@@ -1,7 +1,7 @@
 var
-// Main library for manipulate amqp protocol like RabbitMQ
+	// Main library for manipulate amqp protocol like RabbitMQ
 	amqp = require('amqplib'),
-// Promise created by amqplib for handle amqp connection
+	// Promise created by amqplib for handle amqp connection
 	pConnection;
 
 module.exports = {
@@ -19,8 +19,7 @@ module.exports = {
 	},
 
 	/**
-	 * Allow to add an object in a specific room. If the room is not specified,
-	 * we use the queue task_queue that allow to manage the Work Queues
+	 * Allow to add an object in a specific room.
 	 * @param room
 	 * @param data object that must be insert in queue
 	 */
@@ -35,7 +34,7 @@ module.exports = {
 	},
 
 	/**
-	 * Listen a specific room or the default room task_queue for handle Work Queues
+	 * Listen a specific room and execute a callback for each messages
 	 *
 	 * @param onListenCB called each times a message is received
 	 * @param room
