@@ -53,18 +53,17 @@ module.exports = {
 				conn.close();
 			});
 
-			return conn.createChannel().then(function (ch) {
-				var ok = ch.assertQueue(room, {durable: true});
-				ok = ok.then(function () {
-					ch.prefetch(1);
-				});
-				ok = ok.then(function () {
-					ch.consume(room, doWork);
-				});
-				return ok;
+			return conn.createChannel().then(function (channel) {
+				return channel.assertQueue(room, {durable: true})
+					.then(function () {
+						channel.prefetch(1);
+					})
+					.then(function () {
+						channel.consume(room, doWork);
+					});
 
 				function doWork (msg) {
-					ch.ack(msg);
+					channel.ack(msg);
 					deferred.resolve(JSON.parse(msg.content.toString()));
 				}
 			});
