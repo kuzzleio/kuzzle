@@ -1,8 +1,6 @@
 var
 	// Main library for manipulate amqp protocol like RabbitMQ
 	amqp = require('amqplib'),
-	// Library for manage promises
-	q = require('q'),
 	// Promise created by amqplib for handle amqp connection
 	pConnection;
 
