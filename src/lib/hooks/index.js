@@ -1,5 +1,5 @@
 module.exports = function initHooks(kuzzle) {
 
-	require('./pubsub')(kuzzle);
+	require('./realtime')(kuzzle);
 
 };

@@ -39,7 +39,7 @@ function runHttpServer (kuzzle, params) {
 			kuzzle.log.verbose('emit event request:http');
 			kuzzle.emit('request:http', object);
 
-			// Send response close connection
+			// Send response and close connection
 			response.writeHead(200, {'Content-Type': 'application/json'});
 			response.end(JSON.stringify({error: null, id: object._id}));
 		});

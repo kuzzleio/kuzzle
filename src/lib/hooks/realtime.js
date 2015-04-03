@@ -13,7 +13,7 @@ module.exports = function pubsub (kuzzle) {
 	kuzzle.on('request:http', function(object) {
 
 		kuzzle.log.verbose('trigger event request:http in pubsub');
-		kuzzle.workers.realtime.add('new-data', object);
+		kuzzle.workers.realtime.add(object);
 
 	});
 

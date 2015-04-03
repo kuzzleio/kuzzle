@@ -11,7 +11,7 @@ var
 
 module.exports = function start (params) {
 
-	this.workers.run(this);
+	this.workers.init(this);
 	servers.initAll(this, params);
 
 };
