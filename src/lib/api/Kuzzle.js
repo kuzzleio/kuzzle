@@ -1,8 +1,9 @@
 var
 	captainsLog = require('captains-log'),
+	// Load all configuration files (database, brokers...)
 	config = require('../config'),
-	EventEmitter = require('events').EventEmitter,
-	util = require('util');
+	// Used for emit/listen event
+	EventEmitter = require('events').EventEmitter;
 
 function Kuzzle () {
 

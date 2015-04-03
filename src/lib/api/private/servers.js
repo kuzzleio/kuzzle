@@ -1,10 +1,17 @@
 var
+	// For create the http server
 	http = require('http'),
+	// For create the websocket server
 	io = require('socket.io')(http),
+	// For create the unique id of the object that the use send
 	uuid = require('node-uuid'),
+	// For routing REST call
 	Router = require('router'),
+	// For parse a request sent by user
 	bodyParser = require('body-parser'),
+	// For final step to respond to HTTP request
 	finalhandler = require('finalhandler');
+
 
 module.exports = {
 

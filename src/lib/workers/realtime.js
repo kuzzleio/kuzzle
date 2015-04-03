@@ -1,4 +1,6 @@
-var broker = require('../services/broker');
+var
+	// Broker is a service that allow to use a broker for add and listen one/multiple queue(s)
+	broker = require('../services/broker');
 
 module.exports = {
 
