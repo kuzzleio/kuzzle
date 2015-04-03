@@ -1,0 +1,15 @@
+kuzzle:
+  image: kuzzle
+  volumes:
+    - "src:/var/app"
+  ports:
+    - "8080:8080"
+  links:
+    - rabbit
+  environment:
+    - KUZZLE_PORT=8080
+    - RABBIT_HOST=rabbit
+    - PM2_OPTIONS=--watch
+
+rabbit:
+  image: rabbitmq

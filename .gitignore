@@ -1,0 +1,7 @@
+# IDE
+.idea
+
+# Other
+.DS_STORE
+*#
+*~
