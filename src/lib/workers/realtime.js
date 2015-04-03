@@ -30,24 +30,25 @@ module.exports = {
 		room = room || 'task_queue';
 
 		pConnection.then(function (conn) {
-			var pCreateChannel = conn.createChannel();
-			return pCreateChannel.then(function (ch) {
-				ch.assertQueue(room, {durable: true});
-				ch.sendToQueue(room, new Buffer(JSON.stringify(data)), {deliveryMode: true});
+			return conn.createChannel()
+				.then(function (ch) {
+					ch.assertQueue(room, {durable: true});
+					ch.sendToQueue(room, new Buffer(JSON.stringify(data)), {deliveryMode: true});
 			});
 		});
 	},
 
 	/**
 	 * Listen a specific room or the default room task_queue for handle Work Queues
+	 *
+	 * @param onListenCB called each times a message is received
  	 * @param room
 	 * @returns promise
 	 */
-	listen: function (room) {
-		var deferred = q.defer();
+	listen: function (onListenCB, room) {
 
 		room = room || 'task_queue';
-		pConnection.then(function (conn) {
+		return pConnection.then(function (conn) {
 			// Close the connection if someone kill the server
 			process.once('SIGINT', function () {
 				conn.close();
@@ -59,16 +60,12 @@ module.exports = {
 						channel.prefetch(1);
 					})
 					.then(function () {
-						channel.consume(room, doWork);
+						channel.consume(room, function doWork (msg) {
+							channel.ack(msg);
+							onListenCB(JSON.parse(msg.content.toString()));
+						});
 					});
-
-				function doWork (msg) {
-					channel.ack(msg);
-					deferred.resolve(JSON.parse(msg.content.toString()));
-				}
 			});
 		});
-
-		return deferred.promise;
 	}
 };
