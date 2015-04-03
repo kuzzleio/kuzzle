@@ -1,7 +1,10 @@
 var
 	http = require('http'),
 	io = require('socket.io')(http),
-	uuid = require('node-uuid');
+	uuid = require('node-uuid'),
+	Router = require('router'),
+	bodyParser = require('body-parser'),
+	finalhandler = require('finalhandler');
 
 module.exports = {
 
@@ -20,17 +23,24 @@ function runHttpServer (kuzzle, params) {
 
 	kuzzle.log.info('Launch http server on port', port);
 
+	// initialize the router & server and add a final callback.
+	var router = new Router();
 	var server = http.createServer(function (request, response) {
 
 		kuzzle.log.info('Handle HTTP request');
+		router(request, response, finalhandler(request, response));
+	});
 
-		// Get POST data
-		var body = '';
-		request.on('data', function (chunk) {
-			body += chunk;
-		});
-		request.on('end', function () {
-			var object = JSON.parse(body);
+	// create and mount a new router for our API
+	var api = new Router();
+	router.use('/api/', api);
+
+	// add a body parsing middleware to our API
+	api.use(bodyParser.json());
+
+	api.post('/', function (request, response) {
+		if (request.body) {
+			var object = request.body;
 
 			// TODO: add validation logic -> object is valid ? + schema is valid ?
 			object._id = uuid.v4();
@@ -42,11 +52,16 @@ function runHttpServer (kuzzle, params) {
 			// Send response and close connection
 			response.writeHead(200, {'Content-Type': 'application/json'});
 			response.end(JSON.stringify({error: null, id: object._id}));
-		});
-
+		}
+		else {
+			response.statusCode = 400;
+			// Send response and close connection
+			response.writeHead(200, {'Content-Type': 'application/json'});
+			response.end(JSON.stringify({error: 'Empty data'}));
+		}
 	});
-	server.listen(port);
 
+	server.listen(port);
 }
 
 function runWebsocketServer (kuzzle, params) {
