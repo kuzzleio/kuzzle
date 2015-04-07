@@ -6,7 +6,9 @@
  */
 
 var
-	servers = require('./private/servers.js');
+	servers = require('./private/servers'),
+	FunnelController = require('./controllers/funnelController'),
+	RouterController = require('./controllers/routerController');
 
 
 module.exports = function start (params) {
@@ -16,7 +18,14 @@ module.exports = function start (params) {
 	// initialize all workers according to the configuration
 	this.workers.init();
 
+	// Instantiate the FunnelController for dispatch request from user
+	this.funnel = new FunnelController(this);
+	this.funnel.init();
+	this.router = new RouterController(this);
+
 	servers.initAll(this, params);
+
+
 
 	/**
 	process.on('SIGINT', function() {
