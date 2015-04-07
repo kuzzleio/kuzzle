@@ -42,11 +42,6 @@ module.exports = {
 	 */
 	listen: function (room, onListenCB) {
 		pConnection.then(function (conn) {
-			// Close the connection if someone kill the server
-			process.once('SIGINT', function () {
-				conn.close();
-			});
-
 			return conn.createChannel().then(function (channel) {
 				return channel.assertQueue(room, {durable: true})
 					.then(function () {
@@ -60,5 +55,18 @@ module.exports = {
 					});
 			});
 		});
+	},
+
+	/**
+	 *
+	 */
+	close: function() {
+		pConnection.then(function (conn) {
+			process.once('SIGINT', function () {
+				conn.close();
+				console.log("ok");
+			});
+		});
 	}
+
 };

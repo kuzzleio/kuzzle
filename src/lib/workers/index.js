@@ -1,3 +1,6 @@
+var
+	_ = require('lodash');
+
 module.exports = {
 	list: {},
 
@@ -24,5 +27,13 @@ module.exports = {
 		this.list.realtime = require('./realtime');
 		this.list.realtime.init(kuzzle);
 
+	},
+
+	shutdown: function() {
+		_.forEach(this.list, function parseListWorkers (worker) {
+			if(worker.shutdown === 'function') {
+				worker.shutdown();
+			}
+		});
 	}
 };

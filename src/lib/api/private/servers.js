@@ -17,6 +17,7 @@ module.exports = {
 
 	initAll: function (kuzzle, params) {
 
+
 		runHttpServer(kuzzle, params);
 		runWebsocketServer(kuzzle, params);
 
@@ -61,9 +62,8 @@ function runHttpServer (kuzzle, params) {
 			response.end(JSON.stringify({error: null, id: object._id}));
 		}
 		else {
-			response.statusCode = 400;
 			// Send response and close connection
-			response.writeHead(200, {'Content-Type': 'application/json'});
+			response.writeHead(400, {'Content-Type': 'application/json'});
 			response.end(JSON.stringify({error: 'Empty data'}));
 		}
 	});

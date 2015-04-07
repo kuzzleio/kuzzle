@@ -15,9 +15,13 @@ module.exports = {
 
 	listen: function () {
 		broker.listen('task_queue', onListenRealtimeCB);
+	},
+
+	shutdown: function() {
+		broker.close();
 	}
 };
 
 function onListenRealtimeCB (data) {
-	console.log(data);
+
 }

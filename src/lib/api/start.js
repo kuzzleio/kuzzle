@@ -14,4 +14,9 @@ module.exports = function start (params) {
 	this.workers.init(this);
 	servers.initAll(this, params);
 
+	/**
+	process.on('SIGINT', function() {
+		this.workers.shutdown();
+	}.bind(this));
+	*/
 };
