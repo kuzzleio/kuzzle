@@ -11,7 +11,11 @@ var
 
 module.exports = function start (params) {
 
-	this.workers.init(this);
+	// initialize all hooks according to the configuration
+	this.hooks.init();
+	// initialize all workers according to the configuration
+	this.workers.init();
+
 	servers.initAll(this, params);
 
 	/**

@@ -23,5 +23,5 @@ module.exports = {
 };
 
 function onListenRealtimeCB (data) {
-
+	console.log(data);
 }

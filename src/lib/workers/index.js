@@ -1,39 +1,36 @@
 var
+	// library for execute asynchronous methods
+	async = require('async'),
 	_ = require('lodash');
 
-module.exports = {
-	list: {},
+module.exports = function Workers (kuzzle) {
 
-	/**
-	 * Initialize all workers
-	 * Add here a new worker if needed
-	 *
-	 * @param kuzzle
-	 * @param worker worker name that must be init
-	 * @param params additional parameter
-	 */
-	init: function (kuzzle, worker, params) {
+	this.list = {};
+	this.kuzzle = kuzzle;
 
-		// Initialize a specific worker
-		if(worker && onListenCB) {
-			this.list[worker] = require('./'+worker);
-			this.list[worker].init(kuzzle, params);
 
-			return this[worker];
-		}
+	this.init = function () {
+		var workers = this;
 
-		// Initialize worker for realtime
-		// This worker is the first worker to handle the request send by user
-		this.list.realtime = require('./realtime');
-		this.list.realtime.init(kuzzle);
+		async.each(this.kuzzle.config.workers, function parseGroupWorkers (groupWorkers) {
+			_.each(groupWorkers, function parseWorker (worker) {
+				if(!workers.list[worker]) {
+					workers.list[worker] = require('./'+worker);
+					workers.list[worker].init(workers.kuzzle);
+				}
+			});
+		});
 
-	},
+	};
 
-	shutdown: function() {
-		_.forEach(this.list, function parseListWorkers (worker) {
-			if(worker.shutdown === 'function') {
-				worker.shutdown();
+	this.shutdownAll = function () {
+		var workers = this;
+
+		async.each(Object.keys(this.list), function parseAllWorkers (workerName) {
+			if(workers.list[workerName].shutdown === 'function') {
+				workers.list[workerName].shutdown();
 			}
 		});
-	}
+
+	};
 };
