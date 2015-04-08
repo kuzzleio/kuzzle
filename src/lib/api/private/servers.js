@@ -14,18 +14,23 @@ module.exports = {
 
 };
 
+/**
+ * Run a HTTP server on a specific port and will use the router object for handle request
+ * @param kuzzle
+ * @param params
+ * @returns server
+ */
 function runHttpServer (kuzzle, params) {
 
 	var port = params.port || process.env.KUZZLE_PORT || 80;
 
 	kuzzle.log.info('Launch http server on port', port);
 
-	// initialize the router & server and add a final callback.
-	kuzzle.router.init();
+	kuzzle.router.initRouterHttp();
 
 	var server = http.createServer(function (request, response) {
 		kuzzle.log.silly('Handle HTTP request');
-		kuzzle.router.responseHttp(request, response);
+		kuzzle.router.routeHttp(request, response);
 	});
 
 	server.listen(port);
@@ -33,17 +38,20 @@ function runHttpServer (kuzzle, params) {
 	return server;
 }
 
+/**
+ * Run a websocket server that listen the main room entrypoint for handle write
+ * and the room subscribe for handle user room subscription
+ * @param server
+ * @param kuzzle
+ * @param params
+ */
 function runWebsocketServer (server, kuzzle, params) {
 
 	io = require('socket.io')(server);
 
 	kuzzle.log.info('Launch websocket server');
-
-	io.on('connection', function(socket){
-		socket.on('entrypoint', function(data){
-			kuzzle.log.silly('Handle Websocket request');
-			kuzzle.funnel.execute(data);
-		});
+	io.on('connection', function(socket) {
+		kuzzle.router.routeWebsocket(socket);
 	});
 
 }

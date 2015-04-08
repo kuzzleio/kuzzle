@@ -1,4 +1,7 @@
 var
+	// library for execute asynchronous methods
+	async = require('async'),
+	_ = require('lodash'),
 	Router = require('router'),
 	// For parse a request sent by user
 	bodyParser = require('body-parser'),
@@ -10,7 +13,7 @@ module.exports = function RouterController (kuzzle) {
 
 	this.router = null;
 
-	this.init = function () {
+	this.initRouterHttp = function () {
 
 		this.router = new Router();
 
@@ -21,10 +24,11 @@ module.exports = function RouterController (kuzzle) {
 		// add a body parsing middleware to our API
 		api.use(bodyParser.json());
 
-		api.post('/', function (request, response) {
+		api.post('/article', function (request, response) {
 			if (request.body) {
 
-				var result = kuzzle.funnel.execute(request.body);
+				var data = wrapObject(request.body, 'write', 'article', 'create');
+				var result = kuzzle.funnel.execute(data);
 
 				// Send response and close connection
 				response.writeHead(200, {'Content-Type': 'application/json'});
@@ -39,7 +43,35 @@ module.exports = function RouterController (kuzzle) {
 
 	};
 
-	this.responseHttp = function (request, response) {
+	this.routeHttp = function (request, response) {
 		this.router(request, response, finalhandler(request, response));
 	};
+
+	this.routeWebsocket = function (socket) {
+		async.each(['write', 'read', 'subscribe'], function recordSocketListener (controller) {
+			socket.on(controller, function (data){
+				kuzzle.log.silly('Handle Websocket', controller, 'request');
+				data = wrapObject(data, controller);
+				kuzzle.funnel.execute(data);
+			});
+		});
+	};
 };
+
+function wrapObject (data, controller, collection, action) {
+	if (!data.content) {
+		data = {content: data};
+	}
+
+	data.controller = controller;
+
+	if (collection) {
+		data.collection = collection;
+	}
+
+	if (action) {
+		data.action = action;
+	}
+
+	return data;
+}
