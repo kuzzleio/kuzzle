@@ -1,5 +1,6 @@
 var
 	crypto = require('crypto'),
+	socket = require('socket.io'),
 	WriteController = require('./writeController'),
 	SubscribeController = require('./subscribeController');
 
@@ -24,9 +25,8 @@ module.exports = function FunnelController (kuzzle) {
 		}
 
 
-		if (!this[object.controller][object.action] ||
-			typeof this[object.controller][object.action] !== 'function') {
-
+		if (!this[object.controller] || !this[object.controller][object.action] ||
+				typeof this[object.controller][object.action] !== 'function') {
 			kuzzle.log.error('No corresponding action', object.action, 'in controller', object.controller);
 			return false;
 		}
@@ -36,6 +36,12 @@ module.exports = function FunnelController (kuzzle) {
 			object.requestId = crypto.createHash('md5').update(stringifyObject).digest('hex');
 		}
 
+		this.notify(object);
 		return this[object.controller][object.action](object);
+
+	};
+
+	this.notify = function (object) {
+		kuzzle.io.emit(object.requestId, object);
 	};
 };

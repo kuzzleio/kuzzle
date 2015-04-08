@@ -1,8 +1,6 @@
 var
 	// For create the http server
-	http = require('http'),
-	// For create the websocket server
-	io;
+	http = require('http');
 
 
 module.exports = {
@@ -47,10 +45,10 @@ function runHttpServer (kuzzle, params) {
  */
 function runWebsocketServer (server, kuzzle, params) {
 
-	io = require('socket.io')(server);
+	kuzzle.io = require('socket.io')(server);
 
 	kuzzle.log.info('Launch websocket server');
-	io.on('connection', function(socket) {
+	kuzzle.io.on('connection', function(socket) {
 		kuzzle.router.routeWebsocket(socket);
 	});
 
