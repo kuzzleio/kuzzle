@@ -2,16 +2,14 @@ var
 	// For create the http server
 	http = require('http'),
 	// For create the websocket server
-	io = require('socket.io')(http),
-	// For routing REST call
-	RouterController = require('../controllers/routerController');
+	io;
 
 
 module.exports = {
 
 	initAll: function (kuzzle, params) {
-		runHttpServer(kuzzle, params);
-		runWebsocketServer(kuzzle, params);
+		var server = runHttpServer(kuzzle, params);
+		runWebsocketServer(server, kuzzle, params);
 	}
 
 };
@@ -26,21 +24,26 @@ function runHttpServer (kuzzle, params) {
 	kuzzle.router.init();
 
 	var server = http.createServer(function (request, response) {
-		kuzzle.log.info('Handle HTTP request');
+		kuzzle.log.silly('Handle HTTP request');
 		kuzzle.router.responseHttp(request, response);
 	});
 
 	server.listen(port);
+
+	return server;
 }
 
-function runWebsocketServer (kuzzle, params) {
+function runWebsocketServer (server, kuzzle, params) {
+
+	io = require('socket.io')(server);
 
 	kuzzle.log.info('Launch websocket server');
 
 	io.on('connection', function(socket){
-		socket.on('*', function(data){
-			kuzzle.log.info('Handle Websocket request');
+		socket.on('entrypoint', function(data){
+			kuzzle.log.silly('Handle Websocket request');
+			kuzzle.funnel.execute(data);
 		});
-	}.bind(this));
+	});
 
 }

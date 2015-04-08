@@ -6,13 +6,13 @@ module.exports = function WriteController (kuzzle) {
 
 	this.create = function (data) {
 		// TODO: add validation logic -> object is valid ? + schema is valid ?
-		data._id = uuid.v4();
+		data.msg._id = uuid.v4();
 
 		// Emit the main event
 		kuzzle.log.verbose('emit event request:http');
 		kuzzle.emit('request:http', data);
 
-		return {id: data._id};
+		return {id: data.msg._id};
 	};
 
 };

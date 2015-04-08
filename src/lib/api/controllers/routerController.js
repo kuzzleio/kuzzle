@@ -8,13 +8,15 @@ var
 
 module.exports = function RouterController (kuzzle) {
 
+	this.router = null;
+
 	this.init = function () {
 
-		router = new Router();
+		this.router = new Router();
 
 		// create and mount a new router for our API
 		var api = new Router();
-		router.use('/api/', api);
+		this.router.use('/api/', api);
 
 		// add a body parsing middleware to our API
 		api.use(bodyParser.json());
@@ -34,9 +36,10 @@ module.exports = function RouterController (kuzzle) {
 				response.end(JSON.stringify({error: 'Empty data'}));
 			}
 		}.bind(this));
+
 	};
 
 	this.responseHttp = function (request, response) {
-		router(request, response, finalhandler(request, response));
+		this.router(request, response, finalhandler(request, response));
 	};
 };
