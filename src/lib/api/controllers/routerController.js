@@ -26,7 +26,6 @@ module.exports = function RouterController (kuzzle) {
 
 		api.post('/article', function (request, response) {
 			if (request.body) {
-
 				var data = wrapObject(request.body, 'write', 'article', 'create');
 				kuzzle.funnel.execute(data)
 					.then(function onExecuteSuccess (result) {
@@ -49,6 +48,7 @@ module.exports = function RouterController (kuzzle) {
 	};
 
 	this.routeHttp = function (request, response) {
+		kuzzle.log.silly('Handle HTTP request');
 		this.router(request, response, finalhandler(request, response));
 	};
 

@@ -27,7 +27,6 @@ function runHttpServer (kuzzle, params) {
 	kuzzle.router.initRouterHttp();
 
 	var server = http.createServer(function (request, response) {
-		kuzzle.log.silly('Handle HTTP request');
 		kuzzle.router.routeHttp(request, response);
 	});
 

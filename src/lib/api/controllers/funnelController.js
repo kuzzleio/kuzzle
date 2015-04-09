@@ -69,9 +69,9 @@ module.exports = function FunnelController (kuzzle) {
 				return false;
 			}
 
-			// The request Id is optionnal, but we have to generate it if the user
+			// The request Id is optional, but we have to generate it if the user
 			// not provide it. We need to return this id for let the user know
-			// how to get real time information about this data
+			// how to get real time information about his data
 			if (!object.requestId) {
 				var stringifyObject = JSON.stringify(object);
 				object.requestId = crypto.createHash('md5').update(stringifyObject).digest('hex');
