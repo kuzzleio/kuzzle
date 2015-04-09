@@ -57,14 +57,10 @@ module.exports = {
 		});
 	},
 
-	/**
-	 *
-	 */
 	close: function() {
 		pConnection.then(function (conn) {
 			process.once('SIGINT', function () {
 				conn.close();
-				console.log("ok");
 			});
 		});
 	}

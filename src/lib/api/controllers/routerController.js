@@ -28,11 +28,16 @@ module.exports = function RouterController (kuzzle) {
 			if (request.body) {
 
 				var data = wrapObject(request.body, 'write', 'article', 'create');
-				var result = kuzzle.funnel.execute(data);
-
-				// Send response and close connection
-				response.writeHead(200, {'Content-Type': 'application/json'});
-				response.end(JSON.stringify({error: null, result: result}));
+				kuzzle.funnel.execute(data)
+					.then(function onExecuteSuccess (result) {
+						// Send response and close connection
+						response.writeHead(200, {'Content-Type': 'application/json'});
+						response.end(JSON.stringify({error: null, result: result}));
+					})
+					.catch(function onExecuteError (error) {
+						response.writeHead(400, {'Content-Type': 'application/json'});
+						response.end(JSON.stringify({error: error, result: null}));
+					});
 			}
 			else {
 				// Send response and close connection
