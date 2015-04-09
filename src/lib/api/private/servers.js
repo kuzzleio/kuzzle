@@ -1,14 +1,14 @@
 var
-	// For create the http server
-	http = require('http');
+// For create the http server
+  http = require('http');
 
 
 module.exports = {
 
-	initAll: function (kuzzle, params) {
-		var server = runHttpServer(kuzzle, params);
-		runWebsocketServer(server, kuzzle, params);
-	}
+  initAll: function (kuzzle, params) {
+    var server = runHttpServer(kuzzle, params);
+    runWebsocketServer(server, kuzzle, params);
+  }
 
 };
 
@@ -20,19 +20,19 @@ module.exports = {
  */
 function runHttpServer (kuzzle, params) {
 
-	var port = params.port || process.env.KUZZLE_PORT || 80;
+  var port = params.port || process.env.KUZZLE_PORT || 80;
 
-	kuzzle.log.info('Launch http server on port', port);
+  kuzzle.log.info('Launch http server on port', port);
 
-	kuzzle.router.initRouterHttp();
+  kuzzle.router.initRouterHttp();
 
-	var server = http.createServer(function (request, response) {
-		kuzzle.router.routeHttp(request, response);
-	});
+  var server = http.createServer(function (request, response) {
+    kuzzle.router.routeHttp(request, response);
+  });
 
-	server.listen(port);
+  server.listen(port);
 
-	return server;
+  return server;
 }
 
 /**
@@ -44,11 +44,11 @@ function runHttpServer (kuzzle, params) {
  */
 function runWebsocketServer (server, kuzzle, params) {
 
-	kuzzle.io = require('socket.io')(server);
+  kuzzle.io = require('socket.io')(server);
 
-	kuzzle.log.info('Launch websocket server');
-	kuzzle.io.on('connection', function(socket) {
-		kuzzle.router.routeWebsocket(socket);
-	});
+  kuzzle.log.info('Launch websocket server');
+  kuzzle.io.on('connection', function (socket) {
+    kuzzle.router.routeWebsocket(socket);
+  });
 
 }
