@@ -15,3 +15,4 @@ rabbit:
   image: kuzzle_rabbitmq
   ports:
     - "61613:61613"
+    - "1883:1883"
