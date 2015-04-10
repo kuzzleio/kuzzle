@@ -57,6 +57,32 @@ module.exports = {
     });
   },
 
+  /**
+   * Listen an exchange to a specific routing key and execute a callback for each message
+   *
+   * @param routingKey
+   * @param onListenCB called each times a message is received
+   * @returns promise
+   */
+  listenExchange: function (routingKey, onListenCB) {
+    pConnection.then(function (conn) {
+      return conn.createChannel().then(function (channel) {
+        exName = 'amq.topic';
+        return channel.assertExchange(exName, 'topic', {durable: true})
+          .then(function () {
+            return channel.assertQueue('', {exclusive: true});
+          })
+          .then(function (qok) {
+            var queue = qok.queue;
+            channel.bindQueue(queue, exName, routingKey);
+            channel.consume(queue, function doWork (msg) {
+              onListenCB(JSON.parse(msg.content.toString()), msg.fields.routingKey);
+            });
+          });
+      });
+    });
+  },
+
   close: function () {
     pConnection.then(function (conn) {
       process.once('SIGINT', function () {

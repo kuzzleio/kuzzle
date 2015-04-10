@@ -3,6 +3,7 @@ var
   async = require('async'),
   _ = require('lodash'),
   Router = require('router'),
+  broker = require('../../services/broker');
 // For parse a request sent by user
   bodyParser = require('body-parser'),
 // For final step to respond to HTTP request
@@ -58,6 +59,20 @@ module.exports = function RouterController (kuzzle) {
       socket.on(controller, function (data) {
         kuzzle.log.silly('Handle Websocket', controller, 'request');
         data = wrapObject(data, controller);
+        kuzzle.funnel.execute(data);
+      });
+    });
+  };
+
+  this.routeMQListener = function () {
+    async.each(this.controllers, function recordMQListener (controller) {
+      broker.listenExchange(controller+'.*.*', function handleMQMessage(data, routingKey) {
+        kuzzle.log.silly('Handle MQ input', routingKey , 'message');
+        var routingArray = routingKey.split('.'),
+        var controller = routingArray[0];
+        var collection = routingArray[1];
+        var action = routingArray[2];
+        data = wrapObject(data, controller, collection, action);
         kuzzle.funnel.execute(data);
       });
     });
