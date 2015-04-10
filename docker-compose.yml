@@ -12,4 +12,6 @@ kuzzle:
     - PM2_OPTIONS=--watch
 
 rabbit:
-  image: rabbitmq
+  image: kuzzle_rabbitmq
+  ports:
+    - "61613:61613"
