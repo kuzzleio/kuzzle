@@ -12,6 +12,7 @@ var
 module.exports = function RouterController (kuzzle) {
 
   this.router = null;
+  this.controllers = ['write', 'read', 'subscribe'];
 
   this.initRouterHttp = function () {
 
@@ -53,7 +54,7 @@ module.exports = function RouterController (kuzzle) {
   };
 
   this.routeWebsocket = function (socket) {
-    async.each(['write', 'read', 'subscribe'], function recordSocketListener (controller) {
+    async.each(this.controllers, function recordSocketListener (controller) {
       socket.on(controller, function (data) {
         kuzzle.log.silly('Handle Websocket', controller, 'request');
         data = wrapObject(data, controller);
