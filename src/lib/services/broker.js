@@ -36,8 +36,8 @@ module.exports = {
   /**
    * Listen a specific room and execute a callback for each messages
    *
-   * @param onListenCB called each times a message is received
    * @param room
+   * @param onListenCB called each times a message is received
    * @returns promise
    */
   listen: function (room, onListenCB) {
