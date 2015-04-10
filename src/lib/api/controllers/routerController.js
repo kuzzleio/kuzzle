@@ -64,7 +64,7 @@ module.exports = function RouterController (kuzzle) {
 };
 
 function wrapObject (data, controller, collection, action) {
-  if (!data.content) {
+  if (data.content === 'undefined') {
     data = {content: data};
   }
 
