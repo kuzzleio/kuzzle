@@ -1,5 +1,5 @@
 var
-// For create the unique id of the object that the use send
+  // For create the unique id of the object that the user send
   uuid = require('node-uuid');
 
 module.exports = function WriteController (kuzzle) {

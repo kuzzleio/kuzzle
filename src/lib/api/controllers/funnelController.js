@@ -53,7 +53,7 @@ module.exports = function FunnelController (kuzzle) {
         // Test if a controller and an action exist for the object
         function (callback) {
           if (!this[object.controller] || !this[object.controller][object.action] ||
-            typeof this[object.controller][object.action] !== 'function') {
+              typeof this[object.controller][object.action] !== 'function') {
             kuzzle.log.error('No corresponding action', object.action, 'in controller', object.controller);
             callback('No corresponding action and/or controller');
 
