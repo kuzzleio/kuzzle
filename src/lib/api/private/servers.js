@@ -8,6 +8,7 @@ module.exports = {
   initAll: function (kuzzle, params) {
     var server = runHttpServer(kuzzle, params);
     runWebsocketServer(server, kuzzle, params);
+    runMQListener(kuzzle, params);
   }
 
 };
@@ -50,5 +51,18 @@ function runWebsocketServer (server, kuzzle, params) {
   kuzzle.io.on('connection', function (socket) {
     kuzzle.router.routeWebsocket(socket);
   });
+
+}
+
+/**
+ * Listen to RabbitMQ topics to handle write/subscribe/read messages send via
+ * STOMP/AMQP/MQTT protocols
+ * @param kuzzle
+ * @param params
+ */
+function runMQListener (kuzzle, params) {
+
+  kuzzle.log.info('Launch MQ listener');
+  kuzzle.router.routeMQListener();
 
 }

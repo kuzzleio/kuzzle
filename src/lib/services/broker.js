@@ -36,8 +36,8 @@ module.exports = {
   /**
    * Listen a specific room and execute a callback for each messages
    *
-   * @param onListenCB called each times a message is received
    * @param room
+   * @param onListenCB called each times a message is received
    * @returns promise
    */
   listen: function (room, onListenCB) {
@@ -51,6 +51,32 @@ module.exports = {
             channel.consume(room, function doWork (msg) {
               channel.ack(msg);
               onListenCB(JSON.parse(msg.content.toString()));
+            });
+          });
+      });
+    });
+  },
+
+  /**
+   * Listen an exchange to a specific routing key and execute a callback for each message
+   *
+   * @param routingKey
+   * @param onListenCB called each times a message is received
+   * @returns promise
+   */
+  listenExchange: function (routingKey, onListenCB) {
+    pConnection.then(function (conn) {
+      return conn.createChannel().then(function (channel) {
+        exName = 'amq.topic';
+        return channel.assertExchange(exName, 'topic', {durable: true})
+          .then(function () {
+            return channel.assertQueue('', {exclusive: true});
+          })
+          .then(function (qok) {
+            var queue = qok.queue;
+            channel.bindQueue(queue, exName, routingKey);
+            channel.consume(queue, function doWork (msg) {
+              onListenCB(JSON.parse(msg.content.toString()), msg.fields.routingKey);
             });
           });
       });
