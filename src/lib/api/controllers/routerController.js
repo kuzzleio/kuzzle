@@ -68,7 +68,7 @@ module.exports = function RouterController (kuzzle) {
     async.each(this.controllers, function recordMQListener (controller) {
       broker.listenExchange(controller+'.*.*', function handleMQMessage(data, routingKey) {
         kuzzle.log.silly('Handle MQ input', routingKey , 'message');
-        var routingArray = routingKey.split('.'),
+        var routingArray = routingKey.split('.');
         var controller = routingArray[0];
         var collection = routingArray[1];
         var action = routingArray[2];
