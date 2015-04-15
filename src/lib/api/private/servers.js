@@ -50,5 +50,4 @@ function runWebsocketServer (server, kuzzle, params) {
   kuzzle.io.on('connection', function (socket) {
     kuzzle.router.routeWebsocket(socket);
   });
-
 }

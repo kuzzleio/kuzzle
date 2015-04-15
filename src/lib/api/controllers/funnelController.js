@@ -21,8 +21,10 @@ module.exports = function FunnelController (kuzzle) {
    * Execute in parallel all tests for check whether the object is well constructed
    * Then generate a requestId if not provided and execute the right controller/action
    * @param object
+   * @param request can be either a socket or the request http
+   * depending on who call execute (websocket or http)
    */
-  this.execute = function (object) {
+  this.execute = function (object, request) {
     var deferred = q.defer();
 
     async.parallel([
@@ -78,7 +80,7 @@ module.exports = function FunnelController (kuzzle) {
         }
 
         this.notify(object);
-        deferred.resolve(this[object.controller][object.action](object));
+        deferred.resolve(this[object.controller][object.action](object, request));
       }.bind(this));
 
     return deferred.promise;

@@ -27,7 +27,7 @@ module.exports = function RouterController (kuzzle) {
     api.post('/article', function (request, response) {
       if (request.body) {
         var data = wrapObject(request.body, 'write', 'article', 'create');
-        kuzzle.funnel.execute(data)
+        kuzzle.funnel.execute(data, request)
           .then(function onExecuteSuccess (result) {
             // Send response and close connection
             response.writeHead(200, {'Content-Type': 'application/json'});
@@ -57,7 +57,7 @@ module.exports = function RouterController (kuzzle) {
       socket.on(controller, function (data) {
         kuzzle.log.silly('Handle Websocket', controller, 'request');
         data = wrapObject(data, controller);
-        kuzzle.funnel.execute(data);
+        kuzzle.funnel.execute(data, socket);
       });
     });
   };

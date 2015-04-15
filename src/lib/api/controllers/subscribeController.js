@@ -1,7 +1,7 @@
 module.exports = function SubscribeController (kuzzle) {
 
-  this.on = function (data) {
-    kuzzle.hotelClerk.addSubscriberRoom(data.requestId, data.collection, data.content);
+  this.on = function (data, socket) {
+    kuzzle.hotelClerk.addSubscriberRoom(socket, data.requestId, data.collection, data.content);
     console.log(kuzzle.hotelClerk.rooms);
   };
 
