@@ -1,11 +1,13 @@
 module.exports = function SubscribeController (kuzzle) {
 
   this.on = function (data) {
-    console.log('subscribe');
+    kuzzle.hotelClerk.addSubscriberRoom(data.requestId, data.collection, data.content);
+    console.log(kuzzle.hotelClerk.rooms);
   };
 
   this.off = function (data) {
-    console.log('unsubscribe');
+    kuzzle.hotelClerk.removeSubscriberRoom(data.requestId);
+    console.log(kuzzle.hotelClerk.rooms);
   };
 
 };
