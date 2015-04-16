@@ -1,3 +1,7 @@
+var
+  async = require('async');
+
+
 module.exports = function HotelClerkController (kuzzle) {
 
   /**
@@ -6,18 +10,19 @@ module.exports = function HotelClerkController (kuzzle) {
    * Example for subscribe to a chat room where the subject is Kuzzle
    *  rooms = {
    *    'chat-room-kuzzle' : { // -> the room name
+   *      collection: message // -> collection that we want to retrieve
    *      count: 100 // -> how many users have subscribed to this room
-   *      'filter': { // -> the filter to apply for test if we have to send the document to chat-room-kuzzle
-   *        'term': { 'subject': 'kuzzle' }
+   *      filter: { // -> the filter to apply for test if we have to send the document to chat-room-kuzzle
+   *        subject : termSubjectKuzzle // -> attribute and curryed function
    *      }
    *    }
    *  }
    */
   this.rooms = {};
   /**
-   * In addition to this.rooms, socketsRoom allow to manage socket (= user), rooms and filters
+   * In addition to this.rooms, this.customers allow to manage users and their rooms
    */
-  this.socketsRoom = {};
+  this.customers = {};
   /**
    *
    * A tree where we have an entry by collection, an entry by tag and
@@ -25,10 +30,10 @@ module.exports = function HotelClerkController (kuzzle) {
    *
    * Example for chat-room-kuzzle (see above)
    *  filtersTree = {
-   *    messages : { // -> collection name
+   *    message : { // -> collection name
    *      subject : { // -> attribute where a filter exists
    *        termSubjectKuzzle : [ // -> curried function that return true if the subject is equal to kuzzle
-   *          "chat-room-kuzzle" // -> associated room
+   *          'chat-room-kuzzle' // -> associated room
    *        ]
    *      }
    *    }
@@ -37,21 +42,33 @@ module.exports = function HotelClerkController (kuzzle) {
   this.filtersTree = {};
 
 
-  this.addSubscriberRoom = function (socket, room, collection, filter) {
-    if (!this.rooms[room]) {
-      this.rooms[room] = {
-        count : 0,
-        filter : filter
-      };
+  this.addSubscription = function (connectionId, room, collection, filter) {
 
-      this.addFilter(room, collection, kuzzle.dsl.filterTransformer(filter));
+    if (!this.rooms[room]) {
+      // If it's a new room, we have to calculate filters to apply on the future documents
+      var filterDetail = this.addRoomAndFilter(room, collection, filter);
+
+      if (!filterDetail) {
+        return false;
+      }
+
+      this.rooms[room] = {
+        collection : collection,
+        count : 0,
+        filter : filter,
+        filterDetail : filterDetail
+      };
     }
 
-    this.addSocket(socket.id, room);
+    // Add the room for the customer
+    this.addRoomForCustomer(connectionId, room);
     this.rooms[room].count++;
   };
 
-  this.removeSubscriberRoom = function (room) {
+  this.removeSubscription = function (connectionId, room) {
+    // Remove the room for the customer
+    this.removeRoomForCustomer(connectionId, room);
+
     if (!this.rooms[room]) {
       return false;
     }
@@ -61,27 +78,74 @@ module.exports = function HotelClerkController (kuzzle) {
     if (this.rooms[room].count === 0) {
       delete this.rooms[room];
 
-      // TODO: delete room from tree
+      this.removeRoomFromFilter();
     }
-  };
-
-  this.addFilter = function (room, collection, filter) {
 
   };
 
   /**
-   * Associate the room to the socket in this.socketsRoom
-   * Allow to manage later disconnection and delete socket/rooms/...
-   * @param socket
-   * @param room
+   * This function will delete customer from this.customers and
+   * decrement count in this.rooms for rooms where user has subscribed
+   * Typically called on user disconnection
+   *
+   * @param connectionId can be a socket.id
    */
-  this.addSocket = function (socket, room) {
-    if (!this.socketsRoom[socket]) {
-      this.socketsRoom[socket] = [];
+  this.removeCustomerFromAllRooms = function (connectionId) {
+    if (!this.customers[connectionId]) {
+      return false;
     }
 
-    this.socketsRoom[socket].push(room);
-    console.log(this.socketsRoom);
+    var rooms = this.customers[connectionId];
+    async.each(rooms, function (room) {
+      if (!this.rooms[room]) {
+        return false;
+      }
+
+      this.rooms[room].count--;
+    }.bind(this));
+
+    delete this.customers[connectionId];
+  };
+
+  /**
+   * Associate the room to the connectionId in this.clients
+   * Allow to manage later disconnection and delete socket/rooms/...
+   * @param connectionId
+   * @param room
+   */
+  this.addRoomForCustomer = function (connectionId, room) {
+    if (!this.customers[connectionId]) {
+      this.customers[connectionId] = [];
+    }
+
+    this.customers[connectionId].push(room);
+  };
+
+  this.removeRoomForCustomer = function (connectionId, room) {
+
+  };
+
+  this.addRoomAndFilter = function (room, collection, filter) {
+
+    filter = kuzzle.dsl.filterTransformer(filter);
+
+    if (!filter) {
+      return false;
+    }
+
+    if (!this.filtersTree[collection]) {
+      this.filtersTree[collection] = {};
+    }
+
+    if (!this.filtersTree[collection][filter.field]) {
+      this.filtersTree[collection][filter.field] = {};
+    }
+
+    if (!this.filtersTree[collection][filter.field][filter.fn]) {
+      this.filtersTree[collection][filter.field][filter.fn] = [];
+    }
+
+    this.filtersTree[collection][filter.field][filter.fn].push(room);
   };
 
 };
