@@ -5,7 +5,9 @@ var
 module.exports = function Dsl (kuzzle) {
 
   this.filterTransformer = function (filter) {
-
+    return {
+      'subject' : 'termSubjectKuzzle'
+    };
   };
 
 };

@@ -45,14 +45,11 @@ module.exports = function HotelClerkController (kuzzle) {
 
 
   // BIND PRIVATE METHODS
-  addRoomForCustomer = _.bind(addRoomForCustomer, this);
-  addRoomAndFilter = _.bind(addRoomAndFilter, this);
-  removeRoomForCustomer = _.bind(removeRoomForCustomer, this);
-  cleanUpRooms = _.bind(cleanUpRooms, this);
-  cleanUpCustomers = _.bind(cleanUpCustomers, this);
-  removeRoomFromFilterTree = _.bind(removeRoomFromFilterTree, this);
-  cleanUpTree = _.bind(cleanUpTree, this);
-
+  var tools = {};
+  tools.addRoomForCustomer = _.bind(addRoomForCustomer, this);
+  tools.addRoomAndFilter = _.bind(addRoomAndFilter, this);
+  tools.removeRoomForCustomer = _.bind(removeRoomForCustomer, this);
+  tools.cleanUpRooms = _.bind(cleanUpRooms, this);
 
   /**
    * Add a connectionId to room, and init all information about room if it doesn't exist before
@@ -66,9 +63,9 @@ module.exports = function HotelClerkController (kuzzle) {
 
     if (!this.rooms[room]) {
       // If it's a new room, we have to calculate filters to apply on the future documents
-      var filters = addRoomAndFilter(room, collection, filter);
+      var filters = tools.addRoomAndFilter(room, collection, filter);
 
-      if (!filters) {
+      if (filters === false) {
         return false;
       }
 
@@ -80,7 +77,7 @@ module.exports = function HotelClerkController (kuzzle) {
     }
 
     // Add the room for the customer
-    addRoomForCustomer(connectionId, room);
+    tools.addRoomForCustomer(connectionId, room);
     this.rooms[room].count++;
   };
 
@@ -92,19 +89,20 @@ module.exports = function HotelClerkController (kuzzle) {
    */
   this.removeSubscription = function (connectionId, room) {
     // Remove the room for the customer
-    removeRoomForCustomer(connectionId, room);
+    tools.removeRoomForCustomer(connectionId, room);
 
     if (!this.rooms[room]) {
       return false;
     }
 
     this.rooms[room].count--;
-    cleanUpRooms(room);
+    tools.cleanUpRooms(room);
   };
 
   /**
    * This function will delete customer from this.customers and
    * decrement count in this.rooms for rooms where user has subscribed
+   * Call the cleanUpRooms function for manage empty room
    * Typically called on user disconnection
    *
    * @param connectionId can be a socket.id
@@ -121,7 +119,7 @@ module.exports = function HotelClerkController (kuzzle) {
       }
 
       this.rooms[room].count--;
-      cleanUpRooms(room);
+      tools.cleanUpRooms(room);
     }.bind(this));
 
     delete this.customers[connectionId];
@@ -146,13 +144,22 @@ addRoomForCustomer = function (connectionId, room) {
   this.customers[connectionId].push(room);
 };
 
+/**
+ * Delete room if no use has subscribed to this room and remove also the room in
+ * filterTree object
+ *
+ * @param room
+ */
 cleanUpRooms = function (room) {
+  var tools = {};
+  tools.removeRoomFromFilterTree = _.bind(removeRoomFromFilterTree, this);
+
   if (!this.rooms[room]) {
     return false;
   }
 
   if (this.rooms[room].count === 0) {
-    removeRoomFromFilterTree(room);
+    tools.removeRoomFromFilterTree(room);
     delete this.rooms[room];
   }
 };
@@ -160,13 +167,16 @@ cleanUpRooms = function (room) {
 
 /** MANAGE CUSTOMERS **/
 
-cleanUpCustomers = function (connectionId) {
-  if (_.isEmpty(this.customers[connectionId])) {
-    delete this.customers[connectionId];
-  }
-};
-
+/**
+ * Remove the room from subscribed room from the user
+ *
+ * @param connectionId
+ * @param room
+ */
 removeRoomForCustomer = function (connectionId, room) {
+  var tools = {};
+  tools.cleanUpCustomers = _.bind(cleanUpCustomers, this);
+
   if (!this.customers[connectionId]) {
     return false;
   }
@@ -176,33 +186,58 @@ removeRoomForCustomer = function (connectionId, room) {
     this.customers[connectionId].slice(index, 1);
   }
 
-  cleanUpCustomers(connectionId);
+  tools.cleanUpCustomers(connectionId);
+};
+
+/**
+ * Remove the user if he didn't has subscribed to a room
+ *
+ * @param connectionId
+ */
+cleanUpCustomers = function (connectionId) {
+  if (_.isEmpty(this.customers[connectionId])) {
+    delete this.customers[connectionId];
+  }
 };
 
 
 /** MANAGE FILTERS TREE **/
 
+/**
+ * Create filter function and add collection/field/filter/room to
+ * the filtersTree object
+ *
+ * @param room
+ * @param collection
+ * @param filter
+ */
 addRoomAndFilter = function (room, collection, filter) {
 
-  filter = this.kuzzle.dsl.filterTransformer(filter);
+  var filters = this.kuzzle.dsl.filterTransformer(filter);
 
-  if (!filter) {
+  if (filters === false) {
     return false;
   }
 
-  if (!this.filtersTree[collection]) {
-    this.filtersTree[collection] = {};
-  }
+  async.each(Object.keys(filters), function (field) {
+    var filterFn = filters[field];
 
-  if (!this.filtersTree[collection][filter.field]) {
-    this.filtersTree[collection][filter.field] = {};
-  }
+    if (!this.filtersTree[collection]) {
+      this.filtersTree[collection] = {};
+    }
 
-  if (!this.filtersTree[collection][filter.field][filter.fn]) {
-    this.filtersTree[collection][filter.field][filter.fn] = [];
-  }
+    if (!this.filtersTree[collection][field]) {
+      this.filtersTree[collection][field] = {};
+    }
 
-  this.filtersTree[collection][filter.field][filter.fn].push(room);
+    if (!this.filtersTree[collection][field][filterFn]) {
+      this.filtersTree[collection][field][filterFn] = [];
+    }
+
+    this.filtersTree[collection][field][filterFn].push(room);
+  }.bind(this));
+
+  return filters;
 };
 
 /**
@@ -214,6 +249,10 @@ addRoomAndFilter = function (room, collection, filter) {
  * @param room
  */
 removeRoomFromFilterTree = function (room) {
+
+  var tools = {};
+  tools.cleanUpTree = _.bind(cleanUpTree, this);
+
   if (!this.rooms[room]) {
     return false;
   }
@@ -223,7 +262,7 @@ removeRoomFromFilterTree = function (room) {
     filters = this.rooms[room].filters;
 
   // Can't run asynchronously because of concurrency access of filtersTree
-  filters.forEach(function (filter, field) {
+  _.each(filters, function (filter, field) {
     if (!this.filtersTree[collection]) {
       return false;
     }
@@ -243,14 +282,19 @@ removeRoomFromFilterTree = function (room) {
       this.filtersTree[collection][field][filter].splice(index, 1);
     }
 
-    // Now we have delete the room, we need to clean up the tree
-    cleanUpTree(collection, filter, field);
-
+    // Now we have deleted the room, we need to clean up the tree
+    tools.cleanUpTree(collection, filter, field);
   }.bind(this));
 };
 
 
-// Remove all unused entry in any level in filtersTree variable
+/**
+ * Remove all unused entries in any level in filtersTree variable
+ *
+ * @param collection
+ * @param filter
+ * @param field
+ */
 cleanUpTree = function (collection, filter, field) {
   // delete filter from field if it was the only room
   if (_.isEmpty(this.filtersTree[collection][field][filter])) {
