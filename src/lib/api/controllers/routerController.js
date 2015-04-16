@@ -5,7 +5,7 @@ var
   Router = require('router'),
   broker = require('../../services/broker');
 // For parse a request sent by user
-  bodyParser = require('body-parser'),
+bodyParser = require('body-parser'),
 // For final step to respond to HTTP request
   finalhandler = require('finalhandler');
 
@@ -59,8 +59,12 @@ module.exports = function RouterController (kuzzle) {
       socket.on(controller, function (data) {
         kuzzle.log.silly('Handle Websocket', controller, 'request');
         data = wrapObject(data, controller);
-        kuzzle.funnel.execute(data, socket);
+        kuzzle.funnel.execute(data, socket.id);
       });
+    });
+
+    socket.on('disconnect', function () {
+      kuzzle.hotelClerk.removeCustomerFromAllRooms(socket.id);
     });
   };
 
