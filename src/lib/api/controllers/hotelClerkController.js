@@ -1,7 +1,9 @@
 var
   _ = require('lodash'),
   async = require('async'),
-  q = require('q');
+  q = require('q'),
+  // module for manage md5 hash
+  crypto = require('crypto');
 
 
 module.exports = function HotelClerkController (kuzzle) {
@@ -15,7 +17,7 @@ module.exports = function HotelClerkController (kuzzle) {
    *    'f45de4d8ef4f3ze4ffzer85d4fgkzm41' : { // -> the room id (according to filters and collection)
    *      names: [ 'chat-room-kuzzle' ], // -> real room name list to notify
    *      count: 100 // -> how many users have subscribed to this room
-   *      filters: [ this.filtersTree.message.subject.termSubjectKuzzle ] // -> filters needed to send message to this room
+   *      filters: [ message.subject.termSubjectKuzzle ] // -> filters needed to send message to this room
    *    }
    *  }
    */
@@ -67,16 +69,17 @@ module.exports = function HotelClerkController (kuzzle) {
    */
   this.addSubscription = function (connectionId, room, collection, filters) {
     var
-      deferred = q.defer(),
-      hotelClerkCtrl = this;
+      deferred = q.defer();
 
     tools.createRoom(room, collection, filters)
       .then(function (roomId) {
         // Add the room for the customer
         tools.addRoomForCustomer(connectionId, room, roomId);
-        hotelClerkCtrl.rooms[roomId].count++;
+        console.log("Filters tree", kuzzle.hotelClerk.filtersTree);
+        this.rooms[roomId].count++;
+
         deferred.resolve();
-      })
+      }.bind(this))
       .catch(function (error) {
         deferred.reject(error);
       });
@@ -98,12 +101,12 @@ module.exports = function HotelClerkController (kuzzle) {
     tools.removeRoomForCustomer(connectionId, room)
       .then(function (roomId) {
         if (!this.rooms[roomId]) {
-          deferred.reject('Room ' + room + ' with id ' + roomId + ' doesn\t exist');
+          deferred.reject('Room ' + room + ' with id ' + roomId + ' doesn\'t exist');
         }
 
-        this.rooms[room].count--;
-        tools.cleanUpRooms(room);
-
+        this.rooms[roomId].count--;
+        tools.cleanUpRooms(roomId);
+        console.log("Filters tree", kuzzle.hotelClerk.filtersTree);
         deferred.resolve();
 
       }.bind(this))
@@ -164,15 +167,14 @@ createRoom = function (room, collection, filters) {
     // If it's a new room, we have to calculate filters to apply on the future documents
     tools.addRoomAndFilters = _.bind(addRoomAndFilters, this);
     tools.addRoomAndFilters(roomId, collection, filters)
-      .then(function (formattedFilters) {
-
-        hotelClerkCtrl.rooms[roomId] = {
+      .then(function (pathFilterList) {
+        this.rooms[roomId] = {
           count : 0,
-          filters : formattedFilters
+          filters : pathFilterList
         };
 
         deferred.resolve(roomId);
-      })
+      }.bind(this))
       .catch(function (error) {
         deferred.reject(error);
       });
@@ -204,19 +206,18 @@ addRoomForCustomer = function (connectionId, room, roomId) {
  * Delete room if no use has subscribed to this room and remove also the room in
  * filterTree object
  *
- * @param {String} room
+ * @param {String} roomId
  */
-cleanUpRooms = function (room) {
+cleanUpRooms = function (roomId) {
   var tools = {};
   tools.removeRoomFromFilterTree = _.bind(removeRoomFromFilterTree, this);
 
-  if (!this.rooms[room]) {
+  if (!this.rooms[roomId]) {
     return false;
   }
-
-  if (this.rooms[room].count === 0) {
-    tools.removeRoomFromFilterTree(room);
-    delete this.rooms[room];
+  if (this.rooms[roomId].count === 0) {
+    tools.removeRoomFromFilterTree(roomId);
+    delete this.rooms[roomId];
   }
 };
 
@@ -273,49 +274,64 @@ cleanUpCustomers = function (connectionId) {
 /** MANAGE FILTERS TREE **/
 
 /**
- * Create curried filters function and add collection/field/filters/room to
- * the filtersTree object
+ * Create curried filters function and add collection/field/filters/room to the filtersTree object
+ *
+ * Transform something like:
+ * {
+ *  term: { 'subject': 'kuzzle' }
+ *  range: { 'star': { 'gte': 3 } }
+ * }
+ *
+ * Into something like:
+ * {
+ *  subject: { 'termSubjectKuzzle' : { fn: function () {}, rooms: [] } },
+ *  star: { 'rangeStarGte3' : { fn: function () {} }, rooms: [] }
+ * }
+ * And inject it in the right place in filtersTree according to the collection and field
  *
  * @param {String} roomId
  * @param {String} collection
  * @param {Object} filters
+ * @return {Promise} promise. Resolve a list of path that points to filtersTree object
  */
 addRoomAndFilters = function (roomId, collection, filters) {
-  var deferred = q.defer();
+  var
+    deferred = q.defer(),
+    pathFilterList = [];
 
-  this.kuzzle.dsl.filtersTransformer(filters)
-    .then(function (formatedFilters) {
+  this.kuzzle.dsl.getFunctionsNames(collection, filters)
+    .then(function (filtersNames) {
 
-      // formatedFilters contains something like { subject : { termSubjectKuzzle : { fn: function() {} } } }
-      async.each(Object.keys(formatedFilters), function (field) {
-        // filter contains something like  { termSubjectKuzzle : { fn: function() {} } }
+      async.each(Object.keys(filtersNames), function (name, callback) {
         var
-          filter = formatedFilters[field],
-          filterName = Object.keys(filter)[0];
-
-        filter.rooms = [];
+          fn = Object.keys(filtersNames[name])[0],
+          filter = filtersNames[name][fn],
+          field = Object.keys(filter)[0];
 
         if (!this.filtersTree[collection]) {
-          this.filtersTree[collection] = formatedFilters;
+          this.filtersTree[collection] = {};
         }
-
         if (!this.filtersTree[collection][field]) {
-          this.filtersTree[collection][field] = filter;
+          this.filtersTree[collection][field] = {};
         }
 
-        if (!this.filtersTree[collection][field][filterName]) {
-          this.filtersTree[collection][field] = _.merge(this.filtersTree[collection][field], filter);
+        if (!this.filtersTree[collection][field][name]) {
+          this.filtersTree[collection][field][name] = {
+            rooms: [],
+            fn: this.kuzzle.dsl.createCurriedFunction(name, filtersNames[name])
+          };
+
+          // push the path to in filtersTree for retrieve the function
+          pathFilterList.push(collection+'.'+field+'.'+name);
         }
 
-        this.filtersTree[collection][field][filterName].rooms.push(roomId);
+        this.filtersTree[collection][field][name].rooms.push(roomId);
+        callback();
 
-      }.bind(this));
-
-      deferred.resolve(formatedFilters);
-    })
-    .catch(function (error) {
-      deferred.reject(error);
-    });
+      }.bind(this), function () {
+        deferred.resolve(pathFilterList);
+      });
+    }.bind(this));
 
   return deferred.promise;
 };
@@ -326,68 +342,68 @@ addRoomAndFilters = function (roomId, collection, filters) {
  * If the filter was the only filter for the field, we have to remove the field
  * If the field was the only field of the collection, we have to remove the collection
 
- * @param {String} room
+ * @param {String} roomId
  */
-removeRoomFromFilterTree = function (room) {
+removeRoomFromFilterTree = function (roomId) {
+  var deferred = q.defer();
+
+  if (!this.rooms[roomId]) {
+    deferred.reject();
+    return deferred.promise;
+  }
 
   var tools = {};
-  tools.cleanUpTree = _.bind(cleanUpTree, this);
+  tools.recursiveCleanUpTree = _.bind(recursiveCleanUpTree, this);
 
-  if (!this.rooms[room]) {
+  var filters = this.rooms[roomId].filters;
+
+  async.each(filters, function (filterPath, callback) {
+    tools.recursiveCleanUpTree(this.filtersTree, filterPath);
+    callback();
+
+  }.bind(this), function () {
+    deferred.resolve();
+  });
+
+  return deferred.promise;
+};
+
+recursiveCleanUpTree = function (object, path) {
+  var
+    parent = object,
+    subPath;
+
+  path = path.split('.');
+
+  for (var i = 0; i < path.length -1; i += 1) {
+    parent = parent[path[i]];
+  }
+  subPath = path[path.length-1];
+  if((parent[subPath].rooms && _.isEmpty(parent[subPath].rooms)) || _.isEmpty(parent[subPath])) {
+    delete parent[subPath];
+  }
+
+  path = path.shift();
+  if (_.isEmpty(path)) {
     return false;
   }
 
-  var
-    collection = this.rooms[room].collection,
-    filters = this.rooms[room].filters;
-
-  // Can't run asynchronously because of concurrency access of filtersTree
-  _.each(filters, function (filter, field) {
-    if (!this.filtersTree[collection]) {
-      return false;
-    }
-
-    // corresponding to the list of field for the collection where we have filters
-    if (!this.filtersTree[collection][field]) {
-      return false;
-    }
-
-    // corresponding to the room list which use the filter
-    if (!this.filtersTree[collection][field][filter]) {
-      return false;
-    }
-
-    var index = this.filtersTree[collection][field][filter].indexOf(room);
-    if (index > -1) {
-      this.filtersTree[collection][field][filter].splice(index, 1);
-    }
-
-    // Now we have deleted the room, we need to clean up the tree
-    tools.cleanUpTree(collection, filter, field);
-  }.bind(this));
+  return recursiveCleanUpTree(object, path.join('.'));
 };
 
+getPointerWithPath = function (obj, path, def) {
+  var i, len;
 
-/**
- * Remove all unused entries in any level in filtersTree variable
- *
- * @param {String} collection
- * @param {String} filter
- * @param {String} field
- */
-cleanUpTree = function (collection, filter, field) {
-  // delete filter from field if it was the only room
-  if (_.isEmpty(this.filtersTree[collection][field][filter])) {
-    delete this.filtersTree[collection][field][filter];
+  for(i = 0,path = path.split('.'), len = path.length; i < len; i++){
+    if(!obj || typeof obj !== 'object') {
+      return def;
+    }
+    obj = obj[path[i]];
   }
 
-  // delete field from collection if it was the only filter
-  if (_.isEmpty(this.filtersTree[collection][field])) {
-    delete this.filtersTree[collection][field];
+  if(obj === undefined) {
+    return def;
   }
 
-  // delete collection from tree if it was the only field
-  if (_.isEmpty(this.filtersTree[collection])) {
-    delete this.filtersTree[collection];
-  }
+  return obj;
 };

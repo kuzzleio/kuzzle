@@ -83,6 +83,7 @@ module.exports = function RouterController (kuzzle) {
           })
           .catch(function onExecuteError(error) {
             routerCtrl.notify(data.requestId, {error: error}, socket);
+            kuzzle.log.verbose({error: error});
           });
       });
 
