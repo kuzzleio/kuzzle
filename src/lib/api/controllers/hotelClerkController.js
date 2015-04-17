@@ -1,6 +1,7 @@
 var
   _ = require('lodash'),
-  async = require('async');
+  async = require('async'),
+  q = require('q');
 
 
 module.exports = function HotelClerkController (kuzzle) {
@@ -11,18 +12,22 @@ module.exports = function HotelClerkController (kuzzle) {
    *
    * Example for subscribe to a chat room where the subject is Kuzzle
    *  rooms = {
-   *    'chat-room-kuzzle' : { // -> the room name
-   *      collection: message // -> collection that we want to retrieve
+   *    'f45de4d8ef4f3ze4ffzer85d4fgkzm41' : { // -> the room id (according to filters and collection)
+   *      names: [ 'chat-room-kuzzle' ], // -> real room name list to notify
    *      count: 100 // -> how many users have subscribed to this room
-   *      filters: { // -> filters to apply for test if we have to send the document to chat-room-kuzzle
-   *        subject : termSubjectKuzzle // -> attribute and curryed function
-   *      }
+   *      filters: [ this.filtersTree.message.subject.termSubjectKuzzle ] // -> filters needed to send message to this room
    *    }
    *  }
    */
   this.rooms = {};
   /**
    * In addition to this.rooms, this.customers allow to manage users and their rooms
+   * Example for a customer who subscribes to the room 'chat-room-kuzzle'
+   * customers = {
+   *  '87fd-gre7ggth544z' : { // -> connection id (like socket id)
+   *    'chat-room-kuzzle' : 'fr4fref4f8fre47fe' // -> mapping between user room and roomId
+   *  }
+   * }
    */
   this.customers = {};
   /**
@@ -34,9 +39,10 @@ module.exports = function HotelClerkController (kuzzle) {
    *  filtersTree = {
    *    message : { // -> collection name
    *      subject : { // -> attribute where a filter exists
-   *        termSubjectKuzzle : [ // -> curried function that return true if the subject is equal to kuzzle
-   *          'chat-room-kuzzle' // -> associated room
-   *        ]
+   *        termSubjectKuzzle : {
+   *          rooms: [ 'f45de4d8ef4f3ze4ffzer85d4fgkzm41'], // -> room id that match this filter
+   *          fn: function () {} // -> function to execute on collection message, on field subject
+   *        }
    *      }
    *    }
    *  }
@@ -47,56 +53,65 @@ module.exports = function HotelClerkController (kuzzle) {
   // BIND PRIVATE METHODS
   var tools = {};
   tools.addRoomForCustomer = _.bind(addRoomForCustomer, this);
-  tools.addRoomAndFilter = _.bind(addRoomAndFilter, this);
   tools.removeRoomForCustomer = _.bind(removeRoomForCustomer, this);
+  tools.createRoom = _.bind(createRoom, this);
   tools.cleanUpRooms = _.bind(cleanUpRooms, this);
 
   /**
-   * Add a connectionId to room, and init all information about room if it doesn't exist before
+   * Add a connectionId to room, and init information about room if it doesn't exist before
    *
-   * @param connectionId
-   * @param room
-   * @param collection
-   * @param filter
+   * @param {String} connectionId
+   * @param {String} room
+   * @param {String} collection
+   * @param {Object} filters
    */
-  this.addSubscription = function (connectionId, room, collection, filter) {
+  this.addSubscription = function (connectionId, room, collection, filters) {
+    var
+      deferred = q.defer(),
+      hotelClerkCtrl = this;
 
-    if (!this.rooms[room]) {
-      // If it's a new room, we have to calculate filters to apply on the future documents
-      var filters = tools.addRoomAndFilter(room, collection, filter);
+    tools.createRoom(room, collection, filters)
+      .then(function (roomId) {
+        // Add the room for the customer
+        tools.addRoomForCustomer(connectionId, room, roomId);
+        hotelClerkCtrl.rooms[roomId].count++;
+        deferred.resolve();
+      })
+      .catch(function (error) {
+        deferred.reject(error);
+      });
 
-      if (filters === false) {
-        return false;
-      }
-
-      this.rooms[room] = {
-        collection : collection,
-        count : 0,
-        filters : filters
-      };
-    }
-
-    // Add the room for the customer
-    tools.addRoomForCustomer(connectionId, room);
-    this.rooms[room].count++;
+    return deferred.promise;
   };
 
   /**
    * Remove the connectionId from the room and clean up room (delete room if there is no customer)
-   * @param connectionId
-   * @param room
-   * @returns {boolean}
+   *
+   * @param {String} connectionId
+   * @param {String} room
+   * @returns {Promise} promise
    */
   this.removeSubscription = function (connectionId, room) {
-    // Remove the room for the customer
-    tools.removeRoomForCustomer(connectionId, room);
+    var deferred = q.defer();
 
-    if (!this.rooms[room]) {
-      return false;
-    }
+    // Remove the room for the customer, don't wait for delete before continue
+    tools.removeRoomForCustomer(connectionId, room)
+      .then(function (roomId) {
+        if (!this.rooms[roomId]) {
+          deferred.reject('Room ' + room + ' with id ' + roomId + ' doesn\t exist');
+        }
 
-    this.rooms[room].count--;
-    tools.cleanUpRooms(room);
+        this.rooms[room].count--;
+        tools.cleanUpRooms(room);
+
+        deferred.resolve();
+
+      }.bind(this))
+      .catch( function (error) {
+        deferred.reject(error);
+      });
+
+    return deferred.promise;
   };
 
   /**
@@ -105,7 +120,7 @@ module.exports = function HotelClerkController (kuzzle) {
    * Call the cleanUpRooms function for manage empty room
    * Typically called on user disconnection
    *
-   * @param connectionId can be a socket.id
+   * @param {String} connectionId can be a socket.id
    */
   this.removeCustomerFromAllRooms = function (connectionId) {
     if (!this.customers[connectionId]) {
@@ -131,24 +146,65 @@ module.exports = function HotelClerkController (kuzzle) {
 /** MANAGE ROOMS **/
 
 /**
- * Associate the room to the connectionId in this.clients
- * Allow to manage later disconnection and delete socket/rooms/...
- * @param connectionId
- * @param room
+ * Create new room if needed
+ *
+ * @param {String} room
+ * @param {String} collection
+ * @param {Object} filters
+ * @returns {Promise} promise
  */
-addRoomForCustomer = function (connectionId, room) {
-  if (!this.customers[connectionId]) {
-    this.customers[connectionId] = [];
+createRoom = function (room, collection, filters) {
+  var
+    tools = {},
+    deferred = q.defer(),
+    stringifyObject = JSON.stringify({collection: collection, filters: filters}),
+    roomId = crypto.createHash('md5').update(stringifyObject).digest('hex');
+
+  if (!this.rooms[roomId]) {
+    // If it's a new room, we have to calculate filters to apply on the future documents
+    tools.addRoomAndFilters = _.bind(addRoomAndFilters, this);
+    tools.addRoomAndFilters(roomId, collection, filters)
+      .then(function (formattedFilters) {
+
+        hotelClerkCtrl.rooms[roomId] = {
+          count : 0,
+          filters : formattedFilters
+        };
+
+        deferred.resolve(roomId);
+      })
+      .catch(function (error) {
+        deferred.reject(error);
+      });
+  }
+  else {
+    deferred.resolve();
   }
 
-  this.customers[connectionId].push(room);
+  return deferred.promise;
+};
+
+/**
+ * Associate the room to the connectionId in this.clients
+ * Allow to manage later disconnection and delete socket/rooms/...
+ *
+ * @param {String} connectionId
+ * @param {String} room
+ * @param {String} roomId
+ */
+addRoomForCustomer = function (connectionId, room, roomId) {
+  if (!this.customers[connectionId]) {
+    this.customers[connectionId] = {};
+  }
+
+  this.customers[connectionId][room] = roomId;
 };
 
 /**
  * Delete room if no use has subscribed to this room and remove also the room in
  * filterTree object
  *
- * @param room
+ * @param {String} room
  */
 cleanUpRooms = function (room) {
   var tools = {};
@@ -169,30 +225,43 @@ cleanUpRooms = function (room) {
 
 /**
  * Remove the room from subscribed room from the user
+ * Return the roomId in user mapping
  *
- * @param connectionId
- * @param room
+ * @param {String} connectionId
+ * @param {String} room
+ * @return {Promise} promise
  */
 removeRoomForCustomer = function (connectionId, room) {
-  var tools = {};
+  var
+    deferred = q.defer(),
+    tools = {},
+    roomId;
+
   tools.cleanUpCustomers = _.bind(cleanUpCustomers, this);
 
   if (!this.customers[connectionId]) {
-    return false;
+    deferred.reject('The user with connection ' + connectionId + ' doesn\'t exist');
+    return deferred.promise;
   }
 
-  var index = this.customers[connectionId].indexOf(room);
-  if (index > -1) {
-    this.customers[connectionId].slice(index, 1);
+  if (!this.customers[connectionId][room]) {
+    deferred.reject('The user with connectionId ' + connectionId + ' doesn\'t listen the room ' + room);
+    return deferred.promise;
   }
 
+  roomId = this.customers[connectionId][room];
+  deferred.resolve(roomId);
+
+  delete this.customers[connectionId][room];
   tools.cleanUpCustomers(connectionId);
+
+  return deferred.promise;
 };
 
 /**
  * Remove the user if he didn't has subscribed to a room
  *
- * @param connectionId
+ * @param {String} connectionId
  */
 cleanUpCustomers = function (connectionId) {
   if (_.isEmpty(this.customers[connectionId])) {
@@ -204,40 +273,51 @@ cleanUpCustomers = function (connectionId) {
 /** MANAGE FILTERS TREE **/
 
 /**
- * Create filter function and add collection/field/filter/room to
+ * Create curried filters function and add collection/field/filters/room to
  * the filtersTree object
  *
- * @param room
- * @param collection
- * @param filter
+ * @param {String} roomId
+ * @param {String} collection
+ * @param {Object} filters
  */
-addRoomAndFilter = function (room, collection, filter) {
+addRoomAndFilters = function (roomId, collection, filters) {
+  var deferred = q.defer();
 
-  var filters = this.kuzzle.dsl.filterTransformer(filter);
+  this.kuzzle.dsl.filtersTransformer(filters)
+    .then(function (formatedFilters) {
 
-  if (filters === false) {
-    return false;
-  }
+      // formatedFilters contains something like { subject : { termSubjectKuzzle : { fn: function() {} } } }
+      async.each(Object.keys(formatedFilters), function (field) {
+        // filter contains something like  { termSubjectKuzzle : { fn: function() {} } }
+        var
+          filter = formatedFilters[field],
+          filterName = Object.keys(filter)[0];
 
-  async.each(Object.keys(filters), function (field) {
-    var filterFn = filters[field];
+        filter.rooms = [];
 
-    if (!this.filtersTree[collection]) {
-      this.filtersTree[collection] = {};
-    }
+        if (!this.filtersTree[collection]) {
+          this.filtersTree[collection] = formatedFilters;
+        }
 
-    if (!this.filtersTree[collection][field]) {
-      this.filtersTree[collection][field] = {};
-    }
+        if (!this.filtersTree[collection][field]) {
+          this.filtersTree[collection][field] = filter;
+        }
 
-    if (!this.filtersTree[collection][field][filterFn]) {
-      this.filtersTree[collection][field][filterFn] = [];
-    }
+        if (!this.filtersTree[collection][field][filterName]) {
+          this.filtersTree[collection][field] = _.merge(this.filtersTree[collection][field], filter);
+        }
 
-    this.filtersTree[collection][field][filterFn].push(room);
-  }.bind(this));
+        this.filtersTree[collection][field][filterName].rooms.push(roomId);
 
-  return filters;
+      }.bind(this));
+
+      deferred.resolve(formatedFilters);
+    })
+    .catch(function (error) {
+      deferred.reject(error);
+    });
+
+  return deferred.promise;
 };
 
 /**
@@ -246,7 +326,7 @@ addRoomAndFilter = function (room, collection, filter) {
  * If the filter was the only filter for the field, we have to remove the field
  * If the field was the only field of the collection, we have to remove the collection
 
- * @param room
+ * @param {String} room
  */
 removeRoomFromFilterTree = function (room) {
 
@@ -291,9 +371,9 @@ removeRoomFromFilterTree = function (room) {
 /**
  * Remove all unused entries in any level in filtersTree variable
  *
- * @param collection
- * @param filter
- * @param field
+ * @param {String} collection
+ * @param {String} filter
+ * @param {String} field
  */
 cleanUpTree = function (collection, filter, field) {
   // delete filter from field if it was the only room

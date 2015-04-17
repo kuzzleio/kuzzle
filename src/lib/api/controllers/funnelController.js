@@ -1,6 +1,4 @@
 var
-// Used for hash into md5 the data for generate a requestId
-  crypto = require('crypto'),
   socket = require('socket.io'),
   async = require('async'),
   q = require('q'),
@@ -71,26 +69,16 @@ module.exports = function FunnelController (kuzzle) {
           return false;
         }
 
-        // The request Id is optional, but we have to generate it if the user
-        // not provide it. We need to return this id for let the user know
-        // how to get real time information about his data
-        if (!object.requestId) {
-          var stringifyObject = JSON.stringify(object);
-          object.requestId = crypto.createHash('md5').update(stringifyObject).digest('hex');
-        }
-
-        this.notify(object);
-        deferred.resolve(this[object.controller][object.action](object, connectionId));
+        this[object.controller][object.action](object, connectionId)
+          .then(function (result) {
+            deferred.resolve(result);
+          })
+          .catch(function (error) {
+            deferred.reject(error);
+          });
       }.bind(this));
 
     return deferred.promise;
   };
 
-  /**
-   * Notify on the request Id channel that we have a new object
-   * @param object
-   */
-  this.notify = function (object) {
-    kuzzle.io.emit(object.requestId, object);
-  };
 };

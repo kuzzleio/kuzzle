@@ -1,7 +1,7 @@
 var
   _ = require('lodash');
 
-module.export = {
+module.exports = {
 
   // Returns true only if the value in field has at least one non-null value
   exists: function () {
