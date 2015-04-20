@@ -131,13 +131,15 @@ module.exports = function HotelClerkController (kuzzle) {
     }
 
     var rooms = this.customers[connectionId];
-    async.each(rooms, function (room) {
-      if (!this.rooms[room]) {
+    async.each(Object.keys(rooms), function (roomName) {
+      var roomId = rooms[roomName];
+      if (!this.rooms[roomId]) {
         return false;
       }
 
-      this.rooms[room].count--;
-      tools.cleanUpRooms(room);
+      this.rooms[roomId].count--;
+      tools.cleanUpRooms(roomId);
+      console.log("remove", this.filtersTree);
     }.bind(this));
 
     delete this.customers[connectionId];
@@ -180,7 +182,7 @@ createRoom = function (room, collection, filters) {
       });
   }
   else {
-    deferred.resolve();
+    deferred.resolve(roomId);
   }
 
   return deferred.promise;
@@ -229,10 +231,10 @@ cleanUpRooms = function (roomId) {
  * Return the roomId in user mapping
  *
  * @param {String} connectionId
- * @param {String} room
+ * @param {String} roomName
  * @return {Promise} promise
  */
-removeRoomForCustomer = function (connectionId, room) {
+removeRoomForCustomer = function (connectionId, roomName) {
   var
     deferred = q.defer(),
     tools = {},
@@ -245,15 +247,15 @@ removeRoomForCustomer = function (connectionId, room) {
     return deferred.promise;
   }
 
-  if (!this.customers[connectionId][room]) {
-    deferred.reject('The user with connectionId ' + connectionId + ' doesn\'t listen the room ' + room);
+  if (!this.customers[connectionId][roomName]) {
+    deferred.reject('The user with connectionId ' + connectionId + ' doesn\'t listen the room ' + roomName);
     return deferred.promise;
   }
 
-  roomId = this.customers[connectionId][room];
+  roomId = this.customers[connectionId][roomName];
   deferred.resolve(roomId);
 
-  delete this.customers[connectionId][room];
+  delete this.customers[connectionId][roomName];
   tools.cleanUpCustomers(connectionId);
 
   return deferred.promise;
