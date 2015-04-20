@@ -18,7 +18,15 @@ module.exports = function WriteController (kuzzle) {
     kuzzle.log.verbose('emit event request:http');
     kuzzle.emit('data:create', data);
 
-    deferred.resolve({id: data.content._id, requestId: data.requestId});
+    // Test saved filters for notify rooms in a next step
+    kuzzle.dsl.testFilters(data)
+      .then(function (rooms) {
+        console.log("ok!", rooms);
+        deferred.resolve({ data: data, rooms: rooms});
+      })
+      .catch(function (error) {
+        deferred.reject(error);
+      });
 
     return deferred.promise;
   };

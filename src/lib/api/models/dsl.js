@@ -60,10 +60,12 @@ module.exports = function Dsl (kuzzle) {
 
 
   this.testFilters = function (data) {
-    var deferred = q.defer();
+    var
+      deferred = q.defer(),
+      rooms = [];
 
     if (!data.collection) {
-      deferred.reject('The collectiond doesn\'t contain a collection');
+      deferred.reject('The collection doesn\'t contain a collection');
       return deferred.promise;
     }
 
@@ -81,19 +83,16 @@ module.exports = function Dsl (kuzzle) {
       }
 
       async.each(Object.keys(fieldFilters), function (functionName, callbackField) {
-        if (!fieldFilters[functionName].fn) {
-          callbackField();
-          return false;
+        if (fieldFilters[functionName].fn(data.content[field])) {
+          rooms = _.merge(rooms, fieldFilters[functionName].rooms);
         }
 
-        if (fieldFilters[functionName].fn(data.content[field])) {
-          deferred.resolve();
-        }
+        callbackField();
       }, function () {
         callbackContent();
       });
     }, function () {
-      deferred.reject();
+      deferred.resolve(rooms);
     });
 
     return deferred.promise;

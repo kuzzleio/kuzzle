@@ -18,8 +18,9 @@ module.exports = function FunnelController (kuzzle) {
   /**
    * Execute in parallel all tests for check whether the object is well constructed
    * Then generate a requestId if not provided and execute the right controller/action
-   * @param object
-   * @param connectionId may be a socket id
+   *
+   * @param {Object} object
+   * @param {String} connectionId may be a socket id
    * depending on who call execute (websocket or http)
    */
   this.execute = function (object, connectionId) {
