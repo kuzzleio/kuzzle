@@ -149,6 +149,33 @@ module.exports = function HotelClerkController (kuzzle) {
 
     delete this.customers[connectionId];
   };
+
+  /**
+   * Allow to retrieve the real room names (the one registered by the user) according to
+   * the id (= filter and collection md5 hash)
+   *
+   * @param {String} roomsIds
+   * @returns {Promise} promise
+   */
+  this.findRoomNamesFromIds = function (roomsIds) {
+    var
+      deferred = q.defer(),
+      roomNames = [];
+
+    async.each(roomsIds, function (roomsId, callback) {
+      if (!this.rooms[roomsId]) {
+        callback();
+        return false;
+      }
+
+      roomNames = roomNames.concat(this.rooms[roomsId].names);
+      callback();
+    }.bind(this), function () {
+      deferred.resolve(roomNames);
+    });
+
+    return deferred.promise;
+  };
 };
 
 
@@ -176,6 +203,7 @@ createRoom = function (room, collection, filters) {
     tools.addRoomAndFilters(roomId, collection, filters)
       .then(function (pathFilterList) {
         this.rooms[roomId] = {
+          names: [],
           count : 0,
           filters : pathFilterList
         };
@@ -198,15 +226,16 @@ createRoom = function (room, collection, filters) {
  * Allow to manage later disconnection and delete socket/rooms/...
  *
  * @param {String} connectionId
- * @param {String} room
+ * @param {String} roomName
  * @param {String} roomId
  */
-addRoomForCustomer = function (connectionId, room, roomId) {
+addRoomForCustomer = function (connectionId, roomName, roomId) {
   if (!this.customers[connectionId]) {
     this.customers[connectionId] = {};
   }
 
-  this.customers[connectionId][room] = roomId;
+  this.rooms[roomId].names = _.uniq(this.rooms[roomId].names.concat([roomName]));
+  this.customers[connectionId][roomName] = roomId;
 };
 
 /**

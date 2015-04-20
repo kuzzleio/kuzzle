@@ -84,7 +84,7 @@ module.exports = function Dsl (kuzzle) {
 
       async.each(Object.keys(fieldFilters), function (functionName, callbackField) {
         if (fieldFilters[functionName].fn(data.content[field])) {
-          rooms = _.merge(rooms, fieldFilters[functionName].rooms);
+          rooms = rooms.concat(fieldFilters[functionName].rooms);
         }
 
         callbackField();
@@ -92,9 +92,13 @@ module.exports = function Dsl (kuzzle) {
         callbackContent();
       });
     }, function () {
-      deferred.resolve(rooms);
+      kuzzle.hotelClerk.findRoomNamesFromIds(rooms)
+        .then(function (roomsNames) {
+          deferred.resolve(roomsNames);
+        });
     });
 
     return deferred.promise;
   };
+
 };

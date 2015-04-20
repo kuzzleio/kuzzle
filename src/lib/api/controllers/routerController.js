@@ -80,7 +80,12 @@ module.exports = function RouterController (kuzzle) {
         // execute the funnel. If error occurred, notify users
         kuzzle.funnel.execute(data, socket.id)
           .then(function onExecuteSuccess (result) {
-          })
+            if (result.rooms) {
+              async.each(result.rooms, function (roomName) {
+                routerCtrl.notify(roomName, result.data);
+              });
+            }
+          }.bind(this))
           .catch(function onExecuteError(error) {
             routerCtrl.notify(data.requestId, {error: error}, socket);
             kuzzle.log.verbose({error: error});
