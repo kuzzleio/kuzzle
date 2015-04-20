@@ -5,7 +5,7 @@ RUN npm install -g \
     grunt-cli \
     jslint \
     grunt-jslint \
-    node-inspector
+    node-inspector@0.9.2
 
 ADD /scripts /
 RUN chmod 755 /*.sh

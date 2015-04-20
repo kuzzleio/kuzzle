@@ -75,8 +75,8 @@ module.exports = function HotelClerkController (kuzzle) {
       .then(function (roomId) {
         // Add the room for the customer
         tools.addRoomForCustomer(connectionId, room, roomId);
-        console.log("Filters tree", kuzzle.hotelClerk.filtersTree);
         this.rooms[roomId].count++;
+        console.log("add", this.filtersTree);
 
         deferred.resolve();
       }.bind(this))
@@ -106,9 +106,9 @@ module.exports = function HotelClerkController (kuzzle) {
 
         this.rooms[roomId].count--;
         tools.cleanUpRooms(roomId);
-        console.log("Filters tree", kuzzle.hotelClerk.filtersTree);
-        deferred.resolve();
+        console.log("remove", this.filtersTree);
 
+        deferred.resolve();
       }.bind(this))
       .catch( function (error) {
         deferred.reject(error);
@@ -358,7 +358,7 @@ removeRoomFromFilterTree = function (roomId) {
   var filters = this.rooms[roomId].filters;
 
   async.each(filters, function (filterPath, callback) {
-    tools.recursiveCleanUpTree(this.filtersTree, filterPath);
+    tools.recursiveCleanUpTree(this.filtersTree, filterPath, roomId);
     callback();
 
   }.bind(this), function () {
@@ -368,42 +368,52 @@ removeRoomFromFilterTree = function (roomId) {
   return deferred.promise;
 };
 
-recursiveCleanUpTree = function (object, path) {
+/**
+ * Recursively test filtersTree object according to the path.
+ * Delete entry if it's empty and reach back in the object
+ *
+ * @param {Object} object
+ * @param {String} path
+ * @param {String} roomId
+ */
+recursiveCleanUpTree = function (object, path, roomId) {
   var
     parent = object,
-    subPath;
+    subPath,
+    index,
+    i = 0;
 
   path = path.split('.');
 
-  for (var i = 0; i < path.length -1; i += 1) {
+  // Loop inside the object for find the right entry
+  for (i = 0; i < path.length-1; i++) {
     parent = parent[path[i]];
   }
+
   subPath = path[path.length-1];
-  if((parent[subPath].rooms && _.isEmpty(parent[subPath].rooms)) || _.isEmpty(parent[subPath])) {
-    delete parent[subPath];
+
+  // If the current entry is the curried function (that contains the room list and the function definition)
+  if (parent[subPath].rooms !== undefined) {
+    index = parent[subPath].rooms.indexOf(roomId);
+    if (index > -1) {
+      parent[subPath].rooms.slice(index, 1);
+    }
+
+    if (parent[subPath].rooms.length > 1) {
+      return false;
+    }
+  }
+  // If it's not a function, test if the entry is not empty
+  else if (!_.isEmpty(parent[subPath])) {
+    return false;
   }
 
-  path = path.shift();
+  delete parent[subPath];
+
+  path.pop();
   if (_.isEmpty(path)) {
     return false;
   }
 
   return recursiveCleanUpTree(object, path.join('.'));
-};
-
-getPointerWithPath = function (obj, path, def) {
-  var i, len;
-
-  for(i = 0,path = path.split('.'), len = path.length; i < len; i++){
-    if(!obj || typeof obj !== 'object') {
-      return def;
-    }
-    obj = obj[path[i]];
-  }
-
-  if(obj === undefined) {
-    return def;
-  }
-
-  return obj;
 };

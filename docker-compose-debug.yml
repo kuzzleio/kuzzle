@@ -1,6 +1,6 @@
 kuzzle:
   image: kuzzle
-  command: /run-debug.sh
+  command: tail -f /dev/null
   volumes:
     - "src:/var/app"
   ports:
