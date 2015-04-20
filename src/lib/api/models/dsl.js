@@ -3,6 +3,7 @@ var
   methods = require('./methods'),
   async = require('async'),
   _ = require('lodash'),
+  crypto = require('crypto'),
   q = require('q');
 
 
@@ -23,20 +24,14 @@ module.exports = function Dsl (kuzzle) {
     async.each(Object.keys(filters), function (fn, callback) {
       var
         field = Object.keys(filters[fn])[0],
-        curriedName = filters[fn][field];
+        name = filters[fn][field];
 
-      if (_.isArray(curriedName)) {
-        curriedName = _.sortBy(_.flattenDeep(curriedName));
-      }
+      name = JSON.stringify(name);
+      name = crypto.createHash('md5').update(name).digest('hex');
+      name = fn+field+'-'+name;
 
-      if (_.isObject(curriedName)) {
-
-      }
-
-      curriedName = fn+field+curriedName.toString();
-
-      filtersNames[curriedName] = {};
-      filtersNames[curriedName][fn] = filters[fn];
+      filtersNames[name] = {};
+      filtersNames[name][fn] = filters[fn];
 
       callback();
     }, function () {

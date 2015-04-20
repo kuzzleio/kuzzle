@@ -63,20 +63,27 @@ module.exports = function HotelClerkController (kuzzle) {
    * Add a connectionId to room, and init information about room if it doesn't exist before
    *
    * @param {String} connectionId
-   * @param {String} room
+   * @param {String} roomName
    * @param {String} collection
    * @param {Object} filters
+   * @return {Promise} promise. Return nothing on success. Reject with error if the
+   * user has already subscribe to this room name (just for room with same name, but we not trigger error
+   * if the room has a different name with same filter) or if there is an error during room creation
    */
-  this.addSubscription = function (connectionId, room, collection, filters) {
+  this.addSubscription = function (connectionId, roomName, collection, filters) {
     var
       deferred = q.defer();
 
-    tools.createRoom(room, collection, filters)
+    if (this.customers[connectionId] && this.customers[connectionId][roomName]) {
+      deferred.reject('User already subscribe to the room '+roomName);
+      return deferred.promise;
+    }
+
+    tools.createRoom(roomName, collection, filters)
       .then(function (roomId) {
         // Add the room for the customer
-        tools.addRoomForCustomer(connectionId, room, roomId);
+        tools.addRoomForCustomer(connectionId, roomName, roomId);
         this.rooms[roomId].count++;
-        console.log("add", this.filtersTree);
 
         deferred.resolve();
       }.bind(this))
@@ -106,7 +113,6 @@ module.exports = function HotelClerkController (kuzzle) {
 
         this.rooms[roomId].count--;
         tools.cleanUpRooms(roomId);
-        console.log("remove", this.filtersTree);
 
         deferred.resolve();
       }.bind(this))
@@ -139,7 +145,6 @@ module.exports = function HotelClerkController (kuzzle) {
 
       this.rooms[roomId].count--;
       tools.cleanUpRooms(roomId);
-      console.log("remove", this.filtersTree);
     }.bind(this));
 
     delete this.customers[connectionId];
