@@ -1,6 +1,7 @@
 var
   // For create the unique id of the object that the user send
   uuid = require('node-uuid'),
+  async = require('async'),
   q = require('q');
 
 module.exports = function WriteController (kuzzle) {
@@ -18,6 +19,7 @@ module.exports = function WriteController (kuzzle) {
     kuzzle.emit('data:create', data);
 
     deferred.resolve({id: data.content._id, requestId: data.requestId});
+
     return deferred.promise;
   };
 

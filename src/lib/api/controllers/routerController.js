@@ -36,7 +36,7 @@ module.exports = function RouterController (kuzzle) {
     };
 
     // define routes
-    api.post('/article', function (request, response) {
+    api.post('/', function (request, response) {
       if (request.body) {
         var data = wrapObject(request.body, 'write', 'article', 'create');
 

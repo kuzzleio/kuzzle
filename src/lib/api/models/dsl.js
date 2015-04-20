@@ -41,6 +41,13 @@ module.exports = function Dsl (kuzzle) {
     return deferred.promise;
   };
 
+  /**
+   * Create a curried function according to filter
+   *
+   * @param name
+   * @param filter
+   * @returns {String} a new curried function
+   */
   this.createCurriedFunction = function (name, filter) {
     var
       fn = Object.keys(filter)[0],
@@ -51,4 +58,44 @@ module.exports = function Dsl (kuzzle) {
     return _.curry(curried(value));
   };
 
+
+  this.testFilters = function (data) {
+    var deferred = q.defer();
+
+    if (!data.collection) {
+      deferred.reject('The collectiond doesn\'t contain a collection');
+      return deferred.promise;
+    }
+
+    if (!kuzzle.hotelClerk.filtersTree[data.collection]) {
+      deferred.reject();
+      return deferred.promise;
+    }
+
+    async.each(Object.keys(data.content), function (field, callbackContent) {
+      var fieldFilters = kuzzle.hotelClerk.filtersTree[data.collection][field];
+
+      if (!fieldFilters) {
+        callbackContent();
+        return false;
+      }
+
+      async.each(Object.keys(fieldFilters), function (functionName, callbackField) {
+        if (!fieldFilters[functionName].fn) {
+          callbackField();
+          return false;
+        }
+
+        if (fieldFilters[functionName].fn(data.content[field])) {
+          deferred.resolve();
+        }
+      }, function () {
+        callbackContent();
+      });
+    }, function () {
+      deferred.reject();
+    });
+
+    return deferred.promise;
+  };
 };
