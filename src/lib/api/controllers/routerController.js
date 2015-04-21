@@ -18,6 +18,7 @@ module.exports = function RouterController (kuzzle) {
   this.controllers = ['write', 'read', 'subscribe'];
 
   this.initRouterHttp = function () {
+    var routerCtrl = this;
 
     this.router = new Router();
 
@@ -43,10 +44,10 @@ module.exports = function RouterController (kuzzle) {
         kuzzle.funnel.execute(data, request)
           .then(function onExecuteSuccess (result) {
             // Send response and close connection
-            this.notify(result.requestId, result);
+            routerCtrl.notify(result.requestId, result);
             response.writeHead(200, {'Content-Type': 'application/json'});
             response.end(JSON.stringify({error: null, result: result}));
-          }.bind(this))
+          })
           .catch(function onExecuteError (error) {
             return sendError(error, response);
           });
@@ -85,7 +86,7 @@ module.exports = function RouterController (kuzzle) {
                 routerCtrl.notify(roomName, result.data);
               });
             }
-          }.bind(this))
+          })
           .catch(function onExecuteError(error) {
             routerCtrl.notify(data.requestId, {error: error}, socket);
             kuzzle.log.verbose({error: error});
