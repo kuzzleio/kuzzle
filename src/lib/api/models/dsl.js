@@ -65,7 +65,7 @@ module.exports = function Dsl (kuzzle) {
       rooms = [];
 
     if (!data.collection) {
-      deferred.reject('The collection doesn\'t contain a collection');
+      deferred.reject('The data doesn\'t contain a collection');
       return deferred.promise;
     }
 
