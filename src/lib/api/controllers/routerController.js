@@ -66,7 +66,7 @@ module.exports = function RouterController (kuzzle) {
   /**
    * Create asynchronously listeners on all rooms defined by this.controllers
    *
-   * @param socket
+   * @param {Object} socket
    */
   this.routeWebsocket = function (socket) {
     var routerCtrl = this;
@@ -119,9 +119,9 @@ module.exports = function RouterController (kuzzle) {
    * If socket is defined, we send the event only on this socket,
    * otherwise, we send to all sockets on the room
    *
-   * @param room
-   * @param data
-   * @param socket
+   * @param {String} room
+   * @param {Object} data
+   * @param {Object} socket
    */
   this.notify = function (room, data, socket) {
     if (socket) {

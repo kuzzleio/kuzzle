@@ -59,6 +59,12 @@ module.exports = function Dsl (kuzzle) {
   };
 
 
+  /**
+   * Test all filters in filtersTree for test which room to notify
+   *
+   * @param {Object} data
+   * @returns {Promise} promise. Resolve a rooms list that we need to notify
+   */
   this.testFilters = function (data) {
     var
       deferred = q.defer(),
