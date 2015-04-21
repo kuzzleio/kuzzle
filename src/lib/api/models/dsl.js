@@ -51,6 +51,7 @@ module.exports = function Dsl (kuzzle) {
   this.createCurriedFunction = function (name, filter) {
     var
       fn = Object.keys(filter)[0],
+      field = Object.keys(filter[fn])[0],
       value = filter[fn][field];
 
     curried = _.curry(methods[fn]);
