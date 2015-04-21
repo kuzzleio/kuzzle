@@ -55,7 +55,7 @@ module.exports = function RouterController (kuzzle) {
       else {
         return sendError('Empty data', response);
       }
-    }.bind(this));
+    });
 
   };
 
@@ -72,7 +72,7 @@ module.exports = function RouterController (kuzzle) {
   this.routeWebsocket = function (socket) {
     var routerCtrl = this;
 
-    async.each(this.controllers, function recordSocketListener (controller) {
+    async.each(routerCtrl.controllers, function recordSocketListener (controller) {
 
       socket.on(controller, function (data) {
         kuzzle.log.silly('Handle Websocket', controller, 'request');
