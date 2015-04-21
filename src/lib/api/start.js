@@ -8,7 +8,9 @@
 var
   servers = require('./private/servers'),
   FunnelController = require('./controllers/funnelController'),
-  RouterController = require('./controllers/routerController');
+  RouterController = require('./controllers/routerController'),
+  HotelClerkController = require('./controllers/hotelClerkController'),
+  Dsl = require('./models/dsl');
 
 
 module.exports = function start (params) {
@@ -22,6 +24,10 @@ module.exports = function start (params) {
   this.funnel = new FunnelController(this);
   this.funnel.init();
   this.router = new RouterController(this);
+
+  // Init the controller that will create and destroy room and associate user with room
+  this.hotelClerk = new HotelClerkController(this);
+  this.dsl = new Dsl(this);
 
   servers.initAll(this, params);
 

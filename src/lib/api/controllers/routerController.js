@@ -3,11 +3,13 @@ var
   async = require('async'),
   _ = require('lodash'),
   Router = require('router'),
-  broker = require('../../services/broker');
-// For parse a request sent by user
+  broker = require('../../services/broker'),
+  // For parse a request sent by user
   bodyParser = require('body-parser'),
-// For final step to respond to HTTP request
-  finalhandler = require('finalhandler');
+  // For final step to respond to HTTP request
+  finalhandler = require('finalhandler'),
+  // Used for hash into md5 the data for generate a requestId
+  crypto = require('crypto');
 
 
 module.exports = function RouterController (kuzzle) {
@@ -16,6 +18,7 @@ module.exports = function RouterController (kuzzle) {
   this.controllers = ['write', 'read', 'subscribe'];
 
   this.initRouterHttp = function () {
+    var routerCtrl = this;
 
     this.router = new Router();
 
@@ -26,26 +29,33 @@ module.exports = function RouterController (kuzzle) {
     // add a body parsing middleware to our API
     api.use(bodyParser.json());
 
-    api.post('/article', function (request, response) {
+    // define the function that will be call in case of error
+    var sendError = function (error, response) {
+      response.writeHead(400, {'Content-Type': 'application/json'});
+      response.end(JSON.stringify({error: error, result: null}));
+      return false;
+    };
+
+    // define routes
+    api.post('/', function (request, response) {
       if (request.body) {
         var data = wrapObject(request.body, 'write', 'article', 'create');
-        kuzzle.funnel.execute(data)
+
+        kuzzle.funnel.execute(data, request)
           .then(function onExecuteSuccess (result) {
             // Send response and close connection
+            routerCtrl.notify(result.requestId, result);
             response.writeHead(200, {'Content-Type': 'application/json'});
             response.end(JSON.stringify({error: null, result: result}));
           })
           .catch(function onExecuteError (error) {
-            response.writeHead(400, {'Content-Type': 'application/json'});
-            response.end(JSON.stringify({error: error, result: null}));
+            return sendError(error, response);
           });
       }
       else {
-        // Send response and close connection
-        response.writeHead(400, {'Content-Type': 'application/json'});
-        response.end(JSON.stringify({error: 'Empty data'}));
+        return sendError('Empty data', response);
       }
-    }.bind(this));
+    });
 
   };
 
@@ -54,13 +64,40 @@ module.exports = function RouterController (kuzzle) {
     this.router(request, response, finalhandler(request, response));
   };
 
+  /**
+   * Create asynchronously listeners on all rooms defined by this.controllers
+   *
+   * @param {Object} socket
+   */
   this.routeWebsocket = function (socket) {
-    async.each(this.controllers, function recordSocketListener (controller) {
+    var routerCtrl = this;
+
+    async.each(routerCtrl.controllers, function recordSocketListener (controller) {
+
       socket.on(controller, function (data) {
         kuzzle.log.silly('Handle Websocket', controller, 'request');
         data = wrapObject(data, controller);
-        kuzzle.funnel.execute(data);
+
+        // execute the funnel. If error occurred, notify users
+        kuzzle.funnel.execute(data, socket.id)
+          .then(function onExecuteSuccess (result) {
+            if (result.rooms) {
+              async.each(result.rooms, function (roomName) {
+                routerCtrl.notify(roomName, result.data);
+              });
+            }
+          })
+          .catch(function onExecuteError(error) {
+            routerCtrl.notify(data.requestId, {error: error}, socket);
+            kuzzle.log.verbose({error: error});
+          });
       });
+
+    });
+
+    // add a specific disconnect event for websocket
+    socket.on('disconnect', function () {
+      kuzzle.hotelClerk.removeCustomerFromAllRooms(socket.id);
     });
   };
 
@@ -77,6 +114,24 @@ module.exports = function RouterController (kuzzle) {
       });
     });
   };
+
+  /**
+   * Notify by message data on the request Id channel
+   * If socket is defined, we send the event only on this socket,
+   * otherwise, we send to all sockets on the room
+   *
+   * @param {String} room
+   * @param {Object} data
+   * @param {Object} socket
+   */
+  this.notify = function (room, data, socket) {
+    if (socket) {
+      socket.emit(room, data);
+    }
+    else {
+      kuzzle.io.emit(room, data);
+    }
+  };
 };
 
 function wrapObject (data, controller, collection, action) {
@@ -92,6 +147,14 @@ function wrapObject (data, controller, collection, action) {
 
   if (action) {
     data.action = action;
+  }
+
+  // The request Id is optional, but we have to generate it if the user
+  // not provide it. We need to return this id for let the user know
+  // how to get real time information about his data
+  if (!data.requestId) {
+    var stringifyObject = JSON.stringify(data);
+    data.requestId = crypto.createHash('md5').update(stringifyObject).digest('hex');
   }
 
   return data;

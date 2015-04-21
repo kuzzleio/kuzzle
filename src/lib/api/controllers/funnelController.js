@@ -1,6 +1,4 @@
 var
-// Used for hash into md5 the data for generate a requestId
-  crypto = require('crypto'),
   socket = require('socket.io'),
   async = require('async'),
   q = require('q'),
@@ -20,9 +18,12 @@ module.exports = function FunnelController (kuzzle) {
   /**
    * Execute in parallel all tests for check whether the object is well constructed
    * Then generate a requestId if not provided and execute the right controller/action
-   * @param object
+   *
+   * @param {Object} object
+   * @param {String} connectionId may be a socket id
+   * depending on who call execute (websocket or http)
    */
-  this.execute = function (object) {
+  this.execute = function (object, connectionId) {
     var deferred = q.defer();
 
     async.parallel([
@@ -53,7 +54,7 @@ module.exports = function FunnelController (kuzzle) {
         // Test if a controller and an action exist for the object
         function (callback) {
           if (!this[object.controller] || !this[object.controller][object.action] ||
-            typeof this[object.controller][object.action] !== 'function') {
+              typeof this[object.controller][object.action] !== 'function') {
             kuzzle.log.error('No corresponding action', object.action, 'in controller', object.controller);
             callback('No corresponding action and/or controller');
 
@@ -69,26 +70,16 @@ module.exports = function FunnelController (kuzzle) {
           return false;
         }
 
-        // The request Id is optional, but we have to generate it if the user
-        // not provide it. We need to return this id for let the user know
-        // how to get real time information about his data
-        if (!object.requestId) {
-          var stringifyObject = JSON.stringify(object);
-          object.requestId = crypto.createHash('md5').update(stringifyObject).digest('hex');
-        }
-
-        this.notify(object);
-        deferred.resolve(this[object.controller][object.action](object));
+        this[object.controller][object.action](object, connectionId)
+          .then(function (result) {
+            deferred.resolve(result);
+          })
+          .catch(function (error) {
+            deferred.reject(error);
+          });
       }.bind(this));
 
     return deferred.promise;
   };
 
-  /**
-   * Notify on the request Id channel that we have a new object
-   * @param object
-   */
-  this.notify = function (object) {
-    kuzzle.io.emit(object.requestId, object);
-  };
 };
