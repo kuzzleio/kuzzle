@@ -357,7 +357,7 @@ addRoomAndFilters = function (roomId, collection, filters) {
             fn: this.kuzzle.dsl.createCurriedFunction(name, filtersNames[name])
           };
 
-          // push the path to in filtersTree for retrieve the function
+          // push the path in filtersTree for retrieve the function
           pathFilterList.push(collection+'.'+field+'.'+name);
         }
 
