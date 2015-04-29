@@ -1,6 +1,6 @@
-#!/bin/bash
+#!/bin/sh
 
-function usage
+usage()
 {
     echo "Usage: $0 directory"
     exit 1
