@@ -99,10 +99,7 @@ module.exports = function Dsl (kuzzle) {
         callbackContent();
       });
     }, function () {
-      kuzzle.hotelClerk.findRoomNamesFromIds(rooms)
-        .then(function (roomsNames) {
-          deferred.resolve(roomsNames);
-        });
+      deferred.resolve( rooms );
     });
 
     return deferred.promise;

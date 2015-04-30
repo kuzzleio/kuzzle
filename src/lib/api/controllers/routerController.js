@@ -84,7 +84,7 @@ module.exports = function RouterController (kuzzle) {
           .then(function onExecuteSuccess (result) {
             if (result.rooms) {
               async.each(result.rooms, function (roomName) {
-                routerCtrl.notify(roomName, result.data);
+                routerCtrl.notify(roomName, result.data, result.connections);
               });
             }
           })
@@ -125,9 +125,11 @@ module.exports = function RouterController (kuzzle) {
    * @param {Object} data
    * @param {Object} socket
    */
-  this.notify = function (room, data, socket) {
-    if (socket) {
-      socket.emit(room, data);
+  this.notify = function (room, data, connections) {
+    if (connections) {
+      async.each(connections, function (socketId) {
+        kuzzle.io.to(socketId).emit(room, data);
+      });
     }
     else {
       kuzzle.io.emit(room, data);
