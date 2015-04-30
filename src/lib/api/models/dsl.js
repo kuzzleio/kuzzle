@@ -3,6 +3,7 @@ var
   methods = require('./methods'),
   async = require('async'),
   _ = require('lodash'),
+  stringify = require('json-stable-stringify'),
   crypto = require('crypto'),
   q = require('q');
 
@@ -26,7 +27,7 @@ module.exports = function Dsl (kuzzle) {
         field = Object.keys(filters[fn])[0],
         name = filters[fn][field];
 
-      name = JSON.stringify(name);
+      name = stringify(name);
       name = crypto.createHash('md5').update(name).digest('hex');
       name = fn+field+'-'+name;
 

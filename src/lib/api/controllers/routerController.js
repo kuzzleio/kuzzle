@@ -2,6 +2,7 @@ var
 // library for execute asynchronous methods
   async = require('async'),
   _ = require('lodash'),
+  stringify = require('json-stable-stringify'),
   Router = require('router'),
   broker = require('../../services/broker'),
   // For parse a request sent by user
@@ -32,7 +33,7 @@ module.exports = function RouterController (kuzzle) {
     // define the function that will be call in case of error
     var sendError = function (error, response) {
       response.writeHead(400, {'Content-Type': 'application/json'});
-      response.end(JSON.stringify({error: error, result: null}));
+      response.end(stringify({error: error, result: null}));
       return false;
     };
 
@@ -46,7 +47,7 @@ module.exports = function RouterController (kuzzle) {
             // Send response and close connection
             routerCtrl.notify(result.requestId, result);
             response.writeHead(200, {'Content-Type': 'application/json'});
-            response.end(JSON.stringify({error: null, result: result}));
+            response.end(stringify({error: null, result: result}));
           })
           .catch(function onExecuteError (error) {
             return sendError(error, response);
@@ -153,7 +154,7 @@ function wrapObject (data, controller, collection, action) {
   // not provide it. We need to return this id for let the user know
   // how to get real time information about his data
   if (!data.requestId) {
-    var stringifyObject = JSON.stringify(data);
+    var stringifyObject = stringify(data);
     data.requestId = crypto.createHash('md5').update(stringifyObject).digest('hex');
   }
 

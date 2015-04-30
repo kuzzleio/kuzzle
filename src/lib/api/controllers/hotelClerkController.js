@@ -2,6 +2,7 @@ var
   _ = require('lodash'),
   async = require('async'),
   q = require('q'),
+  stringify = require('json-stable-stringify'),
   // module for manage md5 hash
   crypto = require('crypto');
 
@@ -194,7 +195,7 @@ createRoom = function (room, collection, filters) {
   var
     tools = {},
     deferred = q.defer(),
-    stringifyObject = JSON.stringify({collection: collection, filters: filters}),
+    stringifyObject = stringify({collection: collection, filters: filters}),
     roomId = crypto.createHash('md5').update(stringifyObject).digest('hex');
 
   if (!this.rooms[roomId]) {

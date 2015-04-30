@@ -1,4 +1,5 @@
 var
+  stringify = require('json-stable-stringify'),
 // Main library for manipulate amqp protocol like RabbitMQ
   amqp = require('amqplib'),
 // Promise created by amqplib for handle amqp connection
@@ -28,7 +29,7 @@ module.exports = {
       return conn.createChannel()
         .then(function (ch) {
           ch.assertQueue(room, {durable: true});
-          ch.sendToQueue(room, new Buffer(JSON.stringify(data)), {deliveryMode: true});
+          ch.sendToQueue(room, new Buffer(stringify(data)), {deliveryMode: true});
         });
     });
   },
