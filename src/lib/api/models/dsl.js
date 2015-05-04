@@ -100,7 +100,7 @@ module.exports = function Dsl (kuzzle) {
         callbackContent();
       });
     }, function () {
-      deferred.resolve( rooms );
+      deferred.resolve(rooms);
     });
 
     return deferred.promise;

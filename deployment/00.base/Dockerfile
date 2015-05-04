@@ -23,8 +23,6 @@ RUN tar xvf /root/node-v0.12.1-linux-x64.tar.gz -C /opt/ && \
     ln -s /opt/node-v0.12.1-linux-x64/bin/* /usr/local/bin/
 RUN npm install -g pm2
 
-RUN npm install  json-stable-stringify
-
 RUN chsh -s /bin/zsh && \
     curl -L https://raw.github.com/robbyrussell/oh-my-zsh/master/tools/install.sh | zsh && \
     sed -ri 's|ZSH_THEME="[^"]+"|ZSH_THEME="kardan"|' ~/.zshrc && \
