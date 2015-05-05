@@ -1,7 +1,92 @@
 var
-  _ = require('lodash');
+  _ = require('lodash'),
+  async = require('async'),
+  operators = require('./operators'),
+  q = require('q');
 
 module.exports = {
+
+  /**
+   * Build filtersTree according to a given filter for range filter and return the formatted filter
+   * that can contains filters: gte, gt, lte, lt, from, to
+   *
+   * @param {Object} filtersTree pointer on object filtersTree defined in hotelClerkController
+   * @param {String} roomId
+   * @param {String} collection
+   * @param {Object} filter given by user on subscribe
+   * @return {Promise} the formatted filter that need to be added to the room
+   */
+  range: function (filtersTree, roomId, collection, filter) {
+
+    var
+      deferred = q.defer(),
+      field,
+      formattedFilters;
+
+    if (_.isEmpty(filter)) {
+      deferred.reject('A filter can\'t be empty');
+      return deferred.promise;
+    }
+
+    field = Object.keys(filter)[0];
+    formattedFilters = {};
+
+    async.each(Object.keys(filter[field]), function (fnAndValue, callback) {
+      var
+        fn = Object.keys(fnAndValue)[0],
+        value = fnAndValue[fn],
+        curriedFunctionName = 'range' + field + fn + value;
+
+      var result = buildCurriedFunction(filtersTree, 'range', collection, field, curriedFunctionName, roomId);
+      if (result.error) {
+        callback(result.error);
+        return false;
+      }
+
+      formattedFilters[result.path] = result.filter;
+
+      callback();
+    }, function (error) {
+      if (error) {
+        deferred.reject(error);
+      }
+
+      deferred.resolve({and : formattedFilters});
+    });
+
+    return deferred.promise;
+  },
+
+  /**
+   * Build rooms and filtersTree according to a given filter for term filter (test equality)
+   *
+   * @param {Object} filtersTree pointer on object filtersTree defined in hotelClerkController
+   * @param {String} roomId
+   * @param {String} collection
+   * @param {Object} filter given by user on subscribe
+   * @return {Promise} the formatted filter that need to be added to the room
+   */
+  term: function (filtersTree, roomId, collection, filter) {
+    var
+      deferred = q.defer(),
+      field = Object.keys(filter)[0],
+      value = filter[field],
+      formattedFilters = {},
+      curriedFunctionName = 'term'+field+value;
+
+    var result = buildCurriedFunction(filtersTree, collection, field, 'term', value, curriedFunctionName, roomId);
+    if (result.error) {
+      deferred.reject(result.error);
+      return deferred.promise;
+    }
+
+    formattedFilters[result.path] = result.filter;
+
+    deferred.resolve(formattedFilters);
+    return deferred.promise;
+  },
+
+
 
   /**
    * Returns true only if the value in field has at least one non-null value
@@ -46,70 +131,10 @@ module.exports = {
   },
 
   /**
-   * Return true only if the value in field is in a certain range
-   */
-  range: function () {
-
-  },
-
-  /**
-   * Return true only if the value in field is grander or equal than the provided value
-   */
-  gte: function () {
-
-  },
-
-  /**
-   * Return true only if the value in field is grander than the provided value
-   */
-  gt: function () {
-
-  },
-
-  /**
-   * Return true only if the value in field is lower or equal than the provided value
-   */
-  lte: function () {
-
-  },
-
-  /**
-   * Return true only if the value in field is lower than the provided value
-   */
-  lt: function () {
-
-  },
-
-  /**
-   * Return true only if the value in field begin to the provided values
-   */
-  from: function (value, fieldValue) {
-    return this.gte(value, fieldValue);
-  },
-
-  /**
-   *  Return true only if the value in field end at the provided values
-   */
-  to: function (value, fieldValue) {
-    return this.lte(value, fieldValue);
-  },
-
-  /**
    * Return true only if the value in field pass the regexp test
    */
   regexp: function () {
 
-  },
-
-  /**
-   * Return true only if the value in field match the provided term
-   *
-   * @param value
-   * @param fieldValue
-   * @returns {boolean}
-   */
-  term: function (value, fieldValue) {
-    return value === fieldValue;
   },
 
   /**
@@ -123,48 +148,14 @@ module.exports = {
    * Return true only if values in document are valid according to object provided
    */
   bool: function (document, object) {
-    var noResult;
 
-    // Invert boolean because we want stop loop when a function return false or if there is an error
-    noResult = _.some(Object.keys(object), function (fn) {
-      if (!this[fn]) {
-        return true;
-      }
-
-      if (!this[fn](document, object[fn])) {
-        return true;
-      }
-    });
-
-    return !noResult;
   },
 
   /**
    * Return true only if the the clause not appear in the matching documents.
    */
   must: function (document, filters) {
-    var noResult;
 
-    // Invert boolean because we want stop loop when a function return false or if there is an error
-    noResult = _.some(Object.keys(filters), function (fn) {
-      if (!this[fn]) {
-        return true;
-      }
-
-      var
-        field = Object.keys(filters[fn])[0],
-        value = filters[fn][field];
-
-      if (!document[field]) {
-        return true;
-      }
-
-      if (!this[fn](value, document[field])) {
-        return true;
-      }
-    });
-
-    return !noResult;
   },
 
   /**
@@ -183,4 +174,41 @@ module.exports = {
 
   }
 
+};
+
+
+
+var buildCurriedFunction = function (filtersTree, collection, field, operatorName, value, curriedFunctionName, roomId) {
+  if (!operators[operatorName]) {
+    return {error: 'Operator ' + operatorName + 'doesn\'t exist'};
+  }
+
+  var
+    curriedFunction,
+    path = collection+'.'+field+'.'+curriedFunctionName;
+
+  curriedFunction  = _.curry(operators[operatorName]);
+  curriedFunction = _.curry(curriedFunction(value));
+
+  if (!filtersTree[collection]) {
+    filtersTree[collection] = {};
+  }
+
+  if (!filtersTree[collection][field]) {
+    filtersTree[collection][field] = {};
+  }
+
+  if (!filtersTree[collection][field][curriedFunctionName]) {
+    filtersTree[collection][field][curriedFunctionName] = {
+      rooms: [],
+      fn: curriedFunction
+    };
+  }
+
+  filtersTree[collection][field][curriedFunctionName].rooms.push(roomId);
+
+  return {
+    path: path,
+    filter: filtersTree[collection][field][curriedFunctionName]
+  };
 };

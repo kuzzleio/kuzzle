@@ -9,55 +9,19 @@ var
 
 module.exports = function Dsl (kuzzle) {
 
-  /**
-   * Allow to send a collection and a list of filter and return all "curried" names for each filters
-   *
-   * @param {String} collection
-   * @param {Object} filters
-   * @returns {Promise} promise
-   */
-  this.getFunctionsNames = function (collection, filters) {
+  this.addCurriedFunction = function (filtersTree, roomId, collection, filters) {
+
     var
       deferred = q.defer(),
-      filtersNames = {};
+      filterName = Object.keys(filters)[0];
 
-    async.each(Object.keys(filters), function (fn, callback) {
-      var
-        field = Object.keys(filters[fn])[0],
-        name = filters[fn][field];
+    if (!methods[filterName]) {
+      deferred.reject('Unknown filter with name '+filterName);
+      return deferred.promise;
+    }
 
-      name = JSON.stringify(name);
-      name = crypto.createHash('md5').update(name).digest('hex');
-      name = fn+field+'-'+name;
-
-      filtersNames[name] = {};
-      filtersNames[name][fn] = filters[fn];
-
-      callback();
-    }, function () {
-      deferred.resolve(filtersNames);
-    });
-
-    return deferred.promise;
+    return methods[filterName](filtersTree, roomId, collection, filters[filterName]);
   };
-
-  /**
-   * Create a curried function according to filter
-   *
-   * @param name
-   * @param filter
-   * @returns {String} a new curried function
-   */
-  this.createCurriedFunction = function (name, filter) {
-    var
-      fn = Object.keys(filter)[0],
-      field = Object.keys(filter[fn])[0],
-      value = filter[fn][field];
-
-    curried = _.curry(methods[fn]);
-    return _.curry(curried(value));
-  };
-
 
   /**
    * Test all filters in filtersTree for test which room to notify
@@ -68,6 +32,7 @@ module.exports = function Dsl (kuzzle) {
   this.testFilters = function (data) {
     var
       deferred = q.defer(),
+      cachedResults = {},
       rooms = [];
 
     if (!data.collection) {
@@ -80,22 +45,46 @@ module.exports = function Dsl (kuzzle) {
       return deferred.promise;
     }
 
-    async.each(Object.keys(data.content), function (field, callbackContent) {
+    async.each(Object.keys(data.content), function (field, callbackField) {
+
+      // TODO: test if the field contains a nested field
+
       var fieldFilters = kuzzle.hotelClerk.filtersTree[data.collection][field];
 
       if (!fieldFilters) {
-        callbackContent();
+        callbackField();
         return false;
       }
 
-      async.each(Object.keys(fieldFilters), function (functionName, callbackField) {
-        if (fieldFilters[functionName].fn(data.content[field])) {
-          rooms = rooms.concat(fieldFilters[functionName].rooms);
+      async.each(Object.keys(fieldFilters), function (functionName, callbackFilter) {
+        var
+          filter = fieldFilters[functionName],
+          cachePath = data.collection + '.' + field + '.' + functionName;
+
+        if (cachedResults[cachePath] === undefined) {
+          cachedResults[cachePath] = filter.fn(data.content[field]);
         }
 
-        callbackField();
+        if (!cachedResults[cachePath]) {
+          callbackFilter();
+          return false;
+        }
+
+        async.each(filter.rooms, function (roomId, callbackRoom) {
+          var
+            room = kuzzle.hotelClerk.rooms[roomId],
+            passAllFilters = testFilterRecursively(data.content, room.filters, cachedResults);
+
+          if (passAllFilters) {
+            rooms = rooms.concat(fieldFilters[functionName].rooms);
+          }
+
+          callbackRoom();
+        }, function () {
+          callbackFilter();
+        });
       }, function () {
-        callbackContent();
+        callbackField();
       });
     }, function () {
       kuzzle.hotelClerk.findRoomNamesFromIds(rooms)
@@ -107,4 +96,73 @@ module.exports = function Dsl (kuzzle) {
     return deferred.promise;
   };
 
+};
+
+
+var testFilterRecursively = function (content, filters, cachedResults, upperOperand) {
+  var bool = true;
+
+  Object.keys(filters).some(function (key) {
+    var subBool;
+    if (key === 'or' || key === 'and') {
+      subBool = testFilterRecursively(content, filters[key], cachedResults, key);
+    }
+    else {
+      if (cachedResults[key] === undefined) {
+        var value = getContentValueFromPath(content, key);
+        if (value === undefined) {
+          bool = false;
+
+          // we can stop here the loop if the operand is an and
+          if (upperOperand === 'and') {
+            return true;
+          }
+        }
+
+        cachedResults[key] = filters[key](value);
+      }
+
+      subBool = cachedResults[key];
+    }
+
+    if (upperOperand === undefined) {
+      bool = subBool;
+      return false;
+    }
+    if (upperOperand === 'and') {
+      bool = bool && subBool;
+      // if the result of the current filter is false and if the upper operand is an 'and', we can't stop here and bool is false
+      return !bool;
+    }
+    if (upperOperand === 'or') {
+      // if the result of the current filter is true and if the upper operand is an 'or', we can't stop here and bool is true
+      bool = bool || subBool;
+      return bool;
+    }
+
+  });
+
+  return bool;
+};
+
+var getContentValueFromPath = function (content, path) {
+  var
+    parent = content,
+    subPath,
+    index,
+    i = 0;
+
+  path = path.split('.');
+  // remove the first element (corresponding to the collection) from path
+  path.shift();
+  // remove the last element (corresponding to the function name)
+  path.pop();
+
+  // Loop inside the object for find the right entry
+  for (i = 0; i < path.length-1; i++) {
+    parent = parent[path[i]];
+  }
+
+  subPath = path[path.length-1];
+  return parent[subPath];
 };
