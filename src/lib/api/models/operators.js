@@ -10,28 +10,28 @@ module.exports = {
    * Return true only if the value in field is grander or equal than the provided value
    */
   gte: function (value, fieldValue) {
-
+    return value <= fieldValue;
   },
 
   /**
    * Return true only if the value in field is grander than the provided value
    */
   gt: function (value, fieldValue) {
-
+    return value < fieldValue;
   },
 
   /**
    * Return true only if the value in field is lower or equal than the provided value
    */
   lte: function (value, fieldValue) {
-
+    return value >= fieldValue;
   },
 
   /**
    * Return true only if the value in field is lower than the provided value
    */
   lt: function (value, fieldValue) {
-
+    return value > fieldValue;
   },
 
   /**

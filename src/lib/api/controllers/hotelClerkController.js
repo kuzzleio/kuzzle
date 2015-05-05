@@ -215,6 +215,8 @@ createRoom = function (room, collection, filters) {
           };
         }
 
+        console.log(this.rooms);
+        console.log(this.filtersTree);
         deferred.resolve(roomId);
       }.bind(this))
       .catch(function (error) {

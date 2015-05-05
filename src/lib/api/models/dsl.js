@@ -73,20 +73,42 @@ module.exports = function Dsl (kuzzle) {
         async.each(filter.rooms, function (roomId, callbackRoom) {
           var
             room = kuzzle.hotelClerk.rooms[roomId],
-            passAllFilters = testFilterRecursively(data.content, room.filters, cachedResults);
+            passAllFilters;
+
+          if (!room) {
+            callbackRoom('Room not found');
+            return false;
+          }
+
+          passAllFilters = testFilterRecursively(data.content, room.filters, cachedResults);
 
           if (passAllFilters) {
-            rooms = rooms.concat(fieldFilters[functionName].rooms);
+            rooms = _.uniq(rooms.concat(fieldFilters[functionName].rooms));
           }
 
           callbackRoom();
-        }, function () {
+        }, function (error) {
+          if (error) {
+            callbackFilter(error);
+            return false;
+          }
+
           callbackFilter();
         });
-      }, function () {
+      }, function (error) {
+        if (error) {
+          callbackField(error);
+          return false;
+        }
+
         callbackField();
       });
-    }, function () {
+    }, function (error) {
+      if (error) {
+        deferred.reject(error);
+        return false;
+      }
+
       kuzzle.hotelClerk.findRoomNamesFromIds(rooms)
         .then(function (roomsNames) {
           deferred.resolve(roomsNames);
@@ -119,7 +141,7 @@ var testFilterRecursively = function (content, filters, cachedResults, upperOper
           }
         }
 
-        cachedResults[key] = filters[key](value);
+        cachedResults[key] = filters[key].fn(value);
       }
 
       subBool = cachedResults[key];
@@ -149,8 +171,8 @@ var getContentValueFromPath = function (content, path) {
   var
     parent = content,
     subPath,
-    index,
-    i = 0;
+    error = false,
+    i;
 
   path = path.split('.');
   // remove the first element (corresponding to the collection) from path
@@ -160,9 +182,18 @@ var getContentValueFromPath = function (content, path) {
 
   // Loop inside the object for find the right entry
   for (i = 0; i < path.length-1; i++) {
+    if (parent[path[i]] === undefined) {
+      error = true;
+      break;
+    }
     parent = parent[path[i]];
   }
 
   subPath = path[path.length-1];
+
+  if (error || parent[subPath] === undefined) {
+    return undefined;
+  }
+
   return parent[subPath];
 };

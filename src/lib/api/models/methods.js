@@ -31,13 +31,12 @@ module.exports = {
     field = Object.keys(filter)[0];
     formattedFilters = {};
 
-    async.each(Object.keys(filter[field]), function (fnAndValue, callback) {
+    async.each(Object.keys(filter[field]), function (fn, callback) {
       var
-        fn = Object.keys(fnAndValue)[0],
-        value = fnAndValue[fn],
+        value = filter[field][fn],
         curriedFunctionName = 'range' + field + fn + value;
 
-      var result = buildCurriedFunction(filtersTree, 'range', collection, field, curriedFunctionName, roomId);
+      var result = buildCurriedFunction(filtersTree, collection, field, fn, value, curriedFunctionName, roomId);
       if (result.error) {
         callback(result.error);
         return false;
@@ -180,7 +179,7 @@ module.exports = {
 
 var buildCurriedFunction = function (filtersTree, collection, field, operatorName, value, curriedFunctionName, roomId) {
   if (!operators[operatorName]) {
-    return {error: 'Operator ' + operatorName + 'doesn\'t exist'};
+    return {error: 'Operator ' + operatorName + ' doesn\'t exist'};
   }
 
   var
