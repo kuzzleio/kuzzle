@@ -7,6 +7,45 @@ var
 module.exports = {
 
   /**
+   * Build rooms and filtersTree according to a given filter for term filter (test equality)
+   *
+   * @param {Object} filtersTree pointer on object filtersTree defined in hotelClerkController
+   * @param {String} roomId
+   * @param {String} collection
+   * @param {Object} filter given by user on subscribe
+   * @return {Promise} the formatted filter that need to be added to the room
+   */
+  term: function (filtersTree, roomId, collection, filter) {
+    var
+      deferred = q.defer(),
+      field,
+      value,
+      formattedFilters,
+      curriedFunctionName;
+
+    if (_.isEmpty(filter)) {
+      deferred.reject('A filter can\'t be empty');
+      return deferred.promise;
+    }
+
+    field = Object.keys(filter)[0];
+    value = filter[field];
+    formattedFilters = {};
+    curriedFunctionName = 'term'+field+value;
+
+    var result = buildCurriedFunction(filtersTree, collection, field, 'term', value, curriedFunctionName, roomId);
+    if (result.error) {
+      deferred.reject(result.error);
+      return deferred.promise;
+    }
+
+    formattedFilters[result.path] = result.filter;
+
+    deferred.resolve(formattedFilters);
+    return deferred.promise;
+  },
+
+  /**
    * Build filtersTree according to a given filter for range filter and return the formatted filter
    * that can contains filters: gte, gt, lte, lt, from, to
    *
@@ -17,7 +56,6 @@ module.exports = {
    * @return {Promise} the formatted filter that need to be added to the room
    */
   range: function (filtersTree, roomId, collection, filter) {
-
     var
       deferred = q.defer(),
       field,
@@ -57,7 +95,7 @@ module.exports = {
   },
 
   /**
-   * Build rooms and filtersTree according to a given filter for term filter (test equality)
+   * Build rooms and filtersTree according to a given filter for bool filter (nested filters with ~and/or)
    *
    * @param {Object} filtersTree pointer on object filtersTree defined in hotelClerkController
    * @param {String} roomId
@@ -65,27 +103,127 @@ module.exports = {
    * @param {Object} filter given by user on subscribe
    * @return {Promise} the formatted filter that need to be added to the room
    */
-  term: function (filtersTree, roomId, collection, filter) {
+  bool: function (filtersTree, roomId, collection, filter) {
     var
       deferred = q.defer(),
-      field = Object.keys(filter)[0],
-      value = filter[field],
-      formattedFilters = {},
-      curriedFunctionName = 'term'+field+value;
+      formattedFilters;
 
-    var result = buildCurriedFunction(filtersTree, collection, field, 'term', value, curriedFunctionName, roomId);
-    if (result.error) {
-      deferred.reject(result.error);
+    if (_.isEmpty(filter)) {
+      deferred.reject('A filter can\'t be empty');
       return deferred.promise;
     }
 
-    formattedFilters[result.path] = result.filter;
+    formattedFilters = {};
 
-    deferred.resolve(formattedFilters);
+    async.each(Object.keys(filter), function (method, callback) {
+      var methodName = _.camelCase(method);
+      if (this[methodName] === undefined) {
+        callback('Function ' + method + ' doesn\'t exist');
+      }
+
+      this[methodName](filtersTree, roomId, collection, filter[method])
+        .then(function (subFormattedFilters) {
+          formattedFilters = _.extend(formattedFilters, subFormattedFilters);
+          callback();
+        })
+        .catch(function (error) {
+          callback(error);
+        });
+
+    }.bind(this), function (error) {
+      if (error) {
+        deferred.reject(error);
+      }
+
+      if (Object.keys(formattedFilters)[0] !== 'or' || Object.keys(formattedFilters)[0] !== 'and') {
+        formattedFilters = { and: formattedFilters };
+      }
+
+      deferred.resolve(formattedFilters);
+    });
+
     return deferred.promise;
   },
 
+  /**
+   * Build rooms and filtersTree according to a given filter for must filter (and in nested filters)
+   *
+   * @param {Object} filtersTree pointer on object filtersTree defined in hotelClerkController
+   * @param {String} roomId
+   * @param {String} collection
+   * @param {Object} filters given by user on subscribe
+   * @return {Promise} the formatted filter that need to be added to the room
+   */
+  must: function (filtersTree, roomId, collection, filters) {
+    var
+      deferred = q.defer(),
+      formattedFilters;
 
+    if (_.isEmpty(filters)) {
+      deferred.reject('A filter can\'t be empty');
+      return deferred.promise;
+    }
+
+    formattedFilters = {};
+
+    if (!Array.isArray(filters)) {
+      filters = [filters];
+    }
+
+    async.each(filters, function (filter, callback) {
+      var
+        method = Object.keys(filter)[0],
+        methodName = _.camelCase(method);
+
+      if (this[methodName] === undefined) {
+        callback('Function ' + method + ' is not available in bool filter');
+      }
+
+      this[methodName](filtersTree, roomId, collection, filter[method])
+        .then(function (subFormattedFilters) {
+          formattedFilters = _.extend(formattedFilters, subFormattedFilters);
+          callback();
+        })
+        .catch(function (error) {
+          callback(error);
+        });
+
+    }.bind(this), function (error) {
+      if (error) {
+        deferred.reject(error);
+      }
+
+      deferred.resolve({and: formattedFilters});
+    });
+
+    return deferred.promise;
+  },
+
+  /**
+   * Build rooms and filtersTree according to a given filter for must_not filter (and not in nested filters)
+   *
+   * @param {Object} filtersTree pointer on object filtersTree defined in hotelClerkController
+   * @param {String} roomId
+   * @param {String} collection
+   * @param {Object} filter given by user on subscribe
+   * @return {Promise} the formatted filter that need to be added to the room
+   */
+  mustNot: function (filtersTree, roomId, collection, filter) {
+
+  },
+
+  /**
+   * Build rooms and filtersTree according to a given filter for should filter (or in nested filters with a minimum should match option)
+   *
+   * @param {Object} filtersTree pointer on object filtersTree defined in hotelClerkController
+   * @param {String} roomId
+   * @param {String} collection
+   * @param {Object} filter given by user on subscribe
+   * @return {Promise} the formatted filter that need to be added to the room
+   */
+  should: function (filtersTree, roomId, collection, filter) {
+
+  },
 
   /**
    * Returns true only if the value in field has at least one non-null value
@@ -141,36 +279,6 @@ module.exports = {
    */
   terms: function () {
 
-  },
-
-  /**
-   * Return true only if values in document are valid according to object provided
-   */
-  bool: function (document, object) {
-
-  },
-
-  /**
-   * Return true only if the the clause not appear in the matching documents.
-   */
-  must: function (document, filters) {
-
-  },
-
-  /**
-   * Return true only if value in field not correspond to all filters/values provided
-   */
-  mustNot: function () {
-
-  },
-
-  /**
-   * Return true only if the clause should appear in the matching document.
-   * In a boolean query with no must clauses, one or more should clauses must match a document.
-   * The minimum number of should clauses to match can be set using the minimum_should_match parameter.
-   */
-  should: function () {
-
   }
 
 };
@@ -178,7 +286,7 @@ module.exports = {
 
 
 var buildCurriedFunction = function (filtersTree, collection, field, operatorName, value, curriedFunctionName, roomId) {
-  if (!operators[operatorName]) {
+  if (operators[operatorName] === undefined) {
     return {error: 'Operator ' + operatorName + ' doesn\'t exist'};
   }
 
