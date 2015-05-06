@@ -78,7 +78,7 @@ module.exports = function Dsl (kuzzle) {
 
     // No filters set for this collection : we return an empty list
     if (!kuzzle.hotelClerk.filtersTree[data.collection]) {
-      deferred.resolve( rooms );
+      deferred.resolve(rooms);
       return deferred.promise;
     }
 
