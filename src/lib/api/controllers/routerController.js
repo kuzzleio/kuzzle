@@ -38,16 +38,20 @@ module.exports = function RouterController (kuzzle) {
     };
 
     // define routes
-    api.post('/', function (request, response) {
+    api.post('/:collection', function (request, response) {
       if (request.body) {
-        var data = wrapObject(request.body, 'write', 'article', 'create');
+        var data = wrapObject(request.body, 'write', request.params.collection, 'create');
 
         kuzzle.funnel.execute(data, request)
           .then(function onExecuteSuccess (result) {
             // Send response and close connection
-            routerCtrl.notify(result.requestId, result);
+            if (result.rooms) {
+              async.each(result.rooms, function (roomName) {
+                routerCtrl.notify(roomName, result.data, result.connections);
+              });
+            }
             response.writeHead(200, {'Content-Type': 'application/json'});
-            response.end(stringify({error: null, result: result}));
+            response.end(stringify({error: null, result: result.data}));
           })
           .catch(function onExecuteError (error) {
             return sendError(error, response);
