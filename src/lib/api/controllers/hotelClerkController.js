@@ -170,7 +170,8 @@ createRoom = function (room, collection, filters) {
     deferred = q.defer(),
     stringifyObject = stringify({collection: collection, filters: filters}),
     roomId = crypto.createHash('md5').update(stringifyObject).digest('hex');
-    kuzzle.log.debug('Room created: ' + roomId,  {collection: collection, filters: filters});
+
+  this.kuzzle.log.debug('Create room: ' + roomId,  {collection: collection, filters: filters});
 
   if (!this.rooms[roomId]) {
     // If it's a new room, we have to calculate filters to apply on the future documents
