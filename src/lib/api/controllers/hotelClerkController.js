@@ -389,29 +389,22 @@ removeRoomFromFilterTree = function (roomId) {
  * @param {String} roomId
  */
 recursiveCleanUpTree = function (object, path, roomId) {
-  var
-    parent = object,
-    subPath,
-    index,
-    i = 0;
+  var pathArray = path.split('.'),
+      subPath = pathArray[pathArray.length-1],
+      parent = object;
 
-  path = path.split('.');
-
-  // Loop inside the object for find the right entry
-  for (i = 0; i < path.length-1; i++) {
-    parent = parent[path[i]];
+  for(var i = 0; i < pathArray.length-1; i++) {
+      parent = parent[pathArray[i]];
   }
-
-  subPath = path[path.length-1];
 
   // If the current entry is the curried function (that contains the room list and the function definition)
   if (parent[subPath].rooms !== undefined) {
-    index = parent[subPath].rooms.indexOf(roomId);
+    var index = parent[subPath].rooms.indexOf(roomId);
     if (index > -1) {
-      parent[subPath].rooms.slice(index, 1);
+      parent[subPath].rooms.splice(index, 1);
     }
 
-    if (parent[subPath].rooms.length > 1) {
+    if (parent[subPath].rooms.length > 0) {
       return false;
     }
   }
@@ -421,11 +414,11 @@ recursiveCleanUpTree = function (object, path, roomId) {
   }
 
   delete parent[subPath];
+  pathArray.pop();
 
-  path.pop();
-  if (_.isEmpty(path)) {
+  if (_.isEmpty(pathArray)) {
     return false;
   }
 
-  return recursiveCleanUpTree(object, path.join('.'));
+  return recursiveCleanUpTree(object, pathArray.join('.'));
 };
