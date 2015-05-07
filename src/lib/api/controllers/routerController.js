@@ -109,15 +109,48 @@ module.exports = function RouterController (kuzzle) {
   };
 
   this.routeMQListener = function () {
+    var routerCtrl = this;
     async.each(this.controllers, function recordMQListener (controller) {
-      broker.listenExchange(controller+'.*.*', function handleMQMessage(data, routingKey) {
-        kuzzle.log.silly('Handle MQ input', routingKey , 'message');
-        var routingArray = routingKey.split('.');
-        var controller = routingArray[0];
-        var collection = routingArray[1];
-        var action = routingArray[2];
+      broker.listenExchange(controller+'.*.*', function handleMQMessage(msg) {
+        var connectionId = msg.properties.replyTo,
+            connection = null,
+            data = JSON.parse(msg.content.toString()),
+            routingArray = msg.fields.routingKey.split('.'),
+            controller = routingArray[0],
+            collection = routingArray[1],
+            action = routingArray[2];
+
+        kuzzle.log.silly('Handle MQ input', msg.fields.routingKey , 'message');
+
+        // For MQTT messages, we do not have a replyTo header like with AMQP or STOMP
+        // => MQTT client has to send its mqtt client id and subscribe to the topic exchange mqtt.<clientId>
+        //    to get feedback from Kuzzle.
+        if (data.mqttClientId) {
+          connectionId = "mqtt."+data.mqttClientId;
+        }
+
+        if ( connectionId) {
+          connection = {type: connectionId.split('.')[0], id: connectionId};
+        }
+
+        if ( connectionId && ! data.requestId ) {
+          data.requestId = connectionId;
+        }
+
         data = wrapObject(data, controller, collection, action);
-        kuzzle.funnel.execute(data);
+
+        kuzzle.funnel.execute(data, connection)
+          .then(function onExecuteSuccess (result) {
+            if (result.rooms) {
+              async.each(result.rooms, function (roomName) {
+                routerCtrl.notify(roomName, result.data, result.connections);
+              });
+            }
+          })
+          .catch(function onExecuteError(error) {
+            routerCtrl.notify(data.requestId, {error: error});
+            kuzzle.log.verbose({error: error});
+          });
       });
     });
   };
@@ -138,11 +171,18 @@ module.exports = function RouterController (kuzzle) {
           case 'websocket':
             kuzzle.io.to(connection.id).emit(room, data);
             break;
+          case 'amq':
+            broker.replyTo(connection.id, data);
+            break;
+          case "mqtt":
+            broker.addExchange(connection.id, data);
+            break;
         }
       });
     }
     else {
       kuzzle.io.emit(room, data);
+      broker.addExchange(room, data);
     }
   };
 };

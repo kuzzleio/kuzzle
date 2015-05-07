@@ -37,6 +37,34 @@ module.exports = {
   },
 
   /**
+   * Allow to add an object to a specific exchange/routing_key
+   * @param routing_key
+   * @param data object that must be insert into routing key
+   */
+  addExchange: function (routingKey, data) {
+    pConnection.then(function (conn) {
+      return conn.createChannel().then(function (channel) {
+        return channel.assertExchange(mqEchangeName, 'topic', {durable: true})
+          .then(function () {
+            return channel.publish(mqEchangeName,routingKey,new Buffer(stringify(data)), {deliveryMode: true});
+          });
+        });
+    });
+  },
+
+  /**
+   * Allow to add an object to a specific exchange/routing_key
+   * @param room
+   * @param data object that must be insert into routing key
+   */
+  replyTo: function (room, data) {
+    pConnection.then(function (conn) {
+      return conn.createChannel().then(function (channel) {
+        return channel.sendToQueue(room,new Buffer(stringify(data)), {deliveryMode: true});
+        });
+    });
+  },
+  /**
    * Listen a specific room and execute a callback for each messages
    *
    * @param room
@@ -78,7 +106,7 @@ module.exports = {
             var queue = qok.queue;
             channel.bindQueue(queue, mqEchangeName, routingKey);
             channel.consume(queue, function doWork (msg) {
-              onListenCB(JSON.parse(msg.content.toString()), msg.fields.routingKey);
+              onListenCB(msg);
             });
           });
       });
