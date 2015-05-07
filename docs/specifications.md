@@ -25,6 +25,12 @@ Messages (ie. requests sent to Kuzzle to publish data, subscribe to something, o
 
 #### write
 
+##### Description
+
+Add an content to kuzzle
+
+##### Input message
+
 ```json
 {
   "controller": "write",
@@ -52,26 +58,43 @@ Messages (ie. requests sent to Kuzzle to publish data, subscribe to something, o
     * for **update** : only the JSON attributes that need to be changed.
     * for **delete** : _unused_
 
+##### Output message
+
 #### subscribe
+
+##### Description
+
+Create a filtered room and give the client the roomId.
+The client SHOULD then subscribe to this room to get messages.
+
+##### Input message
 
 ```json
 {
   "controller": "subscribe",
-  "requestId": <requestId>,
+  ["requestId": <requestId>,]
   "collection": <collection>,
   "action": <"on"|"off">,
-  ["content": <content>,]
+  "content": <content>
 }
 ```
 
-* &lt;requestId&gt; : the local room where Kuzzle should publish requested messages
+* &lt;requestId&gt; _(optionnal)_ : if set : identifies the room where where the feedback messages will be sent.
 * &lt;collection&gt; : the collection name
 * &lt;action&gt; : **on** | **off**
-* &lt;content&gt;
-    * for **on** : the filters to subscribe to (see [filters syntax] for details)
-    * for **off** : _unused_
+* &lt;content&gt; the filters to subscribe/unsubscribe to (see [filters syntax] for details)
+
+##### Output message
+
+The room Id.
 
 #### read
+
+##### Description
+
+Get a content from Kuzzle
+
+##### Input message
 
 ```json
 {
@@ -94,6 +117,9 @@ Messages (ie. requests sent to Kuzzle to publish data, subscribe to something, o
     * for **get** : _unused_
     * for **search** : the search filters (see [filters syntax] for details)
 
+##### Output message
+
+The content (to be defined)
 
 ### Protocol dependant encapsulation
 
@@ -147,7 +173,9 @@ socket.emit('<controller>', {
 });
 ```
 
-#### AMQP / STOMP / MQTT 
+For each controller, kuzzle will also send a feedback to the client's socket
+
+#### AMQP / STOMP / MQTT
 
 Kuzzle is listening for **amq.topic** echange, filtering following routing key `<controller>.<collection>.<action>`.
 
@@ -169,19 +197,19 @@ content-type:application/json
 ^@
 ```
 
-_(NB: This will automatically subscribes the client to the reply-to queue.)_
+_(NB: This will automatically subscribe the client to the reply-to queue.)_
 
-* **MQTT** : add the client ID to the message body :
+* **MQTT** : the client SHOULD add its client ID to the message body :
 
 ```json
 {
-  "mqttClientId": "mqtt_gbLzz12URZRKVcIpOCqc11SvMN7",
+  "mqttClientId": "lens_ZyvmGJEKRMHZzMZQfX151szh8zC",
   ["requestId": <requestId>,]
   [<optionnal msg attributes>]
 }
 ```
 
-_(NB: Kuzzle will send messages to the topic exchange **amqp.topic**, with following destination : `mqtt.<mqttClientId>.<requestId>`, so the client has to subscribe to this routing key as well.)_
+_(NB: Kuzzle will send messages to the topic exchange **amqp.topic**, with following destination : `mqtt/<mqttClientId>`, so the client SHOULD also subscribe to this routing key as well.)_
 
 
 [//]: # (=========================================================)
