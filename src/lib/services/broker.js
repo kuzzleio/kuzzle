@@ -68,7 +68,7 @@ module.exports = {
   listenExchange: function (routingKey, onListenCB) {
     pConnection.then(function (conn) {
       return conn.createChannel().then(function (channel) {
-        exName = 'amq.topic';
+        var exName = 'amq.topic';
         return channel.assertExchange(exName, 'topic', {durable: true})
           .then(function () {
             return channel.assertQueue('', {exclusive: true});
