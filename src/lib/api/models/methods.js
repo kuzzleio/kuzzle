@@ -36,7 +36,8 @@ module.exports = {
     if (not) {
       curriedFunctionName += 'not';
     }
-    curriedFunctionName += 'term' + field + value;
+    // Clean the field in function name because can contains '.' and we don't want it in the function name
+    curriedFunctionName += 'term' + field.split('.').join('') + value;
 
     var result = buildCurriedFunction(filtersTree, collection, field, 'term', value, curriedFunctionName, roomId, not);
     if (result.error) {

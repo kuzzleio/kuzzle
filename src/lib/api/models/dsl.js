@@ -39,6 +39,7 @@ module.exports = function Dsl (kuzzle) {
     var
       deferred = q.defer(),
       cachedResults = {},
+      flattenContent = {},
       rooms = [];
 
     if (!data.collection) {
@@ -52,9 +53,10 @@ module.exports = function Dsl (kuzzle) {
       return deferred.promise;
     }
 
-    async.each(Object.keys(data.content), function (field, callbackField) {
+    // trick for easily parse nested document
+    flattenContent = flattenObject(data.content);
 
-      // TODO: test if the field contains a nested field
+    async.each(Object.keys(flattenContent), function (field, callbackField) {
 
       var fieldFilters = kuzzle.hotelClerk.filtersTree[data.collection][field];
 
@@ -65,11 +67,13 @@ module.exports = function Dsl (kuzzle) {
 
       async.each(Object.keys(fieldFilters), function (functionName, callbackFilter) {
         var
+          // Clean the function name because can contains '.' and we don't want it into the function name
+          cleanFunctionName = functionName.split('.').join(''),
           filter = fieldFilters[functionName],
-          cachePath = data.collection + '.' + field + '.' + functionName;
+          cachePath = data.collection + '.' + field + '.' + cleanFunctionName;
 
         if (cachedResults[cachePath] === undefined) {
-          cachedResults[cachePath] = filter.fn(data.content[field]);
+          cachedResults[cachePath] = filter.fn(flattenContent[field]);
         }
 
         if (!cachedResults[cachePath]) {
@@ -87,7 +91,7 @@ module.exports = function Dsl (kuzzle) {
             return false;
           }
 
-          passAllFilters = testFilterRecursively(data.content, room.filters, cachedResults, 'and');
+          passAllFilters = testFilterRecursively(flattenContent, room.filters, cachedResults, 'and');
 
           if (passAllFilters) {
             rooms = _.uniq(rooms.concat(fieldFilters[functionName].rooms));
@@ -126,23 +130,23 @@ module.exports = function Dsl (kuzzle) {
 
 /**
  *
- * @param {Object} content the new document
+ * @param {Object} flattenContent the new flatten document
  * @param {Object} filters filters that we have to test for check if the document match the room
  * @param {Object} cachedResults an object with all already tested curried function for the document
  * @param {String} upperOperand represent the operand (and/or) on the upper level
  * @returns {Boolean} true if the document match a room filters
  */
-var testFilterRecursively = function (content, filters, cachedResults, upperOperand) {
+var testFilterRecursively = function (flattenContent, filters, cachedResults, upperOperand) {
   var bool;
 
   Object.keys(filters).some(function (key) {
     var subBool;
     if (key === 'or' || key === 'and') {
-      subBool = testFilterRecursively(content, filters[key], cachedResults, key);
+      subBool = testFilterRecursively(flattenContent, filters[key], cachedResults, key);
     }
     else {
       if (cachedResults[key] === undefined) {
-        var value = getContentValueFromPath(content, key);
+        var value = getContentValueFromPath(flattenContent, key);
         if (value === undefined) {
           bool = false;
 
@@ -198,32 +202,56 @@ var testFilterRecursively = function (content, filters, cachedResults, upperOper
  * @returns {*} the value in field or undefined if the document has not this field
  */
 var getContentValueFromPath = function (content, path) {
-  var
-    parent = content,
-    subPath,
-    error = false,
-    i;
+  var pathArray = path.split('.');
 
-  path = path.split('.');
   // remove the first element (corresponding to the collection) from path
-  path.shift();
+  pathArray.shift();
   // remove the last element (corresponding to the function name)
-  path.pop();
+  pathArray.pop();
 
-  // Loop inside the object for find the right entry
-  for (i = 0; i < path.length-1; i++) {
-    if (parent[path[i]] === undefined) {
-      error = true;
-      break;
-    }
-    parent = parent[path[i]];
+  return content[pathArray.join('.')];
+};
+
+/**
+ * Flatten an object transform:
+ * {
+ *  title: "kuzzle",
+ *  info : {
+ *    tag: "news"
+ *  }
+ * }
+ *
+ * Into an object like:
+ * {
+ *  title: "kuzzle",
+ *  info.tag: news
+ * }
+ *
+ * @param {Object} target the object that we have to flatten
+ * @returns {Object} the flatten object
+ */
+var flattenObject = function (target) {
+  var
+    delimiter = '.',
+    output = {};
+
+  function step(object, prev) {
+    Object.keys(object).forEach(function(key) {
+      var
+        value = object[key],
+        newKey;
+
+      newKey = prev ? prev + delimiter + key : key;
+
+      if (!Array.isArray(value) && typeof value === 'object' && Object.keys(value).length) {
+        return step(value, newKey);
+      }
+
+      output[newKey] = value;
+    });
   }
 
-  subPath = path[path.length-1];
+  step(target);
 
-  if (error || parent[subPath] === undefined) {
-    return undefined;
-  }
-
-  return parent[subPath];
+  return output;
 };
