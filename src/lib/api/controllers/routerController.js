@@ -162,7 +162,7 @@ module.exports = function RouterController (kuzzle) {
    *
    * @param {String} room
    * @param {Object} data
-   * @param {Object} socket
+   * @param {Object} connections
    */
   this.notify = function (room, data, connections) {
     if (connections) {
