@@ -85,7 +85,7 @@ module.exports = function Dsl (kuzzle) {
             return false;
           }
 
-          passAllFilters = testFilterRecursively(data.content, room.filters, cachedResults);
+          passAllFilters = testFilterRecursively(data.content, room.filters, cachedResults, 'and');
 
           if (passAllFilters) {
             rooms = _.uniq(rooms.concat(fieldFilters[functionName].rooms));
