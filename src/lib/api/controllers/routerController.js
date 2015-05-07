@@ -129,11 +129,11 @@ module.exports = function RouterController (kuzzle) {
           connectionId = "mqtt."+data.mqttClientId;
         }
 
-        if ( connectionId) {
+        if (connectionId) {
           connection = {type: connectionId.split('.')[0], id: connectionId};
         }
 
-        if ( connectionId && ! data.requestId ) {
+        if (connectionId && ! data.requestId) {
           data.requestId = connectionId;
         }
 
