@@ -61,9 +61,9 @@ module.exports = function HotelClerkController (kuzzle) {
   tools.cleanUpRooms = _.bind(cleanUpRooms, this);
 
   /**
-   * Add a connectionId to room, and init information about room if it doesn't exist before
+   * Add a connection.id to room, and init information about room if it doesn't exist before
    *
-   * @param {String} connectionId
+   * @param {Object} connection
    * @param {String} roomName
    * @param {String} collection
    * @param {Object} filters
@@ -71,11 +71,11 @@ module.exports = function HotelClerkController (kuzzle) {
    * user has already subscribe to this room name (just for room with same name, but we not trigger error
    * if the room has a different name with same filter) or if there is an error during room creation
    */
-  this.addSubscription = function (connectionId, roomName, collection, filters) {
+  this.addSubscription = function (connection, roomName, collection, filters) {
     var
       deferred = q.defer();
 
-    if (this.customers[connectionId] && this.customers[connectionId][roomName]) {
+    if (this.customers[connection.id] && this.customers[connection.id][roomName]) {
       deferred.reject('User already subscribe to the room '+roomName);
       return deferred.promise;
     }
@@ -83,9 +83,9 @@ module.exports = function HotelClerkController (kuzzle) {
     tools.createRoom(roomName, collection, filters)
       .then(function (roomId) {
         // Add the room for the customer
-        tools.addRoomForCustomer(connectionId, roomName, roomId);
+        tools.addRoomForCustomer(connection.id, roomName, roomId);
         this.rooms[roomId].count++;
-        deferred.resolve({ data: roomId, rooms: [roomName], connections: [connectionId] });
+        deferred.resolve({ data: roomId, rooms: [roomName], connections: [connection] });
       }.bind(this))
       .catch(function (error) {
         deferred.reject(error);
@@ -95,17 +95,17 @@ module.exports = function HotelClerkController (kuzzle) {
   };
 
   /**
-   * Remove the connectionId from the room and clean up room (delete room if there is no customer)
+   * Remove the connection.id from the room and clean up room (delete room if there is no customer)
    *
-   * @param {String} connectionId
-   * @param {String} room
+   * @param {Object} connection
+   * @param {String} roomName
    * @returns {Promise} promise
    */
-  this.removeSubscription = function (connectionId, room) {
+  this.removeSubscription = function (connection, roomName) {
     var deferred = q.defer();
 
     // Remove the room for the customer, don't wait for delete before continue
-    tools.removeRoomForCustomer(connectionId, room)
+    tools.removeRoomForCustomer(connection.id, roomName)
       .then(function (roomId) {
         if (!this.rooms[roomId]) {
           deferred.reject('Room ' + room + ' with id ' + roomId + ' doesn\'t exist');
@@ -114,7 +114,7 @@ module.exports = function HotelClerkController (kuzzle) {
         this.rooms[roomId].count--;
         tools.cleanUpRooms(roomId);
 
-        deferred.resolve();
+        deferred.resolve({ data: roomId, rooms: [roomName], connections: [connection] });
       }.bind(this))
       .catch( function (error) {
         deferred.reject(error);

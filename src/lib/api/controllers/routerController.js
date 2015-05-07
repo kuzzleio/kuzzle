@@ -40,9 +40,10 @@ module.exports = function RouterController (kuzzle) {
     // define routes
     api.post('/:collection', function (request, response) {
       if (request.body) {
-        var data = wrapObject(request.body, 'write', request.params.collection, 'create');
+        var data = wrapObject(request.body, 'write', request.params.collection, 'create'),
+            connection = {type: 'rest', id: request};
 
-        kuzzle.funnel.execute(data, request)
+        kuzzle.funnel.execute(data, connection)
           .then(function onExecuteSuccess (result) {
             // Send response and close connection
             if (result.rooms) {
@@ -75,7 +76,8 @@ module.exports = function RouterController (kuzzle) {
    * @param {Object} socket
    */
   this.routeWebsocket = function (socket) {
-    var routerCtrl = this;
+    var routerCtrl = this,
+        connection = {type: 'websocket', id: socket.id};
 
     async.each(routerCtrl.controllers, function recordSocketListener (controller) {
 
@@ -84,7 +86,7 @@ module.exports = function RouterController (kuzzle) {
         data = wrapObject(data, controller);
 
         // execute the funnel. If error occurred, notify users
-        kuzzle.funnel.execute(data, socket.id)
+        kuzzle.funnel.execute(data, connection)
           .then(function onExecuteSuccess (result) {
             if (result.rooms) {
               async.each(result.rooms, function (roomName) {
@@ -131,8 +133,12 @@ module.exports = function RouterController (kuzzle) {
    */
   this.notify = function (room, data, connections) {
     if (connections) {
-      async.each(connections, function (socketId) {
-        kuzzle.io.to(socketId).emit(room, data);
+      async.each(connections, function (connection) {
+        switch(connection.type) {
+          case 'websocket':
+            kuzzle.io.to(connection.id).emit(room, data);
+            break;
+        }
       });
     }
     else {
