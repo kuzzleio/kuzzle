@@ -19,6 +19,7 @@
     "finalhandler": "^0.3.4",
     "lodash": "^3.6.0",
     "node-uuid": "1.4.3",
+    "json-stable-stringify": "1.0.0",
     "q": "^1.2.0",
     "rc": "~1.0.1",
     "router": "^1.0.0",

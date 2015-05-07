@@ -1,9 +1,9 @@
-#!/bin/bash
+#!/bin/sh
 
 for dir in ./*/; do
     echo ""
     echo ""
     echo "$dir"
 
-    bash build.sh "$dir"
+    sh build.sh "$dir"
 done

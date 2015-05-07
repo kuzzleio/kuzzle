@@ -2,6 +2,7 @@ var
 // library for execute asynchronous methods
   async = require('async'),
   _ = require('lodash'),
+  stringify = require('json-stable-stringify'),
   Router = require('router'),
   broker = require('../../services/broker'),
   // For parse a request sent by user
@@ -32,21 +33,25 @@ module.exports = function RouterController (kuzzle) {
     // define the function that will be call in case of error
     var sendError = function (error, response) {
       response.writeHead(400, {'Content-Type': 'application/json'});
-      response.end(JSON.stringify({error: error, result: null}));
+      response.end(stringify({error: error, result: null}));
       return false;
     };
 
     // define routes
-    api.post('/', function (request, response) {
+    api.post('/:collection', function (request, response) {
       if (request.body) {
-        var data = wrapObject(request.body, 'write', 'article', 'create');
+        var data = wrapObject(request.body, 'write', request.params.collection, 'create');
 
         kuzzle.funnel.execute(data, request)
           .then(function onExecuteSuccess (result) {
             // Send response and close connection
-            routerCtrl.notify(result.requestId, result);
+            if (result.rooms) {
+              async.each(result.rooms, function (roomName) {
+                routerCtrl.notify(roomName, result.data, result.connections);
+              });
+            }
             response.writeHead(200, {'Content-Type': 'application/json'});
-            response.end(JSON.stringify({error: null, result: result}));
+            response.end(stringify({error: null, result: result.data}));
           })
           .catch(function onExecuteError (error) {
             return sendError(error, response);
@@ -83,7 +88,7 @@ module.exports = function RouterController (kuzzle) {
           .then(function onExecuteSuccess (result) {
             if (result && result.rooms) {
               async.each(result.rooms, function (roomName) {
-                routerCtrl.notify(roomName, result.data);
+                routerCtrl.notify(roomName, result.data, result.connections);
               });
             }
           })
@@ -129,9 +134,11 @@ module.exports = function RouterController (kuzzle) {
    * @param {Object} data
    * @param {Object} socket
    */
-  this.notify = function (room, data, socket) {
-    if (socket) {
-      socket.emit(room, data);
+  this.notify = function (room, data, connections) {
+    if (connections) {
+      async.each(connections, function (socketId) {
+        kuzzle.io.to(socketId).emit(room, data);
+      });
     }
     else {
       kuzzle.io.emit(room, data);
@@ -158,7 +165,7 @@ function wrapObject (data, controller, collection, action) {
   // not provide it. We need to return this id for let the user know
   // how to get real time information about his data
   if (!data.requestId) {
-    var stringifyObject = JSON.stringify(data);
+    var stringifyObject = stringify(data);
     data.requestId = crypto.createHash('md5').update(stringifyObject).digest('hex');
   }
 

@@ -2,6 +2,7 @@ var
   _ = require('lodash'),
   async = require('async'),
   q = require('q'),
+  stringify = require('json-stable-stringify'),
   // module for manage md5 hash
   crypto = require('crypto');
 
@@ -85,8 +86,7 @@ module.exports = function HotelClerkController (kuzzle) {
         // Add the room for the customer
         tools.addRoomForCustomer(connectionId, roomName, roomId);
         this.rooms[roomId].count++;
-
-        deferred.resolve();
+        deferred.resolve({ data: roomId, rooms: [roomName], connections: [connectionId] });
       }.bind(this))
       .catch(function (error) {
         deferred.reject(error);
@@ -150,33 +150,6 @@ module.exports = function HotelClerkController (kuzzle) {
 
     delete this.customers[connectionId];
   };
-
-  /**
-   * Allow to retrieve the real room names (the one registered by the user) according to
-   * the id (= filter and collection md5 hash)
-   *
-   * @param {Array} roomsIds
-   * @returns {Promise} promise
-   */
-  this.findRoomNamesFromIds = function (roomsIds) {
-    var
-      deferred = q.defer(),
-      roomNames = [];
-
-    async.each(roomsIds, function (roomsId, callback) {
-      if (!this.rooms[roomsId]) {
-        callback();
-        return false;
-      }
-
-      roomNames = roomNames.concat(this.rooms[roomsId].names);
-      callback();
-    }.bind(this), function () {
-      deferred.resolve(roomNames);
-    });
-
-    return deferred.promise;
-  };
 };
 
 
@@ -195,8 +168,10 @@ createRoom = function (room, collection, filters) {
   var
     tools = {},
     deferred = q.defer(),
-    stringifyObject = JSON.stringify({collection: collection, filters: filters}),
+    stringifyObject = stringify({collection: collection, filters: filters}),
     roomId = crypto.createHash('md5').update(stringifyObject).digest('hex');
+
+  this.kuzzle.log.debug('Create room: ' + roomId,  {collection: collection, filters: filters});
 
   if (!this.rooms[roomId]) {
     // If it's a new room, we have to calculate filters to apply on the future documents
@@ -333,7 +308,7 @@ cleanUpCustomers = function (connectionId) {
  * @return {Promise} promise. Resolve a list of path that points to filtersTree object
  */
 addRoomAndFilters = function (roomId, collection, filters) {
-  return this.kuzzle.dsl.addCurriedFunction(this.filtersTree, roomId, collection, filters)
+  return this.kuzzle.dsl.addCurriedFunction(this.filtersTree, roomId, collection, filters);
 };
 
 /**

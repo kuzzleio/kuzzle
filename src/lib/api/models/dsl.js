@@ -3,6 +3,7 @@ var
   methods = require('./methods'),
   async = require('async'),
   _ = require('lodash'),
+  stringify = require('json-stable-stringify'),
   crypto = require('crypto'),
   q = require('q');
 
@@ -45,8 +46,9 @@ module.exports = function Dsl (kuzzle) {
       return deferred.promise;
     }
 
+    // No filters set for this collection : we return an empty list
     if (!kuzzle.hotelClerk.filtersTree[data.collection]) {
-      deferred.reject();
+      deferred.resolve(rooms);
       return deferred.promise;
     }
 
@@ -114,10 +116,7 @@ module.exports = function Dsl (kuzzle) {
         return false;
       }
 
-      kuzzle.hotelClerk.findRoomNamesFromIds(rooms)
-        .then(function (roomsNames) {
-          deferred.resolve(roomsNames);
-        });
+      deferred.resolve(rooms);
     });
 
     return deferred.promise;
