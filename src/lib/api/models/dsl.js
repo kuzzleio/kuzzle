@@ -15,6 +15,11 @@ module.exports = function Dsl (kuzzle) {
       deferred = q.defer(),
       filterName = Object.keys(filters)[0];
 
+    if (filterName === undefined) {
+      deferred.reject('Undefined filters');
+      return deferred.promise;
+    }
+
     if (!methods[filterName]) {
       deferred.reject('Unknown filter with name '+filterName);
       return deferred.promise;
@@ -122,7 +127,7 @@ module.exports = function Dsl (kuzzle) {
 
 
 var testFilterRecursively = function (content, filters, cachedResults, upperOperand) {
-  var bool = true;
+  var bool;
 
   Object.keys(filters).some(function (key) {
     var subBool;
@@ -152,13 +157,25 @@ var testFilterRecursively = function (content, filters, cachedResults, upperOper
       return false;
     }
     if (upperOperand === 'and') {
-      bool = bool && subBool;
+      if (bool === undefined) {
+        bool = subBool;
+      }
+      else {
+        bool = bool && subBool;
+      }
+
       // if the result of the current filter is false and if the upper operand is an 'and', we can't stop here and bool is false
       return !bool;
     }
     if (upperOperand === 'or') {
+      if (bool === undefined) {
+        bool = subBool;
+      }
+      else {
+        bool = bool || subBool;
+      }
+
       // if the result of the current filter is true and if the upper operand is an 'or', we can't stop here and bool is true
-      bool = bool || subBool;
       return bool;
     }
 

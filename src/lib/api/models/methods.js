@@ -13,15 +13,16 @@ module.exports = {
    * @param {String} roomId
    * @param {String} collection
    * @param {Object} filter given by user on subscribe
+   * @param {Boolean} not if not is true, check if filters are not true
    * @return {Promise} the formatted filter that need to be added to the room
    */
-  term: function (filtersTree, roomId, collection, filter) {
+  term: function (filtersTree, roomId, collection, filter, not) {
     var
       deferred = q.defer(),
       field,
       value,
       formattedFilters,
-      curriedFunctionName;
+      curriedFunctionName = '';
 
     if (_.isEmpty(filter)) {
       deferred.reject('A filter can\'t be empty');
@@ -31,9 +32,13 @@ module.exports = {
     field = Object.keys(filter)[0];
     value = filter[field];
     formattedFilters = {};
-    curriedFunctionName = 'term'+field+value;
 
-    var result = buildCurriedFunction(filtersTree, collection, field, 'term', value, curriedFunctionName, roomId);
+    if (not) {
+      curriedFunctionName += 'not';
+    }
+    curriedFunctionName += 'term' + field + value;
+
+    var result = buildCurriedFunction(filtersTree, collection, field, 'term', value, curriedFunctionName, roomId, not);
     if (result.error) {
       deferred.reject(result.error);
       return deferred.promise;
@@ -53,9 +58,10 @@ module.exports = {
    * @param {String} roomId
    * @param {String} collection
    * @param {Object} filter given by user on subscribe
+   * @param {Boolean} not if not is true, check if filters are not true
    * @return {Promise} the formatted filter that need to be added to the room
    */
-  range: function (filtersTree, roomId, collection, filter) {
+  range: function (filtersTree, roomId, collection, filter, not) {
     var
       deferred = q.defer(),
       field,
@@ -72,9 +78,14 @@ module.exports = {
     async.each(Object.keys(filter[field]), function (fn, callback) {
       var
         value = filter[field][fn],
-        curriedFunctionName = 'range' + field + fn + value;
+        curriedFunctionName = '';
 
-      var result = buildCurriedFunction(filtersTree, collection, field, fn, value, curriedFunctionName, roomId);
+      if (not) {
+        curriedFunctionName += 'not';
+      }
+      curriedFunctionName += 'range' + field + fn + value;
+
+      var result = buildCurriedFunction(filtersTree, collection, field, fn, value, curriedFunctionName, roomId, not);
       if (result.error) {
         callback(result.error);
         return false;
@@ -101,9 +112,10 @@ module.exports = {
    * @param {String} roomId
    * @param {String} collection
    * @param {Object} filter given by user on subscribe
+   * @param {Boolean} not if not is true, check if filters are not true
    * @return {Promise} the formatted filter that need to be added to the room
    */
-  bool: function (filtersTree, roomId, collection, filter) {
+  bool: function (filtersTree, roomId, collection, filter, not) {
     var
       deferred = q.defer(),
       formattedFilters;
@@ -121,9 +133,9 @@ module.exports = {
         callback('Function ' + method + ' doesn\'t exist');
       }
 
-      this[methodName](filtersTree, roomId, collection, filter[method])
+      this[methodName](filtersTree, roomId, collection, filter[method], not)
         .then(function (subFormattedFilters) {
-          formattedFilters = _.extend(formattedFilters, subFormattedFilters);
+          formattedFilters = deepExtend(formattedFilters, subFormattedFilters);
           callback();
         })
         .catch(function (error) {
@@ -135,7 +147,10 @@ module.exports = {
         deferred.reject(error);
       }
 
-      if (Object.keys(formattedFilters)[0] !== 'or' || Object.keys(formattedFilters)[0] !== 'and') {
+      // check if there is an upper "and" that wrap the whole object
+      if ((Object.keys(formattedFilters)[0] !== 'or' && Object.keys(formattedFilters)[0] !== 'and') ||
+          Object.keys(formattedFilters).length > 1) {
+
         formattedFilters = { and: formattedFilters };
       }
 
@@ -152,49 +167,19 @@ module.exports = {
    * @param {String} roomId
    * @param {String} collection
    * @param {Object} filters given by user on subscribe
+   * @param {Boolean} not if not is true, check if filters are not true
    * @return {Promise} the formatted filter that need to be added to the room
    */
-  must: function (filtersTree, roomId, collection, filters) {
-    var
-      deferred = q.defer(),
-      formattedFilters;
+  must: function (filtersTree, roomId, collection, filters, not) {
+    var deferred = q.defer();
 
-    if (_.isEmpty(filters)) {
-      deferred.reject('A filter can\'t be empty');
-      return deferred.promise;
-    }
-
-    formattedFilters = {};
-
-    if (!Array.isArray(filters)) {
-      filters = [filters];
-    }
-
-    async.each(filters, function (filter, callback) {
-      var
-        method = Object.keys(filter)[0],
-        methodName = _.camelCase(method);
-
-      if (this[methodName] === undefined) {
-        callback('Function ' + method + ' is not available in bool filter');
-      }
-
-      this[methodName](filtersTree, roomId, collection, filter[method])
-        .then(function (subFormattedFilters) {
-          formattedFilters = _.extend(formattedFilters, subFormattedFilters);
-          callback();
-        })
-        .catch(function (error) {
-          callback(error);
-        });
-
-    }.bind(this), function (error) {
-      if (error) {
+    getFormattedFiltersForBoolFilters.bind(this)(filtersTree, roomId, collection, filters, not)
+      .then(function (formattedFilters) {
+        deferred.resolve({and: formattedFilters});
+      })
+      .catch(function (error) {
         deferred.reject(error);
-      }
-
-      deferred.resolve({and: formattedFilters});
-    });
+      });
 
     return deferred.promise;
   },
@@ -205,11 +190,16 @@ module.exports = {
    * @param {Object} filtersTree pointer on object filtersTree defined in hotelClerkController
    * @param {String} roomId
    * @param {String} collection
-   * @param {Object} filter given by user on subscribe
+   * @param {Object} filters given by user on subscribe
+   * @param {Boolean} not if not is true, invert the boolean result
    * @return {Promise} the formatted filter that need to be added to the room
    */
-  mustNot: function (filtersTree, roomId, collection, filter) {
+  mustNot: function (filtersTree, roomId, collection, filters, not) {
+    if (not === undefined) {
+      not = false;
+    }
 
+    return this.must(filtersTree, roomId, collection, filters, !not);
   },
 
   /**
@@ -218,12 +208,25 @@ module.exports = {
    * @param {Object} filtersTree pointer on object filtersTree defined in hotelClerkController
    * @param {String} roomId
    * @param {String} collection
-   * @param {Object} filter given by user on subscribe
+   * @param {Object} filters given by user on subscribe
+   * @param {Boolean} not if not is true, invert the boolean result
    * @return {Promise} the formatted filter that need to be added to the room
    */
-  should: function (filtersTree, roomId, collection, filter) {
+  should: function (filtersTree, roomId, collection, filters, not) {
+    var deferred = q.defer();
 
+    getFormattedFiltersForBoolFilters.bind(this)(filtersTree, roomId, collection, filters, not)
+      .then(function (formattedFilters) {
+        deferred.resolve({or: formattedFilters});
+      })
+      .catch(function (error) {
+        deferred.reject(error);
+      });
+
+    return deferred.promise;
   },
+
+
 
   /**
    * Returns true only if the value in field has at least one non-null value
@@ -285,7 +288,7 @@ module.exports = {
 
 
 
-var buildCurriedFunction = function (filtersTree, collection, field, operatorName, value, curriedFunctionName, roomId) {
+var buildCurriedFunction = function (filtersTree, collection, field, operatorName, value, curriedFunctionName, roomId, not) {
   if (operators[operatorName] === undefined) {
     return {error: 'Operator ' + operatorName + ' doesn\'t exist'};
   }
@@ -296,6 +299,9 @@ var buildCurriedFunction = function (filtersTree, collection, field, operatorNam
 
   curriedFunction  = _.curry(operators[operatorName]);
   curriedFunction = _.curry(curriedFunction(value));
+  if (not) {
+    curriedFunction = _.negate(curriedFunction);
+  }
 
   if (!filtersTree[collection]) {
     filtersTree[collection] = {};
@@ -318,4 +324,90 @@ var buildCurriedFunction = function (filtersTree, collection, field, operatorNam
     path: path,
     filter: filtersTree[collection][field][curriedFunctionName]
   };
+};
+
+/**
+ * Construct the formattedFilters for filters from Bool filter (should, must, must_not)
+ *
+ * @param {Object} filtersTree pointer on object filtersTree defined in hotelClerkController
+ * @param {String} roomId
+ * @param {String} collection
+ * @param {Object} filters given by user on subscribe
+ * @param {Boolean} not if not is true, invert the boolean result
+ * @return {Promise} the formatted filter that need to be added to the room
+ */
+var getFormattedFiltersForBoolFilters = function (filtersTree, roomId, collection, filters, not) {
+  var
+    deferred = q.defer(),
+    formattedFilters;
+
+  if (_.isEmpty(filters)) {
+    deferred.reject('Filters can\'t be empty');
+    return deferred.promise;
+  }
+
+  formattedFilters = {};
+
+  if (!Array.isArray(filters)) {
+    filters = [filters];
+  }
+
+  async.each(filters, function (filter, callback) {
+    var
+      method = Object.keys(filter)[0],
+      methodName = _.camelCase(method);
+
+    if (_.isEmpty(filter)) {
+      // just ignore if one of filters is empty, we don't have to rise an error
+      return false;
+    }
+
+    if (this[methodName] === undefined) {
+      callback('Function ' + method + ' doesn\'t exist');
+      return false;
+    }
+
+    this[methodName](filtersTree, roomId, collection, filter[method], not)
+      .then(function (subFormattedFilters) {
+        formattedFilters = _.extend(formattedFilters, subFormattedFilters);
+        callback();
+      })
+      .catch(function (error) {
+        callback(error);
+      });
+
+  }.bind(this), function (error) {
+    if (error) {
+      deferred.reject(error);
+    }
+
+    deferred.resolve(formattedFilters);
+  });
+
+  return deferred.promise;
+};
+
+var deepExtend = function (filters1, filters2) {
+
+  if (_.isEmpty(filters1)) {
+    return filters2;
+  }
+  if (_.isEmpty(filters2)) {
+    return filters1;
+  }
+
+  var
+    attr,
+    resultFilters = _.clone(filters1);
+
+  for (attr in filters2) {
+    if (!resultFilters[attr]) {
+      resultFilters[attr] = filters2[attr];
+    }
+    else {
+      resultFilters[attr] = _.extend(resultFilters[attr], filters2[attr]);
+    }
+  }
+
+  return resultFilters;
 };

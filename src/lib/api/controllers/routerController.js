@@ -99,6 +99,11 @@ module.exports = function RouterController (kuzzle) {
     socket.on('disconnect', function () {
       kuzzle.hotelClerk.removeCustomerFromAllRooms(socket.id);
     });
+
+    // add specific error handler on socket
+    socket.on('error', function (error) {
+      kuzzle.log.error(error);
+    });
   };
 
   this.routeMQListener = function () {
