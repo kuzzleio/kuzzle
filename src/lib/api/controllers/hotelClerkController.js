@@ -18,7 +18,11 @@ module.exports = function HotelClerkController (kuzzle) {
    *    'f45de4d8ef4f3ze4ffzer85d4fgkzm41' : { // -> the room id (according to filters and collection)
    *      names: [ 'chat-room-kuzzle' ], // -> real room name list to notify
    *      count: 100 // -> how many users have subscribed to this room
-   *      filters: [ message.subject.termSubjectKuzzle ] // -> filters needed to send message to this room
+   *      filters: {
+   *        and : {
+   *          'message.subject.termSubjectKuzzle': filtersTree.message.subject.termSubjectKuzzle.fn
+   *        }
+   *      }
    *    }
    *  }
    */
@@ -349,7 +353,7 @@ removeRoomFromFilterTree = function (roomId) {
  *
  * @param {Object} object
  * @param {String} path
- * @param {String} roomId
+ * @param {String?} roomId
  */
 recursiveCleanUpTree = function (object, path, roomId) {
   var
