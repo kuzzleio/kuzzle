@@ -391,15 +391,17 @@ removeRoomFromFilterTree = function (roomId) {
 recursiveCleanUpTree = function (object, path, roomId) {
   var pathArray = path.split('.'),
       subPath = pathArray[pathArray.length-1],
-      parent = object;
+      parent = object,
+      i,
+      index;
 
-  for(var i = 0; i < pathArray.length-1; i++) {
+  for(i = 0; i < pathArray.length-1; i++) {
       parent = parent[pathArray[i]];
   }
 
   // If the current entry is the curried function (that contains the room list and the function definition)
   if (parent[subPath].rooms !== undefined) {
-    var index = parent[subPath].rooms.indexOf(roomId);
+    index = parent[subPath].rooms.indexOf(roomId);
     if (index > -1) {
       parent[subPath].rooms.splice(index, 1);
     }
