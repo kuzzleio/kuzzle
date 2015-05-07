@@ -124,7 +124,14 @@ module.exports = function Dsl (kuzzle) {
 
 };
 
-
+/**
+ *
+ * @param {Object} content the new document
+ * @param {Object} filters filters that we have to test for check if the document match the room
+ * @param {Object} cachedResults an object with all already tested curried function for the document
+ * @param {String} upperOperand represent the operand (and/or) on the upper level
+ * @returns {Boolean} true if the document match a room filters
+ */
 var testFilterRecursively = function (content, filters, cachedResults, upperOperand) {
   var bool;
 
@@ -183,6 +190,13 @@ var testFilterRecursively = function (content, filters, cachedResults, upperOper
   return bool;
 };
 
+/**
+ * Retrieve the value for a specific field in a document
+ *
+ * @param {Object} content the document where we have to retrieve the field value
+ * @param {String} path the path to the field
+ * @returns {*} the value in field or undefined if the document has not this field
+ */
 var getContentValueFromPath = function (content, path) {
   var
     parent = content,

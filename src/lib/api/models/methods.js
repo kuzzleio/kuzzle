@@ -287,7 +287,19 @@ module.exports = {
 };
 
 
-
+/**
+ * Fill object filtersTree with the new filter added by user
+ *
+ * @param {Object} filtersTree global object defined in hotelClerckController
+ * @param {String} collection the collection name
+ * @param {String} field the field where we need to apply the filter
+ * @param {String} operatorName the operator name that the user wants to execute against the document (defined in operator.js)
+ * @param {*} value the value to test on the field
+ * @param {String} curriedFunctionName
+ * @param {String} roomId
+ * @param {Boolean} not
+ * @returns {Object} an object with the path and the new filter
+ */
 var buildCurriedFunction = function (filtersTree, collection, field, operatorName, value, curriedFunctionName, roomId, not) {
   if (operators[operatorName] === undefined) {
     return {error: 'Operator ' + operatorName + ' doesn\'t exist'};
@@ -387,6 +399,12 @@ var getFormattedFiltersForBoolFilters = function (filtersTree, roomId, collectio
   return deferred.promise;
 };
 
+/**
+ * Allow to merge two object and merge extend entries "and" and "or"
+ * @param {Object} filters1
+ * @param {Object} filters2
+ * @returns {Object} the merged object
+ */
 var deepExtend = function (filters1, filters2) {
 
   if (_.isEmpty(filters1)) {
