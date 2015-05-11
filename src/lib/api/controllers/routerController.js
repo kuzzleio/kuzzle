@@ -167,7 +167,7 @@ module.exports = function RouterController (kuzzle) {
   this.notify = function (room, data, connections) {
     if (connections) {
       async.each(connections, function (connection) {
-        switch(connection.type) {
+        switch (connection.type) {
           case 'websocket':
             kuzzle.io.to(connection.id).emit(room, data);
             break;
