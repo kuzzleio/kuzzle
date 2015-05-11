@@ -96,7 +96,7 @@ module.exports = function RouterController (kuzzle) {
             routerCtrl.notify(data.requestId, result.data, connection);
           })
           .catch(function onExecuteError(error) {
-            routerCtrl.notify(data.requestId, {error: error}, socket);
+            routerCtrl.notify(data.requestId, {error: error}, connection);
             kuzzle.log.verbose({error: error});
           });
       });
@@ -150,7 +150,7 @@ module.exports = function RouterController (kuzzle) {
             routerCtrl.notify(data.requestId, result.data, connection);
           })
           .catch(function onExecuteError(error) {
-            routerCtrl.notify(data.requestId, {error: error});
+            routerCtrl.notify(data.requestId, {error: error}, connection);
             kuzzle.log.verbose({error: error});
           });
       });
