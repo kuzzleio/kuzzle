@@ -3,7 +3,8 @@ var
 // Main library for manipulate amqp protocol like RabbitMQ
   amqp = require('amqplib'),
 // Promise created by amqplib for handle amqp connection
-  pConnection;
+  pConnection,
+  mqEchangeName;
 
 module.exports = {
 
@@ -17,6 +18,7 @@ module.exports = {
       return false;
     }
     pConnection = amqp.connect('amqp://' + kuzzle.config.broker.host);
+    mqEchangeName = 'amq.topic';
   },
 
   /**
@@ -34,6 +36,34 @@ module.exports = {
     });
   },
 
+  /**
+   * Allow to add an object to a specific exchange/routing_key
+   * @param routing_key
+   * @param data object that must be insert into routing key
+   */
+  addExchange: function (routingKey, data) {
+    pConnection.then(function (conn) {
+      return conn.createChannel().then(function (channel) {
+        return channel.assertExchange(mqEchangeName, 'topic', {durable: true})
+          .then(function () {
+            return channel.publish(mqEchangeName,routingKey,new Buffer(stringify(data)), {deliveryMode: true});
+          });
+        });
+    });
+  },
+
+  /**
+   * Allow to add an object to a specific exchange/routing_key
+   * @param room
+   * @param data object that must be insert into routing key
+   */
+  replyTo: function (room, data) {
+    pConnection.then(function (conn) {
+      return conn.createChannel().then(function (channel) {
+        return channel.sendToQueue(room,new Buffer(stringify(data)), {deliveryMode: true});
+        });
+    });
+  },
   /**
    * Listen a specific room and execute a callback for each messages
    *
@@ -68,16 +98,15 @@ module.exports = {
   listenExchange: function (routingKey, onListenCB) {
     pConnection.then(function (conn) {
       return conn.createChannel().then(function (channel) {
-        var exName = 'amq.topic';
-        return channel.assertExchange(exName, 'topic', {durable: true})
+        return channel.assertExchange(mqEchangeName, 'topic', {durable: true})
           .then(function () {
             return channel.assertQueue('', {exclusive: true});
           })
           .then(function (qok) {
             var queue = qok.queue;
-            channel.bindQueue(queue, exName, routingKey);
+            channel.bindQueue(queue, mqEchangeName, routingKey);
             channel.consume(queue, function doWork (msg) {
-              onListenCB(JSON.parse(msg.content.toString()), msg.fields.routingKey);
+              onListenCB(msg);
             });
           });
       });
