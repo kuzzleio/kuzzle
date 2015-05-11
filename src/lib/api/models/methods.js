@@ -17,38 +17,21 @@ module.exports = {
    * @return {Promise} the formatted filter that need to be added to the room
    */
   term: function (filtersTree, roomId, collection, filter, not) {
-    var
-      deferred = q.defer(),
-      field,
-      value,
-      formattedFilters,
-      curriedFunctionName = '';
+    return termFunction('term', filtersTree, roomId, collection, filter, not);
+  },
 
-    if (_.isEmpty(filter)) {
-      deferred.reject('A filter can\'t be empty');
-      return deferred.promise;
-    }
-
-    field = Object.keys(filter)[0];
-    value = filter[field];
-    formattedFilters = {};
-
-    if (not) {
-      curriedFunctionName += 'not';
-    }
-    // Clean the field in function name because can contains '.' and we don't want it in the function name
-    curriedFunctionName += 'term' + field.split('.').join('') + value;
-
-    var result = buildCurriedFunction(filtersTree, collection, field, 'term', value, curriedFunctionName, roomId, not);
-    if (result.error) {
-      deferred.reject(result.error);
-      return deferred.promise;
-    }
-
-    formattedFilters[result.path] = result.filter;
-
-    deferred.resolve(formattedFilters);
-    return deferred.promise;
+  /**
+   * Build rooms and filtersTree according to a given filter for 'terms' filter (test equality with one of given value in array)
+   *
+   * @param {Object} filtersTree pointer on object filtersTree defined in hotelClerkController
+   * @param {String} roomId
+   * @param {String} collection
+   * @param {Object} filter given by user on subscribe
+   * @param {Boolean} not if not is true, check if filters are not true
+   * @return {Promise} the formatted filter that need to be added to the room
+   */
+  terms: function (filtersTree, roomId, collection, filter, not) {
+    return termFunction('terms', filtersTree, roomId, collection, filter, not);
   },
 
   /**
@@ -276,13 +259,71 @@ module.exports = {
     return deferred.promise;
   },
 
+  /**
+   * Build rooms and filtersTree according to a given filter for 'not' filter
+   *
+   * @param {Object} filtersTree pointer on object filtersTree defined in hotelClerkController
+   * @param {String} roomId
+   * @param {String} collection
+   * @param {Object} filters given by user on subscribe
+   * @param {Boolean} not if not is true, invert the boolean result
+   * @return {Promise} the formatted filter that need to be added to the room
+   */
+  not: function (filtersTree, roomId, collection, filters, not) {
+    if (not === undefined) {
+      not = false;
+    }
 
+    return this.must(filtersTree, roomId, collection, filters, !not);
+  },
 
   /**
-   * Returns true only if the value in field has at least one non-null value
+   * Build rooms and filtersTree according to a given filter for 'exists' filter
+   *
+   * @param {Object} filtersTree pointer on object filtersTree defined in hotelClerkController
+   * @param {String} roomId
+   * @param {String} collection
+   * @param {Object} filter given by user on subscribe
+   * @param {Boolean} not if not is true, invert the boolean result
+   * @return {Promise} the formatted filter that need to be added to the room
    */
-  exists: function () {
+  exists: function (filtersTree, roomId, collection, filter, not) {
+    var
+      deferred = q.defer(),
+      fieldName,
+      formattedFilters,
+      curriedFunctionName = '';
 
+    if (_.isEmpty(filter)) {
+      deferred.reject('A filter can\'t be empty');
+      return deferred.promise;
+    }
+
+    fieldName = filter.field;
+
+    if (!fieldName) {
+      deferred.reject('Filter \'exists\' must contains \'field\' attribute');
+      return deferred.promise;
+    }
+
+    formattedFilters = {};
+
+    if (not) {
+      curriedFunctionName += 'not';
+    }
+    // Clean the field in function name because can contains '.' and we don't want it in the function name
+    curriedFunctionName += 'exists' + fieldName.split('.').join('');
+
+    var result = buildCurriedFunction(filtersTree, collection, fieldName, 'exists', fieldName, curriedFunctionName, roomId, not);
+    if (result.error) {
+      deferred.reject(result.error);
+      return deferred.promise;
+    }
+
+    formattedFilters[result.path] = result.filter;
+
+    deferred.resolve(formattedFilters);
+    return deferred.promise;
   },
 
   /**
@@ -325,15 +366,7 @@ module.exports = {
    */
   regexp: function () {
 
-  },
-
-  /**
-   * Return true only if the value in field match on any (configurable) of the provided terms
-   */
-  terms: function () {
-
   }
-
 };
 
 
@@ -360,7 +393,7 @@ var buildCurriedFunction = function (filtersTree, collection, field, operatorNam
     path = collection+'.'+field+'.'+curriedFunctionName;
 
   curriedFunction  = _.curry(operators[operatorName]);
-  curriedFunction = _.curry(curriedFunction(value));
+  curriedFunction = _.curry(curriedFunction(field, value));
   if (not) {
     curriedFunction = _.negate(curriedFunction);
   }
@@ -479,3 +512,38 @@ var deepExtend = function (filters1, filters2) {
 
   return resultFilters;
 };
+
+var termFunction = function (termType, filtersTree, roomId, collection, filter, not) {
+  var
+    deferred = q.defer(),
+    field,
+    value,
+    formattedFilters,
+    curriedFunctionName = '';
+
+  if (_.isEmpty(filter)) {
+    deferred.reject('A filter can\'t be empty');
+    return deferred.promise;
+  }
+
+  field = Object.keys(filter)[0];
+  value = filter[field];
+  formattedFilters = {};
+
+  if (not) {
+    curriedFunctionName += 'not';
+  }
+  // Clean the field in function name because can contains '.' and we don't want it in the function name
+  curriedFunctionName += termType + field.split('.').join('') + value;
+
+  var result = buildCurriedFunction(filtersTree, collection, field, termType, value, curriedFunctionName, roomId, not);
+  if (result.error) {
+    deferred.reject(result.error);
+    return deferred.promise;
+  }
+
+  formattedFilters[result.path] = result.filter;
+
+  deferred.resolve(formattedFilters);
+  return deferred.promise;
+}

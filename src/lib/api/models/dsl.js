@@ -73,7 +73,7 @@ module.exports = function Dsl (kuzzle) {
           cachePath = data.collection + '.' + field + '.' + cleanFunctionName;
 
         if (cachedResults[cachePath] === undefined) {
-          cachedResults[cachePath] = filter.fn(flattenContent[field]);
+          cachedResults[cachePath] = filter.fn(flattenContent);
         }
 
         if (!cachedResults[cachePath]) {
@@ -146,7 +146,7 @@ var testFilterRecursively = function (flattenContent, filters, cachedResults, up
           }
         }
 
-        cachedResults[key] = filters[key].fn(value);
+        cachedResults[key] = filters[key].fn(flattenContent);
       }
 
       subBool = cachedResults[key];
@@ -233,7 +233,7 @@ var flattenObject = function (target) {
 
       newKey = prev ? prev + delimiter + key : key;
 
-      if (!Array.isArray(value) && typeof value === 'object' && Object.keys(value).length) {
+      if (value && !Array.isArray(value) && typeof value === 'object' && Object.keys(value).length) {
         return step(value, newKey);
       }
 
