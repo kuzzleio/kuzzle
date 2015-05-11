@@ -99,20 +99,10 @@ module.exports = function Dsl (kuzzle) {
 
           callbackRoom();
         }, function (error) {
-          if (error) {
-            callbackFilter(error);
-            return false;
-          }
-
-          callbackFilter();
+          callbackFilter(error);
         });
       }, function (error) {
-        if (error) {
-          callbackField(error);
-          return false;
-        }
-
-        callbackField();
+        callbackField(error);
       });
     }, function (error) {
       if (error) {

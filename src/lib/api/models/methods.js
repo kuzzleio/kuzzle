@@ -119,6 +119,7 @@ module.exports = {
   bool: function (filtersTree, roomId, collection, filter, not) {
     var
       deferred = q.defer(),
+      allowedBoolFunctions = ['must', 'mustNot', 'should'],
       formattedFilters;
 
     if (_.isEmpty(filter)) {
@@ -130,7 +131,7 @@ module.exports = {
 
     async.each(Object.keys(filter), function (method, callback) {
       var methodName = _.camelCase(method);
-      if (this[methodName] === undefined) {
+      if (this[methodName] === undefined || allowedBoolFunctions.indexOf(methodName) === -1) {
         callback('Function ' + method + ' doesn\'t exist');
       }
 
