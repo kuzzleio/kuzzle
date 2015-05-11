@@ -513,6 +513,17 @@ var deepExtend = function (filters1, filters2) {
   return resultFilters;
 };
 
+/**
+ * Allow to build filter for "term" and "terms" filters
+ *
+ * @param {String} termType "term" or "terms"
+ * @param {Object} filtersTree pointer on object filtersTree defined in hotelClerkController
+ * @param {String} roomId
+ * @param {String} collection
+ * @param {Object} filter given by user on subscribe
+ * @param {Boolean} not if not is true, check if filters are not true
+ * @return {Promise} the formatted filter that need to be added to the room
+ */
 var termFunction = function (termType, filtersTree, roomId, collection, filter, not) {
   var
     deferred = q.defer(),
@@ -546,4 +557,4 @@ var termFunction = function (termType, filtersTree, roomId, collection, filter, 
 
   deferred.resolve(formattedFilters);
   return deferred.promise;
-}
+};

@@ -132,7 +132,6 @@ module.exports = {
   terms: function (field, value, document) {
     var documentValue = document[field];
 
-    console.log(field, value, document);
     if (documentValue === undefined || !Array.isArray(value)) {
       return false;
     }
