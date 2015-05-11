@@ -20,10 +20,10 @@ module.exports = function FunnelController (kuzzle) {
    * Then generate a requestId if not provided and execute the right controller/action
    *
    * @param {Object} object
-   * @param {String} connectionId may be a socket id
+   * @param {Object} connection
    * depending on who call execute (websocket or http)
    */
-  this.execute = function (object, connectionId) {
+  this.execute = function (object, connection) {
     var deferred = q.defer();
 
     async.parallel([
@@ -70,7 +70,7 @@ module.exports = function FunnelController (kuzzle) {
           return false;
         }
 
-        this[object.controller][object.action](object, connectionId)
+        this[object.controller][object.action](object, connection)
           .then(function (result) {
             deferred.resolve(result);
           })

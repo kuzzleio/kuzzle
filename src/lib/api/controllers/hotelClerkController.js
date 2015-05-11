@@ -68,7 +68,7 @@ module.exports = function HotelClerkController (kuzzle) {
    * Add a connectionId to room, and init information a
    * bout room if it doesn't exist before
    *
-   * @param {String} connectionId
+   * @param {Object} connection
    * @param {String} roomName
    * @param {String} collection
    * @param {Object} filters
@@ -76,11 +76,11 @@ module.exports = function HotelClerkController (kuzzle) {
    * user has already subscribe to this room name (just for room with same name, but we not trigger error
    * if the room has a different name with same filter) or if there is an error during room creation
    */
-  this.addSubscription = function (connectionId, roomName, collection, filters) {
+  this.addSubscription = function (connection, roomName, collection, filters) {
     var
       deferred = q.defer();
 
-    if (this.customers[connectionId] && this.customers[connectionId][roomName]) {
+    if (this.customers[connection.id] && this.customers[connection.id][roomName]) {
       deferred.reject('User already subscribe to the room '+roomName);
       return deferred.promise;
     }
@@ -88,9 +88,9 @@ module.exports = function HotelClerkController (kuzzle) {
     tools.createRoom(roomName, collection, filters)
       .then(function (roomId) {
         // Add the room for the customer
-        tools.addRoomForCustomer(connectionId, roomName, roomId);
+        tools.addRoomForCustomer(connection.id, roomName, roomId);
         this.rooms[roomId].count++;
-        deferred.resolve({ data: roomId, rooms: [roomName], connections: [connectionId] });
+        deferred.resolve({ data: roomId, rooms: [roomName], connections: [connection] });
       }.bind(this))
       .catch(function (error) {
         deferred.reject(error);
@@ -100,17 +100,17 @@ module.exports = function HotelClerkController (kuzzle) {
   };
 
   /**
-   * Remove the connectionId from the room and clean up room (delete room if there is no customer)
+   * Remove the connection.id from the room and clean up room (delete room if there is no customer)
    *
-   * @param {String} connectionId
-   * @param {String} room
+   * @param {Object} connection
+   * @param {String} roomName
    * @returns {Promise} promise
    */
-  this.removeSubscription = function (connectionId, room) {
+  this.removeSubscription = function (connection, roomName) {
     var deferred = q.defer();
 
     // Remove the room for the customer, don't wait for delete before continue
-    tools.removeRoomForCustomer(connectionId, room)
+    tools.removeRoomForCustomer(connection.id, roomName)
       .then(function (roomId) {
         if (!this.rooms[roomId]) {
           deferred.reject('Room ' + room + ' with id ' + roomId + ' doesn\'t exist');
@@ -119,7 +119,7 @@ module.exports = function HotelClerkController (kuzzle) {
         this.rooms[roomId].count--;
         tools.cleanUpRooms(roomId);
 
-        deferred.resolve();
+        deferred.resolve({ data: roomId, rooms: [roomName], connections: [connection] });
       }.bind(this))
       .catch( function (error) {
         deferred.reject(error);
@@ -356,29 +356,24 @@ removeRoomFromFilterTree = function (roomId) {
  * @param {String?} roomId
  */
 recursiveCleanUpTree = function (object, path, roomId) {
-  var
-    parent = object,
-    subPath,
-    index,
-    i = 0;
+  var pathArray = path.split('.'),
+      subPath = pathArray[pathArray.length-1],
+      parent = object,
+      i,
+      index;
 
-  path = path.split('.');
-
-  // Loop inside the object for find the right entry
-  for (i = 0; i < path.length-1; i++) {
-    parent = parent[path[i]];
+  for(i = 0; i < pathArray.length-1; i++) {
+      parent = parent[pathArray[i]];
   }
-
-  subPath = path[path.length-1];
 
   // If the current entry is the curried function (that contains the room list and the function definition)
   if (parent[subPath].rooms !== undefined) {
     index = parent[subPath].rooms.indexOf(roomId);
     if (index > -1) {
-      parent[subPath].rooms.slice(index, 1);
+      parent[subPath].rooms.splice(index, 1);
     }
 
-    if (parent[subPath].rooms.length > 1) {
+    if (parent[subPath].rooms.length > 0) {
       return false;
     }
   }
@@ -388,11 +383,11 @@ recursiveCleanUpTree = function (object, path, roomId) {
   }
 
   delete parent[subPath];
+  pathArray.pop();
 
-  path.pop();
-  if (_.isEmpty(path)) {
+  if (_.isEmpty(pathArray)) {
     return false;
   }
 
-  return recursiveCleanUpTree(object, path.join('.'));
+  return recursiveCleanUpTree(object, pathArray.join('.'));
 };
