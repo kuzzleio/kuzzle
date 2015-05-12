@@ -1,10 +1,6 @@
 FROM debian:wheezy
 MAINTAINER Kaliop Labs
 
-ENV http_proxy http://proxy.infra.lan:3128
-ENV https_proxy http://proxy.infra.lan:3128
-ENV no_proxy "172.16.*, 172.17.*, localhost, *.infra.lan, *.loc"
-
 ENV TERM xterm-256color
 
 RUN apt-get update && apt-get install -y \
