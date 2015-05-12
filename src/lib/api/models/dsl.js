@@ -136,16 +136,6 @@ var testFilterRecursively = function (flattenContent, filters, cachedResults, up
     }
     else {
       if (cachedResults[key] === undefined) {
-        var value = getContentValueFromPath(flattenContent, key);
-        if (value === undefined) {
-          bool = false;
-
-          // we can stop here the loop if the operand is an and
-          if (upperOperand === 'and') {
-            return true;
-          }
-        }
-
         cachedResults[key] = filters[key].fn(flattenContent);
       }
 

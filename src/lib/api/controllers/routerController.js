@@ -95,7 +95,7 @@ module.exports = function RouterController (kuzzle) {
             }
           })
           .catch(function onExecuteError(error) {
-            routerCtrl.notify(data.requestId, {error: error}, socket);
+            routerCtrl.notify(data.requestId, {error: error}, [{id: socket.id, type: 'websocket'}]);
             kuzzle.log.verbose({error: error});
           });
       });
@@ -131,7 +131,7 @@ module.exports = function RouterController (kuzzle) {
         // => MQTT client has to send its mqtt client id and subscribe to the topic exchange mqtt.<clientId>
         //    to get feedback from Kuzzle.
         if (data.mqttClientId) {
-          connectionId = "mqtt."+data.mqttClientId;
+          connectionId = 'mqtt.'+data.mqttClientId;
         }
 
         if (connectionId) {

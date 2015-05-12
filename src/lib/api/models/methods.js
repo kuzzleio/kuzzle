@@ -202,7 +202,12 @@ module.exports = {
 
     getFormattedFilters.bind(this)(filtersTree, roomId, collection, filters, not)
       .then(function (formattedFilters) {
-        deferred.resolve({or: formattedFilters});
+        if (not) {
+          deferred.resolve({and: formattedFilters});
+        }
+        else {
+          deferred.resolve({or: formattedFilters});
+        }
       })
       .catch(function (error) {
         deferred.reject(error);
@@ -506,7 +511,9 @@ var deepExtend = function (filters1, filters2) {
       resultFilters[attr] = filters2[attr];
     }
     else {
-      resultFilters[attr] = _.extend(resultFilters[attr], filters2[attr]);
+      if ( attr === 'and' || attr === 'or' ) {
+        resultFilters[attr] = deepExtend(resultFilters[attr], filters2[attr]);
+      }
     }
   }
 
@@ -540,6 +547,11 @@ var termFunction = function (termType, filtersTree, roomId, collection, filter, 
   field = Object.keys(filter)[0];
   value = filter[field];
   formattedFilters = {};
+
+  if (termType === 'terms' && !Array.isArray(value)) {
+    deferred.reject('Filter terms must contains an array');
+    return deferred.promise;
+  }
 
   if (not) {
     curriedFunctionName += 'not';
