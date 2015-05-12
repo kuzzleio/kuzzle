@@ -48,7 +48,7 @@ module.exports = function RouterController (kuzzle) {
             // Send response and close connection
             if (result.rooms) {
               async.each(result.rooms, function (roomName) {
-                routerCtrl.notify(roomName, result.data, result.connections);
+                routerCtrl.notify(roomName, result.data);
               });
             }
             response.writeHead(200, {'Content-Type': 'application/json'});
@@ -90,12 +90,13 @@ module.exports = function RouterController (kuzzle) {
           .then(function onExecuteSuccess (result) {
             if (result.rooms) {
               async.each(result.rooms, function (roomName) {
-                routerCtrl.notify(roomName, result.data, result.connections);
+                routerCtrl.notify(roomName, result.data);
               });
             }
+            routerCtrl.notify(data.requestId, result.data, connection);
           })
           .catch(function onExecuteError(error) {
-            routerCtrl.notify(data.requestId, {error: error}, socket);
+            routerCtrl.notify(data.requestId, {error: error}, connection);
             kuzzle.log.verbose({error: error});
           });
       });
@@ -143,12 +144,13 @@ module.exports = function RouterController (kuzzle) {
           .then(function onExecuteSuccess (result) {
             if (result.rooms) {
               async.each(result.rooms, function (roomName) {
-                routerCtrl.notify(roomName, result.data, result.connections);
+                routerCtrl.notify(roomName, result.data);
               });
             }
+            routerCtrl.notify(data.requestId, result.data, connection);
           })
           .catch(function onExecuteError(error) {
-            routerCtrl.notify(data.requestId, {error: error});
+            routerCtrl.notify(data.requestId, {error: error}, connection);
             kuzzle.log.verbose({error: error});
           });
       });
@@ -164,21 +166,19 @@ module.exports = function RouterController (kuzzle) {
    * @param {Object} data
    * @param {Object} connections
    */
-  this.notify = function (room, data, connections) {
-    if (connections) {
-      async.each(connections, function (connection) {
-        switch (connection.type) {
-          case 'websocket':
-            kuzzle.io.to(connection.id).emit(room, data);
-            break;
-          case 'amq':
-            broker.replyTo(connection.id, data);
-            break;
-          case "mqtt":
-            broker.addExchange(connection.id, data);
-            break;
-        }
-      });
+  this.notify = function (room, data, connection) {
+    if (connection) {
+      switch (connection.type) {
+        case 'websocket':
+          kuzzle.io.to(connection.id).emit(room, data);
+          break;
+        case 'amq':
+          broker.replyTo(connection.id, data);
+          break;
+        case "mqtt":
+          broker.addExchange(connection.id, data);
+          break;
+      }
     }
     else {
       kuzzle.io.emit(room, data);
