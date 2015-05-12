@@ -207,8 +207,8 @@ var getContentValueFromPath = function (content, path) {
  *  info.tag: news
  * }
  *
- * @param {Object} target the object that we have to flatten
- * @returns {Object} the flatten object
+ * @param {Object} target the object we have to flatten
+ * @returns {Object} the flattened object
  */
 var flattenObject = function (target) {
   var
