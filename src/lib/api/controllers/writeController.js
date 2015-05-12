@@ -14,10 +14,6 @@ module.exports = function WriteController (kuzzle) {
       data.content._id = uuid.v4();
     }
 
-    // Emit the main event
-    kuzzle.log.verbose('emit event request:http');
-    kuzzle.emit('data:create', data);
-
     // Test saved filters for notify rooms in a next step
     kuzzle.dsl.testFilters(data)
       .then(function (rooms) {

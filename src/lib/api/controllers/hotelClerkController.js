@@ -90,7 +90,7 @@ module.exports = function HotelClerkController (kuzzle) {
         // Add the room for the customer
         tools.addRoomForCustomer(connection.id, roomName, roomId);
         this.rooms[roomId].count++;
-        deferred.resolve({ data: roomId, rooms: [roomName], connections: [connection] });
+        deferred.resolve({ data: roomId, rooms: [roomName] });
       }.bind(this))
       .catch(function (error) {
         deferred.reject(error);
@@ -119,7 +119,7 @@ module.exports = function HotelClerkController (kuzzle) {
         this.rooms[roomId].count--;
         tools.cleanUpRooms(roomId);
 
-        deferred.resolve({ data: roomId, rooms: [roomName], connections: [connection] });
+        deferred.resolve({ data: roomId, rooms: [roomName] });
       }.bind(this))
       .catch( function (error) {
         deferred.reject(error);
