@@ -1,5 +1,5 @@
 /**
-  * This file contains basic operators for compare. All operators must return only boolean
+  * This file contains basic operators for comparisons. Every operator must return a boolean value.
   */
 
 var
@@ -8,7 +8,7 @@ var
 module.exports = {
 
   /**
-   * Return true only if the value in field is grander or equal than the provided value
+   * Return true only if the value in field is greater than or equal to the provided value
    *
    * @param {String} field the field that we have to check
    * @param {String} value the value that we have to test on document
@@ -26,7 +26,7 @@ module.exports = {
   },
 
   /**
-   * Return true only if the value in field is grander than the provided value
+   * Return true only if the value in field is greater than the provided value
    *
    * @param {String} field the field that we have to check
    * @param {String} value the value that we have to test on document
@@ -44,7 +44,7 @@ module.exports = {
   },
 
   /**
-   * Return true only if the value in field is lower or equal than the provided value
+   * Return true only if the value in field is less than or equal to to the provided value
    *
    * @param {String} field the field that we have to check
    * @param {String} value the value that we have to test on document
@@ -140,7 +140,7 @@ module.exports = {
   },
 
   /**
-   * Return true if the document have at least one non-null value
+   * Return true if the document contains at least one non-null value
    *
    * @param {String} field the field that we have to check
    * @param {String} value / not used here but let for standardize
