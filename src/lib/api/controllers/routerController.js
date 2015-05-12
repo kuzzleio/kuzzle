@@ -180,7 +180,7 @@ module.exports = function RouterController (kuzzle) {
         case 'amq':
           broker.replyTo(connection.id, data);
           break;
-        case "mqtt":
+        case 'mqtt':
           broker.addExchange(connection.id, data);
           break;
       }
