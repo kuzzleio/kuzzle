@@ -53,7 +53,7 @@ module.exports = function Dsl (kuzzle) {
       return deferred.promise;
     }
 
-    // trick for easily parse nested document
+    // trick to easily parse nested document
     flattenContent = flattenObject(data.content);
 
     async.each(Object.keys(flattenContent), function (field, callbackField) {
@@ -67,7 +67,7 @@ module.exports = function Dsl (kuzzle) {
 
       async.each(Object.keys(fieldFilters), function (functionName, callbackFilter) {
         var
-          // Clean the function name because can contains '.' and we don't want it into the function name
+          // Clean function name of potential '.' characters
           cleanFunctionName = functionName.split('.').join(''),
           filter = fieldFilters[functionName],
           cachePath = data.collection + '.' + field + '.' + cleanFunctionName;

@@ -65,8 +65,7 @@ module.exports = function HotelClerkController (kuzzle) {
   tools.cleanUpRooms = _.bind(cleanUpRooms, this);
 
   /**
-   * Add a connectionId to room, and init information a
-   * bout room if it doesn't exist before
+   * Add a connection to room, and init information about room if it doesn't exist before
    *
    * @param {Object} connection
    * @param {String} roomName
