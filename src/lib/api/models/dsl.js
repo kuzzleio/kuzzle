@@ -154,7 +154,7 @@ var testFilterRecursively = function (flattenContent, filters, cachedResults, up
         bool = bool && subBool;
       }
 
-      // if the result of the current filter is false and if the upper operand is an 'and', we can't stop here and bool is false
+      // AND operand: exit the loop at the first FALSE filter
       return !bool;
     }
     if (upperOperand === 'or') {
@@ -165,7 +165,7 @@ var testFilterRecursively = function (flattenContent, filters, cachedResults, up
         bool = bool || subBool;
       }
 
-      // if the result of the current filter is true and if the upper operand is an 'or', we can't stop here and bool is true
+      // OR operand: exit the loop at the first TRUE filter
       return bool;
     }
 
