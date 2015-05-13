@@ -175,24 +175,6 @@ var testFilterRecursively = function (flattenContent, filters, cachedResults, up
 };
 
 /**
- * Retrieve the value for a specific field in a document
- *
- * @param {Object} content the document where we have to retrieve the field value
- * @param {String} path the path to the field
- * @returns {*} the value in field or undefined if the document has not this field
- */
-var getContentValueFromPath = function (content, path) {
-  var pathArray = path.split('.');
-
-  // remove the first element (corresponding to the collection) from path
-  pathArray.shift();
-  // remove the last element (corresponding to the function name)
-  pathArray.pop();
-
-  return content[pathArray.join('.')];
-};
-
-/**
  * Flatten an object transform:
  * {
  *  title: "kuzzle",
