@@ -20,6 +20,13 @@ module.exports = function Dsl (kuzzle) {
   this.methods = require('./methods');
   this.methods.dsl = this;
 
+  /**
+   *
+   * @param {string} roomId
+   * @param {string} collection
+   * @param {Object} filters
+   * @returns {promise} the generated method
+   */
   this.addCurriedFunction = function (roomId, collection, filters) {
     var
       deferred = q.defer(),
