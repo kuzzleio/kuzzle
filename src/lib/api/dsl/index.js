@@ -7,11 +7,20 @@ var
   crypto = require('crypto'),
   q = require('q');
 
+var filtersTree = {};
 
 module.exports = function Dsl (kuzzle) {
 
-  this.addCurriedFunction = function (filtersTree, roomId, collection, filters) {
+  if (!(this instanceof Dsl)) {
+    return new Dsl(kuzzle);
+  }
 
+  this.filtersTree = {};
+
+  this.methods = require('./methods');
+  this.methods.dsl = this;
+
+  this.addCurriedFunction = function (roomId, collection, filters) {
     var
       deferred = q.defer(),
       filterName = Object.keys(filters)[0];
@@ -26,11 +35,11 @@ module.exports = function Dsl (kuzzle) {
       return deferred.promise;
     }
 
-    return methods[filterName](filtersTree, roomId, collection, filters[filterName]);
+    return this.methods[filterName](roomId, collection, filters[filterName]);
   };
 
   /**
-   * Test all filters in filtersTree for test which room to notify
+   * Test all filters in filtersTree to get the rooms to notify
    *
    * @param {Object} data
    * @returns {Promise} promise. Resolve a rooms list that we need to notify
@@ -48,7 +57,7 @@ module.exports = function Dsl (kuzzle) {
     }
 
     // No filters set for this collection : we return an empty list
-    if (!kuzzle.hotelClerk.filtersTree[data.collection]) {
+    if (!this.filtersTree[data.collection]) {
       deferred.resolve(rooms);
       return deferred.promise;
     }
@@ -58,7 +67,7 @@ module.exports = function Dsl (kuzzle) {
 
     async.each(Object.keys(flattenContent), function (field, callbackField) {
 
-      var fieldFilters = kuzzle.hotelClerk.filtersTree[data.collection][field];
+      var fieldFilters = this.filtersTree[data.collection][field];
 
       if (!fieldFilters) {
         callbackField();
@@ -81,30 +90,34 @@ module.exports = function Dsl (kuzzle) {
           return false;
         }
 
-        async.each(filter.rooms, function (roomId, callbackRoom) {
-          var
-            room = kuzzle.hotelClerk.rooms[roomId],
-            passAllFilters;
+        async.each(
+          filter.rooms,
+          function (roomId, callbackRoom) {
+            var
+              room = kuzzle.hotelClerk.rooms[roomId],
+              passAllFilters;
 
-          if (!room) {
-            callbackRoom('Room not found');
-            return false;
-          }
+            if (!room) {
+              callbackRoom('Room not found');
+              return false;
+            }
 
-          passAllFilters = testFilterRecursively(flattenContent, room.filters, cachedResults, 'and');
+            passAllFilters = testFilterRecursively(flattenContent, room.filters, cachedResults, 'and');
 
-          if (passAllFilters) {
-            rooms = _.uniq(rooms.concat(fieldFilters[functionName].rooms));
-          }
+            if (passAllFilters) {
+              rooms = _.uniq(rooms.concat(fieldFilters[functionName].rooms));
+            }
 
-          callbackRoom();
-        }, function (error) {
+            callbackRoom();
+        }.bind(this),
+        function (error) {
           callbackFilter(error);
         });
-      }, function (error) {
+      }.bind(this),
+      function (error) {
         callbackField(error);
       });
-    }, function (error) {
+    }.bind(this), function (error) {
       if (error) {
         deferred.reject(error);
         return false;
@@ -112,6 +125,29 @@ module.exports = function Dsl (kuzzle) {
 
       deferred.resolve(rooms);
     });
+
+    return deferred.promise;
+  };
+
+
+  /**
+   * Removes all references to a given room
+   *
+   * @param room the room to remove
+   * @returns {promise}
+   */
+  this.removeRoom = function (room) {
+    var deferred = q.defer();
+
+    async.each(room.filters,
+      function (filterPath, callback) {
+        removeFilterPath.call(this, room, filterPath);
+        callback();
+      }.bind(this),
+      function (error) {
+        deferred.resolve();
+      }
+    );
 
     return deferred.promise;
   };
@@ -217,3 +253,49 @@ var flattenObject = function (target) {
 
   return output;
 };
+
+/**
+ * Removes recursively any reference to a given filterPath from the filters cache object
+ *
+ * @private
+ * @param {Object} room the room for which was attached the filter
+ * @param {string} filterPath the path of the filter in the filters collection
+ * @returns {boolean}
+ */
+var removeFilterPath = function (room, filterPath) {
+  var pathArray = filterPath.split('.'),
+    subPath = pathArray[pathArray.length - 1],
+    parent = this.filtersTree,
+    i,
+    index;
+
+  for(i = 0; i < pathArray.length-1; i++) {
+    parent = parent[pathArray[i]];
+  }
+
+  // If the current entry is the curried function (that contains the room list and the function definition)
+  if (parent[subPath].rooms !== undefined) {
+    index = parent[subPath].rooms.indexOf(room.id);
+    if (index > -1) {
+      parent[subPath].rooms.splice(index, 1);
+    }
+
+    if (parent[subPath].rooms.length > 0) {
+      return false;
+    }
+  }
+  // If it's not a function, test if the entry is not empty
+  else if (!_.isEmpty(parent[subPath])) {
+    return false;
+  }
+
+  delete parent[subPath];
+  pathArray.pop();
+
+  if (_.isEmpty(pathArray)) {
+    return false;
+  }
+
+  return removeFilterPath.call(this, room, pathArray.join('.'));
+};
+

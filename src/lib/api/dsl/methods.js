@@ -4,34 +4,37 @@ var
   operators = require('./operators'),
   q = require('q');
 
-module.exports = {
+module.exports = methods = {
+
+  /**
+   * Reference to parent. Initialized by the Dsl object
+   */
+  dsl: {},
 
   /**
    * Build rooms and filtersTree according to a given filter for 'term' filter (test equality)
    *
-   * @param {Object} filtersTree pointer on object filtersTree defined in hotelClerkController
    * @param {String} roomId
    * @param {String} collection
    * @param {Object} filter given by user on subscribe
    * @param {Boolean} not if not is true, check if filters are not true
    * @return {Promise} the formatted filter that need to be added to the room
    */
-  term: function (filtersTree, roomId, collection, filter, not) {
-    return termFunction('term', filtersTree, roomId, collection, filter, not);
+  term: function (roomId, collection, filter, not) {
+    return termFunction('term', roomId, collection, filter, not);
   },
 
   /**
    * Build rooms and filtersTree according to a given filter for 'terms' filter (test equality with one of given value in array)
    *
-   * @param {Object} filtersTree pointer on object filtersTree defined in hotelClerkController
    * @param {String} roomId
    * @param {String} collection
    * @param {Object} filter given by user on subscribe
    * @param {Boolean} not if not is true, check if filters are not true
    * @return {Promise} the formatted filter that need to be added to the room
    */
-  terms: function (filtersTree, roomId, collection, filter, not) {
-    return termFunction('terms', filtersTree, roomId, collection, filter, not);
+  terms: function (roomId, collection, filter, not) {
+    return termFunction('terms', roomId, collection, filter, not);
   },
 
   /**
@@ -45,7 +48,7 @@ module.exports = {
    * @param {Boolean} not if not is true, check if filters are not true
    * @return {Promise} the formatted filter that need to be added to the room
    */
-  range: function (filtersTree, roomId, collection, filter, not) {
+  range: function (roomId, collection, filter, not) {
     var
       deferred = q.defer(),
       field,
@@ -92,14 +95,13 @@ module.exports = {
   /**
    * Build rooms and filtersTree according to a given filter for 'bool' filter (nested filters with ~and/or)
    *
-   * @param {Object} filtersTree pointer on object filtersTree defined in hotelClerkController
    * @param {String} roomId
    * @param {String} collection
    * @param {Object} filter given by user on subscribe
    * @param {Boolean} not if not is true, check if filters are not true
    * @return {Promise} the formatted filter that need to be added to the room
    */
-  bool: function (filtersTree, roomId, collection, filter, not) {
+  bool: function (roomId, collection, filter, not) {
     var
       deferred = q.defer(),
       allowedBoolFunctions = ['must', 'mustNot', 'should'],
@@ -118,7 +120,7 @@ module.exports = {
         callback('Function ' + method + ' doesn\'t exist');
       }
 
-      this[methodName](filtersTree, roomId, collection, filter[method], not)
+      this[methodName](roomId, collection, filter[method], not)
         .then(function (subFormattedFilters) {
           formattedFilters = deepExtend(formattedFilters, subFormattedFilters);
           callback();
@@ -148,17 +150,16 @@ module.exports = {
   /**
    * Build rooms and filtersTree according to a given filter for 'must' filter (and in nested filters)
    *
-   * @param {Object} filtersTree pointer on object filtersTree defined in hotelClerkController
    * @param {String} roomId
    * @param {String} collection
    * @param {Object} filters given by user on subscribe
    * @param {Boolean} not if not is true, check if filters are not true
    * @return {Promise} the formatted filter that need to be added to the room
    */
-  must: function (filtersTree, roomId, collection, filters, not) {
+  must: function (roomId, collection, filters, not) {
     var deferred = q.defer();
 
-    getFormattedFilters.bind(this)(filtersTree, roomId, collection, filters, not)
+    getFormattedFilters(roomId, collection, filters, not)
       .then(function (formattedFilters) {
         deferred.resolve({and: formattedFilters});
       })
@@ -172,35 +173,33 @@ module.exports = {
   /**
    * Build rooms and filtersTree according to a given filter for 'must_not' filter (and not in nested filters)
    *
-   * @param {Object} filtersTree pointer on object filtersTree defined in hotelClerkController
    * @param {String} roomId
    * @param {String} collection
    * @param {Object} filters given by user on subscribe
    * @param {Boolean} not if not is true, invert the boolean result
    * @return {Promise} the formatted filter that need to be added to the room
    */
-  mustNot: function (filtersTree, roomId, collection, filters, not) {
+  mustNot: function (roomId, collection, filters, not) {
     if (not === undefined) {
       not = false;
     }
 
-    return this.must(filtersTree, roomId, collection, filters, !not);
+    return this.must(roomId, collection, filters, !not);
   },
 
   /**
    * Build rooms and filtersTree according to a given filter for 'should' filter (or in nested filters with a minimum should match option)
    *
-   * @param {Object} filtersTree pointer on object filtersTree defined in hotelClerkController
    * @param {String} roomId
    * @param {String} collection
    * @param {Object} filters given by user on subscribe
    * @param {Boolean} not if not is true, invert the boolean result
    * @return {Promise} the formatted filter that need to be added to the room
    */
-  should: function (filtersTree, roomId, collection, filters, not) {
+  should: function (roomId, collection, filters, not) {
     var deferred = q.defer();
 
-    getFormattedFilters.bind(this)(filtersTree, roomId, collection, filters, not)
+    getFormattedFilters(roomId, collection, filters, not)
       .then(function (formattedFilters) {
         if (not) {
           deferred.resolve({and: formattedFilters});
@@ -219,17 +218,16 @@ module.exports = {
   /**
    * Build rooms and filtersTree according to a given filter for 'and' filter
    *
-   * @param {Object} filtersTree pointer on object filtersTree defined in hotelClerkController
    * @param {String} roomId
    * @param {String} collection
    * @param {Object} filters given by user on subscribe
    * @param {Boolean} not if not is true, invert the boolean result
    * @return {Promise} the formatted filter that need to be added to the room
    */
-  and: function (filtersTree, roomId, collection, filters, not) {
+  and: function (roomId, collection, filters, not) {
     var deferred = q.defer();
 
-    getFormattedFilters.bind(this)(filtersTree, roomId, collection, filters, not)
+    getFormattedFilters(roomId, collection, filters, not)
       .then(function (formattedFilters) {
         deferred.resolve({and: formattedFilters});
       })
@@ -243,17 +241,16 @@ module.exports = {
   /**
    * Build rooms and filtersTree according to a given filter for 'or' filter
    *
-   * @param {Object} filtersTree pointer on object filtersTree defined in hotelClerkController
    * @param {String} roomId
    * @param {String} collection
    * @param {Object} filters given by user on subscribe
    * @param {Boolean} not if not is true, invert the boolean result
    * @return {Promise} the formatted filter that need to be added to the room
    */
-  or: function (filtersTree, roomId, collection, filters, not) {
+  or: function (roomId, collection, filters, not) {
     var deferred = q.defer();
 
-    getFormattedFilters.bind(this)(filtersTree, roomId, collection, filters, not)
+    getFormattedFilters(roomId, collection, filters, not)
       .then(function (formattedFilters) {
         deferred.resolve({or: formattedFilters});
       })
@@ -267,32 +264,30 @@ module.exports = {
   /**
    * Build rooms and filtersTree according to a given filter for 'not' filter
    *
-   * @param {Object} filtersTree pointer on object filtersTree defined in hotelClerkController
    * @param {String} roomId
    * @param {String} collection
    * @param {Object} filters given by user on subscribe
    * @param {Boolean} not if not is true, invert the boolean result
    * @return {Promise} the formatted filter that need to be added to the room
    */
-  not: function (filtersTree, roomId, collection, filters, not) {
+  not: function (roomId, collection, filters, not) {
     if (not === undefined) {
       not = false;
     }
 
-    return this.must(filtersTree, roomId, collection, filters, !not);
+    return this.must(roomId, collection, filters, !not);
   },
 
   /**
    * Build rooms and filtersTree according to a given filter for 'exists' filter
    *
-   * @param {Object} filtersTree pointer on object filtersTree defined in hotelClerkController
    * @param {String} roomId
    * @param {String} collection
    * @param {Object} filter given by user on subscribe
    * @param {Boolean} not if not is true, invert the boolean result
    * @return {Promise} the formatted filter that need to be added to the room
    */
-  exists: function (filtersTree, roomId, collection, filter, not) {
+  exists: function (roomId, collection, filter, not) {
     var
       deferred = q.defer(),
       fieldName,
@@ -319,7 +314,7 @@ module.exports = {
     // Clean the field in function name because can contains '.' and we don't want it in the function name
     curriedFunctionName += 'exists' + fieldName.split('.').join('');
 
-    var result = buildCurriedFunction(filtersTree, collection, fieldName, 'exists', fieldName, curriedFunctionName, roomId, not);
+    var result = buildCurriedFunction(collection, fieldName, 'exists', fieldName, curriedFunctionName, roomId, not);
     if (result.error) {
       deferred.reject(result.error);
       return deferred.promise;
@@ -378,7 +373,6 @@ module.exports = {
 /**
  * Fill object filtersTree with the new filter added by user
  *
- * @param {Object} filtersTree global object defined in hotelClerckController
  * @param {String} collection the collection name
  * @param {String} field the field where we need to apply the filter
  * @param {String} operatorName the operator name that the user wants to execute against the document (defined in operator.js)
@@ -388,7 +382,7 @@ module.exports = {
  * @param {Boolean} not
  * @returns {Object} an object with the path and the new filter
  */
-var buildCurriedFunction = function (filtersTree, collection, field, operatorName, value, curriedFunctionName, roomId, not) {
+var buildCurriedFunction = function (collection, field, operatorName, value, curriedFunctionName, roomId, not) {
   if (operators[operatorName] === undefined) {
     return {error: 'Operator ' + operatorName + ' doesn\'t exist'};
   }
@@ -396,47 +390,45 @@ var buildCurriedFunction = function (filtersTree, collection, field, operatorNam
   var
     path = collection+'.'+field+'.'+curriedFunctionName;
 
-
-  if (!filtersTree[collection]) {
-    filtersTree[collection] = {};
+  if (!this.dsl.filtersTree[collection]) {
+    this.dsl.filtersTree[collection] = {};
   }
 
-  if (!filtersTree[collection][field]) {
-    filtersTree[collection][field] = {};
+  if (!this.dsl.filtersTree[collection][field]) {
+    this.dsl.filtersTree[collection][field] = {};
   }
 
-  if (!filtersTree[collection][field][curriedFunctionName]) {
+  if (!this.dsl.filtersTree[collection][field][curriedFunctionName]) {
     var curriedFunction  = _.curry(operators[operatorName]);
     curriedFunction = _.curry(curriedFunction(field, value));
     if (not) {
       curriedFunction = _.negate(curriedFunction);
     }
 
-    filtersTree[collection][field][curriedFunctionName] = {
+    this.dsl.filtersTree[collection][field][curriedFunctionName] = {
       rooms: [],
       fn: curriedFunction
     };
   }
 
-  filtersTree[collection][field][curriedFunctionName].rooms.push(roomId);
+  this.dsl.filtersTree[collection][field][curriedFunctionName].rooms.push(roomId);
 
   return {
     path: path,
-    filter: filtersTree[collection][field][curriedFunctionName]
+    filter: this.dsl.filtersTree[collection][field][curriedFunctionName]
   };
-};
+}.bind(methods);
 
 /**
  * Construct the formattedFilters for filters with conditional operand (bool, and, or, ...)
  *
- * @param {Object} filtersTree pointer on object filtersTree defined in hotelClerkController
  * @param {String} roomId
  * @param {String} collection
  * @param {Object} filters given by user on subscribe
  * @param {Boolean} not if not is true, invert the boolean result
  * @return {Promise} the formatted filter that need to be added to the room
  */
-var getFormattedFilters = function (filtersTree, roomId, collection, filters, not) {
+var getFormattedFilters = function (roomId, collection, filters, not) {
   var
     deferred = q.defer(),
     formattedFilters;
@@ -467,7 +459,7 @@ var getFormattedFilters = function (filtersTree, roomId, collection, filters, no
       return false;
     }
 
-    this[methodName](filtersTree, roomId, collection, filter[method], not)
+    this[methodName](roomId, collection, filter[method], not)
       .then(function (subFormattedFilters) {
         formattedFilters = _.extend(formattedFilters, subFormattedFilters);
         callback();
@@ -485,7 +477,7 @@ var getFormattedFilters = function (filtersTree, roomId, collection, filters, no
   });
 
   return deferred.promise;
-};
+}.bind(methods);
 
 /**
  * Allow to merge two object and merge extend entries "and" and "or"
@@ -524,14 +516,13 @@ var deepExtend = function (filters1, filters2) {
  * Allow to build filter for "term" and "terms" filters
  *
  * @param {String} termType "term" or "terms"
- * @param {Object} filtersTree pointer on object filtersTree defined in hotelClerkController
  * @param {String} roomId
  * @param {String} collection
  * @param {Object} filter given by user on subscribe
  * @param {Boolean} not if not is true, check if filters are not true
  * @return {Promise} the formatted filter that need to be added to the room
  */
-var termFunction = function (termType, filtersTree, roomId, collection, filter, not) {
+var termFunction = function (termType, roomId, collection, filter, not) {
   var
     deferred = q.defer(),
     field,
@@ -559,7 +550,7 @@ var termFunction = function (termType, filtersTree, roomId, collection, filter, 
   // Clean the field in function name because can contains '.' and we don't want it in the function name
   curriedFunctionName += termType + field.split('.').join('') + value;
 
-  var result = buildCurriedFunction(filtersTree, collection, field, termType, value, curriedFunctionName, roomId, not);
+  var result = buildCurriedFunction(collection, field, termType, value, curriedFunctionName, roomId, not);
   if (result.error) {
     deferred.reject(result.error);
     return deferred.promise;
@@ -569,4 +560,4 @@ var termFunction = function (termType, filtersTree, roomId, collection, filter, 
 
   deferred.resolve(formattedFilters);
   return deferred.promise;
-};
+}.bind(methods.dsl);
