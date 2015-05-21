@@ -30,19 +30,20 @@ module.exports = function Dsl (kuzzle) {
   this.addCurriedFunction = function (roomId, collection, filters) {
     var
       deferred = q.defer(),
-      filterName = Object.keys(filters)[0];
+      filterName = Object.keys(filters)[0],
+      privateFilterName = _.camelCase(filterName);
 
     if (filterName === undefined) {
       deferred.reject('Undefined filters');
       return deferred.promise;
     }
 
-    if (!methods[filterName]) {
-      deferred.reject('Unknown filter with name '+filterName);
+    if (!methods[privateFilterName]) {
+      deferred.reject('Unknown filter with name '+ privateFilterName);
       return deferred.promise;
     }
 
-    return this.methods[filterName](roomId, collection, filters[filterName]);
+    return this.methods[privateFilterName](roomId, collection, filters[filterName]);
   };
 
   /**
@@ -55,6 +56,7 @@ module.exports = function Dsl (kuzzle) {
     var
       deferred = q.defer(),
       cachedResults = {},
+      documentKeys =[],
       flattenContent = {},
       rooms = [];
 
@@ -72,8 +74,23 @@ module.exports = function Dsl (kuzzle) {
     // trick to easily parse nested document
     flattenContent = flattenObject(data.content);
 
-    async.each(Object.keys(flattenContent), function (field, callbackField) {
+    // we still need to get the real field keys
+    Object.keys(flattenContent).forEach(function(compoundField){
+      var key;
 
+      compoundField.split('.').forEach(function(attr){
+        if (key) {
+          key += '.' + attr;
+        }
+        else {
+          key = attr;
+        }
+        documentKeys.push(key);
+      });
+    });
+
+
+    async.each(documentKeys, function (field, callbackField) {
       var fieldFilters = this.filtersTree[data.collection][field];
 
       if (!fieldFilters) {

@@ -3,9 +3,10 @@
   */
 
 var
-  _ = require('lodash');
+  _ = require('lodash'),
+  geolib = require('geolib');
 
-module.exports = {
+module.exports = operators = {
 
   /**
    * Return true only if the value in field is greater than or equal to the provided value
@@ -156,7 +157,7 @@ module.exports = {
     if (documentValues === null) {
       return false;
     }
-    if (_.isEmpty(documentValues)) {
+    if (_.isObject(documentValues) && _.isEmpty(documentValues)) {
       return false;
     }
 
@@ -167,6 +168,26 @@ module.exports = {
     }
 
     return true;
+  },
+
+  geoBoundingBox: function (field, value, document) {
+    if (!operators.exists(field + '.lat', value, document)) {
+      return false;
+    }
+    if (!operators.exists(field + '.lon', value, document)) {
+      return false;
+    }
+
+    return geolib.isPointInside(
+      {  latitude: document[field + '.lat'], longitude: document[field + '.lon'] },
+      [
+        { latitude: value.left, longitude: value.top },
+        { latitude: value.right, longitude: value.top },
+        { latitude: value.right, longitude: value.bottom },
+        { latitude: value.left, longitude: value.bottom }
+      ]
+    );
+
   }
 
 };

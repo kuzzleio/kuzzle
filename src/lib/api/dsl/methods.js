@@ -2,7 +2,8 @@ var
   _ = require('lodash'),
   async = require('async'),
   operators = require('./operators'),
-  q = require('q');
+  q = require('q'),
+  geohash = require('ngeohash');
 
 module.exports = methods = {
 
@@ -329,8 +330,162 @@ module.exports = methods = {
   /**
    * Return true only if the point in field is in the bounding box
    */
-  geoBoundingBox: function () {
+  geoBoundingBox: function (roomId, collection, filter, not) {
+    var
+      curriedFunctionName,
+      deferred = q.defer(),
+      fieldName,
+      formattedFilters = {},
+      geoFilter,
+      top,
+      left,
+      bottom,
+      right,
+      result,
+      tmp;
 
+    if (_.isEmpty(filter)) {
+      deferred.reject('Missing filter');
+      return deferred.promise;
+    }
+
+    fieldName = Object.keys(filter)[0];
+    if (!fieldName) {
+      deferred.reject('Missing attribute field');
+      return deferred.promise;
+    }
+
+    geoFilter = filter[fieldName];
+
+    // elastic search DSL allows the undescore notation
+    // we need an exception for the linter
+    /* jshint camelcase: false */
+    if (geoFilter.top_left) {
+      geoFilter.topLeft = geoFilter.top_left;
+      delete geoFilter.top_left;
+    }
+    if (geoFilter.bottom_right) {
+      geoFilter.bottomRight = geoFilter.bottom_right;
+      delete geoFilter.bottom_right;
+    }
+    /* jshint camelcase: true */
+
+    try{
+      // { top: -74.1, left: 40.73, bottom: -71.12, right: 40.01 }
+      if (geoFilter.top &&
+        geoFilter.left &&
+        geoFilter.bottom &&
+        geoFilter.right
+      ){
+        top = geoFilter.top;
+        left = geoFilter.left;
+        bottom = geoFilter.bottom;
+        right = geoFilter.right;
+      }
+      // { topLeft: { lat: 40.73, lon: -74.1 }, bottomRight: { lat: 40.01, lon: -71.12 } }
+      else if (geoFilter.topLeft &&
+        geoFilter.bottomRight &&
+        geoFilter.topLeft.lat &&
+        geoFilter.topLeft.lon &&
+        geoFilter.bottomRight.lat &&
+        geoFilter.bottomRight.lon
+      ){
+        top = geoFilter.topLeft.lon;
+        left = geoFilter.topLeft.lat;
+        bottom = geoFilter.bottomRight.lon;
+        right = geoFilter.bottomRight.lat;
+      }
+      // { topLeft: [ -74.1, 40.73 ], bottomRight: [ -71.12, 40.01 ] }
+      else if (geoFilter.topLeft &&
+        geoFilter.borderBottomRight &&
+        _.isArray(geoFilter.topLeft) &&
+        _.isArray(geoFilter.bottomRight)
+      ){
+        top = geoFilter.topLeft[0];
+        left = geoFilter.topLeft[1];
+        bottom = geoFilter.bottomRight[0];
+        right = geoFilter.bottomRight[1];
+      }
+      // { topLeft: "40.73, -74.1", bottomRight: "40.01, -71.12" }
+      else if (geoFilter.topLeft &&
+        geoFilter.bottomRight &&
+        _.isString(geoFilter.topLeft) &&
+        _.isString(geoFilter.bottomRight) &&
+        /^[-.0-9]+,\s*[-.0-9]+]$/.test(geoFilter.topLeft) &&
+        /^[-.0-9]+,\s*[-.0-9]+]$/.test(geoFilter.bottomRight)
+      ){
+        tmp = geoFilter.topLeft.match(/^([-.0-9]+),\s*([-.0-9]+)$/);
+        top = tmp[1];
+        left = tmp[2];
+
+        tmp = geoFilter.bottomRight.match(/^([-.0-9]+),\s*([-.0-9]+)$/);
+        bottom = tmp[1];
+        right = tmp[2];
+      }
+      // { topLeft: "dr5r9ydj2y73", bottomRight: "drj7teegpus6" }
+      else if (geoFilter.topLeft &&
+        geoFilter.bottomRight &&
+        _.isString(geoFilter.topLeft) &&
+        _.isString(geoFilter.bottomRight) &&
+        /^[0-9a-z]{4,}$/.test(geoFilter.topLeft) &&
+        /^[0-9a-z]{4,}$/.test(geoFilter.bottomRight)
+      ){
+        tmp = geohash.decode(geoFilter.topLeft);
+        top = tmp.longitude;
+        left = tmp.latitude;
+
+        tmp = geohash.decode(geoFilter.bottomRight);
+        bottom = tmp.longitude;
+        right = tmp.latitude;
+      }
+
+      if (top && left && bottom && right) {
+        if (!_.isNumber(top)) {
+          top = parseFloat(top);
+        }
+        if (!_.isNumber(left)) {
+          left = parseFloat(left);
+        }
+        if (!_.isNumber(bottom)) {
+          bottom = parseFloat(bottom);
+        }
+        if (!_.isNumber(right)) {
+          right = parseFloat(right);
+        }
+      }
+      else {
+        throw new SyntaxError('Unable to parse GeoBoundingBox coordinates');
+      }
+    }
+    catch(err) {
+      deferred.reject(err.message);
+      return deferred.promise;
+    }
+
+    curriedFunctionName = [fieldName, 'geoBoundingBox', geohash.encode(left, top), geohash.encode(right, bottom)].join('');
+    if (not) {
+      curriedFunctionName += 'not';
+    }
+
+    result = buildCurriedFunction(
+      collection,
+      fieldName,
+      'geoBoundingBox',
+      {top: top, left: left, right: right, bottom: bottom},
+      curriedFunctionName,
+      roomId,
+      not
+    );
+
+    if (result.error) {
+      deferred.reject(result.error);
+      return deferred.promise;
+    }
+
+    formattedFilters[result.path] = result.filter;
+
+    deferred.resolve(formattedFilters);
+    return deferred.promise;
   },
 
   /**

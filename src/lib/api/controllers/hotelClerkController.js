@@ -298,9 +298,10 @@ cleanUpCustomers = function (connectionId) {
  * @param {String} roomId
  * @param {String} collection
  * @param {Object} filters
- * @return {Promise} promise. Resolve a list of path that points to filtersTree object
+ * @return {promise} promise. Resolve a list of path that points to filtersTree object
  */
 addRoomAndFilters = function (roomId, collection, filters) {
   return this.kuzzle.dsl.addCurriedFunction(roomId, collection, filters);
 };
+
 
