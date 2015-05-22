@@ -715,4 +715,4 @@ var termFunction = function (termType, roomId, collection, filter, not) {
 
   deferred.resolve(formattedFilters);
   return deferred.promise;
-}.bind(methods.dsl);
+};
