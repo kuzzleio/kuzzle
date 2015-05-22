@@ -18,7 +18,11 @@ module.exports = function HotelClerkController (kuzzle) {
    *    'f45de4d8ef4f3ze4ffzer85d4fgkzm41' : { // -> the room id (according to filters and collection)
    *      names: [ 'chat-room-kuzzle' ], // -> real room name list to notify
    *      count: 100 // -> how many users have subscribed to this room
-   *      filters: [ message.subject.termSubjectKuzzle ] // -> filters needed to send message to this room
+   *      filters: {
+   *        and : {
+   *          'message.subject.termSubjectKuzzle': filtersTree.message.subject.termSubjectKuzzle.fn
+   *        }
+   *      }
    *    }
    *  }
    */
@@ -61,7 +65,7 @@ module.exports = function HotelClerkController (kuzzle) {
   tools.cleanUpRooms = _.bind(cleanUpRooms, this);
 
   /**
-   * Add a connection.id to room, and init information about room if it doesn't exist before
+   * Add a connection to room, and init information about room if it doesn't exist before
    *
    * @param {Object} connection
    * @param {String} roomName
@@ -149,7 +153,6 @@ module.exports = function HotelClerkController (kuzzle) {
 
     delete this.customers[connectionId];
   };
-
 };
 
 
@@ -177,12 +180,15 @@ createRoom = function (room, collection, filters) {
     // If it's a new room, we have to calculate filters to apply on the future documents
     tools.addRoomAndFilters = _.bind(addRoomAndFilters, this);
     tools.addRoomAndFilters(roomId, collection, filters)
-      .then(function (pathFilterList) {
-        this.rooms[roomId] = {
-          names: [],
-          count : 0,
-          filters : pathFilterList
-        };
+      .then(function (formattedFilters) {
+
+        if (!this.rooms[roomId]) {
+          this.rooms[roomId] = {
+            names: [],
+            count: 0,
+            filters: formattedFilters
+          };
+        }
 
         deferred.resolve(roomId);
       }.bind(this))
@@ -291,13 +297,11 @@ cleanUpCustomers = function (connectionId) {
  * Transform something like:
  * {
  *  term: { 'subject': 'kuzzle' }
- *  range: { 'star': { 'gte': 3 } }
  * }
  *
  * Into something like:
  * {
  *  subject: { 'termSubjectKuzzle' : { fn: function () {}, rooms: [] } },
- *  star: { 'rangeStarGte3' : { fn: function () {} }, rooms: [] }
  * }
  * And inject it in the right place in filtersTree according to the collection and field
  *
@@ -307,45 +311,7 @@ cleanUpCustomers = function (connectionId) {
  * @return {Promise} promise. Resolve a list of path that points to filtersTree object
  */
 addRoomAndFilters = function (roomId, collection, filters) {
-  var
-    deferred = q.defer(),
-    pathFilterList = [];
-
-  this.kuzzle.dsl.getFunctionsNames(collection, filters)
-    .then(function (filtersNames) {
-
-      async.each(Object.keys(filtersNames), function (name, callback) {
-        var
-          fn = Object.keys(filtersNames[name])[0],
-          filter = filtersNames[name][fn],
-          field = Object.keys(filter)[0];
-
-        if (!this.filtersTree[collection]) {
-          this.filtersTree[collection] = {};
-        }
-        if (!this.filtersTree[collection][field]) {
-          this.filtersTree[collection][field] = {};
-        }
-
-        if (!this.filtersTree[collection][field][name]) {
-          this.filtersTree[collection][field][name] = {
-            rooms: [],
-            fn: this.kuzzle.dsl.createCurriedFunction(name, filtersNames[name])
-          };
-
-          // push the path to in filtersTree for retrieve the function
-          pathFilterList.push(collection+'.'+field+'.'+name);
-        }
-
-        this.filtersTree[collection][field][name].rooms.push(roomId);
-        callback();
-
-      }.bind(this), function () {
-        deferred.resolve(pathFilterList);
-      });
-    }.bind(this));
-
-  return deferred.promise;
+  return this.kuzzle.dsl.addCurriedFunction(this.filtersTree, roomId, collection, filters);
 };
 
 /**
@@ -386,7 +352,7 @@ removeRoomFromFilterTree = function (roomId) {
  *
  * @param {Object} object
  * @param {String} path
- * @param {String} roomId
+ * @param {String?} roomId
  */
 recursiveCleanUpTree = function (object, path, roomId) {
   var pathArray = path.split('.'),

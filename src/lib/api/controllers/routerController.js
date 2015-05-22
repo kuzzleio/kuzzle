@@ -88,7 +88,7 @@ module.exports = function RouterController (kuzzle) {
         // execute the funnel. If error occurred, notify users
         kuzzle.funnel.execute(data, connection)
           .then(function onExecuteSuccess (result) {
-            if (result.rooms) {
+            if (result && result.rooms) {
               async.each(result.rooms, function (roomName) {
                 routerCtrl.notify(roomName, result.data);
               });
@@ -106,6 +106,11 @@ module.exports = function RouterController (kuzzle) {
     // add a specific disconnect event for websocket
     socket.on('disconnect', function () {
       kuzzle.hotelClerk.removeCustomerFromAllRooms(socket.id);
+    });
+
+    // add specific error handler on socket
+    socket.on('error', function (error) {
+      kuzzle.log.error(error);
     });
   };
 
@@ -127,7 +132,7 @@ module.exports = function RouterController (kuzzle) {
         // => MQTT client has to send its mqtt client id and subscribe to the topic exchange mqtt.<clientId>
         //    to get feedback from Kuzzle.
         if (data.mqttClientId) {
-          connectionId = "mqtt."+data.mqttClientId;
+          connectionId = 'mqtt.'+data.mqttClientId;
         }
 
         if (connectionId) {
@@ -164,7 +169,7 @@ module.exports = function RouterController (kuzzle) {
    *
    * @param {String} room
    * @param {Object} data
-   * @param {Object} connections
+   * @param {Object} connection
    */
   this.notify = function (room, data, connection) {
     if (connection) {
@@ -175,7 +180,7 @@ module.exports = function RouterController (kuzzle) {
         case 'amq':
           broker.replyTo(connection.id, data);
           break;
-        case "mqtt":
+        case 'mqtt':
           broker.addExchange(connection.id, data);
           break;
       }
