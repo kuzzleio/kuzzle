@@ -7,7 +7,6 @@ var
   crypto = require('crypto'),
   q = require('q');
 
-var filtersTree = {};
 
 module.exports = function Dsl (kuzzle) {
 
