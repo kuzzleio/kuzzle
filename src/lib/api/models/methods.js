@@ -397,11 +397,6 @@ var buildCurriedFunction = function (filtersTree, collection, field, operatorNam
     curriedFunction,
     path = collection+'.'+field+'.'+curriedFunctionName;
 
-  curriedFunction  = _.curry(operators[operatorName]);
-  curriedFunction = _.curry(curriedFunction(field, value));
-  if (not) {
-    curriedFunction = _.negate(curriedFunction);
-  }
 
   if (!filtersTree[collection]) {
     filtersTree[collection] = {};
@@ -412,6 +407,12 @@ var buildCurriedFunction = function (filtersTree, collection, field, operatorNam
   }
 
   if (!filtersTree[collection][field][curriedFunctionName]) {
+    curriedFunction  = _.curry(operators[operatorName]);
+    curriedFunction = _.curry(curriedFunction(field, value));
+    if (not) {
+      curriedFunction = _.negate(curriedFunction);
+    }
+
     filtersTree[collection][field][curriedFunctionName] = {
       rooms: [],
       fn: curriedFunction
