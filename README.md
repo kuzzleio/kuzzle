@@ -20,6 +20,12 @@ _(to be completed...)_
 
 See [Detailed documentation]
 
+# Tests
+
+## Unit tests:
+
+Run unit tests with `npm test` in src directory (where you can find the package.json file)
+
 # Contributing to Kuzzle
 
 _(to be completed...)_

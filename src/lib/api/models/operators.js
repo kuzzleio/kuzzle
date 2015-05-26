@@ -11,7 +11,7 @@ module.exports = {
    * Return true only if the value in field is greater than or equal to the provided value
    *
    * @param {String} field the field that we have to check
-   * @param {String} value the value that we have to test on document
+   * @param {Number} value the value that we have to test on document
    * @param {Object} document document sent by user that we have to test
    * @returns {boolean} true only if the value in field is grander or equal than the provided value
    */
@@ -29,7 +29,7 @@ module.exports = {
    * Return true only if the value in field is greater than the provided value
    *
    * @param {String} field the field that we have to check
-   * @param {String} value the value that we have to test on document
+   * @param {Number} value the value that we have to test on document
    * @param {Object} document document sent by user that we have to test
    * @returns {boolean} true only if the value in field is grander than the provided value
    */
@@ -47,7 +47,7 @@ module.exports = {
    * Return true only if the value in field is less than or equal to to the provided value
    *
    * @param {String} field the field that we have to check
-   * @param {String} value the value that we have to test on document
+   * @param {Number} value the value that we have to test on document
    * @param {Object} document document sent by user that we have to test
    * @returns {boolean} true only if the value in field is lower or equal than the provided value
    */
@@ -65,7 +65,7 @@ module.exports = {
    * Return true only if the value in field is lower than the provided value
    *
    * @param {String} field the field that we have to check
-   * @param {String} value the value that we have to test on document
+   * @param {Number} value the value that we have to test on document
    * @param {Object} document document sent by user that we have to test
    * @returns {boolean} true only if the value in field is lower than the provided value
    */
@@ -83,7 +83,7 @@ module.exports = {
    * Return true only if the value in field begin to the provided values
    *
    * @param {String} field the field that we have to check
-   * @param {String} value the value that we have to test on document
+   * @param {Number} value the value that we have to test on document
    * @param {Object} document document sent by user that we have to test
    * @returns {boolean} true only if the value in field begin to the provided values
    */
@@ -95,7 +95,7 @@ module.exports = {
    *  Return true only if the value in field end at the provided values
    *
    * @param {String} field the field that we have to check
-   * @param {String} value the value that we have to test on document
+   * @param {Number} value the value that we have to test on document
    * @param {Object} document document sent by user that we have to test
    * @returns {boolean} true only if the value in field end at the provided values
    */
