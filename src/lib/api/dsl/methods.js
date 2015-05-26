@@ -543,6 +543,7 @@ var buildCurriedFunction = function (collection, field, operatorName, value, cur
   }
 
   var
+    curriedFunction,
     path = collection+'.'+field+'.'+curriedFunctionName;
 
   if (!this.dsl.filtersTree[collection]) {
@@ -554,7 +555,7 @@ var buildCurriedFunction = function (collection, field, operatorName, value, cur
   }
 
   if (!this.dsl.filtersTree[collection][field][curriedFunctionName]) {
-    var curriedFunction  = _.curry(operators[operatorName]);
+    curriedFunction  = _.curry(operators[operatorName]);
     curriedFunction = _.curry(curriedFunction(field, value));
     if (not) {
       curriedFunction = _.negate(curriedFunction);
