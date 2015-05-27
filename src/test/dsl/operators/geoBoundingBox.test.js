@@ -35,7 +35,7 @@ describe('Test geoBoundingBox operator', function () {
     should(result).be.exactly(false);
   });
 
-  // according to ES search, when a location is exactly on the corner of the box, the document must be returned
+  // according to ES, when a location is exactly on the corner of the box, the document must be returned
   it('should return true when the location in document is exactly on one corner of the box', function () {
     var
       box = {
