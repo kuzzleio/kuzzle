@@ -7,8 +7,8 @@ describe('Test range method', function () {
   var
     roomIdFilterGrace = 'roomIdGrace',
     roomIdFilterAda = 'roomIdAda',
-    roomIdFilterNobody = 'roomIdNobody',
     roomIdFilterAll = 'roomIdAll',
+    roomIdFilterNobody = 'roomIdNobody',
 
     collection = 'collection',
     documentGrace = {
@@ -23,27 +23,21 @@ describe('Test range method', function () {
     },
 
     filterGrace = {
-      range: {
-        age: {
-          gt: 36,
-          lte: 85
-        }
+      age: {
+        gt: 36,
+        lte: 85
       }
     },
     filterAda = {
-      range: {
-        age: {
-          gte: 36,
-          lt: 85
-        }
+      age: {
+        gte: 36,
+        lt: 85
       }
     },
-    filterNobody = {
-      range: {
-        age: {
-          from: 37,
-          to: 84
-        }
+    filterAll = {
+      age: {
+        gte: 36,
+        lte: 85
       }
     };
 
@@ -55,10 +49,10 @@ describe('Test range method', function () {
         return methods.range(roomIdFilterAda, collection, filterAda);
       })
       .then(function () {
-        return methods.range(roomIdFilterNobody, collection, filterNobody);
+        return methods.range(roomIdFilterAll, collection, filterAll);
       })
       .then(function () {
-        return methods.range(roomIdFilterAll, collection, filterNobody, true);
+        return methods.range(roomIdFilterNobody, collection, filterAll, true);
       });
   });
 
@@ -69,38 +63,88 @@ describe('Test range method', function () {
   });
 
   it('should construct the filterTree with correct curried function name', function () {
-    should(methods.dsl.filtersTree[collection].firstName.termfirstNameBeth).not.be.empty;
-    should(methods.dsl.filtersTree[collection].firstName.nottermfirstNameBeth).not.be.empty;
+    should(methods.dsl.filtersTree[collection].age.rangeagegt36).not.be.empty;
+    should(methods.dsl.filtersTree[collection].age.rangeagelte85).not.be.empty;
+    should(methods.dsl.filtersTree[collection].age.rangeagegte36).not.be.empty;
+    should(methods.dsl.filtersTree[collection].age.rangeagelt85).not.be.empty;
+    should(methods.dsl.filtersTree[collection].age.notrangeagegte36).not.be.empty;
+    should(methods.dsl.filtersTree[collection].age.notrangeagelte85).not.be.empty;
   });
 
   it('should construct the filterTree with correct room list', function () {
-    var
-      rooms = methods.dsl.filtersTree[collection].firstName.termfirstNameBeth.rooms,
-      roomsNot = methods.dsl.filtersTree[collection].firstName.nottermfirstNameBeth.rooms;
+    var rooms;
 
+    // Test gt from filterGrace
+    rooms = methods.dsl.filtersTree[collection].age.rangeagegt36.rooms;
     should(rooms).be.an.Array;
-    should(roomsNot).be.an.Array;
-
     should(rooms).have.length(1);
-    should(roomsNot).have.length(1);
+    should(rooms[0]).be.exactly(roomIdFilterGrace);
 
-    should(rooms[0]).be.exactly(roomIdMatch);
-    should(roomsNot[0]).be.exactly(roomIdNot);
+    // Test lte from filterGrace and filterAll
+    rooms = methods.dsl.filtersTree[collection].age.rangeagelte85.rooms;
+    should(rooms).be.an.Array;
+    should(rooms).have.length(2);
+    should(rooms).be.containEql(roomIdFilterGrace);
+    should(rooms).be.containEql(roomIdFilterAll);
+
+    // Test gte from filterAda and filterAll
+    rooms = methods.dsl.filtersTree[collection].age.rangeagegte36.rooms;
+    should(rooms).be.an.Array;
+    should(rooms).have.length(2);
+    should(rooms).be.containEql(roomIdFilterAda);
+    should(rooms).be.containEql(roomIdFilterAll);
+
+    // Test lt from filterAda
+    rooms = methods.dsl.filtersTree[collection].age.rangeagelt85.rooms;
+    should(rooms).be.an.Array;
+    should(rooms).have.length(1);
+    should(rooms[0]).be.exactly(roomIdFilterAda);
+
+    // Test not gte from negative filterAll
+    rooms = methods.dsl.filtersTree[collection].age.notrangeagegte36.rooms;
+    should(rooms).be.an.Array;
+    should(rooms).have.length(1);
+    should(rooms[0]).be.exactly(roomIdFilterNobody);
+
+    // Test not lte from negative filterAll
+    rooms = methods.dsl.filtersTree[collection].age.notrangeagelte85.rooms;
+    should(rooms).be.an.Array;
+    should(rooms).have.length(1);
+    should(rooms[0]).be.exactly(roomIdFilterNobody);
   });
 
   it('should construct the filterTree with correct functions match', function () {
-    var
-      resultMatch = methods.dsl.filtersTree[collection].firstName.termfirstNameBeth.fn(documentBeth),
-      resultNotMatch = methods.dsl.filtersTree[collection].firstName.termfirstNameBeth.fn(documentAda);
+    var result;
 
-    should(resultMatch).be.exactly(true);
-    should(resultNotMatch).be.exactly(false);
+    result = methods.dsl.filtersTree[collection].age.rangeagegt36.fn(documentGrace);
+    should(result).be.exactly(true);
+    result = methods.dsl.filtersTree[collection].age.rangeagegt36.fn(documentAda);
+    should(result).be.exactly(false);
 
-    resultMatch = methods.dsl.filtersTree[collection].firstName.nottermfirstNameBeth.fn(documentAda);
-    resultNotMatch = methods.dsl.filtersTree[collection].firstName.nottermfirstNameBeth.fn(documentBeth);
+    result = methods.dsl.filtersTree[collection].age.rangeagelte85.fn(documentGrace);
+    should(result).be.exactly(true);
+    result = methods.dsl.filtersTree[collection].age.rangeagelte85.fn(documentAda);
+    should(result).be.exactly(true);
 
-    should(resultMatch).be.exactly(true);
-    should(resultNotMatch).be.exactly(false);
+    result = methods.dsl.filtersTree[collection].age.rangeagegte36.fn(documentGrace);
+    should(result).be.exactly(true);
+    result = methods.dsl.filtersTree[collection].age.rangeagegte36.fn(documentAda);
+    should(result).be.exactly(true);
+
+    result = methods.dsl.filtersTree[collection].age.rangeagelt85.fn(documentGrace);
+    should(result).be.exactly(false);
+    result = methods.dsl.filtersTree[collection].age.rangeagelt85.fn(documentAda);
+    should(result).be.exactly(true);
+
+    result = methods.dsl.filtersTree[collection].age.notrangeagegte36.fn(documentGrace);
+    should(result).be.exactly(false);
+    result = methods.dsl.filtersTree[collection].age.notrangeagegte36.fn(documentAda);
+    should(result).be.exactly(false);
+
+    result = methods.dsl.filtersTree[collection].age.notrangeagelte85.fn(documentGrace);
+    should(result).be.exactly(false);
+    result = methods.dsl.filtersTree[collection].age.notrangeagelte85.fn(documentAda);
+    should(result).be.exactly(false);
   });
 
 });
