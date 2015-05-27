@@ -42,7 +42,6 @@ module.exports = methods = {
    * Build filtersTree according to a given filter for 'range' filter and return the formatted filter
    * that can contains filters: gte, gt, lte, lt, from, to
    *
-   * @param {Object} filtersTree pointer on object filtersTree defined in hotelClerkController
    * @param {String} roomId
    * @param {String} collection
    * @param {Object} filter given by user on subscribe
@@ -73,7 +72,7 @@ module.exports = methods = {
       }
       curriedFunctionName += 'range' + field + fn + value;
 
-      var result = buildCurriedFunction(filtersTree, collection, field, fn, value, curriedFunctionName, roomId, not);
+      var result = buildCurriedFunction(methods.dsl.filtersTree, collection, field, fn, value, curriedFunctionName, roomId, not);
       if (result.error) {
         callback(result.error);
         return false;
