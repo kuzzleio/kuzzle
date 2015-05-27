@@ -72,7 +72,7 @@ module.exports = methods = {
       }
       curriedFunctionName += 'range' + field + fn + value;
 
-      var result = buildCurriedFunction(methods.dsl.filtersTree, collection, field, fn, value, curriedFunctionName, roomId, not);
+      var result = buildCurriedFunction(collection, field, fn, value, curriedFunctionName, roomId, not);
       if (result.error) {
         callback(result.error);
         return false;
