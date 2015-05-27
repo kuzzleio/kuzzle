@@ -84,15 +84,15 @@ describe('Test range method', function () {
     rooms = methods.dsl.filtersTree[collection].age.rangeagelte85.rooms;
     should(rooms).be.an.Array;
     should(rooms).have.length(2);
-    should(rooms).be.containEql(roomIdFilterGrace);
-    should(rooms).be.containEql(roomIdFilterAll);
+    should(rooms).containEql(roomIdFilterGrace);
+    should(rooms).containEql(roomIdFilterAll);
 
     // Test gte from filterAda and filterAll
     rooms = methods.dsl.filtersTree[collection].age.rangeagegte36.rooms;
     should(rooms).be.an.Array;
     should(rooms).have.length(2);
-    should(rooms).be.containEql(roomIdFilterAda);
-    should(rooms).be.containEql(roomIdFilterAll);
+    should(rooms).containEql(roomIdFilterAda);
+    should(rooms).containEql(roomIdFilterAll);
 
     // Test lt from filterAda
     rooms = methods.dsl.filtersTree[collection].age.rangeagelt85.rooms;
