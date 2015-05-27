@@ -3,15 +3,16 @@
   */
 
 var
-  _ = require('lodash');
+  _ = require('lodash'),
+  geolib = require('geolib');
 
-module.exports = {
+module.exports = operators = {
 
   /**
    * Return true only if the value in field is greater than or equal to the provided value
    *
    * @param {String} field the field that we have to check
-   * @param {String} value the value that we have to test on document
+   * @param {Number} value the value that we have to test on document
    * @param {Object} document document sent by user that we have to test
    * @returns {boolean} true only if the value in field is grander or equal than the provided value
    */
@@ -29,7 +30,7 @@ module.exports = {
    * Return true only if the value in field is greater than the provided value
    *
    * @param {String} field the field that we have to check
-   * @param {String} value the value that we have to test on document
+   * @param {Number} value the value that we have to test on document
    * @param {Object} document document sent by user that we have to test
    * @returns {boolean} true only if the value in field is grander than the provided value
    */
@@ -47,7 +48,7 @@ module.exports = {
    * Return true only if the value in field is less than or equal to to the provided value
    *
    * @param {String} field the field that we have to check
-   * @param {String} value the value that we have to test on document
+   * @param {Number} value the value that we have to test on document
    * @param {Object} document document sent by user that we have to test
    * @returns {boolean} true only if the value in field is lower or equal than the provided value
    */
@@ -65,7 +66,7 @@ module.exports = {
    * Return true only if the value in field is lower than the provided value
    *
    * @param {String} field the field that we have to check
-   * @param {String} value the value that we have to test on document
+   * @param {Number} value the value that we have to test on document
    * @param {Object} document document sent by user that we have to test
    * @returns {boolean} true only if the value in field is lower than the provided value
    */
@@ -83,24 +84,24 @@ module.exports = {
    * Return true only if the value in field begin to the provided values
    *
    * @param {String} field the field that we have to check
-   * @param {String} value the value that we have to test on document
+   * @param {Number} value the value that we have to test on document
    * @param {Object} document document sent by user that we have to test
    * @returns {boolean} true only if the value in field begin to the provided values
    */
   from: function (field, value, document) {
-    return this.gte(document[field], value);
+    return this.gte(document[field], value, document);
   },
 
   /**
    *  Return true only if the value in field end at the provided values
    *
    * @param {String} field the field that we have to check
-   * @param {String} value the value that we have to test on document
+   * @param {Number} value the value that we have to test on document
    * @param {Object} document document sent by user that we have to test
    * @returns {boolean} true only if the value in field end at the provided values
    */
   to: function (field, value, document) {
-    return this.lte(document[field], value);
+    return this.lte(document[field], value, document);
   },
 
   /**
@@ -156,7 +157,7 @@ module.exports = {
     if (documentValues === null) {
       return false;
     }
-    if (_.isEmpty(documentValues)) {
+    if (_.isObject(documentValues) && _.isEmpty(documentValues)) {
       return false;
     }
 
@@ -167,6 +168,26 @@ module.exports = {
     }
 
     return true;
+  },
+
+  geoBoundingBox: function (field, value, document) {
+    if (!operators.exists(field + '.lat', value, document)) {
+      return false;
+    }
+    if (!operators.exists(field + '.lon', value, document)) {
+      return false;
+    }
+
+    return geolib.isPointInside(
+      {  latitude: document[field + '.lat'], longitude: document[field + '.lon'] },
+      [
+        { latitude: value.left, longitude: value.top },
+        { latitude: value.right, longitude: value.top },
+        { latitude: value.right, longitude: value.bottom },
+        { latitude: value.left, longitude: value.bottom }
+      ]
+    );
+
   }
 
 };

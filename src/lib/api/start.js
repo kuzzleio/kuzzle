@@ -10,7 +10,7 @@ var
   FunnelController = require('./controllers/funnelController'),
   RouterController = require('./controllers/routerController'),
   HotelClerkController = require('./controllers/hotelClerkController'),
-  Dsl = require('./models/dsl');
+  Dsl = require('./dsl');
 
 
 module.exports = function start (params) {
