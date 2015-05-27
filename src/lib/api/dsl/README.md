@@ -2,7 +2,7 @@
 
 This module parses the filters sent to kuzzle when subscribing to a room and converts them to some actual code.
 
-As an input, the filters are expressed in JSON using a subset of [elasticsearch Query DSL](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl.html).
+As an input, the filters are expressed in JSON using a subset of [elasticsearch filter DSL](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-filters.html).
 
 A complete subscription message can for instance have the following form:
 
@@ -74,6 +74,8 @@ It has the following structure:
                 // actual function implemenation
                 fn: function(value) {...} 
             },
+         },
+         "hobby": {
             "termHobbySki": {
             [..]
 ```
