@@ -1,6 +1,6 @@
 var
   should = require('should'),
-  operators = require('root-require')('lib/api/models/operators');
+  operators = require('root-require')('lib/api/dsl/operators');
 
 describe('Test terms operator', function () {
 
