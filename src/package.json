@@ -8,7 +8,7 @@
     "kuzzle": "./bin/kuzzle.js"
   },
   "scripts": {
-    "test": "mocha -b"
+    "test": "mocha"
   },
   "dependencies": {
     "amqplib": "^0.3.2",
