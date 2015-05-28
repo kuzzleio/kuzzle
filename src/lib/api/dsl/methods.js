@@ -565,7 +565,9 @@ var buildCurriedFunction = function (collection, field, operatorName, value, cur
     };
   }
 
-  this.dsl.filtersTree[collection][field][curriedFunctionName].rooms.push(roomId);
+  if (this.dsl.filtersTree[collection][field][curriedFunctionName].rooms.indexOf(roomId) === -1) {
+    this.dsl.filtersTree[collection][field][curriedFunctionName].rooms.push(roomId);
+  }
 
   return {
     path: path,
