@@ -2,72 +2,104 @@ var
   should = require('should'),
   methods = require('root-require')('lib/api/dsl/methods');
 
-describe('Test term method', function () {
+describe('Test or method', function () {
 
   var
-    roomIdMatch = 'roomIdMatch',
-    roomIdNot = 'roomIdNotMatch',
+    roomId = 'roomId',
     collection = 'collection',
     documentGrace = {
       firstName: 'Grace',
-      lastName: 'Hopper'
+      lastName: 'Hopper',
+      city: 'NYC',
+      hobby: 'computer'
     },
     documentAda = {
       firstName: 'Ada',
-      lastName: 'Lovelace'
+      lastName: 'Lovelace',
+      city: 'London',
+      hobby: 'computer'
     },
-    filter = {
-      firstName: 'Grace'
-    };
+    filter = [
+      {
+        term: {
+          city: 'NYC'
+        }
+      },
+      {
+        term: {
+          city: 'London'
+        }
+      }
+    ];
 
 
   before(function () {
     methods.dsl.filtersTree = {};
-    return methods.term(roomIdMatch, collection, filter)
-      .then(function() {
-        return methods.term(roomIdNot, collection, filter, true);
+    return methods.or(roomId, collection, filter)
+      .then(function () {
+        return methods.or(roomId, collection, filter, true);
       });
   });
 
   it('should construct the filterTree object for the correct attribute', function () {
     should(methods.dsl.filtersTree).not.be.empty;
     should(methods.dsl.filtersTree[collection]).not.be.empty;
-    should(methods.dsl.filtersTree[collection].firstName).not.be.empty;
+    should(methods.dsl.filtersTree[collection].city).not.be.empty;
   });
 
   it('should construct the filterTree with correct curried function name', function () {
-    should(methods.dsl.filtersTree[collection].firstName.termfirstNameGrace).not.be.empty;
-    should(methods.dsl.filtersTree[collection].firstName.nottermfirstNameGrace).not.be.empty;
+    should(methods.dsl.filtersTree[collection].city.termcityNYC).not.be.empty;
+    should(methods.dsl.filtersTree[collection].city.termcityLondon).not.be.empty;
+    should(methods.dsl.filtersTree[collection].city.nottermcityNYC).not.be.empty;
+    should(methods.dsl.filtersTree[collection].city.nottermcityLondon).not.be.empty;
   });
 
   it('should construct the filterTree with correct room list', function () {
-    var
-      rooms = methods.dsl.filtersTree[collection].firstName.termfirstNameGrace.rooms,
-      roomsNot = methods.dsl.filtersTree[collection].firstName.nottermfirstNameGrace.rooms;
+    var rooms;
 
+    rooms = methods.dsl.filtersTree[collection].city.termcityNYC.rooms;
     should(rooms).be.an.Array;
-    should(roomsNot).be.an.Array;
-
     should(rooms).have.length(1);
-    should(roomsNot).have.length(1);
+    should(rooms[0]).be.exactly(roomId);
 
-    should(rooms[0]).be.exactly(roomIdMatch);
-    should(roomsNot[0]).be.exactly(roomIdNot);
+    rooms = methods.dsl.filtersTree[collection].city.termcityLondon.rooms;
+    should(rooms).be.an.Array;
+    should(rooms).have.length(1);
+    should(rooms[0]).be.exactly(roomId);
+
+    rooms = methods.dsl.filtersTree[collection].city.nottermcityNYC.rooms;
+    should(rooms).be.an.Array;
+    should(rooms).have.length(1);
+    should(rooms[0]).be.exactly(roomId);
+
+    rooms = methods.dsl.filtersTree[collection].city.nottermcityLondon.rooms;
+    should(rooms).be.an.Array;
+    should(rooms).have.length(1);
+    should(rooms[0]).be.exactly(roomId);
   });
 
   it('should construct the filterTree with correct functions match', function () {
-    var
-      resultMatch = methods.dsl.filtersTree[collection].firstName.termfirstNameGrace.fn(documentGrace),
-      resultNotMatch = methods.dsl.filtersTree[collection].firstName.termfirstNameGrace.fn(documentAda);
+    var result;
 
-    should(resultMatch).be.exactly(true);
-    should(resultNotMatch).be.exactly(false);
+    result = methods.dsl.filtersTree[collection].city.termcityNYC.fn(documentGrace);
+    should(result).be.exactly(true);
+    result = methods.dsl.filtersTree[collection].city.termcityNYC.fn(documentAda);
+    should(result).be.exactly(false);
 
-    resultMatch = methods.dsl.filtersTree[collection].firstName.nottermfirstNameGrace.fn(documentAda);
-    resultNotMatch = methods.dsl.filtersTree[collection].firstName.nottermfirstNameGrace.fn(documentGrace);
+    result = methods.dsl.filtersTree[collection].city.termcityLondon.fn(documentGrace);
+    should(result).be.exactly(false);
+    result = methods.dsl.filtersTree[collection].city.termcityLondon.fn(documentAda);
+    should(result).be.exactly(true);
 
-    should(resultMatch).be.exactly(true);
-    should(resultNotMatch).be.exactly(false);
+    result = methods.dsl.filtersTree[collection].city.nottermcityNYC.fn(documentGrace);
+    should(result).be.exactly(false);
+    result = methods.dsl.filtersTree[collection].city.nottermcityNYC.fn(documentAda);
+    should(result).be.exactly(true);
+
+    result = methods.dsl.filtersTree[collection].city.nottermcityLondon.fn(documentGrace);
+    should(result).be.exactly(true);
+    result = methods.dsl.filtersTree[collection].city.nottermcityLondon.fn(documentAda);
+    should(result).be.exactly(false);
   });
 
 });
