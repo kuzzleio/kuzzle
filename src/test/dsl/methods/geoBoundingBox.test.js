@@ -89,26 +89,74 @@ describe('Test not method', function () {
   });
 
   it('should construct the filterTree with correct curried function name', function () {
-    console.log(methods.dsl.filtersTree[collection].location);
-    should(methods.dsl.filtersTree[collection].location.nottermcityLondon).not.be.empty;
+    // note: coord are geoashed for build the curried function name
+    should(methods.dsl.filtersTree[collection].location.locationgeoBoundingBoxmpmr22b6xu10ffy7m4).not.be.empty;
+    should(methods.dsl.filtersTree[collection].location.locationgeoBoundingBoxgcmfj457fu10ffy7m4).not.be.empty;
+    should(methods.dsl.filtersTree[collection].location.locationgeoBoundingBoxmpmr22b6xt0hqeycds).not.be.empty;
+    should(methods.dsl.filtersTree[collection].location.locationgeoBoundingBoxj042p0j0phsc9wnc4v).not.be.empty;
+    should(methods.dsl.filtersTree[collection].location.locationgeoBoundingBoxc0x5c7zzzds7jw7zzz).not.be.empty;
   });
 
   it('should construct the filterTree with correct room list', function () {
     var rooms;
 
-    // Test gt from filterGrace
-    rooms = methods.dsl.filtersTree[collection].city.nottermcityLondon.rooms;
+    rooms = methods.dsl.filtersTree[collection].location.locationgeoBoundingBoxmpmr22b6xu10ffy7m4.rooms;
+    should(rooms).be.an.Array;
+    should(rooms).have.length(1);
+    should(rooms[0]).be.exactly(roomId);
+
+    rooms = methods.dsl.filtersTree[collection].location.locationgeoBoundingBoxgcmfj457fu10ffy7m4.rooms;
+    should(rooms).be.an.Array;
+    should(rooms).have.length(1);
+    should(rooms[0]).be.exactly(roomId);
+
+    rooms = methods.dsl.filtersTree[collection].location.locationgeoBoundingBoxmpmr22b6xt0hqeycds.rooms;
+    should(rooms).be.an.Array;
+    should(rooms).have.length(1);
+    should(rooms[0]).be.exactly(roomId);
+
+    rooms = methods.dsl.filtersTree[collection].location.locationgeoBoundingBoxj042p0j0phsc9wnc4v.rooms;
+    should(rooms).be.an.Array;
+    should(rooms).have.length(1);
+    should(rooms[0]).be.exactly(roomId);
+
+    rooms = methods.dsl.filtersTree[collection].location.locationgeoBoundingBoxc0x5c7zzzds7jw7zzz.rooms;
     should(rooms).be.an.Array;
     should(rooms).have.length(1);
     should(rooms[0]).be.exactly(roomId);
   });
 
-  it('should construct the filterTree with correct functions match', function () {
+  it('should construct the filterTree with correct functions geoboundingbox', function () {
     var result;
 
-    result = methods.dsl.filtersTree[collection].city.nottermcityLondon.fn(documentGrace);
+    // test filterEngland
+    result = methods.dsl.filtersTree[collection].location.locationgeoBoundingBoxmpmr22b6xu10ffy7m4.fn(documentGrace);
+    should(result).be.exactly(false);
+    result = methods.dsl.filtersTree[collection].location.locationgeoBoundingBoxmpmr22b6xu10ffy7m4.fn(documentAda);
     should(result).be.exactly(true);
-    result = methods.dsl.filtersTree[collection].city.nottermcityLondon.fn(documentAda);
+
+    // test filterEngland2
+    result = methods.dsl.filtersTree[collection].location.locationgeoBoundingBoxgcmfj457fu10ffy7m4.fn(documentGrace);
+    should(result).be.exactly(false);
+    result = methods.dsl.filtersTree[collection].location.locationgeoBoundingBoxgcmfj457fu10ffy7m4.fn(documentAda);
+    should(result).be.exactly(true);
+
+    // test filterEngland3
+    result = methods.dsl.filtersTree[collection].location.locationgeoBoundingBoxmpmr22b6xt0hqeycds.fn(documentGrace);
+    should(result).be.exactly(false);
+    result = methods.dsl.filtersTree[collection].location.locationgeoBoundingBoxmpmr22b6xt0hqeycds.fn(documentAda);
+    should(result).be.exactly(true);
+
+    // test filterUSA
+    result = methods.dsl.filtersTree[collection].location.locationgeoBoundingBoxj042p0j0phsc9wnc4v.fn(documentGrace);
+    should(result).be.exactly(true);
+    result = methods.dsl.filtersTree[collection].location.locationgeoBoundingBoxj042p0j0phsc9wnc4v.fn(documentAda);
+    should(result).be.exactly(false);
+
+    // test filterUSA2
+    result = methods.dsl.filtersTree[collection].location.locationgeoBoundingBoxc0x5c7zzzds7jw7zzz.fn(documentGrace);
+    should(result).be.exactly(true);
+    result = methods.dsl.filtersTree[collection].location.locationgeoBoundingBoxc0x5c7zzzds7jw7zzz.fn(documentAda);
     should(result).be.exactly(false);
   });
 

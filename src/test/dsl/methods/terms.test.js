@@ -55,7 +55,7 @@ describe('Test terms method', function () {
     should(roomsNot[0]).be.exactly(roomIdNot);
   });
 
-  it('should construct the filterTree with correct functions match', function () {
+  it('should construct the filterTree with correct functions terms', function () {
     var
       resultMatch = methods.dsl.filtersTree[collection].firstName['termsfirstNameGrace,Jean'].fn(documentGrace),
       resultNotMatch = methods.dsl.filtersTree[collection].firstName['termsfirstNameGrace,Jean'].fn(documentAda);

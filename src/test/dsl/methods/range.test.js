@@ -113,7 +113,7 @@ describe('Test range method', function () {
     should(rooms[0]).be.exactly(roomIdFilterNobody);
   });
 
-  it('should construct the filterTree with correct functions match', function () {
+  it('should construct the filterTree with correct functions range', function () {
     var result;
 
     result = methods.dsl.filtersTree[collection].age.rangeagegt36.fn(documentGrace);
