@@ -4,6 +4,7 @@
 
 var
   _ = require('lodash'),
+  big = require('big.js'),
   geolib = require('geolib');
 
 module.exports = operators = {
@@ -177,6 +178,14 @@ module.exports = operators = {
     if (!operators.exists(field + '.lon', value, document)) {
       return false;
     }
+
+    // ugly trick to allow a point to be on the edge of the box + trick for deal with floating number
+    value = {
+      left: big(value.left).plus(10e-6).toString(),
+      top: big(value.top).minus(10e-6).toString(),
+      right: big(value.right).minus(10e-6).toString(),
+      bottom: big(value.bottom).plus(10e-6).toString()
+    };
 
     return geolib.isPointInside(
       {  latitude: document[field + '.lat'], longitude: document[field + '.lon'] },
