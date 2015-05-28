@@ -187,7 +187,6 @@ module.exports = operators = {
       bottom: big(value.bottom).plus(10e-6).toString()
     };
 
-    console.log(value);
     return geolib.isPointInside(
       {  latitude: document[field + '.lat'], longitude: document[field + '.lon'] },
       [
