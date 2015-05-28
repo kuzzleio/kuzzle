@@ -121,7 +121,7 @@ describe('Test bool method', function () {
 
   });
 
-  it('should construct the filterTree with correct functions match', function () {
+  it('should construct the filterTree with correct functions', function () {
     var result;
 
     result = methods.dsl.filtersTree[collection].firstName['termsfirstNameGrace,Ada'].fn(documentGrace);
