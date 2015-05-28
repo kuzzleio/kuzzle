@@ -368,7 +368,6 @@ module.exports = methods = {
       delete geoFilter.bottom_right;
     }
     /* jshint camelcase: true */
-console.log(geoFilter);
     try{
       // { top: -74.1, left: 40.73, bottom: -71.12, right: 40.01 }
       if (geoFilter.top &&
