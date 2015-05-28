@@ -2,7 +2,7 @@ var
   should = require('should'),
   methods = require('root-require')('lib/api/dsl/methods');
 
-describe('Test range method', function () {
+describe('Test exists method', function () {
 
   var
     roomId = 'roomId',
