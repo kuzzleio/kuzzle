@@ -78,7 +78,7 @@ describe('Test or method', function () {
     should(rooms[0]).be.exactly(roomId);
   });
 
-  it('should construct the filterTree with correct functions match', function () {
+  it('should construct the filterTree with correct functions', function () {
     var result;
 
     result = methods.dsl.filtersTree[collection].city.termcityNYC.fn(documentGrace);
