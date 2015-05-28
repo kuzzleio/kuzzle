@@ -29,19 +29,19 @@ describe('Test not method', function () {
       location: {
         top: 52.394484,
         left: -2.939744,
-        right: 51.143628,
-        bottom: 1.180129
+        bottom: 51.143628,
+        right: 1.180129
       }
     },
     filterEngland2 = {
       location: {
         'top_left': {
-          lat: 52.394484,
-          lon: -2.939744
+          lat: -2.939744,
+          lon: 52.394484
         },
         'bottom_right': {
-          lat: 51.143628,
-          lon: 1.180129
+          lat: 1.180129,
+          lon: 51.143628
         }
       }
     },
@@ -89,9 +89,10 @@ describe('Test not method', function () {
   });
 
   it('should construct the filterTree with correct curried function name', function () {
-    // note: coord are geoashed for build the curried function name
-    should(methods.dsl.filtersTree[collection].location.locationgeoBoundingBoxmpmr22b6xu10ffy7m4).not.be.empty;
-    should(methods.dsl.filtersTree[collection].location.locationgeoBoundingBoxgcmfj457fu10ffy7m4).not.be.empty;
+    // Coord are geoashed for build the curried function name
+    // because we have many times the same coord in filters,
+    // we must have only three functions (one for filterEngland, and two for filterUSA)
+    should(Object.keys(methods.dsl.filtersTree[collection].location)).have.length(3);
     should(methods.dsl.filtersTree[collection].location.locationgeoBoundingBoxmpmr22b6xt0hqeycds).not.be.empty;
     should(methods.dsl.filtersTree[collection].location.locationgeoBoundingBoxj042p0j0phsc9wnc4v).not.be.empty;
     should(methods.dsl.filtersTree[collection].location.locationgeoBoundingBoxc0x5c7zzzds7jw7zzz).not.be.empty;
@@ -99,16 +100,6 @@ describe('Test not method', function () {
 
   it('should construct the filterTree with correct room list', function () {
     var rooms;
-
-    rooms = methods.dsl.filtersTree[collection].location.locationgeoBoundingBoxmpmr22b6xu10ffy7m4.rooms;
-    should(rooms).be.an.Array;
-    should(rooms).have.length(1);
-    should(rooms[0]).be.exactly(roomId);
-
-    rooms = methods.dsl.filtersTree[collection].location.locationgeoBoundingBoxgcmfj457fu10ffy7m4.rooms;
-    should(rooms).be.an.Array;
-    should(rooms).have.length(1);
-    should(rooms[0]).be.exactly(roomId);
 
     rooms = methods.dsl.filtersTree[collection].location.locationgeoBoundingBoxmpmr22b6xt0hqeycds.rooms;
     should(rooms).be.an.Array;
@@ -130,18 +121,6 @@ describe('Test not method', function () {
     var result;
 
     // test filterEngland
-    result = methods.dsl.filtersTree[collection].location.locationgeoBoundingBoxmpmr22b6xu10ffy7m4.fn(documentGrace);
-    should(result).be.exactly(false);
-    result = methods.dsl.filtersTree[collection].location.locationgeoBoundingBoxmpmr22b6xu10ffy7m4.fn(documentAda);
-    should(result).be.exactly(true);
-
-    // test filterEngland2
-    result = methods.dsl.filtersTree[collection].location.locationgeoBoundingBoxgcmfj457fu10ffy7m4.fn(documentGrace);
-    should(result).be.exactly(false);
-    result = methods.dsl.filtersTree[collection].location.locationgeoBoundingBoxgcmfj457fu10ffy7m4.fn(documentAda);
-    should(result).be.exactly(true);
-
-    // test filterEngland3
     result = methods.dsl.filtersTree[collection].location.locationgeoBoundingBoxmpmr22b6xt0hqeycds.fn(documentGrace);
     should(result).be.exactly(false);
     result = methods.dsl.filtersTree[collection].location.locationgeoBoundingBoxmpmr22b6xt0hqeycds.fn(documentAda);
