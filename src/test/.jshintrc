@@ -1,3 +1,13 @@
 {
-  "expr": true
+  "expr": true,
+  "camelcase": true,
+  "curly": true,
+  "eqeqeq": true,
+  "freeze": true,
+  "indent": 2,
+  "newcap": true,
+  "quotmark": "single",
+  "eqnull": true,
+  "funcscope": true,
+  "node": true
 }
