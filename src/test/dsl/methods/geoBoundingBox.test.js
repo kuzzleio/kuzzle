@@ -2,7 +2,7 @@ var
   should = require('should'),
   methods = require('root-require')('lib/api/dsl/methods');
 
-describe('Test not method', function () {
+describe('Test geoboundingbox method', function () {
 
   var
     roomId = 'roomId',
@@ -117,7 +117,7 @@ describe('Test not method', function () {
   it('should construct the filterTree with correct functions geoboundingbox', function () {
     var result;
 
-   // test filterEngland
+    // test filterEngland
     result = methods.dsl.filtersTree[collection].location.locationgeoBoundingBoxgcmfj457fu10ffy7m4.fn(documentGrace);
     should(result).be.exactly(false);
     result = methods.dsl.filtersTree[collection].location.locationgeoBoundingBoxgcmfj457fu10ffy7m4.fn(documentAda);
