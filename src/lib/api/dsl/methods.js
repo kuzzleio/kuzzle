@@ -396,7 +396,7 @@ module.exports = methods = {
       }
       // { topLeft: [ -74.1, 40.73 ], bottomRight: [ -71.12, 40.01 ] }
       else if (geoFilter.topLeft &&
-        geoFilter.borderBottomRight &&
+        geoFilter.bottomRight &&
         _.isArray(geoFilter.topLeft) &&
         _.isArray(geoFilter.bottomRight)
       ){
@@ -410,8 +410,8 @@ module.exports = methods = {
         geoFilter.bottomRight &&
         _.isString(geoFilter.topLeft) &&
         _.isString(geoFilter.bottomRight) &&
-        /^[-.0-9]+,\s*[-.0-9]+]$/.test(geoFilter.topLeft) &&
-        /^[-.0-9]+,\s*[-.0-9]+]$/.test(geoFilter.bottomRight)
+        /^[-.0-9]+,\s*[-.0-9]+$/.test(geoFilter.topLeft) &&
+        /^[-.0-9]+,\s*[-.0-9]+$/.test(geoFilter.bottomRight)
       ){
         tmp = geoFilter.topLeft.match(/^([-.0-9]+),\s*([-.0-9]+)$/);
         top = tmp[1];
@@ -566,7 +566,9 @@ var buildCurriedFunction = function (collection, field, operatorName, value, cur
     };
   }
 
-  this.dsl.filtersTree[collection][field][curriedFunctionName].rooms.push(roomId);
+  if (this.dsl.filtersTree[collection][field][curriedFunctionName].rooms.indexOf(roomId) === -1) {
+    this.dsl.filtersTree[collection][field][curriedFunctionName].rooms.push(roomId);
+  }
 
   return {
     path: path,
