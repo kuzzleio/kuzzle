@@ -18,11 +18,11 @@ var
  * This function will also load hooks, workers and server
  *
  * @param {Object} params
- * @param {Object} stack allow to specify what need to be run
+ * @param {Object} feature allow to specify what need to be run
  */
-module.exports = function start (params, stack) {
+module.exports = function start (params, feature) {
 
-  if (!stack || !stack.workers) {
+  if (!feature || (feature && (feature.workers === undefined || feature.workers === true))) {
     // initialize all hooks according to the configuration
     this.hooks.init();
     // initialize all workers according to the configuration
@@ -38,7 +38,7 @@ module.exports = function start (params, stack) {
   this.hotelClerk = new HotelClerkController(this);
   this.dsl = new Dsl(this);
 
-  if (!stack || !stack.servers) {
+  if (!feature || (feature && (feature.servers === undefined || feature.servers === true))) {
     servers.initAll(this, params);
   }
 

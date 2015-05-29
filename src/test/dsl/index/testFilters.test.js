@@ -1,16 +1,13 @@
 var
   should = require('should'),
-
-  captainLog = require('captains-log'),
-  start = require('root-require')('lib/api/start')({}, {workers: false, server: false}),
-  HotelClerkController = require('root-require')('lib/api/controllers/hotelClerkController');
-  index = require('root-require')('lib/api/dsl/index'),
+  start = require('root-require')('lib/api/start');
 
 describe('Test testFilters function index.js file from DSL', function () {
 
   var
-    hotelClerk,
-    requestId = 'roomNameGrace',
+    kuzzle,
+    roomId,
+    roomName = 'roomNameGrace',
     collection = 'user',
     dataGrace = {
       collection: collection,
@@ -83,17 +80,40 @@ describe('Test testFilters function index.js file from DSL', function () {
     };
 
 
-  before(function () {
-    var kuzzle = {
-      log: captainLog(),
+  before(function (done) {
+    kuzzle = {
+      log: {
+        debug: function() {},
+        silly: function() {},
+        error: function() {}
+      },
       start: start
     };
 
-    hotelClerk = new HotelClerkController(kuzzle);
+    kuzzle.start({}, {workers: false, servers: false});
+
+    kuzzle.hotelClerk.addSubscription({id: 'connectionid'}, roomName, collection, filterGrace)
+      .then(function (result) {
+        roomId = result.data;
+        done();
+      });
   });
 
-  it('should construct the filterTree object for the correct attribute', function () {
+  it('should return an array with my room id when document matches', function () {
+    return kuzzle.dsl.testFilters(dataGrace)
+      .then(function (rooms) {
+        should(rooms).be.an.Array;
+        should(rooms).have.length(1);
+        should(rooms[0]).be.exactly(roomId);
+      });
+  });
 
+  it('should return empty array when document doesn\'t match', function () {
+    return kuzzle.dsl.testFilters(dataAda)
+      .then(function (rooms) {
+        should(rooms).be.an.Array;
+        should(rooms).be.empty;
+      });
   });
 
 
