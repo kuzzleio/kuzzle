@@ -367,6 +367,7 @@ module.exports = methods = {
       delete geoFilter.bottom_right;
     }
     /* jshint camelcase: true */
+
     try{
       // { top: -74.1, left: 40.73, bottom: -71.12, right: 40.01 }
       if (geoFilter.top &&
@@ -564,7 +565,9 @@ var buildCurriedFunction = function (collection, field, operatorName, value, cur
     };
   }
 
-  this.dsl.filtersTree[collection][field][curriedFunctionName].rooms.push(roomId);
+  if (this.dsl.filtersTree[collection][field][curriedFunctionName].rooms.indexOf(roomId) === -1) {
+    this.dsl.filtersTree[collection][field][curriedFunctionName].rooms.push(roomId);
+  }
 
   return {
     path: path,
