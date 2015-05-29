@@ -355,7 +355,6 @@ module.exports = methods = {
     }
 
     geoFilter = filter[fieldName];
-
     // elastic search DSL allows the undescore notation
     // we need an exception for the linter
     /* jshint camelcase: false */
