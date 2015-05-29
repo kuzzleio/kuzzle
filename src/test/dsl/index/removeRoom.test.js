@@ -16,7 +16,7 @@ describe('Test removeRoom function index.js file from DSL', function () {
     };
 
 
-  before(function (done) {
+  before(function () {
     kuzzle = {
       log: {
         debug: function() {},
@@ -28,21 +28,19 @@ describe('Test removeRoom function index.js file from DSL', function () {
 
     kuzzle.start({}, {workers: false, servers: false});
 
-    kuzzle.hotelClerk.addSubscription({id: 'connectionid'}, roomName, collection, filter)
+    return kuzzle.hotelClerk.addSubscription({id: 'connectionid'}, roomName, collection, filter)
       .then(function (result) {
-
         roomId = result.data;
-
-        console.log(kuzzle.dsl.filtersTree.user.city);
-        done();
       });
   });
 
   it('should have an empty room list and filtersTree when the function is called', function () {
-    console.log(kuzzle.hotelClerk.rooms[roomId]);
+    should(kuzzle.dsl.filtersTree).be.object;
+    should(kuzzle.dsl.filtersTree).not.be.empty;
+
     return kuzzle.dsl.removeRoom(kuzzle.hotelClerk.rooms[roomId])
       .then(function () {
-        console.log(kuzzle.dsl.filtersTree.user.city);
+        should(kuzzle.dsl.filtersTree).be.empty.object;
       });
   });
 
