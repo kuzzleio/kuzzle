@@ -112,24 +112,44 @@ module.exports = function HotelClerkController (kuzzle) {
    * Typically called on user disconnection
    *
    * @param {String} connectionId can be a socket.id
+   * @param connectionId
+   * @returns {Promise} reject an error or resolve nothing
    */
   this.removeCustomerFromAllRooms = function (connectionId) {
+    var deferred = q.defer();
+
     if (!this.customers[connectionId]) {
-      return false;
+      deferred.reject('Unknown user with connection id ' + connectionId);
+      return deferred.promise;
     }
 
     var rooms = this.customers[connectionId];
-    async.each(Object.keys(rooms), function (roomName) {
+    async.each(Object.keys(rooms), function (roomName, callback) {
       var roomId = rooms[roomName];
       if (!this.rooms[roomId]) {
-        return false;
+        callback();
       }
 
       this.rooms[roomId].count--;
-      cleanUpRooms.call(this, roomId);
+      cleanUpRooms.call(this, roomId)
+        .then(function () {
+          callback();
+        })
+        .catch(function (error) {
+          callback(error);
+        });
+
+    }.bind(this), function (error) {
+      if (error) {
+        deferred.reject(error);
+      }
+
+      delete this.customers[connectionId];
+      deferred.resolve();
+
     }.bind(this));
 
-    delete this.customers[connectionId];
+    return deferred.promise;
   };
 };
 
@@ -201,16 +221,26 @@ addRoomForCustomer = function (connectionId, roomName, roomId) {
  * Delete room if no use has subscribed to this room and remove also the room in
  * filterTree object
  *
- * @param {String} roomId
+ * @param roomId
+ * @returns {Promise}
  */
 cleanUpRooms = function (roomId) {
+  var deferred = q.defer();
+
   if (!this.rooms[roomId]) {
-    return false;
+    deferred.reject('Room ' + roomId + 'doesn\t exist');
+    return deferred.promise;
   }
+
   if (this.rooms[roomId].count === 0) {
-    this.kuzzle.dsl.removeRoom(this.rooms[roomId]);
-    delete this.rooms[roomId];
+    this.kuzzle.dsl.removeRoom(this.rooms[roomId])
+      .then(function () {
+        delete this.rooms[roomId];
+        deferred.resolve();
+      }.bind(this));
   }
+
+  return deferred.promise;
 };
 
 
