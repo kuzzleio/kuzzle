@@ -94,9 +94,14 @@ module.exports = function HotelClerkController (kuzzle) {
         }
 
         this.rooms[roomId].count--;
-        cleanUpRooms.call(this, roomId);
+        cleanUpRooms.call(this, roomId)
+          .then(function () {
+            deferred.resolve({ data: roomId, rooms: [roomName] });
+          })
+          .catch(function (error) {
+            deferred.reject(error);
+          });
 
-        deferred.resolve({ data: roomId, rooms: [roomName] });
       }.bind(this))
       .catch( function (error) {
         deferred.reject(error);
