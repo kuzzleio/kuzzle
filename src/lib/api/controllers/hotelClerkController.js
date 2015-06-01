@@ -37,25 +37,6 @@ module.exports = function HotelClerkController (kuzzle) {
    * }
    */
   this.customers = {};
-  /**
-   *
-   * A tree where we have an entry by collection, an entry by tag and
-   * an entry by filter (curried function) with the rooms list
-   *
-   * Example for chat-room-kuzzle (see above)
-   *  filtersTree = {
-   *    message : { // -> collection name
-   *      subject : { // -> attribute where a filter exists
-   *        termSubjectKuzzle : {
-   *          rooms: [ 'f45de4d8ef4f3ze4ffzer85d4fgkzm41'], // -> room id that match this filter
-   *          fn: function () {} // -> function to execute on collection message, on field subject
-   *        }
-   *      }
-   *    }
-   *  }
-   */
-  this.filtersTree = {};
-
 
   /**
    * Add a connection to room, and init information about room if it doesn't exist before
