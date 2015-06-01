@@ -63,7 +63,7 @@ describe('Test testFilters function index.js file from DSL', function () {
             ]
           }
         ],
-        must_not: [
+        'must_not': [
           {
             'geo_bounding_box': {
               // england
