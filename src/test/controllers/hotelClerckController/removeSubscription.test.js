@@ -4,7 +4,7 @@ var
 
 require('should-promised');
 
-describe('Test addSubscription function in hotelClerk controller', function () {
+describe('Test removeSubscription function in hotelClerk controller', function () {
 
   var
     kuzzle,
