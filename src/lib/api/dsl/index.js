@@ -46,13 +46,22 @@ module.exports = function Dsl (kuzzle) {
   this.addCurriedFunction = function (roomId, collection, filters) {
     var
       deferred = q.defer(),
-      filterName = Object.keys(filters)[0],
-      privateFilterName = _.camelCase(filterName);
+      filterName,
+      privateFilterName;
+
+    if (filters === undefined) {
+      deferred.reject('Filters parameter can\'t be undefined');
+      return deferred.promise;
+    }
+
+    filterName = Object.keys(filters)[0];
 
     if (filterName === undefined) {
       deferred.reject('Undefined filters');
       return deferred.promise;
     }
+
+    privateFilterName = _.camelCase(filterName);
 
     if (!methods[privateFilterName]) {
       deferred.reject('Unknown filter with name '+ privateFilterName);
