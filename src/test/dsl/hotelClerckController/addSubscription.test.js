@@ -44,6 +44,7 @@ describe('Test addSubscription function in hotelClerk controller', function () {
   it('should has the new room and customer', function () {
     return kuzzle.hotelClerk.addSubscription(connection, roomName, collection, filterGrace)
       .then(function (result) {
+        should.fail();
         should(kuzzle.dsl.filtersTree).be.an.object;
         should(kuzzle.dsl.filtersTree).not.be.empty;
 
