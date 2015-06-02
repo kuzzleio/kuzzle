@@ -13,12 +13,21 @@ var
   Dsl = require('./dsl');
 
 
-module.exports = function start (params) {
+/**
+ * Init all thing needed: funnel, hotelClerk and dsl
+ * This function will also load hooks, workers and server
+ *
+ * @param {Object} params
+ * @param {Object} feature allow to specify what need to be run
+ */
+module.exports = function start (params, feature) {
 
-  // initialize all hooks according to the configuration
-  this.hooks.init();
-  // initialize all workers according to the configuration
-  this.workers.init();
+  if (!feature || (feature && (feature.workers === undefined || feature.workers === true))) {
+    // initialize all hooks according to the configuration
+    this.hooks.init();
+    // initialize all workers according to the configuration
+    this.workers.init();
+  }
 
   // Instantiate the FunnelController for dispatch request from user
   this.funnel = new FunnelController(this);
@@ -29,7 +38,9 @@ module.exports = function start (params) {
   this.hotelClerk = new HotelClerkController(this);
   this.dsl = new Dsl(this);
 
-  servers.initAll(this, params);
+  if (!feature || (feature && (feature.servers === undefined || feature.servers === true))) {
+    servers.initAll(this, params);
+  }
 
 
   /**
