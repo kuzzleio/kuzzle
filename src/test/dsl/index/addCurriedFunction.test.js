@@ -4,7 +4,7 @@ var
 
 require('should-promised');
 
-describe('Test removeRoom function index.js file from DSL', function () {
+describe('Test addCurriedFunction function index.js file from DSL', function () {
 
   var
     dsl,
