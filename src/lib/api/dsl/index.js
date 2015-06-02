@@ -14,6 +14,23 @@ module.exports = function Dsl (kuzzle) {
     return new Dsl(kuzzle);
   }
 
+  /**
+   *
+   * A tree where we have an entry by collection, an entry by tag and
+   * an entry by filter (curried function) with the rooms list
+   * @example
+   * Example for chat-room-kuzzle (see above)
+   *  filtersTree = {
+   *    message : { // -> collection name
+   *      subject : { // -> attribute where a filter exists
+   *        termSubjectKuzzle : {
+   *          rooms: [ 'f45de4d8ef4f3ze4ffzer85d4fgkzm41'], // -> room id that match this filter
+   *          fn: function () {} // -> function to execute on collection message, on field subject
+   *        }
+   *      }
+   *    }
+   *  }
+   */
   this.filtersTree = {};
 
   this.methods = require('./methods');
