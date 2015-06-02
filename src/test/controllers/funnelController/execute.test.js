@@ -22,7 +22,7 @@ describe('Test execute function in funnel controller', function () {
     kuzzle.start({}, {workers: false, servers: false});
   });
 
-  it('should reject the promise when the object doesn\'t contain the controller', function () {
+  it('should reject the promise if no controller is specified', function () {
     var object = {
       action: 'create'
     };
@@ -30,7 +30,7 @@ describe('Test execute function in funnel controller', function () {
     return should(kuzzle.funnel.execute(object, {id: 'connectionid'})).be.rejected;
   });
 
-  it('should reject the promise when the object doesn\'t contain the action', function () {
+  it('should reject the promise if no action is specified', function () {
     var object = {
       controller: 'write'
     };
@@ -38,7 +38,7 @@ describe('Test execute function in funnel controller', function () {
     return should(kuzzle.funnel.execute(object, {id: 'connectionid'})).be.rejected;
   });
 
-  it('should reject the promise when the controller doesn\'t exist', function () {
+  it('should reject the promise if the controller doesn\'t exist', function () {
     var object = {
       controller: 'toto',
       action: 'create'
@@ -47,7 +47,7 @@ describe('Test execute function in funnel controller', function () {
     return should(kuzzle.funnel.execute(object, {id: 'connectionid'})).be.rejected;
   });
 
-  it('should reject the promise when the action doesn\'t exist', function () {
+  it('should reject the promise if the action doesn\'t exist', function () {
     var object = {
       controller: 'write',
       action: 'toto'
@@ -56,7 +56,7 @@ describe('Test execute function in funnel controller', function () {
     return should(kuzzle.funnel.execute(object, {id: 'connectionid'})).be.rejected;
   });
 
-  it('should resolve the promise when everything is ok', function () {
+  it('should resolve the promise if everything is ok', function () {
     var object = {
       requestId: 'requestId',
       controller: 'write',
