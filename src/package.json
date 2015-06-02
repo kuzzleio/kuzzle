@@ -31,7 +31,8 @@
   "devDependencies": {
     "root-require": "~0.3.1",
     "mocha": "~2.2.1",
-    "should": "~5.2.0"
+    "should": "~5.2.0",
+    "should-promised": "~0.2.1"
   },
   "engines": {
     "node": ">= 0.10.0",

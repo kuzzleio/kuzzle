@@ -29,13 +29,22 @@ module.exports = function Dsl (kuzzle) {
   this.addCurriedFunction = function (roomId, collection, filters) {
     var
       deferred = q.defer(),
-      filterName = Object.keys(filters)[0],
-      privateFilterName = _.camelCase(filterName);
+      filterName,
+      privateFilterName;
+
+    if (filters === undefined) {
+      deferred.reject('Filters parameter can\'t be undefined');
+      return deferred.promise;
+    }
+
+    filterName = Object.keys(filters)[0];
 
     if (filterName === undefined) {
       deferred.reject('Undefined filters');
       return deferred.promise;
     }
+
+    privateFilterName = _.camelCase(filterName);
 
     if (!methods[privateFilterName]) {
       deferred.reject('Unknown filter with name '+ privateFilterName);
@@ -162,7 +171,7 @@ module.exports = function Dsl (kuzzle) {
   this.removeRoom = function (room) {
     var deferred = q.defer();
 
-    async.each(room.filters,
+    async.each(getFiltersPathsRecursively(room.filters),
       function (filterPath, callback) {
         removeFilterPath.call(this, room, filterPath);
         callback();
@@ -321,4 +330,31 @@ var removeFilterPath = function (room, filterPath) {
 
   return removeFilterPath.call(this, room, pathArray.join('.'));
 };
+
+/**
+ * Get all paths from a complex nested object filters (with nested and/or)
+ * @param filters
+ * @returns {Array} list of filter paths
+ */
+var getFiltersPathsRecursively = function (filters) {
+  var paths = [];
+
+  if (filters.and) {
+    paths.concat(getFiltersPathsRecursively(filters.and));
+  }
+  if (filters.or) {
+    paths.concat(getFiltersPathsRecursively(filters.or));
+  }
+
+  _.each(filters, function (value, key) {
+    if (key === 'and' || key === 'or') {
+      return false;
+    }
+
+    paths.push(key);
+  });
+
+  return paths;
+};
+
 
