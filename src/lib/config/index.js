@@ -1,5 +1,5 @@
 module.exports = {
-  mongo: require('./models/mongo'),
+  elasticsearch: require('./models/elasticsearch'),
   broker: require('./brokers/rabbit'),
   hooks: require('./hooks'),
   workers: require('./workers')
