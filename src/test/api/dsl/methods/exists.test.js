@@ -15,7 +15,7 @@ describe('Test exists method', function () {
       firstName: 'Ada'
     },
     filter = {
-      field: "lastName"
+      field: 'lastName'
     };
 
 

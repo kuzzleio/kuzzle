@@ -22,37 +22,37 @@ describe('Test bool method', function () {
       hobby: 'computer'
     },
     filter = {
-      "must" : [
+      must : [
         {
-          "terms" : {
-            "firstName" : ["Grace", "Ada"]
+          terms : {
+            firstName : ['Grace', 'Ada']
           }
         },
         {
-          "range": {
-            "age": {
-              "gte": 36,
-              "lt": 85
+          range: {
+            age: {
+              gte: 36,
+              lt: 85
             }
           }
         }
       ],
-      "must_not" : [
+      'must_not' : [
         {
-          "term": {
-            "city": "NYC"
+          term: {
+            city: 'NYC'
           }
         }
       ],
-      "should" : [
+      should : [
         {
-          "term" : {
-            "hobby" : "computer"
+          term : {
+            hobby : 'computer'
           }
         },
         {
-          "exists" : {
-            "field" : "lastName"
+          exists : {
+            field : 'lastName'
           }
         }
       ]
