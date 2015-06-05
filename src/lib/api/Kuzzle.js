@@ -20,6 +20,7 @@ function Kuzzle () {
   this.hooks = new Hooks(this);
   this.workers = new Workers(this);
   this.services = new Services(this);
+  this.services.init();
 
   // Add methods
   this.start = require('./start');

@@ -37,7 +37,7 @@ module.exports = function RouterController (kuzzle) {
       return false;
     };
 
-    // define routes
+    // Create a new document
     api.post('/:collection', function (request, response) {
       if (request.body) {
         var data = wrapObject(request.body, 'write', request.params.collection, 'create'),
@@ -61,6 +61,77 @@ module.exports = function RouterController (kuzzle) {
       else {
         return sendError('Empty data', response);
       }
+    });
+
+    // Update a document
+    api.put('/:collection', function (request, response) {
+      if (request.body) {
+        var data = wrapObject(request.body, 'write', request.params.collection, 'update'),
+          connection = {type: 'rest', id: request};
+
+        kuzzle.funnel.execute(data, connection)
+          .then(function onExecuteSuccess (result) {
+            // Send response and close connection
+            if (result.rooms) {
+              async.each(result.rooms, function (roomName) {
+                routerCtrl.notify(roomName, result.data);
+              });
+            }
+            response.writeHead(200, {'Content-Type': 'application/json'});
+            response.end(stringify({error: null, result: result.data}));
+          })
+          .catch(function onExecuteError (error) {
+            return sendError(error, response);
+          });
+      }
+      else {
+        return sendError('Empty data', response);
+      }
+    });
+
+    // Advanced search
+    api.post('/:collection/_search', function (request, response) {
+      if (request.body) {
+        var
+          data = wrapObject(request.body, 'read', request.params.collection, 'search'),
+          connection = {type: 'rest', id: request};
+
+        kuzzle.funnel.execute(data, connection)
+          .then(function onExecuteSuccess (result) {
+            response.writeHead(200, {'Content-Type': 'application/json'});
+            response.end(stringify({error: null, result: result}));
+          })
+          .catch(function onExecuteError (error) {
+            return sendError(error, response);
+          });
+      }
+      else {
+        return sendError('Empty data', response);
+      }
+    });
+
+    // Search by id
+    api.get('/:collection/:id', function (request, response) {
+      var
+        connection = {
+          type: 'rest',
+          id: request
+        },
+        data = {
+          controller: 'read',
+          action: 'search',
+          collection: request.params.collection,
+          _id: request.params.id
+        };
+
+      kuzzle.funnel.execute(data, connection)
+        .then(function onExecuteSuccess (result) {
+          response.writeHead(200, {'Content-Type': 'application/json'});
+          response.end(stringify({error: null, result: result}));
+        })
+        .catch(function onExecuteError (error) {
+          return sendError(error, response);
+        });
     });
 
   };
@@ -193,7 +264,7 @@ module.exports = function RouterController (kuzzle) {
 };
 
 function wrapObject (data, controller, collection, action) {
-  if (data.content === 'undefined') {
+  if (data.content === undefined) {
     data = {content: data};
   }
 

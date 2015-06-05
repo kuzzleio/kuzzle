@@ -2,28 +2,54 @@ var
   _ = require('lodash'),
   es = require('elasticsearch');
 
-module.exports = function (kuzzle) {
+module.exports = {
 
-  if (kuzzle.config.writeEngine.host.indexOf(',') !== -1) {
-    kuzzle.config.writeEngine.host = kuzzle.config.writeEngine.host.split(',');
-  }
+  kuzzle: null,
+  client: null,
 
-  this.client = new es.Client({
-    host: kuzzle.config.writeEngine.host
-  });
+  /**
+   * Initialize the elasticsearch client
+   *
+   * @param {Kuzzle} kuzzle
+   * @returns {Object} client
+   */
+  init: function (kuzzle) {
+    if (this.client) {
+      return this.client;
+    }
 
-  this.write = function (data) {
+    this.kuzzle = kuzzle;
+
+    if (this.kuzzle.config.writeEngine.host.indexOf(',') !== -1) {
+      this.kuzzle.config.writeEngine.host = this.kuzzle.config.writeEngine.host.split(',');
+    }
+
+    this.client = new es.Client({
+      host: this.kuzzle.config.writeEngine.host
+    });
+
+    return this.client;
+  },
+
+  /**
+   * Send to elasticsearch the new document
+   * Clean data for match the elasticsearch specification
+   *
+   * @param {Object} data
+   */
+  write: function (data) {
     data.type = data.collection;
     delete data.collection;
 
-    data.index = kuzzle.config.model.index;
-    data.id = data.content._id;
-    delete data.content._id;
+    data.index = this.kuzzle.config.writeEngine.index;
 
     data.body = data.content;
     delete data.content;
 
-    console.log(data);
-    //return this.client.create(data);
-  };
+    delete data.action;
+    delete data.controller;
+    delete data.requestId;
+
+    return this.client.create(data);
+  }
 };

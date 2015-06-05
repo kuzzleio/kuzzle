@@ -4,24 +4,24 @@ module.exports = {
 
   init: function (kuzzle) {
     this.kuzzle = kuzzle;
-    this.kuzzle.services.broker.init(kuzzle);
+    this.kuzzle.services.list.broker.init(kuzzle);
 
     this.listen();
   },
 
   add: function (data) {
-    this.kuzzle.services.broker.add('task_queue', data);
+    this.kuzzle.services.list.broker.add('task_queue', data);
   },
 
   listen: function () {
-    this.kuzzle.services.broker.listen('task_queue', onListenRealtimeCB.bind(this));
+    this.kuzzle.services.list.broker.listen('task_queue', onListenRealtimeCB.bind(this));
   },
 
   shutdown: function () {
-    this.kuzzle.services.broker.close();
+    this.kuzzle.services.list.broker.close();
   }
 };
 
 function onListenRealtimeCB (data) {
-  this.kuzzle.services.writeEngine(data);
+  this.kuzzle.services.list.writeEngine.write(data);
 }

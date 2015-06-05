@@ -3,15 +3,18 @@ var
   async = require('async'),
   q = require('q'),
   WriteController = require('./writeController'),
+  ReadController = require('./readController'),
   SubscribeController = require('./subscribeController');
 
 module.exports = function FunnelController (kuzzle) {
 
   this.write = null;
   this.subscribe = null;
+  this.read = null;
 
   this.init = function () {
     this.write = new WriteController(kuzzle);
+    this.read = new ReadController(kuzzle);
     this.subscribe = new SubscribeController(kuzzle);
   };
 

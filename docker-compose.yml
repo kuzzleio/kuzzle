@@ -10,7 +10,7 @@ kuzzle:
   environment:
     - KUZZLE_PORT=8081
     - RABBIT_HOST=rabbit
-    - ELASTICSEARCH_HOST=elasticsearch
+    - ELASTICSEARCH_HOST=elasticsearch:9200
     - PM2_OPTIONS=--watch
 
 rabbit:
