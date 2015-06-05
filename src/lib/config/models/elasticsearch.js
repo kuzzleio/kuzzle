@@ -1,6 +1,5 @@
 module.exports = {
 
-  host: process.env.ELASTICSEARCH_HOST || 'localhost',
-  port: process.env.ELASTICSEARCH_PORT || 9200
+  host: process.env.ELASTICSEARCH_HOST || process.env.ELASTICSEARCH_HOSTS || 'localhost'
 
 };
