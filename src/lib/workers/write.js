@@ -23,11 +23,9 @@ module.exports = {
 };
 
 function onListenRealtimeCB (data) {
-  if (data.action === 'create') {
-    return this.kuzzle.services.list.writeEngine.create(data);
+  if (typeof this.kuzzle.services.list.writeEngine[data.action] !== 'function') {
+    return false;
   }
 
-  if (data.action === 'update') {
-    return this.kuzzle.services.list.writeEngine.update(data);
-  }
+  return this.kuzzle.services.list.writeEngine[data.action](data);
 }

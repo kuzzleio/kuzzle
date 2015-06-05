@@ -89,6 +89,58 @@ module.exports = function RouterController (kuzzle) {
       }
     });
 
+    // Update a document
+    api.put('/:collection', function (request, response) {
+      if (request.body) {
+        var data = wrapObject(request.body, 'write', request.params.collection, 'update'),
+          connection = {type: 'rest', id: request};
+
+        kuzzle.funnel.execute(data, connection)
+          .then(function onExecuteSuccess (result) {
+            // Send response and close connection
+            if (result.rooms) {
+              async.each(result.rooms, function (roomName) {
+                routerCtrl.notify(roomName, result.data);
+              });
+            }
+            response.writeHead(200, {'Content-Type': 'application/json'});
+            response.end(stringify({error: null, result: result.data}));
+          })
+          .catch(function onExecuteError (error) {
+            return sendError(error, response);
+          });
+      }
+      else {
+        return sendError('Empty data', response);
+      }
+    });
+
+    // Delete a document
+    api.delete('/:collection/:id', function (request, response) {
+      if (request.body) {
+        var data = wrapObject(request.body, 'write', request.params.collection, 'delete', {_id: request.params.id}),
+          connection = {type: 'rest', id: request};
+
+        kuzzle.funnel.execute(data, connection)
+          .then(function onExecuteSuccess (result) {
+            // Send response and close connection
+            if (result.rooms) {
+              async.each(result.rooms, function (roomName) {
+                routerCtrl.notify(roomName, result.data);
+              });
+            }
+            response.writeHead(200, {'Content-Type': 'application/json'});
+            response.end(stringify({error: null, result: result.data}));
+          })
+          .catch(function onExecuteError (error) {
+            return sendError(error, response);
+          });
+      }
+      else {
+        return sendError('Empty data', response);
+      }
+    });
+
     // Advanced search
     api.post('/:collection/_search', function (request, response) {
       if (request.body) {

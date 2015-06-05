@@ -46,6 +46,25 @@ module.exports = function WriteController (kuzzle) {
       });
 
     return deferred.promise;
-  }
+  };
+
+  this.delete = function (data) {
+    var deferred = q.defer();
+
+    // TODO: add validation logic -> object is valid ? + schema is valid ?
+
+    kuzzle.emit('data:delete', data);
+
+    // Test saved filters for notify rooms in a next step
+    kuzzle.dsl.testFilters(data)
+      .then(function (rooms) {
+        deferred.resolve({ data: data, rooms: rooms});
+      })
+      .catch(function (error) {
+        deferred.reject(error);
+      });
+
+    return deferred.promise;
+  };
 
 };

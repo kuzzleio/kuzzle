@@ -53,6 +53,12 @@ module.exports = {
     return this.client.create(data);
   },
 
+  /**
+   * Send to elasticsearch the partial document
+   * with the id to update
+   *
+   * @param {Object} data
+   */
   update: function (data) {
     data.type = data.collection;
     delete data.collection;
@@ -71,5 +77,22 @@ module.exports = {
     delete data.requestId;
 
     return this.client.update(data);
+  },
+
+  delete: function (data) {
+    data.type = data.collection;
+    delete data.collection;
+
+    data.index = this.kuzzle.config.writeEngine.index;
+
+    data.id = data.content._id;
+    delete data.content;
+
+    delete data.action;
+    delete data.controller;
+    delete data.requestId;
+
+
+    return this.client.delete(data);
   }
 };
