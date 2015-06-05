@@ -1,5 +1,5 @@
 var
-  q = require('q'),
+  config = require('./config'),
   rp = require('request-promise');
 
 module.exports = function () {
@@ -34,7 +34,7 @@ module.exports = function () {
     };
 
     this.pathApi = function (path) {
-      return 'http://localhost:8081/api/' + path;
+      return config.apiUrl + path;
     };
 
     this.callApi = function (options) {
