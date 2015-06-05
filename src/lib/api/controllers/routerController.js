@@ -64,9 +64,9 @@ module.exports = function RouterController (kuzzle) {
     });
 
     // Update a document
-    api.put('/:collection', function (request, response) {
+    api.post('/:collection/:id', function (request, response) {
       if (request.body) {
-        var data = wrapObject(request.body, 'write', request.params.collection, 'update'),
+        var data = wrapObject(request.body, 'write', request.params.collection, 'update', {_id: request.params.id}),
           connection = {type: 'rest', id: request};
 
         kuzzle.funnel.execute(data, connection)
@@ -263,7 +263,7 @@ module.exports = function RouterController (kuzzle) {
   };
 };
 
-function wrapObject (data, controller, collection, action) {
+function wrapObject (data, controller, collection, action, additionalData) {
   if (data.content === undefined) {
     data = {content: data};
   }
@@ -276,6 +276,10 @@ function wrapObject (data, controller, collection, action) {
 
   if (action) {
     data.action = action;
+  }
+
+  if (additionalData !== undefined) {
+    data.content = _.extend(data.content, additionalData);
   }
 
   // The request Id is optional, but we have to generate it if the user

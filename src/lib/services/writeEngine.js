@@ -37,7 +37,7 @@ module.exports = {
    *
    * @param {Object} data
    */
-  write: function (data) {
+  create: function (data) {
     data.type = data.collection;
     delete data.collection;
 
@@ -51,5 +51,25 @@ module.exports = {
     delete data.requestId;
 
     return this.client.create(data);
+  },
+
+  update: function (data) {
+    data.type = data.collection;
+    delete data.collection;
+
+    data.index = this.kuzzle.config.writeEngine.index;
+
+    data.body = data.content;
+    delete data.content;
+
+    data.id = data.body._id;
+    delete data.body._id;
+    data.body = {doc: data.body};
+
+    delete data.action;
+    delete data.controller;
+    delete data.requestId;
+
+    return this.client.update(data);
   }
 };

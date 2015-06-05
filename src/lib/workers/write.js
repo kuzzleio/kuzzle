@@ -23,5 +23,11 @@ module.exports = {
 };
 
 function onListenRealtimeCB (data) {
-  this.kuzzle.services.list.writeEngine.write(data);
+  if (data.action === 'create') {
+    return this.kuzzle.services.list.writeEngine.create(data);
+  }
+
+  if (data.action === 'update') {
+    return this.kuzzle.services.list.writeEngine.update(data);
+  }
 }
