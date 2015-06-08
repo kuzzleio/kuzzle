@@ -36,16 +36,16 @@ module.exports = {
 
     // If an id is defined we can extend the filter for add a filter on the id
     // useful in case we are in get /:collection/:id
-    if (data._id) {
-      if (!Array.isArray(data._id)) {
-        data._id = [data._id];
+    if (data.id) {
+      if (!Array.isArray(data.id)) {
+        data.id = [data.id];
       }
 
       if (data.body === undefined) {
         data.body = {};
       }
 
-      data.body = _.extend(data.body, {ids: {values: data._id}});
+      data.body = _.extend(data.body, {ids: {values: data.id}});
     }
 
     var key = Object.keys(data.body)[0];

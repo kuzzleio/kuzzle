@@ -63,10 +63,31 @@ module.exports = function RouterController (kuzzle) {
       }
     });
 
+    // Advanced search
+    api.post('/:collection/_search', function (request, response) {
+      if (request.body) {
+        var
+          data = wrapObject(request.body, 'read', request.params.collection, 'search'),
+          connection = {type: 'rest', id: request};
+
+        kuzzle.funnel.execute(data, connection)
+          .then(function onExecuteSuccess (result) {
+            response.writeHead(200, {'Content-Type': 'application/json'});
+            response.end(stringify({error: null, result: result}));
+          })
+          .catch(function onExecuteError (error) {
+            return sendError(error, response);
+          });
+      }
+      else {
+        return sendError('Empty data', response);
+      }
+    });
+
     // Update a document
     api.post('/:collection/:id', function (request, response) {
       if (request.body) {
-        var data = wrapObject(request.body, 'write', request.params.collection, 'update', {_id: request.params.id}),
+        var data = wrapObject(request.body, 'write', request.params.collection, 'update', {id: request.params.id}),
           connection = {type: 'rest', id: request};
 
         kuzzle.funnel.execute(data, connection)
@@ -118,7 +139,7 @@ module.exports = function RouterController (kuzzle) {
     // Delete a document
     api.delete('/:collection/:id', function (request, response) {
       if (request.body) {
-        var data = wrapObject(request.body, 'write', request.params.collection, 'delete', {_id: request.params.id}),
+        var data = wrapObject(request.body, 'write', request.params.collection, 'delete', {id: request.params.id}),
           connection = {type: 'rest', id: request};
 
         kuzzle.funnel.execute(data, connection)
@@ -141,27 +162,6 @@ module.exports = function RouterController (kuzzle) {
       }
     });
 
-    // Advanced search
-    api.post('/:collection/_search', function (request, response) {
-      if (request.body) {
-        var
-          data = wrapObject(request.body, 'read', request.params.collection, 'search'),
-          connection = {type: 'rest', id: request};
-
-        kuzzle.funnel.execute(data, connection)
-          .then(function onExecuteSuccess (result) {
-            response.writeHead(200, {'Content-Type': 'application/json'});
-            response.end(stringify({error: null, result: result}));
-          })
-          .catch(function onExecuteError (error) {
-            return sendError(error, response);
-          });
-      }
-      else {
-        return sendError('Empty data', response);
-      }
-    });
-
     // Search by id
     api.get('/:collection/:id', function (request, response) {
       var
@@ -173,7 +173,7 @@ module.exports = function RouterController (kuzzle) {
           controller: 'read',
           action: 'search',
           collection: request.params.collection,
-          _id: request.params.id
+          id: request.params.id
         };
 
       kuzzle.funnel.execute(data, connection)

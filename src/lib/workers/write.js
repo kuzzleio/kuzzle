@@ -23,6 +23,10 @@ module.exports = {
 };
 
 function onListenRealtimeCB (data) {
+  if (data.persist === false) {
+    return false;
+  }
+
   if (typeof this.kuzzle.services.list.writeEngine[data.action] !== 'function') {
     return false;
   }

@@ -12,7 +12,7 @@ module.exports = function WriteController (kuzzle) {
     // TODO: add validation logic -> object is valid ? + schema is valid ?
     if (data.persist !== false) {
       // use uuid v1 http://blog.mikemccandless.com/2014/05/choosing-fast-unique-identifier-uuid.html
-      data.content._id = uuid.v1();
+      data.id = uuid.v1();
     }
 
     kuzzle.emit('data:create', data);

@@ -49,6 +49,7 @@ module.exports = {
     delete data.action;
     delete data.controller;
     delete data.requestId;
+    delete data.persist;
 
     return this.client.create(data);
   },
@@ -68,8 +69,8 @@ module.exports = {
     data.body = data.content;
     delete data.content;
 
-    data.id = data.body._id;
-    delete data.body._id;
+    data.id = data.body.id;
+    delete data.body.id;
     data.body = {doc: data.body};
 
     delete data.action;
@@ -79,13 +80,19 @@ module.exports = {
     return this.client.update(data);
   },
 
+  /**
+   * Send to elasticsearch the document id
+   * that we have to delete
+   *
+   * @param {Object} data
+   */
   delete: function (data) {
     data.type = data.collection;
     delete data.collection;
 
     data.index = this.kuzzle.config.writeEngine.index;
 
-    data.id = data.content._id;
+    data.id = data.content.id;
     delete data.content;
 
     delete data.action;
