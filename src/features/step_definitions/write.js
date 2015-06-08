@@ -27,12 +27,12 @@ var writeSteps = function () {
   });
 
   this.Then(/^I should receive a document id$/, function (callback) {
-    if (this.result && this.result.content && this.result.content._id) {
+    if (this.result && this.result.id) {
       callback();
       return false;
     }
 
-    callback.fail(new Error('No _id information in returned object'));
+    callback.fail(new Error('No id information in returned object'));
   });
 };
 

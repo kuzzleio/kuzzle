@@ -6,7 +6,7 @@ module.exports = function () {
   this.World = function World (callback) {
     this.documentGrace = {
       collection: 'user',
-      content: {
+      body: {
         firstName: 'Grace',
         lastName: 'Hopper',
         age: 85,
@@ -20,7 +20,7 @@ module.exports = function () {
     };
     this.documentAda = {
       collection: 'user',
-      content: {
+      body: {
         firstName: 'Ada',
         lastName: 'Lovelace',
         age: 36,

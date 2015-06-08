@@ -1,6 +1,7 @@
 var
   should = require('should'),
-  start = require('root-require')('lib/api/start');
+  captainsLog = require('captains-log'),
+  Kuzzle = require('root-require')('lib/api/Kuzzle');
 
 require('should-promised');
 
@@ -27,14 +28,9 @@ describe('Test removeSubscription function in hotelClerk controller', function (
 
 
   beforeEach(function () {
-    kuzzle = {
-      log: {
-        debug: function() {},
-        silly: function() {},
-        error: function() {}
-      },
-      start: start
-    };
+    kuzzle = new Kuzzle();
+    kuzzle.log = new captainsLog({level: 'silent'});
+    kuzzle.start({}, {workers: false, servers: false});
 
     kuzzle.start({}, {workers: false, servers: false});
     return kuzzle.hotelClerk.addSubscription(connection, roomName1, collection, filter1)

@@ -1,6 +1,7 @@
 var
   should = require('should'),
-  start = require('root-require')('lib/api/start');
+  captainsLog = require('captains-log'),
+  Kuzzle = require('root-require')('lib/api/Kuzzle');
 
 require('should-promised');
 
@@ -10,15 +11,8 @@ describe('Test execute function in funnel controller', function () {
     kuzzle;
 
   beforeEach(function () {
-    kuzzle = {
-      log: {
-        debug: function() {},
-        silly: function() {},
-        error: function() {}
-      },
-      start: start
-    };
-
+    kuzzle = new Kuzzle();
+    kuzzle.log = new captainsLog({level: 'silent'});
     kuzzle.start({}, {workers: false, servers: false});
   });
 
