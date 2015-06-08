@@ -41,7 +41,9 @@ module.exports = {
     data.type = data.collection;
     delete data.collection;
 
-    data.index = this.kuzzle.config.writeEngine.index;
+    if (data.index === undefined) {
+      data.index = this.kuzzle.config.writeEngine.index;
+    }
 
     delete data.action;
     delete data.controller;
@@ -61,10 +63,15 @@ module.exports = {
     data.type = data.collection;
     delete data.collection;
 
-    data.index = this.kuzzle.config.writeEngine.index;
+    if (data.index === undefined) {
+      data.index = this.kuzzle.config.writeEngine.index;
+    }
 
-    data.id = data.body.id;
-    delete data.body.id;
+    if (data.body.id) {
+      data.id = data.body.id;
+      delete data.body.id;
+    }
+
     data.body = {doc: data.body};
 
     delete data.action;
@@ -84,7 +91,9 @@ module.exports = {
     data.type = data.collection;
     delete data.collection;
 
-    data.index = this.kuzzle.config.writeEngine.index;
+    if (data.index === undefined) {
+      data.index = this.kuzzle.config.writeEngine.index;
+    }
 
     delete data.action;
     delete data.controller;
@@ -92,5 +101,21 @@ module.exports = {
 
 
     return this.client.delete(data);
+  },
+
+  /**
+   * Send to elasticsearch the query
+   * for delete several documents
+   *
+   * @param {Object} data
+   */
+  deleteByQuery: function (data) {
+    var params = {
+      index: data.index || this.kuzzle.config.writeEngine.index,
+      type: data.collection,
+      q: '*'
+    };
+
+    return this.client.deleteByQuery(params);
   }
 };

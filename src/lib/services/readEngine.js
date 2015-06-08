@@ -26,10 +26,14 @@ module.exports = {
   },
 
   read: function (data) {
-    data.index = this.kuzzle.config.readEngine.index;
+    if (data.index === undefined) {
+      data.index = this.kuzzle.config.writeEngine.index;
+    }
 
-    data.type = data.collection;
-    delete data.collection;
+    if (data.collection) {
+      data.type = data.collection;
+      delete data.collection;
+    }
 
     // If an id is defined we can extend the filter for add a filter on the id
     // useful in case we are in get /:collection/:id
@@ -53,6 +57,10 @@ module.exports = {
         filter: data.body
       };
     }
+
+    delete data.controller;
+    delete data.action;
+    delete data.id;
 
     return this.client.search(data);
   }

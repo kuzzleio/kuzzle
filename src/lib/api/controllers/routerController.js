@@ -92,12 +92,6 @@ module.exports = function RouterController (kuzzle) {
 
         kuzzle.funnel.execute(data, connection)
           .then(function onExecuteSuccess (result) {
-            // Send response and close connection
-            if (result.rooms) {
-              async.each(result.rooms, function (roomName) {
-                routerCtrl.notify(roomName, result.data);
-              });
-            }
             response.writeHead(200, {'Content-Type': 'application/json'});
             response.end(stringify({error: null, result: result.data}));
           })
@@ -118,12 +112,6 @@ module.exports = function RouterController (kuzzle) {
 
         kuzzle.funnel.execute(data, connection)
           .then(function onExecuteSuccess (result) {
-            // Send response and close connection
-            if (result.rooms) {
-              async.each(result.rooms, function (roomName) {
-                routerCtrl.notify(roomName, result.data);
-              });
-            }
             response.writeHead(200, {'Content-Type': 'application/json'});
             response.end(stringify({error: null, result: result.data}));
           })
@@ -144,12 +132,27 @@ module.exports = function RouterController (kuzzle) {
 
         kuzzle.funnel.execute(data, connection)
           .then(function onExecuteSuccess (result) {
-            // Send response and close connection
-            if (result.rooms) {
-              async.each(result.rooms, function (roomName) {
-                routerCtrl.notify(roomName, result.data);
-              });
-            }
+            response.writeHead(200, {'Content-Type': 'application/json'});
+            response.end(stringify({error: null, result: result.data}));
+          })
+          .catch(function onExecuteError (error) {
+            return sendError(error, response);
+          });
+      }
+      else {
+        return sendError('Empty data', response);
+      }
+    });
+
+    // TODO: Need to secure
+    // Delete a collection
+    api.delete('/:collection', function (request, response) {
+      if (request.body) {
+        var data = wrapObject(request.body, 'write', request.params.collection, 'deleteByQuery'),
+          connection = {type: 'rest', id: request};
+
+        kuzzle.funnel.execute(data, connection)
+          .then(function onExecuteSuccess (result) {
             response.writeHead(200, {'Content-Type': 'application/json'});
             response.end(stringify({error: null, result: result.data}));
           })
