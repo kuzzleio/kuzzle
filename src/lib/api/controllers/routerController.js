@@ -316,8 +316,8 @@ module.exports = function RouterController (kuzzle) {
 };
 
 function wrapObject (data, controller, collection, action, additionalData) {
-  if (data.content === undefined) {
-    data = {content: data};
+  if (data.body === undefined) {
+    data = {body: data};
   }
 
   data.controller = controller;
@@ -331,7 +331,7 @@ function wrapObject (data, controller, collection, action, additionalData) {
   }
 
   if (additionalData !== undefined) {
-    data.content = _.extend(data.content, additionalData);
+    data = _.extend(data, additionalData);
   }
 
   // The request Id is optional, but we have to generate it if the user

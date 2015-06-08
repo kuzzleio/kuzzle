@@ -43,9 +43,6 @@ module.exports = {
 
     data.index = this.kuzzle.config.writeEngine.index;
 
-    data.body = data.content;
-    delete data.content;
-
     delete data.action;
     delete data.controller;
     delete data.requestId;
@@ -65,9 +62,6 @@ module.exports = {
     delete data.collection;
 
     data.index = this.kuzzle.config.writeEngine.index;
-
-    data.body = data.content;
-    delete data.content;
 
     data.id = data.body.id;
     delete data.body.id;
@@ -91,9 +85,6 @@ module.exports = {
     delete data.collection;
 
     data.index = this.kuzzle.config.writeEngine.index;
-
-    data.id = data.content.id;
-    delete data.content;
 
     delete data.action;
     delete data.controller;

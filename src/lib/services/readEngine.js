@@ -31,9 +31,6 @@ module.exports = {
     data.type = data.collection;
     delete data.collection;
 
-    data.body = data.content;
-    delete data.content;
-
     // If an id is defined we can extend the filter for add a filter on the id
     // useful in case we are in get /:collection/:id
     if (data.id) {

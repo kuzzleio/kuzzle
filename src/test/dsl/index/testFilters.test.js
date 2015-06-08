@@ -11,7 +11,7 @@ describe('Test testFilters function index.js file from DSL', function () {
     collection = 'user',
     dataGrace = {
       collection: collection,
-      content: {
+      body: {
         firstName: 'Grace',
         lastName: 'Hopper',
         age: 85,
@@ -25,7 +25,7 @@ describe('Test testFilters function index.js file from DSL', function () {
     },
     dataAda = {
       collection: collection,
-      content: {
+      body: {
         firstName: 'Ada',
         lastName: 'Lovelace',
         age: 36,

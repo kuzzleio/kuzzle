@@ -62,7 +62,7 @@ describe('Test execute function in funnel controller', function () {
       controller: 'write',
       action: 'create',
       collection: 'user',
-      content: {
+      body: {
         firstName: 'Grace'
       }
     };
