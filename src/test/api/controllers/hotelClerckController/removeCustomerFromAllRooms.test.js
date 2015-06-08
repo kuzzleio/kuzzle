@@ -50,14 +50,14 @@ describe('Test removeCustomerFromAllRooms function in hotelClerk controller', fu
   it('should clean up customers, rooms and filtersTree object', function () {
     return kuzzle.hotelClerk.removeCustomerFromAllRooms(connection.id)
       .then(function () {
-        should(kuzzle.dsl.filtersTree).be.an.object;
+        should(kuzzle.dsl.filtersTree).be.an.Object;
         should(kuzzle.dsl.filtersTree).be.empty;
 
-        should(kuzzle.dsl.rooms).be.an.object;
-        should(kuzzle.dsl.rooms).be.empty;
+        should(kuzzle.hotelClerk.rooms).be.an.Object;
+        should(kuzzle.hotelClerk.rooms).be.empty;
 
-        should(kuzzle.dsl.customers).be.an.object;
-        should(kuzzle.dsl.customers).be.empty;
+        should(kuzzle.hotelClerk.customers).be.an.Object;
+        should(kuzzle.hotelClerk.customers).be.empty;
       });
   });
 

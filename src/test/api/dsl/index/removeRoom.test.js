@@ -35,12 +35,12 @@ describe('Test removeRoom function index.js file from DSL', function () {
   });
 
   it('should have an empty room list and filtersTree when the function is called', function () {
-    should(kuzzle.dsl.filtersTree).be.object;
+    should(kuzzle.dsl.filtersTree).be.Object;
     should(kuzzle.dsl.filtersTree).not.be.empty;
 
     return kuzzle.dsl.removeRoom(kuzzle.hotelClerk.rooms[roomId])
       .then(function () {
-        should(kuzzle.dsl.filtersTree).be.empty.object;
+        should(kuzzle.dsl.filtersTree).be.empty.Object;
       });
   });
 
