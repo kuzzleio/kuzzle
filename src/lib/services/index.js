@@ -6,8 +6,8 @@ module.exports = function (kuzzle) {
   this.init = function () {
     this.list = {
       broker: require('./broker'),
-      writeEngine: require('./writeEngine'),
-      readEngine: require('./readEngine')
+      writeEngine: require('./elasticsearch'),
+      readEngine: require('./elasticsearch')
     };
 
     this.list.writeEngine.init(kuzzle);
