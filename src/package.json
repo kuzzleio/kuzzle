@@ -8,7 +8,7 @@
     "kuzzle": "./bin/kuzzle.js"
   },
   "scripts": {
-    "test": "mocha"
+    "test": "mocha && cucumber.js"
   },
   "dependencies": {
     "amqplib": "^0.3.2",
@@ -26,13 +26,15 @@
     "rc": "~1.0.1",
     "router": "^1.0.0",
     "socket.io": "~1.3.5",
-    "big.js": "~3.0.2"
+    "big.js": "~3.0.2",
+    "request-promise": "~0.4.2"
   },
   "devDependencies": {
     "root-require": "~0.3.1",
     "mocha": "~2.2.1",
     "should": "~5.2.0",
-    "should-promised": "~0.2.1"
+    "should-promised": "~0.2.1",
+    "cucumber": "~0.4.9"
   },
   "engines": {
     "node": ">= 0.10.0",

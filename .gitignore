@@ -1,6 +1,9 @@
 # IDE
 .idea
 
+# Node
+npm-debug.log
+
 # Other
 .DS_STORE
 *#
