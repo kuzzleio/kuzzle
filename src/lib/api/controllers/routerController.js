@@ -219,6 +219,7 @@ module.exports = function RouterController (kuzzle) {
                 routerCtrl.notify(roomName, result.data);
               });
             }
+
             routerCtrl.notify(data.requestId, result.data, connection);
           })
           .catch(function onExecuteError(error) {

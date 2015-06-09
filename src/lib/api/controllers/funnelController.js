@@ -2,6 +2,7 @@ var
   socket = require('socket.io'),
   async = require('async'),
   q = require('q'),
+  _ = require('lodash'),
   WriteController = require('./writeController'),
   ReadController = require('./readController'),
   SubscribeController = require('./subscribeController');
@@ -75,6 +76,13 @@ module.exports = function FunnelController (kuzzle) {
 
         this[object.controller][object.action](object, connection)
           .then(function (result) {
+            // wrap result in result.data if it's not defined (useful with elasticsearch)
+            if (result.data === undefined && !_.isEmpty(result)) {
+              result = {
+                data: result
+              };
+            }
+
             deferred.resolve(result);
           })
           .catch(function (error) {
