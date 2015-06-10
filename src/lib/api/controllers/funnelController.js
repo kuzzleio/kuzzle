@@ -5,18 +5,24 @@ var
   _ = require('lodash'),
   WriteController = require('./writeController'),
   ReadController = require('./readController'),
-  SubscribeController = require('./subscribeController');
+  SubscribeController = require('./subscribeController'),
+  BulkController = require('./bulkController'),
+  AdminController = require('./adminController');
 
 module.exports = function FunnelController (kuzzle) {
 
   this.write = null;
   this.subscribe = null;
   this.read = null;
+  this.admin = null;
+  this.bulk = null;
 
   this.init = function () {
     this.write = new WriteController(kuzzle);
     this.read = new ReadController(kuzzle);
     this.subscribe = new SubscribeController(kuzzle);
+    this.bulk = new BulkController(kuzzle);
+    this.admin = new AdminController(kuzzle);
   };
 
   /**
@@ -76,13 +82,6 @@ module.exports = function FunnelController (kuzzle) {
 
         this[object.controller][object.action](object, connection)
           .then(function (result) {
-            // wrap result in result.data if it's not defined (useful with elasticsearch)
-            if (result.data === undefined && !_.isEmpty(result)) {
-              result = {
-                data: result
-              };
-            }
-
             deferred.resolve(result);
           })
           .catch(function (error) {

@@ -129,27 +129,40 @@ As Kuzzke API can be called through distinct network protocols, the encapsulatio
 
 | HTTP Method | URL format | body | controller | action | comment |
 | --- | --- | --- | --- | --- | --- |
-| **GET** | http(s)://kuzzle.domain/&lt;collection&gt;/ | _empty_  | **read** |  **search** | list all contents of given collection |
 | **GET** | http(s)://kuzzle.domain/&lt;collection&gt;/&lt;id&gt; | _empty_ | **read** | **get** | get a single content |
-| **PUT** | http(s)://kuzzle.domain/&lt;collection&gt; | `{<data_content>}` | **write** | **replace** | replace the entire collection with given contents |
-| **PUT** | http(s)://kuzzle.domain/&lt;collection&gt;/&lt;id&gt; | `{<data_content>}` | **write** | **update** | update a content (or create it if not exsist) |
-| **POST** | http(s)://kuzzle.domain/&lt;collection&gt; |  `{<data_content>}` | **write** | **create** | create a new content |
-| **POST** | http(s)://kuzzle.domain/&lt;collection&gt;/search | `{<search_filters>}` | **read** |  **search** | search contents according to given filters |
-| **DELETE** | http(s)://kuzzle.domain/&lt;collection&gt; | _empty_ | **write** | **delete** | delete the entire collection |
+| **PUT** | http(s)://kuzzle.domain/&lt;collection&gt;/&lt;id&gt; | `{<data_content>}` | **write** | **update** | update the document with the given id |
+| **PUT** | http(s)://kuzzle.domain/&lt;collection&gt;/&lt;id&gt;/_update | `{<data_content>}` | **write** | **update** | update the document with the given id |
+| **PUT** | http(s)://kuzzle.domain/&lt;collection&gt;/&lt;id&gt;/_create | `{<data_content>}` | **write** | **create** | create the document with the given id |
+| **POST** | http(s)://kuzzle.domain/&lt;collection&gt; |  `{<data_content>}` | **write** | **create** | create a new document |
+| **POST** | http(s)://kuzzle.domain/&lt;collection&gt;/_search | `{<search_filters>}` | **read** |  **search** | search document according to given filters |
+| **POST** | http(s)://kuzzle.domain/_bulk | `{<bulk_data_content>}` | **bulk** |  **import** | Perform many create/update/delete operations in a single call (see [ElasticSearch bulk format](https://www.elastic.co/guide/en/elasticsearch/reference/1.x/docs-bulk.html)|
+| **POST** | http(s)://kuzzle.domain/&lt;collection&gt;/_bulk | `{<bulk_data_content>}` | **bulk** |  **import** | Perform many create/update/delete operations in a single call with the default given collection|
 | **DELETE** | http(s)://kuzzle.domain/&lt;collection&gt;/&lt;id&gt; | _empty_ | **write** | **delete** | delete the given content |
+| **DELETE** | http(s)://kuzzle.domain/&lt;collection&gt;/_query | `{<search_filters>}` | **write** | **deleteByQuery** | delete documents according to given filters |
+| **DELETE** | http(s)://kuzzle.domain/&lt;collection&gt; | _empty_ | **admin** | **deleteCollection** | delete the entire collection and schema |
 
 * `{<data_content>}` :
 
-```json
-{
-  ["persist": <true|false>,]
-  "content": <content>
-}
-```
+    ```
+    {
+      "persist": <true|false|undefined>,
+      "body": {
+        "firstName": "Grace",
+        "lastName": "Hooper"
+      }
+    }
+    ```
+    Or directly your document:
+    ```
+    {
+        "firstName": "Grace",
+        "lastName": "Hooper"
+    }
+    ```
 
-* `{<search_filters>}` :
+* `{<bulk_data_content>}` : see [Elasticsearch bulk format](https://www.elastic.co/guide/en/elasticsearch/reference/1.x/docs-bulk.html)
 
-_(to be defined)_
+* `{<search_filters>}` : see [Elasticsearch query DSL](https://www.elastic.co/guide/en/elasticsearch/reference/1.x/query-dsl.html)
 
 
 ##### Notes :

@@ -5,6 +5,7 @@ var
   stringify = require('json-stable-stringify'),
   Router = require('router'),
   broker = require('../../services/broker'),
+  q = require('q'),
   // For parse a request sent by user
   bodyParser = require('body-parser'),
   // For final step to respond to HTTP request
@@ -17,6 +18,7 @@ module.exports = function RouterController (kuzzle) {
 
   this.router = null;
   this.controllers = ['write', 'read', 'subscribe'];
+  this.kuzzle = kuzzle;
 
   this.initRouterHttp = function () {
     var routerCtrl = this;
@@ -30,164 +32,94 @@ module.exports = function RouterController (kuzzle) {
     // add a body parsing middleware to our API
     api.use(bodyParser.json());
 
-    // define the function that will be call in case of error
-    var sendError = function (error, response) {
-      response.writeHead(400, {'Content-Type': 'application/json'});
-      response.end(stringify({error: error, result: null}));
-      return false;
-    };
+    api.post('/_bulk', function (request, response) {
+      var params = {
+        controller: 'bulk',
+        action: 'import'
+      };
 
-    // Create a new document
+      executeFromRest.call(this, params, request, response);
+    }.bind(this));
+
+    api.post('/:collection/_bulk', function (request, response) {
+      var params = {
+        controller: 'bulk',
+        action: 'import'
+      };
+
+      executeFromRest.call(this, params, request, response);
+    }.bind(this));
+
+    api.put('/:collection/:id/_:action', function (request, response) {
+      var params = {
+        controller: 'write'
+      };
+
+      executeFromRest.call(this, params, request, response);
+    }.bind(this));
+
+    api.put('/:collection/:id', function (request, response) {
+      var params = {
+        controller: 'write',
+        action: 'update'
+      };
+
+      executeFromRest.call(this, params, request, response);
+    }.bind(this));
+
     api.post('/:collection', function (request, response) {
-      if (request.body) {
-        var data = wrapObject(request.body, 'write', request.params.collection, 'create'),
-            connection = {type: 'rest', id: request};
+      var params = {
+        controller: 'write',
+        action: 'create'
+      };
 
-        kuzzle.funnel.execute(data, connection)
-          .then(function onExecuteSuccess (result) {
-            // Send response and close connection
-            if (result.rooms) {
-              async.each(result.rooms, function (roomName) {
-                routerCtrl.notify(roomName, result.data);
-              });
-            }
-            response.writeHead(200, {'Content-Type': 'application/json'});
-            response.end(stringify({error: null, result: result.data}));
-          })
-          .catch(function onExecuteError (error) {
-            return sendError(error, response);
-          });
-      }
-      else {
-        return sendError('Empty data', response);
-      }
-    });
+      executeFromRest.call(this, params, request, response);
+    }.bind(this));
 
-    // Advanced search
-    api.post('/:collection/_search', function (request, response) {
-      if (request.body) {
-        var
-          data = wrapObject(request.body, 'read', request.params.collection, 'search'),
-          connection = {type: 'rest', id: request};
-
-        kuzzle.funnel.execute(data, connection)
-          .then(function onExecuteSuccess (result) {
-            response.writeHead(200, {'Content-Type': 'application/json'});
-            response.end(stringify({error: null, result: result}));
-          })
-          .catch(function onExecuteError (error) {
-            return sendError(error, response);
-          });
-      }
-      else {
-        return sendError('Empty data', response);
-      }
-    });
-
-    // Update a document
-    api.post('/:collection/:id', function (request, response) {
-      if (request.body) {
-        var data = wrapObject(request.body, 'write', request.params.collection, 'update', {id: request.params.id}),
-          connection = {type: 'rest', id: request};
-
-        kuzzle.funnel.execute(data, connection)
-          .then(function onExecuteSuccess (result) {
-            response.writeHead(200, {'Content-Type': 'application/json'});
-            response.end(stringify({error: null, result: result.data}));
-          })
-          .catch(function onExecuteError (error) {
-            return sendError(error, response);
-          });
-      }
-      else {
-        return sendError('Empty data', response);
-      }
-    });
-
-    // Update a document
-    api.put('/:collection', function (request, response) {
-      if (request.body) {
-        var data = wrapObject(request.body, 'write', request.params.collection, 'update'),
-          connection = {type: 'rest', id: request};
-
-        kuzzle.funnel.execute(data, connection)
-          .then(function onExecuteSuccess (result) {
-            response.writeHead(200, {'Content-Type': 'application/json'});
-            response.end(stringify({error: null, result: result.data}));
-          })
-          .catch(function onExecuteError (error) {
-            return sendError(error, response);
-          });
-      }
-      else {
-        return sendError('Empty data', response);
-      }
-    });
-
-    // Delete a document
-    api.delete('/:collection/:id', function (request, response) {
-      if (request.body) {
-        var data = wrapObject(request.body, 'write', request.params.collection, 'delete', {id: request.params.id}),
-          connection = {type: 'rest', id: request};
-
-        kuzzle.funnel.execute(data, connection)
-          .then(function onExecuteSuccess (result) {
-            response.writeHead(200, {'Content-Type': 'application/json'});
-            response.end(stringify({error: null, result: result.data}));
-          })
-          .catch(function onExecuteError (error) {
-            return sendError(error, response);
-          });
-      }
-      else {
-        return sendError('Empty data', response);
-      }
-    });
-
-    // TODO: Need to secure
-    // Delete a collection
-    api.delete('/:collection', function (request, response) {
-      if (request.body) {
-        var data = wrapObject(request.body, 'write', request.params.collection, 'deleteByQuery'),
-          connection = {type: 'rest', id: request};
-
-        kuzzle.funnel.execute(data, connection)
-          .then(function onExecuteSuccess (result) {
-            response.writeHead(200, {'Content-Type': 'application/json'});
-            response.end(stringify({error: null, result: result.data}));
-          })
-          .catch(function onExecuteError (error) {
-            return sendError(error, response);
-          });
-      }
-      else {
-        return sendError('Empty data', response);
-      }
-    });
-
-    // Search by id
     api.get('/:collection/:id', function (request, response) {
-      var
-        connection = {
-          type: 'rest',
-          id: request
-        },
-        data = {
-          controller: 'read',
-          action: 'search',
-          collection: request.params.collection,
-          id: request.params.id
-        };
+      var params = {
+        controller: 'read',
+        action: 'get'
+      };
 
-      kuzzle.funnel.execute(data, connection)
-        .then(function onExecuteSuccess (result) {
-          response.writeHead(200, {'Content-Type': 'application/json'});
-          response.end(stringify({error: null, result: result}));
-        })
-        .catch(function onExecuteError (error) {
-          return sendError(error, response);
-        });
-    });
+      executeFromRest.call(this, params, request, response);
+    }.bind(this));
+
+    api.post('/:collection/_search', function (request, response) {
+      var params = {
+        controller: 'read',
+        action: 'search'
+      };
+
+      executeFromRest.call(this, params, request, response);
+    }.bind(this));
+
+    api.delete('/:collection/_query', function (request, response) {
+      var params = {
+        controller: 'write',
+        action: 'deleteByQuery'
+      };
+
+      executeFromRest.call(this, params, request, response);
+    }.bind(this));
+
+    api.delete('/:collection/:id', function (request, response) {
+      var params = {
+        controller: 'write',
+        action: 'delete'
+      };
+
+      executeFromRest.call(this, params, request, response);
+    }.bind(this));
+
+    api.delete('/:collection', function (request, response) {
+      var params = {
+        controller: 'admin',
+        action: 'deleteCollection'
+      };
+
+      executeFromRest.call(this, params, request, response);
+    }.bind(this));
 
   };
 
@@ -319,23 +251,58 @@ module.exports = function RouterController (kuzzle) {
   };
 };
 
-function wrapObject (data, controller, collection, action, additionalData) {
+function sendRestError(error, response) {
+  response.writeHead(400, {'Content-Type': 'application/json'});
+  response.end(stringify({error: error, result: null}));
+
+  return false;
+}
+
+function executeFromRest(params, request, response) {
+  var
+    deferred = q.defer(),
+    data,
+    connection;
+
+  if (!params.controller) {
+    deferred.reject('Missing controller');
+    return deferred.promise;
+  }
+
+  data = {
+    controller: params.controller,
+    action: params.action || request.params.action,
+    collection: request.params.collection,
+    id: request.params.id
+  };
+
+  data = wrapObject(request.body, data);
+  connection = {type: 'rest', id: request};
+
+  this.kuzzle.funnel.execute(data, connection)
+    .then(function (result) {
+      if (result.rooms) {
+        async.each(result.rooms, function (roomName) {
+          this.notify(roomName, result.data);
+        });
+      }
+
+      response.writeHead(200, {'Content-Type': 'application/json'});
+      response.end(stringify({error: null, result: result.data}));
+    }.bind(this))
+    .catch(function (error) {
+      return sendRestError(error, response);
+    });
+}
+
+function wrapObject (requestBody, data) {
   if (data.body === undefined) {
-    data = {body: data};
-  }
-
-  data.controller = controller;
-
-  if (collection) {
-    data.collection = collection;
-  }
-
-  if (action) {
-    data.action = action;
-  }
-
-  if (additionalData !== undefined) {
-    data = _.extend(data, additionalData);
+    if (requestBody.body === undefined) {
+      data.body = requestBody;
+    }
+    else {
+      data.body = requestBody.body;
+    }
   }
 
   // The request Id is optional, but we have to generate it if the user

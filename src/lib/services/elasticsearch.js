@@ -1,5 +1,7 @@
 var
   _ = require('lodash'),
+  q = require('q'),
+  async = require('async'),
   es = require('elasticsearch');
 
 module.exports = {
@@ -11,69 +13,68 @@ module.exports = {
    * Initialize the elasticsearch client
    *
    * @param {Kuzzle} kuzzle
+   * @param {String} engineType 'writeEngine' or 'readEngine'
    * @returns {Object} client
    */
-  init: function (kuzzle) {
+  init: function (kuzzle, engineType) {
     if (this.client) {
       return this.client;
     }
 
     this.kuzzle = kuzzle;
 
-    if (this.kuzzle.config.writeEngine.host.indexOf(',') !== -1) {
-      this.kuzzle.config.writeEngine.host = this.kuzzle.config.writeEngine.host.split(',');
+    if (this.kuzzle.config[engineType].host.indexOf(',') !== -1) {
+      this.kuzzle.config[engineType].host = this.kuzzle.config[engineType].host.split(',');
     }
 
     this.client = new es.Client({
-      host: this.kuzzle.config.writeEngine.host
+      host: this.kuzzle.config[engineType].host,
+      apiVersion: this.kuzzle.config[engineType].apiVersion
     });
 
     return this.client;
   },
 
   /**
-   * Read document from elasticsearch
+   * Search documents from elasticsearch with a query
    * @param data
-   * @returns {Object}
+   * @returns {Promise}
    */
-  read: function (data) {
-    if (data.index === undefined) {
-      data.index = this.kuzzle.config.writeEngine.index;
-    }
+  search: function (data) {
+    var deferred = q.defer();
 
-    if (data.collection) {
-      data.type = data.collection;
-      delete data.collection;
-    }
+    cleanData.call(this, data);
 
-    // If an id is defined we can extend the filter for add a filter on the id
-    // useful in case we are in get /:collection/:id
-    if (data.id) {
-      if (!Array.isArray(data.id)) {
-        data.id = [data.id];
-      }
+    this.client.search(data)
+      .then(function (result) {
+        deferred.resolve({data: result});
+      })
+      .catch(function (error) {
+        deferred.reject(error);
+      });
 
-      if (data.body === undefined) {
-        data.body = {};
-      }
+    return deferred.promise;
+  },
 
-      data.body = _.extend(data.body, {ids: {values: data.id}});
-    }
+  /**
+   * Get the document with given ID
+   * @param {Object} data contains id
+   * @returns {Promise}
+   */
+  get: function (data) {
+    var deferred = q.defer();
 
-    var key = Object.keys(data.body)[0];
-    // if no of those word is the first key, wrap into a default filter (for match with subscribe
-    // where we haven't 'filter' defined)
-    if (key !== 'filtered' || key !== 'query' || key !== 'filter' || key !== 'facets') {
-      data.body = {
-        filter: data.body
-      };
-    }
+    cleanData.call(this, data);
 
-    delete data.controller;
-    delete data.action;
-    delete data.id;
+    this.client.get(data)
+      .then(function (result) {
+        deferred.resolve({data: result});
+      })
+      .catch(function (error) {
+        deferred.reject(error);
+      });
 
-    return this.client.search(data);
+    return deferred.promise;
   },
 
   /**
@@ -81,20 +82,10 @@ module.exports = {
    * Clean data for match the elasticsearch specification
    *
    * @param {Object} data
+   * @returns {Promise}
    */
   create: function (data) {
-    data.type = data.collection;
-    delete data.collection;
-
-    if (data.index === undefined) {
-      data.index = this.kuzzle.config.writeEngine.index;
-    }
-
-    delete data.action;
-    delete data.controller;
-    delete data.requestId;
-    delete data.persist;
-
+    cleanData.call(this, data);
     return this.client.create(data);
   },
 
@@ -103,48 +94,23 @@ module.exports = {
    * with the id to update
    *
    * @param {Object} data
+   * @returns {Promise}
    */
   update: function (data) {
-    data.type = data.collection;
-    delete data.collection;
-
-    if (data.index === undefined) {
-      data.index = this.kuzzle.config.writeEngine.index;
-    }
-
-    if (data.body.id) {
-      data.id = data.body.id;
-      delete data.body.id;
-    }
-
+    cleanData.call(this, data);
     data.body = {doc: data.body};
-
-    delete data.action;
-    delete data.controller;
-    delete data.requestId;
 
     return this.client.update(data);
   },
 
   /**
-   * Send to elasticsearch the document id
-   * that we have to delete
+   * Send to elasticsearch the document id to delete
    *
    * @param {Object} data
+   * @returns {Promise}
    */
   delete: function (data) {
-    data.type = data.collection;
-    delete data.collection;
-
-    if (data.index === undefined) {
-      data.index = this.kuzzle.config.writeEngine.index;
-    }
-
-    delete data.action;
-    delete data.controller;
-    delete data.requestId;
-
-
+    cleanData.call(this, data);
     return this.client.delete(data);
   },
 
@@ -153,14 +119,68 @@ module.exports = {
    * for delete several documents
    *
    * @param {Object} data
+   * @returns {Promise}
    */
   deleteByQuery: function (data) {
-    var params = {
-      index: data.index || this.kuzzle.config.writeEngine.index,
-      type: data.collection,
-      q: '*'
-    };
+    cleanData.call(this, data);
+    return this.client.deleteByQuery(data);
+  },
 
-    return this.client.deleteByQuery(params);
+  /**
+   * Delete type definition and all data for the type
+   * @param {Object} data
+   * @returns {Promise}
+   */
+  deleteCollection: function (data) {
+    cleanData.call(this, data);
+    return this.client.indices.deleteMapping(data);
+  },
+
+  /**
+   * Run several action and document
+   * @param {Object} data
+   * @returns {Promise}
+   */
+  import: function (data) {
+    var nameActions = ['index', 'create', 'update', 'delete'];
+
+    cleanData.call(this, data);
+
+    if (data.body) {
+      // override index
+      async.eachLimit(data.body, 20, function (item) {
+        var action = Object.keys(item)[0];
+
+        if (nameActions.indexOf(action) !== -1) {
+          // TODO: implement multi index
+          item[action]._index = this.kuzzle.config.writeEngine.index;
+        }
+      }.bind(this));
+    }
+
+    return this.client.bulk(data);
   }
+};
+
+/**
+ * Clean object data: remove all attributes created for kuzzle,
+ * add index if not defined and map the name 'collection' to 'type' for ES
+ * @param {Object} data
+ */
+var cleanData = function (data) {
+
+  if (data.collection !== undefined) {
+    data.type = data.collection;
+  }
+
+  if (data.index === undefined) {
+    // TODO: implement multi index
+    data.index = this.kuzzle.config.writeEngine.index;
+  }
+
+  delete data.collection;
+  delete data.persist;
+  delete data.controller;
+  delete data.action;
+  delete data.requestId;
 };

@@ -10,8 +10,8 @@ module.exports = function (kuzzle) {
       readEngine: require('./elasticsearch')
     };
 
-    this.list.writeEngine.init(kuzzle);
-    this.list.readEngine.init(kuzzle);
+    this.list.writeEngine.init(kuzzle, 'writeEngine');
+    this.list.readEngine.init(kuzzle, 'readEngine');
   };
 
 };
