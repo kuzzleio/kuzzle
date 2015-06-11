@@ -8,6 +8,7 @@ module.exports = {
 
   kuzzle: null,
   client: null,
+  engineType: '',
 
   /**
    * Initialize the elasticsearch client
@@ -22,14 +23,15 @@ module.exports = {
     }
 
     this.kuzzle = kuzzle;
+    this.engineType = engineType;
 
-    if (this.kuzzle.config[engineType].host.indexOf(',') !== -1) {
-      this.kuzzle.config[engineType].host = this.kuzzle.config[engineType].host.split(',');
+    if (this.kuzzle.config[this.engineType].host.indexOf(',') !== -1) {
+      this.kuzzle.config[this.engineType].host = this.kuzzle.config[this.engineType].host.split(',');
     }
 
     this.client = new es.Client({
-      host: this.kuzzle.config[engineType].host,
-      apiVersion: this.kuzzle.config[engineType].apiVersion
+      host: this.kuzzle.config[this.engineType].host,
+      apiVersion: this.kuzzle.config[this.engineType].apiVersion
     });
 
     return this.client;
@@ -65,6 +67,8 @@ module.exports = {
     var deferred = q.defer();
 
     cleanData.call(this, data);
+
+    delete data.body;
 
     this.client.get(data)
       .then(function (result) {
@@ -153,7 +157,7 @@ module.exports = {
 
         if (nameActions.indexOf(action) !== -1) {
           // TODO: implement multi index
-          item[action]._index = this.kuzzle.config.writeEngine.index;
+          item[action]._index = this.kuzzle.config[this.engineType].index;
         }
       }.bind(this));
     }
@@ -175,7 +179,7 @@ var cleanData = function (data) {
 
   if (data.index === undefined) {
     // TODO: implement multi index
-    data.index = this.kuzzle.config.writeEngine.index;
+    data.index = this.kuzzle.config[this.engineType].index;
   }
 
   delete data.collection;

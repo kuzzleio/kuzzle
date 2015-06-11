@@ -136,7 +136,7 @@ As Kuzzke API can be called through distinct network protocols, the encapsulatio
 | **POST** | http(s)://kuzzle.domain/&lt;collection&gt; |  `{<data_content>}` | **write** | **create** | create a new document |
 | **POST** | http(s)://kuzzle.domain/&lt;collection&gt;/_search | `{<search_filters>}` | **read** |  **search** | search document according to given filters |
 | **POST** | http(s)://kuzzle.domain/_bulk | `{<bulk_data_content>}` | **bulk** |  **import** | Perform many create/update/delete operations in a single call (see [ElasticSearch bulk format](https://www.elastic.co/guide/en/elasticsearch/reference/1.x/docs-bulk.html)|
-| **POST** | http(s)://kuzzle.domain/&lt;collection&gt;/_bulk | `{<bulk_data_content>}` | **bulk** |  **import** | Perform many create/update/delete operations in a single call with the default given collection|
+| **POST** | http(s)://kuzzle.domain/&lt;collection&gt;/_bulk | `{<bulk_data_content>}` | **bulk** |  **import** | Perform many create/update/delete operations in a single call with the default given collection |
 | **DELETE** | http(s)://kuzzle.domain/&lt;collection&gt;/&lt;id&gt; | _empty_ | **write** | **delete** | delete the given content |
 | **DELETE** | http(s)://kuzzle.domain/&lt;collection&gt;/_query | `{<search_filters>}` | **write** | **deleteByQuery** | delete documents according to given filters |
 | **DELETE** | http(s)://kuzzle.domain/&lt;collection&gt; | _empty_ | **admin** | **deleteCollection** | delete the entire collection and schema |

@@ -17,7 +17,7 @@ var
 module.exports = function RouterController (kuzzle) {
 
   this.router = null;
-  this.controllers = ['write', 'read', 'subscribe'];
+  this.controllers = ['write', 'read', 'subscribe', 'admin', 'bulk'];
   this.kuzzle = kuzzle;
 
   this.initRouterHttp = function () {
@@ -134,14 +134,18 @@ module.exports = function RouterController (kuzzle) {
    * @param {Object} socket
    */
   this.routeWebsocket = function (socket) {
-    var routerCtrl = this,
-        connection = {type: 'websocket', id: socket.id};
+    var
+      routerCtrl = this,
+      connection = {type: 'websocket', id: socket.id},
+      requestId;
 
     async.each(routerCtrl.controllers, function recordSocketListener (controller) {
 
       socket.on(controller, function (data) {
         kuzzle.log.silly('Handle Websocket', controller, 'request');
-        data = wrapObject(data, controller);
+        data = wrapObject(data, {controller: controller});
+
+        var requestId = data.requestId;
 
         // execute the funnel. If error occurred, notify users
         kuzzle.funnel.execute(data, connection)
@@ -152,10 +156,10 @@ module.exports = function RouterController (kuzzle) {
               });
             }
 
-            routerCtrl.notify(data.requestId, result.data, connection);
+            routerCtrl.notify(requestId, {error: null, result: result.data}, connection);
           })
           .catch(function onExecuteError(error) {
-            routerCtrl.notify(data.requestId, {error: error}, connection);
+            routerCtrl.notify(requestId, {error: error, result: null}, connection);
             kuzzle.log.verbose({error: error});
           });
       });
@@ -175,6 +179,7 @@ module.exports = function RouterController (kuzzle) {
 
   this.routeMQListener = function () {
     var routerCtrl = this;
+
     async.each(this.controllers, function recordMQListener (controller) {
       broker.listenExchange(controller+'.*.*', function handleMQMessage(msg) {
         var connectionId = msg.properties.replyTo,
@@ -198,11 +203,9 @@ module.exports = function RouterController (kuzzle) {
           connection = {type: connectionId.split('.')[0], id: connectionId};
         }
 
-        if (connectionId && ! data.requestId) {
-          data.requestId = connectionId;
-        }
+        var requestId = data.requestId || connectionId;
 
-        data = wrapObject(data, controller, collection, action);
+        data = wrapObject(data, {controller: controller, collection: collection, action: action});
 
         kuzzle.funnel.execute(data, connection)
           .then(function onExecuteSuccess (result) {
@@ -211,10 +214,10 @@ module.exports = function RouterController (kuzzle) {
                 routerCtrl.notify(roomName, result.data);
               });
             }
-            routerCtrl.notify(data.requestId, result.data, connection);
+            routerCtrl.notify(requestId, {error: null, result: result.data}, connection);
           })
           .catch(function onExecuteError(error) {
-            routerCtrl.notify(data.requestId, {error: error}, connection);
+            routerCtrl.notify(requestId, {error: error, result: null}, connection);
             kuzzle.log.verbose({error: error});
           });
       });
@@ -296,13 +299,13 @@ function executeFromRest(params, request, response) {
 }
 
 function wrapObject (requestBody, data) {
+  // if the action or controller are directly in request sent by client (for websocket/MQTT...)
+  if (requestBody.action || requestBody.controller) {
+    data = _.extend(data, requestBody);
+  }
+
   if (data.body === undefined) {
-    if (requestBody.body === undefined) {
-      data.body = requestBody;
-    }
-    else {
-      data.body = requestBody.body;
-    }
+    data.body = requestBody.body || requestBody;
   }
 
   // The request Id is optional, but we have to generate it if the user

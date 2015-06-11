@@ -2,12 +2,13 @@ var myHooks = function () {
 
   this.After('@needCleanDb', function (callback) {
     var main = function () {
-      var options = {
-        url: this.pathApi(this.fakeCollection),
-        method: 'DELETE'
+      var filters = {
+        query: {
+          'match_all': {}
+        }
       };
 
-      this.callApi(options)
+      this.api.deleteByQuery(filters)
         .then(function () {
           callback();
         })
@@ -17,6 +18,13 @@ var myHooks = function () {
     };
 
     main.call(this);
+  });
+
+  this.Before('@withWebsocket', function (callback) {
+    // change the API
+    this.api = this.apiTypes.websocket;
+
+    callback();
   });
 };
 
