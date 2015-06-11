@@ -40,7 +40,7 @@ var apiSteps = function () {
     };
 
     // waiting for ES indexation
-    setTimeout(main.bind(this), 2000);
+    setTimeout(main.bind(this), 1500);
   });
 
   this.Then(/^my document has the value "([^"]*)" in field "([^"]*)"$/, function (value, field, callback) {

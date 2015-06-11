@@ -26,11 +26,11 @@ describe('Test service initialization function', function () {
   });
 
   it('should build a writeEngine service with correct methods', function () {
-    should(kuzzle.services.list.readEngine).be.an.Object;
-    should(kuzzle.services.list.readEngine.create).be.an.Function;
-    should(kuzzle.services.list.readEngine.update).be.an.Function;
-    should(kuzzle.services.list.readEngine.deleteByQuery).be.an.Function;
-    should(kuzzle.services.list.readEngine.deleteCollection).be.an.Function;
-    should(kuzzle.services.list.readEngine.import).be.an.Function;
+    should(kuzzle.services.list.writeEngine).be.an.Object;
+    should(kuzzle.services.list.writeEngine.create).be.an.Function;
+    should(kuzzle.services.list.writeEngine.update).be.an.Function;
+    should(kuzzle.services.list.writeEngine.deleteByQuery).be.an.Function;
+    should(kuzzle.services.list.writeEngine.deleteCollection).be.an.Function;
+    should(kuzzle.services.list.writeEngine.import).be.an.Function;
   });
 });
