@@ -73,15 +73,4 @@ module.exports = function WriteController (kuzzle) {
     return deferred.promise;
   };
 
-  this.deleteCollection = function (data) {
-    var deferred = q.defer();
-
-    // TODO: add validation logic -> object is valid ? + schema is valid ?
-
-    kuzzle.emit('data:deleteCollection', data);
-
-    deferred.resolve({data: {}});
-    return deferred.promise;
-  };
-
 };
