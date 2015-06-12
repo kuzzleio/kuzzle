@@ -1,26 +1,35 @@
-var
-// Broker is a service that allow to use a broker for add and listen one/multiple queue(s)
-  broker = require('../services/broker');
-
 module.exports = {
 
+  kuzzle: null,
+
   init: function (kuzzle) {
-    broker.init(kuzzle);
+    this.kuzzle = kuzzle;
+    this.kuzzle.services.list.broker.init(kuzzle);
+
     this.listen();
   },
 
   add: function (data) {
-    broker.add('task_queue', data);
+    this.kuzzle.services.list.broker.add('task_queue', data);
   },
 
   listen: function () {
-    broker.listen('task_queue', onListenRealtimeCB);
+    this.kuzzle.services.list.broker.listen('task_queue', onListenRealtimeCB.bind(this));
   },
 
   shutdown: function () {
-    broker.close();
+    this.kuzzle.services.list.broker.close();
   }
 };
 
 function onListenRealtimeCB (data) {
+  if (data.persist === false) {
+    return false;
+  }
+
+  if (typeof this.kuzzle.services.list.writeEngine[data.action] !== 'function') {
+    return false;
+  }
+
+  return this.kuzzle.services.list.writeEngine[data.action](data);
 }

@@ -6,7 +6,9 @@ var
   pConnection,
   mqEchangeName;
 
-module.exports = {
+module.exports = broker =  {
+
+  kuzzle: null,
 
   /**
    * Initialize the connection with the amqp broker
@@ -19,6 +21,8 @@ module.exports = {
     }
     pConnection = amqp.connect('amqp://' + kuzzle.config.broker.host);
     mqEchangeName = 'amq.topic';
+
+    broker.kuzzle = kuzzle;
   },
 
   /**
@@ -38,7 +42,7 @@ module.exports = {
 
   /**
    * Allow to add an object to a specific exchange/routing_key
-   * @param routing_key
+   * @param routingKey
    * @param data object that must be insert into routing key
    */
   addExchange: function (routingKey, data) {

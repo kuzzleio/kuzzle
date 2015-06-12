@@ -82,7 +82,7 @@ module.exports = function Dsl (kuzzle) {
       deferred = q.defer(),
       cachedResults = {},
       documentKeys =[],
-      flattenContent = {},
+      flattenBody = {},
       rooms = [];
 
     if (!data.collection) {
@@ -97,10 +97,10 @@ module.exports = function Dsl (kuzzle) {
     }
 
     // trick to easily parse nested document
-    flattenContent = flattenObject(data.content);
+    flattenBody = flattenObject(data.body);
 
     // we still need to get the real field keys
-    Object.keys(flattenContent).forEach(function(compoundField){
+    Object.keys(flattenBody).forEach(function(compoundField){
       var key;
 
       compoundField.split('.').forEach(function(attr){
@@ -131,7 +131,7 @@ module.exports = function Dsl (kuzzle) {
           cachePath = data.collection + '.' + field + '.' + cleanFunctionName;
 
         if (cachedResults[cachePath] === undefined) {
-          cachedResults[cachePath] = filter.fn(flattenContent);
+          cachedResults[cachePath] = filter.fn(flattenBody);
         }
 
         if (!cachedResults[cachePath]) {
@@ -151,7 +151,7 @@ module.exports = function Dsl (kuzzle) {
               return false;
             }
 
-            passAllFilters = testFilterRecursively(flattenContent, room.filters, cachedResults, 'and');
+            passAllFilters = testFilterRecursively(flattenBody, room.filters, cachedResults, 'and');
 
             if (passAllFilters) {
               rooms = _.uniq(rooms.concat(fieldFilters[functionName].rooms));
@@ -205,23 +205,23 @@ module.exports = function Dsl (kuzzle) {
 
 /**
  *
- * @param {Object} flattenContent the new flatten document
+ * @param {Object} flattenBody the new flatten document
  * @param {Object} filters filters that we have to test for check if the document match the room
  * @param {Object} cachedResults an object with all already tested curried function for the document
  * @param {String} upperOperand represent the operand (and/or) on the upper level
  * @returns {Boolean} true if the document match a room filters
  */
-var testFilterRecursively = function (flattenContent, filters, cachedResults, upperOperand) {
+var testFilterRecursively = function (flattenBody, filters, cachedResults, upperOperand) {
   var bool;
 
   Object.keys(filters).some(function (key) {
     var subBool;
     if (key === 'or' || key === 'and') {
-      subBool = testFilterRecursively(flattenContent, filters[key], cachedResults, key);
+      subBool = testFilterRecursively(flattenBody, filters[key], cachedResults, key);
     }
     else {
       if (cachedResults[key] === undefined) {
-        cachedResults[key] = filters[key].fn(flattenContent);
+        cachedResults[key] = filters[key].fn(flattenBody);
       }
 
       subBool = cachedResults[key];

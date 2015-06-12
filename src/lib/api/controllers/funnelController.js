@@ -2,17 +2,27 @@ var
   socket = require('socket.io'),
   async = require('async'),
   q = require('q'),
+  _ = require('lodash'),
   WriteController = require('./writeController'),
-  SubscribeController = require('./subscribeController');
+  ReadController = require('./readController'),
+  SubscribeController = require('./subscribeController'),
+  BulkController = require('./bulkController'),
+  AdminController = require('./adminController');
 
 module.exports = function FunnelController (kuzzle) {
 
   this.write = null;
   this.subscribe = null;
+  this.read = null;
+  this.admin = null;
+  this.bulk = null;
 
   this.init = function () {
     this.write = new WriteController(kuzzle);
+    this.read = new ReadController(kuzzle);
     this.subscribe = new SubscribeController(kuzzle);
+    this.bulk = new BulkController(kuzzle);
+    this.admin = new AdminController(kuzzle);
   };
 
   /**

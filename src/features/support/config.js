@@ -1,3 +1,3 @@
 module.exports = {
-  apiUrl: process.env.API_URL || 'http://localhost:8081/api/'
+  url: process.env.KUZZLE_URL || 'http://localhost:8081'
 };

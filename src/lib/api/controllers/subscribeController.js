@@ -4,7 +4,7 @@ var
 module.exports = function SubscribeController (kuzzle) {
 
   this.on = function (data, connection) {
-    return kuzzle.hotelClerk.addSubscription(connection, data.requestId, data.collection, data.content);
+    return kuzzle.hotelClerk.addSubscription(connection, data.requestId, data.collection, data.body);
   };
 
   this.off = function (data, connection) {

@@ -11,7 +11,7 @@ A complete subscription message can for instance have the following form:
     "requestId": "my-custom-subscription",
     "action": "on",
     "collection": "members",
-    "content": {
+    "body": {
         "bool": {
             "must": [
                 { "term": { "sex": "female" } },

@@ -1,6 +1,7 @@
 var
   should = require('should'),
-  start = require('root-require')('lib/api/start');
+  captainsLog = require('captains-log'),
+  Kuzzle = require('root-require')('lib/api/Kuzzle');
 
 describe('Test testFilters function index.js file from DSL', function () {
 
@@ -11,7 +12,7 @@ describe('Test testFilters function index.js file from DSL', function () {
     collection = 'user',
     dataGrace = {
       collection: collection,
-      content: {
+      body: {
         firstName: 'Grace',
         lastName: 'Hopper',
         age: 85,
@@ -25,7 +26,7 @@ describe('Test testFilters function index.js file from DSL', function () {
     },
     dataAda = {
       collection: collection,
-      content: {
+      body: {
         firstName: 'Ada',
         lastName: 'Lovelace',
         age: 36,
@@ -81,15 +82,8 @@ describe('Test testFilters function index.js file from DSL', function () {
 
 
   before(function (done) {
-    kuzzle = {
-      log: {
-        debug: function() {},
-        silly: function() {},
-        error: function() {}
-      },
-      start: start
-    };
-
+    kuzzle = new Kuzzle();
+    kuzzle.log = new captainsLog({level: 'silent'});
     kuzzle.start({}, {workers: false, servers: false});
 
     kuzzle.hotelClerk.addSubscription({id: 'connectionid'}, roomName, collection, filterGrace)

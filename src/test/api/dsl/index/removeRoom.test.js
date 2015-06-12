@@ -1,6 +1,7 @@
 var
   should = require('should'),
-  start = require('root-require')('lib/api/start');
+  captainsLog = require('captains-log'),
+  Kuzzle = require('root-require')('lib/api/Kuzzle');
 
 describe('Test removeRoom function index.js file from DSL', function () {
 
@@ -17,15 +18,8 @@ describe('Test removeRoom function index.js file from DSL', function () {
 
 
   before(function () {
-    kuzzle = {
-      log: {
-        debug: function() {},
-        silly: function() {},
-        error: function() {}
-      },
-      start: start
-    };
-
+    kuzzle = new Kuzzle();
+    kuzzle.log = new captainsLog({level: 'silent'});
     kuzzle.start({}, {workers: false, servers: false});
 
     return kuzzle.hotelClerk.addSubscription({id: 'connectionid'}, roomName, collection, filter)

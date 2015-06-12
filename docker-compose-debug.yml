@@ -8,6 +8,7 @@ kuzzle:
     - "8081:8081"
   links:
     - rabbit
+    - elasticsearch
   environment:
     - KUZZLE_PORT=8081
     - RABBIT_HOST=rabbit
@@ -19,3 +20,6 @@ rabbit:
     - "61613:61613"
     - "1883:1883"
     - "5672:5672"
+
+elasticsearch:
+  image: elasticsearch:1.5.2
