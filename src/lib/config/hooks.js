@@ -7,8 +7,8 @@ module.exports = [
     'data:delete': ['write:add'],
     'data:deleteByQuery': ['write:add'],
     'data:bulkImport': ['write:add'],
-    'data:deleteCollection': ['write:add']
-
+    'data:deleteCollection': ['write:add'],
+    'data:putMapping': ['write:add']
   }
 
 ];
