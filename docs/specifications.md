@@ -61,6 +61,8 @@ Create/Update/delete a document
 
 ##### Output message
 
+_(To be defined)_
+
 #### subscribe
 
 ##### Description
@@ -121,6 +123,56 @@ Get a document from Kuzzle
 ##### Output message
 
 The document (to be defined)
+
+#### admin
+
+##### Description
+
+Delete a mapping and entire collection
+
+##### Input message
+
+```json
+{
+  "controller": "admin",
+  ["requestId": <requestId>,]
+  "collection": <collection>,
+  "action": <"deleteCollection">,
+}
+```
+* &lt;requestId&gt; _(optionnal)_ : if set : identifies the room where where the feedback messages will be sent.
+* &lt;action&gt; : **deleteCollection**
+* &lt;collection&gt; : the collection name
+
+##### Output message
+
+_(to be defined)_
+
+#### bulk
+
+##### Description
+
+Perform many index/delete operations in a single API call.
+
+##### Input message
+
+```json
+{
+  "controller": "bulk",
+  ["requestId": <requestId>,]
+  "collection": <collection>,
+  "action": <"import">
+  ["body": <actions>,]
+}
+```
+* &lt;requestId&gt; _(optionnal)_ : if set : identifies the room where where the feedback messages will be sent.
+* &lt;action&gt; : **import**
+* &lt;collection&gt; : default document collection for items which don’t provide one
+* &lt;body&gt; : array with all actions and documents ([See doc](https://www.elastic.co/guide/en/elasticsearch/client/javascript-api/current/api-reference-1-3.html#api-bulk-1-3))
+
+##### Output message
+
+_(To be defined)_
 
 ### Protocol dependant encapsulation
 
