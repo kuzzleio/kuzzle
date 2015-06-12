@@ -128,7 +128,6 @@ var apiSteps = function () {
         testDelete: function (callbackAsync) {
           this.api.get('2')
             .then(function (body) {
-              console.log(body);
               if (body.error !== null) {
                 callbackAsync();
                 return false;
