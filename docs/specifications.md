@@ -208,6 +208,7 @@ As Kuzzke API can be called through distinct network protocols, the encapsulatio
     }
     ```
     Or directly your document:
+    
     ```
     {
         "firstName": "Grace",
@@ -220,6 +221,7 @@ As Kuzzke API can be called through distinct network protocols, the encapsulatio
 * <a name="search_filters"/>`{<search_filters>}` : see [Elasticsearch query DSL](https://www.elastic.co/guide/en/elasticsearch/reference/1.x/query-dsl.html)
 
 * `{<mapping_content>}` : 
+* 
     ```
     {
         "properties" : {
@@ -228,6 +230,7 @@ As Kuzzke API can be called through distinct network protocols, the encapsulatio
     }
     ```
     Or with additionnal parameters:
+    
     ```
     {
         "body": {
@@ -238,6 +241,7 @@ As Kuzzke API can be called through distinct network protocols, the encapsulatio
         }
     }
     ```
+    
     [See Elasticsearch format](https://www.elastic.co/guide/en/elasticsearch/client/javascript-api/current/api-reference-1-3.html#api-indices-putmapping-1-3)
 
 ##### Notes :
