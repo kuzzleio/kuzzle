@@ -141,7 +141,7 @@ Perform action on collection, indices, mapping...
 }
 ```
 * &lt;requestId&gt; _(optionnal)_ : if set : identifies the room where where the feedback messages will be sent.
-* &lt;action&gt; : **deleteCollection**
+* &lt;action&gt; : **deleteCollection** | **putMapping** | **getMapping**
 * &lt;collection&gt; : the collection name
 
 ##### Output message
