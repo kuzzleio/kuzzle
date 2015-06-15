@@ -140,7 +140,7 @@ Perform action on collection, indices, mapping...
   "action": <"deleteCollection"|"putMapping"|"getMapping">,
 }
 ```
-* &lt;requestId&gt; _(optionnal)_ : if set : identifies the room where where the feedback messages will be sent.
+* &lt;requestId&gt; _(optionnal)_ : if set : identifies the room where the feedback messages will be sent.
 * &lt;action&gt; : **deleteCollection** | **putMapping** | **getMapping**
 * &lt;collection&gt; : the collection name
 

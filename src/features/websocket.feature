@@ -24,7 +24,7 @@ Feature: Test websocket API
   @needCleanDb @withWebsocket
   Scenario: Search a document
     When I write the document "documentGrace"
-    Then I found a document with "grace" in field "firstName"
+    Then I find a document with "grace" in field "firstName"
 
   @needCleanDb @withWebsocket
   Scenario: Bulk import
@@ -34,5 +34,15 @@ Feature: Test websocket API
   @needCleanDb @withWebsocket
   Scenario: Delete type
     When I write the document
-    Then I remove the collection
+    Then I remove the collection and schema
     Then I'm not able to get the document
+
+  @needCleanDb @removeSchema @withWebsocket
+  Scenario: Change mapping
+    When I write the document "documentGrace"
+    Then I don't find a document with "Grace" in field "firstName"
+    Then I remove the collection and schema
+    Then I wait 2s
+    Then I change the schema
+    When I write the document "documentGrace"
+    Then I find a document with "Grace" in field "firstName"

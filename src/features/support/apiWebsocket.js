@@ -16,216 +16,124 @@ module.exports = {
 
   get: function (id) {
     var
-      deferred = q.defer(),
-      requestId = uuid.v1();
+      msg = {
+        action: 'get',
+        collection: this.world.fakeCollection,
+        id: id
+      };
 
-    this.socket.once(requestId, function(result) {
-      if (result.error) {
-        deferred.reject(result.error);
-        return false;
-      }
-
-      deferred.resolve(result);
-    }.bind(this));
-
-    this.socket.emit('read', {
-      requestId: requestId,
-      action: 'get',
-      collection: this.world.fakeCollection,
-      id: id
-    });
-
-    return deferred.promise;
+    return emit.call(this, 'read', msg);
   },
 
   search: function (filters) {
     var
-      deferred = q.defer(),
-      requestId = uuid.v1();
+      msg = {
+        action: 'search',
+        collection: this.world.fakeCollection,
+        body: filters
+      };
 
-    this.socket.once(requestId, function(result) {
-      if (result.error) {
-        deferred.reject(result.error);
-        return false;
-      }
-
-      deferred.resolve(result);
-    }.bind(this));
-
-    this.socket.emit('read', {
-      requestId: requestId,
-      action: 'search',
-      collection: this.world.fakeCollection,
-      body: filters
-    });
-
-    return deferred.promise;
+    return emit.call(this, 'read', msg);
   },
 
   create: function (body, persist) {
     var
-      deferred = q.defer(),
-      msg,
-      requestId = uuid.v1();
+      msg = {
+        persist: persist,
+        action: 'create',
+        collection: this.world.fakeCollection,
+        body: body
+      };
 
-    if (persist === undefined) {
-      persist = false;
-    }
-
-    this.socket.once(requestId, function (result) {
-      if (result.error) {
-        deferred.reject(result.error);
-        return false;
-      }
-
-      deferred.resolve(result);
-    }.bind(this));
-
-    msg = {
-      requestId: requestId,
-      persist: persist,
-      action: 'create',
-      collection: this.world.fakeCollection,
-      body: body
-    };
-
-    this.socket.emit('write', msg );
-
-    return deferred.promise;
+    return emit.call(this, 'write', msg);
   },
 
   update: function (id, body) {
     var
-      deferred = q.defer(),
-      requestId = uuid.v1(),
-      msg;
+      msg = {
+        action: 'update',
+        collection: this.world.fakeCollection,
+        id: id,
+        body: body
+      };
 
-    this.socket.once(requestId, function (result) {
-      if (result.error) {
-        deferred.reject(result.error);
-        return false;
-      }
-
-      deferred.resolve(result);
-    }.bind(this));
-
-    msg = {
-      requestId: requestId,
-      action: 'update',
-      collection: this.world.fakeCollection,
-      id: id,
-      body: body
-    };
-
-    this.socket.emit('write', msg );
-
-    return deferred.promise;
+    return emit.call(this, 'write', msg);
   },
 
   deleteById: function (id) {
     var
-      deferred = q.defer(),
-      requestId = uuid.v1(),
-      msg;
+      msg = {
+        action: 'delete',
+        collection: this.world.fakeCollection,
+        id: id
+      };
 
-    this.socket.once(requestId, function (result) {
-      if (result.error) {
-        deferred.reject(result.error);
-        return false;
-      }
-
-      deferred.resolve(result);
-    }.bind(this));
-
-    msg = {
-      requestId: requestId,
-      action: 'delete',
-      collection: this.world.fakeCollection,
-      id: id
-    };
-
-    this.socket.emit('write', msg );
-
-    return deferred.promise;
+    return emit.call(this, 'write', msg);
   },
 
   deleteByQuery: function (filters) {
     var
-      deferred = q.defer(),
-      requestId = uuid.v1(),
-      msg;
+      msg = {
+        action: 'deleteByQuery',
+        collection: this.world.fakeCollection,
+        body: filters
+      };
 
-    this.socket.once(requestId, function (result) {
-      if (result.error) {
-        deferred.reject(result.error);
-        return false;
-      }
-
-      deferred.resolve(result);
-    }.bind(this));
-
-    msg = {
-      requestId: requestId,
-      action: 'deleteByQuery',
-      collection: this.world.fakeCollection,
-      body: filters
-    };
-
-    this.socket.emit('write', msg );
-
-    return deferred.promise;
+    return emit.call(this, 'write', msg);
   },
 
   deleteCollection: function () {
     var
-      deferred = q.defer(),
-      msg,
-      requestId = uuid.v1();
+      msg = {
+        action: 'deleteCollection',
+        collection: this.world.fakeCollection
+      };
 
-    this.socket.once(requestId, function (result) {
-      if (result.error) {
-        deferred.reject(result.error);
-        return false;
-      }
-
-      deferred.resolve(result);
-    }.bind(this));
-
-    msg = {
-      requestId: requestId,
-      action: 'deleteCollection',
-      collection: this.world.fakeCollection
-    };
-
-    this.socket.emit('admin', msg );
-
-    return deferred.promise;
+    return emit.call(this, 'admin', msg);
   },
 
   bulkImport: function (bulk) {
     var
-      deferred = q.defer(),
-      msg,
-      requestId = uuid.v1();
+      msg = {
+        action: 'import',
+        collection: this.world.fakeCollection,
+        body: bulk
+      };
 
-    this.socket.once(requestId, function (result) {
-      if (result.error) {
-        deferred.reject(result.error);
-        return false;
-      }
+    return emit.call(this, 'bulk', msg );
+  },
 
-      deferred.resolve(result);
-    }.bind(this));
+  putMapping: function () {
+    var
+      msg = {
+        action: 'putMapping',
+        collection: this.world.fakeCollection,
+        body: this.world.schema
+      };
 
-    msg = {
-      requestId: requestId,
-      action: 'import',
-      collection: this.world.fakeCollection,
-      body: bulk
-    };
-
-    this.socket.emit('bulk', msg );
-
-    return deferred.promise;
+    return emit.call(this, 'admin', msg );
   }
+
+};
+
+
+var emit = function (controller, msg) {
+  var
+    requestId = uuid.v1(),
+    deferred = q.defer();
+
+  msg.requestId = requestId;
+
+  this.socket.once(requestId, function (result) {
+    if (result.error) {
+      deferred.reject(result.error);
+      return false;
+    }
+
+    deferred.resolve(result);
+  });
+
+  this.socket.emit(controller, msg );
+
+  return deferred.promise;
 };
