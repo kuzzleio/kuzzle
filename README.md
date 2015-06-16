@@ -22,16 +22,27 @@ Kuzzle run within a set of docker containers.
 
 * build containers :
 
-```bash
-$ cd deployment && ./build-all.sh
-```
+    ```bash
+    $ cd deployment && ./build-all.sh
+    ```
 
 * run containers :
 
-```bash
-$ docker-compose up
-```
+    ```bash
+    $ docker-compose up [-d]
+    ```
 
+* run containers with debugger (dev only)
+
+    ```bash
+    $ docker-compose -f docker-compose-debug.yml up [-d]
+    ```
+    
+If you need custom parameters like elasticsearch on other host, you can copy docker-compose.yml into docker-compose-custom.yml and change setting like environment variables. Next, you can run
+
+    ```bash
+    $ docker-compose -f docker-compose-custom.yml up [-d]
+    ```
 
 # Usage examples
 
@@ -41,12 +52,6 @@ _(to be completed...)_
 
 See [Detailed documentation]
 
-# Tests
-
-## Unit tests:
-
-Run unit tests with `npm test` in src directory (where you can find the package.json file)
-
 # Contributing to Kuzzle
 
 _(to be completed...)_
@@ -55,7 +60,7 @@ _(to be completed...)_
 
 _(to be completed...)_
 
-[Detailed documentation]: docs/index.md
-[Specifications]: docs/specifications.md
-[filters syntax]: docs/filters.md
+[Detailed documentation]: src/docs/index.md
+[Specifications]: src/docs/specifications.md
+[filters syntax]: src/docs/filters.md
 [Elasticsearch filter DSL]: https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-filters.html

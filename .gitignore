@@ -4,6 +4,9 @@
 # Node
 npm-debug.log
 
+# Docker
+docker-compose-custom.yml
+
 # Other
 .DS_STORE
 *#
