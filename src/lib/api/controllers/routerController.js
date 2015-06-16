@@ -50,6 +50,42 @@ module.exports = function RouterController (kuzzle) {
       executeFromRest.call(this, params, request, response);
     }.bind(this));
 
+    api.put('/:collection/_mapping', function (request, response) {
+      var params = {
+        controller: 'admin',
+        action: 'putMapping'
+      };
+
+      executeFromRest.call(this, params, request, response);
+    }.bind(this));
+
+    api.get('/:collection/_mapping', function (request, response) {
+      var params = {
+        controller: 'admin',
+        action: 'getMapping'
+      };
+
+      executeFromRest.call(this, params, request, response);
+    }.bind(this));
+
+    api.post('/:collection/_search', function (request, response) {
+      var params = {
+        controller: 'read',
+        action: 'search'
+      };
+
+      executeFromRest.call(this, params, request, response);
+    }.bind(this));
+
+    api.delete('/:collection/_query', function (request, response) {
+      var params = {
+        controller: 'write',
+        action: 'deleteByQuery'
+      };
+
+      executeFromRest.call(this, params, request, response);
+    }.bind(this));
+
     api.put('/:collection/:id/_:action', function (request, response) {
       var params = {
         controller: 'write'
@@ -80,24 +116,6 @@ module.exports = function RouterController (kuzzle) {
       var params = {
         controller: 'read',
         action: 'get'
-      };
-
-      executeFromRest.call(this, params, request, response);
-    }.bind(this));
-
-    api.post('/:collection/_search', function (request, response) {
-      var params = {
-        controller: 'read',
-        action: 'search'
-      };
-
-      executeFromRest.call(this, params, request, response);
-    }.bind(this));
-
-    api.delete('/:collection/_query', function (request, response) {
-      var params = {
-        controller: 'write',
-        action: 'deleteByQuery'
       };
 
       executeFromRest.call(this, params, request, response);

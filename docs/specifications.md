@@ -106,7 +106,7 @@ Get a document from Kuzzle
   "collection": <collection>,
   "action": <"get"|"search">,
   ["id": <id>,]
-  ["body": <filters>,]
+  ["body": <body>,]
 }
 ```
 
@@ -128,7 +128,7 @@ The document (to be defined)
 
 ##### Description
 
-Delete a mapping and entire collection
+Perform action on collection, indices, mapping...
 
 ##### Input message
 
@@ -137,11 +137,11 @@ Delete a mapping and entire collection
   "controller": "admin",
   ["requestId": <requestId>,]
   "collection": <collection>,
-  "action": <"deleteCollection">,
+  "action": <"deleteCollection"|"putMapping"|"getMapping">,
 }
 ```
-* &lt;requestId&gt; _(optionnal)_ : if set : identifies the room where where the feedback messages will be sent.
-* &lt;action&gt; : **deleteCollection**
+* &lt;requestId&gt; _(optionnal)_ : if set : identifies the room where the feedback messages will be sent.
+* &lt;action&gt; : **deleteCollection** | **putMapping** | **getMapping**
 * &lt;collection&gt; : the collection name
 
 ##### Output message
@@ -162,7 +162,7 @@ Perform many index/delete operations in a single API call.
   ["requestId": <requestId>,]
   "collection": <collection>,
   "action": <"import">
-  ["body": <actions>,]
+  ["body": <body>,]
 }
 ```
 * &lt;requestId&gt; _(optionnal)_ : if set : identifies the room where where the feedback messages will be sent.
@@ -183,18 +183,20 @@ As Kuzzke API can be called through distinct network protocols, the encapsulatio
 | HTTP Method | URL format | body | controller | action | comment |
 | --- | --- | --- | --- | --- | --- |
 | **GET** | http(s)://kuzzle.domain/&lt;collection&gt;/&lt;id&gt; | _empty_ | **read** | **get** | get a single content |
-| **PUT** | http(s)://kuzzle.domain/&lt;collection&gt;/&lt;id&gt; | `{<data_content>}` | **write** | **update** | update the document with the given id |
-| **PUT** | http(s)://kuzzle.domain/&lt;collection&gt;/&lt;id&gt;/_update | `{<data_content>}` | **write** | **update** | update the document with the given id |
-| **PUT** | http(s)://kuzzle.domain/&lt;collection&gt;/&lt;id&gt;/_create | `{<data_content>}` | **write** | **create** | create the document with the given id |
-| **POST** | http(s)://kuzzle.domain/&lt;collection&gt; |  `{<data_content>}` | **write** | **create** | create a new document |
-| **POST** | http(s)://kuzzle.domain/&lt;collection&gt;/_search | `{<search_filters>}` | **read** |  **search** | search document according to given filters |
-| **POST** | http(s)://kuzzle.domain/_bulk | `{<bulk_data_content>}` | **bulk** |  **import** | Perform many create/update/delete operations in a single call (see [ElasticSearch bulk format](https://www.elastic.co/guide/en/elasticsearch/reference/1.x/docs-bulk.html)|
-| **POST** | http(s)://kuzzle.domain/&lt;collection&gt;/_bulk | `{<bulk_data_content>}` | **bulk** |  **import** | Perform many create/update/delete operations in a single call with the default given collection |
+| **POST** | http(s)://kuzzle.domain/&lt;collection&gt;/_search | [`{<search_filters>}`](#search_filters) | **read** |  **search** | search document according to given filters |
+| **PUT** | http(s)://kuzzle.domain/&lt;collection&gt;/&lt;id&gt;/_create | [`{<data_content>}`](#data_content) | **write** | **create** | create the document with the given id |
+| **POST** | http(s)://kuzzle.domain/&lt;collection&gt; |  [`{<data_content>}`](#data_content) | **write** | **create** | create a new document |
+| **PUT** | http(s)://kuzzle.domain/&lt;collection&gt;/&lt;id&gt; | [`{<data_content>}`](#data_content) | **write** | **update** | update the document with the given id |
+| **PUT** | http(s)://kuzzle.domain/&lt;collection&gt;/&lt;id&gt;/_update | [`{<data_content>}`](#data_content) | **write** | **update** | update the document with the given id |
 | **DELETE** | http(s)://kuzzle.domain/&lt;collection&gt;/&lt;id&gt; | _empty_ | **write** | **delete** | delete the given content |
-| **DELETE** | http(s)://kuzzle.domain/&lt;collection&gt;/_query | `{<search_filters>}` | **write** | **deleteByQuery** | delete documents according to given filters |
+| **DELETE** | http(s)://kuzzle.domain/&lt;collection&gt;/_query | [`{<search_filters>}`](#search_filters) | **write** | **deleteByQuery** | delete documents according to given filters |
+| **POST** | http(s)://kuzzle.domain/_bulk | [`{<bulk_data_content>}`](#bulk_data_content) | **bulk** |  **import** | Perform many create/update/delete operations in a single call (see [Elasticsearch bulk format](https://www.elastic.co/guide/en/elasticsearch/reference/1.x/docs-bulk.html)|
+| **POST** | http(s)://kuzzle.domain/&lt;collection&gt;/_bulk | [`{<bulk_data_content>}`](#bulk_data_content) | **bulk** |  **import** | Perform many create/update/delete operations in a single call with the default given collection |
 | **DELETE** | http(s)://kuzzle.domain/&lt;collection&gt; | _empty_ | **admin** | **deleteCollection** | delete the entire collection and schema |
+| **GET** | http(s)://kuzzle.domain/&lt;collection&gt;/_mapping | _empty_ | **admin** | **getMapping** | Retrieve mapping definition of type. |
+| **PUT** | http(s)://kuzzle.domain/&lt;collection&gt;/_mapping | [`{<mapping_content>}`](#mapping_content) | **admin** | **putMapping** | Register specific mapping definition for a specific type |
 
-* `{<data_content>}` :
+* <a name="data_content"/>`{<data_content>}` :
 
     ```
     {
@@ -206,6 +208,7 @@ As Kuzzke API can be called through distinct network protocols, the encapsulatio
     }
     ```
     Or directly your document:
+    
     ```
     {
         "firstName": "Grace",
@@ -213,10 +216,33 @@ As Kuzzke API can be called through distinct network protocols, the encapsulatio
     }
     ```
 
-* `{<bulk_data_content>}` : see [Elasticsearch bulk format](https://www.elastic.co/guide/en/elasticsearch/reference/1.x/docs-bulk.html)
+* <a name="bulk_data_content"/>`{<bulk_data_content>}` : see [Elasticsearch bulk format](https://www.elastic.co/guide/en/elasticsearch/reference/1.x/docs-bulk.html)
 
-* `{<search_filters>}` : see [Elasticsearch query DSL](https://www.elastic.co/guide/en/elasticsearch/reference/1.x/query-dsl.html)
+* <a name="search_filters"/>`{<search_filters>}` : see [Elasticsearch query DSL](https://www.elastic.co/guide/en/elasticsearch/reference/1.x/query-dsl.html)
 
+* <a name="mapping_content"/>`{<mapping_content>}` : 
+* 
+    ```
+    {
+        "properties" : {
+            "firstName" : {"type" : "string", "store" : true, "index" : "not_analyzed" }
+        }
+    }
+    ```
+    Or with additionnal parameters:
+    
+    ```
+    {
+        "body": {
+            "ignoreConflicts": true,
+            "properties" : {
+                "firstName" : {"type" : "string", "store" : true, "index" : "not_analyzed" }
+            }
+        }
+    }
+    ```
+    
+    [See Elasticsearch format](https://www.elastic.co/guide/en/elasticsearch/client/javascript-api/current/api-reference-1-3.html#api-indices-putmapping-1-3)
 
 ##### Notes :
 

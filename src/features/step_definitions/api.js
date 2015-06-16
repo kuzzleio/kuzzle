@@ -4,158 +4,239 @@ var apiSteps = function () {
 
   /** READ **/
   this.Then(/^I'm ?(not)* able to get the document$/, function (not, callback) {
-    var main = function () {
-      this.api.get(this.result.id)
-        .then(function (body) {
-          if (body.error) {
-            callback.fail(new Error(body.error));
-            return false;
-          }
+    var main = function (callbackAsync) {
+      setTimeout(function () {
+        this.api.get(this.result.id)
+          .then(function (body) {
+            if (body.error) {
+              if (body.error.message) {
+                callbackAsync(body.error.message);
+                return false;
+              }
 
-          if (!body.result || !body.result._source) {
-            if (not !== undefined) {
-              callback();
+              callbackAsync(body.error);
               return false;
             }
 
-            callback.fail(new Error('No result provided'));
-            return false;
-          }
+            if (!body.result || !body.result._source) {
+              if (not) {
+                callbackAsync();
+                return false;
+              }
 
-          if (not !== undefined) {
-            callback.fail(new Error('Object with id '+ this.result.id + ' exists'));
-            return false;
-          }
+              callbackAsync('No result provided');
+              return false;
+            }
 
-          callback();
-        }.bind(this))
-        .catch(function (error) {
-          if (not !== undefined) {
-            callback();
-            return false;
-          }
+            if (not) {
+              callbackAsync('Object with id '+ this.result.id + ' exists');
+              return false;
+            }
 
-          callback.fail(error);
-        });
+            callbackAsync();
+          }.bind(this))
+          .catch(function (error) {
+            if (not) {
+              callbackAsync();
+              return false;
+            }
+
+            callbackAsync(error);
+          });
+      }.bind(this), 500); // end setTimeout
     };
 
-    // waiting for ES indexation
-    setTimeout(main.bind(this), 1500);
+
+    async.retry(20, main.bind(this), function (err) {
+      if (err) {
+        if (err.message) {
+          err = err.message;
+        }
+        callback.fail(new Error(err));
+        return false;
+      }
+
+      callback();
+    });
   });
+
 
   this.Then(/^my document has the value "([^"]*)" in field "([^"]*)"$/, function (value, field, callback) {
-    var main = function () {
-      this.api.get(this.result.id)
-        .then(function (body) {
+    var main = function (callbackAsync) {
+      setTimeout(function () {
+        this.api.get(this.result.id)
+          .then(function (body) {
 
-          if (body.error) {
-            callback.fail(new Error(body.error));
-            return false;
-          }
+            if (body.error) {
+              callbackAsync(body.error);
+              return false;
+            }
 
-          if (body.result._source[field] === undefined) {
-            callback.fail(new Error('Undefined field ' + field));
-            return false;
-          }
+            if (body.result._source[field] === undefined) {
+              callbackAsync('Undefined field ' + field);
+              return false;
+            }
 
-          if (body.result._source[field] !== value) {
-            callback.fail(new Error('Value in field ' + field + ' is ' + body.result._source[field] + ' expected to be ' + value));
-            return false;
-          }
+            if (body.result._source[field] !== value) {
+              callbackAsync('Value in field ' + field + ' is ' + body.result._source[field] + ' expected to be ' + value);
+              return false;
+            }
 
-          callback();
-        })
-        .catch(function (error) {
-          callback.fail(error);
-        });
+            callbackAsync();
+          })
+          .catch(function (error) {
+            callbackAsync(error);
+          });
+      }.bind(this), 500); // end setTimeout
     };
 
-    // waiting for ES indexation
-    setTimeout(main.bind(this), 1200);
-  });
-
-  this.Then(/^I found a document with "([^"]*)" in field "([^"]*)"$/, function (value, field, callback) {
-    var main = function () {
-      var filters = {filter: {term: {}}};
-      filters.filter.term[field] = value;
-
-      this.api.search(filters)
-        .then(function (body) {
-
-          if (body.error !== null) {
-            callback.fail(new Error(body.error));
-            return false;
-          }
-
-          if (body.result && body.result.hits && body.result.hits.total !== 0) {
-            callback();
-            return false;
-          }
-
-          callback.fail('No result for filter search');
-        }.bind(this))
-        .catch(function (error) {
-          callback.fail(error);
-        });
-    };
-
-    setTimeout(main.bind(this), 1200);
-  });
-
-  this.Then(/^I can retrieve actions from bulk import$/, function (callback) {
-    var main = function () {
-      // execute in parallel both tests: test if create/update work well and test if delete works well
-      async.parallelLimit({
-        testUpdate: function (callbackAsync) {
-          this.api.get('1')
-            .then(function (body) {
-              if (body.error !== null) {
-                callbackAsync(body.error);
-                return false;
-              }
-
-              if (body.result && body.result._source && body.result._source.title === 'foobar') {
-                callbackAsync();
-                return false;
-              }
-
-              callbackAsync('Document was not updated or created successfully in bulk import');
-            }.bind(this))
-            .catch(function (error) {
-              callbackAsync(error);
-            });
-        }.bind(this),
-        testDelete: function (callbackAsync) {
-          this.api.get('2')
-            .then(function (body) {
-              if (body.error !== null) {
-                callbackAsync();
-                return false;
-              }
-
-              if (body.result && body.result._source) {
-                callbackAsync('Document still exists');
-                return false;
-              }
-
-              callback();
-            }.bind(this))
-            .catch(function () {
-              callbackAsync();
-            });
-        }.bind(this)
-      }, 1, function (error) {
-        if (error) {
-          callback.fail(new Error(error));
-          return false;
+    async.retry(20, main.bind(this), function (err) {
+      if (err) {
+        if (err.message) {
+          err = err.message;
         }
 
-        callback();
-      }.bind(this)); // end async.parallel
+        callback.fail(new Error(err));
+        return false;
+      }
+
+      callback();
+    });
+  });
+
+
+  this.Then(/^I ?(don't)* find a document with "([^"]*)" in field "([^"]*)"$/, function (dont, value, field, callback) {
+    var main = function (callbackAsync) {
+      setTimeout(function () {
+        var filters = {filter: {term: {}}};
+        filters.filter.term[field] = value;
+
+        this.api.search(filters)
+          .then(function (body) {
+
+            if (body.error !== null) {
+              if (dont) {
+                callbackAsync();
+                return false;
+              }
+
+              callbackAsync(body.error);
+              return false;
+            }
+
+            if (body.result && body.result.hits && body.result.hits.total !== 0) {
+              if (dont) {
+                callbackAsync('A document exists for the filter');
+                return false;
+              }
+
+              callbackAsync();
+              return false;
+            }
+
+            if (dont) {
+              callbackAsync();
+              return false;
+            }
+
+            callbackAsync('No result for filter search');
+          }.bind(this))
+          .catch(function (error) {
+            if (dont) {
+              callbackAsync();
+              return false;
+            }
+
+            callbackAsync(error);
+          });
+      }.bind(this), 500); // end setTimeout
+    };
+
+    async.retry(20, main.bind(this), function (err) {
+      if (err) {
+        if (err.message) {
+          err = err.message;
+        }
+
+        callback.fail(new Error(err));
+        return false;
+      }
+
+      callback();
+    });
+  });
+
+
+  this.Then(/^I can retrieve actions from bulk import$/, function (callback) {
+    var main = function (callbackAsync) {
+      setTimeout(function () {
+        // execute in parallel both tests: test if create/update work well and test if delete works well
+        async.parallelLimit({
+          testUpdate: function (callbackAsyncParallel) {
+            this.api.get('1')
+              .then(function (body) {
+                if (body.error !== null) {
+                  callbackAsyncParallel(body.error);
+                  return false;
+                }
+
+                if (body.result && body.result._source && body.result._source.title === 'foobar') {
+                  callbackAsyncParallel();
+                  return false;
+                }
+
+                callbackAsyncParallel('Document was not updated or created successfully in bulk import');
+              }.bind(this))
+              .catch(function (error) {
+                callbackAsyncParallel(error);
+              });
+          }.bind(this),
+          testDelete: function (callbackAsyncParallel) {
+            this.api.get('2')
+              .then(function (body) {
+                if (body.error !== null) {
+                  callbackAsyncParallel();
+                  return false;
+                }
+
+                if (body.result && body.result._source) {
+                  callbackAsyncParallel('Document still exists');
+                  return false;
+                }
+
+                callback();
+              }.bind(this))
+              .catch(function () {
+                callbackAsyncParallel();
+              });
+          }.bind(this)
+        }, 1, function (error) {
+          // Only when we have response from async.parallelLimit we can stop retry by calling callbackAsync
+          if (error) {
+            callbackAsync(error);
+            return false;
+          }
+
+          callbackAsync();
+        }.bind(this)); // end async.parallel
+      }.bind(this), 500); // end setTimeout
     }; // end method main
 
-    setTimeout(main.bind(this), 1200);
+    async.retry(20, main.bind(this), function (err) {
+      if (err) {
+        if (err.message) {
+          err = err.message;
+        }
+
+        callback.fail(new Error(err));
+        return false;
+      }
+
+      callback();
+    });
   });
+
+
 
   /** WRITE **/
   this.When(/^I write the document ?(?:"([^"]*)")?$/, function (documentName, callback) {
@@ -182,6 +263,7 @@ var apiSteps = function () {
       });
   });
 
+
   this.Then(/^I should receive a document id$/, function (callback) {
     if (this.result && this.result.id) {
       callback();
@@ -191,33 +273,43 @@ var apiSteps = function () {
     callback.fail(new Error('No id information in returned object'));
   });
 
+
   this.Then(/^I update the document with value "([^"]*)" in field "([^"]*)"$/, function (value, field, callback) {
-    var main = function () {
-      var body = {};
-      body[field] = value;
+    var main = function (callbackAsync) {
+      setTimeout(function () {
+        var body = {};
+        body[field] = value;
 
-      this.api.update(this.result.id, body)
-        .then(function (body) {
-          if (body.error) {
-            callback.fail(new Error(body.error));
-            return false;
-          }
+        this.api.update(this.result.id, body)
+          .then(function (body) {
+            if (body.error) {
+              callbackAsync(body.error);
+              return false;
+            }
 
-          if (!body.result) {
-            callback.fail(new Error('No result provided'));
-            return false;
-          }
+            if (!body.result) {
+              callbackAsync('No result provided');
+              return false;
+            }
 
-          callback();
-        }.bind(this))
-        .catch(function (error) {
-          callback.fail(error);
-        });
+            callbackAsync();
+          }.bind(this))
+          .catch(function (error) {
+            callbackAsync(error);
+          });
+      }.bind(this), 500); // end setTimeout
     };
 
-    // waiting for ES indexation
-    setTimeout(main.bind(this), 1200);
+    async.retry(20, main.bind(this), function (err) {
+      if (err) {
+        callback.fail(new Error(err));
+        return false;
+      }
+
+      callback();
+    });
   });
+
 
   this.Then(/^I remove the document$/, function (callback) {
     this.api.deleteById(this.result.id)
@@ -234,6 +326,7 @@ var apiSteps = function () {
       });
   });
 
+
   this.When(/^I do a bulk import$/, function (callback) {
     this.api.bulkImport(this.bulk)
       .then(function (body) {
@@ -249,7 +342,8 @@ var apiSteps = function () {
       });
   });
 
-  this.Then(/^I remove the collection/, function (callback) {
+
+  this.Then(/^I remove the collection and schema$/, function (callback) {
     this.api.deleteCollection()
       .then(function (body) {
         if (body.error !== null) {
@@ -263,6 +357,31 @@ var apiSteps = function () {
         callback.fail(new Error(error));
       });
   });
+
+
+  this.Then(/^I change the schema$/, function (callback) {
+    this.api.putMapping()
+      .then(function (body) {
+        if (body.error !== null) {
+          callback.fail(new Error(body.error));
+          return false;
+        }
+
+        callback();
+      }.bind(this))
+      .catch(function (error) {
+        callback.fail(new Error(error));
+      });
+  });
+
+
+  /** TOOLS **/
+  this.Then(/^I wait ([\d]*)s$/, function (time, callback) {
+    setTimeout(function () {
+      callback();
+    }, time*1000);
+  });
+
 };
 
 module.exports = apiSteps;
