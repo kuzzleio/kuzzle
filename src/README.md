@@ -1,4 +1,4 @@
-<p align=center> [logo](docs/images/logo.png)
+<p align=center> ![logo](docs/images/logo.png)
 
 # About Kuzzle
 
