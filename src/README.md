@@ -4,25 +4,53 @@
 
 For UI and linked objects developers, Kuzzle is an open-source solution that handles all the data management
 (CRUD, real-time storage, search, high-level features, etc;).
+
 Kuzzle features are accessible through a secured API, with a large choice of protocols.
+It can be used through a large choice of protocols such as REST, Websocket or Message Queuing protocols (see [Specifications](src/docs/specifications.md) for details).
 
-# Important Note
-
-This NPM package can be run alone but we encourage to use the [Docker version](https://registry.hub.docker.com/u/klabs) for get a packaged version with all in the box. 
+The filtering language is a subset of [Elasticsearch filter DSL](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-filters.html).
+(see [filters syntax](docs/filters.md) for more details).
 
 # Installation
 
-## Default
+First of all, you have to get this code, you can use NPM or clone this repo.
 
-Prerequisites (this is why we recommend the [Docker version](https://registry.hub.docker.com/u/klabs)) :
+NPM
 
-* Node installed with npm
+     $ npm install kuzzle
+     
+GIT
+
+     $ npm clone https://github.com/kuzzleio/kuzzle.git
+
+## All in the box with Docker
+
+You can find a docker-compose.yml file in this repository. The aim of this file is to simplify the Kuzzle deployment.
+
+Prerequisites:
+
+* [Install docker](https://docs.docker.com/installation/#installation)
+* [Install docker-compose](https://docs.docker.com/compose/install/)
+
+Then, you can simply do
+
+     $ docker-compose up
+
+Elasticsearch and RabbitMQ will be launched. You can now access to the api on http://localhost:8081/api/
+If you want to customize the docker-compose file, you can copy this file into docker-compose-custom.yml and edit it
+
+     $ docker-compose -f docker-compose-custom.yml up
+
+## Manual install
+
+### Default
+
+Prerequisites:
+
 * A service [RabbitMQ](https://www.rabbitmq.com/) running on localhost:5672
 * A service [Elasticsearch](https://www.elastic.co/products/elasticsearch) running on localhost:9200 
 
 ```bash
-$ npm install kuzzle
-$ cd kuzzle
 $ kuzzle start
 ```
 
@@ -38,7 +66,7 @@ Or, if you have [PM2](https://github.com/Unitech/pm2)
 $ pm2 start app-start.js
 ```
 
-## Change RabbitMQ and Elasticsearch host
+### Change RabbitMQ and Elasticsearch host
 
 If you are not running RabbitMQ and Elasticsearch on localhost, you can configure host and port (on Linux):
 
@@ -63,6 +91,10 @@ _(to be completed...)_
 
 See [full documentation](docs/index.md)
 
+
+# Acknowledgement
+
+Thanks to [Sails](https://github.com/balderdashy/sails) for a good NPM package infrastructure example.
 
 # License
 

@@ -6,6 +6,9 @@ npm-debug.log
 # IDE
 .idea
 
+# Docker
+docker-compose-custom.yml
+
 # Other
 .DS_STORE
 *#

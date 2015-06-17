@@ -1,0 +1,25 @@
+kuzzle:
+  image: kuzzleio/kuzzle
+  volumes:
+    - "./:/var/app"
+  ports:
+    - "8081:8081"
+  links:
+    - rabbit
+    - elasticsearch
+  environment:
+    - KUZZLE_PORT=8081
+    - RABBIT_HOST=rabbit:5672
+    - ELASTICSEARCH_HOST=elasticsearch:9200
+    - PM2_OPTIONS=--watch
+
+rabbit:
+  image: kuzzle_rabbitmq
+  ports:
+    - "61613:61613"
+    - "1883:1883"
+    - "5672:5672"
+    - "15672:15672"
+
+elasticsearch:
+  image: elasticsearch:1.5.2
