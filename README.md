@@ -40,9 +40,9 @@ Kuzzle run within a set of docker containers.
     
 If you need custom parameters like elasticsearch on other host, you can copy docker-compose.yml into docker-compose-custom.yml and change setting like environment variables. Next, you can run
 
-    ```bash
-    $ docker-compose -f docker-compose-custom.yml up [-d]
-    ```
+```bash
+$ docker-compose -f docker-compose-custom.yml up [-d]
+```
 
 # Usage examples
 
