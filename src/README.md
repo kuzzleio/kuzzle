@@ -1,3 +1,5 @@
+<p align=center> [logo](docs/images/logo.png)
+
 # About Kuzzle
 
 For UI and linked objects developers, Kuzzle is an open-source solution that handles all the data managment

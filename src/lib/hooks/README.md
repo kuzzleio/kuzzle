@@ -1,8 +1,10 @@
 # What is a hook ?
 
 Hooks are listen on a special event on object kuzzle and perform action when he event is triggered according to a configuration in /config/hooks.js
-Example: 
-* when the event "data:create" is emit by kuzzle, the function add in hook write will be executed (for write a message in broker).
+
+Example:
+
+* When the event "data:create" is emitted by kuzzle, the function add in hook write will be executed (for write a message in broker).
 
 
 # Contributing
