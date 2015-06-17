@@ -15,6 +15,7 @@ This NPM package can be run alone but we encourage to use the [Docker version](h
 ## Default
 
 Prerequisites (this is why we recommend the [Docker version](https://registry.hub.docker.com/u/klabs)) :
+
 * Node installed with npm
 * A service [RabbitMQ](https://www.rabbitmq.com/) running on localhost:5672
 * A service [Elasticsearch](https://www.elastic.co/products/elasticsearch) running on localhost:9200 
@@ -37,6 +38,7 @@ Or, if you have [PM2](https://github.com/Unitech/pm2)
 $ pm2 start app-start.js
 ```
 
+
 ## Change RabbitMQ and Elasticsearch host
 
 If you are not running RabbitMQ and Elasticsearch on localhost, you can configure host and port (on Linux):
@@ -47,17 +49,21 @@ $ export RABBIT_HOST=myrabbitmq:5672
 $ kuzzle start
 ```
 
+
 # Tests
 
 Run tests (unit & features) with `npm test`
+
 
 # Contributing to Kuzzle
 
 _(to be completed...)_
 
+
 # Full documentation
 
 See [full documentation](docs/index.md)
+
 
 # License
 
