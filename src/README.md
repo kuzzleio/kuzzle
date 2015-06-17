@@ -2,11 +2,9 @@
 
 # About Kuzzle
 
-For UI and linked objects developers, Kuzzle is an open-source solution that handles all the data managment
+For UI and linked objects developers, Kuzzle is an open-source solution that handles all the data management
 (CRUD, real-time storage, search, high-level features, etc;).
 Kuzzle features are accessible through a secured API, with a large choice of protocols.
-
-This project use RabbitMQ and Elasticsearch behind the scene.
 
 # Important Note
 
@@ -40,7 +38,6 @@ Or, if you have [PM2](https://github.com/Unitech/pm2)
 $ pm2 start app-start.js
 ```
 
-
 ## Change RabbitMQ and Elasticsearch host
 
 If you are not running RabbitMQ and Elasticsearch on localhost, you can configure host and port (on Linux):
@@ -69,4 +66,4 @@ See [full documentation](docs/index.md)
 
 # License
 
-See [licence](license.md)
+See [licence](LICENSE.md)
