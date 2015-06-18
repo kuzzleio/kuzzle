@@ -1,6 +1,6 @@
 # Roadmap
 
-There is a unordered features list that will be implemented:
+There is an unordered features list that will be implemented:
 
 * Multi DB
 * Kuzzle administration BackOffice (change mapping, schema, validation... with UI)

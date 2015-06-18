@@ -8,8 +8,7 @@ For UI and linked objects developers, Kuzzle is an open-source solution that han
 Kuzzle features are accessible through a secured API, with a large choice of protocols.
 It can be used through a large choice of protocols such as REST, Websocket or Message Queuing protocols (see [Specifications](src/docs/specifications.md) for details).
 
-The filtering language is a subset of [Elasticsearch filter DSL](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-filters.html).
-(see [filters syntax](docs/filters.md) for more details).
+Kuzzle use [Elasticsearch filter DSL](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-filters.html) (see [filters syntax](docs/filters.md) for more details) as filtering language and RabbitMQ for managing queues. 
 
 # Installation
 
@@ -36,7 +35,7 @@ Then, you can simply do
 
      $ docker-compose up
 
-Elasticsearch and RabbitMQ will be launched. You can now access to the api on http://localhost:8081/api/
+Elasticsearch and RabbitMQ will be launched. You can now access to the api with http://localhost:8081/api/.
 If you want to customize the docker-compose file, you can copy this file into docker-compose-custom.yml and edit it
 
      $ docker-compose -f docker-compose-custom.yml up
@@ -94,7 +93,7 @@ See [full documentation](docs/index.md)
 
 # Acknowledgement
 
-Thanks to [Sails](https://github.com/balderdashy/sails) for a good NPM package infrastructure example.
+Thanks to [Sails](https://github.com/balderdashy/sails) project for a good NPM package infrastructure example.
 
 # License
 
