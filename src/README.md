@@ -53,7 +53,7 @@ Prerequisites:
 $ kuzzle start
 ```
 
-You can now access to the api on http://localhost:8081/api/. If you want to change the port you can run
+You can now access to the api with http://localhost:8081/api/. If you want to change the port you can run
 
 ```bash
 $ kuzzle start --port 8082
@@ -67,7 +67,7 @@ $ pm2 start app-start.js
 
 ### Change RabbitMQ and Elasticsearch host
 
-If you are not running RabbitMQ and Elasticsearch on localhost, you can configure host and port (on Linux):
+If you are not running RabbitMQ and Elasticsearch on localhost, you can configure host and port:
 
 ```bash
 $ export ELASTICSEARCH_HOST=myelasticsearch:9200
@@ -78,7 +78,9 @@ $ kuzzle start
 
 # Tests
 
-Run tests (unit & features) with `npm test`
+Run tests (unit & features) with 
+
+    $ npm test
 
 
 # Contributing to Kuzzle
@@ -93,7 +95,7 @@ See [full documentation](docs/index.md)
 
 # Acknowledgement
 
-Thanks to [Sails](https://github.com/balderdashy/sails) project for a good NPM package infrastructure example.
+Thanks to [Sails](https://github.com/balderdashy/sails) project for a good Node.js infrastructure example.
 
 # License
 
