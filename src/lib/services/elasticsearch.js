@@ -40,7 +40,7 @@ module.exports = {
   /**
    * Search documents from elasticsearch with a query
    * @param data
-   * @returns {Promise}
+   * @returns {Promise} resolve documents matching the filter
    */
   search: function (data) {
     var deferred = q.defer();
@@ -61,7 +61,7 @@ module.exports = {
   /**
    * Get the document with given ID
    * @param {Object} data contains id
-   * @returns {Promise}
+   * @returns {Promise} resolve the document
    */
   get: function (data) {
     var deferred = q.defer();
@@ -86,7 +86,7 @@ module.exports = {
    * Clean data for match the elasticsearch specification
    *
    * @param {Object} data
-   * @returns {Promise}
+   * @returns {Promise} resolve an object that contains _id
    */
   create: function (data) {
     cleanData.call(this, data);
@@ -98,7 +98,7 @@ module.exports = {
    * with the id to update
    *
    * @param {Object} data
-   * @returns {Promise}
+   * @returns {Promise} resolve an object that contains _id
    */
   update: function (data) {
     cleanData.call(this, data);
@@ -111,7 +111,7 @@ module.exports = {
    * Send to elasticsearch the document id to delete
    *
    * @param {Object} data
-   * @returns {Promise}
+   * @returns {Promise} resolve an object that contains _id
    */
   delete: function (data) {
     cleanData.call(this, data);
@@ -119,25 +119,62 @@ module.exports = {
   },
 
   /**
-   * Send to elasticsearch the query
-   * for delete several documents
+   * Delete all document that match the given filter
    *
    * @param {Object} data
-   * @returns {Promise}
+   * @returns {Promise} resolve an object with ids
    */
   deleteByQuery: function (data) {
+    var
+      deferred = q.defer(),
+      bodyBulk = [];
+
     cleanData.call(this, data);
-    return this.client.deleteByQuery(data);
+    data.scroll = '30s';
+
+    getAllIdsFromQuery.call(this, data)
+      .then(function (ids) {
+        async.each(ids, function (id, callback) {
+          bodyBulk.push({delete: {_index: data.index, _type: data.type, _id: id}});
+          callback();
+        }, function () {
+
+          this.client.bulk({body: bodyBulk})
+            .then(function () {
+              deferred.resolve({ids: ids});
+            })
+            .catch(function (error) {
+              deferred.reject(error);
+            });
+
+        }.bind(this));
+      }.bind(this))
+      .catch(function (error) {
+        deferred.reject(error);
+      });
+
+    return deferred.promise;
   },
 
   /**
    * Delete type definition and all data for the type
    * @param {Object} data
-   * @returns {Promise}
+   * @returns {Promise} resolve an object with the deleted collection name
    */
   deleteCollection: function (data) {
+    var deferred = q.defer();
+
     cleanData.call(this, data);
-    return this.client.indices.deleteMapping(data);
+
+    this.client.indices.deleteMapping(data)
+      .then(function () {
+        deferred.resolve({collection: data.type});
+      })
+      .catch(function (error) {
+        deferred.reject(error);
+      });
+
+    return deferred.promise;
   },
 
   /**
@@ -226,4 +263,41 @@ var cleanData = function (data) {
   delete data.controller;
   delete data.action;
   delete data.requestId;
+};
+
+/**
+ * Scroll index in elasticsearch and return all document ids that match the filter
+ * @param {Object} data
+ * @returns {Promise} resolve an array
+ */
+var getAllIdsFromQuery = function (data) {
+  var
+    deferred = q.defer(),
+    ids = [];
+
+  this.client.search(data, function getMoreUntilDone (error, response) {
+
+    if (error) {
+      deferred.reject(error);
+      return false;
+    }
+
+    response.hits.hits.forEach(function (hit) {
+      ids.push(hit._id);
+    });
+
+    /* jshint camelcase: false */
+    if (response.hits.total !== ids.length) {
+      this.client.scroll({
+        scrollId: response._scroll_id,
+        scroll: '30s'
+      }, getMoreUntilDone);
+    }
+    else {
+      deferred.resolve(ids);
+    }
+    /* jshint camelcase: true */
+  }.bind(this));
+
+  return deferred.promise;
 };

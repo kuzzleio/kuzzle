@@ -14,7 +14,7 @@ module.exports = {
   },
 
   listen: function () {
-    this.kuzzle.services.list.broker.listen('task_queue', onListenRealtimeCB.bind(this));
+    this.kuzzle.services.list.broker.listen('task_queue', onListenCB.bind(this));
   },
 
   shutdown: function () {
@@ -22,7 +22,7 @@ module.exports = {
   }
 };
 
-function onListenRealtimeCB (data) {
+function onListenCB (data) {
   if (data.persist === false) {
     return false;
   }
@@ -31,5 +31,11 @@ function onListenRealtimeCB (data) {
     return false;
   }
 
-  return this.kuzzle.services.list.writeEngine[data.action](data);
+  this.kuzzle.services.list.writeEngine[data.action](data)
+    .then(function (result) {
+      console.log(result);
+    })
+    .catch(function (error) {
+      this.kuzzle.log.error(error);
+    }.bind(this));
 }

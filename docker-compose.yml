@@ -11,6 +11,7 @@ kuzzle:
     - KUZZLE_PORT=8081
     - RABBIT_HOST=rabbit
     - ELASTICSEARCH_HOST=elasticsearch:9200
+    - REDIS_HOST=redis
     - PM2_OPTIONS=--watch
 
 rabbit:
