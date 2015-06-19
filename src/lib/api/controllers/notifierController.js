@@ -13,7 +13,7 @@ module.exports = function NotifierController (kuzzle) {
     }
 
     async.each(rooms, function (roomName) {
-      send.call(this, roomName, data, connection);
+      send.call(kuzzle, roomName, data, connection);
     }.bind(this));
   };
 };
@@ -31,18 +31,18 @@ function send (room, data, connection) {
   if (connection) {
     switch (connection.type) {
       case 'websocket':
-        kuzzle.io.to(connection.id).emit(room, data);
+        this.io.to(connection.id).emit(room, data);
         break;
       case 'amq':
-        broker.replyTo(connection.id, data);
+        this.services.list.broker.replyTo(connection.id, data);
         break;
       case 'mqtt':
-        broker.addExchange(connection.id, data);
+        this.services.list.broker.addExchange(connection.id, data);
         break;
     }
   }
   else {
-    this.kuzzle.io.emit(room, data);
-    this.kuzzle.services.list.broker.addExchange(room, data);
+    this.io.emit(room, data);
+    this.services.list.broker.addExchange(room, data);
   }
 }

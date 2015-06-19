@@ -31,6 +31,10 @@ module.exports = broker =  {
    * @param data object that must be insert in queue
    */
   add: function (room, data) {
+    if (!room) {
+      return false;
+    }
+
     pConnection.then(function (conn) {
       return conn.createChannel()
         .then(function (ch) {

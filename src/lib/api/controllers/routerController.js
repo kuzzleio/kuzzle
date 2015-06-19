@@ -244,7 +244,7 @@ function executeFromRest(params, request, response) {
   var
     deferred = q.defer(),
     data,
-    connection;
+    uuid = require('node-uuid').v1();
 
   if (!params.controller) {
     deferred.reject('Missing controller');
@@ -259,14 +259,25 @@ function executeFromRest(params, request, response) {
   };
 
   data = wrapObject(request.body, data);
-  connection = {type: 'rest', id: request};
 
-  this.kuzzle.funnel.execute(data, connection)
+  data.connectionId = uuid;
+
+  this.kuzzle.services.list.broker.listen('write_response_'+uuid, function (result) {
+    response.end(stringify(result));
+  });
+
+  this.kuzzle.funnel.execute(data)
     .then(function (result) {
-      this.kuzzle.notifier.notify(result.rooms, result.data);
-
       response.writeHead(200, {'Content-Type': 'application/json'});
-      response.end(stringify({error: null, result: result.data}));
+
+      // if have an empty result, we have to listen a queue for get writeEngine action
+      if (data.persist && _.isEmpty(result)) {
+
+      }
+      else {
+        response.end(stringify({error: null, result: result.data}));
+      }
+
     }.bind(this))
     .catch(function (error) {
       return sendRestError(error, response);

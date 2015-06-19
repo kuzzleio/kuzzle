@@ -1,6 +1,4 @@
 var
-  // For create the unique id of the object that the user send
-  uuid = require('node-uuid'),
   _ = require('lodash'),
   async = require('async'),
   q = require('q');
@@ -17,7 +15,7 @@ module.exports = function WriteController (kuzzle) {
 
     kuzzle.emit('data:create', data);
 
-    deferred.resolve();
+    deferred.resolve({});
 
     if (!data.persist) {
       // Test saved filters for notify rooms in a next step
@@ -45,7 +43,7 @@ module.exports = function WriteController (kuzzle) {
 
     kuzzle.emit('data:update', data);
 
-    deferred.resolve();
+    deferred.resolve({});
     return deferred.promise;
   };
 
@@ -56,7 +54,7 @@ module.exports = function WriteController (kuzzle) {
 
     kuzzle.emit('data:delete', data);
 
-    deferred.resolve();
+    deferred.resolve({});
     return deferred.promise;
   };
 
@@ -67,7 +65,7 @@ module.exports = function WriteController (kuzzle) {
 
     kuzzle.emit('data:deleteByQuery', data);
 
-    deferred.resolve();
+    deferred.resolve({});
     return deferred.promise;
   };
 

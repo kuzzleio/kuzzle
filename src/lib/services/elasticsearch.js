@@ -253,6 +253,9 @@ var cleanData = function (data) {
     data.type = data.collection;
   }
 
+  data.id = data._id;
+  delete data._id;
+
   if (data.index === undefined) {
     // TODO: implement multi index
     data.index = this.kuzzle.config[this.engineType].index;
