@@ -9,9 +9,11 @@ kuzzle:
   links:
     - rabbit
     - elasticsearch
+    - redis
   environment:
     - KUZZLE_PORT=8081
     - RABBIT_HOST=rabbit
+    - REDIS_PORT=6379
     - PM2_OPTIONS=--watch
 
 rabbit:
@@ -20,6 +22,11 @@ rabbit:
     - "61613:61613"
     - "1883:1883"
     - "5672:5672"
+
+redis:
+  image: kuzzle_redis
+  ports:
+    - "6379:6379"
 
 elasticsearch:
   image: elasticsearch:1.5.2
