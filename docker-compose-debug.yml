@@ -13,7 +13,7 @@ kuzzle:
   environment:
     - KUZZLE_PORT=8081
     - RABBIT_HOST=rabbit
-    - REDIS_PORT=6379
+    - REDIS_HOST=localhost:6379
     - PM2_OPTIONS=--watch
 
 rabbit:
@@ -24,9 +24,7 @@ rabbit:
     - "5672:5672"
 
 redis:
-  image: kuzzle_redis
-  ports:
-    - "6379:6379"
+  image: redis:3.0.2
 
 elasticsearch:
   image: elasticsearch:1.5.2
