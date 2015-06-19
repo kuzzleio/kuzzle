@@ -1,3 +1,7 @@
+var
+  q = require('q'),
+  _ = require('lodash');
+
 module.exports = {
 
   kuzzle: null,
@@ -31,11 +35,47 @@ function onListenCB (data) {
     return false;
   }
 
-  this.kuzzle.services.list.writeEngine[data.action](data)
+  this.kuzzle.services.list.writeEngine[data.action](_.clone(data))
     .then(function (result) {
-      console.log(result);
-    })
+      buildNotification.call(this, data, result)
+        .then(function (notification) {
+          //console.log(notification);
+        })
+        .catch(function (error) {
+
+        });
+      //this.kuzzle.services.list.broker.add('notify', );
+    }.bind(this))
     .catch(function (error) {
       this.kuzzle.log.error(error);
     }.bind(this));
+}
+
+function buildNotification (data, writeResponse) {
+  var
+    deferred = q.defer(),
+    requestGet;
+
+  if (data.action === 'update') {
+    requestGet = {
+      collection: data.collection,
+      id: writeResponse._id
+    };
+
+    this.kuzzle.services.list.readEngine.get(requestGet)
+      .then(function (result) {
+        data.body = result._source;
+        deferred.resolve(data);
+      })
+      .catch(function (error) {
+        deferred.reject(error);
+      }.bind(this));
+  }
+
+  if (data.action === 'delete') {
+    data.ids = writeResponse.ids;
+  }
+
+  deferred.resolve(data);
+  return deferred.promise;
 }

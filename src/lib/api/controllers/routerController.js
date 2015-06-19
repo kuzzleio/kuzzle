@@ -4,7 +4,6 @@ var
   _ = require('lodash'),
   stringify = require('json-stable-stringify'),
   Router = require('router'),
-  broker = require('../../services/broker'),
   q = require('q'),
   // For parse a request sent by user
   bodyParser = require('body-parser'),
@@ -21,7 +20,6 @@ module.exports = function RouterController (kuzzle) {
   this.kuzzle = kuzzle;
 
   this.initRouterHttp = function () {
-    var routerCtrl = this;
 
     this.router = new Router();
 
@@ -154,8 +152,7 @@ module.exports = function RouterController (kuzzle) {
   this.routeWebsocket = function (socket) {
     var
       routerCtrl = this,
-      connection = {type: 'websocket', id: socket.id},
-      requestId;
+      connection = {type: 'websocket', id: socket.id};
 
     async.each(routerCtrl.controllers, function recordSocketListener (controller) {
 
@@ -168,16 +165,11 @@ module.exports = function RouterController (kuzzle) {
         // execute the funnel. If error occurred, notify users
         kuzzle.funnel.execute(data, connection)
           .then(function onExecuteSuccess (result) {
-            if (result && result.rooms) {
-              async.each(result.rooms, function (roomName) {
-                routerCtrl.notify(roomName, result.data);
-              });
-            }
-
-            routerCtrl.notify(requestId, {error: null, result: result.data}, connection);
+            kuzzle.notifier.notify(result.rooms, result.data);
+            kuzzle.notifier.notify(requestId, {error: null, result: result.data}, connection);
           })
           .catch(function onExecuteError(error) {
-            routerCtrl.notify(requestId, {error: error, result: null}, connection);
+            kuzzle.notifier.notify(requestId, {error: error, result: null}, connection);
             kuzzle.log.verbose({error: error});
           });
       });
@@ -196,10 +188,10 @@ module.exports = function RouterController (kuzzle) {
   };
 
   this.routeMQListener = function () {
-    var routerCtrl = this;
 
     async.each(this.controllers, function recordMQListener (controller) {
-      broker.listenExchange(controller+'.*.*', function handleMQMessage(msg) {
+
+      kuzzle.services.list.broker.listenExchange(controller+'.*.*', function handleMQMessage(msg) {
         var connectionId = msg.properties.replyTo,
             connection = null,
             data = JSON.parse(msg.content.toString()),
@@ -227,48 +219,17 @@ module.exports = function RouterController (kuzzle) {
 
         kuzzle.funnel.execute(data, connection)
           .then(function onExecuteSuccess (result) {
-            if (result.rooms) {
-              async.each(result.rooms, function (roomName) {
-                routerCtrl.notify(roomName, result.data);
-              });
-            }
-            routerCtrl.notify(requestId, {error: null, result: result.data}, connection);
-          })
+            kuzzle.notifier.notify(result.rooms, result.data);
+            kuzzle.notifier.notify(requestId, {error: null, result: result.data}, connection);
+          }.bind(this))
           .catch(function onExecuteError(error) {
-            routerCtrl.notify(requestId, {error: error, result: null}, connection);
+            kuzzle.notifier.notify(requestId, {error: error, result: null}, connection);
             kuzzle.log.verbose({error: error});
           });
-      });
-    });
-  };
 
-  /**
-   * Notify by message data on the request Id channel
-   * If socket is defined, we send the event only on this socket,
-   * otherwise, we send to all sockets on the room
-   *
-   * @param {String} room
-   * @param {Object} data
-   * @param {Object} connection
-   */
-  this.notify = function (room, data, connection) {
-    if (connection) {
-      switch (connection.type) {
-        case 'websocket':
-          kuzzle.io.to(connection.id).emit(room, data);
-          break;
-        case 'amq':
-          broker.replyTo(connection.id, data);
-          break;
-        case 'mqtt':
-          broker.addExchange(connection.id, data);
-          break;
-      }
-    }
-    else {
-      kuzzle.io.emit(room, data);
-      broker.addExchange(room, data);
-    }
+      }); // end listenExchange
+
+    }); // end async
   };
 };
 
@@ -294,7 +255,7 @@ function executeFromRest(params, request, response) {
     controller: params.controller,
     action: params.action || request.params.action,
     collection: request.params.collection,
-    id: request.params.id
+    _id: request.params.id
   };
 
   data = wrapObject(request.body, data);
@@ -302,11 +263,7 @@ function executeFromRest(params, request, response) {
 
   this.kuzzle.funnel.execute(data, connection)
     .then(function (result) {
-      if (result.rooms) {
-        async.each(result.rooms, function (roomName) {
-          this.notify(roomName, result.data);
-        });
-      }
+      this.kuzzle.notifier.notify(result.rooms, result.data);
 
       response.writeHead(200, {'Content-Type': 'application/json'});
       response.end(stringify({error: null, result: result.data}));
@@ -324,6 +281,13 @@ function wrapObject (requestBody, data) {
 
   if (data.body === undefined) {
     data.body = requestBody.body || requestBody;
+  }
+
+  if (requestBody.persist !== undefined) {
+    data.persist = requestBody.persist;
+  }
+  if (data.persist === undefined) {
+    data.persist = true;
   }
 
   // The request Id is optional, but we have to generate it if the user
