@@ -3,5 +3,6 @@ module.exports = {
   readEngine: require('./models/elasticsearch'),
   broker: require('./brokers/rabbit'),
   hooks: require('./hooks'),
-  workers: require('./workers')
+  workers: require('./workers'),
+  cache: require('./models/redis')
 };
