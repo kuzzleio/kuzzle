@@ -21,6 +21,7 @@ module.exports = function WriteController (kuzzle) {
       // Test saved filters for notify rooms in a next step
       kuzzle.dsl.testFilters(data)
         .then(function (rooms) {
+
           kuzzle.notifier.notify(rooms, data);
         })
         .catch(function (error) {

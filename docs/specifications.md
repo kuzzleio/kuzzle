@@ -104,7 +104,7 @@ Get a document from Kuzzle
   "controller": "read",
   "requestId": <requestId>,
   "collection": <collection>,
-  "action": <"get"|"search">,
+  "action": <"get"|"search"|"count">,
   ["id": <id>,]
   ["body": <body>,]
 }
@@ -112,13 +112,15 @@ Get a document from Kuzzle
 
 * &lt;requestId&gt; : the local room where Kuzzle should send requested data
 * &lt;collection&gt; : the collection name
-* &lt;action&gt; : **get** | **search**
+* &lt;action&gt; : **get** | **search** | **count**
 * &lt;id&gt; :
     * for **get** : identifies the document to retrive (if not set, the whole collection will be given)
     * for **search** : _unused_
+    * for **count** : _unused_
 * &lt;body&gt;
     * for **get** : _unused_
     * for **search** : the search filters (see [filters syntax] for details)
+    * for **count** : the search filters (see [filters syntax] for details)
 
 ##### Output message
 
@@ -184,6 +186,7 @@ As Kuzzke API can be called through distinct network protocols, the encapsulatio
 | --- | --- | --- | --- | --- | --- |
 | **GET** | http(s)://kuzzle.domain/&lt;collection&gt;/&lt;id&gt; | _empty_ | **read** | **get** | get a single content |
 | **POST** | http(s)://kuzzle.domain/&lt;collection&gt;/_search | [`{<search_filters>}`](#search_filters) | **read** |  **search** | search document according to given filters |
+| **POST** | http(s)://kuzzle.domain/&lt;collection&gt;/_count | [`{<search_filters>}`](#search_filters) | **read** |  **count** | count documents according to given filters |
 | **PUT** | http(s)://kuzzle.domain/&lt;collection&gt;/&lt;id&gt;/_create | [`{<data_content>}`](#data_content) | **write** | **create** | create the document with the given id |
 | **POST** | http(s)://kuzzle.domain/&lt;collection&gt; |  [`{<data_content>}`](#data_content) | **write** | **create** | create a new document |
 | **PUT** | http(s)://kuzzle.domain/&lt;collection&gt;/&lt;id&gt; | [`{<data_content>}`](#data_content) | **write** | **update** | update the document with the given id |
