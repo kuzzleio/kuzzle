@@ -2,6 +2,8 @@ var
   should = require('should'),
   Kuzzle = require('root-require')('lib/api/Kuzzle');
 
+require('should-promised');
+
 describe('Test cache capabilities', function () {
   var
     kuzzle,
@@ -20,48 +22,48 @@ describe('Test cache capabilities', function () {
     cache.add("foo", ["bar", "baz", "foobar"]);
   });
 
-  describe('Adding links', function () {
-    it('should add a new Object<=>Room link', function () {
+  describe('Adding values', function () {
+    it('should add a new Key<=>Value link', function () {
       return should(cache.add("newobject", "foo")).be.fulfilledWith(1);
     });
 
-    it('should link an object to multiple rooms at once', function () {
+    it('should add multiple values to a key', function () {
       return should(cache.add("newobject", ["baz", "bar", "foobar"])).be.fulfilledWith(3);
     });
 
-    it('should do nothing if adding an object to no room', function () {
+    it('should do nothing if adding nothing to a key', function () {
       return should(cache.add("doesnotexist", null)).be.fulfilledWith(0);
     });
 
-    it('should be able to add a new link to an already linked object', function () {
+    it('should be able to add a new value to an already existing key', function () {
       return should(cache.add("foo", ["new", "room", "bar"])).be.fulfilledWith(2);
     });
   });
 
-  describe('Removing links', function () {
-    it('should remove 1 link to a given object', function () {
+  describe('Removing values', function () {
+    it('should remove 1 value from a given key', function () {
       return should(cache.remove("foo", "bar")).be.fulfilledWith(1);
     });
 
-    it('should remove multiple links to a given object', function () {
+    it('should remove multiple values from a given key', function () {
       return should(cache.remove("foo", ["bar", "baz"])).be.fulfilledWith(2);
     });
 
-    it('should remove the entire object if no room argument is given', function () {
+    it('should remove the entire key if no value argument is given', function () {
       return should(cache.remove("foo")).be.fulfilledWith(1);
     });
 
-    it('should do nothing if trying to remove a non-existant link', function () {
+    it('should do nothing if trying to remove a non-existant key<=>value pair', function () {
       return should(cache.remove("doesnotexist")).be.fulfilledWith(0);
     });
   });
 
-  describe('Retrieving links', function () {
-    it('should return an empty array if looking for a non-existant object', function () {
+  describe('Retrieving values', function () {
+    it('should return an empty array if looking for a non-existant key', function () {
       return should(cache.search("doesnotexist")).eventually.be.an.Array.and.be.empty;
     });
 
-    it('should return the complete list of rooms linked to an link', function () {
+    it('should return the complete list of values linked to a key', function () {
       return should(cache.search("foo")).eventually.be.an.Array.and.have.length(3);
     });
   });

@@ -28,52 +28,52 @@ module.exports = {
   },
 
   /**
-   * Link an object ID to one or multiple rooms
+   * Add one or multiple value to a key
    *
-   * @param {String} Id of the object(s) to add to a room
-   * @param {String|Array} Id of the rooms
-   * @return {Promise} Number of links created
+   * @param {String} Key
+   * @param {String|Array} Value(s)
+   * @return {Promise} Number of values created
    */
-  add: function(object, rooms) {
+  add: function(key, values) {
     var
-      addSet = [object];
+      addSet = [key];
 
-    if (!rooms) {
+    if (!values) {
       return q.when(0);
     }
 
-    if ( typeof rooms === 'string') {
-      addSet.push(rooms);
+    if ( typeof values === 'string') {
+      addSet.push(values);
     } else {
-      addSet = addSet.concat(rooms);
+      addSet = addSet.concat(values);
     }
 
     return q.ninvoke(this.client, "sadd", addSet);
   },
 
   /**
-   * Remove an object from one or multiple rooms.
-   * If the room argument is empty, removes all links to the object.
+   * Remove one or multiple value(s) from a key
+   * If the "values" argument is empty, removes the key completely
    *
-   *  @param {String} Id of the object to remove
-   *  @param {String|Array} Room(s) from which the object is to be removed
-   *  @return {Promise} Number of links deleted
+   *  @param {String} key
+   *  @param {String|Array} Value(s)
+   *  @return {Promise} Number of values deleted
    */
-  remove: function(object, rooms) {
-    if (rooms) {
-      return q.ninvoke(this.client, "srem", [object, rooms]);
+  remove: function(key, values) {
+    if (values) {
+      return q.ninvoke(this.client, "srem", [key, values]);
     } else {
-      return q.ninvoke(this.client, "del", object);
+      return q.ninvoke(this.client, "del", key);
     }
   },
 
   /**
-   * Returns all rooms listening to a given object
+   * Returns all values corresponding to a key
    *
-   * @param {String} Id of the searched object
-   * @return {Promise} Retrieven link(s)
+   * @param {String} searched key
+   * @return {Promise} Array of retrieven value(s)
    */
-  search: function(object) {
-    return q.ninvoke(this.client, "smembers", object);
+  search: function(key) {
+    return q.ninvoke(this.client, "smembers", key);
   }
 };
