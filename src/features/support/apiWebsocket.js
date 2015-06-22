@@ -36,6 +36,17 @@ module.exports = {
     return emit.call(this, 'read', msg);
   },
 
+  count: function (filters) {
+    var
+      msg = {
+        action: 'count',
+        collection: this.world.fakeCollection,
+        body: filters
+      };
+
+    return emit.call(this, 'read', msg);
+  },
+
   create: function (body, persist) {
     var
       msg = {

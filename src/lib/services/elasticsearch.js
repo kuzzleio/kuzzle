@@ -81,6 +81,26 @@ module.exports = {
     return deferred.promise;
   },
 
+  count: function (data) {
+    var deferred = q.defer();
+
+    cleanData.call(this, data);
+
+    if (_.isEmpty(data.body)) {
+      delete data.body;
+    }
+
+    this.client.count(data)
+      .then(function (result) {
+        deferred.resolve({data: result});
+      })
+      .catch(function (error) {
+        deferred.reject(error);
+      });
+
+    return deferred.promise;
+  },
+
   /**
    * Send to elasticsearch the new document
    * Clean data for match the elasticsearch specification
@@ -258,13 +278,13 @@ var cleanData = function (data) {
     data.type = data.collection;
   }
 
-  data.id = data._id;
-  delete data._id;
-
-  if (data.index === undefined) {
-    // TODO: implement multi index
-    data.index = this.kuzzle.config[this.engineType].index;
+  if (data._id) {
+    data.id = data._id;
+    delete data._id;
   }
+
+  // TODO: implement multi index
+  data.index = this.kuzzle.config[this.engineType].index;
 
   delete data.collection;
   delete data.persist;

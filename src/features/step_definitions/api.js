@@ -236,6 +236,43 @@ var apiSteps = function () {
     });
   });
 
+  this.Then(/^I count ([\d]*) documents$/, function (number, callback) {
+    var main = function (callbackAsync) {
+      setTimeout(function () {
+        this.api.count({})
+          .then(function (body) {
+            if (body.error) {
+              callbackAsync(body.error);
+              return false;
+            }
+
+            if (body.result.count !== parseInt(number)) {
+              callbackAsync('No correct value for count. Expected ' + number + ', get ' + body.result.count);
+              return false;
+            }
+
+            callbackAsync();
+          }.bind(this))
+          .catch(function (error) {
+            callbackAsync(error);
+          });
+      }.bind(this), 500); // end setTimeout
+    };
+
+    async.retry(20, main.bind(this), function (err) {
+      if (err) {
+        if (err.message) {
+          err = err.message;
+        }
+
+        callback.fail(new Error(err));
+        return false;
+      }
+
+      callback();
+    });
+  });
+
 
 
   /** WRITE **/

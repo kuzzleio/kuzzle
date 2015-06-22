@@ -37,6 +37,13 @@ Feature: Test websocket API
     Then I remove the collection and schema
     Then I'm not able to get the document
 
+  @needCleanDb @withWebsocket
+  Scenario: Count document
+    When I write the document
+    When I write the document
+    When I write the document
+    Then I count 3 documents
+
   @needCleanDb @removeSchema @withWebsocket
   Scenario: Change mapping
     When I write the document "documentGrace"

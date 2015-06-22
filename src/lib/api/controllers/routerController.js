@@ -85,6 +85,15 @@ module.exports = function RouterController (kuzzle) {
       executeFromRest.call(this, params, request, response);
     }.bind(this));
 
+    api.post('/:collection/_count', function (request, response) {
+      var params = {
+        controller: 'read',
+        action: 'count'
+      };
+
+      executeFromRest.call(this, params, request, response);
+    }.bind(this));
+
     api.put('/:collection/:id/_:action', function (request, response) {
       var params = {
         controller: 'write'
@@ -289,9 +298,12 @@ function executeFromRest(params, request, response) {
   data = {
     controller: params.controller,
     action: params.action || request.params.action,
-    collection: request.params.collection,
-    _id: request.params.id
+    collection: request.params.collection
   };
+
+  if (request.params.id) {
+    data._id = request.params.id;
+  }
 
   data = wrapObject(request.body, data);
 
