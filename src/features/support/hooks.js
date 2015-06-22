@@ -1,11 +1,7 @@
 var myHooks = function () {
 
   this.After('@needCleanDb', function (callback) {
-    var filters = {
-      query: {
-        'match_all': {}
-      }
-    };
+    var filters = {};
 
     this.api.deleteByQuery(filters)
       .then(function () {

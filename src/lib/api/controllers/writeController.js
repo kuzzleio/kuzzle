@@ -21,10 +21,10 @@ module.exports = function WriteController (kuzzle) {
       // Test saved filters for notify rooms in a next step
       kuzzle.dsl.testFilters(data)
         .then(function (rooms) {
-          this.kuzzle.notifier.notify(rooms, data);
+          kuzzle.notifier.notify(rooms, data);
         })
         .catch(function (error) {
-          this.kuzzle.log.error(error);
+          kuzzle.log.error(error);
         });
     }
 

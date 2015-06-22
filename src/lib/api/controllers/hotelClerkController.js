@@ -67,6 +67,7 @@ module.exports = function HotelClerkController (kuzzle) {
         // Add the room for the customer
         addRoomForCustomer.call(this, connection.id, roomName, roomId);
         this.rooms[roomId].count++;
+
         deferred.resolve({ data: roomId, rooms: [roomName] });
       }.bind(this))
       .catch(function (error) {

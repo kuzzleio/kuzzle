@@ -28,7 +28,8 @@ module.exports = {
 
 function onListenCB (data) {
   var
-    roomName;
+    roomWriteResponse,
+    roomNotification;
 
   if (data.persist === false) {
     return false;
@@ -38,14 +39,16 @@ function onListenCB (data) {
     return false;
   }
 
-  if (data.connectionId) {
-    roomName = 'write_response_'+data.connectionId;
-  }
+  roomWriteResponse = 'write_response_'+data.actionId;
+  roomNotification = 'notification_'+data.actionId;
 
   this.kuzzle.services.list.writeEngine[data.action](_.clone(data))
     .then(function (result) {
-      this.kuzzle.services.list.broker.add(roomName, {result: _.extend(data, result)});
 
+      // when we have the response from writeEngine, add it to the broker
+      this.kuzzle.services.list.broker.add(roomWriteResponse, {error: null, result: _.extend(data, result)});
+
+      // notify rooms for the created/updated/deleted document
       buildNotification.call(this, data, result)
         .then(function (notification) {
           //console.log(notification);
@@ -55,7 +58,7 @@ function onListenCB (data) {
         });
     }.bind(this))
     .catch(function (error) {
-      this.kuzzle.services.list.broker.add(roomName, {error: error});
+      this.kuzzle.services.list.broker.add(roomWriteResponse, {error: error});
       this.kuzzle.log.error(error);
     }.bind(this));
 }
@@ -73,7 +76,6 @@ function buildNotification (data, writeResponse) {
 
     this.kuzzle.services.list.readEngine.get(requestGet)
       .then(function (result) {
-        data.body = result._source;
         deferred.resolve(data);
       })
       .catch(function (error) {

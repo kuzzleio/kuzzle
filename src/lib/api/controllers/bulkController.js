@@ -8,7 +8,7 @@ module.exports = function WriteController (kuzzle) {
 
     kuzzle.emit('data:bulkImport', data);
 
-    deferred.resolve({data: {}});
+    deferred.resolve({});
     return deferred.promise;
   };
 

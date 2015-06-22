@@ -19,7 +19,7 @@ module.exports = {
       msg = {
         action: 'get',
         collection: this.world.fakeCollection,
-        id: id
+        _id: id
       };
 
     return emit.call(this, 'read', msg);
@@ -53,7 +53,7 @@ module.exports = {
       msg = {
         action: 'update',
         collection: this.world.fakeCollection,
-        id: id,
+        _id: id,
         body: body
       };
 
@@ -65,7 +65,7 @@ module.exports = {
       msg = {
         action: 'delete',
         collection: this.world.fakeCollection,
-        id: id
+        _id: id
       };
 
     return emit.call(this, 'write', msg);
@@ -123,7 +123,6 @@ var emit = function (controller, msg) {
     deferred = q.defer();
 
   msg.requestId = requestId;
-
   this.socket.once(requestId, function (result) {
     if (result.error) {
       deferred.reject(result.error);

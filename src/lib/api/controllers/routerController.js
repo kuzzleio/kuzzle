@@ -9,6 +9,7 @@ var
   bodyParser = require('body-parser'),
   // For final step to respond to HTTP request
   finalhandler = require('finalhandler'),
+  uuid = require('node-uuid'),
   // Used for hash into md5 the data for generate a requestId
   crypto = require('crypto');
 
@@ -162,13 +163,30 @@ module.exports = function RouterController (kuzzle) {
 
         var requestId = data.requestId;
 
+        // Listen broker because we waiting for writeEngine response
+        if (['write', 'admin', 'bulk'].indexOf(data.controller) !== -1) {
+          // Add an action ID into data in order to notify later the same user with the response from writeEngine
+          data.actionId = uuid.v1();
+
+          kuzzle.services.list.broker.listen('write_response_' + data.actionId, function (writeResponse) {
+            kuzzle.notifier.notify(requestId, cleanUnusedProperty(writeResponse), connection);
+          });
+
+        }
+
         // execute the funnel. If error occurred, notify users
         kuzzle.funnel.execute(data, connection)
           .then(function onExecuteSuccess (result) {
-            kuzzle.notifier.notify(result.rooms, result.data);
-            kuzzle.notifier.notify(requestId, {error: null, result: result.data}, connection);
+            // if something is returned we notify the user
+            if (!_.isEmpty(result)) {
+              kuzzle.notifier.notify(requestId, {error: null, result: result.data}, connection);
+            }
           })
           .catch(function onExecuteError(error) {
+            if (_.isObject(error)) {
+              error = error.toString();
+            }
+
             kuzzle.notifier.notify(requestId, {error: error, result: null}, connection);
             kuzzle.log.verbose({error: error});
           });
@@ -198,7 +216,8 @@ module.exports = function RouterController (kuzzle) {
             routingArray = msg.fields.routingKey.split('.'),
             controller = routingArray[0],
             collection = routingArray[1],
-            action = routingArray[2];
+            action = routingArray[2],
+            requestId;
 
         kuzzle.log.silly('Handle MQ input', msg.fields.routingKey , 'message');
 
@@ -213,16 +232,33 @@ module.exports = function RouterController (kuzzle) {
           connection = {type: connectionId.split('.')[0], id: connectionId};
         }
 
-        var requestId = data.requestId || connectionId;
-
         data = wrapObject(data, {controller: controller, collection: collection, action: action});
+        requestId = data.requestId;
+
+        // Listen broker because we waiting for writeEngine response
+        if (['write', 'admin', 'bulk'].indexOf(data.controller) !== -1) {
+          // Add an action ID into data in order to notify later the same user with the response from writeEngine
+          data.actionId = uuid.v1();
+
+          kuzzle.services.list.broker.listen('write_response_' + data.actionId, function (writeResponse) {
+            kuzzle.notifier.notify(requestId, cleanUnusedProperty(writeResponse), connection);
+          });
+        }
 
         kuzzle.funnel.execute(data, connection)
           .then(function onExecuteSuccess (result) {
+            // if something is returned we notify the user
+            if (!_.isEmpty(result)) {
+              kuzzle.notifier.notify(requestId, {error: null, result: result.data}, connection);
+            }
+
             kuzzle.notifier.notify(result.rooms, result.data);
-            kuzzle.notifier.notify(requestId, {error: null, result: result.data}, connection);
           }.bind(this))
           .catch(function onExecuteError(error) {
+            if (_.isObject(error)) {
+              error = error.toString();
+            }
+
             kuzzle.notifier.notify(requestId, {error: error, result: null}, connection);
             kuzzle.log.verbose({error: error});
           });
@@ -243,8 +279,7 @@ function sendRestError(error, response) {
 function executeFromRest(params, request, response) {
   var
     deferred = q.defer(),
-    data,
-    uuid = require('node-uuid').v1();
+    data;
 
   if (!params.controller) {
     deferred.reject('Missing controller');
@@ -260,26 +295,31 @@ function executeFromRest(params, request, response) {
 
   data = wrapObject(request.body, data);
 
-  data.connectionId = uuid;
+  // Listen broker because we waiting for writeEngine response
+  if (['write', 'admin', 'bulk'].indexOf(data.controller) !== -1) {
+    // Add an action ID into data in order to notify later the same user with the response from writeEngine
+    data.actionId = uuid.v1();
 
-  this.kuzzle.services.list.broker.listen('write_response_'+uuid, function (result) {
-    response.end(stringify(result));
-  });
+    this.kuzzle.services.list.broker.listen('write_response_' + data.actionId , function (writeResponse) {
+      response.end(stringify(cleanUnusedProperty(writeResponse)));
+    });
+  }
 
   this.kuzzle.funnel.execute(data)
     .then(function (result) {
       response.writeHead(200, {'Content-Type': 'application/json'});
 
-      // if have an empty result, we have to listen a queue for get writeEngine action
-      if (data.persist && _.isEmpty(result)) {
-
-      }
-      else {
-        response.end(stringify({error: null, result: result.data}));
+      // if something is returned we notify the user
+      if (!_.isEmpty(result)) {
+        response.end(stringify({error: null, result: cleanUnusedProperty(result.data)}));
       }
 
     }.bind(this))
     .catch(function (error) {
+      if (_.isObject(error)) {
+        error = error.toString();
+      }
+
       return sendRestError(error, response);
     });
 }
@@ -310,4 +350,12 @@ function wrapObject (requestBody, data) {
   }
 
   return data;
+}
+
+function cleanUnusedProperty (writeResponse) {
+  if (writeResponse.result) {
+    delete writeResponse.result.requestId;
+  }
+
+  return writeResponse;
 }

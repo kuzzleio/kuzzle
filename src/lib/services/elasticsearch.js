@@ -139,6 +139,11 @@ module.exports = {
           callback();
         }, function () {
 
+          if (bodyBulk.length === 0) {
+            deferred.resolve({ids : []});
+            return false;
+          }
+
           this.client.bulk({body: bodyBulk})
             .then(function () {
               deferred.resolve({ids: ids});

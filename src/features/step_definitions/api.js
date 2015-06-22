@@ -6,7 +6,7 @@ var apiSteps = function () {
   this.Then(/^I'm ?(not)* able to get the document$/, function (not, callback) {
     var main = function (callbackAsync) {
       setTimeout(function () {
-        this.api.get(this.result.id)
+        this.api.get(this.result._id)
           .then(function (body) {
             if (body.error) {
               if (body.error.message) {
@@ -29,7 +29,7 @@ var apiSteps = function () {
             }
 
             if (not) {
-              callbackAsync('Object with id '+ this.result.id + ' exists');
+              callbackAsync('Object with id '+ this.result._id + ' exists');
               return false;
             }
 
@@ -64,7 +64,7 @@ var apiSteps = function () {
   this.Then(/^my document has the value "([^"]*)" in field "([^"]*)"$/, function (value, field, callback) {
     var main = function (callbackAsync) {
       setTimeout(function () {
-        this.api.get(this.result.id)
+        this.api.get(this.result._id)
           .then(function (body) {
 
             if (body.error) {
@@ -240,7 +240,6 @@ var apiSteps = function () {
 
   /** WRITE **/
   this.When(/^I write the document ?(?:"([^"]*)")?$/, function (documentName, callback) {
-
     var document = this[documentName] || this.documentGrace;
 
     this.api.create(document, true)
@@ -265,7 +264,7 @@ var apiSteps = function () {
 
 
   this.Then(/^I should receive a document id$/, function (callback) {
-    if (this.result && this.result.id) {
+    if (this.result && this.result._id) {
       callback();
       return false;
     }
@@ -280,7 +279,7 @@ var apiSteps = function () {
         var body = {};
         body[field] = value;
 
-        this.api.update(this.result.id, body)
+        this.api.update(this.result._id, body)
           .then(function (body) {
             if (body.error) {
               callbackAsync(body.error);
@@ -312,7 +311,7 @@ var apiSteps = function () {
 
 
   this.Then(/^I remove the document$/, function (callback) {
-    this.api.deleteById(this.result.id)
+    this.api.deleteById(this.result._id)
       .then(function (body) {
         if (body.error !== null) {
           callback.fail(new Error(body.error));
