@@ -78,7 +78,7 @@ $ kuzzle start
 
 # Tests
 
-Run tests (unit & features) with 
+If you use the all-in-the box version (with docker compose), you have to enter in kuzzle container (`docker exec -ti <container_id> /bin/bash`) and run:
 
     $ npm test
 
