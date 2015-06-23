@@ -1,14 +1,19 @@
-# What is a hook ?
+# What is a Hook ?
 
-Hooks are listen on a special event on object kuzzle and perform action when he event is triggered according to a configuration in /config/hooks.js
+Hooks allow to attach some actions to some Kuzzle events.
 
-Example:
+The list of available events and their default attached actions can be found in the /config/hooks.js file.
 
-* When the event "data:create" is emitted by kuzzle, the function add in hook write will be executed (for write a message in broker).
-
+As an example, when the "data:create" event is emitted by kuzzle, it will trigger the execution of the *add* method of the *write* hook, which will send the received message to the broker.
 
 # Contributing
 
-You can create your own hook and share it to the community with a PR ;). If you want to create a hook you have to create a function init().
+You can can define and add your own custom hooks.
 
-Your hook will be automatically called if you add your hook with event in /config/hooks.js.
+A hook must be a valid node.js module that implements an init() function.
+
+The init function is passed the current kuzzle instance object.
+
+Your module must be placed in the /lib/hooks directory.
+
+You can then attach your hook to some events by editing the /config/hooks.js configuration file.
