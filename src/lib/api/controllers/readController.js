@@ -1,4 +1,4 @@
-module.exports = function WriteController (kuzzle) {
+module.exports = function ReadController (kuzzle) {
 
   this.search = function (data) {
     return kuzzle.services.list.readEngine.search(data);

@@ -1,7 +1,7 @@
 var
   q = require('q');
 
-module.exports = function WriteController (kuzzle) {
+module.exports = function BulkController (kuzzle) {
 
   this.import = function (data) {
     var deferred = q.defer();
