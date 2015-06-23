@@ -21,7 +21,7 @@ if [ -f "$DIR/Dockerfile" ]; then
     . "$DIR/image.sh"
 
     docker build -t "$DOCKER_IMAGE":"$DOCKER_TAG" "$DIR"
-
+	exit $?
 else
     echo "No Dockerfile found in $DIR. Skipping"
     exit 2

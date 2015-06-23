@@ -1,7 +1,7 @@
 FROM debian:wheezy
 MAINTAINER Kaliop Labs
 
-ENV TERM xterm-256color
+ENV TERM=xterm-256color SHELL=/bin/zsh
 
 RUN apt-get update && apt-get install -y \
     bash-completion \
