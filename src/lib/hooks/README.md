@@ -1,4 +1,4 @@
-# What is a Hook ?
+# What is a Hook?
 
 Hooks allow to attach some actions to some Kuzzle events.
 
