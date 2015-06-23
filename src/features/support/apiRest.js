@@ -96,5 +96,15 @@ module.exports = {
     };
 
     return this.callApi(options);
+  },
+
+  putMapping: function () {
+    var options = {
+      url: this.pathApi(this.world.fakeCollection + '/_mapping'),
+      method: 'PUT',
+      json: this.world.schema
+    };
+
+    return this.callApi(options);
   }
 };

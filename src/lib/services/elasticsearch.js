@@ -163,6 +163,45 @@ module.exports = {
     }
 
     return this.client.bulk(data);
+  },
+
+  /**
+   * Add a mapping definition for a specific type
+   *
+   * @param {Object} data
+   * @return {Promise}
+   */
+  putMapping: function (data) {
+    cleanData.call(this, data);
+    return this.client.indices.putMapping(data);
+  },
+
+  /**
+   * Retrieve mapping definition for index/type
+   *
+   * @param {Object} data
+   * @return {Promise}
+   */
+  getMapping: function (data) {
+    var deferred = q.defer();
+
+    cleanData.call(this, data);
+    delete data.body;
+
+    this.client.indices.getMapping(data)
+      .then(function (result) {
+        if (result[this.kuzzle.config[this.engineType].index]) {
+          deferred.resolve({data: result[this.kuzzle.config[this.engineType].index]});
+        }
+        else {
+          deferred.reject('No mapping for current index');
+        }
+      }.bind(this))
+      .catch(function (error) {
+        deferred.reject(error);
+      });
+
+    return deferred.promise;
   }
 };
 

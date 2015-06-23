@@ -33,4 +33,11 @@ describe('Test service initialization function', function () {
     should(kuzzle.services.list.writeEngine.deleteCollection).be.an.Function;
     should(kuzzle.services.list.writeEngine.import).be.an.Function;
   });
+
+  it('should build a cache service', function () {
+     should(kuzzle.services.list.cache).be.an.Object;
+     should(kuzzle.services.list.cache.add).be.an.Function;
+     should(kuzzle.services.list.cache.remove).be.an.Function;
+     should(kuzzle.services.list.cache.search).be.an.Function;
+  });
 });

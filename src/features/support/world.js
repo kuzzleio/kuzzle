@@ -1,6 +1,7 @@
 module.exports = function () {
   this.World = function World (callback) {
 
+    // Fake values for test
     this.fakeCollection = 'kuzzle-collection-test';
 
     this.documentGrace = {
@@ -35,6 +36,18 @@ module.exports = function () {
       { delete: {_id: 2 } }
     ];
 
+    this.defaultSchema = {
+      properties: {
+        firstName: {type: 'string', store: true}
+      }
+    };
+    this.schema = {
+      properties: {
+        firstName: {type: 'string', store: true, index: 'not_analyzed'}
+      }
+    };
+
+    // Load API interfaces
     this.apiTypes = {
       rest: require('./apiRest'),
       websocket: require('./apiWebsocket')
