@@ -5,7 +5,7 @@
 For UI and linked objects developers, Kuzzle is an open-source solution that handles all the data management
 (CRUD, real-time storage, search, high-level features, etc;).
 
-Kuzzle features are accessible through a secured API. It can be used through a large choice of protocols such as REST, Websocket or Message Queuing protocols (see [Specifications](src/docs/specifications.md) for details).
+Kuzzle features are accessible through a secured API. It can be used through a large choice of protocols such as REST, Websocket or Message Queuing protocols (see [Specifications](src/docs/api-specifications.md) for details).
 
 Kuzzle use [Elasticsearch filter DSL](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-filters.html) (see [filters syntax](docs/filters.md) for more details) as filtering language and RabbitMQ for managing queues. 
 
