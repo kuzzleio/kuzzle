@@ -21,6 +21,7 @@ NPM
 GIT
 
      $ npm clone https://github.com/kuzzleio/kuzzle.git
+     $ cd kuzzle && npm install
 
 ## All in the box with Docker
 
