@@ -1,12 +1,22 @@
-# What is a worker ?
+# What is a Worker?
 
-A worker is something that could be independent of the rest of Kuzzle and can be launch several times between several hosts.
-Typically a worker can be a broker that listen on a special channel and do something when a message is received.
+A Worker is a component that is designed to possibly run outside of the main Kuzzle instance.
 
-In a next release, Kuzzle could be launched without worker, and workers could be launched in a second times (Because Node.js is mono-thread, it looks like a good solution to launch worker and dependencies in other service) 
+Workers attach themselves to the broker that is fed by Kuzzle to perform any kind of tasks.
+
+As an example, the persistence to [elasticsearch]("https://www.elastic.co/products/elasticsearch") is implemented as a Worker in Kuzzle core.
+
+Additionally, serveral Workers of the same type can be launched in paralell, on the same or a different host.
+
+This flexibility allows the Kuzzle system administrators to leverage their resources consumption and distribute and/or scale their services as fits bests their needs.
 
 # Contributing
 
-You can create your own worker and share it to the community with a PR ;). If you want to create a worker you have to create a function init().
+You can create your own custom Worker. You will then need to create a module that implements the init() function in the /lib/workers directory.
 
-Your worker will be automatically launched when Kuzzle will be started.
+The init function is passed a Kuzzle object (used to transport the configuration, the Kuzzle main application does not actually need to run).
+
+Once your module is ready, you can activate it in the /lib/config/workers.js configuration file.
+
+Please feel free to share your Workers to the community by submitting a pull request.
+We're looking forward them.
