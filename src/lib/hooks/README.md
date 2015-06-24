@@ -12,7 +12,7 @@ You can can define and add your own custom hooks.
 
 A hook must be a valid node.js module that implements an init() function.
 
-The init function is passed the current kuzzle instance object.
+The init function is passed to the current kuzzle instance object.
 
 Your module must be placed in the /lib/hooks directory.
 
