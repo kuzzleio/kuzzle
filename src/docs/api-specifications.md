@@ -27,7 +27,7 @@ Messages (ie. requests sent to Kuzzle to publish data, subscribe to something, o
 
 ##### Description
 
-Create/Update/delete a document
+Create/Update/Delete a document
 
 ##### Input message
 
@@ -42,7 +42,7 @@ Create/Update/delete a document
  ["body": <body>,]
 }
 ```
-* &lt;requestId&gt; _(optionnal)_ : if set : identifies the room where where the feedback messages will be sent.
+* &lt;requestId&gt; _(optionnal)_ : if set : identifies the room where the feedback messages will be sent.
 * &lt;action&gt; : **create** | **update** | **delete**
 * &lt;persist&gt; (only for **create** ? ):
    * if _true_: the document has to be stored to the persistent layer
@@ -81,7 +81,7 @@ The client SHOULD then subscribe to this room to get messages.
 }
 ```
 
-* &lt;requestId&gt; _(optionnal)_ : if set : identifies the room where where the feedback messages will be sent.
+* &lt;requestId&gt; _(optionnal)_ : if set : identifies the room where the feedback messages will be sent.
 * &lt;collection&gt; : the collection name
 * &lt;action&gt; : **on** | **off**
 * &lt;body&gt; the filters to subscribe/unsubscribe to (see [filters syntax] for details)
