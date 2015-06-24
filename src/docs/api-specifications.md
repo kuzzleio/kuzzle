@@ -168,7 +168,7 @@ Perform many index/delete operations in a single API call.
 * &lt;requestId&gt; _(optionnal)_ : if set : identifies the room where where the feedback messages will be sent.
 * &lt;action&gt; : **import**
 * &lt;collection&gt; : default document collection for items which don’t provide one
-* &lt;body&gt; : array with all actions and documents ([See doc](https://www.elastic.co/guide/en/elasticsearch/client/javascript-api/current/api-reference-1-3.html#api-bulk-1-3))
+* &lt;body&gt; : array with all actions and documents ([See Elasticsearch doc](https://www.elastic.co/guide/en/elasticsearch/client/javascript-api/current/api-reference-1-3.html#api-bulk-1-3))
 
 ##### Output message
 
