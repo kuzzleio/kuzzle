@@ -1,6 +1,6 @@
 var
-  q = require("q"),
-  redis = require("redis");
+  q = require('q'),
+  redis = require('redis');
 
 module.exports = {
   kuzzle: null,
@@ -30,8 +30,8 @@ module.exports = {
   /**
    * Add one or multiple value to a key
    *
-   * @param {String} Key
-   * @param {String|Array} Value(s)
+   * @param {String} key
+   * @param {String|Array} values
    * @return {Promise} Number of values created
    */
   add: function(key, values) {
@@ -48,7 +48,7 @@ module.exports = {
       addSet = addSet.concat(values);
     }
 
-    return q.ninvoke(this.client, "sadd", addSet);
+    return q.ninvoke(this.client, 'sadd', addSet);
   },
 
   /**
@@ -56,24 +56,24 @@ module.exports = {
    * If the "values" argument is empty, removes the key completely
    *
    *  @param {String} key
-   *  @param {String|Array} Value(s)
+   *  @param {String|Array} values
    *  @return {Promise} Number of values deleted
    */
   remove: function(key, values) {
     if (values) {
-      return q.ninvoke(this.client, "srem", [key, values]);
+      return q.ninvoke(this.client, 'srem', [key, values]);
     } else {
-      return q.ninvoke(this.client, "del", key);
+      return q.ninvoke(this.client, 'del', key);
     }
   },
 
   /**
    * Returns all values corresponding to a key
    *
-   * @param {String} searched key
-   * @return {Promise} Array of retrieven value(s)
+   * @param {String} key the searched key
+   * @return {Promise} Array of retrieve value(s)
    */
   search: function(key) {
-    return q.ninvoke(this.client, "smembers", key);
+    return q.ninvoke(this.client, 'smembers', key);
   }
 };
