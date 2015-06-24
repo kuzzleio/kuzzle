@@ -8,7 +8,9 @@
     "kuzzle": "./bin/kuzzle.js"
   },
   "scripts": {
-    "test": "mocha && cucumber.js"
+    "test": "npm run unit-testing && npm run functional-testing",
+    "unit-testing": "mocha",
+    "functional-testing": "cucumber.js"
   },
   "dependencies": {
     "amqplib": "^0.3.2",
@@ -29,7 +31,7 @@
     "big.js": "~3.0.2",
     "request-promise": "~0.4.2",
     "redis": "^0.12.1",
-    "elasticsearch": "~5.0.0"
+    "elasticsearch": "~4.1.0"
   },
   "devDependencies": {
     "root-require": "~0.3.1",

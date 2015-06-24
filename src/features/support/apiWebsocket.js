@@ -8,6 +8,8 @@ module.exports = {
 
   socket: null,
   world: null,
+  responses: null,
+  roomId: null,
 
   init: function (world) {
     this.world = world;
@@ -123,10 +125,19 @@ module.exports = {
       };
 
     return emit.call(this, 'admin', msg );
+  },
+
+  subscribe: function (filters) {
+    var
+      msg = {
+        action: 'on',
+        collection: this.world.fakeCollection,
+        body: filters
+      };
+
+    return subscribeAndListen.call(this, 'subscribe', msg);
   }
-
 };
-
 
 var emit = function (controller, msg) {
   var
@@ -147,3 +158,32 @@ var emit = function (controller, msg) {
 
   return deferred.promise;
 };
+
+var subscribeAndListen = function (controller, msg) {
+  var
+    requestId = uuid.v1(),
+    deferred = q.defer();
+
+  msg.requestId = requestId;
+  this.socket.once(requestId, function (result) {
+    if (result.error) {
+      deferred.reject(result.error);
+      return false;
+    }
+
+    this.roomId = result.result;
+
+    this.socket.on(this.roomId, function (document) {
+      console.log('Document received on room ' + this.roomId + ':');
+      console.log(document);
+      this.responses = document;
+    }.bind(this));
+
+    deferred.resolve(result);
+  }.bind(this));
+
+  this.socket.emit(controller, msg);
+
+  return deferred.promise;
+};
+

@@ -53,3 +53,9 @@ Feature: Test websocket API
     Then I change the schema
     When I write the document "documentGrace"
     Then I find a document with "Grace" in field "firstName"
+
+  @needCleanDb @withWebsocket
+  Scenario: Document creation notifications
+    Given A room subscription listening to "lastName" having value "Hopper"
+    When I write the document "documentGrace"
+    Then I should receive a "create" notification

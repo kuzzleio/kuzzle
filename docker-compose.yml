@@ -7,10 +7,12 @@ kuzzle:
   links:
     - rabbit
     - elasticsearch
+    - redis
   environment:
     - KUZZLE_PORT=8081
     - RABBIT_HOST=rabbit
     - ELASTICSEARCH_HOST=elasticsearch:9200
+    - REDIS_HOST=redis:6379
     - PM2_OPTIONS=--watch
 
 rabbit:
@@ -21,5 +23,9 @@ rabbit:
     - "5672:5672"
     - "15672:15672"
 
+redis:
+  image: redis:3.0.2
+
 elasticsearch:
   image: elasticsearch:1.5.2
+  

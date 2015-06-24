@@ -1,6 +1,25 @@
 var async = require('async');
 
 var apiSteps = function () {
+  /** SUBSCRIPTION **/
+  this.Given(/^A room subscription listening to "([^"]*)" having value "([^"]*)"$/, function (key, value, callback) {
+    var filter = { term: {} };
+
+    filter.term[key] = value;
+
+    this.api.subscribe(filter)
+      .then(function (body) {
+        if (body.error !== null) {
+          callback.fail(new Error(body.error));
+          return false;
+        }
+
+        callback();
+      }.bind(this))
+      .catch(function (error) {
+        callback.fail(new Error(error));
+      });
+  });
 
   /** READ **/
   this.Then(/^I'm ?(not)* able to get the document$/, function (not, callback) {
@@ -273,6 +292,33 @@ var apiSteps = function () {
     });
   });
 
+  this.Then(/^I should receive a "([^"]*)" notification$/, function(action, callback) {
+    var main = function (callbackAsync) {
+      setTimeout(function () {
+        if (this.api.responses) {
+          if (this.api.responses.action !== action) {
+            callbackAsync('Action "' + this.api.responses.action + '" received. Expected: "' + action + '"');
+            return false;
+          }
+
+          callbackAsync();
+        }
+      }.bind(this), 500);
+    };
+
+    async.retry(5, main.bind(this), function (err) {
+      if (err) {
+        if (err.message) {
+          err = err.message;
+        }
+
+        callback.fail(new Error(err));
+        return false;
+      }
+
+      callback();
+    });
+  });
 
 
   /** WRITE **/

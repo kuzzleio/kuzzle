@@ -1,4 +1,5 @@
 var
+  _ = require('lodash'),
   async = require('async');
 
 module.exports = function NotifierController (kuzzle) {
@@ -15,6 +16,67 @@ module.exports = function NotifierController (kuzzle) {
     async.each(rooms, function (roomName) {
       send.call(kuzzle, roomName, data, connection);
     }.bind(this));
+  };
+
+
+  /**
+   * On a document change, depending of the change type, get the list of concerned rooms,
+   * and notify them, and update the Document<=>Room links cache.
+   *
+   * @param {Object} data object describing the document
+   * @param {String} [connection] type
+   */
+  this.documentChanged = function (data, connection) {
+    var
+      idList,
+      cachedRooms = [];
+
+    if (data._id) {
+      idList = [data._id];
+    } else {
+      idList = data.ids;
+    }
+
+    // Get the cached Document<=>Rooms links
+    if (data.action !== 'create') {
+      async.each(idList, function (id, callback) {
+        kuzzle.services.list.cache.search(id)
+          .then(function (rooms) {
+            Array.prototype.push.apply(cachedRooms, rooms);
+            callback();
+          });
+      });
+    }
+
+    // Notify rooms
+    if (data.action === 'create' || data.action === 'update') {
+      kuzzle.dsl.testFilters(data)
+        .then(function (rooms) {
+          var
+            clonedData,
+            stopListening;
+
+          kuzzle.services.list.cache.add(data._id, rooms);
+          this.notify(rooms, data, connection);
+
+          if (data.action === 'update') {
+            clonedData = _.clone(data);
+            delete clonedData.body;
+            stopListening = _.difference(cachedRooms, rooms);
+            this.notify(stopListening, clonedData, connection);
+            kuzzle.services.list.cache.remove(data._id, stopListening);
+          }
+        }.bind(this))
+        .catch(function (error) {
+          kuzzle.log.error(error);
+        });
+    } else if (data.action === 'delete' || data.action === 'deleteByQuery') {
+      this.notify(cachedRooms, data, connection);
+      async.each(idList, function (id, callback) {
+        kuzzle.services.list.cache.remove(id)
+          .then(callback());
+      });
+    }
   };
 };
 
