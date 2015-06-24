@@ -6,7 +6,7 @@ Workers attach themselves to the broker that is fed by Kuzzle to perform any kin
 
 As an example, the persistence to [elasticsearch]("https://www.elastic.co/products/elasticsearch") is implemented as a Worker in Kuzzle core.
 
-Additionally, serveral Workers of the same type can be launched in paralell, on the same or a different host.
+Additionally, serveral Workers of the same type can be launched in parallel, on the same or a different host.
 
 This flexibility allows the Kuzzle system administrators to leverage their resources consumption and distribute and/or scale their services as fits bests their needs.
 
