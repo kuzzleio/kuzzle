@@ -7,7 +7,7 @@ For UI and linked objects developers, Kuzzle is an open-source solution that han
 
 Kuzzle features are accessible through a secured API. It can be used through a large choice of protocols such as REST, Websocket or Message Queuing protocols (see [Specifications](docs/api-specifications.md) for details).
 
-Kuzzle use [Elasticsearch filter DSL](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-filters.html) (see [filters syntax](docs/filters.md) for more details) as filtering language and RabbitMQ for managing queues. 
+Kuzzle use [Elasticsearch filter DSL](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-filters.html) (see [filters syntax](docs/filters.md) for more details) as filtering language, [RabbitMQ](https://www.rabbitmq.com/) for managing queues and [Redis](http://redis.io/) for manage filter cache. 
 
 # Installation
 
