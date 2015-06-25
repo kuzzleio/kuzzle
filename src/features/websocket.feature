@@ -59,3 +59,32 @@ Feature: Test websocket API
     Given A room subscription listening to "lastName" having value "Hopper"
     When I write the document "documentGrace"
     Then I should receive a "create" notification
+
+  @needCleanDb @withWebsocket
+  Scenario: Document delete notifications
+    Given A room subscription listening to "lastName" having value "Hopper"
+    When I write the document "documentGrace"
+    Then I remove the document
+    Then I should receive a "delete" notification
+
+  @needCleanDb @withWebsocket
+  Scenario: Document update: new document notification
+    Given A room subscription listening to "lastName" having value "Hopper"
+    When I write the document "documentAda"
+    Then I update the document with value "Hopper" in field "lastName"
+    Then I should receive a "update" notification
+
+  @needCleanDb @withWebsocket
+  Scenario: Document update: removed document notification
+    Given A room subscription listening to "lastName" having value "Hopper"
+    When I write the document "documentGrace"
+    Then I update the document with value "Foo" in field "lastName"
+    Then I should receive a "update" notification
+
+  @needCleanDb @withWebsocket
+  Scenario: Delete a document with a query
+    Given A room subscription listening to "lastName" having value "Hopper"
+    When I write the document "documentGrace"
+    And I write the document "documentAda"
+    Then I remove documents with field "hobby" equals to value "computer"
+    Then I should receive a "delete" notification

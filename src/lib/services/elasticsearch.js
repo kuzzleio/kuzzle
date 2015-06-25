@@ -304,7 +304,6 @@ var getAllIdsFromQuery = function (data) {
     ids = [];
 
   this.client.search(data, function getMoreUntilDone (error, response) {
-
     if (error) {
       deferred.reject(error);
       return false;
@@ -319,7 +318,7 @@ var getAllIdsFromQuery = function (data) {
       this.client.scroll({
         scrollId: response._scroll_id,
         scroll: '30s'
-      }, getMoreUntilDone);
+      }, getMoreUntilDone.bind(this));
     }
     else {
       deferred.resolve(ids);

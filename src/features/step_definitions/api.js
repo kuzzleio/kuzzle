@@ -302,11 +302,13 @@ var apiSteps = function () {
           }
 
           callbackAsync();
+        } else {
+          callbackAsync('No notification received');
         }
       }.bind(this), 500);
     };
 
-    async.retry(5, main.bind(this), function (err) {
+    async.retry(20, main.bind(this), function (err) {
       if (err) {
         if (err.message) {
           err = err.message;
@@ -406,6 +408,43 @@ var apiSteps = function () {
       .catch(function (error) {
         callback.fail(error);
       });
+  });
+
+  this.Then(/^I remove documents with field "([^"]*)" equals to value "([^"]*)"$/, function (field, value, callback) {
+    var main = function (callbackAsync) {
+      setTimeout(function () {
+        var filter = { filter: { term: {} } };
+
+        filter.filter.term[field] = value;
+
+        this.api.deleteByQuery(filter)
+          .then(function (body) {
+            if (body.error) {
+              callbackAsync(body.error);
+              return false;
+            }
+
+            if (!body.result || body.result.ids.length === 0) {
+              callbackAsync('No result provided');
+              return false;
+            }
+
+            callbackAsync();
+          }.bind(this))
+          .catch(function (error) {
+            callbackAsync(error);
+          });
+      }.bind(this), 500); // end setTimeout
+    };
+
+    async.retry(20, main.bind(this), function (err) {
+      if (err) {
+        callback.fail(new Error(err));
+        return false;
+      }
+
+      callback();
+    });
   });
 
 

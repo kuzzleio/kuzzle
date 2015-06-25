@@ -1,5 +1,6 @@
 var
   _ = require('lodash'),
+  q = require('q'),
   async = require('async');
 
 module.exports = function NotifierController (kuzzle) {
@@ -20,62 +21,21 @@ module.exports = function NotifierController (kuzzle) {
 
 
   /**
-   * On a document change, depending of the change type, get the list of concerned rooms,
-   * and notify them, and update the Document<=>Room links cache.
+   * Notify rooms on a document creation/update/deletion
    *
-   * @param {Object} data object describing the document
-   * @param {String} [connection] type
+   * @param {Object} data
+   * @param {Object} [connection]
+   * @returns {Promise} number of notified rooms
    */
   this.documentChanged = function (data, connection) {
-    var
-      idList,
-      cachedRooms = [];
-
-    if (data._id) {
-      idList = [data._id];
-    } else {
-      idList = data.ids;
-    }
-
-    // Get the cached Document<=>Rooms links
-    if (data.action !== 'create') {
-      async.each(idList, function (id, callback) {
-        kuzzle.services.list.cache.search(id)
-          .then(function (rooms) {
-            Array.prototype.push.apply(cachedRooms, rooms);
-            callback();
-          });
-      });
-    }
-
-    // Notify rooms
-    if (data.action === 'create' || data.action === 'update') {
-      kuzzle.dsl.testFilters(data)
-        .then(function (rooms) {
-          var
-            clonedData,
-            stopListening;
-
-          kuzzle.services.list.cache.add(data._id, rooms);
-          this.notify(rooms, data, connection);
-
-          if (data.action === 'update') {
-            clonedData = _.clone(data);
-            delete clonedData.body;
-            stopListening = _.difference(cachedRooms, rooms);
-            this.notify(stopListening, clonedData, connection);
-            kuzzle.services.list.cache.remove(data._id, stopListening);
-          }
-        }.bind(this))
-        .catch(function (error) {
-          kuzzle.log.error(error);
-        });
-    } else if (data.action === 'delete' || data.action === 'deleteByQuery') {
-      this.notify(cachedRooms, data, connection);
-      async.each(idList, function (id, callback) {
-        kuzzle.services.list.cache.remove(id)
-          .then(callback());
-      });
+    switch (data.action) {
+      case 'create':
+        return notifyDocumentCreate.call(kuzzle, data, connection);
+      case 'update':
+        return notifyDocumentUpdate.call(kuzzle, data, connection);
+      case 'delete':
+      case 'deleteByQuery':
+        return notifyDocumentDelete.call(kuzzle, data, connection);
     }
   };
 };
@@ -107,4 +67,124 @@ function send (room, data, connection) {
     this.io.emit(room, data);
     this.services.list.broker.addExchange(room, data);
   }
+}
+
+
+/**
+ * Notify rooms that a newly created document entered their scope
+ *
+ * @param {Object} data object describing the document
+ * @param {Object} [connection] type
+ * @return {Promise} number of notified rooms
+ */
+function notifyDocumentCreate (data, connection) {
+  var
+    notifiedRooms = 0,
+    deferred = q.defer();
+
+    this.dsl.testFilters(data)
+    .then(function (rooms) {
+      notifiedRooms += rooms.length;
+      this.notifier.notify(rooms, data, connection);
+      this.services.list.cache.add(data._id, rooms);
+      }.bind(this))
+    .then (function () {
+      deferred.resolve(notifiedRooms);
+    })
+    .catch(function (error) {
+      this.log.error(error);
+      deferred.reject(error);
+      }.bind(this));
+
+  return deferred.promise;
+}
+
+
+/**
+ * Notify rooms that, either :
+ *    - a newly created document entered their scope
+ *    - a document they listened to left their scope
+ *
+ * @param {Object} data object describing the document
+ * @param {Object} [connection] type
+ * @return {Promise} number of notified rooms
+ */
+function notifyDocumentUpdate (data, connection) {
+  var
+    clonedData = _.clone(data),
+    notifiedRooms = 0,
+    deferred = q.defer();
+
+  delete clonedData.body;
+
+  this.dsl.testFilters(data)
+    .then(function (rooms) {
+      this.notifier.notify(rooms, data, connection);
+      notifiedRooms += rooms.length;
+
+      this.services.list.cache.search(data._id)
+        .then(function (cachedRooms) {
+          var stopListening = _.difference(cachedRooms, rooms);
+          this.notifier.notify(stopListening, clonedData, connection);
+          notifiedRooms += stopListening.length;
+
+          this.services.list.cache.remove(data._id, stopListening);
+          this.services.list.cache.add(data._id, rooms);
+        }.bind(this));
+    }.bind(this))
+    .then(function () {
+      deferred.resolve(notifiedRooms);
+    })
+    .catch(function (error) {
+      this.log.error(error);
+      deferred.reject(error);
+    }.bind(this));
+
+  return deferred.promise;
+}
+
+/**
+ * Notify rooms that a document they listened to has been deleted
+ *
+ * @param {Object} data object containing the document ID (or an array of IDs)
+ * @param {Object} [connection] type
+ * @return {Promise} number of notified rooms
+ */
+function notifyDocumentDelete (data, connection) {
+  var
+    deferred = q.defer(),
+    notifiedRooms = 0,
+    clonedData = _.clone(data),
+    idList;
+
+  if (data.action === 'deleteByQuery') {
+    idList = data.ids;
+    clonedData.action = 'delete';
+    delete clonedData.ids;
+  } else {
+    idList = [data._id];
+  }
+
+  async.each(idList, function (id, callback) {
+      this.services.list.cache.search(id)
+      .then(function (cachedRooms) {
+        notifiedRooms += cachedRooms.length;
+        clonedData._id = id;
+        this.notifier.notify(cachedRooms, clonedData, connection);
+        this.services.list.cache.remove(id);
+      }.bind(this))
+    .done(callback())
+    .catch(function (error) {
+        this.log.error(error);
+    }.bind(this));
+  }.bind(this),
+  function (error) {
+    if (error) {
+      deferred.reject(error);
+    } else {
+      deferred.resolve(notifiedRooms);
+    }
+  });
+
+  return deferred.promise;
 }

@@ -9,7 +9,6 @@ module.exports = {
   socket: null,
   world: null,
   responses: null,
-  roomId: null,
 
   init: function (world) {
     this.world = world;
@@ -132,6 +131,7 @@ module.exports = {
       msg = {
         action: 'on',
         collection: this.world.fakeCollection,
+        requestId: 'foobar',
         body: filters
       };
 
@@ -145,6 +145,7 @@ var emit = function (controller, msg) {
     deferred = q.defer();
 
   msg.requestId = requestId;
+
   this.socket.once(requestId, function (result) {
     if (result.error) {
       deferred.reject(result.error);
@@ -171,11 +172,7 @@ var subscribeAndListen = function (controller, msg) {
       return false;
     }
 
-    this.roomId = result.result;
-
-    this.socket.on(this.roomId, function (document) {
-      console.log('Document received on room ' + this.roomId + ':');
-      console.log(document);
+    this.socket.on(result.result, function (document) {
       this.responses = document;
     }.bind(this));
 

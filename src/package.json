@@ -31,7 +31,7 @@
     "big.js": "~3.0.2",
     "request-promise": "~0.4.2",
     "redis": "^0.12.1",
-    "elasticsearch": "~4.1.0"
+    "elasticsearch": "~5.0.0"
   },
   "devDependencies": {
     "root-require": "~0.3.1",
