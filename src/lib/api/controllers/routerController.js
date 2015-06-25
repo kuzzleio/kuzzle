@@ -32,6 +32,12 @@ module.exports = function RouterController (kuzzle) {
     // add a body parsing middleware to our API
     api.use(bodyParser.json());
 
+    // Simple hello world to let know to the user that kuzzle is running
+    api.get('/', function (request, response) {
+      response.writeHead(200, {'Content-Type': 'application/json'});
+      response.end(stringify({error: null, result: 'Hello from Kuzzle :)'}));
+    }.bind(this));
+
     api.post('/_bulk', function (request, response) {
       var params = {
         controller: 'bulk',

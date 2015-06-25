@@ -4,7 +4,7 @@
  * This is the main entry when you type kuzzle start command
  *
  * If you want to run the kuzzle service with pm2,
- * take a look at the scripts/app-start.js file
+ * take a look at the src/app-start.js file
  *
  */
 var program = require('commander');

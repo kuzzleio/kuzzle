@@ -1,6 +1,5 @@
 module.exports = {
 
-  host: process.env.RABBIT_HOST || 'localhost',
-  port: process.env.RABBIT_PORT || 5672
+  host: process.env.RABBIT_HOST || 'localhost:5672'
 
 };
