@@ -1,7 +1,7 @@
 var
   q = require('q');
 
-module.exports = function WriteController (kuzzle) {
+module.exports = function AdminController (kuzzle) {
 
   this.deleteCollection = function (data) {
     var deferred = q.defer();
