@@ -15,12 +15,12 @@ First of all, you have to get this code, you can use NPM or clone this repo.
 
 * NPM
 
-     $ npm install kuzzle
-     
+      $ npm install kuzzle
+
 * GIT
 
-     $ git clone https://github.com/kuzzleio/kuzzle.git
-     $ cd kuzzle && npm install
+      $ git clone https://github.com/kuzzleio/kuzzle.git
+      $ cd kuzzle && npm install
 
 ## All in the box with Docker
 
