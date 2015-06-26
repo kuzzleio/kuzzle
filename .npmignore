@@ -14,7 +14,6 @@ nbproject
 .tmp
 .jshintrc
 .editorconfig
-CONTRIBUTING.md
 *.md
 **/*.md
 test
