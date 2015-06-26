@@ -1,8 +1,20 @@
-# RealTime DSL
 
-This module parses the filters sent to kuzzle when subscribing to a room and converts them to some actual code.
+# What is dsl?
 
-As an input, the filters are expressed in JSON using a subset of [elasticsearch filter DSL](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-filters.html).
+DSL rewrite/manage request to be a filtering functions in Kuzzle.
+
+This folder contains everything needed for execute filters on documents.
+Create filter from Kuzzle syntax to Elasticsearch DSL.
+
+* index.js entry point for the module
+* operators.js implement the atomic DSL function operation (example (hobby:"ski") will became a filtering function)
+* methods.js rewrite the complex request (hobby:"ski" and sex:"female") as two functions (corresponding to (hobby:"ski") and (sex:"female")) via operators module and [currifying](https://en.wikipedia.org/wiki/Currying) the result as a filtering function.
+
+
+
+As an input, the filters are expressed in JSON using a subset of [Elasticsearch filter DSL](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-filters.html).
+See docs/filters.md section for the list of already implemented filters.
+
 
 A complete subscription message can for instance have the following form:
 
@@ -36,6 +48,7 @@ A complete subscription message can for instance have the following form:
             ]
         }
     }
+}
 ```
 
 Eventually, we want to store this subscription in the hotelClerkController rooms collection in the following form:
@@ -52,6 +65,7 @@ rooms = {
             'members.hobby.termHobbySki': dsl.filtersTree.members.sex.termHobbySki.fn,
             'members.age.rangeAgeGte30Lte45': dsl.filtersTree.members.age.rangeAgeGte30Lte45.fn,
             'members.location.geoDistanceLocation20kmlat40lon50': dsl.filtersTree.members.location.geoDistanceLocation20kmlat40lon50.fn
+            }
         }
     }
 }
@@ -78,6 +92,10 @@ It has the following structure:
          "hobby": {
             "termHobbySki": {
             [..]
+            }
+        }
+    }
+}
 ```
 
 # index.js
@@ -178,3 +196,8 @@ The room to delete, from the hotelClerkController.rooms collection.
 ### return value
 
 The method returns a silent promise.
+
+
+# Contributing
+
+See [docs/filters.md](../../docs/filters.md) section for the list of already implemented filters.
