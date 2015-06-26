@@ -9,6 +9,7 @@ module.exports = {
   socket: null,
   world: null,
   responses: null,
+  subscribedRooms: [],
 
   init: function (world) {
     this.world = world;
@@ -134,18 +135,30 @@ module.exports = {
         body: filters
       };
 
-    return subscribeAndListen.call(this, 'subscribe', msg);
+      return emitAndListen.call(this, 'subscribe', msg);
+  },
+
+  unsubscribe: function (room) {
+    var
+      msg = {
+        action: 'off',
+        collection: this.world.fakeCollection,
+        requestId: room
+      };
+
+    return emit.call(this, 'subscribe', msg);
   }
 };
 
 var emit = function (controller, msg) {
   var
-    requestId = uuid.v1(),
     deferred = q.defer();
 
-  msg.requestId = requestId;
+  if (!msg.requestId) {
+    msg.requestId = uuid.v1();
+  }
 
-  this.socket.once(requestId, function (result) {
+  this.socket.once(msg.requestId, function (result) {
     if (result.error) {
       deferred.reject(result.error);
       return false;
@@ -159,17 +172,21 @@ var emit = function (controller, msg) {
   return deferred.promise;
 };
 
-var subscribeAndListen = function (controller, msg) {
+var emitAndListen = function (controller, msg) {
   var
-    requestId = uuid.v1(),
     deferred = q.defer();
 
-  msg.requestId = requestId;
-  this.socket.once(requestId, function (result) {
+  if (!msg.requestId) {
+    msg.requestId = uuid.v1();
+  }
+
+  this.socket.once(msg.requestId, function (result) {
     if (result.error) {
       deferred.reject(result.error);
       return false;
     }
+
+    this.subscribedRooms.push({ 'roomId': result.result, 'id': msg.requestId});
 
     this.socket.on(result.result, function (document) {
       this.responses = document;
@@ -182,4 +199,3 @@ var subscribeAndListen = function (controller, msg) {
 
   return deferred.promise;
 };
-

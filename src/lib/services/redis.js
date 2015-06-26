@@ -45,6 +45,9 @@ module.exports = {
     if ( typeof values === 'string') {
       addSet.push(values);
     } else {
+      if ( values.length === 0 ) {
+        return q.when(0);
+      }
       addSet = addSet.concat(values);
     }
 
