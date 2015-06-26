@@ -10,9 +10,10 @@ kuzzle:
     - redis
   environment:
     - KUZZLE_PORT=8081
-    - RABBIT_HOST=rabbit
-    - ELASTICSEARCH_HOST=elasticsearch:9200
-    - REDIS_HOST=redis:6379
+    - BROKER_HOST=rabbit:5672
+    - READ_ENGINE_HOST=elasticsearch:9200
+    - WRITE_ENGINE_HOST=elasticsearch:9200
+    - NOTIFICATION_CACHE_HOST=redis:6379
     - PM2_OPTIONS=--watch
 
 rabbit:

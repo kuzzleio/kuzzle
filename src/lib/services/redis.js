@@ -7,12 +7,13 @@ module.exports = {
   client: null,
 
   /**
-   * Initialize the redis cache client
+   * Initialize the redis client
    *
    * @param {Kuzzle} kuzzle
+   * @param {String} type
    * @returns {Object} client
    */
-  init: function(kuzzle) {
+  init: function(kuzzle, type) {
     var configuredHost;
 
     if (this.client) {
@@ -20,7 +21,7 @@ module.exports = {
     }
 
     this.kuzzle = kuzzle;
-    configuredHost = this.kuzzle.config.cache.host.split(':');
+    configuredHost = this.kuzzle.config[type].host.split(':');
 
     this.client = redis.createClient(configuredHost[1], configuredHost[0], {});
 

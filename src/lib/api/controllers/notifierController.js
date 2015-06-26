@@ -86,7 +86,7 @@ function notifyDocumentCreate (data, connection) {
     .then(function (rooms) {
       notifiedRooms += rooms.length;
       this.notifier.notify(rooms, data, connection);
-      return this.services.list.cache.add(data._id, rooms);
+      return this.services.list.notificationCache.add(data._id, rooms);
     }.bind(this))
     .then (function () {
       deferred.resolve(notifiedRooms);
@@ -122,14 +122,14 @@ function notifyDocumentUpdate (data, connection) {
       this.notifier.notify(rooms, data, connection);
       notifiedRooms += rooms.length;
 
-      this.services.list.cache.search(data._id)
+      this.services.list.notificationCache.search(data._id)
         .then(function (cachedRooms) {
           var stopListening = _.difference(cachedRooms, rooms);
           this.notifier.notify(stopListening, clonedData, connection);
           notifiedRooms += stopListening.length;
 
-          return this.services.list.cache.remove(data._id, stopListening)
-            .then(this.services.list.cache.add(data._id, rooms));
+          return this.services.list.notificationCache.remove(data._id, stopListening)
+            .then(this.services.list.notificationCache.add(data._id, rooms));
         }.bind(this));
     }.bind(this))
     .then(function () {
@@ -166,12 +166,12 @@ function notifyDocumentDelete (data, connection) {
   }
 
   async.each(idList, function (id, callback) {
-    this.services.list.cache.search(id)
+    this.services.list.notificationCache.search(id)
     .then(function (cachedRooms) {
       notifiedRooms += cachedRooms.length;
       clonedData._id = id;
       this.notifier.notify(cachedRooms, clonedData, connection);
-      return this.services.list.cache.remove(id);
+      return this.services.list.notificationCache.remove(id);
     }.bind(this))
     .then(callback())
     .catch(function (error) {

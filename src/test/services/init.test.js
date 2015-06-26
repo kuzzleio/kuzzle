@@ -34,9 +34,9 @@ describe('Test service initialization function', function () {
   });
 
   it('should build a cache service', function () {
-     should(kuzzle.services.list.cache).be.an.Object;
-     should(kuzzle.services.list.cache.add).be.a.Function;
-     should(kuzzle.services.list.cache.remove).be.a.Function;
-     should(kuzzle.services.list.cache.search).be.a.Function;
+     should(kuzzle.services.list.notificationCache).be.an.Object;
+     should(kuzzle.services.list.notificationCache.add).be.a.Function;
+     should(kuzzle.services.list.notificationCache.remove).be.a.Function;
+     should(kuzzle.services.list.notificationCache.search).be.a.Function;
   });
 });

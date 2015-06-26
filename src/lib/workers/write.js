@@ -9,8 +9,6 @@ module.exports = {
 
   init: function (kuzzle) {
     this.kuzzle = kuzzle;
-    this.kuzzle.services.list.broker.init(kuzzle);
-
     this.listen();
   },
 

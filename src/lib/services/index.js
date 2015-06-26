@@ -8,12 +8,13 @@ module.exports = function (kuzzle) {
       broker: require('./broker'),
       writeEngine: require('./elasticsearch'),
       readEngine: require('./elasticsearch'),
-      cache: require('./redis')
+      notificationCache: require('./redis')
     };
 
+    this.list.broker.init(kuzzle);
     this.list.writeEngine.init(kuzzle, 'writeEngine');
     this.list.readEngine.init(kuzzle, 'readEngine');
-    this.list.cache.init(kuzzle);
+    this.list.notificationCache.init(kuzzle, 'notificationCache');
   };
 
 };

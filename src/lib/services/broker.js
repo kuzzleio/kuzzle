@@ -19,6 +19,7 @@ module.exports = broker =  {
     if (pConnection) {
       return false;
     }
+
     pConnection = amqp.connect('amqp://' + kuzzle.config.broker.host);
     mqEchangeName = 'amq.topic';
 
