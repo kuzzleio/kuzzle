@@ -131,7 +131,6 @@ module.exports = {
       msg = {
         action: 'on',
         collection: this.world.fakeCollection,
-        requestId: 'foobar',
         body: filters
       };
 
