@@ -60,7 +60,61 @@ Create/Update/Delete a document
 
 ##### Output message
 
-_(To be defined)_
+* create / update
+    
+    ```
+    {
+        "error": null,
+        "result": {
+            "_id": <generated document id>,
+            "_index": <index>,
+            "_type": <collection>,
+            "_version": <version>,
+            "action": <create|update>,
+            "body": <document sent by user>,
+            "collection": <collection>,
+            "controller": "write",
+            "created": true,
+            "persist": true
+        }
+    }
+    ```
+    
+* delete
+
+    ```
+    {
+        "error": null,
+        "result": {
+            "_id": <deleted document id>,
+            "_index": <index>,
+            "_type": <collection>,
+            "_version": <version>,
+            "action": "delete",
+            "body": {},
+            "collection": <collection>,
+            "controller": "write",
+            "found": true,
+            "persist": true
+        }
+    }
+    ```
+    
+* deleteByQuery
+
+    ```
+    {
+        "error": null,
+        "result": {
+            "action": "deleteByQuery",
+            "body": <filter sent by user>,
+            "collection": <collection>,
+            "controller": "write",
+            "ids": <an IDs array>,
+            "persist": true
+        }
+    }
+    ```
 
 #### subscribe
 
@@ -123,7 +177,59 @@ Get a document from Kuzzle
 
 ##### Output message
 
-The document (to be defined)
+* get
+
+    ```
+    {
+        "error": null,
+        "result": {
+            "_id": <document id>,
+            "_index": <index>,
+            "_source": <document's body>,
+            "_type": <collection>,
+            "_version": <version>,
+            "found": true
+        }
+    }
+    ```
+
+* search
+
+    ```
+    {
+        "error": null,
+        "result": {
+            "_shards": <information object about shards>,
+            "hits": {
+                "hits": [
+                    {
+                        "_id": <document id>,
+                        "_index": <index>,
+                        "_score": 1,
+                        "_source": <document's body>,
+                        "_type": <collection>
+                    }
+                ],
+                "max_score": 1,
+                "total": <total count>
+            },
+            "timed_out": false,
+            "took": <time>
+        }
+    }
+    ```
+    
+* count
+
+    ```
+    {
+        "error": null,
+        "result": {
+            "_shards": <information object about shards>,
+            "count": <total count>
+        }
+    }
+    ```
 
 #### admin
 
@@ -147,7 +253,48 @@ Perform action on collection, indices, mapping...
 
 ##### Output message
 
-_(to be defined)_
+* deleteCollection
+
+    ```
+    {
+        "error": null,
+        "result": {
+            "action": "deleteCollection",
+            "body": {},
+            "collection": <collection>,
+            "controller": "admin",
+            "persist": true
+        }
+    }
+    ```
+    
+* putMapping
+
+    ```
+    {
+        "error": null,
+        "result": {
+            "acknowledged": true,
+            "action": "putMapping",
+            "body": <mapping sent by user>,
+            "collection": <collection>,
+            "controller": "admin",
+            "persist": true
+        }
+    }
+    ```
+    
+* getMapping
+
+    ```
+    {
+        "error": null,
+        "result": {
+            "mappings": <object with all mapping existing for index>
+        }
+    }
+    ```
+
 
 #### bulk
 
@@ -173,7 +320,23 @@ Perform many index/delete operations in a single API call.
 
 ##### Output message
 
-_(To be defined)_
+* import
+
+    ```
+    {
+        "error": null,
+        "result": {
+            "action": "import",
+            "body": <body sent by user>,
+            "collection": <collection>,
+            "controller": "bulk",
+            "errors": false,
+            "items": <items array with all documents>,
+            "persist": true,
+            "took": <time>
+        }
+    }
+    ```
 
 ### Protocol dependant encapsulation
 
