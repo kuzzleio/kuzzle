@@ -1,5 +1,7 @@
 # Overview
 
+[Kuzzle Architecture](architecture.md)
+
 
 # Getting started
 
