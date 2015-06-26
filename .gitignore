@@ -1,8 +1,13 @@
+# Node
+node_modules
+npm-debug.log
+.node_history
+
 # IDE
 .idea
 
-# Node
-npm-debug.log
+# Docker
+docker-compose-custom.yml
 
 # Other
 .DS_STORE

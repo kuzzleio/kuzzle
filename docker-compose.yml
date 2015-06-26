@@ -1,7 +1,7 @@
 kuzzle:
-  image: kuzzle
+  image: kuzzleio/kuzzle:dev
   volumes:
-    - "src:/var/app"
+    - ".:/var/app"
   ports:
     - "8081:8081"
   links:
@@ -17,7 +17,7 @@ kuzzle:
     - PM2_OPTIONS=--watch
 
 rabbit:
-  image: kuzzle_rabbitmq
+  image: kuzzleio/rabbitmq
   ports:
     - "61613:61613"
     - "1883:1883"
@@ -29,4 +29,3 @@ redis:
 
 elasticsearch:
   image: elasticsearch:1.5.2
-  
