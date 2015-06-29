@@ -7,10 +7,9 @@ Controller handle a specific part of the Kuzzle architecture.
 * funnelController handle validation client request
 * subscribeController handle subscription actions from client request
 * hotelClerkController handle all subscription proccess (i.e from both client and from Kuzzle)
-* readController handle the abstraction on reading persistant data. As default Kuzzle use Elasticsearch
 * rountingController handle dispating client request to other controllers
+* readController handle the abstraction on reading persistant data. As default Kuzzle use Elasticsearch
 * writeController handle the abstraction on writing persistant data. As default, Kuzzle use Elasticsearch.
-* readController handle the abstraction on writing persistant data. As default, Kuzzle use Elasticsearch.
 
 Refer to [../../../docs/architecture.md] for details.
 

@@ -9,8 +9,8 @@ See  [docs/filters.md](../../../docs/filters.md) section for the list of already
 This folder contains everything needed for filters management. It contains :
 
 * **index.js** entry point for the module,
-* **methods.js** rewrite the complex request (hobby:"ski" and sex:"female") as two filters (dsl.filtersTree.members.sex.termSexFemale.fn and dsl.filtersTree.members.sex.termHobbySki.f) via operators.js module and [currifying](https://en.wikipedia.org/wiki/Currying) the result as a filtering function.
-* **operators.js** implement the atomic DSL function operation (example (hobby:"ski") will became the filtering function dsl.filtersTree.members.sex.termHobbySki.f)
+* **methods.js** rewrite the complex request (hobby:"ski" and sex:"female") as two filters (dsl.filtersTree.members.hobby.termHobbySki.fn and dsl.filtersTree.members.sex.termSexFemale.fn) via operators.js module and [currifying](https://en.wikipedia.org/wiki/Currying) the result as a filtering function.
+* **operators.js** implement the atomic DSL function operation (example (hobby:"ski") will became the filtering function dsl.filtersTree.members.hobby.termHobbySki.fn)
 
 
 A complete subscription message can for instance have the following form:
@@ -59,7 +59,7 @@ rooms = {
         filters: {
         and : {
             'members.sex.termSexFemale': dsl.filtersTree.members.sex.termSexFemale.fn,
-            'members.hobby.termHobbySki': dsl.filtersTree.members.sex.termHobbySki.fn,
+            'members.hobby.termHobbySki': dsl.filtersTree.members.hobby.termHobbySki.fn,
             'members.age.rangeAgeGte30Lte45': dsl.filtersTree.members.age.rangeAgeGte30Lte45.fn,
             'members.location.geoDistanceLocation20kmlat40lon50': dsl.filtersTree.members.location.geoDistanceLocation20kmlat40lon50.fn
             }
@@ -136,7 +136,7 @@ In our example, it would resolve to:
 ```json
 and : {
     'members.sex.termSexFemale': dsl.filtersTree.members.sex.termSexFemale.fn,
-    'members.hobby.termHobbySki': dsl.filtersTree.members.sex.termHobbySki.fn,
+    'members.hobby.termHobbySki': dsl.filtersTree.members.hobby.termHobbySki.fn,
     'members.age.rangeAgeGte30Lte45': dsl.filtersTree.members.age.rangeAgeGte30Lte45.fn,
     'members.location.geoDistanceLocation20kmlat40lon50': dsl.filtersTree.members.location.geoDistanceLocation20kmlat40lon50.fn
 }
