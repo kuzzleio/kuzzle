@@ -38,6 +38,16 @@ module.exports = {
     return this.callApi(options);
   },
 
+  count: function (filters) {
+    var options = {
+      url: this.pathApi(this.world.fakeCollection + '/_count'),
+      method: 'POST',
+      json: filters
+    };
+
+    return this.callApi(options);
+  },
+
   create: function (body) {
     var options = {
       url: this.pathApi(this.world.fakeCollection),

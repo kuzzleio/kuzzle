@@ -26,7 +26,7 @@ describe('Test addSubscription function in hotelClerk controller', function () {
     kuzzle.start({}, {workers: false, servers: false});
   });
 
-  it('should has object filtersTree, customers and rooms empty', function () {
+  it('should have object filtersTree, customers and rooms empty', function () {
     should(kuzzle.dsl.filtersTree).be.an.Object;
     should(kuzzle.dsl.filtersTree).be.empty;
 
@@ -37,7 +37,7 @@ describe('Test addSubscription function in hotelClerk controller', function () {
     should(kuzzle.hotelClerk.customers).be.empty;
   });
 
-  it('should has the new room and customer', function () {
+  it('should have the new room and customer', function () {
     return kuzzle.hotelClerk.addSubscription(connection, roomName, collection, filter)
       .then(function (result) {
         should(kuzzle.dsl.filtersTree).be.an.Object;

@@ -37,6 +37,13 @@ Feature: Test websocket API
     Then I remove the collection and schema
     Then I'm not able to get the document
 
+  @needCleanDb @withWebsocket
+  Scenario: Count document
+    When I write the document
+    When I write the document
+    When I write the document
+    Then I count 3 documents
+
   @needCleanDb @removeSchema @withWebsocket
   Scenario: Change mapping
     When I write the document "documentGrace"
@@ -46,3 +53,39 @@ Feature: Test websocket API
     Then I change the schema
     When I write the document "documentGrace"
     Then I find a document with "Grace" in field "firstName"
+
+  @needCleanDb @withWebsocket @unsubscribe
+  Scenario: Document creation notifications
+    Given A room subscription listening to "lastName" having value "Hopper"
+    When I write the document "documentGrace"
+    Then I should receive a "create" notification
+
+  @needCleanDb @withWebsocket @unsubscribe
+  Scenario: Document delete notifications
+    Given A room subscription listening to "lastName" having value "Hopper"
+    When I write the document "documentGrace"
+    Then I remove the document
+    Then I should receive a "delete" notification
+
+  @needCleanDb @withWebsocket @unsubscribe
+  Scenario: Document update: new document notification
+    Given A room subscription listening to "lastName" having value "Hopper"
+    When I write the document "documentAda"
+    Then I update the document with value "Hopper" in field "lastName"
+    Then I should receive a "update" notification
+
+  @needCleanDb @withWebsocket @unsubscribe
+  Scenario: Document update: removed document notification
+    Given A room subscription listening to "lastName" having value "Hopper"
+    When I write the document "documentGrace"
+    Then I update the document with value "Foo" in field "lastName"
+    Then I should receive a "update" notification
+
+  @needCleanDb @withWebsocket @unsubscribe
+  Scenario: Delete a document with a query
+    Given A room subscription listening to "lastName" having value "Hopper"
+    When I write the document "documentGrace"
+    And I write the document "documentAda"
+    And I wait 1s
+    Then I remove documents with field "hobby" equals to value "computer"
+    Then I should receive a "delete" notification

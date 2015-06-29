@@ -8,7 +8,9 @@
     "kuzzle": "./bin/kuzzle.js"
   },
   "scripts": {
-    "test": "mocha && cucumber.js"
+    "test": "npm run unit-testing && npm run functional-testing",
+    "unit-testing": "mocha",
+    "functional-testing": "cucumber.js"
   },
   "directories": {
     "lib": "lib"
