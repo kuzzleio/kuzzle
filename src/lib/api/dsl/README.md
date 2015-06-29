@@ -1,19 +1,16 @@
+# What is DSL?
 
-# What is dsl?
+This module convert our API Domain Specific Language to our internal filtering functions, it is used by our hotelClerckController.
 
-DSL rewrite/manage request to be a filtering functions in Kuzzle.
-
-This folder contains everything needed for execute filters on documents.
-Create filter from Kuzzle syntax to Elasticsearch DSL.
-
-* index.js entry point for the module
-* operators.js implement the atomic DSL function operation (example (hobby:"ski") will became a filtering function)
-* methods.js rewrite the complex request (hobby:"ski" and sex:"female") as two functions (corresponding to (hobby:"ski") and (sex:"female")) via operators module and [currifying](https://en.wikipedia.org/wiki/Currying) the result as a filtering function.
+Our API DSL are expressed in JSON using a subset of [Elasticsearch filter DSL](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-filters.html).
+See  [docs/filters.md](../../../docs/filters.md) section for the list of already implemented filters.
 
 
+This folder contains everything needed for filters management. It contains :
 
-As an input, the filters are expressed in JSON using a subset of [Elasticsearch filter DSL](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-filters.html).
-See docs/filters.md section for the list of already implemented filters.
+* **index.js** entry point for the module,
+* **methods.js** rewrite the complex request (hobby:"ski" and sex:"female") as two filters (dsl.filtersTree.members.sex.termSexFemale.fn and dsl.filtersTree.members.sex.termHobbySki.f) via operators.js module and [currifying](https://en.wikipedia.org/wiki/Currying) the result as a filtering function.
+* **operators.js** implement the atomic DSL function operation (example (hobby:"ski") will became the filtering function dsl.filtersTree.members.sex.termHobbySki.f)
 
 
 A complete subscription message can for instance have the following form:
@@ -71,7 +68,7 @@ rooms = {
 }
 ```
 
-The current module takes in charge to create the needed functions used in the final room definition.
+The current module manage the needed functions used in the final room definition.
 
 These functions are stored in a central collection in kuzzle.dsl.filtersTree. This object is just a container for the created functions and is used as a repository.
 It has the following structure:
@@ -200,4 +197,4 @@ The method returns a silent promise.
 
 # Contributing
 
-See [docs/filters.md](../../docs/filters.md) section for the list of already implemented filters.
+See [docs/filters.md](../../../docs/filters.md) section for the list of already implemented filters.
