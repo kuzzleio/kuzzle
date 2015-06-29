@@ -1,12 +1,15 @@
-# What is DSL?
+# What is Kuzzle's DSL?
 
-This module convert our API Domain Specific Language to our internal filtering functions, it is used by our hotelClerckController.
-
-Our API DSL are expressed in JSON using a subset of [Elasticsearch filter DSL](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-filters.html).
-See  [docs/filters.md](../../../docs/filters.md) section for the list of already implemented filters.
+This module converts our API Domain Specific Language into some internal filtering functions. It is used by the hotelClerckController.
 
 
-This folder contains everything needed for filters management. It contains :
+The Kuzzle's DSL use the [Elasticsearch filter DSL](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-filters.html).
+
+* for the persistent DSL (search), the whole Elasticsearch DSL is available,
+* for real-time subscription, the filter list is a subset of the Elasticsearch DSL. See the [docs/filters.md](../../../docs/filters.md) section for details.
+
+
+This folder contains the following files :
 
 * **index.js** entry point for the module,
 * **methods.js** rewrite the complex request (hobby:"ski" and sex:"female") as two filters (dsl.filtersTree.members.hobby.termHobbySki.fn and dsl.filtersTree.members.sex.termSexFemale.fn) via operators.js module and [currifying](https://en.wikipedia.org/wiki/Currying) the result as a filtering function.
@@ -68,7 +71,7 @@ rooms = {
 }
 ```
 
-The current module manage the needed functions used in the final room definition.
+The current module manages the needed functions used in the final room definition.
 
 These functions are stored in a central collection in kuzzle.dsl.filtersTree. This object is just a container for the created functions and is used as a repository.
 It has the following structure:
@@ -109,7 +112,7 @@ It exposes 3 methods:
 
     this.addCurriedFunction = function (roomId, collection, filters) {...}
 
-This method parses the filters expressed using our DSL and returns a compound object that embedds the actual filter functions to use.
+This method parses the filters expressed using the DSL and returns a compound object that embeds the actual filter functions to use.
 
 ### parameters
 
@@ -197,4 +200,5 @@ The method returns a silent promise.
 
 # Contributing
 
-See [docs/filters.md](../../../docs/filters.md) section for the list of already implemented filters.
+
+You can refer to the [docs/filters.md](../../../docs/filters.md) section to get the list of the implemented filters.
