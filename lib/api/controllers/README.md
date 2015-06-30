@@ -11,7 +11,7 @@ A controller handles a specific part of the Kuzzle architecture.
 * readController handles the abstraction on reading persistant data. As default Kuzzle use Elasticsearch
 * writeController handles the abstraction on writing persistant data. As default, Kuzzle use Elasticsearch.
 
-Refer to [docs/architecture.md](../../../../docs/architecture.md) for details.
+Refer to [docs/architecture.md](../../../docs/architecture.md) for details.
 
 # Contributing
 

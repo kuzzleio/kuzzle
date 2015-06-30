@@ -22,7 +22,7 @@ For instance, Kuzzle use Elasticsearch for persistent data storage. If we want t
 
 * create a file mongodb.js in the services directory
 * replace the "./elasticsearch.js" by "./mongodb.js" in the [./index.js](./index.js)
-* create the src/lib/config/models/mongodb.js file
+* create the lib/config/models/mongodb.js file
 * edit the [lib/config/index.js](../config/index.js) and add mongodb.js models
 * implement unit/functional testing
 * write the new service documentation
