@@ -2,7 +2,7 @@
 
 ## Global overview
 
-![archi1](images/kuzzle_functional_architecture.png)
+![archi_fonctionnal](images/kuzzle_functional_architecture.png)
 
 Kuzzle Kernel API can be accessed by 3 different ways:
 1. a [RESTFul API](api-specifications.md#REST)
