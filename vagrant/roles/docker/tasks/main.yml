@@ -1,0 +1,7 @@
+- name: install docker if needed
+  command: dpkg-query -l lxc-docker
+  ignore_errors: yes
+  register: deb_check
+- include: docker_install.yml
+  when: deb_check.stderr.find('no packages found') != -1
+- service: name=docker state=running

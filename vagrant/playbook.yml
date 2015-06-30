@@ -1,0 +1,5 @@
+- name: Kuzzle playbook
+  hosts: all
+  sudo: yes
+  roles:
+    - { role: kuzzle }
