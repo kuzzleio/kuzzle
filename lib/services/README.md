@@ -4,10 +4,10 @@ In Kuzzle, a Service module is the implementation of the interface to a differen
 
 Kuzzle currently implements the following Services:
 
-* [broker.js](./broker.js): interfaces to MQTT compatible broker ([RabbitMQ](https://www.rabbitmq.com/) by default).
-* [elasticsearch.js](./elasticsearch.js): interfaces to the [Elasticsearch](https://www.elastic.co/products/elasticsearch).
-* [redis.js](./redis.js): interfaces to the [redis](http://redis.io) cache server.
-* [index.js](./index.js): The module entry point to intialize all the services to engine.
+* [broker.js](./broker.js): interface to a MQTT compatible broker ([RabbitMQ](https://www.rabbitmq.com/) by default).
+* [elasticsearch.js](./elasticsearch.js): interface to [Elasticsearch](https://www.elastic.co/products/elasticsearch), used for persistent data storage.
+* [redis.js](./redis.js): interface to the [redis](http://redis.io) cache server.
+* [index.js](./index.js): module entry point. Used to initialize all implemented services.
 
 
 A Service can be added to different engines. As an exemple, Elasticsearch is used by both the writeEngine and the readEngine (see [index.js](./index.js)).
@@ -16,21 +16,21 @@ A Service can be added to different engines. As an exemple, Elasticsearch is use
 # Contributing
 
 
-## Modifying the service in an existing engine
+## Use a different service for an existing Kuzzle engine
 
-Kuzzle use Elasticsearch by default. As an example, if we want to use MongoDB we must :
+For instance, Kuzzle use Elasticsearch for persistent data storage. If we want to use MongoDB instead, we have to:
 
 * create a file mongodb.js in the services directory
 * replace the "./elasticsearch.js" by "./mongodb.js" in the [./index.js](./index.js)
 * create the src/lib/config/models/mongodb.js file
-* edit the [src/lib/config/index.js](../../../src/lib/config/index.js) and add mongodb.js models
-* create the test and doc!
+* edit the [lib/config/index.js](../config/index.js) and add mongodb.js models
+* implement unit/functional testing
+* write the new service documentation
 
 
-## Adding an engine with an exisiting service
+## Use an existing service for a new Kuzzle engine
 
-Kuzzle use redis service for the cache engine notification.
-
-As an example, you may want to reuse the redis service to create an engine for caching user session.
+Kuzzle use Redis for its notification engine.
+You may want to reuse this Redis service to, for instance, store user sessions.
 
 You can see how elasticsearch service is already used by both the writeEngine and the readEngine for this purpose in the [index.js](./index.js).

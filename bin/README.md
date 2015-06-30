@@ -10,7 +10,7 @@ For features like watch mode, multi-thread support from [pm2](https://www.npmjs.
 
 # Contributing
 
-As an example, for implementing your custom "kuzzle.js stop" action:
+As an example, to implement your custom "kuzzle.js stop" action:
 
 * create kuzzle-stop.js,
 * modify kuzzle.js accordingly.

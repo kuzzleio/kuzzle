@@ -1,6 +1,6 @@
 # What is a Hook?
 
-Hooks allow to attach some actions to some Kuzzle events.
+Hooks allow to attach actions to Kuzzle events.
 
 The list of available events and their default attached actions can be found in the [config/hooks.js](../config/hooks.js) file.
 

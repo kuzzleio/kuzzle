@@ -1,6 +1,6 @@
 # What is Kuzzle's DSL?
 
-This module converts our API Domain Specific Language into some internal filtering functions. It is used by the hotelClerckController.
+This module converts our API Domain Specific Language in internal filtering functions. It is used by the hotelClerkController.
 
 
 The Kuzzle's DSL use the [Elasticsearch filter DSL](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-filters.html).
@@ -12,8 +12,8 @@ The Kuzzle's DSL use the [Elasticsearch filter DSL](https://www.elastic.co/guide
 This folder contains the following files :
 
 * **index.js** entry point for the module,
-* **methods.js** rewrite the complex request (hobby:"ski" and sex:"female") as two filters (dsl.filtersTree.members.hobby.termHobbySki.fn and dsl.filtersTree.members.sex.termSexFemale.fn) via operators.js module and [currifying](https://en.wikipedia.org/wiki/Currying) the result as a filtering function.
-* **operators.js** implement the atomic DSL function operation (example (hobby:"ski") will became the filtering function dsl.filtersTree.members.hobby.termHobbySki.fn)
+* **methods.js** split complex requests (e.g. hobby:"ski" and sex:"female") and convert the result into [currified functions](https://en.wikipedia.org/wiki/Currying), using test functions stored in the operator.js module,
+* **operators.js** implements filters operators.
 
 
 A complete subscription message can for instance have the following form:
