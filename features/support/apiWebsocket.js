@@ -8,6 +8,8 @@ module.exports = {
 
   socket: null,
   world: null,
+  responses: null,
+  subscribedRooms: [],
 
   init: function (world) {
     this.world = world;
@@ -19,7 +21,7 @@ module.exports = {
       msg = {
         action: 'get',
         collection: this.world.fakeCollection,
-        id: id
+        _id: id
       };
 
     return emit.call(this, 'read', msg);
@@ -29,6 +31,17 @@ module.exports = {
     var
       msg = {
         action: 'search',
+        collection: this.world.fakeCollection,
+        body: filters
+      };
+
+    return emit.call(this, 'read', msg);
+  },
+
+  count: function (filters) {
+    var
+      msg = {
+        action: 'count',
         collection: this.world.fakeCollection,
         body: filters
       };
@@ -53,7 +66,7 @@ module.exports = {
       msg = {
         action: 'update',
         collection: this.world.fakeCollection,
-        id: id,
+        _id: id,
         body: body
       };
 
@@ -65,7 +78,7 @@ module.exports = {
       msg = {
         action: 'delete',
         collection: this.world.fakeCollection,
-        id: id
+        _id: id
       };
 
     return emit.call(this, 'write', msg);
@@ -112,19 +125,40 @@ module.exports = {
       };
 
     return emit.call(this, 'admin', msg );
+  },
+
+  subscribe: function (filters) {
+    var
+      msg = {
+        action: 'on',
+        collection: this.world.fakeCollection,
+        body: filters
+      };
+
+      return emitAndListen.call(this, 'subscribe', msg);
+  },
+
+  unsubscribe: function (room) {
+    var
+      msg = {
+        action: 'off',
+        collection: this.world.fakeCollection,
+        requestId: room
+      };
+
+    return emit.call(this, 'subscribe', msg);
   }
-
 };
-
 
 var emit = function (controller, msg) {
   var
-    requestId = uuid.v1(),
     deferred = q.defer();
 
-  msg.requestId = requestId;
+  if (!msg.requestId) {
+    msg.requestId = uuid.v1();
+  }
 
-  this.socket.once(requestId, function (result) {
+  this.socket.once(msg.requestId, function (result) {
     if (result.error) {
       deferred.reject(result.error);
       return false;
@@ -134,6 +168,34 @@ var emit = function (controller, msg) {
   });
 
   this.socket.emit(controller, msg );
+
+  return deferred.promise;
+};
+
+var emitAndListen = function (controller, msg) {
+  var
+    deferred = q.defer();
+
+  if (!msg.requestId) {
+    msg.requestId = uuid.v1();
+  }
+
+  this.socket.once(msg.requestId, function (result) {
+    if (result.error) {
+      deferred.reject(result.error);
+      return false;
+    }
+
+    this.subscribedRooms.push({ 'roomId': result.result, 'id': msg.requestId});
+
+    this.socket.on(result.result, function (document) {
+      this.responses = document;
+    }.bind(this));
+
+    deferred.resolve(result);
+  }.bind(this));
+
+  this.socket.emit(controller, msg);
 
   return deferred.promise;
 };

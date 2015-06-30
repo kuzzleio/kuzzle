@@ -37,6 +37,13 @@ Feature: Test REST API
     Then I remove the collection and schema
     Then I'm not able to get the document
 
+  @needCleanDb
+  Scenario: Count document
+    When I write the document
+    When I write the document
+    When I write the document
+    Then I count 3 documents
+
   @needCleanDb @removeSchema
   Scenario: Change mapping
     When I write the document "documentGrace"
