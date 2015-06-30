@@ -23,7 +23,7 @@ First of all, you have to get this code, you can use NPM or clone this repo.
 
     ```
     $ git clone https://github.com/kuzzleio/kuzzle.git
-    $ cd kuzzle && npm install
+    $ cd kuzzle
     ```
 
 ## All in the box with Docker
