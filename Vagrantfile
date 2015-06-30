@@ -1,6 +1,10 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
+# Plugin from Aidan Nagorcka-Smith
+# https://github.com/aidanns/vagrant-reload
+require './vagrant/plugins/vagrant-reload/lib/vagrant-reload'
+
 # Vagrantfile API/syntax version. Don't touch unless you know what you're doing!
 VAGRANTFILE_API_VERSION = "2"
 
@@ -18,7 +22,11 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   end
 
   config.vm.provision "ansible" do |ansible|
-    ansible.verbose = "vvv"
-    ansible.playbook = "vagrant/playbook.yml"
+    ansible.playbook = "vagrant/docker.yml"
+  end
+  config.vm.provision :reload
+
+  config.vm.provision "ansible", run: "always" do |ansible|
+    ansible.playbook = "vagrant/kuzzle.yml"
   end
 end

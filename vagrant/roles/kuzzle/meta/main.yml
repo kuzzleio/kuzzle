@@ -1,3 +1,2 @@
 dependencies:
-  - { role: docker }
-  - { role: docker-compose }
+  - { role: forgetproxy }

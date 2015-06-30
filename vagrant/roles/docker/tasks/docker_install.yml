@@ -1,11 +1,19 @@
-- name: install curl
-  apt: name=curl update_cache=yes
+- name: install dependencies
+  apt: name={{ item }} update_cache=yes
+  with_items:
+    - curl
+    - python-docker
 - name: install docker
   shell: curl -sSL https://get.docker.com/ | sh
 - name: give docker swap and ulimit capabilities
-  shell: |
-    sed -ri 's/GRUB_CMDLINE_LINUX="(.*)"/GRUB_CMDLINE_LINUX="\1 cgroup_enable=memory swapaccount=1"' /etc/default/grub
-    update-grub
+  lineinfile:
+    dest: /etc/default/grub
+    state: present
+    regexp: '^GRUB_CMDLINE_LINUX="(.*)"'
+    backrefs: true
+    line: 'GRUB_CMDLINE_LINUX="\1 cgroup_enable=memory swapaccount=1"'
+  notify:
+    - update grub
 - name: add vagrant user to docker group
   user:
     name: vagrant
@@ -30,12 +38,4 @@
   when: ansible_env.http_proxy is defined
 - name: reload docker
   service: name=docker state=restarted
-  when: ansible_env.http_proxy is defined
-- name: launch forget proxy container if needed
-  docker:
-    image: klabs/forgetproxy
-    env:
-      - http_proxy: {{ ansible_env.http_proxy }}
-    net: host
-    privileged: true
   when: ansible_env.http_proxy is defined

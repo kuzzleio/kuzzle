@@ -1,4 +1,4 @@
-- name: Kuzzle playbook
+- name: launch kuzzle
   hosts: all
   sudo: yes
   roles:
