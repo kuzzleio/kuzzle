@@ -24,7 +24,7 @@ From Kuzzle's root directory:
 
     $ docker-compose up
 
-You can now access to the websocket api on http://localhost:8081/api/.
+You can now access Kuzzle's http api on http://localhost:8081/api/.
 
 ## Using Vagrant
 
@@ -39,7 +39,7 @@ From the root directory:
 
     $ vagrant up
 
-Once the virtual machine is provisionned, you should be able to access Kuzzle's websocket api on http://localhost:8081/api/.
+Once the virtual machine is provisionned, you should be able to access Kuzzle's http api on http://localhost:8081/api/.
 
 ## From source or npm
 
