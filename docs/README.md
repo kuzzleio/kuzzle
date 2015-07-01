@@ -7,4 +7,5 @@ For the filtering syntax overview, check the [Filters](filters.md) documentation
 # Advanced documentation (not required for a basic development)
 
 For a deeper dive into Kuzzle  you can read the [Architecture](architecture.md) file.
+
 You can also read the README.md file in each folders for a better understanding of various elements.
