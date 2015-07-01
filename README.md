@@ -130,7 +130,7 @@ _(to be completed...)_
 
 # Full documentation
 
-See [full documentation](docs/index.md)
+See [full documentation](docs/README.md)
 
 
 # Acknowledgement
