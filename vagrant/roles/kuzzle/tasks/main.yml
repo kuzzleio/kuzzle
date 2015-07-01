@@ -1,4 +1,0 @@
-- name: kuzzle
-  command: docker-compose -p kuzzle up -d
-  args:
-    chdir: /vagrant

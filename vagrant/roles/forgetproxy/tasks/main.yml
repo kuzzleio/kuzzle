@@ -1,9 +1,0 @@
-- service: name=docker state=running
-- name: launch forget proxy container if needed
-  docker:
-    image: klabs/forgetproxy
-    env:
-      http_proxy: "{{ ansible_env.http_proxy }}"
-    net: host
-    privileged: true
-  when: ansible_env.http_proxy is defined

@@ -21,12 +21,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     v.memory = 1024
   end
 
-  config.vm.provision "ansible" do |ansible|
-    ansible.playbook = "vagrant/docker.yml"
-  end
+  config.vm.provision "shell", path: "vagrant/setup.sh", privileged: true
   config.vm.provision :reload
-
-  config.vm.provision "ansible", run: "always" do |ansible|
-    ansible.playbook = "vagrant/kuzzle.yml"
-  end
+  config.vm.provision "shell", path: "vagrant/kuzzle.sh", run: "always", privileged: true
 end

@@ -1,6 +1,0 @@
-- name: Kuzzle playbook
-  hosts: all
-  sudo: yes
-  roles:
-    - { role: docker }
-    - { role: docker-compose }
