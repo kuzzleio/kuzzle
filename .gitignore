@@ -17,3 +17,5 @@ docker-compose-custom.yml
 *#
 *~
 .*.swp
+.tags
+
