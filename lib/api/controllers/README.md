@@ -6,7 +6,6 @@ A controller handles a specific part of the Kuzzle architecture.
 * bulkController handles batch/import operations into the persistent data storage layer
 * funnelController handles the validation of the client request
 * subscribeController handles the subscription actions from the client request
-* hotelClerkController handles the subscription proccess (i.e from both client and from Kuzzle)
 * routingController handles dispatching client requests to other controllers
 * readController handles the abstraction on reading persistant data. As default Kuzzle use Elasticsearch
 * writeController handles the abstraction on writing persistant data. As default, Kuzzle use Elasticsearch.

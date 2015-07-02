@@ -9,7 +9,13 @@ npm-debug.log
 # Docker
 docker-compose-custom.yml
 
+# vagrant
+/.vagrant
+
 # Other
 .DS_STORE
 *#
 *~
+.*.swp
+.tags
+
