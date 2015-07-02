@@ -20,14 +20,14 @@ Focus to the "Kuzzle kernel" above:
 
 ### Main core components
 
-* **Router Controller**: implements the 3 API routeurs, normalize input message and send them to the Funnel Controller
-* **Funnel Controller**: analyses input message and call the appropriate controller (see [API specitifcation](api-specifications.md))
+* **Router Controller**: implements the 3 API routers, normalize input message and send them to the Funnel Controller
+* **Funnel Controller**: analyses input message and call the appropriate controller (see [API specification](api-specifications.md))
 * **Admin Controller**, **Bulk Controller**, **Write Controller**, **Subscribe Controller**, **Read Controller**: handles input message (see [API specitifcation](api-specifications.md))
-* **Internal Components** : Any components used internally by controller to interact with services
+* **Internal Components** : Any components used internally by controllers and any other internal components to interact with services
 
 ### Hooks
 
-Hooks allow to attach some actions to some Kuzzle events.
+Hooks allow to attach actions to Kuzzle events.
 
 As an example, Admin, Bulk and Writer controllers emit a "data:create" event to handle writing actions through storage engine.
 This event will trigger the execution of the *add* method of the *write* hook, which will send the received message to the broker service.
@@ -48,7 +48,7 @@ A Worker is a component that is designed to possibly run outside of the main Kuz
 
 Workers attach themselves to the broker service that is fed by Kuzzle to perform any kind of tasks.
 
-As an example, the persistence to [elasticsearch]("https://www.elastic.co/products/elasticsearch") is implemented as a *write* worker in Kuzzle core.
+For instance, writing persistent data to kuzzle is implemented as a write worker
 
 Additionally, serveral Workers of the same type can be launched in parallel, on the same or a different host.
 
