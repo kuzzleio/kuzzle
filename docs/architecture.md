@@ -22,7 +22,7 @@ Focus to the "Kuzzle kernel" above:
 
 * **Router Controller**: implements the 3 API routers, normalize input message and send them to the Funnel Controller
 * **Funnel Controller**: analyses input message and call the appropriate controller (see [API specification](api-specifications.md))
-* **Admin Controller**, **Bulk Controller**, **Write Controller**, **Subscribe Controller**, **Read Controller**: handles input message (see [API specitifcation](api-specifications.md))
+* **Admin Controller**, **Bulk Controller**, **Write Controller**, **Subscribe Controller**, **Read Controller**: handles input message (see [API specification](api-specifications.md))
 * **Internal Components** : Any components used internally by controllers and any other internal components to interact with services
 
 ### Hooks
