@@ -125,7 +125,7 @@ Then, you can run:
 
 # Contributing to Kuzzle
 
-_(to be completed...)_
+See [contributing documentation](./CONTRIBUTING.md)
 
 
 # Full documentation
