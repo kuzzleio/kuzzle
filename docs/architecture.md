@@ -56,3 +56,8 @@ This flexibility allows the Kuzzle system administrators to leverage their resou
 
 
 _For more details, see [workers description](../lib/workers/README.md)_
+
+## Next steps
+
+See [Request Scenarios documentation](request_scenarios/README.md) to see how these components are used together to handle a client's action.
+
