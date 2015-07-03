@@ -292,7 +292,7 @@ var apiSteps = function () {
     });
   });
 
-  this.Then(/^I should receive a "([^"]*)" notification$/, function(action, callback) {
+  this.Then(/^I should receive a "([^"]*)" notification$/, function (action, callback) {
     var main = function (callbackAsync) {
       setTimeout(function () {
         if (this.api.responses) {
@@ -322,6 +322,15 @@ var apiSteps = function () {
     });
   });
 
+  this.Then(/^The notification should ?(not)* have a "([^"]*)" member/, function (not, member, callback) {
+    if ( (this.api.responses[member] || not) && !(this.api.responses[member] && not)) {
+      callback();
+    }
+    else {
+      console.log('Faulty notification: ', this.api.responses);
+      callback('The document was ' + (not ? 'not ' : '') + 'supposed to contain the member "' + member + '"');
+    }
+  });
 
   /** WRITE **/
   this.When(/^I write the document ?(?:"([^"]*)")?$/, function (documentName, callback) {
