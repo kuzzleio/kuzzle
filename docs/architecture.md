@@ -52,8 +52,7 @@ For instance, writing persistent data to kuzzle is implemented as a write worker
 
 Additionally, serveral Workers of the same type can be launched in parallel, on the same or a different host.
 
-This flexibility allows the Kuzzle system administrators to leverage their resources consumption and distribute and/or scale their services as fits bests their needs.
+This flexibility allows the Kuzzle system administrators to leverage their resources consumption and distribute and/or scale their services as it best fits their needs.
 
 
 _For more details, see [workers description](../lib/workers/README.md)_
-
