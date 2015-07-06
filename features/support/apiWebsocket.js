@@ -1,5 +1,6 @@
 var
   config = require('./config'),
+  url = require('url'),
   q = require('q'),
   uuid = require('node-uuid'),
   io = require('socket.io-client');
@@ -13,7 +14,7 @@ module.exports = {
 
   init: function (world) {
     this.world = world;
-    this.socket = io(config.url);
+    this.socket = io(url.format({ protocol: 'http', hostname: config.host, port: config.port }));
   },
 
   get: function (id) {

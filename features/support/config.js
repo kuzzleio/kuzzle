@@ -1,3 +1,4 @@
 module.exports = {
-  url: process.env.KUZZLE_URL || 'http://localhost:8081'
+  host: process.env.KUZZLE_HOST || 'localhost',
+  port: process.env.KUZZLE_PORT || '8081'
 };

@@ -52,6 +52,11 @@ var myHooks = function () {
 
     callback();
   });
+
+  this.Before('@withMQTT', function (callback) {
+    this.api = this.apiTypes.mqtt;
+    callback();
+  });
 };
 
 module.exports = myHooks;

@@ -11,7 +11,9 @@ module.exports = {
   },
 
   pathApi: function (path) {
-    return config.url + '/api/' + path;
+    var baseUrl = url.format({ protocol: 'http', hostname: config.host, port: config.port});
+
+    return url.resolve(baseUrl, '/api/' + path);
   },
 
   callApi: function (options) {
