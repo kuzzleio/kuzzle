@@ -6,7 +6,7 @@ Following scenarios explain the message flow between Kuzzle components.
 
 * [with a HTTP Rest Request](read_http.md)
 * [with a Websocket connection](read_websocket.md)
-* [with a messaging broker](read_broker.md)
+* [with a MQ broker](read_mq.md)
 
 ## Related pages
 

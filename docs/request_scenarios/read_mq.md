@@ -1,4 +1,4 @@
-# Reading content from Kuzzle - The Broker way
+# Reading content from Kuzzle - The MQ way
 
 This page explain the scenario that is run while a client is reading contents from Kuzzle through a message broker such as RabbitMQ.
 
@@ -6,11 +6,11 @@ By "reading", we mean any action that gets contents from persistent layer to giv
 get a single content, count a collection, or search contents with advanced filters.
 
 Remember the [Architecture overview](../architecture.md) and focus on the components involved by reading actions:
-![read_scenario_broker_override](../images/kuzzle_read_scenario_broker_overview.png)
+![read_scenario_broker_override](../images/kuzzle_read_scenario_mq_overview.png)
 
 The following diagram shows how request's data are exchanged between the client application, the different Kuzzle components, and the external services:
 
-![read_scenario_broker_details](../images/kuzzle_read_scenario_broker_details.png)
+![read_scenario_broker_details](../images/kuzzle_read_scenario_mq_details.png)
 
 \#0. Kuzzle's MQ Listener has subscribed to the default broker's topics for each controller (sample : "_read.\*.\*_") (see details in [API Specifications](../api-specifications.md)).
 
