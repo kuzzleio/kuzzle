@@ -14,7 +14,7 @@ The following diagram shows how request's data are exchanged between the client 
 
 \#0. Kuzzle's MQ Listener has subscribed to the default broker's topics for each controller (sample : "_read.\*.\*_") (see details in [API Specifications](../api-specifications.md)).
 
-\#1a. \#1b. Tne client application send a message to RabbitMQ's topic "_read.<collection>.get_". The message contains also a "replyTo" header with a temporary queue Id.
+\#1a. \#1b. The client application send a message to RabbitMQ's topic "_read.<collection>.get_". The message contains also a "replyTo" header with a temporary queue Id.
 
 Sample STOM request:
 
@@ -52,6 +52,7 @@ Sample message:
 \#5. The readEngine service makes a synchronous HTTP Rest request to get the data from the data storage
 
 Sample content retrieve from Elasticsearch:
+
 ```json
 {
   "_id": "739c26bc-7a09-469a-803d-623c4045b0cb",

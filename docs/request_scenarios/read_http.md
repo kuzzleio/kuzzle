@@ -37,6 +37,7 @@ Sample message:
 \#5. The readEngine service makes a synchronous HTTP Rest request to get the data from the data storage
 
 Sample content retrieve from Elasticsearch:
+
 ```json
 {
   "_id": "739c26bc-7a09-469a-803d-623c4045b0cb",

@@ -12,7 +12,7 @@ The following diagram shows how request's data are exchanged between the client 
 
 ![read_scenario_websocket_details](../images/kuzzle_read_scenario_websocket_details.png)
 
-\#1a. Tne client application opens a Websocket connection and emit a "read" event with the request
+\#1a. The client application opens a Websocket connection and emit a "read" event with the request
 
 Sample data send:
 
@@ -56,6 +56,7 @@ Sample message:
 \#5. The readEngine service makes a synchronous HTTP Rest request to get the data from the data storage
 
 Sample content retrieve from Elasticsearch:
+
 ```json
 {
   "_id": "739c26bc-7a09-469a-803d-623c4045b0cb",
