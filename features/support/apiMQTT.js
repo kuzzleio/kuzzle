@@ -16,7 +16,7 @@ module.exports = {
       return false;
     }
 
-    this.mqttClient = mqtt.connect('mqtt://' + config.mqttHost + ':' + config.mqttPort);
+    this.mqttClient = mqtt.connect(config.mqttUrl);
     this.mqttClient.subscribe('mqtt.' + this.mqttClient.options.clientId);
   },
 
@@ -183,7 +183,7 @@ var publish = function (topic, message, waitForAnswer) {
 var publishAndListen = function (topic, message) {
   var
     deferred = q.defer(),
-    mqttListener = mqtt.connect('mqtt://' + config.mqttHost + ':' + config.mqttPort);
+    mqttListener = mqtt.connect(config.mqttUrl);
 
   message.mqttClientId = mqttListener.options.clientId;
   mqttListener.subscribe('mqtt.' + mqttListener.options.clientId);
