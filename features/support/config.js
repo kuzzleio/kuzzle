@@ -1,4 +1,5 @@
 module.exports = {
-  host: process.env.KUZZLE_HOST || 'localhost',
-  port: process.env.KUZZLE_PORT || '8081'
+  url: process.env.KUZZLE_URL || 'http://localhost:8081',
+  mqttHost: process.env.KUZZLE_MQTT_HOST || 'rabbit',
+  mqttPort: process.env.KUZZLE_MQTT_PORT || '1883'
 };

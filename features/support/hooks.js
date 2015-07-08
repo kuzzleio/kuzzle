@@ -1,8 +1,10 @@
 var async = require('async');
 
 var myHooks = function () {
-
-  this.After('@needCleanDb', function (callback) {
+  /**
+   * Clean up the database after each test case
+   */
+  this.After(function (callback) {
     var filters = {};
 
     this.api.deleteByQuery(filters)
@@ -25,10 +27,9 @@ var myHooks = function () {
   });
 
   this.After('@unsubscribe', function (callback) {
-    async.each(this.api.subscribedRooms, function (room, callbackAsync) {
-      this.api.unsubscribe.call(this.api, room.id)
+    async.each(Object.keys(this.api.subscribedRooms), function (room, callbackAsync) {
+      this.api.unsubscribe.call(this.api, room)
         .then(function () {
-          this.api.socket.off(room.roomId);
           callbackAsync();
         }.bind(this))
         .catch(function (error) {
@@ -46,14 +47,14 @@ var myHooks = function () {
     }.bind(this));
   });
 
-  this.Before('@withWebsocket', function (callback) {
+  this.Before('@usingWebsocket', function (callback) {
     // change the API
     this.api = this.apiTypes.websocket;
 
     callback();
   });
 
-  this.Before('@withMQTT', function (callback) {
+  this.Before('@usingMQTT', function (callback) {
     this.api = this.apiTypes.mqtt;
     callback();
   });

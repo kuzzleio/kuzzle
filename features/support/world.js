@@ -55,6 +55,7 @@ module.exports = function () {
     };
     this.apiTypes.rest.init(this);
     this.apiTypes.websocket.init(this);
+    this.apiTypes.mqtt.init(this);
 
     // by default, use REST API
     this.api = this.apiTypes.rest;
