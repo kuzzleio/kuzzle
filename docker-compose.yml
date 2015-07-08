@@ -8,12 +8,14 @@ kuzzle:
     - rabbit
     - elasticsearch
     - redis
+    - logstash
   environment:
     - KUZZLE_PORT=8081
     - BROKER_HOST=rabbit:5672
     - READ_ENGINE_HOST=elasticsearch:9200
     - WRITE_ENGINE_HOST=elasticsearch:9200
     - NOTIFICATION_CACHE_HOST=redis:6379
+    - LOG_ENGINE_HOST=logstash:7777
     - PM2_OPTIONS=--watch
 
 rabbit:
@@ -29,3 +31,11 @@ redis:
 
 elasticsearch:
   image: elasticsearch:1.5.2
+
+logstash:
+  image: logstash:1.5.2
+  volumes:
+    - ./logstash.conf:/config-dir/logstash.conf
+  command: logstash --verbose -f /config-dir/logstash.conf
+  ports:
+    - "61614:61614"
