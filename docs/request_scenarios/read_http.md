@@ -34,7 +34,7 @@ Sample message:
 
 \#4. The Read Controller calls the readEngine service
 
-\#5. The readEngine service makes a synchronous HTTP Rest request to get the data from the data storage
+\#5. The readEngine service makes a HTTP Rest request to get the data from the data storage
 
 Sample content retrieve from Elasticsearch:
 
