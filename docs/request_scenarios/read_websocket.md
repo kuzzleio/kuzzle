@@ -14,7 +14,7 @@ The following diagram shows how request's data are exchanged between the client 
 
 \#1a. The client application opens a Websocket connection and emit a "read" event with the request
 
-Sample data send:
+Sample data send: retrieve the document '739c26bc-7a09-469a-803d-623c4045b0cb' in the collection 'users':
 
 ```json
 {

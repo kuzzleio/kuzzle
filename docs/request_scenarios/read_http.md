@@ -14,7 +14,7 @@ The following diagram shows how request's data are exchanged between the client 
 
 \#1. Rest client makes a HTTP GET Request to ask for a content.
 
-Sample request:
+Sample request: retrieve the document '739c26bc-7a09-469a-803d-623c4045b0cb' in the collection 'users':
 GET http://kuzzle:8081/api/users/739c26bc-7a09-469a-803d-623c4045b0cb
 
 \#2. The HTTP router handles the input request and transmit message to the Funnel Controller.
