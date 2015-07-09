@@ -50,10 +50,12 @@ module.exports = function () {
     // Load API interfaces
     this.apiTypes = {
       rest: require('./apiRest'),
-      websocket: require('./apiWebsocket')
+      websocket: require('./apiWebsocket'),
+      mqtt: require('./apiMQTT')
     };
     this.apiTypes.rest.init(this);
     this.apiTypes.websocket.init(this);
+    this.apiTypes.mqtt.init(this);
 
     // by default, use REST API
     this.api = this.apiTypes.rest;

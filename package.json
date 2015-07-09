@@ -46,7 +46,8 @@
     "should": "~5.2.0",
     "should-promised": "~0.2.1",
     "cucumber": "~0.4.9",
-    "socket.io-client": "~1.3.5"
+    "socket.io-client": "~1.3.5",
+    "mqtt": "~1.3.3"
   },
   "engines": {
     "node": ">= 0.10.0",
