@@ -1,7 +1,7 @@
 Feature: Test REST API
   As a user
   I want to create/update/delete/search a document and test bulk import
-  Using REST API../
+  Using REST API
 
   Scenario: Create a new document and get it
     When I write the document

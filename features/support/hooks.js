@@ -14,7 +14,6 @@ var myHooks = function () {
       .catch(function (error) {
         callback(new Error(error));
       });
-
   });
 
   this.After('@removeSchema', function (callback) {
