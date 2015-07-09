@@ -7,10 +7,29 @@ Kuzzle currently implements the following Services:
 * [broker.js](./broker.js): interface to a AMQP compatible broker ([RabbitMQ](https://www.rabbitmq.com/) by default).
 * [elasticsearch.js](./elasticsearch.js): interface to [Elasticsearch](https://www.elastic.co/products/elasticsearch), used for persistent data storage.
 * [redis.js](./redis.js): interface to the [redis](http://redis.io) cache server.
+* [logger.js](./logger.js): interface to the [Logstash](https://www.elastic.co/products/logstash) server.
 * [index.js](./index.js): module entry point. Used to initialize all implemented services.
 
 
 A Service can be added to different engines. As an exemple, Elasticsearch is used by both the writeEngine and the readEngine (see [index.js](./index.js)).
+
+
+# logger.js
+
+The Logger is an interface to Logstash that we used to monitore the Kuzzle state.
+As an exemple if we want to log each data creation for analysis purpose, you just have to call :
+```js
+	kuzzle.emit('data:create', data);
+
+```
+
+and add in the [hooks](../../lib/config/hooks.js) the entry :
+
+```js
+  'data:create': ['log:log']
+```
+
+Every call to emit will add an entry to the logstash server.
 
 
 # Contributing
