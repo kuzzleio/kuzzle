@@ -40,16 +40,22 @@ Sample content retrieve from Elasticsearch:
 
 ```json
 {
+  "_index": "mainindex",
+  "_type": "users",
   "_id": "739c26bc-7a09-469a-803d-623c4045b0cb",
-  "firstName": "Grace",
-  "lastName": "Hopper",
-  "age": 85,
-  "location": {
-    "lat": 32.692742,
-    "lon": -97.114127
-  },
-  "city": "NYC",
-  "hobby": "computer"
+  "_version": 1,
+  "found": true,
+  "_source": {
+      "firstName": "Grace",
+      "lastName": "Hopper",
+      "age": 85,
+      "location": {
+          "lat": 32.692742,
+          "lon": -97.114127
+      },
+      "city": "NYC",
+      "hobby": "computer"
+  }
 }
 ```
 
@@ -60,16 +66,22 @@ Sample content exchanged during callback excecution:
 ```json
 {
   "data": {
+    "_index": "mainindex",
+    "_type": "users",
     "_id": "739c26bc-7a09-469a-803d-623c4045b0cb",
-    "firstName": "Grace",
-    "lastName": "Hopper",
-    "age": 85,
-    "location": {
-      "lat": 32.692742,
-      "lon": -97.114127
-    },
-    "city": "NYC",
-    "hobby": "computer"
+    "_version": 1,
+    "found": true,
+    "_source": {
+        "firstName": "Grace",
+        "lastName": "Hopper",
+        "age": 85,
+        "location": {
+            "lat": 32.692742,
+            "lon": -97.114127
+        },
+        "city": "NYC",
+        "hobby": "computer"
+    }
   }
 }
 ```
@@ -79,16 +91,22 @@ Sample content:
 
 ```json
 {
+  "_index": "mainindex",
+  "_type": "users",
   "_id": "739c26bc-7a09-469a-803d-623c4045b0cb",
-  "firstName": "Grace",
-  "lastName": "Hopper",
-  "age": 85,
-  "location": {
-    "lat": 32.692742,
-    "lon": -97.114127
-  },
-  "city": "NYC",
-  "hobby": "computer"
+  "_version": 1,
+  "found": true,
+  "_source": {
+      "firstName": "Grace",
+      "lastName": "Hopper",
+      "age": 85,
+      "location": {
+          "lat": 32.692742,
+          "lon": -97.114127
+      },
+      "city": "NYC",
+      "hobby": "computer"
+  }
 }
 ```
 
