@@ -1,7 +1,7 @@
 Feature: Test websocket API
   As a user
   I want to create/update/delete/search a document and test bulk import
-  From websocket
+  Using WebSocket API
 
   @usingWebsocket
   Scenario: Create a new document and get it

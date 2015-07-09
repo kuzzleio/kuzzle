@@ -1,6 +1,6 @@
 var
   config = require('./config'),
-  io = require('socket.io-client');
+  async = require('async');
 
 var afterHooks = function () {
   var world;
@@ -16,14 +16,13 @@ var afterHooks = function () {
   });
 
   this.registerHandler('AfterFeatures', function (event, callback) {
-    var socket = io(config.url, { forceNew: false});
-    socket.destroy();
-
-    world.apiTypes.mqtt.disconnect();
+    async.each(Object.keys(world.apiTypes), function (api, callbackAsync) {
+      world.apiTypes[api].disconnect();
+      callbackAsync();
+    });
 
     callback();
   });
-
 };
 
 

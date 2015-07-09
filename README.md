@@ -95,41 +95,22 @@ $ kuzzle start
 ```
 
 
-# Tests
-
-## Unit testing
-
-To run unit tests:
-
-    $ npm run unit-testing
-
-## Functional testing
-
-The easiest and recommanded way of launching the test suite is from within the Kuzzle container.
-
-With the all-in-one Docker recipe:
-
-```bash
-$ docker exec -ti kuzzle_kuzzle_1 bash
-$ npm run functional-testing
-```
-
-With Vagrant:
-
-```bash
-$ vagrant ssh -c 'docker exec -ti kuzzle_kuzzle_1 bash'
-$ npm run functional-testing
-```
-
-If for some reason, you want to launch the tests from your host on the source files, you will need to manually launch all the required dependencies.
-(see Manual install above).
-
-
-## Running all tests at once
-
-To launch both unit and functional testing, simply run from within a Kuzzle container (see 'Functional testing' above): 
+# Running Tests
 
     $ npm test
+
+Because functional tests need a running Kuzzle environment, it is recommended to run these tests from within a Kuzzle container, either using a Docker one:
+
+    $ docker exec -ti kuzzle_kuzzle_1 bash
+    $ npm test
+
+Or using a Vagrant virtual machine:
+
+    $ vagrant ssh -c 'docker exec -ti kuzzle_kuzzle_1 bash'
+    $ npm test
+
+You may also run unit and functional tests separately, or with additional arguments.
+For more information, check the [unit testing](test/README.md) and the [functional testing](features/README.md) documentation.
 
 
 # Contributing to Kuzzle

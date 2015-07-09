@@ -23,6 +23,7 @@ module.exports = {
   disconnect: function () {
     if (this.mqttClient) {
       this.mqttClient.end(true);
+      this.mqttClient = null;
     }
   },
 
@@ -165,10 +166,10 @@ var publish = function (topic, message, waitForAnswer) {
 
       if (unpacked.error) {
         deferred.reject(unpacked.error);
-        return false;
       }
-
-      deferred.resolve(unpacked);
+      else {
+        deferred.resolve(unpacked);
+      }
     }.bind(this));
   }
   else {

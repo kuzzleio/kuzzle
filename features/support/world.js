@@ -51,11 +51,13 @@ module.exports = function () {
     this.apiTypes = {
       rest: require('./apiRest'),
       websocket: require('./apiWebsocket'),
-      mqtt: require('./apiMQTT')
+      mqtt: require('./apiMQTT'),
+      amqp: require('./apiAMQP')
     };
     this.apiTypes.rest.init(this);
     this.apiTypes.websocket.init(this);
     this.apiTypes.mqtt.init(this);
+    this.apiTypes.amqp.init(this);
 
     // by default, use REST API
     this.api = this.apiTypes.rest;
