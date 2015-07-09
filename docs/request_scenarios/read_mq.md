@@ -45,7 +45,7 @@ Sample message:
 }
 ```
 
-\#3. The Funnel Controller handles the message and route it to the good controller, ie Read Controller
+\#3. The Funnel Controller process validation before sending the request to the Read Controller
 
 \#4. The Read Controller calls the readEngine service
 
