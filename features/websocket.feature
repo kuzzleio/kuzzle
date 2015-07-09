@@ -59,7 +59,7 @@ Feature: Test websocket API
     Given A room subscription listening to "lastName" having value "Hopper"
     When I write the document "documentGrace"
     Then I should receive a "create" notification
-    And The notification should have a "body" member
+    And The notification should have a "_source" member
 
   @needCleanDb @withWebsocket @unsubscribe
   Scenario: Document delete notifications
@@ -67,7 +67,7 @@ Feature: Test websocket API
     When I write the document "documentGrace"
     Then I remove the document
     Then I should receive a "delete" notification
-    And The notification should not have a "body" member
+    And The notification should not have a "_source" member
 
   @needCleanDb @withWebsocket @unsubscribe
   Scenario: Document update: new document notification
@@ -75,7 +75,7 @@ Feature: Test websocket API
     When I write the document "documentAda"
     Then I update the document with value "Hopper" in field "lastName"
     Then I should receive a "update" notification
-    And The notification should have a "body" member
+    And The notification should have a "_source" member
 
   @needCleanDb @withWebsocket @unsubscribe
   Scenario: Document update: removed document notification
@@ -83,7 +83,7 @@ Feature: Test websocket API
     When I write the document "documentGrace"
     Then I update the document with value "Foo" in field "lastName"
     Then I should receive a "update" notification
-    And The notification should not have a "body" member
+    And The notification should not have a "_source" member
 
   @needCleanDb @withWebsocket @unsubscribe
   Scenario: Delete a document with a query
@@ -93,4 +93,4 @@ Feature: Test websocket API
     And I wait 1s
     Then I remove documents with field "hobby" equals to value "computer"
     Then I should receive a "delete" notification
-    And The notification should not have a "body" member
+    And The notification should not have a "_source" member
