@@ -9,7 +9,7 @@ module.exports = {
   socket: null,
   world: null,
   responses: null,
-  subscribedRooms: [],
+  subscribedRooms: {},
 
   init: function (world) {
     this.world = world;
@@ -146,26 +146,34 @@ module.exports = {
         requestId: room
       };
 
-    return emit.call(this, 'subscribe', msg);
+    this.socket.off(this.subscribedRooms[room]);
+    delete this.subscribedRooms[room];
+    return emit.call(this, 'subscribe', msg, false);
   }
 };
 
-var emit = function (controller, msg) {
+var emit = function (controller, msg, getAnswer) {
   var
-    deferred = q.defer();
+    deferred = q.defer(),
+    listen = (getAnswer !== undefined) ? getAnswer : true;
 
   if (!msg.requestId) {
     msg.requestId = uuid.v1();
   }
 
-  this.socket.once(msg.requestId, function (result) {
-    if (result.error) {
-      deferred.reject(result.error);
-      return false;
-    }
+  if (listen) {
+    this.socket.once(msg.requestId, function (result) {
+      if (result.error) {
+        deferred.reject(result.error);
+        return false;
+      }
 
-    deferred.resolve(result);
-  });
+      deferred.resolve(result);
+    });
+  }
+  else {
+    deferred.resolve({});
+  }
 
   this.socket.emit(controller, msg );
 
@@ -186,7 +194,7 @@ var emitAndListen = function (controller, msg) {
       return false;
     }
 
-    this.subscribedRooms.push({ 'roomId': result.result, 'id': msg.requestId});
+    this.subscribedRooms[msg.requestId] = result.result;
 
     this.socket.on(result.result, function (document) {
       this.responses = document;

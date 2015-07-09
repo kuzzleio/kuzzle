@@ -266,7 +266,7 @@ var apiSteps = function () {
             }
 
             if (body.result.count !== parseInt(number)) {
-              callbackAsync('No correct value for count. Expected ' + number + ', get ' + body.result.count);
+              callbackAsync('No correct value for count. Expected ' + number + ', got ' + body.result.count);
               return false;
             }
 
