@@ -1,6 +1,7 @@
 var
   should = require('should'),
   captainsLog = require('captains-log'),
+  RequestObject = require('root-require')('lib/api/core/models/requestObject'),
   Kuzzle = require('root-require')('lib/api/Kuzzle');
 
 require('should-promised');
@@ -21,7 +22,9 @@ describe('Test execute function in funnel controller', function () {
       action: 'create'
     };
 
-    return should(kuzzle.funnel.execute(object, {id: 'connectionid'})).be.rejected;
+    var requestObject = new RequestObject(object);
+
+    return should(kuzzle.funnel.execute(requestObject, {id: 'connectionid'})).be.rejected;
   });
 
   it('should reject the promise if no action is specified', function () {
@@ -29,7 +32,9 @@ describe('Test execute function in funnel controller', function () {
       controller: 'write'
     };
 
-    return should(kuzzle.funnel.execute(object, {id: 'connectionid'})).be.rejected;
+    var requestObject = new RequestObject(object);
+
+    return should(kuzzle.funnel.execute(requestObject, {id: 'connectionid'})).be.rejected;
   });
 
   it('should reject the promise if the controller doesn\'t exist', function () {
@@ -38,7 +43,9 @@ describe('Test execute function in funnel controller', function () {
       action: 'create'
     };
 
-    return should(kuzzle.funnel.execute(object, {id: 'connectionid'})).be.rejected;
+    var requestObject = new RequestObject(object);
+
+    return should(kuzzle.funnel.execute(requestObject, {id: 'connectionid'})).be.rejected;
   });
 
   it('should reject the promise if the action doesn\'t exist', function () {
@@ -47,7 +54,9 @@ describe('Test execute function in funnel controller', function () {
       action: 'toto'
     };
 
-    return should(kuzzle.funnel.execute(object, {id: 'connectionid'})).be.rejected;
+    var requestObject = new RequestObject(object);
+
+    return should(kuzzle.funnel.execute(requestObject, {id: 'connectionid'})).be.rejected;
   });
 
   it('should resolve the promise if everything is ok', function () {
@@ -62,7 +71,9 @@ describe('Test execute function in funnel controller', function () {
       }
     };
 
-    return should(kuzzle.funnel.execute(object, {id: 'connectionid'})).not.be.rejected;
+    var requestObject = new RequestObject(object);
+
+    return should(kuzzle.funnel.execute(requestObject, {id: 'connectionid'})).not.be.rejected;
   });
 
 });

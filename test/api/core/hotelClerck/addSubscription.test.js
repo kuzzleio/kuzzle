@@ -1,6 +1,7 @@
 var
   should = require('should'),
   captainsLog = require('captains-log'),
+  RequestObject = require('root-require')('lib/api/core/models/requestObject'),
   Kuzzle = require('root-require')('lib/api/Kuzzle');
 
 require('should-promised');
@@ -38,8 +39,16 @@ describe('Test addSubscription function in the hotelClerk core module', function
   });
 
   it('should have the new room and customer', function () {
-    return kuzzle.hotelClerk.addSubscription(connection, roomName, collection, filter)
-      .then(function (result) {
+    var requestObject = new RequestObject({
+      controller: 'subscribe',
+      action: 'on',
+      requestId: roomName,
+      collection: collection,
+      body: filter
+    });
+
+    return kuzzle.hotelClerk.addSubscription(requestObject, connection)
+      .then(function (realTimeResponseObject) {
         should(kuzzle.dsl.filtersTree).be.an.Object;
         should(kuzzle.dsl.filtersTree).not.be.empty;
 
@@ -49,12 +58,12 @@ describe('Test addSubscription function in the hotelClerk core module', function
         should(kuzzle.hotelClerk.customers).be.an.Object;
         should(kuzzle.hotelClerk.customers).not.be.empty;
 
-        should(result).be.an.Object;
-        should(result.data).be.a.String;
-        should(kuzzle.hotelClerk.rooms[result.data]).be.an.Object;
-        should(kuzzle.hotelClerk.rooms[result.data]).not.be.empty;
+        should(realTimeResponseObject).be.an.Object;
+        should(realTimeResponseObject.roomId).be.a.String;
+        should(kuzzle.hotelClerk.rooms[realTimeResponseObject.roomId]).be.an.Object;
+        should(kuzzle.hotelClerk.rooms[realTimeResponseObject.roomId]).not.be.empty;
 
-        roomId = kuzzle.hotelClerk.rooms[result.data].id;
+        roomId = kuzzle.hotelClerk.rooms[realTimeResponseObject.roomId].id;
 
         should(kuzzle.hotelClerk.customers[connection.id]).be.an.Object;
         should(kuzzle.hotelClerk.customers[connection.id]).not.be.empty;
@@ -63,9 +72,15 @@ describe('Test addSubscription function in the hotelClerk core module', function
   });
 
   it('should return an error when the user has already subscribe to the filter', function () {
-    return kuzzle.hotelClerk.addSubscription(connection, roomName, collection, filter)
+    var requestObject = new RequestObject({
+      requestId: roomName,
+      collection: collection,
+      body: filter
+    });
+
+    return kuzzle.hotelClerk.addSubscription(requestObject, connection)
       .then(function () {
-        return should(kuzzle.hotelClerk.addSubscription(connection, roomName, collection, filter)).be.rejected;
+        return should(kuzzle.hotelClerk.addSubscription(requestObject, connection)).be.rejected;
       });
   });
 

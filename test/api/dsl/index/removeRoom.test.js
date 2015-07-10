@@ -1,6 +1,7 @@
 var
   should = require('should'),
   captainsLog = require('captains-log'),
+  RequestObject = require('root-require')('lib/api/core/models/requestObject'),
   Kuzzle = require('root-require')('lib/api/Kuzzle');
 
 describe('Test removeRoom function index.js file from DSL', function () {
@@ -14,7 +15,12 @@ describe('Test removeRoom function index.js file from DSL', function () {
       terms: {
         city: ['NYC', 'London']
       }
-    };
+    },
+    requestObject = new RequestObject({
+      requestId: roomName,
+      collection: collection,
+      body: filter
+    });
 
 
   before(function () {
@@ -22,9 +28,9 @@ describe('Test removeRoom function index.js file from DSL', function () {
     kuzzle.log = new captainsLog({level: 'silent'});
     kuzzle.start({}, {workers: false, servers: false});
 
-    return kuzzle.hotelClerk.addSubscription({id: 'connectionid'}, roomName, collection, filter)
-      .then(function (result) {
-        roomId = result.data;
+    return kuzzle.hotelClerk.addSubscription(requestObject, {id: 'connectionid'})
+      .then(function (realTimeResponseObject) {
+        roomId = realTimeResponseObject.roomId;
       });
   });
 

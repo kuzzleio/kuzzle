@@ -25,3 +25,8 @@ docker-compose --version > /dev/null 2>&1 || (
     curl -sSL https://github.com/docker/compose/releases/download/1.3.1/docker-compose-`uname -s`-`uname -m` > /usr/local/bin/docker-compose
     chmod a+x /usr/local/bin/docker-compose
 )
+
+python --version > /dev/null 2>&1 || (
+    echo "installing python"
+    apt-get install python
+)

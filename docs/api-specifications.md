@@ -469,6 +469,12 @@ _(NB: This will automatically subscribe the client to the reply-to queue.)_
 
 _(NB: Kuzzle will send messages to the topic exchange **amqp.topic**, with following destination : `mqtt/<mqttClientId>`, so the client SHOULD also subscribe to this routing key as well.)_
 
+## Related pages
+
+* [Architecture overview](../architecture.md)
+* [Sample Request Scenarios](request_scenarios/README.md)
+
+
 
 [ietf-http-status-codes]: http://www.ietf.org/assignments/http-status-codes/http-status-codes.xml
 [filters syntax]: filters.md

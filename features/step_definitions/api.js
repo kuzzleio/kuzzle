@@ -296,8 +296,13 @@ var apiSteps = function () {
     var main = function (callbackAsync) {
       setTimeout(function () {
         if (this.api.responses) {
-          if (this.api.responses.action !== action) {
-            callbackAsync('Action "' + this.api.responses.action + '" received. Expected: "' + action + '"');
+          if (this.api.responses.error) {
+            callbackAsync('An error occurred ' + this.api.response.error.toString());
+            return false;
+          }
+
+          if (this.api.responses.result.action !== action) {
+            callbackAsync('Action "' + this.api.responses.result.action + '" received. Expected: "' + action + '"');
             return false;
           }
 
@@ -323,11 +328,10 @@ var apiSteps = function () {
   });
 
   this.Then(/^The notification should ?(not)* have a "([^"]*)" member/, function (not, member, callback) {
-    if ( (this.api.responses[member] || not) && !(this.api.responses[member] && not)) {
+    if ( (this.api.responses.result[member] || not) && !(this.api.responses.result[member] && not)) {
       callback();
     }
     else {
-      console.log('Faulty notification: ', this.api.responses);
       callback('The document was ' + (not ? 'not ' : '') + 'supposed to contain the member "' + member + '"');
     }
   });

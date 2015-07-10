@@ -1,6 +1,7 @@
 var
   should = require('should'),
   captainsLog = require('captains-log'),
+  RequestObject = require('root-require')('lib/api/core/models/requestObject'),
   Kuzzle = require('root-require')('lib/api/Kuzzle');
 
 require('should-promised');
@@ -14,6 +15,7 @@ describe('Test removeSubscription function in the hotelClerk core module', funct
     badConnection = {id: 'badconnectionid'},
     roomName1 = 'roomName1',
     roomName2 = 'roomName2',
+    requestObject,
     collection = 'user',
     filter1 = {
       term: {
@@ -24,7 +26,22 @@ describe('Test removeSubscription function in the hotelClerk core module', funct
       terms: {
         firstName: ['Ada', 'Grace']
       }
-    };
+    },
+
+    requestObject1 = new RequestObject({
+      controller: 'subscribe',
+      action: 'on',
+      requestId: roomName1,
+      collection: collection,
+      body: filter1
+    }),
+    requestObject2 = new RequestObject({
+      controller: 'subscribe',
+      action: 'on',
+      requestId: roomName2,
+      collection: collection,
+      body: filter2
+    });
 
 
   beforeEach(function () {
@@ -32,23 +49,30 @@ describe('Test removeSubscription function in the hotelClerk core module', funct
     kuzzle.log = new captainsLog({level: 'silent'});
     kuzzle.start({}, {workers: false, servers: false});
 
-    kuzzle.start({}, {workers: false, servers: false});
-    return kuzzle.hotelClerk.addSubscription(connection, roomName1, collection, filter1)
-      .then(function (result) {
-        roomId = result.data;
+    return kuzzle.hotelClerk.addSubscription(requestObject1, connection)
+      .then(function (realTimeResponseObject) {
+        roomId = realTimeResponseObject.roomId;
       });
   });
 
   it('should do nothing when a bad connectionId is given', function () {
-    return should(kuzzle.hotelClerk.removeSubscription(badConnection, roomName1)).be.rejected;
+    return should(kuzzle.hotelClerk.removeSubscription(requestObject1, badConnection)).be.rejected;
   });
 
   it('should do nothing when a bad room is given', function () {
-    return should(kuzzle.hotelClerk.removeSubscription(connection, 'badroomname')).be.rejected;
+    var badRequestObject = new RequestObject({
+      controller: 'subscribe',
+      action: 'on',
+      requestId: 'badroomname',
+      collection: collection,
+      body: filter1
+    });
+
+    return should(kuzzle.hotelClerk.removeSubscription(badRequestObject, connection)).be.rejected;
   });
 
   it('should clean up customers, rooms and filtersTree object', function () {
-    return kuzzle.hotelClerk.removeSubscription(connection, roomName1)
+    return kuzzle.hotelClerk.removeSubscription(requestObject1, connection)
       .then(function () {
         should(kuzzle.dsl.filtersTree).be.an.Object;
         should(kuzzle.dsl.filtersTree).be.empty;
@@ -62,9 +86,9 @@ describe('Test removeSubscription function in the hotelClerk core module', funct
   });
 
   it('should not delete all subscriptions when we want to just remove one', function () {
-    return kuzzle.hotelClerk.addSubscription(connection, roomName2, collection, filter2)
+    return kuzzle.hotelClerk.addSubscription(requestObject2, connection)
       .then(function () {
-        return kuzzle.hotelClerk.removeSubscription(connection, roomName1)
+        return kuzzle.hotelClerk.removeSubscription(requestObject1, connection)
           .then(function () {
             should(kuzzle.dsl.filtersTree).be.an.Object;
             should(kuzzle.dsl.filtersTree).not.be.empty;
