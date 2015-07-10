@@ -6,7 +6,7 @@ var
 
 require('should-promised');
 
-describe('Test removeCustomerFromAllRooms function in hotelClerk controller', function () {
+describe('Test removeCustomerFromAllRooms function in the hotelClerk core module', function () {
 
   var
     kuzzle,

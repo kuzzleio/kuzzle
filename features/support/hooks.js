@@ -48,14 +48,17 @@ var myHooks = function () {
   });
 
   this.Before('@usingWebsocket', function (callback) {
-    // change the API
     this.api = this.apiTypes.websocket;
-
     callback();
   });
 
   this.Before('@usingMQTT', function (callback) {
     this.api = this.apiTypes.mqtt;
+    callback();
+  });
+
+  this.Before('@usingAMQP', function (callback) {
+    this.api = this.apiTypes.amqp;
     callback();
   });
 };

@@ -1,7 +1,7 @@
 Feature: Test MQTT API
   As a user
   I want to create/update/delete/search a document and test bulk import
-  From MQTT
+  Using MQTT API
 
   @usingMQTT
   Scenario: Create a new document and get it

@@ -13,7 +13,17 @@ module.exports = {
 
   init: function (world) {
     this.world = world;
-    this.socket = io(config.url);
+
+    if ( !this.socket ) {
+      this.socket = io(config.url);
+    }
+  },
+
+  disconnect: function () {
+    if (this.socket) {
+      this.socket.close();
+      this.socket = null;
+    }
   },
 
   get: function (id) {

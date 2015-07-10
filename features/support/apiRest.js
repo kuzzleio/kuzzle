@@ -10,6 +10,9 @@ module.exports = {
     this.world = world;
   },
 
+  disconnect: function () {
+  },
+
   pathApi: function (path) {
     return config.url + '/api/' + path;
   },
