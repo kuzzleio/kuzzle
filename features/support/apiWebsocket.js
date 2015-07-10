@@ -15,13 +15,13 @@ module.exports = {
     this.world = world;
 
     if ( !this.socket ) {
-      this.socket = io(config.url);
+      this.socket = io(config.url, { 'force new connection': true });
     }
   },
 
   disconnect: function () {
     if (this.socket) {
-      this.socket.close();
+      this.socket.destroy();
       this.socket = null;
     }
   },
