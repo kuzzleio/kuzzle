@@ -105,7 +105,6 @@ describe('Test testFilters function index.js file from DSL', function () {
   });
 
   it('should return an array with my room id when document matches', function () {
-    console.log('**** request Grace', requestObjectCreateGrace);
     return kuzzle.dsl.testFilters(requestObjectCreateGrace)
       .then(function (rooms) {
         should(rooms).be.an.Array;

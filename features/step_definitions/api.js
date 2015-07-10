@@ -332,7 +332,6 @@ var apiSteps = function () {
       callback();
     }
     else {
-      console.log('Faulty notification: ', this.api.responses.result);
       callback('The document was ' + (not ? 'not ' : '') + 'supposed to contain the member "' + member + '"');
     }
   });
