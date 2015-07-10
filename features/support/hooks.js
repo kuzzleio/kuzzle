@@ -2,15 +2,46 @@ var async = require('async');
 
 var myHooks = function () {
   /**
-   * Clean up the database after each test case
+   *  API LOADING AND RELEASING
+   *  Until cucumber.js supports BeforeAll and AfterAll tags, we have to open/close connections
+   *  on each test case.
+   *
+   *  We could also load all the tested API at the beginning of each test case, using reentrant init() functions,
+   *  and close them all at the very end using the AfterFeatures event.
+   *  This method involves a cucumber.js hack, where we save a 'world' reference at the end of each test case so that
+   *  we can use it when the AfterFeatures event is emitted.
+   *
+   *  Problem is, there is no guarantee that the world we saved still exists when this event is sent. In fact, the
+   *  Cucumber.js documentation states that it should be destroyed at this point of time.
+   *
+   *  And we don't want to deal with destroyed worlds, this is all too messy. And dangerous.
    */
-  this.After(function (callback) {
-    var filters = {};
+  this.Before('@usingREST', function (callback) {
+    this.api = setAPI(this, 'REST');
+    callback();
+  });
 
-    this.api.deleteByQuery(filters)
+  this.Before('@usingWebsocket', function (callback) {
+    this.api = setAPI(this, 'Websocket');
+    callback();
+  });
+
+  this.Before('@usingMQTT', function (callback) {
+    this.api = setAPI(this, 'MQTT');
+    callback();
+  });
+
+  this.Before('@usingAMQP', function (callback) {
+    this.api = setAPI(this, 'AMQP');
+    callback();
+  });
+
+  this.After(function (callback) {
+    this.api.deleteByQuery({})
       .then(function () {
+        this.api.disconnect();
         callback();
-      })
+      }.bind(this))
       .catch(function (error) {
         callback(new Error(error));
       });
@@ -28,7 +59,7 @@ var myHooks = function () {
 
   this.After('@unsubscribe', function (callback) {
     async.each(Object.keys(this.api.subscribedRooms), function (room, callbackAsync) {
-      this.api.unsubscribe.call(this.api, room)
+      this.api.unsubscribe(room)
         .then(function () {
           callbackAsync();
         }.bind(this))
@@ -46,21 +77,12 @@ var myHooks = function () {
       callback();
     }.bind(this));
   });
-
-  this.Before('@usingWebsocket', function (callback) {
-    this.api = this.apiTypes.websocket;
-    callback();
-  });
-
-  this.Before('@usingMQTT', function (callback) {
-    this.api = this.apiTypes.mqtt;
-    callback();
-  });
-
-  this.Before('@usingAMQP', function (callback) {
-    this.api = this.apiTypes.amqp;
-    callback();
-  });
 };
 
 module.exports = myHooks;
+
+var setAPI = function (world, apiName) {
+  var api = require('./api' + apiName);
+  api.init(world);
+  return api;
+};
