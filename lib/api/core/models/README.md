@@ -10,4 +10,4 @@ This class allow to create an object that represent the user request (action, co
 This class allow to create an object that represent information about room that we have to send to the user (room id)
 
 ## responseObject.js
-This class allow to create an object that represent information about object send to the clien (responsze from WriteEngine, action, controller, collection, ...)
+This class allow to create an object that represent information about object send to the client (responsze from WriteEngine, action, controller, collection, ...)
