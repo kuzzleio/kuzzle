@@ -1,6 +1,7 @@
 var
   should = require('should'),
   captainsLog = require('captains-log'),
+  RequestObject = require('root-require')('lib/api/core/models/requestObject'),
   Kuzzle = require('root-require')('lib/api/Kuzzle');
 
 require('should-promised');
@@ -32,9 +33,25 @@ describe('Test removeCustomerFromAllRooms function in hotelClerk controller', fu
     kuzzle.log = new captainsLog({level: 'silent'});
     kuzzle.start({}, {workers: false, servers: false});
 
-    return kuzzle.hotelClerk.addSubscription(connection, roomName1, collection, filter1)
+    var
+      requestObject1 = new RequestObject({
+        controller: 'subscribe',
+        action: 'on',
+        requestId: roomName1,
+        collection: collection,
+        body: filter1
+      }),
+      requestObject2 = new RequestObject({
+        controller: 'subscribe',
+        action: 'on',
+        requestId: roomName2,
+        collection: collection,
+        body: filter2
+      });
+
+    return kuzzle.hotelClerk.addSubscription(requestObject1, connection)
       .then(function () {
-        return kuzzle.hotelClerk.addSubscription(connection, roomName2, collection, filter2);
+        return kuzzle.hotelClerk.addSubscription(requestObject2, connection);
       });
   });
 

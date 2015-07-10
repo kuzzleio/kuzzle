@@ -1,6 +1,7 @@
 var
   should = require('should'),
   captainsLog = require('captains-log'),
+  RequestObject = require('root-require')('lib/api/core/models/requestObject'),
   Kuzzle = require('root-require')('lib/api/Kuzzle');
 
 describe('Test testFilters function index.js file from DSL', function () {
@@ -11,32 +12,26 @@ describe('Test testFilters function index.js file from DSL', function () {
     roomName = 'roomNameGrace',
     collection = 'user',
     dataGrace = {
-      collection: collection,
-      body: {
-        firstName: 'Grace',
-        lastName: 'Hopper',
-        age: 85,
-        location: {
-          lat: 32.692742,
-          lon: -97.114127
-        },
-        city: 'NYC',
-        hobby: 'computer'
-      }
+      firstName: 'Grace',
+      lastName: 'Hopper',
+      age: 85,
+      location: {
+        lat: 32.692742,
+        lon: -97.114127
+      },
+      city: 'NYC',
+      hobby: 'computer'
     },
     dataAda = {
-      collection: collection,
-      body: {
-        firstName: 'Ada',
-        lastName: 'Lovelace',
-        age: 36,
-        location: {
-          lat: 51.519291,
-          lon: -0.149817
-        },
-        city: 'London',
-        hobby: 'computer'
-      }
+      firstName: 'Ada',
+      lastName: 'Lovelace',
+      age: 36,
+      location: {
+        lat: 51.519291,
+        lon: -0.149817
+      },
+      city: 'London',
+      hobby: 'computer'
     },
     filterGrace = {
       bool: {
@@ -78,7 +73,23 @@ describe('Test testFilters function index.js file from DSL', function () {
           }
         ]
       }
-    };
+    },
+
+    requestObjectCreateGrace = new RequestObject({
+      requestId: roomName,
+      collection: collection,
+      body: dataGrace
+    }),
+    requestObjectSubscribeGrace = new RequestObject({
+      requestId: roomName,
+      collection: collection,
+      body: filterGrace
+    }),
+    requestObjectCreateAda = new RequestObject({
+      requestId: roomName,
+      collection: collection,
+      body: dataAda
+    });
 
 
   before(function (done) {
@@ -86,15 +97,15 @@ describe('Test testFilters function index.js file from DSL', function () {
     kuzzle.log = new captainsLog({level: 'silent'});
     kuzzle.start({}, {workers: false, servers: false});
 
-    kuzzle.hotelClerk.addSubscription({id: 'connectionid'}, roomName, collection, filterGrace)
-      .then(function (result) {
-        roomId = result.data;
+    kuzzle.hotelClerk.addSubscription(requestObjectSubscribeGrace, {id: 'connectionid'})
+      .then(function (realTimeResponseObject) {
+        roomId = realTimeResponseObject.roomId;
         done();
       });
   });
 
   it('should return an array with my room id when document matches', function () {
-    return kuzzle.dsl.testFilters(dataGrace)
+    return kuzzle.dsl.testFilters(requestObjectCreateGrace)
       .then(function (rooms) {
         should(rooms).be.an.Array;
         should(rooms).have.length(1);
@@ -103,7 +114,7 @@ describe('Test testFilters function index.js file from DSL', function () {
   });
 
   it('should return empty array when document doesn\'t match', function () {
-    return kuzzle.dsl.testFilters(dataAda)
+    return kuzzle.dsl.testFilters(requestObjectCreateAda)
       .then(function (rooms) {
         should(rooms).be.an.Array;
         should(rooms).be.empty;
