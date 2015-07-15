@@ -6,7 +6,7 @@ By "reading", we mean any action that gets contents from persistent layer to giv
 get a single content, count a collection, or search contents with advanced filters.
 
 Remember the [Architecture overview](../architecture.md) and focus on the components involved by reading actions:
-![read_scenario_websocket_override](../images/kuzzle_read_scenario_websocket_overview.png)
+![read_scenario_websocket_overview](../images/kuzzle_read_scenario_websocket_overview.png)
 
 The following diagram shows how request's data are exchanged between the client application, the different Kuzzle components, and the external services:
 
@@ -104,7 +104,7 @@ Sample content exchanged during callback excecution:
   }
 }
 ```
-\#9. The Websocket Router emits an message to the client's RequestId with the requested content
+\#9. The Websocket Router emits a message to the client's RequestId with the requested content
 
 Sample response content:
 
