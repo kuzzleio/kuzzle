@@ -132,7 +132,7 @@ var apiSteps = function () {
 
         this.api.search(filters)
           .then(function (body) {
-
+console.dir(body.result.hits);
             if (body.error !== null) {
               if (dont) {
                 callbackAsync();

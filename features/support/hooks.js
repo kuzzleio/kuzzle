@@ -36,6 +36,11 @@ var myHooks = function () {
     callback();
   });
 
+  this.Before('@usingSTOMP', function (callback) {
+    this.api = setAPI(this, 'STOMP');
+    callback();
+  });
+
   this.After(function (callback) {
     this.api.deleteByQuery({})
       .then(function () {
