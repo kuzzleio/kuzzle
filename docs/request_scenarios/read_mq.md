@@ -1,22 +1,26 @@
-# Reading content from Kuzzle - The MQ way
+# Reading content from Kuzzle using MQ
 
-This page explain the scenario that is run while a client is reading contents from Kuzzle through a message broker such as RabbitMQ.
+This page explains what happens when clients exchange data with Kuzzle, using a messaging protocol (currently supported: AMQP, MQTT, STOMP).
 
-By "reading", we mean any action that gets contents from persistent layer to give them to the client:
-get a single content, count a collection, or search contents with advanced filters.
+By "reading", we mean any action involving getting content from the persistent layer: getting a single document, count documents, or search contents with advanced filters.
 
 Remember the [Architecture overview](../architecture.md) and focus on the components involved by reading actions:
 ![read_scenario_broker_overview](../images/kuzzle_read_scenario_mq_overview.png)
 
-The following diagram shows how request's data are exchanged between the client application, the different Kuzzle components, and the external services:
+The following diagram shows how request data is exchanged between the client application, the different Kuzzle components, and the external services:
 
 ![read_scenario_broker_details](../images/kuzzle_read_scenario_mq_details.png)
 
-\#0. Kuzzle's MQ Listener has subscribed to the default broker's topics for each controller (sample : "_read.\*.\*_") (see details in [API Specifications](../api-specifications.md)).
+\#0. On startup, Kuzzle subscribes each of his controller to the default ```amq.topic``` exchange (see details in [API Specifications](../api-specifications.md)).
 
-\#1a. \#1b. The client application send a message to RabbitMQ's topic "_read.<collection>.get_". The message contains also a "replyTo" header with a temporary queue Id.
+\#1a. \#1b. The client application sends a message to a topic (MQTT), an ```amq.topic``` routing key (AMQP) or an ```amq.topic``` destination (STOMP). The topic/routing key/destination name describes the message action:
+```read.<collection>.<action (get|search|count)>```
 
-Sample STOM request: retrieve the document '739c26bc-7a09-469a-803d-623c4045b0cb' in the collection 'users':
+A MQTT client wishing to get responses back from Kuzzle must add a ```mqttClientId``` field to his message, and to subscribe to the ```mqtt.<mqttClientId>``` topic.
+
+AMQP and STOMP clients simply have to fill the ```replyTo``` metadata and to listen to the corresponding queue/destination.
+
+Sample STOMP request: retrieve the document ```739c26bc-7a09-469a-803d-623c4045b0cb``` in the collection ```users```:
 
 ```
 SEND
@@ -32,7 +36,7 @@ content-type:application/json
 \#1c. The broker notifies the MQ Listener with the incoming message
 
 
-\#2. The MQListener handles the input message and transmit it to the Funnel Controller.
+\#2. The MQListener handles the input message and forward it to the ```Funnel Controller```.
 
 Sample message:
 
@@ -45,13 +49,13 @@ Sample message:
 }
 ```
 
-\#3. The Funnel Controller process validation before sending the request to the Read Controller
+\#3. The ```Funnel Controller``` validates the message and forward the request to the ```Read Controller```
 
-\#4. The Read Controller calls the readEngine service
+\#4. The ```Read Controller``` calls the ```readEngine service```
 
-\#5. The readEngine service makes a HTTP Rest request to get the data from the data storage
+\#5. The ```readEngine service``` performs an HTTP Rest request to get the data from the data storage
 
-Sample content retrieve from Elasticsearch:
+Sample content retrieval from Elasticsearch:
 
 ```json
 {
@@ -77,7 +81,6 @@ Sample content retrieve from Elasticsearch:
 \#6. \#7. \#8. Callback functions are triggered to transmit the response message back to the MQ Listener
 
 Sample content exchanged during callback excecution:
-
 ```json
 {
   "data": {
@@ -100,9 +103,9 @@ Sample content exchanged during callback excecution:
   }
 }
 ```
-\#9. The MQ Listener sends message to the "replyTo" temporary queue to to the broker.
+\#9. The MQ Listener sends message to the "replyTo" temporary queue to the broker (or to the temporary ```mqtt.<mqttClientId>``` topic for MQTT clients)
 
-\#10. The broker notifies the client with the reponse content.
+\#10. The broker notifies the client with the response content.
 
 Sample response content:
 

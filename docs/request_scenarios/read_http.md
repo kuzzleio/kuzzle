@@ -1,23 +1,22 @@
-# Reading content from Kuzzle - The HTTP Rest way
+# Reading content from Kuzzle using REST
 
-This page explain the scenario that is run while a client is reading contents from Kuzzle with the REST API.
+This page explains what happens when clients exchange data with Kuzzle, using the REST API.
 
-By "reading", we mean any action that gets contents from persistent layer to give them to the client:
-get a single content, count a collection, or search contents with advanced filters.
+By "reading", we mean any action involving getting content from the persistent layer: getting a single document, count documents, or search contents with advanced filters.
 
 Remember the [Architecture overview](../architecture.md) and focus on the components involved by reading actions:
 ![read_scenario_http_overview](../images/kuzzle_read_scenario_http_overview.png)
 
-The following diagram shows how request's data are exchanged between the client application, the different Kuzzle components, and the external services:
+The following diagram shows how request data is exchanged between the client application, the different Kuzzle components, and the external services:
 
 ![read_scenario_http_details](../images/kuzzle_read_scenario_http_details.png)
 
-\#1. Rest client makes a HTTP GET Request to ask for a content.
+\#1. The REST client asks for a content using a HTTP GET Request
 
-Sample request: retrieve the document '739c26bc-7a09-469a-803d-623c4045b0cb' in the collection 'users':
-GET http://kuzzle:8081/api/users/739c26bc-7a09-469a-803d-623c4045b0cb
+For instance, to retrieve the document '739c26bc-7a09-469a-803d-623c4045b0cb' in the collection 'users':
+```GET http://kuzzle:8081/api/users/739c26bc-7a09-469a-803d-623c4045b0cb```
 
-\#2. The HTTP router handles the input request and transmit message to the Funnel Controller.
+\#2. The HTTP router handles the input request and forward the message to the ```Funnel Controller```.
 
 Sample message:
 
@@ -30,13 +29,13 @@ Sample message:
 }
 ```
 
-\#3. The Funnel Controller process validation before sending the request to the Read Controller
+\#3. The ```Funnel Controller``` validates the data before sending the request to the ```Read Controller```
 
-\#4. The Read Controller calls the readEngine service
+\#4. The ```Read Controller``` calls the ```readEngine service```
 
-\#5. The readEngine service makes a HTTP Rest request to get the data from the data storage
+\#5. The ```readEngine service``` performs an HTTP Rest request to get the data from the data storage
 
-Sample content retrieve from Elasticsearch:
+Sample content retrieval from Elasticsearch:
 
 ```json
 {
@@ -59,7 +58,7 @@ Sample content retrieve from Elasticsearch:
 }
 ```
 
-\#6. \#7. \#8. Callback functions are triggered to transmit the response message back to the HTTP Router
+\#6. \#7. \#8. Callback functions are triggered to forward the response message back to the HTTP Router
 
 Sample content exchanged during callback excecution:
 
@@ -85,7 +84,7 @@ Sample content exchanged during callback excecution:
   }
 }
 ```
-\#9. The HTTP Router send the response to the Rest client.
+\#9. The HTTP Router sends the response to the REST client.
 
 Sample content:
 
