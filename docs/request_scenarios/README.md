@@ -8,9 +8,10 @@ Following scenarios explain the message flow between Kuzzle components.
 * [with a Websocket connection](read_websocket.md)
 * [with a MQ broker](read_mq.md)
 
-## Realtime Pub/Sub scenario
+## Subscribing and writing content to Kuzzle
 
-* [with a MQ broker or a Websocket connection](pubsub.md)
+* [Pub/Sub scenario for realtime data](pubsub.md)
+* [Writing persistent data](write.md)
 
 ## Related pages
 
