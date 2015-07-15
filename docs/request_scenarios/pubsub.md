@@ -8,7 +8,7 @@ Kuzzle is able to manage two different types of data:
 
 The client decide if a data is persistent or volatile using the "_persist_" metadata (true/false).
 
-Kuzzle handles data differently, depending if its persistent or not.
+Kuzzle handles data differently, depending if it's persistent or not.
 
 This page describes the process for **non persistent** data. If you wish to learn about how Kuzzle handles persistent data, please read [Writing persistent data to Kuzzle](write.md)
 
