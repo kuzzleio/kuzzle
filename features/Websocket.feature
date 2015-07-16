@@ -94,3 +94,9 @@ Feature: Test websocket API
     Then I remove documents with field "hobby" equals to value "computer"
     Then I should receive a "delete" notification
     And The notification should not have a "_source" member
+
+  @usingWebsocket @unsubscribe
+  Scenario: Count how many subscription on a room
+    Given A room subscription listening to "lastName" having value "Hopper"
+    Given A room subscription listening to "lastName" having value "Hopper"
+    Then I can count "2" subscription
