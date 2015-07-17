@@ -376,6 +376,26 @@ var apiSteps = function () {
     }
   });
 
+  this.Then(/^I can count "([^"]*)" subscription/, function (number, callback) {
+    this.api.countSubscription()
+      .then(function (response) {
+        if (response.error) {
+          callback.fail(new Error(response.error));
+          return false;
+        }
+
+        if (response.result !== parseInt(number)) {
+          callback.fail(new Error('No correct value for count. Expected ' + number + ', got ' + response.result));
+          return false;
+        }
+
+        callback();
+      })
+      .catch(function (error) {
+        callback.fail(new Error(error));
+      });
+  });
+
   /** WRITE **/
   this.When(/^I write the document ?(?:"([^"]*)")?$/, function (documentName, callback) {
     var document = this[documentName] || this.documentGrace;
