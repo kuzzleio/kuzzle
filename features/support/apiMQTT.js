@@ -142,13 +142,26 @@ module.exports = {
     var
       topic = ['subscribe', this.world.fakeCollection, 'off'].join('.'),
       msg = {
-        clientId: this.subscribedRooms[room].options.clientId,
+        clientId: this.subscribedRooms[room].listener.options.clientId,
         requestId: room
       };
 
-    this.subscribedRooms[room].end(true);
+    this.subscribedRooms[room].listener.end(true);
     delete this.subscribedRooms[room];
     return publish.call(this, topic, msg, false);
+  },
+
+  countSubscription: function () {
+    var
+      topic = ['subscribe', this.world.fakeCollection, 'count'].join('.'),
+      rooms = Object.keys(this.subscribedRooms),
+      msg = {
+        body: {
+          roomId: this.subscribedRooms[rooms[0]].roomId
+        }
+      };
+
+    return publish.call(this, topic, msg);
   }
 };
 
@@ -205,7 +218,7 @@ var publishAndListen = function (topic, message) {
     }.bind(this));
 
     mqttListener.subscribe(unpacked.result.roomId);
-    this.subscribedRooms[message.requestId] = mqttListener;
+    this.subscribedRooms[message.requestId] = { roomId: unpacked.result.roomId, listener: mqttListener };
     deferred.resolve(unpacked);
   }.bind(this));
 

@@ -153,12 +153,26 @@ module.exports = {
     var
       topic = ['subscribe', this.world.fakeCollection, 'off'].join('.'),
       msg = {
+        clientId: this.subscribedRooms[room].clientId,
         requestId: room
       };
 
-    this.subscribedRooms[room].close();
+    this.subscribedRooms[room].listener.close();
     delete this.subscribedRooms[room];
     return publish.call(this, topic, msg, false);
+  },
+
+  countSubscription: function () {
+    var
+      topic = ['subscribe', this.world.fakeCollection, 'count'].join('.'),
+      rooms = Object.keys(this.subscribedRooms),
+      msg = {
+        body: {
+          roomId: this.subscribedRooms[rooms[0]].roomId
+        }
+      };
+
+    return publish.call(this, topic, msg);
   }
 };
 
@@ -167,7 +181,9 @@ var publish = function (topic, message, waitForAnswer) {
     deferred = q.defer(),
     listen = (waitForAnswer !== undefined) ? waitForAnswer : true;
 
-  message.clientId = this.clientId;
+  if ( !message.clientId ) {
+    message.clientId = this.clientId;
+  }
 
   this.amqpChannel.then(function (channel) {
     if (listen) {
@@ -179,7 +195,7 @@ var publish = function (topic, message, waitForAnswer) {
               var unpacked = JSON.parse((new Buffer(reply.content)).toString());
 
               if (unpacked.error) {
-                deferred.reject(unpacked.error.body.error);
+                deferred.reject(unpacked.error);
               }
               else {
                 deferred.resolve(unpacked);
@@ -205,13 +221,14 @@ var publish = function (topic, message, waitForAnswer) {
 
 var publishAndListen = function (topic, message) {
   var
-    deferred = q.defer(),
-    roomPromise = publish.call(this, topic, message);
+    deferred = q.defer();
 
-  roomPromise.then(function (response) {
+  message.clientId = uuid.v1();
+
+  publish.call(this, topic, message).then(function (response) {
     this.amqpClient.then(function (connection) {
       connection.createChannel().then(function (channel) {
-        this.subscribedRooms[response.result.roomName] = channel;
+        this.subscribedRooms[response.result.roomName] = { roomId: response.result.roomId, clientId: message.clientId, listener: channel };
 
         channel.assertQueue(response.result.roomId)
           .then(function () {
@@ -232,7 +249,10 @@ var publishAndListen = function (topic, message) {
           deferred.reject(new Error(error));
         });
     }.bind(this));
-  }.bind(this));
+  }.bind(this))
+  .catch(function (error) {
+    deferred.reject(new Error(error));
+  });
 
   return deferred.promise;
 };

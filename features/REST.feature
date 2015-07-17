@@ -44,7 +44,7 @@ Feature: Test REST API
     When I write the document "documentGrace"
     When I write the document "documentAda"
     Then I count 4 documents
-#    And I count 2 documents with "Grace" in field "firstName"
+    And I count 2 documents with "NYC" in field "city"
 
   @usingREST @removeSchema
   Scenario: Change mapping

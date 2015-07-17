@@ -296,11 +296,11 @@ var apiSteps = function () {
       setTimeout(function () {
         var filter = {
           query: {
-            term: {}
+            match: {}
           }
         };
 
-        filter.query.term[field] = value;
+        filter.query.match[field] = value;
 
         this.api.count(filter)
           .then(function (body) {
@@ -486,9 +486,9 @@ var apiSteps = function () {
   this.Then(/^I remove documents with field "([^"]*)" equals to value "([^"]*)"$/, function (field, value, callback) {
     var main = function (callbackAsync) {
       setTimeout(function () {
-        var filter = { filter: { term: {} } };
+        var filter = { query: { match: {} } };
 
-        filter.filter.term[field] = value;
+        filter.query.match[field] = value;
 
         this.api.deleteByQuery(filter)
           .then(function (body) {
@@ -512,7 +512,7 @@ var apiSteps = function () {
 
     async.retry(20, main.bind(this), function (err) {
       if (err) {
-        callback.fail(new Error(err));
+        callback.fail(err);
         return false;
       }
 

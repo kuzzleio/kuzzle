@@ -38,7 +38,7 @@ Feature: Test MQTT API
     When I write the document "documentGrace"
     When I write the document "documentAda"
     Then I count 4 documents
-#    And I count 2 documents with "Grace" in field "firstName"
+    And I count 2 documents with "NYC" in field "city"
 
   @removeSchema @usingMQTT
   Scenario: Change mapping
@@ -90,3 +90,9 @@ Feature: Test MQTT API
     Then I remove documents with field "hobby" equals to value "computer"
     Then I should receive a "delete" notification
     And The notification should not have a "_source" member
+
+  @usingMQTT @unsubscribe
+  Scenario: Count how many subscription on a room
+    Given A room subscription listening to "lastName" having value "Hopper"
+    Given A room subscription listening to "lastName" having value "Hopper"
+    Then I can count "2" subscription
