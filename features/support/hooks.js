@@ -1,4 +1,6 @@
-var async = require('async');
+var
+  async = require('async'),
+  q = require('q');
 
 var myHooks = function () {
   /**
@@ -17,28 +19,58 @@ var myHooks = function () {
    *  And we don't want to deal with destroyed worlds, this is all too messy. And dangerous.
    */
   this.Before('@usingREST', function (callback) {
-    this.api = setAPI(this, 'REST');
-    callback();
+    setAPI(this, 'REST')
+      .then(function (api) {
+        this.api = api;
+        callback();
+      }.bind(this))
+      .catch(function (error) {
+        callback(new Error(error));
+      });
   });
 
   this.Before('@usingWebsocket', function (callback) {
-    this.api = setAPI(this, 'Websocket');
-    callback();
+    setAPI(this, 'Websocket')
+      .then(function (api) {
+        this.api = api;
+        callback();
+      }.bind(this))
+      .catch(function (error) {
+        callback(new Error(error));
+      });
   });
 
   this.Before('@usingMQTT', function (callback) {
-    this.api = setAPI(this, 'MQTT');
-    callback();
+    setAPI(this, 'MQTT')
+      .then(function (api) {
+        this.api = api;
+        callback();
+      }.bind(this))
+      .catch(function (error) {
+        callback(new Error(error));
+      });
   });
 
   this.Before('@usingAMQP', function (callback) {
-    this.api = setAPI(this, 'AMQP');
-    callback();
+    setAPI(this, 'AMQP')
+      .then(function (api) {
+        this.api = api;
+        callback();
+      }.bind(this))
+      .catch(function (error) {
+        callback(new Error(error));
+      });
   });
 
   this.Before('@usingSTOMP', function (callback) {
-    this.api = setAPI(this, 'STOMP');
-    callback();
+    setAPI(this, 'STOMP')
+      .then(function (api) {
+        this.api = api;
+        callback();
+      }.bind(this))
+      .catch(function (error) {
+        callback(new Error(error));
+      });
   });
 
   this.After(function (callback) {
@@ -76,7 +108,7 @@ var myHooks = function () {
       this.api.subscribedRooms = [];
 
       if (error) {
-        callback(new Error(error));
+        callback(error);
       }
 
       callback();
@@ -87,7 +119,23 @@ var myHooks = function () {
 module.exports = myHooks;
 
 var setAPI = function (world, apiName) {
-  var api = require('./api' + apiName);
+  var
+    deferred = q.defer(),
+    api = require('./api' + apiName);
+
   api.init(world);
-  return api;
+
+  /*
+   Ensure that every scenario runs on a clean database, just in case something went wrong in a previous run, for
+   instance if tests where interrupted after writing documents, changing a schema, and so on.
+   */
+  api.deleteByQuery({})
+    .then(function () {
+      deferred.resolve(api);
+    })
+    .catch(function (error) {
+      deferred.reject(error);
+    });
+
+  return deferred.promise;
 };

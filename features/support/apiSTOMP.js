@@ -2,7 +2,8 @@ var
   config = require('./config'),
   stomp = require('stompit'),
   uuid = require('node-uuid'),
-  q = require('q');
+  q = require('q'),
+  KUZZLE_EXCHANGE = 'amq.topic';
 
 module.exports = {
   world: null,
@@ -12,11 +13,21 @@ module.exports = {
   responses: null,
 
   init: function (world) {
-    var stompUrl = config.stompUrl.replace('stomp://', '').split(':');
+    var
+      stompUrl = config.stompUrl.replace('stomp://', '').split(':'),
+      headers = {
+        host: stompUrl[0],
+        port: stompUrl[1],
+        connectHeaders: {
+          'accept-version': '1.0',
+          host: '/'
+        }
+      };
     this.world = world;
 
     if (!this.stompClient) {
-      this.stompClient = stomp.connect({ host: stompUrl[0], port: stompUrl[1] });
+      //this.stompClient = stomp.connect(headers);
+      this.stompClient = q.ninvoke(stomp, 'connect', headers);
     }
   },
 
@@ -96,7 +107,7 @@ module.exports = {
         body: filters
       };
 
-    return publish.call(this, topic, msg);
+    return publish.call(this, topic, msg, false);
   },
 
   deleteCollection: function () {
@@ -152,10 +163,54 @@ module.exports = {
 
 var publish = function (topic, message, waitForAnswer) {
   var
-    deferred = q.defer(),
-    listen = (waitForAnswer === undefined) ? true : waitForAnswer;
+    deferred = q.defer();
+
+  this.stompClient
+    .then(function (client) {
+      var
+        destination = ['/exchange', KUZZLE_EXCHANGE, topic].join('/'),
+        //tempReplyRoom = '/exchange/' + KUZZLE_EXCHANGE + '/' + uuid.v1(),
+        tempReplyRoom = '/exchange/' + KUZZLE_EXCHANGE + '/foo',
+        stringifiedMessage = JSON.stringify(message),
+        stompHeader = {
+          'destination': destination,
+          'content-type': 'application/json',
+          'content-length': stringifiedMessage.length
+        },
+        listen = (waitForAnswer === undefined) ? true : waitForAnswer,
+        writeStream;
 
 
+      if (listen) {
+        stompHeader['reply-to'] = tempReplyRoom;
+        client.subscribe({ destination: tempReplyRoom, ack: 'client-individual'}, function (error, messageStream) {
+          var message = '';
+console.log('MESSAGE STREAM: ', messageStream);
+          messageStream.on('readable', function () {
+            var chunk;
+
+            while (null !== (chunk = messageStream.read())) {
+              message += chunk;
+            }
+          });
+
+          messageStream.on('end', function () {
+            message.ack();
+            console.log('MESSAGE RECEIVED: ', message);
+            deferred.resolve(JSON.parse(message));
+          });
+        });
+    }
+      else {
+        deferred.resolve({});
+      }
+
+      writeStream = client.send(stompHeader);
+      writeStream.end(stringifiedMessage);
+    })
+    .catch(function (error) {
+      deferred.reject(error + ' - ' + error.longMessage);
+    });
 
   return deferred.promise;
 };

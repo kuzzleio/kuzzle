@@ -1,6 +1,7 @@
 var
   config = require('./config'),
   mqtt = require('mqtt'),
+  uuid = require('node-uuid'),
   q = require('q');
 
 module.exports = {
@@ -186,11 +187,12 @@ var publishAndListen = function (topic, message) {
     deferred = q.defer(),
     mqttListener = mqtt.connect(config.mqttUrl);
 
+  message.requestId = uuid.v1();
   message.mqttClientId = mqttListener.options.clientId;
   mqttListener.subscribe('mqtt.' + mqttListener.options.clientId);
 
-  mqttListener.once('message', function (topic, message) {
-    var unpacked = JSON.parse((new Buffer(message)).toString());
+  mqttListener.once('message', function (topic, response) {
+    var unpacked = JSON.parse((new Buffer(response)).toString());
 
     if (unpacked.error) {
       mqttListener.end(true);
@@ -198,12 +200,12 @@ var publishAndListen = function (topic, message) {
       return false;
     }
 
-    mqttListener.on('message', function (topic, message) {
-      this.responses = JSON.parse((new Buffer(message)).toString());
+    mqttListener.on('message', function (topic, notification) {
+      this.responses = JSON.parse((new Buffer(notification)).toString());
     }.bind(this));
 
     mqttListener.subscribe(unpacked.result);
-    this.subscribedRooms[unpacked.result] = mqttListener;
+    this.subscribedRooms[message.requestId] = mqttListener;
     deferred.resolve(unpacked);
   }.bind(this));
 

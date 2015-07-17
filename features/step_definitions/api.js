@@ -132,7 +132,6 @@ var apiSteps = function () {
 
         this.api.search(filters)
           .then(function (body) {
-console.dir(body.result.hits);
             if (body.error !== null) {
               if (dont) {
                 callbackAsync();
@@ -285,6 +284,47 @@ console.dir(body.result.hits);
         }
 
         callback.fail(new Error(err));
+        return false;
+      }
+
+      callback();
+    });
+  });
+
+  this.Then(/^I count ([\d]*) documents with "([^"]*)" in field "([^"]*)"/, function (number, value, field, callback) {
+    var main = function (callbackAsync) {
+      setTimeout(function () {
+        var filter = {
+          query: {
+            term: {}
+          }
+        };
+
+        filter.query.term[field] = value;
+
+        this.api.count(filter)
+          .then(function (body) {
+            if (body.error) {
+              callbackAsync(new Error(error));
+              return false;
+            }
+
+            if (body.result.count !== parseInt(number)) {
+              callbackAsync('Wrong document count received. Expected ' + number + ', got ' + body.result.count);
+              return false;
+            }
+
+            callbackAsync();
+          }.bind(this))
+          .catch(function (error) {
+              callbackAsync(new Error(error));
+          });
+      }.bind(this), 500);
+    };
+
+    async.retry(20, main.bind(this), function (error) {
+      if (error) {
+        callback.fail(new Error(error));
         return false;
       }
 

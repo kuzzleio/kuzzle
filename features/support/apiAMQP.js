@@ -174,7 +174,7 @@ var publish = function (topic, message, waitForAnswer) {
               var unpacked = JSON.parse((new Buffer(reply.content)).toString());
 
               if (unpacked.error) {
-                deferred.reject(unpacked.error);
+                deferred.reject(unpacked.error.body.error);
               }
               else {
                 deferred.resolve(unpacked);
@@ -203,29 +203,33 @@ var publishAndListen = function (topic, message) {
     deferred = q.defer(),
     roomPromise = publish.call(this, topic, message);
 
-  roomPromise.then(function (room) {
-    this.amqpClient.then(function (connection) {
-      connection.createChannel().then(function (channel) {
-        this.subscribedRooms[room.result] = channel;
+  message.requestId = uuid.v1();
 
-        channel.assertQueue(room.result)
-          .then(function () {
-            return channel.bindQueue(room.result, KUZZLE_EXCHANGE, room.result);
-          })
-          .then(function () {
-            channel.consume(room.result, function (reply) {
-              var notification = JSON.parse((new Buffer(reply.content)).toString());
-              channel.ack(reply);
-              this.responses = notification;
-            }.bind(this));
-          }.bind(this))
-          .then(function () {
-            deferred.resolve(room);
-          });
-      }.bind(this))
-      .catch(function (error) {
-        deferred.reject(new Error(error));
-      });
+  roomPromise.then(function (room) {
+    this.amqpClient
+      .then(function (connection) {
+        connection.createChannel()
+          .then(function (channel) {
+            this.subscribedRooms[message.requestId] = channel;
+
+            channel.assertQueue(room.result)
+              .then(function () {
+                return channel.bindQueue(room.result, KUZZLE_EXCHANGE, room.result);
+              })
+              .then(function () {
+                channel.consume(room.result, function (reply) {
+                  var notification = JSON.parse((new Buffer(reply.content)).toString());
+                  channel.ack(reply);
+                  this.responses = notification;
+                }.bind(this));
+              }.bind(this))
+              .then(function () {
+                deferred.resolve(room);
+              });
+        }.bind(this))
+        .catch(function (error) {
+          deferred.reject(new Error(error));
+        });
     }.bind(this));
   }.bind(this));
 
