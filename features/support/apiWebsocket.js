@@ -146,8 +146,8 @@ module.exports = {
       };
 
       return emitAndListen.call(this, 'subscribe', msg);
-  },
 
+  },
   unsubscribe: function (room) {
     var
       msg = {
@@ -159,6 +159,19 @@ module.exports = {
     this.socket.off(this.subscribedRooms[room]);
     delete this.subscribedRooms[room];
     return emit.call(this, 'subscribe', msg, false);
+  },
+
+  countSubscription: function () {
+    var
+      rooms = Object.keys(this.subscribedRooms),
+      msg = {
+        action: 'count',
+        body: {
+          roomId: this.subscribedRooms[rooms[0]]
+        }
+      };
+
+    return emit.call(this, 'subscribe', msg);
   }
 };
 
@@ -185,7 +198,7 @@ var emit = function (controller, msg, getAnswer) {
     deferred.resolve({});
   }
 
-  this.socket.emit(controller, msg );
+  this.socket.emit(controller, msg);
 
   return deferred.promise;
 };
@@ -198,19 +211,19 @@ var emitAndListen = function (controller, msg) {
     msg.requestId = uuid.v1();
   }
 
-  this.socket.once(msg.requestId, function (result) {
-    if (result.error) {
-      deferred.reject(result.error);
+  this.socket.once(msg.requestId, function (response) {
+    if (response.error) {
+      deferred.reject(response.error);
       return false;
     }
 
-    this.subscribedRooms[msg.requestId] = result.result;
+    this.subscribedRooms[response.result.roomName] = response.result.roomId;
 
-    this.socket.on(result.result, function (document) {
+    this.socket.on(response.result.roomId, function (document) {
       this.responses = document;
     }.bind(this));
 
-    deferred.resolve(result);
+    deferred.resolve(response);
   }.bind(this));
 
   this.socket.emit(controller, msg);

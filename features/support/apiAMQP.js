@@ -7,6 +7,7 @@ var
 
 module.exports = {
   world: null,
+  clientId: null,
   amqpClient: null,
   amqpChannel: null,
   subscribedRooms: {},
@@ -14,6 +15,8 @@ module.exports = {
 
   init: function (world) {
     this.world = world;
+
+    this.clientId = uuid.v1();
 
     if (!this.amqpClient) {
       this.amqpClient = amqp.connect(config.amqpUrl);
@@ -164,6 +167,8 @@ var publish = function (topic, message, waitForAnswer) {
     deferred = q.defer(),
     listen = (waitForAnswer !== undefined) ? waitForAnswer : true;
 
+  message.clientId = this.clientId;
+
   this.amqpChannel.then(function (channel) {
     if (listen) {
       channel.assertQueue(null, {autoDelete: true, exclusive: true, durable: false})
@@ -203,29 +208,29 @@ var publishAndListen = function (topic, message) {
     deferred = q.defer(),
     roomPromise = publish.call(this, topic, message);
 
-  roomPromise.then(function (room) {
+  roomPromise.then(function (response) {
     this.amqpClient.then(function (connection) {
       connection.createChannel().then(function (channel) {
-        this.subscribedRooms[room.result] = channel;
+        this.subscribedRooms[response.result.roomName] = channel;
 
-        channel.assertQueue(room.result)
+        channel.assertQueue(response.result.roomId)
           .then(function () {
-            return channel.bindQueue(room.result, KUZZLE_EXCHANGE, room.result);
+            return channel.bindQueue(response.result.roomId, KUZZLE_EXCHANGE, response.result.roomId);
           })
           .then(function () {
-            channel.consume(room.result, function (reply) {
+            channel.consume(response.result.roomId, function (reply) {
               var notification = JSON.parse((new Buffer(reply.content)).toString());
               channel.ack(reply);
               this.responses = notification;
             }.bind(this));
           }.bind(this))
           .then(function () {
-            deferred.resolve(room);
+            deferred.resolve(response);
           });
       }.bind(this))
-      .catch(function (error) {
-        deferred.reject(new Error(error));
-      });
+        .catch(function (error) {
+          deferred.reject(new Error(error));
+        });
     }.bind(this));
   }.bind(this));
 
