@@ -27,7 +27,7 @@ var apiSteps = function () {
       setTimeout(function () {
         this.api.get(this.result._id)
           .then(function (body) {
-            if (body.error) {
+            if (body.error && !not) {
               if (body.error.message) {
                 callbackAsync(body.error.message);
                 return false;
@@ -472,7 +472,7 @@ var apiSteps = function () {
     this.api.deleteById(this.result._id)
       .then(function (body) {
         if (body.error !== null) {
-          callback.fail(new Error(body.error));
+          callback.fail(body.error);
           return false;
         }
 

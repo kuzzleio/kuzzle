@@ -1,13 +1,14 @@
 var
   config = require('./config'),
-  stomp = require('stompit'),
+  stomp = require('stomp-client'),
   uuid = require('node-uuid'),
   q = require('q'),
   KUZZLE_EXCHANGE = 'amq.topic';
 
 module.exports = {
   world: null,
-  stompClient: null,
+  stompClient: undefined,
+  stompConnected: undefined,
   clientId: uuid.v1(),
   subscribedRooms: {},
   responses: null,
@@ -15,20 +16,18 @@ module.exports = {
   init: function (world) {
     var
       stompUrl = config.stompUrl.replace('stomp://', '').split(':'),
-      headers = {
-        host: stompUrl[0],
-        port: stompUrl[1],
-        connectHeaders: {
-          'accept-version': '1.0',
-          host: '/'
-        }
-      };
-    this.world = world;
+      deferredConnection;
 
-    if (!this.stompClient) {
-      //this.stompClient = stomp.connect(headers);
-      this.stompClient = q.ninvoke(stomp, 'connect', headers);
+    if ( !this.stompClient ) {
+      this.stompClient = new stomp(stompUrl[0], stompUrl[1], 'guest', 'guest', '1.0', '/');
+
+      deferredConnection = q.defer();
+      this.stompConnected = deferredConnection.promise;
+      this.stompClient.connect(function (sessionId) {
+        deferredConnection.resolve(sessionId);
+      });
     }
+    this.world = world;
   },
 
   disconnect: function () {
@@ -107,7 +106,7 @@ module.exports = {
         body: filters
       };
 
-    return publish.call(this, topic, msg, false);
+    return publish.call(this, topic, msg);
   },
 
   deleteCollection: function () {
@@ -152,64 +151,68 @@ module.exports = {
     var
       topic = ['subscribe', this.world.fakeCollection, 'off'].join('.'),
       msg = {
-        requestId: room
+        requestId: room,
+        clientId: this.subscribedRooms[room].clientId
       };
 
-    //this.subscribedRooms[room].end(true);
+    if (this.stompClient.subscriptions[this.subscribedRooms[room].topic]) {
+      this.stompClient.unsubscribe(this.subscribedRooms[room].topic);
+    }
     delete this.subscribedRooms[room];
     return publish.call(this, topic, msg, false);
+  },
+
+  countSubscription: function () {
+    var
+      topic = ['subscribe', this.world.fakeCollection, 'count'].join('.'),
+      rooms = Object.keys(this.subscribedRooms),
+      msg = {
+        body: {
+          roomId: this.subscribedRooms[rooms[0]].roomId
+        }
+      };
+
+    return publish.call(this, topic, msg);
   }
 };
 
 var publish = function (topic, message, waitForAnswer) {
   var
-    deferred = q.defer();
+    deferred = q.defer(),
+    listen = (waitForAnswer === undefined) ? true : waitForAnswer,
+    destination = ['/exchange', KUZZLE_EXCHANGE, topic].join('/'),
+    messageHeader = {
+      'content-type': 'application/json'
+    };
 
-  this.stompClient
-    .then(function (client) {
-      var
-        destination = ['/exchange', KUZZLE_EXCHANGE, topic].join('/'),
-        //tempReplyRoom = '/exchange/' + KUZZLE_EXCHANGE + '/' + uuid.v1(),
-        tempReplyRoom = '/exchange/' + KUZZLE_EXCHANGE + '/foo',
-        stringifiedMessage = JSON.stringify(message),
-        stompHeader = {
-          'destination': destination,
-          'content-type': 'application/json',
-          'content-length': stringifiedMessage.length
-        },
-        listen = (waitForAnswer === undefined) ? true : waitForAnswer,
-        writeStream;
+  if (!message.clientId) {
+    message.clientId = uuid.v1();
+  }
 
-
+  this.stompConnected
+    .then(function () {
       if (listen) {
-        stompHeader['reply-to'] = tempReplyRoom;
-        client.subscribe({ destination: tempReplyRoom, ack: 'client-individual'}, function (error, messageStream) {
-          var message = '';
-console.log('MESSAGE STREAM: ', messageStream);
-          messageStream.on('readable', function () {
-            var chunk;
+        messageHeader['reply-to'] = uuid.v1();
+        this.stompClient.subscribe('/queue/' + messageHeader['reply-to'], function (body, headers) {
+          var unpacked = JSON.parse(body);
+          if (unpacked.error) {
+            deferred.reject(unpacked.error);
+          }
+          else {
+            deferred.resolve(unpacked);
+          }
 
-            while (null !== (chunk = messageStream.read())) {
-              message += chunk;
-            }
-          });
-
-          messageStream.on('end', function () {
-            message.ack();
-            console.log('MESSAGE RECEIVED: ', message);
-            deferred.resolve(JSON.parse(message));
-          });
-        });
-    }
+          this.stompClient.unsubscribe(headers.destination);
+        }.bind(this));
+      }
       else {
         deferred.resolve({});
       }
 
-      writeStream = client.send(stompHeader);
-      writeStream.end(stringifiedMessage);
-    })
+      this.stompClient.publish(destination, JSON.stringify(message), messageHeader);
+    }.bind(this))
     .catch(function (error) {
-      deferred.reject(error + ' - ' + error.longMessage);
+      deferred.reject(error);
     });
 
   return deferred.promise;
@@ -218,6 +221,24 @@ console.log('MESSAGE STREAM: ', messageStream);
 var publishAndListen = function (topic, message) {
   var
     deferred = q.defer();
+
+  message.clientId = uuid.v1();
+
+  publish.call(this, topic, message)
+    .then(function (response) {
+      var topic = '/topic/' + response.result.roomId;
+
+      this.subscribedRooms[response.result.roomName] = { roomId: response.result.roomId, topic: topic, clientId: message.clientId };
+
+      this.stompClient.subscribe(topic, function (body) {
+        this.responses = JSON.parse(body);
+      }.bind(this));
+
+      deferred.resolve(response);
+    }.bind(this))
+    .catch(function (error) {
+      deferred.reject(error);
+    });
 
   return deferred.promise;
 };
