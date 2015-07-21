@@ -27,7 +27,7 @@ var apiSteps = function () {
       setTimeout(function () {
         this.api.get(this.result._id)
           .then(function (body) {
-            if (body.error) {
+            if (body.error && !not) {
               if (body.error.message) {
                 callbackAsync(body.error.message);
                 return false;
@@ -132,7 +132,6 @@ var apiSteps = function () {
 
         this.api.search(filters)
           .then(function (body) {
-
             if (body.error !== null) {
               if (dont) {
                 callbackAsync();
@@ -292,6 +291,47 @@ var apiSteps = function () {
     });
   });
 
+  this.Then(/^I count ([\d]*) documents with "([^"]*)" in field "([^"]*)"/, function (number, value, field, callback) {
+    var main = function (callbackAsync) {
+      setTimeout(function () {
+        var filter = {
+          query: {
+            match: {}
+          }
+        };
+
+        filter.query.match[field] = value;
+
+        this.api.count(filter)
+          .then(function (body) {
+            if (body.error) {
+              callbackAsync(new Error(error));
+              return false;
+            }
+
+            if (body.result.count !== parseInt(number)) {
+              callbackAsync('Wrong document count received. Expected ' + number + ', got ' + body.result.count);
+              return false;
+            }
+
+            callbackAsync();
+          }.bind(this))
+          .catch(function (error) {
+              callbackAsync(new Error(error));
+          });
+      }.bind(this), 500);
+    };
+
+    async.retry(20, main.bind(this), function (error) {
+      if (error) {
+        callback.fail(new Error(error));
+        return false;
+      }
+
+      callback();
+    });
+  });
+
   this.Then(/^I should receive a "([^"]*)" notification$/, function (action, callback) {
     var main = function (callbackAsync) {
       setTimeout(function () {
@@ -432,7 +472,7 @@ var apiSteps = function () {
     this.api.deleteById(this.result._id)
       .then(function (body) {
         if (body.error !== null) {
-          callback.fail(new Error(body.error));
+          callback.fail(body.error);
           return false;
         }
 
@@ -446,9 +486,9 @@ var apiSteps = function () {
   this.Then(/^I remove documents with field "([^"]*)" equals to value "([^"]*)"$/, function (field, value, callback) {
     var main = function (callbackAsync) {
       setTimeout(function () {
-        var filter = { filter: { term: {} } };
+        var filter = { query: { match: {} } };
 
-        filter.filter.term[field] = value;
+        filter.query.match[field] = value;
 
         this.api.deleteByQuery(filter)
           .then(function (body) {
@@ -472,7 +512,7 @@ var apiSteps = function () {
 
     async.retry(20, main.bind(this), function (err) {
       if (err) {
-        callback.fail(new Error(err));
+        callback.fail(err);
         return false;
       }
 

@@ -39,10 +39,12 @@ Feature: Test websocket API
 
   @usingWebsocket
   Scenario: Count document
-    When I write the document
-    When I write the document
-    When I write the document
-    Then I count 3 documents
+    When I write the document "documentGrace"
+    When I write the document "documentAda"
+    When I write the document "documentGrace"
+    When I write the document "documentAda"
+    Then I count 4 documents
+    And I count 2 documents with "NYC" in field "city"
 
   @removeSchema @usingWebsocket
   Scenario: Change mapping

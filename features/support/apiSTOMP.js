@@ -1,30 +1,39 @@
 var
   config = require('./config'),
-  mqtt = require('mqtt'),
+  stomp = require('stomp-client'),
   uuid = require('node-uuid'),
-  q = require('q');
+  q = require('q'),
+  KUZZLE_EXCHANGE = 'amq.topic';
 
 module.exports = {
   world: null,
-  mqttClient: null,
+  stompClient: undefined,
+  stompConnected: undefined,
+  clientId: uuid.v1(),
   subscribedRooms: {},
   responses: null,
 
   init: function (world) {
-    this.world = world;
+    var
+      stompUrl = config.stompUrl.replace('stomp://', '').split(':'),
+      deferredConnection;
 
-    if (this.mqttClient) {
-      return false;
+    if ( !this.stompClient ) {
+      this.stompClient = new stomp(stompUrl[0], stompUrl[1], 'guest', 'guest', '1.0', '/');
+
+      deferredConnection = q.defer();
+      this.stompConnected = deferredConnection.promise;
+      this.stompClient.connect(function (sessionId) {
+        deferredConnection.resolve(sessionId);
+      });
     }
-
-    this.mqttClient = mqtt.connect(config.mqttUrl);
-    this.mqttClient.subscribe('mqtt.' + this.mqttClient.options.clientId);
+    this.world = world;
   },
 
   disconnect: function () {
-    if (this.mqttClient) {
-      this.mqttClient.end(true);
-      this.mqttClient = null;
+    if (this.stompClient) {
+      this.stompClient.disconnect();
+      this.stompClient = null;
     }
   },
 
@@ -142,11 +151,13 @@ module.exports = {
     var
       topic = ['subscribe', this.world.fakeCollection, 'off'].join('.'),
       msg = {
-        clientId: this.subscribedRooms[room].listener.options.clientId,
-        requestId: room
+        requestId: room,
+        clientId: this.subscribedRooms[room].clientId
       };
 
-    this.subscribedRooms[room].listener.end(true);
+    if (this.stompClient.subscriptions[this.subscribedRooms[room].topic]) {
+      this.stompClient.unsubscribe(this.subscribedRooms[room].topic);
+    }
     delete this.subscribedRooms[room];
     return publish.call(this, topic, msg, false);
   },
@@ -168,60 +179,66 @@ module.exports = {
 var publish = function (topic, message, waitForAnswer) {
   var
     deferred = q.defer(),
-    listen = (waitForAnswer === undefined) ? true : waitForAnswer;
+    listen = (waitForAnswer === undefined) ? true : waitForAnswer,
+    destination = ['/exchange', KUZZLE_EXCHANGE, topic].join('/'),
+    messageHeader = {
+      'content-type': 'application/json'
+    };
 
   if (!message.clientId) {
-    message.clientId = this.mqttClient.options.clientId;
+    message.clientId = uuid.v1();
   }
 
-  if (listen) {
-    this.mqttClient.once('message', function (topic, message) {
-      var unpacked = JSON.parse((new Buffer(message)).toString());
+  this.stompConnected
+    .then(function () {
+      if (listen) {
+        messageHeader['reply-to'] = uuid.v1();
+        this.stompClient.subscribe('/queue/' + messageHeader['reply-to'], function (body, headers) {
+          var unpacked = JSON.parse(body);
+          if (unpacked.error) {
+            deferred.reject(unpacked.error);
+          }
+          else {
+            deferred.resolve(unpacked);
+          }
 
-      if (unpacked.error) {
-        deferred.reject(unpacked.error);
+          this.stompClient.unsubscribe(headers.destination);
+        }.bind(this));
       }
       else {
-        deferred.resolve(unpacked);
+        deferred.resolve({});
       }
-    }.bind(this));
-  }
-  else {
-    deferred.resolve({});
-  }
 
-  this.mqttClient.publish(topic, JSON.stringify(message));
+      this.stompClient.publish(destination, JSON.stringify(message), messageHeader);
+    }.bind(this))
+    .catch(function (error) {
+      deferred.reject(error);
+    });
 
   return deferred.promise;
 };
 
 var publishAndListen = function (topic, message) {
   var
-    deferred = q.defer(),
-    mqttListener = mqtt.connect(config.mqttUrl);
+    deferred = q.defer();
 
-  message.requestId = uuid.v1();
-  message.clientId = mqttListener.options.clientId;
-  mqttListener.subscribe('mqtt.' + mqttListener.options.clientId);
+  message.clientId = uuid.v1();
 
-  mqttListener.once('message', function (topic, response) {
-    var unpacked = JSON.parse((new Buffer(response)).toString());
+  publish.call(this, topic, message)
+    .then(function (response) {
+      var topic = '/topic/' + response.result.roomId;
 
-    if (unpacked.error) {
-      mqttListener.end(true);
-      deferred.reject(unpacked.error);
-      return false;
-    }
+      this.subscribedRooms[response.result.roomName] = { roomId: response.result.roomId, topic: topic, clientId: message.clientId };
 
-    mqttListener.on('message', function (topic, notification) {
-      this.responses = JSON.parse((new Buffer(notification)).toString());
-    }.bind(this));
+      this.stompClient.subscribe(topic, function (body) {
+        this.responses = JSON.parse(body);
+      }.bind(this));
 
-    mqttListener.subscribe(unpacked.result.roomId);
-    this.subscribedRooms[message.requestId] = { roomId: unpacked.result.roomId, listener: mqttListener };
-    deferred.resolve(unpacked);
-  }.bind(this));
+      deferred.resolve(response);
+    }.bind(this))
+    .catch(function (error) {
+      deferred.reject(error);
+    });
 
-  mqttListener.publish(topic, JSON.stringify(message));
   return deferred.promise;
 };

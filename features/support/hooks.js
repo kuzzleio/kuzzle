@@ -1,4 +1,6 @@
-var async = require('async');
+var
+  async = require('async'),
+  q = require('q');
 
 var myHooks = function () {
   /**
@@ -36,15 +38,22 @@ var myHooks = function () {
     callback();
   });
 
+  this.Before('@usingSTOMP', function (callback) {
+    this.api = setAPI(this, 'STOMP');
+    callback();
+  });
+
   this.After(function (callback) {
-    this.api.deleteByQuery({})
-      .then(function () {
-        this.api.disconnect();
-        callback();
-      }.bind(this))
-      .catch(function (error) {
-        callback(new Error(error));
-      });
+    setTimeout(function () {
+      this.api.deleteByQuery({})
+        .then(function () {
+          this.api.disconnect();
+          callback();
+        }.bind(this))
+        .catch(function (error) {
+          callback(new Error(error));
+        });
+    }.bind(this), 0);
   });
 
   this.After('@removeSchema', function (callback) {
@@ -71,7 +80,7 @@ var myHooks = function () {
       this.api.subscribedRooms = [];
 
       if (error) {
-        callback(new Error(error));
+        callback(error);
       }
 
       callback();
@@ -83,6 +92,8 @@ module.exports = myHooks;
 
 var setAPI = function (world, apiName) {
   var api = require('./api' + apiName);
+
   api.init(world);
+
   return api;
 };

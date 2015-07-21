@@ -33,10 +33,12 @@ Feature: Test AMQP API
 
   @usingAMQP
   Scenario: Count document
-    When I write the document
-    When I write the document
-    When I write the document
-    Then I count 3 documents
+    When I write the document "documentGrace"
+    When I write the document "documentAda"
+    When I write the document "documentGrace"
+    When I write the document "documentAda"
+    Then I count 4 documents
+    And I count 2 documents with "NYC" in field "city"
 
   @removeSchema @usingAMQP
   Scenario: Change mapping
@@ -89,3 +91,9 @@ Feature: Test AMQP API
     Then I remove documents with field "hobby" equals to value "computer"
     Then I should receive a "delete" notification
     And The notification should not have a "_source" member
+
+  @usingAMQP @unsubscribe
+  Scenario: Count how many subscription on a room
+    Given A room subscription listening to "lastName" having value "Hopper"
+    Given A room subscription listening to "lastName" having value "Hopper"
+    Then I can count "2" subscription
