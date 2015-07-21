@@ -21,6 +21,7 @@
     "big.js": "~3.0.2",
     "body-parser": "^1.12.2",
     "captains-log": "~0.11.11",
+    "commander": "~2.1.0",
     "elasticsearch": "~5.0.0",
     "finalhandler": "^0.3.4",
     "geolib": "^2.0.14",
