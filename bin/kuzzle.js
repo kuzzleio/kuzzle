@@ -18,5 +18,10 @@ cmd.option('--port [port]');
 cmd.description('Run Kuzzle');
 cmd.action(require('./kuzzle-start'));
 
+cmd = program.command('perf');
+cmd.option('--port [port]');
+cmd.description('Run Kuzzle');
+cmd.action(require('./kuzzle-perf'));
+
 // Run user command
 program.parse(process.argv);

@@ -4,10 +4,12 @@ kuzzle:
     - ".:/var/app"
   ports:
     - "7512:7512"
+  command: /run-perf.sh
   links:
     - rabbit
     - elasticsearch
     - redis
+    - logstash
   environment:
     - KUZZLE_PORT=7512
     - BROKER_HOST=rabbit:5672
@@ -33,3 +35,11 @@ redis:
 
 elasticsearch:
   image: elasticsearch:1.5.2
+
+logstash:
+  image: logstash:1.5.2
+  volumes:
+    - ./config/logstash.conf:/config-dir/logstash.conf
+  command: logstash -f /config-dir/logstash.conf
+  ports:
+    - "61614:61614"
