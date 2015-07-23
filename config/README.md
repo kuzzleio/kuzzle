@@ -16,7 +16,7 @@ Basically every data creation, deletion update, every Subscriptions added and re
 We also log some starting and stopping services from Kuzzle.
 
 
-Seel [lib/api/perf.js](../lib/api/perf.js)
+See [lib/api/perf.js](../lib/api/perf.js)
 
 ### Is there any informations about Kuzzle send to every event for free  ?
 
