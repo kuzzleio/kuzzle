@@ -32,6 +32,12 @@ Feature: Test STOMP API
     Then I can retrieve actions from bulk import
 
   @usingSTOMP
+  Scenario: Delete type
+    When I write the document
+    Then I remove the collection and schema
+    Then I'm not able to get the document
+
+  @usingSTOMP
   Scenario: Count document
     When I write the document "documentGrace"
     When I write the document "documentAda"

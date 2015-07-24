@@ -44,16 +44,14 @@ var myHooks = function () {
   });
 
   this.After(function (callback) {
-    setTimeout(function () {
-      this.api.deleteByQuery({})
-        .then(function () {
-          this.api.disconnect();
-          callback();
-        }.bind(this))
-        .catch(function (error) {
-          callback(new Error(error));
-        });
-    }.bind(this), 0);
+    this.api.deleteByQuery({})
+      .then(function () {
+        this.api.disconnect();
+        callback();
+      }.bind(this))
+      .catch(function (error) {
+        callback(new Error(error));
+      });
   });
 
   this.After('@removeSchema', function (callback) {
