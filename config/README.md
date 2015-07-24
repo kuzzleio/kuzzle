@@ -45,10 +45,10 @@ See [lib/services/logger.js](../lib/services/logger.js)
 
 ### Where are my log ?
 
-By default all your logs are belong to elasticlogstash.
-Kibana is available by default to  http://localhost:5601 for visualisation (see docker-compose-perf.yml for options).
+By default, all your logs belong to elasticlogstash.
+Kibana is available by default to http://localhost:5601 for visualisation (see docker-compose-perf.yml for options).
 
-If you want your log in a file and/or in tty see section output from logstash.conf.
+If you want your log in a file and/or in tty, see section output from logstash.conf.
 
 With file option, log are send to log_stash component in directory  :
 
