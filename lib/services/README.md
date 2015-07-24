@@ -4,10 +4,11 @@ In Kuzzle, a Service module is the implementation of the interface to a differen
 
 Kuzzle currently implements the following Services:
 
-* [broker.js](./broker.js): interface to a AMQP compatible broker ([RabbitMQ](https://www.rabbitmq.com/) by default).
+* [rabbit.js](./rabbit.js): interface to [RabbitMQ](https://www.rabbitmq.com/)
 * [elasticsearch.js](./elasticsearch.js): interface to [Elasticsearch](https://www.elastic.co/products/elasticsearch), used for persistent data storage.
 * [redis.js](./redis.js): interface to the [redis](http://redis.io) cache server.
 * [logger.js](./logger.js): interface to the [Logstash](https://www.elastic.co/products/logstash) server.
+* [ipc.js](./ipc.js): IPC implementation of the internal message broker
 * [index.js](./index.js): module entry point. Used to initialize all implemented services.
 
 
@@ -48,7 +49,6 @@ For instance, Kuzzle use Elasticsearch for persistent data storage. If we want t
 
 
 ## Use an existing service for a new Kuzzle engine
-
 Kuzzle use Redis for its notification engine.
 You may want to reuse this Redis service to, for instance, store user sessions.
 

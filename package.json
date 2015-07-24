@@ -28,6 +28,7 @@
     "json-stable-stringify": "1.0.0",
     "lodash": "^3.6.0",
     "ngeohash": "^0.6.0",
+    "node-ipc": "^1.1.13",
     "node-uuid": "1.4.3",
     "q": "^1.2.0",
     "rc": "~1.0.1",
