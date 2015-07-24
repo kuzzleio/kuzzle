@@ -45,14 +45,18 @@ See [lib/services/logger.js](../lib/services/logger.js)
 
 ### Where are my log ?
 
-Log are send to log_stash component as a file in directory
+By default all your logs are belong to elasticlogstash.
+Kibana is available by default to  http://localhost:5601 for visualisation (see docker-compose-perf.yml for options).
+
+If you want your log in a file and/or in tty see section output from logstash.conf.
+
+With file option, log are send to log_stash component in directory  :
 
  /var/log/logstash/kuzzle/...
 
-
 ### How to modify my log into Logstash ?
 
-See [/logstash.conf](..//logstash.conf)
+See [/logstash.conf](./logstash.conf)
 
 The filter mutate has a lot of commented/documented filters.
 See the doc from [Logstash](https://www.elastic.co/guide/en/logstash/current/index.html) for more details.
