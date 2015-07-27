@@ -7,6 +7,7 @@
  *   and will re-launch every times a modification will be done
  */
 
+require('newrelic');
 
 (function () {
 

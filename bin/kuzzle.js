@@ -20,7 +20,7 @@ cmd.action(require('./kuzzle-start'));
 
 cmd = program.command('perf');
 cmd.option('--port [port]');
-cmd.description('Run Kuzzle');
+cmd.description('Run Kuzzle for testing performance');
 cmd.action(require('./kuzzle-perf'));
 
 // Run user command
