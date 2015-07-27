@@ -49,13 +49,13 @@ logstash:
     - "61614:61614"
 
 elasticlogstash:
-  image: elasticsearch:1.5.2
+  image: elasticsearch:1.7.0
   command: elasticsearch -Des.cluster.name=elasticlogstash
   ports:
     - "9200:9200"
 
 kibana:
-  image: kibana
+  image: kibana:4.1.1
   links:
     - elasticlogstash:elasticsearch
   ports:

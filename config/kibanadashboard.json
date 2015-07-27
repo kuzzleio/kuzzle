@@ -1,0 +1,17 @@
+[
+  {
+    "_id": "perfs-DashBoard",
+    "_type": "dashboard",
+    "_source": {
+      "title": "perfs DashBoard",
+      "hits": 0,
+      "description": "",
+      "panelsJSON": "[{\"id\":\"memory-over-last-30-minutes\",\"type\":\"visualization\",\"size_x\":3,\"size_y\":2,\"col\":1,\"row\":1}]",
+      "version": 1,
+      "timeRestore": false,
+      "kibanaSavedObjectMeta": {
+        "searchSourceJSON": "{\"filter\":[{\"query\":{\"query_string\":{\"analyze_wildcard\":true,\"query\":\"*\"}}}]}"
+      }
+    }
+  }
+]
