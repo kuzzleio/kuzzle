@@ -11,10 +11,12 @@ describe('Test execute function in funnel controller', function () {
   var
     kuzzle;
 
-  beforeEach(function () {
+  beforeEach(function (callback) {
     kuzzle = new Kuzzle();
     kuzzle.log = new captainsLog({level: 'silent'});
-    kuzzle.start({}, {workers: false, servers: false});
+    kuzzle.start({}, {workers: false, servers: false}).then(function () {
+      callback();
+    });
   });
 
   it('should reject the promise if no controller is specified', function () {
