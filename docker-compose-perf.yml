@@ -44,7 +44,7 @@ logstash:
     - elasticlogstash:elasticsearch
   volumes:
     - ./config/logstash.conf:/config-dir/logstash.conf
-  command: logstash -f /config-dir/logstash.conf
+  command: bash -c "/opt/logstash/bin/plugin install logstash-input-websocket && logstash -f /config-dir/logstash.conf"
   ports:
     - "61614:61614"
 
