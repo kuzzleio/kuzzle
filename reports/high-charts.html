@@ -1,0 +1,1255 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title>node.profiler high-charts</title>
+    <script type='text/javascript' src='https://code.jquery.com/jquery-1.9.1.js'></script>
+    <script type='text/javascript'>//<![CDATA[
+    var data = [
+  {
+    "name": "./node_modules/captains-log/node_modules/rc/lib/utils.js:find",
+    "y": 0.33,
+    "tpc": 0.33,
+    "sync": {
+      "count": 1,
+      "total": 0.33
+    },
+    "async": {
+      "count": 0,
+      "total": 0
+    }
+  },
+  {
+    "name": "./node_modules/captains-log/node_modules/rc/lib/utils.js:json",
+    "y": 0.057142857142857155,
+    "tpc": 0.057142857142857155,
+    "sync": {
+      "count": 7,
+      "total": 0.4000000000000001
+    },
+    "async": {
+      "count": 0,
+      "total": 0
+    }
+  },
+  {
+    "name": "./node_modules/captains-log/node_modules/rc/lib/utils.js:env",
+    "y": 0.22,
+    "tpc": 0.22,
+    "sync": {
+      "count": 1,
+      "total": 0.22
+    },
+    "async": {
+      "count": 0,
+      "total": 0
+    }
+  },
+  {
+    "name": "./node_modules/captains-log/lib/captains.js:LowLevelLogger",
+    "y": 0.06,
+    "tpc": 0.06,
+    "sync": {
+      "count": 1,
+      "total": 0.06
+    },
+    "async": {
+      "count": 0,
+      "total": 0
+    }
+  },
+  {
+    "name": "./node_modules/captains-log/lib/wrap.js:_wrap",
+    "y": 0.46,
+    "tpc": 0.46,
+    "sync": {
+      "count": 1,
+      "total": 0.46
+    },
+    "async": {
+      "count": 0,
+      "total": 0
+    }
+  },
+  {
+    "name": "./lib/hooks/index.js:Hooks",
+    "y": 0.12,
+    "tpc": 0.12,
+    "sync": {
+      "count": 1,
+      "total": 0.12
+    },
+    "async": {
+      "count": 0,
+      "total": 0
+    }
+  },
+  {
+    "name": "./lib/workers/index.js:Workers",
+    "y": 0.06,
+    "tpc": 0.06,
+    "sync": {
+      "count": 1,
+      "total": 0.06
+    },
+    "async": {
+      "count": 0,
+      "total": 0
+    }
+  },
+  {
+    "name": "./node_modules/amqplib/node_modules/bitsyntax/lib/compile.js:compile_builder",
+    "y": 4.79,
+    "tpc": 4.79,
+    "sync": {
+      "count": 1,
+      "total": 4.79
+    },
+    "async": {
+      "count": 0,
+      "total": 0
+    }
+  },
+  {
+    "name": "./node_modules/amqplib/node_modules/bitsyntax/lib/parse.js:parse",
+    "y": 1.6900000000000002,
+    "tpc": 1.6900000000000002,
+    "sync": {
+      "count": 4,
+      "total": 6.760000000000001
+    },
+    "async": {
+      "count": 0,
+      "total": 0
+    }
+  },
+  {
+    "name": "./node_modules/amqplib/node_modules/bitsyntax/lib/parser.js:parse",
+    "y": 0.5774999999999999,
+    "tpc": 0.5774999999999999,
+    "sync": {
+      "count": 4,
+      "total": 2.3099999999999996
+    },
+    "async": {
+      "count": 0,
+      "total": 0
+    }
+  },
+  {
+    "name": "./node_modules/amqplib/node_modules/bitsyntax/lib/pattern.js:value",
+    "y": 0.51,
+    "tpc": 0.51,
+    "sync": {
+      "count": 2,
+      "total": 1.02
+    },
+    "async": {
+      "count": 0,
+      "total": 0
+    }
+  },
+  {
+    "name": "./node_modules/amqplib/node_modules/bitsyntax/lib/pattern.js:variable",
+    "y": 0.12461538461538464,
+    "tpc": 0.12461538461538464,
+    "sync": {
+      "count": 13,
+      "total": 1.6200000000000003
+    },
+    "async": {
+      "count": 0,
+      "total": 0
+    }
+  },
+  {
+    "name": "./node_modules/amqplib/node_modules/bitsyntax/lib/compile.js:compile",
+    "y": 1.2566666666666666,
+    "tpc": 1.2566666666666666,
+    "sync": {
+      "count": 3,
+      "total": 3.77
+    },
+    "async": {
+      "count": 0,
+      "total": 0
+    }
+  },
+  {
+    "name": "./node_modules/amqplib/node_modules/when/lib/makePromise.js:makePromise",
+    "y": 1.06,
+    "tpc": 1.06,
+    "sync": {
+      "count": 1,
+      "total": 1.06
+    },
+    "async": {
+      "count": 0,
+      "total": 0
+    }
+  },
+  {
+    "name": "./node_modules/amqplib/node_modules/when/lib/decorators/array.js:array",
+    "y": 0.4,
+    "tpc": 0.4,
+    "sync": {
+      "count": 1,
+      "total": 0.4
+    },
+    "async": {
+      "count": 0,
+      "total": 0
+    }
+  },
+  {
+    "name": "./node_modules/amqplib/node_modules/when/lib/apply.js:makeApply",
+    "y": 0.07,
+    "tpc": 0.07,
+    "sync": {
+      "count": 1,
+      "total": 0.07
+    },
+    "async": {
+      "count": 0,
+      "total": 0
+    }
+  },
+  {
+    "name": "./node_modules/amqplib/node_modules/when/lib/decorators/flow.js:flow",
+    "y": 0.12,
+    "tpc": 0.12,
+    "sync": {
+      "count": 1,
+      "total": 0.12
+    },
+    "async": {
+      "count": 0,
+      "total": 0
+    }
+  },
+  {
+    "name": "./node_modules/amqplib/node_modules/when/lib/decorators/fold.js:fold",
+    "y": 0.05,
+    "tpc": 0.05,
+    "sync": {
+      "count": 1,
+      "total": 0.05
+    },
+    "async": {
+      "count": 0,
+      "total": 0
+    }
+  },
+  {
+    "name": "./node_modules/amqplib/node_modules/when/lib/decorators/iterate.js:generate",
+    "y": 0.08,
+    "tpc": 0.08,
+    "sync": {
+      "count": 1,
+      "total": 0.08
+    },
+    "async": {
+      "count": 0,
+      "total": 0
+    }
+  },
+  {
+    "name": "./node_modules/amqplib/node_modules/when/lib/decorators/progress.js:progress",
+    "y": 0.04,
+    "tpc": 0.04,
+    "sync": {
+      "count": 1,
+      "total": 0.04
+    },
+    "async": {
+      "count": 0,
+      "total": 0
+    }
+  },
+  {
+    "name": "./node_modules/amqplib/node_modules/when/lib/decorators/inspect.js:inspection",
+    "y": 0.03,
+    "tpc": 0.03,
+    "sync": {
+      "count": 1,
+      "total": 0.03
+    },
+    "async": {
+      "count": 0,
+      "total": 0
+    }
+  },
+  {
+    "name": "./node_modules/amqplib/node_modules/when/lib/decorators/with.js:addWith",
+    "y": 0.04,
+    "tpc": 0.04,
+    "sync": {
+      "count": 1,
+      "total": 0.04
+    },
+    "async": {
+      "count": 0,
+      "total": 0
+    }
+  },
+  {
+    "name": "./node_modules/amqplib/node_modules/when/lib/decorators/timed.js:timed",
+    "y": 0.09,
+    "tpc": 0.09,
+    "sync": {
+      "count": 1,
+      "total": 0.09
+    },
+    "async": {
+      "count": 0,
+      "total": 0
+    }
+  },
+  {
+    "name": "./node_modules/amqplib/node_modules/when/lib/decorators/unhandledRejection.js:unhandledRejection",
+    "y": 0.14,
+    "tpc": 0.14,
+    "sync": {
+      "count": 1,
+      "total": 0.14
+    },
+    "async": {
+      "count": 0,
+      "total": 0
+    }
+  },
+  {
+    "name": "./node_modules/elasticsearch/src/lib/utils.js:each",
+    "y": 0.174,
+    "tpc": 0.174,
+    "sync": {
+      "count": 5,
+      "total": 0.87
+    },
+    "async": {
+      "count": 0,
+      "total": 0
+    }
+  },
+  {
+    "name": "./node_modules/elasticsearch/src/lib/client_action.js:makeFactoryWithModifier",
+    "y": 0.013333333333333334,
+    "tpc": 0.013333333333333334,
+    "sync": {
+      "count": 3,
+      "total": 0.04
+    },
+    "async": {
+      "count": 0,
+      "total": 0
+    }
+  },
+  {
+    "name": "./node_modules/elasticsearch/src/lib/utils.js:merge",
+    "y": 0.039373040752350826,
+    "tpc": 0.039373040752350826,
+    "sync": {
+      "count": 319,
+      "total": 12.559999999999913
+    },
+    "async": {
+      "count": 0,
+      "total": 0
+    }
+  },
+  {
+    "name": "./node_modules/elasticsearch/src/lib/client_action.js:namespaceFactory",
+    "y": 0.07425531914893618,
+    "tpc": 0.07425531914893618,
+    "sync": {
+      "count": 47,
+      "total": 3.4900000000000007
+    },
+    "async": {
+      "count": 0,
+      "total": 0
+    }
+  },
+  {
+    "name": "./node_modules/elasticsearch/src/lib/client_action.js:ApiNamespace",
+    "y": 0.0002127659574468085,
+    "tpc": 0.0002127659574468085,
+    "sync": {
+      "count": 47,
+      "total": 0.01
+    },
+    "async": {
+      "count": 0,
+      "total": 0
+    }
+  },
+  {
+    "name": "./node_modules/elasticsearch/src/lib/client_action.js:factory",
+    "y": 0.0789770992366413,
+    "tpc": 0.0789770992366413,
+    "sync": {
+      "count": 655,
+      "total": 51.730000000000054
+    },
+    "async": {
+      "count": 0,
+      "total": 0
+    }
+  },
+  {
+    "name": "./node_modules/elasticsearch/src/lib/utils.js:identity",
+    "y": 0.000519083969465649,
+    "tpc": 0.000519083969465649,
+    "sync": {
+      "count": 655,
+      "total": 0.3400000000000001
+    },
+    "async": {
+      "count": 0,
+      "total": 0
+    }
+  },
+  {
+    "name": "./node_modules/request-promise/node_modules/request/lib/cookies.js:jar",
+    "y": 0.12,
+    "tpc": 0.12,
+    "sync": {
+      "count": 1,
+      "total": 0.12
+    },
+    "async": {
+      "count": 0,
+      "total": 0
+    }
+  },
+  {
+    "name": "./node_modules/redis/lib/util.js:format",
+    "y": 0.01051724137931035,
+    "tpc": 0.01051724137931035,
+    "sync": {
+      "count": 58,
+      "total": 0.6100000000000003
+    },
+    "async": {
+      "count": 0,
+      "total": 0
+    }
+  },
+  {
+    "name": "./node_modules/redis/lib/util.js:debuglog",
+    "y": 0.005,
+    "tpc": 0.005,
+    "sync": {
+      "count": 2,
+      "total": 0.01
+    },
+    "async": {
+      "count": 0,
+      "total": 0
+    }
+  },
+  {
+    "name": "./node_modules/newrelic/lib/util/logger.js:coerce",
+    "y": 0.010909090909090908,
+    "tpc": 0.010909090909090908,
+    "sync": {
+      "count": 11,
+      "total": 0.12
+    },
+    "async": {
+      "count": 0,
+      "total": 0
+    }
+  },
+  {
+    "name": "./node_modules/newrelic/node_modules/readable-stream/lib/_stream_readable.js:pipe",
+    "y": 1.045,
+    "tpc": 1.045,
+    "sync": {
+      "count": 2,
+      "total": 2.09
+    },
+    "async": {
+      "count": 0,
+      "total": 0
+    }
+  },
+  {
+    "name": "./node_modules/newrelic/node_modules/readable-stream/lib/_stream_readable.js:on",
+    "y": 0.2875,
+    "tpc": 0.2875,
+    "sync": {
+      "count": 4,
+      "total": 1.15
+    },
+    "async": {
+      "count": 0,
+      "total": 0
+    }
+  },
+  {
+    "name": "./node_modules/newrelic/node_modules/readable-stream/lib/_stream_readable.js:resume",
+    "y": 0.415,
+    "tpc": 0.415,
+    "sync": {
+      "count": 2,
+      "total": 0.83
+    },
+    "async": {
+      "count": 0,
+      "total": 0
+    }
+  },
+  {
+    "name": "./node_modules/newrelic/node_modules/readable-stream/lib/_stream_readable.js:read",
+    "y": 0.2366666666666667,
+    "tpc": 0.2366666666666667,
+    "sync": {
+      "count": 3,
+      "total": 0.7100000000000001
+    },
+    "async": {
+      "count": 0,
+      "total": 0
+    }
+  },
+  {
+    "name": "./node_modules/newrelic/lib/util/logger.js:_read",
+    "y": 0.016666666666666666,
+    "tpc": 0.016666666666666666,
+    "sync": {
+      "count": 3,
+      "total": 0.05
+    },
+    "async": {
+      "count": 0,
+      "total": 0
+    }
+  },
+  {
+    "name": "./node_modules/newrelic/lib/util/flatten.js:flatten",
+    "y": 0.13,
+    "tpc": 0.13,
+    "sync": {
+      "count": 1,
+      "total": 0.13
+    },
+    "async": {
+      "count": 0,
+      "total": 0
+    }
+  },
+  {
+    "name": "./node_modules/newrelic/lib/util/safe-json.js:stringifySync",
+    "y": 0.49666666666666665,
+    "tpc": 0.49666666666666665,
+    "sync": {
+      "count": 3,
+      "total": 1.49
+    },
+    "async": {
+      "count": 0,
+      "total": 0
+    }
+  },
+  {
+    "name": "./node_modules/newrelic/lib/config.js:_fromPassed",
+    "y": 0.09333333333333334,
+    "tpc": 0.09333333333333334,
+    "sync": {
+      "count": 6,
+      "total": 0.56
+    },
+    "async": {
+      "count": 0,
+      "total": 0
+    }
+  },
+  {
+    "name": "./node_modules/newrelic/lib/config.js:_fromSpecial",
+    "y": 0.035,
+    "tpc": 0.035,
+    "sync": {
+      "count": 2,
+      "total": 0.07
+    },
+    "async": {
+      "count": 0,
+      "total": 0
+    }
+  },
+  {
+    "name": "./node_modules/newrelic/lib/config.js:_fromEnvironment",
+    "y": 0.11200000000000002,
+    "tpc": 0.11200000000000002,
+    "sync": {
+      "count": 20,
+      "total": 2.24
+    },
+    "async": {
+      "count": 0,
+      "total": 0
+    }
+  },
+  {
+    "name": "./node_modules/newrelic/lib/config.js:_canonicalize",
+    "y": 0.045000000000000005,
+    "tpc": 0.045000000000000005,
+    "sync": {
+      "count": 2,
+      "total": 0.09000000000000001
+    },
+    "async": {
+      "count": 0,
+      "total": 0
+    }
+  },
+  {
+    "name": "./node_modules/newrelic/lib/util/logger.js:debug",
+    "y": 0.2628571428571428,
+    "tpc": 0.2628571428571428,
+    "sync": {
+      "count": 7,
+      "total": 1.8399999999999996
+    },
+    "async": {
+      "count": 0,
+      "total": 0
+    }
+  },
+  {
+    "name": "./node_modules/newrelic/lib/util/logger.js:write",
+    "y": 0.15555555555555556,
+    "tpc": 0.15555555555555556,
+    "sync": {
+      "count": 9,
+      "total": 1.4000000000000001
+    },
+    "async": {
+      "count": 0,
+      "total": 0
+    }
+  },
+  {
+    "name": "./node_modules/newrelic/lib/config.js:validateFlags",
+    "y": 0.05,
+    "tpc": 0.05,
+    "sync": {
+      "count": 2,
+      "total": 0.1
+    },
+    "async": {
+      "count": 0,
+      "total": 0
+    }
+  },
+  {
+    "name": "./node_modules/newrelic/lib/config.js:setLogger",
+    "y": 0.02,
+    "tpc": 0.02,
+    "sync": {
+      "count": 1,
+      "total": 0.02
+    },
+    "async": {
+      "count": 0,
+      "total": 0
+    }
+  },
+  {
+    "name": "./node_modules/newrelic/lib/util/logger.js:trace",
+    "y": 0.22,
+    "tpc": 0.22,
+    "sync": {
+      "count": 1,
+      "total": 0.22
+    },
+    "async": {
+      "count": 0,
+      "total": 0
+    }
+  },
+  {
+    "name": "./node_modules/newrelic/lib/util/logger.js:child",
+    "y": 0.023000000000000007,
+    "tpc": 0.023000000000000007,
+    "sync": {
+      "count": 10,
+      "total": 0.23000000000000007
+    },
+    "async": {
+      "count": 0,
+      "total": 0
+    }
+  },
+  {
+    "name": "./node_modules/newrelic/node_modules/yakaa/lib/debuglog.js:debuglog",
+    "y": 0.14,
+    "tpc": 0.14,
+    "sync": {
+      "count": 1,
+      "total": 0.14
+    },
+    "async": {
+      "count": 0,
+      "total": 0
+    }
+  },
+  {
+    "name": "./node_modules/newrelic/lib/util/logger.js:error",
+    "y": 1.5,
+    "tpc": 1.5,
+    "sync": {
+      "count": 1,
+      "total": 1.5
+    },
+    "async": {
+      "count": 0,
+      "total": 0
+    }
+  },
+  {
+    "name": "./node_modules/newrelic/node_modules/readable-stream/lib/_stream_readable.js:push",
+    "y": 0.74,
+    "tpc": 0.74,
+    "sync": {
+      "count": 1,
+      "total": 0.74
+    },
+    "async": {
+      "count": 0,
+      "total": 0
+    }
+  },
+  {
+    "name": "./lib/services/broker.js:init",
+    "y": 1.7899999999999998,
+    "tpc": 1.7899999999999998,
+    "sync": {
+      "count": 2,
+      "total": 3.5799999999999996
+    },
+    "async": {
+      "count": 0,
+      "total": 0
+    }
+  },
+  {
+    "name": "./node_modules/amqplib/lib/connect.js:connect",
+    "y": 2.66,
+    "tpc": 2.66,
+    "sync": {
+      "count": 1,
+      "total": 2.66
+    },
+    "async": {
+      "count": 0,
+      "total": 0
+    }
+  },
+  {
+    "name": "./node_modules/amqplib/lib/credentials.js:plain",
+    "y": 0.03,
+    "tpc": 0.03,
+    "sync": {
+      "count": 1,
+      "total": 0.03
+    },
+    "async": {
+      "count": 0,
+      "total": 0
+    }
+  },
+  {
+    "name": "./node_modules/amqplib/node_modules/when/lib/Promise.js:then",
+    "y": 0.34,
+    "tpc": 0.34,
+    "sync": {
+      "count": 1,
+      "total": 0.34
+    },
+    "async": {
+      "count": 0,
+      "total": 0
+    }
+  },
+  {
+    "name": "./node_modules/amqplib/node_modules/when/lib/Promise.js:_beget",
+    "y": 0.06,
+    "tpc": 0.06,
+    "sync": {
+      "count": 1,
+      "total": 0.06
+    },
+    "async": {
+      "count": 0,
+      "total": 0
+    }
+  },
+  {
+    "name": "./lib/services/elasticsearch.js:init",
+    "y": 2.5225,
+    "tpc": 2.5225,
+    "sync": {
+      "count": 4,
+      "total": 10.09
+    },
+    "async": {
+      "count": 0,
+      "total": 0
+    }
+  },
+  {
+    "name": "./node_modules/elasticsearch/src/lib/client.js:Client",
+    "y": 9.9,
+    "tpc": 9.9,
+    "sync": {
+      "count": 1,
+      "total": 9.9
+    },
+    "async": {
+      "count": 0,
+      "total": 0
+    }
+  },
+  {
+    "name": "./node_modules/elasticsearch/src/lib/log.js:addOutput",
+    "y": 2.68,
+    "tpc": 2.68,
+    "sync": {
+      "count": 1,
+      "total": 2.68
+    },
+    "async": {
+      "count": 0,
+      "total": 0
+    }
+  },
+  {
+    "name": "./node_modules/elasticsearch/src/lib/utils.js:indexOf",
+    "y": 0.1,
+    "tpc": 0.1,
+    "sync": {
+      "count": 1,
+      "total": 0.1
+    },
+    "async": {
+      "count": 0,
+      "total": 0
+    }
+  },
+  {
+    "name": "./node_modules/elasticsearch/src/lib/utils.js:bind",
+    "y": 0.05500000000000001,
+    "tpc": 0.05500000000000001,
+    "sync": {
+      "count": 8,
+      "total": 0.44000000000000006
+    },
+    "async": {
+      "count": 0,
+      "total": 0
+    }
+  },
+  {
+    "name": "./node_modules/elasticsearch/src/lib/logger.js:setupListeners",
+    "y": 0.55,
+    "tpc": 0.55,
+    "sync": {
+      "count": 1,
+      "total": 0.55
+    },
+    "async": {
+      "count": 0,
+      "total": 0
+    }
+  },
+  {
+    "name": "./node_modules/elasticsearch/src/lib/logger.js:cleanUpListeners",
+    "y": 0.17,
+    "tpc": 0.17,
+    "sync": {
+      "count": 1,
+      "total": 0.17
+    },
+    "async": {
+      "count": 0,
+      "total": 0
+    }
+  },
+  {
+    "name": "./node_modules/elasticsearch/src/lib/utils.js:has",
+    "y": 0.11,
+    "tpc": 0.11,
+    "sync": {
+      "count": 1,
+      "total": 0.11
+    },
+    "async": {
+      "count": 0,
+      "total": 0
+    }
+  },
+  {
+    "name": "./node_modules/elasticsearch/src/lib/utils.js:defaults",
+    "y": 0.07666666666666666,
+    "tpc": 0.07666666666666666,
+    "sync": {
+      "count": 3,
+      "total": 0.22999999999999998
+    },
+    "async": {
+      "count": 0,
+      "total": 0
+    }
+  },
+  {
+    "name": "./node_modules/elasticsearch/src/lib/utils.js:map",
+    "y": 2.2,
+    "tpc": 2.2,
+    "sync": {
+      "count": 1,
+      "total": 2.2
+    },
+    "async": {
+      "count": 0,
+      "total": 0
+    }
+  },
+  {
+    "name": "./node_modules/elasticsearch/src/lib/utils.js:clone",
+    "y": 0.03333333333333333,
+    "tpc": 0.03333333333333333,
+    "sync": {
+      "count": 6,
+      "total": 0.2
+    },
+    "async": {
+      "count": 0,
+      "total": 0
+    }
+  },
+  {
+    "name": "./node_modules/elasticsearch/src/lib/utils.js:pick",
+    "y": 0.17,
+    "tpc": 0.17,
+    "sync": {
+      "count": 1,
+      "total": 0.17
+    },
+    "async": {
+      "count": 0,
+      "total": 0
+    }
+  },
+  {
+    "name": "./node_modules/elasticsearch/src/lib/utils.js:forOwn",
+    "y": 0.5,
+    "tpc": 0.5,
+    "sync": {
+      "count": 1,
+      "total": 0.5
+    },
+    "async": {
+      "count": 0,
+      "total": 0
+    }
+  },
+  {
+    "name": "./node_modules/elasticsearch/src/lib/utils.js:shuffle",
+    "y": 0.19,
+    "tpc": 0.19,
+    "sync": {
+      "count": 1,
+      "total": 0.19
+    },
+    "async": {
+      "count": 0,
+      "total": 0
+    }
+  },
+  {
+    "name": "./node_modules/elasticsearch/src/lib/connection_pool.js:setHosts",
+    "y": 2.99,
+    "tpc": 2.99,
+    "sync": {
+      "count": 1,
+      "total": 2.99
+    },
+    "async": {
+      "count": 0,
+      "total": 0
+    }
+  },
+  {
+    "name": "./node_modules/elasticsearch/src/lib/host.js:toString",
+    "y": 0.43,
+    "tpc": 0.43,
+    "sync": {
+      "count": 1,
+      "total": 0.43
+    },
+    "async": {
+      "count": 0,
+      "total": 0
+    }
+  },
+  {
+    "name": "./node_modules/elasticsearch/src/lib/host.js:makeUrl",
+    "y": 0.32,
+    "tpc": 0.32,
+    "sync": {
+      "count": 1,
+      "total": 0.32
+    },
+    "async": {
+      "count": 0,
+      "total": 0
+    }
+  },
+  {
+    "name": "./node_modules/elasticsearch/src/lib/host.js:getQuery",
+    "y": 0.08,
+    "tpc": 0.08,
+    "sync": {
+      "count": 1,
+      "total": 0.08
+    },
+    "async": {
+      "count": 0,
+      "total": 0
+    }
+  },
+  {
+    "name": "./node_modules/elasticsearch/src/lib/connectors/http.js:createAgent",
+    "y": 0.37,
+    "tpc": 0.37,
+    "sync": {
+      "count": 1,
+      "total": 0.37
+    },
+    "async": {
+      "count": 0,
+      "total": 0
+    }
+  },
+  {
+    "name": "./node_modules/elasticsearch/src/lib/connectors/http.js:makeAgentConfig",
+    "y": 0.04,
+    "tpc": 0.04,
+    "sync": {
+      "count": 1,
+      "total": 0.04
+    },
+    "async": {
+      "count": 0,
+      "total": 0
+    }
+  },
+  {
+    "name": "./node_modules/elasticsearch/src/lib/connectors/_keep_alive_agent.js:WrapNativeAgent",
+    "y": 0.09,
+    "tpc": 0.09,
+    "sync": {
+      "count": 1,
+      "total": 0.09
+    },
+    "async": {
+      "count": 0,
+      "total": 0
+    }
+  },
+  {
+    "name": "./node_modules/elasticsearch/src/lib/connection_pool.js:addConnection",
+    "y": 1.18,
+    "tpc": 1.18,
+    "sync": {
+      "count": 1,
+      "total": 1.18
+    },
+    "async": {
+      "count": 0,
+      "total": 0
+    }
+  },
+  {
+    "name": "./node_modules/elasticsearch/src/lib/log.js:info",
+    "y": 0.17,
+    "tpc": 0.17,
+    "sync": {
+      "count": 1,
+      "total": 0.17
+    },
+    "async": {
+      "count": 0,
+      "total": 0
+    }
+  },
+  {
+    "name": "./node_modules/elasticsearch/src/lib/log.js:listenerCount",
+    "y": 0.05,
+    "tpc": 0.05,
+    "sync": {
+      "count": 1,
+      "total": 0.05
+    },
+    "async": {
+      "count": 0,
+      "total": 0
+    }
+  },
+  {
+    "name": "./node_modules/elasticsearch/src/lib/connection.js:setStatus",
+    "y": 0.77,
+    "tpc": 0.77,
+    "sync": {
+      "count": 1,
+      "total": 0.77
+    },
+    "async": {
+      "count": 0,
+      "total": 0
+    }
+  },
+  {
+    "name": "./node_modules/elasticsearch/src/lib/connectors/http.js:onStatusSet",
+    "y": 0.05,
+    "tpc": 0.05,
+    "sync": {
+      "count": 1,
+      "total": 0.05
+    },
+    "async": {
+      "count": 0,
+      "total": 0
+    }
+  },
+  {
+    "name": "./node_modules/elasticsearch/src/lib/connection_pool.js:onStatusSet",
+    "y": 0.08,
+    "tpc": 0.08,
+    "sync": {
+      "count": 1,
+      "total": 0.08
+    },
+    "async": {
+      "count": 0,
+      "total": 0
+    }
+  },
+  {
+    "name": "./lib/services/logger.js:init",
+    "y": 0.015,
+    "tpc": 0.015,
+    "sync": {
+      "count": 2,
+      "total": 0.03
+    },
+    "async": {
+      "count": 0,
+      "total": 0
+    }
+  },
+  {
+    "name": "./lib/services/redis.js:init",
+    "y": 0.595,
+    "tpc": 0.595,
+    "sync": {
+      "count": 2,
+      "total": 1.19
+    },
+    "async": {
+      "count": 0,
+      "total": 0
+    }
+  },
+  {
+    "name": "./lib/services/newrelic.js:init",
+    "y": 0.02,
+    "tpc": 0.02,
+    "sync": {
+      "count": 1,
+      "total": 0.02
+    },
+    "async": {
+      "count": 0,
+      "total": 0
+    }
+  }
+];
+    $(function() {
+        chart = new Highcharts.Chart({
+            chart: {
+                renderTo: 'container',
+                plotBackgroundColor: null,
+                plotBorderWidth: 1,//null,
+                plotShadow: false
+            },
+            title: {
+                text: "<a href='https://www.npmjs.org/package/node.profiler'>node.profiler</a> high-charts total calls (1993) total attached (2663)",
+                useHTML: true
+            },
+            subtitle: {
+                text: '<div align="center"><form>' +
+                      '<label title="The average time a function took (time per call)"><input type="radio" onclick="radioClicked(this);" name="dataType" value="average" checked />average</label>' +
+                      '<label title="The total time a function took in milliseconds"><input type="radio" onclick="radioClicked(this);" name="dataType" value="total" />total time</label>' +
+                      '<label title="The total count a function has been called"><input type="radio" onclick="radioClicked(this);" name="dataType" value="count" />total calls</label>' +
+                      '</form></div>',
+                useHTML: true
+            },
+            tooltip: {
+                pointFormat: '--------------------------------------<br><b>{point.name}</b>: {point.percentage:.1f} %<br>Time per call: <b>{point.tpc} ms</b><br>Total async calls: <b>{point.async.count}</b><br>Total async time: <b>{point.async.total} ms</b><br>Total sync calls: <b>{point.sync.count}</b><br>Total sync time: <b>{point.sync.total} ms</b>'
+            },
+            plotOptions: {
+                pie: {
+                    allowPointSelect: true,
+                    cursor: 'pointer',
+                    dataLabels: {
+                        enabled: true,
+                        format: '<b>{point.name}</b>: {point.percentage:.1f} %',
+                        style: {
+                            color: (Highcharts.theme && Highcharts.theme.contrastTextColor) || 'black'
+                        }
+                    }
+                }
+            },
+            series: [
+                {
+                    type: 'pie',
+                    name: 'functions',
+                    data: data
+                }
+            ]
+        });
+    });
+    function radioClicked() {
+        var i;
+        var value = $("input:radio[name ='dataType']:checked").val();
+        switch(value) {
+            case "average":
+                for(i = 0; i < data.length; i++) {
+                    data[i].y = data[i].tpc;
+                }
+                break;
+            case "count":
+                for(i = 0; i < data.length; i++) {
+                    data[i].y = (data[i].async.count + data[i].sync.count);
+                }
+                break;
+            case "total":
+                for(i = 0; i < data.length; i++) {
+                    data[i].y = (data[i].async.total + data[i].sync.total);
+                }
+                break;
+        }
+        chart.series[0].setData(data, true);
+    }
+    //]]>
+    </script>
+</head>
+<body>
+<script src="https://code.highcharts.com/highcharts.js"></script>
+<script src="https://code.highcharts.com/modules/exporting.js"></script>
+<div id="container" style="min-width: 300px; height: 800px; margin: 0 auto"></div>
+</body>
+</html>

@@ -44,14 +44,16 @@ describe('Test removeSubscription function in the hotelClerk core module', funct
     });
 
 
-  beforeEach(function () {
+  beforeEach(function (callback) {
     kuzzle = new Kuzzle();
     kuzzle.log = new captainsLog({level: 'silent'});
-    kuzzle.start({}, {workers: false, servers: false});
-
-    return kuzzle.hotelClerk.addSubscription(requestObject1, connection)
+    kuzzle.start({}, {workers: false, servers: false})
+      .then(function () {
+        return kuzzle.hotelClerk.addSubscription(requestObject1, connection);
+      })
       .then(function (realTimeResponseObject) {
         roomId = realTimeResponseObject.roomId;
+        callback();
       });
   });
 

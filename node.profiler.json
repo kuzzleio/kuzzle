@@ -1,0 +1,932 @@
+{
+  "/var/app/lib/api/index.js:KuzzleFactory": {
+    "async": {
+      "count": 0,
+      "total": 0
+    },
+    "sync": {
+      "count": 0,
+      "total": 0
+    }
+  },
+  "/var/app/node_modules/captains-log/node_modules/rc/lib/utils.js:find": {
+    "async": {
+      "count": 0,
+      "total": 0
+    },
+    "sync": {
+      "count": 1,
+      "total": 0.33
+    }
+  },
+  "/var/app/node_modules/captains-log/node_modules/rc/lib/utils.js:json": {
+    "async": {
+      "count": 0,
+      "total": 0
+    },
+    "sync": {
+      "count": 7,
+      "total": 0.4000000000000001
+    }
+  },
+  "/var/app/node_modules/captains-log/node_modules/rc/lib/utils.js:env": {
+    "async": {
+      "count": 0,
+      "total": 0
+    },
+    "sync": {
+      "count": 1,
+      "total": 0.22
+    }
+  },
+  "/var/app/node_modules/captains-log/lib/captains.js:LowLevelLogger": {
+    "async": {
+      "count": 0,
+      "total": 0
+    },
+    "sync": {
+      "count": 1,
+      "total": 0.06
+    }
+  },
+  "/var/app/node_modules/captains-log/lib/wrap.js:_wrap": {
+    "async": {
+      "count": 0,
+      "total": 0
+    },
+    "sync": {
+      "count": 1,
+      "total": 0.46
+    }
+  },
+  "/var/app/lib/hooks/index.js:Hooks": {
+    "async": {
+      "count": 0,
+      "total": 0
+    },
+    "sync": {
+      "count": 1,
+      "total": 0.12
+    }
+  },
+  "/var/app/lib/workers/index.js:Workers": {
+    "async": {
+      "count": 0,
+      "total": 0
+    },
+    "sync": {
+      "count": 1,
+      "total": 0.06
+    }
+  },
+  "/var/app/node_modules/amqplib/node_modules/bitsyntax/lib/compile.js:compile_builder": {
+    "async": {
+      "count": 0,
+      "total": 0
+    },
+    "sync": {
+      "count": 1,
+      "total": 4.79
+    }
+  },
+  "/var/app/node_modules/amqplib/node_modules/bitsyntax/lib/parse.js:parse": {
+    "async": {
+      "count": 0,
+      "total": 0
+    },
+    "sync": {
+      "count": 4,
+      "total": 6.760000000000001
+    }
+  },
+  "/var/app/node_modules/amqplib/node_modules/bitsyntax/lib/parser.js:parse": {
+    "async": {
+      "count": 0,
+      "total": 0
+    },
+    "sync": {
+      "count": 4,
+      "total": 2.3099999999999996
+    }
+  },
+  "/var/app/node_modules/amqplib/node_modules/bitsyntax/lib/pattern.js:value": {
+    "async": {
+      "count": 0,
+      "total": 0
+    },
+    "sync": {
+      "count": 2,
+      "total": 1.02
+    }
+  },
+  "/var/app/node_modules/amqplib/node_modules/bitsyntax/lib/pattern.js:variable": {
+    "async": {
+      "count": 0,
+      "total": 0
+    },
+    "sync": {
+      "count": 13,
+      "total": 1.6200000000000003
+    }
+  },
+  "/var/app/node_modules/amqplib/node_modules/bitsyntax/lib/compile.js:compile": {
+    "async": {
+      "count": 0,
+      "total": 0
+    },
+    "sync": {
+      "count": 3,
+      "total": 3.77
+    }
+  },
+  "/var/app/node_modules/amqplib/node_modules/when/lib/makePromise.js:makePromise": {
+    "async": {
+      "count": 0,
+      "total": 0
+    },
+    "sync": {
+      "count": 1,
+      "total": 1.06
+    }
+  },
+  "/var/app/node_modules/amqplib/node_modules/when/lib/decorators/array.js:array": {
+    "async": {
+      "count": 0,
+      "total": 0
+    },
+    "sync": {
+      "count": 1,
+      "total": 0.4
+    }
+  },
+  "/var/app/node_modules/amqplib/node_modules/when/lib/apply.js:makeApply": {
+    "async": {
+      "count": 0,
+      "total": 0
+    },
+    "sync": {
+      "count": 1,
+      "total": 0.07
+    }
+  },
+  "/var/app/node_modules/amqplib/node_modules/when/lib/decorators/flow.js:flow": {
+    "async": {
+      "count": 0,
+      "total": 0
+    },
+    "sync": {
+      "count": 1,
+      "total": 0.12
+    }
+  },
+  "/var/app/node_modules/amqplib/node_modules/when/lib/decorators/fold.js:fold": {
+    "async": {
+      "count": 0,
+      "total": 0
+    },
+    "sync": {
+      "count": 1,
+      "total": 0.05
+    }
+  },
+  "/var/app/node_modules/amqplib/node_modules/when/lib/decorators/iterate.js:generate": {
+    "async": {
+      "count": 0,
+      "total": 0
+    },
+    "sync": {
+      "count": 1,
+      "total": 0.08
+    }
+  },
+  "/var/app/node_modules/amqplib/node_modules/when/lib/decorators/progress.js:progress": {
+    "async": {
+      "count": 0,
+      "total": 0
+    },
+    "sync": {
+      "count": 1,
+      "total": 0.04
+    }
+  },
+  "/var/app/node_modules/amqplib/node_modules/when/lib/decorators/inspect.js:inspection": {
+    "async": {
+      "count": 0,
+      "total": 0
+    },
+    "sync": {
+      "count": 1,
+      "total": 0.03
+    }
+  },
+  "/var/app/node_modules/amqplib/node_modules/when/lib/decorators/with.js:addWith": {
+    "async": {
+      "count": 0,
+      "total": 0
+    },
+    "sync": {
+      "count": 1,
+      "total": 0.04
+    }
+  },
+  "/var/app/node_modules/amqplib/node_modules/when/lib/decorators/timed.js:timed": {
+    "async": {
+      "count": 0,
+      "total": 0
+    },
+    "sync": {
+      "count": 1,
+      "total": 0.09
+    }
+  },
+  "/var/app/node_modules/amqplib/node_modules/when/lib/decorators/unhandledRejection.js:unhandledRejection": {
+    "async": {
+      "count": 0,
+      "total": 0
+    },
+    "sync": {
+      "count": 1,
+      "total": 0.14
+    }
+  },
+  "/var/app/node_modules/elasticsearch/src/lib/utils.js:each": {
+    "async": {
+      "count": 0,
+      "total": 0
+    },
+    "sync": {
+      "count": 5,
+      "total": 0.87
+    }
+  },
+  "/var/app/node_modules/elasticsearch/src/lib/client_action.js:makeFactoryWithModifier": {
+    "async": {
+      "count": 0,
+      "total": 0
+    },
+    "sync": {
+      "count": 3,
+      "total": 0.04
+    }
+  },
+  "/var/app/node_modules/elasticsearch/src/lib/utils.js:merge": {
+    "async": {
+      "count": 0,
+      "total": 0
+    },
+    "sync": {
+      "count": 319,
+      "total": 12.559999999999913
+    }
+  },
+  "/var/app/node_modules/elasticsearch/src/lib/client_action.js:namespaceFactory": {
+    "async": {
+      "count": 0,
+      "total": 0
+    },
+    "sync": {
+      "count": 47,
+      "total": 3.4900000000000007
+    }
+  },
+  "/var/app/node_modules/elasticsearch/src/lib/client_action.js:ApiNamespace": {
+    "async": {
+      "count": 0,
+      "total": 0
+    },
+    "sync": {
+      "count": 47,
+      "total": 0.01
+    }
+  },
+  "/var/app/node_modules/elasticsearch/src/lib/client_action.js:factory": {
+    "async": {
+      "count": 0,
+      "total": 0
+    },
+    "sync": {
+      "count": 655,
+      "total": 51.730000000000054
+    }
+  },
+  "/var/app/node_modules/elasticsearch/src/lib/utils.js:identity": {
+    "async": {
+      "count": 0,
+      "total": 0
+    },
+    "sync": {
+      "count": 655,
+      "total": 0.3400000000000001
+    }
+  },
+  "/var/app/node_modules/request-promise/node_modules/request/lib/cookies.js:jar": {
+    "async": {
+      "count": 0,
+      "total": 0
+    },
+    "sync": {
+      "count": 1,
+      "total": 0.12
+    }
+  },
+  "/var/app/node_modules/redis/lib/util.js:format": {
+    "async": {
+      "count": 0,
+      "total": 0
+    },
+    "sync": {
+      "count": 57,
+      "total": 0.6000000000000003
+    }
+  },
+  "/var/app/node_modules/redis/lib/util.js:debuglog": {
+    "async": {
+      "count": 0,
+      "total": 0
+    },
+    "sync": {
+      "count": 2,
+      "total": 0.01
+    }
+  },
+  "/var/app/node_modules/redis/lib/util.js:deprecate": {
+    "async": {
+      "count": 0,
+      "total": 0
+    },
+    "sync": {
+      "count": 3,
+      "total": 0
+    }
+  },
+  "/var/app/node_modules/newrelic/lib/util/logger.js:coerce": {
+    "async": {
+      "count": 0,
+      "total": 0
+    },
+    "sync": {
+      "count": 11,
+      "total": 0.12
+    }
+  },
+  "/var/app/node_modules/newrelic/node_modules/readable-stream/lib/_stream_readable.js:pipe": {
+    "async": {
+      "count": 0,
+      "total": 0
+    },
+    "sync": {
+      "count": 2,
+      "total": 2.09
+    }
+  },
+  "/var/app/node_modules/newrelic/node_modules/readable-stream/lib/_stream_readable.js:on": {
+    "async": {
+      "count": 0,
+      "total": 0
+    },
+    "sync": {
+      "count": 4,
+      "total": 1.15
+    }
+  },
+  "/var/app/node_modules/newrelic/node_modules/readable-stream/lib/_stream_readable.js:resume": {
+    "async": {
+      "count": 0,
+      "total": 0
+    },
+    "sync": {
+      "count": 2,
+      "total": 0.83
+    }
+  },
+  "/var/app/node_modules/newrelic/node_modules/readable-stream/lib/_stream_readable.js:read": {
+    "async": {
+      "count": 0,
+      "total": 0
+    },
+    "sync": {
+      "count": 3,
+      "total": 0.7100000000000001
+    }
+  },
+  "/var/app/node_modules/newrelic/lib/util/logger.js:_read": {
+    "async": {
+      "count": 0,
+      "total": 0
+    },
+    "sync": {
+      "count": 3,
+      "total": 0.05
+    }
+  },
+  "/var/app/node_modules/newrelic/lib/util/flatten.js:flatten": {
+    "async": {
+      "count": 0,
+      "total": 0
+    },
+    "sync": {
+      "count": 1,
+      "total": 0.13
+    }
+  },
+  "/var/app/node_modules/newrelic/lib/util/safe-json.js:stringifySync": {
+    "async": {
+      "count": 0,
+      "total": 0
+    },
+    "sync": {
+      "count": 3,
+      "total": 1.49
+    }
+  },
+  "/var/app/node_modules/newrelic/lib/config.js:_fromPassed": {
+    "async": {
+      "count": 0,
+      "total": 0
+    },
+    "sync": {
+      "count": 6,
+      "total": 0.56
+    }
+  },
+  "/var/app/node_modules/newrelic/lib/config.js:_fromSpecial": {
+    "async": {
+      "count": 0,
+      "total": 0
+    },
+    "sync": {
+      "count": 2,
+      "total": 0.07
+    }
+  },
+  "/var/app/node_modules/newrelic/lib/config.js:_fromEnvironment": {
+    "async": {
+      "count": 0,
+      "total": 0
+    },
+    "sync": {
+      "count": 20,
+      "total": 2.24
+    }
+  },
+  "/var/app/node_modules/newrelic/lib/config.js:_canonicalize": {
+    "async": {
+      "count": 0,
+      "total": 0
+    },
+    "sync": {
+      "count": 2,
+      "total": 0.09000000000000001
+    }
+  },
+  "/var/app/node_modules/newrelic/lib/util/logger.js:debug": {
+    "async": {
+      "count": 0,
+      "total": 0
+    },
+    "sync": {
+      "count": 7,
+      "total": 1.8399999999999996
+    }
+  },
+  "/var/app/node_modules/newrelic/lib/util/logger.js:write": {
+    "async": {
+      "count": 0,
+      "total": 0
+    },
+    "sync": {
+      "count": 9,
+      "total": 1.4000000000000001
+    }
+  },
+  "/var/app/node_modules/newrelic/lib/config.js:validateFlags": {
+    "async": {
+      "count": 0,
+      "total": 0
+    },
+    "sync": {
+      "count": 2,
+      "total": 0.1
+    }
+  },
+  "/var/app/node_modules/newrelic/lib/config.js:setLogger": {
+    "async": {
+      "count": 0,
+      "total": 0
+    },
+    "sync": {
+      "count": 1,
+      "total": 0.02
+    }
+  },
+  "/var/app/node_modules/newrelic/lib/util/logger.js:trace": {
+    "async": {
+      "count": 0,
+      "total": 0
+    },
+    "sync": {
+      "count": 1,
+      "total": 0.22
+    }
+  },
+  "/var/app/node_modules/newrelic/lib/util/logger.js:child": {
+    "async": {
+      "count": 0,
+      "total": 0
+    },
+    "sync": {
+      "count": 10,
+      "total": 0.23000000000000007
+    }
+  },
+  "/var/app/node_modules/newrelic/node_modules/yakaa/lib/debuglog.js:debuglog": {
+    "async": {
+      "count": 0,
+      "total": 0
+    },
+    "sync": {
+      "count": 1,
+      "total": 0.14
+    }
+  },
+  "/var/app/node_modules/newrelic/lib/util/logger.js:error": {
+    "async": {
+      "count": 0,
+      "total": 0
+    },
+    "sync": {
+      "count": 1,
+      "total": 1.5
+    }
+  },
+  "/var/app/node_modules/newrelic/node_modules/readable-stream/lib/_stream_readable.js:push": {
+    "async": {
+      "count": 0,
+      "total": 0
+    },
+    "sync": {
+      "count": 1,
+      "total": 0.74
+    }
+  },
+  "/var/app/lib/services/broker.js:init": {
+    "async": {
+      "count": 0,
+      "total": 0
+    },
+    "sync": {
+      "count": 2,
+      "total": 3.5799999999999996
+    }
+  },
+  "/var/app/node_modules/amqplib/lib/connect.js:connect": {
+    "async": {
+      "count": 0,
+      "total": 0
+    },
+    "sync": {
+      "count": 1,
+      "total": 2.66
+    }
+  },
+  "/var/app/node_modules/amqplib/lib/credentials.js:plain": {
+    "async": {
+      "count": 0,
+      "total": 0
+    },
+    "sync": {
+      "count": 1,
+      "total": 0.03
+    }
+  },
+  "/var/app/node_modules/amqplib/node_modules/when/lib/Promise.js:then": {
+    "async": {
+      "count": 0,
+      "total": 0
+    },
+    "sync": {
+      "count": 1,
+      "total": 0.34
+    }
+  },
+  "/var/app/node_modules/amqplib/node_modules/when/lib/Promise.js:_beget": {
+    "async": {
+      "count": 0,
+      "total": 0
+    },
+    "sync": {
+      "count": 1,
+      "total": 0.06
+    }
+  },
+  "/var/app/lib/services/elasticsearch.js:init": {
+    "async": {
+      "count": 0,
+      "total": 0
+    },
+    "sync": {
+      "count": 4,
+      "total": 10.09
+    }
+  },
+  "/var/app/node_modules/elasticsearch/src/lib/client.js:Client": {
+    "async": {
+      "count": 0,
+      "total": 0
+    },
+    "sync": {
+      "count": 1,
+      "total": 9.9
+    }
+  },
+  "/var/app/node_modules/elasticsearch/src/lib/log.js:addOutput": {
+    "async": {
+      "count": 0,
+      "total": 0
+    },
+    "sync": {
+      "count": 1,
+      "total": 2.68
+    }
+  },
+  "/var/app/node_modules/elasticsearch/src/lib/utils.js:indexOf": {
+    "async": {
+      "count": 0,
+      "total": 0
+    },
+    "sync": {
+      "count": 1,
+      "total": 0.1
+    }
+  },
+  "/var/app/node_modules/elasticsearch/src/lib/utils.js:bind": {
+    "async": {
+      "count": 0,
+      "total": 0
+    },
+    "sync": {
+      "count": 8,
+      "total": 0.44000000000000006
+    }
+  },
+  "/var/app/node_modules/elasticsearch/src/lib/logger.js:setupListeners": {
+    "async": {
+      "count": 0,
+      "total": 0
+    },
+    "sync": {
+      "count": 1,
+      "total": 0.55
+    }
+  },
+  "/var/app/node_modules/elasticsearch/src/lib/logger.js:cleanUpListeners": {
+    "async": {
+      "count": 0,
+      "total": 0
+    },
+    "sync": {
+      "count": 1,
+      "total": 0.17
+    }
+  },
+  "/var/app/node_modules/elasticsearch/src/lib/utils.js:has": {
+    "async": {
+      "count": 0,
+      "total": 0
+    },
+    "sync": {
+      "count": 1,
+      "total": 0.11
+    }
+  },
+  "/var/app/node_modules/elasticsearch/src/lib/utils.js:defaults": {
+    "async": {
+      "count": 0,
+      "total": 0
+    },
+    "sync": {
+      "count": 3,
+      "total": 0.22999999999999998
+    }
+  },
+  "/var/app/node_modules/elasticsearch/src/lib/utils.js:map": {
+    "async": {
+      "count": 0,
+      "total": 0
+    },
+    "sync": {
+      "count": 1,
+      "total": 2.2
+    }
+  },
+  "/var/app/node_modules/elasticsearch/src/lib/utils.js:clone": {
+    "async": {
+      "count": 0,
+      "total": 0
+    },
+    "sync": {
+      "count": 6,
+      "total": 0.2
+    }
+  },
+  "/var/app/node_modules/elasticsearch/src/lib/utils.js:pick": {
+    "async": {
+      "count": 0,
+      "total": 0
+    },
+    "sync": {
+      "count": 1,
+      "total": 0.17
+    }
+  },
+  "/var/app/node_modules/elasticsearch/src/lib/utils.js:forOwn": {
+    "async": {
+      "count": 0,
+      "total": 0
+    },
+    "sync": {
+      "count": 1,
+      "total": 0.5
+    }
+  },
+  "/var/app/node_modules/elasticsearch/src/lib/utils.js:shuffle": {
+    "async": {
+      "count": 0,
+      "total": 0
+    },
+    "sync": {
+      "count": 1,
+      "total": 0.19
+    }
+  },
+  "/var/app/node_modules/elasticsearch/src/lib/connection_pool.js:setHosts": {
+    "async": {
+      "count": 0,
+      "total": 0
+    },
+    "sync": {
+      "count": 1,
+      "total": 2.99
+    }
+  },
+  "/var/app/node_modules/elasticsearch/src/lib/host.js:toString": {
+    "async": {
+      "count": 0,
+      "total": 0
+    },
+    "sync": {
+      "count": 1,
+      "total": 0.43
+    }
+  },
+  "/var/app/node_modules/elasticsearch/src/lib/host.js:makeUrl": {
+    "async": {
+      "count": 0,
+      "total": 0
+    },
+    "sync": {
+      "count": 1,
+      "total": 0.32
+    }
+  },
+  "/var/app/node_modules/elasticsearch/src/lib/host.js:getQuery": {
+    "async": {
+      "count": 0,
+      "total": 0
+    },
+    "sync": {
+      "count": 1,
+      "total": 0.08
+    }
+  },
+  "/var/app/node_modules/elasticsearch/src/lib/connectors/http.js:createAgent": {
+    "async": {
+      "count": 0,
+      "total": 0
+    },
+    "sync": {
+      "count": 1,
+      "total": 0.37
+    }
+  },
+  "/var/app/node_modules/elasticsearch/src/lib/connectors/http.js:makeAgentConfig": {
+    "async": {
+      "count": 0,
+      "total": 0
+    },
+    "sync": {
+      "count": 1,
+      "total": 0.04
+    }
+  },
+  "/var/app/node_modules/elasticsearch/src/lib/connectors/_keep_alive_agent.js:WrapNativeAgent": {
+    "async": {
+      "count": 0,
+      "total": 0
+    },
+    "sync": {
+      "count": 1,
+      "total": 0.09
+    }
+  },
+  "/var/app/node_modules/elasticsearch/src/lib/connection_pool.js:addConnection": {
+    "async": {
+      "count": 0,
+      "total": 0
+    },
+    "sync": {
+      "count": 1,
+      "total": 1.18
+    }
+  },
+  "/var/app/node_modules/elasticsearch/src/lib/log.js:info": {
+    "async": {
+      "count": 0,
+      "total": 0
+    },
+    "sync": {
+      "count": 1,
+      "total": 0.17
+    }
+  },
+  "/var/app/node_modules/elasticsearch/src/lib/log.js:listenerCount": {
+    "async": {
+      "count": 0,
+      "total": 0
+    },
+    "sync": {
+      "count": 1,
+      "total": 0.05
+    }
+  },
+  "/var/app/node_modules/elasticsearch/src/lib/connection.js:setStatus": {
+    "async": {
+      "count": 0,
+      "total": 0
+    },
+    "sync": {
+      "count": 1,
+      "total": 0.77
+    }
+  },
+  "/var/app/node_modules/elasticsearch/src/lib/connectors/http.js:onStatusSet": {
+    "async": {
+      "count": 0,
+      "total": 0
+    },
+    "sync": {
+      "count": 1,
+      "total": 0.05
+    }
+  },
+  "/var/app/node_modules/elasticsearch/src/lib/connection_pool.js:onStatusSet": {
+    "async": {
+      "count": 0,
+      "total": 0
+    },
+    "sync": {
+      "count": 1,
+      "total": 0.08
+    }
+  },
+  "/var/app/node_modules/elasticsearch/src/lib/utils.js:keys": {
+    "async": {
+      "count": 0,
+      "total": 0
+    },
+    "sync": {
+      "count": 1,
+      "total": 0
+    }
+  },
+  "/var/app/lib/services/logger.js:init": {
+    "async": {
+      "count": 0,
+      "total": 0
+    },
+    "sync": {
+      "count": 2,
+      "total": 0.03
+    }
+  },
+  "/var/app/lib/services/redis.js:init": {
+    "async": {
+      "count": 0,
+      "total": 0
+    },
+    "sync": {
+      "count": 2,
+      "total": 1.19
+    }
+  },
+  "/var/app/lib/services/newrelic.js:init": {
+    "async": {
+      "count": 0,
+      "total": 0
+    },
+    "sync": {
+      "count": 1,
+      "total": 0.02
+    }
+  }
+}

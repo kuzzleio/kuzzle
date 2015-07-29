@@ -29,6 +29,7 @@
     "lodash": "^3.6.0",
     "newrelic": "^1.21.1",
     "ngeohash": "^0.6.0",
+    "node-ipc": "^1.1.13",
     "node-uuid": "1.4.3",
     "q": "^1.2.0",
     "rc": "~1.0.1",
@@ -42,6 +43,7 @@
     "url": "git://github.com/kuzzleio/kuzzle.git"
   },
   "devDependencies": {
+    "rewire":"~2.3.4",
     "root-require": "~0.3.1",
     "mocha": "~2.2.1",
     "should": "~5.2.0",

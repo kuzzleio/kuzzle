@@ -10,7 +10,9 @@ kuzzle:
     - redis
   environment:
     - KUZZLE_PORT=7512
-    - BROKER_HOST=rabbit:5672
+    - IPC_BROKER_HOST=localhost
+    - IPC_BROKER_PORT=7911
+    - MQ_BROKER_HOST=rabbit:5672
     - READ_ENGINE_HOST=elasticsearch:9200
     - WRITE_ENGINE_HOST=elasticsearch:9200
     - NOTIFICATION_CACHE_HOST=redis:6379
