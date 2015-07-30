@@ -1,6 +1,7 @@
 # Kuzzle AMQP API Specifications
 
 ## Introduction
+
 Kuzzle fully supports the [AMQP](https://www.amqp.org/) protocol, with no loss of functionalities over other means of communications. That means that you can fully and easily use Kuzzle with AMQP.
 
 Kuzzle embeds a MQ Broker service layer, supporting a variety of MQ protocols. This broker is a 2-way mean of communication between your application and Kuzzle, forwarding your queries to Kuzzle, and notifications/responses from Kuzzle back to your application.
@@ -8,6 +9,7 @@ Kuzzle embeds a MQ Broker service layer, supporting a variety of MQ protocols. T
 The current implementation of our MQ Broker service uses [RabbitMQ](https://www.rabbitmq.com).
 
 ## Index
+
 * [How to connect to Kuzzle](#how-to-connect-to-kuzzle)
 * [What are responses objects](#what-are-responses-objects)
 * [Performing queries](#performing-queries)
@@ -103,6 +105,7 @@ How subscription works:
 **replyTo queue metadata:** Required
 
 **Query:**
+
 ```javascript
 {
   /*
@@ -127,6 +130,7 @@ How subscription works:
 ```
 
 **Response:**
+
 ```javascript
 {
   error: null,                      // Assuming everything went well
@@ -144,6 +148,7 @@ Once you receive this ``response``, all you have to do is to subscribe to the ``
 There are 4 types of notifications you can receive:
 
 #### 'A document has been created' notification:
+
 ````javascript
 {
   error: null,                        // Assuming everything went well
@@ -162,6 +167,7 @@ There are 4 types of notifications you can receive:
 ```
 
 #### 'An updated document entered your listening scope' notification:
+
 ```javascript
 {
   error: null,                        // Assuming everything went well
@@ -179,6 +185,7 @@ There are 4 types of notifications you can receive:
 ```
 
 #### 'An updated document left your listening scope' notification:
+
 ```javascript
 {
   error: null,                        // Assuming everything went well
@@ -195,6 +202,7 @@ There are 4 types of notifications you can receive:
 
 
 #### 'A document has been deleted' notification:
+
 ```javascript
 {
   error: null,                        // Assuming everything went well
@@ -224,6 +232,7 @@ It works with the room unique ID Kuzzle returns to you when you make a subscript
 **replyTo queue metadata:** Required.
 
 **Query:**
+
 ```javascript
 {
   /*
@@ -248,6 +257,7 @@ It works with the room unique ID Kuzzle returns to you when you make a subscript
 ```
 
 **Response:**
+
 ```javascript
 {
   error: null,                        // Assuming everything went well
@@ -268,6 +278,7 @@ Makes Kuzzle remove you of its subscribers on this room.
 **replyTo queue metadata:** Optionnal
 
 **Query:**
+
 ```javascript
 {
   /*
@@ -284,6 +295,7 @@ Makes Kuzzle remove you of its subscribers on this room.
 ```
 
 **Response:**
+
 ```javascript
 {
   error: null,                        // Assuming everything went well
@@ -305,6 +317,7 @@ Makes Kuzzle remove you of its subscribers on this room.
 **replyTo queue metadata:** Ignored by Kuzzle
 
 **Query:**
+
 ```javascript
 {
   // Tells Kuzzle to send a pub/sub message
@@ -332,6 +345,7 @@ Makes Kuzzle remove you of its subscribers on this room.
 **replyTo queue metadata:** Optionnal
 
 **Query:**
+
 ```javascript
 {
   // Tells Kuzzle to store your document
@@ -358,6 +372,7 @@ Makes Kuzzle remove you of its subscribers on this room.
 ```
 
 **Kuzzle response:**
+
 ```javascript
 {
   error: null,                      // Assuming everything went well
@@ -391,6 +406,7 @@ Only documents in the persistent data storage layer can be retrieved.
 **replyTo queue metadata:** Required.
 
 **Query:**
+
 ```javascript
 {
   /*
@@ -413,6 +429,7 @@ Only documents in the persistent data storage layer can be retrieved.
 ```
 
 **Response:**
+
 ```javascript
 {
   error: null,                      // Assuming everything went well
@@ -436,6 +453,7 @@ Only documents in the persistent data storage layer can be retrieved.
 ---
 
 ### Searching for documents
+
 Only documents in the persistent data storage layer can be searched.
 
 Kuzzle uses the [ElasticSearch Query DSL ](https://www.elastic.co/guide/en/elasticsearch/reference/1.3/query-dsl.html) syntax.
@@ -447,6 +465,7 @@ Kuzzle uses the [ElasticSearch Query DSL ](https://www.elastic.co/guide/en/elast
 **replyTo queue metadata:** Required.
 
 **Query:**
+
 ```javascript
 {
   /*
@@ -473,6 +492,7 @@ Kuzzle uses the [ElasticSearch Query DSL ](https://www.elastic.co/guide/en/elast
 ```
 
 **Response:**
+
 ```javascript
 {
   error: null,                      // Assuming everything went well
@@ -520,6 +540,7 @@ Only documents in the persistent data storage layer can be updated.
 **replyTo queue metadata:** Optionnal.
 
 **Query:**
+
 ```javascript
 {
   /*
@@ -551,6 +572,7 @@ Only documents in the persistent data storage layer can be updated.
 ```
 
 **Response:**
+
 ```javascript
 {
   error: null,                      // Assuming everything went well
@@ -574,6 +596,7 @@ Only documents in the persistent data storage layer can be updated.
 ---
 
 ### Counting documents
+
 Only documents in the persistent data storage layer can be counted.
 
 Kuzzle uses the [ElasticSearch Query DSL ](https://www.elastic.co/guide/en/elasticsearch/reference/1.3/query-dsl.html) syntax.
@@ -586,6 +609,7 @@ Kuzzle uses the [ElasticSearch Query DSL ](https://www.elastic.co/guide/en/elast
 **replyTo queue metadata:** Required.
 
 **Query:**
+
 ```javascript
 {
   /*
@@ -612,6 +636,7 @@ Kuzzle uses the [ElasticSearch Query DSL ](https://www.elastic.co/guide/en/elast
 ```
 
 **Response:**
+
 ```javascript
 {
   error: null,                      // Assuming everything went well
@@ -635,6 +660,7 @@ Kuzzle uses the [ElasticSearch Query DSL ](https://www.elastic.co/guide/en/elast
 ---
 
 ### Deleting a document using a document unique ID
+
 Only documents in the persistent data storage layer can be deleted.
 
 **Topic:** ``write.<data collection>.delete``
@@ -644,6 +670,7 @@ Only documents in the persistent data storage layer can be deleted.
 **replyTo queue metadata:** Optionnal.
 
 **Query:**
+
 ```javascript
 {
   /*
@@ -666,6 +693,7 @@ Only documents in the persistent data storage layer can be deleted.
 ```
 
 **Response:**
+
 ```javascript
 {
   error: null,                      // Assuming everything went well
@@ -692,6 +720,7 @@ Only documents in the persistent data storage layer can be deleted.
 ---
 
 ### Deleting documents using a query
+
 Only documents in the persistent data storage layer can be deleted.
 
 Kuzzle uses the [ElasticSearch Query DSL ](https://www.elastic.co/guide/en/elasticsearch/reference/1.3/query-dsl.html) syntax.
@@ -704,6 +733,7 @@ Kuzzle uses the [ElasticSearch Query DSL ](https://www.elastic.co/guide/en/elast
 **replyTo queue metadata:** Optionnal.
 
 **Query:**
+
 ```javascript
 {
   /*
@@ -730,6 +760,7 @@ Kuzzle uses the [ElasticSearch Query DSL ](https://www.elastic.co/guide/en/elast
 ```
 
 **Response:**
+
 ```javascript
 {
   error: null,                      // Assuming everything went well
@@ -769,6 +800,7 @@ This action is handled by the **administration** controller.
 **replyTo queue metadata:** Optionnal.
 
 **Query:**
+
 ```javascript
 {
   /*
@@ -785,6 +817,7 @@ This action is handled by the **administration** controller.
 ```
 
 **Response:**
+
 ```javascript
 {
   error: null,                      // Assuming everything went well
@@ -825,6 +858,7 @@ This action is handled by the **administration** controller.
 **replyTo queue metadata:** Optionnal.
 
 **Query:**
+
 ```javascript
 {
   /*
@@ -853,6 +887,7 @@ This action is handled by the **administration** controller.
 ```
 
 **Response:**
+
 ```javascript
 {
   error: null,                      // Assuming everything went well
@@ -889,6 +924,7 @@ Bulk import only works on documents in our persistent data storage layer.
 **replyTo queue metadata:** Optionnal.
 
 **Query:**
+
 ```javascript
 {
   /*
@@ -916,6 +952,7 @@ Bulk import only works on documents in our persistent data storage layer.
 ```
 
 **Response:**
+
 ```javascript
 {
   error: null,                      // Assuming everything went well

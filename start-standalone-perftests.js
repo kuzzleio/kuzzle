@@ -8,14 +8,11 @@
  */
 
 (function () {
-	console.log('=============== ARGS');
-	console.log(arguments);
-	console.log('=============== ');
 	var
 		kuzzle = require('./lib'),
 		rc = require('rc');
 
 
-	kuzzle.start(rc('kuzzle'));
+	kuzzle.perf(rc('kuzzle'));
 
 })();
