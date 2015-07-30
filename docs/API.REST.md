@@ -1,19 +1,16 @@
-# Kuzzle WebSocket API Specifications
+# Kuzzle REST API Specifications
 
 ## Introduction
-You can connect your application directly to Kuzzle, using WebSockets.
+You can connect your application directly to Kuzzle, using REST.
 
 This will give you a direct access to the Kuzzle's router controller, dispatching your queries to the right components, which in turn will send you back a ``response``
 
+**NOTE:** Due to the REST protocol synchronous nature, some Kuzzle functionnalities won't be available to you. Namely, you won't be able to subscribe to documents modifications and receive asynchronous notifications.  
+If you need such functionnalities, please check our other supported protocols. For instance you may easily use REST for your day to day operations, and use our [WebSocket API](./API.WebSocket.md) to manage document subscriptions.
 
 ## Index
-* [How to connect to Kuzzle](#how-to-connect-to-kuzzle)
 * [What are responses objects](#what-are-responses-objects)
 * [Performing queries](#performing-queries)
-  * [Subscribing to documents](#subscribing-to-documents)
-    * [Notifications you can receive](#notifications)
-  * [Counting the number of subscriptions on a given room](#counting-the-number-of-subscriptions-on-a-given-room)
-  * [Unsubscribing of a room](#unsubscribing-of-a-room)
   * [Sending a publish/subscribe message](#sending-a-publish-subscribe-message)
   * [Creating a new document](#creating-a-new-document)
   * [Retrieving a document](#retrieving-a-document)
@@ -26,15 +23,10 @@ This will give you a direct access to the Kuzzle's router controller, dispatchin
   * [Setting up a data mapping on a collection](#setting-up-a-data-mapping-in-a-collection)
   * [Performing a bulk import](#performing-a-bulk-import)
 
-## How to connect to Kuzzle
-
-To establish communication with Kuzzle using WebSockets, simply connect your application to the Kuzzle's WebSocket port.
-By default, the router controller listens to the port 7512 for WebSocket applications.
 
 ## What are responses objects
 
 A ``response`` is the result of a query you send to Kuzzle. It may be the results of a search query, an acknowledgement of a create action, and so on.  
-And when you subscribe to a room, Kuzzle also sends notifications to your application in the form of a ``response`` object.
 
 A ``response`` is a JSON object with the following structure:
 ```javascript
@@ -54,246 +46,34 @@ A ``response`` is a JSON object with the following structure:
 }
 ```
 
-Kuzzle will respond to your application by sending a ``requestId`` message on your socket, so you should specify one to get a response. And for some queries, this argument is required, as it wouldn't have any sense for Kuzzle to not be able to send you a response (for instance, when performing a document search).
-
-So to get a response from Kuzzle, simply add an unique ``requestId`` field to your message (for instance by using an [UUID](https://en.wikipedia.org/wiki/Universally_unique_identifier)), and then listen for a ``requestId`` message on your socket.
-
 ## Performing queries
 
 This section details every query you can send to Kuzzle, and the ``response`` object Kuzzle will send you back, if any.
 
-Each query you make needs to specify:
-* what ``action`` you want to perform,
-* and the ``data collection`` you want to query
+All query URLs start like this: ``http://<kuzzle host>:7512/api/<data collection>/<query action>``
 
-Moreover, you need to emit to Kuzzle a ``controller`` message, where ``controller`` is the Kuzzle component that will execute your query.
+This documentation describes the corresponding URL for each possible query action, and the posting method to use. The only thing you need to know is what a ``data collection`` is.
 
-This documentation will tell you the corresponding ``controller`` and ``action``. The only thing you need to know is what a ``data collection`` is.  
 Simply put, a ``data collection`` is a set of data managed internally by Kuzzle. It acts like a data table for persistent documents, or like a room for pub/sub messages.  
 
 
 ---
 
-### Subscribing to documents
-
-Subscription doesn't work the same way in Kuzzle than with a regular publish/subscribe protocol.  
-In Kuzzle, you don't exactly subscribe to a room or a topic but, instead, you subscribe to documents.
-
-What it means is that, along with your subscription query, you also give to Kuzzle a set of matching criterias.  
-Once you have subscribed to a room, if a pub/sub message is published matching your criterias, or if a matching stored document change (because it is created, updated or deleted), then you'll receive a notification about it.  
-Notifications are ``response`` objects.
-
-Of course, you may also subscribe to a ``data collection`` with no other matching criteria, and you'll effectively listen to a 'topic'.
-
-The matching criterias you pass on to Kuzzle follow the [ElasticSearch filter API](https://www.elastic.co/guide/en/elasticsearch/client/java-api/1.3/query-dsl-filters.html)
-
-How subscription works:  
-:arrow_right: You send a subscription query to Kuzzle  
-:arrow_left: Kuzzle responds to you with a room name and a room unique ID  
-:arrow_right: You subscribe to the topic ``mqtt.<room name>``  
-:arrow_left: When a document matches your room criterias, Kuzzle sends you a ``response``
-
-**Message type:** ``subscribe``
-
-**Query:**
-```javascript
-{
-  action: 'on',
-  collection: '<data collection>',
-
-  /*
-  Required. If your query doesn't include a requestId field, Kuzzle
-  will discard your query, because it doesn't have any mean to send you
-  the resulting room ID.
-  */
-  requestId: <room name>,
-
-  /*
-  A set of filters matching documents you want to listen to
-  */
-  body: {
-
-  }
-}
-```
-
-**Response:**
-```javascript
-{
-  error: null,                      // Assuming everything went well
-  result: {
-    roomId: 'unique Kuzzle room ID',
-    roomName: 'your request ID, or a Kuzzle auto-generated ID'
-  }
-}
-```
-
-#### Notifications
-
-Once you receive this ``response``, all you have to do is to listen to ``requestId`` messages on your socket to receive notifications.
-
-There are 4 types of notifications you can receive:
-
-#### 'A document has been created' notification:
-````javascript
-{
-  error: null,                        // Assuming everything went well
-  result: {
-    _id: 'unique document ID',
-    _source: {                        // The created document
-
-    },
-    action: 'create',
-    collection: '<data collection>',
-    controller: 'write',
-    requestId: '<unique request ID>'  // The query ID that updated the document
-    // there is no document source in this notification
-  }
-}
-```
-
-#### 'An updated document entered your listening scope' notification:
-```javascript
-{
-  error: null,                        // Assuming everything went well
-  result: {
-    _id: 'unique document ID',
-    _source: {                        // The updated document
-
-    },
-    action: 'update',
-    collection: '<data collection>',
-    controller: 'write',
-    requestId: '<unique request ID>'  // The query that updated the document
-  }
-}
-```
-
-#### 'An updated document left your listening scope' notification:
-```javascript
-{
-  error: null,                        // Assuming everything went well
-  result: {
-    _id: 'unique document ID',
-    action: 'update',
-    collection: '<data collection>',
-    controller: 'write',
-    requestId: '<unique request ID>'  // The query that updated the document
-    // there is no document source in this notification
-  }
-}
-```
-
-
-#### 'A document has been deleted' notification:
-```javascript
-{
-  error: null,                        // Assuming everything went well
-  result: {
-    _id: 'unique document ID',
-    action: 'delete',
-    collection: '<data collection>',
-    controller: 'write',
-    requestId: '<unique request ID>'  // The query that updated the document
-    // there is no document source in this notification
-  }
-}
-```
-
----
-
-### Counting the number of subscriptions on a given room
-
-Returns the number of people/applications who have subscribed to the same documents than you.
-
-It works with the room unique ID Kuzzle returns to you when you make a subscription.
-
-**Message type:** ``subscribe``
-
-**Query:**
-```javascript
-{
-  action: 'count',
-
-  /*
-  Required: if your query doesn't include a requestId field, Kuzzle will
-  discard it, as it doesn't have any mean to provide you the result
-  */
-  requestId: <Unique query ID>,
-
-  /*
-  The document unique identifier. It's the same one that Kuzzle sends you
-  in its responses when you create a document, or when you do a search query.
-  */
-  body: {
-    roomId: 'internal Kuzzle room ID'
-  }
-}
-```
-
-**Response:**
-```javascript
-{
-  error: null,                        // Assuming everything went well
-  result: <number of subscriptions>
-}
-```
-
----
-
-### Unsubscribing of a room
-
-Makes Kuzzle remove you from its subscribers on this room.
-
-**Message type:** ``subscribe``
-
-**Query:**
-```javascript
-{
-  action: 'off',
-  collection: '<data collection>',
-
-  /*
-  Required. Represents the request ID of the subscription query.
-  It's also your room name.
-  */
-  requestId: 'room name',
-}
-```
-
-**Response:**
-```javascript
-{
-  error: null,                        // Assuming everything went well
-  result: {
-    roomId: 'unique Kuzzle room ID',
-    roomName: 'your request ID, or a Kuzzle auto-generated ID'
-  }
-}
-```
-
----
-
 ### Sending a publish/subscribe message
 
-**Message type:** ``write``
+**URL:** ``http://kuzzle:7512/api/<data collection>``
 
-**Query:**
+**Method:** ``POST``
+
+**Message:**
 ```javascript
-{
-  action: 'create',
-  collection: '<data collection>',
-
   // Tells Kuzzle to send a pub/sub message
   persist: false,
 
   /*
   The document itself
   */
-  body: {
-    ...
-  }
-}
+  ...
 ```
 
 **Response:** Kuzzle doesn't send a response when sending publish/subscribe messages.
@@ -302,29 +82,19 @@ Makes Kuzzle remove you from its subscribers on this room.
 
 ### Creating a new document
 
-**Message type:** ``write``
+**URL:** ``http://kuzzle:7512/api/<data collection>``
 
-**Query:**
+**Method:** ``POST``
+
+**Message:**
 ```javascript
-{
-  action: 'create',
-  collection: '<data collection>',
-
   // Tells Kuzzle to store your document
   persist: true,
 
   /*
-  Optionnal: allow Kuzzle to send a response to your application
-  */
-  requestId: <Unique query ID>,
-
-  /*
   The document itself
   */
-  body: {
-    ...
-  }
-}
+  ...
 ```
 
 **Kuzzle response:**
@@ -354,27 +124,9 @@ Makes Kuzzle remove you from its subscribers on this room.
 
 Only documents in the persistent data storage layer can be retrieved.
 
-**Message type:** ``read``
+**URL:** ``http://kuzzle:7512/api/<data collection>/<document unique ID>``
 
-**Query:**
-```javascript
-{
-  action: 'get',
-  collection: '<data collection>',
-
-  /*
-  Required: if your query doesn't include a requestId field, Kuzzle will
-  discard it, as it doesn't have any mean to provide you the result
-  */
-  requestId: <Unique query ID>,
-
-  /*
-  The document unique identifier. It's the same one that Kuzzle sends you
-  in its responses when you create a document, or when you do a search query.
-  */
-  _id: '<document ID>'
-}
-```
+**Method:** ``GET``
 
 **Response:**
 ```javascript
@@ -404,30 +156,19 @@ Only documents in the persistent data storage layer can be searched.
 
 Kuzzle uses the [ElasticSearch Query DSL ](https://www.elastic.co/guide/en/elasticsearch/reference/1.3/query-dsl.html) syntax.
 
-**Message type:** ``read``
+**URL:** ``http://kuzzle:7512/api/<data collection>/_search``
 
-**Query:**
+**Method:** ``POST``
+
+**Message:**
 ```javascript
-{
-  action: 'search',
-  collection: '<data collection>',
-
-  /*
-  Required: if your query doesn't include a requestId field, Kuzzle will
-  discard it, as it doesn't have any mean to provide you the result
-  */
-  requestId: <Unique query ID>,
-
   /*
   A set of filters or queries matching documents you're looking for.
   Use 'query' instead of 'filter' if you want to perform a query instead.
   */
-  body: {
-    filter: {
+  filter: {
 
-    }
   }
-}
 ```
 
 **Response:**
@@ -471,34 +212,15 @@ Kuzzle uses the [ElasticSearch Query DSL ](https://www.elastic.co/guide/en/elast
 
 Only documents in the persistent data storage layer can be updated.
 
-**Message type:** ``write``
+**URL:** ``http://kuzzle:7512/api/<data collection>/<document unique ID>``
 
-**Query:**
+**Method:** ``PUT``
+
+**Message:**
 ```javascript
-{
-  action: 'update',
-  collection: '<data collection>',
-
-  /*
-  Optionnal: allow Kuzzle to send a response to your application
-  */
-  requestId: <Unique query ID>,
-
-  /*
-  The document unique identifier. It's the same one that Kuzzle sends you
-  in its responses when you create a document, or when you do a search query.
-  */
-  _id: '<document ID>'
-
-  /*
-  The actual update query
-  */
-  body: {
-    field_to_update1: 'new value',
-    field_to_update2: 'new value',
-    ...
-  }
-}
+  field_to_update1: 'new value',
+  field_to_update2: 'new value',
+  ...
 ```
 
 **Response:**
@@ -529,31 +251,19 @@ Only documents in the persistent data storage layer can be counted.
 
 Kuzzle uses the [ElasticSearch Query DSL ](https://www.elastic.co/guide/en/elasticsearch/reference/1.3/query-dsl.html) syntax.
 
+**URL:** ``http://kuzzle:7512/api/<data collection>/_count``
 
-**Message type:** ``read``
+**Method:** ``POST``
 
-**Query:**
+**Message:**
 ```javascript
-{
-  action: 'count',
-  collection: '<data collection>',
-
-  /*
-  Required: if your query doesn't include a requestId field, Kuzzle will
-  discard it, as it doesn't have any mean to provide you the result
-  */
-  requestId: <Unique query ID>,
-
   /*
   A set of filters or queries matching documents you're looking for.
   Use 'query' instead of 'filter' if you want to perform a query instead.
   */
-  body: {
-    filter: {
+  filter: {
 
-    }
   }
-}
 ```
 
 **Response:**
@@ -582,26 +292,9 @@ Kuzzle uses the [ElasticSearch Query DSL ](https://www.elastic.co/guide/en/elast
 ### Deleting a document using a document unique ID
 Only documents in the persistent data storage layer can be deleted.
 
-**Message type:** ``write``
+**URL:** ``http://kuzzle:7512/api/<data collection>/<document unique ID>``
 
-**Query:**
-```javascript
-{
-  action: 'delete',
-  collection: '<data collection>',
-
-  /*
-  Optionnal: allow Kuzzle to send a response to your application
-  */
-  requestId: <Unique query ID>,
-
-  /*
-  The document unique identifier. It's the same one that Kuzzle sends you
-  in its responses when you create a document, or when you do a search query.
-  */
-  _id: '<document ID>'
-}
-```
+**Method:** ``DELETE``
 
 **Response:**
 ```javascript
@@ -634,30 +327,19 @@ Only documents in the persistent data storage layer can be deleted.
 
 Kuzzle uses the [ElasticSearch Query DSL ](https://www.elastic.co/guide/en/elasticsearch/reference/1.3/query-dsl.html) syntax.
 
+**URL:** ``http://kuzzle:7512/api/<data collection>/_query``
 
-**Message type:** ``write``
+**Method:** ``DELETE``
 
-**Query:**
+**Message:**
 ```javascript
-{
-  action: 'deleteByQuery',
-  collection: '<data collection>',
-
-  /*
-  Optionnal: allow Kuzzle to send a response to your application
-  */
-  requestId: <Unique query ID>,
-
   /*
   A set of filters or queries matching documents you're looking for.
   Use 'query' instead of 'filter' if you want to perform a query instead.
   */
-  body: {
-    filter: {
+  filter: {
 
-    }
   }
-}
 ```
 
 **Response:**
@@ -691,22 +373,10 @@ Kuzzle uses the [ElasticSearch Query DSL ](https://www.elastic.co/guide/en/elast
 ### Deleting an entire data collection
 
 This removes an entire data collection in the persistent data storage layer.  
-This action is handled by the **administration** controller.
 
-**Message type:** ``admin``
+**URL:** ``http://kuzzle:7512/api/<data collection>``
 
-**Query:**
-```javascript
-{
-  action: 'deleteCollection',
-  collection: '<data collection>',
-
-  /*
-  Optionnal: allow Kuzzle to send a response to your application
-  */
-  requestId: <Unique query ID>,
-}
-```
+**Method:** ``DELETE``
 
 **Response:**
 ```javascript
@@ -740,33 +410,21 @@ It means that, by default, you won't be able to exploit the full capabilities of
 
 To solve this matter, Kuzzle's API offer a way to create a data mapping. It exposes the entire [mapping capabilities of ElasticSearch](https://www.elastic.co/guide/en/elasticsearch/reference/1.3/mapping.html).
 
-This action is handled by the **administration** controller.
+**URL:** ``http://kuzzle:7512/api/<data collection>/_mapping``
 
-**Message type:** ``admin``
+**Method:** ``POST``
 
-**Query:**
+**Message:**
 ```javascript
-{
-  action: 'putMapping',
-  collection: '<data collection>',
-
-  /*
-  Optionnal: allow Kuzzle to send a response to your application
-  */
-  requestId: <Unique query ID>,
-
   /*
   Data mapping using ElasticSearch mapping syntax
   */
-  body: {
-    properties: {
-      field1: {type: 'field type', ...options... },
-      field2: {type: 'field type', ...options... },
-      ...
-      fieldn: {type: 'field type', ...options... },
-    }
+  properties: {
+    field1: {type: 'field type', ...options... },
+    field2: {type: 'field type', ...options... },
+    ...
+    fieldn: {type: 'field type', ...options... },
   }
-}
 ```
 
 **Response:**
@@ -799,30 +457,22 @@ As with other queries, the syntax for bulk imports closely ressembles the [Elast
 
 Bulk import only works on documents in our persistent data storage layer.
 
-**Message type:** ``bulk``
+**URL:** ``http://kuzzle:7512/api/<data collection>/_bulk``
 
-**Query:**
+**Method:** ``POST``
+
+**Message:**
 ```javascript
-{
-  action: 'import',
-  collection: '<data collection>',
-
-  /*
-  Optionnal: allow Kuzzle to send a response to your application
-  */
-  requestId: <Unique query ID>,
-
   /*
   Data mapping using ElasticSearch bulk syntax.
   */
-  body: [
+  [
     {create: {}},
     { a: 'document', with: 'any', number: 'of fields' },
     { another: 'document' },
     { and: { another: 'one'} },
     ...
   ]
-}
 ```
 
 **Response:**

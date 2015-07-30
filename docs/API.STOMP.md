@@ -98,13 +98,13 @@ How subscription works:
 
 **Topic:** ``/exchange/amq.topic/subscribe.<data collection>.on``
 
-**reply-to queue metadata:** Mandatory.
+**reply-to queue metadata:** Required.
 
 **Query:**
 ```javascript
 {
   /*
-  Mandatory: an unique connection ID.
+  Required: an unique connection ID.
   If your query doesn't include a clientId field, Kuzzle will discard your query.
   */
   clientId: <Unique connection ID>,
@@ -217,7 +217,7 @@ It works with the room unique ID Kuzzle returns to you when you make a subscript
 
 **Topic:** ``/exchange/amq.topic/subscribe.<data collection>.count``
 
-**reply-to queue metadata:** Mandatory.
+**reply-to queue metadata:** Required.
 
 **Query:**
 ```javascript
@@ -265,13 +265,13 @@ Makes Kuzzle remove you of its subscribers on this room.
 ```javascript
 {
   /*
-  Mandatory. Represents the request ID of the subscription query.
+  Required. Represents the request ID of the subscription query.
   It's also your room name.
   */
   requestId: 'room name',
 
   /*
-  Mandatory. Allow Kuzzle to know which client want to unsubscribe.
+  Required. Allow Kuzzle to know which client want to unsubscribe.
   */
   clientId: '<your unique client ID>'
 }
@@ -376,7 +376,7 @@ Only documents in the persistent data storage layer can be retrieved.
 
 **Topic:** ``/exchange/amq.topic/read.<data collection>.get``
 
-**reply-to queue metadata:** Mandatory.
+**reply-to queue metadata:** Required.
 
 **Query:**
 ```javascript
@@ -430,7 +430,7 @@ Kuzzle uses the [ElasticSearch Query DSL ](https://www.elastic.co/guide/en/elast
 
 **Topic:** ``/exchange/amq.topic/read.<data collection>.search``
 
-**reply-to queue metadata:** Mandatory.
+**reply-to queue metadata:** Required.
 
 **Query:**
 ```javascript
@@ -565,7 +565,7 @@ Kuzzle uses the [ElasticSearch Query DSL ](https://www.elastic.co/guide/en/elast
 
 **Topic:** ``/exchange/amq.topic/read.<data collection>.count``
 
-**reply-to queue metadata:** Mandatory.
+**reply-to queue metadata:** Required.
 
 **Query:**
 ```javascript

@@ -104,7 +104,7 @@ How subscription works:
 ```javascript
 {
   /*
-  Mandatory. If your query doesn't include a clientId field, Kuzzle
+  Required. If your query doesn't include a clientId field, Kuzzle
   will discard your query, because it doesn't have any mean to send you
   the resulting room ID.
   */
@@ -222,7 +222,7 @@ It works with the room unique ID Kuzzle returns to you when you make a subscript
 ```javascript
 {
   /*
-  Mandatory. If your query doesn't include a clientId field, Kuzzle
+  Required. If your query doesn't include a clientId field, Kuzzle
   will discard your query, because it doesn't have any mean to send you
   the result.
   */
@@ -264,13 +264,13 @@ Makes Kuzzle remove you of its subscribers on this room.
 ```javascript
 {
   /*
-  Mandatory. Represents the request ID of the subscription query.
+  Required. Represents the request ID of the subscription query.
   It's also your room name.
   */
   requestId: 'room name',
 
   /*
-  Mandatory. Allow Kuzzle to know which client want to unsubscribe.
+  Required. Allow Kuzzle to know which client want to unsubscribe.
   */
   clientId: '<your unique client ID>'
 }
@@ -375,7 +375,7 @@ Only documents in the persistent data storage layer can be retrieved.
 ```javascript
 {
   /*
-  Mandatory. If your query doesn't include a clientId field, Kuzzle
+  Required. If your query doesn't include a clientId field, Kuzzle
   will discard your query, because it doesn't have any mean to send you
   the result.
   */
@@ -429,7 +429,7 @@ Kuzzle uses the [ElasticSearch Query DSL ](https://www.elastic.co/guide/en/elast
 ```javascript
 {
   /*
-  Mandatory. If your query doesn't include a clientId field, Kuzzle
+  Required. If your query doesn't include a clientId field, Kuzzle
   will discard your query, because it doesn't have any mean to send you
   the result.
   */
@@ -562,7 +562,7 @@ Kuzzle uses the [ElasticSearch Query DSL ](https://www.elastic.co/guide/en/elast
 ```javascript
 {
   /*
-  Mandatory. If your query doesn't include a clientId field, Kuzzle
+  Required. If your query doesn't include a clientId field, Kuzzle
   will discard your query, because it doesn't have any mean to send you
   the result.
   */
