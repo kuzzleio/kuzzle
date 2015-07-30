@@ -149,7 +149,7 @@ There are 4 types of notifications you can receive:
 
 #### 'A document has been created' notification:
 
-````javascript
+```javascript
 {
   error: null,                        // Assuming everything went well
   result: {
