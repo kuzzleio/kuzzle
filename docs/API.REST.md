@@ -1,6 +1,7 @@
 # Kuzzle REST API Specifications
 
 ## Introduction
+
 You can connect your application directly to Kuzzle, using REST.
 
 This will give you a direct access to the Kuzzle's router controller, dispatching your queries to the right components, which in turn will send you back a ``response``
@@ -29,6 +30,7 @@ If you need such functionnalities, please check our other supported protocols. F
 A ``response`` is the result of a query you send to Kuzzle. It may be the results of a search query, an acknowledgement of a create action, and so on.  
 
 A ``response`` is a JSON object with the following structure:
+
 ```javascript
 {
   /*
@@ -66,6 +68,7 @@ Simply put, a ``data collection`` is a set of data managed internally by Kuzzle.
 **Method:** ``POST``
 
 **Message:**
+
 ```javascript
   // Tells Kuzzle to send a pub/sub message
   persist: false,
@@ -87,6 +90,7 @@ Simply put, a ``data collection`` is a set of data managed internally by Kuzzle.
 **Method:** ``POST``
 
 **Message:**
+
 ```javascript
   // Tells Kuzzle to store your document
   persist: true,
@@ -98,6 +102,7 @@ Simply put, a ``data collection`` is a set of data managed internally by Kuzzle.
 ```
 
 **Kuzzle response:**
+
 ```javascript
 {
   error: null,                      // Assuming everything went well
@@ -129,6 +134,7 @@ Only documents in the persistent data storage layer can be retrieved.
 **Method:** ``GET``
 
 **Response:**
+
 ```javascript
 {
   error: null,                      // Assuming everything went well
@@ -152,6 +158,7 @@ Only documents in the persistent data storage layer can be retrieved.
 ---
 
 ### Searching for documents
+
 Only documents in the persistent data storage layer can be searched.
 
 Kuzzle uses the [ElasticSearch Query DSL ](https://www.elastic.co/guide/en/elasticsearch/reference/1.3/query-dsl.html) syntax.
@@ -161,6 +168,7 @@ Kuzzle uses the [ElasticSearch Query DSL ](https://www.elastic.co/guide/en/elast
 **Method:** ``POST``
 
 **Message:**
+
 ```javascript
   /*
   A set of filters or queries matching documents you're looking for.
@@ -172,6 +180,7 @@ Kuzzle uses the [ElasticSearch Query DSL ](https://www.elastic.co/guide/en/elast
 ```
 
 **Response:**
+
 ```javascript
 {
   error: null,                      // Assuming everything went well
@@ -217,6 +226,7 @@ Only documents in the persistent data storage layer can be updated.
 **Method:** ``PUT``
 
 **Message:**
+
 ```javascript
   field_to_update1: 'new value',
   field_to_update2: 'new value',
@@ -224,6 +234,7 @@ Only documents in the persistent data storage layer can be updated.
 ```
 
 **Response:**
+
 ```javascript
 {
   error: null,                      // Assuming everything went well
@@ -247,6 +258,7 @@ Only documents in the persistent data storage layer can be updated.
 ---
 
 ### Counting documents
+
 Only documents in the persistent data storage layer can be counted.
 
 Kuzzle uses the [ElasticSearch Query DSL ](https://www.elastic.co/guide/en/elasticsearch/reference/1.3/query-dsl.html) syntax.
@@ -256,6 +268,7 @@ Kuzzle uses the [ElasticSearch Query DSL ](https://www.elastic.co/guide/en/elast
 **Method:** ``POST``
 
 **Message:**
+
 ```javascript
   /*
   A set of filters or queries matching documents you're looking for.
@@ -267,6 +280,7 @@ Kuzzle uses the [ElasticSearch Query DSL ](https://www.elastic.co/guide/en/elast
 ```
 
 **Response:**
+
 ```javascript
 {
   error: null,                      // Assuming everything went well
@@ -290,6 +304,7 @@ Kuzzle uses the [ElasticSearch Query DSL ](https://www.elastic.co/guide/en/elast
 ---
 
 ### Deleting a document using a document unique ID
+
 Only documents in the persistent data storage layer can be deleted.
 
 **URL:** ``http://kuzzle:7512/api/<data collection>/<document unique ID>``
@@ -297,6 +312,7 @@ Only documents in the persistent data storage layer can be deleted.
 **Method:** ``DELETE``
 
 **Response:**
+
 ```javascript
 {
   error: null,                      // Assuming everything went well
@@ -323,6 +339,7 @@ Only documents in the persistent data storage layer can be deleted.
 ---
 
 ### Deleting documents using a query
+
 Only documents in the persistent data storage layer can be deleted.
 
 Kuzzle uses the [ElasticSearch Query DSL ](https://www.elastic.co/guide/en/elasticsearch/reference/1.3/query-dsl.html) syntax.
@@ -332,6 +349,7 @@ Kuzzle uses the [ElasticSearch Query DSL ](https://www.elastic.co/guide/en/elast
 **Method:** ``DELETE``
 
 **Message:**
+
 ```javascript
   /*
   A set of filters or queries matching documents you're looking for.
@@ -343,6 +361,7 @@ Kuzzle uses the [ElasticSearch Query DSL ](https://www.elastic.co/guide/en/elast
 ```
 
 **Response:**
+
 ```javascript
 {
   error: null,                      // Assuming everything went well
@@ -379,6 +398,7 @@ This removes an entire data collection in the persistent data storage layer.
 **Method:** ``DELETE``
 
 **Response:**
+
 ```javascript
 {
   error: null,                      // Assuming everything went well
@@ -415,6 +435,7 @@ To solve this matter, Kuzzle's API offer a way to create a data mapping. It expo
 **Method:** ``POST``
 
 **Message:**
+
 ```javascript
   /*
   Data mapping using ElasticSearch mapping syntax
@@ -428,6 +449,7 @@ To solve this matter, Kuzzle's API offer a way to create a data mapping. It expo
 ```
 
 **Response:**
+
 ```javascript
 {
   error: null,                      // Assuming everything went well
@@ -462,6 +484,7 @@ Bulk import only works on documents in our persistent data storage layer.
 **Method:** ``POST``
 
 **Message:**
+
 ```javascript
   /*
   Data mapping using ElasticSearch bulk syntax.
@@ -476,6 +499,7 @@ Bulk import only works on documents in our persistent data storage layer.
 ```
 
 **Response:**
+
 ```javascript
 {
   error: null,                      // Assuming everything went well
