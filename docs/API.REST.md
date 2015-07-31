@@ -433,7 +433,7 @@ To solve this matter, Kuzzle's API offer a way to create a data mapping. It expo
 
 **URL:** ``http://kuzzle:7512/api/<data collection>/_mapping``
 
-**Method:** ``POST``
+**Method:** ``PUT``
 
 **Message:**
 
