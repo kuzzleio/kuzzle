@@ -22,6 +22,7 @@ If you need such functionnalities, please check our other supported protocols. F
   * [Deleting documents using a query](#deleting-documents-using-a-query)
   * [Deleting an entire data collection](#deleting-an-entire-data-collection)
   * [Setting up a data mapping on a collection](#setting-up-a-data-mapping-in-a-collection)
+  * [Retriveing the data mapping of a collection](#retrieving-the-data-mapping-of-a-collection)
   * [Performing a bulk import](#performing-a-bulk-import)
 
 
@@ -466,6 +467,43 @@ To solve this matter, Kuzzle's API offer a way to create a data mapping. It expo
     an unique query identifier anyway.
     */
     requestId, '<unique request identifier>'
+  }
+}
+```
+
+---
+
+### Retrieving the data mapping of a collection
+
+Get data mapping of a collection previously defined
+
+**URL:** ``http://kuzzle:7512/api/<data collection>/_mapping``
+
+**Method:** ``GET``
+
+**Response:**
+
+```javascript
+{
+  error: null,
+  result: {
+    _source: {},
+    action: 'getMapping',
+    collection: '<data collection>',
+    controller: 'admin',
+    mainindex: {
+      mappings: {
+        <data collection>: {
+          properties: {
+            field1: {type: 'field type', ...options... },
+            field2: {type: 'field type', ...options... },
+            ...
+            fieldn: {type: 'field type', ...options... },
+          }
+        }
+      }
+    },
+    requestId: '<unique request identifier>'
   }
 }
 ```
