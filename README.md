@@ -81,7 +81,7 @@ $ kuzzle start --port 8082
 Or, if you have [PM2](https://github.com/Unitech/pm2)
 
 ```bash
-$ pm2 start kuzzle-standalone.js
+$ pm2 start app-start.js
 ```
 
 ### Change RabbitMQ and Elasticsearch host
