@@ -27,14 +27,15 @@ The current implementation of our MQ Broker service uses [RabbitMQ](https://www.
   * [Deleting documents using a query](#deleting-documents-using-a-query)
   * [Deleting an entire data collection](#deleting-an-entire-data-collection)
   * [Setting up a data mapping on a collection](#setting-up-a-data-mapping-in-a-collection)
+  * [Retriveing the data mapping of a collection](#retrieving-the-data-mapping-of-a-collection)
   * [Performing a bulk import](#performing-a-bulk-import)
 
-## How to connect to Kuzzle
+##<a name="how-to-connect-to-kuzzle"></a> How to connect to Kuzzle
 
 To establish communication with Kuzzle using STOMP, simply connect your application to the Kuzzle's STOMP port.
 By default, the MQ Broker listens to the port 61613 for STOMP applications.
 
-## What are responses objects
+##<a name="what-are-responses-objects"></a> What are responses objects
 
 A ``response`` is the result of a query you send to Kuzzle. It may be the results of a search query, an acknowledgement of a create action, and so on.  
 And when you subscribe to a room, Kuzzle also sends notifications to your application in the form of a ``response`` object.
@@ -65,7 +66,7 @@ To get responses from Kuzzle, simply subscribe to the queue ``/queue/<reply-to q
 Once you subscribed to your response topic, you may want to send multiple queries asynchronously to Kuzzle, and to distinguish what response refers to what query.  
 To do that, simply add a unique ``requestId`` field to your queries. Kuzzle will send it back in its response!
 
-## Performing queries
+##<a name="performing-queries"></a> Performing queries
 
 This section details every query you can send to Kuzzle, and the ``response`` object Kuzzle will send you back, if any.
 
@@ -80,7 +81,7 @@ Simply put, a ``data collection`` is a set of data managed internally by Kuzzle.
 
 ---
 
-### Subscribing to documents
+###<a name="subscribing-to-documents"></a> Subscribing to documents
 
 Subscription doesn't work the same way in Kuzzle than with a regular publish/subscribe protocol.  
 In Kuzzle, you don't exactly subscribe to a room or a topic but, instead, you subscribe to documents.
@@ -140,7 +141,7 @@ How subscription works:
 }
 ```
 
-#### Notifications
+####<a name="notifications"></a> Notifications
 
 Once you receive this ``response``, all you have to do is to subscribe to the ``/topic/<roomId>`` topic to receive notifications.
 
@@ -218,7 +219,7 @@ There are 4 types of notifications you can receive:
 
 ---
 
-### Counting the number of subscriptions on a given room
+###<a name="counting-the-number-of-subscriptions-on-a-given-room"></a> Counting the number of subscriptions on a given room
 
 Returns the number of people/applications who have subscribed to the same documents than you.
 
@@ -264,7 +265,7 @@ It works with the room unique ID Kuzzle returns to you when you make a subscript
 
 ---
 
-### Unsubscribing of a room
+###<a name="unsubscribing-of-a-room"></a> Unsubscribing of a room
 
 Makes Kuzzle remove you of its subscribers on this room.
 
@@ -303,7 +304,7 @@ Makes Kuzzle remove you of its subscribers on this room.
 
 ---
 
-### Sending a publish/subscribe message
+###<a name="sending-a-publish-subscribe-message"></a> Sending a publish/subscribe message
 
 **Topic:** ``/exchange/amq.topic/write.<data collection>.create``
 
@@ -329,7 +330,7 @@ Makes Kuzzle remove you of its subscribers on this room.
 
 ---
 
-### Creating a new document
+###<a name="creating-a-new-document"></a> Creating a new document
 
 **Topic:** ``/exchange/amq.topic/write.<data collection>.create``
 
@@ -386,7 +387,7 @@ Makes Kuzzle remove you of its subscribers on this room.
 
 ---
 
-### Retrieving a document
+###<a name="retrieving-a-document"></a> Retrieving a document
 
 Only documents in the persistent data storage layer can be retrieved.
 
@@ -441,7 +442,7 @@ Only documents in the persistent data storage layer can be retrieved.
 
 ---
 
-### Searching for documents
+###<a name="searching-for-documents"></a> Searching for documents
 
 Only documents in the persistent data storage layer can be searched.
 
@@ -516,7 +517,7 @@ Kuzzle uses the [ElasticSearch Query DSL ](https://www.elastic.co/guide/en/elast
 
 ---
 
-### Updating a document
+###<a name="updating-a-document"></a> Updating a document
 
 Only documents in the persistent data storage layer can be updated.
 
@@ -580,7 +581,7 @@ Only documents in the persistent data storage layer can be updated.
 
 ---
 
-### Counting documents
+###<a name="counting-documents"></a> Counting documents
 
 Only documents in the persistent data storage layer can be counted.
 
@@ -642,7 +643,7 @@ Kuzzle uses the [ElasticSearch Query DSL ](https://www.elastic.co/guide/en/elast
 
 ---
 
-### Deleting a document using a document unique ID
+###<a name="deleting-a-document-using-a-document-unique-id"></a> Deleting a document using a document unique ID
 
 Only documents in the persistent data storage layer can be deleted.
 
@@ -700,7 +701,7 @@ Only documents in the persistent data storage layer can be deleted.
 
 ---
 
-### Deleting documents using a query
+###<a name="deleting-documents-using-a-query"></a> Deleting documents using a query
 
 Only documents in the persistent data storage layer can be deleted.
 
@@ -767,7 +768,7 @@ Kuzzle uses the [ElasticSearch Query DSL ](https://www.elastic.co/guide/en/elast
 
 ---
 
-### Deleting an entire data collection
+###<a name="deleting-an-entire-data-collection"></a> Deleting an entire data collection
 
 This removes an entire data collection in the persistent data storage layer.  
 This action is handled by the **administration** controller.
@@ -819,7 +820,7 @@ This action is handled by the **administration** controller.
 
 ---
 
-### Setting up a data mapping in a collection
+###<a name="setting-up-a-data-mapping-in-a-collection"></a> Setting up a data mapping in a collection
 
 When creating a new data collection in the persistent data storage layer, Kuzzle uses a default mapping.  
 It means that, by default, you won't be able to exploit the full capabilities of our persistent data storage layer (currently handled by [ElasticSearch](https://www.elastic.co/products/elasticsearch)), and your searches may suffer from below-average performances, depending on the amount of data you stored in a collection and the complexity of your database.
@@ -885,7 +886,71 @@ This action is handled by the **administration** controller.
 
 ---
 
-### Performing a bulk import
+###<a name="retrieving-the-data-mapping-of-a-collection"></a> Retrieving the data mapping of a collection
+
+Get data mapping of a collection previously defined
+
+**Topic:** ``/exchange/amq.topic/admin.<data collection>.getMapping``
+
+**reply-to queue metadata:** Optionnal.
+
+**Query:**
+
+```javascript
+{
+  /*
+  Optionnal: allow Kuzzle to send a response to your application
+  */
+  clientId: <Unique session ID>,
+
+  /*
+  Optionnal: Kuzzle will forward this field in its response, allowing you
+  to easily identify what query generated the response you got.
+  */
+  requestId: <Unique query ID>,
+}
+```
+
+**Response:**
+
+```javascript
+{
+  error: null,                      // Assuming everything went well
+  result: {
+    _source: {},
+    action: 'getMapping',
+    collection: '<data collection>',
+    controller: 'admin',
+    
+    mainindex: {
+      mappings: {
+        <data collection>: {
+        
+          /*
+          Data mapping using ElasticSearch mapping syntax
+          */
+          properties: {
+            field1: {type: 'field type', ...options... },
+            field2: {type: 'field type', ...options... },
+            ...
+            fieldn: {type: 'field type', ...options... },
+          }
+        }
+      }
+    },
+
+    /*
+    The requestId field you provided. If you didn't, Kuzzle generates
+    an unique query identifier anyway.
+    */
+    requestId: '<unique request identifier>'
+  }
+}
+```
+
+---
+
+###<a name="performing-a-bulk-import"></a> Performing a bulk import
 
 A bulk import allow your application to perform multiple writing operations with a single query. This is especially useful if you want to create a large number of documents, as a bulk import will be a lot faster compared to creating them individually using ``create`` queries.  
 As with other queries, the syntax for bulk imports closely ressembles the [ElasticSearch Bulk API](https://www.elastic.co/guide/en/elasticsearch/reference/1.3/docs-bulk.html?q=bulk).
