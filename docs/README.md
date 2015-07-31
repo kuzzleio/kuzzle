@@ -1,6 +1,7 @@
 # API Specifications
 
 Kuzzle supports a variety of communication protocol. You'll find here the specifications of each one of these API:
+
 * [AMQP](./API.AMQP.md)
 * [MQTT](./API.MQTT.md)
 * [REST](./API.REST.md)
