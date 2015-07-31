@@ -15,6 +15,6 @@
 		rc = require('rc');
 
 
-	kuzzle.start(rc('kuzzle'));
+	kuzzle.perf(rc('kuzzle'));
 
 })();
