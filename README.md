@@ -13,7 +13,7 @@ Kuzzle uses [Elasticsearch filter DSL](https://www.elastic.co/guide/en/elasticse
 
 ## Using the all-in-one Docker recipe
 
-If you are running Docker and just want to get your own kuzzle running, you can use the provided docker-compose file.
+If you are running Docker and just want to get your own Kuzzle running, you can use the provided docker-compose file.
 
 Prerequisites:
 
@@ -44,7 +44,7 @@ Once the virtual machine is provisioned, you should be able to access Kuzzle's h
 ## From source or npm
 
 First of all, you have to get this code, you can use NPM or clone this repo.
-
+<!--Pour plus de clarté, besoin de couper la phrase "First of all, you have to get this code. You can use NPM or clone this repo."-->
 * NPM
 
     ```
@@ -98,7 +98,7 @@ $ kuzzle start
 # Running Tests
 
     $ npm test
-
+<!-- -->
 Because functional tests need a running Kuzzle environment, it is recommended to run these tests from within a Kuzzle container, either using a Docker one:
 
     $ docker exec -ti kuzzle_kuzzle_1 bash
