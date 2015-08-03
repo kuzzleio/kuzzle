@@ -3,17 +3,12 @@
 var
   captains = require('captains-log'),
   rc = require('rc'),
-  params = rc('kuzzle'),
-  Kuzzle = require('../lib/api');
+  Kuzzle = require('../lib');
 
 
 module.exports = function () {
-
-
   var log = captains();
-  log.info('Starting Kuzzle in PERF MODE ');
+  log.info('Starting Kuzzle in PERFORMANCES TESTING mode');
 
-  var kuzzle = new Kuzzle();
-
-  kuzzle.perf(params);
+  Kuzzle.perf(rc('kuzzle'));
 };
