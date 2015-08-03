@@ -1,8 +1,14 @@
-# Getting started
+# API Specifications
 
-The main documentation to read before developing with Kuzzle is the [Api Specification](api-specification.md). You will find complete description of how talking to Kuzzle, a list with all entry points for REST API, the format of the message to be sent for all actions and the format of the object returned by Kuzzle.
+Kuzzle supports a variety of communication protocol. You'll find here the specifications of each one of these API:
 
-For the filtering syntax overview, check the [Filters](filters.md) documentation.
+* [AMQP](./API.AMQP.md)
+* [MQTT](./API.MQTT.md)
+* [REST](./API.REST.md)
+* [STOMP](./API.STOMP.md)
+* [Web Socket](./API.WebSocket.md)
+
+For an overview about the filtering syntax, check the [Filters](filters.md) documentation.
 
 # Advanced documentation (not required for a basic development)
 

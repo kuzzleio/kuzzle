@@ -6,7 +6,7 @@ The Kuzzle service is launched by [kuzzle.js](kuzzle.js) command line.
 
 will launch internally [kuzzle-start.js](kuzzle-start.js)
 
-For features like watch mode, multi-thread support from [pm2](https://www.npmjs.com/package/pm2), you can use [app-start](../app-start.js)
+For features like watch mode, multi-thread support from [pm2](https://www.npmjs.com/package/pm2), you can use [app-start.js](../app-start.js)
 
 # Contributing
 
