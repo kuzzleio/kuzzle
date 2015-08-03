@@ -7,7 +7,7 @@ For UI and linked objects developers, Kuzzle is an open-source solution that han
 
 Kuzzle features are accessible through a secured API. It can be used through a large choice of protocols such as REST, Websocket or Message Queuing protocols (see [Specifications](docs/api-specifications.md) for details).
 
-Kuzzle use [Elasticsearch filter DSL](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-filters.html) (see [filters syntax](docs/filters.md) for more details) as filtering language, [RabbitMQ](https://www.rabbitmq.com/) for managing queues and [Redis](http://redis.io/) for manage filter cache.
+Kuzzle uses [Elasticsearch filter DSL](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-filters.html) (see [filters syntax](docs/filters.md) for more details) as filtering language, [RabbitMQ](https://www.rabbitmq.com/) for managing queues and [Redis](http://redis.io/) for managing filter cache.
 
 # Installation
 
@@ -39,7 +39,7 @@ From the root directory:
 
     $ vagrant up
 
-Once the virtual machine is provisionned, you should be able to access Kuzzle's http api on http://localhost:7512/api/.
+Once the virtual machine is provisioned, you should be able to access Kuzzle's http api on http://localhost:7512/api/.
 
 ## From source or npm
 
@@ -72,7 +72,7 @@ Prerequisites:
 $ kuzzle start
 ```
 
-You can now access to the api with http://localhost:7512/api/. If you want to change the port you can run
+You can now access the api with http://localhost:7512/api/. If you want to change the port you can run
 
 ```bash
 $ kuzzle start --port 8082
