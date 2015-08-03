@@ -22,10 +22,11 @@ If you need such functionnalities, please check our other supported protocols. F
   * [Deleting documents using a query](#deleting-documents-using-a-query)
   * [Deleting an entire data collection](#deleting-an-entire-data-collection)
   * [Setting up a data mapping on a collection](#setting-up-a-data-mapping-in-a-collection)
+  * [Retriveing the data mapping of a collection](#retrieving-the-data-mapping-of-a-collection)
   * [Performing a bulk import](#performing-a-bulk-import)
 
 
-## What are responses objects
+## <a name="what-are-responses-objects"></a>What are responses objects
 
 A ``response`` is the result of a query you send to Kuzzle. It may be the results of a search query, an acknowledgement of a create action, and so on.  
 
@@ -48,7 +49,7 @@ A ``response`` is a JSON object with the following structure:
 }
 ```
 
-## Performing queries
+##<a name="performing-queries"></a> Performing queries
 
 This section details every query you can send to Kuzzle, and the ``response`` object Kuzzle will send you back, if any.
 
@@ -61,7 +62,7 @@ Simply put, a ``data collection`` is a set of data managed internally by Kuzzle.
 
 ---
 
-### Sending a publish/subscribe message
+###<a name="sending-a-publish-subscribe-message"></a> Sending a publish/subscribe message
 
 **URL:** ``http://kuzzle:7512/api/<data collection>``
 
@@ -69,21 +70,24 @@ Simply put, a ``data collection`` is a set of data managed internally by Kuzzle.
 
 **Message:**
 
-```javascript
+```javascript  
+{
   // Tells Kuzzle to send a pub/sub message
   persist: false,
-
-  /*
-  The document itself
-  */
-  ...
+  
+  body: {
+    /*
+    The document itself
+    */
+  }
+}
 ```
 
 **Response:** Kuzzle doesn't send a response when sending publish/subscribe messages.
 
 ---
 
-### Creating a new document
+###<a name="creating-a-new-document"></a> Creating a new document
 
 **URL:** ``http://kuzzle:7512/api/<data collection>``
 
@@ -91,14 +95,34 @@ Simply put, a ``data collection`` is a set of data managed internally by Kuzzle.
 
 **Message:**
 
-```javascript
-  // Tells Kuzzle to store your document
-  persist: true,
-
+You can directly send your document through post data using default parameters (persist: true)
+```javascript 
+{
   /*
   The document itself
   */
+}
+```
+
+Or instead control the behavior of the document by passing your document in the body field.
+```javascript  
+{
+  /*
+  Optionnal: Kuzzle will forward this field in its response, allowing you
+  to easily identify what query generated the response you got.
+  */
+  requestId: <Unique query ID>,
+  
+  // Tells Kuzzle to not store your document
+  persist: false,
+  
+  body: {
+    /*
+    The document itself
+    */
+  }
   ...
+}
 ```
 
 **Kuzzle response:**
@@ -114,6 +138,7 @@ Simply put, a ``data collection`` is a set of data managed internally by Kuzzle.
     collection: '<data collection>',
     action: 'create',
     controller: 'write',
+    
     /*
     The requestId field you provided. If you didn't, Kuzzle generates
     an unique query identifier anyway.
@@ -125,7 +150,7 @@ Simply put, a ``data collection`` is a set of data managed internally by Kuzzle.
 
 ---
 
-### Retrieving a document
+###<a name="retrieving-a-document"></a> Retrieving a document
 
 Only documents in the persistent data storage layer can be retrieved.
 
@@ -157,7 +182,7 @@ Only documents in the persistent data storage layer can be retrieved.
 
 ---
 
-### Searching for documents
+###<a name="searching-for-documents"></a> Searching for documents
 
 Only documents in the persistent data storage layer can be searched.
 
@@ -170,6 +195,7 @@ Kuzzle uses the [ElasticSearch Query DSL ](https://www.elastic.co/guide/en/elast
 **Message:**
 
 ```javascript
+{
   /*
   A set of filters or queries matching documents you're looking for.
   Use 'query' instead of 'filter' if you want to perform a query instead.
@@ -177,6 +203,7 @@ Kuzzle uses the [ElasticSearch Query DSL ](https://www.elastic.co/guide/en/elast
   filter: {
 
   }
+}
 ```
 
 **Response:**
@@ -217,7 +244,7 @@ Kuzzle uses the [ElasticSearch Query DSL ](https://www.elastic.co/guide/en/elast
 
 ---
 
-### Updating a document
+###<a name="updating-a-document"></a> Updating a document
 
 Only documents in the persistent data storage layer can be updated.
 
@@ -228,9 +255,11 @@ Only documents in the persistent data storage layer can be updated.
 **Message:**
 
 ```javascript
+{
   field_to_update1: 'new value',
   field_to_update2: 'new value',
   ...
+}
 ```
 
 **Response:**
@@ -257,7 +286,7 @@ Only documents in the persistent data storage layer can be updated.
 
 ---
 
-### Counting documents
+###<a name="counting-documents"></a> Counting documents
 
 Only documents in the persistent data storage layer can be counted.
 
@@ -270,6 +299,7 @@ Kuzzle uses the [ElasticSearch Query DSL ](https://www.elastic.co/guide/en/elast
 **Message:**
 
 ```javascript
+{
   /*
   A set of filters or queries matching documents you're looking for.
   Use 'query' instead of 'filter' if you want to perform a query instead.
@@ -277,6 +307,7 @@ Kuzzle uses the [ElasticSearch Query DSL ](https://www.elastic.co/guide/en/elast
   filter: {
 
   }
+}
 ```
 
 **Response:**
@@ -303,7 +334,7 @@ Kuzzle uses the [ElasticSearch Query DSL ](https://www.elastic.co/guide/en/elast
 
 ---
 
-### Deleting a document using a document unique ID
+###<a name="deleting-a-document-using-a-document-unique-id"></a> Deleting a document using a document unique ID
 
 Only documents in the persistent data storage layer can be deleted.
 
@@ -338,7 +369,7 @@ Only documents in the persistent data storage layer can be deleted.
 
 ---
 
-### Deleting documents using a query
+###<a name="deleting-documents-using-a-query"></a> Deleting documents using a query
 
 Only documents in the persistent data storage layer can be deleted.
 
@@ -389,7 +420,7 @@ Kuzzle uses the [ElasticSearch Query DSL ](https://www.elastic.co/guide/en/elast
 
 ---
 
-### Deleting an entire data collection
+###<a name="deleting-an-entire-data-collection"></a> Deleting an entire data collection
 
 This removes an entire data collection in the persistent data storage layer.  
 
@@ -423,7 +454,7 @@ This removes an entire data collection in the persistent data storage layer.
 
 ---
 
-### Setting up a data mapping in a collection
+###<a name="setting-up-a-data-mapping-in-a-collection"></a> Setting up a data mapping in a collection
 
 When creating a new data collection in the persistent data storage layer, Kuzzle uses a default mapping.  
 It means that, by default, you won't be able to exploit the full capabilities of our persistent data storage layer (currently handled by [ElasticSearch](https://www.elastic.co/products/elasticsearch)), and your searches may suffer from below-average performances, depending on the amount of data you stored in a collection and the complexity of your database.
@@ -432,11 +463,12 @@ To solve this matter, Kuzzle's API offer a way to create a data mapping. It expo
 
 **URL:** ``http://kuzzle:7512/api/<data collection>/_mapping``
 
-**Method:** ``POST``
+**Method:** ``PUT``
 
 **Message:**
 
 ```javascript
+{
   /*
   Data mapping using ElasticSearch mapping syntax
   */
@@ -446,6 +478,7 @@ To solve this matter, Kuzzle's API offer a way to create a data mapping. It expo
     ...
     fieldn: {type: 'field type', ...options... },
   }
+}
 ```
 
 **Response:**
@@ -472,7 +505,53 @@ To solve this matter, Kuzzle's API offer a way to create a data mapping. It expo
 
 ---
 
-### Performing a bulk import
+###<a name="retrieving-the-data-mapping-of-a-collection"></a> Retrieving the data mapping of a collection
+
+Get data mapping of a collection previously defined
+
+**URL:** ``http://kuzzle:7512/api/<data collection>/_mapping``
+
+**Method:** ``GET``
+
+**Response:**
+
+```javascript
+{
+  error: null,                      // Assuming everything went well
+  result: {
+    _source: {},
+    action: 'getMapping',
+    collection: '<data collection>',
+    controller: 'admin',
+    
+    mainindex: {
+      mappings: {
+        <data collection>: {
+          /*
+          Data mapping using ElasticSearch mapping syntax
+          */
+          properties: {
+            field1: {type: 'field type', ...options... },
+            field2: {type: 'field type', ...options... },
+            ...
+            fieldn: {type: 'field type', ...options... },
+          }
+        }
+      }
+    },
+
+    /*
+    The requestId field you provided. If you didn't, Kuzzle generates
+    an unique query identifier anyway.
+    */
+    requestId: '<unique request identifier>'
+  }
+}
+```
+
+---
+
+###<a name="performing-a-bulk-import"></a> Performing a bulk import
 
 A bulk import allow your application to perform multiple writing operations with a single query. This is especially useful if you want to create a large number of documents, as a bulk import will be a lot faster compared to creating them individually using ``create`` queries.  
 As with other queries, the syntax for bulk imports closely ressembles the [ElasticSearch Bulk API](https://www.elastic.co/guide/en/elasticsearch/reference/1.3/docs-bulk.html?q=bulk).
@@ -486,6 +565,7 @@ Bulk import only works on documents in our persistent data storage layer.
 **Message:**
 
 ```javascript
+{
   /*
   Data mapping using ElasticSearch bulk syntax.
   */
@@ -496,6 +576,7 @@ Bulk import only works on documents in our persistent data storage layer.
     { and: { another: 'one'} },
     ...
   ]
+}
 ```
 
 **Response:**
