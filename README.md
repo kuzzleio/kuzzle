@@ -5,7 +5,7 @@
 For UI and linked objects developers, Kuzzle is an open-source solution that handles all the data management
 (CRUD, real-time storage, search, high-level features, etc;).
 
-Kuzzle features are accessible through a secured API. It can be used through a large choice of protocols such as REST, Websocket or Message Queuing protocols (see [Specifications](docs/api-specifications.md) for details).
+Kuzzle features are accessible through a secured API. It can be used through a large choice of protocols such as REST, Websocket or Message Queuing protocols.
 
 Kuzzle uses [Elasticsearch filter DSL](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-filters.html) (see [filters syntax](docs/filters.md) for more details) as filtering language, [RabbitMQ](https://www.rabbitmq.com/) for managing queues and [Redis](http://redis.io/) for managing filter cache.
 
@@ -24,8 +24,6 @@ From Kuzzle's root directory:
 
     $ docker-compose up
 
-You can now access Kuzzle's API.
-
 ## Using Vagrant
 
 If you are not running Docker on your system, for instance if you are running Windows or MacOs, you can pop a virtual machine to run Kuzzle.
@@ -38,8 +36,6 @@ Prerequisites:
 From the root directory:
 
     $ vagrant up
-
-Once the virtual machine is provisioned, you should be able to access Kuzzle's API.
 
 ## From source or NPM
 
@@ -104,14 +100,11 @@ Your applications can now connect to Kuzzle. We provide a few ways to do this:
 # Running Tests
 
     $ npm test
-Because functional tests need a running Kuzzle environment, it is recommended to run these tests from within a Kuzzle container.
-<!--Because functional tests need to be done in a running Kuzzle environment, it is recommended to run these tests from a Kuzzle container.
-Dans la première partie de phrase j'ai rajouté un verbe car la phrase était bancale pour la 2ème partie j'ai supprimé "within" car soit tu mets "from a Kuzzle container" soit "within a Kuzzle container". "From" et "within" sont deux préposition de lieu-->
+Because functional tests need to be done in a running Kuzzle environment, it is recommended to run these tests from a Kuzzle container.
 
-From within a Docker container:
+From a Docker container:
     $ docker exec -ti kuzzle_kuzzle_1 bash
     $ npm test
-<!--From a Docker container:-->
 
 Using a Vagrant virtual machine:
 
