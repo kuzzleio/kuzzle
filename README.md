@@ -24,7 +24,7 @@ From Kuzzle's root directory:
 
     $ docker-compose up
 
-You can now access Kuzzle's http api on http://localhost:7512/api/.
+You can now access Kuzzle's API.
 
 ## Using Vagrant
 
@@ -39,12 +39,12 @@ From the root directory:
 
     $ vagrant up
 
-Once the virtual machine is provisioned, you should be able to access Kuzzle's http api on http://localhost:7512/api/.
+Once the virtual machine is provisioned, you should be able to access Kuzzle's API.
 
-## From source or npm
+## From source or NPM
 
-First of all, you have to get this code, you can use NPM or clone this repo.
-<!--Pour plus de clarté, besoin de couper la phrase "First of all, you have to get this code. You can use NPM or clone this repo."-->
+First of all, you have to get the source code. You can use NPM or clone our GIT repository.
+
 * NPM
 
     ```
@@ -72,19 +72,19 @@ Prerequisites:
 $ kuzzle start
 ```
 
-You can now access the api with http://localhost:7512/api/. If you want to change the port you can run
+To get a list of available options, you can run:
 
 ```bash
-$ kuzzle start --port 8082
+$ kuzzle start -h
 ```
 
-Or, if you have [PM2](https://github.com/Unitech/pm2)
+You may also start Kuzzle by using [PM2](https://github.com/Unitech/pm2):
 
 ```bash
 $ pm2 start app-start.js
 ```
 
-### Change RabbitMQ and Elasticsearch host
+### Change RabbitMQ and Elasticsearch hosts
 
 If you are not running RabbitMQ and Elasticsearch on localhost, you can configure host and port:
 
@@ -94,17 +94,24 @@ $ export RABBIT_HOST=myrabbitmq:5672
 $ kuzzle start
 ```
 
+# Using Kuzzle
+
+Your applications can now connect to Kuzzle. We provide a few ways to do this:
+
+* Using one of our SDK (coming soon)
+* Directly, by accessing one of our API ([REST](docs/API.REST.md), [WebSocket](docs/API.WebSocket.md), [AMQP](docs/API.AMQP.md), [MQTT](docs/API.MQTT.md) or [STOMP](docs/API.STOMP.md))
 
 # Running Tests
 
     $ npm test
-<!--Because functional tests need running within a Kuzzle environment, it is recommended to run these tests within a Kuzzle container, or either using a Docker one-->
-Because functional tests need a running Kuzzle environment, it is recommended to run these tests from within a Kuzzle container, either using a Docker one:
+Because functional tests need a running Kuzzle environment, it is recommended to run these tests from within a Kuzzle container.
+
+From within a Docker container:
 
     $ docker exec -ti kuzzle_kuzzle_1 bash
     $ npm test
 
-Or using a Vagrant virtual machine:
+Using a Vagrant virtual machine:
 
     $ vagrant ssh -c 'docker exec -ti kuzzle_kuzzle_1 bash'
     $ npm test
