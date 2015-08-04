@@ -1,11 +1,24 @@
 /**
- * This PM2 file starts a Kuzzle instance with the logger service activated.
- * It should only be used for benchmarking purpose.
+ * This PM2 file starts a Kuzzle instance in performance recording mode.
+ * This should only be used for benchmarking purpose.
  *
- * Example for contribution purpose only:
- *   $ pm2 start app-start.js --watch -- --port 7512
- *   this command will start a Kuzzle instance on port 7512
- *   and will relaunch it everytime a modification is detected in the source code
+ * Without any argument, a Kuzzle instance is launched, complete with a server and a single set of workers.
+ *
+ * This default configuration isn't optimal performance-wise. Instead, it's prefered to start a Kuzzle server, and
+ * then spawns a couple of workers.
+ *
+ * To start a Kuzzle server:
+ *    pm2 start -n 'server' app-start.js -- --server
+ *
+ * To start 3 sets of workers:
+ *    pm2 start -n 'worker' -f -i 3 app-start.js -- --worker
+ *
+ * You can then scale up/down the number of workers:
+ *   pm2 scale worker <new number of workers>
+ *
+ * Please check the default PM2 JSON configuration file provided in Kuzzle installation directories.
+ *
+ * To get a complete list of available options, launch 'bin/kuzzle.js start -h'
  */
 (function () {
 	var
