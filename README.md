@@ -98,7 +98,7 @@ $ kuzzle start
 # Running Tests
 
     $ npm test
-<!-- -->
+<!--Because functional tests need running within a Kuzzle environment, it is recommended to run these tests within a Kuzzle container, or either using a Docker one-->
 Because functional tests need a running Kuzzle environment, it is recommended to run these tests from within a Kuzzle container, either using a Docker one:
 
     $ docker exec -ti kuzzle_kuzzle_1 bash
@@ -129,4 +129,4 @@ Thanks to [Sails](https://github.com/balderdashy/sails) project for a good Node.
 
 # License
 
-Kuzzle is published under the [Apache 2 License](LICENSE.md).
+Kuzzle is published under [Apache 2 License](LICENSE.md).
