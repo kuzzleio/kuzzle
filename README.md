@@ -105,11 +105,13 @@ Your applications can now connect to Kuzzle. We provide a few ways to do this:
 
     $ npm test
 Because functional tests need a running Kuzzle environment, it is recommended to run these tests from within a Kuzzle container.
+<!--Because functional tests need to be done in a running Kuzzle environment, it is recommended to run these tests from a Kuzzle container.
+Dans la première partie de phrase j'ai rajouté un verbe car la phrase était bancale pour la 2ème partie j'ai supprimé "within" car soit tu mets "from a Kuzzle container" soit "within a Kuzzle container". "From" et "within" sont deux préposition de lieu-->
 
 From within a Docker container:
-
     $ docker exec -ti kuzzle_kuzzle_1 bash
     $ npm test
+<!--From a Docker container:-->
 
 Using a Vagrant virtual machine:
 
