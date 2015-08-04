@@ -3,7 +3,7 @@
 Logstash Elasticsearch and Kibana allow respectively to collect,index and visualize information about logs.
 
  1. Logstash recive the logs from Kuzzle,
- 2. Elasticsearch index the logs,
+ 2. Elasticsearch index the logs (container elasticlogstash),
  3. Kibana vizualise the logs (host http://localhost:5601).
 
 See [docker-compose-perf.yml](../../docker-compose-perf.yml) to manage hosts and corresponding dockers containers.
@@ -18,7 +18,7 @@ See [docker-compose-perf.yml](../../docker-compose-perf.yml) to manage hosts and
 #Logstash Configuration
 
 Logstash is configured via [config/elk/logstash.conf](./logstash.conf).
-You can : 
+No extra configuration is needed, but you can eventually :
 
   * add a input (to federate log from other process like worker), 
   * filter the log (remove some fields, mutate them,...)
@@ -32,22 +32,23 @@ See  [Logstash doc](https://www.elastic.co/guide/en/logstash/current/index.html)
 
 Kibana is available at http://localhost:5601/
 
-All the configuration process will be saved in elasticsearch, and so must be done once.
+All the configuration process describe here will be saved in the elasticlogstash index, and so must be done once.
 
- * Choose the logstash-* index,
- * Clic on green button with a star to use it as default index,
+ * Choose the logstash-* index, (if Kuzzle recive some request, you must see some logs in the discover pannel)
+ * Clic on green button with a star to use logstash-* as the default index,
  * Go to Settings-> Objects and choose Dashboards panel.
  * Clic Import button. Choose the file /config/elk/kibanadashboard.json
 
 The dashboard panel, Searches and Visualizations must be populated. 
-You can now go to Dashbord and load the "perf DashBoard".
+You can now go to Dashboard and load the "perf DashBoard".
 
-##perf DashBoard
+##perf DashBoard : navigate into your tests
 
+Perf Dashboard is used to navigate into all your tests.
 The first line of the dashboard is used as a control.
 To navigate on your differnts tests, you can filter on test type, and on starting date.
-To do so, first clic on "bench type" 
-
+ * To do so, first clic on "bench type".
+ * clic on "choose the date" to navigate into you test.
 
 
 #Howto
@@ -62,7 +63,10 @@ Here, some events aleady send by Kuzzle :
  * \[write,read,bulk,remsub,filter\]:\[start,stop\]
  * websocket:disconnect....
 
+All the stop event (\[write,read,bulk,remsub,filter,...\]:\[stop\]) have a duration field.
+It will correspond to the time from the (\[write,read,bulk,remsub,filter,...\]:\[start\]) event.
     
+
 See [lib/api/perf.js](../../lib/api/perf.js) for an up to date list of events.
 
 ## What kind of is send to every event for free  ?
