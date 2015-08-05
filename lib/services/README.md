@@ -42,7 +42,6 @@ Every call to emit will add an entry to the logstash server.
 The profiling service is designed for get time spent in internal functions. This service is useful during development process, for trying to understand where we waste time.  
 We use [nodegrind](https://www.npmjs.com/package/nodegrind) that output a file for each requests that can be analyzed by [Blackfire](https://blackfire.io) or other software compatible with [KCachegrind](http://kcachegrind.sourceforge.net/html/Home.html) format.
 
-
 When Kuzzle is running, open a new terminal and run:
 
 ```
@@ -65,10 +64,10 @@ $ docker run --rm -ti \
     kuzzleio/blackfire-upload ./aggregate.sh
 ```
 
-For each request made, this service create a new file. In `profiling` folder, files are generated with the format:
+For each request made, this service create a new file. In ``profiling`` folder, files are generated with the format:
 
-* `<controller>-<protocol>-<timestamp>-<requestId>` for profiling in main kuzzle server
-* `worker-<worker name>-<protocol>-<timestamp>-<requestId>` for profiling in workers
+* ``<controller>-<protocol>-<timestamp>-<requestId>`` for profiling in main kuzzle server
+* ``worker-<worker name>-<protocol>-<timestamp>-<requestId>`` for profiling in workers
 
 Two profiling files are generated, because workers and main server are not running on the same thread.
 
