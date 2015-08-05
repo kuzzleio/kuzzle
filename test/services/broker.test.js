@@ -58,7 +58,7 @@ describe('Testing: Internal broker service', function () {
 
   it('should send a message to only one of the registered listeners', function () {
     var
-      room = 'unit-test-broadcast-room',
+      room = 'unit-test-dispatch-room',
       testMessage = 'foobar',
       messagesReceived = 0,
       listen = function (msg) {
@@ -74,6 +74,27 @@ describe('Testing: Internal broker service', function () {
 
     setTimeout(function () {
       should(messagesReceived).be.exactly(1);
+    }, 200);
+  });
+
+  it('should be able to broadcast a message to all listeners', function () {
+    var
+      room = 'unit-test-broadcast-room',
+      testMessage = 'foobar',
+      messagesReceived = 0,
+      listen = function (msg) {
+        should(msg).be.exactly(testMessage);
+        messagesReceived++;
+      };
+
+    kuzzle.services.list.broker.listen(room, listen);
+    kuzzle.services.list.broker.listen(room, listen);
+    kuzzle.services.list.broker.listen(room, listen);
+
+    kuzzle.services.list.broker.broadcast(room, testMessage);
+
+    setTimeout(function () {
+      should(messagesReceived).be.exactly(3);
     }, 200);
   });
 });
