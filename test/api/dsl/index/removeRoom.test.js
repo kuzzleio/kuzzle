@@ -26,7 +26,7 @@ describe('Test removeRoom function index.js file from DSL', function () {
   before(function (callback) {
     kuzzle = new Kuzzle();
     kuzzle.log = new captainsLog({level: 'silent'});
-    kuzzle.start({}, {workers: false, servers: false})
+    kuzzle.start({}, {dummy: true})
       .then(function () {
         return kuzzle.hotelClerk.addSubscription(requestObject, {id: 'connectionid'});
       })

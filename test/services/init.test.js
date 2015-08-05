@@ -11,7 +11,7 @@ describe('Test service initialization function', function () {
   beforeEach(function () {
     kuzzle = new Kuzzle();
     kuzzle.log = new captainsLog({level: 'silent'});
-    kuzzle.start({}, {workers: false, servers: false});
+    kuzzle.start({}, {dummy: true});
   });
 
   it('should build an internal broker service with correct methods', function () {

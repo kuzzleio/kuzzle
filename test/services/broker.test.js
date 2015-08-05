@@ -10,7 +10,7 @@ describe('Testing: Internal broker service', function () {
   before(function (done) {
     kuzzle = new Kuzzle();
     kuzzle.log = new captainsLog({level: 'silent'});
-    kuzzle.start({}, {workers: false, servers: false})
+    kuzzle.start({}, {dummy: true})
       .then(function () {
         done();
       });
