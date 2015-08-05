@@ -19,6 +19,7 @@ describe('Test service initialization function', function () {
     should(kuzzle.services.list.broker.init).be.a.Function;
     should(kuzzle.services.list.broker.start).be.a.Function;
     should(kuzzle.services.list.broker.add).be.a.Function;
+    should(kuzzle.services.list.broker.broadcast).be.a.Function;
     should(kuzzle.services.list.broker.listen).be.a.Function;
     should(kuzzle.services.list.broker.listenOnce).be.a.Function;
     should(kuzzle.services.list.broker.close).be.a.Function;
