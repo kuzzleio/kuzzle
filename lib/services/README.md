@@ -65,7 +65,7 @@ $ docker run --rm -ti \
     kuzzleio/blackfire-upload ./aggregate.sh
 ```
 
-For each request made, this service create a new file. In `profiling` folder, files are generated with the format:
+For each request made, this service create a new file. In `profiling` folder, files are generated with the format:  
 
 * `<controller>-<protocol>-<timestamp>-<requestId>` for profiling in main kuzzle server
 * `worker-<worker name>-<protocol>-<timestamp>-<requestId>` for profiling in workers
