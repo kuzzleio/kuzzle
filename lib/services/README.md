@@ -22,13 +22,13 @@ The main purpose for those subjects is to detect latency and problem in Kuzzle. 
 ## logger.js
 
 The Logger is an interface to Logstash that we used to monitor the Kuzzle state.
-As an exemple if we want to log each data creation for analysis purpose, you just have to call :
+As an exemple if we want to log each data creation for analysis purpose, you just have to call:
 
 ```
   kuzzle.emit('data:create', data);
 ```
 
-and add in the [hooks](../../lib/config/hooks.js) the entry :
+and add in the [hooks](../../lib/config/hooks.js) the entry:
 
 ```
   'data:create': ['log:log']
@@ -39,7 +39,10 @@ Every call to emit will add an entry to the logstash server.
 
 ## Profiling
 
-The profiling service is designed for get time spent in internal functions. We use [nodegrind](https://www.npmjs.com/package/nodegrind) that output a file for each requests that can be analyzed by [Blackfire](https://blackfire.io) or other software compatible with [KCachegrind](http://kcachegrind.sourceforge.net/html/Home.html) format.
+The profiling service is designed for get time spent in internal functions. This service is useful during development process, for trying to understand where we waste time.  
+We use [nodegrind](https://www.npmjs.com/package/nodegrind) that output a file for each requests that can be analyzed by [Blackfire](https://blackfire.io) or other software compatible with [KCachegrind](http://kcachegrind.sourceforge.net/html/Home.html) format.
+
+
 When Kuzzle is running, open a new terminal and run:
 
 ```
@@ -52,9 +55,7 @@ When you're done with profiling, you can disabled it with:
 $ kuzzle disable profiling
 ```
 
-**Note:** You don't have to reload Kuzzle
-
-Output files are generated in `profiling` folder. For use them you can use the container [blackfire-upload](https://github.com/kuzzleio/kuzzle-containers/tree/master/blackfire-upload) created by Kuzzle team for using Blackfire.
+Output files are generated in `profiling` folder. For use them you can use the container [blackfire-upload](https://github.com/kuzzleio/kuzzle-containers/tree/master/blackfire-upload) created by Kuzzle team for upload them to Blackfire.
 
 ```
 $ docker run --rm -ti \
@@ -64,8 +65,18 @@ $ docker run --rm -ti \
     kuzzleio/blackfire-upload ./aggregate.sh
 ```
 
-In `profiling` folder files are generated with the format: `<controller>-<protocol>-<timestamp>-<requestId>`. For each request made, this service create a new file.  
-Next, you can upload file without aggregate different controller in the same upload (doesn't make sense to aggregate call stack for a `write` and a `read`).
+For each request made, this service create a new file. In `profiling` folder, files are generated with the format: 
+* `<controller>-<protocol>-<timestamp>-<requestId>` for profiling in main kuzzle server
+* `worker-<worker name>-<protocol>-<timestamp>-<requestId>` for profiling in workers
+
+Two profiling files are generated, because workers and main server are not running on the same thread.
+
+**Note:** 
+* You don't have to reload Kuzzle when you enable/disable profiling.
+* If you're not using the Docker version, you have to install [Nodegrind](https://www.npmjs.com/package/nodegrind) because it's must be installed globally with `npm install -g nodegrind@0.4.0`
+* **Don't** use the profiling during benchmark: for each request made, minimum of two files will be created.
+* Avoid to mix different controllers if you wan't to aggregate the result. Doesn't make sense to send profiling on controller `write` and `read`.
+
 
 ## Monitoring
 

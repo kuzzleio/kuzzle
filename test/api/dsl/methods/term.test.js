@@ -30,14 +30,14 @@ describe('Test term method', function () {
   });
 
   it('should construct the filterTree object for the correct attribute', function () {
-    should(methods.dsl.filtersTree).not.be.empty;
-    should(methods.dsl.filtersTree[collection]).not.be.empty;
-    should(methods.dsl.filtersTree[collection].firstName).not.be.empty;
+    should(methods.dsl.filtersTree).not.be.empty();
+    should(methods.dsl.filtersTree[collection]).not.be.empty();
+    should(methods.dsl.filtersTree[collection].firstName).not.be.empty();
   });
 
   it('should construct the filterTree with correct curried function name', function () {
-    should(methods.dsl.filtersTree[collection].firstName.termfirstNameGrace).not.be.empty;
-    should(methods.dsl.filtersTree[collection].firstName.nottermfirstNameGrace).not.be.empty;
+    should(methods.dsl.filtersTree[collection].firstName.termfirstNameGrace).not.be.empty();
+    should(methods.dsl.filtersTree[collection].firstName.nottermfirstNameGrace).not.be.empty();
   });
 
   it('should construct the filterTree with correct room list', function () {
@@ -45,8 +45,8 @@ describe('Test term method', function () {
       rooms = methods.dsl.filtersTree[collection].firstName.termfirstNameGrace.rooms,
       roomsNot = methods.dsl.filtersTree[collection].firstName.nottermfirstNameGrace.rooms;
 
-    should(rooms).be.an.Array;
-    should(roomsNot).be.an.Array;
+    should(rooms).be.an.Array();
+    should(roomsNot).be.an.Array();
 
     should(rooms).have.length(1);
     should(roomsNot).have.length(1);

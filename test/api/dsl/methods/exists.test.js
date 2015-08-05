@@ -25,13 +25,13 @@ describe('Test exists method', function () {
   });
 
   it('should construct the filterTree object for the correct attribute', function () {
-    should(methods.dsl.filtersTree).not.be.empty;
-    should(methods.dsl.filtersTree[collection]).not.be.empty;
-    should(methods.dsl.filtersTree[collection].lastName).not.be.empty;
+    should(methods.dsl.filtersTree).not.be.empty();
+    should(methods.dsl.filtersTree[collection]).not.be.empty();
+    should(methods.dsl.filtersTree[collection].lastName).not.be.empty();
   });
 
   it('should construct the filterTree with correct curried function name', function () {
-    should(methods.dsl.filtersTree[collection].lastName.existslastName).not.be.empty;
+    should(methods.dsl.filtersTree[collection].lastName.existslastName).not.be.empty();
   });
 
   it('should construct the filterTree with correct room list', function () {
