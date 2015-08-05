@@ -2,6 +2,8 @@
 node_modules
 npm-debug.log
 .node_history
+# Exclude profiling file output
+*.out
 
 # IDE
 .idea

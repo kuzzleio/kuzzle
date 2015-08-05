@@ -8,6 +8,6 @@ var
 module.exports = function () {
 
   var kuzzle = new Kuzzle(false);
-  kuzzle.enabled(params);
+  kuzzle.enable(params, true);
 
 };

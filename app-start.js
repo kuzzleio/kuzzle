@@ -7,7 +7,9 @@
  *   and will re-launch every times a modification will be done
  */
 
-require('newrelic');
+if (process.env.NEW_RELIC_APP_NAME) {
+  require('newrelic');
+}
 
 (function () {
 

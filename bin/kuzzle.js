@@ -23,5 +23,13 @@ cmd.option('--port [port]');
 cmd.description('Run Kuzzle for testing performance');
 cmd.action(require('./kuzzle-perf'));
 
+cmd = program.command('enable');
+cmd.description('Enable a service');
+cmd.action(require('./kuzzle-enable'));
+
+cmd = program.command('disable');
+cmd.description('Disable a service');
+cmd.action(require('./kuzzle-disable'));
+
 // Run user command
 program.parse(process.argv);

@@ -1,6 +1,4 @@
 #!/usr/bin/env node
-require('newrelic');
-
 var
   captains = require('captains-log'),
   rc = require('rc'),
