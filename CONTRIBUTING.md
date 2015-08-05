@@ -1,11 +1,11 @@
 # How to contribute to Kuzzle
 
-Here are a few rules and guidelines to follow if you want to contribute to Kuzzle and, more importantly, if you want to see your pull requests accepted by the Kuzzle team.
+Here are a few rules and guidelines to follow if you want to contribute to Kuzzle and, more importantly, if you want to see your pull requests accepted by Kuzzle team.
 
 ## Coding style
 We use most of the [NPM Coding Style](https://docs.npmjs.com/misc/coding-style) rules, except for these ones:
 
-* Semicolons at end of lines
+* Semicolons at the end of lines
 * 'Comma first' rule is not followed
 
 ## Guidelines

@@ -7,10 +7,8 @@ var
 require('should-promised');
 
 describe('Test removeCustomerFromAllRooms function in the hotelClerk core module', function () {
-
   var
     kuzzle,
-    roomId,
     connection = {id: 'connectionid'},
     badConnection = {id: 'badconnectionid'},
     roomName1 = 'roomName',
@@ -27,11 +25,10 @@ describe('Test removeCustomerFromAllRooms function in the hotelClerk core module
       }
     };
 
-
   before(function () {
     kuzzle = new Kuzzle();
     kuzzle.log = new captainsLog({level: 'silent'});
-    kuzzle.start({}, {workers: false, servers: false})
+    kuzzle.start({}, {dummy: true})
       .then(function() {
         var requestObject1 = new RequestObject({
             controller: 'subscribe',
@@ -73,6 +70,4 @@ describe('Test removeCustomerFromAllRooms function in the hotelClerk core module
         should(kuzzle.hotelClerk.customers).be.empty;
       });
   });
-
-
 });

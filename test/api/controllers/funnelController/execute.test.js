@@ -14,7 +14,7 @@ describe('Test execute function in funnel controller', function () {
   beforeEach(function (callback) {
     kuzzle = new Kuzzle();
     kuzzle.log = new captainsLog({level: 'silent'});
-    kuzzle.start({}, {workers: false, servers: false}).then(function () {
+    kuzzle.start({}, {dummy: true}).then(function () {
       callback();
     });
   });
