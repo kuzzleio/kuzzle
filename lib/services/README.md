@@ -65,14 +65,14 @@ $ docker run --rm -ti \
     kuzzleio/blackfire-upload ./aggregate.sh
 ```
 
-For each request made, this service create a new file. In `profiling` folder, files are generated with the format:  
+For each request made, this service create a new file. In `profiling` folder, files are generated with the format:
 
 * `<controller>-<protocol>-<timestamp>-<requestId>` for profiling in main kuzzle server
 * `worker-<worker name>-<protocol>-<timestamp>-<requestId>` for profiling in workers
 
 Two profiling files are generated, because workers and main server are not running on the same thread.
 
-**Note:** 
+**Note:**
 
 * You don't have to reload Kuzzle when you enable/disable profiling.
 * If you're not using the Docker version, you have to install [Nodegrind](https://www.npmjs.com/package/nodegrind) because it's must be installed globally with `npm install -g nodegrind@0.4.0`
