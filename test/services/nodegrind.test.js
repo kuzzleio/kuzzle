@@ -18,11 +18,21 @@ describe('Testing: Profiling service', function () {
 
   it('should not add hooks and not be enabled on running', function () {
     should(kuzzle.services.list.profiling.isEnabled).be.false();
+    should(kuzzle.services.list.profiling.hooksAlreadyAdded).be.false();
   });
 
   it('should add hooks and be enabled when toggle is called', function () {
+    kuzzle.services.list.profiling.toggle(true);
 
+    should(kuzzle.services.list.profiling.isEnabled).be.true();
+    should(kuzzle.services.list.profiling.hooksAlreadyAdded).be.true();
   });
 
+  it('should be not enabled but already initialized on disabled', function () {
+    kuzzle.services.list.profiling.toggle(false);
+
+    should(kuzzle.services.list.profiling.isEnabled).be.false();
+    should(kuzzle.services.list.profiling.hooksAlreadyAdded).be.true();
+  });
 
 });
