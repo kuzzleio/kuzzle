@@ -59,7 +59,7 @@ A ``response`` is a JSON object with the following structure:
 
 Kuzzle will respond to your application by sending a ``requestId`` message on your socket, so you should specify one to get a response. And for some queries, this argument is required, as it wouldn't have any sense for Kuzzle to not be able to send you a response (for instance, when performing a document search).
 
-So to get a response from Kuzzle, simply add an unique ``requestId`` field to your message (for instance by using an [UUID](https://en.wikipedia.org/wiki/Universally_unique_identifier)), and then listen for a ``requestId`` message on your socket.
+So to get a response from Kuzzle, simply add a unique ``requestId`` field to your message (for instance by using an [UUID](https://en.wikipedia.org/wiki/Universally_unique_identifier)), and then listen for a ``requestId`` message on your socket.
 
 ##<a name="performing-queries"></a> Performing queries
 
@@ -215,7 +215,7 @@ There are 4 types of notifications you can receive:
 
 Returns the number of people/applications who have subscribed to the same documents than you.
 
-It works with the room unique ID Kuzzle returns to you when you make a subscription.
+It works with the room unique ID Kuzzle returns to you when you make a subscription. <!--Je ne comprends pas cette phrase-->
 
 **Message type:** ``subscribe``
 
@@ -329,7 +329,7 @@ Makes Kuzzle remove you from its subscribers on this room.
   persist: true,
 
   /*
-  Optionnal: allow Kuzzle to send a response to your application
+  Optional: allow Kuzzle to send a response to your application
   */
   requestId: <Unique query ID>,
 
@@ -357,7 +357,7 @@ Makes Kuzzle remove you from its subscribers on this room.
     controller: 'write',
     /*
     The requestId field you provided. If you didn't, Kuzzle generates
-    an unique query identifier anyway.
+    a unique query identifier anyway.
     */
     requestId, '<unique request identifier>'
   }
@@ -408,7 +408,7 @@ Only documents in the persistent data storage layer can be retrieved.
     controller: 'read',
     /*
     The requestId field you provided. If you didn't, Kuzzle generates
-    an unique query identifier anyway.
+    a unique query identifier anyway.
     */
     requestId, '<unique request identifier>'
   }
@@ -479,7 +479,7 @@ Kuzzle uses the [ElasticSearch Query DSL ](https://www.elastic.co/guide/en/elast
     controller: 'read',
     /*
     The requestId field you provided. If you didn't, Kuzzle generates
-    an unique query identifier anyway.
+    a unique query identifier anyway.
     */
     requestId, '<unique request identifier>'
   }
@@ -538,7 +538,7 @@ Only documents in the persistent data storage layer can be updated.
     controller: 'write',
     /*
     The requestId field you provided. If you didn't, Kuzzle generates
-    an unique query identifier anyway.
+    a unique query identifier anyway.
     */
     requestId, '<unique request identifier>'
   }
@@ -596,7 +596,7 @@ Kuzzle uses the [ElasticSearch Query DSL ](https://www.elastic.co/guide/en/elast
     controller: 'read',
     /*
     The requestId field you provided. If you didn't, Kuzzle generates
-    an unique query identifier anyway.
+    a unique query identifier anyway.
     */
     requestId, '<unique request identifier>'
   }
@@ -619,7 +619,7 @@ Only documents in the persistent data storage layer can be deleted.
   collection: '<data collection>',
 
   /*
-  Optionnal: allow Kuzzle to send a response to your application
+  Optional: allow Kuzzle to send a response to your application
   */
   requestId: <Unique query ID>,
 
@@ -649,7 +649,7 @@ Only documents in the persistent data storage layer can be deleted.
 
     /*
     The requestId field you provided. If you didn't, Kuzzle generates
-    an unique query identifier anyway.
+    a unique query identifier anyway.
     */
     requestId, '<unique request identifier>'
   }
@@ -675,7 +675,7 @@ Kuzzle uses the [ElasticSearch Query DSL ](https://www.elastic.co/guide/en/elast
   collection: '<data collection>',
 
   /*
-  Optionnal: allow Kuzzle to send a response to your application
+  Optional: allow Kuzzle to send a response to your application
   */
   requestId: <Unique query ID>,
 
@@ -735,7 +735,7 @@ This action is handled by the **administration** controller.
   collection: '<data collection>',
 
   /*
-  Optionnal: allow Kuzzle to send a response to your application
+  Optional: allow Kuzzle to send a response to your application
   */
   requestId: <Unique query ID>,
 }
@@ -758,7 +758,7 @@ This action is handled by the **administration** controller.
 
     /*
     The requestId field you provided. If you didn't, Kuzzle generates
-    an unique query identifier anyway.
+    a unique query identifier anyway.
     */
     requestId, '<unique request identifier>'
   }
@@ -963,7 +963,7 @@ Bulk import only works on documents in our persistent data storage layer.
 
     /*
     The requestId field you provided. If you didn't, Kuzzle generates
-    an unique query identifier anyway.
+    a unique query identifier anyway.
     */
     requestId, '<unique request identifier>'
   }
