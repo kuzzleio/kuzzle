@@ -72,6 +72,7 @@ For each request made, this service create a new file. In `profiling` folder, fi
 Two profiling files are generated, because workers and main server are not running on the same thread.
 
 **Note:** 
+
 * You don't have to reload Kuzzle when you enable/disable profiling.
 * If you're not using the Docker version, you have to install [Nodegrind](https://www.npmjs.com/package/nodegrind) because it's must be installed globally with `npm install -g nodegrind@0.4.0`
 * **Don't** use the profiling during benchmark: for each request made, minimum of two files will be created.
