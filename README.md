@@ -5,15 +5,15 @@
 For UI and linked objects developers, Kuzzle is an open-source solution that handles all the data management
 (CRUD, real-time storage, search, high-level features, etc;).
 
-Kuzzle features are accessible through a secured API. It can be used through a large choice of protocols such as REST, Websocket or Message Queuing protocols (see [Specifications](docs/api-specifications.md) for details).
+Kuzzle features are accessible through a secured API. It can be used through a large choice of protocols such as REST, Websocket or Message Queuing protocols.
 
-Kuzzle use [Elasticsearch filter DSL](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-filters.html) (see [filters syntax](docs/filters.md) for more details) as filtering language, [RabbitMQ](https://www.rabbitmq.com/) for managing queues and [Redis](http://redis.io/) for manage filter cache.
+Kuzzle uses [Elasticsearch filter DSL](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-filters.html) (see [filters syntax](docs/filters.md) for more details) as filtering language, [RabbitMQ](https://www.rabbitmq.com/) for managing queues and [Redis](http://redis.io/) for managing filter cache.
 
 # Installation
 
 ## Using the all-in-one Docker recipe
 
-If you are running Docker and just want to get your own kuzzle running, you can use the provided docker-compose file.
+If you are running Docker and just want to get your own Kuzzle running, you can use the provided docker-compose file.
 
 Prerequisites:
 
@@ -23,8 +23,6 @@ Prerequisites:
 From Kuzzle's root directory:
 
     $ docker-compose up
-
-You can now access Kuzzle's http api on http://localhost:7512/api/.
 
 ## Using Vagrant
 
@@ -39,11 +37,9 @@ From the root directory:
 
     $ vagrant up
 
-Once the virtual machine is provisionned, you should be able to access Kuzzle's http api on http://localhost:7512/api/.
+## From source or NPM
 
-## From source or npm
-
-First of all, you have to get this code, you can use NPM or clone this repo.
+First of all, you have to get the source code. You can use NPM or clone our GIT repository.
 
 * NPM
 
@@ -72,19 +68,19 @@ Prerequisites:
 $ kuzzle start
 ```
 
-You can now access to the api with http://localhost:7512/api/. If you want to change the port you can run
+To get a list of available options, you can run:
 
 ```bash
-$ kuzzle start --port 8082
+$ kuzzle start -h
 ```
 
-Or, if you have [PM2](https://github.com/Unitech/pm2)
+You may also start Kuzzle by using [PM2](https://github.com/Unitech/pm2):
 
 ```bash
 $ pm2 start app-start.js
 ```
 
-### Change RabbitMQ and Elasticsearch host
+### Change RabbitMQ and Elasticsearch hosts
 
 If you are not running RabbitMQ and Elasticsearch on localhost, you can configure host and port:
 
@@ -94,17 +90,23 @@ $ export RABBIT_HOST=myrabbitmq:5672
 $ kuzzle start
 ```
 
+# Using Kuzzle
+
+Your applications can now connect to Kuzzle. We provide a few ways to do this:
+
+* Using one of our SDK (coming soon)
+* Directly, by accessing one of our API ([REST](docs/API.REST.md), [WebSocket](docs/API.WebSocket.md), [AMQP](docs/API.AMQP.md), [MQTT](docs/API.MQTT.md) or [STOMP](docs/API.STOMP.md))
 
 # Running Tests
 
     $ npm test
+Because functional tests need to be done in a running Kuzzle environment, it is recommended to run these tests from a Kuzzle container.
 
-Because functional tests need a running Kuzzle environment, it is recommended to run these tests from within a Kuzzle container, either using a Docker one:
-
+From a Docker container:
     $ docker exec -ti kuzzle_kuzzle_1 bash
     $ npm test
 
-Or using a Vagrant virtual machine:
+Using a Vagrant virtual machine:
 
     $ vagrant ssh -c 'docker exec -ti kuzzle_kuzzle_1 bash'
     $ npm test
@@ -129,4 +131,4 @@ Thanks to [Sails](https://github.com/balderdashy/sails) project for a good Node.
 
 # License
 
-Kuzzle is published under the [Apache 2 License](LICENSE.md).
+Kuzzle is published under [Apache 2 License](LICENSE.md).

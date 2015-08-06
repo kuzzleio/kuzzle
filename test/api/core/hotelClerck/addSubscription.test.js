@@ -21,10 +21,12 @@ describe('Test addSubscription function in the hotelClerk core module', function
     };
 
 
-  beforeEach(function () {
+  beforeEach(function (callback) {
     kuzzle = new Kuzzle();
     kuzzle.log = new captainsLog({level: 'silent'});
-    kuzzle.start({}, {workers: false, servers: false});
+    kuzzle.start({}, {dummy: true}).then(function () {
+      callback();
+    });
   });
 
   it('should have object filtersTree, customers and rooms empty', function () {

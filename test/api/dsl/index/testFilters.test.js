@@ -95,9 +95,11 @@ describe('Test testFilters function index.js file from DSL', function () {
   before(function (done) {
     kuzzle = new Kuzzle();
     kuzzle.log = new captainsLog({level: 'silent'});
-    kuzzle.start({}, {workers: false, servers: false});
 
-    kuzzle.hotelClerk.addSubscription(requestObjectSubscribeGrace, {id: 'connectionid'})
+    kuzzle.start({}, {dummy: true})
+      .then(function () {
+        return kuzzle.hotelClerk.addSubscription(requestObjectSubscribeGrace, {id: 'connectionid'});
+      })
       .then(function (realTimeResponseObject) {
         roomId = realTimeResponseObject.roomId;
         done();
