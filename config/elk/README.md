@@ -20,7 +20,7 @@ See [docker-compose-perf.yml](../../docker-compose-perf.yml) to manage hosts and
 Logstash is configured via [config/elk/logstash.conf](./logstash.conf).
 No extra configuration is needed, but you can eventually :
 
-  * add a input (to federate log from other process like worker), 
+  * add a input (to federate log from other process like worker),
   * filter the log (remove some fields, mutate them,...)
   * add an output.
 
@@ -39,7 +39,7 @@ All the configuration process describe here will be saved in the elasticlogstash
  * Go to Settings-> Objects and choose Dashboards panel.
  * Clic Import button. Choose the file /config/elk/kibanadashboard.json
 
-The dashboard panel, Searches and Visualizations must be populated. 
+The dashboard panel, Searches and Visualizations must be populated.
 You can now go to Dashboard and load the "perf DashBoard".
 
 ##perf DashBoard : navigate into your tests
@@ -57,15 +57,15 @@ To navigate on your differnts tests, you can filter on test type, and on startin
 
 Basically every data creation, deletion and update, every subscriptions produce a log.
 We also log some starting and stopping services process from Kuzzle.
-Here, some events aleady send by Kuzzle : 
+Here, some events aleady send by Kuzzle :
 
- * date:\[create,update,delete\] 
+ * date:\[create,update,delete\]
  * \[write,read,bulk,remsub,filter\]:\[start,stop\]
  * websocket:disconnect....
 
 All the stop event (\[write,read,bulk,remsub,filter,...\]:\[stop\]) have a duration field.
 It will correspond to the time from the (\[write,read,bulk,remsub,filter,...\]:\[start\]) event.
-    
+
 
 See [lib/api/perf.js](../../lib/api/perf.js) for an up to date list of events.
 
