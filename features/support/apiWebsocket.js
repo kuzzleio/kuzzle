@@ -145,7 +145,7 @@ module.exports = {
         body: filters
       };
 
-      return emitAndListen.call(this, 'subscribe', msg);
+    return emitAndListen.call(this, 'subscribe', msg);
 
   },
   unsubscribe: function (room) {
