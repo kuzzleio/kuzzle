@@ -16,7 +16,6 @@ kuzzle:
     - READ_ENGINE_HOST=elasticsearch:9200
     - WRITE_ENGINE_HOST=elasticsearch:9200
     - NOTIFICATION_CACHE_HOST=redis:6379
-    - LOG_ENGINE_HOST=logstash:7777
     - PM2_OPTIONS=--watch
     - KUZZLE_MQTT_URL=mqtt://rabbit:1883
     - KUZZLE_AMQP_URL=amqp://rabbit:5672

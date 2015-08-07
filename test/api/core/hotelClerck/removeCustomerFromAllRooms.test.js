@@ -7,10 +7,8 @@ var
 require('should-promised');
 
 describe('Test removeCustomerFromAllRooms function in the hotelClerk core module', function () {
-
   var
     kuzzle,
-    roomId,
     connection = {id: 'connectionid'},
     badConnection = {id: 'badconnectionid'},
     roomName1 = 'roomName',
@@ -27,30 +25,30 @@ describe('Test removeCustomerFromAllRooms function in the hotelClerk core module
       }
     };
 
-
   before(function () {
     kuzzle = new Kuzzle();
     kuzzle.log = new captainsLog({level: 'silent'});
-    kuzzle.start({}, {workers: false, servers: false});
+    kuzzle.start({}, {dummy: true})
+      .then(function() {
+        var requestObject1 = new RequestObject({
+            controller: 'subscribe',
+            action: 'on',
+            requestId: roomName1,
+            collection: collection,
+            body: filter1
+          });
 
-    var
-      requestObject1 = new RequestObject({
-        controller: 'subscribe',
-        action: 'on',
-        requestId: roomName1,
-        collection: collection,
-        body: filter1
-      }),
-      requestObject2 = new RequestObject({
-        controller: 'subscribe',
-        action: 'on',
-        requestId: roomName2,
-        collection: collection,
-        body: filter2
-      });
-
-    return kuzzle.hotelClerk.addSubscription(requestObject1, connection)
+        return kuzzle.hotelClerk.addSubscription(requestObject1, connection);
+      })
       .then(function () {
+        var requestObject2 = new RequestObject({
+          controller: 'subscribe',
+          action: 'on',
+          requestId: roomName2,
+          collection: collection,
+          body: filter2
+        });
+
         return kuzzle.hotelClerk.addSubscription(requestObject2, connection);
       });
   });
@@ -72,6 +70,4 @@ describe('Test removeCustomerFromAllRooms function in the hotelClerk core module
         should(kuzzle.hotelClerk.customers).be.empty;
       });
   });
-
-
 });
