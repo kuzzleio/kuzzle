@@ -98,4 +98,12 @@ Log are sent via http request, see [lib/services/logger.js](../lib/services/logg
 
 ## TIPS
 
-WARNING : If you launch a stress test while Kuzzle is reloaded (by example because pm2 is in watchmode), your test will be freeze.
+### Refresh field list in Kibana
+Every time you add/modify/delete the fields in your log, you must refresh fields list in Kibana
+	-go to Setting
+	-clic logstash-*
+	-clic on the orange button with tooltip "Reload field list".
+
+### Don't freeze your test
+
+If you launch a stress test while Kuzzle is reloaded (by example because pm2 is in watchmode), your test will be freeze.
