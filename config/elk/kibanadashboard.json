@@ -15,6 +15,21 @@
     }
   },
   {
+    "_id": "Global-perfs-DashBoard",
+    "_type": "dashboard",
+    "_source": {
+      "title": "Global perfs DashBoard",
+      "hits": 0,
+      "description": "",
+      "panelsJSON": "[{\"col\":10,\"id\":\"explain-bench-filter\",\"row\":1,\"size_x\":3,\"size_y\":2,\"type\":\"visualization\"},{\"col\":5,\"id\":\"write-duration-over-day\",\"row\":3,\"size_x\":4,\"size_y\":3,\"type\":\"visualization\"},{\"col\":1,\"id\":\"bench-type\",\"row\":1,\"size_x\":3,\"size_y\":2,\"type\":\"visualization\"},{\"col\":4,\"id\":\"Bench-type\",\"row\":1,\"size_x\":3,\"size_y\":2,\"type\":\"visualization\"},{\"col\":7,\"id\":\"choose-date\",\"row\":1,\"size_x\":3,\"size_y\":2,\"type\":\"visualization\"},{\"col\":1,\"id\":\"memory-over-current-day\",\"row\":3,\"size_x\":4,\"size_y\":3,\"type\":\"visualization\"}]",
+      "version": 1,
+      "timeRestore": false,
+      "kibanaSavedObjectMeta": {
+        "searchSourceJSON": "{\"filter\":[{\"query\":{\"query_string\":{\"analyze_wildcard\":true,\"query\":\"*\"}}}]}"
+      }
+    }
+  },
+  {
     "_id": "filtering-from-an-event-type-and-a-specific-request",
     "_type": "search",
     "_source": {
@@ -100,19 +115,6 @@
     }
   },
   {
-    "_id": "explain-bench-filter",
-    "_type": "visualization",
-    "_source": {
-      "title": "explain bench filter",
-      "visState": "{\"type\":\"markdown\",\"params\":{\"markdown\":\"Use this as filter for the bench you unresting in.\\n(to cancel this filter clic on filter green on top)\"},\"aggs\":[],\"listeners\":{}}",
-      "description": "",
-      "version": 1,
-      "kibanaSavedObjectMeta": {
-        "searchSourceJSON": "{\"query\":{\"query_string\":{\"query\":\"*\",\"analyze_wildcard\":true}},\"filter\":[]}"
-      }
-    }
-  },
-  {
     "_id": "bench-type",
     "_type": "visualization",
     "_source": {
@@ -126,19 +128,6 @@
     }
   },
   {
-    "_id": "Bench-type",
-    "_type": "visualization",
-    "_source": {
-      "title": "Bench type",
-      "visState": "{\"type\":\"markdown\",\"params\":{\"markdown\":\"Choose here your benchmark type (to cancel this filter clic on filter green on top)\"},\"aggs\":[],\"listeners\":{}}",
-      "description": "",
-      "version": 1,
-      "kibanaSavedObjectMeta": {
-        "searchSourceJSON": "{\"query\":{\"query_string\":{\"analyze_wildcard\":true,\"query\":\"*\"}},\"filter\":[]}"
-      }
-    }
-  },
-  {
     "_id": "choose-date",
     "_type": "visualization",
     "_source": {
@@ -148,6 +137,32 @@
       "version": 1,
       "kibanaSavedObjectMeta": {
         "searchSourceJSON": "{\"index\":\"logstash-*\",\"query\":{\"query_string\":{\"analyze_wildcard\":true,\"query\":\"*\"}},\"filter\":[]}"
+      }
+    }
+  },
+  {
+    "_id": "explain-bench-filter",
+    "_type": "visualization",
+    "_source": {
+      "title": "explain bench filter",
+      "visState": "{\"type\":\"markdown\",\"params\":{\"markdown\":\"Use this as filter for the bench you interesting in.\\n(to cancel this filter clic on filter green on top)\"},\"aggs\":[],\"listeners\":{}}",
+      "description": "",
+      "version": 1,
+      "kibanaSavedObjectMeta": {
+        "searchSourceJSON": "{\"query\":{\"query_string\":{\"query\":\"*\",\"analyze_wildcard\":true}},\"filter\":[]}"
+      }
+    }
+  },
+  {
+    "_id": "Bench-type",
+    "_type": "visualization",
+    "_source": {
+      "title": "Bench type",
+      "visState": "{\"type\":\"markdown\",\"params\":{\"markdown\":\"Choose here your benchmark name.\\n(from attribute testing.parama.testName in log).\\nTo cancel this filter clic on filter green on top.\"},\"aggs\":[],\"listeners\":{}}",
+      "description": "",
+      "version": 1,
+      "kibanaSavedObjectMeta": {
+        "searchSourceJSON": "{\"query\":{\"query_string\":{\"analyze_wildcard\":true,\"query\":\"*\"}},\"filter\":[]}"
       }
     }
   }

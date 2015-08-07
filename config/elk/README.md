@@ -89,3 +89,13 @@ Every \[write,read,bulk,remsub,filter\]:\[stop\] event will send a duration time
 ## How Kuzzle send an event to Logstash ?
 
 Log are sent via http request, see [lib/services/logger.js](../lib/services/logger.js.).
+
+
+## Remove all the logs already saved in my ELK ?
+
+ curl -XDELETE 'http://localhost:9200/logstash-*/'
+
+
+## TIPS
+
+WARNING : If you launch a stress test while Kuzzle is reloaded (by example because pm2 is in watchmode), your test will be freeze.
