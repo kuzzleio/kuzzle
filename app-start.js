@@ -19,9 +19,9 @@
  * To get a complete list of available options, launch 'bin/kuzzle.js start -h'
  */
 (function () {
-	var
-		kuzzle = require('./lib'),
-		rc = require('rc');
+  var
+    kuzzle = require('./lib'),
+    rc = require('rc');
 
-	kuzzle.start(rc('kuzzle'));
+  kuzzle.start(rc('kuzzle'));
 })();

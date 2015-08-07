@@ -40,8 +40,23 @@ elasticsearch:
 
 logstash:
   image: logstash:1.5.2
+  links:
+    - elasticlogstash:elasticsearch
   volumes:
-    - ./config/logstash.conf:/config-dir/logstash.conf
+    - ./config/elk/logstash.conf:/config-dir/logstash.conf
   command: logstash -f /config-dir/logstash.conf
   ports:
     - "61614:61614"
+
+elasticlogstash:
+  image: elasticsearch:1.7.0
+  command: elasticsearch -Des.cluster.name=elasticlogstash
+  ports:
+    - "9200:9200"
+
+kibana:
+  image: kibana:4.1.1
+  links:
+    - elasticlogstash:elasticsearch
+  ports:
+    - "5601:5601"
