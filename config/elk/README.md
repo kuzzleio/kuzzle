@@ -81,14 +81,14 @@ Every \[write,read,bulk,remsub,filter\]:\[stop\] event will send a duration time
 
 ## How to add a new event ?
 
-1. Add the hook "myhook" in file [lib/api/perf.js](../lib/api/perf.js)
+1. Add the hook "myhook" in file [lib/api/perf.js](../../lib/api/perf.js)
 2. emit your event somewhere in the Kuzzle code :
 
  kuzzle.emit("myhook", myData);
 
 ## How Kuzzle send an event to Logstash ?
 
-Log are sent via http request, see [lib/services/logger.js](../lib/services/logger.js.).
+Log are sent via http request, see [lib/services/logger.js](../../lib/services/logger.js).
 
 
 ## Remove all the logs already saved in my ELK ?

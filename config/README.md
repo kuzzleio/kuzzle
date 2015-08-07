@@ -1,7 +1,8 @@
 #Configuration
 
-Every configuration from non mandatory services, like perf monitoring.
+Every configuration for Kuzzle.
+
 
 #ELK
 
-ELK (Elasticsearch, Logstash and Kibnana) Contains all the configuration for perf test.
+ELK (Elasticsearch, Logstash and Kibnana) Contains all the configuration for performance test.
