@@ -28,5 +28,5 @@ if (process.env.NEW_RELIC_APP_NAME) {
     kuzzle = require('./lib'),
     rc = require('rc');
 
-    kuzzle.start(rc('kuzzle'));
+  kuzzle.start(rc('kuzzle'));
 })();

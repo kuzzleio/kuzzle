@@ -316,7 +316,7 @@ var apiSteps = function () {
             callbackAsync();
           }.bind(this))
           .catch(function (error) {
-              callbackAsync(new Error(error));
+            callbackAsync(new Error(error));
           });
       }.bind(this), 500);
     };
