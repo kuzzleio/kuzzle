@@ -96,6 +96,7 @@ Simply put, a ``data collection`` is a set of data managed internally by Kuzzle.
 **Message:**
 
 You can directly send your document through post data using default parameters (persist: true)
+
 ```javascript 
 {
   /*
@@ -105,6 +106,7 @@ You can directly send your document through post data using default parameters (
 ```
 
 Or instead control the behavior of the document by passing your document in the body field.
+
 ```javascript  
 {
   /*
