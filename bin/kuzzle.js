@@ -25,5 +25,17 @@ program
   .description('Start a Kuzzle instance in performance recording mode')
   .action(require('./kuzzle-perf'));
 
+// $ kuzzle enable <service>
+program
+  .command('enable')
+  .description('Enable a service without reloading Kuzzle')
+  .action(require('./kuzzle-enable'));
+
+// $ kuzzle disable <service>
+program
+  .command('disable')
+  .description('Disable a service without reloading Kuzzle')
+  .action(require('./kuzzle-disable'));
+
 // Run user command
 program.parse(process.argv);

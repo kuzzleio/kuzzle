@@ -30,13 +30,13 @@ describe('Test not method', function () {
   });
 
   it('should construct the filterTree object for the correct attribute', function () {
-    should(methods.dsl.filtersTree).not.be.empty;
-    should(methods.dsl.filtersTree[collection]).not.be.empty;
-    should(methods.dsl.filtersTree[collection].city).not.be.empty;
+    should(methods.dsl.filtersTree).not.be.empty();
+    should(methods.dsl.filtersTree[collection]).not.be.empty();
+    should(methods.dsl.filtersTree[collection].city).not.be.empty();
   });
 
   it('should construct the filterTree with correct curried function name', function () {
-    should(methods.dsl.filtersTree[collection].city.nottermcityLondon).not.be.empty;
+    should(methods.dsl.filtersTree[collection].city.nottermcityLondon).not.be.empty();
   });
 
   it('should construct the filterTree with correct room list', function () {

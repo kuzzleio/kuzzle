@@ -30,14 +30,14 @@ describe('Test addSubscription function in the hotelClerk core module', function
   });
 
   it('should have object filtersTree, customers and rooms empty', function () {
-    should(kuzzle.dsl.filtersTree).be.an.Object;
-    should(kuzzle.dsl.filtersTree).be.empty;
+    should(kuzzle.dsl.filtersTree).be.an.Object();
+    should(kuzzle.dsl.filtersTree).be.empty();
 
-    should(kuzzle.hotelClerk.rooms).be.an.Object;
-    should(kuzzle.hotelClerk.rooms).be.empty;
+    should(kuzzle.hotelClerk.rooms).be.an.Object();
+    should(kuzzle.hotelClerk.rooms).be.empty();
 
-    should(kuzzle.hotelClerk.customers).be.an.Object;
-    should(kuzzle.hotelClerk.customers).be.empty;
+    should(kuzzle.hotelClerk.customers).be.an.Object();
+    should(kuzzle.hotelClerk.customers).be.empty();
   });
 
   it('should have the new room and customer', function () {
@@ -51,24 +51,24 @@ describe('Test addSubscription function in the hotelClerk core module', function
 
     return kuzzle.hotelClerk.addSubscription(requestObject, connection)
       .then(function (realTimeResponseObject) {
-        should(kuzzle.dsl.filtersTree).be.an.Object;
-        should(kuzzle.dsl.filtersTree).not.be.empty;
+        should(kuzzle.dsl.filtersTree).be.an.Object();
+        should(kuzzle.dsl.filtersTree).not.be.empty();
 
-        should(kuzzle.hotelClerk.rooms).be.an.Object;
-        should(kuzzle.hotelClerk.rooms).not.be.empty;
+        should(kuzzle.hotelClerk.rooms).be.an.Object();
+        should(kuzzle.hotelClerk.rooms).not.be.empty();
 
-        should(kuzzle.hotelClerk.customers).be.an.Object;
-        should(kuzzle.hotelClerk.customers).not.be.empty;
+        should(kuzzle.hotelClerk.customers).be.an.Object();
+        should(kuzzle.hotelClerk.customers).not.be.empty();
 
-        should(realTimeResponseObject).be.an.Object;
-        should(realTimeResponseObject.roomId).be.a.String;
-        should(kuzzle.hotelClerk.rooms[realTimeResponseObject.roomId]).be.an.Object;
-        should(kuzzle.hotelClerk.rooms[realTimeResponseObject.roomId]).not.be.empty;
+        should(realTimeResponseObject).be.an.Object();
+        should(realTimeResponseObject.roomId).be.a.String();
+        should(kuzzle.hotelClerk.rooms[realTimeResponseObject.roomId]).be.an.Object();
+        should(kuzzle.hotelClerk.rooms[realTimeResponseObject.roomId]).not.be.empty();
 
         roomId = kuzzle.hotelClerk.rooms[realTimeResponseObject.roomId].id;
 
-        should(kuzzle.hotelClerk.customers[connection.id]).be.an.Object;
-        should(kuzzle.hotelClerk.customers[connection.id]).not.be.empty;
+        should(kuzzle.hotelClerk.customers[connection.id]).be.an.Object();
+        should(kuzzle.hotelClerk.customers[connection.id]).not.be.empty();
         should(kuzzle.hotelClerk.customers[connection.id][roomName]).be.exactly(roomId);
       });
   });

@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-
 var
   captains = require('captains-log'),
   rc = require('rc'),

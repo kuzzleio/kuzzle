@@ -76,14 +76,14 @@ describe('Test removeSubscription function in the hotelClerk core module', funct
   it('should clean up customers, rooms and filtersTree object', function () {
     return kuzzle.hotelClerk.removeSubscription(requestObject1, connection)
       .then(function () {
-        should(kuzzle.dsl.filtersTree).be.an.Object;
-        should(kuzzle.dsl.filtersTree).be.empty;
+        should(kuzzle.dsl.filtersTree).be.an.Object();
+        should(kuzzle.dsl.filtersTree).be.empty();
 
-        should(kuzzle.hotelClerk.rooms).be.an.Object;
-        should(kuzzle.hotelClerk.rooms).be.empty;
+        should(kuzzle.hotelClerk.rooms).be.an.Object();
+        should(kuzzle.hotelClerk.rooms).be.empty();
 
-        should(kuzzle.hotelClerk.customers).be.an.Object;
-        should(kuzzle.hotelClerk.customers).be.empty;
+        should(kuzzle.hotelClerk.customers).be.an.Object();
+        should(kuzzle.hotelClerk.customers).be.empty();
       });
   });
 
@@ -92,14 +92,14 @@ describe('Test removeSubscription function in the hotelClerk core module', funct
       .then(function () {
         return kuzzle.hotelClerk.removeSubscription(requestObject1, connection)
           .then(function () {
-            should(kuzzle.dsl.filtersTree).be.an.Object;
-            should(kuzzle.dsl.filtersTree).not.be.empty;
+            should(kuzzle.dsl.filtersTree).be.an.Object();
+            should(kuzzle.dsl.filtersTree).not.be.empty();
 
-            should(kuzzle.hotelClerk.rooms).be.an.Object;
-            should(kuzzle.hotelClerk.rooms).not.be.empty;
+            should(kuzzle.hotelClerk.rooms).be.an.Object();
+            should(kuzzle.hotelClerk.rooms).not.be.empty();
 
-            should(kuzzle.hotelClerk.customers).be.an.Object;
-            should(kuzzle.hotelClerk.customers).not.be.empty;
+            should(kuzzle.hotelClerk.customers).be.an.Object();
+            should(kuzzle.hotelClerk.customers).not.be.empty();
           });
       });
   });

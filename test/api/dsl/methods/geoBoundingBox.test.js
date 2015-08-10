@@ -79,9 +79,9 @@ describe('Test geoboundingbox method', function () {
   });
 
   it('should construct the filterTree object for the correct attribute', function () {
-    should(methods.dsl.filtersTree).not.be.empty;
-    should(methods.dsl.filtersTree[collection]).not.be.empty;
-    should(methods.dsl.filtersTree[collection].location).not.be.empty;
+    should(methods.dsl.filtersTree).not.be.empty();
+    should(methods.dsl.filtersTree[collection]).not.be.empty();
+    should(methods.dsl.filtersTree[collection].location).not.be.empty();
   });
 
   it('should construct the filterTree with correct curried function name', function () {
@@ -90,9 +90,9 @@ describe('Test geoboundingbox method', function () {
     // we must have only three functions (one for filterEngland, and two for filterUSA)
 
     should(Object.keys(methods.dsl.filtersTree[collection].location)).have.length(3);
-    should(methods.dsl.filtersTree[collection].location.locationgeoBoundingBoxgcmfj457fu10ffy7m4).not.be.empty;
-    should(methods.dsl.filtersTree[collection].location.locationgeoBoundingBoxc0x5cc73fds7jwb737).not.be.empty;
-    should(methods.dsl.filtersTree[collection].location.locationgeoBoundingBoxc0x5c7zzzds7jw7zzz).not.be.empty;
+    should(methods.dsl.filtersTree[collection].location.locationgeoBoundingBoxgcmfj457fu10ffy7m4).not.be.empty();
+    should(methods.dsl.filtersTree[collection].location.locationgeoBoundingBoxc0x5cc73fds7jwb737).not.be.empty();
+    should(methods.dsl.filtersTree[collection].location.locationgeoBoundingBoxc0x5c7zzzds7jw7zzz).not.be.empty();
   });
 
   it('should construct the filterTree with correct room list', function () {

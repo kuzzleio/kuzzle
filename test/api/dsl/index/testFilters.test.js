@@ -109,7 +109,7 @@ describe('Test testFilters function index.js file from DSL', function () {
   it('should return an array with my room id when document matches', function () {
     return kuzzle.dsl.testFilters(requestObjectCreateGrace)
       .then(function (rooms) {
-        should(rooms).be.an.Array;
+        should(rooms).be.an.Array();
         should(rooms).have.length(1);
         should(rooms[0]).be.exactly(roomId);
       });
@@ -118,8 +118,8 @@ describe('Test testFilters function index.js file from DSL', function () {
   it('should return empty array when document doesn\'t match', function () {
     return kuzzle.dsl.testFilters(requestObjectCreateAda)
       .then(function (rooms) {
-        should(rooms).be.an.Array;
-        should(rooms).be.empty;
+        should(rooms).be.an.Array();
+        should(rooms).be.empty();
       });
   });
 

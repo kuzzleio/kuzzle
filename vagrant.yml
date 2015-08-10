@@ -1,0 +1,33 @@
+# Vagrant Configuration File
+#
+# NOTE: It is not recommended to edit this files directly.
+#       If you need to override these settings for your
+#       local needs, create a file called .vagrant/vagrant.yml
+#
+virtualmachine:
+
+  # Vagrant box to import (official debian 7 by default):
+  box: debian/jessie64
+
+  # Memory usage:
+  ram: 1024
+
+  # Hostname for the vagrant machine:
+  hostname: kuzzle
+
+  ###
+  # Network settings:
+  network:
+
+    # vagrant machine private IP adress: uncomment following line if you need it
+    #private_network_ip: 33.33.33.33
+
+    # List of ports to be forwarded to your host:
+    # override with empty array if you do not want to forward ports
+    # (in that case, you will need a private IP address to use Kuzzle - see above)
+    forwarded_port: { 7512: 7512, 8081: 7512, 1883: 1883, 5672: 5672, 15672: 15672, 61613: 61613 }
+
+  ### END Network Settings
+
+  # Add here a single folder or a list of folders that you want to share with vagrant (not mandatory):
+  #synced_folder: .
