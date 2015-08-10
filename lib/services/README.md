@@ -15,23 +15,102 @@ Kuzzle currently implements the following Services:
 A Service can be added to different engines. As an exemple, Elasticsearch is used by both the writeEngine and the readEngine (see [index.js](./index.js)).
 
 
-# logger.js
+# Logging/Monitoring/Profiling
 
-The Logger is an interface to Logstash that we used to monitore the Kuzzle state.
-As an exemple if we want to log each data creation for analysis purpose, you just have to call :
-```js
-	kuzzle.emit('data:create', data);
+The main purpose for those subjects is to detect latency and problem in Kuzzle. In many cases, you don't have to enable them if you're not a contributor.
+
+## logger.js
+
+The Logger is an interface to Logstash that we used to monitor the Kuzzle state.
+As an exemple if we want to log each data creation for analysis purpose, you just have to call:
 
 ```
+  kuzzle.emit('data:create', data);
+```
 
-and add in the [hooks](../../lib/config/hooks.js) the entry :
+and add in the [hooks](../../lib/config/hooks.js) the entry:
 
-```js
+```
   'data:create': ['log:log']
 ```
 
 Every call to emit will add an entry to the logstash server.
 
+<a name="profiling" />
+## Profiling
+
+The profiling service is designed for get time spent in internal functions. This service is useful during development process, for trying to understand where we waste time.  
+We use [nodegrind](https://www.npmjs.com/package/nodegrind) that output a file for each requests that can be analyzed by [Blackfire](https://blackfire.io) or other software compatible with [KCachegrind](http://kcachegrind.sourceforge.net/html/Home.html) format.
+
+When Kuzzle is running, open a new terminal and run:
+
+```
+$ kuzzle enable profiling
+```
+
+When you're done with profiling, you can disabled it with:
+
+```
+$ kuzzle disable profiling
+```
+
+Output files are generated in `profiling` folder. For use them you can use the container [blackfire-upload](https://github.com/kuzzleio/kuzzle-containers/tree/master/blackfire-upload) created by Kuzzle team for upload them to Blackfire.
+
+```
+$ docker run --rm -ti \
+    -e BLACKFIRE_CLIENT_ID=$BLACKFIRE_CLIENT_ID \
+    -e BLACKFIRE_CLIENT_TOKEN=$BLACKFIRE_CLIENT_TOKEN \
+    -v paht/to/profiling/:/profiling \
+    kuzzleio/blackfire-upload ./aggregate.sh
+```
+
+For each request made, this service create a new file. In `profiling` folder, files are generated with the format:
+
+* `<controller>-<protocol>-<timestamp>-<requestId>` for profiling in main kuzzle server
+* `worker-<worker name>-<protocol>-<timestamp>-<requestId>` for profiling in workers
+
+Two profiling files are generated, because workers and main server are not running on the same thread.
+
+**Note:**
+
+* You don't have to reload Kuzzle when you enable/disable profiling.
+* If you're not using the Docker version, you have to install [Nodegrind](https://www.npmjs.com/package/nodegrind) because it's must be installed globally with `npm install -g nodegrind@0.4.0`
+* **Don't** use the profiling during benchmark: for each request made, minimum of two files will be created.
+* Avoid to mix different controllers if you wan't to aggregate the result. Doesn't make sense to send profiling on controller `write` and `read`.
+
+
+## Monitoring
+
+The monitoring service allow to show response time for each protocol, controller and action call.
+You can monitor your Kuzzle with [Newrelic](http://newrelic.com/) by adding environment variables (both required):
+
+* NEW_RELIC_APP_NAME: The Newrelic application name that will be displayed in Newrelic dashboard.
+* NEW_RELIC_LICENSE_KEY: Your New Relic [license key](https://docs.newrelic.com/docs/subscriptions/license-key).
+
+**Note:**
+
+* If you're using Docker, you can directly add those variables in docker-compose.yml
+* You have to reload Kuzzle when you change those variables
+
+# Remote action
+
+The `remoteActions` service allow to enabled/disable services when Kuzzle is running without reload. When a process Kuzzle is started, in terminal you can do something like
+
+```
+$ kuzzle enable profiling
+```
+
+And you can disable the service with
+
+```
+$ kuzzle disable profiling
+```
+
+## Currently available services
+
+Currently, there is a list of available services through the remote action:
+
+* [`profiling`](#profiling)
 
 # Contributing
 

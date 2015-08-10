@@ -65,25 +65,25 @@ describe('Test bool method', function () {
   });
 
   it('should construct the filterTree object for the correct attribute', function () {
-    should(methods.dsl.filtersTree).not.be.empty;
-    should(methods.dsl.filtersTree[collection]).not.be.empty;
+    should(methods.dsl.filtersTree).not.be.empty();
+    should(methods.dsl.filtersTree[collection]).not.be.empty();
 
-    should(methods.dsl.filtersTree[collection].firstName).not.be.empty;
-    should(methods.dsl.filtersTree[collection].age).not.be.empty;
-    should(methods.dsl.filtersTree[collection].city).not.be.empty;
-    should(methods.dsl.filtersTree[collection].hobby).not.be.empty;
-    should(methods.dsl.filtersTree[collection].lastName).not.be.empty;
+    should(methods.dsl.filtersTree[collection].firstName).not.be.empty();
+    should(methods.dsl.filtersTree[collection].age).not.be.empty();
+    should(methods.dsl.filtersTree[collection].city).not.be.empty();
+    should(methods.dsl.filtersTree[collection].hobby).not.be.empty();
+    should(methods.dsl.filtersTree[collection].lastName).not.be.empty();
   });
 
   it('should construct the filterTree with correct curried function name', function () {
-    should(methods.dsl.filtersTree[collection].firstName['termsfirstNameGrace,Ada']).not.be.empty;
+    should(methods.dsl.filtersTree[collection].firstName['termsfirstNameGrace,Ada']).not.be.empty();
 
-    should(methods.dsl.filtersTree[collection].age.rangeagegte36).not.be.empty;
-    should(methods.dsl.filtersTree[collection].age.rangeagelt85).not.be.empty;
+    should(methods.dsl.filtersTree[collection].age.rangeagegte36).not.be.empty();
+    should(methods.dsl.filtersTree[collection].age.rangeagelt85).not.be.empty();
 
-    should(methods.dsl.filtersTree[collection].city.nottermcityNYC).not.be.empty;
-    should(methods.dsl.filtersTree[collection].hobby.termhobbycomputer).not.be.empty;
-    should(methods.dsl.filtersTree[collection].lastName.existslastName).not.be.empty;
+    should(methods.dsl.filtersTree[collection].city.nottermcityNYC).not.be.empty();
+    should(methods.dsl.filtersTree[collection].hobby.termhobbycomputer).not.be.empty();
+    should(methods.dsl.filtersTree[collection].lastName.existslastName).not.be.empty();
   });
 
   it('should construct the filterTree with correct room list', function () {

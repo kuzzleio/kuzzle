@@ -39,27 +39,27 @@ describe('Test and method', function () {
   });
 
   it('should construct the filterTree object for the correct attribute', function () {
-    should(methods.dsl.filtersTree).not.be.empty;
-    should(methods.dsl.filtersTree[collection]).not.be.empty;
-    should(methods.dsl.filtersTree[collection].city).not.be.empty;
-    should(methods.dsl.filtersTree[collection].hobby).not.be.empty;
+    should(methods.dsl.filtersTree).not.be.empty();
+    should(methods.dsl.filtersTree[collection]).not.be.empty();
+    should(methods.dsl.filtersTree[collection].city).not.be.empty();
+    should(methods.dsl.filtersTree[collection].hobby).not.be.empty();
   });
 
   it('should construct the filterTree with correct curried function name', function () {
-    should(methods.dsl.filtersTree[collection].city.termcityNYC).not.be.empty;
-    should(methods.dsl.filtersTree[collection].hobby.termhobbycomputer).not.be.empty;
+    should(methods.dsl.filtersTree[collection].city.termcityNYC).not.be.empty();
+    should(methods.dsl.filtersTree[collection].hobby.termhobbycomputer).not.be.empty();
   });
 
   it('should construct the filterTree with correct room list', function () {
     var rooms;
 
     rooms = methods.dsl.filtersTree[collection].city.termcityNYC.rooms;
-    should(rooms).be.an.Array;
+    should(rooms).be.an.Array();
     should(rooms).have.length(1);
     should(rooms[0]).be.exactly(roomId);
 
     rooms = methods.dsl.filtersTree[collection].hobby.termhobbycomputer.rooms;
-    should(rooms).be.an.Array;
+    should(rooms).be.an.Array();
     should(rooms).have.length(1);
     should(rooms[0]).be.exactly(roomId);
   });

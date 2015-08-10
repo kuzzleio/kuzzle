@@ -6,7 +6,6 @@ var apiSteps = function () {
     var filter = { term: {} };
 
     filter.term[key] = value;
-
     this.api.subscribe(filter)
       .then(function (body) {
         if (body.error !== null) {

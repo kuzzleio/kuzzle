@@ -18,6 +18,11 @@
  *
  * To get a complete list of available options, launch 'bin/kuzzle.js start -h'
  */
+
+if (process.env.NEW_RELIC_APP_NAME) {
+  require('newrelic');
+}
+
 (function () {
   var
     kuzzle = require('./lib'),
