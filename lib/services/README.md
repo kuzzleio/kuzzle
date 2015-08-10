@@ -36,7 +36,7 @@ and add in the [hooks](../../lib/config/hooks.js) the entry:
 
 Every call to emit will add an entry to the logstash server.
 
-
+<a name="profiling" />
 ## Profiling
 
 The profiling service is designed for get time spent in internal functions. This service is useful during development process, for trying to understand where we waste time.  
@@ -105,6 +105,12 @@ And you can disable the service with
 ```
 $ kuzzle disable profiling
 ```
+
+## Currently available services
+
+Currently, there is a list of available services through the remote action:
+
+* [`profiling`](#profiling)
 
 # Contributing
 
