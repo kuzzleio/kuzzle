@@ -17,7 +17,7 @@ A Service can be added to different engines. For example, Elasticsearch is used 
 
 # Logging/Monitoring/Profiling
 
-The main purpose for those subjects is to detect latency and problem in Kuzzle. In many cases, you don't have to enable them if you're not a contributor.
+The main purpose for those subjects is to detect latency and problems in Kuzzle. In many cases, you don't have to enable them if you're not a contributor.
 
 ## logger.js
 
@@ -45,19 +45,19 @@ We use [nodegrind](https://www.npmjs.com/package/nodegrind) to output a file for
 When Kuzzle is running, open a new terminal and run:
 
 ```
-$ kuzzle enable profiling
+$ kuzzle enables profiling
 ```
 
 When you're done with profiling, you can disable it with:
 
 ```
-$ kuzzle disable profiling
+$ kuzzle disables profiling
 ```
 
 Output files are generated in the `profiling` folder. To use them you can use the container [blackfire-upload](https://github.com/kuzzleio/kuzzle-containers/tree/master/blackfire-upload) created by Kuzzle team to upload them to Blackfire.
 
 ```
-$ docker run --rm -ti \
+$ docker runs --rm -ti \
     -e BLACKFIRE_CLIENT_ID=$BLACKFIRE_CLIENT_ID \
     -e BLACKFIRE_CLIENT_TOKEN=$BLACKFIRE_CLIENT_TOKEN \
     -v paht/to/profiling/:/profiling \
@@ -76,7 +76,9 @@ Two profiling files are generated because workers and the main server are not ru
 * You don't have to reload Kuzzle when you enable/disable profiling.
 * If you're not using the Docker version, you have to install [Nodegrind](https://www.npmjs.com/package/nodegrind) because it must be installed globally with `npm install -g nodegrind@0.4.0`
 * **Don't** use the profiling during benchmark: for each request made, a minimum of two files will be created.
-* Avoid to mix different controllers if you don't want to aggregate the results. It doesn't make sense to send profiling on controller `write` and `read`. <!--dans la phrase démarrant par "Avoid to mix..." c'est bien une négation que tu voulais mettre aprés "if"?-->
+* Avoid to mix different controllers if you don't want to aggregate the results. It doesn't make sense to send profiling on controller `write` and `read`. 
+<!--Julie-->
+<!--dans la phrase démarrant par "Avoid to mix..." c'est bien une négation que tu voulais mettre aprés "if"?-->
 
 
 ## Monitoring
@@ -96,14 +98,15 @@ You can monitor your Kuzzle with [Newrelic](http://newrelic.com/) by adding envi
 
 The `remoteActions` service allows to enable/disable services when Kuzzle is running without reload. When a Kuzzle process is started, in the terminal you can do something like
 
+
 ```
-$ kuzzle enable profiling
+$ kuzzle enables profiling
 ```
 
 And you can disable the service with
 
 ```
-$ kuzzle disable profiling
+$ kuzzle disables profiling
 ```
 
 ## Currently available services
