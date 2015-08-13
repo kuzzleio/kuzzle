@@ -57,7 +57,7 @@ $ kuzzle disables profiling
 Output files are generated in the `profiling` folder. To use them you can use the container [blackfire-upload](https://github.com/kuzzleio/kuzzle-containers/tree/master/blackfire-upload) created by Kuzzle team to upload them to Blackfire.
 
 ```
-$ docker runs --rm -ti \
+$ docker run --rm -ti \
     -e BLACKFIRE_CLIENT_ID=$BLACKFIRE_CLIENT_ID \
     -e BLACKFIRE_CLIENT_TOKEN=$BLACKFIRE_CLIENT_TOKEN \
     -v paht/to/profiling/:/profiling \
@@ -78,7 +78,8 @@ Two profiling files are generated because workers and the main server are not ru
 * **Don't** use the profiling during benchmark: for each request made, a minimum of two files will be created.
 * Avoid to mix different controllers if you don't want to aggregate the results. It doesn't make sense to send profiling on controller `write` and `read`. 
 <!--Julie-->
-<!--dans la phrase démarrant par "Avoid to mix..." c'est bien une négation que tu voulais mettre aprés "if"?-->
+<!--dans la phrase démarrant par "Avoid to mix..." c'est bien une négation que tu voulais mettre aprés "if"?--> 
+<!--Ainsi la phrase rectifiée veut dire "Evitez de mélanger plusieurs controleurs si vous ne voulez pas aggréger les résultats" c'est ce que tu voulais dire ? -->
 
 
 ## Monitoring
@@ -100,13 +101,13 @@ The `remoteActions` service allows to enable/disable services when Kuzzle is run
 
 
 ```
-$ kuzzle enables profiling
+$ kuzzle enable profiling
 ```
 
 And you can disable the service with
 
 ```
-$ kuzzle disables profiling
+$ kuzzle disable profiling
 ```
 
 ## Currently available services
