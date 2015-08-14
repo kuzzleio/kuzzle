@@ -66,6 +66,7 @@ So to get a response from Kuzzle, simply add an unique ``requestId`` field to yo
 This section details every query you can send to Kuzzle, and the ``response`` object Kuzzle will send you back, if any.
 
 Each query you make needs to specify:
+
 * what ``action`` you want to perform,
 * and the ``data collection`` you want to query
 
