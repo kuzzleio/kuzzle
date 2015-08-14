@@ -17,7 +17,6 @@ describe('Test service initialization function', function () {
   it('should build an internal broker service with correct methods', function () {
     should(kuzzle.services.list.broker).be.an.Object().and.not.be.empty();
     should(kuzzle.services.list.broker.init).be.a.Function();
-    should(kuzzle.services.list.broker.start).be.a.Function();
     should(kuzzle.services.list.broker.add).be.a.Function();
     should(kuzzle.services.list.broker.broadcast).be.a.Function();
     should(kuzzle.services.list.broker.listen).be.a.Function();
