@@ -3,36 +3,37 @@
 ## Global overview
 
 ![archi_fonctionnal](images/kuzzle_functional_architecture.png)
-
-Kuzzle Kernel API can be accessed by 3 different ways:
+<!--Est-ce que "ways" est un terme consacré ?-->
+Kuzzle Kernel API can be accessed from 3 different ways:
 1. a [RESTFul API](api-specifications.md#REST)
 2. a [Websocket connexion](api-specifications.md#Websocket), using Kuzzle [Javascript SDK](https://stash.kaliop.net/projects/LABS/repos/kuzzle-sdk-js)
 3. or a [messaging broker](api-specifications.md#AMQP-STOMP-MQTT) such as RabbitMQ (using any protocol supported by your broker, such as AMQP, MQTT, STOMP)
 
-In background, Kuzzle uses:
+In the background, Kuzzle uses:
 * a noSQL engine to store, index and search contents (we use Elasticsearch by default).
-* a cache engine to store subscribtions list (we use redis by default).
+* a cache engine to store subscription lists (we use redis by default).
 
 ## Core architecture
 
-Focus to the "Kuzzle kernel" above:
+Focus on the above "Kuzzle kernel":
 ![archi_core](images/kuzzle_core_architecture.png)
 
 ### Main core components
 
-* **Router Controller**: implements the 3 API routers, normalize input message and send them to the Funnel Controller
-* **Funnel Controller**: analyses input message and call the appropriate controller (see [API specification](api-specifications.md))
-* **Admin Controller**, **Bulk Controller**, **Write Controller**, **Subscribe Controller**, **Read Controller**: handles input message (see [API specification](api-specifications.md))
-* **Internal Components** : Any components used internally by controllers and any other internal components to interact with services
+* **Router Controller**: implements the 3 API routers, normalizes the input message and sends them to the Funnel Controller
+* **Funnel Controller**: analyses the input message and calls the appropriate controller (see [API specification](api-specifications.md))
+* **Admin Controller**, **Bulk Controller**, **Write Controller**, **Subscribe Controller**, **Read Controller**: handles the input message (see [API specification](api-specifications.md))
+* **Internal Components**: Any components used internally by controllers and any other internal components to interact with services
+<!--Que voulez-vous dire dans la phrase précédente "Aucun composant" ou "N'importe quel composant" ?-->
 
 ### Hooks
 
 Hooks allow to attach actions to Kuzzle events.
 
-As an example, Admin, Bulk and Writer controllers emit a "data:create" event to handle writing actions through storage engine.
-This event will trigger the execution of the *add* method of the *write* hook, which will send the received message to the broker service.
+For example, Admin, Bulk and Writer controllers emit a "data:create" event to handle some writing actions through the storage engine.
+This event will trigger the execution of the *add* method and of the *write* hook, which will send the received message to the broker service.
 
-It is then possible to implement custom hooks to trigger any events emitted by Kuzzle.
+Then it is possible to implement custom hooks to trigger any event emitted by Kuzzle.
 
 _For more details, see [hooks description](../lib/hooks/README.md)_
 
@@ -44,15 +45,15 @@ _For more details, see [services description](../lib/services/README.md)_
 
 ### Workers
 
-A Worker is a component that is designed to possibly run outside of the main Kuzzle instance.
+A Worker is a component that is designed to possibly run outside of the main Kuzzle instance. <!--"Instance" est un terme consacré ?-->
 
 Workers attach themselves to the broker service that is fed by Kuzzle to perform any kind of tasks.
 
-For instance, writing persistent data to kuzzle is implemented as a write worker
+For instance, writing persistent data on Kuzzle is implemented as a write worker.
 
-Additionally, serveral Workers of the same type can be launched in parallel, on the same or a different host.
+Additionally, serveral Workers of the same type can be launched in parallel, on the same or on a different host.
 
-This flexibility allows the Kuzzle system administrators to leverage their resources consumption and distribute and/or scale their services as it best fits their needs.
+This flexibility allows administrators of Kuzzle system to leverage their resource consumption and distribute and/or scale their services to better fit their needs.
 
 
 _For more details, see [workers description](../lib/workers/README.md)_
