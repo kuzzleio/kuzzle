@@ -153,7 +153,7 @@ There are 4 types of notifications you can receive:
     action: 'create',
     collection: '<data collection>',
     controller: 'write',
-    requestId: '<unique request ID>'  // The query ID that updated the document
+    requestId: '<unique request ID>'  // The query updating the document document
   }
 }
 ```
@@ -171,7 +171,7 @@ There are 4 types of notifications you can receive:
     action: 'update',
     collection: '<data collection>',
     controller: 'write',
-    requestId: '<unique request ID>'  // The query that updated the document
+    requestId: '<unique request ID>'  // The query updating the document
   }
 }
 ```
@@ -351,9 +351,6 @@ Makes Kuzzle remove you from its subscribers on this room.
     collection: '<data collection>',
     action: 'create',
     controller: 'write',
-    /*
-    The requestId field you provided.
-    */
     requestId, '<unique request identifier>'
   }
 }
@@ -401,9 +398,6 @@ Only documents in the persistent data storage layer can be retrieved.
     collection: '<data collection>',
     action: 'get',
     controller: 'read',
-    /*
-    The requestId field you provided.
-    */
     requestId, '<unique request identifier>'
   }
 }
@@ -471,9 +465,6 @@ Kuzzle uses the [ElasticSearch Query DSL ](https://www.elastic.co/guide/en/elast
     collection: '<data collection>',
     action: 'search',
     controller: 'read',
-    /*
-    The requestId field you provided.
-    */
     requestId, '<unique request identifier>'
   }
 }
@@ -529,9 +520,6 @@ Only documents in the persistent data storage layer can be updated.
     collection: '<data collection>',
     action: 'update',
     controller: 'write',
-    /*
-    The requestId field you provided.
-    */
     requestId, '<unique request identifier>'
   }
 }
@@ -586,9 +574,6 @@ Kuzzle uses the [ElasticSearch Query DSL ](https://www.elastic.co/guide/en/elast
     collection: '<data collection>',
     action: 'count',
     controller: 'read',
-    /*
-    The requestId field you provided.
-    */
     requestId, '<unique request identifier>'
   }
 }
@@ -637,10 +622,6 @@ Only documents in the persistent data storage layer can be deleted.
     collection: '<data collection>',
     action: 'delete',
     controller: 'write',
-
-    /*
-    The requestId field you provided.
-    */
     requestId, '<unique request identifier>'
   }
 }
@@ -693,16 +674,12 @@ Kuzzle uses the [ElasticSearch Query DSL ](https://www.elastic.co/guide/en/elast
     collection: '<data collection>',
     action: 'deleteByQuery',
     controller: 'write',
+    requestId, '<unique request identifier>',
 
     /*
     Array of strings listing the IDs of removed documents
     */
-    ids: ['id1', 'id2', ..., 'idn'],
-
-    /*
-    The requestId field you provided.
-    */
-    requestId, '<unique request identifier>'
+    ids: ['id1', 'id2', ..., 'idn']
   }
 }
 ```
@@ -744,10 +721,6 @@ This action is handled by the **administration** controller.
     collection: '<data collection>',
     action: 'deleteCollection',
     controller: 'admin',
-
-    /*
-    The requestId field you provided.
-    */
     requestId, '<unique request identifier>'
   }
 }
@@ -804,10 +777,6 @@ This action is handled by the **administration** controller.
     collection: '<data collection>',
     action: 'putMapping',
     controller: 'admin',
-
-    /*
-    The requestId field you provided.
-    */
     requestId, '<unique request identifier>'
   }
 }
@@ -846,6 +815,7 @@ Get data mapping of a collection previously defined
     action: 'getMapping',
     collection: '<data collection>',
     controller: 'admin',
+    requestId: '<unique request identifier>',
 
     mainindex: {
       mappings: {
@@ -862,12 +832,7 @@ Get data mapping of a collection previously defined
           }
         }
       }
-    },
-
-    /*
-    The requestId field you provided.
-    */
-    requestId: '<unique request identifier>'
+    }
   }
 }
 ```
@@ -921,6 +886,7 @@ Bulk import only works on documents in our persistent data storage layer.
     collection: '<data collection>',
     action: 'import',
     controller: 'bulk',
+    requestId, '<unique request identifier>',
 
     /*
     The list of executed queries, with their status
@@ -941,12 +907,7 @@ Bulk import only works on documents in our persistent data storage layer.
           status: <HTTP status code>
         }
       }
-    ],
-
-    /*
-    The requestId field you provided..
-    */
-    requestId, '<unique request identifier>'
+    ]
   }
 }
 ```
