@@ -11,7 +11,7 @@ You can also take a look at the internally used [Elasticsearch API](https://www.
 
 <a name="real-time-filters" />
 ## Real-time implemented filters
-<!-- Que signifie le terme "bool"?-->
+
 * and
 * bool
 * exists
