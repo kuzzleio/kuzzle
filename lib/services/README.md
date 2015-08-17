@@ -45,13 +45,13 @@ We use [nodegrind](https://www.npmjs.com/package/nodegrind) to output a file for
 When Kuzzle is running, open a new terminal and run:
 
 ```
-$ kuzzle enables profiling
+$ kuzzle enable profiling
 ```
 
 When you're done with profiling, you can disable it with:
 
 ```
-$ kuzzle disables profiling
+$ kuzzle disable profiling
 ```
 
 Output files are generated in the `profiling` folder. To use them you can use the container [blackfire-upload](https://github.com/kuzzleio/kuzzle-containers/tree/master/blackfire-upload) created by Kuzzle team to upload them to Blackfire.
@@ -77,9 +77,6 @@ Two profiling files are generated because workers and the main server are not ru
 * If you're not using the Docker version, you have to install [Nodegrind](https://www.npmjs.com/package/nodegrind) because it must be installed globally with `npm install -g nodegrind@0.4.0`
 * **Don't** use the profiling during benchmark: for each request made, a minimum of two files will be created.
 * Avoid to mix different controllers if you don't want to aggregate the results. It doesn't make sense to send profiling on controller `write` and `read`. 
-<!--Julie-->
-<!--dans la phrase démarrant par "Avoid to mix..." c'est bien une négation que tu voulais mettre aprés "if"?--> 
-<!--Ainsi la phrase rectifiée veut dire "Evitez de mélanger plusieurs controleurs si vous ne voulez pas aggréger les résultats" c'est ce que tu voulais dire ? -->
 
 
 ## Monitoring
