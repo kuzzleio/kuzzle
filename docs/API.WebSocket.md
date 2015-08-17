@@ -26,6 +26,7 @@ This will give you a direct access to Kuzzle's router controller, dispatching yo
   * [Deleting documents using a query](#deleting-documents-using-a-query)
   * [Deleting an entire data collection](#deleting-an-entire-data-collection)
   * [Setting up a data mapping on a collection](#setting-up-a-data-mapping-in-a-collection)
+  * [Retrieveing the data mapping of a collection](#retrieving-the-data-mapping-of-a-collection)
   * [Performing a bulk import](#performing-a-bulk-import)
 
 ##<a name="how-to-connect-to-kuzzle"></a> How to connect to Kuzzle
@@ -845,11 +846,11 @@ Get data mapping of a collection previously defined
     action: 'getMapping',
     collection: '<data collection>',
     controller: 'admin',
-    
+
     mainindex: {
       mappings: {
         <data collection>: {
-        
+
           /*
           Data mapping using ElasticSearch mapping syntax
           */
