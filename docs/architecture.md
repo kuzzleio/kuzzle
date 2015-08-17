@@ -4,12 +4,15 @@
 
 ![archi_fonctionnal](images/kuzzle_functional_architecture.png)
 <!--Est-ce que "ways" est un terme consacré ?-->
+
 Kuzzle Kernel API can be accessed from 3 different ways:
+
 1. a [RESTFul API](api-specifications.md#REST)
 2. a [Websocket connexion](api-specifications.md#Websocket), using Kuzzle [Javascript SDK](https://stash.kaliop.net/projects/LABS/repos/kuzzle-sdk-js)
 3. or a [messaging broker](api-specifications.md#AMQP-STOMP-MQTT) such as RabbitMQ (using any protocol supported by your broker, such as AMQP, MQTT, STOMP)
 
 In the background, Kuzzle uses:
+
 * a noSQL engine to store, index and search contents (we use Elasticsearch by default).
 * a cache engine to store subscription lists (we use redis by default).
 
