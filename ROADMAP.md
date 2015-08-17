@@ -1,12 +1,13 @@
 # How we work
 
-Kuzzle is currently in alpha version, and we are working hard to implement the needed functionalities to release our first beta version.
+Kuzzle is currently in alpha version, and we are working hard to implement the needed functionalities to release our first beta version. 
+<!-- and we are working hard to implement new features for our first beta version. We are focusing on user-friendliness and production readiness. -->
 
-It won't be a one-time big release, suddenly bringing Kuzzle from alpha to beta. Kuzzle is an Agile project, and we plan to implement and improve Kuzzle incrementally, until we feel Kuzzle is worthy of a beta version tag.
+It won't be a one-time big release, suddenly bringing Kuzzle from alpha to beta. Kuzzle is an agile project, and we plan to implement and improve Kuzzle incrementally, until we feel Kuzzle is worthy of a beta version tag. <!-- agile is an adjective, no capital letter -->
 
 So stay tuned, as many new functionalities will appear over time!
 
-# Roadmap
+# Roadmap to beta
 
 Here is the list of features we plan to implement to bring Kuzzle's version to beta.
 This list isn't proritized yet, and it may change over time, depending of feedbacks coming from users or from ourselves:
@@ -27,7 +28,8 @@ Here is what we plan to do:
 ## Back-office interface
 
 We think that a good administration graphical interface is essential, so we'll implement one for the beta version.  
-UX Design is planned, to make informations easy to retrieve, and to make the GUI itself easy to use.
+UX Design is planned, to make information easy to retrieve, and to make the GUI itself easy to use.
+<!-- I think that information never takes a 's' -->
 
 Here is the list of functionalities we plan to implement for the beta version of this GUI:
 
