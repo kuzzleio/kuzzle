@@ -12,6 +12,6 @@ For an overview about the filtering syntax, check the [Filters](filters.md) docu
 
 # Advanced documentation (not required for a basic development)
 
-For a deeper dive into Kuzzle  you can read the [Architecture](architecture.md) file.
+For a deeper dive into Kuzzle you can read the [Architecture](architecture.md) file.
 
 You can also read the README.md file in each folder for a better understanding of various elements.
