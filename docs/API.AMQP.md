@@ -96,7 +96,7 @@ The matching criteria you pass on to Kuzzle are [filters](./filters.md).
 How subscription works:  
 :arrow_right: You send a subscription query to Kuzzle  
 :arrow_left: Kuzzle responds to you with a room name and a room unique ID  
-:arrow_right: You listen to ``requestId`` messages on your websocket
+:arrow_right: You subscribe to the queue you provided in the ``replyTo`` metadata
 :arrow_left: When a document matches your room criteria, Kuzzle sends you a ``response``
 
 **Topic:** ``subscribe.<data collection>.on``
