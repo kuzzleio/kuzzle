@@ -22,15 +22,15 @@ If you need such functionnalities, please check our other supported protocols. F
   * [Deleting documents using a query](#deleting-documents-using-a-query)
   * [Deleting an entire data collection](#deleting-an-entire-data-collection)
   * [Setting up a data mapping on a collection](#setting-up-a-data-mapping-in-a-collection)
-  * [Retriveing the data mapping of a collection](#retrieving-the-data-mapping-of-a-collection)
+  * [Retrieveing the data mapping of a collection](#retrieving-the-data-mapping-of-a-collection)
   * [Performing a bulk import](#performing-a-bulk-import)
 
 
-## <a name="what-are-responses-objects"></a>What are responses objects
+  ##<a name="what-are-responses-objects"></a> What are ``response`` objects
 
-A ``response`` is the result of a query you send to Kuzzle. It may be the results of a search query, an acknowledgement of a create action, and so on.  
+  A ``response`` is the result of a query you send to Kuzzle. It may be the results of a search query, an acknowledgement of a created action, and so on.  
 
-A ``response`` is a JSON object with the following structure:
+  A ``response`` is a JSON object with the following structure:
 
 ```javascript
 {
@@ -43,7 +43,6 @@ A ``response`` is a JSON object with the following structure:
   Complex object, depending on your query
   */
   result: {
-    requestId: <unique ID>  // Your query unique identifier. See below.
     ...
   }
 }
@@ -57,7 +56,7 @@ All query URLs start like this: ``http://<kuzzle host>:7512/api/<data collection
 
 This documentation describes the corresponding URL for each possible query action, and the posting method to use. The only thing you need to know is what a ``data collection`` is.
 
-Simply put, a ``data collection`` is a set of data managed internally by Kuzzle. It acts like a data table for persistent documents, or like a room for pub/sub messages.  
+Simply put, a ``data collection`` is a set of data managed internally by Kuzzle. It acts like a data table for persistent documents, or like a room for pub/sub messages.
 
 
 ---
@@ -74,7 +73,7 @@ Simply put, a ``data collection`` is a set of data managed internally by Kuzzle.
 {
   // Tells Kuzzle to send a pub/sub message
   persist: false,
-  
+
   body: {
     /*
     The document itself
@@ -95,27 +94,12 @@ Simply put, a ``data collection`` is a set of data managed internally by Kuzzle.
 
 **Message:**
 
-You can directly send your document through post data using default parameters (persist: true)
-```javascript 
-{
-  /*
-  The document itself
-  */
-}
-```
-
-Or instead control the behavior of the document by passing your document in the body field.
 ```javascript  
 {
-  /*
-  Optionnal: Kuzzle will forward this field in its response, allowing you
-  to easily identify what query generated the response you got.
-  */
-  requestId: <Unique query ID>,
-  
+
   // Tells Kuzzle to not store your document
-  persist: false,
-  
+  persist: true,
+
   body: {
     /*
     The document itself
@@ -138,11 +122,6 @@ Or instead control the behavior of the document by passing your document in the 
     collection: '<data collection>',
     action: 'create',
     controller: 'write',
-    
-    /*
-    The requestId field you provided. If you didn't, Kuzzle generates
-    an unique query identifier anyway.
-    */
     requestId, '<unique request identifier>'
   }
 }
@@ -171,10 +150,6 @@ Only documents in the persistent data storage layer can be retrieved.
     collection: '<data collection>',
     action: 'get',
     controller: 'read',
-    /*
-    The requestId field you provided. If you didn't, Kuzzle generates
-    an unique query identifier anyway.
-    */
     requestId, '<unique request identifier>'
   }
 }
@@ -233,10 +208,6 @@ Kuzzle uses the [ElasticSearch Query DSL ](https://www.elastic.co/guide/en/elast
     collection: '<data collection>',
     action: 'search',
     controller: 'read',
-    /*
-    The requestId field you provided. If you didn't, Kuzzle generates
-    an unique query identifier anyway.
-    */
     requestId, '<unique request identifier>'
   }
 }
@@ -275,10 +246,6 @@ Only documents in the persistent data storage layer can be updated.
     collection: '<data collection>',
     action: 'update',
     controller: 'write',
-    /*
-    The requestId field you provided. If you didn't, Kuzzle generates
-    an unique query identifier anyway.
-    */
     requestId, '<unique request identifier>'
   }
 }
@@ -323,10 +290,6 @@ Kuzzle uses the [ElasticSearch Query DSL ](https://www.elastic.co/guide/en/elast
     collection: '<data collection>',
     action: 'count',
     controller: 'read',
-    /*
-    The requestId field you provided. If you didn't, Kuzzle generates
-    an unique query identifier anyway.
-    */
     requestId, '<unique request identifier>'
   }
 }
@@ -357,11 +320,6 @@ Only documents in the persistent data storage layer can be deleted.
     collection: '<data collection>',
     action: 'delete',
     controller: 'write',
-
-    /*
-    The requestId field you provided. If you didn't, Kuzzle generates
-    an unique query identifier anyway.
-    */
     requestId, '<unique request identifier>'
   }
 }
@@ -403,17 +361,12 @@ Kuzzle uses the [ElasticSearch Query DSL ](https://www.elastic.co/guide/en/elast
     collection: '<data collection>',
     action: 'deleteByQuery',
     controller: 'write',
+    requestId, '<unique request identifier>',
 
     /*
     Array of strings listing the IDs of removed documents
     */
-    ids: ['id1', 'id2', ..., 'idn'],
-
-    /*
-    The requestId field you provided. If you didn't, Kuzzle generates
-    an unique query identifier anyway.
-    */
-    requestId, '<unique request identifier>'
+    ids: ['id1', 'id2', ..., 'idn']
   }
 }
 ```
@@ -442,11 +395,6 @@ This removes an entire data collection in the persistent data storage layer.
     collection: '<data collection>',
     action: 'deleteCollection',
     controller: 'admin',
-
-    /*
-    The requestId field you provided. If you didn't, Kuzzle generates
-    an unique query identifier anyway.
-    */
     requestId, '<unique request identifier>'
   }
 }
@@ -459,7 +407,9 @@ This removes an entire data collection in the persistent data storage layer.
 When creating a new data collection in the persistent data storage layer, Kuzzle uses a default mapping.  
 It means that, by default, you won't be able to exploit the full capabilities of our persistent data storage layer (currently handled by [ElasticSearch](https://www.elastic.co/products/elasticsearch)), and your searches may suffer from below-average performances, depending on the amount of data you stored in a collection and the complexity of your database.
 
-To solve this matter, Kuzzle's API offer a way to create a data mapping. It exposes the entire [mapping capabilities of ElasticSearch](https://www.elastic.co/guide/en/elasticsearch/reference/1.3/mapping.html).
+To solve this matter, Kuzzle's API offer a way to create data mapping and expose the entire [mapping capabilities of ElasticSearch](https://www.elastic.co/guide/en/elasticsearch/reference/1.3/mapping.html).
+
+This action is handled by the **administration** controller.
 
 **URL:** ``http://kuzzle:7512/api/<data collection>/_mapping``
 
@@ -493,11 +443,6 @@ To solve this matter, Kuzzle's API offer a way to create a data mapping. It expo
     collection: '<data collection>',
     action: 'putMapping',
     controller: 'admin',
-
-    /*
-    The requestId field you provided. If you didn't, Kuzzle generates
-    an unique query identifier anyway.
-    */
     requestId, '<unique request identifier>'
   }
 }
@@ -523,7 +468,8 @@ Get data mapping of a collection previously defined
     action: 'getMapping',
     collection: '<data collection>',
     controller: 'admin',
-    
+    requestId: '<unique request identifier>',
+
     mainindex: {
       mappings: {
         <data collection>: {
@@ -538,13 +484,7 @@ Get data mapping of a collection previously defined
           }
         }
       }
-    },
-
-    /*
-    The requestId field you provided. If you didn't, Kuzzle generates
-    an unique query identifier anyway.
-    */
-    requestId: '<unique request identifier>'
+    }
   }
 }
 ```
@@ -553,8 +493,8 @@ Get data mapping of a collection previously defined
 
 ###<a name="performing-a-bulk-import"></a> Performing a bulk import
 
-A bulk import allow your application to perform multiple writing operations with a single query. This is especially useful if you want to create a large number of documents, as a bulk import will be a lot faster compared to creating them individually using ``create`` queries.  
-As with other queries, the syntax for bulk imports closely ressembles the [ElasticSearch Bulk API](https://www.elastic.co/guide/en/elasticsearch/reference/1.3/docs-bulk.html?q=bulk).
+A bulk import allows your application to perform multiple writing operations thanks to a single query. This is especially useful if you want to create a large number of documents, as a bulk import will be a lot faster compared to creating them individually using ``create`` queries.  
+As with other queries, the syntax for bulk imports closely resembles the [ElasticSearch Bulk API](https://www.elastic.co/guide/en/elasticsearch/reference/1.3/docs-bulk.html?q=bulk).
 
 Bulk import only works on documents in our persistent data storage layer.
 
@@ -591,6 +531,7 @@ Bulk import only works on documents in our persistent data storage layer.
     collection: '<data collection>',
     action: 'import',
     controller: 'bulk',
+    requestId, '<unique request identifier>',
 
     /*
     The list of executed queries, with their status
@@ -611,13 +552,7 @@ Bulk import only works on documents in our persistent data storage layer.
           status: <HTTP status code>
         }
       }
-    ],
-
-    /*
-    The requestId field you provided. If you didn't, Kuzzle generates
-    an unique query identifier anyway.
-    */
-    requestId, '<unique request identifier>'
+    ]
   }
 }
 ```

@@ -27,7 +27,7 @@ The current implementation of our MQ Broker service uses [RabbitMQ](https://www.
   * [Deleting documents using a query](#deleting-documents-using-a-query)
   * [Deleting an entire data collection](#deleting-an-entire-data-collection)
   * [Setting up a data mapping on a collection](#setting-up-a-data-mapping-in-a-collection)
-  * [Retriveing the data mapping of a collection](#retrieving-the-data-mapping-of-a-collection)
+  * [Retrieveing the data mapping of a collection](#retrieving-the-data-mapping-of-a-collection)
   * [Performing a bulk import](#performing-a-bulk-import)
 
 ##<a name="how-to-connect-to-kuzzle"></a> How to connect to Kuzzle
