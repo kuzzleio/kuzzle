@@ -267,7 +267,7 @@ It works with the room unique ID Kuzzle returns to you when you make a subscript
 
 ###<a name="unsubscribing-of-a-room"></a> Unsubscribing of a room
 
-Makes Kuzzle remove you of its subscribers on this room.
+Makes Kuzzle remove you from its subscribers on this room.
 
 **Topic:** ``subscribe.<data collection>.off``
 
