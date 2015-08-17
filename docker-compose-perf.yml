@@ -2,6 +2,7 @@ kuzzle:
   image: kuzzleio/kuzzle:dev
   volumes:
     - ".:/var/app"
+    - "/var/log"
   ports:
     - "7512:7512"
   command: /run-perf.sh
@@ -9,7 +10,6 @@ kuzzle:
     - rabbit
     - elasticsearch
     - redis
-    - logstash
   environment:
     - KUZZLE_PORT=7512
     - IPC_BROKER_HOST=localhost
@@ -18,7 +18,6 @@ kuzzle:
     - READ_ENGINE_HOST=elasticsearch:9200
     - WRITE_ENGINE_HOST=elasticsearch:9200
     - NOTIFICATION_CACHE_HOST=redis:6379
-    - LOG_ENGINE_HOST=logstash:7777
     - PM2_OPTIONS=--watch
     - KUZZLE_MQTT_URL=mqtt://rabbit:1883
     - KUZZLE_AMQP_URL=amqp://rabbit:5672
@@ -44,6 +43,8 @@ logstash:
     - elasticlogstash:elasticsearch
   volumes:
     - ./config/elk/logstash.conf:/config-dir/logstash.conf
+  volumes_from:
+    - kuzzle
   command: logstash -f /config-dir/logstash.conf
   ports:
     - "61614:61614"

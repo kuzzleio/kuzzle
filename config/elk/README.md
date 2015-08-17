@@ -1,6 +1,6 @@
 #Configuration for Elasticsearch Logstash and Kibana (ELK)
 
-Logstash Elasticsearch and Kibana allow respectively to collect,index and visualize the information about logs.
+Logstash Elasticsearch and Kibana allow respectively to collect, index and visualize the information about logs.
 
  1. Logstash recive the logs from Kuzzle,
  2. Elasticsearch index the logs (container elasticlogstash),
