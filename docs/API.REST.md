@@ -26,11 +26,11 @@ If you need such functionnalities, please check our other supported protocols. F
   * [Performing a bulk import](#performing-a-bulk-import)
 
 
-  ##<a name="what-are-responses-objects"></a> What are ``response`` objects
+##<a name="what-are-responses-objects"></a> What are ``response`` objects
 
-  A ``response`` is the result of a query you send to Kuzzle. It may be the results of a search query, an acknowledgement of a created action, and so on.  
+A ``response`` is the result of a query you send to Kuzzle. It may be the results of a search query, an acknowledgement of a created action, and so on.  
 
-  A ``response`` is a JSON object with the following structure:
+A ``response`` is a JSON object with the following structure:
 
 ```javascript
 {
