@@ -11,7 +11,7 @@ require 'yaml'
 # add recursive_merge function to merge YAML files
 class Hash
     def recursive_merge(h)
-        self.merge!(h) {|key, _old, _new| if _old.class == Hash then _old.recursive_merge(_new) else _new end  }
+        self.merge!(h) {|key, _old, _new| if ( _old.class == Hash && _new.class == Hash ) then _old.recursive_merge(_new) else _new end  }
     end
 end
 
@@ -39,7 +39,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   end
 
   forwarded_port = vagrantConfig['virtualmachine']['network']['forwarded_port']
-  if forwarded_port.nil?
+  if ( forwarded_port.nil? || forwarded_port == false )
     action = ""
   elsif forwarded_port.respond_to?("each")
     forwarded_port.each do |key, value|
