@@ -3,9 +3,8 @@
 ## Global overview
 
 ![archi_fonctionnal](images/kuzzle_functional_architecture.png)
-<!--Est-ce que "ways" est un terme consacré ?-->
 
-Kuzzle Kernel API can be accessed from 3 different ways:
+Kuzzle Kernel API can be accessed from 3 different paths:
 
 1. a [RESTFul API](api-specifications.md#REST)
 2. a [Websocket connexion](api-specifications.md#Websocket), using Kuzzle [Javascript SDK](https://stash.kaliop.net/projects/LABS/repos/kuzzle-sdk-js)
@@ -26,8 +25,8 @@ Focus on the above "Kuzzle kernel":
 * **Router Controller**: implements the 3 API routers, normalizes the input message and sends them to the Funnel Controller
 * **Funnel Controller**: analyses the input message and calls the appropriate controller (see [API specification](api-specifications.md))
 * **Admin Controller**, **Bulk Controller**, **Write Controller**, **Subscribe Controller**, **Read Controller**: handles the input message (see [API specification](api-specifications.md))
-* **Internal Components**: Any components used internally by controllers and any other internal components to interact with services
-<!--Que voulez-vous dire dans la phrase précédente "Aucun composant" ou "N'importe quel composant" ?-->
+* **Internal Components**: Any component used internally by controllers and any other internal component to interact with services
+
 
 ### Hooks
 
@@ -48,7 +47,8 @@ _For more details, see [services description](../lib/services/README.md)_
 
 ### Workers
 
-A Worker is a component that is designed to possibly run outside of the main Kuzzle instance. <!--"Instance" est un terme consacré ?-->
+A Worker is a component that is designed to possibly run outside of the main Kuzzle instance.
+<!--"Instance" est un terme consacré ? Que voulez-vous dire ?-->
 
 Workers attach themselves to the broker service that is fed by Kuzzle to perform any kind of tasks.
 
