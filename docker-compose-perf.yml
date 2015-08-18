@@ -23,6 +23,7 @@ kuzzle:
     - KUZZLE_MQTT_URL=mqtt://rabbit:1883
     - KUZZLE_AMQP_URL=amqp://rabbit:5672
     - KUZZLE_STOMP_URL=stomp://rabbit:61613
+    - LIKE_A_VIRGIN
 
 rabbit:
   image: kuzzleio/rabbitmq

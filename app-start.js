@@ -29,4 +29,15 @@ if (process.env.NEW_RELIC_APP_NAME) {
     rc = require('rc');
 
   kuzzle.start(rc('kuzzle'));
+
+  // is a reset has been asked and we are launching a server ?
+  if (process.env.LIKE_A_VIRGIN == 1 && process.argv.indexOf('--server') > -1) {
+
+    var result = kuzzle.services.list.readEngine.reset();
+    if (result) {
+      kuzzle.log.info('Reset done: Kuzzle is now like a virgin, touched for the very first time !');
+    } else {
+      kuzzle.log.error('Oops... something really bad happened during reset...');
+    }
+  }
 })();
