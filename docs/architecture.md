@@ -47,10 +47,9 @@ _For more details, see [services description](../lib/services/README.md)_
 
 ### Workers
 
-A Worker is a component that is designed to possibly run outside of the main Kuzzle instance.
-<!--"Instance" est un terme consacré ? Que voulez-vous dire ?-->
+A worker is an independant component, detachable from a Kuzzle server container. It can be run in another container or even on another machine.
 
-Workers attach themselves to the broker service that is fed by Kuzzle to perform any kind of tasks.
+Workers attach themselves to the broker service fed by Kuzzle to perform any kind of task.
 
 For instance, writing persistent data on Kuzzle is implemented as a write worker.
 
