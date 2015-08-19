@@ -20,6 +20,7 @@ kuzzle:
     - KUZZLE_AMQP_URL=amqp://rabbit:5672
     - KUZZLE_STOMP_URL=stomp://rabbit:61613
     - NEW_RELIC_HOME=config
+    - LIKE_A_VIRGIN
 
 rabbit:
   image: kuzzleio/rabbitmq

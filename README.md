@@ -24,6 +24,12 @@ From Kuzzle's root directory:
 
     $ docker-compose up
 
+### Reset Kuzzle with Docker recipe
+
+If you need to get a fresh start with all persistent data erased, from Kuzzle's root directory:
+
+    $ LIKE_A_VIRGIN=1 docker-compose up
+
 ## Using Vagrant
 
 If you are not running Docker on your system, for instance if you are running Windows or MacOs, you can pop a virtual machine to run Kuzzle.
