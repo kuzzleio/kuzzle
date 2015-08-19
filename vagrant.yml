@@ -7,7 +7,7 @@
 virtualmachine:
 
   # Vagrant box to import (official debian 7 by default):
-  box: debian/jessie64
+  box: williamyeh/debian-jessie64-docker
 
   # Memory usage:
   ram: 1024
