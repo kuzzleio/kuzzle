@@ -12,7 +12,7 @@ module.exports = function () {
   Kuzzle.start(rc('kuzzle'));
 
   // is a fixture file has been specified to be inserted into database at Kuzzle start and we are launching a server ?
-  if (process.env.FIXTURES != '' && process.argv.indexOf('--server') > -1) {
+  if (process.env.FIXTURES != '' && process.env.FIXTURES !== undefined && process.argv.indexOf('--server') > -1) {
 
     // implies reset
     reset(function(){
