@@ -1,0 +1,39 @@
+kuzzle:
+  image: kuzzleio/kuzzle:dev
+  command: /run-debug.sh
+  volumes:
+    - ".:/var/app"
+  ports:
+    - "7512:7512"
+    - "8080:8080"
+    - "8081:8081"
+  links:
+    - rabbit
+    - elasticsearch
+    - redis
+  environment:
+    - KUZZLE_PORT=7512
+    - IPC_BROKER_HOST=localhost
+    - IPC_BROKER_PORT=7911
+    - MQ_BROKER_HOST=rabbit:5672
+    - READ_ENGINE_HOST=elasticsearch:9200
+    - WRITE_ENGINE_HOST=elasticsearch:9200
+    - NOTIFICATION_CACHE_HOST=redis:6379
+    - KUZZLE_MQTT_URL=mqtt://rabbit:1883
+    - KUZZLE_AMQP_URL=amqp://rabbit:5672
+    - KUZZLE_STOMP_URL=stomp://rabbit:61613
+    - NEW_RELIC_HOME=config
+
+rabbit:
+  image: kuzzleio/rabbitmq
+  ports:
+    - "61613:61613"
+    - "1883:1883"
+    - "5672:5672"
+    - "15672:15672"
+
+redis:
+  image: redis:3.0.2
+
+elasticsearch:
+  image: elasticsearch:1.5.2
