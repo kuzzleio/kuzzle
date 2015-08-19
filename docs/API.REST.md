@@ -10,8 +10,7 @@ This will give you a direct access to Kuzzle's router controller, dispatching yo
 If you need such functionalities, please check our other supported protocols. For instance you may easily use REST for your day to day operations, and use our [WebSocket API](./API.WebSocket.md) to manage document subscriptions.
 
 ## Index
-* [What are responses objects](#what-are-responses-objects) 
-<!--For the group of words "response objects" the word "response" works is an adjective so it is invariable-->
+* [What are response objects](#what-are-response-objects) 
 * [Performing queries](#performing-queries)
   * [Sending a publish/subscribe message](#sending-a-publish-subscribe-message)
   * [Creating a new document](#creating-a-new-document)
@@ -28,7 +27,6 @@ If you need such functionalities, please check our other supported protocols. Fo
 
 
 ##<a name="what-are-responses-objects"></a> What are ``response`` objects
-<!-- "response objects" cf. line 14-->
 
 A ``response`` is the result of a query you send to Kuzzle. It may be the results of a search query, an acknowledgement of a created action, and so on.  
 
@@ -54,8 +52,8 @@ A ``response`` is a JSON object with the following structure:
 
 This section details every query you can send to Kuzzle, and the ``response`` object Kuzzle will send you back, if any.
 
-All query URLs start like this: ``http://<kuzzle host>:7512/api/<data collection>/<query action>``
-<!-- Shouldn't it be "All URL queries start like this-->
+All URL queries start like this: ``http://<kuzzle host>:7512/api/<data collection>/<query action>``
+
 This documentation describes the corresponding URL for each possible query action, and the posting method to use. The only thing you need to know is what a ``data collection`` is.
 
 Simply put, a ``data collection`` is a set of data managed internally by Kuzzle. It acts like a data table for persistent documents, or like a room for pub/sub messages.
@@ -99,8 +97,7 @@ Simply put, a ``data collection`` is a set of data managed internally by Kuzzle.
 ```javascript  
 {
 
-  // Tells Kuzzle to not store your document
-  <!--"not to store"-->
+  // Tells Kuzzle not to store your document
   persist: true,
 
   body: {
