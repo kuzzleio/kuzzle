@@ -2,17 +2,17 @@
 var
   captains = require('captains-log'),
   rc = require('rc'),
-  Kuzzle = require('../lib');
+  kuzzle = require('../lib');
 
 
 module.exports = function () {
   var log = captains();
-  log.info('Starting Kuzzle');
+  log.info('Starting kuzzle');
 
-  Kuzzle.start(rc('kuzzle'));
+  kuzzle.start(rc('kuzzle'));
 
   // is a fixture file has been specified to be inserted into database at Kuzzle start and we are launching a server ?
-  if (process.env.FIXTURES != '' && process.env.FIXTURES !== undefined && process.argv.indexOf('--server') > -1) {
+   if (process.env.FIXTURES != '' && process.env.FIXTURES !== undefined && process.argv.indexOf('--server') > -1) {
 
     // implies reset
     reset(function(){
