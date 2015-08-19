@@ -4,13 +4,14 @@
 
 You can connect your application directly to Kuzzle, using REST.
 
-This will give you a direct access to the Kuzzle's router controller, dispatching your queries to the right components, which in turn will send you back a ``response``
+This will give you a direct access to Kuzzle's router controller, dispatching your queries to the right components, which in turn will send you back a ``response``
 
-**NOTE:** Due to the REST protocol synchronous nature, some Kuzzle functionnalities won't be available to you. Namely, you won't be able to subscribe to documents modifications and receive asynchronous notifications.  
-If you need such functionnalities, please check our other supported protocols. For instance you may easily use REST for your day to day operations, and use our [WebSocket API](./API.WebSocket.md) to manage document subscriptions.
+**NOTE:** Due to REST protocol synchronous nature, some Kuzzle functionalities won't be available to you. Namely, you won't be able to subscribe to document modifications and receive asynchronous notifications.  
+If you need such functionalities, please check our other supported protocols. For instance you may easily use REST for your day to day operations, and use our [WebSocket API](./API.WebSocket.md) to manage document subscriptions.
 
 ## Index
-* [What are responses objects](#what-are-responses-objects)
+* [What are responses objects](#what-are-responses-objects) 
+<!--For the group of words "response objects" the word "response" works is an adjective so it is invariable-->
 * [Performing queries](#performing-queries)
   * [Sending a publish/subscribe message](#sending-a-publish-subscribe-message)
   * [Creating a new document](#creating-a-new-document)
@@ -27,6 +28,7 @@ If you need such functionnalities, please check our other supported protocols. F
 
 
 ##<a name="what-are-responses-objects"></a> What are ``response`` objects
+<!-- "response objects" cf. line 14-->
 
 A ``response`` is the result of a query you send to Kuzzle. It may be the results of a search query, an acknowledgement of a created action, and so on.  
 
@@ -53,7 +55,7 @@ A ``response`` is a JSON object with the following structure:
 This section details every query you can send to Kuzzle, and the ``response`` object Kuzzle will send you back, if any.
 
 All query URLs start like this: ``http://<kuzzle host>:7512/api/<data collection>/<query action>``
-
+<!-- Shouldn't it be "All URL queries start like this-->
 This documentation describes the corresponding URL for each possible query action, and the posting method to use. The only thing you need to know is what a ``data collection`` is.
 
 Simply put, a ``data collection`` is a set of data managed internally by Kuzzle. It acts like a data table for persistent documents, or like a room for pub/sub messages.
@@ -98,6 +100,7 @@ Simply put, a ``data collection`` is a set of data managed internally by Kuzzle.
 {
 
   // Tells Kuzzle to not store your document
+  <!--"not to store"-->
   persist: true,
 
   body: {
