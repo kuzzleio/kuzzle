@@ -86,14 +86,14 @@ if (process.env.NEW_RELIC_APP_NAME) {
           body: fixtures[collection]
         };
 
-        kuzzle.services.list.writeEngine.import(new RequestObject(fixture), function(error, response) {
-          if (error) {
+        kuzzle.services.list.writeEngine.import(new RequestObject(fixture))
+          .then(function(response){
+            kuzzle.log.info('Fixture import OK for', response);
+          })
+          .catch(function(error){
             kuzzle.log.error('Fixture import error for', error);
-          } else {
-            kuzzle.log.log('Fixture import OK for', response);
-          }
-        });
-
+          })
+        ;
       }
       kuzzle.log.info('All fixtures imports launched.');
     });
