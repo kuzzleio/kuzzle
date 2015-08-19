@@ -88,10 +88,10 @@ if (process.env.NEW_RELIC_APP_NAME) {
 
         kuzzle.services.list.writeEngine.import(new RequestObject(fixture))
           .then(function(response){
-            kuzzle.log.info('Fixture import OK for', response);
+            kuzzle.log.info('Fixture import OK', response);
           })
           .catch(function(error){
-            kuzzle.log.error('Fixture import error for', error);
+            kuzzle.log.error('Fixture import error', error);
           })
         ;
       }
