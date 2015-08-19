@@ -24,6 +24,7 @@ kuzzle:
     - KUZZLE_AMQP_URL=amqp://rabbit:5672
     - KUZZLE_STOMP_URL=stomp://rabbit:61613
     - LIKE_A_VIRGIN
+    - FIXTURES
 
 rabbit:
   image: kuzzleio/rabbitmq
