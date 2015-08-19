@@ -2,7 +2,7 @@
 
 ## Introduction
 
-You can connect your application directly to Kuzzle, using REST.
+You can connect your application directly to Kuzzle using REST.
 
 This will give you a direct access to Kuzzle's router controller, dispatching your queries to the right components, which in turn will send you back a ``response``
 
