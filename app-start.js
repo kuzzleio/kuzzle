@@ -37,19 +37,20 @@ if (process.env.NEW_RELIC_APP_NAME) {
   kuzzle.start(rc('kuzzle'));
 
   var reset = function(callback) {
-    result = kuzzle.services.list.readEngine.reset();
-    if (result) {
-      kuzzle.log.info('=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-');
-      kuzzle.log.info('Reset done: Kuzzle is now like a virgin, touched for the very first time !');
-      kuzzle.log.info('=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-');
-    } else {
-      kuzzle.log.error('=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-');
-      kuzzle.log.error('Oops... something really bad happened during reset...');
-      kuzzle.log.error('=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-');
-    }
-    if (callback) {
-      callback();
-    }
+    kuzzle.services.list.writeEngine.reset()
+      .then(function(){
+        kuzzle.log.info('Reset done: Kuzzle is now like a virgin, touched for the very first time !');
+        if (callback) {
+          callback();
+        }
+      })
+      .catch(function(){
+        kuzzle.log.error('Oops... something really bad happened during reset...');
+        if (callback) {
+          callback();
+        }
+      })
+    ;
   }
 
   // is a reset has been asked and we are launching a server ?
@@ -62,7 +63,6 @@ if (process.env.NEW_RELIC_APP_NAME) {
 
     // implies reset
     reset(function(){
-      kuzzle.log.info('=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-');
       kuzzle.log.info('Reading fixtures file',process.env.FIXTURES);
 
       try {
@@ -86,8 +86,7 @@ if (process.env.NEW_RELIC_APP_NAME) {
           body: fixtures[collection]
         };
 
-        kuzzle.services.list.readEngine.import(new RequestObject(fixture), function(error, response) {
-          console.log('RESPONSE',error, response);
+        kuzzle.services.list.writeEngine.import(new RequestObject(fixture), function(error, response) {
           if (error) {
             kuzzle.log.error('Fixture import error for', error);
           } else {
@@ -97,7 +96,6 @@ if (process.env.NEW_RELIC_APP_NAME) {
 
       }
       kuzzle.log.info('All fixtures imports launched.');
-      kuzzle.log.info('=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-');
     });
   }
 })();
