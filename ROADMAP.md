@@ -3,6 +3,11 @@
 Kuzzle is currently in alpha version, and we are working hard to implement new features for our first beta version, mainly focusing on user-friendliness and production readiness.  
 It won't be a one-time big release, suddenly bringing Kuzzle from alpha to beta. Kuzzle is an agile project, and we plan to implement and improve Kuzzle incrementally, until we feel Kuzzle is worthy of a beta version tag.  
 
+Likewise, the roadmap below is the required features needed to **enter** beta version. After that we'll keep amending this beta version with many more features, until we feel ready to bring Kuzzle to its first stable release.
+
+And after our first stable release, we won't stop there!  
+We have already planned a few neat things for Kuzzle. We already know that we want full scalability, data enrichment through external API, and more.
+
 So stay tuned, as many new functionalities will appear over time!
 
 # What we have planned to do with Kuzzle
@@ -28,8 +33,6 @@ We have a few more ideas still up to debate, so more items might appear in the f
 Here is the list of features we plan to implement to bring Kuzzle's version to beta.
 This list isn't proritized yet, and it may change over time, depending of feedbacks coming from users or from ourselves:
 we follow the [Eat your own dog food](https://en.wikipedia.org/wiki/Eating_your_own_dog_food) principle!
-
-Keep in mind that the list below is the required features needed to **enter** beta version. After that we'll keep amending this beta version with many more features, until we feel ready to bring Kuzzle to its first stable release.
 
 ## SDK
 
