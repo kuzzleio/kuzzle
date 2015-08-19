@@ -6,7 +6,7 @@ It won't be a one-time big release, suddenly bringing Kuzzle from alpha to beta.
 Likewise, the roadmap below is the required features needed to **enter** beta version. After that we'll keep amending this beta version with many more features, until we feel ready to bring Kuzzle to its first stable release.
 
 And after our first stable release, we won't stop there!  
-We have already planned a few neat things for Kuzzle. We already know that we want full scalability, data enrichment through external API, and more.
+We have already planned a few neat things for Kuzzle. For instance, we will make Kuzzle fully scalable, and able to enrich data through external API.
 
 So stay tuned, as many new functionalities will appear over time!
 
