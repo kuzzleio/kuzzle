@@ -10,7 +10,7 @@ This will give you a direct access to Kuzzle's router controller, dispatching yo
 ## Index
 
 * [How to connect to Kuzzle](#how-to-connect-to-kuzzle)
-* [What are responses objects](#what-are-responses-objects)
+* [What are response objects](#what-are-response-objects)
 * [Performing queries](#performing-queries)
   * [Subscribing to documents](#subscribing-to-documents)
     * [Notifications you can receive](#notifications)
@@ -34,7 +34,7 @@ This will give you a direct access to Kuzzle's router controller, dispatching yo
 To establish communication with Kuzzle using WebSockets, simply connect your application to Kuzzle's WebSocket port.
 By default, the router controller listens to the port 7512 for WebSocket applications.
 
-##<a name="what-are-responses-objects"></a> What are ``response`` objects
+##<a name="what-are-response-objects"></a> What are ``response`` objects
 
 A ``response`` is the result of a query you send to Kuzzle. It may be the results of a search query, an acknowledgement of a created action, and so on.  
 And when you subscribe to a room, Kuzzle also sends notifications to your application in the form of a ``response`` object.

@@ -11,7 +11,7 @@ The current implementation of our MQ Broker service uses [RabbitMQ](https://www.
 ## Index
 
 * [How to connect to Kuzzle](#how-to-connect-to-kuzzle)
-* [What are responses objects](#what-are-responses-objects)
+* [What are response objects](#what-are-response-objects)
 * [Performing queries](#performing-queries)
   * [Subscribing to documents](#subscribing-to-documents)
     * [Notifications you can receive](#notifications)
@@ -35,7 +35,7 @@ The current implementation of our MQ Broker service uses [RabbitMQ](https://www.
 To establish communication with Kuzzle using AMQP, simply connect your application to the Kuzzle's AMQP port.
 By default, the MQ Broker listens to the port 5672 for AMQP applications.
 
-##<a name="what-are-responses-objects"></a> What are ``response`` objects
+##<a name="what-are-response-objects"></a> What are ``response`` objects
 
 A ``response`` is the result of a query you send to Kuzzle. It may be the results of a search query, an acknowledgement of a create action, and so on.  
 And when you subscribe to a room, Kuzzle also sends notifications to your application in the form of a ``response`` object.
