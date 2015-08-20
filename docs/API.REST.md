@@ -10,7 +10,7 @@ This will give you a direct access to Kuzzle's router controller, dispatching yo
 If you need such functionalities, please check our other supported protocols. For instance you may easily use REST for your day to day operations, and use our [WebSocket API](./API.WebSocket.md) to manage document subscriptions.
 
 ## Index
-* [What are response objects](#what-are-response-objects) 
+* [What are response objects](#what-are-response-objects)
 * [Performing queries](#performing-queries)
   * [Sending a publish/subscribe message](#sending-a-publish-subscribe-message)
   * [Creating a new document](#creating-a-new-document)
@@ -93,6 +93,18 @@ Simply put, a ``data collection`` is a set of data managed internally by Kuzzle.
 **Method:** ``POST``
 
 **Message:**
+
+You can directly send your document through post data using default parameters (persist: true)
+
+```javascript
+{
+  /*
+  The document itself
+  */
+}
+```
+
+Or instead control the behavior of the document by passing your document in the body field.
 
 ```javascript  
 {
