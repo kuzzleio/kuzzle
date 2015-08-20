@@ -7,7 +7,7 @@ var
 
 module.exports = function () {
   var log = captains();
-  log.info('Starting kuzzle');
+  log.info('Starting Kuzzle');
 
   kuzzle.start(rc('kuzzle'));
 
@@ -16,21 +16,21 @@ module.exports = function () {
 
     // implies reset
     reset(function(){
-      Kuzzle.log.info('Reading fixtures file',process.env.FIXTURES);
+      kuzzle.log.info('Reading fixtures file',process.env.FIXTURES);
 
       try {
         fixtures = JSON.parse(fs.readFileSync(process.env.FIXTURES, 'utf8'));
       } catch(e) {
-        Kuzzle.log.error('An error occured when reading the', process.env.FIXTURES,'file!');
-        Kuzzle.log.error('Remember to put the file into the docker scope...');
-        Kuzzle.log.error('Here is the original error:', e);
+        kuzzle.log.error('An error occured when reading the', process.env.FIXTURES,'file!');
+        kuzzle.log.error('Remember to put the file into the docker scope...');
+        kuzzle.log.error('Here is the original error:', e);
 
         return;
       }
 
       for (collection in fixtures) {
 
-        Kuzzle.log.info('== Importing fixtures for collection', collection, '...');
+        kuzzle.log.info('== Importing fixtures for collection', collection, '...');
 
         fixture = {
           action: 'import',
@@ -39,16 +39,16 @@ module.exports = function () {
           body: fixtures[collection]
         };
 
-        Kuzzle.services.list.writeEngine.import(new RequestObject(fixture))
+        kuzzle.services.list.writeEngine.import(new RequestObject(fixture))
           .then(function(response){
-            Kuzzle.log.info('Fixture import OK', response);
+            kuzzle.log.info('Fixture import OK', response);
           })
           .catch(function(error){
-            kKzzle.log.error('Fixture import error', error);
+            kuzzle.log.error('Fixture import error', error);
           })
         ;
       }
-      Kuzzle.log.info('All fixtures imports launched.');
+      kuzzle.log.info('All fixtures imports launched.');
     });
   }
 };
