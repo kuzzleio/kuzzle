@@ -1,5 +1,5 @@
 var
-  config = require('./config'),
+  config = require('./config')(),
   q = require('q'),
   uuid = require('node-uuid'),
   io = require('socket.io-client');

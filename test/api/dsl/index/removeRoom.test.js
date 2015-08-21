@@ -2,6 +2,7 @@ var
   should = require('should'),
   captainsLog = require('captains-log'),
   RequestObject = require('root-require')('lib/api/core/models/requestObject'),
+  params = require('rc')('kuzzle'),
   Kuzzle = require('root-require')('lib/api/Kuzzle');
 
 describe('Test removeRoom function index.js file from DSL', function () {
@@ -26,7 +27,7 @@ describe('Test removeRoom function index.js file from DSL', function () {
   before(function (callback) {
     kuzzle = new Kuzzle();
     kuzzle.log = new captainsLog({level: 'silent'});
-    kuzzle.start({}, {dummy: true})
+    kuzzle.start(params, {dummy: true})
       .then(function () {
         return kuzzle.hotelClerk.addSubscription(requestObject, {id: 'connectionid'});
       })

@@ -1,6 +1,7 @@
 var
   should = require('should'),
   captainsLog = require('captains-log'),
+  params = require('rc')('kuzzle'),
   Kuzzle = require('root-require')('lib/api/Kuzzle');
 
 describe('Test service initialization function', function () {
@@ -11,7 +12,7 @@ describe('Test service initialization function', function () {
   beforeEach(function () {
     kuzzle = new Kuzzle();
     kuzzle.log = new captainsLog({level: 'silent'});
-    kuzzle.start({}, {dummy: true});
+    kuzzle.start(params, {dummy: true});
   });
 
   it('should build an internal broker service with correct methods', function () {

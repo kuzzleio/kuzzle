@@ -10,21 +10,6 @@ kuzzle:
     - elasticsearch
     - redis
     - logstash
-  environment:
-    - KUZZLE_PORT=7512
-    - IPC_BROKER_HOST=localhost
-    - IPC_BROKER_PORT=7911
-    - MQ_BROKER_HOST=rabbit:5672
-    - READ_ENGINE_HOST=elasticsearch:9200
-    - WRITE_ENGINE_HOST=elasticsearch:9200
-    - NOTIFICATION_CACHE_HOST=redis:6379
-    - LOG_ENGINE_HOST=logstash:7777
-    - PM2_OPTIONS=--watch
-    - KUZZLE_MQTT_URL=mqtt://rabbit:1883
-    - KUZZLE_AMQP_URL=amqp://rabbit:5672
-    - KUZZLE_STOMP_URL=stomp://rabbit:61613
-    - LIKE_A_VIRGIN
-    - FIXTURES
 
 rabbit:
   image: kuzzleio/rabbitmq

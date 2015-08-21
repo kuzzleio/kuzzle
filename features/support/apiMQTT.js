@@ -1,5 +1,5 @@
 var
-  config = require('./config'),
+  config = require('./config')(),
   mqtt = require('mqtt'),
   uuid = require('node-uuid'),
   q = require('q');

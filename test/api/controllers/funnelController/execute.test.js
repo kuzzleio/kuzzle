@@ -2,6 +2,7 @@ var
   should = require('should'),
   captainsLog = require('captains-log'),
   RequestObject = require('root-require')('lib/api/core/models/requestObject'),
+  params = require('rc')('kuzzle'),
   Kuzzle = require('root-require')('lib/api/Kuzzle');
 
 require('should-promised');
@@ -14,7 +15,7 @@ describe('Test execute function in funnel controller', function () {
   beforeEach(function (callback) {
     kuzzle = new Kuzzle();
     kuzzle.log = new captainsLog({level: 'silent'});
-    kuzzle.start({}, {dummy: true}).then(function () {
+    kuzzle.start(params, {dummy: true}).then(function () {
       callback();
     });
   });

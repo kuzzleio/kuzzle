@@ -1,5 +1,5 @@
 var
-  config = require('./config'),
+  config = require('./config')(),
   rp = require('request-promise');
 
 module.exports = {
