@@ -8,6 +8,9 @@ kuzzle:
     - rabbit
     - elasticsearch
     - redis
+  environment:
+    - LIKE_A_VIRGIN
+    - FIXTURES
 
 rabbit:
   image: kuzzleio/rabbitmq

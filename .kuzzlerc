@@ -9,7 +9,8 @@
   // Host and port for mqBroker service that handle communication with protocol like MQTT, STOMP and AMQP
   "mqBroker": {
     "host" : "rabbit",
-    "port": 5672
+    "port": 5672,
+    "enabled": true
   },
   // Host and port for the readEngine service: the database called when we read a data. Can be an array.
   "readEngine": {
