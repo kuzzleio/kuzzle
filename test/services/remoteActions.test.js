@@ -3,7 +3,7 @@ var
   captainsLog = require('captains-log'),
   Kuzzle = require('root-require')('lib/api/Kuzzle');
 
-describe('Testing: Profiling service', function () {
+describe('Testing: Remote Actions service', function () {
   var
     kuzzle;
 
@@ -16,9 +16,8 @@ describe('Testing: Profiling service', function () {
       });
   });
 
-  it('should has init function and actions object', function () {
+  it('should have init function', function () {
     should(kuzzle.services.list.remoteActions.init).be.Function();
-    should(kuzzle.services.list.remoteActions.actions).not.empty().Object();
   });
 
 });
