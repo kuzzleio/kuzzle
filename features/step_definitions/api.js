@@ -20,6 +20,26 @@ var apiSteps = function () {
       });
   });
 
+  /**
+   * Unsubscribes from one of the subscribed rooms
+   */
+  this.Then(/^I unsubscribe/, function (callback) {
+    var rooms = Object.keys(this.api.subscribedRooms);
+
+    if (rooms.length === 0) {
+      callback.fail(new Error('Cannot unsubscribe: no subscribed rooms'));
+      return false;
+    }
+
+    this.api.unsubscribe(rooms[rooms.length - 1])
+      .then(function () {
+        callback();
+      })
+      .catch(function (error) {
+        callback.fail(new Error(error));
+      });
+  });
+
   /** READ **/
   this.Then(/^I'm ?(not)* able to get the document$/, function (not, callback) {
     var main = function (callbackAsync) {

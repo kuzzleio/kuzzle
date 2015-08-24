@@ -16,7 +16,6 @@ describe('Test removeSubscription function in the hotelClerk core module', funct
     badConnection = {id: 'badconnectionid'},
     roomName1 = 'roomName1',
     roomName2 = 'roomName2',
-    requestObject,
     collection = 'user',
     filter1 = {
       term: {
@@ -28,7 +27,6 @@ describe('Test removeSubscription function in the hotelClerk core module', funct
         firstName: ['Ada', 'Grace']
       }
     },
-
     requestObject1 = new RequestObject({
       controller: 'subscribe',
       action: 'on',
