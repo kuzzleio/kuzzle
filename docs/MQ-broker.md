@@ -1,8 +1,8 @@
 # MQ Broker
 
-You can communicate with Kuzzle in AMQP, MQTT and STOMP by enabling MQ Broker. Internally, we use [Rabbit MQ](https://www.rabbitmq.com/) for communicate with external world in these protocols.  
+You can communicate with Kuzzle using AMQP, MQTT or STOMP protocol, by enabling MQ Broker. Internally, we use [Rabbit MQ](https://www.rabbitmq.com/) to communicate with the external world in these protocols.  
 
-## Enable MQ Broker with docker and docker-compose
+## Enabling the MQ Broker with Docker and docker-compose
 
 In order to run a Rabbit container, if you use docker and docker-compose you have to add these lines in your own docker-compose.yml :
 
@@ -16,7 +16,7 @@ rabbit:
     - "15672:15672"
 ```
 
-And add an environment variable and link in main Kuzzle container:
+And add an environment variable and link in the main Kuzzle container:
 
 ```
 kuzzle:
@@ -31,11 +31,11 @@ kuzzle:
     - MQ_BROKER_ENABLED=1
 ```
 
-The file docker-compose-test.yml already contains all dependencies for launch Rabbit, you can have a look for a great example.
+The file ``docker-compose-test.yml`` already contains all the needed dependencies to launch Rabbit, you can have a look for a great example.
 
-## Enable without Docker
+## Enabling the MQ Broker without Docker
 
-You can enable Kuzzle MQ Broker service by set environment variable MQ_BROKER_ENABLED to 1 and by configuring the file `.kuzzlerc` for set your Rabbit host and port:
+You can enable the Kuzzle MQ Broker service by setting  the environment variable ``MQ_BROKER_ENABLED`` to 1, and by configuring the file `.kuzzlerc` to set your Rabbit host and port:
 
 ```json
 [...]
