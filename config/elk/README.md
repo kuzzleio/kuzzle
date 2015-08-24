@@ -35,22 +35,23 @@ Kibana is available to the adress http://localhost:5601
 
 All the configuration process below will be saved in the elasticlogstash index.
 
- * Choose the logstash-* index, (if Kuzzle recive some requests, you must see some logs in the discover pannel)
- * Clic on the green button with a star to use logstash-* as the default index,
- * Go to Settings-> Objects and choose "Dashboards panel".
- * Clic Import button. Choose the file from Kuzzle directory at [/config/elk/kibanadashboard.json](./kibanadashboard.json)
+ * Choose the logstash-* index, (if logstash already received some requests, you must see some logs in the Discover pannel)
+ * Click on the field Time-field-name and choose @timestamp,
+ * Click the create button,
+ * Go to Settings-> Objects and choose "Dashboards panel",
+ * Click Import button. Choose the file from Kuzzle directory at [/config/elk/kibanadashboard.json](./kibanadashboard.json)
 
 The dashboard panel, Searches and Visualizations must be populated.
 You can now go to Dashboard and load the "perf DashBoard".
 
 ##Global perfs DashBoard : navigate into your tests
 
-The "Global Perf Dashboard" is used to navigate into all your tests.
-The first line of the dashboard is used as a control.
-To navigate on your differnts tests, you can filter on the test type, and on the starting date.
+The "Global Perf" DashBoard is used to navigate into all your tests.
+Suppose you launch several tests on several subject, the first line of the dashboard is used as a test selector.
+To navigate on your differents tests, you can filter on the bench type, and on the starting date.
 
- * To do so, first clic on "bench type".
- * clic on "choose the date" to navigate into you test.
+ * To do so, first click on "bench type".
+ * click on "choose the date" to navigate into your test.
 
 
 # FAQ
@@ -106,8 +107,8 @@ You can replace the * by a specific day (example logstash-2015.08.07).
 Every time you add/modify/delete the fields in your log, you must refresh fields list in Kibana
 
  * go to Setting,
- * clic "logstash-*"
- * clic on the orange reload button.
+ * click "logstash-*"
+ * click on the orange reload button.
 
 ### Don't freeze your test :
 
