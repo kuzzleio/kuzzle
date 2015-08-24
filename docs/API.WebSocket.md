@@ -16,7 +16,7 @@ This will give you a direct access to the Kuzzle's router controller, dispatchin
     * [Notifications you can receive](#notifications)
   * [Counting the number of subscriptions on a given room](#counting-the-number-of-subscriptions-on-a-given-room)
   * [Unsubscribing of a room](#unsubscribing-of-a-room)
-  * [Sending a publish/subscribe message](#sending-a-publish-subscribe-message)
+  * [Sending a non persistent message](#sending-a-non-persistent-message)
   * [Creating a new document](#creating-a-new-document)
   * [Retrieving a document](#retrieving-a-document)
   * [Searching for documents](#searching-for-documents)
@@ -283,7 +283,7 @@ Makes Kuzzle remove you from its subscribers on this room.
 
 ---
 
-###<a name="sending-a-publish-subscribe-message"></a> Sending a publish/subscribe message
+###<a name="sending-a-non-persistent-message"></a> Sending a non persistent message
 
 **Message type:** ``write``
 
@@ -294,7 +294,7 @@ Makes Kuzzle remove you from its subscribers on this room.
   action: 'create',
   collection: '<data collection>',
 
-  // Tells Kuzzle to send a pub/sub message
+  // Tells Kuzzle to send a non persistent message
   persist: false,
 
   /*
@@ -306,7 +306,7 @@ Makes Kuzzle remove you from its subscribers on this room.
 }
 ```
 
-**Response:** Kuzzle doesn't send a response when sending publish/subscribe messages.
+**Response:** Kuzzle doesn't send a response when sending non persistent message.
 
 ---
 
