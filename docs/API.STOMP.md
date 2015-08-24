@@ -17,7 +17,7 @@ The current implementation of our MQ Broker service uses [RabbitMQ](https://www.
     * [Notifications you can receive](#notifications)
   * [Counting the number of subscriptions on a given room](#counting-the-number-of-subscriptions-on-a-given-room)
   * [Unsubscribing of a room](#unsubscribing-of-a-room)
-  * [Sending a publish/subscribe message](#sending-a-publish-subscribe-message)
+  * [Sending a non persistent message](#sending-a-non-persistent-message)
   * [Creating a new document](#creating-a-new-document)
   * [Retrieving a document](#retrieving-a-document)
   * [Searching for documents](#searching-for-documents)
@@ -304,7 +304,7 @@ Makes Kuzzle remove you of its subscribers on this room.
 
 ---
 
-###<a name="sending-a-publish-subscribe-message"></a> Sending a publish/subscribe message
+###<a name="sending-a-non-persistent-message"></a> Sending a non persistent message
 
 **Topic:** ``/exchange/amq.topic/write.<data collection>.create``
 
@@ -314,7 +314,7 @@ Makes Kuzzle remove you of its subscribers on this room.
 
 ```javascript
 {
-  // Tells Kuzzle to send a pub/sub message
+  // Tells Kuzzle to send a non persistent message
   persist: false,
 
   /*
@@ -326,7 +326,7 @@ Makes Kuzzle remove you of its subscribers on this room.
 }
 ```
 
-**Response:** Kuzzle doesn't send a response when sending publish/subscribe messages.
+**Response:** Kuzzle doesn't send a response when sending non persistent message.
 
 ---
 
