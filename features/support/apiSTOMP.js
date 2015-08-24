@@ -1,5 +1,5 @@
 var
-  config = require('./config'),
+  config = require('./config')(),
   stomp = require('stomp-client'),
   uuid = require('node-uuid'),
   q = require('q'),

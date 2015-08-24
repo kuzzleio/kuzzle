@@ -9,17 +9,6 @@ kuzzle:
     - elasticsearch
     - redis
   environment:
-    - KUZZLE_PORT=7512
-    - IPC_BROKER_HOST=localhost
-    - IPC_BROKER_PORT=7911
-    - MQ_BROKER_HOST=rabbit:5672
-    - READ_ENGINE_HOST=elasticsearch:9200
-    - WRITE_ENGINE_HOST=elasticsearch:9200
-    - NOTIFICATION_CACHE_HOST=redis:6379
-    - KUZZLE_MQTT_URL=mqtt://rabbit:1883
-    - KUZZLE_AMQP_URL=amqp://rabbit:5672
-    - KUZZLE_STOMP_URL=stomp://rabbit:61613
-    - NEW_RELIC_HOME=config
     - LIKE_A_VIRGIN
     - FIXTURES
 
