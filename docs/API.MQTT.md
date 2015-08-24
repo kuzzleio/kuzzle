@@ -8,6 +8,8 @@ Kuzzle embeds a MQ Broker service layer, supporting a variety of MQ protocols. T
 
 The current implementation of our MQ Broker service uses [RabbitMQ](https://www.rabbitmq.com), with the [RabbitMQ MQTT Adapter](https://www.rabbitmq.com/mqtt.html).
 
+**Note:** Have a look at the file [MQ-broker](MQ-broker.md) for a quick explanation of how to activate this protocol in Kuzzle
+
 ## Index
 
 * [How to connect to Kuzzle](#how-to-connect-to-kuzzle)
