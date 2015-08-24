@@ -16,7 +16,7 @@ This will give you a direct access to the Kuzzle's router controller, dispatchin
     * [Notifications you can receive](#notifications)
   * [Counting the number of subscriptions on a given room](#counting-the-number-of-subscriptions-on-a-given-room)
   * [Unsubscribing of a room](#unsubscribing-of-a-room)
-  * [Sending a publish/subscribe message](#sending-a-publish-subscribe-message)
+  * [Sending a non persistent message](#sending-a-non-persistent-message)
   * [Creating a new document](#creating-a-new-document)
   * [Retrieving a document](#retrieving-a-document)
   * [Searching for documents](#searching-for-documents)
@@ -33,7 +33,7 @@ This will give you a direct access to the Kuzzle's router controller, dispatchin
 To establish communication with Kuzzle using WebSockets, simply connect your application to the Kuzzle's WebSocket port.
 By default, the router controller listens to the port 7512 for WebSocket applications.
 
-##<a name="what-are-responses-objects"></a> What are responses objects
+##<a name="what-are-responses-objects"></a> What are ``response`` objects
 
 A ``response`` is the result of a query you send to Kuzzle. It may be the results of a search query, an acknowledgement of a create action, and so on.  
 And when you subscribe to a room, Kuzzle also sends notifications to your application in the form of a ``response`` object.
@@ -66,6 +66,7 @@ So to get a response from Kuzzle, simply add an unique ``requestId`` field to yo
 This section details every query you can send to Kuzzle, and the ``response`` object Kuzzle will send you back, if any.
 
 Each query you make needs to specify:
+
 * what ``action`` you want to perform,
 * and the ``data collection`` you want to query
 
@@ -88,13 +89,13 @@ Notifications are ``response`` objects.
 
 Of course, you may also subscribe to a ``data collection`` with no other matching criteria, and you'll effectively listen to a 'topic'.
 
-The matching criterias you pass on to Kuzzle follow the [ElasticSearch filter API](https://www.elastic.co/guide/en/elasticsearch/client/java-api/1.3/query-dsl-filters.html)
+The matching criteria you pass on to Kuzzle are [filters](./filters.md).
 
 How subscription works:  
 :arrow_right: You send a subscription query to Kuzzle  
 :arrow_left: Kuzzle responds to you with a room name and a room unique ID  
-:arrow_right: You subscribe to the topic ``mqtt.<room name>``  
-:arrow_left: When a document matches your room criterias, Kuzzle sends you a ``response``
+:arrow_right: You listen to ``requestId`` messages on your websocket
+:arrow_left: When a document matches your room criteria, Kuzzle sends you a ``response``
 
 **Message type:** ``subscribe``
 
@@ -128,14 +129,14 @@ How subscription works:
   error: null,                      // Assuming everything went well
   result: {
     roomId: 'unique Kuzzle room ID',
-    roomName: 'your request ID, or a Kuzzle auto-generated ID'
+    roomName: 'your request ID'
   }
 }
 ```
 
 ####<a name="notifications"></a> Notifications
 
-Once you receive this ``response``, all you have to do is to listen to ``requestId`` messages on your socket to receive notifications.
+Once you receive this ``response``, all you have to do is to listen to ``requestId`` messages on your websocket to receive notifications.
 
 There are 4 types of notifications you can receive:
 
@@ -153,7 +154,6 @@ There are 4 types of notifications you can receive:
     collection: '<data collection>',
     controller: 'write',
     requestId: '<unique request ID>'  // The query ID that updated the document
-    // there is no document source in this notification
   }
 }
 ```
@@ -186,7 +186,7 @@ There are 4 types of notifications you can receive:
     action: 'update',
     collection: '<data collection>',
     controller: 'write',
-    requestId: '<unique request ID>'  // The query that updated the document
+    requestId: '<unique request ID>'  // The query updating the document
     // there is no document source in this notification
   }
 }
@@ -203,7 +203,7 @@ There are 4 types of notifications you can receive:
     action: 'delete',
     collection: '<data collection>',
     controller: 'write',
-    requestId: '<unique request ID>'  // The query that updated the document
+    requestId: '<unique request ID>'  // The query deleting the document
     // there is no document source in this notification
   }
 }
@@ -231,12 +231,8 @@ It works with the room unique ID Kuzzle returns to you when you make a subscript
   */
   requestId: <Unique query ID>,
 
-  /*
-  The document unique identifier. It's the same one that Kuzzle sends you
-  in its responses when you create a document, or when you do a search query.
-  */
   body: {
-    roomId: 'internal Kuzzle room ID'
+    roomId: 'unique Kuzzle room ID'
   }
 }
 ```
@@ -280,14 +276,14 @@ Makes Kuzzle remove you from its subscribers on this room.
   error: null,                        // Assuming everything went well
   result: {
     roomId: 'unique Kuzzle room ID',
-    roomName: 'your request ID, or a Kuzzle auto-generated ID'
+    roomName: 'your room name'
   }
 }
 ```
 
 ---
 
-###<a name="sending-a-publish-subscribe-message"></a> Sending a publish/subscribe message
+###<a name="sending-a-non-persistent-message"></a> Sending a non persistent message
 
 **Message type:** ``write``
 
@@ -298,7 +294,7 @@ Makes Kuzzle remove you from its subscribers on this room.
   action: 'create',
   collection: '<data collection>',
 
-  // Tells Kuzzle to send a pub/sub message
+  // Tells Kuzzle to send a non persistent message
   persist: false,
 
   /*
@@ -310,7 +306,7 @@ Makes Kuzzle remove you from its subscribers on this room.
 }
 ```
 
-**Response:** Kuzzle doesn't send a response when sending publish/subscribe messages.
+**Response:** Kuzzle doesn't send a response when sending non persistent message.
 
 ---
 
@@ -356,8 +352,7 @@ Makes Kuzzle remove you from its subscribers on this room.
     action: 'create',
     controller: 'write',
     /*
-    The requestId field you provided. If you didn't, Kuzzle generates
-    an unique query identifier anyway.
+    The requestId field you provided.
     */
     requestId, '<unique request identifier>'
   }
@@ -407,8 +402,7 @@ Only documents in the persistent data storage layer can be retrieved.
     action: 'get',
     controller: 'read',
     /*
-    The requestId field you provided. If you didn't, Kuzzle generates
-    an unique query identifier anyway.
+    The requestId field you provided.
     */
     requestId, '<unique request identifier>'
   }
@@ -478,8 +472,7 @@ Kuzzle uses the [ElasticSearch Query DSL ](https://www.elastic.co/guide/en/elast
     action: 'search',
     controller: 'read',
     /*
-    The requestId field you provided. If you didn't, Kuzzle generates
-    an unique query identifier anyway.
+    The requestId field you provided.
     */
     requestId, '<unique request identifier>'
   }
@@ -537,8 +530,7 @@ Only documents in the persistent data storage layer can be updated.
     action: 'update',
     controller: 'write',
     /*
-    The requestId field you provided. If you didn't, Kuzzle generates
-    an unique query identifier anyway.
+    The requestId field you provided.
     */
     requestId, '<unique request identifier>'
   }
@@ -595,8 +587,7 @@ Kuzzle uses the [ElasticSearch Query DSL ](https://www.elastic.co/guide/en/elast
     action: 'count',
     controller: 'read',
     /*
-    The requestId field you provided. If you didn't, Kuzzle generates
-    an unique query identifier anyway.
+    The requestId field you provided.
     */
     requestId, '<unique request identifier>'
   }
@@ -648,8 +639,7 @@ Only documents in the persistent data storage layer can be deleted.
     controller: 'write',
 
     /*
-    The requestId field you provided. If you didn't, Kuzzle generates
-    an unique query identifier anyway.
+    The requestId field you provided.
     */
     requestId, '<unique request identifier>'
   }
@@ -710,8 +700,7 @@ Kuzzle uses the [ElasticSearch Query DSL ](https://www.elastic.co/guide/en/elast
     ids: ['id1', 'id2', ..., 'idn'],
 
     /*
-    The requestId field you provided. If you didn't, Kuzzle generates
-    an unique query identifier anyway.
+    The requestId field you provided.
     */
     requestId, '<unique request identifier>'
   }
@@ -757,8 +746,7 @@ This action is handled by the **administration** controller.
     controller: 'admin',
 
     /*
-    The requestId field you provided. If you didn't, Kuzzle generates
-    an unique query identifier anyway.
+    The requestId field you provided.
     */
     requestId, '<unique request identifier>'
   }
@@ -818,8 +806,7 @@ This action is handled by the **administration** controller.
     controller: 'admin',
 
     /*
-    The requestId field you provided. If you didn't, Kuzzle generates
-    an unique query identifier anyway.
+    The requestId field you provided.
     */
     requestId, '<unique request identifier>'
   }
@@ -840,14 +827,10 @@ Get data mapping of a collection previously defined
 {
   action: 'getMapping',
   collection: '<data collection>',
-  /*
-  Optionnal: allow Kuzzle to send a response to your application
-  */
-  clientId: <Unique session ID>,
 
   /*
-  Optionnal: Kuzzle will forward this field in its response, allowing you
-  to easily identify what query generated the response you got.
+  Required: if your query doesn't include a requestId field, Kuzzle will
+  discard it, as it doesn't have any means to provide you with the result
   */
   requestId: <Unique query ID>,
 }
@@ -863,11 +846,11 @@ Get data mapping of a collection previously defined
     action: 'getMapping',
     collection: '<data collection>',
     controller: 'admin',
-    
+
     mainindex: {
       mappings: {
         <data collection>: {
-        
+
           /*
           Data mapping using ElasticSearch mapping syntax
           */
@@ -882,8 +865,7 @@ Get data mapping of a collection previously defined
     },
 
     /*
-    The requestId field you provided. If you didn't, Kuzzle generates
-    an unique query identifier anyway.
+    The requestId field you provided.
     */
     requestId: '<unique request identifier>'
   }
@@ -962,8 +944,7 @@ Bulk import only works on documents in our persistent data storage layer.
     ],
 
     /*
-    The requestId field you provided. If you didn't, Kuzzle generates
-    an unique query identifier anyway.
+    The requestId field you provided..
     */
     requestId, '<unique request identifier>'
   }

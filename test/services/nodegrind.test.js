@@ -1,6 +1,7 @@
 var
   should = require('should'),
   captainsLog = require('captains-log'),
+  params = require('rc')('kuzzle'),
   Kuzzle = require('root-require')('lib/api/Kuzzle');
 
 describe('Testing: Profiling service', function () {
@@ -10,7 +11,7 @@ describe('Testing: Profiling service', function () {
   before(function (done) {
     kuzzle = new Kuzzle();
     kuzzle.log = new captainsLog({level: 'silent'});
-    kuzzle.start({}, {dummy: true})
+    kuzzle.start(params, {dummy: true})
       .then(function () {
         done();
       });

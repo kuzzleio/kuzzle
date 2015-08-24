@@ -1,9 +1,12 @@
 kuzzle:
-  image: kuzzleio/kuzzle
+  image: kuzzleio/kuzzle:dev
+  command: /run-debug.sh
   volumes:
     - ".:/var/app"
   ports:
     - "7512:7512"
+    - "8080:8080"
+    - "8081:8081"
   links:
     - rabbit
     - elasticsearch

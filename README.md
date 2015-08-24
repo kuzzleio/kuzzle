@@ -24,6 +24,20 @@ From Kuzzle's root directory:
 
     $ docker-compose up
 
+### Reset Kuzzle with Docker recipe
+
+If you need to get a fresh start with all persistent data erased, from Kuzzle's root directory:
+
+    $ LIKE_A_VIRGIN=1 docker-compose up
+
+### Reset Kuzzle and insert sorme fixtures with Docker recipe
+
+If you need to get a fresh start with all persistent data erased and populate it with default fixtures, from Kuzzle's root directory:
+
+    $ FIXTURES=path/to/the/fixtures/file.json docker-compose up
+
+Remember that the fixtures must be in the Docker container scope !
+
 ## Using Vagrant
 
 If you are not running Docker on your system, for instance if you are running Windows or MacOs, you can pop a virtual machine to run Kuzzle.
@@ -103,8 +117,11 @@ Your applications can now connect to Kuzzle. We provide a few ways to do this:
 Because functional tests need to be done in a running Kuzzle environment, it is recommended to run these tests from a Kuzzle container.
 
 From a Docker container:
+
+```
     $ docker exec -ti kuzzle_kuzzle_1 bash
     $ npm test
+```
 
 Using a Vagrant virtual machine:
 

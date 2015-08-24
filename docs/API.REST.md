@@ -12,7 +12,7 @@ If you need such functionnalities, please check our other supported protocols. F
 ## Index
 * [What are responses objects](#what-are-responses-objects)
 * [Performing queries](#performing-queries)
-  * [Sending a publish/subscribe message](#sending-a-publish-subscribe-message)
+  * [Sending a non persistent message](#sending-a-non-persistent-message)
   * [Creating a new document](#creating-a-new-document)
   * [Retrieving a document](#retrieving-a-document)
   * [Searching for documents](#searching-for-documents)
@@ -62,7 +62,7 @@ Simply put, a ``data collection`` is a set of data managed internally by Kuzzle.
 
 ---
 
-###<a name="sending-a-publish-subscribe-message"></a> Sending a publish/subscribe message
+###<a name="sending-a-non-persistent-message"></a> Sending a non persistent message
 
 **URL:** ``http://kuzzle:7512/api/<data collection>``
 
@@ -72,7 +72,7 @@ Simply put, a ``data collection`` is a set of data managed internally by Kuzzle.
 
 ```javascript  
 {
-  // Tells Kuzzle to send a pub/sub message
+  // Tells Kuzzle to send a non persistent message
   persist: false,
   
   body: {
@@ -83,7 +83,7 @@ Simply put, a ``data collection`` is a set of data managed internally by Kuzzle.
 }
 ```
 
-**Response:** Kuzzle doesn't send a response when sending publish/subscribe messages.
+**Response:** Kuzzle doesn't send a response when sending non persistent message.
 
 ---
 

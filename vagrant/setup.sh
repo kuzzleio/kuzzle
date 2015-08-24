@@ -1,6 +1,6 @@
 #!/bin/bash
 
-docker info /dev/null 2>&1 || (
+docker info > /dev/null 2>&1 || (
     echo "installing docker"
     curl -sSL https://get.docker.com/ | sh
     systemctl enable docker
