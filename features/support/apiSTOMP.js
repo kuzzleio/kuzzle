@@ -7,7 +7,7 @@ var
 
 module.exports = {
   world: null,
-  stompUrm: undefined,
+  stompUrl: undefined,
   stompClient: undefined,
   stompConnected: undefined,
   clientId: uuid.v1(),
