@@ -16,7 +16,7 @@ class Hash
 end
 
 # Load Vagrant config from YML file :
-vagrantConfig = YAML::load_file( "vagrant.yml" )
+vagrantConfig = YAML::load_file( "vagrant/vagrant.yml" )
 if File.file?('.vagrant/vagrant.yml')
   # Override default vagrant file by locally settings :
   vagrantConfig.recursive_merge(YAML::load_file( ".vagrant/vagrant.yml" ))
