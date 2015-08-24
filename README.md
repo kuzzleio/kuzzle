@@ -117,8 +117,11 @@ Your applications can now connect to Kuzzle. We provide a few ways to do this:
 Because functional tests need to be done in a running Kuzzle environment, it is recommended to run these tests from a Kuzzle container.
 
 From a Docker container:
+
+```
     $ docker exec -ti kuzzle_kuzzle_1 bash
     $ npm test
+```
 
 Using a Vagrant virtual machine:
 
