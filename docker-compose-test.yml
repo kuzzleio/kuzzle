@@ -2,8 +2,6 @@ kuzzle:
   image: kuzzleio/kuzzle
   volumes:
     - ".:/var/app"
-    - ".kuzzlerc-test:/var/app/.kuzzlerc"
-    - "run-test.sh:/run.sh"
   ports:
     - "7512:7512"
   links:
