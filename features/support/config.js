@@ -1,3 +1,8 @@
+/**
+ * This file allow to retrieve configuration easily.
+ * You can change these url in .kuzzlerc file in root folder or you can define environment variable like KUZZLE_URL, KUZZLE_MQTT_URL, KUZZLE_AMQP_URL, KUZZLE_STOMP_URL
+ */
+
 var config = require('rc')('kuzzle');
 
 module.exports = function () {
