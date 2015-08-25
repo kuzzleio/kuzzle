@@ -1,5 +1,5 @@
 kuzzle:
-  image: kuzzleio/kuzzle:dev
+  image: kuzzleio/kuzzle
   command: /run-debug.sh
   volumes:
     - ".:/var/app"

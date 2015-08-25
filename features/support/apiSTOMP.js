@@ -7,6 +7,7 @@ var
 
 module.exports = {
   world: null,
+  stompUrl: undefined,
   stompClient: undefined,
   stompConnected: undefined,
   clientId: uuid.v1(),
@@ -14,12 +15,12 @@ module.exports = {
   responses: null,
 
   init: function (world) {
-    var
-      stompUrl = config.stompUrl.replace('stomp://', '').split(':'),
-      deferredConnection;
+    var deferredConnection;
+
+    this.stompUrl = config.stompUrl.replace('stomp://', '').split(':');
 
     if ( !this.stompClient ) {
-      this.stompClient = new stomp(stompUrl[0], stompUrl[1], 'guest', 'guest', '1.0', '/');
+      this.stompClient = new stomp(this.stompUrl[0], this.stompUrl[1], 'guest', 'guest', '1.0', '/');
 
       deferredConnection = q.defer();
       this.stompConnected = deferredConnection.promise;
@@ -155,9 +156,7 @@ module.exports = {
         clientId: this.subscribedRooms[room].clientId
       };
 
-    if (this.stompClient.subscriptions[this.subscribedRooms[room].topic]) {
-      this.stompClient.unsubscribe(this.subscribedRooms[room].topic);
-    }
+    this.subscribedRooms[room].client.disconnect();
     delete this.subscribedRooms[room];
     return publish.call(this, topic, msg, false);
   },
@@ -220,21 +219,24 @@ var publish = function (topic, message, waitForAnswer) {
 
 var publishAndListen = function (topic, message) {
   var
+    roomClient = new stomp(this.stompUrl[0], this.stompUrl[1], 'guest', 'guest', '1.0', '/'),
     deferred = q.defer();
 
   message.clientId = uuid.v1();
 
   publish.call(this, topic, message)
     .then(function (response) {
-      var topic = '/topic/' + response.result.roomId;
+      roomClient.connect(function () {
+        var topic = '/topic/' + response.result.roomId;
 
-      this.subscribedRooms[response.result.roomName] = { roomId: response.result.roomId, topic: topic, clientId: message.clientId };
+        this.subscribedRooms[response.result.roomName] = { roomId: response.result.roomId, client: roomClient, clientId: message.clientId };
 
-      this.stompClient.subscribe(topic, function (body) {
-        this.responses = JSON.parse(body);
+        roomClient.subscribe(topic, function (body) {
+          this.responses = JSON.parse(body);
+        }.bind(this));
+
+        deferred.resolve(response);
       }.bind(this));
-
-      deferred.resolve(response);
     }.bind(this))
     .catch(function (error) {
       deferred.reject(error);
