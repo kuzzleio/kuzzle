@@ -19,19 +19,19 @@ A Service can be added to different engines. As an exemple, Elasticsearch is use
 
 The main purpose for those subjects is to detect latency and problem in Kuzzle. In many cases, you don't have to enable them if you're not a contributor.
 
-## logger.js
+## perf.js
 
-The Logger is an interface to Logstash that we used to monitor the Kuzzle state.
+The perf service is an interface to Logstash that we used to monitor the Kuzzle state.
 As an exemple if we want to log each data creation for analysis purpose, you just have to call:
 
 ```
-  kuzzle.emit('data:create', data);
+  kuzzle.emit('write:rest:start', data);
 ```
 
 and add in the [hooks](../../lib/config/hooks.js) the entry:
 
 ```
-  'data:create': ['log:log']
+  'write:rest:start': ['perf:log']
 ```
 
 Every call to emit will add an entry to the logstash server.
