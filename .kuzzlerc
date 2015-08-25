@@ -7,10 +7,10 @@
     "port": 7911
   },
   // Host and port for mqBroker service that handle communication with protocol like MQTT, STOMP and AMQP
+  // Only make sense if environment variable MQ_BROKER_ENABLED is set to 1
   "mqBroker": {
     "host" : "rabbit",
-    "port": 5672,
-    "enabled": true
+    "port": 5672
   },
   // Host and port for the readEngine service: the database called when we read a data. Can be an array.
   "readEngine": {
