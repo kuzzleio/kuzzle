@@ -38,6 +38,14 @@ If you need to get a fresh start with all persistent data erased and populate it
 
 Remember that the fixtures must be in the Docker container scope !
 
+### Initialize Kuzzle mapping with Docker recipe
+
+If you need to add a default mapping on Kuzzle start, from Kuzzle's root directory:
+
+    $ DEFAULT_MAPPING=path/to/the/mapping/file.json docker-compose up
+
+Remember that the default mapping must be in the Docker container scope !
+
 ## Using Vagrant
 
 If you are not running Docker on your system, for instance if you are running Windows or MacOs, you can pop a virtual machine to run Kuzzle.
