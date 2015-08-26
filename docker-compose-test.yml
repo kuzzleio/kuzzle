@@ -1,5 +1,6 @@
 kuzzle:
   image: kuzzleio/kuzzle
+  command: /run-test.sh
   volumes:
     - ".:/var/app"
   ports:
