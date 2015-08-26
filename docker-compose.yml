@@ -10,6 +10,7 @@ kuzzle:
   environment:
     - LIKE_A_VIRGIN
     - FIXTURES
+    - DEFAULT_MAPPING
 
 redis:
   image: redis:3.0.2
