@@ -23,7 +23,7 @@ Prerequisites:
 From Kuzzle's root directory:
 
     $ docker-compose up
-    
+
 ## Using Vagrant
 
 If you are not running Docker on your system, for instance if you are running Windows or MacOs, you can pop a virtual machine to run Kuzzle.
