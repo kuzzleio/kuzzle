@@ -17,6 +17,9 @@ describe('Test kuzzle constructor', function () {
     should(kuzzle.workers).be.an.Object();
 
     should(kuzzle.start).be.a.Function();
+    should(kuzzle.enable).be.a.Function();
+    should(kuzzle.cleanDb).be.a.Function();
+    should(kuzzle.prepareDb).be.a.Function();
   });
 
   it('should construct a kuzzle object with emit and listen event', function (done) {
