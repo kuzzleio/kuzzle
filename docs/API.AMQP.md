@@ -227,6 +227,7 @@ There are 4 types of notifications you can receive:
   error: null,                        // Assuming everything went well
   result: {
     roomId: 'unique Kuzzle room ID',
+    roomName: 'the new user room ID',
     controller: 'subscribe',
     action: 'on',
     count: <the new user count on that room>,
@@ -240,6 +241,7 @@ There are 4 types of notifications you can receive:
   error: null,                        // Assuming everything went well
   result: {
     roomId: 'unique Kuzzle room ID',
+    roomName: 'the exiting user room ID', 
     controller: 'subscribe',
     action: 'off',
     count: <the new user count on that room>,
