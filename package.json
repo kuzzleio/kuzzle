@@ -8,9 +8,9 @@
     "kuzzle": "./bin/kuzzle.js"
   },
   "scripts": {
-    "test": "npm run unit-testing && npm run functional-testing",
-    "unit-testing": "mocha",
     "functional-testing": "cucumber.js"
+    "test": "npm run unit-testing --coverage && npm run functional-testing",
+    "unit-testing": "istanbul test _mocha",
   },
   "directories": {
     "lib": "lib"
@@ -51,6 +51,7 @@
     "should": "~7.0.2",
     "should-promised": "~0.3.0",
     "cucumber": "~0.4.9",
+    "istanbul": "^0.3.18",
     "socket.io-client": "~1.3.5",
     "mqtt": ">=1.3.3",
     "stomp-client": "^0.8.0"
