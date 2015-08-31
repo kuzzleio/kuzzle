@@ -59,7 +59,7 @@ describe('Test removeCustomerFromAllRooms function in the hotelClerk core module
   });
 
   it('should clean up customers, rooms and filtersTree object', function () {
-    return kuzzle.hotelClerk.removeCustomerFromAllRooms(connection.id)
+    return kuzzle.hotelClerk.removeCustomerFromAllRooms(connection)
       .then(function () {
         should(kuzzle.dsl.filtersTree).be.an.Object();
         should(kuzzle.dsl.filtersTree).be.empty();
