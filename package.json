@@ -12,7 +12,7 @@
     "unit-testing": "istanbul test _mocha",
     "functional-testing": "npm run cucumber && npm run crawl-coverage",
     "cucumber": "cucumber.js",
-    "crawl-coverage": "wget --mirror --convert-links --backup-converted -nH --directory-prefix=coverage/features --cut-dirs=1 --adjust-extension http://localhost:7512/coverage > /dev/null 2>&1"
+    "crawl-coverage": "node coverage/scripts/feature-coverage-download.js"
   },
   "directories": {
     "lib": "lib"
