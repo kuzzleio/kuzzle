@@ -30,3 +30,7 @@ python --version > /dev/null 2>&1 || (
     echo "installing python"
     apt-get install python
 )
+
+# Disable cadvisor docker
+systemctl disable cadvisor
+systemctl stop cadvisor
