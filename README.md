@@ -7,7 +7,14 @@ For UI and linked objects developers, Kuzzle is an open-source solution that han
 
 Kuzzle features are accessible through a secured API. It can be used through a large choice of protocols such as REST, Websocket or Message Queuing protocols.
 
-Kuzzle uses [Elasticsearch filter DSL](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-filters.html) (see [filters syntax](docs/filters.md) for more details) as filtering language, [RabbitMQ](https://www.rabbitmq.com/) for managing queues and [Redis](http://redis.io/) for managing filter cache.
+Kuzzle uses [Elasticsearch filter DSL](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-filters.html) (see [filters syntax](docs/filters.md) for more details) as filtering language, [RabbitMQ](https://www.rabbitmq.com/) to manage queues and [Redis](http://redis.io/) to manage filters cache.
+
+# Project status
+
+Kuzzle is currently in Alpha stage of development.
+
+We have a pretty clear idea of what we want to implement to bring Kuzzle to a Beta version.  
+Check our [roadmap](./ROADMAP.md) if you wish to know more about it.
 
 # Installation
 
@@ -36,7 +43,7 @@ Prerequisites:
 From the root directory:
 
     $ vagrant up
-    
+
 ## Advanced installation
 
 Take a look at the [installation](docs/installation.md) file for more installation ways. (Manual installation, add fixture, database reset and more)

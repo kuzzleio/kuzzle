@@ -23,6 +23,12 @@ if (process.env.NEW_RELIC_APP_NAME) {
   require('newrelic');
 }
 
+if (process.env.FEATURE_COVERAGE == 1) {
+  var coverage = require('istanbul-middleware');
+  console.log('Hook loader for coverage - ensure this is not production!');
+  coverage.hookLoader(__dirname+'/lib');
+}
+
 (function () {
   var
     kuzzle = require('./lib'),

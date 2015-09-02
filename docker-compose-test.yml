@@ -13,6 +13,7 @@ kuzzle:
     - LIKE_A_VIRGIN
     - FIXTURES
     - MQ_BROKER_ENABLED=1
+    - FEATURE_COVERAGE=1
 
 rabbit:
   image: kuzzleio/rabbitmq
