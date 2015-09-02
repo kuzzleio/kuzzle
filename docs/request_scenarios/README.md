@@ -16,4 +16,4 @@ These following scenarios explain the message flow between Kuzzle components.
 ## Related pages
 
 * [Architecture overview](../architecture.md)
-* [API Specifications](../api-specifications.md)
+* [API Specifications](../README.md)
