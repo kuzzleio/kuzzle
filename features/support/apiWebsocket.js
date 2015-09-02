@@ -1,5 +1,5 @@
 var
-  config = require('./config'),
+  config = require('./config')(),
   q = require('q'),
   uuid = require('node-uuid'),
   io = require('socket.io-client');
@@ -156,7 +156,7 @@ module.exports = {
         requestId: room
       };
 
-    this.socket.off(this.subscribedRooms[room]);
+    this.socket.removeListener(this.subscribedRooms[room], this.subscribedRooms[room].listener);
     delete this.subscribedRooms[room];
     return emit.call(this, 'subscribe', msg, false);
   },
@@ -167,7 +167,7 @@ module.exports = {
       msg = {
         action: 'count',
         body: {
-          roomId: this.subscribedRooms[rooms[0]]
+          roomId: this.subscribedRooms[rooms[0]].roomId
         }
       };
 
@@ -212,17 +212,17 @@ var emitAndListen = function (controller, msg) {
   }
 
   this.socket.once(msg.requestId, function (response) {
+    var listener = function (document) {
+      this.responses = document;
+    };
+
     if (response.error) {
       deferred.reject(response.error);
       return false;
     }
 
-    this.subscribedRooms[response.result.roomName] = response.result.roomId;
-
-    this.socket.on(response.result.roomId, function (document) {
-      this.responses = document;
-    }.bind(this));
-
+    this.subscribedRooms[response.result.roomName] = { roomId: response.result.roomId, listener: listener };
+    this.socket.on(response.result.roomId, listener.bind(this));
     deferred.resolve(response);
   }.bind(this));
 

@@ -3,12 +3,12 @@
 var
   captains = require('captains-log'),
   rc = require('rc'),
-  Kuzzle = require('../lib');
+  kuzzle = require('../lib');
 
 
 module.exports = function () {
   var log = captains();
   log.info('Starting Kuzzle in PERFORMANCES TESTING mode');
 
-  Kuzzle.perf(rc('kuzzle'));
+  kuzzle.perf(rc('kuzzle'));
 };

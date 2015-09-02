@@ -1,0 +1,30 @@
+{
+  // Kuzzle server listening port
+  "port": 7512,
+  // Host and port for ipBroker service that handle internal communication
+  "ipcBroker": {
+    "host": "localhost",
+    "port": 7911
+  },
+  // Host and port for mqBroker service that handle communication with protocol like MQTT, STOMP and AMQP
+  // Only make sense if environment variable MQ_BROKER_ENABLED is set to 1
+  "mqBroker": {
+    "host" : "rabbit",
+    "port": 5672
+  },
+  // Host and port for the readEngine service: the database called when we read a data. Can be an array.
+  "readEngine": {
+    "host": "elasticsearch",
+    "port": "9200"
+  },
+  // Host and port for the writeEngine service: the database called when we write a data. Can be an array.
+  "writeEngine": {
+    "host": "elasticsearch",
+    "port": "9200"
+  },
+  // Host and port for notificationCache service that handle cache for store which user we have to notify
+  "notificationCache": {
+    "host": "redis",
+    "port": 6379
+  }
+}

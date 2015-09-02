@@ -19,19 +19,19 @@ A Service can be added to different engines. For example, Elasticsearch is used 
 
 The main purpose for those subjects is to detect latency and problems in Kuzzle. In many cases, you don't have to enable them if you're not a contributor.
 
-## logger.js
+## perf.js
 
-Logger is an interface to Logstash that we used to monitor Kuzzle state.
-For example if we want to log each data creation for analysis purposes, you just have to call:
+The perf service is an interface to Logstash that we used to monitor the Kuzzle state.
+As an exemple if we want to log each data creation for analysis purpose, you just have to call:
 
 ```
-  kuzzle.emit('data:create', data);
+  kuzzle.emit('write:rest:start', data);
 ```
 
 and add to the [hooks](../../lib/config/hooks.js) the entry:
 
 ```
-  'data:create': ['log:log']
+  'write:rest:start': ['perf:log']
 ```
 
 Every call to emit will add an entry to the logstash server.
@@ -76,7 +76,7 @@ Two profiling files are generated because workers and the main server are not ru
 * You don't have to reload Kuzzle when you enable/disable profiling.
 * If you're not using the Docker version, you have to install [Nodegrind](https://www.npmjs.com/package/nodegrind) because it must be installed globally with `npm install -g nodegrind@0.4.0`
 * **Don't** use the profiling during benchmark: for each request made, a minimum of two files will be created.
-* Avoid to mix different controllers if you don't want to aggregate the results. It doesn't make sense to send profiling on controller `write` and `read`. 
+* Avoid to mix different controllers if you don't want to aggregate the results. It doesn't make sense to send profiling on controller `write` and `read`.
 
 
 ## Monitoring

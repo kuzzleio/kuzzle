@@ -8,9 +8,11 @@
     "kuzzle": "./bin/kuzzle.js"
   },
   "scripts": {
-    "test": "npm run unit-testing && npm run functional-testing",
-    "unit-testing": "mocha",
-    "functional-testing": "cucumber.js"
+    "test": "npm run unit-testing --coverage && npm run functional-testing",
+    "unit-testing": "istanbul test _mocha",
+    "functional-testing": "npm run cucumber && npm run crawl-coverage",
+    "cucumber": "cucumber.js",
+    "crawl-coverage": "node coverage/scripts/feature-coverage-download.js"
   },
   "directories": {
     "lib": "lib"
@@ -20,36 +22,39 @@
     "async": "0.9.0",
     "big.js": "3.0.2",
     "body-parser": "1.12.2",
+    "bunyan": "^1.4.0",
     "captains-log": "0.11.11",
     "commander": "2.1.0",
     "elasticsearch": "5.0.0",
     "finalhandler": "0.3.4",
     "geolib": "2.0.14",
     "json-stable-stringify": "1.0.0",
+    "lodash": "3.6.0",
     "newrelic": "1.21.1",
+    "ngeohash": "0.6.0",
     "node-uuid": "1.4.3",
     "nodegrind": "0.4.0",
-    "lodash": "3.6.0",
-    "ngeohash": "0.6.0",
-    "node-ipc": "1.1.13",
     "q": "1.2.0",
     "rc": "1.0.1",
     "redis": "0.12.1",
     "request-promise": "0.4.2",
     "router": "1.0.0",
-    "socket.io": "1.3.5"
+    "socket.io": "1.3.5",
+    "ws": "^0.7.2"
   },
   "repository": {
     "type": "git",
     "url": "git://github.com/kuzzleio/kuzzle.git"
   },
   "devDependencies": {
-    "rewire":"~2.3.4",
+    "rewire": "~2.3.4",
     "root-require": "~0.3.1",
     "mocha": "~2.2.1",
     "should": "~7.0.2",
     "should-promised": "~0.3.0",
     "cucumber": "~0.4.9",
+    "istanbul": "^0.3.18",
+    "istanbul-middleware": "0.2.0",
     "socket.io-client": "~1.3.5",
     "mqtt": ">=1.3.3",
     "stomp-client": "^0.8.0"
@@ -58,5 +63,5 @@
     "node": ">= 0.10.0",
     "npm": ">= 1.3.0"
   },
-  "license": "Apache 2.0"
+  "license": "Apache-2.0"
 }

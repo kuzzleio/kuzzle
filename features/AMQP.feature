@@ -103,3 +103,11 @@ Feature: Test AMQP API
     Given A room subscription listening to "lastName" having value "Hopper"
     Given A room subscription listening to "lastName" having value "Hopper"
     Then I can count "2" subscription
+
+  @usingAMQP @unsubscribe
+  Scenario: Subscription notifications
+    Given A room subscription listening to "lastName" having value "Hopper"
+    Given A room subscription listening to "lastName" having value "Hopper"
+    Then I should receive a "on" notification
+    Then I unsubscribe
+    And I should receive a "off" notification

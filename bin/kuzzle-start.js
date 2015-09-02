@@ -2,12 +2,21 @@
 var
   captains = require('captains-log'),
   rc = require('rc'),
-  Kuzzle = require('../lib');
+  kuzzle = require('../lib');
 
 
 module.exports = function () {
   var log = captains();
   log.info('Starting Kuzzle');
 
-  Kuzzle.start(rc('kuzzle'));
+  kuzzle.start(rc('kuzzle'))
+    .then(function () {
+      return kuzzle.cleanDb();
+    })
+    .then(function () {
+      return kuzzle.prepareDb();
+    })
+    .catch(function (error) {
+      kuzzle.log.error(error);
+    });
 };

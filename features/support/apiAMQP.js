@@ -1,5 +1,5 @@
 var
-  config = require('./config'),
+  config = require('./config')(),
   amqp = require('amqplib'),
   q = require('q'),
   uuid = require('node-uuid'),

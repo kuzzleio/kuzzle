@@ -19,3 +19,22 @@ We use most of the [NPM Coding Style](https://docs.npmjs.com/misc/coding-style) 
 * If you plan to add new features to Kuzzle, make sure that this is for a general improvement to benefit a majority of Kuzzle users. If not, consider making an add-on instead (like a new Kuzzle service for instance).
 * Follow the [KISS Principle](https://en.wikipedia.org/wiki/KISS_principle)
 * Follow [The Boy Scout Rule](http://programmer.97things.oreilly.com/wiki/index.php/The_Boy_Scout_Rule)
+
+## Tools
+For development only, we built a specific docker-compose file: `docker-compose-debug.yml`. You can use it to profile, debug, test a variable on the fly, add breakpoints and so on, thanks to [Node Inspector](https://github.com/node-inspector/node-inspector).  
+
+Run the stack with:
+
+```
+docker-compose -f docker-compose-debug.yml up
+```
+
+You can now access to:
+
+* http://localhost:7512/api for standard Kuzzle API
+* http://127.0.0.1:8080/debug?port=7000 to debug the server
+* http://127.0.0.1:8081/debug?port=7001 to debug the worker
+
+**Note:** Because we have two different process for server and worker, you have to debug these two applications by accessing two URL (with port 8080 and port 8081).  
+  
+Every times a modification is detected by [PM2](https://github.com/Unitech/pm2), the server is restarted and the debugger page is automatically refreshed with the code up to date and with previous placed breakpoints.

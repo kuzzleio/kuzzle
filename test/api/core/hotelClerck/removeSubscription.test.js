@@ -2,6 +2,7 @@ var
   should = require('should'),
   captainsLog = require('captains-log'),
   RequestObject = require('root-require')('lib/api/core/models/requestObject'),
+  params = require('rc')('kuzzle'),
   Kuzzle = require('root-require')('lib/api/Kuzzle');
 
 require('should-promised');
@@ -15,7 +16,6 @@ describe('Test removeSubscription function in the hotelClerk core module', funct
     badConnection = {id: 'badconnectionid'},
     roomName1 = 'roomName1',
     roomName2 = 'roomName2',
-    requestObject,
     collection = 'user',
     filter1 = {
       term: {
@@ -27,7 +27,6 @@ describe('Test removeSubscription function in the hotelClerk core module', funct
         firstName: ['Ada', 'Grace']
       }
     },
-
     requestObject1 = new RequestObject({
       controller: 'subscribe',
       action: 'on',
@@ -47,7 +46,7 @@ describe('Test removeSubscription function in the hotelClerk core module', funct
   beforeEach(function (callback) {
     kuzzle = new Kuzzle();
     kuzzle.log = new captainsLog({level: 'silent'});
-    kuzzle.start({}, {dummy: true})
+    kuzzle.start(params, {dummy: true})
       .then(function () {
         return kuzzle.hotelClerk.addSubscription(requestObject1, connection);
       })

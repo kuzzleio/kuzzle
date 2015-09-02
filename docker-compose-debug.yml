@@ -1,0 +1,32 @@
+kuzzle:
+  image: kuzzleio/kuzzle
+  command: /run-debug.sh
+  volumes:
+    - ".:/var/app"
+  ports:
+    - "7512:7512"
+    - "8080:8080"
+    - "8081:8081"
+  links:
+    - rabbit
+    - elasticsearch
+    - redis
+  environment:
+    - MQ_BROKER_ENABLED
+    - LIKE_A_VIRGIN
+    - FIXTURES
+    - FEATURE_COVERAGE
+
+rabbit:
+  image: kuzzleio/rabbitmq
+  ports:
+    - "61613:61613"
+    - "1883:1883"
+    - "5672:5672"
+    - "15672:15672"
+
+redis:
+  image: redis:3.0.2
+
+elasticsearch:
+  image: elasticsearch:1.5.2
