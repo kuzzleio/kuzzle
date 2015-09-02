@@ -11,6 +11,7 @@ kuzzle:
     - LIKE_A_VIRGIN
     - FIXTURES
     - DEFAULT_MAPPING
+    - FEATURE_COVERAGE
 
 redis:
   image: redis:3.0.2
