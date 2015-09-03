@@ -84,7 +84,7 @@ Simply put, a ``data collection`` is a set of data managed internally by Kuzzle.
 
 ### <a name="subscribing-to-documents"></a> Subscribing to documents
 
-Subscription doesn't work the same way in Kuzzle than with a regular publish/subscribe protocol.  <!--Pour plus de clarté suggestion de mettre "Subscription works differently in Kuzzle than with..."-->
+Subscription works differently in Kuzzle than with a regular publish/subscribe protocol.  
 In Kuzzle, you don't exactly subscribe to a room or to a topic but, instead, you subscribe to documents.
 
 What it means is that, along with your subscription query, you also give to Kuzzle a set of matching criteria.  
@@ -92,7 +92,6 @@ Once you have subscribed to a room, if a pub/sub message is published matching y
 Notifications are ``response`` objects.
 
 Of course, you may also subscribe to a ``data collection`` with no other matching criteria, and you'll effectively listen to a 'topic'.
-<!-- Pourquoi avoir marqué "listen to a topic" ce sont des documents audio ?-->
 
 The matching criteria you pass on to Kuzzle are [filters](./filters.md).
 
@@ -115,7 +114,7 @@ How subscription works:
   /*
   Required. If your query doesn't include a requestId field, Kuzzle
   will discard your query, because it doesn't have any means to send you
-  the resulting room ID. <!--Est-ce que "resulting room" est un terme consacré et quelle est sa signification ?-->
+  the resulting room ID.
   */
   clientId: <Unique connection ID>,
 
