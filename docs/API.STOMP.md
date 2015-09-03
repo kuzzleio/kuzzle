@@ -18,7 +18,7 @@ The current implementation of our MQ Broker service uses [RabbitMQ](https://www.
   * [Subscribing to documents](#subscribing-to-documents)
     * [Notifications you can receive](#notifications)
   * [Counting the number of subscriptions on a given room](#counting-the-number-of-subscriptions-on-a-given-room)
-  * [Unsubscribing of a room](#unsubscribing-of-a-room)
+  * [Unsubscribing to a room](#unsubscribing-to-a-room)
   * [Sending a non persistent message](#sending-a-non-persistent-message)
   * [Creating a new document](#creating-a-new-document)
   * [Retrieving a document](#retrieving-a-document)
@@ -296,7 +296,7 @@ It works with the room unique ID Kuzzle returns to you when you make a subscript
 
 ---
 
-### <a name="unsubscribing-of-a-room"></a> Unsubscribing of a room
+### <a name="unsubscribing-to-a-room"></a> Unsubscribing to a room
 
 Makes Kuzzle remove you of its subscribers on this room.
 
