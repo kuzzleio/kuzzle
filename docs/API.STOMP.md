@@ -85,7 +85,7 @@ Simply put, a ``data collection`` is a set of data managed internally by Kuzzle.
 
 ### <a name="subscribing-to-documents"></a> Subscribing to documents
 
-Subscription doesn't work the same way in Kuzzle than with a regular publish/subscribe protocol.  
+Subscription works differently in Kuzzle than with a regular publish/subscribe protocol.  
 In Kuzzle, you don't exactly subscribe to a room or a topic but, instead, you subscribe to documents.
 
 What it means is that, along with your subscription query, you also give to Kuzzle a set of matching criteria.  
