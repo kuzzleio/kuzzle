@@ -8,7 +8,7 @@ Kuzzle embeds a MQ Broker service layer supporting a variety of MQ protocols. Th
 
 The current implementation of our MQ Broker service uses [RabbitMQ](https://www.rabbitmq.com).
 
-**Note:** Have a look at the file [MQ-broker](MQ-broker.md) for a quick explanation of how to activate this protocol in Kuzzle
+**Note:** Have a look at the file [MQ-broker](MQ-broker.md) for a quick explanation on how to activate this protocol in Kuzzle
 
 ## Index
 
@@ -495,7 +495,7 @@ Kuzzle uses the [ElasticSearch Query DSL ](https://www.elastic.co/guide/en/elast
   clientId: <Unique session ID>,
 
   /*
-  Optionnal: Kuzzle will forward this field in its response, allowing you
+  Optional: Kuzzle will forward this field in its response, allowing you
   to easily identify which query generated the response you got.
   */
   requestId: <Unique query ID>,
@@ -683,7 +683,7 @@ Only documents in the persistent data storage layer can be deleted.
 ```javascript
 {
   /*
-  Optionnal
+  Optional
   */
   clientId: <Unique session ID>,
 
@@ -695,7 +695,7 @@ Only documents in the persistent data storage layer can be deleted.
 
   /*
   The document unique identifier. It's the same one that Kuzzle sends you
-  in its responses when you create a document, or when you do a search query.
+  in its response when you create a document, or when you do a search query.
   */
   _id: '<document ID>'
 }
