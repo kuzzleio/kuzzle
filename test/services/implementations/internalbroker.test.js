@@ -1,6 +1,5 @@
 var
   should = require('should'),
-  q = require('q'),
   captainsLog = require('captains-log'),
   rewire = require('rewire'),
   internalbroker = rewire('../../../lib/services/internalbroker'),
