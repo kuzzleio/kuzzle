@@ -5,4 +5,5 @@ Every configuration for Kuzzle.
 
 # Performance/stress tests
 
-The <b>perf</b> directory contains configuration of the performance test process for Kuzzle.
+The <b>perf</b> directory contains configuration of the [performance testing process](./perf/README.md) for Kuzzle.
+
