@@ -35,7 +35,7 @@ logstash:
   links:
     - elasticlogstash:elasticsearch
   volumes:
-    - ./config/elk/logstash.conf:/config-dir/logstash.conf
+    - ./config/perf/logstash.conf:/config-dir/logstash.conf
   volumes_from:
     - kuzzle
   command: logstash -f /config-dir/logstash.conf
