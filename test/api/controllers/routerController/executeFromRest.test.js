@@ -18,7 +18,6 @@ require('should-promised');
 describe('Test: routerController.executeFromRest', function () {
 	var
 		kuzzle,
-		router,
 		mockupResponse = {
       ended: false,
 			statusCode: 0,

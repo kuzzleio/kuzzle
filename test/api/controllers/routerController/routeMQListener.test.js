@@ -148,7 +148,7 @@ describe('Test: routerController.routeMQListener', function () {
 			listener = kuzzle.services.list.mqBroker.listeners['write.*.*'].callback,
 			errorMessage = '';
 
-		kuzzle.log.error = function (error) { errorMessage = error; }
+		kuzzle.log.error = function (error) { errorMessage = error; };
 		notifyStatus = '';
 		mqMessage.content = 'foobar';
 
@@ -167,7 +167,7 @@ describe('Test: routerController.routeMQListener', function () {
 
 	it('should notify with an error object in case of rejection', function (done) {
 		var
-			eventReceived = false;
+			eventReceived = false,
 			listener = kuzzle.services.list.mqBroker.listeners['write.*.*'].callback,
 			body = { body: { resolve: false }, clientId: 'foobar'};
 

@@ -66,7 +66,7 @@ describe('Test: write controller', function () {
 			return Promise.resolve(mockupRooms);
 		};
 
-		kuzzle.notifier.notify = function (rooms, req) {
+		kuzzle.notifier.notify = function (rooms) {
 			try {
 				should(rooms).be.exactly(mockupRooms);
 				done();
@@ -87,7 +87,7 @@ describe('Test: write controller', function () {
 			requestObject = new RequestObject({body: {foo: 'bar'}, persist: true}, {}, 'unit-test'),
 			created;
 
-		kuzzle.notifier.notify = function (rooms, req) {
+		kuzzle.notifier.notify = function () {
 			done(new Error('notifications incorrectly sent'));
 		};
 

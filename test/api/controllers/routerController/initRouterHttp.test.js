@@ -22,7 +22,7 @@ require('should-promised');
  */
 function parseHttpResponse(response) {
   var
-    deferred = q.defer();
+    deferred = q.defer(),
     data = '';
 
   response.on('data', function (chunk) {
@@ -136,8 +136,6 @@ describe('Test: routerController.initRouterHttp', function () {
   });
 
   it('should create a route for document retrieving', function (done) {
-    var request;
-
     http.get('http://' + options.hostname + ':' + options.port + '/api/collection/documentID', function (response) {
       parseHttpResponse(response)
         .then(function (result) {
