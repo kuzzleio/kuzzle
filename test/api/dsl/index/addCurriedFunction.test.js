@@ -27,15 +27,15 @@ describe('Test addCurriedFunction function index.js file from DSL', function () 
 
 
   it('should return an error when the filter is undefined', function () {
-    return should(dsl.addCurriedFunction(roomId, collection, undefined)).be.rejected;
+    return should(dsl.addCurriedFunction(roomId, collection, undefined)).be.rejected();
   });
 
   it('should return an error when the filter doesn\'t exist', function () {
-    return should(dsl.addCurriedFunction(roomId, collection, fakeFilter)).be.rejected;
+    return should(dsl.addCurriedFunction(roomId, collection, fakeFilter)).be.rejected();
   });
 
   it('should resolve a promise when the filter exists', function () {
-    return should(dsl.addCurriedFunction(roomId, collection, filter)).not.be.rejected;
+    return should(dsl.addCurriedFunction(roomId, collection, filter)).not.be.rejected();
   });
 
 });

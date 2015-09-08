@@ -128,6 +128,16 @@ module.exports = {
     return publish.call(this, topic, msg);
   },
 
+  globalBulkImport: function (bulk) {
+    var
+      topic = ['bulk', '', 'import'].join('.'),
+      msg = {
+        body: bulk
+      };
+
+    return publish.call(this, topic, msg);
+  },
+
   subscribe: function (filters) {
     var
       topic = ['subscribe', this.world.fakeCollection, 'on'].join('.'),

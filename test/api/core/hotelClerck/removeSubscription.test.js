@@ -57,7 +57,7 @@ describe('Test removeSubscription function in the hotelClerk core module', funct
   });
 
   it('should do nothing when a bad connectionId is given', function () {
-    return should(kuzzle.hotelClerk.removeSubscription(requestObject1, badConnection)).be.rejected;
+    return should(kuzzle.hotelClerk.removeSubscription(requestObject1, badConnection)).be.rejected();
   });
 
   it('should do nothing when a bad room is given', function () {
@@ -69,7 +69,7 @@ describe('Test removeSubscription function in the hotelClerk core module', funct
       body: filter1
     });
 
-    return should(kuzzle.hotelClerk.removeSubscription(badRequestObject, connection)).be.rejected;
+    return should(kuzzle.hotelClerk.removeSubscription(badRequestObject, connection)).be.rejected();
   });
 
   it('should clean up customers, rooms and filtersTree object', function () {

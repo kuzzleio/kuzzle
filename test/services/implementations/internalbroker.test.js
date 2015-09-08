@@ -10,7 +10,7 @@ var
 Tests the Internal Broker implementation
 General broker capabilities are tested in the ../broker.test.js test file.
  */
-describe('Testing: Internal Broker service implementation', function () {
+describe('Test: Internal Broker service ', function () {
   before(function () {
     kuzzleConfig = {
       broker: {

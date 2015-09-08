@@ -55,7 +55,7 @@ describe('Test removeCustomerFromAllRooms function in the hotelClerk core module
   });
 
   it('should do nothing when a bad connectionId is given', function () {
-    return should(kuzzle.hotelClerk.removeCustomerFromAllRooms(badConnection.id)).be.rejected;
+    return should(kuzzle.hotelClerk.removeCustomerFromAllRooms(badConnection.id)).be.rejected();
   });
 
   it('should clean up customers, rooms and filtersTree object', function () {

@@ -126,6 +126,16 @@ module.exports = {
     return emit.call(this, 'bulk', msg );
   },
 
+  globalBulkImport: function (bulk) {
+    var
+      msg = {
+        action: 'import',
+        body: bulk
+      };
+
+    return emit.call(this, 'bulk', msg );
+  },
+
   putMapping: function () {
     var
       msg = {

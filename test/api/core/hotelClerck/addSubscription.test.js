@@ -83,7 +83,7 @@ describe('Test addSubscription function in the hotelClerk core module', function
 
     return kuzzle.hotelClerk.addSubscription(requestObject, connection)
       .then(function () {
-        return should(kuzzle.hotelClerk.addSubscription(requestObject, connection)).be.rejected;
+        return should(kuzzle.hotelClerk.addSubscription(requestObject, connection)).be.rejected();
       });
   });
 
