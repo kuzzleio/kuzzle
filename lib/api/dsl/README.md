@@ -57,6 +57,7 @@ Eventually, we want to store this subscription in the hotelClerkController rooms
 rooms = {
     'f45de4d8ef4f3ze4ffzer85d4fgkzm41' : { // -> computed room id
         id: "f45de4d8ef4f3ze4ffzer85d4fgkzm41",
+        collection: 'members'
         names: [ 'my-custom-subscription' ], // -> customer
         count: 7 // -> how many users have subscribed to this room
         filters: {
