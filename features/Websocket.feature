@@ -64,6 +64,13 @@ Feature: Test websocket API
     And The notification should have a "_source" member
 
   @usingWebsocket @unsubscribe
+  Scenario: Document creation notifications with not exists
+    Given A room subscription listening field "toto" doesn't exists
+    When I write the document "documentGrace"
+    Then I should receive a "create" notification
+    And The notification should have a "_source" member
+
+  @usingWebsocket @unsubscribe
   Scenario: Document delete notifications
     Given A room subscription listening to "lastName" having value "Hopper"
     When I write the document "documentGrace"
@@ -86,6 +93,13 @@ Feature: Test websocket API
     Then I update the document with value "Foo" in field "lastName"
     Then I should receive a "update" notification
     And The notification should not have a "_source" member
+
+  @usingWebsocket @unsubscribe
+  Scenario: Subscribe to a collection
+    Given A room subscription listening to the whole collection
+    When I write the document "documentGrace"
+    Then I should receive a "create" notification
+    And The notification should have a "_source" member
 
   @usingWebsocket @unsubscribe
   Scenario: Delete a document with a query
