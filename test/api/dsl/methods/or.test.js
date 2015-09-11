@@ -60,22 +60,22 @@ describe('Test or method', function () {
     var rooms;
 
     rooms = methods.dsl.filtersTree[collection].fields.city.termcityNYC.rooms;
-    should(rooms).be.an.Array;
+    should(rooms).be.an.Array();
     should(rooms).have.length(1);
     should(rooms[0]).be.exactly(roomId);
 
     rooms = methods.dsl.filtersTree[collection].fields.city.termcityLondon.rooms;
-    should(rooms).be.an.Array;
+    should(rooms).be.an.Array();
     should(rooms).have.length(1);
     should(rooms[0]).be.exactly(roomId);
 
     rooms = methods.dsl.filtersTree[collection].fields.city.nottermcityNYC.rooms;
-    should(rooms).be.an.Array;
+    should(rooms).be.an.Array();
     should(rooms).have.length(1);
     should(rooms[0]).be.exactly(roomId);
 
     rooms = methods.dsl.filtersTree[collection].fields.city.nottermcityLondon.rooms;
-    should(rooms).be.an.Array;
+    should(rooms).be.an.Array();
     should(rooms).have.length(1);
     should(rooms[0]).be.exactly(roomId);
   });

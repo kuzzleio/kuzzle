@@ -101,17 +101,17 @@ describe('Test geoboundingbox method', function () {
     var rooms;
 
     rooms = methods.dsl.filtersTree[collection].fields.location.locationgeoBoundingBoxgcmfj457fu10ffy7m4.rooms;
-    should(rooms).be.an.Array;
+    should(rooms).be.an.Array();
     should(rooms).have.length(1);
     should(rooms[0]).be.exactly(roomId);
 
     rooms = methods.dsl.filtersTree[collection].fields.location.locationgeoBoundingBoxc0x5cc73fds7jwb737.rooms;
-    should(rooms).be.an.Array;
+    should(rooms).be.an.Array();
     should(rooms).have.length(1);
     should(rooms[0]).be.exactly(roomId);
 
     rooms = methods.dsl.filtersTree[collection].fields.location.locationgeoBoundingBoxc0x5c7zzzds7jw7zzz.rooms;
-    should(rooms).be.an.Array;
+    should(rooms).be.an.Array();
     should(rooms).have.length(1);
     should(rooms[0]).be.exactly(roomId);
   });

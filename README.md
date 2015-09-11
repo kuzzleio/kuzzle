@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/kuzzleio/kuzzle.svg)](https://travis-ci.org/kuzzleio/kuzzle)
+
 <p align=center> ![logo](docs/images/logo.png)
 
 # About Kuzzle

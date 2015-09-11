@@ -91,31 +91,31 @@ describe('Test bool method', function () {
     var rooms;
 
     rooms = methods.dsl.filtersTree[collection].fields.firstName['termsfirstNameGrace,Ada'].rooms;
-    should(rooms).be.an.Array;
+    should(rooms).be.an.Array();
     should(rooms).have.length(1);
     should(rooms[0]).be.exactly(roomId);
 
     rooms = methods.dsl.filtersTree[collection].fields.age.rangeagegte36.rooms;
-    should(rooms).be.an.Array;
+    should(rooms).be.an.Array();
     should(rooms).have.length(1);
     should(rooms[0]).be.exactly(roomId);
     rooms = methods.dsl.filtersTree[collection].fields.age.rangeagelt85.rooms;
-    should(rooms).be.an.Array;
+    should(rooms).be.an.Array();
     should(rooms).have.length(1);
     should(rooms[0]).be.exactly(roomId);
 
     rooms = methods.dsl.filtersTree[collection].fields.city.nottermcityNYC.rooms;
-    should(rooms).be.an.Array;
+    should(rooms).be.an.Array();
     should(rooms).have.length(1);
     should(rooms[0]).be.exactly(roomId);
 
     rooms = methods.dsl.filtersTree[collection].fields.hobby.termhobbycomputer.rooms;
-    should(rooms).be.an.Array;
+    should(rooms).be.an.Array();
     should(rooms).have.length(1);
     should(rooms[0]).be.exactly(roomId);
 
     rooms = methods.dsl.filtersTree[collection].fields.lastName.existslastName.rooms;
-    should(rooms).be.an.Array;
+    should(rooms).be.an.Array();
     should(rooms).have.length(1);
     should(rooms[0]).be.exactly(roomId);
 
