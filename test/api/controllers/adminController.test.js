@@ -7,7 +7,7 @@ var
 
 require('should-promised');
 
-describe('Test the admin controller', function () {
+describe('Test: admin controller', function () {
   var
     kuzzle,
     requestObject = new RequestObject({ controller: 'admin' }, { collection: 'unit-test-adminController' }, 'unit-test');

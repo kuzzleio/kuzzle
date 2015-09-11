@@ -11,7 +11,7 @@ require('should-promised');
  * Since we're sending voluntarily false requests, we expect most of these
  * calls to fail.
  */
-describe('Test the admin controller', function () {
+describe('Test: subscribe controller', function () {
   var
     kuzzle,
     requestObject = new RequestObject({}, {}, 'unit-test');
@@ -25,21 +25,21 @@ describe('Test the admin controller', function () {
       });
   });
 
-	it('should forward new subscriptions to the hotelClerk core component', function () {
-		var foo = kuzzle.funnel.subscribe.on(requestObject, { id: 'foobar' });
+  it('should forward new subscriptions to the hotelClerk core component', function () {
+    var foo = kuzzle.funnel.subscribe.on(requestObject, { id: 'foobar' });
 
-		return should(foo).be.rejectedWith('Undefined filters');
-	});
+    return should(foo).be.rejectedWith('Undefined filters');
+  });
 
-	it('should forward unsubscribes queries to the hotelClerk core component', function () {
-		var foo = kuzzle.funnel.subscribe.off(requestObject, { id: 'foobar' });
+  it('should forward unsubscribes queries to the hotelClerk core component', function () {
+    var foo = kuzzle.funnel.subscribe.off(requestObject, { id: 'foobar' });
 
-		return should(foo).be.rejectedWith('The user with connection foobar doesn\'t exist');
-	});
+    return should(foo).be.rejectedWith('The user with connection foobar doesn\'t exist');
+  });
 
-	it('should forward subscription counts queries to the hotelClerk core component', function () {
-		var foo = kuzzle.funnel.subscribe.count(requestObject, { id: 'foobar' });
+  it('should forward subscription counts queries to the hotelClerk core component', function () {
+    var foo = kuzzle.funnel.subscribe.count(requestObject, { id: 'foobar' });
 
-		return should(foo).be.rejectedWith('The room Id is mandatory for count subscription');
-	});
+    return should(foo).be.rejectedWith('The room Id is mandatory for count subscription');
+  });
 });

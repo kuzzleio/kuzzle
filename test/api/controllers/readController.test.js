@@ -11,7 +11,7 @@ require('should-promised');
  * Since we're querying the database for non-existent documents, we expect
  * most of these calls, if not all, to return a rejected promise.
  */
-describe('Test the read controller', function () {
+describe('Test: read controller', function () {
   var
     kuzzle;
 
@@ -24,27 +24,27 @@ describe('Test the read controller', function () {
       });
   });
 
-	it('should allow to perform searches', function () {
-		var
-			requestObject = new RequestObject({}, {collection: 'unit-test-readcontroller'}, 'unit-test');
-			r = kuzzle.funnel.read.search(requestObject);
+  it('should allow to perform searches', function () {
+    var
+      requestObject = new RequestObject({}, {collection: 'unit-test-readcontroller'}, 'unit-test');
+      r = kuzzle.funnel.read.search(requestObject);
 
-		return should(r).be.rejectedWith(Error);
-	});
+    return should(r).be.rejectedWith(Error);
+  });
 
-	it('should allow to get specific documents', function () {
-		var
-			requestObject = new RequestObject({ body: { _id: 'foobar' }}, { collection: 'unit-test-readcontroller' }, 'unit-test');
-			r = kuzzle.funnel.read.get(requestObject);
+  it('should allow to get specific documents', function () {
+    var
+      requestObject = new RequestObject({ body: { _id: 'foobar' }}, { collection: 'unit-test-readcontroller' }, 'unit-test');
+      r = kuzzle.funnel.read.get(requestObject);
 
-		should(r).be.rejectedWith(Error, { status: 404 });
-	});
+    should(r).be.rejectedWith(Error, { status: 404 });
+  });
 
-	it('should allow to count documents', function () {
-		var
-			requestObject = new RequestObject({}, {collection: 'unit-test-readcontroller'}, 'unit-test');
-			r = kuzzle.funnel.read.count(requestObject);
+  it('should allow to count documents', function () {
+    var
+      requestObject = new RequestObject({}, {collection: 'unit-test-readcontroller'}, 'unit-test');
+      r = kuzzle.funnel.read.count(requestObject);
 
-		return should(r).be.rejectedWith(Error);
-	});
+    return should(r).be.rejectedWith(Error);
+  });
 });

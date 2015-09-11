@@ -4,34 +4,38 @@ var
   params = require('rc')('kuzzle'),
   Kuzzle = require('root-require')('lib/api/Kuzzle'),
   rewire = require('rewire'),
-  brokerServer,
-  brokerClient1,
-  brokerClient2,
-  brokerClient3;
+  Broker;
 
-describe('Testing: Internal broker service', function () {
+require('should-promised');
+
+describe('Testing: broker service', function () {
   var
-    kuzzle;
+    kuzzle,
+    brokerServer,
+    brokerClient1,
+    brokerClient2,
+    brokerClient3;
 
   before(function (done) {
     kuzzle = new Kuzzle();
     kuzzle.log = new captainsLog({level: 'silent'});
     kuzzle.start(params, {dummy: true})
       .then(function () {
+        Broker = rewire('../../lib/services/' + kuzzle.config.services.broker);
         kuzzle.config.broker.port = 6666;
-        brokerServer = rewire('../../lib/services/' + kuzzle.config.services.broker);
+        brokerServer = new Broker(kuzzle, { isServer: true });
         return brokerServer.init(kuzzle.config, true);
       })
       .then(function () {
-        brokerClient1 = rewire('../../lib/services/' + kuzzle.config.services.broker);
+        brokerClient1 = new Broker(kuzzle, { isServer: false });
         return brokerClient1.init(kuzzle.config, false);
       })
       .then(function () {
-        brokerClient2 = rewire('../../lib/services/' + kuzzle.config.services.broker);
+        brokerClient2 = new Broker(kuzzle, { isServer: false });
         return brokerClient2.init(kuzzle.config, false);
       })
       .then(function () {
-        brokerClient3 = rewire('../../lib/services/' + kuzzle.config.services.broker);
+        brokerClient3 = new Broker(kuzzle, { isServer: false });
         return brokerClient3.init(kuzzle.config, false);
       })
       .then(function () {

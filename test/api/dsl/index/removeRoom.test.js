@@ -6,7 +6,6 @@ var
   Kuzzle = require('root-require')('lib/api/Kuzzle');
 
 describe('Test removeRoom function index.js file from DSL', function () {
-
   var
     kuzzle,
     roomId,
@@ -24,7 +23,7 @@ describe('Test removeRoom function index.js file from DSL', function () {
     });
 
 
-  before(function (callback) {
+  before(function (done) {
     kuzzle = new Kuzzle();
     kuzzle.log = new captainsLog({level: 'silent'});
     kuzzle.start(params, {dummy: true})
@@ -33,7 +32,7 @@ describe('Test removeRoom function index.js file from DSL', function () {
       })
       .then(function (realTimeResponseObject) {
         roomId = realTimeResponseObject.roomId;
-        callback();
+        done();
       });
   });
 

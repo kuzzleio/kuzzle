@@ -7,7 +7,7 @@ var
 
 require('should-promised');
 
-describe('Test removeCustomerFromAllRooms function in the hotelClerk core module', function () {
+describe('Test: hotelClerk.removeCustomerFromAllRooms', function () {
   var
     kuzzle,
     connection = {id: 'connectionid'},
@@ -16,29 +16,33 @@ describe('Test removeCustomerFromAllRooms function in the hotelClerk core module
     roomName2 = 'roomName2',
     collection = 'user',
     filter1 = {
-      term: {
-        firstName: 'Ada'
-      }
-    },
-    filter2 = {
-      terms: {
-        firstName: ['Ada', 'Grace']
-      }
+        term: {
+          firstName: 'Ada'
+        }
+      },
+      filter2 = {
+        terms: {
+          firstName: ['Ada', 'Grace']
+        }
+      },
+    requestObject1 = new RequestObject({
+      controller: 'subscribe',
+      action: 'on',
+      requestId: roomName1,
+      collection: collection,
+      body: filter1
+    }),
+    notified,
+    mockupNotifier = function (roomId, notification) {
+      notified = { roomId: roomId, notification: notification };
     };
 
-  before(function () {
+  beforeEach(function (done) {
     kuzzle = new Kuzzle();
     kuzzle.log = new captainsLog({level: 'silent'});
     kuzzle.start(params, {dummy: true})
       .then(function() {
-        var requestObject1 = new RequestObject({
-            controller: 'subscribe',
-            action: 'on',
-            requestId: roomName1,
-            collection: collection,
-            body: filter1
-          });
-
+        kuzzle.notifier.notify = mockupNotifier;
         return kuzzle.hotelClerk.addSubscription(requestObject1, connection);
       })
       .then(function () {
@@ -51,6 +55,9 @@ describe('Test removeCustomerFromAllRooms function in the hotelClerk core module
         });
 
         return kuzzle.hotelClerk.addSubscription(requestObject2, connection);
+      })
+      .then(function () {
+        done();
       });
   });
 
@@ -69,6 +76,21 @@ describe('Test removeCustomerFromAllRooms function in the hotelClerk core module
 
         should(kuzzle.hotelClerk.customers).be.an.Object();
         should(kuzzle.hotelClerk.customers).be.empty();
+      });
+  });
+
+  it('should send a notification to other users connected on that room', function () {
+    var roomId;
+
+    return kuzzle.hotelClerk.addSubscription(requestObject1, { id: 'anotherconnection'})
+      .then(function (createdRoom) {
+        roomId = createdRoom.roomId;
+        return kuzzle.hotelClerk.removeCustomerFromAllRooms(connection);
+      })
+      .then(function () {
+        should(notified.roomId).be.exactly(roomId);
+        should(notified.notification.error).be.null();
+        should(notified.notification.result.count).be.exactly(1);
       });
   });
 });

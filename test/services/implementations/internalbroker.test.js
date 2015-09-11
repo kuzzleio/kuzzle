@@ -2,29 +2,45 @@ var
   should = require('should'),
   captainsLog = require('captains-log'),
   rewire = require('rewire'),
-  internalbroker = rewire('../../../lib/services/internalbroker'),
-  brokerClient =  rewire('../../../lib/services/internalbroker'),
-  kuzzleConfig;
+  IPCBroker = rewire('../../../lib/services/internalbroker');
+
+require('should-promised');
 
 /*
 Tests the Internal Broker implementation
 General broker capabilities are tested in the ../broker.test.js test file.
  */
 describe('Test: Internal Broker service ', function () {
+  var
+    kuzzle,
+    brokerServer,
+    brokerClient;
+
   before(function () {
-    kuzzleConfig = {
-      broker: {
-        host: 'localhost',
-        port: '6666'
+    kuzzle = {
+      config: {
+        broker: {
+          host: 'localhost',
+          port: '6666'
+        }
       }
     };
+
+    kuzzle.log = new captainsLog({level: 'silent'});
+    brokerServer = new IPCBroker(kuzzle, { isServer: true });
+    brokerClient = new IPCBroker(kuzzle, { isServer: false });
+  });
+
+  after(function () {
+    brokerServer.close();
+    brokerClient.close();
   });
 
   it('should spawn a web socket server when invoked with server=true', function (done) {
-    internalbroker.init(kuzzleConfig, true)
+    brokerServer.init()
       .then(function () {
-        internalbroker.isServer.should.be.true();
-        internalbroker.server.should.not.be.null();
+        should(brokerServer.isServer).be.true();
+        should(brokerServer.server).not.be.null();
         done();
       })
       .catch(function (e) {
@@ -33,24 +49,20 @@ describe('Test: Internal Broker service ', function () {
   });
 
   it('should not try to spawn a server when one is already running', function () {
-    internalbroker.init(kuzzleConfig, true).should.be.rejected;
+    return should(brokerServer.init()).be.rejected();
   });
 
-  it('should be able to connect over TCP/IP', function (done) {
-    var clientConnect = brokerClient.__get__('clientConnect');
+  it('should be able to connect over TCP/IP', function () {
+    var clientConnect = IPCBroker.__get__('clientConnect');
 
-    brokerClient.init(kuzzleConfig, false)
+    return brokerClient.init()
       .then(function () {
         return clientConnect.call(brokerClient);
       })
       .then(function () {
         should(brokerClient.client.socket).not.be.null();
-        brokerClient.client.connected.should.be.fullfilled;
-        brokerClient.client.state.should.be.exactly('connected');
-        done();
-      })
-      .catch(function (e) {
-        done(e);
+        should(brokerClient.client.state).be.exactly('connected');
+        return should(brokerClient.client.connected.promise).be.fulfilled();
       });
   });
 
@@ -62,7 +74,7 @@ describe('Test: Internal Broker service ', function () {
       try {
         should(brokerClient.client.socket).be.null();
         should(brokerClient.client.connected).be.null();
-        brokerClient.client.state.should.not.be.equal('connected');
+        should(brokerClient.client.state).not.be.equal('connected');
       }
       catch (e) {
         done(e);
@@ -71,8 +83,7 @@ describe('Test: Internal Broker service ', function () {
       setTimeout(function () {
         try {
           should(brokerClient.client.socket).not.be.null();
-          (brokerClient.client.connected).should.be.fullfilled;
-          brokerClient.client.state.should.be.exactly('connected');
+          should(brokerClient.client.state).be.exactly('connected');
           done();
         }
         catch (e) {
@@ -90,7 +101,7 @@ describe('Test: Internal Broker service ', function () {
       try {
         should(brokerClient.client.socket).be.null();
         should(brokerClient.client.connected).be.null();
-        brokerClient.client.state.should.not.be.equal('connected');
+        should(brokerClient.client.state).not.be.equal('connected');
       }
       catch (e) {
         done(e);
@@ -99,8 +110,7 @@ describe('Test: Internal Broker service ', function () {
       setTimeout(function () {
         try {
           should(brokerClient.client.socket).not.be.null();
-          (brokerClient.client.connected).should.be.fullfilled;
-          brokerClient.client.state.should.be.exactly('connected');
+          should(brokerClient.client.state).be.exactly('connected');
           done();
         }
         catch (e) {
@@ -112,28 +122,28 @@ describe('Test: Internal Broker service ', function () {
 
   it('should register only 1 listener on multiple subscriptions', function () {
     var
-      addListener = internalbroker.__get__('addListener'),
+      addListener = IPCBroker.__get__('addListener'),
       room = 'foo',
       fakeListener = function () {};
 
-    addListener.call(internalbroker, room, fakeListener, internalbroker.uuid);
-    addListener.call(internalbroker, room, fakeListener, internalbroker.uuid);
-    addListener.call(internalbroker, room, fakeListener, internalbroker.uuid);
+    addListener.call(brokerServer, room, fakeListener, brokerServer.uuid);
+    addListener.call(brokerServer, room, fakeListener, brokerServer.uuid);
+    addListener.call(brokerServer, room, fakeListener, brokerServer.uuid);
 
-    should.exist(internalbroker.rooms[room]);
-    should(internalbroker.rooms[room].listeners.length).be.exactly(1);
-    delete internalbroker.rooms['foo'];
+    should.exist(brokerServer.rooms[room]);
+    should(brokerServer.rooms[room].listeners.length).be.exactly(1);
+    delete brokerServer.rooms['foo'];
   });
 
   it('should only accept callbacks or sockets listeners', function (done) {
     var room = 'listen-test';
     try {
-      internalbroker.listen(room, null);
-      internalbroker.listen(room, { _socket: 'foobar' });
+      brokerServer.listen(room, null);
+      brokerServer.listen(room, { _socket: 'foobar' });
       brokerClient.listen(room, 'foobar');
       brokerClient.listen(room, [ 'One', 'cannot', 'simply', 'walk', 'into', 'Mordor']);
 
-      should.not.exist(internalbroker.rooms[room]);
+      should.not.exist(brokerServer.rooms[room]);
       should.not.exist(brokerClient.rooms[room]);
       done();
     }
@@ -152,13 +162,13 @@ describe('Test: Internal Broker service ', function () {
 
     setTimeout(function () {
       try {
-        should(internalbroker.rooms[room].listeners.length).be.exactly(1);
+        should(brokerServer.rooms[room].listeners.length).be.exactly(1);
         brokerClient.close();
 
         setTimeout(function () {
           try {
-            internalbroker.add(room, 'foobar');
-            should.not.exist(internalbroker.rooms[room]);
+            brokerServer.add(room, 'foobar');
+            should.not.exist(brokerServer.rooms[room]);
             should(messages).be.exactly(0);
             done();
           }
@@ -168,7 +178,6 @@ describe('Test: Internal Broker service ', function () {
         }, 20);
       }
       catch (e) {
-        console.log(internalbroker.rooms);
         done(e);
       }
     }, 20);
