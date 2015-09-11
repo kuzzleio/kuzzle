@@ -57,13 +57,12 @@ describe('Test: routerController.executeFromRest', function () {
 
       kuzzle.start(params, {dummy: true})
         .then(function () {
+          kuzzle.funnel.execute = mockupFunnel;
+          RouterController.router = mockupRouterListener;
+
+          executeFromRest = RouterController.__get__('executeFromRest');
           done();
         });
-
-      kuzzle.funnel.execute = mockupFunnel;
-      RouterController.router = mockupRouterListener;
-
-      executeFromRest = RouterController.__get__('executeFromRest');
     });
 
     it('should reject requests when the controller is not provided', function () {
