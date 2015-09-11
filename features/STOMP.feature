@@ -93,6 +93,20 @@ Feature: Test STOMP API
     And The notification should not have a "_source" member
 
   @usingSTOMP @unsubscribe
+  Scenario: Document creation notifications with not exists
+    Given A room subscription listening field "toto" doesn't exists
+    When I write the document "documentGrace"
+    Then I should receive a "create" notification
+    And The notification should have a "_source" member
+
+  @usingSTOMP @unsubscribe
+  Scenario: Subscribe to a collection
+    Given A room subscription listening to the whole collection
+    When I write the document "documentGrace"
+    Then I should receive a "create" notification
+    And The notification should have a "_source" member
+
+  @usingSTOMP @unsubscribe
   Scenario: Delete a document with a query
     Given A room subscription listening to "lastName" having value "Hopper"
     When I write the document "documentGrace"

@@ -20,6 +20,39 @@ var apiSteps = function () {
       });
   });
 
+  this.Given(/^A room subscription listening to the whole collection$/, function (callback) {
+    this.api.subscribe()
+      .then(function (body) {
+        if (body.error !== null) {
+          callback.fail(new Error(body.error));
+          return false;
+        }
+
+        callback();
+      }.bind(this))
+      .catch(function (error) {
+        callback.fail(new Error(error));
+      });
+  });
+
+  this.Given(/^A room subscription listening field "([^"]*)" doesn't exists$/, function (key, callback) {
+    var filter = {not: {exists: {field : null}}};
+
+    filter.not.exists.field = key;
+    this.api.subscribe(filter)
+      .then(function (body) {
+        if (body.error !== null) {
+          callback.fail(new Error(body.error));
+          return false;
+        }
+
+        callback();
+      }.bind(this))
+      .catch(function (error) {
+        callback.fail(new Error(error));
+      });
+  });
+
   /**
    * Unsubscribes from one of the subscribed rooms
    */

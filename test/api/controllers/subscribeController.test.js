@@ -28,13 +28,15 @@ describe('Test: subscribe controller', function () {
   it('should forward new subscriptions to the hotelClerk core component', function () {
     var foo = kuzzle.funnel.subscribe.on(requestObject, { id: 'foobar' });
 
-    return should(foo).be.rejectedWith('Undefined filters');
+    return should(foo).be.fulfilled();
   });
 
   it('should forward unsubscribes queries to the hotelClerk core component', function () {
-    var foo = kuzzle.funnel.subscribe.off(requestObject, { id: 'foobar' });
+    var
+      newUser = 'Carmen Sandiego',
+      foo = kuzzle.funnel.subscribe.off(requestObject, { id: newUser });
 
-    return should(foo).be.rejectedWith('The user with connection foobar doesn\'t exist');
+    return should(foo).be.rejectedWith('The user with connection ' + newUser + ' doesn\'t exist');
   });
 
   it('should forward subscription counts queries to the hotelClerk core component', function () {

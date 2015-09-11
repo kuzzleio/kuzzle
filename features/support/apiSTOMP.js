@@ -152,8 +152,12 @@ module.exports = {
     var
       topic = ['subscribe', this.world.fakeCollection, 'on'].join('.'),
       msg = {
-        body: filters
+        body: null
       };
+
+    if (filters) {
+      msg.body = filters;
+    }
 
     return publishAndListen.call(this, topic, msg);
   },

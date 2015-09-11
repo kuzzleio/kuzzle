@@ -152,8 +152,12 @@ module.exports = {
       msg = {
         action: 'on',
         collection: this.world.fakeCollection,
-        body: filters
+        body: null
       };
+
+    if (filters) {
+      msg.body = filters;
+    }
 
     return emitAndListen.call(this, 'subscribe', msg);
 

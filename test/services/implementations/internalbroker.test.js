@@ -132,7 +132,7 @@ describe('Test: Internal Broker service ', function () {
 
     should.exist(brokerServer.rooms[room]);
     should(brokerServer.rooms[room].listeners.length).be.exactly(1);
-    delete brokerServer.rooms['foo'];
+    delete brokerServer.rooms.foo;
   });
 
   it('should only accept callbacks or sockets listeners', function (done) {

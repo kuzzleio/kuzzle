@@ -1,8 +1,9 @@
-#Configuration
+# Configuration
 
 Every configuration for Kuzzle.
 
 
-#ELK
+# Performance/stress tests
 
-ELK (for Elasticsearch, Logstash and Kibnana) Contains all the configuration for performance test.
+The <b>perf</b> directory contains configuration of the [performance testing process](./perf/README.md) for Kuzzle.
+

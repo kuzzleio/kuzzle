@@ -134,6 +134,8 @@ How subscription works:
 }
 ```
 
+**Note:** If an empty body is provided, the subscription is performed on the whole collection
+
 **Response:**
 
 ```javascript
