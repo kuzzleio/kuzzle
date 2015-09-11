@@ -22,6 +22,6 @@ describe('Testing: Internal Broker service implementation', function () {
     should.exist(internalbroker.rooms[room]);
     should(_.size(internalbroker.rooms[room].listeners)).be.exactly(1);
     should(internalbroker.rooms[room].listeners[0].listener).be.exactly('foobar');
-    delete internalbroker.rooms['foo'];
+    delete internalbroker.rooms.foo;
   });
 });

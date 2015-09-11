@@ -46,7 +46,7 @@ describe('Test not method', function () {
 
     // Test gt from filterGrace
     rooms = methods.dsl.filtersTree[collection].fields.city.nottermcityLondon.rooms;
-    should(rooms).be.an.Array;
+    should(rooms).be.an.Array();
     should(rooms).have.length(1);
     should(rooms[0]).be.exactly(roomId);
   });
