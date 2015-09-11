@@ -26,7 +26,7 @@ describe('Test: read controller', function () {
 
   it('should allow to perform searches', function () {
     var
-      requestObject = new RequestObject({}, {collection: 'unit-test-readcontroller'}, 'unit-test');
+      requestObject = new RequestObject({}, {collection: 'unit-test-readcontroller'}, 'unit-test'),
       r = kuzzle.funnel.read.search(requestObject);
 
     return should(r).be.rejectedWith(Error);
@@ -34,7 +34,7 @@ describe('Test: read controller', function () {
 
   it('should allow to get specific documents', function () {
     var
-      requestObject = new RequestObject({ body: { _id: 'foobar' }}, { collection: 'unit-test-readcontroller' }, 'unit-test');
+      requestObject = new RequestObject({ body: { _id: 'foobar' }}, { collection: 'unit-test-readcontroller' }, 'unit-test'),
       r = kuzzle.funnel.read.get(requestObject);
 
     should(r).be.rejectedWith(Error, { status: 404 });
@@ -42,7 +42,7 @@ describe('Test: read controller', function () {
 
   it('should allow to count documents', function () {
     var
-      requestObject = new RequestObject({}, {collection: 'unit-test-readcontroller'}, 'unit-test');
+      requestObject = new RequestObject({}, {collection: 'unit-test-readcontroller'}, 'unit-test'),
       r = kuzzle.funnel.read.count(requestObject);
 
     return should(r).be.rejectedWith(Error);
