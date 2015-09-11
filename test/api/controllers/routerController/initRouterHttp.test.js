@@ -64,14 +64,9 @@ describe('Test: routerController.initRouterHttp', function () {
    * with the params passed to it by initRouterHttp, so we can also test if
    * the answer is correctly constructed.
    */
-  before(function () {
+  before(function (done) {
     kuzzle = new Kuzzle();
     kuzzle.log = new captainsLog({level: 'silent'});
-
-    kuzzle.start(params, {dummy: true})
-      .then(function () {
-        done();
-      });
 
     var mockResponse = function (params, request, response) {
       if (!params.action) {
@@ -82,16 +77,21 @@ describe('Test: routerController.initRouterHttp', function () {
       response.end(JSON.stringify(params));
     };
 
-    RouterController.__set__('executeFromRest', mockResponse);
+    kuzzle.start(params, {dummy: true})
+      .then(function () {
+        RouterController.__set__('executeFromRest', mockResponse);
 
-    router = new RouterController(kuzzle);
-    router.initRouterHttp();
+        router = new RouterController(kuzzle);
+        router.initRouterHttp();
 
-    server = http.createServer(function (request, response) {
-      router.routeHttp(request, response);
-    });
+        server = http.createServer(function (request, response) {
+          router.routeHttp(request, response);
+        });
 
-    server.listen(options.port);
+        server.listen(options.port);
+
+        done();
+      });
   });
 
   after(function () {

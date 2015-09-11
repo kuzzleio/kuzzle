@@ -36,7 +36,7 @@ describe('Test: routerController.routeMQListener', function () {
       content: null
     };
 
-    before(function () {
+    before(function (done) {
       var
         mockupFunnel = function (requestObject) {
           forwardedObject = new ResponseObject(requestObject, {});
@@ -72,14 +72,13 @@ describe('Test: routerController.routeMQListener', function () {
 
       kuzzle.start(params, {dummy: true})
         .then(function () {
+          kuzzle.funnel.execute = mockupFunnel;
+          kuzzle.notifier.notify = mockupNotifier;
+
+          router = new RouterController(kuzzle);
+          router.routeMQListener();
           done();
         });
-
-      kuzzle.funnel.execute = mockupFunnel;
-      kuzzle.notifier.notify = mockupNotifier;
-
-      router = new RouterController(kuzzle);
-      router.routeMQListener();
     });
 
   it('should register a listener for each known controller', function () {

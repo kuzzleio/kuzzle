@@ -29,7 +29,7 @@ describe('Test: routerController.executeFromRest', function () {
     },
     executeFromRest;
 
-    before(function () {
+    before(function (done) {
       var
         mockupFunnel = function (requestObject) {
           var forwardedObject = new ResponseObject(requestObject, {});

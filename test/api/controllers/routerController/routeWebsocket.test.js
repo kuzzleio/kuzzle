@@ -28,7 +28,7 @@ describe('Test: routerController.routeWebsocket', function () {
     forwardedObject = {},
     notifyStatus;
 
-    before(function () {
+    before(function (done) {
       var
         mockupFunnel = function (requestObject) {
           forwardedObject = new ResponseObject(requestObject, {});
@@ -62,14 +62,13 @@ describe('Test: routerController.routeWebsocket', function () {
 
       kuzzle.start(params, {dummy: true})
         .then(function () {
+          kuzzle.funnel.execute = mockupFunnel;
+          kuzzle.notifier.notify = mockupNotifier;
+
+          router = new RouterController(kuzzle);
+          router.routeWebsocket(emitter);
           done();
         });
-
-      kuzzle.funnel.execute = mockupFunnel;
-      kuzzle.notifier.notify = mockupNotifier;
-
-      router = new RouterController(kuzzle);
-      router.routeWebsocket(emitter);
     });
 
     it('should have registered a listener for each known controller', function () {
