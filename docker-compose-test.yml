@@ -1,6 +1,6 @@
 kuzzle:
   image: kuzzleio/kuzzle
-  command: tail -f /dev/null
+  command: /run-test.sh
   volumes:
     - ".:/var/app"
   ports:

@@ -10,15 +10,8 @@ before_install:
  - chmod +x docker-compose
  - sudo mv docker-compose /usr/local/bin
 
-before_script:
-  - docker pull kuzzleio/rabbitmq
-  - docker pull redis:3.0.2
-  - docker pull elasticsearch:1.5.2
-
 script:
-  - docker-compose -f docker-compose-test.yml up -d
-  - docker exec kuzzle_kuzzle_1 /run-test.sh
-  - docker-compose -f docker-compose-test.yml stop
+  - sudo docker-compose -f docker-compose-test.yml up
 
 notifications:
   email: false
