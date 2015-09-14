@@ -11,7 +11,7 @@ before_install:
  - sudo mv docker-compose /usr/local/bin
 
 script:
-  - docker-compose -f docker-compose-test.yml up
+  - docker-compose -f docker-compose-test.yml run kuzzle
 
 notifications:
   email:
