@@ -6,9 +6,9 @@ env:
   COMPOSE_VERSION: 1.1.0
 
 before_install:
- - curl -L https://github.com/docker/compose/releases/download/${COMPOSE_VERSION}/docker-compose-`uname -s`-`uname -m` > docker-compose
- - chmod +x docker-compose
- - sudo mv docker-compose /usr/local/bin
+ - curl -L https://github.com/docker/compose/releases/download/${COMPOSE_VERSION}/docker-compose-`uname -s`-`uname -m` > /docker-compose
+ - chmod +x /docker-compose
+ - sudo mv /docker-compose /usr/local/bin
 
 script:
   - docker-compose -f docker-compose/test-travis.yml run kuzzle
