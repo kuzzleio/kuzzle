@@ -55,7 +55,7 @@ describe('Test: notifier.notifyDocumentDelete', function () {
       .then(function () {
         kuzzle.services.list.notificationCache = mockupCacheService;
         kuzzle.notifier.notify = function (rooms, msg) {
-          should(JSON.stringify(msg)).be.exactly(JSON.stringify(responseObject.toJson(['body'])));
+          should(msg).match(responseObject.toJson(['body']));
           notified++;
         };
         done();

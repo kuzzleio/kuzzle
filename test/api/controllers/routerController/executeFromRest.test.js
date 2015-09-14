@@ -94,7 +94,7 @@ describe('Test: routerController.executeFromRest', function () {
           should(mockupResponse.header['Content-Type']).be.exactly('application/json');
           should(mockupResponse.response.error).be.null();
           should(mockupResponse.response.result).be.not.null();
-          should(JSON.stringify(mockupResponse.response.result._source)).be.exactly(JSON.stringify(data.body));
+          should(mockupResponse.response.result._source).match(data.body);
           should(mockupResponse.response.result.action).be.exactly('create');
           should(mockupResponse.response.result.controller).be.exactly('write');
           done();
