@@ -8,7 +8,7 @@ We choose Elasticsearch, Logstash and Kibana (ELK) for our performance test :
 
 
 You can refer to [collect](./collect.md) and [vizualize](./visualize.md) for more details about the process.
-Indexing is done into the `elasticlogstash` container without any modification. See [docker-compose-perf.yml](../../docker-compose-perf.yml) if you want to replace or modify one of this three elements.
+Indexing is done into the `elasticlogstash` container without any modification. See [docker-compose/perf.yml](../../docker-compose/perf.yml) if you want to replace or modify one of this three elements.
 
 In this document we will explain how to launch the performance test, and how to add your own customs events.
 To navigate and visualize into log informations with Kibana, see [vizualization](./visualize.md).
@@ -16,10 +16,10 @@ To navigate and visualize into log informations with Kibana, see [vizualization]
 # Launch Kuzzle in performance mode
 
 ```js
- docker-compose -f docker-compose-perf.yml up
+ docker-compose -f docker-compose/perf.yml up
 ```
 
-Again see [docker-compose-perf.yml](../../docker-compose-perf.yml) to manage hosts and corresponding dockers containers.
+Again see [docker-compose/perf.yml](../../docker-compose/perf.yml) to manage hosts and corresponding dockers containers.
 But thanks to Docker, you do not need any extra configurations.
 
 # Data to send from my stress test

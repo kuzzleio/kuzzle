@@ -31,7 +31,7 @@ kuzzle:
     - MQ_BROKER_ENABLED=1
 ```
 
-The file ``docker-compose-test.yml`` already contains all the needed dependencies to launch Rabbit, you can have a look for a great example.
+The file ``docker-compose/test.yml`` already contains all the needed dependencies to launch Rabbit, you can have a look for a great example.
 
 ## Enabling the MQ Broker without Docker
 
