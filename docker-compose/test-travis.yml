@@ -3,7 +3,6 @@ kuzzle:
   command: /run-test-travis.sh
   volumes:
     - ".:/var/app"
-    - "./run-test-travis.sh:/run-test-travis.sh"
   ports:
     - "7512:7512"
   links:
