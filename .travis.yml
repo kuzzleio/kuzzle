@@ -14,5 +14,4 @@ script:
   - docker-compose -f docker-compose/test-travis.yml run kuzzle
 
 notifications:
-  email:
-    - support@kuzzle.io
+  email: false
