@@ -14,4 +14,5 @@ script:
   - docker-compose -f docker-compose-test.yml run kuzzle
 
 notifications:
-  email: false
+  email:
+    - support@kuzzle.io
