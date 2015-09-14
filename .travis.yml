@@ -17,8 +17,7 @@ before_install:
  - sudo mv docker-compose-bin /usr/local/bin/docker-compose
 
 script:
-  - docker-compose -f docker-compose/test.yml run kuzzle
-  - npm run coveralls
+  - docker-compose -f docker-compose/test-travis.yml run kuzzle
 
 notifications:
   email: false
