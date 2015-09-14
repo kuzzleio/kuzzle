@@ -10,7 +10,7 @@ Logstash configuration is in three steps :
 Our Logstash is configured via [logstash.conf](./logstash.conf).
 
 As input, we use the file `/var/log/perf.log` from the container `kuzzle`, it will be shared into the `logstash` container.
-We do not use any filter, and our output is an Elasticsearch `elasticlogstash` (see [docker-compose-perf.yml](../../docker-compose-perf.yml) for details).
+We do not use any filter, and our output is an Elasticsearch `elasticlogstash` (see [docker-compose/perf.yml](../../docker-compose/perf.yml) for details).
 
 See [Logstash doc](https://www.elastic.co/guide/en/logstash/current/index.html) for more details if you want to :
 

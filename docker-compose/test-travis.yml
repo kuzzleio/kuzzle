@@ -1,0 +1,31 @@
+kuzzle:
+  image: kuzzleio/kuzzle
+  command: /run-test-travis.sh
+  volumes:
+    - ".:/var/app"
+    - "./run-test-travis.sh:/run-test-travis.sh"
+  ports:
+    - "7512:7512"
+  links:
+    - rabbit
+    - elasticsearch
+    - redis
+  environment:
+    - LIKE_A_VIRGIN
+    - FIXTURES
+    - MQ_BROKER_ENABLED=1
+    - FEATURE_COVERAGE=1
+
+rabbit:
+  image: kuzzleio/rabbitmq
+  ports:
+    - "61613:61613"
+    - "1883:1883"
+    - "5672:5672"
+    - "15672:15672"
+
+redis:
+  image: redis:3.0.2
+
+elasticsearch:
+  image: elasticsearch:1.5.2

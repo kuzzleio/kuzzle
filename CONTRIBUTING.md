@@ -21,7 +21,7 @@ We use most of the [NPM Coding Style](https://docs.npmjs.com/misc/coding-style) 
 * Follow [The Boy Scout Rule](http://programmer.97things.oreilly.com/wiki/index.php/The_Boy_Scout_Rule)
 
 ## Tools
-For development only, we built a specific docker-compose file: `docker-compose-debug.yml`. You can use it to profile, debug, test a variable on the fly, add breakpoints and so on, thanks to [Node Inspector](https://github.com/node-inspector/node-inspector).  
+For development only, we built a specific docker-compose file: `docker-compose/debug.yml`. You can use it to profile, debug, test a variable on the fly, add breakpoints and so on, thanks to [Node Inspector](https://github.com/node-inspector/node-inspector).  
 
 Run the stack with:
 
