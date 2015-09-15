@@ -36,6 +36,15 @@ module.exports = function () {
       { doc: { title: 'foobar' } },
       { delete: {_id: 2 } }
     ];
+    this.globalBulk = [
+      { index:  {_id: 1, _type: 'kuzzle-collection-test' } },
+      { title: 'foo' },
+      { index:  {_id: 2, _type: 'kuzzle-collection-test' } },
+      { title: 'bar' },
+      { update: {_id: 1, _type: 'kuzzle-collection-test' } },
+      { doc: { title: 'foobar' } },
+      { delete: {_id: 2, _type: 'kuzzle-collection-test' } }
+    ];
 
     this.schema = {
       properties: {

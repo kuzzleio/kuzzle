@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/kuzzleio/kuzzle.svg?branch=master)](https://travis-ci.org/kuzzleio/kuzzle) [![Coverage Status](https://coveralls.io/repos/kuzzleio/kuzzle/badge.svg?branch=master&service=github)](https://coveralls.io/github/kuzzleio/kuzzle?branch=master)
+[![Build Status](https://travis-ci.org/kuzzleio/kuzzle.svg?branch=master)](https://travis-ci.org/kuzzleio/kuzzle) [![codecov.io](http://codecov.io/github/kuzzleio/kuzzle/coverage.svg?branch=master)](http://codecov.io/github/kuzzleio/kuzzle?branch=master)
 
 <p align=center> ![logo](docs/images/logo.png)
 

@@ -32,6 +32,11 @@ Feature: Test STOMP API
     Then I can retrieve actions from bulk import
 
   @usingSTOMP
+  Scenario: Global Bulk import
+    When I do a global bulk import
+    Then I can retrieve actions from bulk import
+
+  @usingSTOMP
   Scenario: Delete type
     When I write the document
     Then I remove the collection and schema

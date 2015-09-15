@@ -27,7 +27,7 @@ describe('Test execute function in funnel controller', function () {
 
     var requestObject = new RequestObject(object);
 
-    return should(kuzzle.funnel.execute(requestObject, {id: 'connectionid'})).be.rejected;
+    return should(kuzzle.funnel.execute(requestObject, {id: 'connectionid'})).be.rejected();
   });
 
   it('should reject the promise if no action is specified', function () {
@@ -37,7 +37,7 @@ describe('Test execute function in funnel controller', function () {
 
     var requestObject = new RequestObject(object);
 
-    return should(kuzzle.funnel.execute(requestObject, {id: 'connectionid'})).be.rejected;
+    return should(kuzzle.funnel.execute(requestObject, {id: 'connectionid'})).be.rejected();
   });
 
   it('should reject the promise if the controller doesn\'t exist', function () {
@@ -48,7 +48,7 @@ describe('Test execute function in funnel controller', function () {
 
     var requestObject = new RequestObject(object);
 
-    return should(kuzzle.funnel.execute(requestObject, {id: 'connectionid'})).be.rejected;
+    return should(kuzzle.funnel.execute(requestObject, {id: 'connectionid'})).be.rejected();
   });
 
   it('should reject the promise if the action doesn\'t exist', function () {
@@ -59,7 +59,7 @@ describe('Test execute function in funnel controller', function () {
 
     var requestObject = new RequestObject(object);
 
-    return should(kuzzle.funnel.execute(requestObject, {id: 'connectionid'})).be.rejected;
+    return should(kuzzle.funnel.execute(requestObject, {id: 'connectionid'})).be.rejected();
   });
 
   it('should resolve the promise if everything is ok', function () {
@@ -76,7 +76,7 @@ describe('Test execute function in funnel controller', function () {
 
     var requestObject = new RequestObject(object);
 
-    return should(kuzzle.funnel.execute(requestObject, {id: 'connectionid'})).not.be.rejected;
+    return should(kuzzle.funnel.execute(requestObject, {id: 'connectionid'})).not.be.rejected();
   });
 
 });

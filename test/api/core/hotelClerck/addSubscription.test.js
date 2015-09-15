@@ -3,12 +3,12 @@ var
   captainsLog = require('captains-log'),
   RequestObject = require('root-require')('lib/api/core/models/requestObject'),
   params = require('rc')('kuzzle'),
-  Kuzzle = require('root-require')('lib/api/Kuzzle');
+  Kuzzle = require('../../../../lib/api/Kuzzle');
+
 
 require('should-promised');
 
-describe('Test addSubscription function in the hotelClerk core module', function () {
-
+describe('Test: hotelClerk.addSubscription', function () {
   var
     kuzzle,
     roomId,
@@ -21,13 +21,11 @@ describe('Test addSubscription function in the hotelClerk core module', function
       }
     };
 
-
-  beforeEach(function (callback) {
+  beforeEach(function () {
+    require.cache = {};
     kuzzle = new Kuzzle();
     kuzzle.log = new captainsLog({level: 'silent'});
-    kuzzle.start(params, {dummy: true}).then(function () {
-      callback();
-    });
+    return kuzzle.start(params, {dummy: true});
   });
 
   it('should have object filtersTree, customers and rooms empty', function () {
@@ -74,7 +72,7 @@ describe('Test addSubscription function in the hotelClerk core module', function
       });
   });
 
-  it('should return an error when the user has already subscribe to the filter', function () {
+  it('should return an error when the user has already subscribed to the filter', function () {
     var requestObject = new RequestObject({
       requestId: roomName,
       collection: collection,
@@ -83,9 +81,17 @@ describe('Test addSubscription function in the hotelClerk core module', function
 
     return kuzzle.hotelClerk.addSubscription(requestObject, connection)
       .then(function () {
-        return should(kuzzle.hotelClerk.addSubscription(requestObject, connection)).be.rejected;
+        return should(kuzzle.hotelClerk.addSubscription(requestObject, connection)).be.rejected();
       });
   });
 
+  it('should handle non-string requestIds', function () {
+    var requestObject = new RequestObject({
+      requestId: 0xCAFED00D,
+      collection: collection,
+      body: filter
+    });
 
+    return should(kuzzle.hotelClerk.addSubscription(requestObject, connection)).be.fulfilled();
+  });
 });

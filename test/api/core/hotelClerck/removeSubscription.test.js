@@ -7,7 +7,7 @@ var
 
 require('should-promised');
 
-describe('Test removeSubscription function in the hotelClerk core module', function () {
+describe('Test: hotelClerk.removeSubscription', function () {
 
   var
     kuzzle,
@@ -40,24 +40,30 @@ describe('Test removeSubscription function in the hotelClerk core module', funct
       requestId: roomName2,
       collection: collection,
       body: filter2
-    });
+    }),
+    notified,
+    mockupNotifier = function (roomId, notification) {
+      notified = { roomId: roomId, notification: notification };
+    };
 
 
-  beforeEach(function (callback) {
+  beforeEach(function (done) {
+    notified = null;
     kuzzle = new Kuzzle();
     kuzzle.log = new captainsLog({level: 'silent'});
     kuzzle.start(params, {dummy: true})
       .then(function () {
+        kuzzle.notifier.notify = mockupNotifier;
         return kuzzle.hotelClerk.addSubscription(requestObject1, connection);
       })
       .then(function (realTimeResponseObject) {
         roomId = realTimeResponseObject.roomId;
-        callback();
+        done();
       });
   });
 
   it('should do nothing when a bad connectionId is given', function () {
-    return should(kuzzle.hotelClerk.removeSubscription(requestObject1, badConnection)).be.rejected;
+    return should(kuzzle.hotelClerk.removeSubscription(requestObject1, badConnection)).be.rejected();
   });
 
   it('should do nothing when a bad room is given', function () {
@@ -69,7 +75,7 @@ describe('Test removeSubscription function in the hotelClerk core module', funct
       body: filter1
     });
 
-    return should(kuzzle.hotelClerk.removeSubscription(badRequestObject, connection)).be.rejected;
+    return should(kuzzle.hotelClerk.removeSubscription(badRequestObject, connection)).be.rejected();
   });
 
   it('should clean up customers, rooms and filtersTree object', function () {
@@ -103,5 +109,17 @@ describe('Test removeSubscription function in the hotelClerk core module', funct
       });
   });
 
-
+  it('should send a notification to other users connected on that room', function () {
+    var roomId;
+    return kuzzle.hotelClerk.addSubscription(requestObject1, { id: 'anotherconnection'})
+      .then(function (createdRoom) {
+        roomId = createdRoom.roomId;
+        return kuzzle.hotelClerk.removeSubscription(requestObject1, connection);
+      })
+      .then(function () {
+        should(notified.roomId).be.exactly(roomId);
+        should(notified.notification.error).be.null();
+        should(notified.notification.result.count).be.exactly(1);
+      });
+  });
 });

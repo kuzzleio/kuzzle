@@ -10,7 +10,7 @@ kuzzle:
     - elasticsearch
     - redis
   environment:
-    - LIKE_A_VIRGIN
+    - LIKE_A_VIRGIN=1
     - FIXTURES
     - MQ_BROKER_ENABLED=1
     - FEATURE_COVERAGE=1
