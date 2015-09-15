@@ -13,9 +13,9 @@
     "functional-testing": "npm run cucumber",
     "cucumber": "cucumber.js",
     "crawl-coverage": "node coverage/scripts/feature-coverage-download.js",
+    "coveralls": "cat ./coverage/lcov.info | ./node_modules/.bin/codecov",
     "enable": "node bin/kuzzle enable",
-    "disable": "node bin/kuzzle disable",
-    "coveralls": "cat ./coverage/lcov.info | ./node_modules/.bin/coveralls"
+    "disable": "node bin/kuzzle disable"
   },
   "directories": {
     "lib": "lib"
@@ -50,7 +50,7 @@
     "url": "git://github.com/kuzzleio/kuzzle.git"
   },
   "devDependencies": {
-    "coveralls": "^2.11.4",
+    "codecov.io": "^0.1.6",
     "cucumber": "~0.4.9",
     "grunt": "^0.4.5",
     "grunt-contrib-jshint": "^0.11.3",

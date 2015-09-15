@@ -14,8 +14,14 @@ kuzzle:
     - FIXTURES
     - MQ_BROKER_ENABLED=1
     - FEATURE_COVERAGE=1
-    - COVERALLS_SERVICE_NAME=travis-ci
-    - COVERALLS_REPO_TOKEN
+    # Travis env var must be propagate into the container
+    - TRAVIS
+    - TRAVIS_COMMIT
+    - TRAVIS_JOB_NUMBER
+    - TRAVIS_BRANCH
+    - TRAVIS_JOB_ID
+    - TRAVIS_PULL_REQUEST
+    - TRAVIS_REPO_SLUG
 
 rabbit:
   image: kuzzleio/rabbitmq
