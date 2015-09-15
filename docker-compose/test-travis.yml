@@ -14,8 +14,6 @@ kuzzle:
     - FIXTURES
     - MQ_BROKER_ENABLED=1
     - FEATURE_COVERAGE=1
-    - COVERALLS_SERVICE_NAME=travis-ci
-    - COVERALLS_REPO_TOKEN
 
 rabbit:
   image: kuzzleio/rabbitmq
