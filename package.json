@@ -13,7 +13,7 @@
     "functional-testing": "npm run cucumber && npm run crawl-coverage",
     "cucumber": "cucumber.js",
     "crawl-coverage": "node coverage/scripts/feature-coverage-download.js",
-    "coveralls": "cat ./coverage/lcov.info | ./node_modules/.bin/codecov"
+    "coveralls": "cat ./coverage/lcov.info | ./node_modules/.bin/codecov.io.js"
   },
   "directories": {
     "lib": "lib"
