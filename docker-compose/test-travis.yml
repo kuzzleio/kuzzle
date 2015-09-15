@@ -14,6 +14,7 @@ kuzzle:
     - FIXTURES
     - MQ_BROKER_ENABLED=1
     - FEATURE_COVERAGE=1
+    - TRAVIS=1
 
 rabbit:
   image: kuzzleio/rabbitmq
