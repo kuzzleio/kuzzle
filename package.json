@@ -14,7 +14,7 @@
     "cucumber": "cucumber.js",
     "crawl-coverage": "node coverage/scripts/feature-coverage-download.js",
     "enable": "node bin/kuzzle enable",
-    "disable": "node bin/kuzzle disable"
+    "disable": "node bin/kuzzle disable",
     "coveralls": "cat ./coverage/lcov.info | ./node_modules/.bin/coveralls"
   },
   "directories": {
