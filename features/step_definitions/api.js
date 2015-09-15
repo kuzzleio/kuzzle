@@ -588,6 +588,20 @@ var apiSteps = function () {
       });
   });
 
+  this.When(/^I do a global bulk import$/, function (callback) {
+    this.api.globalBulkImport(this.globalBulk)
+      .then(function (body) {
+        if (body.error !== null) {
+          callback.fail(new Error(body.error));
+          return false;
+        }
+
+        callback();
+      }.bind(this))
+      .catch(function (error) {
+        callback.fail(error);
+      });
+  });
 
   this.Then(/^I remove the collection and schema$/, function (callback) {
     this.api.deleteCollection()

@@ -5,8 +5,9 @@ var
   params = require('rc')('kuzzle'),
   Kuzzle = require('root-require')('lib/api/Kuzzle');
 
-describe('Test testFilters function index.js file from DSL', function () {
+require('should-promised');
 
+describe('Test: dsl.testFilters', function () {
   var
     kuzzle,
     roomId,
@@ -124,5 +125,12 @@ describe('Test testFilters function index.js file from DSL', function () {
       });
   });
 
+  it('should return an error if the requestObject doesn\'t contain a collection name', function () {
+    var requestObject = new RequestObject({
+      requestId: roomName,
+      body: dataGrace
+    });
 
+    return should(kuzzle.dsl.testFilters(requestObject)).be.rejected();
+  });
 });

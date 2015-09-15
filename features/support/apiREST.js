@@ -111,6 +111,16 @@ module.exports = {
     return this.callApi(options);
   },
 
+  globalBulkImport: function (bulk) {
+      var options = {
+        url: this.pathApi('/_bulk'),
+        method: 'POST',
+        json: bulk
+      };
+
+      return this.callApi(options);
+    },
+
   putMapping: function () {
     var options = {
       url: this.pathApi(this.world.fakeCollection + '/_mapping'),

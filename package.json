@@ -8,11 +8,13 @@
     "kuzzle": "./bin/kuzzle.js"
   },
   "scripts": {
-    "test": "npm run unit-testing --coverage && npm run functional-testing",
+    "test": "npm run unit-testing --coverage && npm run functional-testing && npm run crawl-coverage",
     "unit-testing": "istanbul test _mocha",
-    "functional-testing": "npm run cucumber && npm run crawl-coverage",
+    "functional-testing": "npm run cucumber",
     "cucumber": "cucumber.js",
-    "crawl-coverage": "node coverage/scripts/feature-coverage-download.js"
+    "crawl-coverage": "node coverage/scripts/feature-coverage-download.js",
+    "enable": "node bin/kuzzle enable",
+    "disable": "node bin/kuzzle disable"
   },
   "directories": {
     "lib": "lib"

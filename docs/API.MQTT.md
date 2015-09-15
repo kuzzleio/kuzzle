@@ -30,7 +30,8 @@ The current implementation of our MQ Broker service uses [RabbitMQ](https://www.
   * [Deleting an entire data collection](#deleting-an-entire-data-collection)
   * [Setting up a data mapping on a collection](#setting-up-a-data-mapping-in-a-collection)
   * [Retriveing the data mapping of a collection](#retrieving-the-data-mapping-of-a-collection)
-  * [Performing a bulk import](#performing-a-bulk-import)
+  * [Performing a bulk import](#performing-a-bulk-import-on-a-data-collection)
+  * [Performing a global bulk import](#performing-a-global-bulk-import)
 
 ## <a name="how-to-connect-to-kuzzle"></a> How to connect to Kuzzle
 
@@ -243,7 +244,7 @@ There are 4 types of notifications you can receive:
   error: null,                        // Assuming everything went well
   result: {
     roomId: 'unique Kuzzle room ID',
-    roomName: 'the exiting user room ID', 
+    roomName: 'the exiting user room ID',
     controller: 'subscribe',
     action: 'off',
     count: <the new user count on that room>,
@@ -966,7 +967,7 @@ Get data mapping of a collection previously defined
 
 ---
 
-### <a name="performing-a-bulk-import"></a> Performing a bulk import
+### Performing a bulk import on a data collection
 
 A bulk import allow your application to perform multiple writing operations with a single query. This is especially useful if you want to create a large number of documents, as a bulk import will be a lot faster compared to creating them individually using ``create`` queries.  
 As with other queries, the syntax for bulk imports closely ressembles the [ElasticSearch Bulk API](https://www.elastic.co/guide/en/elasticsearch/reference/1.3/docs-bulk.html?q=bulk).
@@ -1040,6 +1041,87 @@ Bulk import only works on documents in our persistent data storage layer.
     /*
     The requestId field you provided. If you didn't, Kuzzle generates
     an unique query identifier anyway.
+    */
+    requestId, '<unique request identifier>'
+  }
+}
+```
+
+---
+
+### Performing a global bulk import
+
+The previous section covers how to perform a bulk import on a specific data collection, but you may want to execute one on a whole database, modifying multiple data collections at once.
+
+To do that, refer to the [ElasticSearch Bulk API](https://www.elastic.co/guide/en/elasticsearch/reference/1.3/docs-bulk.html?q=bulk), using the ``_type`` argument to specify the data collection you want to modify.
+
+Bulk import only works on documents in our persistent data storage layer.
+
+**Topic:** ``bulk..import``
+
+**Query:**
+
+```javascript
+{
+  /*
+  Optionnal: allow Kuzzle to send a response to your application
+  */
+  clientId: <Unique session ID>,
+
+  /*
+  Optionnal: Kuzzle will forward this field in its response, allowing you
+  to easily identify what query generated the response you got.
+  */
+  requestId: <Unique query ID>,
+
+  /*
+  Data mapping using ElasticSearch bulk syntax.
+  */
+  body: [
+    {create: {"_type": "<data collection>"}},
+    { a: 'document', with: 'any', number: 'of fields' },
+    { another: 'document' },
+    { and: { another: 'one'} },
+    ...
+  ]
+}
+```
+
+**Response:**
+
+```javascript
+{
+  error: null,                      // Assuming everything went well
+  result: {
+    _source: {                      // Your original bulk import query
+      ...
+    },
+    action: 'import',
+    controller: 'bulk',
+
+    /*
+    The list of executed queries, with their status
+    */
+    items: [
+      { create: {
+          _id: '<document ID>',
+          status: <HTTP status code>
+        }
+      },
+      { create: {
+          _id: '<document ID>',
+          status: <HTTP status code>
+        }
+      },
+      { create: {
+          _id: '<document ID>',
+          status: <HTTP status code>
+        }
+      }
+    ],
+
+    /*
+    The requestId field you provided.
     */
     requestId, '<unique request identifier>'
   }
