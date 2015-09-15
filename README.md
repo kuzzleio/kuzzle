@@ -26,8 +26,8 @@ If you are running Docker and just want to get your own Kuzzle running, you can 
 
 Prerequisites:
 
-* [Docker](https://docs.docker.com/installation/#installation)
-* [Docker Compose](https://docs.docker.com/compose/install/)
+* [Docker](https://docs.docker.com/installation/#installation) (version >1.5.0)
+* [Docker Compose](https://docs.docker.com/compose/install/) (version >1.2.0)
 
 From Kuzzle's root directory:
 
