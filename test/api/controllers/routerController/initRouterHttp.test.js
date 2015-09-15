@@ -450,6 +450,18 @@ describe('Test: routerController.initRouterHttp', function () {
   });
 
   it('should not create a route for code coverage by default', function (done) {
+    server.close();
+
+    delete process.env.FEATURE_COVERAGE;
+
+    router.initRouterHttp();
+
+    server = http.createServer(function (request, response) {
+      router.routeHttp(request, response);
+    });
+
+    server.listen(options.port);
+
     http.get('http://' + options.hostname + ':' + options.port + '/coverage', function (response) {
       should(response.statusCode).be.exactly(404);
       done();
