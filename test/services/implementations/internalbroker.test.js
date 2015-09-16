@@ -182,4 +182,37 @@ describe('Test: Internal Broker service ', function () {
       }
     }, 20);
   });
+
+  it('should re-register listening requests when reconnecting to the server', function (done) {
+    var
+      room1 = 'unit-test-register-again',
+      room2 = 'unit-test-register-again-listenOnce',
+      listenCB = function () { },
+      listenOnceCB = function () { };
+
+    brokerClient.client.retryInterval = 1;
+    brokerClient.listen(room1, listenCB);
+    brokerClient.listenOnce(room2, listenOnceCB);
+
+    setTimeout(function () {
+      delete brokerServer.rooms[room1];
+      delete brokerServer.rooms[room2];
+
+      brokerClient.client.socket.emit('error', new Error('ECONNRESET'));
+
+      setTimeout(function () {
+        try {
+          should.exist(brokerServer.rooms[room1]);
+          should.exist(brokerServer.rooms[room2]);
+
+          should(brokerServer.rooms[room1].listeners[0].destroyOnUse).be.undefined();
+          should(brokerServer.rooms[room2].listeners[0].destroyOnUse).be.true();
+          done();
+        }
+        catch (e) {
+          done(e);
+        }
+      }, 20);
+    }, 100);
+  });
 });
