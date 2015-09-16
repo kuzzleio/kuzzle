@@ -14,7 +14,7 @@ kuzzle:
     - FIXTURES
     - MQ_BROKER_ENABLED=1
     - FEATURE_COVERAGE=1
-    # Travis env var must be propagate into the container
+    # Travis env var must be propagated into the container
     - TRAVIS
     - TRAVIS_COMMIT
     - TRAVIS_JOB_NUMBER
