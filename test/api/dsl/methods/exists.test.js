@@ -1,6 +1,9 @@
 var
   should = require('should'),
-  methods = require('root-require')('lib/api/dsl/methods');
+  rewire = require('rewire'),
+  methods = rewire('../../../../lib/api/dsl/methods');
+
+require('should-promised');
 
 describe('Test exists method', function () {
 
@@ -54,4 +57,43 @@ describe('Test exists method', function () {
     should(result).be.exactly(false);
   });
 
+  it('should return a rejected promise if the filter argument is empty', function () {
+    return should(methods.exists('foo', 'bar', {})).be.rejectedWith('A filter can\'t be empty');
+  });
+
+  it('should return a rejected promise if the filter argument is invalid', function () {
+    return should(methods.exists('foo', 'bar', { foo: 'bar' })).be.rejectedWith('Filter \'exists\' must contains \'field\' attribute');
+  });
+
+  it('should return a rejected promise if buildCurriedFunction fails', function () {
+    return methods.__with__({
+      buildCurriedFunction: function () { return { error: 'rejected' }; }
+    })(function () {
+      return should(methods.exists('foo', 'bar', { field: 'foo' }));
+    });
+  });
+
+  it('should register the filter in the lcao area in case of a "exist" filter', function () {
+    return methods.__with__({
+      buildCurriedFunction: function (collection, field, operatorName, value, curriedFunctionName, roomId, not, inGlobals) {
+        should(inGlobals).be.false();
+        should(curriedFunctionName).not.startWith('not');
+        return { path: '' };
+      }
+    })(function () {
+      return should(methods.exists('foo', 'bar', { field: 'foo' })).be.fulfilled();
+    });
+  });
+
+  it('should register the filter in the global area in case of a "not exist" filter', function () {
+    return methods.__with__({
+      buildCurriedFunction: function (collection, field, operatorName, value, curriedFunctionName, roomId, not, inGlobals) {
+        should(inGlobals).be.true();
+        should(curriedFunctionName).startWith('not');
+        return { path: '' };
+      }
+    })(function () {
+      return should(methods.exists('foo', 'bar', { field: 'foo' }, true)).be.fulfilled();
+    });
+  });
 });

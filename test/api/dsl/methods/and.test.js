@@ -1,6 +1,9 @@
 var
   should = require('should'),
-  methods = require('root-require')('lib/api/dsl/methods');
+  rewire = require('rewire'),
+  methods = rewire('../../../../lib/api/dsl/methods');
+
+require('should-promised');
 
 describe('Test and method', function () {
 
@@ -79,4 +82,11 @@ describe('Test and method', function () {
     should(result).be.exactly(true);
   });
 
+  it('should return a rejected promise if getFormattedFilters fails', function () {
+    return methods.__with__({
+      getFormattedFilters: function () { return Promise.reject(new Error('rejected')); }
+    })(function () {
+      return should(methods.and(roomId, collection, filter)).be.rejectedWith('rejected');
+    });
+  });
 });

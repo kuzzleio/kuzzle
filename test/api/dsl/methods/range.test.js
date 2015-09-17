@@ -1,6 +1,9 @@
 var
   should = require('should'),
-  methods = require('root-require')('lib/api/dsl/methods');
+  rewire = require('rewire'),
+  methods = rewire('../../../../lib/api/dsl/methods');
+
+require('should-promised');
 
 describe('Test range method', function () {
 
@@ -149,4 +152,15 @@ describe('Test range method', function () {
     should(result).be.exactly(false);
   });
 
+  it('should return a rejected promise if the filter is empty', function () {
+    return should(methods.range(roomIdFilterGrace, collection, {})).be.rejectedWith('A filter can\'t be empty');
+  });
+
+  it('should return a rejected promise if buildCurriedFunction fails', function () {
+    return methods.__with__({
+      buildCurriedFunction: function () { return { error: 'rejected' }; }
+    })(function () {
+      return should(methods.range(roomIdFilterGrace, collection, filterGrace)).be.rejectedWith('rejected');
+    });
+  });
 });

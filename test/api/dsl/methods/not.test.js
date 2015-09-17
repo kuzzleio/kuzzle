@@ -3,7 +3,6 @@ var
   methods = require('root-require')('lib/api/dsl/methods');
 
 describe('Test not method', function () {
-
   var
     roomId = 'roomId',
     collection = 'collection',
@@ -22,7 +21,6 @@ describe('Test not method', function () {
         city: 'London'
       }
     };
-
 
   before(function () {
     methods.dsl.filtersTree = {};
@@ -60,4 +58,12 @@ describe('Test not method', function () {
     should(result).be.exactly(false);
   });
 
+  it('should pass an inverted "not" argument to the must function', function () {
+    methods.must = function (roomId, collection, filters, not) {
+      should(roomId).be.exactly(not);
+    };
+
+    methods.not(true, {}, {}, false);
+    methods.not(false, {}, {}, true);
+  });
 });
