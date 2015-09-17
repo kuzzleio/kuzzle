@@ -144,10 +144,6 @@ describe('Test geoboundingbox method', function () {
     return should(methods.geoBoundingBox('foo', 'bar', {})).be.rejectedWith('Missing filter');
   });
 
-  it('should return a rejected promise if there is no "location" sub-object in the provided filter', function () {
-    return should(methods.geoBoundingBox('foo', 'bar', { foo: 'bar' })).be.rejectedWith('Missing attribute location');
-  });
-
   it('should return a rejected promise if the geolocalisation filter is invalid', function () {
     var
       invalidFilter = {

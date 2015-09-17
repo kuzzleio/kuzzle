@@ -19,7 +19,7 @@ describe('Test geoBoundingBox operator', function () {
       },
       result = operators.geoBoundingBox('location', box, document);
 
-    should(result).be.exactly(true);
+    should(result).be.true();
   });
 
   it('should return false when the location in document is outside the box', function () {
@@ -32,7 +32,7 @@ describe('Test geoBoundingBox operator', function () {
       },
       result = operators.geoBoundingBox('location', box, document);
 
-    should(result).be.exactly(false);
+    should(result).be.false();
   });
 
   // according to ES, when a location is exactly on the corner of the box, the document must be returned
@@ -46,7 +46,32 @@ describe('Test geoBoundingBox operator', function () {
       },
       result = operators.geoBoundingBox('location', box, document);
 
-    should(result).be.exactly(true);
+    should(result).be.true();
   });
 
+  it('should return false if the document does not contain a latitude', function () {
+    var
+      box = {
+        left: 43.629533,
+        top: 3.840730,
+        right: 43.607466,
+        bottom: 3.912785
+      },
+      document = { 'foo.lon': 3.912785 };
+
+    should(operators.geoBoundingBox('foo', box, document)).be.false();
+  });
+
+  it('should return false if the document does not contain a longitude', function () {
+    var
+      box = {
+        left: 43.629533,
+        top: 3.840730,
+        right: 43.607466,
+        bottom: 3.912785
+      },
+      document = { 'foo.lat': 43.607466 };
+
+    should(operators.geoBoundingBox('foo', box, document)).be.false();
+  });
 });
