@@ -2,7 +2,7 @@ kuzzle:
   image: kuzzleio/kuzzle
   command: /run-debug.sh
   volumes:
-    - ".:/var/app"
+    - "..:/var/app"
   ports:
     - "7512:7512"
     - "8080:8080"

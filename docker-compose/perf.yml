@@ -1,7 +1,7 @@
 kuzzle:
   image: kuzzleio/kuzzle
   volumes:
-    - ".:/var/app"
+    - "..:/var/app"
     - "/var/log"
   ports:
     - "7512:7512"
