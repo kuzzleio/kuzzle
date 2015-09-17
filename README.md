@@ -4,6 +4,8 @@
 
 # About Kuzzle
 
+[![Join the chat at https://gitter.im/kuzzleio/kuzzle](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/kuzzleio/kuzzle?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 For UI and linked objects developers, Kuzzle is an open-source solution that handles all the data management
 (CRUD, real-time storage, search, high-level features, etc;).
 
