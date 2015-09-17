@@ -170,7 +170,7 @@ describe('Test bool method', function () {
   it('should return a rejected promise if one of the bool sub-methods fails', function () {
     var f = { must: [ { foo: 'bar' } ] };
 
-    methods.must = function () { return Promise.reject(new Error('rejected')); }
+    methods.must = function () { return Promise.reject(new Error('rejected')); };
     return should(methods.bool(roomId, collection, f)).be.rejectedWith('rejected');
   });
 });
