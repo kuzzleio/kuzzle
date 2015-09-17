@@ -52,8 +52,10 @@
   "devDependencies": {
     "codecov.io": "^0.1.6",
     "cucumber": "0.5.3",
+    "eslint": "^1.4.3",
     "grunt": "^0.4.5",
     "grunt-contrib-jshint": "^0.11.3",
+    "gruntify-eslint": "^1.0.1",
     "istanbul": "^0.3.18",
     "istanbul-middleware": "0.2.0",
     "mocha": "2.3.2",
