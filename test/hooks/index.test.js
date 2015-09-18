@@ -53,11 +53,9 @@ describe('Test main file for hooks managers', function () {
     };
     kuzzle.hooks.init();
 
-    console.log(kuzzle._events);
     should(kuzzle.hooks.list).have.property('write');
     should(kuzzle.hooks.list.write).be.an.Object();
 
-    console.log(kuzzle.listeners('data:create'));
     should(kuzzle.listeners('data:create')).be.an.Array();
     should(kuzzle.listeners('data:create').length).be.exactly(1);
     should(kuzzle.listeners('data:update')).be.an.Array();
