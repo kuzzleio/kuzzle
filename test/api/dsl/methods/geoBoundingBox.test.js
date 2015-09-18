@@ -1,9 +1,11 @@
 var
   should = require('should'),
-  methods = require('root-require')('lib/api/dsl/methods');
+  rewire = require('rewire'),
+  methods = rewire('../../../../lib/api/dsl/methods');
+
+require('should-promised');
 
 describe('Test geoboundingbox method', function () {
-
   var
     roomId = 'roomId',
     collection = 'collection',
@@ -138,4 +140,28 @@ describe('Test geoboundingbox method', function () {
     should(result).be.exactly(false);
   });
 
+  it('should return a rejected promise if an empty filter is provided', function () {
+    return should(methods.geoBoundingBox('foo', 'bar', {})).be.rejectedWith('Missing filter');
+  });
+
+  it('should return a rejected promise if the geolocalisation filter is invalid', function () {
+    var
+      invalidFilter = {
+        location: {
+          top: -2.939744,
+          bottom: 1.180129,
+          right: 51.143628
+        }
+      };
+
+    return should(methods.geoBoundingBox(roomId, collection, invalidFilter)).be.rejectedWith('Unable to parse GeoBoundingBox coordinates');
+  });
+
+  it('should return a rejected promise if buildCurriedFunction fails', function () {
+    return methods.__with__({
+      buildCurriedFunction: function () { return { error: 'rejected' }; }
+    })(function () {
+      return should(methods.geoBoundingBox(roomId, collection, filterEngland)).be.rejectedWith('rejected');
+    });
+  });
 });

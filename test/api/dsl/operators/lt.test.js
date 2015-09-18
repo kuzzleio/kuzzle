@@ -23,4 +23,7 @@ describe('Test lt operator', function () {
     should(result).be.exactly(false);
   });
 
+  it('should return false if the searched value is not in the document', function () {
+    should(operators.lt('foo', 15, document)).be.false();
+  });
 });

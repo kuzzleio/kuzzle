@@ -1,9 +1,13 @@
 var
   should = require('should'),
   captainsLog = require('captains-log'),
+  rewire = require('rewire'),
   RequestObject = require('root-require')('lib/api/core/models/requestObject'),
   params = require('rc')('kuzzle'),
-  Kuzzle = require('root-require')('lib/api/Kuzzle');
+  Kuzzle = require('root-require')('lib/api/Kuzzle'),
+  Dsl = rewire('../../../../lib/api/dsl/index');
+
+require('should-promised');
 
 describe('Test removeRoom function index.js file from DSL', function () {
   var
@@ -23,7 +27,7 @@ describe('Test removeRoom function index.js file from DSL', function () {
     });
 
 
-  before(function (done) {
+  beforeEach(function (done) {
     kuzzle = new Kuzzle();
     kuzzle.log = new captainsLog({level: 'silent'});
     kuzzle.start(params, {dummy: true})
@@ -36,6 +40,13 @@ describe('Test removeRoom function index.js file from DSL', function () {
       });
   });
 
+  it('should return a promise', function () {
+    var result = kuzzle.dsl.removeRoom(kuzzle.hotelClerk.rooms[roomId]);
+
+    should(result).be.a.Promise();
+    return should(result).be.fulfilled();
+  });
+
   it('should have an empty room list and filtersTree when the function is called', function () {
     should(kuzzle.dsl.filtersTree).be.Object();
     should(kuzzle.dsl.filtersTree).not.be.empty();
@@ -46,5 +57,12 @@ describe('Test removeRoom function index.js file from DSL', function () {
       });
   });
 
-
+  it('should return a reject promise on fail', function () {
+    Dsl.__with__({
+      removeRoomFromFields: function () { return Promise.reject(new Error('rejected')); }
+    })(function () {
+      var dsl = new Dsl(kuzzle);
+      return should(dsl.removeRoom(kuzzle.hotelClerk.rooms[roomId])).be.rejected();
+    });
+  });
 });

@@ -1,6 +1,9 @@
 var
   should = require('should'),
-  methods = require('root-require')('lib/api/dsl/methods');
+  rewire = require('rewire'),
+  methods = rewire('../../../../lib/api/dsl/methods');
+
+require('should-promised');
 
 describe('Test bool method', function () {
 
@@ -118,8 +121,6 @@ describe('Test bool method', function () {
     should(rooms).be.an.Array();
     should(rooms).have.length(1);
     should(rooms[0]).be.exactly(roomId);
-
-
   });
 
   it('should construct the filterTree with correct functions', function () {
@@ -154,7 +155,22 @@ describe('Test bool method', function () {
     should(result).be.exactly(true);
     result = methods.dsl.filtersTree[collection].fields.lastName.existslastName.fn(documentAda);
     should(result).be.exactly(true);
-
   });
 
+  it('should return a rejected promise if an empty filter is provided', function () {
+    return should(methods.bool(roomId, collection, {})).be.rejectedWith('A filter can\'t be empty');
+  });
+
+  it('should return a rejected promise if the filter contains an invalid key', function () {
+    var f = { foo: 'bar' };
+
+    return should(methods.bool(roomId, collection, f)).be.rejectedWith('Function foo doesn\'t exist');
+  });
+
+  it('should return a rejected promise if one of the bool sub-methods fails', function () {
+    var f = { must: [ { foo: 'bar' } ] };
+
+    methods.must = function () { return Promise.reject(new Error('rejected')); };
+    return should(methods.bool(roomId, collection, f)).be.rejectedWith('rejected');
+  });
 });

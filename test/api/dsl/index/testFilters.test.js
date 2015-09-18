@@ -1,9 +1,11 @@
 var
   should = require('should'),
   captainsLog = require('captains-log'),
+  rewire = require('rewire'),
   RequestObject = require('root-require')('lib/api/core/models/requestObject'),
   params = require('rc')('kuzzle'),
-  Kuzzle = require('root-require')('lib/api/Kuzzle');
+  Kuzzle = require('root-require')('lib/api/Kuzzle'),
+  Dsl = rewire('../../../../lib/api/dsl/index');
 
 require('should-promised');
 
@@ -132,5 +134,49 @@ describe('Test: dsl.testFilters', function () {
     });
 
     return should(kuzzle.dsl.testFilters(requestObject)).be.rejected();
+  });
+
+  it('should generate an event if filter tests on fields fail', function (done) {
+    this.timeout(50);
+
+    kuzzle.once('filter:error', function (error) {
+      try {
+        should(error.message).be.exactly('rejected');
+        done();
+      }
+      catch (e) {
+        done(e);
+      }
+    });
+
+    Dsl.__with__({
+      testFieldFilters: function () { return Promise.reject(new Error('rejected')); }
+    })(function () {
+      var dsl = new Dsl(kuzzle);
+      dsl.filtersTree[requestObjectCreateGrace.collection] = {};
+      dsl.testFilters(requestObjectCreateGrace);
+    });
+  });
+
+  it('should generate an event if global filter tests fail', function (done) {
+    this.timeout(50);
+
+    kuzzle.once('filter:error', function (error) {
+      try {
+        should(error.message).be.exactly('rejected');
+        done();
+      }
+      catch (e) {
+        done(e);
+      }
+    });
+
+    Dsl.__with__({
+      testGlobalsFilters: function () { return Promise.reject(new Error('rejected')); }
+    })(function () {
+      var dsl = new Dsl(kuzzle);
+      dsl.filtersTree[requestObjectCreateGrace.collection] = {};
+      dsl.testFilters(requestObjectCreateGrace);
+    });
   });
 });
