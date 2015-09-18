@@ -66,17 +66,17 @@ You can also play with [demos](https://github.com/kuzzleio/demo) for a quick Kuz
     $ npm test
 Because functional tests need to be done in a running Kuzzle environment, it is recommended to run these tests from a Kuzzle container.
 
-From a Docker container:
+Using Compose:
 
 ```
-    $ docker exec -ti kuzzle_kuzzle_1 bash
-    $ npm test
+    $ docker-compose -f docker-compose/test.yml up
 ```
+
+This command will pop all the stack for running Kuzzle, then execute unit test and functional test. When all tests are done, containers are destroyed.
 
 Using a Vagrant virtual machine:
 
-    $ vagrant ssh -c 'docker exec -ti kuzzle_kuzzle_1 bash'
-    $ npm test
+    $ vagrant ssh -c 'docker-compose -f docker-compose/test.yml up'
 
 You may also run unit and functional tests separately, or with additional arguments.
 For more information, check the [unit testing](test/README.md) and the [functional testing](features/README.md) documentation.
