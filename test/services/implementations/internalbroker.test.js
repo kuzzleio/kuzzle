@@ -212,7 +212,7 @@ describe('Test: Internal Broker service ', function () {
         catch (e) {
           done(e);
         }
-      }, 20);
-    }, 100);
+      }, 100);
+    }, 20);
   });
 });
