@@ -15,4 +15,9 @@ script:
   - docker-compose -f docker-compose/test-travis.yml run kuzzle
 
 notifications:
-  email: false
+  webhooks:
+    urls:
+      - https://webhooks.gitter.im/e/8e145155fbaaf37cffea
+    on_success: change
+    on_failure: always
+    on_start: never
