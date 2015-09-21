@@ -122,4 +122,28 @@ describe('Test: hotelClerk.removeSubscription', function () {
         should(notified.notification.result.count).be.exactly(1);
       });
   });
+
+  it('should call a function leave when the type is websocket', function () {
+    var leavedRooms = [];
+
+    connection.type = 'websocket';
+    kuzzle.io = {
+      sockets: {
+        connected: {
+          connectionid: {
+            leave: function (roomId) {
+              leavedRooms.push(roomId);
+            }
+          }
+        }
+      }
+    };
+    kuzzle.notifier = {notify: function () {}};
+
+    return kuzzle.hotelClerk.removeSubscription(requestObject1, connection)
+      .then(function () {
+        should(leavedRooms).containEql('b6fba02d3a45c4d6a9bb224532e12eb1');
+        delete connection.type;
+      });
+  });
 });
