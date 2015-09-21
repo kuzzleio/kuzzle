@@ -65,24 +65,27 @@ var myHooks = function () {
   });
 
   this.After('@unsubscribe', function (callback) {
-    async.each(Object.keys(this.api.subscribedRooms), function (room, callbackAsync) {
-      this.api.unsubscribe(room)
-        .then(function () {
-          callbackAsync();
-        }.bind(this))
-        .catch(function (error) {
-          callbackAsync(error);
-        });
-    }.bind(this),
-    function (error) {
-      this.api.subscribedRooms = [];
+    async.each(Object.keys(this.api.subscribedRooms), function (socketName, callbackSocketName) {
+      async.each(Object.keys(this.api.subscribedRooms[socketName]), function (room, callbackRoom) {
+        this.api.unsubscribe(room, socketName)
+          .then(function () {
+            callbackRoom();
+          }.bind(this))
+          .catch(function (error) {
+            callbackRoom(error);
+          });
+      }.bind(this), function (error) {
+        this.api.subscribedRooms[socketName] = {};
 
+        callbackSocketName(error);
+      }.bind(this));
+    }.bind(this), function (error) {
       if (error) {
         callback(error);
       }
 
       callback();
-    }.bind(this));
+    });
   });
 };
 

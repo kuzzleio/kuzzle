@@ -2,11 +2,11 @@ var async = require('async');
 
 var apiSteps = function () {
   /** SUBSCRIPTION **/
-  this.Given(/^A room subscription listening to "([^"]*)" having value "([^"]*)"$/, function (key, value, callback) {
+  this.Given(/^A room subscription listening to "([^"]*)" having value "([^"]*)"(?: with socket "([^"]*)")?$/, function (key, value, socketName, callback) {
     var filter = { term: {} };
 
     filter.term[key] = value;
-    this.api.subscribe(filter)
+    this.api.subscribe(filter, socketName)
       .then(function (body) {
         if (body.error !== null) {
           callback.fail(new Error(body.error));
@@ -56,15 +56,22 @@ var apiSteps = function () {
   /**
    * Unsubscribes from one of the subscribed rooms
    */
-  this.Then(/^I unsubscribe/, function (callback) {
-    var rooms = Object.keys(this.api.subscribedRooms);
+  this.Then(/^I unsubscribe(?: socket "([^"]*)")?/, function (socketName, callback) {
+    var rooms;
+
+    if (socketName) {
+      rooms = Object.keys(this.api.subscribedRooms[socketName]);
+    }
+    else {
+      rooms = Object.keys(this.api.subscribedRooms.client1);
+    }
 
     if (rooms.length === 0) {
       callback.fail(new Error('Cannot unsubscribe: no subscribed rooms'));
       return false;
     }
 
-    this.api.unsubscribe(rooms[rooms.length - 1])
+    this.api.unsubscribe(rooms[rooms.length - 1], socketName)
       .then(function () {
         callback();
       })
