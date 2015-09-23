@@ -171,7 +171,6 @@ module.exports = {
 
     socketName = initSocket.call(this, socketName);
 
-    console.log('room', room);
     this.listSockets[socketName].removeListener(this.subscribedRooms[socketName][room], this.subscribedRooms[socketName][room].listener);
     delete this.subscribedRooms[socketName][room];
     return emit.call(this, 'subscribe', msg, false, socketName);
