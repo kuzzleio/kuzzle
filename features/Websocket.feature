@@ -124,8 +124,8 @@ Feature: Test websocket API
 
   @usingWebsocket @unsubscribe
   Scenario: Subscription notifications
-    Given A room subscription listening to "lastName" having value "Hopper"
-    Given A room subscription listening to "lastName" having value "Hopper"
+    Given A room subscription listening to "lastName" having value "Hopper" with socket "client1"
+    Given A room subscription listening to "lastName" having value "Hopper" with socket "client2"
     Then I should receive a "on" notification
-    Then I unsubscribe
+    Then I unsubscribe socket "client1"
     And I should receive a "off" notification

@@ -7,7 +7,7 @@ var
 module.exports = {
   world: null,
   mqttClient: null,
-  subscribedRooms: {},
+  subscribedRooms: {client1: {}},
   responses: null,
 
   init: function (world) {
@@ -156,22 +156,22 @@ module.exports = {
     var
       topic = ['subscribe', this.world.fakeCollection, 'off'].join('.'),
       msg = {
-        clientId: this.subscribedRooms[room].listener.options.clientId,
+        clientId: this.subscribedRooms.client1[room].listener.options.clientId,
         requestId: room
       };
 
-    this.subscribedRooms[room].listener.end(true);
-    delete this.subscribedRooms[room];
+    this.subscribedRooms.client1[room].listener.end(true);
+    delete this.subscribedRooms.client1[room];
     return publish.call(this, topic, msg, false);
   },
 
   countSubscription: function () {
     var
       topic = ['subscribe', this.world.fakeCollection, 'count'].join('.'),
-      rooms = Object.keys(this.subscribedRooms),
+      rooms = Object.keys(this.subscribedRooms.client1),
       msg = {
         body: {
-          roomId: this.subscribedRooms[rooms[0]].roomId
+          roomId: this.subscribedRooms.client1[rooms[0]].roomId
         }
       };
 
@@ -232,7 +232,7 @@ var publishAndListen = function (topic, message) {
     }.bind(this));
 
     mqttListener.subscribe(unpacked.result.roomId);
-    this.subscribedRooms[message.requestId] = { roomId: unpacked.result.roomId, listener: mqttListener };
+    this.subscribedRooms.client1[message.requestId] = { roomId: unpacked.result.roomId, listener: mqttListener };
     deferred.resolve(unpacked);
   }.bind(this));
 
