@@ -1,6 +1,6 @@
 # Node
 node_modules
-npm-debug.log
+npm-debug.log*
 .node_history
 # Exclude profiling file output
 *.out
@@ -8,6 +8,8 @@ npm-debug.log
 !/coverage/
 /coverage/*
 !/coverage/scripts
+# Plugin config folder
+config/plugins/
 
 # IDE
 .idea
