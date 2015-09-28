@@ -2,8 +2,9 @@
   "kuzzle-plugin-logger": {
     "url": "git+https://github.com/kuzzleio/kuzzle-plugin-logger.git#master",
     "defaultConfig": {
-      "use": "captains-log",
-      "level": "info"
+      "use": "winston",
+      "level": "info",
+      "addDate": true
     },
     "activated": false
   }
