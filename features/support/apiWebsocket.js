@@ -5,8 +5,6 @@ var
   io = require('socket.io-client');
 
 module.exports = {
-
-  socket: null,
   world: null,
   responses: null,
   subscribedRooms: {},
@@ -19,10 +17,10 @@ module.exports = {
   },
 
   disconnect: function () {
-    if (this.socket) {
-      this.socket.destroy();
-      this.socket = null;
-    }
+    Object.keys(this.listSockets).forEach(function (socket) {
+      this.listSockets[socket].destroy();
+      delete this.listSockets[socket];
+    }.bind(this));
   },
 
   get: function (id) {
@@ -264,7 +262,6 @@ var initSocket = function (socketName) {
 
   if (!this.listSockets[socketName]) {
     socket = io(config.url, { 'force new connection': true });
-
     this.listSockets[socketName] = socket;
 
     // the default socket is the socket with name 'client1'
