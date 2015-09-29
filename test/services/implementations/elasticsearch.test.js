@@ -244,49 +244,47 @@ describe('Test: ElasticSearch service', function () {
   });
 
   it('should allow to delete documents using a provided filter', function (done) {
-    var createdDocuments = [];
+    var mockupIds = ['foo', 'bar', 'baz'];
 
-    this.slow(5000);
+    elasticsearch.client.bulk = function (bulkData) {
+      try {
+        should(bulkData.body).not.be.undefined().and.be.an.Array();
+        should(bulkData.body.length).be.exactly(mockupIds.length);
 
-    elasticsearch.create(requestObject)
-      .then(function (result) {
-        createdDocuments.push(result._id);
-        return elasticsearch.create(requestObject);
-      })
-      .then(function (result) {
-        createdDocuments.push(result._id);
-        return elasticsearch.create(requestObject);
-      })
-      .then(function (result) {
-        createdDocuments.push(result._id);
-
-        setTimeout(function () {
-          var ret;
-
-          requestObject.data.body = {};
-          ret = elasticsearch.deleteByQuery(requestObject);
-          should(ret).be.a.Promise();
-
-          ret
-            .then(function (result) {
-              try {
-                should(result.ids).not.be.undefined().and.be.an.Array();
-                should(result.ids.length).be.exactly(3);
-                should(result.ids.sort()).match(createdDocuments.sort());
-                done();
-              }
-              catch (e) {
-                done(e);
-              }
-            })
-            .catch(function (error) {
-              done(error);
-            });
-        }, 1200);
-      })
-      .catch(function (error) {
+        bulkData.body.forEach(function (cmd) {
+          should(cmd).be.an.Object();
+          should(cmd.delete).not.be.undefined().and.be.an.Object();
+          should(mockupIds.indexOf(cmd.delete._id)).not.be.eql(-1);
+          should(cmd.delete._type).be.exactly(requestObject.collection);
+        });
+      }
+      catch (error) {
         done(error);
-      });
+      }
+
+      return Promise.resolve(mockupIds);
+    };
+
+    ES.__with__({
+      getAllIdsFromQuery: function () {
+        return Promise.resolve(mockupIds);
+      }
+    })(function () {
+      elasticsearch.deleteByQuery(requestObject)
+        .then(function (result) {
+          try {
+            should(result.ids).not.be.undefined().and.be.an.Array();
+            should(result.ids).match(mockupIds);
+            done();
+          }
+          catch (e) {
+            done(e);
+          }
+        })
+        .catch(function (error) {
+          done(error);
+        });
+    });
   });
 
   it('should return a rejected promise if the delete by query fails because of a bad filter', function () {
@@ -297,7 +295,13 @@ describe('Test: ElasticSearch service', function () {
     elasticsearch.client.bulk = function () { return Promise.reject(new Error('rejected')); };
     requestObject.data.body = {};
 
-    return should(elasticsearch.deleteByQuery(requestObject)).be.rejected();
+    return ES.__with__({
+      getAllIdsFromQuery: function () {
+        return Promise.resolve(['foo', 'bar']);
+      }
+    })(function () {
+      return should(elasticsearch.deleteByQuery(requestObject)).be.rejected();
+    });
   });
 
   it('should support bulk data import', function () {
