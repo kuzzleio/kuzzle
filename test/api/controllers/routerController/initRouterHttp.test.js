@@ -5,7 +5,7 @@
 
 var
   should = require('should'),
-  captainsLog = require('captains-log'),
+  winston = require('winston'),
   http = require('http'),
   q = require('q'),
   params = require('rc')('kuzzle'),
@@ -66,7 +66,7 @@ describe('Test: routerController.initRouterHttp', function () {
    */
   before(function (done) {
     kuzzle = new Kuzzle();
-    kuzzle.log = new captainsLog({level: 'silent'});
+    kuzzle.log = new (winston.Logger)({transports: [new (winston.transports.Console)({level: 'silent'})]});
 
     var mockResponse = function (params, request, response) {
       if (!params.action) {

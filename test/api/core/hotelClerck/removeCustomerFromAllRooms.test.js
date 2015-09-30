@@ -1,6 +1,6 @@
 var
   should = require('should'),
-  captainsLog = require('captains-log'),
+  winston = require('winston'),
   RequestObject = require('root-require')('lib/api/core/models/requestObject'),
   params = require('rc')('kuzzle'),
   Kuzzle = require('root-require')('lib/api/Kuzzle');
@@ -39,7 +39,8 @@ describe('Test: hotelClerk.removeCustomerFromAllRooms', function () {
 
   beforeEach(function (done) {
     kuzzle = new Kuzzle();
-    kuzzle.log = new captainsLog({level: 'silent'});
+    kuzzle.log = new (winston.Logger)({transports: [new (winston.transports.Console)({level: 'silent'})]});
+    kuzzle.removeAllListeners();
     kuzzle.start(params, {dummy: true})
       .then(function() {
         kuzzle.notifier.notify = mockupNotifier;

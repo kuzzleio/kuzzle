@@ -8,7 +8,7 @@
  */
 var
   should = require('should'),
-  captainsLog = require('captains-log'),
+  winston = require('winston'),
   rewire = require('rewire'),
   RequestObject = require('root-require')('lib/api/core/models/requestObject'),
   ResponseObject = require('root-require')('lib/api/core/models/responseObject'),
@@ -116,21 +116,16 @@ describe('Test: notifier.workerNotification', function () {
   });
 
   it('should log an error when one occurs in a notifyDocument* function', function (done) {
-    var
-      loggedError = false;
-
     responseObject.action = 'create';
-    Notifier.log = { error: function () { loggedError = true; } };
+
+    Notifier.kuzzle.once('log:error', function () {
+      done();
+    });
 
     Notifier.__with__({
       notifyDocumentCreate: function () { return Promise.reject(new Error('')); }
     })(function () {
       (Notifier.__get__('workerNotification')).call(Notifier, responseObject);
-
-      setTimeout(function () {
-        should(loggedError).be.true();
-        done();
-      }, 20);
     });
   });
 });

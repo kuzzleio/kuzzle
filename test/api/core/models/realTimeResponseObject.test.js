@@ -3,7 +3,7 @@
  */
 var
   should = require('should'),
-  captainsLog = require('captains-log'),
+  winston = require('winston'),
   rewire = require('rewire'),
   uuid = require('node-uuid'),
   RequestObject = require('root-require')('lib/api/core/models/requestObject'),

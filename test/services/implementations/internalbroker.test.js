@@ -1,6 +1,6 @@
 var
   should = require('should'),
-  captainsLog = require('captains-log'),
+  winston = require('winston'),
   rewire = require('rewire'),
   IPCBroker = rewire('../../../lib/services/internalbroker');
 
@@ -26,7 +26,7 @@ describe('Test: Internal Broker service ', function () {
       }
     };
 
-    kuzzle.log = new captainsLog({level: 'silent'});
+    kuzzle.log = new (winston.Logger)({transports: [new (winston.transports.Console)({level: 'silent'})]});
     brokerServer = new IPCBroker(kuzzle, { isServer: true });
     brokerClient = new IPCBroker(kuzzle, { isServer: false });
   });
