@@ -2,7 +2,9 @@ var
   should = require('should'),
   winston = require('winston'),
   rewire = require('rewire'),
-  IPCBroker = rewire('../../../lib/services/internalbroker');
+  IPCBroker = rewire('../../../lib/services/internalbroker'),
+  params = require('rc')('kuzzle'),
+  Kuzzle = require('root-require')('lib/api/Kuzzle');
 
 require('should-promised');
 
@@ -16,19 +18,20 @@ describe('Test: Internal Broker service ', function () {
     brokerServer,
     brokerClient;
 
-  before(function () {
-    kuzzle = {
-      config: {
-        broker: {
-          host: 'localhost',
-          port: '6666'
-        }
-      }
-    };
+  before(function (callback) {
+    kuzzle = new Kuzzle();
+    kuzzle.start(params, {dummy: true}).then(function () {
+      kuzzle.config.broker = {
+        host: 'localhost',
+        port: '6666'
+      };
 
-    kuzzle.log = new (winston.Logger)({transports: [new (winston.transports.Console)({level: 'silent'})]});
-    brokerServer = new IPCBroker(kuzzle, { isServer: true });
-    brokerClient = new IPCBroker(kuzzle, { isServer: false });
+      kuzzle.log = new (winston.Logger)({transports: [new (winston.transports.Console)({level: 'silent'})]});
+      brokerServer = new IPCBroker(kuzzle, { isServer: true });
+      brokerClient = new IPCBroker(kuzzle, { isServer: false });
+
+      callback();
+    });
   });
 
   after(function () {

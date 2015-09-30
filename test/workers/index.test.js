@@ -84,7 +84,9 @@ describe('Testing: workers loader', function () {
       foo: ['foo', 'write', 'bar']
     };
 
-    kuzzle.log.error = function () { error = true; };
+    kuzzle.once('log:error', function () {
+      error = true;
+    });
 
     loader.init();
     kuzzle.config.workers = saved;

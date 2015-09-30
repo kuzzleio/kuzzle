@@ -126,6 +126,7 @@ describe('Test: notifier.workerNotification', function () {
       responseObject.collection = false;
 
       kuzzle.once('log:error', function () {
+        responseObject.collection = 'bar';
         done();
       });
 
