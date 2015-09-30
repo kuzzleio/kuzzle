@@ -104,35 +104,45 @@ describe('Testing: Remote Actions service', function () {
     should(addedMessage.error).be.exactly('The service mockupService doesn\'t support on-the-fly disabling/enabling');
   });
 
-  it('should forward to kuzzle a success result if toggling the service succeed', function () {
+  it('should forward to kuzzle a success result if toggling the service succeed', function (done) {
     var enabled = false;
 
     kuzzle.services.list.mockupService = {
       toggle: function (flag) {
         enabled = flag;
-
-        return Promise.resolve('Enabled: ', flag);
+        return Promise.resolve('Enabled: ' + flag.toString());
       }
     };
 
     remoteActionsCallback.call(remoteActions, {id: 'foo', service: 'mockupService', enable: true});
     setTimeout(function () {
-      should(room).be.exactly('foo');
-      should(addedMessage).be.an.Object().and.not.be.empty();
-      should(addedMessage.error).be.undefined();
-      should(addedMessage.result).not.be.undefined().and.be.exactly('Enabled: true');
-    }, 20);
+      try {
+        should(room).be.exactly('foo');
+        should(addedMessage).be.an.Object().and.not.be.empty();
+        should(addedMessage.error).be.undefined();
+        should(addedMessage.result).not.be.undefined().and.be.exactly('Enabled: true');
+      }
+      catch (error) {
+        done(error);
+      }
 
-    remoteActionsCallback.call(remoteActions, {id: 'bar', service: 'mockupService', enable: false});
-    setTimeout(function () {
-      should(room).be.exactly('bar');
-      should(addedMessage).be.an.Object().and.not.be.empty();
-      should(addedMessage.error).be.undefined();
-      should(addedMessage.result).not.be.undefined().and.be.exactly('Enabled: false');
+      remoteActionsCallback.call(remoteActions, {id: 'bar', service: 'mockupService', enable: false});
+      setTimeout(function () {
+        try {
+          should(room).be.exactly('bar');
+          should(addedMessage).be.an.Object().and.not.be.empty();
+          should(addedMessage.error).be.undefined();
+          should(addedMessage.result).not.be.undefined().and.be.exactly('Enabled: false');
+          done();
+        }
+        catch (error) {
+          done(error);
+        }
+      }, 20);
     }, 20);
   });
 
-  it('should forward to kuzzle a failed result if togging the service fails', function () {
+  it('should forward to kuzzle a failed result if togging the service fails', function (done) {
     kuzzle.services.list.mockupService = {
       toggle: function () {
         return Promise.reject(new Error('rejected'));
@@ -141,10 +151,16 @@ describe('Testing: Remote Actions service', function () {
 
     remoteActionsCallback.call(remoteActions, {id: 'foo', service: 'mockupService', enable: true});
     setTimeout(function () {
-      should(room).be.exactly('foo');
-      should(addedMessage).be.an.Object().and.not.be.empty();
-      should(addedMessage.error).not.be.undefined().and.be.a.String();
-      should(addedMessage.error).be.exactly('Error: rejected');
+      try {
+        should(room).be.exactly('foo');
+        should(addedMessage).be.an.Object().and.not.be.empty();
+        should(addedMessage.error).not.be.undefined().and.be.a.String();
+        should(addedMessage.error).be.exactly('rejected');
+        done();
+      }
+      catch (error) {
+        done(error);
+      }
     }, 20);
   });
 });
