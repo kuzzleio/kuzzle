@@ -12,7 +12,9 @@ var
   rewire = require('rewire'),
   RequestObject = require('root-require')('lib/api/core/models/requestObject'),
   ResponseObject = require('root-require')('lib/api/core/models/responseObject'),
-  Notifier = rewire('../../../../lib/api/core/notifier');
+  Notifier = rewire('../../../../lib/api/core/notifier'),
+  params = require('rc')('kuzzle'),
+  Kuzzle = require('root-require')('lib/api/Kuzzle');
 
 require('should-promised');
 
@@ -116,16 +118,18 @@ describe('Test: notifier.workerNotification', function () {
   });
 
   it('should log an error when one occurs in a notifyDocument* function', function (done) {
-    responseObject.action = 'create';
+    var kuzzle = new Kuzzle();
 
-    Notifier.kuzzle.once('log:error', function () {
-      done();
-    });
+    kuzzle.log = new (winston.Logger)({transports: [new (winston.transports.Console)({level: 'silent'})]});
+    kuzzle.start(params, {dummy: true}).then(function () {
+      responseObject.action = 'create';
+      responseObject.collection = false;
 
-    Notifier.__with__({
-      notifyDocumentCreate: function () { return Promise.reject(new Error('')); }
-    })(function () {
-      (Notifier.__get__('workerNotification')).call(Notifier, responseObject);
+      kuzzle.once('log:error', function () {
+        done();
+      });
+
+      kuzzle.services.list.broker.add(kuzzle.config.queues.coreNotifierTaskQueue, responseObject);
     });
   });
 });
