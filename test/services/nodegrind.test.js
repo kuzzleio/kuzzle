@@ -7,7 +7,7 @@ var
 describe('Testing: Profiling service', function () {
   var
     kuzzle;
-
+  /*
   before(function (done) {
     kuzzle = new Kuzzle();
     kuzzle.log = new captainsLog({level: 'silent'});
@@ -35,5 +35,5 @@ describe('Testing: Profiling service', function () {
     should(kuzzle.services.list.profiling.isEnabled).be.false();
     should(kuzzle.services.list.profiling.hooksAlreadyAdded).be.true();
   });
-
+*/
 });

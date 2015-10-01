@@ -1,5 +1,5 @@
 kuzzle:
-  image: kuzzleio/kuzzle
+  image: kuzzleio/dev:node4
   command: /run-test.sh
   volumes:
     - "..:/var/app"
