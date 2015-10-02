@@ -117,7 +117,7 @@ describe('Test plugins manager', function () {
         pipes: {
           'foo': 'myFunc'
         },
-        myFunc: function (callback) {
+        myFunc: function (object, callback) {
           isCalled = true;
           callback();
         }
@@ -127,6 +127,38 @@ describe('Test plugins manager', function () {
 
     pluginsManager.run();
     pluginsManager.trigger('foo')
+      .then(function () {
+        should(isCalled).be.true();
+        done();
+      });
+  });
+
+  it('should attach pipes event with wildcard', function (done) {
+    var
+      kuzzle = new EventEmitter({
+        wildcard: true,
+        maxListeners: 30,
+        delimiter: ':'
+      }),
+      pluginsManager = new PluginsManager (kuzzle),
+      isCalled = false;
+
+    pluginsManager.plugins = [{
+      object: {
+        init: function () {},
+        pipes: {
+          'foo:*': 'myFunc'
+        },
+        myFunc: function (object, callback) {
+          isCalled = true;
+          callback();
+        }
+      },
+      activated: true
+    }];
+
+    pluginsManager.run();
+    pluginsManager.trigger('foo:bar')
       .then(function () {
         should(isCalled).be.true();
         done();
