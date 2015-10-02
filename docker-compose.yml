@@ -1,5 +1,5 @@
 kuzzle:
-  image: kuzzleio/dev:node4
+  image: kuzzleio/dev
   volumes:
     - ".:/var/app"
   ports:
