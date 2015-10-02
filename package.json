@@ -36,7 +36,6 @@
     "newrelic": "1.22.0",
     "ngeohash": "0.6.0",
     "node-uuid": "1.4.3",
-    "nodegrind": "0.4.0",
     "q": "2.0.3",
     "rc": "1.1.1",
     "redis": "1.0.0",

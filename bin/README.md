@@ -20,7 +20,7 @@ $ kuzzle enable <service> <PID|all>
 
 Where:
 
-* service is the Kuzzle service name you want to activate (for instance: profiling, mqBroker, ...)
+* service is the Kuzzle service name you want to activate (for instance: mqBroker)
 * PID is the processus ID of the Kuzzle server or worker you want to control. Use 'all' if you want to broadcast a service activation to a Kuzzle server and all its workers.
 
 You can disable a service with:

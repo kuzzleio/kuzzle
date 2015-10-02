@@ -15,7 +15,7 @@ Kuzzle currently implements the following Services:
 A Service can be added to different engines. For example, Elasticsearch is used by both the writeEngine and the readEngine (see [index.js](./index.js)).
 
 
-# Logging/Monitoring/Profiling
+# Logging/Monitoring
 
 The main purpose for those subjects is to detect latency and problems in Kuzzle. In many cases, you don't have to enable them if you're not a contributor.
 
@@ -35,47 +35,6 @@ and add to the [hooks](../../lib/config/hooks.js) the entry:
 ```
 
 Every call to emit will add an entry to the logstash server.
-
-## Profiling
-
-The profiling service is designed to get time spent in internal functions. This service is useful during the development process to try to understand where we wasted time.  
-We use [nodegrind](https://www.npmjs.com/package/nodegrind) to output a file for each request that can be analyzed by [Blackfire](https://blackfire.io) or other software compatible with [KCachegrind](http://kcachegrind.sourceforge.net/html/Home.html) format.
-
-When Kuzzle is running, open a new terminal and run:
-
-```
-$ kuzzle enable profiling
-```
-
-When you're done with profiling, you can disable it with:
-
-```
-$ kuzzle disable profiling
-```
-
-Output files are generated in the `profiling` folder. To use them you can use the container [blackfire-upload](https://github.com/kuzzleio/kuzzle-containers/tree/master/blackfire-upload) created by Kuzzle team to upload them to Blackfire.
-
-```
-$ docker run --rm -ti \
-    -e BLACKFIRE_CLIENT_ID=$BLACKFIRE_CLIENT_ID \
-    -e BLACKFIRE_CLIENT_TOKEN=$BLACKFIRE_CLIENT_TOKEN \
-    -v paht/to/profiling/:/profiling \
-    kuzzleio/blackfire-upload ./aggregate.sh
-```
-
-For each request made, this service creates a new file. In the `profiling` folder, files are generated with the format:
-
-* `<controller>-<protocol>-<timestamp>-<requestId>` for profiling in the main kuzzle server
-* `worker-<worker name>-<protocol>-<timestamp>-<requestId>` for profiling in workers
-
-Two profiling files are generated because workers and the main server are not running on the same thread.
-
-**Note:**
-
-* You don't have to reload Kuzzle when you enable/disable profiling.
-* If you're not using the Docker version, you have to install [Nodegrind](https://www.npmjs.com/package/nodegrind) because it must be installed globally with `npm install -g nodegrind@0.4.0`
-* **Don't** use the profiling during benchmark: for each request made, a minimum of two files will be created.
-* Avoid to mix different controllers if you don't want to aggregate the results. It doesn't make sense to send profiling on controller `write` and `read`.
 
 
 ## Monitoring
@@ -97,23 +56,20 @@ The `remoteActions` service allows to enable/disable services when Kuzzle is run
 
 
 ```
-$ kuzzle enable profiling
+$ kuzzle enable mqBroker <pid>
 ```
 
 And you can disable the service with
 
 ```
-$ kuzzle disable profiling
+$ kuzzle disable mqBroker <pid>
 ```
 
-## Currently available services
+## Available services
 
-Currently, there is a list of available services through the remote action:
-
-* [`profiling`](#profiling)
+All services including a ``toggle`` function can be enabled/disabled remotely using the Remote Action service.
 
 # Contributing
-
 
 ## Use a different service for an existing Kuzzle engine
 
