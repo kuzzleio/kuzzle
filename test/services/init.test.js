@@ -70,16 +70,6 @@ describe('Test service initialization function', function () {
     should(kuzzle.services.list.notificationCache.search).be.a.Function();
   });
 
-  it('should build a profiling service', function () {
-    kuzzle.start(params, {dummy: true});
-
-    should(kuzzle.services.list.profiling).be.an.Object();
-    should(kuzzle.services.list.profiling.addHooks).be.a.Function();
-    should(kuzzle.services.list.profiling.toggle).be.a.Function();
-    should(kuzzle.services.list.profiling.startLog).be.a.Function();
-    should(kuzzle.services.list.profiling.stopLog).be.a.Function();
-  });
-
   it('should not init services in blacklist', function () {
     kuzzle.config = {
       services: {
