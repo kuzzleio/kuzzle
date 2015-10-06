@@ -43,7 +43,107 @@ A plugin must be identified with the name given by the module, in the `package.j
 
 # How to create a plugin
 
-A plugin is a NPM module or 
+A plugin is a Javascript module that can be installed with NPM or via a public GIT repository.
+
+## Configuration
+
+The module must have a `package.json` file with a `pluginInfo` entry. The optional `defaultConfig` will be copied in files `config/defaultPlugins.json` and `config/customPlugins.json` in Kuzzle.
+
+```json
+"pluginInfo": {
+    "defaultConfig": {
+      "service": "winston",
+      "level": "info",
+      "addDate": true
+    }
+  }
+```
+
+## Architecture
+
+Your main javascript file in your plugin must have a function `init` and expose a `hooks` and/or a `pipes` object. All functions defined in these files must be exposed in main object.
+
+### Hooks
+
+Hooks events are triggered and no blocking functions. Typically, if we want to log something, we will use hooks events.
+
+```js
+// Somewhere in Kuzzle
+kuzzle.pluginsManager.trigger('event:hookEvent', message);
+```
+
+```js
+// In hooks.js file in the plugin
+module.exports = {
+  'event:hookEvent': 'myFunction'
+}
+```
+
+```js
+// In main plugin index file
+module.exports = function () {
+
+  this.hooks = require('./config/hooks.js');
+  this.init = function (config, isDummy) {
+    // do something
+  }
+  
+  this.myFunction = function (message, event) {
+    console.log('Event', event, 'is triggered');
+    console.log('There is the message', message);
+  }
+}
+```
+
+### Pipes
+
+When an event pipes is triggered, we waiting for all functions attached on this event. A function attached on a pipe event have access to the data and can even change it.
+A function must take in last parameter a callback. This callback must be called at the end of the function with `callback(error, object)`:
+
+* error: if there is an error during the function, this parameter must be set. If everything is ok, you can call the function with null
+* object: the object to pass to the next function
+
+Function are called in chain. When the `callback()` function is called, the next function attached on the event is triggered.
+
+We can use pipes event when you want to modify or validate an object with a plugin.
+
+```js
+// Somewhere in Kuzzle
+kuzzle.pluginsManager.trigger('event:pipeEvent', requestObject)
+  .then(function (modifiedRequestObject) {
+    // do something
+  });
+```
+
+```js
+// in pipes.js file in the plugin
+module.exports = {
+  'event:pipeEvent': 'addCreatedAt'
+}
+```
+
+```js
+// In main plugin index file
+module.exports = function () {
+
+  this.pipes = require('./config/pipes.js');
+  this.init = function (config, isDummy) {
+    // do something
+  }
+  
+  this.addCreatedAt = function (requestObject, callback) {
+    requestObject.data.body.createdAt = Date.now();
+    callback(null, requestObject);
+  }
+}
+```
+
+In this example, in Kuzzle, the `modifiedRequestObject` have now a `createdAt` attribute.
+
+
+## Examples
+
+For an example, you can have a look at the [kuzzle-plugin-logger](https://github.com/kuzzleio/kuzzle-plugin-logger).
 
 # Troubleshooting
 
