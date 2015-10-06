@@ -180,7 +180,7 @@ Creates a new document in the persistent data storage, or update it if it alread
       ...
     },
     collection: '<data collection>',
-    action: 'create',
+    action: 'createOrUpdate',
     controller: 'write',
     requestId: '<unique request identifier>',
     version: <number>,              // The new version number of this document
