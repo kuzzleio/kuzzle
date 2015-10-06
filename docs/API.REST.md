@@ -14,6 +14,7 @@ If you need such functionalities, please check our other supported protocols. Fo
 * [Performing queries](#performing-queries)
   * [Sending a non persistent message](#sending-a-non-persistent-message)
   * [Creating a new document](#creating-a-new-document)
+  * [Creating or Updating a document](#creating-or-updating-a-document)
   * [Retrieving a document](#retrieving-a-document)
   * [Searching for documents](#searching-for-documents)
   * [Updating a document](#updating-a-document)
@@ -88,6 +89,8 @@ Simply put, a ``data collection`` is a set of data managed internally by Kuzzle.
 
 ### Creating a new document
 
+Creates a new document in the persistent data storage. Returns an error if the document already exists.
+
 **URL:** ``http://kuzzle:7512/api/<data collection>``
 
 **Method:** ``POST``
@@ -133,7 +136,8 @@ Or instead control the behavior of the document by passing your document in the 
     collection: '<data collection>',
     action: 'create',
     controller: 'write',
-    requestId, '<unique request identifier>'
+    requestId: '<unique request identifier>',
+    _version: 1                     // The version of the document in the persistent data storage
   }
 }
 ```
@@ -141,6 +145,53 @@ Or instead control the behavior of the document by passing your document in the 
 You may use a different route to create documents. This requires that you force the document ID:
 
 **URL:** ``http://kuzzle:7512/api/<data collection>/<document unique ID>/_create``
+
+**Method:** ``PUT``
+
+Everything else stays the same.
+
+---
+
+###  Creating or Updating a document
+
+Creates a new document in the persistent data storage, or update it if it already exists.
+
+**URL:** ``http://kuzzle:7512/api/<data collection>/<documentId>``
+
+**Method:** ``PUT``
+
+**Message:**
+```javascript  
+{
+  /*
+  The document itself
+  */
+}
+```
+
+**Kuzzle response:**
+
+```javascript
+{
+  error: null,                      // Assuming everything went well
+  result: {
+    _id: '<Unique document ID>',    // The generated document ID
+    _source: {                      // The created document
+      ...
+    },
+    collection: '<data collection>',
+    action: 'create',
+    controller: 'write',
+    requestId: '<unique request identifier>',
+    version: <number>,              // The new version number of this document
+    created: <boolean>              // true: a new document has been created, false: the document has been updated
+  }
+}
+```
+
+You may use a different route to create or update documents:
+
+**URL:** ``http://kuzzle:7512/api/<data collection>/<document unique ID>/_createOrUpdate``
 
 **Method:** ``PUT``
 
@@ -238,10 +289,6 @@ Kuzzle uses the [ElasticSearch Query DSL ](https://www.elastic.co/guide/en/elast
 
 Only documents in the persistent data storage layer can be updated.
 
-**URL:** ``http://kuzzle:7512/api/<data collection>/<document unique ID>``
-
-or:
-
 **URL:** ``http://kuzzle:7512/api/<data collection>/<document unique ID>/_update``
 
 **Method:** ``PUT``
@@ -273,7 +320,6 @@ or:
   }
 }
 ```
-
 
 ---
 

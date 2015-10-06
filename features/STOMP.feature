@@ -9,6 +9,13 @@ Feature: Test STOMP API
     Then I should receive a document id
     Then I'm able to get the document
 
+
+  @usingSTOMP
+  Scenario: Create or Update a document
+    When I write the document
+    And I createOrUpdate it
+    Then I should have updated the document
+
   @usingSTOMP
   Scenario: Update a document
     When I write the document

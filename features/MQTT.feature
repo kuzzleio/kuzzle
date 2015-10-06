@@ -10,6 +10,12 @@ Feature: Test MQTT API
     Then I'm able to get the document
 
   @usingMQTT
+  Scenario: Create or Update a document
+    When I write the document
+    And I createOrUpdate it
+    Then I should have updated the document
+
+  @usingMQTT
   Scenario: Update a document
     When I write the document
     Then I update the document with value "foo" in field "firstName"
