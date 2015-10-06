@@ -16,6 +16,6 @@ see [plugins documentation](plugins.md)
 
 # Advanced documentation (not required for a basic development)
 
-For a deeper dive into Kuzzle  you can read the [Architecture](architecture.md) file.
+For a deeper dive into Kuzzle you can read the [Architecture](architecture.md) file.
 
 You can also read the README.md file in each folder for a better understanding of various elements.

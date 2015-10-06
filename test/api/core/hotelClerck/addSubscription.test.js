@@ -26,6 +26,7 @@ describe('Test: hotelClerk.addSubscription', function () {
     kuzzle = new Kuzzle();
     kuzzle.log = new (winston.Logger)({transports: [new (winston.transports.Console)({level: 'silent'})]});
     kuzzle.removeAllListeners();
+
     return kuzzle.start(params, {dummy: true});
   });
 
@@ -73,6 +74,37 @@ describe('Test: hotelClerk.addSubscription', function () {
       });
   });
 
+  it('should call a function join when the type is websocket', function () {
+    var
+      joinedRooms = [],
+      requestObject = new RequestObject({
+        requestId: roomName,
+        collection: collection,
+        body: filter
+      });
+
+    // mockup internal function kuzzle called when type is websocket
+    connection.type = 'websocket';
+    kuzzle.io = {
+      sockets: {
+        connected: {
+          connectionid: {
+            join: function (roomId) {
+              joinedRooms.push(roomId);
+            }
+          }
+        }
+      }
+    };
+    kuzzle.notifier = {notify: function () {}};
+
+    return kuzzle.hotelClerk.addSubscription(requestObject, connection)
+      .then(function () {
+        should(joinedRooms).containEql('b6fba02d3a45c4d6a9bb224532e12eb1');
+        delete connection.type;
+      });
+  });
+
   it('should return an error when the user has already subscribed to the filter', function () {
     var requestObject = new RequestObject({
       requestId: roomName,
@@ -84,6 +116,21 @@ describe('Test: hotelClerk.addSubscription', function () {
       .then(function () {
         return should(kuzzle.hotelClerk.addSubscription(requestObject, connection)).be.rejected();
       });
+  });
+
+  it('should reject an error when a filter is unknown', function () {
+    var
+      pAddSubscription,
+      requestObject = new RequestObject({
+        controller: 'subscribe',
+        action: 'on',
+        requestId: roomName,
+        collection: collection,
+        body: {badterm : {firstName: 'Ada'}}
+      });
+
+    pAddSubscription = kuzzle.hotelClerk.addSubscription(requestObject, connection);
+    return should(pAddSubscription).be.rejected();
   });
 
   it('should handle non-string requestIds', function () {

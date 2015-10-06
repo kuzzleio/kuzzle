@@ -10,7 +10,7 @@ module.exports = {
   clientId: null,
   amqpClient: null,
   amqpChannel: null,
-  subscribedRooms: {},
+  subscribedRooms: {client1 : {}},
   responses: null,
 
   init: function (world) {
@@ -167,22 +167,22 @@ module.exports = {
     var
       topic = ['subscribe', this.world.fakeCollection, 'off'].join('.'),
       msg = {
-        clientId: this.subscribedRooms[room].clientId,
+        clientId: this.subscribedRooms.client1[room].clientId,
         requestId: room
       };
 
-    this.subscribedRooms[room].listener.close();
-    delete this.subscribedRooms[room];
+    this.subscribedRooms.client1[room].listener.close();
+    delete this.subscribedRooms.client1[room];
     return publish.call(this, topic, msg, false);
   },
 
   countSubscription: function () {
     var
       topic = ['subscribe', this.world.fakeCollection, 'count'].join('.'),
-      rooms = Object.keys(this.subscribedRooms),
+      rooms = Object.keys(this.subscribedRooms.client1),
       msg = {
         body: {
-          roomId: this.subscribedRooms[rooms[0]].roomId
+          roomId: this.subscribedRooms.client1[rooms[0]].roomId
         }
       };
 
@@ -242,7 +242,7 @@ var publishAndListen = function (topic, message) {
   publish.call(this, topic, message).then(function (response) {
     this.amqpClient.then(function (connection) {
       connection.createChannel().then(function (channel) {
-        this.subscribedRooms[response.result.roomName] = { roomId: response.result.roomId, clientId: message.clientId, listener: channel };
+        this.subscribedRooms.client1[response.result.roomName] = { roomId: response.result.roomId, clientId: message.clientId, listener: channel };
 
         channel.assertQueue(response.result.roomId)
           .then(function () {

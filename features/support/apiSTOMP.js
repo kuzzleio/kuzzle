@@ -11,7 +11,7 @@ module.exports = {
   stompClient: undefined,
   stompConnected: undefined,
   clientId: uuid.v1(),
-  subscribedRooms: {},
+  subscribedRooms: {client1: {}},
   responses: null,
 
   init: function (world) {
@@ -167,21 +167,21 @@ module.exports = {
       topic = ['subscribe', this.world.fakeCollection, 'off'].join('.'),
       msg = {
         requestId: room,
-        clientId: this.subscribedRooms[room].clientId
+        clientId: this.subscribedRooms.client1[room].clientId
       };
 
-    this.subscribedRooms[room].client.disconnect();
-    delete this.subscribedRooms[room];
+    this.subscribedRooms.client1[room].client.disconnect();
+    delete this.subscribedRooms.client1[room];
     return publish.call(this, topic, msg, false);
   },
 
   countSubscription: function () {
     var
       topic = ['subscribe', this.world.fakeCollection, 'count'].join('.'),
-      rooms = Object.keys(this.subscribedRooms),
+      rooms = Object.keys(this.subscribedRooms.client1),
       msg = {
         body: {
-          roomId: this.subscribedRooms[rooms[0]].roomId
+          roomId: this.subscribedRooms.client1[rooms[0]].roomId
         }
       };
 
@@ -243,7 +243,7 @@ var publishAndListen = function (topic, message) {
       roomClient.connect(function () {
         var topic = '/topic/' + response.result.roomId;
 
-        this.subscribedRooms[response.result.roomName] = { roomId: response.result.roomId, client: roomClient, clientId: message.clientId };
+        this.subscribedRooms.client1[response.result.roomName] = { roomId: response.result.roomId, client: roomClient, clientId: message.clientId };
 
         roomClient.subscribe(topic, function (body) {
           this.responses = JSON.parse(body);

@@ -46,6 +46,7 @@ describe('Test service initialization function', function () {
     kuzzle.start(params, {dummy: true});
 
     should(kuzzle.services.list.readEngine).be.an.Object();
+    should(kuzzle.services.list.readEngine.init).be.a.Function();
     should(kuzzle.services.list.readEngine.search).be.a.Function();
     should(kuzzle.services.list.readEngine.get).be.a.Function();
   });
@@ -54,6 +55,7 @@ describe('Test service initialization function', function () {
     kuzzle.start(params, {dummy: true});
 
     should(kuzzle.services.list.writeEngine).be.an.Object();
+    should(kuzzle.services.list.writeEngine.init).be.a.Function();
     should(kuzzle.services.list.writeEngine.create).be.a.Function();
     should(kuzzle.services.list.writeEngine.update).be.a.Function();
     should(kuzzle.services.list.writeEngine.deleteByQuery).be.a.Function();

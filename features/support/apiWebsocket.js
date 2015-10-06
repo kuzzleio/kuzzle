@@ -5,25 +5,22 @@ var
   io = require('socket.io-client');
 
 module.exports = {
-
-  socket: null,
   world: null,
   responses: null,
   subscribedRooms: {},
+  listSockets: {},
 
   init: function (world) {
     this.world = world;
 
-    if ( !this.socket ) {
-      this.socket = io(config.url, { 'force new connection': true });
-    }
+    initSocket.call(this, 'client1');
   },
 
   disconnect: function () {
-    if (this.socket) {
-      this.socket.destroy();
-      this.socket = null;
-    }
+    Object.keys(this.listSockets).forEach(function (socket) {
+      this.listSockets[socket].destroy();
+      delete this.listSockets[socket];
+    }.bind(this));
   },
 
   get: function (id) {
@@ -147,7 +144,7 @@ module.exports = {
     return emit.call(this, 'admin', msg );
   },
 
-  subscribe: function (filters) {
+  subscribe: function (filters, socketName) {
     var
       msg = {
         action: 'on',
@@ -159,10 +156,10 @@ module.exports = {
       msg.body = filters;
     }
 
-    return emitAndListen.call(this, 'subscribe', msg);
+    return emitAndListen.call(this, 'subscribe', msg, socketName);
 
   },
-  unsubscribe: function (room) {
+  unsubscribe: function (room, socketName) {
     var
       msg = {
         action: 'off',
@@ -170,18 +167,22 @@ module.exports = {
         requestId: room
       };
 
-    this.socket.removeListener(this.subscribedRooms[room], this.subscribedRooms[room].listener);
-    delete this.subscribedRooms[room];
-    return emit.call(this, 'subscribe', msg, false);
+    socketName = initSocket.call(this, socketName);
+
+    this.listSockets[socketName].removeListener(this.subscribedRooms[socketName][room], this.subscribedRooms[socketName][room].listener);
+    delete this.subscribedRooms[socketName][room];
+    return emit.call(this, 'subscribe', msg, false, socketName);
   },
 
-  countSubscription: function () {
+  countSubscription: function (socketName) {
+    socketName = initSocket.call(this, socketName);
+
     var
-      rooms = Object.keys(this.subscribedRooms),
+      rooms = Object.keys(this.subscribedRooms[socketName]),
       msg = {
         action: 'count',
         body: {
-          roomId: this.subscribedRooms[rooms[0]].roomId
+          roomId: this.subscribedRooms[socketName][rooms[0]].roomId
         }
       };
 
@@ -189,7 +190,7 @@ module.exports = {
   }
 };
 
-var emit = function (controller, msg, getAnswer) {
+var emit = function (controller, msg, getAnswer, socketName) {
   var
     deferred = q.defer(),
     listen = (getAnswer !== undefined) ? getAnswer : true;
@@ -198,8 +199,10 @@ var emit = function (controller, msg, getAnswer) {
     msg.requestId = uuid.v1();
   }
 
+  socketName = initSocket.call(this, socketName);
+
   if (listen) {
-    this.socket.once(msg.requestId, function (result) {
+    this.listSockets[socketName].once(msg.requestId, function (result) {
       if (result.error) {
         deferred.reject(result.error);
         return false;
@@ -212,12 +215,12 @@ var emit = function (controller, msg, getAnswer) {
     deferred.resolve({});
   }
 
-  this.socket.emit(controller, msg);
+  this.listSockets[socketName].emit(controller, msg);
 
   return deferred.promise;
 };
 
-var emitAndListen = function (controller, msg) {
+var emitAndListen = function (controller, msg, socketName) {
   var
     deferred = q.defer();
 
@@ -225,7 +228,8 @@ var emitAndListen = function (controller, msg) {
     msg.requestId = uuid.v1();
   }
 
-  this.socket.once(msg.requestId, function (response) {
+  socketName = initSocket.call(this, socketName);
+  this.listSockets[socketName].once(msg.requestId, function (response) {
     var listener = function (document) {
       this.responses = document;
     };
@@ -235,12 +239,36 @@ var emitAndListen = function (controller, msg) {
       return false;
     }
 
-    this.subscribedRooms[response.result.roomName] = { roomId: response.result.roomId, listener: listener };
-    this.socket.on(response.result.roomId, listener.bind(this));
+    if (!this.subscribedRooms[socketName]) {
+      this.subscribedRooms[socketName] = {};
+    }
+
+    this.subscribedRooms[socketName][response.result.roomName] = { roomId: response.result.roomId, listener: listener };
+    this.listSockets[socketName].on(response.result.roomId, listener.bind(this));
     deferred.resolve(response);
   }.bind(this));
 
-  this.socket.emit(controller, msg);
+  this.listSockets[socketName].emit(controller, msg);
 
   return deferred.promise;
+};
+
+var initSocket = function (socketName) {
+  var socket;
+
+  if (!socketName) {
+    socketName = 'client1';
+  }
+
+  if (!this.listSockets[socketName]) {
+    socket = io(config.url, { 'force new connection': true });
+    this.listSockets[socketName] = socket;
+
+    // the default socket is the socket with name 'client1'
+    if ( socketName === 'client1' ) {
+      this.socket = socket;
+    }
+  }
+
+  return socketName;
 };
