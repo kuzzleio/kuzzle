@@ -456,7 +456,7 @@ Creates a new document in the persistent data storage, or update it if it alread
     action: 'createOrUpdate',
     controller: 'write',
     requestId: '<unique request identifier>',
-    version: <number>,              // The new version number of this document
+    _version: <number>,             // The new version number of this document
     created: <boolean>              // true: a new document has been created, false: the document has been updated
   }
 }
