@@ -26,20 +26,18 @@ kuzzle:
 A plugin configuration can have attributes:
 
 * `url`: a git url where the plugin can be find and clone.
-* `name`: a valid name of module present on [npm](https://www.npmjs.com/). Typically, a module that can be installed with `npm install`.
 * `version`: a version corresponding to the version given in the file `package.json` in the plugin module.
 * `customConfig`: config for the plugin. Each plugin have a different configuration (required or optional), check the corresponding plugin documentation for more information.
 * `defaultConfig`: Don't edit this attribute. The defaultConfig is provided by the plugin itself. If you need to change the configuration, edit the `customConfig` attribute
 
 **Note:** 
-* Url or name+version are required. The url is checked first, so if you have set a name and an url, the name will be ignored.
+* Url or version are required. The url is checked first, so if you have set a version and an url, the version will be ignored.
 
 # Default plugins
 
 ## Logger
 
-By default, the logger plugin is enabled and configured for using `captains-log` (refer to the kuzzle-plugin-logger documentation for more information).  
-A plugin must be identified with the name given by the module, in the `package.json` file. For each plugin, we have:
+By default, the logger plugin is enabled and configured for using the service `winston` (refer to the kuzzle-plugin-logger documentation for more information).  
 
 # How to create a plugin
 
