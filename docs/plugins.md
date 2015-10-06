@@ -105,7 +105,7 @@ A function must take in last parameter a callback. This callback must be called 
 
 Function are called in chain. When the `callback()` function is called, the next function attached on the event is triggered.
 
-We can use pipes event when you want to modify or validate an object with a plugin.
+Pipes event are useful when you want to modify or validate an object with a plugin.
 
 ```js
 // Somewhere in Kuzzle
