@@ -3,6 +3,8 @@ var
   PluginsManager = require('root-require')('lib/api/core/pluginsManager'),
   EventEmitter = require('eventemitter2').EventEmitter2;
 
+require('should-promised');
+
 describe('Test plugins manager run', function () {
 
   it('should do nothing on run if plugin is not activated', function () {
@@ -137,5 +139,31 @@ describe('Test plugins manager run', function () {
         should(isCalled).be.true();
         done();
       });
+  });
+
+  it('should attach pipes event and reject if an attached function return an error', function () {
+    var
+      kuzzle = new EventEmitter({
+        wildcard: true,
+        maxListeners: 30,
+        delimiter: ':'
+      }),
+      pluginsManager = new PluginsManager (kuzzle);
+
+    pluginsManager.plugins = [{
+      object: {
+        init: function () {},
+        pipes: {
+          'foo:bar': 'myFunc'
+        },
+        myFunc: function (object, callback) {
+          callback(true);
+        }
+      },
+      activated: true
+    }];
+
+    pluginsManager.run();
+    should(pluginsManager.trigger('foo:bar')).be.rejected();
   });
 });
