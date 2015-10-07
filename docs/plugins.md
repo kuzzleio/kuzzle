@@ -136,7 +136,7 @@ module.exports = function () {
 }
 ```
 
-In this example, in Kuzzle, the `modifiedRequestObject` have now a `createdAt` attribute.
+In this example, in Kuzzle, the `modifiedRequestObject` has now a `createdAt` attribute.
 
 
 ## Examples
