@@ -10,6 +10,12 @@ Feature: Test AMQP API
     Then I'm able to get the document
 
   @usingAMQP
+  Scenario: Create or Update a document
+    When I write the document
+    And I createOrUpdate it
+    Then I should have updated the document
+
+  @usingAMQP
   Scenario: Update a document
     When I write the document
     Then I update the document with value "foo" in field "firstName"

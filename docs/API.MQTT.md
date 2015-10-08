@@ -21,6 +21,7 @@ The current implementation of our MQ Broker service uses [RabbitMQ](https://www.
   * [Unsubscribing to a room](#unsubscribing-to-a-room)
   * [Sending a non persistent message](#sending-a-non-persistent-message)
   * [Creating a new document](#creating-a-new-document)
+  * [Creating or Updating a document](#creating-or-updating-a-document)
   * [Retrieving a document](#retrieving-a-document)
   * [Searching for documents](#searching-for-documents)
   * [Updating a document](#updating-a-document)
@@ -359,6 +360,8 @@ Makes Kuzzle remove you from its subscribers on this room.
 
 ###  Creating a new document
 
+Creates a new document in the persistent data storage. Returns an error if the document already exists.
+
 **Topic:** ``write.<data collection>.create``
 
 **Query:**
@@ -401,7 +404,60 @@ Makes Kuzzle remove you from its subscribers on this room.
     collection: '<data collection>',
     action: 'create',
     controller: 'write',
-    requestId, '<unique request identifier>'
+    requestId, '<unique request identifier>',
+    _version: 1                     // The version of the document in the persistent data storage
+  }
+}
+```
+
+---
+
+###  Creating or Updating a document
+
+Creates a new document in the persistent data storage, or update it if it already exists.
+
+**Topic:** ``write.<data collection>.createOrUpdate``
+
+**Query:**
+
+```javascript
+{
+  /*
+  Optionnal: allow Kuzzle to send a response to your application
+  */
+  clientId: <Unique session ID>,
+
+  /*
+  Optionnal: Kuzzle will forward this field in its response, allowing you
+  to easily identify what query generated the response you got.
+  */
+  requestId: <Unique query ID>,
+
+  /*
+  The document itself
+  */
+  body: {
+    ...
+  }
+}
+```
+
+**Kuzzle response:**
+
+```javascript
+{
+  error: null,                      // Assuming everything went well
+  result: {
+    _id: '<Unique document ID>',    // The generated document ID
+    _source: {                      // The created document
+      ...
+    },
+    collection: '<data collection>',
+    action: 'createOrUpdate',
+    controller: 'write',
+    requestId: '<unique request identifier>',
+    _version: <number>,             // The new version number of this document
+    created: <boolean>              // true: a new document has been created, false: the document has been updated
   }
 }
 ```

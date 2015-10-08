@@ -68,6 +68,17 @@ module.exports = {
     return emit.call(this, 'write', msg);
   },
 
+  createOrUpdate: function (body) {
+    var
+      msg = {
+        action: 'createOrUpdate',
+        collection: this.world.fakeCollection,
+        body: body
+      };
+
+    return emit.call(this, 'write', msg);
+  },
+
   update: function (id, body) {
     var
       msg = {
