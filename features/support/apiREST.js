@@ -61,9 +61,19 @@ module.exports = {
     return this.callApi(options);
   },
 
+  createOrUpdate: function (body) {
+    var options = {
+      url: this.pathApi(this.world.fakeCollection + '/' + body._id),
+      method: 'PUT',
+      json: body
+    };
+
+    return this.callApi(options);
+  },
+
   update: function (id, body) {
     var options = {
-      url: this.pathApi(this.world.fakeCollection + '/' + id),
+      url: this.pathApi(this.world.fakeCollection + '/' + id + '/_update'),
       method: 'PUT',
       json: body
     };

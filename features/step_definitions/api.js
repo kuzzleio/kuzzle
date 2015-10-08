@@ -479,6 +479,30 @@ var apiSteps = function () {
       });
   });
 
+  this.When(/^I createOrUpdate it$/, function (callback) {
+    var document = JSON.parse(JSON.stringify(this.documentGrace));
+
+    document._id = this.result._id;
+
+    this.api.createOrUpdate(document)
+      .then(function (body) {
+        if (body.error) {
+          callback.fail(new Error(body.error));
+          return false;
+        }
+
+        if (!body.result) {
+          callback.fail(new Error('No result provided'));
+          return false;
+        }
+
+        this.updatedResult = body.result;
+        callback();
+      }.bind(this))
+      .catch(function (error) {
+        callback.fail(error);
+      });
+  });
 
   this.Then(/^I should receive a document id$/, function (callback) {
     if (this.result && this.result._id) {
@@ -489,6 +513,17 @@ var apiSteps = function () {
     callback.fail(new Error('No id information in returned object'));
   });
 
+  this.Then(/^I should have updated the document$/, function (callback) {
+    if (this.updatedResult._id === this.result._id && this.updatedResult._version === (this.result._version+1)) {
+      this.result = this.updatedResult;
+      callback();
+      return false;
+    }
+
+    callback.fail(new Error('The received document is not an updated version of the previous one. \n' +
+      'Previous document: ' + JSON.stringify(this.result) + '\n' +
+      'Received document: ' + JSON.stringify(this.updatedResult)));
+  });
 
   this.Then(/^I update the document with value "([^"]*)" in field "([^"]*)"$/, function (value, field, callback) {
     var main = function (callbackAsync) {

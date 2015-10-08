@@ -47,7 +47,16 @@ module.exports = {
       };
 
     return publish.call(this, topic, msg);
+  },
 
+  createOrUpdate: function (body) {
+    var
+      topic = ['write', this.world.fakeCollection, 'createOrUpdate'].join('.'),
+      msg = {
+        body: body
+      };
+
+    return publish.call(this, topic, msg);
   },
 
   get: function (id) {
