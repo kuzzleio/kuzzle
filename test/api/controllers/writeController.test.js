@@ -31,6 +31,9 @@ describe('Test: write controller', function () {
     return should(kuzzle.funnel.write.create(requestObject)).be.rejected()
       .then(function () {
         return should(kuzzle.funnel.write.update(requestObject)).be.rejected();
+      })
+      .then(function () {
+        return should(kuzzle.funnel.write.createOrUpdate(requestObject)).be.rejected();
       });
   });
 
@@ -97,6 +100,27 @@ describe('Test: write controller', function () {
     created.then(function () {
       done();
     });
+  });
+
+  it('should emit a hook on a createOrUpdate query', function (done) {
+    var requestObject = new RequestObject({body: {foo: 'bar'}}, {}, 'unit-test');
+
+    this.timeout(50);
+
+    kuzzle.once('data:createOrUpdate', function (obj) {
+      try {
+        should(obj).be.exactly(requestObject);
+        done();
+      }
+      catch (e) {
+        done(e);
+      }
+    });
+
+    kuzzle.funnel.write.createOrUpdate(requestObject)
+      .catch(function (error) {
+        done(error);
+      });
   });
 
   it('should emit a hook on an update data query', function (done) {

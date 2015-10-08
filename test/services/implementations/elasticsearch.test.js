@@ -140,6 +140,27 @@ describe('Test: ElasticSearch service', function () {
       });
   });
 
+  it('should support createOrUpdate capability', function (done) {
+    var ret;
+
+    requestObject.data.id = createdDocumentId;
+    ret = elasticsearch.createOrUpdate(requestObject);
+
+    should(ret).be.a.Promise();
+
+    ret
+      .then(function (result) {
+        should(result._type).be.exactly(collection);
+        should(result._id).be.exactly(requestObject.data.id);
+        should(result.created).be.false();
+        should(result._version).be.eql(2);
+        createdDocumentId = result._id;
+        done();
+      })
+      .catch(function (error) {
+        done(error);
+      });
+  });
 
   it('should allow getting a single document', function (done) {
     var ret;
