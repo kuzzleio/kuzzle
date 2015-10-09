@@ -14,9 +14,11 @@ describe('Test: dsl.flattenObject', function () {
   it('should flatten an object', function () {
     var result = flattenObject({ foo: { bar: 'bar', baz: { SchrodingerCat: 'Dead'}}});
 
-    should.not.exist(result.foo);
+    // the entry 'foo' must still exists because the user can perform a subscribe on {exists: {field: 'foo'}}
+    should.exist(result.foo);
     should(result['foo.bar']).not.be.undefined().and.be.exactly('bar');
-    should.not.exist(result['foo.baz']);
+    // the entry 'foo.baz' must still exists because the user can perform a subscribe on {exists: {field: 'foo.baz'}}
+    should.exist(result['foo.baz']);
     should(result['foo.baz.SchrodingerCat']).not.be.undefined().and.be.exactly('Dead');
   });
 
