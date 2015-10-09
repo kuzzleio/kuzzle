@@ -135,9 +135,6 @@ describe('Testing: write worker', function () {
       else if (eventName === ('worker:write:' + requestObject.protocol + ':stop')) {
         emittedStopEvent = true;
       }
-      else {
-        done(new Error('Unknown event emitted: ' + eventName));
-      }
     };
 
     callback.call(kuzzle, requestObject);
@@ -176,9 +173,6 @@ describe('Testing: write worker', function () {
       }
       else if (queue === kuzzle.config.queues.coreNotifierTaskQueue) {
         notifierQueue = true;
-      }
-      else {
-        done(new Error('Message sent to an unknown queue: ' + queue));
       }
     };
 
