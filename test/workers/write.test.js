@@ -123,17 +123,19 @@ describe('Testing: write worker', function () {
     this.timeout(50);
 
     kuzzle.emit = function (eventName, data) {
-      try {
-        should(data).match(requestObject);
-      } catch (error) {
-        done(error);
-      }
+      if (eventName.startsWith('worker:write:' + requestObject.protocol)) {
+        try {
+          should(data).match(requestObject);
+        } catch (error) {
+          done(error);
+        }
 
-      if (eventName === ('worker:write:' + requestObject.protocol + ':start')) {
-        emittedStartEvent = true;
-      }
-      else if (eventName === ('worker:write:' + requestObject.protocol + ':stop')) {
-        emittedStopEvent = true;
+        if (eventName === ('worker:write:' + requestObject.protocol + ':start')) {
+          emittedStartEvent = true;
+        }
+        else if (eventName === ('worker:write:' + requestObject.protocol + ':stop')) {
+          emittedStopEvent = true;
+        }
       }
     };
 
