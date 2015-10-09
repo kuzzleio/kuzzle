@@ -10,6 +10,10 @@ Kuzzle supports a variety of communication protocols. You'll find here the speci
 
 For an overview about the filtering syntax, check the [Filters](filters.md) documentation.
 
+# Plugins
+
+see [plugins documentation](plugins.md)
+
 # Advanced documentation (not required for a basic development)
 
 For a deeper dive into Kuzzle you can read the [Architecture](architecture.md) file.

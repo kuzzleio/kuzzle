@@ -1,6 +1,6 @@
 var
   should = require('should'),
-  captainsLog = require('captains-log'),
+  winston = require('winston'),
   params = require('rc')('kuzzle'),
   Kuzzle = require('root-require')('lib/api/Kuzzle'),
   rewire = require('rewire'),
@@ -18,7 +18,7 @@ describe('Testing: broker service', function () {
 
   before(function (done) {
     kuzzle = new Kuzzle();
-    kuzzle.log = new captainsLog({level: 'silent'});
+    kuzzle.log = new (winston.Logger)({transports: [new (winston.transports.Console)({level: 'silent'})]});
     kuzzle.start(params, {dummy: true})
       .then(function () {
         Broker = rewire('../../lib/services/' + kuzzle.config.services.broker);

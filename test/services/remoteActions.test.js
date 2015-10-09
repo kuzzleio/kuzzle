@@ -1,7 +1,7 @@
 var
   should = require('should'),
+  winston = require('winston'),
   rewire = require('rewire'),
-  captainsLog = require('captains-log'),
   params = require('rc')('kuzzle'),
   Kuzzle = require('root-require')('lib/api/Kuzzle'),
   RemoteActions = rewire('../../lib/services/remoteActions');
@@ -16,8 +16,8 @@ describe('Testing: Remote Actions service', function () {
 
   before(function (done) {
     kuzzle = new Kuzzle();
-    kuzzle.log = new captainsLog({level: 'silent'});
-    return kuzzle.start(params, {dummy: true})
+    kuzzle.log = new (winston.Logger)({transports: [new (winston.transports.Console)({level: 'silent'})]});
+    kuzzle.start(params, {dummy: true})
       .then(function () {
         remoteActions = new RemoteActions(kuzzle);
 

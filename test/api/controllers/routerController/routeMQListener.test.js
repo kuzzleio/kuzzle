@@ -5,7 +5,7 @@
 
 var
   should = require('should'),
-  captainsLog = require('captains-log'),
+  winston = require('winston'),
   params = require('rc')('kuzzle'),
   Kuzzle = require('root-require')('lib/api/Kuzzle'),
   rewire = require('rewire'),
@@ -68,7 +68,7 @@ describe('Test: routerController.routeMQListener', function () {
         };
 
       kuzzle = new Kuzzle();
-      kuzzle.log = new captainsLog({level: 'silent'});
+      kuzzle.log = new (winston.Logger)({transports: [new (winston.transports.Console)({level: 'silent'})]});
 
       kuzzle.start(params, {dummy: true})
         .then(function () {
@@ -144,24 +144,18 @@ describe('Test: routerController.routeMQListener', function () {
 
   it('should fail cleanly with incorrect messages', function (done) {
     var
-      listener = kuzzle.services.list.mqBroker.listeners['write.*.*'].callback,
-      errorMessage = '';
+      listener = kuzzle.services.list.mqBroker.listeners['write.*.*'].callback;
 
-    kuzzle.log.error = function (error) { errorMessage = error; };
+    kuzzle.once('log:error', function (error) {
+      should(error).be.an.Object();
+      should(error.message).be.exactly('Parse error');
+      done();
+    });
+
     notifyStatus = '';
     mqMessage.content = 'foobar';
 
     listener(mqMessage);
-
-    setTimeout(function () {
-      try {
-        should(errorMessage).startWith('Parse error');
-        done();
-      }
-      catch (e) {
-        done(e);
-      }
-    }, 20);
   });
 
   it('should notify with an error object in case of rejection', function (done) {

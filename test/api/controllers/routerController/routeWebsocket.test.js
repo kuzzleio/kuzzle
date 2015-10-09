@@ -8,7 +8,7 @@
 
 var
   should = require('should'),
-  captainsLog = require('captains-log'),
+  winston = require('winston'),
   params = require('rc')('kuzzle'),
   EventEmitter = require('events').EventEmitter,
   Kuzzle = require('root-require')('lib/api/Kuzzle'),
@@ -58,7 +58,7 @@ describe('Test: routerController.routeWebsocket', function () {
         };
 
       kuzzle = new Kuzzle();
-      kuzzle.log = new captainsLog({level: 'silent'});
+      kuzzle.log = new (winston.Logger)({transports: [new (winston.transports.Console)({level: 'silent'})]});
 
       kuzzle.start(params, {dummy: true})
         .then(function () {

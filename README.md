@@ -34,6 +34,8 @@ Prerequisites:
 From Kuzzle's root directory:
 
     $ docker-compose up
+    
+**Note:** Kuzzle need an access to the web for download plugins. If you are behind a proxy, you have to run this [container](https://hub.docker.com/r/klabs/forgetproxy/). More information about plugins [here](/docs/plugins.md)
 
 ## Using Vagrant
 
