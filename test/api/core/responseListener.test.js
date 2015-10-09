@@ -3,7 +3,7 @@
  */
 var
   should = require('should'),
-  captainsLog = require('captains-log'),
+  winston = require('winston'),
   rewire = require('rewire'),
   uuid = require('node-uuid'),
   params = require('rc')('kuzzle'),
@@ -29,7 +29,7 @@ describe('Test: responseListener', function () {
 
   before(function (done) {
     kuzzle = new Kuzzle();
-    kuzzle.log = new captainsLog({level: 'silent'});
+    kuzzle.log = new (winston.Logger)({transports: [new (winston.transports.Console)({level: 'silent'})]});
     kuzzle.start(params, {dummy: true})
       .then(function () {
         kuzzle.services.list.broker.listen = function (room, cb) {

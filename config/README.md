@@ -7,3 +7,6 @@ Every configuration for Kuzzle.
 
 The <b>perf</b> directory contains configuration of the [performance testing process](./perf/README.md) for Kuzzle.
 
+# Plugins configuration
+
+see [documentation](../docs/plugins.md)

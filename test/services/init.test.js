@@ -1,6 +1,6 @@
 var
   should = require('should'),
-  captainsLog = require('captains-log'),
+  winston = require('winston'),
   params = require('rc')('kuzzle'),
   Kuzzle = require('root-require')('lib/api/Kuzzle');
 
@@ -11,7 +11,8 @@ describe('Test service initialization function', function () {
 
   beforeEach(function () {
     kuzzle = new Kuzzle();
-    kuzzle.log = new captainsLog({level: 'silent'});
+    kuzzle.log = new (winston.Logger)({transports: [new (winston.transports.Console)({level: 'silent'})]});
+    kuzzle.removeAllListeners();
   });
 
   it('should build an internal broker service with correct methods', function () {
