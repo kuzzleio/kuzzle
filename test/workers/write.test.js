@@ -123,20 +123,19 @@ describe('Testing: write worker', function () {
     this.timeout(50);
 
     kuzzle.emit = function (eventName, data) {
-      try {
-        should(data).match(requestObject);
-      } catch (error) {
-        done(error);
-      }
+      if (eventName.startsWith('worker:write:' + requestObject.protocol)) {
+        try {
+          should(data).match(requestObject);
+        } catch (error) {
+          done(error);
+        }
 
-      if (eventName === ('worker:write:' + requestObject.protocol + ':start')) {
-        emittedStartEvent = true;
-      }
-      else if (eventName === ('worker:write:' + requestObject.protocol + ':stop')) {
-        emittedStopEvent = true;
-      }
-      else {
-        done(new Error('Unknown event emitted: ' + eventName));
+        if (eventName === ('worker:write:' + requestObject.protocol + ':start')) {
+          emittedStartEvent = true;
+        }
+        else if (eventName === ('worker:write:' + requestObject.protocol + ':stop')) {
+          emittedStopEvent = true;
+        }
       }
     };
 
@@ -176,9 +175,6 @@ describe('Testing: write worker', function () {
       }
       else if (queue === kuzzle.config.queues.coreNotifierTaskQueue) {
         notifierQueue = true;
-      }
-      else {
-        done(new Error('Message sent to an unknown queue: ' + queue));
       }
     };
 

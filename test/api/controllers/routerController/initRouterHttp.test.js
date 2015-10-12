@@ -173,11 +173,34 @@ describe('Test: routerController.initRouterHttp', function () {
     request.end();
   });
 
-  it('should create a route for document updates', function (done) {
+  it('should create a route for createOrUpdate actions', function (done) {
     var request;
 
     options.method = 'PUT';
     options.path= '/api/collection/documentID';
+
+    request = http.request(options, function (response) {
+      parseHttpResponse(response)
+        .then(function (result) {
+          should(response.statusCode).be.exactly(200);
+          should(result.controller).be.exactly('write');
+          should(result.action).be.exactly('createOrUpdate');
+          done();
+        })
+        .catch(function (error) {
+          done(error);
+        });
+    });
+
+    request.write('foobar');
+    request.end();
+  });
+
+  it('should create a route for document updates', function (done) {
+    var request;
+
+    options.method = 'PUT';
+    options.path= '/api/collection/documentID/_update';
 
     request = http.request(options, function (response) {
       parseHttpResponse(response)
@@ -403,29 +426,6 @@ describe('Test: routerController.initRouterHttp', function () {
     request.end();
   });
 
-  it('should create a route for document update using alternative path', function (done) {
-    var request;
-
-    options.method = 'PUT';
-    options.path= '/api/collection/documentID/_update';
-
-    request = http.request(options, function (response) {
-      parseHttpResponse(response)
-        .then(function (result) {
-          should(response.statusCode).be.exactly(200);
-          should(result.controller).be.exactly('write');
-          should(result.action).be.exactly('update');
-          done();
-        })
-        .catch(function (error) {
-          done(error);
-        });
-    });
-
-    request.write('foobar');
-    request.end();
-  });
-
   it('should create a route for document creation using alternative path', function (done) {
     var request;
 
@@ -438,6 +438,29 @@ describe('Test: routerController.initRouterHttp', function () {
           should(response.statusCode).be.exactly(200);
           should(result.controller).be.exactly('write');
           should(result.action).be.exactly('create');
+          done();
+        })
+        .catch(function (error) {
+          done(error);
+        });
+    });
+
+    request.write('foobar');
+    request.end();
+  });
+
+  it('should create a route for createOrUpdate actions using alternative path', function (done) {
+    var request;
+
+    options.method = 'PUT';
+    options.path= '/api/collection/documentID/_createOrUpdate';
+
+    request = http.request(options, function (response) {
+      parseHttpResponse(response)
+        .then(function (result) {
+          should(response.statusCode).be.exactly(200);
+          should(result.controller).be.exactly('write');
+          should(result.action).be.exactly('createOrUpdate');
           done();
         })
         .catch(function (error) {
