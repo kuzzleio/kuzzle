@@ -11,5 +11,5 @@ as well as [istanbul](https://gotwarlost.github.io/istanbul/) for test coverage.
     $ npm run unit-testing --coverage
 
 Coverage report will be stored in ```coverage/``` directory:
-* in json format : ```coverage/coverage.json```
+* in json format: ```coverage/coverage.json```
 * in HTML human readable format: ```coverage/lcov-report/index.html```
