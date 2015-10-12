@@ -1,15 +1,15 @@
 # About
 
 Plugins are external components allowing to execute functions on specific event triggering.  
-There is several types of plugins:
+There are several types of plugins:
 
-* Hooks event: just listen to events and perform other actions (ie: a log plugin). They do not respond anything directly, they just listen.
-* Pipes event: perform an action and return something. Kuzzle is waiting for all pipes event are performed before continuing.
+* Hook events: just listen to events and perform other actions (ie: a log plugin). They do not respond anything directly, they just listen.
+* Pipe events: perform an action and return something. Kuzzle is waiting that all pipe events are performed before continuing.
 
 # Configuration
 
-For customize plugins, you can create a file `config/customPlugins.json`. This file can override default plugins file `config/customPlugins.json` for add/remove plugins and their configurations.  
-If you're using docker, you can create your own `customPlugins.json` file and mount it in `/var/app/config/customPlugins.json`. In `docker-compose.yml` file, you can have something like
+To customize plugins, you can create a file `config/customPlugins.json`. This file can override default plugin files `config/customPlugins.json` to add/remove plugins and their configurations.  
+If you're using Docker, you can create your own `customPlugins.json` file and mount it in `/var/app/config/customPlugins.json`. In `docker-compose.yml` file, you can have something like
 
 ```
 kuzzle:
@@ -25,19 +25,19 @@ kuzzle:
 
 A plugin configuration can have attributes:
 
-* `url`: a git url where the plugin can be find and clone.
+* `url`: a git URL where the plugin can be found and cloned.
 * `version`: a version corresponding to the version given in the file `package.json` in the plugin module.
-* `customConfig`: config for the plugin. Each plugin have a different configuration (required or optional), check the corresponding plugin documentation for more information.
+* `customConfig`: config for the plugin. Each plugin has a different configuration (required or optional), check the corresponding plugin documentation for more information.
 * `defaultConfig`: Don't edit this attribute. The defaultConfig is provided by the plugin itself. If you need to change the configuration, edit the `customConfig` attribute
 
 **Note:** 
-* Url or version are required. The url is checked first, so if you have set a version and an url, the version will be ignored.
+* URL or version are required. The URL is checked first, so if you have set a version and an URL, the version will be ignored.
 
 # Default plugins
 
 ## Logger
 
-By default, the logger plugin is enabled and configured for using the service `winston` (refer to the kuzzle-plugin-logger documentation for more information).  
+By default, the logger plugin is enabled and configured to use the service `winston` (refer to the kuzzle-plugin-logger documentation for more information).  
 
 # How to create a plugin
 
@@ -59,11 +59,11 @@ The module must have a `package.json` file with a `pluginInfo` entry. The option
 
 ## Architecture
 
-Your main javascript file in your plugin must have a function `init` and expose a `hooks` and/or a `pipes` object. All functions defined in these files must be exposed in main object.
+Your main javascript file in your plugin must have a function `init` and expose a `hooks` and/or a `pipes` object. All functions defined in these files must be exposed as main object.
 
 ### Hooks
 
-Hooks events are triggered and no blocking functions. Typically, if we want to log something, we will use hooks events.
+Hook events are triggered and are no blocking functions. Typically, if we want to log something, we will use hook events.
 
 ```js
 // Somewhere in Kuzzle
@@ -95,15 +95,15 @@ module.exports = function () {
 
 ### Pipes
 
-When an event pipes is triggered, we waiting for all functions attached on this event. A function attached on a pipe event have access to the data and can even change it.
-A function must take in last parameter a callback. This callback must be called at the end of the function with `callback(error, object)`:
+When an event pipes is triggered, we are waiting for all functions attached on this event. A function attached on a pipe event has access to the data and can even change them.
+A function must take in its last parameter a callback. This callback must be called at the end of the function with `callback(error, object)`:
 
 * error: if there is an error during the function, this parameter must be set. If everything is ok, you can call the function with null
 * object: the object to pass to the next function
 
-Function are called in chain. When the `callback()` function is called, the next function attached on the event is triggered.
+Functions are called in chain. When the `callback()` function is called, the next function attached on the event is triggered.
 
-Pipes event are useful when you want to modify or validate an object with a plugin.
+Pipe events are useful when you want to modify or validate an object with a plugin.
 
 ```js
 // Somewhere in Kuzzle
@@ -141,10 +141,10 @@ In this example, in Kuzzle, the `modifiedRequestObject` has now a `createdAt` at
 
 ## Examples
 
-For an example, you can have a look at the [kuzzle-plugin-logger](https://github.com/kuzzleio/kuzzle-plugin-logger).
+For example, you can have a look at the [kuzzle-plugin-logger](https://github.com/kuzzleio/kuzzle-plugin-logger).
 
 # Troubleshooting
 
 ## Proxy
 
-If you are using Docker and your network is behind a proxy, you need to run this [container](https://hub.docker.com/r/klabs/forgetproxy/) for let the Kuzzle container use your proxy for download the plugin
+If you are using Docker and your network is behind a proxy, you need to run this [container](https://hub.docker.com/r/klabs/forgetproxy/) to let Kuzzle container use your proxy to download the plugin
