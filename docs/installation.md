@@ -71,7 +71,6 @@ First of all, you have to get the source code. You can use NPM or clone our GIT 
 
 Prerequisites:
 
-* A service [RabbitMQ](https://www.rabbitmq.com/) running on localhost:5672
 * A service [Elasticsearch](https://www.elastic.co/products/elasticsearch) running on localhost:9200
 * A service [Redis](http://redis.io/) running on localhost:6379
 
@@ -91,12 +90,24 @@ You may also start Kuzzle by using [PM2](https://github.com/Unitech/pm2):
 $ pm2 start app-start.js
 ```
 
-### Change RabbitMQ and Elasticsearch hosts
 
-If you are not running RabbitMQ and Elasticsearch on localhost, you can configure host and port:
+### Change external services hosts
+
+If you are some external service in another host than localhost, you can configure host and port
+
+examples:
 
 ```bash
-$ export ELASTICSEARCH_HOST=myelasticsearch:9200
-$ export RABBIT_HOST=myrabbitmq:5672
+# Elastic Search (read/write engine):
+$ export READ_ENGINE_HOST=myelasticsearch:9200
+$ export WRITE_ENGINE_HOST=myelasticsearch:9200
+
+# Redis (notification cache):
+$ export NOTIFICATION_CACHE_HOST=myredis:6379
+
+# Rabbit MQ (external broker for AMQP/MQTT/STOMP clients):
+$ export MQ_BROKER_HOST=myrabbitmq
+$ export MQ_BROKER_PORT=5672
+
 $ kuzzle start
 ```
