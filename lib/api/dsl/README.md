@@ -81,18 +81,22 @@ It has the following structure:
 {
     // collection name
     "members" : {
-        // attribute
-        "sex": {
-            "termSexFemale": {
-                // list of rooms that use the function
-                "rooms": ["f45de4d8ef4f3ze4ffzer85d4fgkzm41", "2cf15c9ebf0e315866c44f4afb5920eb4a6a8462" ],
-                // actual function implemenation
-                "fn": "function(value) {...}"
-            },
-         },
-         "hobby": {
-            "termHobbySki": {
-            [..]
+        //global room to test each time https://github.com/kuzzleio/kuzzle/issues/1),
+        "rooms": [""],
+        // attributes where a filter exists
+        "fields": {
+            "sex": {
+                "termSexFemale": {
+                    // list of rooms that match the filter
+                    "rooms": ["f45de4d8ef4f3ze4ffzer85d4fgkzm41", "2cf15c9ebf0e315866c44f4afb5920eb4a6a8462" ],
+                    // actual function implemenation
+                    "fn": "function(value) {...}"
+                },
+             },
+             "hobby": {
+                "termHobbySki": {
+                [..]
+                }
             }
         }
     }
