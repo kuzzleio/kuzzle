@@ -33,7 +33,7 @@ Focus on the above "Kuzzle kernel":
 Hooks allow to attach actions to Kuzzle events.
 
 For example, Admin, Bulk and Writer controllers emit a "data:create" event to handle some writing actions through the storage engine.
-This event will trigger the execution of the *add* method and of the *write* hook, which will send the received message to the broker service.
+This event will trigger the execution of the *add* method and of the *write* hook, which will send the received message to the internal broker.
 
 Then it is possible to implement custom hooks to trigger any event emitted by Kuzzle.
 
@@ -41,7 +41,7 @@ _For more details, see [hooks description](../lib/hooks/README.md)_
 
 ### Services
 
-In Kuzzle, a Service module is the implementation of the interface to external services used by the application (AMQP broker, storage engine, cache engine, etc.)
+In Kuzzle, a Service module is the implementation of the interface to external services used by the application (internal broker, storage engine, cache engine, etc.)
 
 _For more details, see [services description](../lib/services/README.md)_
 
@@ -49,7 +49,7 @@ _For more details, see [services description](../lib/services/README.md)_
 
 A worker is an independant component, detachable from a Kuzzle server container. It can be run in another container or even on another machine.
 
-Workers attach themselves to the broker service fed by Kuzzle to perform any kind of task.
+Workers attach themselves to the internal broker service fed by Kuzzle to perform any kind of task.
 
 For instance, writing persistent data on Kuzzle is implemented as a write worker.
 
