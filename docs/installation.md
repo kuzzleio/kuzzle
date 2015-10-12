@@ -93,7 +93,7 @@ $ pm2 start app-start.js
 
 ### Change external services hosts
 
-If you are some external service in another host than localhost, you can configure host and port
+f you are running some of the service(s) externally, you can configure their host and port using some environment variables:
 
 examples:
 
