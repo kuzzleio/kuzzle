@@ -12,4 +12,4 @@ as well as [istanbul](https://gotwarlost.github.io/istanbul/) for test coverage.
 
 Coverage report will be stored in ```coverage/``` directory:
 * in json format : ```coverage/coverage.json```
-* in HTML human readable format : ```coverage/lcov-report/index.html```
+* in HTML human readable format: ```coverage/lcov-report/index.html```
