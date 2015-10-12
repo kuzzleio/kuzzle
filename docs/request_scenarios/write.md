@@ -57,7 +57,7 @@ Sample message: (**note that _persist = true_**)
 
 \#3. The ```Funnel Controller``` validates the message and forward the request to the ```Write Controller```
 
-\#4. \#5. The Write Hook intercepts the request and sends it to the MQ broker. (see [Hooks Readme](../../lib/hooks/README.md) for more details about hooks)
+\#4. \#5. The Write Hook intercepts the request and sends it to the internal broker. (see [Hooks Readme](../../lib/hooks/README.md) for more details about hooks)
 
 That way Kuzzle parallelizes the processing of writing contents.
 
@@ -71,7 +71,7 @@ Detailed workflow:
 
 ![persistence_scenario_details2](../images/kuzzle_persistence_scenario_details2.png)
 
-\#6. A ```Write Worker``` is notified by the MQ broker about a new write request.
+\#6. A ```Write Worker``` is notified by the internal broker about a new write request.
 
 \#7. The worker calls the ```writeEngine service```
 
@@ -81,7 +81,7 @@ Detailed workflow:
 
 \#10. The worker sends the feedback message from ElasticSearch to the input task queue (see \#2b).
 
-\#11. The worker also sends a notification message to the MQ broker, to notify subscribing clients, if any (see step 3 below).
+\#11. The worker also sends a notification message to the internal broker, to notify subscribing clients, if any (see step 3 below).
 
 ## 3rd step: Send feedback and notify pub/sub clients
 
