@@ -22,9 +22,54 @@
     "host": "elasticsearch",
     "port": "9200"
   },
-  // Host and port for notificationCache service that handle cache for store which user we have to notify
+  // Host and port for notificationCache service. Used to store which user we have to notify
   "notificationCache": {
     "host": "redis",
     "port": 6379
+  },
+  // Host and port for the sessionCache service.
+  "sessionCache": {
+    "host": "redis",
+    "port": 6379
+  },
+  // JWT defaults.
+  "jsonWebToken": {
+    "algorithm": "HS256",
+    "secret": "Kuzzle Rocks"
+    }
+  },
+  // Default user profiles
+  "userProfiles": {
+    "admin": { "roles": [ "admin" ]  },
+    "anonymous": { "roles": [ "guest" ] }
+  },
+  // Default security roles
+  "userRoles": {
+    "admin": {
+      "collections": {
+        "*": {
+          "controllers": {
+            "*": {
+              "actions": {
+                "*": true
+              }
+            }
+          }
+        }
+      }
+    },
+    "guest": {
+      "collections": {
+        "*": {
+          "controllers": {
+            "*": {
+              "actions": {
+                "*": true
+              }
+            }
+          }
+        }
+      }
+    }
   }
 }
