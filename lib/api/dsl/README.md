@@ -28,8 +28,8 @@ A complete subscription message can for instance have the following form:
             "must": [
                 { "term": { "sex": "female" } },
                 { "term": { "hobby": "ski" } },
-                { 
-                    "range": { 
+                {
+                    "range": {
                         "age": {
                             "gte": "30",
                             "lte": "45"
@@ -55,17 +55,17 @@ Eventually, we want to store this subscription in the hotelClerkController rooms
 
 ```json
 rooms = {
-    'f45de4d8ef4f3ze4ffzer85d4fgkzm41' : { // -> computed room id
-        id: "f45de4d8ef4f3ze4ffzer85d4fgkzm41",
-        collection: 'members'
-        names: [ 'my-custom-subscription' ], // -> customer
-        count: 7 // -> how many users have subscribed to this room
-        filters: {
-        and : {
-            'members.sex.termSexFemale': dsl.filtersTree.members.sex.termSexFemale.fn,
-            'members.hobby.termHobbySki': dsl.filtersTree.members.hobby.termHobbySki.fn,
-            'members.age.rangeAgeGte30Lte45': dsl.filtersTree.members.age.rangeAgeGte30Lte45.fn,
-            'members.location.geoDistanceLocation20kmlat40lon50': dsl.filtersTree.members.location.geoDistanceLocation20kmlat40lon50.fn
+    "f45de4d8ef4f3ze4ffzer85d4fgkzm41" : { // -> computed room id
+        "id": "f45de4d8ef4f3ze4ffzer85d4fgkzm41",
+        "collection": "members",
+        "names": [ "my-custom-subscription" ], // -> customer
+        "count": 7, // -> how many users have subscribed to this room
+        "filters": {
+        "and" : {
+            "members.sex.termSexFemale": "dsl.filtersTree.members.sex.termSexFemale.fn",
+            "members.hobby.termHobbySki": "dsl.filtersTree.members.hobby.termHobbySki.fn",
+            "members.age.rangeAgeGte30Lte45": "dsl.filtersTree.members.age.rangeAgeGte30Lte45.fn",
+            "members.location.geoDistanceLocation20kmlat40lon50": "dsl.filtersTree.members.location.geoDistanceLocation20kmlat40lon50.fn"
             }
         }
     }
@@ -81,18 +81,22 @@ It has the following structure:
 {
     // collection name
     "members" : {
-        // attribute
-        "sex": {
-            "termSexFemale": {
-                // list of rooms that use the function
-                rooms: ["f45de4d8ef4f3ze4ffzer85d4fgkzm41", "2cf15c9ebf0e315866c44f4afb5920eb4a6a8462" ],
-                // actual function implemenation
-                fn: function(value) {...} 
-            },
-         },
-         "hobby": {
-            "termHobbySki": {
-            [..]
+        //global room to test each time https://github.com/kuzzleio/kuzzle/issues/1),
+        "rooms": [""],
+        // attributes where a filter exists
+        "fields": {
+            "sex": {
+                "termSexFemale": {
+                    // list of rooms that match the filter
+                    "rooms": ["f45de4d8ef4f3ze4ffzer85d4fgkzm41", "2cf15c9ebf0e315866c44f4afb5920eb4a6a8462" ],
+                    // actual function implemenation
+                    "fn": "function(value) {...}"
+                },
+             },
+             "hobby": {
+                "termHobbySki": {
+                [..]
+                }
             }
         }
     }
@@ -103,7 +107,7 @@ It has the following structure:
 
 The module entry point.
 
-It exposes 3 methods: 
+It exposes 3 methods:
 
 * addCurriedFunction
 * testFilters
@@ -117,7 +121,7 @@ This method parses the filters expressed using the DSL and returns a compound ob
 
 ### parameters
 
-* *string* roomId 
+* *string* roomId
 
 The computed room id.
 In our example, would be *f45de4d8ef4f3ze4ffzer85d4fgkzm41*.
@@ -138,11 +142,11 @@ This method returns a promise that resolves to the final subobject stored hotelC
 In our example, it would resolve to:
 
 ```json
-and : {
-    'members.sex.termSexFemale': dsl.filtersTree.members.sex.termSexFemale.fn,
-    'members.hobby.termHobbySki': dsl.filtersTree.members.hobby.termHobbySki.fn,
-    'members.age.rangeAgeGte30Lte45': dsl.filtersTree.members.age.rangeAgeGte30Lte45.fn,
-    'members.location.geoDistanceLocation20kmlat40lon50': dsl.filtersTree.members.location.geoDistanceLocation20kmlat40lon50.fn
+"and": {
+    "members.sex.termSexFemale": "dsl.filtersTree.members.sex.termSexFemale.fn",
+    "members.hobby.termHobbySki": "dsl.filtersTree.members.hobby.termHobbySki.fn",
+    "members.age.rangeAgeGte30Lte45": "dsl.filtersTree.members.age.rangeAgeGte30Lte45.fn",
+    "members.location.geoDistanceLocation20kmlat40lon50": "dsl.filtersTree.members.location.geoDistanceLocation20kmlat40lon50.fn"
 }
 ```
 
@@ -160,7 +164,7 @@ The data sent including its envelope sent to kuzzle in a write call.
 
 I.e.:
 
-```
+```json
 {
     "action": "create",
     "persist": false,
@@ -170,7 +174,7 @@ I.e.:
         "lastName": "Gibbons",
         "hobby": "singing",
         "location": {
-            "lat": 51;
+            "lat": 51,
             "lon": -2
         },
         "age": 50
