@@ -1,9 +1,8 @@
 #Config
 
 * index.js: the entry point, loads configuration files
-* hooks.js: configures actions listening to hooks
-* ipc.js: configures the internal IPC broker between Kuzzle and its workers
+* hooks.js: configures actions listening to hooks (see [../hooks/README.md](Hooks documentation))
 * queues.js: lists all internal message 'queues' (can be queues, socket names, whatever is used for brokers)
-* rabbit.js: RabbitMQ messaging, used for the MQ Broker
-* workers.js: lists known workers
+* services.js: list available services (see [../services/README.md](Services documentation))
+* workers.js: lists known workers (see [../workers/README.md](Workers documentation))
 * models the engine for data persistence.
