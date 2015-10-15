@@ -117,8 +117,10 @@ describe('Test: notifier.workerNotification', function () {
     });
   });
 
-  it('should log an error when one occurs in a notifyDocument* function', function (done) {
+  it('should log an error when a notification fails', function (done) {
     var kuzzle = new Kuzzle();
+
+    this.timeout(1000);
 
     kuzzle.log = new (winston.Logger)({transports: [new (winston.transports.Console)({level: 'silent'})]});
     kuzzle.start(params, {dummy: true}).then(function () {
@@ -126,11 +128,14 @@ describe('Test: notifier.workerNotification', function () {
       responseObject.collection = false;
 
       kuzzle.once('log:error', function () {
-        responseObject.collection = 'bar';
         done();
       });
 
-      kuzzle.services.list.broker.add(kuzzle.config.queues.coreNotifierTaskQueue, responseObject);
+      Notifier.__with__({
+        notifyDocumentCreate: function () { return Promise.reject(new Error('rejected')); }
+      })(function () {
+        (Notifier.__get__('workerNotification')).call(kuzzle, responseObject);
+      });
     });
   });
 });
