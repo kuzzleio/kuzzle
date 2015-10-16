@@ -26,7 +26,7 @@ For development only, we built a specific docker-compose file: `docker-compose/d
 Run the stack with:
 
 ```
-docker-compose -f docker-compose-debug.yml up
+docker-compose -f docker-compose/debug.yml up
 ```
 
 You can now access to:
@@ -36,7 +36,7 @@ You can now access to:
 * http://127.0.0.1:8081/debug?port=7001 to debug the worker
 
 **Note:** Because we have two different process for server and worker, you have to debug these two applications by accessing two URL (with port 8080 and port 8081).  
-  
+
 Every times a modification is detected by [PM2](https://github.com/Unitech/pm2), the server is restarted and the debugger page is automatically refreshed with the code up to date and with previous placed breakpoints.
 
 # Create a plugin

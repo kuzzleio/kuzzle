@@ -11,7 +11,7 @@ For UI and linked objects developers, Kuzzle is an open-source solution that han
 
 Kuzzle features are accessible through a secured API. It can be used through a large choice of protocols such as REST, Websocket or Message Queuing protocols.
 
-Kuzzle uses [Elasticsearch filter DSL](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-filters.html) (see [filters syntax](docs/filters.md) for more details) as filtering language, [RabbitMQ](https://www.rabbitmq.com/) to manage queues and [Redis](http://redis.io/) to manage filters cache.
+Kuzzle uses [Elasticsearch filter DSL](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-filters.html) (see [filters syntax](docs/filters.md) for more details) as filtering language, and [Redis](http://redis.io/) to manage filters cache.
 
 # Project status
 
@@ -34,7 +34,7 @@ Prerequisites:
 From Kuzzle's root directory:
 
     $ docker-compose up
-    
+
 **Note:** Kuzzle need an access to the web for download plugins. If you are behind a proxy, you have to run this [container](https://hub.docker.com/r/klabs/forgetproxy/). More information about plugins [here](/docs/plugins.md)
 
 ## Using Vagrant
