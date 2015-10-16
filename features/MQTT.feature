@@ -135,3 +135,10 @@ Feature: Test MQTT API
     Then I should receive a "on" notification
     Then I unsubscribe
     And I should receive a "off" notification
+
+  @usingMQTT
+  Scenario: Counting the number of active connections
+    When I count the number of connections
+    And I count the number of connections
+    And I count the number of connections
+    Then I count exactly 1 active "mq" connection

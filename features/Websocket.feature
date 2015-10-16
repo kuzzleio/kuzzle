@@ -135,3 +135,10 @@ Feature: Test websocket API
     Then I should receive a "on" notification
     Then I unsubscribe socket "client1"
     And I should receive a "off" notification
+
+  @usingWebsocket
+  Scenario: Counting the number of active connections
+    When I count the number of connections
+    And I count the number of connections
+    And I count the number of connections
+    Then I count exactly 1 active "websocket" connection

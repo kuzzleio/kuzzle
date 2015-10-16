@@ -198,6 +198,15 @@ module.exports = {
       };
 
     return emit.call(this, 'subscribe', msg);
+  },
+
+  countConnections: function () {
+    var
+      msg = {
+        action: 'countConnections',
+      };
+
+    return emit.call(this, 'admin', msg);
   }
 };
 

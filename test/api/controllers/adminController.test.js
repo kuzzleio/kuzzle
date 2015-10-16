@@ -64,4 +64,63 @@ describe('Test: admin controller', function () {
 
     return should(r).be.rejectedWith('No mapping for current index');
   });
+
+  it('should activate a hook on a get mapping call', function (done) {
+    this.timeout(50);
+
+    kuzzle.once('data:getMapping', function (obj) {
+      try {
+        should(obj).be.exactly(requestObject);
+        done();
+      }
+      catch (e) {
+        done(e);
+      }
+    });
+
+    kuzzle.funnel.admin.getMapping(requestObject);
+  });
+
+  it('should return the number of active connections when requested', function (done) {
+    var r;
+
+    kuzzle.connections = {
+      foo: 42,
+      bar: 314159,
+      baz: 1337
+    };
+
+    r = kuzzle.funnel.admin.countConnections(requestObject);
+
+    should(r).be.a.Promise();
+
+    r
+      .then(function (response) {
+        should(response).be.an.Object();
+        should(response.error).be.null();
+        should(response.data).not.be.null();
+        should(response.data.total).be.a.Number();
+        should(response.data.protocols).be.an.Object().and.match(kuzzle.connections);
+        done();
+      })
+      .catch(function (error) {
+        done(error);
+      });
+  });
+
+  it('should trigger a hook on a countConnections call', function (done) {
+    this.timeout(50);
+
+    kuzzle.once('data:countConnections', function (obj) {
+      try {
+        should(obj).be.exactly(requestObject);
+        done();
+      }
+      catch (e) {
+        done(e);
+      }
+    });
+
+    kuzzle.funnel.admin.countConnections(requestObject);
+  });
 });

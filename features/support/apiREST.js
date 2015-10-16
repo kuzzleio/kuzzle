@@ -122,20 +122,30 @@ module.exports = {
   },
 
   globalBulkImport: function (bulk) {
-      var options = {
-        url: this.pathApi('/_bulk'),
-        method: 'POST',
-        json: bulk
-      };
+    var options = {
+      url: this.pathApi('/_bulk'),
+      method: 'POST',
+      json: bulk
+    };
 
-      return this.callApi(options);
-    },
+    return this.callApi(options);
+  },
 
   putMapping: function () {
     var options = {
       url: this.pathApi(this.world.fakeCollection + '/_mapping'),
       method: 'PUT',
       json: this.world.schema
+    };
+
+    return this.callApi(options);
+  },
+
+  countConnections: function () {
+    var options = {
+      url: this.pathApi('/_countConnections'),
+      method: 'GET',
+      json: {}
     };
 
     return this.callApi(options);

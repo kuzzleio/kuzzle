@@ -66,3 +66,10 @@ Feature: Test REST API
     Then I change the schema
     When I write the document "documentGrace"
     Then I find a document with "Grace" in field "firstName"
+
+  @usingREST
+  Scenario: Counting the number of active connections
+    When I count the number of connections
+    And I count the number of connections
+    And I count the number of connections
+    Then I count exactly 1 active "rest" connection

@@ -455,6 +455,33 @@ var apiSteps = function () {
       });
   });
 
+  this.When(/^I count the number of connections$/, function (callback) {
+    this.api.countConnections()
+      .then(function (response) {
+        if (response.error) {
+          return callback.fail(new Error(response.error));
+        }
+
+        if (!response.result) {
+          return callback.fail(new Error('No result provided'));
+        }
+
+        this.result = response.result;
+        callback();
+      }.bind(this))
+      .catch(function (error) {
+        callback.fail(error);
+      });
+  });
+
+  this.Then(/^I count exactly 1 active "([^"]*)" connection$/, function (protocol, callback) {
+    if (this.result.protocols && this.result.protocols[protocol] === 1 && this.result.total >= this.result.protocols[protocol]) {
+      return callback();
+    }
+
+    callback.fail("Expected at least 1 " + protocol + " connection, found: ", this.result.protocols[protocol]);
+  });
+
   /** WRITE **/
   this.When(/^I write the document ?(?:"([^"]*)")?$/, function (documentName, callback) {
     var document = this[documentName] || this.documentGrace;

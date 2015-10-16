@@ -196,6 +196,14 @@ module.exports = {
       };
 
     return publish.call(this, topic, msg);
+  },
+
+  countConnections: function () {
+    var
+      topic = ['admin', '', 'countConnections'].join('.'),
+      msg = {};
+
+    return publish.call(this, topic, msg);
   }
 };
 

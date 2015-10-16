@@ -509,4 +509,27 @@ describe('Test: routerController.initRouterHttp', function () {
       done();
     });
   });
+
+  it('should create a route for the countConnections command', function (done) {
+    var request;
+
+    options.method = 'GET';
+    options.path= '/api/_countConnections';
+
+    request = http.request(options, function (response) {
+      parseHttpResponse(response)
+        .then(function (result) {
+          should(response.statusCode).be.exactly(200);
+          should(result.controller).be.exactly('admin');
+          should(result.action).be.exactly('countConnections');
+          done();
+        })
+        .catch(function (error) {
+          done(error);
+        });
+    });
+
+    request.write('foobar');
+    request.end();
+  });
 });
