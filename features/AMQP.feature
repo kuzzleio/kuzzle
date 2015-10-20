@@ -138,8 +138,12 @@ Feature: Test AMQP API
     And I should receive a "off" notification
 
   @usingAMQP
-  Scenario: Counting the number of active connections
-    When I count the number of connections
-    And I count the number of connections
-    And I count the number of connections
-    Then I count exactly 1 active "mq" connection
+  Scenario: Getting the last statistics frame
+    When I get the last statistics frame
+    Then I get a statistic frame
+
+  @usingAMQP
+  Scenario: Getting the last statistics frame
+    When I get all statistics frames
+    Then I get at least 1 statistic frame
+

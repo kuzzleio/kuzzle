@@ -455,8 +455,8 @@ var apiSteps = function () {
       });
   });
 
-  this.When(/^I count the number of connections$/, function (callback) {
-    this.api.countConnections()
+  this.When(/^I get the last statistics frame$/, function (callback) {
+    this.api.getStats()
       .then(function (response) {
         if (response.error) {
           return callback.fail(new Error(response.error));
@@ -474,12 +474,55 @@ var apiSteps = function () {
       });
   });
 
-  this.Then(/^I count exactly 1 active "([^"]*)" connection$/, function (protocol, callback) {
-    if (this.result.protocols && this.result.protocols[protocol] === 1 && this.result.total >= this.result.protocols[protocol]) {
+  this.Then(/^I get a statistic frame$/, function (callback) {
+    if (this.result.statistics &&
+        this.result.statistics.ongoingRequests &&
+        this.result.statistics.completedRequests &&
+        this.result.statistics.failedRequests &&
+        this.result.statistics.connections) {
       return callback();
     }
 
-    callback.fail("Expected at least 1 " + protocol + " connection, found: ", this.result.protocols[protocol]);
+    callback.fail('Expected a statistic frame, found: ' + this.result);
+  });
+
+  this.When(/^I get all statistics frames$/, function (callback) {
+    this.api.getAllStats()
+      .then(function (response) {
+        if (response.error) {
+          return callback.fail(new Error(response.error));
+        }
+
+        if (!response.result) {
+          return callback.fail(new Error('No result provided'));
+        }
+
+        this.result = response.result;
+        callback();
+      }.bind(this))
+      .catch(function (error) {
+        callback.fail(error);
+      });
+  });
+
+  this.Then(/^I get at least 1 statistic frame$/, function (callback) {
+    var key;
+
+    if (!this.result.statistics) {
+      return callback.fail('Expected a statistics result, got: ' + this.result);
+    }
+
+    key = Object.keys(this.result.statistics);
+
+    if (key.length > 0 &&
+        this.result.statistics[key[0]].ongoingRequests &&
+        this.result.statistics[key[0]].completedRequests &&
+        this.result.statistics[key[0]].failedRequests &&
+        this.result.statistics[key[0]].connections) {
+      return callback();
+    }
+
+    callback.fail('Expected at least 1 statistic frame, found: ' + this.result.statistics);
   });
 
   /** WRITE **/

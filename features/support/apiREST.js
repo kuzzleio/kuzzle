@@ -141,9 +141,19 @@ module.exports = {
     return this.callApi(options);
   },
 
-  countConnections: function () {
+  getStats: function () {
     var options = {
-      url: this.pathApi('/_countConnections'),
+      url: this.pathApi('/_getStats'),
+      method: 'GET',
+      json: {}
+    };
+
+    return this.callApi(options);
+  },
+
+  getAllStats: function () {
+    var options = {
+      url: this.pathApi('/_getAllStats'),
       method: 'GET',
       json: {}
     };

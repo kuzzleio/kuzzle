@@ -68,8 +68,12 @@ Feature: Test REST API
     Then I find a document with "Grace" in field "firstName"
 
   @usingREST
-  Scenario: Counting the number of active connections
-    When I count the number of connections
-    And I count the number of connections
-    And I count the number of connections
-    Then I count exactly 1 active "rest" connection
+  Scenario: Getting the last statistics frame
+    When I get the last statistics frame
+    Then I get a statistic frame
+
+  @usingREST
+  Scenario: Getting the last statistics frame
+    When I get all statistics frames
+    Then I get at least 1 statistic frame
+

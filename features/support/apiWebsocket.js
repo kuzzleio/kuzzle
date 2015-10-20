@@ -200,10 +200,19 @@ module.exports = {
     return emit.call(this, 'subscribe', msg);
   },
 
-  countConnections: function () {
+  getStats: function () {
     var
       msg = {
-        action: 'countConnections',
+        action: 'getStats'
+      };
+
+    return emit.call(this, 'admin', msg);
+  },
+
+  getAllStats: function () {
+    var
+      msg = {
+        action: 'getAllStats'
       };
 
     return emit.call(this, 'admin', msg);

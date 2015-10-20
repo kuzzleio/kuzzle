@@ -510,18 +510,42 @@ describe('Test: routerController.initRouterHttp', function () {
     });
   });
 
-  it('should create a route for the countConnections command', function (done) {
+  it('should create a route for the getStats command', function (done) {
     var request;
 
     options.method = 'GET';
-    options.path= '/api/_countConnections';
+    options.path= '/api/_getStats';
 
     request = http.request(options, function (response) {
       parseHttpResponse(response)
         .then(function (result) {
           should(response.statusCode).be.exactly(200);
           should(result.controller).be.exactly('admin');
-          should(result.action).be.exactly('countConnections');
+          should(result.action).be.exactly('getStats');
+          done();
+        })
+        .catch(function (error) {
+          done(error);
+        });
+    });
+
+    request.write('foobar');
+    request.end();
+  });
+
+
+  it('should create a route for the getAllStats command', function (done) {
+    var request;
+
+    options.method = 'GET';
+    options.path= '/api/_getAllStats';
+
+    request = http.request(options, function (response) {
+      parseHttpResponse(response)
+        .then(function (result) {
+          should(response.statusCode).be.exactly(200);
+          should(result.controller).be.exactly('admin');
+          should(result.action).be.exactly('getAllStats');
           done();
         })
         .catch(function (error) {

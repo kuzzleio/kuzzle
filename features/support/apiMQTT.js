@@ -188,9 +188,17 @@ module.exports = {
     return publish.call(this, topic, msg);
   },
 
-  countConnections: function () {
+  getStats: function () {
     var
-      topic = ['admin', '', 'countConnections'].join('.'),
+      topic = ['admin', '', 'getStats'].join('.'),
+      msg = {};
+
+    return publish.call(this, topic, msg);
+  },
+
+  getAllStats: function () {
+    var
+      topic = ['admin', '', 'getAllStats'].join('.'),
       msg = {};
 
     return publish.call(this, topic, msg);

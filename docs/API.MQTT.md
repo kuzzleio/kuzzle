@@ -33,6 +33,8 @@ The current implementation of our MQ Broker service uses [RabbitMQ](https://www.
   * [Retrieving the data mapping of a collection](#retrieving-the-data-mapping-of-a-collection)
   * [Performing a bulk import](#performing-a-bulk-import-on-a-data-collection)
   * [Performing a global bulk import](#performing-a-global-bulk-import)
+  * [Getting the last statistics frame](#getting-the-last-statistics-frame)
+  * [Getting all stored statistics](#getting-all-stored-statistics)
 
 ##  How to connect to Kuzzle
 
@@ -1128,6 +1130,158 @@ Bulk import only works on documents in our persistent data storage layer.
     The requestId field you provided.
     */
     requestId, '<unique request identifier>'
+  }
+}
+```
+
+---
+
+### Getting the last statistics frame
+
+Kuzzle monitors its internal activities and make snapshots of them. This command allows getting the last stored statistics frame.
+
+These statistics include:
+
+* the number of connected users for protocols allowing this notion (websocket, udp, ...)
+* the number of ongoing requests
+* the number of completed requests since the last frame
+* the number of failed requests since the last frame
+
+**Topic:** ``admin..getStats``
+
+**Query:**
+
+```javascript
+{
+  /*
+  Required. If your query doesn't include a clientId field, Kuzzle
+  will discard your query, because it doesn't have any mean to send you
+  the result.
+  */
+  clientId: <Unique session ID>,
+
+  /*
+  Optionnal: Kuzzle will forward this field in its response, allowing you
+  to easily identify what query generated the response you got.
+  */
+  requestId: <Unique query ID>
+}
+```
+
+**Response:**
+
+```javascript
+{
+  error: null,                      // Assuming everything went well
+  result: {
+    _source: {                      // Your original query
+      ...
+    },
+    action: 'getStats',
+    controller: 'admin',
+    statistics: {
+      completedRequests: {
+        websocket: 148,
+        rest: 24,
+        mq: 78
+      },
+      failedRequests: {
+        websocket: 3
+      },
+      ongoingRequests: {
+        mq: 8,
+        rest: 2
+      }
+      connections: {
+        websocket: 13
+      }
+    },
+    /*
+    The requestId field you provided.
+    */
+    requestId: '<unique request identifier>'
+  }
+}
+```
+
+---
+
+### Getting all stored statistics
+
+Kuzzle monitors its internal activities and make snapshots regularly. This command allows getting all the stored statistics.    
+By default, snapshots are made every 10s, and these snapshots are stored for 1hr.
+
+These statistics include:
+
+* the number of connected users for protocols allowing this notion (websocket, udp, ...)
+* the number of ongoing requests
+* the number of completed requests since the last frame
+* the number of failed requests since the last frame
+
+Statistics are returned as a JSON-object with each key being the snapshot's timestamp.
+
+**Topic:** ``admin..getStats``
+
+**Query:**
+
+```javascript
+{
+  /*
+  Required. If your query doesn't include a clientId field, Kuzzle
+  will discard your query, because it doesn't have any mean to send you
+  the result.
+  */
+  clientId: <Unique session ID>,
+
+  /*
+  Optionnal: Kuzzle will forward this field in its response, allowing you
+  to easily identify what query generated the response you got.
+  */
+  requestId: <Unique query ID>
+}
+```
+
+**Response:**
+
+```javascript
+{
+  error: null,                      // Assuming everything went well
+  result: {
+    _source: {                      // Your original query
+      ...
+    },
+    action: 'getAllStats',
+    controller: 'admin',
+    statistics: {
+      "YYYY-MM-DDTHH:mm:ss.mmmZ": {
+        completedRequests: {
+          websocket: 148,
+          rest: 24,
+          mq: 78
+        },
+        failedRequests: {
+          websocket: 3
+        },
+        ongoingRequests: {
+          mq: 8,
+          rest: 2
+        }
+        connections: {
+          websocket: 13
+        }
+      },
+      "YYYY-MM-DDTHH:mm:ss.mmmZ": {
+        completedRequests: { ... },
+        failedRequests: { ... },
+        ongoingRequests: { ... }
+        connections: { ... }
+      },
+      ...
+    },
+    /*
+    The requestId field you provided.
+    */
+    requestId: '<unique request identifier>'
   }
 }
 ```
