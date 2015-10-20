@@ -63,7 +63,9 @@ describe('Test: responseObject', function () {
       error = new Error('foobar'),
       response = new ResponseObject(requestObject, error);
 
-    should(response.error).be.exactly(error.message);
+    should(response.error.message).be.not.null();
+    should(response.error.message).be.exactly(error.message);
+    should(response.status).be.exactly(500);
     should(response.protocol).be.exactly(requestObject.protocol);
     should(response.action).be.exactly(requestObject.action);
     should(response.collection).be.exactly(requestObject.collection);
@@ -79,8 +81,9 @@ describe('Test: responseObject', function () {
       response = new ResponseObject(requestObject, error),
       serialized = response.toJson();
 
-    should(Object.keys(serialized).length).be.exactly(2);
-    should(serialized.error).be.exactly(error.message);
+    should(Object.keys(serialized).length).be.exactly(3);
+    should(serialized.status).be.exactly(500);
+    should(serialized.error.message).be.exactly(error.message);
     should(serialized.result.protocol).be.undefined();
     should(serialized.result.action).be.exactly(requestObject.action);
     should(serialized.result.collection).be.exactly(requestObject.collection);
@@ -111,7 +114,8 @@ describe('Test: responseObject', function () {
     serialized = response.toJson();
 
     should(serialized.result).be.null();
-    should(serialized.error).be.exactly(error.message);
+    should(serialized.status).be.exactly(500);
+    should(serialized.error.message).be.exactly(error.message);
   });
 
   it('should be able to reconstruct a response object out of a serialized version of itself', function () {

@@ -88,7 +88,7 @@ describe('Testing: write worker', function () {
       });
   });
 
-  it('should respond with an error if an unknown action has been submitted', function () {
+  it('should respond with an error if an unknown action has been submitted', function (done) {
     var
       callback = Worker.__get__('onListenCB'),
       saveAdd = kuzzle.services.list.broker.add,
@@ -97,8 +97,11 @@ describe('Testing: write worker', function () {
     kuzzle.services.list.broker.add = function(queue, response) {
       try {
         should(queue).be.exactly(kuzzle.config.queues.workerWriteResponseQueue);
+        should(response.status).be.exactly(500);
         should(response.error).not.be.null();
-        should(response.error).be.a.String().and.be.exactly('Write Worker: unknown action <foobar>');
+        should(response.error.message).not.be.null();
+        should(response.error.message).be.a.String().and.be.exactly('Write Worker: unknown action <foobar>');
+        done();
       }
       catch (error) {
         done(error);
@@ -205,8 +208,10 @@ describe('Testing: write worker', function () {
     kuzzle.services.list.broker.add = function (queue, data) {
       try {
         should(data).be.an.Object();
+        should(data.status).be.exactly(500);
         should(data.error).not.be.undefined().and.not.be.null();
-        should(data.error).be.a.String().and.be.exactly('Error: rejected');
+        should(data.error.message).not.be.undefined().and.not.be.null();
+        should(data.error.message).be.a.String().and.be.exactly('Error: rejected');
       } catch (error) {
         done(error);
       }
