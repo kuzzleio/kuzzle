@@ -47,4 +47,51 @@ describe('Test: read controller', function () {
 
     return should(r).be.rejectedWith(Error);
   });
+
+  it('should allow to list all existing colletions', function (done) {
+    var
+      requestObject = new RequestObject({}, {}, ''),
+      r = kuzzle.funnel.read.listCollections(requestObject);
+
+    should(r).be.a.Promise();
+
+    r
+      .then(result => {
+        should(result.data.collections).not.be.undefined().and.be.an.Array();
+        done();
+      })
+      .catch(error => done(error));
+  });
+
+  it('should trigger a plugin event when performing searches', function (done) {
+    var requestObject = new RequestObject({}, {collection: 'unit-test-readcontroller'}, 'unit-test');
+
+    this.timeout(50);
+    kuzzle.on('data:search', () => done());
+    kuzzle.funnel.read.search(requestObject);
+  });
+
+  it('should trigger a plugin event when getting specific documents', function (done) {
+    var requestObject = new RequestObject({ body: { _id: 'foobar' }}, { collection: 'unit-test-readcontroller' }, 'unit-test');
+
+    this.timeout(50);
+    kuzzle.on('data:get', () => done());
+    kuzzle.funnel.read.get(requestObject);
+  });
+
+  it('should trigger a plugin event when counting documents', function (done) {
+    var requestObject = new RequestObject({}, {collection: 'unit-test-readcontroller'}, 'unit-test');
+
+    this.timeout(50);
+    kuzzle.on('data:count', () => done());
+    kuzzle.funnel.read.count(requestObject);
+  });
+
+  it('should trigger a plugin event when listing all existing collections', function (done) {
+    var requestObject = new RequestObject({}, {}, '');
+
+    this.timeout(50);
+    kuzzle.on('data:listCollections', () => done());
+    kuzzle.funnel.read.listCollections(requestObject);
+  });
 });

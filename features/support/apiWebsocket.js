@@ -198,6 +198,12 @@ module.exports = {
       };
 
     return emit.call(this, 'subscribe', msg);
+  },
+
+  listCollections: function () {
+    var msg = {action: 'listCollections'};
+
+    return emit.call(this, 'read', msg );
   }
 };
 
