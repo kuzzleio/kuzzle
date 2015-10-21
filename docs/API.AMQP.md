@@ -1235,20 +1235,22 @@ These statistics include:
     action: 'getStats',
     controller: 'admin',
     statistics: {
-      completedRequests: {
-        websocket: 148,
-        rest: 24,
-        mq: 78
-      },
-      failedRequests: {
-        websocket: 3
-      },
-      ongoingRequests: {
-        mq: 8,
-        rest: 2
-      }
-      connections: {
-        websocket: 13
+      "YYYY-MM-DDTHH:mm:ss.mmmZ": {
+        completedRequests: {
+          websocket: 148,
+          rest: 24,
+          mq: 78
+        },
+        failedRequests: {
+          websocket: 3
+        },
+        ongoingRequests: {
+          mq: 8,
+          rest: 2
+        }
+        connections: {
+          websocket: 13
+        }
       }
     },
     /*

@@ -156,9 +156,14 @@ describe('Test: statistics core component', function () {
 
     result
       .then(response => {
-        var serialized = response.toJson();
+        var
+          serialized = response.toJson(),
+          keys = Object.keys(serialized.result.statistics);
+
         should(serialized.error).be.null();
-        should(serialized.result.statistics).match(fakeStats);
+        should(serialized.result.statistics).be.an.Object();
+        should(keys.length).be.exactly(1);
+        should(serialized.result.statistics[keys[0]]).match(fakeStats);
         done();
       })
       .catch(error => done(error));
@@ -174,9 +179,14 @@ describe('Test: statistics core component', function () {
 
     result
       .then(response => {
-        var serialized = response.toJson();
+        var
+          serialized = response.toJson(),
+          keys = Object.keys(serialized.result.statistics);
+
         should(serialized.error).be.null();
-        should(serialized.result.statistics).match(fakeStats);
+        should(serialized.result.statistics).be.an.Object();
+        should(keys.length).be.exactly(1);
+        should(serialized.result.statistics[keys[0]]).match(fakeStats);
         done();
       })
       .catch(error => done(error));

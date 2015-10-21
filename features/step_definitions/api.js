@@ -474,18 +474,6 @@ var apiSteps = function () {
       });
   });
 
-  this.Then(/^I get a statistic frame$/, function (callback) {
-    if (this.result.statistics &&
-        this.result.statistics.ongoingRequests &&
-        this.result.statistics.completedRequests &&
-        this.result.statistics.failedRequests &&
-        this.result.statistics.connections) {
-      return callback();
-    }
-
-    callback.fail('Expected a statistic frame, found: ' + this.result);
-  });
-
   this.When(/^I get all statistics frames$/, function (callback) {
     this.api.getAllStats()
       .then(function (response) {
