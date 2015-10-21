@@ -6,8 +6,8 @@ var
   winston = require('winston'),
   rewire = require('rewire'),
   uuid = require('node-uuid'),
-  RequestObject = require('root-require')('lib/api/core/models/requestObject'),
-  RTResponseObject = require('root-require')('lib/api/core/models/realTimeResponseObject');
+  RequestObject = require.main.require('lib/api/core/models/requestObject'),
+  RTResponseObject = require.main.require('lib/api/core/models/realTimeResponseObject');
 
 
 describe('Test: realTimeResponseObject', function () {

@@ -7,11 +7,11 @@ var
   should = require('should'),
   winston = require('winston'),
   params = require('rc')('kuzzle'),
-  Kuzzle = require('root-require')('lib/api/Kuzzle'),
+  Kuzzle = require.main.require('lib/api/Kuzzle'),
   rewire = require('rewire'),
   RouterController = rewire('../../../../lib/api/controllers/routerController'),
-  RequestObject = require('root-require')('lib/api/core/models/requestObject'),
-  ResponseObject = require('root-require')('lib/api/core/models/responseObject');
+  RequestObject = require.main.require('lib/api/core/models/requestObject'),
+  ResponseObject = require.main.require('lib/api/core/models/responseObject');
 
 require('should-promised');
 
