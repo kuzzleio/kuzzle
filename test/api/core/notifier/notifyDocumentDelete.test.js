@@ -9,10 +9,10 @@ var
   should = require('should'),
   winston = require('winston'),
   rewire = require('rewire'),
-  RequestObject = require('root-require')('lib/api/core/models/requestObject'),
-  ResponseObject = require('root-require')('lib/api/core/models/responseObject'),
+  RequestObject = require.main.require('lib/api/core/models/requestObject'),
+  ResponseObject = require.main.require('lib/api/core/models/responseObject'),
   params = require('rc')('kuzzle'),
-  Kuzzle = require('root-require')('lib/api/Kuzzle'),
+  Kuzzle = require.main.require('lib/api/Kuzzle'),
   Notifier = rewire('../../../../lib/api/core/notifier');
 
 require('should-promised');

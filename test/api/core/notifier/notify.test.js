@@ -8,7 +8,7 @@ var
   winston = require('winston'),
   rewire = require('rewire'),
   params = require('rc')('kuzzle'),
-  Kuzzle = require('root-require')('lib/api/Kuzzle'),
+  Kuzzle = require.main.require('lib/api/Kuzzle'),
   Notifier = rewire('../../../../lib/api/core/notifier');
 
 require('should-promised');

@@ -3,8 +3,8 @@ var
   winston = require('winston'),
   q = require('q'),
   params = require('rc')('kuzzle'),
-  Kuzzle = require('root-require')('lib/api/Kuzzle'),
-  Redis = require('root-require')('lib/services/redis');
+  Redis = require.main.require('lib/services/redis'),
+  Kuzzle = require.main.require('lib/api/Kuzzle');
 
 require('should-promised');
 

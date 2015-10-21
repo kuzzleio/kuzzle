@@ -6,8 +6,8 @@ var
   winston = require('winston'),
   rewire = require('rewire'),
   params = require('rc')('kuzzle'),
-  Kuzzle = require('root-require')('lib/api/Kuzzle'),
-  RequestObject = require('root-require')('lib/api/core/models/requestObject'),
+  Kuzzle = require.main.require('lib/api/Kuzzle'),
+  RequestObject = require.main.require('lib/api/core/models/requestObject'),
   Statistics = rewire('../../../lib/api/core/statistics');
 
 require('should-promised');

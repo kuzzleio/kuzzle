@@ -3,7 +3,7 @@ var
   winston = require('winston'),
   rewire = require('rewire'),
   params = require('rc')('kuzzle'),
-  Kuzzle = require('root-require')('lib/api/Kuzzle'),
+  Kuzzle = require.main.require('lib/api/Kuzzle'),
   RemoteActions = rewire('../../lib/services/remoteActions');
 
 describe('Testing: Remote Actions service', function () {
