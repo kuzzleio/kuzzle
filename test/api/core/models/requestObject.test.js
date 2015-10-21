@@ -6,7 +6,7 @@ var
   winston = require('winston'),
   rewire = require('rewire'),
   uuid = require('node-uuid'),
-  RequestObject = require('root-require')('lib/api/core/models/requestObject');
+  RequestObject = require.main.require('lib/api/core/models/requestObject');
 
 require('should-promised');
 

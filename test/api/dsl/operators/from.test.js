@@ -1,7 +1,7 @@
 /* The "from" operator is simply an alias to the gte one */
 var
   should = require('should'),
-  operators = require('root-require')('lib/api/dsl/operators');
+  operators = require.main.require('lib/api/dsl/operators');
 
 describe('Test from operator', function () {
   it('should call the gte() operator', function () {

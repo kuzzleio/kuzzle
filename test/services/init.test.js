@@ -2,7 +2,7 @@ var
   should = require('should'),
   winston = require('winston'),
   params = require('rc')('kuzzle'),
-  Kuzzle = require('root-require')('lib/api/Kuzzle');
+  Kuzzle = require.main.require('lib/api/Kuzzle');
 
 describe('Test service initialization function', function () {
 

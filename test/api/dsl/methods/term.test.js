@@ -1,6 +1,6 @@
 var
   should = require('should'),
-  methods = require('root-require')('lib/api/dsl/methods');
+  methods = require.main.require('lib/api/dsl/methods');
 
 describe('Test term method', function () {
 

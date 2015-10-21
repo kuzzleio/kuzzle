@@ -7,9 +7,9 @@ var
   rewire = require('rewire'),
   uuid = require('node-uuid'),
   params = require('rc')('kuzzle'),
-  Kuzzle = require('root-require')('lib/api/Kuzzle'),
-  RequestObject = require('root-require')('lib/api/core/models/requestObject'),
-  ResponseObject = require('root-require')('lib/api/core/models/responseObject'),
+  Kuzzle = require.main.require('lib/api/Kuzzle'),
+  RequestObject = require.main.require('lib/api/core/models/requestObject'),
+  ResponseObject = require.main.require('lib/api/core/models/responseObject'),
   ResponseListener = rewire('../../../lib/api/core/responseListener');
 
 require('should-promised');

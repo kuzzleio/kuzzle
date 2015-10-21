@@ -1,6 +1,6 @@
 var
   should = require('should'),
-  PluginsManager = require('root-require')('lib/api/core/pluginsManager'),
+  PluginsManager = require.main.require('lib/api/core/pluginsManager'),
   EventEmitter = require('eventemitter2').EventEmitter2;
 
 require('should-promised');

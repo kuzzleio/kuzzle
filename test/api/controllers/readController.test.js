@@ -2,8 +2,8 @@ var
   should = require('should'),
   winston = require('winston'),
   params = require('rc')('kuzzle'),
-  Kuzzle = require('root-require')('lib/api/Kuzzle'),
-  RequestObject = require('root-require')('lib/api/core/models/requestObject');
+  Kuzzle = require.main.require('lib/api/Kuzzle'),
+  RequestObject = require.main.require('lib/api/core/models/requestObject');
 
 require('should-promised');
 

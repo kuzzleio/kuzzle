@@ -4,7 +4,7 @@ var
   q = require('q'),
   winston = require('winston'),
   params = require('rc')('kuzzle'),
-  Kuzzle = require('root-require')('lib/api/Kuzzle'),
+  Kuzzle = require.main.require('lib/api/Kuzzle'),
   WLoader = require('../../lib/workers/index');
 
 describe('Testing: workers loader', function () {

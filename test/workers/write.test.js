@@ -3,8 +3,8 @@ var
   winston = require('winston'),
   rewire = require('rewire'),
   params = require('rc')('kuzzle'),
-  Kuzzle = require('root-require')('lib/api/Kuzzle'),
-  RequestObject = require('root-require')('lib/api/core/models/requestObject'),
+  Kuzzle = require.main.require('lib/api/Kuzzle'),
+  RequestObject = require.main.require('lib/api/core/models/requestObject'),
   Worker = rewire('../../lib/workers/write');
 
 require('should-promised');
