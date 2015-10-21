@@ -2,8 +2,8 @@ var
   should = require('should'),
   rewire = require('rewire'),
   params = require('rc')('kuzzle'),
-  Config = require('root-require')('lib/config'),
-  RequestObject = require('root-require')('lib/api/core/models/requestObject'),
+  Config = require.main.require('lib/config'),
+  RequestObject = require.main.require('lib/api/core/models/requestObject'),
   ES = rewire('../../../lib/services/elasticsearch');
 
 require('should-promised');

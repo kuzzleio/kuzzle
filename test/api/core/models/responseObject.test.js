@@ -6,8 +6,8 @@ var
   winston = require('winston'),
   rewire = require('rewire'),
   uuid = require('node-uuid'),
-  RequestObject = require('root-require')('lib/api/core/models/requestObject'),
-  ResponseObject = require('root-require')('lib/api/core/models/responseObject');
+  RequestObject = require.main.require('lib/api/core/models/requestObject'),
+  ResponseObject = require.main.require('lib/api/core/models/responseObject');
 
 describe('Test: responseObject', function () {
   var

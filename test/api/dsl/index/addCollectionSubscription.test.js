@@ -1,6 +1,6 @@
 var
   should = require('should'),
-  Dsl = require('root-require')('lib/api/dsl/index');
+  Dsl = require.main.require('lib/api/dsl/index');
 
 require('should-promised');
 

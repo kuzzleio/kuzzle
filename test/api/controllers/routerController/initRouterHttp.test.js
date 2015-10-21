@@ -9,10 +9,10 @@ var
   http = require('http'),
   q = require('q'),
   params = require('rc')('kuzzle'),
-  Kuzzle = require('root-require')('lib/api/Kuzzle'),
+  Kuzzle = require.main.require('lib/api/Kuzzle'),
   rewire = require('rewire'),
   RouterController = rewire('../../../../lib/api/controllers/routerController'),
-  RequestObject = require('root-require')('lib/api/core/models/requestObject');
+  RequestObject = require.main.require('lib/api/core/models/requestObject');
 
 require('should-promised');
 
