@@ -102,6 +102,7 @@ describe('Test: routerController.initRouterHttp', function () {
     http.get('http://' + options.hostname + ':' + options.port + '/api', function (response) {
       parseHttpResponse(response)
         .then(function (result) {
+          should(result.status).be.exactly(200);
           should(result.error).be.null();
           should(result.result).be.exactly('Hello from Kuzzle :)');
           done();
