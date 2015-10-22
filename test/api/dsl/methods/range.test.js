@@ -1,7 +1,8 @@
 var
   should = require('should'),
   rewire = require('rewire'),
-  methods = rewire('../../../../lib/api/dsl/methods');
+  methods = rewire('../../../../lib/api/dsl/methods'),
+  InternalError = require('../../../../lib/api/core/errors/internalError');
 
 require('should-promised');
 
@@ -158,7 +159,7 @@ describe('Test range method', function () {
 
   it('should return a rejected promise if buildCurriedFunction fails', function () {
     return methods.__with__({
-      buildCurriedFunction: function () { return { error: 'rejected' }; }
+      buildCurriedFunction: function () { return new InternalError('rejected'); }
     })(function () {
       return should(methods.range(roomIdFilterGrace, collection, filterGrace)).be.rejectedWith('rejected');
     });

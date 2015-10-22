@@ -97,7 +97,7 @@ describe('Testing: write worker', function () {
     kuzzle.services.list.broker.add = function(queue, response) {
       try {
         should(queue).be.exactly(kuzzle.config.queues.workerWriteResponseQueue);
-        should(response.status).be.exactly(500);
+        should(response.status).be.exactly(400);
         should(response.error).not.be.null();
         should(response.error.message).not.be.null();
         should(response.error.message).be.a.String().and.be.exactly('Write Worker: unknown action <foobar>');
@@ -211,7 +211,7 @@ describe('Testing: write worker', function () {
         should(data.status).be.exactly(500);
         should(data.error).not.be.undefined().and.not.be.null();
         should(data.error.message).not.be.undefined().and.not.be.null();
-        should(data.error.message).be.a.String().and.be.exactly('Error: rejected');
+        should(data.error.message).be.a.String().and.be.exactly('rejected');
       } catch (error) {
         done(error);
       }

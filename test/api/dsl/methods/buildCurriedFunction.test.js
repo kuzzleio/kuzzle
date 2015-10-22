@@ -13,8 +13,10 @@ describe('Test: dsl.buildCurriedFunction method', function () {
 
   it('should return an error if the provided operator is not supported', function () {
     var result = buildCurriedFunction('', '', 'foobar', '', '', '', false, false);
-
-    should(result).be.an.Object().and.match({ error: 'Operator foobar doesn\'t exist'});
+    should(result).be.an.Object();
+    should(result.status).be.exactly(400);
+    should(result.message).not.be.empty();
+    should(result.message).be.exactly('Operator foobar doesn\'t exist');
   });
 
   it('should initializes the filter tree using the provided arguments', function () {
