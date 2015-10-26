@@ -142,7 +142,7 @@ Feature: Test websocket API
     Then I get at least 1 statistic frame
 
   @usingWebsocket
-  Scenario: Getting the last statistics frame
+  Scenario: Getting all statistics frame
     When I get all statistics frames
     Then I get at least 1 statistic frame
 
