@@ -3,11 +3,17 @@
  */
 var
   should = require('should'),
+  async = require('async'),
   winston = require('winston'),
   rewire = require('rewire'),
   uuid = require('node-uuid'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
-  ResponseObject = require.main.require('lib/api/core/models/responseObject');
+  ResponseObject = require.main.require('lib/api/core/models/responseObject'),
+  BadRequestError = require.main.require('lib/api/core/errors/badRequestError'),
+  ForbiddenError = require.main.require('lib/api/core/errors/forbiddenError'),
+  NotFoundError = require.main.require('lib/api/core/errors/notFoundError'),
+  InternalError = require.main.require('lib/api/core/errors/internalError'),
+  ServiceUnavailableError = require.main.require('lib/api/core/errors/serviceUnavailableError');
 
 describe('Test: responseObject', function () {
   var
@@ -19,6 +25,13 @@ describe('Test: responseObject', function () {
       requestId: 'fakerequestId',
       body: {_id: 'fakeid', foo: 'bar'}
     },
+    errorItems = [
+      { name: 'BadRequestError', type: BadRequestError, status: 400 },
+      { name: 'ForbiddenError', type: ForbiddenError, status: 403 },
+      { name: 'NotFoundError', type: NotFoundError, status: 404 },
+      { name: 'InternalError', type: InternalError, status: 500 },
+      { name: 'ServiceUnavailableError', type: ServiceUnavailableError, status: 503 }
+    ],
     requestObject;
 
   beforeEach(function () {
@@ -37,6 +50,7 @@ describe('Test: responseObject', function () {
     var response = new ResponseObject(requestObject);
 
     should(response.error).be.null();
+    should(response.status).be.exactly(200);
     should(response.protocol).be.exactly(requestObject.protocol);
     should(response.action).be.exactly(requestObject.action);
     should(response.collection).be.exactly(requestObject.collection);
@@ -49,6 +63,8 @@ describe('Test: responseObject', function () {
   it('should use the second argument as the main source if enough information is provided', function () {
     var response = new ResponseObject({}, request);
 
+    should(response.error).be.null();
+    should(response.status).be.exactly(200);
     should(response.protocol).be.null();
     should(response.action).be.exactly(request.action);
     should(response.collection).be.exactly(request.collection);
@@ -58,21 +74,23 @@ describe('Test: responseObject', function () {
     should(response.data).be.null();
   });
 
-  it('should initialize an error response if an error is provided', function () {
-    var
-      error = new Error('foobar'),
-      response = new ResponseObject(requestObject, error);
+  async.each(errorItems, function(item, callback) {
+    it('should initialize a ' + item.name + ' response if such an error is provided', function () {
+      var
+        error = new item.type('foobar'),
+        response = new ResponseObject(requestObject, error);
 
-    should(response.error.message).be.not.null();
-    should(response.error.message).be.exactly(error.message);
-    should(response.status).be.exactly(500);
-    should(response.protocol).be.exactly(requestObject.protocol);
-    should(response.action).be.exactly(requestObject.action);
-    should(response.collection).be.exactly(requestObject.collection);
-    should(response.controller).be.exactly(requestObject.controller);
-    should(response.requestId).be.exactly(requestObject.requestId);
-    should(response.timestamp).be.exactly(requestObject.timestamp);
-    should(response.data).match(requestObject.data);
+        should(response.error.message).be.not.null();
+        should(response.error.message).be.exactly(error.message);
+        should(response.status).be.exactly(item.status);
+        should(response.protocol).be.exactly(requestObject.protocol);
+        should(response.action).be.exactly(requestObject.action);
+        should(response.collection).be.exactly(requestObject.collection);
+        should(response.controller).be.exactly(requestObject.controller);
+        should(response.requestId).be.exactly(requestObject.requestId);
+        should(response.timestamp).be.exactly(requestObject.timestamp);
+        should(response.data).match(requestObject.data);
+    });
   });
 
   it('should return a normalized version of itself when toJson is invoked', function () {
