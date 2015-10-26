@@ -32,6 +32,7 @@ This will give you a direct access to Kuzzle's router controller, dispatching yo
   * [Performing a global bulk import](#performing-a-global-bulk-import)
   * [Getting the last statistics frame](#getting-the-last-statistics-frame)
   * [Getting all stored statistics](#getting-all-stored-statistics)
+  * [Listing all known data collections](#listing-all-known-data-collections)
 
 ##  How to connect to Kuzzle
 
@@ -1218,6 +1219,47 @@ Statistics are returned as a JSON-object with each key being the snapshot's time
     /*
     The requestId field you provided.
     */
+    requestId: '<unique request identifier>'
+  }
+}
+```
+
+---
+
+### Listing all known data collections
+
+Return the complete list of persisted data collections.
+
+**Message type:** ``read``
+
+**Query:**
+
+```javascript
+{
+  action: 'listCollections',
+
+  /*
+  Required: if your query doesn't include a requestId field, Kuzzle will
+  discard it, as it doesn't have any means to provide you with the result
+  */
+  requestId: <Unique query ID>
+}
+```
+
+**Response:**
+
+```javascript
+{
+  error: null,                      // Assuming everything went well
+  result: {
+    collections: [                  // An array of data collection names
+      'collection_1', 
+      'collection_2', 
+      'collection_...',
+      'collection_n'
+    ],
+    action: 'listCollection',
+    controller: 'read',
     requestId: '<unique request identifier>'
   }
 }

@@ -159,5 +159,15 @@ module.exports = {
     };
 
     return this.callApi(options);
+  },
+
+  listCollections: function () {
+    var options = {
+      url: this.pathApi('_listCollections'),
+      method: 'GET',
+      json: true
+    };
+
+    return this.callApi(options);
   }
 };

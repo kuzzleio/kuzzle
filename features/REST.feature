@@ -77,3 +77,8 @@ Feature: Test REST API
     When I get all statistics frames
     Then I get at least 1 statistic frame
 
+  @usingREST
+  Scenario: list known collections
+    When I write the document "documentGrace"
+    And I list data collections
+    Then I can find a collection "kuzzle-collection-test"

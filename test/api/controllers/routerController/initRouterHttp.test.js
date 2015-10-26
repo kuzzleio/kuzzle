@@ -556,4 +556,17 @@ describe('Test: routerController.initRouterHttp', function () {
     request.write('foobar');
     request.end();
   });
+
+  it('should create a route for the listCollection command', function (done) {
+    http.get('http://' + options.hostname + ':' + options.port + '/api/_listCollections', function (response) {
+      parseHttpResponse(response)
+        .then(result => {
+          should(response.statusCode).be.exactly(200);
+          should(result.controller).be.exactly('read');
+          should(result.action).be.exactly('listCollections');
+          done();
+        })
+        .catch(error => done(error));
+    });
+  });
 });

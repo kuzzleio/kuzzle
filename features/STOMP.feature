@@ -138,6 +138,7 @@ Feature: Test STOMP API
     And I should receive a "off" notification
 
   @usingSTOMP
+<<<<<<< HEAD
   Scenario: Getting the last statistics frame
     When I get the last statistics frame
     Then I get at least 1 statistic frame
@@ -147,3 +148,9 @@ Feature: Test STOMP API
     When I get all statistics frames
     Then I get at least 1 statistic frame
 
+=======
+  Scenario: list known collections
+    When I write the document "documentGrace"
+    And I list data collections
+    Then I can find a collection "kuzzle-collection-test"
+>>>>>>> origin/master

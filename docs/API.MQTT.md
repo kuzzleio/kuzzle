@@ -35,6 +35,7 @@ The current implementation of our MQ Broker service uses [RabbitMQ](https://www.
   * [Performing a global bulk import](#performing-a-global-bulk-import)
   * [Getting the last statistics frame](#getting-the-last-statistics-frame)
   * [Getting all stored statistics](#getting-all-stored-statistics)
+  * [Listing all known data collections](#listing-all-known-data-collections)
 
 ##  How to connect to Kuzzle
 
@@ -1283,6 +1284,52 @@ Statistics are returned as a JSON-object with each key being the snapshot's time
     /*
     The requestId field you provided.
     */
+    requestId: '<unique request identifier>'
+  }
+}
+```
+
+---
+
+### Listing all known data collections
+
+Return the complete list of persisted data collections.
+
+**Topic:** ``read..listCollections``
+
+**Query:**
+
+```javascript
+{
+  /*
+  Required. If your query doesn't include a clientId field, Kuzzle
+  will discard your query, because it doesn't have any mean to send you
+  the result.
+  */
+  clientId: <Unique session ID>,
+
+  /*
+  Optionnal: Kuzzle will forward this field in its response, allowing you
+  to easily identify what query generated the response you got.
+  */
+  requestId: <Unique query ID>
+}
+```
+
+**Response:**
+
+```javascript
+{
+  error: null,                      // Assuming everything went well
+  result: {
+    collections: [                  // An array of data collection names
+      'collection_1', 
+      'collection_2', 
+      'collection_...',
+      'collection_n'
+    ],
+    action: 'listCollection',
+    controller: 'read',
     requestId: '<unique request identifier>'
   }
 }
