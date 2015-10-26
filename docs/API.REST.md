@@ -724,7 +724,6 @@ These statistics include:
 {
   error: null,                      // Assuming everything went well
   result: {
-    count: <number of found documents>
     _source: {                      // Your original count query
       ...
     },
