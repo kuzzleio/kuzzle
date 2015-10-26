@@ -50,9 +50,14 @@ A ``response`` is a JSON object with the following structure:
 ```javascript
 {
   /*
-  String containing an error message if something went wrong
+  Integer containing the status code (HTTP-like: 200 if OK, 4xx or 5xx in case of error)
   */
-  error: null,  
+  status: xxx,
+
+  /*
+  Complex object containing error information, if something went wrong (null if OK)
+  */
+  error: {...},
 
   /*
   Complex object, depending on your query
@@ -63,6 +68,8 @@ A ``response`` is a JSON object with the following structure:
   }
 }
 ```
+
+_NB: For more details about status code and error object, see [status-codes.md](status-codes.md)_
 
 In order to get responses from Kuzzle, you have to provide a ``reply-to`` topic name in your message metadata. If you don't, Kuzzle will have no way to reply to you and may even discard your queries if a response is necessary.
 
@@ -140,6 +147,7 @@ How subscription works:
 
 ```javascript
 {
+  status: 200,                      // Assuming everything went well
   error: null,                      // Assuming everything went well
   result: {
     roomId: 'unique Kuzzle room ID',
@@ -158,6 +166,7 @@ There are 4 types of notifications you can receive:
 
 ```javascript
 {
+  status: 200,                       // Assuming everything went well
   error: null,                        // Assuming everything went well
   result: {
     _id: 'unique document ID',
@@ -177,6 +186,7 @@ There are 4 types of notifications you can receive:
 
 ```javascript
 {
+  status: 200,                       // Assuming everything went well
   error: null,                        // Assuming everything went well
   result: {
     _id: 'unique document ID',
@@ -195,6 +205,7 @@ There are 4 types of notifications you can receive:
 
 ```javascript
 {
+  status: 200,                       // Assuming everything went well
   error: null,                        // Assuming everything went well
   result: {
     _id: 'unique document ID',
@@ -212,6 +223,7 @@ There are 4 types of notifications you can receive:
 
 ```javascript
 {
+  status: 200,                       // Assuming everything went well
   error: null,                        // Assuming everything went well
   result: {
     _id: 'unique document ID',
@@ -228,6 +240,7 @@ There are 4 types of notifications you can receive:
 
 ```javascript
 {
+  status: 200,                       // Assuming everything went well
   error: null,                        // Assuming everything went well
   result: {
     roomId: 'unique Kuzzle room ID',
@@ -242,6 +255,7 @@ There are 4 types of notifications you can receive:
 
 ```javascript
 {
+  status: 200,                       // Assuming everything went well
   error: null,                        // Assuming everything went well
   result: {
     roomId: 'unique Kuzzle room ID',
@@ -294,6 +308,7 @@ It works with the room unique ID Kuzzle returns to you when you make a subscript
 
 ```javascript
 {
+  status: 200,                       // Assuming everything went well
   error: null,                        // Assuming everything went well
   result: <number of subscriptions>
 }
@@ -330,6 +345,7 @@ Makes Kuzzle remove you of its subscribers on this room.
 
 ```javascript
 {
+  status: 200,                       // Assuming everything went well
   error: null,                        // Assuming everything went well
   result: {
     roomId: 'unique Kuzzle room ID',
@@ -402,6 +418,7 @@ Creates a new document in the persistent data storage. Returns an error if the d
 
 ```javascript
 {
+  status: 200,                      // Assuming everything went well
   error: null,                      // Assuming everything went well
   result: {
     _id: '<Unique document ID>',    // The generated document ID
@@ -455,6 +472,7 @@ Creates a new document in the persistent data storage, or update it if it alread
 
 ```javascript
 {
+  status: 200,                      // Assuming everything went well
   error: null,                      // Assuming everything went well
   result: {
     _id: '<Unique document ID>',    // The generated document ID
@@ -508,6 +526,7 @@ Only documents in the persistent data storage layer can be retrieved.
 
 ```javascript
 {
+  status: 200,                      // Assuming everything went well
   error: null,                      // Assuming everything went well
   result: {
     _id: '<Unique document ID>',    // The generated document ID
@@ -565,6 +584,7 @@ Kuzzle uses the [ElasticSearch Query DSL ](https://www.elastic.co/guide/en/elast
 
 ```javascript
 {
+  status: 200,                      // Assuming everything went well
   error: null,                      // Assuming everything went well
   result: {
     _source: {                      // Your original filter/query
@@ -639,6 +659,7 @@ Only documents in the persistent data storage layer can be updated.
 
 ```javascript
 {
+  status: 200,                      // Assuming everything went well
   error: null,                      // Assuming everything went well
   result: {
     _id:
@@ -697,6 +718,7 @@ Kuzzle uses the [ElasticSearch Query DSL ](https://www.elastic.co/guide/en/elast
 
 ```javascript
 {
+  status: 200,                      // Assuming everything went well
   error: null,                      // Assuming everything went well
   result: {
     count: <number of found documents>
@@ -748,6 +770,7 @@ Only documents in the persistent data storage layer can be deleted.
 
 ```javascript
 {
+  status: 200,                      // Assuming everything went well
   error: null,                      // Assuming everything went well
   result: {
     _id: '<document ID>'            // The deleted document identifier
@@ -808,6 +831,7 @@ Kuzzle uses the [ElasticSearch Query DSL ](https://www.elastic.co/guide/en/elast
 
 ```javascript
 {
+  status: 200,                      // Assuming everything went well
   error: null,                      // Assuming everything went well
   result: {
     _source: {                      // Your original query
@@ -858,6 +882,7 @@ This action is handled by the **administration** controller.
 
 ```javascript
 {
+  status: 200,                      // Assuming everything went well
   error: null,                      // Assuming everything went well
   result: {
     _source: {                      // Your original query
@@ -921,6 +946,7 @@ This action is handled by the **administration** controller.
 
 ```javascript
 {
+  status: 200,                      // Assuming everything went well
   error: null,                      // Assuming everything went well
   result: {
     _source: {                      // Your original mapping query
@@ -965,6 +991,7 @@ Get data mapping of a collection previously defined
 
 ```javascript
 {
+  status: 200,                      // Assuming everything went well
   error: null,                      // Assuming everything went well
   result: {
     _source: {},
@@ -1038,6 +1065,7 @@ Bulk import only works on documents in our persistent data storage layer.
 
 ```javascript
 {
+  status: 200,                      // Assuming everything went well
   error: null,                      // Assuming everything went well
   result: {
     _source: {                      // Your original bulk import query
@@ -1118,6 +1146,7 @@ Bulk import only works on documents in our persistent data storage layer.
 
 ```javascript
 {
+  status: 200,                      // Assuming everything went well
   error: null,                      // Assuming everything went well
   result: {
     _source: {                      // Your original bulk import query
@@ -1186,11 +1215,12 @@ Return the complete list of persisted data collections.
 
 ```javascript
 {
+  status: 200,                      // Assuming everything went well
   error: null,                      // Assuming everything went well
   result: {
     collections: [                  // An array of data collection names
-      'collection_1', 
-      'collection_2', 
+      'collection_1',
+      'collection_2',
       'collection_...',
       'collection_n'
     ],
