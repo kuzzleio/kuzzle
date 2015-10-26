@@ -30,6 +30,7 @@ This will give you a direct access to Kuzzle's router controller, dispatching yo
   * [Retrieving the data mapping of a collection](#retrieving-the-data-mapping-of-a-collection)
   * [Performing a bulk import](#performing-a-bulk-import-on-a-data-collection)
   * [Performing a global bulk import](#performing-a-global-bulk-import)
+  * [Listing all known data collections](#listing-all-known-data-collections)
 
 ##  How to connect to Kuzzle
 
@@ -1071,6 +1072,47 @@ Bulk import only works on documents in our persistent data storage layer.
     The requestId field you provided.
     */
     requestId, '<unique request identifier>'
+  }
+}
+```
+
+---
+
+### Listing all known data collections
+
+Return the complete list of persisted data collections.
+
+**Message type:** ``read``
+
+**Query:**
+
+```javascript
+{
+  action: 'listCollections',
+
+  /*
+  Required: if your query doesn't include a requestId field, Kuzzle will
+  discard it, as it doesn't have any means to provide you with the result
+  */
+  requestId: <Unique query ID>
+}
+```
+
+**Response:**
+
+```javascript
+{
+  error: null,                      // Assuming everything went well
+  result: {
+    collections: [                  // An array of data collection names
+      'collection_1', 
+      'collection_2', 
+      'collection_...',
+      'collection_n'
+    ],
+    action: 'listCollection',
+    controller: 'read',
+    requestId: '<unique request identifier>'
   }
 }
 ```

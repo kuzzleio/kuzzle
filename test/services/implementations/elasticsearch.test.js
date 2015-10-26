@@ -14,6 +14,7 @@ describe('Test: ElasticSearch service', function () {
     collection = 'unit-tests-elasticsearch',
     createdDocumentId,
     elasticsearch,
+    engineType = 'readEngine',
     requestObject,
     documentAda = {
       firstName: 'Ada',
@@ -38,11 +39,9 @@ describe('Test: ElasticSearch service', function () {
       }
     };
 
-  before(function () {
-    kuzzle.config = new Config(params);
-  });
-
   beforeEach(function () {
+    kuzzle.config = new Config(params);
+
     requestObject = new RequestObject({
         controller: 'write',
         action: 'create',
@@ -51,7 +50,7 @@ describe('Test: ElasticSearch service', function () {
         body: documentAda
       });
 
-    elasticsearch = new ES(kuzzle, {service: 'readEngine'});
+    elasticsearch = new ES(kuzzle, {service: engineType});
     should(elasticsearch.init()).be.exactly(elasticsearch);
   });
 
@@ -71,11 +70,13 @@ describe('Test: ElasticSearch service', function () {
       });
   });
 
+  // init
   it('should initialize properly', function () {
     should(elasticsearch.init()).be.exactly(elasticsearch);
     should(elasticsearch.client).not.be.null();
   });
 
+  // cleanData
   it('should prepare the data for elasticsearch', function () {
     var
       cleanData = ES.__get__('cleanData'),
@@ -97,6 +98,7 @@ describe('Test: ElasticSearch service', function () {
     });
   });
 
+  // search
   it('should be able to search documents', function (done) {
     var ret;
 
@@ -122,6 +124,7 @@ describe('Test: ElasticSearch service', function () {
     return should(elasticsearch.search(requestObject)).be.rejected();
   });
 
+  // create
   it('should allow creating documents', function (done) {
     var ret = elasticsearch.create(requestObject);
 
@@ -140,6 +143,7 @@ describe('Test: ElasticSearch service', function () {
       });
   });
 
+  // createOrUpdate
   it('should support createOrUpdate capability', function (done) {
     var ret;
 
@@ -162,6 +166,7 @@ describe('Test: ElasticSearch service', function () {
       });
   });
 
+  // get
   it('should allow getting a single document', function (done) {
     var ret;
 
@@ -189,6 +194,7 @@ describe('Test: ElasticSearch service', function () {
     return should(elasticsearch.get(requestObject)).be.rejected();
   });
 
+  // count
   it('should allow counting documents using a provided filter', function (done) {
     var ret;
 
@@ -232,6 +238,7 @@ describe('Test: ElasticSearch service', function () {
     return should(elasticsearch.count(requestObject)).be.rejected();
   });
 
+  // update
   it('should allow to update a document', function () {
     requestObject.data._id = createdDocumentId;
     return should(elasticsearch.update(requestObject)).be.fulfilled();
@@ -241,6 +248,7 @@ describe('Test: ElasticSearch service', function () {
     return should(elasticsearch.update(requestObject)).be.rejected();
   });
 
+  // delete
   it('should allow to delete a document', function () {
     delete requestObject.data.body;
     requestObject.data._id = createdDocumentId;
@@ -251,6 +259,7 @@ describe('Test: ElasticSearch service', function () {
     return should(elasticsearch.delete(requestObject)).be.rejected();
   });
 
+  // deleteByQuery
   it('should return an empty result array when no document has been deleted using a filter', function (done) {
     requestObject.data.body = {};
     elasticsearch.deleteByQuery(requestObject)
@@ -325,6 +334,7 @@ describe('Test: ElasticSearch service', function () {
     });
   });
 
+  // import (bulk)
   it('should support bulk data import', function () {
     requestObject.data.body = [
         { index:  {_id: 1, _type: collection } },
@@ -373,6 +383,7 @@ describe('Test: ElasticSearch service', function () {
     return should(elasticsearch.import(requestObject)).be.rejected();
   });
 
+  // putMapping
   it('should have mapping capabilities', function () {
     requestObject.data.body =  {
       properties: {
@@ -387,6 +398,7 @@ describe('Test: ElasticSearch service', function () {
     return should(elasticsearch.putMapping(requestObject)).be.rejected();
   });
 
+  // getMapping
   it('should allow users to retrieve a mapping', function (done) {
     elasticsearch.getMapping(requestObject)
       .then(function (result) {
@@ -405,17 +417,25 @@ describe('Test: ElasticSearch service', function () {
     return should(elasticsearch.getMapping(requestObject)).be.rejected();
   });
 
+  it('should reject the getMapping promise if elasticsearch throws an error', function () {
+    kuzzle.config[engineType].index = 'kuzzle-unit-tests-fakeindex';
+    delete requestObject.data.body;
+    return should(elasticsearch.getMapping(requestObject)).be.rejected();
+  });
+
+  // deleteCollection
   it('should allow deleting an entire collection', function () {
     delete requestObject.data.body;
     return should(elasticsearch.deleteCollection(requestObject)).be.fulfilled();
   });
 
-  it('should return a rejected promise if the delete mapping function fails', function () {
+  it('should return a rejected promise if the delete collection function fails', function () {
     // because we already deleted the collection in the previous test, it should naturally fail
     delete requestObject.data.body;
     return should(elasticsearch.deleteCollection(requestObject)).be.rejected();
   });
 
+  // reset
   it('should allow resetting the database', function (done) {
     var
       ret,
@@ -471,6 +491,7 @@ describe('Test: ElasticSearch service', function () {
     return should(elasticsearch.reset()).be.rejected();
   });
 
+  // getAllIdsFromQuery
   it('should be able to get every ids matching a query', function (done) {
     var
       ret,
@@ -553,5 +574,17 @@ describe('Test: ElasticSearch service', function () {
       .catch(function (error) {
         done(error);
       });
+  });
+
+  // listCollections
+  it('should allow listing all available collections', function () {
+    delete requestObject.data.body;
+    return should(elasticsearch.listCollections(requestObject)).be.fulfilled();
+  });
+
+  it('should reject the listCollections promise if elasticsearch throws an error', function () {
+    kuzzle.config[engineType].index = 'kuzzle-unit-tests-fakeindex';
+    delete requestObject.data.body;
+    return should(elasticsearch.listCollections(requestObject)).be.rejected();
   });
 });
