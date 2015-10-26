@@ -2,7 +2,8 @@ var
   should = require('should'),
   rewire = require('rewire'),
   methods = rewire('../../../../lib/api/dsl/methods'),
-  InternalError = require('../../../../lib/api/core/errors/internalError');
+  BadRequestError = require.main.require('lib/api/core/errors/badRequestError');
+  InternalError = require.main.require('lib/api/core/errors/internalError');
 
 require('should-promised');
 
@@ -15,7 +16,7 @@ describe('Test: dsl.termFunction method', function () {
   });
 
   it('should return a rejected promise if the provided filter is empty', function () {
-    return should(termFunction('term', 'roomId', 'collection', {})).be.rejectedWith('A filter can\'t be empty');
+    return should(termFunction('term', 'roomId', 'collection', {})).be.rejectedWith(BadRequestError, { message: 'A filter can\'t be empty' });
   });
 
   it('should return a rejected promise if the value given for a "terms" filter is not an array', function () {
@@ -24,7 +25,7 @@ describe('Test: dsl.termFunction method', function () {
         foo: 'bar'
       };
 
-    return should(termFunction('terms', 'roomId', 'collection', filter)).be.rejectedWith('Filter terms must contains an array');
+    return should(termFunction('terms', 'roomId', 'collection', filter)).be.rejectedWith(BadRequestError, { message: 'Filter terms must contains an array' });
   });
 
   it('should create a valid "term" filter', function (done) {

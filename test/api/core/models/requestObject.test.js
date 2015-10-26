@@ -6,7 +6,8 @@ var
   winston = require('winston'),
   rewire = require('rewire'),
   uuid = require('node-uuid'),
-  RequestObject = require.main.require('lib/api/core/models/requestObject');
+  RequestObject = require.main.require('lib/api/core/models/requestObject'),
+  BadRequestError = require.main.require('lib/api/core/errors/badRequestError');
 
 require('should-promised');
 
@@ -148,16 +149,16 @@ describe('Test: requestObject', function () {
     delete request.controller;
     requestObject = new RequestObject(request, {}, '');
 
-    return should(requestObject.checkInformation()).be.rejectedWith('No controller provided for object');
+    return should(requestObject.checkInformation()).be.rejectedWith(BadRequestError, { message: 'No controller provided for object' });
   });
-
   it('should reject the promise if no action has been provided', function () {
+
     var requestObject;
 
     delete request.action;
     requestObject = new RequestObject(request, {}, '');
 
-    return should(requestObject.checkInformation()).be.rejectedWith('No action provided for object');
+    return should(requestObject.checkInformation()).be.rejectedWith(BadRequestError, { message: 'No action provided for object' });
   });
 
   it('should return a promise when isValid is invoked', function () {
@@ -175,7 +176,7 @@ describe('Test: requestObject', function () {
     delete request.body;
     requestObject = new RequestObject(request, {}, '');
 
-    return should(requestObject.isValid()).be.rejectedWith('The body can\'t be empty');
+    return should(requestObject.isValid()).be.rejectedWith(BadRequestError, { message: 'The body can\'t be empty' });
   });
 
   it('should be able to tell if data is persistent or not', function () {

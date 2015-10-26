@@ -75,6 +75,7 @@ describe('Test: routerController.executeFromRest', function () {
     should(mockupResponse.header['Content-Type']).not.be.undefined();
     should(mockupResponse.header['Content-Type']).be.exactly('application/json');
     should(mockupResponse.response.result).be.null();
+    should(mockupResponse.response.status).be.exactly(400);
     should(mockupResponse.response.error).not.be.null();
     should(mockupResponse.response.error.message).not.be.null();
     should(mockupResponse.response.error.message).be.exactly('The "controller" argument is missing');
@@ -91,6 +92,7 @@ describe('Test: routerController.executeFromRest', function () {
     should(mockupResponse.header['Content-Type']).not.be.undefined();
     should(mockupResponse.header['Content-Type']).be.exactly('application/json');
     should(mockupResponse.response.result).be.null();
+    should(mockupResponse.response.status).be.exactly(400);
     should(mockupResponse.response.error).not.be.null();
     should(mockupResponse.response.error.message).not.be.null();
     should(mockupResponse.response.error.message).startWith('Invalid request content-type');
@@ -109,6 +111,7 @@ describe('Test: routerController.executeFromRest', function () {
         should(mockupResponse.statusCode).be.exactly(200);
         should(mockupResponse.header['Content-Type']).not.be.undefined();
         should(mockupResponse.header['Content-Type']).be.exactly('application/json');
+        should(mockupResponse.response.status).be.exactly(200);
         should(mockupResponse.response.error).be.null();
         should(mockupResponse.response.result).be.not.null();
         should(mockupResponse.response.result._source).match(data.body);
@@ -154,6 +157,7 @@ describe('Test: routerController.executeFromRest', function () {
         should(mockupResponse.statusCode).be.exactly(500);
         should(mockupResponse.header['Content-Type']).not.be.undefined();
         should(mockupResponse.header['Content-Type']).be.exactly('application/json');
+        should(mockupResponse.response.status).be.exactly(500);
         should(mockupResponse.response.error).not.be.null();
         should(mockupResponse.response.error.message).not.be.null();
         should(mockupResponse.response.error.message).be.exactly('rejected');
@@ -179,6 +183,7 @@ describe('Test: routerController.executeFromRest', function () {
         should(mockupResponse.statusCode).be.exactly(200);
         should(mockupResponse.header['Content-Type']).not.be.undefined();
         should(mockupResponse.header['Content-Type']).be.exactly('application/json');
+        should(mockupResponse.response.status).be.exactly(200);
         should(mockupResponse.response.error).be.null();
         should(mockupResponse.response.result).be.not.null();
         should(mockupResponse.response.result.action).be.exactly('create');
@@ -204,6 +209,7 @@ describe('Test: routerController.executeFromRest', function () {
         should(mockupResponse.statusCode).be.exactly(200);
         should(mockupResponse.header['Content-Type']).not.be.undefined();
         should(mockupResponse.header['Content-Type']).be.exactly('application/json');
+        should(mockupResponse.response.status).be.exactly(200);
         should(mockupResponse.response.error).be.null();
         should(mockupResponse.response.result).be.not.null();
         should(mockupResponse.response.result.action).be.exactly('create');

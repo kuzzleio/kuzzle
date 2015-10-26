@@ -2,7 +2,8 @@ var
   should = require('should'),
   rewire = require('rewire'),
   methods = rewire('../../../../lib/api/dsl/methods'),
-  InternalError = require('../../../../lib/api/core/errors/internalError');
+  BadRequestError = require.main.require('lib/api/core/errors/badRequestError'),
+  InternalError = require.main.require('lib/api/core/errors/internalError');
 
 require('should-promised');
 
@@ -154,7 +155,7 @@ describe('Test range method', function () {
   });
 
   it('should return a rejected promise if the filter is empty', function () {
-    return should(methods.range(roomIdFilterGrace, collection, {})).be.rejectedWith('A filter can\'t be empty');
+    return should(methods.range(roomIdFilterGrace, collection, {})).be.rejectedWith(BadRequestError, { message: 'A filter can\'t be empty' });
   });
 
   it('should return a rejected promise if buildCurriedFunction fails', function () {
