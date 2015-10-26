@@ -186,6 +186,14 @@ module.exports = {
       };
 
     return publish.call(this, topic, msg);
+  },
+
+  listCollections: function () {
+    var
+      topic = ['read', '', 'listCollections'].join('.'),
+      msg = {};
+
+    return publish.call(this, topic, msg);
   }
 };
 

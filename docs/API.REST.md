@@ -26,6 +26,7 @@ If you need such functionalities, please check our other supported protocols. Fo
   * [Retrieving the data mapping of a collection](#retrieving-the-data-mapping-of-a-collection)
   * [Performing a bulk import](#performing-a-bulk-import-on-a-data-collection)
   * [Performing a global bulk import](#performing-a-global-bulk-import)
+  * [Listing all known data collections](#listing-all-known-data-collections)
 
 ## What are ``response`` objects
 
@@ -694,6 +695,35 @@ Bulk import only works on documents in our persistent data storage layer.
         }
       }
     ]
+  }
+}
+```
+
+---
+
+### Listing all known data collections
+
+Return the complete list of persisted data collections.
+
+**URL:** ``http://kuzzle:7512/api/_listCollections``
+
+**Method:** ``GET``
+
+**Response:**
+
+```javascript
+{
+  error: null,                      // Assuming everything went well
+  result: {
+    collections: [                  // An array of data collection names
+      'collection_1', 
+      'collection_2', 
+      'collection_...',
+      'collection_n'
+    ],
+    action: 'listCollection',
+    controller: 'read',
+    requestId: '<unique request identifier>'
   }
 }
 ```

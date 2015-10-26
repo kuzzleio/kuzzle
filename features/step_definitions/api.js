@@ -455,6 +455,36 @@ var apiSteps = function () {
       });
   });
 
+  this.When(/^I list data collections$/, function (callback) {
+    this.api.listCollections()
+      .then(response => {
+        if (response.error) {
+          callback.fail(new Error(response.error));
+          return false;
+        }
+
+        if (!response.result) {
+          return callback.fail(new Error('No result provided'));
+        }
+
+        this.result = response.result;
+        callback();
+      })
+      .catch(error => callback.fail(new Error(error)));
+  });
+
+  this.Then(/^I can find a collection "([^"]*)"$/, function (collection, callback) {
+    if (!this.result.collections) {
+      return callback.fail('Expected a collections list result, got: ' + this.result);
+    }
+
+    if (Array.isArray(this.result.collections) && this.result.collections.indexOf(collection) !== -1) {
+      return callback();
+    }
+
+    callback.fail('Expected to find the collection <' + collection + '> in this collections list: ' + this.result.collections);
+  });
+
   /** WRITE **/
   this.When(/^I write the document ?(?:"([^"]*)")?$/, function (documentName, callback) {
     var document = this[documentName] || this.documentGrace;
