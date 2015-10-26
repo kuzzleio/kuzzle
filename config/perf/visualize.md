@@ -13,7 +13,7 @@ Be sure to have send `testName` and `testStartDate` (see [Data to send from my s
  * Click on the field Time-field-name and choose @timestamp,
  * Click the "create" button,
  * Go to Settings->Objects and choose "Dashboards panel",
- * Click Import button. Choose the file from Kuzzle directory at [/config/elk/kibanadashboard.json](./kibanadashboard.json)
+ * Click Import button. Choose the file from Kuzzle directory at [/config/perf/kibanadashboard.json](./kibanadashboard.json)
 
 The dashboard panel, Searches and Visualizations must be populated.
 You can now go to Dashboard and load the "perf DashBoard".
@@ -36,7 +36,7 @@ As a curl command you can do :
 
 `curl -XDELETE 'http://localhost:9200/logstash-*/'`
 
-You can replace the * by a specific day (example `logstash-2015.08.07`). 
+You can replace the * by a specific day (example `logstash-2015.08.07`).
 
 #Refresh field list in Kibana :
 Every time you add/modify/delete the fields in your log, you must refresh fields list in Kibana

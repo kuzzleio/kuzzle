@@ -1,6 +1,6 @@
 var
   should = require('should'),
-  Kuzzle = require('root-require')('lib/api/Kuzzle');
+  Kuzzle = require.main.require('lib/api/Kuzzle');
 
 describe('Test kuzzle constructor', function () {
 

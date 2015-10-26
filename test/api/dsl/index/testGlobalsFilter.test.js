@@ -1,7 +1,7 @@
 var
   should = require('should'),
   rewire = require('rewire'),
-  RequestObject = require('root-require')('lib/api/core/models/requestObject'),
+  RequestObject = require.main.require('lib/api/core/models/requestObject'),
   Dsl = rewire('../../../../lib/api/dsl/index');
 
 require('should-promised');

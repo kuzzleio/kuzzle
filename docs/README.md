@@ -1,3 +1,7 @@
+# Installation
+
+see [installation documentation](installation.md)
+
 # API Specifications
 
 Kuzzle supports a variety of communication protocols. You'll find here the specifications of each one of these API:

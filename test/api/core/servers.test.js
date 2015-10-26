@@ -7,7 +7,7 @@ var
   http = require('http'),
   rewire = require('rewire'),
   params = require('rc')('kuzzle'),
-  Kuzzle = require('root-require')('lib/api/Kuzzle'),
+  Kuzzle = require.main.require('lib/api/Kuzzle'),
   Servers = rewire('../../../lib/api/core/servers');
 
 require('should-promised');

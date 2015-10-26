@@ -1,6 +1,6 @@
 var
   should = require('should'),
-  operators = require('root-require')('lib/api/dsl/operators');
+  operators = require.main.require('lib/api/dsl/operators');
 
 describe('Test gte operator', function () {
 

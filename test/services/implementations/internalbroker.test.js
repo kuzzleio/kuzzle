@@ -4,7 +4,7 @@ var
   rewire = require('rewire'),
   IPCBroker = rewire('../../../lib/services/internalbroker'),
   params = require('rc')('kuzzle'),
-  Kuzzle = require('root-require')('lib/api/Kuzzle');
+  Kuzzle = require.main.require('lib/api/Kuzzle');
 
 require('should-promised');
 

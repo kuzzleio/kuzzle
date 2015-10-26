@@ -3,7 +3,7 @@ var
   winston = require('winston'),
   params = require('rc')('kuzzle'),
   _ = require('lodash'),
-  Kuzzle = require('root-require')('lib/api/Kuzzle');
+  Kuzzle = require.main.require('lib/api/Kuzzle');
 
 require('should-promised');
 
