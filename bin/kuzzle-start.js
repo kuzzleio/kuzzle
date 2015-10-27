@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 var
-  captains = require('captains-log'),
   rc = require('rc'),
+  winston = require('winston'),
   kuzzle = require('../lib');
 
 
 module.exports = function () {
-  var log = captains();
+  var log = winston;
   log.info('Starting Kuzzle');
 
   kuzzle.start(rc('kuzzle'))

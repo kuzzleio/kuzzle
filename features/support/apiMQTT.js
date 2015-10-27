@@ -188,6 +188,22 @@ module.exports = {
     return publish.call(this, topic, msg);
   },
 
+  getStats: function () {
+    var
+      topic = ['admin', '', 'getStats'].join('.'),
+      msg = {};
+
+    return publish.call(this, topic, msg);
+  },
+
+  getAllStats: function () {
+    var
+      topic = ['admin', '', 'getAllStats'].join('.'),
+      msg = {};
+
+    return publish.call(this, topic, msg);
+  },
+
   listCollections: function () {
     var
       topic = ['read', '', 'listCollections'].join('.'),

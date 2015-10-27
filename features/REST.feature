@@ -68,6 +68,16 @@ Feature: Test REST API
     Then I find a document with "Grace" in field "firstName"
 
   @usingREST
+  Scenario: Getting the last statistics frame
+    When I get the last statistics frame
+    Then I get at least 1 statistic frame
+
+  @usingREST
+  Scenario: Getting all statistics frame
+    When I get all statistics frames
+    Then I get at least 1 statistic frame
+
+  @usingREST
   Scenario: list known collections
     When I write the document "documentGrace"
     And I list data collections

@@ -93,7 +93,7 @@ $ pm2 start app-start.js
 
 ### Change external services hosts
 
-f you are running some of the service(s) externally, you can configure their host and port using some environment variables:
+If you are running some of the service(s) externally, you can configure their host and port using some environment variables:
 
 examples:
 
@@ -102,8 +102,9 @@ examples:
 $ export READ_ENGINE_HOST=myelasticsearch:9200
 $ export WRITE_ENGINE_HOST=myelasticsearch:9200
 
-# Redis (notification cache):
-$ export NOTIFICATION_CACHE_HOST=myredis:6379
+# Redis (cache services):
+$ export CACHE_HOST=myredis
+$ export CACHE_PORT=6379
 
 # Rabbit MQ (external broker for AMQP/MQTT/STOMP clients):
 $ export MQ_BROKER_HOST=myrabbitmq

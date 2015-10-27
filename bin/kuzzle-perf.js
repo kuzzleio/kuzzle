@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 
 var
-  captains = require('captains-log'),
+  winston = require('winston'),
   rc = require('rc'),
   kuzzle = require('../lib');
 
 
 module.exports = function () {
-  var log = captains();
+  var log = winston;
   log.info('Starting Kuzzle in PERFORMANCES TESTING mode');
 
   kuzzle.perf(rc('kuzzle'));
