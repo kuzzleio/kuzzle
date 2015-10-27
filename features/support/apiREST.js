@@ -122,20 +122,50 @@ module.exports = {
   },
 
   globalBulkImport: function (bulk) {
-      var options = {
-        url: this.pathApi('/_bulk'),
-        method: 'POST',
-        json: bulk
-      };
+    var options = {
+      url: this.pathApi('/_bulk'),
+      method: 'POST',
+      json: bulk
+    };
 
-      return this.callApi(options);
-    },
+    return this.callApi(options);
+  },
 
   putMapping: function () {
     var options = {
       url: this.pathApi(this.world.fakeCollection + '/_mapping'),
       method: 'PUT',
       json: this.world.schema
+    };
+
+    return this.callApi(options);
+  },
+
+  getStats: function () {
+    var options = {
+      url: this.pathApi('/_getStats'),
+      method: 'GET',
+      json: {}
+    };
+
+    return this.callApi(options);
+  },
+
+  getAllStats: function () {
+    var options = {
+      url: this.pathApi('/_getAllStats'),
+      method: 'GET',
+      json: {}
+    };
+
+    return this.callApi(options);
+  },
+
+  listCollections: function () {
+    var options = {
+      url: this.pathApi('_listCollections'),
+      method: 'GET',
+      json: true
     };
 
     return this.callApi(options);

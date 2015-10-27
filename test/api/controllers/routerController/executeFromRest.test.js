@@ -7,6 +7,7 @@ var
   should = require('should'),
   winston = require('winston'),
   params = require('rc')('kuzzle'),
+  q = require('q'),
   kuzzle = require.main.require('lib'),
   rewire = require('rewire'),
   RouterController = rewire('../../../../lib/api/controllers/routerController'),
@@ -34,25 +35,26 @@ describe('Test: routerController.executeFromRest', function () {
   before(function (done) {
     var
       mockupFunnel = function (requestObject) {
-        var forwardedObject = new ResponseObject(requestObject, {});
+        var
+          deferred = q.defer(),
+          forwardedObject = new ResponseObject(requestObject, {});
 
         if (requestObject.data.body.resolve) {
           if (requestObject.data.body.empty) {
-            return Promise.resolve({});
+            deferred.resolve({});
           }
           else {
-            return Promise.resolve(forwardedObject);
+            deferred.resolve(forwardedObject);
           }
         }
         else {
-          return Promise.reject(new Error('rejected'));
+          deferred.reject(new Error('rejected'));
         }
+        return deferred.promise;
       },
       mockupRouterListener = {
         listener: {
-          add: function () {
-            return true;
-          }
+          add: function () { return true; }
         }
       };
 

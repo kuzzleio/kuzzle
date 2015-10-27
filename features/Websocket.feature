@@ -135,3 +135,19 @@ Feature: Test websocket API
     Then I should receive a "on" notification
     Then I unsubscribe socket "client1"
     And I should receive a "off" notification
+
+  @usingWebsocket
+  Scenario: Getting the last statistics frame
+    When I get the last statistics frame
+    Then I get at least 1 statistic frame
+
+  @usingWebsocket
+  Scenario: Getting all statistics frame
+    When I get all statistics frames
+    Then I get at least 1 statistic frame
+
+  @usingWebsocket
+  Scenario: list known collections
+    When I write the document "documentGrace"
+    And I list data collections
+    Then I can find a collection "kuzzle-collection-test"

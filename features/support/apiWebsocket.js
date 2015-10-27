@@ -198,6 +198,30 @@ module.exports = {
       };
 
     return emit.call(this, 'subscribe', msg);
+  },
+
+  getStats: function () {
+    var
+      msg = {
+        action: 'getStats'
+      };
+
+    return emit.call(this, 'admin', msg);
+  },
+
+  getAllStats: function () {
+    var
+      msg = {
+        action: 'getAllStats'
+      };
+
+    return emit.call(this, 'admin', msg);
+  },
+
+  listCollections: function () {
+    var msg = {action: 'listCollections'};
+
+    return emit.call(this, 'read', msg );
   }
 };
 
