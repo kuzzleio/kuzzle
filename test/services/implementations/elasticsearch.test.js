@@ -349,6 +349,37 @@ describe('Test: ElasticSearch service', function () {
     return should(elasticsearch.import(requestObject)).be.fulfilled();
   });
 
+
+  it('should raise a "Partial Error" response for bulk data import with some errors', function (done) {
+    requestObject.data.body = [
+        { index:  {_id: 1, _type: collection } },
+        { firstName: 'foo' },
+        { index:  {_id: 2, _type: collection } },
+        { firstName: 'bar' },
+        { update: {_id: 12, _type: collection } },
+        { doc: { firstName: 'foobar' } },
+        { update: {_id: 212, _type: collection } },
+        { doc: { firstName: 'foobar' } }
+      ];
+
+    elasticsearch.import(requestObject)
+      .then(function(result) {
+        try {
+          should(result.status).be.exactly(206);
+          should(result.error).be.not.null();
+          should(result.error.count).be.exactly(2);
+          should(result.error.message).be.exactly('Some error on bulk');
+          should(result.error.stack).be.an.Array().and.match([{status: 404}]).and.match([{error: /^DocumentMissingException/}]);
+          done();
+        } catch(e) {
+          done(e);
+        }
+      })
+      .catch(function(error) {
+        done(error);
+      });
+  });
+
   it('should override the type with the collection if one has been specified in the document', function () {
     requestObject.data.body = [
       { index:  {_id: 1} },

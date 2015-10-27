@@ -32,6 +32,8 @@ It is used to inform the client about the real status of his request (if an erro
 #### 2xx Success
 
 * ``200``: standard status for a successful request.
+* ``206``: the request (tipically a bulk import) is partially successful, but some actions encountered an error.
+(in this case, details of errors are returned within _error.stack_)
 
 #### 4xx Client Error
 
