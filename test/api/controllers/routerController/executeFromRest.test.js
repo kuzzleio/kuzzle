@@ -7,17 +7,18 @@ var
   should = require('should'),
   winston = require('winston'),
   params = require('rc')('kuzzle'),
-  Kuzzle = require.main.require('lib/api/Kuzzle'),
+  kuzzle = require.main.require('lib'),
   rewire = require('rewire'),
   RouterController = rewire('../../../../lib/api/controllers/routerController'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
-  ResponseObject = require.main.require('lib/api/core/models/responseObject');
+  ResponseObject = require.main.require('lib/api/core/models/responseObject'),
+  Role = require.main.require('lib/api/core/models/security/role'),
+  Profile = require.main.require('lib/api/core/models/security/profile');
 
 require('should-promised');
 
 describe('Test: routerController.executeFromRest', function () {
   var
-    kuzzle,
     mockupResponse = {
       ended: false,
       statusCode: 0,
@@ -25,6 +26,7 @@ describe('Test: routerController.executeFromRest', function () {
       response: {},
       init: function () { this.ended = false; this.statusCode = 0; this.response = {}; this.header = ''; },
       writeHead: function (status, header) { this.statusCode = status; this.header = header; },
+      setHeader: function (name, value) { this.header[name] = value; },
       end: function (message) { this.ended = true; this.response = JSON.parse(message); }
     },
     executeFromRest;
@@ -48,19 +50,29 @@ describe('Test: routerController.executeFromRest', function () {
       },
       mockupRouterListener = {
         listener: {
-          add: function () { return true; }
+          add: function () {
+            return true;
+          }
         }
       };
 
-    kuzzle = new Kuzzle();
+
     kuzzle.log = new (winston.Logger)({transports: [new (winston.transports.Console)({level: 'silent'})]});
 
     kuzzle.start(params, {dummy: true})
       .then(function () {
         kuzzle.funnel.execute = mockupFunnel;
         RouterController.router = mockupRouterListener;
-
         executeFromRest = RouterController.__get__('executeFromRest');
+
+        kuzzle.repositories.role.roles.guest = new Role();
+        return kuzzle.repositories.role.hydrate(kuzzle.repositories.role.roles.guest, params.userRoles.guest);
+      })
+      .then(function () {
+        kuzzle.repositories.profile.profiles.anonymous = new Profile();
+        return kuzzle.repositories.profile.hydrate(kuzzle.repositories.profile.profiles.anonymous, params.userProfiles.anonymous);
+      })
+      .then(function () {
         done();
       });
   });

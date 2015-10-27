@@ -3,13 +3,12 @@ var
   winston = require('winston'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
   params = require('rc')('kuzzle'),
-  Kuzzle = require.main.require('lib/api/Kuzzle');
+  kuzzle = require.main.require('lib');
 
 require('should-promised');
 
 describe('Test: hotelClerk.removeCustomerFromAllRooms', function () {
   var
-    kuzzle,
     connection = {id: 'connectionid'},
     badConnection = {id: 'badconnectionid'},
     roomName1 = 'roomName',
@@ -36,6 +35,32 @@ describe('Test: hotelClerk.removeCustomerFromAllRooms', function () {
     mockupNotifier = function (roomId, notification) {
       notified = { roomId: roomId, notification: notification };
     };
+
+  before(function (done) {
+    kuzzle.log = new (winston.Logger)({transports: [new (winston.transports.Console)({level: 'silent'})]});
+    kuzzle.removeAllListeners();
+    kuzzle.start(params, {dummy: true})
+      .then(function() {
+        kuzzle.notifier.notify = mockupNotifier;
+        return kuzzle.hotelClerk.addSubscription(requestObject1);
+      })
+      .then(function () {
+        var requestObject2 = new RequestObject({
+          controller: 'subscribe',
+          action: 'on',
+          requestId: roomName2,
+          collection: collection,
+          body: filter2
+        });
+
+        return kuzzle.hotelClerk.addSubscription(requestObject2);
+      })
+      .then(function () {
+        done();
+      });
+  });
+
+  });
 
   beforeEach(function (done) {
     kuzzle = new Kuzzle();

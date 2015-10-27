@@ -3,24 +3,48 @@ var
   winston = require('winston'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
   params = require('rc')('kuzzle'),
-  Kuzzle = require.main.require('lib/api/Kuzzle');
+  kuzzle = require.main.require('lib'),
+  Profile = require.main.require('lib/api/core/models/security/profile'),
+  Role = require.main.require('lib/api/core/models/security/role');
 
 require('should-promised');
 
 describe('Test: hotelClerk.countSubscription', function () {
   var
-    kuzzle;
+    context = {
+      connection: {id: 'connectionId'},
+      user: null
+    };
 
-  before(function () {
-    kuzzle = new Kuzzle();
+  before(function (done) {
     kuzzle.log = new (winston.Logger)({transports: [new (winston.transports.Console)({level: 'silent'})]});
-    return kuzzle.start(params, {dummy: true});
+
+    kuzzle.hotelClerk.customers = {};
+    kuzzle.hotelClerk.rooms = {};
+
+    kuzzle.start(params, {dummy: true})
+      .then(function () {
+        kuzzle.repositories.role.roles.guest = new Role();
+        return kuzzle.repositories.role.hydrate(kuzzle.repositories.role.roles.guest, params.userRoles.guest);
+      })
+      .then(function () {
+        kuzzle.repositories.profile.profiles.anonymous = new Profile();
+        return kuzzle.repositories.profile.hydrate(kuzzle.repositories.profile.profiles.anonymous, params.userProfiles.anonymous);
+      })
+      .then(function () {
+        return kuzzle.repositories.user.anonymous();
+      })
+      .then(function (anonymousUser) {
+        context.user = anonymousUser;
+        done();
+      });
   });
 
   it('should reject the request if no room ID has been provided', function () {
     var requestObject = new RequestObject({
       body: {}
     });
+    requestObject._context = context;
 
     return should(kuzzle.hotelClerk.countSubscription(requestObject)).be.rejectedWith('The room Id is mandatory for count subscription');
   });
@@ -29,6 +53,7 @@ describe('Test: hotelClerk.countSubscription', function () {
     var requestObject = new RequestObject({
       body: { roomId: 'foobar' }
     });
+    requestObject._context = context;
 
     return should(kuzzle.hotelClerk.countSubscription(requestObject)).be.rejectedWith('The room Id foobar is unknown');
   });
@@ -44,10 +69,20 @@ describe('Test: hotelClerk.countSubscription', function () {
         }),
       countRequest = new RequestObject({ body: {}});
 
-    return kuzzle.hotelClerk.addSubscription(subscribeRequest, { id: 'a connection'})
+    subscribeRequest._context = {
+      connection: {id: 'a connection'},
+      user: context.user
+    };
+    countRequest._context = {
+      connection: {id: 'count connection'},
+      user: context.user
+    };
+
+    return kuzzle.hotelClerk.addSubscription(subscribeRequest)
       .then(function (createdRoom) {
         countRequest.data.body.roomId = createdRoom.roomId;
-        return kuzzle.hotelClerk.addSubscription(subscribeRequest, { id: 'another connection'});
+        subscribeRequest._context.connection.id = 'another connection';
+        return kuzzle.hotelClerk.addSubscription(subscribeRequest);
       })
       .then(function () {
         return kuzzle.hotelClerk.countSubscription(countRequest);
@@ -55,7 +90,8 @@ describe('Test: hotelClerk.countSubscription', function () {
       .then(function (response) {
         should(response.roomId).be.exactly(countRequest.data.body.roomId);
         should(response.count).be.exactly(2);
-        return kuzzle.hotelClerk.removeSubscription(subscribeRequest, { id: 'a connection'});
+        subscribeRequest._context.connection.id = 'a connection';
+        return kuzzle.hotelClerk.removeSubscription(subscribeRequest);
       })
       .then(function () {
         return kuzzle.hotelClerk.countSubscription(countRequest);
