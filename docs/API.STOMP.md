@@ -36,7 +36,7 @@ The current implementation of our MQ Broker service uses [RabbitMQ](https://www.
   * [Getting the last statistics frame](#getting-the-last-statistics-frame)
   * [Getting all stored statistics](#getting-all-stored-statistics)
   * [Listing all known data collections](#listing-all-known-data-collections)
-  
+
 ## How to connect to Kuzzle
 
 To establish communication with Kuzzle using STOMP, simply connect your application to the Kuzzle's STOMP port.
@@ -1224,6 +1224,7 @@ These statistics include:
 
 ```javascript
 {
+  status: 200,                      // Assuming everything went well
   error: null,                      // Assuming everything went well
   result: {
     _source: {                      // Your original query
@@ -1273,7 +1274,7 @@ These statistics include:
 * the number of failed requests since the last frame
 
 Statistics are returned as a JSON-object with each key being the snapshot's timestamp.
- 
+
 **Topic:** ``/exchange/amq.topic/admin..getAllStats``
 
 **reply-to queue metadata:** Required.
@@ -1299,6 +1300,7 @@ Statistics are returned as a JSON-object with each key being the snapshot's time
 
 ```javascript
 {
+  status: 200,                      // Assuming everything went well
   error: null,                      // Assuming everything went well
   result: {
     _source: {                      // Your original query

@@ -258,6 +258,7 @@ There are 4 types of notifications you can receive:
 
 ```javascript
 {
+  status: 200,                       // Assuming everything went well
   error: null,                        // Assuming everything went well
   result: {
     roomId: 'unique Kuzzle room ID',
@@ -1201,6 +1202,7 @@ These statistics include:
 
 ```javascript
 {
+  status: 200,                      // Assuming everything went well
   error: null,                      // Assuming everything went well
   result: {
     _source: {                      // Your original query
@@ -1276,6 +1278,7 @@ Statistics are returned as a JSON-object with each key being the snapshot's time
 
 ```javascript
 {
+  status: 200,                      // Assuming everything went well
   error: null,                      // Assuming everything went well
   result: {
     _source: {                      // Your original query

@@ -1259,6 +1259,7 @@ These statistics include:
 
 ```javascript
 {
+  status: 200,                      // Assuming everything went well
   error: null,                      // Assuming everything went well
   result: {
     _source: {}                     // Your original query
@@ -1335,6 +1336,7 @@ Statistics are returned as a JSON-object with each key being the snapshot's time
 
 ```javascript
 {
+  status: 200,                      // Assuming everything went well
   error: null,                      // Assuming everything went well
   result: {
     _source: {                      // Your original query

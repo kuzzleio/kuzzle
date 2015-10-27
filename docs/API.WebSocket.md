@@ -1142,6 +1142,7 @@ These statistics include:
 
 ```javascript
 {
+  status: 200,                      // Assuming everything went well
   error: null,                      // Assuming everything went well
   result: {
     _source: {                      // Your original query
@@ -1191,7 +1192,7 @@ These statistics include:
 * the number of failed requests since the last frame
 
 Statistics are returned as a JSON-object with each key being the snapshot's timestamp.
- 
+
 **Message type:** ``admin``
 
 **Query:**
@@ -1212,6 +1213,7 @@ Statistics are returned as a JSON-object with each key being the snapshot's time
 
 ```javascript
 {
+  status: 200,                      // Assuming everything went well
   error: null,                      // Assuming everything went well
   result: {
     _source: {                      // Your original query
