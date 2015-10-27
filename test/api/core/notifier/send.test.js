@@ -94,18 +94,26 @@ describe('Test: notifier.send', function () {
   it('should send back a response when a REST connection is provided', function () {
     var
       responded = false,
-      response = { foo: 'bar' },
+      headOK = false,
+      response = { foo: 'bar', status: 200 },
+      contentType = {'Content-Type': 'application/json'},
       connection = {
         type: 'rest',
         response: {
           end: function(msg) {
             should(msg).be.exactly(JSON.stringify(response));
             responded = true;
+          },
+          writeHead: function(status,msg) {
+            should(JSON.stringify(msg)).be.exactly(JSON.stringify(contentType));
+            should(status).be.exactly(200);
+            headOK = true;
           }
         }};
 
     (Notifier.__get__('send')).call(kuzzle, null, response, connection);
     should(responded).be.true();
+    should(headOK).be.true();
   });
 
   it('should broadcast the response if no connection is provided', function () {

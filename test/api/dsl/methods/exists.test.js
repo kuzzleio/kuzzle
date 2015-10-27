@@ -1,7 +1,9 @@
 var
   should = require('should'),
   rewire = require('rewire'),
-  methods = rewire('../../../../lib/api/dsl/methods');
+  methods = rewire('../../../../lib/api/dsl/methods'),
+  BadRequestError = require.main.require('lib/api/core/errors/badRequestError'),
+  InternalError = require.main.require('lib/api/core/errors/internalError');
 
 require('should-promised');
 
@@ -58,16 +60,16 @@ describe('Test exists method', function () {
   });
 
   it('should return a rejected promise if the filter argument is empty', function () {
-    return should(methods.exists('foo', 'bar', {})).be.rejectedWith('A filter can\'t be empty');
+    return should(methods.exists('foo', 'bar', {})).be.rejectedWith(BadRequestError, { message: 'A filter can\'t be empty' });
   });
 
   it('should return a rejected promise if the filter argument is invalid', function () {
-    return should(methods.exists('foo', 'bar', { foo: 'bar' })).be.rejectedWith('Filter \'exists\' must contains \'field\' attribute');
+    return should(methods.exists('foo', 'bar', { foo: 'bar' })).be.rejectedWith(BadRequestError, { message: 'Filter \'exists\' must contains \'field\' attribute' });
   });
 
   it('should return a rejected promise if buildCurriedFunction fails', function () {
     return methods.__with__({
-      buildCurriedFunction: function () { return { error: 'rejected' }; }
+      buildCurriedFunction: function () { return new InternalError('rejected'); }
     })(function () {
       return should(methods.exists('foo', 'bar', { field: 'foo' }));
     });

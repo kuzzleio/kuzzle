@@ -1,7 +1,9 @@
 var
   should = require('should'),
   rewire = require('rewire'),
-  methods = rewire('../../../../lib/api/dsl/methods');
+  methods = rewire('../../../../lib/api/dsl/methods'),
+  BadRequestError = require.main.require('lib/api/core/errors/badRequestError'),
+  InternalError = require.main.require('lib/api/core/errors/internalError');
 
 require('should-promised');
 
@@ -141,7 +143,7 @@ describe('Test geoboundingbox method', function () {
   });
 
   it('should return a rejected promise if an empty filter is provided', function () {
-    return should(methods.geoBoundingBox('foo', 'bar', {})).be.rejectedWith('Missing filter');
+    return should(methods.geoBoundingBox('foo', 'bar', {})).be.rejectedWith(BadRequestError, { message: 'Missing filter' });
   });
 
   it('should return a rejected promise if the geolocalisation filter is invalid', function () {
@@ -154,12 +156,12 @@ describe('Test geoboundingbox method', function () {
         }
       };
 
-    return should(methods.geoBoundingBox(roomId, collection, invalidFilter)).be.rejectedWith('Unable to parse GeoBoundingBox coordinates');
+    return should(methods.geoBoundingBox(roomId, collection, invalidFilter)).be.rejectedWith(BadRequestError, { message: 'Unable to parse GeoBoundingBox coordinates' });
   });
 
   it('should return a rejected promise if buildCurriedFunction fails', function () {
     return methods.__with__({
-      buildCurriedFunction: function () { return { error: 'rejected' }; }
+      buildCurriedFunction: function () { return new InternalError('rejected'); }
     })(function () {
       return should(methods.geoBoundingBox(roomId, collection, filterEngland)).be.rejectedWith('rejected');
     });
