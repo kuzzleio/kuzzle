@@ -138,6 +138,16 @@ Feature: Test STOMP API
     And I should receive a "off" notification
 
   @usingSTOMP
+  Scenario: Getting the last statistics frame
+    When I get the last statistics frame
+    Then I get at least 1 statistic frame
+
+  @usingSTOMP
+  Scenario: Getting all statistics frame
+    When I get all statistics frames
+    Then I get at least 1 statistic frame
+
+  @usingSTOMP
   Scenario: list known collections
     When I write the document "documentGrace"
     And I list data collections

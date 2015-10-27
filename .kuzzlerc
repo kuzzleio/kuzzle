@@ -23,7 +23,7 @@
     "port": "9200"
   },
   // Host and port for notificationCache service that handle cache for store which user we have to notify
-  "notificationCache": {
+  "cache": {
     "host": "redis",
     "port": 6379
   }

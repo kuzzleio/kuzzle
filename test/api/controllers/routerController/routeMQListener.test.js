@@ -6,6 +6,7 @@
 var
   should = require('should'),
   winston = require('winston'),
+  q = require('q'),
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   rewire = require('rewire'),
@@ -39,19 +40,23 @@ describe('Test: routerController.routeMQListener', function () {
     before(function (done) {
       var
         mockupFunnel = function (requestObject) {
+          var deferred = q.defer();
+
           forwardedObject = new ResponseObject(requestObject, {});
 
           if (requestObject.data.body.resolve) {
             if (requestObject.data.body.empty) {
-              return Promise.resolve({});
+              deferred.resolve({});
             }
             else {
-              return Promise.resolve(forwardedObject);
+              deferred.resolve(forwardedObject);
             }
           }
           else {
-            return Promise.reject(new Error('rejected'));
+            deferred.reject(new Error('rejected'));
           }
+
+          return deferred.promise;
         },
         mockupNotifier = function (requestId, responseObject, connection) {
             forwardedConnection = connection;

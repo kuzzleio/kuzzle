@@ -64,4 +64,52 @@ describe('Test: admin controller', function () {
     var r = kuzzle.funnel.admin.getMapping(requestObject);
     return should(r).be.rejectedWith(NotFoundError, { message: 'No mapping for current index' });
   });
+
+  it('should activate a hook on a get mapping call', function (done) {
+    this.timeout(50);
+
+    kuzzle.once('data:getMapping', function (obj) {
+      try {
+        should(obj).be.exactly(requestObject);
+        done();
+      }
+      catch (e) {
+        done(e);
+      }
+    });
+
+    kuzzle.funnel.admin.getMapping(requestObject);
+  });
+
+  it('should trigger a hook on a getStats call', function (done) {
+    this.timeout(50);
+
+    kuzzle.once('data:getStats', function (obj) {
+      try {
+        should(obj).be.exactly(requestObject);
+        done();
+      }
+      catch (e) {
+        done(e);
+      }
+    });
+
+    kuzzle.funnel.admin.getStats(requestObject);
+  });
+
+  it('should trigger a hook on a getAllStats call', function (done) {
+    this.timeout(50);
+
+    kuzzle.once('data:getAllStats', function (obj) {
+      try {
+        should(obj).be.exactly(requestObject);
+        done();
+      }
+      catch (e) {
+        done(e);
+      }
+    });
+
+    kuzzle.funnel.admin.getAllStats(requestObject);
+  });
 });

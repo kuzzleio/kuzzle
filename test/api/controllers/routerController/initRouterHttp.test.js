@@ -511,6 +511,53 @@ describe('Test: routerController.initRouterHttp', function () {
     });
   });
 
+  it('should create a route for the getStats command', function (done) {
+    var request;
+
+    options.method = 'GET';
+    options.path= '/api/_getStats';
+
+    request = http.request(options, function (response) {
+      parseHttpResponse(response)
+        .then(function (result) {
+          should(response.statusCode).be.exactly(200);
+          should(result.controller).be.exactly('admin');
+          should(result.action).be.exactly('getStats');
+          done();
+        })
+        .catch(function (error) {
+          done(error);
+        });
+    });
+
+    request.write('foobar');
+    request.end();
+  });
+
+
+  it('should create a route for the getAllStats command', function (done) {
+    var request;
+
+    options.method = 'GET';
+    options.path= '/api/_getAllStats';
+
+    request = http.request(options, function (response) {
+      parseHttpResponse(response)
+        .then(function (result) {
+          should(response.statusCode).be.exactly(200);
+          should(result.controller).be.exactly('admin');
+          should(result.action).be.exactly('getAllStats');
+          done();
+        })
+        .catch(function (error) {
+          done(error);
+        });
+    });
+
+    request.write('foobar');
+    request.end();
+  });
+
   it('should create a route for the listCollection command', function (done) {
     http.get('http://' + options.hostname + ':' + options.port + '/api/_listCollections', function (response) {
       parseHttpResponse(response)

@@ -470,7 +470,65 @@ var apiSteps = function () {
         this.result = response.result;
         callback();
       })
-      .catch(error => callback.fail(new Error(error)));
+      .catch(error => callback.fail(error));
+  });
+
+  this.When(/^I get the last statistics frame$/, function (callback) {
+    this.api.getStats()
+      .then(function (response) {
+        if (response.error) {
+          return callback.fail(new Error(response.error));
+        }
+
+        if (!response.result) {
+          return callback.fail(new Error('No result provided'));
+        }
+
+        this.result = response.result;
+        callback();
+      }.bind(this))
+      .catch(function (error) {
+        callback.fail(error);
+      });
+  });
+
+  this.When(/^I get all statistics frames$/, function (callback) {
+    this.api.getAllStats()
+      .then(function (response) {
+        if (response.error) {
+          return callback.fail(new Error(response.error));
+        }
+
+        if (!response.result) {
+          return callback.fail(new Error('No result provided'));
+        }
+
+        this.result = response.result;
+        callback();
+      }.bind(this))
+      .catch(function (error) {
+        callback.fail(error);
+      });
+  });
+
+  this.Then(/^I get at least 1 statistic frame$/, function (callback) {
+    var key;
+
+    if (!this.result.statistics) {
+      return callback.fail('Expected a statistics result, got: ' + this.result);
+    }
+
+    key = Object.keys(this.result.statistics);
+
+    if (key.length > 0 &&
+        this.result.statistics[key[0]].ongoingRequests &&
+        this.result.statistics[key[0]].completedRequests &&
+        this.result.statistics[key[0]].failedRequests &&
+        this.result.statistics[key[0]].connections) {
+      return callback();
+    }
+
+    callback.fail('Expected at least 1 statistic frame, found: ' + this.result.statistics);
   });
 
   this.Then(/^I can find a collection "([^"]*)"$/, function (collection, callback) {
