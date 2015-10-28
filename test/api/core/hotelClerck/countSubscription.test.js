@@ -5,7 +5,10 @@ var
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   Profile = require.main.require('lib/api/core/models/security/profile'),
-  Role = require.main.require('lib/api/core/models/security/role');
+  Role = require.main.require('lib/api/core/models/security/role'),
+  BadRequestError = require.main.require('lib/api/core/errors/badRequestError'),
+  NotFoundError = require.main.require('lib/api/core/errors/notFoundError');
+
 
 require('should-promised');
 
@@ -40,7 +43,7 @@ describe('Test: hotelClerk.countSubscription', function () {
       body: {}
     });
 
-    return should(kuzzle.hotelClerk.countSubscription(requestObject)).be.rejectedWith('The room Id is mandatory for count subscription');
+    return should(kuzzle.hotelClerk.countSubscription(requestObject)).be.rejectedWith(BadRequestError, { message: 'The room Id is mandatory for count subscription' });
   });
 
   it('should reject the request if the provided room ID is unknown to Kuzzle', function () {
@@ -48,7 +51,7 @@ describe('Test: hotelClerk.countSubscription', function () {
       body: { roomId: 'foobar' }
     });
 
-    return should(kuzzle.hotelClerk.countSubscription(requestObject)).be.rejectedWith('The room Id foobar is unknown');
+    return should(kuzzle.hotelClerk.countSubscription(requestObject)).be.rejectedWith(NotFoundError, { message: 'The room Id foobar is unknown' });
   });
 
   it('should return the right subscriptions count when handling a correct request', function () {

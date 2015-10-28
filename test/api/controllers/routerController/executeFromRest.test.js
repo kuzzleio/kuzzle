@@ -81,8 +81,10 @@ describe('Test: routerController.executeFromRest', function () {
     should(mockupResponse.header['Content-Type']).not.be.undefined();
     should(mockupResponse.header['Content-Type']).be.exactly('application/json');
     should(mockupResponse.response.result).be.null();
+    should(mockupResponse.response.status).be.exactly(400);
     should(mockupResponse.response.error).not.be.null();
-    should(mockupResponse.response.error).be.exactly('The "controller" argument is missing');
+    should(mockupResponse.response.error.message).not.be.null();
+    should(mockupResponse.response.error.message).be.exactly('The "controller" argument is missing');
   });
 
   it('should reject requests when the content-type is not application/json', function () {
@@ -96,8 +98,10 @@ describe('Test: routerController.executeFromRest', function () {
     should(mockupResponse.header['Content-Type']).not.be.undefined();
     should(mockupResponse.header['Content-Type']).be.exactly('application/json');
     should(mockupResponse.response.result).be.null();
+    should(mockupResponse.response.status).be.exactly(400);
     should(mockupResponse.response.error).not.be.null();
-    should(mockupResponse.response.error).startWith('Invalid request content-type');
+    should(mockupResponse.response.error.message).not.be.null();
+    should(mockupResponse.response.error.message).startWith('Invalid request content-type');
   });
 
   it('should respond with a HTTP 200 message in case of success', function (done) {
@@ -113,6 +117,7 @@ describe('Test: routerController.executeFromRest', function () {
         should(mockupResponse.statusCode).be.exactly(200);
         should(mockupResponse.header['Content-Type']).not.be.undefined();
         should(mockupResponse.header['Content-Type']).be.exactly('application/json');
+        should(mockupResponse.response.status).be.exactly(200);
         should(mockupResponse.response.error).be.null();
         should(mockupResponse.response.result).be.not.null();
         should(mockupResponse.response.result._source).match(data.body);
@@ -145,7 +150,7 @@ describe('Test: routerController.executeFromRest', function () {
     }, 20);
   });
 
-  it('should respond with a HTTP 400 message in case of error', function (done) {
+  it('should respond with a HTTP 500 message in case of error', function (done) {
     var
       params = { action: 'create', controller: 'write' },
       data = {headers: {'content-type': 'application/json'}, body: {resolve: false}, params: {collection: 'foobar'}};
@@ -155,11 +160,13 @@ describe('Test: routerController.executeFromRest', function () {
 
     setTimeout(function () {
       try {
-        should(mockupResponse.statusCode).be.exactly(400);
+        should(mockupResponse.statusCode).be.exactly(500);
         should(mockupResponse.header['Content-Type']).not.be.undefined();
         should(mockupResponse.header['Content-Type']).be.exactly('application/json');
+        should(mockupResponse.response.status).be.exactly(500);
         should(mockupResponse.response.error).not.be.null();
-        should(mockupResponse.response.error).be.exactly('rejected');
+        should(mockupResponse.response.error.message).not.be.null();
+        should(mockupResponse.response.error.message).be.exactly('rejected');
         should(mockupResponse.response.result).be.null();
         done();
       }
@@ -182,6 +189,7 @@ describe('Test: routerController.executeFromRest', function () {
         should(mockupResponse.statusCode).be.exactly(200);
         should(mockupResponse.header['Content-Type']).not.be.undefined();
         should(mockupResponse.header['Content-Type']).be.exactly('application/json');
+        should(mockupResponse.response.status).be.exactly(200);
         should(mockupResponse.response.error).be.null();
         should(mockupResponse.response.result).be.not.null();
         should(mockupResponse.response.result.action).be.exactly('create');
@@ -207,6 +215,7 @@ describe('Test: routerController.executeFromRest', function () {
         should(mockupResponse.statusCode).be.exactly(200);
         should(mockupResponse.header['Content-Type']).not.be.undefined();
         should(mockupResponse.header['Content-Type']).be.exactly('application/json');
+        should(mockupResponse.response.status).be.exactly(200);
         should(mockupResponse.response.error).be.null();
         should(mockupResponse.response.result).be.not.null();
         should(mockupResponse.response.result.action).be.exactly('create');

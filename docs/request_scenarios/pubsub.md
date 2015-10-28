@@ -75,6 +75,7 @@ Sample response content:
 
 ```json
 {
+  "status": 200,
   "error": null,
   "result": "891b0d98-7a2c-4c60-9edd-d3444ffe4a8e"
 }

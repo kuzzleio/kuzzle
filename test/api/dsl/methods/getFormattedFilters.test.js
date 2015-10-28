@@ -1,7 +1,8 @@
 var
   should = require('should'),
   rewire = require('rewire'),
-  methods = rewire('../../../../lib/api/dsl/methods');
+  methods = rewire('../../../../lib/api/dsl/methods'),
+  BadRequestError = require.main.require('lib/api/core/errors/badRequestError');
 
 require('should-promised');
 
@@ -14,11 +15,11 @@ describe('Test: dsl.getFormattedFilters method', function () {
   });
 
   it('should return a rejected promise if the provided filter is empty', function () {
-    return should(getFormattedFilters('roomId', 'collection', {})).be.rejectedWith('Filters can\'t be empty');
+    return should(getFormattedFilters('roomId', 'collection', {})).be.rejectedWith(BadRequestError, { message: 'Filters can\'t be empty' });
   });
 
   it('should return a rejected promise if a filter refers to an unknown method name', function () {
-    return should(getFormattedFilters('roomId', 'collection', { foo: 'bar'})).be.rejectedWith('Function foo doesn\'t exist');
+    return should(getFormattedFilters('roomId', 'collection', { foo: 'bar'})).be.rejectedWith(BadRequestError, { message: 'Function foo doesn\'t exist' });
   });
 
   it('should return a resolved promise containing 1 formatted filter', function (done) {

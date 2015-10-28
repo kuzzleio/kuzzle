@@ -5,7 +5,10 @@ var
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   RequestObject = require.main.require('lib/api/core/models/requestObject')
   Profile = require.main.require('lib/api/core/models/security/profile'),
-  Role = require.main.require('lib/api/core/models/security/role');
+  Role = require.main.require('lib/api/core/models/security/role'),
+  BadRequestError = require.main.require('lib/api/core/errors/badRequestError'),
+  NotFoundError = require.main.require('lib/api/core/errors/notFoundError');
+
 
 require('should-promised');
 
@@ -59,13 +62,13 @@ describe('Test: subscribe controller', function () {
         }
       );
 
-    return should(foo).be.rejectedWith('The user with connection ' + newUser + ' doesn\'t exist');
+    return should(foo).be.rejectedWith(NotFoundError, { message: 'The user with connection ' + newUser + ' doesn\'t exist' });
   });
 
   it('should forward subscription counts queries to the hotelClerk core component', function () {
     var
       foo = kuzzle.funnel.subscribe.count(requestObject);
 
-    return should(foo).be.rejectedWith('The room Id is mandatory for count subscription');
+    return should(foo).be.rejectedWith(BadRequestError, { message: 'The room Id is mandatory for count subscription' });
   });
 });
