@@ -5,7 +5,9 @@ var
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
-  Dsl = rewire('../../../../lib/api/dsl/index');
+  Dsl = rewire('../../../../lib/api/dsl/index'),
+  Profile = require.main.require('lib/api/core/models/security/profile'),
+  Role = require.main.require('lib/api/core/models/security/role');
 
 require('should-promised');
 
@@ -13,6 +15,7 @@ describe('Test removeRoom function index.js file from DSL', function () {
   var
     kuzzle,
     roomId,
+    anonymousUser,
     roomName = 'roomNameGrace',
     collection = 'user',
     filter = {
@@ -33,7 +36,24 @@ describe('Test removeRoom function index.js file from DSL', function () {
     kuzzle.removeAllListeners();
     kuzzle.start(params, {dummy: true})
       .then(function () {
-        return kuzzle.hotelClerk.addSubscription(requestObject, {id: 'connectionid'});
+        kuzzle.repositories.role.roles.guest = new Role();
+        return kuzzle.repositories.role.hydrate(kuzzle.repositories.role.roles.guest, params.userRoles.guest);
+      })
+      .then(function () {
+        kuzzle.repositories.profile.profiles.anonymous = new Profile();
+        return kuzzle.repositories.profile.hydrate(kuzzle.repositories.profile.profiles.anonymous, params.userProfiles.anonymous);
+      })
+      .then(function () {
+        return kuzzle.repositories.user.anonymous();
+      })
+      .then(function (user) {
+        var context = {
+          connection: {id: 'connectionid'},
+          user: user
+        };
+
+        anonymousUser = user;
+        return kuzzle.hotelClerk.addSubscription(requestObject, context);
       })
       .then(function (realTimeResponseObject) {
         roomId = realTimeResponseObject.roomId;

@@ -2,10 +2,10 @@ var
   should = require('should'),
   winston = require('winston'),
   params = require('rc')('kuzzle'),
-  kuzzle = require.main.require('lib'),
-  RequestObject = require.main.require('lib/api/core/models/requestObject'),
-  Role = require.main.require('lib/api/core/models/security/role'),
-  Profile = require.main.require('lib/api/core/models/security/profile');
+  Kuzzle = require.main.require('lib/api/Kuzzle'),
+  RequestObject = require.main.require('lib/api/core/models/requestObject')
+  Profile = require.main.require('lib/api/core/models/security/profile'),
+  Role = require.main.require('lib/api/core/models/security/role');
 
 require('should-promised');
 
@@ -15,15 +15,12 @@ require('should-promised');
  */
 describe('Test: subscribe controller', function () {
   var
-    context,
+    kuzzle,
+    anonymousUser,
     requestObject = new RequestObject({}, {}, 'unit-test');
 
   before(function (done) {
-    context = {
-      connection: {id: 'foo'},
-      user: null
-    };
-
+    kuzzle = new Kuzzle();
     kuzzle.log = new (winston.Logger)({transports: [new (winston.transports.Console)({level: 'silent'})]});
     kuzzle.start(params, {dummy: true})
       .then(function () {
@@ -37,20 +34,18 @@ describe('Test: subscribe controller', function () {
       .then(function () {
         return kuzzle.repositories.user.anonymous();
       })
-      .then(function (anonymousUser) {
-        context.user = anonymousUser;
-        requestObject._context = context;
+      .then(function (user) {
+        anonymousUser = user;
         done();
       });
   });
 
-  beforeEach(function (done) {
-    requestObject._context = context;
-    done();
-  });
-
   it('should forward new subscriptions to the hotelClerk core component', function () {
-    var foo = kuzzle.funnel.subscribe.on(requestObject);
+    var foo = kuzzle.funnel.subscribe.on(requestObject, {
+        connection: {id: 'foobar'},
+        user: anonymousUser
+      }
+    );
 
     return should(foo).be.fulfilled();
   });
@@ -58,16 +53,18 @@ describe('Test: subscribe controller', function () {
   it('should forward unsubscribes queries to the hotelClerk core component', function () {
     var
       newUser = 'Carmen Sandiego',
-      foo;
-
-    requestObject._context.connection = { id: newUser };
-    foo = kuzzle.funnel.subscribe.off(requestObject);
+      foo = kuzzle.funnel.subscribe.off(requestObject, {
+          connection: {id: newUser },
+          user: anonymousUser
+        }
+      );
 
     return should(foo).be.rejectedWith('The user with connection ' + newUser + ' doesn\'t exist');
   });
 
   it('should forward subscription counts queries to the hotelClerk core component', function () {
-    var foo = kuzzle.funnel.subscribe.count(requestObject, { id: 'foobar' });
+    var
+      foo = kuzzle.funnel.subscribe.count(requestObject);
 
     return should(foo).be.rejectedWith('The room Id is mandatory for count subscription');
   });

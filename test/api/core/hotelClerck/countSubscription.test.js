@@ -3,7 +3,7 @@ var
   winston = require('winston'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
   params = require('rc')('kuzzle'),
-  kuzzle = require.main.require('lib'),
+  Kuzzle = require.main.require('lib/api/Kuzzle'),
   Profile = require.main.require('lib/api/core/models/security/profile'),
   Role = require.main.require('lib/api/core/models/security/role');
 
@@ -11,18 +11,13 @@ require('should-promised');
 
 describe('Test: hotelClerk.countSubscription', function () {
   var
-    context = {
-      connection: {id: 'connectionId'},
-      user: null
-    };
+    anonymousUser,
+    kuzzle;
 
   before(function (done) {
+    kuzzle = new Kuzzle();
     kuzzle.log = new (winston.Logger)({transports: [new (winston.transports.Console)({level: 'silent'})]});
-
-    kuzzle.hotelClerk.customers = {};
-    kuzzle.hotelClerk.rooms = {};
-
-    kuzzle.start(params, {dummy: true})
+    return kuzzle.start(params, {dummy: true})
       .then(function () {
         kuzzle.repositories.role.roles.guest = new Role();
         return kuzzle.repositories.role.hydrate(kuzzle.repositories.role.roles.guest, params.userRoles.guest);
@@ -34,8 +29,8 @@ describe('Test: hotelClerk.countSubscription', function () {
       .then(function () {
         return kuzzle.repositories.user.anonymous();
       })
-      .then(function (anonymousUser) {
-        context.user = anonymousUser;
+      .then(function (user) {
+        anonymousUser = user;
         done();
       });
   });
@@ -44,7 +39,6 @@ describe('Test: hotelClerk.countSubscription', function () {
     var requestObject = new RequestObject({
       body: {}
     });
-    requestObject._context = context;
 
     return should(kuzzle.hotelClerk.countSubscription(requestObject)).be.rejectedWith('The room Id is mandatory for count subscription');
   });
@@ -53,13 +47,14 @@ describe('Test: hotelClerk.countSubscription', function () {
     var requestObject = new RequestObject({
       body: { roomId: 'foobar' }
     });
-    requestObject._context = context;
 
     return should(kuzzle.hotelClerk.countSubscription(requestObject)).be.rejectedWith('The room Id foobar is unknown');
   });
 
   it('should return the right subscriptions count when handling a correct request', function () {
     var
+      aContext,
+      anotherContext,
       subscribeRequest = new RequestObject({
           controller: 'subscribe',
           action: 'on',
@@ -69,20 +64,19 @@ describe('Test: hotelClerk.countSubscription', function () {
         }),
       countRequest = new RequestObject({ body: {}});
 
-    subscribeRequest._context = {
+    aContext = {
       connection: {id: 'a connection'},
-      user: context.user
+      user: anonymousUser
     };
-    countRequest._context = {
-      connection: {id: 'count connection'},
-      user: context.user
+    anotherContext = {
+      connection: {id: 'another connection'},
+      user: anonymousUser
     };
 
-    return kuzzle.hotelClerk.addSubscription(subscribeRequest)
+    return kuzzle.hotelClerk.addSubscription(subscribeRequest, aContext)
       .then(function (createdRoom) {
         countRequest.data.body.roomId = createdRoom.roomId;
-        subscribeRequest._context.connection.id = 'another connection';
-        return kuzzle.hotelClerk.addSubscription(subscribeRequest);
+        return kuzzle.hotelClerk.addSubscription(subscribeRequest, anotherContext);
       })
       .then(function () {
         return kuzzle.hotelClerk.countSubscription(countRequest);
@@ -90,8 +84,7 @@ describe('Test: hotelClerk.countSubscription', function () {
       .then(function (response) {
         should(response.roomId).be.exactly(countRequest.data.body.roomId);
         should(response.count).be.exactly(2);
-        subscribeRequest._context.connection.id = 'a connection';
-        return kuzzle.hotelClerk.removeSubscription(subscribeRequest);
+        return kuzzle.hotelClerk.removeSubscription(subscribeRequest, aContext);
       })
       .then(function () {
         return kuzzle.hotelClerk.countSubscription(countRequest);

@@ -8,26 +8,25 @@ var
   winston = require('winston'),
   params = require('rc')('kuzzle'),
   q = require('q'),
-  kuzzle = require.main.require('lib'),
+  Kuzzle = require.main.require('lib/api/Kuzzle'),
   rewire = require('rewire'),
   RouterController = rewire('../../../../lib/api/controllers/routerController'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
-  ResponseObject = require.main.require('lib/api/core/models/responseObject'),
-  Role = require.main.require('lib/api/core/models/security/role'),
-  Profile = require.main.require('lib/api/core/models/security/profile');
+  ResponseObject = require.main.require('lib/api/core/models/responseObject');
 
 require('should-promised');
 
 describe('Test: routerController.executeFromRest', function () {
   var
+    kuzzle,
     mockupResponse = {
       ended: false,
       statusCode: 0,
       header: {},
       response: {},
       init: function () { this.ended = false; this.statusCode = 0; this.response = {}; this.header = ''; },
-      writeHead: function (status, header) { this.statusCode = status; this.header = header; },
       setHeader: function (name, value) { this.header[name] = value; },
+      writeHead: function (status, header) { this.statusCode = status; this.header = header; },
       end: function (message) { this.ended = true; this.response = JSON.parse(message); }
     },
     executeFromRest;
@@ -50,6 +49,7 @@ describe('Test: routerController.executeFromRest', function () {
         else {
           deferred.reject(new Error('rejected'));
         }
+
         return deferred.promise;
       },
       mockupRouterListener = {
@@ -58,23 +58,15 @@ describe('Test: routerController.executeFromRest', function () {
         }
       };
 
-
+    kuzzle = new Kuzzle();
     kuzzle.log = new (winston.Logger)({transports: [new (winston.transports.Console)({level: 'silent'})]});
 
     kuzzle.start(params, {dummy: true})
       .then(function () {
         kuzzle.funnel.execute = mockupFunnel;
         RouterController.router = mockupRouterListener;
-        executeFromRest = RouterController.__get__('executeFromRest');
 
-        kuzzle.repositories.role.roles.guest = new Role();
-        return kuzzle.repositories.role.hydrate(kuzzle.repositories.role.roles.guest, params.userRoles.guest);
-      })
-      .then(function () {
-        kuzzle.repositories.profile.profiles.anonymous = new Profile();
-        return kuzzle.repositories.profile.hydrate(kuzzle.repositories.profile.profiles.anonymous, params.userProfiles.anonymous);
-      })
-      .then(function () {
+        executeFromRest = RouterController.__get__('executeFromRest');
         done();
       });
   });

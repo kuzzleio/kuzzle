@@ -3,14 +3,18 @@ var
   winston = require('winston'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
   params = require('rc')('kuzzle'),
-  kuzzle = require.main.require('lib');
+  Kuzzle = require.main.require('lib/api/Kuzzle')
+  Profile = require.main.require('lib/api/core/models/security/profile'),
+  Role = require.main.require('lib/api/core/models/security/role');
 
 require('should-promised');
 
 describe('Test: hotelClerk.removeCustomerFromAllRooms', function () {
   var
+    kuzzle,
     connection = {id: 'connectionid'},
     badConnection = {id: 'badconnectionid'},
+    anonymousUser,
     roomName1 = 'roomName',
     roomName2 = 'roomName2',
     collection = 'user',
@@ -36,40 +40,30 @@ describe('Test: hotelClerk.removeCustomerFromAllRooms', function () {
       notified = { roomId: roomId, notification: notification };
     };
 
-  before(function (done) {
-    kuzzle.log = new (winston.Logger)({transports: [new (winston.transports.Console)({level: 'silent'})]});
-    kuzzle.removeAllListeners();
-    kuzzle.start(params, {dummy: true})
-      .then(function() {
-        kuzzle.notifier.notify = mockupNotifier;
-        return kuzzle.hotelClerk.addSubscription(requestObject1);
-      })
-      .then(function () {
-        var requestObject2 = new RequestObject({
-          controller: 'subscribe',
-          action: 'on',
-          requestId: roomName2,
-          collection: collection,
-          body: filter2
-        });
-
-        return kuzzle.hotelClerk.addSubscription(requestObject2);
-      })
-      .then(function () {
-        done();
-      });
-  });
-
-  });
-
   beforeEach(function (done) {
     kuzzle = new Kuzzle();
     kuzzle.log = new (winston.Logger)({transports: [new (winston.transports.Console)({level: 'silent'})]});
     kuzzle.removeAllListeners();
     kuzzle.start(params, {dummy: true})
-      .then(function() {
+      .then(function () {
+        kuzzle.repositories.role.roles.guest = new Role();
+        return kuzzle.repositories.role.hydrate(kuzzle.repositories.role.roles.guest, params.userRoles.guest);
+      })
+      .then(function () {
+        kuzzle.repositories.profile.profiles.anonymous = new Profile();
+        return kuzzle.repositories.profile.hydrate(kuzzle.repositories.profile.profiles.anonymous, params.userProfiles.anonymous);
+      })
+      .then(function () {
+        return kuzzle.repositories.user.anonymous();
+      })
+      .then(function (user) {
+        anonymousUser = user;
+
         kuzzle.notifier.notify = mockupNotifier;
-        return kuzzle.hotelClerk.addSubscription(requestObject1, connection);
+        return kuzzle.hotelClerk.addSubscription(requestObject1, {
+          connection: connection,
+          user: anonymousUser
+        });
       })
       .then(function () {
         var requestObject2 = new RequestObject({
@@ -80,7 +74,10 @@ describe('Test: hotelClerk.removeCustomerFromAllRooms', function () {
           body: filter2
         });
 
-        return kuzzle.hotelClerk.addSubscription(requestObject2, connection);
+        return kuzzle.hotelClerk.addSubscription(requestObject2, {
+          connection: connection,
+          user: anonymousUser
+        });
       })
       .then(function () {
         done();
@@ -106,9 +103,14 @@ describe('Test: hotelClerk.removeCustomerFromAllRooms', function () {
   });
 
   it('should send a notification to other users connected on that room', function () {
-    var roomId;
+    var
+      context = {
+        connection: {id: 'anotherconnection'},
+        user: anonymousUser
+      },
+      roomId;
 
-    return kuzzle.hotelClerk.addSubscription(requestObject1, { id: 'anotherconnection'})
+    return kuzzle.hotelClerk.addSubscription(requestObject1, context)
       .then(function (createdRoom) {
         roomId = createdRoom.roomId;
         return kuzzle.hotelClerk.removeCustomerFromAllRooms(connection);
