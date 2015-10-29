@@ -12,6 +12,7 @@ module.exports = {
 
   init: function (world) {
     this.world = world;
+    this.responses = null;
 
     if (this.mqttClient) {
       return false;

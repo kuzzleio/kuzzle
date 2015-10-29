@@ -29,6 +29,7 @@ module.exports = {
       });
     }
     this.world = world;
+    this.responses = null;
   },
 
   disconnect: function () {
