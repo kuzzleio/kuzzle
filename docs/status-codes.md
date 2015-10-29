@@ -33,7 +33,7 @@ It is used to inform the client about the real status of his request (if an erro
 
 * ``200``: standard status for a successful request.
 * ``206``: the request (tipically a bulk import) is partially successful, but some actions encountered an error.
-(in this case, details of errors are returned within _error.stack_)
+(in this case, details of errors are returned within _error.errors_)
 
 #### 4xx Client Error
 
@@ -67,6 +67,12 @@ A Kuzzle response is a JSON object with the following structure:
   Complex object, with details of the error (kept empty for other than "500" errors)
   */
   stack: {...}
+
+  /*
+  [Optionnal, only in case of "bulk" requests] Complex object, with list of errors for a partial error case
+  */
+  errors: {...}
+
 }
 ```
 
