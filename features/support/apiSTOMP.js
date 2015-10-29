@@ -20,7 +20,6 @@ module.exports = {
     this.stompUrl = config.stompUrl.replace('stomp://', '').split(':');
 
     if (!this.stompClient) {
-      console.log('initializing new stomp client');
       this.stompClient = new stomp(this.stompUrl[0], this.stompUrl[1], 'guest', 'guest', '1.0', '/');
 
       deferredConnection = q.defer();
@@ -285,9 +284,6 @@ var publishAndListen = function (topic, message) {
 
         roomClient.subscribe(topic, function (body) { //, headers) {
           self.responses = JSON.parse(body);
-
-  console.log('===== NOTIFICATION RECEIVED');
-  console.log(self.responses);
         });
 
         deferred.resolve(response);

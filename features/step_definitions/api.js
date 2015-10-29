@@ -394,7 +394,6 @@ var apiSteps = function () {
   this.Then(/^I should receive a "([^"]*)" notification$/, function (action, callback) {
     var main = function (callbackAsync) {
       setTimeout(function () {
-        console.log('trying...');
         if (this.api.responses) {
           if (this.api.responses.error) {
             callbackAsync('An error occurred ' + this.api.response.error.toString());
