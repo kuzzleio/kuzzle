@@ -226,7 +226,7 @@ var apiSteps = function () {
 
             callbackAsync(error);
           });
-      }.bind(this), 20); // end setTimeout
+      }.bind(this), 100); // end setTimeout
     };
 
     async.retry(20, main.bind(this), function (err) {
