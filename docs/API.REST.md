@@ -39,9 +39,14 @@ A ``response`` is a JSON object with the following structure:
 ```javascript
 {
   /*
-  String containing an error message if something went wrong
+  Integer containing the status code, also used as HTTP status response Header (200 if OK, 4xx or 5xx in case of error)
   */
-  error: null,  
+  status: xxx,
+
+  /*
+  Complex object containing error information, if something went wrong (null if OK)
+  */
+  error: {...},
 
   /*
   Complex object, depending on your query
@@ -51,6 +56,8 @@ A ``response`` is a JSON object with the following structure:
   }
 }
 ```
+
+_NB: For more details about status code and error object, see [status-codes.md](status-codes.md)_
 
 ## Performing queries
 
@@ -130,6 +137,7 @@ Or instead control the behavior of the document by passing your document in the 
 
 ```javascript
 {
+  status: 200,                      // Assuming everything went well
   error: null,                      // Assuming everything went well
   result: {
     _id: '<Unique document ID>',    // The generated document ID
@@ -176,6 +184,7 @@ Creates a new document in the persistent data storage, or update it if it alread
 
 ```javascript
 {
+  status: 200,                      // Assuming everything went well
   error: null,                      // Assuming everything went well
   result: {
     _id: '<Unique document ID>',    // The generated document ID
@@ -214,6 +223,7 @@ Only documents in the persistent data storage layer can be retrieved.
 
 ```javascript
 {
+  status: 200,                      // Assuming everything went well
   error: null,                      // Assuming everything went well
   result: {
     _id: '<Unique document ID>',    // The generated document ID
@@ -258,6 +268,7 @@ Kuzzle uses the [ElasticSearch Query DSL ](https://www.elastic.co/guide/en/elast
 
 ```javascript
 {
+  status: 200,                      // Assuming everything went well
   error: null,                      // Assuming everything went well
   result: {
     _source: {                      // Your original filter/query
@@ -310,6 +321,7 @@ Only documents in the persistent data storage layer can be updated.
 
 ```javascript
 {
+  status: 200,                      // Assuming everything went well
   error: null,                      // Assuming everything went well
   result: {
     _id:
@@ -354,6 +366,7 @@ Kuzzle uses the [ElasticSearch Query DSL ](https://www.elastic.co/guide/en/elast
 
 ```javascript
 {
+  status: 200,                      // Assuming everything went well
   error: null,                      // Assuming everything went well
   result: {
     count: <number of found documents>
@@ -382,6 +395,7 @@ Only documents in the persistent data storage layer can be deleted.
 
 ```javascript
 {
+  status: 200,                      // Assuming everything went well
   error: null,                      // Assuming everything went well
   result: {
     _id: '<document ID>'            // The deleted document identifier
@@ -432,6 +446,7 @@ Kuzzle uses the [ElasticSearch Query DSL ](https://www.elastic.co/guide/en/elast
 
 ```javascript
 {
+  status: 200,                      // Assuming everything went well
   error: null,                      // Assuming everything went well
   result: {
     _source: {                      // Your original query
@@ -464,6 +479,7 @@ This removes an entire data collection in the persistent data storage layer.
 
 ```javascript
 {
+  status: 200,                      // Assuming everything went well
   error: null,                      // Assuming everything went well
   result: {
     _source: {                      // Your original query
@@ -514,6 +530,7 @@ This action is handled by the **administration** controller.
 
 ```javascript
 {
+  status: 200,                      // Assuming everything went well
   error: null,                      // Assuming everything went well
   result: {
     _source: {                      // Your original mapping query
@@ -541,6 +558,7 @@ Get data mapping of a collection previously defined
 
 ```javascript
 {
+  status: 200,                      // Assuming everything went well
   error: null,                      // Assuming everything went well
   result: {
     _source: {},
@@ -600,6 +618,7 @@ Bulk import only works on documents in our persistent data storage layer.
 
 ```javascript
 {
+  status: 200,                      // Assuming everything went well
   error: null,                      // Assuming everything went well
   result: {
     _source: {                      // Your original bulk import query
@@ -670,6 +689,7 @@ Bulk import only works on documents in our persistent data storage layer.
 
 ```javascript
 {
+  status: 200,                      // Assuming everything went well
   error: null,                      // Assuming everything went well
   result: {
     _source: {                      // Your original bulk import query
@@ -722,6 +742,7 @@ These statistics include:
 
 ```javascript
 {
+  status: 200,                      // Assuming everything went well
   error: null,                      // Assuming everything went well
   result: {
     _source: {                      // Your original count query
@@ -769,7 +790,7 @@ These statistics include:
 * the number of failed requests since the last frame
 
 Statistics are returned as a JSON-object with each key being the snapshot's timestamp.
- 
+
 **URL:** ``http://kuzzle:7512/api/_getAllStats``
 
 **Method:** ``GET``
@@ -778,6 +799,7 @@ Statistics are returned as a JSON-object with each key being the snapshot's time
 
 ```javascript
 {
+  status: 200,                      // Assuming everything went well
   error: null,                      // Assuming everything went well
   result: {
     _source: {                      // Your original query
@@ -833,11 +855,12 @@ Return the complete list of persisted data collections.
 
 ```javascript
 {
+  status: 200,                      // Assuming everything went well
   error: null,                      // Assuming everything went well
   result: {
     collections: [                  // An array of data collection names
-      'collection_1', 
-      'collection_2', 
+      'collection_1',
+      'collection_2',
       'collection_...',
       'collection_n'
     ],

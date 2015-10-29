@@ -161,6 +161,7 @@ describe('Test: statistics core component', function () {
           keys = Object.keys(serialized.result.statistics);
 
         should(serialized.error).be.null();
+        should(serialized.status).be.exactly(200);
         should(serialized.result.statistics).be.an.Object();
         should(keys.length).be.exactly(1);
         should(serialized.result.statistics[keys[0]]).match(fakeStats);
@@ -184,6 +185,7 @@ describe('Test: statistics core component', function () {
           keys = Object.keys(serialized.result.statistics);
 
         should(serialized.error).be.null();
+        should(serialized.status).be.exactly(200);
         should(serialized.result.statistics).be.an.Object();
         should(keys.length).be.exactly(1);
         should(serialized.result.statistics[keys[0]]).match(fakeStats);
@@ -207,6 +209,7 @@ describe('Test: statistics core component', function () {
           key = Object.keys(serialized.result.statistics);
 
         should(serialized.error).be.null();
+        should(serialized.status).be.exactly(200);
         should(key.length).be.exactly(1);
         should(serialized.result.statistics[key[0]]).match(fakeStats);
         done();
@@ -229,6 +232,7 @@ describe('Test: statistics core component', function () {
           key = Object.keys(serialized.result.statistics);
 
         should(serialized.error).be.null();
+        should(serialized.status).be.exactly(200);
         should(key.length).be.exactly(2);
         should(serialized.result.statistics[key[0]]).match(fakeStats);
         should(serialized.result.statistics[key[1]]).match(fakeStats);
@@ -241,13 +245,17 @@ describe('Test: statistics core component', function () {
     stats.lastFrame = lastFrame;
     kuzzle.services.list.statsCache.volatileSet('foo', fakeStats, 10)
       .then(() => { return stats.getAllStats(requestObject); })
-      .then((result) => { console.log('bar'); done('received a response instead of an error' + result); })
+      .then((result) => { done(new Error('received a response instead of an error: ' + JSON.stringify(result))); })
       .catch(error => {
-        var
-          serialized = error.toJson();
-
-        should(serialized.error).be.a.String().and.be.exactly('Invalid time value');
-        done();
+        try {
+          should(error.status).be.exactly(500);
+          should(error.error).not.be.null();
+          should(error.error.message).not.be.null();
+          should(error.error.message).be.a.String().and.be.exactly('Invalid time value');
+          done();
+        } catch (e) {
+          done(e);
+        }
       });
   });
 
