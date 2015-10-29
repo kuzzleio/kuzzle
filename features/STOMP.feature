@@ -63,7 +63,7 @@ Feature: Test STOMP API
     When I write the document "documentGrace"
     Then I don't find a document with "Grace" in field "firstName"
     Then I remove the collection and schema
-    Then I wait 2s
+    Then I wait 1s
     Then I change the schema
     When I write the document "documentGrace"
     Then I find a document with "Grace" in field "firstName"

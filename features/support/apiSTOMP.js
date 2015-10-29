@@ -19,7 +19,8 @@ module.exports = {
 
     this.stompUrl = config.stompUrl.replace('stomp://', '').split(':');
 
-    if ( !this.stompClient ) {
+    if (!this.stompClient) {
+      console.log('initializing new stomp client');
       this.stompClient = new stomp(this.stompUrl[0], this.stompUrl[1], 'guest', 'guest', '1.0', '/');
 
       deferredConnection = q.defer();
@@ -243,6 +244,7 @@ var publish = function (topic, message, waitForAnswer) {
         messageHeader['reply-to'] = uuid.v1();
         this.stompClient.subscribe('/queue/' + messageHeader['reply-to'], function (body, headers) {
           var unpacked = JSON.parse(body);
+
           if (unpacked.error) {
             deferred.reject(unpacked.error);
           }
@@ -269,24 +271,28 @@ var publish = function (topic, message, waitForAnswer) {
 var publishAndListen = function (topic, message) {
   var
     roomClient = new stomp(this.stompUrl[0], this.stompUrl[1], 'guest', 'guest', '1.0', '/'),
-    deferred = q.defer();
+    deferred = q.defer(),
+    self = this;
 
   message.clientId = uuid.v1();
 
-  publish.call(this, topic, message)
+  publish.call(self, topic, message)
     .then(function (response) {
       roomClient.connect(function () {
         var topic = '/topic/' + response.result.roomId;
 
-        this.subscribedRooms.client1[response.result.roomName] = { roomId: response.result.roomId, client: roomClient, clientId: message.clientId };
+        self.subscribedRooms.client1[response.result.roomName] = { roomId: response.result.roomId, client: roomClient, clientId: message.clientId };
 
-        roomClient.subscribe(topic, function (body) {
-          this.responses = JSON.parse(body);
-        }.bind(this));
+        roomClient.subscribe(topic, function (body) { //, headers) {
+          self.responses = JSON.parse(body);
+
+  console.log('===== NOTIFICATION RECEIVED');
+  console.log(self.responses);
+        });
 
         deferred.resolve(response);
-      }.bind(this));
-    }.bind(this))
+      });
+    })
     .catch(function (error) {
       deferred.reject(error);
     });
