@@ -108,6 +108,7 @@ Sample response content:
 
 ```json
 {
+  "status": 200,
   "error": null,
   "result": {
     "_index": "mainindex",

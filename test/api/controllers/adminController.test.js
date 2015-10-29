@@ -3,7 +3,8 @@ var
   winston = require('winston'),
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
-  RequestObject = require.main.require('lib/api/core/models/requestObject');
+  RequestObject = require.main.require('lib/api/core/models/requestObject'),
+  NotFoundError = require.main.require('lib/api/core/errors/notFoundError');
 
 require('should-promised');
 
@@ -61,8 +62,7 @@ describe('Test: admin controller', function () {
 
   it('should return a mapping when requested', function () {
     var r = kuzzle.funnel.admin.getMapping(requestObject);
-
-    return should(r).be.rejectedWith('No mapping for current index');
+    return should(r).be.rejectedWith(NotFoundError, { message: 'No mapping for current index' });
   });
 
   it('should activate a hook on a get mapping call', function (done) {

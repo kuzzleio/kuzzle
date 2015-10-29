@@ -86,25 +86,29 @@ Sample content exchanged during callback excecution:
 ```
 \#9. The HTTP Router sends the response to the REST client.
 
-Sample content:
+Sample response content:
 
 ```json
 {
-  "_index": "mainindex",
-  "_type": "users",
-  "_id": "739c26bc-7a09-469a-803d-623c4045b0cb",
-  "_version": 1,
-  "found": true,
-  "_source": {
-      "firstName": "Grace",
-      "lastName": "Hopper",
-      "age": 85,
-      "location": {
-          "lat": 32.692742,
-          "lon": -97.114127
-      },
-      "city": "NYC",
-      "hobby": "computer"
+  "status": 200,
+  "error": null,
+  "result": {
+    "_index": "mainindex",
+    "_type": "users",
+    "_id": "739c26bc-7a09-469a-803d-623c4045b0cb",
+    "_version": 1,
+    "found": true,
+    "_source": {
+        "firstName": "Grace",
+        "lastName": "Hopper",
+        "age": 85,
+        "location": {
+            "lat": 32.692742,
+            "lon": -97.114127
+        },
+        "city": "NYC",
+        "hobby": "computer"
+    }
   }
 }
 ```

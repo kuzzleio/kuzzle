@@ -29,7 +29,7 @@ describe('Test: read controller', function () {
       requestObject = new RequestObject({}, {collection: 'unit-test-readcontroller'}, 'unit-test'),
       r = kuzzle.funnel.read.search(requestObject);
 
-    return should(r).be.rejectedWith(Error);
+    return should(r).be.rejectedWith(Error, { status: 400 });
   });
 
   it('should allow to get specific documents', function () {
@@ -37,7 +37,7 @@ describe('Test: read controller', function () {
       requestObject = new RequestObject({ body: { _id: 'foobar' }}, { collection: 'unit-test-readcontroller' }, 'unit-test'),
       r = kuzzle.funnel.read.get(requestObject);
 
-    should(r).be.rejectedWith(Error, { status: 404 });
+    return should(r).be.rejectedWith(Error, { status: 404 });
   });
 
   it('should allow to count documents', function () {
@@ -45,7 +45,7 @@ describe('Test: read controller', function () {
       requestObject = new RequestObject({}, {collection: 'unit-test-readcontroller'}, 'unit-test'),
       r = kuzzle.funnel.read.count(requestObject);
 
-    return should(r).be.rejectedWith(Error);
+    return should(r).be.rejectedWith(Error, { status: 400 });
   });
 
   it('should allow to list all existing colletions', function (done) {

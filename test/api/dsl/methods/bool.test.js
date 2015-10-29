@@ -1,7 +1,8 @@
 var
   should = require('should'),
   rewire = require('rewire'),
-  methods = rewire('../../../../lib/api/dsl/methods');
+  methods = rewire('../../../../lib/api/dsl/methods'),
+  BadRequestError = require.main.require('lib/api/core/errors/badRequestError');
 
 require('should-promised');
 
@@ -158,13 +159,13 @@ describe('Test bool method', function () {
   });
 
   it('should return a rejected promise if an empty filter is provided', function () {
-    return should(methods.bool(roomId, collection, {})).be.rejectedWith('A filter can\'t be empty');
+    return should(methods.bool(roomId, collection, {})).be.rejectedWith(BadRequestError, { message: 'A filter can\'t be empty' });
   });
 
   it('should return a rejected promise if the filter contains an invalid key', function () {
     var f = { foo: 'bar' };
 
-    return should(methods.bool(roomId, collection, f)).be.rejectedWith('Function foo doesn\'t exist');
+    return should(methods.bool(roomId, collection, f)).be.rejectedWith(BadRequestError, { message: 'Function foo doesn\'t exist' });
   });
 
   it('should return a rejected promise if one of the bool sub-methods fails', function () {
