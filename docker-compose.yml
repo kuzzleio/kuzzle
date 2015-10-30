@@ -1,7 +1,5 @@
 kuzzle:
   image: kuzzleio/kuzzle
-  volumes:
-    - ".:/var/app"
   ports:
     - "7512:7512"
   links:
