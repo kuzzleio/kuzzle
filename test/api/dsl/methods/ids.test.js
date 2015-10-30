@@ -1,6 +1,11 @@
 var
   should = require('should'),
-  methods = require.main.require('lib/api/dsl/methods');
+  rewire = require('rewire'),
+  methods = rewire('../../../../lib/api/dsl/methods'),
+  BadRequestError = require.main.require('lib/api/core/errors/badRequestError'),
+  InternalError = require.main.require('lib/api/core/errors/internalError');
+
+require('should-promised');
 
 describe('Test ids method', function () {
 
@@ -78,4 +83,23 @@ describe('Test ids method', function () {
     should(resultNotMatch).be.exactly(false);
   });
 
+  it('should reject a promise if the filter is empty', function () {
+    return should(methods.ids(roomIdMatch, collection, {})).be.rejectedWith(BadRequestError);
+  });
+
+  it('should reject a promise if the filter has no "values"', function () {
+    return should(methods.ids(roomIdMatch, collection, {foo: 'bar'})).be.rejectedWith(BadRequestError);
+  });
+
+  it('should reject a promise if the filter has empty "values"', function () {
+    return should(methods.ids(roomIdMatch, collection, {values: []})).be.rejectedWith(BadRequestError);
+  });
+
+  it('should return a rejected promise if buildCurriedFunction fails', function () {
+    return methods.__with__({
+      buildCurriedFunction: function () { return new InternalError('rejected'); }
+    })(function () {
+      return should(methods.ids(roomIdMatch, collection, filter, false)).be.rejectedWith('rejected');
+    });
+  });
 });
