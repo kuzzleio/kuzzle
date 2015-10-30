@@ -12,7 +12,7 @@ kuzzle:
     - elasticsearch
     - redis
   environment:
-    - MQ_BROKER_ENABLED
+    - MQ_BROKER_ENABLED=1
     - LIKE_A_VIRGIN
     - FIXTURES
     - FEATURE_COVERAGE
