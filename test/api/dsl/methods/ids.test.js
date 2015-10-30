@@ -91,6 +91,10 @@ describe('Test ids method', function () {
     return should(methods.ids(roomIdMatch, collection, {foo: 'bar'})).be.rejectedWith(BadRequestError);
   });
 
+  it('should reject a promise if "values" is not an array', function () {
+    return should(methods.ids(roomIdMatch, collection, {values: 'toto'})).be.rejectedWith(BadRequestError);
+  });
+
   it('should reject a promise if the filter has empty "values"', function () {
     return should(methods.ids(roomIdMatch, collection, {values: []})).be.rejectedWith(BadRequestError);
   });
