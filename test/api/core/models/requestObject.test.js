@@ -206,4 +206,16 @@ describe('Test: requestObject', function () {
     requestObject.persist = {};
     should(requestObject.isPersistent()).be.false();
   });
+
+  it('should get the _id of the additional data', function () {
+    var
+      additionalData = { _id: 'fakeId2'},
+      requestObject;
+
+    delete request.body;
+    requestObject = new RequestObject(request, additionalData, protocol);
+
+    should(requestObject.data._id).not.be.undefined();
+    should(requestObject.data._id).be.exactly('fakeId2');
+  });
 });

@@ -121,7 +121,7 @@ var apiSteps = function () {
 
             callbackAsync(error);
           });
-      }.bind(this), 500); // end setTimeout
+      }.bind(this), 20); // end setTimeout
     };
 
 
@@ -165,7 +165,7 @@ var apiSteps = function () {
           .catch(function (error) {
             callbackAsync(error);
           });
-      }.bind(this), 500); // end setTimeout
+      }.bind(this), 100); // end setTimeout
     };
 
     async.retry(20, main.bind(this), function (err) {
@@ -226,7 +226,7 @@ var apiSteps = function () {
 
             callbackAsync(error);
           });
-      }.bind(this), 500); // end setTimeout
+      }.bind(this), 100); // end setTimeout
     };
 
     async.retry(20, main.bind(this), function (err) {
@@ -296,7 +296,7 @@ var apiSteps = function () {
 
           callbackAsync();
         }.bind(this)); // end async.parallel
-      }.bind(this), 500); // end setTimeout
+      }.bind(this), 20); // end setTimeout
     }; // end method main
 
     async.retry(20, main.bind(this), function (err) {
@@ -333,7 +333,7 @@ var apiSteps = function () {
           .catch(function (error) {
             callbackAsync(error);
           });
-      }.bind(this), 500); // end setTimeout
+      }.bind(this), 100); // end setTimeout
     };
 
     async.retry(20, main.bind(this), function (err) {
@@ -378,7 +378,7 @@ var apiSteps = function () {
           .catch(function (error) {
             callbackAsync(new Error(error));
           });
-      }.bind(this), 500);
+      }.bind(this), 20);
     };
 
     async.retry(20, main.bind(this), function (error) {
@@ -409,7 +409,7 @@ var apiSteps = function () {
         } else {
           callbackAsync('No notification received');
         }
-      }.bind(this), 500);
+      }.bind(this), 20);
     };
 
     async.retry(20, main.bind(this), function (err) {
@@ -636,7 +636,7 @@ var apiSteps = function () {
           .catch(function (error) {
             callbackAsync(error);
           });
-      }.bind(this), 500); // end setTimeout
+      }.bind(this), 20); // end setTimeout
     };
 
     async.retry(20, main.bind(this), function (err) {
@@ -689,7 +689,7 @@ var apiSteps = function () {
           .catch(function (error) {
             callbackAsync(error);
           });
-      }.bind(this), 500); // end setTimeout
+      }.bind(this), 20); // end setTimeout
     };
 
     async.retry(20, main.bind(this), function (err) {

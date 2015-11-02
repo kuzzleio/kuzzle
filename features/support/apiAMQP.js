@@ -15,7 +15,7 @@ module.exports = {
 
   init: function (world) {
     this.world = world;
-
+    this.responses = null;
     this.clientId = uuid.v1();
 
     if (!this.amqpClient) {
