@@ -15,7 +15,7 @@ describe('Test: security/profileTest', function () {
   it('should disallow any action when no role be found', function () {
     var profile = new Profile();
 
-    should(profile.isActionAllowed(requestObject)).be.equal(false);
+    should(profile.isActionAllowed(requestObject)).be.false();
   });
 
   it('should allow the action if one of the roles allows it', function () {
@@ -57,10 +57,10 @@ describe('Test: security/profileTest', function () {
     };
 
     profile.roles.push(disallowAllRole);
-    should(profile.isActionAllowed(requestObject)).be.equal(false);
+    should(profile.isActionAllowed(requestObject)).be.false();
 
     profile.roles.push(allowActionRole);
-    should(profile.isActionAllowed(requestObject)).be.equal(true);
+    should(profile.isActionAllowed(requestObject)).be.true();
   });
 
 });

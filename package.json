@@ -32,7 +32,6 @@
     "finalhandler": "0.4.0",
     "geolib": "2.0.18",
     "json-stable-stringify": "1.0.0",
-    "jsonschema": "^1.0.2",
     "jsonwebtoken": "^5.4.0",
     "lodash": "3.10.1",
     "newrelic": "1.22.0",

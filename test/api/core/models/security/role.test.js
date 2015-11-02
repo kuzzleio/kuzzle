@@ -30,28 +30,28 @@ describe('Test: security/roleTest', function () {
       }
     };
 
-    should(role.isActionAllowed(requestObject)).be.equal(false);
+    should(role.isActionAllowed(requestObject)).be.false();
 
     delete role.indexes.index.collections.collection.controllers.controller.actions;
-    should(role.isActionAllowed(requestObject)).be.equal(false);
+    should(role.isActionAllowed(requestObject)).be.false();
 
     delete role.indexes.index.collections.collection.controllers.controller;
-    should(role.isActionAllowed(requestObject)).be.equal(false);
+    should(role.isActionAllowed(requestObject)).be.false();
 
     delete role.indexes.index.collections.collection.controllers;
-    should(role.isActionAllowed(requestObject)).be.equal(false);
+    should(role.isActionAllowed(requestObject)).be.false();
 
     delete role.indexes.index.collections.collection;
-    should(role.isActionAllowed(requestObject)).be.equal(false);
+    should(role.isActionAllowed(requestObject)).be.false();
 
     delete role.indexes.index.collections;
-    should(role.isActionAllowed(requestObject)).be.equal(false);
+    should(role.isActionAllowed(requestObject)).be.false();
 
     delete role.indexes.index;
-    should(role.isActionAllowed(requestObject)).be.equal(false);
+    should(role.isActionAllowed(requestObject)).be.false();
 
     delete role.indexes;
-    should(role.isActionAllowed(requestObject)).be.equal(false);
+    should(role.isActionAllowed(requestObject)).be.false();
   });
 
   it('should allow an action explicitely set to true', function () {
@@ -73,7 +73,7 @@ describe('Test: security/roleTest', function () {
       }
     };
 
-    should(role.isActionAllowed(requestObject)).be.equal(true);
+    should(role.isActionAllowed(requestObject)).be.true();
   });
 
   it('should allow an wildcard action', function () {
@@ -94,7 +94,7 @@ describe('Test: security/roleTest', function () {
       }
     };
 
-    should(role.isActionAllowed(requestObject)).be.equal(true);
+    should(role.isActionAllowed(requestObject)).be.true();
   });
 
   it('should properly handle overwritten permissions', function () {
@@ -128,20 +128,20 @@ describe('Test: security/roleTest', function () {
       }
     };
 
-    should(role.isActionAllowed(requestObject)).be.equal(false);
+    should(role.isActionAllowed(requestObject)).be.false();
 
     role.indexes.index.collections['*'].controllers['*'].actions.action = true;
-    should(role.isActionAllowed(requestObject)).be.equal(true);
+    should(role.isActionAllowed(requestObject)).be.true();
 
     role.indexes.index.collections['*'].controllers.controller = {
       actions: {
         '*': false
       }
     };
-    should(role.isActionAllowed(requestObject)).be.equal(false);
+    should(role.isActionAllowed(requestObject)).be.false();
 
     role.indexes.index.collections['*'].controllers.controller.actions.action = true;
-    should(role.isActionAllowed(requestObject)).be.equal(true);
+    should(role.isActionAllowed(requestObject)).be.true();
 
     role.indexes.index.collections.collection = {
       controllers: {
@@ -152,17 +152,17 @@ describe('Test: security/roleTest', function () {
         }
       }
     };
-    should(role.isActionAllowed(requestObject)).be.equal(false);
+    should(role.isActionAllowed(requestObject)).be.false();
 
     role.indexes.index.collections.collection.controllers.controller = {
       actions: {
         '*': true
       }
     };
-    should(role.isActionAllowed(requestObject)).be.equal(true);
+    should(role.isActionAllowed(requestObject)).be.true();
 
     role.indexes.index.collections.collection.controllers.controller.actions.action = false;
-    should(role.isActionAllowed(requestObject)).be.equal(false);
+    should(role.isActionAllowed(requestObject)).be.false();
   });
 
 });
