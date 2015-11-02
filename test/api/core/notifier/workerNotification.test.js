@@ -120,7 +120,7 @@ describe('Test: notifier.workerNotification', function () {
   it('should log an error when a notification fails', function (done) {
     var kuzzle = new Kuzzle();
 
-    this.timeout(1000);
+    this.timeout(500);
 
     kuzzle.log = new (winston.Logger)({transports: [new (winston.transports.Console)({level: 'silent'})]});
     kuzzle.start(params, {dummy: true}).then(function () {
