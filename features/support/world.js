@@ -1,5 +1,5 @@
 module.exports = function () {
-  this.World = function World (callback) {
+  this.World = function World () {
     this.api = null;
 
     // Fake values for test
@@ -51,7 +51,5 @@ module.exports = function () {
         firstName: {type: 'string', store: true, index: 'not_analyzed'}
       }
     };
-
-    callback();
   };
 };
