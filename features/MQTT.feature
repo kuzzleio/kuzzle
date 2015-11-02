@@ -9,11 +9,13 @@ Feature: Test MQTT API
     Then I should receive a document id
     Then I'm able to get the document
 
-  @usingMQTT
+  @usingMQTT @unsubscribe
   Scenario: Create or Update a document
-    When I write the document
+    Given A room subscription listening to "lastName" having value "Hopper"
+    When I write the document "documentGrace"
     And I createOrUpdate it
     Then I should have updated the document
+    And I should receive a "update" notification
 
   @usingMQTT
   Scenario: Update a document
