@@ -47,6 +47,7 @@ var myHooks = function () {
     this.api.deleteByQuery({})
       .then(function () {
         this.api.disconnect();
+
         callback();
       }.bind(this))
       .catch(function (error) {
