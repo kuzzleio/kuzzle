@@ -331,9 +331,7 @@ It works with the room unique ID Kuzzle returns to you when you make a subscript
 ```javascript
 {
   /*
-    Required. If your query doesn't include a requestId field, Kuzzle
-    will discard your query, because it doesn't have any means to send you
-    back the query response
+   Optional
   */
   clientId: <Unique session ID>,
 
