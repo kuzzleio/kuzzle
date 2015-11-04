@@ -5,6 +5,7 @@ var
 
 describe('Test: security/profileTest', function () {
   var
+    context = {connection: null, user: null},
     requestObject = {
       index: 'index',
       collection: 'collection',
@@ -15,11 +16,12 @@ describe('Test: security/profileTest', function () {
   it('should disallow any action when no role be found', function () {
     var profile = new Profile();
 
-    should(profile.isActionAllowed(requestObject)).be.false();
+    should(profile.isActionAllowed(requestObject, context)).be.false();
   });
 
   it('should allow the action if one of the roles allows it', function () {
     var
+      context = {connection: null, user: null},
       profile = new Profile(),
       disallowAllRole = new Role(),
       allowActionRole = new Role();
@@ -57,10 +59,10 @@ describe('Test: security/profileTest', function () {
     };
 
     profile.roles.push(disallowAllRole);
-    should(profile.isActionAllowed(requestObject)).be.false();
+    should(profile.isActionAllowed(requestObject, context)).be.false();
 
     profile.roles.push(allowActionRole);
-    should(profile.isActionAllowed(requestObject)).be.true();
+    should(profile.isActionAllowed(requestObject, context)).be.true();
   });
 
 });
