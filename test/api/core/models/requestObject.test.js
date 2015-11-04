@@ -208,4 +208,43 @@ describe('Test: requestObject', function () {
     should(requestObject.data._id).not.be.undefined();
     should(requestObject.data._id).be.exactly('fakeId2');
   });
+
+  it('should get the metadata from additional data', function () {
+    var
+      additionalData = { metadata: { foo: 'bar' }},
+      requestObject = new RequestObject(request, additionalData, protocol);
+
+    should(requestObject.metadata).not.be.undefined().and.match(additionalData.metadata);
+  });
+
+  it('should get the metadata from the request', function () {
+    var requestObject;
+
+    request.metadata = { foo: 'bar' };
+    requestObject = new RequestObject(request, {}, protocol);
+
+    should(requestObject.metadata).not.be.undefined().and.match(request.metadata);
+  });
+
+  it('should take the metadata from the additional prior to the main request object', function () {
+    var
+      additionalData = { metadata: { foo: 'bar' }},
+      requestObject;
+
+    request.metadata = { bar: 'foo' };
+    requestObject = new RequestObject(request, additionalData, protocol);
+
+    should(requestObject.metadata).not.be.undefined().and.match(additionalData.metadata);
+  });
+
+  it('should ignore metadata if they are not a json object', function () {
+    var
+      additionalData = { metadata: 'foobar'},
+      requestObject;
+
+    request.metadata = 'barfoo';
+    requestObject = new RequestObject(request, additionalData, protocol);
+
+    should(requestObject.metadata).be.an.Object().and.be.empty();
+  });
 });

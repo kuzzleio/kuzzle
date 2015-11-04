@@ -3,8 +3,8 @@ var
   winston = require('winston'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
   params = require('rc')('kuzzle'),
-  Kuzzle = require('../../../../lib/api/Kuzzle');
-
+  Kuzzle = require('../../../../lib/api/Kuzzle'),
+  ForbiddenError = require.main.require('lib/api/core/errors/forbiddenError');
 
 require('should-promised');
 
@@ -128,5 +128,50 @@ describe('Test: hotelClerk.addSubscription', function () {
 
     pAddSubscription = kuzzle.hotelClerk.addSubscription(requestObject, connection);
     return should(pAddSubscription).be.rejected();
+  });
+
+  it('should return the same room ID if the same filters are used', function () {
+    var
+      requestObject1 = new RequestObject({
+        controller: 'subscribe',
+        collection: collection,
+        body: {
+          term: {
+            firstName: 'Ada'
+          },
+          exists: {
+            field: 'lastName'
+          }
+        }
+      }),
+      requestObject2 = new RequestObject({
+        controller: 'subscribe',
+        collection: collection,
+        body: {
+          exists: {
+            field: 'lastName'
+          },
+          term: {
+            firstName: 'Ada'
+          }
+        }
+      });
+
+    return kuzzle.hotelClerk.addSubscription(requestObject1, connection)
+      .then(() => {
+        return should(kuzzle.hotelClerk.addSubscription(requestObject2, connection)).be.rejectedWith(ForbiddenError);
+      });
+  });
+
+  it('should allow subscribing with an empty filter', function () {
+    var
+      requestObject = new RequestObject({
+        controller: 'subscribe',
+        collection: collection,
+        //body: {}
+      });
+
+    delete requestObject.data.body;
+    return should(kuzzle.hotelClerk.addSubscription(requestObject, connection)).be.fulfilled();
   });
 });

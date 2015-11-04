@@ -75,13 +75,23 @@ describe('Test: hotelClerk.removeSubscription', function () {
     return should(kuzzle.hotelClerk.removeSubscription(requestObject1, badConnection)).be.rejected();
   });
 
-  it('should do nothing when a bad room is given', function () {
+  it('should do nothing when a badly formed unsubscribe request is provided', function () {
     var badRequestObject = new RequestObject({
       controller: 'subscribe',
       action: 'on',
-      requestId: 'badroomname',
       collection: collection,
       body: filter1
+    });
+
+    return should(kuzzle.hotelClerk.removeSubscription(badRequestObject, connection)).be.rejected();
+  });
+
+  it('should do nothing if a bad room name is given', function () {
+    var badRequestObject = new RequestObject({
+      controller: 'subscribe',
+      action: 'on',
+      collection: collection,
+      body: { roomId: 'this is not a room ID' }
     });
 
     return should(kuzzle.hotelClerk.removeSubscription(badRequestObject, connection)).be.rejected();
