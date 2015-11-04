@@ -68,7 +68,7 @@ This feature is especially useful to include volatile information about the perf
 
 For example, if you update a document:
 
-```json
+```javascript
 {
   body: {
     somefield: 'now has a new value'
@@ -82,7 +82,7 @@ For example, if you update a document:
 
 The following ``update`` notification will be sent to all subscribed users:
 
-```json
+```javascript
 {
   status: 200, 
   error: null,
