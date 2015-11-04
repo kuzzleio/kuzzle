@@ -115,16 +115,6 @@ describe('Test: requestObject', function () {
     should(requestObject.data.body).match(additionalData);
   });
 
-  it('should generate a MD5-hash of the body as a requestID for subscribe requests with no requestID provided', function () {
-    var requestObject;
-
-    request.controller = 'subscribe';
-    delete request.requestId;
-    requestObject = new RequestObject(request, {}, protocol);
-
-    should(requestObject.requestId).not.be.undefined().and.match(/[a-fA-F0-9]{32}/);
-  });
-
   it('should initialize an UUID-like requestID if none was provided', function () {
     var requestObject;
 

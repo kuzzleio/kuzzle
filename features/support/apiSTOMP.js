@@ -11,7 +11,7 @@ module.exports = {
   stompClient: undefined,
   stompConnected: undefined,
   clientId: uuid.v1(),
-  subscribedRooms: {client1: {}},
+  subscribedRooms: null,
   responses: null,
 
   init: function (world) {
@@ -29,6 +29,7 @@ module.exports = {
       });
     }
     this.world = world;
+    this.subscribedRooms = {};
     this.responses = null;
   },
 
@@ -173,26 +174,27 @@ module.exports = {
     return publishAndListen.call(this, topic, msg);
   },
 
-  unsubscribe: function (room) {
+  unsubscribe: function (room, clientId) {
     var
       topic = ['subscribe', this.world.fakeCollection, 'off'].join('.'),
       msg = {
-        requestId: room,
-        clientId: this.subscribedRooms.client1[room].clientId
+        body: { roomId: room },
+        clientId: clientId
       };
 
-    this.subscribedRooms.client1[room].client.disconnect();
-    delete this.subscribedRooms.client1[room];
+    this.subscribedRooms[clientId][room].disconnect();
+    delete this.subscribedRooms[clientId][room];
     return publish.call(this, topic, msg, false);
   },
 
   countSubscription: function () {
     var
       topic = ['subscribe', this.world.fakeCollection, 'count'].join('.'),
-      rooms = Object.keys(this.subscribedRooms.client1),
+      clients = Object.keys(this.subscribedRooms),
+      rooms = Object.keys(this.subscribedRooms[clients[0]]),
       msg = {
         body: {
-          roomId: this.subscribedRooms.client1[rooms[0]].roomId
+          roomId: rooms[0]
         }
       };
 
@@ -274,13 +276,14 @@ var publishAndListen = function (topic, message) {
     self = this;
 
   message.clientId = uuid.v1();
+  self.subscribedRooms[message.clientId] = {};
 
   publish.call(self, topic, message)
     .then(function (response) {
       roomClient.connect(function () {
         var topic = '/topic/' + response.result.roomId;
 
-        self.subscribedRooms.client1[response.result.roomName] = { roomId: response.result.roomId, client: roomClient, clientId: message.clientId };
+        self.subscribedRooms[message.clientId][response.result.roomId] = roomClient;
 
         roomClient.subscribe(topic, function (body) { //, headers) {
           self.responses = JSON.parse(body);

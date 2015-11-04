@@ -63,7 +63,8 @@ var apiSteps = function () {
       rooms = Object.keys(this.api.subscribedRooms[socketName]);
     }
     else {
-      rooms = Object.keys(this.api.subscribedRooms.client1);
+      socketName = Object.keys(this.api.subscribedRooms)[0];
+      rooms = Object.keys(this.api.subscribedRooms[socketName]);
     }
 
     if (rooms.length === 0) {

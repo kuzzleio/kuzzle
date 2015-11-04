@@ -126,8 +126,8 @@ Feature: Test websocket API
 
   @usingWebsocket @unsubscribe
   Scenario: Count how many subscription on a room
-    Given A room subscription listening to "lastName" having value "Hopper"
-    Given A room subscription listening to "lastName" having value "Hopper"
+    Given A room subscription listening to "lastName" having value "Hopper" with socket "client1"
+    Given A room subscription listening to "lastName" having value "Hopper" with socket "client2"
     Then I can count "2" subscription
 
   @usingWebsocket @unsubscribe

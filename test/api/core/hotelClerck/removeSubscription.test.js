@@ -41,6 +41,7 @@ describe('Test: hotelClerk.removeSubscription', function () {
       collection: collection,
       body: filter2
     }),
+    unsubscribeRequest,
     notified,
     mockupNotifier = function (roomId, notification) {
       notified = { roomId: roomId, notification: notification };
@@ -59,6 +60,13 @@ describe('Test: hotelClerk.removeSubscription', function () {
       })
       .then(function (realTimeResponseObject) {
         roomId = realTimeResponseObject.roomId;
+        unsubscribeRequest = new RequestObject({
+          controller: 'subscribe',
+          action: 'off',
+          collection: collection,
+          body: { roomId: roomId }
+        });
+
         done();
       });
   });
@@ -80,7 +88,7 @@ describe('Test: hotelClerk.removeSubscription', function () {
   });
 
   it('should clean up customers, rooms and filtersTree object', function () {
-    return kuzzle.hotelClerk.removeSubscription(requestObject1, connection)
+    return kuzzle.hotelClerk.removeSubscription(unsubscribeRequest, connection)
       .then(function () {
         should(kuzzle.dsl.filtersTree).be.an.Object();
         should(kuzzle.dsl.filtersTree).be.empty();
@@ -96,7 +104,7 @@ describe('Test: hotelClerk.removeSubscription', function () {
   it('should not delete all subscriptions when we want to just remove one', function () {
     return kuzzle.hotelClerk.addSubscription(requestObject2, connection)
       .then(function () {
-        return kuzzle.hotelClerk.removeSubscription(requestObject1, connection)
+        return kuzzle.hotelClerk.removeSubscription(unsubscribeRequest, connection)
           .then(function () {
             should(kuzzle.dsl.filtersTree).be.an.Object();
             should(kuzzle.dsl.filtersTree).not.be.empty();
@@ -115,7 +123,7 @@ describe('Test: hotelClerk.removeSubscription', function () {
     return kuzzle.hotelClerk.addSubscription(requestObject1, { id: 'anotherconnection'})
       .then(function (createdRoom) {
         roomId = createdRoom.roomId;
-        return kuzzle.hotelClerk.removeSubscription(requestObject1, connection);
+        return kuzzle.hotelClerk.removeSubscription(unsubscribeRequest, connection);
       })
       .then(function () {
         should(notified.roomId).be.exactly(roomId);
@@ -141,9 +149,9 @@ describe('Test: hotelClerk.removeSubscription', function () {
     };
     kuzzle.notifier = {notify: function () {}};
 
-    return kuzzle.hotelClerk.removeSubscription(requestObject1, connection)
+    return kuzzle.hotelClerk.removeSubscription(unsubscribeRequest, connection)
       .then(function () {
-        should(leavedRooms).containEql('b6fba02d3a45c4d6a9bb224532e12eb1');
+        should(leavedRooms).containEql(roomId);
         delete connection.type;
       });
   });

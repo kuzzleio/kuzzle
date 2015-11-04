@@ -44,6 +44,5 @@ describe('Test: realTimeResponseObject', function () {
     should(response.error).be.null();
     should(response.result).not.be.null();
     should(response.result.roomId).not.be.undefined().and.be.exactly(roomId);
-    should(response.result.roomName).not.be.undefined().and.be.exactly(requestObject.requestId);
   });
 });

@@ -13,7 +13,6 @@ describe('Test: hotelClerk.addSubscription', function () {
     kuzzle,
     roomId,
     connection = {id: 'connectionid'},
-    roomName = 'roomName',
     collection = 'user',
     filter = {
       term: {
@@ -45,7 +44,6 @@ describe('Test: hotelClerk.addSubscription', function () {
     var requestObject = new RequestObject({
       controller: 'subscribe',
       action: 'on',
-      requestId: roomName,
       collection: collection,
       body: filter
     });
@@ -70,7 +68,7 @@ describe('Test: hotelClerk.addSubscription', function () {
 
         should(kuzzle.hotelClerk.customers[connection.id]).be.an.Object();
         should(kuzzle.hotelClerk.customers[connection.id]).not.be.empty();
-        should(kuzzle.hotelClerk.customers[connection.id][roomName]).be.exactly(roomId);
+        should(kuzzle.hotelClerk.customers[connection.id]).match([roomId]);
       });
   });
 
@@ -78,7 +76,7 @@ describe('Test: hotelClerk.addSubscription', function () {
     var
       joinedRooms = [],
       requestObject = new RequestObject({
-        requestId: roomName,
+        controller: 'subscribe',
         collection: collection,
         body: filter
       });
@@ -100,14 +98,14 @@ describe('Test: hotelClerk.addSubscription', function () {
 
     return kuzzle.hotelClerk.addSubscription(requestObject, connection)
       .then(function () {
-        should(joinedRooms).containEql('b6fba02d3a45c4d6a9bb224532e12eb1');
+        should(joinedRooms).containEql(roomId);
         delete connection.type;
       });
   });
 
   it('should return an error when the user has already subscribed to the filter', function () {
     var requestObject = new RequestObject({
-      requestId: roomName,
+      controller: 'subscribe',
       collection: collection,
       body: filter
     });
@@ -124,22 +122,11 @@ describe('Test: hotelClerk.addSubscription', function () {
       requestObject = new RequestObject({
         controller: 'subscribe',
         action: 'on',
-        requestId: roomName,
         collection: collection,
         body: {badterm : {firstName: 'Ada'}}
       });
 
     pAddSubscription = kuzzle.hotelClerk.addSubscription(requestObject, connection);
     return should(pAddSubscription).be.rejected();
-  });
-
-  it('should handle non-string requestIds', function () {
-    var requestObject = new RequestObject({
-      requestId: 0xCAFED00D,
-      collection: collection,
-      body: filter
-    });
-
-    return should(kuzzle.hotelClerk.addSubscription(requestObject, connection)).be.fulfilled();
   });
 });
