@@ -35,6 +35,7 @@ describe('Test: repositories/repository', function () {
   };
   mockReadEngine = {
     get: function (requestObject, forward) {
+      var err;
       if (forward !== false) {
         forwardedObject = requestObject;
       }
@@ -42,7 +43,10 @@ describe('Test: repositories/repository', function () {
         return Promise.resolve(new ResponseObject(requestObject, persistedObject));
       }
 
-      return Promise.resolve(new NotFoundError('Not found'));
+      err = new NotFoundError('Not found');
+      err.found = false;
+      err._id = requestObject.data._id;
+      return Promise.resolve(err);
     },
     mget: function (requestObject) {
       var
@@ -66,7 +70,12 @@ describe('Test: repositories/repository', function () {
 
       return q.all(promises)
         .then(function (results) {
-          var result = new ResponseObject(requestObject, {docs: results});
+          var result = new ResponseObject(requestObject, {docs: results.map(function (response) {
+            if (response instanceof ResponseObject) {
+              return response.data;
+            }
+            return response;
+          })});
 
           return Promise.resolve(result);
         });
@@ -79,7 +88,11 @@ describe('Test: repositories/repository', function () {
   };
 
   before(function () {
-    repository = new Repository(null, {
+    var mockKuzzle = {
+      config: require.main.require('lib/config')(require('rc')('kuzzle'))
+    };
+
+    repository = new Repository(mockKuzzle, {
       collection: '_test/repository',
       ObjectConstructor: ObjectConstructor,
       readEngine: mockReadEngine,

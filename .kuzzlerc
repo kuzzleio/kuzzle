@@ -32,6 +32,10 @@
     "algorithm": "HS256",
     "secret": "Kuzzle Rocks"
   },
+  // repositories defaults
+  "repositories": {
+    "cacheTTL": 1440
+  },
   // Default user profiles
   "userProfiles": {
     "admin": {
