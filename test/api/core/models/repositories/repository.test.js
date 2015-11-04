@@ -240,7 +240,7 @@ describe('Test: repositories/repository', function () {
         })
         .catch(function (error) {
           done(error);
-        })
+        });
     });
   });
 });

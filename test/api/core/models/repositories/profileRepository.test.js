@@ -1,6 +1,7 @@
 var
   params = require('rc')('kuzzle'),
   should = require('should'),
+  Role = require.main.require('lib/api/core/models/security/role'),
   Profile = require.main.require('lib/api/core/models/security/profile'),
   NotFoundError = require.main.require('lib/api/core/errors/notFoundError'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),

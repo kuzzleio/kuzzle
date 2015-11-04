@@ -34,7 +34,7 @@ before(function (done) {
       }
       return Promise.resolve(null);
     },
-    volatileSet: function (key, value, ttl) { forwardedResult = {key: key, value: value, ttl: ttl } },
+    volatileSet: function (key, value, ttl) { forwardedResult = {key: key, value: value, ttl: ttl }; },
     expire: function (key, ttl) { forwardedResult = {key: key, ttl: ttl}; }
   };
   mockReadEngine = {
@@ -165,7 +165,7 @@ describe('Test: repositories/userRepository', function () {
         })
         .catch(function (error) {
           done(error);
-        })
+        });
     });
 
     it('should load the user from cache', function (done) {
