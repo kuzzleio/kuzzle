@@ -9,14 +9,14 @@ var apiSteps = function () {
     this.api.subscribe(filter, socketName)
       .then(function (body) {
         if (body.error !== null) {
-          callback.fail(new Error(body.error));
+          callback(new Error(body.error));
           return false;
         }
 
         callback();
       }.bind(this))
       .catch(function (error) {
-        callback.fail(new Error(error));
+        callback(new Error(error));
       });
   });
 
@@ -24,14 +24,14 @@ var apiSteps = function () {
     this.api.subscribe()
       .then(function (body) {
         if (body.error !== null) {
-          callback.fail(new Error(body.error));
+          callback(new Error(body.error));
           return false;
         }
 
         callback();
       }.bind(this))
       .catch(function (error) {
-        callback.fail(new Error(error));
+        callback(new Error(error));
       });
   });
 
@@ -42,14 +42,14 @@ var apiSteps = function () {
     this.api.subscribe(filter)
       .then(function (body) {
         if (body.error !== null) {
-          callback.fail(new Error(body.error));
+          callback(new Error(body.error));
           return false;
         }
 
         callback();
       }.bind(this))
       .catch(function (error) {
-        callback.fail(new Error(error));
+        callback(new Error(error));
       });
   });
 
@@ -67,7 +67,7 @@ var apiSteps = function () {
     }
 
     if (rooms.length === 0) {
-      callback.fail(new Error('Cannot unsubscribe: no subscribed rooms'));
+      callback(new Error('Cannot unsubscribe: no subscribed rooms'));
       return false;
     }
 
@@ -76,7 +76,7 @@ var apiSteps = function () {
         callback();
       })
       .catch(function (error) {
-        callback.fail(new Error(error));
+        callback(new Error(error));
       });
   });
 
@@ -130,7 +130,7 @@ var apiSteps = function () {
         if (err.message) {
           err = err.message;
         }
-        callback.fail(new Error(err));
+        callback(new Error(err));
         return false;
       }
 
@@ -174,7 +174,7 @@ var apiSteps = function () {
           err = err.message;
         }
 
-        callback.fail(new Error(err));
+        callback(new Error(err));
         return false;
       }
 
@@ -235,7 +235,7 @@ var apiSteps = function () {
           err = err.message;
         }
 
-        callback.fail(new Error(err));
+        callback(new Error(err));
         return false;
       }
 
@@ -305,7 +305,7 @@ var apiSteps = function () {
           err = err.message;
         }
 
-        callback.fail(new Error(err));
+        callback(new Error(err));
         return false;
       }
 
@@ -342,7 +342,7 @@ var apiSteps = function () {
           err = err.message;
         }
 
-        callback.fail(new Error(err));
+        callback(new Error(err));
         return false;
       }
 
@@ -383,7 +383,7 @@ var apiSteps = function () {
 
     async.retry(20, main.bind(this), function (error) {
       if (error) {
-        callback.fail(new Error(error));
+        callback(new Error(error));
         return false;
       }
 
@@ -418,7 +418,7 @@ var apiSteps = function () {
           err = err.message;
         }
 
-        callback.fail(new Error(err));
+        callback(new Error(err));
         return false;
       }
 
@@ -439,19 +439,19 @@ var apiSteps = function () {
     this.api.countSubscription()
       .then(function (response) {
         if (response.error) {
-          callback.fail(new Error(response.error));
+          callback(new Error(response.error));
           return false;
         }
 
         if (response.result !== parseInt(number)) {
-          callback.fail(new Error('No correct value for count. Expected ' + number + ', got ' + response.result));
+          callback(new Error('No correct value for count. Expected ' + number + ', got ' + response.result));
           return false;
         }
 
         callback();
       })
       .catch(function (error) {
-        callback.fail(new Error(error));
+        callback(new Error(error));
       });
   });
 
@@ -459,36 +459,36 @@ var apiSteps = function () {
     this.api.listCollections()
       .then(response => {
         if (response.error) {
-          callback.fail(new Error(response.error));
+          callback(new Error(response.error));
           return false;
         }
 
         if (!response.result) {
-          return callback.fail(new Error('No result provided'));
+          return callback(new Error('No result provided'));
         }
 
         this.result = response.result;
         callback();
       })
-      .catch(error => callback.fail(error));
+      .catch(error => callback(error));
   });
 
   this.When(/^I get the last statistics frame$/, function (callback) {
     this.api.getStats()
       .then(function (response) {
         if (response.error) {
-          return callback.fail(new Error(response.error));
+          return callback(new Error(response.error));
         }
 
         if (!response.result) {
-          return callback.fail(new Error('No result provided'));
+          return callback(new Error('No result provided'));
         }
 
         this.result = response.result;
         callback();
       }.bind(this))
       .catch(function (error) {
-        callback.fail(error);
+        callback(error);
       });
   });
 
@@ -496,18 +496,18 @@ var apiSteps = function () {
     this.api.getAllStats()
       .then(function (response) {
         if (response.error) {
-          return callback.fail(new Error(response.error));
+          return callback(new Error(response.error));
         }
 
         if (!response.result) {
-          return callback.fail(new Error('No result provided'));
+          return callback(new Error('No result provided'));
         }
 
         this.result = response.result;
         callback();
       }.bind(this))
       .catch(function (error) {
-        callback.fail(error);
+        callback(error);
       });
   });
 
@@ -515,7 +515,7 @@ var apiSteps = function () {
     var key;
 
     if (!this.result.statistics) {
-      return callback.fail('Expected a statistics result, got: ' + this.result);
+      return callback('Expected a statistics result, got: ' + this.result);
     }
 
     key = Object.keys(this.result.statistics);
@@ -528,19 +528,19 @@ var apiSteps = function () {
       return callback();
     }
 
-    callback.fail('Expected at least 1 statistic frame, found: ' + this.result.statistics);
+    callback('Expected at least 1 statistic frame, found: ' + this.result.statistics);
   });
 
   this.Then(/^I can find a collection "([^"]*)"$/, function (collection, callback) {
     if (!this.result.collections) {
-      return callback.fail('Expected a collections list result, got: ' + this.result);
+      return callback('Expected a collections list result, got: ' + this.result);
     }
 
     if (Array.isArray(this.result.collections) && this.result.collections.indexOf(collection) !== -1) {
       return callback();
     }
 
-    callback.fail('Expected to find the collection <' + collection + '> in this collections list: ' + this.result.collections);
+    callback('Expected to find the collection <' + collection + '> in this collections list: ' + this.result.collections);
   });
 
   /** WRITE **/
@@ -550,12 +550,12 @@ var apiSteps = function () {
     this.api.create(document, true)
       .then(function (body) {
         if (body.error) {
-          callback.fail(new Error(body.error));
+          callback(new Error(body.error));
           return false;
         }
 
         if (!body.result) {
-          callback.fail(new Error('No result provided'));
+          callback(new Error('No result provided'));
           return false;
         }
 
@@ -563,7 +563,7 @@ var apiSteps = function () {
         callback();
       }.bind(this))
       .catch(function (error) {
-        callback.fail(error);
+        callback(error);
       });
   });
 
@@ -575,12 +575,12 @@ var apiSteps = function () {
     this.api.createOrUpdate(document)
       .then(function (body) {
         if (body.error) {
-          callback.fail(new Error(body.error));
+          callback(new Error(body.error));
           return false;
         }
 
         if (!body.result) {
-          callback.fail(new Error('No result provided'));
+          callback(new Error('No result provided'));
           return false;
         }
 
@@ -588,7 +588,7 @@ var apiSteps = function () {
         callback();
       }.bind(this))
       .catch(function (error) {
-        callback.fail(error);
+        callback(error);
       });
   });
 
@@ -598,7 +598,7 @@ var apiSteps = function () {
       return false;
     }
 
-    callback.fail(new Error('No id information in returned object'));
+    callback(new Error('No id information in returned object'));
   });
 
   this.Then(/^I should have updated the document$/, function (callback) {
@@ -608,7 +608,7 @@ var apiSteps = function () {
       return false;
     }
 
-    callback.fail(new Error('The received document is not an updated version of the previous one. \n' +
+    callback(new Error('The received document is not an updated version of the previous one. \n' +
       'Previous document: ' + JSON.stringify(this.result) + '\n' +
       'Received document: ' + JSON.stringify(this.updatedResult)));
   });
@@ -641,7 +641,7 @@ var apiSteps = function () {
 
     async.retry(20, main.bind(this), function (err) {
       if (err) {
-        callback.fail(new Error(err));
+        callback(new Error(err));
         return false;
       }
 
@@ -654,14 +654,14 @@ var apiSteps = function () {
     this.api.deleteById(this.result._id)
       .then(function (body) {
         if (body.error !== null) {
-          callback.fail(body.error);
+          callback(body.error);
           return false;
         }
 
         callback();
       }.bind(this))
       .catch(function (error) {
-        callback.fail(error);
+        callback(error);
       });
   });
 
@@ -694,7 +694,7 @@ var apiSteps = function () {
 
     async.retry(20, main.bind(this), function (err) {
       if (err) {
-        callback.fail(err);
+        callback(err);
         return false;
       }
 
@@ -707,14 +707,14 @@ var apiSteps = function () {
     this.api.bulkImport(this.bulk)
       .then(function (body) {
         if (body.error !== null) {
-          callback.fail(new Error(body.error));
+          callback(new Error(body.error));
           return false;
         }
 
         callback();
       }.bind(this))
       .catch(function (error) {
-        callback.fail(error);
+        callback(error);
       });
   });
 
@@ -722,14 +722,14 @@ var apiSteps = function () {
     this.api.globalBulkImport(this.globalBulk)
       .then(function (body) {
         if (body.error !== null) {
-          callback.fail(new Error(body.error));
+          callback(new Error(body.error));
           return false;
         }
 
         callback();
       }.bind(this))
       .catch(function (error) {
-        callback.fail(error);
+        callback(error);
       });
   });
 
@@ -737,14 +737,14 @@ var apiSteps = function () {
     this.api.deleteCollection()
       .then(function (body) {
         if (body.error !== null) {
-          callback.fail(new Error(body.error));
+          callback(new Error(body.error));
           return false;
         }
 
         callback();
       }.bind(this))
       .catch(function (error) {
-        callback.fail(new Error(error));
+        callback(new Error(error));
       });
   });
 
@@ -753,14 +753,14 @@ var apiSteps = function () {
     this.api.putMapping()
       .then(function (body) {
         if (body.error !== null) {
-          callback.fail(new Error(body.error));
+          callback(new Error(body.error));
           return false;
         }
 
         callback();
       }.bind(this))
       .catch(function (error) {
-        callback.fail(new Error(error));
+        callback(new Error(error));
       });
   });
 
