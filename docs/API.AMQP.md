@@ -171,9 +171,7 @@ How subscription works:
 ```javascript
 {
   /*
-  Required. If your query doesn't include a requestId field, Kuzzle
-  will discard your query, because it doesn't have any means to send you
-  the resulting room ID.
+  Optional
   */
   clientId: <Unique connection ID>,
 
