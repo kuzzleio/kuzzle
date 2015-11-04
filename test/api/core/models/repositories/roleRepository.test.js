@@ -1,4 +1,5 @@
 var
+  _ = require('lodash'),
   q = require('q'),
   params = require('rc')('kuzzle'),
   should = require('should'),
@@ -49,33 +50,20 @@ describe('Test: repositories/roleRepository', function () {
     },
     mget: function (requestObject) {
       var
-        promises = [];
+        results = [];
 
       requestObject.data.body.ids.forEach(function (id) {
-        var req = new RequestObject({
-          controller: 'read',
-          action: 'get',
-          requestId: 'foo',
-          collection: roleRepository.collection,
-          body: {
-            _id: id
-          }
-        });
-
-        promises.push(mockReadEngine.get(req, false));
+        if (id === 'persisted1') {
+          results.push({_id:id, found: true, _source: persistedObject1});
+        }
+        else if (id === 'persisted2') {
+          results.push({_id: id, found: true, _source: persistedObject2});
+        }
+        else {
+          results.push({_id: id, found: false});
+        }
       });
-
-      return q.all(promises)
-        .then(function (results) {
-          var result = new ResponseObject(requestObject, {docs: results.map(function (response) {
-            if (response instanceof ResponseObject) {
-              return response.data;
-            }
-            return response;
-          })});
-
-          return Promise.resolve(result);
-        });
+      return Promise.resolve(new ResponseObject(requestObject, {docs: results}));
     }
   };
 
@@ -127,11 +115,17 @@ describe('Test: repositories/roleRepository', function () {
         });
     });
 
-    it('should reject the promise in case one of the requested roles does not exist', function (done) {
-      var foo = roleRepository.loadRoles(['guest', 'idontexist']);
-
-      should(foo).be.rejectedWith(NotFoundError);
-      done();
+    it('should retrieve only the roles that exist', function (done) {
+      roleRepository.loadRoles(['guest', 'idontexist'])
+        .then(function (results) {
+          should(results).be.an.Array().and.have.length(1);
+          should(results[0]).be.an.instanceOf(Role);
+          should(results[0]._id).be.exactly('guest');
+          done();
+        })
+        .catch(function (error) {
+          done(error);
+        });
     });
 
   });

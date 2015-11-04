@@ -111,11 +111,11 @@ describe('Test: repositories/profileRepository', function () {
     });
   });
 
-  describe('#serializeToDB', function () {
+  describe('#serializeToDatabase', function () {
     it('should return a plain flat object', function (done) {
       profileRepository.loadProfile('testprofile')
         .then(function (profile) {
-          var result = profileRepository.serializeToDB(profile);
+          var result = profileRepository.serializeToDatabase(profile);
 
           should(result).not.be.an.instanceOf(Profile);
           should(result).be.an.Object();

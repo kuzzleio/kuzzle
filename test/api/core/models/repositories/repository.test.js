@@ -149,13 +149,10 @@ describe('Test: repositories/repository', function () {
   });
 
   describe('#loadMultiFromDatabase', function () {
-    it('should return null for an non existing id', function (done) {
+    it('should return an empty array for an non existing id', function (done) {
       repository.loadMultiFromDatabase([-999, -998, -997])
         .then(function (results) {
-          should(results).be.an.Array().and.have.length(3);
-          results.forEach(function (result) {
-            should(result).be.instanceOf(NotFoundError);
-          });
+          should(results).be.an.Array().and.have.length(0);
           done();
         })
         .catch(function (error) {
