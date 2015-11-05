@@ -217,7 +217,10 @@ There are 4 types of notifications you can receive:
     action: 'create',
     collection: '<data collection>',
     controller: 'write',
-    requestId: '<unique request ID>'  // The query updating the document document
+    requestId: '<unique request ID>',  // The query updating the document document
+    metadata: {
+      // metadata embedded in the modifying request
+    }
   }
 }
 ```
@@ -236,7 +239,10 @@ There are 4 types of notifications you can receive:
     action: 'update',
     collection: '<data collection>',
     controller: 'write',
-    requestId: '<unique request ID>'  // The query updating the document
+    requestId: '<unique request ID>',  // The query updating the document
+    metadata: {
+      // metadata embedded in the modifying request
+    }
   }
 }
 ```
@@ -252,7 +258,10 @@ There are 4 types of notifications you can receive:
     action: 'update',
     collection: '<data collection>',
     controller: 'write',
-    requestId: '<unique request ID>'  // The query updating the document
+    requestId: '<unique request ID>',  // The query updating the document
+    metadata: {
+      // metadata embedded in the modifying request
+    }
     // there is no document source in this notification
   }
 }
@@ -270,7 +279,10 @@ There are 4 types of notifications you can receive:
     action: 'delete',
     collection: '<data collection>',
     controller: 'write',
-    requestId: '<unique request ID>'  // The query deleting the document
+    requestId: '<unique request ID>',  // The query deleting the document
+    metadata: {
+      // metadata embedded in the modifying request
+    }
     // there is no document source in this notification
   }
 }
