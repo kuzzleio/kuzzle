@@ -6,9 +6,10 @@
 
 Kuzzle Kernel API can be accessed from 3 different paths:
 
-1. a [RESTFul API](api-specifications.md#REST)
-2. a [Websocket connexion](api-specifications.md#Websocket), using Kuzzle [Javascript SDK](https://stash.kaliop.net/projects/LABS/repos/kuzzle-sdk-js)
-3. or a [messaging broker](api-specifications.md#AMQP-STOMP-MQTT) such as RabbitMQ (using any protocol supported by your broker, such as AMQP, MQTT, STOMP)
+1. a [RESTFul API](API.REST.md)
+2. a [Websocket connexion](API.WebSocket.md), using Kuzzle [Javascript SDK](http://kuzzleio.github.io/sdk-documentation/)
+3. or a messaging broker such as RabbitMQ
+(using any protocol supported by your broker, such as [AMQP](API.AMQP.md), [MQTT](API.MQTT.md), [STOMP](API.STOMP.md))
 
 In the background, Kuzzle uses:
 
