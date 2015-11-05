@@ -16,10 +16,10 @@ var
   Kuzzle = require.main.require('lib/api/Kuzzle');
 
 
-describe('Test: notifier.workerNotification', function () {
+describe('Test: notifier.checkNewRoutes', function () {
   var
     kuzzle,
-    blacklist = ['init', 'search', 'get', 'count', 'deleteCollection', 'import', 'putMapping', 'getMapping', 'listCollections', 'reset'],
+    blacklist = ['init', 'search', 'get', 'count', 'deleteCollection', 'import', 'putMapping', 'getMapping', 'listCollections', 'reset', 'mget'],
     requestObject = new RequestObject({
       controller: 'write',
       action: '',
