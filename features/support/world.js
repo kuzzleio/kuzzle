@@ -51,5 +51,10 @@ module.exports = function () {
         firstName: {type: 'string', store: true, index: 'not_analyzed'}
       }
     };
+
+    this.metadata = {
+      iwant: 'to break free',
+      we: ['will', 'rock', 'you']
+    };
   };
 };

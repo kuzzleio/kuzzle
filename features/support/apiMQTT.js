@@ -225,6 +225,8 @@ var publish = function (topic, message, waitForAnswer) {
     message.clientId = this.mqttClient.options.clientId;
   }
 
+  message.metadata = this.world.metadata;
+
   if (listen) {
     this.mqttClient.once('message', function (topic, message) {
       var unpacked = JSON.parse((new Buffer(message)).toString());

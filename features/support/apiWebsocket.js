@@ -235,6 +235,8 @@ var emit = function (controller, msg, getAnswer, socketName) {
     msg.requestId = uuid.v1();
   }
 
+  msg.metadata = this.world.metadata;
+
   socketName = initSocket.call(this, socketName);
 
   if (listen) {

@@ -436,6 +436,34 @@ var apiSteps = function () {
     }
   });
 
+  this.Then(/^The notification should have metadata$/, function (callback) {
+    var
+      diff = false;
+
+    if (!this.api.responses.result.metadata) {
+      return callback('Expected metadata in the notification but none was found');
+    }
+
+    diff = Object.keys(this.metadata).length !== Object.keys(this.api.responses.result.metadata).length;
+
+    Object.keys(this.metadata).forEach(key => {
+      if (!diff) {
+        if (!this.api.responses.result.metadata[key]) {
+          diff = true;
+        } else {
+          diff = JSON.stringify(this.metadata[key]).localeCompare(JSON.stringify(this.api.responses.result.metadata[key])) !== 0;
+        }
+      }
+    });
+
+    if (diff) {
+      callback('Expected ' + JSON.stringify(this.api.responses.result.metadata) + ' to match ' + JSON.stringify(this.metadata));
+    } else {
+      callback();
+    }
+
+  });
+
   this.Then(/^I can count "([^"]*)" subscription/, function (number, callback) {
     this.api.countSubscription()
       .then(function (response) {

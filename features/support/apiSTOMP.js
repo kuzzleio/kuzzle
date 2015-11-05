@@ -239,6 +239,8 @@ var publish = function (topic, message, waitForAnswer) {
     message.clientId = uuid.v1();
   }
 
+  message.metadata = this.world.metadata;
+
   this.stompConnected
     .then(function () {
       if (listen) {

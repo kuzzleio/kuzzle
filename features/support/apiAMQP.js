@@ -235,6 +235,8 @@ var publish = function (topic, message, waitForAnswer) {
     message.clientId = this.clientId;
   }
 
+  message.metadata = this.world.metadata;
+
   this.amqpChannel.then(channel => {
     if (listen) {
       channel.assertQueue(null, {autoDelete: true, exclusive: true, durable: false})
