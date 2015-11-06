@@ -1,9 +1,9 @@
 # Kuzzle repositories
 
-The Repository classes allow to fetch and store some Kuzlle internal business object from/to the persistent layer.
+The Repository classes allow to fetch and store some Kuzzle internal business object from/to the persistent layer.
 
-An abstract Repository class is available to be overriden if needed depending on the business needs.
-The class handles the persitence both to the CacheEngine (redis by default) and to the database (elastic search by default).
+An abstract Repository class is available to be overridden if needed depending on the business needs.
+The class handles the persistence both to the CacheEngine (redis by default) and to the database (elastic search by default).
 
 The **Repository** class exposes the following methods:
 
@@ -67,7 +67,7 @@ This method tries to load the business objects form the database matching the gi
 
 Returns a promise that resolves to an array containing the *ObjectConstructor* instances that could be retrieved from the database.
 
-If no matching document could be found, an emtpy array is returned.
+If no matching document could be found, an empty array is returned.
 
 ## loadFromCache
 
@@ -87,7 +87,8 @@ The object id to load from the cache.
 
 An optional options object.
 
-Currently, the only optional parameter that can be pass to the method id *key*. If no key is given to the method, the key used by the method defaults to *collection* + '/' + id.
+Currently, the only optional parameter that can be pass to the method is *key*. 
+If no key is given to the method, defaults to *collection* + '/' + id.
 
 ### returns
 
@@ -115,7 +116,7 @@ In case data is an instance of ResponseObject, only the business information is 
 
 ### returns
 
-Returns a promise that resolves to a *new* *ObjectConstructor* instance.
+Returns a promise that resolves to an *ObjectConstructor* instance.
 
 ## persistToDB
 
@@ -193,7 +194,7 @@ The supported options are:
 Repository.prototype.serializeToCache = function (object) {...}
 ```
 
-This method transforms the busines object before being persisted to the cache. The default implementation just returns the object without any transformation and is meant to be overriden.
+This method transforms the business object before being persisted to the cache. The default implementation just returns the object without any transformation and is meant to be overridden.
 
 ### parameters
 
@@ -211,7 +212,7 @@ The business object to persist.
 Repository.prototype.serializeToDatabase = function (object) {...}
 ```
 
-This method transforms the busines object before being persisted to the cache. The default implementation just returns the object without any transformation and is meant to be overriden.
+This method transforms the business object before being persisted to the cache. The default implementation just returns the object without any transformation and is meant to be overridden.
 
 ### parameters
 

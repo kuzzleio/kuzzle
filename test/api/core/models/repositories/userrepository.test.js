@@ -11,7 +11,7 @@ var
     config: require.main.require('lib/config')(params)
   },
   NotFoundError = require.main.require('lib/api/core/errors/notFoundError'),
-  RequestObject = require.main.require('lib/api/core/models/requestObject'),
+  UnauthorizedError = require.main.require('lib/api/core/errors/unauthorizedError'),
   ResponseObject = require.main.require('lib/api/core/models/responseObject'),
   Profile = require.main.require('lib/api/core/models/security/profile'),
   User = require.main.require('lib/api/core/models/security/user'),
@@ -127,11 +127,7 @@ describe('Test: repositories/userRepository', function () {
 
   describe('#loadFromToken', function () {
     it('should reject the promise if the jwt is invalid', function () {
-      var
-        foo;
-      foo = userRepository.loadFromToken('invalidToken');
-
-      should(foo).be.rejected();
+      return should(userRepository.loadFromToken('invalidToken')).be.rejectedWith(UnauthorizedError, {details: {subCode: UnauthorizedError.prototype.subCodes.JsonWebTokenError, description: 'jwt malformed'}});
     });
 
     it('should load the anonymous user if the uuid is not known', function (done) {
@@ -148,6 +144,15 @@ describe('Test: repositories/userRepository', function () {
         .catch(function (error) {
           done(error);
         });
+    });
+
+    it('shoud reject the promise if the jwt is expired', function (done) {
+      var token = jwt.sign({_id: -1}, params.jsonWebToken.secret, {algorithm: params.jsonWebToken.algorithm, expiresIn: 1});
+
+      setTimeout(function () {
+        should(userRepository.loadFromToken(token)).be.rejectedWith(UnauthorizedError, {details: {subCode: UnauthorizedError.prototype.subCodes.TokenExpired}});
+        done();
+      }, 1001);
     });
 
     it('should load the admin user if the user id is "admin"', function (done) {

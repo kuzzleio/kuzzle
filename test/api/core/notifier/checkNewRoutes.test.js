@@ -19,7 +19,7 @@ var
 describe('Test: notifier.workerNotification', function () {
   var
     kuzzle,
-    blacklist = ['init', 'search', 'get', 'count', 'deleteCollection', 'import', 'putMapping', 'getMapping', 'listCollections', 'reset'],
+    blacklist = ['init', 'search', 'get', 'mget', 'count', 'deleteCollection', 'import', 'putMapping', 'getMapping', 'listCollections', 'reset'],
     requestObject = new RequestObject({
       controller: 'write',
       action: '',
