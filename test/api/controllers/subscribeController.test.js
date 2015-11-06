@@ -9,7 +9,6 @@ var
   BadRequestError = require.main.require('lib/api/core/errors/badRequestError'),
   NotFoundError = require.main.require('lib/api/core/errors/notFoundError');
 
-
 require('should-promised');
 
 /*
@@ -43,6 +42,8 @@ describe('Test: subscribe controller', function () {
       });
   });
 
+  beforeEach(() =>  requestObject = new RequestObject({controller: 'subscribe'}, {}, 'unit-test'));
+
   it('should forward new subscriptions to the hotelClerk core component', function () {
     var foo = kuzzle.funnel.subscribe.on(requestObject, {
         connection: {id: 'foobar'},
@@ -56,19 +57,22 @@ describe('Test: subscribe controller', function () {
   it('should forward unsubscribes queries to the hotelClerk core component', function () {
     var
       newUser = 'Carmen Sandiego',
-      foo = kuzzle.funnel.subscribe.off(requestObject, {
+      result;
+
+      requestObject.data.body = { roomId: 'foobar' };
+      result = kuzzle.funnel.subscribe.off(requestObject, {
           connection: {id: newUser },
           user: anonymousUser
         }
       );
 
-    return should(foo).be.rejectedWith(NotFoundError, { message: 'The user with connection ' + newUser + ' doesn\'t exist' });
+    return should(result).be.rejectedWith(NotFoundError, { message: 'The user with connection ' + newUser + ' doesn\'t exist' });
   });
 
   it('should forward subscription counts queries to the hotelClerk core component', function () {
     var
       foo = kuzzle.funnel.subscribe.count(requestObject);
 
-    return should(foo).be.rejectedWith(BadRequestError, { message: 'The room Id is mandatory for count subscription' });
+    return should(foo).be.rejectedWith(BadRequestError, { message: 'The room Id is mandatory to count subscriptions' });
   });
 });

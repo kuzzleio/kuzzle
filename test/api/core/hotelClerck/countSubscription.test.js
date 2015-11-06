@@ -9,7 +9,6 @@ var
   BadRequestError = require.main.require('lib/api/core/errors/badRequestError'),
   NotFoundError = require.main.require('lib/api/core/errors/notFoundError');
 
-
 require('should-promised');
 
 describe('Test: hotelClerk.countSubscription', function () {
@@ -43,7 +42,7 @@ describe('Test: hotelClerk.countSubscription', function () {
       body: {}
     });
 
-    return should(kuzzle.hotelClerk.countSubscription(requestObject)).be.rejectedWith(BadRequestError, { message: 'The room Id is mandatory for count subscription' });
+    return should(kuzzle.hotelClerk.countSubscription(requestObject)).be.rejectedWith(BadRequestError, { message: 'The room Id is mandatory to count subscriptions' });
   });
 
   it('should reject the request if the provided room ID is unknown to Kuzzle', function () {
@@ -51,7 +50,7 @@ describe('Test: hotelClerk.countSubscription', function () {
       body: { roomId: 'foobar' }
     });
 
-    return should(kuzzle.hotelClerk.countSubscription(requestObject)).be.rejectedWith(NotFoundError, { message: 'The room Id foobar is unknown' });
+    return should(kuzzle.hotelClerk.countSubscription(requestObject)).be.rejectedWith(NotFoundError, { message: 'The room Id foobar does not exist' });
   });
 
   it('should return the right subscriptions count when handling a correct request', function () {
@@ -87,7 +86,7 @@ describe('Test: hotelClerk.countSubscription', function () {
       .then(function (response) {
         should(response.roomId).be.exactly(countRequest.data.body.roomId);
         should(response.count).be.exactly(2);
-        return kuzzle.hotelClerk.removeSubscription(subscribeRequest, aContext);
+        return kuzzle.hotelClerk.removeSubscription(countRequest, aContext);
       })
       .then(function () {
         return kuzzle.hotelClerk.countSubscription(countRequest);

@@ -4,6 +4,7 @@ var
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
+  ForbiddenError = require.main.require('lib/api/core/errors/forbiddenError'),
   Profile = require.main.require('lib/api/core/models/security/profile'),
   Role = require.main.require('lib/api/core/models/security/role');
 
@@ -91,7 +92,7 @@ describe('Test: hotelClerk.addSubscription', function () {
 
         should(kuzzle.hotelClerk.customers[connection.id]).be.an.Object();
         should(kuzzle.hotelClerk.customers[connection.id]).not.be.empty();
-        should(kuzzle.hotelClerk.customers[connection.id][roomName]).be.exactly(roomId);
+        should(kuzzle.hotelClerk.customers[connection.id]).match([roomId]);
       });
   });
 
@@ -99,7 +100,7 @@ describe('Test: hotelClerk.addSubscription', function () {
     var
       joinedRooms = [],
       requestObject = new RequestObject({
-        requestId: roomName,
+        controller: 'subscribe',
         collection: collection,
         body: filter
       });
@@ -121,14 +122,14 @@ describe('Test: hotelClerk.addSubscription', function () {
 
     return kuzzle.hotelClerk.addSubscription(requestObject, context)
       .then(function () {
-        should(joinedRooms).containEql('b6fba02d3a45c4d6a9bb224532e12eb1');
+        should(joinedRooms).containEql(roomId);
         delete connection.type;
       });
   });
 
   it('should return an error when the user has already subscribed to the filter', function () {
     var requestObject = new RequestObject({
-      requestId: roomName,
+      controller: 'subscribe',
       collection: collection,
       body: filter
     });
@@ -145,7 +146,6 @@ describe('Test: hotelClerk.addSubscription', function () {
       requestObject = new RequestObject({
         controller: 'subscribe',
         action: 'on',
-        requestId: roomName,
         collection: collection,
         body: {badterm : {firstName: 'Ada'}}
       });
@@ -154,13 +154,48 @@ describe('Test: hotelClerk.addSubscription', function () {
     return should(pAddSubscription).be.rejected();
   });
 
-  it('should handle non-string requestIds', function () {
-    var requestObject = new RequestObject({
-      requestId: 0xCAFED00D,
+  it('should return the same room ID if the same filters are used', function () {
+    var
+      requestObject1 = new RequestObject({
+        controller: 'subscribe',
       collection: collection,
-      body: filter
+        body: {
+          term: {
+            firstName: 'Ada'
+          },
+          exists: {
+            field: 'lastName'
+          }
+        }
+      }),
+      requestObject2 = new RequestObject({
+        controller: 'subscribe',
+        collection: collection,
+        body: {
+          exists: {
+            field: 'lastName'
+          },
+          term: {
+            firstName: 'Ada'
+          }
+        }
     });
 
+    return kuzzle.hotelClerk.addSubscription(requestObject1, context)
+      .then(() => {
+        return should(kuzzle.hotelClerk.addSubscription(requestObject2, context)).be.rejectedWith(ForbiddenError);
+      });
+  });
+
+  it('should allow subscribing with an empty filter', function () {
+    var
+      requestObject = new RequestObject({
+        controller: 'subscribe',
+        collection: collection,
+        //body: {}
+      });
+
+    delete requestObject.data.body;
     return should(kuzzle.hotelClerk.addSubscription(requestObject, context)).be.fulfilled();
   });
 });

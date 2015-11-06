@@ -16,6 +16,7 @@ Feature: Test websocket API
     And I createOrUpdate it
     Then I should have updated the document
     And I should receive a "update" notification
+    And The notification should have metadata
 
   @usingWebsocket
   Scenario: Update a document
@@ -75,6 +76,7 @@ Feature: Test websocket API
     When I write the document "documentGrace"
     Then I should receive a "create" notification
     And The notification should have a "_source" member
+    And The notification should have metadata
 
   @usingWebsocket @unsubscribe
   Scenario: Document creation notifications with not exists
@@ -82,6 +84,7 @@ Feature: Test websocket API
     When I write the document "documentGrace"
     Then I should receive a "create" notification
     And The notification should have a "_source" member
+    And The notification should have metadata
 
   @usingWebsocket @unsubscribe
   Scenario: Document delete notifications
@@ -90,6 +93,7 @@ Feature: Test websocket API
     Then I remove the document
     Then I should receive a "delete" notification
     And The notification should not have a "_source" member
+    And The notification should have metadata
 
   @usingWebsocket @unsubscribe
   Scenario: Document update: new document notification
@@ -98,6 +102,7 @@ Feature: Test websocket API
     Then I update the document with value "Hopper" in field "lastName"
     Then I should receive a "update" notification
     And The notification should have a "_source" member
+    And The notification should have metadata
 
   @usingWebsocket @unsubscribe
   Scenario: Document update: removed document notification
@@ -106,6 +111,7 @@ Feature: Test websocket API
     Then I update the document with value "Foo" in field "lastName"
     Then I should receive a "update" notification
     And The notification should not have a "_source" member
+    And The notification should have metadata
 
   @usingWebsocket @unsubscribe
   Scenario: Subscribe to a collection
@@ -113,6 +119,7 @@ Feature: Test websocket API
     When I write the document "documentGrace"
     Then I should receive a "create" notification
     And The notification should have a "_source" member
+    And The notification should have metadata
 
   @usingWebsocket @unsubscribe
   Scenario: Delete a document with a query
@@ -123,11 +130,12 @@ Feature: Test websocket API
     Then I remove documents with field "hobby" equals to value "computer"
     Then I should receive a "delete" notification
     And The notification should not have a "_source" member
+    And The notification should have metadata
 
   @usingWebsocket @unsubscribe
   Scenario: Count how many subscription on a room
-    Given A room subscription listening to "lastName" having value "Hopper"
-    Given A room subscription listening to "lastName" having value "Hopper"
+    Given A room subscription listening to "lastName" having value "Hopper" with socket "client1"
+    Given A room subscription listening to "lastName" having value "Hopper" with socket "client2"
     Then I can count "2" subscription
 
   @usingWebsocket @unsubscribe

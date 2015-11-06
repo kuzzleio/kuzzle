@@ -176,12 +176,12 @@ module.exports = {
       msg = {
         action: 'off',
         collection: this.world.fakeCollection,
-        requestId: room
+        body: { roomId: room }
       };
 
     socketName = initSocket.call(this, socketName);
 
-    this.listSockets[socketName].removeListener(this.subscribedRooms[socketName][room], this.subscribedRooms[socketName][room].listener);
+    this.listSockets[socketName].removeListener(room, this.subscribedRooms[socketName][room]);
     delete this.subscribedRooms[socketName][room];
     return emit.call(this, 'subscribe', msg, false, socketName);
   },
@@ -194,7 +194,7 @@ module.exports = {
       msg = {
         action: 'count',
         body: {
-          roomId: this.subscribedRooms[socketName][rooms[0]].roomId
+          roomId: rooms[0]
         }
       };
 
@@ -235,12 +235,14 @@ var emit = function (controller, msg, getAnswer, socketName) {
     msg.requestId = uuid.v1();
   }
 
+  msg.metadata = this.world.metadata;
+
   socketName = initSocket.call(this, socketName);
 
   if (listen) {
     this.listSockets[socketName].once(msg.requestId, function (result) {
       if (result.error) {
-        deferred.reject(result.error);
+        deferred.reject(result.error.message);
         return false;
       }
 
@@ -265,13 +267,13 @@ var emitAndListen = function (controller, msg, socketName) {
   }
 
   socketName = initSocket.call(this, socketName);
-  this.listSockets[socketName].once(msg.requestId, function (response) {
+  this.listSockets[socketName].once(msg.requestId, response => {
     var listener = function (document) {
       this.responses = document;
     };
 
     if (response.error) {
-      deferred.reject(response.error);
+      deferred.reject(response.error.message);
       return false;
     }
 
@@ -279,10 +281,10 @@ var emitAndListen = function (controller, msg, socketName) {
       this.subscribedRooms[socketName] = {};
     }
 
-    this.subscribedRooms[socketName][response.result.roomName] = { roomId: response.result.roomId, listener: listener };
+    this.subscribedRooms[socketName][response.result.roomId] = listener ;
     this.listSockets[socketName].on(response.result.roomId, listener.bind(this));
     deferred.resolve(response);
-  }.bind(this));
+  });
 
   this.listSockets[socketName].emit(controller, msg);
 

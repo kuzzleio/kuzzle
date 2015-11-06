@@ -48,6 +48,7 @@ describe('Test: hotelClerk.removeSubscription', function () {
       collection: collection,
       body: filter2
     }),
+    unsubscribeRequest,
     notified,
     mockupNotifier = function (roomId, notification) {
       notified = { roomId: roomId, notification: notification };
@@ -73,31 +74,35 @@ describe('Test: hotelClerk.removeSubscription', function () {
       })
       .then(function (user) {
         anonymousUser = user;
-
         kuzzle.notifier.notify = mockupNotifier;
         return kuzzle.hotelClerk.addSubscription(requestObject1, context);
       })
       .then(function (realTimeResponseObject) {
         roomId = realTimeResponseObject.roomId;
+        unsubscribeRequest = new RequestObject({
+          controller: 'subscribe',
+          action: 'off',
+          collection: collection,
+          body: { roomId: roomId }
+        });
         done();
       });
   });
 
   it('should do nothing when a bad connectionId is given', function () {
     var
-      context = {
+      badContext = {
         connection: badConnection,
         user: anonymousUser
       };
 
-    return should(kuzzle.hotelClerk.removeSubscription(requestObject1, context)).be.rejected();
+    return should(kuzzle.hotelClerk.removeSubscription(requestObject1, badContext)).be.rejected();
   });
 
-  it('should do nothing when a bad room is given', function () {
+  it('should do nothing when a badly formed unsubscribe request is provided', function () {
     var badRequestObject = new RequestObject({
       controller: 'subscribe',
       action: 'on',
-      requestId: 'badroomname',
       collection: collection,
       body: filter1
     });
@@ -105,8 +110,19 @@ describe('Test: hotelClerk.removeSubscription', function () {
     return should(kuzzle.hotelClerk.removeSubscription(badRequestObject, context)).be.rejected();
   });
 
+  it('should do nothing if a bad room name is given', function () {
+    var badRequestObject = new RequestObject({
+      controller: 'subscribe',
+      action: 'on',
+      collection: collection,
+      body: { roomId: 'this is not a room ID' }
+    });
+
+    return should(kuzzle.hotelClerk.removeSubscription(badRequestObject, context)).be.rejected();
+  });
+
   it('should clean up customers, rooms and filtersTree object', function () {
-    return kuzzle.hotelClerk.removeSubscription(requestObject1, context)
+    return kuzzle.hotelClerk.removeSubscription(unsubscribeRequest, context)
       .then(function () {
         should(kuzzle.dsl.filtersTree).be.an.Object();
         should(kuzzle.dsl.filtersTree).be.empty();
@@ -122,7 +138,7 @@ describe('Test: hotelClerk.removeSubscription', function () {
   it('should not delete all subscriptions when we want to just remove one', function () {
     return kuzzle.hotelClerk.addSubscription(requestObject2, context)
       .then(function () {
-        return kuzzle.hotelClerk.removeSubscription(requestObject1, context)
+        return kuzzle.hotelClerk.removeSubscription(unsubscribeRequest, context)
           .then(function () {
             should(kuzzle.dsl.filtersTree).be.an.Object();
             should(kuzzle.dsl.filtersTree).not.be.empty();
@@ -138,15 +154,15 @@ describe('Test: hotelClerk.removeSubscription', function () {
 
   it('should send a notification to other users connected on that room', function () {
     var
-      context = {
+      localContext = {
         connection: {id: 'anotherconnection'},
         user: anonymousUser
       },
       roomId;
-    return kuzzle.hotelClerk.addSubscription(requestObject1, context)
+    return kuzzle.hotelClerk.addSubscription(requestObject1, localContext)
       .then(function (createdRoom) {
         roomId = createdRoom.roomId;
-        return kuzzle.hotelClerk.removeSubscription(requestObject1, context);
+        return kuzzle.hotelClerk.removeSubscription(unsubscribeRequest, context);
       })
       .then(function () {
         should(notified.roomId).be.exactly(roomId);
@@ -172,9 +188,9 @@ describe('Test: hotelClerk.removeSubscription', function () {
     };
     kuzzle.notifier = {notify: function () {}};
 
-    return kuzzle.hotelClerk.removeSubscription(requestObject1, context)
+    return kuzzle.hotelClerk.removeSubscription(unsubscribeRequest, context)
       .then(function () {
-        should(leavedRooms).containEql('b6fba02d3a45c4d6a9bb224532e12eb1');
+        should(leavedRooms).containEql(roomId);
         delete connection.type;
       });
   });

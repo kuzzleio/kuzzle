@@ -1,5 +1,6 @@
 var
   should = require('should'),
+  q = require('q'),
   winston = require('winston'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
   params = require('rc')('kuzzle'),
@@ -120,5 +121,26 @@ describe('Test: hotelClerk.removeCustomerFromAllRooms', function () {
         should(notified.notification.error).be.null();
         should(notified.notification.result.count).be.exactly(1);
       });
+  });
+
+
+  it('should log an error if a problem occurs while unsubscribing', function (done) {
+    var
+      finished = false,
+      removeRoom = kuzzle.dsl.removeRoom;
+
+    kuzzle.dsl.removeRoom = function () { return Promise.reject(new Error('rejected')); };
+
+    this.timeout(500);
+
+    kuzzle.on('log:error', () => {
+      if (!finished) {
+        finished = true;
+        kuzzle.dsl.removeRoom = removeRoom;
+        done();
+      }
+    });
+
+    should(kuzzle.hotelClerk.removeCustomerFromAllRooms(connection)).be.rejected();
   });
 });
