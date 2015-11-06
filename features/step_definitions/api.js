@@ -630,6 +630,15 @@ var apiSteps = function () {
     callback(new Error('No id information in returned object'));
   });
 
+  this.Then(/^I should receive a request id$/, function (callback) {
+    if (this.result && this.result.requestId) {
+      callback();
+      return false;
+    }
+
+    callback(new Error('No request id returned'));
+  });
+
   this.Then(/^I should have updated the document$/, function (callback) {
     if (this.updatedResult._id === this.result._id && this.updatedResult._version === (this.result._version+1)) {
       this.result = this.updatedResult;
