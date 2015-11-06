@@ -25,6 +25,7 @@ describe('Test: routerController.executeFromRest', function () {
       header: {},
       response: {},
       init: function () { this.ended = false; this.statusCode = 0; this.response = {}; this.header = ''; },
+      setHeader: function (name, value) { this.header[name] = value; },
       writeHead: function (status, header) { this.statusCode = status; this.header = header; },
       end: function (message) { this.ended = true; this.response = JSON.parse(message); }
     },
@@ -105,13 +106,19 @@ describe('Test: routerController.executeFromRest', function () {
 
   it('should respond with a HTTP 200 message in case of success', function (done) {
     var
+      timer,
+      timeout = 500,
       params = { action: 'create', controller: 'write' },
       data = {headers: {'content-type': 'application/json'}, body: {resolve: true}, params: {collection: 'foobar'}};
 
     mockupResponse.init();
     executeFromRest.call(kuzzle, params, data, mockupResponse);
 
-    setTimeout(function () {
+    timer = setInterval(function () {
+      if (mockupResponse.ended === false) {
+        return;
+      }
+
       try {
         should(mockupResponse.statusCode).be.exactly(200);
         should(mockupResponse.header['Content-Type']).not.be.undefined();
@@ -122,12 +129,23 @@ describe('Test: routerController.executeFromRest', function () {
         should(mockupResponse.response.result._source).match(data.body);
         should(mockupResponse.response.result.action).be.exactly('create');
         should(mockupResponse.response.result.controller).be.exactly('write');
+
+        clearInterval(timer);
+        timer = false;
         done();
       }
       catch (e) {
         done(e);
       }
-    }, 20);
+    }, 10);
+
+    setTimeout(function () {
+      if (timer === false) {
+        return;
+      }
+      clearInterval(timer);
+      done(new Error('Timed out without having gotten a valid objectResonse object'));
+    }, timeout);
   });
 
   it('should not respond if the response is empty', function (done) {

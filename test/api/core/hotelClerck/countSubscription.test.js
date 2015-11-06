@@ -4,6 +4,8 @@ var
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
+  Profile = require.main.require('lib/api/core/models/security/profile'),
+  Role = require.main.require('lib/api/core/models/security/role'),
   BadRequestError = require.main.require('lib/api/core/errors/badRequestError'),
   NotFoundError = require.main.require('lib/api/core/errors/notFoundError');
 
@@ -11,12 +13,28 @@ require('should-promised');
 
 describe('Test: hotelClerk.countSubscription', function () {
   var
+    anonymousUser,
     kuzzle;
 
-  before(function () {
+  before(function (done) {
     kuzzle = new Kuzzle();
     kuzzle.log = new (winston.Logger)({transports: [new (winston.transports.Console)({level: 'silent'})]});
-    return kuzzle.start(params, {dummy: true});
+    return kuzzle.start(params, {dummy: true})
+      .then(function () {
+        kuzzle.repositories.role.roles.guest = new Role();
+        return kuzzle.repositories.role.hydrate(kuzzle.repositories.role.roles.guest, params.userRoles.guest);
+      })
+      .then(function () {
+        kuzzle.repositories.profile.profiles.anonymous = new Profile();
+        return kuzzle.repositories.profile.hydrate(kuzzle.repositories.profile.profiles.anonymous, params.userProfiles.anonymous);
+      })
+      .then(function () {
+        return kuzzle.repositories.user.anonymous();
+      })
+      .then(function (user) {
+        anonymousUser = user;
+        done();
+      });
   });
 
   it('should reject the request if no room ID has been provided', function () {
@@ -37,6 +55,8 @@ describe('Test: hotelClerk.countSubscription', function () {
 
   it('should return the right subscriptions count when handling a correct request', function () {
     var
+      aContext,
+      anotherContext,
       subscribeRequest = new RequestObject({
           controller: 'subscribe',
           action: 'on',
@@ -46,10 +66,19 @@ describe('Test: hotelClerk.countSubscription', function () {
         }),
       countRequest = new RequestObject({ body: {}});
 
-    return kuzzle.hotelClerk.addSubscription(subscribeRequest, { id: 'a connection'})
+    aContext = {
+      connection: {id: 'a connection'},
+      user: anonymousUser
+    };
+    anotherContext = {
+      connection: {id: 'another connection'},
+      user: anonymousUser
+    };
+
+    return kuzzle.hotelClerk.addSubscription(subscribeRequest, aContext)
       .then(function (createdRoom) {
         countRequest.data.body.roomId = createdRoom.roomId;
-        return kuzzle.hotelClerk.addSubscription(subscribeRequest, { id: 'another connection'});
+        return kuzzle.hotelClerk.addSubscription(subscribeRequest, anotherContext);
       })
       .then(function () {
         return kuzzle.hotelClerk.countSubscription(countRequest);
@@ -57,7 +86,7 @@ describe('Test: hotelClerk.countSubscription', function () {
       .then(function (response) {
         should(response.roomId).be.exactly(countRequest.data.body.roomId);
         should(response.count).be.exactly(2);
-        return kuzzle.hotelClerk.removeSubscription(countRequest, { id: 'a connection'});
+        return kuzzle.hotelClerk.removeSubscription(countRequest, aContext);
       })
       .then(function () {
         return kuzzle.hotelClerk.countSubscription(countRequest);

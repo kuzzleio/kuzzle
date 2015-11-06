@@ -11,7 +11,6 @@ var
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   rewire = require('rewire'),
   RouterController = rewire('../../../../lib/api/controllers/routerController'),
-  RequestObject = require.main.require('lib/api/core/models/requestObject'),
   ResponseObject = require.main.require('lib/api/core/models/responseObject');
 
 
@@ -35,56 +34,58 @@ describe('Test: routerController.routeMQListener', function () {
         replyTo: 'amq.gen-foobar'
       },
       content: null
-    };
+    },
+    timer,
+    timeout = 500;
 
-    before(function (done) {
-      var
-        mockupFunnel = function (requestObject) {
-          var deferred = q.defer();
+  before(function (done) {
+    var
+      mockupFunnel = function (requestObject) {
+        var deferred = q.defer();
 
-          forwardedObject = new ResponseObject(requestObject, {});
+        forwardedObject = new ResponseObject(requestObject, {});
 
-          if (requestObject.data.body.resolve) {
-            if (requestObject.data.body.empty) {
-              deferred.resolve({});
-            }
-            else {
-              deferred.resolve(forwardedObject);
-            }
+        if (requestObject.data.body.resolve) {
+          if (requestObject.data.body.empty) {
+            deferred.resolve({});
           }
           else {
-            deferred.reject(new Error('rejected'));
+            deferred.resolve(forwardedObject);
           }
+        }
+        else {
+          deferred.reject(new Error('rejected'));
+        }
 
-          return deferred.promise;
-        },
-        mockupNotifier = function (requestId, responseObject, connection) {
-            forwardedConnection = connection;
+        return deferred.promise;
+      },
+      mockupNotifier = function (requestId, responseObject, connection) {
+        forwardedConnection = connection;
 
-            if (responseObject.error) {
-              notifyStatus = 'error';
-            }
-            else if (responseObject.result) {
-              notifyStatus = 'success';
-            }
-            else {
-              notifyStatus = '';
-            }
-        };
+        if (responseObject.error) {
+          notifyStatus = 'error';
+        }
+        else if (responseObject.result) {
+          notifyStatus = 'success';
+        }
+        else {
+          notifyStatus = '';
+        }
+      };
 
-      kuzzle = new Kuzzle();
-      kuzzle.log = new (winston.Logger)({transports: [new (winston.transports.Console)({level: 'silent'})]});
+    kuzzle = new Kuzzle();
+    kuzzle.log = new (winston.Logger)({transports: [new (winston.transports.Console)({level: 'silent'})]});
 
-      kuzzle.start(params, {dummy: true})
-        .then(function () {
-          kuzzle.funnel.execute = mockupFunnel;
-          kuzzle.notifier.notify = mockupNotifier;
+    kuzzle.start(params, {dummy: true})
+      .then(function () {
+        kuzzle.funnel.execute = mockupFunnel;
+        kuzzle.notifier.notify = mockupNotifier;
 
-          router = new RouterController(kuzzle);
-          router.routeMQListener();
-          done();
-        });
-    });
+        router = new RouterController(kuzzle);
+        router.routeMQListener();
+        done();
+      });
+  });
 
   it('should register a listener for each known controller', function () {
     router.controllers.forEach(function (controller) {
@@ -103,9 +104,14 @@ describe('Test: routerController.routeMQListener', function () {
     mqMessage.content = JSON.stringify(body);
     notifyStatus = '';
 
+    forwardedObject = false;
     listener(mqMessage);
 
-    setTimeout(function () {
+    timer = setInterval(function () {
+      if (forwardedObject === false) {
+        return;
+      }
+
       try {
         should(forwardedObject.data.body).not.be.null();
         should(forwardedObject.protocol).be.exactly('mq');
@@ -118,7 +124,17 @@ describe('Test: routerController.routeMQListener', function () {
       catch (e) {
         done(e);
       }
-    }, 20);
+
+      clearInterval(timer);
+      timer = false;
+    }, 5);
+
+    setTimeout(function () {
+      if (timer !== false) {
+        clearInterval(timer);
+        done(new Error('Timeout'));
+      }
+    }, timeout);
   });
 
   it('should be able to manage Buffer-based messages content', function (done) {
@@ -127,11 +143,15 @@ describe('Test: routerController.routeMQListener', function () {
       body = { body: { resolve: true }};
 
     mqMessage.content = new Buffer(JSON.stringify(body));
-    notifyStatus = '';
+    notifyStatus = 'pending';
 
     listener(mqMessage);
 
-    setTimeout(function () {
+    timer = setInterval(function () {
+      if (notifyStatus === 'pending') {
+        return;
+      }
+
       try {
         should(forwardedObject.data.body).not.be.null();
         should(forwardedObject.protocol).be.exactly('mq');
@@ -144,7 +164,17 @@ describe('Test: routerController.routeMQListener', function () {
       catch (e) {
         done(e);
       }
-    }, 20);
+
+      clearInterval(timer);
+      timer = false;
+    }, 5);
+
+    setTimeout(function () {
+      if (timer !== false) {
+        clearInterval(timer);
+        done(new Error('Timeout'));
+      }
+    }, timeout);
   });
 
   it('should fail cleanly with incorrect messages', function (done) {
@@ -170,7 +200,8 @@ describe('Test: routerController.routeMQListener', function () {
       body = { body: { resolve: false }, clientId: 'foobar'};
 
     mqMessage.content = JSON.stringify(body);
-    notifyStatus = '';
+    notifyStatus = 'pending';
+    eventReceived = false;
 
     kuzzle.once('write:mq:funnel:reject', function () {
       eventReceived = true;
@@ -178,7 +209,11 @@ describe('Test: routerController.routeMQListener', function () {
 
     listener(mqMessage);
 
-    setTimeout(function () {
+    timer = setInterval(function () {
+      if (notifyStatus === 'pending') {
+        return;
+      }
+
       try {
         should(notifyStatus).be.exactly('error');
         should(eventReceived).be.true();
@@ -187,7 +222,17 @@ describe('Test: routerController.routeMQListener', function () {
       catch (e) {
         done(e);
       }
-    }, 20);
+
+      clearInterval(timer);
+      timer = false;
+    }, 5);
+
+    setTimeout(function () {
+      if (timer !== false) {
+        clearInterval(timer);
+        done(new Error('Timeout'));
+      }
+    }, timeout);
   });
 
   it('should not notify if the response is empty', function (done) {
@@ -196,19 +241,19 @@ describe('Test: routerController.routeMQListener', function () {
       body = { body: { resolve: true, empty: true }, clientId: 'foobar'};
 
     mqMessage.content = JSON.stringify(body);
-    notifyStatus = '';
+    notifyStatus = 'expected';
 
     listener(mqMessage);
 
     setTimeout(function () {
       try {
-        should(notifyStatus).be.exactly('');
+        should(notifyStatus).be.exactly('expected');
         done();
       }
       catch (e) {
         done(e);
       }
-    }, 20);
+    }, timeout);
   });
 
   it('should initialize an AMQ connection type for AMQP/STOMP messages', function (done) {
@@ -218,10 +263,15 @@ describe('Test: routerController.routeMQListener', function () {
 
     mqMessage.content = JSON.stringify(body);
     notifyStatus = '';
+    forwardedObject = false;
 
     listener(mqMessage);
 
-    setTimeout(function () {
+    timer = setInterval(function () {
+      if (forwardedObject === false) {
+        return;
+      }
+
       try {
         should(forwardedConnection.type).be.exactly('amq');
         should(forwardedConnection.id).be.exactly('foobar');
@@ -231,7 +281,17 @@ describe('Test: routerController.routeMQListener', function () {
       catch (e) {
         done(e);
       }
-    }, 20);
+
+      clearInterval(timer);
+      timer = false;
+    }, 5);
+
+    setTimeout(function () {
+      if (timer !== false) {
+        clearInterval(timer);
+        done(new Error('Timeout'));
+      }
+    }, timeout);
   });
 
   it('should initialize an MQTT connection type for MQTT messages', function (done) {
@@ -245,7 +305,11 @@ describe('Test: routerController.routeMQListener', function () {
 
     listener(mqMessage);
 
-    setTimeout(function () {
+    timer = setInterval(function () {
+      if (forwardedObject === false) {
+        return;
+      }
+
       try {
         should(forwardedConnection.type).be.exactly('mqtt');
         should(forwardedConnection.id).be.exactly('foobar');
@@ -255,6 +319,16 @@ describe('Test: routerController.routeMQListener', function () {
       catch (e) {
         done(e);
       }
-    }, 20);
+
+      clearInterval(timer);
+      timer = false;
+    }, 5);
+
+    setTimeout(function () {
+      if (timer !== false) {
+        clearInterval(timer);
+        done(new Error('Timeout'));
+      }
+    }, timeout);
   });
 });

@@ -26,7 +26,9 @@ describe('Test: routerController.routeWebsocket', function () {
     router,
     emitter = new EventEmitter(),
     forwardedObject = {},
-    notifyStatus;
+    notifyStatus,
+    timer,
+    timeout = 500;
 
     before(function (done) {
       var
@@ -80,9 +82,14 @@ describe('Test: routerController.routeWebsocket', function () {
     it('should embed incoming requests into a well-formed request object', function (done) {
       var emittedObject = {body: {resolve: true}, action: 'get'};
 
+      forwardedObject = false;
       emitter.emit('read', emittedObject);
 
-      setTimeout(function () {
+      timer = setInterval(function () {
+        if (forwardedObject === false) {
+          return;
+        }
+
         try {
           should(forwardedObject.data.body).not.be.null();
           should(forwardedObject.data.body).be.exactly(emittedObject.body);
@@ -94,16 +101,30 @@ describe('Test: routerController.routeWebsocket', function () {
         catch (e) {
           done(e);
         }
-      }, 20);
+
+        clearInterval(timer);
+        timer = false;
+      }, 5);
+
+      setTimeout(function () {
+        if (timer !== false) {
+          clearInterval(timer);
+          done(new Error('Timeout'));
+        }
+      }, timeout);
     });
 
     it('should notify with the returned document in case of success', function (done) {
       var emittedObject = {body: {resolve: true}, action: 'get'};
 
-      notifyStatus = '';
+      notifyStatus = 'pending';
       emitter.emit('read', emittedObject);
 
-      setTimeout(function () {
+      timer = setInterval(function () {
+        if (notifyStatus === 'pending') {
+          return;
+        }
+
         try {
           should(notifyStatus).be.exactly('success');
           done();
@@ -111,7 +132,17 @@ describe('Test: routerController.routeWebsocket', function () {
         catch (e) {
           done(e);
         }
-      }, 20);
+
+        clearInterval(timer);
+        timer = false;
+      }, 5);
+
+      setTimeout(function () {
+        if (timer !== false) {
+          clearInterval(timer);
+          done(new Error('Timeout'));
+        }
+      }, timeout);
     });
 
 
@@ -120,7 +151,7 @@ describe('Test: routerController.routeWebsocket', function () {
         emittedObject = {body: {resolve: false}, action: 'get'},
         eventReceived = false;
 
-      notifyStatus = '';
+      notifyStatus = 'pending';
 
       kuzzle.once('read:websocket:funnel:reject', function () {
         eventReceived = true;
@@ -128,7 +159,11 @@ describe('Test: routerController.routeWebsocket', function () {
 
       emitter.emit('read', emittedObject);
 
-      setTimeout(function () {
+      timer = setInterval(function () {
+        if (notifyStatus === 'pending') {
+          return;
+        }
+
         try {
           should(notifyStatus).be.exactly('error');
           should(eventReceived).be.true();
@@ -137,25 +172,50 @@ describe('Test: routerController.routeWebsocket', function () {
         catch (e) {
           done(e);
         }
-      }, 20);
+
+        clearInterval(timer);
+        timer = false;
+      }, 5);
+
+      setTimeout(function () {
+        if (timer !== false) {
+          clearInterval(timer);
+          done(new Error('Timeout'));
+        }
+      }, timeout);
     });
 
     it('should not notify if the response is empty', function (done) {
       var
         emittedObject = {body: {resolve: true, empty: true}, action: 'get'};
 
-      notifyStatus = '';
+      notifyStatus = 'pending';
+      forwardedObject = false;
       emitter.emit('read', emittedObject);
 
-      setTimeout(function () {
+      timer = setInterval(function () {
+        if (forwardedObject === false) {
+          return;
+        }
+
         try {
-          should(notifyStatus).be.exactly('');
+          should(notifyStatus).be.exactly('pending');
           done();
         }
         catch (e) {
           done(e);
         }
-      }, 20);
+
+        clearInterval(timer);
+        timer = false;
+      }, 5);
+
+      setTimeout(function () {
+        if (timer !== false) {
+          clearInterval(timer);
+          done(new Error('Timeout'));
+        }
+      }, timeout);
     });
 
 

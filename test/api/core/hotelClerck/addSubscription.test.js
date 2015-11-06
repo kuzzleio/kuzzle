@@ -3,8 +3,11 @@ var
   winston = require('winston'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
   params = require('rc')('kuzzle'),
-  Kuzzle = require('../../../../lib/api/Kuzzle'),
-  ForbiddenError = require.main.require('lib/api/core/errors/forbiddenError');
+  Kuzzle = require.main.require('lib/api/Kuzzle'),
+  ForbiddenError = require.main.require('lib/api/core/errors/forbiddenError'),
+  Profile = require.main.require('lib/api/core/models/security/profile'),
+  Role = require.main.require('lib/api/core/models/security/role');
+
 
 require('should-promised');
 
@@ -13,6 +16,11 @@ describe('Test: hotelClerk.addSubscription', function () {
     kuzzle,
     roomId,
     connection = {id: 'connectionid'},
+    context = {
+      connection: connection,
+      user: null
+    },
+    roomName = 'roomName',
     collection = 'user',
     filter = {
       term: {
@@ -20,13 +28,28 @@ describe('Test: hotelClerk.addSubscription', function () {
       }
     };
 
-  beforeEach(function () {
+  beforeEach(function (done) {
     require.cache = {};
     kuzzle = new Kuzzle();
     kuzzle.log = new (winston.Logger)({transports: [new (winston.transports.Console)({level: 'silent'})]});
     kuzzle.removeAllListeners();
 
-    return kuzzle.start(params, {dummy: true});
+    return kuzzle.start(params, {dummy: true})
+      .then(function () {
+        kuzzle.repositories.role.roles.guest = new Role();
+        return kuzzle.repositories.role.hydrate(kuzzle.repositories.role.roles.guest, params.userRoles.guest);
+      })
+      .then(function () {
+        kuzzle.repositories.profile.profiles.anonymous = new Profile();
+        return kuzzle.repositories.profile.hydrate(kuzzle.repositories.profile.profiles.anonymous, params.userProfiles.anonymous);
+      })
+      .then(function () {
+        return kuzzle.repositories.user.anonymous();
+      })
+      .then(function (user) {
+        context.user = user;
+        done();
+      });
   });
 
   it('should have object filtersTree, customers and rooms empty', function () {
@@ -44,11 +67,12 @@ describe('Test: hotelClerk.addSubscription', function () {
     var requestObject = new RequestObject({
       controller: 'subscribe',
       action: 'on',
+      requestId: roomName,
       collection: collection,
       body: filter
     });
 
-    return kuzzle.hotelClerk.addSubscription(requestObject, connection)
+    return kuzzle.hotelClerk.addSubscription(requestObject, context)
       .then(function (realTimeResponseObject) {
         should(kuzzle.dsl.filtersTree).be.an.Object();
         should(kuzzle.dsl.filtersTree).not.be.empty();
@@ -96,7 +120,7 @@ describe('Test: hotelClerk.addSubscription', function () {
     };
     kuzzle.notifier = {notify: function () {}};
 
-    return kuzzle.hotelClerk.addSubscription(requestObject, connection)
+    return kuzzle.hotelClerk.addSubscription(requestObject, context)
       .then(function () {
         should(joinedRooms).containEql(roomId);
         delete connection.type;
@@ -110,9 +134,9 @@ describe('Test: hotelClerk.addSubscription', function () {
       body: filter
     });
 
-    return kuzzle.hotelClerk.addSubscription(requestObject, connection)
+    return kuzzle.hotelClerk.addSubscription(requestObject, context)
       .then(function () {
-        return should(kuzzle.hotelClerk.addSubscription(requestObject, connection)).be.rejected();
+        return should(kuzzle.hotelClerk.addSubscription(requestObject, context)).be.rejected();
       });
   });
 
@@ -126,7 +150,7 @@ describe('Test: hotelClerk.addSubscription', function () {
         body: {badterm : {firstName: 'Ada'}}
       });
 
-    pAddSubscription = kuzzle.hotelClerk.addSubscription(requestObject, connection);
+    pAddSubscription = kuzzle.hotelClerk.addSubscription(requestObject, context);
     return should(pAddSubscription).be.rejected();
   });
 
@@ -134,7 +158,7 @@ describe('Test: hotelClerk.addSubscription', function () {
     var
       requestObject1 = new RequestObject({
         controller: 'subscribe',
-        collection: collection,
+      collection: collection,
         body: {
           term: {
             firstName: 'Ada'
@@ -155,11 +179,11 @@ describe('Test: hotelClerk.addSubscription', function () {
             firstName: 'Ada'
           }
         }
-      });
+    });
 
-    return kuzzle.hotelClerk.addSubscription(requestObject1, connection)
+    return kuzzle.hotelClerk.addSubscription(requestObject1, context)
       .then(() => {
-        return should(kuzzle.hotelClerk.addSubscription(requestObject2, connection)).be.rejectedWith(ForbiddenError);
+        return should(kuzzle.hotelClerk.addSubscription(requestObject2, context)).be.rejectedWith(ForbiddenError);
       });
   });
 
@@ -172,6 +196,6 @@ describe('Test: hotelClerk.addSubscription', function () {
       });
 
     delete requestObject.data.body;
-    return should(kuzzle.hotelClerk.addSubscription(requestObject, connection)).be.fulfilled();
+    return should(kuzzle.hotelClerk.addSubscription(requestObject, context)).be.fulfilled();
   });
 });
