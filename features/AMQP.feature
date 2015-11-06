@@ -16,6 +16,7 @@ Feature: Test AMQP API
     And I createOrUpdate it
     Then I should have updated the document
     And I should receive a "update" notification
+    And The notification should have metadata
 
   @usingAMQP
   Scenario: Update a document
@@ -75,7 +76,7 @@ Feature: Test AMQP API
     When I write the document "documentGrace"
     Then I should receive a "create" notification
     And The notification should have a "_source" member
-
+    And The notification should have metadata
 
   @usingAMQP @unsubscribe
   Scenario: Document delete notifications
@@ -84,6 +85,7 @@ Feature: Test AMQP API
     Then I remove the document
     Then I should receive a "delete" notification
     And The notification should not have a "_source" member
+    And The notification should have metadata
 
   @usingAMQP @unsubscribe
   Scenario: Document update: new document notification
@@ -92,6 +94,7 @@ Feature: Test AMQP API
     Then I update the document with value "Hopper" in field "lastName"
     Then I should receive a "update" notification
     And The notification should have a "_source" member
+    And The notification should have metadata
 
   @usingAMQP @unsubscribe
   Scenario: Document update: removed document notification
@@ -100,6 +103,7 @@ Feature: Test AMQP API
     Then I update the document with value "Foo" in field "lastName"
     Then I should receive a "update" notification
     And The notification should not have a "_source" member
+    And The notification should have metadata
 
   @usingAMQP @unsubscribe
   Scenario: Document creation notifications with not exists
@@ -107,6 +111,7 @@ Feature: Test AMQP API
     When I write the document "documentGrace"
     Then I should receive a "create" notification
     And The notification should have a "_source" member
+    And The notification should have metadata
 
   @usingAMQP @unsubscribe
   Scenario: Subscribe to a collection
@@ -114,6 +119,7 @@ Feature: Test AMQP API
     When I write the document "documentGrace"
     Then I should receive a "create" notification
     And The notification should have a "_source" member
+    And The notification should have metadata
 
   @usingAMQP @unsubscribe
   Scenario: Delete a document with a query
@@ -124,6 +130,7 @@ Feature: Test AMQP API
     Then I remove documents with field "hobby" equals to value "computer"
     Then I should receive a "delete" notification
     And The notification should not have a "_source" member
+    And The notification should have metadata
 
   @usingAMQP @unsubscribe
   Scenario: Count how many subscription on a room

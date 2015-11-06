@@ -261,7 +261,9 @@ describe('Test: ElasticSearch service', function () {
 
   // deleteByQuery
   it('should return an empty result array when no document has been deleted using a filter', function (done) {
-    requestObject.data.body = {};
+    delete requestObject.data.body;
+    requestObject.data.query = { match: {firstName: 'foobar'}};
+
     elasticsearch.deleteByQuery(requestObject)
       .then(function (result) {
         should(result.ids).not.be.undefined().and.be.an.Array();

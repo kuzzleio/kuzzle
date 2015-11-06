@@ -16,16 +16,15 @@ require('should-promised');
 describe('Test: subscribe controller', function () {
   var
     kuzzle,
-    requestObject = new RequestObject({}, {}, 'unit-test');
+    requestObject;
 
-  before(function (done) {
+  before(function () {
     kuzzle = new Kuzzle();
     kuzzle.log = new (winston.Logger)({transports: [new (winston.transports.Console)({level: 'silent'})]});
-    kuzzle.start(params, {dummy: true})
-      .then(function () {
-        done();
-      });
+    return kuzzle.start(params, {dummy: true});
   });
+
+  beforeEach(() =>  requestObject = new RequestObject({controller: 'subscribe'}, {}, 'unit-test'));
 
   it('should forward new subscriptions to the hotelClerk core component', function () {
     var foo = kuzzle.funnel.subscribe.on(requestObject, { id: 'foobar' });
@@ -36,14 +35,17 @@ describe('Test: subscribe controller', function () {
   it('should forward unsubscribes queries to the hotelClerk core component', function () {
     var
       newUser = 'Carmen Sandiego',
-      foo = kuzzle.funnel.subscribe.off(requestObject, { id: newUser });
+      result;
 
-    return should(foo).be.rejectedWith(NotFoundError, { message: 'The user with connection ' + newUser + ' doesn\'t exist' });
+    requestObject.data.body = { roomId: 'foobar' };
+    result = kuzzle.funnel.subscribe.off(requestObject, { id: newUser });
+
+    return should(result).be.rejectedWith(NotFoundError, { message: 'The user with connection ' + newUser + ' doesn\'t exist' });
   });
 
   it('should forward subscription counts queries to the hotelClerk core component', function () {
     var foo = kuzzle.funnel.subscribe.count(requestObject, { id: 'foobar' });
 
-    return should(foo).be.rejectedWith(BadRequestError, { message: 'The room Id is mandatory for count subscription' });
+    return should(foo).be.rejectedWith(BadRequestError, { message: 'The room Id is mandatory to count subscriptions' });
   });
 });

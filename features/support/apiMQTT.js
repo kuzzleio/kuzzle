@@ -7,12 +7,13 @@ var
 module.exports = {
   world: null,
   mqttClient: null,
-  subscribedRooms: {client1: {}},
+  subscribedRooms: null,
   responses: null,
 
   init: function (world) {
     this.world = world;
     this.responses = null;
+    this.subscribedRooms = {};
 
     if (this.mqttClient) {
       return false;
@@ -163,26 +164,27 @@ module.exports = {
     return publishAndListen.call(this, topic, msg);
   },
 
-  unsubscribe: function (room) {
+  unsubscribe: function (room, clientId) {
     var
       topic = ['subscribe', this.world.fakeCollection, 'off'].join('.'),
       msg = {
-        clientId: this.subscribedRooms.client1[room].listener.options.clientId,
-        requestId: room
+        clientId: clientId,
+        body: { roomId: room }
       };
 
-    this.subscribedRooms.client1[room].listener.end(true);
-    delete this.subscribedRooms.client1[room];
+    this.subscribedRooms[clientId][room].end(true);
+    delete this.subscribedRooms[clientId];
     return publish.call(this, topic, msg, false);
   },
 
   countSubscription: function () {
     var
       topic = ['subscribe', this.world.fakeCollection, 'count'].join('.'),
-      rooms = Object.keys(this.subscribedRooms.client1),
+      clients = Object.keys(this.subscribedRooms),
+      rooms = Object.keys(this.subscribedRooms[clients[0]]),
       msg = {
         body: {
-          roomId: this.subscribedRooms.client1[rooms[0]].roomId
+          roomId: rooms[0]
         }
       };
 
@@ -223,6 +225,8 @@ var publish = function (topic, message, waitForAnswer) {
     message.clientId = this.mqttClient.options.clientId;
   }
 
+  message.metadata = this.world.metadata;
+
   if (listen) {
     this.mqttClient.once('message', function (topic, message) {
       var unpacked = JSON.parse((new Buffer(message)).toString());
@@ -249,8 +253,8 @@ var publishAndListen = function (topic, message) {
     deferred = q.defer(),
     mqttListener = mqtt.connect(config.mqttUrl);
 
-  message.requestId = uuid.v1();
   message.clientId = mqttListener.options.clientId;
+  this.subscribedRooms[message.clientId] = {};
   mqttListener.subscribe('mqtt.' + mqttListener.options.clientId);
 
   mqttListener.once('message', function (topic, response) {
@@ -267,7 +271,7 @@ var publishAndListen = function (topic, message) {
     }.bind(this));
 
     mqttListener.subscribe(unpacked.result.roomId);
-    this.subscribedRooms.client1[message.requestId] = { roomId: unpacked.result.roomId, listener: mqttListener };
+    this.subscribedRooms[message.clientId][unpacked.result.roomId] = mqttListener;
     deferred.resolve(unpacked);
   }.bind(this));
 

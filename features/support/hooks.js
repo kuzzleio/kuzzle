@@ -66,27 +66,17 @@ var myHooks = function () {
   });
 
   this.After('@unsubscribe', function (scenario, callback) {
-    async.each(Object.keys(this.api.subscribedRooms), function (socketName, callbackSocketName) {
-      async.each(Object.keys(this.api.subscribedRooms[socketName]), function (room, callbackRoom) {
+    async.each(Object.keys(this.api.subscribedRooms), (socketName, callbackSocketName) => {
+      async.each(Object.keys(this.api.subscribedRooms[socketName]), (room, callbackRoom) => {
         this.api.unsubscribe(room, socketName)
-          .then(function () {
-            callbackRoom();
-          }.bind(this))
-          .catch(function (error) {
-            callbackRoom(error);
-          });
-      }.bind(this), function (error) {
+          .then(() => callbackRoom())
+          .catch(error => callbackRoom(error));
+      }, error => {
         this.api.subscribedRooms[socketName] = {};
 
         callbackSocketName(error);
-      }.bind(this));
-    }.bind(this), function (error) {
-      if (error) {
-        callback(error);
-      }
-
-      callback();
-    });
+      });
+    }, error => callback(error));
   });
 };
 
