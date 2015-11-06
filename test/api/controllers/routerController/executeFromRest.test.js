@@ -30,14 +30,16 @@ describe('Test: routerController.executeFromRest', function () {
       writeHead: function (status, header) { this.statusCode = status; this.header = header; },
       end: function (message) { this.ended = true; this.response = JSON.parse(message); }
     },
+    forwardedObject,
     executeFromRest;
 
   before(function (done) {
     var
       mockupFunnel = function (requestObject) {
         var
-          deferred = q.defer(),
-          forwardedObject = new ResponseObject(requestObject, {});
+          deferred = q.defer();
+
+        forwardedObject = new ResponseObject(requestObject, {});
 
         if (requestObject.data.body.resolve) {
           if (requestObject.data.body.empty) {
@@ -153,7 +155,8 @@ describe('Test: routerController.executeFromRest', function () {
         headers: {'content-type': 'application/json'},
         body: {
           persist: false,
-          resolve: true
+          resolve: true,
+          empty: true
         },
         params: {collection: 'foobar'}
     };
