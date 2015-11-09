@@ -10,11 +10,13 @@ var
     },
     config: require.main.require('lib/config')(params)
   },
+  InternalError = require.main.require('lib/api/core/errors/internalError'),
   NotFoundError = require.main.require('lib/api/core/errors/notFoundError'),
   UnauthorizedError = require.main.require('lib/api/core/errors/unauthorizedError'),
   ResponseObject = require.main.require('lib/api/core/models/responseObject'),
   Profile = require.main.require('lib/api/core/models/security/profile'),
   User = require.main.require('lib/api/core/models/security/user'),
+  Repository = require.main.require('lib/api/core/models/repositories/repository'),
   UserRepository = require.main.require('lib/api/core/models/repositories/userRepository')(kuzzle),
   userRepository;
 
@@ -22,6 +24,7 @@ before(function (done) {
   var
     mockCacheEngine,
     mockReadEngine,
+    mockWriteEngine,
     mockProfileRepository,
     userInCache,
     userInDB,
@@ -46,6 +49,9 @@ before(function (done) {
       return Promise.resolve(new NotFoundError('User not found in db'));
     }
   };
+  mockWriteEngine = {
+    createOrUpdate: requestObject => {  }
+  };
   mockProfileRepository = {
     loadProfile: function (profileKey) {
       var profile = new Profile();
@@ -67,6 +73,7 @@ before(function (done) {
   userRepository = new UserRepository();
   userRepository.cacheEngine = mockCacheEngine;
   userRepository.readEngine = mockReadEngine;
+  userRepository.writeEngine = mockWriteEngine;
 
   kuzzle.repositories = {};
   kuzzle.repositories.profile = mockProfileRepository;
@@ -75,6 +82,14 @@ before(function (done) {
 });
 
 describe('Test: repositories/userRepository', function () {
+  describe('#constructor', () => {
+    it('should take into account the options given', () => {
+      var repository = new UserRepository({ ttl: 1000 });
+
+      should(repository.ttl).be.exactly(1000);
+    });
+  });
+
   describe('#anonymous', function () {
     it('should return a valid anonymous user', function (done) {
       userRepository.anonymous()
@@ -88,7 +103,7 @@ describe('Test: repositories/userRepository', function () {
     });
   });
 
-  describe('#admin', function (done) {
+  describe('#admin', function () {
     it('should return the admin user', function (done) {
       userRepository.admin()
         .then(function (user) {
@@ -107,7 +122,7 @@ describe('Test: repositories/userRepository', function () {
   });
 
   describe('#hydrate', function () {
-    it('should return the anonymous user if the given data is not a valid object', function (done) {
+    it('should return the given user if the given data is not a valid object', function (done) {
       var
         u = new User();
 
@@ -118,10 +133,40 @@ describe('Test: repositories/userRepository', function () {
       ])
         .then(function (results) {
           results.forEach(function (user) {
-            assertIsAnonymous(user);
+            should(user).be.exactly(u);
           });
           done();
         });
+    });
+
+    it('should return the anonymous user if no _id is set', done => {
+      var user = new User();
+      user.profile = new Profile();
+      user.profile._id = 'a profile';
+
+      userRepository.hydrate(user, {})
+        .then(result => {
+          assertIsAnonymous(result);
+          done();
+        })
+        .catch(err => { done(err); });
+    });
+
+    it('should reject the promise if an error is thrown by the prototype hydrate call', () => {
+      var
+        protoHydrate = Repository.prototype.hydrate,
+        user = new User();
+
+      Repository.prototype.hydrate = () => {
+        return Promise.reject(new InternalError('Error'));
+      };
+
+      return should(userRepository.hydrate(user, {})
+        .catch(err => {
+          Repository.prototype.hydrate = protoHydrate;
+
+          return Promise.reject(err);
+        })).be.rejectedWith(InternalError);
     });
   });
 
@@ -153,6 +198,48 @@ describe('Test: repositories/userRepository', function () {
         should(userRepository.loadFromToken(token)).be.rejectedWith(UnauthorizedError, {details: {subCode: UnauthorizedError.prototype.subCodes.TokenExpired}});
         done();
       }, 1001);
+    });
+
+    it('should reject the promise if an error occurred while fetching the user from the cache', () => {
+      var token = jwt.sign({_id: 'auser'}, params.jsonWebToken.secret, {algorithm: params.jsonWebToken.algorithm});
+
+      userRepository.loadFromCache = () => {
+        return Promise.reject(new InternalError('Error'));
+      };
+      return should(userRepository.loadFromToken(token)
+        .catch(err => {
+          delete userRepository.loadFromCache;
+
+          return Promise.reject(err);
+        })).be.rejectedWith(InternalError);
+    });
+
+    it('should reject the promise if an error occurred while fetching the user from the database', () => {
+      var token = jwt.sign({_id: 'auser'}, params.jsonWebToken.secret, {algorithm: params.jsonWebToken.algorithm});
+
+      userRepository.loadOneFromDatabase = () => {
+        return Promise.reject(new InternalError('Error'));
+      };
+      return should(userRepository.loadFromToken(token)
+        .catch(err => {
+          delete userRepository.loadOneFromDatabase;
+
+          return Promise.reject(err);
+        })).be.rejectedWith(InternalError);
+    });
+
+    it('should reject the promise if an untrapped error is raised', () => {
+      var token = jwt.sign({_id: 'admin'}, params.jsonWebToken.secret, {algorithm: params.jsonWebToken.algorithm});
+
+      userRepository.admin = () => {
+        throw new InternalError('Uncaught error');
+      };
+      should(userRepository.loadFromToken(token)
+        .catch(err => {
+          delete userRepository.admin;
+
+          return Promise.reject(err);
+        })).be.rejectedWith(InternalError, {details: {message: 'Uncaught error'}});
     });
 
     it('should load the admin user if the user id is "admin"', function (done) {
@@ -225,6 +312,21 @@ describe('Test: repositories/userRepository', function () {
         .catch(function (error) {
           done(error);
         });
+    });
+  });
+
+  describe('#persist', () => {
+    it('should compute a user id if not set', () => {
+      var user = new User();
+      user.name = 'John Doe';
+      user.profile = new Profile();
+      user.profile._id = 'a profile';
+
+      userRepository.persist(user);
+
+      should(user._id).not.be.empty();
+      should(user._id).match(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
+
     });
   });
 

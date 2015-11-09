@@ -69,7 +69,11 @@ describe('Test: hotelClerk.addSubscription', function () {
       action: 'on',
       requestId: roomName,
       collection: collection,
-      body: filter
+      body: filter,
+      metadata: {
+        foo: 'bar',
+        bar: [ 'foo', 'bar', 'baz', 'qux']
+      }
     });
 
     return kuzzle.hotelClerk.addSubscription(requestObject, context)
@@ -92,7 +96,7 @@ describe('Test: hotelClerk.addSubscription', function () {
 
         should(kuzzle.hotelClerk.customers[connection.id]).be.an.Object();
         should(kuzzle.hotelClerk.customers[connection.id]).not.be.empty();
-        should(kuzzle.hotelClerk.customers[connection.id]).match([roomId]);
+        should(kuzzle.hotelClerk.customers[connection.id][roomId]).not.be.undefined().and.match(requestObject.metadata);
       });
   });
 

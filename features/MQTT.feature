@@ -143,8 +143,10 @@ Feature: Test MQTT API
     Given A room subscription listening to "lastName" having value "Hopper"
     Given A room subscription listening to "lastName" having value "Hopper"
     Then I should receive a "on" notification
+    And The notification should have metadata
     Then I unsubscribe
     And I should receive a "off" notification
+    And The notification should have metadata
 
   @usingMQTT
   Scenario: Getting the last statistics frame
