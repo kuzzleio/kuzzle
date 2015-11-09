@@ -87,6 +87,8 @@ To do that, simply add a unique ``requestId`` field to your queries. Kuzzle will
 
 In every request you send to Kuzzle, you can include a ``metadata`` object. This object content will be ignored by Kuzzle, but it will also be forwarded back in ``responses`` and in ``notifications`` (see below).
 
+You can also include metadata information to a subscription request. These metadata information will be forwarded to other subscribers at the moment of the subscription, and when you leave the room. Please note that when leaving the room, the forwarded metadata are those provided in the **subscription** request.
+
 This feature is especially useful to include volatile information about the performed request.
 
 For example, if you update a document:
@@ -109,11 +111,11 @@ The following ``update`` notification will be sent to all subscribed users:
 
 ```javascript
 {
-  status: 200, 
+  status: 200,
   error: null,
   result: {
     _id: 'a document ID',
-    _source: { 
+    _source: {
       somefield: 'now has a new value',
       someOtherField: 'was left unchanged'
     },
@@ -124,6 +126,38 @@ The following ``update`` notification will be sent to all subscribed users:
     metadata: {
       modifiedBy: 'awesome me',
       reason: 'it needed to be modified'
+    }
+  }
+}
+```
+
+Or if you subscribe:
+
+```javascript
+{
+  clientId: 'myVeryUniqueClientID',
+  body: {
+    // subscription filters
+  },
+  metadata: {
+    hello: 'my name is Bob'
+  }
+}
+```
+
+And then if you leave this room, other subscribers will receive this notification:
+
+```javascript
+{
+  status: 200,
+  error: null,
+  result: {
+    roomId: 'unique Kuzzle room ID',
+    controller: 'subscribe',
+    action: 'off',
+    count: <the new user count on that room>,
+    metadata: {
+      hello: 'my name is Bob'
     }
   }
 }
@@ -308,6 +342,9 @@ There are 4 types of notifications you can receive:
     controller: 'subscribe',
     action: 'on',
     count: <the new user count on that room>,
+    metadata: {
+      // metadata embedded in this user's subscription request
+    }
   }
 }
 ```
@@ -322,6 +359,9 @@ There are 4 types of notifications you can receive:
     controller: 'subscribe',
     action: 'off',
     count: <the new user count on that room>,
+    metadata: {
+      // metadata embedded in this user's subscription request
+    }
   }
 }
 ```
@@ -385,7 +425,7 @@ Makes Kuzzle remove you from its subscribers on this room.
   Required. Allow Kuzzle to know which client want to unsubscribe.
   */
   clientId: '<your unique client ID>',
-  
+
   body: {
     roomId: 'internal Kuzzle room ID'
   }

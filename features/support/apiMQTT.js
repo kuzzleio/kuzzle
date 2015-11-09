@@ -254,6 +254,7 @@ var publishAndListen = function (topic, message) {
     mqttListener = mqtt.connect(config.mqttUrl);
 
   message.clientId = mqttListener.options.clientId;
+  message.metadata = this.world.metadata;
   this.subscribedRooms[message.clientId] = {};
   mqttListener.subscribe('mqtt.' + mqttListener.options.clientId);
 
