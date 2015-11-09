@@ -115,6 +115,8 @@ describe('Test: routerController.executeFromRest', function () {
     mockupResponse.init();
     executeFromRest.call(kuzzle, params, data, mockupResponse);
 
+    this.timeout(timeout);
+
     timer = setInterval(() => {
       if (mockupResponse.ended === false) {
         return;
@@ -139,13 +141,6 @@ describe('Test: routerController.executeFromRest', function () {
         done(e);
       }
     }, 5);
-
-    setTimeout(() => {
-      if (timer !== false) {
-        clearInterval(timer);
-        done(new Error('Timed out without having gotten a valid objectResponse object'));
-      }
-    }, timeout);
   });
 
   it('should respond with a HTTP 200 message for non-persistent write call', function (done) {
@@ -164,6 +159,8 @@ describe('Test: routerController.executeFromRest', function () {
     mockupResponse.init();
     executeFromRest.call(kuzzle, params, data, mockupResponse);
 
+    this.timeout(timeout);
+
     timer = setInterval(() => {
       if (mockupResponse.ended === false) {
         return;
@@ -189,13 +186,6 @@ describe('Test: routerController.executeFromRest', function () {
       }
 
     }, 5);
-
-    setTimeout(() => {
-      if (timer !== false) {
-        clearInterval(timer);
-        done(new Error('Timed out without having gotten a valid objectResponse object'));
-      }
-    }, timeout);
   });
 
   it('should not respond if the response is empty', function (done) {
