@@ -143,8 +143,10 @@ Feature: Test websocket API
     Given A room subscription listening to "lastName" having value "Hopper" with socket "client1"
     Given A room subscription listening to "lastName" having value "Hopper" with socket "client2"
     Then I should receive a "on" notification
+    And The notification should have metadata
     Then I unsubscribe socket "client1"
     And I should receive a "off" notification
+    And The notification should have metadata
 
   @usingWebsocket
   Scenario: Getting the last statistics frame

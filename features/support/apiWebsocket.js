@@ -266,6 +266,8 @@ var emitAndListen = function (controller, msg, socketName) {
     msg.requestId = uuid.v1();
   }
 
+  msg.metadata = this.world.metadata;
+
   socketName = initSocket.call(this, socketName);
   this.listSockets[socketName].once(msg.requestId, response => {
     var listener = function (document) {
