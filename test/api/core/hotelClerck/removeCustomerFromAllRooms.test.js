@@ -143,8 +143,4 @@ describe('Test: hotelClerk.removeCustomerFromAllRooms', function () {
 
     should(kuzzle.hotelClerk.removeCustomerFromAllRooms(connection)).be.rejected();
   });
-
-  it('should return a rejected promise if room removal fail', function () {
-
-  });
 });
