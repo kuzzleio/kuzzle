@@ -23,7 +23,7 @@ describe('Test terms method', function () {
 
   before(function () {
     methods.dsl.filtersTree = {};
-    return methods.terms(roomIdMatch, collection, filter)
+    return methods.terms(roomIdMatch, collection, filter, false)
       .then(function() {
         return methods.terms(roomIdNot, collection, filter, true);
       });

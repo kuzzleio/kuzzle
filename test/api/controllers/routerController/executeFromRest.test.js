@@ -11,13 +11,14 @@ var
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   rewire = require('rewire'),
   RouterController = rewire('../../../../lib/api/controllers/routerController'),
-  RequestObject = require.main.require('lib/api/core/models/requestObject'),
   ResponseObject = require.main.require('lib/api/core/models/responseObject');
 
 require('should-promised');
 
 describe('Test: routerController.executeFromRest', function () {
   var
+    timer,
+    timeout = 500,
     kuzzle,
     mockupResponse = {
       ended: false,
@@ -25,17 +26,20 @@ describe('Test: routerController.executeFromRest', function () {
       header: {},
       response: {},
       init: function () { this.ended = false; this.statusCode = 0; this.response = {}; this.header = ''; },
+      setHeader: function (name, value) { this.header[name] = value; },
       writeHead: function (status, header) { this.statusCode = status; this.header = header; },
       end: function (message) { this.ended = true; this.response = JSON.parse(message); }
     },
+    forwardedObject,
     executeFromRest;
 
   before(function (done) {
     var
       mockupFunnel = function (requestObject) {
         var
-          deferred = q.defer(),
-          forwardedObject = new ResponseObject(requestObject, {});
+          deferred = q.defer();
+
+        forwardedObject = new ResponseObject(requestObject, {});
 
         if (requestObject.data.body.resolve) {
           if (requestObject.data.body.empty) {
@@ -111,7 +115,13 @@ describe('Test: routerController.executeFromRest', function () {
     mockupResponse.init();
     executeFromRest.call(kuzzle, params, data, mockupResponse);
 
-    setTimeout(function () {
+    this.timeout(timeout);
+
+    timer = setInterval(() => {
+      if (mockupResponse.ended === false) {
+        return;
+      }
+
       try {
         should(mockupResponse.statusCode).be.exactly(200);
         should(mockupResponse.header['Content-Type']).not.be.undefined();
@@ -122,12 +132,60 @@ describe('Test: routerController.executeFromRest', function () {
         should(mockupResponse.response.result._source).match(data.body);
         should(mockupResponse.response.result.action).be.exactly('create');
         should(mockupResponse.response.result.controller).be.exactly('write');
+
+        clearInterval(timer);
+        timer = false;
         done();
       }
       catch (e) {
         done(e);
       }
-    }, 20);
+    }, 5);
+  });
+
+  it('should respond with a HTTP 200 message for non-persistent write call', function (done) {
+    var
+      params = {action: 'create', controller: 'write'},
+      data = {
+        headers: {'content-type': 'application/json'},
+        body: {
+          persist: false,
+          resolve: true,
+          empty: true
+        },
+        params: {collection: 'foobar'}
+    };
+
+    mockupResponse.init();
+    executeFromRest.call(kuzzle, params, data, mockupResponse);
+
+    this.timeout(timeout);
+
+    timer = setInterval(() => {
+      if (mockupResponse.ended === false) {
+        return;
+      }
+
+      try {
+        should(mockupResponse.statusCode).be.exactly(200);
+        should(mockupResponse.header['Content-Type']).not.be.undefined();
+        should(mockupResponse.header['Content-Type']).be.exactly('application/json');
+        should(mockupResponse.response.status).be.exactly(200);
+        should(mockupResponse.response.error).be.null();
+        should(mockupResponse.response.result).be.not.null();
+        should(mockupResponse.response.result._source).match(data.body);
+        should(mockupResponse.response.result.action).be.exactly('create');
+        should(mockupResponse.response.result.controller).be.exactly('write');
+
+        clearInterval(timer);
+        timer = false;
+        done();
+      }
+      catch (e) {
+        done(e);
+      }
+
+    }, 5);
   });
 
   it('should not respond if the response is empty', function (done) {

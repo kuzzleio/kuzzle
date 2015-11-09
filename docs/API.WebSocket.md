@@ -11,6 +11,7 @@ This will give you a direct access to Kuzzle's router controller, dispatching yo
 
 * [How to connect to Kuzzle](#how-to-connect-to-kuzzle)
 * [What are response objects](#what-are-response-objects)
+* [Sending metadata](#sending-metadata)
 * [Performing queries](#performing-queries)
   * [Subscribing to documents](#subscribing-to-documents)
     * [Notifications you can receive](#notifications)
@@ -74,6 +75,88 @@ Kuzzle will respond to your application by sending a ``requestId`` message on yo
 
 So to get a response from Kuzzle, simply add a unique ``requestId`` field to your message (for instance by using an [UUID](https://en.wikipedia.org/wiki/Universally_unique_identifier)), and then listen for a ``requestId`` message on your socket.
 
+## Sending metadata
+
+In every request you send to Kuzzle, you can include a ``metadata`` object. This object content will be ignored by Kuzzle, but it will also be forwarded back in ``responses`` and in ``notifications`` (see below).
+
+You can also include metadata information to a subscription request. These metadata information will be forwarded to other subscribers at the moment of the subscription, and when you leave the room. Please note that when leaving the room, the forwarded metadata are those provided in the **subscription** request.
+
+This feature is especially useful to include volatile information about the performed request.
+
+For example, if you update a document:
+
+```javascript
+{
+  action: 'update',
+  collection: 'some data collection',
+  _id: 'a document ID',
+  body: {
+    somefield: 'now has a new value'
+  },
+  metadata: {
+    modifiedBy: 'awesome me',
+    reason: 'it needed to be modified'
+  }
+}
+```
+
+The following ``update`` notification will be sent to all subscribed users:
+
+```javascript
+{
+  status: 200,
+  error: null,
+  result: {
+    _id: 'a document ID',
+    _source: {
+      somefield: 'now has a new value',
+      someOtherField: 'was left unchanged'
+    },
+    action: 'update',
+    collection: '<data collection>',
+    controller: 'write',
+    requestId: '<unique request ID>',
+    metadata: {
+      modifiedBy: 'awesome me',
+      reason: 'it needed to be modified'
+    }
+  }
+}
+```
+
+Or if you subscribe:
+
+```javascript
+{
+  action: 'on',
+  collection: 'some data collection',
+  body: {
+    // subscription filters
+  },
+  metadata: {
+    hello: 'my name is Bob'
+  }
+}
+```
+
+And then if you leave this room, other subscribers will receive this notification:
+
+```javascript
+{
+  status: 200,
+  error: null,
+  result: {
+    roomId: 'unique Kuzzle room ID',
+    controller: 'subscribe',
+    action: 'off',
+    count: <the new user count on that room>,
+    metadata: {
+      hello: 'my name is Bob'
+    }
+  }
+}
+```
+
 ##  Performing queries
 
 This section details every query you can send to Kuzzle, and the ``response`` object Kuzzle will send you back, if any.
@@ -106,7 +189,7 @@ The matching criteria you pass on to Kuzzle are [filters](./filters.md).
 
 How subscription works:  
 :arrow_right: You send a subscription query to Kuzzle  
-:arrow_left: Kuzzle responds to you with a room name and a room unique ID  
+:arrow_left: Kuzzle responds to you with a room unique ID  
 :arrow_right: You listen to ``requestId`` messages on your websocket
 :arrow_left: When a document matches your room criteria, Kuzzle sends you a ``response``
 
@@ -144,8 +227,7 @@ How subscription works:
   status: 200,                      // Assuming everything went well
   error: null,                      // Assuming everything went well
   result: {
-    roomId: 'unique Kuzzle room ID',
-    roomName: 'your request ID'
+    roomId: 'unique Kuzzle room ID'
   }
 }
 ```
@@ -170,7 +252,10 @@ There are 4 types of notifications you can receive:
     action: 'create',
     collection: '<data collection>',
     controller: 'write',
-    requestId: '<unique request ID>'  // The query updating the document document
+    requestId: '<unique request ID>',  // The query updating the document document
+    metadata: {
+      // metadata embedded in the modifying request
+    }
   }
 }
 ```
@@ -189,7 +274,10 @@ There are 4 types of notifications you can receive:
     action: 'update',
     collection: '<data collection>',
     controller: 'write',
-    requestId: '<unique request ID>'  // The query updating the document
+    requestId: '<unique request ID>',  // The query updating the document
+    metadata: {
+      // metadata embedded in the modifying request
+    }
   }
 }
 ```
@@ -205,7 +293,10 @@ There are 4 types of notifications you can receive:
     action: 'update',
     collection: '<data collection>',
     controller: 'write',
-    requestId: '<unique request ID>'  // The query updating the document
+    requestId: '<unique request ID>',  // The query updating the document
+    metadata: {
+      // metadata embedded in the modifying request
+    }
     // there is no document source in this notification
   }
 }
@@ -223,7 +314,10 @@ There are 4 types of notifications you can receive:
     action: 'delete',
     collection: '<data collection>',
     controller: 'write',
-    requestId: '<unique request ID>'  // The query deleting the document
+    requestId: '<unique request ID>',  // The query deleting the document
+    metadata: {
+      // metadata embedded in the modifying request
+    }
     // there is no document source in this notification
   }
 }
@@ -237,10 +331,12 @@ There are 4 types of notifications you can receive:
   error: null,                        // Assuming everything went well
   result: {
     roomId: 'unique Kuzzle room ID',
-    roomName: 'the new user room ID',
     controller: 'subscribe',
     action: 'on',
     count: <the new user count on that room>,
+    metadata: {
+      // metadata embedded in this user's subscription request
+    }
   }
 }
 ```
@@ -252,10 +348,12 @@ There are 4 types of notifications you can receive:
   error: null,                        // Assuming everything went well
   result: {
     roomId: 'unique Kuzzle room ID',
-    roomName: 'the exiting user room ID',
     controller: 'subscribe',
     action: 'off',
     count: <the new user count on that room>,
+    metadata: {
+      // metadata embedded in this user's subscription request
+    }
   }
 }
 ```
@@ -313,11 +411,9 @@ Makes Kuzzle remove you from its subscribers on this room.
   action: 'off',
   collection: '<data collection>',
 
-  /*
-  Required. Represents the request ID of the subscription query.
-  It's also your room name.
-  */
-  requestId: 'room name',
+  body: {
+    roomId: 'unique Kuzzle room ID'
+  }
 }
 ```
 
@@ -328,8 +424,7 @@ Makes Kuzzle remove you from its subscribers on this room.
   status: 200,                       // Assuming everything went well
   error: null,                        // Assuming everything went well
   result: {
-    roomId: 'unique Kuzzle room ID',
-    roomName: 'your room name'
+    roomId: 'unique Kuzzle room ID'
   }
 }
 ```

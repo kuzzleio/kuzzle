@@ -2,7 +2,7 @@ var
   should = require('should'),
   rewire = require('rewire'),
   methods = rewire('../../../../lib/api/dsl/methods'),
-  BadRequestError = require.main.require('lib/api/core/errors/badRequestError');
+  BadRequestError = require.main.require('lib/api/core/errors/badRequestError'),
   InternalError = require.main.require('lib/api/core/errors/internalError');
 
 require('should-promised');

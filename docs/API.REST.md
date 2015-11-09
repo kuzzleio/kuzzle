@@ -11,6 +11,7 @@ If you need such functionalities, please check our other supported protocols. Fo
 
 ## Index
 * [What are response objects](#what-are-response-objects)
+* [Sending metadata](#sending-metadata)
 * [Performing queries](#performing-queries)
   * [Sending a non persistent message](#sending-a-non-persistent-message)
   * [Creating a new document](#creating-a-new-document)
@@ -58,6 +59,50 @@ A ``response`` is a JSON object with the following structure:
 ```
 
 _NB: For more details about status code and error object, see [status-codes.md](status-codes.md)_
+
+## Sending metadata
+
+In every request you send to Kuzzle, you can include a ``metadata`` object. This object content will be ignored by Kuzzle, but it will also be forwarded back in ``responses`` and in ``notifications`` (see below).
+
+This feature is especially useful to include volatile information about the performed request.
+
+For example, if you update a document:
+
+```javascript
+{
+  body: {
+    somefield: 'now has a new value'
+  },
+  metadata: {
+    modifiedBy: 'awesome me',
+    reason: 'it needed to be modified'
+  }
+}
+```
+
+The following ``update`` notification will be sent to all subscribed users:
+
+```javascript
+{
+  status: 200, 
+  error: null,
+  result: {
+    _id: 'a document ID',
+    _source: { 
+      somefield: 'now has a new value',
+      someOtherField: 'was left unchanged'
+    },
+    action: 'update',
+    collection: '<data collection>',
+    controller: 'write',
+    requestId: '<unique request ID>',
+    metadata: {
+      modifiedBy: 'awesome me',
+      reason: 'it needed to be modified'
+    }
+  }
+}
+```
 
 ## Performing queries
 
@@ -174,9 +219,11 @@ Creates a new document in the persistent data storage, or update it if it alread
 **Message:**
 ```javascript  
 {
-  /*
-  The document itself
-  */
+  body: {
+    /*
+    The document itself
+    */
+  }
 }
 ```
 

@@ -4,6 +4,12 @@ Feature: Test REST API
   Using REST API
 
   @usingREST
+  Scenario: Create a non-persistent document
+    When I write the document "documentNonPersistentGrace"
+    Then I should receive a request id
+    Then I'm not able to get the document
+
+  @usingREST
   Scenario: Create a new document and get it
     When I write the document
     Then I should receive a document id
@@ -62,7 +68,7 @@ Feature: Test REST API
     When I write the document "documentGrace"
     Then I don't find a document with "Grace" in field "firstName"
     Then I remove the collection and schema
-    Then I wait 2s
+    Then I wait 1s
     Then I change the schema
     When I write the document "documentGrace"
     Then I find a document with "Grace" in field "firstName"

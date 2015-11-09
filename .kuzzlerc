@@ -22,9 +22,68 @@
     "host": "elasticsearch",
     "port": "9200"
   },
-  // Host and port for notificationCache service that handle cache for store which user we have to notify
+  // Kuzzle internal cache configuration
   "cache": {
     "host": "redis",
     "port": 6379
+  },
+  // JWT defaults.
+  "jsonWebToken": {
+    "algorithm": "HS256",
+    "secret": "Kuzzle Rocks"
+  },
+  // repositories defaults
+  "repositories": {
+    "cacheTTL": 1440
+  },
+  // Default user profiles
+  "userProfiles": {
+    "admin": {
+      "_id": "admin",
+      "roles": [ "admin" ]
+    },
+    "anonymous": {
+      "_id": "anonymous",
+      "roles": [ "guest" ]
+    }
+  },
+  // Default security roles
+  "userRoles": {
+    "admin": {
+      "_id": "admin",
+      "indexes": {
+        "*": {
+        "collections": {
+          "*": {
+            "controllers": {
+              "*": {
+                "actions": {
+                  "*": true
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "guest": {
+      "_id": "guest",
+      "indexes": {
+        "*": {
+          "collections": {
+            "*": {
+              "controllers": {
+                "*": {
+                  "actions": {
+                    "*": true
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
   }
 }

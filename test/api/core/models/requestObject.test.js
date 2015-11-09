@@ -115,16 +115,6 @@ describe('Test: requestObject', function () {
     should(requestObject.data.body).match(additionalData);
   });
 
-  it('should generate a MD5-hash of the body as a requestID for subscribe requests with no requestID provided', function () {
-    var requestObject;
-
-    request.controller = 'subscribe';
-    delete request.requestId;
-    requestObject = new RequestObject(request, {}, protocol);
-
-    should(requestObject.requestId).not.be.undefined().and.match(/[a-fA-F0-9]{32}/);
-  });
-
   it('should initialize an UUID-like requestID if none was provided', function () {
     var requestObject;
 
@@ -205,5 +195,56 @@ describe('Test: requestObject', function () {
 
     requestObject.persist = {};
     should(requestObject.isPersistent()).be.false();
+  });
+
+  it('should get the _id of the additional data', function () {
+    var
+      additionalData = { _id: 'fakeId2'},
+      requestObject;
+
+    delete request.body;
+    requestObject = new RequestObject(request, additionalData, protocol);
+
+    should(requestObject.data._id).not.be.undefined();
+    should(requestObject.data._id).be.exactly('fakeId2');
+  });
+
+  it('should get the metadata from additional data', function () {
+    var
+      additionalData = { metadata: { foo: 'bar' }},
+      requestObject = new RequestObject(request, additionalData, protocol);
+
+    should(requestObject.metadata).not.be.undefined().and.match(additionalData.metadata);
+  });
+
+  it('should get the metadata from the request', function () {
+    var requestObject;
+
+    request.metadata = { foo: 'bar' };
+    requestObject = new RequestObject(request, {}, protocol);
+
+    should(requestObject.metadata).not.be.undefined().and.match(request.metadata);
+  });
+
+  it('should take the metadata from the additional prior to the main request object', function () {
+    var
+      additionalData = { metadata: { foo: 'bar' }},
+      requestObject;
+
+    request.metadata = { bar: 'foo' };
+    requestObject = new RequestObject(request, additionalData, protocol);
+
+    should(requestObject.metadata).not.be.undefined().and.match(additionalData.metadata);
+  });
+
+  it('should ignore metadata if they are not a json object', function () {
+    var
+      additionalData = { metadata: 'foobar'},
+      requestObject;
+
+    request.metadata = 'barfoo';
+    requestObject = new RequestObject(request, additionalData, protocol);
+
+    should(requestObject.metadata).be.an.Object().and.be.empty();
   });
 });

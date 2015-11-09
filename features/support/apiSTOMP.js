@@ -11,7 +11,7 @@ module.exports = {
   stompClient: undefined,
   stompConnected: undefined,
   clientId: uuid.v1(),
-  subscribedRooms: {client1: {}},
+  subscribedRooms: null,
   responses: null,
 
   init: function (world) {
@@ -19,7 +19,7 @@ module.exports = {
 
     this.stompUrl = config.stompUrl.replace('stomp://', '').split(':');
 
-    if ( !this.stompClient ) {
+    if (!this.stompClient) {
       this.stompClient = new stomp(this.stompUrl[0], this.stompUrl[1], 'guest', 'guest', '1.0', '/');
 
       deferredConnection = q.defer();
@@ -29,6 +29,8 @@ module.exports = {
       });
     }
     this.world = world;
+    this.subscribedRooms = {};
+    this.responses = null;
   },
 
   disconnect: function () {
@@ -172,26 +174,27 @@ module.exports = {
     return publishAndListen.call(this, topic, msg);
   },
 
-  unsubscribe: function (room) {
+  unsubscribe: function (room, clientId) {
     var
       topic = ['subscribe', this.world.fakeCollection, 'off'].join('.'),
       msg = {
-        requestId: room,
-        clientId: this.subscribedRooms.client1[room].clientId
+        body: { roomId: room },
+        clientId: clientId
       };
 
-    this.subscribedRooms.client1[room].client.disconnect();
-    delete this.subscribedRooms.client1[room];
+    this.subscribedRooms[clientId][room].disconnect();
+    delete this.subscribedRooms[clientId][room];
     return publish.call(this, topic, msg, false);
   },
 
   countSubscription: function () {
     var
       topic = ['subscribe', this.world.fakeCollection, 'count'].join('.'),
-      rooms = Object.keys(this.subscribedRooms.client1),
+      clients = Object.keys(this.subscribedRooms),
+      rooms = Object.keys(this.subscribedRooms[clients[0]]),
       msg = {
         body: {
-          roomId: this.subscribedRooms.client1[rooms[0]].roomId
+          roomId: rooms[0]
         }
       };
 
@@ -236,12 +239,15 @@ var publish = function (topic, message, waitForAnswer) {
     message.clientId = uuid.v1();
   }
 
+  message.metadata = this.world.metadata;
+
   this.stompConnected
     .then(function () {
       if (listen) {
         messageHeader['reply-to'] = uuid.v1();
         this.stompClient.subscribe('/queue/' + messageHeader['reply-to'], function (body, headers) {
           var unpacked = JSON.parse(body);
+
           if (unpacked.error) {
             deferred.reject(unpacked.error);
           }
@@ -268,24 +274,26 @@ var publish = function (topic, message, waitForAnswer) {
 var publishAndListen = function (topic, message) {
   var
     roomClient = new stomp(this.stompUrl[0], this.stompUrl[1], 'guest', 'guest', '1.0', '/'),
-    deferred = q.defer();
+    deferred = q.defer(),
+    self = this;
 
   message.clientId = uuid.v1();
+  self.subscribedRooms[message.clientId] = {};
 
-  publish.call(this, topic, message)
+  publish.call(self, topic, message)
     .then(function (response) {
       roomClient.connect(function () {
         var topic = '/topic/' + response.result.roomId;
 
-        this.subscribedRooms.client1[response.result.roomName] = { roomId: response.result.roomId, client: roomClient, clientId: message.clientId };
+        self.subscribedRooms[message.clientId][response.result.roomId] = roomClient;
 
-        roomClient.subscribe(topic, function (body) {
-          this.responses = JSON.parse(body);
-        }.bind(this));
+        roomClient.subscribe(topic, function (body) { //, headers) {
+          self.responses = JSON.parse(body);
+        });
 
         deferred.resolve(response);
-      }.bind(this));
-    }.bind(this))
+      });
+    })
     .catch(function (error) {
       deferred.reject(error);
     });

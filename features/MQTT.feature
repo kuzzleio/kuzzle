@@ -9,11 +9,14 @@ Feature: Test MQTT API
     Then I should receive a document id
     Then I'm able to get the document
 
-  @usingMQTT
+  @usingMQTT @unsubscribe
   Scenario: Create or Update a document
-    When I write the document
+    Given A room subscription listening to "lastName" having value "Hopper"
+    When I write the document "documentGrace"
     And I createOrUpdate it
     Then I should have updated the document
+    And I should receive a "update" notification
+    And The notification should have metadata
 
   @usingMQTT
   Scenario: Update a document
@@ -62,7 +65,7 @@ Feature: Test MQTT API
     When I write the document "documentGrace"
     Then I don't find a document with "Grace" in field "firstName"
     Then I remove the collection and schema
-    Then I wait 2s
+    Then I wait 1s
     Then I change the schema
     When I write the document "documentGrace"
     Then I find a document with "Grace" in field "firstName"
@@ -73,6 +76,7 @@ Feature: Test MQTT API
     When I write the document "documentGrace"
     Then I should receive a "create" notification
     And The notification should have a "_source" member
+    And The notification should have metadata
 
   @usingMQTT @unsubscribe
   Scenario: Document delete notifications
@@ -81,6 +85,7 @@ Feature: Test MQTT API
     Then I remove the document
     Then I should receive a "delete" notification
     And The notification should not have a "_source" member
+    And The notification should have metadata
 
   @usingMQTT @unsubscribe
   Scenario: Document update: new document notification
@@ -89,6 +94,7 @@ Feature: Test MQTT API
     Then I update the document with value "Hopper" in field "lastName"
     Then I should receive a "update" notification
     And The notification should have a "_source" member
+    And The notification should have metadata
 
   @usingMQTT @unsubscribe
   Scenario: Document update: removed document notification
@@ -97,6 +103,7 @@ Feature: Test MQTT API
     Then I update the document with value "Foo" in field "lastName"
     Then I should receive a "update" notification
     And The notification should not have a "_source" member
+    And The notification should have metadata
 
   @usingMQTT @unsubscribe
   Scenario: Document creation notifications with not exists
@@ -104,6 +111,7 @@ Feature: Test MQTT API
     When I write the document "documentGrace"
     Then I should receive a "create" notification
     And The notification should have a "_source" member
+    And The notification should have metadata
 
   @usingMQTT @unsubscribe
   Scenario: Subscribe to a collection
@@ -111,6 +119,7 @@ Feature: Test MQTT API
     When I write the document "documentGrace"
     Then I should receive a "create" notification
     And The notification should have a "_source" member
+    And The notification should have metadata
 
   @usingMQTT @unsubscribe
   Scenario: Delete a document with a query
@@ -121,6 +130,7 @@ Feature: Test MQTT API
     Then I remove documents with field "hobby" equals to value "computer"
     Then I should receive a "delete" notification
     And The notification should not have a "_source" member
+    And The notification should have metadata
 
   @usingMQTT @unsubscribe
   Scenario: Count how many subscription on a room
@@ -133,8 +143,10 @@ Feature: Test MQTT API
     Given A room subscription listening to "lastName" having value "Hopper"
     Given A room subscription listening to "lastName" having value "Hopper"
     Then I should receive a "on" notification
+    And The notification should have metadata
     Then I unsubscribe
     And I should receive a "off" notification
+    And The notification should have metadata
 
   @usingMQTT
   Scenario: Getting the last statistics frame

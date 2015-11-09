@@ -10,13 +10,14 @@ module.exports = {
   clientId: null,
   amqpClient: null,
   amqpChannel: null,
-  subscribedRooms: {client1 : {}},
+  subscribedRooms: {},
   responses: null,
 
   init: function (world) {
     this.world = world;
-
+    this.responses = null;
     this.clientId = uuid.v1();
+    this.subscribedRooms = {};
 
     if (!this.amqpClient) {
       this.amqpClient = amqp.connect(config.amqpUrl);
@@ -172,26 +173,28 @@ module.exports = {
     return publishAndListen.call(this, topic, msg);
   },
 
-  unsubscribe: function (room) {
+  unsubscribe: function (room, clientId) {
     var
       topic = ['subscribe', this.world.fakeCollection, 'off'].join('.'),
       msg = {
-        clientId: this.subscribedRooms.client1[room].clientId,
-        requestId: room
+        clientId: clientId,
+        body: { roomId: room }
       };
 
-    this.subscribedRooms.client1[room].listener.close();
-    delete this.subscribedRooms.client1[room];
+    this.subscribedRooms[clientId][room].close();
+    delete this.subscribedRooms[clientId];
+
     return publish.call(this, topic, msg, false);
   },
 
   countSubscription: function () {
     var
       topic = ['subscribe', this.world.fakeCollection, 'count'].join('.'),
-      rooms = Object.keys(this.subscribedRooms.client1),
+      clients = Object.keys(this.subscribedRooms),
+      rooms = Object.keys(this.subscribedRooms[clients[0]]),
       msg = {
         body: {
-          roomId: this.subscribedRooms.client1[rooms[0]].roomId
+          roomId: rooms[0]
         }
       };
 
@@ -232,30 +235,30 @@ var publish = function (topic, message, waitForAnswer) {
     message.clientId = this.clientId;
   }
 
-  this.amqpChannel.then(function (channel) {
+  message.metadata = this.world.metadata;
+
+  this.amqpChannel.then(channel => {
     if (listen) {
       channel.assertQueue(null, {autoDelete: true, exclusive: true, durable: false})
-        .then(function (queue) {
-          channel.consume(queue.queue, function (reply) {
+        .then(queue => {
+          channel.consume(queue.queue, reply => {
             channel.ack(reply);
-            channel.cancel(reply.fields.consumerTag).then(function () {
+            channel.cancel(reply.fields.consumerTag).then(() => {
               var unpacked = JSON.parse((new Buffer(reply.content)).toString());
 
               if (unpacked.error) {
-                deferred.reject(unpacked.error);
+                deferred.reject(unpacked.error.message);
               }
               else {
                 deferred.resolve(unpacked);
               }
             });
           })
-          .then(function () {
+          .then(() => {
             channel.publish(KUZZLE_EXCHANGE, topic, new Buffer(JSON.stringify(message)), { replyTo: queue.queue });
           });
         })
-        .catch(function (error) {
-          deferred.reject(new Error(error));
-        });
+        .catch(error => deferred.reject(error.message));
     }
     else {
       channel.publish(KUZZLE_EXCHANGE, topic, new Buffer(JSON.stringify(message)));
@@ -271,35 +274,27 @@ var publishAndListen = function (topic, message) {
     deferred = q.defer();
 
   message.clientId = uuid.v1();
+  this.subscribedRooms[message.clientId] = {};
 
-  publish.call(this, topic, message).then(function (response) {
-    this.amqpClient.then(function (connection) {
-      connection.createChannel().then(function (channel) {
-        this.subscribedRooms.client1[response.result.roomName] = { roomId: response.result.roomId, clientId: message.clientId, listener: channel };
+  publish.call(this, topic, message)
+    .then(response => {
+      this.amqpClient.then(connection => { return connection.createChannel(); })
+      .then(channel => {
+        this.subscribedRooms[message.clientId][response.result.roomId] = channel;
 
         channel.assertQueue(response.result.roomId)
-          .then(function () {
-            return channel.bindQueue(response.result.roomId, KUZZLE_EXCHANGE, response.result.roomId);
-          })
-          .then(function () {
-            channel.consume(response.result.roomId, function (reply) {
+          .then(() => { return channel.bindQueue(response.result.roomId, KUZZLE_EXCHANGE, response.result.roomId); })
+          .then(() => {
+            channel.consume(response.result.roomId, reply => {
               var notification = JSON.parse((new Buffer(reply.content)).toString());
               channel.ack(reply);
               this.responses = notification;
-            }.bind(this));
-          }.bind(this))
-          .then(function () {
-            deferred.resolve(response);
-          });
-      }.bind(this))
-        .catch(function (error) {
-          deferred.reject(new Error(error));
-        });
-    }.bind(this));
-  }.bind(this))
-  .catch(function (error) {
-    deferred.reject(new Error(error));
-  });
+            });
+          })
+          .then(() => { deferred.resolve(response); });
+      });
+    })
+    .catch(error => deferred.reject(new Error(error.message)));
 
   return deferred.promise;
 };

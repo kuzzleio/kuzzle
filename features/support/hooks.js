@@ -18,35 +18,36 @@ var myHooks = function () {
    *
    *  And we don't want to deal with destroyed worlds, this is all too messy. And dangerous.
    */
-  this.Before('@usingREST', function (callback) {
+  this.Before('@usingREST', function (scenario, callback) {
     this.api = setAPI(this, 'REST');
     callback();
   });
 
-  this.Before('@usingWebsocket', function (callback) {
+  this.Before('@usingWebsocket', function (scenario, callback) {
     this.api = setAPI(this, 'Websocket');
     callback();
   });
 
-  this.Before('@usingMQTT', function (callback) {
+  this.Before('@usingMQTT', function (scenario, callback) {
     this.api = setAPI(this, 'MQTT');
     callback();
   });
 
-  this.Before('@usingAMQP', function (callback) {
+  this.Before('@usingAMQP', function (scenario, callback) {
     this.api = setAPI(this, 'AMQP');
     callback();
   });
 
-  this.Before('@usingSTOMP', function (callback) {
+  this.Before('@usingSTOMP', function (scenario, callback) {
     this.api = setAPI(this, 'STOMP');
     callback();
   });
 
-  this.After(function (callback) {
+  this.After(function (scenario, callback) {
     this.api.deleteByQuery({})
       .then(function () {
         this.api.disconnect();
+
         callback();
       }.bind(this))
       .catch(function (error) {
@@ -54,7 +55,7 @@ var myHooks = function () {
       });
   });
 
-  this.After('@removeSchema', function (callback) {
+  this.After('@removeSchema', function (scenario, callback) {
     this.api.deleteCollection()
       .then(function () {
         setTimeout(callback, 1000);
@@ -64,28 +65,18 @@ var myHooks = function () {
       });
   });
 
-  this.After('@unsubscribe', function (callback) {
-    async.each(Object.keys(this.api.subscribedRooms), function (socketName, callbackSocketName) {
-      async.each(Object.keys(this.api.subscribedRooms[socketName]), function (room, callbackRoom) {
+  this.After('@unsubscribe', function (scenario, callback) {
+    async.each(Object.keys(this.api.subscribedRooms), (socketName, callbackSocketName) => {
+      async.each(Object.keys(this.api.subscribedRooms[socketName]), (room, callbackRoom) => {
         this.api.unsubscribe(room, socketName)
-          .then(function () {
-            callbackRoom();
-          }.bind(this))
-          .catch(function (error) {
-            callbackRoom(error);
-          });
-      }.bind(this), function (error) {
+          .then(() => callbackRoom())
+          .catch(error => callbackRoom(error));
+      }, error => {
         this.api.subscribedRooms[socketName] = {};
 
         callbackSocketName(error);
-      }.bind(this));
-    }.bind(this), function (error) {
-      if (error) {
-        callback(error);
-      }
-
-      callback();
-    });
+      });
+    }, error => callback(error));
   });
 };
 

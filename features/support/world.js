@@ -1,5 +1,5 @@
 module.exports = function () {
-  this.World = function World (callback) {
+  this.World = function World () {
     this.api = null;
 
     // Fake values for test
@@ -15,6 +15,10 @@ module.exports = function () {
       },
       city: 'NYC',
       hobby: 'computer'
+    };
+    this.documentNonPersistentGrace = {
+      persist: false,
+      body: this.documentGrace
     };
     this.documentAda = {
       firstName: 'Ada',
@@ -52,6 +56,9 @@ module.exports = function () {
       }
     };
 
-    callback();
+    this.metadata = {
+      iwant: 'to break free',
+      we: ['will', 'rock', 'you']
+    };
   };
 };
