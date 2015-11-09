@@ -3,8 +3,8 @@ var
   q = require('q'),
   params = require('rc')('kuzzle'),
   should = require('should'),
+  InternalError = require.main.require('lib/api/core/errors/internalError'),
   NotFoundError = require.main.require('lib/api/core/errors/notFoundError'),
-  RequestObject = require.main.require('lib/api/core/models/requestObject'),
   ResponseObject = require.main.require('lib/api/core/models/responseObject'),
   kuzzle = {
     repositories: {},
@@ -77,11 +77,47 @@ describe('Test: repositories/roleRepository', function () {
   });
 
   describe('#loadRoles', function () {
-    it('should reject the promise when loading some non-existing roles', function (done) {
-      var foo = roleRepository.loadRoles(['idontexist']);
+    it('should return an empty array when loading some non-existing roles', done => {
+      roleRepository.loadRoles(['idontexist'])
+        .then(result => {
+          should(result).be.an.Array();
+          should(result).be.empty();
+          done();
+        })
+        .catch(error => {
+          done(error);
+        });
+    });
 
-      should(foo).be.rejectedWith(NotFoundError);
-      done();
+    it('should reject the promise if some error occurs fetching data from the DB', () => {
+      var result;
+
+      roleRepository.loadMultiFromDatabase = () => {
+        return Promise.reject(new InternalError('Error'));
+      };
+      result = roleRepository.loadRoles([-999, -998])
+        .catch(error => {
+          delete roleRepository.loadMultiFromDatabase;
+          return Promise.reject(error);
+        });
+
+      return should(result).be.rejectedWith(InternalError);
+    });
+
+    it('should reject the promise if some error occurs during the hydratation', () => {
+      var result;
+
+      roleRepository.hydrate = () => {
+        return Promise.reject(new InternalError('Error'));
+      };
+
+      result = roleRepository.loadRoles(['guest'])
+        .catch(error => {
+          delete roleRepository.hydrate;
+          return Promise.reject(error);
+        });
+
+      return should(result).be.rejectedWith(InternalError);
     });
 
     it('should retrieve some persisted roles', function (done) {
