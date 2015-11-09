@@ -25,15 +25,15 @@ A Kuzzle response is a JSON object with the following structure:
 ## Status codes
 
 ``status`` attribute is a numeric code similar to [HTTP status codes](https://en.wikipedia.org/wiki/List_of_HTTP_status_codes).
-It is used to inform the client about the real status of his request (if an error occured or not).
+It is used to inform the client about the real status of his request (if an error occurred or not).
 
 ### List of status codes supported by Kuzzle
 
 #### 2xx Success
 
 * ``200``: standard status for a successful request.
-* ``206``: the request (tipically a bulk import) is partially successful, but some actions encountered an error.
-(in this case, details of errors are returned within _error.errors_)
+* ``206``: the request (typically a bulk import) is partially successful, but some actions encountered an error.
+(in this case, error details are returned within _error.errors_)
 
 #### 4xx Client Error
 
@@ -48,7 +48,7 @@ It is used to inform the client about the real status of his request (if an erro
 
 ## Error objects format
 
-When an error occurred, the ``error`` object returned within the response has following JSON format:
+When an error occurred, the ``error`` object returned within the response has the following JSON format:
 
 A Kuzzle response is a JSON object with the following structure:
 ```javascript
@@ -59,7 +59,7 @@ A Kuzzle response is a JSON object with the following structure:
   message: '...',
 
   /*
-  Integer containing the occurrence number of the error (in case of multiple error for bulk actions)
+  Integer containing the occurrence number of the error (in case of multiple errors for bulk actions)
   */
   count: 1,
 
@@ -69,7 +69,7 @@ A Kuzzle response is a JSON object with the following structure:
   stack: {...}
 
   /*
-  [Optionnal, only in case of "bulk" requests] Complex object, with list of errors for a partial error case
+  [Optional, only in case of "bulk" requests] Complex object, with list of errors for a partial error case
   */
   errors: {...}
 
