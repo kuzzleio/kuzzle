@@ -3,8 +3,8 @@ var
   should = require('should'),
   Role = require.main.require('lib/api/core/models/security/role'),
   Profile = require.main.require('lib/api/core/models/security/profile'),
+  InternalError = require.main.require('lib/api/core/errors/internalError'),
   NotFoundError = require.main.require('lib/api/core/errors/notFoundError'),
-  RequestObject = require.main.require('lib/api/core/models/requestObject'),
   ResponseObject = require.main.require('lib/api/core/models/responseObject'),
   kuzzle = {
     repositories: {},
@@ -19,6 +19,7 @@ describe('Test: repositories/profileRepository', function () {
     mockRoleRepository,
     testProfile,
     testProfilePlain,
+    errorProfilePlain,
     profileRepository;
 
   mockReadEngine = {
@@ -27,6 +28,9 @@ describe('Test: repositories/profileRepository', function () {
 
       if (requestObject.data._id === 'testprofile') {
         return Promise.resolve(new ResponseObject(requestObject, testProfilePlain));
+      }
+      if (requestObject.data._id === 'errorprofile') {
+        return Promise.resolve(new ResponseObject(requestObject, errorProfilePlain));
       }
 
       err = new NotFoundError('Not found');
@@ -37,6 +41,9 @@ describe('Test: repositories/profileRepository', function () {
   };
   mockRoleRepository = {
     loadRoles: function (keys) {
+      if (keys.length === 1 && keys[0] === 'error') {
+        return Promise.reject(new InternalError('Error'));
+      }
       return Promise.resolve(keys.map(function (key) {
         var role = new Role();
         role._id = key;
@@ -63,10 +70,39 @@ describe('Test: repositories/profileRepository', function () {
       _id: 'testprofile',
       roles: [ 'test' ]
     };
+
+    errorProfilePlain = {
+      _id: 'errorprofile',
+      roles: [ 'error' ]
+    };
   });
 
-  describe('#loadProfile', function () {
-    it('should load a profile if already in memory', function (done) {
+  describe('#loadProfile', () => {
+    it('should return null if the profile does not exist', done => {
+      profileRepository.loadProfile('idontexist')
+        .then(result => {
+          should(result).be.null();
+
+          done();
+        })
+        .catch(error => {
+          done(error);
+        });
+    });
+
+    it('should reject the promise in case of error', done => {
+      profileRepository.loadOneFromDatabase = () => {
+        return Promise.reject(new InternalError('Error'));
+      };
+
+      should(profileRepository.loadProfile('id')).be.rejectedWith(InternalError);
+
+      delete profileRepository.loadOneFromDatabase;
+
+      done();
+    });
+
+    it('should load a profile if already in memory', done => {
       profileRepository.profiles.testprofile = testProfile;
       // we ensure the readEngine is not called
       profileRepository.loadOneFromDatabase = null;
@@ -83,7 +119,7 @@ describe('Test: repositories/profileRepository', function () {
         });
     });
 
-    it('should load a profile defined in kuzzle params if not in db', function (done) {
+    it('should load a profile defined in kuzzle params if not in db', done => {
       profileRepository.loadProfile('anonymous')
         .then(function (result) {
           should(result).be.an.instanceOf(Profile);
@@ -98,7 +134,7 @@ describe('Test: repositories/profileRepository', function () {
         });
     });
 
-    it('should load a profile from the db', function (done) {
+    it('should load a profile from the db', done => {
       profileRepository.loadProfile('testprofile')
         .then(function (result) {
           should(result).be.an.instanceOf(Profile);
@@ -112,8 +148,14 @@ describe('Test: repositories/profileRepository', function () {
     });
   });
 
-  describe('#serializeToDatabase', function () {
-    it('should return a plain flat object', function (done) {
+  describe('#hydrate', () => {
+    it('should reject the promise in case of error', () => {
+      return should(profileRepository.loadProfile('errorprofile')).be.rejectedWith(InternalError);
+    });
+  });
+
+  describe('#serializeToDatabase', () => {
+    it('should return a plain flat object', done => {
       profileRepository.loadProfile('testprofile')
         .then(function (profile) {
           var result = profileRepository.serializeToDatabase(profile);
