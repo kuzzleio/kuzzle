@@ -570,4 +570,18 @@ describe('Test: routerController.initRouterHttp', function () {
         .catch(error => done(error));
     });
   });
+
+
+  it('should create a route for the now command', function (done) {
+    http.get('http://' + options.hostname + ':' + options.port + '/api/_now', function (response) {
+      parseHttpResponse(response)
+        .then(result => {
+          should(response.statusCode).be.exactly(200);
+          should(result.controller).be.exactly('read');
+          should(result.action).be.exactly('now');
+          done();
+        })
+        .catch(error => done(error));
+    });
+  });
 });
