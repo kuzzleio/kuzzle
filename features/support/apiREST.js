@@ -169,5 +169,15 @@ module.exports = {
     };
 
     return this.callApi(options);
+  },
+
+  now: function () {
+    var options = {
+      url: this.pathApi('_now'),
+      method: 'GET',
+      json: true
+    };
+
+    return this.callApi(options);
   }
 };
