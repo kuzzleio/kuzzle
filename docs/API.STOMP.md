@@ -37,6 +37,7 @@ The current implementation of our MQ Broker service uses [RabbitMQ](https://www.
   * [Getting the last statistics frame](#getting-the-last-statistics-frame)
   * [Getting all stored statistics](#getting-all-stored-statistics)
   * [Listing all known data collections](#listing-all-known-data-collections)
+  * [Getting the current Kuzzle timestamp](#getting-the-current-kuzzle-timestamp)
 
 ## How to connect to Kuzzle
 
@@ -1472,6 +1473,45 @@ Return the complete list of persisted data collections.
       'collection_n'
     ],
     action: 'listCollection',
+    controller: 'read',
+    requestId: '<unique request identifier>'
+  }
+}
+```
+
+---
+
+### Getting the current Kuzzle timestamp
+
+Return the the current Kuzzle UTC timestamp as Epoch time (number of milliseconds elapsed since 1 January 1970 00:00:00)
+
+**Topic:** ``/exchange/amq.topic/read..now``
+
+**replyTo queue metadata:** Required.
+
+**Query:**
+
+```javascript
+{
+  action: 'now',
+
+  /*
+  Required: if your query doesn't include a requestId field, Kuzzle will
+  discard it, as it doesn't have any means to provide you with the result
+  */
+  requestId: <Unique query ID>
+}
+```
+
+**Response:**
+
+```javascript
+{
+  status: 200,                      // Assuming everything went well
+  error: null,                      // Assuming everything went well
+  result: {
+    now: 1447151167622,             // Epoch time
+    action: 'now',
     controller: 'read',
     requestId: '<unique request identifier>'
   }
