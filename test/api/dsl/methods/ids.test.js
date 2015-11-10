@@ -46,15 +46,15 @@ describe('Test ids method', function () {
 
   it('should construct the filterTree with correct curried function name', function () {
     /* jshint camelcase:false */
-    should(methods.dsl.filtersTree[collection].fields._id.ids_id).not.be.empty();
-    should(methods.dsl.filtersTree[collection].fields._id.notids_id).not.be.empty();
+    should(methods.dsl.filtersTree[collection].fields._id.ids_ididGrace).not.be.empty();
+    should(methods.dsl.filtersTree[collection].fields._id.notids_ididGrace).not.be.empty();
   });
 
   it('should construct the filterTree with correct room list', function () {
     /* jshint camelcase:false */
     var
-      rooms = methods.dsl.filtersTree[collection].fields._id.ids_id.rooms,
-      roomsNot = methods.dsl.filtersTree[collection].fields._id.notids_id.rooms;
+      rooms = methods.dsl.filtersTree[collection].fields._id.ids_ididGrace.rooms,
+      roomsNot = methods.dsl.filtersTree[collection].fields._id.notids_ididGrace.rooms;
 
     should(rooms).be.an.Array();
     should(roomsNot).be.an.Array();
@@ -68,16 +68,15 @@ describe('Test ids method', function () {
 
   it('should construct the filterTree with correct functions ids', function () {
     /* jshint camelcase:false */
-
     var
-      resultMatch = methods.dsl.filtersTree[collection].fields._id.ids_id.fn(documentGrace),
-      resultNotMatch = methods.dsl.filtersTree[collection].fields._id.ids_id.fn(documentAda);
+      resultMatch = methods.dsl.filtersTree[collection].fields._id.ids_ididGrace.fn(documentGrace),
+      resultNotMatch = methods.dsl.filtersTree[collection].fields._id.ids_ididGrace.fn(documentAda);
 
     should(resultMatch).be.exactly(true);
     should(resultNotMatch).be.exactly(false);
 
-    resultMatch = methods.dsl.filtersTree[collection].fields._id.notids_id.fn(documentAda);
-    resultNotMatch = methods.dsl.filtersTree[collection].fields._id.notids_id.fn(documentGrace);
+    resultMatch = methods.dsl.filtersTree[collection].fields._id.notids_ididGrace.fn(documentAda);
+    resultNotMatch = methods.dsl.filtersTree[collection].fields._id.notids_ididGrace.fn(documentGrace);
 
     should(resultMatch).be.exactly(true);
     should(resultNotMatch).be.exactly(false);
