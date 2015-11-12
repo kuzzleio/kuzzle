@@ -163,3 +163,8 @@ Feature: Test AMQP API
     When I write the document "documentGrace"
     And I list data collections
     Then I can find a collection "kuzzle-collection-test"
+
+  @usingAMQP
+  Scenario: get the Kuzzle timestamp
+    When I get the server timestamp
+    Then I can read the timestamp

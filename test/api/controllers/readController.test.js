@@ -94,4 +94,25 @@ describe('Test: read controller', function () {
     kuzzle.on('data:listCollections', () => done());
     kuzzle.funnel.read.listCollections(requestObject);
   });
+
+  it('should resolve to the current timestamp when calling the read/now API route', function () {
+    var
+      requestObject = new RequestObject({}, {}, ''),
+      result = kuzzle.funnel.read.now(requestObject);
+
+    should(result).be.a.Promise();
+
+    return result.then(result => {
+      should(result.data).not.be.undefined();
+      should(result.data.now).not.be.undefined().and.be.a.Number();
+    });
+  });
+
+  it('should trigger a plugin event when getting the current timestamp', function (done) {
+    var requestObject = new RequestObject({}, {}, '');
+
+    this.timeout(50);
+    kuzzle.on('data:now', () => done());
+    kuzzle.funnel.read.now(requestObject);
+  });
 });
