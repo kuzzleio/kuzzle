@@ -1,6 +1,6 @@
 {
   "kuzzle-plugin-logger": {
-    "version": "1.0.3",
+    "version": "1.0.4",
     "activated": true,
     "defaultConfig": {
       "service": "winston",
