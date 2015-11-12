@@ -9,7 +9,7 @@ var apiSteps = function () {
     this.api.subscribe(filter, socketName)
       .then(function (body) {
         if (body.error !== null) {
-          callback(new Error(body.error));
+          callback(new Error(body.error.message));
           return false;
         }
 
@@ -24,7 +24,7 @@ var apiSteps = function () {
     this.api.subscribe()
       .then(function (body) {
         if (body.error !== null) {
-          callback(new Error(body.error));
+          callback(new Error(body.error.message));
           return false;
         }
 
@@ -42,7 +42,7 @@ var apiSteps = function () {
     this.api.subscribe(filter)
       .then(function (body) {
         if (body.error !== null) {
-          callback(new Error(body.error));
+          callback(new Error(body.error.message));
           return false;
         }
 
@@ -147,7 +147,7 @@ var apiSteps = function () {
           .then(function (body) {
 
             if (body.error) {
-              callbackAsync(body.error);
+              callbackAsync(body.error.message);
               return false;
             }
 
@@ -198,7 +198,7 @@ var apiSteps = function () {
                 return false;
               }
 
-              callbackAsync(body.error);
+              callbackAsync(body.error.message);
               return false;
             }
 
@@ -254,7 +254,7 @@ var apiSteps = function () {
             this.api.get('1')
               .then(function (body) {
                 if (body.error !== null) {
-                  callbackAsyncParallel(body.error);
+                  callbackAsyncParallel(body.error.message);
                   return false;
                 }
 
@@ -320,7 +320,7 @@ var apiSteps = function () {
         this.api.count({})
           .then(function (body) {
             if (body.error) {
-              callbackAsync(body.error);
+              callbackAsync(body.error.message);
               return false;
             }
 
@@ -365,7 +365,7 @@ var apiSteps = function () {
         this.api.count(filter)
           .then(function (body) {
             if (body.error) {
-              callbackAsync(new Error(error));
+              callbackAsync(body.error.message);
               return false;
             }
 
@@ -468,7 +468,7 @@ var apiSteps = function () {
     this.api.countSubscription()
       .then(function (response) {
         if (response.error) {
-          callback(new Error(response.error));
+          callback(new Error(response.error.message));
           return false;
         }
 
@@ -488,7 +488,7 @@ var apiSteps = function () {
     this.api.listCollections()
       .then(response => {
         if (response.error) {
-          callback(new Error(response.error));
+          callback(new Error(response.error.message));
           return false;
         }
 
@@ -502,11 +502,36 @@ var apiSteps = function () {
       .catch(error => callback(error));
   });
 
+  this.When(/^I get the server timestamp$/, function(callback) {
+    this.api.now()
+      .then(response => {
+        if (response.error) {
+          return callback(new Error(response.error.message));
+        }
+
+        if (!response.result) {
+          return callback(new Error('No result provided'));
+        }
+
+        this.result = response.result;
+        callback();
+      })
+      .catch(error => callback(error));
+  });
+
+  this.Then(/^I can read the timestamp$/, function(callback) {
+    if (!this.result.now || !Number.isInteger(this.result.now)) {
+      return callback('Expected a timestamp result, got: ' + this.result);
+    }
+
+    callback();
+  });
+
   this.When(/^I get the last statistics frame$/, function (callback) {
     this.api.getStats()
       .then(function (response) {
         if (response.error) {
-          return callback(new Error(response.error));
+          return callback(new Error(response.error.message));
         }
 
         if (!response.result) {
@@ -525,7 +550,7 @@ var apiSteps = function () {
     this.api.getAllStats()
       .then(function (response) {
         if (response.error) {
-          return callback(new Error(response.error));
+          return callback(new Error(response.error.message));
         }
 
         if (!response.result) {
@@ -579,7 +604,7 @@ var apiSteps = function () {
     this.api.create(document, true)
       .then(function (body) {
         if (body.error) {
-          callback(new Error(body.error));
+          callback(new Error(body.error.message));
           return false;
         }
 
@@ -604,7 +629,7 @@ var apiSteps = function () {
     this.api.createOrUpdate(document)
       .then(function (body) {
         if (body.error) {
-          callback(new Error(body.error));
+          callback(new Error(body.error.message));
           return false;
         }
 
@@ -660,7 +685,7 @@ var apiSteps = function () {
         this.api.update(this.result._id, body)
           .then(function (body) {
             if (body.error) {
-              callbackAsync(body.error);
+              callbackAsync(body.error.message);
               return false;
             }
 
@@ -692,7 +717,7 @@ var apiSteps = function () {
     this.api.deleteById(this.result._id)
       .then(function (body) {
         if (body.error !== null) {
-          callback(body.error);
+          callback(body.error.message);
           return false;
         }
 
@@ -713,7 +738,7 @@ var apiSteps = function () {
         this.api.deleteByQuery(filter)
           .then(function (body) {
             if (body.error) {
-              callbackAsync(body.error);
+              callbackAsync(body.error.message);
               return false;
             }
 
@@ -745,7 +770,7 @@ var apiSteps = function () {
     this.api.bulkImport(this.bulk)
       .then(function (body) {
         if (body.error !== null) {
-          callback(new Error(body.error));
+          callback(new Error(body.error.message));
           return false;
         }
 
@@ -760,7 +785,7 @@ var apiSteps = function () {
     this.api.globalBulkImport(this.globalBulk)
       .then(function (body) {
         if (body.error !== null) {
-          callback(new Error(body.error));
+          callback(new Error(body.error.message));
           return false;
         }
 
@@ -775,7 +800,7 @@ var apiSteps = function () {
     this.api.deleteCollection()
       .then(function (body) {
         if (body.error !== null) {
-          callback(new Error(body.error));
+          callback(new Error(body.error.message));
           return false;
         }
 
@@ -791,7 +816,7 @@ var apiSteps = function () {
     this.api.putMapping()
       .then(function (body) {
         if (body.error !== null) {
-          callback(new Error(body.error));
+          callback(new Error(body.error.message));
           return false;
         }
 

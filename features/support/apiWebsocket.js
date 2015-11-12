@@ -223,6 +223,12 @@ module.exports = {
     var msg = {action: 'listCollections'};
 
     return emit.call(this, 'read', msg );
+  },
+
+  now: function () {
+    var msg = {action: 'now'};
+
+    return emit.call(this, 'read', msg );
   }
 };
 

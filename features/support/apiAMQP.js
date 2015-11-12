@@ -223,6 +223,14 @@ module.exports = {
       msg = {};
 
     return publish.call(this, topic, msg);
+  },
+
+  now: function () {
+    var
+      topic = ['read', '', 'now'].join('.'),
+      msg = {};
+
+    return publish.call(this, topic, msg);
   }
 };
 

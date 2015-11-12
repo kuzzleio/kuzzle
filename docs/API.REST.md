@@ -30,6 +30,7 @@ If you need such functionalities, please check our other supported protocols. Fo
   * [Getting the last statistics frame](#getting-the-last-statistics-frame)
   * [Getting all stored statistics](#getting-all-stored-statistics)
   * [Listing all known data collections](#listing-all-known-data-collections)
+  * [Getting the current Kuzzle timestamp](#getting-the-current-kuzzle-timestamp)
 
 ## What are ``response`` objects
 
@@ -912,6 +913,31 @@ Return the complete list of persisted data collections.
       'collection_n'
     ],
     action: 'listCollection',
+    controller: 'read',
+    requestId: '<unique request identifier>'
+  }
+}
+```
+
+---
+
+### Getting the current Kuzzle timestamp
+
+Return the the current Kuzzle UTC timestamp as Epoch time (number of milliseconds elapsed since 1 January 1970 00:00:00)
+
+**URL:** ``http://kuzzle:7512/api/_now``
+
+**Method:** ``GET``
+
+**Response:**
+
+```javascript
+{
+  status: 200,                      // Assuming everything went well
+  error: null,                      // Assuming everything went well
+  result: {
+    now: 1447151167622,             // Epoch time
+    action: 'now',
     controller: 'read',
     requestId: '<unique request identifier>'
   }
