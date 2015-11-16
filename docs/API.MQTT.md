@@ -38,7 +38,7 @@ The current implementation of our MQ Broker service uses [RabbitMQ](https://www.
   * [Getting all stored statistics](#getting-all-stored-statistics)
   * [Listing all known data collections](#listing-all-known-data-collections)
   * [Getting the current Kuzzle timestamp](#getting-the-current-kuzzle-timestamp)
-  
+
 ##  How to connect to Kuzzle
 
 To establish communication with Kuzzle using MQTT, simply connect your application to the Kuzzle's MQTT port.
@@ -235,7 +235,11 @@ How subscription works:
   status: 200,                      // Assuming everything went well
   error: null,                      // Assuming everything went well
   result: {
-    roomId: 'unique Kuzzle room ID'
+    roomId: 'unique Kuzzle room ID',
+    requestId: <Unique ID>,
+    controller: 'subscribe',
+    action: 'on',
+    metadata: {}                   // subscription metadata
   }
 }
 ```
@@ -406,7 +410,13 @@ It works with the room unique ID Kuzzle returns to you when you make a subscript
 {
   status: 200,                       // Assuming everything went well
   error: null,                        // Assuming everything went well
-  result: <number of subscriptions>
+  result: {
+    roomId: 'unique Kuzzle room ID',
+    count: <number of subscriptions>,
+    requestId: <Unique ID>,
+    controller: 'subscribe',
+    action: 'count'
+  }
 }
 ```
 
@@ -440,7 +450,11 @@ Makes Kuzzle remove you from its subscribers on this room.
   status: 200,                       // Assuming everything went well
   error: null,                        // Assuming everything went well
   result: {
-    roomId: 'unique Kuzzle room ID'
+    roomId: 'unique Kuzzle room ID',
+    requestId: <Unique ID>,
+    controller: 'subscribe',
+    action: 'off',
+    metadata: {}                   // subscription metadata
   }
 }
 ```
