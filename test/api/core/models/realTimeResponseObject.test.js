@@ -14,10 +14,10 @@ describe('Test: realTimeResponseObject', function () {
   var
     roomId = 'fakeroomid',
     requestObject = new RequestObject({
-      controller: 'write',
-      action: 'update',
-      requestId: 'fakerequestid',
+      controller: 'subscribe',
+      action: 'count',
       collection: 'fakecollection',
+      protocol: 'fakeprotocol',
       body: { foo: 'bar' }
     });
 
@@ -33,7 +33,15 @@ describe('Test: realTimeResponseObject', function () {
       response = responseObject.toJson();
 
     should(response.error).be.null();
-    should(response.result).not.be.null().and.be.exactly(42);
+    should(response.status).be.a.Number().and.be.eql(200);
+    should(response.result).not.be.null().and.be.an.Object();
+    should(response.result.action).be.exactly(requestObject.action);
+    should(response.result.controller).be.exactly(requestObject.controller);
+    should(response.result.metadata).match(requestObject.metadata);
+    should(response.result.protocol).be.exactly(requestObject.protocol);
+    should(response.result.requestId).be.exactly(requestObject.requestId);
+    should(response.result.timestamp).be.exactly(requestObject.timestamp);
+    should(response.result.count).be.exactly(42);
   });
 
   it('should return a normalized subscription response', function () {
@@ -43,6 +51,15 @@ describe('Test: realTimeResponseObject', function () {
 
     should(response.error).be.null();
     should(response.result).not.be.null();
-    should(response.result.roomId).not.be.undefined().and.be.exactly(roomId);
+    should(response.error).be.null();
+    should(response.status).be.a.Number().and.be.eql(200);
+    should(response.result).not.be.null().and.be.an.Object();
+    should(response.result.action).be.exactly(requestObject.action);
+    should(response.result.controller).be.exactly(requestObject.controller);
+    should(response.result.metadata).match(requestObject.metadata);
+    should(response.result.protocol).be.exactly(requestObject.protocol);
+    should(response.result.requestId).be.exactly(requestObject.requestId);
+    should(response.result.timestamp).be.exactly(requestObject.timestamp);
+    should(response.result.count).be.undefined();
   });
 });

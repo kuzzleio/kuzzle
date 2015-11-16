@@ -233,7 +233,11 @@ How subscription works:
   status: 200,                      // Assuming everything went well
   error: null,                      // Assuming everything went well
   result: {
-    roomId: 'unique Kuzzle room ID'
+    roomId: 'unique Kuzzle room ID',
+    requestId: <Unique ID>,
+    controller: 'subscribe',
+    action: 'on',
+    metadata: {}                   // subscription metadata
   }
 }
 ```
@@ -406,7 +410,13 @@ It works with the room unique ID Kuzzle returns to you when you make a subscript
 {
   status: 200,                        // Assuming everything went well
   error: null,                        // Assuming everything went well
-  result: <number of subscriptions>
+  result: {
+    roomId: 'unique Kuzzle room ID',
+    count: <number of subscriptions>
+    requestId: <Unique ID>,
+    controller: 'subscribe',
+    action: 'count',
+  }
 }
 ```
 
@@ -444,7 +454,11 @@ Makes Kuzzle remove you from its subscribers on this room.
   status: 200,                        // Assuming everything went well
   error: null,                        // Assuming everything went well
   result: {
-    roomId: 'unique Kuzzle room ID'
+    roomId: 'unique Kuzzle room ID',
+    requestId: <Unique ID>,
+    controller: 'subscribe',
+    action: 'off',
+    metadata: {}                      // subscription metadata
   }
 }
 ```
