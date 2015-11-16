@@ -1130,7 +1130,6 @@ Bulk import only works on documents in our persistent data storage layer.
 {
   controller: 'bulk',
   action: 'import',
-  collection: '',
 
   /*
   Data mapping using ElasticSearch bulk syntax.
@@ -1213,8 +1212,7 @@ These statistics include:
   requestId: <Unique query ID>,
 
   controller: 'admin',
-  action: 'getStats',
-  collection: ''
+  action: 'getStats'
 }
 ```
 
@@ -1284,8 +1282,7 @@ Statistics are returned as a JSON-object with each key being the snapshot's time
   requestId: <Unique query ID>,
 
   controller: 'admin',
-  action: 'getAllStats',
-  collection: ''
+  action: 'getAllStats'
 }
 ```
 
@@ -1352,8 +1349,7 @@ Return the complete list of persisted data collections.
   requestId: <Unique query ID>,
 
   controller: 'read',
-  action: 'listCollections',
-  collection: ''
+  action: 'listCollections'
 }
 ```
 
@@ -1394,8 +1390,7 @@ Return the the current Kuzzle UTC timestamp as Epoch time (number of millisecond
   requestId: <Unique query ID>,
 
   controller: 'read',
-  action: 'now',
-  collection: ''
+  action: 'now'
 }
 ```
 

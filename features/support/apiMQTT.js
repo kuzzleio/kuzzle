@@ -167,7 +167,6 @@ module.exports = {
     var
       msg = {
         controller: 'bulk',
-        collection: '',
         action: 'import',
         body: bulk
       };
@@ -226,8 +225,7 @@ module.exports = {
     var
       msg = {
         controller: 'admin',
-        collection: '',
-        action: 'getStats',
+        action: 'getStats'
       };
 
     return publish.call(this, msg);
@@ -237,8 +235,7 @@ module.exports = {
     var
       msg = {
         controller: 'admin',
-        collection: '',
-        action: 'getStats',
+        action: 'getStats'
       };
 
     return publish.call(this, msg);
@@ -248,8 +245,7 @@ module.exports = {
     var
       msg = {
         controller: 'read',
-        collection: '',
-        action: 'listCollections',
+        action: 'listCollections'
       };
 
     return publish.call(this, msg);
@@ -259,8 +255,7 @@ module.exports = {
     var
       msg = {
         controller: 'read',
-        collection: '',
-        action: 'now',
+        action: 'now'
       };
 
     return publish.call(this, msg);
