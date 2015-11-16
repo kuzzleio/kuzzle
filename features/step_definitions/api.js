@@ -472,7 +472,7 @@ var apiSteps = function () {
           return false;
         }
 
-        if (response.result !== parseInt(number)) {
+        if (!response.result.count || response.result.count !== parseInt(number)) {
           callback(new Error('No correct value for count. Expected ' + number + ', got ' + response.result));
           return false;
         }
