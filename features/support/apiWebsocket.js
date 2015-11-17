@@ -27,138 +27,151 @@ module.exports = {
   get: function (id) {
     var
       msg = {
+        controller: 'read',
         action: 'get',
         collection: this.world.fakeCollection,
         _id: id
       };
 
-    return emit.call(this, 'read', msg);
+    return emit.call(this, msg);
   },
 
   search: function (filters) {
     var
       msg = {
+        controller: 'read',
         action: 'search',
         collection: this.world.fakeCollection,
         body: filters
       };
 
-    return emit.call(this, 'read', msg);
+    return emit.call(this, msg);
   },
 
   count: function (filters) {
     var
       msg = {
+        controller: 'read',
         action: 'count',
         collection: this.world.fakeCollection,
         body: filters
       };
 
-    return emit.call(this, 'read', msg);
+    return emit.call(this, msg);
   },
 
   create: function (body, persist) {
     var
       msg = {
+        controller: 'write',
         persist: persist,
         action: 'create',
         collection: this.world.fakeCollection,
         body: body
       };
 
-    return emit.call(this, 'write', msg);
+    return emit.call(this, msg);
   },
 
   createOrUpdate: function (body) {
     var
       msg = {
+        controller: 'write',
         action: 'createOrUpdate',
         collection: this.world.fakeCollection,
         body: body
       };
 
-    return emit.call(this, 'write', msg);
+    return emit.call(this, msg);
   },
 
   update: function (id, body) {
     var
       msg = {
+        controller: 'write',
         action: 'update',
         collection: this.world.fakeCollection,
         _id: id,
         body: body
       };
 
-    return emit.call(this, 'write', msg);
+    return emit.call(this, msg);
   },
 
   deleteById: function (id) {
     var
       msg = {
+        controller: 'write',
         action: 'delete',
         collection: this.world.fakeCollection,
         _id: id
       };
 
-    return emit.call(this, 'write', msg);
+    return emit.call(this, msg);
   },
 
   deleteByQuery: function (filters) {
     var
       msg = {
+        controller: 'write',
         action: 'deleteByQuery',
         collection: this.world.fakeCollection,
         body: filters
       };
 
-    return emit.call(this, 'write', msg);
+    return emit.call(this, msg);
   },
 
   deleteCollection: function () {
     var
       msg = {
+        controller: 'admin',
         action: 'deleteCollection',
         collection: this.world.fakeCollection
       };
 
-    return emit.call(this, 'admin', msg);
+    return emit.call(this, msg);
   },
 
   bulkImport: function (bulk) {
     var
       msg = {
+        controller: 'bulk',
         action: 'import',
         collection: this.world.fakeCollection,
         body: bulk
       };
 
-    return emit.call(this, 'bulk', msg );
+    return emit.call(this, msg );
   },
 
   globalBulkImport: function (bulk) {
     var
       msg = {
+        controller: 'bulk',
         action: 'import',
         body: bulk
       };
 
-    return emit.call(this, 'bulk', msg );
+    return emit.call(this, msg );
   },
 
   putMapping: function () {
     var
       msg = {
+        controller: 'admin',
         action: 'putMapping',
         collection: this.world.fakeCollection,
         body: this.world.schema
       };
 
-    return emit.call(this, 'admin', msg );
+    return emit.call(this, msg );
   },
 
   subscribe: function (filters, socketName) {
     var
       msg = {
+        controller: 'subscribe',
         action: 'on',
         collection: this.world.fakeCollection,
         body: null
@@ -168,12 +181,13 @@ module.exports = {
       msg.body = filters;
     }
 
-    return emitAndListen.call(this, 'subscribe', msg, socketName);
+    return emitAndListen.call(this, msg, socketName);
 
   },
   unsubscribe: function (room, socketName) {
     var
       msg = {
+        controller: 'subscribe',
         action: 'off',
         collection: this.world.fakeCollection,
         body: { roomId: room }
@@ -183,7 +197,7 @@ module.exports = {
 
     this.listSockets[socketName].removeListener(room, this.subscribedRooms[socketName][room]);
     delete this.subscribedRooms[socketName][room];
-    return emit.call(this, 'subscribe', msg, false, socketName);
+    return emit.call(this, msg, false, socketName);
   },
 
   countSubscription: function (socketName) {
@@ -192,49 +206,59 @@ module.exports = {
     var
       rooms = Object.keys(this.subscribedRooms[socketName]),
       msg = {
+        controller: 'subscribe',
         action: 'count',
         body: {
           roomId: rooms[0]
         }
       };
 
-    return emit.call(this, 'subscribe', msg);
+    return emit.call(this, msg);
   },
 
   getStats: function () {
     var
       msg = {
+        controller: 'admin',
         action: 'getStats'
       };
 
-    return emit.call(this, 'admin', msg);
+    return emit.call(this, msg);
   },
 
   getAllStats: function () {
     var
       msg = {
+        controller: 'admin',
         action: 'getAllStats'
       };
 
-    return emit.call(this, 'admin', msg);
+    return emit.call(this, msg);
   },
 
   listCollections: function () {
-    var msg = {action: 'listCollections'};
+    var msg = {
+      controller: 'read',
+      action: 'listCollections'
+    };
 
-    return emit.call(this, 'read', msg );
+    return emit.call(this, msg );
   },
 
   now: function () {
-    var msg = {action: 'now'};
+    var msg = {
+      controller: 'read',
+      action: 'now'
+    };
 
-    return emit.call(this, 'read', msg );
+    return emit.call(this, msg );
   }
 };
 
-var emit = function (controller, msg, getAnswer, socketName) {
+var emit = function (msg, getAnswer, socketName) {
   var
     deferred = q.defer(),
+    routename = 'kuzzle',
     listen = (getAnswer !== undefined) ? getAnswer : true;
 
   if (!msg.requestId) {
@@ -259,14 +283,15 @@ var emit = function (controller, msg, getAnswer, socketName) {
     deferred.resolve({});
   }
 
-  this.listSockets[socketName].emit(controller, msg);
+  this.listSockets[socketName].emit(routename, msg);
 
   return deferred.promise;
 };
 
-var emitAndListen = function (controller, msg, socketName) {
+var emitAndListen = function (msg, socketName) {
   var
-    deferred = q.defer();
+    deferred = q.defer(),
+    routename = 'kuzzle';
 
   if (!msg.requestId) {
     msg.requestId = uuid.v1();
@@ -294,7 +319,7 @@ var emitAndListen = function (controller, msg, socketName) {
     deferred.resolve(response);
   });
 
-  this.listSockets[socketName].emit(controller, msg);
+  this.listSockets[socketName].emit(routename, msg);
 
   return deferred.promise;
 };
