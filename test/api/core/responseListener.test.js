@@ -19,6 +19,7 @@ describe('Test: responseListener', function () {
     kuzzle,
     registered,
     listenCallback,
+    controllers = ['write', 'subscribe', 'read', 'admin', 'bulk'],
     requestObject = new RequestObject({
       controller: '',
       action: 'update',
@@ -46,7 +47,7 @@ describe('Test: responseListener', function () {
 
     requestObject.persist = false;
 
-    kuzzle.router.controllers.forEach(function (controller) {
+    controllers.forEach(function (controller) {
       requestObject.controller = controller;
       requestObject.requestId = uuid.v1();
       responseListener.add(requestObject, {});
@@ -60,7 +61,7 @@ describe('Test: responseListener', function () {
 
     requestObject.persist = true;
 
-    kuzzle.router.controllers.forEach(function (controller) {
+    controllers.forEach(function (controller) {
       requestObject.controller = controller;
       requestObject.requestId = uuid.v1();
       responseListener.add(requestObject, {});
@@ -76,7 +77,7 @@ describe('Test: responseListener', function () {
     requestObject.persist = true;
 
     responseListener = new ResponseListener(kuzzle, kuzzle.config.queues.workerWriteResponseQueue);
-    kuzzle.router.controllers.forEach(function (controller) {
+    controllers.forEach(function (controller) {
       requestObject.controller = controller;
       requestObject.requestId = uuid.v1();
       responseListener.add(requestObject, {});

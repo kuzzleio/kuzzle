@@ -42,128 +42,154 @@ module.exports = {
 
   create: function (body, persist) {
     var
-      topic = ['write', this.world.fakeCollection, 'create'].join('.'),
       msg = {
+        controller: 'write',
+        collection: this.world.fakeCollection,
+        action: 'create',
         persist: persist,
         body: body
       };
 
-    return publish.call(this, topic, msg);
+    return publish.call(this, msg);
   },
 
   createOrUpdate: function (body) {
     var
-      topic = ['write', this.world.fakeCollection, 'createOrUpdate'].join('.'),
       msg = {
+        controller: 'write',
+        collection: this.world.fakeCollection,
+        action: 'createOrUpdate',
         body: body
       };
 
-    return publish.call(this, topic, msg);
+    return publish.call(this, msg);
   },
 
   get: function (id) {
     var
-      topic = ['read', this.world.fakeCollection, 'get'].join('.'),
       msg = {
+        controller: 'read',
+        collection: this.world.fakeCollection,
+        action: 'get',
         _id: id
       };
 
-    return publish.call(this, topic, msg);
+    return publish.call(this, msg);
   },
 
   search: function (filters) {
     var
-      topic = ['read', this.world.fakeCollection, 'search'].join('.'),
       msg = {
+        controller: 'read',
+        collection: this.world.fakeCollection,
+        action: 'search',
         body: filters
       };
 
-    return publish.call(this, topic, msg);
-  },
-
-  update: function (id, body) {
-    var
-      topic = ['write', this.world.fakeCollection, 'update'].join('.'),
-      msg = {
-        _id: id,
-        body: body
-      };
-
-    return publish.call(this, topic, msg);
+    return publish.call(this, msg);
   },
 
   count: function (filters) {
     var
-      topic = ['read', this.world.fakeCollection, 'count'].join('.'),
       msg = {
+        controller: 'read',
+        collection: this.world.fakeCollection,
+        action: 'count',
         body: filters
       };
 
-    return publish.call(this, topic, msg);
+    return publish.call(this, msg);
+  },
+
+  update: function (id, body) {
+    var
+      msg = {
+        controller: 'write',
+        collection: this.world.fakeCollection,
+        action: 'update',
+        _id: id,
+        body: body
+      };
+
+    return publish.call(this, msg);
   },
 
   deleteById: function (id) {
     var
-      topic = ['write', this.world.fakeCollection, 'delete'].join('.'),
       msg = {
+        controller: 'write',
+        collection: this.world.fakeCollection,
+        action: 'delete',
         _id: id
       };
 
-    return publish.call(this, topic, msg);
+    return publish.call(this, msg);
   },
 
   deleteByQuery: function (filters) {
     var
-      topic = ['write', this.world.fakeCollection, 'deleteByQuery'].join('.'),
       msg = {
+        controller: 'write',
+        collection: this.world.fakeCollection,
+        action: 'deleteByQuery',
         body: filters
       };
 
-    return publish.call(this, topic, msg);
+    return publish.call(this, msg);
   },
 
   deleteCollection: function () {
     var
-      topic = ['admin', this.world.fakeCollection, 'deleteCollection'].join('.'),
-      msg = {};
+      msg = {
+        controller: 'admin',
+        collection: this.world.fakeCollection,
+        action: 'deleteCollection',
+      };
 
-    return publish.call(this, topic, msg);
+    return publish.call(this, msg);
   },
 
   putMapping: function () {
     var
-      topic = ['admin', this.world.fakeCollection, 'putMapping'].join('.'),
       msg = {
+        controller: 'admin',
+        collection: this.world.fakeCollection,
+        action: 'putMapping',
         body: this.world.schema
       };
 
-    return publish.call(this, topic, msg);
+    return publish.call(this, msg);
   },
 
   bulkImport: function (bulk) {
     var
-      topic = ['bulk', this.world.fakeCollection, 'import'].join('.'),
       msg = {
+        controller: 'bulk',
+        collection: this.world.fakeCollection,
+        action: 'import',
         body: bulk
       };
 
-    return publish.call(this, topic, msg);
+    return publish.call(this, msg);
   },
 
   globalBulkImport: function (bulk) {
     var
-      topic = ['bulk', '', 'import'].join('.'),
       msg = {
+        controller: 'bulk',
+        action: 'import',
         body: bulk
       };
 
-    return publish.call(this, topic, msg);
+    return publish.call(this, msg);
   },
 
   subscribe: function (filters) {
     var
-      topic = ['subscribe', this.world.fakeCollection, 'on'].join('.'),
       msg = {
+        controller: 'subscribe',
+        collection: this.world.fakeCollection,
+        action: 'on',
         body: null
       };
 
@@ -171,73 +197,87 @@ module.exports = {
       msg.body = filters;
     }
 
-    return publishAndListen.call(this, topic, msg);
+    return publishAndListen.call(this, msg);
   },
 
   unsubscribe: function (room, clientId) {
     var
-      topic = ['subscribe', this.world.fakeCollection, 'off'].join('.'),
       msg = {
-        body: { roomId: room },
-        clientId: clientId
+        clientId: clientId,
+        controller: 'subscribe',
+        collection: this.world.fakeCollection,
+        action: 'off',
+        body: { roomId: room }
       };
 
     this.subscribedRooms[clientId][room].disconnect();
     delete this.subscribedRooms[clientId][room];
-    return publish.call(this, topic, msg, false);
+
+    return publish.call(this, msg, false);
   },
 
   countSubscription: function () {
     var
-      topic = ['subscribe', this.world.fakeCollection, 'count'].join('.'),
       clients = Object.keys(this.subscribedRooms),
       rooms = Object.keys(this.subscribedRooms[clients[0]]),
       msg = {
+        controller: 'subscribe',
+        collection: this.world.fakeCollection,
+        action: 'count',
         body: {
           roomId: rooms[0]
         }
       };
 
-    return publish.call(this, topic, msg);
+    return publish.call(this, msg);
   },
 
   getStats: function () {
     var
-      topic = ['admin', '', 'getStats'].join('.'),
-      msg = {};
+      msg = {
+        controller: 'admin',
+        action: 'getStats'
+      };
 
-    return publish.call(this, topic, msg);
+    return publish.call(this, msg);
   },
 
   getAllStats: function () {
     var
-      topic = ['admin', '', 'getAllStats'].join('.'),
-      msg = {};
+      msg = {
+        controller: 'admin',
+        action: 'getStats'
+      };
 
-    return publish.call(this, topic, msg);
+    return publish.call(this, msg);
   },
 
   listCollections: function () {
     var
-      topic = ['read', '', 'listCollections'].join('.'),
-      msg = {};
+      msg = {
+        controller: 'read',
+        action: 'listCollections'
+      };
 
-    return publish.call(this, topic, msg);
+    return publish.call(this, msg);
   },
 
   now: function () {
     var
-      topic = ['read', '', 'now'].join('.'),
-      msg = {};
+      msg = {
+        controller: 'read',
+        action: 'now'
+      };
 
-    return publish.call(this, topic, msg);
+    return publish.call(this, msg);
   }
 };
 
-var publish = function (topic, message, waitForAnswer) {
+var publish = function (message, waitForAnswer) {
   var
     deferred = q.defer(),
-    listen = (waitForAnswer === undefined) ? true : waitForAnswer,
+    topic = 'kuzzle',
+    listen = (waitForAnswer !== undefined) ? waitForAnswer : true,
     destination = ['/exchange', KUZZLE_EXCHANGE, topic].join('/'),
     messageHeader = {
       'content-type': 'application/json'
@@ -279,7 +319,7 @@ var publish = function (topic, message, waitForAnswer) {
   return deferred.promise;
 };
 
-var publishAndListen = function (topic, message) {
+var publishAndListen = function (message) {
   var
     roomClient = new stomp(this.stompUrl[0], this.stompUrl[1], 'guest', 'guest', '1.0', '/'),
     deferred = q.defer(),
@@ -288,7 +328,7 @@ var publishAndListen = function (topic, message) {
   message.clientId = uuid.v1();
   self.subscribedRooms[message.clientId] = {};
 
-  publish.call(self, topic, message)
+  publish.call(this, message)
     .then(function (response) {
       roomClient.connect(function () {
         var topic = '/topic/' + response.result.roomId;
