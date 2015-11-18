@@ -40,6 +40,7 @@ The current implementation of our MQ Broker service uses [RabbitMQ](https://www.
   * [Listing all known data collections](#listing-all-known-data-collections)
   * [Getting the current Kuzzle timestamp](#getting-the-current-kuzzle-timestamp)
   * [Creating an empty collection](#creating-an-empty-collection)
+  * [Deleting the entire content of a collection](#deleting-the-entire-content-of-a-collection)
 
 ## How to connect to Kuzzle
 
@@ -1451,6 +1452,42 @@ This method does nothing if the collection already exists.
     acknowledged: true,
     action: 'createCollection',
     controller: 'write',
+    collection: 'collection name',
+    requestId: '<unique request identifier>'
+  }
+}
+```
+
+
+---
+
+### Deleting the entire content of a collection
+
+This method empties a collection from all its documents, while keeping any associated mapping.  
+It is also way faster than deleting all documents from a collection using a query.
+
+**replyTo queue header:** Optionnal
+
+**Query:**
+
+```javascript
+{
+  controller: 'admin',
+  action: 'truncateCollection',
+  collection: 'collection name'
+}
+```
+
+**Response:**
+
+```javascript
+{
+  status: 200,
+  error: null,
+  result: {
+    acknowledged: true,
+    action: 'truncateCollection',
+    controller: 'admin',
     collection: 'collection name',
     requestId: '<unique request identifier>'
   }
