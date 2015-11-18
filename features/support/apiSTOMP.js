@@ -201,10 +201,22 @@ module.exports = {
     return publish.call(this, topic, msg);
   },
 
-  getStats: function () {
+  getStats: function (timestamp) {
     var
       topic = ['admin', '', 'getStats'].join('.'),
-      msg = {};
+      msg = {
+        body: {
+          timestamp: timestamp
+        }
+      };
+
+    return publish.call(this, topic, msg);
+  },
+
+  getLastStat: function () {
+    var
+        topic = ['admin', '', 'getLastStat'].join('.'),
+        msg = {};
 
     return publish.call(this, topic, msg);
   },

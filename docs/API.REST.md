@@ -28,6 +28,7 @@ If you need such functionalities, please check our other supported protocols. Fo
   * [Performing a bulk import](#performing-a-bulk-import-on-a-data-collection)
   * [Performing a global bulk import](#performing-a-global-bulk-import)
   * [Getting the last statistics frame](#getting-the-last-statistics-frame)
+  * [Getting the statistics from a date](#getting-the-statistics-from-a-date)
   * [Getting all stored statistics](#getting-all-stored-statistics)
   * [Listing all known data collections](#listing-all-known-data-collections)
   * [Getting the current Kuzzle timestamp](#getting-the-current-kuzzle-timestamp)
@@ -782,7 +783,7 @@ These statistics include:
 * the number of completed requests since the last frame
 * the number of failed requests since the last frame
 
-**URL:** ``http://kuzzle:7512/api/_getStats``
+**URL:** ``http://kuzzle:7512/api/_getLastStat``
 
 **Method:** ``GET``
 
@@ -795,6 +796,70 @@ These statistics include:
   result: {
     _source: {                      // Your original count query
       ...
+    },
+    collection: '<data collection>',
+    action: 'getLastStat',
+    controller: 'admin',
+    statistics: {
+      "YYYY-MM-DDTHH:mm:ss.mmmZ": {
+        completedRequests: {
+          websocket: 148,
+          rest: 24,
+          mq: 78
+        },
+        failedRequests: {
+          websocket: 3
+        },
+        ongoingRequests: {
+          mq: 8,
+          rest: 2
+        }
+        connections: {
+          websocket: 13
+        }
+      }
+    },
+    requestId, '<unique request identifier>'
+  }
+}
+```
+
+---
+
+### Getting the statistics from a date
+
+Kuzzle monitors its internal activities and make snapshots of them. This command allows getting the last stored statistics frame from a date.
+
+These statistics include:
+
+* the number of connected users for protocols allowing this notion (websocket, udp, ...)
+* the number of ongoing requests
+* the number of completed requests since the last frame
+* the number of failed requests since the last frame
+
+**URL:** ``http://kuzzle:7512/api/_getStats``
+
+**Method:** ``POST``
+
+**Message:**
+
+```javascript
+{
+  body: {
+    timestamp: 4242424242
+  }
+}
+```
+
+**Response:**
+
+```javascript
+{
+  status: 200,                      // Assuming everything went well
+  error: null,                      // Assuming everything went well
+  result: {
+    _source: {                      // Your original count query
+      timestamp: { 424242424242 }
     },
     collection: '<data collection>',
     action: 'getStats',

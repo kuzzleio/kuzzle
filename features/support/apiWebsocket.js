@@ -201,11 +201,23 @@ module.exports = {
     return emit.call(this, 'subscribe', msg);
   },
 
-  getStats: function () {
+  getStats: function (timestamp) {
     var
       msg = {
-        action: 'getStats'
+        action: 'getStats',
+        body: {
+          timestamp: timestamp
+        }
       };
+
+    return emit.call(this, 'admin', msg);
+  },
+
+  getLastStat: function () {
+    var
+        msg = {
+          action: 'getLastStat'
+        };
 
     return emit.call(this, 'admin', msg);
   },

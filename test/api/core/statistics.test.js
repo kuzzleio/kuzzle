@@ -17,13 +17,14 @@ describe('Test: statistics core component', function () {
     requestObject,
     kuzzle,
     stats,
+    lastFrame = Date.now(),
     fakeStats = {
       connections: { foo: 42 },
       ongoingRequests: { bar: 1337 },
       completedRequests: { baz: 666 },
-      failedRequests: { qux: 667 }
-    },
-    lastFrame = Date.now();
+      failedRequests: { qux: 667 },
+      timestamp: lastFrame
+    };
 
   before(function (done) {
     kuzzle = new Kuzzle();
@@ -60,6 +61,7 @@ describe('Test: statistics core component', function () {
     should(stats.newConnection).be.a.Function();
     should(stats.dropConnection).be.a.Function();
     should(stats.getStats).be.a.Function();
+    should(stats.getLastStat).be.a.Function();
     should(stats.getAllStats).be.a.Function();
   });
 
@@ -150,6 +152,7 @@ describe('Test: statistics core component', function () {
     var result;
 
     stats.currentStats = fakeStats;
+    requestObject.data.body.timestamp = lastFrame - 1000;
     result = stats.getStats(requestObject);
 
     should(result).be.a.Promise();
@@ -170,10 +173,12 @@ describe('Test: statistics core component', function () {
       .catch(error => done(error));
   });
 
-  it('should get the last frame from the cache when statistics snapshots have been taken', function (done) {
+  it('should return the current frame from the cache when statistics snapshots have been taken', function (done) {
     var result;
 
+
     stats.lastFrame = lastFrame;
+    requestObject.data.body.timestamp = lastFrame - 1000;
     result = stats.getStats(requestObject);
 
     should(result).be.a.Promise();
@@ -187,8 +192,57 @@ describe('Test: statistics core component', function () {
         should(serialized.error).be.null();
         should(serialized.status).be.exactly(200);
         should(serialized.result.statistics).be.an.Object();
-        should(keys.length).be.exactly(1);
+        should(keys.length).be.exactly(2);
         should(serialized.result.statistics[keys[0]]).match(fakeStats);
+        done();
+      })
+      .catch(error => done(error));
+  });
+
+  it('should return an empty statistics because the asked date is in the future', function (done) {
+    var result;
+
+
+    stats.lastFrame = lastFrame;
+    requestObject.data.body.timestamp = lastFrame + 1000000;
+    result = stats.getStats(requestObject);
+
+    should(result).be.a.Promise();
+
+    result
+      .then(response => {
+        var
+          serialized = response.toJson(),
+          keys = Object.keys(serialized.result.statistics);
+
+        should(serialized.error).be.null();
+        should(serialized.status).be.exactly(200);
+        should(serialized.result.statistics).be.an.Object();
+        should(keys.length).be.exactly(0);
+        done();
+      })
+      .catch(error => done(error));
+  });
+
+  it('should get the last frame from the cache when statistics snapshots have been taken', function (done) {
+    var result;
+
+    stats.lastFrame = lastFrame;
+    result = stats.getLastStat(requestObject);
+
+    should(result).be.a.Promise();
+
+    result
+      .then(response => {
+        var
+          serialized = response.toJson(),
+          keys = Object.keys(serialized.result.statistics);
+
+        should(serialized.error).be.null();
+        should(serialized.status).be.exactly(200);
+        should(serialized.result.statistics).be.an.Object();
+        should(keys.length).be.exactly(1);
+         should(serialized.result.statistics[keys[0]]).match(fakeStats);
         done();
       })
       .catch(error => done(error));

@@ -32,6 +32,7 @@ This will give you a direct access to Kuzzle's router controller, dispatching yo
   * [Performing a bulk import](#performing-a-bulk-import-on-a-data-collection)
   * [Performing a global bulk import](#performing-a-global-bulk-import)
   * [Getting the last statistics frame](#getting-the-last-statistics-frame)
+  * [Getting the statistics from a date](#getting-the-statistics-from-a-date)
   * [Getting all stored statistics](#getting-all-stored-statistics)
   * [Listing all known data collections](#listing-all-known-data-collections)
   * [Getting the current Kuzzle timestamp](#getting-the-current-kuzzle-timestamp)
@@ -1238,7 +1239,7 @@ These statistics include:
 
 ```javascript
 {
-  action: 'getStats',
+  action: 'getLastStat',
 
   /*
   Required: if your query doesn't include a requestId field, Kuzzle will
@@ -1257,6 +1258,77 @@ These statistics include:
   result: {
     _source: {                      // Your original query
       ...
+    },
+    action: 'getLastStat',
+    controller: 'admin',
+    statistics: {
+      "YYYY-MM-DDTHH:mm:ss.mmmZ": {
+        completedRequests: {
+          websocket: 148,
+          rest: 24,
+          mq: 78
+        },
+        failedRequests: {
+          websocket: 3
+        },
+        ongoingRequests: {
+          mq: 8,
+          rest: 2
+        }
+        connections: {
+          websocket: 13
+        }
+      }
+    },
+    /*
+    The requestId field you provided.
+    */
+    requestId: '<unique request identifier>'
+  }
+}
+```
+
+---
+
+### Getting the statistics frame from a date
+
+Kuzzle monitors its internal activities and make snapshots regularly. This command allows getting the last stored statistics frame from a date.
+By default, snapshots are made every 10s.
+
+These statistics include:
+
+* the number of connected users for protocols allowing this notion (websocket, udp, ...)
+* the number of ongoing requests
+* the number of completed requests since the last frame
+* the number of failed requests since the last frame
+
+**Message type:** ``admin``
+
+**Query:**
+
+```javascript
+{
+  action: 'getStats',
+
+  /*
+  Required: if your query doesn't include a requestId field, Kuzzle will
+  discard it, as it doesn't have any means to provide you with the result
+  */
+  requestId: <Unique query ID>
+
+  timestamp: 4242424242
+}
+```
+
+**Response:**
+
+```javascript
+{
+  status: 200,                      // Assuming everything went well
+  error: null,                      // Assuming everything went well
+  result: {
+    _source: {                      // Your original query
+      timestamp: 4242424242
     },
     action: 'getStats',
     controller: 'admin',

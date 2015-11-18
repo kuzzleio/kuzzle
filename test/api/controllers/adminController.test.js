@@ -97,6 +97,22 @@ describe('Test: admin controller', function () {
     kuzzle.funnel.admin.getStats(requestObject);
   });
 
+  it('should trigger a hook on a getLastStat call', function (done) {
+    this.timeout(50);
+
+    kuzzle.once('data:getLastStat', function (obj) {
+      try {
+        should(obj).be.exactly(requestObject);
+        done();
+      }
+      catch (e) {
+        done(e);
+      }
+    });
+
+    kuzzle.funnel.admin.getLastStat(requestObject);
+  });
+
   it('should trigger a hook on a getAllStats call', function (done) {
     this.timeout(50);
 
