@@ -13,6 +13,7 @@ The current implementation of our MQ Broker service uses [RabbitMQ](https://www.
 ## Index
 
 * [How to connect to Kuzzle](#how-to-connect-to-kuzzle)
+* [Query syntax](#query-syntax)
 * [What are response objects](#what-are-response-objects)
 * [Sending metadata](#sending-metadata)
 * [Performing queries](#performing-queries)
@@ -40,15 +41,58 @@ The current implementation of our MQ Broker service uses [RabbitMQ](https://www.
   * [Listing all known data collections](#listing-all-known-data-collections)
   * [Getting the current Kuzzle timestamp](#getting-the-current-kuzzle-timestamp)
 
-##  How to connect to Kuzzle
+## How to connect to Kuzzle
 
 To establish communication with Kuzzle using MQTT, simply connect your application to the Kuzzle's MQTT port.
 By default, the MQ Broker listens to the port 1883 for MQTT applications.
 
+## Query syntax
+
+The MQ Broker layer listens to a specific topic in order to forward your queries to the right Kuzzle controller.
+
+**Topic name:** ``kuzzle``
+
+**Query body syntax (JSON data):**
+```javascript
+{
+  /*
+  Required for queries that need a feedback (see details below):
+  */
+  clientId: <Unique connection ID>,
+
+  /*
+  Optional: Kuzzle will create a unique ID if you don't provide one,
+    and forward this field in its response, allowing you
+    to easily identify which query generated the response you got.
+  */
+  requestId: <Unique ID>,
+
+  /*
+  Required: Controller and Action to call:
+  */
+  controller: '<controller>',
+  action: '<action>',
+
+  /*
+  Collection on which the action is handled (empty for actions that do not manage a unique collection)
+  */
+  collection: '<data collection>',
+
+  /*
+  A set of filters matching documents you want to listen to
+  */
+  body: {
+
+  }
+}
+```
+
+What that means is that you ask a Kuzzle ``controller`` to perform an ``action`` on a ``data collection``.
+
 ##  What are ``response`` objects
 
 A ``response`` is the result of a query you send to Kuzzle. It may be the results of a search query, an acknowledgement of a created action, and so on.  
-And when you subscribe to a room, Kuzzle also sends notifications to your application in the form of a ``response`` object.
+When you subscribe to a room, Kuzzle also sends a notification to your application in the form of a ``response`` object.
 
 A ``response`` is a JSON object with the following structure:
 
@@ -68,7 +112,7 @@ A ``response`` is a JSON object with the following structure:
   Complex object, depending on your query
   */
   result: {
-    requestId: <unique ID>  // Your query unique identifier. See below.
+    requestId: <unique ID>  // Your query unique identifier. See above.
     ...
   }
 }
@@ -98,6 +142,9 @@ For example, if you update a document:
 ```javascript
 {
   clientId: 'myVeryUniqueClientID',
+  action: 'update',
+  collection: '<data collection>',
+  controller: 'write',
   _id: 'a document ID',
   body: {
     somefield: 'now has a new value'
@@ -138,6 +185,9 @@ Or if you subscribe:
 ```javascript
 {
   clientId: 'myVeryUniqueClientID',
+  controller: 'subscribe',
+  collection: '<data collection>',
+  action: 'on',
   body: {
     // subscription filters
   },
@@ -154,7 +204,7 @@ And then if you leave this room, other subscribers will receive this notificatio
   status: 200,
   error: null,
   result: {
-    roomId: 'unique Kuzzle room ID',
+    roomId: 'uniqueKuzzleRoomID',
     controller: 'subscribe',
     action: 'off',
     count: <the new user count on that room>,
@@ -165,25 +215,18 @@ And then if you leave this room, other subscribers will receive this notificatio
 }
 ```
 
-##  Performing queries
+## Performing queries
 
 This section details every query you can send to Kuzzle, and the ``response`` object Kuzzle will send you back, if any.
 
-The MQ Broker layer listens to specific topics in order to forward your queries to the right Kuzzle controller.
-
-Kuzzle topics are named like this: ``<controller>.<data collection>.<action>``  
-What that means is that you ask a Kuzzle ``controller`` to perform an ``action`` on a ``data collection``.
-
-This documentation will tell you to what topic your queries need to be sent. The only thing you need to know is what a ``data collection`` is.  
-Simply put, a ``data collection`` is a set of data managed internally by Kuzzle. It acts like a data table for persistent documents, or like a room for pub/sub messages.  
 
 
 ---
 
-###  Subscribing to documents
+### Subscribing to documents
 
 Subscription works differently in Kuzzle than with a regular publish/subscribe protocol.  
-In Kuzzle, you don't exactly subscribe to a room or a topic but, instead, you subscribe to documents.
+In Kuzzle, you don't exactly subscribe to a room or to a topic but, instead, you subscribe to documents.
 
 What it means is that, along with your subscription query, you also give to Kuzzle a set of matching criteria.  
 Once you have subscribed to a room, if a pub/sub message is published matching your criteria, or if a matching stored document changes (because it is created, updated or deleted), then you'll receive a notification about it.  
@@ -199,8 +242,6 @@ How subscription works:
 :arrow_right: You subscribe to the topic ``mqtt.<room name>``
 :arrow_left: When a document matches your room criteria, Kuzzle sends you a ``response``
 
-**Topic:** ``subscribe.<data collection>.on``
-
 **Query:**
 
 ```javascript
@@ -210,19 +251,18 @@ How subscription works:
   will discard your query, because it doesn't have any mean to send you
   the resulting room ID.
   */
-  clientId: <Unique session ID>,
+  clientId: '<your unique client ID>',
 
-  /*
-  Optionnal: Kuzzle will create an unique ID if you don't provide one.
-  If you do, the requestId will be treated by Kuzzle as a room name.
-  */
-  requestId: <room name>,
+  controller: 'subscribe',
+  action: 'on',
+  collection: '<data collection>',
 
-  /*
-  A set of filters matching documents you want to listen to
-  */
   body: {
 
+    // subscription filters
+  },
+  metadata: {
+    // query metadata
   }
 }
 ```
@@ -245,7 +285,7 @@ How subscription works:
 }
 ```
 
-####  Notifications
+#### Notifications
 
 Once you receive this ``response``, all you have to do is to subscribe to the ``<provided room name>`` topic to receive notifications.
 
@@ -255,7 +295,7 @@ There are 4 types of notifications you can receive:
 
 ```javascript
 {
-  status: 200,                       // Assuming everything went well
+  status: 200,                        // Assuming everything went well
   error: null,                        // Assuming everything went well
   result: {
     _id: 'unique document ID',
@@ -265,7 +305,7 @@ There are 4 types of notifications you can receive:
     action: 'create',
     collection: '<data collection>',
     controller: 'write',
-    requestId: '<unique request ID>',  // The query updating the document document
+    requestId: '<unique request ID>',  // The query updating the document
     metadata: {
       // metadata embedded in the modifying request
     }
@@ -278,7 +318,7 @@ There are 4 types of notifications you can receive:
 
 ```javascript
 {
-  status: 200,                       // Assuming everything went well
+  status: 200,                        // Assuming everything went well
   error: null,                        // Assuming everything went well
   result: {
     _id: 'unique document ID',
@@ -300,7 +340,7 @@ There are 4 types of notifications you can receive:
 
 ```javascript
 {
-  status: 200,                       // Assuming everything went well
+  status: 200,                        // Assuming everything went well
   error: null,                        // Assuming everything went well
   result: {
     _id: 'unique document ID',
@@ -321,14 +361,14 @@ There are 4 types of notifications you can receive:
 
 ```javascript
 {
-  status: 200,                       // Assuming everything went well
+  status: 200,                        // Assuming everything went well
   error: null,                        // Assuming everything went well
   result: {
     _id: 'unique document ID',
     action: 'delete',
     collection: '<data collection>',
     controller: 'write',
-    requestId: '<unique request ID>',  // The query updating the document
+    requestId: '<unique request ID>',  // The query deleting the document
     metadata: {
       // metadata embedded in the modifying request
     }
@@ -341,7 +381,7 @@ There are 4 types of notifications you can receive:
 
 ```javascript
 {
-  status: 200,                       // Assuming everything went well
+  status: 200,                        // Assuming everything went well
   error: null,                        // Assuming everything went well
   result: {
     roomId: 'unique Kuzzle room ID',
@@ -358,7 +398,7 @@ There are 4 types of notifications you can receive:
 
 ```javascript
 {
-  status: 200,                       // Assuming everything went well
+  status: 200,                        // Assuming everything went well
   error: null,                        // Assuming everything went well
   result: {
     roomId: 'unique Kuzzle room ID',
@@ -374,13 +414,11 @@ There are 4 types of notifications you can receive:
 
 ---
 
-###  Counting the number of subscriptions on a given room
+### Counting the number of subscriptions on a given room
 
 Return the number of people/applications who have subscribed to the same documents as you.
 
 It works with the room unique ID Kuzzle returns to you when you make a subscription.
-
-**Topic:** ``subscribe.<data collection>.count``
 
 **Query:**
 
@@ -393,14 +431,14 @@ It works with the room unique ID Kuzzle returns to you when you make a subscript
   */
   clientId: <Unique session ID>,
 
-  /*
-  Optionnal: Kuzzle will forward this field in its response, allowing you
-  to easily identify what query generated the response you got.
-  */
-  requestId: <Unique query ID>,
-
+  controller: 'subscribe',
+  action: 'count'
+  collection: '<data collection>'
   body: {
-    roomId: 'internal Kuzzle room ID'
+    roomId: 'unique room ID'
+  }
+  metadata: {
+    // query metadata
   }
 }
 ```
@@ -409,7 +447,7 @@ It works with the room unique ID Kuzzle returns to you when you make a subscript
 
 ```javascript
 {
-  status: 200,                       // Assuming everything went well
+  status: 200,                        // Assuming everything went well
   error: null,                        // Assuming everything went well
   result: {
     roomId: 'unique Kuzzle room ID',
@@ -427,19 +465,23 @@ It works with the room unique ID Kuzzle returns to you when you make a subscript
 
 Makes Kuzzle remove you from its subscribers on this room.
 
-**Topic:** ``subscribe.<data collection>.off``
-
 **Query:**
 
 ```javascript
 {
   /*
-  Required. Allow Kuzzle to know which client want to unsubscribe.
+  Required. Allow Kuzzle to know which client wants to unsubscribe.
   */
   clientId: '<your unique client ID>',
+  controller: 'subscribe',
+  action: 'off',
+  collection: '<data collection>',
 
   body: {
-    roomId: 'internal Kuzzle room ID'
+    roomId: 'unique room ID'
+  },
+  metadata: {
+    // query metadata
   }
 }
 ```
@@ -448,7 +490,7 @@ Makes Kuzzle remove you from its subscribers on this room.
 
 ```javascript
 {
-  status: 200,                       // Assuming everything went well
+  status: 200,                        // Assuming everything went well
   error: null,                        // Assuming everything went well
   result: {
     roomId: 'unique Kuzzle room ID',
@@ -462,14 +504,16 @@ Makes Kuzzle remove you from its subscribers on this room.
 
 ---
 
-###  Sending a non persistent message
-
-**Topic:** ``write.<data collection>.create``
+### Sending a non persistent message
 
 **Query:**
 
 ```javascript
 {
+  controller: 'write',
+  action: 'create',
+  collection: '<data collection>',
+
   // Tells Kuzzle to send a non persistent message
   persist: false,
 
@@ -482,33 +526,24 @@ Makes Kuzzle remove you from its subscribers on this room.
 }
 ```
 
-**Response:** Kuzzle doesn't send a response when sending non persistent message.
+**Response:** Kuzzle doesn't send a response when sending a non persistent message.
 
 ---
 
-###  Creating a new document
+### Creating a new document
 
 Creates a new document in the persistent data storage. Returns an error if the document already exists.
-
-**Topic:** ``write.<data collection>.create``
 
 **Query:**
 
 ```javascript
 {
+  controller: 'write',
+  action: 'create',
+  collection: '<data collection>',
+
   // Tells Kuzzle to store your document
   persist: true,
-
-  /*
-  Optionnal: allow Kuzzle to send a response to your application
-  */
-  clientId: <Unique session ID>,
-
-  /*
-  Optionnal: Kuzzle will forward this field in its response, allowing you
-  to easily identify what query generated the response you got.
-  */
-  requestId: <Unique query ID>,
 
   /*
   The document itself
@@ -533,7 +568,7 @@ Creates a new document in the persistent data storage. Returns an error if the d
     collection: '<data collection>',
     action: 'create',
     controller: 'write',
-    requestId, '<unique request identifier>',
+    requestId: '<unique request identifier>',
     _version: 1                     // The version of the document in the persistent data storage
   }
 }
@@ -545,22 +580,13 @@ Creates a new document in the persistent data storage. Returns an error if the d
 
 Creates a new document in the persistent data storage, or update it if it already exists.
 
-**Topic:** ``write.<data collection>.createOrUpdate``
-
 **Query:**
 
 ```javascript
 {
-  /*
-  Optionnal: allow Kuzzle to send a response to your application
-  */
-  clientId: <Unique session ID>,
-
-  /*
-  Optionnal: Kuzzle will forward this field in its response, allowing you
-  to easily identify what query generated the response you got.
-  */
-  requestId: <Unique query ID>,
+  controller: 'write',
+  action: 'createOrUpdate',
+  collection: '<data collection>',
 
   /*
   The document itself
@@ -594,11 +620,9 @@ Creates a new document in the persistent data storage, or update it if it alread
 
 ---
 
-###  Retrieving a document
+### Retrieving a document
 
 Only documents in the persistent data storage layer can be retrieved.
-
-**Topic:** ``read.<data collection>.get``
 
 **Query:**
 
@@ -611,11 +635,9 @@ Only documents in the persistent data storage layer can be retrieved.
   */
   clientId: <Unique session ID>,
 
-  /*
-  Optionnal: Kuzzle will forward this field in its response, allowing you
-  to easily identify what query generated the response you got.
-  */
-  requestId: <Unique query ID>,
+  controller: 'read',
+  action: 'get',
+  collection: '<data collection>',
 
   /*
   The document unique identifier. It's the same one that Kuzzle sends you
@@ -646,13 +668,11 @@ Only documents in the persistent data storage layer can be retrieved.
 
 ---
 
-###  Searching for documents
+### Searching for documents
 
 Only documents in the persistent data storage layer can be searched.
 
 Kuzzle uses the [ElasticSearch Query DSL ](https://www.elastic.co/guide/en/elasticsearch/reference/1.3/query-dsl.html) syntax.
-
-**Topic:** ``read.<data collection>.search``
 
 **Query:**
 
@@ -665,11 +685,9 @@ Kuzzle uses the [ElasticSearch Query DSL ](https://www.elastic.co/guide/en/elast
   */
   clientId: <Unique session ID>,
 
-  /*
-  Optionnal: Kuzzle will forward this field in its response, allowing you
-  to easily identify what query generated the response you got.
-  */
-  requestId: <Unique query ID>,
+  controller: 'read',
+  action: 'search',
+  collection: '<data collection>',
 
   /*
   A set of filters or queries matching documents you're looking for.
@@ -718,26 +736,17 @@ Kuzzle uses the [ElasticSearch Query DSL ](https://www.elastic.co/guide/en/elast
 
 ---
 
-###  Updating a document
+### Updating a document
 
 Only documents in the persistent data storage layer can be updated.
-
-**Topic:** ``write.<data collection>.update``
 
 **Query:**
 
 ```javascript
 {
-  /*
-  Optionnal: allow Kuzzle to send a response to your application
-  */
-  clientId: <Unique session ID>,
-
-  /*
-  Optionnal: Kuzzle will forward this field in its response, allowing you
-  to easily identify what query generated the response you got.
-  */
-  requestId: <Unique query ID>,
+  controller: 'write',
+  action: 'update',
+  collection: '<data collection>',
 
   /*
   The document unique identifier. It's the same one that Kuzzle sends you
@@ -777,31 +786,20 @@ Only documents in the persistent data storage layer can be updated.
 
 ---
 
-###  Counting documents
+### Counting documents
 
 Only documents in the persistent data storage layer can be counted.
 
 Kuzzle uses the [ElasticSearch Query DSL ](https://www.elastic.co/guide/en/elasticsearch/reference/1.3/query-dsl.html) syntax.
 
 
-**Topic:** ``read.<data collection>.count``
-
 **Query:**
 
 ```javascript
 {
-  /*
-  Required. If your query doesn't include a clientId field, Kuzzle
-  will discard your query, because it doesn't have any mean to send you
-  the result.
-  */
-  clientId: <Unique session ID>,
-
-  /*
-  Optionnal: Kuzzle will forward this field in its response, allowing you
-  to easily identify what query generated the response you got.
-  */
-  requestId: <Unique query ID>,
+  controller: 'read',
+  action: 'count',
+  collection: '<data collection>',
 
   /*
   A set of filters or queries matching documents you're looking for.
@@ -836,30 +834,21 @@ Kuzzle uses the [ElasticSearch Query DSL ](https://www.elastic.co/guide/en/elast
 
 ---
 
-###  Deleting a document using a document unique ID
+### Deleting a document using a document unique ID
 
 Only documents in the persistent data storage layer can be deleted.
-
-**Topic:** ``write.<data collection>.delete``
 
 **Query:**
 
 ```javascript
 {
-  /*
-  Optionnal: allow Kuzzle to send a response to your application
-  */
-  clientId: <Unique session ID>,
-
-  /*
-  Optionnal: Kuzzle will forward this field in its response, allowing you
-  to easily identify what query generated the response you got.
-  */
-  requestId: <Unique query ID>,
+  controller: 'write',
+  action: 'delete',
+  collection: '<data collection>',
 
   /*
   The document unique identifier. It's the same one that Kuzzle sends you
-  in its responses when you create a document, or when you do a search query.
+  in its response when you create a document, or when you do a search query.
   */
   _id: '<document ID>'
 }
@@ -888,29 +877,20 @@ Only documents in the persistent data storage layer can be deleted.
 
 ---
 
-###  Deleting documents using a query
+### Deleting documents using a query
 
 Only documents in the persistent data storage layer can be deleted.
 
 Kuzzle uses the [ElasticSearch Query DSL ](https://www.elastic.co/guide/en/elasticsearch/reference/1.3/query-dsl.html) syntax.
 
 
-**Topic:** ``write.<data collection>.deleteByQuery``
-
 **Query:**
 
 ```javascript
 {
-  /*
-  Optionnal: allow Kuzzle to send a response to your application
-  */
-  clientId: <Unique session ID>,
-
-  /*
-  Optionnal: Kuzzle will forward this field in its response, allowing you
-  to easily identify what query generated the response you got.
-  */
-  requestId: <Unique query ID>,
+  controller: 'write',
+  action: 'deleteByQuery',
+  collection: '<data collection>',
 
   /*
   A set of filters or queries matching documents you're looking for.
@@ -949,27 +929,18 @@ Kuzzle uses the [ElasticSearch Query DSL ](https://www.elastic.co/guide/en/elast
 
 ---
 
-###  Deleting an entire data collection
+### Deleting an entire data collection
 
 This removes an entire data collection in the persistent data storage layer.  
 This action is handled by the **administration** controller.
-
-**Topic:** ``admin.<data collection>.deleteCollection``
 
 **Query:**
 
 ```javascript
 {
-  /*
-  Optionnal: allow Kuzzle to send a response to your application
-  */
-  clientId: <Unique session ID>,
-
-  /*
-  Optionnal: Kuzzle will forward this field in its response, allowing you
-  to easily identify what query generated the response you got.
-  */
-  requestId: <Unique query ID>,
+  controller: 'admin',
+  action: 'deleteCollection',
+  collection: '<data collection>'
 }
 ```
 
@@ -995,31 +966,22 @@ This action is handled by the **administration** controller.
 
 ---
 
-###  Setting up a data mapping in a collection
+### Setting up a data mapping in a collection
 
 When creating a new data collection in the persistent data storage layer, Kuzzle uses a default mapping.  
 It means that, by default, you won't be able to exploit the full capabilities of our persistent data storage layer (currently handled by [ElasticSearch](https://www.elastic.co/products/elasticsearch)), and your searches may suffer from below-average performances, depending on the amount of data you stored in a collection and the complexity of your database.
 
-To solve this matter, Kuzzle's API offer a way to create data mapping and expose the entire [mapping capabilities of ElasticSearch](https://www.elastic.co/guide/en/elasticsearch/reference/1.3/mapping.html).
+To solve this matter, Kuzzle's API offers a way to create data mapping and to expose the entire [mapping capabilities of ElasticSearch](https://www.elastic.co/guide/en/elasticsearch/reference/1.3/mapping.html).
 
 This action is handled by the **administration** controller.
-
-**Topic:** ``admin.<data collection>.putMapping``
 
 **Query:**
 
 ```javascript
 {
-  /*
-  Optionnal: allow Kuzzle to send a response to your application
-  */
-  clientId: <Unique session ID>,
-
-  /*
-  Optionnal: Kuzzle will forward this field in its response, allowing you
-  to easily identify what query generated the response you got.
-  */
-  requestId: <Unique query ID>,
+  controller: 'admin',
+  action: 'putMapping',
+  collection: '<data collection>',
 
   /*
   Data mapping using ElasticSearch mapping syntax
@@ -1055,11 +1017,9 @@ This action is handled by the **administration** controller.
 
 ---
 
-###  Retrieving the data mapping of a collection
+### Retrieving the data mapping of a collection
 
 Get data mapping of a collection previously defined
-
-**Topic:** ``admin.<data collection>.getMapping``
 
 **Query:**
 
@@ -1072,11 +1032,9 @@ Get data mapping of a collection previously defined
   */
   clientId: <Unique session ID>,
 
-  /*
-  Optionnal: Kuzzle will forward this field in its response, allowing you
-  to easily identify what query generated the response you got.
-  */
-  requestId: <Unique query ID>,
+  controller: 'admin',
+  action: 'getMapping',
+  collection: '<data collection>'
 }
 ```
 
@@ -1117,27 +1075,18 @@ Get data mapping of a collection previously defined
 
 ### Performing a bulk import on a data collection
 
-A bulk import allows your application to perform multiple writing operations thanks to a single query. This is especially useful if you want to create a large number of documents, as a bulk import will be a lot faster compared to creating them individually using ``create`` queries.  
-As with other queries, the syntax for bulk imports closely resembles the [ElasticSearch Bulk API](https://www.elastic.co/guide/en/elasticsearch/reference/1.3/docs-bulk.html?q=bulk).
+A bulk import allows your application to perform multiple writing operations thanks to a single query. This is especially useful if you want to create a large number of documents. A bulk import will be a lot faster compared to creating them individually using ``create`` queries.  
+For other queries, the syntax for bulk imports closely resembles the [ElasticSearch Bulk API](https://www.elastic.co/guide/en/elasticsearch/reference/1.3/docs-bulk.html?q=bulk).
 
 Bulk import only works on documents in our persistent data storage layer.
-
-**Topic:** ``bulk.<data collection>.import``
 
 **Query:**
 
 ```javascript
 {
-  /*
-  Optionnal: allow Kuzzle to send a response to your application
-  */
-  clientId: <Unique session ID>,
-
-  /*
-  Optionnal: Kuzzle will forward this field in its response, allowing you
-  to easily identify what query generated the response you got.
-  */
-  requestId: <Unique query ID>,
+  controller: 'bulk',
+  action: 'import',
+  collection: '<data collection>',
 
   /*
   Data mapping using ElasticSearch bulk syntax.
@@ -1201,22 +1150,12 @@ To do that, refer to the [ElasticSearch Bulk API](https://www.elastic.co/guide/e
 
 Bulk import only works on documents in our persistent data storage layer.
 
-**Topic:** ``bulk..import``
-
 **Query:**
 
 ```javascript
 {
-  /*
-  Optionnal: allow Kuzzle to send a response to your application
-  */
-  clientId: <Unique session ID>,
-
-  /*
-  Optionnal: Kuzzle will forward this field in its response, allowing you
-  to easily identify what query generated the response you got.
-  */
-  requestId: <Unique query ID>,
+  controller: 'bulk',
+  action: 'import',
 
   /*
   Data mapping using ElasticSearch bulk syntax.
@@ -1268,7 +1207,7 @@ Bulk import only works on documents in our persistent data storage layer.
     /*
     The requestId field you provided.
     */
-    requestId, '<unique request identifier>'
+    requestId: '<unique request identifier>'
   }
 }
 ```
@@ -1299,11 +1238,8 @@ These statistics include:
   */
   clientId: <Unique session ID>,
 
-  /*
-  Optionnal: Kuzzle will forward this field in its response, allowing you
-  to easily identify what query generated the response you got.
-  */
-  requestId: <Unique query ID>
+  controller: 'admin',
+  action: 'getLastStat'
 }
 ```
 
@@ -1439,8 +1375,6 @@ These statistics include:
 
 Statistics are returned as a JSON-object with each key being the snapshot's timestamp.
 
-**Topic:** ``admin..getStats``
-
 **Query:**
 
 ```javascript
@@ -1452,11 +1386,8 @@ Statistics are returned as a JSON-object with each key being the snapshot's time
   */
   clientId: <Unique session ID>,
 
-  /*
-  Optionnal: Kuzzle will forward this field in its response, allowing you
-  to easily identify what query generated the response you got.
-  */
-  requestId: <Unique query ID>
+  controller: 'admin',
+  action: 'getAllStats'
 }
 ```
 
@@ -1512,8 +1443,6 @@ Statistics are returned as a JSON-object with each key being the snapshot's time
 
 Return the complete list of persisted data collections.
 
-**Topic:** ``read..listCollections``
-
 **Query:**
 
 ```javascript
@@ -1525,11 +1454,8 @@ Return the complete list of persisted data collections.
   */
   clientId: <Unique session ID>,
 
-  /*
-  Optionnal: Kuzzle will forward this field in its response, allowing you
-  to easily identify what query generated the response you got.
-  */
-  requestId: <Unique query ID>
+  controller: 'read',
+  action: 'listCollections'
 }
 ```
 
@@ -1559,8 +1485,6 @@ Return the complete list of persisted data collections.
 
 Return the the current Kuzzle UTC timestamp as Epoch time (number of milliseconds elapsed since 1 January 1970 00:00:00)
 
-**Topic:** ``read..now``
-
 **Query:**
 
 ```javascript
@@ -1572,11 +1496,8 @@ Return the the current Kuzzle UTC timestamp as Epoch time (number of millisecond
   */
   clientId: <Unique session ID>,
 
-  /*
-  Optionnal: Kuzzle will forward this field in its response, allowing you
-  to easily identify what query generated the response you got.
-  */
-  requestId: <Unique query ID>
+  controller: 'read',
+  action: 'now'
 }
 ```
 

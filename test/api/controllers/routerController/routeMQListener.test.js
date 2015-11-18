@@ -87,19 +87,17 @@ describe('Test: routerController.routeMQListener', function () {
       });
   });
 
-  it('should register a listener for each known controller', function () {
-    router.controllers.forEach(function (controller) {
-      var listener = kuzzle.services.list.mqBroker.listeners[controller + '.*.*'];
+  it('should register a global listener', function () {
+    var listener = kuzzle.services.list.mqBroker.listeners[router.routename];
 
-      should(listener).not.be.undefined();
-      should(listener.type).be.exactly('listenExchange');
-    });
+    should(listener).not.be.undefined();
+    should(listener.type).be.exactly('listenExchange');
   });
 
   it('should be able to manage JSON-based messages content', function (done) {
     var
-      listener = kuzzle.services.list.mqBroker.listeners['write.*.*'].callback,
-      body = { body: { resolve: true }};
+      listener = kuzzle.services.list.mqBroker.listeners[router.routename].callback,
+      body = { controller: 'write', collection: 'foobar', action: 'create', body: { resolve: true }};
 
     mqMessage.content = JSON.stringify(body);
     notifyStatus = '';
@@ -139,8 +137,8 @@ describe('Test: routerController.routeMQListener', function () {
 
   it('should be able to manage Buffer-based messages content', function (done) {
     var
-      listener = kuzzle.services.list.mqBroker.listeners['write.*.*'].callback,
-      body = { body: { resolve: true }};
+      listener = kuzzle.services.list.mqBroker.listeners[router.routename].callback,
+      body = { controller: 'write', collection: 'foobar', action: 'create', body: { resolve: true }};
 
     mqMessage.content = new Buffer(JSON.stringify(body));
     notifyStatus = 'pending';
@@ -179,7 +177,7 @@ describe('Test: routerController.routeMQListener', function () {
 
   it('should fail cleanly with incorrect messages', function (done) {
     var
-      listener = kuzzle.services.list.mqBroker.listeners['write.*.*'].callback;
+      listener = kuzzle.services.list.mqBroker.listeners[router.routename].callback;
 
     kuzzle.once('log:error', function (error) {
       should(error).be.an.Object();
@@ -196,8 +194,8 @@ describe('Test: routerController.routeMQListener', function () {
   it('should notify with an error object in case of rejection', function (done) {
     var
       eventReceived = false,
-      listener = kuzzle.services.list.mqBroker.listeners['write.*.*'].callback,
-      body = { body: { resolve: false }, clientId: 'foobar'};
+      listener = kuzzle.services.list.mqBroker.listeners[router.routename].callback,
+      body = {controller: 'write', collection: 'foobar', action: 'create', body: { resolve: false }, clientId: 'foobar'};
 
     mqMessage.content = JSON.stringify(body);
     notifyStatus = 'pending';
@@ -237,7 +235,7 @@ describe('Test: routerController.routeMQListener', function () {
 
   it('should not notify if the response is empty', function (done) {
     var
-      listener = kuzzle.services.list.mqBroker.listeners['write.*.*'].callback,
+      listener = kuzzle.services.list.mqBroker.listeners[router.routename].callback,
       body = { body: { resolve: true, empty: true }, clientId: 'foobar'};
 
     mqMessage.content = JSON.stringify(body);
@@ -258,7 +256,7 @@ describe('Test: routerController.routeMQListener', function () {
 
   it('should initialize an AMQ connection type for AMQP/STOMP messages', function (done) {
     var
-      listener = kuzzle.services.list.mqBroker.listeners['write.*.*'].callback,
+      listener = kuzzle.services.list.mqBroker.listeners[router.routename].callback,
       body = { body: { resolve: true }, clientId: 'foobar'};
 
     mqMessage.content = JSON.stringify(body);
@@ -296,7 +294,7 @@ describe('Test: routerController.routeMQListener', function () {
 
   it('should initialize an MQTT connection type for MQTT messages', function (done) {
     var
-      listener = kuzzle.services.list.mqBroker.listeners['write.*.*'].callback,
+      listener = kuzzle.services.list.mqBroker.listeners[router.routename].callback,
       body = { body: { resolve: true }, clientId: 'foobar'};
 
     mqMessage.content = JSON.stringify(body);
