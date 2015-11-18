@@ -36,6 +36,7 @@ This will give you a direct access to Kuzzle's router controller, dispatching yo
   * [Getting all stored statistics](#getting-all-stored-statistics)
   * [Listing all known data collections](#listing-all-known-data-collections)
   * [Getting the current Kuzzle timestamp](#getting-the-current-kuzzle-timestamp)
+  * [Creating an empty collection](#creating-an-empty-collection)
 
 ## How to connect to Kuzzle
 
@@ -1404,6 +1405,42 @@ Return the the current Kuzzle UTC timestamp as Epoch time (number of millisecond
     now: 1447151167622,             // Epoch time
     action: 'now',
     controller: 'read',
+    requestId: '<unique request identifier>'
+  }
+}
+```
+
+
+---
+
+### Creating an empty collection
+
+When creating a document, Kuzzle will automatically create a data collection if needed.  
+But in some cases, you may want to create an empty collection directly, prior to storing any document in it.
+
+This method does nothing if the collection already exists.
+
+**Query:**
+
+```javascript
+{
+  controller: 'write',
+  action: 'createCollection',
+  collection: 'collection name'
+}
+```
+
+**Response:**
+
+```javascript
+{
+  status: 200,
+  error: null,
+  result: {
+    acknowledged: true,
+    action: 'createCollection',
+    controller: 'write',
+    collection: 'collection name',
     requestId: '<unique request identifier>'
   }
 }
