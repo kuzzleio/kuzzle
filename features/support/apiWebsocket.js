@@ -252,6 +252,18 @@ module.exports = {
     };
 
     return emit.call(this, msg );
+  },
+
+
+  truncateCollection: function () {
+    var
+      msg = {
+        controller: 'admin',
+        collection: this.world.fakeCollection,
+        action: 'truncateCollection'
+      };
+
+    return emit.call(this, msg);
   }
 };
 

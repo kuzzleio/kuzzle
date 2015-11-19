@@ -112,4 +112,20 @@ describe('Test: admin controller', function () {
 
     kuzzle.funnel.admin.getAllStats(requestObject);
   });
+
+  it('should trigger a hook on a truncateCollection call', function (done) {
+    this.timeout(50);
+
+    kuzzle.once('data:truncateCollection', obj => {
+      try {
+        should(obj).be.exactly(requestObject);
+        done();
+      }
+      catch (e) {
+        done(e);
+      }
+    });
+
+    kuzzle.funnel.admin.truncateCollection(requestObject);
+  });
 });

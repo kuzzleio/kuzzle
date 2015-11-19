@@ -584,4 +584,46 @@ describe('Test: routerController.initRouterHttp', function () {
         .catch(error => done(error));
     });
   });
+
+  it('should create a route for the createCollection command', done => {
+    var request;
+
+    options.method = 'PUT';
+    options.path= '/api/collection';
+
+    request = http.request(options, function (response) {
+      parseHttpResponse(response)
+        .then(result => {
+          should(response.statusCode).be.exactly(200);
+          should(result.controller).be.exactly('write');
+          should(result.action).be.exactly('createCollection');
+          done();
+        })
+        .catch(error => done(error));
+    });
+
+    request.write('foobar');
+    request.end();
+  });
+
+  it('should create a route for the truncateCollection command', done => {
+    var request;
+
+    options.method = 'DELETE';
+    options.path= '/api/collection/_truncate';
+
+    request = http.request(options, function (response) {
+      parseHttpResponse(response)
+        .then(result => {
+          should(response.statusCode).be.exactly(200);
+          should(result.controller).be.exactly('admin');
+          should(result.action).be.exactly('truncateCollection');
+          done();
+        })
+        .catch(error => done(error));
+    });
+
+    request.write('foobar');
+    request.end();
+  });
 });
