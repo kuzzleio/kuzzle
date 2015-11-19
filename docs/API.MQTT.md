@@ -1227,7 +1227,7 @@ These statistics include:
 * the number of completed requests since the last frame
 * the number of failed requests since the last frame
 
-**Topic:** ``admin.getLastStat``
+**Topic:** ``admin.getLastStats``
 
 **Query:**
 
@@ -1241,7 +1241,7 @@ These statistics include:
   clientId: <Unique session ID>,
 
   controller: 'admin',
-  action: 'getLastStat'
+  action: 'getLastStats'
 }
 ```
 
@@ -1255,7 +1255,7 @@ These statistics include:
     _source: {                      // Your original query
       ...
     },
-    action: 'getLastStat',
+    action: 'getLastStats',
     controller: 'admin',
     statistics: {
       "YYYY-MM-DDTHH:mm:ss.mmmZ": {
@@ -1288,7 +1288,7 @@ These statistics include:
 
 ### Getting the statistics from a date
 
-Kuzzle monitors its internal activities and make snapshots of them. This command allows getting the last stored statistics frame from a date.
+This command allows getting statistics frames saved/stored after a provided timestamp.
 
 These statistics include:
 
@@ -1316,8 +1316,12 @@ These statistics include:
   */
   requestId: <Unique query ID>
 
+  /*
+    Optional: Kuzzle will return all statistics if nor the startTime and stopTime are defined
+  */
   body: {
-    since: 424242424242
+    startTime: <timestamp>,
+    stopTime: <timestamp>
   }
 }
 ```
@@ -1330,7 +1334,7 @@ These statistics include:
   error: null,                      // Assuming everything went well
   result: {
     _source: {                      // Your original query
-      since: { 424242424242 }
+      startTime: <timestamp>, stopTime: <timestamp>
     },
     action: 'getStats',
     controller: 'admin',

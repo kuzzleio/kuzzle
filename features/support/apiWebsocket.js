@@ -216,24 +216,22 @@ module.exports = {
     return emit.call(this, msg);
   },
 
-  getStats: function (timestamp) {
+  getStats: function (dates) {
     var
       msg = {
         controller: 'admin',
         action: 'getStats',
-        body: {
-          timestamp: timestamp
-        }
+        body: dates
       };
 
     return emit.call(this, msg);
   },
 
-  getLastStat: function () {
+  getLastStats: function () {
     var
         msg = {
           controller: 'admin',
-          action: 'getLastStat'
+          action: 'getLastStats'
         };
 
     return emit.call(this, msg);

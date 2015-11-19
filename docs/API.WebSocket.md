@@ -1208,7 +1208,7 @@ These statistics include:
 
 ```javascript
 {
-  action: 'getLastStat',
+  action: 'getLastStats',
 
   /*
   Required: if your query doesn't include a requestId field, Kuzzle will
@@ -1217,7 +1217,7 @@ These statistics include:
   requestId: <Unique query ID>,
 
   controller: 'admin',
-  action: 'getStats'
+  action: 'getLastStats'
 }
 ```
 
@@ -1231,7 +1231,7 @@ These statistics include:
     _source: {                      // Your original query
       ...
     },
-    action: 'getLastStat',
+    action: 'getLastStats',
     controller: 'admin',
     statistics: {
       "YYYY-MM-DDTHH:mm:ss.mmmZ": {
@@ -1264,8 +1264,7 @@ These statistics include:
 
 ### Getting the statistics frame from a date
 
-Kuzzle monitors its internal activities and make snapshots regularly. This command allows getting the last stored statistics frame from a date.
-By default, snapshots are made every 10s.
+This command allows getting statistics frames saved/stored after a provided timestamp.
 
 These statistics include:
 
@@ -1288,8 +1287,12 @@ These statistics include:
   */
   requestId: <Unique query ID>,
 
+  /*
+    Optional: Kuzzle will return all statistics if nor the startTime and stopTime are defined
+  */
   body: {
-    since: 4242424242
+    startTime: <timestamp>,
+    stopTime: <timestamp>
   }
 }
 ```
@@ -1302,7 +1305,7 @@ These statistics include:
   error: null,                      // Assuming everything went well
   result: {
     _source: {                      // Your original query
-      since: 4242424242
+      startTime: <timestamp>, stopTime: <timestamp>
     },
     action: 'getStats',
     controller: 'admin',

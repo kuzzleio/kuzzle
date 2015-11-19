@@ -221,24 +221,22 @@ module.exports = {
     return publish.call(this, msg);
   },
 
-  getStats: function (timestamp) {
+  getStats: function (dates) {
     var
       msg = {
         controller: 'admin',
         action: 'getStats',
-        body: {
-          timestamp: timestamp
-        }
+        body: dates
       };
 
     return publish.call(this, msg);
   },
 
-  getLastStat: function () {
+  getLastStats: function () {
     var
         msg = {
           controller: 'admin',
-          action: 'getLastStat',
+          action: 'getLastStats',
         };
 
     return publish.call(this, msg);
@@ -248,7 +246,7 @@ module.exports = {
     var
       msg = {
         controller: 'admin',
-        action: 'getStats'
+        action: 'getAllStats'
       };
 
     return publish.call(this, msg);

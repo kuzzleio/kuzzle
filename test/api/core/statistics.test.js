@@ -22,8 +22,7 @@ describe('Test: statistics core component', function () {
       connections: { foo: 42 },
       ongoingRequests: { bar: 1337 },
       completedRequests: { baz: 666 },
-      failedRequests: { qux: 667 },
-      timestamp: lastFrame
+      failedRequests: { qux: 667 }
     };
 
   before(function (done) {
@@ -61,7 +60,7 @@ describe('Test: statistics core component', function () {
     should(stats.newConnection).be.a.Function();
     should(stats.dropConnection).be.a.Function();
     should(stats.getStats).be.a.Function();
-    should(stats.getLastStat).be.a.Function();
+    should(stats.getLastStats).be.a.Function();
     should(stats.getAllStats).be.a.Function();
   });
 
@@ -152,7 +151,8 @@ describe('Test: statistics core component', function () {
     var result;
 
     stats.currentStats = fakeStats;
-    requestObject.data.body.since = lastFrame - 1000;
+    requestObject.data.body.startTime = lastFrame - 10000000;
+    requestObject.data.body.stopTime = new Date(new Date().getTime() + 10000);
     result = stats.getStats(requestObject);
 
     should(result).be.a.Promise();
@@ -178,7 +178,8 @@ describe('Test: statistics core component', function () {
 
 
     stats.lastFrame = lastFrame;
-    requestObject.data.body.since = lastFrame - 1000;
+    requestObject.data.body.startTime = lastFrame - 1000;
+    requestObject.data.body.stopTime = new Date(new Date().getTime() + 10000);
     result = stats.getStats(requestObject);
 
     should(result).be.a.Promise();
@@ -204,7 +205,7 @@ describe('Test: statistics core component', function () {
 
 
     stats.lastFrame = lastFrame;
-    requestObject.data.body.since = lastFrame + 1000000;
+    requestObject.data.body.startTime = lastFrame + 10000;
     result = stats.getStats(requestObject);
 
     should(result).be.a.Promise();
@@ -224,11 +225,34 @@ describe('Test: statistics core component', function () {
       .catch(error => done(error));
   });
 
+  it('should return all statistics because startTime is not defined', function (done) {
+    var result;
+
+    stats.lastFrame = lastFrame;
+    requestObject.data.body.stopTime = new Date();
+    result = stats.getStats(requestObject);
+    should(result).be.a.Promise();
+
+    result
+      .then(response => {
+        var
+          serialized = response.toJson(),
+          keys = Object.keys(serialized.result.statistics);
+
+        should(serialized.error).be.null();
+        should(serialized.status).be.exactly(200);
+        should(serialized.result.statistics).be.an.Object();
+        should(keys.length).be.exactly(2);
+        done();
+      })
+      .catch(error => done(error));
+  });
+
   it('should get the last frame from the cache when statistics snapshots have been taken', function (done) {
     var result;
 
     stats.lastFrame = lastFrame;
-    result = stats.getLastStat(requestObject);
+    result = stats.getLastStats(requestObject);
 
     should(result).be.a.Promise();
 
@@ -297,6 +321,8 @@ describe('Test: statistics core component', function () {
 
   it('should manage statistics errors', function (done) {
     stats.lastFrame = lastFrame;
+    requestObject.data.body.startTime = 'a string';
+    requestObject.data.body.stopTime = 'a string';
     kuzzle.services.list.statsCache.volatileSet('foo', fakeStats, 10)
       .then(() => { return stats.getAllStats(requestObject); })
       .then((result) => { done(new Error('received a response instead of an error: ' + JSON.stringify(result))); })

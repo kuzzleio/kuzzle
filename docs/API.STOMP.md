@@ -1226,7 +1226,7 @@ These statistics include:
 * the number of completed requests since the last frame
 * the number of failed requests since the last frame
 
-**Topic:** ``/exchange/amq.topic/admin.getLastStat``
+**Topic:** ``/exchange/amq.topic/admin.getLastStats``
 **reply-to queue header:** Required.
 
 **Query:**
@@ -1234,7 +1234,7 @@ These statistics include:
 ```javascript
 {
   controller: 'admin',
-  action: 'getStats'
+  action: 'getLastStats'
 }
 ```
 
@@ -1248,7 +1248,7 @@ These statistics include:
     _source: {                      // Your original query
       ...
     },
-    action: 'getLastStat',
+    action: 'getLastStats',
     controller: 'admin',
     statistics: {
       "YYYY-MM-DDTHH:mm:ss.mmmZ": {
@@ -1281,7 +1281,7 @@ These statistics include:
 
 ### Getting the statistics from a date
 
-Kuzzle monitors its internal activities and make snapshots of them. This command allows getting the last stored statistics frame from a date.
+This command allows getting statistics frames saved/stored after a provided timestamp.
 
 These statistics include:
 
@@ -1290,7 +1290,7 @@ These statistics include:
 * the number of completed requests since the last frame
 * the number of failed requests since the last frame
 
-**Topic:** ``/exchange/amq.topic/admin..getStats``
+**Topic:** ``/exchange/amq.topic/admin.getStats``
 
 **reply-to queue metadata:** Required.
 
@@ -1309,8 +1309,12 @@ These statistics include:
   */
   requestId: <Unique query ID>,
 
+  /*
+    Optional: Kuzzle will return all statistics if nor the startTime and stopTime are defined
+  */
   body: {
-    since: 4242424242
+    startTime: <timestamp>,
+    stopTime: <timestamp>
   }
 }
 ```
@@ -1323,7 +1327,7 @@ These statistics include:
   error: null,                      // Assuming everything went well
   result: {
     _source: {                      // Your original query
-      since: 4242424242
+      startTime: <timestamp>, stopTime: <timestamp>
     },
     action: 'getStats',
     controller: 'admin',

@@ -141,19 +141,19 @@ module.exports = {
     return this.callApi(options);
   },
 
-  getStats: function (timestamp) {
+  getStats: function (dates) {
     var options = {
       url: this.pathApi('/_getStats'),
       method: 'POST',
-      json: { timestamp: timestamp }
+      json: dates
     };
 
     return this.callApi(options);
   },
 
-  getLastStat: function () {
+  getLastStats: function () {
     var options = {
-      url: this.pathApi('/_getLastStat'),
+      url: this.pathApi('/_getLastStats'),
       method: 'GET',
       json: {}
     };
