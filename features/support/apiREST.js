@@ -189,5 +189,15 @@ module.exports = {
     };
 
     return this.callApi(options);
+  },
+
+  truncateCollection: function () {
+    var options = {
+      url: this.pathApi(this.world.fakeCollection + '/_truncate'),
+      method: 'DELETE',
+      json: true
+    };
+
+    return this.callApi(options);
   }
 };

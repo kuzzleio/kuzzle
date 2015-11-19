@@ -620,4 +620,19 @@ describe('Test: ElasticSearch service', function () {
     delete requestObject.data.body;
     return should(elasticsearch.listCollections(requestObject)).be.rejected();
   });
+
+  // createCollection
+  it('should allow creating a new collection', function () {
+    return should(elasticsearch.createCollection(requestObject)).be.fulfilled();
+  });
+
+  // truncateCollection
+  it('should allow truncating an existing collection', function () {
+    return should(elasticsearch.truncateCollection(requestObject)).be.fulfilled();
+  });
+
+  it('should return an error if trying to truncate a non-existing collection', function () {
+    requestObject.collection = 'non existing collection';
+    return should(elasticsearch.truncateCollection(requestObject)).be.rejected();
+  });
 });

@@ -818,8 +818,7 @@ var apiSteps = function () {
     this.api.deleteCollection()
       .then(function (body) {
         if (body.error !== null) {
-          callback(new Error(body.error.message));
-          return false;
+          return callback(new Error(body.error.message));
         }
 
         callback();
@@ -845,6 +844,17 @@ var apiSteps = function () {
       });
   });
 
+  this.Then(/^I truncate the collection$/, function (callback) {
+    this.api.truncateCollection()
+      .then(body => {
+        if (body.error !== null) {
+          return callback(new Error(body.error.message));
+        }
+
+        callback();
+      })
+      .catch(error => callback(error));
+  });
 
   /** TOOLS **/
   this.Then(/^I wait ([\d]*)s$/, function (time, callback) {
