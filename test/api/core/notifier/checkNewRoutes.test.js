@@ -19,7 +19,21 @@ var
 describe('Test: notifier.checkNewRoutes', function () {
   var
     kuzzle,
-    blacklist = ['init', 'search', 'get', 'mget', 'count', 'deleteCollection', 'import', 'putMapping', 'getMapping', 'listCollections', 'reset'],
+    blacklist = [
+      'init',
+      'search',
+      'get',
+      'mget',
+      'count',
+      'deleteCollection',
+      'import',
+      'putMapping',
+      'getMapping',
+      'listCollections',
+      'reset',
+      'createCollection',
+      'truncateCollection'
+    ],
     requestObject = new RequestObject({
       controller: 'write',
       action: '',

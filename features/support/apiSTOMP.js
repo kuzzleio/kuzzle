@@ -270,6 +270,17 @@ module.exports = {
       };
 
     return publish.call(this, msg);
+  },
+
+  truncateCollection: function () {
+    var
+      msg = {
+        controller: 'admin',
+        collection: this.world.fakeCollection,
+        action: 'truncateCollection'
+      };
+
+    return publish.call(this, msg);
   }
 };
 

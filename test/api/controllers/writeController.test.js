@@ -185,4 +185,23 @@ describe('Test: write controller', function () {
         done(error);
       });
   });
+
+
+  it('should trigger a hook on a createCollection call', function (done) {
+    var requestObject = new RequestObject({}, {}, 'unit-test');
+
+    this.timeout(50);
+
+    kuzzle.once('data:createCollection', obj => {
+      try {
+        should(obj).be.exactly(requestObject);
+        done();
+      }
+      catch (e) {
+        done(e);
+      }
+    });
+
+    kuzzle.funnel.write.createCollection(requestObject);
+  });
 });
