@@ -152,7 +152,7 @@ describe('Test: statistics core component', function () {
     var result;
 
     stats.currentStats = fakeStats;
-    requestObject.data.body.timestamp = lastFrame - 1000;
+    requestObject.data.body.since = lastFrame - 1000;
     result = stats.getStats(requestObject);
 
     should(result).be.a.Promise();
@@ -178,7 +178,7 @@ describe('Test: statistics core component', function () {
 
 
     stats.lastFrame = lastFrame;
-    requestObject.data.body.timestamp = lastFrame - 1000;
+    requestObject.data.body.since = lastFrame - 1000;
     result = stats.getStats(requestObject);
 
     should(result).be.a.Promise();
@@ -204,7 +204,7 @@ describe('Test: statistics core component', function () {
 
 
     stats.lastFrame = lastFrame;
-    requestObject.data.body.timestamp = lastFrame + 1000000;
+    requestObject.data.body.since = lastFrame + 1000000;
     result = stats.getStats(requestObject);
 
     should(result).be.a.Promise();

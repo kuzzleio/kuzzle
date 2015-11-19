@@ -159,11 +159,6 @@ Feature: Test MQTT API
     Then I get at least 1 statistic frame
 
   @usingMQTT
-  Scenario: Getting the statistics frame from a date when there is no stats in cache
-    When I get the last statistics frame when there is still no statistics in cache
-    Then I get at least 1 statistic frame
-
-  @usingMQTT
   Scenario: Getting all statistics frame
     When I get all statistics frames
     Then I get at least 1 statistic frame
