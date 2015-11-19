@@ -1315,7 +1315,7 @@ These statistics include:
   requestId: <Unique query ID>
 
   body: {
-    timestamp: 424242424242
+    since: 424242424242
   }
 }
 ```
@@ -1328,7 +1328,7 @@ These statistics include:
   error: null,                      // Assuming everything went well
   result: {
     _source: {                      // Your original query
-      timestamp: { 424242424242 }
+      since: { 424242424242 }
     },
     action: 'getStats',
     controller: 'admin',

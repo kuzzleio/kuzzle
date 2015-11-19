@@ -1312,7 +1312,7 @@ These statistics include:
   requestId: <Unique query ID>
 
   body: {
-    timestamp: 424242424242
+    since: 424242424242
   }
 }
 ```
@@ -1324,7 +1324,7 @@ These statistics include:
   status: 200,                      // Assuming everything went well
   error: null,                      // Assuming everything went well
   result: {
-    _source: { timestamp: 424242424242 }                     // Your original query
+    _source: { since: 424242424242 }                     // Your original query
     action: 'getStats',
     controller: 'admin',
     statistics: {

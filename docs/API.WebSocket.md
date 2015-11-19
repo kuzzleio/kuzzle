@@ -1284,9 +1284,11 @@ These statistics include:
   Required: if your query doesn't include a requestId field, Kuzzle will
   discard it, as it doesn't have any means to provide you with the result
   */
-  requestId: <Unique query ID>
+  requestId: <Unique query ID>,
 
-  timestamp: 4242424242
+  body: {
+    since: 4242424242
+  }
 }
 ```
 
@@ -1298,7 +1300,7 @@ These statistics include:
   error: null,                      // Assuming everything went well
   result: {
     _source: {                      // Your original query
-      timestamp: 4242424242
+      since: 4242424242
     },
     action: 'getStats',
     controller: 'admin',

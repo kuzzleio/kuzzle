@@ -1305,9 +1305,11 @@ These statistics include:
   Optionnal: Kuzzle will forward this field in its response, allowing you
   to easily identify what query generated the response you got.
   */
-  requestId: <Unique query ID>
+  requestId: <Unique query ID>,
 
-  timestamp: 4242424242
+  body: {
+    since: 4242424242
+  }
 }
 ```
 
@@ -1319,7 +1321,7 @@ These statistics include:
   error: null,                      // Assuming everything went well
   result: {
     _source: {                      // Your original query
-      timestamp: 4242424242
+      since: 4242424242
     },
     action: 'getStats',
     controller: 'admin',

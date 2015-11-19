@@ -846,7 +846,7 @@ These statistics include:
 ```javascript
 {
   body: {
-    timestamp: 4242424242
+    since: 4242424242
   }
 }
 ```
@@ -859,7 +859,7 @@ These statistics include:
   error: null,                      // Assuming everything went well
   result: {
     _source: {                      // Your original count query
-      timestamp: { 424242424242 }
+      since: { 424242424242 }
     },
     collection: '<data collection>',
     action: 'getStats',
