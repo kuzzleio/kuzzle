@@ -1,0 +1,20 @@
+{ 
+  "_id": "test", 
+  "body": {
+    "indexes": {
+      "*": { 
+        "collections": { 
+          "*": { 
+            "controllers": { 
+              "*": { 
+                "actions": { 
+                  "*": "return true;" 
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
