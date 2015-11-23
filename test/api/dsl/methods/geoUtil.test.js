@@ -47,5 +47,11 @@ describe('Test geoUtil methods included in the DSL methods file', function () {
       return true;
     }
   });
+  it('Point: should handle a [0,0] coordinates', function () {
+    result = methods._geoUtil.constructPoint({ lat: 0, lon: 0 });
+    should(result.lat).be.exactly(0);
+    should(result.lon).be.exactly(0);
+  });
+
 
 });
