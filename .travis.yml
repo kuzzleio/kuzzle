@@ -1,25 +1,26 @@
 sudo: required
-
 services:
-  - docker
-
+- docker
 env:
   COMPOSE_VERSION: 1.2.0
-
 before_install:
- - curl -L https://github.com/docker/compose/releases/download/${COMPOSE_VERSION}/docker-compose-`uname -s`-`uname -m` > docker-compose-bin
- - chmod +x docker-compose-bin
- - sudo mv docker-compose-bin /usr/local/bin/docker-compose
- - sudo service docker restart ; sleep 10
-
+- curl -L https://github.com/docker/compose/releases/download/${COMPOSE_VERSION}/docker-compose-`uname
+  -s`-`uname -m` > docker-compose-bin
+- chmod +x docker-compose-bin
+- sudo mv docker-compose-bin /usr/local/bin/docker-compose
+- sudo service docker restart ; sleep 10
 script:
-  - docker-compose -f docker-compose/test-travis.yml run kuzzle
-
+- docker-compose -f docker-compose/test-travis.yml run kuzzle
 notifications:
   webhooks:
     urls:
-      - https://webhooks.gitter.im/e/8e145155fbaaf37cffea
+    - https://webhooks.gitter.im/e/8e145155fbaaf37cffea
     on_success: change
     on_failure: always
     on_start: never
   email: false
+  slack:
+    secure: lcjjpIGmtjOac4SkeMg6rMcUu+3wee+xgEsBC6a1sYCWGKTxs6x22ezCHwBKbjZ9r14wm+2zOfYuBxWtvxkfduB8WVHH/U+2l5Fto37BxFvWSBqBJy+6BzMz+3gH9JvpHHOjuiqotDX8IQwsQhCgO2MIu+clU3F/T2KT9QtZAFzGnD00vjAkPH+9usxTKfFAmKNwETbTCP3cf3s0KOeX8q3YVW7yYV2Rx3lKT6LDtwzRoO1Fuhp6XNgTkKSWnrbkGsr0terSinkwHj/77cgyrnAVKKUo21Oorz9w6lBTOhvj32H0cShta0zk97+E3bhdhCg9hZtF7oqA+u2thLEWRX2luWlN45X6+kpcrEJYg4Zlhd+ABJyk9a68GwP9H9Kqa8+BxTk4tJzf9w/jgKhFcyM2HMBpD97aGqtQMUKXV5lwQPgutL7eGg8irGKwaidWKT9yWRthAQc0xRiv9/zc6Hwtb9RuRi6KZeyKrLFmDT2PP4Y5NhkDV6XFMaxllx0MSaYC4skl59gbrMl3FZWv8xgJUNHHyxfxheg9Apyf1MXGZOqsIlmqky87pO6csqVL1N5MsKrR12EEzBhW+71VnEPph5vNtTU6gm7sIHCkMPUdCbPNZtBnoK+1SF/T8PehgTPIkakFxmqMNy/ApEFHlUT3/5KvAKs37k481QROGV8=
+    on_success: never
+    on_failure: always
+    on_start: never
