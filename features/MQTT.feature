@@ -59,6 +59,8 @@ Feature: Test MQTT API
     When I write the document "documentAda"
     Then I count 4 documents
     And I count 2 documents with "NYC" in field "city"
+    Then I truncate the collection
+    And I count 0 documents
 
   @removeSchema @usingMQTT
   Scenario: Change mapping

@@ -73,17 +73,15 @@ describe('Test: routerController.routeWebsocket', function () {
         });
     });
 
-    it('should have registered a listener for each known controller', function () {
-      router.controllers.forEach(function (controller) {
-        should(emitter.listeners(controller).length).be.exactly(1);
-      });
+    it('should have registered a global listener', function () {
+      should(emitter.listeners(router.routename).length).be.exactly(1);
     });
 
     it('should embed incoming requests into a well-formed request object', function (done) {
-      var emittedObject = {body: {resolve: true}, action: 'get'};
+      var emittedObject = {body: {resolve: true}, controller: 'read', action: 'get'};
 
       forwardedObject = false;
-      emitter.emit('read', emittedObject);
+      emitter.emit(router.routename, emittedObject);
 
       timer = setInterval(function () {
         if (forwardedObject === false) {
@@ -115,10 +113,10 @@ describe('Test: routerController.routeWebsocket', function () {
     });
 
     it('should notify with the returned document in case of success', function (done) {
-      var emittedObject = {body: {resolve: true}, action: 'get'};
+      var emittedObject = {body: {resolve: true}, controller: 'read', action: 'get'};
 
       notifyStatus = 'pending';
-      emitter.emit('read', emittedObject);
+      emitter.emit(router.routename, emittedObject);
 
       timer = setInterval(function () {
         if (notifyStatus === 'pending') {
@@ -148,7 +146,7 @@ describe('Test: routerController.routeWebsocket', function () {
 
     it('should notify with an error object in case of rejection', function (done) {
       var
-        emittedObject = {body: {resolve: false}, action: 'get'},
+        emittedObject = {body: {resolve: false}, controller: 'read', action: 'get'},
         eventReceived = false;
 
       notifyStatus = 'pending';
@@ -157,7 +155,7 @@ describe('Test: routerController.routeWebsocket', function () {
         eventReceived = true;
       });
 
-      emitter.emit('read', emittedObject);
+      emitter.emit(router.routename, emittedObject);
 
       timer = setInterval(function () {
         if (notifyStatus === 'pending') {
@@ -187,11 +185,11 @@ describe('Test: routerController.routeWebsocket', function () {
 
     it('should not notify if the response is empty', function (done) {
       var
-        emittedObject = {body: {resolve: true, empty: true}, action: 'get'};
+        emittedObject = {body: {resolve: true, empty: true}, controller: 'read', action: 'get'};
 
       notifyStatus = 'pending';
       forwardedObject = false;
-      emitter.emit('read', emittedObject);
+      emitter.emit(router.routename, emittedObject);
 
       timer = setInterval(function () {
         if (forwardedObject === false) {
