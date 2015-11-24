@@ -528,7 +528,26 @@ var apiSteps = function () {
   });
 
   this.When(/^I get the last statistics frame$/, function (callback) {
-    this.api.getStats()
+    this.api.getLastStats()
+      .then(function (response) {
+        if (response.error) {
+          return callback(new Error(response.error.message));
+        }
+
+        if (!response.result) {
+          return callback(new Error('No result provided'));
+        }
+
+        this.result = response.result;
+        callback();
+      }.bind(this))
+      .catch(function (error) {
+        callback(error);
+      });
+  });
+
+  this.When(/^I get the statistics frame from a date$/, function (callback) {
+    this.api.getStats({startTime: new Date().getTime()-1000000, stopTime: undefined})
       .then(function (response) {
         if (response.error) {
           return callback(new Error(response.error.message));
@@ -581,7 +600,6 @@ var apiSteps = function () {
         this.result.statistics[key[0]].connections) {
       return callback();
     }
-
     callback('Expected at least 1 statistic frame, found: ' + this.result.statistics);
   });
 

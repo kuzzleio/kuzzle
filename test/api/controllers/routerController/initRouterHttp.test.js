@@ -514,7 +514,7 @@ describe('Test: routerController.initRouterHttp', function () {
   it('should create a route for the getStats command', function (done) {
     var request;
 
-    options.method = 'GET';
+    options.method = 'POST';
     options.path= '/api/_getStats';
 
     request = http.request(options, function (response) {
