@@ -53,5 +53,9 @@ describe('Test geoUtil methods included in the DSL methods file', function () {
     should(result.lon).be.exactly(0);
   });
 
+  it ('getDistance: should handle localized string like "365 219,816 Ft"', function () {
+    result = methods.__get__('geoUtil').getDistance('365 219,816 Ft');
+    should(result).be.exactly(111318.9999168);
+  });
 
 });

@@ -16,9 +16,6 @@ describe('Test geoDistance method', function () {
       'location.lat': 0, // we can't test with nested document here
       'location.lon': 0
     },
-    // realDistance: 111319.491,
-    // distA: 111318,
-    // distB: 111320,
 
     filterExact = {
       location: {
@@ -67,7 +64,6 @@ describe('Test geoDistance method', function () {
     should(methods.dsl.filtersTree).not.be.empty();
     should(methods.dsl.filtersTree[collection]).not.be.empty();
     should(methods.dsl.filtersTree[collection].fields).not.be.empty();
-
     should(methods.dsl.filtersTree[collection].fields.location).not.be.empty();
   });
 
@@ -129,7 +125,7 @@ describe('Test geoDistance method', function () {
   });
 
   it('should return a rejected promise if an empty filter is provided', function () {
-    return should(methods.geoDistance('foo', 'bar', {})).be.rejectedWith(BadRequestError, { message: 'Missing filter' });
+    return should(methods.geoDistance('foo', 'bar', {})).be.rejectedWith(BadRequestError, { message: 'Missingfilter' });
   });
 
   it('should return a rejected promise if the geolocalisation filter is invalid', function () {
