@@ -16,6 +16,21 @@ describe('Test geoDistanceRangeRange method', function () {
       'location.lat': 0, // we can't test with nested document here
       'location.lon': 0
     },
+    documentBad = {
+      name: 'Bad',
+      'location.lol': 0, // we can't test with nested document here
+      'location.cat': 0
+    },
+    documentBadLat = {
+      name: 'Bad',
+      'location.lon': 0, // we can't test with nested document here
+      'location.cat': 0
+    },
+    documentBadLon = {
+      name: 'Bad',
+      'location.lol': 0, // we can't test with nested document here
+      'location.lat': 0
+    },
 
     filterOK = {
       location: {
@@ -65,6 +80,12 @@ describe('Test geoDistanceRangeRange method', function () {
   });
 
   it('should construct the filterTree object for the correct attribute', function () {
+    should(methods.dsl.filtersTree).not.be.empty();
+    should(methods.dsl.filtersTree[collection]).not.be.empty();
+    should(methods.dsl.filtersTree[collection].fields).not.be.empty();
+    should(methods.dsl.filtersTree[collection].fields.location).not.be.empty();
+  });
+  it('should ', function () {
     should(methods.dsl.filtersTree).not.be.empty();
     should(methods.dsl.filtersTree[collection]).not.be.empty();
     should(methods.dsl.filtersTree[collection].fields).not.be.empty();
@@ -126,6 +147,16 @@ describe('Test geoDistanceRangeRange method', function () {
     result = methods.dsl.filtersTree[collection].fields.location['locationgeoDistanceRangekpbxyzbpv111312.96111319.05600000001'].fn(document);
     should(result).be.exactly(true);
 
+  });
+
+  it('should return false if no lat or lon members exists for the location member of the document', function () {
+    // test ok
+    result = methods.dsl.filtersTree[collection].fields.location.locationgeoDistanceRangekpbxyzbpv111320111317.fn(documentBad);
+    should(result).be.exactly(false);
+    result = methods.dsl.filtersTree[collection].fields.location.locationgeoDistanceRangekpbxyzbpv111320111317.fn(documentBadLon);
+    should(result).be.exactly(false);
+    result = methods.dsl.filtersTree[collection].fields.location.locationgeoDistanceRangekpbxyzbpv111320111317.fn(documentBadLat);
+    should(result).be.exactly(false);
   });
 
   it('should return a rejected promise if an empty filter is provided', function () {
