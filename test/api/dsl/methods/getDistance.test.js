@@ -125,7 +125,7 @@ describe('Test geoDistance method', function () {
   });
 
   it('should return a rejected promise if an empty filter is provided', function () {
-    return should(methods.geoDistance('foo', 'bar', {})).be.rejectedWith(BadRequestError, { message: 'Missingfilter' });
+    return should(methods.geoDistance('foo', 'bar', {})).be.rejectedWith(BadRequestError, { message: 'Missing filter' });
   });
 
   it('should return a rejected promise if the geolocalisation filter is invalid', function () {
