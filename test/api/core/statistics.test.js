@@ -328,7 +328,7 @@ describe('Test: statistics core component', function () {
       .then((result) => { done(new Error('received a response instead of an error: ' + JSON.stringify(result))); })
       .catch(error => {
         try {
-          should(error.status).be.exactly(500);
+          should(error.status).be.exactly(400);
           should(error.error).not.be.null();
           should(error.error.message).not.be.null();
           should(error.error.message).be.a.String().and.be.exactly('Invalid time value');
