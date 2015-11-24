@@ -156,7 +156,7 @@ describe('Test geoboundingbox method', function () {
         }
       };
 
-    return should(methods.geoBoundingBox(roomId, collection, invalidFilter)).be.rejectedWith(BadRequestError, { message: 'Unable to parse GeoBoundingBox coordinates' });
+    return should(methods.geoBoundingBox(roomId, collection, invalidFilter)).be.rejectedWith(BadRequestError, { message: 'Unable to parse coordinates' });
   });
 
   it('should return a rejected promise if buildCurriedFunction fails', function () {
