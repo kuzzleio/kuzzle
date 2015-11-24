@@ -156,6 +156,11 @@ Feature: Test STOMP API
     Then I get at least 1 statistic frame
 
   @usingSTOMP
+  Scenario: Getting the statistics frame from a date
+    When I get the statistics frame from a date
+    Then I get at least 1 statistic frame
+
+  @usingSTOMP
   Scenario: Getting all statistics frame
     When I get all statistics frames
     Then I get at least 1 statistic frame
