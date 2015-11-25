@@ -184,6 +184,15 @@ describe('Test geoDistance method', function () {
     return should(methods.geoDistance(roomId, collection, invalidFilter)).be.rejectedWith(BadRequestError, { message: 'No distance given' });
   });
 
+  it('should return a rejected promise if the location filter parameter is missing', function () {
+    var
+      invalidFilter = {
+        distance: 123
+      };
+
+    return should(methods.geoDistance(roomId, collection, invalidFilter)).be.rejectedWith(BadRequestError, { message: 'No location field given' });
+  });
+
   it('should handle the not parameter', function () {
     var
       notFilter = {
