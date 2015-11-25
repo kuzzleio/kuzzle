@@ -36,6 +36,7 @@ The current implementation of our MQ Broker service uses [RabbitMQ](https://www.
   * [Performing a bulk import](#performing-a-bulk-import-on-a-data-collection)
   * [Performing a global bulk import](#performing-a-global-bulk-import)
   * [Getting the last statistics frame](#getting-the-last-statistics-frame)
+  * [Getting the statistics from a date](#getting-the-statistics-from-a-date)
   * [Getting all stored statistics](#getting-all-stored-statistics)
   * [Listing all known data collections](#listing-all-known-data-collections)
   * [Getting the current Kuzzle timestamp](#getting-the-current-kuzzle-timestamp)
@@ -1229,6 +1230,7 @@ These statistics include:
 * the number of completed requests since the last frame
 * the number of failed requests since the last frame
 
+**Topic:** ``admin.getLastStats``
 **replyTo queue header:** Required.
 
 **Query:**
@@ -1236,7 +1238,7 @@ These statistics include:
 ```javascript
 {
   controller: 'admin',
-  action: 'getStats'
+  action: 'getLastStats'
 }
 ```
 
@@ -1247,9 +1249,88 @@ These statistics include:
   status: 200,                      // Assuming everything went well
   error: null,                      // Assuming everything went well
   result: {
-    _source: {                      // Your original query
-      ...
+    _source: {}                     // Your original query
+    action: 'getLastStats',
+    controller: 'admin',
+    statistics: {
+      "YYYY-MM-DDTHH:mm:ss.mmmZ": {
+        completedRequests: {
+          websocket: 148,
+          rest: 24,
+          mq: 78
+        },
+        failedRequests: {
+          websocket: 3
+        },
+        ongoingRequests: {
+          mq: 8,
+          rest: 2
+        }
+        connections: {
+          websocket: 13
+        }
+      }
     },
+    /*
+    The requestId field you provided.
+    */
+    requestId: '<unique request identifier>'
+  }
+}
+```
+
+---
+
+### Getting the statistics from a date
+
+This command allows getting statistics frames saved/stored after a provided timestamp
+
+These statistics include:
+
+* the number of connected users for protocols allowing this notion (websocket, udp, ...)
+* the number of ongoing requests
+* the number of completed requests since the last frame
+* the number of failed requests since the last frame
+
+**Topic:** ``admin.getStats``
+
+**Exchange name:** ``amq.topic``
+
+**replyTo queue metadata:** Required.
+
+**Query:**
+
+```javascript
+{
+  /*
+  Optional
+  */
+  clientId: <Unique session ID>,
+
+  /*
+  Optional: Kuzzle will forward this field in its response, allowing you
+  to easily identify which query generated the response you got.
+  */
+  requestId: <Unique query ID>
+
+  /*
+  Optional: Kuzzle will return all statistics if nor the startTime and stopTime are defined
+  */
+  body: {
+    startTime: <timestamp>,
+    stopTime: <timestamp>
+  }
+}
+```
+
+**Response:**
+
+```javascript
+{
+  status: 200,                      // Assuming everything went well
+  error: null,                      // Assuming everything went well
+  result: {
+    _source: { startTime: <timestamp>, stopTime: <timestamp> }                     // Your original query
     action: 'getStats',
     controller: 'admin',
     statistics: {
