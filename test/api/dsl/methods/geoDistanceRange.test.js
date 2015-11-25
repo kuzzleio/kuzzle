@@ -7,7 +7,7 @@ var
 
 require('should-promised');
 
-describe('Test geoDistanceRangeRange method', function () {
+describe('Test geoDistanceRange method', function () {
   var
     roomId = 'roomId',
     collection = 'collection',
@@ -161,6 +161,38 @@ describe('Test geoDistanceRangeRange method', function () {
 
   it('should return a rejected promise if an empty filter is provided', function () {
     return should(methods.geoDistanceRange('foo', 'bar', {})).be.rejectedWith(BadRequestError, { message: 'Missing filter' });
+  });
+
+  it('should handle correctly the case when from and to comes first, before the location', function () {
+    /* jshint camelcase: false */
+    var
+      underscoreFilter = {
+        from: 123,
+        to: 456,
+        location: {
+          lat_lon: {
+            lat: 0,
+            lon: 1
+          }
+        }
+      };
+    /* jshint camelcase: true */
+
+    return methods.geoDistanceRange(roomId, collection, underscoreFilter);
+  });
+
+  it('should handle the not parameter', function () {
+    var
+      notFilter = {
+        from: 123,
+        to: 456,
+        location: {
+          lat: 0,
+          lon: 1
+        }
+      };
+
+    return methods.geoDistanceRange(roomId, collection, notFilter, true);
   });
 
   it('should return a rejected promise if the geolocalisation filter is invalid', function () {
