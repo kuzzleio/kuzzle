@@ -17,6 +17,7 @@ You can also take a look at the internally used [Elasticsearch API](https://www.
 * exists
 * geoBoundingBox
 * geoDistance
+* geoDistanceRange
 * not
 * or
 * range

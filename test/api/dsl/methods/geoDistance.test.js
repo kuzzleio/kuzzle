@@ -142,6 +142,36 @@ describe('Test geoDistance method', function () {
     return should(methods.geoDistance(roomId, collection, invalidFilter)).be.rejectedWith(BadRequestError, { message: 'Unable to parse coordinates' });
   });
 
+  it('should handle correctly the case when distance is the first filter member', function () {
+    var
+      distanceFirstFilter = {
+        distance: 111318,
+        location: {
+          lat: 0,
+          lon: 1
+        }
+      };
+
+    return methods.geoDistance(roomId, collection, distanceFirstFilter);
+  });
+
+  it('should handle correctly the case when the location is noted with the underscore notation', function () {
+    /* jshint camelcase: false */
+    var
+      underscoreFilter = {
+        distance: 111318,
+        location: {
+          lat_lon: {
+            lat: 0,
+            lon: 1
+          }
+        }
+      };
+    /* jshint camelcase: true */
+
+    return methods.geoDistance(roomId, collection, underscoreFilter);
+  });
+
   it('should return a rejected promise if the distance filter parameter is missing', function () {
     var
       invalidFilter = {
@@ -152,6 +182,28 @@ describe('Test geoDistance method', function () {
       };
 
     return should(methods.geoDistance(roomId, collection, invalidFilter)).be.rejectedWith(BadRequestError, { message: 'No distance given' });
+  });
+
+  it('should return a rejected promise if the location filter parameter is missing', function () {
+    var
+      invalidFilter = {
+        distance: 123
+      };
+
+    return should(methods.geoDistance(roomId, collection, invalidFilter)).be.rejectedWith(BadRequestError, { message: 'No location field given' });
+  });
+
+  it('should handle the not parameter', function () {
+    var
+      notFilter = {
+        location: {
+          lon: -2.939744,
+          lat: 1.180129
+        },
+        distance: 123
+      };
+
+    return methods.geoDistance(roomId, collection, notFilter, true);
   });
 
   it('should return a rejected promise if the distance filter parameter is missing', function () {
