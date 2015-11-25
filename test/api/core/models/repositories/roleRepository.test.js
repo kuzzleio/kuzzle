@@ -3,11 +3,23 @@ var
   q = require('q'),
   params = require('rc')('kuzzle'),
   should = require('should'),
+  BadRequestError = require.main.require('lib/api/core/errors/badRequestError'),
   InternalError = require.main.require('lib/api/core/errors/internalError'),
   NotFoundError = require.main.require('lib/api/core/errors/notFoundError'),
+  RequestObject = require.main.require('lib/api/core/models/requestObject'),
   ResponseObject = require.main.require('lib/api/core/models/responseObject'),
+  User = require.main.require('lib/api/core/models/security/user'),
   kuzzle = {
-    repositories: {},
+    repositories: {
+      user: {
+        anonymous: () => {
+          var user = new User();
+          user._id = -1;
+          user.profile = 'anonymous';
+          return user;
+        }
+      }
+    },
     services: {list: {}},
     config: require.main.require('lib/config')(params)
   },
@@ -18,9 +30,11 @@ var
 describe('Test: repositories/roleRepository', function () {
   var
     ObjectConstructor,
+    forwardedObject,
     persistedObject1,
     persistedObject2,
     mockReadEngine,
+    mockWriteEngine,
     roleRepository;
 
   ObjectConstructor = function () {
@@ -67,9 +81,17 @@ describe('Test: repositories/roleRepository', function () {
     }
   };
 
+  mockWriteEngine = {
+    createOrUpdate: function (requestObject) {
+      forwardedObject = requestObject;
+      return Promise.resolve(new ResponseObject(requestObject, {}));
+    }
+  };
+
   before(function () {
     roleRepository = new RoleRepository();
     roleRepository.readEngine = mockReadEngine;
+    roleRepository.writeEngine = mockWriteEngine;
   });
 
   beforeEach(function () {
@@ -161,6 +183,88 @@ describe('Test: repositories/roleRepository', function () {
         })
         .catch(function (error) {
           done(error);
+        });
+    });
+
+  });
+
+  describe('#getRoleFromRequestObject', function () {
+    it('should build a valid role object', () => {
+      var
+        indexes = {
+          index: {
+            collections: {
+              collection: {
+                controllers: {
+                  controller: {
+                    actions: {
+                      action: true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        requestObject = new RequestObject({
+          collection: 'collection',
+          controller: 'controller',
+          action: 'action',
+          body: {
+            _id: 'roleId',
+            indexes: indexes
+          }
+        }),
+        role;
+
+      role = roleRepository.getRoleFromRequestObject(requestObject);
+
+      should(role._id).be.exactly('roleId');
+      should(role.indexes).be.eql(indexes);
+    });
+  });
+
+  describe('#validateAndSaveRole', function () {
+    it('should reject the promise if no id is defined', () => {
+      var role = new Role();
+
+      return should(roleRepository.validateAndSaveRole(role)).be.rejectedWith(BadRequestError);
+    });
+
+    it('should reject the promise if an invalid role is given', () => {
+      var role = new Role();
+      role._id = 'test';
+
+      should(roleRepository.validateAndSaveRole(role)).be.rejectedWith(BadRequestError);
+    });
+
+    it('persist the role to the database when ok', done => {
+      var
+        indexes = {
+          index: {
+            collections: {
+              colletion: {
+                controllers: {
+                  controller: {
+                    actions: {
+                      action: true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        role = new Role();
+      role._id = 'test';
+      role.indexes = indexes;
+
+      roleRepository.validateAndSaveRole(role)
+        .then(() => {
+          should(forwardedObject.data._id).be.exactly('test');
+          should(forwardedObject.data.body.indexes).be.eql(indexes);
+
+          done();
         });
     });
 

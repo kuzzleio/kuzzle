@@ -105,6 +105,8 @@ describe('Test: routerController.routeMQListener', function () {
     forwardedObject = false;
     listener(mqMessage);
 
+    this.timeout(timeout);
+
     timer = setInterval(function () {
       if (forwardedObject === false) {
         return;
@@ -126,13 +128,6 @@ describe('Test: routerController.routeMQListener', function () {
       clearInterval(timer);
       timer = false;
     }, 5);
-
-    setTimeout(function () {
-      if (timer !== false) {
-        clearInterval(timer);
-        done(new Error('Timeout'));
-      }
-    }, timeout);
   });
 
   it('should be able to manage Buffer-based messages content', function (done) {
@@ -144,6 +139,8 @@ describe('Test: routerController.routeMQListener', function () {
     notifyStatus = 'pending';
 
     listener(mqMessage);
+
+    this.timeout(timeout);
 
     timer = setInterval(function () {
       if (notifyStatus === 'pending') {
@@ -166,13 +163,6 @@ describe('Test: routerController.routeMQListener', function () {
       clearInterval(timer);
       timer = false;
     }, 5);
-
-    setTimeout(function () {
-      if (timer !== false) {
-        clearInterval(timer);
-        done(new Error('Timeout'));
-      }
-    }, timeout);
   });
 
   it('should fail cleanly with incorrect messages', function (done) {
@@ -207,6 +197,8 @@ describe('Test: routerController.routeMQListener', function () {
 
     listener(mqMessage);
 
+    this.timeout(timeout);
+
     timer = setInterval(function () {
       if (notifyStatus === 'pending') {
         return;
@@ -224,13 +216,6 @@ describe('Test: routerController.routeMQListener', function () {
       clearInterval(timer);
       timer = false;
     }, 5);
-
-    setTimeout(function () {
-      if (timer !== false) {
-        clearInterval(timer);
-        done(new Error('Timeout'));
-      }
-    }, timeout);
   });
 
   it('should not notify if the response is empty', function (done) {
@@ -265,6 +250,8 @@ describe('Test: routerController.routeMQListener', function () {
 
     listener(mqMessage);
 
+    this.timeout(timeout);
+
     timer = setInterval(function () {
       if (forwardedObject === false) {
         return;
@@ -283,13 +270,6 @@ describe('Test: routerController.routeMQListener', function () {
       clearInterval(timer);
       timer = false;
     }, 5);
-
-    setTimeout(function () {
-      if (timer !== false) {
-        clearInterval(timer);
-        done(new Error('Timeout'));
-      }
-    }, timeout);
   });
 
   it('should initialize an MQTT connection type for MQTT messages', function (done) {
@@ -302,6 +282,8 @@ describe('Test: routerController.routeMQListener', function () {
     delete mqMessage.properties;
 
     listener(mqMessage);
+
+    this.timeout(timeout);
 
     timer = setInterval(function () {
       if (forwardedObject === false) {
@@ -321,12 +303,5 @@ describe('Test: routerController.routeMQListener', function () {
       clearInterval(timer);
       timer = false;
     }, 5);
-
-    setTimeout(function () {
-      if (timer !== false) {
-        clearInterval(timer);
-        done(new Error('Timeout'));
-      }
-    }, timeout);
   });
 });

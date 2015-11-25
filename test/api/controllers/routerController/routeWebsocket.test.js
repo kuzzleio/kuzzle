@@ -30,213 +30,189 @@ describe('Test: routerController.routeWebsocket', function () {
     timer,
     timeout = 500;
 
-    before(function (done) {
-      var
-        mockupFunnel = function (requestObject) {
-          forwardedObject = new ResponseObject(requestObject, {});
+  before(function (done) {
+    var
+      mockupFunnel = function (requestObject) {
+        forwardedObject = new ResponseObject(requestObject, {});
 
-          if (requestObject.data.body.resolve) {
-            if (requestObject.data.body.empty) {
-              return Promise.resolve({});
-            }
-            else {
-              return Promise.resolve(forwardedObject);
-            }
+        if (requestObject.data.body.resolve) {
+          if (requestObject.data.body.empty) {
+            return Promise.resolve({});
           }
           else {
-            return Promise.reject(new Error('rejected'));
+            return Promise.resolve(forwardedObject);
           }
-        },
-        mockupNotifier = function (requestId, responseObject) {
-            if (responseObject.error) {
-              notifyStatus = 'error';
-            }
-            else if (responseObject.result) {
-              notifyStatus = 'success';
-            }
-            else {
-              notifyStatus = '';
-            }
-        };
-
-      kuzzle = new Kuzzle();
-      kuzzle.log = new (winston.Logger)({transports: [new (winston.transports.Console)({level: 'silent'})]});
-
-      kuzzle.start(params, {dummy: true})
-        .then(function () {
-          kuzzle.funnel.execute = mockupFunnel;
-          kuzzle.notifier.notify = mockupNotifier;
-
-          router = new RouterController(kuzzle);
-          router.routeWebsocket(emitter);
-          done();
-        });
-    });
-
-    it('should have registered a global listener', function () {
-      should(emitter.listeners(router.routename).length).be.exactly(1);
-    });
-
-    it('should embed incoming requests into a well-formed request object', function (done) {
-      var emittedObject = {body: {resolve: true}, controller: 'read', action: 'get'};
-
-      forwardedObject = false;
-      emitter.emit(router.routename, emittedObject);
-
-      timer = setInterval(function () {
-        if (forwardedObject === false) {
-          return;
         }
-
-        try {
-          should(forwardedObject.data.body).not.be.null();
-          should(forwardedObject.data.body).be.exactly(emittedObject.body);
-          should(forwardedObject.protocol).be.exactly('websocket');
-          should(forwardedObject.controller).be.exactly('read');
-          should(forwardedObject.action).be.exactly('get');
-          done();
+        else {
+          return Promise.reject(new Error('rejected'));
         }
-        catch (e) {
-          done(e);
-        }
-
-        clearInterval(timer);
-        timer = false;
-      }, 5);
-
-      setTimeout(function () {
-        if (timer !== false) {
-          clearInterval(timer);
-          done(new Error('Timeout'));
-        }
-      }, timeout);
-    });
-
-    it('should notify with the returned document in case of success', function (done) {
-      var emittedObject = {body: {resolve: true}, controller: 'read', action: 'get'};
-
-      notifyStatus = 'pending';
-      emitter.emit(router.routename, emittedObject);
-
-      timer = setInterval(function () {
-        if (notifyStatus === 'pending') {
-          return;
-        }
-
-        try {
-          should(notifyStatus).be.exactly('success');
-          done();
-        }
-        catch (e) {
-          done(e);
-        }
-
-        clearInterval(timer);
-        timer = false;
-      }, 5);
-
-      setTimeout(function () {
-        if (timer !== false) {
-          clearInterval(timer);
-          done(new Error('Timeout'));
-        }
-      }, timeout);
-    });
-
-
-    it('should notify with an error object in case of rejection', function (done) {
-      var
-        emittedObject = {body: {resolve: false}, controller: 'read', action: 'get'},
-        eventReceived = false;
-
-      notifyStatus = 'pending';
-
-      kuzzle.once('read:websocket:funnel:reject', function () {
-        eventReceived = true;
-      });
-
-      emitter.emit(router.routename, emittedObject);
-
-      timer = setInterval(function () {
-        if (notifyStatus === 'pending') {
-          return;
-        }
-
-        try {
-          should(notifyStatus).be.exactly('error');
-          should(eventReceived).be.true();
-          done();
-        }
-        catch (e) {
-          done(e);
-        }
-
-        clearInterval(timer);
-        timer = false;
-      }, 5);
-
-      setTimeout(function () {
-        if (timer !== false) {
-          clearInterval(timer);
-          done(new Error('Timeout'));
-        }
-      }, timeout);
-    });
-
-    it('should not notify if the response is empty', function (done) {
-      var
-        emittedObject = {body: {resolve: true, empty: true}, controller: 'read', action: 'get'};
-
-      notifyStatus = 'pending';
-      forwardedObject = false;
-      emitter.emit(router.routename, emittedObject);
-
-      timer = setInterval(function () {
-        if (forwardedObject === false) {
-          return;
-        }
-
-        try {
-          should(notifyStatus).be.exactly('pending');
-          done();
-        }
-        catch (e) {
-          done(e);
-        }
-
-        clearInterval(timer);
-        timer = false;
-      }, 5);
-
-      setTimeout(function () {
-        if (timer !== false) {
-          clearInterval(timer);
-          done(new Error('Timeout'));
-        }
-      }, timeout);
-    });
-
-
-    it('should handle sockets clean disconnection', function (done) {
-      var
-        removeCustomers = false,
-        hasListener;
-
-      this.timeout(50);
-
-      kuzzle.hotelClerk.removeCustomerFromAllRooms = function () {
-        removeCustomers = true;
+      },
+      mockupNotifier = function (requestId, responseObject) {
+          if (responseObject.error) {
+            notifyStatus = 'error';
+          }
+          else if (responseObject.result) {
+            notifyStatus = 'success';
+          }
+          else {
+            notifyStatus = '';
+          }
       };
 
-      kuzzle.once('websocket:disconnect', function () {
+    kuzzle = new Kuzzle();
+    kuzzle.log = new (winston.Logger)({transports: [new (winston.transports.Console)({level: 'silent'})]});
+
+    kuzzle.start(params, {dummy: true})
+      .then(function () {
+        kuzzle.funnel.execute = mockupFunnel;
+        kuzzle.notifier.notify = mockupNotifier;
+
+        router = new RouterController(kuzzle);
+        router.routeWebsocket(emitter);
         done();
       });
+  });
 
-      hasListener = emitter.emit('disconnect');
+  it('should have registered a global listener', function () {
+    should(emitter.listeners(router.routename).length).be.exactly(1);
+  });
 
-      should(hasListener).be.true();
-      should(removeCustomers).be.true();
+  it('should embed incoming requests into a well-formed request object', function (done) {
+    var emittedObject = {body: {resolve: true}, controller: 'read', action: 'get'};
+
+    forwardedObject = false;
+    emitter.emit(router.routename, emittedObject);
+
+    this.timeout(timeout);
+    timer = setInterval(function () {
+      if (forwardedObject === false) {
+        return;
+      }
+
+      try {
+        should(forwardedObject.data.body).not.be.null();
+        should(forwardedObject.data.body).be.exactly(emittedObject.body);
+        should(forwardedObject.protocol).be.exactly('websocket');
+        should(forwardedObject.controller).be.exactly('read');
+        should(forwardedObject.action).be.exactly('get');
+        done();
+      }
+      catch (e) {
+        done(e);
+      }
+
+      clearInterval(timer);
+      timer = false;
+    }, 5);
+  });
+
+  it('should notify with the returned document in case of success', function (done) {
+    var emittedObject = {body: {resolve: true}, controller: 'read', action: 'get'};
+
+    notifyStatus = 'pending';
+    emitter.emit(router.routename, emittedObject);
+
+    this.timeout(timeout);
+    timer = setInterval(function () {
+      if (notifyStatus === 'pending') {
+        return;
+      }
+
+      try {
+        should(notifyStatus).be.exactly('success');
+        done();
+      }
+      catch (e) {
+        done(e);
+      }
+
+      clearInterval(timer);
+      timer = false;
+    }, 5);
+  });
+
+
+  it('should notify with an error object in case of rejection', function (done) {
+    var
+      emittedObject = {body: {resolve: false}, controller: 'read', action: 'get'},
+      eventReceived = false;
+
+    notifyStatus = 'pending';
+
+    kuzzle.once('read:websocket:funnel:reject', function () {
+      eventReceived = true;
     });
+
+    emitter.emit(router.routename, emittedObject);
+
+    this.timeout(timeout);
+    timer = setInterval(function () {
+      if (notifyStatus === 'pending') {
+        return;
+      }
+
+      try {
+        should(notifyStatus).be.exactly('error');
+        should(eventReceived).be.true();
+        done();
+      }
+      catch (e) {
+        done(e);
+      }
+
+      clearInterval(timer);
+      timer = false;
+    }, 5);
+  });
+
+  it('should not notify if the response is empty', function (done) {
+    var
+      emittedObject = {body: {resolve: true, empty: true}, controller: 'read', action: 'get'};
+
+    notifyStatus = 'pending';
+    forwardedObject = false;
+    emitter.emit(router.routename, emittedObject);
+
+    this.timeout(timeout);
+    timer = setInterval(function () {
+      if (forwardedObject === false) {
+        return;
+      }
+
+      try {
+        should(notifyStatus).be.exactly('pending');
+        done();
+      }
+      catch (e) {
+        done(e);
+      }
+
+      clearInterval(timer);
+      timer = false;
+    }, 5);
+  });
+
+
+  it('should handle sockets clean disconnection', function (done) {
+    var
+      removeCustomers = false,
+      hasListener;
+
+    this.timeout(50);
+
+    kuzzle.hotelClerk.removeCustomerFromAllRooms = function () {
+      removeCustomers = true;
+    };
+
+    kuzzle.once('websocket:disconnect', function () {
+      done();
+    });
+
+    hasListener = emitter.emit('disconnect');
+
+    should(hasListener).be.true();
+    should(removeCustomers).be.true();
+  });
 
   it('should handle sockets crashes', function (done) {
     var

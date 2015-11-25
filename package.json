@@ -37,6 +37,7 @@
     "newrelic": "1.23.0",
     "ngeohash": "0.6.0",
     "node-uuid": "1.4.3",
+    "portfinder": "^0.4.0",
     "q": "2.0.3",
     "rc": "1.1.2",
     "redis": "2.3.0",
