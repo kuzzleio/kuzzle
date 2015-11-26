@@ -197,4 +197,73 @@ describe('Test redis service', function () {
       })
       .catch(error => done(error));
   });
+
+  it('i#set should set a single value', done => {
+    redis.set('foo', 'bar')
+      .then(result => {
+        should(result).be.exactly('OK');
+        redis.client.get('foo', (e, r) => {
+          should(e).be.null();
+          should(r).be.exactly('bar');
+          done();
+        });
+      });
+  });
+
+  it('#expire should allow to modify an entry ttl', done => {
+    redis.volatileSet('foo', 'bar', 100)
+      .then(() => {
+        return redis.expire('foo', 200);
+      })
+      .then(result => {
+        should(result).be.exactly(1);
+        redis.client.ttl('foo', (e, r) => {
+          should(e).be.null();
+          should(r).be.exactly(200);
+          done();
+        });
+      })
+      .catch(error => {
+        done(error);
+      });
+  });
+
+  it('#expireAt should allow to set a ttl based on a timestamp', done => {
+    var whenSet;
+
+    redis.volatileSet('foo', 'bar', 100)
+      .then(() => {
+        return redis.expireAt('foo', Math.round((whenSet = Date.now()) / 1000) + 50);
+      })
+      .then(result => {
+        should(result).be.exactly(1);
+        redis.client.ttl('foo', (e, r) => {
+          should(e).be.null();
+          should(r).be.exactly(50 - Math.round((Date.now() - whenSet)/1000));
+          done();
+        });
+      })
+      .catch(error => {
+        done(error);
+      });
+  });
+
+  it('#persist should allow to set an infinite ttl', done => {
+    redis.volatileSet('foo', 'bar', 100)
+      .then(() => {
+        return redis.persist('foo');
+      })
+      .then(result => {
+        should(result).be.exactly(1);
+        redis.client.ttl('foo', (e, r) => {
+          should(e).be.null();
+          should(r).be.exactly(-1);
+          done();
+        });
+      })
+      .catch(error => {
+        done(error);
+      });
+  });
+
 });

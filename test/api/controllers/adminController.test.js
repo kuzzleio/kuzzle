@@ -4,6 +4,7 @@ var
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
+  ResponseObject = require.main.require('lib/api/core/models/responseObject'),
   NotFoundError = require.main.require('lib/api/core/errors/notFoundError');
 
 require('should-promised');
@@ -18,6 +19,15 @@ describe('Test: admin controller', function () {
     kuzzle.log = new (winston.Logger)({transports: [new (winston.transports.Console)({level: 'silent'})]});
     kuzzle.start(params, {dummy: true})
       .then(function () {
+        kuzzle.repositories.role.validateAndSaveRole = role => {
+          return Promise.resolve({
+            _index: 'mainindex',
+            _type: '%kuzzle/roles',
+            _id: role._id,
+            created: true
+          });
+        };
+
         done();
       });
   });
@@ -144,4 +154,20 @@ describe('Test: admin controller', function () {
 
     kuzzle.funnel.admin.truncateCollection(requestObject);
   });
+
+  it('should resolve to a responseObject on a putRole call', done => {
+    kuzzle.funnel.admin.putRole(new RequestObject({
+      body: { _id: 'test', indexes: {} }
+    }))
+      .then(result => {
+        should(result).be.an.instanceOf(ResponseObject);
+        should(result.data._id).be.exactly('test');
+        should(result.data.body._id).be.exactly('test');
+        done();
+      })
+      .catch(error => {
+        done(error);
+      });
+  });
+
 });

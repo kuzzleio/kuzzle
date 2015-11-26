@@ -30,14 +30,15 @@ describe('Test: responseListener', function () {
         kuzzle.router.routeWebsocket = function () { websocketServer = true; };
         kuzzle.router.routeMQListener = function () { mqServer = true; };
         kuzzle.router.routeHttp = function () { restRedirected = true; };
+
+        Servers.initAll(kuzzle, { port: port });
+        kuzzle.io.emit('connection', {});
+
         done();
       });
   });
 
   it('should register all three servers at initialization', function () {
-    Servers.initAll(kuzzle, { port: port });
-    kuzzle.io.emit('connection', {});
-
     should(httpServer).be.true();
     should(websocketServer).be.true();
     should(mqServer).be.true();

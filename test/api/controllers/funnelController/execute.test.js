@@ -2,10 +2,12 @@ var
   should = require('should'),
   winston = require('winston'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
+  UnauthorizedError = require.main.require('lib/api/core/errors/unauthorizedError'),
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   Profile = require.main.require('lib/api/core/models/security/profile'),
-  Role = require.main.require('lib/api/core/models/security/role');
+  Role = require.main.require('lib/api/core/models/security/role'),
+  User = require.main.require('lib/api/core/models/security/user');
 
 require('should-promised');
 
@@ -80,6 +82,48 @@ describe('Test execute function in funnel controller', function () {
     var requestObject = new RequestObject(object);
 
     return should(kuzzle.funnel.execute(requestObject, context)).be.rejected();
+  });
+
+  it('should reject the promise if the user is not allowed to execute the action', () => {
+    var
+      role = new Role(),
+      user = new User(),
+      localContext;
+
+    role.indexes = {
+      '*': {
+        collections: {
+          '*': {
+            controllers: {
+              '*': {
+                actions: {
+                  '*': false
+                }
+              }
+            }
+          }
+        }
+      }
+    };
+    user._id = 'testUser';
+    user.profile = new Profile();
+    user.profile.roles = [role];
+
+    context.user.profile.roles[0] = role;
+
+    localContext = {
+      connection: {id: 'connectionid'},
+      user: user
+    };
+
+    return should(
+      kuzzle.funnel.execute(
+        new RequestObject({
+          controller: 'read',
+          action: 'get'
+        }),
+        localContext)
+    ).be.rejectedWith(UnauthorizedError);
   });
 
   it('should resolve the promise if everything is ok', function () {
