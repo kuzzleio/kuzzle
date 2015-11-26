@@ -7,9 +7,6 @@ var
 require('should-promised');
 
 describe('Test unimplemented methods', function () {
-  it('geoDistanceRange call should return a rejected promise', function () {
-    should(methods.geoDistanceRange()).be.rejectedWith(KuzzleError, {message: 'geoDistanceRange is not implemented yet.'});
-  });
   it('geoPolygon call should return a rejected promise', function () {
     should(methods.geoPolygon()).be.rejectedWith(KuzzleError, {message: 'geoPolygon is not implemented yet.'});
   });
