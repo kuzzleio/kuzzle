@@ -130,16 +130,22 @@ describe('Test: hotelClerk.addSubscription', function () {
       });
   });
 
-  it('should return an error when the user has already subscribed to the filter', function () {
+  it('should return the same response when the user has already subscribed to the filter', done => {
     var requestObject = new RequestObject({
       controller: 'subscribe',
       collection: collection,
       body: filter
     });
+    var response;
 
     return kuzzle.hotelClerk.addSubscription(requestObject, context)
-      .then(function () {
-        return should(kuzzle.hotelClerk.addSubscription(requestObject, context)).be.rejected();
+      .then(result => {
+        response = result;
+        return kuzzle.hotelClerk.addSubscription(requestObject, context);
+      })
+      .then(result => {
+        should(result).match(response);
+        done();
       });
   });
 
@@ -157,7 +163,7 @@ describe('Test: hotelClerk.addSubscription', function () {
     return should(pAddSubscription).be.rejected();
   });
 
-  it('should return the same room ID if the same filters are used', function () {
+  it('should return the same room ID if the same filters are used', done => {
     var
       requestObject1 = new RequestObject({
         controller: 'subscribe',
@@ -182,11 +188,20 @@ describe('Test: hotelClerk.addSubscription', function () {
             firstName: 'Ada'
           }
         }
-    });
+      }),
+      response;
 
     return kuzzle.hotelClerk.addSubscription(requestObject1, context)
-      .then(() => {
-        return should(kuzzle.hotelClerk.addSubscription(requestObject2, context)).be.rejectedWith(ForbiddenError);
+      .then(result => {
+        response = result;
+        return kuzzle.hotelClerk.addSubscription(requestObject2, context);
+      })
+      .then(result => {
+        should(result.roomId).be.exactly(response.roomId);
+        done();
+      })
+      .catch(error => {
+        done(error);
       });
   });
 
