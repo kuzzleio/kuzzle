@@ -251,7 +251,7 @@ describe('Test: repositories/repository', function () {
       repository.persistToDatabase(persistedObject);
 
       should(forwardedObject).be.an.instanceOf(RequestObject);
-      should(forwardedObject.body).be.eql(persistedObject);
+      should(forwardedObject.data.body).be.eql(persistedObject);
     });
   });
 

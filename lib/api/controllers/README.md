@@ -2,7 +2,7 @@
 
 A controller handles a specific part of the Kuzzle architecture.
 
-* adminController handles the administration of the persistent data storage layer
+* adminController handles the actions that require some specific rights, such as the administration of the persistent data storage layer or the user rights definition
 * bulkController handles batch/import operations into the persistent data storage layer
 * funnelController handles the validation of the client request
 * subscribeController handles the subscription actions from the client request

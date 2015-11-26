@@ -194,6 +194,11 @@ describe('Test: ElasticSearch service', function () {
     return should(elasticsearch.get(requestObject)).be.rejected();
   });
 
+  // mget
+  it('should return a rejected promise if getting some multiple documents fails', function () {
+    return should(elasticsearch.mget(requestObject)).be.rejected();
+  });
+
   // count
   it('should allow counting documents using a provided filter', function (done) {
     var ret;
