@@ -197,6 +197,8 @@ describe('Test: hotelClerk.addSubscription', function () {
         collection: collection
       });
 
+    delete requestObject.data.body;
+    
     return should(kuzzle.hotelClerk.addSubscription(requestObject, context)).be.fulfilled();
   });
 
