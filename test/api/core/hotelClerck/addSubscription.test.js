@@ -8,7 +8,6 @@ var
   Profile = require.main.require('lib/api/core/models/security/profile'),
   Role = require.main.require('lib/api/core/models/security/role');
 
-
 require('should-promised');
 
 describe('Test: hotelClerk.addSubscription', function () {
@@ -195,11 +194,39 @@ describe('Test: hotelClerk.addSubscription', function () {
     var
       requestObject = new RequestObject({
         controller: 'subscribe',
-        collection: collection,
-        //body: {}
+        collection: collection
       });
 
     delete requestObject.data.body;
+    
     return should(kuzzle.hotelClerk.addSubscription(requestObject, context)).be.fulfilled();
   });
+
+  it('should delay a room creation if it has been marked for destruction', function (done) {
+    var
+      requestObject = new RequestObject({
+        controller: 'subscribe',
+        collection: collection
+      });
+
+    kuzzle.hotelClerk.addSubscription(requestObject, context)
+      .then(response => {
+        kuzzle.hotelClerk.rooms[response.roomId].destroyed = true;
+
+        kuzzle.hotelClerk.addSubscription(requestObject, {connection: {id: 'anotherID'}, user: null})
+          .then(recreated => {
+            should(recreated.roomId).be.exactly(response.roomId);
+            should(kuzzle.hotelClerk.rooms[recreated.roomId].destroyed).be.undefined();
+            should(kuzzle.hotelClerk.rooms[recreated.roomId].customers.length).be.exactly(1);
+            should(kuzzle.hotelClerk.rooms[recreated.roomId].customers).match(['anotherID']);
+            done();
+          })
+          .catch(error => done(error));
+
+        process.nextTick(() => delete kuzzle.hotelClerk.rooms[response.roomId]);
+      })
+      .catch(error => done(error));
+  });
+
+  
 });
