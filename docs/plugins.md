@@ -144,7 +144,7 @@ In this example, in Kuzzle, the `modifiedRequestObject` has now a `createdAt` at
 A plugin controller is a plugin that adds some controller actions into Kuzzle.
 It must expose to Kuzzle :
 
-* a `controllers` object listing one or more controllers:
+__A `controllers` object listing one or more controllers:__
 
 ```js
 // in controllers.js file in the plugin
@@ -153,7 +153,7 @@ module.exports = {
 };
 ```
 
-* a `routes` object listing the HTTP routes for the REST API:
+__A `routes` object listing the HTTP routes for the REST API:__
 
 ```js
 // in routes.js file in the plugin
@@ -166,13 +166,7 @@ module.exports = [
 _NB: you can describe any routes as you want, according to the actions you need to implement.<br>
 For each action, you can declare either a GET action, or a POST action, or both of them._
 
-* the controller code, implementing your actions.
-
-NB: The controller constructor must use a "_context_" variable, which contains
-some Kuzzle prototypes such as ResponseObject or KuzzleError,
-which can be used by the controller actions.<br>
-(see [List of injected prototypes](../lib/api/core/pluginsContext.js) ).
-
+__The controller code, implementing your actions:__
 
 ```js
 // in myController.js file
@@ -213,6 +207,14 @@ module.exports = function () {
   };
 };
 ```
+
+Notes:
+* Action methods must return a promise.
+* The controller constructor must use a "_context_" variable, which contains
+some Kuzzle prototypes such as ResponseObject or KuzzleError,
+which can be used by the controller actions.<br>
+(see [List of injected prototypes](../lib/api/core/pluginsContext.js) ).
+
 
 #### How it works
 
