@@ -71,6 +71,7 @@ describe('Test geoUtil methods included in the DSL methods file', function () {
       result = methods.__get__('geoUtil').constructPolygon(polygon);
       return false;
     } catch(err) {
+      console.log(err);
       return true;
     }
 
