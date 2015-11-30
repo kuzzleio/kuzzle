@@ -58,4 +58,54 @@ describe('Test geoUtil methods included in the DSL methods file', function () {
     should(result).be.exactly(111318.9999168);
   });
 
+  it ('Polygon: should throw an error if some points are in a non valid format (bad array of coordinates)', function () {
+    var
+      polygon = {
+        points: [
+          [0,0],
+          [0,'foo']
+        ]
+      };
+
+    try {
+      result = methods.__get__('geoUtil').constructPolygon(polygon);
+      return false;
+    } catch(err) {
+      return true;
+    }
+
+  });
+
+  it ('Polygon: should throw an error if some points are in a non valid format (bad object)', function () {
+    var
+      polygon = {
+        points: [
+          [0,0],
+          {foo: 'bar'}
+        ]
+      };
+
+    try {
+      result = methods.__get__('geoUtil').constructPolygon(polygon);
+      return false;
+    } catch(err) {
+      return true;
+    }
+  });
+  it ('Polygon: should throw an error if some points are in a non valid format (string)', function () {
+    var
+      polygon = {
+        points: [
+          [0,0],
+          'a,b'
+        ]
+      };
+
+    try {
+      result = methods.__get__('geoUtil').constructPolygon(polygon);
+      return false;
+    } catch(err) {
+      return true;
+    }
+  });
 });
