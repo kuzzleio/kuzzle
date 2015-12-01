@@ -24,7 +24,7 @@ describe('Test geoUtil methods included in the DSL methods file', function () {
     should(result.lon).be.exactly(lon);
   });
 
-  it('Point: form { lonLat: [ -74.1, 40.73 ] }', function () {
+  it('Point: form { latLon: [ -74.1, 40.73 ] }', function () {
     result = methods.__get__('geoUtil').constructPoint({ latLon: [ -74.1, 40.73 ] });
     should(result.lat).be.exactly(lat);
     should(result.lon).be.exactly(lon);
