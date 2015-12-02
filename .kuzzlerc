@@ -85,5 +85,9 @@
         }
       }
     }
+  },
+  "pluginsManager": {
+    "pipeWarnTime": 40,
+    "pipeTimeout": 250
   }
 }

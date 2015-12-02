@@ -5,6 +5,7 @@ There are several types of plugins:
 
 * Hook events: just listen to events and perform other actions (ie: a log plugin). They do not respond anything directly, they just listen.
 * Pipe events: perform an action and return something. Kuzzle is waiting that all pipe events are performed before continuing.
+* Controllers: add a specific controller to Kuzzle.
 
 # Configuration
 
@@ -59,7 +60,7 @@ The module must have a `package.json` file with a `pluginInfo` entry. The option
 
 ## Architecture
 
-Your main javascript file in your plugin must have a function `init` and expose a `hooks` and/or a `pipes` object. All functions defined in these files must be exposed as main object.
+Your main javascript file in your plugin must have a function `init` and expose a `hooks` and/or a `pipes` and/or a `controllers` object. All functions defined in these files must be exposed as main object.
 
 ### Hooks
 
@@ -138,10 +139,119 @@ module.exports = function () {
 
 In this example, in Kuzzle, the `modifiedRequestObject` has now a `createdAt` attribute.
 
+### Controllers
+
+A plugin controller is a plugin that adds some controller actions into Kuzzle.
+It must expose to Kuzzle :
+
+__A `controllers` object listing one or more controllers:__
+
+```js
+// in controllers.js file in the plugin
+module.exports = {
+  'mycontroller': 'MyController'
+};
+```
+
+__A `routes` object listing the HTTP routes for the REST API:__
+
+```js
+// in routes.js file in the plugin
+module.exports = [
+  {verb: 'get', url: '/foo/:name', controller: 'mycontroller', action: 'myAction'},
+  {verb: 'post', url: '/foo', controller: 'mycontroller', action: 'myAction'},
+];
+```
+
+_NB: you can describe any routes as you want, according to the actions you need to implement.<br>
+For each action, you can declare either a GET action, or a POST action, or both of them._
+
+__The controller code, implementing your actions:__
+
+```js
+// in myController.js file
+var q = require('q');
+
+module.exports = function MyController (context) {
+
+  this.myAction = function (requestObject)
+    var
+      deferred = q.defer(),
+      responseBody = {},
+      response;
+
+    // here write the code of your action.
+    // Sample response object creation with the context variable:
+    response = new context.ResponseObject(requestObject, responseBody);
+
+    // the function must return a Promise:
+    deferred.resolve(response);
+    return deferred.promise;
+  };
+};
+```
+
+```js
+// In main plugin index file
+module.exports = function () {
+
+  this.controllers = require('./config/controllers.js');
+  this.routes = require('./config/routes.js');
+  this.init = function (config, isDummy) {
+    // do something
+  };
+
+  this.MyController = function (context) {
+    MyController = require('./controllers/myController'),
+    return new MyController(context);
+  };
+};
+```
+
+Notes:
+* Action methods must return a promise.
+* The controller constructor must use a "_context_" variable, which contains
+some Kuzzle prototypes such as ResponseObject or KuzzleError,
+which can be used by the controller actions.<br>
+(see [List of injected prototypes](../lib/api/core/pluginsContext.js) ).
+
+
+#### How it works
+
+* With Websocket and MQ protocols, _controller_ attribute is prefixed by the plugin name:<br>
+Sample:
+
+```js
+{
+  requestId: 'xxxxxxxxx',
+  controller: 'myplugin/mycontroller',
+  action: 'myAction',
+  body: {
+    name: "John Doe"
+  }
+}
+```
+
+* With REST protocol, we use the routes configured in _routes.js_, prefixed by "\_plugin/" + the plugin name:<br>
+Samples:
+
+GET action:
+
+```
+GET http://kuzzle:7512/api/_plugin/myplugin/foo/John%20Doe
+```
+
+POST action:
+
+```
+POST http://kuzzle:7512/api/_plugin/myplugin/foo
+{"name": "John Doe"}
+```
 
 ## Examples
 
-For example, you can have a look at the [kuzzle-plugin-logger](https://github.com/kuzzleio/kuzzle-plugin-logger).
+* [kuzzle-plugin-logger](https://github.com/kuzzleio/kuzzle-plugin-logger).
+* [kuzzle-plugin-helloworld](https://github.com/kuzzleio/kuzzle-plugin-helloworld).
 
 # Troubleshooting
 
