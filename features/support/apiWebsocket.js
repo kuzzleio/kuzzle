@@ -2,283 +2,49 @@ var
   config = require('./config')(),
   q = require('q'),
   uuid = require('node-uuid'),
-  io = require('socket.io-client');
+  io = require('socket.io-client'),
+  ApiRT = require('./apiRT');
 
-module.exports = {
-  world: null,
-  responses: null,
-  subscribedRooms: {},
-  listSockets: {},
+/** CONSTRUCT **/
+var ApiWebsocket = function () {
+  ApiRT.call(this);
+};
+ApiWebsocket.prototype = new ApiRT();
 
-  init: function (world) {
-    this.world = world;
-    this.responses = null;
+/** SPECIFIC FOR WEBSOCKET */
+ApiWebsocket.prototype.listSockets = {};
 
-    initSocket.call(this, 'client1');
-  },
+ApiWebsocket.prototype.init = function (world) {
+  this.world = world;
+  this.responses = null;
 
-  disconnect: function () {
-    Object.keys(this.listSockets).forEach(function (socket) {
-      this.listSockets[socket].destroy();
-      delete this.listSockets[socket];
-    }.bind(this));
-  },
-
-  get: function (id) {
-    var
-      msg = {
-        controller: 'read',
-        action: 'get',
-        collection: this.world.fakeCollection,
-        _id: id
-      };
-
-    return emit.call(this, msg);
-  },
-
-  search: function (filters) {
-    var
-      msg = {
-        controller: 'read',
-        action: 'search',
-        collection: this.world.fakeCollection,
-        body: filters
-      };
-
-    return emit.call(this, msg);
-  },
-
-  count: function (filters) {
-    var
-      msg = {
-        controller: 'read',
-        action: 'count',
-        collection: this.world.fakeCollection,
-        body: filters
-      };
-
-    return emit.call(this, msg);
-  },
-
-  create: function (body, persist) {
-    var
-      msg = {
-        controller: 'write',
-        persist: persist,
-        action: 'create',
-        collection: this.world.fakeCollection,
-        body: body
-      };
-
-    return emit.call(this, msg);
-  },
-
-  createOrUpdate: function (body) {
-    var
-      msg = {
-        controller: 'write',
-        action: 'createOrUpdate',
-        collection: this.world.fakeCollection,
-        body: body
-      };
-
-    return emit.call(this, msg);
-  },
-
-  update: function (id, body) {
-    var
-      msg = {
-        controller: 'write',
-        action: 'update',
-        collection: this.world.fakeCollection,
-        _id: id,
-        body: body
-      };
-
-    return emit.call(this, msg);
-  },
-
-  deleteById: function (id) {
-    var
-      msg = {
-        controller: 'write',
-        action: 'delete',
-        collection: this.world.fakeCollection,
-        _id: id
-      };
-
-    return emit.call(this, msg);
-  },
-
-  deleteByQuery: function (filters) {
-    var
-      msg = {
-        controller: 'write',
-        action: 'deleteByQuery',
-        collection: this.world.fakeCollection,
-        body: filters
-      };
-
-    return emit.call(this, msg);
-  },
-
-  deleteCollection: function () {
-    var
-      msg = {
-        controller: 'admin',
-        action: 'deleteCollection',
-        collection: this.world.fakeCollection
-      };
-
-    return emit.call(this, msg);
-  },
-
-  bulkImport: function (bulk) {
-    var
-      msg = {
-        controller: 'bulk',
-        action: 'import',
-        collection: this.world.fakeCollection,
-        body: bulk
-      };
-
-    return emit.call(this, msg );
-  },
-
-  globalBulkImport: function (bulk) {
-    var
-      msg = {
-        controller: 'bulk',
-        action: 'import',
-        body: bulk
-      };
-
-    return emit.call(this, msg );
-  },
-
-  putMapping: function () {
-    var
-      msg = {
-        controller: 'admin',
-        action: 'putMapping',
-        collection: this.world.fakeCollection,
-        body: this.world.schema
-      };
-
-    return emit.call(this, msg );
-  },
-
-  subscribe: function (filters, socketName) {
-    var
-      msg = {
-        controller: 'subscribe',
-        action: 'on',
-        collection: this.world.fakeCollection,
-        body: null
-      };
-
-    if (filters) {
-      msg.body = filters;
-    }
-
-    return emitAndListen.call(this, msg, socketName);
-
-  },
-  unsubscribe: function (room, socketName) {
-    var
-      msg = {
-        controller: 'subscribe',
-        action: 'off',
-        collection: this.world.fakeCollection,
-        body: { roomId: room }
-      };
-
-    socketName = initSocket.call(this, socketName);
-
-    this.listSockets[socketName].removeListener(room, this.subscribedRooms[socketName][room]);
-    delete this.subscribedRooms[socketName][room];
-    return emit.call(this, msg, false, socketName);
-  },
-
-  countSubscription: function (socketName) {
-    socketName = initSocket.call(this, socketName);
-
-    var
-      rooms = Object.keys(this.subscribedRooms[socketName]),
-      msg = {
-        controller: 'subscribe',
-        action: 'count',
-        body: {
-          roomId: rooms[0]
-        }
-      };
-
-    return emit.call(this, msg);
-  },
-
-  getStats: function (dates) {
-    var
-      msg = {
-        controller: 'admin',
-        action: 'getStats',
-        body: dates
-      };
-
-    return emit.call(this, msg);
-  },
-
-  getLastStats: function () {
-    var
-        msg = {
-          controller: 'admin',
-          action: 'getLastStats'
-        };
-
-    return emit.call(this, msg);
-  },
-
-  getAllStats: function () {
-    var
-      msg = {
-        controller: 'admin',
-        action: 'getAllStats'
-      };
-
-    return emit.call(this, msg);
-  },
-
-  listCollections: function () {
-    var msg = {
-      controller: 'read',
-      action: 'listCollections'
-    };
-
-    return emit.call(this, msg );
-  },
-
-  now: function () {
-    var msg = {
-      controller: 'read',
-      action: 'now'
-    };
-
-    return emit.call(this, msg );
-  },
-
-
-  truncateCollection: function () {
-    var
-      msg = {
-        controller: 'admin',
-        collection: this.world.fakeCollection,
-        action: 'truncateCollection'
-      };
-
-    return emit.call(this, msg);
-  }
+  initSocket.call(this, 'client1');
 };
 
-var emit = function (msg, getAnswer, socketName) {
+ApiWebsocket.prototype.disconnect = function () {
+  Object.keys(this.listSockets).forEach(socket => {
+    this.listSockets[socket].destroy();
+    delete this.listSockets[socket];
+  });
+};
+
+ApiWebsocket.prototype.unsubscribe = function (room, socketName) {
+  var
+    msg = {
+      controller: 'subscribe',
+      action: 'off',
+      collection: this.world.fakeCollection,
+      body: { roomId: room }
+    };
+
+  socketName = initSocket.call(this, socketName);
+
+  this.listSockets[socketName].removeListener(room, this.subscribedRooms[socketName][room]);
+  delete this.subscribedRooms[socketName][room];
+  return this.send(msg, false, socketName);
+};
+
+ApiWebsocket.prototype.send = function (msg, getAnswer, socketName) {
   var
     deferred = q.defer(),
     routename = 'kuzzle',
@@ -311,7 +77,7 @@ var emit = function (msg, getAnswer, socketName) {
   return deferred.promise;
 };
 
-var emitAndListen = function (msg, socketName) {
+ApiWebsocket.prototype.sendAndListen = function (msg, socketName) {
   var
     deferred = q.defer(),
     routename = 'kuzzle';
@@ -366,3 +132,5 @@ var initSocket = function (socketName) {
 
   return socketName;
 };
+
+module.exports = ApiWebsocket;
