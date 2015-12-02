@@ -97,7 +97,7 @@ describe('Test geoboundingbox method', function () {
 
     should(Object.keys(methods.dsl.filtersTree[collection].fields.location)).have.length(3);
     should(methods.dsl.filtersTree[collection].fields.location.locationgeoBoundingBoxgcmfj457fu10ffy7m4).not.be.empty();
-    should(methods.dsl.filtersTree[collection].fields.location.locationgeoBoundingBoxc0x5cc73fds7jwb737).not.be.empty();
+    should(methods.dsl.filtersTree[collection].fields.location.locationgeoBoundingBoxj042p0j0phsc9wnc4v).not.be.empty();
     should(methods.dsl.filtersTree[collection].fields.location.locationgeoBoundingBoxc0x5c7zzzds7jw7zzz).not.be.empty();
   });
 
@@ -109,7 +109,7 @@ describe('Test geoboundingbox method', function () {
     should(rooms).have.length(1);
     should(rooms[0]).be.exactly(roomId);
 
-    rooms = methods.dsl.filtersTree[collection].fields.location.locationgeoBoundingBoxc0x5cc73fds7jwb737.rooms;
+    rooms = methods.dsl.filtersTree[collection].fields.location.locationgeoBoundingBoxj042p0j0phsc9wnc4v.rooms;
     should(rooms).be.an.Array();
     should(rooms).have.length(1);
     should(rooms[0]).be.exactly(roomId);
@@ -130,9 +130,9 @@ describe('Test geoboundingbox method', function () {
     should(result).be.exactly(true);
 
     // test filterUSA
-    result = methods.dsl.filtersTree[collection].fields.location.locationgeoBoundingBoxc0x5cc73fds7jwb737.fn(documentGrace);
-    should(result).be.exactly(true);
-    result = methods.dsl.filtersTree[collection].fields.location.locationgeoBoundingBoxc0x5cc73fds7jwb737.fn(documentAda);
+    result = methods.dsl.filtersTree[collection].fields.location.locationgeoBoundingBoxj042p0j0phsc9wnc4v.fn(documentGrace);
+    should(result).be.exactly(false);
+    result = methods.dsl.filtersTree[collection].fields.location.locationgeoBoundingBoxj042p0j0phsc9wnc4v.fn(documentAda);
     should(result).be.exactly(false);
 
     // test filterUSA2
