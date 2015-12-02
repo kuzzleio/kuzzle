@@ -2,6 +2,7 @@ var
   should = require('should'),
   winston = require('winston'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
+  InternalError = require.main.require('lib/api/core/errors/internalError'),
   RealTimeResponseObject = require.main.require('lib/api/core/models/realTimeResponseObject'),
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
@@ -281,6 +282,19 @@ describe('Test: hotelClerk.addSubscription', function () {
         done(error);
       });
 
+  });
+
+  it('#join should reject the promise if the room does not exist', () => {
+    return should(kuzzle.hotelClerk.join(
+      new RequestObject({
+        collection: collection,
+        controller: 'subscribe',
+        action: 'join',
+        body: {roomId: 'no way I can exist'}
+      }),
+      context
+    ))
+      .be.rejectedWith(InternalError);
   });
   
 });
