@@ -694,13 +694,152 @@ According to this, all these notations are equivalent:
 
 Filter documents wich have a location field and are located into a [bounding box](#bounding-box).
 
+Given the following documents: 
+```
+{
+  firstName: 'Grace',
+  lastName: 'Hopper',
+  'location.lat': 32.692742,
+  'location.lon': -97.114127
+},
+{
+  firstName: 'Ada',
+  lastName: 'Lovelace',
+  'location.lat': 51.519291,
+  'location.lon': -0.149817
+}
+```
+The following filter will match the second document only:
+```
+geoBoundingBox: {
+  location: {
+    top: -2.939744,
+    left: 52.394484,
+    bottom: 1.180129,
+    right: 51.143628
+  }
+}
+```
+With the [JavaScript SDK](http://kuzzleio.github.io/sdk-documentation/#subscribe):
+```
+var filter = {
+  geoBoundingBox: {
+    location: {
+      top: -2.939744,
+      left: 52.394484,
+      bottom: 1.180129,
+      right: 51.143628
+    }
+  }
+};
+
+var room =
+  kuzzle
+    .dataCollectionFactory('collection')
+    .subscribe(filter, function (error, result) {
+      // called each time a new notification on this filter is received
+    };
+```
+
 #### geoDistance
 
 Filter documents wich have a location field and are located into a given [distance](#distance).
 
+Given the following documents: 
+```
+{
+  firstName: 'Grace',
+  lastName: 'Hopper',
+  'location.lat': 32.692742,
+  'location.lon': -97.114127
+},
+{
+  firstName: 'Ada',
+  lastName: 'Lovelace',
+  'location.lat': 51.519291,
+  'location.lon': -0.149817
+}
+```
+The following filter will match the second document only:
+```
+geoDistance: {
+  location: {
+    lat: 51.5029017,
+    lon: -0.1606903
+  },
+  distance: '10km'
+}
+```
+With the [JavaScript SDK](http://kuzzleio.github.io/sdk-documentation/#subscribe):
+```
+var filter = {
+  geoDistance: {
+    location: { // Buckingham Palace
+      lat: 51.5029017,
+      lon: -0.1606903
+    },
+    distance: '10km'
+  }
+};
+
+var room =
+  kuzzle
+    .dataCollectionFactory('collection')
+    .subscribe(filter, function (error, result) {
+      // called each time a new notification on this filter is received
+    };
+```
+
 #### geoDistanceRange
 
 Filter documents wich have a location field and are located into a given [distances](#distance) range.
+
+Given the following documents: 
+```
+{
+  firstName: 'Grace',
+  lastName: 'Hopper',
+  'location.lat': 32.692742,
+  'location.lon': -97.114127
+},
+{
+  firstName: 'Ada',
+  lastName: 'Lovelace',
+  'location.lat': 51.519291,
+  'location.lon': -0.149817
+}
+```
+The following filter will match the second document only:
+```
+geoDistance: {
+  location: {
+    lat: 51.5029017,
+    lon: -0.1606903
+  },
+  from: '1km',
+  to: '10km'
+}
+```
+With the [JavaScript SDK](http://kuzzleio.github.io/sdk-documentation/#subscribe):
+```
+var filter = {
+  geoDistance: {
+    location: { // Buckingham Palace
+      lat: 51.5029017,
+      lon: -0.1606903
+    },
+    from '1km',
+    to: '10km'
+  }
+};
+
+var room =
+  kuzzle
+    .dataCollectionFactory('collection')
+    .subscribe(filter, function (error, result) {
+      // called each time a new notification on this filter is received
+    };
+```
 
 #### geoPolygon
 
