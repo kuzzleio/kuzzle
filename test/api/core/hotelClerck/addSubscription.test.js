@@ -2,9 +2,9 @@ var
   should = require('should'),
   winston = require('winston'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
+  RealTimeResponseObject = require.main.require('lib/api/core/models/realTimeResponseObject'),
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
-  ForbiddenError = require.main.require('lib/api/core/errors/forbiddenError'),
   Profile = require.main.require('lib/api/core/models/security/profile'),
   Role = require.main.require('lib/api/core/models/security/role');
 
@@ -167,7 +167,7 @@ describe('Test: hotelClerk.addSubscription', function () {
     var
       requestObject1 = new RequestObject({
         controller: 'subscribe',
-      collection: collection,
+        collection: collection,
         body: {
           term: {
             firstName: 'Ada'
@@ -243,5 +243,44 @@ describe('Test: hotelClerk.addSubscription', function () {
       .catch(error => done(error));
   });
 
+  it('should allow to subscribe to an existing room', done => {
+    var
+      roomId,
+      requestObject1 = new RequestObject({
+        controller: 'subscribe',
+        collection: collection
+      });
+
+    kuzzle.hotelClerk.addSubscription(requestObject1, {connection: 'connection1', user: null})
+      .then(result => {
+        should(result).be.an.instanceOf(RealTimeResponseObject);
+        should(result).have.property('roomId');
+
+        return Promise.resolve(result.roomId);
+      })
+      .then(id => {
+        var requestObject2 = new RequestObject({
+          collection: collection,
+          controller: 'subscribe',
+          action: 'join',
+          body: {
+            roomId: id
+          }
+        });
+
+        roomId = id;
+        requestObject2.body = {roomId: roomId};
+        return kuzzle.hotelClerk.join(requestObject2, {connection: 'connection2', user: null});
+      })
+      .then(result => {
+        should(result).be.an.instanceOf(RealTimeResponseObject);
+        should(result).have.property('roomId', roomId);
+        done();
+      })
+      .catch(error => {
+        done(error);
+      });
+
+  });
   
 });
