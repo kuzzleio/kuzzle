@@ -34,7 +34,7 @@ describe('Test: read controller', function () {
 
   it('should allow to get specific documents', function () {
     var
-      requestObject = new RequestObject({ body: { _id: 'foobar' }}, { collection: 'unit-test-readcontroller' }, 'unit-test'),
+      requestObject = new RequestObject({ body: { _id: 'foobar' }}, { index: '%test', collection: 'unit-test-readcontroller' }, 'unit-test'),
       r = kuzzle.funnel.read.get(requestObject);
 
     return should(r).be.rejectedWith(Error, { status: 404 });

@@ -32,7 +32,7 @@ before(function (done) {
 
   mockCacheEngine = {
     get: function (key) {
-      if (key === userRepository.collection + '/userInCache') {
+      if (key === userRepository.index + '/' + userRepository.collection + '/userInCache') {
         return Promise.resolve(userInCache);
       }
       return Promise.resolve(null);

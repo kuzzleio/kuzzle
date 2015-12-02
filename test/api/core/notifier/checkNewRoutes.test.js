@@ -32,13 +32,17 @@ describe('Test: notifier.checkNewRoutes', function () {
       'listCollections',
       'reset',
       'createCollection',
-      'truncateCollection'
+      'truncateCollection',
+      'createIndex',
+      'deleteIndex',
+      'listIndexes'
     ],
     requestObject = new RequestObject({
       controller: 'write',
       action: '',
       requestId: 'foo',
       collection: 'bar',
+      index: '%test',
       body: { foo: 'bar' }
     }),
     responseObject = new ResponseObject(requestObject, {});
@@ -77,6 +81,8 @@ describe('Test: notifier.checkNewRoutes', function () {
       setTimeout(() => {
         var diff = _.difference(knownActions, performedActions);
         try {
+          console.log("backlist:" , blacklist.sort());
+          console.log("diff:" , diff.sort());
           should(diff.sort()).be.an.Array().and.match(blacklist.sort());
           done();
         }

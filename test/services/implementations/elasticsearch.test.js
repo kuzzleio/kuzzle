@@ -10,7 +10,10 @@ require('should-promised');
 
 describe('Test: ElasticSearch service', function () {
   var
-    kuzzle = {},
+    kuzzle = {
+      indexes: {}
+    },
+    index = '%test',
     collection = 'unit-tests-elasticsearch',
     createdDocumentId,
     elasticsearch,
@@ -43,12 +46,13 @@ describe('Test: ElasticSearch service', function () {
     kuzzle.config = new Config(params);
 
     requestObject = new RequestObject({
-        controller: 'write',
-        action: 'create',
-        requestId: 'foo',
-        collection: collection,
-        body: documentAda
-      });
+      controller: 'write',
+      action: 'create',
+      requestId: 'foo',
+      collection: collection,
+      index: index,
+      body: documentAda
+    });
 
     elasticsearch = new ES(kuzzle, {service: engineType});
     should(elasticsearch.init()).be.exactly(elasticsearch);
@@ -63,10 +67,22 @@ describe('Test: ElasticSearch service', function () {
      */
     elasticsearch.deleteCollection(requestObject)
       .then(function () {
-        done();
+        elasticsearch.deleteIndex(requestObject)
+          .then(function () {
+            done();
+          })
+          .catch(function () {
+            done();
+          });
       })
       .catch(function () {
-        done();
+        elasticsearch.deleteIndex(requestObject)
+          .then(function () {
+            done();
+          })
+          .catch(function () {
+            done();
+          });
       });
   });
 
@@ -88,7 +104,7 @@ describe('Test: ElasticSearch service', function () {
     should(preparedData.type).be.exactly(requestObject.collection);
     should(preparedData.id).be.exactly(requestObject.data._id);
     should(preparedData._id).be.undefined();
-    should(preparedData.index).be.exactly(kuzzle.config.readEngine.index);
+    should(preparedData.index).be.exactly(requestObject.index);
 
     // we expect all properties expect _id to be carried over the new data object
     Object.keys(requestObject.data).forEach(function (member) {
@@ -96,6 +112,26 @@ describe('Test: ElasticSearch service', function () {
         should(preparedData[member]).be.exactly(requestObject.data[member]);
       }
     });
+  });
+
+  // multi-index
+  it('should be able to create index', function (done) {
+    var ret;
+
+    requestObject.data.body = filter;
+    ret = elasticsearch.createIndex(requestObject);
+    should(ret).be.a.Promise();
+
+    ret
+      .then(function(result) {
+        should(result.error).not.be.undefined().and.be.null();
+        should(result.index).be.exactly(requestObject.index);
+        console.log(result);
+        done();
+      })
+      .catch(function (error) {
+        done(error);
+      });
   });
 
   // search
