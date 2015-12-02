@@ -175,3 +175,9 @@ Feature: Test STOMP API
   Scenario: get the Kuzzle timestamp
     When I get the server timestamp
     Then I can read the timestamp
+
+  @usingSTOMP @unsubscribe
+  Scenario: get list of subscriptions
+    Given A room subscription listening to "lastName" having value "Hopper"
+    And I get the list subscriptions
+    Then In my list there is a collection "kuzzle-collection-test" with 1 room and 1 subscriber

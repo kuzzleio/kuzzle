@@ -2,289 +2,56 @@ var
   config = require('./config')(),
   mqtt = require('mqtt'),
   uuid = require('node-uuid'),
-  q = require('q');
+  q = require('q'),
+  ApiRT = require('./apiRT');
 
-module.exports = {
-  world: null,
-  mqttClient: null,
-  subscribedRooms: null,
-  responses: null,
 
-  init: function (world) {
-    this.world = world;
-    this.responses = null;
-    this.subscribedRooms = {};
+/** CONSTRUCT **/
+var ApiMQTT = function () {
+  this.mqttClient = null;
 
-    if (this.mqttClient) {
-      return false;
-    }
+  ApiRT.call(this);
+};
+ApiMQTT.prototype = new ApiRT();
 
-    this.mqttClient = mqtt.connect(config.mqttUrl);
-    this.mqttClient.subscribe('mqtt.' + this.mqttClient.options.clientId);
-  },
+/** SPECIFIC FOR MQTT */
+ApiMQTT.prototype.init = function (world) {
+  this.world = world;
+  this.responses = null;
+  this.subscribedRooms = {};
 
-  disconnect: function () {
-    if (this.mqttClient) {
-      this.mqttClient.end(true);
-      this.mqttClient = null;
-    }
-  },
+  if (this.mqttClient) {
+    return false;
+  }
 
-  create: function (body, persist) {
-    var
-      msg = {
-        controller: 'write',
-        collection: this.world.fakeCollection,
-        action: 'create',
-        persist: persist,
-        body: body
-      };
+  this.mqttClient = mqtt.connect(config.mqttUrl);
+  this.mqttClient.subscribe('mqtt.' + this.mqttClient.options.clientId);
+};
 
-    return publish.call(this, msg);
-  },
-
-  createOrUpdate: function (body) {
-    var
-      msg = {
-        controller: 'write',
-        collection: this.world.fakeCollection,
-        action: 'createOrUpdate',
-        body: body
-      };
-
-    return publish.call(this, msg);
-  },
-
-  get: function (id) {
-    var
-      msg = {
-        controller: 'read',
-        collection: this.world.fakeCollection,
-        action: 'get',
-        _id: id
-      };
-
-    return publish.call(this, msg);
-  },
-
-  search: function (filters) {
-    var
-      msg = {
-        controller: 'read',
-        collection: this.world.fakeCollection,
-        action: 'search',
-        body: filters
-      };
-
-    return publish.call(this, msg);
-  },
-
-  count: function (filters) {
-    var
-      msg = {
-        controller: 'read',
-        collection: this.world.fakeCollection,
-        action: 'count',
-        body: filters
-      };
-
-    return publish.call(this, msg);
-  },
-
-  update: function (id, body) {
-    var
-      msg = {
-        controller: 'write',
-        collection: this.world.fakeCollection,
-        action: 'update',
-        _id: id,
-        body: body
-      };
-
-    return publish.call(this, msg);
-  },
-
-  deleteById: function (id) {
-    var
-      msg = {
-        controller: 'write',
-        collection: this.world.fakeCollection,
-        action: 'delete',
-        _id: id
-      };
-
-    return publish.call(this, msg);
-  },
-
-  deleteByQuery: function (filters) {
-    var
-      msg = {
-        controller: 'write',
-        collection: this.world.fakeCollection,
-        action: 'deleteByQuery',
-        body: filters
-      };
-
-    return publish.call(this, msg);
-  },
-
-  deleteCollection: function () {
-    var
-      msg = {
-        controller: 'admin',
-        collection: this.world.fakeCollection,
-        action: 'deleteCollection',
-      };
-
-    return publish.call(this, msg);
-  },
-
-  putMapping: function () {
-    var
-      msg = {
-        controller: 'admin',
-        collection: this.world.fakeCollection,
-        action: 'putMapping',
-        body: this.world.schema
-      };
-
-    return publish.call(this, msg);
-  },
-
-  bulkImport: function (bulk) {
-    var
-      msg = {
-        controller: 'bulk',
-        collection: this.world.fakeCollection,
-        action: 'import',
-        body: bulk
-      };
-
-    return publish.call(this, msg);
-  },
-
-  globalBulkImport: function (bulk) {
-    var
-      msg = {
-        controller: 'bulk',
-        action: 'import',
-        body: bulk
-      };
-
-    return publish.call(this, msg);
-  },
-
-  subscribe: function (filters) {
-    var
-      msg = {
-        controller: 'subscribe',
-        collection: this.world.fakeCollection,
-        action: 'on',
-        body: null
-      };
-
-    if (filters) {
-      msg.body = filters;
-    }
-
-    return publishAndListen.call(this, msg);
-  },
-
-  unsubscribe: function (room, clientId) {
-    var
-      msg = {
-        clientId: clientId,
-        controller: 'subscribe',
-        collection: this.world.fakeCollection,
-        action: 'off',
-        body: { roomId: room }
-      };
-
-    this.subscribedRooms[clientId][room].end(true);
-    delete this.subscribedRooms[clientId];
-    return publish.call(this, msg, false);
-  },
-
-  countSubscription: function () {
-    var
-      clients = Object.keys(this.subscribedRooms),
-      rooms = Object.keys(this.subscribedRooms[clients[0]]),
-      msg = {
-        controller: 'subscribe',
-        collection: this.world.fakeCollection,
-        action: 'count',
-        body: {
-          roomId: rooms[0]
-        }
-      };
-
-    return publish.call(this, msg);
-  },
-
-  getStats: function (dates) {
-    var
-      msg = {
-        controller: 'admin',
-        action: 'getStats',
-        body: dates
-      };
-
-    return publish.call(this, msg);
-  },
-
-  getLastStats: function () {
-    var
-        msg = {
-          controller: 'admin',
-          action: 'getLastStats',
-        };
-
-    return publish.call(this, msg);
-  },
-
-  getAllStats: function () {
-    var
-      msg = {
-        controller: 'admin',
-        action: 'getAllStats'
-      };
-
-    return publish.call(this, msg);
-  },
-
-  listCollections: function () {
-    var
-      msg = {
-        controller: 'read',
-        action: 'listCollections'
-      };
-
-    return publish.call(this, msg);
-  },
-
-  now: function () {
-    var
-      msg = {
-        controller: 'read',
-        action: 'now'
-      };
-
-    return publish.call(this, msg);
-  },
-
-  truncateCollection: function () {
-    var
-      msg = {
-        controller: 'admin',
-        collection: this.world.fakeCollection,
-        action: 'truncateCollection'
-      };
-
-    return publish.call(this, msg);
+ApiMQTT.prototype.disconnect = function () {
+  if (this.mqttClient) {
+    this.mqttClient.end(true);
+    this.mqttClient = null;
   }
 };
 
-var publish = function (message, waitForAnswer) {
+ApiMQTT.prototype.unsubscribe = function (room, clientId) {
+  var
+    msg = {
+      clientId: clientId,
+      controller: 'subscribe',
+      collection: this.world.fakeCollection,
+      action: 'off',
+      body: { roomId: room }
+    };
+
+  this.subscribedRooms[clientId][room].end(true);
+  delete this.subscribedRooms[clientId];
+
+  return this.send(msg, false);
+};
+
+ApiMQTT.prototype.send = function (message, waitForAnswer) {
   var
     deferred = q.defer(),
     topic = 'kuzzle',
@@ -317,7 +84,7 @@ var publish = function (message, waitForAnswer) {
   return deferred.promise;
 };
 
-var publishAndListen = function (message) {
+ApiMQTT.prototype.sendAndListen = function (message) {
   var
     deferred = q.defer(),
     topic = 'kuzzle',
@@ -349,3 +116,5 @@ var publishAndListen = function (message) {
   mqttListener.publish(topic, JSON.stringify(message));
   return deferred.promise;
 };
+
+module.exports = ApiMQTT;
