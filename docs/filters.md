@@ -694,6 +694,8 @@ According to this, all these notations are equivalent:
 
 Filter documents wich have a location field and are located into a [bounding box](#bounding-box).
 
+![Illustration of geoBoundingBox](images/kuzzle_geoBoundingBox.png)
+
 Given the following documents: 
 ```
 {
@@ -743,7 +745,9 @@ var room =
 
 #### geoDistance
 
-Filter documents wich have a location field and are located into a given [distance](#distance).
+Filter documents wich have a location field and are located into a given [distance](#distance) from a given point.
+
+![Illustration of geoDistance](images/kuzzle_geoDistance.png)
 
 Given the following documents: 
 ```
@@ -792,7 +796,10 @@ var room =
 
 #### geoDistanceRange
 
-Filter documents wich have a location field and are located into a given [distances](#distance) range.
+Filter documents wich have a location field and are located into a given [distances](#distance) range from a given point.
+
+![Illustration of geoDistanceRange](images/kuzzle_geoDistanceRange.png)
+
 
 Given the following documents: 
 ```
@@ -811,7 +818,7 @@ Given the following documents:
 ```
 The following filter will match the second document only:
 ```
-geoDistance: {
+geoDistanceRange: {
   location: {
     lat: 51.5029017,
     lon: -0.1606903
@@ -823,7 +830,7 @@ geoDistance: {
 With the [JavaScript SDK](http://kuzzleio.github.io/sdk-documentation/#subscribe):
 ```
 var filter = {
-  geoDistance: {
+  geoDistanceRange: {
     location: { // Buckingham Palace
       lat: 51.5029017,
       lon: -0.1606903
@@ -844,3 +851,58 @@ var room =
 #### geoPolygon
 
 Filter documents wich have a location field and are located into a given [polygon](#polygon).
+
+![Illustration of geoPolygon](images/kuzzle_geoPolygon.png)
+
+Given the following documents: 
+```
+{
+  firstName: 'Grace',
+  lastName: 'Hopper',
+  'location.lat': 32.692742,
+  'location.lon': -97.114127
+},
+{
+  firstName: 'Ada',
+  lastName: 'Lovelace',
+  'location.lat': 51.519291,
+  'location.lon': -0.149817
+}
+```
+The following filter will match the second document only:
+```
+geoPolygon: {
+  location: {
+    points: [
+      { lat: 51.523029, lon: -0.160793 },
+      { lat: 51.522842, lon: -0.145043 },
+      { lat: 51.518303, lon: -0.146116 },
+      { lat: 51.516487, lon: -0.162295 },
+      { lat: 51.520226, lon: -0.158432 }
+    ]
+  }
+}
+```
+With the [JavaScript SDK](http://kuzzleio.github.io/sdk-documentation/#subscribe):
+```
+var filter = {
+  geoPolygon: {
+    location: {
+      points: [
+        { lat: 51.523029, lon: -0.160793 },
+        { lat: 51.522842, lon: -0.145043 },
+        { lat: 51.518303, lon: -0.146116 },
+        { lat: 51.516487, lon: -0.162295 },
+        { lat: 51.520226, lon: -0.158432 }
+      ]
+    }
+  }
+};
+
+var room =
+  kuzzle
+    .dataCollectionFactory('collection')
+    .subscribe(filter, function (error, result) {
+      // called each time a new notification on this filter is received
+    };
+```
