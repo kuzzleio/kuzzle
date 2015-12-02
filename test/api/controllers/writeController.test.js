@@ -61,7 +61,7 @@ describe('Test: write controller', function () {
   it('should send notifications when creating non-persistent messages', function (done) {
     var
       mockupRooms = ['foo', 'bar'],
-      requestObject = new RequestObject({body: {foo: 'bar'}, persist: false}, {}, 'unit-test');
+      requestObject = new RequestObject({body: {foo: 'bar'}}, {}, 'unit-test');
 
     this.timeout(50);
 
@@ -79,7 +79,7 @@ describe('Test: write controller', function () {
       }
     };
 
-    kuzzle.funnel.write.create(requestObject)
+    kuzzle.funnel.write.publish(requestObject)
       .catch(function (error) {
         done(error);
       });

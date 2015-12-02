@@ -7,6 +7,7 @@
  */
 var
   should = require('should'),
+  q = require('q'),
   winston = require('winston'),
   rewire = require('rewire'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
@@ -21,19 +22,12 @@ var mockupCacheService = {
   id: undefined,
   room: undefined,
 
+  search: function () { return q(['foobar']); },
+  remove: function () { return q({}); },
   add: function (id, room) {
     this.id = id;
     this.room = room;
     return Promise.resolve({});
-  }
-};
-
-var mockupTestFilters = function (responseObject) {
-  if (responseObject.data.errorme) {
-    return Promise.reject(new Error('rejected'));
-  }
-  else {
-    return Promise.resolve(['foobar']);
   }
 };
 
@@ -56,7 +50,6 @@ describe('Test: notifier.notifyDocumentCreate', function () {
     kuzzle.start(params, {dummy: true})
       .then(function () {
         kuzzle.services.list.notificationCache = mockupCacheService;
-        kuzzle.dsl.testFilters = mockupTestFilters;
         kuzzle.notifier.notify = function (rooms) { notifiedRooms = rooms; };
         done();
       });
@@ -69,20 +62,7 @@ describe('Test: notifier.notifyDocumentCreate', function () {
     return should(result).be.fulfilled();
   });
 
-  it('should return a rejected promise if the document is not well-formed', function () {
-    var result;
-
-    responseObject.data.errorme = true;
-
-    result = (Notifier.__get__('notifyDocumentCreate')).call(kuzzle, responseObject);
-
-    should(result).be.a.Promise();
-    return should(result).be.rejected();
-  });
-
   it('should notify registered users when a document has been created', function (done) {
-    delete responseObject.data.errorme;
-
     (Notifier.__get__('notifyDocumentCreate')).call(kuzzle, responseObject)
       .then(function () {
         should(notifiedRooms).be.an.Array();

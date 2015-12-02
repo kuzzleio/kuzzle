@@ -115,26 +115,4 @@ describe('Test: notifier.send', function () {
     should(responded).be.true();
     should(headOK).be.true();
   });
-
-  it('should broadcast the response if no connection is provided', function () {
-    var
-      responded = false,
-      room = 'foo',
-      response = 'bar';
-
-    mockupio.init();
-
-    kuzzle.services.list.mqBroker.addExchange = function (room, msg) {
-      should(room).be.exactly(room);
-      should(msg).be.exactly(response);
-      responded = true;
-    };
-
-    (Notifier.__get__('send')).call(kuzzle, room, response);
-    should(responded).be.true();
-    should(mockupio.emitted).be.true();
-    should(mockupio.id).not.be.undefined();
-    should(mockupio.room).be.exactly(room);
-    should(mockupio.response).be.exactly(response);
-  });
 });

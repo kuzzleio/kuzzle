@@ -95,7 +95,9 @@ describe('Test: hotelClerk.addSubscription', function () {
 
         should(kuzzle.hotelClerk.customers[connection.id]).be.an.Object();
         should(kuzzle.hotelClerk.customers[connection.id]).not.be.empty();
-        should(kuzzle.hotelClerk.customers[connection.id][roomId]).not.be.undefined().and.match(requestObject.metadata);
+        should(kuzzle.hotelClerk.customers[connection.id][roomId].metadata).not.be.undefined().and.match(requestObject.metadata);
+        should(kuzzle.hotelClerk.customers[connection.id][roomId].scope).not.be.undefined().and.be.exactly('all');
+        should(kuzzle.hotelClerk.customers[connection.id][roomId].state).not.be.undefined().and.be.exactly('done');
       });
   });
 
