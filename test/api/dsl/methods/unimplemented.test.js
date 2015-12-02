@@ -7,9 +7,6 @@ var
 require('should-promised');
 
 describe('Test unimplemented methods', function () {
-  it('geoPolygon call should return a rejected promise', function () {
-    should(methods.geoPolygon()).be.rejectedWith(KuzzleError, {message: 'geoPolygon is not implemented yet.'});
-  });
   it('geoShape call should return a rejected promise', function () {
     should(methods.geoShape()).be.rejectedWith(KuzzleError, {message: 'geoShape is not implemented yet.'});
   });

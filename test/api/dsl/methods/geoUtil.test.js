@@ -2,7 +2,8 @@ var
   should = require('should'),
   rewire = require('rewire'),
   methods = rewire('../../../../lib/api/dsl/methods'),
-  KuzzleError = require.main.require('lib/api/core/errors/kuzzleError');
+  KuzzleError = require.main.require('lib/api/core/errors/kuzzleError'),
+  geohash = require('ngeohash');
 
 require('should-promised');
 
@@ -58,4 +59,95 @@ describe('Test geoUtil methods included in the DSL methods file', function () {
     should(result).be.exactly(111318.9999168);
   });
 
+  it ('Polygon: should throw an error if some points are in a non valid format (bad point)', function () {
+    var
+      polygon = {
+        points: [
+          [0,0],
+          [0,1],
+          [0]
+        ]
+      };
+
+    try {
+      result = methods.__get__('geoUtil').constructPolygon(polygon);
+      return false;
+    } catch(err) {
+      return true;
+    }
+
+  });
+
+  it ('Polygon: should throw an error if some points are in a non valid format (bad array of coordinates)', function () {
+    var
+      polygon = {
+        points: [
+          [0,0],
+          [0,'foo']
+        ]
+      };
+
+    try {
+      result = methods.__get__('geoUtil').constructPolygon(polygon);
+      return false;
+    } catch(err) {
+      return true;
+    }
+
+  });
+
+  it ('Polygon: should throw an error if some points are in a non valid format (bad object)', function () {
+    var
+      polygon = {
+        points: [
+          [0,0],
+          {foo: 'bar'}
+        ]
+      };
+
+    try {
+      result = methods.__get__('geoUtil').constructPolygon(polygon);
+      return false;
+    } catch(err) {
+      return true;
+    }
+  });
+  
+  it ('Polygon: should handle correctly all points format (string)', function () {
+    var
+      polygon = {
+        points: [
+          [0,0],
+          {lon: 1, lat: 2},
+          '0,0',
+          geohash.encode(2,2)
+        ]
+      };
+
+    try {
+      result = methods.__get__('geoUtil').constructPolygon(polygon);
+      return true;
+    } catch(err) {
+      return false;
+    }
+  });
+  
+  it ('Polygon: should handle correctly all points format (string)', function () {
+    var
+      polygon = {
+        points: [
+          [0,0],
+          {lon: 1, lat: 2},
+          '0,0',
+          geohash.encode(2,2)
+        ]
+      };
+
+    try {
+      result = methods.__get__('geoUtil').constructPolygon(polygon);
+      return false;
+    } catch(err) {
+      return true;
+    }
+  });
 });
