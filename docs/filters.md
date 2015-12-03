@@ -124,7 +124,7 @@ Given the following documents:
   hobby: 'radium'
 }
 ```
-The following filter can be made, and will be validated on the first document: 
+The following filter can be made, and will be validated on the second document: 
 ```
 bool: {
   must : [
