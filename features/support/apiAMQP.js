@@ -99,10 +99,10 @@ ApiAMQP.prototype.sendAndListen = function (message) {
       .then(channel => {
         this.subscribedRooms[message.clientId][response.result.roomId] = channel;
 
-        channel.assertQueue(response.result.roomId)
-          .then(() => { return channel.bindQueue(response.result.roomId, KUZZLE_EXCHANGE, response.result.roomId); })
+        channel.assertQueue(response.result.channel)
+          .then(() => { return channel.bindQueue(response.result.channel, KUZZLE_EXCHANGE, response.result.channel); })
           .then(() => {
-            channel.consume(response.result.roomId, reply => {
+            channel.consume(response.result.channel, reply => {
               var notification = JSON.parse((new Buffer(reply.content)).toString());
               channel.ack(reply);
               this.responses = notification;

@@ -4,6 +4,12 @@ Feature: Test STOMP API
   Using STOMP API
 
   @usingSTOMP
+  Scenario: Publish a realtime message
+    When I publish a message
+    Then I should receive a request id
+    Then I'm not able to get the document
+
+  @usingSTOMP
   Scenario: Create a new document and get it
     When I write the document
     Then I should receive a document id

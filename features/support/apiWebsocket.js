@@ -39,7 +39,7 @@ ApiWebsocket.prototype.unsubscribe = function (room, socketName) {
 
   socketName = initSocket.call(this, socketName);
 
-  this.listSockets[socketName].removeListener(room, this.subscribedRooms[socketName][room]);
+  this.listSockets[socketName].removeListener(this.subscribedRooms[socketName][room].channel, this.subscribedRooms[socketName][room].listener);
   delete this.subscribedRooms[socketName][room];
   return this.send(msg, false, socketName);
 };
@@ -103,8 +103,8 @@ ApiWebsocket.prototype.sendAndListen = function (msg, socketName) {
       this.subscribedRooms[socketName] = {};
     }
 
-    this.subscribedRooms[socketName][response.result.roomId] = listener ;
-    this.listSockets[socketName].on(response.result.roomId, listener.bind(this));
+    this.subscribedRooms[socketName][response.result.roomId] = {channel: response.result.channel, listener: listener };
+    this.listSockets[socketName].on(response.result.channel, listener.bind(this));
     deferred.resolve(response);
   });
 

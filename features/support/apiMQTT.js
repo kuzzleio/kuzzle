@@ -108,7 +108,7 @@ ApiMQTT.prototype.sendAndListen = function (message) {
       this.responses = JSON.parse((new Buffer(notification)).toString());
     }.bind(this));
 
-    mqttListener.subscribe(unpacked.result.roomId);
+    mqttListener.subscribe(unpacked.result.channel);
     this.subscribedRooms[message.clientId][unpacked.result.roomId] = mqttListener;
     deferred.resolve(unpacked);
   }.bind(this));

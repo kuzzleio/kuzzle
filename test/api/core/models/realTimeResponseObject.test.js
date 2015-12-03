@@ -29,7 +29,7 @@ describe('Test: realTimeResponseObject', function () {
 
   it('should return a normalized count response', function () {
     var
-      responseObject = new RTResponseObject(roomId, requestObject, 42),
+      responseObject = new RTResponseObject(roomId, requestObject, {count: 42}),
       response = responseObject.toJson();
 
     should(response.error).be.null();

@@ -14,6 +14,7 @@ describe('Test: hotelClerk.addSubscription', function () {
   var
     kuzzle,
     roomId,
+    channel,
     connection = {id: 'connectionid'},
     context = {
       connection: connection,
@@ -77,6 +78,8 @@ describe('Test: hotelClerk.addSubscription', function () {
 
     return kuzzle.hotelClerk.addSubscription(requestObject, context)
       .then(function (realTimeResponseObject) {
+        var customer;
+
         should(kuzzle.dsl.filtersTree).be.an.Object();
         should(kuzzle.dsl.filtersTree).not.be.empty();
 
@@ -93,11 +96,17 @@ describe('Test: hotelClerk.addSubscription', function () {
 
         roomId = kuzzle.hotelClerk.rooms[realTimeResponseObject.roomId].id;
 
-        should(kuzzle.hotelClerk.customers[connection.id]).be.an.Object();
-        should(kuzzle.hotelClerk.customers[connection.id]).not.be.empty();
-        should(kuzzle.hotelClerk.customers[connection.id][roomId].metadata).not.be.undefined().and.match(requestObject.metadata);
-        should(kuzzle.hotelClerk.customers[connection.id][roomId].scope).not.be.undefined().and.be.exactly('all');
-        should(kuzzle.hotelClerk.customers[connection.id][roomId].state).not.be.undefined().and.be.exactly('done');
+        customer = kuzzle.hotelClerk.customers[connection.id];
+        should(customer).be.an.Object();
+        should(customer).not.be.empty();
+        should(customer[roomId].metadata).not.be.undefined().and.match(requestObject.metadata);
+        should(customer[roomId].channels).be.an.Object().and.not.be.undefined();
+        should(Object.keys(customer[roomId].channels).length).be.exactly(1);
+
+        channel = Object.keys(customer[roomId].channels)[0];
+        should(customer[roomId].channels[channel].scope).not.be.undefined().and.be.exactly('all');
+        should(customer[roomId].channels[channel].state).not.be.undefined().and.be.exactly('done');
+        should(customer[roomId].channels[channel].users).not.be.undefined().and.be.exactly('none');
       });
   });
 
@@ -116,8 +125,8 @@ describe('Test: hotelClerk.addSubscription', function () {
       sockets: {
         connected: {
           connectionid: {
-            join: function (roomId) {
-              joinedRooms.push(roomId);
+            join: function (channel) {
+              joinedRooms.push(channel);
             }
           }
         }
@@ -127,7 +136,7 @@ describe('Test: hotelClerk.addSubscription', function () {
 
     return kuzzle.hotelClerk.addSubscription(requestObject, context)
       .then(function () {
-        should(joinedRooms).containEql(roomId);
+        should(joinedRooms).containEql(channel);
         delete connection.type;
       });
   });
