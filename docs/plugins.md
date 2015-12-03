@@ -31,7 +31,7 @@ A plugin configuration can have attributes:
 * `customConfig`: config for the plugin. Each plugin has a different configuration (required or optional), check the corresponding plugin documentation for more information.
 * `defaultConfig`: Don't edit this attribute. The defaultConfig is provided by the plugin itself. If you need to change the configuration, edit the `customConfig` attribute
 
-**Note:** 
+**Note:**
 * URL or version are required. The URL is checked first, so if you have set a version and an URL, the version will be ignored.
 
 # Default plugins
@@ -86,7 +86,7 @@ module.exports = function () {
   this.init = function (config, isDummy) {
     // do something
   }
-  
+
   this.myFunction = function (message, event) {
     console.log('Event', event, 'is triggered');
     console.log('There is the message', message);
@@ -129,7 +129,7 @@ module.exports = function () {
   this.init = function (config, isDummy) {
     // do something
   }
-  
+
   this.addCreatedAt = function (requestObject, callback) {
     requestObject.data.body.createdAt = Date.now();
     callback(null, requestObject);
@@ -139,6 +139,7 @@ module.exports = function () {
 
 In this example, in Kuzzle, the `modifiedRequestObject` has now a `createdAt` attribute.
 
+<!-- Julie -->
 ### Controllers
 
 A plugin controller is a plugin that adds some controller actions into Kuzzle.
@@ -247,6 +248,7 @@ POST action:
 POST http://kuzzle:7512/api/_plugin/myplugin/foo
 {"name": "John Doe"}
 ```
+<!-- /Julie -->
 
 ## Examples
 
