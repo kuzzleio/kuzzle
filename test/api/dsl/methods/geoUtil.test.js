@@ -30,8 +30,8 @@ describe('Test geoUtil methods included in the DSL methods file', function () {
     should(result.lon).be.exactly(lon);
   });
 
-  it('Point: form { latLon: "-74.1, 40.73" }', function () {
-    result = methods.__get__('geoUtil').constructPoint({ latLon: '-74.1, 40.73' });
+  it('Point: form { latLon: "40.73, -74.1" }', function () {
+    result = methods.__get__('geoUtil').constructPoint({ latLon: '40.73, -74.1' });
     should(result.lat).be.exactly(lat);
     should(result.lon).be.exactly(lon);
   });
@@ -57,6 +57,11 @@ describe('Test geoUtil methods included in the DSL methods file', function () {
   it ('getDistance: should handle localized string like "365 219,816 Ft"', function () {
     result = methods.__get__('geoUtil').getDistance('365 219,816 Ft');
     should(result).be.exactly(111318.9999168);
+  });
+
+  it ('getDistance: should handle strings with no space like "1km"', function () {
+    result = methods.__get__('geoUtil').getDistance('1km');
+    should(result).be.exactly(1000);
   });
 
   it ('Polygon: should throw an error if some points are in a non valid format (bad point)', function () {
@@ -138,7 +143,7 @@ describe('Test geoUtil methods included in the DSL methods file', function () {
         points: [
           [0,0],
           {lon: 1, lat: 2},
-          '0,0',
+          '2,1',
           geohash.encode(2,2)
         ]
       };
