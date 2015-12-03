@@ -856,6 +856,53 @@ var apiSteps = function () {
       .catch(error => callback(error));
   });
 
+  this.Then(/^I get the list subscriptions$/, function (callback) {
+    this.api.listSubscriptions()
+      .then(response => {
+        if (response.error) {
+          return callback(new Error(response.error.message));
+        }
+
+        if (!response.result) {
+          return callback(new Error('No result provided'));
+        }
+
+        if (!response.result._source) {
+          return callback(new Error('No source provided'));
+        }
+
+        this.result = response.result._source;
+        callback();
+      })
+      .catch(error => {
+        callback(error);
+      });
+  });
+
+  this.Then(/^In my list there is a collection "([^"]*)" with ([\d]*) room and ([\d]*) subscriber$/, function (collection, countRooms, countSubscribers, callback) {
+    if (!this.result[collection]) {
+      return callback(new Error('No entry for collection ' + collection));
+    }
+
+    var rooms = Object.keys(this.result[collection]);
+
+    if (rooms.length !== parseInt(countRooms)) {
+      return callback(new Error('Wrong number rooms for collection ' + collection + '. Expected ' + countRooms + ' get ' + rooms.length));
+    }
+
+    var count = 0;
+
+    rooms.forEach(roomId => {
+      count += this.result[collection][roomId];
+    });
+
+    if (count !== parseInt(countSubscribers)) {
+      return callback(new Error('Wrong number subscribers for collection ' + collection + '. Expected ' + countSubscribers + ' get ' + count));
+    }
+
+    callback();
+  });
+
   /** TOOLS **/
   this.Then(/^I wait ([\d]*)s$/, function (time, callback) {
     setTimeout(function () {
