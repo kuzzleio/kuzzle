@@ -100,14 +100,15 @@ describe('Test: hotelClerk.addSubscription', function () {
         customer = kuzzle.hotelClerk.customers[connection.id];
         should(customer).be.an.Object();
         should(customer).not.be.empty();
-        should(customer[roomId].metadata).not.be.undefined().and.match(requestObject.metadata);
-        should(customer[roomId].channels).be.an.Object().and.not.be.undefined();
-        should(Object.keys(customer[roomId].channels).length).be.exactly(1);
+        should(customer[roomId]).not.be.undefined().and.match(requestObject.metadata);
 
-        channel = Object.keys(customer[roomId].channels)[0];
-        should(customer[roomId].channels[channel].scope).not.be.undefined().and.be.exactly('all');
-        should(customer[roomId].channels[channel].state).not.be.undefined().and.be.exactly('done');
-        should(customer[roomId].channels[channel].users).not.be.undefined().and.be.exactly('none');
+        should(kuzzle.hotelClerk.rooms[roomId].channels).be.an.Object().and.not.be.undefined();
+        should(Object.keys(kuzzle.hotelClerk.rooms[roomId].channels).length).be.exactly(1);
+
+        channel = Object.keys(kuzzle.hotelClerk.rooms[roomId].channels)[0];
+        should(kuzzle.hotelClerk.rooms[roomId].channels[channel].scope).not.be.undefined().and.be.exactly('all');
+        should(kuzzle.hotelClerk.rooms[roomId].channels[channel].state).not.be.undefined().and.be.exactly('done');
+        should(kuzzle.hotelClerk.rooms[roomId].channels[channel].users).not.be.undefined().and.be.exactly('none');
       });
   });
 
