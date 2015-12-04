@@ -31,7 +31,7 @@ describe('Test: notifier.publish', function () {
     kuzzle.start(params, {dummy: true})
       .then(() => {
         kuzzle.services.list.notificationCache = {
-          add: function () { cached = true; return Promise.resolve({})},
+          add: function () { cached = true; return Promise.resolve({}); },
           expire: function () { expired = true; }
         };
 
