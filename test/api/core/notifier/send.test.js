@@ -115,4 +115,25 @@ describe('Test: notifier.send', function () {
     should(responded).be.true();
     should(headOK).be.true();
   });
+
+  it('should broadcast to channels if no connection is provided', function () {
+    var
+      room = 'foo',
+      response = 'bar',
+      channel = 'stubChannel';
+
+    mockupio.init();
+    kuzzle.hotelClerk.getChannels = function () { return [channel]; };
+    kuzzle.services.list.mqBroker.addExchange = function (replyTopic, msg) {
+      should(replyTopic).be.exactly(channel);
+      should(msg).be.exactly(response);
+    };
+
+    (Notifier.__get__('send')).call(kuzzle, room, response);
+
+    should(mockupio.emitted).be.true();
+    should(mockupio.id).be.exactly(channel);
+    should(mockupio.room).be.exactly(channel);
+    should(mockupio.response).be.exactly(response);
+  });
 });

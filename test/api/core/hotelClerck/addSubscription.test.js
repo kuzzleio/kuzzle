@@ -3,6 +3,7 @@ var
   winston = require('winston'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
   InternalError = require.main.require('lib/api/core/errors/internalError'),
+  BadRequestError = require.main.require('lib/api/core/errors/badRequestError'),
   RealTimeResponseObject = require.main.require('lib/api/core/models/realTimeResponseObject'),
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
@@ -308,5 +309,46 @@ describe('Test: hotelClerk.addSubscription', function () {
     ))
       .be.rejectedWith(InternalError);
   });
-  
+
+  it('should reject the subscription if the given state argument is incorrect', function () {
+    return should(kuzzle.hotelClerk.addSubscription(
+      new RequestObject({
+        collection: collection,
+        controller: 'subscribe',
+        action: 'on',
+        body: {},
+        state: 'foo'
+      }),
+      context
+    ))
+      .be.rejectedWith(BadRequestError);
+  });
+
+  it('should reject the subscription if the given scope argument is incorrect', function () {
+    return should(kuzzle.hotelClerk.addSubscription(
+      new RequestObject({
+        collection: collection,
+        controller: 'subscribe',
+        action: 'on',
+        body: {},
+        scope: 'foo'
+      }),
+      context
+    ))
+      .be.rejectedWith(BadRequestError);
+  });
+
+  it('should reject the subscription if the given users argument is incorrect', function () {
+    return should(kuzzle.hotelClerk.addSubscription(
+      new RequestObject({
+        collection: collection,
+        controller: 'subscribe',
+        action: 'on',
+        body: {},
+        users: 'foo'
+      }),
+      context
+    ))
+      .be.rejectedWith(BadRequestError);
+  });
 });
