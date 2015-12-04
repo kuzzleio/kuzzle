@@ -40,6 +40,6 @@ describe('Test: dsl.removeRoomFromGlobal', function () {
     dsl.addCollectionSubscription(room.id, room.collection);
     removeRoomFromGlobal.call(dsl, room);
 
-    should(dsl.filtersTree.foo.rooms.length).be.exactly(0);
+    should(dsl.filtersTree.foo).be.undefined();
   });
 });

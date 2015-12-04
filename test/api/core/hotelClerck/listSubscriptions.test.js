@@ -59,7 +59,10 @@ describe('Test: hotelClerk.addSubscription', function () {
       body: {}
     });
 
-    should(kuzzle.hotelClerk.listSubscriptions(requestObject)).be.fulfilledWith({});
+    return kuzzle.hotelClerk.listSubscriptions(requestObject)
+      .then(responseObject => {
+        should(responseObject.data.body).be.empty().Object();
+      });
   });
 
   it('should return a correct list according to subscribe on filter', function () {
