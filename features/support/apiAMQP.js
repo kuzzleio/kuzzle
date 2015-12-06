@@ -29,7 +29,8 @@ module.exports = {
 
   disconnect: function () {
     if (this.amqpClient) {
-      this.amqpClient.then( function (connection) {
+      this.amqpClient
+        .then(function (connection) {
           connection.close();
         })
         .catch();
@@ -37,6 +38,8 @@ module.exports = {
       this.amqpClient = null;
       this.amqpChannel = null;
     }
+
+    return Promise.resolve();
   },
 
   create: function (body, persist) {
@@ -44,6 +47,7 @@ module.exports = {
       msg = {
         controller: 'write',
         collection: this.world.fakeCollection,
+        index: this.world.fakeIndex,
         action: 'create',
         persist: persist,
         body: body
@@ -57,6 +61,7 @@ module.exports = {
       msg = {
         controller: 'write',
         collection: this.world.fakeCollection,
+        index: this.world.fakeIndex,
         action: 'createOrUpdate',
         body: body
       };
@@ -69,6 +74,7 @@ module.exports = {
       msg = {
         controller: 'read',
         collection: this.world.fakeCollection,
+        index: this.world.fakeIndex,
         action: 'get',
         _id: id
       };
@@ -81,6 +87,7 @@ module.exports = {
       msg = {
         controller: 'read',
         collection: this.world.fakeCollection,
+        index: this.world.fakeIndex,
         action: 'search',
         body: filters
       };
@@ -93,6 +100,7 @@ module.exports = {
       msg = {
         controller: 'read',
         collection: this.world.fakeCollection,
+        index: this.world.fakeIndex,
         action: 'count',
         body: filters
       };
@@ -105,6 +113,7 @@ module.exports = {
       msg = {
         controller: 'write',
         collection: this.world.fakeCollection,
+        index: this.world.fakeIndex,
         action: 'update',
         _id: id,
         body: body
@@ -118,6 +127,7 @@ module.exports = {
       msg = {
         controller: 'write',
         collection: this.world.fakeCollection,
+        index: this.world.fakeIndex,
         action: 'delete',
         _id: id
       };
@@ -130,6 +140,7 @@ module.exports = {
       msg = {
         controller: 'write',
         collection: this.world.fakeCollection,
+        index: this.world.fakeIndex,
         action: 'deleteByQuery',
         body: filters
       };
@@ -142,7 +153,19 @@ module.exports = {
       msg = {
         controller: 'admin',
         collection: this.world.fakeCollection,
-        action: 'deleteCollection',
+        index: this.world.fakeIndex,
+        action: 'deleteCollection'
+      };
+
+    return publish.call(this, msg);
+  },
+
+  deleteIndexes: function () {
+    var
+      msg = {
+        controller: 'admin',
+        index: this.world.fakeIndex,
+        action: 'deleteIndexes'
       };
 
     return publish.call(this, msg);
@@ -153,6 +176,7 @@ module.exports = {
       msg = {
         controller: 'admin',
         collection: this.world.fakeCollection,
+        index: this.world.fakeIndex,
         action: 'putMapping',
         body: this.world.schema
       };
@@ -165,6 +189,7 @@ module.exports = {
       msg = {
         controller: 'bulk',
         collection: this.world.fakeCollection,
+        index: this.world.fakeIndex,
         action: 'import',
         body: bulk
       };
@@ -188,6 +213,7 @@ module.exports = {
       msg = {
         controller: 'subscribe',
         collection: this.world.fakeCollection,
+        index: this.world.fakeIndex,
         action: 'on',
         body: null
       };
@@ -205,6 +231,7 @@ module.exports = {
         clientId: clientId,
         controller: 'subscribe',
         collection: this.world.fakeCollection,
+        index: this.world.fakeIndex,
         action: 'off',
         body: { roomId: room }
       };
@@ -222,6 +249,7 @@ module.exports = {
       msg = {
         controller: 'subscribe',
         collection: this.world.fakeCollection,
+        index: this.world.fakeIndex,
         action: 'count',
         body: {
           roomId: rooms[0]
@@ -286,6 +314,7 @@ module.exports = {
     var
       msg = {
         controller: 'admin',
+        index: this.world.fakeIndex,
         collection: this.world.fakeCollection,
         action: 'truncateCollection'
       };

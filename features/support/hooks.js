@@ -43,20 +43,8 @@ var myHooks = function () {
     callback();
   });
 
-  this.After(function (scenario, callback) {
-    this.api.deleteByQuery({})
-      .then(function () {
-        this.api.disconnect();
-
-        callback();
-      }.bind(this))
-      .catch(function (error) {
-        callback(new Error(error));
-      });
-  });
-
   this.After('@removeSchema', function (scenario, callback) {
-    this.api.deleteCollection()
+    this.api.deleteIndexes()
       .then(function () {
         setTimeout(callback, 1000);
       })

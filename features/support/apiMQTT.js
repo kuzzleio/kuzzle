@@ -35,9 +35,20 @@ module.exports = {
       msg = {
         controller: 'write',
         collection: this.world.fakeCollection,
+        index: this.world.fakeIndex,
         action: 'create',
         persist: persist,
         body: body
+      };
+
+    return publish.call(this, msg);
+  },
+
+  deleteIndexes: function () {
+    var
+      msg = {
+        controller: 'admin',
+        action: 'deleteIndexes'
       };
 
     return publish.call(this, msg);
@@ -48,6 +59,7 @@ module.exports = {
       msg = {
         controller: 'write',
         collection: this.world.fakeCollection,
+        index: this.world.fakeIndex,
         action: 'createOrUpdate',
         body: body
       };
@@ -60,6 +72,7 @@ module.exports = {
       msg = {
         controller: 'read',
         collection: this.world.fakeCollection,
+        index: this.world.fakeIndex,
         action: 'get',
         _id: id
       };
@@ -72,6 +85,7 @@ module.exports = {
       msg = {
         controller: 'read',
         collection: this.world.fakeCollection,
+        index: this.world.fakeIndex,
         action: 'search',
         body: filters
       };
@@ -84,6 +98,7 @@ module.exports = {
       msg = {
         controller: 'read',
         collection: this.world.fakeCollection,
+        index: this.world.fakeIndex,
         action: 'count',
         body: filters
       };
@@ -96,6 +111,7 @@ module.exports = {
       msg = {
         controller: 'write',
         collection: this.world.fakeCollection,
+        index: this.world.fakeIndex,
         action: 'update',
         _id: id,
         body: body
@@ -109,6 +125,7 @@ module.exports = {
       msg = {
         controller: 'write',
         collection: this.world.fakeCollection,
+        index: this.world.fakeIndex,
         action: 'delete',
         _id: id
       };
@@ -121,6 +138,7 @@ module.exports = {
       msg = {
         controller: 'write',
         collection: this.world.fakeCollection,
+        index: this.world.fakeIndex,
         action: 'deleteByQuery',
         body: filters
       };
@@ -133,6 +151,7 @@ module.exports = {
       msg = {
         controller: 'admin',
         collection: this.world.fakeCollection,
+        index: this.world.fakeIndex,
         action: 'deleteCollection',
       };
 
@@ -144,6 +163,7 @@ module.exports = {
       msg = {
         controller: 'admin',
         collection: this.world.fakeCollection,
+        index: this.world.fakeIndex,
         action: 'putMapping',
         body: this.world.schema
       };
@@ -156,6 +176,7 @@ module.exports = {
       msg = {
         controller: 'bulk',
         collection: this.world.fakeCollection,
+        index: this.world.fakeIndex,
         action: 'import',
         body: bulk
       };
@@ -167,6 +188,7 @@ module.exports = {
     var
       msg = {
         controller: 'bulk',
+        index: this.world.fakeIndex,
         action: 'import',
         body: bulk
       };
@@ -179,6 +201,7 @@ module.exports = {
       msg = {
         controller: 'subscribe',
         collection: this.world.fakeCollection,
+        index: this.world.fakeIndex,
         action: 'on',
         body: null
       };
@@ -196,6 +219,7 @@ module.exports = {
         clientId: clientId,
         controller: 'subscribe',
         collection: this.world.fakeCollection,
+        index: this.world.fakeIndex,
         action: 'off',
         body: { roomId: room }
       };
@@ -212,6 +236,7 @@ module.exports = {
       msg = {
         controller: 'subscribe',
         collection: this.world.fakeCollection,
+        index: this.world.fakeIndex,
         action: 'count',
         body: {
           roomId: rooms[0]
@@ -236,7 +261,8 @@ module.exports = {
     var
         msg = {
           controller: 'admin',
-          action: 'getLastStats',
+          index: this.world.fakeIndex,
+          action: 'getLastStats'
         };
 
     return publish.call(this, msg);
@@ -277,6 +303,7 @@ module.exports = {
       msg = {
         controller: 'admin',
         collection: this.world.fakeCollection,
+        index: this.world.fakeIndex,
         action: 'truncateCollection'
       };
 

@@ -189,6 +189,8 @@ var apiSteps = function () {
       setTimeout(function () {
         var filters = {filter: {term: {}}};
         filters.filter.term[field] = value;
+        console.log(filters);
+
 
         this.api.search(filters)
           .then(function (body) {

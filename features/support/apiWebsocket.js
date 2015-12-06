@@ -30,6 +30,7 @@ module.exports = {
         controller: 'read',
         action: 'get',
         collection: this.world.fakeCollection,
+        index: this.world.fakeIndex,
         _id: id
       };
 
@@ -42,6 +43,7 @@ module.exports = {
         controller: 'read',
         action: 'search',
         collection: this.world.fakeCollection,
+        index: this.world.fakeIndex,
         body: filters
       };
 
@@ -54,6 +56,7 @@ module.exports = {
         controller: 'read',
         action: 'count',
         collection: this.world.fakeCollection,
+        index: this.world.fakeIndex,
         body: filters
       };
 
@@ -67,6 +70,7 @@ module.exports = {
         persist: persist,
         action: 'create',
         collection: this.world.fakeCollection,
+        index: this.world.fakeIndex,
         body: body
       };
 
@@ -79,6 +83,7 @@ module.exports = {
         controller: 'write',
         action: 'createOrUpdate',
         collection: this.world.fakeCollection,
+        index: this.world.fakeIndex,
         body: body
       };
 
@@ -91,6 +96,7 @@ module.exports = {
         controller: 'write',
         action: 'update',
         collection: this.world.fakeCollection,
+        index: this.world.fakeIndex,
         _id: id,
         body: body
       };
@@ -104,6 +110,7 @@ module.exports = {
         controller: 'write',
         action: 'delete',
         collection: this.world.fakeCollection,
+        index: this.world.fakeIndex,
         _id: id
       };
 
@@ -116,6 +123,7 @@ module.exports = {
         controller: 'write',
         action: 'deleteByQuery',
         collection: this.world.fakeCollection,
+        index: this.world.fakeIndex,
         body: filters
       };
 
@@ -127,6 +135,7 @@ module.exports = {
       msg = {
         controller: 'admin',
         action: 'deleteCollection',
+        index: this.world.fakeIndex,
         collection: this.world.fakeCollection
       };
 
@@ -138,6 +147,7 @@ module.exports = {
       msg = {
         controller: 'bulk',
         action: 'import',
+        index: this.world.fakeIndex,
         collection: this.world.fakeCollection,
         body: bulk
       };
@@ -150,6 +160,7 @@ module.exports = {
       msg = {
         controller: 'bulk',
         action: 'import',
+        index: this.world.fakeIndex,
         body: bulk
       };
 
@@ -161,6 +172,7 @@ module.exports = {
       msg = {
         controller: 'admin',
         action: 'putMapping',
+        index: this.world.fakeIndex,
         collection: this.world.fakeCollection,
         body: this.world.schema
       };
@@ -173,6 +185,7 @@ module.exports = {
       msg = {
         controller: 'subscribe',
         action: 'on',
+        index: this.world.fakeIndex,
         collection: this.world.fakeCollection,
         body: null
       };
@@ -189,6 +202,7 @@ module.exports = {
       msg = {
         controller: 'subscribe',
         action: 'off',
+        index: this.world.fakeIndex,
         collection: this.world.fakeCollection,
         body: { roomId: room }
       };
@@ -207,6 +221,7 @@ module.exports = {
       rooms = Object.keys(this.subscribedRooms[socketName]),
       msg = {
         controller: 'subscribe',
+        index: this.world.fakeIndex,
         action: 'count',
         body: {
           roomId: rooms[0]
@@ -250,6 +265,7 @@ module.exports = {
   listCollections: function () {
     var msg = {
       controller: 'read',
+      index: this.world.fakeIndex,
       action: 'listCollections'
     };
 
@@ -266,10 +282,21 @@ module.exports = {
   },
 
 
+  deleteIndexes: function () {
+    var
+      msg = {
+        controller: 'admin',
+        action: 'deleteIndexes'
+      };
+
+    return emit.call(this, msg);
+  },
+
   truncateCollection: function () {
     var
       msg = {
         controller: 'admin',
+        index: this.world.fakeIndex,
         collection: this.world.fakeCollection,
         action: 'truncateCollection'
       };

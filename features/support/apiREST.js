@@ -14,7 +14,7 @@ module.exports = {
   },
 
   pathApi: function (path) {
-    return config.url + '/api/' + path;
+    return config.url + '/api/v1/' + path;
   },
 
   callApi: function (options) {
@@ -23,7 +23,7 @@ module.exports = {
 
   get: function (id) {
     var options = {
-      url: this.pathApi(this.world.fakeCollection + '/' + id),
+      url: this.pathApi(this.world.fakeIndex + '/' + this.world.fakeCollection + '/' + id),
       method: 'GET',
       json: true
     };
@@ -33,7 +33,7 @@ module.exports = {
 
   search: function (filters) {
     var options = {
-      url: this.pathApi(this.world.fakeCollection + '/_search'),
+      url: this.pathApi(this.world.fakeIndex + '/' + this.world.fakeCollection + '/_search'),
       method: 'POST',
       json: filters
     };
@@ -43,7 +43,7 @@ module.exports = {
 
   count: function (filters) {
     var options = {
-      url: this.pathApi(this.world.fakeCollection + '/_count'),
+      url: this.pathApi(this.world.fakeIndex + '/' + this.world.fakeCollection + '/_count'),
       method: 'POST',
       json: filters
     };
@@ -53,7 +53,7 @@ module.exports = {
 
   create: function (body) {
     var options = {
-      url: this.pathApi(this.world.fakeCollection),
+      url: this.pathApi(this.world.fakeIndex + '/' + this.world.fakeCollection),
       method: 'POST',
       json: body
     };
@@ -63,7 +63,7 @@ module.exports = {
 
   createOrUpdate: function (body) {
     var options = {
-      url: this.pathApi(this.world.fakeCollection + '/' + body._id),
+      url: this.pathApi(this.world.fakeIndex + '/' + this.world.fakeCollection + '/' + body._id),
       method: 'PUT',
       json: body
     };
@@ -73,7 +73,7 @@ module.exports = {
 
   update: function (id, body) {
     var options = {
-      url: this.pathApi(this.world.fakeCollection + '/' + id + '/_update'),
+      url: this.pathApi(this.world.fakeIndex + '/' + this.world.fakeCollection + '/' + id + '/_update'),
       method: 'PUT',
       json: body
     };
@@ -83,7 +83,7 @@ module.exports = {
 
   deleteById: function (id) {
     var options = {
-      url: this.pathApi(this.world.fakeCollection + '/' + id),
+      url: this.pathApi(this.world.fakeIndex + '/' + this.world.fakeCollection + '/' + id),
       method: 'DELETE',
       json: true
     };
@@ -93,7 +93,7 @@ module.exports = {
 
   deleteByQuery: function (filters) {
     var options = {
-      url: this.pathApi(this.world.fakeCollection + '/_query'),
+      url: this.pathApi(this.world.fakeIndex + '/' + this.world.fakeCollection + '/_query'),
       method: 'DELETE',
       json: filters
     };
@@ -103,7 +103,7 @@ module.exports = {
 
   deleteCollection: function () {
     var options = {
-      url: this.pathApi(this.world.fakeCollection),
+      url: this.pathApi(this.world.fakeIndex + '/' + this.world.fakeCollection),
       method: 'DELETE',
       json: true
     };
@@ -113,7 +113,7 @@ module.exports = {
 
   bulkImport: function (bulk) {
     var options = {
-      url: this.pathApi(this.world.fakeCollection + '/_bulk'),
+      url: this.pathApi(this.world.fakeIndex + '/' + this.world.fakeCollection + '/_bulk'),
       method: 'POST',
       json: bulk
     };
@@ -123,7 +123,7 @@ module.exports = {
 
   globalBulkImport: function (bulk) {
     var options = {
-      url: this.pathApi('/_bulk'),
+      url: this.pathApi('_bulk'),
       method: 'POST',
       json: bulk
     };
@@ -133,7 +133,7 @@ module.exports = {
 
   putMapping: function () {
     var options = {
-      url: this.pathApi(this.world.fakeCollection + '/_mapping'),
+      url: this.pathApi(this.world.fakeIndex + '/' + this.world.fakeCollection + '/_mapping'),
       method: 'PUT',
       json: this.world.schema
     };
@@ -143,7 +143,7 @@ module.exports = {
 
   getStats: function (dates) {
     var options = {
-      url: this.pathApi('/_getStats'),
+      url: this.pathApi('_getStats'),
       method: 'POST',
       json: dates
     };
@@ -153,7 +153,7 @@ module.exports = {
 
   getLastStats: function () {
     var options = {
-      url: this.pathApi('/_getLastStats'),
+      url: this.pathApi('_getLastStats'),
       method: 'GET',
       json: {}
     };
@@ -163,8 +163,18 @@ module.exports = {
 
   getAllStats: function () {
     var options = {
-      url: this.pathApi('/_getAllStats'),
+      url: this.pathApi('_getAllStats'),
       method: 'GET',
+      json: {}
+    };
+
+    return this.callApi(options);
+  },
+
+  deleteIndexes: function () {
+    var options = {
+      url: this.pathApi('_deleteIndexes'),
+      method: 'DELETE',
       json: {}
     };
 
@@ -173,7 +183,7 @@ module.exports = {
 
   listCollections: function () {
     var options = {
-      url: this.pathApi('_listCollections'),
+      url: this.pathApi(this.world.fakeIndex + '/' + '_listCollections'),
       method: 'GET',
       json: true
     };
@@ -193,7 +203,7 @@ module.exports = {
 
   truncateCollection: function () {
     var options = {
-      url: this.pathApi(this.world.fakeCollection + '/_truncate'),
+      url: this.pathApi(this.world.fakeIndex + '/' + this.world.fakeCollection + '/_truncate'),
       method: 'DELETE',
       json: true
     };

@@ -52,7 +52,7 @@
     "admin": {
       "_id": "admin",
       "indexes": {
-        "_canCreate": false,
+        "_canCreate": true,
         "*": {
         "collections": {
           "_canCreate": true,
@@ -72,10 +72,10 @@
     "guest": {
       "_id": "guest",
       "indexes": {
-        "_canCreate": false,
+        "_canCreate": true,
         "*": {
           "collections": {
-            "_canCreate": false,
+            "_canCreate": true,
             "*": {
               "controllers": {
                 "*": {
