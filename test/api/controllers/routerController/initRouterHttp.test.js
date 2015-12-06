@@ -81,6 +81,11 @@ describe('Test: routerController.initRouterHttp', function () {
       .then(function () {
         RouterController.__set__('executeFromRest', mockResponse);
 
+        kuzzle.pluginsManager.routes = [
+          {verb: 'get', url: '/_plugin/myplugin/bar/:name', controller: 'myplugin/foo', action: 'bar'},
+          {verb: 'post', url: '/_plugin/myplugin/bar', controller: 'myplugin/foo', action: 'bar'},
+        ];
+
         router = new RouterController(kuzzle);
         router.initRouterHttp();
 
@@ -562,6 +567,7 @@ describe('Test: routerController.initRouterHttp', function () {
     http.get('http://' + options.hostname + ':' + options.port + '/api/v1/index/_listCollections', function (response) {
       parseHttpResponse(response)
         .then(result => {
+          console.log(response, result)
           should(response.statusCode).be.exactly(200);
           should(result.controller).be.exactly('read');
           should(result.action).be.exactly('listCollections');
@@ -705,6 +711,42 @@ describe('Test: routerController.initRouterHttp', function () {
           done();
         })
         .catch(error => done(error));
+    });
+
+    request.write('foobar');
+    request.end();
+  });
+
+  it('should create a GET route for plugin controller', function (done) {
+    http.get('http://' + options.hostname + ':' + options.port + '/api/v1/_plugin/myplugin/bar/name', function (response) {
+      parseHttpResponse(response)
+        .then(function (result) {
+          should(response.statusCode).be.exactly(200);
+          should(result.controller).be.exactly('myplugin/foo');
+          should(result.action).be.exactly('bar');
+          done();
+        })
+        .catch(function (error) {
+          done(error);
+        });
+    });
+  });
+
+  it('should create a POST route for plugin controller', function (done) {
+    options.method = 'POST';
+    options.path= '/api/v1/_plugin/myplugin/bar';
+
+    request = http.request(options, function (response) {
+      parseHttpResponse(response)
+        .then(function (result) {
+          should(response.statusCode).be.exactly(200);
+          should(result.controller).be.exactly('myplugin/foo');
+          should(result.action).be.exactly('bar');
+          done();
+        })
+        .catch(function (error) {
+          done(error);
+        });
     });
 
     request.write('foobar');

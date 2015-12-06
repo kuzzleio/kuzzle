@@ -145,4 +145,32 @@ describe('Test execute function in funnel controller', function () {
     return should(kuzzle.funnel.execute(requestObject, context)).not.be.rejected();
   });
 
+  it('should resolve the promise in cas of a plugin controller action', function() {
+    var
+      pluginController = {
+        bar: function(requestObject){
+          return Promise.resolve();
+        }
+      },
+      FooController = function(context) {
+        return pluginController;
+      },
+      object = {
+        requestId: 'requestId',
+        controller: 'myplugin/foo',
+        action: 'bar',
+        name: 'John Doe'
+      },
+      requestObject;
+
+    // Reinitialize the Funnel controller with the dummy plugin controller:
+    kuzzle.pluginsManager.controllers = {
+      'myplugin/foo': FooController
+    };
+    kuzzle.funnel.init();
+
+    requestObject = new RequestObject(object);
+
+    return should(kuzzle.funnel.execute(requestObject, context)).not.be.rejected();
+  });
 });

@@ -65,7 +65,7 @@ Feature: Test REST API
     Then I truncate the collection
     And I count 0 documents
 
-  @usingREST @removeSchema
+  @usingREST
   Scenario: Change mapping
     When I write the document "documentGrace"
     Then I don't find a document with "Grace" in field "firstName"
@@ -73,6 +73,7 @@ Feature: Test REST API
     Then I wait 1s
     Then I change the schema
     When I write the document "documentGrace"
+    Then I wait 1s
     Then I find a document with "Grace" in field "firstName"
 
   @usingREST

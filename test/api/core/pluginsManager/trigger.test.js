@@ -1,5 +1,6 @@
 var
   should = require('should'),
+  params = require('rc')('kuzzle'),
   PluginsManager = require.main.require('lib/api/core/pluginsManager'),
   EventEmitter = require('eventemitter2').EventEmitter2;
 
@@ -12,7 +13,11 @@ describe('Test plugins manager trigger', function () {
         maxListeners: 30,
         delimiter: ':'
       }),
-      pluginsManager = new PluginsManager (kuzzle);
+      pluginsManager;
+
+    kuzzle.config = {pluginsManager: params.pluginsManager};
+
+    pluginsManager = new PluginsManager(kuzzle);
 
     pluginsManager.plugins = [{
       object: {

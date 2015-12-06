@@ -33,6 +33,7 @@ Feature: Test MQTT API
   @usingMQTT
   Scenario: Search a document
     When I write the document "documentGrace"
+    And I wait 1s
     Then I find a document with "grace" in field "firstName"
 
   @usingMQTT
@@ -175,3 +176,9 @@ Feature: Test MQTT API
   Scenario: get the Kuzzle timestamp
     When I get the server timestamp
     Then I can read the timestamp
+
+  @usingMQTT @unsubscribe
+  Scenario: get list of subscriptions
+    Given A room subscription listening to "lastName" having value "Hopper"
+    And I get the list subscriptions
+    Then In my list there is a collection "kuzzle-collection-test" with 1 room and 1 subscriber

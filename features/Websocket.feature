@@ -33,6 +33,7 @@ Feature: Test websocket API
   @usingWebsocket
   Scenario: Search a document
     When I write the document "documentGrace"
+    And I wait 1s
     Then I find a document with "grace" in field "firstName"
 
   @usingWebsocket
@@ -62,7 +63,7 @@ Feature: Test websocket API
     Then I truncate the collection
     And I count 0 documents
 
-  @removeSchema @usingWebsocket
+  @usingWebsocket
   Scenario: Change mapping
     When I write the document "documentGrace"
     Then I don't find a document with "Grace" in field "firstName"
@@ -70,6 +71,7 @@ Feature: Test websocket API
     Then I wait 1s
     Then I change the schema
     When I write the document "documentGrace"
+    And I wait 1s
     Then I find a document with "Grace" in field "firstName"
 
   @usingWebsocket @unsubscribe
@@ -175,3 +177,9 @@ Feature: Test websocket API
   Scenario: get the Kuzzle timestamp
     When I get the server timestamp
     Then I can read the timestamp
+
+  @usingWebsocket @unsubscribe
+  Scenario: get list of subscriptions
+    Given A room subscription listening to "lastName" having value "Hopper"
+    And I get the list subscriptions
+    Then In my list there is a collection "kuzzle-collection-test" with 1 room and 1 subscriber
