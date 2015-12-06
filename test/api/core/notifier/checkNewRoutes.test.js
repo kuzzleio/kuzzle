@@ -30,7 +30,7 @@ describe('Test: notifier.checkNewRoutes', function () {
       'putMapping',
       'getMapping',
       'listCollections',
-      'reset',
+      'deleteIndexes',
       'createCollection',
       'truncateCollection',
       'createIndex',
@@ -81,8 +81,6 @@ describe('Test: notifier.checkNewRoutes', function () {
       setTimeout(() => {
         var diff = _.difference(knownActions, performedActions);
         try {
-          console.log("backlist:" , blacklist.sort());
-          console.log("diff:" , diff.sort());
           should(diff.sort()).be.an.Array().and.match(blacklist.sort());
           done();
         }

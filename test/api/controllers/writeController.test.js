@@ -20,42 +20,20 @@ describe('Test: write controller', function () {
     kuzzle.log = new (winston.Logger)({transports: [new (winston.transports.Console)({level: 'silent'})]});
     kuzzle.start(params, {dummy: true})
       .then(function () {
+        kuzzle.services.list.writeEngine = {};
         done();
       });
   });
 
-  it('should reject an empty request', function () {
-    var requestObject = new RequestObject({}, {}, 'unit-test');
+  it('should invalidate a request without body', function (done) {
+    var requestObject = new RequestObject({});
     delete requestObject.data.body;
 
-    return should(kuzzle.funnel.write.create(requestObject)).be.rejected()
-      .then(function () {
-        return should(kuzzle.funnel.write.update(requestObject)).be.rejected();
-      })
-      .then(function () {
-        return should(kuzzle.funnel.write.createOrUpdate(requestObject)).be.rejected();
-      });
-  });
-
-  it('should emit a hook on a create data query', function (done) {
-    var requestObject = new RequestObject({body: {foo: 'bar'}}, {}, 'unit-test');
-
-    this.timeout(50);
-
-    kuzzle.once('data:create', function (obj) {
-      try {
-        should(obj).be.exactly(requestObject);
-        done();
-      }
-      catch (e) {
-        done(e);
-      }
-    });
-
-    kuzzle.funnel.write.create(requestObject)
-      .catch(function (error) {
-        done(error);
-      });
+    should(requestObject.isValid()).be.rejected();
+    should(kuzzle.funnel.write.create(requestObject)).be.rejected();
+    should(kuzzle.funnel.write.createOrUpdate(requestObject)).be.rejected();
+    should(kuzzle.funnel.write.update(requestObject)).be.rejected();
+    done();
   });
 
   it('should send notifications when creating non-persistent messages', function (done) {
@@ -100,6 +78,27 @@ describe('Test: write controller', function () {
     created.then(function () {
       done();
     });
+  });
+
+  it('should emit a data:create hook on a create data query', function (done) {
+    var requestObject = new RequestObject({body: {foo: 'bar'}}, {}, 'unit-test');
+
+    this.timeout(50);
+
+    kuzzle.once('data:create', function (obj) {
+      try {
+        should(obj).be.exactly(requestObject);
+        done();
+      }
+      catch (e) {
+        done(e);
+      }
+    });
+
+    kuzzle.funnel.write.create(requestObject)
+      .catch(function (error) {
+        done(error);
+      });
   });
 
   it('should emit a hook on a createOrUpdate query', function (done) {
