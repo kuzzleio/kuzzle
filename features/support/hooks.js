@@ -83,7 +83,9 @@ var myHooks = function () {
 module.exports = myHooks;
 
 var setAPI = function (world, apiName) {
-  var api = require('./api' + apiName);
+  var
+    Api = require('./api' + apiName),
+    api = new Api();
 
   api.init(world);
 

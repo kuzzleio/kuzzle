@@ -271,6 +271,8 @@ describe('Test: ElasticSearch service', function () {
 
     elasticsearch.deleteByQuery(requestObject)
       .then(function (result) {
+        // Ugly line in order to spot a random bug on this unit test
+        console.log(result);
         should(result.ids).not.be.undefined().and.be.an.Array();
         should(result.ids.length).be.exactly(0);
         done();

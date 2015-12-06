@@ -1,4 +1,6 @@
-var async = require('async');
+var
+  _ = require('lodash'),
+  async = require('async');
 
 var apiSteps = function () {
   /** SUBSCRIPTION **/
@@ -585,21 +587,26 @@ var apiSteps = function () {
   });
 
   this.Then(/^I get at least 1 statistic frame$/, function (callback) {
-    var key;
-
     if (!this.result.statistics) {
       return callback('Expected a statistics result, got: ' + this.result);
     }
 
-    key = Object.keys(this.result.statistics);
-
-    if (key.length > 0 &&
-        this.result.statistics[key[0]].ongoingRequests &&
-        this.result.statistics[key[0]].completedRequests &&
-        this.result.statistics[key[0]].failedRequests &&
-        this.result.statistics[key[0]].connections) {
+    if (_.isArray(this.result.statistics) &&
+        this.result.statistics.length > 0 &&
+        this.result.statistics[0].ongoingRequests &&
+        this.result.statistics[0].completedRequests &&
+        this.result.statistics[0].failedRequests &&
+        this.result.statistics[0].connections) {
       return callback();
     }
+
+    if (this.result.statistics.ongoingRequests &&
+        this.result.statistics.completedRequests &&
+        this.result.statistics.failedRequests &&
+        this.result.statistics.connections) {
+      return callback();
+    }
+
     callback('Expected at least 1 statistic frame, found: ' + this.result.statistics);
   });
 
@@ -854,6 +861,53 @@ var apiSteps = function () {
         callback();
       })
       .catch(error => callback(error));
+  });
+
+  this.Then(/^I get the list subscriptions$/, function (callback) {
+    this.api.listSubscriptions()
+      .then(response => {
+        if (response.error) {
+          return callback(new Error(response.error.message));
+        }
+
+        if (!response.result) {
+          return callback(new Error('No result provided'));
+        }
+
+        if (!response.result._source) {
+          return callback(new Error('No source provided'));
+        }
+
+        this.result = response.result._source;
+        callback();
+      })
+      .catch(error => {
+        callback(error);
+      });
+  });
+
+  this.Then(/^In my list there is a collection "([^"]*)" with ([\d]*) room and ([\d]*) subscriber$/, function (collection, countRooms, countSubscribers, callback) {
+    if (!this.result[collection]) {
+      return callback(new Error('No entry for collection ' + collection));
+    }
+
+    var rooms = Object.keys(this.result[collection]);
+
+    if (rooms.length !== parseInt(countRooms)) {
+      return callback(new Error('Wrong number rooms for collection ' + collection + '. Expected ' + countRooms + ' get ' + rooms.length));
+    }
+
+    var count = 0;
+
+    rooms.forEach(roomId => {
+      count += this.result[collection][roomId];
+    });
+
+    if (count !== parseInt(countSubscribers)) {
+      return callback(new Error('Wrong number subscribers for collection ' + collection + '. Expected ' + countSubscribers + ' get ' + count));
+    }
+
+    callback();
   });
 
   /** TOOLS **/
