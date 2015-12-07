@@ -223,14 +223,14 @@ describe('Test: ElasticSearch service', function () {
     var ret;
 
     delete requestObject.data.body;
-    requestObject.data.query = { match: {firstName: 'Ada'}};
+    requestObject.data.filter = { match: {firstName: 'Ada'}};
     ret = elasticsearch.count(requestObject);
     should(ret).be.a.Promise();
 
     ret
       .then(function(result) {
         should(result.data).not.be.undefined();
-        should(result.data.query).be.an.Object().and.match({});
+        should(result.data.filter).be.an.Object().and.match({});
         should(result.data.count).be.a.Number();
         done();
       })
@@ -267,7 +267,7 @@ describe('Test: ElasticSearch service', function () {
   // deleteByQuery
   it('should return an empty result array when no document has been deleted using a filter', function (done) {
     delete requestObject.data.body;
-    requestObject.data.query = { term: {firstName: 'no way any document can be returned with this filter'}};
+    requestObject.data.filter = { term: {firstName: 'no way any document can be returned with this filter'}};
 
     elasticsearch.deleteByQuery(requestObject)
       .then(function (result) {

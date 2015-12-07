@@ -10,10 +10,9 @@ var
 
 require('should-promised');
 
-describe('Test: hotelClerk.addSubscription', function () {
+describe('Test: hotelClerk.listSubscriptions', function () {
   var
     kuzzle,
-    roomId,
     connection = {id: 'connectionid'},
     context = {
       connection: connection,
@@ -59,7 +58,7 @@ describe('Test: hotelClerk.addSubscription', function () {
       body: {}
     });
 
-    return kuzzle.hotelClerk.listSubscriptions(requestObject)
+    return kuzzle.hotelClerk.listSubscriptions(requestObject, context)
       .then(responseObject => {
         should(responseObject.data.body).be.empty().Object();
       });
@@ -77,7 +76,7 @@ describe('Test: hotelClerk.addSubscription', function () {
     return kuzzle.hotelClerk.addSubscription(requestObject, context)
       .then(() => {
         // In fact, requestObject can be the same as subscribe. But here, we don't care
-        return kuzzle.hotelClerk.listSubscriptions(requestObject);
+        return kuzzle.hotelClerk.listSubscriptions(requestObject, context);
       })
       .then(responseObject => {
         should(responseObject).have.property('data');
@@ -85,12 +84,60 @@ describe('Test: hotelClerk.addSubscription', function () {
         // user -> collection
         should(responseObject.data.body).have.property('user');
 
-        // there is no subscribe on whole collection
-        should(responseObject.data.body.user).not.have.property('totalGlobals');
+        // 3e0e837b447bf16b2251025ad36f39ed -> room id generated with collection and filter
+        should(responseObject.data.body.user).have.property('3e0e837b447bf16b2251025ad36f39ed');
+        should(responseObject.data.body.user['3e0e837b447bf16b2251025ad36f39ed']).be.equal(1);
+      });
+  });
+
+  it('should return a correct list according to subscribe on filter and user right', function () {
+    var
+      requestObjectUser = new RequestObject({
+        controller: 'subscribe',
+        action: 'on',
+        requestId: roomName,
+        collection: collection,
+        body: filter
+      }),
+      requestObjectFoo = new RequestObject({
+        controller: 'subscribe',
+        action: 'on',
+        requestId: roomName,
+        collection: 'foo',
+        body: filter
+      }),
+      requestObjectList = new RequestObject({
+        controller: 'subscribe',
+        action: 'list',
+        requestId: roomName,
+        body: {}
+      });
+
+    return kuzzle.hotelClerk.addSubscription(requestObjectUser, context)
+      .then(() => {
+        return kuzzle.hotelClerk.addSubscription(requestObjectFoo, context);
+      })
+      .then(() => {
+
+        // Mock user can access only on user collection
+        context.user.profile.roles[0].indexes['*'].collections.user = context.user.profile.roles[0].indexes['*'].collections['*'];
+        delete context.user.profile.roles[0].indexes['*'].collections['*'];
+
+        // In fact, requestObject can be the same as subscribe. But here, we don't care
+        return kuzzle.hotelClerk.listSubscriptions(requestObjectList, context);
+      })
+      .then(responseObject => {
+        should(responseObject).have.property('data');
+        should(responseObject.data).have.property('body');
+        // user -> collection
+        should(responseObject.data.body).have.property('user');
 
         // 3e0e837b447bf16b2251025ad36f39ed -> room id generated with collection and filter
         should(responseObject.data.body.user).have.property('3e0e837b447bf16b2251025ad36f39ed');
         should(responseObject.data.body.user['3e0e837b447bf16b2251025ad36f39ed']).be.equal(1);
+
+        // should not return the collection foo
+        should(responseObject.data.body).not.have.property('foo');
       });
   });
 
@@ -106,43 +153,13 @@ describe('Test: hotelClerk.addSubscription', function () {
     return kuzzle.hotelClerk.addSubscription(requestObject, context)
       .then(() => {
         // In fact, requestObject can be the same as subscribe. But here, we don't care
-        return kuzzle.hotelClerk.listSubscriptions(requestObject);
+        return kuzzle.hotelClerk.listSubscriptions(requestObject, context);
       })
       .then(responseObject => {
         should(responseObject).have.property('data');
         should(responseObject.data).have.property('body');
         // user -> collection
         should(responseObject.data.body).have.property('user');
-
-        // there is subscription on the whole collection
-        should(responseObject.data.body.user).have.property('totalGlobals');
-        should(responseObject.data.body.user.totalGlobals).be.equal(1);
-      });
-  });
-
-  // Just check if something go wrong with dsl.filtersTree and hotelClerck.rooms
-  it('should return an empty list if a room is in filtersTree but not listed in rooms', function () {
-    var requestObject = new RequestObject({
-      controller: 'subscribe',
-      action: 'on',
-      requestId: roomName,
-      collection: collection,
-      body: filter
-    });
-
-    return kuzzle.hotelClerk.addSubscription(requestObject, context)
-      .then(() => {
-
-        kuzzle.hotelClerk.rooms = {};
-        // In fact, requestObject can be the same as subscribe. But here, we don't care
-        return kuzzle.hotelClerk.listSubscriptions(requestObject);
-      })
-      .then(responseObject => {
-        should(responseObject).have.property('data');
-        should(responseObject.data).have.property('body');
-        should(responseObject.data.body).have.property('user');
-        // user -> collection
-        should(responseObject.data.body.user).be.an.empty().Object();
       });
   });
 });
