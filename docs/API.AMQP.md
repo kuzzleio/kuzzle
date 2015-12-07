@@ -334,7 +334,7 @@ How subscription works:
 
 Once you receive this ``response``, all you have to do is to subscribe to the ``roomId`` channel on the ``amq.topic`` exchange to receive notifications.
 
-There are 4 types of notifications you can receive:
+You can receive the following types of notifications:
 
 #### 'A document has been created' notification:
 
