@@ -83,7 +83,10 @@ describe('Test: subscribe controller', function () {
       this.timeout(50);
 
       kuzzle.once('subscription:list', () => done());
-      should(kuzzle.funnel.subscribe.list(requestObject)).be.a.Promise();
+      should(kuzzle.funnel.subscribe.list(requestObject, {
+        connection: {id: 'foobar'},
+        user: anonymousUser
+      })).be.a.Promise();
     });
   });
 
@@ -91,7 +94,10 @@ describe('Test: subscribe controller', function () {
     it('should trigger a hook and return a promise', function (done) {
       this.timeout(50);
       kuzzle.once('subscription:join', () => done());
-      should(kuzzle.funnel.subscribe.join(requestObject, context)).be.a.Promise();
+      should(kuzzle.funnel.subscribe.join(requestObject, {
+        connection: {id: 'foobar'},
+        user: anonymousUser
+      })).be.a.Promise();
     });
   });
 });
