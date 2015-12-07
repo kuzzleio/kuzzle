@@ -22,9 +22,14 @@ describe('Test: hotelClerk.removeAllRooms', function () {
     roomName = 'roomName',
     collection1 = 'user',
     collection2 = 'foo',
-    filter = {
+    filter1 = {
       term: {
         firstName: 'Ada'
+      }
+    },
+    filter2 = {
+      term: {
+        name: 'foo'
       }
     };
 
@@ -113,7 +118,7 @@ describe('Test: hotelClerk.removeAllRooms', function () {
         action: 'on',
         requestId: roomName,
         collection: collection1,
-        body: filter
+        body: filter1
       }),
       requestObjectRemove = new RequestObject({
         controller: 'admin',
@@ -150,7 +155,7 @@ describe('Test: hotelClerk.removeAllRooms', function () {
         action: 'on',
         requestId: roomName,
         collection: collection1,
-        body: filter
+        body: filter1
       }),
       requestObjectRemove = new RequestObject({
         controller: 'admin',
@@ -218,6 +223,139 @@ describe('Test: hotelClerk.removeAllRooms', function () {
         should(Object.keys(kuzzle.dsl.filtersTree).length).be.exactly(1);
         should(kuzzle.dsl.filtersTree[collection1]).be.undefined();
         should(kuzzle.dsl.filtersTree[collection2]).be.Object();
+      });
+  });
+
+  it('should reject an error if room is provided but is not an array', function () {
+    var
+      requestObjectSubscribeCollection1 = new RequestObject({
+        controller: 'subscribe',
+        action: 'on',
+        requestId: roomName,
+        collection: collection1,
+        body: {}
+      }),
+      requestObjectRemove = new RequestObject({
+        controller: 'admin',
+        action: 'removeAllRooms',
+        requestId: roomName,
+        collection: collection1,
+        body: {rooms: {}}
+      });
+
+    return kuzzle.hotelClerk.addSubscription(requestObjectSubscribeCollection1, context)
+      .then(() => {
+        return should(kuzzle.hotelClerk.removeAllRooms(requestObjectRemove)).be.rejectedWith(BadRequestError);
+      });
+  });
+
+  it('should remove only listed rooms for the collection', function () {
+    var
+      roomName = '3e0e837b447bf16b2251025ad36f39ed',
+      requestObjectSubscribeFilter1 = new RequestObject({
+        controller: 'subscribe',
+        action: 'on',
+        requestId: roomName,
+        collection: collection1,
+        body: filter1
+      }),
+      requestObjectSubscribeFilter2 = new RequestObject({
+        controller: 'subscribe',
+        action: 'on',
+        requestId: roomName,
+        collection: collection1,
+        body: filter2
+      }),
+      requestObjectRemove = new RequestObject({
+        controller: 'admin',
+        action: 'removeAllRooms',
+        requestId: roomName,
+        collection: collection1,
+        body: {rooms: [roomName]}
+      });
+
+    return kuzzle.hotelClerk.addSubscription(requestObjectSubscribeFilter1, context)
+      .then(() => {
+        return kuzzle.hotelClerk.addSubscription(requestObjectSubscribeFilter2, context);
+      })
+      .then(() => {
+        return kuzzle.hotelClerk.removeAllRooms(requestObjectRemove);
+      })
+      .then(() => {
+        should(Object.keys(kuzzle.hotelClerk.rooms).length).be.exactly(1);
+        should(kuzzle.hotelClerk.rooms[roomName]).be.undefined();
+      });
+  });
+
+  it('should return a response with partial error if a roomId doesn\'t correspond to the collection', function () {
+    var
+      badRoomName = 'c5fbe423c70b2924d9eebbc285a1b983',
+      requestObjectSubscribe1 = new RequestObject({
+        controller: 'subscribe',
+        action: 'on',
+        requestId: roomName,
+        collection: collection1,
+        body: {}
+      }),
+      requestObjectSubscribe2 = new RequestObject({
+        controller: 'subscribe',
+        action: 'on',
+        requestId: roomName,
+        collection: collection2,
+        body: {}
+      }),
+      requestObjectRemove = new RequestObject({
+        controller: 'admin',
+        action: 'removeAllRooms',
+        requestId: roomName,
+        collection: collection1,
+        body: {rooms: [badRoomName]}
+      });
+
+    return kuzzle.hotelClerk.addSubscription(requestObjectSubscribe1, context)
+      .then(() => {
+        return kuzzle.hotelClerk.addSubscription(requestObjectSubscribe2, context);
+      })
+      .then(() => {
+        return kuzzle.hotelClerk.removeAllRooms(requestObjectRemove);
+      })
+      .then((responseObject) => {
+        should(responseObject.status).be.exactly(206);
+        should(responseObject.error).be.not.null();
+        should(responseObject.error.count).be.exactly(1);
+        should(responseObject.error.message).be.exactly('Some errors with provided rooms');
+        should(responseObject.error.errors).be.an.Array().and.match(['The room with id ' + badRoomName + ' doesn\'t correspond to collection ' + collection1]);
+      });
+  });
+
+  it('should return a response with partial error if a roomId doesn\'t exist', function () {
+    var
+      badRoomName = 'badRoomId',
+      requestObjectSubscribe = new RequestObject({
+        controller: 'subscribe',
+        action: 'on',
+        requestId: roomName,
+        collection: collection1,
+        body: {}
+      }),
+      requestObjectRemove = new RequestObject({
+        controller: 'admin',
+        action: 'removeAllRooms',
+        requestId: roomName,
+        collection: collection1,
+        body: {rooms: [badRoomName]}
+      });
+
+    return kuzzle.hotelClerk.addSubscription(requestObjectSubscribe, context)
+      .then(() => {
+        return kuzzle.hotelClerk.removeAllRooms(requestObjectRemove);
+      })
+      .then((responseObject) => {
+        should(responseObject.status).be.exactly(206);
+        should(responseObject.error).be.not.null();
+        should(responseObject.error.count).be.exactly(1);
+        should(responseObject.error.message).be.exactly('Some errors with provided rooms');
+        should(responseObject.error.errors).be.an.Array().and.match(['No room with id ' + badRoomName]);
       });
   });
 });
