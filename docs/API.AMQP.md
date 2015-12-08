@@ -239,7 +239,7 @@ Once you have subscribed to a room, depending on your filters, you may receive t
 * whenever a matching stored document is created, updated or deleted (once the change is effective in the database)
 * whenever a user enters or leaves the room
 
-Good news is, you may ask Kuzzle to send only the notifications relevant to your application, by configuring your subscription request (see below).  
+You may ask Kuzzle to send only the notifications relevant to your application, by configuring your subscription request (see below).  
 You can also subscribe multiple times to the same room, with different configurations. Kuzzle will provide you with a channel for each of these subscriptions, allowing different part of your application to concentrate on what it needs to process.
 
 The matching criteria you pass on to Kuzzle are based upon [Kuzzle DSL](./filters.md)
@@ -274,7 +274,7 @@ How subscription works:
   /*
   The "scope" argument filters document modifications when a change has been
   detected in the database.
-  You may receive notifications only when documents enter your
+  You may receive notifications only when documents enter or stay in your
   scope (scope: 'in'), when documents leave it (scope: 'out'), or
   both (scope: 'all')
 
