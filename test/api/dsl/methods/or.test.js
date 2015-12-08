@@ -1,7 +1,7 @@
 var
   should = require('should'),
-  rewire = require('rewire'),
-  methods = rewire('../../../../lib/api/dsl/methods');
+  methods = require.main.require('lib/api/dsl/methods'),
+  BadRequestError = require.main.require('lib/api/core/errors/badRequestError');
 
 require('should-promised');
 
@@ -107,11 +107,11 @@ describe('Test or method', function () {
     should(result).be.exactly(false);
   });
 
-  it('should return a rejected promise if getFormattedFilters fails', function () {
-    return methods.__with__({
-      getFormattedFilters: function () { return Promise.reject(new Error('rejected')); }
-    })(function () {
-      return should(methods.or(roomId, collection, filter)).be.rejectedWith('rejected');
-    });
+  it('should reject an error if the filter OR is not an array', function () {
+    return should(methods.or(roomId, collection, {})).be.rejectedWith(BadRequestError);
+  });
+
+  it('should reject an error if the filter OR is an array with empty filters', function () {
+    return should(methods.or(roomId, collection, [{}])).be.rejectedWith(BadRequestError);
   });
 });
