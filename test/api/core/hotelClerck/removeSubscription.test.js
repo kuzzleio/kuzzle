@@ -23,6 +23,7 @@ describe('Test: hotelClerk.removeSubscription', function () {
     badConnection = {id: 'badconnectionid'},
     roomName1 = 'roomName1',
     roomName2 = 'roomName2',
+    index = 'test',
     collection = 'user',
     filter1 = {
       term: {
@@ -38,6 +39,7 @@ describe('Test: hotelClerk.removeSubscription', function () {
       controller: 'subscribe',
       action: 'on',
       requestId: roomName1,
+      index: index,
       collection: collection,
       body: filter1
     }),
@@ -45,6 +47,7 @@ describe('Test: hotelClerk.removeSubscription', function () {
       controller: 'subscribe',
       action: 'on',
       requestId: roomName2,
+      index: index,
       collection: collection,
       body: filter2
     }),
@@ -82,6 +85,7 @@ describe('Test: hotelClerk.removeSubscription', function () {
         unsubscribeRequest = new RequestObject({
           controller: 'subscribe',
           action: 'off',
+          index: index,
           collection: collection,
           body: { roomId: roomId }
         });
@@ -103,6 +107,7 @@ describe('Test: hotelClerk.removeSubscription', function () {
     var badRequestObject = new RequestObject({
       controller: 'subscribe',
       action: 'on',
+      index: index,
       collection: collection,
       body: filter1
     });
@@ -114,6 +119,7 @@ describe('Test: hotelClerk.removeSubscription', function () {
     var badRequestObject = new RequestObject({
       controller: 'subscribe',
       action: 'on',
+      index: index,
       collection: collection,
       body: { roomId: 'this is not a room ID' }
     });

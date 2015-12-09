@@ -169,4 +169,52 @@ describe('Test: admin controller', function () {
       });
   });
 
+  it('should trigger a hook on a deleteIndexes call', function (done) {
+    this.timeout(50);
+
+    kuzzle.once('data:deleteIndexes', function (obj) {
+      try {
+        should(obj).be.exactly(requestObject);
+        done();
+      }
+      catch (e) {
+        done(e);
+      }
+    });
+
+    kuzzle.funnel.admin.deleteIndexes(requestObject);
+  });
+
+  it('should trigger a hook on a createIndex call', function (done) {
+    this.timeout(50);
+
+    kuzzle.once('data:createIndex', function (obj) {
+      try {
+        should(obj).be.exactly(requestObject);
+        done();
+      }
+      catch (e) {
+        done(e);
+      }
+    });
+
+    kuzzle.funnel.admin.createIndex(requestObject);
+  });
+
+  it('should trigger a hook on a deleteIndex call', function (done) {
+    this.timeout(50);
+
+    kuzzle.once('data:deleteIndex', function (obj) {
+      try {
+        should(obj).be.exactly(requestObject);
+        done();
+      }
+      catch (e) {
+        done(e);
+      }
+    });
+
+    kuzzle.funnel.admin.deleteIndex(requestObject);
+  });
+
 });

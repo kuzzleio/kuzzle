@@ -75,4 +75,36 @@ describe('Test: subscribe controller', function () {
 
     return should(foo).be.rejectedWith(BadRequestError, { message: 'The room Id is mandatory to count subscriptions' });
   });
+
+  it('should trigger a hook on a join call', function (done) {
+    this.timeout(50);
+
+    kuzzle.once('subscription:join', function (obj) {
+      try {
+        should(obj).be.exactly(requestObject);
+        done();
+      }
+      catch (e) {
+        done(e);
+      }
+    });
+
+    kuzzle.funnel.subscribe.join(requestObject);
+  });
+
+  it('should trigger a hook on a list call', function (done) {
+    this.timeout(50);
+
+    kuzzle.once('subscription:list', function (obj) {
+      try {
+        should(obj).be.exactly(requestObject);
+        done();
+      }
+      catch (e) {
+        done(e);
+      }
+    });
+
+    kuzzle.funnel.subscribe.list(requestObject);
+  });
 });

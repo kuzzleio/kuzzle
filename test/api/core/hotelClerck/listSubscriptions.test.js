@@ -20,7 +20,7 @@ describe('Test: hotelClerk.addSubscription', function () {
       user: null
     },
     roomName = 'roomName',
-    index = '%test',
+    index = '%test',collection
     collection = 'user',
     filter = {
       term: {
@@ -82,14 +82,15 @@ describe('Test: hotelClerk.addSubscription', function () {
         should(responseObject).have.property('data');
         should(responseObject.data).have.property('body');
         // user -> collection
-        should(responseObject.data.body).have.property('user');
+        should(responseObject.data.body).have.property(index);
+        should(responseObject.data.body[index]).have.property(collection);
 
         // there is no subscribe on whole collection
-        should(responseObject.data.body.user).not.have.property('totalGlobals');
+        should(responseObject.data.body[index][collection]).not.have.property('totalGlobals');
 
         // 3e0e837b447bf16b2251025ad36f39ed -> room id generated with collection and filter
-        should(responseObject.data.body.user).have.property('3e0e837b447bf16b2251025ad36f39ed');
-        should(responseObject.data.body.user['3e0e837b447bf16b2251025ad36f39ed']).be.equal(1);
+        should(responseObject.data.body[index][collection]).have.property('d0d7627d6fedf3b8719a1602032f7117');
+        should(responseObject.data.body[index][collection]['d0d7627d6fedf3b8719a1602032f7117']).be.equal(1);
       });
   });
 
@@ -112,11 +113,12 @@ describe('Test: hotelClerk.addSubscription', function () {
         should(responseObject).have.property('data');
         should(responseObject.data).have.property('body');
         // user -> collection
-        should(responseObject.data.body).have.property('user');
+        should(responseObject.data.body).have.property(index);
+        should(responseObject.data.body[index]).have.property(collection);
 
         // there is subscription on the whole collection
-        should(responseObject.data.body.user).have.property('totalGlobals');
-        should(responseObject.data.body.user.totalGlobals).be.equal(1);
+        should(responseObject.data.body[index][collection]).have.property('totalGlobals');
+        should(responseObject.data.body[index][collection].totalGlobals).be.equal(1);
       });
   });
 
@@ -141,9 +143,10 @@ describe('Test: hotelClerk.addSubscription', function () {
       .then(responseObject => {
         should(responseObject).have.property('data');
         should(responseObject.data).have.property('body');
-        should(responseObject.data.body).have.property('user');
+        should(responseObject.data.body).have.property(index);
+        should(responseObject.data.body[index]).have.property(collection);
         // user -> collection
-        should(responseObject.data.body.user).be.an.empty().Object();
+        should(responseObject.data.body[index][collection]).be.an.empty().Object();
       });
   });
 });

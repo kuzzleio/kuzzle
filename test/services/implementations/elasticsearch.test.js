@@ -543,28 +543,35 @@ describe('Test: ElasticSearch service', function () {
   });
 
   it('should override the type with the collection if one has been specified in the request', function () {
+    kuzzle.indexes = {};
+
     requestObject.data.body = [
       { index:  {_id: 1, _index: index} },
       { firstName: 'foo' },
-      { index:  {_id: 2, _index: index} },
+      { index:  {_id: 2, _index: 'indexAlt'} },
       { firstName: 'bar' },
       { update: {_id: 1, _index: index} },
       { doc: { firstName: 'foobar' } },
-      { delete: {_id: 2, _index: index} }
+      { delete: {_id: 2, _index: 'indexAlt'} }
     ];
 
     elasticsearch.client.bulk = function (data) {
       should(data.body).be.an.Array().and.match([
         { index:  {_id: 1, _index: index, _type: collection} },
         { firstName: 'foo' },
-        { index:  {_id: 2, _index: index, _type: collection} },
+        { index:  {_id: 2, _index: 'indexAlt', _type: collection} },
         { firstName: 'bar' },
         { update: {_id: 1, _index: index, _type: collection} },
         { doc: { firstName: 'foobar' } },
-        { delete: {_id: 2, _index: index, _type: collection} }
+        { delete: {_id: 2, _index: 'indexAlt', _type: collection} }
       ]);
 
-      return Promise.resolve({});
+      return Promise.resolve({items: [
+        { index:  {_id: 1, _index: index, _type: collection} },
+        { index:  {_id: 2, _index: 'indexAlt', _type: collection} },
+        { update: {_id: 1, _index: index, _type: collection} },
+        { delete: {_id: 2, _index: 'indexAlt', _type: collection} }
+      ]});
     };
 
     return should(elasticsearch.import(requestObject)).be.fulfilled();
@@ -974,6 +981,15 @@ describe('Test: ElasticSearch service', function () {
     elasticsearch.client.indices.delete = function () { return Promise.reject(new Error('rejected')); };
 
     return should(elasticsearch.deleteIndexes(requestObject)).be.rejected();
+  });
+
+  it('should not delete any index if only left %kuzzle internal index', function () {
+    elasticsearch.client.cat.indices = function (data) {
+      return Promise.resolve('      \n %kuzzle    \n  ');
+    };
+    elasticsearch.client.indices.delete = function () { return Promise.reject(new Error('rejected')); };
+
+    return should(elasticsearch.deleteIndexes(requestObject)).be.fulfilled();
   });
 
   it('should be able to create index', function (done) {

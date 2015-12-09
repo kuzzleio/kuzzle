@@ -883,12 +883,17 @@ var apiSteps = function () {
       });
   });
 
-  this.Then(/^In my list there is a collection "([^"]*)" with ([\d]*) room and ([\d]*) subscriber$/, function (collection, countRooms, countSubscribers, callback) {
-    if (!this.result[collection]) {
+  this.Then(/^In my list there is a collection "([^"]*)" with ([\d]*) room and ([\d]*) subscriber$/, function(collection, countRooms, countSubscribers, callback) {
+
+    if (!this.result[this.fakeIndex]) {
+      return callback(new Error('No entry for index ' + this.fakeIndex));
+    }
+
+    if (!this.result[this.fakeIndex][collection]) {
       return callback(new Error('No entry for collection ' + collection));
     }
 
-    var rooms = Object.keys(this.result[collection]);
+    var rooms = Object.keys(this.result[this.fakeIndex][collection]);
 
     if (rooms.length !== parseInt(countRooms)) {
       return callback(new Error('Wrong number rooms for collection ' + collection + '. Expected ' + countRooms + ' get ' + rooms.length));
@@ -897,7 +902,7 @@ var apiSteps = function () {
     var count = 0;
 
     rooms.forEach(roomId => {
-      count += this.result[collection][roomId];
+      count += this.result[this.fakeIndex][collection][roomId];
     });
 
     if (count !== parseInt(countSubscribers)) {

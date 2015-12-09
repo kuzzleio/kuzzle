@@ -18,14 +18,14 @@ describe('Test: dsl.should method', function () {
   });
 
   it('should return an "AND" embedded object in case of a should-not filter', function () {
-    return should(methods.should('resolve', {}, {}, true)).be.fulfilledWith({and: 'resolved'});
+    return should(methods.should('resolve', 'index', {}, {}, true)).be.fulfilledWith({and: 'resolved'});
   });
 
   it('should return an "OR" embedded object in case of a should filter', function () {
-    return should(methods.should('resolve', {}, {}, false)).be.fulfilledWith({or: 'resolved'});
+    return should(methods.should('resolve', 'index', {}, {}, false)).be.fulfilledWith({or: 'resolved'});
   });
 
   it('should return a rejected promise if getFormattedFilters fails', function () {
-    return should(methods.should('rejected', {}, {}, false)).be.rejectedWith('rejected');
+    return should(methods.should('rejected', 'index', {}, {}, false)).be.rejectedWith('rejected');
   });
 });

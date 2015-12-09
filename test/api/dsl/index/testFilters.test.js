@@ -17,6 +17,7 @@ describe('Test: dsl.testFilters', function () {
     anonymousUser,
     roomId,
     roomName = 'roomNameGrace',
+    index = 'index',
     collection = 'user',
     dataGrace = {
       firstName: 'Grace',
@@ -84,16 +85,19 @@ describe('Test: dsl.testFilters', function () {
 
     requestObjectCreateGrace = new RequestObject({
       requestId: roomName,
+      index: index,
       collection: collection,
       body: dataGrace
     }),
     requestObjectSubscribeGrace = new RequestObject({
       requestId: roomName,
+      index: index,
       collection: collection,
       body: filterGrace
     }),
     requestObjectCreateAda = new RequestObject({
       requestId: roomName,
+      index: index,
       collection: collection,
       body: dataAda
     });
@@ -147,9 +151,20 @@ describe('Test: dsl.testFilters', function () {
       });
   });
 
+  it('should return an error if the requestObject doesn\'t contain a index name', function () {
+    var requestObject = new RequestObject({
+      requestId: roomName,
+      collection: 'test',
+      body: dataGrace
+    });
+
+    return should(kuzzle.dsl.testFilters(requestObject)).be.rejected();
+  });
+
   it('should return an error if the requestObject doesn\'t contain a collection name', function () {
     var requestObject = new RequestObject({
       requestId: roomName,
+      index: 'test',
       body: dataGrace
     });
 
@@ -173,7 +188,8 @@ describe('Test: dsl.testFilters', function () {
       testFieldFilters: function () { return Promise.reject(new Error('rejected')); }
     })(function () {
       var dsl = new Dsl(kuzzle);
-      dsl.filtersTree[requestObjectCreateGrace.collection] = {};
+      dsl.filtersTree[requestObjectCreateGrace.index] = {};
+      dsl.filtersTree[requestObjectCreateGrace.index][requestObjectCreateGrace.collection] = {};
       dsl.testFilters(requestObjectCreateGrace);
     });
   });
@@ -195,7 +211,8 @@ describe('Test: dsl.testFilters', function () {
       testGlobalsFilters: function () { return Promise.reject(new Error('rejected')); }
     })(function () {
       var dsl = new Dsl(kuzzle);
-      dsl.filtersTree[requestObjectCreateGrace.collection] = {};
+      dsl.filtersTree[requestObjectCreateGrace.index] = {};
+      dsl.filtersTree[requestObjectCreateGrace.index][requestObjectCreateGrace.collection] = {};
       dsl.testFilters(requestObjectCreateGrace);
     });
   });

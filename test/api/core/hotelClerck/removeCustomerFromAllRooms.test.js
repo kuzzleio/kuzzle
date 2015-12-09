@@ -19,21 +19,23 @@ describe('Test: hotelClerk.removeCustomerFromAllRooms', function () {
     roomName1 = 'roomName',
     roomName2 = 'roomName2',
     collection = 'user',
+    index = '%test',
     filter1 = {
-        term: {
-          firstName: 'Ada'
-        }
-      },
-      filter2 = {
-        terms: {
-          firstName: ['Ada', 'Grace']
-        }
-      },
+      term: {
+        firstName: 'Ada'
+      }
+    },
+    filter2 = {
+      terms: {
+        firstName: ['Ada', 'Grace']
+      }
+    },
     requestObject1 = new RequestObject({
       controller: 'subscribe',
       action: 'on',
       requestId: roomName1,
       collection: collection,
+      index: index,
       body: filter1
     }),
     notified,
@@ -72,6 +74,7 @@ describe('Test: hotelClerk.removeCustomerFromAllRooms', function () {
           action: 'on',
           requestId: roomName2,
           collection: collection,
+          index: index,
           body: filter2
         });
 
