@@ -405,9 +405,8 @@ describe('Test: ElasticSearch service', function () {
     elasticsearch.deleteByQuery(requestObject)
       .then(function (result) {
         // Ugly line in order to spot a random bug on this unit test
-        console.log(result);
-        should(result.ids).not.be.undefined().and.be.an.Array();
-        should(result.ids.length).be.exactly(0);
+        should(result.data.ids).not.be.undefined().and.be.an.Array();
+        should(result.data.ids.length).be.exactly(0);
         done();
       })
       .catch(error => done(error));
@@ -443,8 +442,8 @@ describe('Test: ElasticSearch service', function () {
       elasticsearch.deleteByQuery(requestObject)
         .then(function (result) {
           try {
-            should(result.ids).not.be.undefined().and.be.an.Array();
-            should(result.ids).match(mockupIds);
+            should(result.data.ids).not.be.undefined().and.be.an.Array();
+            should(result.data.ids).match(mockupIds);
             done();
           }
           catch (e) {
@@ -940,9 +939,13 @@ describe('Test: ElasticSearch service', function () {
       ret,
       deletedAll = false;
 
+    elasticsearch.client.cat.indices = function (data) {
+      return Promise.resolve('      \n %kuzzle      \n ' + index + ' \n  ');
+    };
+
     elasticsearch.client.indices.delete = function (param) {
       try {
-        should(param).be.an.Object().and.match({index: '_all'});
+        should(param).be.an.Object().and.match({index: [index]});
         deletedAll = true;
         return Promise.resolve({});
       }
@@ -952,7 +955,7 @@ describe('Test: ElasticSearch service', function () {
       }
     };
 
-    ret = elasticsearch.deleteIndexes();
+    ret = elasticsearch.deleteIndexes(requestObject);
     should(ret).be.a.Promise();
 
     ret
@@ -965,9 +968,12 @@ describe('Test: ElasticSearch service', function () {
   });
 
   it('should return a rejected promise if the reset fails while deleting all indexes', function () {
+    elasticsearch.client.cat.indices = function (data) {
+      return Promise.resolve('      \n %kuzzle      \n ' + index + ' \n  ');
+    };
     elasticsearch.client.indices.delete = function () { return Promise.reject(new Error('rejected')); };
 
-    return should(elasticsearch.deleteIndexes()).be.rejected();
+    return should(elasticsearch.deleteIndexes(requestObject)).be.rejected();
   });
 
   it('should be able to create index', function (done) {

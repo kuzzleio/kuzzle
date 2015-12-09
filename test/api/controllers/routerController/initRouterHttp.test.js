@@ -567,7 +567,6 @@ describe('Test: routerController.initRouterHttp', function () {
     http.get('http://' + options.hostname + ':' + options.port + '/api/v1/index/_listCollections', function (response) {
       parseHttpResponse(response)
         .then(result => {
-          console.log(response, result)
           should(response.statusCode).be.exactly(200);
           should(result.controller).be.exactly('read');
           should(result.action).be.exactly('listCollections');

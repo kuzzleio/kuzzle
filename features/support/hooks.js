@@ -43,13 +43,37 @@ var myHooks = function () {
     callback();
   });
 
-  this.After('@removeSchema', function (scenario, callback) {
+
+  this.registerHandler('BeforeFeature', (event, callback) => {
+    this.api = setAPI(this, 'Websocket');
+    this.api.createIndex((new this.World()).fakeIndex)
+      .then(this.api.createIndex((new this.World()).fakeAltIndex))
+      .then(() => {
+        setTimeout(callback, 1000);
+      })
+      .catch(error => callback(new Error(error)));
+  });
+
+  this.registerHandler('AfterFeature', function (event, callback) {
+    this.api = setAPI(this, 'Websocket');
     this.api.deleteIndexes()
       .then(function () {
-        setTimeout(callback, 1000);
+        callback();
       })
       .catch(function (error) {
         callback(new Error(error));
+      });
+  });
+
+  this.After(function (scenario, callback) {
+    this.api.deleteCollection()
+      .then(function () {
+        this.api.disconnect();
+
+        callback();
+      }.bind(this))
+      .catch(function () {
+        callback();
       });
   });
 

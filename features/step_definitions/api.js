@@ -84,51 +84,49 @@ var apiSteps = function () {
   });
 
   /** READ **/
-  this.Then(/^I'm ?(not)* able to get the document$/, function (not, callback) {
+  this.Then(/^I'm ?(not)* able to get the document(?: in index "([^"]*)")?$/, function (not, index, callback) {
     var main = function (callbackAsync) {
-      setTimeout(function () {
-        this.api.get(this.result._id)
-          .then(function (body) {
-            if (body.error && !not) {
-              if (body.error.message) {
-                callbackAsync(body.error.message);
-                return false;
-              }
-
-              callbackAsync(body.error);
+      this.api.get(this.result._id, index)
+        .then(body => {
+          if (body.error && !not) {
+            if (body.error.message) {
+              callbackAsync(body.error.message);
               return false;
             }
 
-            if (!body.result || !body.result._source) {
-              if (not) {
-                callbackAsync();
-                return false;
-              }
+            callbackAsync(body.error);
+            return false;
+          }
 
-              callbackAsync('No result provided');
-              return false;
-            }
-
-            if (not) {
-              callbackAsync('Object with id '+ this.result._id + ' exists');
-              return false;
-            }
-
-            callbackAsync();
-          }.bind(this))
-          .catch(function (error) {
+          if (!body.result || !body.result._source) {
             if (not) {
               callbackAsync();
               return false;
             }
 
-            callbackAsync(error);
-          });
-      }.bind(this), 20); // end setTimeout
+            callbackAsync('No result provided');
+            return false;
+          }
+
+          if (not) {
+            callbackAsync('Object with id '+ this.result._id + ' exists');
+            return false;
+          }
+
+          callbackAsync();
+        })
+        .catch(function (error) {
+          if (not) {
+            callbackAsync();
+            return false;
+          }
+
+          callbackAsync(error);
+        });
     };
 
 
-    async.retry(20, main.bind(this), function (err) {
+    async.retry({times: 20, interval: 20}, main.bind(this), function (err) {
       if (err) {
         if (err.message) {
           err = err.message;
@@ -136,7 +134,6 @@ var apiSteps = function () {
         callback(new Error(err));
         return false;
       }
-
       callback();
     });
   });
@@ -186,15 +183,13 @@ var apiSteps = function () {
   });
 
 
-  this.Then(/^I ?(don't)* find a document with "([^"]*)" in field "([^"]*)"$/, function (dont, value, field, callback) {
+  this.Then(/^I ?(don't)* find a document with "([^"]*)"(?: in field "([^"]*)")?(?: in index "([^"]*)")?$/, function (dont, value, field, index, callback) {
     var main = function (callbackAsync) {
       setTimeout(function () {
         var filters = {filter: {term: {}}};
         filters.filter.term[field] = value;
-        console.log(filters);
 
-
-        this.api.search(filters)
+        this.api.search(filters, index)
           .then(function (body) {
             if (body.error !== null) {
               if (dont) {
@@ -318,10 +313,10 @@ var apiSteps = function () {
     });
   });
 
-  this.Then(/^I count ([\d]*) documents$/, function (number, callback) {
+  this.Then(/^I count ([\d]*) documents(?: in index "([^"]*)")?$/, function (number, index, callback) {
     var main = function (callbackAsync) {
       setTimeout(function () {
-        this.api.count({})
+        this.api.count({}, index)
           .then(function (body) {
             if (body.error) {
               callbackAsync(body.error.message);
@@ -355,7 +350,7 @@ var apiSteps = function () {
     });
   });
 
-  this.Then(/^I count ([\d]*) documents with "([^"]*)" in field "([^"]*)"/, function (number, value, field, callback) {
+  this.Then(/^I count ([\d]*) documents with "([^"]*)" in field "([^"]*)(?: in index "([^"]*)")?"/, function (number, value, field, index, callback) {
     var main = function (callbackAsync) {
       setTimeout(function () {
         var filter = {
@@ -366,7 +361,7 @@ var apiSteps = function () {
 
         filter.query.match[field] = value;
 
-        this.api.count(filter)
+        this.api.count(filter, index)
           .then(function (body) {
             if (body.error) {
               callbackAsync(body.error.message);
@@ -488,8 +483,8 @@ var apiSteps = function () {
       });
   });
 
-  this.When(/^I list data collections$/, function (callback) {
-    this.api.listCollections()
+  this.When(/^I list data collections(?: in index "([^"]*)")?$/, function (index, callback) {
+    this.api.listCollections(index)
       .then(response => {
         if (response.error) {
           callback(new Error(response.error.message));
@@ -613,7 +608,6 @@ var apiSteps = function () {
   });
 
   this.Then(/^I can find a collection "([^"]*)"$/, function (collection, callback) {
-    console.log(this.result)
     if (!this.result.collections) {
       return callback('Expected a collections list result, got: ' + this.result);
     }
@@ -626,10 +620,10 @@ var apiSteps = function () {
   });
 
   /** WRITE **/
-  this.When(/^I write the document ?(?:"([^"]*)")?$/, function (documentName, callback) {
+  this.When(/^I write the document ?(?:"([^"]*)")?(?: in index "([^"]*)")?$/, function (documentName, index, callback) {
     var document = this[documentName] || this.documentGrace;
 
-    this.api.create(document, true)
+    this.api.create(document, true, index)
       .then(function (body) {
         if (body.error) {
           callback(new Error(body.error.message));
@@ -704,13 +698,13 @@ var apiSteps = function () {
       'Received document: ' + JSON.stringify(this.updatedResult)));
   });
 
-  this.Then(/^I update the document with value "([^"]*)" in field "([^"]*)"$/, function (value, field, callback) {
+  this.Then(/^I update the document with value "([^"]*)" in field "([^"]*)"(?: in index "([^"]*)")?$/, function (value, field, index, callback) {
     var main = function (callbackAsync) {
       setTimeout(function () {
         var body = {};
         body[field] = value;
 
-        this.api.update(this.result._id, body)
+        this.api.update(this.result._id, body, index)
           .then(function (body) {
             if (body.error) {
               callbackAsync(body.error.message);
@@ -741,8 +735,8 @@ var apiSteps = function () {
   });
 
 
-  this.Then(/^I remove the document$/, function (callback) {
-    this.api.deleteById(this.result._id)
+  this.Then(/^I remove the document(?: in index "([^"]*)")?$/, function (index, callback) {
+    this.api.deleteById(this.result._id, index)
       .then(function (body) {
         if (body.error !== null) {
           callback(body.error.message);
@@ -756,14 +750,14 @@ var apiSteps = function () {
       });
   });
 
-  this.Then(/^I remove documents with field "([^"]*)" equals to value "([^"]*)"$/, function (field, value, callback) {
+  this.Then(/^I remove documents with field "([^"]*)" equals to value "([^"]*)"(?: in index "([^"]*)")?$/, function (field, value, index, callback) {
     var main = function (callbackAsync) {
       setTimeout(function () {
         var filter = { query: { match: {} } };
 
         filter.query.match[field] = value;
 
-        this.api.deleteByQuery(filter)
+        this.api.deleteByQuery(filter, index)
           .then(function (body) {
             if (body.error) {
               callbackAsync(body.error.message);
@@ -794,8 +788,8 @@ var apiSteps = function () {
   });
 
 
-  this.When(/^I do a bulk import$/, function (callback) {
-    this.api.bulkImport(this.bulk)
+  this.When(/^I do a bulk import(?: from index "([^"]*)")?$/, function (index, callback) {
+    this.api.bulkImport(this.bulk, index)
       .then(function (body) {
         if (body.error !== null) {
           callback(new Error(body.error.message));
@@ -824,8 +818,8 @@ var apiSteps = function () {
       });
   });
 
-  this.Then(/^I remove the collection and schema$/, function (callback) {
-    this.api.deleteCollection()
+  this.Then(/^I remove the collection and schema(?: from index "([^"]*)")?$/, function (index, callback) {
+    this.api.deleteCollection(index)
       .then(function (body) {
         if (body.error !== null) {
           return callback(new Error(body.error.message));
@@ -839,7 +833,7 @@ var apiSteps = function () {
   });
 
 
-  this.Then(/^I change the schema$/, function (callback) {
+  this.Then(/^I change the schema(?: in index "([^"]*)")?$/, function (index, callback) {
     this.api.putMapping()
       .then(function (body) {
         if (body.error !== null) {
@@ -854,8 +848,8 @@ var apiSteps = function () {
       });
   });
 
-  this.Then(/^I truncate the collection$/, function (callback) {
-    this.api.truncateCollection()
+  this.Then(/^I truncate the collection(?: in index "([^"]*)")?$/, function (index, callback) {
+    this.api.truncateCollection(index)
       .then(body => {
         if (body.error !== null) {
           return callback(new Error(body.error.message));

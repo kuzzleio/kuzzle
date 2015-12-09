@@ -8,6 +8,7 @@ Feature: Test STOMP API
     When I write the document
     Then I should receive a document id
     Then I'm able to get the document
+    And I'm not able to get the document in index "index-test-alt"
 
   @usingSTOMP @unsubscribe
   Scenario: Create or Update a document
@@ -33,7 +34,8 @@ Feature: Test STOMP API
   @usingSTOMP
   Scenario: Search a document
     When I write the document "documentGrace"
-    Then I find a document with "grace" in field "firstName"
+    And I find a document with "grace" in field "firstName"
+    And I don't find a document with "grace" in field "firstName" in index "index-test-alt"
 
   @usingSTOMP
   Scenario: Bulk import
@@ -58,6 +60,7 @@ Feature: Test STOMP API
     When I write the document "documentGrace"
     When I write the document "documentAda"
     Then I count 4 documents
+    And I count 0 documents in index "index-test-alt"
     And I count 2 documents with "NYC" in field "city"
     Then I truncate the collection
     And I count 0 documents

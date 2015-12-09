@@ -3,7 +3,8 @@ module.exports = function () {
     this.api = null;
 
     // Fake values for test
-    this.fakeIndex = '-test';
+    this.fakeIndex = 'index-test';
+    this.fakeAltIndex = 'index-test-alt';
     this.fakeCollection = 'kuzzle-collection-test';
 
     this.documentGrace = {

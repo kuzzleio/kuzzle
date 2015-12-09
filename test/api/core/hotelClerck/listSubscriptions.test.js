@@ -20,6 +20,7 @@ describe('Test: hotelClerk.addSubscription', function () {
       user: null
     },
     roomName = 'roomName',
+    index = '%test',
     collection = 'user',
     filter = {
       term: {
@@ -67,6 +68,7 @@ describe('Test: hotelClerk.addSubscription', function () {
       controller: 'subscribe',
       action: 'on',
       requestId: roomName,
+      index: index,
       collection: collection,
       body: filter
     });
@@ -96,6 +98,7 @@ describe('Test: hotelClerk.addSubscription', function () {
       controller: 'subscribe',
       action: 'on',
       requestId: roomName,
+      index: index,
       collection: collection,
       body: {}
     });
@@ -123,6 +126,7 @@ describe('Test: hotelClerk.addSubscription', function () {
       controller: 'subscribe',
       action: 'on',
       requestId: roomName,
+      index: index,
       collection: collection,
       body: filter
     });
