@@ -623,10 +623,31 @@ var apiSteps = function () {
   });
 
   /** WRITE **/
+  this.When(/^I publish a message$/, function (callback) {
+    this.api.publish(this.documentGrace)
+      .then(function (body) {
+        if (body.error) {
+          callback(new Error(body.error.message));
+          return false;
+        }
+
+        if (!body.result) {
+          callback(new Error('No result provided'));
+          return false;
+        }
+
+        this.result = body.result;
+        callback();
+      }.bind(this))
+      .catch(function (error) {
+        callback(error);
+      });
+  });
+
   this.When(/^I write the document ?(?:"([^"]*)")?$/, function (documentName, callback) {
     var document = this[documentName] || this.documentGrace;
 
-    this.api.create(document, true)
+    this.api.create(document)
       .then(function (body) {
         if (body.error) {
           callback(new Error(body.error.message));

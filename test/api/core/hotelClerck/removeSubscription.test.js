@@ -14,6 +14,7 @@ describe('Test: hotelClerk.removeSubscription', function () {
   var
     kuzzle,
     roomId,
+    channel,
     anonymousUser,
     connection = {id: 'connectionid'},
     context = {
@@ -79,6 +80,7 @@ describe('Test: hotelClerk.removeSubscription', function () {
       })
       .then(function (realTimeResponseObject) {
         roomId = realTimeResponseObject.roomId;
+        channel = realTimeResponseObject.channel;
         unsubscribeRequest = new RequestObject({
           controller: 'subscribe',
           action: 'off',
@@ -179,8 +181,8 @@ describe('Test: hotelClerk.removeSubscription', function () {
       sockets: {
         connected: {
           connectionid: {
-            leave: function (roomId) {
-              leavedRooms.push(roomId);
+            leave: function (channel) {
+              leavedRooms.push(channel);
             }
           }
         }
@@ -190,7 +192,7 @@ describe('Test: hotelClerk.removeSubscription', function () {
 
     return kuzzle.hotelClerk.removeSubscription(unsubscribeRequest, context)
       .then(function () {
-        should(leavedRooms).containEql(roomId);
+        should(leavedRooms).containEql(channel);
         delete connection.type;
       });
   });

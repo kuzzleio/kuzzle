@@ -175,7 +175,8 @@ The following ``update`` notification will be sent to all subscribed users:
     metadata: {
       modifiedBy: 'awesome me',
       reason: 'it needed to be modified'
-    }
+    },
+    scope: '<in or out>'
   }
 }
 ```
@@ -226,19 +227,26 @@ This section details every query you can send to Kuzzle, and the ``response`` ob
 Subscription works differently in Kuzzle than with a regular publish/subscribe protocol.  
 In Kuzzle, you don't exactly subscribe to a room or to a topic but, instead, you subscribe to documents.
 
-What it means is that, along with your subscription query, you also give to Kuzzle a set of matching criteria.  
-Once you have subscribed to a room, if a pub/sub message is published matching your criteria, or if a matching stored document changes (because it is created, updated or deleted), then you'll receive a notification about it.  
-Notifications are ``response`` objects.
-
+What it means is that, along with your subscription query, you also give to Kuzzle a set of document or message filters.  
 Of course, you may also subscribe to a ``data collection`` with no other matching criteria, and you'll effectively listen to a 'topic'.
 
-The matching criteria you pass on to Kuzzle are [filters](./filters.md).
+Once you have subscribed to a room, depending on your filters, you may receive the following notifications:
+
+* whenever a pub/sub message is published matching your criteria (realtime)
+* whenever a matching document is about to be created or deleted (realtime)
+* whenever a matching stored document is created, updated or deleted (once the change is effective in the database)
+* whenever a user enters or leaves the room
+
+You may ask Kuzzle to send only the notifications relevant to your application, by configuring your subscription request (see below).  
+You can also subscribe multiple times to the same room, with different configurations. Kuzzle will provide you with a channel for each of these subscriptions, allowing different part of your application to concentrate on what it needs to process.
+
+The matching criteria you pass on to Kuzzle are based upon [Kuzzle DSL](./filters.md)
 
 How subscription works:  
 :arrow_right: You send a subscription query to Kuzzle  
-:arrow_left: Kuzzle responds to you with a room unique ID  
-:arrow_right: You subscribe to the queue ``/queue/<reply-to queue you provided>``
-:arrow_left: When a document matches your room criterias, Kuzzle sends you a ``response``
+:arrow_left: Kuzzle responds to you with a ``roomId`` and a ``channel``  
+:arrow_right: You listen to the ``channel`` provided in the response       
+:arrow_left: Kuzzle forwards the corresponding notifications on that channel
 
 **reply-to queue header:** Required.
 
@@ -259,7 +267,44 @@ How subscription works:
   },
   metadata: {
     // query metadata
-  }
+  },
+
+  /*
+  The "scope" argument filters document modifications when a change has been
+  detected in the database.
+  You may receive notifications only when documents enter or stay in your
+  scope (scope: 'in'), when documents leave it (scope: 'out'), or
+  both (scope: 'all')
+
+  You may also filter out all these notifications (scope = 'none')
+
+  Default: scope: 'all'
+  */
+  scope: 'all|in|out|none',
+
+  /*
+  The "state" argument filters document notifications depending on their state.
+  This does not affect pub/sub messages or user events.
+
+  You may choose to only receive document notifications when a change has
+  been detected in the database (state = 'done'), when a document is
+  about to be changed (state: 'pending'), or both (state: 'all')
+
+  Default: 'done'
+  */
+  state: 'all|pending|done',
+
+  /*
+  User events are notification sent when users enter or leave the room you
+  subscribed to.
+
+  You may choose to receive notifications when users enter the
+  room (users: 'in'), when they leave the room (users: 'out'), or
+  both (users: 'all')
+
+  Default: 'none
+  */
+  users: 'all|in|out|none'
 }
 ```
 
@@ -276,6 +321,7 @@ How subscription works:
     requestId: <Unique ID>,
     controller: 'subscribe',
     action: 'on',
+    state: 'done',
     metadata: {}                   // subscription metadata
   }
 }
@@ -285,7 +331,7 @@ How subscription works:
 
 Once you receive this ``response``, all you have to do is to subscribe to the ``/topic/<roomId>`` topic to receive notifications.
 
-There are 4 types of notifications you can receive:
+You can receive the following types of notifications:
 
 #### 'A document has been created' notification:
 
@@ -302,6 +348,8 @@ There are 4 types of notifications you can receive:
     collection: '<data collection>',
     controller: 'write',
     requestId: '<unique request ID>',  // The query updating the document
+    scope: 'in',                       // The document entered your room scope
+    state: 'done',                     // The document has been fully created
     metadata: {
       // metadata embedded in the modifying request
     }
@@ -324,6 +372,8 @@ There are 4 types of notifications you can receive:
     action: 'update',
     collection: '<data collection>',
     controller: 'write',
+    scope: 'in',                       // The document entered your room scope
+    state: 'done',                     // The document has been fully updated
     requestId: '<unique request ID>',  // The query updating the document
     metadata: {
       // metadata embedded in the modifying request
@@ -343,6 +393,8 @@ There are 4 types of notifications you can receive:
     action: 'update',
     collection: '<data collection>',
     controller: 'write',
+    scope: 'out',                      // The document left your room scope
+    state: 'done',                     // The document has been fully updated
     requestId: '<unique request ID>',  // The query updating the document
     metadata: {
       // metadata embedded in the modifying request
@@ -364,6 +416,8 @@ There are 4 types of notifications you can receive:
     action: 'delete',
     collection: '<data collection>',
     controller: 'write',
+    scope: 'out',                      // The document left your room scope
+    state: 'done',                     // The document has been fully deleted
     requestId: '<unique request ID>',  // The query deleting the document
     metadata: {
       // metadata embedded in the modifying request
@@ -408,6 +462,44 @@ There are 4 types of notifications you can receive:
 }
 ```
 
+### 'A document is about to be created' notification:
+
+```javascript
+{
+  status: 200,                        // Assuming everything went well
+  error: null,                        // Assuming everything went well
+  result: {
+    controller: 'write',
+    action: 'create',
+    collection: '<data collection>',
+    metadata: {},
+    _source: {
+      // The content of the document     
+    },
+    state: 'pending'                  // Indicates that the document will be created
+  }
+}
+```
+
+### 'A document is about to be deleted' notification:
+
+```javascript
+{
+  status: 200,                        // Assuming everything went well
+  error: null,                        // Assuming everything went well
+  result: {
+    controller: 'write',
+    action: 'delete',
+    collection: '<data collection>',
+    metadata: {},
+    _source: {
+      // The content of the document     
+    },
+    state: 'pending'                  // Indicates that the document will be deleted
+  }
+}
+```
+
 ---
 
 ### Counting the number of subscriptions on a given room
@@ -428,7 +520,7 @@ It works with the room unique ID Kuzzle returns to you when you make a subscript
 
   body: {
     roomId: 'unique room ID'
-  }
+  },
   metadata: {
     // query metadata
   }
@@ -446,7 +538,8 @@ It works with the room unique ID Kuzzle returns to you when you make a subscript
     count: <number of subscriptions>,
     requestId: <Unique ID>,
     controller: 'subscribe',
-    action: 'count'
+    action: 'count',
+    state: 'done'
   }
 }
 ```
@@ -491,6 +584,7 @@ Makes Kuzzle remove you from its subscribers on this room.
     requestId: <Unique ID>,
     controller: 'subscribe',
     action: 'off',
+    state: 'done',
     metadata: {}                   // subscription metadata
   }
 }
@@ -500,17 +594,15 @@ Makes Kuzzle remove you from its subscribers on this room.
 
 ### Sending a non persistent message
 
-**reply-to queue header:** Ignored by Kuzzle
+**reply-to queue header:** Optional
 
 **Query:**
 
 ```javascript
 {
   controller: 'write',
-  action: 'create',
+  action: 'publish',
   collection: '<data collection>',
-  // Tells Kuzzle to send a non persistent message
-  persist: false,
 
   /*
   The document itself
@@ -521,7 +613,25 @@ Makes Kuzzle remove you from its subscribers on this room.
 }
 ```
 
-**Response:** Kuzzle doesn't send a response when sending a non persistent message.
+**Response:**
+
+```javascript
+{
+  "error": null,
+  "status": 200,
+  "result": {
+    "_source": {
+      // the message you sent
+    },
+    "action": "publish",
+    "collection": "<data collection>",
+    "controller": "write",
+    "metadata": {},
+    "requestId": "<unique request identifier>",
+    "state": "done"
+  }  
+}
+```
 
 ---
 
@@ -538,10 +648,6 @@ Creates a new document in the persistent data storage. Returns an error if the d
   controller: 'write',
   action: 'create',
   collection: '<data collection>',
-
-  // Tells Kuzzle to store your document
-  persist: true,
-
   /*
   The document itself
   */
@@ -565,6 +671,7 @@ Creates a new document in the persistent data storage. Returns an error if the d
     collection: '<data collection>',
     action: 'create',
     controller: 'write',
+    state: 'done',
     requestId: '<unique request identifier>',
     _version: 1                     // The version of the document in the persistent data storage
   }
@@ -610,6 +717,7 @@ Creates a new document in the persistent data storage, or update it if it alread
     collection: '<data collection>',
     action: 'createOrUpdate',
     controller: 'write',
+    state: 'done',
     requestId: '<unique request identifier>',
     _version: <number>,             // The new version number of this document
     created: <boolean>              // true: a new document has been created, false: the document has been updated
@@ -655,6 +763,7 @@ Only documents in the persistent data storage layer can be retrieved.
     collection: '<data collection>',
     action: 'get',
     controller: 'read',
+    state: 'done',
     requestId, '<unique request identifier>'
   }
 }
@@ -719,6 +828,7 @@ Kuzzle uses the [ElasticSearch Query DSL ](https://www.elastic.co/guide/en/elast
     collection: '<data collection>',
     action: 'search',
     controller: 'read',
+    state: 'done',
     requestId, '<unique request identifier>'
   }
 }
@@ -771,6 +881,7 @@ Only documents in the persistent data storage layer can be updated.
     collection: '<data collection>',
     action: 'update',
     controller: 'write',
+    state: 'done',
     requestId, '<unique request identifier>'
   }
 }
@@ -821,6 +932,7 @@ Kuzzle uses the [ElasticSearch Query DSL ](https://www.elastic.co/guide/en/elast
     collection: '<data collection>',
     action: 'count',
     controller: 'read',
+    state: 'done',
     requestId, '<unique request identifier>'
   }
 }
@@ -866,6 +978,7 @@ Only documents in the persistent data storage layer can be deleted.
     collection: '<data collection>',
     action: 'delete',
     controller: 'write',
+    state: 'done',
     requestId, '<unique request identifier>'
   }
 }
@@ -915,6 +1028,7 @@ Kuzzle uses the [ElasticSearch Query DSL ](https://www.elastic.co/guide/en/elast
     collection: '<data collection>',
     action: 'deleteByQuery',
     controller: 'write',
+    state: 'done',
     requestId, '<unique request identifier>',
 
     /*
@@ -959,6 +1073,7 @@ This action is handled by the **administration** controller.
     collection: '<data collection>',
     action: 'deleteCollection',
     controller: 'admin',
+    state: 'done',
     requestId, '<unique request identifier>'
   }
 }
@@ -1012,6 +1127,7 @@ This action is handled by the **administration** controller.
     collection: '<data collection>',
     action: 'putMapping',
     controller: 'admin',
+    state: 'done',
     requestId, '<unique request identifier>'
   }
 }
@@ -1046,6 +1162,7 @@ Get data mapping of a collection previously defined
     action: 'getMapping',
     collection: '<data collection>',
     controller: 'admin',
+    state: 'done',
     requestId: '<unique request identifier>',
 
     mainindex: {
@@ -1113,6 +1230,7 @@ Bulk import only works on documents in our persistent data storage layer.
     collection: '<data collection>',
     action: 'import',
     controller: 'bulk',
+    state: 'done',
     requestId, '<unique request identifier>',
 
     /*
@@ -1183,6 +1301,7 @@ Bulk import only works on documents in our persistent data storage layer.
     },
     action: 'import',
     controller: 'bulk',
+    state: 'done',
 
     /*
     The list of executed queries, with their status
@@ -1250,6 +1369,7 @@ These statistics include:
     },
     action: 'getLastStats',
     controller: 'admin',
+    state: 'done',
     statistics: {
       "YYYY-MM-DDTHH:mm:ss.mmmZ": {
         completedRequests: {
@@ -1331,6 +1451,7 @@ These statistics include:
     },
     action: 'getStats',
     controller: 'admin',
+    state: 'done',
     statistics: {
       "YYYY-MM-DDTHH:mm:ss.mmmZ": {
         completedRequests: {
@@ -1397,6 +1518,7 @@ Statistics are returned as a JSON-object with each key being the snapshot's time
     },
     action: 'getAllStats',
     controller: 'admin',
+    state: 'done',
     statistics: {
       "YYYY-MM-DDTHH:mm:ss.mmmZ": {
         completedRequests: {
@@ -1463,6 +1585,7 @@ Return the complete list of persisted data collections.
     ],
     action: 'listCollection',
     controller: 'read',
+    state: 'done',
     requestId: '<unique request identifier>'
   }
 }
@@ -1495,6 +1618,7 @@ Return the the current Kuzzle UTC timestamp as Epoch time (number of millisecond
     now: 1447151167622,             // Epoch time
     action: 'now',
     controller: 'read',
+    state: 'done',
     requestId: '<unique request identifier>'
   }
 }
@@ -1533,6 +1657,7 @@ This method does nothing if the collection already exists.
     action: 'createCollection',
     controller: 'write',
     collection: 'collection name',
+    state: 'done',
     requestId: '<unique request identifier>'
   }
 }
@@ -1569,6 +1694,7 @@ It is also way faster than deleting all documents from a collection using a quer
     action: 'truncateCollection',
     controller: 'admin',
     collection: 'collection name',
+    state: 'done',
     requestId: '<unique request identifier>'
   }
 }
