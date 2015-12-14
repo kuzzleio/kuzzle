@@ -125,7 +125,7 @@ describe('Test: hotelClerk.removeSubscription', function () {
 
   it('should clean up customers, rooms and filtersTree object', function () {
     return kuzzle.hotelClerk.removeSubscription(unsubscribeRequest, context)
-      .then(function () {
+      .finally(function () {
         should(kuzzle.dsl.filtersTree).be.an.Object();
         should(kuzzle.dsl.filtersTree).be.empty();
 
