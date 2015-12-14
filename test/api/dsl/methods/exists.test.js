@@ -63,8 +63,12 @@ describe('Test exists method', function () {
     return should(methods.exists('foo', 'bar', {})).be.rejectedWith(BadRequestError, { message: 'A filter can\'t be empty' });
   });
 
-  it('should return a rejected promise if the filter argument is invalid', function () {
+  it('should return a rejected promise if the filter argument does not contain a "field" term', function () {
     return should(methods.exists('foo', 'bar', { foo: 'bar' })).be.rejectedWith(BadRequestError, { message: 'Filter \'exists\' must contains \'field\' attribute' });
+  });
+
+  it('should return a rejected promise if the "field" term does not contain a string', function () {
+    return should(methods.exists('foo', 'bar', { field: {foo: 'bar'} })).be.rejectedWith(BadRequestError);
   });
 
   it('should return a rejected promise if buildCurriedFunction fails', function () {
