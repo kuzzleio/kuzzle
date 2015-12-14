@@ -291,4 +291,16 @@ ApiRT.prototype.listSubscriptions = function () {
   return this.send(msg);
 };
 
+ApiRT.prototype.removeRooms = function (rooms) {
+  var
+    msg = {
+      controller: 'admin',
+      action: 'removeRooms',
+      collection: this.world.fakeCollection,
+      body: {rooms: rooms}
+    };
+
+  return this.send(msg);
+};
+
 module.exports = ApiRT;
