@@ -52,6 +52,16 @@ ApiREST.prototype.count = function (filters) {
 
 ApiREST.prototype.create = function (body) {
   var options = {
+    url: this.pathApi(this.world.fakeCollection) + '/_create',
+    method: 'POST',
+    json: body
+  };
+
+  return this.callApi(options);
+};
+
+ApiREST.prototype.publish = function (body) {
+  var options = {
     url: this.pathApi(this.world.fakeCollection),
     method: 'POST',
     json: body

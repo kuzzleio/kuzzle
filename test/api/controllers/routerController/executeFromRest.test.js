@@ -145,13 +145,11 @@ describe('Test: routerController.executeFromRest', function () {
 
   it('should respond with a HTTP 200 message for non-persistent write call', function (done) {
     var
-      params = {action: 'create', controller: 'write'},
+      params = {action: 'publish', controller: 'write'},
       data = {
         headers: {'content-type': 'application/json'},
         body: {
-          persist: false,
-          resolve: true,
-          empty: true
+          resolve: true
         },
         params: {collection: 'foobar'}
     };
@@ -174,7 +172,7 @@ describe('Test: routerController.executeFromRest', function () {
         should(mockupResponse.response.error).be.null();
         should(mockupResponse.response.result).be.not.null();
         should(mockupResponse.response.result._source).match(data.body);
-        should(mockupResponse.response.result.action).be.exactly('create');
+        should(mockupResponse.response.result.action).be.exactly('publish');
         should(mockupResponse.response.result.controller).be.exactly('write');
 
         clearInterval(timer);

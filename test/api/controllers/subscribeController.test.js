@@ -19,9 +19,11 @@ describe('Test: subscribe controller', function () {
   var
     kuzzle,
     anonymousUser,
+    context,
     requestObject = new RequestObject({}, {}, 'unit-test');
 
   before(function (done) {
+    context = {};
     kuzzle = new Kuzzle();
     kuzzle.log = new (winston.Logger)({transports: [new (winston.transports.Console)({level: 'silent'})]});
     kuzzle.start(params, {dummy: true})
@@ -74,5 +76,28 @@ describe('Test: subscribe controller', function () {
       foo = kuzzle.funnel.subscribe.count(requestObject);
 
     return should(foo).be.rejectedWith(BadRequestError, { message: 'The room Id is mandatory to count subscriptions' });
+  });
+
+  describe('#list', function () {
+    it('should trigger a hook and return a promise', function (done) {
+      this.timeout(50);
+
+      kuzzle.once('subscription:list', () => done());
+      should(kuzzle.funnel.subscribe.list(requestObject, {
+        connection: {id: 'foobar'},
+        user: anonymousUser
+      })).be.a.Promise();
+    });
+  });
+
+  describe('#join', function () {
+    it('should trigger a hook and return a promise', function (done) {
+      this.timeout(50);
+      kuzzle.once('subscription:join', () => done());
+      should(kuzzle.funnel.subscribe.join(requestObject, {
+        connection: {id: 'foobar'},
+        user: anonymousUser
+      })).be.a.Promise();
+    });
   });
 });

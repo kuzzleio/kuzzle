@@ -166,8 +166,7 @@ I.e.:
 
 ```json
 {
-    "action": "create",
-    "persist": false,
+    "action": "publish",
     "collection": "members",
     "content": {
         "firstName": "Beth",

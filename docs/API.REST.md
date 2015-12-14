@@ -103,7 +103,8 @@ The following ``update`` notification will be sent to all subscribed users:
     metadata: {
       modifiedBy: 'awesome me',
       reason: 'it needed to be modified'
-    }
+    },
+    scope: '<in or out>'
   }
 }
 ```
@@ -131,18 +132,31 @@ Simply put, a ``data collection`` is a set of data managed internally by Kuzzle.
 
 ```javascript  
 {
-  // Tells Kuzzle to send a non persistent message
-  persist: false,
-
-  body: {
-    /*
-    The document itself
-    */
-  }
+  /*
+  The message to send
+  */
 }
 ```
 
-**Response:** Kuzzle doesn't send a response when sending non persistent message.
+**Response:** 
+
+```javascript
+{
+  "error": null,
+  "status": 200,
+  "result": {
+    "_source": {
+      // the message you sent
+    },
+    "action": "publish",
+    "collection": "<data collection>",
+    "controller": "write",
+    "metadata": {},
+    "requestId": "<unique request identifier>",
+    "state": "done"
+  }  
+}
+```
 
 ---
 
@@ -150,35 +164,17 @@ Simply put, a ``data collection`` is a set of data managed internally by Kuzzle.
 
 Creates a new document in the persistent data storage. Returns an error if the document already exists.
 
-**URL:** ``http://kuzzle:7512/api/<data collection>``
+**URL:** ``http://kuzzle:7512/api/<data collection>/_create``
 
 **Method:** ``POST``
 
 **Message:**
-
-You can directly send your document through post data using default parameters (persist: true)
 
 ```javascript
 {
   /*
   The document itself
   */
-}
-```
-
-Or instead control the behavior of the document by passing your document in the body field.
-
-```javascript  
-{
-  // Tells Kuzzle to store your document
-  persist: true,
-
-  body: {
-    /*
-    The document itself
-    */
-  }
-  ...
 }
 ```
 
@@ -197,7 +193,8 @@ Or instead control the behavior of the document by passing your document in the 
     action: 'create',
     controller: 'write',
     requestId: '<unique request identifier>',
-    _version: 1                     // The version of the document in the persistent data storage
+    _version: 1,                    // The version of the document in the persistent data storage
+    state: 'done'
   }
 }
 ```
@@ -247,7 +244,8 @@ Creates a new document in the persistent data storage, or update it if it alread
     controller: 'write',
     requestId: '<unique request identifier>',
     _version: <number>,             // The new version number of this document
-    created: <boolean>              // true: a new document has been created, false: the document has been updated
+    created: <boolean>;             // true: a new document has been created, false: the document has been updated
+    state: 'done'
   }
 }
 ```
@@ -284,7 +282,8 @@ Only documents in the persistent data storage layer can be retrieved.
     collection: '<data collection>',
     action: 'get',
     controller: 'read',
-    requestId, '<unique request identifier>'
+    requestId: '<unique request identifier>',
+    state: 'done'
   }
 }
 ```
@@ -343,7 +342,8 @@ Kuzzle uses the [ElasticSearch Query DSL ](https://www.elastic.co/guide/en/elast
     collection: '<data collection>',
     action: 'search',
     controller: 'read',
-    requestId, '<unique request identifier>'
+    requestId: '<unique request identifier>',
+    state: 'done'
   }
 }
 ```
@@ -382,7 +382,8 @@ Only documents in the persistent data storage layer can be updated.
     collection: '<data collection>',
     action: 'update',
     controller: 'write',
-    requestId, '<unique request identifier>'
+    requestId: '<unique request identifier>',
+    state: 'done'
   }
 }
 ```
@@ -427,7 +428,8 @@ Kuzzle uses the [ElasticSearch Query DSL ](https://www.elastic.co/guide/en/elast
     collection: '<data collection>',
     action: 'count',
     controller: 'read',
-    requestId, '<unique request identifier>'
+    requestId: '<unique request identifier>',
+    state: 'done'
   }
 }
 ```
@@ -458,7 +460,8 @@ Only documents in the persistent data storage layer can be deleted.
     collection: '<data collection>',
     action: 'delete',
     controller: 'write',
-    requestId, '<unique request identifier>'
+    requestId: '<unique request identifier>',
+    state: 'done'
   }
 }
 ```
@@ -511,7 +514,8 @@ Kuzzle uses the [ElasticSearch Query DSL ](https://www.elastic.co/guide/en/elast
     /*
     Array of strings listing the IDs of removed documents
     */
-    ids: ['id1', 'id2', ..., 'idn']
+    ids: ['id1', 'id2', ..., 'idn'],
+    state: 'done'
   }
 }
 ```
@@ -541,7 +545,8 @@ This removes an entire data collection in the persistent data storage layer.
     collection: '<data collection>',
     action: 'deleteCollection',
     controller: 'admin',
-    requestId, '<unique request identifier>'
+    requestId: '<unique request identifier>',
+    state: 'done'
   }
 }
 ```
@@ -590,7 +595,8 @@ This action is handled by the **administration** controller.
     collection: '<data collection>',
     action: 'putMapping',
     controller: 'admin',
-    requestId, '<unique request identifier>'
+    requestId: '<unique request identifier>',
+    state: 'done'
   }
 }
 ```
@@ -630,7 +636,8 @@ Get data mapping of a collection previously defined
           }
         }
       }
-    }
+    },
+    state: 'done'
   }
 }
 ```
@@ -678,8 +685,9 @@ Bulk import only works on documents in our persistent data storage layer.
     collection: '<data collection>',
     action: 'import',
     controller: 'bulk',
-    requestId, '<unique request identifier>',
-
+    requestId: '<unique request identifier>',
+    state: 'done',
+    
     /*
     The list of executed queries, with their status
     */
@@ -748,6 +756,7 @@ Bulk import only works on documents in our persistent data storage layer.
     },
     action: 'import',
     controller: 'bulk',
+    state: 'done',
     /*
     The list of executed queries, with their status
     */
@@ -802,6 +811,7 @@ These statistics include:
     collection: '<data collection>',
     action: 'getLastStats',
     controller: 'admin',
+    state: 'done',
     statistics: {
       "YYYY-MM-DDTHH:mm:ss.mmmZ": {
         completedRequests: {
@@ -870,6 +880,7 @@ These statistics include:
     collection: '<data collection>',
     action: 'getStats',
     controller: 'admin',
+    state: 'done',
     statistics: {
       "YYYY-MM-DDTHH:mm:ss.mmmZ": {
         completedRequests: {
@@ -926,6 +937,7 @@ Statistics are returned as a JSON-object with each key being the snapshot's time
     },
     action: 'getAllStats',
     controller: 'admin',
+    state: 'done',
     statistics: {
       "YYYY-MM-DDTHH:mm:ss.mmmZ": {
         completedRequests: {
@@ -985,7 +997,8 @@ Return the complete list of persisted data collections.
     ],
     action: 'listCollection',
     controller: 'read',
-    requestId: '<unique request identifier>'
+    requestId: '<unique request identifier>',
+    state: 'done'
   }
 }
 ```
@@ -1010,7 +1023,8 @@ Return the the current Kuzzle UTC timestamp as Epoch time (number of millisecond
     now: 1447151167622,             // Epoch time
     action: 'now',
     controller: 'read',
-    requestId: '<unique request identifier>'
+    requestId: '<unique request identifier>',
+    state: 'done'
   }
 }
 ```
@@ -1040,7 +1054,8 @@ This method does nothing if the collection already exists.
     action: 'createCollection',
     controller: 'write',
     collection: 'collection name',
-    requestId: '<unique request identifier>'
+    requestId: '<unique request identifier>',
+    state: 'done'
   }
 }
 ```
@@ -1070,7 +1085,8 @@ It is also way faster than deleting all documents from a collection using a quer
     action: 'truncateCollection',
     controller: 'admin',
     collection: 'collection name',
-    requestId: '<unique request identifier>'
+    requestId: '<unique request identifier>',
+    state: 'done'
   }
 }
 ```
