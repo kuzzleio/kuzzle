@@ -11,7 +11,7 @@ var
 
 require('should-promised');
 
-describe('Test: hotelClerk.removeAllRooms', function () {
+describe('Test: hotelClerk.removeRooms', function () {
   var
     kuzzle,
     connection = {id: 'connectionid'},
@@ -60,25 +60,25 @@ describe('Test: hotelClerk.removeAllRooms', function () {
   it('should reject an error if no collection provided', function () {
     var requestObject = new RequestObject({
       controller: 'admin',
-      action: 'removeAllRooms',
+      action: 'removeRooms',
       requestId: roomName,
       collection: undefined,
       body: {}
     });
 
-    return should(kuzzle.hotelClerk.removeAllRooms(requestObject)).rejectedWith(BadRequestError);
+    return should(kuzzle.hotelClerk.removeRooms(requestObject)).rejectedWith(BadRequestError);
   });
 
   it('should reject an error if there is no subscription on this collection', function () {
     var requestObject = new RequestObject({
       controller: 'admin',
-      action: 'removeAllRooms',
+      action: 'removeRooms',
       requestId: roomName,
       collection: collection1,
       body: {}
     });
 
-    return should(kuzzle.hotelClerk.removeAllRooms(requestObject)).rejectedWith(NotFoundError);
+    return should(kuzzle.hotelClerk.removeRooms(requestObject)).rejectedWith(NotFoundError);
   });
 
   it('should remove room in global subscription for provided collection', function () {
@@ -92,7 +92,7 @@ describe('Test: hotelClerk.removeAllRooms', function () {
       }),
       requestObjectRemove = new RequestObject({
         controller: 'admin',
-        action: 'removeAllRooms',
+        action: 'removeRooms',
         requestId: roomName,
         collection: collection1,
         body: {}
@@ -100,7 +100,7 @@ describe('Test: hotelClerk.removeAllRooms', function () {
 
     return kuzzle.hotelClerk.addSubscription(requestObjectSubscribe, context)
       .then(() => {
-        return kuzzle.hotelClerk.removeAllRooms(requestObjectRemove);
+        return kuzzle.hotelClerk.removeRooms(requestObjectRemove);
       })
       .then(responseObject => {
         should(responseObject.data.body).have.property('acknowledge');
@@ -122,7 +122,7 @@ describe('Test: hotelClerk.removeAllRooms', function () {
       }),
       requestObjectRemove = new RequestObject({
         controller: 'admin',
-        action: 'removeAllRooms',
+        action: 'removeRooms',
         requestId: roomName,
         collection: collection1,
         body: {}
@@ -130,7 +130,7 @@ describe('Test: hotelClerk.removeAllRooms', function () {
 
     return kuzzle.hotelClerk.addSubscription(requestObjectSubscribe, context)
       .then(() => {
-        return kuzzle.hotelClerk.removeAllRooms(requestObjectRemove);
+        return kuzzle.hotelClerk.removeRooms(requestObjectRemove);
       })
       .then(responseObject => {
         should(responseObject.data.body).have.property('acknowledge');
@@ -159,7 +159,7 @@ describe('Test: hotelClerk.removeAllRooms', function () {
       }),
       requestObjectRemove = new RequestObject({
         controller: 'admin',
-        action: 'removeAllRooms',
+        action: 'removeRooms',
         requestId: roomName,
         collection: collection1,
         body: {}
@@ -170,7 +170,7 @@ describe('Test: hotelClerk.removeAllRooms', function () {
         return kuzzle.hotelClerk.addSubscription(requestObjectSubscribeFilter, context);
       })
       .then(() => {
-        return kuzzle.hotelClerk.removeAllRooms(requestObjectRemove);
+        return kuzzle.hotelClerk.removeRooms(requestObjectRemove);
       })
       .then(responseObject => {
         should(responseObject.data.body).have.property('acknowledge');
@@ -199,7 +199,7 @@ describe('Test: hotelClerk.removeAllRooms', function () {
       }),
       requestObjectRemove = new RequestObject({
         controller: 'admin',
-        action: 'removeAllRooms',
+        action: 'removeRooms',
         requestId: roomName,
         collection: collection1,
         body: {}
@@ -210,7 +210,7 @@ describe('Test: hotelClerk.removeAllRooms', function () {
         return kuzzle.hotelClerk.addSubscription(requestObjectSubscribeCollection2, context);
       })
       .then(() => {
-        return kuzzle.hotelClerk.removeAllRooms(requestObjectRemove);
+        return kuzzle.hotelClerk.removeRooms(requestObjectRemove);
       })
       .then(responseObject => {
         should(responseObject.data.body).have.property('acknowledge');
@@ -237,7 +237,7 @@ describe('Test: hotelClerk.removeAllRooms', function () {
       }),
       requestObjectRemove = new RequestObject({
         controller: 'admin',
-        action: 'removeAllRooms',
+        action: 'removeRooms',
         requestId: roomName,
         collection: collection1,
         body: {rooms: {}}
@@ -245,7 +245,7 @@ describe('Test: hotelClerk.removeAllRooms', function () {
 
     return kuzzle.hotelClerk.addSubscription(requestObjectSubscribeCollection1, context)
       .then(() => {
-        return should(kuzzle.hotelClerk.removeAllRooms(requestObjectRemove)).be.rejectedWith(BadRequestError);
+        return should(kuzzle.hotelClerk.removeRooms(requestObjectRemove)).be.rejectedWith(BadRequestError);
       });
   });
 
@@ -268,7 +268,7 @@ describe('Test: hotelClerk.removeAllRooms', function () {
       }),
       requestObjectRemove = new RequestObject({
         controller: 'admin',
-        action: 'removeAllRooms',
+        action: 'removeRooms',
         requestId: roomName,
         collection: collection1,
         body: {rooms: [roomName]}
@@ -279,7 +279,7 @@ describe('Test: hotelClerk.removeAllRooms', function () {
         return kuzzle.hotelClerk.addSubscription(requestObjectSubscribeFilter2, context);
       })
       .then(() => {
-        return kuzzle.hotelClerk.removeAllRooms(requestObjectRemove);
+        return kuzzle.hotelClerk.removeRooms(requestObjectRemove);
       })
       .then(() => {
         should(Object.keys(kuzzle.hotelClerk.rooms).length).be.exactly(1);
@@ -306,7 +306,7 @@ describe('Test: hotelClerk.removeAllRooms', function () {
       }),
       requestObjectRemove = new RequestObject({
         controller: 'admin',
-        action: 'removeAllRooms',
+        action: 'removeRooms',
         requestId: roomName,
         collection: collection1,
         body: {rooms: [badRoomName]}
@@ -317,7 +317,7 @@ describe('Test: hotelClerk.removeAllRooms', function () {
         return kuzzle.hotelClerk.addSubscription(requestObjectSubscribe2, context);
       })
       .then(() => {
-        return kuzzle.hotelClerk.removeAllRooms(requestObjectRemove);
+        return kuzzle.hotelClerk.removeRooms(requestObjectRemove);
       })
       .then((responseObject) => {
         should(responseObject.status).be.exactly(206);
@@ -340,7 +340,7 @@ describe('Test: hotelClerk.removeAllRooms', function () {
       }),
       requestObjectRemove = new RequestObject({
         controller: 'admin',
-        action: 'removeAllRooms',
+        action: 'removeRooms',
         requestId: roomName,
         collection: collection1,
         body: {rooms: [badRoomName]}
@@ -348,7 +348,7 @@ describe('Test: hotelClerk.removeAllRooms', function () {
 
     return kuzzle.hotelClerk.addSubscription(requestObjectSubscribe, context)
       .then(() => {
-        return kuzzle.hotelClerk.removeAllRooms(requestObjectRemove);
+        return kuzzle.hotelClerk.removeRooms(requestObjectRemove);
       })
       .then((responseObject) => {
         should(responseObject.status).be.exactly(206);
