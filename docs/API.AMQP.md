@@ -789,14 +789,19 @@ Kuzzle uses the [ElasticSearch Query DSL ](https://www.elastic.co/guide/en/elast
   action: 'search',
   collection: '<data collection>',
 
-  /*
-  A set of filters or queries matching documents you're looking for.
-  Use 'query' instead of 'filter' if you want to perform a query instead.
-  */
   body: {
+    /*
+    A set of filters or queries matching documents you're looking for.
+    Use 'query' instead of 'filter' if you want to perform a query instead.
+    */
     filter: {
 
-    }
+    },
+    /*
+    'from' and 'size' argument for pagination
+    */
+    from: 0,
+    size: 42
   }
 }
 ```
