@@ -377,7 +377,7 @@ describe('Test: ElasticSearch service', function () {
           should(result.status).be.exactly(206);
           should(result.error).be.not.null();
           should(result.error.count).be.exactly(2);
-          should(result.error.message).be.exactly('Some error on bulk');
+          should(result.error.message).be.exactly('Some errors on bulk');
           should(result.error.errors).be.an.Array().and.match([{status: 404}]).and.match([{error: /^DocumentMissingException/}]);
           done();
         } catch(e) {
