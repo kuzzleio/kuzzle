@@ -18,12 +18,15 @@ describe('Test: requestObject', function () {
 
   beforeEach(function () {
     request = {
-      action: 'fakeaction',
-      controller: 'fakecontroller',
-      collection: 'fakecollection',
+      action: 'fakeAction',
+      controller: 'fakeController',
+      collection: 'fakeCollection',
       protocol: protocol,
       requestId: 'fakerequestId',
-      body: { _id: 'fakeid', foo: 'bar' }
+      body: { _id: 'fakeid', foo: 'bar' },
+      state: 'fakeState',
+      scope: 'fakeScope',
+      users: 'fakeUsers'
     };
   });
 
@@ -48,6 +51,10 @@ describe('Test: requestObject', function () {
     should(requestObject.protocol).be.exactly(protocol);
     should(requestObject.controller).be.exactly(request.controller);
     should(requestObject.collection).be.exactly(request.collection);
+    should(requestObject.controller).be.exactly(request.controller);
+    should(requestObject.state).be.exactly(request.state.toLowerCase());
+    should(requestObject.scope).be.exactly(request.scope.toLowerCase());
+    should(requestObject.users).be.exactly(request.users.toLowerCase());
     should(requestObject.requestId).be.exactly(request.requestId);
     should(requestObject.timestamp).be.a.Number().and.be.within(timestampStart, timestampEnd);
   });
