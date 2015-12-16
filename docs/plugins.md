@@ -31,7 +31,7 @@ A plugin configuration can have attributes:
 * `customConfig`: config for the plugin. Each plugin has a different configuration (required or optional), check the corresponding plugin documentation for more information.
 * `defaultConfig`: Don't edit this attribute. The defaultConfig is provided by the plugin itself. If you need to change the configuration, edit the `customConfig` attribute
 
-**Note:** 
+**Note:**
 * URL or version are required. The URL is checked first, so if you have set a version and an URL, the version will be ignored.
 
 # Default plugins
@@ -83,10 +83,10 @@ module.exports = {
 module.exports = function () {
 
   this.hooks = require('./config/hooks.js');
-  this.init = function (config, isDummy) {
+  this.init = function (config, context, isDummy) {
     // do something
   }
-  
+
   this.myFunction = function (message, event) {
     console.log('Event', event, 'is triggered');
     console.log('There is the message', message);
@@ -126,10 +126,10 @@ module.exports = {
 module.exports = function () {
 
   this.pipes = require('./config/pipes.js');
-  this.init = function (config, isDummy) {
+  this.init = function (config, context, isDummy) {
     // do something
   }
-  
+
   this.addCreatedAt = function (requestObject, callback) {
     requestObject.data.body.createdAt = Date.now();
     callback(null, requestObject);
@@ -197,13 +197,15 @@ module.exports = function () {
 
   this.controllers = require('./config/controllers.js');
   this.routes = require('./config/routes.js');
-  this.init = function (config, isDummy) {
+  this.context = null;
+  this.init = function (config, context, isDummy) {
+    this.context = context;
     // do something
   };
 
-  this.MyController = function (context) {
+  this.MyController = function () {
     MyController = require('./controllers/myController'),
-    return new MyController(context);
+    return new MyController(this.context);
   };
 };
 ```

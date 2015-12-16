@@ -10,6 +10,20 @@ require('should-promised');
 
 describe('Test plugins manager run', function () {
   var
+    contextObjects = [
+      'ResponseObject',
+      'RealTimeResponseObject',
+      'BadRequestError',
+      'ForbiddenError',
+      'GatewayTimeoutError',
+      'InternalError',
+      'KuzzleError',
+      'NotFoundError',
+      'PartialError',
+      'ServiceUnavailableError',
+      'UnauthorizedError',
+      'repositories'
+    ],
     kuzzle,
     pluginsManager;
 
@@ -20,6 +34,12 @@ describe('Test plugins manager run', function () {
       delimiter: ':'
     });
     kuzzle.config = { pluginsManager: params.pluginsManager };
+    kuzzle.repositories = {
+      repository: 'repository',
+      userRepository: 'userRepository',
+      roleRepository: 'roleRepository',
+      profileRepository: 'profileRepository'
+    };
 
     pluginsManager = new PluginsManager(kuzzle);
   });
@@ -226,11 +246,11 @@ describe('Test plugins manager run', function () {
     pluginsManager.plugins = {
       myplugin: {
         object: {
-          init: function () {},
+          init: function (config, context) {},
           controllers: {
             'foo': 'FooController'
           },
-          FooController: function(context){done();}
+          FooController: function(){done();}
         },
         activated: true
       }
@@ -240,6 +260,37 @@ describe('Test plugins manager run', function () {
     should.not.exist(pluginsManager.controllers['myplugin/dfoo']);
     should(pluginsManager.controllers['myplugin/foo']).be.a.Function();
     pluginsManager.controllers['myplugin/foo']();
+  });
+
+  it('should see the context object within the plugin', function (done) {
+    pluginsManager.plugins = [{
+      object: {
+        context: null,
+        init: function (config, context) {
+            this.context = context;
+        },
+        hooks: {
+          'test': 'myFunc'
+        },
+        myFunc: function () {
+          var
+            context = this.context,
+            repositories = context.repositories();
+          contextObjects.forEach(function (item) {
+            should(context[item]).be.a.Function();
+          });
+          should(repositories.repository).be.equal('repository');
+          should(repositories.userRepository).be.equal('userRepository');
+          should(repositories.roleRepository).be.equal('roleRepository');
+          should(repositories.profileRepository).be.equal('profileRepository');
+          done();
+        }
+      },
+      activated: true
+    }];
+
+    pluginsManager.run();
+    kuzzle.emit('test');
   });
 
   it('should attach controller routes on kuzzle object', function () {
