@@ -131,13 +131,13 @@ describe('Test: read controller', function () {
     });
 
     it('should reject the request if an invalid "type" argument is provided', function () {
-      var requestObject = new RequestObject({type: 'foo'}, {}, '');
+      var requestObject = new RequestObject({body: {type: 'foo'}}, {}, '');
 
       return should(kuzzle.funnel.read.listCollections(requestObject)).be.rejectedWith(BadRequestError);
     });
 
     it('should only return stored collections with type = stored', function () {
-      var requestObject = new RequestObject({type: 'stored'}, {}, '');
+      var requestObject = new RequestObject({body: {type: 'stored'}}, {}, '');
 
       return kuzzle.funnel.read.listCollections(requestObject).then(response => {
         should(response.data.type).be.exactly('stored');
@@ -147,7 +147,7 @@ describe('Test: read controller', function () {
     });
 
     it('should only return realtime collections with type = realtime', function () {
-      var requestObject = new RequestObject({type: 'realtime'}, {}, '');
+      var requestObject = new RequestObject({body: {type: 'realtime'}}, {}, '');
 
       return kuzzle.funnel.read.listCollections(requestObject).then(response => {
         should(response.data.type).be.exactly('realtime');

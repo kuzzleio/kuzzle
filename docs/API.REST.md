@@ -986,17 +986,9 @@ Statistics are returned as a JSON-object with each key being the snapshot's time
 Return the complete list of realtime and stored  data collections.  
 The ``type`` argument filters the returned collections. Allowed values: ``all``, ``stored`` and ``realtime`` (default: ``all``).
 
-**URL:** ``http://kuzzle:7512/api/_listCollections``
+**URL:** ``http://kuzzle:7512/api/_listCollections/<type>``
 
-**Method:** ``POST``
-
-**Message:**
-
-```javascript
-{
-  type: 'all|stored|realtime'
-}
-```
+**Method:** ``GET``
 
 **Response:**
 
@@ -1014,7 +1006,8 @@ The ``type`` argument filters the returned collections. Allowed values: ``all``,
     action: 'listCollection',
     controller: 'read',
     requestId: '<unique request identifier>',
-    state: 'done'
+    state: 'done',
+    type: 'collection type'
   }
 }
 ```

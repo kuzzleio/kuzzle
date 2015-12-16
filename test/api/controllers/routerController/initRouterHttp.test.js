@@ -586,7 +586,7 @@ describe('Test: routerController.initRouterHttp', function () {
     request.end();
   });
 
-  it('should create a route for the listCollection command', function (done) {
+  it('should create a default route for the listCollection command', function (done) {
     http.get('http://' + options.hostname + ':' + options.port + '/api/_listCollections', function (response) {
       parseHttpResponse(response)
         .then(result => {
@@ -599,6 +599,18 @@ describe('Test: routerController.initRouterHttp', function () {
     });
   });
 
+  it('should create a GET route for listCollections', function (done) {
+    http.get('http://' + options.hostname + ':' + options.port + '/api/_listCollections/all', function (response) {
+      parseHttpResponse(response)
+        .then(result => {
+          should(response.statusCode).be.exactly(200);
+          should(result.controller).be.exactly('read');
+          should(result.action).be.exactly('listCollections');
+          done();
+        })
+        .catch(error => done(error));
+    });
+  });
 
   it('should create a route for the now command', function (done) {
     http.get('http://' + options.hostname + ':' + options.port + '/api/_now', function (response) {
@@ -680,27 +692,6 @@ describe('Test: routerController.initRouterHttp', function () {
           should(response.statusCode).be.exactly(200);
           should(result.controller).be.exactly('myplugin/foo');
           should(result.action).be.exactly('bar');
-          done();
-        })
-        .catch(function (error) {
-          done(error);
-        });
-    });
-
-    request.write('foobar');
-    request.end();
-  });
-
-  it('should create a POST route for listCollections', function (done) {
-    options.method = 'POST';
-    options.path= '/api/_listCollections';
-
-    request = http.request(options, function (response) {
-      parseHttpResponse(response)
-        .then(function (result) {
-          should(response.statusCode).be.exactly(200);
-          should(result.controller).be.exactly('read');
-          should(result.action).be.exactly('listCollections');
           done();
         })
         .catch(function (error) {

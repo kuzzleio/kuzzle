@@ -1572,7 +1572,9 @@ The ``type`` argument filters the returned collections. Allowed values: ``all``,
 {
   controller: 'read',
   action: 'listCollections',
-  type: 'all|stored|realtime'
+  body: {
+    type: 'all|stored|realtime'
+  }
 }
 ```
 
@@ -1592,6 +1594,7 @@ The ``type`` argument filters the returned collections. Allowed values: ``all``,
     action: 'listCollection',
     controller: 'read',
     state: 'done',
+    type: 'collection type',
     requestId: '<unique request identifier>'
   }
 }

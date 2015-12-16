@@ -255,7 +255,7 @@ ApiRT.prototype.listCollections = function (type) {
     msg = {
       controller: 'read',
       action: 'listCollections',
-      type
+      body: {type}
     };
 
   return this.send(msg);

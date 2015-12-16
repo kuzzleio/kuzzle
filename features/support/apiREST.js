@@ -183,9 +183,13 @@ ApiREST.prototype.getAllStats = function () {
 ApiREST.prototype.listCollections = function (type) {
   var options = {
     url: this.pathApi('_listCollections'),
-    method: 'POST',
-    json: { type }
+    method: 'GET',
+    json: {}
   };
+
+  if (type) {
+    options.url += '/' + type;
+  }
 
   return this.callApi(options);
 };
