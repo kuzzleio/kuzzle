@@ -994,7 +994,7 @@ The ``type`` argument filters the returned collections. Allowed values: ``all``,
 
 ```javascript
 {
-  type: 'all|stored|realtime```
+  type: 'all|stored|realtime'
 }
 ```
 
