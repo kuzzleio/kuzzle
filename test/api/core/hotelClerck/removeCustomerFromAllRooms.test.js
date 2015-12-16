@@ -16,8 +16,6 @@ describe('Test: hotelClerk.removeCustomerFromAllRooms', function () {
     connection = {id: 'connectionid'},
     badConnection = {id: 'badconnectionid'},
     anonymousUser,
-    roomName1 = 'roomName',
-    roomName2 = 'roomName2',
     collection = 'user',
     filter1 = {
         term: {
@@ -32,7 +30,6 @@ describe('Test: hotelClerk.removeCustomerFromAllRooms', function () {
     requestObject1 = new RequestObject({
       controller: 'subscribe',
       action: 'on',
-      requestId: roomName1,
       collection: collection,
       body: filter1
     }),
@@ -70,7 +67,6 @@ describe('Test: hotelClerk.removeCustomerFromAllRooms', function () {
         var requestObject2 = new RequestObject({
           controller: 'subscribe',
           action: 'on',
-          requestId: roomName2,
           collection: collection,
           body: filter2
         });

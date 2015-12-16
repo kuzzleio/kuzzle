@@ -180,11 +180,11 @@ ApiREST.prototype.getAllStats = function () {
   return this.callApi(options);
 };
 
-ApiREST.prototype.listCollections = function () {
+ApiREST.prototype.listCollections = function (type) {
   var options = {
     url: this.pathApi('_listCollections'),
-    method: 'GET',
-    json: true
+    method: 'POST',
+    json: { type }
   };
 
   return this.callApi(options);

@@ -1562,7 +1562,8 @@ Statistics are returned as a JSON-object with each key being the snapshot's time
 
 ### Listing all known data collections
 
-Return the complete list of persisted data collections.
+Return the complete list of realtime and stored  data collections.  
+The ``type`` argument filters the returned collections. Allowed values: ``all``, ``stored`` and ``realtime`` (default: ``all``).
 
 **reply-to queue header:** Required.
 
@@ -1571,7 +1572,8 @@ Return the complete list of persisted data collections.
 ```javascript
 {
   controller: 'read',
-  action: 'listCollections'
+  action: 'listCollections',
+  type: 'all|stored|realtime'
 }
 ```
 

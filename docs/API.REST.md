@@ -983,11 +983,20 @@ Statistics are returned as a JSON-object with each key being the snapshot's time
 
 ### Listing all known data collections
 
-Return the complete list of persisted data collections.
+Return the complete list of realtime and stored  data collections.  
+The ``type`` argument filters the returned collections. Allowed values: ``all``, ``stored`` and ``realtime`` (default: ``all``).
 
 **URL:** ``http://kuzzle:7512/api/_listCollections``
 
-**Method:** ``GET``
+**Method:** ``POST``
+
+**Message:**
+
+```javascript
+{
+  type: 'all|stored|realtime```
+}
+```
 
 **Response:**
 
@@ -1009,6 +1018,12 @@ Return the complete list of persisted data collections.
   }
 }
 ```
+
+Alternative route (returns all known data collections):
+
+**URL:** ``http://kuzzle:7512/api/_listCollections``
+
+**Method:** ``GET``
 
 ---
 

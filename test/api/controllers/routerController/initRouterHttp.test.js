@@ -690,4 +690,25 @@ describe('Test: routerController.initRouterHttp', function () {
     request.write('foobar');
     request.end();
   });
+
+  it('should create a POST route for listCollections', function (done) {
+    options.method = 'POST';
+    options.path= '/api/_listCollections';
+
+    request = http.request(options, function (response) {
+      parseHttpResponse(response)
+        .then(function (result) {
+          should(response.statusCode).be.exactly(200);
+          should(result.controller).be.exactly('read');
+          should(result.action).be.exactly('listCollections');
+          done();
+        })
+        .catch(function (error) {
+          done(error);
+        });
+    });
+
+    request.write('foobar');
+    request.end();
+  });
 });

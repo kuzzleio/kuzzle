@@ -250,11 +250,12 @@ ApiRT.prototype.getAllStats = function () {
   return this.send(msg);
 };
 
-ApiRT.prototype.listCollections = function () {
+ApiRT.prototype.listCollections = function (type) {
   var
     msg = {
       controller: 'read',
-      action: 'listCollections'
+      action: 'listCollections',
+      type
     };
 
   return this.send(msg);
