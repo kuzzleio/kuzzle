@@ -638,17 +638,13 @@ var apiSteps = function () {
     callback('Expected at least 1 statistic frame, found: ' + this.result.statistics);
   });
 
-  this.Then(/^I can ?(not)* find a collection ?(.*)$/, function (not, collection, callback) {
+  this.Then(/^I can ?(not)* find a ?(.*?) collection ?(.*)$/, function (not, type, collection, callback) {
     if (!this.result.collections) {
       return callback('Expected a collections list result, got: ' + this.result);
     }
 
-    if (!Array.isArray(this.result.collections)) {
-      return callback('Expected listCollection response to be an array, got a ' + typeof this.result.collections);
-    }
-
     if (!collection) {
-      if (this.result.collections.length === 0) {
+      if (this.result.collections[type].length === 0) {
         if (not) {
           return callback();
         }
@@ -657,7 +653,7 @@ var apiSteps = function () {
       }
     }
 
-    if (this.result.collections.indexOf(collection) !== -1) {
+    if (this.result.collections[type].indexOf(collection) !== -1) {
       if (not) {
         return callback('Expected collection ' + collection + ' not to appear in the collection list');
       }

@@ -175,13 +175,13 @@ Feature: Test websocket API
   Scenario: list known stored collections
     When I write the document "documentGrace"
     And I list "stored" data collections
-    Then I can find a collection kuzzle-collection-test
+    Then I can find a stored collection kuzzle-collection-test
 
   @usingWebsocket @unsubscribe
   Scenario: list known realtime collections
     Given A room subscription listening to "lastName" having value "Hopper"
     When I list "realtime" data collections
-    Then I can find a collection kuzzle-collection-test
+    Then I can find a realtime collection kuzzle-collection-test
 
   @usingWebsocket
   Scenario: get the Kuzzle timestamp

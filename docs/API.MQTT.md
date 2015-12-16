@@ -1602,12 +1602,20 @@ The ``type`` argument filters the returned collections. Allowed values: ``all``,
   status: 200,                      // Assuming everything went well
   error: null,                      // Assuming everything went well
   result: {
-    collections: [                  // An array of data collection names
-      'collection_1',
-      'collection_2',
-      'collection_...',
-      'collection_n'
-    ],
+    collections: {
+      stored: [                     // An array of stored data collection names
+        'collection_1',
+        'collection_2',
+        'collection_...',
+        'collection_n'
+      ],
+      realtime: [                   // An array of stored data collection names
+        'collection_1',
+        'collection_2',
+        'collection_...',
+        'collection_n'
+      ]
+    },
     action: 'listCollection',
     controller: 'read',
     state: 'done',

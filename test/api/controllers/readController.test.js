@@ -89,7 +89,7 @@ describe('Test: read controller', function () {
     before(function () {
       kuzzle.services.list.readEngine.listCollections = function(requestObject) {
         stored = true;
-        return q(new ResponseObject(requestObject, {collections: ['foo']}));
+        return q(new ResponseObject(requestObject, {collections: {stored: ['foo']}}));
       };
 
       kuzzle.hotelClerk.getRealtimeCollections = function () {
@@ -115,8 +115,11 @@ describe('Test: read controller', function () {
           should(realtime).be.true();
           should(stored).be.true();
           should(result.data.type).be.exactly('all');
-          should(result.data.collections).not.be.undefined().and.be.an.Array();
-          should(result.data.collections.sort()).match(['bar', 'foo']);
+          should(result.data.collections).not.be.undefined().and.be.an.Object();
+          should(result.data.collections.stored).not.be.undefined().and.be.an.Array();
+          should(result.data.collections.realtime).not.be.undefined().and.be.an.Array();
+          should(result.data.collections.stored.sort()).match(['foo']);
+          should(result.data.collections.realtime.sort()).match(['bar', 'foo']);
           done();
         })
         .catch(error => done(error));

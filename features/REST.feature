@@ -94,12 +94,12 @@ Feature: Test REST API
   Scenario: list known stored collections
     When I write the document "documentGrace"
     And I list "stored" data collections
-    Then I can find a collection kuzzle-collection-test
+    Then I can find a stored collection kuzzle-collection-test
 
   @usingREST
   Scenario: list known realtime collections
     When I list "realtime" data collections
-    Then I can not find a collection
+    Then I can not find a realtime collection
 
   @usingREST
   Scenario: get the Kuzzle timestamp
