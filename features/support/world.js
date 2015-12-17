@@ -18,10 +18,6 @@ module.exports = function () {
       city: 'NYC',
       hobby: 'computer'
     };
-    this.documentNonPersistentGrace = {
-      persist: false,
-      body: this.documentGrace
-    };
     this.documentAda = {
       firstName: 'Ada',
       lastName: 'Lovelace',

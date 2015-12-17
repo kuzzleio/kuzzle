@@ -4,6 +4,12 @@ Feature: Test AMQP API
   Using AMQP API
 
   @usingAMQP
+  Scenario: Publish a realtime message
+    When I publish a message
+    Then I should receive a request id
+    Then I'm not able to get the document
+
+  @usingAMQP
   Scenario: Create a new document and get it
     When I write the document
     Then I should receive a document id

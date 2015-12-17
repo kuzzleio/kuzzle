@@ -4,8 +4,8 @@ Feature: Test REST API
   Using REST API
 
   @usingREST
-  Scenario: Create a non-persistent document
-    When I write the document "documentNonPersistentGrace"
+  Scenario: Publish a realtime message
+    When I publish a message
     Then I should receive a request id
     Then I'm not able to get the document
     And I'm not able to get the document in index "index-test-alt"

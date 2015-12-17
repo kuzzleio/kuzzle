@@ -51,7 +51,7 @@ describe('Test: dsl.testFilterRecursively', function () {
 
   it('should return the final result of an AND filter set', function () {
     var
-      returnedBeforeLastTest = true;
+      returnedBeforeLastTest = true,
       filters = {
         foo: {
           fn: function () {
@@ -79,27 +79,33 @@ describe('Test: dsl.testFilterRecursively', function () {
 
   it('should return the final result of an OR filter set', function () {
     var
-      returnedBeforeLastTest = true;
-      filters = {
-        foo: {
-          fn: function () {
-            return false;
+      returnedBeforeLastTest = true,
+      filters = [
+        {
+          foo: {
+            fn: function () {
+              return false;
+            }
           }
         },
-        bar: {
-          fn: function (body) {
-            return body.result;
+        {
+          bar: {
+            fn: function (body) {
+              return body.result;
+            }
           }
         },
-        baz: {
-          fn: function () {
-            returnedBeforeLastTest = false;
-            return false;
+        {
+          baz: {
+            fn: function () {
+              returnedBeforeLastTest = false;
+              return false;
+            }
           }
         }
-      };
+      ];
 
-    should(testFilterRecursively({ result: true}, filters, {}, 'or')).be.true();
+    should(testFilterRecursively({result: true}, filters, {}, 'or')).be.true();
     should(returnedBeforeLastTest).be.true();
 
     should(testFilterRecursively({ result: false}, filters, {}, 'or')).be.false();

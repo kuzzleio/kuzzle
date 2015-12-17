@@ -54,6 +54,7 @@ ApiSTOMP.prototype.unsubscribe = function (room, clientId) {
       clientId: clientId,
       controller: 'subscribe',
       collection: this.world.fakeCollection,
+      index: this.world.fakeIndex,
       action: 'off',
       body: { roomId: room }
     };
@@ -122,7 +123,7 @@ ApiSTOMP.prototype.sendAndListen = function (message) {
   this.send.call(this, message)
     .then(function (response) {
       roomClient.connect(function () {
-        var topic = '/topic/' + response.result.roomId;
+        var topic = '/topic/' + response.result.channel;
 
         self.subscribedRooms[message.clientId][response.result.roomId] = roomClient;
 

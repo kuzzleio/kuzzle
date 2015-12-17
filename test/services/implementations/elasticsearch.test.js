@@ -394,7 +394,7 @@ describe('Test: ElasticSearch service', function () {
   // deleteByQuery
   it('should return an empty result array when no document has been deleted using a filter', function (done) {
     delete requestObject.data.body;
-    requestObject.data.query = { term: {firstName: 'no way any document can be returned with this filter'}};
+    requestObject.data.filter = { term: {firstName: 'no way any document can be returned with this filter'}};
 
     elasticsearch.client.search = function(data, callback) {
       should(data.query).be.exactly(requestObject.data.query);

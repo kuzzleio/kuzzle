@@ -15,14 +15,26 @@ var ApiRT = function () {
 ApiRT.prototype.send = function () {};
 ApiRT.prototype.sendAndListen = function () {};
 
-ApiRT.prototype.create = function (body, persist, index) {
+ApiRT.prototype.create = function (body, index) {
   var
     msg = {
       controller: 'write',
       collection: this.world.fakeCollection,
       index: index || this.world.fakeIndex,
       action: 'create',
-      persist: persist,
+      body: body
+    };
+
+  return this.send(msg);
+};
+
+ApiRT.prototype.publish = function (body, index) {
+  var
+    msg = {
+      controller: 'write',
+      collection: this.world.fakeCollection,
+      index: index || this.world.fakeIndex,
+      action: 'publish',
       body: body
     };
 
@@ -177,6 +189,7 @@ ApiRT.prototype.subscribe = function (filters, client) {
       collection: this.world.fakeCollection,
       index: this.world.fakeIndex,
       action: 'on',
+      users: 'all',
       body: null
     };
 

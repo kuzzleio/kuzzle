@@ -19,9 +19,11 @@ describe('Test: subscribe controller', function () {
   var
     kuzzle,
     anonymousUser,
-    requestObject = new RequestObject({}, {}, 'unit-test');
+    context,
+    requestObject = new RequestObject({index: 'test'}, {}, 'unit-test');
 
   before(function (done) {
+    context = {};
     kuzzle = new Kuzzle();
     kuzzle.log = new (winston.Logger)({transports: [new (winston.transports.Console)({level: 'silent'})]});
     kuzzle.start(params, {dummy: true})
@@ -42,14 +44,13 @@ describe('Test: subscribe controller', function () {
       });
   });
 
-  beforeEach(() =>  requestObject = new RequestObject({controller: 'subscribe'}, {}, 'unit-test'));
+  beforeEach(() =>  requestObject = new RequestObject({index: 'test', collection: 'collection', controller: 'subscribe'}, {}, 'unit-test'));
 
-  it('should forward new subscriptions to the hotelClerk core component', function () {
+  it('should forward new subscriptions to the hotelClerk core component', function (done) {
     var foo = kuzzle.funnel.subscribe.on(requestObject, {
-        connection: {id: 'foobar'},
-        user: anonymousUser
-      }
-    );
+      connection: {id: 'foobar'},
+      user: anonymousUser
+    });
 
     return should(foo).be.fulfilled();
   });
@@ -59,12 +60,11 @@ describe('Test: subscribe controller', function () {
       newUser = 'Carmen Sandiego',
       result;
 
-      requestObject.data.body = { roomId: 'foobar' };
-      result = kuzzle.funnel.subscribe.off(requestObject, {
-          connection: {id: newUser },
-          user: anonymousUser
-        }
-      );
+    requestObject.data.body = { roomId: 'foobar' };
+    result = kuzzle.funnel.subscribe.off(requestObject, {
+      connection: {id: newUser },
+      user: anonymousUser
+    });
 
     return should(result).be.rejectedWith(NotFoundError, { message: 'The user with connection ' + newUser + ' doesn\'t exist' });
   });
@@ -76,35 +76,26 @@ describe('Test: subscribe controller', function () {
     return should(foo).be.rejectedWith(BadRequestError, { message: 'The room Id is mandatory to count subscriptions' });
   });
 
-  it('should trigger a hook on a join call', function (done) {
-    this.timeout(50);
+  describe('#list', function () {
+    it('should trigger a hook and return a promise', function (done) {
+      this.timeout(50);
 
-    kuzzle.once('subscription:join', function (obj) {
-      try {
-        should(obj).be.exactly(requestObject);
-        done();
-      }
-      catch (e) {
-        done(e);
-      }
+      kuzzle.once('subscription:list', () => done());
+      should(kuzzle.funnel.subscribe.list(requestObject, {
+        connection: {id: 'foobar'},
+        user: anonymousUser
+      })).be.a.Promise();
     });
-
-    kuzzle.funnel.subscribe.join(requestObject);
   });
 
-  it('should trigger a hook on a list call', function (done) {
-    this.timeout(50);
-
-    kuzzle.once('subscription:list', function (obj) {
-      try {
-        should(obj).be.exactly(requestObject);
-        done();
-      }
-      catch (e) {
-        done(e);
-      }
+  describe('#join', function () {
+    it('should trigger a hook and return a promise', function (done) {
+      this.timeout(50);
+      kuzzle.once('subscription:join', () => done());
+      should(kuzzle.funnel.subscribe.join(requestObject, {
+        connection: {id: 'foobar'},
+        user: anonymousUser
+      })).be.a.Promise();
     });
-
-    kuzzle.funnel.subscribe.list(requestObject);
   });
 });

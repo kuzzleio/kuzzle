@@ -116,25 +116,24 @@ describe('Test: notifier.send', function () {
     should(headOK).be.true();
   });
 
-  it('should broadcast the response if no connection is provided', function () {
+  it('should broadcast to channels if no connection is provided', function () {
     var
-      responded = false,
       room = 'foo',
-      response = 'bar';
+      response = 'bar',
+      channel = 'stubChannel';
 
     mockupio.init();
-
-    kuzzle.services.list.mqBroker.addExchange = function (room, msg) {
-      should(room).be.exactly(room);
+    kuzzle.hotelClerk.getChannels = function () { return [channel]; };
+    kuzzle.services.list.mqBroker.addExchange = function (replyTopic, msg) {
+      should(replyTopic).be.exactly(channel);
       should(msg).be.exactly(response);
-      responded = true;
     };
 
     (Notifier.__get__('send')).call(kuzzle, room, response);
-    should(responded).be.true();
+
     should(mockupio.emitted).be.true();
-    should(mockupio.id).not.be.undefined();
-    should(mockupio.room).be.exactly(room);
+    should(mockupio.id).be.exactly(channel);
+    should(mockupio.room).be.exactly(channel);
     should(mockupio.response).be.exactly(response);
   });
 });

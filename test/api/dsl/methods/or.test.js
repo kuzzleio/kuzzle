@@ -1,7 +1,8 @@
 var
   should = require('should'),
   rewire = require('rewire'),
-  methods = rewire('../../../../lib/api/dsl/methods');
+  methods = rewire('../../../../lib/api/dsl/methods'),
+  BadRequestError = require.main.require('lib/api/core/errors/badRequestError');
 
 require('should-promised');
 
@@ -114,5 +115,13 @@ describe('Test or method', function () {
     })(function () {
       return should(methods.or(roomId, index, collection, filter)).be.rejectedWith('rejected');
     });
+  });
+
+  it('should reject an error if the filter OR is not an array', function () {
+    return should(methods.or(roomId, collection, {})).be.rejectedWith(BadRequestError);
+  });
+
+  it('should reject an error if the filter OR is an array with empty filters', function () {
+    return should(methods.or(roomId, collection, [{}])).be.rejectedWith(BadRequestError);
   });
 });

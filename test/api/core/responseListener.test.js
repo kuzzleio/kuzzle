@@ -42,34 +42,6 @@ describe('Test: responseListener', function () {
       });
   });
 
-  it('should not wait for a response when the persist flag is false', function () {
-    var responseListener = new ResponseListener(kuzzle, kuzzle.config.queues.workerWriteResponseQueue);
-
-    requestObject.persist = false;
-
-    controllers.forEach(function (controller) {
-      requestObject.controller = controller;
-      requestObject.requestId = uuid.v1();
-      responseListener.add(requestObject, {});
-    });
-
-    should(Object.keys(responseListener.waitingQueries).length).be.exactly(0);
-  });
-
-  it('should wait for a response only for requests involving a worker', function () {
-    var responseListener = new ResponseListener(kuzzle, kuzzle.config.queues.workerWriteResponseQueue);
-
-    requestObject.persist = true;
-
-    controllers.forEach(function (controller) {
-      requestObject.controller = controller;
-      requestObject.requestId = uuid.v1();
-      responseListener.add(requestObject, {});
-    });
-
-    should(Object.keys(responseListener.waitingQueries).length).be.exactly(['admin', 'bulk', 'write'].length);
-  });
-
   it('should register only once, when the component is been instantiated', function () {
     var responseListener;
 
