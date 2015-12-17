@@ -3,7 +3,7 @@
 Plugins are external components allowing to execute functions on specific event triggering.  
 There are several types of plugins:
 
-* Hook events: just listen to events and perform other actions (ie: a log plugin). They do not respond anything directly, they just listen.
+* Hook events: just listen to events and perform other actions (ie: a log plugin). They do not respond to anything directly, they just listen.
 * Pipe events: perform an action and return something. Kuzzle is waiting that all pipe events are performed before continuing.
 * Controllers: add a specific controller to Kuzzle.
 
@@ -38,7 +38,7 @@ A plugin configuration can have attributes:
 
 ## Logger
 
-By default, the logger plugin is enabled and configured to use the service `winston` (refer to the kuzzle-plugin-logger documentation for more information).  
+By default, the logger plugin is enabled and configured to use the service `winston` (refer to kuzzle-plugin-logger documentation for more information).  
 
 # How to create a plugin
 
@@ -64,7 +64,7 @@ Your main javascript file in your plugin must have a function `init` and expose 
 
 ### Hooks
 
-Hook events are triggered and are no blocking functions. Typically, if we want to log something, we will use hook events.
+Hook events are triggered and are not blocking functions. Typically, if we want to log something, we will use hook events.
 
 ```js
 // Somewhere in Kuzzle
@@ -96,7 +96,7 @@ module.exports = function () {
 
 ### Pipes
 
-When an event pipes is triggered, we are waiting for all functions attached on this event. A function attached on a pipe event has access to the data and can even change them.
+When an event pipe is triggered, we are waiting for all the functions attached on this event. A function attached on a pipe event has access to the data and can even change them.
 A function must take in its last parameter a callback. This callback must be called at the end of the function with `callback(error, object)`:
 
 * error: if there is an error during the function, this parameter must be set. If everything is ok, you can call the function with null
@@ -143,7 +143,7 @@ In this example, in Kuzzle, the `modifiedRequestObject` has now a `createdAt` at
 ### Controllers
 
 A plugin controller is a plugin that adds some controller actions into Kuzzle.
-It must expose to Kuzzle :
+It must expose to Kuzzle:
 
 __A `controllers` object listing one or more controllers:__
 
