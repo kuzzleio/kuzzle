@@ -33,11 +33,11 @@ before(function (done) {
   mockCacheEngine = {
     get: function (key) {
       if (key === userRepository.collection + '/userInCache') {
-        return Promise.resolve(userInCache);
+        return Promise.resolve(JSON.stringify(userInCache));
       }
       return Promise.resolve(null);
     },
-    volatileSet: function (key, value, ttl) { forwardedResult = {key: key, value: value, ttl: ttl }; },
+    volatileSet: function (key, value, ttl) { forwardedResult = {key: key, value: JSON.parse(value), ttl: ttl }; },
     expire: function (key, ttl) { forwardedResult = {key: key, ttl: ttl}; }
   };
   mockReadEngine = {
