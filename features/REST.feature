@@ -103,3 +103,10 @@ Feature: Test REST API
   Scenario: get the Kuzzle timestamp
     When I get the server timestamp
     Then I can read the timestamp
+
+  @usingREST
+  Scenario: create additional index
+    When I create an index named "my-new-index"
+    Then I'm able to find the index named "my-new-index" in index list
+    Then I'm not able to find the index named "my-undefined-index" in index list
+    Then I'm able to delete the index named "my-new-index"

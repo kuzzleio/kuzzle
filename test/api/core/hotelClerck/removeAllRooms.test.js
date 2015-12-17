@@ -58,6 +58,19 @@ describe('Test: hotelClerk.removeRooms', function () {
       });
   });
 
+  it('should reject an error if no index provided', function () {
+    var requestObject = new RequestObject({
+      controller: 'admin',
+      action: 'removeRooms',
+      requestId: roomName,
+      index: undefined,
+      collection: collection1,
+      body: {}
+    });
+
+    return should(kuzzle.hotelClerk.removeRooms(requestObject)).rejectedWith(BadRequestError);
+  });
+
   it('should reject an error if no collection provided', function () {
     var requestObject = new RequestObject({
       controller: 'admin',
@@ -71,7 +84,7 @@ describe('Test: hotelClerk.removeRooms', function () {
     return should(kuzzle.hotelClerk.removeRooms(requestObject)).rejectedWith(BadRequestError);
   });
 
-  it('should reject an error if there is no subscription on this collection', function () {
+  it('should reject an error if there is no subscription on this index', function () {
     var requestObject = new RequestObject({
       controller: 'admin',
       action: 'removeRooms',
@@ -82,6 +95,32 @@ describe('Test: hotelClerk.removeRooms', function () {
     });
 
     return should(kuzzle.hotelClerk.removeRooms(requestObject)).rejectedWith(NotFoundError);
+  });
+
+  it('should reject an error if there is no subscription on this collection', function () {
+
+    var
+      requestObjectSubscribe = new RequestObject({
+        controller: 'subscribe',
+        action: 'on',
+        requestId: roomName,
+        index: index,
+        collection: collection1,
+        body: {}
+      }),
+      requestObject = new RequestObject({
+        controller: 'admin',
+        action: 'removeRooms',
+        requestId: roomName,
+        index: index,
+        collection: collection2,
+        body: {}
+      });
+
+    return kuzzle.hotelClerk.addSubscription(requestObjectSubscribe, context)
+      .then(() => {
+        should(kuzzle.hotelClerk.removeRooms(requestObject)).rejectedWith(BadRequestError);
+      });
   });
 
   it('should remove room in global subscription for provided collection', function () {
@@ -301,7 +340,6 @@ describe('Test: hotelClerk.removeRooms', function () {
         return kuzzle.hotelClerk.removeRooms(requestObjectRemove);
       })
       .then(() => {
-        console.log(kuzzle.hotelClerk.rooms);
         should(Object.keys(kuzzle.hotelClerk.rooms).length).be.exactly(1);
         should(kuzzle.hotelClerk.rooms[roomName]).be.undefined();
       });
@@ -340,11 +378,9 @@ describe('Test: hotelClerk.removeRooms', function () {
         return kuzzle.hotelClerk.addSubscription(requestObjectSubscribe2, context);
       })
       .then(() => {
-        console.log(kuzzle.hotelClerk.rooms);
         return kuzzle.hotelClerk.removeRooms(requestObjectRemove);
       })
       .then((responseObject) => {
-        console.log(responseObject);
         should(responseObject.status).be.exactly(206);
         should(responseObject.error).be.not.null();
         should(responseObject.error.count).be.exactly(1);

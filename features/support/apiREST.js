@@ -214,6 +214,16 @@ ApiREST.prototype.truncateCollection = function (index) {
   return this.callApi(options);
 };
 
+ApiREST.prototype.listIndexes = function () {
+  var options = {
+    url: this.pathApi('_listIndexes'),
+    method: 'GET',
+    json: true
+  };
+
+  return this.callApi(options);
+};
+
 ApiREST.prototype.deleteIndexes = function () {
   var options = {
     url: this.pathApi('_deleteIndexes'),

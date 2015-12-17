@@ -318,6 +318,16 @@ ApiRT.prototype.deleteIndexes = function () {
   return this.send(msg);
 };
 
+ApiRT.prototype.listIndexes = function () {
+  var
+    msg = {
+      controller: 'read',
+      action: 'listIndexes'
+    };
+
+  return this.send(msg);
+};
+
 ApiRT.prototype.createIndex = function (index) {
   var
     msg = {

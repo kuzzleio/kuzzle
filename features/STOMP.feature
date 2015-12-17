@@ -200,3 +200,10 @@ Feature: Test STOMP API
     When I remove the first room
     And I get the list subscriptions
     Then In my list there is a collection "kuzzle-collection-test" with 1 room and 1 subscriber
+
+  @usingSTOMP
+  Scenario: create additional index
+    When I create an index named "my-new-index"
+    Then I'm able to find the index named "my-new-index" in index list
+    Then I'm not able to find the index named "my-undefined-index" in index list
+    Then I'm able to delete the index named "my-new-index"
