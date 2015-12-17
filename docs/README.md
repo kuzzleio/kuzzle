@@ -4,13 +4,16 @@ see [installation documentation](installation.md)
 
 # API Specifications
 
-Kuzzle supports a variety of communication protocols. You'll find here the specifications of each one of these API:
+Kuzzle supports a variety of communication protocols. 
+For the time being, Kuzzle implements the following protocols:
 
-* [AMQP](./API.AMQP.md)
-* [MQTT](./API.MQTT.md)
-* [REST](./API.REST.md)
-* [STOMP](./API.STOMP.md)
-* [Web Socket](./API.WebSocket.md)
+* AMQP
+* MQTT
+* REST
+* STOMP
+* Web Socket
+
+[Browse Kuzzle's API documentation](http://kuzzleio.github.io/kuzzle-api-documentation).
 
 For an overview about the filtering syntax, check the [Filters](filters.md) documentation.
 
