@@ -46,7 +46,7 @@ describe('Test: subscribe controller', function () {
 
   beforeEach(() =>  requestObject = new RequestObject({index: 'test', collection: 'collection', controller: 'subscribe'}, {}, 'unit-test'));
 
-  it('should forward new subscriptions to the hotelClerk core component', function (done) {
+  it('should forward new subscriptions to the hotelClerk core component', function () {
     var foo = kuzzle.funnel.subscribe.on(requestObject, {
       connection: {id: 'foobar'},
       user: anonymousUser

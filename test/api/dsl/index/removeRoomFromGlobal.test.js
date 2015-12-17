@@ -13,7 +13,7 @@ describe('Test: dsl.removeRoomFromGlobal', function () {
   });
 
   it('should do nothing if the collection does not exist', function () {
-    var room = { collection: 'foobar' };
+    var room = { index: 'test', collection: 'foobar' };
 
     should(removeRoomFromGlobal.call(dsl, room)).be.false();
 
@@ -40,6 +40,6 @@ describe('Test: dsl.removeRoomFromGlobal', function () {
     dsl.addCollectionSubscription(room.id, room.index, room.collection);
     removeRoomFromGlobal.call(dsl, room);
 
-    should(dsl.filtersTree.test.foo).be.undefined();
+    should(dsl.filtersTree.test).be.undefined();
   });
 });
