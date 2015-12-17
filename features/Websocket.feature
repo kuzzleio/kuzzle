@@ -192,3 +192,13 @@ Feature: Test websocket API
     Given A room subscription listening to "lastName" having value "Hopper"
     And I get the list subscriptions
     Then In my list there is a collection "kuzzle-collection-test" with 1 room and 1 subscriber
+
+  @usingWebsocket @unsubscribe
+  Scenario: remove a specific room in subscriptions
+    Given A room subscription listening to "lastName" having value "Hopper"
+    Given A room subscription listening to "firstName" having value "Grace"
+    And I get the list subscriptions
+    Then In my list there is a collection "kuzzle-collection-test" with 2 room and 2 subscriber
+    When I remove the first room
+    And I get the list subscriptions
+    Then In my list there is a collection "kuzzle-collection-test" with 1 room and 1 subscriber

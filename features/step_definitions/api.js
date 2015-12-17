@@ -83,6 +83,34 @@ var apiSteps = function () {
       });
   });
 
+  /**
+   * Remove room subscription
+   */
+  this.Then(/^I remove the first room(?: for socket "([^"]*)")?/, function (socketName, callback) {
+    var rooms;
+
+    if (socketName) {
+      rooms = Object.keys(this.api.subscribedRooms[socketName]);
+    }
+    else {
+      socketName = Object.keys(this.api.subscribedRooms)[0];
+      rooms = Object.keys(this.api.subscribedRooms[socketName]);
+    }
+
+    if (rooms.length === 0) {
+      callback(new Error('Cannot unsubscribe: no subscribed rooms'));
+      return false;
+    }
+
+    this.api.removeRooms([rooms[0]])
+      .then(function () {
+        callback();
+      })
+      .catch(function (error) {
+        callback(new Error(error));
+      });
+  });
+
   /** READ **/
   this.Then(/^I'm ?(not)* able to get the document(?: in index "([^"]*)")?$/, function (not, index, callback) {
     var main = function (callbackAsync) {

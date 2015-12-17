@@ -12,13 +12,17 @@ describe('Test: dsl.getFiltersPathsRecursively', function () {
       filter = {
         and: {
           'message.subject.Potayto': undefined,
-          or: {
-            and: {
-              'message.subject.Potahto': undefined,
-              'message.subject.MisterSandman': undefined
+          or: [
+            {
+              and: {
+                'message.subject.Potahto': undefined,
+                'message.subject.MisterSandman': undefined
+              }
             },
-            'message.subject.BringUsADream': undefined
-          }
+            {
+              'message.subject.BringUsADream': undefined
+            }
+          ]
         }
       },
       result = getFiltersPathsRecursively(filter);

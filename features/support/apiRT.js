@@ -340,4 +340,17 @@ ApiRT.prototype.deleteIndex = function (index) {
   return this.send(msg);
 };
 
+ApiRT.prototype.removeRooms = function (rooms, index) {
+  var
+    msg = {
+      controller: 'admin',
+      action: 'removeRooms',
+      collection: this.world.fakeCollection,
+      index: index || this.world.fakeIndex,
+      body: {rooms: rooms}
+    };
+
+  return this.send(msg);
+};
+
 module.exports = ApiRT;
