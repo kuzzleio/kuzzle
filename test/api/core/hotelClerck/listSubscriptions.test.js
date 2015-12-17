@@ -67,14 +67,16 @@ describe('Test: hotelClerk.addSubscription', function () {
   });
 
   it('should return a correct list according to subscribe on filter', function () {
-    var requestObject = new RequestObject({
-      controller: 'subscribe',
-      action: 'on',
-      requestId: roomName,
-      index: index,
-      collection: collection,
-      body: filter
-    });
+    var
+      roomName = 'd0d7627d6fedf3b8719a1602032f7117',
+      requestObject = new RequestObject({
+        controller: 'subscribe',
+        action: 'on',
+        requestId: roomName,
+        index: index,
+        collection: collection,
+        body: filter
+      });
 
     return kuzzle.hotelClerk.addSubscription(requestObject, context)
       .then(() => {
@@ -92,13 +94,14 @@ describe('Test: hotelClerk.addSubscription', function () {
         should(responseObject.data.body[index][collection]).not.have.property('totalGlobals');
 
         // 3e0e837b447bf16b2251025ad36f39ed -> room id generated with collection and filter
-        should(responseObject.data.body[index][collection]).have.property('d0d7627d6fedf3b8719a1602032f7117');
-        should(responseObject.data.body[index][collection]['d0d7627d6fedf3b8719a1602032f7117']).be.equal(1);
+        should(responseObject.data.body[index][collection]).have.property(roomName);
+        should(responseObject.data.body[index][collection][roomName]).be.equal(1);
       });
   });
 
    it('should return a correct list according to subscribe on filter and user right', function () {
     var
+      roomName = 'd0d7627d6fedf3b8719a1602032f7117',
       requestObjectUser = new RequestObject({
         controller: 'subscribe',
         action: 'on',
@@ -144,8 +147,8 @@ describe('Test: hotelClerk.addSubscription', function () {
         should(responseObject.data.body[index]).have.property(collection);
 
         // 3e0e837b447bf16b2251025ad36f39ed -> room id generated with collection and filter
-        should(responseObject.data.body[index][collection]).have.property('d0d7627d6fedf3b8719a1602032f7117');
-        should(responseObject.data.body[index][collection]['d0d7627d6fedf3b8719a1602032f7117']).be.equal(1);
+        should(responseObject.data.body[index][collection]).have.property(roomName);
+        should(responseObject.data.body[index][collection][roomName]).be.equal(1);
 
         // should not return the collection foo
         should(responseObject.data.body[index]).not.have.property('foo');
