@@ -9,9 +9,8 @@
     }
   },
   "kuzzle-plugin-basicauth": {
-    "version": "0.0.1",
+    "url": "git+https://github.com/kuzzleio/kuzzle-plugin-basicauth.git",
     "activated": true,
-    "defaultConfig": {
-    }
+    "defaultConfig": {}
   }
 }
