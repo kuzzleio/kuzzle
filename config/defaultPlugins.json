@@ -8,7 +8,7 @@
       "addDate": true
     }
   },
-  "kuzzle-plugin-passportjs": {
+  "kuzzle-plugin-basicauth": {
     "version": "0.0.1",
     "activated": true,
     "defaultConfig": {
