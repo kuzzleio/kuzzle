@@ -40,6 +40,10 @@ A plugin configuration can have attributes:
 
 By default, the logger plugin is enabled and configured to use the service `winston` (refer to the kuzzle-plugin-logger documentation for more information).  
 
+## Basic Auth
+
+By default, the "basic auth" plugin is enabled to authenticate users with their username/password (refer to the kuzzle-plugin-basicauth documentation for more information).
+
 # How to create a plugin
 
 A plugin is a Javascript module that can be installed with NPM or via a public GIT repository.
