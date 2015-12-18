@@ -6,7 +6,9 @@ var
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   BadRequestError = require.main.require('lib/api/core/errors/badRequestError'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
-  ResponseObject = require.main.require('lib/api/core/models/responseObject');
+  ResponseObject = require.main.require('lib/api/core/models/responseObject'),
+  Profile = require.main.require('lib/api/core/models/security/profile'),
+  Role = require.main.require('lib/api/core/models/security/role');
 
 require('should-promised');
 
@@ -18,13 +20,10 @@ describe('Test: read controller', function () {
   var
     kuzzle;
 
-  before(function (done) {
+  before(function () {
     kuzzle = new Kuzzle();
     kuzzle.log = new (winston.Logger)({transports: [new (winston.transports.Console)({level: 'silent'})]});
-    kuzzle.start(params, {dummy: true})
-      .then(function () {
-        done();
-      });
+    return kuzzle.start(params, {dummy: true});
   });
 
   describe('#search', function () {
@@ -84,7 +83,11 @@ describe('Test: read controller', function () {
   describe('#listCollections', function () {
     var
       realtime,
-      stored;
+      stored,
+      context = {
+        connection: {id: 'connectionid'},
+        user: null
+      };
 
     before(function () {
       kuzzle.services.list.readEngine.listCollections = function(requestObject) {
@@ -96,6 +99,20 @@ describe('Test: read controller', function () {
         realtime = true;
         return ['foo', 'bar'];
       };
+
+      kuzzle.repositories.role.roles.guest = new Role();
+
+      return kuzzle.repositories.role.hydrate(kuzzle.repositories.role.roles.guest, params.userRoles.guest)
+        .then(() => {
+          kuzzle.repositories.profile.profiles.anonymous = new Profile();
+          return kuzzle.repositories.profile.hydrate(kuzzle.repositories.profile.profiles.anonymous, params.userProfiles.anonymous);
+        })
+        .then(() => {
+          return kuzzle.repositories.user.anonymous();
+        })
+        .then(user => {
+          context.user = user;
+        });
     });
 
     beforeEach(function () {
@@ -106,7 +123,7 @@ describe('Test: read controller', function () {
     it('should resolve to a full collections list', function (done) {
       var
         requestObject = new RequestObject({}, {}, ''),
-        r = kuzzle.funnel.read.listCollections(requestObject);
+        r = kuzzle.funnel.read.listCollections(requestObject, context);
 
       should(r).be.a.Promise();
 
@@ -130,19 +147,19 @@ describe('Test: read controller', function () {
 
       this.timeout(50);
       kuzzle.once('data:listCollections', () => done());
-      kuzzle.funnel.read.listCollections(requestObject);
+      kuzzle.funnel.read.listCollections(requestObject, context);
     });
 
     it('should reject the request if an invalid "type" argument is provided', function () {
       var requestObject = new RequestObject({body: {type: 'foo'}}, {}, '');
 
-      return should(kuzzle.funnel.read.listCollections(requestObject)).be.rejectedWith(BadRequestError);
+      return should(kuzzle.funnel.read.listCollections(requestObject, context)).be.rejectedWith(BadRequestError);
     });
 
     it('should only return stored collections with type = stored', function () {
       var requestObject = new RequestObject({body: {type: 'stored'}}, {}, '');
 
-      return kuzzle.funnel.read.listCollections(requestObject).then(response => {
+      return kuzzle.funnel.read.listCollections(requestObject, context).then(response => {
         should(response.data.type).be.exactly('stored');
         should(realtime).be.false();
         should(stored).be.true();
@@ -152,7 +169,7 @@ describe('Test: read controller', function () {
     it('should only return realtime collections with type = realtime', function () {
       var requestObject = new RequestObject({body: {type: 'realtime'}}, {}, '');
 
-      return kuzzle.funnel.read.listCollections(requestObject).then(response => {
+      return kuzzle.funnel.read.listCollections(requestObject, context).then(response => {
         should(response.data.type).be.exactly('realtime');
         should(realtime).be.true();
         should(stored).be.false();
