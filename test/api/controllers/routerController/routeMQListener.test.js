@@ -218,27 +218,6 @@ describe('Test: routerController.routeMQListener', function () {
     }, 5);
   });
 
-  it('should not notify if the response is empty', function (done) {
-    var
-      listener = kuzzle.services.list.mqBroker.listeners[router.routename].callback,
-      body = { body: { resolve: true, empty: true }, clientId: 'foobar'};
-
-    mqMessage.content = JSON.stringify(body);
-    notifyStatus = 'expected';
-
-    listener(mqMessage);
-
-    setTimeout(function () {
-      try {
-        should(notifyStatus).be.exactly('expected');
-        done();
-      }
-      catch (e) {
-        done(e);
-      }
-    }, timeout);
-  });
-
   it('should initialize an AMQ connection type for AMQP/STOMP messages', function (done) {
     var
       listener = kuzzle.services.list.mqBroker.listeners[router.routename].callback,

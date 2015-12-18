@@ -46,7 +46,6 @@ describe('Test: responseListener', function () {
     var responseListener;
 
     registered = 0;
-    requestObject.persist = true;
 
     responseListener = new ResponseListener(kuzzle, kuzzle.config.queues.workerWriteResponseQueue);
     controllers.forEach(function (controller) {
@@ -62,27 +61,18 @@ describe('Test: responseListener', function () {
     var
       responseListener = new ResponseListener(kuzzle, kuzzle.config.queues.workerWriteResponseQueue),
       responseObject,
-      notified = {};
+      promise;
 
-    requestObject.persist = true;
     requestObject.controller = 'write';
     requestObject.requestId = uuid.v1();
-    responseListener.add(requestObject, { id: 'foobar'});
-
-    kuzzle.notifier.notify = function (requestId, response, connection) {
-      notified = {
-        requestId: requestId,
-        id: connection.id
-      };
-    };
+    promise = responseListener.add(requestObject, { id: 'foobar'});
 
     responseObject = new ResponseObject(requestObject);
 
+
     listenCallback.call(kuzzle, responseObject);
 
-    should(notified.requestId).be.exactly(requestObject.requestId);
-    should(notified.id).be.exactly('foobar');
-    should(Object.keys(responseListener.waitingQueries).length).be.exactly(0);
+    return should(promise).be.fulfilledWith(responseObject);
   });
 
 
