@@ -162,9 +162,11 @@ var apiSteps = function () {
         callback(new Error(err));
         return false;
       }
+
       callback();
     });
   });
+
 
   this.Then(/^my document has the value "([^"]*)" in field "([^"]*)"$/, function (value, field, callback) {
     var main = function (callbackAsync) {
@@ -268,6 +270,7 @@ var apiSteps = function () {
       callback();
     });
   });
+
 
   this.Then(/^I can retrieve actions from bulk import$/, function (callback) {
     var main = function (callbackAsync) {
@@ -508,8 +511,8 @@ var apiSteps = function () {
       });
   });
 
-  this.When(/^I list data collections(?: in index "([^"]*)")?$/, function (index, callback) {
-    this.api.listCollections(index)
+  this.When(/^I list "([^"]*)" data collections(?: in index "([^"]*)")?$/, function (type, index, callback) {
+    this.api.listCollections(index, type)
       .then(response => {
         if (response.error) {
           callback(new Error(response.error.message));
@@ -632,12 +635,26 @@ var apiSteps = function () {
     callback('Expected at least 1 statistic frame, found: ' + this.result.statistics);
   });
 
-  this.Then(/^I can find a collection "([^"]*)"$/, function (collection, callback) {
+  this.Then(/^I can ?(not)* find a ?(.*?) collection ?(.*)$/, function (not, type, collection, callback) {
     if (!this.result.collections) {
       return callback('Expected a collections list result, got: ' + this.result);
     }
 
-    if (Array.isArray(this.result.collections) && this.result.collections.indexOf(collection) !== -1) {
+    if (!collection) {
+      if (this.result.collections[type].length === 0) {
+        if (not) {
+          return callback();
+        }
+
+        return callback('Collection list is empty, expected collections to be listed');
+      }
+    }
+
+    if (this.result.collections[type].indexOf(collection) !== -1) {
+      if (not) {
+        return callback('Expected collection ' + collection + ' not to appear in the collection list');
+      }
+
       return callback();
     }
 

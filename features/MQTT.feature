@@ -175,10 +175,16 @@ Feature: Test MQTT API
     Then I get at least 1 statistic frame
 
   @usingMQTT
-  Scenario: list known collections
+  Scenario: list known stored collections
     When I write the document "documentGrace"
-    And I list data collections
-    Then I can find a collection "kuzzle-collection-test"
+    And I list "stored" data collections
+    Then I can find a stored collection kuzzle-collection-test
+
+  @usingMQTT @unsubscribe
+  Scenario: list known realtime collections
+    Given A room subscription listening to "lastName" having value "Hopper"
+    When I list "realtime" data collections
+    Then I can find a realtime collection kuzzle-collection-test
 
   @usingMQTT
   Scenario: get the Kuzzle timestamp
