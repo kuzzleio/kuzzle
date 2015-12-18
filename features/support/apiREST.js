@@ -13,7 +13,7 @@ ApiREST.prototype.init = function (world) {
 ApiREST.prototype.disconnect = function () {};
 
 ApiREST.prototype.pathApi = function (path) {
-  return config.url + '/api/v1/' + path;
+  return config.url + '/api/v1.0/' + path;
 };
 
 ApiREST.prototype.callApi = function (options) {
