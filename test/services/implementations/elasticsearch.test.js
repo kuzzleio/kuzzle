@@ -975,8 +975,11 @@ describe('Test: ElasticSearch service', function () {
   });
 
   it('should return a rejected promise if the reset fails while deleting all indexes', function () {
-    elasticsearch.client.cat.indices = function (data) {
-      return Promise.resolve('      \n %kuzzle      \n ' + index + ' \n  ');
+    elasticsearch.client.indices.getMapping = function (data) {
+      var indexes = {};
+      indexes['%kuzzle'] = [];
+      indexes[index] = [];
+      return Promise.resolve(indexes);
     };
     elasticsearch.client.indices.delete = function () { return Promise.reject(new Error('rejected')); };
 
@@ -984,8 +987,10 @@ describe('Test: ElasticSearch service', function () {
   });
 
   it('should not delete any index if only left %kuzzle internal index', function () {
-    elasticsearch.client.cat.indices = function (data) {
-      return Promise.resolve('      \n %kuzzle    \n  ');
+    elasticsearch.client.indices.getMapping = function (data) {
+      var indexes = {};
+      indexes['%kuzzle'] = [];
+      return Promise.resolve(indexes);
     };
     elasticsearch.client.indices.delete = function () { return Promise.reject(new Error('rejected')); };
 
@@ -1051,9 +1056,10 @@ describe('Test: ElasticSearch service', function () {
   });
 
   it('should allow listing indexes', function (done) {
-
-    elasticsearch.client.cat.indices = function (data) {
-      return Promise.resolve('      \n ' + index + ' \n  ');
+    elasticsearch.client.indices.getMapping = function (data) {
+      var indexes = {};
+      indexes[index] = [];
+      return Promise.resolve(indexes);
     };
 
     elasticsearch.listIndexes(requestObject)
@@ -1065,7 +1071,7 @@ describe('Test: ElasticSearch service', function () {
   });
 
   it('should reject the listIndexes promise if elasticsearch throws an error', function () {
-    elasticsearch.client.cat.indices = function(data) {
+    elasticsearch.client.indices.getMapping = function (data) {
       return Promise.reject(new Error());
     };
 
