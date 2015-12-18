@@ -58,12 +58,13 @@ describe('Test: hotelClerk.countSubscription', function () {
       aContext,
       anotherContext,
       subscribeRequest = new RequestObject({
-          controller: 'subscribe',
-          action: 'on',
-          requestId: 'foo',
-          collection: 'bar',
-          body: { term: { foo: 'bar' } }
-        }),
+        controller: 'subscribe',
+        action: 'on',
+        requestId: 'foo',
+        collection: 'bar',
+        index: 'test',
+        body: { term: { foo: 'bar' } }
+      }),
       countRequest = new RequestObject({ body: {}});
 
     aContext = {

@@ -3,6 +3,8 @@ module.exports = function () {
     this.api = null;
 
     // Fake values for test
+    this.fakeIndex = 'index-test';
+    this.fakeAltIndex = 'index-test-alt';
     this.fakeCollection = 'kuzzle-collection-test';
 
     this.documentGrace = {
@@ -37,13 +39,13 @@ module.exports = function () {
       { delete: {_id: 2 } }
     ];
     this.globalBulk = [
-      { index:  {_id: 1, _type: 'kuzzle-collection-test' } },
+      { index:  {_id: 1, _type: this.fakeCollection, _index: this.fakeIndex } },
       { title: 'foo' },
-      { index:  {_id: 2, _type: 'kuzzle-collection-test' } },
+      { index:  {_id: 2, _type: this.fakeCollection, _index: this.fakeIndex } },
       { title: 'bar' },
-      { update: {_id: 1, _type: 'kuzzle-collection-test' } },
+      { update: {_id: 1, _type: this.fakeCollection, _index: this.fakeIndex } },
       { doc: { title: 'foobar' } },
-      { delete: {_id: 2, _type: 'kuzzle-collection-test' } }
+      { delete: {_id: 2, _type: this.fakeCollection, _index: this.fakeIndex } }
     ];
 
     this.schema = {
