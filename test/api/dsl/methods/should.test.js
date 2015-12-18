@@ -1,10 +1,21 @@
 var
   should = require('should'),
-  methods = require.main.require('lib/api/dsl/methods');
+  rewire = require('rewire'),
+  methods = rewire('../../../../lib/api/dsl/methods');
 
 require('should-promised');
 
 describe('Test: dsl.should method', function () {
+  before(function () {
+    methods.__set__('getFormattedFilters', function (roomId) {
+      if (roomId === 'resolve') {
+        return Promise.resolve('resolved');
+      }
+      else {
+        return Promise.reject(new Error('rejected'));
+      }
+    });
+  });
 
   it('should call the function "AND" in case of a should-not filter', function () {
     var andIsCalled = false;
@@ -12,7 +23,7 @@ describe('Test: dsl.should method', function () {
       andIsCalled = true;
     };
 
-    methods.should('roomId', {}, {}, true);
+    methods.should('roomId', 'index', {}, {}, true);
     should(andIsCalled).be.exactly(true);
   });
 
@@ -22,7 +33,7 @@ describe('Test: dsl.should method', function () {
       orIsCalled = true;
     };
 
-    methods.should('roomId', {}, {}, false);
+    methods.should('roomId', 'index', {}, {}, false);
     should(orIsCalled).be.exactly(true);
   });
 });

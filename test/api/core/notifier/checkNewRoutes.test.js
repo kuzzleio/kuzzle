@@ -30,15 +30,19 @@ describe('Test: notifier.checkNewRoutes', function () {
       'putMapping',
       'getMapping',
       'listCollections',
-      'reset',
+      'deleteIndexes',
       'createCollection',
-      'truncateCollection'
+      'truncateCollection',
+      'createIndex',
+      'deleteIndex',
+      'listIndexes'
     ],
     requestObject = new RequestObject({
       controller: 'write',
       action: '',
       requestId: 'foo',
       collection: 'bar',
+      index: '%test',
       body: { foo: 'bar' }
     }),
     responseObject = new ResponseObject(requestObject, {});

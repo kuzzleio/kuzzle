@@ -17,6 +17,7 @@ describe('Test removeRoom function index.js file from DSL', function () {
     roomId,
     anonymousUser,
     roomName = 'roomNameGrace',
+    index = 'test',
     collection = 'user',
     filter = {
       terms: {
@@ -25,6 +26,7 @@ describe('Test removeRoom function index.js file from DSL', function () {
     },
     requestObject = new RequestObject({
       requestId: roomName,
+      index: index,
       collection: collection,
       body: filter
     });

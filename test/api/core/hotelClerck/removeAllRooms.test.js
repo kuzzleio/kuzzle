@@ -20,6 +20,7 @@ describe('Test: hotelClerk.removeRooms', function () {
       user: null
     },
     roomName = 'roomName',
+    index = 'test',
     collection1 = 'user',
     collection2 = 'foo',
     filter1 = {
@@ -57,11 +58,25 @@ describe('Test: hotelClerk.removeRooms', function () {
       });
   });
 
+  it('should reject an error if no index provided', function () {
+    var requestObject = new RequestObject({
+      controller: 'admin',
+      action: 'removeRooms',
+      requestId: roomName,
+      index: undefined,
+      collection: collection1,
+      body: {}
+    });
+
+    return should(kuzzle.hotelClerk.removeRooms(requestObject)).rejectedWith(BadRequestError);
+  });
+
   it('should reject an error if no collection provided', function () {
     var requestObject = new RequestObject({
       controller: 'admin',
       action: 'removeRooms',
       requestId: roomName,
+      index: index,
       collection: undefined,
       body: {}
     });
@@ -69,16 +84,43 @@ describe('Test: hotelClerk.removeRooms', function () {
     return should(kuzzle.hotelClerk.removeRooms(requestObject)).rejectedWith(BadRequestError);
   });
 
-  it('should reject an error if there is no subscription on this collection', function () {
+  it('should reject an error if there is no subscription on this index', function () {
     var requestObject = new RequestObject({
       controller: 'admin',
       action: 'removeRooms',
       requestId: roomName,
+      index: index,
       collection: collection1,
       body: {}
     });
 
     return should(kuzzle.hotelClerk.removeRooms(requestObject)).rejectedWith(NotFoundError);
+  });
+
+  it('should reject an error if there is no subscription on this collection', function () {
+
+    var
+      requestObjectSubscribe = new RequestObject({
+        controller: 'subscribe',
+        action: 'on',
+        requestId: roomName,
+        index: index,
+        collection: collection1,
+        body: {}
+      }),
+      requestObject = new RequestObject({
+        controller: 'admin',
+        action: 'removeRooms',
+        requestId: roomName,
+        index: index,
+        collection: collection2,
+        body: {}
+      });
+
+    return kuzzle.hotelClerk.addSubscription(requestObjectSubscribe, context)
+      .then(() => {
+        should(kuzzle.hotelClerk.removeRooms(requestObject)).rejectedWith(BadRequestError);
+      });
   });
 
   it('should remove room in global subscription for provided collection', function () {
@@ -87,6 +129,7 @@ describe('Test: hotelClerk.removeRooms', function () {
         controller: 'subscribe',
         action: 'on',
         requestId: roomName,
+        index: index,
         collection: collection1,
         body: {}
       }),
@@ -94,6 +137,7 @@ describe('Test: hotelClerk.removeRooms', function () {
         controller: 'admin',
         action: 'removeRooms',
         requestId: roomName,
+        index: index,
         collection: collection1,
         body: {}
       });
@@ -117,6 +161,7 @@ describe('Test: hotelClerk.removeRooms', function () {
         controller: 'subscribe',
         action: 'on',
         requestId: roomName,
+        index: index,
         collection: collection1,
         body: filter1
       }),
@@ -124,6 +169,7 @@ describe('Test: hotelClerk.removeRooms', function () {
         controller: 'admin',
         action: 'removeRooms',
         requestId: roomName,
+        index: index,
         collection: collection1,
         body: {}
       });
@@ -147,6 +193,7 @@ describe('Test: hotelClerk.removeRooms', function () {
         controller: 'subscribe',
         action: 'on',
         requestId: roomName,
+        index: index,
         collection: collection1,
         body: {}
       }),
@@ -154,6 +201,7 @@ describe('Test: hotelClerk.removeRooms', function () {
         controller: 'subscribe',
         action: 'on',
         requestId: roomName,
+        index: index,
         collection: collection1,
         body: filter1
       }),
@@ -161,6 +209,7 @@ describe('Test: hotelClerk.removeRooms', function () {
         controller: 'admin',
         action: 'removeRooms',
         requestId: roomName,
+        index: index,
         collection: collection1,
         body: {}
       });
@@ -187,6 +236,7 @@ describe('Test: hotelClerk.removeRooms', function () {
         controller: 'subscribe',
         action: 'on',
         requestId: roomName,
+        index: index,
         collection: collection1,
         body: {}
       }),
@@ -194,6 +244,7 @@ describe('Test: hotelClerk.removeRooms', function () {
         controller: 'subscribe',
         action: 'on',
         requestId: roomName,
+        index: index,
         collection: collection2,
         body: {}
       }),
@@ -201,6 +252,7 @@ describe('Test: hotelClerk.removeRooms', function () {
         controller: 'admin',
         action: 'removeRooms',
         requestId: roomName,
+        index: index,
         collection: collection1,
         body: {}
       });
@@ -221,8 +273,9 @@ describe('Test: hotelClerk.removeRooms', function () {
 
         should(kuzzle.dsl.filtersTree).be.Object();
         should(Object.keys(kuzzle.dsl.filtersTree).length).be.exactly(1);
-        should(kuzzle.dsl.filtersTree[collection1]).be.undefined();
-        should(kuzzle.dsl.filtersTree[collection2]).be.Object();
+        should(Object.keys(kuzzle.dsl.filtersTree[index]).length).be.exactly(1);
+        should(kuzzle.dsl.filtersTree[index][collection1]).be.undefined();
+        should(kuzzle.dsl.filtersTree[index][collection2]).be.Object();
       });
   });
 
@@ -232,6 +285,7 @@ describe('Test: hotelClerk.removeRooms', function () {
         controller: 'subscribe',
         action: 'on',
         requestId: roomName,
+        index: index,
         collection: collection1,
         body: {}
       }),
@@ -239,6 +293,7 @@ describe('Test: hotelClerk.removeRooms', function () {
         controller: 'admin',
         action: 'removeRooms',
         requestId: roomName,
+        index: index,
         collection: collection1,
         body: {rooms: {}}
       });
@@ -251,11 +306,12 @@ describe('Test: hotelClerk.removeRooms', function () {
 
   it('should remove only listed rooms for the collection', function () {
     var
-      roomName = '3e0e837b447bf16b2251025ad36f39ed',
+      roomName = '9a83647ec2913bee3f3c1549c8a1ee7e',
       requestObjectSubscribeFilter1 = new RequestObject({
         controller: 'subscribe',
         action: 'on',
         requestId: roomName,
+        index: index,
         collection: collection1,
         body: filter1
       }),
@@ -263,6 +319,7 @@ describe('Test: hotelClerk.removeRooms', function () {
         controller: 'subscribe',
         action: 'on',
         requestId: roomName,
+        index: index,
         collection: collection1,
         body: filter2
       }),
@@ -270,6 +327,7 @@ describe('Test: hotelClerk.removeRooms', function () {
         controller: 'admin',
         action: 'removeRooms',
         requestId: roomName,
+        index: index,
         collection: collection1,
         body: {rooms: [roomName]}
       });
@@ -289,11 +347,12 @@ describe('Test: hotelClerk.removeRooms', function () {
 
   it('should return a response with partial error if a roomId doesn\'t correspond to the collection', function () {
     var
-      badRoomName = 'c5fbe423c70b2924d9eebbc285a1b983',
+      badRoomName = '0ca6c2f9b4cc6450a63e3fe848ec7138',
       requestObjectSubscribe1 = new RequestObject({
         controller: 'subscribe',
         action: 'on',
         requestId: roomName,
+        index: index,
         collection: collection1,
         body: {}
       }),
@@ -301,6 +360,7 @@ describe('Test: hotelClerk.removeRooms', function () {
         controller: 'subscribe',
         action: 'on',
         requestId: roomName,
+        index: index,
         collection: collection2,
         body: {}
       }),
@@ -308,6 +368,7 @@ describe('Test: hotelClerk.removeRooms', function () {
         controller: 'admin',
         action: 'removeRooms',
         requestId: roomName,
+        index: index,
         collection: collection1,
         body: {rooms: [badRoomName]}
       });
@@ -335,6 +396,7 @@ describe('Test: hotelClerk.removeRooms', function () {
         controller: 'subscribe',
         action: 'on',
         requestId: roomName,
+        index: index,
         collection: collection1,
         body: {}
       }),
@@ -342,6 +404,7 @@ describe('Test: hotelClerk.removeRooms', function () {
         controller: 'admin',
         action: 'removeRooms',
         requestId: roomName,
+        index: index,
         collection: collection1,
         body: {rooms: [badRoomName]}
       });

@@ -20,29 +20,26 @@ describe('Test: write controller', function () {
     kuzzle.log = new (winston.Logger)({transports: [new (winston.transports.Console)({level: 'silent'})]});
     kuzzle.start(params, {dummy: true})
       .then(function () {
+        kuzzle.services.list.writeEngine = {};
         done();
       });
   });
 
-  it('should reject an empty request', function () {
-    var requestObject = new RequestObject({}, {}, 'unit-test');
+  it('should reject an empty request', function (done) {
+    var requestObject = new RequestObject({});
     delete requestObject.data.body;
 
-    return should(kuzzle.funnel.write.create(requestObject)).be.rejected()
-      .then(function () {
-        return should(kuzzle.funnel.write.update(requestObject)).be.rejected();
-      })
-      .then(function () {
-        return should(kuzzle.funnel.write.createOrUpdate(requestObject)).be.rejected();
-      })
-      .then(function () {
-        return should(kuzzle.funnel.write.publish(requestObject)).be.rejected();
-      });
+    should(requestObject.isValid()).be.rejected();
+    should(kuzzle.funnel.write.create(requestObject)).be.rejected();
+    should(kuzzle.funnel.write.createOrUpdate(requestObject)).be.rejected();
+    should(kuzzle.funnel.write.update(requestObject)).be.rejected();
+    done();
   });
 
   describe('#create', function () {
     it('should emit a hook on a create data query', function (done) {
-      var requestObject = new RequestObject({body: {foo: 'bar'}}, {}, 'unit-test');
+      var
+        requestObject = new RequestObject({index: 'test', body: {foo: 'bar'}, persist: false}, {}, 'unit-test');
 
       this.timeout(50);
 
@@ -64,7 +61,7 @@ describe('Test: write controller', function () {
 
     it('should not send notifications right away when creating persistent messages', function (done) {
       var
-        requestObject = new RequestObject({body: {foo: 'bar'}, persist: true}, {}, 'unit-test'),
+        requestObject = new RequestObject({index: 'test', body: {foo: 'bar'}, persist: true}, {}, 'unit-test'),
         created;
 
       kuzzle.notifier.notify = function () {
@@ -84,7 +81,7 @@ describe('Test: write controller', function () {
     it('should send notifications when publishing messages', function (done) {
       var
         mockupRooms = ['foo', 'bar'],
-        requestObject = new RequestObject({body: {foo: 'bar'}}, {}, 'unit-test');
+        requestObject = new RequestObject({index: 'test', body: {foo: 'bar'}}, {}, 'unit-test');
 
       this.timeout(50);
 
@@ -206,6 +203,7 @@ describe('Test: write controller', function () {
         });
     });
   });
+
 
   describe('#createCollection', function () {
     it('should trigger a hook on a createCollection call', function (done) {

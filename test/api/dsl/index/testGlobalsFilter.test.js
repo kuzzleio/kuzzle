@@ -14,6 +14,7 @@ describe('Test: dsl.testGlobalsFilters', function () {
     cachedResult = { Goldorak: 'GO!' },
     requestObject = new RequestObject({
       requestId: 'foo',
+      index: 'test',
       collection: 'bar',
       body: {foo: 'bar'}
     });
@@ -27,7 +28,8 @@ describe('Test: dsl.testGlobalsFilters', function () {
     });
 
     dsl = new Dsl();
-    dsl.filtersTree[requestObject.collection] = {};
+    dsl.filtersTree[requestObject.index] = {};
+    dsl.filtersTree[requestObject.index][requestObject.collection] = {};
   });
 
   it('should resolve to an empty array if there if the collection doesn\'t contain a room array', function () {
@@ -35,14 +37,14 @@ describe('Test: dsl.testGlobalsFilters', function () {
   });
 
   it('should resolve to an empty array if there is no rooms registered on that collection', function () {
-    dsl.filtersTree[requestObject.collection].rooms = [];
+    dsl.filtersTree[requestObject.index][requestObject.collection].rooms = [];
     return should(testGlobalsFilters.call(dsl, requestObject, flattenBody, cachedResult)).be.fulfilledWith([]);
   });
 
   it('should call the testRooms with the appropriate set of arguments', function () {
     var rooms = ['Excuse', 'me', 'while', 'I', 'kiss', 'the', 'sky'];
 
-    dsl.filtersTree[requestObject.collection].rooms = rooms;
+    dsl.filtersTree[requestObject.index][requestObject.collection].rooms = rooms;
     return should(testGlobalsFilters.call(dsl, requestObject, flattenBody, cachedResult)).be.fulfilledWith(rooms);
   });
 });
