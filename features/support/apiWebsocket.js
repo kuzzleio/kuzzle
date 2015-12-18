@@ -34,6 +34,7 @@ ApiWebsocket.prototype.unsubscribe = function (room, socketName) {
       controller: 'subscribe',
       action: 'off',
       collection: this.world.fakeCollection,
+      index: this.world.fakeIndex,
       body: { roomId: room }
     };
 
@@ -90,9 +91,7 @@ ApiWebsocket.prototype.sendAndListen = function (msg, socketName) {
 
   socketName = initSocket.call(this, socketName);
   this.listSockets[socketName].once(msg.requestId, response => {
-    var listener = function (document) {
-      this.responses = document;
-    };
+    var listener = document => this.responses = document;
 
     if (response.error) {
       deferred.reject(response.error.message);

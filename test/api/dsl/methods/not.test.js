@@ -5,6 +5,7 @@ var
 describe('Test not method', function () {
   var
     roomId = 'roomId',
+    index = 'index',
     collection = 'collection',
     documentGrace = {
       firstName: 'Grace',
@@ -24,26 +25,26 @@ describe('Test not method', function () {
 
   before(function () {
     methods.dsl.filtersTree = {};
-    return methods.not(roomId, collection, filter);
+    return methods.not(roomId, index, collection, filter);
   });
 
   it('should construct the filterTree object for the correct attribute', function () {
     should(methods.dsl.filtersTree).not.be.empty();
-    should(methods.dsl.filtersTree[collection]).not.be.empty();
-    should(methods.dsl.filtersTree[collection].fields).not.be.empty();
-
-    should(methods.dsl.filtersTree[collection].fields.city).not.be.empty();
+    should(methods.dsl.filtersTree[index]).not.be.empty();
+    should(methods.dsl.filtersTree[index][collection]).not.be.empty();
+    should(methods.dsl.filtersTree[index][collection].fields).not.be.empty();
+    should(methods.dsl.filtersTree[index][collection].fields.city).not.be.empty();
   });
 
   it('should construct the filterTree with correct curried function name', function () {
-    should(methods.dsl.filtersTree[collection].fields.city.nottermcityLondon).not.be.empty();
+    should(methods.dsl.filtersTree[index][collection].fields.city.nottermcityLondon).not.be.empty();
   });
 
   it('should construct the filterTree with correct room list', function () {
     var rooms;
 
     // Test gt from filterGrace
-    rooms = methods.dsl.filtersTree[collection].fields.city.nottermcityLondon.rooms;
+    rooms = methods.dsl.filtersTree[index][collection].fields.city.nottermcityLondon.rooms;
     should(rooms).be.an.Array();
     should(rooms).have.length(1);
     should(rooms[0]).be.exactly(roomId);
@@ -52,18 +53,18 @@ describe('Test not method', function () {
   it('should construct the filterTree with correct functions', function () {
     var result;
 
-    result = methods.dsl.filtersTree[collection].fields.city.nottermcityLondon.fn(documentGrace);
+    result = methods.dsl.filtersTree[index][collection].fields.city.nottermcityLondon.fn(documentGrace);
     should(result).be.exactly(true);
-    result = methods.dsl.filtersTree[collection].fields.city.nottermcityLondon.fn(documentAda);
+    result = methods.dsl.filtersTree[index][collection].fields.city.nottermcityLondon.fn(documentAda);
     should(result).be.exactly(false);
   });
 
   it('should pass an inverted "not" argument to the must function', function () {
-    methods.must = function (roomId, collection, filters, not) {
+    methods.must = function (roomId, index, collection, filters, not) {
       should(roomId).be.exactly(not);
     };
 
-    methods.not(true, {}, {}, false);
-    methods.not(false, {}, {}, true);
+    methods.not(true, index, {}, {}, false);
+    methods.not(false, index, {}, {}, true);
   });
 });

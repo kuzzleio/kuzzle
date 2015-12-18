@@ -120,6 +120,7 @@ describe('Test execute function in funnel controller', function () {
       kuzzle.funnel.execute(
         new RequestObject({
           controller: 'read',
+          index: '@test',
           action: 'get'
         }),
         localContext)
@@ -130,6 +131,7 @@ describe('Test execute function in funnel controller', function () {
     var object = {
       requestId: 'requestId',
       controller: 'write',
+      index: '@test',
       action: 'create',
       collection: 'user',
       persist: false,

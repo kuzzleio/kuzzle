@@ -20,7 +20,7 @@ describe('Test: subscribe controller', function () {
     kuzzle,
     anonymousUser,
     context,
-    requestObject = new RequestObject({}, {}, 'unit-test');
+    requestObject = new RequestObject({index: 'test'}, {}, 'unit-test');
 
   before(function (done) {
     context = {};
@@ -44,14 +44,13 @@ describe('Test: subscribe controller', function () {
       });
   });
 
-  beforeEach(() =>  requestObject = new RequestObject({controller: 'subscribe'}, {}, 'unit-test'));
+  beforeEach(() =>  requestObject = new RequestObject({index: 'test', collection: 'collection', controller: 'subscribe'}, {}, 'unit-test'));
 
   it('should forward new subscriptions to the hotelClerk core component', function () {
     var foo = kuzzle.funnel.subscribe.on(requestObject, {
-        connection: {id: 'foobar'},
-        user: anonymousUser
-      }
-    );
+      connection: {id: 'foobar'},
+      user: anonymousUser
+    });
 
     return should(foo).be.fulfilled();
   });
@@ -61,12 +60,11 @@ describe('Test: subscribe controller', function () {
       newUser = 'Carmen Sandiego',
       result;
 
-      requestObject.data.body = { roomId: 'foobar' };
-      result = kuzzle.funnel.subscribe.off(requestObject, {
-          connection: {id: newUser },
-          user: anonymousUser
-        }
-      );
+    requestObject.data.body = { roomId: 'foobar' };
+    result = kuzzle.funnel.subscribe.off(requestObject, {
+      connection: {id: newUser },
+      user: anonymousUser
+    });
 
     return should(result).be.rejectedWith(NotFoundError, { message: 'The user with connection ' + newUser + ' doesn\'t exist' });
   });

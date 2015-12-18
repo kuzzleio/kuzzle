@@ -4,15 +4,14 @@ var
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
-  ResponseObject = require.main.require('lib/api/core/models/responseObject'),
-  NotFoundError = require.main.require('lib/api/core/errors/notFoundError');
+  ResponseObject = require.main.require('lib/api/core/models/responseObject');
 
 require('should-promised');
 
 describe('Test: admin controller', function () {
   var
     kuzzle,
-    requestObject = new RequestObject({ controller: 'admin' }, { collection: 'unit-test-adminController' }, 'unit-test');
+    requestObject = new RequestObject({ controller: 'admin' }, { index: '%test', collection: 'unit-test-adminController' }, 'unit-test');
 
   before(function (done) {
     kuzzle = new Kuzzle();
@@ -21,8 +20,8 @@ describe('Test: admin controller', function () {
       .then(function () {
         kuzzle.repositories.role.validateAndSaveRole = role => {
           return Promise.resolve({
-            _index: 'mainindex',
-            _type: '%kuzzle/roles',
+            _index: '%kuzzle',
+            _type: 'roles',
             _id: role._id,
             created: true
           });
@@ -72,7 +71,7 @@ describe('Test: admin controller', function () {
 
   it('should return a mapping when requested', function () {
     var r = kuzzle.funnel.admin.getMapping(requestObject);
-    return should(r).be.rejectedWith(NotFoundError, { message: 'No mapping for current index' });
+    return should(r).be.rejected();
   });
 
   it('should activate a hook on a get mapping call', function (done) {
@@ -168,6 +167,54 @@ describe('Test: admin controller', function () {
       .catch(error => {
         done(error);
       });
+  });
+
+  it('should trigger a hook on a deleteIndexes call', function (done) {
+    this.timeout(50);
+
+    kuzzle.once('data:deleteIndexes', function (obj) {
+      try {
+        should(obj).be.exactly(requestObject);
+        done();
+      }
+      catch (e) {
+        done(e);
+      }
+    });
+
+    kuzzle.funnel.admin.deleteIndexes(requestObject);
+  });
+
+  it('should trigger a hook on a createIndex call', function (done) {
+    this.timeout(50);
+
+    kuzzle.once('data:createIndex', function (obj) {
+      try {
+        should(obj).be.exactly(requestObject);
+        done();
+      }
+      catch (e) {
+        done(e);
+      }
+    });
+
+    kuzzle.funnel.admin.createIndex(requestObject);
+  });
+
+  it('should trigger a hook on a deleteIndex call', function (done) {
+    this.timeout(50);
+
+    kuzzle.once('data:deleteIndex', function (obj) {
+      try {
+        should(obj).be.exactly(requestObject);
+        done();
+      }
+      catch (e) {
+        done(e);
+      }
+    });
+
+    kuzzle.funnel.admin.deleteIndex(requestObject);
   });
 
   describe('#removeRooms', function () {

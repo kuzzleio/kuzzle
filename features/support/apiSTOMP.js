@@ -54,6 +54,7 @@ ApiSTOMP.prototype.unsubscribe = function (room, clientId) {
       clientId: clientId,
       controller: 'subscribe',
       collection: this.world.fakeCollection,
+      index: this.world.fakeIndex,
       action: 'off',
       body: { roomId: room }
     };

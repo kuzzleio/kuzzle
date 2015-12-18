@@ -16,66 +16,53 @@ require('should-promised');
  * Since we're querying the database for non-existent documents, we expect
  * most of these calls, if not all, to return a rejected promise.
  */
-describe('Test: read controller', function () {
-  var
-    kuzzle;
+var
+  kuzzle;
 
-  before(function () {
-    kuzzle = new Kuzzle();
-    kuzzle.log = new (winston.Logger)({transports: [new (winston.transports.Console)({level: 'silent'})]});
-    return kuzzle.start(params, {dummy: true});
-  });
+before(function (done) {
+  kuzzle = new Kuzzle();
+  kuzzle.log = new (winston.Logger)({transports: [new (winston.transports.Console)({level: 'silent'})]});
+  kuzzle.start(params, {dummy: true})
+    .then(function () {
+      kuzzle.services.list.readEngine = {
+        search: function(requestObject) { return Promise.resolve(new ResponseObject(requestObject, {})); },
+        get: function(requestObject) { return Promise.resolve(new ResponseObject(requestObject, {})); },
+        count: function(requestObject) { return Promise.resolve(new ResponseObject(requestObject, {})); },
+        listCollections: function(requestObject) { return Promise.resolve(new ResponseObject(requestObject, {})); },
+        listIndexes: function(requestObject) { return Promise.resolve(new ResponseObject(requestObject, {})); }
+      };
+      done();
+    });
+});
+
+describe('Test: read controller', function () {
 
   describe('#search', function () {
-    it('should allow to perform searches', function () {
-      var
-        requestObject = new RequestObject({}, {collection: 'unit-test-readcontroller'}, 'unit-test'),
-        r = kuzzle.funnel.read.search(requestObject);
-
-      return should(r).be.rejectedWith(Error, { status: 400 });
-    });
-
     it('should trigger a plugin event', function (done) {
-      var requestObject = new RequestObject({}, {collection: 'unit-test-readcontroller'}, 'unit-test');
+      var requestObject = new RequestObject({index: '%test', collection: 'unit-test-readcontroller'});
 
       this.timeout(50);
-      kuzzle.on('data:search', () => done());
+      kuzzle.once('data:search', () => done());
       kuzzle.funnel.read.search(requestObject);
     });
   });
 
   describe('#get', function () {
-    it('should allow to get specific documents', function () {
-      var
-        requestObject = new RequestObject({body: {_id: 'foobar'}}, {collection: 'unit-test-readcontroller'}, 'unit-test'),
-        r = kuzzle.funnel.read.get(requestObject);
-
-      return should(r).be.rejectedWith(Error, {status: 404});
-    });
-
     it('should trigger a plugin event', function (done) {
-      var requestObject = new RequestObject({ body: { _id: 'foobar' }}, { collection: 'unit-test-readcontroller' }, 'unit-test');
+      var requestObject = new RequestObject({index: '%test', collection: 'unit-test-readcontroller'});
 
       this.timeout(50);
-      kuzzle.on('data:get', () => done());
+      kuzzle.once('data:get', () => done());
       kuzzle.funnel.read.get(requestObject);
     });
   });
 
   describe('#count', function () {
-    it('should allow to count documents', function () {
-      var
-        requestObject = new RequestObject({}, {collection: 'unit-test-readcontroller'}, 'unit-test'),
-        r = kuzzle.funnel.read.count(requestObject);
-
-      return should(r).be.rejectedWith(Error, {status: 400});
-    });
-
-    it('should trigger a plugin event', function (done) {
-      var requestObject = new RequestObject({}, {collection: 'unit-test-readcontroller'}, 'unit-test');
+    it('should emit a data:count hook when counting', function (done) {
+      var requestObject = new RequestObject({index: '%test', collection: 'unit-test-readcontroller'});
 
       this.timeout(50);
-      kuzzle.on('data:count', () => done());
+      kuzzle.once('data:count', () => done());
       kuzzle.funnel.read.count(requestObject);
     });
   });
@@ -143,11 +130,11 @@ describe('Test: read controller', function () {
     });
 
     it('should trigger a plugin event', function (done) {
-      var requestObject = new RequestObject({}, {}, '');
+      var requestObject = new RequestObject({index: '%test', collection: 'unit-test-readcontroller'});
 
       this.timeout(50);
       kuzzle.once('data:listCollections', () => done());
-      kuzzle.funnel.read.listCollections(requestObject, context);
+      kuzzle.funnel.read.listCollections(requestObject);
     });
 
     it('should reject the request if an invalid "type" argument is provided', function () {
@@ -156,7 +143,7 @@ describe('Test: read controller', function () {
       return should(kuzzle.funnel.read.listCollections(requestObject, context)).be.rejectedWith(BadRequestError);
     });
 
-    it('should only return stored collections with type = stored', function () {
+   it('should only return stored collections with type = stored', function () {
       var requestObject = new RequestObject({body: {type: 'stored'}}, {}, '');
 
       return kuzzle.funnel.read.listCollections(requestObject, context).then(response => {
@@ -178,25 +165,35 @@ describe('Test: read controller', function () {
   });
 
   describe('#now', function () {
-    it('should resolve to the current timestamp', function () {
+    it('should trigger a plugin event', function (done) {
+      var requestObject = new RequestObject({index: '%test', collection: 'unit-test-readcontroller'});
+
+      this.timeout(50);
+      kuzzle.once('data:now', () => done());
+      kuzzle.funnel.read.now(requestObject);
+    });
+
+    it('should resolve to a number', function () {
       var
-        requestObject = new RequestObject({}, {}, ''),
-        result = kuzzle.funnel.read.now(requestObject);
+        requestObject = new RequestObject({}),
+        promisedResult = kuzzle.funnel.read.now(requestObject);
 
-      should(result).be.a.Promise();
+      should(promisedResult).be.a.Promise();
 
-      return result.then(result => {
+      return promisedResult.then(result => {
         should(result.data).not.be.undefined();
         should(result.data.now).not.be.undefined().and.be.a.Number();
       });
     });
+  });
 
-    it('should trigger a plugin event', function (done) {
-      var requestObject = new RequestObject({}, {}, '');
+  describe('#listIndexes', function () {
+    it('should emit a data:listIndexes hook when reading indexes', function (done) {
+      var requestObject = new RequestObject({index: '%test', collection: 'unit-test-readcontroller'});
 
       this.timeout(50);
-      kuzzle.on('data:now', () => done());
-      kuzzle.funnel.read.now(requestObject);
+      kuzzle.once('data:listIndexes', () => done());
+      kuzzle.funnel.read.listIndexes(requestObject);
     });
   });
 });
