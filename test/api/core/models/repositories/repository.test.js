@@ -34,16 +34,16 @@ describe('Test: repositories/repository', function () {
 
   mockCacheEngine = {
     get: function (key) {
-      if (key === repository.collection + '/persisted') {
+      if (key === repository.index + '/' + repository.collection + '/persisted') {
         return Promise.resolve(JSON.stringify(persistedObject));
       }
-      if (key === repository.collection + '/cached') {
+      if (key === repository.index + '/' + repository.collection + '/cached') {
         return Promise.resolve(JSON.stringify(cachedObject));
       }
-      if (key === repository.collection + '/error') {
+      if (key === repository.index + '/' + repository.collection + '/error') {
         return Promise.reject(new InternalError('Error'));
       }
-      if (key === repository.collection + '/string') {
+      if (key === repository.index + '/' + repository.collection + '/string') {
         return Promise.resolve('a string');
       }
 
@@ -90,6 +90,7 @@ describe('Test: repositories/repository', function () {
           action: 'get',
           requestId: 'foo',
           collection: repository.collection,
+          index: repository.index,
           body: {
             _id: id
           }
@@ -123,7 +124,8 @@ describe('Test: repositories/repository', function () {
     };
 
     repository = new Repository(mockKuzzle, {
-      collection: '_test/repository',
+      index: '%test',
+      collection: 'repository',
       ObjectConstructor: ObjectConstructor,
       readEngine: mockReadEngine,
       writeEngine: mockWriteEngine,

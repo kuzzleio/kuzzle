@@ -20,6 +20,7 @@ describe('Test: responseObject', function () {
     request = {
       action: 'fakeaction',
       controller: 'fakecontroller',
+      index: '%test',
       collection: 'fakecollection',
       persist: 'maybe',
       requestId: 'fakerequestId',

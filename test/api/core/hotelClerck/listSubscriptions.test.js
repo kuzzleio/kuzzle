@@ -10,15 +10,17 @@ var
 
 require('should-promised');
 
-describe('Test: hotelClerk.listSubscriptions', function () {
+describe('Test: hotelClerk.addSubscription', function () {
   var
     kuzzle,
+    roomId,
     connection = {id: 'connectionid'},
     context = {
       connection: connection,
       user: null
     },
     roomName = 'roomName',
+    index = '%test',
     collection = 'user',
     filter = {
       term: {
@@ -65,13 +67,16 @@ describe('Test: hotelClerk.listSubscriptions', function () {
   });
 
   it('should return a correct list according to subscribe on filter', function () {
-    var requestObject = new RequestObject({
-      controller: 'subscribe',
-      action: 'on',
-      requestId: roomName,
-      collection: collection,
-      body: filter
-    });
+    var
+      roomName = 'd0d7627d6fedf3b8719a1602032f7117',
+      requestObject = new RequestObject({
+        controller: 'subscribe',
+        action: 'on',
+        requestId: roomName,
+        index: index,
+        collection: collection,
+        body: filter
+      });
 
     return kuzzle.hotelClerk.addSubscription(requestObject, context)
       .then(() => {
@@ -82,20 +87,26 @@ describe('Test: hotelClerk.listSubscriptions', function () {
         should(responseObject).have.property('data');
         should(responseObject.data).have.property('body');
         // user -> collection
-        should(responseObject.data.body).have.property('user');
+        should(responseObject.data.body).have.property(index);
+        should(responseObject.data.body[index]).have.property(collection);
+
+        // there is no subscribe on whole collection
+        should(responseObject.data.body[index][collection]).not.have.property('totalGlobals');
 
         // 3e0e837b447bf16b2251025ad36f39ed -> room id generated with collection and filter
-        should(responseObject.data.body.user).have.property('3e0e837b447bf16b2251025ad36f39ed');
-        should(responseObject.data.body.user['3e0e837b447bf16b2251025ad36f39ed']).be.equal(1);
+        should(responseObject.data.body[index][collection]).have.property(roomName);
+        should(responseObject.data.body[index][collection][roomName]).be.equal(1);
       });
   });
 
-  it('should return a correct list according to subscribe on filter and user right', function () {
+   it('should return a correct list according to subscribe on filter and user right', function () {
     var
+      roomName = 'd0d7627d6fedf3b8719a1602032f7117',
       requestObjectUser = new RequestObject({
         controller: 'subscribe',
         action: 'on',
         requestId: roomName,
+        index: index,
         collection: collection,
         body: filter
       }),
@@ -103,12 +114,14 @@ describe('Test: hotelClerk.listSubscriptions', function () {
         controller: 'subscribe',
         action: 'on',
         requestId: roomName,
+        index: index,
         collection: 'foo',
         body: filter
       }),
       requestObjectList = new RequestObject({
         controller: 'subscribe',
         action: 'list',
+        index: index,
         requestId: roomName,
         body: {}
       });
@@ -130,22 +143,24 @@ describe('Test: hotelClerk.listSubscriptions', function () {
         should(responseObject).have.property('data');
         should(responseObject.data).have.property('body');
         // user -> collection
-        should(responseObject.data.body).have.property('user');
+        should(responseObject.data.body).have.property(index);
+        should(responseObject.data.body[index]).have.property(collection);
 
         // 3e0e837b447bf16b2251025ad36f39ed -> room id generated with collection and filter
-        should(responseObject.data.body.user).have.property('3e0e837b447bf16b2251025ad36f39ed');
-        should(responseObject.data.body.user['3e0e837b447bf16b2251025ad36f39ed']).be.equal(1);
+        should(responseObject.data.body[index][collection]).have.property(roomName);
+        should(responseObject.data.body[index][collection][roomName]).be.equal(1);
 
         // should not return the collection foo
-        should(responseObject.data.body).not.have.property('foo');
+        should(responseObject.data.body[index]).not.have.property('foo');
       });
   });
 
-  it('should return a correct list according to subscribe on whole collection', function () {
+   it('should return a correct list according to subscribe on whole collection', function () {
     var requestObject = new RequestObject({
       controller: 'subscribe',
       action: 'on',
       requestId: roomName,
+      index: index,
       collection: collection,
       body: {}
     });
@@ -158,8 +173,8 @@ describe('Test: hotelClerk.listSubscriptions', function () {
       .then(responseObject => {
         should(responseObject).have.property('data');
         should(responseObject.data).have.property('body');
-        // user -> collection
-        should(responseObject.data.body).have.property('user');
+        should(responseObject.data.body).have.property(index);
+        should(responseObject.data.body[index]).have.property(collection);
       });
   });
 });

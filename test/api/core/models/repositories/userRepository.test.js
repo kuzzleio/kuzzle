@@ -32,7 +32,7 @@ before(function (done) {
 
   mockCacheEngine = {
     get: function (key) {
-      if (key === userRepository.collection + '/userInCache') {
+      if (key === userRepository.index + '/' + userRepository.collection + '/userInCache') {
         return Promise.resolve(JSON.stringify(userInCache));
       }
       return Promise.resolve(null);
@@ -179,7 +179,7 @@ describe('Test: repositories/userRepository', function () {
       var
         token;
 
-      token = jwt.sign({_id: -99999}, params.jsonWebToken.secret, {algorithm: params.jsonWebToken.algorithm});
+       token = jwt.sign({_id: -99999}, params.jsonWebToken.secret, {algorithm: params.jsonWebToken.algorithm});
 
       userRepository.loadFromToken(token)
         .then(function (user) {

@@ -23,6 +23,7 @@ describe('Test: hotelClerk.addSubscription', function () {
       user: null
     },
     roomName = 'roomName',
+    index = 'test',
     collection = 'user',
     filter = {
       term: {
@@ -70,6 +71,7 @@ describe('Test: hotelClerk.addSubscription', function () {
       controller: 'subscribe',
       action: 'on',
       requestId: roomName,
+      index: index,
       collection: collection,
       body: filter,
       metadata: {
@@ -119,6 +121,7 @@ describe('Test: hotelClerk.addSubscription', function () {
       requestObject = new RequestObject({
         controller: 'subscribe',
         collection: collection,
+        index: index,
         body: filter
       });
 
@@ -148,6 +151,7 @@ describe('Test: hotelClerk.addSubscription', function () {
     var requestObject = new RequestObject({
       controller: 'subscribe',
       collection: collection,
+      index: index,
       body: filter
     });
     var response;
@@ -170,6 +174,7 @@ describe('Test: hotelClerk.addSubscription', function () {
         controller: 'subscribe',
         action: 'on',
         collection: collection,
+        index: index,
         body: {badterm : {firstName: 'Ada'}}
       });
 
@@ -182,6 +187,7 @@ describe('Test: hotelClerk.addSubscription', function () {
       requestObject1 = new RequestObject({
         controller: 'subscribe',
         collection: collection,
+        index: index,
         body: {
           term: {
             firstName: 'Ada'
@@ -194,6 +200,7 @@ describe('Test: hotelClerk.addSubscription', function () {
       requestObject2 = new RequestObject({
         controller: 'subscribe',
         collection: collection,
+        index: index,
         body: {
           exists: {
             field: 'lastName'
@@ -223,6 +230,7 @@ describe('Test: hotelClerk.addSubscription', function () {
     var
       requestObject = new RequestObject({
         controller: 'subscribe',
+        index: index,
         collection: collection
       });
 
@@ -235,6 +243,7 @@ describe('Test: hotelClerk.addSubscription', function () {
     var
       requestObject = new RequestObject({
         controller: 'subscribe',
+        index: index,
         collection: collection
       });
 
@@ -262,6 +271,7 @@ describe('Test: hotelClerk.addSubscription', function () {
       roomId,
       requestObject1 = new RequestObject({
         controller: 'subscribe',
+        index: index,
         collection: collection
       });
 
@@ -275,6 +285,7 @@ describe('Test: hotelClerk.addSubscription', function () {
       .then(id => {
         var requestObject2 = new RequestObject({
           collection: collection,
+          index: index,
           controller: 'subscribe',
           action: 'join',
           body: {
@@ -301,6 +312,7 @@ describe('Test: hotelClerk.addSubscription', function () {
     return should(kuzzle.hotelClerk.join(
       new RequestObject({
         collection: collection,
+        index: index,
         controller: 'subscribe',
         action: 'join',
         body: {roomId: 'no way I can exist'}

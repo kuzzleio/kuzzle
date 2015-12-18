@@ -10,6 +10,7 @@ require('should-promised');
 describe('Test geoDistanceRange method', function () {
   var
     roomId = 'roomId',
+    index = 'test',
     collection = 'collection',
     document = {
       name: 'Zero',
@@ -35,7 +36,7 @@ describe('Test geoDistanceRange method', function () {
     filterOK = {
       location: {
         lat: 0,
-        lon: 1,
+        lon: 1
       },
       from: 111320,
       to: 111317
@@ -43,7 +44,7 @@ describe('Test geoDistanceRange method', function () {
     filterNOK = {
       location: {
         lat: 0,
-        lon: 1,
+        lon: 1
       },
       from: 1,
       to: 10
@@ -51,7 +52,7 @@ describe('Test geoDistanceRange method', function () {
     filterOkHumanReadable = {
       location: {
         lat: 0,
-        lon: 1,
+        lon: 1
       },
       from: '365 200 Ft',
       to: '365 220 Ft'
@@ -67,29 +68,31 @@ describe('Test geoDistanceRange method', function () {
 
   before(function () {
     methods.dsl.filtersTree = {};
-    return methods.geoDistanceRange(roomId, collection, filterOK)
+    return methods.geoDistanceRange(roomId, index, collection, filterOK)
       .then(function () {
-        return methods.geoDistanceRange(roomId, collection, filterNOK);
+        return methods.geoDistanceRange(roomId, index, collection, filterNOK);
       })
       .then(function () {
-        return methods.geoDistanceRange(roomId, collection, filterOkHumanReadable);
+        return methods.geoDistanceRange(roomId, index, collection, filterOkHumanReadable);
       })
       .then(function () {
-        return methods.geoDistanceRange(roomId, collection, filterEqual);
+        return methods.geoDistanceRange(roomId, index, collection, filterEqual);
       });
   });
 
   it('should construct the filterTree object for the correct attribute', function () {
     should(methods.dsl.filtersTree).not.be.empty();
-    should(methods.dsl.filtersTree[collection]).not.be.empty();
-    should(methods.dsl.filtersTree[collection].fields).not.be.empty();
-    should(methods.dsl.filtersTree[collection].fields.location).not.be.empty();
+    should(methods.dsl.filtersTree[index]).not.be.empty();
+    should(methods.dsl.filtersTree[index][collection]).not.be.empty();
+    should(methods.dsl.filtersTree[index][collection].fields).not.be.empty();
+    should(methods.dsl.filtersTree[index][collection].fields.location).not.be.empty();
   });
   it('should ', function () {
     should(methods.dsl.filtersTree).not.be.empty();
-    should(methods.dsl.filtersTree[collection]).not.be.empty();
-    should(methods.dsl.filtersTree[collection].fields).not.be.empty();
-    should(methods.dsl.filtersTree[collection].fields.location).not.be.empty();
+    should(methods.dsl.filtersTree[index]).not.be.empty();
+    should(methods.dsl.filtersTree[index][collection]).not.be.empty();
+    should(methods.dsl.filtersTree[index][collection].fields).not.be.empty();
+    should(methods.dsl.filtersTree[index][collection].fields.location).not.be.empty();
   });
 
   it('should construct the filterTree with correct curried function name', function () {
@@ -97,32 +100,32 @@ describe('Test geoDistanceRange method', function () {
     // because we have many times the same coord in filters,
     // we must have only four functions
     
-    should(Object.keys(methods.dsl.filtersTree[collection].fields.location)).have.length(4);
-    should(methods.dsl.filtersTree[collection].fields.location.locationgeoDistanceRangekpbxyzbpv111320111317).not.be.empty();
-    should(methods.dsl.filtersTree[collection].fields.location.locationgeoDistanceRangekpbxyzbpv110).not.be.empty();
-    should(methods.dsl.filtersTree[collection].fields.location.locationgeoDistanceRangekpbxyzbpv111318111318).not.be.empty();
-    should(methods.dsl.filtersTree[collection].fields.location['locationgeoDistanceRangekpbxyzbpv111312.96111319.05600000001']).not.be.empty();
+    should(Object.keys(methods.dsl.filtersTree[index][collection].fields.location)).have.length(4);
+    should(methods.dsl.filtersTree[index][collection].fields.location.locationgeoDistanceRangekpbxyzbpv111320111317).not.be.empty();
+    should(methods.dsl.filtersTree[index][collection].fields.location.locationgeoDistanceRangekpbxyzbpv110).not.be.empty();
+    should(methods.dsl.filtersTree[index][collection].fields.location.locationgeoDistanceRangekpbxyzbpv111318111318).not.be.empty();
+    should(methods.dsl.filtersTree[index][collection].fields.location['locationgeoDistanceRangekpbxyzbpv111312.96111319.05600000001']).not.be.empty();
   });
 
   it('should construct the filterTree with correct room list', function () {
     var rooms;
 
-    rooms = methods.dsl.filtersTree[collection].fields.location.locationgeoDistanceRangekpbxyzbpv111320111317.rooms;
+    rooms = methods.dsl.filtersTree[index][collection].fields.location.locationgeoDistanceRangekpbxyzbpv111320111317.rooms;
     should(rooms).be.an.Array();
     should(rooms).have.length(1);
     should(rooms[0]).be.exactly(roomId);
 
-    rooms = methods.dsl.filtersTree[collection].fields.location.locationgeoDistanceRangekpbxyzbpv110.rooms;
+    rooms = methods.dsl.filtersTree[index][collection].fields.location.locationgeoDistanceRangekpbxyzbpv110.rooms;
     should(rooms).be.an.Array();
     should(rooms).have.length(1);
     should(rooms[0]).be.exactly(roomId);
 
-    rooms = methods.dsl.filtersTree[collection].fields.location.locationgeoDistanceRangekpbxyzbpv111318111318.rooms;
+    rooms = methods.dsl.filtersTree[index][collection].fields.location.locationgeoDistanceRangekpbxyzbpv111318111318.rooms;
     should(rooms).be.an.Array();
     should(rooms).have.length(1);
     should(rooms[0]).be.exactly(roomId);
 
-    rooms = methods.dsl.filtersTree[collection].fields.location['locationgeoDistanceRangekpbxyzbpv111312.96111319.05600000001'].rooms;
+    rooms = methods.dsl.filtersTree[index][collection].fields.location['locationgeoDistanceRangekpbxyzbpv111312.96111319.05600000001'].rooms;
     should(rooms).be.an.Array();
     should(rooms).have.length(1);
     should(rooms[0]).be.exactly(roomId);
@@ -132,35 +135,35 @@ describe('Test geoDistanceRange method', function () {
     var result;
 
     // test ok
-    result = methods.dsl.filtersTree[collection].fields.location.locationgeoDistanceRangekpbxyzbpv111320111317.fn(document);
+    result = methods.dsl.filtersTree[index][collection].fields.location.locationgeoDistanceRangekpbxyzbpv111320111317.fn(document);
     should(result).be.exactly(true);
 
     // test not ok
-    result = methods.dsl.filtersTree[collection].fields.location.locationgeoDistanceRangekpbxyzbpv110.fn(document);
+    result = methods.dsl.filtersTree[index][collection].fields.location.locationgeoDistanceRangekpbxyzbpv110.fn(document);
     should(result).be.exactly(false);
 
     // test human readable distance
-    result = methods.dsl.filtersTree[collection].fields.location.locationgeoDistanceRangekpbxyzbpv111318111318.fn(document);
+    result = methods.dsl.filtersTree[index][collection].fields.location.locationgeoDistanceRangekpbxyzbpv111318111318.fn(document);
     should(result).be.exactly(true);
 
     // test from == to
-    result = methods.dsl.filtersTree[collection].fields.location['locationgeoDistanceRangekpbxyzbpv111312.96111319.05600000001'].fn(document);
+    result = methods.dsl.filtersTree[index][collection].fields.location['locationgeoDistanceRangekpbxyzbpv111312.96111319.05600000001'].fn(document);
     should(result).be.exactly(true);
 
   });
 
   it('should return false if no lat or lon members exists for the location member of the document', function () {
     // test ok
-    result = methods.dsl.filtersTree[collection].fields.location.locationgeoDistanceRangekpbxyzbpv111320111317.fn(documentBad);
+    result = methods.dsl.filtersTree[index][collection].fields.location.locationgeoDistanceRangekpbxyzbpv111320111317.fn(documentBad);
     should(result).be.exactly(false);
-    result = methods.dsl.filtersTree[collection].fields.location.locationgeoDistanceRangekpbxyzbpv111320111317.fn(documentBadLon);
+    result = methods.dsl.filtersTree[index][collection].fields.location.locationgeoDistanceRangekpbxyzbpv111320111317.fn(documentBadLon);
     should(result).be.exactly(false);
-    result = methods.dsl.filtersTree[collection].fields.location.locationgeoDistanceRangekpbxyzbpv111320111317.fn(documentBadLat);
+    result = methods.dsl.filtersTree[index][collection].fields.location.locationgeoDistanceRangekpbxyzbpv111320111317.fn(documentBadLat);
     should(result).be.exactly(false);
   });
 
   it('should return a rejected promise if an empty filter is provided', function () {
-    return should(methods.geoDistanceRange('foo', 'bar', {})).be.rejectedWith(BadRequestError, { message: 'Missing filter' });
+    return should(methods.geoDistanceRange('foo', index, 'bar', {})).be.rejectedWith(BadRequestError, { message: 'Missing filter' });
   });
 
   it('should handle correctly the case when from and to comes first, before the location', function () {
@@ -178,7 +181,7 @@ describe('Test geoDistanceRange method', function () {
       };
     /* jshint camelcase: true */
 
-    return methods.geoDistanceRange(roomId, collection, underscoreFilter);
+    return methods.geoDistanceRange(roomId, index, collection, underscoreFilter);
   });
 
   it('should handle the not parameter', function () {
@@ -192,7 +195,7 @@ describe('Test geoDistanceRange method', function () {
         }
       };
 
-    return methods.geoDistanceRange(roomId, collection, notFilter, true);
+    return methods.geoDistanceRange(roomId, index, collection, notFilter, true);
   });
 
   it('should return a rejected promise if the geolocalisation filter is invalid', function () {
@@ -207,7 +210,7 @@ describe('Test geoDistanceRange method', function () {
         to: 133
       };
 
-    return should(methods.geoDistanceRange(roomId, collection, invalidFilter)).be.rejectedWith(BadRequestError, { message: 'Unable to parse coordinates' });
+    return should(methods.geoDistanceRange(roomId, index, collection, invalidFilter)).be.rejectedWith(BadRequestError, { message: 'Unable to parse coordinates' });
   });
 
   it('should return a rejected promise if the from filter parameter is missing', function () {
@@ -220,7 +223,7 @@ describe('Test geoDistanceRange method', function () {
         to: 123
       };
 
-    return should(methods.geoDistanceRange(roomId, collection, invalidFilter)).be.rejectedWith(BadRequestError, { message: 'No from parameter given' });
+    return should(methods.geoDistanceRange(roomId, index, collection, invalidFilter)).be.rejectedWith(BadRequestError, { message: 'No from parameter given' });
   });
 
   it('should return a rejected promise if the to filter parameter is missing', function () {
@@ -233,7 +236,7 @@ describe('Test geoDistanceRange method', function () {
         from: 123
       };
 
-    return should(methods.geoDistanceRange(roomId, collection, invalidFilter)).be.rejectedWith(BadRequestError, { message: 'No to parameter given' });
+    return should(methods.geoDistanceRange(roomId, index, collection, invalidFilter)).be.rejectedWith(BadRequestError, { message: 'No to parameter given' });
   });
 
   it('should return a rejected promise if the location filter parameter is missing', function () {
@@ -243,7 +246,7 @@ describe('Test geoDistanceRange method', function () {
         to: 456
       };
 
-    return should(methods.geoDistanceRange(roomId, collection, invalidFilter)).be.rejectedWith(BadRequestError, { message: 'No location field given' });
+    return should(methods.geoDistanceRange(roomId, index, collection, invalidFilter)).be.rejectedWith(BadRequestError, { message: 'No location field given' });
   });
 
   it('should return a rejected promise if the distance filter parameter is missing', function () {
@@ -257,14 +260,14 @@ describe('Test geoDistanceRange method', function () {
         to: 'bad bad bad'
       };
 
-    return should(methods.geoDistanceRange(roomId, collection, invalidFilter)).be.rejectedWith(BadRequestError, { message: 'Unable to parse the distance filter parameter' });
+    return should(methods.geoDistanceRange(roomId, index, collection, invalidFilter)).be.rejectedWith(BadRequestError, { message: 'Unable to parse the distance filter parameter' });
   });
 
   it('should return a rejected promise if buildCurriedFunction fails', function () {
     return methods.__with__({
       buildCurriedFunction: function () { return new InternalError('rejected'); }
     })(function () {
-      return should(methods.geoDistanceRange(roomId, collection, filterOK)).be.rejectedWith('rejected');
+      return should(methods.geoDistanceRange(roomId, index, collection, filterOK)).be.rejectedWith('rejected');
     });
   });
 });
