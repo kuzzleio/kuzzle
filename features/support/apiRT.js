@@ -265,12 +265,13 @@ ApiRT.prototype.getAllStats = function () {
   return this.send(msg);
 };
 
-ApiRT.prototype.listCollections = function (index) {
+ApiRT.prototype.listCollections = function (index, type) {
   var
     msg = {
       controller: 'read',
       index: index || this.world.fakeIndex,
-      action: 'listCollections'
+      action: 'listCollections',
+      body: {type}
     };
 
   return this.send(msg);

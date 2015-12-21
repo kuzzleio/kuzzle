@@ -180,7 +180,7 @@ ApiREST.prototype.getAllStats = function () {
   return this.callApi(options);
 };
 
-ApiREST.prototype.listCollections = function (index) {
+ApiREST.prototype.listCollections = function (index, type) {
   var options;
 
   index = index || this.world.fakeIndex;
@@ -190,6 +190,10 @@ ApiREST.prototype.listCollections = function (index) {
     method: 'GET',
     json: true
   };
+
+  if (type) {
+    options.url += '/' + type;
+  }
 
   return this.callApi(options);
 };
