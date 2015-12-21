@@ -186,25 +186,6 @@ describe('Test: routerController.executeFromRest', function () {
     }, 5);
   });
 
-  it('should not respond if the response is empty', function (done) {
-    var
-      callParams = { action: 'create', controller: 'write' },
-      data = {headers: {'content-type': 'application/json'}, body: {resolve: true, empty: true}, params: {index: '%test', collection: 'foobar'}};
-
-    mockupResponse.init();
-    executeFromRest.call(kuzzle, callParams, data, mockupResponse);
-
-    setTimeout(function () {
-      try {
-        should(mockupResponse.ended).be.false();
-        done();
-      }
-      catch (e) {
-        done(e);
-      }
-    }, 20);
-  });
-
   it('should respond with a HTTP 500 message in case of error', function (done) {
     var
       callParams = { action: 'create', controller: 'write' },

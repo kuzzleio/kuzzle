@@ -39,7 +39,7 @@ describe('Test: write controller', function () {
   describe('#create', function () {
     it('should emit a hook on a create data query', function (done) {
       var
-        requestObject = new RequestObject({index: 'test', body: {foo: 'bar'}, persist: false}, {}, 'unit-test');
+        requestObject = new RequestObject({index: 'test', body: {foo: 'bar'}}, {}, 'unit-test');
 
       this.timeout(50);
 
@@ -57,23 +57,6 @@ describe('Test: write controller', function () {
         .catch(function (error) {
           done(error);
         });
-    });
-
-    it('should not send notifications right away when creating persistent messages', function (done) {
-      var
-        requestObject = new RequestObject({index: 'test', body: {foo: 'bar'}, persist: true}, {}, 'unit-test'),
-        created;
-
-      kuzzle.notifier.notify = function () {
-        done(new Error('notifications incorrectly sent'));
-      };
-
-      created = kuzzle.funnel.write.create(requestObject);
-      should(created).be.fulfilled();
-
-      created.then(function () {
-        done();
-      });
     });
   });
 

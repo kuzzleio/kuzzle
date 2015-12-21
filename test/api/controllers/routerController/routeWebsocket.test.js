@@ -165,34 +165,6 @@ describe('Test: routerController.routeWebsocket', function () {
     }, 5);
   });
 
-  it('should not notify if the response is empty', function (done) {
-    var
-      emittedObject = {body: {resolve: true, empty: true}, controller: 'read', action: 'get'};
-
-    notifyStatus = 'pending';
-    forwardedObject = false;
-    emitter.emit(router.routename, emittedObject);
-
-    this.timeout(timeout);
-    timer = setInterval(function () {
-      if (forwardedObject === false) {
-        return;
-      }
-
-      try {
-        should(notifyStatus).be.exactly('pending');
-        done();
-      }
-      catch (e) {
-        done(e);
-      }
-
-      clearInterval(timer);
-      timer = false;
-    }, 5);
-  });
-
-
   it('should handle sockets clean disconnection', function (done) {
     var
       removeCustomers = false,
