@@ -21,20 +21,9 @@ describe('Test: routerController.routeMQListener', function () {
     kuzzle,
     router,
     forwardedObject = {},
-    forwardedConnection = {},
-    notifyStatus,
-    mqMessage = {
-      fields: {
-        consumerTag: 'amq.ctag-foobar',
-        exchange: 'amq.topic',
-        routingKey: 'write.foobar.create'
-      },
-      properties: {
-        header: {},
-        replyTo: 'amq.gen-foobar'
-      },
-      content: null
-    },
+    channel,
+    messageSent = false,
+    mqMessage,
     timer,
     timeout = 500;
 
@@ -59,18 +48,9 @@ describe('Test: routerController.routeMQListener', function () {
 
         return deferred.promise;
       },
-      mockupNotifier = function (requestId, responseObject, connection) {
-        forwardedConnection = connection;
-
-        if (responseObject.error) {
-          notifyStatus = 'error';
-        }
-        else if (responseObject.result) {
-          notifyStatus = 'success';
-        }
-        else {
-          notifyStatus = '';
-        }
+      mockupSendMessage = replyChannel => {
+        messageSent = true;
+        channel = replyChannel;
       };
 
     kuzzle = new Kuzzle();
@@ -79,12 +59,32 @@ describe('Test: routerController.routeMQListener', function () {
     kuzzle.start(params, {dummy: true})
       .then(function () {
         kuzzle.funnel.execute = mockupFunnel;
-        kuzzle.notifier.notify = mockupNotifier;
+        kuzzle.services.list.mqBroker.replyTo = mockupSendMessage;
+        kuzzle.services.list.mqBroker.addExchange = mockupSendMessage;
 
         router = new RouterController(kuzzle);
         router.routeMQListener();
         done();
       });
+  });
+
+  beforeEach(function () {
+    forwardedObject = false;
+    messageSent = false;
+    channel = '';
+
+    mqMessage = {
+      fields: {
+        consumerTag: 'amq.ctag-foobar',
+        exchange: 'amq.topic',
+        routingKey: 'write.foobar.create'
+      },
+      properties: {
+        header: {},
+        replyTo: 'amq.gen-foobar'
+      },
+      content: null
+    };
   });
 
   it('should register a global listener', function () {
@@ -97,12 +97,42 @@ describe('Test: routerController.routeMQListener', function () {
   it('should be able to manage JSON-based messages content', function (done) {
     var
       listener = kuzzle.services.list.mqBroker.listeners[router.routename].callback,
-      body = { controller: 'write', collection: 'foobar', action: 'create', body: { resolve: true }};
+      body = { controller: 'write', collection: 'foobar', action: 'create', body: {resolve: true}};
 
     mqMessage.content = JSON.stringify(body);
-    notifyStatus = '';
+    listener(mqMessage);
+    this.timeout(timeout);
 
-    forwardedObject = false;
+    timer = setInterval(function () {
+      if (forwardedObject === false) {
+        return;
+      }
+
+      try {
+        should(forwardedObject.data.body).not.be.null();
+        should(forwardedObject.protocol).be.exactly('mq');
+        should(forwardedObject.controller).be.exactly('write');
+        should(forwardedObject.collection).be.exactly('foobar');
+        should(forwardedObject.action).be.exactly('create');
+        should(messageSent).be.true();
+        done();
+      }
+      catch (e) {
+        done(e);
+      }
+
+      clearInterval(timer);
+      timer = false;
+    }, 5);
+  });
+
+  it('should be able to manage Buffer-based messages content', function (done) {
+    var
+      listener = kuzzle.services.list.mqBroker.listeners[router.routename].callback,
+      body = { controller: 'write', collection: 'foobar', action: 'create', body: {resolve: true}};
+
+    mqMessage.content = new Buffer(JSON.stringify(body));
+
     listener(mqMessage);
 
     this.timeout(timeout);
@@ -118,42 +148,7 @@ describe('Test: routerController.routeMQListener', function () {
         should(forwardedObject.controller).be.exactly('write');
         should(forwardedObject.collection).be.exactly('foobar');
         should(forwardedObject.action).be.exactly('create');
-        should(notifyStatus).be.exactly('success');
-        done();
-      }
-      catch (e) {
-        done(e);
-      }
-
-      clearInterval(timer);
-      timer = false;
-    }, 5);
-  });
-
-  it('should be able to manage Buffer-based messages content', function (done) {
-    var
-      listener = kuzzle.services.list.mqBroker.listeners[router.routename].callback,
-      body = { controller: 'write', collection: 'foobar', action: 'create', body: { resolve: true }};
-
-    mqMessage.content = new Buffer(JSON.stringify(body));
-    notifyStatus = 'pending';
-
-    listener(mqMessage);
-
-    this.timeout(timeout);
-
-    timer = setInterval(function () {
-      if (notifyStatus === 'pending') {
-        return;
-      }
-
-      try {
-        should(forwardedObject.data.body).not.be.null();
-        should(forwardedObject.protocol).be.exactly('mq');
-        should(forwardedObject.controller).be.exactly('write');
-        should(forwardedObject.collection).be.exactly('foobar');
-        should(forwardedObject.action).be.exactly('create');
-        should(notifyStatus).be.exactly('success');
+        should(messageSent).be.true();
         done();
       }
       catch (e) {
@@ -175,37 +170,66 @@ describe('Test: routerController.routeMQListener', function () {
       done();
     });
 
-    notifyStatus = '';
     mqMessage.content = 'foobar';
 
     listener(mqMessage);
   });
 
-  it('should notify with an error object in case of rejection', function (done) {
+  it('should notify an AMQ client with an error object in case of rejection', function (done) {
     var
       eventReceived = false,
       listener = kuzzle.services.list.mqBroker.listeners[router.routename].callback,
       body = {controller: 'write', collection: 'foobar', action: 'create', body: { resolve: false }, clientId: 'foobar'};
 
     mqMessage.content = JSON.stringify(body);
-    notifyStatus = 'pending';
     eventReceived = false;
 
-    kuzzle.once('write:mq:funnel:reject', function () {
-      eventReceived = true;
-    });
-
+    kuzzle.once('log:error', () => eventReceived = true);
     listener(mqMessage);
 
     this.timeout(timeout);
 
     timer = setInterval(function () {
-      if (notifyStatus === 'pending') {
+      if (forwardedObject === false) {
         return;
       }
 
       try {
-        should(notifyStatus).be.exactly('error');
+        should(messageSent).be.true();
+        should(eventReceived).be.true();
+        done();
+      }
+      catch (e) {
+        done(e);
+      }
+
+      clearInterval(timer);
+      timer = false;
+    }, 5);
+  });
+
+  it('should notify a MQTT client with an error object in case of rejection', function (done) {
+    var
+      eventReceived = false,
+      listener = kuzzle.services.list.mqBroker.listeners[router.routename].callback,
+      body = {controller: 'write', collection: 'foobar', action: 'create', body: { resolve: false }, clientId: 'foobar'};
+
+    mqMessage.content = JSON.stringify(body);
+    delete mqMessage.properties;
+    eventReceived = false;
+
+    kuzzle.once('log:error', () => eventReceived = true);
+    listener(mqMessage);
+
+    this.timeout(timeout);
+
+    timer = setInterval(function () {
+      if (forwardedObject === false) {
+        return;
+      }
+
+      try {
+        should(messageSent).be.true();
         should(eventReceived).be.true();
         done();
       }
@@ -224,11 +248,7 @@ describe('Test: routerController.routeMQListener', function () {
       body = { body: { resolve: true }, clientId: 'foobar'};
 
     mqMessage.content = JSON.stringify(body);
-    notifyStatus = '';
-    forwardedObject = false;
-
     listener(mqMessage);
-
     this.timeout(timeout);
 
     timer = setInterval(function () {
@@ -237,9 +257,8 @@ describe('Test: routerController.routeMQListener', function () {
       }
 
       try {
-        should(forwardedConnection.type).be.exactly('amq');
-        should(forwardedConnection.id).be.exactly('foobar');
-        should(forwardedConnection.replyTo).be.exactly(mqMessage.properties.replyTo);
+        should(messageSent).be.true();
+        should(channel).be.exactly(mqMessage.properties.replyTo);
         done();
       }
       catch (e) {
@@ -257,7 +276,6 @@ describe('Test: routerController.routeMQListener', function () {
       body = { body: { resolve: true }, clientId: 'foobar'};
 
     mqMessage.content = JSON.stringify(body);
-    notifyStatus = '';
     delete mqMessage.properties;
 
     listener(mqMessage);
@@ -270,9 +288,8 @@ describe('Test: routerController.routeMQListener', function () {
       }
 
       try {
-        should(forwardedConnection.type).be.exactly('mqtt');
-        should(forwardedConnection.id).be.exactly('foobar');
-        should(forwardedConnection.replyTo).be.exactly('mqtt.foobar');
+        should(messageSent).be.true();
+        should(channel).be.exactly('mqtt.foobar');
         done();
       }
       catch (e) {
