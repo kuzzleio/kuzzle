@@ -57,7 +57,7 @@ describe('Test: workerListener', function () {
     should(registered).be.exactly(1);
   });
 
-  it('should forward a registered response back to the requester', function () {
+  it('should resolved the stored promise when receiving a success response', function () {
     var
       workerListener = new WorkerListener(kuzzle, kuzzle.config.queues.workerWriteResponseQueue),
       responseObject,
@@ -69,29 +69,40 @@ describe('Test: workerListener', function () {
 
     responseObject = new ResponseObject(requestObject);
 
-
     listenCallback.call(kuzzle, responseObject);
 
     return should(promise).be.fulfilledWith(responseObject);
   });
 
-
-  it('should not do anything when receiving an unregistered response', function () {
+  it('should reject the stored promise when receiving an errored response', function () {
     var
       workerListener = new WorkerListener(kuzzle, kuzzle.config.queues.workerWriteResponseQueue),
       responseObject,
-      notified = false;
+      promise;
+
+    requestObject.controller = 'write';
+    requestObject.requestId = uuid.v1();
+    promise = workerListener.add(requestObject, { id: 'foobar'});
+
+    responseObject = new ResponseObject(requestObject, new Error('foobar'));
+    listenCallback.call(kuzzle, responseObject);
+
+    return should(promise).be.rejectedWith(responseObject);
+  });
+
+  it('should only trigger a log response when receiving an unknown response', function (done) {
+    var
+      workerListener = new WorkerListener(kuzzle, kuzzle.config.queues.workerWriteResponseQueue),
+      responseObject;
+
+    this.timeout(50);
+
+    kuzzle.once('log:verbose', () => done());
 
     requestObject.requestId = uuid.v1();
-
-    kuzzle.notifier.notify = function () {
-      notified = true;
-    };
 
     responseObject = new ResponseObject(requestObject);
 
     listenCallback.call(kuzzle, responseObject);
-
-    should(notified).be.false();
   });
 });
