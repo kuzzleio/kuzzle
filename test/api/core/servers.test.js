@@ -12,7 +12,7 @@ var
 
 require('should-promised');
 
-describe('Test: responseListener', function () {
+describe('Test: core/servers', function () {
   var
     kuzzle,
     port = 6667,

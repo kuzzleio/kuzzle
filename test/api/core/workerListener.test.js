@@ -10,11 +10,11 @@ var
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
   ResponseObject = require.main.require('lib/api/core/models/responseObject'),
-  ResponseListener = rewire('../../../lib/api/core/responseListener');
+  WorkerListener = rewire('../../../lib/api/core/workerListener');
 
 require('should-promised');
 
-describe('Test: responseListener', function () {
+describe('Test: workerListener', function () {
   var
     kuzzle,
     registered,
@@ -43,15 +43,15 @@ describe('Test: responseListener', function () {
   });
 
   it('should register only once, when the component is been instantiated', function () {
-    var responseListener;
+    var workerListener;
 
     registered = 0;
 
-    responseListener = new ResponseListener(kuzzle, kuzzle.config.queues.workerWriteResponseQueue);
+    workerListener = new WorkerListener(kuzzle, kuzzle.config.queues.workerWriteResponseQueue);
     controllers.forEach(function (controller) {
       requestObject.controller = controller;
       requestObject.requestId = uuid.v1();
-      responseListener.add(requestObject, {});
+      workerListener.add(requestObject, {});
     });
 
     should(registered).be.exactly(1);
@@ -59,13 +59,13 @@ describe('Test: responseListener', function () {
 
   it('should forward a registered response back to the requester', function () {
     var
-      responseListener = new ResponseListener(kuzzle, kuzzle.config.queues.workerWriteResponseQueue),
+      workerListener = new WorkerListener(kuzzle, kuzzle.config.queues.workerWriteResponseQueue),
       responseObject,
       promise;
 
     requestObject.controller = 'write';
     requestObject.requestId = uuid.v1();
-    promise = responseListener.add(requestObject, { id: 'foobar'});
+    promise = workerListener.add(requestObject, { id: 'foobar'});
 
     responseObject = new ResponseObject(requestObject);
 
@@ -78,7 +78,7 @@ describe('Test: responseListener', function () {
 
   it('should not do anything when receiving an unregistered response', function () {
     var
-      responseListener = new ResponseListener(kuzzle, kuzzle.config.queues.workerWriteResponseQueue),
+      workerListener = new WorkerListener(kuzzle, kuzzle.config.queues.workerWriteResponseQueue),
       responseObject,
       notified = false;
 
