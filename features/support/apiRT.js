@@ -364,4 +364,15 @@ ApiRT.prototype.removeRooms = function (rooms, index) {
   return this.send(msg);
 };
 
+ApiRT.prototype.getServerInfo = function () {
+  var
+    msg = {
+      controller: 'read',
+      action: 'serverInfo',
+      body: {}
+    };
+
+  return this.send(msg);
+};
+
 module.exports = ApiRT;
