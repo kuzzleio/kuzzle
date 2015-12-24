@@ -7,5 +7,15 @@
       "level": "info",
       "addDate": true
     }
+  },
+  "kuzzle-plugin-socketio": {
+    "url": "https://github.com/kuzzleio/kuzzle-plugin-socketio.git",
+    "defaultConfig": {
+      "port": 7513
+    },
+    "customConfig": {
+      "port": 7513
+    },
+    "activated": true
   }
 }
