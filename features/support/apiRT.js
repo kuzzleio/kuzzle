@@ -265,12 +265,13 @@ ApiRT.prototype.getAllStats = function () {
   return this.send(msg);
 };
 
-ApiRT.prototype.listCollections = function (index) {
+ApiRT.prototype.listCollections = function (index, type) {
   var
     msg = {
       controller: 'read',
       index: index || this.world.fakeIndex,
-      action: 'listCollections'
+      action: 'listCollections',
+      body: {type}
     };
 
   return this.send(msg);
@@ -358,6 +359,17 @@ ApiRT.prototype.removeRooms = function (rooms, index) {
       collection: this.world.fakeCollection,
       index: index || this.world.fakeIndex,
       body: {rooms: rooms}
+    };
+
+  return this.send(msg);
+};
+
+ApiRT.prototype.getServerInfo = function () {
+  var
+    msg = {
+      controller: 'read',
+      action: 'serverInfo',
+      body: {}
     };
 
   return this.send(msg);

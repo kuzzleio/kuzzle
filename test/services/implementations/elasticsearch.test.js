@@ -50,7 +50,8 @@ describe('Test: ElasticSearch service', function () {
     elasticsearch = new ES(kuzzle, {service: engineType});
     elasticsearch.client = {
       indices: {},
-      cat: {}
+      cat: {},
+      cluster: {}
     };
   });
 
@@ -67,386 +68,485 @@ describe('Test: ElasticSearch service', function () {
     kuzzle.indexes[index] = [collection];
   });
 
-  // init
-  it('should initialize properly', function (done) {
-    should(elasticsearch.init()).be.exactly(elasticsearch);
-    done();
-  });
-
-  // cleanData
-  it('should prepare the data for elasticsearch', function () {
-    var
-      cleanData = ES.__get__('cleanData'),
-      preparedData;
-
-    requestObject.data._id = 'foobar';
-    preparedData = cleanData.call(elasticsearch, requestObject);
-
-    should(preparedData.type).be.exactly(requestObject.collection);
-    should(preparedData.id).be.exactly(requestObject.data._id);
-    should(preparedData._id).be.undefined();
-    should(preparedData.index).be.exactly(requestObject.index);
-
-    // we expect all properties expect _id to be carried over the new data object
-    Object.keys(requestObject.data).forEach(function (member) {
-      if (member !== '_id') {
-        should(preparedData[member]).be.exactly(requestObject.data[member]);
-      }
+  describe('#init', function () {
+    it('should initialize properly', function (done) {
+      should(elasticsearch.init()).be.exactly(elasticsearch);
+      done();
     });
   });
 
-  // search
-  it('should be able to search documents', function (done) {
-    var ret;
+  describe('#cleanData', function () {
+    it('should prepare the data for elasticsearch', function () {
+      var
+        cleanData = ES.__get__('cleanData'),
+        preparedData;
 
-    elasticsearch.client.search = function(data) {
-      should(data.body).be.exactly(filter);
+      requestObject.data._id = 'foobar';
+      preparedData = cleanData.call(elasticsearch, requestObject);
 
-      return Promise.resolve({hits: { total: 0, hits: []}});
-    };
+      should(preparedData.type).be.exactly(requestObject.collection);
+      should(preparedData.id).be.exactly(requestObject.data._id);
+      should(preparedData._id).be.undefined();
+      should(preparedData.index).be.exactly(requestObject.index);
 
-    requestObject.data.body = filter;
-    ret = elasticsearch.search(requestObject);
-    should(ret).be.a.Promise();
-
-    ret
-      .then(function(result) {
-        should(result.data).not.be.undefined().and.not.be.null();
-        should(result.data.hits).not.be.undefined();
-        should(result.data.hits.total).be.exactly(0);
-        should(result.data.hits.hits).be.an.Array();
-        done();
-      })
-      .catch(error => done(error));
+      // we expect all properties expect _id to be carried over the new data object
+      Object.keys(requestObject.data).forEach(function (member) {
+        if (member !== '_id') {
+          should(preparedData[member]).be.exactly(requestObject.data[member]);
+        }
+      });
+    });
   });
 
-  it('should return a rejected promise if a search fails', function () {
+  describe('#search', function () {
+    it('should be able to search documents', function (done) {
+      var ret;
 
-    elasticsearch.client.search = function(data) {
-      should(data.body).not.be.exactly(filter);
+      elasticsearch.client.search = function (data) {
+        should(data.body).be.exactly(filter);
 
-      return Promise.reject(new Error());
-    };
+        return Promise.resolve({hits: {total: 0, hits: []}});
+      };
 
-    return should(elasticsearch.search(requestObject)).be.rejected();
+      requestObject.data.body = filter;
+      ret = elasticsearch.search(requestObject);
+      should(ret).be.a.Promise();
+
+      ret
+        .then(function (result) {
+          should(result.data).not.be.undefined().and.not.be.null();
+          should(result.data.hits).not.be.undefined();
+          should(result.data.hits.total).be.exactly(0);
+          should(result.data.hits.hits).be.an.Array();
+          done();
+        })
+        .catch(error => done(error));
+    });
+
+    it('should return a rejected promise if a search fails', function () {
+
+      elasticsearch.client.search = function (data) {
+        should(data.body).not.be.exactly(filter);
+
+        return Promise.reject(new Error());
+      };
+
+      return should(elasticsearch.search(requestObject)).be.rejected();
+    });
   });
 
-  // create
-  it('should allow creating documents', function (done) {
-    var
-      ret;
+  describe('#create', function () {
+    it('should allow creating documents', function (done) {
+      var
+        ret;
 
-    kuzzle.indexes = {};
+      kuzzle.indexes = {};
 
-    elasticsearch.client.create = function(data) {
-      should(data.index).be.exactly(index);
-      should(data.type).be.exactly(collection);
-      should(data.body).be.exactly(documentAda);
+      elasticsearch.client.create = function (data) {
+        should(data.index).be.exactly(index);
+        should(data.type).be.exactly(collection);
+        should(data.body).be.exactly(documentAda);
 
-      return Promise.resolve({});
-    };
+        return Promise.resolve({});
+      };
 
-    ret = elasticsearch.create(requestObject);
+      ret = elasticsearch.create(requestObject);
 
-    should(ret).be.a.Promise();
+      should(ret).be.a.Promise();
 
-    ret
-      .then(function (result) {
-        should(kuzzle.indexes).be.an.instanceOf(Object).and.have.property(index, [collection]);
-        done();
-      })
-      .catch(error => done(error));
-  });
-  it('should reject the create promise if elasticsearch throws an error', function () {
-    var
-      ret;
+      ret
+        .then(function (result) {
+          should(kuzzle.indexes).be.an.instanceOf(Object).and.have.property(index, [collection]);
+          done();
+        })
+        .catch(error => done(error));
+    });
 
-    elasticsearch.client.create = function(data) {
-      return Promise.reject(new Error());
-    };
+    it('should reject the create promise if elasticsearch throws an error', function () {
+      elasticsearch.client.create = function () {
+        return Promise.reject(new Error());
+      };
 
-    return should(elasticsearch.create(requestObject)).be.rejected();
-  });
-
-  // createOrUpdate
-  it('should support createOrUpdate capability', function (done) {
-    var ret;
-
-    kuzzle.indexes = {};
-
-    elasticsearch.client.index = function(data) {
-      should(data.index).be.exactly(index);
-      should(data.type).be.exactly(collection);
-      should(data.body).be.exactly(documentAda);
-      should(data.id).be.exactly(createdDocumentId);
-
-      return Promise.resolve({});
-    };
-
-    requestObject.data._id = createdDocumentId;
-    ret = elasticsearch.createOrUpdate(requestObject);
-
-    should(ret).be.a.Promise();
-
-    ret
-      .then(function (result) {
-        should(kuzzle.indexes).be.an.instanceOf(Object).and.have.property(index, [collection]);
-        done();
-      })
-      .catch(error => done(error));
-  });
-  it('should reject the createOrUpdate promise if elasticsearch throws an error', function () {
-    var ret;
-
-    elasticsearch.client.index = function(data) {
-      return Promise.reject(new Error());
-    };
-
-    requestObject.data._id = createdDocumentId;
-    ret = elasticsearch.createOrUpdate(requestObject);
-
-    return should(ret).be.rejected();
+      return should(elasticsearch.create(requestObject)).be.rejected();
+    });
   });
 
-  // get
-  it('should allow getting a single document', function (done) {
-    var ret;
+  describe('#createOrUpdate', function () {
+    it('should support createOrUpdate capability', function (done) {
+      var ret;
 
-    elasticsearch.client.get = function(data) {
-      should(data.id).be.exactly(createdDocumentId);
+      kuzzle.indexes = {};
 
-      return Promise.resolve({});
-    };
+      elasticsearch.client.index = function (data) {
+        should(data.index).be.exactly(index);
+        should(data.type).be.exactly(collection);
+        should(data.body).be.exactly(documentAda);
+        should(data.id).be.exactly(createdDocumentId);
 
-    delete requestObject.data.body;
-    requestObject.data._id = createdDocumentId;
+        return Promise.resolve({});
+      };
 
-    ret = elasticsearch.get(requestObject);
+      requestObject.data._id = createdDocumentId;
+      ret = elasticsearch.createOrUpdate(requestObject);
 
-    should(ret).be.a.Promise();
+      should(ret).be.a.Promise();
 
-    ret
-      .then(result => {
-        should(kuzzle.indexes).be.an.instanceOf(Object).and.have.property(index, [collection]);
-        done();
-      })
-      .catch(error => done(error));
+      ret
+        .then(function (result) {
+          should(kuzzle.indexes).be.an.instanceOf(Object).and.have.property(index, [collection]);
+          done();
+        })
+        .catch(error => done(error));
+    });
+
+    it('should reject the createOrUpdate promise if elasticsearch throws an error', function () {
+      var ret;
+
+      elasticsearch.client.index = function (data) {
+        return Promise.reject(new Error());
+      };
+
+      requestObject.data._id = createdDocumentId;
+      ret = elasticsearch.createOrUpdate(requestObject);
+
+      return should(ret).be.rejected();
+    });
+  });
+
+  describe('#get', function () {
+    it('should allow getting a single document', function (done) {
+      var ret;
+
+      elasticsearch.client.get = function (data) {
+        should(data.id).be.exactly(createdDocumentId);
+
+        return Promise.resolve({});
+      };
+
+      delete requestObject.data.body;
+      requestObject.data._id = createdDocumentId;
+
+      ret = elasticsearch.get(requestObject);
+
+      should(ret).be.a.Promise();
+
+      ret
+        .then(result => {
+          should(kuzzle.indexes).be.an.instanceOf(Object).and.have.property(index, [collection]);
+          done();
+        })
+        .catch(error => done(error));
+    });
   });
 
 
-  // mget
-  it('should return a rejected promise if getting a single document fails', function () {
+  describe('#mget', function () {
+    it('should return a rejected promise if getting a single document fails', function () {
 
-    elasticsearch.client.get = function(data) {
-      should(data.id).be.undefined();
+      elasticsearch.client.get = function (data) {
+        should(data.id).be.undefined();
 
-      return Promise.reject(new Error());
-    };
+        return Promise.reject(new Error());
+      };
 
 
-    return should(elasticsearch.get(requestObject)).be.rejected();
+      return should(elasticsearch.get(requestObject)).be.rejected();
+    });
+
+    it('should allow getting multiples documents', function () {
+
+      elasticsearch.client.mget = function (data) {
+        should(data.body.ids).be.an.Array();
+
+        return Promise.resolve(new Error());
+      };
+
+      delete requestObject.data.body;
+      requestObject.data = {body: {ids: [1, 2, 3]}};
+
+      return should(elasticsearch.mget(requestObject)).be.fulfilled();
+    });
+
+    it('should return a rejected promise if getting some multiple documents fails', function () {
+      elasticsearch.client.mget = function (data) {
+        should(data.body.ids).be.undefined();
+
+        return Promise.reject(new Error());
+      };
+
+      requestObject.data.body = {};
+
+      return should(elasticsearch.mget(requestObject)).be.rejected();
+    });
   });
 
-  it('should allow getting multiples documents', function () {
+  describe('#count', function () {
+    it('should allow counting documents using a provided filter', function (done) {
+      var ret;
 
-    elasticsearch.client.mget = function(data) {
-      should(data.body.ids).be.an.Array();
+      elasticsearch.client.count = function (data) {
+        should(data.body).have.keys();
 
-      return Promise.resolve(new Error());
-    };
+        return Promise.resolve({});
+      };
 
-    delete requestObject.data.body;
-    requestObject.data = { body: {ids: [1, 2, 3] } };
+      requestObject.data.body = {};
+      ret = elasticsearch.count(requestObject);
+      should(ret).be.a.Promise();
 
-    return should(elasticsearch.mget(requestObject)).be.fulfilled();
+      ret
+        .then(function (result) {
+          done();
+        })
+        .catch(error => done(error));
+    });
+
+    it('should allow counting objects using a query', function (done) {
+      var ret;
+
+      elasticsearch.client.count = function (data) {
+        should(data.body).be.an.instanceOf(Object).and.have.property('query', {foo: 'bar'});
+
+        return Promise.resolve({});
+      };
+
+      requestObject.data.body = {};
+      requestObject.data.query = {foo: 'bar'};
+
+      ret = elasticsearch.count(requestObject);
+      should(ret).be.a.Promise();
+
+      ret
+        .then(function (result) {
+          done();
+        })
+        .catch(error => done(error));
+    });
+
+    it('should return a rejected promise if the count fails', function () {
+
+      elasticsearch.client.count = function (data) {
+        return Promise.reject(new Error());
+      };
+
+      requestObject.data.body = {};
+      requestObject.data.query = {foo: 'bar'};
+
+      return should(elasticsearch.count(requestObject)).be.rejected();
+    });
   });
 
-  it('should return a rejected promise if getting some multiple documents fails', function () {
-    elasticsearch.client.mget = function(data) {
-      should(data.body.ids).be.undefined();
+  describe('#update', function () {
+    it('should allow to update a document', function (done) {
+      var ret;
 
-      return Promise.reject(new Error());
-    };
+      kuzzle.indexes = {};
 
-    requestObject.data.body = {};
+      elasticsearch.client.update = function (data) {
+        should(data.body.doc).be.exactly(documentAda);
+        should(data.id).be.exactly(createdDocumentId);
 
-    return should(elasticsearch.mget(requestObject)).be.rejected();
+        return Promise.resolve({});
+      };
+
+      requestObject.data._id = createdDocumentId;
+
+      ret = elasticsearch.update(requestObject);
+      should(ret).be.a.Promise();
+
+      ret
+        .then(function (result) {
+          should(kuzzle.indexes).be.an.instanceOf(Object).and.have.property(index, [collection]);
+          done();
+        })
+        .catch(error => done(error));
+    });
+
+    it('should return a rejected promise if an update fails', function () {
+
+      elasticsearch.client.update = function (data) {
+        should(data.id).be.undefined();
+
+        return Promise.reject(new Error());
+      };
+
+      return should(elasticsearch.update(requestObject)).be.rejected();
+    });
   });
 
-  // count
-  it('should allow counting documents using a provided filter', function (done) {
-    var ret;
+  describe('#delete', function () {
+    it('should allow to delete a document', function () {
 
-    elasticsearch.client.count = function(data) {
-      should(data.body).have.keys();
+      elasticsearch.client.delete = function (data) {
+        should(data.id).be.exactly(createdDocumentId);
 
-      return Promise.resolve({});
-    };
+        return Promise.resolve({});
+      };
 
-    requestObject.data.body = {};
-    ret = elasticsearch.count(requestObject);
-    should(ret).be.a.Promise();
+      delete requestObject.data.body;
+      requestObject.data._id = createdDocumentId;
 
-    ret
-      .then(function(result) {
-        done();
-      })
-      .catch(error => done(error));
+      return should(elasticsearch.delete(requestObject)).be.fulfilled();
+    });
+
+    it('should return a rejected promise if a delete fails', function () {
+
+      elasticsearch.client.delete = function (data) {
+        should(data.id).be.undefined();
+
+        return Promise.reject(new Error());
+      };
+
+      return should(elasticsearch.delete(requestObject)).be.rejected();
+    });
   });
 
-  it('should allow counting objects using a query', function (done) {
-    var ret;
+  describe('#deleteByQuery', function () {
+    it('should return an empty result array when no document has been deleted using a filter', function (done) {
+      delete requestObject.data.body;
+      requestObject.data.filter = {term: {firstName: 'no way any document can be returned with this filter'}};
 
-    elasticsearch.client.count = function(data) {
-      should(data.body).be.an.instanceOf(Object).and.have.property('query', {foo: 'bar'});
+      elasticsearch.client.search = function (data, callback) {
+        should(data.query).be.exactly(requestObject.data.query);
 
-      return Promise.resolve({});
-    };
+        callback(null, {hits: {hits: [], total: 0}});
+      };
 
-    requestObject.data.body = {};
-    requestObject.data.query = {foo: 'bar'};
-
-    ret = elasticsearch.count(requestObject);
-    should(ret).be.a.Promise();
-
-    ret
-      .then(function(result) {
-        done();
-      })
-      .catch(error => done(error));
-  });
-
-  it('should return a rejected promise if the count fails', function () {
-
-    elasticsearch.client.count = function(data) {
-      return Promise.reject(new Error());
-    };
-
-    requestObject.data.body = {};
-    requestObject.data.query = {foo: 'bar'};
-
-    return should(elasticsearch.count(requestObject)).be.rejected();
-  });
-
-  // update
-  it('should allow to update a document', function (done) {
-    var ret;
-
-    kuzzle.indexes = {};
-
-    elasticsearch.client.update = function(data) {
-      should(data.body.doc).be.exactly(documentAda);
-      should(data.id).be.exactly(createdDocumentId);
-
-      return Promise.resolve({});
-    };
-
-    requestObject.data._id = createdDocumentId;
-
-    ret = elasticsearch.update(requestObject);
-    should(ret).be.a.Promise();
-
-    ret
-      .then(function(result) {
-        should(kuzzle.indexes).be.an.instanceOf(Object).and.have.property(index, [collection]);
-        done();
-      })
-      .catch(error => done(error));
-  });
-
-  it('should return a rejected promise if an update fails', function () {
-
-    elasticsearch.client.update = function(data) {
-      should(data.id).be.undefined();
-
-      return Promise.reject(new Error());
-    };
-
-    return should(elasticsearch.update(requestObject)).be.rejected();
-  });
-
-  // delete
-  it('should allow to delete a document', function () {
-
-    elasticsearch.client.delete = function(data) {
-      should(data.id).be.exactly(createdDocumentId);
-
-      return Promise.resolve({});
-    };
-
-    delete requestObject.data.body;
-    requestObject.data._id = createdDocumentId;
-
-    return should(elasticsearch.delete(requestObject)).be.fulfilled();
-  });
-
-  it('should return a rejected promise if a delete fails', function () {
-
-    elasticsearch.client.delete = function(data) {
-      should(data.id).be.undefined();
-
-      return Promise.reject(new Error());
-    };
-
-    return should(elasticsearch.delete(requestObject)).be.rejected();
-  });
-
-  // deleteByQuery
-  it('should return an empty result array when no document has been deleted using a filter', function (done) {
-    delete requestObject.data.body;
-    requestObject.data.filter = { term: {firstName: 'no way any document can be returned with this filter'}};
-
-    elasticsearch.client.search = function(data, callback) {
-      should(data.query).be.exactly(requestObject.data.query);
-
-      callback(null, {hits: {hits: [], total:0}});
-    };
-
-    elasticsearch.deleteByQuery(requestObject)
-      .then(function (result) {
-        // Ugly line in order to spot a random bug on this unit test
-        should(result.data.ids).not.be.undefined().and.be.an.Array();
-        should(result.data.ids.length).be.exactly(0);
-        done();
-      })
-      .catch(error => done(error));
-  });
-
-  it('should allow to delete documents using a provided filter', function (done) {
-    var mockupIds = ['foo', 'bar', 'baz'];
-
-    elasticsearch.client.bulk = function (bulkData) {
-      try {
-        should(bulkData.body).not.be.undefined().and.be.an.Array();
-        should(bulkData.body.length).be.exactly(mockupIds.length);
-
-        bulkData.body.forEach(function (cmd) {
-          should(cmd).be.an.Object();
-          should(cmd.delete).not.be.undefined().and.be.an.Object();
-          should(mockupIds.indexOf(cmd.delete._id)).not.be.eql(-1);
-          should(cmd.delete._type).be.exactly(requestObject.collection);
-        });
-      }
-      catch (error) {
-        done(error);
-      }
-
-      return Promise.resolve(mockupIds);
-    };
-
-    ES.__with__({
-      getAllIdsFromQuery: function () {
-        return Promise.resolve(mockupIds);
-      }
-    })(function () {
       elasticsearch.deleteByQuery(requestObject)
         .then(function (result) {
-          try {
-            should(result.data.ids).not.be.undefined().and.be.an.Array();
-            should(result.data.ids).match(mockupIds);
-            done();
+          // Ugly line in order to spot a random bug on this unit test
+          should(result.data.ids).not.be.undefined().and.be.an.Array();
+          should(result.data.ids.length).be.exactly(0);
+          done();
+        })
+        .catch(error => done(error));
+    });
+
+    it('should allow to delete documents using a provided filter', function (done) {
+      var mockupIds = ['foo', 'bar', 'baz'];
+
+      elasticsearch.client.bulk = function (bulkData) {
+        try {
+          should(bulkData.body).not.be.undefined().and.be.an.Array();
+          should(bulkData.body.length).be.exactly(mockupIds.length);
+
+          bulkData.body.forEach(function (cmd) {
+            should(cmd).be.an.Object();
+            should(cmd.delete).not.be.undefined().and.be.an.Object();
+            should(mockupIds.indexOf(cmd.delete._id)).not.be.eql(-1);
+            should(cmd.delete._type).be.exactly(requestObject.collection);
+          });
+        }
+        catch (error) {
+          done(error);
+        }
+
+        return Promise.resolve(mockupIds);
+      };
+
+      ES.__with__({
+        getAllIdsFromQuery: function () {
+          return Promise.resolve(mockupIds);
+        }
+      })(function () {
+        elasticsearch.deleteByQuery(requestObject)
+          .then(function (result) {
+            try {
+              should(result.data.ids).not.be.undefined().and.be.an.Array();
+              should(result.data.ids).match(mockupIds);
+              done();
+            }
+            catch (e) {
+              done(e);
+            }
+          })
+          .catch(function (error) {
+            done(error);
+          });
+      });
+    });
+
+    it('should return a rejected promise if the delete by query fails because of a bad filter', function () {
+
+      elasticsearch.client.search = function (data, callback) {
+        callback(new Error(), {});
+      };
+
+      return should(elasticsearch.deleteByQuery(requestObject)).be.rejected();
+    });
+
+    it('should return a rejected promise if the delete by query fails because of a bulk failure', function () {
+      elasticsearch.client.bulk = function () {
+        return Promise.reject(new Error('rejected'));
+      };
+      requestObject.data.body = {};
+
+      return ES.__with__({
+        getAllIdsFromQuery: function () {
+          return Promise.resolve(['foo', 'bar']);
+        }
+      })(function () {
+        return should(elasticsearch.deleteByQuery(requestObject)).be.rejected();
+      });
+    });
+  });
+
+  describe('#bulk', function () {
+    it('should support bulk data import', function () {
+      requestObject.data.body = [
+        {index: {_id: 1, _type: collection, _index: index}},
+        {firstName: 'foo'},
+        {index: {_id: 2, _type: collection, _index: index}},
+        {firstName: 'bar'},
+        {update: {_id: 1, _type: collection, _index: index}},
+        {doc: {firstName: 'foobar'}},
+        {delete: {_id: 2, _type: collection, _index: index}}
+      ];
+
+      elasticsearch.client.bulk = function (data) {
+        should(data.body).be.exactly(requestObject.data.body);
+
+        return Promise.resolve({});
+      };
+
+      return should(elasticsearch.import(requestObject)).be.fulfilled();
+    });
+
+
+    it('should raise a "Partial Error" response for bulk data import with some errors', function (done) {
+      requestObject.data.body = [
+        {index: {_id: 1, _type: collection, _index: index}},
+        {firstName: 'foo'},
+        {index: {_id: 2, _type: collection, _index: index}},
+        {firstName: 'bar'},
+        {update: {_id: 12, _type: collection, _index: index}},
+        {doc: {firstName: 'foobar'}},
+        {update: {_id: 212, _type: collection, _index: index}},
+        {doc: {firstName: 'foobar'}}
+      ];
+
+      elasticsearch.client.bulk = function (data) {
+        should(data.body).be.exactly(requestObject.data.body);
+
+        return Promise.resolve({
+          errors: true,
+          items: {
+            12: {index: {status: 404, error: 'DocumentMissingException'}},
+            212: {index: {status: 404, error: 'DocumentMissingException'}}
           }
-          catch (e) {
+        });
+      };
+
+      elasticsearch.import(requestObject)
+        .then(function (result) {
+          try {
+            should(result.status).be.exactly(206);
+            should(result.error).be.not.null();
+            should(result.error.count).be.exactly(2);
+            should(result.error.message).be.exactly('Some errors on bulk');
+            should(result.error.errors).be.an.Array().and.match([{status: 404}]).and.match([{error: /^DocumentMissingException/}]);
+            done();
+          } catch (e) {
             done(e);
           }
         })
@@ -454,627 +554,570 @@ describe('Test: ElasticSearch service', function () {
           done(error);
         });
     });
-  });
 
-  it('should return a rejected promise if the delete by query fails because of a bad filter', function () {
+    it('should override the type with the collection if one has been specified in the request', function () {
+      kuzzle.indexes = {};
 
-    elasticsearch.client.search = function(data, callback) {
-      callback(new Error(), {});
-    };
+      requestObject.data.body = [
+        {index: {_id: 1, _index: index}},
+        {firstName: 'foo'},
+        {index: {_id: 2, _index: 'indexAlt'}},
+        {firstName: 'bar'},
+        {update: {_id: 1, _index: index}},
+        {doc: {firstName: 'foobar'}},
+        {delete: {_id: 2, _index: 'indexAlt'}}
+      ];
 
-    return should(elasticsearch.deleteByQuery(requestObject)).be.rejected();
-  });
+      elasticsearch.client.bulk = function (data) {
+        should(data.body).be.an.Array().and.match([
+          {index: {_id: 1, _index: index, _type: collection}},
+          {firstName: 'foo'},
+          {index: {_id: 2, _index: 'indexAlt', _type: collection}},
+          {firstName: 'bar'},
+          {update: {_id: 1, _index: index, _type: collection}},
+          {doc: {firstName: 'foobar'}},
+          {delete: {_id: 2, _index: 'indexAlt', _type: collection}}
+        ]);
 
-  it('should return a rejected promise if the delete by query fails because of a bulk failure', function () {
-    elasticsearch.client.bulk = function () { return Promise.reject(new Error('rejected')); };
-    requestObject.data.body = {};
+        return Promise.resolve({
+          items: [
+            {index: {_id: 1, _index: index, _type: collection}},
+            {index: {_id: 2, _index: 'indexAlt', _type: collection}},
+            {update: {_id: 1, _index: index, _type: collection}},
+            {delete: {_id: 2, _index: 'indexAlt', _type: collection}}
+          ]
+        });
+      };
 
-    return ES.__with__({
-      getAllIdsFromQuery: function () {
-        return Promise.resolve(['foo', 'bar']);
-      }
-    })(function () {
-      return should(elasticsearch.deleteByQuery(requestObject)).be.rejected();
+      return should(elasticsearch.import(requestObject)).be.fulfilled();
+    });
+
+    it('should reject the import promise if elasticsearch throws an error', function () {
+      requestObject.data.body = [
+        {index: {_id: 1, _index: index}},
+        {firstName: 'foo'},
+        {index: {_id: 2, _index: index}},
+        {firstName: 'bar'},
+        {update: {_id: 1, _index: index}},
+        {doc: {firstName: 'foobar'}},
+        {delete: {_id: 2, _index: index}}
+      ];
+
+      elasticsearch.client.bulk = function (data) {
+        return Promise.reject(new Error());
+      };
+
+      return should(elasticsearch.import(requestObject)).be.rejected();
+    });
+
+    it('should return a rejected promise if no body is provided', function () {
+      delete requestObject.data.body;
+      return should(elasticsearch.import(requestObject)).be.rejected();
+    });
+
+    it('should return a rejected promise if no type has been provided, locally or globally', function () {
+      delete requestObject.collection;
+
+      requestObject.data.body = [
+        {index: {_id: 1, _type: collection, _index: index}},
+        {firstName: 'foo'},
+        {index: {_id: 2, _type: collection, _index: index}},
+        {firstName: 'bar'},
+        {update: {_id: 1, _index: index}},
+        {doc: {firstName: 'foobar'}},
+        {delete: {_id: 2, _type: collection, _index: index}}
+      ];
+
+      elasticsearch.client.bulk = function (data) {
+        return Promise.resolve({});
+      };
+
+      return should(elasticsearch.import(requestObject)).be.rejected();
+    });
+
+    it('should return a rejected promise if no index has been provided, locally or globally', function () {
+      delete requestObject.index;
+
+      requestObject.data.body = [
+        {index: {_id: 1, _type: collection, _index: index}},
+        {firstName: 'foo'},
+        {index: {_id: 2, _type: collection, _index: index}},
+        {firstName: 'bar'},
+        {update: {_id: 1, _type: collection}},
+        {doc: {firstName: 'foobar'}},
+        {delete: {_id: 2, _type: collection, _index: index}}
+      ];
+
+      elasticsearch.client.bulk = function (data) {
+        return Promise.resolve({});
+      };
+
+      return should(elasticsearch.import(requestObject)).be.rejected();
     });
   });
 
-  // import (bulk)
-  it('should support bulk data import', function () {
-    requestObject.data.body = [
-        { index:  {_id: 1, _type: collection, _index: index } },
-        { firstName: 'foo' },
-        { index:  {_id: 2, _type: collection, _index: index } },
-        { firstName: 'bar' },
-        { update: {_id: 1, _type: collection, _index: index } },
-        { doc: { firstName: 'foobar' } },
-        { delete: {_id: 2, _type: collection, _index: index } }
-      ];
-
-    elasticsearch.client.bulk = function (data) {
-      should(data.body).be.exactly(requestObject.data.body);
-
-      return Promise.resolve({});
-    };
-
-    return should(elasticsearch.import(requestObject)).be.fulfilled();
-  });
-
-
-  it('should raise a "Partial Error" response for bulk data import with some errors', function (done) {
-    requestObject.data.body = [
-        { index:  {_id: 1, _type: collection, _index: index } },
-        { firstName: 'foo' },
-        { index:  {_id: 2, _type: collection, _index: index } },
-        { firstName: 'bar' },
-        { update: {_id: 12, _type: collection, _index: index } },
-        { doc: { firstName: 'foobar' } },
-        { update: {_id: 212, _type: collection, _index: index } },
-        { doc: { firstName: 'foobar' } }
-      ];
-
-    elasticsearch.client.bulk = function (data) {
-      should(data.body).be.exactly(requestObject.data.body);
-
-      return Promise.resolve({
-        errors: true,
-        items: {
-          12: {index: {status: 404, error: 'DocumentMissingException'}},
-          212: {index: {status: 404, error: 'DocumentMissingException'}}
-        }
-      });
-    };
-
-    elasticsearch.import(requestObject)
-      .then(function(result) {
-        try {
-          should(result.status).be.exactly(206);
-          should(result.error).be.not.null();
-          should(result.error.count).be.exactly(2);
-          should(result.error.message).be.exactly('Some errors on bulk');
-          should(result.error.errors).be.an.Array().and.match([{status: 404}]).and.match([{error: /^DocumentMissingException/}]);
-          done();
-        } catch(e) {
-          done(e);
-        }
-      })
-      .catch(function(error) {
-        done(error);
-      });
-  });
-
-  it('should override the type with the collection if one has been specified in the request', function () {
-    kuzzle.indexes = {};
-
-    requestObject.data.body = [
-      { index:  {_id: 1, _index: index} },
-      { firstName: 'foo' },
-      { index:  {_id: 2, _index: 'indexAlt'} },
-      { firstName: 'bar' },
-      { update: {_id: 1, _index: index} },
-      { doc: { firstName: 'foobar' } },
-      { delete: {_id: 2, _index: 'indexAlt'} }
-    ];
-
-    elasticsearch.client.bulk = function (data) {
-      should(data.body).be.an.Array().and.match([
-        { index:  {_id: 1, _index: index, _type: collection} },
-        { firstName: 'foo' },
-        { index:  {_id: 2, _index: 'indexAlt', _type: collection} },
-        { firstName: 'bar' },
-        { update: {_id: 1, _index: index, _type: collection} },
-        { doc: { firstName: 'foobar' } },
-        { delete: {_id: 2, _index: 'indexAlt', _type: collection} }
-      ]);
-
-      return Promise.resolve({items: [
-        { index:  {_id: 1, _index: index, _type: collection} },
-        { index:  {_id: 2, _index: 'indexAlt', _type: collection} },
-        { update: {_id: 1, _index: index, _type: collection} },
-        { delete: {_id: 2, _index: 'indexAlt', _type: collection} }
-      ]});
-    };
-
-    return should(elasticsearch.import(requestObject)).be.fulfilled();
-  });
-
-  it('should reject the import promise if elasticsearch throws an error', function () {
-    requestObject.data.body = [
-      { index:  {_id: 1, _index: index} },
-      { firstName: 'foo' },
-      { index:  {_id: 2, _index: index} },
-      { firstName: 'bar' },
-      { update: {_id: 1, _index: index} },
-      { doc: { firstName: 'foobar' } },
-      { delete: {_id: 2, _index: index} }
-    ];
-
-    elasticsearch.client.bulk = function (data) {
-      return Promise.reject(new Error());
-    };
-
-    return should(elasticsearch.import(requestObject)).be.rejected();
-  });
-
-  it('should return a rejected promise if no body is provided', function () {
-    delete requestObject.data.body;
-    return should(elasticsearch.import(requestObject)).be.rejected();
-  });
-
-  it('should return a rejected promise if no type has been provided, locally or globally', function () {
-    delete requestObject.collection;
-
-    requestObject.data.body = [
-      { index:  {_id: 1, _type: collection, _index: index } },
-      { firstName: 'foo' },
-      { index:  {_id: 2, _type: collection, _index: index } },
-      { firstName: 'bar' },
-      { update: {_id: 1, _index: index} },
-      { doc: { firstName: 'foobar' } },
-      { delete: {_id: 2, _type: collection, _index: index } }
-    ];
-
-    elasticsearch.client.bulk = function (data) {
-      return Promise.resolve({});
-    };
-
-    return should(elasticsearch.import(requestObject)).be.rejected();
-  });
-
-  it('should return a rejected promise if no index has been provided, locally or globally', function () {
-    delete requestObject.index;
-
-    requestObject.data.body = [
-      { index:  {_id: 1, _type: collection, _index: index } },
-      { firstName: 'foo' },
-      { index:  {_id: 2, _type: collection, _index: index } },
-      { firstName: 'bar' },
-      { update: {_id: 1, _type: collection} },
-      { doc: { firstName: 'foobar' } },
-      { delete: {_id: 2, _type: collection, _index: index } }
-    ];
-
-    elasticsearch.client.bulk = function (data) {
-      return Promise.resolve({});
-    };
-
-    return should(elasticsearch.import(requestObject)).be.rejected();
-  });
-
-  // putMapping
-  it('should have mapping capabilities', function () {
-    requestObject.data.body =  {
-      properties: {
-        city: {type: 'string'}
-      }
-    };
-    elasticsearch.client.indices.putMapping = function (data) {
-      should(data.body).be.exactly(requestObject.data.body);
-
-      return Promise.resolve({});
-    };
-
-    return should(elasticsearch.putMapping(requestObject)).be.fulfilled();
-  });
-
-  it('should reject bad mapping input', function () {
-
-    elasticsearch.client.indices.putMapping = function (data) {
-      should(data.body).not.have.key('properties');
-
-      return Promise.reject({});
-    };
-
-    return should(elasticsearch.putMapping(requestObject)).be.rejected();
-  });
-
-  // getMapping
-  it('should allow users to retrieve a mapping', function (done) {
-
-    elasticsearch.client.indices.getMapping = function (data) {
-      var mappings = {};
-
-      mappings[index] = {mappings: {}};
-
-      return Promise.resolve(mappings);
-    };
-
-    elasticsearch.getMapping(requestObject)
-      .then(function (result) {
-        should(result.data).not.be.undefined();
-        should(result.data[requestObject.index]).not.be.undefined();
-        should(result.data[requestObject.index].mappings).not.be.undefined();
-        done();
-      })
-      .catch(error => done(error));
-  });
-
-  it('should return a rejected promise if there is no mapping found', function () {
-    requestObject.collection = 'foobar';
-    requestObject.index = 'kuzzle-unit-tests-fakeindex';
-
-    elasticsearch.client.indices.getMapping = function (data) {
-      var mappings = {};
-
-      mappings[index] = {mappings: {}};
-      mappings[index].mappings[collection] = {};
-
-      return Promise.resolve(mappings);
-    };
-
-    return should(elasticsearch.getMapping(requestObject)).be.rejected();
-  });
-
-  it('should reject the getMapping promise if elasticsearch throws an error', function () {
-
-    elasticsearch.client.indices.getMapping = function (data) {
-      return Promise.reject(new Error());
-    };
-
-    return should(elasticsearch.getMapping(requestObject)).be.rejected();
-  });
-
-  // deleteCollection
-  it('should allow deleting an entire collection', function (done) {
-
-    elasticsearch.client.indices.deleteMapping = function (data) {
-      return Promise.resolve({});
-    };
-
-    delete requestObject.data.body;
-    should(elasticsearch.deleteCollection(requestObject)).be.fulfilled()
-      .then(function (result) {
-        should(kuzzle.indexes).be.an.instanceOf(Object).and.have.property(index, []);
-        done();
-      })
-      .catch(error => done(error));
-  });
-
-  it('should return a rejected promise if the delete collection function fails', function () {
-    // because we already deleted the collection in the previous test, it should naturally fail
-    elasticsearch.client.indices.deleteMapping = function (data) {
-      return Promise.reject(new Error());
-    };
-
-    delete requestObject.data.body;
-    return should(elasticsearch.deleteCollection(requestObject)).be.rejected();
-  });
-
-  // getAllIdsFromQuery
-  it('should be able to get every ids matching a query', function (done) {
-    var
-      ret,
-      getAllIdsFromQuery = ES.__get__('getAllIdsFromQuery'),
-      ids = ['foo', 'bar'];
-
-    elasticsearch.client.search = function (data, callback) {
-      var response = {
-        hits: {
-          hits: [
-            {_id: 'foo'},
-            {_id: 'bar'}
-          ],
-          total: 2
+  describe('#putMapping', function () {
+    it('should have mapping capabilities', function () {
+      requestObject.data.body = {
+        properties: {
+          city: {type: 'string'}
         }
       };
-      callback(null, response);
-    };
+      elasticsearch.client.indices.putMapping = function (data) {
+        should(data.body).be.exactly(requestObject.data.body);
 
-    ret = getAllIdsFromQuery.call(elasticsearch, requestObject);
-    should(ret).be.a.Promise();
-
-    ret
-      .then(function (result) {
-        should(result).be.an.Array().and.match(ids);
-        should(result.length).be.exactly(2);
-        done();
-      })
-      .catch(error => done(error));
-  });
-
-  it('should return a rejected promise if the search fails', function () {
-    var getAllIdsFromQuery = ES.__get__('getAllIdsFromQuery');
-
-    elasticsearch.client.search = function (data, callback) {
-      callback(new Error('rejected'));
-    };
-
-    return should(getAllIdsFromQuery.call(elasticsearch, requestObject)).be.rejectedWith('rejected');
-  });
-
-  it('should scroll through result pages until getting all ids', function (done) {
-    var
-      getAllIdsFromQuery = ES.__get__('getAllIdsFromQuery'),
-      ids = ['foo', 'bar'];
-
-    elasticsearch.client.search = function (data, callback) {
-      var response = {
-        hits: {
-          hits: [
-            {_id: 'foo'}
-          ],
-          total: 2
-        }
-      };
-      callback(null, response);
-    };
-
-
-    elasticsearch.client.scroll = function (data, callback) {
-      var response = {
-        hits: {
-          hits: [
-            {_id: 'bar'}
-          ],
-          total: 2
-        }
-      };
-      callback(null, response);
-    };
-
-    getAllIdsFromQuery.call(elasticsearch, requestObject)
-      .then(function (result) {
-        should(result).be.an.Array().and.match(ids);
-        should(result.length).be.exactly(2);
-        done();
-      })
-      .catch(error => done(error));
-  });
-
-  // listCollections
-  it('should allow listing all available collections', function () {
-
-    elasticsearch.client.indices.getMapping = function (data) {
-      var mappings = {};
-
-      mappings[index] = {mappings: {}};
-      mappings[index].mappings[collection] = {};
-
-      return Promise.resolve(mappings);
-    };
-
-    delete requestObject.data.body;
-    return should(elasticsearch.listCollections(requestObject)).be.fulfilled();
-  });
-
-  it('should reject the listCollections promise if elasticsearch throws an error', function () {
-
-    elasticsearch.client.indices.getMapping = function (data) {
-      return Promise.reject(new Error());
-    };
-
-    requestObject.index = 'kuzzle-unit-tests-fakeindex';
-    delete requestObject.data.body;
-    return should(elasticsearch.listCollections(requestObject)).be.rejected();
-  });
-
-  // createCollection
-  it('should allow creating a new collection', function (done) {
-
-    elasticsearch.client.indices.putMapping = function (data) {
-      return Promise.resolve();
-    };
-
-    requestObject.collection = '%foobar';
-    elasticsearch.createCollection(requestObject)
-      .then(function (result) {
-        should(kuzzle.indexes).be.an.instanceOf(Object).and.have.property(index, [collection, requestObject.collection]);
-        done();
-      })
-      .catch(error => done(error));
-  });
-
-  it('should reject the createCollection promise if elasticsearch throws an error', function () {
-
-    elasticsearch.client.indices.putMapping = function (data) {
-      return Promise.reject(new Error());
-    };
-
-    return should(elasticsearch.createCollection(requestObject)).be.rejected();
-  });
-
-  // truncateCollection
-  it('should allow truncating an existing collection', function (done) {
-    var
-      mapping = {},
-      hasRetrievedMapping = false,
-      hasDeletedMapping = false,
-      hasCreatedMapping = false;
-
-    mapping[index] = {mappings: {}};
-    mapping[index].mappings[collection] = {foo: 'bar'};
-
-    elasticsearch.client.indices.getMapping = function (data) {
-      hasRetrievedMapping = true;
-      return Promise.resolve(mapping);
-    };
-    elasticsearch.client.indices.deleteMapping = function (data) {
-      hasDeletedMapping = true;
-      return Promise.resolve();
-    };
-    elasticsearch.client.indices.putMapping = function (data) {
-      should(data.body[data.type]).be.exactly(mapping[requestObject.index].mappings[requestObject.collection]);
-      hasCreatedMapping = true;
-      return Promise.resolve();
-    };
-
-    elasticsearch.truncateCollection(requestObject)
-      .then(function (result) {
-        should(hasRetrievedMapping).be.exactly(true);
-        should(hasDeletedMapping).be.exactly(true);
-        should(hasCreatedMapping).be.exactly(true);
-        done();
-      })
-      .catch(error => done(error));
-  });
-
-  it('should return an error if trying to truncate a non-existing collection', function () {
-    var
-      mapping = {};
-
-    mapping[index] = {mappings: {}};
-    mapping[index].mappings[collection] = {foo: 'bar'};
-
-    elasticsearch.client.indices.getMapping = function (data) {
-      return Promise.resolve(mapping);
-    };
-    elasticsearch.client.indices.deleteMapping = function (data) {
-      return Promise.reject();
-    };
-
-    requestObject.collection = 'non existing collection';
-    return should(elasticsearch.truncateCollection(requestObject)).be.rejected();
-  });
-
-  it('should return an error if trying to truncate a non-existing collection into an non-existing index', function () {
-    var
-      mapping = {};
-
-    mapping[index] = {mappings: {}};
-    mapping[index].mappings[collection] = {foo: 'bar'};
-
-    elasticsearch.client.indices.getMapping = function (data) {
-      return Promise.resolve(mapping);
-    };
-
-    requestObject.index = 'non existing index';
-    return should(elasticsearch.truncateCollection(requestObject)).be.rejected();
-  });
-
-  // reset
-  it('should allow deleting all indexes', function (done) {
-    var
-      ret,
-      deletedAll = false;
-
-    elasticsearch.client.cat.indices = function (data) {
-      return Promise.resolve('      \n %kuzzle      \n ' + index + ' \n  ');
-    };
-
-    elasticsearch.client.indices.delete = function (param) {
-      try {
-        should(param).be.an.Object().and.match({index: [index]});
-        deletedAll = true;
         return Promise.resolve({});
-      }
-      catch (error) {
-        done(error);
-        return Promise.reject(error);
-      }
-    };
+      };
 
-    ret = elasticsearch.deleteIndexes(requestObject);
-    should(ret).be.a.Promise();
+      return should(elasticsearch.putMapping(requestObject)).be.fulfilled();
+    });
 
-    ret
-      .then(function () {
-        should(kuzzle.indexes).be.an.instanceOf(Object).and.have.keys();
-        should(deletedAll).be.true();
-        done();
-      })
-      .catch(error => done(error));
+    it('should reject bad mapping input', function () {
+
+      elasticsearch.client.indices.putMapping = function (data) {
+        should(data.body).not.have.key('properties');
+
+        return Promise.reject({});
+      };
+
+      return should(elasticsearch.putMapping(requestObject)).be.rejected();
+    });
   });
 
-  it('should return a rejected promise if the reset fails while deleting all indexes', function () {
-    elasticsearch.client.indices.getMapping = function (data) {
-      var indexes = {};
-      indexes['%kuzzle'] = [];
-      indexes[index] = [];
-      return Promise.resolve(indexes);
-    };
-    elasticsearch.client.indices.delete = function () { return Promise.reject(new Error('rejected')); };
+  describe('#getMapping', function () {
+    it('should allow users to retrieve a mapping', function (done) {
 
-    return should(elasticsearch.deleteIndexes(requestObject)).be.rejected();
+      elasticsearch.client.indices.getMapping = function (data) {
+        var mappings = {};
+
+        mappings[index] = {mappings: {}};
+
+        return Promise.resolve(mappings);
+      };
+
+      elasticsearch.getMapping(requestObject)
+        .then(function (result) {
+          should(result.data).not.be.undefined();
+          should(result.data[requestObject.index]).not.be.undefined();
+          should(result.data[requestObject.index].mappings).not.be.undefined();
+          done();
+        })
+        .catch(error => done(error));
+    });
+
+    it('should return a rejected promise if there is no mapping found', function () {
+      requestObject.collection = 'foobar';
+      requestObject.index = 'kuzzle-unit-tests-fakeindex';
+
+      elasticsearch.client.indices.getMapping = function (data) {
+        var mappings = {};
+
+        mappings[index] = {mappings: {}};
+        mappings[index].mappings[collection] = {};
+
+        return Promise.resolve(mappings);
+      };
+
+      return should(elasticsearch.getMapping(requestObject)).be.rejected();
+    });
+
+    it('should reject the getMapping promise if elasticsearch throws an error', function () {
+
+      elasticsearch.client.indices.getMapping = function (data) {
+        return Promise.reject(new Error());
+      };
+
+      return should(elasticsearch.getMapping(requestObject)).be.rejected();
+    });
   });
 
-  it('should not delete any index if only left %kuzzle internal index', function () {
-    elasticsearch.client.indices.getMapping = function (data) {
-      var indexes = {};
-      indexes['%kuzzle'] = [];
-      return Promise.resolve(indexes);
-    };
-    elasticsearch.client.indices.delete = function () { return Promise.reject(new Error('rejected')); };
+  describe('#deleteCollection', function () {
+    it('should allow deleting an entire collection', function (done) {
 
-    return should(elasticsearch.deleteIndexes(requestObject)).be.fulfilled();
+      elasticsearch.client.indices.deleteMapping = function (data) {
+        return Promise.resolve({});
+      };
+
+      delete requestObject.data.body;
+      should(elasticsearch.deleteCollection(requestObject)).be.fulfilled()
+        .then(function (result) {
+          should(kuzzle.indexes).be.an.instanceOf(Object).and.have.property(index, []);
+          done();
+        })
+        .catch(error => done(error));
+    });
+
+    it('should return a rejected promise if the delete collection function fails', function () {
+      // because we already deleted the collection in the previous test, it should naturally fail
+      elasticsearch.client.indices.deleteMapping = function (data) {
+        return Promise.reject(new Error());
+      };
+
+      delete requestObject.data.body;
+      return should(elasticsearch.deleteCollection(requestObject)).be.rejected();
+    });
   });
 
-  it('should be able to create index', function (done) {
-    var ret;
+  describe('#getAllIdsFromQuery', function () {
+    it('should be able to get every ids matching a query', function (done) {
+      var
+        ret,
+        getAllIdsFromQuery = ES.__get__('getAllIdsFromQuery'),
+        ids = ['foo', 'bar'];
 
-    kuzzle.indexes = {};
+      elasticsearch.client.search = function (data, callback) {
+        var response = {
+          hits: {
+            hits: [
+              {_id: 'foo'},
+              {_id: 'bar'}
+            ],
+            total: 2
+          }
+        };
+        callback(null, response);
+      };
 
-    elasticsearch.client.indices.create = function(data) {
-      should(data.index).be.exactly(requestObject.index);
+      ret = getAllIdsFromQuery.call(elasticsearch, requestObject);
+      should(ret).be.a.Promise();
 
-      return Promise.resolve({});
-    };
+      ret
+        .then(function (result) {
+          should(result).be.an.Array().and.match(ids);
+          should(result.length).be.exactly(2);
+          done();
+        })
+        .catch(error => done(error));
+    });
 
-    ret = elasticsearch.createIndex(requestObject);
-    should(ret).be.a.Promise();
+    it('should return a rejected promise if the search fails', function () {
+      var getAllIdsFromQuery = ES.__get__('getAllIdsFromQuery');
 
-    ret
-      .then(function(result) {
-        should(kuzzle.indexes).be.an.instanceOf(Object).and.have.property(index, []);
-        done();
-      })
-      .catch(error => done(error));
+      elasticsearch.client.search = function (data, callback) {
+        callback(new Error('rejected'));
+      };
+
+      return should(getAllIdsFromQuery.call(elasticsearch, requestObject)).be.rejectedWith('rejected');
+    });
+
+    it('should scroll through result pages until getting all ids', function (done) {
+      var
+        getAllIdsFromQuery = ES.__get__('getAllIdsFromQuery'),
+        ids = ['foo', 'bar'];
+
+      elasticsearch.client.search = function (data, callback) {
+        var response = {
+          hits: {
+            hits: [
+              {_id: 'foo'}
+            ],
+            total: 2
+          }
+        };
+        callback(null, response);
+      };
+
+
+      elasticsearch.client.scroll = function (data, callback) {
+        var response = {
+          hits: {
+            hits: [
+              {_id: 'bar'}
+            ],
+            total: 2
+          }
+        };
+        callback(null, response);
+      };
+
+      getAllIdsFromQuery.call(elasticsearch, requestObject)
+        .then(function (result) {
+          should(result).be.an.Array().and.match(ids);
+          should(result.length).be.exactly(2);
+          done();
+        })
+        .catch(error => done(error));
+    });
   });
 
-  it('should reject the createIndex promise if elasticsearch throws an error', function () {
-    elasticsearch.client.indices.create = function(data) {
-      return Promise.reject(new Error());
-    };
+  describe('#listCollections', function () {
+    it('should allow listing all available collections', function () {
 
-    return should(elasticsearch.createIndex(requestObject)).be.rejected();
+      elasticsearch.client.indices.getMapping = function (data) {
+        var mappings = {};
+
+        mappings[index] = {mappings: {}};
+        mappings[index].mappings[collection] = {};
+
+        return Promise.resolve(mappings);
+      };
+
+      delete requestObject.data.body;
+      return should(elasticsearch.listCollections(requestObject)).be.fulfilled();
+    });
+
+    it('should reject the listCollections promise if elasticsearch throws an error', function () {
+
+      elasticsearch.client.indices.getMapping = function (data) {
+        return Promise.reject(new Error());
+      };
+
+      requestObject.index = 'kuzzle-unit-tests-fakeindex';
+      delete requestObject.data.body;
+      return should(elasticsearch.listCollections(requestObject)).be.rejected();
+    });
   });
 
-  it('should be able to delete index', function (done) {
-    var ret;
+  describe('#createCollection', function () {
+    it('should allow creating a new collection', function (done) {
 
-    elasticsearch.client.indices.delete = function(data) {
-      should(data.index).be.exactly(requestObject.index);
+      elasticsearch.client.indices.putMapping = function (data) {
+        return Promise.resolve();
+      };
 
-      return Promise.resolve({});
-    };
+      requestObject.collection = '%foobar';
+      elasticsearch.createCollection(requestObject)
+        .then(function (result) {
+          should(kuzzle.indexes).be.an.instanceOf(Object).and.have.property(index, [collection, requestObject.collection]);
+          done();
+        })
+        .catch(error => done(error));
+    });
 
-    ret = elasticsearch.deleteIndex(requestObject);
-    should(ret).be.a.Promise();
+    it('should reject the createCollection promise if elasticsearch throws an error', function () {
 
-    ret
-      .then(function(result) {
-        should(kuzzle.indexes).be.an.instanceOf(Object).and.have.keys();
-        done();
-      })
-      .catch(error => done(error));
+      elasticsearch.client.indices.putMapping = function (data) {
+        return Promise.reject(new Error());
+      };
+
+      return should(elasticsearch.createCollection(requestObject)).be.rejected();
+    });
   });
 
-  it('should reject the deleteIndex promise if elasticsearch throws an error', function () {
-    elasticsearch.client.indices.delete = function(data) {
-      return Promise.reject(new Error());
-    };
+  describe('#truncateCollection', function () {
+    it('should allow truncating an existing collection', function (done) {
+      var
+        mapping = {},
+        hasRetrievedMapping = false,
+        hasDeletedMapping = false,
+        hasCreatedMapping = false;
 
-    return should(elasticsearch.deleteIndex(requestObject)).be.rejected();
+      mapping[index] = {mappings: {}};
+      mapping[index].mappings[collection] = {foo: 'bar'};
+
+      elasticsearch.client.indices.getMapping = function (data) {
+        hasRetrievedMapping = true;
+        return Promise.resolve(mapping);
+      };
+      elasticsearch.client.indices.deleteMapping = function (data) {
+        hasDeletedMapping = true;
+        return Promise.resolve();
+      };
+      elasticsearch.client.indices.putMapping = function (data) {
+        should(data.body[data.type]).be.exactly(mapping[requestObject.index].mappings[requestObject.collection]);
+        hasCreatedMapping = true;
+        return Promise.resolve();
+      };
+
+      elasticsearch.truncateCollection(requestObject)
+        .then(function (result) {
+          should(hasRetrievedMapping).be.exactly(true);
+          should(hasDeletedMapping).be.exactly(true);
+          should(hasCreatedMapping).be.exactly(true);
+          done();
+        })
+        .catch(error => done(error));
+    });
+
+    it('should return an error if trying to truncate a non-existing collection', function () {
+      var
+        mapping = {};
+
+      mapping[index] = {mappings: {}};
+      mapping[index].mappings[collection] = {foo: 'bar'};
+
+      elasticsearch.client.indices.getMapping = function (data) {
+        return Promise.resolve(mapping);
+      };
+      elasticsearch.client.indices.deleteMapping = function (data) {
+        return Promise.reject();
+      };
+
+      requestObject.collection = 'non existing collection';
+      return should(elasticsearch.truncateCollection(requestObject)).be.rejected();
+    });
+
+    it('should return an error if trying to truncate a non-existing collection into an non-existing index', function () {
+      var
+        mapping = {};
+
+      mapping[index] = {mappings: {}};
+      mapping[index].mappings[collection] = {foo: 'bar'};
+
+      elasticsearch.client.indices.getMapping = function (data) {
+        return Promise.resolve(mapping);
+      };
+
+      requestObject.index = 'non existing index';
+      return should(elasticsearch.truncateCollection(requestObject)).be.rejected();
+    });
   });
 
-  it('should allow listing indexes', function (done) {
-    elasticsearch.client.indices.getMapping = function (data) {
-      var indexes = {};
-      indexes[index] = [];
-      return Promise.resolve(indexes);
-    };
+  describe('#reset', function () {
+    it('should allow deleting all indexes', function (done) {
+      var
+        ret,
+        deletedAll = false;
 
-    elasticsearch.listIndexes(requestObject)
-      .then(result => {
-        should(result.data.indexes).be.an.instanceOf(Array).and.match([index]);
-        done();
-      })
-      .catch(error => done(error));
+      elasticsearch.client.cat.indices = function (data) {
+        return Promise.resolve('      \n %kuzzle      \n ' + index + ' \n  ');
+      };
+
+      elasticsearch.client.indices.delete = function (param) {
+        try {
+          should(param).be.an.Object().and.match({index: [index]});
+          deletedAll = true;
+          return Promise.resolve({});
+        }
+        catch (error) {
+          done(error);
+          return Promise.reject(error);
+        }
+      };
+
+      ret = elasticsearch.deleteIndexes(requestObject);
+      should(ret).be.a.Promise();
+
+      ret
+        .then(function () {
+          should(kuzzle.indexes).be.an.instanceOf(Object).and.have.keys();
+          should(deletedAll).be.true();
+          done();
+        })
+        .catch(error => done(error));
+    });
+
+    it('should return a rejected promise if the reset fails while deleting all indexes', function () {
+      elasticsearch.client.indices.getMapping = function (data) {
+        var indexes = {};
+        indexes['%kuzzle'] = [];
+        indexes[index] = [];
+        return Promise.resolve(indexes);
+      };
+      elasticsearch.client.indices.delete = function () {
+        return Promise.reject(new Error('rejected'));
+      };
+
+      return should(elasticsearch.deleteIndexes(requestObject)).be.rejected();
+    });
+
+    it('should not delete any index if only left %kuzzle internal index', function () {
+      elasticsearch.client.indices.getMapping = function (data) {
+        var indexes = {};
+        indexes['%kuzzle'] = [];
+        return Promise.resolve(indexes);
+      };
+      elasticsearch.client.indices.delete = function () {
+        return Promise.reject(new Error('rejected'));
+      };
+
+      return should(elasticsearch.deleteIndexes(requestObject)).be.fulfilled();
+    });
   });
 
-  it('should reject the listIndexes promise if elasticsearch throws an error', function () {
-    elasticsearch.client.indices.getMapping = function (data) {
-      return Promise.reject(new Error());
-    };
+  describe('#createIndex', function () {
+    it('should be able to create index', function (done) {
+      var ret;
 
-    return should(elasticsearch.listIndexes(requestObject)).be.rejected();
+      kuzzle.indexes = {};
+
+      elasticsearch.client.indices.create = function (data) {
+        should(data.index).be.exactly(requestObject.index);
+
+        return Promise.resolve({});
+      };
+
+      ret = elasticsearch.createIndex(requestObject);
+      should(ret).be.a.Promise();
+
+      ret
+        .then(function (result) {
+          should(kuzzle.indexes).be.an.instanceOf(Object).and.have.property(index, []);
+          done();
+        })
+        .catch(error => done(error));
+    });
+
+    it('should reject the createIndex promise if elasticsearch throws an error', function () {
+      elasticsearch.client.indices.create = function (data) {
+        return Promise.reject(new Error());
+      };
+
+      return should(elasticsearch.createIndex(requestObject)).be.rejected();
+    });
+  });
+
+  describe('#deleteIndex', function () {
+    it('should be able to delete index', function (done) {
+      var ret;
+
+      elasticsearch.client.indices.delete = function (data) {
+        should(data.index).be.exactly(requestObject.index);
+
+        return Promise.resolve({});
+      };
+
+      ret = elasticsearch.deleteIndex(requestObject);
+      should(ret).be.a.Promise();
+
+      ret
+        .then(function (result) {
+          should(kuzzle.indexes).be.an.instanceOf(Object).and.have.keys();
+          done();
+        })
+        .catch(error => done(error));
+    });
+
+    it('should reject the deleteIndex promise if elasticsearch throws an error', function () {
+      elasticsearch.client.indices.delete = function (data) {
+        return Promise.reject(new Error());
+      };
+
+      return should(elasticsearch.deleteIndex(requestObject)).be.rejected();
+    });
+  });
+
+  describe('#listIndexes', function () {
+    it('should allow listing indexes', function (done) {
+      elasticsearch.client.indices.getMapping = function (data) {
+        var indexes = {};
+        indexes[index] = [];
+        return Promise.resolve(indexes);
+      };
+
+      elasticsearch.listIndexes(requestObject)
+        .then(result => {
+          should(result.data.indexes).be.an.instanceOf(Array).and.match([index]);
+          done();
+        })
+        .catch(error => done(error));
+    });
+
+    it('should reject the listIndexes promise if elasticsearch throws an error', function () {
+      elasticsearch.client.indices.getMapping = function (data) {
+        return Promise.reject(new Error());
+      };
+
+      return should(elasticsearch.listIndexes(requestObject)).be.rejected();
+    });
+  });
+
+  describe('#getInfos', function () {
+    it('should allow getting elasticsearch informations', function () {
+      var esStub = function () { return Promise.resolve({version: {}, indices: {store: {}}}); };
+
+      elasticsearch.client.info = elasticsearch.client.cluster.health = elasticsearch.client.cluster.stats = esStub;
+      return should(elasticsearch.getInfos(requestObject)).be.fulfilled();
+    });
   });
 });

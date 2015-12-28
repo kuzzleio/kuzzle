@@ -1,6 +1,7 @@
 var
   config = require('./config')(),
-  rp = require('request-promise');
+  rp = require('request-promise'),
+  apiVersion;
 
 var ApiREST = function () {
   this.world = null;
@@ -13,7 +14,13 @@ ApiREST.prototype.init = function (world) {
 ApiREST.prototype.disconnect = function () {};
 
 ApiREST.prototype.pathApi = function (path) {
-  return config.url + '/api/v1.0/' + path;
+  var basePath = '/api';
+
+  if (apiVersion) {
+    basePath += '/' + apiVersion;
+  }
+
+  return config.url + basePath + '/' + path;
 };
 
 ApiREST.prototype.callApi = function (options) {
@@ -180,7 +187,7 @@ ApiREST.prototype.getAllStats = function () {
   return this.callApi(options);
 };
 
-ApiREST.prototype.listCollections = function (index) {
+ApiREST.prototype.listCollections = function (index, type) {
   var options;
 
   index = index || this.world.fakeIndex;
@@ -190,6 +197,10 @@ ApiREST.prototype.listCollections = function (index) {
     method: 'GET',
     json: true
   };
+
+  if (type) {
+    options.url += '/' + type;
+  }
 
   return this.callApi(options);
 };
@@ -252,6 +263,20 @@ ApiREST.prototype.deleteIndex = function (index) {
   };
 
   return this.callApi(options);
+};
+
+ApiREST.prototype.getServerInfo = function () {
+  var options = {
+    url: this.pathApi('_serverInfo'),
+    method: 'GET',
+    json: true
+  };
+
+  return this.callApi(options)
+    .then(res => {
+      apiVersion = res.result.serverInfo.kuzzle.api.version;
+      return res;
+    });
 };
 
 module.exports = ApiREST;

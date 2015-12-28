@@ -217,4 +217,25 @@ describe('Test: admin controller', function () {
     kuzzle.funnel.admin.deleteIndex(requestObject);
   });
 
+  describe('#removeRooms', function () {
+    it('should trigger a plugin hook', function (done) {
+      this.timeout(50);
+
+      kuzzle.once('subscription:removeRooms', obj => {
+        try {
+          should(obj).be.exactly(requestObject);
+          done();
+        }
+        catch (e) {
+          done(e);
+        }
+      });
+
+      kuzzle.funnel.admin.removeRooms(requestObject);
+    });
+
+    it('should resolve to a promise', function () {
+      return should(kuzzle.funnel.admin.removeRooms(requestObject)).be.rejected();
+    });
+  });
 });

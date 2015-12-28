@@ -266,4 +266,7 @@ describe('Test redis service', function () {
       });
   });
 
+  it('#getInfos should return a properly formatted response', () => {
+    return should(redis.getInfos()).be.fulfilled();
+  });
 });

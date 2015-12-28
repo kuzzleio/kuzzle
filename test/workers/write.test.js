@@ -116,47 +116,6 @@ describe('Testing: write worker', function () {
     should(responded).be.true();
   });
 
-  it('should emit events when successfully submitting a query and receiving a response', function (done) {
-    var
-      callback = Worker.__get__('onListenCB'),
-      emittedStartEvent = false,
-      emittedStopEvent = false,
-      saveEventEmitter = kuzzle.emit;
-
-    this.timeout(50);
-
-    kuzzle.emit = function (eventName, data) {
-      if (eventName.startsWith('worker:write:' + requestObject.protocol)) {
-        try {
-          should(data).match(requestObject);
-        } catch (error) {
-          done(error);
-        }
-
-        if (eventName === ('worker:write:' + requestObject.protocol + ':start')) {
-          emittedStartEvent = true;
-        }
-        else if (eventName === ('worker:write:' + requestObject.protocol + ':stop')) {
-          emittedStopEvent = true;
-        }
-      }
-    };
-
-    callback.call(kuzzle, requestObject);
-
-    setTimeout(function () {
-      try {
-        should(emittedStartEvent).be.true();
-        should(emittedStopEvent).be.true();
-        kuzzle.emit = saveEventEmitter;
-        done();
-      }
-      catch (error) {
-        done(error);
-      }
-    }, 20);
-  });
-
   it('should respond to the response queue and to the notifier queue when a query is successfully completed', function (done) {
     var
       callback = Worker.__get__('onListenCB'),

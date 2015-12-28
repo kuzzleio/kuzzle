@@ -1,10 +1,14 @@
 var
   should = require('should'),
+  q = require('q'),
   winston = require('winston'),
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
+  BadRequestError = require.main.require('lib/api/core/errors/badRequestError'),
+  RequestObject = require.main.require('lib/api/core/models/requestObject'),
   ResponseObject = require.main.require('lib/api/core/models/responseObject'),
-  RequestObject = require.main.require('lib/api/core/models/requestObject');
+  Profile = require.main.require('lib/api/core/models/security/profile'),
+  Role = require.main.require('lib/api/core/models/security/role');
 
 require('should-promised');
 
@@ -25,76 +29,199 @@ before(function (done) {
         get: function(requestObject) { return Promise.resolve(new ResponseObject(requestObject, {})); },
         count: function(requestObject) { return Promise.resolve(new ResponseObject(requestObject, {})); },
         listCollections: function(requestObject) { return Promise.resolve(new ResponseObject(requestObject, {})); },
-        listIndexes: function(requestObject) { return Promise.resolve(new ResponseObject(requestObject, {})); }
+        listIndexes: function(requestObject) { return Promise.resolve(new ResponseObject(requestObject, {})); },
       };
+
+      Object.keys(kuzzle.services.list).forEach(service => {
+        if (kuzzle.services.list[service].getInfos) {
+          kuzzle.services.list[service].getInfos = function () { return q({}); };
+        }
+      });
       done();
     });
 });
 
 describe('Test: read controller', function () {
 
-  after(function (done) {
-    done();
+  describe('#search', function () {
+    it('should trigger a plugin event', function (done) {
+      var requestObject = new RequestObject({index: '%test', collection: 'unit-test-readcontroller'});
+
+      this.timeout(50);
+      kuzzle.once('data:search', () => done());
+      kuzzle.funnel.read.search(requestObject);
+    });
   });
 
-  it('should emit a data:search hook when searching', function (done) {
-    var requestObject = new RequestObject({index: '%test', collection: 'unit-test-readcontroller'});
+  describe('#get', function () {
+    it('should trigger a plugin event', function (done) {
+      var requestObject = new RequestObject({index: '%test', collection: 'unit-test-readcontroller'});
 
-    this.timeout(50);
-    kuzzle.once('data:search', () => done());
-    kuzzle.funnel.read.search(requestObject);
+      this.timeout(50);
+      kuzzle.once('data:get', () => done());
+      kuzzle.funnel.read.get(requestObject);
+    });
   });
 
-  it('should emit a data:get hook when reading', function (done) {
-    var requestObject = new RequestObject({index: '%test', collection: 'unit-test-readcontroller'});
+  describe('#count', function () {
+    it('should emit a data:count hook when counting', function (done) {
+      var requestObject = new RequestObject({index: '%test', collection: 'unit-test-readcontroller'});
 
-    this.timeout(50);
-    kuzzle.once('data:get', () => done());
-    kuzzle.funnel.read.get(requestObject);
+      this.timeout(50);
+      kuzzle.once('data:count', () => done());
+      kuzzle.funnel.read.count(requestObject);
+    });
   });
 
-  it('should emit a data:count hook when counting', function (done) {
-    var requestObject = new RequestObject({index: '%test', collection: 'unit-test-readcontroller'});
-
-    this.timeout(50);
-    kuzzle.once('data:count', () => done());
-    kuzzle.funnel.read.count(requestObject);
-  });
-
-  it('should emit a data:listCollections hook when reading collections', function (done) {
-    var requestObject = new RequestObject({index: '%test', collection: 'unit-test-readcontroller'});
-
-    this.timeout(50);
-    kuzzle.once('data:listCollections', () => done());
-    kuzzle.funnel.read.listCollections(requestObject);
-  });
-
-  it('should emit a data:now hook when reading kuzzle time', function (done) {
-    var requestObject = new RequestObject({index: '%test', collection: 'unit-test-readcontroller'});
-
-    this.timeout(50);
-    kuzzle.once('data:now', () => done());
-    kuzzle.funnel.read.now(requestObject);
-  });
-
-  it('should emit a data:listIndexes hook when reading indexes', function (done) {
-    var requestObject = new RequestObject({index: '%test', collection: 'unit-test-readcontroller'});
-
-    this.timeout(50);
-    kuzzle.once('data:listIndexes', () => done());
-    kuzzle.funnel.read.listIndexes(requestObject);
-  });
-
-  it('should retrieve a number when requesting server time', function () {
+  describe('#listCollections', function () {
     var
-      requestObject = new RequestObject({}),
-      promisedResult = kuzzle.funnel.read.now(requestObject);
+      realtime,
+      stored,
+      context = {
+        connection: {id: 'connectionid'},
+        user: null
+      };
 
-    should(promisedResult).be.a.Promise();
+    before(function () {
+      kuzzle.services.list.readEngine.listCollections = function(requestObject) {
+        stored = true;
+        return q(new ResponseObject(requestObject, {collections: {stored: ['foo']}}));
+      };
 
-    return promisedResult.then(result => {
-      should(result.data).not.be.undefined();
-      should(result.data.now).not.be.undefined().and.be.a.Number();
+      kuzzle.hotelClerk.getRealtimeCollections = function () {
+        realtime = true;
+        return ['foo', 'bar'];
+      };
+
+      kuzzle.repositories.role.roles.guest = new Role();
+
+      return kuzzle.repositories.role.hydrate(kuzzle.repositories.role.roles.guest, params.userRoles.guest)
+        .then(() => {
+          kuzzle.repositories.profile.profiles.anonymous = new Profile();
+          return kuzzle.repositories.profile.hydrate(kuzzle.repositories.profile.profiles.anonymous, params.userProfiles.anonymous);
+        })
+        .then(() => {
+          return kuzzle.repositories.user.anonymous();
+        })
+        .then(user => {
+          context.user = user;
+        });
+    });
+
+    beforeEach(function () {
+      realtime = false;
+      stored = false;
+    });
+
+    it('should resolve to a full collections list', function (done) {
+      var
+        requestObject = new RequestObject({}, {}, ''),
+        r = kuzzle.funnel.read.listCollections(requestObject, context);
+
+      should(r).be.a.Promise();
+
+      r
+        .then(result => {
+          should(realtime).be.true();
+          should(stored).be.true();
+          should(result.data.type).be.exactly('all');
+          should(result.data.collections).not.be.undefined().and.be.an.Object();
+          should(result.data.collections.stored).not.be.undefined().and.be.an.Array();
+          should(result.data.collections.realtime).not.be.undefined().and.be.an.Array();
+          should(result.data.collections.stored.sort()).match(['foo']);
+          should(result.data.collections.realtime.sort()).match(['bar', 'foo']);
+          done();
+        })
+        .catch(error => done(error));
+    });
+
+    it('should trigger a plugin event', function (done) {
+      var requestObject = new RequestObject({index: '%test', collection: 'unit-test-readcontroller'});
+
+      this.timeout(50);
+      kuzzle.once('data:listCollections', () => done());
+      kuzzle.funnel.read.listCollections(requestObject);
+    });
+
+    it('should reject the request if an invalid "type" argument is provided', function () {
+      var requestObject = new RequestObject({body: {type: 'foo'}}, {}, '');
+
+      return should(kuzzle.funnel.read.listCollections(requestObject, context)).be.rejectedWith(BadRequestError);
+    });
+
+   it('should only return stored collections with type = stored', function () {
+      var requestObject = new RequestObject({body: {type: 'stored'}}, {}, '');
+
+      return kuzzle.funnel.read.listCollections(requestObject, context).then(response => {
+        should(response.data.type).be.exactly('stored');
+        should(realtime).be.false();
+        should(stored).be.true();
+      });
+    });
+
+    it('should only return realtime collections with type = realtime', function () {
+      var requestObject = new RequestObject({body: {type: 'realtime'}}, {}, '');
+
+      return kuzzle.funnel.read.listCollections(requestObject, context).then(response => {
+        should(response.data.type).be.exactly('realtime');
+        should(realtime).be.true();
+        should(stored).be.false();
+      });
+    });
+  });
+
+  describe('#now', function () {
+    it('should trigger a plugin event', function (done) {
+      var requestObject = new RequestObject({index: '%test', collection: 'unit-test-readcontroller'});
+
+      this.timeout(50);
+      kuzzle.once('data:now', () => done());
+      kuzzle.funnel.read.now(requestObject);
+    });
+
+    it('should resolve to a number', function () {
+      var
+        requestObject = new RequestObject({}),
+        promisedResult = kuzzle.funnel.read.now(requestObject);
+
+      should(promisedResult).be.a.Promise();
+
+      return promisedResult.then(result => {
+        should(result.data).not.be.undefined();
+        should(result.data.now).not.be.undefined().and.be.a.Number();
+      });
+    });
+  });
+
+  describe('#listIndexes', function () {
+    it('should emit a data:listIndexes hook when reading indexes', function (done) {
+      var requestObject = new RequestObject({index: '%test', collection: 'unit-test-readcontroller'});
+
+      this.timeout(50);
+      kuzzle.once('data:listIndexes', () => done());
+      kuzzle.funnel.read.listIndexes(requestObject);
+    });
+  });
+
+  describe('#serverInfo', function () {
+    it('should return a properly formatted server information object', function () {
+      var requestObject = new RequestObject({});
+      return kuzzle.funnel.read.serverInfo(requestObject)
+        .then(res => {
+          res = res.toJson();
+          should(res.status).be.exactly(200);
+          should(res.error).be.null();
+          should(res.result).not.be.null();
+          should(res.result.serverInfo).be.an.Object();
+          should(res.result.serverInfo.kuzzle).be.and.Object();
+          should(res.result.serverInfo.kuzzle.version).be.a.String();
+          should(res.result.serverInfo.kuzzle.api).be.an.Object();
+          should(res.result.serverInfo.kuzzle.api.version).be.a.String();
+          should(res.result.serverInfo.kuzzle.api.routes).be.an.Object();
+          should(res.result.serverInfo.kuzzle.plugins).be.an.Object();
+          should(res.result.serverInfo.kuzzle.system).be.an.Object();
+          should(res.result.serverInfo.services).be.an.Object();
+        });
     });
   });
 });

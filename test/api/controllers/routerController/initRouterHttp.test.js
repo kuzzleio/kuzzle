@@ -50,6 +50,8 @@ describe('Test: routerController.initRouterHttp', function () {
   var
     kuzzle,
     server,
+    url,
+    path,
     router,
     options = {
       hostname: 'localhost',
@@ -81,6 +83,9 @@ describe('Test: routerController.initRouterHttp', function () {
       .then(function () {
         RouterController.__set__('executeFromRest', mockResponse);
 
+        path = '/api/' + kuzzle.config.apiVersion;
+        url = 'http://' + options.hostname + ':' + options.port + path;
+
         kuzzle.pluginsManager.routes = [
           {verb: 'get', url: '/_plugin/myplugin/bar/:name', controller: 'myplugin/foo', action: 'bar'},
           {verb: 'post', url: '/_plugin/myplugin/bar', controller: 'myplugin/foo', action: 'bar'},
@@ -104,7 +109,7 @@ describe('Test: routerController.initRouterHttp', function () {
   });
 
   it('should reply with a Hello World on a simple GET query', function (done) {
-    http.get('http://' + options.hostname + ':' + options.port + '/api/v1.0', function (response) {
+    http.get(url, function (response) {
       parseHttpResponse(response)
         .then(function (result) {
           should(result.status).be.exactly(200);
@@ -122,7 +127,7 @@ describe('Test: routerController.initRouterHttp', function () {
     var request;
 
     options.method = 'POST';
-    options.path= '/api/v1.0/index/collection';
+    options.path= path + '/index/collection';
 
     request = http.request(options, function (response) {
       parseHttpResponse(response)
@@ -145,7 +150,7 @@ describe('Test: routerController.initRouterHttp', function () {
     var request;
 
     options.method = 'POST';
-    options.path= '/api/v1.0/index/collection/_create';
+    options.path= path + '/index/collection/_create';
 
     request = http.request(options, function (response) {
       parseHttpResponse(response)
@@ -165,7 +170,7 @@ describe('Test: routerController.initRouterHttp', function () {
   });
 
   it('should create a route for document retrieving', function (done) {
-    http.get('http://' + options.hostname + ':' + options.port + '/api/v1.0/index/collection/documentID', function (response) {
+    http.get(url + '/index/collection/documentID', function (response) {
       parseHttpResponse(response)
         .then(function (result) {
           should(response.statusCode).be.exactly(200);
@@ -183,7 +188,7 @@ describe('Test: routerController.initRouterHttp', function () {
     var request;
 
     options.method = 'POST';
-    options.path= '/api/v1.0/index/collection/_search';
+    options.path= path + '/index/collection/_search';
 
     request = http.request(options, function (response) {
       parseHttpResponse(response)
@@ -206,7 +211,7 @@ describe('Test: routerController.initRouterHttp', function () {
     var request;
 
     options.method = 'PUT';
-    options.path= '/api/v1.0/index/collection/documentID';
+    options.path= path + '/index/collection/documentID';
 
     request = http.request(options, function (response) {
       parseHttpResponse(response)
@@ -229,7 +234,7 @@ describe('Test: routerController.initRouterHttp', function () {
     var request;
 
     options.method = 'PUT';
-    options.path= '/api/v1.0/index/collection/documentID/_update';
+    options.path= path + '/index/collection/documentID/_update';
 
     request = http.request(options, function (response) {
       parseHttpResponse(response)
@@ -252,7 +257,7 @@ describe('Test: routerController.initRouterHttp', function () {
     var request;
 
     options.method = 'POST';
-    options.path= '/api/v1.0/index/collection/_count';
+    options.path= path + '/index/collection/_count';
 
     request = http.request(options, function (response) {
       parseHttpResponse(response)
@@ -275,7 +280,7 @@ describe('Test: routerController.initRouterHttp', function () {
     var request;
 
     options.method = 'DELETE';
-    options.path= '/api/v1.0/index/collection/documentID';
+    options.path= path + '/index/collection/documentID';
 
     request = http.request(options, function (response) {
       parseHttpResponse(response)
@@ -298,7 +303,7 @@ describe('Test: routerController.initRouterHttp', function () {
     var request;
 
     options.method = 'DELETE';
-    options.path= '/api/v1.0/index/collection/_query';
+    options.path= path + '/index/collection/_query';
 
     request = http.request(options, function (response) {
       parseHttpResponse(response)
@@ -321,7 +326,7 @@ describe('Test: routerController.initRouterHttp', function () {
     var request;
 
     options.method = 'DELETE';
-    options.path= '/api/v1.0/index/collection';
+    options.path= path + '/index/collection';
 
     request = http.request(options, function (response) {
       parseHttpResponse(response)
@@ -344,7 +349,7 @@ describe('Test: routerController.initRouterHttp', function () {
     var request;
 
     options.method = 'PUT';
-    options.path= '/api/v1.0/index/collection/_mapping';
+    options.path= path + '/index/collection/_mapping';
 
     request = http.request(options, function (response) {
       parseHttpResponse(response)
@@ -367,7 +372,7 @@ describe('Test: routerController.initRouterHttp', function () {
     var request;
 
     options.method = 'GET';
-    options.path= '/api/v1.0/index/collection/_mapping';
+    options.path= path + '/index/collection/_mapping';
 
     request = http.request(options, function (response) {
       parseHttpResponse(response)
@@ -390,7 +395,7 @@ describe('Test: routerController.initRouterHttp', function () {
     var request;
 
     options.method = 'POST';
-    options.path= '/api/v1.0/index/collection/_bulk';
+    options.path= path + '/index/collection/_bulk';
 
     request = http.request(options, function (response) {
       parseHttpResponse(response)
@@ -413,7 +418,7 @@ describe('Test: routerController.initRouterHttp', function () {
     var request;
 
     options.method = 'POST';
-    options.path= '/api/v1.0/index/_bulk';
+    options.path= path + '/index/_bulk';
 
     request = http.request(options, function (response) {
       parseHttpResponse(response)
@@ -436,7 +441,7 @@ describe('Test: routerController.initRouterHttp', function () {
     var request;
 
     options.method = 'PUT';
-    options.path= '/api/v1.0/index/collection/documentID/_delete';
+    options.path= path + '/index/collection/documentID/_delete';
 
     request = http.request(options, function (response) {
       parseHttpResponse(response)
@@ -459,7 +464,7 @@ describe('Test: routerController.initRouterHttp', function () {
     var request;
 
     options.method = 'PUT';
-    options.path= '/api/v1.0/index/collection/documentID/_create';
+    options.path= path + '/index/collection/documentID/_create';
 
     request = http.request(options, function (response) {
       parseHttpResponse(response)
@@ -482,7 +487,7 @@ describe('Test: routerController.initRouterHttp', function () {
     var request;
 
     options.method = 'PUT';
-    options.path= '/api/v1.0/index/collection/documentID/_createOrUpdate';
+    options.path= path + '/index/collection/documentID/_createOrUpdate';
 
     request = http.request(options, function (response) {
       parseHttpResponse(response)
@@ -543,7 +548,7 @@ describe('Test: routerController.initRouterHttp', function () {
     var request;
 
     options.method = 'POST';
-    options.path= '/api/v1.0/_getStats';
+    options.path= path + '/_getStats';
 
     request = http.request(options, function (response) {
       parseHttpResponse(response)
@@ -567,7 +572,7 @@ describe('Test: routerController.initRouterHttp', function () {
     var request;
 
     options.method = 'GET';
-    options.path= '/api/v1.0/_getAllStats';
+    options.path= path + '/_getAllStats';
 
     request = http.request(options, function (response) {
       parseHttpResponse(response)
@@ -586,8 +591,8 @@ describe('Test: routerController.initRouterHttp', function () {
     request.end();
   });
 
-  it('should create a route for the listCollection command', function (done) {
-    http.get('http://' + options.hostname + ':' + options.port + '/api/v1.0/index/_listCollections', function (response) {
+  it('should create a default route for the listCollection command', function (done) {
+    http.get(url + '/index/_listCollections', function (response) {
       parseHttpResponse(response)
         .then(result => {
           should(response.statusCode).be.exactly(200);
@@ -599,9 +604,21 @@ describe('Test: routerController.initRouterHttp', function () {
     });
   });
 
+  it('should create a GET route for listCollections', function (done) {
+    http.get(url + '/index/_listCollections/all', function (response) {
+      parseHttpResponse(response)
+        .then(result => {
+          should(response.statusCode).be.exactly(200);
+          should(result.controller).be.exactly('read');
+          should(result.action).be.exactly('listCollections');
+          done();
+        })
+        .catch(error => done(error));
+    });
+  });
 
   it('should create a route for the now command', function (done) {
-    http.get('http://' + options.hostname + ':' + options.port + '/api/v1.0/_now', function (response) {
+    http.get(url + '/_now', function (response) {
       parseHttpResponse(response)
         .then(result => {
           should(response.statusCode).be.exactly(200);
@@ -617,7 +634,7 @@ describe('Test: routerController.initRouterHttp', function () {
     var request;
 
     options.method = 'PUT';
-    options.path= '/api/v1.0/index/collection';
+    options.path= path + '/index/collection';
 
     request = http.request(options, function (response) {
       parseHttpResponse(response)
@@ -638,7 +655,7 @@ describe('Test: routerController.initRouterHttp', function () {
     var request;
 
     options.method = 'DELETE';
-    options.path= '/api/v1.0/index/collection/_truncate';
+    options.path= path + '/index/collection/_truncate';
 
     request = http.request(options, function (response) {
       parseHttpResponse(response)
@@ -659,7 +676,7 @@ describe('Test: routerController.initRouterHttp', function () {
     var request;
 
     options.method = 'GET';
-    options.path= '/api/v1.0/_listIndexes';
+    options.path= path + '/_listIndexes';
 
     request = http.request(options, function (response) {
       parseHttpResponse(response)
@@ -680,7 +697,7 @@ describe('Test: routerController.initRouterHttp', function () {
     var request;
 
     options.method = 'PUT';
-    options.path= '/api/v1.0/index';
+    options.path= path + '/index';
 
     request = http.request(options, function (response) {
       parseHttpResponse(response)
@@ -701,7 +718,7 @@ describe('Test: routerController.initRouterHttp', function () {
     var request;
 
     options.method = 'DELETE';
-    options.path= '/api/v1.0/index';
+    options.path= path + '/index';
 
     request = http.request(options, function (response) {
       parseHttpResponse(response)
@@ -722,7 +739,7 @@ describe('Test: routerController.initRouterHttp', function () {
     var request;
 
     options.method = 'DELETE';
-    options.path= '/api/v1.0/_deleteIndexes';
+    options.path= path + '/_deleteIndexes';
 
     request = http.request(options, function (response) {
       parseHttpResponse(response)
@@ -740,7 +757,7 @@ describe('Test: routerController.initRouterHttp', function () {
   });
 
   it('should create a GET route for plugin controller', function (done) {
-    http.get('http://' + options.hostname + ':' + options.port + '/api/v1.0/_plugin/myplugin/bar/name', function (response) {
+    http.get(url + '/_plugin/myplugin/bar/name', function (response) {
       parseHttpResponse(response)
         .then(function (result) {
           should(response.statusCode).be.exactly(200);
@@ -756,7 +773,7 @@ describe('Test: routerController.initRouterHttp', function () {
 
   it('should create a POST route for plugin controller', function (done) {
     options.method = 'POST';
-    options.path= '/api/v1.0/_plugin/myplugin/bar';
+    options.path= path + '/_plugin/myplugin/bar';
 
     request = http.request(options, function (response) {
       parseHttpResponse(response)
@@ -773,5 +790,20 @@ describe('Test: routerController.initRouterHttp', function () {
 
     request.write('foobar');
     request.end();
+  });
+
+  it('should create a GET route to get server informations', function (done) {
+    http.get('http://' + options.hostname + ':' + options.port + '/api/_serverInfo', function (response) {
+      parseHttpResponse(response)
+        .then(function (result) {
+          should(response.statusCode).be.exactly(200);
+          should(result.controller).be.exactly('read');
+          should(result.action).be.exactly('serverInfo');
+          done();
+        })
+        .catch(function (error) {
+          done(error);
+        });
+    });
   });
 });
