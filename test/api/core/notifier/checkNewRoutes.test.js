@@ -35,7 +35,8 @@ describe('Test: notifier.checkNewRoutes', function () {
       'truncateCollection',
       'createIndex',
       'deleteIndex',
-      'listIndexes'
+      'listIndexes',
+      'getInfos'
     ],
     requestObject = new RequestObject({
       controller: 'write',

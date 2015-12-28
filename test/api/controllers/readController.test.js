@@ -29,8 +29,14 @@ before(function (done) {
         get: function(requestObject) { return Promise.resolve(new ResponseObject(requestObject, {})); },
         count: function(requestObject) { return Promise.resolve(new ResponseObject(requestObject, {})); },
         listCollections: function(requestObject) { return Promise.resolve(new ResponseObject(requestObject, {})); },
-        listIndexes: function(requestObject) { return Promise.resolve(new ResponseObject(requestObject, {})); }
+        listIndexes: function(requestObject) { return Promise.resolve(new ResponseObject(requestObject, {})); },
       };
+
+      Object.keys(kuzzle.services.list).forEach(service => {
+        if (kuzzle.services.list[service].getInfos) {
+          kuzzle.services.list[service].getInfos = function () { return q({}); };
+        }
+      });
       done();
     });
 });
@@ -194,6 +200,28 @@ describe('Test: read controller', function () {
       this.timeout(50);
       kuzzle.once('data:listIndexes', () => done());
       kuzzle.funnel.read.listIndexes(requestObject);
+    });
+  });
+
+  describe('#serverInfo', function () {
+    it('should return a properly formatted server information object', function () {
+      var requestObject = new RequestObject({});
+      return kuzzle.funnel.read.serverInfo(requestObject)
+        .then(res => {
+          res = res.toJson();
+          should(res.status).be.exactly(200);
+          should(res.error).be.null();
+          should(res.result).not.be.null();
+          should(res.result.serverInfo).be.an.Object();
+          should(res.result.serverInfo.kuzzle).be.and.Object();
+          should(res.result.serverInfo.kuzzle.version).be.a.String();
+          should(res.result.serverInfo.kuzzle.api).be.an.Object();
+          should(res.result.serverInfo.kuzzle.api.version).be.a.String();
+          should(res.result.serverInfo.kuzzle.api.routes).be.an.Object();
+          should(res.result.serverInfo.kuzzle.plugins).be.an.Object();
+          should(res.result.serverInfo.kuzzle.system).be.an.Object();
+          should(res.result.serverInfo.services).be.an.Object();
+        });
     });
   });
 });
