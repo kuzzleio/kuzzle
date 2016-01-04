@@ -38,11 +38,13 @@ A plugin configuration can have attributes:
 
 ## Logger
 
-By default, the logger plugin is enabled and configured to use the service `winston` (refer to the kuzzle-plugin-logger documentation for more information).  
+By default, the logger plugin is enabled and configured to use the service `winston` (refer to the [kuzzle-plugin-logger documentation](https://github.com/kuzzleio/kuzzle-plugin-logger) for more information).  
 
-## Basic Auth
+## "Passport Local" Authentication
 
-By default, the "basic auth" plugin is enabled to authenticate users with their username/password (refer to the kuzzle-plugin-basicauth documentation for more information).
+By default, the a standard "passport-local" plugin is enabled to authenticate users with their username/password (refer to the [kuzzle-plugin-auth-passport-local documentation](https://github.com/kuzzleio/kuzzle-plugin-auth-passport-local) for more information).
+
+See also the [global authentication mechanism documentation](security/authentication.md).
 
 # How to create a plugin
 

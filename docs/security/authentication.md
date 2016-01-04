@@ -3,7 +3,7 @@
 ## Overview
 
 Kuzzle uses [passportjs](http://passportjs.org/) to enable authentication with a potentially large amount of providers, for example:
-* basic username/password authentication (enabled by default)
+* local username/password authentication (enabled by default)
 * oauth2 providers like github or google
 * SAML providers
 * etc.
@@ -20,7 +20,7 @@ See also Kuzzle API Documentation about [Auth Controller](http://kuzzleio.github
 
 Any strategy supported by passportjs can be implemented for Kuzzle with a dedicated plugin (see [plugins documentation](../plugins.md)).
 
-Take example in [Basic Auth plugin](https://github.com/kuzzleio/kuzzle-plugin-basicauth), an authentication plugin must provide following steps:
+Take example in [Passport Local plugin](https://github.com/kuzzleio/kuzzle-plugin-auth-passport-local), an authentication plugin must provide following steps:
 
 ### The strategy module
 
