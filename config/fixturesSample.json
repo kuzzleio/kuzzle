@@ -1,0 +1,28 @@
+{
+  "index": {
+    "collection": [
+      {"index": {}},
+      {"a": "document", "with": "any", "number": "of fields"}
+    ],
+    "otherCollection": [
+      {"index": {}},
+      {"foo": "bar", "baz": {"bar": "foo"}, "done": true},
+      {"index": {}},
+      {"foo": "bar", "baz": {"bar": "foo"}, "done": false}
+    ]
+  },
+  "otherIndex": {
+    "collection": [
+      {"index": {}},
+      {"foo": "bar", "baz": {"bar": "foo"}, "done": true},
+      {"index": {}},
+      {"foo": "bar", "baz": {"bar": "foo"}, "done": false}
+    ],
+    "otherCollection": [
+      {"index": {}},
+      {"foo": "bar", "baz": {"bar": "foo"}, "done": true},
+      {"index": {}},
+      {"foo": "bar", "baz": {"bar": "foo"}, "done": false}
+    ]
+  }
+}
