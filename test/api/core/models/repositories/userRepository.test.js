@@ -351,7 +351,7 @@ describe('Test: repositories/userRepository', function () {
         });
     });
 
-    it('should resolve to "null" username is not found', function (done) {
+    it('should resolve to "null" if username is not found', function (done) {
       userRepository.loadByUsernameAndPassword('unknownUser', 'azerty')
         .then(function (user) {
           should(user).be.null();
@@ -362,7 +362,7 @@ describe('Test: repositories/userRepository', function () {
         });
     });
 
-    it('should resolve to "null" bad password is given', function (done) {
+    it('should resolve to "null" if bad password is given', function (done) {
       userRepository.loadByUsernameAndPassword('userInCache', 'badpassword')
         .then(function (user) {
           should(user).be.null();
