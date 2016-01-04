@@ -8,8 +8,8 @@
       "addDate": true
     }
   },
-  "kuzzle-plugin-basicauth": {
-    "url": "git+https://github.com/kuzzleio/kuzzle-plugin-basicauth.git",
+  "kuzzle-plugin-auth-passport-local": {
+    "url": "git+https://github.com/kuzzleio/kuzzle-plugin-auth-passport-local.git",
     "activated": true,
     "defaultConfig": {}
   }
