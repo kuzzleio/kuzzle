@@ -24,6 +24,34 @@ If you need to get a fresh start with all persistent data erased, from Kuzzle's 
 If you need to get a fresh start with all persistent data erased and populate it with default fixtures, from Kuzzle's root directory:
 
     $ FIXTURES=path/to/the/fixtures/file.json docker-compose up
+    
+examples:
+
+```javascript
+{
+  "index": {
+    "collection": [
+      { "index": {} },
+      { "a": "document", "with": "any", "number": "of fields" },
+      { "index": {} },
+      { "another": "document" },
+      { "index": {} },
+      { "and": { another: "one"} },
+    ],
+    "otherCollection": [
+      { "index": {} },
+      { "foo": "bar", "baz": {"bar": "foo"}, "done": true },
+    ]
+  },
+  "otherindex": {
+    "collection": [
+      { "index": {} },
+      { "...": "..." }
+    ]
+  }
+}
+```
+
 
 Remember that the fixtures must be in the Docker container scope !
 
