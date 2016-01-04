@@ -8,6 +8,8 @@ var
   util = require('util'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
+  requestObject,
+  MockupWrapper,
   MockupStrategy;
 
 require('should-promised');
@@ -43,10 +45,24 @@ MockupStrategy.prototype.authenticate = function(req, options) {
   }
 };
 
+MockupWrapper = function(MockupReturn) {
+  this.authenticate = function(request, strategy){
+    var deferred = q.defer();
+    if (MockupReturn === 'resolve') {
+      deferred.resolve({_id: request.body.username});
+    }
+    else {
+      deferred.reject(new Error('Mockup Wrapper Error'));
+    }
+    return deferred.promise;
+  };
+};
+
 describe('Test the auth controller', function () {
   var kuzzle;
 
   before(function (done) {
+    requestObject = new RequestObject({ controller: 'auth', action: 'login', body: {strategy: 'mockup', username: 'jdoe'} }, {}, 'unit-test');
     kuzzle = new Kuzzle();
     kuzzle.log = new (winston.Logger)({transports: [new (winston.transports.Console)({level: 'silent'})]});
     kuzzle.start(params, {dummy: true})
@@ -57,7 +73,6 @@ describe('Test the auth controller', function () {
             user = {
                 _id: username
               };
-              console.log(user);
           deferred.resolve(user);
           deferred.promise.nodeify(callback);
           return deferred.promise;
@@ -67,10 +82,8 @@ describe('Test the auth controller', function () {
   });
 
   it('should resolve to a valid jwt token if authentication succeed', function (done) {
-    var requestObject = new RequestObject({ controller: 'auth', action: 'login', body: {strategy: 'mockup', username: 'jdoe'} }, {}, 'unit-test');
-
     this.timeout(50);
-
+    kuzzle.funnel.auth.passport = new MockupWrapper('resolve');
     kuzzle.funnel.auth.login(requestObject)
       .then(function(response) {
         var decodedToken = jwt.verify(response.data.jwt, params.jsonWebToken.secret);
@@ -83,8 +96,8 @@ describe('Test the auth controller', function () {
   });
 
   it('should reject if authentication failure', function () {
-    var requestObject = new RequestObject({ controller: 'auth', action: 'login', body: {strategy: 'nostrategy', username: 'jdoe'} }, {}, 'unit-test');
     this.timeout(50);
-    return should(kuzzle.funnel.auth.login(requestObject)).be.rejectedWith('Unknown authentication strategy "nostrategy"');
+    kuzzle.funnel.auth.passport = new MockupWrapper('reject');
+    return should(kuzzle.funnel.auth.login(requestObject)).be.rejectedWith('Mockup Wrapper Error');
   });
 });
