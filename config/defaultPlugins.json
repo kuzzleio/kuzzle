@@ -2,6 +2,7 @@
   "kuzzle-plugin-logger": {
     "version": "1.0.4",
     "activated": true,
+    "loadedBy": "all",
     "defaultConfig": {
       "service": "winston",
       "level": "info",
@@ -10,12 +11,11 @@
   },
   "kuzzle-plugin-socketio": {
     "url": "https://github.com/kuzzleio/kuzzle-plugin-socketio.git",
+    "activated": true,
     "defaultConfig": {
-      "port": 7513
-    },
-    "customConfig": {
-      "port": 7513
-    },
-    "activated": true
+      "port": 7513,
+      "loadedBy": "server",
+      "protocol": "socketio"
+    }
   }
 }
