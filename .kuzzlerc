@@ -32,6 +32,12 @@
     "algorithm": "HS256",
     "secret": "Kuzzle Rocks"
   },
+  // Password Manager defaults.
+  "passwordManager": {
+    "secret": "jbsB8r69PFP39KdLtjVr25Z22",
+    "algorithm": "sha1",
+    "digest": "hex"
+  },
   // repositories defaults
   "repositories": {
     "cacheTTL": 1440
