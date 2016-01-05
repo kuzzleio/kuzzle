@@ -2,6 +2,7 @@ kuzzle:
   image: kuzzleio/kuzzle
   ports:
     - "7512:7512"
+    - "7513:7513"
   links:
     - elasticsearch
     - redis

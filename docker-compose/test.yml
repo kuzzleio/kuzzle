@@ -5,6 +5,7 @@ kuzzle:
     - "..:/var/app"
   ports:
     - "7512:7512"
+    - "7513:7513"
   links:
     - rabbit
     - elasticsearch
