@@ -320,7 +320,7 @@ describe('Test: repositories/userRepository', function () {
       var
         checkToken;
 
-       checkToken = jwt.sign({_id: 'userInCache'}, params.jsonWebToken.secret, {algorithm: params.jsonWebToken.algorithm});
+       checkToken = jwt.sign({_id: 'userInCache'}, params.jsonWebToken.secret, {algorithm: params.jsonWebToken.algorithm, expiresIn: params.jsonWebToken.expiresIn});
 
       userRepository.generateToken('userInCache')
         .then(function (token) {

@@ -30,7 +30,8 @@
   // JWT defaults.
   "jsonWebToken": {
     "algorithm": "HS256",
-    "secret": "Kuzzle Rocks"
+    "secret": "Kuzzle Rocks",
+    "expiresIn": "1h"
   },
   // Password Manager defaults.
   "passwordManager": {
