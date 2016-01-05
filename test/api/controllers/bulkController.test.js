@@ -1,6 +1,5 @@
 var
   should = require('should'),
-  winston = require('winston'),
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   RequestObject = require.main.require('lib/api/core/models/requestObject');
@@ -12,13 +11,9 @@ describe('Test the bulk controller', function () {
     kuzzle,
     requestObject = new RequestObject({ controller: 'bulk' }, { collection: 'unit-test-bulkController' }, 'unit-test');
 
-  before(function (done) {
+  before(function () {
     kuzzle = new Kuzzle();
-    kuzzle.log = new (winston.Logger)({transports: [new (winston.transports.Console)({level: 'silent'})]});
-    kuzzle.start(params, {dummy: true})
-      .then(function () {
-        done();
-      });
+    return kuzzle.start(params, {dummy: true});
   });
 
   it('should activate a hook on a bulk import request', function (done) {

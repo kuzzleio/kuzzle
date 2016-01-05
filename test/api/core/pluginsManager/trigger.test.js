@@ -1,10 +1,14 @@
 var
   should = require('should'),
   params = require('rc')('kuzzle'),
-  PluginsManager = require.main.require('lib/api/core/pluginsManager'),
+  rewire = require('rewire'),
+  PluginsManager = rewire('../../../../lib/api/core/pluginsManager'),
   EventEmitter = require('eventemitter2').EventEmitter2;
 
 describe('Test plugins manager trigger', function () {
+  before(function () {
+    PluginsManager.__set__('console', {log: function () {}, error: function () {}});
+  });
 
   it('should trigger hooks event', function (done) {
     var

@@ -27,6 +27,10 @@ describe('Test plugins manager run', function () {
     kuzzle,
     pluginsManager;
 
+  before(function () {
+    PluginsManager.__set__('console', {log: function () {}, error: function () {}});
+  });
+
   beforeEach(() => {
     kuzzle = new EventEmitter({
       wildcard: true,

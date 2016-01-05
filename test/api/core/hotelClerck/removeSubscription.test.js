@@ -1,6 +1,5 @@
 var
   should = require('should'),
-  winston = require('winston'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
@@ -62,7 +61,6 @@ describe('Test: hotelClerk.removeSubscription', function () {
   beforeEach(function (done) {
     notified = null;
     kuzzle = new Kuzzle();
-    kuzzle.log = new (winston.Logger)({transports: [new (winston.transports.Console)({level: 'silent'})]});
     kuzzle.removeAllListeners();
     kuzzle.start(params, {dummy: true})
       .then(function () {
@@ -179,27 +177,16 @@ describe('Test: hotelClerk.removeSubscription', function () {
       });
   });
 
-  it('should call a function leave when the type is websocket', function () {
-    var leavedRooms = [];
+  it('should trigger a protocol:leaveChannel hook', function (done) {
+    this.timeout(50);
 
-    connection.type = 'websocket';
-    kuzzle.io = {
-      sockets: {
-        connected: {
-          connectionid: {
-            leave: function (channel) {
-              leavedRooms.push(channel);
-            }
-          }
-        }
-      }
-    };
-    kuzzle.notifier = {notify: function () {}};
+    kuzzle.once('protocol:leaveChannel', (data) => {
+      should(data).be.an.Object();
+      should(data.channel).be.a.String();
+      should(data.id).be.eql(context.connection.id);
+      done();
+    });
 
-    return kuzzle.hotelClerk.removeSubscription(unsubscribeRequest, context)
-      .then(function () {
-        should(leavedRooms).containEql(channel);
-        delete connection.type;
-      });
+    kuzzle.hotelClerk.removeSubscription(unsubscribeRequest, context);
   });
 });
