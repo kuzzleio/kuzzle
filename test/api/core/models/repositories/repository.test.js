@@ -35,10 +35,10 @@ describe('Test: repositories/repository', function () {
   mockCacheEngine = {
     get: function (key) {
       if (key === repository.index + '/' + repository.collection + '/persisted') {
-        return Promise.resolve(persistedObject);
+        return Promise.resolve(JSON.stringify(persistedObject));
       }
       if (key === repository.index + '/' + repository.collection + '/cached') {
-        return Promise.resolve(cachedObject);
+        return Promise.resolve(JSON.stringify(cachedObject));
       }
       if (key === repository.index + '/' + repository.collection + '/error') {
         return Promise.reject(new InternalError('Error'));
@@ -49,8 +49,8 @@ describe('Test: repositories/repository', function () {
 
       return Promise.resolve(null);
     },
-    set: (key, value) => { forwardedObject = {op: 'set', key: key, value: value}; },
-    volatileSet: (key, value, ttl) => { forwardedObject = {op: 'volatileSet', key: key, value: value, ttl: ttl }; },
+    set: (key, value) => { forwardedObject = {op: 'set', key: key, value: JSON.parse(value)}; },
+    volatileSet: (key, value, ttl) => { forwardedObject = {op: 'volatileSet', key: key, value: JSON.parse(value), ttl: ttl }; },
     expire: (key, ttl) => { forwardedObject = {op: 'expire', key: key, ttl: ttl}; },
     persist: key => { forwardedObject = {op: 'persist', key: key}; }
   };

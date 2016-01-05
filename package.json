@@ -39,6 +39,7 @@
     "ngeohash": "0.6.0",
     "node-units": "0.1.5",
     "node-uuid": "1.4.3",
+    "passport": "0.3.2",
     "portfinder": "^0.4.0",
     "q": "2.0.3",
     "rc": "1.1.2",
