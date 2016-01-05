@@ -21,6 +21,10 @@ For an overview about the filtering syntax, check the [Filters](filters.md) docu
 
 see [plugins documentation](plugins.md)
 
+# Authentication
+
+see [authentication mechanism](security/authentication.md)
+
 # Advanced documentation (not required for a basic development)
 
 For a deeper dive into Kuzzle you can read the [Architecture](architecture.md) file.
