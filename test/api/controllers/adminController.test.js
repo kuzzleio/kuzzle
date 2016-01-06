@@ -154,21 +154,6 @@ describe('Test: admin controller', function () {
     kuzzle.funnel.admin.truncateCollection(requestObject);
   });
 
-  it('should resolve to a responseObject on a putRole call', done => {
-    kuzzle.funnel.admin.putRole(new RequestObject({
-      body: { _id: 'test', indexes: {} }
-    }))
-      .then(result => {
-        should(result).be.an.instanceOf(ResponseObject);
-        should(result.data._id).be.exactly('test');
-        should(result.data.body._id).be.exactly('test');
-        done();
-      })
-      .catch(error => {
-        done(error);
-      });
-  });
-
   it('should trigger a hook on a deleteIndexes call', function (done) {
     this.timeout(50);
 
