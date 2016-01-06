@@ -1,6 +1,6 @@
 {
   // Kuzzle server listening port
-  "port": 7512,
+  "port": 7511,
   // Host and port for ipBroker service that handle internal communication
   "ipcBroker": {
     "host": "localhost",

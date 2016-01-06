@@ -9,10 +9,11 @@
     }
   },
   "kuzzle-plugin-socketio": {
-    "version": "1.0.1",
+    "version": "1.0.3",
     "activated": true,
     "defaultConfig": {
-      "port": 7513,
+      "port": 7512,
+      "room": "kuzzle",
       "loadedBy": "server"
     }
   },

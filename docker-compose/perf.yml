@@ -4,8 +4,8 @@ kuzzle:
     - "..:/var/app"
     - "/var/log"
   ports:
+    - "7511:7511"
     - "7512:7512"
-    - "7513:7513"
   command: /run-perf.sh
   links:
     - rabbit

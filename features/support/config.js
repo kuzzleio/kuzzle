@@ -8,8 +8,8 @@ var config = require('rc')('kuzzle');
 module.exports = function () {
 
   var defaultUrls = {
-    url: 'http://localhost:7512',
-    ws: 'http://localhost:7513',
+    url: 'http://localhost:7511',
+    ws: 'http://localhost:7512',
     mqttUrl: 'mqtt://localhost:1883',
     amqpUrl: 'amqp://localhost:5672',
     stompUrl: 'stomp://localhost:61613'

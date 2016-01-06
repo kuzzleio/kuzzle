@@ -2,7 +2,6 @@ var
   should = require('should'),
   jwt = require('jsonwebtoken'),
   q = require('q'),
-  winston = require('winston'),
   params = require('rc')('kuzzle'),
   passport = require('passport'),
   util = require('util'),
@@ -64,7 +63,6 @@ describe('Test the auth controller', function () {
   before(function (done) {
     requestObject = new RequestObject({ controller: 'auth', action: 'login', body: {strategy: 'mockup', username: 'jdoe'} }, {}, 'unit-test');
     kuzzle = new Kuzzle();
-    kuzzle.log = new (winston.Logger)({transports: [new (winston.transports.Console)({level: 'silent'})]});
     kuzzle.start(params, {dummy: true})
       .then(function () {
         passport.use(new MockupStrategy( 'mockup', function(username, callback) {
