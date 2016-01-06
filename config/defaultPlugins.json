@@ -9,12 +9,11 @@
     }
   },
   "kuzzle-plugin-socketio": {
-    "url": "https://github.com/kuzzleio/kuzzle-plugin-socketio.git",
+    "version": "1.0.1",
     "activated": true,
     "defaultConfig": {
       "port": 7513,
-      "loadedBy": "server",
-      "protocol": "socketio"
+      "loadedBy": "server"
     }
   },
   "kuzzle-plugin-auth-passport-local": {
