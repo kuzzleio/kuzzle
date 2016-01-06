@@ -45,7 +45,7 @@ var myHooks = function () {
 
 
   this.registerHandler('BeforeFeature', (event, callback) => {
-    this.api = setAPI(this, 'Websocket');
+    this.api = setAPI(this, 'REST');
     this.api.createIndex((new this.World()).fakeIndex)
       .then(this.api.createIndex((new this.World()).fakeAltIndex))
       .then(() => {
@@ -55,7 +55,7 @@ var myHooks = function () {
   });
 
   this.registerHandler('AfterFeature', function (event, callback) {
-    this.api = setAPI(this, 'Websocket');
+    this.api = setAPI(this, 'REST');
     this.api.deleteIndexes()
       .then(function () {
         callback();

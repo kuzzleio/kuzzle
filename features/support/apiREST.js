@@ -1,7 +1,7 @@
 var
   config = require('./config')(),
   rp = require('request-promise'),
-  apiVersion;
+  apiVersion = '1.0';
 
 var ApiREST = function () {
   this.world = null;
@@ -14,13 +14,11 @@ ApiREST.prototype.init = function (world) {
 ApiREST.prototype.disconnect = function () {};
 
 ApiREST.prototype.pathApi = function (path) {
-  var basePath = '/api';
+  return config.url + '/api/1.0/' + path;
+};
 
-  if (apiVersion) {
-    basePath += '/' + apiVersion;
-  }
-
-  return config.url + basePath + '/' + path;
+ApiREST.prototype.pathBaseApi = function (path) {
+  return config.url + '/api/' + path;
 };
 
 ApiREST.prototype.callApi = function (options) {
@@ -267,7 +265,7 @@ ApiREST.prototype.deleteIndex = function (index) {
 
 ApiREST.prototype.getServerInfo = function () {
   var options = {
-    url: this.pathApi('_serverInfo'),
+    url: this.pathBaseApi('_serverInfo'),
     method: 'GET',
     json: true
   };

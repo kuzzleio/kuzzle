@@ -9,6 +9,7 @@ module.exports = function () {
 
   var defaultUrls = {
     url: 'http://localhost:7512',
+    ws: 'http://localhost:7513',
     mqttUrl: 'mqtt://localhost:1883',
     amqpUrl: 'amqp://localhost:5672',
     stompUrl: 'stomp://localhost:61613'
