@@ -325,4 +325,102 @@ describe('Test plugins manager run', function () {
       .and.be.equal('bar');
   });
 
+  it('should run server plugins only on server instances', function () {
+    var
+      loadedByServer = false,
+      loadedByWorker = false;
+
+    pluginsManager.plugins = {
+      serverPlugin: {
+        object: {
+          init: function () { loadedByServer = true; }
+        },
+        activated: true,
+        config: {
+          loadedBy: 'server'
+        }
+      },
+      workerPlugin: {
+        object: {
+          init: function () { loadedByWorker = true; }
+        },
+        activated: true,
+        config: {
+          loadedBy: 'worker'
+        }
+      }
+    };
+
+    pluginsManager.isServer = true;
+    pluginsManager.run();
+
+    should(loadedByServer).be.true();
+    should(loadedByWorker).be.false();
+  });
+
+  it('should run worker plugins only on worker instances', function () {
+    var
+      loadedByServer = false,
+      loadedByWorker = false;
+
+    pluginsManager.plugins = {
+      serverPlugin: {
+        object: {
+          init: function () { loadedByServer = true; }
+        },
+        activated: true,
+        config: {
+          loadedBy: 'server'
+        }
+      },
+      workerPlugin: {
+        object: {
+          init: function () { loadedByWorker = true; }
+        },
+        activated: true,
+        config: {
+          loadedBy: 'worker'
+        }
+      }
+    };
+
+    pluginsManager.isServer = false;
+    pluginsManager.run();
+
+    should(loadedByServer).be.false();
+    should(loadedByWorker).be.true();
+  });
+
+  it('should always start plugins with loadedBy="all"', function () {
+    var
+      loadedByServer = false,
+      loadedByWorker = false;
+
+    pluginsManager.plugins = {
+      serverPlugin: {
+        object: {
+          init: function () { loadedByServer = true; }
+        },
+        activated: true,
+        config: {
+          loadedBy: 'all'
+        }
+      },
+      workerPlugin: {
+        object: {
+          init: function () { loadedByWorker = true; }
+        },
+        activated: true,
+        config: {
+          loadedBy: 'all'
+        }
+      }
+    };
+
+    pluginsManager.isServer = false;
+    pluginsManager.run();
+
+    should(loadedByServer).be.true();
+    should(loadedByWorker).be.true();
+  });
 });
