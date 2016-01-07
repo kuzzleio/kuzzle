@@ -43,30 +43,6 @@ var myHooks = function () {
     callback();
   });
 
-
-  this.registerHandler('BeforeFeature', (event, callback) => {
-    this.api = setAPI(this, 'REST');
-    this.api.createIndex((new this.World()).fakeIndex)
-      .then(() => {
-        return this.api.createIndex((new this.World()).fakeAltIndex);
-      })
-      .then(() => {
-        callback();
-      })
-      .catch(error => callback(new Error(error)));
-  });
-
-  this.registerHandler('AfterFeature', function (event, callback) {
-    this.api = setAPI(this, 'REST');
-    this.api.deleteIndexes()
-      .then(function () {
-        callback();
-      })
-      .catch(function (error) {
-        callback(new Error(error));
-      });
-  });
-
   this.After(function (scenario, callback) {
     this.api.deleteCollection()
       .then(function () {

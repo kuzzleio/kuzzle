@@ -126,7 +126,7 @@ Your main javascript file in your plugin must have a function `init` and expose 
 
 ## The plugin init function
 
-All plugins must expose a ``init`` function. Its purpose is to initialize the plugins according to its configuratin.
+All plugins must expose a ``init`` function. Its purpose is to initialize the plugins according to its configuration.
 
 Kuzzle calls these ``init`` function at startup, during initialization.
 
@@ -317,13 +317,13 @@ Samples:
 GET action:
 
 ```
-GET http://kuzzle:7511/api/_plugin/myplugin/foo/John%20Doe
+GET http://kuzzle:7511/api/1.0/_plugin/myplugin/foo/John%20Doe
 ```
 
 POST action:
 
 ```
-POST http://kuzzle:7511/api/_plugin/myplugin/foo
+POST http://kuzzle:7511/api/1.0/_plugin/myplugin/foo
 {"name": "John Doe"}
 ```
 
