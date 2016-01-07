@@ -102,7 +102,7 @@ The module must have a `package.json` file with a `pluginInfo` entry. The option
 ```
 
 The `loadedBy` option tells Kuzzle to install and load the plugin only by corresponding instance types.  
-The accepted values are: `all`, `server` and `worker`.
+The accepted values are: `all`, `server` and `worker`. Default value: `all`.
 
 ## The plugin context
 
