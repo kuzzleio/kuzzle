@@ -75,6 +75,7 @@ describe('Test plugins manager run', function () {
           done();
         }
       },
+      config: {},
       activated: true
     }];
 
@@ -93,6 +94,7 @@ describe('Test plugins manager run', function () {
           done();
         }
       },
+      config: {},
       activated: true
     }];
 
@@ -114,6 +116,7 @@ describe('Test plugins manager run', function () {
           callback(null, object);
         }
       },
+      config: {},
       activated: true
     }];
 
@@ -142,6 +145,7 @@ describe('Test plugins manager run', function () {
           callback();
         }
       },
+      config: {},
       activated: true
     }];
 
@@ -167,6 +171,7 @@ describe('Test plugins manager run', function () {
           callback(true);
         }
       },
+      config: {},
       activated: true
     }];
 
@@ -187,6 +192,7 @@ describe('Test plugins manager run', function () {
         hooks: {'log:warn': 'warn'},
         warn: (msg) => { warnings.push(msg); }
       },
+      config: {},
       activated: true
     });
 
@@ -256,6 +262,7 @@ describe('Test plugins manager run', function () {
           },
           FooController: function(){done();}
         },
+        config: {},
         activated: true
       }
     };
@@ -290,6 +297,7 @@ describe('Test plugins manager run', function () {
           done();
         }
       },
+      config: {},
       activated: true
     }];
 
@@ -302,11 +310,13 @@ describe('Test plugins manager run', function () {
       myplugin: {
         object: {
           init: function () {},
+          config: {},
           routes: [
             {verb: 'get', url: '/bar/:name', controller: 'foo', action: 'bar'},
             {verb: 'post', url: '/bar', controller: 'foo', action: 'bar'}
           ]
         },
+        config: {},
         activated: true
       }
     };
@@ -323,104 +333,5 @@ describe('Test plugins manager run', function () {
     should(pluginsManager.routes[0].action)
       .be.equal(pluginsManager.routes[0].action)
       .and.be.equal('bar');
-  });
-
-  it('should run server plugins only on server instances', function () {
-    var
-      loadedByServer = false,
-      loadedByWorker = false;
-
-    pluginsManager.plugins = {
-      serverPlugin: {
-        object: {
-          init: function () { loadedByServer = true; }
-        },
-        activated: true,
-        config: {
-          loadedBy: 'server'
-        }
-      },
-      workerPlugin: {
-        object: {
-          init: function () { loadedByWorker = true; }
-        },
-        activated: true,
-        config: {
-          loadedBy: 'worker'
-        }
-      }
-    };
-
-    pluginsManager.isServer = true;
-    pluginsManager.run();
-
-    should(loadedByServer).be.true();
-    should(loadedByWorker).be.false();
-  });
-
-  it('should run worker plugins only on worker instances', function () {
-    var
-      loadedByServer = false,
-      loadedByWorker = false;
-
-    pluginsManager.plugins = {
-      serverPlugin: {
-        object: {
-          init: function () { loadedByServer = true; }
-        },
-        activated: true,
-        config: {
-          loadedBy: 'server'
-        }
-      },
-      workerPlugin: {
-        object: {
-          init: function () { loadedByWorker = true; }
-        },
-        activated: true,
-        config: {
-          loadedBy: 'worker'
-        }
-      }
-    };
-
-    pluginsManager.isServer = false;
-    pluginsManager.run();
-
-    should(loadedByServer).be.false();
-    should(loadedByWorker).be.true();
-  });
-
-  it('should always start plugins with loadedBy="all"', function () {
-    var
-      loadedByServer = false,
-      loadedByWorker = false;
-
-    pluginsManager.plugins = {
-      serverPlugin: {
-        object: {
-          init: function () { loadedByServer = true; }
-        },
-        activated: true,
-        config: {
-          loadedBy: 'all'
-        }
-      },
-      workerPlugin: {
-        object: {
-          init: function () { loadedByWorker = true; }
-        },
-        activated: true,
-        config: {
-          loadedBy: 'all'
-        }
-      }
-    };
-
-    pluginsManager.isServer = false;
-    pluginsManager.run();
-
-    should(loadedByServer).be.true();
-    should(loadedByWorker).be.true();
   });
 });

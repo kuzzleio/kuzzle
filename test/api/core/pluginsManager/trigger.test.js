@@ -33,6 +33,7 @@ describe('Test plugins manager trigger', function () {
           done();
         }
       },
+      config: {},
       activated: true
     }];
 
