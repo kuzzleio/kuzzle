@@ -18,7 +18,7 @@
     "enable": "node bin/kuzzle enable",
     "disable": "node bin/kuzzle disable",
     "preversion": "git checkout master && git pull",
-    "postversion": "git push && git push --tags"    
+    "postversion": "git push && git push --tags"
   },
   "directories": {
     "lib": "lib"
@@ -43,6 +43,7 @@
     "node-uuid": "1.4.3",
     "passport": "0.3.2",
     "portfinder": "^0.4.0",
+    "proper-lockfile": "^1.1.1",
     "q": "2.0.3",
     "rc": "1.1.2",
     "redis": "2.3.0",

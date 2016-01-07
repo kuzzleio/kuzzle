@@ -1,22 +1,39 @@
 #!/usr/bin/env node
 var
   rc = require('rc'),
-  winston = require('winston'),
   kuzzle = require('../lib');
 
 
 module.exports = function () {
-  var log = winston;
-  log.info('Starting Kuzzle');
+  console.log('Starting Kuzzle');
 
   kuzzle.start(rc('kuzzle'))
-    .then(function () {
-      return kuzzle.cleanDb();
+    .then(() => { return kuzzle.cleanDb(); })
+    .then(() => { return kuzzle.prepareDb(); })
+    .then(() => {
+      console.log(
+        `
+      ▄▄▄▄▄      ▄███▄      ▄▄▄▄
+   ▄█████████▄▄█████████▄▄████████▄
+  ██████████████████████████████████
+   ▀██████████████████████████████▀
+    ▄███████████████████████████▄
+  ▄███████████████████████████████▄
+ ▀█████████████████████████████████▀
+   ▀██▀        ▀██████▀       ▀██▀
+          ██     ████    ██
+                ▄████▄
+                ▀████▀
+                  ▀▀`
+      );
+
+      console.log(`
+████████████████████████████████████
+██     KUZZLE ` + (kuzzle.isServer ? 'SERVER' : 'WORKER') + ` STARTED
+████████████████████████████████████`);
     })
-    .then(function () {
-      return kuzzle.prepareDb();
-    })
-    .catch(function (error) {
-      kuzzle.log.error(error);
+    .catch(error => {
+      console.error(error);
+      process.exit(1);
     });
 };

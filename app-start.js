@@ -35,14 +35,32 @@ if (process.env.FEATURE_COVERAGE == 1) {
     rc = require('rc');
 
   kuzzle.start(rc('kuzzle'))
-    .then(function () {
-      return kuzzle.cleanDb();
-    })
-    .then(function () {
-      return kuzzle.prepareDb();
-    })
-    .catch(function (error) {
-      kuzzle.log.error(error);
-    });
+    .then(() => { return kuzzle.cleanDb(); })
+    .then(() => { return kuzzle.prepareDb(); })
+    .then(() => {
+      console.log(
+        `
+      ▄▄▄▄▄      ▄███▄      ▄▄▄▄
+   ▄█████████▄▄█████████▄▄████████▄
+  ██████████████████████████████████
+   ▀██████████████████████████████▀
+    ▄███████████████████████████▄
+  ▄███████████████████████████████▄
+ ▀█████████████████████████████████▀
+   ▀██▀        ▀██████▀       ▀██▀
+          ██     ████    ██
+                ▄████▄
+                ▀████▀
+                  ▀▀`
+      );
 
+      console.log(`
+████████████████████████████████████
+██     KUZZLE ` + (kuzzle.isServer ? 'SERVER' : 'WORKER') + ` STARTED
+████████████████████████████████████`);
+    })
+    .catch(error => {
+      console.error(error);
+      process.exit(1);
+    });
 })();
