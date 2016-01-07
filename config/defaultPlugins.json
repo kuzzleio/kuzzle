@@ -1,7 +1,7 @@
 {
   "kuzzle-plugin-logger": {
     "version": "1.0.6",
-    "activated": true,
+    "activated": false,
     "defaultConfig": {
       "service": "winston",
       "level": "info",
@@ -19,7 +19,7 @@
   },
   "kuzzle-plugin-auth-passport-local": {
     "url": "git+https://github.com/kuzzleio/kuzzle-plugin-auth-passport-local.git",
-    "activated": true,
+    "activated": false,
     "defaultConfig": {}
   }
 }
