@@ -51,7 +51,7 @@ var myHooks = function () {
         return this.api.createIndex((new this.World()).fakeAltIndex);
       })
       .then(() => {
-        setTimeout(callback, 1000);
+        callback();
       })
       .catch(error => callback(new Error(error)));
   });
