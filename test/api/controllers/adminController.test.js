@@ -161,7 +161,6 @@ describe('Test: admin controller', function () {
       .then(result => {
         should(result).be.an.instanceOf(ResponseObject);
         should(result.data._id).be.exactly('test');
-        should(result.data.body._id).be.exactly('test');
         done();
       })
       .catch(error => {

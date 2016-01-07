@@ -65,7 +65,7 @@ var mockupTestFilters = function (responseObject) {
 
 var mockupReadEngine = {
   get: function (requestObject) {
-    return Promise.resolve(new ResponseObject(requestObject, {}));
+    return Promise.resolve(new ResponseObject(requestObject, requestObject.data));
   }
 };
 

@@ -11,6 +11,7 @@ var
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   rewire = require('rewire'),
   RouterController = rewire('../../../../lib/api/controllers/routerController'),
+  RequestObject = rewire('../../../../lib/api/core/models/requestObject'),
   ResponseObject = require.main.require('lib/api/core/models/responseObject');
 
 require('should-promised');
@@ -31,6 +32,7 @@ describe('Test: routerController.executeFromRest', function () {
       end: function (message) { this.ended = true; this.response = JSON.parse(message); }
     },
     forwardedObject,
+    savedRequestObject,
     executeFromRest;
 
   before(function (done) {
@@ -39,6 +41,7 @@ describe('Test: routerController.executeFromRest', function () {
         var
           deferred = q.defer();
 
+        savedRequestObject = requestObject;
         forwardedObject = new ResponseObject(requestObject, {});
 
         if (requestObject.data.body.resolve) {
@@ -128,10 +131,9 @@ describe('Test: routerController.executeFromRest', function () {
         should(mockupResponse.header['Content-Type']).be.exactly('application/json');
         should(mockupResponse.response.status).be.exactly(200);
         should(mockupResponse.response.error).be.null();
-        should(mockupResponse.response.result).be.not.null();
-        should(mockupResponse.response.result._source).match(data.body);
-        should(mockupResponse.response.result.action).be.exactly('create');
-        should(mockupResponse.response.result.controller).be.exactly('write');
+        should(mockupResponse.response).be.not.null();
+        should(mockupResponse.response.action).be.exactly('create');
+        should(mockupResponse.response.controller).be.exactly('write');
 
         clearInterval(timer);
         timer = false;
@@ -170,10 +172,9 @@ describe('Test: routerController.executeFromRest', function () {
         should(mockupResponse.header['Content-Type']).be.exactly('application/json');
         should(mockupResponse.response.status).be.exactly(200);
         should(mockupResponse.response.error).be.null();
-        should(mockupResponse.response.result).be.not.null();
-        should(mockupResponse.response.result._source).match(data.body);
-        should(mockupResponse.response.result.action).be.exactly('publish');
-        should(mockupResponse.response.result.controller).be.exactly('write');
+        should(mockupResponse.response).be.not.null();
+        should(mockupResponse.response.action).be.exactly('publish');
+        should(mockupResponse.response.controller).be.exactly('write');
 
         clearInterval(timer);
         timer = false;
@@ -227,9 +228,9 @@ describe('Test: routerController.executeFromRest', function () {
         should(mockupResponse.header['Content-Type']).be.exactly('application/json');
         should(mockupResponse.response.status).be.exactly(200);
         should(mockupResponse.response.error).be.null();
-        should(mockupResponse.response.result).be.not.null();
-        should(mockupResponse.response.result.action).be.exactly('create');
-        should(mockupResponse.response.result.controller).be.exactly('write');
+        should(mockupResponse.response).be.not.null();
+        should(mockupResponse.response.action).be.exactly('create');
+        should(mockupResponse.response.controller).be.exactly('write');
         done();
       }
       catch (e) {
@@ -253,10 +254,10 @@ describe('Test: routerController.executeFromRest', function () {
         should(mockupResponse.header['Content-Type']).be.exactly('application/json');
         should(mockupResponse.response.status).be.exactly(200);
         should(mockupResponse.response.error).be.null();
-        should(mockupResponse.response.result).be.not.null();
-        should(mockupResponse.response.result.action).be.exactly('create');
-        should(mockupResponse.response.result.controller).be.exactly('write');
-        should(mockupResponse.response.result._id).be.exactly('fakeid');
+        should(mockupResponse.response).be.not.null();
+        should(mockupResponse.response.action).be.exactly('create');
+        should(mockupResponse.response.controller).be.exactly('write');
+        should(savedRequestObject.data._id).be.exactly('fakeid');
         done();
       }
       catch (e) {

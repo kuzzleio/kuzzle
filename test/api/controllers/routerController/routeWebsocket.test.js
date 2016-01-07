@@ -85,8 +85,6 @@ describe('Test: routerController.routeWebsocket', function () {
       }
 
       try {
-        should(forwardedObject.data.body).not.be.null();
-        should(forwardedObject.data.body).be.exactly(emittedObject.body);
         should(forwardedObject.protocol).be.exactly('websocket');
         should(forwardedObject.controller).be.exactly('read');
         should(forwardedObject.action).be.exactly('get');
