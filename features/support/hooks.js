@@ -47,7 +47,9 @@ var myHooks = function () {
   this.registerHandler('BeforeFeature', (event, callback) => {
     this.api = setAPI(this, 'REST');
     this.api.createIndex((new this.World()).fakeIndex)
-      .then(this.api.createIndex((new this.World()).fakeAltIndex))
+      .then(() => {
+        return this.api.createIndex((new this.World()).fakeAltIndex);
+      })
       .then(() => {
         setTimeout(callback, 1000);
       })
