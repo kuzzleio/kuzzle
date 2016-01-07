@@ -56,7 +56,7 @@ if (process.env.FEATURE_COVERAGE == 1) {
 
       console.log(`
 ████████████████████████████████████
-██     KUZZLE ` + (kuzzle.isServer ? 'SERVER' : 'WORKER') + ` STARTED
+██     KUZZLE ` + (kuzzle.isServer ? 'SERVER' : 'WORKER') + ` STARTED      ██
 ████████████████████████████████████`);
     })
     .catch(error => {

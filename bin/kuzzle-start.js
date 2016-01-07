@@ -29,7 +29,7 @@ module.exports = function () {
 
       console.log(`
 ████████████████████████████████████
-██     KUZZLE ` + (kuzzle.isServer ? 'SERVER' : 'WORKER') + ` STARTED
+██     KUZZLE ` + (kuzzle.isServer ? 'SERVER' : 'WORKER') + ` STARTED      ██
 ████████████████████████████████████`);
     })
     .catch(error => {
