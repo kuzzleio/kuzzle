@@ -17,7 +17,6 @@ var apiSteps = function () {
         callback();
       }.bind(this))
       .catch(function (error) {
-          console.log(error);
         callback(error);
       });
   });
@@ -158,8 +157,6 @@ var apiSteps = function () {
         callback();
       })
       .catch(function (error) {
-
-        console.log(error);
         callback(error);
       });
   });
