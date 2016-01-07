@@ -11,6 +11,10 @@
   "kuzzle-plugin-auth-passport-local": {
     "url": "git+https://github.com/kuzzleio/kuzzle-plugin-auth-passport-local.git",
     "activated": true,
-    "defaultConfig": {}
+    "defaultConfig": {
+      "secret": "jbsB8r69PFP39KdLtjVr25Z22",
+      "algorithm": "sha1",
+      "digest": "hex"
+    }
   }
 }

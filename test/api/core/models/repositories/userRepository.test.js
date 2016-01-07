@@ -335,9 +335,9 @@ describe('Test: repositories/userRepository', function () {
 
   });
 
-  describe('#loadByUsernameAndPassword', function () {
+  describe('#loadByUsername', function () {
     it('should resolve to user if good credentials are given', function (done) {
-      userRepository.loadByUsernameAndPassword('userInCache', 'azerty')
+      userRepository.load('userInCache')
         .then(function (user) {
           should(user._id).be.exactly('userInCache');
           should(user.name).be.exactly('Johnny Cash');
@@ -352,7 +352,7 @@ describe('Test: repositories/userRepository', function () {
     });
 
     it('should resolve to "null" if username is not found', function (done) {
-      userRepository.loadByUsernameAndPassword('unknownUser', 'azerty')
+      userRepository.load('unknownUser')
         .then(function (user) {
           should(user).be.null();
           done();
@@ -362,8 +362,8 @@ describe('Test: repositories/userRepository', function () {
         });
     });
 
-    it('should resolve to "null" if bad password is given', function (done) {
-      userRepository.loadByUsernameAndPassword('userInCache', 'badpassword')
+    /*it('should resolve to "null" if bad password is given', function (done) {
+      userRepository.loadByUsername('userInCache')
         .then(function (user) {
           should(user).be.null();
           done();
@@ -371,7 +371,7 @@ describe('Test: repositories/userRepository', function () {
         .catch(function (error) {
           done(error);
         });
-    });
+    });*/
 
     it('should reject the promise if an error occurred while fetching the user', () => {
 
@@ -379,7 +379,7 @@ describe('Test: repositories/userRepository', function () {
         return Promise.reject(new InternalError('Error'));
       };
 
-      return should(userRepository.loadByUsernameAndPassword('userInCache', 'azerty')
+      return should(userRepository.load('userInCache')
         .catch(err => {
           delete userRepository.load;
 
