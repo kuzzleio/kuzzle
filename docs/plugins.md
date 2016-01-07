@@ -139,7 +139,6 @@ module.exports = function () {
 
 In this example, in Kuzzle, the `modifiedRequestObject` has now a `createdAt` attribute.
 
-<!-- Julie -->
 ### Controllers
 
 A plugin controller is a plugin that adds some controller actions into Kuzzle.
@@ -248,7 +247,6 @@ POST action:
 POST http://kuzzle:7512/api/_plugin/myplugin/foo
 {"name": "John Doe"}
 ```
-<!-- /Julie -->
 
 ## Examples
 
