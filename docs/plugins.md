@@ -30,7 +30,7 @@
 Plugins are external components allowing to execute functions on specific event triggering.  
 There are several types of plugins:
 
-* Hook events: just listen to events and perform other actions (ie: a log plugin). They do not respond anything directly, they just listen.
+* Hook events: just listen to events and perform other actions (ie: a log plugin). They do not respond to anything directly, they just listen.
 * Pipe events: perform an action and return something. Kuzzle is waiting that all pipe events are performed before continuing.
 * Controllers: add a specific controller to Kuzzle.
 
@@ -68,11 +68,11 @@ Plugins configuration have the following default attributes:
 
 ## Logger
 
-By default, the logger plugin is enabled and configured to use the service `winston` (refer to the [kuzzle-plugin-logger documentation](https://github.com/kuzzleio/kuzzle-plugin-logger) for more information).  
+By default, the logger plugin is enabled and configured to use the service `winston` (refer to [kuzzle-plugin-logger documentation](https://github.com/kuzzleio/kuzzle-plugin-logger) for more information).  
 
 ## "Passport Local" Authentication
 
-By default, the a standard "passport-local" plugin is enabled to authenticate users with their username/password (refer to the [kuzzle-plugin-auth-passport-local documentation](https://github.com/kuzzleio/kuzzle-plugin-auth-passport-local) for more information).
+By default, the a standard "passport-local" plugin is enabled to authenticate users with their username/password (refer to [kuzzle-plugin-auth-passport-local documentation](https://github.com/kuzzleio/kuzzle-plugin-auth-passport-local) for more information).
 
 See also the [global authentication mechanism documentation](security/authentication.md).
 
