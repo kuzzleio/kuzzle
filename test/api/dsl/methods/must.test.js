@@ -18,10 +18,10 @@ describe('Test: dsl.must method', function () {
   });
 
   it('should return an embedded object containing the result of getFormattedFilters', function () {
-    return should(methods.must('resolve', {}, {}, false)).be.fulfilledWith({and: 'resolved'});
+    return should(methods.must('resolve', 'index', {}, {}, false)).be.fulfilledWith({and: 'resolved'});
   });
 
   it('should return a rejected promise if getFormattedFilters fails', function () {
-    return should(methods.must('rejected', {}, {}, false)).be.rejectedWith('rejected');
+    return should(methods.must('rejected', 'index', {}, {}, false)).be.rejectedWith('rejected');
   });
 });

@@ -1,21 +1,24 @@
 {
   "name": "kuzzle",
   "author": "The Kuzzle Team <support@kuzzle.io>",
-  "version": "0.5.4",
+  "version": "0.7.2",
+  "apiVersion": "1.0",
   "description": "Kuzzle is an open-source solution that handles all the data management through a secured API, with a large choice of protocols.",
   "main": "./lib/index.js",
   "bin": {
     "kuzzle": "./bin/kuzzle.js"
   },
   "scripts": {
-    "test": "npm run unit-testing --coverage && npm run functional-testing && npm run crawl-coverage",
+    "test": "npm run unit-testing --coverage && npm run functional-testing && npm run crawl-coverage && grunt",
     "unit-testing": "istanbul test _mocha",
     "functional-testing": "npm run cucumber",
     "cucumber": "cucumber.js",
     "crawl-coverage": "node coverage/scripts/feature-coverage-download.js",
     "codecov": "cat ./coverage/lcov.info | ./node_modules/.bin/codecov",
     "enable": "node bin/kuzzle enable",
-    "disable": "node bin/kuzzle disable"
+    "disable": "node bin/kuzzle disable",
+    "preversion": "git checkout master && git pull",
+    "postversion": "git push && git push --tags"    
   },
   "directories": {
     "lib": "lib"
@@ -38,6 +41,7 @@
     "ngeohash": "0.6.0",
     "node-units": "0.1.5",
     "node-uuid": "1.4.3",
+    "passport": "0.3.2",
     "portfinder": "^0.4.0",
     "q": "2.0.3",
     "rc": "1.1.2",

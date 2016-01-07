@@ -75,10 +75,10 @@ describe('Test: routerController.executeFromRest', function () {
   });
 
   it('should reject requests when the controller is not provided', function () {
-    var params = { action: 'create', collection: 'foobar' };
+    var callParams = { action: 'create' };
 
     mockupResponse.init();
-    executeFromRest.call(kuzzle, params, {headers: {'content-type': 'application/json'}}, mockupResponse);
+    executeFromRest.call(kuzzle, callParams, {headers: {'content-type': 'application/json'}, params: { collection: 'foobar', index: '%test'}}, mockupResponse);
 
     should(mockupResponse.statusCode).be.exactly(400);
     should(mockupResponse.header['Content-Type']).not.be.undefined();
@@ -93,7 +93,7 @@ describe('Test: routerController.executeFromRest', function () {
   it('should reject requests when the content-type is not application/json', function () {
     var
       params = { action: 'create', controller: 'write' },
-      data = {_body: true, headers: {'content-type': '"application/x-www-form-urlencoded'}, body: {resolve: true}, params: {collection: 'foobar'}};
+      data = {_body: true, headers: {'content-type': '"application/x-www-form-urlencoded'}, body: {resolve: true}, params: {collection: 'foobar', index: '%test'}};
 
     mockupResponse.init();
     executeFromRest.call(kuzzle, params, data, mockupResponse);
@@ -110,7 +110,7 @@ describe('Test: routerController.executeFromRest', function () {
   it('should respond with a HTTP 200 message in case of success', function (done) {
     var
       params = { action: 'create', controller: 'write' },
-      data = {headers: {'content-type': 'application/json'}, body: {resolve: true}, params: {collection: 'foobar'}};
+      data = {headers: {'content-type': 'application/json'}, body: {resolve: true}, params: {index: '%test', collection: 'foobar'}};
 
     mockupResponse.init();
     executeFromRest.call(kuzzle, params, data, mockupResponse);
@@ -145,15 +145,13 @@ describe('Test: routerController.executeFromRest', function () {
 
   it('should respond with a HTTP 200 message for non-persistent write call', function (done) {
     var
-      params = {action: 'create', controller: 'write'},
+      params = {action: 'publish', controller: 'write'},
       data = {
         headers: {'content-type': 'application/json'},
         body: {
-          persist: false,
-          resolve: true,
-          empty: true
+          resolve: true
         },
-        params: {collection: 'foobar'}
+        params: {index: '%test', ollection: 'foobar'}
     };
 
     mockupResponse.init();
@@ -174,7 +172,7 @@ describe('Test: routerController.executeFromRest', function () {
         should(mockupResponse.response.error).be.null();
         should(mockupResponse.response.result).be.not.null();
         should(mockupResponse.response.result._source).match(data.body);
-        should(mockupResponse.response.result.action).be.exactly('create');
+        should(mockupResponse.response.result.action).be.exactly('publish');
         should(mockupResponse.response.result.controller).be.exactly('write');
 
         clearInterval(timer);
@@ -188,32 +186,13 @@ describe('Test: routerController.executeFromRest', function () {
     }, 5);
   });
 
-  it('should not respond if the response is empty', function (done) {
-    var
-      params = { action: 'create', controller: 'write' },
-      data = {headers: {'content-type': 'application/json'}, body: {resolve: true, empty: true}, params: {collection: 'foobar'}};
-
-    mockupResponse.init();
-    executeFromRest.call(kuzzle, params, data, mockupResponse);
-
-    setTimeout(function () {
-      try {
-        should(mockupResponse.ended).be.false();
-        done();
-      }
-      catch (e) {
-        done(e);
-      }
-    }, 20);
-  });
-
   it('should respond with a HTTP 500 message in case of error', function (done) {
     var
-      params = { action: 'create', controller: 'write' },
-      data = {headers: {'content-type': 'application/json'}, body: {resolve: false}, params: {collection: 'foobar'}};
+      callParams = { action: 'create', controller: 'write' },
+      data = {headers: {'content-type': 'application/json'}, body: {resolve: false}, params: {index: '%test', collection: 'foobar'}};
 
     mockupResponse.init();
-    executeFromRest.call(kuzzle, params, data, mockupResponse);
+    executeFromRest.call(kuzzle, callParams, data, mockupResponse);
 
     setTimeout(function () {
       try {
@@ -235,11 +214,11 @@ describe('Test: routerController.executeFromRest', function () {
 
   it('should use the request content instead of the metadata to complete missing information', function (done) {
     var
-      params = {controller: 'write' },
-      data = {headers: {'content-type': 'application/json'}, body: {resolve: true}, params: {collection: 'foobar',  action: 'create'}};
+      callParams = {controller: 'write' },
+      data = {headers: {'content-type': 'application/json'}, body: {resolve: true}, params: {index: '%test', collection: 'foobar',  action: 'create'}};
 
     mockupResponse.init();
-    executeFromRest.call(kuzzle, params, data, mockupResponse);
+    executeFromRest.call(kuzzle, callParams, data, mockupResponse);
 
     setTimeout(function () {
       try {
@@ -261,11 +240,11 @@ describe('Test: routerController.executeFromRest', function () {
 
   it('should copy any found "id" identifier', function (done) {
     var
-      params = {controller: 'write' },
-      data = {headers: {'content-type': 'application/json'}, body: {resolve: true}, params: {collection: 'foobar',  action: 'create', id: 'fakeid'}};
+      callParams = {controller: 'write' },
+      data = {headers: {'content-type': 'application/json'}, body: {resolve: true}, params: {index: '%test', collection: 'foobar',  action: 'create', id: 'fakeid'}};
 
     mockupResponse.init();
-    executeFromRest.call(kuzzle, params, data, mockupResponse);
+    executeFromRest.call(kuzzle, callParams, data, mockupResponse);
 
     setTimeout(function () {
       try {

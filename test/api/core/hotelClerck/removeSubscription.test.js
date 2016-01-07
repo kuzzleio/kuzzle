@@ -14,6 +14,7 @@ describe('Test: hotelClerk.removeSubscription', function () {
   var
     kuzzle,
     roomId,
+    channel,
     anonymousUser,
     connection = {id: 'connectionid'},
     context = {
@@ -23,6 +24,7 @@ describe('Test: hotelClerk.removeSubscription', function () {
     badConnection = {id: 'badconnectionid'},
     roomName1 = 'roomName1',
     roomName2 = 'roomName2',
+    index = 'test',
     collection = 'user',
     filter1 = {
       term: {
@@ -38,6 +40,7 @@ describe('Test: hotelClerk.removeSubscription', function () {
       controller: 'subscribe',
       action: 'on',
       requestId: roomName1,
+      index: index,
       collection: collection,
       body: filter1
     }),
@@ -45,6 +48,7 @@ describe('Test: hotelClerk.removeSubscription', function () {
       controller: 'subscribe',
       action: 'on',
       requestId: roomName2,
+      index: index,
       collection: collection,
       body: filter2
     }),
@@ -79,9 +83,11 @@ describe('Test: hotelClerk.removeSubscription', function () {
       })
       .then(function (realTimeResponseObject) {
         roomId = realTimeResponseObject.roomId;
+        channel = realTimeResponseObject.channel;
         unsubscribeRequest = new RequestObject({
           controller: 'subscribe',
           action: 'off',
+          index: index,
           collection: collection,
           body: { roomId: roomId }
         });
@@ -103,6 +109,7 @@ describe('Test: hotelClerk.removeSubscription', function () {
     var badRequestObject = new RequestObject({
       controller: 'subscribe',
       action: 'on',
+      index: index,
       collection: collection,
       body: filter1
     });
@@ -114,6 +121,7 @@ describe('Test: hotelClerk.removeSubscription', function () {
     var badRequestObject = new RequestObject({
       controller: 'subscribe',
       action: 'on',
+      index: index,
       collection: collection,
       body: { roomId: 'this is not a room ID' }
     });
@@ -123,7 +131,7 @@ describe('Test: hotelClerk.removeSubscription', function () {
 
   it('should clean up customers, rooms and filtersTree object', function () {
     return kuzzle.hotelClerk.removeSubscription(unsubscribeRequest, context)
-      .then(function () {
+      .finally(function () {
         should(kuzzle.dsl.filtersTree).be.an.Object();
         should(kuzzle.dsl.filtersTree).be.empty();
 
@@ -179,8 +187,8 @@ describe('Test: hotelClerk.removeSubscription', function () {
       sockets: {
         connected: {
           connectionid: {
-            leave: function (roomId) {
-              leavedRooms.push(roomId);
+            leave: function (channel) {
+              leavedRooms.push(channel);
             }
           }
         }
@@ -190,7 +198,7 @@ describe('Test: hotelClerk.removeSubscription', function () {
 
     return kuzzle.hotelClerk.removeSubscription(unsubscribeRequest, context)
       .then(function () {
-        should(leavedRooms).containEql(roomId);
+        should(leavedRooms).containEql(channel);
         delete connection.type;
       });
   });

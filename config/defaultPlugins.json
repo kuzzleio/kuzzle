@@ -7,5 +7,10 @@
       "level": "info",
       "addDate": true
     }
+  },
+  "kuzzle-plugin-auth-passport-local": {
+    "url": "git+https://github.com/kuzzleio/kuzzle-plugin-auth-passport-local.git",
+    "activated": true,
+    "defaultConfig": {}
   }
 }

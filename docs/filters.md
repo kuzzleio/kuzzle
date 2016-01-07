@@ -12,9 +12,11 @@ You can also take a look at the internally used [Elasticsearch API](https://www.
 <a name="real-time-filters" />
 ## Real-time implemented filters
 
+
 * [and](#and)
 * [bool](#bool)
 * [exists](#exists)
+* [missing](#missing)
 * [not](#not)
 * [or](#or)
 * [range](#range)
@@ -124,7 +126,7 @@ Given the following documents:
   hobby: 'radium'
 }
 ```
-The following filter can be made, and will be validated on the first document: 
+The following filter can be made, and will be validated on the second document: 
 ```
 bool: {
   must : [
@@ -244,6 +246,50 @@ With the [JavaScript SDK](http://kuzzleio.github.io/sdk-documentation/#subscribe
 ```js
 var filter = {
   exists: {
+    field: 'alive'
+  }
+};
+
+var room =
+  kuzzle
+    .dataCollectionFactory('collection')
+    .subscribe(filter, function (error, result) {
+      // called each time a new notification on this filter is received
+    };
+```
+## missing
+
+Returns documents that have only null values or no value in the original field
+
+Given the following documents:
+
+```
+{
+  firstName: 'Grace',
+  lastName: 'Hopper',
+  city: 'NYC',
+  hobby: 'computer',
+  alive: false
+},
+{
+  firstName: 'Ada',
+  lastName: 'Lovelace',
+  city: 'London',
+  hobby: 'computer',
+}
+```
+The following filter can be made, and will be validated on the second document: 
+```
+{
+  missing: {
+    field: 'alive'
+  }
+}
+```
+With the [JavaScript SDK](http://kuzzleio.github.io/sdk-documentation/#subscribe):
+```js
+var filter = {
+  missing: {
     field: 'alive'
   }
 };
@@ -429,7 +475,7 @@ Given the following documents:
 The following filter can be made, and will be validated on the two first documents: 
 ```
 terms: {
-  firstName: 'Grace'
+  firstName: ['Grace', 'Ada']
 }
 ```
 With the [JavaScript SDK](http://kuzzleio.github.io/sdk-documentation/#subscribe):

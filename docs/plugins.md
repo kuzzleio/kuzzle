@@ -38,7 +38,13 @@ A plugin configuration can have attributes:
 
 ## Logger
 
-By default, the logger plugin is enabled and configured to use the service `winston` (refer to kuzzle-plugin-logger documentation for more information).  
+By default, the logger plugin is enabled and configured to use the service `winston` (refer to [kuzzle-plugin-logger documentation](https://github.com/kuzzleio/kuzzle-plugin-logger) for more information).  
+
+## "Passport Local" Authentication
+
+By default, the a standard "passport-local" plugin is enabled to authenticate users with their username/password (refer to [kuzzle-plugin-auth-passport-local documentation](https://github.com/kuzzleio/kuzzle-plugin-auth-passport-local) for more information).
+
+See also the [global authentication mechanism documentation](security/authentication.md).
 
 # How to create a plugin
 
@@ -83,7 +89,7 @@ module.exports = {
 module.exports = function () {
 
   this.hooks = require('./config/hooks.js');
-  this.init = function (config, isDummy) {
+  this.init = function (config, context, isDummy) {
     // do something
   }
 
@@ -126,7 +132,7 @@ module.exports = {
 module.exports = function () {
 
   this.pipes = require('./config/pipes.js');
-  this.init = function (config, isDummy) {
+  this.init = function (config, context, isDummy) {
     // do something
   }
 
@@ -197,13 +203,15 @@ module.exports = function () {
 
   this.controllers = require('./config/controllers.js');
   this.routes = require('./config/routes.js');
-  this.init = function (config, isDummy) {
+  this.context = null;
+  this.init = function (config, context, isDummy) {
+    this.context = context;
     // do something
   };
 
-  this.MyController = function (context) {
+  this.MyController = function () {
     MyController = require('./controllers/myController'),
-    return new MyController(context);
+    return new MyController(this.context);
   };
 };
 ```

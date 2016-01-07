@@ -4,10 +4,22 @@ Feature: Test MQTT API
   Using MQTT API
 
   @usingMQTT
+  Scenario: Get server information
+    When I get server informations
+    Then I can retrieve the Kuzzle API version
+
+  @usingMQTT
+  Scenario: Publish a realtime message
+    When I publish a message
+    Then I should receive a request id
+    Then I'm not able to get the document
+
+  @usingMQTT
   Scenario: Create a new document and get it
     When I write the document
     Then I should receive a document id
     Then I'm able to get the document
+    And I'm not able to get the document in index "index-test-alt"
 
   @usingMQTT @unsubscribe
   Scenario: Create or Update a document
@@ -34,6 +46,7 @@ Feature: Test MQTT API
   Scenario: Search a document
     When I write the document "documentGrace"
     Then I find a document with "grace" in field "firstName"
+    And I don't find a document with "grace" in field "firstName" in index "index-test-alt"
 
   @usingMQTT
   Scenario: Bulk import
@@ -58,6 +71,7 @@ Feature: Test MQTT API
     When I write the document "documentGrace"
     When I write the document "documentAda"
     Then I count 4 documents
+    And I count 0 documents in index "index-test-alt"
     And I count 2 documents with "NYC" in field "city"
     Then I truncate the collection
     And I count 0 documents
@@ -166,10 +180,16 @@ Feature: Test MQTT API
     Then I get at least 1 statistic frame
 
   @usingMQTT
-  Scenario: list known collections
+  Scenario: list known stored collections
     When I write the document "documentGrace"
-    And I list data collections
-    Then I can find a collection "kuzzle-collection-test"
+    And I list "stored" data collections
+    Then I can find a stored collection kuzzle-collection-test
+
+  @usingMQTT @unsubscribe
+  Scenario: list known realtime collections
+    Given A room subscription listening to "lastName" having value "Hopper"
+    When I list "realtime" data collections
+    Then I can find a realtime collection kuzzle-collection-test
 
   @usingMQTT
   Scenario: get the Kuzzle timestamp
@@ -181,3 +201,20 @@ Feature: Test MQTT API
     Given A room subscription listening to "lastName" having value "Hopper"
     And I get the list subscriptions
     Then In my list there is a collection "kuzzle-collection-test" with 1 room and 1 subscriber
+
+  @usingMQTT @unsubscribe
+  Scenario: remove a specific room in subscriptions
+    Given A room subscription listening to "lastName" having value "Hopper"
+    Given A room subscription listening to "firstName" having value "Grace"
+    And I get the list subscriptions
+    Then In my list there is a collection "kuzzle-collection-test" with 2 room and 2 subscriber
+    When I remove the first room
+    And I get the list subscriptions
+    Then In my list there is a collection "kuzzle-collection-test" with 1 room and 1 subscriber
+
+  @usingMQTT
+  Scenario: create additional index
+    When I create an index named "my-new-index"
+    Then I'm able to find the index named "my-new-index" in index list
+    Then I'm not able to find the index named "my-undefined-index" in index list
+    Then I'm able to delete the index named "my-new-index"

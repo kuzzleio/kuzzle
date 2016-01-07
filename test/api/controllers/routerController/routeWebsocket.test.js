@@ -24,9 +24,9 @@ describe('Test: routerController.routeWebsocket', function () {
   var
     kuzzle,
     router,
+    messageSent,
     emitter = new EventEmitter(),
     forwardedObject = {},
-    notifyStatus,
     timer,
     timeout = 500;
 
@@ -46,17 +46,6 @@ describe('Test: routerController.routeWebsocket', function () {
         else {
           return Promise.reject(new Error('rejected'));
         }
-      },
-      mockupNotifier = function (requestId, responseObject) {
-          if (responseObject.error) {
-            notifyStatus = 'error';
-          }
-          else if (responseObject.result) {
-            notifyStatus = 'success';
-          }
-          else {
-            notifyStatus = '';
-          }
       };
 
     kuzzle = new Kuzzle();
@@ -65,12 +54,19 @@ describe('Test: routerController.routeWebsocket', function () {
     kuzzle.start(params, {dummy: true})
       .then(function () {
         kuzzle.funnel.execute = mockupFunnel;
-        kuzzle.notifier.notify = mockupNotifier;
-
+        kuzzle.io = {
+          emit: () => messageSent = true,
+          to: () => { return kuzzle.io; }
+        };
         router = new RouterController(kuzzle);
         router.routeWebsocket(emitter);
         done();
       });
+  });
+
+  beforeEach(function () {
+    messageSent = false;
+    forwardedObject = false;
   });
 
   it('should have registered a global listener', function () {
@@ -80,7 +76,6 @@ describe('Test: routerController.routeWebsocket', function () {
   it('should embed incoming requests into a well-formed request object', function (done) {
     var emittedObject = {body: {resolve: true}, controller: 'read', action: 'get'};
 
-    forwardedObject = false;
     emitter.emit(router.routename, emittedObject);
 
     this.timeout(timeout);
@@ -95,6 +90,7 @@ describe('Test: routerController.routeWebsocket', function () {
         should(forwardedObject.protocol).be.exactly('websocket');
         should(forwardedObject.controller).be.exactly('read');
         should(forwardedObject.action).be.exactly('get');
+        should(messageSent).be.true();
         done();
       }
       catch (e) {
@@ -105,54 +101,23 @@ describe('Test: routerController.routeWebsocket', function () {
       timer = false;
     }, 5);
   });
-
-  it('should notify with the returned document in case of success', function (done) {
-    var emittedObject = {body: {resolve: true}, controller: 'read', action: 'get'};
-
-    notifyStatus = 'pending';
-    emitter.emit(router.routename, emittedObject);
-
-    this.timeout(timeout);
-    timer = setInterval(function () {
-      if (notifyStatus === 'pending') {
-        return;
-      }
-
-      try {
-        should(notifyStatus).be.exactly('success');
-        done();
-      }
-      catch (e) {
-        done(e);
-      }
-
-      clearInterval(timer);
-      timer = false;
-    }, 5);
-  });
-
 
   it('should notify with an error object in case of rejection', function (done) {
     var
       emittedObject = {body: {resolve: false}, controller: 'read', action: 'get'},
       eventReceived = false;
 
-    notifyStatus = 'pending';
-
-    kuzzle.once('read:websocket:funnel:reject', function () {
-      eventReceived = true;
-    });
-
+    kuzzle.once('log:error', () => eventReceived = true);
     emitter.emit(router.routename, emittedObject);
 
     this.timeout(timeout);
     timer = setInterval(function () {
-      if (notifyStatus === 'pending') {
+      if (forwardedObject === false) {
         return;
       }
 
       try {
-        should(notifyStatus).be.exactly('error');
+        should(messageSent).be.true();
         should(eventReceived).be.true();
         done();
       }
@@ -164,34 +129,6 @@ describe('Test: routerController.routeWebsocket', function () {
       timer = false;
     }, 5);
   });
-
-  it('should not notify if the response is empty', function (done) {
-    var
-      emittedObject = {body: {resolve: true, empty: true}, controller: 'read', action: 'get'};
-
-    notifyStatus = 'pending';
-    forwardedObject = false;
-    emitter.emit(router.routename, emittedObject);
-
-    this.timeout(timeout);
-    timer = setInterval(function () {
-      if (forwardedObject === false) {
-        return;
-      }
-
-      try {
-        should(notifyStatus).be.exactly('pending');
-        done();
-      }
-      catch (e) {
-        done(e);
-      }
-
-      clearInterval(timer);
-      timer = false;
-    }, 5);
-  });
-
 
   it('should handle sockets clean disconnection', function (done) {
     var

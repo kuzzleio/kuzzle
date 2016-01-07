@@ -47,94 +47,24 @@ describe('Test: notifier.send', function () {
       });
   });
 
-  it('should notify a socket directly when a websocket connection is provided', function () {
+  it('should broadcast to channels if no connection is provided', function () {
     var
       room = 'foo',
       response = 'bar',
-      connection = { id: 'Rasta', type: 'websocket' };
+      channel = 'stubChannel';
 
     mockupio.init();
-    (Notifier.__get__('send')).call(kuzzle, room, response, connection);
-
-    should(mockupio.emitted).be.true();
-    should(mockupio.id).be.exactly(connection.id);
-    should(mockupio.room).be.exactly(room);
-    should(mockupio.response).be.exactly(response);
-  });
-
-  it('should send a MQ message to the right channel when an AMQP/STOMP connection is provided', function (done) {
-    var
-      response = 'foobar',
-      connection = { type: 'amq', replyTo: 'fakeamqchannel'};
-
-    this.timeout(50);
-
-    kuzzle.services.list.mqBroker.replyTo = function (replyTopic, msg) {
-      should(replyTopic).be.exactly(connection.replyTo);
-      should(msg).be.exactly(response);
-      done();
-    };
-
-    (Notifier.__get__('send')).call(kuzzle, null, response, connection);
-  });
-
-  it('should send a MQ message to the right channel when a MQTT connection is provided', function () {
-    var
-      response = 'foobar',
-      connection = { type: 'mqtt', replyTo: 'fakemqttchannel'};
-
+    kuzzle.hotelClerk.getChannels = function () { return [channel]; };
     kuzzle.services.list.mqBroker.addExchange = function (replyTopic, msg) {
-      should(replyTopic).be.exactly(connection.replyTo);
+      should(replyTopic).be.exactly(channel);
       should(msg).be.exactly(response);
-    };
-
-    (Notifier.__get__('send')).call(kuzzle, null, response, connection);
-  });
-
-  it('should send back a response when a REST connection is provided', function () {
-    var
-      responded = false,
-      headOK = false,
-      response = { foo: 'bar', status: 200 },
-      contentType = {'Content-Type': 'application/json'},
-      connection = {
-        type: 'rest',
-        response: {
-          end: function(msg) {
-            should(msg).be.exactly(JSON.stringify(response));
-            responded = true;
-          },
-          writeHead: function(status,msg) {
-            should(JSON.stringify(msg)).be.exactly(JSON.stringify(contentType));
-            should(status).be.exactly(200);
-            headOK = true;
-          }
-        }};
-
-    (Notifier.__get__('send')).call(kuzzle, null, response, connection);
-    should(responded).be.true();
-    should(headOK).be.true();
-  });
-
-  it('should broadcast the response if no connection is provided', function () {
-    var
-      responded = false,
-      room = 'foo',
-      response = 'bar';
-
-    mockupio.init();
-
-    kuzzle.services.list.mqBroker.addExchange = function (room, msg) {
-      should(room).be.exactly(room);
-      should(msg).be.exactly(response);
-      responded = true;
     };
 
     (Notifier.__get__('send')).call(kuzzle, room, response);
-    should(responded).be.true();
+
     should(mockupio.emitted).be.true();
-    should(mockupio.id).not.be.undefined();
-    should(mockupio.room).be.exactly(room);
+    should(mockupio.id).be.exactly(channel);
+    should(mockupio.room).be.exactly(channel);
     should(mockupio.response).be.exactly(response);
   });
 });

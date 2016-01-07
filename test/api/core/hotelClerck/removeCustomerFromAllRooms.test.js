@@ -16,24 +16,23 @@ describe('Test: hotelClerk.removeCustomerFromAllRooms', function () {
     connection = {id: 'connectionid'},
     badConnection = {id: 'badconnectionid'},
     anonymousUser,
-    roomName1 = 'roomName',
-    roomName2 = 'roomName2',
     collection = 'user',
+    index = '%test',
     filter1 = {
-        term: {
-          firstName: 'Ada'
-        }
-      },
-      filter2 = {
-        terms: {
-          firstName: ['Ada', 'Grace']
-        }
-      },
+      term: {
+        firstName: 'Ada'
+      }
+    },
+    filter2 = {
+      terms: {
+        firstName: ['Ada', 'Grace']
+      }
+    },
     requestObject1 = new RequestObject({
       controller: 'subscribe',
       action: 'on',
-      requestId: roomName1,
       collection: collection,
+      index: index,
       body: filter1
     }),
     notified,
@@ -70,8 +69,8 @@ describe('Test: hotelClerk.removeCustomerFromAllRooms', function () {
         var requestObject2 = new RequestObject({
           controller: 'subscribe',
           action: 'on',
-          requestId: roomName2,
           collection: collection,
+          index: index,
           body: filter2
         });
 
@@ -91,7 +90,7 @@ describe('Test: hotelClerk.removeCustomerFromAllRooms', function () {
 
   it('should clean up customers, rooms and filtersTree object', function () {
     return kuzzle.hotelClerk.removeCustomerFromAllRooms(connection)
-      .then(function () {
+      .finally(function () {
         should(kuzzle.dsl.filtersTree).be.an.Object();
         should(kuzzle.dsl.filtersTree).be.empty();
 
@@ -116,7 +115,7 @@ describe('Test: hotelClerk.removeCustomerFromAllRooms', function () {
         roomId = createdRoom.roomId;
         return kuzzle.hotelClerk.removeCustomerFromAllRooms(connection);
       })
-      .then(function () {
+      .finally(function () {
         should(notified.roomId).be.exactly(roomId);
         should(notified.notification.error).be.null();
         should(notified.notification.result.count).be.exactly(1);
@@ -127,13 +126,20 @@ describe('Test: hotelClerk.removeCustomerFromAllRooms', function () {
   it('should log an error if a problem occurs while unsubscribing', function (done) {
     var
       finished = false,
+
       removeRoom = kuzzle.dsl.removeRoom;
 
-    kuzzle.dsl.removeRoom = function () { return Promise.reject(new Error('rejected')); };
+    kuzzle.dsl.removeRoom = function () {
+      var deferred = q.defer();
+
+      deferred.reject(new Error('rejected'));
+
+      return deferred.promise;
+    };
 
     this.timeout(500);
 
-    kuzzle.on('log:error', () => {
+    kuzzle.once('log:error', () => {
       if (!finished) {
         finished = true;
         kuzzle.dsl.removeRoom = removeRoom;
@@ -141,6 +147,6 @@ describe('Test: hotelClerk.removeCustomerFromAllRooms', function () {
       }
     });
 
-    should(kuzzle.hotelClerk.removeCustomerFromAllRooms(connection)).be.rejected();
+    kuzzle.hotelClerk.removeCustomerFromAllRooms(connection);
   });
 });

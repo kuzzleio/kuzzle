@@ -18,13 +18,15 @@ describe('Test: requestObject', function () {
 
   beforeEach(function () {
     request = {
-      action: 'fakeaction',
-      controller: 'fakecontroller',
-      collection: 'fakecollection',
-      persist: 'maybe',
+      action: 'fakeAction',
+      controller: 'fakeController',
+      collection: 'fakeCollection',
       protocol: protocol,
       requestId: 'fakerequestId',
-      body: { _id: 'fakeid', foo: 'bar' }
+      body: { _id: 'fakeid', foo: 'bar' },
+      state: 'fakeState',
+      scope: 'fakeScope',
+      users: 'fakeUsers'
     };
   });
 
@@ -33,7 +35,6 @@ describe('Test: requestObject', function () {
 
     should(requestObject.checkInformation).not.be.undefined().and.be.a.Function();
     should(requestObject.isValid).not.be.undefined().and.be.a.Function();
-    should(requestObject.isPersistent).not.be.undefined().and.be.a.Function();
   });
 
   it('should initialize a valid request object out of a basic request', function () {
@@ -50,25 +51,12 @@ describe('Test: requestObject', function () {
     should(requestObject.protocol).be.exactly(protocol);
     should(requestObject.controller).be.exactly(request.controller);
     should(requestObject.collection).be.exactly(request.collection);
-    should(requestObject.persist).be.exactly(request.persist);
+    should(requestObject.controller).be.exactly(request.controller);
+    should(requestObject.state).be.exactly(request.state.toLowerCase());
+    should(requestObject.scope).be.exactly(request.scope.toLowerCase());
+    should(requestObject.users).be.exactly(request.users.toLowerCase());
     should(requestObject.requestId).be.exactly(request.requestId);
     should(requestObject.timestamp).be.a.Number().and.be.within(timestampStart, timestampEnd);
-  });
-
-  it('should take the persist flag from additional data prior to the one in the main request object', function () {
-    var requestObject = new RequestObject(request, { persist: false }, protocol);
-
-    should(requestObject.persist).not.be.undefined().and.be.false();
-  });
-
-  it('should set persist to true by default', function () {
-    var requestObject;
-
-    delete request.persist;
-
-    requestObject = new RequestObject(request, {}, protocol);
-
-    should(requestObject.persist).not.be.undefined().and.be.true();
   });
 
   it('should ignore the query member if a body is defined', function () {
@@ -167,34 +155,6 @@ describe('Test: requestObject', function () {
     requestObject = new RequestObject(request, {}, '');
 
     return should(requestObject.isValid()).be.rejectedWith(BadRequestError, { message: 'The body can\'t be empty' });
-  });
-
-  it('should be able to tell if data is persistent or not', function () {
-    var requestObject = new RequestObject(request, {}, '');
-
-    requestObject.persist = true;
-    should(requestObject.isPersistent()).be.true();
-
-    requestObject.persist = 'true';
-    should(requestObject.isPersistent()).be.true();
-
-    requestObject.persist = false;
-    should(requestObject.isPersistent()).be.false();
-
-    requestObject.persist = 'foobar';
-    should(requestObject.isPersistent()).be.false();
-
-    delete requestObject.persist;
-    should(requestObject.isPersistent()).be.false();
-
-    requestObject.persist = null;
-    should(requestObject.isPersistent()).be.false();
-
-    requestObject.persist = [];
-    should(requestObject.isPersistent()).be.false();
-
-    requestObject.persist = {};
-    should(requestObject.isPersistent()).be.false();
   });
 
   it('should get the _id of the additional data', function () {

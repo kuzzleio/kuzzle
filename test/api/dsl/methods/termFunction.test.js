@@ -25,7 +25,7 @@ describe('Test: dsl.termFunction method', function () {
         foo: 'bar'
       };
 
-    return should(termFunction('terms', 'roomId', 'collection', filter)).be.rejectedWith(BadRequestError, { message: 'Filter terms must contains an array' });
+    return should(termFunction('terms', 'roomId', 'index', 'collection', filter)).be.rejectedWith(BadRequestError, { message: 'Filter terms must contains an array' });
   });
 
   it('should create a valid "term" filter', function (done) {
@@ -34,11 +34,11 @@ describe('Test: dsl.termFunction method', function () {
         foo: 'bar'
       };
 
-    termFunction('term', 'roomId', 'collection', filter)
+    termFunction('term', 'roomId', 'index', 'collection', filter)
       .then(function (formattedFilter) {
-        should.exist(formattedFilter['collection.foo.termfoobar']);
-        should(formattedFilter['collection.foo.termfoobar'].rooms).be.an.Array().and.match(['roomId']);
-        should(formattedFilter['collection.foo.termfoobar'].fn).be.a.Function();
+        should.exist(formattedFilter['index.collection.foo.termfoobar']);
+        should(formattedFilter['index.collection.foo.termfoobar'].rooms).be.an.Array().and.match(['roomId']);
+        should(formattedFilter['index.collection.foo.termfoobar'].fn).be.a.Function();
         done();
       })
       .catch(function (error) {
@@ -52,11 +52,11 @@ describe('Test: dsl.termFunction method', function () {
         foo: ['bar', 'baz']
       };
 
-    termFunction('terms', 'roomId', 'collection', filter)
+    termFunction('terms', 'roomId', 'index', 'collection', filter)
       .then(function (formattedFilter) {
-        should.exist(formattedFilter['collection.foo.termsfoobar,baz']);
-        should(formattedFilter['collection.foo.termsfoobar,baz'].rooms).be.an.Array().and.match(['roomId']);
-        should(formattedFilter['collection.foo.termsfoobar,baz'].fn).be.a.Function();
+        should.exist(formattedFilter['index.collection.foo.termsfoobar,baz']);
+        should(formattedFilter['index.collection.foo.termsfoobar,baz'].rooms).be.an.Array().and.match(['roomId']);
+        should(formattedFilter['index.collection.foo.termsfoobar,baz'].fn).be.a.Function();
         done();
       })
       .catch(function (error) {
@@ -70,11 +70,11 @@ describe('Test: dsl.termFunction method', function () {
         foo: 'bar'
       };
 
-    termFunction('term', 'roomId', 'collection', filter, true)
+    termFunction('term', 'roomId', 'index', 'collection', filter, true)
       .then(function (formattedFilter) {
-        should.exist(formattedFilter['collection.foo.nottermfoobar']);
-        should(formattedFilter['collection.foo.nottermfoobar'].rooms).be.an.Array().and.match(['roomId']);
-        should(formattedFilter['collection.foo.nottermfoobar'].fn).be.a.Function();
+        should.exist(formattedFilter['index.collection.foo.nottermfoobar']);
+        should(formattedFilter['index.collection.foo.nottermfoobar'].rooms).be.an.Array().and.match(['roomId']);
+        should(formattedFilter['index.collection.foo.nottermfoobar'].fn).be.a.Function();
         done();
       })
       .catch(function (error) {
@@ -88,11 +88,11 @@ describe('Test: dsl.termFunction method', function () {
         foo: ['bar', 'baz']
       };
 
-    termFunction('terms', 'roomId', 'collection', filter, true)
+    termFunction('terms', 'roomId', 'index', 'collection', filter, true)
       .then(function (formattedFilter) {
-        should.exist(formattedFilter['collection.foo.nottermsfoobar,baz']);
-        should(formattedFilter['collection.foo.nottermsfoobar,baz'].rooms).be.an.Array().and.match(['roomId']);
-        should(formattedFilter['collection.foo.nottermsfoobar,baz'].fn).be.a.Function();
+        should.exist(formattedFilter['index.collection.foo.nottermsfoobar,baz']);
+        should(formattedFilter['index.collection.foo.nottermsfoobar,baz'].rooms).be.an.Array().and.match(['roomId']);
+        should(formattedFilter['index.collection.foo.nottermsfoobar,baz'].fn).be.a.Function();
         done();
       })
       .catch(function (error) {
@@ -109,7 +109,7 @@ describe('Test: dsl.termFunction method', function () {
     return methods.__with__({
       buildCurriedFunction: function () { return new InternalError('rejected'); }
     })(function () {
-      return should(termFunction('terms', 'roomId', 'collection', filter)).be.rejectedWith('rejected');
+      return should(termFunction('terms', 'roomId', 'index', 'collection', filter)).be.rejectedWith('rejected');
     });
   });
 });

@@ -4,10 +4,16 @@ Feature: Test REST API
   Using REST API
 
   @usingREST
-  Scenario: Create a non-persistent document
-    When I write the document "documentNonPersistentGrace"
+  Scenario: Get server information
+    When I get server informations
+    Then I can retrieve the Kuzzle API version
+
+  @usingREST
+  Scenario: Publish a realtime message
+    When I publish a message
     Then I should receive a request id
     Then I'm not able to get the document
+    And I'm not able to get the document in index "index-test-alt"
 
   @usingREST
   Scenario: Create a new document and get it
@@ -37,6 +43,7 @@ Feature: Test REST API
   Scenario: Search a document
     When I write the document "documentGrace"
     Then I find a document with "grace" in field "firstName"
+    And I don't find a document with "grace" in field "firstName" in index "index-test-alt"
 
   @usingREST
   Scenario: Bulk import
@@ -61,11 +68,12 @@ Feature: Test REST API
     When I write the document "documentGrace"
     When I write the document "documentAda"
     Then I count 4 documents
+    And I count 0 documents in index "index-test-alt"
     And I count 2 documents with "NYC" in field "city"
     Then I truncate the collection
     And I count 0 documents
 
-  @usingREST @removeSchema
+  @usingREST
   Scenario: Change mapping
     When I write the document "documentGrace"
     Then I don't find a document with "Grace" in field "firstName"
@@ -91,12 +99,24 @@ Feature: Test REST API
     Then I get at least 1 statistic frame
 
   @usingREST
-  Scenario: list known collections
+  Scenario: list known stored collections
     When I write the document "documentGrace"
-    And I list data collections
-    Then I can find a collection "kuzzle-collection-test"
+    And I list "stored" data collections
+    Then I can find a stored collection kuzzle-collection-test
+
+  @usingREST
+  Scenario: list known realtime collections
+    When I list "realtime" data collections
+    Then I can not find a realtime collection
 
   @usingREST
   Scenario: get the Kuzzle timestamp
     When I get the server timestamp
     Then I can read the timestamp
+
+  @usingREST
+  Scenario: create additional index
+    When I create an index named "my-new-index"
+    Then I'm able to find the index named "my-new-index" in index list
+    Then I'm not able to find the index named "my-undefined-index" in index list
+    Then I'm able to delete the index named "my-new-index"

@@ -3,6 +3,7 @@ var
   winston = require('winston'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
   InternalError = require.main.require('lib/api/core/errors/internalError'),
+  BadRequestError = require.main.require('lib/api/core/errors/badRequestError'),
   RealTimeResponseObject = require.main.require('lib/api/core/models/realTimeResponseObject'),
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
@@ -15,12 +16,14 @@ describe('Test: hotelClerk.addSubscription', function () {
   var
     kuzzle,
     roomId,
+    channel,
     connection = {id: 'connectionid'},
     context = {
       connection: connection,
       user: null
     },
     roomName = 'roomName',
+    index = 'test',
     collection = 'user',
     filter = {
       term: {
@@ -68,6 +71,7 @@ describe('Test: hotelClerk.addSubscription', function () {
       controller: 'subscribe',
       action: 'on',
       requestId: roomName,
+      index: index,
       collection: collection,
       body: filter,
       metadata: {
@@ -78,6 +82,8 @@ describe('Test: hotelClerk.addSubscription', function () {
 
     return kuzzle.hotelClerk.addSubscription(requestObject, context)
       .then(function (realTimeResponseObject) {
+        var customer;
+
         should(kuzzle.dsl.filtersTree).be.an.Object();
         should(kuzzle.dsl.filtersTree).not.be.empty();
 
@@ -94,9 +100,18 @@ describe('Test: hotelClerk.addSubscription', function () {
 
         roomId = kuzzle.hotelClerk.rooms[realTimeResponseObject.roomId].id;
 
-        should(kuzzle.hotelClerk.customers[connection.id]).be.an.Object();
-        should(kuzzle.hotelClerk.customers[connection.id]).not.be.empty();
-        should(kuzzle.hotelClerk.customers[connection.id][roomId]).not.be.undefined().and.match(requestObject.metadata);
+        customer = kuzzle.hotelClerk.customers[connection.id];
+        should(customer).be.an.Object();
+        should(customer).not.be.empty();
+        should(customer[roomId]).not.be.undefined().and.match(requestObject.metadata);
+
+        should(kuzzle.hotelClerk.rooms[roomId].channels).be.an.Object().and.not.be.undefined();
+        should(Object.keys(kuzzle.hotelClerk.rooms[roomId].channels).length).be.exactly(1);
+
+        channel = Object.keys(kuzzle.hotelClerk.rooms[roomId].channels)[0];
+        should(kuzzle.hotelClerk.rooms[roomId].channels[channel].scope).not.be.undefined().and.be.exactly('all');
+        should(kuzzle.hotelClerk.rooms[roomId].channels[channel].state).not.be.undefined().and.be.exactly('done');
+        should(kuzzle.hotelClerk.rooms[roomId].channels[channel].users).not.be.undefined().and.be.exactly('none');
       });
   });
 
@@ -106,6 +121,7 @@ describe('Test: hotelClerk.addSubscription', function () {
       requestObject = new RequestObject({
         controller: 'subscribe',
         collection: collection,
+        index: index,
         body: filter
       });
 
@@ -115,8 +131,8 @@ describe('Test: hotelClerk.addSubscription', function () {
       sockets: {
         connected: {
           connectionid: {
-            join: function (roomId) {
-              joinedRooms.push(roomId);
+            join: function (channel) {
+              joinedRooms.push(channel);
             }
           }
         }
@@ -126,7 +142,7 @@ describe('Test: hotelClerk.addSubscription', function () {
 
     return kuzzle.hotelClerk.addSubscription(requestObject, context)
       .then(function () {
-        should(joinedRooms).containEql(roomId);
+        should(joinedRooms).containEql(channel);
         delete connection.type;
       });
   });
@@ -135,6 +151,7 @@ describe('Test: hotelClerk.addSubscription', function () {
     var requestObject = new RequestObject({
       controller: 'subscribe',
       collection: collection,
+      index: index,
       body: filter
     });
     var response;
@@ -157,6 +174,7 @@ describe('Test: hotelClerk.addSubscription', function () {
         controller: 'subscribe',
         action: 'on',
         collection: collection,
+        index: index,
         body: {badterm : {firstName: 'Ada'}}
       });
 
@@ -169,6 +187,7 @@ describe('Test: hotelClerk.addSubscription', function () {
       requestObject1 = new RequestObject({
         controller: 'subscribe',
         collection: collection,
+        index: index,
         body: {
           term: {
             firstName: 'Ada'
@@ -181,6 +200,7 @@ describe('Test: hotelClerk.addSubscription', function () {
       requestObject2 = new RequestObject({
         controller: 'subscribe',
         collection: collection,
+        index: index,
         body: {
           exists: {
             field: 'lastName'
@@ -210,6 +230,7 @@ describe('Test: hotelClerk.addSubscription', function () {
     var
       requestObject = new RequestObject({
         controller: 'subscribe',
+        index: index,
         collection: collection
       });
 
@@ -222,6 +243,7 @@ describe('Test: hotelClerk.addSubscription', function () {
     var
       requestObject = new RequestObject({
         controller: 'subscribe',
+        index: index,
         collection: collection
       });
 
@@ -249,6 +271,7 @@ describe('Test: hotelClerk.addSubscription', function () {
       roomId,
       requestObject1 = new RequestObject({
         controller: 'subscribe',
+        index: index,
         collection: collection
       });
 
@@ -262,6 +285,7 @@ describe('Test: hotelClerk.addSubscription', function () {
       .then(id => {
         var requestObject2 = new RequestObject({
           collection: collection,
+          index: index,
           controller: 'subscribe',
           action: 'join',
           body: {
@@ -288,6 +312,7 @@ describe('Test: hotelClerk.addSubscription', function () {
     return should(kuzzle.hotelClerk.join(
       new RequestObject({
         collection: collection,
+        index: index,
         controller: 'subscribe',
         action: 'join',
         body: {roomId: 'no way I can exist'}
@@ -296,5 +321,46 @@ describe('Test: hotelClerk.addSubscription', function () {
     ))
       .be.rejectedWith(InternalError);
   });
-  
+
+  it('should reject the subscription if the given state argument is incorrect', function () {
+    return should(kuzzle.hotelClerk.addSubscription(
+      new RequestObject({
+        collection: collection,
+        controller: 'subscribe',
+        action: 'on',
+        body: {},
+        state: 'foo'
+      }),
+      context
+    ))
+      .be.rejectedWith(BadRequestError);
+  });
+
+  it('should reject the subscription if the given scope argument is incorrect', function () {
+    return should(kuzzle.hotelClerk.addSubscription(
+      new RequestObject({
+        collection: collection,
+        controller: 'subscribe',
+        action: 'on',
+        body: {},
+        scope: 'foo'
+      }),
+      context
+    ))
+      .be.rejectedWith(BadRequestError);
+  });
+
+  it('should reject the subscription if the given users argument is incorrect', function () {
+    return should(kuzzle.hotelClerk.addSubscription(
+      new RequestObject({
+        collection: collection,
+        controller: 'subscribe',
+        action: 'on',
+        body: {},
+        users: 'foo'
+      }),
+      context
+    ))
+      .be.rejectedWith(BadRequestError);
+  });
 });

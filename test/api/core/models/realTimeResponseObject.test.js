@@ -29,7 +29,7 @@ describe('Test: realTimeResponseObject', function () {
 
   it('should return a normalized count response', function () {
     var
-      responseObject = new RTResponseObject(roomId, requestObject, 42),
+      responseObject = new RTResponseObject(roomId, requestObject, {count: 42}),
       response = responseObject.toJson();
 
     should(response.error).be.null();
@@ -42,6 +42,23 @@ describe('Test: realTimeResponseObject', function () {
     should(response.result.requestId).be.exactly(requestObject.requestId);
     should(response.result.timestamp).be.exactly(requestObject.timestamp);
     should(response.result.count).be.exactly(42);
+  });
+
+  it('should return a normalized channel response', function () {
+    var
+      responseObject = new RTResponseObject(roomId, requestObject, {channel: 'foobar'}),
+      response = responseObject.toJson();
+
+    should(response.error).be.null();
+    should(response.status).be.a.Number().and.be.eql(200);
+    should(response.result).not.be.null().and.be.an.Object();
+    should(response.result.action).be.exactly(requestObject.action);
+    should(response.result.controller).be.exactly(requestObject.controller);
+    should(response.result.metadata).match(requestObject.metadata);
+    should(response.result.protocol).be.exactly(requestObject.protocol);
+    should(response.result.requestId).be.exactly(requestObject.requestId);
+    should(response.result.timestamp).be.exactly(requestObject.timestamp);
+    should(response.result.channel).be.exactly('foobar');
   });
 
   it('should return a normalized subscription response', function () {

@@ -120,6 +120,7 @@ describe('Test execute function in funnel controller', function () {
       kuzzle.funnel.execute(
         new RequestObject({
           controller: 'read',
+          index: '@test',
           action: 'get'
         }),
         localContext)
@@ -129,18 +130,14 @@ describe('Test execute function in funnel controller', function () {
   it('should resolve the promise if everything is ok', function () {
     var object = {
       requestId: 'requestId',
-      controller: 'write',
-      action: 'create',
-      collection: 'user',
-      persist: false,
-      body: {
-        firstName: 'Grace'
-      }
+      controller: 'read',
+      action: 'listIndexes',
+      collection: 'user'
     };
 
     var requestObject = new RequestObject(object);
 
-    return should(kuzzle.funnel.execute(requestObject, context)).not.be.rejected();
+    return should(kuzzle.funnel.execute(requestObject, context)).be.fulfilled();
   });
 
   it('should resolve the promise in cas of a plugin controller action', function() {

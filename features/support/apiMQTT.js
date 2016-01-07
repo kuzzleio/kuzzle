@@ -41,6 +41,7 @@ ApiMQTT.prototype.unsubscribe = function (room, clientId) {
       clientId: clientId,
       controller: 'subscribe',
       collection: this.world.fakeCollection,
+      index: this.world.fakeIndex,
       action: 'off',
       body: { roomId: room }
     };
@@ -108,7 +109,7 @@ ApiMQTT.prototype.sendAndListen = function (message) {
       this.responses = JSON.parse((new Buffer(notification)).toString());
     }.bind(this));
 
-    mqttListener.subscribe(unpacked.result.roomId);
+    mqttListener.subscribe(unpacked.result.channel);
     this.subscribedRooms[message.clientId][unpacked.result.roomId] = mqttListener;
     deferred.resolve(unpacked);
   }.bind(this));

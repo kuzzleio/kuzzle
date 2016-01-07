@@ -34,12 +34,13 @@ ApiWebsocket.prototype.unsubscribe = function (room, socketName) {
       controller: 'subscribe',
       action: 'off',
       collection: this.world.fakeCollection,
+      index: this.world.fakeIndex,
       body: { roomId: room }
     };
 
   socketName = initSocket.call(this, socketName);
 
-  this.listSockets[socketName].removeListener(room, this.subscribedRooms[socketName][room]);
+  this.listSockets[socketName].removeListener(this.subscribedRooms[socketName][room].channel, this.subscribedRooms[socketName][room].listener);
   delete this.subscribedRooms[socketName][room];
   return this.send(msg, false, socketName);
 };
@@ -90,9 +91,7 @@ ApiWebsocket.prototype.sendAndListen = function (msg, socketName) {
 
   socketName = initSocket.call(this, socketName);
   this.listSockets[socketName].once(msg.requestId, response => {
-    var listener = function (document) {
-      this.responses = document;
-    };
+    var listener = document => this.responses = document;
 
     if (response.error) {
       deferred.reject(response.error.message);
@@ -103,8 +102,8 @@ ApiWebsocket.prototype.sendAndListen = function (msg, socketName) {
       this.subscribedRooms[socketName] = {};
     }
 
-    this.subscribedRooms[socketName][response.result.roomId] = listener ;
-    this.listSockets[socketName].on(response.result.roomId, listener.bind(this));
+    this.subscribedRooms[socketName][response.result.roomId] = {channel: response.result.channel, listener: listener };
+    this.listSockets[socketName].on(response.result.channel, listener.bind(this));
     deferred.resolve(response);
   });
 

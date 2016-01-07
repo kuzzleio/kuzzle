@@ -1,6 +1,7 @@
 var
   config = require('./config')(),
-  rp = require('request-promise');
+  rp = require('request-promise'),
+  apiVersion;
 
 var ApiREST = function () {
   this.world = null;
@@ -13,16 +14,22 @@ ApiREST.prototype.init = function (world) {
 ApiREST.prototype.disconnect = function () {};
 
 ApiREST.prototype.pathApi = function (path) {
-  return config.url + '/api/' + path;
+  var basePath = '/api';
+
+  if (apiVersion) {
+    basePath += '/' + apiVersion;
+  }
+
+  return config.url + basePath + '/' + path;
 };
 
 ApiREST.prototype.callApi = function (options) {
   return rp(options);
 };
 
-ApiREST.prototype.get = function (id) {
+ApiREST.prototype.get = function (id, index) {
   var options = {
-    url: this.pathApi(this.world.fakeCollection + '/' + id),
+    url: this.pathApi(((typeof index !== 'string') ? this.world.fakeIndex : index) + '/' + this.world.fakeCollection + '/' + id),
     method: 'GET',
     json: true
   };
@@ -30,9 +37,9 @@ ApiREST.prototype.get = function (id) {
   return this.callApi(options);
 };
 
-ApiREST.prototype.search = function (filters) {
+ApiREST.prototype.search = function (filters, index) {
   var options = {
-    url: this.pathApi(this.world.fakeCollection + '/_search'),
+    url: this.pathApi(((typeof index !== 'string') ? this.world.fakeIndex : index) + '/' + this.world.fakeCollection + '/_search'),
     method: 'POST',
     json: filters
   };
@@ -40,9 +47,9 @@ ApiREST.prototype.search = function (filters) {
   return this.callApi(options);
 };
 
-ApiREST.prototype.count = function (filters) {
+ApiREST.prototype.count = function (filters, index) {
   var options = {
-    url: this.pathApi(this.world.fakeCollection + '/_count'),
+    url: this.pathApi(((typeof index !== 'string') ? this.world.fakeIndex : index) + '/' + this.world.fakeCollection + '/_count'),
     method: 'POST',
     json: filters
   };
@@ -50,9 +57,9 @@ ApiREST.prototype.count = function (filters) {
   return this.callApi(options);
 };
 
-ApiREST.prototype.create = function (body) {
+ApiREST.prototype.create = function (body, index) {
   var options = {
-    url: this.pathApi(this.world.fakeCollection),
+    url: this.pathApi(((typeof index !== 'string') ? this.world.fakeIndex : index) + '/' + this.world.fakeCollection + '/_create'),
     method: 'POST',
     json: body
   };
@@ -60,9 +67,19 @@ ApiREST.prototype.create = function (body) {
   return this.callApi(options);
 };
 
-ApiREST.prototype.createOrUpdate = function (body) {
+ApiREST.prototype.publish = function (body, index) {
   var options = {
-    url: this.pathApi(this.world.fakeCollection + '/' + body._id),
+    url: this.pathApi(((typeof index !== 'string') ? this.world.fakeIndex : index) + '/' + this.world.fakeCollection),
+    method: 'POST',
+    json: body
+  };
+
+  return this.callApi(options);
+};
+
+ApiREST.prototype.createOrUpdate = function (body, index) {
+  var options = {
+    url: this.pathApi(((typeof index !== 'string') ? this.world.fakeIndex : index) + '/' + this.world.fakeCollection + '/' + body._id),
     method: 'PUT',
     json: body
   };
@@ -70,9 +87,9 @@ ApiREST.prototype.createOrUpdate = function (body) {
   return this.callApi(options);
 };
 
-ApiREST.prototype.update = function (id, body) {
+ApiREST.prototype.update = function (id, body, index) {
   var options = {
-    url: this.pathApi(this.world.fakeCollection + '/' + id + '/_update'),
+    url: this.pathApi(((typeof index !== 'string') ? this.world.fakeIndex : index) + '/' + this.world.fakeCollection + '/' + id + '/_update'),
     method: 'PUT',
     json: body
   };
@@ -80,9 +97,9 @@ ApiREST.prototype.update = function (id, body) {
   return this.callApi(options);
 };
 
-ApiREST.prototype.deleteById = function (id) {
+ApiREST.prototype.deleteById = function (id, index) {
   var options = {
-    url: this.pathApi(this.world.fakeCollection + '/' + id),
+    url: this.pathApi(((typeof index !== 'string') ? this.world.fakeIndex : index) + '/' + this.world.fakeCollection + '/' + id),
     method: 'DELETE',
     json: true
   };
@@ -90,9 +107,9 @@ ApiREST.prototype.deleteById = function (id) {
   return this.callApi(options);
 };
 
-ApiREST.prototype.deleteByQuery = function (filters) {
+ApiREST.prototype.deleteByQuery = function (filters, index) {
   var options = {
-    url: this.pathApi(this.world.fakeCollection + '/_query'),
+    url: this.pathApi(((typeof index !== 'string') ? this.world.fakeIndex : index) + '/' + this.world.fakeCollection + '/_query'),
     method: 'DELETE',
     json: filters
   };
@@ -100,9 +117,9 @@ ApiREST.prototype.deleteByQuery = function (filters) {
   return this.callApi(options);
 };
 
-ApiREST.prototype.deleteCollection = function () {
+ApiREST.prototype.deleteCollection = function (index) {
   var options = {
-    url: this.pathApi(this.world.fakeCollection),
+    url: this.pathApi(((typeof index !== 'string') ? this.world.fakeIndex : index) + '/' + this.world.fakeCollection),
     method: 'DELETE',
     json: true
   };
@@ -110,9 +127,9 @@ ApiREST.prototype.deleteCollection = function () {
   return this.callApi(options);
 };
 
-ApiREST.prototype.bulkImport = function (bulk) {
+ApiREST.prototype.bulkImport = function (bulk, index) {
   var options = {
-    url: this.pathApi(this.world.fakeCollection + '/_bulk'),
+    url: this.pathApi(((typeof index !== 'string') ? this.world.fakeIndex : index) + '/' + this.world.fakeCollection + '/_bulk'),
     method: 'POST',
     json: bulk
   };
@@ -122,7 +139,7 @@ ApiREST.prototype.bulkImport = function (bulk) {
 
 ApiREST.prototype.globalBulkImport = function (bulk) {
   var options = {
-    url: this.pathApi('/_bulk'),
+    url: this.pathApi('_bulk'),
     method: 'POST',
     json: bulk
   };
@@ -130,9 +147,9 @@ ApiREST.prototype.globalBulkImport = function (bulk) {
   return this.callApi(options);
 };
 
-ApiREST.prototype.putMapping = function () {
+ApiREST.prototype.putMapping = function (index) {
   var options = {
-    url: this.pathApi(this.world.fakeCollection + '/_mapping'),
+    url: this.pathApi(((typeof index !== 'string') ? this.world.fakeIndex : index) + '/' + this.world.fakeCollection + '/_mapping'),
     method: 'PUT',
     json: this.world.schema
   };
@@ -142,7 +159,7 @@ ApiREST.prototype.putMapping = function () {
 
 ApiREST.prototype.getStats = function (dates) {
   var options = {
-    url: this.pathApi('/_getStats'),
+    url: this.pathApi('_getStats'),
     method: 'POST',
     json: dates
   };
@@ -152,7 +169,7 @@ ApiREST.prototype.getStats = function (dates) {
 
 ApiREST.prototype.getLastStats = function () {
   var options = {
-    url: this.pathApi('/_getLastStats'),
+    url: this.pathApi('_getLastStats'),
     method: 'GET',
     json: {}
   };
@@ -162,7 +179,7 @@ ApiREST.prototype.getLastStats = function () {
 
 ApiREST.prototype.getAllStats = function () {
   var options = {
-    url: this.pathApi('/_getAllStats'),
+    url: this.pathApi('_getAllStats'),
     method: 'GET',
     json: {}
   };
@@ -170,12 +187,20 @@ ApiREST.prototype.getAllStats = function () {
   return this.callApi(options);
 };
 
-ApiREST.prototype.listCollections = function () {
-  var options = {
-    url: this.pathApi('_listCollections'),
+ApiREST.prototype.listCollections = function (index, type) {
+  var options;
+
+  index = index || this.world.fakeIndex;
+
+  options = {
+    url: this.pathApi(index + '/_listCollections'),
     method: 'GET',
     json: true
   };
+
+  if (type) {
+    options.url += '/' + type;
+  }
 
   return this.callApi(options);
 };
@@ -190,14 +215,68 @@ ApiREST.prototype.now = function () {
   return this.callApi(options);
 };
 
-ApiREST.prototype.truncateCollection = function () {
+ApiREST.prototype.truncateCollection = function (index) {
   var options = {
-    url: this.pathApi(this.world.fakeCollection + '/_truncate'),
+    url: this.pathApi(((typeof index !== 'string') ? this.world.fakeIndex : index) + '/' + this.world.fakeCollection + '/_truncate'),
     method: 'DELETE',
     json: true
   };
 
   return this.callApi(options);
+};
+
+ApiREST.prototype.listIndexes = function () {
+  var options = {
+    url: this.pathApi('_listIndexes'),
+    method: 'GET',
+    json: true
+  };
+
+  return this.callApi(options);
+};
+
+ApiREST.prototype.deleteIndexes = function () {
+  var options = {
+    url: this.pathApi('_deleteIndexes'),
+    method: 'DELETE',
+    json: true
+  };
+
+  return this.callApi(options);
+};
+
+ApiREST.prototype.createIndex = function (index) {
+  var options = {
+    url: this.pathApi(index),
+    method: 'PUT',
+    json: true
+  };
+
+  return this.callApi(options);
+};
+
+ApiREST.prototype.deleteIndex = function (index) {
+  var options = {
+    url: this.pathApi(index),
+    method: 'DELETE',
+    json: true
+  };
+
+  return this.callApi(options);
+};
+
+ApiREST.prototype.getServerInfo = function () {
+  var options = {
+    url: this.pathApi('_serverInfo'),
+    method: 'GET',
+    json: true
+  };
+
+  return this.callApi(options)
+    .then(res => {
+      apiVersion = res.result.serverInfo.kuzzle.api.version;
+      return res;
+    });
 };
 
 module.exports = ApiREST;

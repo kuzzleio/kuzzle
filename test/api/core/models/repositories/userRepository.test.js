@@ -22,6 +22,8 @@ var
 
 before(function (done) {
   var
+    clearPassword = 'azerty',
+    encryptedPassword = '5c4ec74fd64bb57c05b4948f3a7e9c7d450f069a',
     mockCacheEngine,
     mockReadEngine,
     mockWriteEngine,
@@ -32,12 +34,12 @@ before(function (done) {
 
   mockCacheEngine = {
     get: function (key) {
-      if (key === userRepository.collection + '/userInCache') {
-        return Promise.resolve(userInCache);
+      if (key === userRepository.index + '/' + userRepository.collection + '/userInCache') {
+        return Promise.resolve(JSON.stringify(userInCache));
       }
       return Promise.resolve(null);
     },
-    volatileSet: function (key, value, ttl) { forwardedResult = {key: key, value: value, ttl: ttl }; },
+    volatileSet: function (key, value, ttl) { forwardedResult = {key: key, value: JSON.parse(value), ttl: ttl }; },
     expire: function (key, ttl) { forwardedResult = {key: key, ttl: ttl}; }
   };
   mockReadEngine = {
@@ -62,7 +64,8 @@ before(function (done) {
   userInCache = {
     _id: 'userInCache',
     name: 'Johnny Cash',
-    profile: 'userincacheprofile'
+    profile: 'userincacheprofile',
+    password: encryptedPassword
   };
   userInDB = {
     _id: 'userInDB',
@@ -179,7 +182,7 @@ describe('Test: repositories/userRepository', function () {
       var
         token;
 
-      token = jwt.sign({_id: -99999}, params.jsonWebToken.secret, {algorithm: params.jsonWebToken.algorithm});
+       token = jwt.sign({_id: -99999}, params.jsonWebToken.secret, {algorithm: params.jsonWebToken.algorithm});
 
       userRepository.loadFromToken(token)
         .then(function (user) {
@@ -206,6 +209,7 @@ describe('Test: repositories/userRepository', function () {
       userRepository.loadFromCache = () => {
         return Promise.reject(new InternalError('Error'));
       };
+
       return should(userRepository.loadFromToken(token)
         .catch(err => {
           delete userRepository.loadFromCache;
@@ -292,6 +296,95 @@ describe('Test: repositories/userRepository', function () {
         .catch(function (error) {
           done(error);
         });
+    });
+  });
+
+  describe('#generateToken', function () {
+    it('should reject the promise if the username is null', function () {
+      return should(userRepository.generateToken(null)).be.rejectedWith(InternalError);
+    });
+
+    it('should reject the promise if an error occurred while generating the token', () => {
+
+      kuzzle.config.jsonWebToken.algorithm = 'fake JWT ALgorithm';
+
+      return should(userRepository.generateToken('userInCache')
+        .catch(err => {
+          kuzzle.config.jsonWebToken.algorithm = params.jsonWebToken.algorithm;
+
+          return Promise.reject(err);
+        })).be.rejectedWith(InternalError);
+    });
+
+    it('should resolve to the good jwt token for a given username', function (done) {
+      var
+        checkToken;
+
+       checkToken = jwt.sign({_id: 'userInCache'}, params.jsonWebToken.secret, {algorithm: params.jsonWebToken.algorithm, expiresIn: params.jsonWebToken.expiresIn});
+
+      userRepository.generateToken('userInCache')
+        .then(function (token) {
+          should(token).be.exactly(checkToken);
+
+          done();
+        })
+        .catch(function (error) {
+          done(error);
+        });
+    });
+
+  });
+
+  describe('#loadByUsernameAndPassword', function () {
+    it('should resolve to user if good credentials are given', function (done) {
+      userRepository.loadByUsernameAndPassword('userInCache', 'azerty')
+        .then(function (user) {
+          should(user._id).be.exactly('userInCache');
+          should(user.name).be.exactly('Johnny Cash');
+          should(user.profile).be.an.instanceOf(Profile);
+          should(user.profile._id).be.exactly('userincacheprofile');
+
+          done();
+        })
+        .catch(function (error) {
+          done(error);
+        });
+    });
+
+    it('should resolve to "null" if username is not found', function (done) {
+      userRepository.loadByUsernameAndPassword('unknownUser', 'azerty')
+        .then(function (user) {
+          should(user).be.null();
+          done();
+        })
+        .catch(function (error) {
+          done(error);
+        });
+    });
+
+    it('should resolve to "null" if bad password is given', function (done) {
+      userRepository.loadByUsernameAndPassword('userInCache', 'badpassword')
+        .then(function (user) {
+          should(user).be.null();
+          done();
+        })
+        .catch(function (error) {
+          done(error);
+        });
+    });
+
+    it('should reject the promise if an error occurred while fetching the user', () => {
+
+      userRepository.load = () => {
+        return Promise.reject(new InternalError('Error'));
+      };
+
+      return should(userRepository.loadByUsernameAndPassword('userInCache', 'azerty')
+        .catch(err => {
+          delete userRepository.load;
+
+          return Promise.reject(err);
+        })).be.rejectedWith(InternalError);
     });
   });
 

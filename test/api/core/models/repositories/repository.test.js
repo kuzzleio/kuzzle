@@ -24,22 +24,33 @@ describe('Test: repositories/repository', function () {
   persistedObject._id = -1;
   persistedObject.name = 'persisted';
 
+  cachedObject = new ObjectConstructor();
+  cachedObject._id = -2;
+  cachedObject.name = 'cached';
+
+  uncachedObject = new ObjectConstructor();
+  uncachedObject._id = -3;
+  uncachedObject.name = 'uncached';
+
   mockCacheEngine = {
     get: function (key) {
-      if (key === repository.collection + '/persisted') {
-        return Promise.resolve(persistedObject);
+      if (key === repository.index + '/' + repository.collection + '/persisted') {
+        return Promise.resolve(JSON.stringify(persistedObject));
       }
-      if (key === repository.collection + '/error') {
+      if (key === repository.index + '/' + repository.collection + '/cached') {
+        return Promise.resolve(JSON.stringify(cachedObject));
+      }
+      if (key === repository.index + '/' + repository.collection + '/error') {
         return Promise.reject(new InternalError('Error'));
       }
-      if (key === repository.collection + '/string') {
+      if (key === repository.index + '/' + repository.collection + '/string') {
         return Promise.resolve('a string');
       }
 
       return Promise.resolve(null);
     },
-    set: (key, value) => { forwardedObject = {op: 'set', key: key, value: value}; },
-    volatileSet: (key, value, ttl) => { forwardedObject = {op: 'volatileSet', key: key, value: value, ttl: ttl }; },
+    set: (key, value) => { forwardedObject = {op: 'set', key: key, value: JSON.parse(value)}; },
+    volatileSet: (key, value, ttl) => { forwardedObject = {op: 'volatileSet', key: key, value: JSON.parse(value), ttl: ttl }; },
     expire: (key, ttl) => { forwardedObject = {op: 'expire', key: key, ttl: ttl}; },
     persist: key => { forwardedObject = {op: 'persist', key: key}; }
   };
@@ -51,6 +62,12 @@ describe('Test: repositories/repository', function () {
       }
       if (requestObject.data._id === 'persisted') {
         return Promise.resolve(new ResponseObject(requestObject, persistedObject));
+      }
+      if (requestObject.data._id === 'uncached') {
+        return Promise.resolve(new ResponseObject(requestObject, uncachedObject));
+      }
+      if (requestObject.data._id === 'cached') {
+        return Promise.resolve(new ResponseObject(requestObject, uncachedObject));
       }
       if (requestObject.data._id === 'error') {
         return Promise.reject(new InternalError('Error'));
@@ -73,6 +90,7 @@ describe('Test: repositories/repository', function () {
           action: 'get',
           requestId: 'foo',
           collection: repository.collection,
+          index: repository.index,
           body: {
             _id: id
           }
@@ -106,7 +124,8 @@ describe('Test: repositories/repository', function () {
     };
 
     repository = new Repository(mockKuzzle, {
-      collection: '_test/repository',
+      index: '%test',
+      collection: 'repository',
       ObjectConstructor: ObjectConstructor,
       readEngine: mockReadEngine,
       writeEngine: mockWriteEngine,
@@ -116,6 +135,10 @@ describe('Test: repositories/repository', function () {
 
   beforeEach(function () {
     forwardedObject = null;
+    repository.ObjectConstructor = ObjectConstructor;
+    repository.readEngine = mockReadEngine;
+    repository.writeEngine = mockWriteEngine;
+    repository.cacheEngine = mockCacheEngine;
   });
 
   describe('#loadOneFromDatabase', function () {
@@ -238,6 +261,94 @@ describe('Test: repositories/repository', function () {
           should(result._id).be.exactly(-1);
           should(result.name).be.exactly('persisted');
           should(result.type).be.exactly('testObject');
+          done();
+        })
+        .catch(function (error) {
+          done(error);
+        });
+    });
+  });
+
+  describe('#load', function () {
+    it('should return null for an non-existing id', function (done) {
+      repository.load(-999)
+        .then(function (result) {
+          should(result).be.null();
+          done();
+        })
+        .catch(function (error) {
+          done(error);
+        });
+    });
+
+    it('should reject the promise in case of error', done => {
+      should(repository.load('error')).be.rejectedWith(InternalError);
+      should(repository.load('string')).be.rejectedWith(InternalError);
+      done();
+    });
+
+    it('should return a valid ObjectConstructor instance if found', function (done) {
+      repository.load('persisted')
+        .then(function (result) {
+          should(result).be.an.instanceOf(ObjectConstructor);
+          should(result._id).be.exactly(-1);
+          should(result.name).be.exactly('persisted');
+          should(result.type).be.exactly('testObject');
+          done();
+        })
+        .catch(function (error) {
+          done(error);
+        });
+    });
+
+    it('should return a valid ObjectConstructor instance if found only in cache', function (done) {
+      repository.load('cached')
+        .then(function (result) {
+          should(result).be.an.instanceOf(ObjectConstructor);
+          should(result._id).be.exactly(-2);
+          should(result.name).be.exactly('cached');
+          should(result.type).be.exactly('testObject');
+          done();
+        })
+        .catch(function (error) {
+          done(error);
+        });
+    });
+
+    it('should return a valid ObjectConstructor instance if found only in readEngine', function (done) {
+      repository.load('uncached')
+        .then(function (result) {
+          should(result).be.an.instanceOf(ObjectConstructor);
+          should(result._id).be.exactly(-3);
+          should(result.name).be.exactly('uncached');
+          should(result.type).be.exactly('testObject');
+          done();
+        })
+        .catch(function (error) {
+          done(error);
+        });
+    });
+
+    it('should get content only from readEngine if cacheEngine is null', function (done) {
+      repository.cacheEngine = null;
+      repository.load('cached')
+        .then(function (result) {
+          should(result).be.an.instanceOf(ObjectConstructor);
+          should(result._id).be.exactly(-3);
+          should(result.name).be.exactly('uncached');
+          should(result.type).be.exactly('testObject');
+          done();
+        })
+        .catch(function (error) {
+          done(error);
+        });
+    });
+
+    it('should get content only from cacheEngine if readEngine is null', function (done) {
+      repository.readEngine = null;
+      repository.load('uncached')
+        .then(function (result) {
+          should(result).be.null();
           done();
         })
         .catch(function (error) {
