@@ -30,6 +30,12 @@
         "workerGroup:loaded": "info",
         "profiling:*": "info"
       }
+    },
+    "defaultConfig": {
+      "service": "winston",
+      "level": "info",
+      "addDate": true,
+      "loadedBy": "all"
     }
   },
   "kuzzle-plugin-socketio": {
@@ -48,6 +54,11 @@
         "protocol:joinChannel": "joinChannel",
         "protocol:leaveChannel": "leaveChannel"
       }
+    },
+    "defaultConfig": {
+      "port": 7512,
+      "room": "kuzzle",
+      "loadedBy": "server"
     }
   },
   "kuzzle-plugin-auth-passport-local": {

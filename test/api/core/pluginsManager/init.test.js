@@ -25,6 +25,8 @@ describe('Plugins manager initialization', function () {
       return true;
     });
 
+    PluginsManager.__set__('loadPlugins', function () {});
+
     PluginsManager.__set__('fs', {
       writeFileSync: function () {
         configWritten = true;
