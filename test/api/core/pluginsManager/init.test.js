@@ -45,6 +45,7 @@ describe('Plugins manager initialization', function () {
 
     PluginsManager.__with__({
       childProcess: {
+        /*jshint -W001 */
         hasOwnProperty: () => { return false; }
       },
       process: {
