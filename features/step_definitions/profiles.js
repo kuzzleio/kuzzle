@@ -1,0 +1,168 @@
+var apiSteps = function () {
+  this.When(/^I create a new profile "([^"]*)" with id "([^"]*)"$/, function (profile, id, callback) {
+    if (!this.profiles[profile]) {
+      return callback('Fixture for profile ' + profile + ' does not exists');
+    }
+
+    this.api.putProfile(id, this.profiles[profile])
+      .then(function (body) {
+        if (body.error) {
+          callback(new Error(body.error.message));
+          return false;
+        }
+
+        callback();
+      }.bind(this))
+      .catch(function (error) {
+        callback(error);
+      });
+  });
+
+  this.Then(/^I'm ?(not)* able to find the profile with id "([^"]*)"(?: with profile "([^"]*)")?$/, function (not, id, profile, callback) {
+    var
+      index,
+      main;
+
+    if (profile && !this.profiles[profile]) {
+      return callback('Fixture for profile ' + profile + ' not exists');
+    }
+
+    main = function (callbackAsync) {
+      setTimeout(() => {
+        this.api.getProfile(id)
+          .then(body => {
+            if (body.error) {
+              return callbackAsync(body.error.message);
+            }
+
+            if (!body.result) {
+              if (not) {
+                return callbackAsync();
+              }
+
+              return callbackAsync('No result provided');
+            }
+
+            if (!body.result._source.roles) {
+              if (not) {
+                return callbackAsync();
+              }
+
+              return callbackAsync('Profile with id '+ id + ' exists');
+            }
+
+            callbackAsync();
+          })
+          .catch(error => {
+            callback(error);
+          });
+      }, 20); // end setTimeout
+    };
+
+    async.retry(20, main.bind(this), function (err) {
+      if (err) {
+        callback(new Error(err));
+        return false;
+      }
+
+      callback();
+    });
+  });
+
+  this.When(/^I delete the profile with id "([^"]*)"$/, function (id, callback) {
+    this.api.deleteProfile(id)
+      .then(body => {
+        if (body.error) {
+          callback(new Error(body.error.message));
+          return false;
+        }
+
+        callback();
+      })
+      .catch(function (error) {
+        callback(error);
+      });
+  });
+
+  this.Then(/^I'm able to find "([^"]*)" profiles(?: containing the role with id "([^"]*)")?$/, function (profilesCount, roleId, callback) {
+    var body = {
+        roles: []
+      },
+      main;
+
+    if (roleId)
+      body.roles.push(roleId);
+
+    main = function (callbackAsync) {
+      setTimeout(() => {
+        this.api.searchProfiles(body).then(response => {
+          if (response.error) {
+            callback(new Error(response.error.message));
+            return false;
+          }
+
+          if (!response.result) {
+            callback(new Error('Malformed response (no error, no result)'));
+            return false;
+          }
+
+          if (!response.result._source) {
+            callback(new Error('Malformed response (no error, no _source)'));
+            return false;
+          }
+
+          if (typeof response.result._source != 'array') {
+            callback(new Error('Malformed response (_source is not an array)'));
+            return false;
+          }
+
+          if (response.result._source.length != parseInt(profilesCount)) {
+            callback(new Error('Expected ' + profilesCount + ' profiles. Got ' + response.result._source.length));
+            return false;
+          }
+
+          callback();
+        })
+        .catch(function (error) {
+          callback(error);
+        });
+      })
+    };
+
+    async.retry(20, main.bind(this), function (err) {
+      if (err) {
+        callback(new Error(err));
+        return false;
+      }
+
+      callback();
+    });
+  });
+
+  this.Given(/^I update the profile with id "([^"]*)" by adding the role "([^"]*)"$/, function (profileId, roleId, callback) {
+    if (!this.profiles[profileId]) {
+      return callback('Fixture for profile ' + profileId + ' does not exists');
+    }
+
+    if (!this.roles[roleId]) {
+      return callback('Fixture for role ' + roleId + ' does not exists');
+    }
+
+    this.api.putProfile(profileId, {
+      roles: [roleId]
+    })
+    .then(response => {
+      if (response.error) {
+        callback(new Error(response.error.message));
+        return false;
+      }
+
+      callback();
+    })
+    .catch(function (error) {
+      callback(error);
+    });
+  });
+};
+
+module.exports = apiSteps;
