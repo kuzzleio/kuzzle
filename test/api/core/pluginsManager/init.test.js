@@ -32,7 +32,14 @@ describe('Plugins manager initialization', function () {
         configWritten = true;
         return false;
       },
-      existsSync: function () { return locked; }
+      existsSync: function (path) {
+        // prevents "require" on the non-existent custom plugins file
+        if (path.includes('customPlugins')) {
+          return false;
+        }
+        
+        return locked;
+      }
     });
   });
 
