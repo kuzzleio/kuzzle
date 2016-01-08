@@ -116,6 +116,7 @@ describe('Test: hotelClerk.removeCustomerFromAllRooms', function () {
         return kuzzle.hotelClerk.removeCustomerFromAllRooms(connection);
       })
       .finally(function () {
+        console.log(notified);
         should(notified.roomId).be.exactly(roomId);
         should(notified.notification.error).be.null();
         should(notified.notification.result.count).be.exactly(1);

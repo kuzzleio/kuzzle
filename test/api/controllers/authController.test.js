@@ -86,7 +86,7 @@ describe('Test the auth controller', function () {
     kuzzle.funnel.auth.passport = new MockupWrapper('resolve');
     kuzzle.funnel.auth.login(requestObject)
       .then(function(response) {
-        var decodedToken = jwt.verify(response.data.jwt, params.jsonWebToken.secret);
+        var decodedToken = jwt.verify(response.data.body.jwt, params.jsonWebToken.secret);
         should(decodedToken._id).be.equal('jdoe');
         done();
       })
