@@ -174,8 +174,8 @@ module.exports = function ()
 
 ### Pipe plugins
 
-When an pipe event is triggered, we are waiting for all plugins attached on this event. A plugin attached on a pipe event has access to the data and can even change them.
-A pipe plugin must take in its last parameter a callback. This callback must be called at the end of the function with `callback(error, object)`:
+When a pipe event is triggered, we are waiting for all plugins attached on this event. A plugin attached on a pipe event has access to the data and can even change them.
+A pipe plugin constructor must take in its last parameter a callback. This callback must be called at the end of the function with `callback(error, object)`:
 
 * error: if there is an error during the function, this parameter must be set. If everything is ok, you can call the function with null
 * object: the object to pass to the next function
@@ -334,7 +334,7 @@ By default, the Kuzzle official docker image is shipped with the [Socket.io](htt
 
 #### How it works
 
-Protocol plugins allow Kuzzle to support any existing protocol. These plugins ensure a two-ways communication between clients and Kuzzle.  
+Protocol plugins allow Kuzzle to support any existing protocol. These plugins ensure a two-way communication between clients and Kuzzle.  
 
 Messages emanating from Kuzzle are emitted using the following hooks. Protocol plugins are free to ignore some or all of these hooks:
 
