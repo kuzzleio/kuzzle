@@ -70,7 +70,7 @@ describe('Test: notifier.notifyDocumentDelete', function () {
   });
 
   it('should do nothing if no id is provided', function (done) {
-    delete responseObject.data._id;
+    delete responseObject.data.body._id;
 
     notified = 0;
 
@@ -102,21 +102,21 @@ describe('Test: notifier.notifyDocumentDelete', function () {
 
   it('should return a rejected promise if the document is not well-formed', function () {
     responseObject.action = 'deleteByQuery';
-    responseObject.data.ids = ['errorme'];
+    responseObject.data.body.ids = ['errorme'];
 
     return should((Notifier.__get__('notifyDocumentDelete')).call(kuzzle, responseObject)).be.rejected();
   });
 
   it('should notify when a document has been deleted', function (done) {
     responseObject.action = 'delete';
-    responseObject.data._id = ['foobar'];
+    responseObject.data.body._id = ['foobar'];
 
     notified = 0;
 
     (Notifier.__get__('notifyDocumentDelete')).call(kuzzle, responseObject)
       .then (function () {
         should(notified).be.exactly(1);
-        should(mockupCacheService.id).be.exactly(responseObject.data._id);
+        should(mockupCacheService.id).be.exactly(responseObject.data.body._id);
         done();
       })
       .catch (function (e) {
@@ -127,14 +127,14 @@ describe('Test: notifier.notifyDocumentDelete', function () {
 
   it('should notify for each document when multiple document have been deleted', function (done) {
     responseObject.action = 'deleteByQuery';
-    responseObject.data.ids = ['foo', 'bar'];
+    responseObject.data.body.ids = ['foo', 'bar'];
 
     notified = 0;
 
     (Notifier.__get__('notifyDocumentDelete')).call(kuzzle, responseObject)
       .then(function () {
-        should(notified).be.exactly(responseObject.data.ids.length);
-        should(mockupCacheService.id).be.exactly(responseObject.data._id);
+        should(notified).be.exactly(responseObject.data.body.ids.length);
+        should(mockupCacheService.id).be.exactly(responseObject.data.body._id);
         done();
       })
       .catch (function (e) {
