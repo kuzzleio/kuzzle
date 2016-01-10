@@ -105,7 +105,7 @@ describe('Test: ElasticSearch service', function () {
       elasticsearch.client.search = function (data) {
         should(data.body).be.exactly(filter);
 
-        return Promise.resolve({hits: {total: 0, hits: []}});
+        return Promise.resolve({total: 0, hits: []});
       };
 
       requestObject.data.body = filter;
@@ -115,9 +115,8 @@ describe('Test: ElasticSearch service', function () {
       ret
         .then(function (result) {
           should(result.data).not.be.undefined().and.not.be.null();
-          should(result.data.body.hits).not.be.undefined();
-          should(result.data.body.hits.total).be.exactly(0);
-          should(result.data.body.hits.hits).be.an.Array();
+          should(result.data.body.total).be.exactly(0);
+          should(result.data.body.hits).be.an.Array();
           done();
         })
         .catch(error => done(error));
