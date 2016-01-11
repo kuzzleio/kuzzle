@@ -3,7 +3,6 @@
  */
 var
   should = require('should'),
-  winston = require('winston'),
   rewire = require('rewire'),
   uuid = require('node-uuid'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),

@@ -4,6 +4,7 @@ kuzzle:
   volumes:
     - "..:/var/app"
   ports:
+    - "7511:7511"
     - "7512:7512"
     - "8080:8080"
     - "8081:8081"
@@ -14,7 +15,7 @@ kuzzle:
   environment:
     - MQ_BROKER_ENABLED=1
     - LIKE_A_VIRGIN
-    - FIXTURES
+    - FIXTURES=/var/app/features/fixtures/functionalTestsFixtures.json
     - FEATURE_COVERAGE
 
 rabbit:

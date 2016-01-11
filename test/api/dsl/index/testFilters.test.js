@@ -1,6 +1,5 @@
 var
   should = require('should'),
-  winston = require('winston'),
   rewire = require('rewire'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
   params = require('rc')('kuzzle'),
@@ -105,7 +104,6 @@ describe('Test: dsl.testFilters', function () {
 
   before(function (done) {
     kuzzle = new Kuzzle();
-    kuzzle.log = new (winston.Logger)({transports: [new (winston.transports.Console)({level: 'silent'})]});
 
     kuzzle.start(params, {dummy: true})
       .then(function () {

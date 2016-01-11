@@ -1,0 +1,16 @@
+{
+  "index-test": {
+    "testCollection": [
+      { "create": { "_id": "alovelace"} },
+      { "username": "alovelace", "name": {"first": "Ada", "last": "Lovelace"} }
+    ]
+  },
+  "index-test-alt": {
+    "testCollection": [
+      { "create": { "_id": "ghopper"} },
+      { "username": "ghopper", "name": {"first": "Grace", "last": "Hopper"} }
+    ]
+  }
+}
+
+
