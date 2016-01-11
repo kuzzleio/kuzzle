@@ -1,7 +1,7 @@
 var
   config = require('./config')(),
   rp = require('request-promise'),
-  apiVersion;
+  apiVersion = require('../../package.json').apiVersion;
 
 var ApiREST = function () {
   this.world = null;

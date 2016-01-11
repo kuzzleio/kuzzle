@@ -1,3 +1,6 @@
+var
+  async = require('async');
+
 var apiSteps = function () {
   this.When(/^I create a new profile "([^"]*)" with id "([^"]*)"$/, function (profile, id, callback) {
     if (!this.profiles[profile]) {

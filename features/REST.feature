@@ -140,6 +140,8 @@ Feature: Test REST API
 
   @usingREST
   Scenario: search and update profiles
+    When I create a new role "role1" with id "role1"
+    When I create a new role "role2" with id "role2"
     When I create a new profile "profile1" with id "my-profile-1"
     And I create a new profile "profile3" with id "my-profile-2"
     Then I'm able to find "1" profiles containing the role with id "role1"
