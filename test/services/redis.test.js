@@ -1,6 +1,5 @@
 var
   should = require('should'),
-  winston = require('winston'),
   q = require('q'),
   params = require('rc')('kuzzle'),
   Redis = require.main.require('lib/services/redis'),
@@ -16,7 +15,6 @@ describe('Test redis service', function () {
 
   before(function (done) {
     kuzzle = new Kuzzle();
-    kuzzle.log = new (winston.Logger)({transports: [new (winston.transports.Console)({level: 'silent'})]});
     kuzzle.start(params, {dummy: true})
       .then(() => {
         kuzzle.config.cache.databases.push(dbname);

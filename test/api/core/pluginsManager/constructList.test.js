@@ -29,7 +29,7 @@ describe('Plugins manager constructList', function () {
       },
       mergedPlugins;
 
-    mergedPlugins = constructList(defaultPlugins, customPlugins, true);
+    mergedPlugins = constructList(defaultPlugins, customPlugins);
     should(mergedPlugins.foo).be.Object();
     should(mergedPlugins.bar).be.Object();
   });
@@ -54,7 +54,7 @@ describe('Plugins manager constructList', function () {
       },
       mergedPlugins;
 
-    mergedPlugins = constructList(defaultPlugins, customPlugins, true);
+    mergedPlugins = constructList(defaultPlugins, customPlugins);
 
     should(mergedPlugins.foo.config).be.Object();
     should(mergedPlugins.foo.config).have.property('bar');
@@ -92,7 +92,7 @@ describe('Plugins manager constructList', function () {
       },
       mergedPlugins;
 
-    mergedPlugins = constructList(defaultPlugins, customPlugins, true);
+    mergedPlugins = constructList(defaultPlugins, customPlugins);
 
     should(mergedPlugins.foo.config).be.Object();
     should(mergedPlugins.foo.config).have.property('bar');
@@ -131,7 +131,7 @@ describe('Plugins manager constructList', function () {
       },
       mergedPlugins;
 
-    mergedPlugins = constructList(defaultPlugins, customPlugins, true);
+    mergedPlugins = constructList(defaultPlugins, customPlugins);
 
     should(mergedPlugins.foo.config).be.Object();
     should(mergedPlugins.foo.config).have.property('bar');
@@ -154,9 +154,74 @@ describe('Plugins manager constructList', function () {
       defaultPlugins = {},
       mergedPlugins;
 
-    mergedPlugins = constructList(defaultPlugins, customPlugins, true);
+    mergedPlugins = constructList(defaultPlugins, customPlugins);
 
     should(mergedPlugins.foo.config).be.Object();
     should(mergedPlugins.foo.config).have.property('bar');
+  });
+
+  it('should add server plugins only on server instances', function () {
+    var
+      plugins,
+      defaultPlugins = {
+        serverPlugin: {
+          defaultConfig: {
+            loadedBy: 'server'
+          }
+        },
+        workerPlugin: {
+          defaultConfig: {
+            loadedBy: 'worker'
+          }
+        }
+      };
+
+    plugins = constructList(defaultPlugins, {}, true);
+
+    should(plugins.serverPlugin).be.an.Object();
+    should(plugins.workerPlugin).be.undefined();
+  });
+
+  it('should run worker plugins only on worker instances', function () {
+    var
+      plugins,
+      defaultPlugins = {
+        serverPlugin: {
+          defaultConfig: {
+            loadedBy: 'server'
+          }
+        },
+        workerPlugin: {
+          defaultConfig: {
+            loadedBy: 'worker'
+          }
+        }
+      };
+
+    plugins = constructList(defaultPlugins, {}, false);
+
+    should(plugins.serverPlugin).be.undefined();
+    should(plugins.workerPlugin).be.an.Object();
+  });
+
+  it('should always start plugins with loadedBy="all"', function () {
+    var
+      plugins,
+      defaultPlugins = {
+        serverPlugin: {
+          defaultConfig: {
+            loadedBy: 'all'
+          }
+        },
+        workerPlugin: {
+          defaultConfig: {
+          }
+        }
+      };
+
+    plugins = constructList(defaultPlugins, {}, true);
+
+    should(plugins.serverPlugin).be.an.Object();
+    should(plugins.workerPlugin).be.an.Object();
   });
 });

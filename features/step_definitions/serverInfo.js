@@ -1,5 +1,5 @@
 var apiSteps = function () {
-  this.When('I get server informations', function (callback) {
+  this.When(/^I get server informations$/, function (callback) {
     this.api.getServerInfo()
       .then(body => {
         if (body.error) {
@@ -16,7 +16,7 @@ var apiSteps = function () {
       .catch(error => callback(error));
   });
 
-  this.Then('I can retrieve the Kuzzle API version', function(callback) {
+  this.Then(/^I can retrieve the Kuzzle API version$/, function(callback) {
     if (this.result.serverInfo && this.result.serverInfo.kuzzle && this.result.serverInfo.kuzzle.api) {
       this.apiVersion = this.result.serverInfo.kuzzle.api;
       return callback();

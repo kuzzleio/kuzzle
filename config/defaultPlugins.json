@@ -1,11 +1,29 @@
 {
   "kuzzle-plugin-logger": {
-    "version": "1.0.4",
+    "version": "1.0.6",
     "activated": true,
+    "name": "kuzzle-plugin-logger",
     "defaultConfig": {
       "service": "winston",
       "level": "info",
-      "addDate": true
+      "addDate": true,
+      "loadedBy": "all"
     }
+  },
+  "kuzzle-plugin-socketio": {
+    "version": "1.0.3",
+    "activated": true,
+    "name": "kuzzle-plugin-socketio",
+    "defaultConfig": {
+      "port": 7512,
+      "room": "kuzzle",
+      "loadedBy": "server"
+    }
+  },
+  "kuzzle-plugin-auth-passport-local": {
+    "url": "git+https://github.com/kuzzleio/kuzzle-plugin-auth-passport-local.git",
+    "activated": true,
+    "name": "kuzzle-plugin-auth-passport-local",
+    "defaultConfig": {}
   }
 }

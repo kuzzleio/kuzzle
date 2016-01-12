@@ -1,6 +1,5 @@
 var
   should = require('should'),
-  winston = require('winston'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
   InternalError = require.main.require('lib/api/core/errors/internalError'),
   BadRequestError = require.main.require('lib/api/core/errors/badRequestError'),
@@ -34,7 +33,6 @@ describe('Test: hotelClerk.addSubscription', function () {
   beforeEach(function (done) {
     require.cache = {};
     kuzzle = new Kuzzle();
-    kuzzle.log = new (winston.Logger)({transports: [new (winston.transports.Console)({level: 'silent'})]});
     kuzzle.removeAllListeners();
 
     return kuzzle.start(params, {dummy: true})
@@ -115,36 +113,24 @@ describe('Test: hotelClerk.addSubscription', function () {
       });
   });
 
-  it('should call a function join when the type is websocket', function () {
-    var
-      joinedRooms = [],
-      requestObject = new RequestObject({
-        controller: 'subscribe',
-        collection: collection,
-        index: index,
-        body: filter
-      });
+  it('should trigger a protocol:joinChannel hook', function (done) {
+    var requestObject = new RequestObject({
+      controller: 'subscribe',
+      collection: collection,
+      index: index,
+      body: filter
+    });
 
-    // mockup internal function kuzzle called when type is websocket
-    connection.type = 'websocket';
-    kuzzle.io = {
-      sockets: {
-        connected: {
-          connectionid: {
-            join: function (channel) {
-              joinedRooms.push(channel);
-            }
-          }
-        }
-      }
-    };
-    kuzzle.notifier = {notify: function () {}};
+    this.timeout(50);
 
-    return kuzzle.hotelClerk.addSubscription(requestObject, context)
-      .then(function () {
-        should(joinedRooms).containEql(channel);
-        delete connection.type;
-      });
+    kuzzle.once('protocol:joinChannel', (data) => {
+      should(data).be.an.Object();
+      should(data.channel).be.a.String();
+      should(data.id).be.eql(context.connection.id);
+      done();
+    });
+
+    kuzzle.hotelClerk.addSubscription(requestObject, context);
   });
 
   it('should return the same response when the user has already subscribed to the filter', done => {

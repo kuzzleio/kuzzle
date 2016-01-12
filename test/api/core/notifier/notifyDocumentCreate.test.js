@@ -8,7 +8,6 @@
 var
   should = require('should'),
   q = require('q'),
-  winston = require('winston'),
   rewire = require('rewire'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
   ResponseObject = require.main.require('lib/api/core/models/responseObject'),
@@ -46,7 +45,6 @@ describe('Test: notifier.notifyDocumentCreate', function () {
 
   before(function (done) {
     kuzzle = new Kuzzle();
-    kuzzle.log = new (winston.Logger)({transports: [new (winston.transports.Console)({level: 'silent'})]});
     kuzzle.start(params, {dummy: true})
       .then(function () {
         kuzzle.services.list.notificationCache = mockupCacheService;
@@ -68,7 +66,7 @@ describe('Test: notifier.notifyDocumentCreate', function () {
         should(notifiedRooms).be.an.Array();
         should(notifiedRooms.length).be.exactly(1);
         should(notifiedRooms[0]).be.exactly('foobar');
-        should(mockupCacheService.id).be.exactly(responseObject.data._id);
+        should(mockupCacheService.id).be.exactly(responseObject.data.body._id);
         should(mockupCacheService.room).be.an.Array();
         should(mockupCacheService.room[0]).be.exactly('foobar');
         done();

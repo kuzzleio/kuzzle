@@ -12,7 +12,7 @@ var apiSteps = function () {
           return false;
         }
 
-        this.result = body.result;
+        this.result = body;
         callback();
       }.bind(this))
       .catch(function (error) {
