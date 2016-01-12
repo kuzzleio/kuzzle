@@ -17,11 +17,11 @@ var apiSteps = function () {
         callback();
       }.bind(this))
       .catch(function (error) {
-        callback(error.error.error.message);
+        callback(error);
       });
   });
 
-  this.Then(/^I cannot create an invalid profile$/, {timeout: 120 * 1000}, function (callback) {
+  this.Then(/^I cannot create an invalid profile$/, {timeout: 20 * 1000}, function (callback) {
     this.api.putProfile('invalid-profile', this.profiles.invalidProfile)
       .then(function (body) {
         if (body.error) {
@@ -30,6 +30,21 @@ var apiSteps = function () {
         }
 
         callback(new Error("Creating profile with unexisting role succeeded. Expected to throw."));
+      }.bind(this))
+      .catch(function (error) {
+        callback();
+      });
+  });
+
+  this.Then(/^I cannot create a profile with an empty set of roles$/, {timeout: 20 * 1000}, function (callback) {
+    this.api.putProfile('invalid-profile', this.profiles.empty)
+      .then(function (body) {
+        if (body.error) {
+          callback();
+          return true;
+        }
+
+        callback(new Error("Creating profile without roles succeeded. Expected to throw."));
       }.bind(this))
       .catch(function (error) {
         callback();
@@ -160,7 +175,7 @@ var apiSteps = function () {
           callbackAsync();
         })
         .catch(function (error) {
-          callbackAsync(error.error.error.message);
+          callbackAsync(error);
         });
       }, 2000);
     };
@@ -192,7 +207,7 @@ var apiSteps = function () {
       callback();
     })
     .catch(function (error) {
-      callback(error.error.error.message);
+      callback(error);
     });
   });
 };

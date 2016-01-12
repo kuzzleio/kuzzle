@@ -135,6 +135,10 @@ Feature: Test REST API
     Then I cannot a profile without ID
 
   @usingREST
+  Scenario: creating a profile with an empty set of roles triggers an error
+    Then I cannot create a profile with an empty set of roles
+
+  @usingREST
   Scenario: create, get and delete a profile
     Given I create a new role "role1" with id "role1"
     And I create a new role "role2" with id "role2"

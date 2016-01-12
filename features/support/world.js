@@ -108,6 +108,9 @@ module.exports = function () {
       },
       invalidProfile: {
         roles: ['unexisting-role']
+      },
+      emptyProfile: {
+        roles: []
       }
     }
   };

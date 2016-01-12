@@ -443,6 +443,18 @@ ApiRT.prototype.getProfile = function (id) {
   return this.send(msg);
 };
 
+ApiRT.prototype.putProfile = function (id, body) {
+  var
+    msg = {
+      controller: 'security',
+      action: 'putProfile',
+      _id: id,
+      body: body
+    };
+
+  return this.send(msg);
+};
+
 ApiRT.prototype.searchProfiles = function (body) {
   var
     msg = {
