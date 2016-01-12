@@ -127,7 +127,12 @@ Feature: Test REST API
     Then I'm not able to find a role with id "test"
 
   @usingREST
+  Scenario: create an invalid profile with unexisting role triggers an error
+
+  @usingREST
   Scenario: create, get and delete a profile
+    When I create a new role "role1" with id "role1"
+    When I create a new role "role2" with id "role2"
     When I create a new profile "profile1" with id "my-new-profile"
     Then I'm able to find the profile with id "my-new-profile"
     Given I delete the profile with id "my-new-profile"
@@ -135,12 +140,11 @@ Feature: Test REST API
 
   @usingREST
   Scenario: search and update profiles
-    When I create a new role "role1" with id "role1"
-    When I create a new role "role2" with id "role2"
     When I create a new profile "profile1" with id "my-profile-1"
     And I create a new profile "profile3" with id "my-profile-2"
     Then I'm able to find "1" profiles containing the role with id "role1"
     Then I'm able to find "2" profiles
     Then I'm able to find "0" profiles containing the role with id "undefined-role"
     Given I update the profile with id "my-profile-2" by adding the role "role1"
+    #Then I'm able to find "2" profiles
     Then I'm able to find "2" profiles containing the role with id "role1"

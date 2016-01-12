@@ -2,7 +2,7 @@ var
   async = require('async');
 
 var apiSteps = function () {
-  this.When(/^I create a new profile "([^"]*)" with id "([^"]*)"$/, function (profile, id, callback) {
+  this.When(/^I create a new profile "([^"]*)" with id "([^"]*)"$/, {timeout: 20 * 1000}, function (profile, id, callback) {
     if (!this.profiles[profile]) {
       return callback('Fixture for profile ' + profile + ' does not exists');
     }
@@ -87,7 +87,7 @@ var apiSteps = function () {
       });
   });
 
-  this.Then(/^I'm able to find "([^"]*)" profiles(?: containing the role with id "([^"]*)")?$/, function (profilesCount, roleId, callback) {
+  this.Then(/^I'm able to find "([^"]*)" profiles(?: containing the role with id "([^"]*)")?$/, {timeout: 20 * 1000}, function (profilesCount, roleId, callback) {
     var body = {
         roles: []
       },
@@ -98,38 +98,40 @@ var apiSteps = function () {
 
     main = function (callbackAsync) {
       setTimeout(() => {
+
         this.api.searchProfiles(body).then(response => {
+
           if (response.error) {
-            callback(new Error(response.error.message));
+            callbackAsync(new Error(response.error.message));
             return false;
           }
 
           if (!response.result) {
-            callback(new Error('Malformed response (no error, no result)'));
+            callbackAsync(new Error('Malformed response (no error, no result)'));
             return false;
           }
 
           if (!response.result._source) {
-            callback(new Error('Malformed response (no error, no _source)'));
+            callbackAsync(new Error('Malformed response (no error, no _source)'));
             return false;
           }
 
-          if (typeof response.result._source != 'array') {
-            callback(new Error('Malformed response (_source is not an array)'));
+          if (!Array.isArray(response.result._source)) {
+            callbackAsync(new Error('Malformed response (_source is not an array)'));
             return false;
           }
 
           if (response.result._source.length != parseInt(profilesCount)) {
-            callback(new Error('Expected ' + profilesCount + ' profiles. Got ' + response.result._source.length));
+            callbackAsync(new Error('Expected ' + profilesCount + ' profiles. Got ' + response.result._source.length));
             return false;
           }
 
-          callback();
+          callbackAsync();
         })
         .catch(function (error) {
-          callback(error);
+          callbackAsync(error.error.error.message);
         });
-      })
+      }, 2000);
     };
 
     async.retry(20, main.bind(this), function (err) {
@@ -142,11 +144,7 @@ var apiSteps = function () {
     });
   });
 
-  this.Given(/^I update the profile with id "([^"]*)" by adding the role "([^"]*)"$/, function (profileId, roleId, callback) {
-    if (!this.profiles[profileId]) {
-      return callback('Fixture for profile ' + profileId + ' does not exists');
-    }
-
+  this.Given(/^I update the profile with id "([^"]*)" by adding the role "([^"]*)"$/, {timeout: 20 * 1000}, function (profileId, roleId, callback) {
     if (!this.roles[roleId]) {
       return callback('Fixture for role ' + roleId + ' does not exists');
     }
@@ -163,7 +161,7 @@ var apiSteps = function () {
       callback();
     })
     .catch(function (error) {
-      callback(error);
+      callback(error.error.error.message);
     });
   });
 };
