@@ -5,8 +5,6 @@ var
   BadRequestError = require.main.require('lib/api/core/errors/badRequestError'),
   InternalError = require.main.require('lib/api/core/errors/internalError');
 
-require('should-promised');
-
 describe('Test exists method', function () {
 
   var

@@ -4,8 +4,6 @@ var
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   RequestObject = require.main.require('lib/api/core/models/requestObject');
 
-require('should-promised');
-
 describe('Test the bulk controller', function () {
   var
     kuzzle,

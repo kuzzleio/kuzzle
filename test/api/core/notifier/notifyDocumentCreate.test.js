@@ -15,8 +15,6 @@ var
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   Notifier = rewire('../../../../lib/api/core/notifier');
 
-require('should-promised');
-
 var mockupCacheService = {
   id: undefined,
   room: undefined,

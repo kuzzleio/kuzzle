@@ -8,8 +8,6 @@ var
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
   BadRequestError = require.main.require('lib/api/core/errors/badRequestError');
 
-require('should-promised');
-
 describe('Test: requestObject', function () {
   var
     protocol = 'foobar',

@@ -3,8 +3,6 @@ var
   rewire = require('rewire'),
   Dsl = rewire('../../../../lib/api/dsl/index');
 
-require('should-promised');
-
 describe('Test: dsl.removeRoomFromFields', function () {
   var
     dsl,

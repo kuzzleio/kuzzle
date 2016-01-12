@@ -4,7 +4,7 @@ var
   methods = rewire('../../../../lib/api/dsl/methods'),
   KuzzleError = require.main.require('lib/api/core/errors/kuzzleError');
 
-require('should-promised');
+
 
 describe('Test unimplemented methods', function () {
   it('geoShape call should return a rejected promise', function () {

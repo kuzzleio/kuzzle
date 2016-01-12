@@ -13,8 +13,6 @@ var
   RouterController = rewire('../../../../lib/api/controllers/routerController'),
   RequestObject = require.main.require('lib/api/core/models/requestObject');
 
-require('should-promised');
-
 /*
  * This function helps keeping tests simple and clear while ensuring that
  * responses are well-formed.

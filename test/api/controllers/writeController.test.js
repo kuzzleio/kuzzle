@@ -4,8 +4,6 @@ var
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   RequestObject = require.main.require('lib/api/core/models/requestObject');
 
-require('should-promised');
-
 /*
  * Since we're sending voluntarily false requests, we expect most of these
  * calls to fail.

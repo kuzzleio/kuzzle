@@ -6,8 +6,6 @@ var
   EventEmitter = require('eventemitter2').EventEmitter2,
   GatewayTimeoutError = require.main.require('lib/api/core/errors/gatewayTimeoutError');
 
-require('should-promised');
-
 describe('Test plugins manager run', function () {
   var
     contextObjects = [

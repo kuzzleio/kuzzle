@@ -4,7 +4,7 @@ var
   _ = require('lodash'),
   Kuzzle = require.main.require('lib/api/Kuzzle');
 
-require('should-promised');
+
 
 describe('Test main file for hooks managers', function () {
   var

@@ -5,7 +5,7 @@ var
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle');
 
-require('should-promised');
+
 
 /*
 Tests the Internal Broker implementation
