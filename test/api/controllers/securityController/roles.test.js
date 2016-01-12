@@ -34,6 +34,12 @@ describe('Test: security controller', function () {
             _source: {}
           });
         };
+        kuzzle.services.readEngine.search = requestObject => {
+          return Promise.resolve(new ResponseObject(requestObject, {
+            hits: [{_id: 'test'}],
+            total: 1
+          }));
+        };
 
         done();
       });
@@ -67,7 +73,7 @@ describe('Test: security controller', function () {
       });
   });
 
-  it('should return response with an array of roles a searchRole call', done => {
+  it('should return response with an array of roles on searchRole call', done => {
     kuzzle.funnel.security.searchRole(new RequestObject({
         body: { _id: 'test' }
       }))
