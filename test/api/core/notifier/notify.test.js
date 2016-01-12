@@ -5,7 +5,6 @@
  */
 var
   should = require('should'),
-  winston = require('winston'),
   rewire = require('rewire'),
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
@@ -19,7 +18,6 @@ describe('Test: notifier.notify', function () {
 
   before(function () {
     kuzzle = new Kuzzle();
-    kuzzle.log = new (winston.Logger)({transports: [new (winston.transports.Console)({level: 'silent'})]});
     return kuzzle.start(params, {dummy: true});
   });
 

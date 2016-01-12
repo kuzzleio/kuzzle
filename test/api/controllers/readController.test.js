@@ -1,7 +1,6 @@
 var
   should = require('should'),
   q = require('q'),
-  winston = require('winston'),
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   BadRequestError = require.main.require('lib/api/core/errors/badRequestError'),
@@ -21,7 +20,6 @@ var
 
 before(function (done) {
   kuzzle = new Kuzzle();
-  kuzzle.log = new (winston.Logger)({transports: [new (winston.transports.Console)({level: 'silent'})]});
   kuzzle.start(params, {dummy: true})
     .then(function () {
       kuzzle.services.list.readEngine = {

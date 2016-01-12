@@ -10,7 +10,7 @@ describe('Test plugins manager installation', function () {
   before(function () {
     PluginsManager.__set__('initConfig', function () {});
     PluginsManager.__set__('npmInstall', function () {});
-    PluginsManager.__set__('kuzzle', {log: {info: function () {}, error: function () {}}});
+    PluginsManager.__set__('console', {log: function () {}, error: function () {}});
     installPlugins = PluginsManager.__get__('installPlugins');
   });
 

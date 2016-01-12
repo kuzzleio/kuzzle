@@ -1,6 +1,5 @@
 var
   should = require('should'),
-  winston = require('winston'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
   ResponseObject = require.main.require('lib/api/core/models/responseObject'),
   params = require('rc')('kuzzle'),
@@ -37,7 +36,6 @@ describe('Test: hotelClerk.getChannels', function () {
   beforeEach(function () {
     responseObject = new ResponseObject(new RequestObject({collection: 'foo', body: dataGrace}));
     kuzzle = new Kuzzle();
-    kuzzle.log = new (winston.Logger)({transports: [new (winston.transports.Console)({level: 'silent'})]});
     kuzzle.removeAllListeners();
 
     return kuzzle.start(params, {dummy: true});

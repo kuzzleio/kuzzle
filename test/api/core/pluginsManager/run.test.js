@@ -27,6 +27,10 @@ describe('Test plugins manager run', function () {
     kuzzle,
     pluginsManager;
 
+  before(function () {
+    PluginsManager.__set__('console', {log: function () {}, error: function () {}});
+  });
+
   beforeEach(() => {
     kuzzle = new EventEmitter({
       wildcard: true,
@@ -71,6 +75,7 @@ describe('Test plugins manager run', function () {
           done();
         }
       },
+      config: {},
       activated: true
     }];
 
@@ -89,6 +94,7 @@ describe('Test plugins manager run', function () {
           done();
         }
       },
+      config: {},
       activated: true
     }];
 
@@ -110,6 +116,7 @@ describe('Test plugins manager run', function () {
           callback(null, object);
         }
       },
+      config: {},
       activated: true
     }];
 
@@ -138,6 +145,7 @@ describe('Test plugins manager run', function () {
           callback();
         }
       },
+      config: {},
       activated: true
     }];
 
@@ -163,6 +171,7 @@ describe('Test plugins manager run', function () {
           callback(true);
         }
       },
+      config: {},
       activated: true
     }];
 
@@ -183,6 +192,7 @@ describe('Test plugins manager run', function () {
         hooks: {'log:warn': 'warn'},
         warn: (msg) => { warnings.push(msg); }
       },
+      config: {},
       activated: true
     });
 
@@ -252,6 +262,7 @@ describe('Test plugins manager run', function () {
           },
           FooController: function(){done();}
         },
+        config: {},
         activated: true
       }
     };
@@ -286,6 +297,7 @@ describe('Test plugins manager run', function () {
           done();
         }
       },
+      config: {},
       activated: true
     }];
 
@@ -298,11 +310,13 @@ describe('Test plugins manager run', function () {
       myplugin: {
         object: {
           init: function () {},
+          config: {},
           routes: [
             {verb: 'get', url: '/bar/:name', controller: 'foo', action: 'bar'},
             {verb: 'post', url: '/bar', controller: 'foo', action: 'bar'}
           ]
         },
+        config: {},
         activated: true
       }
     };
@@ -320,5 +334,4 @@ describe('Test plugins manager run', function () {
       .be.equal(pluginsManager.routes[0].action)
       .and.be.equal('bar');
   });
-
 });

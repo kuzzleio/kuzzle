@@ -22,6 +22,7 @@ And add an environment variable and link in the main Kuzzle container:
 kuzzle:
   image: kuzzleio/kuzzle
   ports:
+    - "7511:7511"
     - "7512:7512"
   links:
     - rabbit

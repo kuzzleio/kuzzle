@@ -1,6 +1,5 @@
 var
   should = require('should'),
-  winston = require('winston'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
@@ -31,7 +30,6 @@ describe('Test: hotelClerk.addSubscription', function () {
   beforeEach(function (done) {
     require.cache = {};
     kuzzle = new Kuzzle();
-    kuzzle.log = new (winston.Logger)({transports: [new (winston.transports.Console)({level: 'silent'})]});
     kuzzle.removeAllListeners();
 
     return kuzzle.start(params, {dummy: true})
