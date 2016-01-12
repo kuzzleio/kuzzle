@@ -3,7 +3,6 @@
  */
 var
   should = require('should'),
-  winston = require('winston'),
   uuid = require('node-uuid'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
   RTResponseObject = require.main.require('lib/api/core/models/realTimeResponseObject');
