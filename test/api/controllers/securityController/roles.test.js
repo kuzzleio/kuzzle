@@ -32,11 +32,14 @@ describe('Test: security controller - roles', function () {
             _source: {}
           });
         };
-        kuzzle.services.readEngine.search = requestObject => {
+        kuzzle.services.list.readEngine.search = requestObject => {
           return Promise.resolve(new ResponseObject(requestObject, {
             hits: [{_id: 'test'}],
             total: 1
           }));
+        };
+        kuzzle.repositories.role.deleteFromDatabase = requestObject => {
+          return Promise.resolve(new ResponseObject(requestObject, {_id: 'test'}));
         };
 
         done();
@@ -72,13 +75,33 @@ describe('Test: security controller - roles', function () {
   });
 
   it('should return response with an array of roles on searchRole call', done => {
-    kuzzle.funnel.security.searchRole(new RequestObject({
+    kuzzle.funnel.security.searchRoles(new RequestObject({
         body: { _id: 'test' }
       }))
       .then(result => {
-        console.log('*** result', result);
+        var jsonResponse = result.toJson();
+
         should(result).be.an.instanceOf(ResponseObject);
-        should(result.data.body._id).be.exactly('test');
+        should(jsonResponse.result.hits).be.an.Array();
+        should(jsonResponse.result.hits[0]._id).be.exactly('test');
+
+        done();
+      })
+      .catch(error => {
+        done(error);
+      });
+  });
+
+  it('should return response with on deleteRole call', done => {
+    kuzzle.funnel.security.deleteRole(new RequestObject({
+        body: { _id: 'test' }
+      }))
+      .then(result => {
+        var jsonResponse = result.toJson();
+
+        should(result).be.an.instanceOf(ResponseObject);
+        should(jsonResponse.result._id).be.exactly('test');
+
         done();
       })
       .catch(error => {
