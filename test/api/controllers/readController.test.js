@@ -122,12 +122,12 @@ describe('Test: read controller', function () {
         .then(result => {
           should(realtime).be.true();
           should(stored).be.true();
-          should(result.data.type).be.exactly('all');
-          should(result.data.collections).not.be.undefined().and.be.an.Object();
-          should(result.data.collections.stored).not.be.undefined().and.be.an.Array();
-          should(result.data.collections.realtime).not.be.undefined().and.be.an.Array();
-          should(result.data.collections.stored.sort()).match(['foo']);
-          should(result.data.collections.realtime.sort()).match(['bar', 'foo']);
+          should(result.data.body.type).be.exactly('all');
+          should(result.data.body.collections).not.be.undefined().and.be.an.Object();
+          should(result.data.body.collections.stored).not.be.undefined().and.be.an.Array();
+          should(result.data.body.collections.realtime).not.be.undefined().and.be.an.Array();
+          should(result.data.body.collections.stored.sort()).match(['foo']);
+          should(result.data.body.collections.realtime.sort()).match(['bar', 'foo']);
           done();
         })
         .catch(error => done(error));
@@ -151,7 +151,7 @@ describe('Test: read controller', function () {
       var requestObject = new RequestObject({body: {type: 'stored'}}, {}, '');
 
       return kuzzle.funnel.read.listCollections(requestObject, context).then(response => {
-        should(response.data.type).be.exactly('stored');
+        should(response.data.body.type).be.exactly('stored');
         should(realtime).be.false();
         should(stored).be.true();
       });
@@ -161,7 +161,7 @@ describe('Test: read controller', function () {
       var requestObject = new RequestObject({body: {type: 'realtime'}}, {}, '');
 
       return kuzzle.funnel.read.listCollections(requestObject, context).then(response => {
-        should(response.data.type).be.exactly('realtime');
+        should(response.data.body.type).be.exactly('realtime');
         should(realtime).be.true();
         should(stored).be.false();
       });
@@ -186,7 +186,7 @@ describe('Test: read controller', function () {
 
       return promisedResult.then(result => {
         should(result.data).not.be.undefined();
-        should(result.data.now).not.be.undefined().and.be.a.Number();
+        should(result.data.body.now).not.be.undefined().and.be.a.Number();
       });
     });
   });

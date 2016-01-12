@@ -161,12 +161,14 @@ describe('Test: statistics core component', function () {
 
         should(serialized.error).be.null();
         should(serialized.status).be.exactly(200);
-        should(serialized.result.statistics).be.an.Array();
-        should(serialized.result.statistics).have.length(1);
+        should(serialized.result.hits).be.an.Array();
+        should(serialized.result.hits).have.length(1);
+        should(serialized.result.total).be.exactly(1);
+
         ['completedRequests', 'connections', 'failedRequests', 'ongoingRequests'].forEach(k => {
-          should(serialized.result.statistics[0][k]).match(fakeStats[k]);
+          should(serialized.result.hits[0][k]).match(fakeStats[k]);
         });
-        should(serialized.result.statistics[0].timestamp).match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.[0-9.]+Z)?$/);
+        should(serialized.result.hits[0].timestamp).match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.[0-9.]+Z)?$/);
         done();
       })
       .catch(error => done(error));
@@ -189,12 +191,13 @@ describe('Test: statistics core component', function () {
 
         should(serialized.error).be.null();
         should(serialized.status).be.exactly(200);
-        should(serialized.result.statistics).be.an.Array();
-        should(serialized.result.statistics).have.length(2);
+        should(serialized.result.hits).be.an.Array();
+        should(serialized.result.hits).have.length(2);
+        should(serialized.result.total).be.exactly(2);
         ['completedRequests', 'connections', 'failedRequests', 'ongoingRequests'].forEach(k => {
-          should(serialized.result.statistics[0][k]).match(fakeStats[k]);
+          should(serialized.result.hits[0][k]).match(fakeStats[k]);
         });
-        should(serialized.result.statistics[0].timestamp).match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.[0-9.]+Z)?$/);
+        should(serialized.result.hits[0].timestamp).match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.[0-9.]+Z)?$/);
         done();
       })
       .catch(error => done(error));
@@ -216,8 +219,9 @@ describe('Test: statistics core component', function () {
 
         should(serialized.error).be.null();
         should(serialized.status).be.exactly(200);
-        should(serialized.result.statistics).be.an.Array();
-        should(serialized.result.statistics).have.length(0);
+        should(serialized.result.hits).be.an.Array();
+        should(serialized.result.hits).have.length(0);
+        should(serialized.result.total).be.exactly(0);
         done();
       })
       .catch(error => done(error));
@@ -237,8 +241,9 @@ describe('Test: statistics core component', function () {
 
         should(serialized.error).be.null();
         should(serialized.status).be.exactly(200);
-        should(serialized.result.statistics).be.an.Array();
-        should(serialized.result.statistics).have.length(2);
+        should(serialized.result.hits).be.an.Array();
+        should(serialized.result.hits).have.length(2);
+        should(serialized.result.total).be.exactly(2);
         done();
       })
       .catch(error => done(error));
@@ -258,11 +263,11 @@ describe('Test: statistics core component', function () {
 
         should(serialized.error).be.null();
         should(serialized.status).be.exactly(200);
-        should(serialized.result.statistics).be.an.Object();
+        should(serialized.result).be.an.Object();
         ['completedRequests', 'connections', 'failedRequests', 'ongoingRequests'].forEach(k => {
-          should(serialized.result.statistics[k]).match(fakeStats[k]);
+          should(serialized.result[k]).match(fakeStats[k]);
         });
-        should(serialized.result.statistics.timestamp).match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.[0-9.]+Z)?$/);
+        should(serialized.result.timestamp).match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.[0-9.]+Z)?$/);
         done();
       })
       .catch(error => done(error));
@@ -281,11 +286,12 @@ describe('Test: statistics core component', function () {
         var serialized = response.toJson();
 
         should(serialized.error).be.null();
-        should(serialized.result.statistics).be.an.Array();
-        should(serialized.result.statistics).have.length(1);
+        should(serialized.result.hits).be.an.Array();
+        should(serialized.result.hits).have.length(1);
+        should(serialized.result.total).be.exactly(1);
         should(serialized.status).be.exactly(200);
         ['completedRequests', 'connections', 'failedRequests', 'ongoingRequests'].forEach(k => {
-          should(serialized.result.statistics[0][k]).match(fakeStats[k]);
+          should(serialized.result.hits[0][k]).match(fakeStats[k]);
         });
         done();
       })
@@ -304,18 +310,19 @@ describe('Test: statistics core component', function () {
       .then(response => {
         var serialized = response.toJson();
 
-        should(serialized.result.statistics).be.an.Array();
-        should(serialized.result.statistics).have.length(2);
+        should(serialized.result.hits).be.an.Array();
+        should(serialized.result.hits).have.length(2);
+        should(serialized.result.total).be.exactly(2);
         should(serialized.error).be.null();
         should(serialized.status).be.exactly(200);
         ['completedRequests', 'connections', 'failedRequests', 'ongoingRequests'].forEach(k => {
-          should(serialized.result.statistics[0][k]).match(fakeStats[k]);
+          should(serialized.result.hits[0][k]).match(fakeStats[k]);
         });
-        should(serialized.result.statistics[0].timestamp).match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.[0-9.]+Z)?$/);
+        should(serialized.result.hits[0].timestamp).match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.[0-9.]+Z)?$/);
         ['completedRequests', 'connections', 'failedRequests', 'ongoingRequests'].forEach(k => {
-          should(serialized.result.statistics[1][k]).match(fakeStats[k]);
+          should(serialized.result.hits[1][k]).match(fakeStats[k]);
         });
-        should(serialized.result.statistics[1].timestamp).match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.[0-9.]+Z)?$/);
+        should(serialized.result.hits[1].timestamp).match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.[0-9.]+Z)?$/);
         done();
       })
       .catch(error => done(error));

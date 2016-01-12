@@ -67,8 +67,8 @@ describe('Test: hotelClerk.getChannels', function () {
         var eligibleChannels;
 
         channels.pending = response.channel;
-
         responseObject.state = 'done';
+
         eligibleChannels = kuzzle.hotelClerk.getChannels(roomId, responseObject.toJson());
         should(eligibleChannels.length).be.exactly(2);
         should(eligibleChannels.sort()).match([channels.all, channels.done].sort());

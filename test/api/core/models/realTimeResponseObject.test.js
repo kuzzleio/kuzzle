@@ -3,7 +3,6 @@
  */
 var
   should = require('should'),
-  rewire = require('rewire'),
   uuid = require('node-uuid'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
   RTResponseObject = require.main.require('lib/api/core/models/realTimeResponseObject');
@@ -33,13 +32,14 @@ describe('Test: realTimeResponseObject', function () {
 
     should(response.error).be.null();
     should(response.status).be.a.Number().and.be.eql(200);
+    should(response.action).be.exactly(requestObject.action);
+    should(response.controller).be.exactly(requestObject.controller);
+    should(response.metadata).match(requestObject.metadata);
+    should(response.protocol).be.exactly(requestObject.protocol);
+    should(response.requestId).be.exactly(requestObject.requestId);
+    should(response.timestamp).be.exactly(requestObject.timestamp);
+
     should(response.result).not.be.null().and.be.an.Object();
-    should(response.result.action).be.exactly(requestObject.action);
-    should(response.result.controller).be.exactly(requestObject.controller);
-    should(response.result.metadata).match(requestObject.metadata);
-    should(response.result.protocol).be.exactly(requestObject.protocol);
-    should(response.result.requestId).be.exactly(requestObject.requestId);
-    should(response.result.timestamp).be.exactly(requestObject.timestamp);
     should(response.result.count).be.exactly(42);
   });
 
@@ -50,13 +50,14 @@ describe('Test: realTimeResponseObject', function () {
 
     should(response.error).be.null();
     should(response.status).be.a.Number().and.be.eql(200);
+    should(response.action).be.exactly(requestObject.action);
+    should(response.controller).be.exactly(requestObject.controller);
+    should(response.metadata).match(requestObject.metadata);
+    should(response.protocol).be.exactly(requestObject.protocol);
+    should(response.requestId).be.exactly(requestObject.requestId);
+    should(response.timestamp).be.exactly(requestObject.timestamp);
+
     should(response.result).not.be.null().and.be.an.Object();
-    should(response.result.action).be.exactly(requestObject.action);
-    should(response.result.controller).be.exactly(requestObject.controller);
-    should(response.result.metadata).match(requestObject.metadata);
-    should(response.result.protocol).be.exactly(requestObject.protocol);
-    should(response.result.requestId).be.exactly(requestObject.requestId);
-    should(response.result.timestamp).be.exactly(requestObject.timestamp);
     should(response.result.channel).be.exactly('foobar');
   });
 
@@ -66,16 +67,15 @@ describe('Test: realTimeResponseObject', function () {
       response = responseObject.toJson();
 
     should(response.error).be.null();
-    should(response.result).not.be.null();
-    should(response.error).be.null();
     should(response.status).be.a.Number().and.be.eql(200);
+    should(response.action).be.exactly(requestObject.action);
+    should(response.controller).be.exactly(requestObject.controller);
+    should(response.metadata).match(requestObject.metadata);
+    should(response.protocol).be.exactly(requestObject.protocol);
+    should(response.requestId).be.exactly(requestObject.requestId);
+    should(response.timestamp).be.exactly(requestObject.timestamp);
+
     should(response.result).not.be.null().and.be.an.Object();
-    should(response.result.action).be.exactly(requestObject.action);
-    should(response.result.controller).be.exactly(requestObject.controller);
-    should(response.result.metadata).match(requestObject.metadata);
-    should(response.result.protocol).be.exactly(requestObject.protocol);
-    should(response.result.requestId).be.exactly(requestObject.requestId);
-    should(response.result.timestamp).be.exactly(requestObject.timestamp);
     should(response.result.count).be.undefined();
   });
 });
