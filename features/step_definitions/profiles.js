@@ -17,9 +17,40 @@ var apiSteps = function () {
         callback();
       }.bind(this))
       .catch(function (error) {
-        callback(error);
+        callback(error.error.error.message);
       });
   });
+
+  this.Then(/^I cannot create an invalid profile$/, {timeout: 120 * 1000}, function (callback) {
+    this.api.putProfile('invalid-profile', this.profiles.invalidProfile)
+      .then(function (body) {
+        if (body.error) {
+          callback();
+          return true;
+        }
+
+        callback(new Error("Creating profile with unexisting role succeeded. Expected to throw."));
+      }.bind(this))
+      .catch(function (error) {
+        callback();
+      });
+  });
+
+  this.Then(/^I cannot a profile without ID$/, function (callback) {
+    this.api.getProfile('')
+      .then(body => {
+        if (body.error) {
+          callback();
+          return true;
+        }
+
+        callback(new Error("Getting profile without id succeeded. Expected to throw."));
+      })
+      .catch(error => {
+        callback();
+      })
+  });
+
 
   this.Then(/^I'm ?(not)* able to find the profile with id "([^"]*)"(?: with profile "([^"]*)")?$/, function (not, id, profile, callback) {
     var
