@@ -4,8 +4,6 @@ var
   methods = rewire('../../../../lib/api/dsl/methods'),
   BadRequestError = require.main.require('lib/api/core/errors/badRequestError');
 
-require('should-promised');
-
 describe('Test bool method', function () {
 
   var

@@ -118,7 +118,7 @@ var apiSteps = function () {
               return false;
             }
 
-            if (body.result && body.result.hits && body.result.hits.total !== 0) {
+            if (body.result && body.result.hits && body.result.total !== 0) {
               if (dont) {
                 callbackAsync('A document exists for the filter');
                 return false;

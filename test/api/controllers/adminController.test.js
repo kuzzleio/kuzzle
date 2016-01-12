@@ -1,12 +1,9 @@
 var
   should = require('should'),
-  winston = require('winston'),
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
   ResponseObject = require.main.require('lib/api/core/models/responseObject');
-
-require('should-promised');
 
 describe('Test: admin controller', function () {
   var
@@ -15,7 +12,6 @@ describe('Test: admin controller', function () {
 
   before(function (done) {
     kuzzle = new Kuzzle();
-    kuzzle.log = new (winston.Logger)({transports: [new (winston.transports.Console)({level: 'silent'})]});
     kuzzle.start(params, {dummy: true})
       .then(function () {
         kuzzle.repositories.role.validateAndSaveRole = role => {
@@ -152,6 +148,20 @@ describe('Test: admin controller', function () {
     });
 
     kuzzle.funnel.admin.truncateCollection(requestObject);
+  });
+
+  it('should resolve to a responseObject on a putRole call', done => {
+    kuzzle.funnel.admin.putRole(new RequestObject({
+      body: { _id: 'test', indexes: {} }
+    }))
+      .then(result => {
+        should(result).be.an.instanceOf(ResponseObject);
+        should(result.data.body._id).be.exactly('test');
+        done();
+      })
+      .catch(error => {
+        done(error);
+      });
   });
 
   it('should trigger a hook on a deleteIndexes call', function (done) {

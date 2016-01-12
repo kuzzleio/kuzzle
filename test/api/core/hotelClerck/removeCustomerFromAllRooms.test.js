@@ -1,14 +1,11 @@
 var
   should = require('should'),
   q = require('q'),
-  winston = require('winston'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   Profile = require.main.require('lib/api/core/models/security/profile'),
   Role = require.main.require('lib/api/core/models/security/role');
-
-require('should-promised');
 
 describe('Test: hotelClerk.removeCustomerFromAllRooms', function () {
   var
@@ -42,7 +39,6 @@ describe('Test: hotelClerk.removeCustomerFromAllRooms', function () {
 
   beforeEach(function (done) {
     kuzzle = new Kuzzle();
-    kuzzle.log = new (winston.Logger)({transports: [new (winston.transports.Console)({level: 'silent'})]});
     kuzzle.removeAllListeners();
     kuzzle.start(params, {dummy: true})
       .then(function () {

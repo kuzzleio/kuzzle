@@ -4,8 +4,6 @@ var
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
   Dsl = rewire('../../../../lib/api/dsl/index');
 
-require('should-promised');
-
 describe('Test: dsl.testFieldFilters', function () {
   var
     testFieldFilters = Dsl.__get__('testFieldFilters'),

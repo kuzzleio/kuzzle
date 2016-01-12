@@ -5,7 +5,7 @@ var
   KuzzleError = require.main.require('lib/api/core/errors/kuzzleError'),
   geohash = require('ngeohash');
 
-require('should-promised');
+
 
 describe('Test geoUtil methods included in the DSL methods file', function () {
   var result,

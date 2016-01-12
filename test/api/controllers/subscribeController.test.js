@@ -1,6 +1,5 @@
 var
   should = require('should'),
-  winston = require('winston'),
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
@@ -8,8 +7,6 @@ var
   Role = require.main.require('lib/api/core/models/security/role'),
   BadRequestError = require.main.require('lib/api/core/errors/badRequestError'),
   NotFoundError = require.main.require('lib/api/core/errors/notFoundError');
-
-require('should-promised');
 
 /*
  * Since we're sending voluntarily false requests, we expect most of these
@@ -25,7 +22,6 @@ describe('Test: subscribe controller', function () {
   before(function (done) {
     context = {};
     kuzzle = new Kuzzle();
-    kuzzle.log = new (winston.Logger)({transports: [new (winston.transports.Console)({level: 'silent'})]});
     kuzzle.start(params, {dummy: true})
       .then(function () {
         kuzzle.repositories.role.roles.guest = new Role();

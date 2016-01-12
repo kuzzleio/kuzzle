@@ -5,8 +5,6 @@ var
   GatewayTimeoutError = require.main.require('lib/api/core/errors/gatewayTimeoutError'),
   Sandbox = rewire('../../../../lib/api/core/sandbox');
 
-require('should-promised');
-
 describe('Test: sandbox/sandboxTest', () => {
   var sandbox;
 
@@ -106,8 +104,8 @@ describe('Test: sandbox/sandboxTest', () => {
 
       revert = LocalSandbox.__set__({
         process: {
-          debugPort: 17512,
-          execArgv: ['--debug-port=17512']
+          debugPort: 17511,
+          execArgv: ['--debug-port=17511']
         }
       });
 

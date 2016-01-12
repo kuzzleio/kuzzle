@@ -1,6 +1,5 @@
 var
   should = require('should'),
-  winston = require('winston'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
   BadRequestError = require.main.require('lib/api/core/errors/badRequestError'),
   NotFoundError = require.main.require('lib/api/core/errors/notFoundError'),
@@ -8,8 +7,6 @@ var
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   Profile = require.main.require('lib/api/core/models/security/profile'),
   Role = require.main.require('lib/api/core/models/security/role');
-
-require('should-promised');
 
 describe('Test: hotelClerk.removeRooms', function () {
   var
@@ -37,7 +34,6 @@ describe('Test: hotelClerk.removeRooms', function () {
   beforeEach(function (done) {
     require.cache = {};
     kuzzle = new Kuzzle();
-    kuzzle.log = new (winston.Logger)({transports: [new (winston.transports.Console)({level: 'silent'})]});
     kuzzle.removeAllListeners();
 
     return kuzzle.start(params, {dummy: true})

@@ -60,27 +60,27 @@ var apiSteps = function () {
   });
 
   this.Then(/^I get at least 1 statistic frame$/, function (callback) {
-    if (!this.result.statistics) {
+    if (!this.result) {
       return callback('Expected a statistics result, got: ' + this.result);
     }
 
-    if (_.isArray(this.result.statistics) &&
-      this.result.statistics.length > 0 &&
-      this.result.statistics[0].ongoingRequests &&
-      this.result.statistics[0].completedRequests &&
-      this.result.statistics[0].failedRequests &&
-      this.result.statistics[0].connections) {
+    if (this.result.hits &&
+      this.result.hits.length > 0 &&
+      this.result.hits[0].ongoingRequests &&
+      this.result.hits[0].completedRequests &&
+      this.result.hits[0].failedRequests &&
+      this.result.hits[0].connections) {
       return callback();
     }
 
-    if (this.result.statistics.ongoingRequests &&
-      this.result.statistics.completedRequests &&
-      this.result.statistics.failedRequests &&
-      this.result.statistics.connections) {
+    if (this.result.ongoingRequests &&
+      this.result.completedRequests &&
+      this.result.failedRequests &&
+      this.result.connections) {
       return callback();
     }
 
-    callback('Expected at least 1 statistic frame, found: ' + this.result.statistics);
+    callback('Expected at least 1 statistic frame, found: ' + this.result);
   });
 };
 
