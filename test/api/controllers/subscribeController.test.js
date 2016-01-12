@@ -8,8 +8,6 @@ var
   BadRequestError = require.main.require('lib/api/core/errors/badRequestError'),
   NotFoundError = require.main.require('lib/api/core/errors/notFoundError');
 
-require('should-promised');
-
 /*
  * Since we're sending voluntarily false requests, we expect most of these
  * calls to fail.

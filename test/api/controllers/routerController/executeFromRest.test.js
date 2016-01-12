@@ -13,8 +13,6 @@ var
   RequestObject = rewire('../../../../lib/api/core/models/requestObject'),
   ResponseObject = require.main.require('lib/api/core/models/responseObject');
 
-require('should-promised');
-
 describe('Test: routerController.executeFromRest', function () {
   var
     timer,

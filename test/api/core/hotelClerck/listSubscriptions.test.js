@@ -7,8 +7,6 @@ var
   Profile = require.main.require('lib/api/core/models/security/profile'),
   Role = require.main.require('lib/api/core/models/security/role');
 
-require('should-promised');
-
 describe('Test: hotelClerk.addSubscription', function () {
   var
     kuzzle,

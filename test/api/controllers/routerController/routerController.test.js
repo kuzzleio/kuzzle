@@ -9,8 +9,6 @@ var
   ResponseObject = require.main.require('lib/api/core/models/responseObject'),
   PluginImplementationError = require.main.require('lib/api/core/errors/pluginImplementationError');
 
-require('should-promised');
-
 describe('Test: routerController', () => {
   describe('#getBearerTokenFromHeaders', () => {
     var

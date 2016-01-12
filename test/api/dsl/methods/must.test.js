@@ -3,7 +3,7 @@ var
   rewire = require('rewire'),
   methods = rewire('../../../../lib/api/dsl/methods');
 
-require('should-promised');
+
 
 describe('Test: dsl.must method', function () {
   before(function () {
