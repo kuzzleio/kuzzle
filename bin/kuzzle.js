@@ -17,14 +17,6 @@ program
   .description('Start a Kuzzle instance')
   .action(require('./kuzzle-start'));
 
-
-// $ kuzzle perf
-program
-  .command('perf')
-  .option('-p, --port [port]', 'Kuzzle port number', parseInt)
-  .description('Start a Kuzzle instance in performance recording mode')
-  .action(require('./kuzzle-perf'));
-
 // $ kuzzle enable <service>
 program
   .command('enable')
@@ -36,6 +28,12 @@ program
   .command('disable')
   .description('Disable a service without reloading Kuzzle')
   .action(require('./kuzzle-disable'));
+
+// $ kuzzle install
+program
+  .command('install')
+  .description('Install plugin dependencies')
+  .action(require('./kuzzle-install'));
 
 // Run user command
 program.parse(process.argv);
