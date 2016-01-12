@@ -6,8 +6,7 @@
     "defaultConfig": {
       "service": "winston",
       "level": "info",
-      "addDate": true,
-      "loadedBy": "all"
+      "addDate": true
     }
   },
   "kuzzle-plugin-socketio": {

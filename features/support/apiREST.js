@@ -279,7 +279,7 @@ ApiREST.prototype.getServerInfo = function () {
 
 ApiREST.prototype.putRole = function (id, body) {
   var options = {
-    url: this.pathApi('roles/' + id),
+    url: this.apiPath('roles/' + id),
     method: 'PUT',
     json: body
   };
@@ -289,7 +289,7 @@ ApiREST.prototype.putRole = function (id, body) {
 
 ApiREST.prototype.getRole = function (id) {
   var options = {
-    url: this.pathApi('roles/' + id),
+    url: this.apiPath('roles/' + id),
     method: 'GET',
     json: true
   };
@@ -299,7 +299,7 @@ ApiREST.prototype.getRole = function (id) {
 
 ApiREST.prototype.searchRoles = function (body) {
   var options = {
-    url: this.pathApi('roles/_search'),
+    url: this.apiPath('roles/_search'),
     method: 'POST',
     json: body
   };
@@ -309,7 +309,7 @@ ApiREST.prototype.searchRoles = function (body) {
 
 ApiREST.prototype.deleteRole = function (id) {
   var options = {
-    url: this.pathApi('roles/' + id),
+    url: this.apiPath('roles/' + id),
     method: 'DELETE',
     json: true
   };

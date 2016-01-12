@@ -34,6 +34,7 @@ var apiSteps = function () {
       setTimeout(() => {
         this.api.getRole(id)
           .then(body => {
+            console.log(body);
             if (body.error) {
               return callbackAsync(body.error.message);
             }
@@ -46,7 +47,7 @@ var apiSteps = function () {
               return callbackAsync('No result provided');
             }
 
-            if (!body.result._source.indexes) {
+            if (!body.result.indexes) {
               if (not) {
                 return callbackAsync();
               }
@@ -56,7 +57,7 @@ var apiSteps = function () {
 
             if (role) {
               index = Object.keys(this.roles[role].indexes)[0];
-              if (!body.result._source.indexes[index]) {
+              if (!body.result.indexes[index]) {
                 if (not) {
                   return callbackAsync();
                 }
@@ -119,13 +120,14 @@ var apiSteps = function () {
       setTimeout(() => {
         this.api.searchRoles(body)
           .then(body => {
+            console.log(body);
             if (body.error) {
               callbackAsync(body.error.message);
               return false;
             }
 
-            if (!body.result._source || body.result._source.length !== parseInt(count)) {
-              return callbackAsync('Expected ' + count + ' roles, get ' + body.result._source.length);
+            if (!body.result.hits || body.result.hits.length !== parseInt(count)) {
+              return callbackAsync('Expected ' + count + ' roles, get ' + body.result.hits.length);
             }
 
             callbackAsync();
