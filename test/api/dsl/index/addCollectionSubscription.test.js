@@ -2,8 +2,6 @@ var
   should = require('should'),
   Dsl = require.main.require('lib/api/dsl/index');
 
-require('should-promised');
-
 describe('Test: dsl.addCollectionSubscription', function () {
   var dsl,
     index = 'test';

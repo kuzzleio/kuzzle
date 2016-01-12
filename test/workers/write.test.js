@@ -6,7 +6,7 @@ var
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
   Worker = rewire('../../lib/workers/write');
 
-require('should-promised');
+
 
 describe('Testing: write worker', function () {
   var

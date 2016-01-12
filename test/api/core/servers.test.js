@@ -9,8 +9,6 @@ var
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   Servers = rewire('../../../lib/api/core/servers');
 
-require('should-promised');
-
 describe('Test: core/servers', function () {
   var
     kuzzle,

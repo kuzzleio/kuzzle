@@ -8,8 +8,6 @@ var
   BadRequestError = require.main.require('lib/api/core/errors/badRequestError'),
   NotFoundError = require.main.require('lib/api/core/errors/notFoundError');
 
-require('should-promised');
-
 describe('Test: hotelClerk.countSubscription', function () {
   var
     anonymousUser,

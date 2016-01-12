@@ -11,8 +11,6 @@ var
   MockupWrapper,
   MockupStrategy;
 
-require('should-promised');
-
 MockupStrategy = function(name, verify) {
   var options = {};
 

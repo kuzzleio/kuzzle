@@ -12,8 +12,6 @@ var
   ResponseObject = require.main.require('lib/api/core/models/responseObject'),
   Notifier = rewire('../../../../lib/api/core/notifier');
 
-require('should-promised');
-
 describe('Test: notifier.publish', function () {
   var
     kuzzle,

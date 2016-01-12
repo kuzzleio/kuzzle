@@ -5,8 +5,6 @@ var
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
   ResponseObject = require.main.require('lib/api/core/models/responseObject');
 
-require('should-promised');
-
 describe('Test: admin controller', function () {
   var
     kuzzle,

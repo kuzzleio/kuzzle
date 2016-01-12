@@ -10,8 +10,6 @@ var
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   Notifier = rewire('../../../../lib/api/core/notifier');
 
-require('should-promised');
-
 describe('Test: notifier.send', function () {
   var
     kuzzle;

@@ -6,7 +6,7 @@ var
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
   ES = rewire('../../../lib/services/elasticsearch');
 
-require('should-promised');
+
 
 
 describe('Test: ElasticSearch service', function () {

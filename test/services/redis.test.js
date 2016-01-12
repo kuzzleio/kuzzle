@@ -5,7 +5,7 @@ var
   Redis = require.main.require('lib/services/redis'),
   Kuzzle = require.main.require('lib/api/Kuzzle');
 
-require('should-promised');
+
 
 describe('Test redis service', function () {
   var

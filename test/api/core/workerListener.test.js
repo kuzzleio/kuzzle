@@ -11,8 +11,6 @@ var
   ResponseObject = require.main.require('lib/api/core/models/responseObject'),
   WorkerListener = rewire('../../../lib/api/core/workerListener');
 
-require('should-promised');
-
 describe('Test: workerListener', function () {
   var
     kuzzle,

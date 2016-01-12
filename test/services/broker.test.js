@@ -5,7 +5,7 @@ var
   rewire = require('rewire'),
   Broker;
 
-require('should-promised');
+
 
 describe('Testing: broker service', function () {
   var

@@ -9,8 +9,6 @@ var
   Profile = require.main.require('lib/api/core/models/security/profile'),
   Role = require.main.require('lib/api/core/models/security/role');
 
-require('should-promised');
-
 /*
  * Since we're querying the database for non-existent documents, we expect
  * most of these calls, if not all, to return a rejected promise.

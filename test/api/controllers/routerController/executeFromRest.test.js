@@ -12,8 +12,6 @@ var
   RouterController = rewire('../../../../lib/api/controllers/routerController'),
   ResponseObject = require.main.require('lib/api/core/models/responseObject');
 
-require('should-promised');
-
 describe('Test: routerController.executeFromRest', function () {
   var
     timer,
