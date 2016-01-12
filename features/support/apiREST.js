@@ -213,9 +213,15 @@ ApiREST.prototype.now = function () {
   return this.callApi(options);
 };
 
-ApiREST.prototype.truncateCollection = function (index) {
+ApiREST.prototype.truncateCollection = function (index, collection) {
+  var url = '';
+
+  url += index || this.world.fakeIndex;
+  url += '/' + collection || this.world.fakeCollection;
+  url += '/_truncate';
+
   var options = {
-    url: this.apiPath(((typeof index !== 'string') ? this.world.fakeIndex : index) + '/' + this.world.fakeCollection + '/_truncate'),
+    url: this.apiPath(url),
     method: 'DELETE',
     json: true
   };
