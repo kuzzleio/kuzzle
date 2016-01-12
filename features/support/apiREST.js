@@ -277,4 +277,44 @@ ApiREST.prototype.getServerInfo = function () {
     });
 };
 
+ApiREST.prototype.putRole = function (id, body) {
+  var options = {
+    url: this.pathApi('roles/' + id),
+    method: 'PUT',
+    json: body
+  };
+
+  return this.callApi(options);
+};
+
+ApiREST.prototype.getRole = function (id) {
+  var options = {
+    url: this.pathApi('roles/' + id),
+    method: 'GET',
+    json: true
+  };
+
+  return this.callApi(options);
+};
+
+ApiREST.prototype.searchRoles = function (body) {
+  var options = {
+    url: this.pathApi('roles/_search'),
+    method: 'POST',
+    json: body
+  };
+
+  return this.callApi(options);
+};
+
+ApiREST.prototype.deleteRole = function (id) {
+  var options = {
+    url: this.pathApi('roles/' + id),
+    method: 'DELETE',
+    json: true
+  };
+
+  return this.callApi(options);
+};
+
 module.exports = ApiREST;
