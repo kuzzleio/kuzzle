@@ -34,7 +34,6 @@ var apiSteps = function () {
       setTimeout(() => {
         this.api.getRole(id)
           .then(body => {
-            console.log(body);
             if (body.error) {
               return callbackAsync(body.error.message);
             }
@@ -103,7 +102,7 @@ var apiSteps = function () {
       });
   });
 
-  this.Then(/^I'm able to find "(\d*)" role by searching index corresponding to role "([^"]*)"$/, function (count, role, callback) {
+  this.Then(/^I'm able to find "(\d*)" role by searching index corresponding to role "([^"]*)"(?: from "([^"]*)" to "([^"]*)")?$/, function (count, role, from, size, callback) {
     var
       main,
       index,
@@ -114,13 +113,16 @@ var apiSteps = function () {
     }
 
     index = Object.keys(this.roles[role].indexes)[0];
-    body = {indexes : [index]};
+    body = {
+      indexes : [index],
+      from: from || 0,
+      size: size || 999
+    };
 
     main = function (callbackAsync) {
       setTimeout(() => {
         this.api.searchRoles(body)
           .then(body => {
-            console.log(body);
             if (body.error) {
               callbackAsync(body.error.message);
               return false;
