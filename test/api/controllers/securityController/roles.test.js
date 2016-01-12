@@ -1,6 +1,5 @@
 var
   should = require('should'),
-  winston = require('winston'),
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
@@ -8,13 +7,12 @@ var
 
 require('should-promised');
 
-describe('Test: security controller', function () {
+describe('Test: security controller - roles', function () {
   var
     kuzzle;
 
   before(function (done) {
     kuzzle = new Kuzzle();
-    kuzzle.log = new (winston.Logger)({transports: [new (winston.transports.Console)({level: 'silent'})]});
     kuzzle.start(params, {dummy: true})
       .then(function () {
         // Mock
@@ -78,6 +76,7 @@ describe('Test: security controller', function () {
         body: { _id: 'test' }
       }))
       .then(result => {
+        console.log('*** result', result);
         should(result).be.an.instanceOf(ResponseObject);
         should(result.data.body._id).be.exactly('test');
         done();
