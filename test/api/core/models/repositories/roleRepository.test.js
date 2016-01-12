@@ -188,6 +188,13 @@ describe('Test: repositories/roleRepository', function () {
 
   });
 
+
+  describe('#loadRole', function () {
+    it('should return a bad request error when no _id is provided', () => {
+      return should(roleRepository.loadRole({})).rejectedWith(BadRequestError);
+    });
+  });
+
   describe('#getRoleFromRequestObject', function () {
     it('should build a valid role object', () => {
       var
