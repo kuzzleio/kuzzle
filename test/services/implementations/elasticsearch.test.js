@@ -105,7 +105,7 @@ describe('Test: ElasticSearch service', function () {
       elasticsearch.client.search = function (data) {
         should(data.body).be.exactly(filter);
 
-        return Promise.resolve({hits: {total: 0, hits: []}});
+        return Promise.resolve({total: 0, hits: []});
       };
 
       requestObject.data.body = filter;
@@ -115,9 +115,8 @@ describe('Test: ElasticSearch service', function () {
       ret
         .then(function (result) {
           should(result.data).not.be.undefined().and.not.be.null();
-          should(result.data.hits).not.be.undefined();
-          should(result.data.hits.total).be.exactly(0);
-          should(result.data.hits.hits).be.an.Array();
+          should(result.data.body.total).be.exactly(0);
+          should(result.data.body.hits).be.an.Array();
           done();
         })
         .catch(error => done(error));
@@ -415,8 +414,8 @@ describe('Test: ElasticSearch service', function () {
       elasticsearch.deleteByQuery(requestObject)
         .then(function (result) {
           // Ugly line in order to spot a random bug on this unit test
-          should(result.data.ids).not.be.undefined().and.be.an.Array();
-          should(result.data.ids.length).be.exactly(0);
+          should(result.data.body.ids).not.be.undefined().and.be.an.Array();
+          should(result.data.body.ids.length).be.exactly(0);
           done();
         })
         .catch(error => done(error));
@@ -452,8 +451,8 @@ describe('Test: ElasticSearch service', function () {
         elasticsearch.deleteByQuery(requestObject)
           .then(function (result) {
             try {
-              should(result.data.ids).not.be.undefined().and.be.an.Array();
-              should(result.data.ids).match(mockupIds);
+              should(result.data.body.ids).not.be.undefined().and.be.an.Array();
+              should(result.data.body.ids).match(mockupIds);
               done();
             }
             catch (e) {
@@ -698,8 +697,8 @@ describe('Test: ElasticSearch service', function () {
       elasticsearch.getMapping(requestObject)
         .then(function (result) {
           should(result.data).not.be.undefined();
-          should(result.data[requestObject.index]).not.be.undefined();
-          should(result.data[requestObject.index].mappings).not.be.undefined();
+          should(result.data.body[requestObject.index]).not.be.undefined();
+          should(result.data.body[requestObject.index].mappings).not.be.undefined();
           done();
         })
         .catch(error => done(error));
@@ -1097,7 +1096,7 @@ describe('Test: ElasticSearch service', function () {
 
       elasticsearch.listIndexes(requestObject)
         .then(result => {
-          should(result.data.indexes).be.an.instanceOf(Array).and.match([index]);
+          should(result.data.body.indexes).be.an.instanceOf(Array).and.match([index]);
           done();
         })
         .catch(error => done(error));

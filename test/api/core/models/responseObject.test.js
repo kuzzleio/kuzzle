@@ -56,7 +56,7 @@ describe('Test: responseObject', function () {
     should(response.controller).be.exactly(requestObject.controller);
     should(response.requestId).be.exactly(requestObject.requestId);
     should(response.timestamp).be.exactly(requestObject.timestamp);
-    should(response.data._id).be.exactly('fakeid');
+    should(response.data.body._id).be.exactly('fakeid');
   });
 
   it('should use the second argument as the main source if enough information is provided', function () {
@@ -87,7 +87,7 @@ describe('Test: responseObject', function () {
       should(response.controller).be.exactly(requestObject.controller);
       should(response.requestId).be.exactly(requestObject.requestId);
       should(response.timestamp).be.exactly(requestObject.timestamp);
-      should(response.data).be.null();
+      should(response.data.body).be.null();
     });
   });
 
