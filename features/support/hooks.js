@@ -72,8 +72,6 @@ var myHooks = function () {
   this.Before('@cleanSecurity', function (scenario, callback) {
     this.api.deleteIndex('%kuzzle')
       .then(function () {
-        this.api.disconnect();
-
         callback();
       }.bind(this))
       .catch(function () {
