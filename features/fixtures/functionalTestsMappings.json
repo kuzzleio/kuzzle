@@ -1,0 +1,11 @@
+{
+	"test-mapping": {
+	  "test-collection": [
+	    {
+	      "properties" : {
+	        "position" : {"type" : "geo_point" }
+	      }
+	    }
+	  ]
+	}
+}
