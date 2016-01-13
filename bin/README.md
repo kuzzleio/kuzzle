@@ -2,6 +2,13 @@
 
 The Kuzzle service is launched by [kuzzle.js](kuzzle.js) command line.
 
+
+```
+$ kuzzle.js install
+```
+
+will install plugins declared in `config/defaultPlugins.json` and in `config/customPlugins.json`
+
 ```
 $ kuzzle.js start
 ```

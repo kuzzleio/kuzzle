@@ -5,8 +5,6 @@ var
   GatewayTimeoutError = require.main.require('lib/api/core/errors/gatewayTimeoutError'),
   Sandbox = rewire('../../../../lib/api/core/sandbox');
 
-require('should-promised');
-
 describe('Test: sandbox/sandboxTest', () => {
   var sandbox;
 

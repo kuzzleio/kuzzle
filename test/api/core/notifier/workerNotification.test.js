@@ -15,8 +15,6 @@ var
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle');
 
-require('should-promised');
-
 describe('Test: notifier.workerNotification', function () {
   var
     requestObject = new RequestObject({

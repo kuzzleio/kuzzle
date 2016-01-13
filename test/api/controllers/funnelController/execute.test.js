@@ -8,8 +8,6 @@ var
   Role = require.main.require('lib/api/core/models/security/role'),
   User = require.main.require('lib/api/core/models/security/user');
 
-require('should-promised');
-
 describe('Test execute function in funnel controller', function () {
 
   var

@@ -9,8 +9,6 @@ var
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
   Statistics = rewire('../../../lib/api/core/statistics');
 
-require('should-promised');
-
 describe('Test: statistics core component', function () {
   var
     requestObject,
