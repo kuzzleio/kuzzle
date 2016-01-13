@@ -96,5 +96,22 @@ module.exports = function () {
       }
     };
 
+    this.profiles = {
+      profile1: {
+        roles: ['role1']
+      },
+      profile2: {
+        roles: ['role1', 'role2']
+      },
+      profile3: {
+        roles: ['role2']
+      },
+      invalidProfile: {
+        roles: ['unexisting-role']
+      },
+      emptyProfile: {
+        roles: []
+      }
+    }
   };
 };

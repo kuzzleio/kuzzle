@@ -1,6 +1,7 @@
 var
   config = require('./config')(),
   rp = require('request-promise'),
+  apiVersion = require('../../package.json').apiVersion;
   apiVersion = '1.0';
 
 var ApiREST = function () {
@@ -316,5 +317,46 @@ ApiREST.prototype.deleteRole = function (id) {
 
   return this.callApi(options);
 };
+
+ApiREST.prototype.putProfile = function (id, body) {
+  var options = {
+    url: this.pathApi('profiles/' + id),
+    method: 'PUT',
+    json: body
+  };
+
+  return this.callApi(options);
+};
+
+ApiREST.prototype.getProfile = function (id) {
+  var options = {
+    url: this.pathApi('profiles/' + id),
+    method: 'GET',
+    json: true
+  };
+
+  return this.callApi(options);
+};
+
+ApiREST.prototype.searchProfiles = function (body) {
+  var options = {
+    url: this.pathApi('profiles/_search'),
+    method: 'POST',
+    json: body
+  };
+
+  return this.callApi(options);
+};
+
+ApiREST.prototype.deleteProfile = function (id) {
+  var options = {
+    url: this.pathApi('profiles/' + id),
+    method: 'DELETE',
+    json: true
+  };
+
+  return this.callApi(options);
+};
+
 
 module.exports = ApiREST;
