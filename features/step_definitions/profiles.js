@@ -67,7 +67,7 @@ var apiSteps = function () {
   });
 
 
-  this.Then(/^I'm ?(not)* able to find the profile with id "([^"]*)"(?: with profile "([^"]*)")?$/, function (not, id, profile, callback) {
+  this.Then(/^I'm ?(not)* able to find the profile with id "([^"]*)"(?: with profile "([^"]*)")?$/, {timeout: 20 * 1000}, function (not, id, profile, callback) {
     var
       index,
       main;
@@ -92,7 +92,7 @@ var apiSteps = function () {
               return callbackAsync('No result provided');
             }
 
-            if (!body.result._source.roles) {
+            if (!body.result.roles) {
               if (not) {
                 return callbackAsync();
               }
