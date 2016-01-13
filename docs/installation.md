@@ -2,15 +2,15 @@
 
 ## Table of Contents
 
-  * [Using the all-in-one Docker recipe](#using-the-all-in-one-docker-recipe)
-    * [Reset Kuzzle with Docker recipe](#reset-kuzzle-with-docker-recipe)
-    * [Reset Kuzzle and insert sorme fixtures with Docker recipe](#reset-kuzzle-and-insert-sorme-fixtures-with-docker-recipe)
-    * [Initialize Kuzzle mapping with Docker recipe](#initialize-kuzzle-mapping-with-docker-recipe)
-  * [Using Vagrant](#using-vagrant)
-  * [From source or NPM](#from-source-or-npm)
-  * [Manual install](#manual-install)
-    * [Default](#default)
-    * [Change external services hosts](#change-external-services-hosts)
+* [Using the all-in-one Docker recipe](#using-the-all-in-one-docker-recipe)
+  * [Reset Kuzzle with Docker recipe](#reset-kuzzle-with-docker-recipe)
+  * [Reset Kuzzle and insert sorme fixtures with Docker recipe](#reset-kuzzle-and-insert-sorme-fixtures-with-docker-recipe)
+  * [Initialize Kuzzle mapping with Docker recipe](#initialize-kuzzle-mapping-with-docker-recipe)
+* [Using Vagrant](#using-vagrant)
+* [From source or NPM](#from-source-or-npm)
+* [Manual install](#manual-install)
+  * [Default](#default)
+  * [Change external services hosts](#change-external-services-hosts)
 
 ## Using the all-in-one Docker recipe
 
@@ -72,6 +72,22 @@ Remember that the fixtures must be in the Docker container scope !
 If you need to add a default mapping on Kuzzle start, from Kuzzle's root directory:
 
     $ DEFAULT_MAPPING=path/to/the/mapping/file.json docker-compose up
+
+examples:
+
+```javascript
+{
+  "index": {
+    "collection": [
+      {
+        "properties" : {
+          "position" : {"type" : "geo_point" }
+        }
+      }
+    ]
+  }
+}
+```
 
 Remember that the default mapping must be in the Docker container scope !
 
