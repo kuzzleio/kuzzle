@@ -142,6 +142,12 @@ describe('Test kuzzle constructor', function () {
       process.env.DEFAULT_MAPPING = '/var/app/features/fixtures/functionalTestsMappings.json';
       delete process.env.FIXTURES;
       kuzzle.isServer = true;
+      kuzzle.pluginsManager = {
+        trigger: function(event, data) {
+          should(event).be.equalOneOf('preparedb:done', 'preparedb:start', 'preparedb:error', 'log:info', 'log:error');
+        }
+      };
+
       kuzzle.services.list = {
         readEngine: {},
         writeEngine: {}
