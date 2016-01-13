@@ -15,6 +15,7 @@ kuzzle:
   environment:
     - MQ_BROKER_ENABLED=1
     - LIKE_A_VIRGIN
+    - DEFAULT_MAPPING
     - FIXTURES=/var/app/features/fixtures/functionalTestsFixtures.json
     - FEATURE_COVERAGE
 
