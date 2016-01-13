@@ -219,7 +219,7 @@ Feature: Test STOMP API
     Then I'm not able to find the index named "my-undefined-index" in index list
     Then I'm able to delete the index named "my-new-index"
 
-  @usingSTOMP
+  @usingSTOMP @cleanSecurity
   Scenario: Create/get/search/update/delete role
     When I create a new role "role1" with id "test"
     Then I'm able to find a role with id "test"

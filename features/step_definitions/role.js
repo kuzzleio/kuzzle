@@ -46,7 +46,7 @@ var apiSteps = function () {
               return callbackAsync('No result provided');
             }
 
-            if (!body.result._source.indexes) {
+            if (!body.result.indexes) {
               if (not) {
                 return callbackAsync();
               }
@@ -56,7 +56,7 @@ var apiSteps = function () {
 
             if (role) {
               index = Object.keys(this.roles[role].indexes)[0];
-              if (!body.result._source.indexes[index]) {
+              if (!body.result.indexes[index]) {
                 if (not) {
                   return callbackAsync();
                 }
@@ -102,7 +102,7 @@ var apiSteps = function () {
       });
   });
 
-  this.Then(/^I'm able to find "(\d*)" role by searching index corresponding to role "([^"]*)"$/, function (count, role, callback) {
+  this.Then(/^I'm able to find "(\d*)" role by searching index corresponding to role "([^"]*)"(?: from "([^"]*)" to "([^"]*)")?$/, function (count, role, from, size, callback) {
     var
       main,
       index,
@@ -113,7 +113,11 @@ var apiSteps = function () {
     }
 
     index = Object.keys(this.roles[role].indexes)[0];
-    body = {indexes : [index]};
+    body = {
+      indexes : [index],
+      from: from || 0,
+      size: size || 999
+    };
 
     main = function (callbackAsync) {
       setTimeout(() => {
@@ -124,8 +128,8 @@ var apiSteps = function () {
               return false;
             }
 
-            if (!body.result._source || body.result._source.length !== parseInt(count)) {
-              return callbackAsync('Expected ' + count + ' roles, get ' + body.result._source.length);
+            if (!body.result.hits || body.result.hits.length !== parseInt(count)) {
+              return callbackAsync('Expected ' + count + ' roles, get ' + body.result.hits.length);
             }
 
             callbackAsync();

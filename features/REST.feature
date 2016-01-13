@@ -116,7 +116,7 @@ Feature: Test REST API
     Then I'm not able to find the index named "my-undefined-index" in index list
     Then I'm able to delete the index named "my-new-index"
 
-  @usingREST
+  @usingREST @cleanSecurity
   Scenario: Create/get/search/update/delete role
     When I create a new role "role1" with id "test"
     Then I'm able to find a role with id "test"
@@ -125,6 +125,11 @@ Feature: Test REST API
     Then I'm able to find "1" role by searching index corresponding to role "role2"
     And I delete the role with id "test"
     Then I'm not able to find a role with id "test"
+    Then I create a new role "role1" with id "test"
+    And I create a new role "role1" with id "test2"
+    And I create a new role "role1" with id "test3"
+    Then I'm able to find "3" role by searching index corresponding to role "role1"
+    Then I'm able to find "1" role by searching index corresponding to role "role1" from "0" to "1"
 
   @usingREST
   Scenario: create an invalid profile with unexisting role triggers an error

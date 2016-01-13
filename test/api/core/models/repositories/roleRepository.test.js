@@ -188,6 +188,122 @@ describe('Test: repositories/roleRepository', function () {
 
   });
 
+
+  describe('#loadRole', function () {
+    it('should return a bad request error when no _id is provided', () => {
+      return should(roleRepository.loadRole({})).rejectedWith(BadRequestError);
+    });
+
+    it('should load the role directly from memory if it\'s in memory', () => {
+      var isLoadFromDB = false;
+
+      roleRepository.roles = {roleId : {myRole : {}}};
+      RoleRepository.prototype.loadOneFromDatabase = () => {
+        isLoadFromDB = true;
+        return Promise.resolve();
+      };
+
+      return roleRepository.loadRole({_id: 'roleId'})
+        .then((role) => {
+          should(isLoadFromDB).be.false();
+          should(role).have.property('myRole');
+        });
+    });
+
+    it('should load the role directly from DB if it\'s not in memory', () => {
+      var isLoadFromDB = false;
+
+      roleRepository.roles = {otherRoleId : {myRole : {}}};
+      RoleRepository.prototype.loadOneFromDatabase = () => {
+        isLoadFromDB = true;
+        return Promise.resolve(roleRepository.roles.otherRoleId);
+      };
+
+      return roleRepository.loadRole({_id: 'roleId'})
+        .then((role) => {
+          should(isLoadFromDB).be.true();
+          should(role).have.property('myRole');
+        });
+    });
+  });
+
+  describe('#searchRole', function () {
+    it('should call repository search without filter and with parameters from requestObject', () => {
+      var
+        savedFilter,
+        savedFrom,
+        savedSize,
+        savedHydrate;
+
+      RoleRepository.prototype.search = (filter, from, size, hydrate) => {
+        savedFilter = filter;
+        savedFrom = from;
+        savedSize = size;
+        savedHydrate = hydrate;
+
+        return Promise.resolve();
+      };
+
+      return roleRepository.searchRole(new RequestObject({body: {from: 1, size: 3, hydrate: false}}))
+        .then(() => {
+          should(savedFilter).be.eql({or: []});
+          should(savedFrom).be.eql(1);
+          should(savedSize).be.eql(3);
+          should(savedHydrate).be.false();
+        });
+    });
+
+    it('should construct a correct filter according to indexes', () => {
+      var
+        savedFilter,
+        savedFrom,
+        savedSize,
+        savedHydrate;
+
+      RoleRepository.prototype.search = (filter, from, size, hydrate) => {
+        savedFilter = filter;
+        savedFrom = from;
+        savedSize = size;
+        savedHydrate = hydrate;
+
+        return Promise.resolve();
+      };
+
+      return roleRepository.searchRole(new RequestObject({body: {indexes: ['test']}}))
+        .then(() => {
+          should(savedFilter).be.eql({or: [
+            // specific index name provided
+            {exists: {field: 'indexes.test'}},
+            // default filter
+            {exists: {field: 'indexes.*'}}
+          ]});
+        });
+    });
+  });
+
+  describe('#deleteRole', function () {
+    it('should reject if there is no _id', () => {
+      should(roleRepository.deleteRole({})).rejectedWith(BadRequestError);
+    });
+
+    it('should call deleteFromDatabase and remove the role from memory', () => {
+      var isDeletedFromDB = false;
+
+      roleRepository.roles = {myRole : {}};
+
+      RoleRepository.prototype.deleteFromDatabase = id => {
+        isDeletedFromDB = true;
+        return Promise.resolve();
+      };
+
+      return roleRepository.deleteRole({_id: 'myRole'})
+        .then(() => {
+          should(roleRepository.roles).be.eql({});
+          should(isDeletedFromDB).be.true();
+        });
+    });
+  });
+
   describe('#getRoleFromRequestObject', function () {
     it('should build a valid role object', () => {
       var

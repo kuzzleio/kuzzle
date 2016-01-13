@@ -15,11 +15,11 @@ ApiREST.prototype.init = function (world) {
 ApiREST.prototype.disconnect = function () {};
 
 ApiREST.prototype.apiPath = function (path) {
-  return config.url + '/api/1.0/' + path;
+  return config.url + encodeURI('/api/1.0/' + path);
 };
 
 ApiREST.prototype.apiBasePath = function (path) {
-  return config.url + '/api/' + path;
+  return config.url + encodeURI('/api/' + path);
 };
 
 ApiREST.prototype.callApi = function (options) {
@@ -214,7 +214,7 @@ ApiREST.prototype.now = function () {
   return this.callApi(options);
 };
 
-ApiREST.prototype.truncateCollection = function (index) {
+ApiREST.prototype.truncateCollection = function (index, collection) {
   var options = {
     url: this.apiPath(((typeof index !== 'string') ? this.world.fakeIndex : index) + '/' + this.world.fakeCollection + '/_truncate'),
     method: 'DELETE',
@@ -280,7 +280,7 @@ ApiREST.prototype.getServerInfo = function () {
 
 ApiREST.prototype.putRole = function (id, body) {
   var options = {
-    url: this.pathApi('roles/' + id),
+    url: this.apiPath('roles/' + id),
     method: 'PUT',
     json: body
   };
@@ -290,7 +290,7 @@ ApiREST.prototype.putRole = function (id, body) {
 
 ApiREST.prototype.getRole = function (id) {
   var options = {
-    url: this.pathApi('roles/' + id),
+    url: this.apiPath('roles/' + id),
     method: 'GET',
     json: true
   };
@@ -300,7 +300,7 @@ ApiREST.prototype.getRole = function (id) {
 
 ApiREST.prototype.searchRoles = function (body) {
   var options = {
-    url: this.pathApi('roles/_search'),
+    url: this.apiPath('roles/_search'),
     method: 'POST',
     json: body
   };
@@ -310,7 +310,7 @@ ApiREST.prototype.searchRoles = function (body) {
 
 ApiREST.prototype.deleteRole = function (id) {
   var options = {
-    url: this.pathApi('roles/' + id),
+    url: this.apiPath('roles/' + id),
     method: 'DELETE',
     json: true
   };
