@@ -7,14 +7,14 @@ var
   Profile = require.main.require('lib/api/core/models/security/profile'),
   Role = require.main.require('lib/api/core/models/security/role');
 
-describe('Test: hotelClerk.addSubscription', function () {
+describe('Test: hotelClerk.listSubscription', function () {
   var
     kuzzle,
     roomId,
     connection = {id: 'connectionid'},
     context = {
       connection: connection,
-      user: null
+      token: null
     },
     roomName = 'roomName',
     index = '%test',
@@ -40,10 +40,10 @@ describe('Test: hotelClerk.addSubscription', function () {
         return kuzzle.repositories.profile.hydrate(kuzzle.repositories.profile.profiles.anonymous, params.userProfiles.anonymous);
       })
       .then(function () {
-        return kuzzle.repositories.user.anonymous();
+        return kuzzle.repositories.token.anonymous();
       })
-      .then(function (user) {
-        context.user = user;
+      .then(function (token) {
+        context.token = token;
         done();
       });
   });
@@ -129,8 +129,8 @@ describe('Test: hotelClerk.addSubscription', function () {
       .then(() => {
 
         // Mock user can access only on user collection
-        context.user.profile.roles[0].indexes['*'].collections.user = context.user.profile.roles[0].indexes['*'].collections['*'];
-        delete context.user.profile.roles[0].indexes['*'].collections['*'];
+        context.token.user.profile.roles[0].indexes['*'].collections.user = context.token.user.profile.roles[0].indexes['*'].collections['*'];
+        delete context.token.user.profile.roles[0].indexes['*'].collections['*'];
 
         // In fact, requestObject can be the same as subscribe. But here, we don't care
         return kuzzle.hotelClerk.listSubscriptions(requestObjectList, context);

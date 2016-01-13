@@ -36,7 +36,7 @@ MockupStrategy.prototype.authenticate = function(req, options) {
   }
 
   try {
-      this._verify(username, verified);
+    this._verify(username, verified);
   } catch (ex) {
     return self.error(ex);
   }
@@ -63,12 +63,12 @@ describe('Test the auth controller', function () {
     kuzzle = new Kuzzle();
     kuzzle.start(params, {dummy: true})
       .then(function () {
-        passport.use(new MockupStrategy( 'mockup', function(username, callback) {
+        passport.use(new MockupStrategy('mockup', function(username, callback) {
           var
-            deferred = q.defer();
+            deferred = q.defer(),
             user = {
-                _id: username
-              };
+              _id: username
+            };
           deferred.resolve(user);
           deferred.promise.nodeify(callback);
           return deferred.promise;
@@ -79,8 +79,20 @@ describe('Test the auth controller', function () {
 
   it('should resolve to a valid jwt token if authentication succeed', function (done) {
     this.timeout(50);
+
+    kuzzle.repositories.user.load = function(t) {
+      var deferred = q.defer();
+
+      deferred.resolve({
+        _id: t,
+        profile: 'anonymous'
+      });
+
+      return deferred;
+    };
+
     kuzzle.funnel.auth.passport = new MockupWrapper('resolve');
-    kuzzle.funnel.auth.login(requestObject)
+    kuzzle.funnel.auth.login(requestObject, {})
       .then(function(response) {
         var decodedToken = jwt.verify(response.data.body.jwt, params.jsonWebToken.secret);
         should(decodedToken._id).be.equal('jdoe');

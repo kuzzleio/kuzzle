@@ -173,7 +173,7 @@ describe('Test: repositories/userRepository', function () {
     });
   });
 
-  describe('#loadFromToken', function () {
+  /*describe('#loadFromToken', function () {
     it('should reject the promise if the jwt is invalid', function () {
       return should(userRepository.loadFromToken('invalidToken')).be.rejectedWith(UnauthorizedError, {details: {subCode: UnauthorizedError.prototype.subCodes.JsonWebTokenError, description: 'jwt malformed'}});
     });
@@ -334,8 +334,9 @@ describe('Test: repositories/userRepository', function () {
     });
 
   });
+  */
 
-  describe('#loadByUsername', function () {
+  describe('#load', function () {
     it('should resolve to user if good credentials are given', function (done) {
       userRepository.load('userInCache')
         .then(function (user) {

@@ -1,4 +1,5 @@
 var
+  q = require('q'),
   params = require('rc')('kuzzle'),
   should = require('should'),
   Role = require.main.require('lib/api/core/models/security/role'),
@@ -27,10 +28,10 @@ describe('Test: repositories/profileRepository', function () {
       var err;
 
       if (requestObject.data._id === 'testprofile') {
-        return Promise.resolve(new ResponseObject(requestObject, testProfilePlain));
+        return q(new ResponseObject(requestObject, testProfilePlain));
       }
       if (requestObject.data._id === 'errorprofile') {
-        return Promise.resolve(new ResponseObject(requestObject, errorProfilePlain));
+        return q(new ResponseObject(requestObject, errorProfilePlain));
       }
 
       err = new NotFoundError('Not found');
