@@ -70,13 +70,7 @@ var myHooks = function () {
   });
 
   this.Before('@cleanSecurity', function (scenario, callback) {
-    this.api.deleteCollection('%kuzzle', 'roles')
-      .then(() => {
-        return this.api.deleteCollection('%kuzzle', 'profiles');
-      })
-      .then(() => {
-        return this.api.deleteCollection('%kuzzle', 'users');
-      })
+    this.api.deleteIndex('%kuzzle')
       .then(function () {
         this.api.disconnect();
 

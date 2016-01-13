@@ -14,11 +14,11 @@ ApiREST.prototype.init = function (world) {
 ApiREST.prototype.disconnect = function () {};
 
 ApiREST.prototype.apiPath = function (path) {
-  return config.url + '/api/1.0/' + path;
+  return config.url + encodeURI('/api/1.0/' + path);
 };
 
 ApiREST.prototype.apiBasePath = function (path) {
-  return config.url + '/api/' + path;
+  return config.url + encodeURI('/api/' + path);
 };
 
 ApiREST.prototype.callApi = function (options) {
@@ -214,14 +214,8 @@ ApiREST.prototype.now = function () {
 };
 
 ApiREST.prototype.truncateCollection = function (index, collection) {
-  var url = '';
-
-  url += index || this.world.fakeIndex;
-  url += '/' + collection || this.world.fakeCollection;
-  url += '/_truncate';
-
   var options = {
-    url: this.apiPath(url),
+    url: this.apiPath(((typeof index !== 'string') ? this.world.fakeIndex : index) + '/' + this.world.fakeCollection + '/_truncate'),
     method: 'DELETE',
     json: true
   };

@@ -133,11 +133,11 @@ ApiRT.prototype.deleteByQuery = function (filters, index) {
   return this.send(msg);
 };
 
-ApiRT.prototype.deleteCollection = function (index, collection) {
+ApiRT.prototype.deleteCollection = function (index) {
   var
     msg = {
       controller: 'admin',
-      collection: collection || this.world.fakeCollection,
+      collection: this.world.fakeCollection,
       index: index || this.world.fakeIndex,
       action: 'deleteCollection'
     };
