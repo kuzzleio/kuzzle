@@ -320,7 +320,7 @@ ApiREST.prototype.deleteRole = function (id) {
 
 ApiREST.prototype.putProfile = function (id, body) {
   var options = {
-    url: this.pathApi('profiles/' + id),
+    url: this.apiPath('profiles/' + id),
     method: 'PUT',
     json: body
   };
@@ -330,7 +330,7 @@ ApiREST.prototype.putProfile = function (id, body) {
 
 ApiREST.prototype.getProfile = function (id) {
   var options = {
-    url: this.pathApi('profiles/' + id),
+    url: this.apiPath('profiles/' + id),
     method: 'GET',
     json: true
   };
@@ -340,7 +340,7 @@ ApiREST.prototype.getProfile = function (id) {
 
 ApiREST.prototype.searchProfiles = function (body) {
   var options = {
-    url: this.pathApi('profiles/_search'),
+    url: this.apiPath('profiles/_search'),
     method: 'POST',
     json: body
   };
@@ -350,7 +350,7 @@ ApiREST.prototype.searchProfiles = function (body) {
 
 ApiREST.prototype.deleteProfile = function (id) {
   var options = {
-    url: this.pathApi('profiles/' + id),
+    url: this.apiPath('profiles/' + id),
     method: 'DELETE',
     json: true
   };
