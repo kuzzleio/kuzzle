@@ -133,7 +133,7 @@ var apiSteps = function () {
       });
   });
 
-  this.Then(/^I'm able to find "([^"]*)" profiles(?: containing the role with id "([^"]*)")?$/, {timeout: 20 * 1000}, function (profilesCount, roleId, callback) {
+  this.Then(/^I'm able to find "([\d]*)" profiles(?: containing the role with id "([^"]*)")?$/, function (profilesCount, roleId, callback) {
     var body = {
         roles: []
       },
@@ -157,18 +157,13 @@ var apiSteps = function () {
             return false;
           }
 
-          if (!response.result._source) {
-            callbackAsync(new Error('Malformed response (no error, no _source)'));
+          if (!Array.isArray(response.result.hits)) {
+            callbackAsync(new Error('Malformed response (hits is not an array)'));
             return false;
           }
 
-          if (!Array.isArray(response.result._source)) {
-            callbackAsync(new Error('Malformed response (_source is not an array)'));
-            return false;
-          }
-
-          if (response.result._source.length != parseInt(profilesCount)) {
-            callbackAsync(new Error('Expected ' + profilesCount + ' profiles. Got ' + response.result._source.length));
+          if (response.result.hits.length !== parseInt(profilesCount)) {
+            callbackAsync(new Error('Expected ' + profilesCount + ' profiles. Got ' + response.result.hits.length));
             return false;
           }
 
@@ -177,7 +172,7 @@ var apiSteps = function () {
         .catch(function (error) {
           callbackAsync(error);
         });
-      }, 2000);
+      }, 200);
     };
 
     async.retry(20, main.bind(this), function (err) {
