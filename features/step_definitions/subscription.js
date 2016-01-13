@@ -134,11 +134,7 @@ var apiSteps = function () {
           return callback(new Error('No result provided'));
         }
 
-        if (!response.result._source) {
-          return callback(new Error('No source provided'));
-        }
-
-        this.result = response.result._source;
+        this.result = response.result;
         callback();
       })
       .catch(error => {

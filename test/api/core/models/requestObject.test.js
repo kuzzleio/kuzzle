@@ -3,13 +3,10 @@
  */
 var
   should = require('should'),
-  winston = require('winston'),
   rewire = require('rewire'),
   uuid = require('node-uuid'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
   BadRequestError = require.main.require('lib/api/core/errors/badRequestError');
-
-require('should-promised');
 
 describe('Test: requestObject', function () {
   var

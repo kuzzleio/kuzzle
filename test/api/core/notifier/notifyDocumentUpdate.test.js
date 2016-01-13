@@ -7,15 +7,12 @@
  */
 var
   should = require('should'),
-  winston = require('winston'),
   rewire = require('rewire'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
   ResponseObject = require.main.require('lib/api/core/models/responseObject'),
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   Notifier = rewire('../../../../lib/api/core/notifier');
-
-require('should-promised');
 
 var mockupCacheService = {
   addId: undefined,
@@ -52,10 +49,10 @@ var mockupCacheService = {
 };
 
 var mockupTestFilters = function (responseObject) {
-  if (responseObject.data._id === 'errorme') {
+  if (responseObject.data.body._id === 'errorme') {
     return Promise.reject(new Error('rejected'));
   }
-  else if (responseObject.data._id === 'removeme') {
+  else if (responseObject.data.body._id === 'removeme') {
     return Promise.resolve([]);
   }
   else {
@@ -65,7 +62,7 @@ var mockupTestFilters = function (responseObject) {
 
 var mockupReadEngine = {
   get: function (requestObject) {
-    return Promise.resolve(new ResponseObject(requestObject, {}));
+    return Promise.resolve(new ResponseObject(requestObject, requestObject.data));
   }
 };
 
@@ -84,7 +81,6 @@ describe('Test: notifier.notifyDocumentUpdate', function () {
 
   before(function (done) {
     kuzzle = new Kuzzle();
-    kuzzle.log = new (winston.Logger)({transports: [new (winston.transports.Console)({level: 'silent'})]});
     kuzzle.start(params, {dummy: true})
       .then(function () {
         kuzzle.services.list.notificationCache = mockupCacheService;
@@ -107,13 +103,13 @@ describe('Test: notifier.notifyDocumentUpdate', function () {
   });
 
   it('should return a rejected promise if the document is not well-formed', function () {
-    responseObject.data._id = 'errorme';
+    responseObject.data.body._id = 'errorme';
 
     return should((Notifier.__get__('notifyDocumentUpdate')).call(kuzzle, responseObject)).be.rejected();
   });
 
   it('should notify subscribers when an updated document entered their scope', function (done) {
-    responseObject.data._id = 'addme';
+    responseObject.data.body._id = 'addme';
 
     notified = 0;
     mockupCacheService.init();
@@ -121,7 +117,7 @@ describe('Test: notifier.notifyDocumentUpdate', function () {
     (Notifier.__get__('notifyDocumentUpdate')).call(kuzzle, responseObject)
       .then(function () {
         should(notified).be.exactly(1);
-        should(mockupCacheService.addId).be.exactly(responseObject.data._id);
+        should(mockupCacheService.addId).be.exactly(responseObject.data.body._id);
         should(mockupCacheService.room).be.an.Array();
         should(mockupCacheService.room[0]).be.exactly('foobar');
         should(mockupCacheService.removeId).be.undefined();
@@ -133,7 +129,7 @@ describe('Test: notifier.notifyDocumentUpdate', function () {
   });
 
   it('should notify subscribers when an updated document left their scope', function (done) {
-    responseObject.data._id = 'removeme';
+    responseObject.data.body._id = 'removeme';
 
     notified = 0;
     mockupCacheService.init();
@@ -143,7 +139,7 @@ describe('Test: notifier.notifyDocumentUpdate', function () {
         should(notified).be.exactly(1);
         should(mockupCacheService.addId).be.undefined();
         should(mockupCacheService.room).be.undefined();
-        should(mockupCacheService.removeId).be.exactly(responseObject.data._id);
+        should(mockupCacheService.removeId).be.exactly(responseObject.data.body._id);
         done();
       })
       .catch (function (e) {

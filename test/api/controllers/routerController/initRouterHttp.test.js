@@ -5,7 +5,6 @@
 
 var
   should = require('should'),
-  winston = require('winston'),
   http = require('http'),
   q = require('q'),
   params = require('rc')('kuzzle'),
@@ -13,8 +12,6 @@ var
   rewire = require('rewire'),
   RouterController = rewire('../../../../lib/api/controllers/routerController'),
   RequestObject = require.main.require('lib/api/core/models/requestObject');
-
-require('should-promised');
 
 /*
  * This function helps keeping tests simple and clear while ensuring that
@@ -68,7 +65,6 @@ describe('Test: routerController.initRouterHttp', function () {
    */
   before(function (done) {
     kuzzle = new Kuzzle();
-    kuzzle.log = new (winston.Logger)({transports: [new (winston.transports.Console)({level: 'silent'})]});
 
     var mockResponse = function (params, request, response) {
       if (!params.action) {

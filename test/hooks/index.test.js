@@ -1,11 +1,10 @@
 var
   should = require('should'),
-  winston = require('winston'),
   params = require('rc')('kuzzle'),
   _ = require('lodash'),
   Kuzzle = require.main.require('lib/api/Kuzzle');
 
-require('should-promised');
+
 
 describe('Test main file for hooks managers', function () {
   var
@@ -22,7 +21,6 @@ describe('Test main file for hooks managers', function () {
   beforeEach(function () {
     kuzzle = new Kuzzle();
     kuzzle.removeAllListeners();
-    kuzzle.log = new (winston.Logger)({transports: [new (winston.transports.Console)({level: 'silent'})]});
   });
 
   it('should be rejected on init when a hook is undefined in config', function () {

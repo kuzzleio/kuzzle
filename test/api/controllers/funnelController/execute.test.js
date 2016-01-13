@@ -1,6 +1,5 @@
 var
   should = require('should'),
-  winston = require('winston'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
   UnauthorizedError = require.main.require('lib/api/core/errors/unauthorizedError'),
   params = require('rc')('kuzzle'),
@@ -8,8 +7,6 @@ var
   Profile = require.main.require('lib/api/core/models/security/profile'),
   Role = require.main.require('lib/api/core/models/security/role'),
   User = require.main.require('lib/api/core/models/security/user');
-
-require('should-promised');
 
 describe('Test execute function in funnel controller', function () {
 
@@ -22,7 +19,6 @@ describe('Test execute function in funnel controller', function () {
 
   beforeEach(function (callback) {
     kuzzle = new Kuzzle();
-    kuzzle.log = new (winston.Logger)({transports: [new (winston.transports.Console)({level: 'silent'})]});
     kuzzle.removeAllListeners();
     kuzzle.start(params, {dummy: true})
       .then(function () {

@@ -120,7 +120,7 @@ var initSocket = function (socketName) {
   }
 
   if (!this.listSockets[socketName]) {
-    socket = io(config.url, { 'force new connection': true });
+    socket = io(config.ws, { 'force new connection': true });
     this.listSockets[socketName] = socket;
 
     // the default socket is the socket with name 'client1'

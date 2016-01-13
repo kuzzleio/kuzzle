@@ -40,7 +40,7 @@ var apiSteps = function () {
       return callback();
     }
 
-    callback('Expected to find the collection <' + collection + '> in this collections list: ' + this.result.collections);
+    callback('Expected to find the collection <' + collection + '> in this collections list: ' + JSON.stringify(this.result.collections));
   });
 
   this.Then(/^I remove the collection and schema(?: from index "([^"]*)")?$/, function (index, callback) {

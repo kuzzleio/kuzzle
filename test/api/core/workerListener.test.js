@@ -3,7 +3,6 @@
  */
 var
   should = require('should'),
-  winston = require('winston'),
   rewire = require('rewire'),
   uuid = require('node-uuid'),
   params = require('rc')('kuzzle'),
@@ -11,8 +10,6 @@ var
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
   ResponseObject = require.main.require('lib/api/core/models/responseObject'),
   WorkerListener = rewire('../../../lib/api/core/workerListener');
-
-require('should-promised');
 
 describe('Test: workerListener', function () {
   var
@@ -30,7 +27,6 @@ describe('Test: workerListener', function () {
 
   before(function (done) {
     kuzzle = new Kuzzle();
-    kuzzle.log = new (winston.Logger)({transports: [new (winston.transports.Console)({level: 'silent'})]});
     kuzzle.start(params, {dummy: true})
       .then(function () {
         kuzzle.services.list.broker.listen = function (room, cb) {

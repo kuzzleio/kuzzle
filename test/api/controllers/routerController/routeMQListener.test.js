@@ -5,7 +5,6 @@
 
 var
   should = require('should'),
-  winston = require('winston'),
   q = require('q'),
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
@@ -13,8 +12,6 @@ var
   RouterController = rewire('../../../../lib/api/controllers/routerController'),
   ResponseObject = require.main.require('lib/api/core/models/responseObject');
 
-
-require('should-promised');
 
 describe('Test: routerController.routeMQListener', function () {
   var
@@ -54,7 +51,6 @@ describe('Test: routerController.routeMQListener', function () {
       };
 
     kuzzle = new Kuzzle();
-    kuzzle.log = new (winston.Logger)({transports: [new (winston.transports.Console)({level: 'silent'})]});
 
     kuzzle.start(params, {dummy: true})
       .then(function () {

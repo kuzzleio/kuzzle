@@ -2,7 +2,6 @@ var
   should = require('should'),
   jwt = require('jsonwebtoken'),
   q = require('q'),
-  winston = require('winston'),
   params = require('rc')('kuzzle'),
   passport = require('passport'),
   util = require('util'),
@@ -11,8 +10,6 @@ var
   requestObject,
   MockupWrapper,
   MockupStrategy;
-
-require('should-promised');
 
 MockupStrategy = function(name, verify) {
   var options = {};
@@ -64,7 +61,6 @@ describe('Test the auth controller', function () {
   before(function (done) {
     requestObject = new RequestObject({ controller: 'auth', action: 'login', body: {strategy: 'mockup', username: 'jdoe'} }, {}, 'unit-test');
     kuzzle = new Kuzzle();
-    kuzzle.log = new (winston.Logger)({transports: [new (winston.transports.Console)({level: 'silent'})]});
     kuzzle.start(params, {dummy: true})
       .then(function () {
         passport.use(new MockupStrategy( 'mockup', function(username, callback) {
@@ -86,7 +82,7 @@ describe('Test the auth controller', function () {
     kuzzle.funnel.auth.passport = new MockupWrapper('resolve');
     kuzzle.funnel.auth.login(requestObject)
       .then(function(response) {
-        var decodedToken = jwt.verify(response.data.jwt, params.jsonWebToken.secret);
+        var decodedToken = jwt.verify(response.data.body.jwt, params.jsonWebToken.secret);
         should(decodedToken._id).be.equal('jdoe');
         done();
       })

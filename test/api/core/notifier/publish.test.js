@@ -5,15 +5,12 @@
  */
 var
   should = require('should'),
-  winston = require('winston'),
   rewire = require('rewire'),
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
   ResponseObject = require.main.require('lib/api/core/models/responseObject'),
   Notifier = rewire('../../../../lib/api/core/notifier');
-
-require('should-promised');
 
 describe('Test: notifier.publish', function () {
   var
@@ -27,7 +24,6 @@ describe('Test: notifier.publish', function () {
 
   before(function (done) {
     kuzzle = new Kuzzle();
-    kuzzle.log = new (winston.Logger)({transports: [new (winston.transports.Console)({level: 'silent'})]});
     kuzzle.start(params, {dummy: true})
       .then(() => {
         kuzzle.services.list.notificationCache = {
