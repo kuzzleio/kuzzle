@@ -55,7 +55,7 @@ describe('Test: repositories/profileRepository', function () {
         return role;
       })
       .filter((role) => {
-        return role._id != 'notExistingRole'
+        return role._id !== 'notExistingRole';
       })
     );
     }
@@ -186,7 +186,7 @@ describe('Test: repositories/profileRepository', function () {
 
       should(profileRepository.buildProfileFromRequestObject(validProfileObject))
         .be.fulfilledWith(Profile);
-    })
+    });
   });
 
   describe('#hydrate', () => {
@@ -225,7 +225,7 @@ describe('Test: repositories/profileRepository', function () {
       profileRepository.profiles[testProfile._id] = testProfile;
       should(profileRepository.deleteProfile(testProfile))
         .be.fulfilledWith(ResponseObject);
-    })
+    });
   });
 
   describe('#serializeToDatabase', () => {
@@ -326,6 +326,6 @@ describe('Test: repositories/profileRepository', function () {
           should(result).be.an.instanceOf(ResponseObject);
           should(result.data.body._id).be.eql(testProfile._id);
         });
-    })
+    });
   });
 });
