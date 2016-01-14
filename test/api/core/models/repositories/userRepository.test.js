@@ -1,5 +1,4 @@
 var
-  jwt = require('jsonwebtoken'),
   q = require('q'),
   should = require('should'),
   params = require('rc')('kuzzle'),
@@ -12,7 +11,6 @@ var
   },
   InternalError = require.main.require('lib/api/core/errors/internalError'),
   NotFoundError = require.main.require('lib/api/core/errors/notFoundError'),
-  UnauthorizedError = require.main.require('lib/api/core/errors/unauthorizedError'),
   ResponseObject = require.main.require('lib/api/core/models/responseObject'),
   Profile = require.main.require('lib/api/core/models/security/profile'),
   User = require.main.require('lib/api/core/models/security/user'),
