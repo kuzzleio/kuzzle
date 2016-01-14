@@ -32,13 +32,13 @@ describe('Test: security controller - profiles', function () {
             _source: {}
           });
         };
-        kuzzle.services.list.readEngine.search = requestObject => {
+        kuzzle.repositories.profile.searchProfiles = requestObject => {
           return Promise.resolve(new ResponseObject(requestObject, {
             hits: [{_id: 'test'}],
             total: 1
           }));
         };
-        kuzzle.repositories.profile.deleteFromDatabase = requestObject => {
+        kuzzle.repositories.profile.deleteProfile = requestObject => {
           return Promise.resolve(new ResponseObject(requestObject, {_id: 'test'}));
         };
 
@@ -87,7 +87,7 @@ describe('Test: security controller - profiles', function () {
       });
   });
 
-  it('should return response with an array of profiles on searchProfile call', done => {
+  it('should return a ResponseObject containing an array of profiles on searchProfile call', done => {
     kuzzle.funnel.security.searchProfiles(new RequestObject({
         body: {}
       }))
