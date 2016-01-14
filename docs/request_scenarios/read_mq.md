@@ -133,4 +133,4 @@ Sample response content:
 ## Related pages
 
 * [Architecture overview](../architecture.md)
-* [API Specifications](../api-specifications.md)
+* [API Specifications](../README.md#api-specifications)

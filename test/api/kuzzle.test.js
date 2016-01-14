@@ -131,6 +131,134 @@ describe('Test kuzzle constructor', function () {
   });
 
   describe('#prepareDb', () => {
+    it('should create indexes when a valid mappings file is set', function (done) {
 
+      var
+        hasListedIndexes = false,
+        hasCreatedIndex = false,
+        hasPutMapping = false;
+
+      process.env.LIKE_A_VIRGIN = 1;
+      process.env.DEFAULT_MAPPING = '/var/app/features/fixtures/functionalTestsMappings.json';
+      delete process.env.FIXTURES;
+      kuzzle.isServer = true;
+      kuzzle.pluginsManager = {
+        trigger: function(event, data) {
+          should(event).be.equalOneOf('preparedb:done', 'preparedb:start', 'preparedb:error', 'log:info', 'log:error');
+        }
+      };
+
+      kuzzle.services.list = {
+        readEngine: {},
+        writeEngine: {}
+      };
+
+      kuzzle.services.list.readEngine.listIndexes = function() {
+        hasListedIndexes = true;
+        return Promise.resolve({data: {body: {indexes: [] } } });
+      };
+
+      kuzzle.services.list.writeEngine.createIndex = function() {
+        hasCreatedIndex = true;
+        return Promise.resolve();
+      };
+
+      kuzzle.services.list.writeEngine.putMapping = function() {
+        hasPutMapping = true;
+        return Promise.resolve();
+      };
+
+      kuzzle.prepareDb()
+        .then(() => {
+          should(hasListedIndexes).be.exactly(true);
+          should(hasCreatedIndex).be.exactly(true);
+          should(hasPutMapping).be.exactly(true);
+          done();
+        })
+        .catch(error => done(error));
+    });
+
+    it('should create indexes when a valid fixtures file is set', function (done) {
+
+      var
+        hasListedIndexes = false,
+        hasCreatedIndex = false,
+        hasImportedFixtures = false;
+
+      process.env.LIKE_A_VIRGIN = 1;
+      process.env.FIXTURES = '/var/app/features/fixtures/functionalTestsFixtures.json';
+      delete process.env.DEFAULT_MAPPING;
+      kuzzle.isServer = true;
+      kuzzle.services.list = {
+        readEngine: {},
+        writeEngine: {}
+      };
+
+      kuzzle.services.list.readEngine.listIndexes = function() {
+        hasListedIndexes = true;
+        return Promise.resolve({data: {body: {indexes: [] } } });
+      };
+
+      kuzzle.services.list.writeEngine.createIndex = function() {
+        hasCreatedIndex = true;
+        return Promise.resolve();
+      };
+
+      kuzzle.services.list.writeEngine.import = function() {
+        hasImportedFixtures = true;
+        return Promise.resolve();
+      };
+
+      kuzzle.prepareDb()
+        .then(() => {
+          should(hasListedIndexes).be.exactly(true);
+          should(hasCreatedIndex).be.exactly(true);
+          should(hasImportedFixtures).be.exactly(true);
+          done();
+        })
+        .catch(error => done(error));
+    });
+
+    it('should do nothing when no default mappings nor fixtures are set', function (done) {
+
+      var
+        hasListedIndexes = false;
+
+      process.env.LIKE_A_VIRGIN = 1;
+      delete process.env.FIXTURES;
+      delete process.env.DEFAULT_MAPPING;
+      kuzzle.isServer = true;
+      kuzzle.services.list = {
+        readEngine: {},
+        writeEngine: {}
+      };
+
+      kuzzle.services.list.readEngine.listIndexes = function() {
+        hasListedIndexes = true;
+        return Promise.resolve({data: {body: {indexes: [] } } });
+      };
+
+      kuzzle.prepareDb()
+        .then(() => {
+          should(hasListedIndexes).be.exactly(true);
+          done();
+        })
+        .catch(error => done(error));
+    });
+
+    it('should do nothing when we are in a worker', function (done) {
+
+      process.env.LIKE_A_VIRGIN = 1;
+      process.env.FIXTURES = '/var/app/features/fixtures/functionalTestsFixtures.json';
+      delete process.env.DEFAULT_MAPPING;
+      kuzzle.isServer = false;
+
+      kuzzle.prepareDb()
+        .then(() => {
+          done();
+        })
+        .catch(error => done(error));
+    });
   });
+
 });
