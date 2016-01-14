@@ -53,11 +53,13 @@ Sample message: (**note that _persist = true_**)
 }
 ```
 
-\#2b. The router then subscribes a listener to the task queue to notify the client about his request status
-
 \#3. The ```Funnel Controller``` validates the message and forward the request to the ```Write Controller```
 
-\#4. \#5. The Write Hook intercepts the request and sends it to the internal broker. (see [Hooks Readme](../../lib/hooks/README.md) for more details about hooks)
+\#4. The ```Write Controller``` triggers the ```Plugins Manager``` with a "data:create" event.<br/>
+The ```Plugins Manager``` calls all pipes and hooks configured by the active plugins (see [Plugin's documentation](../plugins.md)), and finally trigger the "add" event of the ```Write Hook```.<br/>
+The ```Write Hook``` sends the request to the ```Internal Broker```. (see [Hooks Readme](../../lib/hooks/README.md) for more details about hooks).
+
+\#5. The ```Write Controller``` asks the ```Worker Listener``` to listen to the ```Internal Broker```'s feedback message.
 
 That way Kuzzle parallelizes the processing of writing contents.
 
@@ -73,35 +75,31 @@ Detailed workflow:
 
 \#6. A ```Write Worker``` is notified by the internal broker about a new write request.
 
-\#7. The worker calls the ```writeEngine service```
+\#7. The worker calls the ```Write Engine``` service.
 
-\#8. The ```writeEngine service``` performs an HTTP Rest request to send the data to the data storage
+\#8. The ```Write Engine``` service performs an HTTP Rest request to send the data to the data storage.
 
 \#9. Callback functions are triggered to transmit the response message back to the ```Write Worker```
 
-\#10. The worker sends the feedback message from ElasticSearch to the input task queue (see \#2b).
+\#10. The worker sends the feedback message from ElasticSearch to the input task queue (see \#5b).
 
-\#11. The worker also sends a notification message to the internal broker, to notify subscribing clients, if any (see step 3 below).
+\#11. The worker also sends a notification message to the internal broker, to notify subscribing clients, if any (see [Pub/Sub scenario for realtime data](pubsub.md)).
 
-## 3rd step: Send feedback and notify pub/sub clients
+## 3rd step: Send feedback
 
 Involved components overview:
 
 ![persistence_overview3](../images/kuzzle_persistence_scenario_overview3.png)
 
-Detailed workflow, with another client who has subscribed to a room and who will be notified about this new document (see [Pub/Sub scenario for realtime data](pubsub.md) for more details about subscribtions):
+Detailed workflow:
 
 ![persistence_scenario_details3](../images/kuzzle_persistence_scenario_details3.png)
 
-\#12. The listener that the ```Router Controller``` registered in step 2b receive a notification from the write worker...
+\#12. The ```Worker Listener``` that the ```Write Controller``` registered in step 5a. receive a notification from the ```Internal Broker```...
 
-\#13. ... and forward it back to the client.
+\#13. ... and forward it back to the ```Router Controller```...
 
-\#14. The ```Notifier``` core component is informed about the new content.
-
-\#15. The ```Notifier``` component calculates the filtered rooms related to this content, and calls the Notification Cache service to store the content/roomId relationship
-
-\#16. The ```Notifier``` component notifies the subscribing clients, either directly through Websocket, and/or via the MQ Broker.
+\#14. ... which sends a feedback to the client.
 
 
 ## Related pages
