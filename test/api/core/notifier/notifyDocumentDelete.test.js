@@ -43,7 +43,8 @@ describe('Test: notifier.notifyDocumentDelete', function () {
       body: { foo: 'bar' }
     }),
     responseObject = new ResponseObject(requestObject, { _id: 'Sir Isaac Newton is the deadliest son-of-a-bitch in space' }),
-    notified = 0;
+    notified = 0,
+    savedResponse;
 
   before(function (done) {
     kuzzle = new Kuzzle();
@@ -53,6 +54,7 @@ describe('Test: notifier.notifyDocumentDelete', function () {
         kuzzle.notifier.notify = function (rooms, msg) {
           should(msg).match(responseObject.toJson(['body']));
           notified++;
+          savedResponse = msg;
         };
         done();
       });
@@ -113,6 +115,10 @@ describe('Test: notifier.notifyDocumentDelete', function () {
       .then (function () {
         should(notified).be.exactly(1);
         should(mockupCacheService.id).be.exactly(responseObject.data.body._id);
+
+        should(savedResponse.scope).be.exactly('out');
+        should(savedResponse.action).be.exactly('delete');
+
         done();
       })
       .catch (function (e) {

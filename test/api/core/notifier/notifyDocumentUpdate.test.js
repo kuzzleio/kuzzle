@@ -77,7 +77,8 @@ describe('Test: notifier.notifyDocumentUpdate', function () {
       body: { foo: 'bar' }
     }),
     responseObject = new ResponseObject(requestObject, { _id: 'Sir Isaac Newton is the deadliest son-of-a-bitch in space' }),
-    notified = 0;
+    notified = 0,
+    savedResponse;
 
   before(function (done) {
     kuzzle = new Kuzzle();
@@ -86,9 +87,13 @@ describe('Test: notifier.notifyDocumentUpdate', function () {
         kuzzle.services.list.notificationCache = mockupCacheService;
         kuzzle.services.list.readEngine = mockupReadEngine;
         kuzzle.dsl.testFilters = mockupTestFilters;
-        kuzzle.notifier.notify = function (rooms) {
+        kuzzle.notifier.notify = function (rooms, response) {
           if (rooms.length > 0) {
             notified++;
+          }
+
+          if (rooms.length !== 0) {
+            savedResponse = response;
           }
         };
         done();
@@ -121,6 +126,10 @@ describe('Test: notifier.notifyDocumentUpdate', function () {
         should(mockupCacheService.room).be.an.Array();
         should(mockupCacheService.room[0]).be.exactly('foobar');
         should(mockupCacheService.removeId).be.undefined();
+
+        should(savedResponse.scope).be.exactly('in');
+        should(savedResponse.action).be.exactly('update');
+
         done();
       })
       .catch (function (e) {
@@ -140,6 +149,10 @@ describe('Test: notifier.notifyDocumentUpdate', function () {
         should(mockupCacheService.addId).be.undefined();
         should(mockupCacheService.room).be.undefined();
         should(mockupCacheService.removeId).be.exactly(responseObject.data.body._id);
+
+        should(savedResponse.scope).be.exactly('out');
+        should(savedResponse.action).be.exactly('update');
+
         done();
       })
       .catch (function (e) {
