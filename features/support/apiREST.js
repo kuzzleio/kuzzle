@@ -55,12 +55,23 @@ ApiREST.prototype.count = function (filters, index) {
   return this.callApi(options);
 };
 
-ApiREST.prototype.create = function (body, index) {
+ApiREST.prototype.create = function (body, index, collection, jwtToken) {
   var options = {
-    url: this.apiPath(((typeof index !== 'string') ? this.world.fakeIndex : index) + '/' + this.world.fakeCollection + '/_create'),
+    url: this.apiPath(
+      ((typeof index !== 'string') ? this.world.fakeIndex : index) +
+      '/' +
+      ((typeof collection !== 'string') ? this.world.fakeCollection : collection) +
+      '/_create'
+    ),
     method: 'POST',
     json: body
   };
+
+  if (Boolean(jwtToken)) {
+    options.headers = {
+      authorization: 'Bearer ' + jwtToken
+    };
+  }
 
   return this.callApi(options);
 };
@@ -276,5 +287,33 @@ ApiREST.prototype.getServerInfo = function () {
       return res;
     });
 };
+
+ApiREST.prototype.login = function (strategy, credentials) {
+  var options = {
+    url: this.apiPath('_login'),
+    method: 'POST',
+    json: {
+      strategy: strategy,
+      username: credentials.username,
+      password: credentials.password
+    }
+  };
+
+  return this.callApi(options);
+};
+
+ApiREST.prototype.logout = function (jwtToken) {
+  var options = {
+    url: this.apiPath('_logout'),
+    method: 'GET',
+    json: {},
+    headers: {
+      authorization: 'Bearer ' + jwtToken
+    }
+  };
+
+  return this.callApi(options);
+};
+
 
 module.exports = ApiREST;
