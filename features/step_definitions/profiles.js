@@ -29,7 +29,7 @@ var apiSteps = function () {
           return true;
         }
 
-        callback(new Error("Creating profile with unexisting role succeeded. Expected to throw."));
+        callback(new Error('Creating profile with unexisting role succeeded. Expected to throw.'));
       }.bind(this))
       .catch(function (error) {
         callback();
@@ -44,7 +44,7 @@ var apiSteps = function () {
           return true;
         }
 
-        callback(new Error("Creating profile without roles succeeded. Expected to throw."));
+        callback(new Error('Creating profile without roles succeeded. Expected to throw.'));
       }.bind(this))
       .catch(function (error) {
         callback();
@@ -59,11 +59,11 @@ var apiSteps = function () {
           return true;
         }
 
-        callback(new Error("Getting profile without id succeeded. Expected to throw."));
+        callback(new Error('Getting profile without id succeeded. Expected to throw.'));
       })
       .catch(error => {
         callback();
-      })
+      });
   });
 
 
@@ -139,8 +139,9 @@ var apiSteps = function () {
       },
       main;
 
-    if (roleId)
+    if (roleId) {
       body.roles.push(roleId);
+    }
 
     main = function (callbackAsync) {
       setTimeout(() => {

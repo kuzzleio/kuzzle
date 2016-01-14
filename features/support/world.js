@@ -112,6 +112,6 @@ module.exports = function () {
       emptyProfile: {
         roles: []
       }
-    }
+    };
   };
 };
