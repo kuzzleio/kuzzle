@@ -49,7 +49,7 @@ Sample Javascript code :
 ```
 
 
-\#2. The ```Websocket router``` interprets the input request and tranfer the subscription message to the ```Funnel Controller```.
+\#2. The ```Websocket router``` interprets the input request and transfer the subscription message to the ```Funnel Controller```.
 
 Sample message:
 ```json
@@ -130,4 +130,4 @@ Sample message: (**note that _persist = false_**)
 ## Related pages
 
 * [Architecture overview](../architecture.md)
-* [API Specifications](../api-specifications.md)
+* [API Specifications](../README.md#api-specifications)
