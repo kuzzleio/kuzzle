@@ -179,17 +179,6 @@ describe('Test: repositories/profileRepository', function () {
         .be.rejectedWith(BadRequestError);
     });
 
-    it('should reject when no roles are provided', () => {
-      var invalidProfileObject = new RequestObject({
-        body: {
-          _id: 'daPimp'
-        }
-      });
-
-      should(profileRepository.buildProfileFromRequestObject(invalidProfileObject))
-        .be.rejectedWith(BadRequestError);
-    });
-
     it('should resolve to a valid Profile when a valid object is provided', () => {
       var validProfileObject = new RequestObject({
         body: testProfilePlain
