@@ -39,14 +39,15 @@ describe('Test: notifier.notifyDocumentCreate', function () {
       body: { term: { foo: 'bar' } }
     }),
     responseObject = new ResponseObject(requestObject, { _id: 'WhoYouGonnaCall?'}),
-    notifiedRooms;
+    notifiedRooms,
+    savedResponse;
 
   before(function (done) {
     kuzzle = new Kuzzle();
     kuzzle.start(params, {dummy: true})
       .then(function () {
         kuzzle.services.list.notificationCache = mockupCacheService;
-        kuzzle.notifier.notify = function (rooms) { notifiedRooms = rooms; };
+        kuzzle.notifier.notify = function (rooms, response) { notifiedRooms = rooms; savedResponse = response; };
         done();
       });
   });
@@ -58,7 +59,7 @@ describe('Test: notifier.notifyDocumentCreate', function () {
     return should(result).be.fulfilled();
   });
 
-  it('should notify registered users when a document has been created', function (done) {
+  it('should notify registered users when a document has been created with correct attributes', function (done) {
     (Notifier.__get__('notifyDocumentCreate')).call(kuzzle, responseObject)
       .then(function () {
         should(notifiedRooms).be.an.Array();
@@ -67,6 +68,10 @@ describe('Test: notifier.notifyDocumentCreate', function () {
         should(mockupCacheService.id).be.exactly(responseObject.data.body._id);
         should(mockupCacheService.room).be.an.Array();
         should(mockupCacheService.room[0]).be.exactly('foobar');
+
+        should(savedResponse.scope).be.exactly('in');
+        should(savedResponse.action).be.exactly('create');
+
         done();
       })
       .catch (function (e) {
