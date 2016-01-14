@@ -12,6 +12,7 @@ kuzzle:
     - redis
   environment:
     - LIKE_A_VIRGIN=1
+    - DEFAULT_MAPPING
     - FIXTURES=/var/app/features/fixtures/functionalTestsFixtures.json
     - MQ_BROKER_ENABLED=1
     - FEATURE_COVERAGE=1
