@@ -11,10 +11,10 @@ The following diagram shows how request data is exchanged between the client app
 
 ![read_scenario_broker_details](../images/kuzzle_read_scenario_mq_details.png)
 
-\#0. On startup, Kuzzle subscribes each of his controller to the default ```amq.topic``` exchange (see details in [API Specifications](../api-specifications.md)).
+\#1a. \#1b. The client application sends a message to a topic (MQTT), an ```amq.topic``` routing key (AMQP) or an ```amq.topic``` destination (STOMP).
+The topic/routing key/destination name describes the message action: ```read.<collection>.<action (get|search|count)>```
 
-\#1a. \#1b. The client application sends a message to a topic (MQTT), an ```amq.topic``` routing key (AMQP) or an ```amq.topic``` destination (STOMP). The topic/routing key/destination name describes the message action:
-```read.<collection>.<action (get|search|count)>```
+(see details in [API Specifications](../api-specifications.md)).
 
 A MQTT client wishing to get responses back from Kuzzle must add a ```mqttClientId``` field to his message, and to subscribe to the ```mqtt.<mqttClientId>``` topic.
 
@@ -33,10 +33,7 @@ content-type:application/json
 ^@
 ```
 
-\#1c. The broker notifies the MQ Listener with the incoming message
-
-
-\#2. The MQListener handles the input message and forward it to the ```Funnel Controller```.
+\#2. The MQ plugin handles the input message and forward it to the ```Funnel Controller```.
 
 Sample message:
 
@@ -78,7 +75,7 @@ Sample content retrieval from Elasticsearch:
 }
 ```
 
-\#6. \#7. \#8. Callback functions are triggered to transmit the response message back to the MQ Listener
+\#6. \#7. \#8. Callback functions are triggered to transmit the response message back to the MQ plugin
 
 Sample content exchanged during callback excecution:
 ```json
@@ -103,9 +100,8 @@ Sample content exchanged during callback excecution:
   }
 }
 ```
-\#9. The MQ Listener sends message to the "replyTo" temporary queue to the broker (or to the temporary ```mqtt.<mqttClientId>``` topic for MQTT clients)
 
-\#10. The broker notifies the client with the response content.
+\#9. The MQ plugin notifies the client with the response content.
 
 Sample response content:
 
