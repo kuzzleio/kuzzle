@@ -1,6 +1,12 @@
+var
+  rc = require('rc');
+
 module.exports = function () {
   this.World = function World () {
     this.api = null;
+    this.kuzzleConfig = rc('kuzzle');
+
+    this.currentUser = null;
 
     // Fake values for test
     this.fakeIndex = 'index-test';
@@ -30,22 +36,22 @@ module.exports = function () {
       hobby: 'computer'
     };
     this.bulk = [
-      { index:  {_id: 1 } },
-      { title: 'foo' },
-      { index:  {_id: 2 } },
-      { title: 'bar' },
-      { update: {_id: 1 } },
-      { doc: { title: 'foobar' } },
-      { delete: {_id: 2 } }
+      {index: {_id: 1}},
+      {title: 'foo'},
+      {index: {_id: 2}},
+      {title: 'bar'},
+      {update: {_id: 1}},
+      {doc: {title: 'foobar'}},
+      {delete: {_id: 2}}
     ];
     this.globalBulk = [
-      { index:  {_id: 1, _type: this.fakeCollection, _index: this.fakeIndex } },
-      { title: 'foo' },
-      { index:  {_id: 2, _type: this.fakeCollection, _index: this.fakeIndex } },
-      { title: 'bar' },
-      { update: {_id: 1, _type: this.fakeCollection, _index: this.fakeIndex } },
-      { doc: { title: 'foobar' } },
-      { delete: {_id: 2, _type: this.fakeCollection, _index: this.fakeIndex } }
+      {index: {_id: 1, _type: this.fakeCollection, _index: this.fakeIndex}},
+      {title: 'foo'},
+      {index: {_id: 2, _type: this.fakeCollection, _index: this.fakeIndex}},
+      {title: 'bar'},
+      {update: {_id: 1, _type: this.fakeCollection, _index: this.fakeIndex}},
+      {doc: {title: 'foobar'}},
+      {delete: {_id: 2, _type: this.fakeCollection, _index: this.fakeIndex}}
     ];
 
     this.schema = {
@@ -112,6 +118,33 @@ module.exports = function () {
       emptyProfile: {
         roles: []
       }
-    }
+    };
+
+    this.users = {
+      user1: {
+        name: {
+          first: 'David',
+          last: 'Bowie',
+          real: 'David Robert Jones'
+        },
+        profile: 'admin'
+      },
+      user2: {
+        name: {
+          first: 'Steve',
+          last: 'Wozniak'
+        },
+        hobby: 'Segway Polo',
+        profile: 'profile2'
+      },
+      unexistingprofile: {
+        name: 'John Doe',
+        profile: 'i-dont-exist'
+      },
+      invalidprofileType: {
+        name: 'John Doe',
+        profile: null
+      }
+    };
   };
 };

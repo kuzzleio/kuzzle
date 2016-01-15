@@ -216,7 +216,7 @@ ApiREST.prototype.now = function () {
 
 ApiREST.prototype.truncateCollection = function (index, collection) {
   var options = {
-    url: this.apiPath(((typeof index !== 'string') ? this.world.fakeIndex : index) + '/' + this.world.fakeCollection + '/_truncate'),
+    url: this.apiPath(((typeof index !== 'string') ? this.world.fakeIndex : index) + '/' + (collection || this.world.fakeCollection) + '/_truncate'),
     method: 'DELETE',
     json: true
   };
@@ -320,7 +320,7 @@ ApiREST.prototype.deleteRole = function (id) {
 
 ApiREST.prototype.putProfile = function (id, body) {
   var options = {
-    url: this.pathApi('profiles/' + id),
+    url: this.apiPath('profiles/' + id),
     method: 'PUT',
     json: body
   };
@@ -330,7 +330,7 @@ ApiREST.prototype.putProfile = function (id, body) {
 
 ApiREST.prototype.getProfile = function (id) {
   var options = {
-    url: this.pathApi('profiles/' + id),
+    url: this.apiPath('profiles/' + id),
     method: 'GET',
     json: true
   };
@@ -340,7 +340,7 @@ ApiREST.prototype.getProfile = function (id) {
 
 ApiREST.prototype.searchProfiles = function (body) {
   var options = {
-    url: this.pathApi('profiles/_search'),
+    url: this.apiPath('profiles/_search'),
     method: 'POST',
     json: body
   };
@@ -350,7 +350,7 @@ ApiREST.prototype.searchProfiles = function (body) {
 
 ApiREST.prototype.deleteProfile = function (id) {
   var options = {
-    url: this.pathApi('profiles/' + id),
+    url: this.apiPath('profiles/' + id),
     method: 'DELETE',
     json: true
   };
@@ -358,5 +358,46 @@ ApiREST.prototype.deleteProfile = function (id) {
   return this.callApi(options);
 };
 
+ApiREST.prototype.getUser = function (id) {
+  var options = {
+    url: this.apiPath('users/' + id),
+    method: 'GET',
+    json: true
+  };
+
+  return this.callApi(options);
+};
+
+ApiREST.prototype.getCurrentUser = function () {
+  return this.callApi({
+    url: this.apiPath('users/me'),
+    method: 'GET',
+    json: true
+  });
+};
+
+ApiREST.prototype.searchUsers = function (body) {
+  return this.callApi({
+    url: this.apiPath('users/_search'),
+    method: 'POST',
+    json: body
+  });
+};
+
+ApiREST.prototype.deleteUser = function (id) {
+  return this.callApi({
+    url: this.apiPath('users/' + id),
+    method: 'DELETE',
+    json: true
+  });
+};
+
+ApiREST.prototype.putUser = function (id, body) {
+  return this.callApi({
+    url: this.apiPath('users/' + id),
+    method: 'PUT',
+    json: body
+  });
+};
 
 module.exports = ApiREST;

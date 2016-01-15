@@ -29,7 +29,7 @@ var apiSteps = function () {
           return true;
         }
 
-        callback(new Error("Creating profile with unexisting role succeeded. Expected to throw."));
+        callback(new Error('Creating profile with unexisting role succeeded. Expected to throw.'));
       }.bind(this))
       .catch(function (error) {
         callback();
@@ -44,7 +44,7 @@ var apiSteps = function () {
           return true;
         }
 
-        callback(new Error("Creating profile without roles succeeded. Expected to throw."));
+        callback(new Error('Creating profile without roles succeeded. Expected to throw.'));
       }.bind(this))
       .catch(function (error) {
         callback();
@@ -59,15 +59,15 @@ var apiSteps = function () {
           return true;
         }
 
-        callback(new Error("Getting profile without id succeeded. Expected to throw."));
+        callback(new Error('Getting profile without id succeeded. Expected to throw.'));
       })
       .catch(error => {
         callback();
-      })
+      });
   });
 
 
-  this.Then(/^I'm ?(not)* able to find the profile with id "([^"]*)"(?: with profile "([^"]*)")?$/, function (not, id, profile, callback) {
+  this.Then(/^I'm ?(not)* able to find the profile with id "([^"]*)"(?: with profile "([^"]*)")?$/, {timeout: 20 * 1000}, function (not, id, profile, callback) {
     var
       index,
       main;
@@ -92,7 +92,7 @@ var apiSteps = function () {
               return callbackAsync('No result provided');
             }
 
-            if (!body.result._source.roles) {
+            if (!body.result.roles) {
               if (not) {
                 return callbackAsync();
               }
@@ -133,14 +133,15 @@ var apiSteps = function () {
       });
   });
 
-  this.Then(/^I'm able to find "([^"]*)" profiles(?: containing the role with id "([^"]*)")?$/, {timeout: 20 * 1000}, function (profilesCount, roleId, callback) {
+  this.Then(/^I'm able to find "([\d]*)" profiles(?: containing the role with id "([^"]*)")?$/, function (profilesCount, roleId, callback) {
     var body = {
         roles: []
       },
       main;
 
-    if (roleId)
+    if (roleId) {
       body.roles.push(roleId);
+    }
 
     main = function (callbackAsync) {
       setTimeout(() => {
@@ -157,18 +158,13 @@ var apiSteps = function () {
             return false;
           }
 
-          if (!response.result._source) {
-            callbackAsync(new Error('Malformed response (no error, no _source)'));
+          if (!Array.isArray(response.result.hits)) {
+            callbackAsync(new Error('Malformed response (hits is not an array)'));
             return false;
           }
 
-          if (!Array.isArray(response.result._source)) {
-            callbackAsync(new Error('Malformed response (_source is not an array)'));
-            return false;
-          }
-
-          if (response.result._source.length != parseInt(profilesCount)) {
-            callbackAsync(new Error('Expected ' + profilesCount + ' profiles. Got ' + response.result._source.length));
+          if (response.result.hits.length !== parseInt(profilesCount)) {
+            callbackAsync(new Error('Expected ' + profilesCount + ' profiles. Got ' + response.result.hits.length));
             return false;
           }
 
@@ -177,7 +173,7 @@ var apiSteps = function () {
         .catch(function (error) {
           callbackAsync(error);
         });
-      }, 2000);
+      }, 200);
     };
 
     async.retry(20, main.bind(this), function (err) {

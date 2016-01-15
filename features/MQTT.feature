@@ -229,19 +229,19 @@ Feature: Test MQTT API
     And I delete the role with id "test"
     Then I'm not able to find a role with id "test"
 
-  @usingMQTT
+  @usingMQTT @cleanSecurity
   Scenario: create an invalid profile with unexisting role triggers an error
     Then I cannot create an invalid profile
 
-  @usingMQTT
+  @usingMQTT @cleanSecurity
   Scenario: get profile without id triggers an error
     Then I cannot a profile without ID
 
-  @usingMQTT
+  @usingMQTT @cleanSecurity
   Scenario: creating a profile with an empty set of roles triggers an error
     Then I cannot create a profile with an empty set of roles
 
-  @usingMQTT
+  @usingMQTT @cleanSecurity
   Scenario: create, get and delete a profile
     Given I create a new role "role1" with id "role1"
     And I create a new role "role2" with id "role2"
@@ -250,7 +250,7 @@ Feature: Test MQTT API
     Given I delete the profile with id "my-new-profile"
     Then I'm not able to find the profile with id "my-new-profile"
 
-  @usingMQTT
+  @usingMQTT @cleanSecurity
   Scenario: search and update profiles
     Given I create a new profile "profile1" with id "my-profile-1"
     And I create a new profile "profile3" with id "my-profile-2"
