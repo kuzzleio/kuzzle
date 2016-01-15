@@ -106,24 +106,6 @@ describe('Test: routerController.executeFromRest', function () {
     should(mockupResponse.response.error.message).startWith('Invalid request content-type');
   });
 
-  it('should reject requests when a GET is done on _search', function () {
-    var
-      params = { action: 'get', controller: 'read', id: '_search' },
-      data = {_body: true, headers: {'content-type': 'application/json'}, body: {resolve: true}, params: {collection: 'foobar', index: '%test', id: '_search'}};
-
-    mockupResponse.init();
-    executeFromRest.call(kuzzle, params, data, mockupResponse);
-
-    should(mockupResponse.statusCode).be.exactly(400);
-    should(mockupResponse.header['Content-Type']).not.be.undefined();
-    should(mockupResponse.header['Content-Type']).be.exactly('application/json');
-    should(mockupResponse.response.result).be.null();
-    should(mockupResponse.response.status).be.exactly(400);
-    should(mockupResponse.response.error).not.be.null();
-    should(mockupResponse.response.error.message).not.be.null();
-    should(mockupResponse.response.error.message).startWith('The action _search can\'t be done with a GET');
-  });
-
   it('should respond with a HTTP 200 message in case of success', function (done) {
     var
       params = { action: 'create', controller: 'write' },

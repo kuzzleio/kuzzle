@@ -4,6 +4,7 @@ var
   params = require('rc')('kuzzle'),
   Config = require.main.require('lib/config'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
+  BadRequestError = require.main.require('lib/api/core/errors/badRequestError.js'),
   ES = rewire('../../../lib/services/elasticsearch');
 
 
@@ -235,6 +236,17 @@ describe('Test: ElasticSearch service', function () {
           done();
         })
         .catch(error => done(error));
+    });
+
+    it('should reject requests when the user search for a document with id _search', function () {
+      elasticsearch.client.get = function (data) {
+        should(data.id).be.exactly(createdDocumentId);
+
+        return Promise.resolve({});
+      };
+
+      requestObject.data._id = '_search';
+      return should(elasticsearch.get(requestObject)).be.rejectedWith(BadRequestError);
     });
   });
 
