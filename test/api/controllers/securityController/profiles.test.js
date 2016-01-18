@@ -34,7 +34,15 @@ describe('Test: security controller - profiles', function () {
         };
         kuzzle.repositories.profile.searchProfiles = requestObject => {
           return Promise.resolve(new ResponseObject(requestObject, {
-            hits: [{_id: 'test'}],
+            hits: [{
+              _id: 'test',
+              roles: [
+                {
+                  _id: 'role1',
+                  indexes: {}
+                }
+              ]
+            }],
             total: 1
           }));
         };
@@ -90,6 +98,27 @@ describe('Test: security controller - profiles', function () {
   it('should return a ResponseObject containing an array of profiles on searchProfile call', done => {
     kuzzle.funnel.security.searchProfiles(new RequestObject({
         body: {}
+      }))
+      .then(result => {
+        var jsonResponse = result.toJson();
+
+        should(result).be.an.instanceOf(ResponseObject);
+        should(jsonResponse.result.hits).be.an.Array();
+        should(jsonResponse.result.hits[0]._id).be.exactly('test');
+
+        done();
+      })
+      .catch(error => {
+        done(error);
+      });
+  });
+
+  it('should return a ResponseObject containing an array of profiles on searchProfile call with hydrate', done => {
+    kuzzle.funnel.security.searchProfiles(new RequestObject({
+        body: {
+          roles: ['role1'],
+          hydrate: true
+        }
       }))
       .then(result => {
         var jsonResponse = result.toJson();
