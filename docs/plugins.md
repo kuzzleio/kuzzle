@@ -159,7 +159,7 @@ module.exports = {
 
 ```js
 // Plugin implementation
-module.exports = function ()
+module.exports = function () {
   this.hooks = require('./config/hooks.js');
   this.init = function (config, context, isDummy) {
     // do something
