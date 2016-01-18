@@ -2,7 +2,6 @@ var
   config = require('./config')(),
   rp = require('request-promise'),
   apiVersion = require('../../package.json').apiVersion;
-  apiVersion = '1.0';
 
 var ApiREST = function () {
   this.world = null;
