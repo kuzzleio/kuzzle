@@ -48,8 +48,9 @@ var myHooks = function () {
       _id: 'test',
       profile: 'admin',
       password: 'e413c46b3736f45ae10c648db95449925b76ca95'
-    }, 'user', '%kuzzle');
-    callback();
+    }, '%kuzzle', 'users').then(function() {
+      callback();
+    });
   });
 
   this.After(function (scenario, callback) {
