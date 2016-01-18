@@ -2,7 +2,6 @@ var
   jwt = require('jsonwebtoken'),
   q = require('q'),
   should = require('should'),
-  rewire = require('rewire'),
   params = require('rc')('kuzzle'),
   kuzzle = {
     repositories: {},
@@ -11,6 +10,7 @@ var
     },
     config: require.main.require('lib/config')(params)
   },
+  context = {connection: {id: 'papagayo'}},
   InternalError = require.main.require('lib/api/core/errors/internalError'),
   UnauthorizedError = require.main.require('lib/api/core/errors/unauthorizedError'),
   Profile = require.main.require('lib/api/core/models/security/profile'),
@@ -19,7 +19,6 @@ var
   Role = require.main.require('lib/api/core/models/security/role'),
   Repository = require.main.require('lib/api/core/models/repositories/repository'),
   TokenRepository = require.main.require('lib/api/core/models/repositories/tokenRepository')(kuzzle),
-  TokenRepositoryRewired = rewire('../../../../../lib/api/core/models/repositories/tokenRepository'),
   tokenRepository;
 
 beforeEach(function (done) {
@@ -124,6 +123,15 @@ beforeEach(function (done) {
   kuzzle.repositories = {};
   kuzzle.repositories.profile = mockProfileRepository;
   kuzzle.repositories.user = mockUserRepository;
+
+
+  kuzzle.hotelClerk = {
+    tokenizedConnectionsController: {
+      add: function (token, context) {},
+      expire: function (token) {},
+      checkTokensValidity: function () {}
+    }
+  };
 
   done();
 });
@@ -307,11 +315,15 @@ describe('Test: repositories/tokenRepository', function () {
       return should(tokenRepository.generateToken(null)).be.rejectedWith(InternalError);
     });
 
+    it('should reject the promise if the context is null', function () {
+      return should(tokenRepository.generateToken(new User(), null)).be.rejectedWith(InternalError);
+    });
+
     it('should reject the promise if an error occurred while generating the token', () => {
 
       kuzzle.config.jsonWebToken.algorithm = 'fake JWT ALgorithm';
 
-      return should(tokenRepository.generateToken(new User())
+      return should(tokenRepository.generateToken(new User(), context)
         .catch(err => {
           kuzzle.config.jsonWebToken.algorithm = params.jsonWebToken.algorithm;
 
@@ -329,7 +341,7 @@ describe('Test: repositories/tokenRepository', function () {
 
       user._id = 'userInCache';
 
-      tokenRepository.generateToken(user)
+      tokenRepository.generateToken(user, context)
         .then(function (token) {
           should(token).be.an.instanceOf(Token);
           should(token._id).be.exactly(checkToken);
@@ -351,7 +363,7 @@ describe('Test: repositories/tokenRepository', function () {
 
       user._id = 'userInCache';
 
-      tokenRepository.generateToken(user)
+      tokenRepository.generateToken(user, context)
         .catch(function (error) {
           should(error).be.an.instanceOf(InternalError);
           should(error.message).be.exactly('Error while saving token');
@@ -365,7 +377,7 @@ describe('Test: repositories/tokenRepository', function () {
 
       user._id = 'userInCache';
 
-      tokenRepository.generateToken(user, {expiresIn: 'toto'})
+      tokenRepository.generateToken(user, context, {expiresIn: 'toto'})
         .catch(function (error) {
           should(error).be.an.instanceOf(InternalError);
           should(error.message).be.exactly('Error while generating token');
@@ -401,11 +413,34 @@ describe('Test: repositories/tokenRepository', function () {
 
       user._id = 'userInCache';
 
-      tokenRepository.generateToken(user)
+      tokenRepository.generateToken(user, context)
         .then(function (token) {
           return tokenRepository.expire(token);
         })
         .then(() => {
+          done();
+        })
+        .catch(function (error) {
+          done(error);
+        });
+    });
+
+    it('should expire token in TokenizedConnectionsController', (done) => {
+      var
+        tokenizedConnectionsControllerExpired = false,
+        user = new User();
+
+      kuzzle.hotelClerk.tokenizedConnectionsController.expire = function () {
+        tokenizedConnectionsControllerExpired = true;
+      };
+      user._id = 'userInCache';
+
+      tokenRepository.generateToken(user, context)
+        .then(function (token) {
+          return tokenRepository.expire(token);
+        })
+        .then(() => {
+          should(tokenizedConnectionsControllerExpired).be.exactly(true);
           done();
         })
         .catch(function (error) {
@@ -423,7 +458,7 @@ describe('Test: repositories/tokenRepository', function () {
 
       user._id = 'userInCache';
 
-      tokenRepository.generateToken(user)
+      tokenRepository.generateToken(user, context)
         .then(function (token) {
           return tokenRepository.expire(token);
         })

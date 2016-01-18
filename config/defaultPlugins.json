@@ -11,7 +11,7 @@
     }
   },
   "kuzzle-plugin-socketio": {
-    "version": "1.0.4",
+    "version": "1.0.5",
     "activated": true,
     "name": "kuzzle-plugin-socketio",
     "defaultConfig": {
@@ -21,7 +21,7 @@
     }
   },
   "kuzzle-plugin-auth-passport-local": {
-    "url": "git+https://github.com/kuzzleio/kuzzle-plugin-auth-passport-local.git",
+    "version": "1.1.0",
     "activated": true,
     "name": "kuzzle-plugin-auth-passport-local",
     "defaultConfig": {
