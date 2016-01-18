@@ -72,7 +72,7 @@ var apiSteps = function () {
       });
   });
 
-  this.Then(/^I truncate the collection(?: "(.*?)")(?: in index "([^"]*)")?$/, function (collection, index, callback) {
+  this.Then(/^I truncate the collection(?: "(.*?)")?(?: in index "([^"]*)")?$/, function (collection, index, callback) {
     this.api.truncateCollection(index, collection)
       .then(body => {
         if (body.error !== null) {

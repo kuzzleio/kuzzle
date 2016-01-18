@@ -1,8 +1,8 @@
 var
+  _ = require('lodash'),
   config = require('./config')(),
   rp = require('request-promise'),
   apiVersion = require('../../package.json').apiVersion;
-  apiVersion = '1.0';
 
 var ApiREST = function () {
   this.world = null;
@@ -23,6 +23,13 @@ ApiREST.prototype.apiBasePath = function (path) {
 };
 
 ApiREST.prototype.callApi = function (options) {
+  if (this.world.currentUser && this.world.currentUser.token) {
+    if (!options.headers) {
+      options.headers = {};
+    }
+    options.headers = _.extend(options.headers, {authorization: 'Bearer ' + this.world.currentUser.token});
+  }
+
   return rp(options);
 };
 

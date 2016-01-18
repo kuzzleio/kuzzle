@@ -265,7 +265,7 @@ Feature: Test websocket API
     Then I'm able to find "2" profiles
     Then I'm able to find "2" profiles containing the role with id "role1"
 
-  @usingWebsocket
+  @usingWebsocket @cleanSecurity
   Scenario: user crudl
     And I create a new role "role1" with id "role1"
     And I create a new role "role2" with id "role2"
