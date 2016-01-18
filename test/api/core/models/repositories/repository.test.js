@@ -49,10 +49,10 @@ describe('Test: repositories/repository', function () {
 
       return Promise.resolve(null);
     },
-    set: (key, value) => { forwardedObject = {op: 'set', key: key, value: JSON.parse(value)}; },
-    volatileSet: (key, value, ttl) => { forwardedObject = {op: 'volatileSet', key: key, value: JSON.parse(value), ttl: ttl }; },
-    expire: (key, ttl) => { forwardedObject = {op: 'expire', key: key, ttl: ttl}; },
-    persist: key => { forwardedObject = {op: 'persist', key: key}; }
+    set: (key, value) => { forwardedObject = {op: 'set', key: key, value: JSON.parse(value)}; return Promise.resolve('OK'); },
+    volatileSet: (key, value, ttl) => { forwardedObject = {op: 'volatileSet', key: key, value: JSON.parse(value), ttl: ttl }; return Promise.resolve('OK'); },
+    expire: (key, ttl) => { forwardedObject = {op: 'expire', key: key, ttl: ttl}; return Promise.resolve('OK'); },
+    persist: key => { forwardedObject = {op: 'persist', key: key}; return Promise.resolve('OK'); }
   };
   mockReadEngine = {
     get: function (requestObject, forward) {
@@ -118,6 +118,9 @@ describe('Test: repositories/repository', function () {
   mockWriteEngine = {
     createOrUpdate: function (o) {
       forwardedObject = o;
+    },
+    delete: requestObject => {
+      return Promise.resolve(new ResponseObject(requestObject));
     }
   };
 
@@ -366,6 +369,17 @@ describe('Test: repositories/repository', function () {
 
       should(forwardedObject).be.an.instanceOf(RequestObject);
       should(forwardedObject.data.body).be.eql(persistedObject);
+    });
+  });
+
+  describe('#deleteFromDatabase', () => {
+    it('should respond with a ResponseObject', done => {
+      repository.deleteFromDatabase('test')
+        .then(response => {
+          should(response).be.an.instanceOf(ResponseObject);
+          done();
+        })
+        .catch(error => { done(error); });
     });
   });
 

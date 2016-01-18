@@ -18,7 +18,8 @@ var
   User = require.main.require('lib/api/core/models/security/user'),
   Repository = require.main.require('lib/api/core/models/repositories/repository'),
   UserRepository = require.main.require('lib/api/core/models/repositories/userRepository')(kuzzle),
-  userRepository;
+  userRepository,
+  userInvalidProfile;
 
 before(function (done) {
   var
@@ -39,8 +40,8 @@ before(function (done) {
       }
       return Promise.resolve(null);
     },
-    volatileSet: function (key, value, ttl) { forwardedResult = {key: key, value: JSON.parse(value), ttl: ttl }; },
-    expire: function (key, ttl) { forwardedResult = {key: key, ttl: ttl}; }
+    volatileSet: function (key, value, ttl) { forwardedResult = {key: key, value: JSON.parse(value), ttl: ttl }; return Promise.resolve('OK'); },
+    expire: function (key, ttl) { forwardedResult = {key: key, ttl: ttl}; return Promise.resolve('OK'); }
   };
   mockReadEngine = {
     get: function (requestObject) {
@@ -52,10 +53,14 @@ before(function (done) {
     }
   };
   mockWriteEngine = {
-    createOrUpdate: requestObject => {  }
+    createOrUpdate: requestObject => { return Promise.resolve(new ResponseObject(requestObject, {})); }
   };
   mockProfileRepository = {
     loadProfile: function (profileKey) {
+      if (profileKey === 'notfound') {
+        return Promise.resolve(null);
+      }
+
       var profile = new Profile();
       profile._id = profileKey;
       return Promise.resolve(profile);
@@ -71,6 +76,10 @@ before(function (done) {
     _id: 'userInDB',
     name: 'Debbie Jones',
     profile: 'userindbprofile'
+  };
+  userInvalidProfile = {
+    _id: 'userInvalidProfile',
+    profile: 'notfound'
   };
 
   userRepository = new UserRepository();
@@ -170,6 +179,40 @@ describe('Test: repositories/userRepository', function () {
 
           return Promise.reject(err);
         })).be.rejectedWith(InternalError);
+    });
+
+    it('should reject the promise if the profile cannot be found', () => {
+      var user = new User();
+
+      return should(userRepository.hydrate(user, userInvalidProfile))
+        .be.rejectedWith(InternalError);
+
+    });
+  });
+
+  describe('#load', function () {
+    it('should return the anonymous user when the anonymous or -1 id is given', done => {
+      q.all([
+        userRepository.load(-1),
+        userRepository.load('anonymous')
+      ])
+        .then(users => {
+          users.every(user => { assertIsAnonymous(user); });
+
+          done();
+        })
+        .catch(error => { done(error); });
+    });
+
+    it('should return the admin user when the admin id is given', done => {
+      userRepository.load('admin')
+        .then(user => {
+          should(user).be.an.instanceOf(User);
+          should(user._id).be.exactly('admin');
+
+          done();
+        })
+        .catch(error => { done(error); });
     });
   });
 
@@ -419,7 +462,6 @@ describe('Test: repositories/userRepository', function () {
 
       should(user._id).not.be.empty();
       should(user._id).match(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
-
     });
   });
 

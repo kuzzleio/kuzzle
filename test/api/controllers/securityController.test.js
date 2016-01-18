@@ -1,12 +1,9 @@
 var
   should = require('should'),
-  winston = require('winston'),
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
   ResponseObject = require.main.require('lib/api/core/models/responseObject');
-
-require('should-promised');
 
 describe('Test: security controller', function () {
   var
@@ -14,7 +11,6 @@ describe('Test: security controller', function () {
 
   before(function (done) {
     kuzzle = new Kuzzle();
-    kuzzle.log = new (winston.Logger)({transports: [new (winston.transports.Console)({level: 'silent'})]});
     kuzzle.start(params, {dummy: true})
       .then(function () {
         kuzzle.repositories.role.validateAndSaveRole = role => {
