@@ -246,7 +246,7 @@ describe('Test: repositories/roleRepository', function () {
 
       return roleRepository.searchRole(new RequestObject({body: {from: 1, size: 3, hydrate: false}}))
         .then(() => {
-          should(savedFilter).be.eql({or: []});
+          should(savedFilter).be.eql({});
           should(savedFrom).be.eql(1);
           should(savedSize).be.eql(3);
           should(savedHydrate).be.false();
