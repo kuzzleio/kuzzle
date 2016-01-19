@@ -43,16 +43,6 @@ var myHooks = function () {
     callback();
   });
 
-  this.Before('@createTestUser', function (scenario, callback) {
-    this.api.createOrUpdate({
-      _id: 'test',
-      profile: 'admin',
-      password: 'e413c46b3736f45ae10c648db95449925b76ca95'
-    }, '%kuzzle', 'users').then(function() {
-      callback();
-    });
-  });
-
   this.After(function (scenario, callback) {
     this.api.deleteCollection()
       .then(function () {

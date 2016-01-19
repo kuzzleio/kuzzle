@@ -219,7 +219,7 @@ Feature: Test AMQP API
     Then I'm not able to find the index named "my-undefined-index" in index list
     Then I'm able to delete the index named "my-new-index"
 
-  @usingAMQP @createTestUser
+  @usingAMQP
   Scenario: login user
     When I send a login request with test:testpwd user
     Then I write the document with auth token

@@ -85,7 +85,6 @@ describe('Test kuzzle constructor', function () {
 
       kuzzle.pluginsManager = {
         trigger: function(event, data) {
-          console.log('??', event, data);
           should(event).be.exactly('cleanDb:error');
           should(data).be.exactly('Oops... something really bad happened during reset...');
 
