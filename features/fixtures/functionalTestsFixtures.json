@@ -15,6 +15,7 @@
     "users": [
       { "create": { "_id": "test" } },
       {
+        "_id": "test",
         "profile": "admin",
         "password": "e413c46b3736f45ae10c648db95449925b76ca95"
       }
