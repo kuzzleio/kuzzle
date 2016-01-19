@@ -25,7 +25,7 @@
     "activated": true,
     "name": "kuzzle-plugin-auth-passport-local",
     "defaultConfig": {
-      "secret": "jbsB8r69PFP39KdLtjVr25Z22",
+      "secret": "changeme",
       "algorithm": "sha1",
       "digest": "hex"
     }
