@@ -162,7 +162,7 @@ describe('Test: repositories/profileRepository', function () {
 
           should(result).not.be.an.instanceOf(Profile);
           should(result).be.an.Object();
-          should(result._id).be.exactly('testprofile');
+          should(profile._id).be.exactly('testprofile');
           should(result.roles).be.an.Array();
           should(result.roles).have.length(1);
           should(result.roles[0]).be.exactly('test');
