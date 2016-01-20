@@ -74,8 +74,7 @@ var myHooks = function () {
       .then(() => {
         return this.api.createIndex('%kuzzle');
       })
-      .then(() => callback())
-      .catch(() => callback());
+      .finally(() => callback());
   });
 };
 
