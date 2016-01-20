@@ -71,12 +71,11 @@ var myHooks = function () {
 
   this.Before('@cleanSecurity', function (scenario, callback) {
     this.api.deleteIndex('%kuzzle')
-      .then(function () {
-        callback();
-      }.bind(this))
-      .catch(function () {
-        callback();
-      });
+      .then(() => {
+        return this.api.createIndex('%kuzzle');
+      })
+      .then(() => callback())
+      .catch(() => callback());
   });
 };
 
