@@ -409,4 +409,49 @@ ApiRT.prototype.logout = function(jwtToken) {
   return this.send(msg);
 };
 
+ApiRT.prototype.putRole = function (id, body) {
+  var
+    msg = {
+      controller: 'security',
+      action: 'putRole',
+      _id: id,
+      body: body
+    };
+
+  return this.send(msg);
+};
+
+ApiRT.prototype.getRole = function (id) {
+  var
+    msg = {
+      controller: 'security',
+      action: 'getRole',
+      _id: id
+    };
+
+  return this.send(msg);
+};
+
+ApiRT.prototype.searchRoles = function (body) {
+  var
+    msg = {
+      controller: 'security',
+      action: 'searchRoles',
+      body: body
+    };
+
+  return this.send(msg);
+};
+
+ApiRT.prototype.deleteRole = function (id) {
+  var
+    msg = {
+      controller: 'security',
+      action: 'deleteRole',
+      _id: id
+    };
+
+  return this.send(msg);
+};
+
 module.exports = ApiRT;

@@ -219,6 +219,16 @@ Feature: Test AMQP API
     Then I'm not able to find the index named "my-undefined-index" in index list
     Then I'm able to delete the index named "my-new-index"
 
+  @usingAMQP @cleanSecurity
+  Scenario: Create/get/search/update/delete role
+    When I create a new role "role1" with id "test"
+    Then I'm able to find a role with id "test"
+    And I update the role with id "test" with role "role2"
+    Then I'm able to find a role with id "test" with role "role2"
+    Then I'm able to find "1" role by searching index corresponding to role "role2"
+    And I delete the role with id "test"
+    Then I'm not able to find a role with id "test"
+
   @usingAMQP
   Scenario: login user
     When I send a login request with test:testpwd user

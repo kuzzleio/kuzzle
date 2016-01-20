@@ -110,6 +110,9 @@ describe('Test: repositories/repository', function () {
 
           return Promise.resolve(result);
         });
+    },
+    search: function (requestObject) {
+      return Promise.resolve(new ResponseObject(requestObject, {hits: [{_id: 'role'}]}));
     }
   };
   mockWriteEngine = {
@@ -433,6 +436,23 @@ describe('Test: repositories/repository', function () {
   describe('#serializeToDatabase', () => {
     it('should return the same object', () => {
       should(repository.serializeToDatabase(persistedObject)).be.exactly(persistedObject);
+    });
+  });
+
+  describe('#search', function () {
+    it('should return a list from database', function (done) {
+      repository.search({}, 0, 10, false)
+        .then(response => {
+          should(response.data.body.hits).be.an.Array();
+          done();
+        });
+    });
+    it('should construct role if hydrate is true', function (done) {
+      repository.search({}, 0, 10, true)
+        .then(response => {
+          should(response.data.body.hits).be.an.Array();
+          done();
+        });
     });
   });
 });
