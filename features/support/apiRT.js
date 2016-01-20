@@ -454,4 +454,61 @@ ApiRT.prototype.deleteRole = function (id) {
   return this.send(msg);
 };
 
+ApiRT.prototype.putRole = function (id, body) {
+  var
+    msg = {
+      controller: 'security',
+      action: 'putRole',
+      _id: id,
+      body: body
+    };
+
+  return this.send(msg);
+};
+
+ApiRT.prototype.getProfile = function (id) {
+  var
+    msg = {
+      controller: 'security',
+      action: 'getProfile',
+      _id: id
+    };
+
+  return this.send(msg);
+};
+
+ApiRT.prototype.putProfile = function (id, body) {
+  var
+    msg = {
+      controller: 'security',
+      action: 'putProfile',
+      _id: id,
+      body: body
+    };
+
+  return this.send(msg);
+};
+
+ApiRT.prototype.searchProfiles = function (body) {
+  var
+    msg = {
+      controller: 'security',
+      action: 'searchProfiles',
+      body: body
+    };
+
+  return this.send(msg);
+};
+
+ApiRT.prototype.deleteProfile = function (id) {
+  var
+    msg = {
+      controller: 'security',
+      action: 'deleteProfile',
+      _id: id
+    };
+
+  return this.send(msg);
+};
+
 module.exports = ApiRT;
