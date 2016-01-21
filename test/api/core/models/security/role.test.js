@@ -3,7 +3,8 @@ var
   rewire = require('rewire'),
   BadRequestError = require.main.require('lib/api/core/errors/badRequestError'),
   InternalError = require.main.require('lib/api/core/errors/internalError'),
-  Role = rewire('../../../../../lib/api/core/models/security/role');
+  Role = rewire('../../../../../lib/api/core/models/security/role'),
+  internalIndex = require('rc')('kuzzle').internalIndex;
 
 describe('Test: security/roleTest', function () {
   var
@@ -84,7 +85,7 @@ describe('Test: security/roleTest', function () {
       should(role.isActionAllowed(requestObject, context)).be.true();
     });
 
-    it('should allow an wildcard action', function () {
+    it('should allow a wildcard action', function () {
       var role = new Role();
       role.indexes = {
         '*': {
@@ -103,6 +104,62 @@ describe('Test: security/roleTest', function () {
       };
 
       should(role.isActionAllowed(requestObject, context)).be.true();
+    });
+
+    it('should not allow security actions when the internal index is not set explicitly', function () {
+      var
+        role = new Role(),
+        rq = {
+          controller: 'security',
+          action: 'some security action'
+        };
+
+      role.indexes = {
+        '*': {
+          collections: {
+            '*': {
+              controllers: {
+                '*': {
+                  actions: {
+                    '*': true
+                  }
+                }
+              }
+            }
+          }
+        }
+      };
+
+      should(role.isActionAllowed(rq, context)).be.false();
+    });
+
+    it('should not allow any action on the internal index if no role has been explicitly set on it', function () {
+      var
+        role = new Role(),
+        rq = {
+          index: internalIndex,
+          collection: 'collection',
+          controller: 'controller',
+          action: 'action'
+        };
+
+      role.indexes = {
+        '*': {
+          collections: {
+            '*': {
+              controllers: {
+                '*': {
+                  actions: {
+                    '*': true
+                  }
+                }
+              }
+            }
+          }
+        }
+      };
+
+      should(role.isActionAllowed(rq, context)).be.false();
     });
 
     it('should properly handle overridden permissions', function () {
