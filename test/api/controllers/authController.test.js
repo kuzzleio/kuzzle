@@ -175,10 +175,15 @@ describe('Test the auth controller', function () {
         });
     });
 
-    it('should reject if authentication failure', function () {
+    it('should reject if authentication failure', function (done) {
       this.timeout(50);
       kuzzle.funnel.auth.passport = new MockupWrapper('reject');
-      return should(kuzzle.funnel.auth.login(requestObject)).be.rejectedWith('Mockup Wrapper Error');
+      kuzzle.funnel.auth.login(requestObject)
+        .catch((error) => {
+          should(error).be.an.instanceOf(ResponseObject);
+          should(error.error.message).be.exactly('Mockup Wrapper Error');
+          done();
+        });
     });
   });
   describe('#logout', function () {
