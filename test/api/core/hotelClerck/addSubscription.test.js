@@ -1,5 +1,6 @@
 var
   should = require('should'),
+  q = require('q'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
   InternalError = require.main.require('lib/api/core/errors/internalError'),
   BadRequestError = require.main.require('lib/api/core/errors/badRequestError'),
@@ -264,7 +265,7 @@ describe('Test: hotelClerk.addSubscription', function () {
         should(result).be.an.instanceOf(RealTimeResponseObject);
         should(result).have.property('roomId');
 
-        return Promise.resolve(result.roomId);
+        return q(result.roomId);
       })
       .then(id => {
         var requestObject2 = new RequestObject({

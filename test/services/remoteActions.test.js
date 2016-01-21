@@ -1,6 +1,7 @@
 var
   should = require('should'),
   rewire = require('rewire'),
+  q = require('q'),
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   RemoteActions = rewire('../../lib/services/remoteActions');
@@ -108,7 +109,7 @@ describe('Testing: Remote Actions service', function () {
     kuzzle.services.list.mockupService = {
       toggle: function (flag) {
         enabled = flag;
-        return Promise.resolve('Enabled: ' + flag.toString());
+        return q('Enabled: ' + flag.toString());
       }
     };
 
@@ -143,7 +144,7 @@ describe('Testing: Remote Actions service', function () {
   it('should forward to kuzzle a failed result if togging the service fails', function (done) {
     kuzzle.services.list.mockupService = {
       toggle: function () {
-        return Promise.reject(new Error('rejected'));
+        return q.reject(new Error('rejected'));
       }
     };
 

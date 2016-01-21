@@ -1,5 +1,6 @@
 var
   should = require('should'),
+  q = require('q'),
   rewire = require('rewire'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
   params = require('rc')('kuzzle'),
@@ -181,7 +182,7 @@ describe('Test: dsl.testFilters', function () {
     });
 
     Dsl.__with__({
-      testFieldFilters: function () { return Promise.reject(new Error('rejected')); }
+      testFieldFilters: function () { return q.reject(new Error('rejected')); }
     })(function () {
       var dsl = new Dsl(kuzzle);
       dsl.filtersTree[requestObjectCreateGrace.index] = {};
@@ -204,7 +205,7 @@ describe('Test: dsl.testFilters', function () {
     });
 
     Dsl.__with__({
-      testGlobalsFilters: function () { return Promise.reject(new Error('rejected')); }
+      testGlobalsFilters: function () { return q.reject(new Error('rejected')); }
     })(function () {
       var dsl = new Dsl(kuzzle);
       dsl.filtersTree[requestObjectCreateGrace.index] = {};

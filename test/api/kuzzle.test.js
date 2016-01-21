@@ -1,5 +1,6 @@
 var
   rc = require('rc'),
+  q = require('q'),
   should = require('should'),
   Kuzzle = require.main.require('lib/api/Kuzzle');
 
@@ -53,12 +54,12 @@ describe('Test kuzzle constructor', function () {
 
       kuzzle.services.list.writeEngine.deleteIndexes = function() {
         hasDeletedIndexes = true;
-        return Promise.resolve();
+        return q();
       };
 
       kuzzle.services.list.writeEngine.createIndex = function() {
         hasCreatedIndex = true;
-        return Promise.resolve();
+        return q();
       };
 
       kuzzle.cleanDb()
@@ -86,12 +87,12 @@ describe('Test kuzzle constructor', function () {
       };
 
       kuzzle.services.list.writeEngine.deleteIndexes = function() {
-        return Promise.reject();
+        return q.reject();
       };
 
 
       kuzzle.services.list.writeEngine.createIndex = function() {
-        return Promise.reject();
+        return q.reject();
       };
 
       should(kuzzle.cleanDb()).be.fulfilled();
@@ -111,12 +112,12 @@ describe('Test kuzzle constructor', function () {
 
       kuzzle.services.list.writeEngine.deleteIndexes = function() {
         hasDeletedIndexes = true;
-        return Promise.reject();
+        return q.reject();
       };
 
       kuzzle.services.list.writeEngine.createIndex = function() {
         hasCreatedIndex = true;
-        return Promise.reject();
+        return q.reject();
       };
 
 
@@ -155,17 +156,17 @@ describe('Test kuzzle constructor', function () {
 
       kuzzle.services.list.readEngine.listIndexes = function() {
         hasListedIndexes = true;
-        return Promise.resolve({data: {body: {indexes: [] } } });
+        return q({data: {body: {indexes: [] } } });
       };
 
       kuzzle.services.list.writeEngine.createIndex = function() {
         hasCreatedIndex = true;
-        return Promise.resolve();
+        return q();
       };
 
       kuzzle.services.list.writeEngine.putMapping = function() {
         hasPutMapping = true;
-        return Promise.resolve();
+        return q();
       };
 
       kuzzle.prepareDb()
@@ -196,17 +197,17 @@ describe('Test kuzzle constructor', function () {
 
       kuzzle.services.list.readEngine.listIndexes = function() {
         hasListedIndexes = true;
-        return Promise.resolve({data: {body: {indexes: [] } } });
+        return q({data: {body: {indexes: [] } } });
       };
 
       kuzzle.services.list.writeEngine.createIndex = function() {
         hasCreatedIndex = true;
-        return Promise.resolve();
+        return q();
       };
 
       kuzzle.services.list.writeEngine.import = function() {
         hasImportedFixtures = true;
-        return Promise.resolve();
+        return q();
       };
 
       kuzzle.prepareDb()
@@ -235,7 +236,7 @@ describe('Test kuzzle constructor', function () {
 
       kuzzle.services.list.readEngine.listIndexes = function() {
         hasListedIndexes = true;
-        return Promise.resolve({data: {body: {indexes: [] } } });
+        return q({data: {body: {indexes: [] } } });
       };
 
       kuzzle.prepareDb()
