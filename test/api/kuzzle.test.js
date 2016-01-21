@@ -1,5 +1,6 @@
 var
   rc = require('rc'),
+  params = require('rc')('kuzzle'),
   should = require('should'),
   Kuzzle = require.main.require('lib/api/Kuzzle');
 
@@ -9,6 +10,7 @@ describe('Test kuzzle constructor', function () {
 
   before(function () {
     kuzzle = new Kuzzle();
+    return kuzzle.start(params, {dummy: true});
   });
 
   it('should construct a kuzzle object', function () {

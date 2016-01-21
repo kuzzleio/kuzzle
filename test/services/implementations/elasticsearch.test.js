@@ -7,9 +7,6 @@ var
   BadRequestError = require.main.require('lib/api/core/errors/badRequestError.js'),
   ES = rewire('../../../lib/services/elasticsearch');
 
-
-
-
 describe('Test: ElasticSearch service', function () {
   var
     kuzzle = {
@@ -1011,7 +1008,7 @@ describe('Test: ElasticSearch service', function () {
     it('should return a rejected promise if the reset fails while deleting all indexes', function () {
       elasticsearch.client.indices.getMapping = function (data) {
         var indexes = {};
-        indexes['%kuzzle'] = [];
+        indexes[kuzzle.config.internalIndex] = [];
         indexes[index] = [];
         return Promise.resolve(indexes);
       };
@@ -1022,10 +1019,10 @@ describe('Test: ElasticSearch service', function () {
       return should(elasticsearch.deleteIndexes(requestObject)).be.rejected();
     });
 
-    it('should not delete any index if only left %kuzzle internal index', function () {
+    it('should not delete any index if only the internal index exists', function () {
       elasticsearch.client.indices.getMapping = function (data) {
         var indexes = {};
-        indexes['%kuzzle'] = [];
+        indexes[kuzzle.config.internalIndex] = [];
         return Promise.resolve(indexes);
       };
       elasticsearch.client.indices.delete = function () {
