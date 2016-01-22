@@ -99,21 +99,21 @@ See [full documentation](docs/README.md)
 
 ## Updating kuzzle's containers
 
-When you already have installed an old version of kuzzle, don't forget to update kuzzle's containers with :
+When you already have installed an old version of kuzzle, don't forget to update kuzzle's containers with:
 
 ```
-    $ docker-compose -f docker-compose/test.yml pull 
+    $ docker-compose -f <docker-compose-file.yml> pull 
 ```
 
 ## Updating kuzzle's dependencies 
 
-To ensure if your kuzzle's dependencies are updated, go into kuzzle's containers and run :
+To ensure that Kuzzle's dependencies are up-to-date, go into a Kuzzle container and run:
 
 ```
-    (host)      $ docker exec -ti dockercompose_kuzzle_1 bash
+    (host)      $ docker exec -ti <docker-compose-file.yml> bash
     (container) $ npm install
+    (container) $ bin/kuzzle.js install
 ```
-
 
 # Acknowledgement
 
