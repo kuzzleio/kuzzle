@@ -203,7 +203,7 @@ describe('Test: routerController.initRouterHttp', function () {
     request.end();
   });
 
-  it('should create a route for createOrUpdate actions', function (done) {
+  it('should create a route for createOrReplace actions', function (done) {
     var request;
 
     options.method = 'PUT';
@@ -214,7 +214,7 @@ describe('Test: routerController.initRouterHttp', function () {
         .then(function (result) {
           should(response.statusCode).be.exactly(200);
           should(result.controller).be.exactly('write');
-          should(result.action).be.exactly('createOrUpdate');
+          should(result.action).be.exactly('createOrReplace');
           done();
         })
         .catch(function (error) {
@@ -352,7 +352,7 @@ describe('Test: routerController.initRouterHttp', function () {
         .then(function (result) {
           should(response.statusCode).be.exactly(200);
           should(result.controller).be.exactly('admin');
-          should(result.action).be.exactly('putMapping');
+          should(result.action).be.exactly('createOrReplaceMapping');
           done();
         })
         .catch(function (error) {
@@ -479,18 +479,18 @@ describe('Test: routerController.initRouterHttp', function () {
     request.end();
   });
 
-  it('should create a route for createOrUpdate actions using alternative path', function (done) {
+  it('should create a route for createOrReplace actions using alternative path', function (done) {
     var request;
 
     options.method = 'PUT';
-    options.path= path + '/index/collection/documentID/_createOrUpdate';
+    options.path= path + '/index/collection/documentID/_createOrReplace';
 
     request = http.request(options, function (response) {
       parseHttpResponse(response)
         .then(function (result) {
           should(response.statusCode).be.exactly(200);
           should(result.controller).be.exactly('write');
-          should(result.action).be.exactly('createOrUpdate');
+          should(result.action).be.exactly('createOrReplace');
           done();
         })
         .catch(function (error) {

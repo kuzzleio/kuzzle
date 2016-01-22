@@ -163,7 +163,7 @@ describe('Test kuzzle constructor', function () {
         return Promise.resolve();
       };
 
-      kuzzle.services.list.writeEngine.putMapping = function() {
+      kuzzle.services.list.writeEngine.createOrReplaceMapping = function() {
         hasPutMapping = true;
         return Promise.resolve();
       };

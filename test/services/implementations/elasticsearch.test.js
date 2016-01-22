@@ -171,8 +171,8 @@ describe('Test: ElasticSearch service', function () {
     });
   });
 
-  describe('#createOrUpdate', function () {
-    it('should support createOrUpdate capability', function (done) {
+  describe('#createOrReplace', function () {
+    it('should support createOrReplace capability', function (done) {
       var ret;
 
       kuzzle.indexes = {};
@@ -187,7 +187,7 @@ describe('Test: ElasticSearch service', function () {
       };
 
       requestObject.data._id = createdDocumentId;
-      ret = elasticsearch.createOrUpdate(requestObject);
+      ret = elasticsearch.createOrReplace(requestObject);
 
       should(ret).be.a.Promise();
 
@@ -199,7 +199,7 @@ describe('Test: ElasticSearch service', function () {
         .catch(error => done(error));
     });
 
-    it('should reject the createOrUpdate promise if elasticsearch throws an error', function () {
+    it('should reject the createOrReplace promise if elasticsearch throws an error', function () {
       var ret;
 
       elasticsearch.client.index = function (data) {
@@ -207,7 +207,7 @@ describe('Test: ElasticSearch service', function () {
       };
 
       requestObject.data._id = createdDocumentId;
-      ret = elasticsearch.createOrUpdate(requestObject);
+      ret = elasticsearch.createOrReplace(requestObject);
 
       return should(ret).be.rejected();
     });
@@ -667,7 +667,7 @@ describe('Test: ElasticSearch service', function () {
     });
   });
 
-  describe('#putMapping', function () {
+  describe('#createOrReplaceMapping', function () {
     it('should have mapping capabilities', function () {
       requestObject.data.body = {
         properties: {
@@ -680,7 +680,7 @@ describe('Test: ElasticSearch service', function () {
         return Promise.resolve({});
       };
 
-      return should(elasticsearch.putMapping(requestObject)).be.fulfilled();
+      return should(elasticsearch.createOrReplaceMapping(requestObject)).be.fulfilled();
     });
 
     it('should reject bad mapping input', function () {
@@ -691,7 +691,7 @@ describe('Test: ElasticSearch service', function () {
         return Promise.reject({});
       };
 
-      return should(elasticsearch.putMapping(requestObject)).be.rejected();
+      return should(elasticsearch.createOrReplaceMapping(requestObject)).be.rejected();
     });
   });
 

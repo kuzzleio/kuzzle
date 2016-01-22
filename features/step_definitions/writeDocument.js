@@ -25,12 +25,12 @@ var apiSteps = function () {
       });
   });
 
-  this.When(/^I createOrUpdate it$/, function (callback) {
+  this.When(/^I createOrReplace it$/, function (callback) {
     var document = JSON.parse(JSON.stringify(this.documentGrace));
 
     document._id = this.result._id;
 
-    this.api.createOrUpdate(document)
+    this.api.createOrReplace(document)
       .then(function (body) {
         if (body.error) {
           callback(new Error(body.error.message));

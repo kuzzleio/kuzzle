@@ -75,7 +75,7 @@ ApiREST.prototype.publish = function (body, index) {
   return this.callApi(options);
 };
 
-ApiREST.prototype.createOrUpdate = function (body, index) {
+ApiREST.prototype.createOrReplace = function (body, index) {
   var options = {
     url: this.apiPath(((typeof index !== 'string') ? this.world.fakeIndex : index) + '/' + this.world.fakeCollection + '/' + body._id),
     method: 'PUT',
@@ -145,7 +145,7 @@ ApiREST.prototype.globalBulkImport = function (bulk) {
   return this.callApi(options);
 };
 
-ApiREST.prototype.putMapping = function (index) {
+ApiREST.prototype.createOrReplaceMapping = function (index) {
   var options = {
     url: this.apiPath(((typeof index !== 'string') ? this.world.fakeIndex : index) + '/' + this.world.fakeCollection + '/_mapping'),
     method: 'PUT',
@@ -277,7 +277,7 @@ ApiREST.prototype.getServerInfo = function () {
     });
 };
 
-ApiREST.prototype.putRole = function (id, body) {
+ApiREST.prototype.createOrReplaceRole = function (id, body) {
   var options = {
     url: this.apiPath('roles/' + id),
     method: 'PUT',
@@ -317,7 +317,7 @@ ApiREST.prototype.deleteRole = function (id) {
   return this.callApi(options);
 };
 
-ApiREST.prototype.putProfile = function (id, body) {
+ApiREST.prototype.createOrReplaceProfile = function (id, body) {
   var options = {
     url: this.apiPath('profiles/' + id),
     method: 'PUT',

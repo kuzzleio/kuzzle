@@ -49,7 +49,7 @@ describe('Test: admin controller', function () {
   it('should activate a hook on a put mapping call', function (done) {
     this.timeout(50);
 
-    kuzzle.once('data:putMapping', function (obj) {
+    kuzzle.once('data:createOrReplaceMapping', function (obj) {
       try {
         should(obj).be.exactly(requestObject);
         done();
@@ -59,7 +59,7 @@ describe('Test: admin controller', function () {
       }
     });
 
-    kuzzle.funnel.admin.putMapping(requestObject)
+    kuzzle.funnel.admin.createOrReplaceMapping(requestObject)
       .catch(function (error) {
         done(error);
       });

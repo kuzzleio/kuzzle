@@ -116,7 +116,7 @@ describe('Test: repositories/repository', function () {
     }
   };
   mockWriteEngine = {
-    createOrUpdate: function (o) {
+    createOrReplace: function (o) {
       forwardedObject = o;
     }
   };
