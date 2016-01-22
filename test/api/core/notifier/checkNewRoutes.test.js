@@ -59,7 +59,8 @@ describe('Test: notifier.checkNewRoutes', function () {
       mockupAction = function (responseObject) {
         performedActions.push(responseObject.action);
         return Promise.resolve({});
-      };
+      },
+      action;
 
     this.timeout(100);
 
@@ -68,7 +69,7 @@ describe('Test: notifier.checkNewRoutes', function () {
       notifyDocumentUpdate: mockupAction,
       notifyDocumentDelete: mockupAction
     })(function () {
-      for (var action in kuzzle.services.list.readEngine) {
+      for (action in kuzzle.services.list.readEngine) {
         if (kuzzle.services.list.readEngine.hasOwnProperty(action) && typeof kuzzle.services.list.readEngine[action] === 'function') {
           knownActions.push(action);
           responseObject.action = action;

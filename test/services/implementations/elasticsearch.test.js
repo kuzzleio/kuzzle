@@ -8,8 +8,6 @@ var
   ES = rewire('../../../lib/services/elasticsearch');
 
 
-
-
 describe('Test: ElasticSearch service', function () {
   var
     kuzzle = {

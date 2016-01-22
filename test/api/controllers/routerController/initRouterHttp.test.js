@@ -64,9 +64,10 @@ describe('Test: routerController.initRouterHttp', function () {
    * the answer is correctly constructed.
    */
   before(function (done) {
+    var mockResponse;
     kuzzle = new Kuzzle();
 
-    var mockResponse = function (params, request, response) {
+    mockResponse = function (params, request, response) {
       if (!params.action) {
         params.action = request.params.action;
       }
@@ -768,6 +769,7 @@ describe('Test: routerController.initRouterHttp', function () {
   });
 
   it('should create a POST route for plugin controller', function (done) {
+    var request;
     options.method = 'POST';
     options.path= path + '/_plugin/myplugin/bar';
 

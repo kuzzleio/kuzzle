@@ -15,7 +15,9 @@ describe('Test: repositories/repository', function () {
     ObjectConstructor,
     mockCacheEngine,
     mockReadEngine,
-    mockWriteEngine;
+    mockWriteEngine,
+    cachedObject,
+    uncachedObject;
 
   ObjectConstructor = function () {
     this.type = 'testObject';
