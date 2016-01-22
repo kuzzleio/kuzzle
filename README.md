@@ -95,9 +95,30 @@ See [contributing documentation](./CONTRIBUTING.md)
 See [full documentation](docs/README.md)
 
 
+# Usefully tips
+
+## Updating kuzzle's containers
+
+When you have already installed an old version of kuzzle, don't forget to update kuzzle's containers with :
+
+```
+    $ docker-compose -f docker-compose/test.yml pull 
+```
+
+## Updating kuzzle's dependencies 
+
+To ensure if your kuzzle's dependencies are updated, go into kuzzle's containers and run :
+
+```
+    (host)      $ docker exec -ti dockercompose_kuzzle_1 bash
+    (container) $ npm install
+```
+
+
 # Acknowledgement
 
 Thanks to [Sails](https://github.com/balderdashy/sails) project for a good Node.js infrastructure example.
+
 
 # License
 
