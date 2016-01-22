@@ -95,11 +95,11 @@ See [contributing documentation](./CONTRIBUTING.md)
 See [full documentation](docs/README.md)
 
 
-# Usefully tips
+# Useful tips
 
 ## Updating kuzzle's containers
 
-When you have already installed an old version of kuzzle, don't forget to update kuzzle's containers with :
+When you already have installed an old version of kuzzle, don't forget to update kuzzle's containers with :
 
 ```
     $ docker-compose -f docker-compose/test.yml pull 
