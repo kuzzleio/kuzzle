@@ -34,7 +34,7 @@ describe('Test: repositories/roleRepository', function () {
     persistedObject1,
     persistedObject2,
     mockReadEngine,
-    mockWriteEngine,
+    mockWriteLayer,
     roleRepository;
 
   ObjectConstructor = function () {
@@ -81,7 +81,7 @@ describe('Test: repositories/roleRepository', function () {
     }
   };
 
-  mockWriteEngine = {
+  mockWriteLayer = {
     execute: function (requestObject) {
       forwardedObject = requestObject;
       return Promise.resolve(new ResponseObject(requestObject, {}));
@@ -91,7 +91,7 @@ describe('Test: repositories/roleRepository', function () {
   before(function () {
     roleRepository = new RoleRepository();
     roleRepository.readEngine = mockReadEngine;
-    roleRepository.writeEngine = mockWriteEngine;
+    roleRepository.writeLayer = mockWriteLayer;
   });
 
   beforeEach(function () {

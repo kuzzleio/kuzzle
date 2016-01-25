@@ -26,7 +26,7 @@ before(function (done) {
     encryptedPassword = '5c4ec74fd64bb57c05b4948f3a7e9c7d450f069a',
     mockCacheEngine,
     mockReadEngine,
-    mockWriteEngine,
+    mockWriteLayer,
     mockProfileRepository,
     userInCache,
     userInDB,
@@ -51,7 +51,7 @@ before(function (done) {
       return Promise.resolve(new NotFoundError('User not found in db'));
     }
   };
-  mockWriteEngine = {
+  mockWriteLayer = {
     execute: requestObject => {  }
   };
   mockProfileRepository = {
@@ -76,7 +76,7 @@ before(function (done) {
   userRepository = new UserRepository();
   userRepository.cacheEngine = mockCacheEngine;
   userRepository.readEngine = mockReadEngine;
-  userRepository.writeEngine = mockWriteEngine;
+  userRepository.writeLayer = mockWriteLayer;
 
   kuzzle.repositories = {};
   kuzzle.repositories.profile = mockProfileRepository;

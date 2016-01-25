@@ -15,7 +15,7 @@ describe('Test: repositories/repository', function () {
     ObjectConstructor,
     mockCacheEngine,
     mockReadEngine,
-    mockWriteEngine,
+    mockWriteLayer,
     cachedObject,
     uncachedObject;
 
@@ -118,7 +118,7 @@ describe('Test: repositories/repository', function () {
       return Promise.resolve(new ResponseObject(requestObject, {hits: [{_id: 'role'}]}));
     }
   };
-  mockWriteEngine = {
+  mockWriteLayer = {
     execute: function (o) {
       forwardedObject = o;
     }
@@ -134,7 +134,7 @@ describe('Test: repositories/repository', function () {
       collection: 'repository',
       ObjectConstructor: ObjectConstructor,
       readEngine: mockReadEngine,
-      writeEngine: mockWriteEngine,
+      writeLayer: mockWriteLayer,
       cacheEngine: mockCacheEngine
     });
   });
@@ -143,7 +143,7 @@ describe('Test: repositories/repository', function () {
     forwardedObject = null;
     repository.ObjectConstructor = ObjectConstructor;
     repository.readEngine = mockReadEngine;
-    repository.writeEngine = mockWriteEngine;
+    repository.writeLayer = mockWriteLayer;
     repository.cacheEngine = mockCacheEngine;
   });
 
