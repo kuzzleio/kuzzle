@@ -8,6 +8,7 @@
  */
 var
   should = require('should'),
+  q = require('q'),
   rewire = require('rewire'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
   ResponseObject = require.main.require('lib/api/core/models/responseObject'),
@@ -34,9 +35,9 @@ describe('Test: notifier.workerNotification', function () {
     responseObject.action = 'create';
 
     Notifier.__with__({
-      notifyDocumentCreate: function () { created = true; return Promise.resolve({}); },
-      notifyDocumentUpdate: function () { anyOtherAction = true; return Promise.resolve({}); },
-      notifyDocumentDelete: function () { anyOtherAction = true; return Promise.resolve({}); }
+      notifyDocumentCreate: function () { created = true; return q({}); },
+      notifyDocumentUpdate: function () { anyOtherAction = true; return q({}); },
+      notifyDocumentDelete: function () { anyOtherAction = true; return q({}); }
     })(function () {
       (Notifier.__get__('workerNotification'))(responseObject);
       should(created).be.true();
@@ -52,9 +53,9 @@ describe('Test: notifier.workerNotification', function () {
     responseObject.action = 'update';
 
     Notifier.__with__({
-      notifyDocumentCreate: function () { anyOtherAction = true; return Promise.resolve({}); },
-      notifyDocumentUpdate: function () { updated = true; return Promise.resolve({}); },
-      notifyDocumentDelete: function () { anyOtherAction = true; return Promise.resolve({}); }
+      notifyDocumentCreate: function () { anyOtherAction = true; return q({}); },
+      notifyDocumentUpdate: function () { updated = true; return q({}); },
+      notifyDocumentDelete: function () { anyOtherAction = true; return q({}); }
     })(function () {
       (Notifier.__get__('workerNotification'))(responseObject);
       should(updated).be.true();
@@ -70,9 +71,9 @@ describe('Test: notifier.workerNotification', function () {
     responseObject.action = 'delete';
 
     Notifier.__with__({
-      notifyDocumentCreate: function () { anyOtherAction = true; return Promise.resolve({}); },
-      notifyDocumentUpdate: function () { anyOtherAction = true; return Promise.resolve({}); },
-      notifyDocumentDelete: function () { deleted = true; return Promise.resolve({}); }
+      notifyDocumentCreate: function () { anyOtherAction = true; return q({}); },
+      notifyDocumentUpdate: function () { anyOtherAction = true; return q({}); },
+      notifyDocumentDelete: function () { deleted = true; return q({}); }
     })(function () {
       (Notifier.__get__('workerNotification'))(responseObject);
       should(deleted).be.true();
@@ -88,9 +89,9 @@ describe('Test: notifier.workerNotification', function () {
     responseObject.action = 'deleteByQuery';
 
     Notifier.__with__({
-      notifyDocumentCreate: function () { anyOtherAction = true; return Promise.resolve({}); },
-      notifyDocumentUpdate: function () { anyOtherAction = true; return Promise.resolve({}); },
-      notifyDocumentDelete: function () { deleted = true; return Promise.resolve({}); }
+      notifyDocumentCreate: function () { anyOtherAction = true; return q({}); },
+      notifyDocumentUpdate: function () { anyOtherAction = true; return q({}); },
+      notifyDocumentDelete: function () { deleted = true; return q({}); }
     })(function () {
       (Notifier.__get__('workerNotification'))(responseObject);
       should(deleted).be.true();
@@ -105,9 +106,9 @@ describe('Test: notifier.workerNotification', function () {
     responseObject.action = 'foo';
 
     Notifier.__with__({
-      notifyDocumentCreate: function () { tookAction = true; return Promise.resolve({}); },
-      notifyDocumentUpdate: function () { tookAction = true; return Promise.resolve({}); },
-      notifyDocumentDelete: function () { tookAction = true; return Promise.resolve({}); }
+      notifyDocumentCreate: function () { tookAction = true; return q({}); },
+      notifyDocumentUpdate: function () { tookAction = true; return q({}); },
+      notifyDocumentDelete: function () { tookAction = true; return q({}); }
     })(function () {
       (Notifier.__get__('workerNotification'))(responseObject);
       should(tookAction).be.false();
@@ -128,7 +129,7 @@ describe('Test: notifier.workerNotification', function () {
       });
 
       Notifier.__with__({
-        notifyDocumentCreate: function () { return Promise.reject(new Error('rejected')); }
+        notifyDocumentCreate: function () { return q.reject(new Error('rejected')); }
       })(function () {
         (Notifier.__get__('workerNotification')).call(kuzzle, responseObject);
       });

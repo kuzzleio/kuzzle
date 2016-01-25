@@ -7,6 +7,7 @@
  */
 var
   should = require('should'),
+  q = require('q'),
   rewire = require('rewire'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
   ResponseObject = require.main.require('lib/api/core/models/responseObject'),
@@ -28,41 +29,41 @@ var mockupCacheService = {
       this.addId = id;
       this.room = room;
     }
-    return Promise.resolve({});
+    return q({});
   },
 
   remove: function (id, room) {
     if (room.length > 0) {
       this.removeId = id;
     }
-    return Promise.resolve({});
+    return q({});
   },
 
   search: function (id) {
     if (id === 'removeme') {
-      return Promise.resolve(['foobar']);
+      return q(['foobar']);
     }
     else {
-      return Promise.resolve([]);
+      return q([]);
     }
   }
 };
 
 var mockupTestFilters = function (responseObject) {
   if (responseObject.data.body._id === 'errorme') {
-    return Promise.reject(new Error('rejected'));
+    return q.reject(new Error('rejected'));
   }
   else if (responseObject.data.body._id === 'removeme') {
-    return Promise.resolve([]);
+    return q([]);
   }
   else {
-    return Promise.resolve(['foobar']);
+    return q(['foobar']);
   }
 };
 
 var mockupReadEngine = {
   get: function (requestObject) {
-    return Promise.resolve(new ResponseObject(requestObject, requestObject.data));
+    return q(new ResponseObject(requestObject, requestObject.data));
   }
 };
 

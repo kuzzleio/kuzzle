@@ -1,5 +1,6 @@
 var
   should = require('should'),
+  q = require('q'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
   UnauthorizedError = require.main.require('lib/api/core/errors/unauthorizedError'),
   params = require('rc')('kuzzle'),
@@ -140,7 +141,7 @@ describe('Test execute function in funnel controller', function () {
     var
       pluginController = {
         bar: function(requestObject){
-          return Promise.resolve();
+          return q();
         }
       },
       FooController = function(context) {
