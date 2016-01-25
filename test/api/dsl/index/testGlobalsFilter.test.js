@@ -1,5 +1,6 @@
 var
   should = require('should'),
+  q = require('q'),
   rewire = require('rewire'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
   Dsl = rewire('../../../../lib/api/dsl/index');
@@ -22,7 +23,7 @@ describe('Test: dsl.testGlobalsFilters', function () {
       should(rooms).be.an.Array();
       should(body).be.exactly(flattenBody);
       should(cache).match(cachedResult);
-      return Promise.resolve(rooms);
+      return q(rooms);
     });
 
     dsl = new Dsl();

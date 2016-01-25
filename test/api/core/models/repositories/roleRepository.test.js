@@ -51,16 +51,16 @@ describe('Test: repositories/roleRepository', function () {
       var err;
 
       if (requestObject.data._id === 'persisted1') {
-        return Promise.resolve(new ResponseObject(requestObject, persistedObject1));
+        return q(new ResponseObject(requestObject, persistedObject1));
       }
       if (requestObject.data._id === 'persisted2') {
-        return Promise.resolve(new ResponseObject(requestObject, persistedObject2));
+        return q(new ResponseObject(requestObject, persistedObject2));
       }
 
       err = new NotFoundError('Not found');
       err.found = false;
       err._id = requestObject.data._id;
-      return Promise.resolve(err);
+      return q(err);
     },
     mget: function (requestObject) {
       var
@@ -77,14 +77,14 @@ describe('Test: repositories/roleRepository', function () {
           results.push({_id: id, found: false});
         }
       });
-      return Promise.resolve(new ResponseObject(requestObject, {docs: results}));
+      return q(new ResponseObject(requestObject, {docs: results}));
     }
   };
 
   mockWriteLayer = {
     execute: function (requestObject) {
       forwardedObject = requestObject;
-      return Promise.resolve(new ResponseObject(requestObject, {}));
+      return q(new ResponseObject(requestObject, {}));
     }
   };
 
@@ -115,12 +115,12 @@ describe('Test: repositories/roleRepository', function () {
       var result;
 
       roleRepository.loadMultiFromDatabase = () => {
-        return Promise.reject(new InternalError('Error'));
+        return q.reject(new InternalError('Error'));
       };
       result = roleRepository.loadRoles([-999, -998])
         .catch(error => {
           delete roleRepository.loadMultiFromDatabase;
-          return Promise.reject(error);
+          return q.reject(error);
         });
 
       return should(result).be.rejectedWith(InternalError);
@@ -130,13 +130,13 @@ describe('Test: repositories/roleRepository', function () {
       var result;
 
       roleRepository.hydrate = () => {
-        return Promise.reject(new InternalError('Error'));
+        return q.reject(new InternalError('Error'));
       };
 
       result = roleRepository.loadRoles(['guest'])
         .catch(error => {
           delete roleRepository.hydrate;
-          return Promise.reject(error);
+          return q.reject(error);
         });
 
       return should(result).be.rejectedWith(InternalError);
@@ -200,7 +200,7 @@ describe('Test: repositories/roleRepository', function () {
       roleRepository.roles = {roleId : {myRole : {}}};
       RoleRepository.prototype.loadOneFromDatabase = () => {
         isLoadFromDB = true;
-        return Promise.resolve();
+        return q();
       };
 
       return roleRepository.loadRole({_id: 'roleId'})
@@ -216,7 +216,7 @@ describe('Test: repositories/roleRepository', function () {
       roleRepository.roles = {otherRoleId : {myRole : {}}};
       RoleRepository.prototype.loadOneFromDatabase = () => {
         isLoadFromDB = true;
-        return Promise.resolve(roleRepository.roles.otherRoleId);
+        return q(roleRepository.roles.otherRoleId);
       };
 
       return roleRepository.loadRole({_id: 'roleId'})
@@ -241,7 +241,7 @@ describe('Test: repositories/roleRepository', function () {
         savedSize = size;
         savedHydrate = hydrate;
 
-        return Promise.resolve();
+        return q();
       };
 
       return roleRepository.searchRole(new RequestObject({body: {from: 1, size: 3, hydrate: false}}))
@@ -266,7 +266,7 @@ describe('Test: repositories/roleRepository', function () {
         savedSize = size;
         savedHydrate = hydrate;
 
-        return Promise.resolve();
+        return q();
       };
 
       return roleRepository.searchRole(new RequestObject({body: {indexes: ['test']}}))
@@ -293,7 +293,7 @@ describe('Test: repositories/roleRepository', function () {
 
       RoleRepository.prototype.deleteFromDatabase = id => {
         isDeletedFromDB = true;
-        return Promise.resolve();
+        return q();
       };
 
       return roleRepository.deleteRole({_id: 'myRole'})

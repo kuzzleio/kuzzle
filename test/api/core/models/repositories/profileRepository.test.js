@@ -1,5 +1,6 @@
 var
   params = require('rc')('kuzzle'),
+  q = require('q'),
   should = require('should'),
   Role = require.main.require('lib/api/core/models/security/role'),
   Profile = require.main.require('lib/api/core/models/security/profile'),
@@ -31,25 +32,25 @@ describe('Test: repositories/profileRepository', function () {
       var err;
 
       if (requestObject.data._id === 'testprofile') {
-        return Promise.resolve(new ResponseObject(requestObject, testProfilePlain));
+        return q(new ResponseObject(requestObject, testProfilePlain));
       }
       if (requestObject.data._id === 'errorprofile') {
-        return Promise.resolve(new ResponseObject(requestObject, errorProfilePlain));
+        return q(new ResponseObject(requestObject, errorProfilePlain));
       }
 
       err = new NotFoundError('Not found');
       err.found = false;
       err._id = requestObject.data._id;
-      return Promise.resolve(err);
+      return q(err);
     }
   };
   mockRoleRepository = {
     loadRoles: function (keys) {
       if (keys.length === 1 && keys[0] === 'error') {
-        return Promise.reject(new InternalError('Error'));
+        return q.reject(new InternalError('Error'));
       }
 
-      return Promise.resolve(keys.map(function (key) {
+      return q(keys.map(function (key) {
         var role = new Role();
         role._id = key;
         return role;
@@ -111,7 +112,7 @@ describe('Test: repositories/profileRepository', function () {
 
     it('should reject the promise in case of error', done => {
       profileRepository.loadOneFromDatabase = () => {
-        return Promise.reject(new InternalError('Error'));
+        return q.reject(new InternalError('Error'));
       };
 
       should(profileRepository.loadProfile('id')).be.rejectedWith(InternalError);
@@ -215,7 +216,7 @@ describe('Test: repositories/profileRepository', function () {
 
     it('should return a ResponseObject after deleting', () => {
       profileRepository.deleteFromDatabase = id => {
-        return Promise.resolve(new ResponseObject({
+        return q(new ResponseObject({
           body: {
             _id: id
           }
@@ -251,7 +252,7 @@ describe('Test: repositories/profileRepository', function () {
   describe('#searchProfiles', () => {
     it('should return a ResponseObject containing an array of profiles', (done) => {
       profileRepository.search = () => {
-        return Promise.resolve(new ResponseObject({}, {
+        return q(new ResponseObject({}, {
           hits: [{_id: 'test'}],
           total: 1
         }));
@@ -274,7 +275,7 @@ describe('Test: repositories/profileRepository', function () {
 
     it('should properly format the roles filter', (done) => {
       profileRepository.search = (filter) => {
-        return Promise.resolve(new ResponseObject({}, {
+        return q(new ResponseObject({}, {
           hits: [{_id: 'test'}],
           total: 1,
           filter: filter
@@ -313,7 +314,7 @@ describe('Test: repositories/profileRepository', function () {
 
     it('should properly persist the profile', () => {
       profileRepository.persistToDatabase = (profile) => {
-        return Promise.resolve(new ResponseObject({}, {
+        return q(new ResponseObject({}, {
           body: {
             _id: profile._id
           }

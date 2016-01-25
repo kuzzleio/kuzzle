@@ -1,5 +1,6 @@
 var
   should = require('should'),
+  q = require('q'),
   rewire = require('rewire'),
   methods = rewire('../../../../lib/api/dsl/methods');
 
@@ -84,7 +85,7 @@ describe('Test and method', function () {
 
   it('should return a rejected promise if getFormattedFilters fails', function () {
     return methods.__with__({
-      getFormattedFilters: function () { return Promise.reject(new Error('rejected')); }
+      getFormattedFilters: function () { return q.reject(new Error('rejected')); }
     })(function () {
       return should(methods.and(roomId, index, collection, filter)).be.rejectedWith('rejected');
     });

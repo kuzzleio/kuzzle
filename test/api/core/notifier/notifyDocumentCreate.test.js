@@ -24,7 +24,7 @@ var mockupCacheService = {
   add: function (id, room) {
     this.id = id;
     this.room = room;
-    return Promise.resolve({});
+    return q({});
   }
 };
 
