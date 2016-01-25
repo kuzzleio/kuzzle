@@ -49,10 +49,10 @@ describe('Test: repositories/repository', function () {
 
       return q(null);
     },
-    set: (key, value) => { forwardedObject = {op: 'set', key: key, value: JSON.parse(value)}; return Promise.resolve('OK'); },
-    volatileSet: (key, value, ttl) => { forwardedObject = {op: 'volatileSet', key: key, value: JSON.parse(value), ttl: ttl }; return Promise.resolve('OK'); },
-    expire: (key, ttl) => { forwardedObject = {op: 'expire', key: key, ttl: ttl}; return Promise.resolve('OK'); },
-    persist: key => { forwardedObject = {op: 'persist', key: key}; return Promise.resolve('OK'); }
+    set: (key, value) => { forwardedObject = {op: 'set', key: key, value: JSON.parse(value)}; return q('OK'); },
+    volatileSet: (key, value, ttl) => { forwardedObject = {op: 'volatileSet', key: key, value: JSON.parse(value), ttl: ttl }; return q('OK'); },
+    expire: (key, ttl) => { forwardedObject = {op: 'expire', key: key, ttl: ttl}; return q('OK'); },
+    persist: key => { forwardedObject = {op: 'persist', key: key}; return q('OK'); }
   };
   mockReadEngine = {
     get: function (requestObject, forward) {
@@ -120,7 +120,7 @@ describe('Test: repositories/repository', function () {
       forwardedObject = o;
     },
     delete: requestObject => {
-      return Promise.resolve(new ResponseObject(requestObject));
+      return q(new ResponseObject(requestObject));
     }
   };
 

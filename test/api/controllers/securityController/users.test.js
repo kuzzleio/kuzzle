@@ -1,4 +1,5 @@
 var
+  q = require('q'),
   should = require('should'),
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
@@ -18,7 +19,7 @@ describe('Test: security controller - users', function () {
       .then(function () {
         // Mock
         kuzzle.services.list.readEngine.search = requestObject => {
-          return Promise.resolve(new ResponseObject(requestObject, {
+          return q(new ResponseObject(requestObject, {
             hits: [{_id: 'admin', _source: { profile: 'admin' }}],
             total: 1
           }));
@@ -31,10 +32,10 @@ describe('Test: security controller - users', function () {
             return kuzzle.repositories.user.admin();
           }
 
-          return Promise.resolve(null);
+          return q(null);
         };
         kuzzle.repositories.user.persist = (user, opts) => {
-          return Promise.resolve(new ResponseObject(new RequestObject(user), {
+          return q(new ResponseObject(new RequestObject(user), {
             _index: '%kuzzle',
             _type: 'users',
             _id: user._id,
@@ -44,7 +45,7 @@ describe('Test: security controller - users', function () {
           }));
         };
         kuzzle.repositories.user.deleteFromDatabase = requestObject => {
-          return Promise.resolve(new ResponseObject(requestObject, {_id: 'test'}));
+          return q(new ResponseObject(requestObject, {_id: 'test'}));
         };
 
         done();

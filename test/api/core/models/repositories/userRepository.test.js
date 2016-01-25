@@ -40,8 +40,8 @@ before(function (done) {
       }
       return q(null);
     },
-    volatileSet: function (key, value, ttl) { forwardedResult = {key: key, value: JSON.parse(value), ttl: ttl }; return Promise.resolve('OK'); },
-    expire: function (key, ttl) { forwardedResult = {key: key, ttl: ttl}; return Promise.resolve('OK'); }
+    volatileSet: function (key, value, ttl) { forwardedResult = {key: key, value: JSON.parse(value), ttl: ttl }; return q('OK'); },
+    expire: function (key, ttl) { forwardedResult = {key: key, ttl: ttl}; return q('OK'); }
   };
   mockReadEngine = {
     get: function (requestObject) {
@@ -53,12 +53,12 @@ before(function (done) {
     }
   };
   mockWriteEngine = {
-    createOrUpdate: requestObject => { return Promise.resolve(new ResponseObject(requestObject, {})); }
+    createOrUpdate: requestObject => { return q(new ResponseObject(requestObject, {})); }
   };
   mockProfileRepository = {
     loadProfile: function (profileKey) {
       if (profileKey === 'notfound') {
-        return Promise.resolve(null);
+        return q(null);
       }
 
       var profile = new Profile();
