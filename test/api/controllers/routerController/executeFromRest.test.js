@@ -90,10 +90,11 @@ describe('Test: routerController.executeFromRest', function () {
   it('should reject requests when the content-type is not application/json', function () {
     var
       params = { action: 'create', controller: 'write' },
-      data = {_body: true, headers: {'content-type': '"application/x-www-form-urlencoded'}, body: {resolve: true}, params: {collection: 'foobar', index: '%test'}};
+      data = {_body: true, headers: {'content-type': 'application/x-www-form-urlencoded'}, body: {resolve: true}, params: {collection: 'foobar', index: '%test'}};
 
     mockupResponse.init();
     executeFromRest.call(kuzzle, params, data, mockupResponse);
+
     should(mockupResponse.statusCode).be.exactly(400);
     should(mockupResponse.header['Content-Type']).not.be.undefined();
     should(mockupResponse.header['Content-Type']).be.exactly('application/json');
