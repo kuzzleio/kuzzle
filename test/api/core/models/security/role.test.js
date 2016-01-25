@@ -1,5 +1,6 @@
 var
   should = require('should'),
+  q = require('q'),
   rewire = require('rewire'),
   BadRequestError = require.main.require('lib/api/core/errors/badRequestError'),
   InternalError = require.main.require('lib/api/core/errors/internalError'),
@@ -693,7 +694,7 @@ describe('Test: security/roleTest', function () {
         Role.__with__({
           Sandbox: function () {
             this.run = function (data) {
-              return Promise.reject(new Error('our unit test error'));
+              return q.reject(new Error('our unit test error'));
             };
           }
         })(() => {
@@ -729,7 +730,7 @@ describe('Test: security/roleTest', function () {
         Role.__with__({
           Sandbox: function () {
             this.run = function (data) {
-              return Promise.resolve({
+              return q({
                 result: 'I am not a boolean'
               });
             };
@@ -765,7 +766,7 @@ describe('Test: security/roleTest', function () {
         Role.__with__({
           Sandbox: function () {
             this.run = function (data) {
-              return Promise.resolve({ result: true });
+              return q({ result: true });
             };
           }
         })(() => {

@@ -1,5 +1,6 @@
 var
   should = require('should'),
+  q = require('q'),
   rewire = require('rewire'),
   params = require('rc')('kuzzle'),
   Config = require.main.require('lib/config'),
@@ -103,7 +104,7 @@ describe('Test: ElasticSearch service', function () {
       elasticsearch.client.search = function (data) {
         should(data.body).be.exactly(filter);
 
-        return Promise.resolve({total: 0, hits: []});
+        return q({total: 0, hits: []});
       };
 
       requestObject.data.body = filter;
@@ -125,7 +126,7 @@ describe('Test: ElasticSearch service', function () {
       elasticsearch.client.search = function (data) {
         should(data.body).not.be.exactly(filter);
 
-        return Promise.reject(new Error());
+        return q.reject(new Error());
       };
 
       return should(elasticsearch.search(requestObject)).be.rejected();
@@ -144,7 +145,7 @@ describe('Test: ElasticSearch service', function () {
         should(data.type).be.exactly(collection);
         should(data.body).be.exactly(documentAda);
 
-        return Promise.resolve({});
+        return q({});
       };
 
       ret = elasticsearch.create(requestObject);
@@ -161,7 +162,7 @@ describe('Test: ElasticSearch service', function () {
 
     it('should reject the create promise if elasticsearch throws an error', function () {
       elasticsearch.client.create = function () {
-        return Promise.reject(new Error());
+        return q.reject(new Error());
       };
 
       return should(elasticsearch.create(requestObject)).be.rejected();
@@ -180,7 +181,7 @@ describe('Test: ElasticSearch service', function () {
         should(data.body).be.exactly(documentAda);
         should(data.id).be.exactly(createdDocumentId);
 
-        return Promise.resolve({});
+        return q({});
       };
 
       requestObject.data._id = createdDocumentId;
@@ -200,7 +201,7 @@ describe('Test: ElasticSearch service', function () {
       var ret;
 
       elasticsearch.client.index = function (data) {
-        return Promise.reject(new Error());
+        return q.reject(new Error());
       };
 
       requestObject.data._id = createdDocumentId;
@@ -217,7 +218,7 @@ describe('Test: ElasticSearch service', function () {
       elasticsearch.client.get = function (data) {
         should(data.id).be.exactly(createdDocumentId);
 
-        return Promise.resolve({});
+        return q({});
       };
 
       delete requestObject.data.body;
@@ -239,7 +240,7 @@ describe('Test: ElasticSearch service', function () {
       elasticsearch.client.get = function (data) {
         should(data.id).be.exactly(createdDocumentId);
 
-        return Promise.resolve({});
+        return q({});
       };
 
       requestObject.data._id = '_search';
@@ -254,7 +255,7 @@ describe('Test: ElasticSearch service', function () {
       elasticsearch.client.get = function (data) {
         should(data.id).be.undefined();
 
-        return Promise.reject(new Error());
+        return q.reject(new Error());
       };
 
 
@@ -266,7 +267,7 @@ describe('Test: ElasticSearch service', function () {
       elasticsearch.client.mget = function (data) {
         should(data.body.ids).be.an.Array();
 
-        return Promise.resolve(new Error());
+        return q(new Error());
       };
 
       delete requestObject.data.body;
@@ -279,7 +280,7 @@ describe('Test: ElasticSearch service', function () {
       elasticsearch.client.mget = function (data) {
         should(data.body.ids).be.undefined();
 
-        return Promise.reject(new Error());
+        return q.reject(new Error());
       };
 
       requestObject.data.body = {};
@@ -295,7 +296,7 @@ describe('Test: ElasticSearch service', function () {
       elasticsearch.client.count = function (data) {
         should(data.body).have.keys();
 
-        return Promise.resolve({});
+        return q({});
       };
 
       requestObject.data.body = {};
@@ -315,7 +316,7 @@ describe('Test: ElasticSearch service', function () {
       elasticsearch.client.count = function (data) {
         should(data.body).be.an.instanceOf(Object).and.have.property('query', {foo: 'bar'});
 
-        return Promise.resolve({});
+        return q({});
       };
 
       requestObject.data.body = {};
@@ -334,7 +335,7 @@ describe('Test: ElasticSearch service', function () {
     it('should return a rejected promise if the count fails', function () {
 
       elasticsearch.client.count = function (data) {
-        return Promise.reject(new Error());
+        return q.reject(new Error());
       };
 
       requestObject.data.body = {};
@@ -354,7 +355,7 @@ describe('Test: ElasticSearch service', function () {
         should(data.body.doc).be.exactly(documentAda);
         should(data.id).be.exactly(createdDocumentId);
 
-        return Promise.resolve({});
+        return q({});
       };
 
       requestObject.data._id = createdDocumentId;
@@ -375,7 +376,7 @@ describe('Test: ElasticSearch service', function () {
       elasticsearch.client.update = function (data) {
         should(data.id).be.undefined();
 
-        return Promise.reject(new Error());
+        return q.reject(new Error());
       };
 
       return should(elasticsearch.update(requestObject)).be.rejected();
@@ -388,7 +389,7 @@ describe('Test: ElasticSearch service', function () {
       elasticsearch.client.delete = function (data) {
         should(data.id).be.exactly(createdDocumentId);
 
-        return Promise.resolve({});
+        return q({});
       };
 
       delete requestObject.data.body;
@@ -402,7 +403,7 @@ describe('Test: ElasticSearch service', function () {
       elasticsearch.client.delete = function (data) {
         should(data.id).be.undefined();
 
-        return Promise.reject(new Error());
+        return q.reject(new Error());
       };
 
       return should(elasticsearch.delete(requestObject)).be.rejected();
@@ -449,12 +450,12 @@ describe('Test: ElasticSearch service', function () {
           done(error);
         }
 
-        return Promise.resolve(mockupIds);
+        return q(mockupIds);
       };
 
       ES.__with__({
         getAllIdsFromQuery: function () {
-          return Promise.resolve(mockupIds);
+          return q(mockupIds);
         }
       })(function () {
         elasticsearch.deleteByQuery(requestObject)
@@ -485,13 +486,13 @@ describe('Test: ElasticSearch service', function () {
 
     it('should return a rejected promise if the delete by query fails because of a bulk failure', function () {
       elasticsearch.client.bulk = function () {
-        return Promise.reject(new Error('rejected'));
+        return q.reject(new Error('rejected'));
       };
       requestObject.data.body = {};
 
       return ES.__with__({
         getAllIdsFromQuery: function () {
-          return Promise.resolve(['foo', 'bar']);
+          return q(['foo', 'bar']);
         }
       })(function () {
         return should(elasticsearch.deleteByQuery(requestObject)).be.rejected();
@@ -514,7 +515,7 @@ describe('Test: ElasticSearch service', function () {
       elasticsearch.client.bulk = function (data) {
         should(data.body).be.exactly(requestObject.data.body);
 
-        return Promise.resolve({});
+        return q({});
       };
 
       return should(elasticsearch.import(requestObject)).be.fulfilled();
@@ -536,7 +537,7 @@ describe('Test: ElasticSearch service', function () {
       elasticsearch.client.bulk = function (data) {
         should(data.body).be.exactly(requestObject.data.body);
 
-        return Promise.resolve({
+        return q({
           errors: true,
           items: {
             12: {index: {status: 404, error: 'DocumentMissingException'}},
@@ -587,7 +588,7 @@ describe('Test: ElasticSearch service', function () {
           {delete: {_id: 2, _index: 'indexAlt', _type: collection}}
         ]);
 
-        return Promise.resolve({
+        return q({
           items: [
             {index: {_id: 1, _index: index, _type: collection}},
             {index: {_id: 2, _index: 'indexAlt', _type: collection}},
@@ -612,7 +613,7 @@ describe('Test: ElasticSearch service', function () {
       ];
 
       elasticsearch.client.bulk = function (data) {
-        return Promise.reject(new Error());
+        return q.reject(new Error());
       };
 
       return should(elasticsearch.import(requestObject)).be.rejected();
@@ -637,7 +638,7 @@ describe('Test: ElasticSearch service', function () {
       ];
 
       elasticsearch.client.bulk = function (data) {
-        return Promise.resolve({});
+        return q({});
       };
 
       return should(elasticsearch.import(requestObject)).be.rejected();
@@ -657,7 +658,7 @@ describe('Test: ElasticSearch service', function () {
       ];
 
       elasticsearch.client.bulk = function (data) {
-        return Promise.resolve({});
+        return q({});
       };
 
       return should(elasticsearch.import(requestObject)).be.rejected();
@@ -674,7 +675,7 @@ describe('Test: ElasticSearch service', function () {
       elasticsearch.client.indices.putMapping = function (data) {
         should(data.body).be.exactly(requestObject.data.body);
 
-        return Promise.resolve({});
+        return q({});
       };
 
       return should(elasticsearch.putMapping(requestObject)).be.fulfilled();
@@ -685,7 +686,7 @@ describe('Test: ElasticSearch service', function () {
       elasticsearch.client.indices.putMapping = function (data) {
         should(data.body).not.have.key('properties');
 
-        return Promise.reject({});
+        return q.reject({});
       };
 
       return should(elasticsearch.putMapping(requestObject)).be.rejected();
@@ -700,7 +701,7 @@ describe('Test: ElasticSearch service', function () {
 
         mappings[index] = {mappings: {}};
 
-        return Promise.resolve(mappings);
+        return q(mappings);
       };
 
       elasticsearch.getMapping(requestObject)
@@ -723,7 +724,7 @@ describe('Test: ElasticSearch service', function () {
         mappings[index] = {mappings: {}};
         mappings[index].mappings[collection] = {};
 
-        return Promise.resolve(mappings);
+        return q(mappings);
       };
 
       return should(elasticsearch.getMapping(requestObject)).be.rejected();
@@ -732,7 +733,7 @@ describe('Test: ElasticSearch service', function () {
     it('should reject the getMapping promise if elasticsearch throws an error', function () {
 
       elasticsearch.client.indices.getMapping = function (data) {
-        return Promise.reject(new Error());
+        return q.reject(new Error());
       };
 
       return should(elasticsearch.getMapping(requestObject)).be.rejected();
@@ -743,7 +744,7 @@ describe('Test: ElasticSearch service', function () {
     it('should allow deleting an entire collection', function (done) {
 
       elasticsearch.client.indices.deleteMapping = function (data) {
-        return Promise.resolve({});
+        return q({});
       };
 
       delete requestObject.data.body;
@@ -758,7 +759,7 @@ describe('Test: ElasticSearch service', function () {
     it('should return a rejected promise if the delete collection function fails', function () {
       // because we already deleted the collection in the previous test, it should naturally fail
       elasticsearch.client.indices.deleteMapping = function (data) {
-        return Promise.reject(new Error());
+        return q.reject(new Error());
       };
 
       delete requestObject.data.body;
@@ -857,7 +858,7 @@ describe('Test: ElasticSearch service', function () {
         mappings[index] = {mappings: {}};
         mappings[index].mappings[collection] = {};
 
-        return Promise.resolve(mappings);
+        return q(mappings);
       };
 
       delete requestObject.data.body;
@@ -867,7 +868,7 @@ describe('Test: ElasticSearch service', function () {
     it('should reject the listCollections promise if elasticsearch throws an error', function () {
 
       elasticsearch.client.indices.getMapping = function (data) {
-        return Promise.reject(new Error());
+        return q.reject(new Error());
       };
 
       requestObject.index = 'kuzzle-unit-tests-fakeindex';
@@ -880,7 +881,7 @@ describe('Test: ElasticSearch service', function () {
     it('should allow creating a new collection', function (done) {
 
       elasticsearch.client.indices.putMapping = function (data) {
-        return Promise.resolve();
+        return q();
       };
 
       requestObject.collection = '%foobar';
@@ -895,7 +896,7 @@ describe('Test: ElasticSearch service', function () {
     it('should reject the createCollection promise if elasticsearch throws an error', function () {
 
       elasticsearch.client.indices.putMapping = function (data) {
-        return Promise.reject(new Error());
+        return q.reject(new Error());
       };
 
       return should(elasticsearch.createCollection(requestObject)).be.rejected();
@@ -915,16 +916,16 @@ describe('Test: ElasticSearch service', function () {
 
       elasticsearch.client.indices.getMapping = function (data) {
         hasRetrievedMapping = true;
-        return Promise.resolve(mapping);
+        return q(mapping);
       };
       elasticsearch.client.indices.deleteMapping = function (data) {
         hasDeletedMapping = true;
-        return Promise.resolve();
+        return q();
       };
       elasticsearch.client.indices.putMapping = function (data) {
         should(data.body[data.type]).be.exactly(mapping[requestObject.index].mappings[requestObject.collection]);
         hasCreatedMapping = true;
-        return Promise.resolve();
+        return q();
       };
 
       elasticsearch.truncateCollection(requestObject)
@@ -945,10 +946,10 @@ describe('Test: ElasticSearch service', function () {
       mapping[index].mappings[collection] = {foo: 'bar'};
 
       elasticsearch.client.indices.getMapping = function (data) {
-        return Promise.resolve(mapping);
+        return q(mapping);
       };
       elasticsearch.client.indices.deleteMapping = function (data) {
-        return Promise.reject();
+        return q.reject();
       };
 
       requestObject.collection = 'non existing collection';
@@ -963,7 +964,7 @@ describe('Test: ElasticSearch service', function () {
       mapping[index].mappings[collection] = {foo: 'bar'};
 
       elasticsearch.client.indices.getMapping = function (data) {
-        return Promise.resolve(mapping);
+        return q(mapping);
       };
 
       requestObject.index = 'non existing index';
@@ -978,18 +979,18 @@ describe('Test: ElasticSearch service', function () {
         deletedAll = false;
 
       elasticsearch.client.cat.indices = function (data) {
-        return Promise.resolve('      \n %kuzzle      \n ' + index + ' \n  ');
+        return q('      \n %kuzzle      \n ' + index + ' \n  ');
       };
 
       elasticsearch.client.indices.delete = function (param) {
         try {
           should(param).be.an.Object().and.match({index: [index]});
           deletedAll = true;
-          return Promise.resolve({});
+          return q({});
         }
         catch (error) {
           done(error);
-          return Promise.reject(error);
+          return q.reject(error);
         }
       };
 
@@ -1010,10 +1011,10 @@ describe('Test: ElasticSearch service', function () {
         var indexes = {};
         indexes[kuzzle.config.internalIndex] = [];
         indexes[index] = [];
-        return Promise.resolve(indexes);
+        return q(indexes);
       };
       elasticsearch.client.indices.delete = function () {
-        return Promise.reject(new Error('rejected'));
+        return q.reject(new Error('rejected'));
       };
 
       return should(elasticsearch.deleteIndexes(requestObject)).be.rejected();
@@ -1023,10 +1024,10 @@ describe('Test: ElasticSearch service', function () {
       elasticsearch.client.indices.getMapping = function (data) {
         var indexes = {};
         indexes[kuzzle.config.internalIndex] = [];
-        return Promise.resolve(indexes);
+        return q(indexes);
       };
       elasticsearch.client.indices.delete = function () {
-        return Promise.reject(new Error('rejected'));
+        return q.reject(new Error('rejected'));
       };
 
       return should(elasticsearch.deleteIndexes(requestObject)).be.fulfilled();
@@ -1042,7 +1043,7 @@ describe('Test: ElasticSearch service', function () {
       elasticsearch.client.indices.create = function (data) {
         should(data.index).be.exactly(requestObject.index);
 
-        return Promise.resolve({});
+        return q({});
       };
 
       ret = elasticsearch.createIndex(requestObject);
@@ -1058,7 +1059,7 @@ describe('Test: ElasticSearch service', function () {
 
     it('should reject the createIndex promise if elasticsearch throws an error', function () {
       elasticsearch.client.indices.create = function (data) {
-        return Promise.reject(new Error());
+        return q.reject(new Error());
       };
 
       return should(elasticsearch.createIndex(requestObject)).be.rejected();
@@ -1072,7 +1073,7 @@ describe('Test: ElasticSearch service', function () {
       elasticsearch.client.indices.delete = function (data) {
         should(data.index).be.exactly(requestObject.index);
 
-        return Promise.resolve({});
+        return q({});
       };
 
       ret = elasticsearch.deleteIndex(requestObject);
@@ -1088,7 +1089,7 @@ describe('Test: ElasticSearch service', function () {
 
     it('should reject the deleteIndex promise if elasticsearch throws an error', function () {
       elasticsearch.client.indices.delete = function (data) {
-        return Promise.reject(new Error());
+        return q.reject(new Error());
       };
 
       return should(elasticsearch.deleteIndex(requestObject)).be.rejected();
@@ -1100,7 +1101,7 @@ describe('Test: ElasticSearch service', function () {
       elasticsearch.client.indices.getMapping = function (data) {
         var indexes = {};
         indexes[index] = [];
-        return Promise.resolve(indexes);
+        return q(indexes);
       };
 
       elasticsearch.listIndexes(requestObject)
@@ -1113,7 +1114,7 @@ describe('Test: ElasticSearch service', function () {
 
     it('should reject the listIndexes promise if elasticsearch throws an error', function () {
       elasticsearch.client.indices.getMapping = function (data) {
-        return Promise.reject(new Error());
+        return q.reject(new Error());
       };
 
       return should(elasticsearch.listIndexes(requestObject)).be.rejected();
@@ -1122,7 +1123,7 @@ describe('Test: ElasticSearch service', function () {
 
   describe('#getInfos', function () {
     it('should allow getting elasticsearch informations', function () {
-      var esStub = function () { return Promise.resolve({version: {}, indices: {store: {}}}); };
+      var esStub = function () { return q({version: {}, indices: {store: {}}}); };
 
       elasticsearch.client.info = elasticsearch.client.cluster.health = elasticsearch.client.cluster.stats = esStub;
       return should(elasticsearch.getInfos(requestObject)).be.fulfilled();

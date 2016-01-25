@@ -1,5 +1,6 @@
 var
   should = require('should'),
+  q = require('q'),
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
@@ -15,7 +16,7 @@ describe('Test: admin controller', function () {
     kuzzle.start(params, {dummy: true})
       .then(function () {
         kuzzle.repositories.role.validateAndSaveRole = role => {
-          return Promise.resolve({
+          return q({
             _index: kuzzle.config.internalIndex,
             _type: 'roles',
             _id: role._id,

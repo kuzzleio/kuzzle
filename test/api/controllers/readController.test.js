@@ -21,11 +21,11 @@ before(function (done) {
   kuzzle.start(params, {dummy: true})
     .then(function () {
       kuzzle.services.list.readEngine = {
-        search: function(requestObject) { return Promise.resolve(new ResponseObject(requestObject, {})); },
-        get: function(requestObject) { return Promise.resolve(new ResponseObject(requestObject, {})); },
-        count: function(requestObject) { return Promise.resolve(new ResponseObject(requestObject, {})); },
-        listCollections: function(requestObject) { return Promise.resolve(new ResponseObject(requestObject, {})); },
-        listIndexes: function(requestObject) { return Promise.resolve(new ResponseObject(requestObject, {})); },
+        search: function(requestObject) { return q(new ResponseObject(requestObject, {})); },
+        get: function(requestObject) { return q(new ResponseObject(requestObject, {})); },
+        count: function(requestObject) { return q(new ResponseObject(requestObject, {})); },
+        listCollections: function(requestObject) { return q(new ResponseObject(requestObject, {})); },
+        listIndexes: function(requestObject) { return q(new ResponseObject(requestObject, {})); },
       };
 
       Object.keys(kuzzle.services.list).forEach(service => {

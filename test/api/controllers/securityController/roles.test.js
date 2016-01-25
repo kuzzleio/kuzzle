@@ -1,5 +1,6 @@
 var
   should = require('should'),
+  q = require('q'),
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
@@ -15,7 +16,7 @@ describe('Test: security controller - roles', function () {
       .then(function () {
         // Mock
         kuzzle.repositories.role.validateAndSaveRole = role => {
-          return Promise.resolve({
+          return q({
             _index: kuzzle.config.internalIndex,
             _type: 'roles',
             _id: role._id,
@@ -23,7 +24,7 @@ describe('Test: security controller - roles', function () {
           });
         };
         kuzzle.repositories.role.loadOneFromDatabase = id => {
-          return Promise.resolve({
+          return q({
             _index: kuzzle.config.internalIndex,
             _type: 'roles',
             _id: id,
@@ -31,13 +32,13 @@ describe('Test: security controller - roles', function () {
           });
         };
         kuzzle.services.list.readEngine.search = requestObject => {
-          return Promise.resolve(new ResponseObject(requestObject, {
+          return q(new ResponseObject(requestObject, {
             hits: [{_id: 'test'}],
             total: 1
           }));
         };
         kuzzle.repositories.role.deleteFromDatabase = requestObject => {
-          return Promise.resolve(new ResponseObject(requestObject, {_id: 'test'}));
+          return q(new ResponseObject(requestObject, {_id: 'test'}));
         };
 
         done();
