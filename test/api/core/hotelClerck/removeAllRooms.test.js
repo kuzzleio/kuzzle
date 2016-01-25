@@ -46,10 +46,10 @@ describe('Test: hotelClerk.removeRooms', function () {
         return kuzzle.repositories.profile.hydrate(kuzzle.repositories.profile.profiles.anonymous, params.userProfiles.anonymous);
       })
       .then(function () {
-        return kuzzle.repositories.user.anonymous();
+        return kuzzle.repositories.token.anonymous();
       })
-      .then(function (user) {
-        context.user = user;
+      .then(function (token) {
+        context.token = token;
         done();
       });
   });

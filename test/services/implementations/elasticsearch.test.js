@@ -1019,19 +1019,6 @@ describe('Test: ElasticSearch service', function () {
 
       return should(elasticsearch.deleteIndexes(requestObject)).be.rejected();
     });
-
-    it('should not delete any index if only the internal index exists', function () {
-      elasticsearch.client.indices.getMapping = function (data) {
-        var indexes = {};
-        indexes[kuzzle.config.internalIndex] = [];
-        return q(indexes);
-      };
-      elasticsearch.client.indices.delete = function () {
-        return q.reject(new Error('rejected'));
-      };
-
-      return should(elasticsearch.deleteIndexes(requestObject)).be.fulfilled();
-    });
   });
 
   describe('#createIndex', function () {

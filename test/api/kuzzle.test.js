@@ -11,7 +11,12 @@ describe('Test kuzzle constructor', function () {
 
   before(function () {
     kuzzle = new Kuzzle();
-    return kuzzle.start(params, {dummy: true});
+    return kuzzle.start(params, {dummy: true})
+      .then(() => {
+        kuzzle.pluginsManager = {
+              trigger: function(event, data) {}
+            };
+      });
   });
 
   it('should construct a kuzzle object', function () {
@@ -73,7 +78,8 @@ describe('Test kuzzle constructor', function () {
         .catch(error => done(error));
     });
 
-    it('should log an error if elasticsearch fail when cleaning database', function () {
+    it('should log an error if elasticsearch fail when cleaning database', function (done) {
+      var hasTriggedPluginManager = false;
 
       process.env.LIKE_A_VIRGIN = 1;
       kuzzle.isServer = true;
@@ -85,6 +91,8 @@ describe('Test kuzzle constructor', function () {
         trigger: function(event, data) {
           should(event).be.exactly('cleanDb:error');
           should(data).be.exactly('Oops... something really bad happened during reset...');
+
+          hasTriggedPluginManager = true;
         }
       };
 
@@ -98,6 +106,11 @@ describe('Test kuzzle constructor', function () {
       };
 
       should(kuzzle.cleanDb()).be.fulfilled();
+
+      setTimeout(() => {
+        should(hasTriggedPluginManager).be.exactly(true);
+        done();
+      }, 100);
     });
 
     it('should not clean database when environment variable LIKE_A_VIRGIN is not set to 1', function (done) {
