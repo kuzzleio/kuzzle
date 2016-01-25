@@ -5,6 +5,7 @@
  */
 var
   should = require('should'),
+  q = require('q'),
   rewire = require('rewire'),
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
@@ -27,7 +28,7 @@ describe('Test: notifier.publish', function () {
     kuzzle.start(params, {dummy: true})
       .then(() => {
         kuzzle.services.list.notificationCache = {
-          add: function () { cached = true; return Promise.resolve({}); },
+          add: function () { cached = true; return q({}); },
           expire: function () { expired = true; }
         };
 
@@ -47,7 +48,7 @@ describe('Test: notifier.publish', function () {
 
     notifier = new Notifier(kuzzle);
     notifier.notify = function () { notified = true; };
-    kuzzle.dsl.testFilters = function () { return Promise.resolve(rooms); };
+    kuzzle.dsl.testFilters = function () { return q(rooms); };
     notified = false;
     cached = false;
     expired = false;
@@ -109,11 +110,13 @@ describe('Test: notifier.publish', function () {
     request.action = 'create';
 
     notifier.publish(new RequestObject(request)).then(result => {
-      should(result).be.instanceof(ResponseObject);
-      should(notified).be.true();
-      should(cached).be.true();
-      should(expired).be.true();
-      done();
+      setTimeout(() => {
+        should(result).be.instanceof(ResponseObject);
+        should(notified).be.true();
+        should(cached).be.true();
+        should(expired).be.true();
+        done();
+      }, 20);
     })
     .catch(error => done(error));
   });
@@ -122,11 +125,13 @@ describe('Test: notifier.publish', function () {
     request.action = 'createOrUpdate';
 
     notifier.publish(new RequestObject(request)).then(result => {
-      should(result).be.instanceof(ResponseObject);
-      should(notified).be.true();
-      should(cached).be.true();
-      should(expired).be.true();
-      done();
+      setTimeout(() => {
+        should(result).be.instanceof(ResponseObject);
+        should(notified).be.true();
+        should(cached).be.true();
+        should(expired).be.true();
+        done();
+      }, 20);
     })
       .catch(error => done(error));
   });
@@ -141,17 +146,19 @@ describe('Test: notifier.publish', function () {
 
     published
       .then(result => {
-        should(result).be.instanceof(ResponseObject);
-        should(notified).be.false();
-        should(cached).be.false();
-        should(expired).be.false();
-        done();
+        setTimeout(() => {
+          should(result).be.instanceof(ResponseObject);
+          should(notified).be.false();
+          should(cached).be.false();
+          should(expired).be.false();
+          done();
+        });
       })
       .catch(error => done(error));
   });
 
   it('should return a rejected promise if testFilters fails', function () {
-    kuzzle.dsl.testFilters = function () { return Promise.reject(new Error('')); };
+    kuzzle.dsl.testFilters = function () { return q.reject(new Error('')); };
     return should(notifier.publish(new RequestObject(request))).be.rejected();
   });
 });

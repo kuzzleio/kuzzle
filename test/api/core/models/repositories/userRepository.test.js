@@ -36,9 +36,9 @@ before(function (done) {
   mockCacheEngine = {
     get: function (key) {
       if (key === userRepository.index + '/' + userRepository.collection + '/userInCache') {
-        return Promise.resolve(JSON.stringify(userInCache));
+        return q(JSON.stringify(userInCache));
       }
-      return Promise.resolve(null);
+      return q(null);
     },
     volatileSet: function (key, value, ttl) { forwardedResult = {key: key, value: JSON.parse(value), ttl: ttl }; return Promise.resolve('OK'); },
     expire: function (key, ttl) { forwardedResult = {key: key, ttl: ttl}; return Promise.resolve('OK'); }
@@ -46,10 +46,10 @@ before(function (done) {
   mockReadEngine = {
     get: function (requestObject) {
       if (requestObject.data._id === 'userInDB') {
-        return Promise.resolve(new ResponseObject(requestObject, userInDB));
+        return q(new ResponseObject(requestObject, userInDB));
       }
 
-      return Promise.resolve(new NotFoundError('User not found in db'));
+      return q(new NotFoundError('User not found in db'));
     }
   };
   mockWriteEngine = {
@@ -63,7 +63,7 @@ before(function (done) {
 
       var profile = new Profile();
       profile._id = profileKey;
-      return Promise.resolve(profile);
+      return q(profile);
     }
   };
   userInCache = {
@@ -170,14 +170,14 @@ describe('Test: repositories/userRepository', function () {
         user = new User();
 
       Repository.prototype.hydrate = () => {
-        return Promise.reject(new InternalError('Error'));
+        return q.reject(new InternalError('Error'));
       };
 
       return should(userRepository.hydrate(user, {})
         .catch(err => {
           Repository.prototype.hydrate = protoHydrate;
 
-          return Promise.reject(err);
+          return q.reject(err);
         })).be.rejectedWith(InternalError);
     });
 
@@ -250,14 +250,14 @@ describe('Test: repositories/userRepository', function () {
       var token = jwt.sign({_id: 'auser'}, params.jsonWebToken.secret, {algorithm: params.jsonWebToken.algorithm});
 
       userRepository.loadFromCache = () => {
-        return Promise.reject(new InternalError('Error'));
+        return q.reject(new InternalError('Error'));
       };
 
       return should(userRepository.loadFromToken(token)
         .catch(err => {
           delete userRepository.loadFromCache;
 
-          return Promise.reject(err);
+          return q.reject(err);
         })).be.rejectedWith(InternalError);
     });
 
@@ -265,13 +265,13 @@ describe('Test: repositories/userRepository', function () {
       var token = jwt.sign({_id: 'auser'}, params.jsonWebToken.secret, {algorithm: params.jsonWebToken.algorithm});
 
       userRepository.loadOneFromDatabase = () => {
-        return Promise.reject(new InternalError('Error'));
+        return q.reject(new InternalError('Error'));
       };
       return should(userRepository.loadFromToken(token)
         .catch(err => {
           delete userRepository.loadOneFromDatabase;
 
-          return Promise.reject(err);
+          return q.reject(err);
         })).be.rejectedWith(InternalError);
     });
 
@@ -285,7 +285,7 @@ describe('Test: repositories/userRepository', function () {
         .catch(err => {
           delete userRepository.admin;
 
-          return Promise.reject(err);
+          return q.reject(err);
         })).be.rejectedWith(InternalError, {details: {message: 'Uncaught error'}});
     });
 
@@ -355,7 +355,7 @@ describe('Test: repositories/userRepository', function () {
         .catch(err => {
           kuzzle.config.jsonWebToken.algorithm = params.jsonWebToken.algorithm;
 
-          return Promise.reject(err);
+          return q.reject(err);
         })).be.rejectedWith(InternalError);
     });
 
@@ -419,14 +419,14 @@ describe('Test: repositories/userRepository', function () {
     it('should reject the promise if an error occurred while fetching the user', () => {
 
       userRepository.load = () => {
-        return Promise.reject(new InternalError('Error'));
+        return q.reject(new InternalError('Error'));
       };
 
       return should(userRepository.loadByUsernameAndPassword('userInCache', 'azerty')
         .catch(err => {
           delete userRepository.load;
 
-          return Promise.reject(err);
+          return q.reject(err);
         })).be.rejectedWith(InternalError);
     });
   });

@@ -1,5 +1,6 @@
 var
   should = require('should'),
+  q = require('q'),
   rewire = require('rewire'),
   methods = rewire('../../../../lib/api/dsl/methods'),
   BadRequestError = require.main.require('lib/api/core/errors/badRequestError');
@@ -168,7 +169,7 @@ describe('Test bool method', function () {
   it('should return a rejected promise if one of the bool sub-methods fails', function () {
     var f = { must: [ { foo: 'bar' } ] };
 
-    methods.must = function () { return Promise.reject(new Error('rejected')); };
+    methods.must = function () { return q.reject(new Error('rejected')); };
     return should(methods.bool(roomId, index, collection, f)).be.rejectedWith('rejected');
   });
 });

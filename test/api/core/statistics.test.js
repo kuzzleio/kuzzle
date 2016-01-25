@@ -3,6 +3,7 @@
  */
 var
   should = require('should'),
+  q = require('q'),
   rewire = require('rewire'),
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
@@ -377,7 +378,7 @@ describe('Test: statistics core component', function () {
     var statsCache = kuzzle.services.list.statsCache;
 
     kuzzle.services.list.statsCache = {
-      get: () => { return Promise.reject(new Error()); }
+      get: () => { return q.reject(new Error()); }
     };
 
     stats.lastFrame = Date.now();
@@ -386,7 +387,7 @@ describe('Test: statistics core component', function () {
       stats.getLastStats(requestObject)
         .catch(error => {
           kuzzle.services.list.statsCache = statsCache;
-          return Promise.reject(error);
+          return q.reject(error);
         })
     ).be.rejected();
   });

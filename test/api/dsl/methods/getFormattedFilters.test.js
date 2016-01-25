@@ -1,6 +1,7 @@
 var
   should = require('should'),
   rewire = require('rewire'),
+  q = require('q'),
   methods = rewire('../../../../lib/api/dsl/methods'),
   BadRequestError = require.main.require('lib/api/core/errors/badRequestError');
 
@@ -137,7 +138,7 @@ describe('Test: dsl.getFormattedFilters method', function () {
         }
       };
 
-    methods.exists = function () { return Promise.reject(new Error('rejected')); };
+    methods.exists = function () { return q.reject(new Error('rejected')); };
 
     return should(getFormattedFilters('roomId', 'index', 'collection', filter)).be.rejectedWith('rejected');
   });

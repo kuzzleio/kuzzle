@@ -1,5 +1,6 @@
 var
   should = require('should'),
+  q = require('q'),
   rewire = require('rewire'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
   Dsl = rewire('../../../../lib/api/dsl/index');
@@ -17,7 +18,7 @@ describe('Test: dsl.testFieldFilters', function () {
 
   before(function () {
     Dsl.__set__('testRooms', function (rooms) {
-      return Promise.resolve(rooms);
+      return q(rooms);
     });
   });
 
@@ -120,7 +121,7 @@ describe('Test: dsl.testFieldFilters', function () {
     };
 
     return Dsl.__with__({
-      testRooms: function () { return Promise.reject(new Error('rejected')); }
+      testRooms: function () { return q.reject(new Error('rejected')); }
     })(function () {
       result = testFieldFilters.call(dsl, requestObject, { 'foo.bar.baz': '' }, {});
       return should(result).be.rejectedWith('rejected');

@@ -1,18 +1,17 @@
 var
   should = require('should'),
   rewire = require('rewire'),
+  q = require('q'),
   methods = rewire('../../../../lib/api/dsl/methods');
-
-
 
 describe('Test: dsl.must method', function () {
   before(function () {
     methods.__set__('getFormattedFilters', function (roomId) {
       if (roomId === 'resolve') {
-        return Promise.resolve('resolved');
+        return q('resolved');
       }
       else {
-        return Promise.reject(new Error('rejected'));
+        return q.reject(new Error('rejected'));
       }
     });
   });
