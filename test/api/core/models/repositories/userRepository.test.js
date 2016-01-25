@@ -52,7 +52,7 @@ before(function (done) {
     }
   };
   mockWriteEngine = {
-    createOrUpdate: requestObject => {  }
+    execute: requestObject => {  }
   };
   mockProfileRepository = {
     loadProfile: function (profileKey) {

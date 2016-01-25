@@ -82,7 +82,7 @@ describe('Test: repositories/roleRepository', function () {
   };
 
   mockWriteEngine = {
-    createOrUpdate: function (requestObject) {
+    execute: function (requestObject) {
       forwardedObject = requestObject;
       return Promise.resolve(new ResponseObject(requestObject, {}));
     }

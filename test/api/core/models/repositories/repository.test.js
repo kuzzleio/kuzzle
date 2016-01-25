@@ -15,11 +15,14 @@ describe('Test: repositories/repository', function () {
     ObjectConstructor,
     mockCacheEngine,
     mockReadEngine,
-    mockWriteEngine;
+    mockWriteEngine,
+    cachedObject,
+    uncachedObject;
 
   ObjectConstructor = function () {
     this.type = 'testObject';
   };
+
   persistedObject = new ObjectConstructor();
   persistedObject._id = -1;
   persistedObject.name = 'persisted';
@@ -116,7 +119,7 @@ describe('Test: repositories/repository', function () {
     }
   };
   mockWriteEngine = {
-    createOrUpdate: function (o) {
+    execute: function (o) {
       forwardedObject = o;
     }
   };
