@@ -1,5 +1,4 @@
 var
-  jwt = require('jsonwebtoken'),
   q = require('q'),
   should = require('should'),
   params = require('rc')('kuzzle'),
@@ -12,7 +11,6 @@ var
   },
   InternalError = require.main.require('lib/api/core/errors/internalError'),
   NotFoundError = require.main.require('lib/api/core/errors/notFoundError'),
-  UnauthorizedError = require.main.require('lib/api/core/errors/unauthorizedError'),
   ResponseObject = require.main.require('lib/api/core/models/responseObject'),
   Profile = require.main.require('lib/api/core/models/security/profile'),
   User = require.main.require('lib/api/core/models/security/user'),
@@ -26,7 +24,7 @@ before(function (done) {
     encryptedPassword = '5c4ec74fd64bb57c05b4948f3a7e9c7d450f069a',
     mockCacheEngine,
     mockReadEngine,
-    mockWriteEngine,
+    mockWriteLayer,
     mockProfileRepository,
     userInCache,
     userInDB,
@@ -35,9 +33,9 @@ before(function (done) {
   mockCacheEngine = {
     get: function (key) {
       if (key === userRepository.index + '/' + userRepository.collection + '/userInCache') {
-        return Promise.resolve(JSON.stringify(userInCache));
+        return q(JSON.stringify(userInCache));
       }
-      return Promise.resolve(null);
+      return q(null);
     },
     volatileSet: function (key, value, ttl) { forwardedResult = {key: key, value: JSON.parse(value), ttl: ttl }; },
     expire: function (key, ttl) { forwardedResult = {key: key, ttl: ttl}; }
@@ -45,20 +43,20 @@ before(function (done) {
   mockReadEngine = {
     get: function (requestObject) {
       if (requestObject.data._id === 'userInDB') {
-        return Promise.resolve(new ResponseObject(requestObject, userInDB));
+        return q(new ResponseObject(requestObject, userInDB));
       }
 
-      return Promise.resolve(new NotFoundError('User not found in db'));
+      return q(new NotFoundError('User not found in db'));
     }
   };
-  mockWriteEngine = {
-    createOrReplace: requestObject => { }
+  mockWriteLayer = {
+    execute: requestObject => { }
   };
   mockProfileRepository = {
     loadProfile: function (profileKey) {
       var profile = new Profile();
       profile._id = profileKey;
-      return Promise.resolve(profile);
+      return q(profile);
     }
   };
   userInCache = {
@@ -76,7 +74,7 @@ before(function (done) {
   userRepository = new UserRepository();
   userRepository.cacheEngine = mockCacheEngine;
   userRepository.readEngine = mockReadEngine;
-  userRepository.writeEngine = mockWriteEngine;
+  userRepository.writeLayer = mockWriteLayer;
 
   kuzzle.repositories = {};
   kuzzle.repositories.profile = mockProfileRepository;
@@ -161,19 +159,19 @@ describe('Test: repositories/userRepository', function () {
         user = new User();
 
       Repository.prototype.hydrate = () => {
-        return Promise.reject(new InternalError('Error'));
+        return q.reject(new InternalError('Error'));
       };
 
       return should(userRepository.hydrate(user, {})
         .catch(err => {
           Repository.prototype.hydrate = protoHydrate;
 
-          return Promise.reject(err);
+          return q.reject(err);
         })).be.rejectedWith(InternalError);
     });
   });
 
-  describe('#loadFromToken', function () {
+  /*describe('#loadFromToken', function () {
     it('should reject the promise if the jwt is invalid', function () {
       return should(userRepository.loadFromToken('invalidToken')).be.rejectedWith(UnauthorizedError, {details: {subCode: UnauthorizedError.prototype.subCodes.JsonWebTokenError, description: 'jwt malformed'}});
     });
@@ -207,14 +205,14 @@ describe('Test: repositories/userRepository', function () {
       var token = jwt.sign({_id: 'auser'}, params.jsonWebToken.secret, {algorithm: params.jsonWebToken.algorithm});
 
       userRepository.loadFromCache = () => {
-        return Promise.reject(new InternalError('Error'));
+        return q.reject(new InternalError('Error'));
       };
 
       return should(userRepository.loadFromToken(token)
         .catch(err => {
           delete userRepository.loadFromCache;
 
-          return Promise.reject(err);
+          return q.reject(err);
         })).be.rejectedWith(InternalError);
     });
 
@@ -222,13 +220,13 @@ describe('Test: repositories/userRepository', function () {
       var token = jwt.sign({_id: 'auser'}, params.jsonWebToken.secret, {algorithm: params.jsonWebToken.algorithm});
 
       userRepository.loadOneFromDatabase = () => {
-        return Promise.reject(new InternalError('Error'));
+        return q.reject(new InternalError('Error'));
       };
       return should(userRepository.loadFromToken(token)
         .catch(err => {
           delete userRepository.loadOneFromDatabase;
 
-          return Promise.reject(err);
+          return q.reject(err);
         })).be.rejectedWith(InternalError);
     });
 
@@ -242,7 +240,7 @@ describe('Test: repositories/userRepository', function () {
         .catch(err => {
           delete userRepository.admin;
 
-          return Promise.reject(err);
+          return q.reject(err);
         })).be.rejectedWith(InternalError, {details: {message: 'Uncaught error'}});
     });
 
@@ -312,7 +310,7 @@ describe('Test: repositories/userRepository', function () {
         .catch(err => {
           kuzzle.config.jsonWebToken.algorithm = params.jsonWebToken.algorithm;
 
-          return Promise.reject(err);
+          return q.reject(err);
         })).be.rejectedWith(InternalError);
     });
 
@@ -334,10 +332,11 @@ describe('Test: repositories/userRepository', function () {
     });
 
   });
+  */
 
-  describe('#loadByUsernameAndPassword', function () {
+  describe('#load', function () {
     it('should resolve to user if good credentials are given', function (done) {
-      userRepository.loadByUsernameAndPassword('userInCache', 'azerty')
+      userRepository.load('userInCache')
         .then(function (user) {
           should(user._id).be.exactly('userInCache');
           should(user.name).be.exactly('Johnny Cash');
@@ -352,7 +351,7 @@ describe('Test: repositories/userRepository', function () {
     });
 
     it('should resolve to "null" if username is not found', function (done) {
-      userRepository.loadByUsernameAndPassword('unknownUser', 'azerty')
+      userRepository.load('unknownUser')
         .then(function (user) {
           should(user).be.null();
           done();
@@ -362,8 +361,8 @@ describe('Test: repositories/userRepository', function () {
         });
     });
 
-    it('should resolve to "null" if bad password is given', function (done) {
-      userRepository.loadByUsernameAndPassword('userInCache', 'badpassword')
+    /*it('should resolve to "null" if bad password is given', function (done) {
+      userRepository.loadByUsername('userInCache')
         .then(function (user) {
           should(user).be.null();
           done();
@@ -371,19 +370,19 @@ describe('Test: repositories/userRepository', function () {
         .catch(function (error) {
           done(error);
         });
-    });
+    });*/
 
     it('should reject the promise if an error occurred while fetching the user', () => {
 
       userRepository.load = () => {
-        return Promise.reject(new InternalError('Error'));
+        return q.reject(new InternalError('Error'));
       };
 
-      return should(userRepository.loadByUsernameAndPassword('userInCache', 'azerty')
+      return should(userRepository.load('userInCache')
         .catch(err => {
           delete userRepository.load;
 
-          return Promise.reject(err);
+          return q.reject(err);
         })).be.rejectedWith(InternalError);
     });
   });

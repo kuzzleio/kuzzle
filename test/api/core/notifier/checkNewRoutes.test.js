@@ -6,6 +6,7 @@
  */
 var
   should = require('should'),
+  q = require('q'),
   _ = require('lodash'),
   rewire = require('rewire'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
@@ -58,9 +59,8 @@ describe('Test: notifier.checkNewRoutes', function () {
       performedActions = [],
       mockupAction = function (responseObject) {
         performedActions.push(responseObject.action);
-        return Promise.resolve({});
-      },
-      action;
+        return q({});
+      };
 
     this.timeout(100);
 

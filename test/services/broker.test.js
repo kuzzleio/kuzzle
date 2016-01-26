@@ -175,4 +175,16 @@ describe('Testing: broker service', function () {
       }
     }, 50);
   });
+
+  it('should wait for a listener to connect to a given room', function (done) {
+    var ret = brokerServer.waitForListeners('foo');
+    this.timeout(300);
+
+    setTimeout(() => {
+      should(ret.inspect().state).be.eql('pending');
+      brokerServer.rooms.foo = { listeners: [{listener: function () {}}] };
+
+      ret.then(() => done()).catch(err => done(err));
+    }, 100);
+  });
 });

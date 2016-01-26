@@ -1,12 +1,11 @@
 var
   should = require('should'),
   rewire = require('rewire'),
+  q = require('q'),
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
   Worker = rewire('../../lib/workers/write');
-
-
 
 describe('Testing: write worker', function () {
   var
@@ -21,10 +20,10 @@ describe('Testing: write worker', function () {
         kuzzle.services.init = function () {};
 
         // we test successful write commands using a mockup 'create' action...
-        kuzzle.services.list.writeEngine.create = function (request) { return Promise.resolve(request); };
+        kuzzle.services.list.writeEngine.create = function (request) { return q(request); };
 
         // ...and failed write command with a mockup 'update' action
-        kuzzle.services.list.writeEngine.update = function () { return Promise.reject(new Error('rejected')); };
+        kuzzle.services.list.writeEngine.update = function () { return q.reject(new Error('rejected')); };
 
         done();
       });

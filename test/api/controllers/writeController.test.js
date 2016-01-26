@@ -1,5 +1,6 @@
 var
   should = require('should'),
+  q = require('q'),
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   RequestObject = require.main.require('lib/api/core/models/requestObject');
@@ -65,7 +66,7 @@ describe('Test: write controller', function () {
       this.timeout(50);
 
       kuzzle.dsl.testFilters = function () {
-        return Promise.resolve(mockupRooms);
+        return q(mockupRooms);
       };
 
       kuzzle.notifier.notify = function (rooms) {
@@ -86,7 +87,7 @@ describe('Test: write controller', function () {
 
     it('should return a rejected promise if publishing fails', function () {
       var requestObject = new RequestObject({body: {foo: 'bar'}}, {}, 'unit-test');
-      kuzzle.notifier.publish = function () { return Promise.reject(new Error('error')); };
+      kuzzle.notifier.publish = function () { return q.reject(new Error('error')); };
       return should(kuzzle.funnel.write.publish(requestObject)).be.rejectedWith(Error);
     });
   });
