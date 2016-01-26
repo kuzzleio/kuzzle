@@ -15,15 +15,21 @@ var ApiRT = function () {
 ApiRT.prototype.send = function () {};
 ApiRT.prototype.sendAndListen = function () {};
 
-ApiRT.prototype.create = function (body, index) {
+ApiRT.prototype.create = function (body, index, collection, jwtToken) {
   var
     msg = {
       controller: 'write',
-      collection: this.world.fakeCollection,
+      collection: collection || this.world.fakeCollection,
       index: index || this.world.fakeIndex,
       action: 'create',
       body: body
     };
+
+  if (jwtToken !== undefined) {
+    msg.headers = {
+      authorization :'Bearer ' + jwtToken
+    };
+  }
 
   return this.send(msg);
 };
@@ -41,11 +47,11 @@ ApiRT.prototype.publish = function (body, index) {
   return this.send(msg);
 };
 
-ApiRT.prototype.createOrUpdate = function (body, index) {
+ApiRT.prototype.createOrUpdate = function (body, index, collection) {
   var
     msg = {
       controller: 'write',
-      collection: this.world.fakeCollection,
+      collection: collection || this.world.fakeCollection,
       index: index || this.world.fakeIndex,
       action: 'createOrUpdate',
       body: body
@@ -370,6 +376,136 @@ ApiRT.prototype.getServerInfo = function () {
       controller: 'read',
       action: 'serverInfo',
       body: {}
+    };
+
+  return this.send(msg);
+};
+
+ApiRT.prototype.login = function (strategy, credentials) {
+  var
+    msg = {
+      controller: 'auth',
+      action: 'login',
+      body: {
+        strategy: strategy,
+        username: credentials.username,
+        password: credentials.password
+      }
+    };
+
+  return this.send(msg);
+};
+
+ApiRT.prototype.logout = function(jwtToken) {
+  var
+    msg = {
+      controller: 'auth',
+      action: 'logout',
+      headers: {
+        authorization: 'Bearer ' + jwtToken
+      }
+    };
+
+  return this.send(msg);
+};
+
+ApiRT.prototype.putRole = function (id, body) {
+  var
+    msg = {
+      controller: 'security',
+      action: 'putRole',
+      _id: id,
+      body: body
+    };
+
+  return this.send(msg);
+};
+
+ApiRT.prototype.getRole = function (id) {
+  var
+    msg = {
+      controller: 'security',
+      action: 'getRole',
+      _id: id
+    };
+
+  return this.send(msg);
+};
+
+ApiRT.prototype.searchRoles = function (body) {
+  var
+    msg = {
+      controller: 'security',
+      action: 'searchRoles',
+      body: body
+    };
+
+  return this.send(msg);
+};
+
+ApiRT.prototype.deleteRole = function (id) {
+  var
+    msg = {
+      controller: 'security',
+      action: 'deleteRole',
+      _id: id
+    };
+
+  return this.send(msg);
+};
+
+ApiRT.prototype.putRole = function (id, body) {
+  var
+    msg = {
+      controller: 'security',
+      action: 'putRole',
+      _id: id,
+      body: body
+    };
+
+  return this.send(msg);
+};
+
+ApiRT.prototype.getProfile = function (id) {
+  var
+    msg = {
+      controller: 'security',
+      action: 'getProfile',
+      _id: id
+    };
+
+  return this.send(msg);
+};
+
+ApiRT.prototype.putProfile = function (id, body) {
+  var
+    msg = {
+      controller: 'security',
+      action: 'putProfile',
+      _id: id,
+      body: body
+    };
+
+  return this.send(msg);
+};
+
+ApiRT.prototype.searchProfiles = function (body) {
+  var
+    msg = {
+      controller: 'security',
+      action: 'searchProfiles',
+      body: body
+    };
+
+  return this.send(msg);
+};
+
+ApiRT.prototype.deleteProfile = function (id) {
+  var
+    msg = {
+      controller: 'security',
+      action: 'deleteProfile',
+      _id: id
     };
 
   return this.send(msg);

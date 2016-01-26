@@ -1,7 +1,7 @@
 var
   config = require('./config')(),
   rp = require('request-promise'),
-  apiVersion = '1.0';
+  apiVersion = require('../../package.json').apiVersion;
 
 var ApiREST = function () {
   this.world = null;
@@ -14,11 +14,11 @@ ApiREST.prototype.init = function (world) {
 ApiREST.prototype.disconnect = function () {};
 
 ApiREST.prototype.apiPath = function (path) {
-  return config.url + '/api/1.0/' + path;
+  return encodeURI(config.url + '/api/1.0/' + path);
 };
 
 ApiREST.prototype.apiBasePath = function (path) {
-  return config.url + '/api/' + path;
+  return encodeURI(config.url + '/api/' + path);
 };
 
 ApiREST.prototype.callApi = function (options) {
@@ -55,12 +55,23 @@ ApiREST.prototype.count = function (filters, index) {
   return this.callApi(options);
 };
 
-ApiREST.prototype.create = function (body, index) {
+ApiREST.prototype.create = function (body, index, collection, jwtToken) {
   var options = {
-    url: this.apiPath(((typeof index !== 'string') ? this.world.fakeIndex : index) + '/' + this.world.fakeCollection + '/_create'),
+    url: this.apiPath(
+      ((typeof index !== 'string') ? this.world.fakeIndex : index) +
+      '/' +
+      ((typeof collection !== 'string') ? this.world.fakeCollection : collection) +
+      '/_create'
+    ),
     method: 'POST',
     json: body
   };
+
+  if (Boolean(jwtToken)) {
+    options.headers = {
+      authorization: 'Bearer ' + jwtToken
+    };
+  }
 
   return this.callApi(options);
 };
@@ -75,9 +86,9 @@ ApiREST.prototype.publish = function (body, index) {
   return this.callApi(options);
 };
 
-ApiREST.prototype.createOrUpdate = function (body, index) {
+ApiREST.prototype.createOrUpdate = function (body, index, collection) {
   var options = {
-    url: this.apiPath(((typeof index !== 'string') ? this.world.fakeIndex : index) + '/' + this.world.fakeCollection + '/' + body._id),
+    url: this.apiPath(((typeof index !== 'string') ? this.world.fakeIndex : index) + '/' + ((typeof collection !== 'string') ? this.world.fakeCollection : collection) + '/' + body._id),
     method: 'PUT',
     json: body
   };
@@ -276,5 +287,114 @@ ApiREST.prototype.getServerInfo = function () {
       return res;
     });
 };
+
+ApiREST.prototype.login = function (strategy, credentials) {
+  var options = {
+    url: this.apiPath('_login'),
+    method: 'POST',
+    json: {
+      strategy: strategy,
+      username: credentials.username,
+      password: credentials.password
+    }
+  };
+
+  return this.callApi(options);
+};
+
+ApiREST.prototype.logout = function (jwtToken) {
+  var options = {
+    url: this.apiPath('_logout'),
+    method: 'GET',
+    json: {},
+    headers: {
+      authorization: 'Bearer ' + jwtToken
+    }
+  };
+
+  return this.callApi(options);
+};
+
+
+ApiREST.prototype.putRole = function (id, body) {
+  var options = {
+    url: this.apiPath('roles/' + id),
+    method: 'PUT',
+    json: body
+  };
+
+  return this.callApi(options);
+};
+
+ApiREST.prototype.getRole = function (id) {
+  var options = {
+    url: this.apiPath('roles/' + id),
+    method: 'GET',
+    json: true
+  };
+
+  return this.callApi(options);
+};
+
+ApiREST.prototype.searchRoles = function (body) {
+  var options = {
+    url: this.apiPath('roles/_search'),
+    method: 'POST',
+    json: body
+  };
+
+  return this.callApi(options);
+};
+
+ApiREST.prototype.deleteRole = function (id) {
+  var options = {
+    url: this.apiPath('roles/' + id),
+    method: 'DELETE',
+    json: true
+  };
+
+  return this.callApi(options);
+};
+
+ApiREST.prototype.putProfile = function (id, body) {
+  var options = {
+    url: this.apiPath('profiles/' + id),
+    method: 'PUT',
+    json: body
+  };
+
+  return this.callApi(options);
+};
+
+ApiREST.prototype.getProfile = function (id) {
+  var options = {
+    url: this.apiPath('profiles/' + id),
+    method: 'GET',
+    json: true
+  };
+
+  return this.callApi(options);
+};
+
+ApiREST.prototype.searchProfiles = function (body) {
+  var options = {
+    url: this.apiPath('profiles/_search'),
+    method: 'POST',
+    json: body
+  };
+
+  return this.callApi(options);
+};
+
+ApiREST.prototype.deleteProfile = function (id) {
+  var options = {
+    url: this.apiPath('profiles/' + id),
+    method: 'DELETE',
+    json: true
+  };
+
+  return this.callApi(options);
+};
+
 
 module.exports = ApiREST;

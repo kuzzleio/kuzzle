@@ -1,5 +1,6 @@
 var
   should = require('should'),
+  q = require('q'),
   rewire = require('rewire'),
   BadRequestError = require.main.require('lib/api/core/errors/badRequestError'),
   InternalError = require.main.require('lib/api/core/errors/internalError'),
@@ -309,6 +310,7 @@ describe('Test: security/roleTest', function () {
     it('should reject the promise if the collections attribute is empty', () => {
       var role = new Role();
       role.indexes = {
+        _canCreate: true,
         '*': {
           collections: {}
         }
@@ -320,6 +322,7 @@ describe('Test: security/roleTest', function () {
     it('should reject the promise if the collection element is not an object', () => {
       var role = new Role();
       role.indexes = {
+        _canCreate: true,
         '*': {
           collections: {
             invalid: true
@@ -333,6 +336,7 @@ describe('Test: security/roleTest', function () {
     it('should reject the promise if the collection element is empty', () => {
       var role = new Role();
       role.indexes = {
+        _canCreate: true,
         '*': {
           collections: {
             invalid: {}
@@ -346,8 +350,10 @@ describe('Test: security/roleTest', function () {
     it('should reject the promise if the controllers attribute is missing', () => {
       var role = new Role();
       role.indexes = {
+        _canCreate: true,
         index: {
           collections: {
+            _canCreate: true,
             collection: {
               a: true
             }
@@ -361,8 +367,10 @@ describe('Test: security/roleTest', function () {
     it('should reject the promise is the controllers attribute is not an object', () => {
       var role = new Role();
       role.indexes = {
+        _canCreate: true,
         index: {
           collections: {
+            _canCreate: true,
             collection: {
               controllers: true
             }
@@ -376,8 +384,10 @@ describe('Test: security/roleTest', function () {
     it('should reject the promise if the controllers attribute is empty', () => {
       var role = new Role();
       role.indexes = {
+        _canCreate: true,
         index: {
           collections: {
+            _canCreate: true,
             collection: {
               controllers: {}
             }
@@ -391,8 +401,10 @@ describe('Test: security/roleTest', function () {
     it('should reject the promise is the controller element is not an object', () => {
       var role = new Role();
       role.indexes = {
+        _canCreate: true,
         index: {
           collections: {
+            _canCreate: true,
             collection: {
               controllers: {
                 controller: true
@@ -408,8 +420,10 @@ describe('Test: security/roleTest', function () {
     it('should reject the promise if the controller element is empty', () => {
       var role = new Role();
       role.indexes = {
+        _canCreate: true,
         index: {
           collections: {
+            _canCreate: true,
             collection: {
               controllers: {
                 controller: {}
@@ -425,8 +439,10 @@ describe('Test: security/roleTest', function () {
     it('should reject the promise if the actions attribute is missing', () => {
       var role = new Role();
       role.indexes = {
+        _canCreate: true,
         index: {
           collections: {
+            _canCreate: true,
             collection: {
               controllers: {
                 controller: {
@@ -444,8 +460,10 @@ describe('Test: security/roleTest', function () {
     it('should reject the promise is the actions attribute is not an object', () => {
       var role = new Role();
       role.indexes = {
+        _canCreate: true,
         index: {
           collections: {
+            _canCreate: true,
             collection: {
               controllers: {
                 controller: {
@@ -463,8 +481,10 @@ describe('Test: security/roleTest', function () {
     it('should reject the promise if the actions attribute is empty', () => {
       var role = new Role();
       role.indexes = {
+        _canCreate: true,
         index: {
           collections: {
+            _canCreate: true,
             collection: {
               controllers: {
                 controller: {
@@ -482,8 +502,10 @@ describe('Test: security/roleTest', function () {
     it('should reject the promise if the action right is neither a boolean or a string', () => {
       var role = new Role();
       role.indexes = {
+        _canCreate: true,
         index: {
           collections: {
+            _canCreate: true,
             collection: {
               controllers: {
                 controller: {
@@ -500,11 +522,63 @@ describe('Test: security/roleTest', function () {
       return should(role.validateDefinition(context)).be.rejectedWith(BadRequestError, {message: 'Invalid definition for index,collection,controller,action. Must be a boolean or a string'});
     });
 
+    it('should reject if _canCreate is not boolean in indexes', () => {
+      var role = new Role();
+      role.indexes = {
+        _canCreate: {},
+        index1: {
+          collections: {
+            _canCreate: true,
+            collection1: {
+              controllers: {
+                controller: {
+                  actions: {
+                    action1: false,
+                    action2: true
+                  }
+                }
+
+              }
+            }
+          }
+        }
+      };
+
+      return should(role.validateDefinition(context)).be.rejectedWith('Invalid index definition for _canCreate. Must be an boolean');
+    });
+
+    it('should reject if _canCreate is not boolean in collections', () => {
+      var role = new Role();
+      role.indexes = {
+        _canCreate: true,
+        index1: {
+          collections: {
+            _canCreate: {},
+            collection1: {
+              controllers: {
+                controller: {
+                  actions: {
+                    action1: false,
+                    action2: true
+                  }
+                }
+
+              }
+            }
+          }
+        }
+      };
+
+      return should(role.validateDefinition(context)).be.rejectedWith('Invalid index definition for index1,_canCreate. Must be an boolean');
+    });
+
     it('should validate if only boolean rights are given', done => {
       var role = new Role();
       role.indexes = {
+        _canCreate: true,
         index1: {
           collections: {
+            _canCreate: true,
             collection1: {
               controllers: {
                 controller: {
@@ -529,6 +603,7 @@ describe('Test: security/roleTest', function () {
         },
         index2: {
           collections: {
+            _canCreate: true,
             collection: {
               controllers: {
                 controller1: {
@@ -562,15 +637,17 @@ describe('Test: security/roleTest', function () {
         Role.__with__({
           Sandbox: function () {
             this.run = function (data) {
-              return Promise.reject(new Error('our unit test error'));
+              return q.reject(new Error('our unit test error'));
             };
           }
         })(() => {
           var role = new Role();
 
           role.indexes = {
+            _canCreate: true,
             index: {
               collections: {
+                _canCreate: true,
                 collection: {
                   controllers: {
                     controller: {
@@ -596,7 +673,7 @@ describe('Test: security/roleTest', function () {
         Role.__with__({
           Sandbox: function () {
             this.run = function (data) {
-              return Promise.resolve({
+              return q({
                 result: 'I am not a boolean'
               });
             };
@@ -604,8 +681,10 @@ describe('Test: security/roleTest', function () {
         })(() => {
           var role = new Role();
           role.indexes = {
+            _canCreate: true,
             index: {
               collections: {
+                _canCreate: true,
                 collection: {
                   controllers: {
                     controller: {
@@ -630,14 +709,16 @@ describe('Test: security/roleTest', function () {
         Role.__with__({
           Sandbox: function () {
             this.run = function (data) {
-              return Promise.resolve({ result: true });
+              return q({ result: true });
             };
           }
         })(() => {
           var role = new Role();
           role.indexes = {
+            _canCreate: true,
             index: {
               collections: {
+                _canCreate: true,
                 collection: {
                   controllers: {
                     controller: {

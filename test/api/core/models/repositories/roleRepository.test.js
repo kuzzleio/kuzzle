@@ -34,7 +34,7 @@ describe('Test: repositories/roleRepository', function () {
     persistedObject1,
     persistedObject2,
     mockReadEngine,
-    mockWriteEngine,
+    mockWriteLayer,
     roleRepository;
 
   ObjectConstructor = function () {
@@ -51,16 +51,16 @@ describe('Test: repositories/roleRepository', function () {
       var err;
 
       if (requestObject.data._id === 'persisted1') {
-        return Promise.resolve(new ResponseObject(requestObject, persistedObject1));
+        return q(new ResponseObject(requestObject, persistedObject1));
       }
       if (requestObject.data._id === 'persisted2') {
-        return Promise.resolve(new ResponseObject(requestObject, persistedObject2));
+        return q(new ResponseObject(requestObject, persistedObject2));
       }
 
       err = new NotFoundError('Not found');
       err.found = false;
       err._id = requestObject.data._id;
-      return Promise.resolve(err);
+      return q(err);
     },
     mget: function (requestObject) {
       var
@@ -77,21 +77,21 @@ describe('Test: repositories/roleRepository', function () {
           results.push({_id: id, found: false});
         }
       });
-      return Promise.resolve(new ResponseObject(requestObject, {docs: results}));
+      return q(new ResponseObject(requestObject, {docs: results}));
     }
   };
 
-  mockWriteEngine = {
-    createOrUpdate: function (requestObject) {
+  mockWriteLayer = {
+    execute: function (requestObject) {
       forwardedObject = requestObject;
-      return Promise.resolve(new ResponseObject(requestObject, {}));
+      return q(new ResponseObject(requestObject, {}));
     }
   };
 
   before(function () {
     roleRepository = new RoleRepository();
     roleRepository.readEngine = mockReadEngine;
-    roleRepository.writeEngine = mockWriteEngine;
+    roleRepository.writeLayer = mockWriteLayer;
   });
 
   beforeEach(function () {
@@ -115,12 +115,12 @@ describe('Test: repositories/roleRepository', function () {
       var result;
 
       roleRepository.loadMultiFromDatabase = () => {
-        return Promise.reject(new InternalError('Error'));
+        return q.reject(new InternalError('Error'));
       };
       result = roleRepository.loadRoles([-999, -998])
         .catch(error => {
           delete roleRepository.loadMultiFromDatabase;
-          return Promise.reject(error);
+          return q.reject(error);
         });
 
       return should(result).be.rejectedWith(InternalError);
@@ -130,13 +130,13 @@ describe('Test: repositories/roleRepository', function () {
       var result;
 
       roleRepository.hydrate = () => {
-        return Promise.reject(new InternalError('Error'));
+        return q.reject(new InternalError('Error'));
       };
 
       result = roleRepository.loadRoles(['guest'])
         .catch(error => {
           delete roleRepository.hydrate;
-          return Promise.reject(error);
+          return q.reject(error);
         });
 
       return should(result).be.rejectedWith(InternalError);
@@ -186,6 +186,122 @@ describe('Test: repositories/roleRepository', function () {
         });
     });
 
+  });
+
+
+  describe('#loadRole', function () {
+    it('should return a bad request error when no _id is provided', () => {
+      return should(roleRepository.loadRole({})).rejectedWith(BadRequestError);
+    });
+
+    it('should load the role directly from memory if it\'s in memory', () => {
+      var isLoadFromDB = false;
+
+      roleRepository.roles = {roleId : {myRole : {}}};
+      RoleRepository.prototype.loadOneFromDatabase = () => {
+        isLoadFromDB = true;
+        return q();
+      };
+
+      return roleRepository.loadRole({_id: 'roleId'})
+        .then((role) => {
+          should(isLoadFromDB).be.false();
+          should(role).have.property('myRole');
+        });
+    });
+
+    it('should load the role directly from DB if it\'s not in memory', () => {
+      var isLoadFromDB = false;
+
+      roleRepository.roles = {otherRoleId : {myRole : {}}};
+      RoleRepository.prototype.loadOneFromDatabase = () => {
+        isLoadFromDB = true;
+        return q(roleRepository.roles.otherRoleId);
+      };
+
+      return roleRepository.loadRole({_id: 'roleId'})
+        .then((role) => {
+          should(isLoadFromDB).be.true();
+          should(role).have.property('myRole');
+        });
+    });
+  });
+
+  describe('#searchRole', function () {
+    it('should call repository search without filter and with parameters from requestObject', () => {
+      var
+        savedFilter,
+        savedFrom,
+        savedSize,
+        savedHydrate;
+
+      RoleRepository.prototype.search = (filter, from, size, hydrate) => {
+        savedFilter = filter;
+        savedFrom = from;
+        savedSize = size;
+        savedHydrate = hydrate;
+
+        return q();
+      };
+
+      return roleRepository.searchRole(new RequestObject({body: {from: 1, size: 3, hydrate: false}}))
+        .then(() => {
+          should(savedFilter).be.eql({});
+          should(savedFrom).be.eql(1);
+          should(savedSize).be.eql(3);
+          should(savedHydrate).be.false();
+        });
+    });
+
+    it('should construct a correct filter according to indexes', () => {
+      var
+        savedFilter,
+        savedFrom,
+        savedSize,
+        savedHydrate;
+
+      RoleRepository.prototype.search = (filter, from, size, hydrate) => {
+        savedFilter = filter;
+        savedFrom = from;
+        savedSize = size;
+        savedHydrate = hydrate;
+
+        return q();
+      };
+
+      return roleRepository.searchRole(new RequestObject({body: {indexes: ['test']}}))
+        .then(() => {
+          should(savedFilter).be.eql({or: [
+            // specific index name provided
+            {exists: {field: 'indexes.test'}},
+            // default filter
+            {exists: {field: 'indexes.*'}}
+          ]});
+        });
+    });
+  });
+
+  describe('#deleteRole', function () {
+    it('should reject if there is no _id', () => {
+      should(roleRepository.deleteRole({})).rejectedWith(BadRequestError);
+    });
+
+    it('should call deleteFromDatabase and remove the role from memory', () => {
+      var isDeletedFromDB = false;
+
+      roleRepository.roles = {myRole : {}};
+
+      RoleRepository.prototype.deleteFromDatabase = id => {
+        isDeletedFromDB = true;
+        return q();
+      };
+
+      return roleRepository.deleteRole({_id: 'myRole'})
+        .then(() => {
+          should(roleRepository.roles).be.eql({});
+          should(isDeletedFromDB).be.true();
+        });
+    });
   });
 
   describe('#getRoleFromRequestObject', function () {

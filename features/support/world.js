@@ -58,5 +58,60 @@ module.exports = function () {
       iwant: 'to break free',
       we: ['will', 'rock', 'you']
     };
+
+    this.roles = {
+      role1: {
+        indexes: {
+          'fakeIndex1': {
+            collections: {
+              'fakeCollection1': {
+                controllers: {
+                  'fakeController1': {
+                    actions: {
+                      'fakeAction1': true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      role2: {
+        indexes: {
+          'fakeIndex2': {
+            collections: {
+              'fakeCollection2': {
+                controllers: {
+                  'fakeController2': {
+                    actions: {
+                      'fakeAction2': true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    };
+
+    this.profiles = {
+      profile1: {
+        roles: ['role1']
+      },
+      profile2: {
+        roles: ['role1', 'role2']
+      },
+      profile3: {
+        roles: ['role2']
+      },
+      invalidProfile: {
+        roles: ['unexisting-role']
+      },
+      emptyProfile: {
+        roles: []
+      }
+    };
   };
 };

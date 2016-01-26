@@ -2,14 +2,32 @@ var
   async = require('async');
 
 var apiSteps = function () {
-  this.When(/^I write the document ?(?:"([^"]*)")?(?: in index "([^"]*)")?$/, function (documentName, index, callback) {
-    var document = this[documentName] || this.documentGrace;
+  this.When(/^I ?(can't)* write the document ?(?:"([^"]*)")?(?: in index "([^"]*)")?(with auth token)?$/, function (cant, documentName, index, auth, callback) {
+    var
+      collection,
+      jwtToken,
+      document = this[documentName] || this.documentGrace;
 
-    this.api.create(document, index)
+    if (Boolean(auth)) {
+      if (!Boolean(this.jwtToken)) {
+        callback(new Error('Cannot retrieve jwt token'));
+        return false;
+      }
+      jwtToken = this.jwtToken;
+    }
+
+
+    this.api.create(document, index, collection, jwtToken)
       .then(function (body) {
         if (body.error) {
-          callback(new Error(body.error.message));
-          return false;
+          if (cant) {
+            callback();
+            return true;
+          }
+          else {
+            callback(new Error(body.error.message));
+            return false;
+          }
         }
 
         if (!body.result) {
@@ -21,6 +39,10 @@ var apiSteps = function () {
         callback();
       }.bind(this))
       .catch(function (error) {
+        if (cant) {
+          callback();
+          return true;
+        }
         callback(error);
       });
   });

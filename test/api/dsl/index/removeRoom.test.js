@@ -1,5 +1,6 @@
 var
   should = require('should'),
+  q = require('q'),
   rewire = require('rewire'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
   params = require('rc')('kuzzle'),
@@ -78,7 +79,7 @@ describe('Test removeRoom function index.js file from DSL', function () {
 
   it('should return a reject promise on fail', function () {
     Dsl.__with__({
-      removeRoomFromFields: function () { return Promise.reject(new Error('rejected')); }
+      removeRoomFromFields: function () { return q.reject(new Error('rejected')); }
     })(function () {
       var dsl = new Dsl(kuzzle);
       return should(dsl.removeRoom(kuzzle.hotelClerk.rooms[roomId])).be.rejected();

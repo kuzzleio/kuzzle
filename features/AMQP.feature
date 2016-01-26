@@ -218,3 +218,53 @@ Feature: Test AMQP API
     Then I'm able to find the index named "my-new-index" in index list
     Then I'm not able to find the index named "my-undefined-index" in index list
     Then I'm able to delete the index named "my-new-index"
+
+  @usingAMQP
+  Scenario: login user
+    When I send a login request with test:testpwd user
+    Then I write the document with auth token
+    Then I send a logout request with previously received token
+    Then I can't write the document with auth token
+
+
+  @usingAMQP @cleanSecurity
+  Scenario: Create/get/search/update/delete role
+    When I create a new role "role1" with id "test"
+    Then I'm able to find a role with id "test"
+    And I update the role with id "test" with role "role2"
+    Then I'm able to find a role with id "test" with role "role2"
+    Then I'm able to find "1" role by searching index corresponding to role "role2"
+    And I delete the role with id "test"
+    Then I'm not able to find a role with id "test"
+
+  @usingAMQP @cleanSecurity
+  Scenario: create an invalid profile with unexisting role triggers an error
+    Then I cannot create an invalid profile
+
+  @usingAMQP @cleanSecurity
+  Scenario: get profile without id triggers an error
+    Then I cannot a profile without ID
+
+  @usingAMQP @cleanSecurity
+  Scenario: creating a profile with an empty set of roles triggers an error
+    Then I cannot create a profile with an empty set of roles
+
+  @usingAMQP @cleanSecurity
+  Scenario: create, get and delete a profile
+    Given I create a new role "role1" with id "role1"
+    And I create a new role "role2" with id "role2"
+    When I create a new profile "profile1" with id "my-new-profile"
+    Then I'm able to find the profile with id "my-new-profile"
+    Given I delete the profile with id "my-new-profile"
+    Then I'm not able to find the profile with id "my-new-profile"
+
+  @usingAMQP @cleanSecurity
+  Scenario: search and update profiles
+    Given I create a new profile "profile1" with id "my-profile-1"
+    And I create a new profile "profile3" with id "my-profile-2"
+    Then I'm able to find "1" profiles containing the role with id "role1"
+    Then I'm able to find "2" profiles
+    Then I'm able to find "0" profiles containing the role with id "undefined-role"
+    Given I update the profile with id "my-profile-2" by adding the role "role1"
+    Then I'm able to find "2" profiles
+    Then I'm able to find "2" profiles containing the role with id "role1"

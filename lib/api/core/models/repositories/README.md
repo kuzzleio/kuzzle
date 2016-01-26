@@ -29,9 +29,11 @@ The constructor function for the business objects. The load* methods will return
 
 The read engine to use to retrieve the business objects from the database. Defaults to Kuzzle's readEngine (elasticsearch).
 
-* *function* writeEngine (optional)
+* *function* writeLayer (optional)
 
-The write engine to use to persist the business objects to the database. Defaults to Kuzzle's writeEngine (elasticsearch).
+The write layer to use to persist business objects to the database.  
+This layer exposes only a `execute` function, taking a `RequestObject` object as an argument, and returning a promise.  
+Defaults to Kuzzle's write workers.
 
 * *function* cacheEngine (optional)
 
@@ -69,6 +71,37 @@ Returns a promise that resolves to an array containing the *ObjectConstructor* i
 
 If no matching document could be found, an empty array is returned.
 
+## search
+
+```javascript
+Repository.prototype.search = function (filter, from, size, hydrate) {...}
+```
+
+This method tries to load document from readEngine or the business objects (according to hydrate parameter) form the database matching the given ids.
+
+### parameters
+
+* *object* filter
+
+The filter sent to the readEngine in order to retrieve documents.
+
+* *Integer* from
+
+Starting offset (default: 0).
+
+* *Integer* size
+
+Number of hits to return (default: 20).
+
+* *Boolean* hydrate
+
+If hydrate is true, the function resolve a ResponseObject with a list of business objects. If hydrate is false, resolve a ResponseObject with documents directly from readEngine. (default: false).
+
+### returns
+
+Returns a promise that resolves a ResponseObject that contains either a list of business objects or a list of document from readEngine according to the parameter hydrate.
+
+
 ## loadFromCache
 
 ```javascript
@@ -87,7 +120,7 @@ The object id to load from the cache.
 
 An optional options object.
 
-Currently, the only optional parameter that can be pass to the method is *key*. 
+Currently, the only optional parameter that can be pass to the method is *key*.
 If no key is given to the method, defaults to *collection* + '/' + id.
 
 ### returns
@@ -223,4 +256,3 @@ The business object to persist.
 ### returns
 
 *(Object)*
-

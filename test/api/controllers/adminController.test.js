@@ -1,5 +1,6 @@
 var
   should = require('should'),
+  q = require('q'),
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
@@ -15,7 +16,7 @@ describe('Test: admin controller', function () {
     kuzzle.start(params, {dummy: true})
       .then(function () {
         kuzzle.repositories.role.validateAndSaveRole = role => {
-          return Promise.resolve({
+          return q({
             _index: '%kuzzle',
             _type: 'roles',
             _id: role._id,
@@ -148,20 +149,6 @@ describe('Test: admin controller', function () {
     });
 
     kuzzle.funnel.admin.truncateCollection(requestObject);
-  });
-
-  it('should resolve to a responseObject on a putRole call', done => {
-    kuzzle.funnel.admin.putRole(new RequestObject({
-      body: { _id: 'test', indexes: {} }
-    }))
-      .then(result => {
-        should(result).be.an.instanceOf(ResponseObject);
-        should(result.data.body._id).be.exactly('test');
-        done();
-      })
-      .catch(error => {
-        done(error);
-      });
   });
 
   it('should trigger a hook on a deleteIndexes call', function (done) {
