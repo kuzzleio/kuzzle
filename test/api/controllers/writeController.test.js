@@ -30,6 +30,7 @@ describe('Test: write controller', function () {
     should(kuzzle.funnel.write.create(requestObject)).be.rejected();
     should(kuzzle.funnel.write.createOrUpdate(requestObject)).be.rejected();
     should(kuzzle.funnel.write.update(requestObject)).be.rejected();
+    should(kuzzle.funnel.write.replace(requestObject)).be.rejected();
     done();
   });
 
@@ -132,6 +133,29 @@ describe('Test: write controller', function () {
       });
 
       kuzzle.funnel.write.update(requestObject)
+        .catch(function (error) {
+          done(error);
+        });
+    });
+  });
+
+  describe('#replace', function () {
+    it('should emit a hook on a replace query', function (done) {
+      var requestObject = new RequestObject({body: {foo: 'bar'}}, {}, 'unit-test');
+
+      this.timeout(50);
+
+      kuzzle.once('data:replace', function (obj) {
+        try {
+          should(obj).be.exactly(requestObject);
+          done();
+        }
+        catch (e) {
+          done(e);
+        }
+      });
+
+      kuzzle.funnel.write.replace(requestObject)
         .catch(function (error) {
           done(error);
         });

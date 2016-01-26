@@ -24,10 +24,6 @@
     "version": "1.1.0",
     "activated": true,
     "name": "kuzzle-plugin-auth-passport-local",
-    "defaultConfig": {
-      "secret": "changeme",
-      "algorithm": "sha1",
-      "digest": "hex"
-    }
+    "defaultConfig": {}
   }
 }

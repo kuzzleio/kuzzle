@@ -21,6 +21,12 @@ Feature: Test STOMP API
     Then I'm able to get the document
     And I'm not able to get the document in index "index-test-alt"
 
+  @usingSTOMP
+  Scenario: Replace a document
+    When I write the document "documentGrace"
+    Then I replace the document with "documentAda" document
+    Then my document has the value "Ada" in field "firstName"
+
   @usingSTOMP @unsubscribe
   Scenario: Create or Update a document
     Given A room subscription listening to "lastName" having value "Hopper"
@@ -118,6 +124,24 @@ Feature: Test STOMP API
     When I write the document "documentGrace"
     Then I update the document with value "Foo" in field "lastName"
     Then I should receive a "update" notification
+    And The notification should not have a "_source" member
+    And The notification should have metadata
+
+  @usingSTOMP @unsubscribe
+  Scenario: Document replace: new document notification
+    Given A room subscription listening to "lastName" having value "Hopper"
+    When I write the document "documentAda"
+    Then I replace the document with "documentGrace" document
+    Then I should receive a "replace" notification
+    And The notification should have a "_source" member
+    And The notification should have metadata
+
+  @usingSTOMP @unsubscribe
+  Scenario: Document replace: removed document notification
+    Given A room subscription listening to "lastName" having value "Hopper"
+    When I write the document "documentGrace"
+    Then I replace the document with "documentAda" document
+    Then I should receive a "replace" notification
     And The notification should not have a "_source" member
     And The notification should have metadata
 
