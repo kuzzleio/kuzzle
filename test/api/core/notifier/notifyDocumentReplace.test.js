@@ -55,15 +55,6 @@ var mockupCacheService = {
   }
 };
 
-var mockupTestFilters = function (responseObject) {
-  if (responseObject.data.body._id === 'errorme') {
-    return q.reject(new Error('rejected'));
-  } else if (responseObject.data.body._id === 'removeme') {
-    return q([]);
-  }
-  return q(['foobar']);
-};
-
 describe('Test: notifier.notifyDocumentReplace', function () {
   var
     kuzzle,
@@ -83,7 +74,6 @@ describe('Test: notifier.notifyDocumentReplace', function () {
     kuzzle.start(params, {dummy: true})
       .then(function () {
         kuzzle.services.list.notificationCache = mockupCacheService;
-        kuzzle.dsl.testFilters = mockupTestFilters;
         kuzzle.notifier.notify = function (rooms, response) {
           if (rooms.length > 0) {
             notified++;
