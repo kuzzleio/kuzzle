@@ -3,7 +3,7 @@
  * to messages coming from workers.
  * And in particular, messages from the write worker(s), that need to be forwarded to the right listeners.
  *
- * This file tests the documents update notifications.
+ * This file tests the documents replace notifications.
  */
 var
   should = require('should'),
@@ -41,6 +41,14 @@ var mockupCacheService = {
 
   search: function (id) {
     if (id === 'removeme') {
+      return q(['foobar']);
+    } else if (id === 'errorme') {
+      return q.reject(new Error('rejected'));
+    } else if (id === 'addRequest') {
+      return q(['foobar']);
+    } else if (id === 'removeRequest') {
+      return q([]);
+    } else if (id === 'addme') {
       return q(['foobar']);
     }
     return q([]);
@@ -104,6 +112,7 @@ describe('Test: notifier.notifyDocumentReplace', function () {
 
   it('should notify subscribers when a replaced document entered their scope', function (done) {
     responseObject.data.body._id = 'addme';
+    responseObject.requestId = 'addRequest';
 
     notified = 0;
     mockupCacheService.init();
@@ -117,7 +126,7 @@ describe('Test: notifier.notifyDocumentReplace', function () {
         should(mockupCacheService.removeId).be.undefined();
 
         should(savedResponse.scope).be.exactly('in');
-        should(savedResponse.action).be.exactly('replace');
+        should(savedResponse.action).be.exactly('update');
 
         done();
       })
@@ -128,6 +137,7 @@ describe('Test: notifier.notifyDocumentReplace', function () {
 
   it('should notify subscribers when an updated document left their scope', function (done) {
     responseObject.data.body._id = 'removeme';
+    responseObject.requestId = 'removeRequest';
 
     notified = 0;
     mockupCacheService.init();
@@ -140,7 +150,7 @@ describe('Test: notifier.notifyDocumentReplace', function () {
         should(mockupCacheService.removeId).be.exactly(responseObject.data.body._id);
 
         should(savedResponse.scope).be.exactly('out');
-        should(savedResponse.action).be.exactly('replace');
+        should(savedResponse.action).be.exactly('update');
 
         done();
       })

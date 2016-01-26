@@ -142,7 +142,7 @@ Feature: Test websocket API
     Given A room subscription listening to "lastName" having value "Hopper"
     When I write the document "documentAda"
     Then I replace the document with "documentGrace" document
-    Then I should receive a "replace" notification
+    Then I should receive a "update" notification
     And The notification should have a "_source" member
     And The notification should have metadata
 
@@ -151,7 +151,7 @@ Feature: Test websocket API
     Given A room subscription listening to "lastName" having value "Hopper"
     When I write the document "documentGrace"
     Then I replace the document with "documentAda" document
-    Then I should receive a "replace" notification
+    Then I should receive a "update" notification
     And The notification should not have a "_source" member
     And The notification should have metadata
 
