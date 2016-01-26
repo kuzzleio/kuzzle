@@ -29,9 +29,11 @@ The constructor function for the business objects. The load* methods will return
 
 The read engine to use to retrieve the business objects from the database. Defaults to Kuzzle's readEngine (elasticsearch).
 
-* *function* writeEngine (optional)
+* *function* writeLayer (optional)
 
-The write engine to use to persist the business objects to the database. Defaults to Kuzzle's writeEngine (elasticsearch).
+The write layer to use to persist business objects to the database.  
+This layer exposes only a `execute` function, taking a `RequestObject` object as an argument, and returning a promise.  
+Defaults to Kuzzle's write workers.
 
 * *function* cacheEngine (optional)
 

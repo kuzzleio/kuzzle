@@ -21,11 +21,11 @@ before(function (done) {
   kuzzle.start(params, {dummy: true})
     .then(function () {
       kuzzle.services.list.readEngine = {
-        search: function(requestObject) { return Promise.resolve(new ResponseObject(requestObject, {})); },
-        get: function(requestObject) { return Promise.resolve(new ResponseObject(requestObject, {})); },
-        count: function(requestObject) { return Promise.resolve(new ResponseObject(requestObject, {})); },
-        listCollections: function(requestObject) { return Promise.resolve(new ResponseObject(requestObject, {})); },
-        listIndexes: function(requestObject) { return Promise.resolve(new ResponseObject(requestObject, {})); },
+        search: function(requestObject) { return q(new ResponseObject(requestObject, {})); },
+        get: function(requestObject) { return q(new ResponseObject(requestObject, {})); },
+        count: function(requestObject) { return q(new ResponseObject(requestObject, {})); },
+        listCollections: function(requestObject) { return q(new ResponseObject(requestObject, {})); },
+        listIndexes: function(requestObject) { return q(new ResponseObject(requestObject, {})); },
       };
 
       Object.keys(kuzzle.services.list).forEach(service => {
@@ -75,7 +75,7 @@ describe('Test: read controller', function () {
       stored,
       context = {
         connection: {id: 'connectionid'},
-        user: null
+        token: null
       };
 
     before(function () {
@@ -97,10 +97,10 @@ describe('Test: read controller', function () {
           return kuzzle.repositories.profile.hydrate(kuzzle.repositories.profile.profiles.anonymous, params.userProfiles.anonymous);
         })
         .then(() => {
-          return kuzzle.repositories.user.anonymous();
+          return kuzzle.repositories.token.anonymous();
         })
-        .then(user => {
-          context.user = user;
+        .then(token => {
+          context.token = token;
         });
     });
 

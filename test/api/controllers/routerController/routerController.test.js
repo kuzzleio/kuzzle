@@ -6,6 +6,10 @@ var
   q = require('q'),
   RouterController = rewire('../../../../lib/api/controllers/routerController'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
+  Token = require.main.require('lib/api/core/models/security/token'),
+  User = require.main.require('lib/api/core/models/security/user'),
+  Profile = require.main.require('lib/api/core/models/security/profile'),
+  Role = require.main.require('lib/api/core/models/security/role'),
   ResponseObject = require.main.require('lib/api/core/models/responseObject'),
   PluginImplementationError = require.main.require('lib/api/core/errors/pluginImplementationError');
 
@@ -44,7 +48,7 @@ describe('Test: routerController', () => {
       should(context.connection).be.an.Object();
       should(context.connection.id).be.eql(userId);
       should(context.connection.type).be.eql(protocol);
-      should(context.user).be.null();
+      should(context.token).be.null();
     });
 
     it('should declare a new connection to the statistics core component', () => {
@@ -56,7 +60,7 @@ describe('Test: routerController', () => {
         should(context.connection).be.an.Object();
         should(context.connection.id).be.eql(userId);
         should(context.connection.type).be.eql(protocol);
-        should(context.user).be.null();
+        should(context.token).be.null();
         newConnectionDeclared = true;
       };
 
@@ -86,6 +90,39 @@ describe('Test: routerController', () => {
       kuzzle = new Kuzzle();
       kuzzle.start(params, {dummy: true})
         .then(() => {
+
+          kuzzle.repositories.token.verifyToken = function() {
+            var
+              token = new Token(),
+              role = new Role(),
+              user = new User();
+
+            role.indexes = {
+              '*': {
+                collections: {
+                  '*': {
+                    controllers: {
+                      '*': {
+                        actions: {
+                          '*': true
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            };
+
+            user._id = 'testUser';
+            user.profile = new Profile();
+            user.profile.roles = [role];
+
+            token._id = 'fake-token';
+            token.user = user;
+
+            return q(token);
+          };
+
           return kuzzle.router.newConnection('foo', 'bar');
         })
         .then(res => {
@@ -96,15 +133,15 @@ describe('Test: routerController', () => {
     });
 
     it('should return a fulfilled promise with the right arguments', () => {
-      return should(kuzzle.router.execute(undefined, requestObject, context)).be.fulfilled();
+      return should(kuzzle.router.execute(requestObject, context)).be.fulfilled();
     });
 
     it('should return an error if no request object is provided', () => {
-      return should(kuzzle.router.execute(undefined, undefined, context)).be.rejectedWith(ResponseObject);
+      return should(kuzzle.router.execute(undefined, context)).be.rejectedWith(ResponseObject);
     });
 
     it('should return an error if an invalid context is provided', () => {
-      return should(kuzzle.router.execute(undefined, requestObject, {})).be.rejectedWith(ResponseObject);
+      return should(kuzzle.router.execute(requestObject, {})).be.rejectedWith(ResponseObject);
     });
 
     it('should return an error if an invalid context ID is provided', () => {
@@ -115,13 +152,13 @@ describe('Test: routerController', () => {
             type: 'jude'
           }
         };
-      return should(kuzzle.router.execute(undefined, requestObject, invalidContext)).be.rejectedWith(ResponseObject);
+      return should(kuzzle.router.execute(requestObject, invalidContext)).be.rejectedWith(ResponseObject);
     });
 
     it('should forward any error that occured during execution back to the protocol plugin', () => {
       kuzzle.funnel.execute = () => { return q.reject(new Error('rejected')); };
 
-      return should(kuzzle.router.execute(undefined, requestObject, context)).be.rejectedWith(ResponseObject);
+      return should(kuzzle.router.execute(requestObject, context)).be.rejectedWith(ResponseObject);
     });
   });
 
