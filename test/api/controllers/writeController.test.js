@@ -3,7 +3,8 @@ var
   q = require('q'),
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
-  RequestObject = require.main.require('lib/api/core/models/requestObject');
+  RequestObject = require.main.require('lib/api/core/models/requestObject'),
+  ResponseObject = require.main.require('lib/api/core/models/responseObject');
 
 /*
  * Since we're sending voluntarily false requests, we expect most of these
@@ -11,15 +12,28 @@ var
  */
 describe('Test: write controller', function () {
   var
-    kuzzle;
+    kuzzle,
+    indexCacheAdded;
 
   before(function (done) {
     kuzzle = new Kuzzle();
     kuzzle.start(params, {dummy: true})
       .then(function () {
         kuzzle.services.list.writeEngine = {};
+        kuzzle.indexCache = {
+          add: () => indexCacheAdded = true
+        };
+
+        kuzzle.workerListener = {
+          add: rq => { return q(new ResponseObject(rq)); }
+        };
+
         done();
       });
+  });
+
+  beforeEach(function () {
+    indexCacheAdded = false;
   });
 
   it('should reject an empty request', function (done) {
@@ -113,6 +127,19 @@ describe('Test: write controller', function () {
           done(error);
         });
     });
+
+    it('should add the new collection to the index cache', function (done) {
+      var requestObject = new RequestObject({body: {foo: 'bar'}}, {}, 'unit-test');
+      this.timeout(50);
+
+      kuzzle.funnel.write.createOrUpdate(requestObject)
+        .then(response => {
+          should(response).be.instanceof(ResponseObject);
+          should(indexCacheAdded).be.true();
+          done();
+        })
+        .catch(err => done(err));
+    });
   });
 
   describe('#update', function () {
@@ -202,6 +229,19 @@ describe('Test: write controller', function () {
       });
 
       kuzzle.funnel.write.createCollection(requestObject);
+    });
+
+    it('should add the new collection to the index cache', function (done) {
+      var requestObject = new RequestObject({}, {}, 'unit-test');
+      this.timeout(50);
+
+      kuzzle.funnel.write.createCollection(requestObject)
+        .then(response => {
+          should(response).be.instanceof(ResponseObject);
+          should(indexCacheAdded).be.true();
+          done();
+        })
+        .catch(err => done(err));
     });
   });
 });
