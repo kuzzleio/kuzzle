@@ -22,7 +22,7 @@ describe('Test: repositories/profileRepository', function () {
   var
     mockReadEngine,
     mockRoleRepository,
-    mockSearch,
+    mockUserRepository,
     testProfile,
     testProfilePlain,
     errorProfilePlain,
