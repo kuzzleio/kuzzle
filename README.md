@@ -53,7 +53,7 @@ From the root directory:
 
 ## Advanced installation
 
-Take a look at the [installation](docs/installation.md) file for more installation ways. (Manual installation, add fixture, database reset and more)
+Take a look at the [installation](docs/installation.md) file for more installation ways. (Manual installation, update, add fixture, database reset and more)
 
 # Using Kuzzle
 
@@ -94,26 +94,6 @@ See [contributing documentation](./CONTRIBUTING.md)
 
 See [full documentation](docs/README.md)
 
-
-# Useful tips
-
-## Updating kuzzle's containers
-
-When you already have installed an old version of kuzzle, don't forget to update kuzzle's containers with:
-
-```
-    $ docker-compose -f <docker-compose-file.yml> pull 
-```
-
-## Updating kuzzle's dependencies 
-
-To ensure that Kuzzle's dependencies are up-to-date, go into a Kuzzle container and run:
-
-```
-    (host)      $ docker exec -ti <docker-compose-file.yml> bash
-    (container) $ npm install
-    (container) $ bin/kuzzle.js install
-```
 
 # Acknowledgement
 

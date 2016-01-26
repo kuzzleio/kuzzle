@@ -6,6 +6,9 @@
   * [Reset Kuzzle with Docker recipe](#reset-kuzzle-with-docker-recipe)
   * [Reset Kuzzle and insert sorme fixtures with Docker recipe](#reset-kuzzle-and-insert-sorme-fixtures-with-docker-recipe)
   * [Initialize Kuzzle mapping with Docker recipe](#initialize-kuzzle-mapping-with-docker-recipe)
+  * [Useful tips](#useful-tips)
+    * [Updating kuzzle's containers](#updating-kuzzle-s-containers)
+    * [Updating kuzzle's dependencies](#updating-kuzzle-s-dependencies)
 * [Using Vagrant](#using-vagrant)
 * [From source or NPM](#from-source-or-npm)
 * [Manual install](#manual-install)
@@ -90,6 +93,28 @@ examples:
 ```
 
 Remember that the default mapping must be in the Docker container scope !
+
+
+### Useful tips
+
+
+#### Updating kuzzle's containers
+
+When you already have installed an old version of kuzzle, don't forget to update kuzzle's containers with:
+
+```
+    $ docker-compose -f <docker-compose-file.yml> pull 
+```
+
+#### Updating kuzzle's dependencies 
+
+To ensure that Kuzzle's dependencies are up-to-date, run the command directly without log-in into the container:
+
+```
+    $ docker exec -ti <docker-compose-file.yml> run kuzzle npm install
+    $ docker exec -ti <docker-compose-file.yml> run kuzzle bin/kuzzle.js install
+```
+
 
 ## Using Vagrant
 
