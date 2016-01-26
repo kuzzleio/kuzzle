@@ -1,5 +1,4 @@
 var
-  jwt = require('jsonwebtoken'),
   q = require('q'),
   should = require('should'),
   params = require('rc')('kuzzle'),
@@ -12,7 +11,6 @@ var
   },
   InternalError = require.main.require('lib/api/core/errors/internalError'),
   NotFoundError = require.main.require('lib/api/core/errors/notFoundError'),
-  UnauthorizedError = require.main.require('lib/api/core/errors/unauthorizedError'),
   ResponseObject = require.main.require('lib/api/core/models/responseObject'),
   Profile = require.main.require('lib/api/core/models/security/profile'),
   User = require.main.require('lib/api/core/models/security/user'),
@@ -216,7 +214,7 @@ describe('Test: repositories/userRepository', function () {
     });
   });
 
-  describe('#loadFromToken', function () {
+  /*describe('#loadFromToken', function () {
     it('should reject the promise if the jwt is invalid', function () {
       return should(userRepository.loadFromToken('invalidToken')).be.rejectedWith(UnauthorizedError, {details: {subCode: UnauthorizedError.prototype.subCodes.JsonWebTokenError, description: 'jwt malformed'}});
     });
@@ -377,10 +375,11 @@ describe('Test: repositories/userRepository', function () {
     });
 
   });
+  */
 
-  describe('#loadByUsernameAndPassword', function () {
+  describe('#load', function () {
     it('should resolve to user if good credentials are given', function (done) {
-      userRepository.loadByUsernameAndPassword('userInCache', 'azerty')
+      userRepository.load('userInCache')
         .then(function (user) {
           should(user._id).be.exactly('userInCache');
           should(user.name).be.exactly('Johnny Cash');
@@ -395,7 +394,7 @@ describe('Test: repositories/userRepository', function () {
     });
 
     it('should resolve to "null" if username is not found', function (done) {
-      userRepository.loadByUsernameAndPassword('unknownUser', 'azerty')
+      userRepository.load('unknownUser')
         .then(function (user) {
           should(user).be.null();
           done();
@@ -405,8 +404,8 @@ describe('Test: repositories/userRepository', function () {
         });
     });
 
-    it('should resolve to "null" if bad password is given', function (done) {
-      userRepository.loadByUsernameAndPassword('userInCache', 'badpassword')
+    /*it('should resolve to "null" if bad password is given', function (done) {
+      userRepository.loadByUsername('userInCache')
         .then(function (user) {
           should(user).be.null();
           done();
@@ -414,7 +413,7 @@ describe('Test: repositories/userRepository', function () {
         .catch(function (error) {
           done(error);
         });
-    });
+    });*/
 
     it('should reject the promise if an error occurred while fetching the user', () => {
 
@@ -422,7 +421,7 @@ describe('Test: repositories/userRepository', function () {
         return q.reject(new InternalError('Error'));
       };
 
-      return should(userRepository.loadByUsernameAndPassword('userInCache', 'azerty')
+      return should(userRepository.load('userInCache')
         .catch(err => {
           delete userRepository.load;
 

@@ -15,15 +15,21 @@ var ApiRT = function () {
 ApiRT.prototype.send = function () {};
 ApiRT.prototype.sendAndListen = function () {};
 
-ApiRT.prototype.create = function (body, index) {
+ApiRT.prototype.create = function (body, index, collection, jwtToken) {
   var
     msg = {
       controller: 'write',
-      collection: this.world.fakeCollection,
+      collection: collection || this.world.fakeCollection,
       index: index || this.world.fakeIndex,
       action: 'create',
       body: body
     };
+
+  if (jwtToken !== undefined) {
+    msg.headers = {
+      authorization :'Bearer ' + jwtToken
+    };
+  }
 
   return this.send(msg);
 };
@@ -41,11 +47,11 @@ ApiRT.prototype.publish = function (body, index) {
   return this.send(msg);
 };
 
-ApiRT.prototype.createOrUpdate = function (body, index) {
+ApiRT.prototype.createOrUpdate = function (body, index, collection) {
   var
     msg = {
       controller: 'write',
-      collection: this.world.fakeCollection,
+      collection: collection || this.world.fakeCollection,
       index: index || this.world.fakeIndex,
       action: 'createOrUpdate',
       body: body
@@ -370,6 +376,34 @@ ApiRT.prototype.getServerInfo = function () {
       controller: 'read',
       action: 'serverInfo',
       body: {}
+    };
+
+  return this.send(msg);
+};
+
+ApiRT.prototype.login = function (strategy, credentials) {
+  var
+    msg = {
+      controller: 'auth',
+      action: 'login',
+      body: {
+        strategy: strategy,
+        username: credentials.username,
+        password: credentials.password
+      }
+    };
+
+  return this.send(msg);
+};
+
+ApiRT.prototype.logout = function(jwtToken) {
+  var
+    msg = {
+      controller: 'auth',
+      action: 'logout',
+      headers: {
+        authorization: 'Bearer ' + jwtToken
+      }
     };
 
   return this.send(msg);

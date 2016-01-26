@@ -219,6 +219,13 @@ Feature: Test MQTT API
     Then I'm not able to find the index named "my-undefined-index" in index list
     Then I'm able to delete the index named "my-new-index"
 
+  @usingMQTT
+  Scenario: login user
+    When I send a login request with test:testpwd user
+    Then I write the document with auth token
+    Then I send a logout request with previously received token
+    Then I can't write the document with auth token
+
   @usingMQTT @cleanSecurity
   Scenario: Create/get/search/update/delete role
     When I create a new role "role1" with id "test"

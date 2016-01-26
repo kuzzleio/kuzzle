@@ -75,7 +75,7 @@ describe('Test: read controller', function () {
       stored,
       context = {
         connection: {id: 'connectionid'},
-        user: null
+        token: null
       };
 
     before(function () {
@@ -97,10 +97,10 @@ describe('Test: read controller', function () {
           return kuzzle.repositories.profile.hydrate(kuzzle.repositories.profile.profiles.anonymous, params.userProfiles.anonymous);
         })
         .then(() => {
-          return kuzzle.repositories.user.anonymous();
+          return kuzzle.repositories.token.anonymous();
         })
-        .then(user => {
-          context.user = user;
+        .then(token => {
+          context.token = token;
         });
     });
 
