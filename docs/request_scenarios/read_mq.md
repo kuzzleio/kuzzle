@@ -11,10 +11,9 @@ The following diagram shows how request data is exchanged between the client app
 
 ![read_scenario_broker_details](../images/kuzzle_read_scenario_mq_details.png)
 
-\#1a. \#1b. The client application sends a message to a topic (MQTT), an ```amq.topic``` routing key (AMQP) or an ```amq.topic``` destination (STOMP).
-The topic/routing key/destination name describes the message action: ```read.<collection>.<action (get|search|count)>```
+\#1a. \#1b. The client application sends a message to a topic (MQTT), an ```amq.topic/kuzzle``` routing key (AMQP) or an ```amq.topic/kuzzle``` destination (STOMP).
 
-(see details in [API Specifications](../api-specifications.md)).
+(see details in [API Documentation](http://kuzzleio.github.io/kuzzle-api-documentation/#message-queuing-protocols)).
 
 A MQTT client wishing to get responses back from Kuzzle must add a ```mqttClientId``` field to his message, and to subscribe to the ```mqtt.<mqttClientId>``` topic.
 
@@ -24,11 +23,17 @@ Sample STOMP request: retrieve the document ```739c26bc-7a09-469a-803d-623c4045b
 
 ```
 SEND
-destination:/exchange/amq.topic/read.users.get
+destination:/exchange/amq.topic/kuzzle
 reply-to:/temp-queue/739c26bc-7a09-469a-803d-623c4045b0cb
 content-type:application/json
 
-{_id: "739c26bc-7a09-469a-803d-623c4045b0cb"}
+{
+  "index": "mainindex",
+  "collection": "users",
+  "controller": "read",
+  "action": "get",
+  "_id": "739c26bc-7a09-469a-803d-623c4045b0cb"
+}
 
 ^@
 ```
@@ -39,8 +44,9 @@ Sample message:
 
 ```json
 {
-  "controller": "read",
+  "index": "mainindex",
   "collection": "users",
+  "controller": "read",
   "action": "get",
   "_id": "739c26bc-7a09-469a-803d-623c4045b0cb"
 }
@@ -133,4 +139,4 @@ Sample response content:
 ## Related pages
 
 * [Architecture overview](../architecture.md)
-* [API Specifications](../README.md#api-specifications)
+* [API Documentation](http://kuzzleio.github.io/kuzzle-api-documentation)
