@@ -60,7 +60,8 @@ describe('Test: notifier.checkNewRoutes', function () {
       mockupAction = function (responseObject) {
         performedActions.push(responseObject.action);
         return q({});
-      };
+      },
+      action;
 
     this.timeout(100);
 
