@@ -416,7 +416,7 @@ ApiREST.prototype.getUser = function (id) {
 
 ApiREST.prototype.getCurrentUser = function () {
   return this.callApi({
-    url: this.apiPath('users/me'),
+    url: this.apiPath('users/_me'),
     method: 'GET',
     json: true
   });
