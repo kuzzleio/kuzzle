@@ -3,15 +3,15 @@
 This page explains what happens when clients send new content to Kuzzle
 
 Kuzzle is able to manage two different types of data:
-* persistent data
-* volatile/realtime data
-
-The client decide if a data is persistent or volatile using the "_persist_" metadata (true/false).
+* persistent data => using the "_create_", "_createOrUpdate_", or "_delete_" actions.
+* volatile/realtime data => using the "_publish_" action.
 
 Kuzzle handles data differently, depending if it's persistent or not.
 
+This page describes the process for **persistent** data, with an example using the "_create_" action.
+(see also [API Documentation](http://kuzzleio.github.io/kuzzle-api-documentation/#create))
 
-This page describes the process for **persistent** data. If you wish to learn about how Kuzzle handles volatile data, please read [Pub/Sub scenario for realtime data](pubsub.md)
+If you wish to learn about how Kuzzle handles volatile data, please read [Pub/Sub scenario for realtime data](pubsub.md)
 
 Remember the [Architecture overview](../architecture.md).
 
@@ -31,14 +31,12 @@ Detailed workflow:
 
 \#2a. The router handles the input request and forward the message to the ```Funnel Controller```
 
-Sample message: (**note that _persist = true_**)
-
 ```json
 {
-  "controller": "write",
+  "index": "mainindex",
   "collection": "users",
+  "controller": "write",
   "action": "create",
-  "persist": true,
   "body": {
       "firstName": "Grace",
       "lastName": "Hopper",
@@ -105,4 +103,4 @@ Detailed workflow:
 ## Related pages
 
 * [Architecture overview](../architecture.md)
-* [API Specifications](../README.md#api-specifications)
+* [API Documentation](http://kuzzleio.github.io/kuzzle-api-documentation)
