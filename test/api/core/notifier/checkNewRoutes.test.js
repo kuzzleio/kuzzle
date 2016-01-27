@@ -27,7 +27,7 @@ describe('Test: notifier.checkNewRoutes', function () {
       'count',
       'deleteCollection',
       'import',
-      'createOrReplaceMapping',
+      'updateMapping',
       'getMapping',
       'listCollections',
       'deleteIndexes',

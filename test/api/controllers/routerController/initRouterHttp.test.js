@@ -376,7 +376,7 @@ describe('Test: routerController.initRouterHttp', function () {
         .then(function (result) {
           should(response.statusCode).be.exactly(200);
           should(result.controller).be.exactly('admin');
-          should(result.action).be.exactly('createOrReplaceMapping');
+          should(result.action).be.exactly('updateMapping');
           done();
         })
         .catch(function (error) {

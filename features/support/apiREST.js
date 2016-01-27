@@ -166,7 +166,7 @@ ApiREST.prototype.globalBulkImport = function (bulk) {
   return this.callApi(options);
 };
 
-ApiREST.prototype.createOrReplaceMapping = function (index) {
+ApiREST.prototype.updateMapping = function (index) {
   var options = {
     url: this.apiPath(((typeof index !== 'string') ? this.world.fakeIndex : index) + '/' + this.world.fakeCollection + '/_mapping'),
     method: 'PUT',

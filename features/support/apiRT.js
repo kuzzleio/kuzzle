@@ -164,13 +164,13 @@ ApiRT.prototype.deleteCollection = function (index) {
   return this.send(msg);
 };
 
-ApiRT.prototype.createOrReplaceMapping = function (index) {
+ApiRT.prototype.updateMapping = function (index) {
   var
     msg = {
       controller: 'admin',
       collection: this.world.fakeCollection,
       index: index || this.world.fakeIndex,
-      action: 'createOrReplaceMapping',
+      action: 'updateMapping',
       body: this.world.schema
     };
 

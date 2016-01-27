@@ -728,7 +728,7 @@ describe('Test: ElasticSearch service', function () {
     });
   });
 
-  describe('#createOrReplaceMapping', function () {
+  describe('#updateMapping', function () {
     it('should have mapping capabilities', function () {
       requestObject.data.body = {
         properties: {
@@ -741,7 +741,7 @@ describe('Test: ElasticSearch service', function () {
         return q({});
       };
 
-      return should(elasticsearch.createOrReplaceMapping(requestObject)).be.fulfilled();
+      return should(elasticsearch.updateMapping(requestObject)).be.fulfilled();
     });
 
     it('should reject bad mapping input', function () {
@@ -752,7 +752,7 @@ describe('Test: ElasticSearch service', function () {
         return q.reject({});
       };
 
-      return should(elasticsearch.createOrReplaceMapping(requestObject)).be.rejected();
+      return should(elasticsearch.updateMapping(requestObject)).be.rejected();
     });
   });
 

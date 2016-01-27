@@ -58,7 +58,7 @@ var apiSteps = function () {
   });
 
   this.Then(/^I change the schema(?: in index "([^"]*)")?$/, function (index, callback) {
-    this.api.createOrReplaceMapping()
+    this.api.updateMapping()
       .then(function (body) {
         if (body.error !== null) {
           callback(new Error(body.error.message));
