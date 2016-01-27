@@ -216,8 +216,6 @@ describe('Test: ElasticSearch service', function () {
     it('should support replace capability', function (done) {
       var ret;
 
-      kuzzle.indexes = {};
-
       elasticsearch.client.exists = function (data) {
         return q(true);
       };
@@ -235,13 +233,7 @@ describe('Test: ElasticSearch service', function () {
       ret = elasticsearch.replace(requestObject);
 
       should(ret).be.a.Promise();
-
-      ret
-        .then(function (result) {
-          should(kuzzle.indexes).be.an.instanceOf(Object).and.have.property(index, [collection]);
-          done();
-        })
-        .catch(error => done(error));
+      done();
     });
 
     it('should reject the replace promise if elasticsearch throws an error', function () {

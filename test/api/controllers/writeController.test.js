@@ -22,16 +22,39 @@ describe('Test: write controller', function () {
       });
   });
 
-  it('should reject an empty request', function (done) {
+  it('should reject an empty request', function () {
     var requestObject = new RequestObject({});
     delete requestObject.data.body;
 
-    should(requestObject.isValid()).be.rejected();
-    should(kuzzle.funnel.write.create(requestObject)).be.rejected();
-    should(kuzzle.funnel.write.createOrUpdate(requestObject)).be.rejected();
-    should(kuzzle.funnel.write.update(requestObject)).be.rejected();
-    should(kuzzle.funnel.write.replace(requestObject)).be.rejected();
-    done();
+    return should(requestObject.isValid()).be.rejected();
+  });
+
+  it('should reject an empty create request', function () {
+    var requestObject = new RequestObject({});
+    delete requestObject.data.body;
+
+    return should(kuzzle.funnel.write.create(requestObject)).be.rejected();
+  });
+
+  it('should reject an empty createOrUpdate request', function () {
+    var requestObject = new RequestObject({});
+    delete requestObject.data.body;
+
+    return should(kuzzle.funnel.write.createOrUpdate(requestObject)).be.rejected();
+  });
+
+  it('should reject an empty update request', function () {
+    var requestObject = new RequestObject({});
+    delete requestObject.data.body;
+
+    return should(kuzzle.funnel.write.update(requestObject)).be.rejected();
+  });
+
+  it('should reject an empty replace request', function () {
+    var requestObject = new RequestObject({});
+    delete requestObject.data.body;
+
+    return should(kuzzle.funnel.write.replace(requestObject)).be.rejected();
   });
 
   describe('#create', function () {
