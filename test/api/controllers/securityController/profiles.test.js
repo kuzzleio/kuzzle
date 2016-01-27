@@ -34,18 +34,16 @@ describe('Test: security controller - profiles', function () {
           });
         };
         kuzzle.repositories.profile.searchProfiles = requestObject => {
-          return q(new ResponseObject(requestObject, {
-            hits: [{
-              _id: 'test',
-              roles: [
-                {
-                  _id: 'role1',
-                  indexes: {}
-                }
-              ]
-            }],
-            total: 1
-          }));
+          return q([{
+            _id: 'test',
+            roles: [
+              {
+                _id: 'role1',
+                indexes: {}
+              }
+            ]
+          }]
+          );
         };
         kuzzle.repositories.profile.deleteProfile = requestObject => {
           return q(new ResponseObject(requestObject, {_id: 'test'}));
