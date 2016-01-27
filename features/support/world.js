@@ -5,6 +5,7 @@ module.exports = function () {
   this.World = function World () {
     this.api = null;
     this.kuzzleConfig = rc('kuzzle');
+    this.idPrefix = 'kuzzle-functional-tests-';
 
     this.currentUser = null;
 
@@ -36,22 +37,22 @@ module.exports = function () {
       hobby: 'computer'
     };
     this.bulk = [
-      {index: {_id: 1}},
-      {title: 'foo'},
-      {index: {_id: 2}},
-      {title: 'bar'},
-      {update: {_id: 1}},
-      {doc: {title: 'foobar'}},
-      {delete: {_id: 2}}
+      { index:  {_id: 1 } },
+      { title: 'foo' },
+      { index:  {_id: 2 } },
+      { title: 'bar' },
+      { update: {_id: 1 } },
+      { doc: { title: 'foobar' } },
+      { delete: {_id: 2 } }
     ];
     this.globalBulk = [
-      {index: {_id: 1, _type: this.fakeCollection, _index: this.fakeIndex}},
-      {title: 'foo'},
-      {index: {_id: 2, _type: this.fakeCollection, _index: this.fakeIndex}},
-      {title: 'bar'},
-      {update: {_id: 1, _type: this.fakeCollection, _index: this.fakeIndex}},
-      {doc: {title: 'foobar'}},
-      {delete: {_id: 2, _type: this.fakeCollection, _index: this.fakeIndex}}
+      { index:  {_id: 1, _type: this.fakeCollection, _index: this.fakeIndex } },
+      { title: 'foo' },
+      { index:  {_id: 2, _type: this.fakeCollection, _index: this.fakeIndex } },
+      { title: 'bar' },
+      { update: {_id: 1, _type: this.fakeCollection, _index: this.fakeIndex } },
+      { doc: { title: 'foobar' } },
+      { delete: {_id: 2, _type: this.fakeCollection, _index: this.fakeIndex } }
     ];
 
     this.schema = {
@@ -104,13 +105,13 @@ module.exports = function () {
 
     this.profiles = {
       profile1: {
-        roles: ['role1']
+        roles: [this.idPrefix + 'role1']
       },
       profile2: {
-        roles: ['role1', 'role2']
+        roles: [this.idPrefix + 'role1', this.idPrefix + 'role2']
       },
       profile3: {
-        roles: ['role2']
+        roles: [this.idPrefix + 'role2']
       },
       invalidProfile: {
         roles: ['unexisting-role']
@@ -127,7 +128,8 @@ module.exports = function () {
           last: 'Bowie',
           real: 'David Robert Jones'
         },
-        profile: 'admin'
+        profile: 'admin',
+        password: '30b64e1a26bc4f6e40d1a4b0388a58b7821afa1f'
       },
       user2: {
         name: {
@@ -135,11 +137,11 @@ module.exports = function () {
           last: 'Wozniak'
         },
         hobby: 'Segway Polo',
-        profile: 'profile2'
+        profile: this.idPrefix + 'profile2'
       },
       unexistingprofile: {
         name: 'John Doe',
-        profile: 'i-dont-exist'
+        profile: this.idPrefix + 'i-dont-exist'
       },
       invalidprofileType: {
         name: 'John Doe',

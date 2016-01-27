@@ -106,7 +106,7 @@ describe('Test: security controller - users', function () {
       kuzzle.funnel.security.getCurrentUser(new RequestObject({
         body: {}
       }), {
-        user: { _id: 'admin' }
+        token: { user: { _id: 'admin' } }
       })
         .then(response => {
           should(response.data.body._id).be.exactly('admin');

@@ -15,11 +15,14 @@ describe('Test: repositories/repository', function () {
     ObjectConstructor,
     mockCacheEngine,
     mockReadEngine,
-    mockWriteEngine;
+    mockWriteLayer,
+    cachedObject,
+    uncachedObject;
 
   ObjectConstructor = function () {
     this.type = 'testObject';
   };
+
   persistedObject = new ObjectConstructor();
   persistedObject._id = -1;
   persistedObject.name = 'persisted';
@@ -115,8 +118,8 @@ describe('Test: repositories/repository', function () {
       return q(new ResponseObject(requestObject, {hits: [{_id: 'role'}]}));
     }
   };
-  mockWriteEngine = {
-    createOrUpdate: function (o) {
+  mockWriteLayer = {
+    execute: function (o) {
       forwardedObject = o;
     },
     delete: requestObject => {
@@ -134,7 +137,7 @@ describe('Test: repositories/repository', function () {
       collection: 'repository',
       ObjectConstructor: ObjectConstructor,
       readEngine: mockReadEngine,
-      writeEngine: mockWriteEngine,
+      writeLayer: mockWriteLayer,
       cacheEngine: mockCacheEngine
     });
   });
@@ -143,7 +146,7 @@ describe('Test: repositories/repository', function () {
     forwardedObject = null;
     repository.ObjectConstructor = ObjectConstructor;
     repository.readEngine = mockReadEngine;
-    repository.writeEngine = mockWriteEngine;
+    repository.writeLayer = mockWriteLayer;
     repository.cacheEngine = mockCacheEngine;
   });
 
@@ -373,13 +376,15 @@ describe('Test: repositories/repository', function () {
   });
 
   describe('#deleteFromDatabase', () => {
-    it('should respond with a ResponseObject', done => {
-      repository.deleteFromDatabase('test')
-        .then(response => {
-          should(response).be.an.instanceOf(ResponseObject);
-          done();
-        })
-        .catch(error => { done(error); });
+    it('should construct a valid requestObject', () => {
+      repository.deleteFromDatabase('test');
+
+      should(forwardedObject).be.an.instanceOf(RequestObject);
+      should(forwardedObject).match({
+        data: { _id: 'test' },
+        controller: 'write',
+        action: 'delete'
+      });
     });
   });
 

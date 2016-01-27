@@ -232,7 +232,7 @@ ApiREST.prototype.now = function () {
   return this.callApi(options);
 };
 
-ApiREST.prototype.truncateCollection = function (index) {
+ApiREST.prototype.truncateCollection = function (index, collection) {
   var options = {
     url: this.apiPath(((typeof index !== 'string') ? this.world.fakeIndex : index) + '/' + (collection || this.world.fakeCollection) + '/_truncate'),
     method: 'DELETE',

@@ -7,6 +7,8 @@ module.exports = function () {
     var
       userObject = this.users[user];
 
+    id = this.idPrefix + id;
+
     this.api.putUser(id, userObject)
       .then(body => {
         if (body.error) {
@@ -24,6 +26,8 @@ module.exports = function () {
   this.Then(/^I am able to get the (unhydrated )?user "(.*?)"(?: matching {(.*)})?$/, function (unhydrated, id, match, callback) {
     var hydrate = unhydrated ? false : true;
 
+    id = this.idPrefix + id;
+
     this.api.getUser(id, hydrate)
       .then(body => {
         var
@@ -35,6 +39,7 @@ module.exports = function () {
         }
 
         if (match) {
+          match = match.replace(/#prefix#/g, this.idPrefix);
           matchObject = JSON.parse('{' + match + '}');
           if (!_.matches(matchObject)(body.result)) {
             return callback(new Error('Error: ' + JSON.stringify(body.result) + ' does not match ' + match));
@@ -54,6 +59,8 @@ module.exports = function () {
     }
 
     run = (cb) => {
+      filter = filter.replace(/#prefix#/g, this.idPrefix);
+
       this.api.searchUsers(JSON.parse('{' + filter + '}'))
         .then(body => {
           var matchFunc;
@@ -67,6 +74,7 @@ module.exports = function () {
           }
 
           if (match) {
+            match = match.replace(/#prefix#/g, this.idPrefix);
             matchFunc = _.matches(JSON.parse('{' + match + '}'));
             if (!body.result.hits.every(hit => {
                 return matchFunc(hit);
@@ -90,6 +98,8 @@ module.exports = function () {
   });
 
   this.Then(/^I delete the user "(.*?)"$/, function (id, callback) {
+    id = this.idPrefix + id;
+
     this.api.deleteUser(id)
       .then(body => {
         if (body.error) {
@@ -108,6 +118,7 @@ module.exports = function () {
           return callback(new Error(body.error.message));
         }
 
+        match = match.replace(/#prefix#/g, this.idPrefix);
         if (!_.matches(JSON.parse('{' + match + '}'))(body.result)) {
           return callback(new Error('Expected: ' + match + '\nGot: ' + JSON.stringify(body.result)));
         }

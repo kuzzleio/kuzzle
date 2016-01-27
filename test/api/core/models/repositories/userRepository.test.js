@@ -25,7 +25,7 @@ before(function (done) {
     encryptedPassword = '5c4ec74fd64bb57c05b4948f3a7e9c7d450f069a',
     mockCacheEngine,
     mockReadEngine,
-    mockWriteEngine,
+    mockWriteLayer,
     mockProfileRepository,
     userInCache,
     userInDB,
@@ -50,15 +50,14 @@ before(function (done) {
       return q(new NotFoundError('User not found in db'));
     }
   };
-  mockWriteEngine = {
-    createOrUpdate: requestObject => { return q(new ResponseObject(requestObject, {})); }
+  mockWriteLayer = {
+    execute: requestObject => { return q({}); }
   };
   mockProfileRepository = {
     loadProfile: function (profileKey) {
       if (profileKey === 'notfound') {
         return q(null);
       }
-
       var profile = new Profile();
       profile._id = profileKey;
       return q(profile);
@@ -83,7 +82,7 @@ before(function (done) {
   userRepository = new UserRepository();
   userRepository.cacheEngine = mockCacheEngine;
   userRepository.readEngine = mockReadEngine;
-  userRepository.writeEngine = mockWriteEngine;
+  userRepository.writeLayer = mockWriteLayer;
 
   kuzzle.repositories = {};
   kuzzle.repositories.profile = mockProfileRepository;
@@ -184,7 +183,6 @@ describe('Test: repositories/userRepository', function () {
 
       return should(userRepository.hydrate(user, userInvalidProfile))
         .be.rejectedWith(InternalError);
-
     });
   });
 
@@ -461,6 +459,7 @@ describe('Test: repositories/userRepository', function () {
 
       should(user._id).not.be.empty();
       should(user._id).match(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
+
     });
   });
 
