@@ -22,15 +22,39 @@ describe('Test: write controller', function () {
       });
   });
 
-  it('should reject an empty request', function (done) {
+  it('should reject an empty request', function () {
     var requestObject = new RequestObject({});
     delete requestObject.data.body;
 
-    should(requestObject.isValid()).be.rejected();
-    should(kuzzle.funnel.write.create(requestObject)).be.rejected();
-    should(kuzzle.funnel.write.createOrReplace(requestObject)).be.rejected();
-    should(kuzzle.funnel.write.update(requestObject)).be.rejected();
-    done();
+    return should(requestObject.isValid()).be.rejected();
+  });
+
+  it('should reject an empty create request', function () {
+    var requestObject = new RequestObject({});
+    delete requestObject.data.body;
+
+    return should(kuzzle.funnel.write.create(requestObject)).be.rejected();
+  });
+
+  it('should reject an empty createOrReplace request', function () {
+    var requestObject = new RequestObject({});
+    delete requestObject.data.body;
+
+    return should(kuzzle.funnel.write.createOrReplace(requestObject)).be.rejected();
+  });
+
+  it('should reject an empty update request', function () {
+    var requestObject = new RequestObject({});
+    delete requestObject.data.body;
+
+    return should(kuzzle.funnel.write.update(requestObject)).be.rejected();
+  });
+
+  it('should reject an empty replace request', function () {
+    var requestObject = new RequestObject({});
+    delete requestObject.data.body;
+
+    return should(kuzzle.funnel.write.replace(requestObject)).be.rejected();
   });
 
   describe('#create', function () {
@@ -132,6 +156,29 @@ describe('Test: write controller', function () {
       });
 
       kuzzle.funnel.write.update(requestObject)
+        .catch(function (error) {
+          done(error);
+        });
+    });
+  });
+
+  describe('#replace', function () {
+    it('should emit a hook on a replace query', function (done) {
+      var requestObject = new RequestObject({body: {foo: 'bar'}}, {}, 'unit-test');
+
+      this.timeout(50);
+
+      kuzzle.once('data:replace', function (obj) {
+        try {
+          should(obj).be.exactly(requestObject);
+          done();
+        }
+        catch (e) {
+          done(e);
+        }
+      });
+
+      kuzzle.funnel.write.replace(requestObject)
         .catch(function (error) {
           done(error);
         });

@@ -68,7 +68,8 @@ describe('Test: notifier.checkNewRoutes', function () {
     Notifier.__with__({
       notifyDocumentCreate: mockupAction,
       notifyDocumentUpdate: mockupAction,
-      notifyDocumentDelete: mockupAction
+      notifyDocumentDelete: mockupAction,
+      notifyDocumentReplace: mockupAction
     })(function () {
       for (action in kuzzle.services.list.readEngine) {
         if (kuzzle.services.list.readEngine.hasOwnProperty(action) && typeof kuzzle.services.list.readEngine[action] === 'function') {

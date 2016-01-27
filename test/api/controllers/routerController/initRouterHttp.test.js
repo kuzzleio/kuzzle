@@ -250,6 +250,29 @@ describe('Test: routerController.initRouterHttp', function () {
     request.end();
   });
 
+  it('should create a route for replace actions', function (done) {
+    var request;
+
+    options.method = 'PUT';
+    options.path= path + '/index/collection/documentID/_replace';
+
+    request = http.request(options, function (response) {
+      parseHttpResponse(response)
+        .then(function (result) {
+          should(response.statusCode).be.exactly(200);
+          should(result.controller).be.exactly('write');
+          should(result.action).be.exactly('replace');
+          done();
+        })
+        .catch(function (error) {
+          done(error);
+        });
+    });
+
+    request.write('foobar');
+    request.end();
+  });
+
   it('should create a route for document counting', function (done) {
     var request;
 

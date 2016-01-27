@@ -28,6 +28,12 @@ Feature: Test REST API
     Then I should have updated the document
 
   @usingREST
+  Scenario: Replace a document
+    When I write the document "documentGrace"
+    Then I replace the document with "documentAda" document
+    Then my document has the value "Ada" in field "firstName"
+
+  @usingREST
   Scenario: Update a document
     When I write the document
     Then I update the document with value "foo" in field "firstName"

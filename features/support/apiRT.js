@@ -60,6 +60,19 @@ ApiRT.prototype.createOrReplace = function (body, index, collection) {
   return this.send(msg);
 };
 
+ApiRT.prototype.replace = function (body, index, collection) {
+  var
+    msg = {
+      controller: 'write',
+      collection: collection || this.world.fakeCollection,
+      index: index || this.world.fakeIndex,
+      action: 'replace',
+      body: body
+    };
+
+  return this.send(msg);
+};
+
 ApiRT.prototype.get = function (id, index) {
   var
     msg = {
