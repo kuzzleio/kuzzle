@@ -32,19 +32,19 @@ beforeEach(function (done) {
   mockCacheEngine = {
     get: function (key) {
       if (key === tokenRepository.index + '/' + tokenRepository.collection + '/tokenInCache') {
-        return Promise.resolve(JSON.stringify(tokenInCache));
+        return q(JSON.stringify(tokenInCache));
       }
-      return Promise.resolve(null);
+      return q(null);
     },
     volatileSet: function (key, value, ttl) { forwardedResult = {key: key, value: JSON.parse(value), ttl: ttl }; },
-    expire: function (key, ttl) { return Promise.resolve(forwardedResult = {key: key, ttl: ttl}); }
+    expire: function (key, ttl) { return q(forwardedResult = {key: key, ttl: ttl}); }
   };
 
   mockProfileRepository = {
     loadProfile: function (profileKey) {
       var profile = new Profile();
       profile._id = profileKey;
-      return Promise.resolve(profile);
+      return q(profile);
     }
   };
 
@@ -54,7 +54,7 @@ beforeEach(function (done) {
       user._id = username;
       user.profile = 'anonymous';
 
-      return Promise.resolve(user);
+      return q(user);
     },
     anonymous: function () {
       var
@@ -81,7 +81,7 @@ beforeEach(function (done) {
       user.profile = new Profile();
       user.profile.roles = [role];
 
-      return Promise.resolve(user);
+      return q(user);
     },
     admin: function () {
       var
@@ -108,7 +108,7 @@ beforeEach(function (done) {
       user.profile = new Profile();
       user.profile.roles = [role];
 
-      return Promise.resolve(user);
+      return q(user);
     }
   };
 
@@ -206,14 +206,14 @@ describe('Test: repositories/tokenRepository', function () {
         token = new Token();
 
       Repository.prototype.hydrate = () => {
-        return Promise.reject(new InternalError('Error'));
+        return q.reject(new InternalError('Error'));
       };
 
       return should(tokenRepository.hydrate(token, {})
         .catch(err => {
           Repository.prototype.hydrate = protoHydrate;
 
-          return Promise.reject(err);
+          return q.reject(err);
         })).be.rejectedWith(InternalError);
     });
   });
@@ -256,14 +256,14 @@ describe('Test: repositories/tokenRepository', function () {
       var token = jwt.sign({_id: 'auser'}, params.jsonWebToken.secret, {algorithm: params.jsonWebToken.algorithm});
 
       tokenRepository.loadFromCache = () => {
-        return Promise.reject(new InternalError('Error'));
+        return q.reject(new InternalError('Error'));
       };
 
       return should(tokenRepository.verifyToken(token)
         .catch(err => {
           delete tokenRepository.loadFromCache;
 
-          return Promise.reject(err);
+          return q.reject(err);
         })).be.rejectedWith(InternalError);
     });
 
@@ -278,7 +278,7 @@ describe('Test: repositories/tokenRepository', function () {
         .catch(err => {
           delete tokenRepository.admin;
 
-          return Promise.reject(err);
+          return q.reject(err);
         })).be.rejectedWith(InternalError, {details: {message: 'Uncaught error'}});
     });
 
@@ -327,7 +327,7 @@ describe('Test: repositories/tokenRepository', function () {
         .catch(err => {
           kuzzle.config.jsonWebToken.algorithm = params.jsonWebToken.algorithm;
 
-          return Promise.reject(err);
+          return q.reject(err);
         })).be.rejectedWith(InternalError);
     });
 

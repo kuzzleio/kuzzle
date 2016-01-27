@@ -6,6 +6,7 @@ var
   Config = require.main.require('lib/config'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
   BadRequestError = require.main.require('lib/api/core/errors/badRequestError.js'),
+  NotFoundError = require.main.require('lib/api/core/errors/notFoundError'),
   ES = rewire('../../../lib/services/elasticsearch');
 
 describe('Test: ElasticSearch service', function () {
@@ -177,6 +178,68 @@ describe('Test: ElasticSearch service', function () {
       ret = elasticsearch.createOrUpdate(requestObject);
 
       return should(ret).be.rejected();
+    });
+  });
+
+  describe('#replace', function () {
+    it('should support replace capability', function (done) {
+      var ret;
+
+      elasticsearch.client.exists = function (data) {
+        return q(true);
+      };
+
+      elasticsearch.client.index = function (data) {
+        should(data.index).be.exactly(index);
+        should(data.type).be.exactly(collection);
+        should(data.body).be.exactly(documentAda);
+        should(data.id).be.exactly(createdDocumentId);
+
+        return Promise.resolve({});
+      };
+
+      requestObject.data._id = createdDocumentId;
+      ret = elasticsearch.replace(requestObject);
+
+      should(ret).be.a.Promise();
+      done();
+    });
+
+    it('should reject the replace promise if elasticsearch throws an error', function () {
+      var ret;
+
+      elasticsearch.client.index = function (data) {
+        return Promise.reject(new Error());
+      };
+
+      requestObject.data._id = createdDocumentId;
+      ret = elasticsearch.replace(requestObject);
+
+      return should(ret).be.rejected();
+    });
+
+    it('should throw a NotFoundError Exception if document already exists', function () {
+      var ret;
+
+      kuzzle.indexes = {};
+
+      elasticsearch.client.exists = function (data) {
+        return q(false);
+      };
+
+      elasticsearch.client.index = function (data) {
+        should(data.index).be.exactly(index);
+        should(data.type).be.exactly(collection);
+        should(data.body).be.exactly(documentAda);
+        should(data.id).be.exactly(createdDocumentId);
+
+        return Promise.resolve({});
+      };
+
+      requestObject.data._id = createdDocumentId;
+      ret = elasticsearch.replace(requestObject);
+
+      should(ret).be.rejectedWith(NotFoundError, { message: 'Document with id ' + requestObject.data._id + ' not found.' });
     });
   });
 
@@ -941,7 +1004,7 @@ describe('Test: ElasticSearch service', function () {
     it('should return a rejected promise if the reset fails while deleting all indexes', function () {
       elasticsearch.client.indices.getMapping = function (data) {
         var indexes = {};
-        indexes['%kuzzle'] = [];
+        indexes[kuzzle.config.internalIndex] = [];
         indexes[index] = [];
         return q(indexes);
       };

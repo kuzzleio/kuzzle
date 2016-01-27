@@ -22,7 +22,7 @@ describe('Test: admin controller', function () {
       .then(function () {
         kuzzle.repositories.role.validateAndSaveRole = role => {
           return q({
-            _index: '%kuzzle',
+            _index: kuzzle.config.internalIndex,
             _type: 'roles',
             _id: role._id,
             created: true
