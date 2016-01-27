@@ -104,6 +104,16 @@ ApiREST.prototype.createOrUpdate = function (body, index, collection) {
   return this.callApi(options);
 };
 
+ApiREST.prototype.replace = function (body, index, collection) {
+  var options = {
+    url: this.apiPath(((typeof index !== 'string') ? this.world.fakeIndex : index) + '/' + ((typeof collection !== 'string') ? this.world.fakeCollection : collection) + '/' + body._id + '/_replace'),
+    method: 'PUT',
+    json: body
+  };
+
+  return this.callApi(options);
+};
+
 ApiREST.prototype.update = function (id, body, index) {
   var options = {
     url: this.apiPath(((typeof index !== 'string') ? this.world.fakeIndex : index) + '/' + this.world.fakeCollection + '/' + id + '/_update'),
