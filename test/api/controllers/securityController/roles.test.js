@@ -17,7 +17,7 @@ describe('Test: security controller - roles', function () {
         // Mock
         kuzzle.repositories.role.validateAndSaveRole = role => {
           return q({
-            _index: '%kuzzle',
+            _index: kuzzle.config.internalIndex,
             _type: 'roles',
             _id: role._id,
             created: true
@@ -25,7 +25,7 @@ describe('Test: security controller - roles', function () {
         };
         kuzzle.repositories.role.loadOneFromDatabase = id => {
           return q({
-            _index: '%kuzzle',
+            _index: kuzzle.config.internalIndex,
             _type: 'roles',
             _id: id,
             _source: {}

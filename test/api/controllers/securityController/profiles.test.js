@@ -19,7 +19,7 @@ describe('Test: security controller - profiles', function () {
         kuzzle.repositories.role.roles.role1 = { _id: 'role1' };
         kuzzle.repositories.profile.validateAndSaveProfile = profile => {
           return q({
-            _index: '%kuzzle',
+            _index: kuzzle.config.internalIndex,
             _type: 'profiles',
             _id: profile._id,
             created: true
@@ -27,7 +27,7 @@ describe('Test: security controller - profiles', function () {
         };
         kuzzle.repositories.profile.loadProfile = id => {
           return q({
-            _index: '%kuzzle',
+            _index: kuzzle.config.internalIndex,
             _type: 'profiles',
             _id: id,
             _source: {}

@@ -1009,7 +1009,7 @@ describe('Test: ElasticSearch service', function () {
     it('should return a rejected promise if the reset fails while deleting all indexes', function () {
       elasticsearch.client.indices.getMapping = function (data) {
         var indexes = {};
-        indexes['%kuzzle'] = [];
+        indexes[kuzzle.config.internalIndex] = [];
         indexes[index] = [];
         return q(indexes);
       };
@@ -1019,19 +1019,6 @@ describe('Test: ElasticSearch service', function () {
 
       return should(elasticsearch.deleteIndexes(requestObject)).be.rejected();
     });
-
-    /*it('should not delete any index if only left %kuzzle internal index', function () {
-      elasticsearch.client.indices.getMapping = function (data) {
-        var indexes = {};
-        indexes['%kuzzle'] = [];
-        return q(indexes);
-      };
-      elasticsearch.client.indices.delete = function () {
-        return q.reject(new Error('rejected'));
-      };
-
-      return should(elasticsearch.deleteIndexes(requestObject)).be.fulfilled();
-    });*/
   });
 
   describe('#createIndex', function () {
