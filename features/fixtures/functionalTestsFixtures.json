@@ -10,15 +10,5 @@
       { "create": { "_id": "ghopper"} },
       { "username": "ghopper", "name": {"first": "Grace", "last": "Hopper"} }
     ]
-  },
-  "%kuzzle": {
-    "users": [
-      { "create": { "_id": "test" } },
-      {
-        "_id": "test",
-        "profile": "admin",
-        "password": "30b64e1a26bc4f6e40d1a4b0388a58b7821afa1f"
-      }
-    ]
   }
 }

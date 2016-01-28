@@ -6,6 +6,7 @@ var apiSteps = function () {
     if (!this.profiles[profile]) {
       return callback('Fixture for profile ' + profile + ' does not exists');
     }
+    id = this.idPrefix + id;
 
     this.api.createOrReplaceProfile(id, this.profiles[profile])
       .then(function (body) {
@@ -76,6 +77,8 @@ var apiSteps = function () {
       return callback('Fixture for profile ' + profile + ' not exists');
     }
 
+    id = this.idPrefix + id;
+
     main = function (callbackAsync) {
       setTimeout(() => {
         this.api.getProfile(id)
@@ -118,7 +121,11 @@ var apiSteps = function () {
     });
   });
 
-  this.When(/^I delete the profile with id "([^"]*)"$/, function (id, callback) {
+  this.When(/^I delete the profile (?:with id )?"([^"]*)"$/, function (id, callback) {
+    if (id) {
+      id = this.idPrefix + id;
+    }
+
     this.api.deleteProfile(id)
       .then(body => {
         if (body.error) {
@@ -190,6 +197,8 @@ var apiSteps = function () {
     if (!this.roles[roleId]) {
       return callback('Fixture for role ' + roleId + ' does not exists');
     }
+    roleId = this.idPrefix + roleId;
+    profileId = this.idPrefix + profileId;
 
     this.api.createOrReplaceProfile(profileId, {
       roles: [roleId]

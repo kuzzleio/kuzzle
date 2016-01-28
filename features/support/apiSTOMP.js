@@ -1,4 +1,5 @@
 var
+  _ = require('lodash'),
   config = require('./config')(),
   stomp = require('stomp-client'),
   uuid = require('node-uuid'),
@@ -80,6 +81,13 @@ ApiSTOMP.prototype.send = function (message, waitForAnswer) {
   }
 
   message.metadata = this.world.metadata;
+
+  if (this.world.currentUser && this.world.currentUser.token) {
+    if (!message.headers) {
+      message.headers = {};
+    }
+    message.headers = _.extend(message.headers, {authorization: 'Bearer ' + this.world.currentUser.token});
+  }
 
   this.stompConnected
     .then(function () {

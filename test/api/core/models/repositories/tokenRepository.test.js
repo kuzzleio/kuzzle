@@ -36,7 +36,10 @@ beforeEach(function (done) {
       }
       return q(null);
     },
-    volatileSet: function (key, value, ttl) { forwardedResult = {key: key, value: JSON.parse(value), ttl: ttl }; },
+    volatileSet: function (key, value, ttl) {
+      forwardedResult = {key: key, value: JSON.parse(value), ttl: ttl };
+      return q('OK');
+    },
     expire: function (key, ttl) { return q(forwardedResult = {key: key, ttl: ttl}); }
   };
 

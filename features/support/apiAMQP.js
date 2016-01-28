@@ -1,4 +1,5 @@
 var
+  _ = require('lodash'),
   config = require('./config')(),
   amqp = require('amqplib'),
   q = require('q'),
@@ -53,6 +54,13 @@ ApiAMQP.prototype.send = function (message, waitForAnswer) {
   }
 
   message.metadata = this.world.metadata;
+
+  if (this.world.currentUser && this.world.currentUser.token) {
+    if (!message.headers) {
+      message.headers = {};
+    }
+    message.headers = _.extend(message.headers, {authorization: 'Bearer ' + this.world.currentUser.token});
+  }
 
   this.amqpChannel.then(channel => {
     if (listen) {

@@ -1,4 +1,5 @@
 var
+  _ = require('lodash'),
   config = require('./config')(),
   mqtt = require('mqtt'),
   uuid = require('node-uuid'),
@@ -63,6 +64,13 @@ ApiMQTT.prototype.send = function (message, waitForAnswer) {
   }
 
   message.metadata = this.world.metadata;
+
+  if (this.world.currentUser && this.world.currentUser.token) {
+    if (!message.headers) {
+      message.headers = {};
+    }
+    message.headers = _.extend(message.headers, {authorization: 'Bearer ' + this.world.currentUser.token});
+  }
 
   if (listen) {
     this.mqttClient.once('message', function (topic, message) {
