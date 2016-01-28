@@ -2,22 +2,11 @@ var
   async = require('async');
 
 var apiSteps = function () {
-  this.When(/^I ?(can't)* write the document ?(?:"([^"]*)")?(?: in index "([^"]*)")?(with auth token)?$/, function (cant, documentName, index, auth, callback) {
+  this.When(/^I ?(can't)* write the document ?(?:"([^"]*)")?(?: in index "([^"]*)")?$/, function (cant, documentName, index, callback) {
     var
-      collection,
-      jwtToken,
       document = this[documentName] || this.documentGrace;
 
-    if (Boolean(auth)) {
-      if (!Boolean(this.jwtToken)) {
-        callback(new Error('Cannot retrieve jwt token'));
-        return false;
-      }
-      jwtToken = this.jwtToken;
-    }
-
-
-    this.api.create(document, index, collection, jwtToken)
+    this.api.create(document, index)
       .then(function (body) {
         if (body.error) {
           if (cant) {

@@ -7,6 +7,8 @@ var apiSteps = function () {
       return callback('Fixture for role ' + role + ' not exists');
     }
 
+    id = this.idPrefix + id;
+
     this.api.putRole(id, this.roles[role])
       .then(function (body) {
         if (body.error) {
@@ -25,6 +27,8 @@ var apiSteps = function () {
     var
       index,
       main;
+
+    id = this.idPrefix + id;
 
     if (role && !this.roles[role]) {
       return callback('Fixture for role ' + role + ' not exists');
@@ -88,6 +92,8 @@ var apiSteps = function () {
       return callback('Fixture for role ' + role + ' not exists');
     }
 
+    id = this.idPrefix + id;
+
     this.api.putRole(id, this.roles[role])
       .then(body => {
         if (body.error) {
@@ -150,7 +156,9 @@ var apiSteps = function () {
     });
   });
 
-  this.When(/^I delete the role with id "([^"]*)"$/, function (id, callback) {
+  this.When(/^I delete the role (?:with id )?"([^"]*)"$/, function (id, callback) {
+    id = this.idPrefix + id;
+
     this.api.deleteRole(id)
       .then(body => {
         if (body.error) {

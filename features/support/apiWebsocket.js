@@ -1,4 +1,5 @@
 var
+  _ = require('lodash'),
   config = require('./config')(),
   q = require('q'),
   uuid = require('node-uuid'),
@@ -56,6 +57,13 @@ ApiWebsocket.prototype.send = function (msg, getAnswer, socketName) {
   }
 
   msg.metadata = this.world.metadata;
+
+  if (this.world.currentUser && this.world.currentUser.token) {
+    if (!msg.headers) {
+      msg.headers = {};
+    }
+    msg.headers = _.extend(msg.headers, {authorization: 'Bearer ' + this.world.currentUser.token});
+  }
 
   socketName = initSocket.call(this, socketName);
 
