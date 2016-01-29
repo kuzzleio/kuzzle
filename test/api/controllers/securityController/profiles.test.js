@@ -45,6 +45,25 @@ describe('Test: security controller - profiles', function () {
           }]
           );
         };
+        kuzzle.repositories.profile.loadMultiFromDatabase = (ids, hydrate) => {
+          if (!hydrate) {
+            return q(ids.map(id => {
+              return {
+                _id: id,
+                _source: {
+                  roles: ['role1']
+                }
+              };
+            }));
+          }
+
+          return q(ids.map(id => {
+            return {
+              _id: id,
+              roles: [{_id: 'role1'}]
+            };
+          }));
+        };
         kuzzle.repositories.profile.deleteProfile = requestObject => {
           return q(new ResponseObject(requestObject, {_id: 'test'}));
         };
@@ -53,101 +72,146 @@ describe('Test: security controller - profiles', function () {
       });
   });
 
-  it('should resolve to a responseObject on a putProfile call', done => {
-    kuzzle.funnel.security.putProfile(new RequestObject({
-        body: { _id: 'test', roles: ['role1'] }
-      }))
-      .then(result => {
-        should(result).be.an.instanceOf(ResponseObject);
-        should(result.data.body._id).be.exactly('test');
-        done();
-      })
-      .catch(error => {
-        done(error);
-      });
+  describe('#putProfile', function () {
+    it('should resolve to a responseObject on a putProfile call', done => {
+      kuzzle.funnel.security.putProfile(new RequestObject({
+          body: {_id: 'test', roles: ['role1']}
+        }))
+        .then(result => {
+          should(result).be.an.instanceOf(ResponseObject);
+          should(result.data.body._id).be.exactly('test');
+          done();
+        })
+        .catch(error => {
+          done(error);
+        });
+    });
   });
 
-  it('should resolve to a responseObject on a getProfile call', done => {
-    kuzzle.funnel.security.getProfile(new RequestObject({
-        body: { _id: 'test' }
-      }))
-      .then(result => {
-        should(result).be.an.instanceOf(ResponseObject);
-        should(result.data.body._id).be.exactly('test');
-        done();
-      })
-      .catch(error => {
-        done(error);
-      });
+  describe('#getProfile', function () {
+    it('should resolve to a responseObject on a getProfile call', done => {
+      kuzzle.funnel.security.getProfile(new RequestObject({
+          body: {_id: 'test'}
+        }))
+        .then(result => {
+          should(result).be.an.instanceOf(ResponseObject);
+          should(result.data.body._id).be.exactly('test');
+          done();
+        })
+        .catch(error => {
+          done(error);
+        });
+    });
+
+    it('should reject to an error on a getProfile call without id', () => {
+      return should(kuzzle.funnel.security.getProfile(new RequestObject({body: {_id: ''}}))).be.rejectedWith(BadRequestError);
+    });
   });
 
-  it('should reject to an error on a getProfile call without id', done => {
-    kuzzle.funnel.security.getProfile(new RequestObject({
-        body: { _id: '' }
-      }))
-      .then(result => {
-        done('Call resolved to ResponseObject but BadRequestError expected.');
-      })
-      .catch(error => {
-        should(error).be.an.instanceOf(BadRequestError);
-        done();
-      });
+  describe('#mGetProfiles', function () {
+    it('should reject to an error on a mGetProfiles call without ids', () => {
+      return should(kuzzle.funnel.security.mGetProfiles(new RequestObject({body: {}}))).be.rejectedWith(BadRequestError);
+    });
+
+    it('should resolve to a responseObject on a mGetProfiles call', done => {
+      kuzzle.funnel.security.mGetProfiles(new RequestObject({
+          body: {ids: ['test']}
+        }))
+        .then(result => {
+          should(result).be.an.instanceOf(ResponseObject);
+          should(result.data.body.hits).be.an.Array();
+          should(result.data.body.hits).not.be.empty();
+
+          should(result.data.body.hits[0]).be.an.Object();
+          should(result.data.body.hits[0]._source.roles).be.an.Array();
+          should(result.data.body.hits[0]._source.roles[0]).be.a.String();
+
+          done();
+        })
+        .catch(error => {
+          done(error);
+        });
+    });
+
+    it('should resolve to a responseObject with roles on a mGetProfiles call with hydrate', done => {
+      kuzzle.funnel.security.mGetProfiles(new RequestObject({
+          body: {ids: ['test'], hydrate: true}
+        }))
+        .then(result => {
+          should(result).be.an.instanceOf(ResponseObject);
+          should(result.data.body.hits).be.an.Array();
+          should(result.data.body.hits).not.be.empty();
+          should(result.data.body.hits[0]).be.an.Object();
+          should(result.data.body.hits[0]._source.roles).be.an.Array();
+          should(result.data.body.hits[0]._source.roles[0]).be.an.Object();
+          should(result.data.body.hits[0]._source.roles[0]._id).be.a.String();
+
+          done();
+        })
+        .catch(error => {
+          done(error);
+        });
+    });
   });
 
-  it('should return a ResponseObject containing an array of profiles on searchProfile call', done => {
-    kuzzle.funnel.security.searchProfiles(new RequestObject({
-        body: {}
-      }))
-      .then(result => {
-        var jsonResponse = result.toJson();
+  describe('#searchProfiles', function () {
+    it('should return a ResponseObject containing an array of profiles on searchProfile call', done => {
+      kuzzle.funnel.security.searchProfiles(new RequestObject({
+          body: {}
+        }))
+        .then(result => {
+          var jsonResponse = result.toJson();
 
-        should(result).be.an.instanceOf(ResponseObject);
-        should(jsonResponse.result.hits).be.an.Array();
-        should(jsonResponse.result.hits[0]._id).be.exactly('test');
+          should(result).be.an.instanceOf(ResponseObject);
+          should(jsonResponse.result.hits).be.an.Array();
+          should(jsonResponse.result.hits[0]._id).be.exactly('test');
 
-        done();
-      })
-      .catch(error => {
-        done(error);
-      });
+          done();
+        })
+        .catch(error => {
+          done(error);
+        });
+    });
+
+    it('should return a ResponseObject containing an array of profiles on searchProfile call with hydrate', done => {
+      kuzzle.funnel.security.searchProfiles(new RequestObject({
+          body: {
+            roles: ['role1'],
+            hydrate: true
+          }
+        }))
+        .then(result => {
+          var jsonResponse = result.toJson();
+
+          should(result).be.an.instanceOf(ResponseObject);
+          should(jsonResponse.result.hits).be.an.Array();
+          should(jsonResponse.result.hits[0]._id).be.exactly('test');
+
+          done();
+        })
+        .catch(error => {
+          done(error);
+        });
+    });
   });
 
-  it('should return a ResponseObject containing an array of profiles on searchProfile call with hydrate', done => {
-    kuzzle.funnel.security.searchProfiles(new RequestObject({
-        body: {
-          roles: ['role1'],
-          hydrate: true
-        }
-      }))
-      .then(result => {
-        var jsonResponse = result.toJson();
+  describe('#deleteProfile', function () {
+    it('should return response with on deleteProfile call', done => {
+      kuzzle.funnel.security.deleteProfile(new RequestObject({
+          body: {_id: 'test'}
+        }))
+        .then(result => {
+          var jsonResponse = result.toJson();
 
-        should(result).be.an.instanceOf(ResponseObject);
-        should(jsonResponse.result.hits).be.an.Array();
-        should(jsonResponse.result.hits[0]._id).be.exactly('test');
+          should(result).be.an.instanceOf(ResponseObject);
+          should(jsonResponse.result._id).be.exactly('test');
 
-        done();
-      })
-      .catch(error => {
-        done(error);
-      });
-  });
-
-  it('should return response with on deleteProfile call', done => {
-    kuzzle.funnel.security.deleteProfile(new RequestObject({
-        body: { _id: 'test' }
-      }))
-      .then(result => {
-        var jsonResponse = result.toJson();
-
-        should(result).be.an.instanceOf(ResponseObject);
-        should(jsonResponse.result._id).be.exactly('test');
-
-        done();
-      })
-      .catch(error => {
-        done(error);
-      });
+          done();
+        })
+        .catch(error => {
+          done(error);
+        });
+    });
   });
 
 });
