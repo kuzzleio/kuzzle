@@ -25,5 +25,29 @@
     "activated": true,
     "name": "kuzzle-plugin-auth-passport-local",
     "defaultConfig": {}
+  },
+  "kuzzle-plugin-auth-github": {
+    "version": "1.0.0",
+    "activated": true,
+    "name": "kuzzle-plugin-auth-github",
+    "defaultConfig": {
+      "persist": {}
+    },
+    "customConfig": {
+      "scope": [
+        "user:email"
+      ],
+      "persist": {
+        "defaultProfile": "anonymous",
+        "attrs": [
+          "name",
+          "email",
+          "avatar_url"
+        ]
+      },
+      "clientID": "d6afd7b4bcfa8803c557",
+      "clientSecret": "4f7200d8955c1c82304d4fc251ab3fa9702866ed",
+      "callbackUrl": "http://192.168.1.189:7511/api/1.0/_login/github"
+    }
   }
 }

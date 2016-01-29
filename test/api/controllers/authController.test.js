@@ -43,7 +43,7 @@ MockupStrategy.prototype.authenticate = function(req, options) {
 };
 
 MockupWrapper = function(MockupReturn) {
-  this.authenticate = function(request, strategy){
+  this.authenticate = function(request, strategy) {
     var deferred = q.defer();
     if (MockupReturn === 'resolve') {
       deferred.resolve({_id: request.body.username});
