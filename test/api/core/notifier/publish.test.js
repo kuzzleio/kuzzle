@@ -121,8 +121,8 @@ describe('Test: notifier.publish', function () {
     .catch(error => done(error));
   });
 
-  it('should cache the document in case of a createOrUpdate document request', function (done) {
-    request.action = 'createOrUpdate';
+  it('should cache the document in case of a createOrReplace document request', function (done) {
+    request.action = 'createOrReplace';
 
     notifier.publish(new RequestObject(request)).then(result => {
       setTimeout(() => {

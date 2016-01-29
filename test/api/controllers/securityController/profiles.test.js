@@ -72,9 +72,9 @@ describe('Test: security controller - profiles', function () {
       });
   });
 
-  describe('#putProfile', function () {
-    it('should resolve to a responseObject on a putProfile call', done => {
-      kuzzle.funnel.security.putProfile(new RequestObject({
+  describe('#createOrReplaceProfile', function () {
+    it('should resolve to a responseObject on a createOrReplaceProfile call', done => {
+      kuzzle.funnel.security.createOrReplaceProfile(new RequestObject({
           body: {_id: 'test', roles: ['role1']}
         }))
         .then(result => {

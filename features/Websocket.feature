@@ -25,7 +25,7 @@ Feature: Test websocket API
   Scenario: Create or Update a document
     Given A room subscription listening to "lastName" having value "Hopper"
     When I write the document "documentGrace"
-    And I createOrUpdate it
+    And I createOrReplace it
     Then I should have updated the document
     And I should receive a "update" notification
     And The notification should have metadata
