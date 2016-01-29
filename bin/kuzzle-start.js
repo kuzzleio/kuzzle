@@ -35,9 +35,16 @@ module.exports = function () {
       );
 
       console.log(`
-████████████████████████████████████
-██     KUZZLE ` + (kuzzle.isServer ? 'SERVER' : 'WORKER') + ` STARTED      ██
-████████████████████████████████████`);
+ ████████████████████████████████████
+ ██     KUZZLE ` + (kuzzle.isServer ? 'SERVER' : 'WORKER') + ` STARTED      ██`);
+
+      if (kuzzle.isServer) {
+        console.log(`
+ ██   ...WAITING FOR WORKERS...    ██
+ ████████████████████████████████████`);
+      } else {
+        console.log(' ████████████████████████████████████');
+      }
     })
     .then(() => {
       /*
@@ -45,8 +52,28 @@ module.exports = function () {
        */
       return kuzzle.services.list.broker.waitForListeners(kuzzle.config.queues.workerWriteTaskQueue);
     })
-    .then(() => { return kuzzle.cleanDb(); })
-    .then(() => { return kuzzle.prepareDb(); })
+    .then(() => {
+      if (kuzzle.isServer) {
+        console.log(`
+ ████████████████████████████████████
+ ██        WORKER CONNECTED        ██
+ ██    ...PREPARING DATABASE...    ██
+ ████████████████████████████████████`);
+      }
+
+      return kuzzle.cleanDb(kuzzle);
+    })
+    .then(() => {
+      return kuzzle.prepareDb(kuzzle);
+    })
+    .then(() => {
+      if (kuzzle.isServer) {
+        console.log(`
+ ████████████████████████████████████
+ ██          KUZZLE READY          ██
+ ████████████████████████████████████`);
+      }
+    })
     .catch(error => {
       console.error(error);
       process.exit(1);
