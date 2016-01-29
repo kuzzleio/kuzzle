@@ -75,7 +75,7 @@ var myHooks = function () {
 
   this.After('@cleanSecurity', function (scenario, callback) {
     cleanSecurity.call(this, callback);
-  })
+  });
 
 };
 
@@ -89,7 +89,7 @@ function setAPI (world, apiName) {
   api.init(world);
 
   return api;
-};
+}
 
 function cleanSecurity (callback) {
   this.api.listIndexes()
@@ -103,7 +103,7 @@ function cleanSecurity (callback) {
         { filter: { regexp: { _uid: 'users.' + this.idPrefix + '.*' } } },
         '%kuzzle',
         'users'
-      )
+      );
     })
     .then(() => {
       return this.api.deleteByQuery(
@@ -123,4 +123,4 @@ function cleanSecurity (callback) {
       callback();
     })
     .catch(error => { callback(error); });
-};
+}
