@@ -24,7 +24,7 @@ Feature: Test REST API
   @usingREST
   Scenario: Create or Update a document
     When I write the document
-    And I createOrUpdate it
+    And I createOrReplace it
     Then I should have updated the document
 
   @usingREST

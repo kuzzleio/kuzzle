@@ -45,67 +45,67 @@ describe('Test: security controller - roles', function () {
       });
   });
 
-  it('should resolve to a responseObject on a putRole call', done => {
-    kuzzle.funnel.security.putRole(new RequestObject({
-        body: { _id: 'test', indexes: {} }
-      }))
-      .then(result => {
-        should(result).be.an.instanceOf(ResponseObject);
-        should(result.data.body._id).be.exactly('test');
-        done();
-      })
-      .catch(error => {
-        done(error);
-      });
+  it('should resolve to a responseObject on a createOrReplaceRole call', done => {
+    kuzzle.funnel.security.createOrReplaceRole(new RequestObject({
+      body: {_id: 'test', indexes: {}}
+    }))
+    .then(result => {
+      should(result).be.an.instanceOf(ResponseObject);
+      should(result.data.body._id).be.exactly('test');
+      done();
+    })
+    .catch(error => {
+      done(error);
+    });
   });
 
   it('should resolve to a responseObject on a getRole call', done => {
     kuzzle.funnel.security.getRole(new RequestObject({
-        body: { _id: 'test' }
-      }))
-      .then(result => {
-        should(result).be.an.instanceOf(ResponseObject);
-        should(result.data.body._id).be.exactly('test');
-        done();
-      })
-      .catch(error => {
-        done(error);
-      });
+      body: {_id: 'test'}
+    }))
+    .then(result => {
+      should(result).be.an.instanceOf(ResponseObject);
+      should(result.data.body._id).be.exactly('test');
+      done();
+    })
+    .catch(error => {
+      done(error);
+    });
   });
 
   it('should return response with an array of roles on searchRole call', done => {
     kuzzle.funnel.security.searchRoles(new RequestObject({
-        body: { _id: 'test' }
-      }))
-      .then(result => {
-        var jsonResponse = result.toJson();
+      body: {_id: 'test'}
+    }))
+    .then(result => {
+      var jsonResponse = result.toJson();
 
-        should(result).be.an.instanceOf(ResponseObject);
-        should(jsonResponse.result.hits).be.an.Array();
-        should(jsonResponse.result.hits[0]._id).be.exactly('test');
+      should(result).be.an.instanceOf(ResponseObject);
+      should(jsonResponse.result.hits).be.an.Array();
+      should(jsonResponse.result.hits[0]._id).be.exactly('test');
 
-        done();
-      })
-      .catch(error => {
-        done(error);
-      });
+      done();
+    })
+    .catch(error => {
+      done(error);
+    });
   });
 
   it('should return response with on deleteRole call', done => {
     kuzzle.funnel.security.deleteRole(new RequestObject({
-        body: { _id: 'test' }
-      }))
-      .then(result => {
-        var jsonResponse = result.toJson();
+      body: {_id: 'test'}
+    }))
+    .then(result => {
+      var jsonResponse = result.toJson();
 
-        should(result).be.an.instanceOf(ResponseObject);
-        should(jsonResponse.result._id).be.exactly('test');
+      should(result).be.an.instanceOf(ResponseObject);
+      should(jsonResponse.result._id).be.exactly('test');
 
-        done();
-      })
-      .catch(error => {
-        done(error);
-      });
+      done();
+    })
+    .catch(error => {
+      done(error);
+    });
   });
 
 });

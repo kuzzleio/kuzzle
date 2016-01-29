@@ -27,8 +27,8 @@ describe('Test: security controller', function () {
       });
   });
 
-  it('should resolve to a responseObject on a putRole call', done => {
-    kuzzle.funnel.security.putRole(new RequestObject({
+  it('should resolve to a responseObject on a createOrUpdateRole call', done => {
+    kuzzle.funnel.security.createOrReplaceRole(new RequestObject({
         body: { _id: 'test', indexes: {} }
       }))
       .then(result => {

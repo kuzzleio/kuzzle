@@ -27,7 +27,7 @@ describe('Test: notifier.checkNewRoutes', function () {
       'count',
       'deleteCollection',
       'import',
-      'putMapping',
+      'updateMapping',
       'getMapping',
       'listCollections',
       'deleteIndexes',
@@ -60,7 +60,8 @@ describe('Test: notifier.checkNewRoutes', function () {
       mockupAction = function (responseObject) {
         performedActions.push(responseObject.action);
         return q({});
-      };
+      },
+      action;
 
     this.timeout(100);
 
@@ -70,7 +71,7 @@ describe('Test: notifier.checkNewRoutes', function () {
       notifyDocumentDelete: mockupAction,
       notifyDocumentReplace: mockupAction
     })(function () {
-      for (var action in kuzzle.services.list.readEngine) {
+      for (action in kuzzle.services.list.readEngine) {
         if (kuzzle.services.list.readEngine.hasOwnProperty(action) && typeof kuzzle.services.list.readEngine[action] === 'function') {
           knownActions.push(action);
           responseObject.action = action;

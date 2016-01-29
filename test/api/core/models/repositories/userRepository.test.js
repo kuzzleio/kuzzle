@@ -55,10 +55,10 @@ before(function (done) {
   };
   mockProfileRepository = {
     loadProfile: function (profileKey) {
+      var profile = new Profile();
       if (profileKey === 'notfound') {
         return q(null);
       }
-      var profile = new Profile();
       profile._id = profileKey;
       return q(profile);
     }
@@ -221,7 +221,7 @@ describe('Test: repositories/userRepository', function () {
       var
         token;
 
-       token = jwt.sign({_id: -99999}, params.jsonWebToken.secret, {algorithm: params.jsonWebToken.algorithm});
+      token = jwt.sign({_id: -99999}, params.jsonWebToken.secret, {algorithm: params.jsonWebToken.algorithm});
 
       userRepository.loadFromToken(token)
         .then(function (user) {
@@ -359,7 +359,7 @@ describe('Test: repositories/userRepository', function () {
       var
         checkToken;
 
-       checkToken = jwt.sign({_id: 'userInCache'}, params.jsonWebToken.secret, {algorithm: params.jsonWebToken.algorithm, expiresIn: params.jsonWebToken.expiresIn});
+      checkToken = jwt.sign({_id: 'userInCache'}, params.jsonWebToken.secret, {algorithm: params.jsonWebToken.algorithm, expiresIn: params.jsonWebToken.expiresIn});
 
       userRepository.generateToken('userInCache')
         .then(function (token) {
