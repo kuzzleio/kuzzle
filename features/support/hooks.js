@@ -95,7 +95,7 @@ function cleanSecurity (callback) {
   this.api.listIndexes()
     .then(response => {
       if (response.result.indexes.indexOf('%kuzzle') === -1) {
-        return true;
+        return q.reject(new ReferenceError('%kuzzle index not found'));
       }
     })
     .then(() => {
@@ -122,5 +122,11 @@ function cleanSecurity (callback) {
     .then(() => {
       callback();
     })
-    .catch(error => { callback(error); });
+    .catch(error => {
+      if (error instanceof ReferenceError && error.message === '%kuzzle index not found') {
+        // The %kuzzle index is not created yet. Is not a problem if the tests are run for the first time.
+        callback();
+      }
+      callback(error);
+    });
 }
