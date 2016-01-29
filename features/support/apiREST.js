@@ -1,4 +1,5 @@
 var
+  _ = require('lodash'),
   config = require('./config')(),
   rp = require('request-promise'),
   apiVersion = require('../../package.json').apiVersion;
@@ -22,6 +23,13 @@ ApiREST.prototype.apiBasePath = function (path) {
 };
 
 ApiREST.prototype.callApi = function (options) {
+  if (this.world.currentUser && this.world.currentUser.token) {
+    if (!options.headers) {
+      options.headers = {};
+    }
+    options.headers = _.extend(options.headers, {authorization: 'Bearer ' + this.world.currentUser.token});
+  }
+
   return rp(options);
 };
 
@@ -86,7 +94,7 @@ ApiREST.prototype.publish = function (body, index) {
   return this.callApi(options);
 };
 
-ApiREST.prototype.createOrUpdate = function (body, index, collection) {
+ApiREST.prototype.createOrReplace = function (body, index, collection) {
   var options = {
     url: this.apiPath(((typeof index !== 'string') ? this.world.fakeIndex : index) + '/' + ((typeof collection !== 'string') ? this.world.fakeCollection : collection) + '/' + body._id),
     method: 'PUT',
@@ -166,7 +174,7 @@ ApiREST.prototype.globalBulkImport = function (bulk) {
   return this.callApi(options);
 };
 
-ApiREST.prototype.putMapping = function (index) {
+ApiREST.prototype.updateMapping = function (index) {
   var options = {
     url: this.apiPath(((typeof index !== 'string') ? this.world.fakeIndex : index) + '/' + this.world.fakeCollection + '/_mapping'),
     method: 'PUT',
@@ -234,9 +242,9 @@ ApiREST.prototype.now = function () {
   return this.callApi(options);
 };
 
-ApiREST.prototype.truncateCollection = function (index) {
+ApiREST.prototype.truncateCollection = function (index, collection) {
   var options = {
-    url: this.apiPath(((typeof index !== 'string') ? this.world.fakeIndex : index) + '/' + this.world.fakeCollection + '/_truncate'),
+    url: this.apiPath(((typeof index !== 'string') ? this.world.fakeIndex : index) + '/' + (collection || this.world.fakeCollection) + '/_truncate'),
     method: 'DELETE',
     json: true
   };
@@ -325,8 +333,7 @@ ApiREST.prototype.logout = function (jwtToken) {
   return this.callApi(options);
 };
 
-
-ApiREST.prototype.putRole = function (id, body) {
+ApiREST.prototype.createOrReplaceRole = function (id, body) {
   var options = {
     url: this.apiPath('roles/' + id),
     method: 'PUT',
@@ -366,7 +373,7 @@ ApiREST.prototype.deleteRole = function (id) {
   return this.callApi(options);
 };
 
-ApiREST.prototype.putProfile = function (id, body) {
+ApiREST.prototype.createOrReplaceProfile = function (id, body) {
   var options = {
     url: this.apiPath('profiles/' + id),
     method: 'PUT',
@@ -406,5 +413,46 @@ ApiREST.prototype.deleteProfile = function (id) {
   return this.callApi(options);
 };
 
+ApiREST.prototype.getUser = function (id) {
+  var options = {
+    url: this.apiPath('users/' + id),
+    method: 'GET',
+    json: true
+  };
+
+  return this.callApi(options);
+};
+
+ApiREST.prototype.getCurrentUser = function () {
+  return this.callApi({
+    url: this.apiPath('users/_me'),
+    method: 'GET',
+    json: true
+  });
+};
+
+ApiREST.prototype.searchUsers = function (body) {
+  return this.callApi({
+    url: this.apiPath('users/_search'),
+    method: 'POST',
+    json: body
+  });
+};
+
+ApiREST.prototype.deleteUser = function (id) {
+  return this.callApi({
+    url: this.apiPath('users/' + id),
+    method: 'DELETE',
+    json: true
+  });
+};
+
+ApiREST.prototype.putUser = function (id, body) {
+  return this.callApi({
+    url: this.apiPath('users/' + id),
+    method: 'PUT',
+    json: body
+  });
+};
 
 module.exports = ApiREST;

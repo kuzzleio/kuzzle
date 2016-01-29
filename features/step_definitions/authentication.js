@@ -1,7 +1,7 @@
 var apiSteps = function () {
-  this.When(/^I send a login request with test:testpwd user?$/, function (callback) {
-    this.api.login('local', {username: 'test', password:'testpwd'})
-      .then(function (body) {
+  this.When(/^I log in as (.*?):(.*?)$/, function (login, password, callback) {
+    this.api.login('local', {username: this.idPrefix + login, password: password})
+      .then(body => {
         if (body.error) {
           callback(new Error(body.error.message));
           return false;
@@ -17,27 +17,37 @@ var apiSteps = function () {
           return false;
         }
 
-        this.jwtToken = body.result.jwt;
+        if (this.currentUser === null) {
+          this.currentUser = {};
+        }
+
+        this.currentUser.token = body.result.jwt;
         callback();
-      }.bind(this))
+      })
       .catch(function (error) {
         callback(error);
       });
   });
 
-  this.Then(/^I send a logout request with previously received token?$/, function (callback) {
-    if (!Boolean(this.jwtToken)) {
+  this.Then(/^I log ?out$/, function (callback) {
+    if (!this.currentUser || !this.currentUser.token) {
       callback(new Error('Cannot retrieve jwt token'));
       return false;
     }
 
     this.api.logout(this.jwtToken)
-      .then(function (body) {
+      .then(body => {
+        delete this.currentUser;
+
         if (body.error) {
           callback(new Error(body.error.message));
           return false;
         }
         callback();
+      })
+      .catch(error => {
+        delete this.currentUser;
+        callback(error);
       });
   });
 };

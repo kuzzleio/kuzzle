@@ -50,11 +50,11 @@ describe('Test: write controller', function () {
     return should(kuzzle.funnel.write.create(requestObject)).be.rejected();
   });
 
-  it('should reject an empty createOrUpdate request', function () {
+  it('should reject an empty createOrReplace request', function () {
     var requestObject = new RequestObject({});
     delete requestObject.data.body;
 
-    return should(kuzzle.funnel.write.createOrUpdate(requestObject)).be.rejected();
+    return should(kuzzle.funnel.write.createOrReplace(requestObject)).be.rejected();
   });
 
   it('should reject an empty update request', function () {
@@ -130,13 +130,13 @@ describe('Test: write controller', function () {
     });
   });
 
-  describe('#createOrUpdate', function () {
-    it('should emit a hook on a createOrUpdate query', function (done) {
+  describe('#createOrReplace', function () {
+    it('should emit a hook on a createOrReplace query', function (done) {
       var requestObject = new RequestObject({body: {foo: 'bar'}}, {}, 'unit-test');
 
       this.timeout(50);
 
-      kuzzle.once('data:createOrUpdate', function (obj) {
+      kuzzle.once('data:createOrReplace', function (obj) {
         try {
           should(obj).be.exactly(requestObject);
           done();
@@ -146,7 +146,7 @@ describe('Test: write controller', function () {
         }
       });
 
-      kuzzle.funnel.write.createOrUpdate(requestObject)
+      kuzzle.funnel.write.createOrReplace(requestObject)
         .catch(function (error) {
           done(error);
         });
@@ -156,7 +156,7 @@ describe('Test: write controller', function () {
       var requestObject = new RequestObject({body: {foo: 'bar'}}, {}, 'unit-test');
       this.timeout(50);
 
-      kuzzle.funnel.write.createOrUpdate(requestObject)
+      kuzzle.funnel.write.createOrReplace(requestObject)
         .then(response => {
           should(response).be.instanceof(ResponseObject);
           should(indexCacheAdded).be.true();

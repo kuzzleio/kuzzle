@@ -103,11 +103,11 @@ describe('Test: admin controller', function () {
     });
   });
 
-  describe('#putMapping', function () {
-    it('should activate a hook on a put mapping call', function (done) {
+  describe('#updateMapping', function () {
+    it('should activate a hook on a mapping update call', function (done) {
       this.timeout(50);
 
-      kuzzle.once('data:putMapping', function (obj) {
+      kuzzle.once('data:updateMapping', function (obj) {
         try {
           should(obj).be.exactly(requestObject);
           done();
@@ -117,7 +117,7 @@ describe('Test: admin controller', function () {
         }
       });
 
-      kuzzle.funnel.admin.putMapping(requestObject)
+      kuzzle.funnel.admin.updateMapping(requestObject)
         .catch(function (error) {
           done(error);
         });
@@ -126,7 +126,7 @@ describe('Test: admin controller', function () {
     it('should add the new collection to the cache', function (done) {
       this.timeout(50);
 
-      kuzzle.funnel.admin.putMapping(requestObject)
+      kuzzle.funnel.admin.updateMapping(requestObject)
         .then(response => {
           should(response).be.instanceof(ResponseObject);
           should(indexCacheAdd).be.true();

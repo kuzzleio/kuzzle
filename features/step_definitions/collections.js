@@ -58,7 +58,7 @@ var apiSteps = function () {
   });
 
   this.Then(/^I change the schema(?: in index "([^"]*)")?$/, function (index, callback) {
-    this.api.putMapping()
+    this.api.updateMapping()
       .then(function (body) {
         if (body.error !== null) {
           callback(new Error(body.error.message));
@@ -72,8 +72,8 @@ var apiSteps = function () {
       });
   });
 
-  this.Then(/^I truncate the collection(?: in index "([^"]*)")?$/, function (index, callback) {
-    this.api.truncateCollection(index)
+  this.Then(/^I truncate the collection(?: "(.*?)")?(?: in index "([^"]*)")?$/, function (collection, index, callback) {
+    this.api.truncateCollection(index, collection)
       .then(body => {
         if (body.error !== null) {
           return callback(new Error(body.error.message));

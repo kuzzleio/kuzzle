@@ -348,4 +348,34 @@ describe('Test: hotelClerk.addSubscription', function () {
     ))
       .be.rejectedWith(BadRequestError);
   });
+
+  it('should treat null/undefined filters as empty filters', function (done) {
+    var
+      requestObject1 = new RequestObject({
+        controller: 'subscribe',
+        collection: collection,
+        index: index,
+        body: {}
+      }),
+      requestObject2 = new RequestObject({
+        controller: 'subscribe',
+        collection: collection,
+        index: index,
+        body: null
+      }),
+      response;
+
+    return kuzzle.hotelClerk.addSubscription(requestObject1, context)
+      .then(result => {
+        response = result;
+        return kuzzle.hotelClerk.addSubscription(requestObject2, context);
+      })
+      .then(result => {
+        should(result.roomId).be.exactly(response.roomId);
+        done();
+      })
+      .catch(error => {
+        done(error);
+      });
+  });
 });
