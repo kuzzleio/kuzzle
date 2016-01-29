@@ -445,6 +445,17 @@ ApiRT.prototype.getRole = function (id) {
   return this.send(msg);
 };
 
+ApiRT.prototype.mGetRoles = function (body) {
+  var
+    msg = {
+      controller: 'security',
+      action: 'mGetRoles',
+      body: body
+    };
+
+  return this.send(msg);
+};
+
 ApiRT.prototype.searchRoles = function (body) {
   var
     msg = {
@@ -485,6 +496,17 @@ ApiRT.prototype.getProfile = function (id) {
       controller: 'security',
       action: 'getProfile',
       _id: id
+    };
+
+  return this.send(msg);
+};
+
+ApiRT.prototype.mGetProfiles = function (body) {
+  var
+    msg = {
+      controller: 'security',
+      action: 'mGetProfiles',
+      body: body
     };
 
   return this.send(msg);
