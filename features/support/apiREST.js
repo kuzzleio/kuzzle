@@ -354,6 +354,16 @@ ApiREST.prototype.getRole = function (id) {
   return this.callApi(options);
 };
 
+ApiREST.prototype.mGetRoles = function (body) {
+  var options = {
+    url: this.apiPath('roles/_mget'),
+    method: 'POST',
+    json: body
+  };
+
+  return this.callApi(options);
+};
+
 ApiREST.prototype.searchRoles = function (body) {
   var options = {
     url: this.apiPath('roles/_search'),
@@ -389,6 +399,16 @@ ApiREST.prototype.getProfile = function (id) {
     url: this.apiPath('profiles/' + id),
     method: 'GET',
     json: true
+  };
+
+  return this.callApi(options);
+};
+
+ApiREST.prototype.mGetProfiles = function (body) {
+  var options = {
+    url: this.apiPath('profiles/_mget'),
+    method: 'POST',
+    json: body
   };
 
   return this.callApi(options);
