@@ -23,7 +23,6 @@ describe('Test: admin controller', function () {
             created: true
           });
         };
-
         done();
       });
   });

@@ -88,7 +88,7 @@ describe('Test the passport Wrapper', function () {
   it('should resolve to the user if good credentials', function (done) {
     passportWrapper.authenticate({body: {username: 'jdoe'}}, 'mockup')
       .then(function (userObject) {
-        should(userObject._id).be.equal('jdoe');
+        should(userObject.user._id).be.equal('jdoe');
         done();
       })
       .catch(function(err) {

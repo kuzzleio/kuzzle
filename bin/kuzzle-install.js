@@ -104,7 +104,7 @@ function installPlugins(plugins, basePlugins) {
 
     console.log('███ kuzzle-install: Downloading plugin: ', name);
     newInstalled = true;
-    //npmInstall(pluginInstallId);
+    npmInstall(pluginInstallId);
     initConfig(plugin, name);
     console.log('███ kuzzle-install: Plugin', name, 'downloaded');
 
