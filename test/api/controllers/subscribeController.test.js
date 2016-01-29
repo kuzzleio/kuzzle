@@ -15,7 +15,7 @@ var
 describe('Test: subscribe controller', function () {
   var
     kuzzle,
-    anonymousUser,
+    anonymousToken,
     context,
     requestObject = new RequestObject({index: 'test'}, {}, 'unit-test');
 
@@ -32,10 +32,10 @@ describe('Test: subscribe controller', function () {
         return kuzzle.repositories.profile.hydrate(kuzzle.repositories.profile.profiles.anonymous, params.userProfiles.anonymous);
       })
       .then(function () {
-        return kuzzle.repositories.user.anonymous();
+        return kuzzle.repositories.token.anonymous();
       })
-      .then(function (user) {
-        anonymousUser = user;
+      .then(function (token) {
+        anonymousToken = token;
         done();
       });
   });
@@ -45,7 +45,7 @@ describe('Test: subscribe controller', function () {
   it('should forward new subscriptions to the hotelClerk core component', function () {
     var foo = kuzzle.funnel.subscribe.on(requestObject, {
       connection: {id: 'foobar'},
-      user: anonymousUser
+      token: anonymousToken
     });
 
     return should(foo).be.fulfilled();
@@ -59,7 +59,7 @@ describe('Test: subscribe controller', function () {
     requestObject.data.body = { roomId: 'foobar' };
     result = kuzzle.funnel.subscribe.off(requestObject, {
       connection: {id: newUser },
-      user: anonymousUser
+      token: anonymousToken
     });
 
     return should(result).be.rejectedWith(NotFoundError, { message: 'The user with connection ' + newUser + ' doesn\'t exist' });
@@ -79,7 +79,7 @@ describe('Test: subscribe controller', function () {
       kuzzle.once('subscription:list', () => done());
       should(kuzzle.funnel.subscribe.list(requestObject, {
         connection: {id: 'foobar'},
-        user: anonymousUser
+        token: anonymousToken
       })).be.a.Promise();
     });
   });
@@ -90,7 +90,7 @@ describe('Test: subscribe controller', function () {
       kuzzle.once('subscription:join', () => done());
       should(kuzzle.funnel.subscribe.join(requestObject, {
         connection: {id: 'foobar'},
-        user: anonymousUser
+        token: anonymousToken
       })).be.a.Promise();
     });
   });

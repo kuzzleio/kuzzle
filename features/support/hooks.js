@@ -69,15 +69,6 @@ var myHooks = function () {
     }, error => callback(error));
   });
 
-  this.Before('@cleanSecurity', function (scenario, callback) {
-    this.api.deleteIndex('%kuzzle')
-      .then(function () {
-        callback();
-      }.bind(this))
-      .catch(function () {
-        callback();
-      });
-  });
 };
 
 module.exports = myHooks;

@@ -6,6 +6,7 @@
  */
 var
   should = require('should'),
+  q = require('q'),
   _ = require('lodash'),
   rewire = require('rewire'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
@@ -58,7 +59,7 @@ describe('Test: notifier.checkNewRoutes', function () {
       performedActions = [],
       mockupAction = function (responseObject) {
         performedActions.push(responseObject.action);
-        return Promise.resolve({});
+        return q({});
       };
 
     this.timeout(100);
@@ -66,7 +67,8 @@ describe('Test: notifier.checkNewRoutes', function () {
     Notifier.__with__({
       notifyDocumentCreate: mockupAction,
       notifyDocumentUpdate: mockupAction,
-      notifyDocumentDelete: mockupAction
+      notifyDocumentDelete: mockupAction,
+      notifyDocumentReplace: mockupAction
     })(function () {
       for (var action in kuzzle.services.list.readEngine) {
         if (kuzzle.services.list.readEngine.hasOwnProperty(action) && typeof kuzzle.services.list.readEngine[action] === 'function') {

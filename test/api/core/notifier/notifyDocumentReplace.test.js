@@ -3,7 +3,7 @@
  * to messages coming from workers.
  * And in particular, messages from the write worker(s), that need to be forwarded to the right listeners.
  *
- * This file tests the documents update notifications.
+ * This file tests the documents replace notifications.
  */
 var
   should = require('should'),
@@ -42,37 +42,25 @@ var mockupCacheService = {
   search: function (id) {
     if (id === 'removeme') {
       return q(['foobar']);
-    }
-    else {
+    } else if (id === 'errorme') {
+      return q.reject(new Error('rejected'));
+    } else if (id === 'addRequest') {
+      return q(['foobar']);
+    } else if (id === 'removeRequest') {
       return q([]);
+    } else if (id === 'addme') {
+      return q(['foobar']);
     }
-  }
-};
-
-var mockupTestFilters = function (responseObject) {
-  if (responseObject.data.body._id === 'errorme') {
-    return q.reject(new Error('rejected'));
-  }
-  else if (responseObject.data.body._id === 'removeme') {
     return q([]);
   }
-  else {
-    return q(['foobar']);
-  }
 };
 
-var mockupReadEngine = {
-  get: function (requestObject) {
-    return q(new ResponseObject(requestObject, requestObject.data));
-  }
-};
-
-describe('Test: notifier.notifyDocumentUpdate', function () {
+describe('Test: notifier.notifyDocumentReplace', function () {
   var
     kuzzle,
     requestObject = new RequestObject({
       controller: 'write',
-      action: 'update',
+      action: 'replace',
       requestId: 'foo',
       collection: 'bar',
       body: { foo: 'bar' }
@@ -86,8 +74,6 @@ describe('Test: notifier.notifyDocumentUpdate', function () {
     kuzzle.start(params, {dummy: true})
       .then(function () {
         kuzzle.services.list.notificationCache = mockupCacheService;
-        kuzzle.services.list.readEngine = mockupReadEngine;
-        kuzzle.dsl.testFilters = mockupTestFilters;
         kuzzle.notifier.notify = function (rooms, response) {
           if (rooms.length > 0) {
             notified++;
@@ -102,7 +88,7 @@ describe('Test: notifier.notifyDocumentUpdate', function () {
   });
 
   it('should return a promise', function () {
-    var result = (Notifier.__get__('notifyDocumentUpdate')).call(kuzzle, responseObject);
+    var result = (Notifier.__get__('notifyDocumentReplace')).call(kuzzle, responseObject);
 
     should(result).be.a.Promise();
     return should(result).be.fulfilled();
@@ -111,16 +97,17 @@ describe('Test: notifier.notifyDocumentUpdate', function () {
   it('should return a rejected promise if the document is not well-formed', function () {
     responseObject.data.body._id = 'errorme';
 
-    return should((Notifier.__get__('notifyDocumentUpdate')).call(kuzzle, responseObject)).be.rejected();
+    return should((Notifier.__get__('notifyDocumentReplace')).call(kuzzle, responseObject)).be.rejected();
   });
 
-  it('should notify subscribers when an updated document entered their scope', function (done) {
+  it('should notify subscribers when a replaced document entered their scope', function (done) {
     responseObject.data.body._id = 'addme';
+    responseObject.requestId = 'addRequest';
 
     notified = 0;
     mockupCacheService.init();
 
-    (Notifier.__get__('notifyDocumentUpdate')).call(kuzzle, responseObject)
+    (Notifier.__get__('notifyDocumentReplace')).call(kuzzle, responseObject)
       .then(function () {
         should(notified).be.exactly(1);
         should(mockupCacheService.addId).be.exactly(responseObject.data.body._id);
@@ -140,11 +127,12 @@ describe('Test: notifier.notifyDocumentUpdate', function () {
 
   it('should notify subscribers when an updated document left their scope', function (done) {
     responseObject.data.body._id = 'removeme';
+    responseObject.requestId = 'removeRequest';
 
     notified = 0;
     mockupCacheService.init();
 
-    (Notifier.__get__('notifyDocumentUpdate')).call(kuzzle, responseObject)
+    (Notifier.__get__('notifyDocumentReplace')).call(kuzzle, responseObject)
       .then(function () {
         should(notified).be.exactly(1);
         should(mockupCacheService.addId).be.undefined();
@@ -157,7 +145,7 @@ describe('Test: notifier.notifyDocumentUpdate', function () {
         done();
       })
       .catch (function (e) {
-      done(e);
-    });
+        done(e);
+      });
   });
 });

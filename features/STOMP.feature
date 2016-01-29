@@ -21,6 +21,12 @@ Feature: Test STOMP API
     Then I'm able to get the document
     And I'm not able to get the document in index "index-test-alt"
 
+  @usingSTOMP
+  Scenario: Replace a document
+    When I write the document "documentGrace"
+    Then I replace the document with "documentAda" document
+    Then my document has the value "Ada" in field "firstName"
+
   @usingSTOMP @unsubscribe
   Scenario: Create or Update a document
     Given A room subscription listening to "lastName" having value "Hopper"
@@ -117,6 +123,24 @@ Feature: Test STOMP API
     Given A room subscription listening to "lastName" having value "Hopper"
     When I write the document "documentGrace"
     Then I update the document with value "Foo" in field "lastName"
+    Then I should receive a "update" notification
+    And The notification should not have a "_source" member
+    And The notification should have metadata
+
+  @usingSTOMP @unsubscribe
+  Scenario: Document replace: new document notification
+    Given A room subscription listening to "lastName" having value "Hopper"
+    When I write the document "documentAda"
+    Then I replace the document with "documentGrace" document
+    Then I should receive a "update" notification
+    And The notification should have a "_source" member
+    And The notification should have metadata
+
+  @usingSTOMP @unsubscribe
+  Scenario: Document replace: removed document notification
+    Given A room subscription listening to "lastName" having value "Hopper"
+    When I write the document "documentGrace"
+    Then I replace the document with "documentAda" document
     Then I should receive a "update" notification
     And The notification should not have a "_source" member
     And The notification should have metadata
@@ -219,7 +243,15 @@ Feature: Test STOMP API
     Then I'm not able to find the index named "my-undefined-index" in index list
     Then I'm able to delete the index named "my-new-index"
 
-  @usingSTOMP @cleanSecurity
+  @usingSTOMP
+  Scenario: login user
+    Given I create a user "user1" with id "user1-id"
+    When I log in as user1-id:testpwd
+    Then I write the document
+    Then I logout
+    Then I can't write the document
+
+  @usingSTOMP
   Scenario: Create/get/search/update/delete role
     When I create a new role "role1" with id "test"
     Then I'm able to find a role with id "test"
@@ -229,19 +261,19 @@ Feature: Test STOMP API
     And I delete the role with id "test"
     Then I'm not able to find a role with id "test"
 
-  @usingSTOMP @cleanSecurity
+  @usingSTOMP
   Scenario: create an invalid profile with unexisting role triggers an error
     Then I cannot create an invalid profile
 
-  @usingSTOMP @cleanSecurity
+  @usingSTOMP
   Scenario: get profile without id triggers an error
     Then I cannot a profile without ID
 
-  @usingSTOMP @cleanSecurity
+  @usingSTOMP
   Scenario: creating a profile with an empty set of roles triggers an error
     Then I cannot create a profile with an empty set of roles
 
-  @usingSTOMP @cleanSecurity
+  @usingSTOMP
   Scenario: create, get and delete a profile
     Given I create a new role "role1" with id "role1"
     And I create a new role "role2" with id "role2"
@@ -249,10 +281,14 @@ Feature: Test STOMP API
     Then I'm able to find the profile with id "my-new-profile"
     Given I delete the profile with id "my-new-profile"
     Then I'm not able to find the profile with id "my-new-profile"
+    Then I delete the role "role1"
+    Then I delete the role "role2"
 
-  @usingSTOMP @cleanSecurity
+  @usingSTOMP
   Scenario: search and update profiles
-    Given I create a new profile "profile1" with id "my-profile-1"
+    Given I create a new role "role1" with id "role1"
+    And I create a new role "role2" with id "role2"
+    And I create a new profile "profile1" with id "my-profile-1"
     And I create a new profile "profile3" with id "my-profile-2"
     Then I'm able to find "1" profiles containing the role with id "role1"
     Then I'm able to find "2" profiles
@@ -260,3 +296,30 @@ Feature: Test STOMP API
     Given I update the profile with id "my-profile-2" by adding the role "role1"
     Then I'm able to find "2" profiles
     Then I'm able to find "2" profiles containing the role with id "role1"
+    Then I delete the profile "my-profile-1"
+    Then I delete the profile "my-profile-2"
+    Then I delete the role "role1"
+    Then I delete the role "role2"
+
+  @usingSTOMP
+  Scenario: user crudl
+    And I create a new role "role1" with id "role1"
+    And I create a new role "role2" with id "role2"
+    And I create a new profile "profile2" with id "profile2"
+    And I create a user "user1" with id "user1-id"
+    And I create a user "user2" with id "user2-id"
+    Then I am able to get the user "user1-id" matching {"_id":"#prefix#user1-id","_source":{"profile":{"_id":"admin","roles":[{"_id":"admin"}]}}}
+    Then I am able to get the unhydrated user "user1-id" matching {"_id":"#prefix#user1-id","_source":{"profile":"admin"}}
+    Then I am able to get the user "user2-id" matching {"_id":"#prefix#user2-id","_source":{"profile":{"_id":"#prefix#profile2"}}}
+    Then I search for {"regexp":{"_id":"^#prefix#.*"}} and find 2 users
+    Then I delete the user "user2-id"
+    Then I search for {"regexp":{"_id":"^#prefix#.*"}} and find 1 users matching {"_id":"#prefix#user1-id","_source":{"name":{"first":"David","last":"Bowie"}}}
+    When I log in as user1-id:testpwd
+    Then I am getting the current user, which matches {"_id":"#prefix#user1-id","_source":{"profile":{"_id":"admin"}}}
+    Then I log out
+    Then I am getting the current user, which matches {"_id":-1,"_source":{"profile":{"_id":"anonymous"}}}
+    Then I delete the user "user1-id"
+    Then I delete the profile "profile2"
+    Then I delete the role "role1"
+    Then I delete the role "role2"
+

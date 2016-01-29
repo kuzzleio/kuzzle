@@ -11,7 +11,7 @@
     }
   },
   "kuzzle-plugin-socketio": {
-    "version": "1.0.4",
+    "version": "1.0.5",
     "activated": true,
     "name": "kuzzle-plugin-socketio",
     "defaultConfig": {
@@ -21,33 +21,13 @@
     }
   },
   "kuzzle-plugin-auth-passport-local": {
-    "version": "1.0.0",
+    "version": "1.1.0",
     "activated": true,
     "name": "kuzzle-plugin-auth-passport-local",
-    "defaultConfig": {}
-  },
-  "kuzzle-plugin-auth-github": {
-    "version": "1.0.0",
-    "activated": true,
-    "name": "kuzzle-plugin-auth-github",
     "defaultConfig": {
-      "persist": {}
-    },
-    "customConfig": {
-      "scope": [
-        "user:email"
-      ],
-      "persist": {
-        "defaultProfile": "anonymous",
-        "attrs": [
-          "name",
-          "email",
-          "avatar_url"
-        ]
-      },
-      "clientID": "d6afd7b4bcfa8803c557",
-      "clientSecret": "4f7200d8955c1c82304d4fc251ab3fa9702866ed",
-      "callbackUrl": "http://192.168.1.189:7511/api/1.0/_login/github"
+      "secret": "changeme",
+      "algorithm": "sha1",
+      "digest": "hex"
     }
   }
 }

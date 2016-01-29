@@ -1,6 +1,13 @@
+var
+  rc = require('rc');
+
 module.exports = function () {
   this.World = function World () {
     this.api = null;
+    this.kuzzleConfig = rc('kuzzle');
+    this.idPrefix = 'kuzzle-functional-tests-';
+
+    this.currentUser = null;
 
     // Fake values for test
     this.fakeIndex = 'index-test';
@@ -98,19 +105,47 @@ module.exports = function () {
 
     this.profiles = {
       profile1: {
-        roles: ['role1']
+        roles: [this.idPrefix + 'role1']
       },
       profile2: {
-        roles: ['role1', 'role2']
+        roles: [this.idPrefix + 'role1', this.idPrefix + 'role2']
       },
       profile3: {
-        roles: ['role2']
+        roles: [this.idPrefix + 'role2']
       },
       invalidProfile: {
         roles: ['unexisting-role']
       },
       emptyProfile: {
         roles: []
+      }
+    };
+
+    this.users = {
+      user1: {
+        name: {
+          first: 'David',
+          last: 'Bowie',
+          real: 'David Robert Jones'
+        },
+        profile: 'admin',
+        password: '30b64e1a26bc4f6e40d1a4b0388a58b7821afa1f'
+      },
+      user2: {
+        name: {
+          first: 'Steve',
+          last: 'Wozniak'
+        },
+        hobby: 'Segway Polo',
+        profile: this.idPrefix + 'profile2'
+      },
+      unexistingprofile: {
+        name: 'John Doe',
+        profile: this.idPrefix + 'i-dont-exist'
+      },
+      invalidprofileType: {
+        name: 'John Doe',
+        profile: null
       }
     };
   };

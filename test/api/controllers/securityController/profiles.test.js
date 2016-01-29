@@ -1,5 +1,6 @@
 var
   should = require('should'),
+  q = require('q'),
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   BadRequestError = require.main.require('lib/api/core/errors/badRequestError'),
@@ -17,23 +18,23 @@ describe('Test: security controller - profiles', function () {
         // Mock
         kuzzle.repositories.role.roles.role1 = { _id: 'role1' };
         kuzzle.repositories.profile.validateAndSaveProfile = profile => {
-          return Promise.resolve({
-            _index: '%kuzzle',
+          return q({
+            _index: kuzzle.config.internalIndex,
             _type: 'profiles',
             _id: profile._id,
             created: true
           });
         };
         kuzzle.repositories.profile.loadProfile = id => {
-          return Promise.resolve({
-            _index: '%kuzzle',
+          return q({
+            _index: kuzzle.config.internalIndex,
             _type: 'profiles',
             _id: id,
             _source: {}
           });
         };
         kuzzle.repositories.profile.searchProfiles = requestObject => {
-          return Promise.resolve(new ResponseObject(requestObject, {
+          return q(new ResponseObject(requestObject, {
             hits: [{
               _id: 'test',
               roles: [
@@ -47,7 +48,7 @@ describe('Test: security controller - profiles', function () {
           }));
         };
         kuzzle.repositories.profile.deleteProfile = requestObject => {
-          return Promise.resolve(new ResponseObject(requestObject, {_id: 'test'}));
+          return q(new ResponseObject(requestObject, {_id: 'test'}));
         };
 
         done();

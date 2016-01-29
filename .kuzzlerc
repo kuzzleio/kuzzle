@@ -39,6 +39,8 @@
     "algorithm": "sha1",
     "digest": "hex"
   },
+  // Default internal index
+  "internalIndex": "%kuzzle",
   // repositories defaults
   "repositories": {
     "cacheTTL": 1440
@@ -73,6 +75,20 @@
               }
             }
           }
+        },
+        "%kuzzle": {
+        "collections": {
+          "_canCreate": true,
+          "*": {
+            "controllers": {
+              "*": {
+                "actions": {
+                  "*": true
+                  }
+                }
+              }
+            }
+          }
         }
       }
     },
@@ -88,6 +104,20 @@
                 "*": {
                   "actions": {
                     "*": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "%kuzzle": {
+        "collections": {
+          "_canCreate": true,
+          "*": {
+            "controllers": {
+              "*": {
+                "actions": {
+                  "*": true
                   }
                 }
               }

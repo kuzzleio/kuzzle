@@ -15,11 +15,14 @@ describe('Test: repositories/repository', function () {
     ObjectConstructor,
     mockCacheEngine,
     mockReadEngine,
-    mockWriteEngine;
+    mockWriteLayer,
+    cachedObject,
+    uncachedObject;
 
   ObjectConstructor = function () {
     this.type = 'testObject';
   };
+
   persistedObject = new ObjectConstructor();
   persistedObject._id = -1;
   persistedObject.name = 'persisted';
@@ -35,24 +38,24 @@ describe('Test: repositories/repository', function () {
   mockCacheEngine = {
     get: function (key) {
       if (key === repository.index + '/' + repository.collection + '/persisted') {
-        return Promise.resolve(JSON.stringify(persistedObject));
+        return q(JSON.stringify(persistedObject));
       }
       if (key === repository.index + '/' + repository.collection + '/cached') {
-        return Promise.resolve(JSON.stringify(cachedObject));
+        return q(JSON.stringify(cachedObject));
       }
       if (key === repository.index + '/' + repository.collection + '/error') {
-        return Promise.reject(new InternalError('Error'));
+        return q.reject(new InternalError('Error'));
       }
       if (key === repository.index + '/' + repository.collection + '/string') {
-        return Promise.resolve('a string');
+        return q('a string');
       }
 
-      return Promise.resolve(null);
+      return q(null);
     },
-    set: (key, value) => { forwardedObject = {op: 'set', key: key, value: JSON.parse(value)}; },
-    volatileSet: (key, value, ttl) => { forwardedObject = {op: 'volatileSet', key: key, value: JSON.parse(value), ttl: ttl }; },
-    expire: (key, ttl) => { forwardedObject = {op: 'expire', key: key, ttl: ttl}; },
-    persist: key => { forwardedObject = {op: 'persist', key: key}; }
+    set: (key, value) => { forwardedObject = {op: 'set', key: key, value: JSON.parse(value)}; return q('OK'); },
+    volatileSet: (key, value, ttl) => { forwardedObject = {op: 'volatileSet', key: key, value: JSON.parse(value), ttl: ttl }; return q('OK'); },
+    expire: (key, ttl) => { forwardedObject = {op: 'expire', key: key, ttl: ttl}; return q('OK'); },
+    persist: key => { forwardedObject = {op: 'persist', key: key}; return q('OK'); }
   };
   mockReadEngine = {
     get: function (requestObject, forward) {
@@ -61,22 +64,22 @@ describe('Test: repositories/repository', function () {
         forwardedObject = requestObject;
       }
       if (requestObject.data._id === 'persisted') {
-        return Promise.resolve(new ResponseObject(requestObject, persistedObject));
+        return q(new ResponseObject(requestObject, persistedObject));
       }
       if (requestObject.data._id === 'uncached') {
-        return Promise.resolve(new ResponseObject(requestObject, uncachedObject));
+        return q(new ResponseObject(requestObject, uncachedObject));
       }
       if (requestObject.data._id === 'cached') {
-        return Promise.resolve(new ResponseObject(requestObject, uncachedObject));
+        return q(new ResponseObject(requestObject, uncachedObject));
       }
       if (requestObject.data._id === 'error') {
-        return Promise.reject(new InternalError('Error'));
+        return q.reject(new InternalError('Error'));
       }
 
       err = new NotFoundError('Not found');
       err.found = false;
       err._id = requestObject.data._id;
-      return Promise.resolve(err);
+      return q(err);
     },
     mget: function (requestObject) {
       var
@@ -108,16 +111,19 @@ describe('Test: repositories/repository', function () {
             return response;
           })});
 
-          return Promise.resolve(result);
+          return q(result);
         });
     },
     search: function (requestObject) {
-      return Promise.resolve(new ResponseObject(requestObject, {hits: [{_id: 'role'}]}));
+      return q(new ResponseObject(requestObject, {hits: [{_id: 'role'}]}));
     }
   };
-  mockWriteEngine = {
-    createOrUpdate: function (o) {
+  mockWriteLayer = {
+    execute: function (o) {
       forwardedObject = o;
+    },
+    delete: requestObject => {
+      return q(new ResponseObject(requestObject));
     }
   };
 
@@ -131,7 +137,7 @@ describe('Test: repositories/repository', function () {
       collection: 'repository',
       ObjectConstructor: ObjectConstructor,
       readEngine: mockReadEngine,
-      writeEngine: mockWriteEngine,
+      writeLayer: mockWriteLayer,
       cacheEngine: mockCacheEngine
     });
   });
@@ -140,7 +146,7 @@ describe('Test: repositories/repository', function () {
     forwardedObject = null;
     repository.ObjectConstructor = ObjectConstructor;
     repository.readEngine = mockReadEngine;
-    repository.writeEngine = mockWriteEngine;
+    repository.writeLayer = mockWriteLayer;
     repository.cacheEngine = mockCacheEngine;
   });
 
@@ -366,6 +372,19 @@ describe('Test: repositories/repository', function () {
 
       should(forwardedObject).be.an.instanceOf(RequestObject);
       should(forwardedObject.data.body).be.eql(persistedObject);
+    });
+  });
+
+  describe('#deleteFromDatabase', () => {
+    it('should construct a valid requestObject', () => {
+      repository.deleteFromDatabase('test');
+
+      should(forwardedObject).be.an.instanceOf(RequestObject);
+      should(forwardedObject).match({
+        data: { _id: 'test' },
+        controller: 'write',
+        action: 'delete'
+      });
     });
   });
 

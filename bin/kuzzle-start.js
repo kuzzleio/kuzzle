@@ -17,8 +17,6 @@ module.exports = function () {
   console.log('Starting Kuzzle');
 
   kuzzle.start(rc('kuzzle'))
-    .then(() => { return kuzzle.cleanDb(); })
-    .then(() => { return kuzzle.prepareDb(); })
     .then(() => {
       console.log(
         `
@@ -41,6 +39,14 @@ module.exports = function () {
 ██     KUZZLE ` + (kuzzle.isServer ? 'SERVER' : 'WORKER') + ` STARTED      ██
 ████████████████████████████████████`);
     })
+    .then(() => {
+      /*
+       Waits for at least one write worker to be connected to the server before trying to use them
+       */
+      return kuzzle.services.list.broker.waitForListeners(kuzzle.config.queues.workerWriteTaskQueue);
+    })
+    .then(() => { return kuzzle.cleanDb(); })
+    .then(() => { return kuzzle.prepareDb(); })
     .catch(error => {
       console.error(error);
       process.exit(1);

@@ -7,6 +7,7 @@
  */
 var
   should = require('should'),
+  q = require('q'),
   rewire = require('rewire'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
   ResponseObject = require.main.require('lib/api/core/models/responseObject'),
@@ -19,15 +20,15 @@ var mockupCacheService = {
 
   remove: function (id) {
     this.id = id;
-    return Promise.resolve({});
+    return q({});
   },
 
   search: function (id) {
     if (id === 'errorme') {
-      return Promise.reject(new Error());
+      return q.reject(new Error());
     }
     else {
-      return Promise.resolve(['']);
+      return q(['']);
     }
   }
 };

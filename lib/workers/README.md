@@ -6,7 +6,7 @@ Workers attach themselves to the broker that is fed by Kuzzle to perform any kin
 
 For instance, the persistent data storage is implemented as a Worker in Kuzzle core.
 
-Additionally, serveral Workers of the same type can be launched in parallel, on the same or a different host.
+Additionally, several Workers of the same type can be launched in parallel, on the same or a different host.
 
 This flexibility allows the Kuzzle system administrators to leverage their resources consumption and distribute and/or scale their services.
 
