@@ -2,32 +2,20 @@ var
   async = require('async');
 
 var apiSteps = function () {
-  this.When(/^I ?(can't)* write the document ?(?:"([^"]*)")?(?: in index "([^"]*)")?(with auth token)?$/, function (cant, documentName, index, auth, callback) {
+  this.When(/^I ?(can't)* write the document ?(?:"([^"]*)")?(?: in index "([^"]*)")?$/, function (cant, documentName, index, callback) {
     var
-      collection,
-      jwtToken,
       document = this[documentName] || this.documentGrace;
 
-    if (Boolean(auth)) {
-      if (!Boolean(this.jwtToken)) {
-        callback(new Error('Cannot retrieve jwt token'));
-        return false;
-      }
-      jwtToken = this.jwtToken;
-    }
-
-
-    this.api.create(document, index, collection, jwtToken)
+    this.api.create(document, index)
       .then(function (body) {
         if (body.error) {
           if (cant) {
             callback();
             return true;
           }
-          else {
-            callback(new Error(body.error.message));
-            return false;
-          }
+
+          callback(new Error(body.error.message));
+          return false;
         }
 
         if (!body.result) {
@@ -53,7 +41,7 @@ var apiSteps = function () {
     document._id = this.result._id;
 
     this.api.createOrUpdate(document)
-      .then(function (body) {
+      .then((body) => {
         if (body.error) {
           callback(new Error(body.error.message));
           return false;
@@ -66,14 +54,14 @@ var apiSteps = function () {
 
         this.updatedResult = body.result;
         callback();
-      }.bind(this))
+      })
       .catch(function (error) {
         callback(error);
       });
   });
 
   this.Then(/^I should have updated the document$/, function (callback) {
-    if (this.updatedResult._id === this.result._id && this.updatedResult._version === (this.result._version+1)) {
+    if (this.updatedResult._id === this.result._id && this.updatedResult._version === (this.result._version + 1)) {
       this.result = this.updatedResult;
       callback();
       return false;
@@ -91,7 +79,7 @@ var apiSteps = function () {
         body[field] = value;
 
         this.api.update(this.result._id, body, index)
-          .then(function (body) {
+          .then((body) => {
             if (body.error) {
               callbackAsync(body.error.message);
               return false;
@@ -103,7 +91,7 @@ var apiSteps = function () {
             }
 
             callbackAsync();
-          }.bind(this))
+          })
           .catch(function (error) {
             callbackAsync(error);
           });
@@ -118,6 +106,30 @@ var apiSteps = function () {
 
       callback();
     });
+  });
+
+  this.Then(/^I replace the document with "([^"]*)" document$/, function (documentName, callback) {
+    var document = JSON.parse(JSON.stringify(this[documentName]));
+
+    document._id = this.result._id;
+    this.api.replace(document)
+      .then((body) => {
+        if (body.error) {
+          callback(new Error(body.error.message));
+          return false;
+        }
+
+        if (!body.result) {
+          callback(new Error('No result provided'));
+          return false;
+        }
+
+        this.updatedResult = body.result;
+        callback();
+      })
+      .catch(function (error) {
+        callback(error);
+      });
   });
 };
 

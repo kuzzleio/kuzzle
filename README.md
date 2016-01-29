@@ -53,7 +53,7 @@ From the root directory:
 
 ## Advanced installation
 
-Take a look at the [installation](docs/installation.md) file for more installation ways. (Manual installation, add fixture, database reset and more)
+Take a look at the [installation](docs/installation.md) file for more installation ways. (Manual installation, update, add fixture, database reset and more)
 
 # Using Kuzzle
 
@@ -98,6 +98,7 @@ See [full documentation](docs/README.md)
 # Acknowledgement
 
 Thanks to [Sails](https://github.com/balderdashy/sails) project for a good Node.js infrastructure example.
+
 
 # License
 

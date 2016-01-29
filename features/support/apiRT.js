@@ -60,6 +60,19 @@ ApiRT.prototype.createOrUpdate = function (body, index, collection) {
   return this.send(msg);
 };
 
+ApiRT.prototype.replace = function (body, index, collection) {
+  var
+    msg = {
+      controller: 'write',
+      collection: collection || this.world.fakeCollection,
+      index: index || this.world.fakeIndex,
+      action: 'replace',
+      body: body
+    };
+
+  return this.send(msg);
+};
+
 ApiRT.prototype.get = function (id, index) {
   var
     msg = {
@@ -293,11 +306,11 @@ ApiRT.prototype.now = function () {
   return this.send(msg);
 };
 
-ApiRT.prototype.truncateCollection = function (index) {
+ApiRT.prototype.truncateCollection = function (index, collection) {
   var
     msg = {
       controller: 'admin',
-      collection: this.world.fakeCollection,
+      collection: collection || this.world.fakeCollection,
       index: index || this.world.fakeIndex,
       action: 'truncateCollection'
     };
@@ -509,6 +522,49 @@ ApiRT.prototype.deleteProfile = function (id) {
     };
 
   return this.send(msg);
+};
+
+ApiRT.prototype.getUser = function (id, hydrate) {
+  return this.send({
+    controller: 'security',
+    action: 'getUser',
+    _id: id,
+    body: {
+      hydrate: hydrate === undefined ? true : hydrate
+    }
+  });
+};
+
+ApiRT.prototype.getCurrentUser = function () {
+  return this.send({
+    controller: 'security',
+    action: 'getCurrentUser'
+  });
+};
+
+ApiRT.prototype.searchUsers = function (body) {
+  return this.send({
+    controller: 'security',
+    action: 'searchUsers',
+    body: body
+  });
+};
+
+ApiRT.prototype.deleteUser = function (id) {
+  return this.send({
+    controller: 'security',
+    action: 'deleteUser',
+    _id: id
+  });
+};
+
+ApiRT.prototype.putUser = function (id, body) {
+  return this.send({
+    controller: 'security',
+    action: 'putUser',
+    body: body,
+    _id: id
+  });
 };
 
 module.exports = ApiRT;

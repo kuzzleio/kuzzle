@@ -136,6 +136,21 @@ describe('Test: notifier.publish', function () {
       .catch(error => done(error));
   });
 
+  it('should cache the document in case of a replace document request', function (done) {
+    request.action = 'replace';
+
+    notifier.publish(new RequestObject(request)).then(result => {
+      setTimeout(() => {
+        should(result).be.instanceof(ResponseObject);
+        should(notified).be.true();
+        should(cached).be.true();
+        should(expired).be.true();
+        done();
+      }, 20);
+    })
+    .catch(error => done(error));
+  });
+
   it('should do nothing if there is no room to notify', function (done) {
     var
       published;
