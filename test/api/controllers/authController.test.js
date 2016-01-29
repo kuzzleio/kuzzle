@@ -217,28 +217,36 @@ describe('Test the auth controller', function () {
         });
     });
 
-    it('should emit a auth:logout event', function () {
+    it('should emit a auth:logout event', function (done) {
       this.timeout(50);
 
       kuzzle.pluginsManager.trigger = function (event) {
-        should(event).be.exactly('auth:logout');
-        return q();
+        if (event === 'auth:logout') {
+          return q();
+        }
       };
 
-      should(kuzzle.funnel.auth.logout(requestObject, context)).be.fulfilledWith(ResponseObject);
+      kuzzle.funnel.auth.logout(requestObject, context)
+        .then(response => {
+          should(response).be.instanceof(ResponseObject);
+          done();
+        })
+        .catch(err => done(err));
     });
 
     it('should emit an error if event emit raise an error', function () {
       this.timeout(50);
 
       kuzzle.pluginsManager.trigger = function (event) {
-        return q.reject();
+        if (event === 'auth:logout') {
+          return q.reject();
+        }
       };
 
-      should(kuzzle.funnel.auth.logout(requestObject, context)).be.rejectedWith(InternalError);
+      return should(kuzzle.funnel.auth.logout(requestObject, context)).be.rejectedWith(ResponseObject);
     });
 
-    it('should expire token', function () {
+    it('should expire token', function (done) {
       this.timeout(50);
 
       kuzzle.repositories.token.expire = function(token) {
@@ -246,7 +254,12 @@ describe('Test the auth controller', function () {
         return q();
       };
 
-      should(kuzzle.funnel.auth.logout(requestObject, context)).be.fulfilledWith(ResponseObject);
+      kuzzle.funnel.auth.logout(requestObject, context)
+        .then(response => {
+          should(response).be.instanceof(ResponseObject);
+          done();
+        })
+        .catch(err => done(err));
     });
 
     it('should emit an error if token cannot be expired', function () {
@@ -256,10 +269,10 @@ describe('Test the auth controller', function () {
         return q.reject();
       };
 
-      should(kuzzle.funnel.auth.logout(requestObject, context)).be.rejectedWith(InternalError);
+      return should(kuzzle.funnel.auth.logout(requestObject, context)).be.rejectedWith(ResponseObject);
     });
 
-    it('should remove all room registration for current connexion', function () {
+    it('should remove all room registration for current connexion', function (done) {
       this.timeout(50);
 
       kuzzle.hotelClerk.removeCustomerFromAllRooms = function(connection) {
@@ -267,7 +280,12 @@ describe('Test the auth controller', function () {
         return q();
       };
 
-      should(kuzzle.funnel.auth.logout(requestObject, context)).be.fulfilledWith(ResponseObject);
+      kuzzle.funnel.auth.logout(requestObject, context)
+        .then(response => {
+          should(response).be.instanceof(ResponseObject);
+          done();
+        })
+        .catch(err => done(err));
     });
 
     it('should not remove room registration for connexion if there is no id', function (done) {
