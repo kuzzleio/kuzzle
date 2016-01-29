@@ -139,11 +139,11 @@ ApiRT.prototype.deleteById = function (id, index) {
   return this.send(msg);
 };
 
-ApiRT.prototype.deleteByQuery = function (filters, index) {
+ApiRT.prototype.deleteByQuery = function (filters, index, collection) {
   var
     msg = {
       controller: 'write',
-      collection: this.world.fakeCollection,
+      collection: collection || this.world.fakeCollection,
       index: index || this.world.fakeIndex,
       action: 'deleteByQuery',
       body: filters
@@ -546,7 +546,9 @@ ApiRT.prototype.searchUsers = function (body) {
   return this.send({
     controller: 'security',
     action: 'searchUsers',
-    body: body
+    body: {
+      filter: body
+    }
   });
 };
 
