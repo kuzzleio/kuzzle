@@ -111,7 +111,7 @@ The following diagram shows how Kuzzle handles a new message and how subscribed 
 
 The "_publish_" method can be triggered:
 * either direclty by the ```Write Controller``` for non persistent data (using the [publish](http://kuzzleio.github.io/kuzzle-api-documentation/#publish) action).
-* or by by the ```Plugins Manager``` when a 'data:create' event is triggered, to notify users in real-time before the data are sent to the storage Engine.
+* or by the ```Plugins Manager``` when a 'data:create' event is triggered, to notify users in real-time before the data are sent to the storage Engine.
 
 \#2. The ```Notifier``` calls the ```DSL``` component to test registered filters that match the content, and get related rooms.
 
