@@ -152,12 +152,14 @@ describe('Test kuzzle constructor', function () {
     var
       filesRead,
       indexCreated,
+      internalIndexCreated,
       mappingsImported,
       fixturesImported;
 
     before(function () {
       prepareDb = rewire('../../lib/api/prepareDb');
 
+      prepareDb.__set__('createInternalStructure', function () { internalIndexCreated = true; return q(); });
       prepareDb.__set__('readFile', function (filename) { filesRead.push(filename); return q(); });
       prepareDb.__set__('createIndexes', function () { indexCreated = true; return q(); });
       prepareDb.__set__('importMapping', function () { mappingsImported = true; return q(); });
@@ -167,6 +169,10 @@ describe('Test kuzzle constructor', function () {
 
       kuzzle.pluginsManager = {
         trigger: function () {}
+      };
+
+      kuzzle.config = {
+        internalIndex: 'foobar'
       };
 
       kuzzle.services = {
@@ -191,6 +197,7 @@ describe('Test kuzzle constructor', function () {
       indexCreated = false;
       mappingsImported = false;
       fixturesImported = false;
+      internalIndexCreated = false;
     });
 
     it('should execute the right call chain', function (done) {
@@ -202,6 +209,7 @@ describe('Test kuzzle constructor', function () {
           should(indexCreated).be.true();
           should(mappingsImported).be.true();
           should(fixturesImported).be.true();
+          should(internalIndexCreated).be.true();
           done();
         })
         .catch(err => done(err));
@@ -216,6 +224,7 @@ describe('Test kuzzle constructor', function () {
           should(indexCreated).be.false();
           should(mappingsImported).be.false();
           should(fixturesImported).be.false();
+          should(internalIndexCreated).be.false();
           done();
         })
         .catch(err => done(err));
@@ -446,7 +455,7 @@ describe('Test kuzzle constructor', function () {
           workerListener: {
             add: function (rq) {
               should(rq.controller).be.eql('admin');
-              should(rq.action).be.eql('putMapping');
+              should(rq.action).be.eql('updateMapping');
               should(rq.index).be.eql(stubIndex);
               should(rq.collection).be.eql(stubCollection);
               should(rq.data.body).be.an.Object();
@@ -591,6 +600,110 @@ describe('Test kuzzle constructor', function () {
     it('should filter errors when they are about documents that already exist', function () {
       workerPromise = q.reject(new ResponseObject({}, new PartialError('rejected', [{status: 409}])));
       return should(importFixtures.call(context)).be.fulfilled();
+    });
+  });
+
+  describe('#createInternalStructure', function () {
+    var
+      context,
+      workerCalled,
+      indexAdded,
+      requests,
+      createInternalStructure;
+
+    before(function () {
+      prepareDb = rewire('../../lib/api/prepareDb');
+      createInternalStructure = prepareDb.__get__('createInternalStructure');
+    });
+
+    beforeEach(function () {
+      workerCalled = false;
+      indexAdded = [];
+      requests = [];
+
+      context = {
+        kuzzle: {
+          indexCache: {
+            indexes: {
+
+            },
+            add: function (idx, collection) {
+              should(idx).be.eql(context.kuzzle.config.internalIndex);
+              indexAdded.push({index: idx, collection});
+            }
+          },
+          pluginsManager: {
+            trigger: function () {
+            }
+          },
+          workerListener: {
+            add: function (rq) {
+              requests.push(rq);
+              workerCalled = true;
+              return q();
+            }
+          },
+          config: {
+            internalIndex: 'foobar'
+          }
+        }
+      };
+    });
+
+    it('should create a proper internal structure', function (done) {
+      createInternalStructure.call(context)
+        .then(() => {
+          should(workerCalled).be.true();
+
+          /*
+            We expect these 3 request objects, in this order:
+              - internal index creation
+              - profiles collection mapping
+              - users collection mapping
+           */
+          should(requests.length).be.eql(3);
+          should(indexAdded.length).be.eql(3);
+
+          should(requests[0].controller).be.eql('admin');
+          should(requests[0].action).be.eql('createIndex');
+          should(requests[0].index).be.eql(context.kuzzle.config.internalIndex);
+
+          should(indexAdded[0].index).be.eql(context.kuzzle.config.internalIndex);
+          should(indexAdded[0].collection).be.undefined();
+
+
+          should(requests[1].controller).be.eql('admin');
+          should(requests[1].action).be.eql('updateMapping');
+          should(requests[1].index).be.eql(context.kuzzle.config.internalIndex);
+          should(requests[1].collection).be.eql('profiles');
+
+          should(indexAdded[1].index).be.eql(context.kuzzle.config.internalIndex);
+          should(indexAdded[1].collection).be.eql('profiles');
+
+
+          should(requests[2].controller).be.eql('admin');
+          should(requests[2].action).be.eql('updateMapping');
+          should(requests[2].index).be.eql(context.kuzzle.config.internalIndex);
+          should(requests[2].collection).be.eql('users');
+
+          should(indexAdded[2].index).be.eql(context.kuzzle.config.internalIndex);
+          should(indexAdded[2].collection).be.eql('users');
+
+          done();
+        })
+        .catch(err => done(err));
+    });
+
+    it('should not do anything if the index already exists', function (done) {
+      context.kuzzle.indexCache.indexes[context.kuzzle.config.internalIndex] = {};
+      createInternalStructure.call(context)
+        .then(() => {
+          should(workerCalled).be.false();
+          should(requests.length).be.eql(0);
+          should(indexAdded.length).be.eql(0);
+          done();
+        })
+        .catch(err => done(err));
     });
   });
 });

@@ -344,7 +344,7 @@ describe('Test the auth controller', function () {
 
     it('should return a non-hydrated response if hydrate===false', done => {
       kuzzle.funnel.auth.getCurrentUser(new RequestObject({
-        body: { hydrate: false}
+        body: {hydrate: false}
       }), {
         token: { user: { _id: 'admin' } }
       })

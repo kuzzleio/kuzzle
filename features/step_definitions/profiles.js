@@ -6,6 +6,7 @@ var apiSteps = function () {
     if (!this.profiles[profile]) {
       return callback('Fixture for profile ' + profile + ' does not exists');
     }
+
     id = this.idPrefix + id;
 
     this.api.createOrReplaceProfile(id, this.profiles[profile])
@@ -70,7 +71,6 @@ var apiSteps = function () {
 
   this.Then(/^I'm ?(not)* able to find the profile with id "([^"]*)"(?: with profile "([^"]*)")?$/, {timeout: 20 * 1000}, function (not, id, profile, callback) {
     var
-      index,
       main;
 
     if (profile && !this.profiles[profile]) {
@@ -147,7 +147,7 @@ var apiSteps = function () {
       main;
 
     if (roleId) {
-      body.roles.push(roleId);
+      body.roles.push(this.idPrefix + roleId);
     }
 
     main = function (callbackAsync) {
@@ -213,6 +213,46 @@ var apiSteps = function () {
     })
     .catch(function (error) {
       callback(error);
+    });
+  });
+
+  this.Then(/^I'm able to do a multi get with "([^"]*)" and get "(\d*)" profiles$/, function (profiles, count, callback) {
+    var
+      main,
+      body;
+
+    body = {
+      ids: profiles.split(',').map(roleId => this.idPrefix + roleId)
+    };
+
+    main = function (callbackAsync) {
+      setTimeout(() => {
+        this.api.mGetProfiles(body)
+          .then(response => {
+            if (response.error) {
+              callbackAsync(response.error.message);
+              return false;
+            }
+
+            if (!response.result.hits || response.result.hits.length !== parseInt(count)) {
+              return callbackAsync('Expected ' + count + ' profiles, get ' + response.result.hits.length);
+            }
+
+            callbackAsync();
+          })
+          .catch(function (error) {
+            callbackAsync(error);
+          });
+      }, 100); // end setTimeout
+    };
+
+    async.retry(20, main.bind(this), function (err) {
+      if (err) {
+        callback(new Error(err));
+        return false;
+      }
+
+      callback();
     });
   });
 };

@@ -262,6 +262,12 @@ Feature: Test websocket API
     Then I'm able to find "1" role by searching index corresponding to role "role2"
     And I delete the role with id "test"
     Then I'm not able to find a role with id "test"
+    Then I create a new role "role1" with id "test"
+    And I create a new role "role1" with id "test2"
+    And I create a new role "role1" with id "test3"
+    Then I'm able to do a multi get with "test,test2,test3" and get "3" roles
+    Then I'm able to find "3" role by searching index corresponding to role "role1"
+    Then I'm able to find "1" role by searching index corresponding to role "role1" from "0" to "1"
 
   @usingWebsocket @cleanSecurity
   Scenario: create an invalid profile with unexisting role triggers an error
@@ -293,6 +299,7 @@ Feature: Test websocket API
     Then I'm able to find "1" profiles containing the role with id "role1"
     Then I'm able to find "2" profiles
     Then I'm able to find "0" profiles containing the role with id "undefined-role"
+    Then I'm able to do a multi get with "my-profile-1,my-profile-2" and get "2" profiles
     Given I update the profile with id "my-profile-2" by adding the role "role1"
     Then I'm able to find "2" profiles
     Then I'm able to find "2" profiles containing the role with id "role1"
@@ -302,8 +309,9 @@ Feature: Test websocket API
     And I create a new role "role1" with id "role1"
     And I create a new role "role2" with id "role2"
     And I create a new profile "profile2" with id "profile2"
-    And I create a user "user1" with id "user1-id"
+    And I create a new user "user1" with id "user1-id"
     And I create a user "user2" with id "user2-id"
+    And I can't create a new user "user2" with id "user1-id"
     Then I am able to get the user "user1-id" matching {"_id":"#prefix#user1-id","_source":{"profile":{"_id":"admin","roles":[{"_id":"admin"}]}}}
     Then I am able to get the unhydrated user "user1-id" matching {"_id":"#prefix#user1-id","_source":{"profile":"admin"}}
     Then I am able to get the user "user2-id" matching {"_id":"#prefix#user2-id","_source":{"profile":{"_id":"#prefix#profile2"}}}

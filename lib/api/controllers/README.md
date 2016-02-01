@@ -9,6 +9,7 @@ A controller handles a specific part of the Kuzzle architecture.
 * routingController handles dispatching client requests to other controllers
 * readController handles the abstraction on reading persistant data. As default Kuzzle use Elasticsearch
 * writeController handles the abstraction on writing persistant data. As default, Kuzzle use Elasticsearch.
+* securityController handles the abstraction on reading/writing data to manage rights, like Role, Profile and User. As default, Kuzzle use a specific index %kuzzle in Elasticsearch.
 
 Refer to [docs/architecture.md](../../../docs/architecture.md) for details.
 

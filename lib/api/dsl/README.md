@@ -1,6 +1,6 @@
 # What is Kuzzle's DSL?
 
-This module converts our API Domain Specific Language in internal filtering functions. It is used by the hotelClerkController.
+This module converts our API Domain Specific Language in internal filtering functions. It is used by the HotelClerk component.
 
 
 The Kuzzle's DSL use the [Elasticsearch filter DSL](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-filters.html).
@@ -51,7 +51,7 @@ A complete subscription message can for instance have the following form:
 }
 ```
 
-Eventually, we want to store this subscription in the hotelClerkController rooms collection in the following form:
+Eventually, we want to store this subscription in the HotelClerk rooms collection in the following form:
 
 ```json
 rooms = {

@@ -27,6 +27,7 @@ describe('Test: repositories/repository', function () {
   persistedObject._id = -1;
   persistedObject.name = 'persisted';
 
+
   cachedObject = new ObjectConstructor();
   cachedObject._id = -2;
   cachedObject.name = 'cached';
@@ -106,9 +107,18 @@ describe('Test: repositories/repository', function () {
         .then(function (results) {
           var result = new ResponseObject(requestObject, {docs: results.map(function (response) {
             if (response instanceof ResponseObject) {
-              return response.data;
+              return {
+                found: (response.data.found === undefined) ? true : response.data.found,
+                _source: response.data.body,
+                _id: response.data.body._id
+              };
             }
-            return response;
+
+            return {
+              found: (response.found === undefined) ? true : response.found,
+              _source: response.name,
+              _id: response._id
+            };
           })});
 
           return q(result);
@@ -228,13 +238,35 @@ describe('Test: repositories/repository', function () {
         });
     });
 
-    it('should return a valid ObjectConstructor instance if found', function (done) {
-      repository.loadMultiFromDatabase(['persisted'])
+    it('should return a list of hydrated object when parameter hydrate is set', function (done) {
+      repository.loadMultiFromDatabase(['persisted'], true)
         .then(function (results) {
+          should(results).be.an.Array();
+          should(results).not.be.empty();
+
           results.forEach(function (result) {
             should(result).be.instanceOf(ObjectConstructor);
             should(result._id).be.exactly(-1);
             should(result.name).be.exactly('persisted');
+          });
+
+          done();
+        })
+        .catch(function (error) {
+          done(error);
+        });
+    });
+
+    it('should return a list of plain object when parameter hydrate is false', function (done) {
+      repository.loadMultiFromDatabase(['persisted'], false)
+        .then(function (results) {
+          should(results).be.an.Array();
+          should(results).not.be.empty();
+
+          results.forEach(function (result) {
+            should(result).not.be.instanceOf(ObjectConstructor);
+            should(result._id).be.exactly(-1);
+            should(result._source.name).be.exactly('persisted');
           });
 
           done();
@@ -422,7 +454,7 @@ describe('Test: repositories/repository', function () {
   });
 
   describe('#hydrate', function () {
-    it('should return a properly hydrated object', function (done) {
+    it('should return a properly hydrated object with a plain old object', function (done) {
       var
         object = new ObjectConstructor(),
         data = {
@@ -444,6 +476,60 @@ describe('Test: repositories/repository', function () {
           done(error);
         });
     });
+
+    it('should hydrate properly with a ResponseObject', function (done) {
+      var
+        object = new ObjectConstructor(),
+        data = new ResponseObject (null, {
+          value1: {
+            test: true
+          },
+          type: 'myType'
+        });
+
+      repository.hydrate(object, data)
+        .then(result => {
+          should(result).be.an.instanceOf(ObjectConstructor);
+          should(result.type).be.exactly('myType');
+          should(result.value1).be.eql({test: true});
+          should(result.value1.test).be.true();
+          done();
+        })
+        .catch(function (error) {
+          done(error);
+        });
+    });
+
+    it('should hydrate properly with a ResponseObject containing a _source member', function (done) {
+      var
+        object = new ObjectConstructor(),
+        data = new ResponseObject (null, {
+          _id: 'foo',
+          _source: {
+            value1: {
+              test: true
+            },
+            type: 'myType'
+          }
+        });
+
+      repository.hydrate(object, data)
+        .then(result => {
+          should(result).be.an.instanceOf(ObjectConstructor);
+          should(result.type).be.exactly('myType');
+          should(result.value1).be.eql({test: true});
+          should(result.value1.test).be.true();
+          should(result._id).be.eql('foo');
+          done();
+        })
+        .catch(function (error) {
+          done(error);
+        });
+    });
+
+    it('should return a rejected promise if the provided data is not an object', function () {
+      return should(repository.hydrate(new ObjectConstructor(), 'foobar')).be.rejectedWith(InternalError);
+    });
   });
 
   describe('#serializeToCache', () => {
@@ -462,14 +548,15 @@ describe('Test: repositories/repository', function () {
     it('should return a list from database', function (done) {
       repository.search({}, 0, 10, false)
         .then(response => {
-          should(response.data.body.hits).be.an.Array();
+          should(response).be.an.Array();
           done();
         });
     });
     it('should construct role if hydrate is true', function (done) {
       repository.search({}, 0, 10, true)
         .then(response => {
-          should(response.data.body.hits).be.an.Array();
+          should(response).be.an.Array();
+          should(response[0].type).be.exactly('testObject');
           done();
         });
     });
