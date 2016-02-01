@@ -134,9 +134,9 @@ ApiREST.prototype.deleteById = function (id, index) {
   return this.callApi(options);
 };
 
-ApiREST.prototype.deleteByQuery = function (filters, index) {
+ApiREST.prototype.deleteByQuery = function (filters, index, collection) {
   var options = {
-    url: this.apiPath(((typeof index !== 'string') ? this.world.fakeIndex : index) + '/' + this.world.fakeCollection + '/_query'),
+    url: this.apiPath(((typeof index !== 'string') ? this.world.fakeIndex : index) + '/' + (collection || this.world.fakeCollection) + '/_query'),
     method: 'DELETE',
     json: filters
   };
@@ -435,7 +435,7 @@ ApiREST.prototype.searchUsers = function (body) {
   return this.callApi({
     url: this.apiPath('users/_search'),
     method: 'POST',
-    json: body
+    json: { filter: body }
   });
 };
 

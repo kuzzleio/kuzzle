@@ -69,11 +69,19 @@ var myHooks = function () {
     }, error => callback(error));
   });
 
+  this.Before('@cleanSecurity', function (scenario, callback) {
+    cleanSecurity.call(this, callback);
+  });
+
+  this.After('@cleanSecurity', function (scenario, callback) {
+    cleanSecurity.call(this, callback);
+  });
+
 };
 
 module.exports = myHooks;
 
-var setAPI = function (world, apiName) {
+function setAPI (world, apiName) {
   var
     Api = require('./api' + apiName),
     api = new Api();
@@ -81,4 +89,44 @@ var setAPI = function (world, apiName) {
   api.init(world);
 
   return api;
-};
+}
+
+function cleanSecurity (callback) {
+  this.api.listIndexes()
+    .then(response => {
+      if (response.result.indexes.indexOf('%kuzzle') === -1) {
+        return q.reject(new ReferenceError('%kuzzle index not found'));
+      }
+    })
+    .then(() => {
+      return this.api.deleteByQuery(
+        { filter: { regexp: { _uid: 'users.' + this.idPrefix + '.*' } } },
+        '%kuzzle',
+        'users'
+      );
+    })
+    .then(() => {
+      return this.api.deleteByQuery(
+        { filter: { regexp: { _uid: 'profiles.' + this.idPrefix + '.*' } } },
+        '%kuzzle',
+        'profiles'
+      );
+    })
+    .then(() => {
+      return this.api.deleteByQuery(
+        {filter: { regexp: { _uid: 'roles.' + this.idPrefix + '.*' } } },
+        '%kuzzle',
+        'roles'
+      );
+    })
+    .then(() => {
+      callback();
+    })
+    .catch(error => {
+      if (error instanceof ReferenceError && error.message === '%kuzzle index not found') {
+        // The %kuzzle index is not created yet. Is not a problem if the tests are run for the first time.
+        callback();
+      }
+      callback(error);
+    });
+}
