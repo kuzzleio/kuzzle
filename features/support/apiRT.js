@@ -582,10 +582,10 @@ ApiRT.prototype.deleteUser = function (id) {
   });
 };
 
-ApiRT.prototype.putUser = function (body, id) {
+ApiRT.prototype.createOrReplaceUser = function (body, id) {
   return this.send({
     controller: 'security',
-    action: 'putUser',
+    action: 'createOrReplaceUser',
     body: body,
     _id: id
   });

@@ -467,7 +467,7 @@ ApiREST.prototype.deleteUser = function (id) {
   });
 };
 
-ApiREST.prototype.putUser = function (body, id) {
+ApiREST.prototype.createOrReplaceUser = function (body, id) {
   return this.callApi({
     url: this.apiPath('users/' + id),
     method: 'PUT',
