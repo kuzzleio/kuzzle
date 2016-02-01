@@ -313,7 +313,7 @@ describe('Test the auth controller', function () {
   describe('#getCurrentUser', function () {
     it('should return the user given in the context', done => {
       kuzzle.funnel.auth.getCurrentUser(new RequestObject({
-        body: {}
+        body: { hydrate: true }
       }), {
         token: { user: { _id: 'admin' } }
       })
