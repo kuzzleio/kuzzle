@@ -13,6 +13,8 @@ The following diagram shows how request data is exchanged between the client app
 
 \#1a. The client application opens a Websocket connection and emit a "read" event containing the request
 
+(see details in [API Documentation](http://kuzzleio.github.io/kuzzle-api-documentation/#socket-io))
+
 For instance, to retrieve the document ```739c26bc-7a09-469a-803d-623c4045b0cb``` in the collection ```users```:
 
 ```json
@@ -134,4 +136,4 @@ Sample response content:
 ## Related pages
 
 * [Architecture overview](../architecture.md)
-* [API Specifications](../README.md#api-specifications)
+* [API Documentation](http://kuzzleio.github.io/kuzzle-api-documentation)
