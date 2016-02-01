@@ -105,10 +105,63 @@ describe('Test: routerController.executeFromRest', function () {
     should(mockupResponse.response.error.message).startWith('Invalid request content-type');
   });
 
+  it('should reject requests when the content-type charset is not utf-8', function () {
+    var
+      params = { action: 'create', controller: 'write' },
+      data = {_body: true, headers: {'content-type': 'application/json; charset=iso-8859-15'}, body: {resolve: true}, params: {collection: 'foobar', index: '%test'}};
+
+    mockupResponse.init();
+    executeFromRest.call(kuzzle, params, data, mockupResponse);
+
+    should(mockupResponse.statusCode).be.exactly(400);
+    should(mockupResponse.header['Content-Type']).not.be.undefined();
+    should(mockupResponse.header['Content-Type']).be.exactly('application/json');
+    should(mockupResponse.response.result).be.null();
+    should(mockupResponse.response.status).be.exactly(400);
+    should(mockupResponse.response.error).not.be.null();
+    should(mockupResponse.response.error.message).not.be.null();
+    should(mockupResponse.response.error.message).startWith('Charset of the Request content-type must be utf-8');
+  });
+
   it('should respond with a HTTP 200 message in case of success', function (done) {
     var
       params = { action: 'create', controller: 'write' },
       data = {headers: {'content-type': 'application/json'}, body: {resolve: true}, params: {index: '%test', collection: 'foobar'}};
+
+    mockupResponse.init();
+    executeFromRest.call(kuzzle, params, data, mockupResponse);
+
+    this.timeout(timeout);
+
+    timer = setInterval(() => {
+      if (mockupResponse.ended === false) {
+        return;
+      }
+
+      try {
+        should(mockupResponse.statusCode).be.exactly(200);
+        should(mockupResponse.header['Content-Type']).not.be.undefined();
+        should(mockupResponse.header['Content-Type']).be.exactly('application/json');
+        should(mockupResponse.response.status).be.exactly(200);
+        should(mockupResponse.response.error).be.null();
+        should(mockupResponse.response).be.not.null();
+        should(mockupResponse.response.action).be.exactly('create');
+        should(mockupResponse.response.controller).be.exactly('write');
+
+        clearInterval(timer);
+        timer = false;
+        done();
+      }
+      catch (e) {
+        done(e);
+      }
+    }, 5);
+  });
+
+  it('should respond with a HTTP 200 message in case of success when specifying charset', function (done) {
+    var
+      params = { action: 'create', controller: 'write' },
+      data = {headers: {'content-type': 'application/json; charset=utf-8'}, body: {resolve: true}, params: {index: '%test', collection: 'foobar'}};
 
     mockupResponse.init();
     executeFromRest.call(kuzzle, params, data, mockupResponse);
