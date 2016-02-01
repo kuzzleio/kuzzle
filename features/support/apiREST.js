@@ -447,12 +447,34 @@ ApiREST.prototype.deleteUser = function (id) {
   });
 };
 
-ApiREST.prototype.putUser = function (id, body) {
+ApiREST.prototype.putUser = function (body, id) {
   return this.callApi({
     url: this.apiPath('users/' + id),
     method: 'PUT',
     json: body
   });
+};
+
+ApiREST.prototype.createUser = function (body, id) {
+  var options = {
+    url: this.apiPath('users/_create'),
+    method: 'POST',
+    json: body
+  };
+  
+  if (id !== undefined) {
+    if (body.body) {
+      options.json.body._id = id;
+    }
+    else {
+      options.json = {
+        _id: id,
+        body: body
+      };
+    }
+  }
+  
+  return this.callApi(options);
 };
 
 module.exports = ApiREST;

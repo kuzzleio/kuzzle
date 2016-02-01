@@ -560,13 +560,26 @@ ApiRT.prototype.deleteUser = function (id) {
   });
 };
 
-ApiRT.prototype.putUser = function (id, body) {
+ApiRT.prototype.putUser = function (body, id) {
   return this.send({
     controller: 'security',
     action: 'putUser',
     body: body,
     _id: id
   });
+};
+
+ApiRT.prototype.createUser = function (body, id) {
+  var msg = {
+    controller: 'security',
+    action: 'createUser',
+    body: body
+  };
+  if (id !== undefined) {
+    msg._id = id;
+  }
+
+  return this.send(msg);
 };
 
 module.exports = ApiRT;
