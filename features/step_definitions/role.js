@@ -6,10 +6,9 @@ var apiSteps = function () {
     if (!this.roles[role]) {
       return callback('Fixture for role ' + role + ' not exists');
     }
-
     id = this.idPrefix + id;
 
-    this.api.putRole(id, this.roles[role])
+    this.api.createOrReplaceRole(id, this.roles[role])
       .then(function (body) {
         if (body.error) {
           callback(new Error(body.error.message));
@@ -91,10 +90,9 @@ var apiSteps = function () {
     if (!this.roles[role]) {
       return callback('Fixture for role ' + role + ' not exists');
     }
-
     id = this.idPrefix + id;
 
-    this.api.putRole(id, this.roles[role])
+    this.api.createOrReplaceRole(id, this.roles[role])
       .then(body => {
         if (body.error) {
           callback(new Error(body.error.message));

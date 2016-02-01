@@ -94,7 +94,7 @@ ApiREST.prototype.publish = function (body, index) {
   return this.callApi(options);
 };
 
-ApiREST.prototype.createOrUpdate = function (body, index, collection) {
+ApiREST.prototype.createOrReplace = function (body, index, collection) {
   var options = {
     url: this.apiPath(((typeof index !== 'string') ? this.world.fakeIndex : index) + '/' + ((typeof collection !== 'string') ? this.world.fakeCollection : collection) + '/' + body._id),
     method: 'PUT',
@@ -134,9 +134,9 @@ ApiREST.prototype.deleteById = function (id, index) {
   return this.callApi(options);
 };
 
-ApiREST.prototype.deleteByQuery = function (filters, index) {
+ApiREST.prototype.deleteByQuery = function (filters, index, collection) {
   var options = {
-    url: this.apiPath(((typeof index !== 'string') ? this.world.fakeIndex : index) + '/' + this.world.fakeCollection + '/_query'),
+    url: this.apiPath(((typeof index !== 'string') ? this.world.fakeIndex : index) + '/' + (collection || this.world.fakeCollection) + '/_query'),
     method: 'DELETE',
     json: filters
   };
@@ -174,7 +174,7 @@ ApiREST.prototype.globalBulkImport = function (bulk) {
   return this.callApi(options);
 };
 
-ApiREST.prototype.putMapping = function (index) {
+ApiREST.prototype.updateMapping = function (index) {
   var options = {
     url: this.apiPath(((typeof index !== 'string') ? this.world.fakeIndex : index) + '/' + this.world.fakeCollection + '/_mapping'),
     method: 'PUT',
@@ -333,8 +333,7 @@ ApiREST.prototype.logout = function (jwtToken) {
   return this.callApi(options);
 };
 
-
-ApiREST.prototype.putRole = function (id, body) {
+ApiREST.prototype.createOrReplaceRole = function (id, body) {
   var options = {
     url: this.apiPath('roles/' + id),
     method: 'PUT',
@@ -374,7 +373,7 @@ ApiREST.prototype.deleteRole = function (id) {
   return this.callApi(options);
 };
 
-ApiREST.prototype.putProfile = function (id, body) {
+ApiREST.prototype.createOrReplaceProfile = function (id, body) {
   var options = {
     url: this.apiPath('profiles/' + id),
     method: 'PUT',
@@ -436,7 +435,7 @@ ApiREST.prototype.searchUsers = function (body) {
   return this.callApi({
     url: this.apiPath('users/_search'),
     method: 'POST',
-    json: body
+    json: { filter: body }
   });
 };
 

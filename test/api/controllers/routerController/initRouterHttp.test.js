@@ -64,9 +64,10 @@ describe('Test: routerController.initRouterHttp', function () {
    * the answer is correctly constructed.
    */
   before(function (done) {
+    var mockResponse;
     kuzzle = new Kuzzle();
 
-    var mockResponse = function (params, request, response) {
+    mockResponse = function (params, request, response) {
       if (!params.action) {
         params.action = request.params.action;
       }
@@ -203,7 +204,7 @@ describe('Test: routerController.initRouterHttp', function () {
     request.end();
   });
 
-  it('should create a route for createOrUpdate actions', function (done) {
+  it('should create a route for createOrReplace actions', function (done) {
     var request;
 
     options.method = 'PUT';
@@ -214,7 +215,7 @@ describe('Test: routerController.initRouterHttp', function () {
         .then(function (result) {
           should(response.statusCode).be.exactly(200);
           should(result.controller).be.exactly('write');
-          should(result.action).be.exactly('createOrUpdate');
+          should(result.action).be.exactly('createOrReplace');
           done();
         })
         .catch(function (error) {
@@ -375,7 +376,7 @@ describe('Test: routerController.initRouterHttp', function () {
         .then(function (result) {
           should(response.statusCode).be.exactly(200);
           should(result.controller).be.exactly('admin');
-          should(result.action).be.exactly('putMapping');
+          should(result.action).be.exactly('updateMapping');
           done();
         })
         .catch(function (error) {
@@ -502,18 +503,18 @@ describe('Test: routerController.initRouterHttp', function () {
     request.end();
   });
 
-  it('should create a route for createOrUpdate actions using alternative path', function (done) {
+  it('should create a route for createOrReplace actions using alternative path', function (done) {
     var request;
 
     options.method = 'PUT';
-    options.path= path + '/index/collection/documentID/_createOrUpdate';
+    options.path= path + '/index/collection/documentID/_createOrReplace';
 
     request = http.request(options, function (response) {
       parseHttpResponse(response)
         .then(function (result) {
           should(response.statusCode).be.exactly(200);
           should(result.controller).be.exactly('write');
-          should(result.action).be.exactly('createOrUpdate');
+          should(result.action).be.exactly('createOrReplace');
           done();
         })
         .catch(function (error) {
@@ -791,6 +792,7 @@ describe('Test: routerController.initRouterHttp', function () {
   });
 
   it('should create a POST route for plugin controller', function (done) {
+    var request;
     options.method = 'POST';
     options.path= path + '/_plugin/myplugin/bar';
 
