@@ -54,7 +54,7 @@ Detailed workflow:
 \#3. The ```Funnel Controller``` validates the message and forward the request to the ```Write Controller```
 
 \#4. The ```Write Controller``` triggers the ```Plugins Manager``` with a "data:create" event.<br/>
-The ```Plugins Manager``` calls all pipes and hooks configured by the active plugins (see [Plugin's documentation](../plugins.md)), and finally trigger the "add" event of the ```Write Hook```.<br/>
+The ```Plugins Manager``` calls all pipes and hooks configured by the active plugins (see [Plugin's documentation](../plugins.md)), and finally triggers the "add" event of the ```Write Hook```.<br/>
 The ```Write Hook``` sends the request to the ```Internal Broker```. (see [Hooks Readme](../../lib/hooks/README.md) for more details about hooks).
 
 \#5. The ```Write Controller``` asks the ```Worker Listener``` to listen to the ```Internal Broker```'s feedback message.
@@ -95,7 +95,7 @@ Detailed workflow:
 
 \#12. The ```Worker Listener``` that the ```Write Controller``` registered in step 5a. receive a notification from the ```Internal Broker```...
 
-\#13. ... and forward it back to the ```Router Controller```...
+\#13. ... and forwards it back to the ```Router Controller```...
 
 \#14. ... which sends a feedback to the client.
 
