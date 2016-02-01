@@ -38,7 +38,7 @@ content-type:application/json
 ^@
 ```
 
-\#2. The MQ plugin handles the input message and forward it to the ```Funnel Controller```.
+\#2. The MQ plugin handles the input message and forwards it to the ```Funnel Controller```.
 
 Sample message:
 
