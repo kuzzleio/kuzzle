@@ -454,7 +454,7 @@ describe('Test: repositories/repository', function () {
   });
 
   describe('#hydrate', function () {
-    it('should return a properly hydrated object', function (done) {
+    it('should return a properly hydrated object with a plain old object', function (done) {
       var
         object = new ObjectConstructor(),
         data = {
@@ -475,6 +475,60 @@ describe('Test: repositories/repository', function () {
         .catch(function (error) {
           done(error);
         });
+    });
+
+    it('should hydrate properly with a ResponseObject', function (done) {
+      var
+        object = new ObjectConstructor(),
+        data = new ResponseObject (null, {
+          value1: {
+            test: true
+          },
+          type: 'myType'
+        });
+
+      repository.hydrate(object, data)
+        .then(result => {
+          should(result).be.an.instanceOf(ObjectConstructor);
+          should(result.type).be.exactly('myType');
+          should(result.value1).be.eql({test: true});
+          should(result.value1.test).be.true();
+          done();
+        })
+        .catch(function (error) {
+          done(error);
+        });
+    });
+
+    it('should hydrate properly with a ResponseObject containing a _source member', function (done) {
+      var
+        object = new ObjectConstructor(),
+        data = new ResponseObject (null, {
+          _id: 'foo',
+          _source: {
+            value1: {
+              test: true
+            },
+            type: 'myType'
+          }
+        });
+
+      repository.hydrate(object, data)
+        .then(result => {
+          should(result).be.an.instanceOf(ObjectConstructor);
+          should(result.type).be.exactly('myType');
+          should(result.value1).be.eql({test: true});
+          should(result.value1.test).be.true();
+          should(result._id).be.eql('foo');
+          done();
+        })
+        .catch(function (error) {
+          done(error);
+        });
+    });
+
+    it('should return a rejected promise if the provided data is not an object', function () {
+      return should(repository.hydrate(new ObjectConstructor(), 'foobar')).be.rejectedWith(InternalError);
     });
   });
 

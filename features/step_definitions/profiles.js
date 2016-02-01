@@ -6,6 +6,7 @@ var apiSteps = function () {
     if (!this.profiles[profile]) {
       return callback('Fixture for profile ' + profile + ' does not exists');
     }
+
     id = this.idPrefix + id;
 
     this.api.createOrReplaceProfile(id, this.profiles[profile])
@@ -70,7 +71,6 @@ var apiSteps = function () {
 
   this.Then(/^I'm ?(not)* able to find the profile with id "([^"]*)"(?: with profile "([^"]*)")?$/, {timeout: 20 * 1000}, function (not, id, profile, callback) {
     var
-      index,
       main;
 
     if (profile && !this.profiles[profile]) {
@@ -147,7 +147,7 @@ var apiSteps = function () {
       main;
 
     if (roleId) {
-      body.roles.push(roleId);
+      body.roles.push(this.idPrefix + roleId);
     }
 
     main = function (callbackAsync) {

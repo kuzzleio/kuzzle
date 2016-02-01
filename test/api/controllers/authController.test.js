@@ -10,6 +10,8 @@ var
   ResponseObject = require.main.require('lib/api/core/models/responseObject'),
   InternalError = require.main.require('lib/api/core/errors/internalError'),
   Token = require.main.require('lib/api/core/models/security/token'),
+  Profile = require.main.require('lib/api/core/models/security/profile'),
+  User = require.main.require('lib/api/core/models/security/user'),
   context = {},
   requestObject,
   MockupWrapper,
@@ -305,6 +307,57 @@ describe('Test the auth controller', function () {
           done();
         })
         .catch(err => done(err));
+    });
+  });
+
+  describe('#getCurrentUser', function () {
+    it('should return the user given in the context', done => {
+      kuzzle.funnel.auth.getCurrentUser(new RequestObject({
+        body: {}
+      }), {
+        token: { user: { _id: 'admin' } }
+      })
+        .then(response => {
+          should(response.data.body._id).be.exactly('admin');
+          should(response.data.body._source).be.an.instanceOf(User);
+          should(response.data.body._source.profile).be.an.instanceOf(Profile);
+          should(response.data.body._source.profile._id).be.exactly('admin');
+
+          done();
+        })
+        .catch(error => { done(error); });
+    });
+
+    it('should return a falsey response if the current user is unknown', done => {
+      kuzzle.funnel.auth.getCurrentUser(new RequestObject({
+        body: {}
+      }), {
+        token: { user: { _id: 'Carmen Sandiego' } }
+      })
+        .then(response => {
+          should(response.data.body._id).be.undefined();
+          should(response.data.body.found).be.false();
+          done();
+        })
+        .catch(error => { done(error); });
+    });
+
+    it('should return a non-hydrated response if hydrate===false', done => {
+      kuzzle.funnel.auth.getCurrentUser(new RequestObject({
+        body: {hydrate: false}
+      }), {
+        token: { user: { _id: 'admin' } }
+      })
+        .then(response => {
+          should(response.data.body._id).be.exactly('admin');
+          should(response.data.body._source).not.be.an.instanceOf(User);
+          should(response.data.body._source.profile).not.be.an.instanceOf(Profile);
+          should(response.data.body._source.name).be.a.String();
+          should(response.data.body._source.profile).be.eql('admin');
+
+          done();
+        })
+        .catch(error => { done(error); });
     });
   });
 });
