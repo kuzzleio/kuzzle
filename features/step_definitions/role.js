@@ -170,6 +170,46 @@ var apiSteps = function () {
         callback(error);
       });
   });
+
+  this.Then(/^I'm able to do a multi get with "([^"]*)" and get "(\d*)" roles$/, function (roles, count, callback) {
+    var
+      main,
+      body;
+
+    body = {
+      ids: roles.split(',').map(roleId => this.idPrefix + roleId)
+    };
+
+    main = function (callbackAsync) {
+      setTimeout(() => {
+        this.api.mGetRoles(body)
+          .then(response => {
+            if (response.error) {
+              callbackAsync(response.error.message);
+              return false;
+            }
+
+            if (!response.result.hits || response.result.hits.length !== parseInt(count)) {
+              return callbackAsync('Expected ' + count + ' roles, get ' + response.result.hits.length);
+            }
+
+            callbackAsync();
+          })
+          .catch(function (error) {
+            callbackAsync(error);
+          });
+      }, 100); // end setTimeout
+    };
+
+    async.retry(20, main.bind(this), function (err) {
+      if (err) {
+        callback(new Error(err));
+        return false;
+      }
+
+      callback();
+    });
+  });
 };
 
 module.exports = apiSteps;
