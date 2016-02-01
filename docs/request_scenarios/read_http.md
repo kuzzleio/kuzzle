@@ -22,8 +22,9 @@ Sample message:
 
 ```json
 {
-  "controller": "read",
+  "index": "mainindex",
   "collection": "users",
+  "controller": "read",
   "action": "get",
   "_id": "739c26bc-7a09-469a-803d-623c4045b0cb"
 }
@@ -116,4 +117,4 @@ Sample response content:
 ## Related pages
 
 * [Architecture overview](../architecture.md)
-* [API Specifications](../README.md#api-specifications)
+* [API Documentation](http://kuzzleio.github.io/kuzzle-api-documentation)

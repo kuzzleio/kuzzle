@@ -11,10 +11,9 @@ The following diagram shows how request data is exchanged between the client app
 
 ![read_scenario_broker_details](../images/kuzzle_read_scenario_mq_details.png)
 
-\#0. On startup, Kuzzle subscribes each of his controller to the default ```amq.topic``` exchange (see details in [API Specifications](../api-specifications.md)).
+\#1a. \#1b. The client application sends a message to a topic (MQTT), an ```amq.topic/kuzzle``` routing key (AMQP) or an ```amq.topic/kuzzle``` destination (STOMP).
 
-\#1a. \#1b. The client application sends a message to a topic (MQTT), an ```amq.topic``` routing key (AMQP) or an ```amq.topic``` destination (STOMP). The topic/routing key/destination name describes the message action:
-```read.<collection>.<action (get|search|count)>```
+(see details in [API Documentation](http://kuzzleio.github.io/kuzzle-api-documentation/#message-queuing-protocols)).
 
 A MQTT client wishing to get responses back from Kuzzle must add a ```mqttClientId``` field to his message, and to subscribe to the ```mqtt.<mqttClientId>``` topic.
 
@@ -24,26 +23,30 @@ Sample STOMP request: retrieve the document ```739c26bc-7a09-469a-803d-623c4045b
 
 ```
 SEND
-destination:/exchange/amq.topic/read.users.get
+destination:/exchange/amq.topic/kuzzle
 reply-to:/temp-queue/739c26bc-7a09-469a-803d-623c4045b0cb
 content-type:application/json
 
-{_id: "739c26bc-7a09-469a-803d-623c4045b0cb"}
+{
+  "index": "mainindex",
+  "collection": "users",
+  "controller": "read",
+  "action": "get",
+  "_id": "739c26bc-7a09-469a-803d-623c4045b0cb"
+}
 
 ^@
 ```
 
-\#1c. The broker notifies the MQ Listener with the incoming message
-
-
-\#2. The MQListener handles the input message and forward it to the ```Funnel Controller```.
+\#2. The MQ plugin handles the input message and forwards it to the ```Funnel Controller```.
 
 Sample message:
 
 ```json
 {
-  "controller": "read",
+  "index": "mainindex",
   "collection": "users",
+  "controller": "read",
   "action": "get",
   "_id": "739c26bc-7a09-469a-803d-623c4045b0cb"
 }
@@ -78,7 +81,7 @@ Sample content retrieval from Elasticsearch:
 }
 ```
 
-\#6. \#7. \#8. Callback functions are triggered to transmit the response message back to the MQ Listener
+\#6. \#7. \#8. Callback functions are triggered to transmit the response message back to the MQ plugin
 
 Sample content exchanged during callback excecution:
 ```json
@@ -103,9 +106,8 @@ Sample content exchanged during callback excecution:
   }
 }
 ```
-\#9. The MQ Listener sends message to the "replyTo" temporary queue to the broker (or to the temporary ```mqtt.<mqttClientId>``` topic for MQTT clients)
 
-\#10. The broker notifies the client with the response content.
+\#9. The MQ plugin notifies the client with the response content.
 
 Sample response content:
 
@@ -137,4 +139,4 @@ Sample response content:
 ## Related pages
 
 * [Architecture overview](../architecture.md)
-* [API Specifications](../README.md#api-specifications)
+* [API Documentation](http://kuzzleio.github.io/kuzzle-api-documentation)

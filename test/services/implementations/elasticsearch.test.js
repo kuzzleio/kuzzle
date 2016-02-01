@@ -11,9 +11,7 @@ var
 
 describe('Test: ElasticSearch service', function () {
   var
-    kuzzle = {
-      indexes: {}
-    },
+    kuzzle = {},
     index = '%test',
     collection = 'unit-tests-elasticsearch',
     createdDocumentId = 'id-test',
@@ -64,8 +62,6 @@ describe('Test: ElasticSearch service', function () {
       index: index,
       body: documentAda
     });
-
-    kuzzle.indexes[index] = [collection];
   });
 
   describe('#init', function () {
@@ -135,12 +131,7 @@ describe('Test: ElasticSearch service', function () {
   });
 
   describe('#create', function () {
-    it('should allow creating documents', function (done) {
-      var
-        ret;
-
-      kuzzle.indexes = {};
-
+    it('should allow creating documents', function () {
       elasticsearch.client.create = function (data) {
         should(data.index).be.exactly(index);
         should(data.type).be.exactly(collection);
@@ -149,16 +140,7 @@ describe('Test: ElasticSearch service', function () {
         return q({});
       };
 
-      ret = elasticsearch.create(requestObject);
-
-      should(ret).be.a.Promise();
-
-      ret
-        .then(function (result) {
-          should(kuzzle.indexes).be.an.instanceOf(Object).and.have.property(index, [collection]);
-          done();
-        })
-        .catch(error => done(error));
+      return should(elasticsearch.create(requestObject)).be.a.fulfilled();
     });
 
     it('should reject the create promise if elasticsearch throws an error', function () {
@@ -171,11 +153,7 @@ describe('Test: ElasticSearch service', function () {
   });
 
   describe('#createOrReplace', function () {
-    it('should support createOrReplace capability', function (done) {
-      var ret;
-
-      kuzzle.indexes = {};
-
+    it('should support createOrReplace capability', function () {
       elasticsearch.client.index = function (data) {
         should(data.index).be.exactly(index);
         should(data.type).be.exactly(collection);
@@ -186,16 +164,7 @@ describe('Test: ElasticSearch service', function () {
       };
 
       requestObject.data._id = createdDocumentId;
-      ret = elasticsearch.createOrReplace(requestObject);
-
-      should(ret).be.a.Promise();
-
-      ret
-        .then(function (result) {
-          should(kuzzle.indexes).be.an.instanceOf(Object).and.have.property(index, [collection]);
-          done();
-        })
-        .catch(error => done(error));
+      return should(elasticsearch.createOrReplace(requestObject)).be.fulfilled();
     });
 
     it('should reject the createOrReplace promise if elasticsearch throws an error', function () {
@@ -275,9 +244,7 @@ describe('Test: ElasticSearch service', function () {
   });
 
   describe('#get', function () {
-    it('should allow getting a single document', function (done) {
-      var ret;
-
+    it('should allow getting a single document', function () {
       elasticsearch.client.get = function (data) {
         should(data.id).be.exactly(createdDocumentId);
 
@@ -287,16 +254,7 @@ describe('Test: ElasticSearch service', function () {
       delete requestObject.data.body;
       requestObject.data._id = createdDocumentId;
 
-      ret = elasticsearch.get(requestObject);
-
-      should(ret).be.a.Promise();
-
-      ret
-        .then(result => {
-          should(kuzzle.indexes).be.an.instanceOf(Object).and.have.property(index, [collection]);
-          done();
-        })
-        .catch(error => done(error));
+      return should(elasticsearch.get(requestObject)).be.fulfilled();
     });
 
     it('should reject requests when the user search for a document with id _search', function () {
@@ -409,11 +367,7 @@ describe('Test: ElasticSearch service', function () {
   });
 
   describe('#update', function () {
-    it('should allow to update a document', function (done) {
-      var ret;
-
-      kuzzle.indexes = {};
-
+    it('should allow to update a document', function () {
       elasticsearch.client.update = function (data) {
         should(data.body.doc).be.exactly(documentAda);
         should(data.id).be.exactly(createdDocumentId);
@@ -423,15 +377,7 @@ describe('Test: ElasticSearch service', function () {
 
       requestObject.data._id = createdDocumentId;
 
-      ret = elasticsearch.update(requestObject);
-      should(ret).be.a.Promise();
-
-      ret
-        .then(function (result) {
-          should(kuzzle.indexes).be.an.instanceOf(Object).and.have.property(index, [collection]);
-          done();
-        })
-        .catch(error => done(error));
+      return should(elasticsearch.update(requestObject)).be.fulfilled();
     });
 
     it('should return a rejected promise if an update fails', function () {
@@ -628,8 +574,6 @@ describe('Test: ElasticSearch service', function () {
     });
 
     it('should override the type with the collection if one has been specified in the request', function () {
-      kuzzle.indexes = {};
-
       requestObject.data.body = [
         {index: {_id: 1, _index: index}},
         {firstName: 'foo'},
@@ -804,19 +748,14 @@ describe('Test: ElasticSearch service', function () {
   });
 
   describe('#deleteCollection', function () {
-    it('should allow deleting an entire collection', function (done) {
+    it('should allow deleting an entire collection', function () {
 
       elasticsearch.client.indices.deleteMapping = function (data) {
         return q({});
       };
 
       delete requestObject.data.body;
-      should(elasticsearch.deleteCollection(requestObject)).be.fulfilled()
-        .then(function (result) {
-          should(kuzzle.indexes).be.an.instanceOf(Object).and.have.property(index, []);
-          done();
-        })
-        .catch(error => done(error));
+      return should(elasticsearch.deleteCollection(requestObject)).be.fulfilled();
     });
 
     it('should return a rejected promise if the delete collection function fails', function () {
@@ -941,19 +880,13 @@ describe('Test: ElasticSearch service', function () {
   });
 
   describe('#createCollection', function () {
-    it('should allow creating a new collection', function (done) {
-
+    it('should allow creating a new collection', function () {
       elasticsearch.client.indices.putMapping = function (data) {
         return q();
       };
 
       requestObject.collection = '%foobar';
-      elasticsearch.createCollection(requestObject)
-        .then(function (result) {
-          should(kuzzle.indexes).be.an.instanceOf(Object).and.have.property(index, [collection, requestObject.collection]);
-          done();
-        })
-        .catch(error => done(error));
+      return should(elasticsearch.createCollection(requestObject)).be.fulfilled();
     });
 
     it('should reject the createCollection promise if elasticsearch throws an error', function () {
@@ -1062,7 +995,6 @@ describe('Test: ElasticSearch service', function () {
 
       ret
         .then(function () {
-          should(kuzzle.indexes).be.an.instanceOf(Object).and.have.keys();
           should(deletedAll).be.true();
           done();
         })
@@ -1085,26 +1017,14 @@ describe('Test: ElasticSearch service', function () {
   });
 
   describe('#createIndex', function () {
-    it('should be able to create index', function (done) {
-      var ret;
-
-      kuzzle.indexes = {};
-
+    it('should be able to create index', function () {
       elasticsearch.client.indices.create = function (data) {
         should(data.index).be.exactly(requestObject.index);
 
         return q({});
       };
 
-      ret = elasticsearch.createIndex(requestObject);
-      should(ret).be.a.Promise();
-
-      ret
-        .then(function (result) {
-          should(kuzzle.indexes).be.an.instanceOf(Object).and.have.property(index, []);
-          done();
-        })
-        .catch(error => done(error));
+      return should(elasticsearch.createIndex(requestObject)).be.fulfilled();
     });
 
     it('should reject the createIndex promise if elasticsearch throws an error', function () {
@@ -1117,24 +1037,14 @@ describe('Test: ElasticSearch service', function () {
   });
 
   describe('#deleteIndex', function () {
-    it('should be able to delete index', function (done) {
-      var ret;
-
+    it('should be able to delete index', function () {
       elasticsearch.client.indices.delete = function (data) {
         should(data.index).be.exactly(requestObject.index);
 
         return q({});
       };
 
-      ret = elasticsearch.deleteIndex(requestObject);
-      should(ret).be.a.Promise();
-
-      ret
-        .then(function (result) {
-          should(kuzzle.indexes).be.an.instanceOf(Object).and.have.keys();
-          done();
-        })
-        .catch(error => done(error));
+      return should(elasticsearch.deleteIndex(requestObject)).be.fulfilled();
     });
 
     it('should reject the deleteIndex promise if elasticsearch throws an error', function () {
@@ -1147,19 +1057,14 @@ describe('Test: ElasticSearch service', function () {
   });
 
   describe('#listIndexes', function () {
-    it('should allow listing indexes', function (done) {
+    it('should allow listing indexes', function () {
       elasticsearch.client.indices.getMapping = function (data) {
         var indexes = {};
         indexes[index] = [];
         return q(indexes);
       };
 
-      elasticsearch.listIndexes(requestObject)
-        .then(result => {
-          should(result.data.body.indexes).be.an.instanceOf(Array).and.match([index]);
-          done();
-        })
-        .catch(error => done(error));
+      return should(elasticsearch.listIndexes(requestObject)).be.fulfilled();
     });
 
     it('should reject the listIndexes promise if elasticsearch throws an error', function () {
