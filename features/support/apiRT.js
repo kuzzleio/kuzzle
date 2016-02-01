@@ -537,7 +537,7 @@ ApiRT.prototype.getUser = function (id, hydrate) {
 
 ApiRT.prototype.getCurrentUser = function () {
   return this.send({
-    controller: 'security',
+    controller: 'auth',
     action: 'getCurrentUser'
   });
 };
