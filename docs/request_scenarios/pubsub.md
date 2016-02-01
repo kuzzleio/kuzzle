@@ -74,9 +74,9 @@ Sample message:
 
 \#5. The ```HotelClerk``` calls the ```DSL``` component to get a formated filter related to the subscription (see [DSL Readme for more details](../../lib/api/dsl/README.md)).
 
-\#6. The ```HotelClerk``` create a channel related to the filters and give it back to the ```Subscribe Controller```.
+\#6. The ```HotelClerk``` creates a channel related to the filters and give it back to the ```Subscribe Controller```.
 
-\#7. The channel is send back to the Websocket (or MQ) Router through the internal components.
+\#7. The channel is sent back to the Websocket (or MQ) Router through the internal components.
 
 \#8. The Websocket (or MQ) Router emits a ```<requestId>``` event to the client, containing the subscribed channel ID.
 
@@ -121,7 +121,7 @@ The "_publish_" method can be triggered:
 
 \#5. The ```Notifier``` broadcasts the message to each related channel to the Websocket (or MQ) router.
 
-\#6. Finally, the router send the message to the clients who subscribed to it.
+\#6. Finally, the router sends the message to the clients who subscribed to it.
 
 ## 3rd step : notify about persisted data
 
@@ -135,7 +135,7 @@ The "_publish_" method can be triggered:
 
 \#4. The ```Notifier``` broadcasts the message to each related channel to the Websocket (or MQ) router.
 
-\#5. Finally, the router send the message to the clients who subscribed to it.
+\#5. Finally, the router sends the message to the clients who subscribed to it.
 
 ## Related pages
 
