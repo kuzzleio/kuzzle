@@ -38,6 +38,7 @@ describe('Test: security controller - users', function () {
           return q(new ResponseObject(new RequestObject(user), {
             _index: '%kuzzle',
             _type: 'users',
+            _method: (opts && opts.database && opts.database.method) ? opts.database.method : 'createOrReplace',
             _id: user._id,
             _version: 1,
             created: true,
@@ -163,6 +164,21 @@ describe('Test: security controller - users', function () {
         .then(response => {
           should(response).be.an.instanceOf(ResponseObject);
           should(response.data.body.created).be.exactly(true);
+          should(response.data.body._method).be.exactly('create');
+
+          done();
+        })
+        .catch(error => { done(error); });
+    });
+
+    it('should compute a user id if none is provided', done => {
+      kuzzle.funnel.security.createUser(new RequestObject({
+        body: { name: 'John Doe', profile: 'anonymous' }
+      }))
+        .then(response => {
+          should(response).be.an.instanceOf(ResponseObject);
+          should(response.data.body._method).be.exactly('create');
+          should(response.data.body._id).match(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
 
           done();
         })
@@ -184,6 +200,8 @@ describe('Test: security controller - users', function () {
       }))
         .then(response => {
           should(response).be.an.instanceOf(ResponseObject);
+          should(response.data.body._method).be.exactly('update');
+          should(response.data.body._id).be.exactly('anonymous');
 
           done();
         })
