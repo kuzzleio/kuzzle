@@ -6,7 +6,6 @@ var
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   ForbiddenError = require.main.require('lib/api/core/errors/forbiddenError'),
-  InternalError = require.main.require('lib/api/core/errors/internalError'),
   PassportWrapper = require.main.require('lib/api/core/auth/passportWrapper'),
   MockupStrategy;
 
