@@ -60,14 +60,14 @@ Returns a promise that resolves to the *ObjectConstructor* instance if found or 
 ## loadMultiFromDatabase
 
 ```javascript
-Repository.prototype.loadMultiFromDatabase = function (ids) {...}
+Repository.prototype.loadMultiFromDatabase = function (ids, hydrate) {...}
 ```
 
 This method tries to load the business objects form the database matching the given ids.
 
 ### returns
 
-Returns a promise that resolves to an array containing the *ObjectConstructor* instances that could be retrieved from the database.
+Returns a promise that resolves to an array containing the *ObjectConstructor* instances or documents that could be retrieved from the database.
 
 If no matching document could be found, an empty array is returned.
 
