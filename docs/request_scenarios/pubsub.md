@@ -21,7 +21,7 @@ The following diagram shows how two different clients, a Websocket and a MQ one,
 
 ![pubsub_scenario_details1](../images/kuzzle_pubsub_scenario_details1.png)
 
-\#1. The client application opens a Websocket or a MQ connection and emit a "subscribe" event with some filters.
+\#1. The client application opens a Websocket or a MQ connection and emits a "subscribe" event with some filters.
 (see [API Documentation](http://kuzzleio.github.io/kuzzle-api-documentation/#on))
 
 For instance, to be notified about all contents posted to the collection "users", containing a field "hobby" equals to "computer":
