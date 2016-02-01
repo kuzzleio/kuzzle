@@ -2,7 +2,6 @@ var apiSteps = function () {
   this.When(/^I log in as (.*?):(.*?)$/, function (login, password, callback) {
     this.api.login('local', {username: this.idPrefix + login, password: password})
       .then(body => {
-        console.log("### body: ", body);
         if (body.error) {
           callback(new Error(body.error.message));
           return false;

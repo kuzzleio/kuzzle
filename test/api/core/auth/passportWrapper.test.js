@@ -6,6 +6,7 @@ var
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   ForbiddenError = require.main.require('lib/api/core/errors/forbiddenError'),
+  InternalError = require.main.require('lib/api/core/errors/internalError'),
   PassportWrapper = require.main.require('lib/api/core/auth/passportWrapper'),
   MockupStrategy;
 
@@ -88,7 +89,7 @@ describe('Test the passport Wrapper', function () {
   it('should resolve to the user if good credentials', function (done) {
     passportWrapper.authenticate({body: {username: 'jdoe'}}, 'mockup')
       .then(function (userObject) {
-        should(userObject.user._id).be.equal('jdoe');
+        should(userObject._id).be.equal('jdoe');
         done();
       })
       .catch(function(err) {
@@ -102,5 +103,12 @@ describe('Test the passport Wrapper', function () {
 
   it('should reject in case of authenticate error', function () {
     return should(passportWrapper.authenticate({body: {username: 'jdoe'}}, 'error')).be.rejectedWith('Bad Credentials');
+  });
+
+  it('should reject a promise because an exception has been thrown', function() {
+    MockupStrategy.prototype.authenticate = function() {
+      throw new Error('exception');
+    };
+    return should(passportWrapper.authenticate({body: {username: 'jdoe'}}, 'mockup')).be.rejectedWith('exception');
   });
 });
