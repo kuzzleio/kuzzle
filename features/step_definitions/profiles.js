@@ -6,10 +6,9 @@ var apiSteps = function () {
     if (!this.profiles[profile]) {
       return callback('Fixture for profile ' + profile + ' does not exists');
     }
-
     id = this.idPrefix + id;
 
-    this.api.putProfile(id, this.profiles[profile])
+    this.api.createOrReplaceProfile(id, this.profiles[profile])
       .then(function (body) {
         if (body.error) {
           callback(new Error(body.error.message));
@@ -24,7 +23,7 @@ var apiSteps = function () {
   });
 
   this.Then(/^I cannot create an invalid profile$/, {timeout: 20 * 1000}, function (callback) {
-    this.api.putProfile('invalid-profile', this.profiles.invalidProfile)
+    this.api.createOrReplaceProfile('invalid-profile', this.profiles.invalidProfile)
       .then(function (body) {
         if (body.error) {
           callback();
@@ -39,7 +38,7 @@ var apiSteps = function () {
   });
 
   this.Then(/^I cannot create a profile with an empty set of roles$/, {timeout: 20 * 1000}, function (callback) {
-    this.api.putProfile('invalid-profile', this.profiles.empty)
+    this.api.createOrReplaceProfile('invalid-profile', this.profiles.empty)
       .then(function (body) {
         if (body.error) {
           callback();
@@ -198,11 +197,10 @@ var apiSteps = function () {
     if (!this.roles[roleId]) {
       return callback('Fixture for role ' + roleId + ' does not exists');
     }
-
     roleId = this.idPrefix + roleId;
     profileId = this.idPrefix + profileId;
 
-    this.api.putProfile(profileId, {
+    this.api.createOrReplaceProfile(profileId, {
       roles: [roleId]
     })
     .then(response => {

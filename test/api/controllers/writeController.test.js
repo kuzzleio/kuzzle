@@ -3,7 +3,8 @@ var
   q = require('q'),
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
-  RequestObject = require.main.require('lib/api/core/models/requestObject');
+  RequestObject = require.main.require('lib/api/core/models/requestObject'),
+  ResponseObject = require.main.require('lib/api/core/models/responseObject');
 
 /*
  * Since we're sending voluntarily false requests, we expect most of these
@@ -11,15 +12,28 @@ var
  */
 describe('Test: write controller', function () {
   var
-    kuzzle;
+    kuzzle,
+    indexCacheAdded;
 
   before(function (done) {
     kuzzle = new Kuzzle();
     kuzzle.start(params, {dummy: true})
       .then(function () {
         kuzzle.services.list.writeEngine = {};
+        kuzzle.indexCache = {
+          add: () => indexCacheAdded = true
+        };
+
+        kuzzle.workerListener = {
+          add: rq => { return q(new ResponseObject(rq)); }
+        };
+
         done();
       });
+  });
+
+  beforeEach(function () {
+    indexCacheAdded = false;
   });
 
   it('should reject an empty request', function () {
@@ -36,11 +50,11 @@ describe('Test: write controller', function () {
     return should(kuzzle.funnel.write.create(requestObject)).be.rejected();
   });
 
-  it('should reject an empty createOrUpdate request', function () {
+  it('should reject an empty createOrReplace request', function () {
     var requestObject = new RequestObject({});
     delete requestObject.data.body;
 
-    return should(kuzzle.funnel.write.createOrUpdate(requestObject)).be.rejected();
+    return should(kuzzle.funnel.write.createOrReplace(requestObject)).be.rejected();
   });
 
   it('should reject an empty update request', function () {
@@ -116,13 +130,13 @@ describe('Test: write controller', function () {
     });
   });
 
-  describe('#createOrUpdate', function () {
-    it('should emit a hook on a createOrUpdate query', function (done) {
+  describe('#createOrReplace', function () {
+    it('should emit a hook on a createOrReplace query', function (done) {
       var requestObject = new RequestObject({body: {foo: 'bar'}}, {}, 'unit-test');
 
       this.timeout(50);
 
-      kuzzle.once('data:createOrUpdate', function (obj) {
+      kuzzle.once('data:createOrReplace', function (obj) {
         try {
           should(obj).be.exactly(requestObject);
           done();
@@ -132,10 +146,23 @@ describe('Test: write controller', function () {
         }
       });
 
-      kuzzle.funnel.write.createOrUpdate(requestObject)
+      kuzzle.funnel.write.createOrReplace(requestObject)
         .catch(function (error) {
           done(error);
         });
+    });
+
+    it('should add the new collection to the index cache', function (done) {
+      var requestObject = new RequestObject({body: {foo: 'bar'}}, {}, 'unit-test');
+      this.timeout(50);
+
+      kuzzle.funnel.write.createOrReplace(requestObject)
+        .then(response => {
+          should(response).be.instanceof(ResponseObject);
+          should(indexCacheAdded).be.true();
+          done();
+        })
+        .catch(err => done(err));
     });
   });
 
@@ -249,6 +276,19 @@ describe('Test: write controller', function () {
       });
 
       kuzzle.funnel.write.createCollection(requestObject);
+    });
+
+    it('should add the new collection to the index cache', function (done) {
+      var requestObject = new RequestObject({}, {}, 'unit-test');
+      this.timeout(50);
+
+      kuzzle.funnel.write.createCollection(requestObject)
+        .then(response => {
+          should(response).be.instanceof(ResponseObject);
+          should(indexCacheAdded).be.true();
+          done();
+        })
+        .catch(err => done(err));
     });
   });
 });

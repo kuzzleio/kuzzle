@@ -47,13 +47,13 @@ ApiRT.prototype.publish = function (body, index) {
   return this.send(msg);
 };
 
-ApiRT.prototype.createOrUpdate = function (body, index, collection) {
+ApiRT.prototype.createOrReplace = function (body, index, collection) {
   var
     msg = {
       controller: 'write',
       collection: collection || this.world.fakeCollection,
       index: index || this.world.fakeIndex,
-      action: 'createOrUpdate',
+      action: 'createOrReplace',
       body: body
     };
 
@@ -164,13 +164,13 @@ ApiRT.prototype.deleteCollection = function (index) {
   return this.send(msg);
 };
 
-ApiRT.prototype.putMapping = function (index) {
+ApiRT.prototype.updateMapping = function (index) {
   var
     msg = {
       controller: 'admin',
       collection: this.world.fakeCollection,
       index: index || this.world.fakeIndex,
-      action: 'putMapping',
+      action: 'updateMapping',
       body: this.world.schema
     };
 
@@ -422,11 +422,11 @@ ApiRT.prototype.logout = function(jwtToken) {
   return this.send(msg);
 };
 
-ApiRT.prototype.putRole = function (id, body) {
+ApiRT.prototype.createOrReplaceRole = function (id, body) {
   var
     msg = {
       controller: 'security',
-      action: 'putRole',
+      action: 'createOrReplaceRole',
       _id: id,
       body: body
     };
@@ -467,11 +467,11 @@ ApiRT.prototype.deleteRole = function (id) {
   return this.send(msg);
 };
 
-ApiRT.prototype.putRole = function (id, body) {
+ApiRT.prototype.createOrReplaceRole = function (id, body) {
   var
     msg = {
       controller: 'security',
-      action: 'putRole',
+      action: 'createOrReplaceRole',
       _id: id,
       body: body
     };
@@ -490,11 +490,11 @@ ApiRT.prototype.getProfile = function (id) {
   return this.send(msg);
 };
 
-ApiRT.prototype.putProfile = function (id, body) {
+ApiRT.prototype.createOrReplaceProfile = function (id, body) {
   var
     msg = {
       controller: 'security',
-      action: 'putProfile',
+      action: 'createOrReplaceProfile',
       _id: id,
       body: body
     };
@@ -537,7 +537,7 @@ ApiRT.prototype.getUser = function (id, hydrate) {
 
 ApiRT.prototype.getCurrentUser = function () {
   return this.send({
-    controller: 'security',
+    controller: 'auth',
     action: 'getCurrentUser'
   });
 };

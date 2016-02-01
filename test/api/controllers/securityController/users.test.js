@@ -101,25 +101,6 @@ describe('Test: security controller - users', function () {
     });
   });
 
-  describe('#getCurrentUser', function () {
-    it('should return the user given in the context', done => {
-      kuzzle.funnel.security.getCurrentUser(new RequestObject({
-        body: {}
-      }), {
-        token: { user: { _id: 'admin' } }
-      })
-        .then(response => {
-          should(response.data.body._id).be.exactly('admin');
-          should(response.data.body._source).be.an.instanceOf(User);
-          should(response.data.body._source.profile).be.an.instanceOf(Profile);
-          should(response.data.body._source.profile._id).be.exactly('admin');
-
-          done();
-        })
-        .catch(error => { done(error); });
-    });
-  });
-
   describe('#searchUsers', function () {
     it('should return a valid responseObject', done => {
       kuzzle.funnel.security.searchUsers(new RequestObject({

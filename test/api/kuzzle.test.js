@@ -37,6 +37,20 @@ describe('Test kuzzle constructor', function () {
   });
 
   describe('#cleanDb', () => {
+    var resetCalled;
+
+    beforeEach(function () {
+      kuzzle.services.list = {
+        writeEngine: {}
+      };
+
+      kuzzle.indexCache = {
+        reset: () => resetCalled = true
+      };
+
+      resetCalled = false;
+    });
+
     it('should clean database when environment variable LIKE_A_VIRGIN is set to 1', function (done) {
       var
         workerCalled = false,
@@ -44,9 +58,6 @@ describe('Test kuzzle constructor', function () {
 
       process.env.LIKE_A_VIRGIN = 1;
       kuzzle.isServer = true;
-      kuzzle.services.list = {
-        writeEngine: {}
-      };
 
       kuzzle.pluginsManager = {
         trigger: function(event, data) {
@@ -66,9 +77,10 @@ describe('Test kuzzle constructor', function () {
         }
       };
 
-      kuzzle.cleanDb()
+      kuzzle.cleanDb(kuzzle)
         .then(() => {
           should(workerCalled).be.true();
+          should(resetCalled).be.true();
           should(hasFiredCleanDbDone).be.true();
           done();
         })
@@ -100,9 +112,10 @@ describe('Test kuzzle constructor', function () {
         }
       };
 
-      kuzzle.cleanDb()
+      kuzzle.cleanDb(kuzzle)
         .then(() => {
           should(workerCalled).be.true();
+          should(resetCalled).be.false();
           should(hasFiredCleanDbError).be.true();
           done();
         })
@@ -125,9 +138,10 @@ describe('Test kuzzle constructor', function () {
         }
       };
 
-      kuzzle.cleanDb()
+      kuzzle.cleanDb(kuzzle)
         .then(() => {
           should(workerCalled).be.false();
+          should(resetCalled).be.false();
           done();
         })
         .catch(error => done(error));
@@ -182,7 +196,7 @@ describe('Test kuzzle constructor', function () {
     it('should execute the right call chain', function (done) {
       kuzzle.isServer = true;
 
-      prepareDb.call(kuzzle)
+      prepareDb(kuzzle)
         .then(() => {
           should(filesRead).match(['mappings', 'fixtures']);
           should(indexCreated).be.true();
@@ -196,7 +210,7 @@ describe('Test kuzzle constructor', function () {
     it('should do nothing if not in a kuzzle server instance', function (done) {
       kuzzle.isServer = false;
 
-      prepareDb.call(kuzzle)
+      prepareDb(kuzzle)
         .then(() => {
           should(filesRead).match([]);
           should(indexCreated).be.false();
@@ -225,8 +239,11 @@ describe('Test kuzzle constructor', function () {
 
     beforeEach(function () {
       context = {
-        pluginsManager: {
-          trigger: function () {}
+        kuzzle: {
+          pluginsManager: {
+            trigger: function () {
+            }
+          }
         },
         data: {}
       };
@@ -271,6 +288,7 @@ describe('Test kuzzle constructor', function () {
       createIndexes,
       workerCalled,
       indexCreated,
+      indexAdded,
       workerPromise;
 
     before(function () {
@@ -282,22 +300,29 @@ describe('Test kuzzle constructor', function () {
       workerCalled = false;
       workerPromise = q();
       indexCreated = [];
+      indexAdded = false;
 
       context = {
-        pluginsManager: {
-          trigger: function () {}
-        },
-        workerListener: {
-          add: function (rq) {
-            should(rq.controller).be.eql('admin');
-            should(rq.action).be.eql('createIndex');
-            should(rq.index).not.be.undefined();
-            workerCalled = true;
-            indexCreated.push(rq.index);
-            return workerPromise;
+        kuzzle: {
+          pluginsManager: {
+            trigger: function () {
+            }
+          },
+          workerListener: {
+            add: function (rq) {
+              should(rq.controller).be.eql('admin');
+              should(rq.action).be.eql('createIndex');
+              should(rq.index).not.be.undefined();
+              workerCalled = true;
+              indexCreated.push(rq.index);
+              return workerPromise;
+            }
+          },
+          indexCache: {
+            indexes: {},
+            add: () => indexAdded = true
           }
         },
-        actualIndexes: [],
         data: {
           fixtures: {},
           mappings: {}
@@ -312,6 +337,7 @@ describe('Test kuzzle constructor', function () {
         .then(data => {
           should(data).be.undefined();
           should(workerCalled).be.false();
+          should(indexAdded).be.false();
           done();
         })
         .catch(err => done(err));
@@ -329,6 +355,7 @@ describe('Test kuzzle constructor', function () {
         .then(data => {
           should(data).be.undefined();
           should(workerCalled).be.true();
+          should(indexAdded).be.true();
           should(indexCreated.length).be.eql(Object.keys(context.data.mappings).length);
           should(indexCreated.sort()).match(Object.keys(context.data.mappings).sort());
           done();
@@ -348,6 +375,7 @@ describe('Test kuzzle constructor', function () {
         .then(data => {
           should(data).be.undefined();
           should(workerCalled).be.true();
+          should(indexAdded).be.true();
           should(indexCreated.length).be.eql(Object.keys(context.data.fixtures).length);
           should(indexCreated.sort()).match(Object.keys(context.data.fixtures).sort());
           done();
@@ -363,12 +391,13 @@ describe('Test kuzzle constructor', function () {
         'qux': 'qux'
       };
 
-      context.actualIndexes = ['foo', 'bar'];
+      context.kuzzle.indexCache.indexes = { foo: ['foo'], bar: ['bar']};
 
       createIndexes.call(context)
         .then(data => {
           should(data).be.undefined();
           should(workerCalled).be.true();
+          should(indexAdded).be.true();
           should(indexCreated.length).be.eql(1);
           should(indexCreated).match(['qux']);
           done();
@@ -409,19 +438,22 @@ describe('Test kuzzle constructor', function () {
       mappingCreated = null;
 
       context = {
-        pluginsManager: {
-          trigger: function () {}
-        },
-        workerListener: {
-          add: function (rq) {
-            should(rq.controller).be.eql('admin');
-            should(rq.action).be.eql('putMapping');
-            should(rq.index).be.eql(stubIndex);
-            should(rq.collection).be.eql(stubCollection);
-            should(rq.data.body).be.an.Object();
-            workerCalled = true;
-            mappingCreated = rq.data.body;
-            return workerPromise;
+        kuzzle: {
+          pluginsManager: {
+            trigger: function () {
+            }
+          },
+          workerListener: {
+            add: function (rq) {
+              should(rq.controller).be.eql('admin');
+              should(rq.action).be.eql('putMapping');
+              should(rq.index).be.eql(stubIndex);
+              should(rq.collection).be.eql(stubCollection);
+              should(rq.data.body).be.an.Object();
+              workerCalled = true;
+              mappingCreated = rq.data.body;
+              return workerPromise;
+            }
           }
         },
         data: {
@@ -496,19 +528,22 @@ describe('Test kuzzle constructor', function () {
       fixturesImported = null;
 
       context = {
-        pluginsManager: {
-          trigger: function () {}
-        },
-        workerListener: {
-          add: function (rq) {
-            should(rq.controller).be.eql('bulk');
-            should(rq.action).be.eql('import');
-            should(rq.index).be.eql(stubIndex);
-            should(rq.collection).be.eql(stubCollection);
-            should(rq.data.body).be.an.Object();
-            workerCalled = true;
-            fixturesImported = rq.data.body;
-            return workerPromise;
+        kuzzle: {
+          pluginsManager: {
+            trigger: function () {
+            }
+          },
+          workerListener: {
+            add: function (rq) {
+              should(rq.controller).be.eql('bulk');
+              should(rq.action).be.eql('import');
+              should(rq.index).be.eql(stubIndex);
+              should(rq.collection).be.eql(stubCollection);
+              should(rq.data.body).be.an.Object();
+              workerCalled = true;
+              fixturesImported = rq.data.body;
+              return workerPromise;
+            }
           }
         },
         data: {
