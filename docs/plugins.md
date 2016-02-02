@@ -342,6 +342,7 @@ Messages emanating from Kuzzle are emitted using the following hooks. Protocol p
 |------|----------------|-----------------------------|
 | ``protocol:joinChannel`` | `{channel, id}`| Tells protocol plugins that the connection `id` subscribed to the channel `channel` |
 | ``protocol:leaveChannel`` | `{channel, id}` | Tells protocol plugins that the connection `id` left the channel `channel` |
+| ``protocol:notify`` | `{channel, id, payload}` | Asks the protocol plugins to emit a data `payload` to the connection `id`, on the channel `channel` |
 | ``protocol:broadcast`` | `{channel, payload}` | Asks protocol plugins to emit a data `payload` to clients connected to the channel `channel` |
 
 *For more information about channels, see our [API Documentation](http://kuzzleio.github.io/kuzzle-api-documentation/#on)*
@@ -364,6 +365,7 @@ First, link protocol hooks to their corresponding implementation methods:
 // Content of a hooks.js file:
 module.exports = {
   'protocol:broadcast': 'broadcast',
+  'protocol:notify': 'notify',
   'protocol:joinChannel': 'join',
   'protocol:leaveChannel': 'leave'
 };
@@ -407,6 +409,16 @@ module.exports = function () {
      by Kuzzle when a "data.payload" needs to be broadcasted to the
      "data.channel" channel
 
+     The payload is a ResponseObject
+    */
+  };
+  
+  this.notify = function (data) {
+    /*
+     Linked to the protocol:notify hook, emitted
+     by Kuzzle when a "data.payload" needs to be emitted to the
+     connection "data.id", on the channel "data.channel"
+     
      The payload is a ResponseObject
     */
   };
