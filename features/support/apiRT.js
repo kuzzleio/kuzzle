@@ -445,6 +445,17 @@ ApiRT.prototype.getRole = function (id) {
   return this.send(msg);
 };
 
+ApiRT.prototype.mGetRoles = function (body) {
+  var
+    msg = {
+      controller: 'security',
+      action: 'mGetRoles',
+      body: body
+    };
+
+  return this.send(msg);
+};
+
 ApiRT.prototype.searchRoles = function (body) {
   var
     msg = {
@@ -485,6 +496,17 @@ ApiRT.prototype.getProfile = function (id) {
       controller: 'security',
       action: 'getProfile',
       _id: id
+    };
+
+  return this.send(msg);
+};
+
+ApiRT.prototype.mGetProfiles = function (body) {
+  var
+    msg = {
+      controller: 'security',
+      action: 'mGetProfiles',
+      body: body
     };
 
   return this.send(msg);
@@ -560,13 +582,26 @@ ApiRT.prototype.deleteUser = function (id) {
   });
 };
 
-ApiRT.prototype.putUser = function (id, body) {
+ApiRT.prototype.createOrReplaceUser = function (body, id) {
   return this.send({
     controller: 'security',
-    action: 'putUser',
+    action: 'createOrReplaceUser',
     body: body,
     _id: id
   });
+};
+
+ApiRT.prototype.createUser = function (body, id) {
+  var msg = {
+    controller: 'security',
+    action: 'createUser',
+    body: body
+  };
+  if (id !== undefined) {
+    msg._id = id;
+  }
+
+  return this.send(msg);
 };
 
 ApiRT.prototype.checkToken = function (token) {

@@ -353,6 +353,16 @@ ApiREST.prototype.getRole = function (id) {
   return this.callApi(options);
 };
 
+ApiREST.prototype.mGetRoles = function (body) {
+  var options = {
+    url: this.apiPath('roles/_mget'),
+    method: 'POST',
+    json: body
+  };
+
+  return this.callApi(options);
+};
+
 ApiREST.prototype.searchRoles = function (body) {
   var options = {
     url: this.apiPath('roles/_search'),
@@ -388,6 +398,16 @@ ApiREST.prototype.getProfile = function (id) {
     url: this.apiPath('profiles/' + id),
     method: 'GET',
     json: true
+  };
+
+  return this.callApi(options);
+};
+
+ApiREST.prototype.mGetProfiles = function (body) {
+  var options = {
+    url: this.apiPath('profiles/_mget'),
+    method: 'POST',
+    json: body
   };
 
   return this.callApi(options);
@@ -447,12 +467,34 @@ ApiREST.prototype.deleteUser = function (id) {
   });
 };
 
-ApiREST.prototype.putUser = function (id, body) {
+ApiREST.prototype.createOrReplaceUser = function (body, id) {
   return this.callApi({
     url: this.apiPath('users/' + id),
     method: 'PUT',
     json: body
   });
+};
+
+ApiREST.prototype.createUser = function (body, id) {
+  var options = {
+    url: this.apiPath('users/_create'),
+    method: 'POST',
+    json: body
+  };
+  
+  if (id !== undefined) {
+    if (body.body) {
+      options.json.body._id = id;
+    }
+    else {
+      options.json = {
+        _id: id,
+        body: body
+      };
+    }
+  }
+  
+  return this.callApi(options);
 };
 
 ApiREST.prototype.checkToken = function (token) {

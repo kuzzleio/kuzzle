@@ -8,8 +8,7 @@ Kuzzle Kernel API can be accessed from 3 different paths:
 
 1. a [RESTFul API](API.REST.md)
 2. a [Websocket connexion](API.WebSocket.md), using Kuzzle [Javascript SDK](http://kuzzleio.github.io/sdk-documentation/)
-3. or a messaging broker such as RabbitMQ
-(using any protocol supported by your broker, such as [AMQP](API.AMQP.md), [MQTT](API.MQTT.md), [STOMP](API.STOMP.md))
+3. or any other custom protocol, using a Protocol Plugin (examples: [AMQP](API.AMQP.md), [MQTT](API.MQTT.md), [STOMP](API.STOMP.md))
 
 In the background, Kuzzle uses:
 
@@ -25,7 +24,7 @@ Focus on the above "Kuzzle kernel":
 
 * **Router Controller**: implements the 3 API routers, normalizes the input message and sends them to the Funnel Controller
 * **Funnel Controller**: analyses the input message and calls the appropriate controller (see [API specification](api-specifications.md))
-* **Admin Controller**, **Bulk Controller**, **Write Controller**, **Subscribe Controller**, **Read Controller**: handles the input message (see [API specification](api-specifications.md))
+* **Admin Controller**, **Auth Controller**, **Bulk Controller**, **Write Controller**, **Subscribe Controller**, **Read Controller**: handles the input message (see [API documentation](http://kuzzleio.github.io/kuzzle-api-documentation))
 * **Internal Components**: Any component used internally by controllers and any other internal component to interact with services
 
 

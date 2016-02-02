@@ -264,6 +264,12 @@ Feature: Test MQTT API
     Then I'm able to find "1" role by searching index corresponding to role "role2"
     And I delete the role with id "test"
     Then I'm not able to find a role with id "test"
+    Then I create a new role "role1" with id "test"
+    And I create a new role "role1" with id "test2"
+    And I create a new role "role1" with id "test3"
+    Then I'm able to do a multi get with "test,test2,test3" and get "3" roles
+    Then I'm able to find "3" role by searching index corresponding to role "role1"
+    Then I'm able to find "1" role by searching index corresponding to role "role1" from "0" to "1"
 
   @usingMQTT @cleanSecurity
   Scenario: create an invalid profile with unexisting role triggers an error
@@ -295,6 +301,7 @@ Feature: Test MQTT API
     Then I'm able to find "1" profiles containing the role with id "role1"
     Then I'm able to find "2" profiles
     Then I'm able to find "0" profiles containing the role with id "undefined-role"
+    Then I'm able to do a multi get with "my-profile-1,my-profile-2" and get "2" profiles
     Given I update the profile with id "my-profile-2" by adding the role "role1"
     Then I'm able to find "2" profiles
     Then I'm able to find "2" profiles containing the role with id "role1"

@@ -3,23 +3,35 @@ var
   async = require('async');
 
 module.exports = function () {
-  this.When(/^I create a user "(.*?)" with id "(.*?)"$/, {timeout: 20000}, function (user, id, callback) {
+  this.When(/^I (can't )?create a (new )?user "(.*?)" with id "(.*?)"$/, {timeout: 20000}, function (not, isNew, user, id, callback) {
     var
-      userObject = this.users[user];
+      userObject = this.users[user],
+      method = isNew ? 'createUser' : 'createOrReplaceUser';
 
     id = this.idPrefix + id;
 
-    this.api.putUser(id, userObject)
+
+    this.api[method](userObject, id)
       .then(body => {
         if (body.error) {
-          callback(new Error(body.error.message));
-          return false;
+          if (not) {
+            return callback();
+          }
+          return callback(new Error(body.error.message));
         }
 
-        callback();
+        if (not) {
+          return callback(new Error());
+        }
+        return callback();
       })
       .catch(function (error) {
-        callback(error);
+        if (not) {
+          return callback();
+        }
+        else {
+          callback(error);
+        }
       });
   });
 
@@ -128,5 +140,6 @@ module.exports = function () {
       .catch(error => { callback(error); });
 
   });
+
 };
 
