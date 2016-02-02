@@ -74,7 +74,7 @@ Remember that the fixtures must be in the Docker container scope !
 
 If you need to add a default mapping on Kuzzle start, from Kuzzle's root directory:
 
-    $ DEFAULT_MAPPING=path/to/the/mapping/file.json docker-compose up
+    $ FIXTURES=path/to/the/fixtures/file.json DEFAULT_MAPPING=path/to/the/mapping/file.json docker-compose up
 
 examples:
 
@@ -94,6 +94,9 @@ examples:
 
 Remember that the default mapping must be in the Docker container scope !
 
+You can, of course, use all those option alltogether like:
+
+    LIKE_A_VIRGIN=1 FIXTURES=fixtures/file.json DEFAULT_MAPPING=mapping/file.json docker-compose up
 
 ### Useful tips
 
@@ -129,67 +132,88 @@ From the root directory:
 
     $ vagrant up
 
-## From source or NPM
-
-First of all, you have to get the source code. You can use NPM or clone our GIT repository.
-
-* NPM
-
-    ```
-    $ npm install kuzzle
-    ```
-
-* GIT
-
-    ```
-    $ git clone https://github.com/kuzzleio/kuzzle.git
-    $ cd kuzzle
-    ```
-
 ## Manual install
 
-### Default
+**Note:** we will assume that you want to launch Kuzzle and other services on the same host (localhost), but you can, of course, host kuzzle and any of its services on different hosts.
 
-Prerequisites:
+### Prerequisites:
 
 * A service [Elasticsearch](https://www.elastic.co/products/elasticsearch) running on localhost:9200
 * A service [Redis](http://redis.io/) running on localhost:6379
+* A properly installed [nodeJs](https://nodejs.org/en/download/) version 4 or upper
 
-```bash
-$ kuzzle start
-```
+### Step one
 
-To get a list of available options, you can run:
+Retrieve the Kuzzle source code from the [GitHub repo](https://github.com/kuzzleio/kuzzle.git) by doing
 
-```bash
-$ kuzzle start -h
-```
+    $ git clone https://github.com/kuzzleio/kuzzle.git
+    $ cd kuzzle
 
-You may also start Kuzzle by using [PM2](https://github.com/Unitech/pm2):
+then install the dependencies by doing:
 
-```bash
-$ pm2 start app-start.js
-```
+    $ npm install
+
+### Step two
+
+Configure your environment. Kuzzle has been designed to be launched into a container, so the default hosts used to access to the ElasticSearch and Redis servers needs to be tweaked to hit the right hosts. If everything is hosted on localhost, you can use environment variable to overwrite default ones:
+
+    $ export READ_ENGINE_HOST=localhost:9200
+    $ export WRITE_ENGINE_HOST=localhost:9200
+    $ export CACHE_HOST=localhost
+    $ export CACHE_PORT=6379
 
 
-### Change external services hosts
+### Step three
+
+Install the default plugins, by doing:
+
+    $ ./bin/kuzzle.js install
+
+
+### Finally
+
+Start Kuzzle with default options (one server and one worker) by doing
+
+    $ ./bin/kuzzle.js start
+
+### All steps in one
+
+    $ git clone https://github.com/kuzzleio/kuzzle.git
+    $ cd kuzzle
+    $ npm install
+    $ export READ_ENGINE_HOST=localhost:9200
+    $ export WRITE_ENGINE_HOST=localhost:9200
+    $ export CACHE_HOST=localhost
+    $ export CACHE_PORT=6379
+    $ ./bin/kuzzle.js install
+    $ ./bin/kuzzle.js start
+
+### Going further
+
+#### Command Line Interface
+
+Kuzzle comes along with a [CLI](https://en.wikipedia.org/wiki/Command-line_interface)
+
+To get a list of available options, you can run
+
+    $ ./bin/kuzzle.js start -h
+
+#### Change external services hosts or ports
 
 If you are running some of the service(s) externally, you can configure their host and port using some environment variables:
 
 examples:
 
-```bash
-# Elastic Search (read/write engine):
-$ export READ_ENGINE_HOST=myelasticsearch:9200
-$ export WRITE_ENGINE_HOST=myelasticsearch:9200
+    # Elastic Search (read/write engine):
+    $ export READ_ENGINE_HOST=myelasticsearch:9200
+    $ export WRITE_ENGINE_HOST=myelasticsearch:9200
 
-# Redis (cache services):
-$ export CACHE_HOST=myredis
-$ export CACHE_PORT=6379
+    # Redis (cache services):
+    $ export CACHE_HOST=myredis
+    $ export CACHE_PORT=6379
 
-# Rabbit MQ (external broker for AMQP/MQTT/STOMP clients):
-$ export MQ_BROKER_HOST=myrabbitmq
-$ export MQ_BROKER_PORT=5672
+    # Rabbit MQ (external broker for AMQP/MQTT/STOMP clients):
+    $ export MQ_BROKER_HOST=myrabbitmq
+    $ export MQ_BROKER_PORT=5672
 
-$ kuzzle start
-```
+    $ ./bin/kuzzle.js start
