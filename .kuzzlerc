@@ -62,6 +62,7 @@
       "_id": "admin",
       "indexes": {
         "_canCreate": true,
+        "_canDelete": true,
         "*": {
         "collections": {
           "_canCreate": true,
@@ -96,6 +97,7 @@
       "_id": "guest",
       "indexes": {
         "_canCreate": true,
+        "_canDelete": true,
         "*": {
           "collections": {
             "_canCreate": true,

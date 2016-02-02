@@ -181,6 +181,53 @@ describe('Test: security/roleTest', function () {
       should(roleDeny.isActionAllowed(rq, context)).be.false();
     });
 
+    it('should allow/deny index deletion according to indexes._canDelete right', function () {
+      var
+        roleAllow = new Role(),
+        roleDeny = new Role(),
+        rq = {
+          controller: 'admin',
+          action: 'deleteIndex'
+        };
+
+      roleAllow.indexes = {
+        '_canDelete': true,
+        '*': {
+          collections: {
+            '*': {
+              controllers: {
+                '*': {
+                  actions: {
+                    '*': true
+                  }
+                }
+              }
+            }
+          }
+        }
+      };
+
+      roleDeny.indexes = {
+        '_canDelete': false,
+        '*': {
+          collections: {
+            '*': {
+              controllers: {
+                '*': {
+                  actions: {
+                    '*': true
+                  }
+                }
+              }
+            }
+          }
+        }
+      };
+
+      should(roleAllow.isActionAllowed(rq, context)).be.true();
+      should(roleDeny.isActionAllowed(rq, context)).be.false();
+    });
+
     it('should not allow any action on the internal index if no role has been explicitly set on it', function () {
       var
         role = new Role(),
