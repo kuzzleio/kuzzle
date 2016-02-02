@@ -8,6 +8,7 @@ var
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
   ResponseObject = require.main.require('lib/api/core/models/responseObject'),
+  BadRequestError = require.main.require('lib/api/core/errors/badRequestError'),
   InternalError = require.main.require('lib/api/core/errors/internalError'),
   Token = require.main.require('lib/api/core/models/security/token'),
   Profile = require.main.require('lib/api/core/models/security/profile'),
@@ -358,6 +359,70 @@ describe('Test the auth controller', function () {
           done();
         })
         .catch(error => { done(error); });
+    });
+  });
+
+  describe('#checkToken', function () {
+    var
+      stubToken = {
+        expiresAt: 42
+      };
+
+    beforeEach(function () {
+      requestObject = new RequestObject({
+          action: 'checkToken',
+          controller: 'auth'
+        },
+        {body: {token: 'foobar'}});
+      kuzzle = new Kuzzle();
+      return kuzzle.start(params, {dummy: true});
+    });
+
+    it('should return a rejected promise if no token is provided', function () {
+      return should(kuzzle.funnel.auth.checkToken(new RequestObject({ body: {}}))).be.rejectedWith(BadRequestError);
+    });
+
+    it('should return a valid response if the token is valid', function (done) {
+      kuzzle.repositories.token.verifyToken = arg => {
+        should(arg).be.eql(requestObject.data.body.token);
+        return q(stubToken);
+      };
+
+      kuzzle.funnel.auth.checkToken(requestObject)
+        .then(response => {
+          should(response).be.instanceof(ResponseObject);
+          should(response.data.body.valid).be.true();
+          should(response.data.body.state).be.undefined();
+          should(response.data.body.expiresAt).be.eql(stubToken.expiresAt);
+          done();
+        })
+        .catch(err => done(err));
+    });
+
+    it('should return a valid response if the token is not valid', function (done) {
+      kuzzle.repositories.token.verifyToken = arg => {
+        should(arg).be.eql(requestObject.data.body.token);
+        return q.reject({status: 401, message: 'foobar'});
+      };
+
+      kuzzle.funnel.auth.checkToken(requestObject)
+        .then(response => {
+          should(response).be.instanceof(ResponseObject);
+          should(response.data.body.valid).be.false();
+          should(response.data.body.state).be.eql('foobar');
+          should(response.data.body.expiresAt).be.undefined();
+          done();
+        })
+        .catch(err => done(err));
+    });
+
+    it('should return a rejected promise if an error occurs', function () {
+      kuzzle.repositories.token.verifyToken = arg => {
+        should(arg).be.eql(requestObject.data.body.token);
+        return q.reject({status: 500});
+      };
+
+      return should(kuzzle.funnel.auth.checkToken(requestObject)).be.rejected();
     });
   });
 });
