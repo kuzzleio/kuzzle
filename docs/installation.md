@@ -2,24 +2,37 @@
 
 ## Table of Contents
 
-* [Using the all-in-one Docker recipe](#using-the-all-in-one-docker-recipe)
-  * [Reset Kuzzle with Docker recipe](#reset-kuzzle-with-docker-recipe)
-  * [Reset Kuzzle and insert sorme fixtures with Docker recipe](#reset-kuzzle-and-insert-sorme-fixtures-with-docker-recipe)
-  * [Initialize Kuzzle mapping with Docker recipe](#initialize-kuzzle-mapping-with-docker-recipe)
-  * [Useful tips](#useful-tips)
-    * [Updating kuzzle's containers](#updating-kuzzles-containers)
-    * [Updating kuzzle's dependencies](#updating-kuzzles-dependencies)
-* [Using Vagrant](#using-vagrant)
-* [From source or NPM](#from-source-or-npm)
-* [Manual install](#manual-install)
-  * [Default](#default)
-  * [Change external services hosts](#change-external-services-hosts)
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+
+
+- [Using the all-in-one Docker recipe](#using-the-all-in-one-docker-recipe)
+  - [Prerequisites](#prerequisites)
+  - [Reset Kuzzle with Docker recipe](#reset-kuzzle-with-docker-recipe)
+  - [Reset Kuzzle and insert sorme fixtures with Docker recipe](#reset-kuzzle-and-insert-sorme-fixtures-with-docker-recipe)
+  - [Initialize Kuzzle mapping with Docker recipe](#initialize-kuzzle-mapping-with-docker-recipe)
+  - [Useful tips](#useful-tips)
+    - [Updating kuzzle's containers](#updating-kuzzles-containers)
+    - [Updating kuzzle's dependencies](#updating-kuzzles-dependencies)
+- [Using Vagrant](#using-vagrant)
+- [Manual install](#manual-install)
+  - [Prerequisites](#prerequisites-1)
+  - [Step one](#step-one)
+  - [Step two](#step-two)
+  - [Step three](#step-three)
+  - [Finally](#finally)
+  - [All steps in one](#all-steps-in-one)
+  - [Going further](#going-further)
+    - [Command Line Interface](#command-line-interface)
+    - [Change external services hosts or ports](#change-external-services-hosts-or-ports)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 ## Using the all-in-one Docker recipe
 
 If you are running Docker and just want to get your own Kuzzle running, you can use the provided docker-compose file.
 
-Prerequisites:
+### Prerequisites
 
 * [Docker](https://docs.docker.com/installation/#installation)
 * [Docker Compose](https://docs.docker.com/compose/install/)
@@ -136,7 +149,7 @@ From the root directory:
 
 **Note:** we will assume that you want to launch Kuzzle and other services on the same host (localhost), but you can, of course, host kuzzle and any of its services on different hosts.
 
-### Prerequisites:
+### Prerequisites
 
 * A service [Elasticsearch](https://www.elastic.co/products/elasticsearch) running on localhost:9200
 * A service [Redis](http://redis.io/) running on localhost:6379
