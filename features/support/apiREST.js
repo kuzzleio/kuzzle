@@ -455,4 +455,12 @@ ApiREST.prototype.putUser = function (id, body) {
   });
 };
 
+ApiREST.prototype.checkToken = function (token) {
+  return this.callApi({
+    url: this.apiPath('_checkToken'),
+    method: 'POST',
+    json: {token}
+  });
+};
+
 module.exports = ApiREST;

@@ -569,4 +569,12 @@ ApiRT.prototype.putUser = function (id, body) {
   });
 };
 
+ApiRT.prototype.checkToken = function (token) {
+  return this.send({
+    controller: 'auth',
+    action: 'checkToken',
+    body: {token}
+  });
+};
+
 module.exports = ApiRT;
