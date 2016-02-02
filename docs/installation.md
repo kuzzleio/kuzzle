@@ -157,18 +157,18 @@ From the root directory:
 
 ### Step one
 
-Retrieve the Kuzzle source code from the [GitHub repo](https://github.com/kuzzleio/kuzzle.git) by doing
+Retrieve the Kuzzle source code from the [GitHub repo](https://github.com/kuzzleio/kuzzle.git):
 
     $ git clone https://github.com/kuzzleio/kuzzle.git
     $ cd kuzzle
 
-then install the dependencies by doing:
+then install the dependencies:
 
     $ npm install
 
 ### Step two
 
-Configure your environment. Kuzzle has been designed to be launched into a container, so the default hosts used to access to the ElasticSearch and Redis servers needs to be tweaked to hit the right hosts. If everything is hosted on localhost, you can use environment variable to overwrite default ones:
+Configure your environment. Kuzzle has been designed to be launched from inside a container, so the default hosts used to access to the ElasticSearch and Redis servers needs to be tweaked to hit the right hosts. If everything is hosted on localhost, you can use environment variable to overwrite default ones:
 
     $ export READ_ENGINE_HOST=localhost:9200
     $ export WRITE_ENGINE_HOST=localhost:9200
@@ -178,16 +178,24 @@ Configure your environment. Kuzzle has been designed to be launched into a conta
 
 ### Step three
 
-Install the default plugins, by doing:
+Install the default plugins:
 
     $ ./bin/kuzzle.js install
 
 
 ### Finally
 
-Start Kuzzle with default options (one server and one worker) by doing
+Start a server instance:
 
-    $ ./bin/kuzzle.js start
+    $ ./bin/kuzzle.js start --server
+
+And then as many worker instances as you want. At least 1 worker is required:
+
+    $ bin/kuzzle.js start --worker
+
+For more information, you can execute:
+
+    $ bin/kuzzle.js start --help
 
 ### All steps in one
 
@@ -199,7 +207,8 @@ Start Kuzzle with default options (one server and one worker) by doing
     $ export CACHE_HOST=localhost
     $ export CACHE_PORT=6379
     $ ./bin/kuzzle.js install
-    $ ./bin/kuzzle.js start
+    $ ./bin/kuzzle.js start --server
+    $ ./bin/kuzzle.js start --worker
 
 ### Going further
 
