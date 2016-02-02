@@ -129,7 +129,7 @@ module.exports = function () {
           real: 'David Robert Jones'
         },
         profile: 'admin',
-        password: '30b64e1a26bc4f6e40d1a4b0388a58b7821afa1f'
+        password: 'testpwd'
       },
       user2: {
         name: {
@@ -137,7 +137,8 @@ module.exports = function () {
           last: 'Wozniak'
         },
         hobby: 'Segway Polo',
-        profile: this.idPrefix + 'profile2'
+        profile: this.idPrefix + 'profile2',
+        password: 'testpwd2'
       },
       unexistingprofile: {
         name: 'John Doe',
