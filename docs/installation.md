@@ -109,7 +109,7 @@ Remember that the default mapping must be in the Docker container scope !
 
 You can, of course, use all those option alltogether like:
 
-    LIKE_A_VIRGIN=1 FIXTURES=fixtures/file.json DEFAULT_MAPPING=mapping/file.json docker-compose up
+    $ LIKE_A_VIRGIN=1 FIXTURES=fixtures/file.json DEFAULT_MAPPING=mapping/file.json docker-compose up
 
 ### Useful tips
 
