@@ -38,13 +38,16 @@ var apiSteps = function () {
 
     this.api.logout(this.currentUser.token)
       .then(body => {
+        delete this.currentUser;
         if (body.error) {
           return callback(new Error(body.error.message));
         }
         callback();
       })
-      .catch(error => callback(error))
-      .finally(() => delete this.currentUser);
+      .catch(error => {
+        delete this.currentUser;
+        callback(error);
+      });
   });
 
   this.Then(/^I check the JWT Token$/, function (callback) {
