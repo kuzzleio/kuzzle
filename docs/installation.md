@@ -153,7 +153,7 @@ From the root directory:
 
 * A service [Elasticsearch](https://www.elastic.co/products/elasticsearch) running on localhost:9200
 * A service [Redis](http://redis.io/) running on localhost:6379
-* A properly installed [nodeJs](https://nodejs.org/en/download/) version 4 or upper
+* A properly installed [nodeJs](https://nodejs.org/en/download/package-manager/) **version 4** or upper
 
 ### Step one
 
