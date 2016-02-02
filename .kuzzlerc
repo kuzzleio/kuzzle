@@ -66,6 +66,7 @@
         "*": {
         "collections": {
           "_canCreate": true,
+          "_canDelete": true,
           "*": {
             "controllers": {
               "*": {
@@ -80,6 +81,7 @@
         "%kuzzle": {
         "collections": {
           "_canCreate": true,
+          "_canDelete": true,
           "*": {
             "controllers": {
               "*": {
@@ -101,6 +103,7 @@
         "*": {
           "collections": {
             "_canCreate": true,
+            "_canDelete": true,
             "*": {
               "controllers": {
                 "*": {
@@ -115,6 +118,7 @@
         "%kuzzle": {
         "collections": {
           "_canCreate": true,
+          "_canDelete": true,
           "*": {
             "controllers": {
               "*": {
