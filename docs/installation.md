@@ -1,5 +1,7 @@
 # Installation
 
+If you want to run Kuzzle on Windows™, read the [installation-windows.md file](./installation-windows.md)
+
 ## Table of Contents
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
@@ -182,14 +184,13 @@ Install the default plugins:
 
     $ ./bin/kuzzle.js install
 
-
 ### Finally
 
 Start a server instance:
 
     $ ./bin/kuzzle.js start --server
 
-And then as many worker instances as you want. At least 1 worker is required:
+And then start as many worker instances as you want. At least one worker is required:
 
     $ bin/kuzzle.js start --worker
 
