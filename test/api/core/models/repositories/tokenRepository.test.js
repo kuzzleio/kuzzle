@@ -128,12 +128,10 @@ beforeEach(function (done) {
   kuzzle.repositories.user = mockUserRepository;
 
 
-  kuzzle.hotelClerk = {
-    tokenizedConnectionsController: {
-      add: function (token, context) {},
-      expire: function (token) {},
-      checkTokensValidity: function () {}
-    }
+  kuzzle.tokenManager = {
+    add: function (token, context) {},
+    expire: function (token) {},
+    checkTokensValidity: function () {}
   };
 
   done();
@@ -428,13 +426,13 @@ describe('Test: repositories/tokenRepository', function () {
         });
     });
 
-    it('should expire token in TokenizedConnectionsController', (done) => {
+    it('should expire token in the token manager', (done) => {
       var
-        tokenizedConnectionsControllerExpired = false,
+        tokenManagerExpired = false,
         user = new User();
 
-      kuzzle.hotelClerk.tokenizedConnectionsController.expire = function () {
-        tokenizedConnectionsControllerExpired = true;
+      kuzzle.tokenManager.expire = function () {
+        tokenManagerExpired = true;
       };
       user._id = 'userInCache';
 
@@ -443,7 +441,7 @@ describe('Test: repositories/tokenRepository', function () {
           return tokenRepository.expire(token);
         })
         .then(() => {
-          should(tokenizedConnectionsControllerExpired).be.exactly(true);
+          should(tokenManagerExpired).be.exactly(true);
           done();
         })
         .catch(function (error) {

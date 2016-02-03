@@ -154,7 +154,7 @@ describe('Test the auth controller', function () {
         });
     });
 
-    it('should register token in tokenizedConnectionsController when a connexion id is set', function (done) {
+    it('should register token in the token manager when a connexion id is set', function (done) {
       context = {
         connection: {
           id: 'banana'
@@ -163,7 +163,7 @@ describe('Test the auth controller', function () {
 
       requestObject.data.body.expiresIn = '1m';
 
-      kuzzle.hotelClerk.tokenizedConnectionsController.add = function(token, context) {
+      kuzzle.tokenManager.add = function(token) {
         should(token).be.an.instanceOf(Token);
         should(token.ttl).be.exactly(60000);
         should(token.expiresAt).be.approximately(Date.now() + token.ttl, 30);
