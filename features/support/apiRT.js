@@ -604,4 +604,12 @@ ApiRT.prototype.createUser = function (body, id) {
   return this.send(msg);
 };
 
+ApiRT.prototype.checkToken = function (token) {
+  return this.send({
+    controller: 'auth',
+    action: 'checkToken',
+    body: {token}
+  });
+};
+
 module.exports = ApiRT;

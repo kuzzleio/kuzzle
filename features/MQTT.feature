@@ -248,8 +248,12 @@ Feature: Test MQTT API
     Given I create a user "user1" with id "user1-id"
     When I log in as user1-id:testpwd
     Then I write the document
+    Then I check the JWT Token
+    And The token is valid
     Then I logout
     Then I can't write the document
+    Then I check the JWT Token
+    And The token is invalid
 
   @usingMQTT @cleanSecurity
   Scenario: Create/get/search/update/delete role
