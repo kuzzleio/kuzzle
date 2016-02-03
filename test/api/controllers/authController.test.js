@@ -8,7 +8,6 @@ var
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
   ResponseObject = require.main.require('lib/api/core/models/responseObject'),
-  InternalError = require.main.require('lib/api/core/errors/internalError'),
   Token = require.main.require('lib/api/core/models/security/token'),
   Profile = require.main.require('lib/api/core/models/security/profile'),
   User = require.main.require('lib/api/core/models/security/user'),
@@ -52,7 +51,7 @@ MockupWrapper = function(MockupReturn) {
   this.authenticate = function(request, strategy) {
     var deferred = q.defer();
     if (MockupReturn === 'resolve') {
-      deferred.resolve({_id: request.body.username});
+      deferred.resolve({_id: request.query.username});
     }
     else {
       deferred.reject(new Error('Mockup Wrapper Error'));

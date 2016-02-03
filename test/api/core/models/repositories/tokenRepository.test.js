@@ -369,7 +369,7 @@ describe('Test: repositories/tokenRepository', function () {
       tokenRepository.generateToken(user, context)
         .catch(function (error) {
           should(error).be.an.instanceOf(InternalError);
-          should(error.message).be.exactly('Error while saving token');
+          should(error.message).be.exactly('Unable to generate token for unknown user');
           done();
         });
     });

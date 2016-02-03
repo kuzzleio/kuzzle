@@ -126,7 +126,7 @@ describe('Test: routerController.executeFromRest', function () {
   it('should respond with a HTTP 200 message in case of success', function (done) {
     var
       params = { action: 'create', controller: 'write' },
-      data = {headers: {'content-type': 'application/json'}, body: {resolve: true}, params: {index: '%test', collection: 'foobar'}};
+      data = {headers: {'content-type': 'application/json'}, body: {resolve: true}, params: {index: '%test', collection: 'foobar'}, originalUrl: 'http://host.url'};
 
     mockupResponse.init();
     executeFromRest.call(kuzzle, params, data, mockupResponse);
@@ -161,7 +161,7 @@ describe('Test: routerController.executeFromRest', function () {
   it('should respond with a HTTP 200 message in case of success when specifying charset', function (done) {
     var
       params = { action: 'create', controller: 'write' },
-      data = {headers: {'content-type': 'application/json; charset=utf-8'}, body: {resolve: true}, params: {index: '%test', collection: 'foobar'}};
+      data = {headers: {'content-type': 'application/json; charset=utf-8'}, body: {resolve: true}, params: {index: '%test', collection: 'foobar'}, originalUrl: 'http://host.url'};
 
     mockupResponse.init();
     executeFromRest.call(kuzzle, params, data, mockupResponse);
@@ -201,7 +201,8 @@ describe('Test: routerController.executeFromRest', function () {
         body: {
           resolve: true
         },
-        params: {index: '%test', ollection: 'foobar'}
+        params: {index: '%test', ollection: 'foobar'},
+        originalUrl: 'http://host.url'
     };
 
     mockupResponse.init();
@@ -238,7 +239,7 @@ describe('Test: routerController.executeFromRest', function () {
   it('should respond with a HTTP 500 message in case of error', function (done) {
     var
       callParams = { action: 'create', controller: 'write' },
-      data = {headers: {'content-type': 'application/json'}, body: {resolve: false}, params: {index: '%test', collection: 'foobar'}};
+      data = {headers: {'content-type': 'application/json'}, body: {resolve: false}, params: {index: '%test', collection: 'foobar'}, originalUrl: 'http://host.url'};
 
     mockupResponse.init();
     executeFromRest.call(kuzzle, callParams, data, mockupResponse);
@@ -264,7 +265,7 @@ describe('Test: routerController.executeFromRest', function () {
   it('should use the request content instead of the metadata to complete missing information', function (done) {
     var
       callParams = {controller: 'write' },
-      data = {headers: {'content-type': 'application/json'}, body: {resolve: true}, params: {index: '%test', collection: 'foobar',  action: 'create'}};
+      data = {headers: {'content-type': 'application/json'}, body: {resolve: true}, params: {index: '%test', collection: 'foobar',  action: 'create'}, originalUrl: 'http://host.url'};
 
     mockupResponse.init();
     executeFromRest.call(kuzzle, callParams, data, mockupResponse);
@@ -290,7 +291,7 @@ describe('Test: routerController.executeFromRest', function () {
   it('should copy any found "id" identifier', function (done) {
     var
       callParams = {controller: 'write' },
-      data = {headers: {'content-type': 'application/json'}, body: {resolve: true}, params: {index: '%test', collection: 'foobar',  action: 'create', id: 'fakeid'}};
+      data = {headers: {'content-type': 'application/json'}, body: {resolve: true}, params: {index: '%test', collection: 'foobar',  action: 'create', id: 'fakeid'}, originalUrl: 'http://host.url'};
 
     mockupResponse.init();
     executeFromRest.call(kuzzle, callParams, data, mockupResponse);
