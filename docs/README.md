@@ -1,6 +1,6 @@
 # Installation
 
-see [installation documentation](installation.md)
+See [installation documentation](installation.md)
 
 # API Specifications
 
