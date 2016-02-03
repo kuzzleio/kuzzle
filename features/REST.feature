@@ -130,7 +130,7 @@ Feature: Test REST API
   @usingREST @cleanSecurity
   Scenario: login user
     Given I create a user "user1" with id "user1-id"
-    When I log in as user1-id:testpwd
+    When I log in as user1-id:testpwd expiring in 1h
     Then I write the document
     Then I check the JWT Token
     And The token is valid
@@ -194,7 +194,7 @@ Feature: Test REST API
 
   @usingREST @cleanSecurity
   Scenario: user crudl
-    And I create a new role "role1" with id "role1"
+    When I create a new role "role1" with id "role1"
     And I create a new role "role2" with id "role2"
     And I create a new profile "profile2" with id "profile2"
     And I create a user "user1" with id "user1-id"
@@ -204,8 +204,7 @@ Feature: Test REST API
     Then I search for {"regexp":{"_uid":"users.#prefix#.*"}} and find 2 users
     Then I delete the user "user2-id"
     Then I search for {"regexp":{"_uid":"users.#prefix#.*"}} and find 1 users matching {"_id":"#prefix#user1-id","_source":{"name":{"first":"David","last":"Bowie"}}}
-    When I log in as user1-id:testpwd
+    When I log in as user1-id:testpwd expiring in 1h
     Then I am getting the current user, which matches {"_id":"#prefix#user1-id","_source":{"profile":{"_id":"admin"}}}
     Then I log out
     Then I am getting the current user, which matches {"_id":-1,"_source":{"profile":{"_id":"anonymous"}}}
-

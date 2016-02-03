@@ -91,6 +91,10 @@ function setAPI (world, apiName) {
 }
 
 function cleanSecurity (callback) {
+  if (this.currentUser) {
+    delete this.currentUser;
+  }
+
   this.api.listIndexes()
     .then(response => {
       if (response.result.indexes.indexOf('%kuzzle') === -1) {

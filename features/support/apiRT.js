@@ -402,7 +402,8 @@ ApiRT.prototype.login = function (strategy, credentials) {
       body: {
         strategy: strategy,
         username: credentials.username,
-        password: credentials.password
+        password: credentials.password,
+        expiresIn: credentials.expiresIn
       }
     };
 
