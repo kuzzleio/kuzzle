@@ -21,6 +21,7 @@ var apiSteps = function () {
           this.currentUser = {};
         }
 
+        this.currentToken = { jwt: body.result.jwt };
         this.currentUser.token = body.result.jwt;
         callback();
       })
@@ -35,13 +36,11 @@ var apiSteps = function () {
       return false;
     }
 
-    this.api.logout(this.jwtToken)
+    this.api.logout(this.currentUser.token)
       .then(body => {
         delete this.currentUser;
-
         if (body.error) {
-          callback(new Error(body.error.message));
-          return false;
+          return callback(new Error(body.error.message));
         }
         callback();
       })
@@ -49,6 +48,35 @@ var apiSteps = function () {
         delete this.currentUser;
         callback(error);
       });
+  });
+
+  this.Then(/^I check the JWT Token$/, function (callback) {
+    if (!this.currentToken || !this.currentToken.jwt) {
+      return callback(new Error('Cannot retrieve the JWT token'));
+    }
+
+    this.api.checkToken(this.currentToken.jwt)
+      .then(body => {
+        if (body.error) {
+          return callback(new Error(body.error.message));
+        }
+
+        this.currentToken.tokenValidity = body.result;
+        callback();
+      })
+      .catch(err => callback(err));
+  });
+
+  this.Then(/^The token is (.*?)$/, function (state, callback) {
+    if (!this.currentToken || !this.currentToken.tokenValidity) {
+      return callback(new Error('Cannot check the JWT token validity'));
+    }
+
+    if (this.currentToken.tokenValidity.valid === (state === 'valid')) {
+      return callback();
+    }
+
+    callback(new Error('Expected token to be ' + state + ', got: ' + JSON.stringify(this.currentToken.tokenValidity)));
   });
 };
 

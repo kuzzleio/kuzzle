@@ -250,8 +250,12 @@ Feature: Test websocket API
     Given I create a user "user1" with id "user1-id"
     When I log in as user1-id:testpwd
     Then I write the document
+    Then I check the JWT Token
+    And The token is valid
     Then I logout
     Then I can't write the document
+    Then I check the JWT Token
+    And The token is invalid
 
   @usingWebsocket @cleanSecurity
   Scenario: Create/get/search/update/delete role
@@ -309,7 +313,7 @@ Feature: Test websocket API
     And I create a new role "role1" with id "role1"
     And I create a new role "role2" with id "role2"
     And I create a new profile "profile2" with id "profile2"
-    And I create a new user "user1" with id "user1-id"
+    And I create a user "user1" with id "user1-id"
     And I create a user "user2" with id "user2-id"
     And I can't create a new user "user2" with id "user1-id"
     Then I am able to get the user "user1-id" matching {"_id":"#prefix#user1-id","_source":{"profile":{"_id":"admin","roles":[{"_id":"admin"}]}}}
