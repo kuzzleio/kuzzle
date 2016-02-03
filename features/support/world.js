@@ -129,7 +129,7 @@ module.exports = function () {
           real: 'David Robert Jones'
         },
         profile: 'admin',
-        password: 'testpwd'
+        password: '30b64e1a26bc4f6e40d1a4b0388a58b7821afa1f'
       },
       user2: {
         name: {
