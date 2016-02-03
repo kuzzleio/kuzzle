@@ -10,7 +10,7 @@ describe('Test: token manager core component', function (done) {
     kuzzle,
     tokenManager;
 
-  before(function () {
+  before(function (done) {
     kuzzle = new Kuzzle();
     kuzzle.start(params, {dummy: true})
       .then(() => {
