@@ -137,7 +137,8 @@ module.exports = function () {
           last: 'Wozniak'
         },
         hobby: 'Segway Polo',
-        profile: this.idPrefix + 'profile2'
+        profile: this.idPrefix + 'profile2',
+        password: 'testpwd2'
       },
       unexistingprofile: {
         name: 'John Doe',

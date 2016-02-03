@@ -497,4 +497,12 @@ ApiREST.prototype.createUser = function (body, id) {
   return this.callApi(options);
 };
 
+ApiREST.prototype.checkToken = function (token) {
+  return this.callApi({
+    url: this.apiPath('_checkToken'),
+    method: 'POST',
+    json: {token}
+  });
+};
+
 module.exports = ApiREST;
