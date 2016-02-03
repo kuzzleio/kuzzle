@@ -1,6 +1,6 @@
 var apiSteps = function () {
-  this.When(/^I log in as (.*?):(.*?)$/, function (login, password, callback) {
-    this.api.login('local', {username: this.idPrefix + login, password: password})
+  this.When(/^I log in as (.*?):(.*?) expiring in (.*?)$/, function (login, password, expiration, callback) {
+    this.api.login('local', {username: this.idPrefix + login, password: password, expiresIn: expiration})
       .then(body => {
         if (body.error) {
           callback(new Error(body.error.message));

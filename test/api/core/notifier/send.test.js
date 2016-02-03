@@ -42,4 +42,30 @@ describe('Test: notifier.send', function () {
 
     (Notifier.__get__('send')).call(kuzzle, room, response);
   });
+
+  it('should emit a protocol:notify hook when a connection ID is provided', function (done) {
+    var
+      room = 'foo',
+      response = 'bar',
+      channel = 'stubChannel',
+      connectionId = 'Brian Kernighan';
+
+    this.timeout(50);
+
+    kuzzle.hotelClerk.getChannels = function () { return [channel]; };
+    kuzzle.services.list.mqBroker.addExchange = function (replyTopic, msg) {
+      should(replyTopic).be.exactly(channel);
+      should(msg).be.exactly(response);
+    };
+
+    kuzzle.once('protocol:notify', (data) => {
+      should(data).be.an.Object();
+      should(data.channel).be.eql(channel);
+      should(data.payload).be.eql(response);
+      should(data.id).be.eql(connectionId);
+      done();
+    });
+
+    (Notifier.__get__('send')).call(kuzzle, room, response, connectionId);
+  });
 });
