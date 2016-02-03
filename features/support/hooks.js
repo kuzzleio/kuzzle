@@ -76,7 +76,6 @@ var myHooks = function () {
   this.After('@cleanSecurity', function (scenario, callback) {
     cleanSecurity.call(this, callback);
   });
-
 };
 
 module.exports = myHooks;

@@ -198,9 +198,9 @@ describe('Test: security controller - users', function () {
     });
   });
 
-  describe('#putUser', function () {
+  describe('#createOrReplaceUser', function () {
     it('should return a valid responseObject', done => {
-      kuzzle.funnel.security.putUser(new RequestObject({
+      kuzzle.funnel.security.createOrReplaceUser(new RequestObject({
         body: {
           _id: 'test',
           profile: 'admin'
@@ -216,7 +216,7 @@ describe('Test: security controller - users', function () {
     });
 
     it('should reject the promise if no profile is given', () => {
-      return should(kuzzle.funnel.security.putUser(new RequestObject({
+      return should(kuzzle.funnel.security.createOrReplaceUser(new RequestObject({
         _id: 'test'
       })))
         .be.rejectedWith(BadRequestError);
