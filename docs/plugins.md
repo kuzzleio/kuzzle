@@ -342,7 +342,7 @@ Messages emanating from Kuzzle are emitted using the following hooks. Protocol p
 |------|----------------|-----------------------------|
 | ``protocol:joinChannel`` | `{channel, id}`| Tells protocol plugins that the connection `id` subscribed to the channel `channel` |
 | ``protocol:leaveChannel`` | `{channel, id}` | Tells protocol plugins that the connection `id` left the channel `channel` |
-| ``protocol:notify`` | `{channel, id, payload}` | Asks the protocol plugins to emit a data `payload` to the connection `id`, on the channel `channel` |
+| ``protocol:notify`` | `{channel, id, payload}` | Asks protocol plugins to emit a data `payload` to the connection `id`, on the channel `channel` |
 | ``protocol:broadcast`` | `{channel, payload}` | Asks protocol plugins to emit a data `payload` to clients connected to the channel `channel` |
 
 *For more information about channels, see our [API Documentation](http://kuzzleio.github.io/kuzzle-api-documentation/#on)*
