@@ -5,14 +5,14 @@ var
   RealTimeResponseObject = require.main.require('lib/api/core/models/realTimeResponseObject'),
   TokenManager = require.main.require('lib/api/core/auth/tokenManager');
 
-describe('Test: token manager core component', function () {
+describe('Test: token manager core component', function (done) {
   var
     kuzzle,
     tokenManager;
 
   before(function () {
     kuzzle = new Kuzzle();
-    return kuzzle.start(params, {dummy: true})
+    kuzzle.start(params, {dummy: true})
       .then(() => {
         kuzzle.hotelClerk.customers = {
           'foobar': {
@@ -21,7 +21,9 @@ describe('Test: token manager core component', function () {
             'room3': {}
           }
         };
-      });
+        done();
+      })
+      .catch(err => done(err));
   });
 
   beforeEach(function () {
@@ -30,13 +32,13 @@ describe('Test: token manager core component', function () {
 
   describe('#expire', function () {
     it('should force a token to expire when called', function () {
-      tokenManager.tokenizedConnections['foobar'] = {
+      tokenManager.tokenizedConnections.foobar = {
         expiresAt: Date.now() + 1000000
       };
 
       tokenManager.expire({_id: 'foobar'});
 
-      should(tokenManager.tokenizedConnections['foobar'].expiresAt).be.belowOrEqual(Date.now());
+      should(tokenManager.tokenizedConnections.foobar.expiresAt).be.belowOrEqual(Date.now());
     });
   });
 
