@@ -54,6 +54,8 @@ MockupWrapper = function(MockupReturn) {
     var deferred = q.defer();
     if (MockupReturn === 'resolve') {
       deferred.resolve({_id: request.query.username});
+    } else if (MockupReturn === 'oauth') {
+      deferred.resolve({headers: {Location: 'http://github.com'}});
     }
     else {
       deferred.reject(new Error('Mockup Wrapper Error'));
@@ -106,6 +108,21 @@ describe('Test the auth controller', function () {
         .then(function(response) {
           var decodedToken = jwt.verify(response.data.body.jwt, params.jsonWebToken.secret);
           should(decodedToken._id).be.equal('jdoe');
+          done();
+        })
+        .catch(function (error) {
+          done(error);
+        });
+    });
+
+    it('should resolve to a redirect url', function(done) {
+      this.timeout(50);
+
+      kuzzle.funnel.auth.passport = new MockupWrapper('oauth');
+      kuzzle.funnel.auth.login(requestObject, {})
+        .then(function(response) {
+          console.log(response);
+          should(response.data.body.headers.Location).be.equal('http://github.com');
           done();
         })
         .catch(function (error) {
