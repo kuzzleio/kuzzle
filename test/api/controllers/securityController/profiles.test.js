@@ -5,7 +5,8 @@ var
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   BadRequestError = require.main.require('lib/api/core/errors/badRequestError'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
-  ResponseObject = require.main.require('lib/api/core/models/responseObject');
+  ResponseObject = require.main.require('lib/api/core/models/responseObject'),
+  NotFoundError = require.main.require('lib/api/core/errors/notFoundError');
 
 describe('Test: security controller - profiles', function () {
   var
@@ -26,6 +27,10 @@ describe('Test: security controller - profiles', function () {
           });
         };
         kuzzle.repositories.profile.loadProfile = id => {
+          if (id === 'badId') {
+            return q(null);
+          }
+
           return q({
             _index: kuzzle.config.internalIndex,
             _type: 'profiles',
@@ -36,7 +41,7 @@ describe('Test: security controller - profiles', function () {
             }]
           });
         };
-        kuzzle.repositories.profile.searchProfiles = requestObject => {
+        kuzzle.repositories.profile.searchProfiles = () => {
           return q([{
             _id: 'test',
             roles: [
@@ -108,6 +113,10 @@ describe('Test: security controller - profiles', function () {
 
     it('should reject to an error on a getProfile call without id', () => {
       return should(kuzzle.funnel.security.getProfile(new RequestObject({body: {_id: ''}}))).be.rejectedWith(BadRequestError);
+    });
+
+    it('should reject NotFoundError on a getProfile call with a bad id', () => {
+      return should(kuzzle.funnel.security.getProfile(new RequestObject({body: {_id: 'badId'}}))).be.rejectedWith(NotFoundError);
     });
   });
 
