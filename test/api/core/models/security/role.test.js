@@ -191,8 +191,8 @@ describe('Test: security/roleTest', function () {
         };
 
       roleAllow.indexes = {
-        '_canDelete': true,
         '*': {
+          '_canDelete': true,
           collections: {
             '*': {
               controllers: {
@@ -208,8 +208,8 @@ describe('Test: security/roleTest', function () {
       };
 
       roleDeny.indexes = {
-        '_canDelete': false,
         '*': {
+          '_canDelete': false,
           collections: {
             '*': {
               controllers: {
@@ -240,8 +240,8 @@ describe('Test: security/roleTest', function () {
       roleAllow.indexes = {
         '*': {
           collections: {
-            '_canDelete': true,
             '*': {
+              '_canDelete': true,
               controllers: {
                 '*': {
                   actions: {
@@ -257,8 +257,8 @@ describe('Test: security/roleTest', function () {
       roleDeny.indexes = {
         '*': {
           collections: {
-            '_canDelete': false,
             '*': {
+              '_canDelete': false,
               controllers: {
                 '*': {
                   actions: {

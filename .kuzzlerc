@@ -62,12 +62,12 @@
       "_id": "admin",
       "indexes": {
         "_canCreate": true,
-        "_canDelete": true,
         "*": {
+        "_canDelete": true,
         "collections": {
           "_canCreate": true,
-          "_canDelete": true,
           "*": {
+            "_canDelete": true,
             "controllers": {
               "*": {
                 "actions": {
@@ -81,8 +81,8 @@
         "%kuzzle": {
         "collections": {
           "_canCreate": true,
-          "_canDelete": true,
           "*": {
+          "_canDelete": true,
             "controllers": {
               "*": {
                 "actions": {
@@ -99,8 +99,8 @@
       "_id": "guest",
       "indexes": {
         "_canCreate": true,
-        "_canDelete": true,
         "*": {
+        "_canDelete": true,
           "collections": {
             "_canCreate": true,
             "_canDelete": true,
@@ -118,8 +118,8 @@
         "%kuzzle": {
         "collections": {
           "_canCreate": true,
-          "_canDelete": true,
           "*": {
+            "_canDelete": true,
             "controllers": {
               "*": {
                 "actions": {
