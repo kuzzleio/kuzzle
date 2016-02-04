@@ -30,7 +30,10 @@ describe('Test: security controller - profiles', function () {
             _index: kuzzle.config.internalIndex,
             _type: 'profiles',
             _id: id,
-            _source: {}
+            roles: [{
+              _id: 'role1',
+              indexes: {}
+            }]
           });
         };
         kuzzle.repositories.profile.searchProfiles = requestObject => {

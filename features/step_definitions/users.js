@@ -35,12 +35,10 @@ module.exports = function () {
       });
   });
 
-  this.Then(/^I am able to get the (unhydrated )?user "(.*?)"(?: matching {(.*)})?$/, function (unhydrated, id, match, callback) {
-    var hydrate = unhydrated ? false : true;
-
+  this.Then(/^I am able to get the user "(.*?)"(?: matching {(.*)})?$/, function (id, match, callback) {
     id = this.idPrefix + id;
 
-    this.api.getUser(id, hydrate)
+    this.api.getUser(id)
       .then(body => {
         var
           matchObject;

@@ -10,6 +10,7 @@ var
   ResponseObject = require.main.require('lib/api/core/models/responseObject'),
   BadRequestError = require.main.require('lib/api/core/errors/badRequestError'),
   InternalError = require.main.require('lib/api/core/errors/internalError'),
+  NotFoundError = require.main.require('lib/api/core/errors/notFoundError'),
   Token = require.main.require('lib/api/core/models/security/token'),
   Profile = require.main.require('lib/api/core/models/security/profile'),
   User = require.main.require('lib/api/core/models/security/user'),
@@ -121,7 +122,6 @@ describe('Test the auth controller', function () {
       kuzzle.funnel.auth.passport = new MockupWrapper('oauth');
       kuzzle.funnel.auth.login(requestObject, {})
         .then(function(response) {
-          console.log(response);
           should(response.data.body.headers.Location).be.equal('http://github.com');
           done();
         })
@@ -337,8 +337,8 @@ describe('Test the auth controller', function () {
       })
         .then(response => {
           should(response.data.body._id).be.exactly('admin');
-          should(response.data.body._source).be.an.instanceOf(User);
-          should(response.data.body._source.profile).be.an.instanceOf(Profile);
+          should(response.data.body._source).not.be.empty().Object();
+          should(response.data.body._source.profile).not.be.empty().Object();
           should(response.data.body._source.profile._id).be.exactly('admin');
 
           done();
@@ -346,36 +346,14 @@ describe('Test the auth controller', function () {
         .catch(error => { done(error); });
     });
 
-    it('should return a falsey response if the current user is unknown', done => {
-      kuzzle.funnel.auth.getCurrentUser(new RequestObject({
+    it('should return a falsey response if the current user is unknown', () => {
+      var promise = kuzzle.funnel.auth.getCurrentUser(new RequestObject({
         body: {}
       }), {
         token: { user: { _id: 'Carmen Sandiego' } }
-      })
-        .then(response => {
-          should(response.data.body._id).be.undefined();
-          should(response.data.body.found).be.false();
-          done();
-        })
-        .catch(error => { done(error); });
-    });
+      });
 
-    it('should return a non-hydrated response if hydrate===false', done => {
-      kuzzle.funnel.auth.getCurrentUser(new RequestObject({
-        body: {hydrate: false}
-      }), {
-        token: { user: { _id: 'admin' } }
-      })
-        .then(response => {
-          should(response.data.body._id).be.exactly('admin');
-          should(response.data.body._source).not.be.an.instanceOf(User);
-          should(response.data.body._source.profile).not.be.an.instanceOf(Profile);
-          should(response.data.body._source.name).be.a.String();
-          should(response.data.body._source.profile).be.eql('admin');
-
-          done();
-        })
-        .catch(error => { done(error); });
+      return should(promise).be.rejectedWith(NotFoundError);
     });
   });
 

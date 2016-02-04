@@ -7,7 +7,8 @@ var
   User = require.main.require('lib/api/core/models/security/user'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
   ResponseObject = require.main.require('lib/api/core/models/responseObject'),
-  BadRequestError = require.main.require('lib/api/core/errors/badRequestError');
+  BadRequestError = require.main.require('lib/api/core/errors/badRequestError'),
+  NotFoundError = require.main.require('lib/api/core/errors/notFoundError');
 
 describe('Test: security controller - users', function () {
   var
@@ -66,7 +67,7 @@ describe('Test: security controller - users', function () {
         .then(response => {
           should(response).be.an.instanceOf(ResponseObject);
           should(response.data.body._id).be.exactly(-1);
-          should(response.data.body._source.profile).be.an.instanceOf(Profile);
+          should(response.data.body._source.profile).not.be.empty().Object();
           should(response.data.body._source.profile._id).be.exactly('anonymous');
 
           done();
@@ -74,31 +75,12 @@ describe('Test: security controller - users', function () {
         .catch(error => { done(error); });
     });
 
-    it('should return an unhydrated user when asked', done => {
-      kuzzle.funnel.security.getUser(new RequestObject({
-        body: { hydrate: false, _id: 'anonymous' }
-      }))
-        .then(response => {
-          should(response.data.body._source.profile).be.a.String();
-          should(response.data.body._source.profile).be.exactly('anonymous');
-
-          done();
-
-        })
-        .catch(error => { done(error); });
-    });
-
-    it('should respond found:false when the user is not found', done => {
-      kuzzle.funnel.security.getUser(new RequestObject({
+    it('should respond found:false when the user is not found', () => {
+      var promise = kuzzle.funnel.security.getUser(new RequestObject({
         body: { _id: 'i.dont.exist' }
-      }))
-        .then(response => {
-          should(response).be.an.instanceOf(ResponseObject);
-          should(response.data.body).match({found: false});
+      }));
 
-          done();
-        })
-        .catch(error => { done(error); });
+      return should(promise).be.rejectedWith(NotFoundError);
     });
   });
 
