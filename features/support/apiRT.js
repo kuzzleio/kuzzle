@@ -402,7 +402,8 @@ ApiRT.prototype.login = function (strategy, credentials) {
       body: {
         strategy: strategy,
         username: credentials.username,
-        password: credentials.password
+        password: credentials.password,
+        expiresIn: credentials.expiresIn
       }
     };
 
@@ -602,6 +603,14 @@ ApiRT.prototype.createUser = function (body, id) {
   }
 
   return this.send(msg);
+};
+
+ApiRT.prototype.checkToken = function (token) {
+  return this.send({
+    controller: 'auth',
+    action: 'checkToken',
+    body: {token}
+  });
 };
 
 module.exports = ApiRT;

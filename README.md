@@ -79,7 +79,7 @@ This command will pop all the stack for running Kuzzle, then execute unit test a
 
 Using a Vagrant virtual machine:
 
-    $ vagrant ssh -c 'docker-compose -f docker-compose/test.yml up'
+    $ vagrant ssh -c 'cp -fR /vagrant /tmp/ && cd /tmp/vagrant && docker-compose -p kuzzle -f docker-compose/test.yml up'
 
 You may also run unit and functional tests separately, or with additional arguments.
 For more information, check the [unit testing](test/README.md) and the [functional testing](features/README.md) documentation.

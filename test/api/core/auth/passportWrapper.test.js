@@ -103,4 +103,11 @@ describe('Test the passport Wrapper', function () {
   it('should reject in case of authenticate error', function () {
     return should(passportWrapper.authenticate({body: {username: 'jdoe'}}, 'error')).be.rejectedWith('Bad Credentials');
   });
+
+  it('should reject a promise because an exception has been thrown', function() {
+    MockupStrategy.prototype.authenticate = function() {
+      throw new Error('exception');
+    };
+    return should(passportWrapper.authenticate({body: {username: 'jdoe'}}, 'mockup')).be.rejectedWith('exception');
+  });
 });

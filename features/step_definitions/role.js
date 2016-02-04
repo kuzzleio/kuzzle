@@ -4,7 +4,7 @@ var
 var apiSteps = function () {
   this.When(/^I create a new role "([^"]*)" with id "([^"]*)"$/, function (role, id, callback) {
     if (!this.roles[role]) {
-      return callback('Fixture for role ' + role + ' not exists');
+      return callback('Fixture for role ' + role + ' does not exist');
     }
     id = this.idPrefix + id;
 
@@ -113,7 +113,7 @@ var apiSteps = function () {
       body;
 
     if (!this.roles[role]) {
-      return callback('Fixture for role ' + role + ' not exists');
+      return callback('Fixture for role ' + role + ' does not exist');
     }
 
     index = Object.keys(this.roles[role].indexes)[0];
