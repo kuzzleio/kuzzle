@@ -100,7 +100,7 @@
       "indexes": {
         "_canCreate": true,
         "*": {
-        "_canDelete": true,
+          "_canDelete": true,
           "collections": {
             "_canCreate": true,
             "_canDelete": true,
@@ -116,14 +116,14 @@
           }
         },
         "%kuzzle": {
-        "collections": {
-          "_canCreate": true,
-          "*": {
-            "_canDelete": true,
-            "controllers": {
-              "*": {
-                "actions": {
-                  "*": true
+          "collections": {
+            "_canCreate": true,
+            "*": {
+              "_canDelete": true,
+              "controllers": {
+                "*": {
+                  "actions": {
+                    "*": true
                   }
                 }
               }
