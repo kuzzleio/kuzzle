@@ -75,7 +75,7 @@ describe('Test: security controller - users', function () {
         .catch(error => { done(error); });
     });
 
-    it('should reject wit NotFoundError when the user is not found', () => {
+    it('should reject with NotFoundError when the user is not found', () => {
       var promise = kuzzle.funnel.security.getUser(new RequestObject({
         body: { _id: 'i.dont.exist' }
       }));
