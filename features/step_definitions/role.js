@@ -49,17 +49,13 @@ var apiSteps = function () {
               return callbackAsync('No result provided');
             }
 
-            if (!body.result.indexes) {
-              if (not) {
-                return callbackAsync();
-              }
-
-              return callbackAsync('Role with id '+ id + ' exists');
+            if (not) {
+              return callbackAsync(`Role with id ${id} exists`);
             }
 
             if (role) {
               index = Object.keys(this.roles[role].indexes)[0];
-              if (!body.result.indexes[index]) {
+              if (!body.result._source.indexes[index]) {
                 if (not) {
                   return callbackAsync();
                 }
@@ -71,6 +67,10 @@ var apiSteps = function () {
             callbackAsync();
           })
           .catch(error => {
+            if (not) {
+              return callback();
+            }
+
             callback(error);
           });
       }, 20); // end setTimeout
@@ -132,8 +132,12 @@ var apiSteps = function () {
               return false;
             }
 
-            if (!body.result.hits || body.result.hits.length !== parseInt(count)) {
-              return callbackAsync('Expected ' + count + ' roles, get ' + body.result.hits.length);
+            if (!body.result.hits) {
+              body.result.hits = body.result.hits.filter(doc => doc._id.indexOf(this.idPrefix));
+
+              if (body.result.hits.length !== parseInt(count)) {
+                return callbackAsync('Expected ' + count + ' roles, get ' + body.result.hits.length);
+              }
             }
 
             callbackAsync();

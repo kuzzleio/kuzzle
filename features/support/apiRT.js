@@ -547,14 +547,11 @@ ApiRT.prototype.deleteProfile = function (id) {
   return this.send(msg);
 };
 
-ApiRT.prototype.getUser = function (id, hydrate) {
+ApiRT.prototype.getUser = function (id) {
   return this.send({
     controller: 'security',
     action: 'getUser',
-    _id: id,
-    body: {
-      hydrate: hydrate === undefined ? true : hydrate
-    }
+    _id: id
   });
 };
 

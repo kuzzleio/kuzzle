@@ -5,7 +5,8 @@ var
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
   ResponseObject = require.main.require('lib/api/core/models/responseObject'),
-  BadRequestError = require.main.require('lib/api/core/errors/badRequestError');
+  BadRequestError = require.main.require('lib/api/core/errors/badRequestError'),
+  NotFoundError = require.main.require('lib/api/core/errors/notFoundError');
 
 describe('Test: security controller - roles', function () {
   var
@@ -25,6 +26,10 @@ describe('Test: security controller - roles', function () {
           });
         };
         kuzzle.repositories.role.loadOneFromDatabase = id => {
+          if (id === 'badId') {
+            return q(null);
+          }
+
           return q({
             _index: kuzzle.config.internalIndex,
             _type: 'roles',
@@ -83,6 +88,10 @@ describe('Test: security controller - roles', function () {
         .catch(error => {
           done(error);
         });
+    });
+
+    it('should reject NotFoundError on a getRole call with a bad id', () => {
+      return should(kuzzle.funnel.security.getRole(new RequestObject({body: {_id: 'badId'}}))).be.rejectedWith(NotFoundError);
     });
   });
 
