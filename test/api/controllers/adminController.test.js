@@ -20,6 +20,9 @@ describe('Test: admin controller', function () {
     kuzzle = new Kuzzle();
     kuzzle.start(params, {dummy: true})
       .then(function () {
+        kuzzle.services.list.readEngine.listIndexes = requestObject => {
+           return q(new ResponseObject(requestObject, {indexes: [index]}));
+        };
         kuzzle.repositories.role.validateAndSaveRole = role => {
           return q({
             _index: kuzzle.config.internalIndex,
@@ -234,6 +237,21 @@ describe('Test: admin controller', function () {
   });
 
   describe('#deleteIndexes', function () {
+    var context = {
+      token: {
+        user: {
+          profile: {
+            roles: [{
+                indexes: {
+                  '*': {
+                    _canDelete: true,
+                  }
+                }
+              }]
+          }
+        }
+      }
+    };
     it('should trigger a hook on a deleteIndexes call', function (done) {
       this.timeout(50);
 
@@ -247,18 +265,22 @@ describe('Test: admin controller', function () {
         }
       });
 
-      kuzzle.funnel.admin.deleteIndexes(requestObject);
+      kuzzle.funnel.admin.deleteIndexes(requestObject, context);
     });
 
     it('should reset the index cache', function (done) {
       this.timeout(50);
 
-      kuzzle.funnel.admin.deleteIndexes(requestObject)
+      kuzzle.workerListener.add = rq => {
+        return q(new ResponseObject(rq, {deleted: rq.data.body.indexes}));
+      };
+
+      kuzzle.funnel.admin.deleteIndexes(requestObject, context)
         .then(response => {
           should(response).be.instanceof(ResponseObject);
           should(indexCacheAdd).be.false();
-          should(indexCacheRemove).be.false();
-          should(indexCacheReset).be.true();
+          should(indexCacheRemove).be.true();
+          should(indexCacheReset).be.false();
           done();
         })
         .catch(err => done(err));
