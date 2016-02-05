@@ -102,7 +102,7 @@ describe('Test: security controller - profiles', function () {
 
   describe('#createProfile', function () {
     it('should reject when a profile already exists with the id', () => {
-      var promise = kuzzle.funnel.security.createOrReplaceProfile(new RequestObject({
+      var promise = kuzzle.funnel.security.createProfile(new RequestObject({
           body: {_id: 'alreadyExists', roles: ['role1']}
         }));
 
@@ -110,7 +110,7 @@ describe('Test: security controller - profiles', function () {
     });
 
     it('should resolve to a responseObject on a createProfile call', () => {
-      var promise = kuzzle.funnel.security.createOrReplaceProfile(new RequestObject({
+      var promise = kuzzle.funnel.security.createProfile(new RequestObject({
         body: {_id: 'test', roles: ['role1']}
       }));
 
