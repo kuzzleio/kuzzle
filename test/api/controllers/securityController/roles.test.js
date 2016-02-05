@@ -18,6 +18,10 @@ describe('Test: security controller - roles', function () {
       .then(function () {
         // Mock
         kuzzle.repositories.role.validateAndSaveRole = role => {
+          if (role._id === 'alreadyExists') {
+            return q.reject();
+          }
+
           return q({
             _index: kuzzle.config.internalIndex,
             _type: 'roles',
@@ -60,7 +64,7 @@ describe('Test: security controller - roles', function () {
   });
 
   describe('#createOrReplaceRole', function () {
-    it('should resolve to a responseObject on a putRole call', done => {
+    it('should resolve to a responseObject on a createOrReplaceRole call', done => {
       kuzzle.funnel.security.createOrReplaceRole(new RequestObject({
           body: {_id: 'test', indexes: {}}
         }))
@@ -72,6 +76,24 @@ describe('Test: security controller - roles', function () {
         .catch(error => {
           done(error);
         });
+    });
+  });
+
+  describe('#createRole', function () {
+    it('should reject when a role already exists with the id', () => {
+      var promise = kuzzle.funnel.security.createRole(new RequestObject({
+        body: {_id: 'alreadyExists', indexes: {}}
+      }));
+
+      return should(promise).be.rejected();
+    });
+
+    it('should resolve to a responseObject on a createRole call', () => {
+      var promise = kuzzle.funnel.security.createRole(new RequestObject({
+        body: {_id: 'test', indexes: {}}
+      }));
+
+      return should(promise).be.fulfilled();
     });
   });
 
