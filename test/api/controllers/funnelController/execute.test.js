@@ -37,7 +37,8 @@ describe('Test execute function in funnel controller', function () {
       .then(function (anonymousToken) {
         context.token = anonymousToken;
         callback();
-      });
+      })
+      .catch(error => callback(error));
   });
 
   it('should reject the promise if no controller is specified', function () {

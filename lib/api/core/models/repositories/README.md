@@ -63,7 +63,7 @@ Returns a promise that resolves to the *ObjectConstructor* instance if found or 
 Repository.prototype.loadMultiFromDatabase = function (ids, hydrate) {...}
 ```
 
-This method tries to load the business objects form the database matching the given ids.
+This method tries to load the business objects from the database matching the given ids.
 
 ### returns
 
@@ -77,7 +77,7 @@ If no matching document could be found, an empty array is returned.
 Repository.prototype.search = function (filter, from, size, hydrate) {...}
 ```
 
-This method tries to load document from readEngine or the business objects (according to hydrate parameter) form the database matching the given ids.
+This method tries to load document from readEngine or the business objects (according to hydrate parameter) from the database matching the given ids.
 
 ### parameters
 
@@ -185,7 +185,7 @@ The business object to persist.
 
 * *Object* opts
 
-An options options object.  
+An optional options object.
 The supported options are:
 
 > * key: The key used to store the object in the cache engine. Defaults to *collection* + '/' + object._id

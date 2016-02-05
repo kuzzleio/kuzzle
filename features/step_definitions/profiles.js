@@ -87,25 +87,17 @@ var apiSteps = function () {
               return callbackAsync(body.error.message);
             }
 
-            if (!body.result) {
-              if (not) {
-                return callbackAsync();
-              }
-
-              return callbackAsync('No result provided');
-            }
-
-            if (!body.result.roles) {
-              if (not) {
-                return callbackAsync();
-              }
-
-              return callbackAsync('Profile with id '+ id + ' exists');
+            if (not) {
+              return callbackAsync(`Profile with id ${id} exists`);
             }
 
             callbackAsync();
           })
           .catch(error => {
+            if (not) {
+              return callback();
+            }
+
             callback(error);
           });
       }, 20); // end setTimeout
@@ -170,9 +162,12 @@ var apiSteps = function () {
             return false;
           }
 
-          if (response.result.hits.length !== parseInt(profilesCount)) {
-            callbackAsync(new Error('Expected ' + profilesCount + ' profiles. Got ' + response.result.hits.length));
-            return false;
+          if (!response.result.hits) {
+            response.result.hits = response.result.hits.filter(doc => doc._id.indexOf(this.idPrefix));
+
+            if (response.result.hits.length !== parseInt(profilesCount)) {
+              return callbackAsync(`Expected ${profilesCount} profiles. Got ${response.result.hits.length}`);
+            }
           }
 
           callbackAsync();
