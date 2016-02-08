@@ -990,6 +990,7 @@ describe('Test: ElasticSearch service', function () {
         }
       };
 
+      requestObject.data.body.indexes = [index];
       ret = elasticsearch.deleteIndexes(requestObject);
       should(ret).be.a.Promise();
 

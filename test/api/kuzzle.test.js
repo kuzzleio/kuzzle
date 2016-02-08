@@ -39,11 +39,30 @@ describe('Test kuzzle constructor', function () {
   describe('#cleanDb', () => {
     var resetCalled;
 
-    beforeEach(function () {
+    before(function () {
       kuzzle.services.list = {
-        writeEngine: {}
+        writeEngine: {},
+        readEngine: {
+          listIndexes: function () {
+            return q({
+              data: {
+                body: {
+                  indexes: ['foo', 'bar']
+                }
+              }
+            });
+          }
+        }
       };
 
+      kuzzle.indexCache = {
+        reset: () => resetCalled = true
+      };
+
+      resetCalled = false;
+    });
+
+    beforeEach(function () {
       kuzzle.indexCache = {
         reset: () => resetCalled = true
       };
