@@ -19,6 +19,10 @@ describe('Test: security controller - profiles', function () {
         // Mock
         kuzzle.repositories.role.roles.role1 = { _id: 'role1' };
         kuzzle.repositories.profile.validateAndSaveProfile = profile => {
+          if (profile._id === 'alreadyExists') {
+            return q.reject();
+          }
+
           return q({
             _index: kuzzle.config.internalIndex,
             _type: 'profiles',
@@ -93,6 +97,24 @@ describe('Test: security controller - profiles', function () {
         .catch(error => {
           done(error);
         });
+    });
+  });
+
+  describe('#createProfile', function () {
+    it('should reject when a profile already exists with the id', () => {
+      var promise = kuzzle.funnel.security.createProfile(new RequestObject({
+          body: {_id: 'alreadyExists', roles: ['role1']}
+        }));
+
+      return should(promise).be.rejected();
+    });
+
+    it('should resolve to a responseObject on a createProfile call', () => {
+      var promise = kuzzle.funnel.security.createProfile(new RequestObject({
+        body: {_id: 'test', roles: ['role1']}
+      }));
+
+      return should(promise).be.fulfilled();
     });
   });
 
