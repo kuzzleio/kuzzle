@@ -35,5 +35,11 @@ program
   .description('Install plugin dependencies')
   .action(require('./kuzzle-install'));
 
+// $ kuzzle firstAdmin
+program
+  .command('firstAdmin')
+  .description('Create the first administrator')
+  .action(require('./kuzzle-firstAdmin'));
+
 // Run user command
 program.parse(process.argv);
