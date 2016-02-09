@@ -22,7 +22,7 @@ For features like watch mode, multi-thread support from [pm2](https://www.npmjs.
 You can enable services in a running Kuzzle without restarting it with a simple command line:
 
 ```
-$ kuzzle enable <service> <PID|all>
+$ kuzzle.js enable <service> <PID|all>
 ```
 
 Where:
@@ -33,10 +33,17 @@ Where:
 You can disable a service with:
 
 ```
-$ kuzzle disable <service> <PID|all>
+$ kuzzle.js disable <service> <PID|all>
 ```
 
 **Note:** All services containing a toggle() method can be activated or deactivated on the fly. Some vital services can't be togglable. 
+
+```
+$ kuzzle.js createFirstAdmin
+```
+
+will guide you through the creation process of the first admin user and fix the rights to other user types.
+
 
 
 # Contributing
