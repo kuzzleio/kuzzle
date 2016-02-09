@@ -24,6 +24,9 @@ describe('Test: security controller', function () {
         };
 
         done();
+      })
+      .catch((error) => {
+        done(error);
       });
   });
 

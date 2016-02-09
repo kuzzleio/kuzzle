@@ -133,7 +133,7 @@ describe('Test: repositories/roleRepository', function () {
         return q.reject(new InternalError('Error'));
       };
 
-      result = roleRepository.loadRoles(['guest'])
+      result = roleRepository.loadRoles(['anonymous'])
         .catch(error => {
           delete roleRepository.hydrate;
           return q.reject(error);
@@ -159,12 +159,12 @@ describe('Test: repositories/roleRepository', function () {
     });
 
     it('should retrieve the default roles', function (done) {
-      roleRepository.loadRoles(['guest'])
+      roleRepository.loadRoles(['anonymous'])
         .then(function (results) {
           should(results).be.an.Array().and.have.length(1);
           results.forEach(function (result) {
             should(result).be.an.instanceOf(Role);
-            should(result._id).be.exactly('guest');
+            should(result._id).be.exactly('anonymous');
           });
           done();
         })
@@ -174,11 +174,11 @@ describe('Test: repositories/roleRepository', function () {
     });
 
     it('should retrieve only the roles that exist', function (done) {
-      roleRepository.loadRoles(['guest', 'idontexist'])
+      roleRepository.loadRoles(['anonymous', 'idontexist'])
         .then(function (results) {
           should(results).be.an.Array().and.have.length(1);
           should(results[0]).be.an.instanceOf(Role);
-          should(results[0]._id).be.exactly('guest');
+          should(results[0]._id).be.exactly('anonymous');
           done();
         })
         .catch(function (error) {
