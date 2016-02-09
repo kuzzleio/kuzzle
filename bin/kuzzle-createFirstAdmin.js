@@ -230,12 +230,10 @@ var nextStep = (message) => {
     createAdmin()
       .then((res) => {
         console.log(clc.green('[✔] First admin created'));
-        console.log(res);
         return resetRoles('default');
       })
       .then((res) => {
         console.log(clc.green('[✔] "default" Role reseted'));
-        console.log(res);
         return resetRoles('anonymous');
       })
       .then((res) => {
