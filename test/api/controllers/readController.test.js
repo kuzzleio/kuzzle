@@ -89,9 +89,9 @@ describe('Test: read controller', function () {
         return ['foo', 'bar'];
       };
 
-      kuzzle.repositories.role.roles.guest = new Role();
+      kuzzle.repositories.role.roles.anonymous = new Role();
 
-      return kuzzle.repositories.role.hydrate(kuzzle.repositories.role.roles.guest, params.userRoles.guest)
+      return kuzzle.repositories.role.hydrate(kuzzle.repositories.role.roles.anonymous, params.userRoles.anonymous)
         .then(() => {
           kuzzle.repositories.profile.profiles.anonymous = new Profile();
           return kuzzle.repositories.profile.hydrate(kuzzle.repositories.profile.profiles.anonymous, params.userProfiles.anonymous);
