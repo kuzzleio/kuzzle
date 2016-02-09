@@ -8,7 +8,7 @@
  */
 var program = require('commander');
 
-// $ kuzzle start
+// $ kuzzle.js start
 program
   .command('start')
   .option('--port [port]', 'Kuzzle port number', parseInt)
@@ -17,29 +17,29 @@ program
   .description('Start a Kuzzle instance')
   .action(require('./kuzzle-start'));
 
-// $ kuzzle enable <service>
+// $ kuzzle.js enable <service>
 program
   .command('enable')
   .description('Enable a service without reloading Kuzzle')
   .action(require('./kuzzle-enable'));
 
-// $ kuzzle disable <service>
+// $ kuzzle.js disable <service>
 program
   .command('disable')
   .description('Disable a service without reloading Kuzzle')
   .action(require('./kuzzle-disable'));
 
-// $ kuzzle install
+// $ kuzzle.js install
 program
   .command('install')
   .description('Install plugin dependencies')
   .action(require('./kuzzle-install'));
 
-// $ kuzzle firstAdmin
+// $ kuzzle.js createFirstAdmin
 program
-  .command('firstAdmin')
+  .command('createFirstAdmin')
   .description('Create the first administrator')
-  .action(require('./kuzzle-firstAdmin'));
+  .action(require('./kuzzle-createFirstAdmin'));
 
 // Run user command
 program.parse(process.argv);
