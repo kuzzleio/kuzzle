@@ -222,21 +222,21 @@ var nextStep = (message) => {
         return resetRoles('default');
       })
       .then((res) => {
-        console.log(clc.green('[✔] "default" Role reseted'));
+        console.log(clc.green('[✔] "default" Role reset'));
         return resetRoles('anonymous');
       })
       .then((res) => {
-        console.log(clc.green('[✔] "anonymous" Role reseted'));
+        console.log(clc.green('[✔] "anonymous" Role reset'));
         return resetProfile('default', 'default');
       })
       .then((res) => {
-        console.log(clc.green('[✔] "default" profile reseted'));
+        console.log(clc.green('[✔] "default" profile reset'));
         return resetProfile('anonymous', 'anonymous');
       })
       .then((res) => {
-        console.log(clc.green('[✔] "anonymous" profile reseted'));
+        console.log(clc.green('[✔] "anonymous" profile reset'));
         console.log('\n');
-        console.log(clc.green('[✔] Everything is fisnished'));
+        console.log(clc.green('[✔] Everything is finished'));
       })
       .catch((err) => {
         console.log(clc.red('[✖] Something whent terribly wrong:'));
