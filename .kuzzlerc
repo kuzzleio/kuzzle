@@ -61,6 +61,39 @@
     }
   },
   // Default security roles
+  "roleWithoutAdmin": { // role definition for all users before to create the first admin
+    "indexes": {
+      "_canCreate": true,
+      "*": {
+      "collections": {
+        "_canCreate": true,
+        "*": {
+          "controllers": {
+            "*": {
+              "actions": {
+                "*": true
+                }
+              }
+            }
+          }
+        }
+      },
+      "%kuzzle": {
+      "collections": {
+        "_canCreate": true,
+        "*": {
+          "controllers": {
+            "*": {
+              "actions": {
+                "*": true
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
   "userRoles": {
     "admin": {
       "_id": "admin",
@@ -99,15 +132,20 @@
     "anonymous": {
       "_id": "anonymous",
       "indexes": {
-        "_canCreate": true,
+        "_canCreate": false,
         "*": {
           "collections": {
-            "_canCreate": true,
+            "_canCreate": false,
             "*": {
               "controllers": {
+                "auth": {
+                  "actions": {
+                    "login": true
+                  }
+                },
                 "*": {
                   "actions": {
-                    "*": true
+                    "*": false
                   }
                 }
               }
@@ -116,12 +154,12 @@
         },
         "%kuzzle": {
         "collections": {
-          "_canCreate": true,
+          "_canCreate": false,
           "*": {
             "controllers": {
               "*": {
                 "actions": {
-                  "*": true
+                  "*": false
                   }
                 }
               }
@@ -133,15 +171,15 @@
     "default": {
       "_id": "default",
       "indexes": {
-        "_canCreate": true,
+        "_canCreate": false,
         "*": {
           "collections": {
-            "_canCreate": true,
+            "_canCreate": false,
             "*": {
               "controllers": {
                 "*": {
                   "actions": {
-                    "*": true
+                    "*": false
                   }
                 }
               }
@@ -150,12 +188,20 @@
         },
         "%kuzzle": {
         "collections": {
-          "_canCreate": true,
+          "_canCreate": false,
           "*": {
             "controllers": {
+              "auth": {
+                "actions": {
+                  "login": true,
+                  "logout": true,
+                  "whoami": true,
+                  "getCurrentUser": true
+                }
+              },
               "*": {
                 "actions": {
-                  "*": true
+                  "*": false
                   }
                 }
               }
