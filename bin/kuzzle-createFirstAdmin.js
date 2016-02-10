@@ -8,39 +8,39 @@ var
   step = 0,
   // steps definitions
   steps = [
-  	{
+    {
       // get username
-  		prompt: '\n[❓] Which username for the first admin ?\nTip: avoid to name it admin, or root...\n: ',
-  		check: function(userEntry) {
-  			var _name = userEntry.trim(),
-  			badNames = ['admin','root'];
-  			if (badNames.indexOf(_name) === -1) {
+      prompt: '\n[❓] Which username for the first admin ?\nTip: avoid to name it admin, or root...\n: ',
+      check: function(userEntry) {
+        var _name = userEntry.trim(),
+        badNames = ['admin','root'];
+        if (badNames.indexOf(_name) === -1) {
           if (_name.length < 4) {
             console.log(clc.red('[✖] Username should have at least 4 chars'));
             return false;
           }
 
           name = _name
-  				console.log(clc.green('[✔] Given username: ' + name));
-  				if (_name !== userEntry) {
-  					console.log(clc.cyan('[ℹ] The username have been trimmed.'));
-  				}
-  				name = _name;
-  				return true;
-  			} else {
-  				console.log(clc.red('[✖] It is a bad idea to name an admin "' + _name + '"...'));
+          console.log(clc.green('[✔] Given username: ' + name));
+          if (_name !== userEntry) {
+            console.log(clc.cyan('[ℹ] The username has been trimmed.'));
+          }
+          name = _name;
+          return true;
+        } else {
+          console.log(clc.red('[✖] It is a bad idea to name an admin "' + _name + '"...'));
           if (readlineSync.keyInYNStrict('[❓] Are you sure you want to name it "' + _name + '" ?')) {
             name = _name;
             return true;
           }
-  				return false;
-  			}
-  		}
-  	},
+          return false;
+        }
+      }
+    },
     {
       // get password
       password: true,
-      prompt: '\n[?] Which password do you want to set for this account ?\nTips: try to mix lowercased and uppcased letters, digits and special chars. It is always a bad idea to put space char in a password.\n: ',
+      prompt: '\n[?] Enter a password for this account ?\nTips: mix lowercase and uppcase letters, digits and special chars. Avoid using spaces or tabs.\n: ',
       check: function(userEntry) {
         var _password = userEntry, userEntryBis;
         if (userEntry.replace('/ /g', '') !== _password || _password.trim() !== userEntry || userEntry.length < 8) {
@@ -54,7 +54,7 @@ var
             return false;
           }
         }
-        userEntryBis = readlineSync.question('\n[?] Could you, please, type it again ?\n: ', {hideEchoBack: true});
+        userEntryBis = readlineSync.question('\n[?] Please, confirm the password\n: ', {hideEchoBack: true});
         if (userEntryBis === userEntry) {
           password = userEntryBis;
           console.log(clc.green('[✔] Given password set'));
