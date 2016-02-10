@@ -67,17 +67,6 @@ var
     }
   ];
 
-process.stdin.setEncoding('utf8');
-
-if (process.env.NEW_RELIC_APP_NAME) {
-  require('newrelic');
-}
-
-if (process.env.FEATURE_COVERAGE == 1) {
-  var coverage = require('istanbul-middleware');
-  console.log('Hook loader for coverage - ensure this is not production!');
-  coverage.hookLoader(__dirname+'/lib');
-}
 
 var createAdminRole = () => {
   var data = {
@@ -265,6 +254,7 @@ var nextStep = (message) => {
   }
 };
 
+process.stdin.setEncoding('utf8');
 
 module.exports = function () {
   // try to access to the admin profile
