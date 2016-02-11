@@ -82,9 +82,7 @@
       },
       "%kuzzle": {
       "collections": {
-        "_canCreate": false,
         "*": {
-          "_canDelete": false,
           "controllers": {
             "*": {
               "actions": {
@@ -139,38 +137,14 @@
     "anonymous": {
       "_id": "anonymous",
       "indexes": {
-        "_canCreate": false,
         "*": {
-          "_canDelete": false,
           "collections": {
-            "_canCreate": false,
             "*": {
-              "_canDelete": false,
               "controllers": {
                 "auth": {
                   "actions": {
                     "login": true,
                     "getCurrentUser": true
-                  }
-                },
-                "*": {
-                  "actions": {
-                    "*": false
-                  }
-                }
-              }
-            }
-          }
-        },
-        "%kuzzle": {
-        "collections": {
-          "_canCreate": false,
-          "*": {
-            "_canDelete": false,
-            "controllers": {
-              "*": {
-                "actions": {
-                  "*": false
                   }
                 }
               }
@@ -182,39 +156,15 @@
     "default": {
       "_id": "default",
       "indexes": {
-        "_canCreate": false,
         "*": {
-          "_canDelete": false,
           "collections": {
-            "_canCreate": false,
             "*": {
-              "_canDelete": false,
               "controllers": {
                 "auth": {
                   "actions": {
                     "login": true,
                     "logout": true,
                     "getCurrentUser": true
-                  }
-                },
-                "*": {
-                  "actions": {
-                    "*": false
-                  }
-                }
-              }
-            }
-          }
-        },
-        "%kuzzle": {
-        "collections": {
-          "_canCreate": false,
-          "*": {
-            "_canDelete": false,
-            "controllers": {
-              "*": {
-                "actions": {
-                  "*": false
                   }
                 }
               }
