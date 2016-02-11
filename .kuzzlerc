@@ -65,9 +65,11 @@
     "indexes": {
       "_canCreate": true,
       "*": {
+      "_canDelete": true,
       "collections": {
         "_canCreate": true,
         "*": {
+          "_canDelete": true,
           "controllers": {
             "*": {
               "actions": {
@@ -79,9 +81,11 @@
         }
       },
       "%kuzzle": {
+      "_canDelete": false,
       "collections": {
-        "_canCreate": true,
+        "_canCreate": false,
         "*": {
+          "_canDelete": false,
           "controllers": {
             "*": {
               "actions": {
@@ -104,7 +108,6 @@
         "_canDelete": true,
         "collections": {
           "_canCreate": true,
-          "_canDelete": true,
           "*": {
             "_canDelete": true,
             "controllers": {
@@ -118,10 +121,11 @@
           }
         },
         "%kuzzle": {
+        "_canDelete": false,
         "collections": {
-          "_canCreate": true,
+          "_canCreate": false,
           "*": {
-          "_canDelete": true,
+            "_canDelete": false,
             "controllers": {
               "*": {
                 "actions": {
@@ -139,15 +143,16 @@
       "indexes": {
         "_canCreate": false,
         "*": {
-          "_canDelete": true,
+          "_canDelete": false,
           "collections": {
             "_canCreate": false,
-            "_canDelete": false,
             "*": {
+              "_canDelete": false,
               "controllers": {
                 "auth": {
                   "actions": {
-                    "login": true
+                    "login": true,
+                    "getCurrentUser": true
                   }
                 },
                 "*": {
@@ -160,6 +165,7 @@
           }
         },
         "%kuzzle": {
+        "_canDelete": false,
         "collections": {
           "_canCreate": false,
           "*": {
@@ -181,10 +187,19 @@
       "indexes": {
         "_canCreate": false,
         "*": {
+          "_canDelete": false,
           "collections": {
             "_canCreate": false,
             "*": {
+              "_canDelete": false,
               "controllers": {
+                "auth": {
+                  "actions": {
+                    "login": true,
+                    "logout": true,
+                    "getCurrentUser": true
+                  }
+                },
                 "*": {
                   "actions": {
                     "*": false
@@ -195,19 +210,12 @@
           }
         },
         "%kuzzle": {
+        "_canDelete": false,
         "collections": {
           "_canCreate": false,
           "*": {
             "_canDelete": false,
             "controllers": {
-              "auth": {
-                "actions": {
-                  "login": true,
-                  "logout": true,
-                  "whoami": true,
-                  "getCurrentUser": true
-                }
-              },
               "*": {
                 "actions": {
                   "*": false
