@@ -61,32 +61,32 @@
     }
   },
   // role template for all users before to create the first admin
-  "roleWithoutAdmin": { 
-    "indexes": {
-      "_canCreate": true,
-      "*": {
-      "_canDelete": true,
-      "collections": {
-        "_canCreate": true,
-        "*": {
-          "_canDelete": true,
-          "controllers": {
-            "*": {
-              "actions": {
-                "*": true
+  "roleWithoutAdmin": {
+    "indexes": {                // when we are in the ES level, before the indexes
+      "_canCreate": true,       // we can create indexes
+      "*": {                    // when we are in any index (except %kuzzle index)
+        "_canDelete": true,     // we can delete it
+        "collections": {        // when we are in an index
+          "_canCreate": true,   // we can create a collection in it
+          "*": {                // in nay collection
+            "_canDelete": true, // we can delete the collection
+            "controllers": {    // at the controller level
+              "*": {            // for any controller
+                "actions": {    // and at the action level
+                  "*": true     // we can do any action
                 }
               }
             }
           }
         }
       },
-      "%kuzzle": {
-      "collections": {
-        "*": {
-          "controllers": {
-            "*": {
-              "actions": {
-                "*": true
+      "%kuzzle": {              // into the %kuzzle index, only
+      "collections": {          // at the collection level, cannot create any collection by our own
+        "*": {                  // for all the collections
+          "controllers": {      // at the controller level
+            "security": {       // with the security controller only
+              "actions": {      // at the action level of the security controller
+                "*": true       // we can do any action
                 }
               }
             }
@@ -121,7 +121,7 @@
         "collections": {
           "*": {
             "controllers": {
-              "*": {
+              "security": {
                 "actions": {
                   "*": true
                   }
@@ -160,7 +160,6 @@
               "controllers": {
                 "auth": {
                   "actions": {
-                    "login": true,
                     "logout": true,
                     "getCurrentUser": true
                   }
@@ -170,7 +169,7 @@
           }
         }
       }
-    }    
+    }
   },
   "pluginsManager": {
     "pipeWarnTime": 40,
