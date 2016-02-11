@@ -81,7 +81,6 @@
         }
       },
       "%kuzzle": {
-      "_canDelete": false,
       "collections": {
         "_canCreate": false,
         "*": {
@@ -121,7 +120,6 @@
           }
         },
         "%kuzzle": {
-        "_canDelete": false,
         "collections": {
           "_canCreate": false,
           "*": {
@@ -165,7 +163,6 @@
           }
         },
         "%kuzzle": {
-        "_canDelete": false,
         "collections": {
           "_canCreate": false,
           "*": {
@@ -210,7 +207,6 @@
           }
         },
         "%kuzzle": {
-        "_canDelete": false,
         "collections": {
           "_canCreate": false,
           "*": {
