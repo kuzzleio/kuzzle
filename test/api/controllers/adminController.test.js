@@ -234,6 +234,47 @@ describe('Test: admin controller', function () {
   });
 
   describe('#deleteIndexes', function () {
+    var context = {
+      token: {
+        user: {
+          profile: {
+            roles: [{
+                indexes: {
+                  '%text1': {
+                    _canDelete: true,
+                  },
+                  '%text2': {
+                    _canDelete: true,
+                  },
+                  '%text3': {
+                    _canDelete: false,
+                  }
+                }
+              }]
+          }
+        }
+      }
+    };
+
+    before(function () {
+      kuzzle.indexCache.oldRemove = kuzzle.indexCache.remove;
+      kuzzle.services.list.readEngine.listIndexes = requestObject => {
+         return q(new ResponseObject(requestObject, {indexes: ['%text1', '%text2', '%text3']}));
+      };
+      kuzzle.workerListener.add = rq => {
+        return q(new ResponseObject(rq, {deleted: rq.data.body.indexes}));
+      };
+      kuzzle.indexCache.remove = (i, c) => {
+        should(['%text1', '%text2']).containEql(i);
+        indexCacheRemove = true;
+      };
+    });
+    after(function () {
+      kuzzle.indexCache.remove = kuzzle.indexCache.oldRemove;
+      delete kuzzle.indexCache.oldRemove;
+    });
+
+
     it('should trigger a hook on a deleteIndexes call', function (done) {
       this.timeout(50);
 
@@ -247,18 +288,30 @@ describe('Test: admin controller', function () {
         }
       });
 
-      kuzzle.funnel.admin.deleteIndexes(requestObject);
+      kuzzle.funnel.admin.deleteIndexes(requestObject, context);
+    });
+
+    it('should delete only the allowed indexes', function (done) {
+      this.timeout(50);
+
+      kuzzle.funnel.admin.deleteIndexes(requestObject, context)
+        .then(response => {
+          should(response).be.instanceof(ResponseObject);
+          should(response.data.body.deleted).be.eql(['%text1', '%text2']);
+          done();
+        })
+        .catch(err => done(err));
     });
 
     it('should reset the index cache', function (done) {
       this.timeout(50);
 
-      kuzzle.funnel.admin.deleteIndexes(requestObject)
+      kuzzle.funnel.admin.deleteIndexes(requestObject, context)
         .then(response => {
           should(response).be.instanceof(ResponseObject);
           should(indexCacheAdd).be.false();
-          should(indexCacheRemove).be.false();
-          should(indexCacheReset).be.true();
+          should(indexCacheRemove).be.true();
+          should(indexCacheReset).be.false();
           done();
         })
         .catch(err => done(err));

@@ -63,9 +63,11 @@
       "indexes": {
         "_canCreate": true,
         "*": {
+        "_canDelete": true,
         "collections": {
           "_canCreate": true,
           "*": {
+            "_canDelete": true,
             "controllers": {
               "*": {
                 "actions": {
@@ -80,6 +82,7 @@
         "collections": {
           "_canCreate": true,
           "*": {
+          "_canDelete": true,
             "controllers": {
               "*": {
                 "actions": {
@@ -97,8 +100,10 @@
       "indexes": {
         "_canCreate": true,
         "*": {
+          "_canDelete": true,
           "collections": {
             "_canCreate": true,
+            "_canDelete": true,
             "*": {
               "controllers": {
                 "*": {
@@ -111,13 +116,14 @@
           }
         },
         "%kuzzle": {
-        "collections": {
-          "_canCreate": true,
-          "*": {
-            "controllers": {
-              "*": {
-                "actions": {
-                  "*": true
+          "collections": {
+            "_canCreate": true,
+            "*": {
+              "_canDelete": true,
+              "controllers": {
+                "*": {
+                  "actions": {
+                    "*": true
                   }
                 }
               }
