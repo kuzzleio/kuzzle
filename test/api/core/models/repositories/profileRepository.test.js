@@ -181,9 +181,10 @@ describe('Test: repositories/profileRepository', function () {
     });
     it('should throw if the profile contains unexisting roles', () => {
       var p = new Profile();
-      return should(profileRepository.hydrate(
-        p, { roles: ['notExistingRole'] }
-      )).be.rejectedWith(NotFoundError);
+      profileRepository.hydrate(p, { roles: ['notExistingRole'] })
+        .catch((error) => {
+          should(error).be.an.instanceOf(NotFoundError);
+        });
     });
   });
 

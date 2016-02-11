@@ -60,8 +60,8 @@
       "roles": [ "anonymous" ]
     }
   },
-  // Default security roles
-  "roleWithoutAdmin": { // role definition for all users before to create the first admin
+  // role template for all users before to create the first admin
+  "roleWithoutAdmin": { 
     "indexes": {
       "_canCreate": true,
       "*": {
@@ -94,15 +94,19 @@
       }
     }
   },
+  // Default security roles 
   "userRoles": {
     "admin": {
       "_id": "admin",
       "indexes": {
         "_canCreate": true,
         "*": {
+        "_canDelete": true,
         "collections": {
           "_canCreate": true,
+          "_canDelete": true,
           "*": {
+            "_canDelete": true,
             "controllers": {
               "*": {
                 "actions": {
@@ -117,6 +121,7 @@
         "collections": {
           "_canCreate": true,
           "*": {
+          "_canDelete": true,
             "controllers": {
               "*": {
                 "actions": {
@@ -134,8 +139,10 @@
       "indexes": {
         "_canCreate": false,
         "*": {
+          "_canDelete": true,
           "collections": {
             "_canCreate": false,
+            "_canDelete": false,
             "*": {
               "controllers": {
                 "auth": {
@@ -156,6 +163,7 @@
         "collections": {
           "_canCreate": false,
           "*": {
+            "_canDelete": false,
             "controllers": {
               "*": {
                 "actions": {
@@ -190,6 +198,7 @@
         "collections": {
           "_canCreate": false,
           "*": {
+            "_canDelete": false,
             "controllers": {
               "auth": {
                 "actions": {
