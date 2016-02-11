@@ -31,7 +31,6 @@ describe('Test: repositories/profileRepository', function () {
   mockReadEngine = {
     get: function (requestObject) {
       var err;
-
       if (requestObject.data._id === 'testprofile') {
         return q(new ResponseObject(requestObject, testProfilePlain));
       }
@@ -124,7 +123,7 @@ describe('Test: repositories/profileRepository', function () {
     });
 
     it('should load a profile if already in memory', done => {
-      profileRepository.profiles.testprofile = testProfile;
+      profileRepository.profiles.testprofile = testProfilePlain;
       // we ensure the readEngine is not called
       profileRepository.loadOneFromDatabase = null;
       profileRepository.readEngine = null;
@@ -133,21 +132,6 @@ describe('Test: repositories/profileRepository', function () {
         .then(function (result){
           should(result).be.an.instanceOf(Profile);
           should(result).be.eql(testProfile);
-          done();
-        })
-        .catch(function (error) {
-          done(error);
-        });
-    });
-
-    it('should load a profile defined in kuzzle params if not in db', done => {
-      profileRepository.loadProfile('anonymous')
-        .then(function (result) {
-          should(result).be.an.instanceOf(Profile);
-          should(result._id).be.exactly('anonymous');
-          should(result.roles).be.an.Array();
-          should(result.roles).not.be.empty();
-
           done();
         })
         .catch(function (error) {

@@ -609,7 +609,8 @@ describe('Test kuzzle constructor', function () {
       workerCalled,
       indexAdded,
       requests,
-      createInternalStructure;
+      createInternalStructure,
+      params = rc('kuzzle');
 
     before(function () {
       prepareDb = rewire('../../lib/api/prepareDb');
@@ -622,6 +623,7 @@ describe('Test kuzzle constructor', function () {
       requests = [];
 
       context = {
+        defaultRoleDefinition: params.roleWithoutAdmin,
         kuzzle: {
           indexCache: {
             indexes: {
@@ -661,8 +663,8 @@ describe('Test kuzzle constructor', function () {
               - profiles collection mapping
               - users collection mapping
            */
-          should(requests.length).be.eql(3);
-          should(indexAdded.length).be.eql(3);
+          should(requests.length).be.eql(9);
+          should(indexAdded.length).be.eql(4);
 
           should(requests[0].controller).be.eql('admin');
           should(requests[0].action).be.eql('createIndex');

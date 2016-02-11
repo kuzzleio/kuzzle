@@ -5,7 +5,7 @@ var
   RealTimeResponseObject = require.main.require('lib/api/core/models/realTimeResponseObject'),
   TokenManager = require.main.require('lib/api/core/auth/tokenManager');
 
-describe('Test: token manager core component', function (done) {
+describe('Test: token manager core component', function () {
   var
     kuzzle,
     tokenManager;
@@ -28,6 +28,34 @@ describe('Test: token manager core component', function (done) {
 
   beforeEach(function () {
     tokenManager = new TokenManager(kuzzle);
+  });
+
+  describe('#add', function () {
+    var token;
+
+    beforeEach(function () {
+      token = {_id: 'foobar', expiresAt: Date.now()+1000};
+    });
+
+    it('should not add a token if the context does not contain a connection object', function () {
+      tokenManager.add(token, {});
+      should(tokenManager.tokenizedConnections.foobar).be.undefined();
+    });
+
+    it('should not add a token if the context connection does not contain an id', function () {
+      tokenManager.add(token, {connection: {}});
+      should(tokenManager.tokenizedConnections.foobar).be.undefined();
+    });
+
+    it('should add the token if the context is properly formatted', function () {
+      var
+        context = {connection: {id: 'foo'}};
+      
+      tokenManager.add(token, context);
+      should(tokenManager.tokenizedConnections.foobar).be.an.Object();
+      should(tokenManager.tokenizedConnections.foobar.expiresAt).be.eql(token.expiresAt);
+      should(tokenManager.tokenizedConnections.foobar.connection).be.eql(context.connection);
+    });
   });
 
   describe('#expire', function () {

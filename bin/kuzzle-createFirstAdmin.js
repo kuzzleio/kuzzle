@@ -3,6 +3,8 @@ var
   readlineSync = require('readline-sync'),
   clc = require('cli-color'),
   request = require('request-promise'),
+  rc = require('rc'),
+  params = rc('kuzzle'),
   name,
   password,
   step = 0,
@@ -67,116 +69,11 @@ var
     }
   ];
 
-
-var createAdminRole = () => {
-  var data = {
-    indexes: {
-      _canCreate: true,
-      '*': {
-      collections: {
-        _canCreate: true,
-        '*': {
-          controllers: {
-            '*': {
-              actions: {
-                '*': true
-                }
-              }
-            }
-          }
-        }
-      },
-      '%kuzzle': {
-      collections: {
-        _canCreate: true,
-        '*': {
-          controllers: {
-           '*': {
-              actions: {
-                '*': true
-                }
-              }
-            }
-          }
-        }
-      }
-    }    
-  };
-
-  return request({
-    method: 'PUT',
-    uri: 'http://localhost:7511/api/1.0/roles/admin',
-    body: data,
-    json: true
-  });
-};
-
-var createAdminUser = () => {
-  var data = {
-    _id: name,
-    password: password,
-    profile: 'admin'
-  };
-
-  return request({
-    method: 'POST',
-    uri: 'http://localhost:7511/api/1.0/users/_create',
-    body: data,
-    json: true
-  });
-};
-
-var createAdmin = () => {
-  return createAdminRole()
-    .then(() => {
-      console.log(clc.green('[✔] "admin" role created'));
-      return resetProfile('admin', 'admin');
-    })
-    .then(() => {
-      console.log(clc.green('[✔] "admin" profile created'));
-      return createAdminUser();
-    });
-};
-
-var resetRoles = (roleId) => {
-  var data = {
-    indexes: {
-      _canCreate: false,
-      '*': {
-      collections: {
-        _canCreate: false,
-        '*': {
-          controllers: {
-            '*': {
-              actions: {
-                '*': false
-                }
-              }
-            }
-          }
-        }
-      },
-      '%kuzzle': {
-      collections: {
-        _canCreate: false,
-        '*': {
-          controllers: {
-           '*': {
-              actions: {
-                '*': false
-                }
-              }
-            }
-          }
-        }
-      }
-    }    
-  };
-
+var resetRole = (roleId) => {
   return request({
     method: 'PUT',
     uri: 'http://localhost:7511/api/1.0/roles/' + roleId,
-    body: data,
+    body: params.userRoles[roleId],
     json: true
   });
 };
@@ -193,7 +90,21 @@ var resetProfile = (profileId, roleId) => {
     body: data,
     json: true
   });  
- 
+};
+
+var createAdminUser = () => {
+  var data = {
+    _id: name,
+    password: password,
+    profile: 'admin'
+  };
+
+  return request({
+    method: 'POST',
+    uri: 'http://localhost:7511/api/1.0/users/_create',
+    body: data,
+    json: true
+  });
 };
 
 var nextStep = (message) => {
@@ -216,25 +127,33 @@ var nextStep = (message) => {
       nextStep(clc.cyan('███ Please retry...'));
     }
   } else {
-    createAdmin()
-      .then((res) => {
-        console.log(clc.green('[✔] First admin created'));
-        return resetRoles('default');
-      })
-      .then((res) => {
-        console.log(clc.green('[✔] "default" Role reset'));
-        return resetRoles('anonymous');
-      })
-      .then((res) => {
-        console.log(clc.green('[✔] "anonymous" Role reset'));
+    createAdminUser()
+      .then((res) =>{
+        console.log(clc.green('[✔] "' + name + '" user created with admin rights'));
         return resetProfile('default', 'default');
       })
       .then((res) => {
         console.log(clc.green('[✔] "default" profile reset'));
+        return resetProfile('admin', 'admin');
+      })
+      .then((res) => {
+        console.log(clc.green('[✔] "admin" profile reset'));
         return resetProfile('anonymous', 'anonymous');
       })
       .then((res) => {
         console.log(clc.green('[✔] "anonymous" profile reset'));
+        return resetRole('default')
+      })
+      .then((res) => {
+        console.log(clc.green('[✔] "default" role reset'));
+        return resetRole('admin');
+      })
+      .then((res) => {
+        console.log(clc.green('[✔] "admin" role reset'));
+        return resetRole('anonymous');
+      })
+      .then((res) => {
+        console.log(clc.green('[✔] "anonymous" role reset'));
         console.log('\n');
         console.log(clc.green('[✔] Everything is finished'));
       })
@@ -260,16 +179,15 @@ module.exports = function () {
   // try to access to the admin profile
   request({
     method: 'GET',
-    uri: 'http://localhost:7511/api/1.0/%25kuzzle/profiles/admin',
+    uri: 'http://localhost:7511/api/1.0/%25kuzzle/roles/admin',
     json: true
   })
+    .then((res) =>{
+      // we can access to the admin role, so no admin account have been created yet
+      console.log(clc.green('███ Kuzzle first admin creation'));
+      nextStep();
+    })
     .catch((err) => {
-      if (err.statusCode === 404) {
-        // if the response is "Not Found" then we do not have an admin profile
-        console.log(clc.green('███ Kuzzle first admin creation'));
-        nextStep();
-      } else {
-        console.log(clc.green('[✔] The first admin has already been created'));
-      }
+      console.log(clc.green('[✔] The first admin has already been created'));
     });
 };
