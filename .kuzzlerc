@@ -80,18 +80,21 @@
           }
         }
       },
-      "%kuzzle": {              // into the %kuzzle index, only
-      "collections": {          // at the collection level, cannot create any collection by our own
-        "*": {                  // for all the collections
-          "controllers": {      // at the controller level
-            "*": {              // with all the controller only
-              "actions": {      // at the action level of the security controller
-                "*": true       // we can do any action
+      "%kuzzle": {                // into the %kuzzle index, only
+        "_canDelete": false       // we cannot delete collections
+        "collections": {          // at the collection level, cannot create any collection by our own
+          "_canCreate": true      // we can create collections
+          "*": {                  // for all the collections
+            "_canDelete": false   // we cannot delete it
+            "controllers": {      // at the controller level
+              "*": {              // with all the controller only
+                "actions": {      // at the action level of the security controller
+                  "*": true       // we can do any action
+                  }
                 }
               }
             }
           }
-        }
       }
     }
   },
@@ -118,17 +121,20 @@
           }
         },
         "%kuzzle": {
-        "collections": {
-          "*": {
-            "controllers": {
-              "*": {
-                "actions": {
-                  "*": true
+          "_canDelete": false,
+          "collections": {
+            "_canCreate": true,
+            "*": {
+              "_canDelete": false
+              "controllers": {
+                "*": {
+                  "actions": {
+                    "*": true
+                    }
                   }
                 }
               }
             }
-          }
         }
       }
     },
