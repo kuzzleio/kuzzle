@@ -81,11 +81,11 @@
         }
       },
       "%kuzzle": {                // into the %kuzzle index, only
-        "_canDelete": false       // we cannot delete collections
+        "_canDelete": false,      // we cannot delete collections
         "collections": {          // at the collection level, cannot create any collection by our own
-          "_canCreate": true      // we can create collections
+          "_canCreate": true,     // we can create collections
           "*": {                  // for all the collections
-            "_canDelete": false   // we cannot delete it
+            "_canDelete": false,  // we cannot delete it
             "controllers": {      // at the controller level
               "*": {              // with all the controller only
                 "actions": {      // at the action level of the security controller
@@ -125,7 +125,7 @@
           "collections": {
             "_canCreate": true,
             "*": {
-              "_canDelete": false
+              "_canDelete": false,
               "controllers": {
                 "*": {
                   "actions": {
