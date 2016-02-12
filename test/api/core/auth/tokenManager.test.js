@@ -5,9 +5,11 @@ var
   RealTimeResponseObject = require.main.require('lib/api/core/models/realTimeResponseObject'),
   TokenManager = require.main.require('lib/api/core/auth/tokenManager');
 
-describe('Test: token manager core component', function (done) {
+describe('Test: token manager core component', function () {
   var
     kuzzle,
+    token,
+    contextStub,
     tokenManager;
 
   before(function (done) {
@@ -21,6 +23,8 @@ describe('Test: token manager core component', function (done) {
             'room3': {}
           }
         };
+
+        contextStub = {connection: {id: 'foobar'}};
         done();
       })
       .catch(err => done(err));
@@ -28,14 +32,31 @@ describe('Test: token manager core component', function (done) {
 
   beforeEach(function () {
     tokenManager = new TokenManager(kuzzle);
+    token = {_id: 'foobar', expiresAt: Date.now()+1000};
+  });
+
+  describe('#add', function () {
+    it('should not add a token if the context does not contain a connection object', function () {
+      tokenManager.add(token, {});
+      should(tokenManager.tokenizedConnections.foobar).be.undefined();
+    });
+
+    it('should not add a token if the context connection does not contain an id', function () {
+      tokenManager.add(token, {connection: {}});
+      should(tokenManager.tokenizedConnections.foobar).be.undefined();
+    });
+
+    it('should add the token if the context is properly formatted', function () {
+      tokenManager.add(token, contextStub);
+      should(tokenManager.tokenizedConnections.foobar).be.an.Object();
+      should(tokenManager.tokenizedConnections.foobar.expiresAt).be.eql(token.expiresAt);
+      should(tokenManager.tokenizedConnections.foobar.connection).be.eql(contextStub.connection);
+    });
   });
 
   describe('#expire', function () {
     it('should force a token to expire when called', function () {
-      tokenManager.tokenizedConnections.foobar = {
-        expiresAt: Date.now() + 1000000
-      };
-
+      tokenManager.add(token, contextStub);
       tokenManager.expire({_id: 'foobar'});
 
       should(tokenManager.tokenizedConnections.foobar.expiresAt).be.belowOrEqual(Date.now());
@@ -69,37 +90,39 @@ describe('Test: token manager core component', function (done) {
     it('should do nothing if no token has expired', function () {
       var stubTokens = {
         foo: {
+          _id: 'foo',
           expiresAt: Date.now() + 1000000
         },
         bar: {
+          _id: 'bar',
           expiresAt: Date.now() + 1000000
         }
       };
 
-      tokenManager.tokenizedConnections = stubTokens;
+      Object.keys(stubTokens).forEach(k => tokenManager.add(stubTokens[k], contextStub));
 
       tokenManager.checkTokensValidity();
 
       should(notification).be.null();
       should(subscriptionsCleaned).be.false();
-      should(tokenManager.tokenizedConnections).be.eql(stubTokens);
+      should(tokenManager.tokenizedConnections.foo).match({expiresAt: stubTokens.foo.expiresAt, connection: contextStub.connection});
+      should(tokenManager.tokenizedConnections.bar).match({expiresAt: stubTokens.bar.expiresAt, connection: contextStub.connection});
     });
 
     it('should clean up subscriptions upon a token expiration', function () {
       var
         stubTokens = {
           foo: {
-            expiresAt: Date.now() - 1000,
-            connection: {
-              id: 'foobar'
-            }
+            _id: 'foo',
+            expiresAt: Date.now() - 1000
           },
           bar: {
+            _id: 'bar',
             expiresAt: Date.now() + 1000000
           }
         };
 
-      tokenManager.tokenizedConnections = stubTokens;
+      Object.keys(stubTokens).forEach(k => tokenManager.add(stubTokens[k], contextStub));
 
       tokenManager.checkTokensValidity();
 
@@ -112,31 +135,31 @@ describe('Test: token manager core component', function (done) {
       should(notification.controller).be.eql('auth');
       should(notification.action).be.eql('jwtTokenExpired');
       should(tokenManager.tokenizedConnections.foo).be.undefined();
-      should(tokenManager.tokenizedConnections.bar).be.eql(stubTokens.bar);
+      should(tokenManager.tokenizedConnections.bar).match({expiresAt: stubTokens.bar.expiresAt, connection: contextStub.connection});
     });
 
     it('should behave correctly if the token does not match any subscription', function () {
       var
         stubTokens = {
           foo: {
-            expiresAt: Date.now() - 1000,
-            connection: {
-              id: 'barfoo'
-            }
+            _id: 'foo',
+            expiresAt: Date.now() - 1000
           },
           bar: {
+            _id: 'bar',
             expiresAt: Date.now() + 1000000
           }
         };
 
-      tokenManager.tokenizedConnections = stubTokens;
+      contextStub = {connection: {id: 'this id matches nothing'}};
+      Object.keys(stubTokens).forEach(k => tokenManager.add(stubTokens[k], contextStub));
 
       tokenManager.checkTokensValidity();
 
       should(subscriptionsCleaned).be.false();
       should(notification).be.null();
       should(tokenManager.tokenizedConnections.foo).be.undefined();
-      should(tokenManager.tokenizedConnections.bar).be.eql(stubTokens.bar);
+      should(tokenManager.tokenizedConnections.bar).match({expiresAt: stubTokens.bar.expiresAt, connection: contextStub.connection});
     });
   });
 });
