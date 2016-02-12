@@ -45,17 +45,11 @@ describe('Test: security controller - profiles', function () {
             }]
           });
         };
-        kuzzle.repositories.profile.searchProfiles = () => {
-          return q([{
-            _id: 'test',
-            roles: [
-              {
-                _id: 'role1',
-                indexes: {}
-              }
-            ]
-          }]
-          );
+        kuzzle.services.list.readEngine.search = requestObject => {
+          return q(new ResponseObject(requestObject, {
+            hits: [{_id: 'test'}],
+            total: 1
+          }));
         };
         kuzzle.repositories.profile.loadMultiFromDatabase = (ids, hydrate) => {
           if (!hydrate) {
