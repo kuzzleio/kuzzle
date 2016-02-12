@@ -84,7 +84,7 @@
       "collections": {          // at the collection level, cannot create any collection by our own
         "*": {                  // for all the collections
           "controllers": {      // at the controller level
-            "security": {       // with the security controller only
+            "*": {              // with all the controller only
               "actions": {      // at the action level of the security controller
                 "*": true       // we can do any action
                 }
@@ -121,7 +121,7 @@
         "collections": {
           "*": {
             "controllers": {
-              "security": {
+              "*": {
                 "actions": {
                   "*": true
                   }

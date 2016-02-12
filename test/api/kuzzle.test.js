@@ -677,10 +677,12 @@ describe('Test kuzzle constructor', function () {
           should(workerCalled).be.true();
 
           /*
-            We expect these 3 request objects, in this order:
+            We expect these 9 request objects, in this order:
               - internal index creation
               - profiles collection mapping
               - users collection mapping
+              - users roles
+              - users profiles
            */
           should(requests.length).be.eql(9);
           should(indexAdded.length).be.eql(4);
@@ -701,7 +703,6 @@ describe('Test kuzzle constructor', function () {
           should(indexAdded[1].index).be.eql(context.kuzzle.config.internalIndex);
           should(indexAdded[1].collection).be.eql('profiles');
 
-
           should(requests[2].controller).be.eql('admin');
           should(requests[2].action).be.eql('updateMapping');
           should(requests[2].index).be.eql(context.kuzzle.config.internalIndex);
@@ -709,6 +710,36 @@ describe('Test kuzzle constructor', function () {
 
           should(indexAdded[2].index).be.eql(context.kuzzle.config.internalIndex);
           should(indexAdded[2].collection).be.eql('users');
+
+          should(requests[3].controller).be.eql('write');
+          should(requests[3].action).be.eql('createOrReplace');
+          should(requests[3].index).be.eql(context.kuzzle.config.internalIndex);
+          should(requests[3].collection).be.eql('roles');
+
+          should(requests[4].controller).be.eql('write');
+          should(requests[4].action).be.eql('createOrReplace');
+          should(requests[4].index).be.eql(context.kuzzle.config.internalIndex);
+          should(requests[4].collection).be.eql('roles');
+
+          should(requests[5].controller).be.eql('write');
+          should(requests[5].action).be.eql('createOrReplace');
+          should(requests[5].index).be.eql(context.kuzzle.config.internalIndex);
+          should(requests[5].collection).be.eql('roles');
+
+          should(requests[6].controller).be.eql('write');
+          should(requests[6].action).be.eql('createOrReplace');
+          should(requests[6].index).be.eql(context.kuzzle.config.internalIndex);
+          should(requests[6].collection).be.eql('profiles');
+
+          should(requests[7].controller).be.eql('write');
+          should(requests[7].action).be.eql('createOrReplace');
+          should(requests[7].index).be.eql(context.kuzzle.config.internalIndex);
+          should(requests[7].collection).be.eql('profiles');
+
+          should(requests[8].controller).be.eql('write');
+          should(requests[8].action).be.eql('createOrReplace');
+          should(requests[8].index).be.eql(context.kuzzle.config.internalIndex);
+          should(requests[8].collection).be.eql('profiles');
 
           done();
         })
