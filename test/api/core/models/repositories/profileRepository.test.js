@@ -16,11 +16,11 @@ var
     services: {list: {}},
     config: require.main.require('lib/config')(params)
   },
-  UserRepository = require.main.require('lib/api/core/models/repositories/userRepository')(kuzzle);
-  ProfileRepository = require.main.require('lib/api/core/models/repositories/profileRepository')(kuzzle);
-  RoleRepository = require.main.require('lib/api/core/models/repositories/roleRepository')(kuzzle),
+  UserRepository = require.main.require('lib/api/core/models/repositories/userRepository')(kuzzle),
+  ProfileRepository = require.main.require('lib/api/core/models/repositories/profileRepository')(kuzzle),
+  RoleRepository = require.main.require('lib/api/core/models/repositories/roleRepository')(kuzzle);
 
-describe('Test: repositories/profileRepository', function () {
+describe('Test: repositories/profileRepository', () => {
   var
     mockReadEngine,
     mockRoleRepository,
@@ -31,7 +31,7 @@ describe('Test: repositories/profileRepository', function () {
     profileRepository;
 
   mockReadEngine = {
-    get: function (requestObject) {
+    get: (requestObject) => {
       var err;
       if (requestObject.data._id === 'testprofile') {
         return q(new ResponseObject(requestObject, testProfilePlain));
@@ -47,20 +47,20 @@ describe('Test: repositories/profileRepository', function () {
     }
   };
   mockRoleRepository = {
-    loadRoles: function (keys) {
+    loadRoles: (keys) => {
       if (keys.length === 1 && keys[0] === 'error') {
         return q.reject(new InternalError('Error'));
       }
 
-      return q(keys.map(function (key) {
-        var role = new Role();
-        role._id = key;
-        return role;
-      })
-      .filter((role) => {
-        return role._id !== 'notExistingRole';
-      })
-    );
+      return q(keys.map((key) => {
+          var role = new Role();
+          role._id = key;
+          return role;
+        })
+          .filter((role) => {
+            return role._id !== 'notExistingRole';
+          })
+      );
     }
   };
   mockUserRepository = {
@@ -73,12 +73,12 @@ describe('Test: repositories/profileRepository', function () {
     }
   };
 
-  before(function () {
+  before(() => {
     kuzzle.repositories.role = mockRoleRepository;
     kuzzle.repositories.user = mockUserRepository;
   });
 
-  beforeEach(function () {
+  beforeEach(() => {
     profileRepository = new ProfileRepository();
     profileRepository.readEngine = mockReadEngine;
 
@@ -356,21 +356,22 @@ describe('Test: repositories/profileRepository', function () {
 
       userRepository.hydrate(user, {})
         .then((result) => {
-          should(result.profile._id).be.exactly('default');
+          should(result.profile._id).be.eql('default');
         });
     });
   });
 
   describe('#defaultRole', () => {
     it('should add the default role when the profile do not have any role set', () => {
-      profileRepository = new ProfileRepository(),
-        profile = new Profile();
+      var profile = new Profile();
       profile._id = 'NoRole';
+      profileRepository = new ProfileRepository();
 
       profileRepository.hydrate(profile, {})
         .then((result) => {
-          should(result.roles[0]._id).be.exactly('default');
+          should(result.roles[0]._id).be.eql('default');
         });
     });
   });
+
 });
