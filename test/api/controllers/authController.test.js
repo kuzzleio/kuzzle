@@ -68,37 +68,44 @@ MockupWrapper = function(MockupReturn) {
 describe('Test the auth controller', function () {
   var kuzzle;
 
-  describe('#login', function () {
-    beforeEach(function (done) {
-      requestObject = new RequestObject({ controller: 'auth', action: 'login', body: {strategy: 'mockup', username: 'jdoe'} }, {}, 'unit-test');
-      kuzzle = new Kuzzle();
-      kuzzle.start(params, {dummy: true})
-        .then(function () {
-
-          kuzzle.repositories.user.load = function(t) {
-            var deferred = q.defer();
-
-            deferred.resolve({
+  beforeEach(function (done) {
+    requestObject = new RequestObject({ controller: 'auth', action: 'login', body: {strategy: 'mockup', username: 'jdoe'} }, {}, 'unit-test');
+    kuzzle = new Kuzzle();
+    kuzzle.start(params, {dummy: true})
+      .then(function () {
+        kuzzle.repositories.user.load = function(t) {
+          if ( t === 'unknown_user' ) {
+            return q(null);
+          }
+          return q({
+            _id: t,
+            profile: {
               _id: t,
-              profile: 'anonymous'
-            });
+              roles: [
+                {
+                  _id: 'role1',
+                  indexes: {}
+                }
+              ]
+            }
+          });
+        };
+        done();
+      });
+  });
 
-            return deferred;
+  describe('#login', function () {
+    beforeEach(function () {
+      passport.use(new MockupStrategy('mockup', function(username, callback) {
+        var
+          deferred = q.defer(),
+          user = {
+            _id: username
           };
-
-          passport.use(new MockupStrategy('mockup', function(username, callback) {
-            var
-              deferred = q.defer(),
-              user = {
-                _id: username
-              };
-            deferred.resolve(user);
-            deferred.promise.nodeify(callback);
-            return deferred.promise;
-          }));
-
-          done();
-        });
+        deferred.resolve(user);
+        deferred.promise.nodeify(callback);
+        return deferred.promise;
+      }));
     });
 
     it('should resolve to a valid jwt token if authentication succeed', function (done) {
@@ -208,8 +215,19 @@ describe('Test the auth controller', function () {
   });
   describe('#logout', function () {
 
-    beforeEach(function (done) {
-      var signedToken = jwt.sign({_id: 'admin'}, params.jsonWebToken.secret, {algorithm: params.jsonWebToken.algorithm});
+    beforeEach(function () {
+      var
+       signedToken = jwt.sign({_id: 'admin'}, params.jsonWebToken.secret, {algorithm: params.jsonWebToken.algorithm}),
+       t = new Token();
+
+      t._id = signedToken;
+
+      context = {
+        connection: {
+          id: 'papagaya'
+        },
+        token: t
+      };
 
       requestObject = new RequestObject({
         controller: 'auth',
@@ -218,23 +236,7 @@ describe('Test the auth controller', function () {
           authorization: 'Bearer ' + signedToken
         }
       }, {}, 'unit-test');
-      kuzzle = new Kuzzle();
-      kuzzle.start(params, {dummy: true})
-        .then(kuzzle.repositories.user.admin())
-        .then(function (user) {
-          var t = new Token();
-          t._id = signedToken;
-          t.user = user;
 
-          context = {
-            connection: {
-              id: 'papagaya'
-            },
-            token: t
-          };
-
-          done();
-        });
     });
 
     it('should emit a auth:logout event', function (done) {
@@ -350,7 +352,7 @@ describe('Test the auth controller', function () {
       var promise = kuzzle.funnel.auth.getCurrentUser(new RequestObject({
         body: {}
       }), {
-        token: { user: { _id: 'Carmen Sandiego' } }
+        token: { user: { _id: 'unknown_user' } }
       });
 
       return should(promise).be.rejectedWith(NotFoundError);
@@ -369,8 +371,6 @@ describe('Test the auth controller', function () {
           controller: 'auth'
         },
         {body: {token: 'foobar'}});
-      kuzzle = new Kuzzle();
-      return kuzzle.start(params, {dummy: true});
     });
 
     it('should return a rejected promise if no token is provided', function () {
