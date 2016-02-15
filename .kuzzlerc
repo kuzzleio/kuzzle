@@ -141,9 +141,13 @@
     "anonymous": {
       "_id": "anonymous",
       "indexes": {
+        "_canCreate": false,
         "*": {
+          "_canDelete": false,
           "collections": {
+            "_canCreate": false,
             "*": {
+              "_canDelete": false,
               "controllers": {
                 "auth": {
                   "actions": {
@@ -160,9 +164,13 @@
     "default": {
       "_id": "default",
       "indexes": {
+        "_canCreate": false,
         "*": {
+          "_canDelete": false,
           "collections": {
+            "_canCreate": false,
             "*": {
+              "_canDelete": false,
               "controllers": {
                 "auth": {
                   "actions": {

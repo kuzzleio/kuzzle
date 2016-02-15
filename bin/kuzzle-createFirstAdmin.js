@@ -22,7 +22,6 @@ var
             return false;
           }
 
-          name = _name;
           console.log(clc.green('[✔] Given username: ' + name));
           if (_name !== userEntry) {
             console.log(clc.cyan('[ℹ] The username has been trimmed.'));
