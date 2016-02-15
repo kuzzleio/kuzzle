@@ -60,7 +60,7 @@
       "roles": [ "anonymous" ]
     }
   },
-  // role template for all users before to create the first admin
+  // role template for all users before creating the first admin
   "roleWithoutAdmin": {
     "indexes": {                // when we are in the ES level, before the indexes
       "_canCreate": true,       // we can create indexes
