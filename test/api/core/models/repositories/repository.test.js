@@ -125,7 +125,7 @@ describe('Test: repositories/repository', function () {
         });
     },
     search: function (requestObject) {
-      return q(new ResponseObject(requestObject, {hits: [{_id: 'role'}]}));
+      return q(new ResponseObject(requestObject, {hits: [{_id: 'role', _source: {indexes: {}}}], total: 1}));
     }
   };
   mockWriteLayer = {
@@ -548,15 +548,21 @@ describe('Test: repositories/repository', function () {
     it('should return a list from database', function (done) {
       repository.search({}, 0, 10, false)
         .then(response => {
-          should(response).be.an.Array();
+          should(response).be.an.Object();
+          should(response.hits).be.an.Array();
+          should(response.total).be.exactly(1);
+
           done();
         });
     });
     it('should construct role if hydrate is true', function (done) {
       repository.search({}, 0, 10, true)
         .then(response => {
-          should(response).be.an.Array();
-          should(response[0].type).be.exactly('testObject');
+          should(response).be.an.Object();
+          should(response.hits).be.an.Array();
+          should(response.total).be.exactly(1);
+
+          should(response.hits[0].type).be.exactly('testObject');
           done();
         });
     });
