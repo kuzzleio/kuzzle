@@ -5,18 +5,20 @@ var
   should = require('should'),
   Role = require.main.require('lib/api/core/models/security/role'),
   Profile = require.main.require('lib/api/core/models/security/profile'),
+  User = require.main.require('lib/api/core/models/security/user'),
   BadRequestError = require.main.require('lib/api/core/errors/badRequestError'),
   InternalError = require.main.require('lib/api/core/errors/internalError'),
   NotFoundError = require.main.require('lib/api/core/errors/notFoundError'),
   ResponseObject = require.main.require('lib/api/core/models/responseObject'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
-  UserRepository = require.main.require('lib/api/core/models/repositories/userRepository'),
   kuzzle = {
     repositories: {},
     services: {list: {}},
     config: require.main.require('lib/config')(params)
   },
+  UserRepository = require.main.require('lib/api/core/models/repositories/userRepository')(kuzzle);
   ProfileRepository = require.main.require('lib/api/core/models/repositories/profileRepository')(kuzzle);
+  RoleRepository = require.main.require('lib/api/core/models/repositories/roleRepository')(kuzzle),
 
 describe('Test: repositories/profileRepository', function () {
   var
@@ -213,6 +215,35 @@ describe('Test: repositories/profileRepository', function () {
       should(profileRepository.deleteProfile(testProfile))
         .be.fulfilledWith(ResponseObject);
     });
+    it('should reject when trying to delete admin', () => {
+      var profile = {
+        _id: 'admin',
+        roles: [ 'admin' ]
+      };
+
+      should(profileRepository.deleteProfile(profile))
+        .be.rejectedWith(BadRequestError);
+    });
+
+    it('should reject when trying to delete default', () => {
+      var profile = {
+        _id: 'default',
+        roles: [ 'default' ]
+      };
+
+      should(profileRepository.deleteProfile(profile))
+        .be.rejectedWith(BadRequestError);
+    });
+
+    it('should reject when trying to delete anonymous', () => {
+      var profile = {
+        _id: 'anonymous',
+        roles: [ 'anonymous' ]
+      };
+
+      should(profileRepository.deleteProfile(profile))
+        .be.rejectedWith(BadRequestError);
+    });
   });
 
   describe('#serializeToDatabase', () => {
@@ -312,6 +343,33 @@ describe('Test: repositories/profileRepository', function () {
           should(profileRepository.profiles[testProfile._id]).be.eql(testProfile);
           should(result).be.an.instanceOf(ResponseObject);
           should(result.data.body._id).be.eql(testProfile._id);
+        });
+    });
+  });
+
+  describe('#defaultProfile', () => {
+    it('should add the default profile when the user do not have any profile set', () => {
+      var userRepository = new UserRepository(),
+        user = new User();
+      user.name = 'No Profile';
+      user._id = 'NoProfile';
+
+      userRepository.hydrate(user, {})
+        .then((result) => {
+          should(result.profile._id).be.exactly('default');
+        });
+    });
+  });
+
+  describe('#defaultRole', () => {
+    it('should add the default role when the profile do not have any role set', () => {
+      profileRepository = new ProfileRepository(),
+        profile = new Profile();
+      profile._id = 'NoRole';
+
+      profileRepository.hydrate(profile, {})
+        .then((result) => {
+          should(result.roles[0]._id).be.exactly('default');
         });
     });
   });
