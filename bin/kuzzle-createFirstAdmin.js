@@ -21,12 +21,13 @@ var
             console.log(clc.red('[✖] Username should have at least 4 chars'));
             return false;
           }
+          
+          name = _name;
 
           console.log(clc.green('[✔] Given username: ' + name));
           if (_name !== userEntry) {
             console.log(clc.cyan('[ℹ] The username has been trimmed.'));
           }
-          name = _name;
           return true;
         } else {
           console.log(clc.red('[✖] It is a bad idea to name an admin "' + _name + '"...'));
