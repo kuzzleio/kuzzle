@@ -23,12 +23,12 @@ describe('Test: security controller - profiles', function () {
             return q.reject();
           }
 
-          return q({
+          return q(new ResponseObject({}, {
             _index: kuzzle.config.internalIndex,
             _type: 'profiles',
             _id: profile._id,
             created: true
-          });
+          }));
         };
         kuzzle.repositories.profile.loadProfile = id => {
           if (id === 'badId') {
@@ -220,6 +220,39 @@ describe('Test: security controller - profiles', function () {
         .catch(error => {
           done(error);
         });
+    });
+  });
+
+  describe('#updateProfile', function () {
+    it('should return a valid ResponseObject', done => {
+
+      kuzzle.repositories.profile.validateAndSaveProfile = profile => {
+        return q(new ResponseObject({}, {
+          _index: kuzzle.config.internalIndex,
+          _type: 'profiles',
+          _id: profile._id,
+          created: false
+        }));
+      };
+
+      kuzzle.funnel.security.updateProfile(new RequestObject({
+          body: { _id: 'test', foo: 'bar' }
+        }), {})
+        .then(response => {
+          should(response).be.an.instanceOf(ResponseObject);
+          should(response.data.body.created).be.exactly(false);
+          should(response.data.body._id).be.exactly('test');
+
+          done();
+        })
+        .catch(error => { done(error); });
+    });
+
+    it('should reject the promise if no id is given', () => {
+      return should(kuzzle.funnel.security.updateProfile(new RequestObject({
+        body: {}
+      }), {}))
+        .be.rejectedWith(BadRequestError);
     });
   });
 

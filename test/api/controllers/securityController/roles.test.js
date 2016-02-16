@@ -22,12 +22,12 @@ describe('Test: security controller - roles', function () {
             return q.reject();
           }
 
-          return q({
+          return q(new ResponseObject({}, {
             _index: kuzzle.config.internalIndex,
             _type: 'roles',
             _id: role._id,
             created: true
-          });
+          }));
         };
         kuzzle.repositories.role.loadOneFromDatabase = id => {
           if (id === 'badId') {
@@ -156,6 +156,43 @@ describe('Test: security controller - roles', function () {
         .catch(error => {
           done(error);
         });
+    });
+  });
+
+  describe('#updateRole', function () {
+
+    it('should return a valid ResponseObject', done => {
+      kuzzle.repositories.role.validateAndSaveRole = role => {
+        if (role._id === 'alreadyExists') {
+          return q.reject();
+        }
+
+        return q(new ResponseObject({}, {
+          _index: kuzzle.config.internalIndex,
+          _type: 'roles',
+          _id: role._id,
+          created: false
+        }));
+      };
+
+      kuzzle.funnel.security.updateRole(new RequestObject({
+        body: { _id: 'test', foo: 'bar' }
+      }), {})
+        .then(response => {
+          should(response).be.an.instanceOf(ResponseObject);
+          should(response.data.body.created).be.exactly(false);
+          should(response.data.body._id).be.exactly('test');
+
+          done();
+        })
+        .catch(error => { done(error); });
+    });
+
+    it('should reject the promise if no id is given', () => {
+      return should(kuzzle.funnel.security.updateRole(new RequestObject({
+        body: {}
+      }), {}))
+        .be.rejectedWith(BadRequestError);
     });
   });
 
