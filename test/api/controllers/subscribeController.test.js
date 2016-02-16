@@ -19,24 +19,15 @@ describe('Test: subscribe controller', function () {
     context,
     requestObject = new RequestObject({index: 'test'}, {}, 'unit-test');
 
-  before(function (done) {
+  before(function () {
     context = {};
     kuzzle = new Kuzzle();
-    kuzzle.start(params, {dummy: true})
-      .then(function () {
-        kuzzle.repositories.role.roles.guest = new Role();
-        return kuzzle.repositories.role.hydrate(kuzzle.repositories.role.roles.guest, params.userRoles.guest);
-      })
-      .then(function () {
-        kuzzle.repositories.profile.profiles.anonymous = new Profile();
-        return kuzzle.repositories.profile.hydrate(kuzzle.repositories.profile.profiles.anonymous, params.userProfiles.anonymous);
-      })
+    return kuzzle.start(params, {dummy: true})
       .then(function () {
         return kuzzle.repositories.token.anonymous();
       })
       .then(function (token) {
         anonymousToken = token;
-        done();
       });
   });
 
@@ -78,7 +69,7 @@ describe('Test: subscribe controller', function () {
 
       kuzzle.once('subscription:list', () => done());
       should(kuzzle.funnel.subscribe.list(requestObject, {
-        connection: {id: 'foobar'},
+        connection: {id: 'foobar'} ,
         token: anonymousToken
       })).be.a.Promise();
     });

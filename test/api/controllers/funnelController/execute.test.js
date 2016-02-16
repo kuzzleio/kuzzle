@@ -24,14 +24,16 @@ describe('Test execute function in funnel controller', function () {
     kuzzle.removeAllListeners();
     kuzzle.start(params, {dummy: true})
       .then(function () {
-        kuzzle.repositories.role.roles.guest = new Role();
-        return kuzzle.repositories.role.hydrate(kuzzle.repositories.role.roles.guest, params.userRoles.guest);
+        kuzzle.repositories.role.roles.anonymous = new Role();
+        params.roleWithoutAdmin._id = 'anonymous';
+        return kuzzle.repositories.role.hydrate(kuzzle.repositories.role.roles.anonymous, params.roleWithoutAdmin);
       })
+
       .then(function () {
-        kuzzle.repositories.profile.profiles.anonymous = new Profile();
-        return kuzzle.repositories.profile.hydrate(kuzzle.repositories.profile.profiles.anonymous, params.userProfiles.anonymous);
+        kuzzle.repositories.profile.profiles.anonymous = {_id: 'anonymous', roles: ['anonymous']};
+        return q(kuzzle.repositories.profile.profiles.anonymous);
       })
-      .then(function () {
+      .then(function (res) {
         return kuzzle.repositories.token.anonymous();
       })
       .then(function (anonymousToken) {

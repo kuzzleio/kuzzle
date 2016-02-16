@@ -5,20 +5,22 @@ var
   should = require('should'),
   Role = require.main.require('lib/api/core/models/security/role'),
   Profile = require.main.require('lib/api/core/models/security/profile'),
+  User = require.main.require('lib/api/core/models/security/user'),
   BadRequestError = require.main.require('lib/api/core/errors/badRequestError'),
   InternalError = require.main.require('lib/api/core/errors/internalError'),
   NotFoundError = require.main.require('lib/api/core/errors/notFoundError'),
   ResponseObject = require.main.require('lib/api/core/models/responseObject'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
-  UserRepository = require.main.require('lib/api/core/models/repositories/userRepository'),
   kuzzle = {
     repositories: {},
     services: {list: {}},
     config: require.main.require('lib/config')(params)
   },
-  ProfileRepository = require.main.require('lib/api/core/models/repositories/profileRepository')(kuzzle);
+  UserRepository = require.main.require('lib/api/core/models/repositories/userRepository')(kuzzle),
+  ProfileRepository = require.main.require('lib/api/core/models/repositories/profileRepository')(kuzzle),
+  RoleRepository = require.main.require('lib/api/core/models/repositories/roleRepository')(kuzzle);
 
-describe('Test: repositories/profileRepository', function () {
+describe('Test: repositories/profileRepository', () => {
   var
     mockReadEngine,
     mockRoleRepository,
@@ -29,9 +31,8 @@ describe('Test: repositories/profileRepository', function () {
     profileRepository;
 
   mockReadEngine = {
-    get: function (requestObject) {
+    get: (requestObject) => {
       var err;
-
       if (requestObject.data._id === 'testprofile') {
         return q(new ResponseObject(requestObject, testProfilePlain));
       }
@@ -46,20 +47,20 @@ describe('Test: repositories/profileRepository', function () {
     }
   };
   mockRoleRepository = {
-    loadRoles: function (keys) {
+    loadRoles: (keys) => {
       if (keys.length === 1 && keys[0] === 'error') {
         return q.reject(new InternalError('Error'));
       }
 
-      return q(keys.map(function (key) {
-        var role = new Role();
-        role._id = key;
-        return role;
-      })
-      .filter((role) => {
-        return role._id !== 'notExistingRole';
-      })
-    );
+      return q(keys.map((key) => {
+          var role = new Role();
+          role._id = key;
+          return role;
+        })
+          .filter((role) => {
+            return role._id !== 'notExistingRole';
+          })
+      );
     }
   };
   mockUserRepository = {
@@ -72,12 +73,12 @@ describe('Test: repositories/profileRepository', function () {
     }
   };
 
-  before(function () {
+  before(() => {
     kuzzle.repositories.role = mockRoleRepository;
     kuzzle.repositories.user = mockUserRepository;
   });
 
-  beforeEach(function () {
+  beforeEach(() => {
     profileRepository = new ProfileRepository();
     profileRepository.readEngine = mockReadEngine;
 
@@ -124,7 +125,7 @@ describe('Test: repositories/profileRepository', function () {
     });
 
     it('should load a profile if already in memory', done => {
-      profileRepository.profiles.testprofile = testProfile;
+      profileRepository.profiles.testprofile = testProfilePlain;
       // we ensure the readEngine is not called
       profileRepository.loadOneFromDatabase = null;
       profileRepository.readEngine = null;
@@ -133,21 +134,6 @@ describe('Test: repositories/profileRepository', function () {
         .then(function (result){
           should(result).be.an.instanceOf(Profile);
           should(result).be.eql(testProfile);
-          done();
-        })
-        .catch(function (error) {
-          done(error);
-        });
-    });
-
-    it('should load a profile defined in kuzzle params if not in db', done => {
-      profileRepository.loadProfile('anonymous')
-        .then(function (result) {
-          should(result).be.an.instanceOf(Profile);
-          should(result._id).be.exactly('anonymous');
-          should(result.roles).be.an.Array();
-          should(result.roles).not.be.empty();
-
           done();
         })
         .catch(function (error) {
@@ -228,6 +214,35 @@ describe('Test: repositories/profileRepository', function () {
       profileRepository.profiles[testProfile._id] = testProfile;
       should(profileRepository.deleteProfile(testProfile))
         .be.fulfilledWith(ResponseObject);
+    });
+    it('should reject when trying to delete admin', () => {
+      var profile = {
+        _id: 'admin',
+        roles: [ 'admin' ]
+      };
+
+      should(profileRepository.deleteProfile(profile))
+        .be.rejectedWith(BadRequestError);
+    });
+
+    it('should reject when trying to delete default', () => {
+      var profile = {
+        _id: 'default',
+        roles: [ 'default' ]
+      };
+
+      should(profileRepository.deleteProfile(profile))
+        .be.rejectedWith(BadRequestError);
+    });
+
+    it('should reject when trying to delete anonymous', () => {
+      var profile = {
+        _id: 'anonymous',
+        roles: [ 'anonymous' ]
+      };
+
+      should(profileRepository.deleteProfile(profile))
+        .be.rejectedWith(BadRequestError);
     });
   });
 
@@ -331,4 +346,32 @@ describe('Test: repositories/profileRepository', function () {
         });
     });
   });
+
+  describe('#defaultProfile', () => {
+    it('should add the default profile when the user do not have any profile set', () => {
+      var userRepository = new UserRepository(),
+        user = new User();
+      user.name = 'No Profile';
+      user._id = 'NoProfile';
+
+      userRepository.hydrate(user, {})
+        .then((result) => {
+          should(result.profile._id).be.eql('default');
+        });
+    });
+  });
+
+  describe('#defaultRole', () => {
+    it('should add the default role when the profile do not have any role set', () => {
+      var profile = new Profile();
+      profile._id = 'NoRole';
+      profileRepository = new ProfileRepository();
+
+      profileRepository.hydrate(profile, {})
+        .then((result) => {
+          should(result.roles[0]._id).be.eql('default');
+        });
+    });
+  });
+
 });

@@ -462,7 +462,6 @@ describe('Test: repositories/userRepository', function () {
 
     });
   });
-
 });
 
 function assertIsAnonymous (user) {

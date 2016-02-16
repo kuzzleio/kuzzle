@@ -35,14 +35,6 @@ describe('Test removeRoom function index.js file from DSL', function () {
     kuzzle.removeAllListeners();
     kuzzle.start(params, {dummy: true})
       .then(function () {
-        kuzzle.repositories.role.roles.guest = new Role();
-        return kuzzle.repositories.role.hydrate(kuzzle.repositories.role.roles.guest, params.userRoles.guest);
-      })
-      .then(function () {
-        kuzzle.repositories.profile.profiles.anonymous = new Profile();
-        return kuzzle.repositories.profile.hydrate(kuzzle.repositories.profile.profiles.anonymous, params.userProfiles.anonymous);
-      })
-      .then(function () {
         return kuzzle.repositories.user.anonymous();
       })
       .then(function (user) {
