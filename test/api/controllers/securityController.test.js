@@ -15,12 +15,12 @@ describe('Test: security controller', function () {
     kuzzle.start(params, {dummy: true})
       .then(function () {
         kuzzle.repositories.role.validateAndSaveRole = role => {
-          return q({
+          return q(new ResponseObject({}, {
             _index: '%kuzzle',
             _type: 'roles',
             _id: role._id,
             created: true
-          });
+          }));
         };
 
         done();
