@@ -164,7 +164,6 @@ describe('Test: repositories/roleRepository', function () {
           should(results).be.an.Array().and.have.length(1);
           results.forEach(function (result) {
             should(result).be.an.instanceOf(Role);
-            should(result._id).be.exactly('anonymous');
           });
           done();
         })
@@ -178,7 +177,6 @@ describe('Test: repositories/roleRepository', function () {
         .then(function (results) {
           should(results).be.an.Array().and.have.length(1);
           should(results[0]).be.an.instanceOf(Role);
-          should(results[0]._id).be.exactly('anonymous');
           done();
         })
         .catch(function (error) {

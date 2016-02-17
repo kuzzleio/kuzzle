@@ -48,15 +48,12 @@
   // Default user profiles
   "userProfiles": {
     "admin": {
-      "_id": "admin",
       "roles": [ "admin" ]
     },
     "default": {
-      "_id": "default",
       "roles": [ "default" ]
     },
     "anonymous": {
-      "_id": "anonymous",
       "roles": [ "anonymous" ]
     }
   },
@@ -101,7 +98,6 @@
   // Default security roles 
   "userRoles": {
     "admin": {
-      "_id": "admin",
       "indexes": {
         "_canCreate": true,
         "*": {
@@ -139,7 +135,6 @@
       }
     },
     "anonymous": {
-      "_id": "anonymous",
       "indexes": {
         "_canCreate": false,
         "*": {
@@ -162,7 +157,6 @@
       }
     },
     "default": {
-      "_id": "default",
       "indexes": {
         "_canCreate": false,
         "*": {
