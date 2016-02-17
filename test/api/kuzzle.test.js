@@ -723,33 +723,21 @@ describe('Test kuzzle constructor', function () {
 
           should(requests[3].controller).be.eql('security');
           should(requests[3].action).be.eql('createOrReplaceRole');
-          should(requests[3].index).be.eql(context.kuzzle.config.internalIndex);
-          should(requests[3].collection).be.eql('roles');
 
           should(requests[4].controller).be.eql('security');
           should(requests[4].action).be.eql('createOrReplaceRole');
-          should(requests[4].index).be.eql(context.kuzzle.config.internalIndex);
-          should(requests[4].collection).be.eql('roles');
 
           should(requests[5].controller).be.eql('security');
           should(requests[5].action).be.eql('createOrReplaceRole');
-          should(requests[5].index).be.eql(context.kuzzle.config.internalIndex);
-          should(requests[5].collection).be.eql('roles');
 
           should(requests[6].controller).be.eql('security');
           should(requests[6].action).be.eql('createOrReplaceProfile');
-          should(requests[6].index).be.eql(context.kuzzle.config.internalIndex);
-          should(requests[6].collection).be.eql('profiles');
 
           should(requests[7].controller).be.eql('security');
           should(requests[7].action).be.eql('createOrReplaceProfile');
-          should(requests[7].index).be.eql(context.kuzzle.config.internalIndex);
-          should(requests[7].collection).be.eql('profiles');
 
           should(requests[8].controller).be.eql('security');
           should(requests[8].action).be.eql('createOrReplaceProfile');
-          should(requests[8].index).be.eql(context.kuzzle.config.internalIndex);
-          should(requests[8].collection).be.eql('profiles');
 
           done();
         })
