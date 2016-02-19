@@ -10,23 +10,6 @@ We have already planned a few neat things for Kuzzle. For instance, we will make
 
 So stay tuned, as many new functionalities will appear over time!
 
-# What we have planned to do with Kuzzle
-
-On one hand, Kuzzle is a big project, and we're bringing a lot of resources to make it a reality and, in the future, it will need resources to maintain and improve it.
-
-On the other hand, Kuzzle is also an open source project, and we have open source core values at heart.
-
-So, to avoid any confusion, we decided to be completely honest with our intents.  
-Keep in mind that we're talking about intents based on long-term goals: we're still far from a stable release of Kuzzle!
-
-Here is what we know for sure:
-
-* Kuzzle source code will **always** be open source and free to use
-* We plan to sell professional-grade support of Kuzzle
-* We plan to sell a cloud-based version of Kuzzle
-* Because we feel that contributions will help us release a better version of Kuzzle faster, we plan to reward our contributors, or at least most of them, depending on our budget. What we have in mind at the moment is a free access to our cloud-based version of Kuzzle.
-
-We have a few more ideas still up for debate, so more items might appear in the future.
 
 # Roadmap to beta
 
