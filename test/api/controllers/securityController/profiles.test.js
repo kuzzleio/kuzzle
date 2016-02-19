@@ -2,6 +2,7 @@ var
   should = require('should'),
   q = require('q'),
   params = require('rc')('kuzzle'),
+  Profile = require.main.require('lib/api/core/models/security/profile'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   BadRequestError = require.main.require('lib/api/core/errors/badRequestError'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
@@ -31,14 +32,23 @@ describe('Test: security controller - profiles', function () {
           }));
         };
         kuzzle.repositories.profile.loadProfile = id => {
-          if (id === 'badId') {
+          var profileId;
+
+          if (id instanceof Profile) {
+            profileId = id._id;
+          }
+          else {
+            profileId = id;
+          }
+
+          if (profileId === 'badId') {
             return q(null);
           }
 
           return q({
             _index: kuzzle.config.internalIndex,
             _type: 'profiles',
-            _id: id,
+            _id: profileId,
             roles: [{
               _id: 'role1',
               indexes: {}
