@@ -201,7 +201,7 @@ describe('Test: repositories/roleRepository', function () {
         return q();
       };
 
-      return roleRepository.loadRole({_id: 'roleId'})
+      return roleRepository.loadRole('roleId')
         .then((role) => {
           should(isLoadFromDB).be.false();
           should(role).have.property('myRole');
@@ -217,7 +217,7 @@ describe('Test: repositories/roleRepository', function () {
         return q(roleRepository.roles.otherRoleId);
       };
 
-      return roleRepository.loadRole({_id: 'roleId'})
+      return roleRepository.loadRole('roleId')
         .then((role) => {
           should(isLoadFromDB).be.true();
           should(role).have.property('myRole');
