@@ -28,7 +28,7 @@ rabbit:
     - "15672:15672"
 
 redis:
-  image: redis:3.0.2
+  image: redis:3.0
 
 elasticsearch:
-  image: elasticsearch:1.5.2
+  image: elasticsearch:1.7
