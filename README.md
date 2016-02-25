@@ -2,7 +2,7 @@
 
 [![Join the chat at https://gitter.im/kuzzleio/kuzzle](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/kuzzleio/kuzzle?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
-<p align=center> ![logo](docs/images/logo.png)
+<p align=center> ![logo](docs/images/Kuzzle_beta_logo_inline_blue_2.png)
 
 # About Kuzzle
 
@@ -15,9 +15,8 @@ Kuzzle uses [Elasticsearch filter DSL](https://www.elastic.co/guide/en/elasticse
 
 # Project status
 
-Kuzzle is currently in Alpha stage of development.
+Kuzzle is currently in Beta stage of development.
 
-We have a pretty clear idea of what we want to implement to bring Kuzzle to a Beta version.  
 Check our [roadmap](./ROADMAP.md) if you wish to know more about it.
 
 # Installation
