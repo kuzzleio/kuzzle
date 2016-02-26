@@ -345,6 +345,25 @@ describe('Test: repositories/profileRepository', () => {
           should(result.data.body._id).be.eql(testProfile._id);
         });
     });
+
+    it('should properly persist the profile with a non object role', () => {
+      profileRepository.persistToDatabase = (profile) => {
+        return q(new ResponseObject({}, {
+          body: {
+            _id: profile._id
+          }
+        }));
+      };
+
+      testProfile.roles = 'anonymous';
+      profileRepository.validateAndSaveProfile(testProfile)
+        .then((result) => {
+          should(profileRepository.profiles[testProfile._id]).be.eql(testProfile);
+          should(result).be.an.instanceOf(ResponseObject);
+          should(result.data.body._id).be.eql(testProfile._id);
+        });
+    });
+
   });
 
   describe('#defaultProfile', () => {
