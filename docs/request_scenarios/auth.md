@@ -2,7 +2,7 @@
 
 This page explains what happens when a client authenticates to Kuzzle, with 2 examples:
 * A simple authentication with the "Local" strategy
-* A 2-step authentication with the "Github" strategy, which authenticate github usesr with **oauth2** protocol.
+* A 2-step authentication with the "Github" strategy, which authenticates github users with **oauth2** protocol.
 
 ## Overview
 
@@ -48,7 +48,7 @@ Detailed workflow:
 
 \#4. The plugin calls the ```User Repository``` and check if credentials are good and resolve to an existing user.
 
-\#5. If a user is found, he is resolved and sends back to the ```Auth Controller``` through the internal components.
+\#5. If a user is found, he is resolved and sent back to the ```Auth Controller``` through the internal components.
 
 \#6. The ```Auth Controller``` calls the *generateToken()* method to get a [JWT Token](https://jwt.io/) related to the user.
 
@@ -180,9 +180,9 @@ curl http://<kuzzle>/api/1.0/_login/github?code=OAUTH2_CODE
 
 \#13. The plugin calls the ```User Repository``` to check for an existing user with the given github ID.
 
-(Note: If no related user is found in kuzzle, the plugin can either deny the authentication, or create automatically the user, depending to its settings).
+(Note: If no related user is found in kuzzle, the plugin can either deny the authentication, or create automatically the user, depending on its settings).
 
-\#14. The user is resolved and sends back to the ```Auth Controller``` through the internal components.
+\#14. The user is resolved and sent back to the ```Auth Controller``` through the internal components.
 
 \#15. The ```Auth Controller``` calls the *generateToken()* method to get a [JWT Token](https://jwt.io/) related to the user.
 
