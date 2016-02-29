@@ -14,7 +14,9 @@ Kuzzle provides a **auth** controller which delegates the authentication strateg
 
 If the passportjs _authenticate_ method resolves an existing user, Kuzzle generates a [JSON Web Token](https://tools.ietf.org/html/rfc7519) that should be used in subsequent requests.
 
-See also Kuzzle API Documentation about [Auth Controller](http://kuzzleio.github.io/kuzzle-api-documentation/#auth-controller) and [JWT token usage](http://kuzzleio.github.io/kuzzle-api-documentation/#authorization-header) in Kuzzle requests.
+See more details:
+* [Authentication scenarios](../request_scenarios/auth.md)
+* [Kuzzle API Documentation about Auth Controller](http://kuzzleio.github.io/kuzzle-api-documentation/#auth-controller) and [JWT token usage](http://kuzzleio.github.io/kuzzle-api-documentation/#authorization-header) in Kuzzle requests.
 
 ## How to provide your own strategy
 
