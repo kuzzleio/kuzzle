@@ -130,7 +130,7 @@ To ensure that Kuzzle's dependencies are up-to-date, run the command directly wi
 
 ```
     $ docker exec -ti <docker-compose-file.yml> run kuzzle npm install
-    $ docker exec -ti <docker-compose-file.yml> run kuzzle bin/kuzzle.js install
+    $ docker exec -ti <docker-compose-file.yml> run kuzzle bin/kuzzle install
 ```
 
 
@@ -182,21 +182,21 @@ Configure your environment. Kuzzle has been designed to be launched from inside 
 
 Install the default plugins:
 
-    $ ./bin/kuzzle.js install
+    $ ./bin/kuzzle install
 
 ### Finally
 
 Start a server instance:
 
-    $ ./bin/kuzzle.js start --server
+    $ ./bin/kuzzle start --server
 
 And then start as many worker instances as you want. At least one worker is required:
 
-    $ bin/kuzzle.js start --worker
+    $ bin/kuzzle start --worker
 
 For more information, you can execute:
 
-    $ bin/kuzzle.js start --help
+    $ bin/kuzzle start --help
 
 ### All steps in one
 
@@ -207,9 +207,9 @@ For more information, you can execute:
     $ export WRITE_ENGINE_HOST=localhost:9200
     $ export CACHE_HOST=localhost
     $ export CACHE_PORT=6379
-    $ ./bin/kuzzle.js install
-    $ ./bin/kuzzle.js start --server
-    $ ./bin/kuzzle.js start --worker
+    $ ./bin/kuzzle install
+    $ ./bin/kuzzle start --server
+    $ ./bin/kuzzle start --worker
 
 ### Going further
 
@@ -219,7 +219,7 @@ Kuzzle comes along with a [CLI](https://en.wikipedia.org/wiki/Command-line_inter
 
 To get a list of available options, you can run
 
-    $ ./bin/kuzzle.js start -h
+    $ ./bin/kuzzle start -h
 
 #### Change external services hosts or ports
 
@@ -239,4 +239,4 @@ examples:
     $ export MQ_BROKER_HOST=myrabbitmq
     $ export MQ_BROKER_PORT=5672
 
-    $ ./bin/kuzzle.js start
+    $ ./bin/kuzzle start
