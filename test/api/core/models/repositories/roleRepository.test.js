@@ -77,7 +77,7 @@ describe('Test: repositories/roleRepository', function () {
           results.push({_id: id, found: false});
         }
       });
-      return q(new ResponseObject(requestObject, {docs: results}));
+      return q(new ResponseObject(requestObject, {hits: results}));
     }
   };
 

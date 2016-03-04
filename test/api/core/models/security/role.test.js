@@ -11,7 +11,11 @@ describe('Test: security/roleTest', function () {
   var
     context = {
       connection: {type: 'test'},
-      user: null
+      token : {
+        user: {
+          _id: -1
+        }
+      }
     },
     requestObject = {
       index: 'index',
@@ -20,7 +24,7 @@ describe('Test: security/roleTest', function () {
       action: 'action'
     };
 
-  describe('#isActionValid', () => {
+  describe('#isActionValid', (callback) => {
     it('should disallow any action when no matching entry can be found', function () {
       var
         role = new Role();
@@ -40,28 +44,54 @@ describe('Test: security/roleTest', function () {
         }
       };
 
-      should(role.isActionAllowed(requestObject, context)).be.false();
+      role.isActionAllowed(requestObject, context)
+        .then(isAllowed => {
+          should(isAllowed).be.false();
 
-      delete role.indexes.index.collections.collection.controllers.controller.actions;
-      should(role.isActionAllowed(requestObject, context)).be.false();
+          delete role.indexes.index.collections.collection.controllers.controller.actions;
+          return role.isActionAllowed(requestObject, context);
+        })
+        .then(isAllowed => {
+          should(isAllowed).be.false();
 
-      delete role.indexes.index.collections.collection.controllers.controller;
-      should(role.isActionAllowed(requestObject, context)).be.false();
+          delete role.indexes.index.collections.collection.controllers.controller;
+          return role.isActionAllowed(requestObject, context);
+        })
+        .then(isAllowed => {
+          should(isAllowed).be.false();
 
-      delete role.indexes.index.collections.collection.controllers;
-      should(role.isActionAllowed(requestObject, context)).be.false();
+          delete role.indexes.index.collections.collection.controllers;
+          return role.isActionAllowed(requestObject, context);
+        })
+        .then(isAllowed => {
+          should(isAllowed).be.false();
 
-      delete role.indexes.index.collections.collection;
-      should(role.isActionAllowed(requestObject, context)).be.false();
+          delete role.indexes.index.collections.collection;
+          return role.isActionAllowed(requestObject, context);
+        })
+        .then(isAllowed => {
+          should(isAllowed).be.false();
 
-      delete role.indexes.index.collections;
-      should(role.isActionAllowed(requestObject, context)).be.false();
+          delete role.indexes.index.collections;
+          return role.isActionAllowed(requestObject, context);
+        })
+        .then(isAllowed => {
+          should(isAllowed).be.false();
 
-      delete role.indexes.index;
-      should(role.isActionAllowed(requestObject, context)).be.false();
+          delete role.indexes.index;
+          return role.isActionAllowed(requestObject, context);
+        })
+        .then(isAllowed => {
+          should(isAllowed).be.false();
 
-      delete role.indexes;
-      should(role.isActionAllowed(requestObject, context)).be.false();
+          delete role.indexes;
+          return role.isActionAllowed(requestObject, context);
+        })
+        .then(isAllowed => {
+          should(isAllowed).be.false();
+
+          callback();
+        });
     });
 
     it('should allow an action explicitely set to true', function () {
@@ -83,7 +113,7 @@ describe('Test: security/roleTest', function () {
         }
       };
 
-      should(role.isActionAllowed(requestObject, context)).be.true();
+      return should(role.isActionAllowed(requestObject, context)).be.fulfilledWith(true);
     });
 
     it('should allow a wildcard action', function () {
@@ -104,7 +134,7 @@ describe('Test: security/roleTest', function () {
         }
       };
 
-      should(role.isActionAllowed(requestObject, context)).be.true();
+      return should(role.isActionAllowed(requestObject, context)).be.fulfilledWith(true);
     });
 
     it('should not allow security actions when the internal index is not set explicitly', function () {
@@ -131,10 +161,10 @@ describe('Test: security/roleTest', function () {
         }
       };
 
-      should(role.isActionAllowed(rq, context)).be.false();
+      return should(role.isActionAllowed(rq, context)).be.fulfilledWith(false);
     });
 
-    it('should allow/deny index creation according to indexes._canCreate right', function () {
+    it('should allow/deny index creation according to indexes._canCreate right', function (callback) {
       var
         roleAllow = new Role(),
         roleDeny = new Role(),
@@ -177,11 +207,20 @@ describe('Test: security/roleTest', function () {
         }
       };
 
-      should(roleAllow.isActionAllowed(rq, context)).be.true();
-      should(roleDeny.isActionAllowed(rq, context)).be.false();
+      roleAllow.isActionAllowed(rq, context)
+        .then(isAllowed => {
+          should(isAllowed).be.true();
+
+          return roleDeny.isActionAllowed(rq, context);
+        })
+        .then(isAllowed => {
+          should(isAllowed).be.false();
+
+          callback();
+        });
     });
 
-    it('should allow/deny index deletion according to indexes._canDelete right', function () {
+    it('should allow/deny index deletion according to indexes._canDelete right', function (callback) {
       var
         roleAllow = new Role(),
         roleDeny = new Role(),
@@ -224,11 +263,20 @@ describe('Test: security/roleTest', function () {
         }
       };
 
-      should(roleAllow.isActionAllowed(rq, context)).be.true();
-      should(roleDeny.isActionAllowed(rq, context)).be.false();
+      roleAllow.isActionAllowed(rq, context)
+        .then(isAllowed => {
+          should(isAllowed).be.true();
+
+          return roleDeny.isActionAllowed(rq, context);
+        })
+        .then(isAllowed => {
+          should(isAllowed).be.false();
+
+          callback();
+        });
     });
 
-    it('should allow/deny collection deletion according to collection._canDelete right', function () {
+    it('should allow/deny collection deletion according to collection._canDelete right', function (callback) {
       var
         roleAllow = new Role(),
         roleDeny = new Role(),
@@ -271,8 +319,17 @@ describe('Test: security/roleTest', function () {
         }
       };
 
-      should(roleAllow.isActionAllowed(rq, context)).be.true();
-      should(roleDeny.isActionAllowed(rq, context)).be.false();
+      roleAllow.isActionAllowed(rq, context)
+        .then(isAllowed => {
+          should(isAllowed).be.true();
+
+          return roleDeny.isActionAllowed(rq, context);
+        })
+        .then(isAllowed => {
+          should(isAllowed).be.false();
+
+          callback();
+        });
     });
 
     it('should not allow any action on the internal index if no role has been explicitly set on it', function () {
@@ -301,10 +358,10 @@ describe('Test: security/roleTest', function () {
         }
       };
 
-      should(role.isActionAllowed(rq, context)).be.false();
+      return should(role.isActionAllowed(rq, context)).be.fulfilledWith(false);
     });
 
-    it('should properly handle overridden permissions', function () {
+    it('should properly handle overridden permissions', function (callback) {
       var role = new Role();
       role.indexes = {
         '*': {
@@ -335,41 +392,70 @@ describe('Test: security/roleTest', function () {
         }
       };
 
-      should(role.isActionAllowed(requestObject, context)).be.false();
+      role.isActionAllowed(requestObject, context)
+        .then(isAllowed => {
+          should(isAllowed).be.false();
 
-      role.indexes.index.collections['*'].controllers['*'].actions.action = true;
-      should(role.isActionAllowed(requestObject, context)).be.true();
+          role.indexes.index.collections['*'].controllers['*'].actions.action = true;
 
-      role.indexes.index.collections['*'].controllers.controller = {
-        actions: {
-          '*': false
-        }
-      };
-      should(role.isActionAllowed(requestObject, context)).be.false();
+          return role.isActionAllowed(requestObject, context);
+        })
+        .then(isAllowed => {
+          should(isAllowed).be.true();
 
-      role.indexes.index.collections['*'].controllers.controller.actions.action = true;
-      should(role.isActionAllowed(requestObject, context)).be.true();
-
-      role.indexes.index.collections.collection = {
-        controllers: {
-          '*': {
+          role.indexes.index.collections['*'].controllers.controller = {
             actions: {
               '*': false
             }
-          }
-        }
-      };
-      should(role.isActionAllowed(requestObject, context)).be.false();
+          };
 
-      role.indexes.index.collections.collection.controllers.controller = {
-        actions: {
-          '*': true
-        }
-      };
-      should(role.isActionAllowed(requestObject, context)).be.true();
+          return role.isActionAllowed(requestObject, context);
+        })
+        .then(isAllowed => {
+          should(isAllowed).be.false();
 
-      role.indexes.index.collections.collection.controllers.controller.actions.action = false;
-      should(role.isActionAllowed(requestObject, context)).be.false();
+          role.indexes.index.collections['*'].controllers.controller.actions.action = true;
+
+          return role.isActionAllowed(requestObject, context);
+        })
+        .then(isAllowed => {
+          should(isAllowed).be.true();
+
+          role.indexes.index.collections.collection = {
+            controllers: {
+              '*': {
+                actions: {
+                  '*': false
+                }
+              }
+            }
+          };
+
+          return role.isActionAllowed(requestObject, context);
+        })
+        .then(isAllowed => {
+          should(isAllowed).be.false();
+
+          role.indexes.index.collections.collection.controllers.controller = {
+            actions: {
+              '*': true
+            }
+          };
+
+          return role.isActionAllowed(requestObject, context);
+        })
+        .then(isAllowed => {
+          should(isAllowed).be.true();
+
+          role.indexes.index.collections.collection.controllers.controller.actions.action = false;
+
+          return role.isActionAllowed(requestObject, context);
+        })
+        .then(isAllowed => {
+          should(isAllowed).be.false();
+
+          callback();
+        });
     });
 
     it('should throw an error if the rights configuration is not either a boolean or a function', function () {
@@ -390,7 +476,7 @@ describe('Test: security/roleTest', function () {
         }
       };
 
-      should(function () { role.isActionAllowed(requestObject, context); }).throw(InternalError);
+      should(role.isActionAllowed(requestObject, context)).be.rejected();
     });
 
     it('should throw an error if an invalid function is given', function () {
@@ -414,7 +500,7 @@ describe('Test: security/roleTest', function () {
       should(function () { role.isActionAllowed(requestObject, context); }).throw(InternalError);
     });
 
-    it('should handle a custom right function', function () {
+    it('should handle a custom right function', function (callback) {
       var
         role = new Role(),
         noMatchRequestObject = {
@@ -430,7 +516,10 @@ describe('Test: security/roleTest', function () {
               controllers: {
                 '*': {
                   actions: {
-                    '*': 'return requestObject.action === \'action\'; '
+                    '*': {
+                      args: {},
+                      test: 'return requestObject.action === \'action\'; '
+                    }
                   }
                 }
               }
@@ -439,13 +528,26 @@ describe('Test: security/roleTest', function () {
         }
       };
 
-      should(role.isActionAllowed(requestObject, context)).be.true();
-      should(role.isActionAllowed(noMatchRequestObject, context)).be.false();
+      role.isActionAllowed(requestObject, context)
+        .then(isAllowed => {
+          should(isAllowed).be.true();
 
-      role.closures = {};
-      role.indexes['*'].collections['*'].controllers['*'].actions['*'] = 'return requestObject.action !== \'action\'; ';
-      should(role.isActionAllowed(requestObject, context)).be.false();
-
+          return role.isActionAllowed(noMatchRequestObject, context);
+        })
+        .then(isAllowed => {
+          should(isAllowed).be.false();
+          role.closures = {};
+          role.indexes['*'].collections['*'].controllers['*'].actions['*'] = {
+            args: {},
+            test: 'return requestObject.action !== \'action\'; '
+          };
+          
+          return role.isActionAllowed(requestObject, context);
+        })
+        .then(isAllowed => {
+          should(isAllowed).be.false();
+          callback();
+        });
     });
 
   });
@@ -697,7 +799,7 @@ describe('Test: security/roleTest', function () {
       return should(role.validateDefinition(context)).be.rejectedWith(BadRequestError, {message: 'Invalid definition for index,collection,controller. `actions` attribute cannot be empty'});
     });
 
-    it('should reject the promise if the action right is neither a boolean or a string', () => {
+    it('should reject the promise if the action right is neither a boolean or an object', () => {
       var role = new Role();
       role.indexes = {
         _canCreate: true,
@@ -717,7 +819,7 @@ describe('Test: security/roleTest', function () {
         }
       };
 
-      return should(role.validateDefinition(context)).be.rejectedWith(BadRequestError, {message: 'Invalid definition for index,collection,controller,action. Must be a boolean or a string'});
+      return should(role.validateDefinition(context)).be.rejectedWith(BadRequestError, {message: 'Invalid definition for index,collection,controller,action. Must be a boolean or an object'});
     });
 
     it('should reject if _canCreate is not boolean in indexes', () => {
@@ -850,7 +952,10 @@ describe('Test: security/roleTest', function () {
                   controllers: {
                     controller: {
                       actions: {
-                        action: 'a string'
+                        action: {
+                          args: {},
+                          test: 'a string'
+                        }
                       }
                     }
                   }
@@ -887,7 +992,10 @@ describe('Test: security/roleTest', function () {
                   controllers: {
                     controller: {
                       actions: {
-                        action: 'a string'
+                        action: {
+                          args: {},
+                          test: 'a string'
+                        }
                       }
                     }
                   }
@@ -921,7 +1029,10 @@ describe('Test: security/roleTest', function () {
                   controllers: {
                     controller: {
                       actions: {
-                        action: 'a string'
+                        action: {
+                          args: {},
+                          test: 'a string'
+                        }
                       }
                     }
                   }
