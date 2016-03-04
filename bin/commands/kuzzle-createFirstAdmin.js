@@ -216,8 +216,9 @@ var nextStep = (message) => {
 var checkIfFistAdminNeeded = () => {
   // try to access to the admin profile
   return request({
-    method: 'GET',
-    uri: 'http://localhost:7511/api/1.0/%25kuzzle/roles/admin',
+    method: 'POST',
+    uri: 'http://localhost:7511/api/1.0/users/_search',
+    body: {},
     json: true
   });
 }
