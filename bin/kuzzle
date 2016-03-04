@@ -15,31 +15,31 @@ program
   .option('--server', 'start an instance without workers')
   .option('--worker', 'spawn a single set of workers instead of starting a Kuzzle instance')
   .description('Start a Kuzzle instance')
-  .action(require('./kuzzle-start'));
+  .action(require('./commands/kuzzle-start'));
 
 // $ kuzzle.js enable <service>
 program
   .command('enable')
   .description('Enable a service without reloading Kuzzle')
-  .action(require('./kuzzle-enable'));
+  .action(require('./commands/kuzzle-enable'));
 
 // $ kuzzle.js disable <service>
 program
   .command('disable')
   .description('Disable a service without reloading Kuzzle')
-  .action(require('./kuzzle-disable'));
+  .action(require('./commands/kuzzle-disable'));
 
 // $ kuzzle.js install
 program
   .command('install')
   .description('Install plugin dependencies')
-  .action(require('./kuzzle-install'));
+  .action(require('./commands/kuzzle-install'));
 
 // $ kuzzle.js createFirstAdmin
 program
   .command('createFirstAdmin')
   .description('Create the first administrator')
-  .action(require('./kuzzle-createFirstAdmin'));
+  .action(require('./commands/kuzzle-createFirstAdmin').action);
 
 // Run user command
 program.parse(process.argv);

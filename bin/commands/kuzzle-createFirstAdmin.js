@@ -1,0 +1,241 @@
+var
+  readlineSync = require('readline-sync'),
+  clc = require('cli-color'),
+  error = clc.red,
+  warn = clc.yellow,
+  question = clc.whiteBright,
+  notice = clc.cyanBright,
+  ok = clc.green.bold,
+  kuz = clc.greenBright.bold,
+  request = require('request-promise'),
+  rc = require('rc'),
+  params = rc('kuzzle'),
+  name,
+  password,
+  resetRoles = false,
+  step = 0,
+  // steps definitions
+  steps = [
+    {
+      // get username
+      prompt: '\n[❓] Which username for the first admin ?\nTip: avoid to name it admin, or root...\n: ',
+      check: (userEntry) => {
+        var _name = userEntry.trim(),
+        badNames = ['admin','root'];
+        if (badNames.indexOf(_name) === -1) {
+          if (_name.length < 4) {
+            console.log(ok('[✖] Username should have at least 4 chars'));
+            return false;
+          }
+          
+          name = _name;
+
+          console.log(ok('[✔] Given username: ' + name));
+          if (_name !== userEntry) {
+            console.log(notice('[ℹ] The username has been trimmed.'));
+          }
+          return true;
+        } else {
+          console.log(error('[✖] It is a bad idea to name an admin "' + _name + '"...'));
+          if (readlineSync.keyInYNStrict(question('[❓] Are you sure you want to name it "' + _name + '" ?'))) {
+            name = _name;
+            return true;
+          }
+          return false;
+        }
+      }
+    },
+    {
+      // get password
+      password: true,
+      prompt: '\n[❓] Enter a password for this account ?\nTips: mix lowercase and uppcase letters, digits and special chars. Avoid using spaces or tabs.\n: ',
+      check: (userEntry) => {
+        var _password = userEntry, userEntryBis;
+        if (userEntry.replace('/ /g', '') !== _password || _password.trim() !== userEntry || userEntry.length < 8) {
+          console.log(error('[✖] It looks like your password could be too weak or too difficult to use or type...'));
+          if (userEntry.length > 0) {
+            if (!readlineSync.keyInYNStrict(question('[❓] Are you sure you want to use this password anyway ?'))) {
+              return false;
+            }
+          } else {
+            console.log(error('[✖] Password cannot be empty'));
+            return false;
+          }
+        }
+        userEntryBis = readlineSync.question(question('\n[❓] Please, confirm the password\n: '), {hideEchoBack: true});
+        if (userEntryBis === userEntry) {
+          password = userEntryBis;
+          console.log(ok('[✔] Given password set'));
+          return true;
+        } else {
+          console.log(error('[✖] The passwords you typed does not match...'));
+          return false;
+        }
+      }
+    },
+    {
+      // reset rights ?
+      yesNo: true,
+      prompt: '\n[❓] Do you want to reset roles ?',
+      check: (userEntry) => {
+        resetRoles = userEntry;
+        return true;
+      }
+    }
+  ];
+
+var resetRole = (roleId) => {
+  return request({
+    method: 'PUT',
+    uri: 'http://localhost:7511/api/1.0/roles/' + roleId,
+    body: params.userRoles[roleId],
+    json: true
+  });
+};
+
+var resetProfile = (profileId, roleId) => {
+  var data = {
+      _id: profileId,
+      roles: [ roleId ]
+  };
+
+  return request({
+    method: 'PUT',
+    uri: 'http://localhost:7511/api/1.0/profiles/' + profileId,
+    body: data,
+    json: true
+  });  
+};
+
+var createAdminUser = () => {
+  var data = {
+    _id: name,
+    password: password,
+    profile: 'admin'
+  };
+
+  return request({
+    method: 'POST',
+    uri: 'http://localhost:7511/api/1.0/users/_create',
+    body: data,
+    json: true
+  });
+};
+
+var nextStep = (message) => {
+  var userEntry, 
+    options = {};
+  
+  if (message) {
+    console.log(message);
+  }
+
+  if (step < steps.length) {
+    if (steps[step].password) {
+      options.hideEchoBack = true;
+    }
+    if (steps[step].yesNo) {
+      userEntry = readlineSync.keyInYNStrict(question(steps[step].prompt));
+    } else {
+      userEntry = readlineSync.question(question(steps[step].prompt), options);
+    }
+    if (steps[step].check(userEntry)) {
+      step++;
+      nextStep();
+    } else {
+      nextStep(notice('███ Please retry...'));
+    }
+  } else {
+    if (resetRoles) {
+      createAdminUser()
+        .then((res) =>{
+          console.log(ok('[✔] "' + name + '" user created with admin rights'));
+          return resetProfile('default', 'default');
+        })
+        .then((res) => {
+          console.log(ok('[✔] "default" profile reset'));
+          return resetProfile('admin', 'admin');
+        })
+        .then((res) => {
+          console.log(ok('[✔] "admin" profile reset'));
+          return resetProfile('anonymous', 'anonymous');
+        })
+        .then((res) => {
+          console.log(ok('[✔] "anonymous" profile reset'));
+          return resetRole('default')
+        })
+        .then((res) => {
+          console.log(ok('[✔] "default" role reset'));
+          return resetRole('admin');
+        })
+        .then((res) => {
+          console.log(ok('[✔] "admin" role reset'));
+          return resetRole('anonymous');
+        })
+        .then((res) => {
+          console.log(ok('[✔] "anonymous" role reset'));
+          console.log('\n');
+          console.log(ok('[✔] Everything is finished'));
+        })
+        .catch((err) => {
+          console.log(error('[✖] Something whent terribly wrong:'));
+          switch(err.statusCode) {
+            case 409:
+              console.log(error('>>> This account already exists!'));
+              break;
+            case 401:
+              console.log(error('>>> You are not allowed to perform this operation.') + '\n>>>This probably means that there is already an admin, so this utility is not allowed to create a new one.');
+              break;
+            default:
+              console.log(err);
+          }
+        });
+    } else {
+      createAdminUser()
+        .then((res) =>{
+          console.log(ok('[✔] "' + name + '" user created with admin rights'));
+          console.log(notice('[ℹ] The roles and profiles have not been reseted.'));
+        })
+        .catch((err) => {
+          console.log(error('[✖] Something whent terribly wrong:'));
+          switch(err.statusCode) {
+            case 409:
+              console.log(error('>>> This account already exists!'));
+              break;
+            case 401:
+              console.log(error('>>> You are not allowed to perform this operation.') + '\n>>>This probably means that there is already an admin, so this utility is not allowed to create a new one.');
+              break;
+            default:
+              console.log(err);
+          }
+        });
+    }
+  }
+};
+
+var checkIfFistAdminNeeded = () => {
+  // try to access to the admin profile
+  return request({
+    method: 'GET',
+    uri: 'http://localhost:7511/api/1.0/%25kuzzle/roles/admin',
+    json: true
+  });
+}
+
+process.stdin.setEncoding('utf8');
+
+module.exports = {
+  check: checkIfFistAdminNeeded,
+  action: () => {
+
+    checkIfFistAdminNeeded()
+      .then((res) =>{
+        // we can access to the admin role, so no admin account have been created yet
+        console.log(ok('███ Kuzzle first admin creation'));
+        nextStep();
+      })
+      .catch((err) => {
+        console.log(ok('[✔] The first admin has already been created'));
+      });
+  }
+};
