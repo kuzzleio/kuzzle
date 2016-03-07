@@ -518,7 +518,7 @@ describe('Test: security/roleTest', function () {
                   actions: {
                     '*': {
                       args: {},
-                      test: 'return requestObject.action === \'action\'; '
+                      test: 'return $requestObject.action === \'action\'; '
                     }
                   }
                 }
@@ -539,7 +539,7 @@ describe('Test: security/roleTest', function () {
           role.closures = {};
           role.indexes['*'].collections['*'].controllers['*'].actions['*'] = {
             args: {},
-            test: 'return requestObject.action !== \'action\'; '
+            test: 'return $requestObject.action !== \'action\'; '
           };
           
           return role.isActionAllowed(requestObject, context);
