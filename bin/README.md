@@ -1,19 +1,19 @@
 # Managing Kuzzle service
 
-The Kuzzle service is launched by [kuzzle.js](kuzzle.js) command line.
+The Kuzzle service is launched by [kuzzle](kuzzle) command line.
 
 
 ```
-$ kuzzle.js install
+$ kuzzle install
 ```
 
 will install plugins declared in `config/defaultPlugins.json` and in `config/customPlugins.json`
 
 ```
-$ kuzzle.js start
+$ kuzzle start
 ```
 
-will launch internally [kuzzle-start.js](kuzzle-start.js)
+will launch internally [./commands/kuzzle-start.js](./commands/kuzzle-start.js)
 
 For features like watch mode, multi-thread support from [pm2](https://www.npmjs.com/package/pm2), you can use [app-start.js](../app-start.js)
 
@@ -22,7 +22,7 @@ For features like watch mode, multi-thread support from [pm2](https://www.npmjs.
 You can enable services in a running Kuzzle without restarting it with a simple command line:
 
 ```
-$ kuzzle.js enable <service> <PID|all>
+$ kuzzle enable <service> <PID|all>
 ```
 
 Where:
@@ -33,13 +33,13 @@ Where:
 You can disable a service with:
 
 ```
-$ kuzzle.js disable <service> <PID|all>
+$ kuzzle disable <service> <PID|all>
 ```
 
 **Note:** All services containing a toggle() method can be activated or deactivated on the fly. Some vital services can't be togglable. 
 
 ```
-$ kuzzle.js createFirstAdmin
+$ kuzzle createFirstAdmin
 ```
 
 will guide you through the creation process of the first admin user and fix the rights to other user types.
@@ -48,7 +48,7 @@ will guide you through the creation process of the first admin user and fix the 
 
 # Contributing
 
-As an example, to implement your custom "kuzzle.js stop" action:
+As an example, to implement your custom "kuzzle stop" action:
 
 * create kuzzle-stop.js,
-* modify kuzzle.js accordingly.
+* modify kuzzle accordingly.
