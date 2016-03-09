@@ -5,6 +5,7 @@ var
   params = require('rc')('kuzzle'),
   Config = require.main.require('lib/config'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
+  ResponseObject = require.main.require('lib/api/core/models/responseObject'),
   BadRequestError = require.main.require('lib/api/core/errors/badRequestError.js'),
   NotFoundError = require.main.require('lib/api/core/errors/notFoundError'),
   ES = rewire('../../../lib/services/elasticsearch');
@@ -1009,6 +1010,22 @@ describe('Test: ElasticSearch service', function () {
 
       elasticsearch.client.info = elasticsearch.client.cluster.health = elasticsearch.client.cluster.stats = esStub;
       return should(elasticsearch.getInfos(requestObject)).be.fulfilled();
+    });
+  });
+
+  describe('#refreshIndex', function () {
+    it('should send a valid request to es client', function (done) {
+      var esStub = (data) => { return q(data); };
+
+      elasticsearch.client.indices.refresh = esStub;
+
+      elasticsearch.refreshIndex(requestObject)
+        .then(data => {
+          should(data).be.an.instanceOf(ResponseObject);
+          should(data.index).be.eql(index);
+          done();
+        })
+        .catch(error => { done(error); })
     });
   });
 });
