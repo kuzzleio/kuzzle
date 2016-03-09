@@ -52,9 +52,7 @@ var myHooks = function () {
     // give a little time to run the After hook before proceeding
     setTimeout(() => {
       [api.world.fakeIndex, api.world.fakeAltIndex, api.world.fakeNewIndex].forEach(index => {
-        promises.push(api.deleteIndex(index).catch(error => {
-          console.log('AfterSetup del index error');
-        }));
+        promises.push(api.deleteIndex(index));
       });
 
       q.all(promises)
