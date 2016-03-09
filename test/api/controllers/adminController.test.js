@@ -68,41 +68,6 @@ describe('Test: admin controller', function () {
     indexCacheReset = false;
   });
 
-  describe('#deleteCollection', function () {
-    it('should activate a hook on a delete collection call', function (done) {
-      this.timeout(50);
-
-      kuzzle.once('data:deleteCollection', function (obj) {
-        try {
-          should(obj).be.exactly(requestObject);
-          done();
-        }
-        catch (e) {
-          done(e);
-        }
-      });
-
-      kuzzle.funnel.admin.deleteCollection(requestObject)
-        .catch(function (error) {
-          done(error);
-        });
-    });
-
-    it('should remove the deleted collection from the cache', function (done) {
-      this.timeout(50);
-
-      kuzzle.funnel.admin.deleteCollection(requestObject)
-        .then(response => {
-          should(response).be.instanceof(ResponseObject);
-          should(indexCacheAdd).be.false();
-          should(indexCacheRemove).be.true();
-          should(indexCacheReset).be.false();
-          done();
-        })
-        .catch(err => done(err));
-    });
-  });
-
   describe('#updateMapping', function () {
     it('should activate a hook on a mapping update call', function (done) {
       this.timeout(50);
