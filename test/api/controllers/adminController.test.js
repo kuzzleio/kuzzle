@@ -366,4 +366,16 @@ describe('Test: admin controller', function () {
       return should(kuzzle.funnel.admin.removeRooms(requestObject)).be.rejected();
     });
   });
+
+  describe('#refreshIndex', function () {
+    it('should trigger a plugin hook', function (done) {
+      kuzzle.once('data:refreshIndex', o => {
+        should(o).be.exactly(requestObject);
+        done();
+      });
+
+      kuzzle.funnel.admin.refreshIndex(requestObject);
+    });
+
+  });
 });
