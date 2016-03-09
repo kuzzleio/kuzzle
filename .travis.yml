@@ -1,14 +1,6 @@
 sudo: required
 services:
 - docker
-env:
-  COMPOSE_VERSION: 1.2.0
-before_install:
-- curl -L https://github.com/docker/compose/releases/download/${COMPOSE_VERSION}/docker-compose-`uname
-  -s`-`uname -m` > docker-compose-bin
-- chmod +x docker-compose-bin
-- sudo mv docker-compose-bin /usr/local/bin/docker-compose
-- sudo service docker restart ; sleep 10
 script:
 - docker-compose -f docker-compose/test-travis.yml run kuzzle
 notifications:
