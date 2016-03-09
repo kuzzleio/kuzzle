@@ -14,6 +14,8 @@ program
   .option('--port [port]', 'Kuzzle port number', parseInt)
   .option('--server', 'start an instance without workers')
   .option('--worker', 'spawn a single set of workers instead of starting a Kuzzle instance')
+  .option('--likeAvirgin', 'reset before start, so that Kuzzle is like a virgin, touched for the very first time')
+  .option('--fixtures <fixtures>', 'reset before start, so that Kuzzle is like a virgin, touched for the very first time')
   .description('Start a Kuzzle instance')
   .action(require('./commands/kuzzle-start'));
 

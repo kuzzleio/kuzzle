@@ -19,7 +19,7 @@ if (process.env.FEATURE_COVERAGE == 1) {
   coverage.hookLoader(__dirname+'/../lib');
 }
 
-module.exports = function () {
+module.exports = function (args) {
   console.log(kuz('Starting Kuzzle'));
 
   kuzzle.start(rc('kuzzle'))
@@ -66,10 +66,21 @@ module.exports = function () {
          ████████████████████████████████████`);
       }
 
-      return kuzzle.cleanDb(kuzzle);
+      return kuzzle.cleanDb(kuzzle, (args.likeAvirgin));
     })
     .then(() => {
-      return kuzzle.prepareDb(kuzzle);
+      var fixtures = null,
+        mappings = null;
+
+      if (typeof args.fixtures === 'string') {
+        fixtures = args.fixtures;
+      }
+      
+      if (typeof args.mappings === 'string') {
+        mappings = args.mappings;
+      }
+
+      return kuzzle.prepareDb(kuzzle, fixtures, mappings);
     })
     .then(() => {
       if (kuzzle.isServer) {

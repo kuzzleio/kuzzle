@@ -16,7 +16,7 @@ kuzzle:
     - MQ_BROKER_ENABLED=1
     - LIKE_A_VIRGIN
     - DEFAULT_MAPPING
-    - FIXTURES=/var/app/features/fixtures/functionalTestsFixtures.json
+    - FIXTURES
     - FEATURE_COVERAGE
 
 rabbit:
