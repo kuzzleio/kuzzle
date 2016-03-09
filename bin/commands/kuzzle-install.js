@@ -1,12 +1,16 @@
-#!/usr/bin/env node
-
 var
   fs = require('fs'),
   path = require('path'),
   childProcess = require('child_process'),
   lockfile = require('proper-lockfile'),
   _ = require('lodash'),
-  pathConfig = path.join(__dirname, '..', 'config');
+  pathConfig = path.join(__dirname, '..', '..', 'config'),
+  clc = require('cli-color'),
+  error = clc.red,
+  warn = clc.yellow,
+  notice = clc.cyanBright,
+  ok = clc.green.bold,
+  kuz = clc.greenBright.bold;
 
 var app = module.exports = function () {
   var
@@ -16,18 +20,18 @@ var app = module.exports = function () {
     customPlugins = {};
 
   if (!childProcess.hasOwnProperty('execSync')) {
-    console.error('███ kuzzle-install: Make sure you\'re using Node version >= 0.12');
+    console.error(error('███ kuzzle-install: Make sure you\'re using Node version >= 0.12'));
     process.exit(1);
   }
 
-  console.log('███ kuzzle-install: Starting plugins installation...');
+  console.log(notice('███ kuzzle-install: Starting plugins installation...'));
 
   /*
    Prevents multiple plugin installations at the same time.
    */
   lockfile.lock('./node_modules', {retries: 1000, minTimeout: 200, maxTimeout: 1000}, (err, release) => {
     if (err) {
-      console.error('███ kuzzle-install: Unable to acquire lock: ', err);
+      console.error(error('███ kuzzle-install: Unable to acquire lock: '), err);
       process.exit(1);
     }
 
@@ -35,7 +39,7 @@ var app = module.exports = function () {
       defaultPlugins = require(pathDefaultPlugins);
     }
     catch (err) {
-      console.error('███ kuzzle-install: Unable to load default plugin configuration: ', err);
+      console.error(error('███ kuzzle-install: Unable to load default plugin configuration: '), err);
       process.exit(1);
     }
 
@@ -44,7 +48,7 @@ var app = module.exports = function () {
         customPlugins = require(pathCustomPlugins);
       }
       catch (err) {
-        console.error('███ kuzzle-install: Unable to load custom plugin configuration: ', err);
+        console.error(error('███ kuzzle-install: Unable to load custom plugin configuration: '), err);
         process.exit(1);
       }
     }
@@ -54,7 +58,7 @@ var app = module.exports = function () {
         fs.writeFileSync(pathDefaultPlugins, JSON.stringify(defaultPlugins, null, 2));
       }
       catch (err) {
-        console.error('███ kuzzle-install: Unable to write the default plugin configuration file: ', err);
+        console.error(error('███ kuzzle-install: Unable to write the default plugin configuration file: '), err);
         process.exit(1);
       }
     }
@@ -64,13 +68,13 @@ var app = module.exports = function () {
         fs.writeFileSync(pathCustomPlugins, JSON.stringify(customPlugins, null, 2));
       }
       catch (err) {
-        console.error('███ kuzzle-install: Unable to write the custom plugin configuration file: ', err);
+        console.error(error('███ kuzzle-install: Unable to write the custom plugin configuration file: '), err);
       }
     }
 
     release();
 
-    console.log('███ kuzzle-install: Done');
+    console.log(ok('███ kuzzle-install: Done'));
   });
 };
 
@@ -93,7 +97,7 @@ function installPlugins(plugins, basePlugins) {
       pluginInstallId = name + '@' + plugin.version;
     }
     else {
-      console.error('███ kuzzle-install: Plugin', name, 'has no version. The version is mandatory if there is no URL.');
+      console.error(error('███ kuzzle-install: Plugin'), name, 'has no version. The version is mandatory if there is no URL.');
       process.exit(1);
     }
 
@@ -149,7 +153,7 @@ function initConfig(plugin, name) {
     pluginPackage = require(path.join(getPathPlugin(name), 'package.json'));
   }
   catch (e) {
-    console.error(new InternalError('███ kuzzle-install: There is a problem with plugin ' + name + '. Check the plugin name'));
+    console.error(error('███ kuzzle-install:'), 'There is a problem with plugin ' + name + '. Check the plugin name');
   }
 
   // If there is no information about plugin in the package.json
@@ -202,6 +206,6 @@ function needInstall(name, from) {
  * @returns {String}
  */
 function getPathPlugin (name) {
-  return path.join(__dirname, '..', 'node_modules', name);
+  return path.join(__dirname, '..', '..', 'node_modules', name);
 }
 
