@@ -1025,7 +1025,7 @@ describe('Test: ElasticSearch service', function () {
           should(data.index).be.eql(index);
           done();
         })
-        .catch(error => { done(error); })
+        .catch(error => { done(error); });
     });
   });
 });
