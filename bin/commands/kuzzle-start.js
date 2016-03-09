@@ -80,7 +80,7 @@ module.exports = function () {
         firstAdmin.check()
           .then((res) => {
             if (res.result.total === 0) {
-              console.log(notice('[ℹ] There is administrator user yet. You can use the CLI or the back-office to create one.'));
+              console.log(notice('[ℹ] There is no administrator user yet. You can use the CLI or the back-office to create one.'));
             }
             console.log(notice('[ℹ] Entering no-administrator mode: everyone has administrator rights.'));
           })
