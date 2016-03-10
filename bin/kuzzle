@@ -8,7 +8,7 @@
  */
 var program = require('commander');
 
-// $ kuzzle.js start
+// $ kuzzle start
 program
   .command('start')
   .option('--port [port]', 'Kuzzle port number', parseInt)
@@ -20,7 +20,7 @@ program
   .description('Start a Kuzzle instance')
   .action(require('./commands/kuzzle-start'));
 
-// $ kuzzle.js enable <service>
+// $ kuzzle enable <service>
 program
   .command('enable')
   .description('Enable a service without reloading Kuzzle')
@@ -32,17 +32,23 @@ program
   .description('Disable a service without reloading Kuzzle')
   .action(require('./commands/kuzzle-disable'));
 
-// $ kuzzle.js install
+// $ kuzzle install
 program
   .command('install')
   .description('Install plugin dependencies')
   .action(require('./commands/kuzzle-install'));
 
-// $ kuzzle.js createFirstAdmin
+// $ kuzzle createFirstAdmin
 program
   .command('createFirstAdmin')
   .description('Create the first administrator')
   .action(require('./commands/kuzzle-createFirstAdmin').action);
+
+// $ kuzzle likeAvirgin
+program
+  .command('likeAvirgin')
+  .description('Empty all the Kuzzle storage and make it look like a virgin, touched for the very first time')
+  .action(require('./commands/kuzzle-reset'));  
 
 // Run user command
 program.parse(process.argv);
