@@ -1088,7 +1088,7 @@ describe('Test: security/roleTest', function () {
             list: {
               readEngine: {
                 get: function (requestObject) {
-                  throw(new InternalError("Error"));
+                  throw(new InternalError('Error'));
                 }
               }
             }
