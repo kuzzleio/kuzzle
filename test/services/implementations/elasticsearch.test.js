@@ -507,6 +507,13 @@ describe('Test: ElasticSearch service', function () {
         return should(elasticsearch.deleteByQuery(requestObject)).be.rejected();
       });
     });
+
+    it('should return a rejected promise if the delete by query fails because the filter is null', function () {
+
+      requestObject.data.body = null;
+
+      return should(elasticsearch.deleteByQuery(requestObject)).be.rejected();
+    });
   });
 
   describe('#bulk', function () {
