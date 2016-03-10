@@ -7,9 +7,7 @@ var
   ResponseObject = require.main.require('lib/api/core/models/responseObject'),
   InternalError = require.main.require('lib/api/core/errors/internalError'),
   Role = rewire('../../../../../lib/api/core/models/security/role'),
-  internalIndex = require('rc')('kuzzle').internalIndex,
-  ES = rewire('../../../../../lib/services/elasticsearch'),
-  Kuzzle = require.main.require('lib/api/Kuzzle');
+  internalIndex = require('rc')('kuzzle').internalIndex;
 
 describe('Test: security/roleTest', function () {
   var
@@ -27,8 +25,6 @@ describe('Test: security/roleTest', function () {
       controller: 'controller',
       action: 'action'
     },
-    elasticsearch,
-    engineType = 'readEngine',
     documentAda = {
       _id: 'ada',
       found: true,
@@ -41,16 +37,49 @@ describe('Test: security/roleTest', function () {
         city: 'London',
         hobby: 'computer'
       }
+    },
+    documentFalseAda = {
+      _id: 'foobar',
+      found: true,
+      _version: 1,
+      _index: 'bar',
+      _type: 'barbar',
+      _source: {
+        firstName: 'Ada',
+        lastName: 'Lovelace',
+        city: 'London',
+        hobby: 'computer'
+      }
+    },
+    kuzzle = {
+      services: {
+        list: {
+          readEngine: {
+            get: function (requestObject) {
+              if (requestObject.data.id !== 'foobar') {
+                return q(new ResponseObject(requestObject, documentAda));
+              } else {
+                return q(new ResponseObject(requestObject, documentFalseAda));
+              }
+            },
+            mget: function (requestObject) {
+              if (requestObject.data.body.ids[0] !== 'foobar') {
+                return q(new ResponseObject(requestObject, {hits:[documentAda]}));
+              } else {
+                return q(new ResponseObject(requestObject, {hits:[documentFalseAda]}));
+              }
+            },
+            search: function (requestObject) {
+              if (requestObject.data.body.filter.ids.values[0] !== 'foobar') {
+                return q(new ResponseObject(requestObject, {hits:[documentAda]}));
+              } else {
+                return q(new ResponseObject(requestObject, {hits:[documentFalseAda]}));
+              }
+            }
+          }
+        }
+      }
     };
-
-  before(function(){
-    elasticsearch = new ES(kuzzle, {service: engineType});
-    elasticsearch.client = {
-      indices: {},
-      cat: {},
-      cluster: {}
-    };
-  });
 
   describe('#isActionValid', (callback) => {
     it('should disallow any action when no matching entry can be found', function () {
@@ -690,7 +719,7 @@ describe('Test: security/roleTest', function () {
         });
     });
 
-    it('should allow/deny rights using custom function with in args using get', function() {
+    it('should allow/deny rights using custom function with args using get', function(callback) {
       var
         roleAllow = new Role(),
         roleDeny = new Role();
@@ -701,16 +730,20 @@ describe('Test: security/roleTest', function () {
             '*': {
               controllers: {
                 '*': {
-                  args: {
-                    document: {
-                      action: {
-                        get: '$currentId'
+                  actions: {
+                    '*': {
+                      args: {
+                        document: {
+                          action: {
+                            get: '$currentId'
+                          },
+                          index: 'bar',
+                          collection: 'barbar'
+                        }
                       },
-                      index: 'bar',
-                      collection: 'barbar'
+                      test: 'return args.document && args.document.id === $requestObject.data._id;'
                     }
-                  },
-                  test: 'return args.document.content.id === $requestObject._id;'
+                  }
                 }
               }
             }
@@ -735,7 +768,7 @@ describe('Test: security/roleTest', function () {
                           collection: 'barbar'
                         }
                       },
-                      test: 'return args.document.content.id === $requestObject._id;'
+                      test: 'return args.document && args.document.id === $requestObject.data._id;'
                     }
                   }
                 }
@@ -756,16 +789,12 @@ describe('Test: security/roleTest', function () {
         }
       });
 
-      elasticsearch.client.get = function (data) {
-        return q(new ResponseObject(requestObject, documentAda));
-      };
 
-
-      roleAllow.isActionAllowed(requestObject, context, {}, Kuzzle)
+      roleAllow.isActionAllowed(requestObject, context, {}, kuzzle)
         .then(isAllowed => {
           should(isAllowed).be.true();
 
-          return roleDeny.isActionAllowed(requestObject, context, {}, Kuzzle);
+          return roleDeny.isActionAllowed(requestObject, context, {}, kuzzle);
         })
         .then(isAllowed => {
           should(isAllowed).be.false();
@@ -773,6 +802,190 @@ describe('Test: security/roleTest', function () {
           callback();
         });
     });
+
+    it('should allow/deny rights using custom function with args using mget', function(callback) {
+      var
+        roleAllow = new Role(),
+        roleDeny = new Role();
+
+      roleAllow.indexes = {
+        '*': {
+          collections: {
+            '*': {
+              controllers: {
+                '*': {
+                  actions: {
+                    '*': {
+                      args: {
+                        documents: {
+                          action: {
+                            mget: ['$currentId']
+                          },
+                          index: 'bar',
+                          collection: 'barbar'
+                        }
+                      },
+                      test: 'return args.documents[0] && args.documents[0].id === $requestObject.data._id;'
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      };
+
+      roleDeny.indexes = {
+        '*': {
+          collections: {
+            '*': {
+              controllers: {
+                '*': {
+                  actions: {
+                    '*': {
+                      args: {
+                        documents: {
+                          action: {
+                            mget: ['foobar']
+                          },
+                          index: 'bar',
+                          collection: 'barbar'
+                        }
+                      },
+                      test: 'return args.documents[0] && args.documents[0].id === $requestObject.data._id;'
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      };
+
+      var requestObject = new RequestObject({
+        controller: 'read',
+        action: 'get',
+        requestId: 'foo',
+        collection: 'barbar',
+        index: 'bar',
+        body: {
+          _id: documentAda._id
+        }
+      });
+
+
+      roleAllow.isActionAllowed(requestObject, context, {}, kuzzle)
+        .then(isAllowed => {
+          should(isAllowed).be.true();
+
+          return roleDeny.isActionAllowed(requestObject, context, {}, kuzzle);
+        })
+        .then(isAllowed => {
+          should(isAllowed).be.false();
+
+          callback();
+        });
+    });
+  });
+
+  it('should allow/deny rights using custom function with args using search', function(callback) {
+    var
+      roleAllow = new Role(),
+      roleDeny = new Role();
+
+    roleAllow.indexes = {
+      '*': {
+        collections: {
+          '*': {
+            controllers: {
+              '*': {
+                actions: {
+                  '*': {
+                    args: {
+                      documents: {
+                        action: {
+                          search: {
+                            filter: {
+                              ids: {
+                                values: [
+                                  '$requestObject.data._id'
+                                ]
+                              }
+                            }
+                          }
+                        },
+                        index: 'bar',
+                        collection: 'barbar'
+                      }
+                    },
+                    test: 'return args.documents[0] && args.documents[0].id === $requestObject.data._id;'
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    };
+
+    roleDeny.indexes = {
+      '*': {
+        collections: {
+          '*': {
+            controllers: {
+              '*': {
+                actions: {
+                  '*': {
+                    args: {
+                      documents: {
+                        action: {
+                          search: {
+                            filter: {
+                              ids: {
+                                values: [
+                                  'foobar'
+                                ]
+                              }
+                            }
+                          }
+                        },
+                        index: 'bar',
+                        collection: 'barbar'
+                      }
+                    },
+                    test: 'return args.documents[0] && args.documents[0].id === $requestObject.data._id;'
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    };
+
+    var requestObject = new RequestObject({
+      controller: 'read',
+      action: 'get',
+      requestId: 'foo',
+      collection: 'barbar',
+      index: 'bar',
+      body: {
+        _id: documentAda._id
+      }
+    });
+
+
+    roleAllow.isActionAllowed(requestObject, context, {}, kuzzle)
+      .then(isAllowed => {
+        should(isAllowed).be.true();
+
+        return roleDeny.isActionAllowed(requestObject, context, {}, kuzzle);
+      })
+      .then(isAllowed => {
+        should(isAllowed).be.false();
+
+        callback();
+      });
   });
 
   describe('#validateDefinition', () => {
