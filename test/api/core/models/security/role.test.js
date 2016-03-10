@@ -618,8 +618,29 @@ describe('Test: security/roleTest', function () {
       should(role.isActionAllowed(requestObject, context)).be.rejected();
     });
 
-    it('should throw an error if an invalid function is given', function () {
-      var role = new Role();
+    it('should throw an error if an invalid function is given', function (callback) {
+      var role = new Role(),
+        kuzzle = {
+          pluginsManager: {
+            trigger: () => {
+              return true;
+            }
+          },
+          services: {
+            list: {
+              readEngine: {
+                search: function (requestObject) {
+                  if (requestObject.data.body.filter.ids.values[0] !== 'foobar') {
+                    return q(new ResponseObject(requestObject, {hits: [documentAda]}));
+                  } else {
+                    return q(new ResponseObject(requestObject, {hits: [documentFalseAda]}));
+                  }
+                }
+              }
+            }
+          }
+        };
+
       role.indexes = {
         '*': {
           collections: {
@@ -627,7 +648,10 @@ describe('Test: security/roleTest', function () {
               controllers: {
                 '*': {
                   actions: {
-                    '*': '(some invalid code'
+                    '*': {
+                      test: '(some invalid code',
+                      args: {}
+                    }
                   }
                 }
               }
@@ -636,9 +660,71 @@ describe('Test: security/roleTest', function () {
         }
       };
 
-      should(function () {
-        role.isActionAllowed(requestObject, context);
-      }).throw(InternalError);
+      role.isActionAllowed(requestObject, context, {}, kuzzle)
+        .then(isActionAllowed => {
+          should(isActionAllowed).be.empty();
+        })
+        .catch(e => {
+          should(e).be.an.instanceOf(InternalError);
+          callback();
+        });
+    });
+
+    it('should throw an error if an invalid argument is given', function (callback) {
+      var role = new Role(),
+        kuzzle = {
+          pluginsManager: {
+            trigger: () => {
+              return true;
+            }
+          },
+          services: {
+            list: {
+              readEngine: {
+                search: function (requestObject) {
+                  if (requestObject.data.body.filter.ids.values[0] !== 'foobar') {
+                    return q(new ResponseObject(requestObject, {hits: [documentAda]}));
+                  } else {
+                    return q(new ResponseObject(requestObject, {hits: [documentFalseAda]}));
+                  }
+                }
+              }
+            }
+          }
+        };
+
+      role.indexes = {
+        '*': {
+          collections: {
+            '*': {
+              controllers: {
+                '*': {
+                  actions: {
+                    '*': {
+                      test: '(some invalid code',
+                      args: {
+                        document: {
+                          get: '$requestObject.data..id'
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      };
+
+      try {
+        role.isActionAllowed(requestObject, context, {}, kuzzle)
+          .then(isActionAllowed => {
+            should(isActionAllowed).be.empty();
+          });
+      } catch (e) {
+        should(e).be.an.instanceOf(InternalError);
+        callback();
+      }
     });
 
     it('should handle a custom right function', function (callback) {
@@ -1075,7 +1161,7 @@ describe('Test: security/roleTest', function () {
         });
     });
 
-    it('should not allow if read method throws an error', function () {
+    it('should not allow if read method throws an error', function (callback) {
       var
         role = new Role(),
         kuzzle = {
@@ -1088,7 +1174,7 @@ describe('Test: security/roleTest', function () {
             list: {
               readEngine: {
                 get: function (requestObject) {
-                  throw(new InternalError('Error'));
+                  return q.reject(new InternalError('Our Error'));
                 }
               }
             }
@@ -1133,10 +1219,11 @@ describe('Test: security/roleTest', function () {
         }
       });
 
-
-      should(function () {
-        role.isActionAllowed(requestObject, context, {}, kuzzle);
-      }).throw(InternalError);
+      return role.isActionAllowed(requestObject, context, {}, kuzzle)
+        .then(isActionAllowed => {
+          should(isActionAllowed).be.false();
+          callback();
+      });
     });
 
     it('should not allow if collection is not specified', function (callback) {
