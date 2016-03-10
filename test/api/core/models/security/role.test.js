@@ -50,35 +50,6 @@ describe('Test: security/roleTest', function () {
         city: 'London',
         hobby: 'computer'
       }
-    },
-    kuzzle = {
-      services: {
-        list: {
-          readEngine: {
-            get: function (requestObject) {
-              if (requestObject.data.id !== 'foobar') {
-                return q(new ResponseObject(requestObject, documentAda));
-              } else {
-                return q(new ResponseObject(requestObject, documentFalseAda));
-              }
-            },
-            mget: function (requestObject) {
-              if (requestObject.data.body.ids[0] !== 'foobar') {
-                return q(new ResponseObject(requestObject, {hits:[documentAda]}));
-              } else {
-                return q(new ResponseObject(requestObject, {hits:[documentFalseAda]}));
-              }
-            },
-            search: function (requestObject) {
-              if (requestObject.data.body.filter.ids.values[0] !== 'foobar') {
-                return q(new ResponseObject(requestObject, {hits:[documentAda]}));
-              } else {
-                return q(new ResponseObject(requestObject, {hits:[documentFalseAda]}));
-              }
-            }
-          }
-        }
-      }
     };
 
   describe('#isActionValid', (callback) => {
@@ -92,8 +63,7 @@ describe('Test: security/roleTest', function () {
             collection: {
               controllers: {
                 controller: {
-                  actions: {
-                  }
+                  actions: {}
                 }
               }
             }
@@ -666,7 +636,9 @@ describe('Test: security/roleTest', function () {
         }
       };
 
-      should(function () { role.isActionAllowed(requestObject, context); }).throw(InternalError);
+      should(function () {
+        role.isActionAllowed(requestObject, context);
+      }).throw(InternalError);
     });
 
     it('should handle a custom right function', function (callback) {
@@ -710,7 +682,7 @@ describe('Test: security/roleTest', function () {
             args: {},
             test: 'return $requestObject.action !== \'action\'; '
           };
-          
+
           return role.isActionAllowed(requestObject, context);
         })
         .then(isAllowed => {
@@ -719,10 +691,25 @@ describe('Test: security/roleTest', function () {
         });
     });
 
-    it('should allow/deny rights using custom function with args using get', function(callback) {
+    it('should allow/deny rights using custom function with args using get', function (callback) {
       var
         roleAllow = new Role(),
-        roleDeny = new Role();
+        roleDeny = new Role(),
+        kuzzle = {
+          services: {
+            list: {
+              readEngine: {
+                get: function (requestObject) {
+                  if (requestObject.data.id !== 'foobar') {
+                    return q(new ResponseObject(requestObject, documentAda));
+                  } else {
+                    return q(new ResponseObject(requestObject, documentFalseAda));
+                  }
+                }
+              }
+            }
+          }
+        };
 
       roleAllow.indexes = {
         '*': {
@@ -803,10 +790,25 @@ describe('Test: security/roleTest', function () {
         });
     });
 
-    it('should allow/deny rights using custom function with args using mget', function(callback) {
+    it('should allow/deny rights using custom function with args using mget', function (callback) {
       var
         roleAllow = new Role(),
-        roleDeny = new Role();
+        roleDeny = new Role(),
+        kuzzle = {
+          services: {
+            list: {
+              readEngine: {
+                mget: function (requestObject) {
+                  if (requestObject.data.body.ids[0] !== 'foobar') {
+                    return q(new ResponseObject(requestObject, {hits: [documentAda]}));
+                  } else {
+                    return q(new ResponseObject(requestObject, {hits: [documentFalseAda]}));
+                  }
+                }
+              }
+            }
+          }
+        };
 
       roleAllow.indexes = {
         '*': {
@@ -886,106 +888,326 @@ describe('Test: security/roleTest', function () {
           callback();
         });
     });
-  });
 
-  it('should allow/deny rights using custom function with args using search', function(callback) {
-    var
-      roleAllow = new Role(),
-      roleDeny = new Role();
+    it('should allow/deny rights using custom function with args using search', function (callback) {
+      var
+        roleAllow = new Role(),
+        roleDeny = new Role(),
+        kuzzle = {
+          services: {
+            list: {
+              readEngine: {
+                search: function (requestObject) {
+                  if (requestObject.data.body.filter.ids.values[0] !== 'foobar') {
+                    return q(new ResponseObject(requestObject, {hits: [documentAda]}));
+                  } else {
+                    return q(new ResponseObject(requestObject, {hits: [documentFalseAda]}));
+                  }
+                }
+              }
+            }
+          }
+        };
 
-    roleAllow.indexes = {
-      '*': {
-        collections: {
-          '*': {
-            controllers: {
-              '*': {
-                actions: {
-                  '*': {
-                    args: {
-                      documents: {
-                        action: {
-                          search: {
-                            filter: {
-                              ids: {
-                                values: [
-                                  '$requestObject.data._id'
-                                ]
+      roleAllow.indexes = {
+        '*': {
+          collections: {
+            '*': {
+              controllers: {
+                '*': {
+                  actions: {
+                    '*': {
+                      args: {
+                        documents: {
+                          action: {
+                            search: {
+                              filter: {
+                                ids: {
+                                  values: [
+                                    '$requestObject.data._id'
+                                  ]
+                                }
                               }
                             }
-                          }
-                        },
-                        index: 'bar',
-                        collection: 'barbar'
-                      }
-                    },
-                    test: 'return args.documents[0] && args.documents[0].id === $requestObject.data._id;'
+                          },
+                          index: 'bar',
+                          collection: 'barbar'
+                        }
+                      },
+                      test: 'return args.documents[0] && args.documents[0].id === $requestObject.data._id;'
+                    }
                   }
                 }
               }
             }
           }
         }
-      }
-    };
+      };
 
-    roleDeny.indexes = {
-      '*': {
-        collections: {
-          '*': {
-            controllers: {
-              '*': {
-                actions: {
-                  '*': {
-                    args: {
-                      documents: {
-                        action: {
-                          search: {
-                            filter: {
-                              ids: {
-                                values: [
-                                  'foobar'
-                                ]
+      roleDeny.indexes = {
+        '*': {
+          collections: {
+            '*': {
+              controllers: {
+                '*': {
+                  actions: {
+                    '*': {
+                      args: {
+                        documents: {
+                          action: {
+                            search: {
+                              filter: {
+                                ids: {
+                                  values: [
+                                    'foobar'
+                                  ]
+                                }
                               }
                             }
-                          }
-                        },
-                        index: 'bar',
-                        collection: 'barbar'
-                      }
-                    },
-                    test: 'return args.documents[0] && args.documents[0].id === $requestObject.data._id;'
+                          },
+                          index: 'bar',
+                          collection: 'barbar'
+                        }
+                      },
+                      test: 'return args.documents[0] && args.documents[0].id === $requestObject.data._id;'
+                    }
                   }
                 }
               }
             }
           }
         }
-      }
-    };
+      };
 
-    var requestObject = new RequestObject({
-      controller: 'read',
-      action: 'get',
-      requestId: 'foo',
-      collection: 'barbar',
-      index: 'bar',
-      body: {
-        _id: documentAda._id
-      }
+      var requestObject = new RequestObject({
+        controller: 'read',
+        action: 'get',
+        requestId: 'foo',
+        collection: 'barbar',
+        index: 'bar',
+        body: {
+          _id: documentAda._id
+        }
+      });
+
+
+      roleAllow.isActionAllowed(requestObject, context, {}, kuzzle)
+        .then(isAllowed => {
+          should(isAllowed).be.true();
+
+          return roleDeny.isActionAllowed(requestObject, context, {}, kuzzle);
+        })
+        .then(isAllowed => {
+          should(isAllowed).be.false();
+
+          callback();
+        });
     });
 
+    it('should not allow bad method call', function (callback) {
+      var
+        role = new Role(),
+        kuzzle = {
+          pluginsManager: {
+            trigger: () => {
+              return true;
+            }
+          },
+          services: {
+            list: {
+              readEngine: {
+                get: function (requestObject) {
+                  if (requestObject.data.id !== 'foobar') {
+                    return q(new ResponseObject(requestObject, documentAda));
+                  } else {
+                    return q(new ResponseObject(requestObject, documentFalseAda));
+                  }
+                }
+              }
+            }
+          }
+        };
 
-    roleAllow.isActionAllowed(requestObject, context, {}, kuzzle)
-      .then(isAllowed => {
-        should(isAllowed).be.true();
+      role.indexes = {
+        '*': {
+          collections: {
+            '*': {
+              controllers: {
+                '*': {
+                  actions: {
+                    '*': {
+                      args: {
+                        document: {
+                          action: {
+                            foo: '$currentId'
+                          },
+                          index: 'bar',
+                          collection: 'barbar'
+                        }
+                      },
+                      test: 'return args.document && args.document.id === $requestObject.data._id;'
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      };
 
-        return roleDeny.isActionAllowed(requestObject, context, {}, kuzzle);
-      })
-      .then(isAllowed => {
-        should(isAllowed).be.false();
-
-        callback();
+      var requestObject = new RequestObject({
+        controller: 'read',
+        action: 'get',
+        requestId: 'foo',
+        collection: 'barbar',
+        index: 'bar',
+        body: {
+          _id: documentAda._id
+        }
       });
+
+
+      role.isActionAllowed(requestObject, context, {}, kuzzle)
+        .then(isAllowed => {
+          should(isAllowed).be.false();
+
+          callback();
+        });
+    });
+
+    it('should not allow if read method throws an error', function () {
+      var
+        role = new Role(),
+        kuzzle = {
+          pluginsManager: {
+            trigger: () => {
+              return true;
+            }
+          },
+          services: {
+            list: {
+              readEngine: {
+                get: function (requestObject) {
+                  throw(new InternalError("Error"));
+                }
+              }
+            }
+          }
+        };
+
+      role.indexes = {
+        '*': {
+          collections: {
+            '*': {
+              controllers: {
+                '*': {
+                  actions: {
+                    '*': {
+                      args: {
+                        document: {
+                          action: {
+                            get: '$currentId'
+                          },
+                          index: 'bar',
+                          collection: 'barbar'
+                        }
+                      },
+                      test: 'return args.document && args.document.id === $requestObject.data._id;'
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      };
+
+      var requestObject = new RequestObject({
+        controller: 'read',
+        action: 'get',
+        requestId: 'foo',
+        collection: 'barbar',
+        index: 'bar',
+        body: {
+          _id: documentAda._id
+        }
+      });
+
+
+      should(function () {
+        role.isActionAllowed(requestObject, context, {}, kuzzle);
+      }).throw(InternalError);
+    });
+
+    it('should not allow if collection is not specified', function (callback) {
+      var
+        role = new Role(),
+        kuzzle = {
+          pluginsManager: {
+            trigger: () => {
+              return true;
+            }
+          },
+          services: {
+            list: {
+              readEngine: {
+                get: function (requestObject) {
+                  if (requestObject.data.id !== 'foobar') {
+                    return q(new ResponseObject(requestObject, documentAda));
+                  } else {
+                    return q(new ResponseObject(requestObject, documentFalseAda));
+                  }
+                }
+              }
+            }
+          }
+        };
+
+      role.indexes = {
+        '*': {
+          collections: {
+            '*': {
+              controllers: {
+                '*': {
+                  actions: {
+                    '*': {
+                      args: {
+                        document: {
+                          action: {
+                            get: '$currentId'
+                          },
+                          collection: 'barbar'
+                        }
+                      },
+                      test: 'return args.document && args.document.id === $requestObject.data._id;'
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      };
+
+      var requestObject = new RequestObject({
+        controller: 'read',
+        action: 'get',
+        requestId: 'foo',
+        collection: 'barbar',
+        index: 'bar',
+        body: {
+          _id: documentAda._id
+        }
+      });
+
+
+      role.isActionAllowed(requestObject, context, {}, kuzzle)
+        .then(isAllowed => {
+          should(isAllowed).be.false();
+
+          callback();
+        });
+    });
   });
 
   describe('#validateDefinition', () => {
