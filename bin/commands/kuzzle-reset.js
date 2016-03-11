@@ -31,7 +31,7 @@ var interractiveLogin = (args) => {
       console.log(ok('[✔] User ' + username + ' successfully logged in!'))
       doReset(res.result.jwt, args);
     })
-    .catch((error) => {
+    .catch((err) => {
       console.log(error('Bad credentials'));
       process.exit(1);
     });
@@ -81,7 +81,7 @@ var doReset = (token, args) => {
       }, 1200);
     })
     .catch((err) => {
-      console.log(error('\nSomething wrong just happened. Here is the original error'), err);
+      console.log(error('\n[✖] Something wrong just happened. Here is the original error'), err);
     });
 };
 

@@ -38,13 +38,35 @@ $ kuzzle disable <service> <PID|all>
 
 **Note:** All services containing a toggle() method can be activated or deactivated on the fly. Some vital services can't be togglable. 
 
+# Create the first admin
+
+You will need it to connect to the back-office
+
 ```
 $ kuzzle createFirstAdmin
 ```
 
-will guide you through the creation process of the first admin user and fix the rights to other user types.
+will guide you through the creation process of the first admin user and fix the rights to other user types if needed.
 
+**Note:** This command is interractive and let you choose to reset the roles rights or not.
 
+# Reset Kuzzle
+
+```
+$ kuzzle likeAvirgin
+```
+
+will allow you to reset Kuzzle and restore it as if it is freshly installed.
+
+If you need to be connected as an administrative user, an interrective prompt will ask you for a username and a password
+
+## Reset and add fixtures or mappings
+
+You can perform a reset followed by a fixtures and/or mappings import by doing:
+
+```
+$ kuzzle likeAvirgin --fixtures /path/to/the/fixtures/file.json --mappings /path/to/the/mappings/file.json
+```
 
 # Contributing
 
