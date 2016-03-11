@@ -41,7 +41,7 @@ var interractiveLogin = () => {
 var doReset = (token) => {
   var options = {
     method: 'DELETE',
-    uri: 'http://localhost:7511/api/1.0/_deleteIndexes',
+    uri: 'http://localhost:7511/api/1.0/_cleanDb',
     body: {},
     json: true
   };
