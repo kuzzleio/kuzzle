@@ -38,7 +38,7 @@ $ kuzzle disable <service> <PID|all>
 
 **Note:** All services containing a toggle() method can be activated or deactivated on the fly. Some vital services can't be togglable. 
 
-# Create the first admin
+# Create the first administrative user account
 
 You will need it to connect to the back-office
 
@@ -66,6 +66,18 @@ You can perform a reset followed by a fixtures and/or mappings import by doing:
 
 ```
 $ kuzzle likeAvirgin --fixtures /path/to/the/fixtures/file.json --mappings /path/to/the/mappings/file.json
+```
+
+# Getting help
+
+You can, of course, get some help by using the --help option. 
+
+Try those: 
+
+```
+$ kuzzle --help
+$ kuzzle start --help
+$ kuzzle likeAvirgin --help
 ```
 
 # Contributing
