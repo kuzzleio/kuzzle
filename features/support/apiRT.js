@@ -152,18 +152,6 @@ ApiRT.prototype.deleteByQuery = function (filters, index, collection) {
   return this.send(msg);
 };
 
-ApiRT.prototype.deleteCollection = function (index) {
-  var
-    msg = {
-      controller: 'admin',
-      collection: this.world.fakeCollection,
-      index: index || this.world.fakeIndex,
-      action: 'deleteCollection'
-    };
-
-  return this.send(msg);
-};
-
 ApiRT.prototype.updateMapping = function (index) {
   var
     msg = {
@@ -177,11 +165,11 @@ ApiRT.prototype.updateMapping = function (index) {
   return this.send(msg);
 };
 
-ApiRT.prototype.bulkImport = function (bulk, index) {
+ApiRT.prototype.bulkImport = function (bulk, index, collection) {
   var
     msg = {
       controller: 'bulk',
-      collection: this.world.fakeCollection,
+      collection: collection || this.world.fakeCollection,
       index: index || this.world.fakeIndex,
       action: 'import',
       body: bulk
@@ -607,6 +595,14 @@ ApiRT.prototype.checkToken = function (token) {
     controller: 'auth',
     action: 'checkToken',
     body: {token}
+  });
+};
+
+ApiRT.prototype.refreshIndex = function (index) {
+  return this.send({
+    index: index,
+    controller: 'admin',
+    action: 'refreshIndex'
   });
 };
 
