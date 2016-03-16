@@ -6,6 +6,7 @@ var
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
   ResponseObject = require.main.require('lib/api/core/models/responseObject'),
   InternalError = require.main.require('lib/api/core/errors/internalError'),
+  ParseError = require.main.require('lib/api/core/errors/parseError'),
   Role = rewire('../../../../../lib/api/core/models/security/role'),
   internalIndex = require('rc')('kuzzle').internalIndex;
 
@@ -665,7 +666,7 @@ describe('Test: security/roleTest', function () {
           should(isActionAllowed).be.empty();
         })
         .catch(e => {
-          should(e).be.an.instanceOf(InternalError);
+          should(e).be.an.instanceOf(ParseError);
           callback();
         });
     });
@@ -722,7 +723,7 @@ describe('Test: security/roleTest', function () {
             should(isActionAllowed).be.empty();
           });
       } catch (e) {
-        should(e).be.an.instanceOf(InternalError);
+        should(e).be.an.instanceOf(ParseError);
         callback();
       }
     });
