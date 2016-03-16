@@ -459,8 +459,19 @@ describe('Test: security/roleTest', function () {
         }
       };
 
-      should(roleAllow.isActionAllowed(rq, context)).be.true();
-      should(roleDeny.isActionAllowed(rq, context)).be.false();
+      roleAllow.isActionAllowed(rq, context)
+        .then(isAllowed => {
+          should(isAllowed).be.true();
+
+          return roleDeny.isActionAllowed(rq, context);
+        })
+        .then(isAllowed => {
+          should(isAllowed).be.false();
+
+          done();
+        })
+        .catch(error => { done(error); });
+
     });
 
     it('should not allow any action on the internal index if no role has been explicitly set on it', function () {
