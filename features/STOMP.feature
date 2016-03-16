@@ -51,8 +51,9 @@ Feature: Test STOMP API
   @usingSTOMP
   Scenario: Search a document
     When I write the document "documentGrace"
-    And I find a document with "grace" in field "firstName"
-    And I don't find a document with "grace" in field "firstName" in index "index-test-alt"
+    And I refresh the index
+    Then I find a document with "grace" in field "firstName"
+    And I don't find a document with "grace" in field "firstName" in index "kuzzle-test-index-alt"
 
   @usingSTOMP
   Scenario: Bulk import
@@ -67,7 +68,8 @@ Feature: Test STOMP API
   @usingSTOMP
   Scenario: Delete type
     When I write the document
-    Then I remove the collection and schema
+    Then I refresh the index
+    Then I truncate the collection
     Then I'm not able to get the document
 
   @usingSTOMP
@@ -77,7 +79,7 @@ Feature: Test STOMP API
     When I write the document "documentGrace"
     When I write the document "documentAda"
     Then I count 4 documents
-    And I count 0 documents in index "index-test-alt"
+    And I count 0 documents in index "kuzzle-test-index-alt"
     And I count 2 documents with "NYC" in field "city"
     Then I truncate the collection
     And I count 0 documents
@@ -86,11 +88,10 @@ Feature: Test STOMP API
   Scenario: Change mapping
     When I write the document "documentGrace"
     Then I don't find a document with "Grace" in field "firstName"
-    Then I remove the collection and schema
-    Then I wait 1s
     Then I change the schema
     When I write the document "documentGrace"
-    Then I find a document with "Grace" in field "firstName"
+    And I refresh the index
+    Then I find a document with "Grace" in field "newFirstName"
 
   @usingSTOMP @unsubscribe
   Scenario: Document creation notifications
@@ -166,7 +167,7 @@ Feature: Test STOMP API
     Given A room subscription listening to "lastName" having value "Hopper"
     When I write the document "documentGrace"
     And I write the document "documentAda"
-    And I wait 1s
+    And I refresh the index
     Then I remove documents with field "hobby" equals to value "computer"
     Then I should receive a "delete" notification
     And The notification should not have a "_source" member
@@ -238,10 +239,10 @@ Feature: Test STOMP API
 
   @usingSTOMP
   Scenario: create additional index
-    When I create an index named "my-new-index"
-    Then I'm able to find the index named "my-new-index" in index list
+    When I create an index named "kuzzle-test-index-new"
+    Then I'm able to find the index named "kuzzle-test-index-new" in index list
     Then I'm not able to find the index named "my-undefined-index" in index list
-    Then I'm able to delete the index named "my-new-index"
+    Then I'm able to delete the index named "kuzzle-test-index-new"
 
   @usingSTOMP @cleanSecurity
   Scenario: login user
