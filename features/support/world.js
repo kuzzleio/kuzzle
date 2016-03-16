@@ -10,9 +10,8 @@ module.exports = function () {
     this.currentUser = null;
 
     // Fake values for test
-    this.fakeIndex = 'kuzzle-test-index';
-    this.fakeAltIndex = 'kuzzle-test-index-alt';
-    this.fakeNewIndex = 'kuzzle-test-index-new';
+    this.fakeIndex = 'index-test';
+    this.fakeAltIndex = 'index-test-alt';
     this.fakeCollection = 'kuzzle-collection-test';
 
     this.documentGrace = {
@@ -56,22 +55,11 @@ module.exports = function () {
       { delete: {_id: 2, _type: this.fakeCollection, _index: this.fakeIndex } }
     ];
 
-
-    /* jshint camelcase: false */
     this.schema = {
       properties: {
-        firstName: {
-          type: 'string',
-          copy_to: 'newFirstName'
-        },
-        newFirstName: {
-          type: 'string',
-          store: true,
-          index: 'not_analyzed'
-        }
+        firstName: {type: 'string', store: true, index: 'not_analyzed'}
       }
     };
-    /* jshint camelcase: true */
 
     this.metadata = {
       iwant: 'to break free',
