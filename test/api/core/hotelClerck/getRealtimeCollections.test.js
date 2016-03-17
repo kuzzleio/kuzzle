@@ -7,7 +7,9 @@ var
   Role = require.main.require('lib/api/core/models/security/role');
 
 describe('Test: hotelClerk.getRealtimeCollections', function () {
-  var collection = 'foobar';
+  var
+    index = 'foo',
+    collection = 'bar';
 
   beforeEach(function () {
     kuzzle = new Kuzzle();
@@ -31,7 +33,8 @@ describe('Test: hotelClerk.getRealtimeCollections', function () {
         var requestObject1 = new RequestObject({
           controller: 'subscribe',
           action: 'on',
-          collection: collection,
+          index,
+          collection,
           body: {}
         });
 
@@ -47,7 +50,8 @@ describe('Test: hotelClerk.getRealtimeCollections', function () {
         var requestObject2 = new RequestObject({
           controller: 'subscribe',
           action: 'on',
-          collection: collection,
+          index,
+          collection,
           body: { term: { foo: 'bar' } }
         });
 
