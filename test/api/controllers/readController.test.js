@@ -33,6 +33,18 @@ before(function (done) {
           kuzzle.services.list[service].getInfos = function () { return q({}); };
         }
       });
+
+      kuzzle.pluginsManager.plugins = {
+        mocha: {
+          name: 'test',
+          version: '0.1',
+          activated: false,
+          object: {
+            hooks: []
+          }
+        }
+      };
+
       done();
     });
 });

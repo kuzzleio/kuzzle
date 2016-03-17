@@ -16,8 +16,8 @@ kuzzle:
     - MQ_BROKER_ENABLED=1
     - LIKE_A_VIRGIN
     - DEFAULT_MAPPING
-    - FIXTURES=/var/app/features/fixtures/functionalTestsFixtures.json
     - FEATURE_COVERAGE
+    - FIXTURES=/var/app/features/fixtures/empty.json
 
 rabbit:
   image: kuzzleio/rabbitmq
@@ -31,4 +31,4 @@ redis:
   image: redis:3.0
 
 elasticsearch:
-  image: elasticsearch:1.7
+  image: elasticsearch:2.2
