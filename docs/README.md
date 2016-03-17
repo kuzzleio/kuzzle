@@ -13,7 +13,7 @@ For the time being, Kuzzle implements the following protocols:
 * STOMP
 * Web Socket
 
-Browser [Kuzzle's API documentation](http://kuzzleio.github.io/kuzzle-api-documentation).
+Browse [Kuzzle's API documentation](http://kuzzleio.github.io/kuzzle-api-documentation).
 
 For an overview about the filtering syntax, check the [Filters](filters.md) documentation.
 
