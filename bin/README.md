@@ -48,7 +48,7 @@ $ kuzzle createFirstAdmin
 
 will guide you through the creation process of the first admin user and fix the rights to other user types if needed.
 
-**Note:** This command is interractive and let you choose to reset the roles rights or not.
+**Note:** This command is interactive and let you choose to reset the roles rights or not.
 
 # Reset Kuzzle
 
