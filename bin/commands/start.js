@@ -1,7 +1,7 @@
 var
   rc = require('rc'),
   kuzzle = require('../../lib')
-  firstAdmin = require('./kuzzle-createFirstAdmin'),
+  firstAdmin = require('./createFirstAdmin'),
   clc = require('cli-color'),
   error = clc.red,
   warn = clc.yellow,
