@@ -1,3 +1,16 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
+
+- [Kuzzle Authentication](#kuzzle-authentication)
+  - [Overview](#overview)
+  - [How it works](#how-it-works)
+  - [How to provide your own strategy](#how-to-provide-your-own-strategy)
+    - [The strategy module](#the-strategy-module)
+    - [The hook activation](#the-hook-activation)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 # Kuzzle Authentication
 
 ## Overview
