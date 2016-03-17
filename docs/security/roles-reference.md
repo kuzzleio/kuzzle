@@ -59,7 +59,7 @@ Each entry of the `indexes`, `collections`, `controllers`, `actions` tree can be
 
 The `action permission` value can be set either to:
 * a boolean. When set to `true`, the user is allowed to perform the action.
-* an object that describes a function (more about it in the [action permossions functions section](#action-permissions-functions)).
+* an object that describes a function (more about it in the [action permissions functions section](#actions-permissions-functions)).
 
 example:
 
@@ -91,16 +91,16 @@ var anonymousRole = {
 
 The example above is the permission definition set by Kuzzle for the Anonymous user after the first admin user has been created.
 
-In this example, the role denies every action to the user, except the login, checkToken and getCurrentUser actions of the auth controller.
+In this example, the role denies every action to the user, except the `login`, `checkToken` and `getCurrentUser` actions of the `auth` controller.
 
 ## &#95;canDelete and &#95;canCreate
 
 Some permissions are not related to an index or a collection like for instance creating or deleting an index or a collection.
 
-To handle such cases, the role definition accepts the &#95;canDelete and &#95;canCreate parameters.
+To handle such cases, the role definition accepts the `_canDelete` and `_canCreate` parameters.
 
-* &#95;canCreate needs to be defined _at the level above_ of the target.
-* &#95;canDelete needs to be defined at the first sub-level of the target.
+* `_canCreate` needs to be defined _at the level above_ of the target.
+* `_canDelete` needs to be defined at the first sub-level of the target.
 
 Example:
 
