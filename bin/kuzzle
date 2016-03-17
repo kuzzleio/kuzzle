@@ -18,31 +18,31 @@ program
   .option('--fixtures <fixtures>', 'allow you to specify a fixtures file')
   .option('--mappings <mappings>', 'allow you to specify a mappings file')
   .description('Start a Kuzzle instance')
-  .action(require('./commands/kuzzle-start'));
+  .action(require('./commands/start'));
 
 // $ kuzzle enable <service>
 program
   .command('enable')
   .description('Enable a service without reloading Kuzzle')
-  .action(require('./commands/kuzzle-enable'));
+  .action(require('./commands/enable'));
 
 // $ kuzzle.js disable <service>
 program
   .command('disable')
   .description('Disable a service without reloading Kuzzle')
-  .action(require('./commands/kuzzle-disable'));
+  .action(require('./commands/disable'));
 
 // $ kuzzle install
 program
   .command('install')
   .description('Install plugin dependencies')
-  .action(require('./commands/kuzzle-install'));
+  .action(require('./commands/install'));
 
 // $ kuzzle createFirstAdmin
 program
   .command('createFirstAdmin')
   .description('Create the first administrator')
-  .action(require('./commands/kuzzle-createFirstAdmin').action);
+  .action(require('./commands/createFirstAdmin').action);
 
 // $ kuzzle likeAvirgin
 program
@@ -50,7 +50,7 @@ program
   .option('--fixtures <fixtures>', 'allow you to specify a fixtures file')
   .option('--mappings <mappings>', 'allow you to specify a mappings file')
   .description('Empty all the Kuzzle storage and make it look like a virgin, touched for the very first time')
-  .action(require('./commands/kuzzle-reset'));  
+  .action(require('./commands/reset'));  
 
 // Run user command
 program.parse(process.argv);
