@@ -144,6 +144,16 @@ ApiREST.prototype.deleteByQuery = function (filters, index, collection) {
   return this.callApi(options);
 };
 
+ApiREST.prototype.deleteCollection = function (index) {
+  var options = {
+    url: this.apiPath(((typeof index !== 'string') ? this.world.fakeIndex : index) + '/' + this.world.fakeCollection),
+    method: 'DELETE',
+    json: true
+  };
+
+  return this.callApi(options);
+};
+
 ApiREST.prototype.bulkImport = function (bulk, index) {
   var options = {
     url: this.apiPath(((typeof index !== 'string') ? this.world.fakeIndex : index) + '/' + this.world.fakeCollection + '/_bulk'),
@@ -492,14 +502,6 @@ ApiREST.prototype.checkToken = function (token) {
     url: this.apiPath('_checkToken'),
     method: 'POST',
     json: {token}
-  });
-};
-
-ApiREST.prototype.refreshIndex = function (index) {
-  return this.callApi({
-    url: this.apiPath(index + '/_refresh'),
-    method: 'POST',
-    json: true
   });
 };
 

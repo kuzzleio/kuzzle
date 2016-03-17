@@ -416,6 +416,64 @@ describe('Test: security/roleTest', function () {
         });
     });
 
+    it('should allow/deny collection deletion according to collection._canDelete right', function () {
+      var
+        roleAllow = new Role(),
+        roleDeny = new Role(),
+        rq = {
+          controller: 'admin',
+          action: 'deleteCollection'
+        };
+
+      roleAllow.indexes = {
+        '*': {
+          collections: {
+            '*': {
+              '_canDelete': true,
+              controllers: {
+                '*': {
+                  actions: {
+                    '*': true
+                  }
+                }
+              }
+            }
+          }
+        }
+      };
+
+      roleDeny.indexes = {
+        '*': {
+          collections: {
+            '*': {
+              '_canDelete': false,
+              controllers: {
+                '*': {
+                  actions: {
+                    '*': true
+                  }
+                }
+              }
+            }
+          }
+        }
+      };
+
+      roleAllow.isActionAllowed(rq, context)
+        .then(isAllowed => {
+          should(isAllowed).be.true();
+
+          return roleDeny.isActionAllowed(rq, context);
+        })
+        .then(isAllowed => {
+          should(isAllowed).be.false();
+
+          done();
+        })
+        .catch(error => { done(error); });
+
+    });
+
     it('should not allow any action on the internal index if no role has been explicitly set on it', function () {
       var
         role = new Role(),

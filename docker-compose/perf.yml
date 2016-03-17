@@ -30,7 +30,7 @@ redis:
   image: redis:3.0
 
 elasticsearch:
-  image: elasticsearch:2.2
+  image: elasticsearch:1.7
 
 logstash:
   image: logstash:1.5.2
