@@ -60,7 +60,6 @@ describe('Test service initialization function', function () {
         should(kuzzle.services.list.writeEngine.create).be.a.Function();
         should(kuzzle.services.list.writeEngine.update).be.a.Function();
         should(kuzzle.services.list.writeEngine.deleteByQuery).be.a.Function();
-        should(kuzzle.services.list.writeEngine.deleteCollection).be.a.Function();
         should(kuzzle.services.list.writeEngine.import).be.a.Function();
       });
   });
