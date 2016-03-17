@@ -222,7 +222,7 @@ describe('Test kuzzle constructor', function () {
     it('should execute the right call chain', function (done) {
       kuzzle.isServer = true;
 
-      prepareDb(kuzzle)
+      prepareDb(kuzzle, 'mappings', 'fixtures')
         .then(() => {
           should(filesRead).match(['mappings', 'fixtures']);
           should(indexCreated).be.true();
@@ -273,6 +273,7 @@ describe('Test kuzzle constructor', function () {
             }
           }
         },
+        files: {},
         data: {}
       };
     });
@@ -280,11 +281,11 @@ describe('Test kuzzle constructor', function () {
     it('should do nothing if the corresponding env variable is not set', function (done) {
       this.timeout(50);
       context.data = { foo: 'bar' };
+      context.files.foo = null;
 
       readFile.call(context, 'foo')
         .then(data => {
-          should(data).be.undefined();
-          should(context.data).be.eql({foo: {}});
+          should(context.data.foo).be.eql({});
           done();
         })
         .catch(err => done(err));
@@ -293,10 +294,10 @@ describe('Test kuzzle constructor', function () {
     it('should return the parsed content of the file', function (done) {
       this.timeout(50);
       fileContent = '{"foo": "bar"}';
+      context.files.fixtures = 'fixtures';
 
       readFile.call(context, 'fixtures')
         .then(data => {
-          should(data).be.undefined();
           should(context.data).be.an.Object().and.be.eql({fixtures: JSON.parse(fileContent)});
           done();
         })
@@ -305,8 +306,8 @@ describe('Test kuzzle constructor', function () {
 
     it('should return a rejected promise if the file content is not a valid JSON object', function () {
       fileContent = 'not a valid JSON content';
-
-      return should(readFile.call(context, 'fixtures')).be.rejectedWith(InternalError);
+      context.files.fixtures = 'fixtures';
+      return should(readFile.call(context, 'fixtures')).be.rejected();
     });
   });
 
