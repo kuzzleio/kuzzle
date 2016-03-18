@@ -70,6 +70,39 @@ describe('Test kuzzle constructor', function () {
       resetCalled = false;
     });
 
+    it('should clean database when cleanAndPrepare is called', function (done) {
+      var
+        cleanAndPrepareDone = false,
+        cleanAndPrepareOK = false,
+        params = rc('kuzzle');
+        params._ = ['likeAvirgin', 'all'];
+
+      kuzzle.isServer = true;
+
+      kuzzle.cleanAndPrepare = rewire('../../lib/api/cleanAndPrepare');
+
+      kuzzle.cleanAndPrepare.__set__('onListenCB', function(response) {
+        cleanAndPrepareDone = true;
+
+        if (response.result.error) {
+          cleanAndPrepareOK =  false;
+        } else {
+          cleanAndPrepareOK = true;
+        }
+      });
+
+      kuzzle.cleanAndPrepare.__set__('timeOutCB', function() {
+        return false
+      });
+
+      kuzzle.cleanAndPrepare(params);
+      setTimeout(() => {
+        should(cleanAndPrepareDone).be.true();
+        should(cleanAndPrepareOK).be.true();
+        done();
+      }, 1000);
+    });
+
     it('should clean database when environment variable LIKE_A_VIRGIN is set to 1', function (done) {
       var
         workerCalled = false,
