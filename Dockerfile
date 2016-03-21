@@ -1,4 +1,4 @@
-FROM kuzzleio/base
+FROM kuzzleio/base:alpine
 MAINTAINER Kuzzle <support@kuzzle.io>
 
 ADD ./ /var/app/
