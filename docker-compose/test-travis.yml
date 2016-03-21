@@ -23,7 +23,7 @@ kuzzle:
     - TRAVIS_REPO_SLUG
 
 rabbit:
-  image: kuzzleio/rabbitmq
+  image: kuzzleio/rabbitmq:alpine
 
 redis:
   image: redis:3.0-alpine

@@ -20,7 +20,7 @@ kuzzle:
     - FIXTURES=/var/app/features/fixtures/empty.json
 
 rabbit:
-  image: kuzzleio/rabbitmq
+  image: kuzzleio/rabbitmq:alpine
   ports:
     - "61613:61613"
     - "1883:1883"
