@@ -1,5 +1,5 @@
 kuzzle:
-  image: kuzzleio/kuzzle
+  image: kuzzleio/dev
   command: /run-debug.sh
   volumes:
     - "..:/var/app"
@@ -28,7 +28,7 @@ rabbit:
     - "15672:15672"
 
 redis:
-  image: redis:3.0
+  image: redis:3.0-alpine
 
 elasticsearch:
-  image: elasticsearch:2.2
+  image: kuzzleio/elasticsearch:2.2
