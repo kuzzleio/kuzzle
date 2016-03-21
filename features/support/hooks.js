@@ -1,8 +1,69 @@
 var
   async = require('async'),
-  q = require('q');
+  q = require('q'),
+  util = require('util');
 
 var myHooks = function () {
+  this.BeforeFeature((event, callback) => {
+    var
+      api = restApi(),
+      fixtures = require('../fixtures/functionalTestsFixtures.json'),
+      promises = [];
+
+    Object.keys(fixtures).forEach(index => {
+      promises.push((function () {
+        var deferred = q.defer();
+
+        api.deleteIndex(index)
+          .then(response => {
+            deferred.resolve(response);
+          })
+          .catch(error => {
+            // ignoring errors
+            // console.log('Error deleting index ' + index + '. Ignoring...');
+            deferred.resolve({});
+          });
+
+        return deferred.promise;
+      }));
+
+      Object.keys(fixtures[index]).forEach(collection => {
+        promises.push(() => {
+          return api.bulkImport(fixtures[index][collection], index, collection);
+        });
+      });
+
+      promises.push(() => {
+        return api.refreshIndex(index);
+      });
+    });
+
+    promises.reduce(q.when, q())
+      .then(() => {
+        callback();
+      });
+  });
+
+  this.AfterFeature((event, callback) => {
+    var
+      api = restApi(),
+      promises = [];
+
+    // give a little time to run the After hook before proceeding
+    setTimeout(() => {
+      [api.world.fakeIndex, api.world.fakeAltIndex, api.world.fakeNewIndex].forEach(index => {
+        promises.push(api.deleteIndex(index));
+      });
+
+      q.all(promises)
+        .then(() => {
+          callback();
+        })
+        .catch(error => { callback(new Error(error)); });
+    }, 0);
+
+  });
+
   /**
    *  API LOADING AND RELEASING
    *  Until cucumber.js supports BeforeAll and AfterAll tags, we have to open/close connections
@@ -44,15 +105,13 @@ var myHooks = function () {
   });
 
   this.After(function (scenario, callback) {
-    this.api.deleteCollection()
-      .then(function () {
+    this.api.truncateCollection()
+      .then(() => {
+        this.api.refreshIndex(this.fakeIndex);
         this.api.disconnect();
-
         callback();
-      }.bind(this))
-      .catch(function () {
-        callback();
-      });
+      })
+      .catch(e => { callback(); });
   });
 
   this.After('@unsubscribe', function (scenario, callback) {
@@ -88,6 +147,15 @@ function setAPI (world, apiName) {
   api.init(world);
 
   return api;
+}
+
+function restApi () {
+  var
+    W = require('./world'),
+    world = new (new W()).World();
+
+  return setAPI(world, 'REST');
+
 }
 
 function cleanSecurity (callback) {
@@ -133,3 +201,4 @@ function cleanSecurity (callback) {
       callback(error);
     });
 }
+

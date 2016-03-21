@@ -5,6 +5,7 @@ var
   params = require('rc')('kuzzle'),
   Config = require.main.require('lib/config'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
+  ResponseObject = require.main.require('lib/api/core/models/responseObject'),
   BadRequestError = require.main.require('lib/api/core/errors/badRequestError.js'),
   NotFoundError = require.main.require('lib/api/core/errors/notFoundError'),
   ES = rewire('../../../lib/services/elasticsearch');
@@ -507,6 +508,13 @@ describe('Test: ElasticSearch service', function () {
         return should(elasticsearch.deleteByQuery(requestObject)).be.rejected();
       });
     });
+
+    it('should return a rejected promise if the delete by query fails because the filter is null', function () {
+
+      requestObject.data.body = null;
+
+      return should(elasticsearch.deleteByQuery(requestObject)).be.rejected();
+    });
   });
 
   describe('#bulk', function () {
@@ -747,28 +755,6 @@ describe('Test: ElasticSearch service', function () {
     });
   });
 
-  describe('#deleteCollection', function () {
-    it('should allow deleting an entire collection', function () {
-
-      elasticsearch.client.indices.deleteMapping = function (data) {
-        return q({});
-      };
-
-      delete requestObject.data.body;
-      return should(elasticsearch.deleteCollection(requestObject)).be.fulfilled();
-    });
-
-    it('should return a rejected promise if the delete collection function fails', function () {
-      // because we already deleted the collection in the previous test, it should naturally fail
-      elasticsearch.client.indices.deleteMapping = function (data) {
-        return q.reject(new Error());
-      };
-
-      delete requestObject.data.body;
-      return should(elasticsearch.deleteCollection(requestObject)).be.rejected();
-    });
-  });
-
   describe('#getAllIdsFromQuery', function () {
     it('should be able to get every ids matching a query', function (done) {
       var
@@ -901,70 +887,18 @@ describe('Test: ElasticSearch service', function () {
 
   describe('#truncateCollection', function () {
     it('should allow truncating an existing collection', function (done) {
-      var
-        mapping = {},
-        hasRetrievedMapping = false,
-        hasDeletedMapping = false,
-        hasCreatedMapping = false;
-
-      mapping[index] = {mappings: {}};
-      mapping[index].mappings[collection] = {foo: 'bar'};
-
-      elasticsearch.client.indices.getMapping = function (data) {
-        hasRetrievedMapping = true;
-        return q(mapping);
-      };
-      elasticsearch.client.indices.deleteMapping = function (data) {
-        hasDeletedMapping = true;
-        return q();
-      };
-      elasticsearch.client.indices.putMapping = function (data) {
-        should(data.body[data.type]).be.exactly(mapping[requestObject.index].mappings[requestObject.collection]);
-        hasCreatedMapping = true;
-        return q();
+      var myES = new ES(kuzzle, {service: engineType});
+      myES.deleteByQuery = requestObject => {
+        return q(requestObject);
       };
 
-      elasticsearch.truncateCollection(requestObject)
-        .then(function (result) {
-          should(hasRetrievedMapping).be.exactly(true);
-          should(hasDeletedMapping).be.exactly(true);
-          should(hasCreatedMapping).be.exactly(true);
+      myES.truncateCollection(requestObject)
+        .then(request => {
+          should(request).be.an.instanceOf(RequestObject);
+          should(request.data.body).be.Object().and.be.empty();
           done();
         })
-        .catch(error => done(error));
-    });
-
-    it('should return an error if trying to truncate a non-existing collection', function () {
-      var
-        mapping = {};
-
-      mapping[index] = {mappings: {}};
-      mapping[index].mappings[collection] = {foo: 'bar'};
-
-      elasticsearch.client.indices.getMapping = function (data) {
-        return q(mapping);
-      };
-      elasticsearch.client.indices.deleteMapping = function (data) {
-        return q.reject();
-      };
-
-      requestObject.collection = 'non existing collection';
-      return should(elasticsearch.truncateCollection(requestObject)).be.rejected();
-    });
-
-    it('should return an error if trying to truncate a non-existing collection into an non-existing index', function () {
-      var
-        mapping = {};
-
-      mapping[index] = {mappings: {}};
-      mapping[index].mappings[collection] = {foo: 'bar'};
-
-      elasticsearch.client.indices.getMapping = function (data) {
-        return q(mapping);
-      };
-
-      requestObject.index = 'non existing index';
-      return should(elasticsearch.truncateCollection(requestObject)).be.rejected();
+        .catch(error => { done(error); });
     });
   });
 
@@ -1083,6 +1017,22 @@ describe('Test: ElasticSearch service', function () {
 
       elasticsearch.client.info = elasticsearch.client.cluster.health = elasticsearch.client.cluster.stats = esStub;
       return should(elasticsearch.getInfos(requestObject)).be.fulfilled();
+    });
+  });
+
+  describe('#refreshIndex', function () {
+    it('should send a valid request to es client', function (done) {
+      var esStub = (data) => { return q(data); };
+
+      elasticsearch.client.indices.refresh = esStub;
+
+      elasticsearch.refreshIndex(requestObject)
+        .then(data => {
+          should(data).be.an.instanceOf(ResponseObject);
+          should(data.index).be.eql(index);
+          done();
+        })
+        .catch(error => { done(error); });
     });
   });
 });

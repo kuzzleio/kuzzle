@@ -159,6 +159,35 @@ describe('Test: hotelClerk.addSubscription', function () {
     return should(pAddSubscription).be.rejected();
   });
 
+  it('should reject with an error if no index is provided', function () {
+    var
+      pAddSubscription,
+      requestObject = new RequestObject({
+        controller: 'subscribe',
+        action: 'on',
+        collection,
+        body: {}
+      });
+
+    pAddSubscription = kuzzle.hotelClerk.addSubscription(requestObject, context);
+    return should(pAddSubscription).be.rejectedWith(BadRequestError);
+  });
+
+  it('should reject with an error if no collection is provided', function () {
+    var
+      pAddSubscription,
+      requestObject = new RequestObject({
+        controller: 'subscribe',
+        action: 'on',
+        index,
+        body: {}
+      });
+
+    pAddSubscription = kuzzle.hotelClerk.addSubscription(requestObject, context);
+    return should(pAddSubscription).be.rejectedWith(BadRequestError);
+  });
+
+
   it('should return the same room ID if the same filters are used', done => {
     var
       requestObject1 = new RequestObject({

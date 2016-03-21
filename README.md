@@ -58,10 +58,10 @@ Take a look at the [installation](docs/installation.md) file for more installati
 
 Your applications can now connect to Kuzzle. We provide a few ways to do this:
 
-* Using one of our SDK ([Javascript](https://github.com/kuzzleio/sdk-javascript), more coming soon)
+* Using one of our SDK ([Javascript](https://github.com/kuzzleio/sdk-javascript), [Android](https://github.com/kuzzleio/sdk-android), more coming soon...).
 * Directly, by accessing one of our API ([REST](docs/API.REST.md), [WebSocket](docs/API.WebSocket.md), [AMQP](docs/API.AMQP.md), [MQTT](docs/API.MQTT.md) or [STOMP](docs/API.STOMP.md))
 
-You can also play with [demos](https://github.com/kuzzleio/demo) for a quick Kuzzle overview.
+You can also play with our [demos](http://kuzzle.io/demos-tutorials/) for a quick Kuzzle overview.
 
 # Running Tests
 

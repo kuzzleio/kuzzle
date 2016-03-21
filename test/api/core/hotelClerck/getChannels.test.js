@@ -16,6 +16,7 @@ describe('Test: hotelClerk.getChannels', function () {
       controller: 'subscribe',
       action: 'on',
       requestId: 'foo',
+      index: 'index',
       collection: 'bar',
       body: {},
       metadata: {}

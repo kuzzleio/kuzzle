@@ -105,7 +105,7 @@ describe('Test: repositories/repository', function () {
 
       return q.all(promises)
         .then(function (results) {
-          var result = new ResponseObject(requestObject, {docs: results.map(function (response) {
+          var result = new ResponseObject(requestObject, {hits: results.map(function (response) {
             if (response instanceof ResponseObject) {
               return {
                 found: (response.data.found === undefined) ? true : response.data.found,
