@@ -87,10 +87,15 @@ var app = module.exports = function () {
 function installPlugins(plugins, basePlugins) {
   var
     newInstalled = false,
+    installViaNpm = true,
     pluginInstallId;
 
   _.forEach(plugins, (plugin, name) => {
-    if (plugin.url) {
+    if (plugin.path) {
+      console.log('███ kuzzle-install: Plugin', name, 'uses local plugin. Config will be overrided with local changes.');
+      installViaNpm = false;
+    }
+    else if (plugin.url) {
       pluginInstallId = plugin.url;
     }
     else if (plugin.version) {
@@ -101,14 +106,16 @@ function installPlugins(plugins, basePlugins) {
       process.exit(1);
     }
 
-    if (!needInstall(name, pluginInstallId)) {
+    if (!plugin.path && !needInstall(plugin, name, pluginInstallId)) {
       console.log('███ kuzzle-install: Plugin', name, 'is already installed. Skipping...');
       return true;
     }
 
     console.log('███ kuzzle-install: Downloading plugin: ', name);
     newInstalled = true;
-    npmInstall(pluginInstallId);
+    if (installViaNpm) {
+      npmInstall(pluginInstallId);
+    }
     initConfig(plugin, name);
     console.log('███ kuzzle-install: Plugin', name, 'downloaded');
 
@@ -150,7 +157,7 @@ function initConfig(plugin, name) {
     pluginPackage;
 
   try {
-    pluginPackage = require(path.join(getPathPlugin(name), 'package.json'));
+    pluginPackage = require(path.join(getPathPlugin(plugin, name), 'package.json'));
   }
   catch (e) {
     console.error(error('███ kuzzle-install:'), 'There is a problem with plugin ' + name + '. Check the plugin name');
@@ -170,15 +177,16 @@ function initConfig(plugin, name) {
  * If the plugin is configured with an url from GIT, the plugin is installed each time
  * If the plugin come from NPM, the plugin is installed only if the version is different from the already installed
  *
+ * @param plugin
  * @param name
  * @param from previously installation information with version or git url with branch
  * @returns {boolean} true if the plugin must be installed, false if not
  */
-function needInstall(name, from) {
+function needInstall(plugin, name, from) {
   var
     packageDefinition,
     packagePath,
-    pluginPath = getPathPlugin(name);
+    pluginPath = getPathPlugin(plugin, name);
 
   // If we want to install a plugin with git, maybe there is no version and we want to 'pull' the plugin
   if (from.indexOf('git') !== -1) {
@@ -202,10 +210,14 @@ function needInstall(name, from) {
 
 /**
  * Return the real plugin path
+ * @param plugin
  * @param name
  * @returns {String}
  */
-function getPathPlugin (name) {
+function getPathPlugin (plugin, name) {
+  if (plugin.path) {
+    return plugin.path;
+  }
   return path.join(__dirname, '..', '..', 'node_modules', name);
 }
 

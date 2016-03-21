@@ -25,3 +25,5 @@ docker-compose-custom.yml
 .*.swp
 .tags
 
+# Kuzzle
+kuzzle-*.log
