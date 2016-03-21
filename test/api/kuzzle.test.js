@@ -26,6 +26,7 @@ describe('Test kuzzle constructor', function () {
     should(kuzzle.enable).be.a.Function();
     should(kuzzle.cleanDb).be.a.Function();
     should(kuzzle.prepareDb).be.a.Function();
+    should(kuzzle.cleanAndPrepare).be.a.Function();
   });
 
   it('should construct a kuzzle object with emit and listen event', function (done) {
@@ -70,39 +71,6 @@ describe('Test kuzzle constructor', function () {
       resetCalled = false;
     });
 
-    it('should clean database when cleanAndPrepare is called', function (done) {
-      var
-        cleanAndPrepareDone = false,
-        cleanAndPrepareOK = false,
-        params = rc('kuzzle');
-        params._ = ['likeAvirgin', 'all'];
-
-      kuzzle.isServer = true;
-
-      kuzzle.cleanAndPrepare = rewire('../../lib/api/cleanAndPrepare');
-
-      kuzzle.cleanAndPrepare.__set__('onListenCB', function(response) {
-        cleanAndPrepareDone = true;
-
-        if (response.result.error) {
-          cleanAndPrepareOK =  false;
-        } else {
-          cleanAndPrepareOK = true;
-        }
-      });
-
-      kuzzle.cleanAndPrepare.__set__('timeOutCB', function() {
-        return false
-      });
-
-      kuzzle.cleanAndPrepare(params);
-      setTimeout(() => {
-        should(cleanAndPrepareDone).be.true();
-        should(cleanAndPrepareOK).be.true();
-        done();
-      }, 1000);
-    });
-
     it('should clean database when environment variable LIKE_A_VIRGIN is set to 1', function (done) {
       var
         workerCalled = false,
@@ -145,6 +113,28 @@ describe('Test kuzzle constructor', function () {
         hasFiredCleanDbError = false;
 
       process.env.LIKE_A_VIRGIN = 1;
+
+      kuzzle = new Kuzzle();
+      kuzzle.isServer = true;
+
+      kuzzle.services.list = {
+        writeEngine: {},
+        readEngine: {
+          listIndexes: function () {
+            return q({
+              data: {
+                body: {
+                  indexes: ['foo', 'bar']
+                }
+              }
+            });
+          }
+        }
+      };
+
+      kuzzle.indexCache = {
+        reset: () => resetCalled = true
+      };
 
       kuzzle.workerListener = {
         add: function (requestObject) {
@@ -198,6 +188,45 @@ describe('Test kuzzle constructor', function () {
         })
         .catch(error => done(error));
     });
+
+    it('should clean database when cleanAndPrepare is called', function (done) {
+      var
+        cleanAndPrepareDone = false,
+        cleanAndPrepareOK = false,
+        cleanDbDone = false,
+        prepareDbDone = false;
+        params = rc('kuzzle');
+        params._ = ['likeAvirgin', 'all'];
+
+      kuzzle.isServer = true;
+
+      kuzzle.cleanDb = function() {cleanDbDone = true; return q();};
+      kuzzle.prepareDb = function() {prepareDbDone = true; return q();};
+
+      kuzzle.cleanAndPrepare = rewire('../../lib/api/cleanAndPrepare');
+
+      kuzzle.cleanAndPrepare.__set__('onListenCB', function(response) {
+        cleanAndPrepareDone = true;
+
+        if (response.result.error) {
+          cleanAndPrepareOK = false;
+        } else {
+          cleanAndPrepareOK = true;
+        }
+      });
+
+      kuzzle.cleanAndPrepare.__set__('timeOutCB', function() {
+        return false
+      });
+
+      kuzzle.cleanAndPrepare(params);
+      setTimeout(() => {
+        should(cleanAndPrepareDone).be.true();
+        should(cleanAndPrepareOK).be.true();
+        done();
+      }, 1000);
+    });
+
   });
 
   describe('#prepareDb', () => {
