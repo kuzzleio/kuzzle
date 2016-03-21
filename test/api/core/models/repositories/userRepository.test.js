@@ -112,24 +112,6 @@ describe('Test: repositories/userRepository', function () {
     });
   });
 
-  describe('#admin', function () {
-    it('should return the admin user', function (done) {
-      userRepository.admin()
-        .then(function (user) {
-          should(user).be.an.instanceOf(User);
-          should(user._id).be.exactly('admin');
-          should(user.name).be.exactly('Administrator');
-          should(user.profile).be.an.instanceOf(Profile);
-          should(user.profile._id).be.exactly('admin');
-
-          done();
-        })
-        .catch(function (error) {
-          done(error);
-        });
-    });
-  });
-
   describe('#hydrate', function () {
     it('should return the given user if the given data is not a valid object', function (done) {
       var
@@ -200,16 +182,6 @@ describe('Test: repositories/userRepository', function () {
         .catch(error => { done(error); });
     });
 
-    it('should return the admin user when the admin id is given', done => {
-      userRepository.load('admin')
-        .then(user => {
-          should(user).be.an.instanceOf(User);
-          should(user._id).be.exactly('admin');
-
-          done();
-        })
-        .catch(error => { done(error); });
-    });
   });
 
   /*describe('#loadFromToken', function () {
