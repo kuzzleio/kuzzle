@@ -216,7 +216,7 @@ describe('Test kuzzle constructor', function () {
       });
 
       kuzzle.cleanAndPrepare.__set__('timeOutCB', function() {
-        return false
+        return false;
       });
 
       kuzzle.cleanAndPrepare(params);
