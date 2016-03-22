@@ -1,10 +1,10 @@
 # Installation
 
-See [installation documentation](installation.md)
+See the [installation documentation](installation.md).
 
 # API Specifications
 
-Kuzzle supports a variety of communication protocols. 
+Kuzzle supports a variety of communication protocols.  
 For the time being, Kuzzle implements the following protocols:
 
 * AMQP
@@ -13,17 +13,17 @@ For the time being, Kuzzle implements the following protocols:
 * STOMP
 * Web Socket
 
-[Browse Kuzzle's API documentation](http://kuzzleio.github.io/kuzzle-api-documentation).
+Browse [Kuzzle's API documentation](http://kuzzleio.github.io/kuzzle-api-documentation).
 
 For an overview about the filtering syntax, check the [Filters](filters.md) documentation.
 
 # Plugins
 
-see [plugins documentation](plugins.md)
+See the [plugins documentation](plugins.md)
 
 # Authentication
 
-see [authentication mechanism](security/authentication.md)
+See the [authentication mechanism](security/authentication.md)
 
 # Advanced documentation (not required for a basic development)
 
