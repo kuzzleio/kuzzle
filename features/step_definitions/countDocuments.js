@@ -20,10 +20,6 @@ var apiSteps = function () {
             callbackAsync();
           }.bind(this))
           .catch(function (error) {
-            if (error === 'IndexMissingException[[' + index + '] missing]' && number === 0) {
-              // consider an index missing error ok when looking for 0 documents
-              callbackAsync();
-            }
             callbackAsync(error);
           });
       }.bind(this), 100); // end setTimeout

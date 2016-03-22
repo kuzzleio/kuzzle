@@ -226,7 +226,6 @@ describe('Test kuzzle constructor', function () {
         done();
       }, 1000);
     });
-
   });
 
   describe('#prepareDb', () => {
