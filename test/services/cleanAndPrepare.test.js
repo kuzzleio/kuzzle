@@ -30,6 +30,8 @@ describe('Testing: Clean and Prepare service', function () {
 
         kuzzle.cleanDb = function() {cleanDbDone = true; return q();};
         kuzzle.prepareDb = function() {prepareDbDone = true; return q();};
+        kuzzle.cleanAndPrepare = rewire('../../lib/api/cleanAndPrepare');
+        kuzzle.cleanAndPrepare.__set__('onListenCB', function(response) { return response;});
 
         done();
       })
@@ -75,7 +77,7 @@ describe('Testing: Clean and Prepare service', function () {
     should(room).be.exactly('');
   });
 
-  it('should ignore actions sent without an id', function () {
+  it('should be called when asking to do a cleanAndPrepare action', function (done) {
     var
       ret,
       params = rc('kuzzle');
@@ -84,9 +86,8 @@ describe('Testing: Clean and Prepare service', function () {
     kuzzle.cleanAndPrepare(params);
     setTimeout(() => {
       should(cleanDbDone).be.true();
-      should(prepareDb).be.true();
+      should(prepareDbDone).be.true();
       done();
     }, 1000);
-
   });
 });
