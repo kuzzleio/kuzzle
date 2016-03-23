@@ -159,19 +159,6 @@ describe('Test: repositories/tokenRepository', function () {
     });
   });
 
-  describe('#admin', function () {
-    it('should return the admin token', function (done) {
-      tokenRepository.admin()
-        .then(function (token) {
-          assertIsAdmin(token);
-          done();
-        })
-        .catch(function (error) {
-          done(error);
-        });
-    });
-  });
-
   describe('#hydrate', function () {
     it('should return the given token if the given data is not a valid object', function (done) {
       var
@@ -270,31 +257,17 @@ describe('Test: repositories/tokenRepository', function () {
 
 
     it('should reject the promise if an untrapped error is raised', () => {
-      var token = jwt.sign({_id: 'admin'}, params.jsonWebToken.secret, {algorithm: params.jsonWebToken.algorithm});
+      var token = jwt.sign({_id: null}, params.jsonWebToken.secret, {algorithm: params.jsonWebToken.algorithm});
 
-      tokenRepository.admin = () => {
+      tokenRepository.anonymous = () => {
         throw new InternalError('Uncaught error');
       };
       should(tokenRepository.verifyToken(token)
         .catch(err => {
-          delete tokenRepository.admin;
+          delete tokenRepository.anonymous;
 
           return q.reject(err);
         })).be.rejectedWith(InternalError, {details: {message: 'Uncaught error'}});
-    });
-
-    it('should load the admin user if the user id is "admin"', function (done) {
-      var token = jwt.sign({_id: 'admin'}, params.jsonWebToken.secret, {algorithm: params.jsonWebToken.algorithm});
-
-      tokenRepository.verifyToken(token)
-        .then(function (userToken) {
-          assertIsAdmin(userToken);
-
-          done();
-        })
-        .catch(function (error) {
-          done(error);
-        });
     });
 
     it('should load the anonymous user if the token is null', function (done) {
