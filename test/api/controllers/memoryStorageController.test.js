@@ -6,6 +6,7 @@ var
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   redisCommands = require('redis-commands'),
+  redisClientMock = require('../../mocks/services/redisClient.mock'),
   BadRequestError = require.main.require('lib/api/core/errors/badRequestError'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
   ResponseObject = require.main.require('lib/api/core/models/responseObject'),
@@ -15,7 +16,8 @@ var
   called,
   extractArgumentsFromRequestObject = MemoryStorageController.__get__('extractArgumentsFromRequestObject'),
   extractArgumentsFromRequestObjectForSet = MemoryStorageController.__get__('extractArgumentsFromRequestObjectForSet'),
-  extractArgumentsFromRequestObjecForSort = MemoryStorageController.__get__('extractArgumentsFromRequestObjecForSort'),
+  extractArgumentsFromRequestObjectForSort = MemoryStorageController.__get__('extractArgumentsFromRequestObjectForSort'),
+  extractArgumentsFromRequestObjectForZAdd = MemoryStorageController.__get__('extractArgumentsFromRequestObjectForZAdd'),
   extractArgumentsFromRequestObjectForZInterstore = MemoryStorageController.__get__('extractArgumentsFromRequestObjectForZInterstore'),
   extractArgumentsFromRequestObjectForZRangeByLex = MemoryStorageController.__get__('extractArgumentsFromRequestObjectForZRangeByLex'),
   extractArgumentsFromRequestObjectForZRangeByScore = MemoryStorageController.__get__('extractArgumentsFromRequestObjectForZRangeByScore'),
@@ -35,7 +37,7 @@ before(function (done) {
       };
 
       return f.apply(this, Array.prototype.slice.call(arguments));
-    }
+    };
   }.bind(this);
 
   requestObject = new RequestObject({
@@ -48,14 +50,16 @@ before(function (done) {
   });
 
   extractArgumentsFromRequestObjectForSet = wrapped(extractArgumentsFromRequestObjectForSet);
-  extractArgumentsFromRequestObjecForSort = wrapped(extractArgumentsFromRequestObjecForSort);
+  extractArgumentsFromRequestObjectForSort = wrapped(extractArgumentsFromRequestObjectForSort);
+  extractArgumentsFromRequestObjectForZAdd = wrapped(extractArgumentsFromRequestObjectForZAdd);
   extractArgumentsFromRequestObjectForZInterstore = wrapped(extractArgumentsFromRequestObjectForZInterstore);
   extractArgumentsFromRequestObjectForZRangeByLex  = wrapped(extractArgumentsFromRequestObjectForZRangeByLex);
   extractArgumentsFromRequestObjectForZRangeByScore = wrapped(extractArgumentsFromRequestObjectForZRangeByScore);
 
   MemoryStorageController.__set__({
     extractArgumentsFromRequestObjectForSet: extractArgumentsFromRequestObjectForSet,
-    extractArgumentsFromRequestObjecForSort: extractArgumentsFromRequestObjecForSort,
+    extractArgumentsFromRequestObjectForSort: extractArgumentsFromRequestObjectForSort,
+    extractArgumentsFromRequestObjectForZAdd: extractArgumentsFromRequestObjectForZAdd,
     extractArgumentsFromRequestObjectForZInterstore: extractArgumentsFromRequestObjectForZInterstore,
     extractArgumentsFromRequestObjectForZRangeByLex: extractArgumentsFromRequestObjectForZRangeByLex,
     extractArgumentsFromRequestObjectForZRangeByScore: extractArgumentsFromRequestObjectForZRangeByScore
@@ -64,6 +68,8 @@ before(function (done) {
   kuzzle = new Kuzzle();
   kuzzle.start(params, {dummy: true})
     .then(() => {
+      kuzzle.services.list.memoryStorage.client = redisClientMock;
+
       msController = new MemoryStorageController(kuzzle);
 
       testMapping = {
@@ -97,20 +103,21 @@ before(function (done) {
       revertMapping = MemoryStorageController.__set__(testMapping);
 
       done();
-    })
+    });
 });
 
 beforeEach(function () {
   called = {
     extractArgumentsFromRequestObjectForSet: false,
-    extractArgumentsFromRequestObjecForSort: false,
+    extractArgumentsFromRequestObjectForSort: false,
+    extractArgumentsFromRequestObjectForZAdd: false,
     extractArgumentsFromRequestObjectForZInterstore: false,
     extractArgumentsFromRequestObjectForZRangeByLex: false,
     extractArgumentsFromRequestObjectForZRangeByScore: false
   };
 });
 
-describe('Test: cache controller', function () {
+describe('Test: memoryStore controller', function () {
 
   describe('#constructor', function () {
     it('should not expose blacklisted methods', () => {
@@ -256,7 +263,339 @@ describe('Test: cache controller', function () {
       should(result[3]).be.exactly(222);
       should(result[4]).be.exactly('NX');
       should(result[5]).be.exactly('XX');
+
+      delete requestObject.data.body.px;
+      result = extractArgumentsFromRequestObjectForSet(requestObject);
+
+      should(result).be.eql([
+        'myKey',
+        { foo: 'bar' },
+        'EX',
+        111,
+        'NX'
+      ]);
     });
 
   });
+
+  describe('#extractArgumentsFromRequestObjectForSort', function () {
+
+    it('should be called when extractArgumentsFromRequestObject is called with the "sort" command', () => {
+      extractArgumentsFromRequestObject('sort', requestObject);
+
+      should(called.extractArgumentsFromRequestObjectForSort.called).be.true();
+      should(called.extractArgumentsFromRequestObjectForSort.args).be.eql([requestObject]);
+    });
+
+    it ('should handle the request if no optional parameter is given', () => {
+      var
+        requestObject = new RequestObject({
+          body: {
+            _id: 'myKey'
+          }
+        }),
+        result = extractArgumentsFromRequestObjectForSort(requestObject);
+
+      should(result).be.an.Array();
+      should(result).length(1);
+      should(result[0]).be.exactly('myKey');
+    });
+
+    it('should handle a request with some optional parameters', () => {
+      var
+        requestObject = new RequestObject({
+          body: {
+            _id: 'myKey',
+            alpha: true,
+            direction: 'DESC',
+            by: 'byParam',
+            offset: 10,
+            count: 20,
+            get: 'getParam',
+            store: 'storeParam'
+          }
+        }),
+        result = extractArgumentsFromRequestObjectForSort(requestObject);
+
+      should(result).be.an.Array();
+      should(result).length(12);
+      should(result).eql(['myKey', 'ALPHA', 'DESC', 'BY', 'byParam', 'LIMIT', 10, 20, 'GET', 'getParam', 'STORE', 'storeParam']);
+    });
+
+  });
+
+  describe('#extractArgumentsFromRequestObjectForZAdd', function () {
+
+    it('should be called from extractArgumentsFromRequestObject when the command "zadd" is called', () => {
+      extractArgumentsFromRequestObject('zadd', requestObject);
+
+      should(called.extractArgumentsFromRequestObjectForZAdd.called).be.true();
+      should(called.extractArgumentsFromRequestObjectForZAdd.args).be.eql([requestObject]);
+    });
+
+    it('should extract any given argument', () => {
+      var
+        requestObject = new RequestObject({
+          body: {
+            _id: 'myKey',
+            nx: true,
+            xx: true,
+            ch: true,
+            incr: true,
+            score: 'scoreVal',
+            member: 'memberVal',
+            values: [
+              { score: 1, member: 'm1' },
+              { score: 2, member: 'm2' },
+              { score: 3, member: 'm3' }
+            ]
+          }
+        }),
+        result = extractArgumentsFromRequestObjectForZAdd(requestObject);
+
+      should(result).be.an.Array();
+      should(result).length(12);
+      should(result).eql(['myKey', 'NX', 'CH', 'INCR', 'scoreVal', 'memberVal', 1, 'm1', 2, 'm2', 3, 'm3']);
+
+      delete requestObject.data.body.nx;
+      result = extractArgumentsFromRequestObjectForZAdd(requestObject);
+
+      should(result).eql([
+        'myKey',
+        'XX',
+        'CH',
+        'INCR',
+        'scoreVal',
+        'memberVal',
+        1,
+        'm1',
+        2,
+        'm2',
+        3,
+        'm3'
+      ]);
+    });
+
+  });
+
+  describe('#extractArgumentsFromRequestObjectForZInterstore', function () {
+
+    it('should be called from extractArgumentsFromRequestObject for the "zinterstore" command', () => {
+      extractArgumentsFromRequestObject('zinterstore', requestObject);
+
+      should(called.extractArgumentsFromRequestObjectForZInterstore.called).be.true();
+      should(called.extractArgumentsFromRequestObjectForZInterstore.args).be.eql([requestObject]);
+    });
+
+    it('should be called from extractArgumentsFromRequestObject for the "zuninonstore" command', () => {
+      extractArgumentsFromRequestObject('zunionstore', requestObject);
+
+      should(called.extractArgumentsFromRequestObjectForZInterstore.called).be.true();
+      should(called.extractArgumentsFromRequestObjectForZInterstore.args).be.eql([requestObject]);
+    });
+
+    it('should extract any given argument', () => {
+      var
+        requestObject = new RequestObject({
+          body: {
+            _id: 'myKey',
+            destination: 'destinationVal',
+            numkeys: 10,
+            keys: [
+              'key2',
+              'key3'
+            ],
+            weight: 'singleWeightVal',
+            weights: [
+              'weight1',
+              'weight2'
+            ],
+            aggregate: 'aggregateVal'
+          }
+        }),
+        result = extractArgumentsFromRequestObjectForZInterstore(requestObject);
+
+      should(result).be.an.Array();
+      should(result).length(11);
+      should(result).eql([
+        'destinationVal',
+        10,
+        'myKey',
+        'key2',
+        'key3',
+        'WEIGHTS',
+        'singleWeightVal',
+        'weight1',
+        'weight2',
+        'AGGREGATE',
+        'AGGREGATEVAL'
+      ]);
+    });
+
+    it('should throw an error an invalid keys parameter is given', () => {
+      var
+        requestObject = new RequestObject({
+          body: {
+            keys: 'unvalid value'
+          }
+        });
+
+      should(extractArgumentsFromRequestObjectForZInterstore.bind(null, requestObject)).throw(BadRequestError);
+
+      requestObject = new RequestObject({
+        body: {
+          weights: 'unvalid'
+        }
+      });
+      should(extractArgumentsFromRequestObjectForZInterstore.bind(null, requestObject)).throw(BadRequestError);
+
+    });
+  });
+
+  describe('#extractArgumentsFromRequestObjectForZRangeByLex', function () {
+
+    it('should be called from extractArgumentsFromRequestObject for the "zrangebylex" command', () => {
+      extractArgumentsFromRequestObject('zrangebylex', requestObject);
+
+      should(called.extractArgumentsFromRequestObjectForZRangeByLex.called).be.true();
+      should(called.extractArgumentsFromRequestObjectForZRangeByLex.args).be.eql([requestObject]);
+    });
+
+    it('should be called from extractArgumentsFromRequestObject for the "zrevrangebylex" command', () => {
+      extractArgumentsFromRequestObject('zrevrangebylex', requestObject);
+
+      should(called.extractArgumentsFromRequestObjectForZRangeByLex.called).be.true();
+      should(called.extractArgumentsFromRequestObjectForZRangeByLex.args).be.eql([requestObject]);
+    });
+
+    it('should extract any given argument', () => {
+      var
+        requestObject = new RequestObject({
+          body: {
+            _id: 'myKey',
+            min: 'minVal',
+            max: 'maxVal',
+            offset: 10,
+            count: 20
+          }
+        }),
+        result = extractArgumentsFromRequestObjectForZRangeByLex(requestObject);
+
+      should(result).be.an.Array();
+      should(result).eql(['myKey', 'minVal', 'maxVal', 'LIMIT', 10, 20]);
+    });
+  });
+
+  describe('#extractArgumentsFromRequestObjectForZRangeByScore', function () {
+
+    it('should be called from extractArgumentsFromRequestObject for the "zrangebyscore" command', () => {
+      extractArgumentsFromRequestObject('zrangebyscore', requestObject);
+
+      should(called.extractArgumentsFromRequestObjectForZRangeByScore.called).be.true();
+      should(called.extractArgumentsFromRequestObjectForZRangeByScore.args).be.eql([requestObject]);
+    });
+
+    it('should be called from extractArgumentsFromRequestObject for the "zrevrangebyscore" command', () => {
+      extractArgumentsFromRequestObject('zrevrangebyscore', requestObject);
+
+      should(called.extractArgumentsFromRequestObjectForZRangeByScore.called).be.true();
+      should(called.extractArgumentsFromRequestObjectForZRangeByScore.args).be.eql([requestObject]);
+    });
+
+    it('should extract any given parameter', () => {
+      var
+        requestObject = new RequestObject({
+          body: {
+            _id: 'myKey',
+            min: 'minVal',
+            max: 'maxVal',
+            withscores: true,
+            offset: 10,
+            count: 20
+          }
+        }),
+        result = extractArgumentsFromRequestObjectForZRangeByScore(requestObject);
+
+      should(result).be.an.Array();
+      should(result).be.eql([
+        'myKey',
+        'minVal',
+        'maxVal',
+        'WITHSCORES',
+        'LIMIT',
+        10,
+        20
+      ]);
+    });
+
+  });
+
+  describe('#generated functions', function () {
+
+    before(function () {
+      revertMapping();
+    });
+
+    after(function () {
+      MemoryStorageController.__set__({
+        mapping: testMapping
+      });
+    });
+
+    it('should return a valid ResponseObject', done => {
+      var rq = new RequestObject({
+        controller: 'memoryStore',
+        action: 'set',
+        body: {
+          _id: 'myKey',
+          foo: 'bar'
+        }
+      });
+
+      msController.set(rq)
+        .then(response => {
+          should(response).be.an.instanceOf(ResponseObject);
+          should(response.data.body.result.name).be.exactly('set');
+          should(response.data.body.result.args).length(2);
+          should(response.data.body.result.args[0]).be.exactly('myKey');
+          should(response.data.body.result.args[1]).be.eql(rq.data.body);
+
+          done();
+        })
+        .catch(error => {
+          console.log(error);
+          done();
+        });
+    });
+
+    it('custom mapping checks', done => {
+      var
+        rq = new RequestObject({
+          controller: 'memoryStore',
+          action: 'zrange',
+          body: {
+            _id: 'myKey',
+            start: 'startVal',
+            stop: 'stopVal',
+            withscores: true
+          }
+        });
+
+      msController.zrange(rq)
+        .then(response => {
+          should(response.data.body.result.name).be.exactly('zrange');
+          should(response.data.body.result.args).be.eql([
+            'myKey',
+            'startVal',
+            'stopVal',
+            'WITHSCORES'
+          ]);
+
+          done();
+        });
+
+
+    });
+  });
+
 });
