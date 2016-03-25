@@ -1,16 +1,132 @@
 var
   _ = require('lodash'),
+  q = require('q'),
   config = require('./config')(),
   rp = require('request-promise'),
-  apiVersion = require('../../package.json').apiVersion;
+  apiVersion = require('../../package.json').apiVersion,
+  rewire = require('rewire'),
+  RouterController = rewire('../../lib/api/controllers/routerController.js'),
+  routes,
+  util = require('util');
 
 var ApiREST = function () {
   this.world = null;
 };
 
 ApiREST.prototype.init = function (world) {
+  if (routes === undefined) {
+    initRoutes.call(this);
+  }
+
+
   this.world = world;
 };
+
+function initRoutes() {
+  var
+    context = {},
+    Router = function () {},
+    routerController = new RouterController({
+      pluginsManager: {
+        routes: []
+      },
+      config: {
+        apiVersion: '1.0'
+      }
+    });
+
+  Router.prototype.use = Router.prototype.get = Router.prototype.post = Router.prototype.delete = Router.prototype.put = function () {};
+
+  routerController.initRouterHttp.call(context);
+
+  this.routes = routes = RouterController.__get__('routes');
+}
+
+ApiREST.prototype.getRequest = function (index, collection, controller, action, args) {
+  var
+    url = '',
+    queryString = [],
+    verb = 'GET',
+    json = true,
+    result;
+
+  if (index) {
+    url += index + '/';
+  }
+  if (collection) {
+    url += collection + '/';
+  }
+
+  if (!args) {
+    args = {};
+  }
+  if (!args.body) {
+    args.body = {};
+  }
+
+  routes.some(route => {
+    if (route.controller === controller && route.action === action ) {
+      var
+        hits = [];
+
+      verb = route.verb.toUpperCase();
+
+      url += route.url.replace(/(:[^/]+)/g, function (match) {
+        hits.push(match.substring(1));
+
+        if (match === ':id') {
+          if (args._id) {
+            return args._id;
+          }
+          if (args.body._id) {
+            return args.body._id;
+          }
+        }
+
+        if (args.body[match.substring(1)]) {
+          return args.body[match.substring(1)];
+        }
+
+        return '';
+      }).substring(1);
+
+      // add extra aguments in the query string
+      if (verb === 'GET') {
+        _.difference(Object.keys(args.body), hits).forEach(key => {
+          queryString.push(key + '=' + encodeURIComponent(args.body[key]));
+        });
+
+        if (queryString.length) {
+          url += '?' + queryString.join('&');
+        }
+      }
+
+      url = url
+        .replace(/\/\//g, '/')
+        .replace(/\/$/, '');
+
+      return true;
+    }
+
+    return false;
+  });
+
+  result = {
+    url: this.apiPath(url),
+    method: verb,
+    json: true
+  };
+
+  if (verb !== 'GET') {
+    result.body = { body: args.body };
+  }
+
+  // console.log(util.inspect(result, { depth: 6 }));
+
+  return result;
+};
+
+
 
 ApiREST.prototype.disconnect = function () {};
 
@@ -501,6 +617,15 @@ ApiREST.prototype.refreshIndex = function (index) {
     method: 'POST',
     json: true
   });
+};
+
+ApiREST.prototype.callMemoryStorage = function (command, args) {
+  return this.callApi(this.getRequest(null, null, 'ms', command, args))
+    .then(response => {
+      this.world.memoryStorageResult = response;
+
+      return q(response);
+    });
 };
 
 module.exports = ApiREST;

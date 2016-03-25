@@ -211,3 +211,37 @@ Feature: Test REST API
     Then I am getting the current user, which matches {"_id":"#prefix#user1-id","_source":{"profile":{"_id":"admin"}}}
     Then I log out
     Then I am getting the current user, which matches {"_id":-1,"_source":{"profile":{"_id":"anonymous"}}}
+
+  @usingREST @cleanRedis
+  Scenario: memory storage
+    When I call the info method of the memory storage with arguments ""
+    Then The ms result should match the regex ^# Server\r\nredis_version:
+    When I call the set method of the memory storage with arguments { "_id": "#prefix#mykey", "body": { "value": 2 }}
+    Then The ms result should match the regex OK
+    Then I call the incr method of the memory storage with arguments { "_id": "#prefix#mykey" }
+    And The ms result should match the json 3
+    Then I call the decr method of the memory storage with arguments { "_id": "#prefix#mykey" }
+    And The ms result should match the json 2
+    Then I call the append method of the memory storage with arguments { "_id": "#prefix#mykey", "body": "bar" }
+    And The ms result should match the json 4
+    Then I call the get method of the memory storage with arguments { "_id": "#prefix#mykey" }
+    And The ms result should match the json "2bar"
+    Then I call the del method of the memory storage with arguments { "_id": "#prefix#mykey" }
+    And The ms result should match the json 1
+    Then I call the get method of the memory storage with arguments { "_id": "#prefix#mykey" }
+    And The ms result should match the json null
+    Then I call the set method of the memory storage with arguments { "_id": "#prefix#x", "body": "foobar" }
+    Then I call the set method of the memory storage with arguments { "_id": "#prefix#y", "body": "abcdef" }
+    Then I call the bitop method of the memory storage with arguments { "body": { "operation": "AND", "destkey": "#prefix#dest", "keys": [ "#prefix#x", "#prefix#y" ] } }
+    Then I call the get method of the memory storage with arguments { "_id": "#prefix#dest" }
+    And The ms result should match the json "`bc`ab"
+    Then I call the bitop method of the memory storage with arguments { "body": { "operation": "OR", "destkey": "#prefix#dest", "keys": [ "#prefix#x", "#prefix#y" ] } }
+    Then I call the get method of the memory storage with arguments { "_id": "#prefix#dest" }
+    And The ms result should match the json "goofev"
+    Then I call the bitpos method of the memory storage with arguments { "_id": "#prefix#x", "body": { "bit": 1 } }
+    And The ms result should match the json 1
+    Then I call the rpush method of the memory storage with arguments { "_id": "#prefix#list", "body": { "value": 1, "values": [ "abcd", 5 ] }}
+    And The ms result should match the json 5
+    Then I call the lindex method of the memory storage with arguments { "_id": "#prefix#list", "body": { "idx": 1 } }
+    And The ms result should match the json "abcd"
+

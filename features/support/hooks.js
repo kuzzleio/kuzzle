@@ -1,4 +1,5 @@
 var
+  _ = require('lodash'),
   async = require('async'),
   q = require('q'),
   util = require('util');
@@ -135,6 +136,14 @@ var myHooks = function () {
   this.After('@cleanSecurity', function (scenario, callback) {
     cleanSecurity.call(this, callback);
   });
+
+  this.Before('@cleanRedis', function (scenario, callback) {
+    cleanRedis.call(this, callback);
+  });
+
+  this.After('@cleanRedis', function (scenario, callback) {
+    cleanRedis.call(this, callback);
+  });
 };
 
 module.exports = myHooks;
@@ -202,3 +211,20 @@ function cleanSecurity (callback) {
     });
 }
 
+function cleanRedis(callback) {
+  this.api.callMemoryStorage('keys', { body: { pattern: this.idPrefix + '*' } })
+    .then(response => {
+      console.log(response);
+
+      if (_.isArray(response.result) && response.result.length) {
+        return this.api.callMemoryStorage('del', { body: { keys: response.result } });
+      }
+
+      return;
+    })
+    .then(response => {
+      callback();
+    })
+    .catch(error => callback(error));
+
+}
