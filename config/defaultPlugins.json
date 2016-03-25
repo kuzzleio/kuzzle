@@ -11,6 +11,7 @@
     }
   },
   "kuzzle-plugin-socketio": {
+    "path": "/var/app/socketio",
     "version": "1.0.6",
     "activated": true,
     "name": "kuzzle-plugin-socketio",
