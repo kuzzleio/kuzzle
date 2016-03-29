@@ -1,5 +1,5 @@
 kuzzle:
-  image: kuzzleio/kuzzle
+  image: kuzzleio/test:alpine
   command: /run-test-travis.sh
   volumes:
     - "..:/var/app"
@@ -23,10 +23,10 @@ kuzzle:
     - TRAVIS_REPO_SLUG
 
 rabbit:
-  image: kuzzleio/rabbitmq
+  image: kuzzleio/rabbitmq:alpine
 
 redis:
-  image: redis:3.0
+  image: redis:3.0-alpine
 
 elasticsearch:
-  image: elasticsearch:2.2
+  image: kuzzleio/elasticsearch:2.2

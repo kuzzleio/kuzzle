@@ -1,5 +1,5 @@
 kuzzle:
-  image: kuzzleio/kuzzle
+  image: kuzzleio/kuzzle:alpine
   volumes:
     - "..:/var/app"
     - "/var/log"
@@ -19,7 +19,7 @@ kuzzle:
     - FEATURE_COVERAGE
 
 rabbit:
-  image: kuzzleio/rabbitmq
+  image: kuzzleio/rabbitmq:alpine
   ports:
     - "61613:61613"
     - "1883:1883"
@@ -27,10 +27,10 @@ rabbit:
     - "15672:15672"
 
 redis:
-  image: redis:3.0
+  image: redis:3.0-alpine
 
 elasticsearch:
-  image: elasticsearch:2.2
+  image: kuzzleio/elasticsearch:2.2
 
 logstash:
   image: logstash:1.5.2
