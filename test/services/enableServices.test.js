@@ -4,7 +4,7 @@ var
   q = require('q'),
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
-  RemoteActions = rewire('../../lib/services/remoteActions');
+  RemoteActions = rewire('../../lib/services/enableServices');
 
 describe('Testing: Remote Actions service', function () {
   var
@@ -38,7 +38,7 @@ describe('Testing: Remote Actions service', function () {
   });
 
   it('should have init function', function () {
-    should(kuzzle.services.list.remoteActions.init).be.Function();
+    should(kuzzle.services.list.enableServices.init).be.Function();
   });
 
   it('should register to the remote actions queues when initializing', function () {

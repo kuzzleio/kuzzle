@@ -43,7 +43,7 @@ module.exports = function () {
     console.log(notice('[ℹ] Processing...\n'));
 
     var kuzzle = new Kuzzle(false);
-    kuzzle.remote.cleanAndPrepare(kuzzle, params);
+    kuzzle.remote(kuzzle, 'cleanAndPrepare', params);
 
   } else {
 

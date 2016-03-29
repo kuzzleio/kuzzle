@@ -23,10 +23,9 @@ describe('Test kuzzle constructor', function () {
     should(kuzzle.workers).be.an.Object();
 
     should(kuzzle.start).be.a.Function();
-    should(kuzzle.enable).be.a.Function();
+    should(kuzzle.remote).be.a.Function();
     should(kuzzle.cleanDb).be.a.Function();
     should(kuzzle.prepareDb).be.a.Function();
-    should(kuzzle.cleanAndPrepare).be.a.Function();
   });
 
   it('should construct a kuzzle object with emit and listen event', function (done) {
@@ -191,6 +190,9 @@ describe('Test kuzzle constructor', function () {
 
     it('should clean database when cleanAndPrepare is called', function (done) {
       var
+        cleanAndPrepareOnListenCB,
+        cleanAndPrepareTimeOutCB,
+        remotes,
         cleanAndPrepareDone = false,
         cleanAndPrepareOK = false,
         cleanDbDone = false,
@@ -203,9 +205,7 @@ describe('Test kuzzle constructor', function () {
       kuzzle.cleanDb = function() {cleanDbDone = true; return q();};
       kuzzle.prepareDb = function() {prepareDbDone = true; return q();};
 
-      kuzzle.cleanAndPrepare = rewire('../../lib/api/cleanAndPrepare');
-
-      kuzzle.cleanAndPrepare.__set__('onListenCB', function(response) {
+      cleanAndPrepareOnListenCB = function(response) {
         cleanAndPrepareDone = true;
 
         if (response.result.error) {
@@ -213,13 +213,21 @@ describe('Test kuzzle constructor', function () {
         } else {
           cleanAndPrepareOK = true;
         }
-      });
+      };
 
-      kuzzle.cleanAndPrepare.__set__('timeOutCB', function() {
+      cleanAndPrepareTimeOutCB = function() {
         return false;
-      });
+      };
 
-      kuzzle.cleanAndPrepare(params);
+      kuzzle.remote = rewire('../../lib/api/remote');
+
+      remotes = kuzzle.remote.__get__('remotes');
+      remotes.cleanAndPrepare.onListenCB = cleanAndPrepareOnListenCB;
+      remotes.cleanAndPrepare.timeOutCB = cleanAndPrepareTimeOutCB;
+
+      kuzzle.remote.__set__('remotes', remotes);
+
+      kuzzle.remote(kuzzle, 'cleanAndPrepare', params);
       setTimeout(() => {
         should(cleanAndPrepareDone).be.true();
         should(cleanAndPrepareOK).be.true();
