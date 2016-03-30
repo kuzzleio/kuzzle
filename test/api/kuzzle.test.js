@@ -849,7 +849,7 @@ describe('Test kuzzle constructor', function () {
       processExit = process.exit;
       process.exit = function (status) {
         exitStatus = status;
-      }
+      };
 
       kuzzle = new Kuzzle(false);
     });
@@ -861,7 +861,7 @@ describe('Test kuzzle constructor', function () {
     it('should return false if the remote action does not exists', function (done) {
       should(remote(kuzzle, 'foo', {}, {})).be.false();
       done();
-    })
+    });
 
     it('should exit the process with status 1 if no PID is given and PID is mandatory', function (done) {
       params = rc('kuzzle');
