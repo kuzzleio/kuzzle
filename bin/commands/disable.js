@@ -6,6 +6,6 @@ var
 module.exports = function () {
 
   var kuzzle = new Kuzzle(false);
-  kuzzle.remote(kuzzle, 'enableServices', params, {enable: false});
+  kuzzle.remoteActions(kuzzle, 'enableServices', params, {enable: false});
 
 };
