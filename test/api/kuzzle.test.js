@@ -835,7 +835,7 @@ describe('Test kuzzle constructor', function () {
     });
   });
 
-  describe('#remote', function () {
+  describe('#remoteActions', function () {
     var 
       kuzzle,
       remoteActions,
