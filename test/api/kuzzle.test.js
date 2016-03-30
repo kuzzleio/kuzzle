@@ -202,10 +202,10 @@ describe('Test kuzzle constructor', function () {
 
       kuzzle.isServer = true;
 
-      kuzzle.cleanDb = function() {cleanDbDone = true; return q();};
-      kuzzle.prepareDb = function() {prepareDbDone = true; return q();};
+      kuzzle.cleanDb = function () { cleanDbDone = true; return q();};
+      kuzzle.prepareDb = function () { prepareDbDone = true; return q();};
 
-      cleanAndPrepareOnListenCB = function(response) {
+      cleanAndPrepareOnListenCB = function (response) {
         cleanAndPrepareDone = true;
 
         if (response.result.error) {
@@ -215,7 +215,7 @@ describe('Test kuzzle constructor', function () {
         }
       };
 
-      cleanAndPrepareTimeOutCB = function() {
+      cleanAndPrepareTimeOutCB = function () {
         return false;
       };
 
