@@ -23,7 +23,7 @@ describe('Test kuzzle constructor', function () {
     should(kuzzle.workers).be.an.Object();
 
     should(kuzzle.start).be.a.Function();
-    should(kuzzle.remote).be.a.Function();
+    should(kuzzle.remoteActions).be.a.Function();
     should(kuzzle.cleanDb).be.a.Function();
     should(kuzzle.prepareDb).be.a.Function();
   });
@@ -219,15 +219,15 @@ describe('Test kuzzle constructor', function () {
         return false;
       };
 
-      kuzzle.remote = rewire('../../lib/api/remote');
+      kuzzle.remoteActions = rewire('../../lib/api/remoteActions');
 
-      remotes = kuzzle.remote.__get__('remotes');
-      remotes.cleanAndPrepare.onListenCB = cleanAndPrepareOnListenCB;
-      remotes.cleanAndPrepare.timeOutCB = cleanAndPrepareTimeOutCB;
+      remoteActions = kuzzle.remoteActions.__get__('remoteActions');
+      remoteActions.cleanAndPrepare.onListenCB = cleanAndPrepareOnListenCB;
+      remoteActions.cleanAndPrepare.timeOutCB = cleanAndPrepareTimeOutCB;
 
-      kuzzle.remote.__set__('remotes', remotes);
+      kuzzle.remoteActions.__set__('remoteActions', remoteActions);
 
-      kuzzle.remote(kuzzle, 'cleanAndPrepare', params);
+      kuzzle.remoteActions(kuzzle, 'cleanAndPrepare', params);
       setTimeout(() => {
         should(cleanAndPrepareDone).be.true();
         should(cleanAndPrepareOK).be.true();
@@ -838,13 +838,13 @@ describe('Test kuzzle constructor', function () {
   describe('#remote', function () {
     var 
       kuzzle,
-      remote,
+      remoteActions,
       processExit,
       params,
       exitStatus = 0;
 
     before(function () {
-      remote = rewire('../../lib/api/remote');
+      remoteActions = rewire('../../lib/api/remoteActions');
 
       processExit = process.exit;
       process.exit = function (status) {
@@ -859,7 +859,7 @@ describe('Test kuzzle constructor', function () {
     });
 
     it('should return false if the remote action does not exists', function (done) {
-      should(remote(kuzzle, 'foo', {}, {})).be.false();
+      should(remoteActions(kuzzle, 'foo', {}, {})).be.false();
       done();
     });
 
@@ -867,7 +867,7 @@ describe('Test kuzzle constructor', function () {
       params = rc('kuzzle');
       params._ = [];
 
-      remote(kuzzle, 'enableServices', params, {});
+      remoteActions(kuzzle, 'enableServices', params, {});
       should(exitStatus).be.eql(1);
       done();
     });
@@ -876,7 +876,7 @@ describe('Test kuzzle constructor', function () {
       params = rc('kuzzle');
       params._ = ['likeAvirgin', 'foo'];
 
-      remote(kuzzle, 'enableServices', params, {});
+      remoteActions(kuzzle, 'enableServices', params, {});
       should(exitStatus).be.eql(1);
       done();
     });
