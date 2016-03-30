@@ -82,7 +82,7 @@ describe('Test: admin controller', function () {
         }
       });
 
-      kuzzle.funnel.admin.deleteCollection(requestObject)
+      kuzzle.funnel.controllers.admin.deleteCollection(requestObject)
         .catch(function (error) {
           done(error);
         });
@@ -91,7 +91,7 @@ describe('Test: admin controller', function () {
     it('should remove the deleted collection from the cache', function (done) {
       this.timeout(50);
 
-      kuzzle.funnel.admin.deleteCollection(requestObject)
+      kuzzle.funnel.controllers.admin.deleteCollection(requestObject)
         .then(response => {
           should(response).be.instanceof(ResponseObject);
           should(indexCacheAdd).be.false();
@@ -117,7 +117,7 @@ describe('Test: admin controller', function () {
         }
       });
 
-      kuzzle.funnel.admin.updateMapping(requestObject)
+      kuzzle.funnel.controllers.admin.updateMapping(requestObject)
         .catch(function (error) {
           done(error);
         });
@@ -126,7 +126,7 @@ describe('Test: admin controller', function () {
     it('should add the new collection to the cache', function (done) {
       this.timeout(50);
 
-      kuzzle.funnel.admin.updateMapping(requestObject)
+      kuzzle.funnel.controllers.admin.updateMapping(requestObject)
         .then(response => {
           should(response).be.instanceof(ResponseObject);
           should(indexCacheAdd).be.true();
@@ -140,7 +140,7 @@ describe('Test: admin controller', function () {
 
   describe('#getMapping', function () {
     it('should return a mapping when requested', function () {
-      var r = kuzzle.funnel.admin.getMapping(requestObject);
+      var r = kuzzle.funnel.controllers.admin.getMapping(requestObject);
       return should(r).be.rejected();
     });
 
@@ -157,7 +157,7 @@ describe('Test: admin controller', function () {
         }
       });
 
-      kuzzle.funnel.admin.getMapping(requestObject);
+      kuzzle.funnel.controllers.admin.getMapping(requestObject);
     });
   });
 
@@ -175,7 +175,7 @@ describe('Test: admin controller', function () {
         }
       });
 
-      kuzzle.funnel.admin.getStats(requestObject);
+      kuzzle.funnel.controllers.admin.getStats(requestObject);
     });
   });
 
@@ -193,7 +193,7 @@ describe('Test: admin controller', function () {
         }
       });
 
-      kuzzle.funnel.admin.getLastStats(requestObject);
+      kuzzle.funnel.controllers.admin.getLastStats(requestObject);
     });
   });
 
@@ -211,7 +211,7 @@ describe('Test: admin controller', function () {
         }
       });
 
-      kuzzle.funnel.admin.getAllStats(requestObject);
+      kuzzle.funnel.controllers.admin.getAllStats(requestObject);
     });
   });
 
@@ -229,7 +229,7 @@ describe('Test: admin controller', function () {
         }
       });
 
-      kuzzle.funnel.admin.truncateCollection(requestObject);
+      kuzzle.funnel.controllers.admin.truncateCollection(requestObject);
     });
   });
 
@@ -288,13 +288,13 @@ describe('Test: admin controller', function () {
         }
       });
 
-      kuzzle.funnel.admin.deleteIndexes(requestObject, context);
+      kuzzle.funnel.controllers.admin.deleteIndexes(requestObject, context);
     });
 
     it('should delete only the allowed indexes', function (done) {
       this.timeout(50);
 
-      kuzzle.funnel.admin.deleteIndexes(requestObject, context)
+      kuzzle.funnel.controllers.admin.deleteIndexes(requestObject, context)
         .then(response => {
           should(response).be.instanceof(ResponseObject);
           should(response.data.body.deleted).be.eql(['%text1', '%text2']);
@@ -306,7 +306,7 @@ describe('Test: admin controller', function () {
     it('should reset the index cache', function (done) {
       this.timeout(50);
 
-      kuzzle.funnel.admin.deleteIndexes(requestObject, context)
+      kuzzle.funnel.controllers.admin.deleteIndexes(requestObject, context)
         .then(response => {
           should(response).be.instanceof(ResponseObject);
           should(indexCacheAdd).be.false();
@@ -332,13 +332,13 @@ describe('Test: admin controller', function () {
         }
       });
 
-      kuzzle.funnel.admin.createIndex(requestObject);
+      kuzzle.funnel.controllers.admin.createIndex(requestObject);
     });
 
     it('should add the new index to the cache', function (done) {
       this.timeout(50);
 
-      kuzzle.funnel.admin.createIndex(requestObject)
+      kuzzle.funnel.controllers.admin.createIndex(requestObject)
         .then(response => {
           should(response).be.instanceof(ResponseObject);
           should(indexCacheAdd).be.true();
@@ -364,11 +364,11 @@ describe('Test: admin controller', function () {
         }
       });
 
-      kuzzle.funnel.admin.deleteIndex(requestObject);
+      kuzzle.funnel.controllers.admin.deleteIndex(requestObject);
     });
 
     it('should remove the index from the cache', function (done) {
-      kuzzle.funnel.admin.deleteIndex(requestObject)
+      kuzzle.funnel.controllers.admin.deleteIndex(requestObject)
         .then(response => {
           should(response).be.instanceof(ResponseObject);
           should(indexCacheAdd).be.false();
@@ -394,11 +394,11 @@ describe('Test: admin controller', function () {
         }
       });
 
-      kuzzle.funnel.admin.removeRooms(requestObject);
+      kuzzle.funnel.controllers.admin.removeRooms(requestObject);
     });
 
     it('should resolve to a promise', function () {
-      return should(kuzzle.funnel.admin.removeRooms(requestObject)).be.rejected();
+      return should(kuzzle.funnel.controllers.admin.removeRooms(requestObject)).be.rejected();
     });
   });
 });

@@ -47,28 +47,28 @@ describe('Test: write controller', function () {
     var requestObject = new RequestObject({});
     delete requestObject.data.body;
 
-    return should(kuzzle.funnel.write.create(requestObject)).be.rejected();
+    return should(kuzzle.funnel.controllers.write.create(requestObject)).be.rejected();
   });
 
   it('should reject an empty createOrReplace request', function () {
     var requestObject = new RequestObject({});
     delete requestObject.data.body;
 
-    return should(kuzzle.funnel.write.createOrReplace(requestObject)).be.rejected();
+    return should(kuzzle.funnel.controllers.write.createOrReplace(requestObject)).be.rejected();
   });
 
   it('should reject an empty update request', function () {
     var requestObject = new RequestObject({});
     delete requestObject.data.body;
 
-    return should(kuzzle.funnel.write.update(requestObject)).be.rejected();
+    return should(kuzzle.funnel.controllers.write.update(requestObject)).be.rejected();
   });
 
   it('should reject an empty replace request', function () {
     var requestObject = new RequestObject({});
     delete requestObject.data.body;
 
-    return should(kuzzle.funnel.write.replace(requestObject)).be.rejected();
+    return should(kuzzle.funnel.controllers.write.replace(requestObject)).be.rejected();
   });
 
   describe('#create', function () {
@@ -88,7 +88,7 @@ describe('Test: write controller', function () {
         }
       });
 
-      kuzzle.funnel.write.create(requestObject)
+      kuzzle.funnel.controllers.write.create(requestObject)
         .catch(function (error) {
           done(error);
         });
@@ -117,7 +117,7 @@ describe('Test: write controller', function () {
         }
       };
 
-      kuzzle.funnel.write.publish(requestObject)
+      kuzzle.funnel.controllers.write.publish(requestObject)
         .catch(function (error) {
           done(error);
         });
@@ -126,7 +126,7 @@ describe('Test: write controller', function () {
     it('should return a rejected promise if publishing fails', function () {
       var requestObject = new RequestObject({body: {foo: 'bar'}}, {}, 'unit-test');
       kuzzle.notifier.publish = function () { return q.reject(new Error('error')); };
-      return should(kuzzle.funnel.write.publish(requestObject)).be.rejectedWith(Error);
+      return should(kuzzle.funnel.controllers.write.publish(requestObject)).be.rejectedWith(Error);
     });
   });
 
@@ -146,7 +146,7 @@ describe('Test: write controller', function () {
         }
       });
 
-      kuzzle.funnel.write.createOrReplace(requestObject)
+      kuzzle.funnel.controllers.write.createOrReplace(requestObject)
         .catch(function (error) {
           done(error);
         });
@@ -156,7 +156,7 @@ describe('Test: write controller', function () {
       var requestObject = new RequestObject({body: {foo: 'bar'}}, {}, 'unit-test');
       this.timeout(50);
 
-      kuzzle.funnel.write.createOrReplace(requestObject)
+      kuzzle.funnel.controllers.write.createOrReplace(requestObject)
         .then(response => {
           should(response).be.instanceof(ResponseObject);
           should(indexCacheAdded).be.true();
@@ -182,7 +182,7 @@ describe('Test: write controller', function () {
         }
       });
 
-      kuzzle.funnel.write.update(requestObject)
+      kuzzle.funnel.controllers.write.update(requestObject)
         .catch(function (error) {
           done(error);
         });
@@ -205,7 +205,7 @@ describe('Test: write controller', function () {
         }
       });
 
-      kuzzle.funnel.write.replace(requestObject)
+      kuzzle.funnel.controllers.write.replace(requestObject)
         .catch(function (error) {
           done(error);
         });
@@ -228,7 +228,7 @@ describe('Test: write controller', function () {
         }
       });
 
-      kuzzle.funnel.write.delete(requestObject)
+      kuzzle.funnel.controllers.write.delete(requestObject)
         .catch(function (error) {
           done(error);
         });
@@ -251,7 +251,7 @@ describe('Test: write controller', function () {
         }
       });
 
-      kuzzle.funnel.write.deleteByQuery(requestObject)
+      kuzzle.funnel.controllers.write.deleteByQuery(requestObject)
         .catch(function (error) {
           done(error);
         });
@@ -275,14 +275,14 @@ describe('Test: write controller', function () {
         }
       });
 
-      kuzzle.funnel.write.createCollection(requestObject);
+      kuzzle.funnel.controllers.write.createCollection(requestObject);
     });
 
     it('should add the new collection to the index cache', function (done) {
       var requestObject = new RequestObject({}, {}, 'unit-test');
       this.timeout(50);
 
-      kuzzle.funnel.write.createCollection(requestObject)
+      kuzzle.funnel.controllers.write.createCollection(requestObject)
         .then(response => {
           should(response).be.instanceof(ResponseObject);
           should(indexCacheAdded).be.true();

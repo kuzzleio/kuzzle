@@ -8,16 +8,18 @@ var
   Profile = require.main.require('lib/api/core/models/security/profile'),
   Token = require.main.require('lib/api/core/models/security/token'),
   Role = require.main.require('lib/api/core/models/security/role'),
-  User = require.main.require('lib/api/core/models/security/user');
+  User = require.main.require('lib/api/core/models/security/user'),
+  rewire = require('rewire'),
+  FunnelController = rewire('../../../../lib/api/controllers/funnelController');
 
 describe('Test execute function in funnel controller', function () {
-
   var
     context = {
       connection: {id: 'connectionid'},
       token: null
     },
-    kuzzle;
+    kuzzle,
+    processRequest;
 
   beforeEach(function (callback) {
     kuzzle = new Kuzzle();
@@ -28,7 +30,6 @@ describe('Test execute function in funnel controller', function () {
         params.roleWithoutAdmin._id = 'anonymous';
         return kuzzle.repositories.role.hydrate(kuzzle.repositories.role.roles.anonymous, params.roleWithoutAdmin);
       })
-
       .then(function () {
         kuzzle.repositories.profile.profiles.anonymous = {_id: 'anonymous', roles: ['anonymous']};
         return q(kuzzle.repositories.profile.profiles.anonymous);
@@ -38,6 +39,7 @@ describe('Test execute function in funnel controller', function () {
       })
       .then(function (anonymousToken) {
         context.token = anonymousToken;
+        processRequest = FunnelController.__get__('processRequest');
         callback();
       })
       .catch(error => callback(error));
@@ -50,7 +52,7 @@ describe('Test execute function in funnel controller', function () {
 
     var requestObject = new RequestObject(object);
 
-    return should(kuzzle.funnel.execute(requestObject, context)).be.rejected();
+    return should(processRequest(kuzzle, kuzzle.funnel.controllers, requestObject, context)).be.rejected();
   });
 
   it('should reject the promise if no action is specified', function () {
@@ -60,7 +62,7 @@ describe('Test execute function in funnel controller', function () {
 
     var requestObject = new RequestObject(object);
 
-    return should(kuzzle.funnel.execute(requestObject, context)).be.rejected();
+    return should(processRequest(kuzzle, kuzzle.funnel.controllers, requestObject, context)).be.rejected();
   });
 
   it('should reject the promise if the controller doesn\'t exist', function () {
@@ -71,7 +73,7 @@ describe('Test execute function in funnel controller', function () {
 
     var requestObject = new RequestObject(object);
 
-    return should(kuzzle.funnel.execute(requestObject, context)).be.rejected();
+    return should(processRequest(kuzzle, kuzzle.funnel.controllers, requestObject, context)).be.rejected();
   });
 
   it('should reject the promise if the action doesn\'t exist', function () {
@@ -82,15 +84,14 @@ describe('Test execute function in funnel controller', function () {
 
     var requestObject = new RequestObject(object);
 
-    return should(kuzzle.funnel.execute(requestObject, context)).be.rejected();
+    return should(processRequest(kuzzle, kuzzle.funnel.controllers, requestObject, context)).be.rejected();
   });
 
   it('should reject the promise if the user is not allowed to execute the action', () => {
     var
       token = new Token(),
       role = new Role(),
-      user = new User(),
-      localContext;
+      user = new User();
 
     role.indexes = {
       '*': {
@@ -108,29 +109,23 @@ describe('Test execute function in funnel controller', function () {
       }
     };
 
-
     user._id = 'testUser';
     user.profile = new Profile();
     user.profile.roles = [role];
 
-    context.token.user.profile.roles[0] = role;
-
     token._id = 'fake-token';
     token.user = user;
 
-    localContext = {
-      connection: {id: 'connectionid'},
-      token: token
-    };
+    kuzzle.repositories.token.verifyToken = function () { return q(token); };
 
     return should(
-      kuzzle.funnel.execute(
+      processRequest(kuzzle, kuzzle.funnel.controllers,
         new RequestObject({
           controller: 'read',
           index: '@test',
           action: 'get'
         }),
-        localContext)
+        context)
     ).be.rejectedWith(UnauthorizedError);
   });
 
@@ -144,14 +139,14 @@ describe('Test execute function in funnel controller', function () {
 
     var requestObject = new RequestObject(object);
 
-    kuzzle.funnel.execute(requestObject, context)
+    processRequest(kuzzle, kuzzle.funnel.controllers,requestObject, context)
       .then(() => {
         done();
       })
       .catch(err => done(err));
   });
 
-  it('should resolve the promise in cas of a plugin controller action', function() {
+  it('should resolve the promise in case of a plugin controller action', function() {
     var
       pluginController = {
         bar: function(requestObject){
@@ -177,6 +172,6 @@ describe('Test execute function in funnel controller', function () {
 
     requestObject = new RequestObject(object);
 
-    return should(kuzzle.funnel.execute(requestObject, context)).not.be.rejected();
+    return should(processRequest(kuzzle, kuzzle.funnel.controllers,requestObject, context)).not.be.rejected();
   });
 });

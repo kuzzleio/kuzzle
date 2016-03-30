@@ -354,8 +354,8 @@ To access these methods, simply call ``context.getRouter().<router method>``:
 
 | Router method | Arguments    | Returns | Description              |
 |-----------------|--------------|---------|--------------------------|
-| ``newConnection`` | ``protocol name`` (string) <br>``connection ID`` (string) | A promise resolving to a ``context`` object | Declare a new connection to Kuzzle. |
-| ``execute`` | ``optional JWT Headers`` (string)<br>``RequestObject`` (object)<br>``context`` (obtained with ``newConnection``) | A promise resolving to the corresponding ``ResponseObject`` | Execute a client request. |
+| ``newConnection`` | ``protocol name`` (string) <br/>``connection ID`` (string) | A promise resolving to a ``context`` object | Declare a new connection to Kuzzle. |
+| ``execute`` | ``optional JWT Headers`` (string)<br/>``RequestObject`` (object)<br/>``context`` (obtained with ``newConnection``)<br/>A node callback resolved with the request response |  | Execute a client request. |
 | ``removeConnection`` | ``context`` (obtained with ``newConnection``) | | Asks Kuzzle to remove the corresponding connection and all its subscriptions |
 
 #### Example
@@ -390,14 +390,14 @@ module.exports = function () {
       });
 
     // whenever a client sends a request
-    context.getRouter().execute(null, requestObject, this.contexts["id"])
-      .then(response => {
-        // forward the response to the client
-      })
-      .catch(error => {
+    context.getRouter().execute(null, requestObject, this.contexts["id"], (error, response) => {
+      if (error) {
         // errors are encapsulated in a ResponseObject. You may simply
         // forward it to the client too
-      });
+      } else {
+        // forward the response to the client
+      }
+    });
 
     // whenever a client is disconnected
     context.getRouter().removeConnection(this.contexts["id"]);
