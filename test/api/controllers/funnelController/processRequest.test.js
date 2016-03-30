@@ -12,7 +12,7 @@ var
   rewire = require('rewire'),
   FunnelController = rewire('../../../../lib/api/controllers/funnelController');
 
-describe('Test execute function in funnel controller', function () {
+describe('funnelController.processRequest', function () {
   var
     context = {
       connection: {id: 'connectionid'},
