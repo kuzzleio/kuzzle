@@ -834,4 +834,51 @@ describe('Test kuzzle constructor', function () {
         .catch(err => done(err));
     });
   });
+
+  describe('#remote', function () {
+    var 
+      kuzzle,
+      remote,
+      processExit,
+      params,
+      exitStatus = 0;
+
+    before(function () {
+      remote = rewire('../../lib/api/remote');
+
+      processExit = process.exit;
+      process.exit = function (status) {
+        exitStatus = status;
+      }
+
+      kuzzle = new Kuzzle(false);
+    });
+
+    after(function () {
+      process.exit = processExit;
+    });
+
+    it('should return false if the remote action does not exists', function (done) {
+      should(remote(kuzzle, 'foo', {}, {})).be.false();
+      done();
+    })
+
+    it('should exit the process with status 1 if no PID is given and PID is mandatory', function (done) {
+      params = rc('kuzzle');
+      params._ = [];
+
+      remote(kuzzle, 'enableServices', params, {});
+      should(exitStatus).be.eql(1);
+      done();
+    });
+
+    it('should exit the process with status 1 if the given PID does not exists', function (done) {
+      params = rc('kuzzle');
+      params._ = ['likeAvirgin', 'foo'];
+
+      remote(kuzzle, 'enableServices', params, {});
+      should(exitStatus).be.eql(1);
+      done();
+    });
+  });
 });

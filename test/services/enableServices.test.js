@@ -6,7 +6,7 @@ var
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   RemoteActions = rewire('../../lib/services/enableServices');
 
-describe('Testing: Remote Actions service', function () {
+describe('Testing: Enable service remote action', function () {
   var
     kuzzle,
     remoteActions,
