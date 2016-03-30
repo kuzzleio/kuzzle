@@ -56,12 +56,12 @@ describe('Test: security controller - users', function () {
 
   describe('#getUser', function () {
     it('should reject the promise if no id is given', () => {
-      return should(kuzzle.funnel.security.getUser(new RequestObject({})))
+      return should(kuzzle.funnel.controllers.security.getUser(new RequestObject({})))
         .be.rejectedWith(BadRequestError);
     });
 
     it('should return an hydrated responseObject', done => {
-      kuzzle.funnel.security.getUser(new RequestObject({
+      kuzzle.funnel.controllers.security.getUser(new RequestObject({
         body: { _id: 'anonymous' }
       }))
         .then(response => {
@@ -76,7 +76,7 @@ describe('Test: security controller - users', function () {
     });
 
     it('should reject with NotFoundError when the user is not found', () => {
-      var promise = kuzzle.funnel.security.getUser(new RequestObject({
+      var promise = kuzzle.funnel.controllers.security.getUser(new RequestObject({
         body: { _id: 'i.dont.exist' }
       }));
 
@@ -86,7 +86,7 @@ describe('Test: security controller - users', function () {
 
   describe('#searchUsers', function () {
     it('should return a valid responseObject', done => {
-      kuzzle.funnel.security.searchUsers(new RequestObject({
+      kuzzle.funnel.controllers.security.searchUsers(new RequestObject({
         body: {
           filter: {},
           from: 0,
@@ -103,7 +103,7 @@ describe('Test: security controller - users', function () {
     });
 
     it('should return some unhydrated users when asked', done => {
-      kuzzle.funnel.security.searchUsers(new RequestObject({
+      kuzzle.funnel.controllers.security.searchUsers(new RequestObject({
         body: { hydrate: false }
       }))
         .then(response => {
@@ -120,7 +120,7 @@ describe('Test: security controller - users', function () {
 
   describe('#deleteUser', function () {
     it('should return a valid responseObject', done => {
-      kuzzle.funnel.security.deleteUser(new RequestObject({
+      kuzzle.funnel.controllers.security.deleteUser(new RequestObject({
         body: { _id: 'test' }
       }))
         .then(response => {
@@ -133,14 +133,14 @@ describe('Test: security controller - users', function () {
     });
 
     it('should not resolve the promise when no id is given', () => {
-      return should(kuzzle.funnel.security.deleteUser(new RequestObject({})))
+      return should(kuzzle.funnel.controllers.security.deleteUser(new RequestObject({})))
         .be.rejectedWith(BadRequestError);
     });
   });
 
   describe('#createUser', function () {
     it('should return a valid a valid response', done => {
-      kuzzle.funnel.security.createUser(new RequestObject({
+      kuzzle.funnel.controllers.security.createUser(new RequestObject({
         body: { _id: 'test', name: 'John Doe', profile: 'anonymous' }
       }))
         .then(response => {
@@ -154,7 +154,7 @@ describe('Test: security controller - users', function () {
     });
 
     it('should compute a user id if none is provided', done => {
-      kuzzle.funnel.security.createUser(new RequestObject({
+      kuzzle.funnel.controllers.security.createUser(new RequestObject({
         body: { name: 'John Doe', profile: 'anonymous' }
       }))
         .then(response => {
@@ -168,7 +168,7 @@ describe('Test: security controller - users', function () {
     });
 
     it('should reject the promise if no profile is given', () => {
-      return should(kuzzle.funnel.security.createUser(new RequestObject({
+      return should(kuzzle.funnel.controllers.security.createUser(new RequestObject({
         body: {}
       })))
         .be.rejectedWith(BadRequestError);
@@ -177,7 +177,7 @@ describe('Test: security controller - users', function () {
 
   describe('#updateUser', function () {
     it('should return a valid ResponseObject', done => {
-      kuzzle.funnel.security.updateUser(new RequestObject({
+      kuzzle.funnel.controllers.security.updateUser(new RequestObject({
         body: { _id: 'anonymous', foo: 'bar' }
       }))
         .then(response => {
@@ -191,7 +191,7 @@ describe('Test: security controller - users', function () {
     });
 
     it('should reject the promise if no id is given', () => {
-      return should(kuzzle.funnel.security.updateUser(new RequestObject({
+      return should(kuzzle.funnel.controllers.security.updateUser(new RequestObject({
         body: {}
       })))
         .be.rejectedWith(BadRequestError);
@@ -200,7 +200,7 @@ describe('Test: security controller - users', function () {
 
   describe('#createOrReplaceUser', function () {
     it('should return a valid responseObject', done => {
-      kuzzle.funnel.security.createOrReplaceUser(new RequestObject({
+      kuzzle.funnel.controllers.security.createOrReplaceUser(new RequestObject({
         body: {
           _id: 'test',
           profile: 'admin'
@@ -216,7 +216,7 @@ describe('Test: security controller - users', function () {
     });
 
     it('should reject the promise if no profile is given', () => {
-      return should(kuzzle.funnel.security.createOrReplaceUser(new RequestObject({
+      return should(kuzzle.funnel.controllers.security.createOrReplaceUser(new RequestObject({
         _id: 'test'
       })))
         .be.rejectedWith(BadRequestError);

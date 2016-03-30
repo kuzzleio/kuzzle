@@ -186,7 +186,7 @@
     "pipeTimeout": 250
   },
   "request": {
-    "maxConcurrentRequests": 10,
+    "maxConcurrentRequests": 50,
     "maxRetainedRequests": 2000
   }
 }
