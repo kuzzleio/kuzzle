@@ -35,14 +35,6 @@ describe('funnelController.playCachedRequests', function () {
     kuzzle = new Kuzzle();
     kuzzle.start(params, {dummy: true})
       .then(() => {
-        FunnelController.__set__('execute', function (r, c, cb) {
-          executeCalled = true;
-
-          should(r).be.eql(requestObject);
-          should(c).be.eql(context);
-          should(cb).be.eql(callback);
-        });
-
         FunnelController.__set__('setTimeout', function () {
           setTimeoutCalled = true;
         });
@@ -65,6 +57,13 @@ describe('funnelController.playCachedRequests', function () {
     funnel = new FunnelController(kuzzle);
     funnel.init();
     funnel.lastOverloadTime = 0;
+    funnel.execute = function (r, c, cb) {
+      executeCalled = true;
+
+      should(r).be.eql(requestObject);
+      should(c).be.eql(context);
+      should(cb).be.eql(callback);
+    };
   });
 
   describe('#returning to normal state', function () {
@@ -133,6 +132,7 @@ describe('funnelController.playCachedRequests', function () {
       funnel.cachedRequests = 1;
       funnel.concurrentRequests = 0;
       funnel.requestsCache = [{requestObject, context, callback}];
+      playCachedRequests(kuzzle, funnel);
 
       should(nextTickCalled).be.true();
       should(setTimeoutCalled).be.false();
