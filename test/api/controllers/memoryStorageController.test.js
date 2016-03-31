@@ -19,8 +19,6 @@ var
   extractArgumentsFromRequestObjectForSort = MemoryStorageController.__get__('extractArgumentsFromRequestObjectForSort'),
   extractArgumentsFromRequestObjectForZAdd = MemoryStorageController.__get__('extractArgumentsFromRequestObjectForZAdd'),
   extractArgumentsFromRequestObjectForZInterstore = MemoryStorageController.__get__('extractArgumentsFromRequestObjectForZInterstore'),
-  extractArgumentsFromRequestObjectForZRangeByLex = MemoryStorageController.__get__('extractArgumentsFromRequestObjectForZRangeByLex'),
-  extractArgumentsFromRequestObjectForZRangeByScore = MemoryStorageController.__get__('extractArgumentsFromRequestObjectForZRangeByScore'),
   requestObject,
   testMapping,
   revertMapping;
@@ -53,16 +51,12 @@ before(function (done) {
   extractArgumentsFromRequestObjectForSort = wrapped(extractArgumentsFromRequestObjectForSort);
   extractArgumentsFromRequestObjectForZAdd = wrapped(extractArgumentsFromRequestObjectForZAdd);
   extractArgumentsFromRequestObjectForZInterstore = wrapped(extractArgumentsFromRequestObjectForZInterstore);
-  extractArgumentsFromRequestObjectForZRangeByLex  = wrapped(extractArgumentsFromRequestObjectForZRangeByLex);
-  extractArgumentsFromRequestObjectForZRangeByScore = wrapped(extractArgumentsFromRequestObjectForZRangeByScore);
 
   MemoryStorageController.__set__({
     extractArgumentsFromRequestObjectForSet: extractArgumentsFromRequestObjectForSet,
     extractArgumentsFromRequestObjectForSort: extractArgumentsFromRequestObjectForSort,
     extractArgumentsFromRequestObjectForZAdd: extractArgumentsFromRequestObjectForZAdd,
-    extractArgumentsFromRequestObjectForZInterstore: extractArgumentsFromRequestObjectForZInterstore,
-    extractArgumentsFromRequestObjectForZRangeByLex: extractArgumentsFromRequestObjectForZRangeByLex,
-    extractArgumentsFromRequestObjectForZRangeByScore: extractArgumentsFromRequestObjectForZRangeByScore
+    extractArgumentsFromRequestObjectForZInterstore: extractArgumentsFromRequestObjectForZInterstore
   });
 
   kuzzle = new Kuzzle();
@@ -400,7 +394,6 @@ describe('Test: memoryStore controller', function () {
           body: {
             _id: 'myKey',
             destination: 'destinationVal',
-            numkeys: 10,
             keys: [
               'key2',
               'key3'
@@ -419,7 +412,7 @@ describe('Test: memoryStore controller', function () {
       should(result).length(11);
       should(result).eql([
         'destinationVal',
-        10,
+        3,
         'myKey',
         'key2',
         'key3',
@@ -450,84 +443,6 @@ describe('Test: memoryStore controller', function () {
       should(extractArgumentsFromRequestObjectForZInterstore.bind(null, requestObject)).throw(BadRequestError);
 
     });
-  });
-
-  describe('#extractArgumentsFromRequestObjectForZRangeByLex', function () {
-
-    it('should be called from extractArgumentsFromRequestObject for the "zrangebylex" command', () => {
-      extractArgumentsFromRequestObject('zrangebylex', requestObject);
-
-      should(called.extractArgumentsFromRequestObjectForZRangeByLex.called).be.true();
-      should(called.extractArgumentsFromRequestObjectForZRangeByLex.args).be.eql([requestObject]);
-    });
-
-    it('should be called from extractArgumentsFromRequestObject for the "zrevrangebylex" command', () => {
-      extractArgumentsFromRequestObject('zrevrangebylex', requestObject);
-
-      should(called.extractArgumentsFromRequestObjectForZRangeByLex.called).be.true();
-      should(called.extractArgumentsFromRequestObjectForZRangeByLex.args).be.eql([requestObject]);
-    });
-
-    it('should extract any given argument', () => {
-      var
-        requestObject = new RequestObject({
-          body: {
-            _id: 'myKey',
-            min: 'minVal',
-            max: 'maxVal',
-            offset: 10,
-            count: 20
-          }
-        }),
-        result = extractArgumentsFromRequestObjectForZRangeByLex(requestObject);
-
-      should(result).be.an.Array();
-      should(result).eql(['myKey', 'minVal', 'maxVal', 'LIMIT', 10, 20]);
-    });
-  });
-
-  describe('#extractArgumentsFromRequestObjectForZRangeByScore', function () {
-
-    it('should be called from extractArgumentsFromRequestObject for the "zrangebyscore" command', () => {
-      extractArgumentsFromRequestObject('zrangebyscore', requestObject);
-
-      should(called.extractArgumentsFromRequestObjectForZRangeByScore.called).be.true();
-      should(called.extractArgumentsFromRequestObjectForZRangeByScore.args).be.eql([requestObject]);
-    });
-
-    it('should be called from extractArgumentsFromRequestObject for the "zrevrangebyscore" command', () => {
-      extractArgumentsFromRequestObject('zrevrangebyscore', requestObject);
-
-      should(called.extractArgumentsFromRequestObjectForZRangeByScore.called).be.true();
-      should(called.extractArgumentsFromRequestObjectForZRangeByScore.args).be.eql([requestObject]);
-    });
-
-    it('should extract any given parameter', () => {
-      var
-        requestObject = new RequestObject({
-          body: {
-            _id: 'myKey',
-            min: 'minVal',
-            max: 'maxVal',
-            withscores: true,
-            offset: 10,
-            count: 20
-          }
-        }),
-        result = extractArgumentsFromRequestObjectForZRangeByScore(requestObject);
-
-      should(result).be.an.Array();
-      should(result).be.eql([
-        'myKey',
-        'minVal',
-        'maxVal',
-        'WITHSCORES',
-        'LIMIT',
-        10,
-        20
-      ]);
-    });
-
   });
 
   describe('#generated functions', function () {
@@ -568,7 +483,7 @@ describe('Test: memoryStore controller', function () {
         });
     });
 
-    it('custom mapping checks', done => {
+    it('custom mapping checks - zrange', done => {
       var
         rq = new RequestObject({
           controller: 'memoryStore',
@@ -593,9 +508,96 @@ describe('Test: memoryStore controller', function () {
 
           done();
         });
-
-
     });
+
+    it('custom mapping checks - zrangebylex', done => {
+      var
+        rq = new RequestObject({
+          controller: 'memoryStore',
+          action: 'zrangebylex',
+          body: {
+            _id: 'myKey',
+            min: 'minVal',
+            max: 'maxVal',
+            offset: 'offsetVal',
+            count: 'countVal'
+          }
+        }),
+        expected = [
+          'myKey',
+          'minVal',
+          'maxVal',
+          'LIMIT',
+          'offsetVal',
+          'countVal'
+        ];
+
+      msController.zrangebylex(rq)
+        .then(response => {
+          should(response.data.body.result.name).be.exactly('zrangebylex');
+          should(response.data.body.result.args).be.eql(expected);
+
+          rq.action = 'zrevrangebylex';
+
+          return msController.zrevrangebylex(rq);
+        })
+        .then(response => {
+          expected[1] = expected[2];
+          expected[2] = 'minVal';
+
+          should(response.data.body.result.name).be.exactly('zrevrangebylex');
+          should(response.data.body.result.args).be.eql(expected);
+
+          done();
+        })
+        .catch(err => done(err));
+    });
+
+    it('custom mapping checks - zrangebyscore', done => {
+      var
+        rq = new RequestObject({
+          controller: 'memoryStore',
+          acion: 'zrangebyscore',
+          body: {
+            _id: 'myKey',
+            min: 'minVal',
+            max: 'maxVal',
+            withscores: true,
+            offset: 'offsetVal',
+            count: 'countVal'
+          }
+        }),
+        expected = [
+          'myKey',
+          'minVal',
+          'maxVal',
+          'WITHSCORES',
+          'LIMIT',
+          'offsetVal',
+          'countVal'
+        ];
+
+      msController.zrangebyscore(rq)
+        .then(response => {
+          should(response.data.body.result.name).be.exactly('zrangebyscore');
+          should(response.data.body.result.args).be.eql(expected);
+
+          rq.action = 'zrevrangebyscore';
+
+          return msController.zrevrangebyscore(rq);
+        })
+        .then(response => {
+          expected[1] = expected[2];
+          expected[2] = 'minVal';
+
+          should(response.data.body.result.name).be.exactly('zrevrangebyscore');
+          should(response.data.body.result.args).be.eql(expected);
+
+          done();
+        })
+        .catch(err => done(err));
+    });
+
   });
 
 });

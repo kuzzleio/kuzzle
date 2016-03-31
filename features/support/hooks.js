@@ -214,15 +214,13 @@ function cleanSecurity (callback) {
 function cleanRedis(callback) {
   this.api.callMemoryStorage('keys', { body: { pattern: this.idPrefix + '*' } })
     .then(response => {
-      console.log(response);
-
       if (_.isArray(response.result) && response.result.length) {
         return this.api.callMemoryStorage('del', { body: { keys: response.result } });
       }
 
       return;
     })
-    .then(response => {
+    .then(() => {
       callback();
     })
     .catch(error => callback(error));

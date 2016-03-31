@@ -83,7 +83,7 @@ ApiREST.prototype.getRequest = function (index, collection, controller, action, 
           }
         }
 
-        if (args.body[match.substring(1)]) {
+        if (args.body[match.substring(1)] !== undefined) {
           return args.body[match.substring(1)];
         }
 
@@ -93,7 +93,14 @@ ApiREST.prototype.getRequest = function (index, collection, controller, action, 
       // add extra aguments in the query string
       if (verb === 'GET') {
         _.difference(Object.keys(args.body), hits).forEach(key => {
-          queryString.push(key + '=' + encodeURIComponent(args.body[key]));
+          var value = args.body[key];
+
+          if (_.isArray(value)) {
+            queryString = queryString.concat(value.map(v => key + '=' + encodeURIComponent(v)));
+          }
+          else {
+            queryString.push(key + '=' + encodeURIComponent(args.body[key]));
+          }
         });
 
         if (queryString.length) {
