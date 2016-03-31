@@ -46,8 +46,8 @@ describe('Test removeRoom function index.js file from DSL', function () {
         anonymousUser = user;
         return kuzzle.hotelClerk.addSubscription(requestObject, context);
       })
-      .then(function (realTimeResponseObject) {
-        roomId = realTimeResponseObject.roomId;
+      .then(function (notificationObject) {
+        roomId = notificationObject.roomId;
         done();
       });
   });

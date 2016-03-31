@@ -6,7 +6,7 @@ This directory contains Kuzzle object abstraction for different request and resp
 ## requestObject.js
 This class allow to create an object that represent the user request (action, controller, collection, filter or document, requestId, ...)
 
-## realTimeResponseObject.js
+## notificationObject.js
 This class allow to create an object that represent information about room that we have to send to the user (room id)
 
 ## responseObject.js

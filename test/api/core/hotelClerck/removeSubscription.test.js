@@ -69,9 +69,9 @@ describe('Test: hotelClerk.removeSubscription', function () {
         kuzzle.notifier.notify = mockupNotifier;
         return kuzzle.hotelClerk.addSubscription(requestObject1, context);
       })
-      .then(function (realTimeResponseObject) {
-        roomId = realTimeResponseObject.roomId;
-        channel = realTimeResponseObject.channel;
+      .then(function (notificationObject) {
+        roomId = notificationObject.roomId;
+        channel = notificationObject.channel;
         unsubscribeRequest = new RequestObject({
           controller: 'subscribe',
           action: 'off',
