@@ -44,7 +44,6 @@ describe('funnelController.playCachedRequests', function () {
         });
 
         playCachedRequests = FunnelController.__get__('playCachedRequests');
-
         done();
       });
   });

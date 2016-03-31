@@ -9,19 +9,14 @@ var
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
   ResponseObject = require.main.require('lib/api/core/models/responseObject'),
   BadRequestError = require.main.require('lib/api/core/errors/badRequestError'),
-  InternalError = require.main.require('lib/api/core/errors/internalError'),
   NotFoundError = require.main.require('lib/api/core/errors/notFoundError'),
   Token = require.main.require('lib/api/core/models/security/token'),
-  Profile = require.main.require('lib/api/core/models/security/profile'),
-  User = require.main.require('lib/api/core/models/security/user'),
   context = {},
   requestObject,
   MockupWrapper,
   MockupStrategy;
 
 MockupStrategy = function(name, verify) {
-  var options = {};
-
   passport.Strategy.call(this);
   this.name = name;
   this._verify = verify;
@@ -29,7 +24,7 @@ MockupStrategy = function(name, verify) {
 };
 util.inherits(MockupStrategy, passport.Strategy);
 
-MockupStrategy.prototype.authenticate = function(req, options) {
+MockupStrategy.prototype.authenticate = function(req) {
   var
     self = this,
     username;
