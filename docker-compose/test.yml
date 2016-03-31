@@ -1,5 +1,5 @@
 kuzzle:
-  image: kuzzleio/kuzzle
+  image: kuzzleio/test:alpine
   command: /run-test.sh
   volumes:
     - "..:/var/app"
@@ -18,7 +18,7 @@ kuzzle:
     - FIXTURES=/var/app/features/fixtures/empty.json
 
 rabbit:
-  image: kuzzleio/rabbitmq
+  image: kuzzleio/rabbitmq:alpine
   ports:
     - "61613:61613"
     - "1883:1883"
@@ -26,7 +26,7 @@ rabbit:
     - "15672:15672"
 
 redis:
-  image: redis:3.0
+  image: redis:3.0-alpine
 
 elasticsearch:
-  image: elasticsearch:2.2
+  image: kuzzleio/elasticsearch:2.2

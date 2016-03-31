@@ -38,13 +38,17 @@ $ kuzzle disable <service> <PID|all>
 
 **Note:** All services containing a toggle() method can be activated or deactivated on the fly. Some vital services can't be togglable. 
 
+# Create the first administrative user account
+
+You will need it to connect to the back-office
+
 ```
 $ kuzzle createFirstAdmin
 ```
 
-will guide you through the creation process of the first admin user and fix the rights to other user types.
+will guide you through the creation process of the first admin user and fix the rights to other user types if needed.
 
-
+**Note:** This command is interactive and let you choose to reset the roles rights or not.
 
 # Contributing
 

@@ -1,7 +1,7 @@
 var
   _ = require('lodash'),
   config = require('./config')(),
-  stomp = require('stomp-client'),
+  Stomp = require('stomp-client'),
   uuid = require('node-uuid'),
   q = require('q'),
   KUZZLE_EXCHANGE = 'amq.topic',
@@ -28,7 +28,7 @@ ApiSTOMP.prototype.init = function (world) {
   this.stompUrl = config.stompUrl.replace('stomp://', '').split(':');
 
   if (!this.stompClient) {
-    this.stompClient = new stomp(this.stompUrl[0], this.stompUrl[1], 'guest', 'guest', '1.0', '/');
+    this.stompClient = new Stomp(this.stompUrl[0], this.stompUrl[1], 'guest', 'guest', '1.0', '/');
 
     deferredConnection = q.defer();
     this.stompConnected = deferredConnection.promise;
@@ -121,7 +121,7 @@ ApiSTOMP.prototype.send = function (message, waitForAnswer) {
 
 ApiSTOMP.prototype.sendAndListen = function (message) {
   var
-    roomClient = new stomp(this.stompUrl[0], this.stompUrl[1], 'guest', 'guest', '1.0', '/'),
+    roomClient = new Stomp(this.stompUrl[0], this.stompUrl[1], 'guest', 'guest', '1.0', '/'),
     deferred = q.defer(),
     self = this;
 
