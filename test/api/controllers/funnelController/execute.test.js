@@ -108,15 +108,17 @@ describe('funnelController.execute', function () {
     });
 
     it('should not fire the hook if one was fired less than 500ms ago', function (done) {
-      kuzzle.once('server:overload', function () {
+      var listener = function () {
         done(new Error('server:overload hook fired unexpectedly'));
-      });
+      };
+
+      kuzzle.once('server:overload', listener);
 
       funnel.overloaded = true;
       funnel.lastWarningTime = Date.now() - 200;
       funnel.execute(requestObject, context, () => {});
       setTimeout(() => {
-        kuzzle.removeAllListeners('server:overload');
+        kuzzle.off('server:overload', listener);
         done();
       }, 200);
     });
