@@ -27,7 +27,7 @@ describe('Test the bulk controller', function () {
       }
     });
 
-    kuzzle.funnel.bulk.import(requestObject)
+    kuzzle.funnel.controllers.bulk.import(requestObject)
       .catch(function (error) {
         done(error);
       });

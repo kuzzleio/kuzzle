@@ -4,7 +4,6 @@ var
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   rewire = require('rewire'),
   q = require('q'),
-  RouterController = rewire('../../../../lib/api/controllers/routerController'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
   Token = require.main.require('lib/api/core/models/security/token'),
   User = require.main.require('lib/api/core/models/security/user'),
@@ -14,19 +13,6 @@ var
   PluginImplementationError = require.main.require('lib/api/core/errors/pluginImplementationError');
 
 describe('Test: routerController', () => {
-  describe('#getBearerTokenFromHeaders', () => {
-    var
-      getBearerTokenFromHeader = RouterController.__get__('getBearerTokenFromHeaders');
-
-    it('should extract the bearer token from the header', () => {
-      var result = getBearerTokenFromHeader({
-        authorization: 'Bearer sometoken'
-      });
-
-      should(result).be.exactly('sometoken');
-    });
-  });
-
   describe('#newConnection', () => {
     var
       kuzzle,
@@ -132,19 +118,33 @@ describe('Test: routerController', () => {
         .catch(error => done(error));
     });
 
-    it('should return a fulfilled promise with the right arguments', () => {
-      return should(kuzzle.router.execute(requestObject, context)).be.fulfilled();
+    it('should return a fulfilled promise with the right arguments', (done) => {
+      kuzzle.router.execute(requestObject, context, done);
     });
 
-    it('should return an error if no request object is provided', () => {
-      return should(kuzzle.router.execute(undefined, context)).be.rejectedWith(ResponseObject);
+    it('should return an error if no request object is provided', (done) => {
+      kuzzle.router.execute(undefined, context, (err) => {
+        if (err && err instanceof ResponseObject) {
+          done();
+        }
+        else {
+          done(new Error('Returned successfully. Expected an error'));
+        }
+      });
     });
 
-    it('should return an error if an invalid context is provided', () => {
-      return should(kuzzle.router.execute(requestObject, {})).be.rejectedWith(ResponseObject);
+    it('should return an error if an invalid context is provided', (done) => {
+      kuzzle.router.execute(requestObject, {}, (err) => {
+        if (err && err instanceof ResponseObject) {
+          done();
+        }
+        else {
+          done(new Error('Returned successfully. Expected an error'));
+        }
+      });
     });
 
-    it('should return an error if an invalid context ID is provided', () => {
+    it('should return an error if an invalid context ID is provided', (done) => {
       var
         invalidContext = {
           connection: {
@@ -152,13 +152,28 @@ describe('Test: routerController', () => {
             type: 'jude'
           }
         };
-      return should(kuzzle.router.execute(requestObject, invalidContext)).be.rejectedWith(ResponseObject);
+
+      kuzzle.router.execute(requestObject, invalidContext, (err) => {
+        if (err && err instanceof ResponseObject) {
+          done();
+        }
+        else {
+          done(new Error('Returned successfully. Expected an error'));
+        }
+      });
     });
 
-    it('should forward any error that occured during execution back to the protocol plugin', () => {
-      kuzzle.funnel.execute = () => { return q.reject(new Error('rejected')); };
+    it('should forward any error that occured during execution back to the protocol plugin', (done) => {
+      kuzzle.funnel.execute = (r, c, cb) => { cb(new Error('rejected')); };
 
-      return should(kuzzle.router.execute(requestObject, context)).be.rejectedWith(ResponseObject);
+      kuzzle.router.execute(requestObject, context, (err) => {
+        if (err && err instanceof ResponseObject) {
+          done();
+        }
+        else {
+          done(new Error('Returned successfully. Expected an error'));
+        }
+      });
     });
   });
 

@@ -33,26 +33,21 @@ describe('Test: routerController.executeFromRest', function () {
 
   before(function (done) {
     var
-      mockupFunnel = function (requestObject) {
-        var
-          deferred = q.defer();
-
+      mockupFunnel = function (requestObject, context, callback) {
         savedRequestObject = requestObject;
         forwardedObject = new ResponseObject(requestObject, {});
 
         if (requestObject.data.body.resolve) {
           if (requestObject.data.body.empty) {
-            deferred.resolve({});
+            callback(null, {});
           }
           else {
-            deferred.resolve(forwardedObject);
+            callback(null, forwardedObject);
           }
         }
         else {
-          deferred.reject(new Error('rejected'));
+          callback(new Error('rejected'));
         }
-
-        return deferred.promise;
       },
       mockupRouterListener = {
         listener: {

@@ -31,7 +31,7 @@ describe('Test: security controller', function () {
   });
 
   it('should resolve to a responseObject on a createOrUpdateRole call', done => {
-    kuzzle.funnel.security.createOrReplaceRole(new RequestObject({
+    kuzzle.funnel.controllers.security.createOrReplaceRole(new RequestObject({
         body: { _id: 'test', indexes: {} }
       }))
       .then(result => {
@@ -45,7 +45,7 @@ describe('Test: security controller', function () {
   });
 
   it('should be rejected if creating a profile with bad roles property form', () => {
-    var promise = kuzzle.funnel.security.createOrReplaceProfile(new RequestObject({
+    var promise = kuzzle.funnel.controllers.security.createOrReplaceProfile(new RequestObject({
       body: { _id: 'test', roles: 'not-an-array-role' }
     }));
 
