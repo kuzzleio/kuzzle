@@ -85,6 +85,7 @@ describe('Test: security/roleTest', function () {
         .then(isAllowed => {
           should(isAllowed).be.false();
         });
+
     });
 
     it('should allow an action explicitely set to true', function () {
@@ -114,7 +115,69 @@ describe('Test: security/roleTest', function () {
       return should(role.isActionAllowed(requestObject, context)).be.fulfilledWith(true);
     });
 
-    it('should not allow any action on the internal index if no role has been explicitly set on it', function () {
+    it('should properly handle restrictions', function (callback) {
+      var
+        role = new Role(),
+        rq = {
+          index: 'index',
+          collection: 'collection',
+          controller: 'controller',
+          action: 'action'
+        },
+        restrictions = [
+          {index: 'index1'},
+          {index: 'index2', collections: ['collection1']},
+          {index: 'index3', collections: ['collection1', 'collection2']}
+        ];
+
+      role.controllers = {
+        controller: {
+          actions: {
+            action: true
+          }
+        }
+      };
+
+      role.isActionAllowed(rq, context)
+        .then(isAllowed => {
+          should(isAllowed).be.true();
+          return role.isActionAllowed(rq, context, restrictions);
+        })
+        .then(isAllowed => {
+          should(isAllowed).be.false();
+          rq.index = 'index1';
+          return role.isActionAllowed(rq, context, restrictions);
+        })
+        .then(isAllowed => {
+          should(isAllowed).be.true();
+          rq.index = 'index2';
+          return role.isActionAllowed(rq, context, restrictions);
+        })
+        .then(isAllowed => {
+          should(isAllowed).be.false();
+          rq.collection = 'collection1';
+          return role.isActionAllowed(rq, context, restrictions);
+        })
+        .then(isAllowed => {
+          should(isAllowed).be.true();
+          rq.collection = 'collection2';
+          return role.isActionAllowed(rq, context, restrictions);
+        })
+        .then(isAllowed => {
+          should(isAllowed).be.false();
+          rq.index = 'index3';
+          return role.isActionAllowed(rq, context, restrictions);
+        })
+        .then(isAllowed => {
+          should(isAllowed).be.true();
+          callback();
+        })
+        .catch(err => {
+          callback(err);
+        });
+    });
+
+    it('should not allow any action on the internal index if no role has been explicitly set on it', function (callback) {
       var
         role = new Role(),
         rq = {
@@ -135,10 +198,23 @@ describe('Test: security/roleTest', function () {
         }
       };
 
-      should(role.isActionAllowed(rq, context)).be.fulfilledWith(false);
-      should(role.isActionAllowed(rq, context, restrictions)).be.fulfilledWith(false);
-      restrictions.push({index: '%kuzzle'});
-      should(role.isActionAllowed(rq, context, restrictions)).be.fulfilledWith(true);
+      role.isActionAllowed(rq, context)
+        .then(isAllowed => {
+          should(isAllowed).be.false();
+          return role.isActionAllowed(rq, context, restrictions);
+        })
+        .then(isAllowed => {
+          should(isAllowed).be.false();
+          restrictions.push({index: '%kuzzle'});
+          return role.isActionAllowed(rq, context, restrictions);
+        })
+        .then(isAllowed => {
+          should(isAllowed).be.true();
+          callback();
+        })
+        .catch(err => {
+          callback(err);
+        });
     });
 
     it('should properly handle overridden permissions', function () {
@@ -159,16 +235,12 @@ describe('Test: security/roleTest', function () {
       return role.isActionAllowed(requestObject, context)
         .then(isAllowed => {
           should(isAllowed).be.false();
-
           role.controllers.controller.actions.action = true;
-
           return role.isActionAllowed(requestObject, context);
         })
         .then(isAllowed => {
           should(isAllowed).be.true();
-
-          role.indexes.index.collections.collection.controllers.controller.actions.action = false;
-
+          role.controllers.controller.actions.action = false;
           return role.isActionAllowed(requestObject, context);
         })
         .then(isAllowed => {
