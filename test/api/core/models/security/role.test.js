@@ -25,6 +25,9 @@ describe('Test: security/roleTest', () => {
           return true;
         }
       },
+      indexCache: {
+        indexes: ['cachedIndex']
+      },
       services: {
         list: {
           readEngine: {
@@ -283,6 +286,122 @@ describe('Test: security/roleTest', () => {
           should(isAllowed).be.false();
         });
     });
+
+    it('should allow/deny collection creation according to index creation right', done => {
+      var
+        roleAllow = new Role(),
+        roleDeny = new Role(),
+        rq = {
+          controller: 'admin',
+          action: 'createCollection',
+          index: 'index',
+          collection: 'collection'
+        };
+
+      roleAllow.controllers = {
+        admin: {
+          actions: {
+            createIndex: true,
+            createCollection: true
+          }
+        }
+      };
+
+      roleDeny.controllers = {
+        admin: {
+          actions: {
+            createInedx: false,
+            createCollection: true
+          }
+        }
+      };
+
+      roleAllow.isActionAllowed(rq, context, [], kuzzle)
+        .then(isAllowed => {
+          should(isAllowed).be.true();
+          return roleDeny.isActionAllowed(rq, context, [], kuzzle);
+        })
+        .then(isAllowed => {
+          should(isAllowed).be.false();
+          done();
+        })
+        .catch(err => {
+          done(err);
+        });
+    });
+
+    it('should allow/deny document creation according to index/collection creation right', done => {
+      var
+        roleAllow = new Role(),
+        roleDeny1 = new Role(),
+        roleDeny2 = new Role(),
+        rq = {
+          controller: 'write',
+          action: 'create',
+          index: 'index',
+          collection: 'collection'
+        };
+
+      roleAllow.controllers = {
+        admin: {
+          actions: {
+            createIndex: true,
+            createCollection: true
+          }
+        },
+        write: {
+          actions: {
+            create: true
+          }
+        }
+      };
+
+      roleDeny1.controllers = {
+        admin: {
+          actions: {
+            createIndex: false,
+            createCollection: true
+          }
+        },
+        write: {
+          actions: {
+            create: true
+          }
+        }
+      };
+
+      roleDeny2.controllers = {
+        admin: {
+          actions: {
+            createIndex: true,
+            createCollection: false
+          }
+        },
+        write: {
+          actions: {
+            create: true
+          }
+        }
+      };
+
+      roleAllow.isActionAllowed(rq, context, [], kuzzle)
+        .then(isAllowed => {
+          should(isAllowed).be.true();
+          return roleDeny1.isActionAllowed(rq, context, [], kuzzle);
+        })
+        .then(isAllowed => {
+          should(isAllowed).be.false();
+          return roleDeny2.isActionAllowed(rq, context, [], kuzzle);
+        })
+        .then(isAllowed => {
+          should(isAllowed).be.false();
+          done();
+        })
+        .catch(err => {
+          done(err);
+        });
+    });
+
 
     it('should reject if the rights configuration is not either a boolean or a closure', () => {
       var role = new Role();
