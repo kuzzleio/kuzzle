@@ -738,12 +738,14 @@ describe('Test kuzzle constructor', function () {
             internalIndex: 'foobar'
           },
           funnel: {
-            security: {
-              createOrReplaceRole: function(requestObject) {
-                requests.push(requestObject);
-              },
-              createOrReplaceProfile: function(requestObject) {
-                requests.push(requestObject);
+            controllers: {
+              security: {
+                createOrReplaceRole: function (requestObject) {
+                  requests.push(requestObject);
+                },
+                createOrReplaceProfile: function (requestObject) {
+                  requests.push(requestObject);
+                }
               }
             }
           }

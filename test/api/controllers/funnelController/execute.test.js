@@ -2,181 +2,186 @@ var
   should = require('should'),
   q = require('q'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
-  UnauthorizedError = require.main.require('lib/api/core/errors/unauthorizedError'),
+  ResponseObject = require.main.require('lib/api/core/models/responseObject'),
+  ServiceUnavailableError = require.main.require('lib/api/core/errors/serviceUnavailableError'),
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
-  Profile = require.main.require('lib/api/core/models/security/profile'),
-  Token = require.main.require('lib/api/core/models/security/token'),
-  Role = require.main.require('lib/api/core/models/security/role'),
-  User = require.main.require('lib/api/core/models/security/user');
+  rewire = require('rewire'),
+  FunnelController = rewire('../../../../lib/api/controllers/funnelController');
 
-describe('Test execute function in funnel controller', function () {
-
+describe('funnelController.execute', function () {
   var
+    kuzzle,
+    funnel,
+    processRequestCalled,
+    requestObject,
+    context,
+    requestReplayed;
+
+  before(function (callback) {
     context = {
       connection: {id: 'connectionid'},
       token: null
-    },
-    kuzzle;
+    };
 
-  beforeEach(function (callback) {
     kuzzle = new Kuzzle();
-    kuzzle.removeAllListeners();
     kuzzle.start(params, {dummy: true})
-      .then(function () {
-        kuzzle.repositories.role.roles.anonymous = new Role();
-        params.roleWithoutAdmin._id = 'anonymous';
-        return kuzzle.repositories.role.hydrate(kuzzle.repositories.role.roles.anonymous, params.roleWithoutAdmin);
-      })
-
-      .then(function () {
-        kuzzle.repositories.profile.profiles.anonymous = {_id: 'anonymous', roles: ['anonymous']};
-        return q(kuzzle.repositories.profile.profiles.anonymous);
-      })
-      .then(function (res) {
-        return kuzzle.repositories.token.anonymous();
-      })
-      .then(function (anonymousToken) {
-        context.token = anonymousToken;
-        callback();
-      })
-      .catch(error => callback(error));
-  });
-
-  it('should reject the promise if no controller is specified', function () {
-    var object = {
-      action: 'create'
-    };
-
-    var requestObject = new RequestObject(object);
-
-    return should(kuzzle.funnel.execute(requestObject, context)).be.rejected();
-  });
-
-  it('should reject the promise if no action is specified', function () {
-    var object = {
-      controller: 'write'
-    };
-
-    var requestObject = new RequestObject(object);
-
-    return should(kuzzle.funnel.execute(requestObject, context)).be.rejected();
-  });
-
-  it('should reject the promise if the controller doesn\'t exist', function () {
-    var object = {
-      controller: 'toto',
-      action: 'create'
-    };
-
-    var requestObject = new RequestObject(object);
-
-    return should(kuzzle.funnel.execute(requestObject, context)).be.rejected();
-  });
-
-  it('should reject the promise if the action doesn\'t exist', function () {
-    var object = {
-      controller: 'write',
-      action: 'toto'
-    };
-
-    var requestObject = new RequestObject(object);
-
-    return should(kuzzle.funnel.execute(requestObject, context)).be.rejected();
-  });
-
-  it('should reject the promise if the user is not allowed to execute the action', () => {
-    var
-      token = new Token(),
-      role = new Role(),
-      user = new User(),
-      localContext;
-
-    role.indexes = {
-      '*': {
-        collections: {
-          '*': {
-            controllers: {
-              '*': {
-                actions: {
-                  '*': false
-                }
-              }
-            }
-          }
-        }
-      }
-    };
-
-
-    user._id = 'testUser';
-    user.profile = new Profile();
-    user.profile.roles = [role];
-
-    context.token.user.profile.roles[0] = role;
-
-    token._id = 'fake-token';
-    token.user = user;
-
-    localContext = {
-      connection: {id: 'connectionid'},
-      token: token
-    };
-
-    return should(
-      kuzzle.funnel.execute(
-        new RequestObject({
-          controller: 'read',
-          index: '@test',
-          action: 'get'
-        }),
-        localContext)
-    ).be.rejectedWith(UnauthorizedError);
-  });
-
-  it('should resolve the promise if everything is ok', function (done) {
-    var object = {
-      requestId: 'requestId',
-      controller: 'read',
-      action: 'listIndexes',
-      collection: 'user'
-    };
-
-    var requestObject = new RequestObject(object);
-
-    kuzzle.funnel.execute(requestObject, context)
       .then(() => {
-        done();
-      })
-      .catch(err => done(err));
+        FunnelController.__set__('processRequest', function (requestObject) {
+          processRequestCalled = true;
+
+          if (requestObject.errorMe) {
+            return q.reject(new Error('errored on purpose'));
+          }
+
+          return q(new ResponseObject(requestObject));
+        });
+
+        FunnelController.__set__('playCachedRequests', function () {
+          requestReplayed = true;
+        });
+
+        callback();
+      });
   });
 
-  it('should resolve the promise in cas of a plugin controller action', function() {
-    var
-      pluginController = {
-        bar: function(requestObject){
-          return q();
-        }
-      },
-      FooController = function(context) {
-        return pluginController;
-      },
-      object = {
-        requestId: 'requestId',
-        controller: 'myplugin/foo',
-        action: 'bar',
-        name: 'John Doe'
-      },
-      requestObject;
+  beforeEach(function () {
+    processRequestCalled = false;
+    requestReplayed = false;
 
-    // Reinitialize the Funnel controller with the dummy plugin controller:
-    kuzzle.pluginsManager.controllers = {
-      'myplugin/foo': FooController
-    };
-    kuzzle.funnel.init();
+    requestObject = new RequestObject({
+      controller: 'foo',
+      action: 'bar'
+    });
 
-    requestObject = new RequestObject(object);
+    funnel = new FunnelController(kuzzle);
+    funnel.init();
+  });
 
-    return should(kuzzle.funnel.execute(requestObject, context)).not.be.rejected();
+  describe('#normal state', function () {
+    it('should execute the request immediately if not overloaded', function (done) {
+      funnel.execute(requestObject, context, (err, res) => {
+        should(err).be.null();
+        should(res).be.instanceOf(ResponseObject);
+        should(processRequestCalled).be.true();
+        done();
+      });
+    });
+
+    it('should forward any error occuring during the request execution', function (done) {
+      requestObject.errorMe = true;
+
+      funnel.execute(requestObject, context, (err, res) => {
+        should(err).be.instanceOf(Error);
+        should(res).be.undefined();
+        should(processRequestCalled).be.true();
+        should(funnel.overloaded).be.false();
+        should(requestReplayed).be.false();
+        done();
+      });
+    });
+  });
+
+  describe('#server:overload hook', function () {
+    it('should fire the hook the first time Kuzzle is in overloaded state', function (done) {
+      this.timeout(500);
+
+      kuzzle.once('server:overload', function () {
+        done();
+      });
+
+      funnel.overloaded = true;
+      funnel.execute(requestObject, context, () => {
+      });
+    });
+
+    it('should fire the hook if the last one was fired more than 500ms ago', function (done) {
+      this.timeout(500);
+
+      kuzzle.once('server:overload', function () {
+        done();
+      });
+
+      funnel.overloaded = true;
+      funnel.lastWarningTime = Date.now() - 501;
+      funnel.execute(requestObject, context, () => {});
+    });
+
+    it('should not fire the hook if one was fired less than 500ms ago', function (done) {
+      var listener = function () {
+        done(new Error('server:overload hook fired unexpectedly'));
+      };
+
+      kuzzle.once('server:overload', listener);
+
+      funnel.overloaded = true;
+      funnel.lastWarningTime = Date.now() - 200;
+      funnel.execute(requestObject, context, () => {});
+      setTimeout(() => {
+        kuzzle.off('server:overload', listener);
+        done();
+      }, 200);
+    });
+  });
+
+  describe('#overloaded state', function () {
+    it('should enter overloaded state if the maxConcurrentRequests property is reached', function (done) {
+      var callback = () => {
+        done(new Error('Request executed. It should have been queued instead'));
+      };
+
+      funnel.concurrentRequests = kuzzle.config.request.maxConcurrentRequests;
+
+      funnel.execute(requestObject, context, callback);
+
+      setTimeout(() => {
+        should(funnel.overloaded).be.true();
+        should(requestReplayed).be.true();
+        should(processRequestCalled).be.false();
+        should(funnel.cachedRequests).be.eql(1);
+        should(funnel.requestsCache[0]).match({requestObject, context, callback});
+        done();
+      }, 100);
+    });
+
+    it('should not relaunch the request replayer background task if already in overloaded state', function (done) {
+      var callback = () => {
+        done(new Error('Request executed. It should have been queued instead'));
+      };
+
+      funnel.concurrentRequests = kuzzle.config.request.maxConcurrentRequests;
+      funnel.overloaded = true;
+
+      funnel.execute(requestObject, context, callback);
+
+      setTimeout(() => {
+        should(funnel.overloaded).be.true();
+        should(requestReplayed).be.false();
+        should(processRequestCalled).be.false();
+        should(funnel.cachedRequests).be.eql(1);
+        should(funnel.requestsCache[0]).match({requestObject, context, callback});
+        done();
+      }, 100);
+    });
+
+    it('should discard the request if the maxRetainedRequests property is reached', function (done) {
+      this.timeout(500);
+
+      funnel.concurrentRequests = kuzzle.config.request.maxConcurrentRequests;
+      funnel.cachedRequests = kuzzle.config.request.maxRetainedRequests;
+      funnel.overloaded = true;
+
+      funnel.execute(requestObject, context, (err, res) => {
+        should(funnel.overloaded).be.true();
+        should(requestReplayed).be.false();
+        should(processRequestCalled).be.false();
+        should(funnel.cachedRequests).be.eql(kuzzle.config.request.maxRetainedRequests);
+        should(funnel.requestsCache).be.empty();
+        should(res).be.undefined();
+        should(err).be.instanceOf(ServiceUnavailableError);
+        done();
+      });
+    });
   });
 });
+

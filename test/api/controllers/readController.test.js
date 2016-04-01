@@ -57,7 +57,7 @@ describe('Test: read controller', function () {
 
       this.timeout(50);
       kuzzle.once('data:search', () => done());
-      kuzzle.funnel.read.search(requestObject);
+      kuzzle.funnel.controllers.read.search(requestObject);
     });
   });
 
@@ -67,7 +67,7 @@ describe('Test: read controller', function () {
 
       this.timeout(50);
       kuzzle.once('data:get', () => done());
-      kuzzle.funnel.read.get(requestObject);
+      kuzzle.funnel.controllers.read.get(requestObject);
     });
   });
 
@@ -77,7 +77,7 @@ describe('Test: read controller', function () {
 
       this.timeout(50);
       kuzzle.once('data:count', () => done());
-      kuzzle.funnel.read.count(requestObject);
+      kuzzle.funnel.controllers.read.count(requestObject);
     });
   });
 
@@ -124,7 +124,7 @@ describe('Test: read controller', function () {
     it('should resolve to a full collections list', function (done) {
       var
         requestObject = new RequestObject({}, {}, ''),
-        r = kuzzle.funnel.read.listCollections(requestObject, context);
+        r = kuzzle.funnel.controllers.read.listCollections(requestObject, context);
 
       should(r).be.a.Promise();
 
@@ -148,19 +148,19 @@ describe('Test: read controller', function () {
 
       this.timeout(50);
       kuzzle.once('data:listCollections', () => done());
-      kuzzle.funnel.read.listCollections(requestObject);
+      kuzzle.funnel.controllers.read.listCollections(requestObject);
     });
 
     it('should reject the request if an invalid "type" argument is provided', function () {
       var requestObject = new RequestObject({body: {type: 'foo'}}, {}, '');
 
-      return should(kuzzle.funnel.read.listCollections(requestObject, context)).be.rejectedWith(BadRequestError);
+      return should(kuzzle.funnel.controllers.read.listCollections(requestObject, context)).be.rejectedWith(BadRequestError);
     });
 
    it('should only return stored collections with type = stored', function () {
       var requestObject = new RequestObject({body: {type: 'stored'}}, {}, '');
 
-      return kuzzle.funnel.read.listCollections(requestObject, context).then(response => {
+      return kuzzle.funnel.controllers.read.listCollections(requestObject, context).then(response => {
         should(response.data.body.type).be.exactly('stored');
         should(realtime).be.false();
         should(stored).be.true();
@@ -170,7 +170,7 @@ describe('Test: read controller', function () {
     it('should only return realtime collections with type = realtime', function () {
       var requestObject = new RequestObject({body: {type: 'realtime'}}, {}, '');
 
-      return kuzzle.funnel.read.listCollections(requestObject, context).then(response => {
+      return kuzzle.funnel.controllers.read.listCollections(requestObject, context).then(response => {
         should(response.data.body.type).be.exactly('realtime');
         should(realtime).be.true();
         should(stored).be.false();
@@ -184,13 +184,13 @@ describe('Test: read controller', function () {
 
       this.timeout(50);
       kuzzle.once('data:now', () => done());
-      kuzzle.funnel.read.now(requestObject);
+      kuzzle.funnel.controllers.read.now(requestObject);
     });
 
     it('should resolve to a number', function () {
       var
         requestObject = new RequestObject({}),
-        promisedResult = kuzzle.funnel.read.now(requestObject);
+        promisedResult = kuzzle.funnel.controllers.read.now(requestObject);
 
       should(promisedResult).be.a.Promise();
 
@@ -207,14 +207,14 @@ describe('Test: read controller', function () {
 
       this.timeout(50);
       kuzzle.once('data:listIndexes', () => done());
-      kuzzle.funnel.read.listIndexes(requestObject);
+      kuzzle.funnel.controllers.read.listIndexes(requestObject);
     });
   });
 
   describe('#serverInfo', function () {
     it('should return a properly formatted server information object', function () {
       var requestObject = new RequestObject({});
-      return kuzzle.funnel.read.serverInfo(requestObject)
+      return kuzzle.funnel.controllers.read.serverInfo(requestObject)
         .then(res => {
           res = res.toJson();
           should(res.status).be.exactly(200);
