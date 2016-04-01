@@ -102,24 +102,24 @@ describe('Test: security/roleTest', () => {
         }
       };
 
-      return role.isActionAllowed(requestObject, context)
+      return role.isActionAllowed(requestObject, context, kuzzle)
         .then(isAllowed => {
           should(isAllowed).be.false();
 
           delete role.controllers.controller.actions;
-          return role.isActionAllowed(requestObject, context);
+          return role.isActionAllowed(requestObject, context, kuzzle);
         })
         .then(isAllowed => {
           should(isAllowed).be.false();
 
           delete role.controllers.controller;
-          return role.isActionAllowed(requestObject, context);
+          return role.isActionAllowed(requestObject, context, kuzzle);
         })
         .then(isAllowed => {
           should(isAllowed).be.false();
 
           delete role.controllers;
-          return role.isActionAllowed(requestObject, context);
+          return role.isActionAllowed(requestObject, context, kuzzle);
         })
         .then(isAllowed => {
           should(isAllowed).be.false();
@@ -138,7 +138,7 @@ describe('Test: security/roleTest', () => {
         }
       };
 
-      return should(role.isActionAllowed(requestObject, context)).be.fulfilledWith(true);
+      return should(role.isActionAllowed(requestObject, context, kuzzle)).be.fulfilledWith(true);
     });
 
     it('should allow a wildcard action', () => {
@@ -151,7 +151,7 @@ describe('Test: security/roleTest', () => {
         }
       };
 
-      return should(role.isActionAllowed(requestObject, context)).be.fulfilledWith(true);
+      return should(role.isActionAllowed(requestObject, context, kuzzle)).be.fulfilledWith(true);
     });
 
     it('should properly handle restrictions', done => {
@@ -177,35 +177,36 @@ describe('Test: security/roleTest', () => {
         }
       };
 
-      role.isActionAllowed(rq, context)
+      role.isActionAllowed(rq, context, kuzzle)
         .then(isAllowed => {
           should(isAllowed).be.true();
-          return role.isActionAllowed(rq, context, restrictions);
+          role.restrictedTo = restrictions;
+          return role.isActionAllowed(rq, context, kuzzle);
         })
         .then(isAllowed => {
           should(isAllowed).be.false();
           rq.index = 'index1';
-          return role.isActionAllowed(rq, context, restrictions);
+          return role.isActionAllowed(rq, context, kuzzle);
         })
         .then(isAllowed => {
           should(isAllowed).be.true();
           rq.index = 'index2';
-          return role.isActionAllowed(rq, context, restrictions);
+          return role.isActionAllowed(rq, context, kuzzle);
         })
         .then(isAllowed => {
           should(isAllowed).be.false();
           rq.collection = 'collection1';
-          return role.isActionAllowed(rq, context, restrictions);
+          return role.isActionAllowed(rq, context, kuzzle);
         })
         .then(isAllowed => {
           should(isAllowed).be.true();
           rq.collection = 'collection2';
-          return role.isActionAllowed(rq, context, restrictions);
+          return role.isActionAllowed(rq, context, kuzzle);
         })
         .then(isAllowed => {
           should(isAllowed).be.false();
           rq.index = 'index3';
-          return role.isActionAllowed(rq, context, restrictions);
+          return role.isActionAllowed(rq, context, kuzzle);
         })
         .then(isAllowed => {
           should(isAllowed).be.true();
@@ -237,15 +238,16 @@ describe('Test: security/roleTest', () => {
         }
       };
 
-      role.isActionAllowed(rq, context)
+      role.isActionAllowed(rq, context, kuzzle)
         .then(isAllowed => {
           should(isAllowed).be.false();
-          return role.isActionAllowed(rq, context, restrictions);
+          role.restrictedTo = restrictions;
+          return role.isActionAllowed(rq, context, kuzzle);
         })
         .then(isAllowed => {
           should(isAllowed).be.false();
           restrictions.push({index: '%kuzzle'});
-          return role.isActionAllowed(rq, context, restrictions);
+          return role.isActionAllowed(rq, context, kuzzle);
         })
         .then(isAllowed => {
           should(isAllowed).be.true();
@@ -271,11 +273,11 @@ describe('Test: security/roleTest', () => {
           }
         };
 
-      return role.isActionAllowed(requestObject, context)
+      return role.isActionAllowed(requestObject, context, kuzzle)
         .then(isAllowed => {
           should(isAllowed).be.false();
           role.controllers.controller.actions.action = true;
-          return role.isActionAllowed(requestObject, context);
+          return role.isActionAllowed(requestObject, context, kuzzle);
         })
         .then(isAllowed => {
           should(isAllowed).be.true();
@@ -316,10 +318,10 @@ describe('Test: security/roleTest', () => {
         }
       };
 
-      roleAllow.isActionAllowed(rq, context, [], kuzzle)
+      roleAllow.isActionAllowed(rq, context, kuzzle)
         .then(isAllowed => {
           should(isAllowed).be.true();
-          return roleDeny.isActionAllowed(rq, context, [], kuzzle);
+          return roleDeny.isActionAllowed(rq, context, kuzzle);
         })
         .then(isAllowed => {
           should(isAllowed).be.false();
@@ -384,14 +386,14 @@ describe('Test: security/roleTest', () => {
         }
       };
 
-      roleAllow.isActionAllowed(rq, context, [], kuzzle)
+      roleAllow.isActionAllowed(rq, context, kuzzle)
         .then(isAllowed => {
           should(isAllowed).be.true();
-          return roleDeny1.isActionAllowed(rq, context, [], kuzzle);
+          return roleDeny1.isActionAllowed(rq, context, kuzzle);
         })
         .then(isAllowed => {
           should(isAllowed).be.false();
-          return roleDeny2.isActionAllowed(rq, context, [], kuzzle);
+          return roleDeny2.isActionAllowed(rq, context, kuzzle);
         })
         .then(isAllowed => {
           should(isAllowed).be.false();
@@ -413,7 +415,7 @@ describe('Test: security/roleTest', () => {
         }
       };
 
-      return should(role.isActionAllowed(requestObject, context)).be.rejected();
+      return should(role.isActionAllowed(requestObject, context, kuzzle)).be.rejected();
     });
 
     it('should reject if the closure function return a non boolean value', () => {
@@ -427,7 +429,7 @@ describe('Test: security/roleTest', () => {
         }
       };
 
-      return should(role.isActionAllowed(requestObject, context, [], kuzzle)).be.rejected();
+      return should(role.isActionAllowed(requestObject, context, kuzzle)).be.rejected();
     });
 
     it('should reject if an invalid function is given', () => {
@@ -444,7 +446,7 @@ describe('Test: security/roleTest', () => {
         }
       };
 
-      return should(role.isActionAllowed(requestObject, context, [], kuzzle)).be.rejectedWith(ParseError);
+      return should(role.isActionAllowed(requestObject, context, kuzzle)).be.rejectedWith(ParseError);
     });
 
     it('should reject if an invalid argument is given', () => {
@@ -465,7 +467,7 @@ describe('Test: security/roleTest', () => {
         }
       };
 
-      return should(role.isActionAllowed(requestObject, context, [], kuzzle)).be.rejectedWith(ParseError);
+      return should(role.isActionAllowed(requestObject, context, kuzzle)).be.rejectedWith(ParseError);
     });
 
     it('should handle a custom right function', done => {
@@ -488,11 +490,11 @@ describe('Test: security/roleTest', () => {
         }
       };
 
-      return role.isActionAllowed(requestObject, context)
+      return role.isActionAllowed(requestObject, context, kuzzle)
         .then(isAllowed => {
           should(isAllowed).be.true();
 
-          return role.isActionAllowed(noMatchRequestObject, context);
+          return role.isActionAllowed(noMatchRequestObject, context, kuzzle);
         })
         .then(isAllowed => {
           should(isAllowed).be.false();
@@ -502,7 +504,7 @@ describe('Test: security/roleTest', () => {
             test: 'return $requestObject.action !== \'action\'; '
           };
 
-          return role.isActionAllowed(requestObject, context);
+          return role.isActionAllowed(requestObject, context, kuzzle);
         })
         .then(isAllowed => {
           should(isAllowed).be.false();
@@ -568,11 +570,11 @@ describe('Test: security/roleTest', () => {
       });
 
 
-      return roleAllow.isActionAllowed(requestObject, context, {}, kuzzle)
+      return roleAllow.isActionAllowed(requestObject, context, kuzzle)
         .then(isAllowed => {
           should(isAllowed).be.true();
 
-          return roleDeny.isActionAllowed(requestObject, context, [], kuzzle);
+          return roleDeny.isActionAllowed(requestObject, context, kuzzle);
         })
         .then(isAllowed => should(isAllowed).be.false());
     });
@@ -630,11 +632,11 @@ describe('Test: security/roleTest', () => {
         }
       };
 
-      return roleAllow.isActionAllowed(requestObject, context, {}, kuzzle)
+      return roleAllow.isActionAllowed(requestObject, context, kuzzle)
         .then(isAllowed => {
           should(isAllowed).be.true();
 
-          return roleDeny.isActionAllowed(requestObject, context, [], kuzzle);
+          return roleDeny.isActionAllowed(requestObject, context, kuzzle);
         })
         .then(isAllowed => should(isAllowed).be.false());
     });
@@ -708,11 +710,11 @@ describe('Test: security/roleTest', () => {
         }
       };
 
-      return roleAllow.isActionAllowed(requestObject, context, {}, kuzzle)
+      return roleAllow.isActionAllowed(requestObject, context, kuzzle)
         .then(isAllowed => {
           should(isAllowed).be.true();
 
-          return roleDeny.isActionAllowed(requestObject, context, [], kuzzle);
+          return roleDeny.isActionAllowed(requestObject, context, kuzzle);
         })
         .then(isAllowed => should(isAllowed).be.false());
     });
@@ -750,7 +752,7 @@ describe('Test: security/roleTest', () => {
         }
       };
 
-      return role.isActionAllowed(requestObject, context, {}, kuzzle)
+      return role.isActionAllowed(requestObject, context, kuzzle)
         .then(isAllowed => should(isAllowed).be.false());
     });
 
@@ -787,8 +789,7 @@ describe('Test: security/roleTest', () => {
         }
       };
 
-      return role.isActionAllowed(requestObject, context, {}, kuzzle)
-        .then(isActionAllowed => should(isActionAllowed).be.false());
+      return should(role.isActionAllowed(requestObject, context, kuzzle)).be.fulfilledWith(false);
     });
 
     it('should not allow if collection is not specified', () => {
@@ -823,8 +824,7 @@ describe('Test: security/roleTest', () => {
         }
       };
 
-      return role.isActionAllowed(requestObject, context, {}, kuzzle)
-        .then(isAllowed => should(isAllowed).be.false());
+      return should(role.isActionAllowed(requestObject, context, kuzzle)).be.fulfilledWith(false);
     });
   });
 
