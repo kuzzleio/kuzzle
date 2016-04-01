@@ -9,13 +9,49 @@ var
   Role = rewire('../../../../../lib/api/core/models/security/role'),
   internalIndex = require('rc')('kuzzle').internalIndex;
 
-describe('Test: security/roleTest', function () {
+describe('Test: security/roleTest', () => {
   var
     context = {
       connection: {type: 'test'},
       token : {
         user: {
           _id: -1
+        }
+      }
+    },
+    kuzzle = {
+      pluginsManager: {
+        trigger: () => {
+          return true;
+        }
+      },
+      services: {
+        list: {
+          readEngine: {
+            search: requestObject => {
+              if (requestObject.data.body.filter.ids.values[0] !== 'foobar') {
+                return q(new ResponseObject(requestObject, {hits: [documentAda]}));
+              } else {
+                return q(new ResponseObject(requestObject, {hits: [documentFalseAda]}));
+              }
+            },
+            get: requestObject => {
+              if (requestObject.data.id === 'reject') {
+                return q.reject(new InternalError('Our Error'));
+              } else if (requestObject.data.id !== 'foobar') {
+                return q(new ResponseObject(requestObject, documentAda));
+              } else {
+                return q(new ResponseObject(requestObject, documentFalseAda));
+              }
+            },
+            mget: requestObject => {
+              if (requestObject.data.body.ids[0] !== 'foobar') {
+                return q(new ResponseObject(requestObject, {hits: [documentAda]}));
+              } else {
+                return q(new ResponseObject(requestObject, {hits: [documentFalseAda]}));
+              }
+            }
+          }
         }
       }
     },
@@ -88,7 +124,7 @@ describe('Test: security/roleTest', function () {
 
     });
 
-    it('should allow an action explicitely set to true', function () {
+    it('should allow an action explicitely set to true', () => {
       var role = new Role();
 
       role.controllers = {
@@ -102,7 +138,7 @@ describe('Test: security/roleTest', function () {
       return should(role.isActionAllowed(requestObject, context)).be.fulfilledWith(true);
     });
 
-    it('should allow a wildcard action', function () {
+    it('should allow a wildcard action', () => {
       var role = new Role();
       role.controllers = {
         '*': {
@@ -115,7 +151,7 @@ describe('Test: security/roleTest', function () {
       return should(role.isActionAllowed(requestObject, context)).be.fulfilledWith(true);
     });
 
-    it('should properly handle restrictions', function (callback) {
+    it('should properly handle restrictions', done => {
       var
         role = new Role(),
         rq = {
@@ -170,14 +206,14 @@ describe('Test: security/roleTest', function () {
         })
         .then(isAllowed => {
           should(isAllowed).be.true();
-          callback();
+          done();
         })
         .catch(err => {
-          callback(err);
+          done(err);
         });
     });
 
-    it('should not allow any action on the internal index if no role has been explicitly set on it', function (callback) {
+    it('should not allow any action on the internal index if no role has been explicitly set on it', done => {
       var
         role = new Role(),
         rq = {
@@ -210,14 +246,14 @@ describe('Test: security/roleTest', function () {
         })
         .then(isAllowed => {
           should(isAllowed).be.true();
-          callback();
+          done();
         })
         .catch(err => {
-          callback(err);
+          done(err);
         });
     });
 
-    it('should properly handle overridden permissions', function () {
+    it('should properly handle overridden permissions', () => {
       var role = new Role();
       role.controllers = {
           '*': {
@@ -248,7 +284,7 @@ describe('Test: security/roleTest', function () {
         });
     });
 
-    it('should reject if the rights configuration is not either a boolean or a closure', function () {
+    it('should reject if the rights configuration is not either a boolean or a closure', () => {
       var role = new Role();
       role.controllers = {
         '*': {
@@ -261,28 +297,22 @@ describe('Test: security/roleTest', function () {
       return should(role.isActionAllowed(requestObject, context)).be.rejected();
     });
 
-    it('should reject if an invalid function is given', function () {
-      var role = new Role(),
-        kuzzle = {
-          pluginsManager: {
-            trigger: () => {
-              return true;
-            }
-          },
-          services: {
-            list: {
-              readEngine: {
-                search: function (requestObject) {
-                  if (requestObject.data.body.filter.ids.values[0] !== 'foobar') {
-                    return q({hits: [documentAda]});
-                  }
+    it('should reject if the closure function return a non boolean value', () => {
+      var role = new Role();
 
-                  return q({hits: [documentFalseAda]});
-                }
-              }
-            }
+      role.controllers = {
+        '*': {
+          actions: {
+            '*': {test: 'return "retret";'}
           }
-        };
+        }
+      };
+
+      return should(role.isActionAllowed(requestObject, context, [], kuzzle)).be.rejected();
+    });
+
+    it('should reject if an invalid function is given', () => {
+      var role = new Role();
 
       role.controllers = {
         '*': {
@@ -295,29 +325,11 @@ describe('Test: security/roleTest', function () {
         }
       };
 
-      return should(role.isActionAllowed(requestObject, context, {}, kuzzle)).be.rejectedWith(ParseError);
+      return should(role.isActionAllowed(requestObject, context, [], kuzzle)).be.rejectedWith(ParseError);
     });
 
-    it('should reject if an invalid argument is given', function () {
-      var role = new Role(),
-        kuzzle = {
-          pluginsManager: {
-            trigger: () => true
-          },
-          services: {
-            list: {
-              readEngine: {
-                search: rq => {
-                  if (rq.data.body.filter.ids.values[0] !== 'foobar') {
-                    return q({hits: [documentAda]});
-                  }
-
-                  return q({hits: [documentFalseAda]});
-                }
-              }
-            }
-          }
-        };
+    it('should reject if an invalid argument is given', () => {
+      var role = new Role();
 
       role.controllers = {
         '*': {
@@ -334,10 +346,10 @@ describe('Test: security/roleTest', function () {
         }
       };
 
-      return should(() => role.isActionAllowed(requestObject, context, {}, kuzzle)).throw(ParseError);
+      return should(role.isActionAllowed(requestObject, context, [], kuzzle)).be.rejectedWith(ParseError);
     });
 
-    it('should handle a custom right function', function () {
+    it('should handle a custom right function', done => {
       var
         role = new Role(),
         noMatchRequestObject = {
@@ -375,28 +387,17 @@ describe('Test: security/roleTest', function () {
         })
         .then(isAllowed => {
           should(isAllowed).be.false();
+          done();
+        })
+        .catch(err => {
+          done(err);
         });
     });
 
-    it('should allow/deny rights using custom function with args using get', () => {
+    it('should allow/deny rights using custom function with args using get', done => {
       var
         roleAllow = new Role(),
-        roleDeny = new Role(),
-        kuzzle = {
-          services: {
-            list: {
-              readEngine: {
-                get: function (requestObject) {
-                  if (requestObject.data.id !== 'foobar') {
-                    return q(documentAda);
-                  }
-
-                  return q(documentFalseAda);
-                }
-              }
-            }
-          }
-        };
+        roleDeny = new Role();
 
       roleAllow.controllers = {
         '*': {
@@ -452,7 +453,7 @@ describe('Test: security/roleTest', function () {
         .then(isAllowed => {
           should(isAllowed).be.true();
 
-          return roleDeny.isActionAllowed(requestObject, context, {}, kuzzle);
+          return roleDeny.isActionAllowed(requestObject, context, [], kuzzle);
         })
         .then(isAllowed => should(isAllowed).be.false());
     });
@@ -461,21 +462,6 @@ describe('Test: security/roleTest', function () {
       var
         roleAllow = new Role(),
         roleDeny = new Role(),
-        kuzzle = {
-          services: {
-            list: {
-              readEngine: {
-                mget: function (requestObject) {
-                  if (requestObject.data.body.ids[0] !== 'foobar') {
-                    return q({hits: [documentAda]});
-                  }
-
-                  return q({hits: [documentFalseAda]});
-                }
-              }
-            }
-          }
-        },
         requestObject = new RequestObject({
           controller: 'read',
           action: 'get',
@@ -529,7 +515,7 @@ describe('Test: security/roleTest', function () {
         .then(isAllowed => {
           should(isAllowed).be.true();
 
-          return roleDeny.isActionAllowed(requestObject, context, {}, kuzzle);
+          return roleDeny.isActionAllowed(requestObject, context, [], kuzzle);
         })
         .then(isAllowed => should(isAllowed).be.false());
     });
@@ -538,21 +524,6 @@ describe('Test: security/roleTest', function () {
       var
         roleAllow = new Role(),
         roleDeny = new Role(),
-        kuzzle = {
-          services: {
-            list: {
-              readEngine: {
-                search: function (requestObject) {
-                  if (requestObject.data.body.filter.ids.values[0] !== 'foobar') {
-                    return q({hits: [documentAda]});
-                  }
-
-                  return q({hits: [documentFalseAda]});
-                }
-              }
-            }
-          }
-        },
         requestObject = new RequestObject({
           controller: 'read',
           action: 'get',
@@ -622,7 +593,7 @@ describe('Test: security/roleTest', function () {
         .then(isAllowed => {
           should(isAllowed).be.true();
 
-          return roleDeny.isActionAllowed(requestObject, context, {}, kuzzle);
+          return roleDeny.isActionAllowed(requestObject, context, [], kuzzle);
         })
         .then(isAllowed => should(isAllowed).be.false());
     });
@@ -630,26 +601,6 @@ describe('Test: security/roleTest', function () {
     it('should not allow bad method call', () => {
       var
         role = new Role(),
-        kuzzle = {
-          pluginsManager: {
-            trigger: () => {
-              return true;
-            }
-          },
-          services: {
-            list: {
-              readEngine: {
-                get: function (requestObject) {
-                  if (requestObject.data.id !== 'foobar') {
-                    return q(documentAda);
-                  }
-
-                  return q(documentFalseAda);
-                }
-              }
-            }
-          }
-        },
         requestObject = new RequestObject({
           controller: 'read',
           action: 'get',
@@ -687,18 +638,6 @@ describe('Test: security/roleTest', function () {
     it('should not allow if read method throws an error', () => {
       var
         role = new Role(),
-        kuzzle = {
-          pluginsManager: {
-            trigger: () => true
-          },
-          services: {
-            list: {
-              readEngine: {
-                get: () => q.reject(new InternalError('Our Error'))
-              }
-            }
-          }
-        },
         requestObject = new RequestObject({
           controller: 'read',
           action: 'get',
@@ -736,26 +675,6 @@ describe('Test: security/roleTest', function () {
     it('should not allow if collection is not specified', () => {
       var
         role = new Role(),
-        kuzzle = {
-          pluginsManager: {
-            trigger: () => {
-              return true;
-            }
-          },
-          services: {
-            list: {
-              readEngine: {
-                get: (requestObject) => {
-                  if (requestObject.data.id !== 'foobar') {
-                    return q(documentAda);
-                  }
-
-                  return q(documentFalseAda);
-                }
-              }
-            }
-          }
-        },
         requestObject = new RequestObject({
           controller: 'read',
           action: 'get',
@@ -885,8 +804,7 @@ describe('Test: security/roleTest', function () {
         }
       };
 
-      return role.validateDefinition(context)
-        .then(result => should(result).be.a.Boolean());
+      return should(role.validateDefinition(context)).be.fulfilledWith(true);
     });
 
     it('should reject the promise if the closure does not contain a "test" attribute', () => {
