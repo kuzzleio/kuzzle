@@ -47,9 +47,6 @@ $ kuzzle createFirstAdmin
 ```
 
 will guide you through the creation process of the first admin user and fix the rights to other user types if needed.
-<<<<<<< HEAD
-
-**Note:** This command is interactive and let you choose to reset the roles rights or not.
 
 # Reset Kuzzle
 
@@ -59,7 +56,6 @@ $ kuzzle likeAvirgin
 
 will allow you to reset Kuzzle and restore it as if it is freshly installed.
 
-If you need to be connected as an administrative user, an interrective prompt will ask you for a username and a password
 
 ## Reset and add fixtures or mappings
 

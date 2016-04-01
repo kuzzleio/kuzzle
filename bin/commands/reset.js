@@ -38,7 +38,7 @@ module.exports = function () {
   console.log(warn('[ℹ] You are about to reset Kuzzle and make it like a virgin.'));
   console.log(warn('[ℹ] This operation cannot be undone.\n'));
 
-  if (readlineSync.question('[❓] Are you sure ? If so, please type "I am sure" (if not just press [Enter]): ') === 'I am sure') {
+  if (readlineSync.question('[❓] Are you sure? If so, please type "I am sure" (if not just press [Enter]): ') === 'I am sure') {
 
     console.log(notice('[ℹ] Processing...\n'));
 
