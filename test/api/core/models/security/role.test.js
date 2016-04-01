@@ -248,7 +248,7 @@ describe('Test: security/roleTest', function () {
         });
     });
 
-    it('should throw an error if the rights configuration is not either a boolean or a closure', function () {
+    it('should reject if the rights configuration is not either a boolean or a closure', function () {
       var role = new Role();
       role.controllers = {
         '*': {
@@ -258,10 +258,10 @@ describe('Test: security/roleTest', function () {
         }
       };
 
-      should(role.isActionAllowed(requestObject, context)).be.rejected();
+      return should(role.isActionAllowed(requestObject, context)).be.rejected();
     });
 
-    it('should throw an error if an invalid function is given', function () {
+    it('should reject if an invalid function is given', function () {
       var role = new Role(),
         kuzzle = {
           pluginsManager: {
@@ -298,7 +298,7 @@ describe('Test: security/roleTest', function () {
       return should(role.isActionAllowed(requestObject, context, {}, kuzzle)).be.rejectedWith(ParseError);
     });
 
-    it('should throw an error if an invalid argument is given', () => {
+    it('should reject if an invalid argument is given', function () {
       var role = new Role(),
         kuzzle = {
           pluginsManager: {
@@ -323,7 +323,7 @@ describe('Test: security/roleTest', function () {
         '*': {
           actions: {
             '*': {
-              test: '(some invalid code',
+              test: 'return args.document && args.document.id === $requestObject.data._id;',
               args: {
                 document: {
                   get: '$requestObject.data..id'
