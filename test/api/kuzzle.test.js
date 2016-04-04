@@ -208,7 +208,7 @@ describe('Test kuzzle constructor', function () {
       cleanAndPrepareOnListenCB = function (response) {
         cleanAndPrepareDone = true;
 
-        if (response.result.error) {
+        if (response.error) {
           cleanAndPrepareOK = false;
         } else {
           cleanAndPrepareOK = true;
@@ -228,6 +228,7 @@ describe('Test kuzzle constructor', function () {
       kuzzle.remoteActions.__set__('remoteActions', remoteActions);
 
       kuzzle.remoteActions(kuzzle, 'cleanAndPrepare', params);
+
       setTimeout(() => {
         should(cleanAndPrepareDone).be.true();
         should(cleanAndPrepareOK).be.true();
