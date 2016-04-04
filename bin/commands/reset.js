@@ -13,7 +13,9 @@ var
   kuz = clc.greenBright.bold;
 
 module.exports = function () {
-  var tmp;
+  var 
+    tmp, 
+    userIsSure = false;
 
   // check, if files are provided, if they exists
   if (params.fixtures) {
@@ -34,12 +36,17 @@ module.exports = function () {
     }
   }
 
-
   console.log(warn('[ℹ] You are about to reset Kuzzle and make it like a virgin.'));
   console.log(warn('[ℹ] This operation cannot be undone.\n'));
+  
+  if (!params.noint) {
+    userIsSure = readlineSync.question('[❓] Are you sure? If so, please type "I am sure" (if not just press [Enter]): ') === 'I am sure';
+  } else {
+    // not intteractive mode
+    userIsSure = true;
+  }
 
-  if (readlineSync.question('[❓] Are you sure? If so, please type "I am sure" (if not just press [Enter]): ') === 'I am sure') {
-
+  if (userIsSure) {
     console.log(notice('[ℹ] Processing...\n'));
 
     var kuzzle = new Kuzzle(false);

@@ -49,6 +49,7 @@ program
   .command('likeAvirgin')
   .option('--fixtures <fixtures>', 'allow you to specify a fixtures file')
   .option('--mappings <mappings>', 'allow you to specify a mappings file')
+  .option('--noint', 'non interractive mode, will perform the reset immediately')
   .description('Empty all the Kuzzle storage and make it look like a virgin, touched for the very first time')
   .action(require('./commands/reset'));  
 
