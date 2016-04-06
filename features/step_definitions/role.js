@@ -24,7 +24,7 @@ var apiSteps = function () {
 
   this.Then(/^I'm ?(not)* able to find a role with id "([^"]*)"(?: with role "([^"]*)")?$/, function (not, id, role, callback) {
     var
-      index,
+      controller,
       main;
 
     id = this.idPrefix + id;
@@ -54,8 +54,8 @@ var apiSteps = function () {
             }
 
             if (role) {
-              index = Object.keys(this.roles[role].indexes)[0];
-              if (!body.result._source.indexes[index]) {
+              controller = Object.keys(this.roles[role].controllers)[0];
+              if (!body.result._source.controllers[controller]) {
                 if (not) {
                   return callbackAsync();
                 }

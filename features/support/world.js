@@ -80,35 +80,19 @@ module.exports = function () {
 
     this.roles = {
       role1: {
-        indexes: {
-          'fakeIndex1': {
-            collections: {
-              'fakeCollection1': {
-                controllers: {
-                  'fakeController1': {
-                    actions: {
-                      'fakeAction1': true
-                    }
-                  }
-                }
-              }
+        controllers: {
+          'fakeController1': {
+            actions: {
+              'fakeAction1': true
             }
           }
         }
       },
       role2: {
-        indexes: {
-          'fakeIndex2': {
-            collections: {
-              'fakeCollection2': {
-                controllers: {
-                  'fakeController2': {
-                    actions: {
-                      'fakeAction2': true
-                    }
-                  }
-                }
-              }
+        controllers: {
+          'fakeController2': {
+            actions: {
+              'fakeAction2': true
             }
           }
         }
@@ -117,16 +101,31 @@ module.exports = function () {
 
     this.profiles = {
       profile1: {
-        roles: [this.idPrefix + 'role1']
+        roles: [{
+          _id: this.idPrefix + 'role1',
+          restrictedTo: [{index: 'fakeIndex1', collections: ['fakeCollection1']}]
+        }]
       },
       profile2: {
-        roles: [this.idPrefix + 'role1', this.idPrefix + 'role2']
+        roles: [
+          {
+            _id: this.idPrefix + 'role1',
+            restrictedTo: [{index: 'fakeIndex1', collections: ['fakeCollection1']}]
+          },
+          {
+            _id: this.idPrefix + 'role2',
+            restrictedTo: [{index: 'fakeIndex2', collections: ['fakeCollection2']}]
+          }
+        ]
       },
       profile3: {
-        roles: [this.idPrefix + 'role2']
+        roles: [{
+          _id: this.idPrefix + 'role2',
+          restrictedTo: [{index: 'fakeIndex2', collections: ['fakeCollection2']}]
+        }]
       },
       invalidProfile: {
-        roles: ['unexisting-role']
+        roles: [{_id: 'unexisting-role'}]
       },
       emptyProfile: {
         roles: []
