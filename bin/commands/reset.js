@@ -15,7 +15,8 @@ var
 module.exports = function () {
   var 
     tmp, 
-    userIsSure = false;
+    userIsSure = false, 
+    kuzzle = new Kuzzle(false);
 
   // check, if files are provided, if they exists
   if (params.fixtures) {
@@ -38,7 +39,7 @@ module.exports = function () {
 
   console.log(warn('[ℹ] You are about to reset Kuzzle and make it like a virgin.'));
   console.log(warn('[ℹ] This operation cannot be undone.\n'));
-  
+
   if (!params.noint) {
     userIsSure = readlineSync.question('[❓] Are you sure? If so, please type "I am sure" (if not just press [Enter]): ') === 'I am sure';
   } else {
@@ -47,11 +48,11 @@ module.exports = function () {
   }
 
   if (userIsSure) {
-    console.log(notice('[ℹ] Processing...\n'));
 
-    var kuzzle = new Kuzzle(false);
+    console.log(notice('[ℹ] Processing...\n')); 
+
     kuzzle.remoteActions(kuzzle, 'cleanAndPrepare', params);
-
+    
   } else {
 
     console.log(notice('[ℹ] Nothing have been done... you do not look that sure...'));

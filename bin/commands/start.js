@@ -1,7 +1,10 @@
 var
   rc = require('rc'),
-  kuzzle = require('../../lib')
+  params = rc('kuzzle'),
+  kuzzle = require('../../lib'),
+  RequestObject = require('../../lib/api/core/models/requestObject'),
   firstAdmin = require('./createFirstAdmin'),
+  q = require('q'),
   clc = require('cli-color'),
   error = clc.red,
   warn = clc.yellow,
@@ -22,7 +25,7 @@ if (process.env.FEATURE_COVERAGE == 1) {
 module.exports = function (args) {
   console.log(kuz('Starting Kuzzle'));
 
-  kuzzle.start(rc('kuzzle'))
+  kuzzle.start(params)
     .then(() => {
       console.log(
         `
@@ -58,36 +61,62 @@ module.exports = function (args) {
       return kuzzle.services.list.broker.waitForListeners(kuzzle.config.queues.workerWriteTaskQueue);
     })
     .then(() => {
+      var request;
       if (kuzzle.isServer) {
         console.log(`
-         ████████████████████████████████████
-         ██        WORKER CONNECTED        ██
-         ██    ...PREPARING DATABASE...    ██
-         ████████████████████████████████████`);
+ ████████████████████████████████████
+ ██        WORKER CONNECTED        ██
+ ██    ...PREPARING DATABASE...    ██
+ ████████████████████████████████████`);
+
+        //return kuzzle.cleanDb(kuzzle, (args.likeAvirgin));
+        if (params.likeAvirgin) {
+          request = new RequestObject({controller: 'remoteActions', action: 'cleanDb', body: {}});
+          return kuzzle.remoteActionsController.actions.cleanDb(kuzzle, request);
+        }
       }
 
-      return kuzzle.cleanDb(kuzzle, (args.likeAvirgin));
+      return q();
     })
     .then(() => {
-      var fixtures = null,
-        mappings = null;
+      var 
+        request,
+        data = {};
 
-      if (typeof args.fixtures === 'string') {
-        fixtures = args.fixtures;
-      }
-      
-      if (typeof args.mappings === 'string') {
-        mappings = args.mappings;
-      }
+      if (kuzzle.isServer) {
+        deferred = q.defer();
+        if (params.fixtures) {
+          try {
+            tmp = JSON.parse(fs.readFileSync(params.fixtures, 'utf8'));
+          } catch(e) {
+            console.log(error('[✖] The file ' + params.fixtures + ' cannot be opened... aborting.'));
+            process.exit(1);
+          }
+          data.fixtures = params.fixtures;
+        }
 
-      return kuzzle.prepareDb(kuzzle, fixtures, mappings);
+        if (params.mappings) {
+          try {
+            tmp = JSON.parse(fs.readFileSync(params.mappings, 'utf8'));
+          } catch(e) {
+            console.log(error('[✖] The file ' + params.mappings + ' cannot be opened... aborting.'));
+            process.exit(1);
+          }
+          data.mappings = params.mappings;
+        }
+
+        request = new RequestObject({controller: 'remoteActions', action: 'prepareDb', body: data});
+        return kuzzle.remoteActionsController.actions.prepareDb(kuzzle, request);
+      } else {
+        return q();
+      }
     })
     .then(() => {
       if (kuzzle.isServer) {
         console.log(`
-         ████████████████████████████████████
-         ██          KUZZLE READY          ██
-         ████████████████████████████████████`);
+ ████████████████████████████████████
+ ██          KUZZLE READY          ██
+ ████████████████████████████████████`);
         firstAdmin.check()
           .then((res) => {
             if (res.result.total === 0) {
