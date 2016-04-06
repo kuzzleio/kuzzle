@@ -22,12 +22,12 @@ describe('Test: security controller - profiles', function () {
           if (profile._id === 'alreadyExists') {
             return q.reject();
           }
-     
+
           return q(profile);
         };
         kuzzle.repositories.profile.loadProfile = id => {
           var profileId;
-     
+
           if (id instanceof Profile) {
             profileId = id._id;
           }
@@ -39,7 +39,15 @@ describe('Test: security controller - profiles', function () {
             return q(null);
           }
 
-          return q(id);
+          return q({
+            _index: kuzzle.config.internalIndex,
+            _type: 'profiles',
+            _id: profileId,
+            roles: [{
+              _id: 'role1',
+              controllers: {}
+            }]
+          });
         };
         kuzzle.services.list.readEngine.search = () => {
           if (error) {
@@ -62,7 +70,7 @@ describe('Test: security controller - profiles', function () {
               return {
                 _id: id,
                 _source: {
-                  roles: ['role1']
+                  roles: [{_id: 'role1'}]
                 }
               };
             }));
@@ -92,7 +100,7 @@ describe('Test: security controller - profiles', function () {
   describe('#createOrReplaceProfile', function () {
     it('should resolve to a responseObject on a createOrReplaceProfile call', () => {
       return kuzzle.funnel.controllers.security.createOrReplaceProfile(new RequestObject({
-          body: {_id: 'test', roles: ['role1']}
+          body: {_id: 'test', roles: [{_id: 'role1'}]}
         }))
         .then(result => {
           should(result).be.an.instanceOf(ResponseObject);
@@ -111,7 +119,7 @@ describe('Test: security controller - profiles', function () {
   describe('#createProfile', function () {
     it('should reject when a profile already exists with the id', () => {
       var promise = kuzzle.funnel.controllers.security.createProfile(new RequestObject({
-          body: {_id: 'alreadyExists', roles: ['role1']}
+          body: {_id: 'alreadyExists', roles: [{_id: 'role1'}]}
         }));
 
       return should(promise).be.rejected();
@@ -119,7 +127,7 @@ describe('Test: security controller - profiles', function () {
 
     it('should resolve to a responseObject on a createProfile call', () => {
       var promise = kuzzle.funnel.controllers.security.createProfile(new RequestObject({
-        body: {_id: 'test', roles: ['role1']}
+        body: {_id: 'test', roles: [{_id: 'role1'}]}
       }));
 
       return should(promise).be.fulfilled();
@@ -173,7 +181,8 @@ describe('Test: security controller - profiles', function () {
 
           should(result.data.body.hits[0]).be.an.Object();
           should(result.data.body.hits[0]._source.roles).be.an.Array();
-          should(result.data.body.hits[0]._source.roles[0]).be.a.String();
+          should(result.data.body.hits[0]._source.roles[0]).be.an.Object();
+          should(result.data.body.hits[0]._source.roles[0]._id).be.an.String();
         });
     });
 

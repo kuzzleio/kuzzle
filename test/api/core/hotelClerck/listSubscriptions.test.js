@@ -107,8 +107,7 @@ describe('Test: hotelClerk.listSubscription', function () {
       .then(() => kuzzle.hotelClerk.addSubscription(requestObjectFoo, context))
       .then(() => {
         // Mock user can access only on user collection
-        context.token.user.profile.roles[0].indexes['*'].collections.user = context.token.user.profile.roles[0].indexes['*'].collections['*'];
-        delete context.token.user.profile.roles[0].indexes['*'].collections['*'];
+        context.token.user.profile.roles[0].restrictedTo = [{index: index, collections: [collection]}];
 
         // In fact, requestObject can be the same as subscribe. But here, we don't care
         return kuzzle.hotelClerk.listSubscriptions(requestObjectList, context);

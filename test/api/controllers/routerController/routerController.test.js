@@ -82,20 +82,12 @@ describe('Test: routerController', () => {
               role = new Role(),
               user = new User();
 
-            role.indexes = {
-              '*': {
-                collections: {
-                  '*': {
-                    controllers: {
-                      '*': {
-                        actions: {
-                          '*': true
-                        }
-                      }
-                    }
+            role.controllers = {
+                '*': {
+                  actions: {
+                    '*': true
                   }
                 }
-              }
             };
 
             user._id = 'testUser';

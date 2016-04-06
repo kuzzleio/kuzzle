@@ -76,7 +76,7 @@ describe('Test: security controller - roles', function () {
   describe('#createOrReplaceRole', function () {
     it('should resolve to a responseObject on a createOrReplaceRole call', () => {
       return kuzzle.funnel.controllers.security.createOrReplaceRole(new RequestObject({
-          body: {_id: 'test', indexes: {}}
+          body: {_id: 'test', controllers: {}}
         }))
         .then(result => {
           should(result).be.an.instanceOf(ResponseObject);
@@ -94,7 +94,7 @@ describe('Test: security controller - roles', function () {
   describe('#createRole', function () {
     it('should reject when a role already exists with the id', () => {
       var promise = kuzzle.funnel.controllers.security.createRole(new RequestObject({
-        body: {_id: 'alreadyExists', indexes: {}}
+        body: {_id: 'alreadyExists', controllers: {}}
       }));
 
       return should(promise).be.rejected();
@@ -102,7 +102,7 @@ describe('Test: security controller - roles', function () {
 
     it('should resolve to a responseObject on a createRole call', () => {
       var promise = kuzzle.funnel.controllers.security.createRole(new RequestObject({
-        body: {_id: 'test', indexes: {}}
+        body: {_id: 'test', controllers: {}}
       }));
 
       return should(promise).be.fulfilled();

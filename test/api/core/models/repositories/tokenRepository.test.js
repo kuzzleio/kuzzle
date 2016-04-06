@@ -64,18 +64,10 @@ beforeEach(function (done) {
         role = new Role(),
         user = new User();
 
-      role.indexes = {
+      role.controllers = {
         '*': {
-          collections: {
-            '*': {
-              controllers: {
-                '*': {
-                  actions: {
-                    '*': true
-                  }
-                }
-              }
-            }
+          actions: {
+            '*': true
           }
         }
       };
@@ -91,18 +83,10 @@ beforeEach(function (done) {
         role = new Role(),
         user = new User();
 
-      role.indexes = {
+      role.controllers = {
         '*': {
-          collections: {
-            '*': {
-              controllers: {
-                '*': {
-                  actions: {
-                    '*': true
-                  }
-                }
-              }
-            }
+          actions: {
+            '*': true
           }
         }
       };

@@ -225,7 +225,7 @@ describe('Test: repositories/roleRepository', function () {
         });
     });
 
-    it('should construct a correct filter according to indexes', () => {
+    it('should construct a correct filter according to controllers', () => {
       var
         savedFilter,
         savedFrom,
@@ -241,13 +241,13 @@ describe('Test: repositories/roleRepository', function () {
         return q();
       };
 
-      return roleRepository.searchRole(new RequestObject({body: {indexes: ['test']}}))
+      return roleRepository.searchRole(new RequestObject({body: {controllers: ['test']}}))
         .then(() => {
           should(savedFilter).be.eql({or: [
-            // specific index name provided
-            {exists: {field: 'indexes.test'}},
+            // specific controller name provided
+            {exists: {field: 'controllers.test'}},
             // default filter
-            {exists: {field: 'indexes.*'}}
+            {exists: {field: 'controllers.*'}}
           ]});
         });
     });
@@ -279,18 +279,10 @@ describe('Test: repositories/roleRepository', function () {
   describe('#getRoleFromRequestObject', function () {
     it('should build a valid role object', () => {
       var
-        indexes = {
-          index: {
-            collections: {
-              collection: {
-                controllers: {
-                  controller: {
-                    actions: {
-                      action: true
-                    }
-                  }
-                }
-              }
+        controllers = {
+          controller: {
+            actions: {
+              action: true
             }
           }
         },
@@ -300,7 +292,7 @@ describe('Test: repositories/roleRepository', function () {
           action: 'action',
           body: {
             _id: 'roleId',
-            indexes: indexes
+            controllers: controllers
           }
         }),
         role;
@@ -308,7 +300,7 @@ describe('Test: repositories/roleRepository', function () {
       role = roleRepository.getRoleFromRequestObject(requestObject);
 
       should(role._id).be.exactly('roleId');
-      should(role.indexes).be.eql(indexes);
+      should(role.controllers).be.eql(controllers);
     });
   });
 
@@ -328,29 +320,21 @@ describe('Test: repositories/roleRepository', function () {
 
     it('persist the role to the database when ok', () => {
       var
-        indexes = {
-          index: {
-            collections: {
-              colletion: {
-                controllers: {
-                  controller: {
-                    actions: {
-                      action: true
-                    }
-                  }
-                }
-              }
+        controllers = {
+          controller: {
+            actions: {
+              action: true
             }
           }
         },
         role = new Role();
       role._id = 'test';
-      role.indexes = indexes;
+      role.controllers = controllers;
 
       return roleRepository.validateAndSaveRole(role)
         .then(() => {
           should(forwardedObject.data._id).be.exactly('test');
-          should(forwardedObject.data.body.indexes).be.eql(indexes);
+          should(forwardedObject.data.body.controllers).be.eql(controllers);
         });
     });
   });
