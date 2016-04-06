@@ -324,12 +324,3 @@ Feature: Test AMQP API
     Then I am getting the current user, which matches {"_id":"#prefix#user1-id","_source":{"profile":{"_id":"admin"}}}
     Then I log out
     Then I am getting the current user, which matches {"_id":-1,"_source":{"profile":{"_id":"anonymous"}}}
-
-
-  @usingWebsocket @cleanSecurity @unsubscribe
-  Scenario: token expiration
-    Given A room subscription listening to "lastName" having value "Hopper"
-    Given I create a user "user1" with id "user1-id"
-    When I log in as user1-id:testpwd expiring in 1s
-    Then I wait 1s
-    And I should receive a "jwtTokenExpired" notification
