@@ -22,12 +22,7 @@ describe('Test: security controller - roles', function () {
             return q.reject();
           }
 
-          return q(new ResponseObject({}, {
-            _index: kuzzle.config.internalIndex,
-            _type: 'roles',
-            _id: role._id,
-            created: true
-          }));
+          return q(role);
         };
         kuzzle.repositories.role.loadOneFromDatabase = id => {
           if (id === 'badId') {
@@ -167,12 +162,7 @@ describe('Test: security controller - roles', function () {
           return q.reject();
         }
 
-        return q(new ResponseObject({}, {
-          _index: kuzzle.config.internalIndex,
-          _type: 'roles',
-          _id: role._id,
-          created: false
-        }));
+        return q(role);
       };
 
       kuzzle.funnel.controllers.security.updateRole(new RequestObject({
@@ -180,7 +170,6 @@ describe('Test: security controller - roles', function () {
       }), {})
         .then(response => {
           should(response).be.an.instanceOf(ResponseObject);
-          should(response.data.body.created).be.exactly(false);
           should(response.data.body._id).be.exactly('test');
 
           done();
@@ -193,6 +182,13 @@ describe('Test: security controller - roles', function () {
         body: {}
       }), {}))
         .be.rejectedWith(BadRequestError);
+    });
+
+    it('should reject the promise if the role cannot be found in the database', () => {
+      return should(kuzzle.funnel.controllers.security.updateRole(new RequestObject({
+        body: { _id: 'badId' }
+      }), {}))
+        .be.rejectedWith(NotFoundError);
     });
   });
 
@@ -212,6 +208,12 @@ describe('Test: security controller - roles', function () {
         .catch(error => {
           done(error);
         });
+    });
+
+    it('should reject the promise if attempting to delete one of the core roles', function () {
+      return should(kuzzle.funnel.controllers.security.deleteRole(new RequestObject({
+        body: { _id: 'admin'}
+      }))).be.rejectedWith(BadRequestError);
     });
   });
 
