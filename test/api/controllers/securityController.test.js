@@ -3,6 +3,7 @@ var
   should = require('should'),
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
+  Role = require.main.require('lib/api/core/models/security/role'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
   ResponseObject = require.main.require('lib/api/core/models/responseObject');
 
@@ -15,12 +16,7 @@ describe('Test: security controller', function () {
     kuzzle.start(params, {dummy: true})
       .then(function () {
         kuzzle.repositories.role.validateAndSaveRole = role => {
-          return q(new ResponseObject({}, {
-            _index: '%kuzzle',
-            _type: 'roles',
-            _id: role._id,
-            created: true
-          }));
+          return q(role);
         };
 
         done();
