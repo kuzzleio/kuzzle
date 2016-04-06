@@ -9,19 +9,14 @@ var
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
   ResponseObject = require.main.require('lib/api/core/models/responseObject'),
   BadRequestError = require.main.require('lib/api/core/errors/badRequestError'),
-  InternalError = require.main.require('lib/api/core/errors/internalError'),
   NotFoundError = require.main.require('lib/api/core/errors/notFoundError'),
   Token = require.main.require('lib/api/core/models/security/token'),
-  Profile = require.main.require('lib/api/core/models/security/profile'),
-  User = require.main.require('lib/api/core/models/security/user'),
   context = {},
   requestObject,
   MockupWrapper,
   MockupStrategy;
 
 MockupStrategy = function(name, verify) {
-  var options = {};
-
   passport.Strategy.call(this);
   this.name = name;
   this._verify = verify;
@@ -29,7 +24,7 @@ MockupStrategy = function(name, verify) {
 };
 util.inherits(MockupStrategy, passport.Strategy);
 
-MockupStrategy.prototype.authenticate = function(req, options) {
+MockupStrategy.prototype.authenticate = function(req) {
   var
     self = this,
     username;
@@ -111,8 +106,8 @@ describe('Test the auth controller', function () {
     it('should resolve to a valid jwt token if authentication succeed', function (done) {
       this.timeout(50);
 
-      kuzzle.funnel.auth.passport = new MockupWrapper('resolve');
-      kuzzle.funnel.auth.login(requestObject, {})
+      kuzzle.funnel.controllers.auth.passport = new MockupWrapper('resolve');
+      kuzzle.funnel.controllers.auth.login(requestObject, {})
         .then(function(response) {
           var decodedToken = jwt.verify(response.data.body.jwt, params.jsonWebToken.secret);
           should(decodedToken._id).be.equal('jdoe');
@@ -126,8 +121,8 @@ describe('Test the auth controller', function () {
     it('should resolve to a redirect url', function(done) {
       this.timeout(50);
 
-      kuzzle.funnel.auth.passport = new MockupWrapper('oauth');
-      kuzzle.funnel.auth.login(requestObject, {})
+      kuzzle.funnel.controllers.auth.passport = new MockupWrapper('oauth');
+      kuzzle.funnel.controllers.auth.login(requestObject, {})
         .then(function(response) {
           should(response.data.body.headers.Location).be.equal('http://github.com');
           done();
@@ -140,7 +135,7 @@ describe('Test the auth controller', function () {
     it('should use local strategy if no one is set', function (done) {
       this.timeout(50);
 
-      kuzzle.funnel.auth.passport = {
+      kuzzle.funnel.controllers.auth.passport = {
         authenticate: function(data, strategy) {
           should(strategy).be.exactly('local');
           done();
@@ -150,7 +145,7 @@ describe('Test the auth controller', function () {
 
       delete requestObject.data.body.strategy;
 
-      kuzzle.funnel.auth.login(requestObject, {});
+      kuzzle.funnel.controllers.auth.login(requestObject, {});
     });
 
     it('should be able to set authentication expiration', function (done) {
@@ -158,8 +153,8 @@ describe('Test the auth controller', function () {
 
       requestObject.data.body.expiresIn = '1s';
 
-      kuzzle.funnel.auth.passport = new MockupWrapper('resolve');
-      kuzzle.funnel.auth.login(requestObject, {connection: {id: 'banana'}})
+      kuzzle.funnel.controllers.auth.passport = new MockupWrapper('resolve');
+      kuzzle.funnel.controllers.auth.login(requestObject, {connection: {id: 'banana'}})
         .then(function(response) {
           var decodedToken = jwt.verify(response.data.body.jwt, params.jsonWebToken.secret);
           should(decodedToken._id).be.equal('jdoe');
@@ -195,8 +190,8 @@ describe('Test the auth controller', function () {
         done();
       };
 
-      kuzzle.funnel.auth.passport = new MockupWrapper('resolve');
-      kuzzle.funnel.auth.login(requestObject, context)
+      kuzzle.funnel.controllers.auth.passport = new MockupWrapper('resolve');
+      kuzzle.funnel.controllers.auth.login(requestObject, context)
         .catch(function (error) {
           done(error);
         });
@@ -204,8 +199,8 @@ describe('Test the auth controller', function () {
 
     it('should reject if authentication failure', function (done) {
       this.timeout(50);
-      kuzzle.funnel.auth.passport = new MockupWrapper('reject');
-      kuzzle.funnel.auth.login(requestObject)
+      kuzzle.funnel.controllers.auth.passport = new MockupWrapper('reject');
+      kuzzle.funnel.controllers.auth.login(requestObject)
         .catch((error) => {
           should(error).be.an.instanceOf(ResponseObject);
           should(error.error.message).be.exactly('Mockup Wrapper Error');
@@ -248,7 +243,7 @@ describe('Test the auth controller', function () {
         }
       };
 
-      kuzzle.funnel.auth.logout(requestObject, context)
+      kuzzle.funnel.controllers.auth.logout(requestObject, context)
         .then(response => {
           should(response).be.instanceof(ResponseObject);
           done();
@@ -265,7 +260,7 @@ describe('Test the auth controller', function () {
         }
       };
 
-      return should(kuzzle.funnel.auth.logout(requestObject, context)).be.rejectedWith(ResponseObject);
+      return should(kuzzle.funnel.controllers.auth.logout(requestObject, context)).be.rejectedWith(ResponseObject);
     });
 
     it('should expire token', function (done) {
@@ -276,7 +271,7 @@ describe('Test the auth controller', function () {
         return q();
       };
 
-      kuzzle.funnel.auth.logout(requestObject, context)
+      kuzzle.funnel.controllers.auth.logout(requestObject, context)
         .then(response => {
           should(response).be.instanceof(ResponseObject);
           done();
@@ -291,7 +286,7 @@ describe('Test the auth controller', function () {
         return q.reject();
       };
 
-      return should(kuzzle.funnel.auth.logout(requestObject, context)).be.rejectedWith(ResponseObject);
+      return should(kuzzle.funnel.controllers.auth.logout(requestObject, context)).be.rejectedWith(ResponseObject);
     });
 
     it('should remove all room registration for current connexion', function (done) {
@@ -302,7 +297,7 @@ describe('Test the auth controller', function () {
         return q();
       };
 
-      kuzzle.funnel.auth.logout(requestObject, context)
+      kuzzle.funnel.controllers.auth.logout(requestObject, context)
         .then(response => {
           should(response).be.instanceof(ResponseObject);
           done();
@@ -321,7 +316,7 @@ describe('Test the auth controller', function () {
 
       delete context.connection.id;
 
-      kuzzle.funnel.auth.logout(requestObject, context)
+      kuzzle.funnel.controllers.auth.logout(requestObject, context)
         .then(() => {
           should(removeCustomerFromAllRooms).be.exactly(false);
           done();
@@ -332,7 +327,7 @@ describe('Test the auth controller', function () {
 
   describe('#getCurrentUser', function () {
     it('should return the user given in the context', done => {
-      kuzzle.funnel.auth.getCurrentUser(new RequestObject({
+      kuzzle.funnel.controllers.auth.getCurrentUser(new RequestObject({
         body: {}
       }), {
         token: { user: { _id: 'admin' } }
@@ -349,7 +344,7 @@ describe('Test the auth controller', function () {
     });
 
     it('should return a falsey response if the current user is unknown', () => {
-      var promise = kuzzle.funnel.auth.getCurrentUser(new RequestObject({
+      var promise = kuzzle.funnel.controllers.auth.getCurrentUser(new RequestObject({
         body: {}
       }), {
         token: { user: { _id: 'unknown_user' } }
@@ -374,7 +369,7 @@ describe('Test the auth controller', function () {
     });
 
     it('should return a rejected promise if no token is provided', function () {
-      return should(kuzzle.funnel.auth.checkToken(new RequestObject({ body: {}}))).be.rejectedWith(BadRequestError);
+      return should(kuzzle.funnel.controllers.auth.checkToken(new RequestObject({ body: {}}))).be.rejectedWith(BadRequestError);
     });
 
     it('should return a valid response if the token is valid', function (done) {
@@ -383,7 +378,7 @@ describe('Test the auth controller', function () {
         return q(stubToken);
       };
 
-      kuzzle.funnel.auth.checkToken(requestObject)
+      kuzzle.funnel.controllers.auth.checkToken(requestObject)
         .then(response => {
           should(response).be.instanceof(ResponseObject);
           should(response.data.body.valid).be.true();
@@ -400,7 +395,7 @@ describe('Test the auth controller', function () {
         return q.reject({status: 401, message: 'foobar'});
       };
 
-      kuzzle.funnel.auth.checkToken(requestObject)
+      kuzzle.funnel.controllers.auth.checkToken(requestObject)
         .then(response => {
           should(response).be.instanceof(ResponseObject);
           should(response.data.body.valid).be.false();
@@ -417,7 +412,7 @@ describe('Test the auth controller', function () {
         return q.reject({status: 500});
       };
 
-      return should(kuzzle.funnel.auth.checkToken(requestObject)).be.rejected();
+      return should(kuzzle.funnel.controllers.auth.checkToken(requestObject)).be.rejected();
     });
   });
 });

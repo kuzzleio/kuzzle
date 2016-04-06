@@ -90,7 +90,7 @@ describe('Test: security controller - profiles', function () {
 
   describe('#createOrReplaceProfile', function () {
     it('should resolve to a responseObject on a createOrReplaceProfile call', done => {
-      kuzzle.funnel.security.createOrReplaceProfile(new RequestObject({
+      kuzzle.funnel.controllers.security.createOrReplaceProfile(new RequestObject({
           body: {_id: 'test', roles: ['role1']}
         }))
         .then(result => {
@@ -106,7 +106,7 @@ describe('Test: security controller - profiles', function () {
 
   describe('#createProfile', function () {
     it('should reject when a profile already exists with the id', () => {
-      var promise = kuzzle.funnel.security.createProfile(new RequestObject({
+      var promise = kuzzle.funnel.controllers.security.createProfile(new RequestObject({
           body: {_id: 'alreadyExists', roles: ['role1']}
         }));
 
@@ -114,7 +114,7 @@ describe('Test: security controller - profiles', function () {
     });
 
     it('should resolve to a responseObject on a createProfile call', () => {
-      var promise = kuzzle.funnel.security.createProfile(new RequestObject({
+      var promise = kuzzle.funnel.controllers.security.createProfile(new RequestObject({
         body: {_id: 'test', roles: ['role1']}
       }));
 
@@ -124,7 +124,7 @@ describe('Test: security controller - profiles', function () {
 
   describe('#getProfile', function () {
     it('should resolve to a responseObject on a getProfile call', done => {
-      kuzzle.funnel.security.getProfile(new RequestObject({
+      kuzzle.funnel.controllers.security.getProfile(new RequestObject({
           body: {_id: 'test'}
         }))
         .then(result => {
@@ -138,21 +138,21 @@ describe('Test: security controller - profiles', function () {
     });
 
     it('should reject to an error on a getProfile call without id', () => {
-      return should(kuzzle.funnel.security.getProfile(new RequestObject({body: {_id: ''}}))).be.rejectedWith(BadRequestError);
+      return should(kuzzle.funnel.controllers.security.getProfile(new RequestObject({body: {_id: ''}}))).be.rejectedWith(BadRequestError);
     });
 
     it('should reject NotFoundError on a getProfile call with a bad id', () => {
-      return should(kuzzle.funnel.security.getProfile(new RequestObject({body: {_id: 'badId'}}))).be.rejectedWith(NotFoundError);
+      return should(kuzzle.funnel.controllers.security.getProfile(new RequestObject({body: {_id: 'badId'}}))).be.rejectedWith(NotFoundError);
     });
   });
 
   describe('#mGetProfiles', function () {
     it('should reject to an error on a mGetProfiles call without ids', () => {
-      return should(kuzzle.funnel.security.mGetProfiles(new RequestObject({body: {}}))).be.rejectedWith(BadRequestError);
+      return should(kuzzle.funnel.controllers.security.mGetProfiles(new RequestObject({body: {}}))).be.rejectedWith(BadRequestError);
     });
 
     it('should resolve to a responseObject on a mGetProfiles call', done => {
-      kuzzle.funnel.security.mGetProfiles(new RequestObject({
+      kuzzle.funnel.controllers.security.mGetProfiles(new RequestObject({
           body: {ids: ['test']}
         }))
         .then(result => {
@@ -172,7 +172,7 @@ describe('Test: security controller - profiles', function () {
     });
 
     it('should resolve to a responseObject with roles on a mGetProfiles call with hydrate', done => {
-      kuzzle.funnel.security.mGetProfiles(new RequestObject({
+      kuzzle.funnel.controllers.security.mGetProfiles(new RequestObject({
           body: {ids: ['test'], hydrate: true}
         }))
         .then(result => {
@@ -194,7 +194,7 @@ describe('Test: security controller - profiles', function () {
 
   describe('#searchProfiles', function () {
     it('should return a ResponseObject containing an array of profiles on searchProfile call', done => {
-      kuzzle.funnel.security.searchProfiles(new RequestObject({
+      kuzzle.funnel.controllers.security.searchProfiles(new RequestObject({
           body: {}
         }))
         .then(result => {
@@ -212,7 +212,7 @@ describe('Test: security controller - profiles', function () {
     });
 
     it('should return a ResponseObject containing an array of profiles on searchProfile call with hydrate', done => {
-      kuzzle.funnel.security.searchProfiles(new RequestObject({
+      kuzzle.funnel.controllers.security.searchProfiles(new RequestObject({
           body: {
             roles: ['role1'],
             hydrate: true
@@ -245,7 +245,7 @@ describe('Test: security controller - profiles', function () {
         }));
       };
 
-      kuzzle.funnel.security.updateProfile(new RequestObject({
+      kuzzle.funnel.controllers.security.updateProfile(new RequestObject({
           body: { _id: 'test', foo: 'bar' }
         }), {})
         .then(response => {
@@ -259,7 +259,7 @@ describe('Test: security controller - profiles', function () {
     });
 
     it('should reject the promise if no id is given', () => {
-      return should(kuzzle.funnel.security.updateProfile(new RequestObject({
+      return should(kuzzle.funnel.controllers.security.updateProfile(new RequestObject({
         body: {}
       }), {}))
         .be.rejectedWith(BadRequestError);
@@ -268,7 +268,7 @@ describe('Test: security controller - profiles', function () {
 
   describe('#deleteProfile', function () {
     it('should return response with on deleteProfile call', done => {
-      kuzzle.funnel.security.deleteProfile(new RequestObject({
+      kuzzle.funnel.controllers.security.deleteProfile(new RequestObject({
           body: {_id: 'test'}
         }))
         .then(result => {
