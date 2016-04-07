@@ -7,9 +7,9 @@ var
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   RequestObject = require.main.require('lib/api/core/models/requestObject');
 
-describe('Test: clean and prepare database remote action', () => {
+describe('Test: clean and prepare database remote action', function () {
 
-  it('should call cleanDb and prepareDb', (done) => {
+  it('should call cleanDb and prepareDb', function (done) {
     var 
       request,
       cleanDbCalled = false,
@@ -20,11 +20,11 @@ describe('Test: clean and prepare database remote action', () => {
     kuzzle = new Kuzzle();
     kuzzle.start(params, {dummy: true});
 
-    kuzzle.remoteActionsController.actions.cleanDb = () => { cleanDbCalled = true; return q(); }
-    kuzzle.remoteActionsController.actions.prepareDb = () => { prepareDbCalled = true; return q(); }
+    kuzzle.remoteActionsController.actions.cleanDb = function () { cleanDbCalled = true; return q(); }
+    kuzzle.remoteActionsController.actions.prepareDb = function () { prepareDbCalled = true; return q(); }
 
     kuzzle.remoteActionsController.actions.cleanAndPrepare(kuzzle, request)
-      .then(() => {
+      .then(function () {
         should(cleanDbCalled).be.true();
         should(prepareDbCalled).be.true();
         done();
