@@ -23,17 +23,12 @@ describe('Test: security controller - profiles', function () {
           if (profile._id === 'alreadyExists') {
             return q.reject();
           }
-
-          return q(new ResponseObject({}, {
-            _index: kuzzle.config.internalIndex,
-            _type: 'profiles',
-            _id: profile._id,
-            created: true
-          }));
+     
+          return q(profile);
         };
         kuzzle.repositories.profile.loadProfile = id => {
           var profileId;
-
+     
           if (id instanceof Profile) {
             profileId = id._id;
           }
@@ -45,15 +40,7 @@ describe('Test: security controller - profiles', function () {
             return q(null);
           }
 
-          return q({
-            _index: kuzzle.config.internalIndex,
-            _type: 'profiles',
-            _id: profileId,
-            roles: [{
-              _id: 'role1',
-              indexes: {}
-            }]
-          });
+          return q(id);
         };
         kuzzle.services.list.readEngine.search = requestObject => {
           return q(new ResponseObject(requestObject, {
@@ -237,12 +224,7 @@ describe('Test: security controller - profiles', function () {
     it('should return a valid ResponseObject', done => {
 
       kuzzle.repositories.profile.validateAndSaveProfile = profile => {
-        return q(new ResponseObject({}, {
-          _index: kuzzle.config.internalIndex,
-          _type: 'profiles',
-          _id: profile._id,
-          created: false
-        }));
+        return q(profile);
       };
 
       kuzzle.funnel.controllers.security.updateProfile(new RequestObject({
@@ -250,7 +232,6 @@ describe('Test: security controller - profiles', function () {
         }), {})
         .then(response => {
           should(response).be.an.instanceOf(ResponseObject);
-          should(response.data.body.created).be.exactly(false);
           should(response.data.body._id).be.exactly('test');
 
           done();

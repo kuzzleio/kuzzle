@@ -5,12 +5,15 @@
  * NOTE: must be added in api REST because the apiREST file doesn't extend this ApiRT
  */
 
-var ApiRT = function () {
-  this.world = null;
-  this.clientId = null;
-  this.subscribedRooms = {};
-  this.responses = null;
-};
+var
+  _ = require('lodash'),
+  q = require('q'),
+  ApiRT = function () {
+    this.world = null;
+    this.clientId = null;
+    this.subscribedRooms = {};
+    this.responses = null;
+  };
 
 ApiRT.prototype.send = function () {};
 ApiRT.prototype.sendAndListen = function () {};
@@ -604,6 +607,18 @@ ApiRT.prototype.refreshIndex = function (index) {
     controller: 'admin',
     action: 'refreshIndex'
   });
+};
+
+ApiRT.prototype.callMemoryStorage = function (command, args) {
+  return this.send(_.extend({
+    controller: 'ms',
+    action: command
+  }, args))
+    .then(response => {
+      this.world.memoryStorageResult = response;
+
+      return q(response);
+    });
 };
 
 module.exports = ApiRT;
