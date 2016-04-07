@@ -4,6 +4,8 @@ var
   sinon = require('sinon'),
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
+  Profile = require.main.require('lib/api/core/models/security/profile'),
+  Role = require.main.require('lib/api/core/models/security/role'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
   ResponseObject = require.main.require('lib/api/core/models/responseObject'),
   PartialError = require.main.require('lib/api/core/errors/partialError');
@@ -251,27 +253,45 @@ describe('Test: admin controller', () => {
   describe('#deleteIndexes', function () {
     var context = {
       token: {
-        user: {
-          profile: {
-            roles: [{
-                indexes: {
-                  '%text1': {
-                    _canDelete: true,
-                  },
-                  '%text2': {
-                    _canDelete: true,
-                  },
-                  '%text3': {
-                    _canDelete: false,
-                  }
-                }
-              }]
-          }
-        }
+        user: {}
       }
     };
 
-    it('should trigger a hook on a deleteIndexes call', function (done) {
+    before(function () {
+      var
+        profile = new Profile();
+        role = new Role();
+
+      role._id = 'deleteIndex';
+      role.controllers = {
+        '*': {
+          actions: {
+            '*': true
+          }
+        }
+      };
+      role.restrictedTo = [{index: '%text1'},{index: '%text2'}];
+      profile.roles = [role];
+      context.token.user.profile = profile;
+      kuzzle.indexCache.oldRemove = kuzzle.indexCache.remove;
+      kuzzle.services.list.readEngine.listIndexes = requestObject => {
+         return q(new ResponseObject(requestObject, {indexes: ['%text1', '%text2', '%text3']}));
+      };
+      kuzzle.workerListener.add = rq => {
+        return q(new ResponseObject(rq, {deleted: rq.data.body.indexes}));
+      };
+      kuzzle.indexCache.remove = (i, c) => {
+        should(['%text1', '%text2']).containEql(i);
+        indexCacheRemove = true;
+      };
+    });
+    after(function () {
+      kuzzle.indexCache.remove = kuzzle.indexCache.oldRemove;
+      delete kuzzle.indexCache.oldRemove;
+    });
+
+
+    it('should trigger a hook on a deleteIndexes call', done => {
       this.timeout(50);
       sandbox.stub(kuzzle.services.list.readEngine, 'listIndexes').resolves({indexes: []});
 

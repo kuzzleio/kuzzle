@@ -147,15 +147,15 @@ Feature: Test REST API
     Then I'm able to find a role with id "test"
     And I update the role with id "test" with role "role2"
     Then I'm able to find a role with id "test" with role "role2"
-    Then I'm able to find "1" role by searching index corresponding to role "role2"
+    Then I'm able to find "1" role by searching controller corresponding to role "role2"
     And I delete the role with id "test"
     Then I'm not able to find a role with id "test"
     Then I create a new role "role1" with id "test"
     And I create a new role "role1" with id "test2"
     And I create a new role "role1" with id "test3"
     Then I'm able to do a multi get with "test,test2,test3" and get "3" roles
-    Then I'm able to find "3" role by searching index corresponding to role "role1"
-    Then I'm able to find "1" role by searching index corresponding to role "role1" from "0" to "1"
+    Then I'm able to find "3" role by searching controller corresponding to role "role1"
+    Then I'm able to find "1" role by searching controller corresponding to role "role1" from "0" to "1"
 
   @usingREST @cleanSecurity
   Scenario: create an invalid profile with unexisting role triggers an error
