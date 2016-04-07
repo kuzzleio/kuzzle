@@ -290,7 +290,7 @@ Notes:
 * The controller constructor must use a "_context_" variable, which contains
 some Kuzzle prototypes such as ResponseObject or KuzzleError,
 which can be used by the controller actions.<br>
-(see [List of injected prototypes](../lib/api/core/pluginsContext.js) ).
+(see [List of injected prototypes](../lib/api/core/plugins/pluginsContext.js) ).
 
 
 #### How it works

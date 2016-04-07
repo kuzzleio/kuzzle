@@ -2,7 +2,7 @@ var
   should = require('should'),
   params = require('rc')('kuzzle'),
   rewire = require('rewire'),
-  PluginsManager = rewire('../../../../lib/api/core/pluginsManager'),
+  PluginsManager = rewire('../../../../lib/api/core/plugins/pluginsManager'),
   EventEmitter = require('eventemitter2').EventEmitter2,
   GatewayTimeoutError = require.main.require('lib/api/core/errors/gatewayTimeoutError');
 
