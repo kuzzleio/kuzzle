@@ -12,7 +12,7 @@ var
   kuzzle,
   oldProcessExit = process.exit;
 
-before(function (done) {
+before((done) => {
 
   process.exit = (status) => {
     return true;
@@ -21,21 +21,18 @@ before(function (done) {
   kuzzle = new Kuzzle();
 
   kuzzle.start(params, {dummy: true})
-    .then(function () {
+    .then(() => {
       done();
-    })
-    .catch((error) => {
-      done(error);
     });
 });
 
-after(function () {
+after(() => {
   process.exit = oldProcessExit;
 });
 
-describe('Test: remote actions controller', function () {
+describe('Test: remote actions controller', () => {
 
-  it('should fail if there is no action given', function (done) {
+  it('should fail if there is no action given', (done) => {
     var request = new RequestObject({controller: 'remoteActions', action: null, body: {}});
 
     kuzzle.services.list.broker.listenOnce(request.requestId, (response) => {
@@ -48,7 +45,7 @@ describe('Test: remote actions controller', function () {
 
   });
 
-  it('should fail if the given action does not exist', function (done) {
+  it('should fail if the given action does not exist', (done) => {
     var request = new RequestObject({controller: 'remoteActions', action: 'foo', body: {}});
 
     kuzzle.services.list.broker.listenOnce(request.requestId, (response) => {
@@ -61,7 +58,7 @@ describe('Test: remote actions controller', function () {
 
   });
 
-  it('should fail if the given action triggers some error', function (done) {
+  it('should fail if the given action triggers some error', (done) => {
     var request = new RequestObject({controller: 'remoteActions', action: 'enable', body: {service: 'broker', enable: true}});
 
     kuzzle.services.list.broker.listenOnce(request.requestId, (response) => {
