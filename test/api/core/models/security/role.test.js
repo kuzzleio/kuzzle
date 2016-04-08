@@ -241,16 +241,16 @@ describe('Test: security/roleTest', () => {
       role.isActionAllowed(rq, context, kuzzle)
         .then(isAllowed => {
           should(isAllowed).be.false();
+          role.allowInternalIndex = true;
+          return role.isActionAllowed(rq, context, kuzzle);
+        })
+        .then(isAllowed => {
+          should(isAllowed).be.true();
           role.restrictedTo = restrictions;
           return role.isActionAllowed(rq, context, kuzzle);
         })
         .then(isAllowed => {
           should(isAllowed).be.false();
-          restrictions.push({index: '%kuzzle'});
-          return role.isActionAllowed(rq, context, kuzzle);
-        })
-        .then(isAllowed => {
-          should(isAllowed).be.true();
           done();
         })
         .catch(err => {
