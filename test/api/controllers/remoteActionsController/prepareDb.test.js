@@ -12,6 +12,7 @@ var
 
 describe('Test: Prepare database', function () {
   var 
+    kuzzle,
     request,
     filesRead,
     indexCreated,
@@ -19,7 +20,7 @@ describe('Test: Prepare database', function () {
     mappingsImported,
     fixturesImported;
 
-  before(function (done) {
+  beforeEach(function (done) {
     prepareDb = rewire('../../../../lib/api/controllers/remoteActions/prepareDb');
 
     prepareDb.__set__('createInternalStructure', function () { internalIndexCreated = true; return q(); });
@@ -29,36 +30,35 @@ describe('Test: Prepare database', function () {
     prepareDb.__set__('importFixtures', function () { fixturesImported = true; return q(); });
 
     kuzzle = new Kuzzle();
-    kuzzle.start(params, {dummy: true});
+    kuzzle.start(params, {dummy: true})
+      .then(() => {
+        kuzzle.config = {
+          internalIndex: 'foobar'
+        };
 
-    kuzzle.config = {
-      internalIndex: 'foobar'
-    };
-
-    kuzzle.services.list = {
-      writeEngine: {},
-      readEngine: {
-        listIndexes: function () {
-          return q({
-            data: {
-              body: {
-                indexes: ['foo', 'bar']
-              }
+        kuzzle.services.list = {
+          writeEngine: {},
+          readEngine: {
+            listIndexes: function () {
+              return q({
+                data: {
+                  body: {
+                    indexes: ['foo', 'bar']
+                  }
+                }
+              });
             }
-          });
-        }
-      }
-    };
+          }
+        };
 
-    done();
-  });
+        filesRead = [];
+        indexCreated = false;
+        mappingsImported = false;
+        fixturesImported = false;
+        internalIndexCreated = false;
 
-  beforeEach(function () {
-    filesRead = [];
-    indexCreated = false;
-    mappingsImported = false;
-    fixturesImported = false;
-    internalIndexCreated = false;
+        done();
+      });
   });
 
   it('should execute the right call chain', function (done) {
@@ -79,8 +79,10 @@ describe('Test: Prepare database', function () {
 
   it('should do nothing if not in a kuzzle server instance', function (done) {
     kuzzle.isServer = false;
+    kuzzle.isWorker = true;
+    request = new RequestObject({controller: 'remoteActions', action: 'prepareDb', body: {}});
 
-    prepareDb(kuzzle)
+    prepareDb(kuzzle, request)
       .then(function () {
         should(filesRead).match([]);
         should(indexCreated).be.false();

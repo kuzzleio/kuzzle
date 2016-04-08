@@ -14,11 +14,6 @@ describe('Test: clean database', function () {
     request = new RequestObject({controller: 'remoteActions', action: 'cleanDb', body: {}});
 
   beforeEach(function (done) {
-    if (kuzzle) {
-      console.log('delete kuzzle');
-      kuzzle = null;
-    }
-    console.log('kuzzle', kuzzle);
     kuzzle = new Kuzzle();
     kuzzle.start(params, {dummy: true})
       .then(function () {
@@ -42,7 +37,8 @@ describe('Test: clean database', function () {
         };
 
         resetCalled = false;
-console.log('beforeEach');
+
+        kuzzle.isServer = true;
 
         done();
       });
@@ -53,12 +49,9 @@ console.log('beforeEach');
     var
       workerCalled = false,
       hasFiredCleanDbDone = false;
-this.timeout(200);
-    kuzzle.isServer = true;
 
     kuzzle.pluginsManager = {
       trigger: function (event, data) {
-        console.log('old kuzzle.pluginsManager');
         if (event === 'cleanDb:done') {
           hasFiredCleanDbDone = true;
           should(data).be.exactly('Reset done: Kuzzle is now like a virgin, touched for the very first time !');
@@ -68,7 +61,6 @@ this.timeout(200);
 
     kuzzle.workerListener = {
       add: function (requestObject) {
-        console.log('old kuzzle.workerListener');
         should(requestObject.controller).be.eql('admin');
         should(requestObject.action).be.eql('deleteIndexes');
         workerCalled = true;
@@ -81,7 +73,6 @@ this.timeout(200);
         should(workerCalled).be.true();
         should(resetCalled).be.true();
         should(hasFiredCleanDbDone).be.true();
-        delete kuzzle;
         done();
       })
       .catch(error => done(error));
@@ -91,7 +82,7 @@ this.timeout(200);
     var
       workerCalled = false,
       hasFiredCleanDbError = false;
-this.timeout(200);
+
     kuzzle.services.list = {
       writeEngine: {},
       readEngine: {
@@ -113,7 +104,6 @@ this.timeout(200);
 
     kuzzle.workerListener = {
       add: function (requestObject) {
-        console.log('AAAAAAAAAAAAAAA');
         workerCalled = true;
         should(requestObject.controller).be.eql('admin');
         should(requestObject.action).be.eql('deleteIndexes');
@@ -123,7 +113,6 @@ this.timeout(200);
 
     kuzzle.pluginsManager = {
       trigger: function (event, data) {
-        console.log('BBBBBBBBBBBBBB', event, data);
         if (event === 'cleanDb:error') {
           should(data).be.exactly('error');
           hasFiredCleanDbError = true;
@@ -133,7 +122,6 @@ this.timeout(200);
 
     kuzzle.remoteActionsController.actions.cleanDb(kuzzle, request)
       .then(function (result) {
-        console.log('result', result);
         should(workerCalled).be.true();
         should(resetCalled).be.false();
         should(hasFiredCleanDbError).be.true();
