@@ -3,8 +3,6 @@ var
   should = require('should'),
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
-  Profile = require.main.require('lib/api/core/models/security/profile'),
-  User = require.main.require('lib/api/core/models/security/user'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
   ResponseObject = require.main.require('lib/api/core/models/responseObject'),
   BadRequestError = require.main.require('lib/api/core/errors/badRequestError'),
@@ -12,6 +10,7 @@ var
 
 describe('Test: security controller - users', function () {
   var
+    persistOptions,
     kuzzle;
 
   before(function (done) {
@@ -36,15 +35,8 @@ describe('Test: security controller - users', function () {
           return q(null);
         };
         kuzzle.repositories.user.persist = (user, opts) => {
-          return q(new ResponseObject(new RequestObject(user), {
-            _index: '%kuzzle',
-            _type: 'users',
-            _method: (opts && opts.database && opts.database.method) ? opts.database.method : 'createOrReplace',
-            _id: user._id,
-            _version: 1,
-            created: true,
-            _source: kuzzle.repositories.user.serializeToDatabase(user)
-          }));
+          persistOptions = opts;
+          return q(user);
         };
         kuzzle.repositories.user.deleteFromDatabase = requestObject => {
           return q(new ResponseObject(requestObject, {_id: 'test'}));
@@ -54,14 +46,18 @@ describe('Test: security controller - users', function () {
       });
   });
 
+  beforeEach(function () {
+    persistOptions = {};
+  });
+
   describe('#getUser', function () {
     it('should reject the promise if no id is given', () => {
-      return should(kuzzle.funnel.security.getUser(new RequestObject({})))
+      return should(kuzzle.funnel.controllers.security.getUser(new RequestObject({})))
         .be.rejectedWith(BadRequestError);
     });
 
     it('should return an hydrated responseObject', done => {
-      kuzzle.funnel.security.getUser(new RequestObject({
+      kuzzle.funnel.controllers.security.getUser(new RequestObject({
         body: { _id: 'anonymous' }
       }))
         .then(response => {
@@ -76,7 +72,7 @@ describe('Test: security controller - users', function () {
     });
 
     it('should reject with NotFoundError when the user is not found', () => {
-      var promise = kuzzle.funnel.security.getUser(new RequestObject({
+      var promise = kuzzle.funnel.controllers.security.getUser(new RequestObject({
         body: { _id: 'i.dont.exist' }
       }));
 
@@ -86,7 +82,7 @@ describe('Test: security controller - users', function () {
 
   describe('#searchUsers', function () {
     it('should return a valid responseObject', done => {
-      kuzzle.funnel.security.searchUsers(new RequestObject({
+      kuzzle.funnel.controllers.security.searchUsers(new RequestObject({
         body: {
           filter: {},
           from: 0,
@@ -103,7 +99,7 @@ describe('Test: security controller - users', function () {
     });
 
     it('should return some unhydrated users when asked', done => {
-      kuzzle.funnel.security.searchUsers(new RequestObject({
+      kuzzle.funnel.controllers.security.searchUsers(new RequestObject({
         body: { hydrate: false }
       }))
         .then(response => {
@@ -120,7 +116,7 @@ describe('Test: security controller - users', function () {
 
   describe('#deleteUser', function () {
     it('should return a valid responseObject', done => {
-      kuzzle.funnel.security.deleteUser(new RequestObject({
+      kuzzle.funnel.controllers.security.deleteUser(new RequestObject({
         body: { _id: 'test' }
       }))
         .then(response => {
@@ -133,20 +129,19 @@ describe('Test: security controller - users', function () {
     });
 
     it('should not resolve the promise when no id is given', () => {
-      return should(kuzzle.funnel.security.deleteUser(new RequestObject({})))
+      return should(kuzzle.funnel.controllers.security.deleteUser(new RequestObject({})))
         .be.rejectedWith(BadRequestError);
     });
   });
 
   describe('#createUser', function () {
     it('should return a valid a valid response', done => {
-      kuzzle.funnel.security.createUser(new RequestObject({
+      kuzzle.funnel.controllers.security.createUser(new RequestObject({
         body: { _id: 'test', name: 'John Doe', profile: 'anonymous' }
       }))
         .then(response => {
           should(response).be.an.instanceOf(ResponseObject);
-          should(response.data.body.created).be.exactly(true);
-          should(response.data.body._method).be.exactly('create');
+          should(persistOptions.database.method).be.exactly('create');
 
           done();
         })
@@ -154,12 +149,12 @@ describe('Test: security controller - users', function () {
     });
 
     it('should compute a user id if none is provided', done => {
-      kuzzle.funnel.security.createUser(new RequestObject({
+      kuzzle.funnel.controllers.security.createUser(new RequestObject({
         body: { name: 'John Doe', profile: 'anonymous' }
       }))
         .then(response => {
           should(response).be.an.instanceOf(ResponseObject);
-          should(response.data.body._method).be.exactly('create');
+          should(persistOptions.database.method).be.exactly('create');
           should(response.data.body._id).match(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
 
           done();
@@ -168,7 +163,7 @@ describe('Test: security controller - users', function () {
     });
 
     it('should reject the promise if no profile is given', () => {
-      return should(kuzzle.funnel.security.createUser(new RequestObject({
+      return should(kuzzle.funnel.controllers.security.createUser(new RequestObject({
         body: {}
       })))
         .be.rejectedWith(BadRequestError);
@@ -177,12 +172,12 @@ describe('Test: security controller - users', function () {
 
   describe('#updateUser', function () {
     it('should return a valid ResponseObject', done => {
-      kuzzle.funnel.security.updateUser(new RequestObject({
+      kuzzle.funnel.controllers.security.updateUser(new RequestObject({
         body: { _id: 'anonymous', foo: 'bar' }
       }))
         .then(response => {
           should(response).be.an.instanceOf(ResponseObject);
-          should(response.data.body._method).be.exactly('update');
+          should(persistOptions.database.method).be.exactly('update');
           should(response.data.body._id).be.exactly('anonymous');
 
           done();
@@ -191,7 +186,7 @@ describe('Test: security controller - users', function () {
     });
 
     it('should reject the promise if no id is given', () => {
-      return should(kuzzle.funnel.security.updateUser(new RequestObject({
+      return should(kuzzle.funnel.controllers.security.updateUser(new RequestObject({
         body: {}
       })))
         .be.rejectedWith(BadRequestError);
@@ -200,7 +195,7 @@ describe('Test: security controller - users', function () {
 
   describe('#createOrReplaceUser', function () {
     it('should return a valid responseObject', done => {
-      kuzzle.funnel.security.createOrReplaceUser(new RequestObject({
+      kuzzle.funnel.controllers.security.createOrReplaceUser(new RequestObject({
         body: {
           _id: 'test',
           profile: 'admin'
@@ -216,7 +211,7 @@ describe('Test: security controller - users', function () {
     });
 
     it('should reject the promise if no profile is given', () => {
-      return should(kuzzle.funnel.security.createOrReplaceUser(new RequestObject({
+      return should(kuzzle.funnel.controllers.security.createOrReplaceUser(new RequestObject({
         _id: 'test'
       })))
         .be.rejectedWith(BadRequestError);

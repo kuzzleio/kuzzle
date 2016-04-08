@@ -161,5 +161,7 @@ module.exports = function () {
         profile: null
       }
     };
+
+    this.memoryStorageResult = null;
   };
 };

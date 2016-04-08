@@ -56,13 +56,14 @@ kuzzle:
 
 Plugins configuration have the following default attributes:
 
+* `path`: The local path where the plugin is hosted on the server.
 * `url`: a git URL where the plugin can be found and cloned.
 * `version`: the NPM package version to download
 * `customConfig`: config for the plugin. Each plugin has a different configuration (required or optional), check the corresponding plugin documentation for more information.
 * `defaultConfig`: Don't edit this attribute. The defaultConfig is provided by the plugin itself. If you need to change the configuration, edit the `customConfig` attribute
 
 **Note:**
-* A `url` or `version` parameter is required. The URL is checked first, so if you have set both a version and an URL, the version will be ignored.
+* A `path`, a `url`, or a `version` parameter is required. Priority is `path`, `url`, `version`; if more than one paramater is set, highest priority parameter is used and others will be ignored.
 
 # Default plugins
 
@@ -354,8 +355,8 @@ To access these methods, simply call ``context.getRouter().<router method>``:
 
 | Router method | Arguments    | Returns | Description              |
 |-----------------|--------------|---------|--------------------------|
-| ``newConnection`` | ``protocol name`` (string) <br>``connection ID`` (string) | A promise resolving to a ``context`` object | Declare a new connection to Kuzzle. |
-| ``execute`` | ``optional JWT Headers`` (string)<br>``RequestObject`` (object)<br>``context`` (obtained with ``newConnection``) | A promise resolving to the corresponding ``ResponseObject`` | Execute a client request. |
+| ``newConnection`` | ``protocol name`` (string) <br/>``connection ID`` (string) | A promise resolving to a ``context`` object | Declare a new connection to Kuzzle. |
+| ``execute`` | ``optional JWT Headers`` (string)<br/>``RequestObject`` (object)<br/>``context`` (obtained with ``newConnection``)<br/>A node callback resolved with the request response |  | Execute a client request. |
 | ``removeConnection`` | ``context`` (obtained with ``newConnection``) | | Asks Kuzzle to remove the corresponding connection and all its subscriptions |
 
 #### Example
@@ -390,14 +391,14 @@ module.exports = function () {
       });
 
     // whenever a client sends a request
-    context.getRouter().execute(null, requestObject, this.contexts["id"])
-      .then(response => {
-        // forward the response to the client
-      })
-      .catch(error => {
+    context.getRouter().execute(null, requestObject, this.contexts["id"], (error, response) => {
+      if (error) {
         // errors are encapsulated in a ResponseObject. You may simply
         // forward it to the client too
-      });
+      } else {
+        // forward the response to the client
+      }
+    });
 
     // whenever a client is disconnected
     context.getRouter().removeConnection(this.contexts["id"]);

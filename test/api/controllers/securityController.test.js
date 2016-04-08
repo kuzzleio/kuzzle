@@ -3,6 +3,7 @@ var
   should = require('should'),
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
+  Role = require.main.require('lib/api/core/models/security/role'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
   ResponseObject = require.main.require('lib/api/core/models/responseObject');
 
@@ -15,12 +16,7 @@ describe('Test: security controller', function () {
     kuzzle.start(params, {dummy: true})
       .then(function () {
         kuzzle.repositories.role.validateAndSaveRole = role => {
-          return q(new ResponseObject({}, {
-            _index: '%kuzzle',
-            _type: 'roles',
-            _id: role._id,
-            created: true
-          }));
+          return q(role);
         };
 
         done();
@@ -31,7 +27,7 @@ describe('Test: security controller', function () {
   });
 
   it('should resolve to a responseObject on a createOrUpdateRole call', done => {
-    kuzzle.funnel.security.createOrReplaceRole(new RequestObject({
+    kuzzle.funnel.controllers.security.createOrReplaceRole(new RequestObject({
         body: { _id: 'test', indexes: {} }
       }))
       .then(result => {
@@ -45,7 +41,7 @@ describe('Test: security controller', function () {
   });
 
   it('should be rejected if creating a profile with bad roles property form', () => {
-    var promise = kuzzle.funnel.security.createOrReplaceProfile(new RequestObject({
+    var promise = kuzzle.funnel.controllers.security.createOrReplaceProfile(new RequestObject({
       body: { _id: 'test', roles: 'not-an-array-role' }
     }));
 

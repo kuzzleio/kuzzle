@@ -34,7 +34,7 @@ describe('Test: subscribe controller', function () {
   beforeEach(() =>  requestObject = new RequestObject({index: 'test', collection: 'collection', controller: 'subscribe'}, {}, 'unit-test'));
 
   it('should forward new subscriptions to the hotelClerk core component', function () {
-    var foo = kuzzle.funnel.subscribe.on(requestObject, {
+    var foo = kuzzle.funnel.controllers.subscribe.on(requestObject, {
       connection: {id: 'foobar'},
       token: anonymousToken
     });
@@ -48,7 +48,7 @@ describe('Test: subscribe controller', function () {
       result;
 
     requestObject.data.body = { roomId: 'foobar' };
-    result = kuzzle.funnel.subscribe.off(requestObject, {
+    result = kuzzle.funnel.controllers.subscribe.off(requestObject, {
       connection: {id: newUser },
       token: anonymousToken
     });
@@ -58,7 +58,7 @@ describe('Test: subscribe controller', function () {
 
   it('should forward subscription counts queries to the hotelClerk core component', function () {
     var
-      foo = kuzzle.funnel.subscribe.count(requestObject);
+      foo = kuzzle.funnel.controllers.subscribe.count(requestObject);
 
     return should(foo).be.rejectedWith(BadRequestError, { message: 'The room Id is mandatory to count subscriptions' });
   });
@@ -68,7 +68,7 @@ describe('Test: subscribe controller', function () {
       this.timeout(50);
 
       kuzzle.once('subscription:list', () => done());
-      should(kuzzle.funnel.subscribe.list(requestObject, {
+      should(kuzzle.funnel.controllers.subscribe.list(requestObject, {
         connection: {id: 'foobar'} ,
         token: anonymousToken
       })).be.a.Promise();
@@ -79,7 +79,7 @@ describe('Test: subscribe controller', function () {
     it('should trigger a hook and return a promise', function (done) {
       this.timeout(50);
       kuzzle.once('subscription:join', () => done());
-      should(kuzzle.funnel.subscribe.join(requestObject, {
+      should(kuzzle.funnel.controllers.subscribe.join(requestObject, {
         connection: {id: 'foobar'},
         token: anonymousToken
       })).be.a.Promise();

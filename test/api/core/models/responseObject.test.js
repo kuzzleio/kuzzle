@@ -135,7 +135,7 @@ describe('Test: responseObject', function () {
 
   it('should be able to reconstruct a response object out of a serialized version of itself', function () {
     var
-      response = new ResponseObject(requestObject),
+      response = new ResponseObject(requestObject, {}),
       serialized = JSON.parse(JSON.stringify(response)),
       unserialized = ResponseObject.prototype.unserialize(serialized);
 
