@@ -117,16 +117,16 @@ this.timeout(200);
     kuzzle.workerListener = {
       add: function (requestObject) {
         console.log('AAAAAAAAAAAAAAA');
+        workerCalled = true;
         should(requestObject.controller).be.eql('admin');
         should(requestObject.action).be.eql('deleteIndexes');
-        workerCalled = true;
         return q.reject('error');
       }
     };
 
     kuzzle.pluginsManager = {
       trigger: function (event, data) {
-        console.log('BBBBBBBBBBBBBB', event);
+        console.log('BBBBBBBBBBBBBB', event, data);
         if (event === 'cleanDb:error') {
           should(data).be.exactly('error');
           hasFiredCleanDbError = true;
@@ -135,7 +135,8 @@ this.timeout(200);
     };
 
     kuzzle.remoteActionsController.actions.cleanDb(kuzzle, request)
-      .then(function () {
+      .then(function (result) {
+        console.log('result', result);
         should(workerCalled).be.true();
         should(resetCalled).be.false();
         should(hasFiredCleanDbError).be.true();

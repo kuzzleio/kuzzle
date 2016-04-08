@@ -18,19 +18,20 @@ describe('Test: clean and prepare database remote action', function () {
       kuzzle;
 
     kuzzle = new Kuzzle();
-    kuzzle.start(params, {dummy: true});
+    kuzzle.start(params, {dummy: true})
+      .then(() => {
+        kuzzle.remoteActionsController.actions.cleanDb = function () { cleanDbCalled = true; return q(); }
+        kuzzle.remoteActionsController.actions.prepareDb = function () { prepareDbCalled = true; return q(); }
 
-    kuzzle.remoteActionsController.actions.cleanDb = function () { cleanDbCalled = true; return q(); }
-    kuzzle.remoteActionsController.actions.prepareDb = function () { prepareDbCalled = true; return q(); }
-
-    kuzzle.remoteActionsController.actions.cleanAndPrepare(kuzzle, request)
-      .then(function () {
-        should(cleanDbCalled).be.true();
-        should(prepareDbCalled).be.true();
-        done();
-      })
-      .catch((err) => {
-        done(err);
+        kuzzle.remoteActionsController.actions.cleanAndPrepare(kuzzle, request)
+          .then(function () {
+            should(cleanDbCalled).be.true();
+            should(prepareDbCalled).be.true();
+            done();
+          })
+          .catch((err) => {
+            done(err);
+          });
       });
   });
 });
