@@ -158,8 +158,6 @@ describe('Test: security/roleTest', () => {
       var
         role = new Role(),
         rq = {
-          index: 'index',
-          collection: 'collection',
           controller: 'controller',
           action: 'action'
         },
@@ -184,6 +182,11 @@ describe('Test: security/roleTest', () => {
           return role.isActionAllowed(rq, context, kuzzle);
         })
         .then(isAllowed => {
+          should(isAllowed).be.true();
+          rq.index = 'index';
+          return role.isActionAllowed(rq, context, kuzzle);
+        })
+        .then(isAllowed => {
           should(isAllowed).be.false();
           rq.index = 'index1';
           return role.isActionAllowed(rq, context, kuzzle);
@@ -191,6 +194,11 @@ describe('Test: security/roleTest', () => {
         .then(isAllowed => {
           should(isAllowed).be.true();
           rq.index = 'index2';
+          return role.isActionAllowed(rq, context, kuzzle);
+        })
+        .then(isAllowed => {
+          should(isAllowed).be.true();
+          rq.collection = 'collection';
           return role.isActionAllowed(rq, context, kuzzle);
         })
         .then(isAllowed => {
