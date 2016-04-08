@@ -37,9 +37,6 @@ describe('Test: clean database', function () {
           }
         };
 
-        kuzzle.remoteActionsController.actions.cleanDb = require('../../../../lib/api/controllers/remoteActions/cleanDb');
-        kuzzle.remoteActionsController.actions.prepareDb = require('../../../../lib/api/controllers/remoteActions/prepareDb');
-
         kuzzle.indexCache = {
           reset: function () { resetCalled = true; }
         };
