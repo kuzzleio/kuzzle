@@ -4,9 +4,25 @@
     "activated": true,
     "name": "kuzzle-plugin-logger",
     "defaultConfig": {
-      "service": "winston",
-      "level": "info",
-      "addDate": true,
+      "services": {
+        "file": {
+          "outputs": {
+            "error": {
+              "level": "error",
+              "filename": "kuzzle-error.log"
+            },
+            "warning": {
+              "level": "warn",
+              "filename": "kuzzle-warning.log"
+            }
+          },
+          "addDate": true
+        },
+        "stdout": {
+          "level": "info",
+          "addDate": true
+        }
+      },
       "loadedBy": "all"
     }
   },
