@@ -42,7 +42,10 @@ describe('Test: clean database', function () {
 
         done();
       });
+  });
 
+  after(function () {
+    kuzzle.isServer = false;
   });
 
   it('should clean database when the cleanDb controller is called', function (done) {

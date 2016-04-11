@@ -19,8 +19,6 @@ describe('Testing: write worker', function () {
       .then(function () {
         kuzzle.services.init = function () {};
 
-        kuzzle.services.list.statcache = {volatileSet: function() {}};
-
         // we test successful write commands using a mockup 'create' action...
         kuzzle.services.list.writeEngine.create = function (request) { return q(request); };
 

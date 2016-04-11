@@ -61,6 +61,11 @@ describe('Test: Prepare database', function () {
       });
   });
 
+  after(function () {
+    kuzzle.isServer = false;
+  });
+
+
   it('should execute the right call chain', function (done) {
     kuzzle.isServer = true;
     request = new RequestObject({controller: 'remoteActions', action: 'prepareDb', body: {}});

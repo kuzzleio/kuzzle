@@ -28,6 +28,7 @@ before(function (done) {
 
 after(function () {
   process.exit = oldProcessExit;
+  kuzzle.isServer = false;
 });
 
 describe('Test: remote actions controller', function () {
