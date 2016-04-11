@@ -13,6 +13,7 @@
   * [Architecture](#architecture)
   * [The plugin init function](#the-plugin-init-function)
     * [Listener plugins](#listener-plugins)
+    * [Worker plugins](#worker-plugins)
     * [Pipe plugins](#pipe-plugins)
     * [Controllers](#controllers)
       * [How it works](#how-it-works)
@@ -31,6 +32,7 @@ Plugins are external components allowing to execute functions on specific event 
 There are several types of plugins:
 
 * Hook events: just listen to events and perform other actions (ie: a log plugin). They do not respond to anything directly, they just listen.
+* Workers: just like Hook plugins, they only listen without responding but Workers are running on another process. Useful when a plugin has many complex computation to perform.
 * Pipe events: perform an action and return something. Kuzzle is waiting that all pipe events are performed before continuing.
 * Controllers: add a specific controller to Kuzzle.
 
@@ -140,6 +142,40 @@ Where:
 * ``isDummy``: boolean. True: asks the plugin to not really start itself, but instead mock its functionalities (useful when testing plugins, kuzzle, or both)
 
 ### Listener plugins
+
+Hook events are triggered and are non-blocking functions. Listener plugins are configured to be called on these hooks.
+
+```js
+// Somewhere in Kuzzle
+kuzzle.pluginsManager.trigger('event:hookEvent', message);
+```
+
+```js
+/*
+  Plugin hooks configuration.
+  Let's assume that we store this configuration in a "hooks.js" file
+ */
+module.exports = {
+  'event:hookEvent': 'myFunction'
+}
+```
+
+```js
+// Plugin implementation
+module.exports = function () {
+  this.hooks = require('./config/hooks.js');
+  this.init = function (config, context, isDummy) {
+    // do something
+  }
+
+  this.myFunction = function (message, event) {
+    console.log('Event', event, 'is triggered');
+    console.log('Here is the message', message);
+  }
+}
+```
+
+### Worker plugins
 
 Hook events are triggered and are non-blocking functions. Listener plugins are configured to be called on these hooks.
 
@@ -413,13 +449,13 @@ module.exports = function () {
      The payload is a ResponseObject
     */
   };
-  
+
   this.notify = function (data) {
     /*
      Linked to the protocol:notify hook, emitted
      by Kuzzle when a "data.payload" needs to be emitted to the
      connection "data.id", on the channel "data.channel"
-     
+
      The payload is a ResponseObject
     */
   };
