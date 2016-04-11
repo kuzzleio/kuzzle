@@ -15,12 +15,12 @@ describe('Test: cleanDb remote action caller', function () {
     processExit = process.exit;
     process.exit = function (status) {
       exitStatus = status;
-    }
+    };
   });
 
   after(function () {
     process.exit = processExit;
-  })
+  });
 
   it('should prepare the data properly', function (done) {
     var
