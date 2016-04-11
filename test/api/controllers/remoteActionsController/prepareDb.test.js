@@ -61,10 +61,19 @@ describe('Test: Prepare database', function () {
       });
   });
 
-  after(function () {
-    kuzzle.isServer = false;
-  });
+  it('should store fixtures and mappings filename if provided', function (done) {
+    kuzzle.isServer = true;
+    request = new RequestObject({controller: 'remoteActions', action: 'prepareDb', body: {fixtures: 'fixtures.json', mappings: 'mappings.json'}});
 
+    prepareDb(kuzzle, request)
+      .then(() => {
+        var files = prepareDb.__get__('files');
+        should(files.fixtures).be.eql('fixtures.json');
+        should(files.mappings).be.eql('mappings.json');
+        done();
+      })
+      .catch(err => done(err));
+  });
 
   it('should execute the right call chain', function (done) {
     kuzzle.isServer = true;

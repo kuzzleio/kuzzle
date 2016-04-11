@@ -44,10 +44,6 @@ describe('Test: clean database', function () {
       });
   });
 
-  after(function () {
-    kuzzle.isServer = false;
-  });
-
   it('should clean database when the cleanDb controller is called', function (done) {
     var
       workerCalled = false,
@@ -130,8 +126,16 @@ describe('Test: clean database', function () {
         should(hasFiredCleanDbError).be.true();
         done();
       })
-      .catch((err) => {
-        done(err);
-      });
+      .catch((err) => done(err));
+  });
+
+  it('should do nothing if kuzzle is not a server', function (done) {
+    kuzzle.isServer = false;
+    kuzzle.remoteActionsController.actions.cleanDb(kuzzle, request)
+      .then ((result) => {
+        should(result).be.eql(request);
+        done();
+      })
+      .catch(err => done(err));
   });
 });
