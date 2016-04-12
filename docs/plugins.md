@@ -9,6 +9,7 @@
   * [Socket.io communication support](#socketio-communication-support)
 * [How to create a plugin](#how-to-create-a-plugin)
   * [Configuration](#configuration)
+  * [Events triggered](#events-triggered)
   * [The plugin context](#the-plugin-context)
   * [Architecture](#architecture)
   * [The plugin init function](#the-plugin-init-function)
@@ -95,17 +96,43 @@ The module must have a `package.json` file with a `pluginInfo` entry. The option
 
 ```json
 "pluginInfo": {
-    "loadedBy": "all",
+    "loadedBy": "server",
     "defaultConfig": {
       "service": "winston",
       "level": "info",
       "addDate": true
-    }
+    },
+    "threads": 2
   }
 ```
 
-The `loadedBy` option tells Kuzzle to install and load the plugin only by corresponding instance types.  
-The accepted values are: `all`, `server` and `worker`. Default value: `all`.
+* The `loadedBy` option tells Kuzzle to install and load the plugin only by corresponding instance types. The accepted values are: `all`, `server` and `worker`. Default value: `all`.
+* The `threads` option tells Kuzzle to load the plugin into different process and scale up to two process. Check [Worker communication](#worker-plugins) for more information.
+
+##  Events triggered
+
+| Event | Description | Input |
+|-------|-------------|-------|
+|`cleanDb:deleteIndexes`| Triggered during `cleanDb` process just before indexes deletion. |Type: Request object.<br> Contains all indexes to delete in `requestObject.data.body.indexes`|
+|`cleanDb:done`|Triggered after indexes deletion.| / |
+|`cleanDb:error`|Triggered when an error occurred on clean db|Type: Error|
+|`prepareDb:createInternalIndex`|Triggered on Kuzzle start for creating the internal index `%kuzzle`|Type: Request object.<br> Contains the internal index in `requestObject.index`|
+|`prepareDb:updateMappingRoles`|Triggered on Kuzzle start for creating the internal mapping for Roles collection|Type: Request object.<br> Contains the default mapping in `requestObject.data.body`|
+|`prepareDb:updateMappingProfiles`|Triggered on Kuzzle start for creating the internal mapping for Profiles collection|Type: Request object.<br> Contains the default mapping in `requestObject.data.body`|
+|`prepareDb:updateMappingUsers`|Triggered on Kuzzle start for creating the internal mapping for Users collection|Type: Request object.<br> Contains the default mapping in `requestObject.data.body`|
+|`prepareDb:createFixturesIndex`|Triggered during database preparation. Called for each index in fixtures|Type: Request object.<br> Contains the index to create in `requestObject.index`|
+|`prepareDb:importMapping`|Triggered during database preparation. Called for each mapping to import|Type: Request object.<br> Contains the index in `requestObject.index` and mapping in `requestObject.data.body`|
+|`prepareDb:importFixtures`|Triggered during database preparation. Called for each fixtures to import|Type: Request object.<br> Contains the index in `requestObject.index` and bulk in `requestObject.data.body`|
+|`prepareDb:error`|Triggered when an error occurred during database preparation|Type: Error|
+|``|||
+|``|||
+|``|||
+|``|||
+|``|||
+|``|||
+|``|||
+|``|||
+
 
 ## The plugin context
 
@@ -177,37 +204,22 @@ module.exports = function () {
 
 ### Worker plugins
 
-Hook events are triggered and are non-blocking functions. Listener plugins are configured to be called on these hooks.
+Every Hook plugin can be used as Worker, but Worker plugin can only be launch by the Server, if you define in configuration `"loadedBy": "worker"`, the plugin will be ignored.  
+You can convert a Hook plugin into a Worker plugin by adding attribute `threads` in your plugin definition.
 
-```js
-// Somewhere in Kuzzle
-kuzzle.pluginsManager.trigger('event:hookEvent', message);
-```
-
-```js
-/*
-  Plugin hooks configuration.
-  Let's assume that we store this configuration in a "hooks.js" file
- */
-module.exports = {
-  'event:hookEvent': 'myFunction'
-}
-```
-
-```js
-// Plugin implementation
-module.exports = function () {
-  this.hooks = require('./config/hooks.js');
-  this.init = function (config, context, isDummy) {
-    // do something
+```json
+{
+    "path": "/var/kuzzle-plugin-very-useful",
+    "defaultConfig": {
+      "loadedBy": "server",
+      "threads": 2
+    },
+    "activated": true
   }
-
-  this.myFunction = function (message, event) {
-    console.log('Event', event, 'is triggered');
-    console.log('Here is the message', message);
-  }
-}
 ```
+
+The `threads` value correspond to the number of process that will be launch.
+
 
 ### Pipe plugins
 
