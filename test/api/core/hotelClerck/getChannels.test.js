@@ -1,7 +1,7 @@
 var
   should = require('should'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
-  ResponseObject = require.main.require('lib/api/core/models/responseObject'),
+  NotificationObject = require.main.require('lib/api/core/models/notificationObject'),
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle');
 
@@ -31,11 +31,10 @@ describe('Test: hotelClerk.getChannels', function () {
       },
       city: 'NYC',
       hobby: 'computer'
-    },
-    responseObject;
+    };
+    //notificationObject;
 
   beforeEach(function () {
-    responseObject = new ResponseObject(new RequestObject({collection: 'foo', body: dataGrace}));
     kuzzle = new Kuzzle();
     kuzzle.removeAllListeners();
 
@@ -49,12 +48,14 @@ describe('Test: hotelClerk.getChannels', function () {
   it('should return the right channels depending on the response state', function (done) {
     var
       roomId,
+      notification,
       channels = {};
 
     request.state = 'all';
     kuzzle.hotelClerk.addSubscription(new RequestObject(request), context)
       .then(response => {
         roomId = response.roomId;
+        notification = new NotificationObject(response.roomId, new RequestObject({collection: 'foo', body: dataGrace}));
         channels.all = response.channel;
         request.state = 'done';
         return kuzzle.hotelClerk.addSubscription(new RequestObject(request), context);
@@ -68,19 +69,19 @@ describe('Test: hotelClerk.getChannels', function () {
         var eligibleChannels;
 
         channels.pending = response.channel;
-        responseObject.state = 'done';
+        notification.state = 'done';
 
-        eligibleChannels = kuzzle.hotelClerk.getChannels(roomId, responseObject.toJson());
+        eligibleChannels = kuzzle.hotelClerk.getChannels(roomId, notification);
         should(eligibleChannels.length).be.exactly(2);
         should(eligibleChannels.sort()).match([channels.all, channels.done].sort());
 
-        responseObject.state = 'pending';
-        eligibleChannels = kuzzle.hotelClerk.getChannels(roomId, responseObject.toJson());
+        notification.state = 'pending';
+        eligibleChannels = kuzzle.hotelClerk.getChannels(roomId, notification);
         should(eligibleChannels.length).be.exactly(2);
         should(eligibleChannels.sort()).match([channels.all, channels.pending].sort());
 
-        delete responseObject.state;
-        eligibleChannels = kuzzle.hotelClerk.getChannels(roomId, responseObject.toJson());
+        delete notification.state;
+        eligibleChannels = kuzzle.hotelClerk.getChannels(roomId, notification);
         should(eligibleChannels.length).be.exactly(3);
         should(eligibleChannels.sort()).match([channels.all, channels.pending, channels.done].sort());
 
@@ -93,12 +94,14 @@ describe('Test: hotelClerk.getChannels', function () {
   it('should return the right channels depending on the response scope', function (done) {
     var
       roomId,
+      notification,
       channels = {};
 
     request.scope = 'all';
     kuzzle.hotelClerk.addSubscription(new RequestObject(request), context)
       .then(response => {
         roomId = response.roomId;
+        notification = new NotificationObject(response.roomId, new RequestObject({collection: 'foo', body: dataGrace}));
         channels.all = response.channel;
         request.scope = 'in';
         return kuzzle.hotelClerk.addSubscription(new RequestObject(request), context);
@@ -117,18 +120,18 @@ describe('Test: hotelClerk.getChannels', function () {
         var eligibleChannels;
 
         channels.none = response.channel;
-        responseObject.scope = 'in';
-        eligibleChannels = kuzzle.hotelClerk.getChannels(roomId, responseObject.toJson());
+        notification.scope = 'in';
+        eligibleChannels = kuzzle.hotelClerk.getChannels(roomId, notification);
         should(eligibleChannels.length).be.exactly(2);
         should(eligibleChannels.sort()).match([channels.all, channels.in].sort());
 
-        responseObject.scope = 'out';
-        eligibleChannels = kuzzle.hotelClerk.getChannels(roomId, responseObject.toJson());
+        notification.scope = 'out';
+        eligibleChannels = kuzzle.hotelClerk.getChannels(roomId, notification);
         should(eligibleChannels.length).be.exactly(2);
         should(eligibleChannels.sort()).match([channels.all, channels.out].sort());
 
-        delete responseObject.scope;
-        eligibleChannels = kuzzle.hotelClerk.getChannels(roomId, responseObject.toJson());
+        delete notification.scope;
+        eligibleChannels = kuzzle.hotelClerk.getChannels(roomId, notification);
         should(eligibleChannels.length).be.exactly(4);
         should(eligibleChannels.sort()).match(Object.keys(channels).map(key => channels[key]).sort());
         done();
@@ -139,13 +142,15 @@ describe('Test: hotelClerk.getChannels', function () {
   it('should return the right channels depending on the user event type', function (done) {
     var
       roomId,
+      notification,
       channels = {};
 
-    responseObject.controller = 'subscribe';
     request.users = 'all';
     kuzzle.hotelClerk.addSubscription(new RequestObject(request), context)
       .then(response => {
         roomId = response.roomId;
+        notification = new NotificationObject(response.roomId, new RequestObject({collection: 'foo', body: dataGrace}));
+        notification.controller = 'subscribe';
         channels.all = response.channel;
         request.users = 'in';
         return kuzzle.hotelClerk.addSubscription(new RequestObject(request), context);
@@ -165,19 +170,19 @@ describe('Test: hotelClerk.getChannels', function () {
 
         channels.none = response.channel;
 
-        responseObject.action = 'on';
-        eligibleChannels = kuzzle.hotelClerk.getChannels(roomId, responseObject.toJson());
+        notification.action = 'on';
+        eligibleChannels = kuzzle.hotelClerk.getChannels(roomId, notification);
         should(eligibleChannels.length).be.exactly(2);
         should(eligibleChannels.sort()).match([channels.all, channels.in].sort());
 
-        responseObject.action = 'off';
-        eligibleChannels = kuzzle.hotelClerk.getChannels(roomId, responseObject.toJson());
+        notification.action = 'off';
+        eligibleChannels = kuzzle.hotelClerk.getChannels(roomId, notification);
         should(eligibleChannels.length).be.exactly(2);
         should(eligibleChannels.sort()).match([channels.all, channels.out].sort());
 
-        delete responseObject.controller;
-        delete responseObject.action;
-        eligibleChannels = kuzzle.hotelClerk.getChannels(roomId, responseObject.toJson());
+        delete notification.controller;
+        delete notification.action;
+        eligibleChannels = kuzzle.hotelClerk.getChannels(roomId, notification);
         should(eligibleChannels.length).be.exactly(4);
         should(eligibleChannels.sort()).match(Object.keys(channels).map(key => channels[key]).sort());
         done();
