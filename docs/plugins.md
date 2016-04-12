@@ -124,7 +124,16 @@ The module must have a `package.json` file with a `pluginInfo` entry. The option
 |`prepareDb:importMapping`|Triggered during database preparation. Called for each mapping to import|Type: Request object.<br> Contains the index in `requestObject.index` and mapping in `requestObject.data.body`|
 |`prepareDb:importFixtures`|Triggered during database preparation. Called for each fixtures to import|Type: Request object.<br> Contains the index in `requestObject.index` and bulk in `requestObject.data.body`|
 |`prepareDb:error`|Triggered when an error occurred during database preparation|Type: Error|
-|``|||
+|`data:updateMapping`|Triggered before controller `admin` and action `updateMapping`|Type: Request object|
+|`data:getMapping`|Triggered before controller `admin` and action `getMapping`|Type: Request object|
+|`data:getStats`|Triggered before controller `admin` and action `getStats`|Type: Request object|
+|`data:getAllStats`|Triggered before controller `admin` and action `getAllStats`|Type: Request object|
+|`data:truncateCollection`|Triggered before controller `admin` and action `truncateCollection`|Type: Request object|
+|`data:deleteIndexes`|Triggered before controller `admin` and action `deleteIndexes`|Type: Request object|
+|`data:createIndex`|Triggered before controller `admin` and action `createIndex`|Type: Request object|
+|`data:deleteIndex`|Triggered before controller `admin` and action `deleteIndex`|Type: Request object|
+|`data:removeRooms`|Triggered before controller `admin` and action `removeRooms`. This action remove all rooms for a given collection|Type: Request object|
+|`data:refreshIndex`|Triggered before controller `admin` and action `refreshIndex`.|Type: Request object|
 |``|||
 |``|||
 |``|||
