@@ -2,7 +2,6 @@ var
   should = require('should'),
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
-  rewire = require('rewire'),
   q = require('q'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
   Token = require.main.require('lib/api/core/models/security/token'),
@@ -164,7 +163,7 @@ describe('Test: routerController', () => {
     });
 
     it('should forward any error that occured during execution back to the protocol plugin', (done) => {
-      kuzzle.funnel.execute = (r, c, cb) => { cb(new Error('rejected')); };
+      kuzzle.funnel.execute = (r, c, cb) => { cb(new ResponseObject(r, new Error('rejected'))); };
 
       kuzzle.router.execute(requestObject, context, (err) => {
         if (err && err instanceof ResponseObject) {

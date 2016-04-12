@@ -178,7 +178,8 @@ describe('funnelController.execute', function () {
         should(funnel.cachedRequests).be.eql(kuzzle.config.request.maxRetainedRequests);
         should(funnel.requestsCache).be.empty();
         should(res).be.undefined();
-        should(err).be.instanceOf(ServiceUnavailableError);
+        should(err).be.instanceOf(ResponseObject);
+        should(err.status).be.eql(503);
         done();
       });
     });

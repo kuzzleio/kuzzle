@@ -6,7 +6,6 @@
 var
   should = require('should'),
   params = require('rc')('kuzzle'),
-  q = require('q'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   rewire = require('rewire'),
   RouterController = rewire('../../../../lib/api/controllers/routerController'),
@@ -46,7 +45,7 @@ describe('Test: routerController.executeFromRest', function () {
           }
         }
         else {
-          callback(new Error('rejected'));
+          callback(new ResponseObject(requestObject, new Error('rejected')));
         }
       },
       mockupRouterListener = {

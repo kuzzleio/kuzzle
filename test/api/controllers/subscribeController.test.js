@@ -3,10 +3,7 @@ var
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
-  Profile = require.main.require('lib/api/core/models/security/profile'),
-  Role = require.main.require('lib/api/core/models/security/role'),
-  BadRequestError = require.main.require('lib/api/core/errors/badRequestError'),
-  NotFoundError = require.main.require('lib/api/core/errors/notFoundError');
+  ResponseObject = require.main.require('lib/api/core/models/responseObject');
 
 /*
  * Since we're sending voluntarily false requests, we expect most of these
@@ -53,14 +50,14 @@ describe('Test: subscribe controller', function () {
       token: anonymousToken
     });
 
-    return should(result).be.rejectedWith(NotFoundError, { message: 'The user with connection ' + newUser + ' doesn\'t exist' });
+    return should(result).be.rejectedWith(ResponseObject, { error: {message: 'The user with connection ' + newUser + ' doesn\'t exist' }});
   });
 
   it('should forward subscription counts queries to the hotelClerk core component', function () {
     var
       foo = kuzzle.funnel.controllers.subscribe.count(requestObject);
 
-    return should(foo).be.rejectedWith(BadRequestError, { message: 'The room Id is mandatory to count subscriptions' });
+    return should(foo).be.rejectedWith(ResponseObject, { error: {message: 'The room Id is mandatory to count subscriptions' }});
   });
 
   describe('#list', function () {
