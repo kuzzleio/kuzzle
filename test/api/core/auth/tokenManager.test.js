@@ -2,7 +2,7 @@ var
   should = require('should'),
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
-  RealTimeResponseObject = require.main.require('lib/api/core/models/realTimeResponseObject'),
+  NotificationObject = require.main.require('lib/api/core/models/notificationObject'),
   TokenManager = require.main.require('lib/api/core/auth/tokenManager');
 
 describe('Test: token manager core component', function () {
@@ -157,7 +157,7 @@ describe('Test: token manager core component', function () {
       should(subscriptionsCleaned).be.true();
       should(rooms).match(['room1', 'room2', 'room3']);
       should(connectionId).be.eql('foobar');
-      should(notification).be.instanceof(RealTimeResponseObject);
+      should(notification).be.instanceof(NotificationObject);
       should(notification.roomId).be.eql(rooms);
       should(notification.requestId).be.eql('server notification');
       should(notification.controller).be.eql('auth');

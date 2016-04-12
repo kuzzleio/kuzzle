@@ -10,7 +10,7 @@ describe('Test plugins manager run', function () {
   var
     contextObjects = [
       'ResponseObject',
-      'RealTimeResponseObject',
+      'NotificationObject',
       'BadRequestError',
       'ForbiddenError',
       'GatewayTimeoutError',

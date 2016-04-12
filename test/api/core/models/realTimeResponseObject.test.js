@@ -5,10 +5,10 @@ var
   should = require('should'),
   uuid = require('node-uuid'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
-  RTResponseObject = require.main.require('lib/api/core/models/realTimeResponseObject');
+  NotificationObject = require.main.require('lib/api/core/models/notificationObject');
 
 
-describe('Test: realTimeResponseObject', function () {
+describe('Test: NotificationObject', function () {
   var
     roomId = 'fakeroomid',
     requestObject = new RequestObject({
@@ -20,14 +20,14 @@ describe('Test: realTimeResponseObject', function () {
     });
 
   it('should have a toJSon prototype function', function () {
-    var response = new RTResponseObject(roomId, requestObject);
+    var response = new NotificationObject(roomId, requestObject);
 
     should(response.toJson).not.be.undefined().and.be.a.Function();
   });
 
   it('should return a normalized count response', function () {
     var
-      responseObject = new RTResponseObject(roomId, requestObject, {count: 42}),
+      responseObject = new NotificationObject(roomId, requestObject, {count: 42}),
       response = responseObject.toJson();
 
     should(response.error).be.null();
@@ -45,7 +45,7 @@ describe('Test: realTimeResponseObject', function () {
 
   it('should return a normalized channel response', function () {
     var
-      responseObject = new RTResponseObject(roomId, requestObject, {channel: 'foobar'}),
+      responseObject = new NotificationObject(roomId, requestObject, {channel: 'foobar'}),
       response = responseObject.toJson();
 
     should(response.error).be.null();
@@ -63,7 +63,7 @@ describe('Test: realTimeResponseObject', function () {
 
   it('should return a normalized subscription response', function () {
     var
-      responseObject = new RTResponseObject(roomId, requestObject),
+      responseObject = new NotificationObject(roomId, requestObject),
       response = responseObject.toJson();
 
     should(response.error).be.null();

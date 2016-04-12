@@ -3,10 +3,8 @@ var
   q = require('q'),
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
-  BadRequestError = require.main.require('lib/api/core/errors/badRequestError'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
   ResponseObject = require.main.require('lib/api/core/models/responseObject'),
-  Profile = require.main.require('lib/api/core/models/security/profile'),
   Role = require.main.require('lib/api/core/models/security/role');
 
 /*
@@ -91,9 +89,9 @@ describe('Test: read controller', function () {
       };
 
     before(function () {
-      kuzzle.services.list.readEngine.listCollections = function(requestObject) {
+      kuzzle.services.list.readEngine.listCollections = function() {
         stored = true;
-        return q(new ResponseObject(requestObject, {collections: {stored: ['foo']}}));
+        return q({collections: {stored: ['foo']}});
       };
 
       kuzzle.hotelClerk.getRealtimeCollections = function () {
@@ -154,7 +152,7 @@ describe('Test: read controller', function () {
     it('should reject the request if an invalid "type" argument is provided', function () {
       var requestObject = new RequestObject({body: {type: 'foo'}}, {}, '');
 
-      return should(kuzzle.funnel.controllers.read.listCollections(requestObject, context)).be.rejectedWith(BadRequestError);
+      return should(kuzzle.funnel.controllers.read.listCollections(requestObject, context)).be.rejectedWith(ResponseObject);
     });
 
    it('should only return stored collections with type = stored', function () {

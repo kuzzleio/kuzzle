@@ -4,9 +4,7 @@ var
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
-  ResponseObject = require.main.require('lib/api/core/models/responseObject'),
-  BadRequestError = require.main.require('lib/api/core/errors/badRequestError'),
-  NotFoundError = require.main.require('lib/api/core/errors/notFoundError');
+  ResponseObject = require.main.require('lib/api/core/models/responseObject');
 
 describe('Test: security controller - roles', function () {
   var
@@ -45,13 +43,13 @@ describe('Test: security controller - roles', function () {
           }));
         };
         kuzzle.services.list.readEngine.search = requestObject => {
-          return q(new ResponseObject(requestObject, {
+          return q({
             hits: [{_id: 'test'}],
             total: 1
-          }));
+          });
         };
         kuzzle.repositories.role.deleteFromDatabase = requestObject => {
-          return q(new ResponseObject(requestObject, {_id: 'test'}));
+          return q({_id: 'test'});
         };
 
         done();
@@ -108,13 +106,13 @@ describe('Test: security controller - roles', function () {
     });
 
     it('should reject NotFoundError on a getRole call with a bad id', () => {
-      return should(kuzzle.funnel.controllers.security.getRole(new RequestObject({body: {_id: 'badId'}}))).be.rejectedWith(NotFoundError);
+      return should(kuzzle.funnel.controllers.security.getRole(new RequestObject({body: {_id: 'badId'}}))).be.rejectedWith(ResponseObject);
     });
   });
 
   describe('#mGetRoles', function () {
     it('should reject an error if no ids is provided', () => {
-      return should(kuzzle.funnel.controllers.security.mGetRoles(new RequestObject({body: {}}))).be.rejectedWith(BadRequestError);
+      return should(kuzzle.funnel.controllers.security.mGetRoles(new RequestObject({body: {}}))).be.rejectedWith(ResponseObject);
     });
 
     it('should resolve to a responseObject', done => {
@@ -181,14 +179,14 @@ describe('Test: security controller - roles', function () {
       return should(kuzzle.funnel.controllers.security.updateRole(new RequestObject({
         body: {}
       }), {}))
-        .be.rejectedWith(BadRequestError);
+        .be.rejectedWith(ResponseObject);
     });
 
     it('should reject the promise if the role cannot be found in the database', () => {
       return should(kuzzle.funnel.controllers.security.updateRole(new RequestObject({
         body: { _id: 'badId' }
       }), {}))
-        .be.rejectedWith(NotFoundError);
+        .be.rejectedWith(ResponseObject);
     });
   });
 
@@ -213,7 +211,7 @@ describe('Test: security controller - roles', function () {
     it('should reject the promise if attempting to delete one of the core roles', function () {
       return should(kuzzle.funnel.controllers.security.deleteRole(new RequestObject({
         body: { _id: 'admin'}
-      }))).be.rejectedWith(BadRequestError);
+      }))).be.rejectedWith(ResponseObject);
     });
   });
 

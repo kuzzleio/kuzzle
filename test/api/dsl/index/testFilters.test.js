@@ -117,8 +117,8 @@ describe('Test: dsl.testFilters', function () {
         anonymousUser = user;
         return kuzzle.hotelClerk.addSubscription(requestObjectSubscribeGrace, context);
       })
-      .then(function (realTimeResponseObject) {
-        roomId = realTimeResponseObject.roomId;
+      .then(function (notificationObject) {
+        roomId = notificationObject.roomId;
         done();
       });
   });
