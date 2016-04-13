@@ -106,9 +106,7 @@ describe('Test: read controller', function () {
           kuzzle.repositories.profile.profiles.anonymous = {_id: 'anonymous', roles: ['anonymous']};
           return q(kuzzle.repositories.profile.profiles.anonymous);
         })
-        .then(() => {
-          return kuzzle.repositories.token.anonymous();
-        })
+        .then(() => kuzzle.repositories.token.anonymous())
         .then(token => {
           context.token = token;
         });
