@@ -111,11 +111,15 @@ The module must have a `package.json` file with a `pluginInfo` entry. The option
 
 ##  Events triggered
 
+On each of following events, you can attach a function to execute in your plugin. In this function you **HAVE** to return an object similar to the input, because Kuzzle need it for internal purpose.
+
 | Event | Description | Input |
 |-------|-------------|-------|
+|**cleanDb**|||
 |`cleanDb:deleteIndexes`| Triggered during `cleanDb` process just before indexes deletion. |Type: Request object.<br> Contains all indexes to delete in `requestObject.data.body.indexes`|
 |`cleanDb:done`|Triggered after indexes deletion.| / |
 |`cleanDb:error`|Triggered when an error occurred on clean db|Type: Error|
+|**prepareDb**|||
 |`prepareDb:createInternalIndex`|Triggered on Kuzzle start for creating the internal index `%kuzzle`|Type: Request object.<br> Contains the internal index in `requestObject.index`|
 |`prepareDb:updateMappingRoles`|Triggered on Kuzzle start for creating the internal mapping for Roles collection|Type: Request object.<br> Contains the default mapping in `requestObject.data.body`|
 |`prepareDb:updateMappingProfiles`|Triggered on Kuzzle start for creating the internal mapping for Profiles collection|Type: Request object.<br> Contains the default mapping in `requestObject.data.body`|
@@ -124,16 +128,109 @@ The module must have a `package.json` file with a `pluginInfo` entry. The option
 |`prepareDb:importMapping`|Triggered during database preparation. Called for each mapping to import|Type: Request object.<br> Contains the index in `requestObject.index` and mapping in `requestObject.data.body`|
 |`prepareDb:importFixtures`|Triggered during database preparation. Called for each fixtures to import|Type: Request object.<br> Contains the index in `requestObject.index` and bulk in `requestObject.data.body`|
 |`prepareDb:error`|Triggered when an error occurred during database preparation|Type: Error|
-|`data:updateMapping`|Triggered before controller `admin` and action `updateMapping`|Type: Request object|
-|`data:getMapping`|Triggered before controller `admin` and action `getMapping`|Type: Request object|
-|`data:getStats`|Triggered before controller `admin` and action `getStats`|Type: Request object|
-|`data:getAllStats`|Triggered before controller `admin` and action `getAllStats`|Type: Request object|
-|`data:truncateCollection`|Triggered before controller `admin` and action `truncateCollection`|Type: Request object|
-|`data:deleteIndexes`|Triggered before controller `admin` and action `deleteIndexes`|Type: Request object|
-|`data:createIndex`|Triggered before controller `admin` and action `createIndex`|Type: Request object|
-|`data:deleteIndex`|Triggered before controller `admin` and action `deleteIndex`|Type: Request object|
-|`data:removeRooms`|Triggered before controller `admin` and action `removeRooms`. This action remove all rooms for a given collection|Type: Request object|
-|`data:refreshIndex`|Triggered before controller `admin` and action `refreshIndex`.|Type: Request object|
+|**auth**|||
+|`auth:beforeLogout`|Triggered before controller `auth` and action `logout`.|Type: Context user.<br> `{profile, role, user, token}`|
+|`auth:afterLogout`|Triggered after controller `auth` and action `logout`.|Type: Response object|
+|`auth:beforeLogin`|Triggered before controller `auth` and action `login`.|Type: Object.<br> `{context, requestObject}`|
+|`auth:afterLogin`|Triggered after controller `auth` and action `login`.|Type: Response object|
+|`auth:getCurrentUser`|Triggered before controller `auth` and action `getCurrentUser`.|Type: Request object|
+|`auth:beforeCheckToken`|Triggered before controller `auth` and action `checkToken`.|Type: Request object|
+|`auth:afterCheckToken`|Triggered after controller `auth` and action `checkToken`.|Type: Response object|
+|**data**|||
+|`data:beforeUpdateMapping`|Triggered before controller `admin` and action `updateMapping`|Type: Request object|
+|`data:afterUpdateMapping`|Triggered after controller `admin` and action `updateMapping`|Type: Response object|
+|`data:beforeGetMapping`|Triggered before controller `admin` and action `getMapping`|Type: Request object|
+|`data:afterGetMapping`|Triggered after controller `admin` and action `getMapping`|Type: Response object|
+|`data:beforeGetStats`|Triggered before controller `admin` and action `getStats`|Type: Request object|
+|`data:afterGetStats`|Triggered after controller `admin` and action `getStats`|Type: Response object|
+|`data:beforeGetLastStats`|Triggered before controller `admin` and action `getLastStats`|Type: Request object|
+|`data:afterGetLastStats`|Triggered after controller `admin` and action `getLastStats`|Type: Response object|
+|`data:beforeGetAllStats`|Triggered before controller `admin` and action `getAllStats`|Type: Request object|
+|`data:afterGetAllStats`|Triggered after controller `admin` and action `getAllStats`|Type: Response object|
+|`data:beforeTruncateCollection`|Triggered before controller `admin` and action `truncateCollection`|Type: Request object|
+|`data:afterTruncateCollection`|Triggered after controller `admin` and action `truncateCollection`|Type: Response object|
+|`data:beforeDeleteIndexes`|Triggered before controller `admin` and action `deleteIndexes`|Type: Request object|
+|`data:afterDeleteIndexes`|Triggered after controller `admin` and action `deleteIndexes`|Type: Response object|
+|`data:beforeCreateIndex`|Triggered before controller `admin` and action `createIndex`|Type: Request object|
+|`data:afterCreateIndex`|Triggered after controller `admin` and action `createIndex`|Type: Response object|
+|`data:beforeDeleteIndex`|Triggered before controller `admin` and action `deleteIndex`|Type: Request object|
+|`data:afterDeleteIndex`|Triggered after controller `admin` and action `deleteIndex`|Type: Response object|
+|`data:beforeRefreshIndex`|Triggered before controller `admin` and action `refreshIndex`.|Type: Request object|
+|`data:afterRefreshIndex`|Triggered after controller `admin` and action `refreshIndex`.|Type: Response object|
+|`data:beforeBulkImport`|Triggered before controller `bulk` and action `import`.|Type: Response object|
+|`data:afterBulkImport`|Triggered after controller `bulk` and action `import`.|Type: Response object|
+|`data:beforeSearch`|Triggered before controller `read` and action `search`.|Type: Request object|
+|`data:afterSearch`|Triggered after controller `read` and action `search`.|Type: Response object|
+|`data:beforeGet`|Triggered before controller `read` and action `get`.|Type: Request object|
+|`data:afterGet`|Triggered after controller `read` and action `get`.|Type: Response object|
+|`data:beforeCount`|Triggered before controller `read` and action `count`.|Type: Request object|
+|`data:afterCount`|Triggered after controller `read` and action `count`.|Type: Response object|
+|`data:beforeListCollections`|Triggered before controller `read` and action `listCollections`.|Type: Request object|
+|`data:afterListCollections`|Triggered after controller `read` and action `listCollections`.|Type: Response object|
+|`data:beforeNow`|Triggered before controller `read` and action `now`.|Type: Request object|
+|`data:afterNow`|Triggered after controller `read` and action `now`.|Type: Response object|
+|`data:beforeListIndexes`|Triggered before controller `read` and action `listIndexes`.|Type: Request object|
+|`data:afterListIndexes`|Triggered after controller `read` and action `listIndexes`.|Type: Response object|
+|`data:afterServerInfo`|Triggered after controller `read` and action `serverInfo`.|Type: Response object|
+|**subscription**|||
+|`subscription:beforeRemoveRooms`|Triggered before controller `admin` and action `removeRooms`. This action remove all rooms for a given collection|Type: Request object|
+|`subscription:afterRemoveRooms`|Triggered after controller `admin` and action `removeRooms`. When the remove is done|Type: Response object|
+|**server**|||
+|`server:overload`|Triggered when the server overload|Type: String.<br> Contains the overload percentage with '%' character|
+|**memoryStorage**|||
+|`memoryStorage:before<Action>`|All actions in `memoryStorage` controller have a triggered before |Type: Request object|
+|`memoryStorage:after<Action>`|All actions in `memoryStorage` controller have a triggered after |Type: Response object|
+|**security**|||
+|`security:formatUserForSerialization`|Triggered before serialize a user. Useful to clean a user like attribute `password`|Type: User|
+|`security:beforeGetRole`|Triggered before controller `security` and action `getRole`.|Type: Request object|
+|`security:afterGetRole`|Triggered after controller `security` and action `getRole`.|Type: Response object|
+|`security:beforeMGetRoles`|Triggered before controller `security` and action `mGetRoles`.|Type: Request object|
+|`security:afterMGetRoles`|Triggered after controller `security` and action `mGetRoles`.|Type: Response object|
+|`security:beforeSearchRole`|Triggered before controller `security` and action `searchRoles`.|Type: Request object|
+|`security:afterSearchRole`|Triggered after controller `security` and action `searchRoles`.|Type: Response object|
+|`security:beforeCreateOrReplaceRole`|Triggered before controller `security` and action `createOrReplaceRole`.|Type: Object.<br> `{context, requestObject}`|
+|`security:afterCreateOrReplaceRole`|Triggered after controller `security` and action `createOrReplaceRole`.|Type: Response object|
+|`security:beforeCreateRole`|Triggered before controller `security` and action `createRole`.|Type: Object.<br> `{context, requestObject}`|
+|`security:afterCreateRole`|Triggered after controller `security` and action `createRole`.|Type: Response object|
+|`security:beforeDeleteRole`|Triggered before controller `security` and action `deleteRole`.|Type: Request object|
+|`security:afterDeleteRole`|Triggered after controller `security` and action `deleteRole`.|Type: Response object|
+|`security:beforeGetProfile`|Triggered before controller `security` and action `getProfile`.|Type: Request object|
+|`security:afterGetProfile`|Triggered after controller `security` and action `getProfile`.|Type: Response object|
+|`security:beforeMGetProfiles`|Triggered before controller `security` and action `mGetProfiles`.|Type: Request object|
+|`security:afterMGetProfiles`|Triggered after controller `security` and action `mGetProfiles`.|Type: Response object|
+|`security:beforeCreateOrReplaceProfile`|Triggered before controller `security` and action `createOrReplaceProfile`.|Type: Object.<br> `{context, requestObject}`|
+|`security:afterCreateOrReplaceProfile`|Triggered after controller `security` and action `createOrReplaceProfile`.|Type: Response object|
+|`security:beforeCreateProfile`|Triggered before controller `security` and action `createProfile`.|Type: Object.<br> `{context, requestObject}`|
+|`security:afterCreateProfile`|Triggered after controller `security` and action `createProfile`.|Type: Response object|
+|`security:beforeCreateProfile`|Triggered before controller `security` and action `createProfile`.|Type: Object.<br> `{context, requestObject}`|
+|`security:afterCreateProfile`|Triggered after controller `security` and action `createProfile`.|Type: Response object|
+|`security:beforeDeleteProfile`|Triggered before controller `security` and action `deleteProfile`.|Type: Request object|
+|`security:afterDeleteProfile`|Triggered after controller `security` and action `deleteProfile`.|Type: Response object|
+|`security:beforeSearchProfiles`|Triggered before controller `security` and action `searchProfiles`.|Type: Request object|
+|`security:afterSearchProfiles`|Triggered after controller `security` and action `searchProfiles`.|Type: Response object|
+|`security:beforeGetUser`|Triggered before controller `security` and action `getUser`.|Type: Request object|
+|`security:afterGetUser`|Triggered after controller `security` and action `getUser`.|Type: Response object|
+|`security:beforeSearchUsers`|Triggered before controller `security` and action `searchUsers`.|Type: Request object|
+|`security:afterSearchUsers`|Triggered after controller `security` and action `searchUsers`.|Type: Response object|
+|`security:beforeDeleteUser`|Triggered before controller `security` and action `deleteUser`.|Type: Request object|
+|`security:afterDeleteUser`|Triggered after controller `security` and action `deleteUser`.|Type: Response object|
+|`security:beforeCreateUser`|Triggered before controller `security` and action `createUser`.|Type: Request object|
+|`security:afterCreateUser`|Triggered after controller `security` and action `createUser`.|Type: Response object|
+|`security:beforeUpdateUser`|Triggered before controller `security` and action `updateUser`.|Type: Request object|
+|`security:afterUpdateUser`|Triggered after controller `security` and action `updateUser`.|Type: Response object|
+|`security:beforeUpdateProfile`|Triggered before controller `security` and action `updateProfile`.|Type: Object.<br> `{context, requestObject}`|
+|`security:afterUpdateProfile`|Triggered after controller `security` and action `updateProfile`.|Type: Response object|
+|`security:beforeUpdateRole`|Triggered before controller `security` and action `updateRole`.|Type: Object.<br> `{context, requestObject}`|
+|`security:afterUpdateRole`|Triggered after controller `security` and action `updateRole`.|Type: Response object|
+|`security:beforeCreateOrReplaceUser`|Triggered before controller `security` and action `createOrReplaceUser`.|Type: Request object|
+|`security:afterCreateOrReplaceUser`|Triggered after controller `security` and action `createOrReplaceUser`.|Type: Response object|
+
+|`security:beforeCreateOrReplaceUser`|Triggered before controller `security` and action `createOrReplaceUser`.|Type: Request object|
+|`security:afterCreateOrReplaceUser`|Triggered after controller `security` and action `createOrReplaceUser`.|Type: Response object|
+
+|``|||
+|``|||
+|``|||
 |``|||
 |``|||
 |``|||
