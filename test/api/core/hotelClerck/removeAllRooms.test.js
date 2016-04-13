@@ -4,9 +4,7 @@ var
   BadRequestError = require.main.require('lib/api/core/errors/badRequestError'),
   NotFoundError = require.main.require('lib/api/core/errors/notFoundError'),
   params = require('rc')('kuzzle'),
-  Kuzzle = require.main.require('lib/api/Kuzzle'),
-  Profile = require.main.require('lib/api/core/models/security/profile'),
-  Role = require.main.require('lib/api/core/models/security/role');
+  Kuzzle = require.main.require('lib/api/Kuzzle');
 
 describe('Test: hotelClerk.removeRooms', function () {
   var
@@ -16,7 +14,7 @@ describe('Test: hotelClerk.removeRooms', function () {
       connection: connection,
       user: null
     },
-    roomName = 'roomName',
+    roomName,
     index = 'test',
     collection1 = 'user',
     collection2 = 'foo',
@@ -33,6 +31,7 @@ describe('Test: hotelClerk.removeRooms', function () {
 
   beforeEach(function (done) {
     require.cache = {};
+    roomName = 'roomName';
     kuzzle = new Kuzzle();
     kuzzle.removeAllListeners();
 
@@ -131,12 +130,10 @@ describe('Test: hotelClerk.removeRooms', function () {
       });
 
     return kuzzle.hotelClerk.addSubscription(requestObjectSubscribe, context)
-      .then(() => {
-        return kuzzle.hotelClerk.removeRooms(requestObjectRemove);
-      })
-      .then(responseObject => {
-        should(responseObject.data.body).have.property('acknowledge');
-        should(responseObject.data.body.acknowledge).be.true();
+      .then(() => kuzzle.hotelClerk.removeRooms(requestObjectRemove))
+      .then(response => {
+        should(response).have.property('acknowledge');
+        should(response.acknowledge).be.true();
 
         should(kuzzle.hotelClerk.rooms).be.empty().Object();
         should(kuzzle.dsl.filtersTree).be.empty().Object();
@@ -163,12 +160,10 @@ describe('Test: hotelClerk.removeRooms', function () {
       });
 
     return kuzzle.hotelClerk.addSubscription(requestObjectSubscribe, context)
-      .then(() => {
-        return kuzzle.hotelClerk.removeRooms(requestObjectRemove);
-      })
-      .then(responseObject => {
-        should(responseObject.data.body).have.property('acknowledge');
-        should(responseObject.data.body.acknowledge).be.true();
+      .then(() => kuzzle.hotelClerk.removeRooms(requestObjectRemove))
+      .then(response => {
+        should(response).have.property('acknowledge');
+        should(response.acknowledge).be.true();
 
         should(kuzzle.hotelClerk.rooms).be.empty().Object();
         should(kuzzle.dsl.filtersTree).be.empty().Object();
@@ -203,15 +198,11 @@ describe('Test: hotelClerk.removeRooms', function () {
       });
 
     return kuzzle.hotelClerk.addSubscription(requestObjectSubscribeGlobal, context)
-      .then(() => {
-        return kuzzle.hotelClerk.addSubscription(requestObjectSubscribeFilter, context);
-      })
-      .then(() => {
-        return kuzzle.hotelClerk.removeRooms(requestObjectRemove);
-      })
-      .then(responseObject => {
-        should(responseObject.data.body).have.property('acknowledge');
-        should(responseObject.data.body.acknowledge).be.true();
+      .then(() => kuzzle.hotelClerk.addSubscription(requestObjectSubscribeFilter, context))
+      .then(() => kuzzle.hotelClerk.removeRooms(requestObjectRemove))
+      .then(response => {
+        should(response).have.property('acknowledge');
+        should(response.acknowledge).be.true();
 
         should(kuzzle.hotelClerk.rooms).be.empty().Object();
         should(kuzzle.dsl.filtersTree).be.empty().Object();
@@ -246,15 +237,11 @@ describe('Test: hotelClerk.removeRooms', function () {
       });
 
     return kuzzle.hotelClerk.addSubscription(requestObjectSubscribeCollection1, context)
-      .then(() => {
-        return kuzzle.hotelClerk.addSubscription(requestObjectSubscribeCollection2, context);
-      })
-      .then(() => {
-        return kuzzle.hotelClerk.removeRooms(requestObjectRemove);
-      })
-      .then(responseObject => {
-        should(responseObject.data.body).have.property('acknowledge');
-        should(responseObject.data.body.acknowledge).be.true();
+      .then(() => kuzzle.hotelClerk.addSubscription(requestObjectSubscribeCollection2, context))
+      .then(() => kuzzle.hotelClerk.removeRooms(requestObjectRemove))
+      .then(response => {
+        should(response).have.property('acknowledge');
+        should(response.acknowledge).be.true();
 
         should(kuzzle.hotelClerk.rooms).be.Object();
         should(Object.keys(kuzzle.hotelClerk.rooms).length).be.exactly(1);
@@ -294,11 +281,11 @@ describe('Test: hotelClerk.removeRooms', function () {
 
   it('should remove only listed rooms for the collection', function () {
     var
-      roomName = '9a83647ec2913bee3f3c1549c8a1ee7e',
+      roomId = '9a83647ec2913bee3f3c1549c8a1ee7e',
       requestObjectSubscribeFilter1 = new RequestObject({
         controller: 'subscribe',
         action: 'on',
-        requestId: roomName,
+        requestId: roomId,
         index: index,
         collection: collection1,
         body: filter1
@@ -306,7 +293,7 @@ describe('Test: hotelClerk.removeRooms', function () {
       requestObjectSubscribeFilter2 = new RequestObject({
         controller: 'subscribe',
         action: 'on',
-        requestId: roomName,
+        requestId: roomId,
         index: index,
         collection: collection1,
         body: filter2
@@ -314,19 +301,15 @@ describe('Test: hotelClerk.removeRooms', function () {
       requestObjectRemove = new RequestObject({
         controller: 'admin',
         action: 'removeRooms',
-        requestId: roomName,
+        requestId: roomId,
         index: index,
         collection: collection1,
-        body: {rooms: [roomName]}
+        body: {rooms: [roomId]}
       });
 
     return kuzzle.hotelClerk.addSubscription(requestObjectSubscribeFilter1, context)
-      .then(() => {
-        return kuzzle.hotelClerk.addSubscription(requestObjectSubscribeFilter2, context);
-      })
-      .then(() => {
-        return kuzzle.hotelClerk.removeRooms(requestObjectRemove);
-      })
+      .then(() => kuzzle.hotelClerk.addSubscription(requestObjectSubscribeFilter2, context))
+      .then(() => kuzzle.hotelClerk.removeRooms(requestObjectRemove))
       .then(() => {
         should(Object.keys(kuzzle.hotelClerk.rooms).length).be.exactly(1);
         should(kuzzle.hotelClerk.rooms[roomName]).be.undefined();
@@ -362,18 +345,12 @@ describe('Test: hotelClerk.removeRooms', function () {
       });
 
     return kuzzle.hotelClerk.addSubscription(requestObjectSubscribe1, context)
-      .then(() => {
-        return kuzzle.hotelClerk.addSubscription(requestObjectSubscribe2, context);
-      })
-      .then(() => {
-        return kuzzle.hotelClerk.removeRooms(requestObjectRemove);
-      })
-      .then((responseObject) => {
-        should(responseObject.status).be.exactly(206);
-        should(responseObject.error).be.not.null();
-        should(responseObject.error.count).be.exactly(1);
-        should(responseObject.error.message).be.exactly('Some errors with provided rooms');
-        should(responseObject.error.errors).be.an.Array().and.match(['The room with id ' + badRoomName + ' doesn\'t correspond to collection ' + collection1]);
+      .then(() => kuzzle.hotelClerk.addSubscription(requestObjectSubscribe2, context))
+      .then(() => kuzzle.hotelClerk.removeRooms(requestObjectRemove))
+      .then((response) => {
+        should(response.acknowledge).be.true();
+        should(response.partialErrors.length).be.exactly(1);
+        should(response.partialErrors).be.an.Array().and.match(['The room with id ' + badRoomName + ' doesn\'t correspond to collection ' + collection1]);
       });
   });
 
@@ -398,15 +375,11 @@ describe('Test: hotelClerk.removeRooms', function () {
       });
 
     return kuzzle.hotelClerk.addSubscription(requestObjectSubscribe, context)
-      .then(() => {
-        return kuzzle.hotelClerk.removeRooms(requestObjectRemove);
-      })
-      .then((responseObject) => {
-        should(responseObject.status).be.exactly(206);
-        should(responseObject.error).be.not.null();
-        should(responseObject.error.count).be.exactly(1);
-        should(responseObject.error.message).be.exactly('Some errors with provided rooms');
-        should(responseObject.error.errors).be.an.Array().and.match(['No room with id ' + badRoomName]);
+      .then(() => kuzzle.hotelClerk.removeRooms(requestObjectRemove))
+      .then(response => {
+        should(response.acknowledge).be.true();
+        should(response.partialErrors.length).be.exactly(1);
+        should(response.partialErrors).be.an.Array().and.match(['No room with id ' + badRoomName]);
       });
   });
 });

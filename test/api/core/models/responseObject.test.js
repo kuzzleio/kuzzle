@@ -151,8 +151,8 @@ describe('Test: responseObject', function () {
         result = formatError({});
 
       should(result.message).be.exactly('Internal error');
-      should(result.count).be.exactly(1);
-      should(result.stack).be.exactly('');
+      should(result.count).be.undefined();
+      should(result.stack).be.undefined();
       should(result.errors).be.undefined();
       should(result.details).be.undefined();
     });
@@ -160,13 +160,13 @@ describe('Test: responseObject', function () {
     it('should copy the stack trace only if the status code is 500', function () {
       var formatError = ResponseObject.__get__('formatError');
 
-      should(formatError({}, {stack: 'foobar', status: 404}).stack).be.exactly('');
+      should(formatError({}, {stack: 'foobar', status: 404}).stack).be.undefined();
       should(formatError({}, {stack: 'foobar', status: 500}).stack).be.exactly('foobar');
-      should(formatError({}, {body: 'foobar', status: 404}).stack).be.exactly('');
+      should(formatError({}, {body: 'foobar', status: 404}).stack).be.undefined();
       should(formatError({}, {body: 'foobar', status: 500}).stack).be.exactly('foobar');
-      should(formatError({}, {foo: 'bar', status: 404}).stack).be.exactly('');
+      should(formatError({}, {foo: 'bar', status: 404}).stack).be.undefined();
       should(formatError({}, {foo: 'bar', status: 500}).stack).be.an.Object().and.containEql('foo');
-      should(formatError({}, {foo: 'bar', status: 500})._source).be.null();
+      should(formatError({}, {foo: 'bar', status: 500})._source).be.undefined();
     });
 
     it('should copy optional error values', function () {

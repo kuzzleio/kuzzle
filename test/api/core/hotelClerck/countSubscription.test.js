@@ -3,8 +3,6 @@ var
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
-  Profile = require.main.require('lib/api/core/models/security/profile'),
-  Role = require.main.require('lib/api/core/models/security/role'),
   BadRequestError = require.main.require('lib/api/core/errors/badRequestError'),
   NotFoundError = require.main.require('lib/api/core/errors/notFoundError');
 
@@ -73,7 +71,6 @@ describe('Test: hotelClerk.countSubscription', function () {
         return kuzzle.hotelClerk.countSubscription(countRequest);
       })
       .then(function (response) {
-        should(response.roomId).be.exactly(countRequest.data.body.roomId);
         should(response.count).be.exactly(2);
         return kuzzle.hotelClerk.removeSubscription(countRequest, aContext);
       })
@@ -81,7 +78,6 @@ describe('Test: hotelClerk.countSubscription', function () {
         return kuzzle.hotelClerk.countSubscription(countRequest);
       })
       .then(function (response) {
-        should(response.roomId).be.exactly(countRequest.data.body.roomId);
         should(response.count).be.exactly(1);
       });
   });

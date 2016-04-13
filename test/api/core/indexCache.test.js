@@ -17,25 +17,13 @@ describe('Test: core/indexCache', function () {
       .then(function () {
         kuzzle.services.list.readEngine = {
           listIndexes: () => {
-            var stubResponse = {
-              data: {
-                body: {
-                  indexes: ['foo']
-                }
-              }
-            };
-
-            return q(stubResponse);
+            return q({ indexes: ['foo'] });
           },
 
           listCollections: () => {
             var stubResponse = {
-              data: {
-                body: {
-                  collections: {
-                    stored: ['bar', 'baz', 'qux']
-                  }
-                }
+              collections: {
+                stored: ['bar', 'baz', 'qux']
               }
             };
 

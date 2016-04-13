@@ -2,9 +2,7 @@ var
   should = require('should'),
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
-  RequestObject = require.main.require('lib/api/core/models/requestObject'),
-  Profile = require.main.require('lib/api/core/models/security/profile'),
-  Role = require.main.require('lib/api/core/models/security/role');
+  RequestObject = require.main.require('lib/api/core/models/requestObject');
 
 describe('Test: hotelClerk.getRealtimeCollections', function () {
   var

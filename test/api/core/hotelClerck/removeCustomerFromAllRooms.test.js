@@ -3,9 +3,7 @@ var
   q = require('q'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
   params = require('rc')('kuzzle'),
-  Kuzzle = require.main.require('lib/api/Kuzzle'),
-  Profile = require.main.require('lib/api/core/models/security/profile'),
-  Role = require.main.require('lib/api/core/models/security/role');
+  Kuzzle = require.main.require('lib/api/Kuzzle');
 
 describe('Test: hotelClerk.removeCustomerFromAllRooms', function () {
   var
@@ -33,18 +31,17 @@ describe('Test: hotelClerk.removeCustomerFromAllRooms', function () {
       body: filter1
     }),
     notified,
-    mockupNotifier = function (roomId, notification) {
-      notified = { roomId: roomId, notification: notification };
+    mockupNotifier = function (roomId, request, notification) {
+      notified = { roomId, request, notification };
     };
 
-  beforeEach(function (done) {
+  beforeEach(function () {
     kuzzle = new Kuzzle();
     kuzzle.removeAllListeners();
-    kuzzle.start(params, {dummy: true})
-      .then(function () {
-        return kuzzle.repositories.user.anonymous();
-      })
-      .then(function (user) {
+
+    return kuzzle.start(params, {dummy: true})
+      .then(() => kuzzle.repositories.user.anonymous())
+      .then(user => {
         anonymousUser = user;
 
         kuzzle.notifier.notify = mockupNotifier;
@@ -53,7 +50,7 @@ describe('Test: hotelClerk.removeCustomerFromAllRooms', function () {
           user: anonymousUser
         });
       })
-      .then(function () {
+      .then(() => {
         var requestObject2 = new RequestObject({
           controller: 'subscribe',
           action: 'on',
@@ -66,9 +63,6 @@ describe('Test: hotelClerk.removeCustomerFromAllRooms', function () {
           connection: connection,
           user: anonymousUser
         });
-      })
-      .then(function () {
-        done();
       });
   });
 
@@ -99,14 +93,17 @@ describe('Test: hotelClerk.removeCustomerFromAllRooms', function () {
       roomId;
 
     return kuzzle.hotelClerk.addSubscription(requestObject1, context)
-      .then(function (createdRoom) {
+      .then(createdRoom => {
         roomId = createdRoom.roomId;
         return kuzzle.hotelClerk.removeCustomerFromAllRooms(connection);
       })
-      .finally(function () {
+      .finally(() => {
         should(notified.roomId).be.exactly(roomId);
-        should(notified.notification.error).be.null();
-        should(notified.notification.result.count).be.exactly(1);
+        should(notified.request).be.instanceOf(RequestObject);
+        should(notified.request.controller).be.exactly('subscribe');
+        should(notified.request.action).be.exactly('off');
+        should(notified.request.index).be.exactly(requestObject1.index);
+        should(notified.notification.count).be.exactly(1);
       });
   });
 
