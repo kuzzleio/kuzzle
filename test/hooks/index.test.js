@@ -14,8 +14,8 @@ describe('Test main file for hooks managers', function () {
       'foo:baz': ['foo:bar', 'foo:baz']
     },
     hooksConfig = {
-      'data:create': ['write:add'],
-      'data:update': ['write:add']
+      'data:beforeCreate': ['write:add'],
+      'data:beforeUpdate': ['write:add']
     };
 
   beforeEach(function () {
@@ -54,13 +54,13 @@ describe('Test main file for hooks managers', function () {
     should(kuzzle.hooks.list).have.property('write');
     should(kuzzle.hooks.list.write).be.an.Object();
 
-    should(kuzzle.listeners('data:create')).be.an.Array();
-    should(kuzzle.listeners('data:create').length).be.exactly(1);
-    should(kuzzle.listeners('data:update')).be.an.Array();
-    should(kuzzle.listeners('data:update').length).be.exactly(1);
+    should(kuzzle.listeners('data:beforeCreate')).be.an.Array();
+    should(kuzzle.listeners('data:beforeCreate').length).be.exactly(1);
+    should(kuzzle.listeners('data:beforeUpdate')).be.an.Array();
+    should(kuzzle.listeners('data:beforeUpdate').length).be.exactly(1);
 
-    should(kuzzle.listeners('data:create')[0]).be.a.Function();
-    should(kuzzle.listeners('data:update')[0]).be.a.Function();
+    should(kuzzle.listeners('data:beforeCreate')[0]).be.a.Function();
+    should(kuzzle.listeners('data:beforeUpdate')[0]).be.a.Function();
 
     done();
 

@@ -72,7 +72,7 @@ describe('Test: admin controller', function () {
     it('should activate a hook on a mapping update call', function (done) {
       this.timeout(50);
 
-      kuzzle.once('data:updateMapping', function (obj) {
+      kuzzle.once('data:beforeUpdateMapping', function (obj) {
         try {
           should(obj).be.exactly(requestObject);
           done();
@@ -112,7 +112,7 @@ describe('Test: admin controller', function () {
     it('should activate a hook on a get mapping call', function (done) {
       this.timeout(50);
 
-      kuzzle.once('data:getMapping', function (obj) {
+      kuzzle.once('data:beforeGetMapping', function (obj) {
         try {
           should(obj).be.exactly(requestObject);
           done();
@@ -130,7 +130,7 @@ describe('Test: admin controller', function () {
     it('should trigger a hook on a getStats call', function (done) {
       this.timeout(50);
 
-      kuzzle.once('data:getStats', function (obj) {
+      kuzzle.once('data:beforeGetStats', function (obj) {
         try {
           should(obj).be.exactly(requestObject);
           done();
@@ -148,7 +148,7 @@ describe('Test: admin controller', function () {
     it('should trigger a hook on a getLastStats call', function (done) {
       this.timeout(50);
 
-      kuzzle.once('data:getLastStats', function (obj) {
+      kuzzle.once('data:beforeGetLastStats', function (obj) {
         try {
           should(obj).be.exactly(requestObject);
           done();
@@ -166,7 +166,7 @@ describe('Test: admin controller', function () {
     it('should trigger a hook on a getAllStats call', function (done) {
       this.timeout(50);
 
-      kuzzle.once('data:getAllStats', function (obj) {
+      kuzzle.once('data:beforeGetAllStats', function (obj) {
         try {
           should(obj).be.exactly(requestObject);
           done();
@@ -184,7 +184,7 @@ describe('Test: admin controller', function () {
     it('should trigger a hook on a truncateCollection call', function (done) {
       this.timeout(50);
 
-      kuzzle.once('data:truncateCollection', obj => {
+      kuzzle.once('data:beforeTruncateCollection', obj => {
         try {
           should(obj).be.exactly(requestObject);
           done();
@@ -243,7 +243,7 @@ describe('Test: admin controller', function () {
     it('should trigger a hook on a deleteIndexes call', function (done) {
       this.timeout(50);
 
-      kuzzle.once('data:deleteIndexes', function (obj) {
+      kuzzle.once('data:beforeDeleteIndexes', function (obj) {
         try {
           should(obj).be.exactly(requestObject);
           done();
@@ -287,7 +287,7 @@ describe('Test: admin controller', function () {
     it('should trigger a hook on a createIndex call', function (done) {
       this.timeout(50);
 
-      kuzzle.once('data:createIndex', function (obj) {
+      kuzzle.once('data:beforeCreateIndex', function (obj) {
         try {
           should(obj).be.exactly(requestObject);
           done();
@@ -319,7 +319,7 @@ describe('Test: admin controller', function () {
     it('should trigger a hook on a deleteIndex call', function (done) {
       this.timeout(50);
 
-      kuzzle.once('data:deleteIndex', function (obj) {
+      kuzzle.once('data:beforeDeleteIndex', function (obj) {
         try {
           should(obj).be.exactly(requestObject);
           done();
@@ -369,7 +369,7 @@ describe('Test: admin controller', function () {
 
   describe('#refreshIndex', function () {
     it('should trigger a plugin hook', function (done) {
-      kuzzle.once('data:refreshIndex', o => {
+      kuzzle.once('data:beforeRefreshIndex', o => {
         should(o).be.exactly(requestObject);
         done();
       });
