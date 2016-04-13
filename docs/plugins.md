@@ -136,6 +136,7 @@ On each of following events, you can attach a function to execute in your plugin
 |`auth:getCurrentUser`	| `auth` | `getCurrentUser` |Triggered before controller `auth` and action `getCurrentUser`.|Type: Request object|
 |`auth:beforeCheckToken`| `auth` | `checkToken` |Triggered before controller `auth` and action `checkToken`.|Type: Request object|
 |`auth:afterCheckToken`	| `auth` | `checkToken` |Triggered after controller `auth` and action `checkToken`.|Type: Response object|
+|`auth:loadStrategies`	| /      |    /         |Triggered during authentication. This event allows to load the corresponding strategy. Take a look at the [Github Plugin](https://github.com/kuzzleio/kuzzle-plugin-auth-github) |Type: Passport|
 |**data**|||
 |`data:beforeUpdateMapping`     | `admin` | `updateMapping` |Triggered before controller `admin` and action `updateMapping`|Type: Request object|
 |`data:afterUpdateMapping`      | `admin` | `updateMapping` |Triggered after controller `admin` and action `updateMapping`|Type: Response object|
@@ -198,8 +199,8 @@ On each of following events, you can attach a function to execute in your plugin
 |**server**|||
 |`server:overload`| / | / |Triggered when the server overload|Type: String.<br> Contains the overload percentage with '%' character|
 |**memoryStorage**|||
-|`memoryStorage:before<Action>`	| `memoryStorage` | / |All actions in `memoryStorage` controller have a triggered before |Type: Request object|
-|`memoryStorage:after<Action>`	| `memoryStorage` | / |All actions in `memoryStorage` controller have a triggered after |Type: Response object|
+|`memoryStorage:before<Action>`	| `memoryStorage` | / |All actions in `memoryStorage` controller have a trigger before |Type: Request object|
+|`memoryStorage:after<Action>`	| `memoryStorage` | / |All actions in `memoryStorage` controller have a trigger after |Type: Response object|
 |**security**|||
 |`security:formatUserForSerialization`	| / | / |Triggered before serialize a user. Useful to clean a user like attribute `password`|Type: User|
 |`security:beforeGetRole`				| `security` | `getRole` |Triggered before controller `security` and action `getRole`.|Type: Request object|
@@ -253,18 +254,31 @@ On each of following events, you can attach a function to execute in your plugin
 |`subscription:afterCount`	| `subscribe` | `count` |Triggered after controller `subscribe` and action `count`.|Type: Response object|
 |`subscription:beforeList`	| `subscribe` | `list` |Triggered before controller `subscribe` and action `list`.|Type: Request object|
 |`subscription:afterList`	| `subscribe` | `list` |Triggered after controller `subscribe` and action `list`.|Type: Response object|
-
-
-|``|||
-|``|||
-|``|||
-|``|||
-|``|||
-|``|||
-|``|||
-|``|||
-|``|||
-|``|||
+|**room**|||
+|`room:new`					| / | / |Triggered when a new room is added in the rooms list. You can't modify the input on this event.|Type: Object. <br> `{roomId, index, collection, formattedFilters}`|
+|`room:remove`				| / | / |Triggered after a room is removed from the list. You can't modify the input on this event.|Type: String.<br> The room id|
+|**protocol**|||
+|`protocol:leaveChannel`	| / | / |Triggered before a room is removed for the user. You can't modify the input on this event.|Type: Object.<br>  `{channel, id}` <br>`channel` is the channel name.<br> `id` is the connection id|
+|`protocol:joinChannel`		| / | / |Triggered after attach a user to a room. You can't modify the input on this event.|Type: Object.<br>  `{channel, id}` <br>`channel` is the channel name.<br> `id` is the connection id|
+|`protocol:notify`			| / | / |Triggered before notify a connection id.|Type: Object.<br>  `{payload, channel, id}` <br>`payload` is the notification content. <br>`channel` is the channel name.<br> `id` is the connection id|
+|`protocol:broadcast`		| / | / |Triggered before broadcast. You can't modify the input on this event.|Type: Object.<br>  `{payload, channel}` <br>`payload` is the notification content. <br>`channel` is the channel name.|
+|**server**|||
+|`server:httpStarted`		| / | / |Triggered when the http server is started.|Type: String|
+|`server:mqStarted`			| / | / |Triggered when the MQ server is started.|Type: String|
+|**passport**|||
+|`passport:loadScope`		| / | / |Triggered during authentication. This event allow plugins to modify the scope with rights. Take a look at the [Github Plugin](https://github.com/kuzzleio/kuzzle-plugin-auth-github#configuration) |Type: Object.<br> `{scope}`|
+|**passport**|||
+|`internalBroker:started`		| / | / |Triggered when the internal broker is started|Type: String.<br> `'Internal broker server started'`|
+|`internalBroker:connected`		| / | / |Triggered when the internal broker is connected|Type: String.<br> `'Connected to Kuzzle server'`|
+|`internalBroker:reregistering`	| / | / |Triggered when the internal broker is reregistered|Type: String.<br> `'Re-registering room: ' + room`|
+|`internalBroker:error`			| / | / |Triggered when an error occured in internal broker|Type: Object.<br> {host, port, message, retry}|
+|`internalBroker:socketClosed`	| / | / |Triggered when the socket is closed|Type: String|
+|**rabbit**|||
+|`rabbit:started`		| / | / |Triggered when rabbit MQ service is started|Type: String.<br> `'RabbitMQ Service started'`|
+|`rabbit:error`			| / | / |Triggered when an error occured on rabbit connection|Type: Error|
+|`rabbit:stopped`		| / | / |Triggered when the rabbit MQ service is stopped|Type: String.<br> `'RabbitMQ Service stopped'`|
+|**workerGroup**|||
+|`workerGroup:loaded`	| / | / |Triggered when workers are loaded|Type: String.<br> Worker group name|
 
 
 ## The plugin context
