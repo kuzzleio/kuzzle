@@ -6,33 +6,28 @@
 var
   should = require('should'),
   q = require('q'),
-  rewire = require('rewire'),
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
-  RequestObject = require.main.require('lib/api/core/models/requestObject'),
-  ResponseObject = require.main.require('lib/api/core/models/responseObject'),
-  Notifier = rewire('../../../../lib/api/core/notifier');
+  RequestObject = require.main.require('lib/api/core/models/requestObject');
 
 describe('Test: notifier.publish', function () {
   var
     kuzzle,
-    notifier,
-    notified,
+    notification,
     rooms,
     cached,
     expired,
     request;
 
-  before(function (done) {
+  before(() => {
     kuzzle = new Kuzzle();
-    kuzzle.start(params, {dummy: true})
+    
+    return kuzzle.start(params, {dummy: true})
       .then(() => {
         kuzzle.services.list.notificationCache = {
           add: function () { cached = true; return q({}); },
           expire: function () { expired = true; }
         };
-
-        done();
       });
   });
 
@@ -42,138 +37,101 @@ describe('Test: notifier.publish', function () {
       action: 'publish',
       requestId: 'foo',
       collection: 'bar',
-      body: {},
+      _id: 'I am fabulous',
+      body: { youAre: 'fabulous too' },
       metadata: {}
     };
 
-    notifier = new Notifier(kuzzle);
-    notifier.notify = function () { notified = true; };
-    kuzzle.dsl.testFilters = function () { return q(rooms); };
-    notified = false;
+    kuzzle.notifier.notify = (r, rq, n) => {
+      notification = n;
+    };
+
+    kuzzle.dsl.testFilters = () => q(rooms);
+
+    notification = null;
     cached = false;
     expired = false;
     rooms = ['foo'];
   });
 
-  it('should publish messages', function (done) {
-    var
-      published;
-
-    request.action = 'foo';
-    request.state = 'bar';
-    published = notifier.publish(new RequestObject(request));
-    should(published).be.a.Promise();
-
-    published
+  it('should publish messages', () => {
+    return kuzzle.notifier.publish(new RequestObject(request))
       .then(result => {
-        should(result).be.instanceof(ResponseObject);
-        should(result.state).be.exactly('bar');
-        should(notified).be.true();
+        should(result).match({published: true});
+        should(notification.state).be.eql('done');
+        should(notification.scope).be.eql('in');
+        should(notification._id).be.eql(request._id);
+        should(notification._source).be.eql(request.body);
         should(cached).be.false();
         should(expired).be.false();
-
-        request.controller = 'qux';
-        return published
-          .then(result => {
-            should(result).be.instanceof(ResponseObject);
-            should(result.state).be.exactly('bar');
-            should(notified).be.true();
-            should(cached).be.false();
-            should(expired).be.false();
-          });
-      })
-      .then(() => done())
-      .catch(error => done(error));
+      });
   });
 
-  it('should publish volatile messages with the right state', function (done) {
-    var
-      published;
-
-    request.state = 'foobar';
-    published = notifier.publish(new RequestObject(request));
-    should(published).be.a.Promise();
-
-    published
-      .then(result => {
-        should(result).be.instanceof(ResponseObject);
-        should(result.state).be.exactly('done');
-        should(notified).be.true();
-        should(cached).be.false();
-        should(expired).be.false();
-        done();
-      })
-      .catch(error => done(error));
-  });
-
-  it('should cache the document in case of a create document request', function (done) {
+  it('should cache the document in case of a create document request', (done) => {
+    this.timeout(50);
     request.action = 'create';
 
-    notifier.publish(new RequestObject(request)).then(result => {
-      setTimeout(() => {
-        should(result).be.instanceof(ResponseObject);
-        should(notified).be.true();
-        should(cached).be.true();
-        should(expired).be.true();
-        done();
-      }, 20);
-    })
-    .catch(error => done(error));
+    kuzzle.notifier.publish(new RequestObject(request));
+
+    setTimeout(() => {
+      should(notification.state).be.eql('pending');
+      should(notification.scope).be.undefined();
+      should(notification._id).be.eql(request._id);
+      should(notification._source).be.eql(request.body);
+      should(cached).be.true();
+      should(expired).be.true();
+      done();
+    }, 20);
   });
 
   it('should cache the document in case of a createOrReplace document request', function (done) {
+    this.timeout(50);
     request.action = 'createOrReplace';
 
-    notifier.publish(new RequestObject(request)).then(result => {
-      setTimeout(() => {
-        should(result).be.instanceof(ResponseObject);
-        should(notified).be.true();
-        should(cached).be.true();
-        should(expired).be.true();
-        done();
-      }, 20);
-    })
-      .catch(error => done(error));
+    kuzzle.notifier.publish(new RequestObject(request));
+
+    setTimeout(() => {
+      should(notification.state).be.eql('pending');
+      should(notification.scope).be.undefined();
+      should(notification._id).be.eql(request._id);
+      should(notification._source).be.eql(request.body);
+      should(cached).be.true();
+      should(expired).be.true();
+      done();
+    }, 20);
   });
 
   it('should cache the document in case of a replace document request', function (done) {
+    this.timeout(50);
     request.action = 'replace';
 
-    notifier.publish(new RequestObject(request)).then(result => {
-      setTimeout(() => {
-        should(result).be.instanceof(ResponseObject);
-        should(notified).be.true();
-        should(cached).be.true();
-        should(expired).be.true();
-        done();
-      }, 20);
-    })
-    .catch(error => done(error));
+    kuzzle.notifier.publish(new RequestObject(request));
+
+    setTimeout(() => {
+      should(notification.state).be.eql('pending');
+      should(notification.scope).be.undefined();
+      should(notification._id).be.eql(request._id);
+      should(notification._source).be.eql(request.body);
+      should(cached).be.true();
+      should(expired).be.true();
+      done();
+    }, 20);
   });
 
-  it('should do nothing if there is no room to notify', function (done) {
-    var
-      published;
-
+  it('should do nothing if there is no room to notify', () => {
     rooms = [];
-    published = notifier.publish(new RequestObject(request));
-    should(published).be.a.Promise();
 
-    published
+    return kuzzle.notifier.publish(new RequestObject(request))
       .then(result => {
-        setTimeout(() => {
-          should(result).be.instanceof(ResponseObject);
-          should(notified).be.false();
-          should(cached).be.false();
-          should(expired).be.false();
-          done();
-        });
-      })
-      .catch(error => done(error));
+        should(result).match({published: true});
+        should(notification).be.null();
+        should(cached).be.false();
+        should(expired).be.false();
+      });
   });
 
-  it('should return a rejected promise if testFilters fails', function () {
-    kuzzle.dsl.testFilters = function () { return q.reject(new Error('')); };
-    return should(notifier.publish(new RequestObject(request))).be.rejected();
+  it('should return a rejected promise if testFilters fails', () => {
+    kuzzle.dsl.testFilters = () => q.reject(new Error(''));
+    return should(kuzzle.notifier.publish(new RequestObject(request))).be.rejected();
   });
 });

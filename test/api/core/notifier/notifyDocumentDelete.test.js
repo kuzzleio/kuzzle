@@ -8,12 +8,9 @@
 var
   should = require('should'),
   q = require('q'),
-  rewire = require('rewire'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
-  ResponseObject = require.main.require('lib/api/core/models/responseObject'),
   params = require('rc')('kuzzle'),
-  Kuzzle = require.main.require('lib/api/Kuzzle'),
-  Notifier = rewire('../../../../lib/api/core/notifier');
+  Kuzzle = require.main.require('lib/api/Kuzzle');
 
 var mockupCacheService = {
   id: undefined,
@@ -27,121 +24,80 @@ var mockupCacheService = {
     if (id === 'errorme') {
       return q.reject(new Error());
     }
-    else {
-      return q(['']);
-    }
+
+    return q(['']);
   }
 };
 
 describe('Test: notifier.notifyDocumentDelete', function () {
   var
     kuzzle,
+    requestObject,
+    notification;
+
+  before(() => {
+    kuzzle = new Kuzzle();
+    return kuzzle.start(params, {dummy: true})
+      .then(function () {
+        kuzzle.services.list.notificationCache = mockupCacheService;
+        kuzzle.notifier.notify = (rooms, r,n) => {
+          should(r).be.exactly(requestObject);
+          notification.push(n);
+        };
+      });
+  });
+
+  beforeEach(() => {
+    notification = [];
     requestObject = new RequestObject({
       controller: 'write',
       action: 'delete',
       requestId: 'foo',
       collection: 'bar',
       body: { foo: 'bar' }
-    }),
-    responseObject = new ResponseObject(requestObject, { _id: 'Sir Isaac Newton is the deadliest son-of-a-bitch in space' }),
-    notified = 0,
-    savedResponse;
-
-  before(function (done) {
-    kuzzle = new Kuzzle();
-    kuzzle.start(params, {dummy: true})
-      .then(function () {
-        kuzzle.services.list.notificationCache = mockupCacheService;
-        kuzzle.notifier.notify = function (rooms, msg) {
-          should(msg).match(responseObject.toJson(['body']));
-          notified++;
-          savedResponse = msg;
-        };
-        done();
-      });
-  });
-
-  it('should return a promise', function () {
-    var result = (Notifier.__get__('notifyDocumentDelete')).call(kuzzle, responseObject);
-
-    should(result).be.a.Promise();
-    return should(result).be.fulfilled();
+    });
   });
 
   it('should do nothing if no id is provided', function (done) {
-    delete responseObject.data.body._id;
+    this.timeout(50);
+    kuzzle.notifier.notifyDocumentDelete(requestObject, []);
 
-    notified = 0;
-
-    (Notifier.__get__('notifyDocumentDelete')).call(kuzzle, responseObject)
-      .then(function () {
-        should(notified).be.exactly(0);
-        done();
-      })
-      .catch(function (error) {
-        done(error);
-      });
-  });
-
-  it('should do nothing if an empty ids array is provided', function (done) {
-    responseObject.action = 'deleteByQuery';
-    responseObject.data.ids = [];
-
-    notified = 0;
-
-    (Notifier.__get__('notifyDocumentDelete')).call(kuzzle, responseObject)
-      .then(function () {
-        should(notified).be.exactly(0);
-        done();
-      })
-      .catch(function (error) {
-        done(error);
-      });
-  });
-
-  it('should return a rejected promise if the document is not well-formed', function () {
-    responseObject.action = 'deleteByQuery';
-    responseObject.data.body.ids = ['errorme'];
-
-    return should((Notifier.__get__('notifyDocumentDelete')).call(kuzzle, responseObject)).be.rejected();
+    setTimeout(() => {
+      should(notification.length).be.eql(0);
+      done();
+    }, 20);
   });
 
   it('should notify when a document has been deleted', function (done) {
-    responseObject.action = 'delete';
-    responseObject.data.body._id = ['foobar'];
+    this.timeout(50);
 
-    notified = 0;
+    kuzzle.notifier.notifyDocumentDelete(requestObject, ['foobar']);
 
-    (Notifier.__get__('notifyDocumentDelete')).call(kuzzle, responseObject)
-      .then (function () {
-        should(notified).be.exactly(1);
-        should(mockupCacheService.id).be.exactly(responseObject.data.body._id);
+    setTimeout(() => {
+      should(mockupCacheService.id).be.exactly('foobar');
 
-        should(savedResponse.scope).be.exactly('out');
-        should(savedResponse.action).be.exactly('delete');
+      should(notification.length).be.eql(1);
+      should(notification[0].scope).be.exactly('out');
+      should(notification[0].action).be.exactly('delete');
+      should(notification[0]._id).be.exactly('foobar');
+      should(notification[0].state).be.exactly('done');
 
-        done();
-      })
-      .catch (function (e) {
-        done(e);
-      });
+      done();
+    }, 20);
   });
 
 
   it('should notify for each document when multiple document have been deleted', function (done) {
-    responseObject.action = 'deleteByQuery';
-    responseObject.data.body.ids = ['foo', 'bar'];
+    var ids = ['foo', 'bar'];
 
-    notified = 0;
+    this.timeout(50);
 
-    (Notifier.__get__('notifyDocumentDelete')).call(kuzzle, responseObject)
-      .then(function () {
-        should(notified).be.exactly(responseObject.data.body.ids.length);
-        should(mockupCacheService.id).be.exactly(responseObject.data.body._id);
-        done();
-      })
-      .catch (function (e) {
-        done(e);
-      });
+    kuzzle.notifier.notifyDocumentDelete(requestObject, ids);
+
+    setTimeout(() => {
+      should(notification.length).be.eql(ids.length);
+      should(notification.map(n => n._id)).match(ids);
+      done();
+    }, 20);
   });
 });

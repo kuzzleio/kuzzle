@@ -8,12 +8,9 @@
 var
   should = require('should'),
   q = require('q'),
-  rewire = require('rewire'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
-  ResponseObject = require.main.require('lib/api/core/models/responseObject'),
   params = require('rc')('kuzzle'),
-  Kuzzle = require.main.require('lib/api/Kuzzle'),
-  Notifier = rewire('../../../../lib/api/core/notifier');
+  Kuzzle = require.main.require('lib/api/Kuzzle');
 
 var mockupCacheService = {
   addId: undefined,
@@ -40,17 +37,13 @@ var mockupCacheService = {
   },
 
   search: function (id) {
-    if (id === 'removeme') {
-      return q(['foobar']);
-    } else if (id === 'errorme') {
-      return q.reject(new Error('rejected'));
-    } else if (id === 'addRequest') {
-      return q(['foobar']);
-    } else if (id === 'removeRequest') {
-      return q([]);
-    } else if (id === 'addme') {
+    if (['removeme', 'addme'].indexOf(id) !== -1) {
       return q(['foobar']);
     }
+    else if (id === 'errorme') {
+      return q.reject(new Error('rejected'));
+    }
+
     return q([]);
   }
 };
@@ -58,94 +51,82 @@ var mockupCacheService = {
 describe('Test: notifier.notifyDocumentReplace', function () {
   var
     kuzzle,
+    requestObject,
+    notified = 0,
+    notification;
+
+  before(() => {
+    kuzzle = new Kuzzle();
+    return kuzzle.start(params, {dummy: true})
+      .then(function () {
+        kuzzle.services.list.notificationCache = mockupCacheService;
+        kuzzle.notifier.notify = (rooms, r, n) => {
+          if (rooms.length > 0) {
+            notified++;
+            notification = n;
+          }
+        };
+      });
+  });
+
+  beforeEach(() => {
     requestObject = new RequestObject({
       controller: 'write',
       action: 'replace',
       requestId: 'foo',
       collection: 'bar',
+      _id: 'Sir Isaac Newton is the deadliest son-of-a-bitch in space',
       body: { foo: 'bar' }
-    }),
-    responseObject = new ResponseObject(requestObject, { _id: 'Sir Isaac Newton is the deadliest son-of-a-bitch in space' }),
-    notified = 0,
-    savedResponse;
+    });
 
-  before(function (done) {
-    kuzzle = new Kuzzle();
-    kuzzle.start(params, {dummy: true})
-      .then(function () {
-        kuzzle.services.list.notificationCache = mockupCacheService;
-        kuzzle.notifier.notify = function (rooms, response) {
-          if (rooms.length > 0) {
-            notified++;
-          }
-
-          if (rooms.length !== 0) {
-            savedResponse = response;
-          }
-        };
-        done();
-      });
-  });
-
-  it('should return a promise', function () {
-    var result = (Notifier.__get__('notifyDocumentReplace')).call(kuzzle, responseObject);
-
-    should(result).be.a.Promise();
-    return should(result).be.fulfilled();
-  });
-
-  it('should return a rejected promise if the document is not well-formed', function () {
-    responseObject.data.body._id = 'errorme';
-
-    return should((Notifier.__get__('notifyDocumentReplace')).call(kuzzle, responseObject)).be.rejected();
+    mockupCacheService.init();
+    notified = 0;
+    notification = 0;
   });
 
   it('should notify subscribers when a replaced document entered their scope', function (done) {
-    responseObject.data.body._id = 'addme';
-    responseObject.requestId = 'addRequest';
+    this.timeout(50);
 
-    notified = 0;
-    mockupCacheService.init();
+    requestObject.requestId = 'addme';
 
-    (Notifier.__get__('notifyDocumentReplace')).call(kuzzle, responseObject)
-      .then(function () {
-        should(notified).be.exactly(1);
-        should(mockupCacheService.addId).be.exactly(responseObject.data.body._id);
-        should(mockupCacheService.room).be.an.Array();
-        should(mockupCacheService.room[0]).be.exactly('foobar');
-        should(mockupCacheService.removeId).be.undefined();
+    kuzzle.notifier.notifyDocumentReplace(requestObject);
 
-        should(savedResponse.scope).be.exactly('in');
-        should(savedResponse.action).be.exactly('update');
+    setTimeout(() => {
+      should(notified).be.exactly(1);
+      should(mockupCacheService.addId).be.exactly(requestObject.data._id);
+      should(mockupCacheService.room).be.an.Array();
+      should(mockupCacheService.room[0]).be.exactly('foobar');
+      should(mockupCacheService.removeId).be.undefined();
 
-        done();
-      })
-      .catch (function (e) {
-        done(e);
-      });
+      should(notification.scope).be.exactly('in');
+      should(notification.action).be.exactly('update');
+      should(notification.state).be.eql('done');
+      should(notification._id).be.eql(requestObject.data._id);
+      should(notification._source).be.eql(requestObject.data.body);
+
+      done();
+    }, 20);
   });
 
-  it('should notify subscribers when an updated document left their scope', function (done) {
-    responseObject.data.body._id = 'removeme';
-    responseObject.requestId = 'removeRequest';
+  it('should notify subscribers when an updated document left their scope', (done) => {
+    this.timeout(50);
 
-    notified = 0;
-    mockupCacheService.init();
+    requestObject.data._id = 'removeme';
+    kuzzle.notifier.notifyDocumentReplace(requestObject);
 
-    (Notifier.__get__('notifyDocumentReplace')).call(kuzzle, responseObject)
-      .then(function () {
-        should(notified).be.exactly(1);
-        should(mockupCacheService.addId).be.undefined();
-        should(mockupCacheService.room).be.undefined();
-        should(mockupCacheService.removeId).be.exactly(responseObject.data.body._id);
+    setTimeout(() => {
+      should(notified).be.exactly(1);
+      should(mockupCacheService.addId).be.undefined();
+      should(mockupCacheService.room).be.undefined();
+      should(mockupCacheService.removeId).be.exactly(requestObject.data._id);
 
-        should(savedResponse.scope).be.exactly('out');
-        should(savedResponse.action).be.exactly('update');
+      should(notification.scope).be.exactly('out');
+      should(notification.action).be.exactly('update');
+      should(notification.state).be.eql('done');
+      should(notification._id).be.eql(requestObject.data._id);
+      should(notification._source).be.undefined();
 
-        done();
-      })
-      .catch (function (e) {
-        done(e);
-      });
+      done();
+    }, 20);
   });
 });
