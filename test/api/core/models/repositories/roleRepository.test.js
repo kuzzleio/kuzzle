@@ -1,5 +1,4 @@
 var
-  _ = require('lodash'),
   q = require('q'),
   params = require('rc')('kuzzle'),
   should = require('should'),
@@ -7,7 +6,6 @@ var
   InternalError = require.main.require('lib/api/core/errors/internalError'),
   NotFoundError = require.main.require('lib/api/core/errors/notFoundError'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
-  ResponseObject = require.main.require('lib/api/core/models/responseObject'),
   User = require.main.require('lib/api/core/models/security/user'),
   kuzzle = {
     repositories: {
@@ -26,7 +24,6 @@ var
   Role = require.main.require('lib/api/core/models/security/role'),
   RoleRepository = require.main.require('lib/api/core/models/repositories/roleRepository')(kuzzle);
 
-
 describe('Test: repositories/roleRepository', function () {
   var
     ObjectConstructor,
@@ -40,6 +37,7 @@ describe('Test: repositories/roleRepository', function () {
   ObjectConstructor = function () {
     this.type = 'testObject';
   };
+
   persistedObject1 = new ObjectConstructor();
   persistedObject1._id = 'persisted1';
 
@@ -51,10 +49,10 @@ describe('Test: repositories/roleRepository', function () {
       var err;
 
       if (requestObject.data._id === 'persisted1') {
-        return q(new ResponseObject(requestObject, persistedObject1));
+        return q(persistedObject1);
       }
       if (requestObject.data._id === 'persisted2') {
-        return q(new ResponseObject(requestObject, persistedObject2));
+        return q(persistedObject2);
       }
 
       err = new NotFoundError('Not found');
@@ -77,14 +75,14 @@ describe('Test: repositories/roleRepository', function () {
           results.push({_id: id, found: false});
         }
       });
-      return q(new ResponseObject(requestObject, {hits: results}));
+      return q({hits: results});
     }
   };
 
   mockWriteLayer = {
     execute: function (requestObject) {
       forwardedObject = requestObject;
-      return q(new ResponseObject(requestObject, {}));
+      return q({});
     }
   };
 
@@ -99,24 +97,19 @@ describe('Test: repositories/roleRepository', function () {
   });
 
   describe('#loadRoles', function () {
-    it('should return an empty array when loading some non-existing roles', done => {
-      roleRepository.loadRoles(['idontexist'])
+    it('should return an empty array when loading some non-existing roles', () => {
+      return roleRepository.loadRoles(['idontexist'])
         .then(result => {
           should(result).be.an.Array();
           should(result).be.empty();
-          done();
-        })
-        .catch(error => {
-          done(error);
         });
     });
 
     it('should reject the promise if some error occurs fetching data from the DB', () => {
       var result;
 
-      roleRepository.loadMultiFromDatabase = () => {
-        return q.reject(new InternalError('Error'));
-      };
+      roleRepository.loadMultiFromDatabase = () => q.reject(new InternalError('Error'));
+
       result = roleRepository.loadRoles([-999, -998])
         .catch(error => {
           delete roleRepository.loadMultiFromDatabase;
@@ -129,9 +122,7 @@ describe('Test: repositories/roleRepository', function () {
     it('should reject the promise if some error occurs during the hydratation', () => {
       var result;
 
-      roleRepository.hydrate = () => {
-        return q.reject(new InternalError('Error'));
-      };
+      roleRepository.hydrate = () => q.reject(new InternalError('Error'));
 
       result = roleRepository.loadRoles(['anonymous'])
         .catch(error => {
@@ -142,50 +133,33 @@ describe('Test: repositories/roleRepository', function () {
       return should(result).be.rejectedWith(InternalError);
     });
 
-    it('should retrieve some persisted roles', function (done) {
-      roleRepository.loadRoles(['persisted1', 'persisted2'])
-        .then(function (results) {
+    it('should retrieve some persisted roles', () => {
+      return roleRepository.loadRoles(['persisted1', 'persisted2'])
+        .then(results => {
           should(results).be.an.Array().and.have.length(2);
-          results.forEach(function (result) {
+          results.forEach(result => {
             should(result).be.an.instanceOf(Role);
             should(result._id).be.oneOf(['persisted1', 'persisted2']);
           });
-
-          done();
-        })
-        .catch(function (error) {
-          done(error);
         });
     });
 
-    it('should retrieve the default roles', function (done) {
-      roleRepository.loadRoles(['anonymous'])
-        .then(function (results) {
+    it('should retrieve the default roles', () => {
+      return roleRepository.loadRoles(['anonymous'])
+        .then(results =>{
           should(results).be.an.Array().and.have.length(1);
-          results.forEach(function (result) {
-            should(result).be.an.instanceOf(Role);
-          });
-          done();
-        })
-        .catch(function (error) {
-          done(error);
+          results.forEach(result => should(result).be.an.instanceOf(Role));
         });
     });
 
-    it('should retrieve only the roles that exist', function (done) {
-      roleRepository.loadRoles(['anonymous', 'idontexist'])
-        .then(function (results) {
+    it('should retrieve only the roles that exist', () => {
+      return roleRepository.loadRoles(['anonymous', 'idontexist'])
+        .then(results => {
           should(results).be.an.Array().and.have.length(1);
           should(results[0]).be.an.instanceOf(Role);
-          done();
-        })
-        .catch(function (error) {
-          done(error);
         });
     });
-
   });
-
 
   describe('#loadRole', function () {
     it('should return a bad request error when no _id is provided', () => {
@@ -281,7 +255,7 @@ describe('Test: repositories/roleRepository', function () {
 
   describe('#deleteRole', function () {
     it('should reject if there is no _id', () => {
-      should(roleRepository.deleteRole({})).rejectedWith(BadRequestError);
+      return should(roleRepository.deleteRole({})).rejectedWith(BadRequestError);
     });
 
     it('should call deleteFromDatabase and remove the role from memory', () => {
@@ -349,10 +323,10 @@ describe('Test: repositories/roleRepository', function () {
       var role = new Role();
       role._id = 'test';
 
-      should(roleRepository.validateAndSaveRole(role)).be.rejectedWith(BadRequestError);
+      return should(roleRepository.validateAndSaveRole(role)).be.rejectedWith(BadRequestError);
     });
 
-    it('persist the role to the database when ok', done => {
+    it('persist the role to the database when ok', () => {
       var
         indexes = {
           index: {
@@ -373,14 +347,11 @@ describe('Test: repositories/roleRepository', function () {
       role._id = 'test';
       role.indexes = indexes;
 
-      roleRepository.validateAndSaveRole(role)
+      return roleRepository.validateAndSaveRole(role)
         .then(() => {
           should(forwardedObject.data._id).be.exactly('test');
           should(forwardedObject.data.body.indexes).be.eql(indexes);
-
-          done();
         });
     });
-
   });
 });

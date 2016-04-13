@@ -3,7 +3,6 @@ var
   q = require('q'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
   ResponseObject = require.main.require('lib/api/core/models/responseObject'),
-  ServiceUnavailableError = require.main.require('lib/api/core/errors/serviceUnavailableError'),
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   rewire = require('rewire'),

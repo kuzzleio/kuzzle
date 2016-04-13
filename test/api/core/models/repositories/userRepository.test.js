@@ -21,7 +21,6 @@ var
 
 before(function (done) {
   var
-    clearPassword = 'azerty',
     encryptedPassword = '5c4ec74fd64bb57c05b4948f3a7e9c7d450f069a',
     mockCacheEngine,
     mockReadEngine,
@@ -41,6 +40,7 @@ before(function (done) {
     volatileSet: function (key, value, ttl) { forwardedResult = {key: key, value: JSON.parse(value), ttl: ttl }; return q('OK'); },
     expire: function (key, ttl) { forwardedResult = {key: key, ttl: ttl}; return q('OK'); }
   };
+
   mockReadEngine = {
     get: function (requestObject) {
       if (requestObject.data._id === 'userInDB') {
@@ -50,9 +50,11 @@ before(function (done) {
       return q(new NotFoundError('User not found in db'));
     }
   };
+
   mockWriteLayer = {
-    execute: requestObject => { return q({}); }
+    execute: () => q({})
   };
+
   mockProfileRepository = {
     loadProfile: function (profileKey) {
       var profile = new Profile();
@@ -100,15 +102,9 @@ describe('Test: repositories/userRepository', function () {
   });
 
   describe('#anonymous', function () {
-    it('should return a valid anonymous user', function (done) {
-      userRepository.anonymous()
-        .then(function (user) {
-          assertIsAnonymous(user);
-          done();
-        })
-        .catch(function (error) {
-          done(error);
-        });
+    it('should return a valid anonymous user', function () {
+      return userRepository.anonymous()
+        .then(user => assertIsAnonymous(user));
     });
   });
 
@@ -123,24 +119,18 @@ describe('Test: repositories/userRepository', function () {
         userRepository.hydrate(u, 'a scalar')
       ])
         .then(function (results) {
-          results.forEach(function (user) {
-            should(user).be.exactly(u);
-          });
+          results.forEach(user => should(user).be.exactly(u));
           done();
         });
     });
 
-    it('should return the anonymous user if no _id is set', done => {
+    it('should return the anonymous user if no _id is set', () => {
       var user = new User();
       user.profile = new Profile();
       user.profile._id = 'a profile';
 
-      userRepository.hydrate(user, {})
-        .then(result => {
-          assertIsAnonymous(result);
-          done();
-        })
-        .catch(err => { done(err); });
+      return userRepository.hydrate(user, {})
+        .then(result => assertIsAnonymous(result));
     });
 
     it('should reject the promise if an error is thrown by the prototype hydrate call', () => {
@@ -148,9 +138,7 @@ describe('Test: repositories/userRepository', function () {
         protoHydrate = Repository.prototype.hydrate,
         user = new User();
 
-      Repository.prototype.hydrate = () => {
-        return q.reject(new InternalError('Error'));
-      };
+      Repository.prototype.hydrate = () => q.reject(new InternalError('Error'));
 
       return should(userRepository.hydrate(user, {})
         .catch(err => {
@@ -183,213 +171,25 @@ describe('Test: repositories/userRepository', function () {
     });
 
   });
-
-  /*describe('#loadFromToken', function () {
-    it('should reject the promise if the jwt is invalid', function () {
-      return should(userRepository.loadFromToken('invalidToken')).be.rejectedWith(UnauthorizedError, {details: {subCode: UnauthorizedError.prototype.subCodes.JsonWebTokenError, description: 'jwt malformed'}});
-    });
-
-    it('should load the anonymous user if the uuid is not known', function (done) {
-      var
-        token;
-
-      token = jwt.sign({_id: -99999}, params.jsonWebToken.secret, {algorithm: params.jsonWebToken.algorithm});
-
-      userRepository.loadFromToken(token)
-        .then(function (user) {
-          assertIsAnonymous(user);
-          done();
-        })
-        .catch(function (error) {
-          done(error);
-        });
-    });
-
-    it('shoud reject the promise if the jwt is expired', function (done) {
-      var token = jwt.sign({_id: -1}, params.jsonWebToken.secret, {algorithm: params.jsonWebToken.algorithm, expiresIn: 1});
-
-      setTimeout(function () {
-        should(userRepository.loadFromToken(token)).be.rejectedWith(UnauthorizedError, {details: {subCode: UnauthorizedError.prototype.subCodes.TokenExpired}});
-        done();
-      }, 1001);
-    });
-
-    it('should reject the promise if an error occurred while fetching the user from the cache', () => {
-      var token = jwt.sign({_id: 'auser'}, params.jsonWebToken.secret, {algorithm: params.jsonWebToken.algorithm});
-
-      userRepository.loadFromCache = () => {
-        return q.reject(new InternalError('Error'));
-      };
-
-      return should(userRepository.loadFromToken(token)
-        .catch(err => {
-          delete userRepository.loadFromCache;
-
-          return q.reject(err);
-        })).be.rejectedWith(InternalError);
-    });
-
-    it('should reject the promise if an error occurred while fetching the user from the database', () => {
-      var token = jwt.sign({_id: 'auser'}, params.jsonWebToken.secret, {algorithm: params.jsonWebToken.algorithm});
-
-      userRepository.loadOneFromDatabase = () => {
-        return q.reject(new InternalError('Error'));
-      };
-      return should(userRepository.loadFromToken(token)
-        .catch(err => {
-          delete userRepository.loadOneFromDatabase;
-
-          return q.reject(err);
-        })).be.rejectedWith(InternalError);
-    });
-
-    it('should reject the promise if an untrapped error is raised', () => {
-      var token = jwt.sign({_id: 'admin'}, params.jsonWebToken.secret, {algorithm: params.jsonWebToken.algorithm});
-
-      userRepository.admin = () => {
-        throw new InternalError('Uncaught error');
-      };
-      should(userRepository.loadFromToken(token)
-        .catch(err => {
-          delete userRepository.admin;
-
-          return q.reject(err);
-        })).be.rejectedWith(InternalError, {details: {message: 'Uncaught error'}});
-    });
-
-    it('should load the admin user if the user id is "admin"', function (done) {
-      var token = jwt.sign({_id: 'admin'}, params.jsonWebToken.secret, {algorithm: params.jsonWebToken.algorithm});
-
-      userRepository.loadFromToken(token)
-        .then(function (user) {
-          should(user).be.an.instanceOf(User);
-          should(user._id).be.exactly('admin');
-          should(user.name).be.exactly('Administrator');
-          should(user.profile).be.an.instanceOf(Profile);
-          should(user.profile._id).be.exactly('admin');
-
-          done();
-        })
-        .catch(function (error) {
-          done(error);
-        });
-    });
-
-    it('should load the user from cache', function (done) {
-      var token = jwt.sign({_id: 'userInCache'}, params.jsonWebToken.secret, {algorithm: params.jsonWebToken.algorithm});
-
-      userRepository.loadFromToken(token)
-        .then(function (user) {
-          should(user._id).be.exactly('userInCache');
-          should(user.name).be.exactly('Johnny Cash');
-          should(user.profile).be.an.instanceOf(Profile);
-          should(user.profile._id).be.exactly('userincacheprofile');
-
-          done();
-        })
-        .catch(function (error) {
-          done(error);
-        });
-    });
-
-    it('should load the user from db', function (done) {
-      var token = jwt.sign({_id: 'userInDB'}, params.jsonWebToken.secret, {algorithm: params.jsonWebToken.algorithm});
-
-      userRepository.loadFromToken(token)
-        .then(function (user) {
-          should(user._id).be.exactly('userInDB');
-          should(user.name).be.exactly('Debbie Jones');
-          should(user.profile).be.an.instanceOf(Profile);
-          should(user.profile._id).be.exactly('userindbprofile');
-
-          done();
-        })
-        .catch(function (error) {
-          done(error);
-        });
-    });
-  });
-
-  describe('#generateToken', function () {
-    it('should reject the promise if the username is null', function () {
-      return should(userRepository.generateToken(null)).be.rejectedWith(InternalError);
-    });
-
-    it('should reject the promise if an error occurred while generating the token', () => {
-
-      kuzzle.config.jsonWebToken.algorithm = 'fake JWT ALgorithm';
-
-      return should(userRepository.generateToken('userInCache')
-        .catch(err => {
-          kuzzle.config.jsonWebToken.algorithm = params.jsonWebToken.algorithm;
-
-          return q.reject(err);
-        })).be.rejectedWith(InternalError);
-    });
-
-    it('should resolve to the good jwt token for a given username', function (done) {
-      var
-        checkToken;
-
-      checkToken = jwt.sign({_id: 'userInCache'}, params.jsonWebToken.secret, {algorithm: params.jsonWebToken.algorithm, expiresIn: params.jsonWebToken.expiresIn});
-
-      userRepository.generateToken('userInCache')
-        .then(function (token) {
-          should(token).be.exactly(checkToken);
-
-          done();
-        })
-        .catch(function (error) {
-          done(error);
-        });
-    });
-
-  });
-  */
-
+  
   describe('#load', function () {
-    it('should resolve to user if good credentials are given', function (done) {
-      userRepository.load('userInCache')
-        .then(function (user) {
+    it('should resolve to user if good credentials are given', () => {
+      return userRepository.load('userInCache')
+        .then(user => {
           should(user._id).be.exactly('userInCache');
           should(user.name).be.exactly('Johnny Cash');
           should(user.profile).be.an.instanceOf(Profile);
           should(user.profile._id).be.exactly('userincacheprofile');
-
-          done();
-        })
-        .catch(function (error) {
-          done(error);
         });
     });
 
-    it('should resolve to "null" if username is not found', function (done) {
-      userRepository.load('unknownUser')
-        .then(function (user) {
-          should(user).be.null();
-          done();
-        })
-        .catch(function (error) {
-          done(error);
-        });
+    it('should resolve to "null" if username is not found', () => {
+      return userRepository.load('unknownUser')
+        .then(user => should(user).be.null());
     });
-
-    /*it('should resolve to "null" if bad password is given', function (done) {
-      userRepository.loadByUsername('userInCache')
-        .then(function (user) {
-          should(user).be.null();
-          done();
-        })
-        .catch(function (error) {
-          done(error);
-        });
-    });*/
 
     it('should reject the promise if an error occurred while fetching the user', () => {
-
-      userRepository.load = () => {
-        return q.reject(new InternalError('Error'));
-      };
+      userRepository.load = () => q.reject(new InternalError('Error'));
 
       return should(userRepository.load('userInCache')
         .catch(err => {
@@ -401,9 +201,9 @@ describe('Test: repositories/userRepository', function () {
   });
 
   describe('#serializeToCache', function () {
-    it('should return a valid plain object', function (done) {
-      userRepository.anonymous()
-        .then(function (user) {
+    it('should return a valid plain object', () => {
+      return userRepository.anonymous()
+        .then(user => {
           var result = userRepository.serializeToCache(user);
 
           should(result).not.be.an.instanceOf(User);
@@ -411,11 +211,6 @@ describe('Test: repositories/userRepository', function () {
           should(result._id).be.exactly(-1);
           should(result.profile).be.a.String();
           should(result.profile).be.exactly('anonymous');
-
-          done();
-        })
-        .catch(function (error) {
-          done(error);
         });
     });
   });
@@ -431,7 +226,20 @@ describe('Test: repositories/userRepository', function () {
 
       should(user._id).not.be.empty();
       should(user._id).match(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
+    });
+  });
 
+  describe('#defaultProfile', () => {
+    it('should add the default profile when the user do not have any profile set', () => {
+      var
+        userRepository = new UserRepository(),
+        user = new User();
+
+      user.name = 'No Profile';
+      user._id = 'NoProfile';
+
+      return userRepository.hydrate(user, {})
+        .then(result => should(result.profile._id).be.eql('default'));
     });
   });
 });

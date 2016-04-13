@@ -4,8 +4,7 @@ var
   InternalError = require.main.require('lib/api/core/errors/internalError'),
   NotFoundError = require.main.require('lib/api/core/errors/notFoundError'),
   Repository = require.main.require('lib/api/core/models/repositories/repository'),
-  RequestObject = require.main.require('lib/api/core/models/requestObject'),
-  ResponseObject = require.main.require('lib/api/core/models/responseObject');
+  RequestObject = require.main.require('lib/api/core/models/requestObject');
 
 describe('Test: repositories/repository', function () {
   var
@@ -26,7 +25,6 @@ describe('Test: repositories/repository', function () {
   persistedObject = new ObjectConstructor();
   persistedObject._id = -1;
   persistedObject.name = 'persisted';
-
 
   cachedObject = new ObjectConstructor();
   cachedObject._id = -2;
@@ -58,21 +56,26 @@ describe('Test: repositories/repository', function () {
     expire: (key, ttl) => { forwardedObject = {op: 'expire', key: key, ttl: ttl}; return q('OK'); },
     persist: key => { forwardedObject = {op: 'persist', key: key}; return q('OK'); }
   };
+
   mockReadEngine = {
     get: function (requestObject, forward) {
       var err;
       if (forward !== false) {
         forwardedObject = requestObject;
       }
+
       if (requestObject.data._id === 'persisted') {
-        return q(new ResponseObject(requestObject, persistedObject));
+        return q(persistedObject);
       }
+
       if (requestObject.data._id === 'uncached') {
-        return q(new ResponseObject(requestObject, uncachedObject));
+        return q(uncachedObject);
       }
+
       if (requestObject.data._id === 'cached') {
-        return q(new ResponseObject(requestObject, uncachedObject));
+        return q(uncachedObject);
       }
+
       if (requestObject.data._id === 'error') {
         return q.reject(new InternalError('Error'));
       }
@@ -80,7 +83,7 @@ describe('Test: repositories/repository', function () {
       err = new NotFoundError('Not found');
       err.found = false;
       err._id = requestObject.data._id;
-      return q(err);
+      return q.reject(err);
     },
     mget: function (requestObject) {
       var
@@ -103,38 +106,43 @@ describe('Test: repositories/repository', function () {
         promises.push(mockReadEngine.get(req, false));
       });
 
-      return q.all(promises)
-        .then(function (results) {
-          var result = new ResponseObject(requestObject, {hits: results.map(function (response) {
-            if (response instanceof ResponseObject) {
-              return {
-                found: (response.data.found === undefined) ? true : response.data.found,
-                _source: response.data.body,
-                _id: response.data.body._id
-              };
-            }
+      return q.allSettled(promises)
+        .then(results => {
+          var
+            error,
+            result = results
+              .map(r => {
+                if (r.state === 'rejected') {
+                  if (r.reason.status === 404) {
+                    return { found: false };
+                  }
 
-            return {
-              found: (response.found === undefined) ? true : response.found,
-              _source: response.name,
-              _id: response._id
-            };
-          })});
+                  error = r.reason;
+                  return null;
+                }
 
-          return q(result);
+                return {
+                  found: (r.value.found === undefined) ? true : r.value.found,
+                  _source: {name: r.value.name},
+                  _id: r.value._id
+                };
+              });
+
+          if (error) {
+            return q.reject(error);
+          }
+          
+          return q({hits: result});
         });
     },
-    search: function (requestObject) {
-      return q(new ResponseObject(requestObject, {hits: [{_id: 'role', _source: {indexes: {}}}], total: 1}));
-    }
+    search: () => q({hits: [{_id: 'role', _source: {indexes: {}}}], total: 1})
   };
+
   mockWriteLayer = {
     execute: function (o) {
       forwardedObject = o;
     },
-    delete: requestObject => {
-      return q(new ResponseObject(requestObject));
-    }
+    delete: requestObject => q(requestObject)
   };
 
   before(function () {
@@ -161,240 +169,173 @@ describe('Test: repositories/repository', function () {
   });
 
   describe('#loadOneFromDatabase', function () {
-    it('should return null for an non existing id', function (done) {
-      repository.loadOneFromDatabase(-9999)
-        .then(function (result) {
-          should(result).be.null();
-          done();
-        })
-        .catch(function (error) {
-          done(error);
-        });
+    it('should return null for an non existing id', () => {
+      return repository.loadOneFromDatabase(-9999)
+        .then(result => should(result).be.null());
     });
 
     it('should reject the promise in case of error', () => {
       return should(repository.loadOneFromDatabase('error')).be.rejectedWith(InternalError);
     });
 
-    it('should create a valid requestObject request for the readEngine', function (done) {
-      repository.loadOneFromDatabase(-9999)
-        .then(function (result) {
+    it('should create a valid requestObject request for the readEngine', () => {
+      return repository.loadOneFromDatabase(-9999)
+        .then(() => {
           should(forwardedObject).be.instanceOf(RequestObject);
           should(forwardedObject.controller).be.exactly('read');
           should(forwardedObject.action).be.exactly('get');
           should(forwardedObject.data._id).be.exactly(-9999);
           should(forwardedObject.collection).be.exactly(repository.collection);
-          done();
-        })
-        .catch(function (error) {
-          done(error);
         });
     });
 
-    it('should return a valid ObjectConstructor instance if found', function (done) {
-      repository.loadOneFromDatabase('persisted')
-        .then(function (result) {
+    it('should return a valid ObjectConstructor instance if found', () => {
+      return repository.loadOneFromDatabase('persisted')
+        .then(result => {
           should(result).be.instanceOf(ObjectConstructor);
           should(result._id).be.exactly(-1);
           should(result.name).be.exactly('persisted');
-
-          done();
-        })
-        .catch(function (error) {
-          done(error);
         });
     });
 
   });
 
   describe('#loadMultiFromDatabase', function () {
-    it('should return an empty array for an non existing id', function (done) {
-      repository.loadMultiFromDatabase([-999, -998, -997])
-        .then(function (results) {
-          should(results).be.an.Array().and.have.length(0);
-          done();
-        })
-        .catch(function (error) {
-          done(error);
-        });
+    it('should return an empty array for an non existing id', () => {
+      return repository.loadMultiFromDatabase([-999, -998, -997])
+        .then(results => should(results).be.an.Array().and.have.length(0));
     });
 
     it('should reject the promise in case of error', () => {
       return should(repository.loadMultiFromDatabase(['error'])).be.rejectedWith(InternalError);
     });
 
-    it('should create a valid requestObject request for the readEngine', function (done) {
-      repository.loadMultiFromDatabase([-999, 'persisted', -998])
-        .then(function (results) {
+    it('should create a valid requestObject request for the readEngine', () => {
+      return repository.loadMultiFromDatabase([-999, 'persisted', -998])
+        .then(() => {
           should(forwardedObject).be.instanceOf(RequestObject);
           should(forwardedObject.controller).be.exactly('read');
           should(forwardedObject.action).be.exactly('mget');
           should(forwardedObject.collection).be.exactly(repository.collection);
           should(forwardedObject.data.body.ids).be.eql([-999, 'persisted', -998]);
-          done();
-        })
-        .catch(function (error) {
-          done(error);
         });
     });
 
-    it('should return a list of hydrated object when parameter hydrate is set', function (done) {
-      repository.loadMultiFromDatabase(['persisted'], true)
-        .then(function (results) {
+    it('should return a list of hydrated object when parameter hydrate is set', () => {
+      return repository.loadMultiFromDatabase(['persisted'], true)
+        .then(results => {
           should(results).be.an.Array();
           should(results).not.be.empty();
 
-          results.forEach(function (result) {
+          results.forEach(result => {
             should(result).be.instanceOf(ObjectConstructor);
             should(result._id).be.exactly(-1);
             should(result.name).be.exactly('persisted');
           });
-
-          done();
-        })
-        .catch(function (error) {
-          done(error);
         });
     });
 
-    it('should return a list of plain object when parameter hydrate is false', function (done) {
-      repository.loadMultiFromDatabase(['persisted'], false)
-        .then(function (results) {
+    it('should return a list of plain object when parameter hydrate is false', () => {
+      return repository.loadMultiFromDatabase(['persisted'], false)
+        .then(results => {
           should(results).be.an.Array();
           should(results).not.be.empty();
 
-          results.forEach(function (result) {
+          results.forEach(result => {
             should(result).not.be.instanceOf(ObjectConstructor);
             should(result._id).be.exactly(-1);
             should(result._source.name).be.exactly('persisted');
           });
-
-          done();
-        })
-        .catch(function (error) {
-          done(error);
         });
     });
   });
 
   describe('#loadFromCache', function () {
-    it('should return null for an non-existing id', function (done) {
-      repository.loadFromCache(-999)
-        .then(function (result) {
-          should(result).be.null();
-          done();
-        })
-        .catch(function (error) {
-          done(error);
-        });
+    it('should return null for an non-existing id', () => {
+      return repository.loadFromCache(-999)
+        .then(result => should(result).be.null());
     });
 
-    it('should reject the promise in case of error', done => {
-      should(repository.loadFromCache('error')).be.rejectedWith(InternalError);
-      should(repository.loadFromCache('string')).be.rejectedWith(InternalError);
-      done();
+    it('should reject the promise in case of error', () => {
+      return should(repository.loadFromCache('error')).be.rejectedWith(InternalError);
     });
 
-    it('should return a valid ObjectConstructor instance if found', function (done) {
-      repository.loadFromCache('persisted')
-        .then(function (result) {
+    it('should reject the promise when loading an incorrect object', () => {
+      return should(repository.loadFromCache('string')).be.rejectedWith(InternalError);
+    });
+
+    it('should return a valid ObjectConstructor instance if found', () => {
+      return repository.loadFromCache('persisted')
+        .then(result => {
           should(result).be.an.instanceOf(ObjectConstructor);
           should(result._id).be.exactly(-1);
           should(result.name).be.exactly('persisted');
           should(result.type).be.exactly('testObject');
-          done();
-        })
-        .catch(function (error) {
-          done(error);
         });
     });
   });
 
   describe('#load', function () {
-    it('should return null for an non-existing id', function (done) {
-      repository.load(-999)
-        .then(function (result) {
-          should(result).be.null();
-          done();
-        })
-        .catch(function (error) {
-          done(error);
-        });
+    it('should return null for an non-existing id', () => {
+      return repository.load(-999)
+        .then(result => should(result).be.null());
     });
 
-    it('should reject the promise in case of error', done => {
-      should(repository.load('error')).be.rejectedWith(InternalError);
-      should(repository.load('string')).be.rejectedWith(InternalError);
-      done();
+    it('should reject the promise in case of error', () => {
+      return should(repository.load('error')).be.rejectedWith(InternalError);
     });
 
-    it('should return a valid ObjectConstructor instance if found', function (done) {
-      repository.load('persisted')
-        .then(function (result) {
+    it('should reject the promise when loading an incorrect object', () => {
+      return should(repository.load('string')).be.rejectedWith(InternalError);
+    });
+
+    it('should return a valid ObjectConstructor instance if found', () => {
+      return repository.load('persisted')
+        .then(result => {
           should(result).be.an.instanceOf(ObjectConstructor);
           should(result._id).be.exactly(-1);
           should(result.name).be.exactly('persisted');
           should(result.type).be.exactly('testObject');
-          done();
-        })
-        .catch(function (error) {
-          done(error);
         });
     });
 
-    it('should return a valid ObjectConstructor instance if found only in cache', function (done) {
-      repository.load('cached')
-        .then(function (result) {
+    it('should return a valid ObjectConstructor instance if found only in cache', () => {
+      return repository.load('cached')
+        .then(result => {
           should(result).be.an.instanceOf(ObjectConstructor);
           should(result._id).be.exactly(-2);
           should(result.name).be.exactly('cached');
           should(result.type).be.exactly('testObject');
-          done();
-        })
-        .catch(function (error) {
-          done(error);
         });
     });
 
-    it('should return a valid ObjectConstructor instance if found only in readEngine', function (done) {
-      repository.load('uncached')
-        .then(function (result) {
+    it('should return a valid ObjectConstructor instance if found only in readEngine', () => {
+      return repository.load('uncached')
+        .then(result => {
           should(result).be.an.instanceOf(ObjectConstructor);
           should(result._id).be.exactly(-3);
           should(result.name).be.exactly('uncached');
           should(result.type).be.exactly('testObject');
-          done();
-        })
-        .catch(function (error) {
-          done(error);
         });
     });
 
-    it('should get content only from readEngine if cacheEngine is null', function (done) {
+    it('should get content only from readEngine if cacheEngine is null', () => {
       repository.cacheEngine = null;
-      repository.load('cached')
-        .then(function (result) {
+
+      return repository.load('cached')
+        .then(result => {
           should(result).be.an.instanceOf(ObjectConstructor);
           should(result._id).be.exactly(-3);
           should(result.name).be.exactly('uncached');
           should(result.type).be.exactly('testObject');
-          done();
-        })
-        .catch(function (error) {
-          done(error);
         });
     });
 
-    it('should get content only from cacheEngine if readEngine is null', function (done) {
+    it('should get content only from cacheEngine if readEngine is null', () => {
       repository.readEngine = null;
-      repository.load('uncached')
-        .then(function (result) {
-          should(result).be.null();
-          done();
-        })
-        .catch(function (error) {
-          done(error);
-        });
+
+      return repository.load('uncached')
+        .then(result => should(result).be.null());
     });
   });
 
@@ -454,7 +395,7 @@ describe('Test: repositories/repository', function () {
   });
 
   describe('#hydrate', function () {
-    it('should return a properly hydrated object with a plain old object', function (done) {
+    it('should return a properly hydrated object with a plain old object', () => {
       var
         object = new ObjectConstructor(),
         data = {
@@ -464,66 +405,12 @@ describe('Test: repositories/repository', function () {
           type: 'myType'
         };
 
-      repository.hydrate(object, data)
-        .then(function (result) {
-          should(result).be.an.instanceOf(ObjectConstructor);
-          should(result.type).be.exactly('myType');
-          should(result.value1).be.eql({test: true});
-          should(result.value1.test).be.true();
-          done();
-        })
-        .catch(function (error) {
-          done(error);
-        });
-    });
-
-    it('should hydrate properly with a ResponseObject', function (done) {
-      var
-        object = new ObjectConstructor(),
-        data = new ResponseObject (null, {
-          value1: {
-            test: true
-          },
-          type: 'myType'
-        });
-
-      repository.hydrate(object, data)
+      return repository.hydrate(object, data)
         .then(result => {
           should(result).be.an.instanceOf(ObjectConstructor);
           should(result.type).be.exactly('myType');
           should(result.value1).be.eql({test: true});
           should(result.value1.test).be.true();
-          done();
-        })
-        .catch(function (error) {
-          done(error);
-        });
-    });
-
-    it('should hydrate properly with a ResponseObject containing a _source member', function (done) {
-      var
-        object = new ObjectConstructor(),
-        data = new ResponseObject (null, {
-          _id: 'foo',
-          _source: {
-            value1: {
-              test: true
-            },
-            type: 'myType'
-          }
-        });
-
-      repository.hydrate(object, data)
-        .then(result => {
-          should(result).be.an.instanceOf(ObjectConstructor);
-          should(result.type).be.exactly('myType');
-          should(result.value1).be.eql({test: true});
-          should(result.value1.test).be.true();
-          should(result._id).be.eql('foo');
-          done();
-        })
-        .catch(function (error) {
-          done(error);
         });
     });
 
@@ -545,25 +432,22 @@ describe('Test: repositories/repository', function () {
   });
 
   describe('#search', function () {
-    it('should return a list from database', function (done) {
-      repository.search({}, 0, 10, false)
+    it('should return a list from database', () => {
+      return repository.search({}, 0, 10, false)
         .then(response => {
           should(response).be.an.Object();
           should(response.hits).be.an.Array();
           should(response.total).be.exactly(1);
-
-          done();
         });
     });
-    it('should construct role if hydrate is true', function (done) {
-      repository.search({}, 0, 10, true)
+
+    it('should construct role if hydrate is true', () => {
+      return repository.search({}, 0, 10, true)
         .then(response => {
           should(response).be.an.Object();
           should(response.hits).be.an.Array();
           should(response.total).be.exactly(1);
-
           should(response.hits[0].type).be.exactly('testObject');
-          done();
         });
     });
   });
