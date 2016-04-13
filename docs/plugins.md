@@ -157,21 +157,41 @@ On each of following events, you can attach a function to execute in your plugin
 |`data:afterDeleteIndex`        | `admin` | `deleteIndex` |Triggered after controller `admin` and action `deleteIndex`|Type: Response object|
 |`data:beforeRefreshIndex`      | `admin` | `refreshIndex` |Triggered before controller `admin` and action `refreshIndex`.|Type: Request object|
 |`data:afterRefreshIndex`       | `admin` | `refreshIndex` |Triggered after controller `admin` and action `refreshIndex`.|Type: Response object|
-|`data:beforeBulkImport`        | `admin` | `import` |Triggered before controller `bulk` and action `import`.|Type: Response object|
-|`data:afterBulkImport`         | `admin` | `import` |Triggered after controller `bulk` and action `import`.|Type: Response object|
-|`data:beforeSearch`            | `admin` | `search` |Triggered before controller `read` and action `search`.|Type: Request object|
-|`data:afterSearch`             | `admin` | `search` |Triggered after controller `read` and action `search`.|Type: Response object|
-|`data:beforeGet`               | `admin` | `get` |Triggered before controller `read` and action `get`.|Type: Request object|
-|`data:afterGet`                | `admin` | `get` |Triggered after controller `read` and action `get`.|Type: Response object|
-|`data:beforeCount`             | `admin` | `count` |Triggered before controller `read` and action `count`.|Type: Request object|
-|`data:afterCount`              | `admin` | `count` |Triggered after controller `read` and action `count`.|Type: Response object|
-|`data:beforeListCollections`   | `admin` | `listCollections` |Triggered before controller `read` and action `listCollections`.|Type: Request object|
-|`data:afterListCollections`    | `admin` | `listCollections` |Triggered after controller `read` and action `listCollections`.|Type: Response object|
-|`data:beforeNow`               | `admin` | `now` |Triggered before controller `read` and action `now`.|Type: Request object|
-|`data:afterNow`                | `admin` | `now` |Triggered after controller `read` and action `now`.|Type: Response object|
-|`data:beforeListIndexes`       | `admin` | `listIndexes` |Triggered before controller `read` and action `listIndexes`.|Type: Request object|
-|`data:afterListIndexes`        | `admin` | `listIndexes` |Triggered after controller `read` and action `listIndexes`.|Type: Response object|
-|`data:afterServerInfo`         | `admin` | `serverInfo` |Triggered after controller `read` and action `serverInfo`.|Type: Response object|
+|`data:beforeBulkImport`        | `bulk` | `import` |Triggered before controller `bulk` and action `import`.|Type: Response object|
+|`data:afterBulkImport`         | `bulk` | `import` |Triggered after controller `bulk` and action `import`.|Type: Response object|
+|`data:beforeSearch`            | `read` | `search` |Triggered before controller `read` and action `search`.|Type: Request object|
+|`data:afterSearch`             | `read` | `search` |Triggered after controller `read` and action `search`.|Type: Response object|
+|`data:beforeGet`               | `read` | `get` |Triggered before controller `read` and action `get`.|Type: Request object|
+|`data:afterGet`                | `read` | `get` |Triggered after controller `read` and action `get`.|Type: Response object|
+|`data:beforeCount`             | `read` | `count` |Triggered before controller `read` and action `count`.|Type: Request object|
+|`data:afterCount`              | `read` | `count` |Triggered after controller `read` and action `count`.|Type: Response object|
+|`data:beforeListCollections`   | `read` | `listCollections` |Triggered before controller `read` and action `listCollections`.|Type: Request object|
+|`data:afterListCollections`    | `read` | `listCollections` |Triggered after controller `read` and action `listCollections`.|Type: Response object|
+|`data:beforeNow`               | `read` | `now` |Triggered before controller `read` and action `now`.|Type: Request object|
+|`data:afterNow`                | `read` | `now` |Triggered after controller `read` and action `now`.|Type: Response object|
+|`data:beforeListIndexes`       | `read` | `listIndexes` |Triggered before controller `read` and action `listIndexes`.|Type: Request object|
+|`data:afterListIndexes`        | `read` | `listIndexes` |Triggered after controller `read` and action `listIndexes`.|Type: Response object|
+|`data:afterServerInfo`         | `read` | `serverInfo` |Triggered after controller `read` and action `serverInfo`.|Type: Response object|
+|`data:beforeCreate`        	| `write` | `create` |Triggered before controller `write` and action `create`.|Type: Request object|
+|`data:afterCreate`         	| `write` | `create` |Triggered after controller `write` and action `create`.|Type: Response object|
+|`data:beforeCreate`        	| `write` | `create` |Triggered before controller `write` and action `create`.|Type: Request object|
+|`data:afterCreate`         	| `write` | `create` |Triggered after controller `write` and action `create`.|Type: Response object|
+|`data:beforePublish`        	| `write` | `publish` |Triggered before controller `write` and action `publish`.|Type: Request object|
+|`data:afterPublish`         	| `write` | `publish` |Triggered after controller `write` and action `publish`.|Type: Response object|
+|`data:beforeCreateOrReplace`   | `write` | `createOrReplace` |Triggered before controller `write` and action `createOrReplace`.|Type: Request object|
+|`data:afterPublish`         	| `write` | `createOrReplace` |Triggered after controller `write` and action `createOrReplace`.|Type: Response object|
+|`data:beforeCreateOrReplace`   | `write` | `createOrReplace` |Triggered before controller `write` and action `createOrReplace`.|Type: Request object|
+|`data:afterPublish`         	| `write` | `createOrReplace` |Triggered after controller `write` and action `createOrReplace`.|Type: Response object|
+|`data:beforeUpdate`   			| `write` | `update` |Triggered before controller `write` and action `update`.|Type: Request object|
+|`data:afterUpdate`         	| `write` | `update` |Triggered after controller `write` and action `update`.|Type: Response object|
+|`data:beforeReplace`   		| `write` | `replace` |Triggered before controller `write` and action `replace`.|Type: Request object|
+|`data:afterReplace`         	| `write` | `replace` |Triggered after controller `write` and action `replace`.|Type: Response object|
+|`data:beforeDelete`   			| `write` | `delete` |Triggered before controller `write` and action `delete`.|Type: Request object|
+|`data:afterDelete`         	| `write` | `delete` |Triggered after controller `write` and action `delete`.|Type: Response object|
+|`data:beforeDeleteByQuery`   	| `write` | `deleteByQuery` |Triggered before controller `write` and action `deleteByQuery`.|Type: Request object|
+|`data:afterDeleteByQuery`      | `write` | `deleteByQuery` |Triggered after controller `write` and action `deleteByQuery`.|Type: Response object|
+|`data:beforeCreateCollection`  | `write` | `createCollection` |Triggered before controller `write` and action `createCollection`.|Type: Request object|
+|`data:afterCreateCollection`   | `write` | `createCollection` |Triggered after controller `write` and action `createCollection`.|Type: Response object|
 |**subscription**|||
 |`subscription:beforeRemoveRooms`	| `admin` | `removeRooms` |Triggered before controller `admin` and action `removeRooms`. This action remove all rooms for a given collection|Type: Request object|
 |`subscription:afterRemoveRooms`	| `admin` | `removeRooms` |Triggered after controller `admin` and action `removeRooms`. When the remove is done|Type: Response object|
@@ -222,6 +242,19 @@ On each of following events, you can attach a function to execute in your plugin
 |`security:afterUpdateRole`				| `security` | `updateRole` |Triggered after controller `security` and action `updateRole`.|Type: Response object|
 |`security:beforeCreateOrReplaceUser`	| `security` | `createOrReplaceUser` |Triggered before controller `security` and action `createOrReplaceUser`.|Type: Request object|
 |`security:afterCreateOrReplaceUser`	| `security` | `createOrReplaceUser` |Triggered after controller `security` and action `createOrReplaceUser`.|Type: Response object|
+|**subscription**|||
+|`subscription:beforeOn`	| `subscribe` | `on` |Triggered before controller `subscribe` and action `on`.|Type: Request object|
+|`subscription:afterOn`		| `subscribe` | `on` |Triggered after controller `subscribe` and action `on`.|Type: Response object|
+|`subscription:beforeJoin`	| `subscribe` | `join` |Triggered before controller `subscribe` and action `join`.|Type: Request object|
+|`subscription:afterJoin`	| `subscribe` | `join` |Triggered after controller `subscribe` and action `join`.|Type: Response object|
+|`subscription:beforeOff`	| `subscribe` | `off` |Triggered before controller `subscribe` and action `off`.|Type: Request object|
+|`subscription:afterOff`	| `subscribe` | `off` |Triggered after controller `subscribe` and action `off`.|Type: Response object|
+|`subscription:beforeCount`	| `subscribe` | `count` |Triggered before controller `subscribe` and action `count`.|Type: Request object|
+|`subscription:afterCount`	| `subscribe` | `count` |Triggered after controller `subscribe` and action `count`.|Type: Response object|
+|`subscription:beforeList`	| `subscribe` | `list` |Triggered before controller `subscribe` and action `list`.|Type: Request object|
+|`subscription:afterList`	| `subscribe` | `list` |Triggered after controller `subscribe` and action `list`.|Type: Response object|
+
+
 |``|||
 |``|||
 |``|||
