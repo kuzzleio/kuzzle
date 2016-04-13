@@ -4,7 +4,8 @@ var
   rewire = require('rewire'),
   PluginsManager = rewire('../../../../lib/api/core/plugins/pluginsManager'),
   EventEmitter = require('eventemitter2').EventEmitter2,
-  GatewayTimeoutError = require.main.require('lib/api/core/errors/gatewayTimeoutError');
+  GatewayTimeoutError = require.main.require('lib/api/core/errors/gatewayTimeoutError'),
+  workerPrefix = PluginsManager.__get__('workerPrefix');
 
 describe('Test plugins manager run', function () {
   var
@@ -23,10 +24,117 @@ describe('Test plugins manager run', function () {
       'repositories'
     ],
     kuzzle,
-    pluginsManager;
+    pluginsManager,
+    pm2Mock;
+
+  pm2Mock = function () {
+    /* jshint -W106 */
+    var universalProcess = {
+      name: workerPrefix + 'foo',
+      pm_id: 42
+    };
+    /* jshint +W106 */
+    var busDatas = {
+      'initialized': {
+        process: universalProcess,
+        data: {
+          events: [
+            'foo:bar'
+          ]
+        }
+      },
+      'process:event': {
+        event: 'exit',
+        process: universalProcess
+      },
+      'ready': {
+        process: universalProcess
+      }
+    };
+    var
+      busListeners,
+      processList,
+      uniqueness,
+      sentMessages;
+
+    return {
+      connect: function (callback) {
+        callback();
+      },
+      list: function (callback) {
+        callback(null, processList);
+      },
+      delete: function (name, callback) {
+        processList = processList.filter(item => {
+          return item.name !== name;
+        });
+        callback(null);
+      },
+      start: function (processSpec, callback) {
+        var i;
+        for(i = 0; i < processSpec.instances; i++) {
+          /* jshint -W106 */
+          processList.push({
+            process: {
+              name: processSpec.name,
+              pm_id: uniqueness++
+            }
+          });
+          /* jshint +W106 */
+        }
+        callback();
+      },
+      launchBus: function (callback) {
+        callback(null, {
+          on: function (event, cb) {
+            var wrapper = function (data) {
+              cb(data);
+            };
+            if (!busListeners[event]) {
+              busListeners[event] = [];
+            }
+            busListeners[event].push(wrapper);
+          }
+        });
+      },
+      sendDataToProcessId: function (processId, data, callback) {
+        sentMessages.push(data);
+        callback(null);
+      },
+      /** Mock only methods */
+      clearAll: function () {
+        busListeners = {};
+        processList = [];
+        uniqueness = 0;
+        sentMessages = [];
+      },
+      getProcessList: function () {
+        return processList;
+      },
+      getSentMessages: function() {
+        return sentMessages;
+      },
+      // Should be used to trigger a particular event on the bus
+      triggerOnBus: function (event) {
+        if (busListeners[event]) {
+          busListeners[event].forEach(item => {
+            item(busDatas[event]);
+          });
+        }
+      },
+      initializeList: function () {
+        processList = [universalProcess];
+      }
+      /** END - Mock only methods */
+    };
+  }();
 
   before(function () {
-    PluginsManager.__set__('console', {log: function () {}, error: function () {}});
+    PluginsManager.__set__('console', {
+      log: function () {},
+      error: function () {}
+    });
+    PluginsManager.__set__('pm2', pm2Mock);
   });
 
   beforeEach(() => {
@@ -44,6 +152,7 @@ describe('Test plugins manager run', function () {
     };
 
     pluginsManager = new PluginsManager(kuzzle);
+    pm2Mock.clearAll();
   });
 
   it('should do nothing on run if plugin is not activated', function () {
@@ -309,6 +418,7 @@ describe('Test plugins manager run', function () {
         object: {
           init: function () {},
           config: {},
+          controllers: ['foo'],
           routes: [
             {verb: 'get', url: '/bar/:name', controller: 'foo', action: 'bar'},
             {verb: 'post', url: '/bar', controller: 'foo', action: 'bar'}
@@ -331,5 +441,161 @@ describe('Test plugins manager run', function () {
     should(pluginsManager.routes[0].action)
       .be.equal(pluginsManager.routes[0].action)
       .and.be.equal('bar');
+  });
+
+  it('should initialize plugin workers if some are defined', function (done) {
+    pluginsManager.plugins = {
+      foo: {
+        config: {
+          threads: 2
+        },
+        activated: true
+      }
+    };
+    pluginsManager.isServer = true;
+    pluginsManager.isDummy = false;
+
+    pluginsManager.run();
+    setTimeout(() => {
+      should(pm2Mock.getProcessList()).be.an.Array().and.length(2);
+      done();
+    },200);
+  });
+
+  it('should send an initialize message to the process when ready is received', function (done) {
+    pluginsManager.plugins = {
+      foo: {
+        config: {
+          threads: 1
+        },
+        activated: true
+      }
+    };
+    pluginsManager.isServer = true;
+    pluginsManager.isDummy = false;
+
+    pluginsManager.run();
+    setTimeout(() => {
+      pm2Mock.triggerOnBus('ready');
+      setTimeout(() => {
+        var messages = pm2Mock.getSentMessages();
+        should(messages).be.an.Array().and.length(1);
+        should(messages[0].topic).be.equal('initialize');
+        done();
+      }, 100);
+    },100);
+  });
+
+  it('should add worker to list when initialized is received', function (done) {
+    pluginsManager.plugins = {
+      foo: {
+        config: {
+          threads: 1
+        },
+        activated: true
+      }
+    };
+    pluginsManager.isServer = true;
+    pluginsManager.isDummy = false;
+
+    pluginsManager.run();
+    setTimeout(() => {
+      pm2Mock.triggerOnBus('initialized');
+      setTimeout(() => {
+        should(pluginsManager.workers[workerPrefix + 'foo']).be.an.Object();
+        should(pluginsManager.workers[workerPrefix + 'foo'].pmIds).be.an.Object();
+        should(pluginsManager.workers[workerPrefix + 'foo'].pmIds.getSize()).be.equal(1);
+        done();
+      }, 100);
+    },100);
+  });
+
+  it('should remove a worker to list when process:event exit is received', function (done) {
+    pluginsManager.plugins = {
+      foo: {
+        config: {
+          threads: 1
+        },
+        activated: true
+      }
+    };
+    pluginsManager.isServer = true;
+    pluginsManager.isDummy = false;
+
+    pluginsManager.run();
+    setTimeout(() => {
+      pm2Mock.triggerOnBus('initialized');
+      setTimeout(() => {
+        should(pluginsManager.workers[workerPrefix + 'foo']).be.an.Object();
+        should(pluginsManager.workers[workerPrefix + 'foo'].pmIds).be.an.Object();
+        should(pluginsManager.workers[workerPrefix + 'foo'].pmIds.getSize()).be.equal(1);
+
+        pm2Mock.triggerOnBus('process:event');
+        setTimeout(() => {
+          should.not.exist(pluginsManager.workers[workerPrefix + 'foo']);
+          done();
+        }, 100);
+      }, 100);
+    },100);
+  });
+
+  it('should receive the triggered message', function (done) {
+    var triggerWorkers = PluginsManager.__get__('triggerWorkers');
+    pluginsManager.plugins = {
+      foo: {
+        config: {
+          threads: 1,
+          hooks: {
+            'foo:bar': 'foobar'
+          }
+        },
+        activated: true
+      }
+    };
+    pluginsManager.isServer = true;
+    pluginsManager.isDummy = false;
+
+
+    pluginsManager.run();
+    setTimeout(() => {
+      pm2Mock.triggerOnBus('initialized');
+      setTimeout(() => {
+        should(pluginsManager.workers[workerPrefix + 'foo']).be.an.Object();
+        should(pluginsManager.workers[workerPrefix + 'foo'].pmIds).be.an.Object();
+        should(pluginsManager.workers[workerPrefix + 'foo'].pmIds.getSize()).be.equal(1);
+
+        triggerWorkers.call(pluginsManager, 'foo:bar', {
+          'firstName': 'Ada'
+        });
+        setTimeout(() => {
+          should(pm2Mock.getSentMessages()).be.an.Array().and.length(1);
+          should(pm2Mock.getSentMessages()[0]).be.an.Object();
+          should(pm2Mock.getSentMessages()[0].data.message.firstName).be.equal('Ada');
+          done();
+        },100);
+      }, 100);
+    },100);
+  });
+
+  it('should delete plugin workers at initialization', function (done) {
+    pluginsManager.plugins = {
+      foo: {
+        config: {
+          threads: 1
+        },
+        activated: true
+      }
+    };
+    pluginsManager.isServer = true;
+    pluginsManager.isDummy = false;
+
+    pm2Mock.initializeList();
+
+    pluginsManager.run();
+    setTimeout(() => {
+      should.not.exist(pluginsManager.workers[workerPrefix + 'foo']);
+      should(pm2Mock.getProcessList()).length(0);
+      done();
+    },100);
   });
 });
