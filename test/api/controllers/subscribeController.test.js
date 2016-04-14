@@ -64,7 +64,7 @@ describe('Test: subscribe controller', function () {
     it('should trigger a hook and return a promise', function (done) {
       this.timeout(50);
 
-      kuzzle.once('subscription:list', () => done());
+      kuzzle.once('subscription:beforeList', () => done());
       should(kuzzle.funnel.controllers.subscribe.list(requestObject, {
         connection: {id: 'foobar'} ,
         token: anonymousToken
@@ -75,7 +75,7 @@ describe('Test: subscribe controller', function () {
   describe('#join', function () {
     it('should trigger a hook and return a promise', function (done) {
       this.timeout(50);
-      kuzzle.once('subscription:join', () => done());
+      kuzzle.once('subscription:beforeJoin', () => done());
       should(kuzzle.funnel.controllers.subscribe.join(requestObject, {
         connection: {id: 'foobar'},
         token: anonymousToken

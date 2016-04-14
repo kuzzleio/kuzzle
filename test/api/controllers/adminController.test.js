@@ -349,7 +349,7 @@ describe('Test: admin controller', function () {
     it('should trigger a plugin hook', function (done) {
       this.timeout(50);
 
-      kuzzle.once('subscription:removeRooms', obj => {
+      kuzzle.once('subscription:beforeRemoveRooms', obj => {
         try {
           should(obj).be.exactly(requestObject);
           done();

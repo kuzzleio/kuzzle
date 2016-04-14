@@ -233,12 +233,12 @@ describe('Test the auth controller', function () {
 
     });
 
-    it('should emit a auth:logout event', function (done) {
+    it('should emit a auth:afterLogout event', function (done) {
       this.timeout(50);
 
-      kuzzle.pluginsManager.trigger = function (event) {
-        if (event === 'auth:logout') {
-          return q();
+      kuzzle.pluginsManager.trigger = function (event, data) {
+        if (event === 'auth:afterLogout' || event === 'auth:beforeLogout') {
+          return q(data);
         }
       };
 
@@ -254,7 +254,7 @@ describe('Test the auth controller', function () {
       this.timeout(50);
 
       kuzzle.pluginsManager.trigger = function (event) {
-        if (event === 'auth:logout') {
+        if (event === 'auth:afterLogout' || event === 'auth:beforeLogout') {
           return q.reject();
         }
       };
