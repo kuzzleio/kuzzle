@@ -34,7 +34,7 @@ describe('Test plugins manager run', function () {
       pm_id: 42
     };
     /* jshint +W106 */
-    var busDatas = {
+    var busData = {
       'initialized': {
         process: universalProcess,
         data: {
@@ -62,11 +62,13 @@ describe('Test plugins manager run', function () {
         callback();
       },
       list: function (callback) {
-        callback(null, processList);
+        callback(null, processList.map(item => item.process));
       },
-      delete: function (name, callback) {
+      delete: function (pmId, callback) {
         processList = processList.filter(item => {
-          return item.name !== name;
+          /* jshint -W106 */
+          return item.process.pm_id !== pmId;
+          /* jshint +W106 */
         });
         callback(null);
       },
@@ -102,7 +104,7 @@ describe('Test plugins manager run', function () {
         callback(null);
       },
       /** Mock only methods */
-      clearAll: function () {
+      resetMock: function () {
         busListeners = {};
         processList = [];
         uniqueness = 0;
@@ -118,12 +120,12 @@ describe('Test plugins manager run', function () {
       triggerOnBus: function (event) {
         if (busListeners[event]) {
           busListeners[event].forEach(item => {
-            item(busDatas[event]);
+            item(busData[event]);
           });
         }
       },
       initializeList: function () {
-        processList = [universalProcess];
+        processList = [{process: universalProcess}];
       }
       /** END - Mock only methods */
     };
@@ -152,7 +154,7 @@ describe('Test plugins manager run', function () {
     };
 
     pluginsManager = new PluginsManager(kuzzle);
-    pm2Mock.clearAll();
+    pm2Mock.resetMock();
   });
 
   it('should do nothing on run if plugin is not activated', function () {
@@ -459,7 +461,7 @@ describe('Test plugins manager run', function () {
     setTimeout(() => {
       should(pm2Mock.getProcessList()).be.an.Array().and.length(2);
       done();
-    },200);
+    },50);
   });
 
   it('should send an initialize message to the process when ready is received', function (done) {
@@ -482,8 +484,8 @@ describe('Test plugins manager run', function () {
         should(messages).be.an.Array().and.length(1);
         should(messages[0].topic).be.equal('initialize');
         done();
-      }, 100);
-    },100);
+      }, 50);
+    },50);
   });
 
   it('should add worker to list when initialized is received', function (done) {
@@ -506,8 +508,8 @@ describe('Test plugins manager run', function () {
         should(pluginsManager.workers[workerPrefix + 'foo'].pmIds).be.an.Object();
         should(pluginsManager.workers[workerPrefix + 'foo'].pmIds.getSize()).be.equal(1);
         done();
-      }, 100);
-    },100);
+      }, 50);
+    },50);
   });
 
   it('should remove a worker to list when process:event exit is received', function (done) {
@@ -534,9 +536,9 @@ describe('Test plugins manager run', function () {
         setTimeout(() => {
           should.not.exist(pluginsManager.workers[workerPrefix + 'foo']);
           done();
-        }, 100);
-      }, 100);
-    },100);
+        }, 50);
+      }, 50);
+    },50);
   });
 
   it('should receive the triggered message', function (done) {
@@ -572,9 +574,9 @@ describe('Test plugins manager run', function () {
           should(pm2Mock.getSentMessages()[0]).be.an.Object();
           should(pm2Mock.getSentMessages()[0].data.message.firstName).be.equal('Ada');
           done();
-        },100);
-      }, 100);
-    },100);
+        },50);
+      }, 50);
+    },50);
   });
 
   it('should delete plugin workers at initialization', function (done) {
@@ -593,9 +595,9 @@ describe('Test plugins manager run', function () {
 
     pluginsManager.run();
     setTimeout(() => {
-      should.not.exist(pluginsManager.workers[workerPrefix + 'foo']);
-      should(pm2Mock.getProcessList()).length(0);
+      should(pm2Mock.getProcessList()).length(1);
+      should(pm2Mock.getProcessList()[0].process.pm_id).not.equal(42);
       done();
-    },100);
+    },50);
   });
 });
