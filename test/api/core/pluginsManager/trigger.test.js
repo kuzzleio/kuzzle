@@ -37,8 +37,10 @@ describe('Test plugins manager trigger', function () {
       activated: true
     }];
 
-    pluginsManager.run();
-    pluginsManager.trigger('foo:bar');
+    pluginsManager.run()
+      .then(() => {
+        pluginsManager.trigger('foo:bar');
+      });
   });
 
 });

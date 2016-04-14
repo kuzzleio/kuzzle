@@ -157,7 +157,7 @@ describe('Test plugins manager run', function () {
     pm2Mock.resetMock();
   });
 
-  it('should do nothing on run if plugin is not activated', function () {
+  it('should do nothing on run if plugin is not activated', function (done) {
     var isInitialized = false;
 
     pluginsManager.plugins = [{
@@ -169,8 +169,11 @@ describe('Test plugins manager run', function () {
       activated: false
     }];
 
-    pluginsManager.run();
-    should(isInitialized).be.false();
+    pluginsManager.run()
+      .then(() => {
+        should(isInitialized).be.false();
+        done();
+      });
   });
 
   it('should attach event hook on kuzzle object', function (done) {
@@ -188,8 +191,10 @@ describe('Test plugins manager run', function () {
       activated: true
     }];
 
-    pluginsManager.run();
-    kuzzle.emit('test');
+    pluginsManager.run()
+      .then(() => {
+        kuzzle.emit('test');
+      });
   });
 
   it('should attach event hook with wildcard on kuzzle object', function (done) {
@@ -207,8 +212,10 @@ describe('Test plugins manager run', function () {
       activated: true
     }];
 
-    pluginsManager.run();
-    kuzzle.emit('foo:bar');
+    pluginsManager.run()
+      .then(() => {
+        kuzzle.emit('foo:bar');
+      });
   });
 
   it('should attach pipes event', function (done) {
@@ -229,14 +236,16 @@ describe('Test plugins manager run', function () {
       activated: true
     }];
 
-    pluginsManager.run();
-    pluginsManager.trigger('foo')
-      .then(function () {
-        should(isCalled).be.true();
-        done();
-      })
-      .catch(error => {
-        done(error);
+    pluginsManager.run()
+      .then(() => {
+        pluginsManager.trigger('foo')
+          .then(function () {
+            should(isCalled).be.true();
+            done();
+          })
+          .catch(error => {
+            done(error);
+          });
       });
   });
 
@@ -258,18 +267,20 @@ describe('Test plugins manager run', function () {
       activated: true
     }];
 
-    pluginsManager.run();
-    pluginsManager.trigger('foo:bar')
-      .then(function () {
-        should(isCalled).be.true();
-        done();
-      })
-      .catch(error => {
-        done(error);
+    pluginsManager.run()
+      .then(() => {
+        pluginsManager.trigger('foo:bar')
+          .then(function () {
+            should(isCalled).be.true();
+            done();
+          })
+          .catch(error => {
+            done(error);
+          });
       });
   });
 
-  it('should attach pipes event and reject if an attached function return an error', function () {
+  it('should attach pipes event and reject if an attached function return an error', function (done) {
     pluginsManager.plugins = [{
       object: {
         init: function () {},
@@ -284,8 +295,11 @@ describe('Test plugins manager run', function () {
       activated: true
     }];
 
-    pluginsManager.run();
-    return should(pluginsManager.trigger('foo:bar')).be.rejected();
+    pluginsManager.run()
+      .then(() => {
+        should(pluginsManager.trigger('foo:bar')).be.rejected();
+        done();
+      });
   });
 
   it('should log a warning in case a pipe plugin exceeds the warning delay', done => {
@@ -324,19 +338,21 @@ describe('Test plugins manager run', function () {
       activated: true
     });
 
-    pluginsManager.run();
-    PluginsManager.__get__('triggerPipes').call(pluginsManager, 'foo:bar')
-      .then(result => {
-        should(warnings).have.length(1);
-        should(warnings[0]).be.exactly('Pipe plugin pipeTest exceeded 20ms to execute.');
-        done();
-      })
-      .catch(error => {
-        done(error);
+    pluginsManager.run()
+      .then(() => {
+        PluginsManager.__get__('triggerPipes').call(pluginsManager, 'foo:bar')
+          .then(result => {
+            should(warnings).have.length(1);
+            should(warnings[0]).be.exactly('Pipe plugin pipeTest exceeded 20ms to execute.');
+            done();
+          })
+          .catch(error => {
+            done(error);
+          });
       });
   });
 
-  it('should timeout the pipe when taking too long to execute', function() {
+  it('should timeout the pipe when taking too long to execute', function(done) {
     pluginsManager.plugins = [{
       name: 'pipeTest',
       object: {
@@ -356,9 +372,11 @@ describe('Test plugins manager run', function () {
       activated: true
     }];
 
-    pluginsManager.run();
-
-    return should(PluginsManager.__get__('triggerPipes').call(pluginsManager, 'foo:bar')).be.rejectedWith(GatewayTimeoutError);
+    pluginsManager.run()
+      .then(() => {
+        should(PluginsManager.__get__('triggerPipes').call(pluginsManager, 'foo:bar')).be.rejectedWith(GatewayTimeoutError);
+        done();
+      });
   });
 
   it('should attach controller actions on kuzzle object', function (done) {
@@ -376,10 +394,12 @@ describe('Test plugins manager run', function () {
       }
     };
 
-    pluginsManager.run();
-    should.not.exist(pluginsManager.controllers['myplugin/dfoo']);
-    should(pluginsManager.controllers['myplugin/foo']).be.a.Function();
-    pluginsManager.controllers['myplugin/foo']();
+    pluginsManager.run()
+      .then(() => {
+        should.not.exist(pluginsManager.controllers['myplugin/dfoo']);
+        should(pluginsManager.controllers['myplugin/foo']).be.a.Function();
+        pluginsManager.controllers['myplugin/foo']();
+      });
   });
 
   it('should see the context object within the plugin', function (done) {
@@ -410,11 +430,13 @@ describe('Test plugins manager run', function () {
       activated: true
     }];
 
-    pluginsManager.run();
-    kuzzle.emit('test');
+    pluginsManager.run()
+      .then(() => {
+        kuzzle.emit('test');
+      });
   });
 
-  it('should attach controller routes on kuzzle object', function () {
+  it('should attach controller routes on kuzzle object', function (done) {
     pluginsManager.plugins = {
       myplugin: {
         object: {
@@ -431,18 +453,21 @@ describe('Test plugins manager run', function () {
       }
     };
 
-    pluginsManager.run();
-    should(pluginsManager.routes).be.an.Array().and.length(2);
-    should(pluginsManager.routes[0].verb).be.equal('get');
-    should(pluginsManager.routes[0].url).be.equal('/_plugin/myplugin/bar/:name');
-    should(pluginsManager.routes[1].verb).be.equal('post');
-    should(pluginsManager.routes[1].url).be.equal('/_plugin/myplugin/bar');
-    should(pluginsManager.routes[0].controller)
-      .be.equal(pluginsManager.routes[0].controller)
-      .and.be.equal('myplugin/foo');
-    should(pluginsManager.routes[0].action)
-      .be.equal(pluginsManager.routes[0].action)
-      .and.be.equal('bar');
+    pluginsManager.run()
+      .then(() => {
+        should(pluginsManager.routes).be.an.Array().and.length(2);
+        should(pluginsManager.routes[0].verb).be.equal('get');
+        should(pluginsManager.routes[0].url).be.equal('/_plugin/myplugin/bar/:name');
+        should(pluginsManager.routes[1].verb).be.equal('post');
+        should(pluginsManager.routes[1].url).be.equal('/_plugin/myplugin/bar');
+        should(pluginsManager.routes[0].controller)
+          .be.equal(pluginsManager.routes[0].controller)
+          .and.be.equal('myplugin/foo');
+        should(pluginsManager.routes[0].action)
+          .be.equal(pluginsManager.routes[0].action)
+          .and.be.equal('bar');
+        done();
+      });
   });
 
   it('should initialize plugin workers if some are defined', function (done) {
@@ -457,11 +482,11 @@ describe('Test plugins manager run', function () {
     pluginsManager.isServer = true;
     pluginsManager.isDummy = false;
 
-    pluginsManager.run();
-    setTimeout(() => {
-      should(pm2Mock.getProcessList()).be.an.Array().and.length(2);
-      done();
-    },50);
+    pluginsManager.run()
+      .then(() => {
+        should(pm2Mock.getProcessList()).be.an.Array().and.length(2);
+        done();
+      });
   });
 
   it('should send an initialize message to the process when ready is received', function (done) {
@@ -476,16 +501,15 @@ describe('Test plugins manager run', function () {
     pluginsManager.isServer = true;
     pluginsManager.isDummy = false;
 
-    pluginsManager.run();
-    setTimeout(() => {
-      pm2Mock.triggerOnBus('ready');
-      setTimeout(() => {
-        var messages = pm2Mock.getSentMessages();
+    pluginsManager.run()
+      .then(() => {
+        var messages;
+        pm2Mock.triggerOnBus('ready');
+        messages = pm2Mock.getSentMessages();
         should(messages).be.an.Array().and.length(1);
         should(messages[0].topic).be.equal('initialize');
         done();
-      }, 50);
-    },50);
+      });
   });
 
   it('should add worker to list when initialized is received', function (done) {
@@ -500,16 +524,14 @@ describe('Test plugins manager run', function () {
     pluginsManager.isServer = true;
     pluginsManager.isDummy = false;
 
-    pluginsManager.run();
-    setTimeout(() => {
-      pm2Mock.triggerOnBus('initialized');
-      setTimeout(() => {
+    pluginsManager.run()
+      .then(() => {
+        pm2Mock.triggerOnBus('initialized');
         should(pluginsManager.workers[workerPrefix + 'foo']).be.an.Object();
         should(pluginsManager.workers[workerPrefix + 'foo'].pmIds).be.an.Object();
         should(pluginsManager.workers[workerPrefix + 'foo'].pmIds.getSize()).be.equal(1);
         done();
-      }, 50);
-    },50);
+      });
   });
 
   it('should remove a worker to list when process:event exit is received', function (done) {
@@ -524,21 +546,17 @@ describe('Test plugins manager run', function () {
     pluginsManager.isServer = true;
     pluginsManager.isDummy = false;
 
-    pluginsManager.run();
-    setTimeout(() => {
-      pm2Mock.triggerOnBus('initialized');
-      setTimeout(() => {
+    pluginsManager.run()
+      .then(() => {
+        pm2Mock.triggerOnBus('initialized');
         should(pluginsManager.workers[workerPrefix + 'foo']).be.an.Object();
         should(pluginsManager.workers[workerPrefix + 'foo'].pmIds).be.an.Object();
         should(pluginsManager.workers[workerPrefix + 'foo'].pmIds.getSize()).be.equal(1);
 
         pm2Mock.triggerOnBus('process:event');
-        setTimeout(() => {
-          should.not.exist(pluginsManager.workers[workerPrefix + 'foo']);
-          done();
-        }, 50);
-      }, 50);
-    },50);
+        should.not.exist(pluginsManager.workers[workerPrefix + 'foo']);
+        done();
+      });
   });
 
   it('should receive the triggered message', function (done) {
@@ -558,10 +576,10 @@ describe('Test plugins manager run', function () {
     pluginsManager.isDummy = false;
 
 
-    pluginsManager.run();
-    setTimeout(() => {
-      pm2Mock.triggerOnBus('initialized');
-      setTimeout(() => {
+    pluginsManager.run()
+      .then(() => {
+        pm2Mock.triggerOnBus('initialized');
+
         should(pluginsManager.workers[workerPrefix + 'foo']).be.an.Object();
         should(pluginsManager.workers[workerPrefix + 'foo'].pmIds).be.an.Object();
         should(pluginsManager.workers[workerPrefix + 'foo'].pmIds.getSize()).be.equal(1);
@@ -569,14 +587,12 @@ describe('Test plugins manager run', function () {
         triggerWorkers.call(pluginsManager, 'foo:bar', {
           'firstName': 'Ada'
         });
-        setTimeout(() => {
-          should(pm2Mock.getSentMessages()).be.an.Array().and.length(1);
-          should(pm2Mock.getSentMessages()[0]).be.an.Object();
-          should(pm2Mock.getSentMessages()[0].data.message.firstName).be.equal('Ada');
-          done();
-        },50);
-      }, 50);
-    },50);
+
+        should(pm2Mock.getSentMessages()).be.an.Array().and.length(1);
+        should(pm2Mock.getSentMessages()[0]).be.an.Object();
+        should(pm2Mock.getSentMessages()[0].data.message.firstName).be.equal('Ada');
+        done();
+      });
   });
 
   it('should delete plugin workers at initialization', function (done) {
@@ -593,11 +609,13 @@ describe('Test plugins manager run', function () {
 
     pm2Mock.initializeList();
 
-    pluginsManager.run();
-    setTimeout(() => {
-      should(pm2Mock.getProcessList()).length(1);
-      should(pm2Mock.getProcessList()[0].process.pm_id).not.equal(42);
-      done();
-    },50);
+    pluginsManager.run()
+      .then(() => {
+        should(pm2Mock.getProcessList()).length(1);
+        /* jshint -W106 */
+        should(pm2Mock.getProcessList()[0].process.pm_id).not.equal(42);
+        /* jshint +W106 */
+        done();
+      });
   });
 });
