@@ -19,11 +19,11 @@ before(function (done) {
   kuzzle.start(params, {dummy: true})
     .then(function () {
       kuzzle.services.list.readEngine = {
-        search: function(requestObject) { return q(new ResponseObject(requestObject, {})); },
-        get: function(requestObject) { return q(new ResponseObject(requestObject, {})); },
-        count: function(requestObject) { return q(new ResponseObject(requestObject, {})); },
-        listCollections: function(requestObject) { return q(new ResponseObject(requestObject, {})); },
-        listIndexes: function(requestObject) { return q(new ResponseObject(requestObject, {})); },
+        search: () => q({hits: [], total: 0}),
+        get: rq => q({_id: rq.data._id, _source: rq.data.body}),
+        count: () => q({count: 1}),
+        listCollections: () => q({}),
+        listIndexes: () => q({})
       };
 
       Object.keys(kuzzle.services.list).forEach(service => {
@@ -48,7 +48,6 @@ before(function (done) {
 });
 
 describe('Test: read controller', function () {
-
   describe('#search', function () {
     it('should trigger a plugin event', function (done) {
       var requestObject = new RequestObject({index: '%test', collection: 'unit-test-readcontroller'});
@@ -117,14 +116,11 @@ describe('Test: read controller', function () {
       stored = false;
     });
 
-    it('should resolve to a full collections list', function (done) {
+    it('should resolve to a full collections list', () => {
       var
-        requestObject = new RequestObject({}, {}, ''),
-        r = kuzzle.funnel.controllers.read.listCollections(requestObject, context);
+        requestObject = new RequestObject({}, {}, '');
 
-      should(r).be.a.Promise();
-
-      r
+      return kuzzle.funnel.controllers.read.listCollections(requestObject, context)
         .then(result => {
           should(realtime).be.true();
           should(stored).be.true();
@@ -134,9 +130,7 @@ describe('Test: read controller', function () {
           should(result.data.body.collections.realtime).not.be.undefined().and.be.an.Array();
           should(result.data.body.collections.stored.sort()).match(['foo']);
           should(result.data.body.collections.realtime.sort()).match(['bar', 'foo']);
-          done();
-        })
-        .catch(error => done(error));
+        });
     });
 
     it('should trigger a plugin event', function (done) {
