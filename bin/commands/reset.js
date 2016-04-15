@@ -16,7 +16,7 @@ module.exports = function () {
   var 
     tmp, 
     userIsSure = false, 
-    kuzzle = new Kuzzle(false);
+    kuzzle = new Kuzzle();
 
   // check, if files are provided, if they exists
   if (params.fixtures) {
@@ -51,7 +51,7 @@ module.exports = function () {
 
     console.log(notice('[ℹ] Processing...\n')); 
 
-    kuzzle.remoteActions(kuzzle, 'cleanAndPrepare', params);
+    kuzzle.remoteActions.do('cleanAndPrepare', params);
     
   } else {
 

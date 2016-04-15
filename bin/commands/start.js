@@ -23,7 +23,7 @@ if (process.env.FEATURE_COVERAGE == 1) {
 }
 
 module.exports = function (args) {
-  console.log(kuz('Starting Kuzzle'));
+  console.log(kuz('Starting Kuzzle'), (kuzzle.isServer ? notice('Server') : warn('Worker')));
 
   kuzzle.start(params)
     .then(() => {
