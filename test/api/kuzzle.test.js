@@ -21,9 +21,9 @@ describe('Test kuzzle constructor', () => {
 
     should(kuzzle.hooks).be.an.Object();
     should(kuzzle.workers).be.an.Object();
+    should(kuzzle.remoteActions).be.an.Object();
 
     should(kuzzle.start).be.a.Function();
-    should(kuzzle.remoteActions).be.a.Function();
   });
 
   it('should construct a kuzzle object with emit and listen event', (done) => {
