@@ -12,10 +12,10 @@ describe('Testing: write worker', function () {
     kuzzle,
     requestObject;
 
-  before(function (done) {
+  before(() => {
     kuzzle = new Kuzzle();
 
-    kuzzle.start(params, {dummy: true})
+    return kuzzle.start(params, {dummy: true})
       .then(function () {
         kuzzle.services.init = function () {};
 
@@ -24,8 +24,6 @@ describe('Testing: write worker', function () {
 
         // ...and failed write command with a mockup 'update' action
         kuzzle.services.list.writeEngine.update = function () { return q.reject(new Error('rejected')); };
-
-        done();
       });
   });
 
@@ -95,9 +93,8 @@ describe('Testing: write worker', function () {
       try {
         should(queue).be.exactly(kuzzle.config.queues.workerWriteResponseQueue);
         should(response.status).be.exactly(400);
-        should(response.error).not.be.null();
-        should(response.error.message).not.be.null();
-        should(response.error.message).be.a.String().and.be.exactly('Write Worker: unknown action <foobar>');
+        should(response.message).not.be.null();
+        should(response.message).be.a.String().and.be.exactly('Write Worker: unknown action <foobar>');
         done();
       }
       catch (error) {
@@ -116,7 +113,6 @@ describe('Testing: write worker', function () {
   it('should respond to the response queue and to the notifier queue when a query is successfully completed', function (done) {
     var
       callback = Worker.__get__('onListenCB'),
-      notifierQueue = false,
       responseQueue = false,
       saveBrokerAdd = kuzzle.services.list.broker.add;
 
@@ -132,9 +128,6 @@ describe('Testing: write worker', function () {
       if (queue === kuzzle.config.queues.workerWriteResponseQueue) {
         responseQueue = true;
       }
-      else if (queue === kuzzle.config.queues.coreNotifierTaskQueue) {
-        notifierQueue = true;
-      }
     };
 
     callback.call(kuzzle, requestObject);
@@ -142,7 +135,6 @@ describe('Testing: write worker', function () {
     setTimeout(function () {
       try {
         should(responseQueue).be.true();
-        should(notifierQueue).be.true();
         kuzzle.services.list.broker.add = saveBrokerAdd;
         done();
       }
@@ -154,8 +146,7 @@ describe('Testing: write worker', function () {
 
   it('should respond to the client when an error occurs', function (done) {
     var
-      callback = Worker.__get__('onListenCB'),
-      notifierQueue = false,
+      onListenCB = Worker.__get__('onListenCB'),
       responseQueue = false,
       saveBrokerAdd = kuzzle.services.list.broker.add;
 
@@ -164,10 +155,10 @@ describe('Testing: write worker', function () {
     kuzzle.services.list.broker.add = function (queue, data) {
       try {
         should(data).be.an.Object();
-        should(data.status).be.exactly(500);
-        should(data.error).not.be.undefined().and.not.be.null();
-        should(data.error.message).not.be.undefined().and.not.be.null();
-        should(data.error.message).be.a.String().and.be.exactly('rejected');
+        should(data.status).be.exactly(400);
+        should(data.message).be.eql('rejected');
+        should(data.stack).be.a.String();
+        should(data.requestId).be.eql(requestObject.requestId);
       } catch (error) {
         done(error);
       }
@@ -175,21 +166,17 @@ describe('Testing: write worker', function () {
       if (queue === kuzzle.config.queues.workerWriteResponseQueue) {
         responseQueue = true;
       }
-      else if (queue === kuzzle.config.queues.coreNotifierTaskQueue) {
-        notifierQueue = true;
-      }
       else {
         done(new Error('Message sent to an unknown queue: ' + queue));
       }
     };
 
     requestObject.action = 'update';
-    callback.call(kuzzle, requestObject);
+    onListenCB.call(kuzzle, requestObject);
 
     setTimeout(function () {
       try {
         should(responseQueue).be.true();
-        should(notifierQueue).be.false();
         kuzzle.services.list.broker.add = saveBrokerAdd;
         done();
       }
