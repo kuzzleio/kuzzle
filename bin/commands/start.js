@@ -69,7 +69,6 @@ module.exports = function (args) {
  ██    ...PREPARING DATABASE...    ██
  ████████████████████████████████████`);
 
-        //return kuzzle.cleanDb(kuzzle, (args.likeAvirgin));
         if (params.likeAvirgin) {
           request = new RequestObject({controller: 'remoteActions', action: 'cleanDb', body: {}});
           return kuzzle.remoteActionsController.actions.cleanDb(kuzzle, request);
