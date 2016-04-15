@@ -37,20 +37,18 @@ describe('Test kuzzle constructor', () => {
   describe('#remoteActions', () => {
     var 
       kuzzle,
-      remoteActions,
       processExit,
       params,
       exitStatus = 0;
 
     before(() => {
-      remoteActions = rewire('../../lib/api/remoteActions');
 
       processExit = process.exit;
       process.exit = (status) => {
         exitStatus = status;
       };
 
-      kuzzle = new Kuzzle(false);
+      kuzzle = new Kuzzle();
     });
 
     after(() => {
@@ -59,7 +57,7 @@ describe('Test kuzzle constructor', () => {
 
     it('should exit the process with status 1 if the remote action does not exists', (done) => {
       exitStatus = 0;
-      remoteActions(kuzzle, 'foo', {}, {});
+      kuzzle.remoteActions.do('foo', {}, {});
       should(exitStatus).be.eql(1);
       done();
     });
@@ -69,7 +67,7 @@ describe('Test kuzzle constructor', () => {
       params._ = [];
       exitStatus = 0;
 
-      remoteActions(kuzzle, 'enableServices', params, {});
+      kuzzle.remoteActions.do('enableServices', params, {});
       should(exitStatus).be.eql(1);
       done();
     });
@@ -79,7 +77,7 @@ describe('Test kuzzle constructor', () => {
       params._ = ['likeAvirgin', 'foo'];
       exitStatus = 0;
 
-      remoteActions(kuzzle, 'enableServices', params, {});
+      kuzzle.remoteActions.do('enableServices', params, {});
       should(exitStatus).be.eql(1);
       done();
     });
