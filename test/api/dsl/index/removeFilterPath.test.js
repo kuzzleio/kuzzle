@@ -22,6 +22,17 @@ describe('Test: dsl.removeFilterPath', function () {
               }
             }
           }
+        },
+        bCollection: {
+          rooms: [],
+          fields: {
+            aField: {
+              randomFilter: {
+                rooms: [],
+                fn: function () { }
+              }
+            }
+          }
         }
       }
     };
@@ -51,9 +62,21 @@ describe('Test: dsl.removeFilterPath', function () {
     should(dsl.filtersTree.anIndex.aCollection.fields.aField.randomFilter.rooms).be.an.Array().and.match(rooms);
   });
 
-  it('should remove the entire filter path if there is no room left', function () {
+  it('should remove the entire collection if there is no room left', function () {
     dsl.filtersTree.anIndex.aCollection.fields.aField.randomFilter.rooms = [ 'foo' ];
     removeFilterPath.call(dsl, {id: 'foo'}, 'anIndex.aCollection.aField.randomFilter');
+
+    should(dsl.filtersTree).be.an.Object().and.not.be.empty();
+    should.exist(dsl.filtersTree.anIndex);
+    should.exist(dsl.filtersTree.anIndex.bCollection);
+    should.not.exist(dsl.filtersTree.anIndex.aCollection);
+  });
+
+  it('should remove the entire index if there is no room left', function () {
+    dsl.filtersTree.anIndex.aCollection.fields.aField.randomFilter.rooms = [ 'foo' ];
+    dsl.filtersTree.anIndex.bCollection.fields.aField.randomFilter.rooms = [ 'foo' ];
+    removeFilterPath.call(dsl, {id: 'foo'}, 'anIndex.aCollection.aField.randomFilter');
+    removeFilterPath.call(dsl, {id: 'foo'}, 'anIndex.bCollection.aField.randomFilter');
 
     should(dsl.filtersTree).be.an.Object().and.be.empty();
   });
