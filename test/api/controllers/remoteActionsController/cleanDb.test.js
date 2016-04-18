@@ -55,6 +55,8 @@ describe('Test: clean database', function () {
           hasFiredCleanDbDone = true;
           should(data).be.exactly('Reset done: Kuzzle is now like a virgin, touched for the very first time !');
         }
+
+        return q(data);
       }
     };
 
@@ -116,6 +118,8 @@ describe('Test: clean database', function () {
           should(data).be.exactly('error');
           hasFiredCleanDbError = true;
         }
+
+        return q(data);
       }
     };
 

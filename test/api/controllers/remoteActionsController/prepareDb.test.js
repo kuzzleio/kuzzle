@@ -174,7 +174,8 @@ describe('Test: Prepare database', function () {
       workerCalled,
       indexCreated,
       indexAdded,
-      workerPromise;
+      workerPromise,
+      prepareDb;
 
     before(function () {
       prepareDb = rewire('../../../../lib/api/controllers/remoteActions/prepareDb');
@@ -190,7 +191,8 @@ describe('Test: Prepare database', function () {
       context = {
         kuzzle: {
           pluginsManager: {
-            trigger: function () {
+            trigger: function (event, data) {
+              return q(data);
             }
           },
           workerListener: {
@@ -305,7 +307,8 @@ describe('Test: Prepare database', function () {
       importMapping,
       workerCalled,
       mappingCreated,
-      workerPromise;
+      workerPromise,
+      prepareDb;
 
     before(function () {
       prepareDb = rewire('../../../../lib/api/controllers/remoteActions/prepareDb');
@@ -320,7 +323,8 @@ describe('Test: Prepare database', function () {
       context = {
         kuzzle: {
           pluginsManager: {
-            trigger: function () {
+            trigger: function (event, data) {
+              return q(data);
             }
           },
           workerListener: {
@@ -392,7 +396,8 @@ describe('Test: Prepare database', function () {
       importFixtures,
       workerCalled,
       fixturesImported,
-      workerPromise;
+      workerPromise,
+      prepareDb;
 
     before(function () {
       prepareDb = rewire('../../../../lib/api/controllers/remoteActions/prepareDb');
@@ -407,7 +412,8 @@ describe('Test: Prepare database', function () {
       context = {
         kuzzle: {
           pluginsManager: {
-            trigger: function () {
+            trigger: function (event, data) {
+              return q(data);
             }
           },
           workerListener: {
@@ -500,7 +506,8 @@ describe('Test: Prepare database', function () {
             }
           },
           pluginsManager: {
-            trigger: function () {
+            trigger: function (event, data) {
+              return q(data);
             }
           },
           workerListener: {
