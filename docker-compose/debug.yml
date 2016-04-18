@@ -14,10 +14,7 @@ kuzzle:
     - redis
   environment:
     - MQ_BROKER_ENABLED=1
-    - LIKE_A_VIRGIN
-    - DEFAULT_MAPPING
     - FEATURE_COVERAGE
-    - FIXTURES=/var/app/features/fixtures/empty.json
 
 rabbit:
   image: kuzzleio/rabbitmq:alpine
