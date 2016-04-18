@@ -7,9 +7,6 @@ kuzzle:
     - elasticsearch
     - redis
   environment:
-    - LIKE_A_VIRGIN
-    - FIXTURES
-    - DEFAULT_MAPPING
     - FEATURE_COVERAGE
 
 redis:
