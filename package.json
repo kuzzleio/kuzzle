@@ -77,7 +77,7 @@
     "stomp-client": "0.8.1"
   },
   "engines": {
-    "node": ">= 4.1.1",
+    "node": ">= 4.3.1",
     "npm": ">= 2.14.4"
   },
   "license": "Apache-2.0"
