@@ -1,9 +1,9 @@
 var
   rc = require('rc'),
-  params = rc('kuzzle'),
   q = require('q'),
   should = require('should'),
-  cleanDb = require.main.require('lib/api/remoteActions/cleanDb');
+  rewire = require('rewire'),
+  cleanDb = rewire('../../../lib/api/remoteActions/cleanDb');
 
 
 describe('Test: cleanDb remote action caller', function () {
@@ -16,6 +16,10 @@ describe('Test: cleanDb remote action caller', function () {
     process.exit = function (status) {
       exitStatus = status;
     };
+    cleanDb.__set__('console', {
+      log: function () {},
+      error: function () {}
+    });
   });
 
   after(function () {

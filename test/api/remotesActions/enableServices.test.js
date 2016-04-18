@@ -3,7 +3,8 @@ var
   params = rc('kuzzle'),
   q = require('q'),
   should = require('should'),
-  enableServices = require.main.require('lib/api/remoteActions/enableServices');
+  rewire = require('rewire'),
+  enableServices = rewire('../../../lib/api/remoteActions/enableServices');
 
 
 describe('Test: enableServices remote action caller', function () {
@@ -16,6 +17,10 @@ describe('Test: enableServices remote action caller', function () {
     process.exit = function (status) {
       exitStatus = status;
     };
+    enableServices.__set__('console', {
+      log: function () {},
+      error: function () {}
+    });
   });
 
   after(function () {

@@ -81,8 +81,8 @@ describe('Test plugins manager run', function () {
       },
       /** Mock only methods */
       triggerEvent: function (event) {
-        if (callbackList['message']) {
-          callbackList['message'].forEach(item => {
+        if (callbackList.message) {
+          callbackList.message.forEach(item => {
             item(triggerData[event]);
           });
         }
