@@ -4,7 +4,8 @@ var
   q = require('q'),
   should = require('should'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
-  RequestObject = require.main.require('lib/api/core/models/requestObject');
+  RequestObject = require.main.require('lib/api/core/models/requestObject'),
+  BadRequestError = require.main.require('lib/api/core/errors/badRequestError');
 
 
 describe('Test: clean database', function () {
@@ -124,22 +125,17 @@ describe('Test: clean database', function () {
     };
 
     kuzzle.remoteActionsController.actions.cleanDb(kuzzle, request)
-      .then(function (result) {
+      .then(() => done('Should have failed'))
+      .catch(() => {
         should(workerCalled).be.true();
         should(resetCalled).be.false();
         should(hasFiredCleanDbError).be.true();
         done();
-      })
-      .catch((err) => done(err));
+      });
   });
 
-  it('should do nothing if kuzzle is not a server', function (done) {
+  it('should do nothing if kuzzle is not a server', () => {
     kuzzle.isServer = false;
-    kuzzle.remoteActionsController.actions.cleanDb(kuzzle, request)
-      .then ((result) => {
-        should(result).be.eql(request);
-        done();
-      })
-      .catch(err => done(err));
+    return should(kuzzle.remoteActionsController.actions.cleanDb(kuzzle, request)).be.rejectedWith(BadRequestError);
   });
 });

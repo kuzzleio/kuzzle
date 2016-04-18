@@ -34,7 +34,7 @@ describe('Test kuzzle constructor', () => {
   });
 
   describe('#remoteActions', () => {
-    var 
+    var
       kuzzle,
       processExit,
       params,
