@@ -4,7 +4,8 @@ var
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
-  ResponseObject = require.main.require('lib/api/core/models/responseObject');
+  ResponseObject = require.main.require('lib/api/core/models/responseObject'),
+  PartialError = require.main.require('lib/api/core/errors/partialError');
 
 describe('Test: admin controller', function () {
   var
@@ -14,11 +15,22 @@ describe('Test: admin controller', function () {
     indexCacheReset,
     index = '%text',
     collection = 'unit-test-adminController',
-    requestObject = new RequestObject({ controller: 'admin' }, {index, collection}, 'unit-test');
+    requestObject,
+    error,
+    mockFunction,
+    mockResponse;
 
-  before(function (done) {
+  before(() => {
+    mockFunction = () => {
+      if (error) {
+        return q.reject(new Error('foobar'));
+      }
+
+      return q(mockResponse);
+    };
+
     kuzzle = new Kuzzle();
-    kuzzle.start(params, {dummy: true})
+    return kuzzle.start(params, {dummy: true})
       .then(function () {
         kuzzle.repositories.role.validateAndSaveRole = role => {
           return q({
@@ -29,11 +41,7 @@ describe('Test: admin controller', function () {
           });
         };
 
-        kuzzle.workerListener = {
-          add: function (rq) {
-            return q(new ResponseObject(rq));
-          }
-        };
+        kuzzle.workerListener.add = mockFunction;
 
         kuzzle.indexCache = {
           add: (i, c) => {
@@ -57,8 +65,6 @@ describe('Test: admin controller', function () {
             indexCacheReset = true;
           }
         };
-
-        done();
       });
   });
 
@@ -66,6 +72,9 @@ describe('Test: admin controller', function () {
     indexCacheAdd = false;
     indexCacheRemove = false;
     indexCacheReset = false;
+    error = false;
+    mockResponse = {};
+    requestObject = new RequestObject({ controller: 'admin' }, {index, collection}, 'unit-test');
   });
 
   describe('#updateMapping', function () {
@@ -88,25 +97,47 @@ describe('Test: admin controller', function () {
         });
     });
 
-    it('should add the new collection to the cache', function (done) {
+    it('should add the new collection to the cache', () => {
       this.timeout(50);
 
-      kuzzle.funnel.controllers.admin.updateMapping(requestObject)
+      return kuzzle.funnel.controllers.admin.updateMapping(requestObject)
         .then(response => {
           should(response).be.instanceof(ResponseObject);
           should(indexCacheAdd).be.true();
           should(indexCacheRemove).be.false();
           should(indexCacheReset).be.false();
-          done();
+        });
+    });
+
+    it('should return a rejected ResponseObject in case of error', () => {
+      error = true;
+      return should(kuzzle.funnel.controllers.admin.updateMapping(requestObject)
+        .catch(response => {
+          should(response).be.instanceof(ResponseObject);
+          should(indexCacheAdd).be.false();
+          should(indexCacheRemove).be.false();
+          should(indexCacheReset).be.false();
+          return q.reject();
         })
-        .catch(err => done(err));
+      ).be.rejected();
     });
   });
 
   describe('#getMapping', function () {
-    it('should return a mapping when requested', function () {
-      var r = kuzzle.funnel.controllers.admin.getMapping(requestObject);
-      return should(r).be.rejected();
+    before(() => {
+      kuzzle.services.list.readEngine.getMapping = mockFunction;
+    });
+
+    it('should reject with a response object in case of error', function () {
+      error = true;
+      return should(kuzzle.funnel.controllers.admin.getMapping(requestObject)).be.rejectedWith(ResponseObject);
+    });
+
+    it('should fulfill with a response object', () => {
+      return kuzzle.funnel.controllers.admin.getMapping(requestObject)
+        .then(response => {
+          should(response).be.instanceof(ResponseObject);
+        });
     });
 
     it('should activate a hook on a get mapping call', function (done) {
@@ -127,6 +158,10 @@ describe('Test: admin controller', function () {
   });
 
   describe('#getStats', function () {
+    before(() => {
+      kuzzle.statistics.getStats = mockFunction;
+    });
+
     it('should trigger a hook on a getStats call', function (done) {
       this.timeout(50);
 
@@ -142,9 +177,24 @@ describe('Test: admin controller', function () {
 
       kuzzle.funnel.controllers.admin.getStats(requestObject);
     });
+
+    it('should fulfill with a response object', () => {
+      return kuzzle.funnel.controllers.admin.getStats(requestObject)
+        .then(response => should(response).be.instanceOf(ResponseObject));
+    });
+
+    it('should reject with a response object in case of error', () => {
+      error = true;
+
+      return should(kuzzle.funnel.controllers.admin.getStats(requestObject)).be.rejectedWith(ResponseObject);
+    });
   });
 
   describe('#getLastStats', function () {
+    before(() => {
+      kuzzle.statistics.getLastStats = mockFunction;
+    });
+
     it('should trigger a hook on a getLastStats call', function (done) {
       this.timeout(50);
 
@@ -160,9 +210,24 @@ describe('Test: admin controller', function () {
 
       kuzzle.funnel.controllers.admin.getLastStats(requestObject);
     });
+
+    it('should fulfill with a response object', () => {
+      return kuzzle.funnel.controllers.admin.getLastStats(requestObject)
+        .then(response => should(response).be.instanceOf(ResponseObject));
+    });
+
+    it('should reject with a response object in case of error', () => {
+      error = true;
+
+      return should(kuzzle.funnel.controllers.admin.getLastStats(requestObject)).be.rejectedWith(ResponseObject);
+    });
   });
 
   describe('#getAllStats', function () {
+    before(() => {
+      kuzzle.statistics.getAllStats = mockFunction;
+    });
+
     it('should trigger a hook on a getAllStats call', function (done) {
       this.timeout(50);
 
@@ -178,9 +243,31 @@ describe('Test: admin controller', function () {
 
       kuzzle.funnel.controllers.admin.getAllStats(requestObject);
     });
+
+    it('should fulfill with a response object', () => {
+      return kuzzle.funnel.controllers.admin.getAllStats(requestObject)
+        .then(response => should(response).be.instanceOf(ResponseObject));
+    });
+
+    it('should reject with a response object in case of error', () => {
+      error = true;
+
+      return should(kuzzle.funnel.controllers.admin.getAllStats(requestObject)).be.rejectedWith(ResponseObject);
+    });
   });
 
   describe('#truncateCollection', function () {
+    it('should fulfill with a response object', () => {
+      return kuzzle.funnel.controllers.admin.truncateCollection(requestObject)
+        .then(response => should(response).be.instanceOf(ResponseObject));
+    });
+
+    it('should reject with a response object in case of error', () => {
+      error = true;
+
+      return should(kuzzle.funnel.controllers.admin.truncateCollection(requestObject)).be.rejectedWith(ResponseObject);
+    });
+
     it('should trigger a hook on a truncateCollection call', function (done) {
       this.timeout(50);
 
@@ -224,11 +311,13 @@ describe('Test: admin controller', function () {
     before(function () {
       kuzzle.indexCache.oldRemove = kuzzle.indexCache.remove;
       kuzzle.services.list.readEngine.listIndexes = () => {
-         return q({indexes: ['%text1', '%text2', '%text3']});
+        if (error) {
+          return q.reject(new Error('foobar'));
+        }
+
+        return q({indexes: ['%text1', '%text2', '%text3']});
       };
-      kuzzle.workerListener.add = rq => {
-        return q({deleted: rq.data.body.indexes});
-      };
+
       kuzzle.indexCache.remove = (i, c) => {
         should(['%text1', '%text2']).containEql(i);
         indexCacheRemove = true;
@@ -256,34 +345,43 @@ describe('Test: admin controller', function () {
       kuzzle.funnel.controllers.admin.deleteIndexes(requestObject, context);
     });
 
-    it('should delete only the allowed indexes', function (done) {
+    it('should delete only the allowed indexes', () => {
       this.timeout(50);
+      mockResponse = {deleted: ['%text1', '%text2']};
 
-      kuzzle.funnel.controllers.admin.deleteIndexes(requestObject, context)
+      return kuzzle.funnel.controllers.admin.deleteIndexes(requestObject, context)
         .then(response => {
           should(response).be.instanceof(ResponseObject);
           should(response.data.body.deleted).be.eql(['%text1', '%text2']);
-          done();
-        })
-        .catch(err => done(err));
-    });
-
-    it('should reset the index cache', function (done) {
-      this.timeout(50);
-
-      kuzzle.funnel.controllers.admin.deleteIndexes(requestObject, context)
-        .then(response => {
-          should(response).be.instanceof(ResponseObject);
           should(indexCacheAdd).be.false();
           should(indexCacheRemove).be.true();
           should(indexCacheReset).be.false();
-          done();
-        })
-        .catch(err => done(err));
+        });
+    });
+
+    it('should reject with a response object in case of error', () => {
+      error = true;
+
+      return should(kuzzle.funnel.controllers.admin.deleteIndexes(requestObject, context)).be.rejectedWith(ResponseObject);
     });
   });
 
   describe('#createIndex', function () {
+    before(() => {
+      kuzzle.workerListener.add = mockFunction;
+    });
+
+    it('should fulfill with a response object', () => {
+      return kuzzle.funnel.controllers.admin.createIndex(requestObject)
+        .then(response => should(response).be.instanceOf(ResponseObject));
+    });
+
+    it('should reject with a response object in case of error', () => {
+      error = true;
+
+      return should(kuzzle.funnel.controllers.admin.createIndex(requestObject)).be.rejectedWith(ResponseObject);
+    });
+
     it('should trigger a hook on a createIndex call', function (done) {
       this.timeout(50);
 
@@ -316,6 +414,17 @@ describe('Test: admin controller', function () {
   });
 
   describe('#deleteIndex', function () {
+    it('should fulfill with a response object', () => {
+      return kuzzle.funnel.controllers.admin.deleteIndex(requestObject)
+        .then(response => should(response).be.instanceOf(ResponseObject));
+    });
+
+    it('should reject with a response object in case of error', () => {
+      error = true;
+
+      return should(kuzzle.funnel.controllers.admin.deleteIndex(requestObject)).be.rejectedWith(ResponseObject);
+    });
+
     it('should trigger a hook on a deleteIndex call', function (done) {
       this.timeout(50);
 
@@ -346,6 +455,10 @@ describe('Test: admin controller', function () {
   });
 
   describe('#removeRooms', function () {
+    before(() => {
+      kuzzle.hotelClerk.removeRooms = mockFunction;
+    });
+
     it('should trigger a plugin hook', function (done) {
       this.timeout(50);
 
@@ -362,12 +475,41 @@ describe('Test: admin controller', function () {
       kuzzle.funnel.controllers.admin.removeRooms(requestObject);
     });
 
-    it('should resolve to a promise', function () {
-      return should(kuzzle.funnel.controllers.admin.removeRooms(requestObject)).be.rejected();
+    it('should fulfill with a response object', () => {
+      return kuzzle.funnel.controllers.admin.removeRooms(requestObject)
+        .then(response => should(response).be.instanceOf(ResponseObject));
+    });
+
+    it('should reject with a response object in case of error', () => {
+      error = true;
+
+      return should(kuzzle.funnel.controllers.admin.removeRooms(requestObject)).be.rejectedWith(ResponseObject);
+    });
+
+    it('should fulfill with a response object with partial errors, if any', () => {
+      mockResponse = { partialErrors: ['foo', 'bar'] };
+
+      return kuzzle.funnel.controllers.admin.removeRooms(requestObject)
+        .then(response => {
+          should(response).be.instanceOf(ResponseObject);
+          should(response.status).be.eql(206);
+          should(response.error).be.instanceOf(PartialError);
+        });
     });
   });
 
   describe('#refreshIndex', function () {
+    it('should fulfill with a response object', () => {
+      return kuzzle.funnel.controllers.admin.refreshIndex(requestObject)
+        .then(response => should(response).be.instanceOf(ResponseObject));
+    });
+
+    it('should reject with a response object in case of error', () => {
+      error = true;
+
+      return should(kuzzle.funnel.controllers.admin.refreshIndex(requestObject)).be.rejectedWith(ResponseObject);
+    });
+
     it('should trigger a plugin hook', function (done) {
       kuzzle.once('data:refreshIndex', o => {
         should(o).be.exactly(requestObject);
