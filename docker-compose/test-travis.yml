@@ -8,11 +8,8 @@ kuzzle:
     - elasticsearch
     - redis
   environment:
-    - LIKE_A_VIRGIN=1
-    - DEFAULT_MAPPING
     - MQ_BROKER_ENABLED=1
     - FEATURE_COVERAGE=1
-    - FIXTURES=/var/app/features/fixtures/empty.json
     # Travis env var must be propagated into the container
     - TRAVIS
     - TRAVIS_COMMIT

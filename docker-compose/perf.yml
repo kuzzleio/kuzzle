@@ -13,9 +13,6 @@ kuzzle:
     - redis
   environment:
     - MQ_BROKER_ENABLED
-    - LIKE_A_VIRGIN
-    - DEFAULT_MAPPING
-    - FIXTURES
     - FEATURE_COVERAGE
 
 rabbit:

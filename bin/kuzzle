@@ -8,38 +8,50 @@
  */
 var program = require('commander');
 
-// $ kuzzle.js start
+// $ kuzzle start
 program
   .command('start')
   .option('--port [port]', 'Kuzzle port number', parseInt)
   .option('--server', 'start an instance without workers')
   .option('--worker', 'spawn a single set of workers instead of starting a Kuzzle instance')
+  .option('--likeAvirgin', 'reset before start, so that Kuzzle is like a virgin, touched for the very first time')
+  .option('--fixtures <fixtures>', 'allow you to load a fixtures file')
+  .option('--mappings <mappings>', 'allow you to load and apply a mappings file')
   .description('Start a Kuzzle instance')
-  .action(require('./commands/kuzzle-start'));
+  .action(require('./commands/start'));
 
-// $ kuzzle.js enable <service>
+// $ kuzzle enable <service>
 program
   .command('enable')
   .description('Enable a service without reloading Kuzzle')
-  .action(require('./commands/kuzzle-enable'));
+  .action(require('./commands/enable'));
 
 // $ kuzzle.js disable <service>
 program
   .command('disable')
   .description('Disable a service without reloading Kuzzle')
-  .action(require('./commands/kuzzle-disable'));
+  .action(require('./commands/disable'));
 
-// $ kuzzle.js install
+// $ kuzzle install
 program
   .command('install')
   .description('Install plugin dependencies')
-  .action(require('./commands/kuzzle-install'));
+  .action(require('./commands/install'));
 
-// $ kuzzle.js createFirstAdmin
+// $ kuzzle createFirstAdmin
 program
   .command('createFirstAdmin')
   .description('Create the first administrator')
-  .action(require('./commands/kuzzle-createFirstAdmin').action);
+  .action(require('./commands/createFirstAdmin').action);
+
+// $ kuzzle likeAvirgin
+program
+  .command('likeAvirgin')
+  .option('--fixtures <fixtures>', 'allow you to specify a fixtures file')
+  .option('--mappings <mappings>', 'allow you to specify a mappings file')
+  .option('--noint', 'non interractive mode, will perform the reset immediately')
+  .description('Empty all the Kuzzle storage and make it look like a virgin, touched for the very first time')
+  .action(require('./commands/reset'));  
 
 // Run user command
 program.parse(process.argv);
