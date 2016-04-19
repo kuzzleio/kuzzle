@@ -1,73 +1,80 @@
 var
   should = require('should'),
   q = require('q'),
-  rewire = require('rewire'),
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
   ResponseObject = require.main.require('lib/api/core/models/responseObject'),
-  BadRequestError = require.main.require('lib/api/core/errors/badRequestError');
-
-var
-  kuzzle,
-  oldProcessExit = process.exit;
-
-before(function (done) {
-
-  process.exit = (status) => {
-    return true;
-  };
-
-  kuzzle = new Kuzzle();
-
-  kuzzle.start(params, {dummy: true})
-    .then(function () {
-      done();
-    });
-});
-
-after(function () {
-  process.exit = oldProcessExit;
-});
+  RemoteActionsController = require.main.require('lib/api/controllers/remoteActionsController');
 
 describe('Test: remote actions controller', function () {
+  var
+    kuzzle,
+    oldProcessExit = process.exit,
+    remoteActionsController,
+    brokerInvoked,
+    requestId,
+    responseObject;
 
-  it('should fail if there is no action given', function (done) {
+  before(() => {
+    process.exit = status => true;
+
+    kuzzle = new Kuzzle();
+
+    return kuzzle.start(params, {dummy: true})
+      .then(() => {
+        remoteActionsController = new RemoteActionsController(kuzzle);
+
+        kuzzle.services.list.broker.add = (rid, res) => {
+          brokerInvoked = true;
+          requestId = rid;
+          responseObject = res;
+        };
+      });
+  });
+
+  after(function () {
+    process.exit = oldProcessExit;
+  });
+
+  beforeEach(() => {
+    brokerInvoked = false;
+    requestId = null;
+    responseObject = null;
+  });
+
+  it('should fail if there is no action given', () => {
     var request = new RequestObject({controller: 'remoteActions', action: null, body: {}});
 
-    kuzzle.services.list.broker.listenOnce(request.requestId, (response) => {
-      should(response.error).not.be.null();
-      should(response.error.message).not.be.null();
-      should(response.error.message).be.a.String().and.be.exactly('No action given.');
-      done();
-    });
-    kuzzle.services.list.broker.broadcast(kuzzle.config.queues.remoteActionsQueue, request);
-
+    remoteActionsController.onListenCB(request);
+    should(brokerInvoked).be.true();
+    should(requestId).be.eql(request.requestId);
+    should(responseObject).be.instanceOf(ResponseObject);
+    should(responseObject.status).be.eql(400);
+    should(responseObject.error.message).be.eql('No action given.');
   });
 
-  it('should fail if the given action does not exist', function (done) {
+  it('should fail if the given action does not exist', () => {
     var request = new RequestObject({controller: 'remoteActions', action: 'foo', body: {}});
 
-    kuzzle.services.list.broker.listenOnce(request.requestId, (response) => {
-      should(response.error).not.be.null();
-      should(response.error.message).not.be.null();
-      should(response.error.message).be.a.String().and.be.exactly('The action "foo" do not exist.');
-      done();
-    });
-    kuzzle.services.list.broker.broadcast(kuzzle.config.queues.remoteActionsQueue, request);
+    remoteActionsController.onListenCB(request);
 
+    should(brokerInvoked).be.true();
+    should(requestId).be.eql(request.requestId);
+    should(responseObject).be.instanceOf(ResponseObject);
+    should(responseObject.status).be.eql(404);
+    should(responseObject.error.message).be.eql('The action "foo" do not exist.');
   });
 
-  it('should fail if the given action triggers some error', function (done) {
+  it('should fail if the given action triggers some error', () => {
     var request = new RequestObject({controller: 'remoteActions', action: 'enable', body: {service: 'broker', enable: true}});
 
-    kuzzle.services.list.broker.listenOnce(request.requestId, (response) => {
-      should(response.error).not.be.null();
-      should(response.error.message).not.be.null();
-      should(response.error.message).be.a.String().and.be.exactly('The action "enable" do not exist.');
-      done();
-    });
-    kuzzle.services.list.broker.broadcast(kuzzle.config.queues.remoteActionsQueue, request);
+    remoteActionsController.onListenCB(request);
 
+    should(brokerInvoked).be.true();
+    should(requestId).be.eql(request.requestId);
+    should(responseObject).be.instanceOf(ResponseObject);
+    should(responseObject.status).be.eql(404);
+    should(responseObject.error.message).be.eql('The action "enable" do not exist.');
   });
 });

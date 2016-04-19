@@ -238,7 +238,7 @@ describe('Test: read controller', function () {
   describe('#listIndexes', function () {
     before(() => {
       kuzzle.services.list.readEngine.listIndexes = mockFunction;
-    })
+    });
 
     it('should fulfill with a response object', () => {
       return kuzzle.funnel.controllers.read.listIndexes(requestObject)
