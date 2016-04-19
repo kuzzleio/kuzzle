@@ -162,6 +162,7 @@ describe('Test: hotelClerk.removeSubscription', function () {
         should(notified.request.controller).be.exactly('subscribe');
         should(notified.request.action).be.exactly('off');
         should(notified.request.index).be.exactly(requestObject1.index);
+        should(notified.request.collection).be.exactly(requestObject1.collection);
         should(notified.notification.count).be.exactly(1);
       });
   });
