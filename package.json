@@ -73,6 +73,8 @@
     "mqtt": "1.7.4",
     "rewire": "2.5.1",
     "should": "8.3.0",
+    "sinon": "1.17.3",
+    "sinon-as-promised": "^4.0.0",
     "socket.io-client": "1.4.5",
     "stomp-client": "0.8.1"
   },
