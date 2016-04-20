@@ -34,12 +34,6 @@ describe('Test: admin controller', () => {
   });
 
   describe('#updateMapping', function () {
-    beforeEach(function () {
-      sandbox.spy(kuzzle.indexCache, 'add');
-      sandbox.spy(kuzzle.indexCache, 'remove');
-      sandbox.spy(kuzzle.indexCache, 'reset');
-    });
-
     it('should activate a hook on a mapping update call', function (done) {
       this.timeout(50);
       sandbox.stub(kuzzle.workerListener, 'add').resolves({});
@@ -63,6 +57,9 @@ describe('Test: admin controller', () => {
     it('should add the new collection to the cache', () => {
       this.timeout(50);
       sandbox.stub(kuzzle.workerListener, 'add').resolves({});
+      sandbox.spy(kuzzle.indexCache, 'add');
+      sandbox.spy(kuzzle.indexCache, 'remove');
+      sandbox.spy(kuzzle.indexCache, 'reset');
 
       return kuzzle.funnel.controllers.admin.updateMapping(requestObject)
         .then(response => {
@@ -75,6 +72,9 @@ describe('Test: admin controller', () => {
 
     it('should return a rejected ResponseObject in case of error', () => {
       sandbox.stub(kuzzle.workerListener, 'add').rejects({});
+      sandbox.spy(kuzzle.indexCache, 'add');
+      sandbox.spy(kuzzle.indexCache, 'remove');
+      sandbox.spy(kuzzle.indexCache, 'reset');
 
       return should(kuzzle.funnel.controllers.admin.updateMapping(requestObject)
         .catch(response => {
