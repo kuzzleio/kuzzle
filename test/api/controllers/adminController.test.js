@@ -8,7 +8,7 @@ var
   ResponseObject = require.main.require('lib/api/core/models/responseObject'),
   PartialError = require.main.require('lib/api/core/errors/partialError');
 
-require('sinon-as-promised');
+require('sinon-as-promised')(q.Promise);
 
 describe('Test: admin controller', () => {
   var
