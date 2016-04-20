@@ -12,6 +12,7 @@ describe('Test: NotificationObject', function () {
     requestObject = new RequestObject({
       controller: 'subscribe',
       action: 'count',
+      index: 'fakeIndex',
       collection: 'fakecollection',
       protocol: 'fakeprotocol',
       body: { foo: 'bar' }
@@ -36,6 +37,8 @@ describe('Test: NotificationObject', function () {
     should(response.protocol).be.exactly(requestObject.protocol);
     should(response.requestId).be.exactly(requestObject.requestId);
     should(response.timestamp).be.exactly(requestObject.timestamp);
+    should(response.index).be.exactly(requestObject.index);
+    should(response.collection).be.exactly(requestObject.collection);
 
     should(response.result).not.be.null().and.be.an.Object();
     should(response.result.count).be.exactly(42);
@@ -54,6 +57,8 @@ describe('Test: NotificationObject', function () {
     should(response.protocol).be.exactly(requestObject.protocol);
     should(response.requestId).be.exactly(requestObject.requestId);
     should(response.timestamp).be.exactly(requestObject.timestamp);
+    should(response.index).be.exactly(requestObject.index);
+    should(response.collection).be.exactly(requestObject.collection);
 
     should(response.result).not.be.null().and.be.an.Object();
     should(response.result.channel).be.exactly('foobar');
@@ -72,6 +77,8 @@ describe('Test: NotificationObject', function () {
     should(response.protocol).be.exactly(requestObject.protocol);
     should(response.requestId).be.exactly(requestObject.requestId);
     should(response.timestamp).be.exactly(requestObject.timestamp);
+    should(response.index).be.exactly(requestObject.index);
+    should(response.collection).be.exactly(requestObject.collection);
 
     should(response.result).be.undefined();
   });

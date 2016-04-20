@@ -9,7 +9,8 @@ var
 describe('Test: security controller - users', function () {
   var
     persistOptions,
-    kuzzle;
+    kuzzle,
+    error;
 
   before(function (done) {
     kuzzle = new Kuzzle();
@@ -17,12 +18,20 @@ describe('Test: security controller - users', function () {
       .then(function () {
         // Mock
         kuzzle.services.list.readEngine.search = () => {
+          if (error) {
+            return q.reject(new Error(''));
+          }
+
           return q({
             hits: [{_id: 'admin', _source: { profile: 'admin' }}],
             total: 1
           });
         };
+
         kuzzle.repositories.user.load = id => {
+          if (error) {
+            return q.reject(new Error(''));
+          }
           if (id === 'anonymous') {
             return kuzzle.repositories.user.anonymous();
           }
@@ -32,11 +41,16 @@ describe('Test: security controller - users', function () {
 
           return q(null);
         };
+
         kuzzle.repositories.user.persist = (user, opts) => {
           persistOptions = opts;
           return q(user);
         };
+
         kuzzle.repositories.user.deleteFromDatabase = () => {
+          if (error) {
+            return q.reject(new Error(''));
+          }
           return q({_id: 'test'});
         };
 
@@ -46,6 +60,7 @@ describe('Test: security controller - users', function () {
 
   beforeEach(function () {
     persistOptions = {};
+    error = false;
   });
 
   describe('#getUser', function () {
@@ -54,8 +69,8 @@ describe('Test: security controller - users', function () {
         .be.rejectedWith(ResponseObject);
     });
 
-    it('should return an hydrated responseObject', done => {
-      kuzzle.funnel.controllers.security.getUser(new RequestObject({
+    it('should return an hydrated responseObject', () => {
+      return kuzzle.funnel.controllers.security.getUser(new RequestObject({
         body: { _id: 'anonymous' }
       }))
         .then(response => {
@@ -63,10 +78,7 @@ describe('Test: security controller - users', function () {
           should(response.data.body._id).be.exactly(-1);
           should(response.data.body._source.profile).not.be.empty().Object();
           should(response.data.body._source.profile._id).be.exactly('anonymous');
-
-          done();
-        })
-        .catch(error => { done(error); });
+        });
     });
 
     it('should reject with NotFoundError when the user is not found', () => {
@@ -79,8 +91,8 @@ describe('Test: security controller - users', function () {
   });
 
   describe('#searchUsers', function () {
-    it('should return a valid responseObject', done => {
-      kuzzle.funnel.controllers.security.searchUsers(new RequestObject({
+    it('should return a valid responseObject', () => {
+      return kuzzle.funnel.controllers.security.searchUsers(new RequestObject({
         body: {
           filter: {},
           from: 0,
@@ -90,14 +102,11 @@ describe('Test: security controller - users', function () {
         .then(response => {
           should(response).be.an.instanceOf(ResponseObject);
           should(response.data.body).match({hits: [{_id: 'admin'}], total: 1});
-
-          done();
-        })
-        .catch(error => { done(error); });
+        });
     });
 
-    it('should return some unhydrated users when asked', done => {
-      kuzzle.funnel.controllers.security.searchUsers(new RequestObject({
+    it('should return some unhydrated users when asked', () => {
+      return kuzzle.funnel.controllers.security.searchUsers(new RequestObject({
         body: { hydrate: false }
       }))
         .then(response => {
@@ -105,30 +114,38 @@ describe('Test: security controller - users', function () {
           response.data.body.hits.every(doc => {
             should(doc._source.profile).be.a.String();
           });
+        });
+    });
 
-          done();
-        })
-        .catch(error => { done(error); });
+    it('should reject with a response object in case of error', () => {
+      error = true;
+      return should(kuzzle.funnel.controllers.security.searchUsers(new RequestObject({
+        body: {hydrate: false}
+      }))).be.rejectedWith(ResponseObject);
     });
   });
 
   describe('#deleteUser', function () {
-    it('should return a valid responseObject', done => {
-      kuzzle.funnel.controllers.security.deleteUser(new RequestObject({
+    it('should return a valid responseObject', () => {
+      return kuzzle.funnel.controllers.security.deleteUser(new RequestObject({
         body: { _id: 'test' }
       }))
         .then(response => {
           should(response).be.an.instanceOf(ResponseObject);
           should(response.status).be.exactly(200);
-
-          done();
-        })
-        .catch(error => { done(error); });
+        });
     });
 
     it('should not resolve the promise when no id is given', () => {
       return should(kuzzle.funnel.controllers.security.deleteUser(new RequestObject({})))
         .be.rejectedWith(ResponseObject);
+    });
+
+    it('should reject with a response object in case of error', () => {
+      error = true;
+      return should(kuzzle.funnel.controllers.security.deleteUser(new RequestObject({
+        body: {_id: 'test'}
+      }))).be.rejectedWith(ResponseObject);
     });
   });
 
