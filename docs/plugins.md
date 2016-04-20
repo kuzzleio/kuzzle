@@ -350,8 +350,8 @@ module.exports = function () {
 
 ### Worker plugins
 
-Every Hook plugin can be used as Worker, but Worker plugin can only be launch by the Server, if you define in configuration `"loadedBy": "worker"`, the plugin will be ignored.  
-You can convert a Hook plugin into a Worker plugin by adding attribute `threads` in your plugin definition.
+Every Hook plugin can be used as a Worker plugin, but Worker plugins can only be launched by the Server. If you set your configuration as `"loadedBy": "worker"`, the plugin will be ignored.  
+You can convert a Hook plugin into a Worker plugin by adding a `threads` attribute to your plugin definition:
 
 ```json
 {
@@ -364,16 +364,16 @@ You can convert a Hook plugin into a Worker plugin by adding attribute `threads`
   }
 ```
 
-The `threads` value correspond to the number of process that will be launch.
+The `threads` value correspond to the number of processes that will be launched.
 
 
 ### Pipe plugins
 
-When a pipe event is triggered, we are waiting for all plugins attached on this event. A plugin attached on a pipe event has access to the data and can even change them.
+When a pipe event is triggered, we wait for all plugins attached to this event. A plugin attached to a pipe event has access to the data and can even change them.
 A pipe plugin constructor must take in its last parameter a callback. This callback must be called at the end of the function with `callback(error, object)`:
 
-* error: if there is an error during the function, this parameter must be set. If everything is ok, you can call the function with null
-* object: the object to pass to the next function
+* error: if there is an error during the function, this parameter must be set. If everything is ok, you can call the function with null.
+* object: the object to pass to the next function.
 
 Plugins are called in chain. When the `callback()` function is called, the next function attached on the event is triggered.  
 If the plugin fails to call the callback before timeout, Kuzzle will raise an error and forward it to the requesting clients.
@@ -415,8 +415,8 @@ In this example, in Kuzzle, the `modifiedRequestObject` has now a `createdAt` at
 
 ### Controllers
 
-A plugin controller is a plugin that adds new controller and actions to Kuzzle.
-It must expose to Kuzzle:
+A controller plugin is a plugin that adds new controller and actions to Kuzzle.
+It must provide to Kuzzle:
 
 __A `controllers` object listing one or more controllers:__
 
