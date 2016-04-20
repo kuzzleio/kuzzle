@@ -3,16 +3,14 @@ var
   q = require('q'),
   rewire = require('rewire'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
+  NotFoundError = require.main.require('lib/api/core/errors/notFoundError'),
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
-  Dsl = rewire('../../../../lib/api/dsl/index'),
-  Profile = require.main.require('lib/api/core/models/security/profile'),
-  Role = require.main.require('lib/api/core/models/security/role');
+  Dsl = rewire('../../../../lib/api/dsl/index');
 
 describe('Test: dsl.testFilters', function () {
   var
     kuzzle,
-    anonymousUser,
     roomId,
     roomName = 'roomNameGrace',
     index = 'index',
@@ -80,52 +78,34 @@ describe('Test: dsl.testFilters', function () {
         ]
       }
     },
-
-    requestObjectCreateGrace = new RequestObject({
-      requestId: roomName,
-      index: index,
-      collection: collection,
-      body: dataGrace
-    }),
     requestObjectSubscribeGrace = new RequestObject({
       requestId: roomName,
       index: index,
       collection: collection,
       body: filterGrace
-    }),
-    requestObjectCreateAda = new RequestObject({
-      requestId: roomName,
-      index: index,
-      collection: collection,
-      body: dataAda
     });
 
-
-  before(function (done) {
+  before(() => {
     kuzzle = new Kuzzle();
 
-    kuzzle.start(params, {dummy: true})
-      .then(function () {
-        return kuzzle.repositories.user.anonymous();
-      })
-      .then(function (user) {
+    return kuzzle.start(params, {dummy: true})
+      .then(() => kuzzle.repositories.user.anonymous())
+      .then(user => {
         var context = {
           connection: {id: 'connectionid'},
           user: user
         };
 
-        anonymousUser = user;
         return kuzzle.hotelClerk.addSubscription(requestObjectSubscribeGrace, context);
       })
-      .then(function (realTimeResponseObject) {
-        roomId = realTimeResponseObject.roomId;
-        done();
+      .then(notificationObject => {
+        roomId = notificationObject.roomId;
       });
   });
 
   it('should return an array with my room id when document matches', function () {
-    return kuzzle.dsl.testFilters(requestObjectCreateGrace)
-      .then(function (rooms) {
+    return kuzzle.dsl.testFilters(index, collection, null, dataGrace)
+      .then(rooms => {
         should(rooms).be.an.Array();
         should(rooms).have.length(1);
         should(rooms[0]).be.exactly(roomId);
@@ -133,31 +113,19 @@ describe('Test: dsl.testFilters', function () {
   });
 
   it('should return empty array when document doesn\'t match', function () {
-    return kuzzle.dsl.testFilters(requestObjectCreateAda)
+    return kuzzle.dsl.testFilters(index, collection, null, dataAda)
       .then(function (rooms) {
         should(rooms).be.an.Array();
         should(rooms).be.empty();
       });
   });
 
-  it('should return an error if the requestObject doesn\'t contain a index name', function () {
-    var requestObject = new RequestObject({
-      requestId: roomName,
-      collection: 'test',
-      body: dataGrace
-    });
-
-    return should(kuzzle.dsl.testFilters(requestObject)).be.rejected();
+  it('should return an error if no index is provided', function () {
+    return should(kuzzle.dsl.testFilters(null, collection, null, dataAda)).be.rejectedWith(NotFoundError);
   });
 
   it('should return an error if the requestObject doesn\'t contain a collection name', function () {
-    var requestObject = new RequestObject({
-      requestId: roomName,
-      index: 'test',
-      body: dataGrace
-    });
-
-    return should(kuzzle.dsl.testFilters(requestObject)).be.rejected();
+    return should(kuzzle.dsl.testFilters(index, null, null, dataAda)).be.rejectedWith(NotFoundError);
   });
 
   it('should generate an event if filter tests on fields fail', function (done) {
@@ -177,9 +145,9 @@ describe('Test: dsl.testFilters', function () {
       testFieldFilters: function () { return q.reject(new Error('rejected')); }
     })(function () {
       var dsl = new Dsl(kuzzle);
-      dsl.filtersTree[requestObjectCreateGrace.index] = {};
-      dsl.filtersTree[requestObjectCreateGrace.index][requestObjectCreateGrace.collection] = {};
-      dsl.testFilters(requestObjectCreateGrace);
+      dsl.filtersTree[index] = {};
+      dsl.filtersTree[index][collection] = {};
+      dsl.testFilters(index, collection, null, dataGrace);
     });
   });
 
@@ -200,9 +168,9 @@ describe('Test: dsl.testFilters', function () {
       testGlobalsFilters: function () { return q.reject(new Error('rejected')); }
     })(function () {
       var dsl = new Dsl(kuzzle);
-      dsl.filtersTree[requestObjectCreateGrace.index] = {};
-      dsl.filtersTree[requestObjectCreateGrace.index][requestObjectCreateGrace.collection] = {};
-      dsl.testFilters(requestObjectCreateGrace);
+      dsl.filtersTree[index] = {};
+      dsl.filtersTree[index][collection] = {};
+      dsl.testFilters(index, collection, null, dataGrace);
     });
   });
 });

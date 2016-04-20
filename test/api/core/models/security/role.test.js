@@ -4,7 +4,6 @@ var
   rewire = require('rewire'),
   BadRequestError = require.main.require('lib/api/core/errors/badRequestError'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
-  ResponseObject = require.main.require('lib/api/core/models/responseObject'),
   InternalError = require.main.require('lib/api/core/errors/internalError'),
   ParseError = require.main.require('lib/api/core/errors/parseError'),
   Role = rewire('../../../../../lib/api/core/models/security/role'),
@@ -53,7 +52,7 @@ describe('Test: security/roleTest', function () {
       }
     };
 
-  describe('#isActionValid', (callback) => {
+  describe('#isActionValid', () => {
     it('should disallow any action when no matching entry can be found', function () {
       var
         role = new Role();
@@ -72,7 +71,7 @@ describe('Test: security/roleTest', function () {
         }
       };
 
-      role.isActionAllowed(requestObject, context)
+      return role.isActionAllowed(requestObject, context)
         .then(isAllowed => {
           should(isAllowed).be.false();
 
@@ -117,8 +116,6 @@ describe('Test: security/roleTest', function () {
         })
         .then(isAllowed => {
           should(isAllowed).be.false();
-
-          callback();
         });
     });
 
@@ -192,7 +189,7 @@ describe('Test: security/roleTest', function () {
       return should(role.isActionAllowed(rq, context)).be.fulfilledWith(false);
     });
 
-    it('should allow/deny index creation according to indexes._canCreate right', function (callback) {
+    it('should allow/deny index creation according to indexes._canCreate right', function () {
       var
         roleAllow = new Role(),
         roleDeny = new Role(),
@@ -235,7 +232,7 @@ describe('Test: security/roleTest', function () {
         }
       };
 
-      roleAllow.isActionAllowed(rq, context)
+      return roleAllow.isActionAllowed(rq, context)
         .then(isAllowed => {
           should(isAllowed).be.true();
 
@@ -243,12 +240,10 @@ describe('Test: security/roleTest', function () {
         })
         .then(isAllowed => {
           should(isAllowed).be.false();
-
-          callback();
         });
     });
 
-    it('should allow/deny collection creation according to index._canCreate right', function (callback) {
+    it('should allow/deny collection creation according to index._canCreate right', function () {
       var
         roleAllow = new Role(),
         roleDeny = new Role(),
@@ -291,7 +286,7 @@ describe('Test: security/roleTest', function () {
         }
       };
 
-      roleAllow.isActionAllowed(rq, context)
+      return roleAllow.isActionAllowed(rq, context)
         .then(isAllowed => {
           should(isAllowed).be.true();
 
@@ -299,12 +294,10 @@ describe('Test: security/roleTest', function () {
         })
         .then(isAllowed => {
           should(isAllowed).be.false();
-
-          callback();
         });
     });
 
-    it('should allow/deny collection creation according to collection._canCreate right', function (callback) {
+    it('should allow/deny collection creation according to collection._canCreate right', function () {
       var
         roleAllow = new Role(),
         roleDeny = new Role(),
@@ -347,7 +340,7 @@ describe('Test: security/roleTest', function () {
         }
       };
 
-      roleAllow.isActionAllowed(rq, context)
+      return roleAllow.isActionAllowed(rq, context)
         .then(isAllowed => {
           should(isAllowed).be.true();
 
@@ -355,12 +348,10 @@ describe('Test: security/roleTest', function () {
         })
         .then(isAllowed => {
           should(isAllowed).be.false();
-
-          callback();
         });
     });
 
-    it('should allow/deny index deletion according to indexes._canDelete right', function (callback) {
+    it('should allow/deny index deletion according to indexes._canDelete right', function () {
       var
         roleAllow = new Role(),
         roleDeny = new Role(),
@@ -403,7 +394,7 @@ describe('Test: security/roleTest', function () {
         }
       };
 
-      roleAllow.isActionAllowed(rq, context)
+      return roleAllow.isActionAllowed(rq, context)
         .then(isAllowed => {
           should(isAllowed).be.true();
 
@@ -411,67 +402,7 @@ describe('Test: security/roleTest', function () {
         })
         .then(isAllowed => {
           should(isAllowed).be.false();
-
-          callback();
         });
-    });
-
-    it('should allow/deny collection deletion according to collection._canDelete right', function () {
-      var
-        roleAllow = new Role(),
-        roleDeny = new Role(),
-        rq = {
-          controller: 'admin',
-          action: 'deleteCollection'
-        };
-
-      roleAllow.indexes = {
-        '*': {
-          collections: {
-            '*': {
-              '_canDelete': true,
-              controllers: {
-                '*': {
-                  actions: {
-                    '*': true
-                  }
-                }
-              }
-            }
-          }
-        }
-      };
-
-      roleDeny.indexes = {
-        '*': {
-          collections: {
-            '*': {
-              '_canDelete': false,
-              controllers: {
-                '*': {
-                  actions: {
-                    '*': true
-                  }
-                }
-              }
-            }
-          }
-        }
-      };
-
-      roleAllow.isActionAllowed(rq, context)
-        .then(isAllowed => {
-          should(isAllowed).be.true();
-
-          return roleDeny.isActionAllowed(rq, context);
-        })
-        .then(isAllowed => {
-          should(isAllowed).be.false();
-
-          done();
-        })
-        .catch(error => { done(error); });
-
     });
 
     it('should not allow any action on the internal index if no role has been explicitly set on it', function () {
@@ -503,7 +434,7 @@ describe('Test: security/roleTest', function () {
       return should(role.isActionAllowed(rq, context)).be.fulfilledWith(false);
     });
 
-    it('should properly handle overridden permissions', function (callback) {
+    it('should properly handle overridden permissions', function () {
       var role = new Role();
       role.indexes = {
         '*': {
@@ -534,7 +465,7 @@ describe('Test: security/roleTest', function () {
         }
       };
 
-      role.isActionAllowed(requestObject, context)
+      return role.isActionAllowed(requestObject, context)
         .then(isAllowed => {
           should(isAllowed).be.false();
 
@@ -595,33 +526,10 @@ describe('Test: security/roleTest', function () {
         })
         .then(isAllowed => {
           should(isAllowed).be.false();
-
-          callback();
         });
     });
 
-    it('should throw an error if the rights configuration is not either a boolean or a function', function () {
-      var role = new Role();
-      role.indexes = {
-        '*': {
-          collections: {
-            '*': {
-              controllers: {
-                '*': {
-                  actions: {
-                    '*': {an: 'object'}
-                  }
-                }
-              }
-            }
-          }
-        }
-      };
-
-      should(role.isActionAllowed(requestObject, context)).be.rejected();
-    });
-
-    it('should throw an error if an invalid function is given', function (callback) {
+    it('should throw an error if an invalid function is given', function () {
       var role = new Role(),
         kuzzle = {
           pluginsManager: {
@@ -634,10 +542,10 @@ describe('Test: security/roleTest', function () {
               readEngine: {
                 search: function (requestObject) {
                   if (requestObject.data.body.filter.ids.values[0] !== 'foobar') {
-                    return q(new ResponseObject(requestObject, {hits: [documentAda]}));
-                  } else {
-                    return q(new ResponseObject(requestObject, {hits: [documentFalseAda]}));
+                    return q({hits: [documentAda]});
                   }
+
+                  return q({hits: [documentFalseAda]});
                 }
               }
             }
@@ -663,33 +571,24 @@ describe('Test: security/roleTest', function () {
         }
       };
 
-      role.isActionAllowed(requestObject, context, {}, kuzzle)
-        .then(isActionAllowed => {
-          should(isActionAllowed).be.empty();
-        })
-        .catch(e => {
-          should(e).be.an.instanceOf(ParseError);
-          callback();
-        });
+      return should(role.isActionAllowed(requestObject, context, {}, kuzzle)).be.rejectedWith(ParseError);
     });
 
-    it('should throw an error if an invalid argument is given', function (callback) {
+    it('should throw an error if an invalid argument is given', () => {
       var role = new Role(),
         kuzzle = {
           pluginsManager: {
-            trigger: () => {
-              return true;
-            }
+            trigger: () => true
           },
           services: {
             list: {
               readEngine: {
-                search: function (requestObject) {
-                  if (requestObject.data.body.filter.ids.values[0] !== 'foobar') {
-                    return q(new ResponseObject(requestObject, {hits: [documentAda]}));
-                  } else {
-                    return q(new ResponseObject(requestObject, {hits: [documentFalseAda]}));
+                search: rq => {
+                  if (rq.data.body.filter.ids.values[0] !== 'foobar') {
+                    return q({hits: [documentAda]});
                   }
+
+                  return q({hits: [documentFalseAda]});
                 }
               }
             }
@@ -719,18 +618,10 @@ describe('Test: security/roleTest', function () {
         }
       };
 
-      try {
-        role.isActionAllowed(requestObject, context, {}, kuzzle)
-          .then(isActionAllowed => {
-            should(isActionAllowed).be.empty();
-          });
-      } catch (e) {
-        should(e).be.an.instanceOf(ParseError);
-        callback();
-      }
+      return should(() => role.isActionAllowed(requestObject, context, {}, kuzzle)).throw(ParseError);
     });
 
-    it('should handle a custom right function', function (callback) {
+    it('should handle a custom right function', function () {
       var
         role = new Role(),
         noMatchRequestObject = {
@@ -758,7 +649,7 @@ describe('Test: security/roleTest', function () {
         }
       };
 
-      role.isActionAllowed(requestObject, context)
+      return role.isActionAllowed(requestObject, context)
         .then(isAllowed => {
           should(isAllowed).be.true();
 
@@ -776,11 +667,10 @@ describe('Test: security/roleTest', function () {
         })
         .then(isAllowed => {
           should(isAllowed).be.false();
-          callback();
         });
     });
 
-    it('should allow/deny rights using custom function with args using get', function (callback) {
+    it('should allow/deny rights using custom function with args using get', () => {
       var
         roleAllow = new Role(),
         roleDeny = new Role(),
@@ -790,10 +680,10 @@ describe('Test: security/roleTest', function () {
               readEngine: {
                 get: function (requestObject) {
                   if (requestObject.data.id !== 'foobar') {
-                    return q(new ResponseObject(requestObject, documentAda));
-                  } else {
-                    return q(new ResponseObject(requestObject, documentFalseAda));
+                    return q(documentAda);
                   }
+
+                  return q(documentFalseAda);
                 }
               }
             }
@@ -866,20 +756,16 @@ describe('Test: security/roleTest', function () {
       });
 
 
-      roleAllow.isActionAllowed(requestObject, context, {}, kuzzle)
+      return roleAllow.isActionAllowed(requestObject, context, {}, kuzzle)
         .then(isAllowed => {
           should(isAllowed).be.true();
 
           return roleDeny.isActionAllowed(requestObject, context, {}, kuzzle);
         })
-        .then(isAllowed => {
-          should(isAllowed).be.false();
-
-          callback();
-        });
+        .then(isAllowed => should(isAllowed).be.false());
     });
 
-    it('should allow/deny rights using custom function with args using mget', function (callback) {
+    it('should allow/deny rights using custom function with args using mget', function () {
       var
         roleAllow = new Role(),
         roleDeny = new Role(),
@@ -889,15 +775,25 @@ describe('Test: security/roleTest', function () {
               readEngine: {
                 mget: function (requestObject) {
                   if (requestObject.data.body.ids[0] !== 'foobar') {
-                    return q(new ResponseObject(requestObject, {hits: [documentAda]}));
-                  } else {
-                    return q(new ResponseObject(requestObject, {hits: [documentFalseAda]}));
+                    return q({hits: [documentAda]});
                   }
+
+                  return q({hits: [documentFalseAda]});
                 }
               }
             }
           }
-        };
+        },
+        requestObject = new RequestObject({
+          controller: 'read',
+          action: 'get',
+          requestId: 'foo',
+          collection: 'barbar',
+          index: 'bar',
+          body: {
+            _id: documentAda._id
+          }
+        });
 
       roleAllow.indexes = {
         '*': {
@@ -953,32 +849,16 @@ describe('Test: security/roleTest', function () {
         }
       };
 
-      var requestObject = new RequestObject({
-        controller: 'read',
-        action: 'get',
-        requestId: 'foo',
-        collection: 'barbar',
-        index: 'bar',
-        body: {
-          _id: documentAda._id
-        }
-      });
-
-
-      roleAllow.isActionAllowed(requestObject, context, {}, kuzzle)
+      return roleAllow.isActionAllowed(requestObject, context, {}, kuzzle)
         .then(isAllowed => {
           should(isAllowed).be.true();
 
           return roleDeny.isActionAllowed(requestObject, context, {}, kuzzle);
         })
-        .then(isAllowed => {
-          should(isAllowed).be.false();
-
-          callback();
-        });
+        .then(isAllowed => should(isAllowed).be.false());
     });
 
-    it('should allow/deny rights using custom function with args using search', function (callback) {
+    it('should allow/deny rights using custom function with args using search', () => {
       var
         roleAllow = new Role(),
         roleDeny = new Role(),
@@ -988,15 +868,25 @@ describe('Test: security/roleTest', function () {
               readEngine: {
                 search: function (requestObject) {
                   if (requestObject.data.body.filter.ids.values[0] !== 'foobar') {
-                    return q(new ResponseObject(requestObject, {hits: [documentAda]}));
-                  } else {
-                    return q(new ResponseObject(requestObject, {hits: [documentFalseAda]}));
+                    return q({hits: [documentAda]});
                   }
+
+                  return q({hits: [documentFalseAda]});
                 }
               }
             }
           }
-        };
+        },
+        requestObject = new RequestObject({
+          controller: 'read',
+          action: 'get',
+          requestId: 'foo',
+          collection: 'barbar',
+          index: 'bar',
+          body: {
+            _id: documentAda._id
+          }
+        });
 
       roleAllow.indexes = {
         '*': {
@@ -1068,32 +958,16 @@ describe('Test: security/roleTest', function () {
         }
       };
 
-      var requestObject = new RequestObject({
-        controller: 'read',
-        action: 'get',
-        requestId: 'foo',
-        collection: 'barbar',
-        index: 'bar',
-        body: {
-          _id: documentAda._id
-        }
-      });
-
-
-      roleAllow.isActionAllowed(requestObject, context, {}, kuzzle)
+      return roleAllow.isActionAllowed(requestObject, context, {}, kuzzle)
         .then(isAllowed => {
           should(isAllowed).be.true();
 
           return roleDeny.isActionAllowed(requestObject, context, {}, kuzzle);
         })
-        .then(isAllowed => {
-          should(isAllowed).be.false();
-
-          callback();
-        });
+        .then(isAllowed => should(isAllowed).be.false());
     });
 
-    it('should not allow bad method call', function (callback) {
+    it('should not allow bad method call', () => {
       var
         role = new Role(),
         kuzzle = {
@@ -1107,15 +981,25 @@ describe('Test: security/roleTest', function () {
               readEngine: {
                 get: function (requestObject) {
                   if (requestObject.data.id !== 'foobar') {
-                    return q(new ResponseObject(requestObject, documentAda));
-                  } else {
-                    return q(new ResponseObject(requestObject, documentFalseAda));
+                    return q(documentAda);
                   }
+
+                  return q(documentFalseAda);
                 }
               }
             }
           }
-        };
+        },
+        requestObject = new RequestObject({
+          controller: 'read',
+          action: 'get',
+          requestId: 'foo',
+          collection: 'barbar',
+          index: 'bar',
+          body: {
+            _id: documentAda._id
+          }
+        });
 
       role.indexes = {
         '*': {
@@ -1144,45 +1028,35 @@ describe('Test: security/roleTest', function () {
         }
       };
 
-      var requestObject = new RequestObject({
-        controller: 'read',
-        action: 'get',
-        requestId: 'foo',
-        collection: 'barbar',
-        index: 'bar',
-        body: {
-          _id: documentAda._id
-        }
-      });
-
-
-      role.isActionAllowed(requestObject, context, {}, kuzzle)
-        .then(isAllowed => {
-          should(isAllowed).be.false();
-
-          callback();
-        });
+      return role.isActionAllowed(requestObject, context, {}, kuzzle)
+        .then(isAllowed => should(isAllowed).be.false());
     });
 
-    it('should not allow if read method throws an error', function (callback) {
+    it('should not allow if read method throws an error', () => {
       var
         role = new Role(),
         kuzzle = {
           pluginsManager: {
-            trigger: () => {
-              return true;
-            }
+            trigger: () => true
           },
           services: {
             list: {
               readEngine: {
-                get: function (requestObject) {
-                  return q.reject(new InternalError('Our Error'));
-                }
+                get: () => q.reject(new InternalError('Our Error'))
               }
             }
           }
-        };
+        },
+        requestObject = new RequestObject({
+          controller: 'read',
+          action: 'get',
+          requestId: 'foo',
+          collection: 'barbar',
+          index: 'bar',
+          body: {
+            _id: documentAda._id
+          }
+        });
 
       role.indexes = {
         '*': {
@@ -1211,25 +1085,11 @@ describe('Test: security/roleTest', function () {
         }
       };
 
-      var requestObject = new RequestObject({
-        controller: 'read',
-        action: 'get',
-        requestId: 'foo',
-        collection: 'barbar',
-        index: 'bar',
-        body: {
-          _id: documentAda._id
-        }
-      });
-
       return role.isActionAllowed(requestObject, context, {}, kuzzle)
-        .then(isActionAllowed => {
-          should(isActionAllowed).be.false();
-          callback();
-      });
+        .then(isActionAllowed => should(isActionAllowed).be.false());
     });
 
-    it('should not allow if collection is not specified', function (callback) {
+    it('should not allow if collection is not specified', () => {
       var
         role = new Role(),
         kuzzle = {
@@ -1241,17 +1101,27 @@ describe('Test: security/roleTest', function () {
           services: {
             list: {
               readEngine: {
-                get: function (requestObject) {
+                get: (requestObject) => {
                   if (requestObject.data.id !== 'foobar') {
-                    return q(new ResponseObject(requestObject, documentAda));
-                  } else {
-                    return q(new ResponseObject(requestObject, documentFalseAda));
+                    return q(documentAda);
                   }
+
+                  return q(documentFalseAda);
                 }
               }
             }
           }
-        };
+        },
+        requestObject = new RequestObject({
+          controller: 'read',
+          action: 'get',
+          requestId: 'foo',
+          collection: 'barbar',
+          index: 'bar',
+          body: {
+            _id: documentAda._id
+          }
+        });
 
       role.indexes = {
         '*': {
@@ -1279,24 +1149,8 @@ describe('Test: security/roleTest', function () {
         }
       };
 
-      var requestObject = new RequestObject({
-        controller: 'read',
-        action: 'get',
-        requestId: 'foo',
-        collection: 'barbar',
-        index: 'bar',
-        body: {
-          _id: documentAda._id
-        }
-      });
-
-
-      role.isActionAllowed(requestObject, context, {}, kuzzle)
-        .then(isAllowed => {
-          should(isAllowed).be.false();
-
-          callback();
-        });
+      return role.isActionAllowed(requestObject, context, {}, kuzzle)
+        .then(isAllowed => should(isAllowed).be.false());
     });
   });
 
@@ -1620,7 +1474,7 @@ describe('Test: security/roleTest', function () {
       return should(role.validateDefinition(context)).be.rejectedWith('Invalid index definition for index1,_canCreate. Must be an boolean');
     });
 
-    it('should validate if only boolean rights are given', done => {
+    it('should validate if only boolean rights are given', () => {
       var role = new Role();
       role.indexes = {
         _canCreate: true,
@@ -1670,23 +1524,36 @@ describe('Test: security/roleTest', function () {
         }
       };
 
-      role.validateDefinition(context)
-        .then(result => {
-          should(result).be.a.Boolean();
-          done();
-        })
-        .catch(error => {
-          done(error);
-        });
+      return role.validateDefinition(context)
+        .then(result => should(result).be.a.Boolean());
+    });
+
+    it('should reject the promise if the closure does not contain a "test" attribute', () => {
+      var role = new Role();
+      role.indexes = {
+        '*': {
+          collections: {
+            '*': {
+              controllers: {
+                '*': {
+                  actions: {
+                    '*': {an: 'object'}
+                  }
+                }
+              }
+            }
+          }
+        }
+      };
+
+      return should(role.validateDefinition(context)).be.rejected();
     });
 
     it('should reject the promise if the sandbox thew an error', () => {
       var foo =
         Role.__with__({
           Sandbox: function () {
-            this.run = function (data) {
-              return q.reject(new Error('our unit test error'));
-            };
+            this.run = () => q.reject(new Error('our unit test error'));
           }
         })(() => {
           var role = new Role();
@@ -1718,16 +1585,11 @@ describe('Test: security/roleTest', function () {
       return should(foo).be.rejectedWith(Error, {message: 'our unit test error'});
     });
 
-
     it('should reject the promise if the sandbox does not resolve to a boolean', () => {
       var foo =
         Role.__with__({
           Sandbox: function () {
-            this.run = function (data) {
-              return q({
-                result: 'I am not a boolean'
-              });
-            };
+            this.run = () => q({result: 'I am not a boolean'});
           }
         })(() => {
           var role = new Role();
@@ -1758,50 +1620,38 @@ describe('Test: security/roleTest', function () {
       return should(foo).be.rejectedWith(BadRequestError, {message: 'Invalid definition for index,collection,controller,action. Error executing function'});
     });
 
-    it('should resolve the promise if the sandbox returned a boolean', done => {
-      var foo =
-        Role.__with__({
-          Sandbox: function () {
-            this.run = function (data) {
-              return q({ result: true });
-            };
-          }
-        })(() => {
-          var role = new Role();
-          role.indexes = {
-            _canCreate: true,
-            index: {
-              collections: {
-                _canCreate: true,
-                collection: {
-                  controllers: {
-                    controller: {
-                      actions: {
-                        action: {
-                          args: {},
-                          test: 'a string'
-                        }
+    it('should resolve the promise if the sandbox returned a boolean', () => {
+      return Role.__with__({
+        Sandbox: function () {
+          this.run = () => q({ result: true });
+        }
+      })(() => {
+        var role = new Role();
+        role.indexes = {
+          _canCreate: true,
+          index: {
+            collections: {
+              _canCreate: true,
+              collection: {
+                controllers: {
+                  controller: {
+                    actions: {
+                      action: {
+                        args: {},
+                        test: 'a string'
                       }
                     }
                   }
                 }
               }
             }
-          };
+          }
+        };
 
-          return role.validateDefinition(context);
-        })
-        .then(result => {
-          should(result).be.true();
-          done();
-        })
-        .catch(error => {
-          done(error);
-        });
-
+        return role.validateDefinition(context);
+      })
+      .then(result => should(result).be.true());
     });
-
   });
-
 });
 

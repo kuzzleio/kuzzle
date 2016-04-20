@@ -8,6 +8,7 @@ var
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
+  BadRequestError = require.main.require('lib/api/core/errors/badRequestError'),
   Statistics = rewire('../../../lib/api/core/statistics');
 
 describe('Test: statistics core component', function () {
@@ -144,207 +145,117 @@ describe('Test: statistics core component', function () {
     should(stats.currentStats.connections).be.empty();
   });
 
-  it('should return the current frame when there is still no statistics in cache', function (done) {
-    var result;
-
+  it('should return the current frame when there is still no statistics in cache', () => {
     stats.currentStats = fakeStats;
     requestObject.data.body.startTime = lastFrame - 10000000;
     requestObject.data.body.stopTime = new Date(new Date().getTime() + 10000);
-    result = stats.getStats(requestObject);
 
-    should(result).be.a.Promise();
-
-    result
+    return stats.getStats(requestObject)
       .then(response => {
-        var serialized = response.toJson();
-
-        should(serialized.error).be.null();
-        should(serialized.status).be.exactly(200);
-        should(serialized.result.hits).be.an.Array();
-        should(serialized.result.hits).have.length(1);
-        should(serialized.result.total).be.exactly(1);
+        should(response.hits).be.an.Array();
+        should(response.hits).have.length(1);
+        should(response.total).be.exactly(1);
 
         ['completedRequests', 'connections', 'failedRequests', 'ongoingRequests'].forEach(k => {
-          should(serialized.result.hits[0][k]).match(fakeStats[k]);
+          should(response.hits[0][k]).match(fakeStats[k]);
         });
-        should(serialized.result.hits[0].timestamp).match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.[0-9.]+Z)?$/);
-        done();
-      })
-      .catch(error => done(error));
+        should(response.hits[0].timestamp).match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.[0-9.]+Z)?$/);
+      });
   });
 
-  it('should return the current frame from the cache when statistics snapshots have been taken', function (done) {
-    var result;
-
-
+  it('should return the current frame from the cache when statistics snapshots have been taken', () => {
     stats.lastFrame = lastFrame;
     requestObject.data.body.startTime = lastFrame - 1000;
     requestObject.data.body.stopTime = new Date(new Date().getTime() + 10000);
-    result = stats.getStats(requestObject);
 
-    should(result).be.a.Promise();
-
-    result
+    return stats.getStats(requestObject)
       .then(response => {
-        var serialized = response.toJson();
-
-        should(serialized.error).be.null();
-        should(serialized.status).be.exactly(200);
-        should(serialized.result.hits).be.an.Array();
-        should(serialized.result.hits).have.length(2);
-        should(serialized.result.total).be.exactly(2);
+        should(response.hits).be.an.Array();
+        should(response.hits).have.length(2);
+        should(response.total).be.exactly(2);
         ['completedRequests', 'connections', 'failedRequests', 'ongoingRequests'].forEach(k => {
-          should(serialized.result.hits[0][k]).match(fakeStats[k]);
+          should(response.hits[0][k]).match(fakeStats[k]);
         });
-        should(serialized.result.hits[0].timestamp).match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.[0-9.]+Z)?$/);
-        done();
-      })
-      .catch(error => done(error));
+        should(response.hits[0].timestamp).match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.[0-9.]+Z)?$/);
+      });
   });
 
-  it('should return an empty statistics because the asked date is in the future', function (done) {
-    var result;
-
-
+  it('should return an empty statistics because the asked date is in the future', () => {
     stats.lastFrame = lastFrame;
     requestObject.data.body.startTime = lastFrame + 10000;
-    result = stats.getStats(requestObject);
 
-    should(result).be.a.Promise();
-
-    result
+    return stats.getStats(requestObject)
       .then(response => {
-        var serialized = response.toJson();
-
-        should(serialized.error).be.null();
-        should(serialized.status).be.exactly(200);
-        should(serialized.result.hits).be.an.Array();
-        should(serialized.result.hits).have.length(0);
-        should(serialized.result.total).be.exactly(0);
-        done();
-      })
-      .catch(error => done(error));
+        should(response.hits).be.an.Array();
+        should(response.hits).have.length(0);
+        should(response.total).be.exactly(0);
+      });
   });
 
-  it('should return all statistics because startTime is not defined', function (done) {
-    var result;
-
+  it('should return all statistics because startTime is not defined', () => {
     stats.lastFrame = lastFrame;
     requestObject.data.body.stopTime = new Date();
-    result = stats.getStats(requestObject);
-    should(result).be.a.Promise();
 
-    result
+    return stats.getStats(requestObject)
       .then(response => {
-        var serialized = response.toJson();
-
-        should(serialized.error).be.null();
-        should(serialized.status).be.exactly(200);
-        should(serialized.result.hits).be.an.Array();
-        should(serialized.result.hits).have.length(2);
-        should(serialized.result.total).be.exactly(2);
-        done();
-      })
-      .catch(error => done(error));
+        should(response.hits).be.an.Array();
+        should(response.hits).have.length(2);
+        should(response.total).be.exactly(2);
+      });
   });
 
-  it('should get the last frame from the cache when statistics snapshots have been taken', function (done) {
-    var result;
-
+  it('should get the last frame from the cache when statistics snapshots have been taken', () => {
     stats.lastFrame = lastFrame;
-    result = stats.getLastStats(requestObject);
 
-    should(result).be.a.Promise();
-
-    result
+    return stats.getLastStats(requestObject)
       .then(response => {
-        var serialized = response.toJson();
-
-        should(serialized.error).be.null();
-        should(serialized.status).be.exactly(200);
-        should(serialized.result).be.an.Object();
+        should(response).be.an.Object();
         ['completedRequests', 'connections', 'failedRequests', 'ongoingRequests'].forEach(k => {
-          should(serialized.result[k]).match(fakeStats[k]);
+          should(response[k]).match(fakeStats[k]);
         });
-        should(serialized.result.timestamp).match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.[0-9.]+Z)?$/);
-        done();
-      })
-      .catch(error => done(error));
+        should(response.timestamp).match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.[0-9.]+Z)?$/);
+      });
   });
 
-  it('should return the current frame instead of all statistics if no cache has been initialized', function (done) {
-    var result;
-
+  it('should return the current frame instead of all statistics if no cache has been initialized', () => {
     stats.currentStats = fakeStats;
-    result = stats.getAllStats(requestObject);
 
-    should(result).be.a.Promise();
-
-    result
+    return stats.getAllStats(requestObject)
       .then(response => {
-        var serialized = response.toJson();
-
-        should(serialized.error).be.null();
-        should(serialized.result.hits).be.an.Array();
-        should(serialized.result.hits).have.length(1);
-        should(serialized.result.total).be.exactly(1);
-        should(serialized.status).be.exactly(200);
+        should(response.hits).be.an.Array();
+        should(response.hits).have.length(1);
+        should(response.total).be.exactly(1);
         ['completedRequests', 'connections', 'failedRequests', 'ongoingRequests'].forEach(k => {
-          should(serialized.result.hits[0][k]).match(fakeStats[k]);
+          should(response.hits[0][k]).match(fakeStats[k]);
         });
-        done();
-      })
-      .catch(error => done(error));
+      });
   });
 
-  it('should return all saved statistics', function (done) {
-    var result;
-
+  it('should return all saved statistics', () => {
     stats.lastFrame = lastFrame;
-    result = stats.getAllStats(requestObject);
 
-    should(result).be.a.Promise();
-
-    result
+    return stats.getAllStats(requestObject)
       .then(response => {
-        var serialized = response.toJson();
-
-        should(serialized.result.hits).be.an.Array();
-        should(serialized.result.hits).have.length(2);
-        should(serialized.result.total).be.exactly(2);
-        should(serialized.error).be.null();
-        should(serialized.status).be.exactly(200);
+        should(response.hits).be.an.Array();
+        should(response.hits).have.length(2);
+        should(response.total).be.exactly(2);
         ['completedRequests', 'connections', 'failedRequests', 'ongoingRequests'].forEach(k => {
-          should(serialized.result.hits[0][k]).match(fakeStats[k]);
+          should(response.hits[0][k]).match(fakeStats[k]);
         });
-        should(serialized.result.hits[0].timestamp).match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.[0-9.]+Z)?$/);
+        should(response.hits[0].timestamp).match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.[0-9.]+Z)?$/);
         ['completedRequests', 'connections', 'failedRequests', 'ongoingRequests'].forEach(k => {
-          should(serialized.result.hits[1][k]).match(fakeStats[k]);
+          should(response.hits[1][k]).match(fakeStats[k]);
         });
-        should(serialized.result.hits[1].timestamp).match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.[0-9.]+Z)?$/);
-        done();
-      })
-      .catch(error => done(error));
+        should(response.hits[1].timestamp).match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.[0-9.]+Z)?$/);
+      });
   });
 
-  it('should manage statistics errors', function (done) {
+  it('should manage statistics errors', () => {
     stats.lastFrame = lastFrame;
     requestObject.data.body.startTime = 'a string';
     requestObject.data.body.stopTime = 'a string';
-    kuzzle.services.list.statsCache.volatileSet('foo', fakeStats, 10)
-      .then(() => { return stats.getAllStats(requestObject); })
-      .then((result) => { done(new Error('received a response instead of an error: ' + JSON.stringify(result))); })
-      .catch(error => {
-        try {
-          should(error.status).be.exactly(400);
-          should(error.error).not.be.null();
-          should(error.error.message).not.be.null();
-          should(error.error.message).be.a.String().and.be.exactly('Invalid time value');
-          done();
-        } catch (e) {
-          done(e);
-        }
-      });
+
+    return should(stats.getAllStats(requestObject)).be.rejectedWith(BadRequestError);
   });
 
   it('should write statistics frames in cache', function (done) {
@@ -362,7 +273,6 @@ describe('Test: statistics core component', function () {
 
         try {
           unserialized = JSON.parse(result);
-
         }
         catch (e) {
           done('Invalid statistics frame retrieved: ' + result + '(error: ' + e + ')');
@@ -391,6 +301,5 @@ describe('Test: statistics core component', function () {
         })
     ).be.rejected();
   });
-
 });
 

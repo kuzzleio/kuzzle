@@ -3,7 +3,6 @@ var
   q = require('q'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
   ResponseObject = require.main.require('lib/api/core/models/responseObject'),
-  ServiceUnavailableError = require.main.require('lib/api/core/errors/serviceUnavailableError'),
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   rewire = require('rewire'),
@@ -178,7 +177,8 @@ describe('funnelController.execute', function () {
         should(funnel.cachedRequests).be.eql(kuzzle.config.request.maxRetainedRequests);
         should(funnel.requestsCache).be.empty();
         should(res).be.undefined();
-        should(err).be.instanceOf(ServiceUnavailableError);
+        should(err).be.instanceOf(ResponseObject);
+        should(err.status).be.eql(503);
         done();
       });
     });

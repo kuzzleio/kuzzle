@@ -5,7 +5,6 @@ var
   params = require('rc')('kuzzle'),
   Config = require.main.require('lib/config'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
-  ResponseObject = require.main.require('lib/api/core/models/responseObject'),
   BadRequestError = require.main.require('lib/api/core/errors/badRequestError.js'),
   NotFoundError = require.main.require('lib/api/core/errors/notFoundError'),
   ES = rewire('../../../lib/services/elasticsearch');
@@ -96,31 +95,23 @@ describe('Test: ElasticSearch service', function () {
   });
 
   describe('#search', function () {
-    it('should be able to search documents', function (done) {
-      var ret;
-
+    it('should be able to search documents', () => {
       elasticsearch.client.search = function (data) {
         should(data.body).be.exactly(filter);
-
         return q({total: 0, hits: []});
       };
 
       requestObject.data.body = filter;
-      ret = elasticsearch.search(requestObject);
-      should(ret).be.a.Promise();
 
-      ret
+      return elasticsearch.search(requestObject)
         .then(function (result) {
-          should(result.data).not.be.undefined().and.not.be.null();
-          should(result.data.body.total).be.exactly(0);
-          should(result.data.body.hits).be.an.Array();
-          done();
-        })
-        .catch(error => done(error));
+          should(result).be.an.Object();
+          should(result.total).be.exactly(0);
+          should(result.hits).be.an.Array();
+        });
     });
 
     it('should return a rejected promise if a search fails', function () {
-
       elasticsearch.client.search = function (data) {
         should(data.body).not.be.exactly(filter);
 
@@ -292,7 +283,6 @@ describe('Test: ElasticSearch service', function () {
         return q(new Error());
       };
 
-      delete requestObject.data.body;
       requestObject.data = {body: {ids: [1, 2, 3]}};
 
       return should(elasticsearch.mget(requestObject)).be.fulfilled();
@@ -312,9 +302,7 @@ describe('Test: ElasticSearch service', function () {
   });
 
   describe('#count', function () {
-    it('should allow counting documents using a provided filter', function (done) {
-      var ret;
-
+    it('should allow counting documents using a provided filter', () => {
       elasticsearch.client.count = function (data) {
         should(data.body).have.keys();
 
@@ -322,19 +310,11 @@ describe('Test: ElasticSearch service', function () {
       };
 
       requestObject.data.body = {};
-      ret = elasticsearch.count(requestObject);
-      should(ret).be.a.Promise();
 
-      ret
-        .then(function (result) {
-          done();
-        })
-        .catch(error => done(error));
+      return elasticsearch.count(requestObject);
     });
 
-    it('should allow counting objects using a query', function (done) {
-      var ret;
-
+    it('should allow counting objects using a query', () => {
       elasticsearch.client.count = function (data) {
         should(data.body).be.an.instanceOf(Object).and.have.property('query', {foo: 'bar'});
 
@@ -344,21 +324,11 @@ describe('Test: ElasticSearch service', function () {
       requestObject.data.body = {};
       requestObject.data.query = {foo: 'bar'};
 
-      ret = elasticsearch.count(requestObject);
-      should(ret).be.a.Promise();
-
-      ret
-        .then(function (result) {
-          done();
-        })
-        .catch(error => done(error));
+      return elasticsearch.count(requestObject);
     });
 
     it('should return a rejected promise if the count fails', function () {
-
-      elasticsearch.client.count = function (data) {
-        return q.reject(new Error());
-      };
+      elasticsearch.client.count = () => q.reject(new Error());
 
       requestObject.data.body = {};
       requestObject.data.query = {foo: 'bar'};
@@ -382,7 +352,6 @@ describe('Test: ElasticSearch service', function () {
     });
 
     it('should return a rejected promise if an update fails', function () {
-
       elasticsearch.client.update = function (data) {
         should(data.id).be.undefined();
 
@@ -395,7 +364,6 @@ describe('Test: ElasticSearch service', function () {
 
   describe('#delete', function () {
     it('should allow to delete a document', function () {
-
       elasticsearch.client.delete = function (data) {
         should(data.id).be.exactly(createdDocumentId);
 
@@ -409,7 +377,6 @@ describe('Test: ElasticSearch service', function () {
     });
 
     it('should return a rejected promise if a delete fails', function () {
-
       elasticsearch.client.delete = function (data) {
         should(data.id).be.undefined();
 
@@ -421,7 +388,7 @@ describe('Test: ElasticSearch service', function () {
   });
 
   describe('#deleteByQuery', function () {
-    it('should return an empty result array when no document has been deleted using a filter', function (done) {
+    it('should return an empty result array when no document has been deleted using a filter', () => {
       delete requestObject.data.body;
       requestObject.data.filter = {term: {firstName: 'no way any document can be returned with this filter'}};
 
@@ -431,14 +398,12 @@ describe('Test: ElasticSearch service', function () {
         callback(null, {hits: {hits: [], total: 0}});
       };
 
-      elasticsearch.deleteByQuery(requestObject)
+      return elasticsearch.deleteByQuery(requestObject)
         .then(function (result) {
           // Ugly line in order to spot a random bug on this unit test
-          should(result.data.body.ids).not.be.undefined().and.be.an.Array();
-          should(result.data.body.ids.length).be.exactly(0);
-          done();
-        })
-        .catch(error => done(error));
+          should(result.ids).not.be.undefined().and.be.an.Array();
+          should(result.ids.length).be.exactly(0);
+        });
     });
 
     it('should allow to delete documents using a provided filter', function (done) {
@@ -471,8 +436,8 @@ describe('Test: ElasticSearch service', function () {
         elasticsearch.deleteByQuery(requestObject)
           .then(function (result) {
             try {
-              should(result.data.body.ids).not.be.undefined().and.be.an.Array();
-              should(result.data.body.ids).match(mockupIds);
+              should(result.ids).not.be.undefined().and.be.an.Array();
+              should(result.ids).match(mockupIds);
               done();
             }
             catch (e) {
@@ -517,7 +482,7 @@ describe('Test: ElasticSearch service', function () {
     });
   });
 
-  describe('#bulk', function () {
+  describe('#import', function () {
     it('should support bulk data import', function () {
       requestObject.data.body = [
         {index: {_id: 1, _type: collection, _index: index}},
@@ -539,7 +504,7 @@ describe('Test: ElasticSearch service', function () {
     });
 
 
-    it('should raise a "Partial Error" response for bulk data import with some errors', function (done) {
+    it('should raise a "Partial Error" response for bulk data import with some errors', () => {
       requestObject.data.body = [
         {index: {_id: 1, _type: collection, _index: index}},
         {firstName: 'foo'},
@@ -563,21 +528,14 @@ describe('Test: ElasticSearch service', function () {
         });
       };
 
-      elasticsearch.import(requestObject)
+      return elasticsearch.import(requestObject)
         .then(function (result) {
           try {
-            should(result.status).be.exactly(206);
-            should(result.error).be.not.null();
-            should(result.error.count).be.exactly(2);
-            should(result.error.message).be.exactly('Some errors on bulk');
-            should(result.error.errors).be.an.Array().and.match([{status: 404}]).and.match([{error: /^DocumentMissingException/}]);
-            done();
+            should(result.errors).be.true();
+            should(result.partialErrors).be.an.Array().and.match([{status: 404}]).and.match([{error: /^DocumentMissingException/}]);
           } catch (e) {
-            done(e);
+            return q.reject(e);
           }
-        })
-        .catch(function (error) {
-          done(error);
         });
     });
 
@@ -721,9 +679,8 @@ describe('Test: ElasticSearch service', function () {
 
       elasticsearch.getMapping(requestObject)
         .then(function (result) {
-          should(result.data).not.be.undefined();
-          should(result.data.body[requestObject.index]).not.be.undefined();
-          should(result.data.body[requestObject.index].mappings).not.be.undefined();
+          should(result[requestObject.index]).not.be.undefined();
+          should(result[requestObject.index].mappings).not.be.undefined();
           done();
         })
         .catch(error => done(error));
@@ -1021,18 +978,15 @@ describe('Test: ElasticSearch service', function () {
   });
 
   describe('#refreshIndex', function () {
-    it('should send a valid request to es client', function (done) {
+    it('should send a valid request to es client', () => {
       var esStub = (data) => { return q(data); };
 
       elasticsearch.client.indices.refresh = esStub;
 
-      elasticsearch.refreshIndex(requestObject)
+      return elasticsearch.refreshIndex(requestObject)
         .then(data => {
-          should(data).be.an.instanceOf(ResponseObject);
           should(data.index).be.eql(index);
-          done();
-        })
-        .catch(error => { done(error); });
+        });
     });
   });
 });

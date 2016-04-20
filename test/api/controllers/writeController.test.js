@@ -13,7 +13,14 @@ var
 describe('Test: write controller', function () {
   var
     kuzzle,
-    indexCacheAdded;
+    indexCacheAdded,
+    createDocumentNotification,
+    updateDocumentNotification,
+    replaceDocumentNotification,
+    deleteDocumentNotification,
+    messagePublished,
+    error,
+    requestObject;
 
   before(function (done) {
     kuzzle = new Kuzzle();
@@ -21,11 +28,23 @@ describe('Test: write controller', function () {
       .then(function () {
         kuzzle.services.list.writeEngine = {};
         kuzzle.indexCache = {
-          add: () => indexCacheAdded = true
+          add: () => { indexCacheAdded = true; }
         };
 
-        kuzzle.workerListener = {
-          add: rq => { return q(new ResponseObject(rq)); }
+        kuzzle.notifier = {
+          notifyDocumentCreate: () => { createDocumentNotification = true; },
+          notifyDocumentUpdate: () => { updateDocumentNotification = true; },
+          notifyDocumentReplace: () => { replaceDocumentNotification = true; },
+          notifyDocumentDelete: () => { deleteDocumentNotification = true; },
+          publish: () => {
+            messagePublished = true;
+
+            if (error) {
+              return q.reject(new Error(''));
+            }
+
+            return q({});
+          }
         };
 
         done();
@@ -33,39 +52,54 @@ describe('Test: write controller', function () {
   });
 
   beforeEach(function () {
+    kuzzle.workerListener.add = rq => {
+      if (error) {
+        return q.reject(new Error(''));
+      }
+
+      return q(rq);
+    };
+
+    requestObject = new RequestObject({body: {foo: 'bar'}}, {}, 'unit-test');
     indexCacheAdded = false;
+    createDocumentNotification = false;
+    updateDocumentNotification = false;
+    replaceDocumentNotification = false;
+    deleteDocumentNotification = false;
+    messagePublished = false;
+    error = false;
   });
 
   it('should reject an empty request', function () {
-    var requestObject = new RequestObject({});
+    requestObject = new RequestObject({});
     delete requestObject.data.body;
 
     return should(requestObject.isValid()).be.rejected();
   });
 
   it('should reject an empty create request', function () {
-    var requestObject = new RequestObject({});
+    requestObject = new RequestObject({});
     delete requestObject.data.body;
 
     return should(kuzzle.funnel.controllers.write.create(requestObject)).be.rejected();
   });
 
   it('should reject an empty createOrReplace request', function () {
-    var requestObject = new RequestObject({});
+    requestObject = new RequestObject({});
     delete requestObject.data.body;
 
     return should(kuzzle.funnel.controllers.write.createOrReplace(requestObject)).be.rejected();
   });
 
   it('should reject an empty update request', function () {
-    var requestObject = new RequestObject({});
+    requestObject = new RequestObject({});
     delete requestObject.data.body;
 
     return should(kuzzle.funnel.controllers.write.update(requestObject)).be.rejected();
   });
 
   it('should reject an empty replace request', function () {
-    var requestObject = new RequestObject({});
+    requestObject = new RequestObject({});
     delete requestObject.data.body;
 
     return should(kuzzle.funnel.controllers.write.replace(requestObject)).be.rejected();
@@ -73,9 +107,6 @@ describe('Test: write controller', function () {
 
   describe('#create', function () {
     it('should emit a hook on a create data query', function (done) {
-      var
-        requestObject = new RequestObject({index: 'test', body: {foo: 'bar'}}, {}, 'unit-test');
-
       this.timeout(50);
 
       kuzzle.once('data:create', function (obj) {
@@ -89,51 +120,52 @@ describe('Test: write controller', function () {
       });
 
       kuzzle.funnel.controllers.write.create(requestObject)
-        .catch(function (error) {
-          done(error);
+        .catch(error => done(error));
+    });
+
+    it('should notify on successful document creation', () => {
+      return kuzzle.funnel.controllers.write.create(requestObject)
+        .then(response => {
+          should(response).be.instanceOf(ResponseObject);
+          should(createDocumentNotification).be.true();
+        });
+    });
+
+    it('should reject with a response object in case of error', (done) => {
+      error = true;
+      kuzzle.funnel.controllers.write.create(requestObject)
+        .then(() => done('Expected promise to be rejected'))
+        .catch(response => {
+          should(response).be.instanceOf(ResponseObject);
+          should(createDocumentNotification).be.false();
+          done();
         });
     });
   });
 
   describe('#publish', function () {
-    it('should send notifications when publishing messages', function (done) {
-      var
-        mockupRooms = ['foo', 'bar'],
-        requestObject = new RequestObject({index: 'test', body: {foo: 'bar'}}, {}, 'unit-test');
-
-      this.timeout(50);
-
-      kuzzle.dsl.testFilters = function () {
-        return q(mockupRooms);
-      };
-
-      kuzzle.notifier.notify = function (rooms) {
-        try {
-          should(rooms).be.exactly(mockupRooms);
-          done();
-        }
-        catch (e) {
-          done(e);
-        }
-      };
-
-      kuzzle.funnel.controllers.write.publish(requestObject)
-        .catch(function (error) {
-          done(error);
+    it('should send notifications when publishing messages', function () {
+      return kuzzle.funnel.controllers.write.publish(requestObject)
+        .then(response => {
+          should(response).be.instanceOf(ResponseObject);
+          should(messagePublished).be.true();
         });
     });
-
-    it('should return a rejected promise if publishing fails', function () {
-      var requestObject = new RequestObject({body: {foo: 'bar'}}, {}, 'unit-test');
-      kuzzle.notifier.publish = function () { return q.reject(new Error('error')); };
-      return should(kuzzle.funnel.controllers.write.publish(requestObject)).be.rejectedWith(Error);
+    
+    it('should reject with a response object in case of error', (done) => {
+      error = true;
+      kuzzle.funnel.controllers.write.publish(requestObject)
+        .then(() => done('Expected promise to be rejected'))
+        .catch(response => {
+          should(response).be.instanceOf(ResponseObject);
+          should(messagePublished).be.true();
+          done();
+        });
     });
   });
 
   describe('#createOrReplace', function () {
     it('should emit a hook on a createOrReplace query', function (done) {
-      var requestObject = new RequestObject({body: {foo: 'bar'}}, {}, 'unit-test');
-
       this.timeout(50);
 
       kuzzle.once('data:createOrReplace', function (obj) {
@@ -153,7 +185,6 @@ describe('Test: write controller', function () {
     });
 
     it('should add the new collection to the index cache', function (done) {
-      var requestObject = new RequestObject({body: {foo: 'bar'}}, {}, 'unit-test');
       this.timeout(50);
 
       kuzzle.funnel.controllers.write.createOrReplace(requestObject)
@@ -164,12 +195,48 @@ describe('Test: write controller', function () {
         })
         .catch(err => done(err));
     });
+
+    it('should reject with a response object in case of error', (done) => {
+      error = true;
+      kuzzle.funnel.controllers.write.createOrReplace(requestObject)
+        .then(() => done('Expected promise to be rejected'))
+        .catch(response => {
+          should(response).be.instanceOf(ResponseObject);
+          should(createDocumentNotification).be.false();
+          should(replaceDocumentNotification).be.false();
+          done();
+        });
+    });
+
+    it('should notify on document creation', () => {
+      var requestObject = new RequestObject({body: {foo: 'bar'}}, {}, 'unit-test');
+
+      kuzzle.workerListener.add = () => q({ created: true });
+
+      return kuzzle.funnel.controllers.write.createOrReplace(requestObject)
+        .then(response => {
+          should(response).be.instanceOf(ResponseObject);
+          should(createDocumentNotification).be.true();
+          should(replaceDocumentNotification).be.false();
+        });
+    });
+
+    it('should notify on document replace', () => {
+      var requestObject = new RequestObject({body: {foo: 'bar'}}, {}, 'unit-test');
+
+      kuzzle.workerListener.add = () => q({ created: false });
+
+      return kuzzle.funnel.controllers.write.createOrReplace(requestObject)
+        .then(response => {
+          should(response).be.instanceOf(ResponseObject);
+          should(createDocumentNotification).be.false();
+          should(replaceDocumentNotification).be.true();
+        });
+    });
   });
 
   describe('#update', function () {
     it('should emit a hook on an update data query', function (done) {
-      var requestObject = new RequestObject({body: {foo: 'bar'}}, {}, 'unit-test');
-
       this.timeout(50);
 
       kuzzle.once('data:update', function (obj) {
@@ -187,12 +254,29 @@ describe('Test: write controller', function () {
           done(error);
         });
     });
+
+    it('should notify on document update', () => {
+      return kuzzle.funnel.controllers.write.update(requestObject)
+        .then(response => {
+          should(response).be.instanceOf(ResponseObject);
+          should(updateDocumentNotification).be.true();
+        });
+    });
+
+    it('should reject with a response object in case of error', (done) => {
+      error = true;
+      kuzzle.funnel.controllers.write.update(requestObject)
+        .then(() => done('Expected promise to be rejected'))
+        .catch(response => {
+          should(response).be.instanceOf(ResponseObject);
+          should(updateDocumentNotification).be.false();
+          done();
+        });
+    });
   });
 
   describe('#replace', function () {
     it('should emit a hook on a replace query', function (done) {
-      var requestObject = new RequestObject({body: {foo: 'bar'}}, {}, 'unit-test');
-
       this.timeout(50);
 
       kuzzle.once('data:replace', function (obj) {
@@ -210,12 +294,29 @@ describe('Test: write controller', function () {
           done(error);
         });
     });
+
+    it('should notify on document replace', () => {
+      return kuzzle.funnel.controllers.write.replace(requestObject)
+        .then(response => {
+          should(response).be.instanceOf(ResponseObject);
+          should(replaceDocumentNotification).be.true();
+        });
+    });
+
+    it('should reject with a response object in case of error', (done) => {
+      error = true;
+      kuzzle.funnel.controllers.write.replace(requestObject)
+        .then(() => done('Expected promise to be rejected'))
+        .catch(response => {
+          should(response).be.instanceOf(ResponseObject);
+          should(replaceDocumentNotification).be.false();
+          done();
+        });
+    });
   });
 
   describe('#delete', function () {
     it('should emit a hook on a delete data query', function (done) {
-      var requestObject = new RequestObject({body: {foo: 'bar'}}, {}, 'unit-test');
-
       this.timeout(50);
 
       kuzzle.once('data:delete', function (obj) {
@@ -233,12 +334,29 @@ describe('Test: write controller', function () {
           done(error);
         });
     });
+
+    it('should notify on document delete', () => {
+      return kuzzle.funnel.controllers.write.delete(requestObject)
+        .then(response => {
+          should(response).be.instanceOf(ResponseObject);
+          should(deleteDocumentNotification).be.true();
+        });
+    });
+
+    it('should reject with a response object in case of error', (done) => {
+      error = true;
+      kuzzle.funnel.controllers.write.delete(requestObject)
+        .then(() => done('Expected promise to be rejected'))
+        .catch(response => {
+          should(response).be.instanceOf(ResponseObject);
+          should(deleteDocumentNotification).be.false();
+          done();
+        });
+    });
   });
 
   describe('#deleteByQuery', function () {
     it('should emit a hook on a deleteByQuery data query', function (done) {
-      var requestObject = new RequestObject({body: {foo: 'bar'}}, {}, 'unit-test');
-
       this.timeout(50);
 
       kuzzle.once('data:deleteByQuery', function (obj) {
@@ -256,13 +374,30 @@ describe('Test: write controller', function () {
           done(error);
         });
     });
+
+    it('should notify on document delete', () => {
+      return kuzzle.funnel.controllers.write.deleteByQuery(requestObject)
+        .then(response => {
+          should(response).be.instanceOf(ResponseObject);
+          should(deleteDocumentNotification).be.true();
+        });
+    });
+
+    it('should reject with a response object in case of error', (done) => {
+      error = true;
+      kuzzle.funnel.controllers.write.deleteByQuery(requestObject)
+        .then(() => done('Expected promise to be rejected'))
+        .catch(response => {
+          should(response).be.instanceOf(ResponseObject);
+          should(deleteDocumentNotification).be.false();
+          done();
+        });
+    });
   });
 
 
   describe('#createCollection', function () {
     it('should trigger a hook on a createCollection call', function (done) {
-      var requestObject = new RequestObject({}, {}, 'unit-test');
-
       this.timeout(50);
 
       kuzzle.once('data:createCollection', obj => {
@@ -279,7 +414,6 @@ describe('Test: write controller', function () {
     });
 
     it('should add the new collection to the index cache', function (done) {
-      var requestObject = new RequestObject({}, {}, 'unit-test');
       this.timeout(50);
 
       kuzzle.funnel.controllers.write.createCollection(requestObject)
@@ -289,6 +423,17 @@ describe('Test: write controller', function () {
           done();
         })
         .catch(err => done(err));
+    });
+
+    it('should reject with a response object in case of error', (done) => {
+      error = true;
+      kuzzle.funnel.controllers.write.createCollection(requestObject)
+        .then(() => done('Expected promise to be rejected'))
+        .catch(response => {
+          should(response).be.instanceOf(ResponseObject);
+          should(indexCacheAdded).be.false();
+          done();
+        });
     });
   });
 });

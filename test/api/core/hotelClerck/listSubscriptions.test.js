@@ -2,15 +2,11 @@ var
   should = require('should'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
   params = require('rc')('kuzzle'),
-  Kuzzle = require.main.require('lib/api/Kuzzle'),
-  ForbiddenError = require.main.require('lib/api/core/errors/forbiddenError'),
-  Profile = require.main.require('lib/api/core/models/security/profile'),
-  Role = require.main.require('lib/api/core/models/security/role');
+  Kuzzle = require.main.require('lib/api/Kuzzle');
 
 describe('Test: hotelClerk.listSubscription', function () {
   var
     kuzzle,
-    roomId,
     connection = {id: 'connectionid'},
     context = {
       connection: connection,
@@ -25,19 +21,14 @@ describe('Test: hotelClerk.listSubscription', function () {
       }
     };
 
-  beforeEach(function (done) {
+  beforeEach(function () {
     require.cache = {};
     kuzzle = new Kuzzle();
     kuzzle.removeAllListeners();
 
     return kuzzle.start(params, {dummy: true})
-      .then(function () {
-        return kuzzle.repositories.token.anonymous();
-      })
-      .then(function (token) {
-        context.token = token;
-        done();
-      });
+      .then(() => kuzzle.repositories.token.anonymous())
+      .then(token => { context.token = token; });
   });
 
   it('should return an empty object if there is no room', function () {
@@ -49,8 +40,8 @@ describe('Test: hotelClerk.listSubscription', function () {
     });
 
     return kuzzle.hotelClerk.listSubscriptions(requestObject, context)
-      .then(responseObject => {
-        should(responseObject.data.body).be.empty().Object();
+      .then(response => {
+        should(response).be.empty().Object();
       });
   });
 
@@ -71,19 +62,17 @@ describe('Test: hotelClerk.listSubscription', function () {
         // In fact, requestObject can be the same as subscribe. But here, we don't care
         return kuzzle.hotelClerk.listSubscriptions(requestObject, context);
       })
-      .then(responseObject => {
-        should(responseObject).have.property('data');
-        should(responseObject.data).have.property('body');
+      .then(response => {
         // user -> collection
-        should(responseObject.data.body).have.property(index);
-        should(responseObject.data.body[index]).have.property(collection);
+        should(response).have.property(index);
+        should(response[index]).have.property(collection);
 
         // there is no subscribe on whole collection
-        should(responseObject.data.body[index][collection]).not.have.property('totalGlobals');
+        should(response[index][collection]).not.have.property('totalGlobals');
 
         // 3e0e837b447bf16b2251025ad36f39ed -> room id generated with collection and filter
-        should(responseObject.data.body[index][collection]).have.property(roomName);
-        should(responseObject.data.body[index][collection][roomName]).be.equal(1);
+        should(response[index][collection]).have.property(roomName);
+        should(response[index][collection][roomName]).be.equal(1);
       });
   });
 
@@ -115,11 +104,8 @@ describe('Test: hotelClerk.listSubscription', function () {
       });
 
     return kuzzle.hotelClerk.addSubscription(requestObjectUser, context)
+      .then(() => kuzzle.hotelClerk.addSubscription(requestObjectFoo, context))
       .then(() => {
-        return kuzzle.hotelClerk.addSubscription(requestObjectFoo, context);
-      })
-      .then(() => {
-
         // Mock user can access only on user collection
         context.token.user.profile.roles[0].indexes['*'].collections.user = context.token.user.profile.roles[0].indexes['*'].collections['*'];
         delete context.token.user.profile.roles[0].indexes['*'].collections['*'];
@@ -127,42 +113,39 @@ describe('Test: hotelClerk.listSubscription', function () {
         // In fact, requestObject can be the same as subscribe. But here, we don't care
         return kuzzle.hotelClerk.listSubscriptions(requestObjectList, context);
       })
-      .then(responseObject => {
-        should(responseObject).have.property('data');
-        should(responseObject.data).have.property('body');
+      .then(response => {
         // user -> collection
-        should(responseObject.data.body).have.property(index);
-        should(responseObject.data.body[index]).have.property(collection);
+        should(response).have.property(index);
+        should(response[index]).have.property(collection);
 
         // 3e0e837b447bf16b2251025ad36f39ed -> room id generated with collection and filter
-        should(responseObject.data.body[index][collection]).have.property(roomName);
-        should(responseObject.data.body[index][collection][roomName]).be.equal(1);
+        should(response[index][collection]).have.property(roomName);
+        should(response[index][collection][roomName]).be.equal(1);
 
         // should not return the collection foo
-        should(responseObject.data.body[index]).not.have.property('foo');
+        should(response[index]).not.have.property('foo');
       });
   });
 
-   it('should return a correct list according to subscribe on whole collection', function () {
-    var requestObject = new RequestObject({
-      controller: 'subscribe',
-      action: 'on',
-      requestId: roomName,
-      index: index,
-      collection: collection,
-      body: {}
-    });
+  it('should return a correct list according to subscribe on whole collection', function () {
+    var
+      requestObject = new RequestObject({
+        controller: 'subscribe',
+        action: 'on',
+        requestId: roomName,
+        index: index,
+        collection: collection,
+        body: {}
+      });
 
     return kuzzle.hotelClerk.addSubscription(requestObject, context)
       .then(() => {
         // In fact, requestObject can be the same as subscribe. But here, we don't care
         return kuzzle.hotelClerk.listSubscriptions(requestObject, context);
       })
-      .then(responseObject => {
-        should(responseObject).have.property('data');
-        should(responseObject.data).have.property('body');
-        should(responseObject.data.body).have.property(index);
-        should(responseObject.data.body[index]).have.property(collection);
+      .then(response => {
+        should(response).have.property(index);
+        should(response[index]).have.property(collection);
       });
   });
 });

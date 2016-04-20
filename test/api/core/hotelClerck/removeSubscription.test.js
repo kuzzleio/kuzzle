@@ -2,12 +2,9 @@ var
   should = require('should'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
   params = require('rc')('kuzzle'),
-  Kuzzle = require.main.require('lib/api/Kuzzle'),
-  Profile = require.main.require('lib/api/core/models/security/profile'),
-  Role = require.main.require('lib/api/core/models/security/role');
+  Kuzzle = require.main.require('lib/api/Kuzzle');
 
 describe('Test: hotelClerk.removeSubscription', function () {
-
   var
     kuzzle,
     roomId,
@@ -51,27 +48,26 @@ describe('Test: hotelClerk.removeSubscription', function () {
     }),
     unsubscribeRequest,
     notified,
-    mockupNotifier = function (roomId, notification) {
-      notified = { roomId: roomId, notification: notification };
+    mockupNotifier = (roomId, request, notification) => {
+      notified = { roomId, request, notification };
     };
 
 
-  beforeEach(function (done) {
+  beforeEach(function () {
     notified = null;
     kuzzle = new Kuzzle();
     kuzzle.removeAllListeners();
-    kuzzle.start(params, {dummy: true})
-      .then(function () {
-        return kuzzle.repositories.user.anonymous();
-      })
-      .then(function (user) {
+
+    return kuzzle.start(params, {dummy: true})
+      .then(() => kuzzle.repositories.user.anonymous())
+      .then(user => {
         anonymousUser = user;
         kuzzle.notifier.notify = mockupNotifier;
         return kuzzle.hotelClerk.addSubscription(requestObject1, context);
       })
-      .then(function (realTimeResponseObject) {
-        roomId = realTimeResponseObject.roomId;
-        channel = realTimeResponseObject.channel;
+      .then(notification => {
+        roomId = notification.roomId;
+        channel = notification.channel;
         unsubscribeRequest = new RequestObject({
           controller: 'subscribe',
           action: 'off',
@@ -79,7 +75,6 @@ describe('Test: hotelClerk.removeSubscription', function () {
           collection: collection,
           body: { roomId: roomId }
         });
-        done();
       });
   });
 
@@ -154,16 +149,21 @@ describe('Test: hotelClerk.removeSubscription', function () {
         connection: {id: 'anotherconnection'},
         user: anonymousUser
       },
-      roomId;
+      rId;
+
     return kuzzle.hotelClerk.addSubscription(requestObject1, localContext)
-      .then(function (createdRoom) {
-        roomId = createdRoom.roomId;
+      .then(createdRoom => {
+        rId = createdRoom.roomId;
         return kuzzle.hotelClerk.removeSubscription(unsubscribeRequest, context);
       })
-      .then(function () {
-        should(notified.roomId).be.exactly(roomId);
-        should(notified.notification.error).be.null();
-        should(notified.notification.result.count).be.exactly(1);
+      .then(() => {
+        should(notified.roomId).be.exactly(rId);
+        should(notified.request).be.instanceOf(RequestObject);
+        should(notified.request.controller).be.exactly('subscribe');
+        should(notified.request.action).be.exactly('off');
+        should(notified.request.index).be.exactly(requestObject1.index);
+        should(notified.request.collection).be.exactly(requestObject1.collection);
+        should(notified.notification.count).be.exactly(1);
       });
   });
 

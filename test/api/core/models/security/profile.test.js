@@ -19,7 +19,7 @@ describe('Test: security/profileTest', function () {
     return should(profile.isActionAllowed(requestObject, context)).be.fulfilledWith(false);
   });
 
-  it('should allow the action if one of the roles allows it', function (callback) {
+  it('should allow the action if one of the roles allows it', () => {
     var
       context = {connection: null, user: null},
       profile = new Profile(),
@@ -61,17 +61,13 @@ describe('Test: security/profileTest', function () {
     profile.roles.push(disallowAllRole);
 
 
-    profile.isActionAllowed(requestObject, context)
+    return profile.isActionAllowed(requestObject, context)
       .then(isAllowed => {
         should(isAllowed).be.false();
 
         profile.roles.push(allowActionRole);
         return profile.isActionAllowed(requestObject, context);
       })
-      .then(isAllowed => {
-        should(isAllowed).be.true();
-        callback();
-      });
+      .then(isAllowed => should(isAllowed).be.true());
   });
-
 });

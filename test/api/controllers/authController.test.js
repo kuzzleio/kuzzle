@@ -32,6 +32,7 @@ MockupStrategy.prototype.authenticate = function(req) {
   if (req.body && req.body.username) {
     username = req.body.username;
   }
+
   function verified(err, user, info) {
     if (err) { return self.error(err); }
     if (!user) { return self.fail(info); }
@@ -47,16 +48,14 @@ MockupStrategy.prototype.authenticate = function(req) {
 
 MockupWrapper = function(MockupReturn) {
   this.authenticate = function(request, strategy){
-    var deferred = q.defer();
     if (MockupReturn === 'resolve') {
-      deferred.resolve({_id: request.query.username});
+      return q({_id: request.query.username});
     } else if (MockupReturn === 'oauth') {
-      deferred.resolve({headers: {Location: 'http://github.com'}});
+      return q({headers: {Location: 'http://github.com'}});
     }
     else {
-      deferred.reject(new Error('Mockup Wrapper Error'));
+      return q.reject(new Error('Mockup Wrapper Error'));
     }
-    return deferred.promise;
   };
 };
 
@@ -104,7 +103,7 @@ describe('Test the auth controller', function () {
     });
 
     it('should resolve to a valid jwt token if authentication succeed', function (done) {
-      this.timeout(50);
+      this.timeout(500);
 
       kuzzle.funnel.controllers.auth.passport = new MockupWrapper('resolve');
       kuzzle.funnel.controllers.auth.login(requestObject, {})
@@ -327,11 +326,13 @@ describe('Test the auth controller', function () {
 
   describe('#getCurrentUser', function () {
     it('should return the user given in the context', done => {
-      kuzzle.funnel.controllers.auth.getCurrentUser(new RequestObject({
-        body: {}
-      }), {
-        token: { user: { _id: 'admin' } }
-      })
+      var
+        rq = new RequestObject({body: {}}),
+        token = {
+          token: {user: { _id: 'admin' }}
+        };
+
+      kuzzle.funnel.controllers.auth.getCurrentUser(rq, token)
         .then(response => {
           should(response.data.body._id).be.exactly('admin');
           should(response.data.body._source).not.be.empty().Object();
@@ -340,7 +341,7 @@ describe('Test the auth controller', function () {
 
           done();
         })
-        .catch(error => { done(error); });
+        .catch(error => done(error));
     });
 
     it('should return a falsey response if the current user is unknown', () => {
@@ -350,7 +351,7 @@ describe('Test the auth controller', function () {
         token: { user: { _id: 'unknown_user' } }
       });
 
-      return should(promise).be.rejectedWith(NotFoundError);
+      return should(promise).be.rejectedWith(ResponseObject);
     });
   });
 
@@ -369,7 +370,7 @@ describe('Test the auth controller', function () {
     });
 
     it('should return a rejected promise if no token is provided', function () {
-      return should(kuzzle.funnel.controllers.auth.checkToken(new RequestObject({ body: {}}))).be.rejectedWith(BadRequestError);
+      return should(kuzzle.funnel.controllers.auth.checkToken(new RequestObject({ body: {}}))).be.rejectedWith(ResponseObject);
     });
 
     it('should return a valid response if the token is valid', function (done) {

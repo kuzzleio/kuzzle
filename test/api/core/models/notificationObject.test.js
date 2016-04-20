@@ -3,32 +3,31 @@
  */
 var
   should = require('should'),
-  uuid = require('node-uuid'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
-  RTResponseObject = require.main.require('lib/api/core/models/realTimeResponseObject');
+  NotificationObject = require.main.require('lib/api/core/models/notificationObject');
 
-
-describe('Test: realTimeResponseObject', function () {
+describe('Test: NotificationObject', function () {
   var
     roomId = 'fakeroomid',
     requestObject = new RequestObject({
       controller: 'subscribe',
       action: 'count',
+      index: 'fakeIndex',
       collection: 'fakecollection',
       protocol: 'fakeprotocol',
       body: { foo: 'bar' }
     });
 
   it('should have a toJSon prototype function', function () {
-    var response = new RTResponseObject(roomId, requestObject);
+    var response = new NotificationObject(roomId, requestObject);
 
     should(response.toJson).not.be.undefined().and.be.a.Function();
   });
 
   it('should return a normalized count response', function () {
     var
-      responseObject = new RTResponseObject(roomId, requestObject, {count: 42}),
-      response = responseObject.toJson();
+      notificationObject = new NotificationObject(roomId, requestObject, {count: 42}),
+      response = notificationObject.toJson();
 
     should(response.error).be.null();
     should(response.status).be.a.Number().and.be.eql(200);
@@ -38,6 +37,8 @@ describe('Test: realTimeResponseObject', function () {
     should(response.protocol).be.exactly(requestObject.protocol);
     should(response.requestId).be.exactly(requestObject.requestId);
     should(response.timestamp).be.exactly(requestObject.timestamp);
+    should(response.index).be.exactly(requestObject.index);
+    should(response.collection).be.exactly(requestObject.collection);
 
     should(response.result).not.be.null().and.be.an.Object();
     should(response.result.count).be.exactly(42);
@@ -45,8 +46,8 @@ describe('Test: realTimeResponseObject', function () {
 
   it('should return a normalized channel response', function () {
     var
-      responseObject = new RTResponseObject(roomId, requestObject, {channel: 'foobar'}),
-      response = responseObject.toJson();
+      notificationObject = new NotificationObject(roomId, requestObject, {channel: 'foobar'}),
+      response = notificationObject.toJson();
 
     should(response.error).be.null();
     should(response.status).be.a.Number().and.be.eql(200);
@@ -56,6 +57,8 @@ describe('Test: realTimeResponseObject', function () {
     should(response.protocol).be.exactly(requestObject.protocol);
     should(response.requestId).be.exactly(requestObject.requestId);
     should(response.timestamp).be.exactly(requestObject.timestamp);
+    should(response.index).be.exactly(requestObject.index);
+    should(response.collection).be.exactly(requestObject.collection);
 
     should(response.result).not.be.null().and.be.an.Object();
     should(response.result.channel).be.exactly('foobar');
@@ -63,8 +66,8 @@ describe('Test: realTimeResponseObject', function () {
 
   it('should return a normalized subscription response', function () {
     var
-      responseObject = new RTResponseObject(roomId, requestObject),
-      response = responseObject.toJson();
+      notificationObject = new NotificationObject(roomId, requestObject),
+      response = notificationObject.toJson();
 
     should(response.error).be.null();
     should(response.status).be.a.Number().and.be.eql(200);
@@ -74,8 +77,9 @@ describe('Test: realTimeResponseObject', function () {
     should(response.protocol).be.exactly(requestObject.protocol);
     should(response.requestId).be.exactly(requestObject.requestId);
     should(response.timestamp).be.exactly(requestObject.timestamp);
+    should(response.index).be.exactly(requestObject.index);
+    should(response.collection).be.exactly(requestObject.collection);
 
-    should(response.result).not.be.null().and.be.an.Object();
-    should(response.result.count).be.undefined();
+    should(response.result).be.undefined();
   });
 });

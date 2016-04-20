@@ -8,12 +8,9 @@
 var
   should = require('should'),
   q = require('q'),
-  rewire = require('rewire'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
-  ResponseObject = require.main.require('lib/api/core/models/responseObject'),
   params = require('rc')('kuzzle'),
-  Kuzzle = require.main.require('lib/api/Kuzzle'),
-  Notifier = rewire('../../../../lib/api/core/notifier');
+  Kuzzle = require.main.require('lib/api/Kuzzle');
 
 var mockupCacheService = {
   id: undefined,
@@ -35,47 +32,47 @@ describe('Test: notifier.notifyDocumentCreate', function () {
       controller: 'write',
       action: 'create',
       requestId: 'foo',
-      collection: 'bar',
-      body: { term: { foo: 'bar' } }
+      collection: 'bar'
     }),
-    responseObject = new ResponseObject(requestObject, { _id: 'WhoYouGonnaCall?'}),
+    newDocument = { _id: 'WhoYouGonnaCall?', _source: {foo: 'bar'}},
     notifiedRooms,
-    savedResponse;
+    savedResponse,
+    notification;
 
-  before(function (done) {
+  before(function () {
     kuzzle = new Kuzzle();
-    kuzzle.start(params, {dummy: true})
+
+    return kuzzle.start(params, {dummy: true})
       .then(function () {
         kuzzle.services.list.notificationCache = mockupCacheService;
-        kuzzle.notifier.notify = function (rooms, response) { notifiedRooms = rooms; savedResponse = response; };
-        done();
+        kuzzle.notifier.notify = (rooms, r, n) => {
+          notifiedRooms = rooms;
+          savedResponse = r;
+          notification = n;
+        };
       });
   });
 
-  it('should return a promise', function () {
-    var result = (Notifier.__get__('notifyDocumentCreate')).call(kuzzle, responseObject);
+  it('should notify registered users when a document has been created with correct attributes', (done) => {
+    this.timeout(50);
+    kuzzle.notifier.notifyDocumentCreate(requestObject, newDocument);
 
-    should(result).be.a.Promise();
-    return should(result).be.fulfilled();
-  });
+    setTimeout(() => {
+      should(notifiedRooms).be.an.Array();
+      should(notifiedRooms.length).be.exactly(1);
+      should(notifiedRooms[0]).be.exactly('foobar');
+      should(mockupCacheService.id).be.exactly(newDocument._id);
+      should(mockupCacheService.room).be.an.Array();
+      should(mockupCacheService.room[0]).be.exactly('foobar');
 
-  it('should notify registered users when a document has been created with correct attributes', function (done) {
-    (Notifier.__get__('notifyDocumentCreate')).call(kuzzle, responseObject)
-      .then(function () {
-        should(notifiedRooms).be.an.Array();
-        should(notifiedRooms.length).be.exactly(1);
-        should(notifiedRooms[0]).be.exactly('foobar');
-        should(mockupCacheService.id).be.exactly(responseObject.data.body._id);
-        should(mockupCacheService.room).be.an.Array();
-        should(mockupCacheService.room[0]).be.exactly('foobar');
-
-        should(savedResponse.scope).be.exactly('in');
-        should(savedResponse.action).be.exactly('create');
-
-        done();
-      })
-      .catch (function (e) {
-        done(e);
-      });
+      should(savedResponse).be.exactly(requestObject);
+      should(notification).be.an.Object();
+      should(notification._id).be.exactly(newDocument._id);
+      should(notification._source).match(newDocument._source);
+      should(notification.state).be.exactly('done');
+      should(notification.scope).be.exactly('in');
+      should(notification.action).be.exactly('create');
+      done();
+    }, 20);
   });
 });

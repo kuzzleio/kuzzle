@@ -7,7 +7,6 @@ var
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   PartialError = require.main.require('lib/api/core/errors/partialError'),
   InternalError = require.main.require('lib/api/core/errors/internalError'),
-  ResponseObject = require.main.require('lib/api/core/models/responseObject'),
   RequestObject = require.main.require('lib/api/core/models/requestObject');
 
 describe('Test: Prepare database', function () {
@@ -379,7 +378,7 @@ describe('Test: Prepare database', function () {
     });
 
     it('should return a rejected promise if the mapping creation fails', function () {
-      workerPromise = q.reject(new ResponseObject({}, new Error('rejected')));
+      workerPromise = q.reject(new Error('rejected'));
       return should(importMapping.call(context)).be.rejectedWith(InternalError);
     });
   });
@@ -458,12 +457,12 @@ describe('Test: Prepare database', function () {
     });
 
     it('should return a rejected promise if a fixture import fails', function () {
-      workerPromise = q.reject(new ResponseObject({}, new Error('rejected')));
+      workerPromise = q.reject(new Error('rejected'));
       return should(importFixtures.call(context)).be.rejectedWith(InternalError);
     });
 
     it('should filter errors when they are about documents that already exist', function () {
-      workerPromise = q.reject(new ResponseObject({}, new PartialError('rejected', [{status: 409}])));
+      workerPromise = q.reject(new PartialError('rejected', [{status: 409}]));
       return should(importFixtures.call(context)).be.fulfilled();
     });
   });

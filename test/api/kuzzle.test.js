@@ -6,7 +6,6 @@ var
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   PartialError = require.main.require('lib/api/core/errors/partialError'),
   InternalError = require.main.require('lib/api/core/errors/internalError'),
-  ResponseObject = require.main.require('lib/api/core/models/responseObject'),
   prepareDb;
 
 describe('Test kuzzle constructor', () => {
@@ -35,7 +34,7 @@ describe('Test kuzzle constructor', () => {
   });
 
   describe('#remoteActions', () => {
-    var 
+    var
       kuzzle,
       processExit,
       params,

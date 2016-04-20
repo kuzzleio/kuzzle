@@ -5,7 +5,6 @@
 
 var
   should = require('should'),
-  q = require('q'),
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   rewire = require('rewire'),
@@ -38,7 +37,7 @@ describe('Test: routerController.routeMQListener', function () {
           }
         }
         else {
-          callback(new Error('rejected'));
+          callback(new ResponseObject(requestObject, new Error('rejected')));
         }
       },
       mockupSendMessage = replyChannel => {

@@ -221,7 +221,7 @@ var checkIfFistAdminNeeded = () => {
     body: {},
     json: true
   });
-}
+};
 
 process.stdin.setEncoding('utf8');
 
