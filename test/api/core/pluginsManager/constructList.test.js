@@ -1,7 +1,7 @@
 var
   should = require('should'),
   rewire = require('rewire'),
-  PluginsManager = rewire('../../../../lib/api/core/pluginsManager');
+  PluginsManager = rewire('../../../../lib/api/core/plugins/pluginsManager');
 
 describe('Plugins manager constructList', function () {
 

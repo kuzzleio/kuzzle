@@ -1,9 +1,9 @@
 var
   rc = require('rc'),
-  params = rc('kuzzle'),
   q = require('q'),
   should = require('should'),
-  cleanAndPrepare = require.main.require('lib/api/remoteActions/cleanAndPrepare');
+  rewire = require('rewire'),
+  cleanAndPrepare = rewire('../../../lib/api/remoteActions/cleanAndPrepare');
 
 
 describe('Test: CleanAndPrepare remote action caller', function () {
@@ -16,6 +16,10 @@ describe('Test: CleanAndPrepare remote action caller', function () {
     process.exit = function (status) {
       exitStatus = status;
     };
+    cleanAndPrepare.__set__('console', {
+      log: function () {},
+      error: function () {}
+    });
   });
 
   after(function () {

@@ -102,7 +102,7 @@ describe('Test: subscribe controller', function () {
     it('should trigger a hook and return a promise', function (done) {
       this.timeout(50);
 
-      kuzzle.once('subscription:list', () => done());
+      kuzzle.once('subscription:beforeList', () => done());
       kuzzle.funnel.controllers.subscribe.list(requestObject);
     });
 
@@ -134,7 +134,7 @@ describe('Test: subscribe controller', function () {
 
     it('should trigger a hook and return a promise', function (done) {
       this.timeout(50);
-      kuzzle.once('subscription:join', () => done());
+      kuzzle.once('subscription:beforeJoin', () => done());
       kuzzle.funnel.controllers.subscribe.join(requestObject);
     });
   });

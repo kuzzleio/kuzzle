@@ -3,7 +3,8 @@ var
   params = rc('kuzzle'),
   q = require('q'),
   should = require('should'),
-  prepareDb = require.main.require('lib/api/remoteActions/prepareDb');
+  rewire = require('rewire'),
+  prepareDb = rewire('../../../lib/api/remoteActions/prepareDb');
 
 
 describe('Test: prepareDb remote action caller', function () {
@@ -16,6 +17,10 @@ describe('Test: prepareDb remote action caller', function () {
     process.exit = function (status) {
       exitStatus = status;
     };
+    prepareDb.__set__('console', {
+      log: function () {},
+      error: function () {}
+    });
   });
 
   after(function () {

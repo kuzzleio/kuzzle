@@ -20,7 +20,7 @@ describe('Test the bulk controller', function () {
   it('should activate a hook on a bulk import request', function (done) {
     this.timeout(50);
 
-    kuzzle.once('data:bulkImport', function (obj) {
+    kuzzle.once('data:beforeBulkImport', function (obj) {
       try {
         should(obj).be.exactly(requestObject);
         done();
