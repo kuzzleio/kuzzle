@@ -105,13 +105,15 @@ describe('Test: routerController.initRouterHttp', function () {
     server.close();
   });
 
-  it('should reply with a Hello World on a simple GET query', function (done) {
+  it('should reply with a list of available routes on a simple GET query', function (done) {
     http.get(url, function (response) {
       parseHttpResponse(response)
         .then(function (result) {
           should(result.status).be.exactly(200);
           should(result.error).be.null();
-          should(result.result).be.exactly('Hello from Kuzzle :)');
+          should(result.result.message).be.exactly('Available routes for this API version by verb.');
+          should(result.result.routes).be.an.Object();
+          should(result.result.routes['myplugin/foo']).be.an.Object();
           done();
         })
         .catch(function (error) {

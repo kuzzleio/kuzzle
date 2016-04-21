@@ -109,7 +109,7 @@ describe('Test: write controller', function () {
     it('should emit a hook on a create data query', function (done) {
       this.timeout(50);
 
-      kuzzle.once('data:create', function (obj) {
+      kuzzle.once('data:beforeCreate', function (obj) {
         try {
           should(obj).be.exactly(requestObject);
           done();
@@ -168,7 +168,7 @@ describe('Test: write controller', function () {
     it('should emit a hook on a createOrReplace query', function (done) {
       this.timeout(50);
 
-      kuzzle.once('data:createOrReplace', function (obj) {
+      kuzzle.once('data:beforeCreateOrReplace', function (obj) {
         try {
           should(obj).be.exactly(requestObject);
           done();
@@ -239,7 +239,7 @@ describe('Test: write controller', function () {
     it('should emit a hook on an update data query', function (done) {
       this.timeout(50);
 
-      kuzzle.once('data:update', function (obj) {
+      kuzzle.once('data:beforeUpdate', function (obj) {
         try {
           should(obj).be.exactly(requestObject);
           done();
@@ -279,7 +279,7 @@ describe('Test: write controller', function () {
     it('should emit a hook on a replace query', function (done) {
       this.timeout(50);
 
-      kuzzle.once('data:replace', function (obj) {
+      kuzzle.once('data:beforeReplace', function (obj) {
         try {
           should(obj).be.exactly(requestObject);
           done();
@@ -319,7 +319,7 @@ describe('Test: write controller', function () {
     it('should emit a hook on a delete data query', function (done) {
       this.timeout(50);
 
-      kuzzle.once('data:delete', function (obj) {
+      kuzzle.once('data:beforeDelete', function (obj) {
         try {
           should(obj).be.exactly(requestObject);
           done();
@@ -359,7 +359,7 @@ describe('Test: write controller', function () {
     it('should emit a hook on a deleteByQuery data query', function (done) {
       this.timeout(50);
 
-      kuzzle.once('data:deleteByQuery', function (obj) {
+      kuzzle.once('data:beforeDeleteByQuery', function (obj) {
         try {
           should(obj).be.exactly(requestObject);
           done();
@@ -400,7 +400,7 @@ describe('Test: write controller', function () {
     it('should trigger a hook on a createCollection call', function (done) {
       this.timeout(50);
 
-      kuzzle.once('data:createCollection', obj => {
+      kuzzle.once('data:beforeCreateCollection', obj => {
         try {
           should(obj).be.exactly(requestObject);
           done();

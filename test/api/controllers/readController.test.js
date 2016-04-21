@@ -64,7 +64,7 @@ describe('Test: read controller', function () {
 
     it('should trigger a plugin event', function (done) {
       this.timeout(50);
-      kuzzle.once('data:search', () => done());
+      kuzzle.once('data:beforeSearch', () => done());
       kuzzle.funnel.controllers.read.search(requestObject);
     });
   });
@@ -87,7 +87,7 @@ describe('Test: read controller', function () {
 
     it('should trigger a plugin event', function (done) {
       this.timeout(50);
-      kuzzle.once('data:get', () => done());
+      kuzzle.once('data:beforeGet', () => done());
       kuzzle.funnel.controllers.read.get(requestObject);
     });
   });
@@ -110,7 +110,7 @@ describe('Test: read controller', function () {
 
     it('should emit a data:count hook when counting', function (done) {
       this.timeout(50);
-      kuzzle.once('data:count', () => done());
+      kuzzle.once('data:beforeCount', () => done());
       kuzzle.funnel.controllers.read.count(requestObject);
     });
   });
@@ -175,7 +175,7 @@ describe('Test: read controller', function () {
 
     it('should trigger a plugin event', function (done) {
       this.timeout(50);
-      kuzzle.once('data:listCollections', () => done());
+      kuzzle.once('data:beforeListCollections', () => done());
       kuzzle.funnel.controllers.read.listCollections(requestObject);
     });
 
@@ -222,7 +222,7 @@ describe('Test: read controller', function () {
   describe('#now', function () {
     it('should trigger a plugin event', function (done) {
       this.timeout(50);
-      kuzzle.once('data:now', () => done());
+      kuzzle.once('data:beforeNow', () => done());
       kuzzle.funnel.controllers.read.now(requestObject);
     });
 
@@ -253,7 +253,7 @@ describe('Test: read controller', function () {
 
     it('should emit a data:listIndexes hook when reading indexes', function (done) {
       this.timeout(50);
-      kuzzle.once('data:listIndexes', () => done());
+      kuzzle.once('data:beforeListIndexes', () => done());
       kuzzle.funnel.controllers.read.listIndexes(requestObject);
     });
   });

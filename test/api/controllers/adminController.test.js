@@ -38,7 +38,7 @@ describe('Test: admin controller', () => {
       this.timeout(50);
       sandbox.stub(kuzzle.workerListener, 'add').resolves({});
 
-      kuzzle.once('data:updateMapping', function (obj) {
+      kuzzle.once('data:beforeUpdateMapping', function (obj) {
         try {
           should(obj).be.exactly(requestObject);
           done();
@@ -106,7 +106,7 @@ describe('Test: admin controller', () => {
       this.timeout(50);
       sandbox.stub(kuzzle.services.list.readEngine, 'getMapping').resolves({});
 
-      kuzzle.once('data:getMapping', function (obj) {
+      kuzzle.once('data:beforeGetMapping', function (obj) {
         try {
           should(obj).be.exactly(requestObject);
           done();
@@ -125,7 +125,7 @@ describe('Test: admin controller', () => {
       this.timeout(50);
       sandbox.stub(kuzzle.statistics, 'getStats').resolves({});
 
-      kuzzle.once('data:getStats', function (obj) {
+      kuzzle.once('data:beforeGetStats', function (obj) {
         try {
           should(obj).be.exactly(requestObject);
           done();
@@ -157,7 +157,7 @@ describe('Test: admin controller', () => {
       this.timeout(50);
       sandbox.stub(kuzzle.statistics, 'getLastStats').resolves({});
 
-      kuzzle.once('data:getLastStats', function (obj) {
+      kuzzle.once('data:beforeGetLastStats', function (obj) {
         try {
           should(obj).be.exactly(requestObject);
           done();
@@ -189,7 +189,7 @@ describe('Test: admin controller', () => {
       this.timeout(50);
       sandbox.stub(kuzzle.statistics, 'getAllStats').resolves({});
 
-      kuzzle.once('data:getAllStats', function (obj) {
+      kuzzle.once('data:beforeGetAllStats', function (obj) {
         try {
           should(obj).be.exactly(requestObject);
           done();
@@ -234,7 +234,7 @@ describe('Test: admin controller', () => {
       this.timeout(50);
       sandbox.stub(kuzzle.workerListener, 'add').resolves({});
 
-      kuzzle.once('data:truncateCollection', obj => {
+      kuzzle.once('data:beforeTruncateCollection', obj => {
         try {
           should(obj).be.exactly(requestObject);
           done();
@@ -275,7 +275,7 @@ describe('Test: admin controller', () => {
       this.timeout(50);
       sandbox.stub(kuzzle.services.list.readEngine, 'listIndexes').resolves({indexes: []});
 
-      kuzzle.once('data:deleteIndexes', function (obj) {
+      kuzzle.once('data:beforeDeleteIndexes', function (obj) {
         try {
           should(obj).be.exactly(requestObject);
           done();
@@ -333,7 +333,7 @@ describe('Test: admin controller', () => {
       this.timeout(50);
       sandbox.stub(kuzzle.workerListener, 'add').resolves({});
 
-      kuzzle.once('data:createIndex', function (obj) {
+      kuzzle.once('data:beforeCreateIndex', function (obj) {
         try {
           should(obj).be.exactly(requestObject);
           done();
@@ -414,7 +414,7 @@ describe('Test: admin controller', () => {
       this.timeout(50);
       sandbox.stub(kuzzle.hotelClerk, 'removeRooms').resolves({});
 
-      kuzzle.once('subscription:removeRooms', obj => {
+      kuzzle.once('subscription:beforeRemoveRooms', obj => {
         try {
           should(obj).be.exactly(requestObject);
           done();
@@ -466,9 +466,7 @@ describe('Test: admin controller', () => {
     });
 
     it('should trigger a plugin hook', function (done) {
-      sandbox.stub(kuzzle.workerListener, 'add').resolves({});
-
-      kuzzle.once('data:refreshIndex', o => {
+      kuzzle.once('data:beforeRefreshIndex', o => {
         should(o).be.exactly(requestObject);
         done();
       });

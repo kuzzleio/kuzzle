@@ -13,12 +13,6 @@ Kuzzle features are accessible through a secured API. It can be used through a l
 
 Kuzzle uses [Elasticsearch filter DSL](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-filters.html) (see [filters syntax](docs/filters.md) for more details) as filtering language, and [Redis](http://redis.io/) to manage filters cache.
 
-# Project status
-
-Kuzzle is currently in Beta stage of development.
-
-Check our [roadmap](./ROADMAP.md) if you wish to know more about it.
-
 # Installation
 
 ## Using the all-in-one Docker recipe
