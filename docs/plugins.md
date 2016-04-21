@@ -152,7 +152,6 @@ On each of following events, you can attach a function to execute in your plugin
 |`data:afterListIndexes`        | `read` | `listIndexes` |Triggered after controller `read` and action `listIndexes`.|Type: Response object|
 |`data:afterServerInfo`         | `read` | `serverInfo` |Triggered after controller `read` and action `serverInfo`.|Type: Response object|
 |`data:beforeCreate`        	| `write` | `create` |Triggered before controller `write` and action `create`.|Type: Request object|
-|`data:afterCreate`         	| `write` | `create` |Triggered after controller `write` and action `create`.|Type: Response object|
 |`data:beforeCreate`        	| `write` | `create` |Triggered before controller `write` and action `create`.|Type: Request object|
 |`data:afterCreate`         	| `write` | `create` |Triggered after controller `write` and action `create`.|Type: Response object|
 |`data:beforePublish`        	| `write` | `publish` |Triggered before controller `write` and action `publish`.|Type: Request object|
