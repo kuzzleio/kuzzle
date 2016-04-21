@@ -380,7 +380,7 @@ describe('Test: admin controller', () => {
       this.timeout(50);
       sandbox.stub(kuzzle.workerListener, 'add').resolves({});
 
-      kuzzle.once('data:deleteIndex', function (obj) {
+      kuzzle.once('data:beforeDeleteIndex', function (obj) {
         try {
           should(obj).be.exactly(requestObject);
           done();
