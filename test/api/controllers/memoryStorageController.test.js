@@ -5,7 +5,7 @@ var
   rewire = require('rewire'),
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
-  redisCommands = require('redis-commands'),
+  redisCommands = [],
   redisClientMock = require('../../mocks/services/redisClient.mock'),
   BadRequestError = require.main.require('lib/api/core/errors/badRequestError'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
@@ -62,6 +62,7 @@ before(function (done) {
   kuzzle = new Kuzzle();
   kuzzle.start(params, {dummy: true})
     .then(() => {
+      redisCommands = kuzzle.services.list.memoryStorage.commands;
       kuzzle.services.list.memoryStorage.client = redisClientMock;
 
       msController = new MemoryStorageController(kuzzle);
