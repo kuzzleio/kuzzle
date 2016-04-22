@@ -22,7 +22,7 @@ For features like watch mode, multi-thread support from [pm2](https://www.npmjs.
 You can enable services in a running Kuzzle without restarting it with a simple command line:
 
 ```
-$ kuzzle enable <service> <PID|all>
+$ kuzzle enable <service> --pid <PID|all>
 ```
 
 Where:
@@ -33,7 +33,7 @@ Where:
 You can disable a service with:
 
 ```
-$ kuzzle disable <service> <PID|all>
+$ kuzzle disable <service> --pid <PID|all>
 ```
 
 **Note:** All services containing a toggle() method can be activated or deactivated on the fly. Some vital services can't be togglable. 
@@ -51,7 +51,7 @@ will guide you through the creation process of the first admin user and fix the 
 # Reset Kuzzle
 
 ```
-$ kuzzle likeAvirgin
+$ kuzzle likeAvirgin --pid <PID|all>
 ```
 
 will allow you to reset Kuzzle and restore it as if it is freshly installed.
