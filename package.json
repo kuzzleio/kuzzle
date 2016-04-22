@@ -40,7 +40,6 @@
     "jsonwebtoken": "^5.4.0",
     "lodash": "4.6.1",
     "ms": "^0.7.1",
-    "newrelic": "1.26.0",
     "ngeohash": "0.6.0",
     "node-units": "0.1.7",
     "node-uuid": "1.4.7",
