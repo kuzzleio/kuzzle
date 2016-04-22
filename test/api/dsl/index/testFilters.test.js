@@ -2,14 +2,11 @@ var
   should = require('should'),
   q = require('q'),
   rewire = require('rewire'),
-  sinon = require('sinon'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
   NotFoundError = require.main.require('lib/api/core/errors/notFoundError'),
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   Dsl = rewire('../../../../lib/api/dsl/index');
-
-require('sinon-as-promised')(q.Promise);
 
 describe('Test: dsl.testFilters', function () {
   var
@@ -18,7 +15,6 @@ describe('Test: dsl.testFilters', function () {
     roomName = 'roomNameGrace',
     index = 'index',
     collection = 'user',
-    sandbox,
     dataGrace = {
       firstName: 'Grace',
       lastName: 'Hopper',
