@@ -73,7 +73,7 @@ describe('Test kuzzle constructor', () => {
 
     it('should exit the process with status 1 if the given PID does not exists', (done) => {
       params = rc('kuzzle');
-      params.pid = undefined;
+      params.pid = 'foo';
       exitStatus = 0;
 
       kuzzle.remoteActions.do('enableServices', params, {});
