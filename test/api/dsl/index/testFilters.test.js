@@ -26,17 +26,6 @@ describe('Test: dsl.testFilters', function () {
       city: 'NYC',
       hobby: 'computer'
     },
-    dataAda = {
-      firstName: 'Ada',
-      lastName: 'Lovelace',
-      age: 36,
-      location: {
-        lat: 51.519291,
-        lon: -0.149817
-      },
-      city: 'London',
-      hobby: 'computer'
-    },
     filterGrace = {
       bool: {
         must: [
@@ -113,7 +102,7 @@ describe('Test: dsl.testFilters', function () {
   });
 
   it('should return empty array when document doesn\'t match', function () {
-    return kuzzle.dsl.testFilters(index, collection, null, dataAda)
+    return kuzzle.dsl.testFilters('fakeIndex', 'fakeCollection', null, {})
       .then(function (rooms) {
         should(rooms).be.an.Array();
         should(rooms).be.empty();
@@ -121,56 +110,36 @@ describe('Test: dsl.testFilters', function () {
   });
 
   it('should return an error if no index is provided', function () {
-    return should(kuzzle.dsl.testFilters(null, collection, null, dataAda)).be.rejectedWith(NotFoundError);
+    return should(kuzzle.dsl.testFilters(null, collection, null, dataGrace)).be.rejectedWith(NotFoundError);
   });
 
   it('should return an error if the requestObject doesn\'t contain a collection name', function () {
-    return should(kuzzle.dsl.testFilters(index, null, null, dataAda)).be.rejectedWith(NotFoundError);
+    return should(kuzzle.dsl.testFilters(index, null, null, dataGrace)).be.rejectedWith(NotFoundError);
   });
 
-  it('should generate an event if filter tests on fields fail', function (done) {
-    this.timeout(50);
-
-    kuzzle.once('filter:error', function (error) {
-      try {
-        should(error.message).be.exactly('rejected');
-        done();
-      }
-      catch (e) {
-        done(e);
-      }
-    });
-
+  it('should reject the promise if testFieldFilter fails', (done) => {
     Dsl.__with__({
-      testFieldFilters: function () { return q.reject(new Error('rejected')); }
+        testFieldFilters: function () { return q.reject(new Error('rejected')); }
     })(function () {
       var dsl = new Dsl(kuzzle);
       dsl.filtersTree[index] = {};
       dsl.filtersTree[index][collection] = {};
-      dsl.testFilters(index, collection, null, dataGrace);
+      dsl.testFilters(index, collection, null, dataGrace)
+        .then(() => done('Test should have failed'))
+        .catch(() => done());
     });
   });
 
-  it('should generate an event if global filter tests fail', function (done) {
-    this.timeout(50);
-
-    kuzzle.once('filter:error', function (error) {
-      try {
-        should(error.message).be.exactly('rejected');
-        done();
-      }
-      catch (e) {
-        done(e);
-      }
-    });
-
+  it('should reject the promise if testFieldFilter fails', (done) => {
     Dsl.__with__({
       testGlobalsFilters: function () { return q.reject(new Error('rejected')); }
     })(function () {
       var dsl = new Dsl(kuzzle);
       dsl.filtersTree[index] = {};
       dsl.filtersTree[index][collection] = {};
-      dsl.testFilters(index, collection, null, dataGrace);
+      dsl.testFilters(index, collection, null, dataGrace)
+        .then(() => done('Test should have failed'))
+        .catch(() => done());
     });
   });
 });
