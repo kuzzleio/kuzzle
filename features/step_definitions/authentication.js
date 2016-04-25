@@ -78,6 +78,17 @@ var apiSteps = function () {
 
     callback(new Error('Expected token to be ' + state + ', got: ' + JSON.stringify(this.currentToken.tokenValidity)));
   });
+  
+  this.Then(/^I update current user with data \{(.*?)}$/, function (dataBody, callback) {
+    this.api.selfUpdate(JSON.parse('{' + dataBody + '}'))
+      .then(body => {
+        if (body.error) {
+          return callback(new Error(body.error.message));
+        }
+        callback();
+      })
+      .catch(err => callback(err));
+  });
 };
 
 module.exports = apiSteps;
