@@ -1,4 +1,5 @@
 var
+  _ = require('lodash'),
   q = require('q'),
   params = require('rc')('kuzzle'),
   should = require('should'),
@@ -84,10 +85,16 @@ describe('Test: repositories/profileRepository', () => {
     testProfile.roles = [];
     testProfile.roles[0] = new Role();
     testProfile.roles[0]._id = 'test';
+    testProfile.roles[0].restrictedTo = [{index: 'index'}];
+    testProfile.roles[1] = new Role();
+    testProfile.roles[1]._id = 'test2';
 
     testProfilePlain = {
       _id: 'testprofile',
-      roles: [ 'test' ]
+      roles: [
+        {_id: 'test', restrictedTo: [{index: 'index'}]},
+        {_id: 'test2'}
+      ]
     };
 
     errorProfilePlain = {
@@ -153,8 +160,8 @@ describe('Test: repositories/profileRepository', () => {
         body: testProfilePlain
       });
 
-      return profileRepository.buildProfileFromRequestObject(validProfileObject)
-        .then(response => should(response).be.instanceOf(Profile));
+      return should(profileRepository.buildProfileFromRequestObject(validProfileObject))
+        .be.fulfilledWith(testProfilePlain);
     });
   });
 
@@ -163,15 +170,23 @@ describe('Test: repositories/profileRepository', () => {
       return should(profileRepository.loadProfile('errorprofile')).be.rejectedWith(InternalError);
     });
 
-    it('should throw if the profile contains unexisting roles', (done) => {
+    it('should hydrate a profille with its roles', (done) => {
       var p = new Profile();
-
-      profileRepository.hydrate(p, { roles: ['notExistingRole'] })
-        .then(() => done('Returned non-error'))
-        .catch((error) => {
-          should(error).be.an.instanceOf(NotFoundError);
+      profileRepository.hydrate(p, testProfilePlain)
+        .then((result) => {
+          should(result.roles[0]).be.an.instanceOf(Role);
+          should(result.roles[0]._id).be.equal('test');
+          should(result.roles[0].restrictedTo).match([{index: 'index'}]);
           done();
+        })
+        .catch((error) => {
+          done(error);
         });
+    });
+
+    it('should throw if the profile contains unexisting roles', () => {
+      var p = new Profile();
+      return should(profileRepository.hydrate(p, { roles: [{_id: 'notExistingRole' }] })).be.rejectedWith(NotFoundError);
     });
   });
 
@@ -203,7 +218,7 @@ describe('Test: repositories/profileRepository', () => {
     it('should reject when trying to delete admin', () => {
       var profile = {
         _id: 'admin',
-        roles: [ 'admin' ]
+        roles: [ {_id: 'admin'} ]
       };
 
       return should(profileRepository.deleteProfile(profile))
@@ -213,7 +228,7 @@ describe('Test: repositories/profileRepository', () => {
     it('should reject when trying to delete default', () => {
       var profile = {
         _id: 'default',
-        roles: [ 'default' ]
+        roles: [ {_id: 'default'} ]
       };
 
       return should(profileRepository.deleteProfile(profile))
@@ -223,7 +238,7 @@ describe('Test: repositories/profileRepository', () => {
     it('should reject when trying to delete anonymous', () => {
       var profile = {
         _id: 'anonymous',
-        roles: [ 'anonymous' ]
+        roles: [ {_id: 'anonymous'} ]
       };
 
       return should(profileRepository.deleteProfile(profile))
@@ -241,8 +256,15 @@ describe('Test: repositories/profileRepository', () => {
           should(result).be.an.Object();
           should(profile._id).be.exactly('testprofile');
           should(result.roles).be.an.Array();
-          should(result.roles).have.length(1);
-          should(result.roles[0]).be.exactly('test');
+          should(result.roles).have.length(2);
+          should(result.roles[0]).be.an.Object();
+          should(result.roles[0]).not.be.an.instanceOf(Role);
+          should(result.roles[0]._id).be.exactly('test');
+          should(result.roles[0].restrictedTo).be.an.Array();
+          should(result.roles[1]).be.an.Object();
+          should(result.roles[1]).not.be.an.instanceOf(Role);
+          should(result.roles[1]._id).be.exactly('test2');
+          should(result.roles[1].restrictedTo).be.empty();
         });
     });
   });
@@ -262,6 +284,7 @@ describe('Test: repositories/profileRepository', () => {
           should(result).have.property('hits');
           should(result).have.property('total');
           should(result.hits).be.an.Array();
+          should(result.hits[0]).be.an.Object();
           should(result.hits[0]._id).be.exactly('test');
 
           done();
