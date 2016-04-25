@@ -23,12 +23,14 @@ program
 // $ kuzzle enable <service>
 program
   .command('enable')
+  .option('--pid <pid>', '[all|integer] the pid to apply the action - mandatory option')
   .description('Enable a service without reloading Kuzzle')
   .action(require('./commands/enable'));
 
 // $ kuzzle.js disable <service>
 program
   .command('disable')
+  .option('--pid <pid>', '[all|integer] the pid to apply the action - mandatory option')
   .description('Disable a service without reloading Kuzzle')
   .action(require('./commands/disable'));
 
@@ -47,6 +49,7 @@ program
 // $ kuzzle likeAvirgin
 program
   .command('likeAvirgin')
+  .option('--pid <pid>', '[all|integer] the pid to apply the action - mandatory option')
   .option('--fixtures <fixtures>', 'allow you to specify a fixtures file')
   .option('--mappings <mappings>', 'allow you to specify a mappings file')
   .option('--noint', 'non interractive mode, will perform the reset immediately')
