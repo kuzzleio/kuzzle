@@ -33,25 +33,25 @@ describe('Test: security/roleTest', () => {
           readEngine: {
             search: requestObject => {
               if (requestObject.data.body.filter.ids.values[0] !== 'foobar') {
-                return q(new ResponseObject(requestObject, {hits: [documentAda]}));
+                return q({hits: [documentAda]});
               } else {
-                return q(new ResponseObject(requestObject, {hits: [documentFalseAda]}));
+                return q({hits: [documentFalseAda]});
               }
             },
             get: requestObject => {
               if (requestObject.data.id === 'reject') {
                 return q.reject(new InternalError('Our Error'));
               } else if (requestObject.data.id !== 'foobar') {
-                return q(new ResponseObject(requestObject, documentAda));
+                return q(documentAda);
               } else {
-                return q(new ResponseObject(requestObject, documentFalseAda));
+                return q(documentFalseAda);
               }
             },
             mget: requestObject => {
               if (requestObject.data.body.ids[0] !== 'foobar') {
-                return q(new ResponseObject(requestObject, {hits: [documentAda]}));
+                return q({hits: [documentAda]});
               } else {
-                return q(new ResponseObject(requestObject, {hits: [documentFalseAda]}));
+                return q({hits: [documentFalseAda]});
               }
             }
           }
@@ -92,7 +92,7 @@ describe('Test: security/roleTest', () => {
     };
 
   describe('#isActionAllowed', () => {
-    it('should disallow any action when no matching entry can be found', function () {
+    it('should disallow any action when no matching entry can be found', () => {
       var
         role = new Role();
 
@@ -154,7 +154,7 @@ describe('Test: security/roleTest', () => {
       return should(role.isActionAllowed(requestObject, context, kuzzle)).be.fulfilledWith(true);
     });
 
-    it('should properly handle restrictions', done => {
+    it('should properly handle restrictions', () => {
       var
         role = new Role(),
         rq = {
@@ -175,7 +175,7 @@ describe('Test: security/roleTest', () => {
         }
       };
 
-      role.isActionAllowed(rq, context, kuzzle)
+      return role.isActionAllowed(rq, context, kuzzle)
         .then(isAllowed => {
           should(isAllowed).be.true();
           role.restrictedTo = restrictions;
@@ -218,14 +218,10 @@ describe('Test: security/roleTest', () => {
         })
         .then(isAllowed => {
           should(isAllowed).be.true();
-          done();
-        })
-        .catch(err => {
-          done(err);
         });
     });
 
-    it('should not allow any action on the internal index if no role has been explicitly set on it', done => {
+    it('should not allow any action on the internal index if no role has been explicitly set on it', () => {
       var
         role = new Role(),
         rq = {
@@ -246,7 +242,7 @@ describe('Test: security/roleTest', () => {
         }
       };
 
-      role.isActionAllowed(rq, context, kuzzle)
+      return role.isActionAllowed(rq, context, kuzzle)
         .then(isAllowed => {
           should(isAllowed).be.false();
           role.allowInternalIndex = true;
@@ -259,10 +255,6 @@ describe('Test: security/roleTest', () => {
         })
         .then(isAllowed => {
           should(isAllowed).be.false();
-          done();
-        })
-        .catch(err => {
-          done(err);
         });
     });
 
@@ -297,7 +289,7 @@ describe('Test: security/roleTest', () => {
         });
     });
 
-    it('should allow/deny collection creation according to index creation right', done => {
+    it('should allow/deny collection creation according to index creation right', () => {
       var
         roleAllow = new Role(),
         roleDeny = new Role(),
@@ -326,21 +318,17 @@ describe('Test: security/roleTest', () => {
         }
       };
 
-      roleAllow.isActionAllowed(rq, context, kuzzle)
+      return roleAllow.isActionAllowed(rq, context, kuzzle)
         .then(isAllowed => {
           should(isAllowed).be.true();
           return roleDeny.isActionAllowed(rq, context, kuzzle);
         })
         .then(isAllowed => {
           should(isAllowed).be.false();
-          done();
-        })
-        .catch(err => {
-          done(err);
         });
     });
 
-    it('should allow/deny document creation according to index/collection creation right', done => {
+    it('should allow/deny document creation according to index/collection creation right', () => {
       var
         roleAllow = new Role(),
         roleDeny1 = new Role(),
@@ -394,7 +382,7 @@ describe('Test: security/roleTest', () => {
         }
       };
 
-      roleAllow.isActionAllowed(rq, context, kuzzle)
+      return roleAllow.isActionAllowed(rq, context, kuzzle)
         .then(isAllowed => {
           should(isAllowed).be.true();
           return roleDeny1.isActionAllowed(rq, context, kuzzle);
@@ -405,10 +393,6 @@ describe('Test: security/roleTest', () => {
         })
         .then(isAllowed => {
           should(isAllowed).be.false();
-          done();
-        })
-        .catch(err => {
-          done(err);
         });
     });
 
@@ -478,7 +462,7 @@ describe('Test: security/roleTest', () => {
       return should(role.isActionAllowed(requestObject, context, kuzzle)).be.rejectedWith(ParseError);
     });
 
-    it('should handle a custom right function', done => {
+    it('should handle a custom right function', () => {
       var
         role = new Role(),
         noMatchRequestObject = {
@@ -516,14 +500,10 @@ describe('Test: security/roleTest', () => {
         })
         .then(isAllowed => {
           should(isAllowed).be.false();
-          done();
-        })
-        .catch(err => {
-          done(err);
         });
     });
 
-    it('should allow/deny rights using custom function with args using get', done => {
+    it('should allow/deny rights using custom function with args using get', () => {
       var
         roleAllow = new Role(),
         roleDeny = new Role();
@@ -587,7 +567,7 @@ describe('Test: security/roleTest', () => {
         .then(isAllowed => should(isAllowed).be.false());
     });
 
-    it('should allow/deny rights using custom function with args using mget', function () {
+    it('should allow/deny rights using custom function with args using mget', () => {
       var
         roleAllow = new Role(),
         roleDeny = new Role(),
@@ -774,7 +754,7 @@ describe('Test: security/roleTest', () => {
           collection: 'barbar',
           index: 'bar',
           body: {
-            _id: documentAda._id
+            _id: 'reject'
           }
         });
 

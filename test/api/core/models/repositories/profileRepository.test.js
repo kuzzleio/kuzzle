@@ -334,7 +334,7 @@ describe('Test: repositories/profileRepository', () => {
 
       return profileRepository.validateAndSaveProfile(testProfile)
         .then((result) => {
-          should(profileRepository.profiles[testProfile._id]).match({roles: ['test']});
+          should(profileRepository.profiles[testProfile._id]).match({roles: [{_id: 'test'}]});
           should(result).be.an.Object();
           should(result._id).be.eql(testProfile._id);
         });
@@ -347,7 +347,7 @@ describe('Test: repositories/profileRepository', () => {
 
       return profileRepository.validateAndSaveProfile(testProfile)
         .then((result) => {
-          should(profileRepository.profiles[testProfile._id]).match({roles: ['anonymous']});
+          should(profileRepository.profiles[testProfile._id]).match({roles: [{_id: 'anonymous'}]});
           should(result).be.an.Object();
           should(result._id).be.eql(testProfile._id);
         });
