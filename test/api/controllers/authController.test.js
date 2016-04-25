@@ -416,4 +416,85 @@ describe('Test the auth controller', function () {
       return should(kuzzle.funnel.controllers.auth.checkToken(requestObject)).be.rejected();
     });
   });
+
+  describe('#selfUpdate', function () {
+    var
+      persistOptions,
+      kuzzle,
+      error;
+
+    before(function (done) {
+      kuzzle = new Kuzzle();
+      kuzzle.start(params, {dummy: true})
+        .then(function () {
+
+          kuzzle.repositories.user.load = id => {
+            if (id === 'anonymous') {
+              return kuzzle.repositories.user.anonymous();
+            }
+            if (id === 'admin') {
+              return {_id: 'admin', _source: { profile: 'admin' }};
+            }
+
+            return q(null);
+          };
+
+          kuzzle.repositories.user.persist = (user, opts) => {
+            persistOptions = opts;
+            return q(user);
+          };
+
+          done();
+        });
+    });
+
+    beforeEach(function () {
+      persistOptions = {};
+      error = false;
+    });
+
+    it('should return a valid ResponseObject', done => {
+      kuzzle.funnel.controllers.auth.selfUpdate(new RequestObject({
+        body: { foo: 'bar' }
+      }), { token: { user: { _id: 'admin' }, _id: 'admin' } })
+        .then(response => {
+          should(response).be.an.instanceOf(ResponseObject);
+          should(persistOptions.database.method).be.exactly('update');
+          should(response.data.body._id).be.exactly('admin');
+
+          done();
+        })
+        .catch(error => { done(error); });
+    });
+
+    it('should reject a ResponseObject if profile is specified', () => {
+      should(kuzzle.funnel.controllers.auth.selfUpdate(new RequestObject({
+        body: { foo: 'bar', profile: 'test' }
+      }), { token: { user: { _id: 'admin' }, _id: 'admin' } }))
+        .be.rejectedWith(ResponseObject);
+    });
+
+    it('should reject a ResponseObject if _id is specified in the body', () => {
+      should(kuzzle.funnel.controllers.auth.selfUpdate(new RequestObject({
+        body: { foo: 'bar', _id: 'test' }
+      }), { token: { user: { _id: 'admin' }, _id: 'admin' } }))
+        .be.rejectedWith(ResponseObject);
+    });
+
+    it('should reject a ResponseObject the promise if current user is anonymous', () => {
+      should(kuzzle.funnel.controllers.auth.selfUpdate(new RequestObject({
+        body: {
+          foo: 'bar'
+        }
+      }), {
+        token: {
+          user: {
+            _id: -1
+          },
+          _id: null
+        }
+      }))
+        .be.rejectedWith(ResponseObject);
+    });
+  });
 });
