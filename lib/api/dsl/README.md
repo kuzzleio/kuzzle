@@ -6,7 +6,7 @@ This module converts our API Domain Specific Language in internal filtering func
 The Kuzzle's DSL use the [Elasticsearch filter DSL](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-filters.html).
 
 * for the persistent DSL (search), the whole Elasticsearch DSL is available,
-* for real-time subscription, the filter list is a subset of the Elasticsearch DSL. See the [docs/filters.md](../../../docs/filters.md) section for details.
+* for real-time subscription, the filter list is a subset of the Elasticsearch DSL. See the [filtering documentation](http://kuzzle.io/guide/#filtering-syntax) for details.
 
 
 This folder contains the following files :
@@ -205,4 +205,4 @@ The method returns a silent promise.
 # Contributing
 
 
-You can refer to the [docs/filters.md](../../../docs/filters.md) section to get the list of the implemented filters.
+You can refer to the [documentation](http://kuzzle.io/guide/#filtering-syntax) to get the list of the implemented filters.
