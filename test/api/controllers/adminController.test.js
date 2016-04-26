@@ -273,23 +273,7 @@ describe('Test: admin controller', () => {
       role.restrictedTo = [{index: '%text1'},{index: '%text2'}];
       profile.roles = [role];
       context.token.user.profile = profile;
-      kuzzle.indexCache.oldRemove = kuzzle.indexCache.remove;
-      kuzzle.services.list.readEngine.listIndexes = requestObject => {
-         return q(new ResponseObject(requestObject, {indexes: ['%text1', '%text2', '%text3']}));
-      };
-      kuzzle.workerListener.add = rq => {
-        return q(new ResponseObject(rq, {deleted: rq.data.body.indexes}));
-      };
-      kuzzle.indexCache.remove = (i, c) => {
-        should(['%text1', '%text2']).containEql(i);
-        indexCacheRemove = true;
-      };
     });
-    after(function () {
-      kuzzle.indexCache.remove = kuzzle.indexCache.oldRemove;
-      delete kuzzle.indexCache.oldRemove;
-    });
-
 
     it('should trigger a hook on a deleteIndexes call', done => {
       this.timeout(50);
