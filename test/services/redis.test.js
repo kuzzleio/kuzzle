@@ -3,7 +3,7 @@ var
   q = require('q'),
   params = require('rc')('kuzzle'),
   Redis = require.main.require('lib/services/redis'),
-  redisCommands = require('redis-commands'),
+  redisCommands = (require('ioredis')()).getBuiltinCommands(),
   Kuzzle = require.main.require('lib/api/Kuzzle');
 
 
@@ -270,10 +270,11 @@ describe('Test redis service', function () {
   });
 
   it('should implement all canonical methods', () => {
-    redisCommands.list.forEach(command => {
+    redisCommands.forEach(command => {
       if(command === 'client') {
         return true;
       }
+
       should(redis[command]).be.a.Function();
     });
   });

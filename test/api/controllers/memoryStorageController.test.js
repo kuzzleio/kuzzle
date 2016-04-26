@@ -129,7 +129,7 @@ describe('Test: memoryStore controller', function () {
     it('should construct the allowed functions', () => {
       var
         blacklisted = MemoryStorageController.__get__('blacklist'),
-        allowed = _.difference(redisCommands.list, blacklisted);
+        allowed = _.difference(redisCommands, blacklisted);
 
       should(allowed).be.an.Array();
       should(allowed).not.be.empty();

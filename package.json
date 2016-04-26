@@ -73,7 +73,6 @@
     "istanbul-middleware": "0.2.2",
     "mocha": "2.4.5",
     "mqtt": "1.7.4",
-    "redis-commands": "^1.2.0",
     "rewire": "2.5.1",
     "should": "8.3.0",
     "socket.io-client": "1.4.5",
