@@ -278,4 +278,17 @@ describe('Test redis service', function () {
       should(redis[command]).be.a.Function();
     });
   });
+
+  it('should build a client instance of Cluster if several nodes are defined', (done) => {
+    redis = new Redis(kuzzle, {service: dbname});
+    redis.kuzzleConfig.cache.nodes = [
+      {host: 'fobar', port: 6379}
+    ];
+
+    redis.init()
+      .then(() => {
+        should(redis.client).instanceOf(Redis.Cluster);
+        done();
+      });
+  });
 });

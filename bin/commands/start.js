@@ -48,9 +48,11 @@ module.exports = function (args) {
  ██     KUZZLE ` + (kuzzle.isServer ? 'SERVER' : 'WORKER') + ` STARTED      ██`);
 
       if (kuzzle.isServer) {
+        process.title = 'KuzzleServer';
         console.log(` ██   ...WAITING FOR WORKERS...    ██
  ████████████████████████████████████`);
       } else {
+        process.title = 'KuzzleWorker';
         console.log(' ████████████████████████████████████');
       }
     })

@@ -24,8 +24,10 @@
   },
   // Kuzzle internal cache configuration
   "cache": {
-    "host": "redis",
-    "port": 6379
+    "node": {
+      "host": "redis",
+      "port": 6379
+    }
   },
   // JWT defaults.
   "jsonWebToken": {
