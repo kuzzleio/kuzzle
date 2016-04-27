@@ -1,90 +1,142 @@
 var
   fs = require('fs'),
   path = require('path'),
+  q = require('q'),
   childProcess = require('child_process'),
   lockfile = require('proper-lockfile'),
   _ = require('lodash'),
-  pathConfig = path.join(__dirname, '..', '..', 'config'),
   clc = require('cli-color'),
-  error = clc.red,
-  warn = clc.yellow,
-  notice = clc.cyanBright,
-  ok = clc.green.bold,
-  kuz = clc.greenBright.bold;
+  defaultConfig = require('rc')('kuzzle'),
+  DatabaseService = require('../../lib/services/elasticsearch'),
+  RequestObject = require('../../lib/api/core/models/requestObject');
 
-var app = module.exports = function () {
+var
+  clcError = clc.red,
+  clcNotice = clc.cyanBright,
+  clcOk = clc.green.bold;
+
+/* eslint-disable no-console */
+
+module.exports = function () {
   var
-    pathDefaultPlugins = path.join(pathConfig, 'defaultPlugins.json'),
-    pathCustomPlugins = path.join(pathConfig, 'customPlugins.json'),
-    defaultPlugins,
-    customPlugins = {};
+    dbService,
+    kuzzleConfiguration;
 
   if (!childProcess.hasOwnProperty('execSync')) {
-    console.error(error('███ kuzzle-install: Make sure you\'re using Node version >= 0.12'));
+    console.error(clcError('███ kuzzle-install: Make sure you\'re using Node version >= 0.12'));
     process.exit(1);
   }
 
-  console.log(notice('███ kuzzle-install: Starting plugins installation...'));
+  console.log(clcNotice('███ kuzzle-install: Loading Kuzzle configuration...'));
+  kuzzleConfiguration = require('../../lib/config')(defaultConfig);
+  dbService = new DatabaseService({config: kuzzleConfiguration}, {service: 'writeEngine'});
+  dbService.init();
+
+  console.log(clcNotice('███ kuzzle-install: Starting plugins installation...'));
 
   /*
    Prevents multiple plugin installations at the same time.
    */
   lockfile.lock('./node_modules', {retries: 1000, minTimeout: 200, maxTimeout: 1000}, (err, release) => {
     if (err) {
-      console.error(error('███ kuzzle-install: Unable to acquire lock: '), err);
+      console.error(clcError('███ kuzzle-install: Unable to acquire lock: '), err);
       process.exit(1);
     }
 
-    try {
-      defaultPlugins = require(pathDefaultPlugins);
-    }
-    catch (err) {
-      console.error(error('███ kuzzle-install: Unable to load default plugin configuration: '), err);
-      process.exit(1);
-    }
+    initializeInternalIndex(dbService, kuzzleConfiguration.internalIndex)
+      .then(() => getPluginsList(dbService, kuzzleConfiguration))
+      .then(plugins => {
+        installPlugins(plugins);
 
-    if (fs.existsSync(pathCustomPlugins)) {
-      try {
-        customPlugins = require(pathCustomPlugins);
-      }
-      catch (err) {
-        console.error(error('███ kuzzle-install: Unable to load custom plugin configuration: '), err);
-        process.exit(1);
-      }
-    }
-
-    if (installPlugins.call(this, defaultPlugins)) {
-      try {
-        fs.writeFileSync(pathDefaultPlugins, JSON.stringify(defaultPlugins, null, 2));
-      }
-      catch (err) {
-        console.error(error('███ kuzzle-install: Unable to write the default plugin configuration file: '), err);
-        process.exit(1);
-      }
-    }
-
-    if (installPlugins.call(this, customPlugins, defaultPlugins)) {
-      try {
-        fs.writeFileSync(pathCustomPlugins, JSON.stringify(customPlugins, null, 2));
-      }
-      catch (err) {
-        console.error(error('███ kuzzle-install: Unable to write the custom plugin configuration file: '), err);
-      }
-    }
-
-    release();
-
-    console.log(ok('███ kuzzle-install: Done'));
+        console.log(clcNotice('███ kuzzle-install: Updating plugins configuration...'));
+        return updatePluginsConfiguration(
+          dbService,
+          kuzzleConfiguration.internalIndex,
+          kuzzleConfiguration.pluginsManager.dataCollection,
+          plugins);
+      })
+      .then(() => {
+        release();
+        console.log(clcOk('███ kuzzle-install: Plugins installed'));
+      })
+      .catch(error => {
+        release();
+        console.error(clcError('Unable to install plugins: '), error);
+      });
   });
 };
 
 /**
+ * Creates the internalIndex in the Kuzzle database, if it
+ * doesn't already exists
+ *
+ * @param db
+ * @param indexName
+ */
+function initializeInternalIndex(db, indexName) {
+  var rq = new RequestObject({
+    index: indexName
+  });
+
+  return db
+    .createIndex(rq)
+    .catch(err => {
+      // ignoring error if it's raised because the index already exists
+      if (err.status === 400) {
+        return q();
+      }
+
+      return q.reject(err);
+    });
+}
+
+/**
+ * Returns the list of plugins to install
+ * The returned list is in the following format:
+ *   [
+ *     "plugin-name": {
+ *       "how to": "get this plugin"
+ *     }
+ *   ]
+ *
+ * @param {Object} db - database service
+ * @param {Object} cfg - Kuzzle configuration
+ * @returns Promise
+ */
+function getPluginsList(db, cfg) {
+  var rq = new RequestObject({
+    index: cfg.internalIndex,
+    collection: cfg.pluginsManager.dataCollection
+  });
+
+  return db
+    .search(rq)
+    .then(result => {
+      var plugins = {};
+
+      if (result.total === 0) {
+        return cfg.pluginsManager.defaultPlugins;
+      }
+
+      result.hits.forEach(p => {
+        if (p._source.defaultConfig) {
+          p._source.config = p._source.defaultConfig;
+          delete p._source.defaultConfig;
+        }
+
+        plugins[p._id] = p._source;
+      });
+
+      return plugins;
+    });
+}
+
+/**
  * Install given plugins
  * @param plugins
- * @param basePlugins
  * @returns {boolean}
  */
-function installPlugins(plugins, basePlugins) {
+function installPlugins(plugins) {
   var
     newInstalled = false,
     installViaNpm = true,
@@ -102,7 +154,7 @@ function installPlugins(plugins, basePlugins) {
       pluginInstallId = name + '@' + plugin.version;
     }
     else {
-      console.error(error('███ kuzzle-install: Plugin'), name, 'has no version. The version is mandatory if there is no URL.');
+      console.error(clcError('███ kuzzle-install: Plugin'), name, 'provides no means of installation. Expected: path, git URL or npm version');
       process.exit(1);
     }
 
@@ -116,26 +168,11 @@ function installPlugins(plugins, basePlugins) {
     if (installViaNpm) {
       npmInstall(pluginInstallId);
     }
-    initConfig(plugin, name);
-    console.log('███ kuzzle-install: Plugin', name, 'downloaded');
 
-    // By default, when a new plugin is installed, the plugin is disabled
-    // If in customPlugins the `activated` flag is undefined, we get the `activated` flag from the default one
-    if (plugin.activated === undefined) {
-      plugin.activated = (basePlugins !== undefined && basePlugins[name] && basePlugins[name].activated === true);
-    }
+    console.log('███ kuzzle-install: Plugin', name, 'downloaded');
   });
 
   return newInstalled;
-}
-
-
-/**
- * Execute shell command
- * @param command
- */
-function sh(command) {
-  return childProcess.execSync(command).toString();
 }
 
 /**
@@ -143,39 +180,64 @@ function sh(command) {
  * @param plugin
  */
 function npmInstall(plugin) {
-  sh('npm install ' + plugin);
+  return childProcess
+    .execSync('npm install ' + plugin)
+    .toString();
 }
 
 /**
- * Initialize the config plugin
- * @param plugin
- * @param name
+ * Updates plugins configuration in Kuzzle database
+ *
+ * @param db - database service client
+ * @param index in which the plugin configuration must be stored
+ * @param collection in which the plugin configuration must be stored
+ * @param plugins list
  * @returns {boolean}
  */
-function initConfig(plugin, name) {
-  var
-    pluginPackage;
+function updatePluginsConfiguration(db, index, collection, plugins) {
+  var promises = [];
 
-  try {
-    pluginPackage = require(path.join(getPathPlugin(plugin, name), 'package.json'));
-  }
-  catch (e) {
-    console.error(error('███ kuzzle-install:'), 'There is a problem with plugin ' + name + '. Check the plugin name');
-  }
+  _.forEach(plugins, (plugin, name) => {
+    var
+      pluginPackage,
+      rq = new RequestObject({
+        index,
+        collection,
+        _id: name
+      });
 
-  // If there is no information about plugin in the package.json
-  if (!pluginPackage.pluginInfo) {
-    return false;
-  }
+    try {
+      pluginPackage = require(path.join(getPathPlugin(plugin, name), 'package.json'));
+    }
+    catch (e) {
+      console.error(clcError('███ kuzzle-install:'), 'There is a problem with plugin ' + name + '. Check the plugin installation directory');
+    }
 
-  plugin = _.extend(plugin, pluginPackage.pluginInfo);
+    // If there is no information about plugin in the package.json
+    if (!pluginPackage.pluginInfo) {
+      return false;
+    }
+
+    rq.data.body = _.extend(plugin, pluginPackage.pluginInfo);
+
+    // By default, when a new plugin is installed, the plugin is disabled
+    if (rq.data.body.activated === undefined) {
+      rq.data.body.activated = false;
+    }
+
+    promises.push(db.createOrReplace(rq));
+  });
+
+  return q.all(promises);
 }
 
 
 /**
- * Function for detect if the configured plugin must be installed
- * If the plugin is configured with an url from GIT, the plugin is installed each time
- * If the plugin come from NPM, the plugin is installed only if the version is different from the already installed
+ * Detects if the configured plugin must be installed
+ * If the plugin is configured with an url from GIT, the plugin is installed every time
+ *   to ensure getting the latest release
+ * If the plugin come from NPM or , the plugin is installed only if the required version
+ *   is different from the version of the already installed plugin
  *
  * @param plugin
  * @param name
@@ -220,4 +282,3 @@ function getPathPlugin (plugin, name) {
   }
   return path.join(__dirname, '..', '..', 'node_modules', name);
 }
-

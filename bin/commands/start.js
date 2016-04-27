@@ -1,4 +1,5 @@
 var
+  fs = require('fs'),
   rc = require('rc'),
   params = rc('kuzzle'),
   kuzzle = require('../../lib'),
@@ -85,10 +86,9 @@ module.exports = function (args) {
         data = {};
 
       if (kuzzle.isServer) {
-        deferred = q.defer();
         if (params.fixtures) {
           try {
-            tmp = JSON.parse(fs.readFileSync(params.fixtures, 'utf8'));
+            JSON.parse(fs.readFileSync(params.fixtures, 'utf8'));
           } catch(e) {
             console.log(error('[✖] The file ' + params.fixtures + ' cannot be opened... aborting.'));
             process.exit(1);
@@ -98,7 +98,7 @@ module.exports = function (args) {
 
         if (params.mappings) {
           try {
-            tmp = JSON.parse(fs.readFileSync(params.mappings, 'utf8'));
+            JSON.parse(fs.readFileSync(params.mappings, 'utf8'));
           } catch(e) {
             console.log(error('[✖] The file ' + params.mappings + ' cannot be opened... aborting.'));
             process.exit(1);
@@ -125,7 +125,7 @@ module.exports = function (args) {
             }
             console.log(notice('[ℹ] Entering no-administrator mode: everyone has administrator rights.'));
           })
-          .catch((err) => {
+          .catch(() => {
             console.log(ok('[✔] It seems that you already have an admin account.'));
           });
       }
