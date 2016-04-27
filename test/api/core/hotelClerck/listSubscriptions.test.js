@@ -54,34 +54,34 @@ describe('Test: hotelClerk.listSubscription', function () {
       });
   });
 
-   it('should return a correct list according to subscribe on filter and user right', function () {
-     kuzzle.hotelClerk.rooms = {
-       'foo': {
-         index, collection, roomId: 'foo', customers: ['foo']
-       },
-       'bar': {
-         index, collection, roomId: 'bar', customers: ['bar']
-       },
-       'foobar': {
-         index, collection, roomId: 'foobar', customers: ['foo', 'bar']
-       }
-     };
+  it('should return a correct list according to subscribe on filter and user right', function () {
+    kuzzle.hotelClerk.rooms = {
+      'foo': {
+        index, collection: 'foo', roomId: 'foo', customers: ['foo']
+      },
+      'bar': {
+        index, collection: 'bar', roomId: 'bar', customers: ['bar']
+      },
+      'foobar': {
+        index, collection: 'foo', roomId: 'foobar', customers: ['foo', 'bar']
+      }
+    };
 
-     context.token.user.profile.isActionAllowed = sinon.stub().resolves(true);
-     context.token.user.profile.isActionAllowed.onSecondCall().resolves(false);
+    context.token.user.profile.isActionAllowed = sinon.stub().resolves(true);
+    context.token.user.profile.isActionAllowed.onSecondCall().resolves(false);
 
-     return kuzzle.hotelClerk.listSubscriptions(context)
-       .then(response => {
-         // user -> collection
-         should(response).have.property(index);
-         should(response[index]).have.property(collection);
-         should(response[index][collection]).have.property('foo');
-         should(response[index][collection]).have.property('foobar');
-         should(response[index][collection].foo).be.equal(1);
-         should(response[index][collection].foobar).be.equal(2);
+    return kuzzle.hotelClerk.listSubscriptions(context)
+      .then(response => {
+        // user -> collection
+        should(response).have.property(index);
+        should(response[index]).have.property('foo');
+        should(response[index].foo).have.property('foo');
+        should(response[index].foo).have.property('foobar');
+        should(response[index].foo.foo).be.equal(1);
+        should(response[index].foo.foobar).be.equal(2);
 
-         // should not return the collection bar
-         should(response[index]).not.have.property('bar');
-      });
+        // should not return the collection bar
+        should(response[index]).not.have.property('bar');
+     });
   });
 });
