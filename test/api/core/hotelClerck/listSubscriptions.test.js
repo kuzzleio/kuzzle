@@ -30,7 +30,7 @@ describe('Test: hotelClerk.listSubscription', function () {
             }
           }
         };
-      })
+      });
   });
 
   it('should return an empty object if there is no room', function () {
@@ -77,8 +77,8 @@ describe('Test: hotelClerk.listSubscription', function () {
          should(response[index]).have.property(collection);
          should(response[index][collection]).have.property('foo');
          should(response[index][collection]).have.property('foobar');
-         should(response[index][collection]['foo']).be.equal(1);
-         should(response[index][collection]['foobar']).be.equal(2);
+         should(response[index][collection].foo).be.equal(1);
+         should(response[index][collection].foobar).be.equal(2);
 
          // should not return the collection bar
          should(response[index]).not.have.property('bar');

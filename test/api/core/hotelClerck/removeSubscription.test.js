@@ -43,7 +43,7 @@ describe('Test: hotelClerk.removeSubscription', function () {
     kuzzle.hotelClerk.customers[connection.id] = {
       'foo': {},
       'bar': {}
-    }
+    };
 
     kuzzle.hotelClerk.rooms = {
       'foo': {

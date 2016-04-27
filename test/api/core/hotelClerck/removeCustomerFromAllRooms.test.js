@@ -28,7 +28,7 @@ describe('Test: hotelClerk.removeCustomerFromAllRooms', function () {
     kuzzle.hotelClerk.customers[connection.id] = {
       'foo': {},
       'bar': {}
-    }
+    };
 
     kuzzle.hotelClerk.rooms = {
       'foo': {
