@@ -236,7 +236,7 @@ On each of following events, you can attach a function to execute in your plugin
 |`auth:afterLogin`		| `auth` | `login` |Triggered after controller `auth` and action `login`.|Type: Response object|
 |`auth:getCurrentUser`	| `auth` | `getCurrentUser` |Triggered before controller `auth` and action `getCurrentUser`.|Type: Request object|
 |`auth:beforeCheckToken`| `auth` | `checkToken` |Triggered before controller `auth` and action `checkToken`.|Type: Request object|
-|`auth:getCurrentUser`	| `auth` | `getCurrentUser` |Triggered before controller `auth` and action `getCurrentUser`.|Type: Request object|
+|`auth:afterCheckToken`	| `auth` | `checkToken` |Triggered after controller `auth` and action `checkToken`.|Type: Response object|
 |`auth:beforeUpdateSelf`| `auth` | `updateSelf` |Triggered before controller `auth` and action `updateSelf`.|Type: Request object|
 |`auth:afterUpdateSelf`	| `auth` | `updateSelf` |Triggered after controller `auth` and action `updateSelf`.|Type: Response object|
 |`auth:loadStrategies`	| /      |    /         |Triggered during authentication. This event allows to load the corresponding strategy. Take a look at the [Github Plugin](https://github.com/kuzzleio/kuzzle-plugin-auth-github) |Type: Passport|
