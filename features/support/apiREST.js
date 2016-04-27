@@ -505,4 +505,14 @@ ApiREST.prototype.checkToken = function (token) {
   });
 };
 
+ApiREST.prototype.updateSelf = function (body) {
+  var options = {
+    url: this.apiPath('_updateSelf'),
+    method: 'PUT',
+    json: body
+  };
+
+  return this.callApi(options);
+};
+
 module.exports = ApiREST;
