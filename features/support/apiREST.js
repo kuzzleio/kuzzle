@@ -606,9 +606,9 @@ ApiREST.prototype.createUser = function (body, id) {
   return this.callApi(options);
 };
 
-ApiREST.prototype.selfUpdate = function (body) {
+ApiREST.prototype.updateSelf = function (body) {
   var options = {
-    url: this.apiPath('_selfUpdate'),
+    url: this.apiPath('_updateSelf'),
     method: 'PUT',
     json: body
   };

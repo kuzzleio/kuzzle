@@ -417,7 +417,7 @@ describe('Test the auth controller', function () {
     });
   });
 
-  describe('#selfUpdate', function () {
+  describe('#updateSelf', function () {
     var
       persistOptions,
       kuzzle,
@@ -454,7 +454,7 @@ describe('Test the auth controller', function () {
     });
 
     it('should return a valid ResponseObject', done => {
-      kuzzle.funnel.controllers.auth.selfUpdate(new RequestObject({
+      kuzzle.funnel.controllers.auth.updateSelf(new RequestObject({
         body: { foo: 'bar' }
       }), { token: { user: { _id: 'admin' }, _id: 'admin' } })
         .then(response => {
@@ -468,21 +468,21 @@ describe('Test the auth controller', function () {
     });
 
     it('should reject a ResponseObject if profile is specified', () => {
-      should(kuzzle.funnel.controllers.auth.selfUpdate(new RequestObject({
+      should(kuzzle.funnel.controllers.auth.updateSelf(new RequestObject({
         body: { foo: 'bar', profile: 'test' }
       }), { token: { user: { _id: 'admin' }, _id: 'admin' } }))
         .be.rejectedWith(ResponseObject);
     });
 
     it('should reject a ResponseObject if _id is specified in the body', () => {
-      should(kuzzle.funnel.controllers.auth.selfUpdate(new RequestObject({
+      should(kuzzle.funnel.controllers.auth.updateSelf(new RequestObject({
         body: { foo: 'bar', _id: 'test' }
       }), { token: { user: { _id: 'admin' }, _id: 'admin' } }))
         .be.rejectedWith(ResponseObject);
     });
 
     it('should reject a ResponseObject the promise if current user is anonymous', () => {
-      should(kuzzle.funnel.controllers.auth.selfUpdate(new RequestObject({
+      should(kuzzle.funnel.controllers.auth.updateSelf(new RequestObject({
         body: {
           foo: 'bar'
         }

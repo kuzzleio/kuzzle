@@ -580,10 +580,10 @@ ApiRT.prototype.createOrReplaceUser = function (body, id) {
   });
 };
 
-ApiRT.prototype.selfUpdate = function (body) {
+ApiRT.prototype.updateSelf = function (body) {
   return this.send({
     controller: 'auth',
-    action: 'selfUpdate',
+    action: 'updateSelf',
     body: body
   });
 };

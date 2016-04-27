@@ -80,7 +80,7 @@ var apiSteps = function () {
   });
   
   this.Then(/^I update current user with data \{(.*?)}$/, function (dataBody, callback) {
-    this.api.selfUpdate(JSON.parse('{' + dataBody + '}'))
+    this.api.updateSelf(JSON.parse('{' + dataBody + '}'))
       .then(body => {
         if (body.error) {
           return callback(new Error(body.error.message));
