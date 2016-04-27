@@ -17,6 +17,14 @@
     "host" : "rabbit",
     "port": 5672
   },
+  /*
+   Host and port for the internalEngine service: the light database service
+   called by Kuzzle core components. Can be an array
+   */
+  "internalEngine": {
+    "host": "elasticsearch",
+    "port": "9200"
+  },
   // Host and port for the readEngine service: the database called when we read a data. Can be an array.
   "readEngine": {
     "host": "elasticsearch",

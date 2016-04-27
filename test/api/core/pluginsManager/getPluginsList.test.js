@@ -31,14 +31,14 @@ describe('Plugins manager: getPluginsList', function () {
   });
  
   it('should not return any plugin if the database search returns nothing', () => {
-    sandbox.stub(kuzzle.services.list.readEngine, 'search').resolves({hits: []});
+    sandbox.stub(kuzzle.internalEngine, 'search').resolves({hits: []});
 
     return getPluginsList(kuzzle, true)
       .then(plugins => should(plugins).be.an.Object().and.be.empty());
   });
 
   it('should return a properly formatted plugins list', () => {
-    sandbox.stub(kuzzle.services.list.readEngine, 'search').resolves({hits: [
+    sandbox.stub(kuzzle.internalEngine, 'search').resolves({hits: [
       {'_id': 'foo', _source: { config: {}}},
       {'_id': 'bar', _source: { config: {}}},
       {'_id': 'foobar', _source: { config: {}}},
@@ -55,7 +55,7 @@ describe('Plugins manager: getPluginsList', function () {
   });
 
   it('should only return server plugins on a server instance', () => {
-    sandbox.stub(kuzzle.services.list.readEngine, 'search').resolves({hits: [
+    sandbox.stub(kuzzle.internalEngine, 'search').resolves({hits: [
       {'_id': 'foo', _source: { config: { 'loadedBy': 'server' }}},
       {'_id': 'bar', _source: { config: { 'loadedBy': 'worker' }}},
       {'_id': 'foobar', _source: { config: { 'loadedBy': 'all' }}},
@@ -71,7 +71,7 @@ describe('Plugins manager: getPluginsList', function () {
   });
 
   it('should only return worker plugins on a worker instance', () => {
-    sandbox.stub(kuzzle.services.list.readEngine, 'search').resolves({hits: [
+    sandbox.stub(kuzzle.internalEngine, 'search').resolves({hits: [
       {'_id': 'foo', _source: { config: { 'loadedBy': 'server' }}},
       {'_id': 'bar', _source: { config: { 'loadedBy': 'worker' }}},
       {'_id': 'foobar', _source: { config: { 'loadedBy': 'all' }}},

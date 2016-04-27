@@ -7,8 +7,7 @@ var
   _ = require('lodash'),
   clc = require('cli-color'),
   defaultConfig = require('rc')('kuzzle'),
-  DatabaseService = require('../../lib/services/elasticsearch'),
-  RequestObject = require('../../lib/api/core/models/requestObject');
+  DatabaseService = require('../../lib/services/internalEngine');
 
 var
   clcError = clc.red,
@@ -29,7 +28,7 @@ module.exports = function () {
 
   console.log(clcNotice('███ kuzzle-install: Loading Kuzzle configuration...'));
   kuzzleConfiguration = require('../../lib/config')(defaultConfig);
-  dbService = new DatabaseService({config: kuzzleConfiguration}, {service: 'writeEngine'});
+  dbService = new DatabaseService({config: kuzzleConfiguration});
   dbService.init();
 
   console.log(clcNotice('███ kuzzle-install: Starting plugins installation...'));
@@ -73,13 +72,9 @@ module.exports = function () {
  * @param db
  * @param indexName
  */
-function initializeInternalIndex(db, indexName) {
-  var rq = new RequestObject({
-    index: indexName
-  });
-
+function initializeInternalIndex(db) {
   return db
-    .createIndex(rq)
+    .createInternalIndex()
     .catch(err => {
       // ignoring error if it's raised because the index already exists
       if (err.status === 400) {
@@ -104,13 +99,8 @@ function initializeInternalIndex(db, indexName) {
  * @returns Promise
  */
 function getPluginsList(db, cfg) {
-  var rq = new RequestObject({
-    index: cfg.internalIndex,
-    collection: cfg.pluginsManager.dataCollection
-  });
-
   return db
-    .search(rq)
+    .search(cfg.pluginsManager.dataCollection)
     .then(result => {
       var plugins = {};
 
@@ -200,11 +190,7 @@ function updatePluginsConfiguration(db, index, collection, plugins) {
   _.forEach(plugins, (plugin, name) => {
     var
       pluginPackage,
-      rq = new RequestObject({
-        index,
-        collection,
-        _id: name
-      });
+      pluginConfiguration;
 
     try {
       pluginPackage = require(path.join(getPathPlugin(plugin, name), 'package.json'));
@@ -218,14 +204,14 @@ function updatePluginsConfiguration(db, index, collection, plugins) {
       return false;
     }
 
-    rq.data.body = _.extend(plugin, pluginPackage.pluginInfo);
+    pluginConfiguration = _.extend(plugin, pluginPackage.pluginInfo);
 
     // By default, when a new plugin is installed, the plugin is disabled
-    if (rq.data.body.activated === undefined) {
-      rq.data.body.activated = false;
+    if (pluginConfiguration.activated === undefined) {
+      pluginConfiguration.activated = false;
     }
 
-    promises.push(db.createOrReplace(rq));
+    promises.push(db.createOrReplace(collection, name, pluginConfiguration));
   });
 
   return q.all(promises);
