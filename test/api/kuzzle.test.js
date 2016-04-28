@@ -1,7 +1,6 @@
 var
   rc = require('rc'),
   q = require('q'),
-  rewire = require('rewire'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   should = require('should');
 
