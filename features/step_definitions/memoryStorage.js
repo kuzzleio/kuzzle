@@ -8,10 +8,6 @@ module.exports = function () {
   this.When(/^I call the (.*?) method of the memory storage with arguments$/, function (command, args) {
     var realArgs;
 
-    if (args === undefined) {
-      args = Array.prototype.slice.call(arguments)[2];
-    }
-
     if (args && args !== '') {
       try{
         realArgs = JSON.parse(args.replace(/#prefix#/g, this.idPrefix));
@@ -25,8 +21,12 @@ module.exports = function () {
       .then(response => {
         // console.log(realArgs, response);
         if (response.error) {
-          return q.reject(new Error(response.error.message));
+          return q.reject(response.error);
         }
+
+        this.memoryStorageResult = response;
+
+        return response;
       });
   });
 

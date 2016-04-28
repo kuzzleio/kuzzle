@@ -1,5 +1,6 @@
 var
-  async = require('async');
+  async = require('async'),
+  q = require('q');
 
 var apiSteps = function () {
   this.Then(/^I'm ?(not)* able to get the document(?: in index "([^"]*)")?$/, function (not, index, callback) {
@@ -100,65 +101,34 @@ var apiSteps = function () {
     });
   });
 
-  this.Then(/^I ?(don't)* find a document with "([^"]*)"(?: in field "([^"]*)")?(?: in index "([^"]*)")?$/, function (dont, value, field, index, callback) {
-    var main = function (callbackAsync) {
-      setTimeout(function () {
-        var filters = {filter: {term: {}}};
-        filters.filter.term[field] = value;
+  this.Then(/^I ?(don't)* find a document with "([^"]*)"(?: in field "([^"]*)")?(?: in index "([^"]*)")?$/, function (dont, value, field, index) {
+    var filters = {filter: { term: {}}};
+    filters.filter.term[field] = value;
 
-        this.api.search(filters, index)
-          .then(function (body) {
-            if (body.error !== null) {
-              if (dont) {
-                callbackAsync();
-                return false;
-              }
+    return this.api.search(filters, index)
+      .then(function (body) {
+        if (body.error !== null) {
+          if (dont) {
+            return q();
+          }
 
-              callbackAsync(body.error.message);
-              return false;
-            }
-
-            if (body.result && body.result.hits && body.result.total !== 0) {
-              if (dont) {
-                callbackAsync('A document exists for the filter');
-                return false;
-              }
-
-              callbackAsync();
-              return false;
-            }
-
-            if (dont) {
-              callbackAsync();
-              return false;
-            }
-
-            callbackAsync('No result for filter search');
-          }.bind(this))
-          .catch(function (error) {
-            if (dont) {
-              callbackAsync();
-              return false;
-            }
-
-            callbackAsync(error);
-          });
-      }.bind(this), 100); // end setTimeout
-    };
-
-    async.retry(20, main.bind(this), function (err) {
-      if (err) {
-        if (err.message) {
-          err = err.message;
+          return q.reject(body.error);
         }
 
-        callback(new Error(err));
-        return false;
-      }
+        if (body.result && body.result.hits && body.result.total !== 0) {
+          if (dont) { return q.reject('A document exists for the filter'); }
+          return q();
+        }
 
-      callback();
-    });
+        if (dont) { return q(); }
+        return q.reject('No result for filter search');
+      })
+      .catch(error => {
+        if (dont) { return q(); }
+        return q.reject(error);
+      });
   });
+
 
   this.Then(/^I should receive a document id$/, function (callback) {
     if (this.result && this.result._id) {

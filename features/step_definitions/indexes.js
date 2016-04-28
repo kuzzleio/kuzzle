@@ -1,5 +1,6 @@
 var
-  async = require('async');
+  async = require('async'),
+  q = require('q');
 
 var apiSteps = function () {
   this.When(/^I create an index named "([^"]*)"$/, function (index, callback) {
@@ -125,6 +126,40 @@ var apiSteps = function () {
       })
       .catch(error => callback(error));
   });
+
+  this.When(/^I (enable|disable) the autoRefresh(?: on the index "(.*?)")?$/, function (enable, index) {
+    var
+      idx = index ? index : this.fakeIndex,
+      autoRefresh = (enable === 'enable');
+
+    return this.api.setAutoRefresh(idx, autoRefresh)
+      .then(body => {
+        if (body.error) {
+          return q.reject(new Error(body.error.message));
+        }
+
+        this.result = body;
+
+        return body;
+      });
+  });
+
+  this.Then(/^I check the autoRefresh status(?: on the index "(.*?)")?$/, function (index) {
+    var
+      idx = index ? index : this.fakeIndex;
+
+    return this.api.getAutoRefresh(idx)
+      .then(body => {
+        if (body.error) {
+          return q.reject(body.error);
+        }
+
+        this.result = body;
+
+        return body;
+      });
+  });
+
 
 };
 

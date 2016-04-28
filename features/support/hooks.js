@@ -54,6 +54,7 @@ var myHooks = function () {
     setTimeout(() => {
       [api.world.fakeIndex, api.world.fakeAltIndex, api.world.fakeNewIndex].forEach(index => {
         promises.push(api.deleteIndex(index));
+        promises.push(api.setAutoRefresh(index, false));
       });
 
       q.all(promises)
@@ -103,16 +104,6 @@ var myHooks = function () {
   this.Before('@usingSTOMP', function (scenario, callback) {
     this.api = setAPI(this, 'STOMP');
     callback();
-  });
-
-  this.After(function (scenario, callback) {
-    this.api.truncateCollection()
-      .then(() => {
-        this.api.refreshIndex(this.fakeIndex);
-        this.api.disconnect();
-        callback();
-      })
-      .catch(e => { callback(); });
   });
 
   this.After('@unsubscribe', function (scenario, callback) {

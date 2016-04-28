@@ -62,7 +62,7 @@ var apiSteps = function () {
     this.api.truncateCollection(index, collection)
       .then(body => {
         if (body.error !== null) {
-          return callback(new Error(body.error.message));
+          return callback(body.error);
         }
 
         callback();
