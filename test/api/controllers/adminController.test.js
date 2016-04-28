@@ -302,7 +302,7 @@ describe('Test: admin controller', () => {
         .then(response => {
           mock.verify();
           should(response).be.instanceof(ResponseObject);
-          should(mock.getCall(0).args[0].data.body.indexes).match(['%text1', '%text2']);
+          should(mock.firstCall.args[0].data.body.indexes).match(['%text1', '%text2']);
           should(kuzzle.indexCache.add.called).be.false();
           should(kuzzle.indexCache.remove.calledTwice).be.true();
           should(kuzzle.indexCache.reset.called).be.false();
@@ -475,4 +475,89 @@ describe('Test: admin controller', () => {
     });
 
   });
+
+  describe('#getAutoRefresh', function () {
+
+    it('should fulfill with a response object', () => {
+      sandbox.stub(kuzzle.workerListener, 'add').resolves({});
+
+      return kuzzle.funnel.controllers.admin.getAutoRefresh(requestObject)
+        .then(response => should(response).be.instanceOf(ResponseObject));
+    });
+
+    it ('should reject with a response object in case of error', () => {
+      sandbox.stub(kuzzle.workerListener, 'add').rejects({});
+
+      return should(kuzzle.funnel.controllers.admin.getAutoRefresh(requestObject)).be.rejectedWith(ResponseObject);
+    });
+
+    it('should trigger a plugin hook', done => {
+      kuzzle.once('data:beforeGetAutoRefresh', o => {
+        should(o).be.exactly(requestObject);
+        done();
+      });
+
+      kuzzle.funnel.controllers.admin.getAutoRefresh(requestObject);
+    });
+  });
+
+  describe('#setAutoRefresh', function () {
+
+    it('should fulfill with a response object', () => {
+      var req = new RequestObject({
+        index: requestObject.index,
+        body: { autoRefresh: true }
+      });
+
+      sandbox.stub(kuzzle.workerListener, 'add').resolves({});
+
+      return kuzzle.funnel.controllers.admin.setAutoRefresh(req)
+        .then(response => should(response).be.an.instanceOf(ResponseObject));
+    });
+
+    it('should reject the promise if the autoRefresh value is not set', () => {
+      var req = new RequestObject({
+        index: requestObject.index,
+        body: {}
+      });
+
+      return should(kuzzle.funnel.controllers.admin.setAutoRefresh(req)).be.rejectedWith(ResponseObject);
+    });
+
+    it('should reject the promise if the autoRefresh value is not a boolean', () => {
+      var req = new RequestObject({
+        index: requestObject.index,
+        body: { autoRefresh: -999 }
+      });
+
+      return should(kuzzle.funnel.controllers.admin.setAutoRefresh(req)).be.rejectedWith(ResponseObject);
+    });
+
+    it('should reject the promise in case of error', () => {
+      var req = new RequestObject({
+        index: requestObject.index,
+        body: { autoRefresh: false }
+      });
+
+      sandbox.stub(kuzzle.workerListener, 'add').rejects({});
+
+      return should(kuzzle.funnel.controllers.admin.setAutoRefresh(req)).be.rejectedWith(ResponseObject);
+    });
+
+    it('should trigger a plugin hook', done => {
+      var req = new RequestObject({
+        index: requestObject.index,
+        body: { autoRefresh: true }
+      });
+
+      kuzzle.once('data:beforeSetAutoRefresh', o => {
+        should(o).be.exactly(req);
+        done();
+      });
+
+      kuzzle.funnel.controllers.admin.setAutoRefresh(req);
+    });
+
+  });
+
 });
