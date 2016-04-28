@@ -3,12 +3,13 @@ var
   q = require('q'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
   ResponseObject = require.main.require('lib/api/core/models/responseObject'),
+  ServiceUnavailableError = require.main.require('lib/api/core/errors/serviceUnavailableError'),
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   rewire = require('rewire'),
   FunnelController = rewire('../../../../lib/api/controllers/funnelController');
 
-describe('funnelController.execute', function () {
+describe('funnelController.execute', () => {
   var
     kuzzle,
     funnel,
@@ -26,7 +27,7 @@ describe('funnelController.execute', function () {
     kuzzle = new Kuzzle();
     kuzzle.start(params, {dummy: true})
       .then(() => {
-        FunnelController.__set__('processRequest', function (requestObject) {
+        FunnelController.__set__('processRequest', (kuzzle, controllers, requestObject, context) => {
           processRequestCalled = true;
 
           if (requestObject.errorMe) {
@@ -44,7 +45,7 @@ describe('funnelController.execute', function () {
       });
   });
 
-  beforeEach(function () {
+  beforeEach(() => {
     processRequestCalled = false;
     requestReplayed = false;
 
@@ -58,31 +59,41 @@ describe('funnelController.execute', function () {
   });
 
   describe('#normal state', function () {
-    it('should execute the request immediately if not overloaded', function (done) {
+    it('should execute the request immediately if not overloaded', done => {
       funnel.execute(requestObject, context, (err, res) => {
-        should(err).be.null();
-        should(res).be.instanceOf(ResponseObject);
-        should(processRequestCalled).be.true();
-        done();
+        try {
+          should(err).be.null();
+          should(res.status).be.exactly(200);
+          should(res).be.instanceOf(ResponseObject);
+          should(processRequestCalled).be.true();
+          done();
+        } catch (err) {
+          done(err);
+        }
       });
     });
 
-    it('should forward any error occuring during the request execution', function (done) {
+    it('should forward any error occuring during the request execution', done => {
       requestObject.errorMe = true;
 
       funnel.execute(requestObject, context, (err, res) => {
-        should(err).be.instanceOf(Error);
-        should(res).be.undefined();
-        should(processRequestCalled).be.true();
-        should(funnel.overloaded).be.false();
-        should(requestReplayed).be.false();
-        done();
+        try {
+          should(err).be.instanceOf(Error);
+          should(res.status).be.exactly(500);
+          should(res.error.message).be.exactly('errored on purpose');
+          should(processRequestCalled).be.true();
+          should(funnel.overloaded).be.false();
+          should(requestReplayed).be.false();
+          done();
+        } catch (err) {
+          done(err);
+        }
       });
     });
   });
 
   describe('#server:overload hook', function () {
-    it('should fire the hook the first time Kuzzle is in overloaded state', function (done) {
+    it('should fire the hook the first time Kuzzle is in overloaded state', done => {
       this.timeout(500);
 
       kuzzle.once('server:overload', function () {
@@ -94,7 +105,7 @@ describe('funnelController.execute', function () {
       });
     });
 
-    it('should fire the hook if the last one was fired more than 500ms ago', function (done) {
+    it('should fire the hook if the last one was fired more than 500ms ago', done => {
       this.timeout(500);
 
       kuzzle.once('server:overload', function () {
@@ -106,7 +117,7 @@ describe('funnelController.execute', function () {
       funnel.execute(requestObject, context, () => {});
     });
 
-    it('should not fire the hook if one was fired less than 500ms ago', function (done) {
+    it('should not fire the hook if one was fired less than 500ms ago', done => {
       var listener = function () {
         done(new Error('server:overload hook fired unexpectedly'));
       };
@@ -124,7 +135,7 @@ describe('funnelController.execute', function () {
   });
 
   describe('#overloaded state', function () {
-    it('should enter overloaded state if the maxConcurrentRequests property is reached', function (done) {
+    it('should enter overloaded state if the maxConcurrentRequests property is reached', done => {
       var callback = () => {
         done(new Error('Request executed. It should have been queued instead'));
       };
@@ -143,7 +154,7 @@ describe('funnelController.execute', function () {
       }, 100);
     });
 
-    it('should not relaunch the request replayer background task if already in overloaded state', function (done) {
+    it('should not relaunch the request replayer background task if already in overloaded state', done => {
       var callback = () => {
         done(new Error('Request executed. It should have been queued instead'));
       };
@@ -163,7 +174,7 @@ describe('funnelController.execute', function () {
       }, 100);
     });
 
-    it('should discard the request if the maxRetainedRequests property is reached', function (done) {
+    it('should discard the request if the maxRetainedRequests property is reached', done => {
       this.timeout(500);
 
       funnel.concurrentRequests = kuzzle.config.request.maxConcurrentRequests;
@@ -176,9 +187,10 @@ describe('funnelController.execute', function () {
         should(processRequestCalled).be.false();
         should(funnel.cachedRequests).be.eql(kuzzle.config.request.maxRetainedRequests);
         should(funnel.requestsCache).be.empty();
-        should(res).be.undefined();
-        should(err).be.instanceOf(ResponseObject);
+        should(err).be.instanceOf(ServiceUnavailableError);
         should(err.status).be.eql(503);
+        should(res).be.instanceOf(ResponseObject);
+        should(res.status).be.eql(503);
         done();
       });
     });

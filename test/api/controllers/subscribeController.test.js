@@ -58,7 +58,7 @@ describe('Test: subscribe controller', function () {
 
     it('should reject with a response object in case of error', () => {
       error = true;
-      return should(kuzzle.funnel.controllers.subscribe.on(requestObject)).be.rejectedWith(ResponseObject);
+      return should(kuzzle.funnel.controllers.subscribe.on(requestObject)).be.rejected();
     });
   });
 
@@ -74,7 +74,7 @@ describe('Test: subscribe controller', function () {
 
     it('should reject with a response object in case of error', () => {
       error = true;
-      return should(kuzzle.funnel.controllers.subscribe.off(requestObject)).be.rejectedWith(ResponseObject);
+      return should(kuzzle.funnel.controllers.subscribe.off(requestObject)).be.rejected();
     });
   });
 
@@ -90,7 +90,7 @@ describe('Test: subscribe controller', function () {
 
     it('should reject with a response object in case of error', () => {
       error = true;
-      return should(kuzzle.funnel.controllers.subscribe.count(requestObject)).be.rejectedWith(ResponseObject);
+      return should(kuzzle.funnel.controllers.subscribe.count(requestObject)).be.rejected();
     });
   });
 
@@ -113,7 +113,7 @@ describe('Test: subscribe controller', function () {
 
     it('should reject with a response object in case of error', () => {
       error = true;
-      return should(kuzzle.funnel.controllers.subscribe.list(requestObject)).be.rejectedWith(ResponseObject);
+      return should(kuzzle.funnel.controllers.subscribe.list(requestObject)).be.rejected();
     });
   });
 
@@ -129,7 +129,7 @@ describe('Test: subscribe controller', function () {
 
     it('should reject with a response object in case of error', () => {
       error = true;
-      return should(kuzzle.funnel.controllers.subscribe.join(requestObject)).be.rejectedWith(ResponseObject);
+      return should(kuzzle.funnel.controllers.subscribe.join(requestObject)).be.rejected();
     });
 
     it('should trigger a hook and return a promise', function (done) {

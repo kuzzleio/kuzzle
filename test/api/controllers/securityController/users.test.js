@@ -63,7 +63,7 @@ describe('Test: security controller - users', function () {
   describe('#getUser', function () {
     it('should reject the promise if no id is given', () => {
       return should(kuzzle.funnel.controllers.security.getUser(new RequestObject({})))
-        .be.rejectedWith(ResponseObject);
+        .be.rejected();
     });
 
     it('should return an hydrated responseObject', () => {
@@ -83,7 +83,7 @@ describe('Test: security controller - users', function () {
         body: { _id: 'i.dont.exist' }
       }));
 
-      return should(promise).be.rejectedWith(ResponseObject);
+      return should(promise).be.rejected();
     });
   });
 
@@ -118,7 +118,7 @@ describe('Test: security controller - users', function () {
       error = true;
       return should(kuzzle.funnel.controllers.security.searchUsers(new RequestObject({
         body: {hydrate: false}
-      }))).be.rejectedWith(ResponseObject);
+      }))).be.rejected();
     });
   });
 
@@ -135,14 +135,14 @@ describe('Test: security controller - users', function () {
 
     it('should not resolve the promise when no id is given', () => {
       return should(kuzzle.funnel.controllers.security.deleteUser(new RequestObject({})))
-        .be.rejectedWith(ResponseObject);
+        .be.rejected();
     });
 
     it('should reject with a response object in case of error', () => {
       error = true;
       return should(kuzzle.funnel.controllers.security.deleteUser(new RequestObject({
         body: {_id: 'test'}
-      }))).be.rejectedWith(ResponseObject);
+      }))).be.rejected();
     });
   });
 
@@ -178,7 +178,7 @@ describe('Test: security controller - users', function () {
       return should(kuzzle.funnel.controllers.security.createUser(new RequestObject({
         body: {}
       })))
-        .be.rejectedWith(ResponseObject);
+        .be.rejected();
     });
   });
 
@@ -202,7 +202,7 @@ describe('Test: security controller - users', function () {
       return should(kuzzle.funnel.controllers.security.updateUser(new RequestObject({
         body: {}
       })))
-        .be.rejectedWith(ResponseObject);
+        .be.rejected();
     });
   });
 
@@ -227,7 +227,7 @@ describe('Test: security controller - users', function () {
       return should(kuzzle.funnel.controllers.security.createOrReplaceUser(new RequestObject({
         _id: 'test'
       })))
-        .be.rejectedWith(ResponseObject);
+        .be.rejected();
     });
   });
 

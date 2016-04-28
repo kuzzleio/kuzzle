@@ -136,28 +136,32 @@ describe('Test: write controller', function () {
       kuzzle.funnel.controllers.write.create(requestObject)
         .then(() => done('Expected promise to be rejected'))
         .catch(response => {
-          should(response).be.instanceOf(ResponseObject);
+          should(response).be.instanceOf(Error);
           should(createDocumentNotification).be.false();
           done();
         });
     });
   });
 
-  describe('#publish', function () {
-    it('should send notifications when publishing messages', function () {
+  describe('#publish', () => {
+    it('should send notifications when publishing messages', (done) => {
       return kuzzle.funnel.controllers.write.publish(requestObject)
         .then(response => {
           should(response).be.instanceOf(ResponseObject);
           should(messagePublished).be.true();
+          done();
+        })
+        .catch(err => {
+          done(err);
         });
     });
-    
+
     it('should reject with a response object in case of error', (done) => {
       error = true;
       kuzzle.funnel.controllers.write.publish(requestObject)
         .then(() => done('Expected promise to be rejected'))
         .catch(response => {
-          should(response).be.instanceOf(ResponseObject);
+          should(response).be.instanceOf(Error);
           should(messagePublished).be.true();
           done();
         });
@@ -201,10 +205,14 @@ describe('Test: write controller', function () {
       kuzzle.funnel.controllers.write.createOrReplace(requestObject)
         .then(() => done('Expected promise to be rejected'))
         .catch(response => {
-          should(response).be.instanceOf(ResponseObject);
-          should(createDocumentNotification).be.false();
-          should(replaceDocumentNotification).be.false();
-          done();
+          try {
+            should(response).be.instanceOf(Error);
+            should(createDocumentNotification).be.false();
+            should(replaceDocumentNotification).be.false();
+            done();
+          } catch (err) {
+            done(err);
+          }
         });
     });
 
@@ -268,7 +276,7 @@ describe('Test: write controller', function () {
       kuzzle.funnel.controllers.write.update(requestObject)
         .then(() => done('Expected promise to be rejected'))
         .catch(response => {
-          should(response).be.instanceOf(ResponseObject);
+          should(response).be.instanceOf(Error);
           should(updateDocumentNotification).be.false();
           done();
         });
@@ -308,7 +316,7 @@ describe('Test: write controller', function () {
       kuzzle.funnel.controllers.write.replace(requestObject)
         .then(() => done('Expected promise to be rejected'))
         .catch(response => {
-          should(response).be.instanceOf(ResponseObject);
+          should(response).be.instanceOf(Error);
           should(replaceDocumentNotification).be.false();
           done();
         });
@@ -348,7 +356,7 @@ describe('Test: write controller', function () {
       kuzzle.funnel.controllers.write.delete(requestObject)
         .then(() => done('Expected promise to be rejected'))
         .catch(response => {
-          should(response).be.instanceOf(ResponseObject);
+          should(response).be.instanceOf(Error);
           should(deleteDocumentNotification).be.false();
           done();
         });
@@ -388,7 +396,7 @@ describe('Test: write controller', function () {
       kuzzle.funnel.controllers.write.deleteByQuery(requestObject)
         .then(() => done('Expected promise to be rejected'))
         .catch(response => {
-          should(response).be.instanceOf(ResponseObject);
+          should(response).be.instanceOf(Error);
           should(deleteDocumentNotification).be.false();
           done();
         });
@@ -430,7 +438,7 @@ describe('Test: write controller', function () {
       kuzzle.funnel.controllers.write.createCollection(requestObject)
         .then(() => done('Expected promise to be rejected'))
         .catch(response => {
-          should(response).be.instanceOf(ResponseObject);
+          should(response).be.instanceOf(Error);
           should(indexCacheAdded).be.false();
           done();
         });
