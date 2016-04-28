@@ -13,17 +13,13 @@ var
   ok = clc.green.bold,
   kuz = clc.greenBright.bold;
 
-if (process.env.NEW_RELIC_APP_NAME) {
-  require('newrelic');
-}
-
 if (process.env.FEATURE_COVERAGE == 1) {
   var coverage = require('istanbul-middleware');
   console.log(warn('Hook loader for coverage - ensure this is not production!'));
   coverage.hookLoader(__dirname+'/../lib');
 }
 
-module.exports = function (args) {
+module.exports = function () {
   console.log(kuz('Starting Kuzzle'), (kuzzle.isServer ? notice('Server') : warn('Worker')));
 
   kuzzle.start(params)

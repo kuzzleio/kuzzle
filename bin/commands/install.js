@@ -16,7 +16,7 @@ var
 
 /* eslint-disable no-console */
 
-module.exports = function () {
+module.exports = function (plugin, options) {
   var
     dbService,
     kuzzleConfiguration;
@@ -26,16 +26,25 @@ module.exports = function () {
     process.exit(1);
   }
 
+  // Checking mutually exclusive options
+  if ([0, 'version', 'url', 'path'].reduce((p, c) => p + (options[c] !== undefined)) > 1) {
+    console.error(clcError('███ kuzzle-install: Options --version, --path and --url are mutually exclusive'));
+    process.exit(1);
+  }
+
   console.log(clcNotice('███ kuzzle-install: Loading Kuzzle configuration...'));
   kuzzleConfiguration = require('../../lib/config')(defaultConfig);
   dbService = new DatabaseService({config: kuzzleConfiguration});
   dbService.init();
 
-  console.log(clcNotice('███ kuzzle-install: Starting plugins installation...'));
+  if (plugin) {
+    console.log(clcNotice('███ kuzzle-install: Installing plugin ' + plugin + '...'));
+  }
+  else {
+    console.log(clcNotice('███ kuzzle-install: Starting plugins installation...'));
+  }
 
-  /*
-   Prevents multiple plugin installations at the same time.
-   */
+  // Prevents multiple 'kuzzle install' to install plugins at the same time.
   lockfile.lock('./node_modules', {retries: 1000, minTimeout: 200, maxTimeout: 1000}, (err, release) => {
     if (err) {
       console.error(clcError('███ kuzzle-install: Unable to acquire lock: '), err);
@@ -43,7 +52,24 @@ module.exports = function () {
     }
 
     initializeInternalIndex(dbService, kuzzleConfiguration.internalIndex)
-      .then(() => getPluginsList(dbService, kuzzleConfiguration))
+      .then(() => {
+        var p = {};
+
+        if (plugin) {
+          p[plugin] = {};
+          ['version', 'url', 'path'].forEach(tag => {
+            if (options[tag] !== undefined) {
+              p[plugin][tag] = options[tag];
+            }
+          });
+
+          p[plugin].activated = options.activated;
+
+          return q(p);
+        }
+
+        return getPluginsList(dbService, kuzzleConfiguration);
+      })
       .then(plugins => {
         installPlugins(plugins);
 
@@ -56,7 +82,13 @@ module.exports = function () {
       })
       .then(() => {
         release();
-        console.log(clcOk('███ kuzzle-install: Plugins installed'));
+
+        if (plugin) {
+          console.log(clcOk('███ kuzzle-install: Plugin ' + plugin + ' installed'));
+        }
+        else {
+          console.log(clcOk('███ kuzzle-install: Plugins installed'));
+        }
       })
       .catch(error => {
         release();

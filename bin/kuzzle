@@ -11,7 +11,7 @@ var program = require('commander');
 // $ kuzzle start
 program
   .command('start')
-  .option('--port [port]', 'Kuzzle port number', parseInt)
+  .option('--port <port>', 'Kuzzle port number', parseInt)
   .option('--server', 'start an instance without workers')
   .option('--worker', 'spawn a single set of workers instead of starting a Kuzzle instance')
   .option('--likeAvirgin', 'reset before start, so that Kuzzle is like a virgin, touched for the very first time')
@@ -23,21 +23,30 @@ program
 // $ kuzzle enable <service>
 program
   .command('enable')
-  .option('--pid <pid>', '[all|integer] the pid to apply the action - mandatory option')
+  .option('--pid <pid>', '[all|integer] the pid to apply the action - required')
   .description('Enable a service without reloading Kuzzle')
   .action(require('./commands/enable'));
 
 // $ kuzzle.js disable <service>
 program
   .command('disable')
-  .option('--pid <pid>', '[all|integer] the pid to apply the action - mandatory option')
+  .option('--pid <pid>', '[all|integer] the pid to apply the action - required option')
   .description('Disable a service without reloading Kuzzle')
   .action(require('./commands/disable'));
 
 // $ kuzzle install
 program
   .command('install')
-  .description('Install plugin dependencies')
+  .arguments('[plugin]')
+  .description(`Install plugins if necessary, and refresh their configuration.
+  If no argument is supplied, install and refresh all plugins.
+
+  Otherwise, install & refresh a specific plugin using --version, --url or --path option.
+  The --version, --url and --path are mutually exclusive`)
+  .option('-v, --version <version>', 'Install plugin <version> from NPM')
+  .option('-u, --url <url>', 'Install plugin from a GIT repo <url>')
+  .option('-p, --path <path>', 'Install a plugin from directory <path>')
+  .option('-a, --activated', 'Activate the plugin (when a new plugin is installed, it is deactivated by default)')
   .action(require('./commands/install'));
 
 // $ kuzzle createFirstAdmin
@@ -59,6 +68,13 @@ program
 // Run user command
 program.parse(process.argv);
 
-if (!program.args.length) {
+/*
+  Workaround for a bug in commander: program.args.length is empty if a sub-command is executed with
+  a flag as the last option before an argument.
+  For instance: "kuzzle install -a plugin" will incorrectly trigger the help and exit
+
+  This is still true with commander v2.2
+ */
+if (program.rawArgs.length <= 2) {
   program.help();
 }
