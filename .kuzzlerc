@@ -220,15 +220,15 @@
      */
     "defaultPlugins": {
       "kuzzle-plugin-logger": {
-        "version": "2.0.2",
+        "npmVersion": "2.0.2",
         "activated": true
       },
       "kuzzle-plugin-socketio": {
-        "version": "1.0.7",
+        "npmVersion": "1.0.7",
         "activated": true
       },
       "kuzzle-plugin-auth-passport-local": {
-        "version": "1.3.5",
+        "npmVersion": "1.3.5",
         "activated": true
       }
     }
