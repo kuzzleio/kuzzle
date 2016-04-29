@@ -182,8 +182,9 @@ describe('Test: security controller - profiles', function () {
       };
 
       return kuzzle.funnel.controllers.security.updateProfile(new RequestObject({
-          body: { _id: 'test', foo: 'bar' }
-        }), {})
+        _id: 'test',
+        body: { foo: 'bar' }
+      }), {})
         .then(response => {
           should(response).be.an.instanceOf(ResponseObject);
           should(response.data.body._id).be.exactly('test');

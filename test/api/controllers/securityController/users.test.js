@@ -16,7 +16,48 @@ describe('Test: security controller - users', function () {
 
   before(() => {
     kuzzle = new Kuzzle();
-    return kuzzle.start(params, {dummy: true});
+    kuzzle.start(params, {dummy: true})
+      .then(function () {
+        // Mock
+        kuzzle.services.list.readEngine.search = () => {
+          if (error) {
+            return q.reject(new Error(''));
+          }
+
+          return q({
+            hits: [{_id: 'admin', _source: { profile: 'admin' }}],
+            total: 1
+          });
+        };
+
+        kuzzle.repositories.user.load = id => {
+          if (error) {
+            return q.reject(new Error(''));
+          }
+          if (id === 'anonymous') {
+            return kuzzle.repositories.user.anonymous();
+          }
+          if (id === 'admin') {
+            return kuzzle.repositories.user.admin();
+          }
+
+          return q(null);
+        };
+
+        kuzzle.repositories.user.persist = (user, opts) => {
+          persistOptions = opts;
+          return q(user);
+        };
+
+        kuzzle.repositories.user.deleteFromDatabase = () => {
+          if (error) {
+            return q.reject(new Error(''));
+          }
+          return q({_id: 'test'});
+        };
+
+        done();
+      });
   });
 
   beforeEach(function () {
