@@ -459,7 +459,7 @@ function getPluginConfiguration(plugin, db, cfg) {
  * Sets a new plugin property
  *
  * @param {string} plugin
- * @param {string} property - expected: key:value
+ * @param {string} property - expected: stringified JSON object
  * @param {object} db - kuzzle database handler
  * @param {object} cfg - kuzzle configuration
  * @returns {Promise}
@@ -563,5 +563,9 @@ function removePlugin(plugin, db, cfg) {
         }
       }
     })
-    .then(() => console.log('███ kuzzle-install: Plugin directory deleted'));
+    .then(() => {
+      if (installedLocally) {
+        console.log('███ kuzzle-install: Plugin directory deleted');
+      }
+    });
 }
