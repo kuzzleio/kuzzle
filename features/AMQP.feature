@@ -324,6 +324,16 @@ Feature: Test AMQP API
     Then I log out
     Then I am getting the current user, which matches {"_id":-1,"_source":{"profile":{"_id":"anonymous"}}}
 
+    @usingAMQP @cleanSecurity
+    Scenario: user updateSelf
+      When I create a new user "user1" with id "user1-id"
+      Then I am able to get the user "user1-id" matching {"_id":"#prefix#user1-id","_source":{"profile":{"_id":"admin", "_source": {"roles":[{"_id":"admin"}]}}}}
+      When I log in as user1-id:testpwd expiring in 1h
+      Then I am getting the current user, which matches {"_id":"#prefix#user1-id","_source":{"profile":{"_id":"admin"}}}
+      Then I update current user with data {"foo":"bar"}
+      Then I am getting the current user, which matches {"_id":"#prefix#user1-id","_source":{"profile":{"_id":"admin"},"foo":"bar"}}
+      Then I log out
+      Then I am getting the current user, which matches {"_id":-1,"_source":{"profile":{"_id":"anonymous"}}}
 
   @usingWebsocket @cleanSecurity @unsubscribe
   Scenario: token expiration

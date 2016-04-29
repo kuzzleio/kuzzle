@@ -610,4 +610,12 @@ ApiRT.prototype.checkToken = function (token) {
   });
 };
 
+ApiRT.prototype.updateSelf = function (body) {
+  return this.send({
+    controller: 'auth',
+    action: 'updateSelf',
+    body: body
+  });
+};
+
 module.exports = ApiRT;

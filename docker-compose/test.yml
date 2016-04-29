@@ -1,5 +1,5 @@
 kuzzle:
-  image: kuzzleio/kuzzle
+  image: kuzzleio/kuzzle:beta
   command: /run-test.sh
   volumes:
     - "..:/var/app"
