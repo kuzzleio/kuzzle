@@ -98,10 +98,13 @@ module.exports = function (plugin, options) {
         else {
           console.log(clcOk('███ kuzzle-install: Plugins installed'));
         }
+
+        process.exit(0);
       })
       .catch(error => {
         release();
         console.error(clcError('Error: '), error);
+        process.exit(error.status);
       });
   });
 };
