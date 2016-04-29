@@ -9,7 +9,7 @@ module.exports = function () {
     process.exit(1);
   }
 
-  console.log(childProcess
-    .execSync('kuzzle plugins --install')
+console.log(childProcess
+    .execSync(require.main.filename + ' plugins --install')
     .toString());
 };
