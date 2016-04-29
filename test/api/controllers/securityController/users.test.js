@@ -35,9 +35,6 @@ describe('Test: security controller - users', function () {
           if (id === 'anonymous') {
             return kuzzle.repositories.user.anonymous();
           }
-          if (id === 'admin') {
-            return kuzzle.repositories.user.admin();
-          }
 
           return q(null);
         };
@@ -188,12 +185,13 @@ describe('Test: security controller - users', function () {
   describe('#updateUser', function () {
     it('should return a valid ResponseObject', done => {
       kuzzle.funnel.controllers.security.updateUser(new RequestObject({
-        body: { _id: 'anonymous', foo: 'bar' }
+        _id: 'anonymous',
+        body: { foo: 'bar' }
       }))
         .then(response => {
           should(response).be.an.instanceOf(ResponseObject);
           should(persistOptions.database.method).be.exactly('update');
-          should(response.data.body._id).be.exactly('anonymous');
+          should(response.data.body._id).be.exactly(-1);
 
           done();
         })
