@@ -17,7 +17,7 @@ var apiSteps = function () {
           return false;
         }
 
-        if (this.currentUser === null) {
+        if (this.currentUser === null || this.currentUser === undefined) {
           this.currentUser = {};
         }
 

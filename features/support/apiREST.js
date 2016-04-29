@@ -166,9 +166,10 @@ ApiREST.prototype.get = function (id, index) {
   return this.callApi(options);
 };
 
-ApiREST.prototype.search = function (filters, index) {
+ApiREST.prototype.search = function (filters, index, collection) {
   var options = {
-    url: this.apiPath(((typeof index !== 'string') ? this.world.fakeIndex : index) + '/' + this.world.fakeCollection + '/_search'),
+    url: this.apiPath(((typeof index !== 'string') ? this.world.fakeIndex : index) + '/' +
+                        ((typeof collection !== 'string') ? this.world.fakeCollection : collection) + '/_search'),
     method: 'POST',
     json: filters
   };
@@ -176,9 +177,10 @@ ApiREST.prototype.search = function (filters, index) {
   return this.callApi(options);
 };
 
-ApiREST.prototype.count = function (filters, index) {
+ApiREST.prototype.count = function (filters, index, collection) {
   var options = {
-    url: this.apiPath(((typeof index !== 'string') ? this.world.fakeIndex : index) + '/' + this.world.fakeCollection + '/_count'),
+    url: this.apiPath(((typeof index !== 'string') ? this.world.fakeIndex : index) + '/' +
+                        ((typeof collection !== 'string') ? this.world.fakeCollection : collection) + '/_count'),
     method: 'POST',
     json: filters
   };
@@ -594,7 +596,7 @@ ApiREST.prototype.createUser = function (body, id) {
     method: 'POST',
     json: body
   };
-  
+
   if (id !== undefined) {
     if (body.body) {
       options.json.body._id = id;
@@ -606,7 +608,7 @@ ApiREST.prototype.createUser = function (body, id) {
       };
     }
   }
-  
+
   return this.callApi(options);
 };
 

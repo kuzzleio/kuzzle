@@ -131,7 +131,7 @@ Feature: Test REST API
 
   @usingREST @cleanSecurity
   Scenario: login user
-    Given I create a user "user1" with id "user1-id"
+    Given I create a user "useradmin" with id "user1-id"
     When I log in as user1-id:testpwd expiring in 1h
     Then I write the document
     Then I check the JWT Token
@@ -199,7 +199,7 @@ Feature: Test REST API
     When I create a new role "role1" with id "role1"
     And I create a new role "role2" with id "role2"
     And I create a new profile "profile2" with id "profile2"
-    And I create a new user "user1" with id "user1-id"
+    And I create a new user "useradmin" with id "user1-id"
     And I create a user "user2" with id "user2-id"
     And I can't create a new user "user2" with id "user1-id"
     Then I am able to get the user "user1-id" matching {"_id":"#prefix#user1-id","_source":{"profile":{"_id":"admin", "_source": {"roles":[{"_id":"admin"}]}}}}
@@ -211,6 +211,108 @@ Feature: Test REST API
     Then I am getting the current user, which matches {"_id":"#prefix#user1-id","_source":{"profile":{"_id":"admin"}}}
     Then I log out
     Then I am getting the current user, which matches {"_id":-1,"_source":{"profile":{"_id":"anonymous"}}}
+
+  @usingREST @cleanSecurity
+  Scenario: user permissions
+    Given I create a new role "role1" with id "role1"
+    And I create a new role "role2" with id "role2"
+    And I create a new role "role3" with id "role3"
+    And I create a new profile "profile1" with id "profile1"
+    And I create a new profile "profile2" with id "profile2"
+    And I create a new profile "profile3" with id "profile3"
+    And I create a new profile "profile4" with id "profile4"
+    And I create a new profile "profile5" with id "profile5"
+    And I create a new profile "profile6" with id "profile6"
+    And I create a new user "user1" with id "user1-id"
+    And I create a new user "user2" with id "user2-id"
+    And I create a new user "user3" with id "user3-id"
+    And I create a new user "user4" with id "user4-id"
+    And I create a new user "user5" with id "user5-id"
+    And I create a new user "user6" with id "user6-id"
+    When I log in as user1-id:testpwd1 expiring in 1h
+    Then I'm allowed to create a document in index "kuzzle-test-index" and collection "kuzzle-collection-test"
+    And I'm allowed to create a document in index "kuzzle-test-index" and collection "kuzzle-collection-test-alt"
+    And I'm allowed to create a document in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test"
+    And I'm allowed to create a document in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test-alt"
+    And I'm allowed to search for documents in index "kuzzle-test-index" and collection "kuzzle-collection-test"
+    And I'm allowed to search for documents in index "kuzzle-test-index" and collection "kuzzle-collection-test-alt"
+    And I'm allowed to search for documents in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test"
+    And I'm allowed to search for documents in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test-alt"
+    And I'm allowed to count documents in index "kuzzle-test-index" and collection "kuzzle-collection-test"
+    And I'm allowed to count documents in index "kuzzle-test-index" and collection "kuzzle-collection-test-alt"
+    And I'm allowed to count documents in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test"
+    And I'm allowed to count documents in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test-alt"
+    Then I log out
+    When I log in as user2-id:testpwd2 expiring in 1h
+    Then I'm allowed to create a document in index "kuzzle-test-index" and collection "kuzzle-collection-test"
+    And I'm allowed to create a document in index "kuzzle-test-index" and collection "kuzzle-collection-test-alt"
+    And I'm not allowed to create a document in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test"
+    And I'm not allowed to create a document in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test-alt"
+    And I'm allowed to search for documents in index "kuzzle-test-index" and collection "kuzzle-collection-test"
+    And I'm allowed to search for documents in index "kuzzle-test-index" and collection "kuzzle-collection-test-alt"
+    And I'm allowed to search for documents in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test"
+    And I'm allowed to search for documents in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test-alt"
+    And I'm allowed to count documents in index "kuzzle-test-index" and collection "kuzzle-collection-test"
+    And I'm allowed to count documents in index "kuzzle-test-index" and collection "kuzzle-collection-test-alt"
+    And I'm allowed to count documents in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test"
+    And I'm allowed to count documents in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test-alt"
+    Then I log out
+    When I log in as user3-id:testpwd3 expiring in 1h
+    Then I'm not allowed to create a document in index "kuzzle-test-index" and collection "kuzzle-collection-test"
+    And I'm not allowed to create a document in index "kuzzle-test-index" and collection "kuzzle-collection-test-alt"
+    And I'm not allowed to create a document in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test"
+    And I'm not allowed to create a document in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test-alt"
+    And I'm not allowed to search for documents in index "kuzzle-test-index" and collection "kuzzle-collection-test"
+    And I'm not allowed to search for documents in index "kuzzle-test-index" and collection "kuzzle-collection-test-alt"
+    And I'm allowed to search for documents in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test"
+    And I'm not allowed to search for documents in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test-alt"
+    And I'm not allowed to count documents in index "kuzzle-test-index" and collection "kuzzle-collection-test"
+    And I'm not allowed to count documents in index "kuzzle-test-index" and collection "kuzzle-collection-test-alt"
+    And I'm allowed to count documents in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test"
+    And I'm not allowed to count documents in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test-alt"
+    Then I log out
+    When I log in as user4-id:testpwd4 expiring in 1h
+    Then I'm not allowed to create a document in index "kuzzle-test-index" and collection "kuzzle-collection-test"
+    And I'm not allowed to create a document in index "kuzzle-test-index" and collection "kuzzle-collection-test-alt"
+    And I'm not allowed to create a document in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test"
+    And I'm not allowed to create a document in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test-alt"
+    And I'm allowed to search for documents in index "kuzzle-test-index" and collection "kuzzle-collection-test"
+    And I'm allowed to search for documents in index "kuzzle-test-index" and collection "kuzzle-collection-test-alt"
+    And I'm allowed to search for documents in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test"
+    And I'm allowed to search for documents in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test-alt"
+    And I'm not allowed to count documents in index "kuzzle-test-index" and collection "kuzzle-collection-test"
+    And I'm not allowed to count documents in index "kuzzle-test-index" and collection "kuzzle-collection-test-alt"
+    And I'm not allowed to count documents in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test"
+    And I'm not allowed to count documents in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test-alt"
+    Then I log out
+    When I log in as user5-id:testpwd5 expiring in 1h
+    Then I'm not allowed to create a document in index "kuzzle-test-index" and collection "kuzzle-collection-test"
+    And I'm not allowed to create a document in index "kuzzle-test-index" and collection "kuzzle-collection-test-alt"
+    And I'm not allowed to create a document in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test"
+    And I'm not allowed to create a document in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test-alt"
+    And I'm allowed to search for documents in index "kuzzle-test-index" and collection "kuzzle-collection-test"
+    And I'm allowed to search for documents in index "kuzzle-test-index" and collection "kuzzle-collection-test-alt"
+    And I'm not allowed to search for documents in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test"
+    And I'm not allowed to search for documents in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test-alt"
+    And I'm not allowed to count documents in index "kuzzle-test-index" and collection "kuzzle-collection-test"
+    And I'm not allowed to count documents in index "kuzzle-test-index" and collection "kuzzle-collection-test-alt"
+    And I'm not allowed to count documents in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test"
+    And I'm not allowed to count documents in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test-alt"
+    Then I log out
+    When I log in as user6-id:testpwd6 expiring in 1h
+    Then I'm not allowed to create a document in index "kuzzle-test-index" and collection "kuzzle-collection-test"
+    And I'm not allowed to create a document in index "kuzzle-test-index" and collection "kuzzle-collection-test-alt"
+    And I'm not allowed to create a document in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test"
+    And I'm not allowed to create a document in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test-alt"
+    And I'm allowed to search for documents in index "kuzzle-test-index" and collection "kuzzle-collection-test"
+    And I'm not allowed to search for documents in index "kuzzle-test-index" and collection "kuzzle-collection-test-alt"
+    And I'm not allowed to search for documents in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test"
+    And I'm not allowed to search for documents in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test-alt"
+    And I'm not allowed to count documents in index "kuzzle-test-index" and collection "kuzzle-collection-test"
+    And I'm not allowed to count documents in index "kuzzle-test-index" and collection "kuzzle-collection-test-alt"
+    And I'm not allowed to count documents in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test"
+    And I'm not allowed to count documents in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test-alt"
+    Then I log out
 
   @usingREST @cleanRedis
   Scenario: memory storage - misc

@@ -214,6 +214,87 @@ var apiSteps = function () {
       callback();
     });
   });
+
+  this.Then(/^I'm ?(not)* allowed to create a document in index "([^"]*)" and collection "([^"]*)"$/, function (not, index, collection, callback) {
+    var
+      document = this.documentGrace;
+
+    this.api.create(document, index, collection)
+      .then(body => {
+        if (not && body.status === 403) {
+            callback();
+            return true;
+        }
+        if (not) {
+          callback(new Error('Unexpected status response. Got ' + body.status + ' ; Expected 403'));
+          return false;
+        }
+        if (body.status === 200) {
+          callback();
+          return true;
+        }
+        callback(new Error('Unexpected status response. Got ' + body.status + ' ; Expected 200'));
+      })
+      .catch(error => {
+        if (not && error.statusCode === 403) {
+          callback();
+          return true;
+        }
+        callback(error);
+      });
+  });
+
+  this.Then(/^I'm ?(not)* allowed to search for documents in index "([^"]*)" and collection "([^"]*)"$/, function (not, index, collection, callback) {
+    this.api.search({}, index, collection)
+      .then(body => {
+        if (not && body.status === 403) {
+            callback();
+            return true;
+        }
+        if (not) {
+          callback(new Error('Unexpected status response. Got ' + body.status + ' ; Expected 403'));
+          return false;
+        }
+        if (body.status === 200) {
+          callback();
+          return true;
+        }
+        callback(new Error('Unexpected status response. Got ' + body.status + ' ; Expected 200'));
+      })
+      .catch(error => {
+        if (not && error.statusCode === 403) {
+          callback();
+          return true;
+        }
+        callback(error);
+      });
+  });
+
+  this.Then(/^I'm ?(not)* allowed to count documents in index "([^"]*)" and collection "([^"]*)"$/, function (not, index, collection, callback) {
+    this.api.count({}, index, collection)
+      .then(body => {
+        if (not && body.status === 403) {
+            callback();
+            return true;
+        }
+        if (not) {
+          callback(new Error('Unexpected status response. Got ' + body.status + ' ; Expected 403'));
+          return false;
+        }
+        if (body.status === 200) {
+          callback();
+          return true;
+        }
+        callback(new Error('Unexpected status response. Got ' + body.status + ' ; Expected 200'));
+      })
+      .catch(error => {
+        if (not && error.statusCode === 403) {
+          callback();
+          return true;
+        }
+        callback(error);
+      });
+  });
 };
 
 module.exports = apiSteps;
