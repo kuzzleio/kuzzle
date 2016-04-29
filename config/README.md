@@ -4,4 +4,4 @@ Global Kuzzle configuration files
 
 # Plugins configuration
 
-see [documentation](../docs/plugins.md)
+see [documentation](http://kuzzle.io/guide/#plugins)
