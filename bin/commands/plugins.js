@@ -17,7 +17,7 @@ var
 
 /* eslint-disable no-console */
 
-module.exports = function (plugin, options) {
+module.exports = function pluginsManager (plugin, options) {
   var
     dbService,
     kuzzleConfiguration;
@@ -103,6 +103,16 @@ module.exports = function (plugin, options) {
       })
       .catch(error => {
         release();
+
+        /*
+         If elasticsearch returns with a "Service temporary unavailable" error,
+         we retry until it's ready
+         */
+        if (error.status === 503) {
+          console.log('The database seems to not be ready yet. Retrying in 5s...');
+          return setTimeout(() => pluginsManager(plugin, options), 5000);
+        }
+
         console.error(clcError('Error: '), error);
         process.exit(error.status);
       });
