@@ -177,9 +177,6 @@ describe('Test: security controller - profiles', function () {
     it('should return a valid ResponseObject', () => {
       sandbox.stub(kuzzle.repositories.profile, 'loadProfile').resolves({});
       sandbox.stub(kuzzle.repositories.profile, 'validateAndSaveProfile').resolves({_id: 'test'});
-      kuzzle.repositories.profile.validateAndSaveProfile = profile => {
-        return q(profile);
-      };
 
       return kuzzle.funnel.controllers.security.updateProfile(new RequestObject({
         _id: 'test',

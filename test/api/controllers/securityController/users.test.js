@@ -206,7 +206,8 @@ describe('Test: security controller - users', function () {
       sandbox.stub(kuzzle.repositories.user, 'load').resolves({});
 
       return kuzzle.funnel.controllers.security.updateUser(new RequestObject({
-        body: { _id: 'test', foo: 'bar' }
+        _id: 'test',
+        body: { foo: 'bar' }
       }))
         .then(response => {
           mock.verify();
