@@ -11,7 +11,7 @@ A controller handles a specific part of the Kuzzle architecture.
 * writeController handles the abstraction on writing persistant data. As default, Kuzzle use Elasticsearch.
 * securityController handles the abstraction on reading/writing data to manage rights, like Role, Profile and User. As default, Kuzzle use a specific index %kuzzle in Elasticsearch.
 
-Refer to [docs/architecture.md](../../../docs/architecture.md) for details.
+Refer to [architecture documentation](http://kuzzle.io/guide/#architecture) for details.
 
 # Contributing
 

@@ -48,10 +48,20 @@ describe('Test: clean database', function () {
   it('should clean database when the cleanDb controller is called', function (done) {
     var
       workerCalled = false,
-      hasFiredCleanDbDone = false;
+      hasFiredCleanDbDone = false,
+      hasFiredCleanDeleteIndexesDone = false;
 
     kuzzle.pluginsManager = {
       trigger: function (event, data) {
+        if (event === 'cleanDb:deleteIndexes') {
+          hasFiredCleanDeleteIndexesDone = true;
+          should(data).be.an.instanceOf(RequestObject);
+          should(data.controller).be.exactly('admin');
+          should(data.action).be.exactly('deleteIndexes');
+          should(data.data).be.an.instanceOf(Object);
+          should(data.data.body).be.an.instanceOf(Object);
+        }
+
         if (event === 'cleanDb:done') {
           hasFiredCleanDbDone = true;
           should(data).be.exactly('Reset done: Kuzzle is now like a virgin, touched for the very first time !');
@@ -74,6 +84,7 @@ describe('Test: clean database', function () {
       .then(function () {
         should(workerCalled).be.true();
         should(resetCalled).be.true();
+        should(hasFiredCleanDeleteIndexesDone).be.true();
         should(hasFiredCleanDbDone).be.true();
         done();
       })

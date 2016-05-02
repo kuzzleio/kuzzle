@@ -33,9 +33,9 @@ ApiAMQP.prototype.init = function (world) {
 
 ApiAMQP.prototype.disconnect = function () {
   if (this.amqpClient) {
-    this.amqpClient.then( function (connection) {
-        connection.close();
-      })
+    this.amqpClient.then(function (connection) {
+      connection.close();
+    })
       .catch();
 
     this.amqpClient = null;

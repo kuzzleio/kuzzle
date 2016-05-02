@@ -457,9 +457,9 @@ describe('Test plugins manager run', function () {
       .then(() => {
         should(pluginsManager.routes).be.an.Array().and.length(2);
         should(pluginsManager.routes[0].verb).be.equal('get');
-        should(pluginsManager.routes[0].url).be.equal('/_plugin/myplugin/bar/:name');
+        should(pluginsManager.routes[0].url).be.equal('/myplugin/bar/:name');
         should(pluginsManager.routes[1].verb).be.equal('post');
-        should(pluginsManager.routes[1].url).be.equal('/_plugin/myplugin/bar');
+        should(pluginsManager.routes[1].url).be.equal('/myplugin/bar');
         should(pluginsManager.routes[0].controller)
           .be.equal(pluginsManager.routes[0].controller)
           .and.be.equal('myplugin/foo');

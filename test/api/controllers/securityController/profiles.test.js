@@ -232,8 +232,9 @@ describe('Test: security controller - profiles', function () {
       sandbox.stub(kuzzle.repositories.profile, 'loadProfile', stubs.loadProfile);
       sandbox.stub(kuzzle.repositories.profile, 'validateAndSaveProfile', stubs.validateAndSaveProfile);
       return kuzzle.funnel.controllers.security.updateProfile(new RequestObject({
-          body: { _id: 'test', foo: 'bar' }
-        }), {})
+        _id: 'test',
+        body: { foo: 'bar' }
+      }), {})
         .then(response => {
           should(response).be.an.instanceOf(ResponseObject);
           should(response.data.body._id).be.exactly('test');
