@@ -505,7 +505,10 @@ describe('Test: ElasticSearch service', function () {
 
   describe('#import', function () {
     it('should support bulk data import', () => {
-      var spy = sandbox.stub(elasticsearch.client, 'bulk').resolves({});
+      var
+        refreshIndexIfNeeded = ES.__get__('refreshIndexIfNeeded'),
+        refreshIndexSpy = sandbox.spy(refreshIndexIfNeeded),
+        spy = sandbox.stub(elasticsearch.client, 'bulk').resolves({});
 
       requestObject.data.body = [
         {index: {_id: 1, _type: collection, _index: index}},
@@ -517,10 +520,16 @@ describe('Test: ElasticSearch service', function () {
         {delete: {_id: 2, _type: collection, _index: index}}
       ];
 
-      return should(elasticsearch.import(requestObject)
-        .then(() => {
-          should(spy.firstCall.args[0].body).be.exactly(requestObject.data.body);
-        })).be.fulfilled();
+      return should(
+        ES.__with__('refreshIndexIfNeeded', refreshIndexSpy)(() => {
+          return elasticsearch.import(requestObject)
+            .then(() => {
+              should(spy.firstCall.args[0].body).be.exactly(requestObject.data.body);
+
+              should(refreshIndexSpy.calledOnce).be.true();
+            });
+        })
+      ).be.fulfilled();
     });
 
     it('should raise a "Partial Error" response for bulk data import with some errors', () => {
