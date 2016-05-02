@@ -84,8 +84,8 @@ describe('Test: routerController.initRouterHttp', function () {
         url = 'http://' + options.hostname + ':' + options.port + path;
 
         kuzzle.pluginsManager.routes = [
-          {verb: 'get', url: '/_plugin/myplugin/bar/:name', controller: 'myplugin/foo', action: 'bar'},
-          {verb: 'post', url: '/_plugin/myplugin/bar', controller: 'myplugin/foo', action: 'bar'},
+          {verb: 'get', url: '/myplugin/bar/:name', controller: 'myplugin/foo', action: 'bar'},
+          {verb: 'post', url: '/myplugin/bar', controller: 'myplugin/foo', action: 'bar'},
         ];
 
         router = new RouterController(kuzzle);
