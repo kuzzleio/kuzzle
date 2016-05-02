@@ -46,6 +46,9 @@ describe('Test: ElasticSearch service', function () {
 
   before(()=> {
     kuzzle.config = new Config(params);
+    kuzzle.pluginsManager = {
+      trigger: () => {}
+    };
 
     elasticsearch = new ES(kuzzle, {service: engineType});
 
@@ -56,6 +59,8 @@ describe('Test: ElasticSearch service', function () {
 
   beforeEach(() => {
     sandbox = sinon.sandbox.create();
+
+    elasticsearch.autoRefresh = {};
 
     requestObject = new RequestObject({
       controller: 'write',
@@ -68,7 +73,7 @@ describe('Test: ElasticSearch service', function () {
 
     afterEach(() => {
       sandbox.restore();
-    })
+    });
   });
 
   describe('#init', function () {
@@ -136,18 +141,19 @@ describe('Test: ElasticSearch service', function () {
         spy = sandbox.stub(elasticsearch.client, 'create').resolves({}),
         refreshIndexIfNeeded = ES.__get__('refreshIndexIfNeeded'),
         refreshIndexSpy = sandbox.spy(refreshIndexIfNeeded);
-      ES.__set__('refreshIndexIfNeeded', refreshIndexSpy);
 
-      return should(elasticsearch.create(requestObject)
-        .then(() => {
-          var data = spy.firstCall.args[0];
+      return should(ES.__with__('refreshIndexIfNeeded', refreshIndexSpy)(() => {
+        return elasticsearch.create(requestObject)
+          .then(() => {
+            var data = spy.firstCall.args[0];
 
-          should(data.index).be.exactly(index);
-          should(data.type).be.exactly(collection);
-          should(data.body).be.exactly(documentAda);
+            should(data.index).be.exactly(index);
+            should(data.type).be.exactly(collection);
+            should(data.body).be.exactly(documentAda);
 
-          should(refreshIndexSpy.calledOnce).be.true();
-        })).be.fulfilled();
+            should(refreshIndexSpy.calledOnce).be.true();
+          });
+      })).be.fulfilled();
     });
 
     it('should reject the create promise if elasticsearch throws an error', function () {
@@ -164,21 +170,23 @@ describe('Test: ElasticSearch service', function () {
         refreshIndexSpy = sandbox.spy(refreshIndexIfNeeded),
         spy = sandbox.stub(elasticsearch.client, 'index').resolves({});
 
-      ES.__set__('refreshIndexIfNeeded', refreshIndexSpy);
-
       requestObject.data._id = createdDocumentId;
-      return should(elasticsearch.createOrReplace(requestObject)
-        .then(() => {
-          var data = spy.firstCall.args[0];
 
-          should(data.index).be.exactly(index);
-          should(data.type).be.exactly(collection);
-          should(data.body).be.exactly(documentAda);
-          should(data.id).be.exactly(createdDocumentId);
+      return should(
+        ES.__with__('refreshIndexIfNeeded', refreshIndexSpy)(() => {
+          return elasticsearch.createOrReplace(requestObject)
+            .then(() => {
+              var data = spy.firstCall.args[0];
 
-          should(refreshIndexSpy.calledOnce).be.true();
-        })).be.fulfilled();
+              should(data.index).be.exactly(index);
+              should(data.type).be.exactly(collection);
+              should(data.body).be.exactly(documentAda);
+              should(data.id).be.exactly(createdDocumentId);
 
+              should(refreshIndexSpy.calledOnce).be.true();
+            });
+        })
+      ).be.fulfilled();
     });
 
     it('should reject the createOrReplace promise if elasticsearch throws an error', () => {
@@ -198,21 +206,23 @@ describe('Test: ElasticSearch service', function () {
 
       sandbox.stub(elasticsearch.client, 'exists').resolves(true);
 
-      ES.__set__('refreshIndexIfNeeded', refreshIndexSpy);
-
       requestObject.data._id = createdDocumentId;
 
-      return should(elasticsearch.replace(requestObject)
-        .then(() => {
-          var data = spy.firstCall.args[0];
+      return should(
+        ES.__with__('refreshIndexIfNeeded', refreshIndexSpy)(() => {
+          return elasticsearch.replace(requestObject)
+            .then(() => {
+              var data = spy.firstCall.args[0];
 
-          should(data.index).be.exactly(index);
-          should(data.type).be.exactly(collection);
-          should(data.body).be.exactly(documentAda);
-          should(data.id).be.exactly(createdDocumentId);
+              should(data.index).be.exactly(index);
+              should(data.type).be.exactly(collection);
+              should(data.body).be.exactly(documentAda);
+              should(data.id).be.exactly(createdDocumentId);
 
-          should(refreshIndexSpy.calledOnce).be.true();
-        })).be.fulfilled();
+              should(refreshIndexSpy.calledOnce).be.true();
+            });
+        })
+      ).be.fulfilled();
     });
 
     it('should reject the replace promise if elasticsearch throws an error', () => {
@@ -278,7 +288,7 @@ describe('Test: ElasticSearch service', function () {
             should(spy.firstCall.args[0].id).be.undefined();
             done();
           }
-          catch(e) { done(e) }
+          catch(e) { done(e); }
         });
     });
 
@@ -348,16 +358,25 @@ describe('Test: ElasticSearch service', function () {
 
   describe('#update', function () {
     it('should allow to update a document', function () {
-      var spy = sandbox.stub(elasticsearch.client, 'update').resolves({});
+      var
+        refreshIndexIfNeeded = ES.__get__('refreshIndexIfNeeded'),
+        refreshIndexSpy = sandbox.spy(refreshIndexIfNeeded),
+        spy = sandbox.stub(elasticsearch.client, 'update').resolves({});
 
       requestObject.data._id = createdDocumentId;
 
-      return should(elasticsearch.update(requestObject)
-        .then(() => {
-          var data = spy.firstCall.args[0];
-          should(data.body.doc).be.exactly(documentAda);
-          should(data.id).be.exactly(createdDocumentId);
-        })).be.fulfilled();
+      return should(
+        ES.__with__('refreshIndexIfNeeded', refreshIndexSpy)(() => {
+          return elasticsearch.update(requestObject)
+            .then(() => {
+              var data = spy.firstCall.args[0];
+              should(data.body.doc).be.exactly(documentAda);
+              should(data.id).be.exactly(createdDocumentId);
+
+              should(refreshIndexSpy.calledOnce).be.true();
+            });
+        })
+      ).be.fulfilled();
     });
 
     it('should return a rejected promise if an update fails', done => {
@@ -376,15 +395,24 @@ describe('Test: ElasticSearch service', function () {
 
   describe('#delete', function () {
     it('should allow to delete a document', () => {
-      var spy = sandbox.stub(elasticsearch.client, 'delete').resolves({});
+      var
+        refreshIndexIfNeeded = ES.__get__('refreshIndexIfNeeded'),
+        refreshIndexSpy = sandbox.spy(refreshIndexIfNeeded),
+        spy = sandbox.stub(elasticsearch.client, 'delete').resolves({});
 
       delete requestObject.data.body;
       requestObject.data._id = createdDocumentId;
 
-      return should(elasticsearch.delete(requestObject)
-        .then(() => {
-          should(spy.firstCall.args[0].id).be.exactly(createdDocumentId);
-        })).be.fulfilled();
+      return should(
+        ES.__with__('refreshIndexIfNeeded', refreshIndexSpy)(() => {
+          return elasticsearch.delete(requestObject)
+            .then(() => {
+              should(spy.firstCall.args[0].id).be.exactly(createdDocumentId);
+
+              should(refreshIndexSpy.calledOnce).be.true();
+            });
+        })
+      ).be.fulfilled();
     });
 
     it('should return a rejected promise if a delete fails', done => {
@@ -664,7 +692,7 @@ describe('Test: ElasticSearch service', function () {
     });
 
     it('should return a rejected promise if there is no mapping found', () => {
-      var mappings = {}
+      var mappings = {};
       mappings[index] = {mappings: {}};
       mappings[index].mappings[collection] = {};
 
@@ -890,4 +918,91 @@ describe('Test: ElasticSearch service', function () {
         });
     });
   });
+
+  describe('#getAutoRefresh', function () {
+    it('should reflect the current autoRefresh status', () => {
+      return should(elasticsearch.getAutoRefresh(requestObject)
+        .then(response => {
+          should(response).be.false();
+
+          elasticsearch.autoRefresh[requestObject.index] = true;
+
+          return elasticsearch.getAutoRefresh(requestObject);
+        })
+        .then(response => {
+          should(response).be.true();
+          elasticsearch.autoRefresh[requestObject.index] = false;
+        })
+      ).be.fulfilled();
+    });
+  });
+
+  describe('#setAutoRefresh', function () {
+    it('should toggle the autoRefresh status', () => {
+      var req = new RequestObject({
+        index: requestObject.index,
+        body: { autoRefresh: true }
+      });
+
+      return should(elasticsearch.setAutoRefresh(req)
+        .then(response => {
+          should(response).be.true();
+
+          req.data.body.autoRefresh = false;
+          return elasticsearch.setAutoRefresh(req);
+        })
+        .then(response => {
+          should(response).be.false();
+        })
+      ).be.fulfilled();
+    });
+  });
+
+  describe('#refreshIndexIfNeeded', function () {
+    it('should not refresh the index if autoRefresh is set to false', () => {
+      var
+        refreshIndexIfNeeded = ES.__get__('refreshIndexIfNeeded'),
+        spy = sandbox.stub(elasticsearch.client.indices, 'refresh').resolves({});
+
+      return should(refreshIndexIfNeeded.call(elasticsearch, { index: requestObject.index }, { foo: 'bar' })
+        .then(response => {
+          should(spy.called).be.false();
+          should(response).be.eql({ foo: 'bar' });
+        })).be.fulfilled();
+    });
+
+    it('should refresh the index if asked to', () => {
+      var
+        refreshIndexIfNeeded = ES.__get__('refreshIndexIfNeeded'),
+        spy = sandbox.stub(elasticsearch.client.indices, 'refresh').resolves({});
+
+      elasticsearch.autoRefresh[requestObject.index] = true;
+
+      return should(refreshIndexIfNeeded.call(elasticsearch, { index: requestObject.index }, { foo: 'bar' })
+        .then(response => {
+          should(spy.called).be.true();
+          should(response).be.eql({ foo: 'bar' });
+        })).be.fulfilled();
+    });
+
+    it('should not block execution in case the index could not be refreshed', () => {
+      var
+        refreshIndexIfNeeded = ES.__get__('refreshIndexIfNeeded'),
+        spy = sandbox.stub(elasticsearch.client.indices, 'refresh').rejects({}),
+        pluginSpy = sandbox.spy(kuzzle.pluginsManager, 'trigger');
+
+      elasticsearch.autoRefresh[requestObject.index] = true;
+
+      return should(refreshIndexIfNeeded.call(elasticsearch, { index: requestObject.index }, { foo: 'bar' })
+        .then(response => {
+          should(pluginSpy.calledWith('log:error')).be.true();
+          should(spy.called).be.true();
+          should(response).be.eql({ foo: 'bar' });
+        })
+      ).be.fulfilled();
+    });
+
+
+  });
+
 });

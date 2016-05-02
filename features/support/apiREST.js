@@ -636,8 +636,12 @@ ApiREST.prototype.callMemoryStorage = function (command, args) {
   return this.callApi(this.getRequest(null, null, 'ms', command, args));
 };
 
+ApiREST.prototype.getAutoRefresh = function (index) {
+  return this.callApi(this.getRequest(index, null, 'admin', 'getAutoRefresh'));
+};
+
 ApiREST.prototype.setAutoRefresh = function (index, autoRefresh) {
-  return this.callApi(this.getRequest(index, null, 'admin', 'setAutoRefresh', { autoRefresh: autoRefresh }));
+  return this.callApi(this.getRequest(index, null, 'admin', 'setAutoRefresh', { body: {autoRefresh: autoRefresh }}));
 };
 
 module.exports = ApiREST;
