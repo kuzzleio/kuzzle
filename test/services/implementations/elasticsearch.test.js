@@ -448,12 +448,15 @@ describe('Test: ElasticSearch service', function () {
 
     it('should allow to delete documents using a provided filter', () => {
       var
+        refreshIndexIfNeeded = ES.__get__('refreshIndexIfNeeded'),
+        refreshIndexSpy = sandbox.spy(refreshIndexIfNeeded),
         mockupIds = ['foo', 'bar', 'baz'],
         spy = sandbox.stub(elasticsearch.client, 'bulk').resolves(mockupIds),
         getAllIdsStub = sinon.stub().resolves(mockupIds);
 
       return ES.__with__({
-        getAllIdsFromQuery: getAllIdsStub
+        getAllIdsFromQuery: getAllIdsStub,
+        refreshIndexIfNeeded: refreshIndexSpy
       })(() => {
         return should(elasticsearch.deleteByQuery(requestObject)
           .then(result => {
@@ -473,6 +476,9 @@ describe('Test: ElasticSearch service', function () {
             // elasticserach.deleteByQuery
             should(result.ids).not.be.undefined().and.be.an.Array();
             should(result.ids).match(mockupIds);
+
+            // refreshIndexIfNeeded
+            should(refreshIndexSpy.calledOnce).be.true();
           })
         ).be.fulfilled();
       });
