@@ -475,7 +475,12 @@ function setPluginConfiguration(plugin, property, db, cfg) {
   }
 
   return db
-    .update(cfg.pluginsManager.dataCollection, plugin, jsonProperty);
+    .get(cfg.pluginsManager.dataCollection, plugin)
+    .then(result => {
+      var newConfiguration = result._source;
+      _.extend(newConfiguration.config, jsonProperty);
+      return db.update(cfg.pluginsManager.dataCollection, plugin, newConfiguration);
+    });
 }
 
 /**
@@ -493,11 +498,11 @@ function unsetPluginConfiguration(plugin, property, db, cfg) {
     .then(result => {
       var config = result._source;
 
-      if (!config[property]) {
+      if (!config.config[property]) {
         return q.reject(new Error('Property ' + property + ' not found in the plugin configuration'));
       }
 
-      delete config[property];
+      delete config.config[property];
       return db.replace(cfg.pluginsManager.dataCollection, plugin, config);
     });
 }
@@ -522,7 +527,11 @@ function replacePluginConfiguration(plugin, content, db, cfg) {
   }
 
   return db
-    .replace(cfg.pluginsManager.dataCollection, plugin, jsonProperty);
+    .get(cfg.pluginsManager.dataCollection, plugin)
+    .then(result => {
+      result._source.config = jsonProperty;
+      return db.replace(cfg.pluginsManager.dataCollection, plugin, result._source);
+    });
 }
 
 /**
