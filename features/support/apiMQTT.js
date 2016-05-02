@@ -2,7 +2,6 @@ var
   _ = require('lodash'),
   config = require('./config')(),
   mqtt = require('mqtt'),
-  uuid = require('node-uuid'),
   q = require('q'),
   ApiRT = require('./apiRT');
 

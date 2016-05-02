@@ -42,4 +42,4 @@ Every times a modification is detected by [PM2](https://github.com/Unitech/pm2),
 
 # Create a plugin
 
-See [plugins documentation](docs/plugins.md#how-to-create-a-plugin)
+See [plugins documentation](http://kuzzle.io/guide/#plugins)

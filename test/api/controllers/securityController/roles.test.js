@@ -191,7 +191,8 @@ describe('Test: security controller - roles', function () {
       };
 
       kuzzle.funnel.controllers.security.updateRole(new RequestObject({
-        body: { _id: 'test', foo: 'bar' }
+        _id: 'test',
+        body: { foo: 'bar' }
       }), {})
         .then(response => {
           should(response).be.an.instanceOf(ResponseObject);
@@ -211,7 +212,8 @@ describe('Test: security controller - roles', function () {
 
     it('should reject the promise if the role cannot be found in the database', () => {
       return should(kuzzle.funnel.controllers.security.updateRole(new RequestObject({
-        body: { _id: 'badId' }
+        _id: 'badId',
+        body: {}
       }), {}))
         .be.rejectedWith(ResponseObject);
     });
@@ -220,8 +222,9 @@ describe('Test: security controller - roles', function () {
   describe('#deleteRole', function () {
     it('should return response with on deleteRole call', done => {
       kuzzle.funnel.controllers.security.deleteRole(new RequestObject({
-          body: {_id: 'test'}
-        }))
+        _id: 'test',
+        body: {}
+      }))
         .then(result => {
           var jsonResponse = result.toJson();
 
@@ -237,7 +240,8 @@ describe('Test: security controller - roles', function () {
 
     it('should reject the promise if attempting to delete one of the core roles', function () {
       return should(kuzzle.funnel.controllers.security.deleteRole(new RequestObject({
-        body: { _id: 'admin'}
+        _id: 'admin',
+        body: {}
       }))).be.rejectedWith(ResponseObject);
     });
   });

@@ -1,8 +1,7 @@
 var
   _ = require('lodash'),
   async = require('async'),
-  q = require('q'),
-  util = require('util');
+  q = require('q');
 
 var myHooks = function () {
   this.BeforeFeature((event, callback) => {
@@ -19,7 +18,7 @@ var myHooks = function () {
           .then(response => {
             deferred.resolve(response);
           })
-          .catch(error => {
+          .catch(() => {
             // ignoring errors
             // console.log('Error deleting index ' + index + '. Ignoring...');
             deferred.resolve({});
@@ -81,32 +80,42 @@ var myHooks = function () {
    *
    *  And we don't want to deal with destroyed worlds, this is all too messy. And dangerous.
    */
-  this.Before('@usingREST', function (scenario, callback) {
+  this.Before({tags: ['@usingREST']}, function (scenario, callback) {
     this.api = setAPI(this, 'REST');
     callback();
   });
 
-  this.Before('@usingWebsocket', function (scenario, callback) {
+  this.Before({tags: ['@usingWebsocket']}, function (scenario, callback) {
     this.api = setAPI(this, 'Websocket');
     callback();
   });
 
-  this.Before('@usingMQTT', function (scenario, callback) {
+  this.Before({tags: ['@usingMQTT']}, function (scenario, callback) {
     this.api = setAPI(this, 'MQTT');
     callback();
   });
 
-  this.Before('@usingAMQP', function (scenario, callback) {
+  this.Before({tags: ['@usingAMQP']}, function (scenario, callback) {
     this.api = setAPI(this, 'AMQP');
     callback();
   });
 
-  this.Before('@usingSTOMP', function (scenario, callback) {
+  this.Before({tags: ['@usingSTOMP']}, function (scenario, callback) {
     this.api = setAPI(this, 'STOMP');
     callback();
   });
 
-  this.After('@unsubscribe', function (scenario, callback) {
+  this.After(function (scenario, callback) {
+    this.api.truncateCollection()
+      .then(() => {
+        this.api.refreshIndex(this.fakeIndex);
+        this.api.disconnect();
+        callback();
+      })
+      .catch(e => { callback(); });
+  });
+
+  this.After({tags: ['@unsubscribe']}, function (scenario, callback) {
     async.each(Object.keys(this.api.subscribedRooms), (socketName, callbackSocketName) => {
       async.each(Object.keys(this.api.subscribedRooms[socketName]), (room, callbackRoom) => {
         this.api.unsubscribe(room, socketName)
@@ -120,19 +129,19 @@ var myHooks = function () {
     }, error => callback(error));
   });
 
-  this.Before('@cleanSecurity', function (scenario, callback) {
+  this.Before({tags: ['@cleanSecurity']}, function (scenario, callback) {
     cleanSecurity.call(this, callback);
   });
 
-  this.After('@cleanSecurity', function (scenario, callback) {
+  this.After({tags: ['@cleanSecurity']}, function (scenario, callback) {
     cleanSecurity.call(this, callback);
   });
 
-  this.Before('@cleanRedis', function (scenario, callback) {
+  this.Before({tags: ['@cleanRedis']}, function (scenario, callback) {
     cleanRedis.call(this, callback);
   });
 
-  this.After('@cleanRedis', function (scenario, callback) {
+  this.After({tags: ['@cleanRedis']}, function (scenario, callback) {
     cleanRedis.call(this, callback);
   });
 };
