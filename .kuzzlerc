@@ -20,9 +20,9 @@
   // Host and port for the writeEngine service: the database called when we write a data. Can be an array.
   "writeEngine": {
     // autoRefresh: an index => boolean container object.
-    // If the autoRefresh is set to true for a given index, all write calls will be followed by a refreh request.
+    // If the autoRefresh is set to true for a given index, all write calls will be followed by a refresh request.
     //
-    // /!\ Enabling the autoRefresh can lead to performance issued.
+    // /!\ Enabling the autoRefresh can lead to performance issues.
     // cf https://www.elastic.co/guide/en/elasticsearch/guide/current/near-real-time.html#refresh-api
     //
     // "autoRefresh": { "index1": true|false }

@@ -6,6 +6,7 @@ var
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
   ResponseObject = require.main.require('lib/api/core/models/responseObject'),
+  BadRequestError = require.main.require('lib/api/core/errors/badRequestError'),
   PartialError = require.main.require('lib/api/core/errors/partialError');
 
 require('sinon-as-promised')(q.Promise);
@@ -485,10 +486,10 @@ describe('Test: admin controller', () => {
         .then(response => should(response).be.instanceOf(ResponseObject));
     });
 
-    it ('should reject with a response object in case of error', () => {
+    it ('should reject in case of error', () => {
       sandbox.stub(kuzzle.workerListener, 'add').rejects({});
 
-      return should(kuzzle.funnel.controllers.admin.getAutoRefresh(requestObject)).be.rejectedWith(ResponseObject);
+      return should(kuzzle.funnel.controllers.admin.getAutoRefresh(requestObject)).be.rejectedWith();
     });
 
     it('should trigger a plugin hook', done => {
@@ -521,7 +522,7 @@ describe('Test: admin controller', () => {
         body: {}
       });
 
-      return should(kuzzle.funnel.controllers.admin.setAutoRefresh(req)).be.rejectedWith(ResponseObject);
+      return should(kuzzle.funnel.controllers.admin.setAutoRefresh(req)).be.rejectedWith(BadRequestError);
     });
 
     it('should reject the promise if the autoRefresh value is not a boolean', () => {
@@ -530,7 +531,7 @@ describe('Test: admin controller', () => {
         body: { autoRefresh: -999 }
       });
 
-      return should(kuzzle.funnel.controllers.admin.setAutoRefresh(req)).be.rejectedWith(ResponseObject);
+      return should(kuzzle.funnel.controllers.admin.setAutoRefresh(req)).be.rejectedWith(BadRequestError);
     });
 
     it('should reject the promise in case of error', () => {
@@ -541,7 +542,7 @@ describe('Test: admin controller', () => {
 
       sandbox.stub(kuzzle.workerListener, 'add').rejects({});
 
-      return should(kuzzle.funnel.controllers.admin.setAutoRefresh(req)).be.rejectedWith(ResponseObject);
+      return should(kuzzle.funnel.controllers.admin.setAutoRefresh(req)).be.rejected();
     });
 
     it('should trigger a plugin hook', done => {
