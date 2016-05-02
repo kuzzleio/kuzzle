@@ -23,13 +23,12 @@ module.exports = function pluginsManager (plugin, options) {
     kuzzleConfiguration;
 
   if (!childProcess.hasOwnProperty('execSync')) {
-    console.error(clcError('███ kuzzle-install: Make sure you\'re using Node version >= 0.12'));
+    console.error(clcError('███ kuzzle-plugins: Make sure you\'re using Node version >= 0.12'));
     process.exit(1);
   }
 
   checkOptions(plugin, options);
 
-  console.log('███ kuzzle-install: Loading Kuzzle configuration...');
   kuzzleConfiguration = require('../../lib/config')(defaultConfig);
   dbService = new DatabaseService({config: kuzzleConfiguration});
   dbService.init();
@@ -37,7 +36,7 @@ module.exports = function pluginsManager (plugin, options) {
   // Prevents multiple 'kuzzle install' to install plugins at the same time.
   lockfile.lock('./node_modules', {retries: 1000, minTimeout: 200, maxTimeout: 1000, stale: 60000, update: 10000}, (err, release) => {
     if (err) {
-      console.error(clcError('███ kuzzle-install: Unable to acquire lock: '), err);
+      console.error(clcError('███ kuzzle-plugins: Unable to acquire lock: '), err);
       process.exit(1);
     }
 
@@ -45,58 +44,52 @@ module.exports = function pluginsManager (plugin, options) {
       .then(() => {
         if (options.install) {
           if (plugin) {
-            console.log('███ kuzzle-install: Installing plugin ' + plugin + '...');
+            console.log('███ kuzzle-plugins: Installing plugin ' + plugin + '...');
           }
           else {
-            console.log('███ kuzzle-install: Starting plugins installation...');
+            console.log('███ kuzzle-plugins: Starting plugins installation...');
           }
 
           return installPlugins(plugin, options, dbService, kuzzleConfiguration);
         }
 
         if (options.get) {
-          console.log('███ kuzzle-install: Getting configuration for plugin ' + plugin + '...');
           return getPluginConfiguration(plugin, dbService, kuzzleConfiguration);
         }
 
         if (options.set) {
-          console.log('███ kuzzle-install: Updating configuration for plugin ' + plugin + '...');
           return setPluginConfiguration(plugin, options.set, dbService, kuzzleConfiguration);
         }
 
         if (options.unset) {
-          console.log('███ kuzzle-install: Removing configuration ' + options.unset + ' from plugin ' + plugin + '...');
           return unsetPluginConfiguration(plugin, options.unset, dbService, kuzzleConfiguration);
         }
 
         if (options.replace) {
-          console.log('███ kuzzle-install: Replacing configuration of plugin ' + plugin + '...');
           return replacePluginConfiguration(plugin, options.replace, dbService, kuzzleConfiguration);
         }
 
         if (options.remove) {
-          console.log('███ kuzzle-install: Removing plugin ' + plugin + '...');
           return removePlugin(plugin, dbService, kuzzleConfiguration);
         }
 
         if (options.activate) {
-          console.log('███ kuzzle-install: Activating plugin ' + plugin + '...');
-          return dbService.update(kuzzleConfiguration.pluginsManager.dataCollection, plugin, {activated: true});
+          return dbService
+            .update(kuzzleConfiguration.pluginsManager.dataCollection, plugin, {activated: true})
+            .then(() => getPluginConfiguration(plugin, dbService, kuzzleConfiguration));
         }
 
         if (options.deactivate) {
-          console.log('███ kuzzle-install: Deactivating plugin ' + plugin + '...');
-          return dbService.update(kuzzleConfiguration.pluginsManager.dataCollection, plugin, {activated: false});
+          return dbService
+            .update(kuzzleConfiguration.pluginsManager.dataCollection, plugin, {activated: false})
+            .then(() => getPluginConfiguration(plugin, dbService, kuzzleConfiguration));
         }
       })
       .then(() => {
         release();
 
-        if (plugin) {
-          console.log(clcOk('Done'));
-        }
-        else {
-          console.log(clcOk('███ kuzzle-install: Plugins installed'));
+        if (!plugin) {
+          console.log(clcOk('███ kuzzle-plugins: Plugins installed'));
         }
 
         process.exit(0);
@@ -220,7 +213,7 @@ function installPlugins(plugin, options, dbService, kuzzleConfiguration) {
     .then(plugins => {
       acquirePlugins(plugins);
 
-      console.log('███ kuzzle-install: Updating plugins configuration...');
+      console.log('███ kuzzle-plugins: Updating plugins configuration...');
 
       return updatePluginsConfiguration(
         dbService,
@@ -242,7 +235,7 @@ function acquirePlugins(plugins) {
 
   _.forEach(plugins, (plugin, name) => {
     if (plugin.path) {
-      console.log('███ kuzzle-install: Plugin', name, 'uses local plugin. Config will be overrided with local changes.');
+      console.log('███ kuzzle-plugins: Plugin', name, 'uses local plugin. Config will be overrided with local changes.');
       installViaNpm = false;
     }
     else if (plugin.gitUrl) {
@@ -252,22 +245,22 @@ function acquirePlugins(plugins) {
       pluginInstallId = name + '@' + plugin.npmVersion;
     }
     else {
-      console.error(clcError('███ kuzzle-install: Plugin'), name, 'provides no means of installation. Expected: path, git URL or npm version');
+      console.error(clcError('███ kuzzle-plugins: Plugin'), name, 'provides no means of installation. Expected: path, git URL or npm version');
       process.exit(1);
     }
 
     if (!plugin.path && !needInstall(plugin, name, pluginInstallId)) {
-      console.log('███ kuzzle-install: Plugin', name, 'is already installed. Skipping...');
+      console.log('███ kuzzle-plugins: Plugin', name, 'is already installed. Skipping...');
       return true;
     }
 
-    console.log('███ kuzzle-install: Downloading plugin: ', name);
+    console.log('███ kuzzle-plugins: Downloading plugin: ', name);
     newInstalled = true;
     if (installViaNpm) {
       npmInstall(pluginInstallId);
     }
 
-    console.log('███ kuzzle-install: Plugin', name, 'downloaded');
+    console.log('███ kuzzle-plugins: Plugin', name, 'downloaded');
   });
 
   return newInstalled;
@@ -303,7 +296,7 @@ function updatePluginsConfiguration(db, collection, plugins) {
       pluginPackage = require(path.join(getPathPlugin(plugin, name), 'package.json'));
     }
     catch (e) {
-      console.error(clcError('███ kuzzle-install:'), 'There is a problem with plugin ' + name + '. Check the plugin installation directory');
+      console.error(clcError('███ kuzzle-plugins:'), 'There is a problem with plugin ' + name + '. Check the plugin installation directory');
     }
 
     // If there is no information about plugin in the package.json
@@ -480,7 +473,8 @@ function setPluginConfiguration(plugin, property, db, cfg) {
       var newConfiguration = result._source;
       _.extend(newConfiguration.config, jsonProperty);
       return db.update(cfg.pluginsManager.dataCollection, plugin, newConfiguration);
-    });
+    })
+    .then(() => getPluginConfiguration(plugin, db, cfg));
 }
 
 /**
@@ -504,7 +498,8 @@ function unsetPluginConfiguration(plugin, property, db, cfg) {
 
       delete config.config[property];
       return db.replace(cfg.pluginsManager.dataCollection, plugin, config);
-    });
+    })
+    .then(() => getPluginConfiguration(plugin, db, cfg));
 }
 
 /**
@@ -531,7 +526,8 @@ function replacePluginConfiguration(plugin, content, db, cfg) {
     .then(result => {
       result._source.config = jsonProperty;
       return db.replace(cfg.pluginsManager.dataCollection, plugin, result._source);
-    });
+    })
+    .then(() => getPluginConfiguration(plugin, db, cfg));
 }
 
 /**
@@ -557,7 +553,7 @@ function removePlugin(plugin, db, cfg) {
       var
         moduleDirectory;
 
-      console.log('███ kuzzle-install: Plugin configuration deleted');
+      console.log('███ kuzzle-plugins: Plugin configuration deleted');
 
       if (installedLocally) {
         try {
@@ -574,7 +570,7 @@ function removePlugin(plugin, db, cfg) {
     })
     .then(() => {
       if (installedLocally) {
-        console.log('███ kuzzle-install: Plugin directory deleted');
+        console.log('███ kuzzle-plugins: Plugin directory deleted');
       }
     });
 }
