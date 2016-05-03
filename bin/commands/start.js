@@ -1,4 +1,5 @@
 var
+  fs = require('fs'),
   rc = require('rc'),
   params = rc('kuzzle'),
   kuzzle = require('../../lib'),
@@ -12,17 +13,13 @@ var
   ok = clc.green.bold,
   kuz = clc.greenBright.bold;
 
-if (process.env.NEW_RELIC_APP_NAME) {
-  require('newrelic');
-}
-
 if (process.env.FEATURE_COVERAGE == 1) {
   var coverage = require('istanbul-middleware');
   console.log(warn('Hook loader for coverage - ensure this is not production!'));
   coverage.hookLoader(__dirname+'/../lib');
 }
 
-module.exports = function (args) {
+module.exports = function () {
   console.log(kuz('Starting Kuzzle'), (kuzzle.isServer ? notice('Server') : warn('Worker')));
 
   kuzzle.start(params)
@@ -85,10 +82,9 @@ module.exports = function (args) {
         data = {};
 
       if (kuzzle.isServer) {
-        deferred = q.defer();
         if (params.fixtures) {
           try {
-            tmp = JSON.parse(fs.readFileSync(params.fixtures, 'utf8'));
+            JSON.parse(fs.readFileSync(params.fixtures, 'utf8'));
           } catch(e) {
             console.log(error('[✖] The file ' + params.fixtures + ' cannot be opened... aborting.'));
             process.exit(1);
@@ -98,7 +94,7 @@ module.exports = function (args) {
 
         if (params.mappings) {
           try {
-            tmp = JSON.parse(fs.readFileSync(params.mappings, 'utf8'));
+            JSON.parse(fs.readFileSync(params.mappings, 'utf8'));
           } catch(e) {
             console.log(error('[✖] The file ' + params.mappings + ' cannot be opened... aborting.'));
             process.exit(1);
@@ -125,7 +121,7 @@ module.exports = function (args) {
             }
             console.log(notice('[ℹ] Entering no-administrator mode: everyone has administrator rights.'));
           })
-          .catch((err) => {
+          .catch(() => {
             console.log(ok('[✔] It seems that you already have an admin account.'));
           });
       }

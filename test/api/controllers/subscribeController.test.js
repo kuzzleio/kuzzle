@@ -2,138 +2,109 @@ var
   should = require('should'),
   params = require('rc')('kuzzle'),
   q = require('q'),
+  sinon = require('sinon'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
   ResponseObject = require.main.require('lib/api/core/models/responseObject');
 
-/*
- * Since we're sending voluntarily false requests, we expect most of these
- * calls to fail.
- */
+require('sinon-as-promised')(q.Promise);
+
 describe('Test: subscribe controller', function () {
   var
     kuzzle,
-    anonymousToken,
-    context,
-    requestObject,
-    error,
-    mockFunction,
-    mockResponse;
+    sandbox,
+    requestObject;
 
-  before(function () {
-    mockFunction = () => {
-      if (error) {
-        return q.reject(new Error('foobar'));
-      }
-
-      return q(mockResponse);
-    };
-
-    context = {};
+  before(() => {
     kuzzle = new Kuzzle();
-    return kuzzle.start(params, {dummy: true})
-      .then(function () {
-        return kuzzle.repositories.token.anonymous();
-      })
-      .then(function (token) {
-        anonymousToken = token;
-      });
+    return kuzzle.start(params, {dummy: true});
   });
 
   beforeEach(() => {
-    error = false;
-    mockResponse = {};
     requestObject = new RequestObject({index: 'test', collection: 'collection', controller: 'subscribe'}, {}, 'unit-test');
+    sandbox = sinon.sandbox.create();
+  });
+
+  afterEach(() => {
+    sandbox.restore();
   });
 
   describe('#on', () => {
-    before(() => {
-      kuzzle.hotelClerk.addSubscription = mockFunction;
-    });
-
     it('should forward new subscriptions to the hotelClerk core component', function () {
+      sandbox.stub(kuzzle.hotelClerk, 'addSubscription').resolves();
+
       return kuzzle.funnel.controllers.subscribe.on(requestObject)
         .then(response => should(response).be.instanceOf(ResponseObject));
     });
 
     it('should reject with a response object in case of error', () => {
-      error = true;
+      sandbox.stub(kuzzle.hotelClerk, 'addSubscription').rejects();
       return should(kuzzle.funnel.controllers.subscribe.on(requestObject)).be.rejected();
     });
   });
 
   describe('#off', () => {
-    before(() => {
-      kuzzle.hotelClerk.removeSubscription = mockFunction;
-    });
-
     it('should forward unsubscribes queries to the hotelClerk core component', function () {
+      sandbox.stub(kuzzle.hotelClerk, 'removeSubscription').resolves();
       return kuzzle.funnel.controllers.subscribe.off(requestObject)
         .then(response => should(response).be.instanceOf(ResponseObject));
     });
 
     it('should reject with a response object in case of error', () => {
-      error = true;
+      sandbox.stub(kuzzle.hotelClerk, 'removeSubscription').rejects();
       return should(kuzzle.funnel.controllers.subscribe.off(requestObject)).be.rejected();
     });
   });
 
   describe('#count', () => {
-    before(() => {
-      kuzzle.hotelClerk.countSubscription = mockFunction;
-    });
-
     it('should forward subscription counts queries to the hotelClerk core component', function () {
+      sandbox.stub(kuzzle.hotelClerk, 'countSubscription').resolves();
       return kuzzle.funnel.controllers.subscribe.count(requestObject)
         .then(response => should(response).be.instanceOf(ResponseObject));
     });
 
     it('should reject with a response object in case of error', () => {
-      error = true;
+      sandbox.stub(kuzzle.hotelClerk, 'countSubscription').rejects();
       return should(kuzzle.funnel.controllers.subscribe.count(requestObject)).be.rejected();
     });
   });
 
   describe('#list', function () {
-    before(() => {
-      kuzzle.hotelClerk.listSubscriptions = mockFunction;
-    });
-
     it('should trigger a hook and return a promise', function (done) {
       this.timeout(50);
+      sandbox.stub(kuzzle.hotelClerk, 'listSubscriptions').resolves();
 
       kuzzle.once('subscription:beforeList', () => done());
       kuzzle.funnel.controllers.subscribe.list(requestObject);
     });
 
     it('should forward subscription list query to the hotelClerk core component', function () {
+      sandbox.stub(kuzzle.hotelClerk, 'listSubscriptions').resolves();
       return kuzzle.funnel.controllers.subscribe.list(requestObject)
         .then(response => should(response).be.instanceOf(ResponseObject));
     });
 
     it('should reject with a response object in case of error', () => {
-      error = true;
+      sandbox.stub(kuzzle.hotelClerk, 'listSubscriptions').rejects();
       return should(kuzzle.funnel.controllers.subscribe.list(requestObject)).be.rejected();
     });
   });
 
   describe('#join', function () {
-    before(() => {
-      kuzzle.hotelClerk.join = mockFunction;
-    });
-
     it('should forward subscription join query to the hotelClerk core component', function () {
+      sandbox.stub(kuzzle.hotelClerk, 'join').resolves();
       return kuzzle.funnel.controllers.subscribe.join(requestObject)
         .then(response => should(response).be.instanceOf(ResponseObject));
     });
 
     it('should reject with a response object in case of error', () => {
-      error = true;
+      sandbox.stub(kuzzle.hotelClerk, 'join').rejects();
       return should(kuzzle.funnel.controllers.subscribe.join(requestObject)).be.rejected();
     });
 
     it('should trigger a hook and return a promise', function (done) {
       this.timeout(50);
+      sandbox.stub(kuzzle.hotelClerk, 'join').resolves();
       kuzzle.once('subscription:beforeJoin', () => done());
       kuzzle.funnel.controllers.subscribe.join(requestObject);
     });
