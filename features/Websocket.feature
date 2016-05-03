@@ -246,8 +246,8 @@ Feature: Test websocket API
 
   @usingWebsocket @cleanSecurity
   Scenario: login user
-    Given I create a user "useradmin" with id "user1-id"
-    When I log in as user1-id:testpwd expiring in 1h
+    Given I create a user "useradmin" with id "useradmin-id"
+    When I log in as useradmin-id:testpwd expiring in 1h
     Then I write the document
     Then I check the JWT Token
     And The token is valid
@@ -312,27 +312,27 @@ Feature: Test websocket API
     When I create a new role "role1" with id "role1"
     And I create a new role "role2" with id "role2"
     And I create a new profile "profile2" with id "profile2"
-    And I create a new user "useradmin" with id "user1-id"
+    And I create a new user "useradmin" with id "useradmin-id"
     And I create a user "user2" with id "user2-id"
-    And I can't create a new user "user2" with id "user1-id"
-    Then I am able to get the user "user1-id" matching {"_id":"#prefix#user1-id","_source":{"profile":{"_id":"admin", "_source": {"roles":[{"_id":"admin"}]}}}}
+    And I can't create a new user "user2" with id "useradmin-id"
+    Then I am able to get the user "useradmin-id" matching {"_id":"#prefix#useradmin-id","_source":{"profile":{"_id":"admin", "_source": {"roles":[{"_id":"admin"}]}}}}
     Then I am able to get the user "user2-id" matching {"_id":"#prefix#user2-id","_source":{"profile":{"_id":"#prefix#profile2"}}}
     Then I search for {"regexp":{"_uid":"users.#prefix#.*"}} and find 2 users
     Then I delete the user "user2-id"
-    Then I search for {"regexp":{"_uid":"users.#prefix#.*"}} and find 1 users matching {"_id":"#prefix#user1-id","_source":{"name":{"first":"David","last":"Bowie"}}}
-    When I log in as user1-id:testpwd expiring in 1h
-    Then I am getting the current user, which matches {"_id":"#prefix#user1-id","_source":{"profile":{"_id":"admin"}}}
+    Then I search for {"regexp":{"_uid":"users.#prefix#.*"}} and find 1 users matching {"_id":"#prefix#useradmin-id","_source":{"name":{"first":"David","last":"Bowie"}}}
+    When I log in as useradmin-id:testpwd expiring in 1h
+    Then I am getting the current user, which matches {"_id":"#prefix#useradmin-id","_source":{"profile":{"_id":"admin"}}}
     Then I log out
     Then I am getting the current user, which matches {"_id":-1,"_source":{"profile":{"_id":"anonymous"}}}
 
   @usingWebsocket @cleanSecurity
   Scenario: user updateSelf
-    When I create a new user "useradmin" with id "user1-id"
-    Then I am able to get the user "user1-id" matching {"_id":"#prefix#user1-id","_source":{"profile":{"_id":"admin", "_source": {"roles":[{"_id":"admin"}]}}}}
-    When I log in as user1-id:testpwd expiring in 1h
-    Then I am getting the current user, which matches {"_id":"#prefix#user1-id","_source":{"profile":{"_id":"admin"}}}
+    When I create a new user "useradmin" with id "useradmin-id"
+    Then I am able to get the user "useradmin-id" matching {"_id":"#prefix#useradmin-id","_source":{"profile":{"_id":"admin", "_source": {"roles":[{"_id":"admin"}]}}}}
+    When I log in as useradmin-id:testpwd expiring in 1h
+    Then I am getting the current user, which matches {"_id":"#prefix#useradmin-id","_source":{"profile":{"_id":"admin"}}}
     Then I update current user with data {"foo":"bar"}
-    Then I am getting the current user, which matches {"_id":"#prefix#user1-id","_source":{"profile":{"_id":"admin"},"foo":"bar"}}
+    Then I am getting the current user, which matches {"_id":"#prefix#useradmin-id","_source":{"profile":{"_id":"admin"},"foo":"bar"}}
     Then I log out
     Then I am getting the current user, which matches {"_id":-1,"_source":{"profile":{"_id":"anonymous"}}}
 
@@ -345,7 +345,7 @@ Feature: Test websocket API
     And I should receive a "jwtTokenExpired" notification
 
   @usingWebsocket @cleanSecurity @unsubscribe
-  Scenario: user permissions @permissions
+  Scenario: user permissions
     Given I create a new role "role1" with id "role1"
     And I create a new role "role2" with id "role2"
     And I create a new role "role3" with id "role3"
