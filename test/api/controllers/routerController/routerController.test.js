@@ -115,7 +115,7 @@ describe('Test: routerController', () => {
 
     it('should return an error if no request object is provided', (done) => {
       kuzzle.router.execute(undefined, context, (err) => {
-        if (err && err instanceof ResponseObject) {
+        if (err && err instanceof PluginImplementationError) {
           done();
         }
         else {
@@ -126,7 +126,7 @@ describe('Test: routerController', () => {
 
     it('should return an error if an invalid context is provided', (done) => {
       kuzzle.router.execute(requestObject, {}, (err) => {
-        if (err && err instanceof ResponseObject) {
+        if (err && err instanceof PluginImplementationError) {
           done();
         }
         else {
@@ -145,7 +145,7 @@ describe('Test: routerController', () => {
         };
 
       kuzzle.router.execute(requestObject, invalidContext, (err) => {
-        if (err && err instanceof ResponseObject) {
+        if (err && err instanceof PluginImplementationError) {
           done();
         }
         else {
@@ -155,10 +155,10 @@ describe('Test: routerController', () => {
     });
 
     it('should forward any error that occured during execution back to the protocol plugin', (done) => {
-      kuzzle.funnel.execute = (r, c, cb) => { cb(new ResponseObject(r, new Error('rejected'))); };
+      kuzzle.funnel.execute = (r, c, cb) => cb(new Error('rejected'));
 
       kuzzle.router.execute(requestObject, context, (err) => {
-        if (err && err instanceof ResponseObject) {
+        if (err && err instanceof Error) {
           done();
         }
         else {
