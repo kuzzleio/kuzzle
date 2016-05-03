@@ -26,19 +26,9 @@ describe('Test: hotelClerk.addSubscription', function () {
       }
     };
 
-  beforeEach(function (done) {
-    require.cache = {};
+  beforeEach(() => {
     kuzzle = new Kuzzle();
-    kuzzle.removeAllListeners();
-
-    return kuzzle.start(params, {dummy: true})
-      .then(function () {
-        return kuzzle.repositories.token.anonymous();
-      })
-      .then(function (token) {
-        context.token = token;
-        done();
-      });
+    return kuzzle.start(params, {dummy: true});
   });
 
   it('should have object filtersTree, customers and rooms empty', function () {
