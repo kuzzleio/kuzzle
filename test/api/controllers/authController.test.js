@@ -466,21 +466,21 @@ describe('Test the auth controller', function () {
         .catch(error => { done(error); });
     });
 
-    it('should reject a ResponseObject if profile is specified', () => {
+    it('should reject if profile is specified', () => {
       should(kuzzle.funnel.controllers.auth.updateSelf(new RequestObject({
         body: { foo: 'bar', profile: 'test' }
       }), { token: { user: { _id: 'admin' }, _id: 'admin' } }))
-        .be.rejectedWith(ResponseObject);
+        .be.rejected();
     });
 
-    it('should reject a ResponseObject if _id is specified in the body', () => {
+    it('should reject if _id is specified in the body', () => {
       should(kuzzle.funnel.controllers.auth.updateSelf(new RequestObject({
         body: { foo: 'bar', _id: 'test' }
       }), { token: { user: { _id: 'admin' }, _id: 'admin' } }))
-        .be.rejectedWith(ResponseObject);
+        .be.rejected();
     });
 
-    it('should reject a ResponseObject the promise if current user is anonymous', () => {
+    it('should reject a the promise if current user is anonymous', () => {
       should(kuzzle.funnel.controllers.auth.updateSelf(new RequestObject({
         body: {
           foo: 'bar'
@@ -493,7 +493,7 @@ describe('Test the auth controller', function () {
           _id: null
         }
       }))
-        .be.rejectedWith(ResponseObject);
+        .be.rejected();
     });
   });
 });

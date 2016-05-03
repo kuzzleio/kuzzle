@@ -7,6 +7,7 @@ var
   Profile = require.main.require('lib/api/core/models/security/profile'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
+  NotFoundError = require.main.require('lib/api/core/errors/notFoundError'),
   ResponseObject = require.main.require('lib/api/core/models/responseObject');
 
 require('sinon-as-promised')(q.Promise);
@@ -56,7 +57,7 @@ describe('Test: security controller - profiles', function () {
       sandbox.stub(kuzzle.repositories.profile, 'validateAndSaveProfile').rejects();
       return should(kuzzle.funnel.controllers.security.createProfile(new RequestObject({
         body: {_id: 'test', roles: ['role1']}
-      }))).be.rejectedWith(ResponseObject);
+      }))).be.rejected();
     });
 
     it('should resolve to a responseObject on a createProfile call', () => {
@@ -87,7 +88,7 @@ describe('Test: security controller - profiles', function () {
       sandbox.stub(kuzzle.repositories.profile, 'loadProfile').resolves(null);
       return should(kuzzle.funnel.controllers.security.getProfile(new RequestObject({
           body: {_id: 'test'}
-        }))).be.rejectedWith(ResponseObject);
+        }))).be.rejected(NotFoundError);
     });
   });
 
