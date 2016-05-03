@@ -95,9 +95,13 @@ describe('Test: notifier.notifyDocumentDelete', function () {
     kuzzle.notifier.notifyDocumentDelete(requestObject, ids);
 
     setTimeout(() => {
+      try {
       should(notification.length).be.eql(ids.length);
       should(notification.map(n => n._id)).match(ids);
       done();
+    } catch (err) {
+      done(err);
+    }
     }, 20);
   });
 });

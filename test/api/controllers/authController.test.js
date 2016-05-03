@@ -201,8 +201,7 @@ describe('Test the auth controller', function () {
       kuzzle.funnel.controllers.auth.passport = new MockupWrapper('reject');
       kuzzle.funnel.controllers.auth.login(requestObject)
         .catch((error) => {
-          should(error).be.an.instanceOf(ResponseObject);
-          should(error.error.message).be.exactly('Mockup Wrapper Error');
+          should(error.message).be.exactly('Mockup Wrapper Error');
           done();
         });
     });
@@ -259,7 +258,7 @@ describe('Test the auth controller', function () {
         }
       };
 
-      return should(kuzzle.funnel.controllers.auth.logout(requestObject, context)).be.rejectedWith(ResponseObject);
+      return should(kuzzle.funnel.controllers.auth.logout(requestObject, context)).be.rejected();
     });
 
     it('should expire token', function (done) {
@@ -285,7 +284,7 @@ describe('Test the auth controller', function () {
         return q.reject();
       };
 
-      return should(kuzzle.funnel.controllers.auth.logout(requestObject, context)).be.rejectedWith(ResponseObject);
+      return should(kuzzle.funnel.controllers.auth.logout(requestObject, context)).be.rejected();
     });
 
     it('should remove all room registration for current connexion', function (done) {
@@ -351,7 +350,7 @@ describe('Test the auth controller', function () {
         token: { user: { _id: 'unknown_user' } }
       });
 
-      return should(promise).be.rejectedWith(ResponseObject);
+      return should(promise).be.rejected();
     });
   });
 
@@ -370,7 +369,7 @@ describe('Test the auth controller', function () {
     });
 
     it('should return a rejected promise if no token is provided', function () {
-      return should(kuzzle.funnel.controllers.auth.checkToken(new RequestObject({ body: {}}))).be.rejectedWith(ResponseObject);
+      return should(kuzzle.funnel.controllers.auth.checkToken(new RequestObject({ body: {}}))).be.rejected();
     });
 
     it('should return a valid response if the token is valid', function (done) {
@@ -467,21 +466,21 @@ describe('Test the auth controller', function () {
         .catch(error => { done(error); });
     });
 
-    it('should reject a ResponseObject if profile is specified', () => {
+    it('should reject if profile is specified', () => {
       should(kuzzle.funnel.controllers.auth.updateSelf(new RequestObject({
         body: { foo: 'bar', profile: 'test' }
       }), { token: { user: { _id: 'admin' }, _id: 'admin' } }))
-        .be.rejectedWith(ResponseObject);
+        .be.rejected();
     });
 
-    it('should reject a ResponseObject if _id is specified in the body', () => {
+    it('should reject if _id is specified in the body', () => {
       should(kuzzle.funnel.controllers.auth.updateSelf(new RequestObject({
         body: { foo: 'bar', _id: 'test' }
       }), { token: { user: { _id: 'admin' }, _id: 'admin' } }))
-        .be.rejectedWith(ResponseObject);
+        .be.rejected();
     });
 
-    it('should reject a ResponseObject the promise if current user is anonymous', () => {
+    it('should reject a the promise if current user is anonymous', () => {
       should(kuzzle.funnel.controllers.auth.updateSelf(new RequestObject({
         body: {
           foo: 'bar'
@@ -494,7 +493,7 @@ describe('Test the auth controller', function () {
           _id: null
         }
       }))
-        .be.rejectedWith(ResponseObject);
+        .be.rejected();
     });
   });
 });
