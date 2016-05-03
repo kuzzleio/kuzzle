@@ -1,122 +1,120 @@
 var
   should = require('should'),
+  q = require('q'),
+  sinon = require('sinon'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
+  BadRequestError = require.main.require('lib/api/core/errors/badRequestError'),
+  NotFoundError = require.main.require('lib/api/core/errors/notFoundError'),
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle');
+
+require('sinon-as-promised')(q.Promise);
 
 describe('Test: hotelClerk.removeSubscription', function () {
   var
     kuzzle,
-    roomId,
-    channel,
-    anonymousUser,
     connection = {id: 'connectionid'},
     context = {
       connection: connection,
-      user: anonymousUser
+      user: null
     },
-    badConnection = {id: 'badconnectionid'},
-    roomName1 = 'roomName1',
-    roomName2 = 'roomName2',
     index = 'test',
     collection = 'user',
-    filter1 = {
-      term: {
-        firstName: 'Ada'
-      }
-    },
-    filter2 = {
-      terms: {
-        firstName: ['Ada', 'Grace']
-      }
-    },
-    requestObject1 = new RequestObject({
+    unsubscribeRequest;
+
+
+  before(() => {
+    kuzzle = new Kuzzle();
+
+    return kuzzle.start(params, {dummy: true});
+  });
+
+  beforeEach(() => {
+    sandbox = sinon.sandbox.create();
+
+    unsubscribeRequest = new RequestObject({
       controller: 'subscribe',
-      action: 'on',
-      requestId: roomName1,
+      action: 'off',
       index: index,
       collection: collection,
-      body: filter1
-    }),
-    requestObject2 = new RequestObject({
-      controller: 'subscribe',
-      action: 'on',
-      requestId: roomName2,
-      index: index,
-      collection: collection,
-      body: filter2
-    }),
-    unsubscribeRequest,
-    notified,
-    mockupNotifier = (roomId, request, notification) => {
-      notified = { roomId, request, notification };
+      body: { roomId: 'foo' }
+    });
+
+    kuzzle.hotelClerk.customers[connection.id] = {
+      'foo': {},
+      'bar': {}
     };
 
+    kuzzle.hotelClerk.rooms = {
+      'foo': {
+        customers: [connection.id],
+        index,
+        collection,
+        channels: ['foobar']
+      },
+      'bar': {
+        customers: [connection.id],
+        index,
+        collection,
+        channels: ['barfoo']
+      }
+    };
+  });
 
-  beforeEach(function () {
-    notified = null;
-    kuzzle = new Kuzzle();
-    kuzzle.removeAllListeners();
-
-    return kuzzle.start(params, {dummy: true})
-      .then(() => kuzzle.repositories.user.anonymous())
-      .then(user => {
-        anonymousUser = user;
-        kuzzle.notifier.notify = mockupNotifier;
-        return kuzzle.hotelClerk.addSubscription(requestObject1, context);
-      })
-      .then(notification => {
-        roomId = notification.roomId;
-        channel = notification.channel;
-        unsubscribeRequest = new RequestObject({
-          controller: 'subscribe',
-          action: 'off',
-          index: index,
-          collection: collection,
-          body: { roomId: roomId }
-        });
-      });
+  afterEach(() => {
+    sandbox.restore();
   });
 
   it('should do nothing when a bad connectionId is given', function () {
     var
       badContext = {
-        connection: badConnection,
-        user: anonymousUser
+        connection: {id: 'unknown'},
+        user: null
       };
 
-    return should(kuzzle.hotelClerk.removeSubscription(requestObject1, badContext)).be.rejected();
+    return should(kuzzle.hotelClerk.removeSubscription(unsubscribeRequest, badContext)).be.rejectedWith(NotFoundError);
   });
 
   it('should do nothing when a badly formed unsubscribe request is provided', function () {
-    var badRequestObject = new RequestObject({
-      controller: 'subscribe',
-      action: 'on',
-      index: index,
-      collection: collection,
-      body: filter1
-    });
-
-    return should(kuzzle.hotelClerk.removeSubscription(badRequestObject, context)).be.rejected();
+    delete unsubscribeRequest.data.body;
+    return should(kuzzle.hotelClerk.removeSubscription(unsubscribeRequest, context)).be.rejectedWith(BadRequestError);
   });
 
   it('should do nothing if a bad room name is given', function () {
-    var badRequestObject = new RequestObject({
-      controller: 'subscribe',
-      action: 'on',
-      index: index,
-      collection: collection,
-      body: { roomId: 'this is not a room ID' }
-    });
+    unsubscribeRequest.data.body.roomId = 'qux';
+    return should(kuzzle.hotelClerk.removeSubscription(unsubscribeRequest, context)).be.rejectedWith(NotFoundError);
+  });
 
-    return should(kuzzle.hotelClerk.removeSubscription(badRequestObject, context)).be.rejected();
+  it('should not delete all subscriptions when we want to just remove one', function () {
+    var mock = sandbox.mock(kuzzle.dsl).expects('removeRoom').once().resolves();
+
+    sandbox.spy(kuzzle.notifier, 'notify');
+
+    return kuzzle.hotelClerk.removeSubscription(unsubscribeRequest, context)
+      .finally(function () {
+        mock.verify();
+        should(kuzzle.notifier.notify.called).be.false();
+
+        should(kuzzle.hotelClerk.rooms).be.an.Object();
+        should(kuzzle.hotelClerk.rooms).have.property('bar');
+        should(kuzzle.hotelClerk.rooms).not.have.property('foo');
+
+        should(kuzzle.hotelClerk.customers).be.an.Object();
+        should(kuzzle.hotelClerk.customers).not.be.empty();
+      });
   });
 
   it('should clean up customers, rooms and filtersTree object', function () {
+    var mock = sandbox.mock(kuzzle.dsl).expects('removeRoom').once().resolves();
+
+    sandbox.spy(kuzzle.notifier, 'notify');
+    delete kuzzle.hotelClerk.rooms.bar;
+    delete kuzzle.hotelClerk.customers[connection.id].bar;
+
     return kuzzle.hotelClerk.removeSubscription(unsubscribeRequest, context)
       .finally(function () {
-        should(kuzzle.dsl.filtersTree).be.an.Object();
-        should(kuzzle.dsl.filtersTree).be.empty();
+        mock.verify();
+        should(kuzzle.notifier.notify.called).be.false();
 
         should(kuzzle.hotelClerk.rooms).be.an.Object();
         should(kuzzle.hotelClerk.rooms).be.empty();
@@ -126,44 +124,29 @@ describe('Test: hotelClerk.removeSubscription', function () {
       });
   });
 
-  it('should not delete all subscriptions when we want to just remove one', function () {
-    return kuzzle.hotelClerk.addSubscription(requestObject2, context)
-      .then(function () {
-        return kuzzle.hotelClerk.removeSubscription(unsubscribeRequest, context)
-          .then(function () {
-            should(kuzzle.dsl.filtersTree).be.an.Object();
-            should(kuzzle.dsl.filtersTree).not.be.empty();
-
-            should(kuzzle.hotelClerk.rooms).be.an.Object();
-            should(kuzzle.hotelClerk.rooms).not.be.empty();
-
-            should(kuzzle.hotelClerk.customers).be.an.Object();
-            should(kuzzle.hotelClerk.customers).not.be.empty();
-          });
-      });
-  });
-
   it('should send a notification to other users connected on that room', function () {
     var
-      localContext = {
-        connection: {id: 'anotherconnection'},
-        user: anonymousUser
-      },
-      rId;
+      mockDsl = sandbox.mock(kuzzle.dsl).expects('removeRoom').never(),
+      mockNotify = sandbox.mock(kuzzle.notifier).expects('notify').once();
 
-    return kuzzle.hotelClerk.addSubscription(requestObject1, localContext)
-      .then(createdRoom => {
-        rId = createdRoom.roomId;
-        return kuzzle.hotelClerk.removeSubscription(unsubscribeRequest, context);
-      })
-      .then(() => {
-        should(notified.roomId).be.exactly(rId);
-        should(notified.request).be.instanceOf(RequestObject);
-        should(notified.request.controller).be.exactly('subscribe');
-        should(notified.request.action).be.exactly('off');
-        should(notified.request.index).be.exactly(requestObject1.index);
-        should(notified.request.collection).be.exactly(requestObject1.collection);
-        should(notified.notification.count).be.exactly(1);
+    kuzzle.hotelClerk.rooms.foo.customers.push('another connection');
+
+    return kuzzle.hotelClerk.removeSubscription(unsubscribeRequest, context)
+      .finally(() => {
+        mockDsl.verify();
+        mockNotify.verify();
+
+        // testing roomId argument
+        should(mockNotify.args[0][0]).be.exactly('foo');
+
+        // testing requestObject argument
+        should(mockNotify.args[0][1]).be.instanceOf(RequestObject);
+        should(mockNotify.args[0][1].controller).be.exactly('subscribe');
+        should(mockNotify.args[0][1].action).be.exactly('off');
+        should(mockNotify.args[0][1].index).be.exactly(index);
+
+        // testing payload argument
+        should(mockNotify.args[0][2].count).be.exactly(1);
       });
   });
 

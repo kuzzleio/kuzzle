@@ -10,10 +10,7 @@ describe('Test: hotelClerk.removeRooms', function () {
   var
     kuzzle,
     connection = {id: 'connectionid'},
-    context = {
-      connection: connection,
-      user: null
-    },
+    context,
     roomName,
     index = 'test',
     collection1 = 'user',
@@ -29,19 +26,19 @@ describe('Test: hotelClerk.removeRooms', function () {
       }
     };
 
-  beforeEach(function (done) {
-    require.cache = {};
-    roomName = 'roomName';
+  beforeEach(() => {
     kuzzle = new Kuzzle();
-    kuzzle.removeAllListeners();
 
     return kuzzle.start(params, {dummy: true})
-      .then(function () {
-        return kuzzle.repositories.token.anonymous();
-      })
-      .then(function (token) {
-        context.token = token;
-        done();
+      .then(() => {
+        context = {
+          connection: connection,
+          token: {
+            user: {
+              profile: {}
+            }
+          }
+        };
       });
   });
 

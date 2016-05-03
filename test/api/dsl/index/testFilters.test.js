@@ -78,11 +78,10 @@ describe('Test: dsl.testFilters', function () {
     kuzzle = new Kuzzle();
 
     return kuzzle.start(params, {dummy: true})
-      .then(() => kuzzle.repositories.user.anonymous())
       .then(user => {
         var context = {
           connection: {id: 'connectionid'},
-          user: user
+          user: null
         };
 
         return kuzzle.hotelClerk.addSubscription(requestObjectSubscribeGrace, context);
