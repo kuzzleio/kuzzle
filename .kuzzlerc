@@ -111,7 +111,7 @@
       }
     }
   },
-  // Default security roles 
+  // Default security roles
   "userRoles": {
     "admin": {
       "indexes": {
@@ -224,7 +224,7 @@
         "activated": true
       },
       "kuzzle-plugin-socketio": {
-        "npmVersion": "1.0.7",
+        "npmVersion": "1.0.8",
         "activated": true
       },
       "kuzzle-plugin-auth-passport-local": {
