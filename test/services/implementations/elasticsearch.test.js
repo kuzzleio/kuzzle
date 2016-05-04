@@ -4,7 +4,7 @@ var
   sinon = require('sinon'),
   rewire = require('rewire'),
   params = require('rc')('kuzzle'),
-  Config = require.main.require('lib/config'),
+  Kuzzle = require.main.require('lib/api/Kuzzle'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
   BadRequestError = require.main.require('lib/api/core/errors/badRequestError.js'),
   NotFoundError = require.main.require('lib/api/core/errors/notFoundError'),
@@ -13,7 +13,7 @@ var
 describe('Test: ElasticSearch service', function () {
   var
     kuzzle = {},
-    sandbox,
+    sandbox = sinon.sandbox.create(),
     index = '%test',
     collection = 'unit-tests-elasticsearch',
     createdDocumentId = 'id-test',
@@ -45,21 +45,23 @@ describe('Test: ElasticSearch service', function () {
 
 
   before(()=> {
-    kuzzle.config = new Config(params);
-    kuzzle.pluginsManager = {
-      trigger: () => {}
-    };
+    kuzzle = new Kuzzle();
+    return kuzzle.start(params, {dummy: true})
+      .then(() => {
+        kuzzle.pluginsManager = {
+          trigger: () => {}
+        };
 
-    elasticsearch = new ES(kuzzle, {service: engineType});
+        elasticsearch = new ES(kuzzle, {service: engineType});
 
-    // we make sure the service won't eer be able to connect to elasticsearch
-    elasticsearch.init();
-    elasticsearch.client.transport = {};
+        // we make sure the services won't ever be able to connect to elasticsearch
+        elasticsearch.init();
+        elasticsearch.client.transport = {};
+        kuzzle.internalEngine.client.transport = {};
+      });
   });
 
   beforeEach(() => {
-    sandbox = sinon.sandbox.create();
-
     elasticsearch.autoRefresh = {};
 
     requestObject = new RequestObject({
@@ -70,10 +72,10 @@ describe('Test: ElasticSearch service', function () {
       index: index,
       body: documentAda
     });
+  });
 
-    afterEach(() => {
-      sandbox.restore();
-    });
+  afterEach(() => {
+    sandbox.restore();
   });
 
   describe('#init', function () {
@@ -940,13 +942,12 @@ describe('Test: ElasticSearch service', function () {
         .then(response => {
           should(response).be.false();
 
-          elasticsearch.autoRefresh[requestObject.index] = true;
-
+          elasticsearch.settings.autoRefresh[requestObject.index] = true;
           return elasticsearch.getAutoRefresh(requestObject);
         })
         .then(response => {
           should(response).be.true();
-          elasticsearch.autoRefresh[requestObject.index] = false;
+          elasticsearch.settings.autoRefresh[requestObject.index] = false;
         })
       ).be.fulfilled();
     });
@@ -954,14 +955,17 @@ describe('Test: ElasticSearch service', function () {
 
   describe('#setAutoRefresh', function () {
     it('should toggle the autoRefresh status', () => {
-      var req = new RequestObject({
-        index: requestObject.index,
-        body: { autoRefresh: true }
-      });
+      var
+        spy = sandbox.stub(kuzzle.internalEngine, 'createOrReplace').resolves({}),
+        req = new RequestObject({
+          index: requestObject.index,
+          body: { autoRefresh: true }
+        });
 
       return should(elasticsearch.setAutoRefresh(req)
         .then(response => {
           should(response).be.true();
+          should(spy.calledOnce).be.true();
 
           req.data.body.autoRefresh = false;
           return elasticsearch.setAutoRefresh(req);
@@ -991,7 +995,7 @@ describe('Test: ElasticSearch service', function () {
         refreshIndexIfNeeded = ES.__get__('refreshIndexIfNeeded'),
         spy = sandbox.stub(elasticsearch.client.indices, 'refresh').resolves({});
 
-      elasticsearch.autoRefresh[requestObject.index] = true;
+      elasticsearch.settings.autoRefresh[requestObject.index] = true;
 
       return should(refreshIndexIfNeeded.call(elasticsearch, { index: requestObject.index }, { foo: 'bar' })
         .then(response => {
@@ -1014,6 +1018,10 @@ describe('Test: ElasticSearch service', function () {
           should(spy.called).be.true();
           should(response).be.eql({ foo: 'bar' });
         })
+        .catch(err => {
+          console.log(err);
+        })
+
       ).be.fulfilled();
     });
 

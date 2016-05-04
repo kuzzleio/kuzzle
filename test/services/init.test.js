@@ -1,16 +1,27 @@
 var
   should = require('should'),
   params = require('rc')('kuzzle'),
-  Kuzzle = require.main.require('lib/api/Kuzzle');
+  sinon = require('sinon'),
+  Kuzzle = require.main.require('lib/api/Kuzzle'),
+  sandbox = sinon.sandbox.create();
 
 describe('Test service initialization function', function () {
 
   var
     kuzzle;
 
-  beforeEach(function () {
+  beforeEach(() => {
     kuzzle = new Kuzzle();
-    kuzzle.removeAllListeners();
+    return kuzzle.start(params, {dummy: true})
+      .then(() => {
+        kuzzle.removeAllListeners();
+
+        kuzzle.internalEngine.client.transport = {};
+      });
+  });
+
+  afterEach(() => {
+    sandbox.restore();
   });
 
   it('should build an internal broker service with correct methods', function () {
@@ -75,14 +86,20 @@ describe('Test service initialization function', function () {
   });
 
   it('should not init services in blacklist', function () {
+    var spy = sandbox.stub(kuzzle.internalEngine, 'get').rejects({});
+
     kuzzle.config = {
       services: {
         writeEngine: 'elasticsearch'
       }
     };
-    kuzzle.services.init({blacklist: ['writeEngine']});
 
-    should(kuzzle.services.list.writeEngine.client).be.null();
+    return kuzzle.services.init({blacklist: ['writeEngine']})
+      .then(() => {
+        should(kuzzle.services.list.writeEngine.client).be.null();
+        should(spy.calledOnce).be.true();
+      });
+
   });
 
   it('should throw error if service file doesn\'t exist', function (done) {

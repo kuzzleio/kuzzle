@@ -26,7 +26,10 @@ describe('Test: read controller', function () {
 
     kuzzle = new Kuzzle();
     return kuzzle.start(params, {dummy: true})
-      .then(function () {
+      .then(() => {
+        return kuzzle.services.list.readEngine.init();
+      })
+      .then(() => {
         kuzzle.pluginsManager.plugins = {
           mocha: {
             name: 'test',

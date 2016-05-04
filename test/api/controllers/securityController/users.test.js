@@ -16,7 +16,7 @@ describe('Test: security controller - users', function () {
 
   before(() => {
     kuzzle = new Kuzzle();
-    kuzzle.start(params, {dummy: true})
+    return kuzzle.start(params, {dummy: true})
       .then(function () {
         // Mock
         kuzzle.services.list.readEngine.search = () => {
@@ -55,8 +55,6 @@ describe('Test: security controller - users', function () {
           }
           return q({_id: 'test'});
         };
-
-        done();
       });
   });
 

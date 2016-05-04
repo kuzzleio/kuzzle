@@ -4,6 +4,7 @@ var
   q = require('q'),
   params = require('rc')('kuzzle'),
   passport = require('passport'),
+  sinon = require('sinon'),
   util = require('util'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
@@ -12,7 +13,9 @@ var
   NotFoundError = require.main.require('lib/api/core/errors/notFoundError'),
   Token = require.main.require('lib/api/core/models/security/token'),
   context = {},
+  redisClientMock = require('../../mocks/services/redisClient.mock'),
   requestObject,
+  sandbox = sinon.sandbox.create(),
   MockupWrapper,
   MockupStrategy;
 
@@ -63,10 +66,17 @@ describe('Test the auth controller', function () {
   var kuzzle;
 
   beforeEach(function (done) {
+    sandbox.restore();
+
     requestObject = new RequestObject({ controller: 'auth', action: 'login', body: {strategy: 'mockup', username: 'jdoe'} }, {}, 'unit-test');
     kuzzle = new Kuzzle();
     kuzzle.start(params, {dummy: true})
+      .then(() => {
+        return kuzzle.services.list.tokenCache.init();
+      })
       .then(function () {
+        kuzzle.services.list.tokenCache.client = redisClientMock;
+
         kuzzle.repositories.user.load = function(t) {
           if ( t === 'unknown_user' ) {
             return q(null);
@@ -207,6 +217,7 @@ describe('Test the auth controller', function () {
         });
     });
   });
+
   describe('#logout', function () {
 
     beforeEach(function () {
@@ -233,21 +244,19 @@ describe('Test the auth controller', function () {
 
     });
 
-    it('should emit a auth:afterLogout event', function (done) {
-      this.timeout(50);
+    it('should emit a auth:afterLogout event', () => {
+      var
+        spy = sandbox.stub(kuzzle.pluginsManager, 'trigger', (event, data) => q(data));
 
-      kuzzle.pluginsManager.trigger = function (event, data) {
-        if (event === 'auth:afterLogout' || event === 'auth:beforeLogout') {
-          return q(data);
-        }
-      };
+      sandbox.stub(kuzzle.repositories.token.cacheEngine, 'expire').resolves({});
 
-      kuzzle.funnel.controllers.auth.logout(requestObject, context)
+      return kuzzle.funnel.controllers.auth.logout(requestObject, context)
         .then(response => {
-          should(response).be.instanceof(ResponseObject);
-          done();
-        })
-        .catch(err => done(err));
+          should(response).be.an.instanceOf(ResponseObject);
+
+          should(spy.calledWith('auth:beforeLogout')).be.true();
+          should(spy.calledWith('auth:afterLogout')).be.true();
+        });
     });
 
     it('should emit an error if event emit raise an error', function () {
@@ -322,6 +331,7 @@ describe('Test the auth controller', function () {
         })
         .catch(err => done(err));
     });
+
   });
 
   describe('#getCurrentUser', function () {

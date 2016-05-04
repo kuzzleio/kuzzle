@@ -10,6 +10,7 @@ var
   BadRequestError = require.main.require('lib/api/core/errors/badRequestError'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
   ResponseObject = require.main.require('lib/api/core/models/responseObject'),
+  Redis = require.main.require('lib/services/redis'),
   MemoryStorageController = rewire('../../../lib/api/controllers/memoryStorageController.js'),
   msController,
   kuzzle,
@@ -62,7 +63,12 @@ before(function (done) {
   kuzzle = new Kuzzle();
   kuzzle.start(params, {dummy: true})
     .then(() => {
-      kuzzle.services.list.memoryStorage.client = redisClientMock;
+      var redis = new Redis(kuzzle, {service: 'memoryStorage'});
+      return redis.init();
+    })
+    .then(redis => {
+      redis.client = redisClientMock;
+      kuzzle.services.list.memoryStorage = redis;
 
       msController = new MemoryStorageController(kuzzle);
 
@@ -97,6 +103,9 @@ before(function (done) {
       revertMapping = MemoryStorageController.__set__(testMapping);
 
       done();
+    })
+    .catch(err => {
+      done(err);
     });
 });
 
@@ -483,7 +492,7 @@ describe('Test: memoryStore controller', function () {
         });
     });
 
-    it('custom mapping checks - zrange', done => {
+    it('custom mapping checks - zrange', () => {
       var
         rq = new RequestObject({
           controller: 'memoryStore',
@@ -496,7 +505,7 @@ describe('Test: memoryStore controller', function () {
           }
         });
 
-      msController.zrange(rq)
+      return msController.zrange(rq)
         .then(response => {
           should(response.data.body.result.name).be.exactly('zrange');
           should(response.data.body.result.args).be.eql([
@@ -505,8 +514,6 @@ describe('Test: memoryStore controller', function () {
             'stopVal',
             'WITHSCORES'
           ]);
-
-          done();
         });
     });
 
