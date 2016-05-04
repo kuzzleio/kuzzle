@@ -102,6 +102,11 @@
             "checkToken": true,
             "getCurrentUser": true
           }
+        },
+        "read": {
+          "actions": {
+            "serverInfo": true
+          }
         }
       }
     },
@@ -112,6 +117,11 @@
             "logout": true,
             "checkToken": true,
             "getCurrentUser": true
+          }
+        },
+        "read": {
+          "actions": {
+            "serverInfo": true
           }
         }
       }
