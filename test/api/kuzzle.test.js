@@ -668,12 +668,14 @@ describe('Test kuzzle constructor', function () {
             internalIndex: 'foobar'
           },
           funnel: {
-            security: {
-              createOrReplaceRole: function(requestObject) {
-                requests.push(requestObject);
-              },
-              createOrReplaceProfile: function(requestObject) {
-                requests.push(requestObject);
+            controllers: {
+              security: {
+                createOrReplaceRole: function (requestObject) {
+                  requests.push(requestObject);
+                },
+                createOrReplaceProfile: function (requestObject) {
+                  requests.push(requestObject);
+                }
               }
             }
           }
@@ -694,8 +696,8 @@ describe('Test kuzzle constructor', function () {
               - users roles
               - users profiles
            */
-          should(requests.length).be.eql(9);
-          should(indexAdded.length).be.eql(4);
+          should(requests.length).be.eql(10);
+          should(indexAdded.length).be.eql(5);
 
           should(requests[0].controller).be.eql('admin');
           should(requests[0].action).be.eql('createIndex');
@@ -708,21 +710,26 @@ describe('Test kuzzle constructor', function () {
           should(requests[1].controller).be.eql('admin');
           should(requests[1].action).be.eql('updateMapping');
           should(requests[1].index).be.eql(context.kuzzle.config.internalIndex);
-          should(requests[1].collection).be.eql('profiles');
+          should(requests[1].collection).be.eql('roles');
 
           should(indexAdded[1].index).be.eql(context.kuzzle.config.internalIndex);
-          should(indexAdded[1].collection).be.eql('profiles');
+          should(indexAdded[1].collection).be.eql('roles');
 
           should(requests[2].controller).be.eql('admin');
           should(requests[2].action).be.eql('updateMapping');
           should(requests[2].index).be.eql(context.kuzzle.config.internalIndex);
-          should(requests[2].collection).be.eql('users');
+          should(requests[2].collection).be.eql('profiles');
 
           should(indexAdded[2].index).be.eql(context.kuzzle.config.internalIndex);
-          should(indexAdded[2].collection).be.eql('users');
+          should(indexAdded[2].collection).be.eql('profiles');
 
-          should(requests[3].controller).be.eql('security');
-          should(requests[3].action).be.eql('createOrReplaceRole');
+          should(requests[3].controller).be.eql('admin');
+          should(requests[3].action).be.eql('updateMapping');
+          should(requests[3].index).be.eql(context.kuzzle.config.internalIndex);
+          should(requests[3].collection).be.eql('users');
+
+          should(indexAdded[3].index).be.eql(context.kuzzle.config.internalIndex);
+          should(indexAdded[3].collection).be.eql('users');
 
           should(requests[4].controller).be.eql('security');
           should(requests[4].action).be.eql('createOrReplaceRole');
@@ -731,13 +738,16 @@ describe('Test kuzzle constructor', function () {
           should(requests[5].action).be.eql('createOrReplaceRole');
 
           should(requests[6].controller).be.eql('security');
-          should(requests[6].action).be.eql('createOrReplaceProfile');
+          should(requests[6].action).be.eql('createOrReplaceRole');
 
           should(requests[7].controller).be.eql('security');
           should(requests[7].action).be.eql('createOrReplaceProfile');
 
           should(requests[8].controller).be.eql('security');
           should(requests[8].action).be.eql('createOrReplaceProfile');
+
+          should(requests[9].controller).be.eql('security');
+          should(requests[9].action).be.eql('createOrReplaceProfile');
 
           done();
         })

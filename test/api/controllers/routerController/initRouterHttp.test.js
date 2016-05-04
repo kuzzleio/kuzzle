@@ -342,29 +342,6 @@ describe('Test: routerController.initRouterHttp', function () {
     request.end();
   });
 
-  it('should create a route for collection deletion', function (done) {
-    var request;
-
-    options.method = 'DELETE';
-    options.path= path + '/index/collection';
-
-    request = http.request(options, function (response) {
-      parseHttpResponse(response)
-        .then(function (result) {
-          should(response.statusCode).be.exactly(200);
-          should(result.controller).be.exactly('admin');
-          should(result.action).be.exactly('deleteCollection');
-          done();
-        })
-        .catch(function (error) {
-          done(error);
-        });
-    });
-
-    request.write('foobar');
-    request.end();
-  });
-
   it('should create a route for collection mapping creation', function (done) {
     var request;
 

@@ -1,5 +1,5 @@
 kuzzle:
-  image: kuzzleio/kuzzle
+  image: kuzzleio/dev:alpine
   command: /run-debug.sh
   volumes:
     - "..:/var/app"
@@ -16,11 +16,11 @@ kuzzle:
     - MQ_BROKER_ENABLED=1
     - LIKE_A_VIRGIN
     - DEFAULT_MAPPING
-    - FIXTURES=/var/app/features/fixtures/functionalTestsFixtures.json
     - FEATURE_COVERAGE
+    - FIXTURES=/var/app/features/fixtures/empty.json
 
 rabbit:
-  image: kuzzleio/rabbitmq
+  image: kuzzleio/rabbitmq:alpine
   ports:
     - "61613:61613"
     - "1883:1883"
@@ -28,7 +28,7 @@ rabbit:
     - "15672:15672"
 
 redis:
-  image: redis:3.0
+  image: redis:3.0-alpine
 
 elasticsearch:
-  image: elasticsearch:1.7
+  image: kuzzleio/elasticsearch:2.2

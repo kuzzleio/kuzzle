@@ -5,12 +5,15 @@
  * NOTE: must be added in api REST because the apiREST file doesn't extend this ApiRT
  */
 
-var ApiRT = function () {
-  this.world = null;
-  this.clientId = null;
-  this.subscribedRooms = {};
-  this.responses = null;
-};
+var
+  _ = require('lodash'),
+  q = require('q'),
+  ApiRT = function () {
+    this.world = null;
+    this.clientId = null;
+    this.subscribedRooms = {};
+    this.responses = null;
+  };
 
 ApiRT.prototype.send = function () {};
 ApiRT.prototype.sendAndListen = function () {};
@@ -152,18 +155,6 @@ ApiRT.prototype.deleteByQuery = function (filters, index, collection) {
   return this.send(msg);
 };
 
-ApiRT.prototype.deleteCollection = function (index) {
-  var
-    msg = {
-      controller: 'admin',
-      collection: this.world.fakeCollection,
-      index: index || this.world.fakeIndex,
-      action: 'deleteCollection'
-    };
-
-  return this.send(msg);
-};
-
 ApiRT.prototype.updateMapping = function (index) {
   var
     msg = {
@@ -177,11 +168,11 @@ ApiRT.prototype.updateMapping = function (index) {
   return this.send(msg);
 };
 
-ApiRT.prototype.bulkImport = function (bulk, index) {
+ApiRT.prototype.bulkImport = function (bulk, index, collection) {
   var
     msg = {
       controller: 'bulk',
-      collection: this.world.fakeCollection,
+      collection: collection || this.world.fakeCollection,
       index: index || this.world.fakeIndex,
       action: 'import',
       body: bulk
@@ -608,6 +599,26 @@ ApiRT.prototype.checkToken = function (token) {
     action: 'checkToken',
     body: {token}
   });
+};
+
+ApiRT.prototype.refreshIndex = function (index) {
+  return this.send({
+    index: index,
+    controller: 'admin',
+    action: 'refreshIndex'
+  });
+};
+
+ApiRT.prototype.callMemoryStorage = function (command, args) {
+  return this.send(_.extend({
+    controller: 'ms',
+    action: command
+  }, args))
+    .then(response => {
+      this.world.memoryStorageResult = response;
+
+      return q(response);
+    });
 };
 
 module.exports = ApiRT;

@@ -3,6 +3,7 @@ var
   q = require('q'),
   params = require('rc')('kuzzle'),
   Redis = require.main.require('lib/services/redis'),
+  redisCommands = require('redis-commands'),
   Kuzzle = require.main.require('lib/api/Kuzzle');
 
 
@@ -196,7 +197,7 @@ describe('Test redis service', function () {
       .catch(error => done(error));
   });
 
-  it('i#set should set a single value', done => {
+  it('#set should set a single value', done => {
     redis.set('foo', 'bar')
       .then(result => {
         should(result).be.exactly('OK');
@@ -266,5 +267,14 @@ describe('Test redis service', function () {
 
   it('#getInfos should return a properly formatted response', () => {
     return should(redis.getInfos()).be.fulfilled();
+  });
+
+  it('should implement all canonical methods', () => {
+    redisCommands.list.forEach(command => {
+      if(command === 'client') {
+        return true;
+      }
+      should(redis[command]).be.a.Function();
+    });
   });
 });

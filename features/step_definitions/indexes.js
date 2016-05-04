@@ -88,7 +88,6 @@ var apiSteps = function () {
   });
 
   this.Then(/^I'm able to delete the index named "([^"]*)"$/, function (index, callback) {
-
     this.api.deleteIndex(index)
       .then(body => {
         if (body.error) {
@@ -105,6 +104,28 @@ var apiSteps = function () {
       })
       .catch(error => callback(error));
   });
+
+  this.Then(/^I refresh the index( ".*?")?$/, function (index, callback) {
+    var
+      idx = index ? index : this.fakeIndex;
+
+    this.api.refreshIndex(idx)
+      .then(body => {
+        if (body.error) {
+          if (body.error.message) {
+            callback(body.error.message);
+            return false;
+          }
+
+          callback(body.error);
+          return false;
+        }
+
+        callback();
+      })
+      .catch(error => callback(error));
+  });
+
 };
 
 module.exports = apiSteps;
