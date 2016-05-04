@@ -9,8 +9,6 @@ var
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
   ResponseObject = require.main.require('lib/api/core/models/responseObject'),
-  BadRequestError = require.main.require('lib/api/core/errors/badRequestError'),
-  NotFoundError = require.main.require('lib/api/core/errors/notFoundError'),
   Token = require.main.require('lib/api/core/models/security/token'),
   context = {},
   redisClientMock = require('../../mocks/services/redisClient.mock'),
@@ -65,12 +63,12 @@ MockupWrapper = function(MockupReturn) {
 describe('Test the auth controller', function () {
   var kuzzle;
 
-  beforeEach(function (done) {
+  beforeEach(() => {
     sandbox.restore();
 
     requestObject = new RequestObject({ controller: 'auth', action: 'login', body: {strategy: 'mockup', username: 'jdoe'} }, {}, 'unit-test');
     kuzzle = new Kuzzle();
-    kuzzle.start(params, {dummy: true})
+    return kuzzle.start(params, {dummy: true})
       .then(() => {
         return kuzzle.services.list.tokenCache.init();
       })
@@ -94,13 +92,12 @@ describe('Test the auth controller', function () {
             }
           });
         };
-        done();
       });
   });
 
   describe('#login', function () {
-    beforeEach(function () {
-      passport.use(new MockupStrategy('mockup', function(username, callback) {
+    beforeEach(() => {
+      return passport.use(new MockupStrategy('mockup', function(username, callback) {
         var
           deferred = q.defer(),
           user = {
@@ -112,18 +109,15 @@ describe('Test the auth controller', function () {
       }));
     });
 
-    it('should resolve to a valid jwt token if authentication succeed', function (done) {
-      this.timeout(500);
-
+    it('should resolve to a valid jwt token if authentication succeed', () => {
       kuzzle.funnel.controllers.auth.passport = new MockupWrapper('resolve');
-      kuzzle.funnel.controllers.auth.login(requestObject, {})
-        .then(function(response) {
+      return kuzzle.funnel.controllers.auth.login(requestObject, {})
+        .then(response => {
           var decodedToken = jwt.verify(response.data.body.jwt, params.jsonWebToken.secret);
           should(decodedToken._id).be.equal('jdoe');
-          done();
         })
-        .catch(function (error) {
-          done(error);
+        .catch(error => {
+          console.log(error);
         });
     });
 
@@ -294,22 +288,6 @@ describe('Test the auth controller', function () {
       };
 
       return should(kuzzle.funnel.controllers.auth.logout(requestObject, context)).be.rejected();
-    });
-
-    it('should remove all room registration for current connexion', function (done) {
-      this.timeout(50);
-
-      kuzzle.hotelClerk.removeCustomerFromAllRooms = function(connection) {
-        should(connection).be.exactly(context.connection);
-        return q();
-      };
-
-      kuzzle.funnel.controllers.auth.logout(requestObject, context)
-        .then(response => {
-          should(response).be.instanceof(ResponseObject);
-          done();
-        })
-        .catch(err => done(err));
     });
 
     it('should not remove room registration for connexion if there is no id', function (done) {

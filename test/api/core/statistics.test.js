@@ -7,6 +7,7 @@ var
   rewire = require('rewire'),
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
+  redisClientMock = require('../../mocks/services/redisClient.mock'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
   BadRequestError = require.main.require('lib/api/core/errors/badRequestError'),
   Statistics = rewire('../../../lib/api/core/statistics');
@@ -31,6 +32,7 @@ describe('Test: statistics core component', function () {
         return kuzzle.services.list.statsCache.init(kuzzle, {service: 'statsCache'});
       })
       .then(service => {
+        service.client = redisClientMock;
         return service.volatileSet(lastFrame, JSON.stringify(fakeStats), 30)
             .then(() => service.volatileSet(lastFrame + 100, JSON.stringify(fakeStats), 30));
       })

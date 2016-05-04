@@ -5,6 +5,7 @@ var
   rewire = require('rewire'),
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
+  Redis = require.main.require('lib/services/redis'),
   redisCommands = [],
   redisClientMock = require('../../mocks/services/redisClient.mock'),
   BadRequestError = require.main.require('lib/api/core/errors/badRequestError'),
@@ -23,7 +24,7 @@ var
   testMapping,
   revertMapping;
 
-before(function (done) {
+before(() => {
   var wrapped = function (f) {
     return function () {
       if (called === undefined) {
@@ -60,15 +61,13 @@ before(function (done) {
   });
 
   kuzzle = new Kuzzle();
-  kuzzle.start(params, {dummy: true})
+  return kuzzle.start(params, {dummy: true})
     .then(() => {
-      var redis = new Redis(kuzzle, {service: 'memoryStorage'});
-      return redis.init();
+      return kuzzle.services.list.memoryStorage.init();
     })
     .then(() => {
       redisCommands = kuzzle.services.list.memoryStorage.commands;
-      redis.client = redisClientMock;
-      kuzzle.services.list.memoryStorage = redis;
+      kuzzle.services.list.memoryStorage.client = redisClientMock;
 
       msController = new MemoryStorageController(kuzzle);
 
@@ -101,8 +100,6 @@ before(function (done) {
       };
 
       revertMapping = MemoryStorageController.__set__(testMapping);
-
-      done();
     });
 });
 
