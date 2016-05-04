@@ -293,20 +293,32 @@ describe('Test: admin controller', () => {
     });
 
     it('should delete only the allowed indexes', () => {
-      var mock;
+      var
+        mock,
+        deleteIndexRequestObject = new RequestObject({
+          controller: 'admin',
+          action: 'deleteIndexes',
+          body: {indexes: ['%text1', '%text2', '%text3']}
+        }),
+        isActionAllowedStub = sandbox.stub(context.token.user.profile, 'isActionAllowed'),
+        workerListenerStub = requestObject => q({deleted: requestObject.data.body.indexes});
 
       this.timeout(50);
-      sandbox.stub(kuzzle.services.list.readEngine, 'listIndexes').resolves({indexes: ['%text1', '%text2', '%text3']});
-      mock = sandbox.mock(kuzzle.workerListener).expects('add').once().resolves({deleted: ['%text1', '%text2']});
+
+      sandbox.stub(kuzzle.services.list.readEngine, 'listIndexes').resolves({indexes: ['%text1', '%text2', '%text3', '%text4']});
+      sandbox.stub(kuzzle.workerListener, 'add', workerListenerStub);
+      isActionAllowedStub.withArgs({controller: 'admin', action: 'deleteIndex', index: '%text1'}).resolves(true);
+      isActionAllowedStub.withArgs({controller: 'admin', action: 'deleteIndex', index: '%text2'}).resolves(true);
+      isActionAllowedStub.withArgs({controller: 'admin', action: 'deleteIndex', index: '%text3'}).resolves(false);
+      isActionAllowedStub.withArgs({controller: 'admin', action: 'deleteIndex', index: '%text4'}).resolves(true);
       sandbox.spy(kuzzle.indexCache, 'add');
       sandbox.spy(kuzzle.indexCache, 'remove');
       sandbox.spy(kuzzle.indexCache, 'reset');
 
-      return kuzzle.funnel.controllers.admin.deleteIndexes(requestObject, context)
+      return kuzzle.funnel.controllers.admin.deleteIndexes(deleteIndexRequestObject, context)
         .then(response => {
-          mock.verify();
           should(response).be.instanceof(ResponseObject);
-          should(mock.getCall(0).args[0].data.body.indexes).match(['%text1', '%text2']);
+          should(response.data.body.deleted).match(['%text1', '%text2']);
           should(kuzzle.indexCache.add.called).be.false();
           should(kuzzle.indexCache.remove.calledTwice).be.true();
           should(kuzzle.indexCache.reset.called).be.false();
