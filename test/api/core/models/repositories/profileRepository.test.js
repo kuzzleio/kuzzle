@@ -62,16 +62,17 @@ describe('Test: repositories/profileRepository', () => {
 
   before(() => {
     kuzzle = new Kuzzle();
-    kuzzle.start(params, {dummy: true});
-
-    testProfile = new Profile();
-    testProfile._id = 'testprofile';
-    testProfile.roles = [];
-    testProfile.roles[0] = new Role();
-    testProfile.roles[0]._id = 'test';
-    testProfile.roles[0].restrictedTo = [{index: 'index'}];
-    testProfile.roles[1] = new Role();
-    testProfile.roles[1]._id = 'test2';
+    return kuzzle.start(params, {dummy: true})
+    .then(() => {
+      testProfile = new Profile();
+      testProfile._id = 'testprofile';
+      testProfile.roles = [];
+      testProfile.roles[0] = new Role();
+      testProfile.roles[0]._id = 'test';
+      testProfile.roles[0].restrictedTo = [{index: 'index'}];
+      testProfile.roles[1] = new Role();
+      testProfile.roles[1]._id = 'test2';
+    });
 
   });
 

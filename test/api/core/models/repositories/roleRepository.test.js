@@ -32,7 +32,7 @@ describe('Test: repositories/roleRepository', function () {
 
   before(function () {
     kuzzle = new Kuzzle();
-    kuzzle.start(params, {dummy: true});
+    return kuzzle.start(params, {dummy: true});
   });
 
   beforeEach(function () {
