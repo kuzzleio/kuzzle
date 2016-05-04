@@ -7,6 +7,7 @@ var
   Profile = require.main.require('lib/api/core/models/security/profile'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
+  NotFoundError = require.main.require('lib/api/core/errors/notFoundError'),
   ResponseObject = require.main.require('lib/api/core/models/responseObject');
 
 require('sinon-as-promised')(q.Promise);
@@ -47,7 +48,7 @@ describe('Test: security controller - profiles', function () {
       sandbox.stub(kuzzle.repositories.profile, 'validateAndSaveProfile').rejects();
       return should(kuzzle.funnel.controllers.security.createOrReplaceProfile(new RequestObject({
         body: {_id: 'test', roles: ['role1']}
-      }))).be.rejectedWith(ResponseObject);
+      }))).be.rejected();
     });
   });
 
@@ -56,7 +57,7 @@ describe('Test: security controller - profiles', function () {
       sandbox.stub(kuzzle.repositories.profile, 'validateAndSaveProfile').rejects();
       return should(kuzzle.funnel.controllers.security.createProfile(new RequestObject({
         body: {_id: 'test', roles: ['role1']}
-      }))).be.rejectedWith(ResponseObject);
+      }))).be.rejected();
     });
 
     it('should resolve to a responseObject on a createProfile call', () => {
@@ -80,27 +81,27 @@ describe('Test: security controller - profiles', function () {
     });
 
     it('should reject to an error on a getProfile call without id', () => {
-      return should(kuzzle.funnel.controllers.security.getProfile(new RequestObject({body: {_id: ''}}))).be.rejectedWith(ResponseObject);
+      return should(kuzzle.funnel.controllers.security.getProfile(new RequestObject({body: {_id: ''}}))).be.rejected();
     });
 
     it('should reject NotFoundError on a getProfile call with a bad id', () => {
       sandbox.stub(kuzzle.repositories.profile, 'loadProfile').resolves(null);
       return should(kuzzle.funnel.controllers.security.getProfile(new RequestObject({
           body: {_id: 'test'}
-        }))).be.rejectedWith(ResponseObject);
+        }))).be.rejected(NotFoundError);
     });
   });
 
   describe('#mGetProfiles', function () {
     it('should reject to an error on a mGetProfiles call without ids', () => {
-      return should(kuzzle.funnel.controllers.security.mGetProfiles(new RequestObject({body: {}}))).be.rejectedWith(ResponseObject);
+      return should(kuzzle.funnel.controllers.security.mGetProfiles(new RequestObject({body: {}}))).be.rejected();
     });
 
     it('should reject with a response object in case of error', () => {
       sandbox.stub(kuzzle.repositories.profile, 'loadMultiFromDatabase').rejects();
       return should(kuzzle.funnel.controllers.security.mGetProfiles(new RequestObject({
         body: {ids: ['test'] }
-      }))).be.rejectedWith(ResponseObject);
+      }))).be.rejected();
     });
 
     it('should resolve to a responseObject on a mGetProfiles call', () => {
@@ -169,7 +170,7 @@ describe('Test: security controller - profiles', function () {
       sandbox.stub(kuzzle.repositories.profile, 'searchProfiles').rejects();
       return should(kuzzle.funnel.controllers.security.searchProfiles(new RequestObject({
         body: {roles: ['foo']}
-      }))).be.rejectedWith(ResponseObject);
+      }))).be.rejected();
     });
   });
 
@@ -192,7 +193,7 @@ describe('Test: security controller - profiles', function () {
       return should(kuzzle.funnel.controllers.security.updateProfile(new RequestObject({
         body: {}
       }), {}))
-        .be.rejectedWith(ResponseObject);
+        .be.rejected();
     });
   });
 
@@ -214,7 +215,7 @@ describe('Test: security controller - profiles', function () {
       sandbox.stub(kuzzle.repositories.profile, 'deleteProfile').rejects();
       return should(kuzzle.funnel.controllers.security.deleteProfile(new RequestObject({
         body: {_id: 'test'}
-      }))).be.rejectedWith(ResponseObject);
+      }))).be.rejected();
     });
   });
 });

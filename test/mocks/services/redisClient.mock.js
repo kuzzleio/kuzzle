@@ -1,8 +1,8 @@
 var
-  redisCommands = require('redis-commands'),
+  redisCommands = (require('ioredis')()).getBuiltinCommands(),
   mock = {};
 
-redisCommands.list.forEach(command => {
+redisCommands.forEach(command => {
   mock[command] = mock[command.toUpperCase()] = function () {
     var
       args = Array.prototype.slice.call(arguments),

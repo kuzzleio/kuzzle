@@ -32,6 +32,7 @@ describe('Test: routerController.executeFromRest', function () {
 
   before(function (done) {
     var
+      error,
       mockupFunnel = function (requestObject, context, callback) {
         savedRequestObject = requestObject;
         forwardedObject = new ResponseObject(requestObject, {});
@@ -45,7 +46,8 @@ describe('Test: routerController.executeFromRest', function () {
           }
         }
         else {
-          callback(new ResponseObject(requestObject, new Error('rejected')));
+          error = new Error('rejected');
+          callback(error, new ResponseObject(requestObject, error));
         }
       },
       mockupRouterListener = {

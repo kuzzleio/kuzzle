@@ -52,8 +52,10 @@
   },
   // Kuzzle internal cache configuration
   "cache": {
-    "host": "redis",
-    "port": 6379
+    "node": {
+      "host": "redis",
+      "port": 6379
+    }
   },
   // JWT defaults.
   "jsonWebToken": {
@@ -126,7 +128,7 @@
       }
     }
   },
-  // Default security roles 
+  // Default security roles
   "userRoles": {
     "admin": {
       "indexes": {
@@ -239,7 +241,7 @@
         "activated": true
       },
       "kuzzle-plugin-socketio": {
-        "npmVersion": "1.0.7",
+        "npmVersion": "1.0.8",
         "activated": true
       },
       "kuzzle-plugin-auth-passport-local": {

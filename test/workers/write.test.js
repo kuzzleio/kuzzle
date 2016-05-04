@@ -19,7 +19,7 @@ describe('Testing: write worker', function () {
 
     return kuzzle.start(params, {dummy: true})
       .then(function () {
-        kuzzle.services.init = function () {};
+        kuzzle.services.init = function () {return q();};
 
         // we test successful write commands using a mockup 'create' action...
         kuzzle.services.list.writeEngine.create = function (request) { return q(request); };
