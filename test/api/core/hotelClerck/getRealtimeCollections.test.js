@@ -2,9 +2,7 @@ var
   should = require('should'),
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
-  RequestObject = require.main.require('lib/api/core/models/requestObject'),
-  Profile = require.main.require('lib/api/core/models/security/profile'),
-  Role = require.main.require('lib/api/core/models/security/role');
+  RequestObject = require.main.require('lib/api/core/models/requestObject');
 
 describe('Test: hotelClerk.getRealtimeCollections', function () {
   var
@@ -21,47 +19,21 @@ describe('Test: hotelClerk.getRealtimeCollections', function () {
   });
 
   it('should return an array of unique collection names', function () {
-    var
-      connection = {id: 'connectionid'},
-      anonymousUser;
+    kuzzle.hotelClerk.rooms = {
+      foo: {
+        collection: 'foo'
+      },
+      bar: {
+        collection: 'bar'
+      },
+      foobar: {
+        collection: 'foo',
+      },
+      barfoo: {
+        collection: 'barfoo'
+      }
+    };
 
-    return kuzzle.start(params, {dummy: true})
-      .then(function () {
-        return kuzzle.repositories.user.anonymous();
-      })
-      .then(function (user) {
-        var requestObject1 = new RequestObject({
-          controller: 'subscribe',
-          action: 'on',
-          index,
-          collection,
-          body: {}
-        });
-
-        anonymousUser = user;
-
-        kuzzle.notifier.notify = function () {};
-        return kuzzle.hotelClerk.addSubscription(requestObject1, {
-          connection: connection,
-          user: anonymousUser
-        });
-      })
-      .then(function () {
-        var requestObject2 = new RequestObject({
-          controller: 'subscribe',
-          action: 'on',
-          index,
-          collection,
-          body: { term: { foo: 'bar' } }
-        });
-
-        return kuzzle.hotelClerk.addSubscription(requestObject2, {
-          connection: connection,
-          user: anonymousUser
-        });
-      })
-      .then(() => {
-        should(kuzzle.hotelClerk.getRealtimeCollections()).be.an.Array().and.match([collection]);
-      });
+    should(kuzzle.hotelClerk.getRealtimeCollections()).be.an.Array().and.match(['foo', 'bar', 'barfoo']);
   });
 });

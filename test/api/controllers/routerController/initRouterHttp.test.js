@@ -84,8 +84,8 @@ describe('Test: routerController.initRouterHttp', function () {
         url = 'http://' + options.hostname + ':' + options.port + path;
 
         kuzzle.pluginsManager.routes = [
-          {verb: 'get', url: '/_plugin/myplugin/bar/:name', controller: 'myplugin/foo', action: 'bar'},
-          {verb: 'post', url: '/_plugin/myplugin/bar', controller: 'myplugin/foo', action: 'bar'},
+          {verb: 'get', url: '/myplugin/bar/:name', controller: 'myplugin/foo', action: 'bar'},
+          {verb: 'post', url: '/myplugin/bar', controller: 'myplugin/foo', action: 'bar'},
         ];
 
         router = new RouterController(kuzzle);
@@ -105,13 +105,15 @@ describe('Test: routerController.initRouterHttp', function () {
     server.close();
   });
 
-  it('should reply with a Hello World on a simple GET query', function (done) {
+  it('should reply with a list of available routes on a simple GET query', function (done) {
     http.get(url, function (response) {
       parseHttpResponse(response)
         .then(function (result) {
           should(result.status).be.exactly(200);
           should(result.error).be.null();
-          should(result.result).be.exactly('Hello from Kuzzle :)');
+          should(result.result.message).be.exactly('Available routes for this API version by verb.');
+          should(result.result.routes).be.an.Object();
+          should(result.result.routes['myplugin/foo']).be.an.Object();
           done();
         })
         .catch(function (error) {

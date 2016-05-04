@@ -2,19 +2,16 @@ var
   should = require('should'),
   q = require('q'),
   rewire = require('rewire'),
-  RequestObject = require.main.require('lib/api/core/models/requestObject'),
   Dsl = rewire('../../../../lib/api/dsl/index');
 
 describe('Test: dsl.testFieldFilters', function () {
   var
     testFieldFilters = Dsl.__get__('testFieldFilters'),
     dsl,
-    requestObject = new RequestObject({
-      requestId: 'foo',
-      index: 'test',
-      collection: 'bar',
-      body: { foo: 'bar' }
-    });
+    index = 'test',
+    collection = 'bar',
+    data = { foo: { bar: 'bar' }},
+    flattenBody;
 
   before(function () {
     Dsl.__set__('testRooms', function (rooms) {
@@ -24,35 +21,36 @@ describe('Test: dsl.testFieldFilters', function () {
 
   beforeEach(function () {
     dsl = new Dsl();
+    flattenBody = Dsl.__get__('flattenObject')(data);
   });
 
   it('should return a promise when no fields are provided', function () {
-    var result = testFieldFilters({}, {}, {});
+    var result = testFieldFilters.call(dsl, index, collection, {}, {});
     return should(result).be.fulfilledWith([]);
   });
 
   it('should resolve to an empty array if the collection isn\'t yet listed', function () {
-    var result = testFieldFilters.call(dsl, {}, requestObject, {});
+    var result = testFieldFilters.call(dsl, index, 'nocollection', flattenBody, {});
     return should(result).be.fulfilledWith([]);
   });
 
   it('should resolve to an empty array if no field is registered on a given collection', function () {
     var result;
 
-    dsl.filtersTree[requestObject.index] = {};
-    dsl.filtersTree[requestObject.index][requestObject.collection] = {};
+    dsl.filtersTree[index] = {};
+    dsl.filtersTree[index][collection] = {};
 
-    result = testFieldFilters.call(dsl, {}, requestObject, {});
+    result = testFieldFilters.call(dsl, index, collection, flattenBody, {});
     return should(result).be.fulfilledWith([]);
   });
 
   it('should resolve to an empty array if the tested fields aren\'t listed on a given collection', function () {
     var result;
 
-    dsl.filtersTree[requestObject.index] = {};
-    dsl.filtersTree[requestObject.index][requestObject.collection] = { fields: { foobar: '' }};
+    dsl.filtersTree[index] = {};
+    dsl.filtersTree[index][collection] = { fields: { foobar: '' }};
 
-    result = testFieldFilters.call(dsl, requestObject, {}, {});
+    result = testFieldFilters.call(dsl, index, collection, flattenBody, {});
     return should(result).be.fulfilledWith([]);
   });
 
@@ -60,8 +58,8 @@ describe('Test: dsl.testFieldFilters', function () {
     var
       result;
 
-    dsl.filtersTree[requestObject.index] = {};
-    dsl.filtersTree[requestObject.index][requestObject.collection] = {
+    dsl.filtersTree[index] = {};
+    dsl.filtersTree[index][collection] = {
       fields: {
         foobar: {
           testFoobar: {
@@ -74,7 +72,7 @@ describe('Test: dsl.testFieldFilters', function () {
       }
     };
 
-    result = testFieldFilters.call(dsl, requestObject, { foobar: '' }, {});
+    result = testFieldFilters.call(dsl, index, collection, flattenBody, {});
     return should(result).be.fulfilledWith([]);
   });
 
@@ -83,8 +81,8 @@ describe('Test: dsl.testFieldFilters', function () {
       result,
       rooms = [ 'foo', 'bar', 'baz' ];
 
-    dsl.filtersTree[requestObject.index] = {};
-    dsl.filtersTree[requestObject.index][requestObject.collection] = {
+    dsl.filtersTree[index] = {};
+    dsl.filtersTree[index][collection] = {
       fields: {
         'foo.bar': {
           testFoobar: {
@@ -97,7 +95,7 @@ describe('Test: dsl.testFieldFilters', function () {
       }
     };
 
-    result = testFieldFilters.call(dsl, requestObject, { 'foo.bar.baz': '' }, {});
+    result = testFieldFilters.call(dsl, index, collection, flattenBody, {});
     return should(result).be.fulfilledWith(rooms);
   });
 
@@ -106,8 +104,8 @@ describe('Test: dsl.testFieldFilters', function () {
       result,
       rooms = [ 'foo', 'bar', 'baz' ];
 
-    dsl.filtersTree[requestObject.index] = {};
-    dsl.filtersTree[requestObject.index][requestObject.collection] = {
+    dsl.filtersTree[index] = {};
+    dsl.filtersTree[index][collection] = {
       fields: {
         'foo.bar': {
           testFoobar: {
@@ -123,7 +121,7 @@ describe('Test: dsl.testFieldFilters', function () {
     return Dsl.__with__({
       testRooms: function () { return q.reject(new Error('rejected')); }
     })(function () {
-      result = testFieldFilters.call(dsl, requestObject, { 'foo.bar.baz': '' }, {});
+      result = testFieldFilters.call(dsl, index, collection, flattenBody, {});
       return should(result).be.rejectedWith('rejected');
     });
   });

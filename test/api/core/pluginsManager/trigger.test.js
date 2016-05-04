@@ -2,7 +2,7 @@ var
   should = require('should'),
   params = require('rc')('kuzzle'),
   rewire = require('rewire'),
-  PluginsManager = rewire('../../../../lib/api/core/pluginsManager'),
+  PluginsManager = rewire('../../../../lib/api/core/plugins/pluginsManager'),
   EventEmitter = require('eventemitter2').EventEmitter2;
 
 describe('Test plugins manager trigger', function () {
@@ -37,8 +37,10 @@ describe('Test plugins manager trigger', function () {
       activated: true
     }];
 
-    pluginsManager.run();
-    pluginsManager.trigger('foo:bar');
+    pluginsManager.run()
+      .then(() => {
+        pluginsManager.trigger('foo:bar');
+      });
   });
 
 });

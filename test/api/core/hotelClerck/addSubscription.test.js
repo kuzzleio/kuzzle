@@ -4,11 +4,8 @@ var
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
   InternalError = require.main.require('lib/api/core/errors/internalError'),
   BadRequestError = require.main.require('lib/api/core/errors/badRequestError'),
-  RealTimeResponseObject = require.main.require('lib/api/core/models/realTimeResponseObject'),
   params = require('rc')('kuzzle'),
-  Kuzzle = require.main.require('lib/api/Kuzzle'),
-  Profile = require.main.require('lib/api/core/models/security/profile'),
-  Role = require.main.require('lib/api/core/models/security/role');
+  Kuzzle = require.main.require('lib/api/Kuzzle');
 
 describe('Test: hotelClerk.addSubscription', function () {
   var
@@ -29,19 +26,9 @@ describe('Test: hotelClerk.addSubscription', function () {
       }
     };
 
-  beforeEach(function (done) {
-    require.cache = {};
+  beforeEach(() => {
     kuzzle = new Kuzzle();
-    kuzzle.removeAllListeners();
-
-    return kuzzle.start(params, {dummy: true})
-      .then(function () {
-        return kuzzle.repositories.token.anonymous();
-      })
-      .then(function (token) {
-        context.token = token;
-        done();
-      });
+    return kuzzle.start(params, {dummy: true});
   });
 
   it('should have object filtersTree, customers and rooms empty', function () {
@@ -70,7 +57,7 @@ describe('Test: hotelClerk.addSubscription', function () {
     });
 
     return kuzzle.hotelClerk.addSubscription(requestObject, context)
-      .then(function (realTimeResponseObject) {
+      .then(response => {
         var customer;
 
         should(kuzzle.dsl.filtersTree).be.an.Object();
@@ -82,12 +69,13 @@ describe('Test: hotelClerk.addSubscription', function () {
         should(kuzzle.hotelClerk.customers).be.an.Object();
         should(kuzzle.hotelClerk.customers).not.be.empty();
 
-        should(realTimeResponseObject).be.an.Object();
-        should(realTimeResponseObject.roomId).be.a.String();
-        should(kuzzle.hotelClerk.rooms[realTimeResponseObject.roomId]).be.an.Object();
-        should(kuzzle.hotelClerk.rooms[realTimeResponseObject.roomId]).not.be.empty();
+        should(response).be.an.Object();
+        should(response).have.property('roomId');
+        should(response).have.property('channel');
+        should(kuzzle.hotelClerk.rooms[response.roomId]).be.an.Object();
+        should(kuzzle.hotelClerk.rooms[response.roomId]).not.be.empty();
 
-        roomId = kuzzle.hotelClerk.rooms[realTimeResponseObject.roomId].id;
+        roomId = kuzzle.hotelClerk.rooms[response.roomId].id;
 
         customer = kuzzle.hotelClerk.customers[connection.id];
         should(customer).be.an.Object();
@@ -283,7 +271,8 @@ describe('Test: hotelClerk.addSubscription', function () {
 
     kuzzle.hotelClerk.addSubscription(requestObject1, {connection: 'connection1', user: null})
       .then(result => {
-        should(result).be.an.instanceOf(RealTimeResponseObject);
+        should(result).be.an.Object();
+        should(result).have.property('channel');
         should(result).have.property('roomId');
 
         return q(result.roomId);
@@ -304,8 +293,9 @@ describe('Test: hotelClerk.addSubscription', function () {
         return kuzzle.hotelClerk.join(requestObject2, {connection: 'connection2', user: null});
       })
       .then(result => {
-        should(result).be.an.instanceOf(RealTimeResponseObject);
+        should(result).be.an.Object();
         should(result).have.property('roomId', roomId);
+        should(result).have.property('channel');
         done();
       })
       .catch(error => {

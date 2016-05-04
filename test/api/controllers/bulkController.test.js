@@ -2,7 +2,10 @@ var
   should = require('should'),
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
-  RequestObject = require.main.require('lib/api/core/models/requestObject');
+  q = require('q'),
+  RequestObject = require.main.require('lib/api/core/models/requestObject'),
+  ResponseObject = require.main.require('lib/api/core/models/responseObject'),
+  PartialError = require.main.require('lib/api/core/errors/partialError');
 
 describe('Test the bulk controller', function () {
   var
@@ -17,7 +20,7 @@ describe('Test the bulk controller', function () {
   it('should activate a hook on a bulk import request', function (done) {
     this.timeout(50);
 
-    kuzzle.once('data:bulkImport', function (obj) {
+    kuzzle.once('data:beforeBulkImport', function (obj) {
       try {
         should(obj).be.exactly(requestObject);
         done();
@@ -31,5 +34,46 @@ describe('Test the bulk controller', function () {
       .catch(function (error) {
         done(error);
       });
+  });
+
+  it('should return a response object', () => {
+    kuzzle.workerListener.add = () => q({});
+    return should(
+      kuzzle.funnel.controllers.bulk.import(requestObject)
+        .then(response => {
+          should(response).be.instanceOf(ResponseObject);
+          should(response.status).be.eql(200);
+          should(response.error).be.null();
+        })
+    ).be.fulfilled();
+  });
+
+  it('should handle partial errors', () => {
+    kuzzle.workerListener.add = () => {
+      return q({partialErrors: ['foo', 'bar']});
+    };
+
+    return should(
+      kuzzle.funnel.controllers.bulk.import(requestObject)
+        .then(response => {
+          should(response).be.instanceOf(ResponseObject);
+          should(response.status).be.eql(206);
+          should(response.error).be.instanceOf(PartialError);
+        })
+    ).be.fulfilled();
+  });
+
+  it('should return a ResponseObject in a rejected promise in case of error', () => {
+    kuzzle.workerListener.add = () => q.reject(new Error('foobar'));
+
+    return should(
+      kuzzle.funnel.controllers.bulk.import(requestObject)
+        .catch(response => {
+          should(response).be.instanceOf(ResponseObject);
+          should(response.error).not.be.null();
+          should(response.error.message).be.eql('foobar');
+          return q.reject();
+        })
+    ).be.rejected();
   });
 });

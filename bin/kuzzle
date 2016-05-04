@@ -8,38 +8,82 @@
  */
 var program = require('commander');
 
-// $ kuzzle.js start
+// $ kuzzle start
 program
   .command('start')
-  .option('--port [port]', 'Kuzzle port number', parseInt)
+  .option('--port <port>', 'Kuzzle port number', parseInt)
   .option('--server', 'start an instance without workers')
   .option('--worker', 'spawn a single set of workers instead of starting a Kuzzle instance')
+  .option('--likeAvirgin', 'reset before start, so that Kuzzle is like a virgin, touched for the very first time')
+  .option('--fixtures <fixtures>', 'allow you to load a fixtures file')
+  .option('--mappings <mappings>', 'allow you to load and apply a mappings file')
   .description('Start a Kuzzle instance')
-  .action(require('./commands/kuzzle-start'));
+  .action(require('./commands/start'));
 
-// $ kuzzle.js enable <service>
+// $ kuzzle enable <service>
 program
   .command('enable')
+  .option('--pid <pid>', '[all|integer] the pid to apply the action - required')
   .description('Enable a service without reloading Kuzzle')
-  .action(require('./commands/kuzzle-enable'));
+  .action(require('./commands/enable'));
 
 // $ kuzzle.js disable <service>
 program
   .command('disable')
+  .option('--pid <pid>', '[all|integer] the pid to apply the action - required option')
   .description('Disable a service without reloading Kuzzle')
-  .action(require('./commands/kuzzle-disable'));
+  .action(require('./commands/disable'));
 
-// $ kuzzle.js install
+// $ kuzzle install
 program
   .command('install')
-  .description('Install plugin dependencies')
-  .action(require('./commands/kuzzle-install'));
+  .description('Install all listed plugins, and refresh their configuration.')
+  .action(require('./commands/install'));
 
-// $ kuzzle.js createFirstAdmin
+// $ kuzzle plugins
+program
+  .command('plugins')
+  .arguments('[name]')
+  .description('Manage plugins')
+  .option('--install', '*If plugin [name] is provided, installs it using --npmVersion, --gitUrl or --path. Otherwise, (re-)installs all listed plugins')
+  .option('--get', '*Gets the plugin [name] current stored configuration')
+  .option('--set <JSONObject>', '*Updates the plugin configuration with new properties')
+  .option('--replace <JSONObject>', '*Replaces a plugin configuration with a new one')
+  .option('--unset <property>', '*Deletes the property [property] from the plugin configuration')
+  .option('--remove', '*Removes the supplied plugin [name] from Kuzzle')
+  .option('--activate', '*Marks the plugin as "activated" (Kuzzle ignores deactivated plugins)')
+  .option('--deactivate', '*Marks the plugin as "deactivated" (Kuzzle ignores deactivated plugins)')
+  .option('-v, --npmVersion <version>', 'Installs plugin <version> from NPM (work only with --install)')
+  .option('-u, --gitUrl <url>', 'Installs plugin from a GIT repo <url> (work only with --install)')
+  .option('-p, --path <path>', 'Installs a plugin from directory <path> (work only with --install)')
+  .action(require('./commands/plugins'));
+
+// $ kuzzle createFirstAdmin
 program
   .command('createFirstAdmin')
   .description('Create the first administrator')
-  .action(require('./commands/kuzzle-createFirstAdmin').action);
+  .action(require('./commands/createFirstAdmin').action);
+
+// $ kuzzle likeAvirgin
+program
+  .command('likeAvirgin')
+  .option('--pid <pid>', '[all|integer] the pid to apply the action - mandatory option')
+  .option('--fixtures <fixtures>', 'allow you to specify a fixtures file')
+  .option('--mappings <mappings>', 'allow you to specify a mappings file')
+  .option('--noint', 'non interractive mode, will perform the reset immediately')
+  .description('Empty all the Kuzzle storage and make it look like a virgin, touched for the very first time')
+  .action(require('./commands/reset'));  
 
 // Run user command
 program.parse(process.argv);
+
+/*
+  Workaround for a bug in commander: program.args.length is empty if a sub-command is executed with
+  a flag as the last option before an argument.
+  For instance: "kuzzle install -a plugin" will incorrectly trigger the help and exit
+
+  This is still true with commander v2.2
+ */
+if (program.rawArgs.length <= 2) {
+  program.help();
+}

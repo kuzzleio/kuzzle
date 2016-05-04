@@ -4,7 +4,7 @@ Hooks allow to attach actions to Kuzzle events.
 
 The list of available events and their default attached actions can be found in the [config/hooks.js](../config/hooks.js) file.
 
-As an example, when the "data:create" event is emitted by kuzzle, it will trigger the execution of the *add* method of the *write* hook, which will send the received message to the broker.
+For instance, when the "data:create" event is emitted by kuzzle, it triggers the execution of the *add* method of the *write* hook, sending the received message to the broker.
 
 # Contributing
 
