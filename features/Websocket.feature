@@ -344,7 +344,7 @@ Feature: Test websocket API
     Then I wait 1s
     And I should receive a "jwtTokenExpired" notification
 
-  @usingWebsocket @cleanSecurity @unsubscribe
+  @usingWebsocket @cleanSecurity
   Scenario: user permissions
     Given I create a new role "role1" with id "role1"
     And I create a new role "role2" with id "role2"
