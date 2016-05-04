@@ -247,10 +247,6 @@ var apiSteps = function () {
   this.Then(/^I'm ?(not)* allowed to search for documents in index "([^"]*)" and collection "([^"]*)"$/, function (not, index, collection, callback) {
     this.api.search({}, index, collection)
       .then(body => {
-        if (not && body.status === 403) {
-            callback();
-            return true;
-        }
         if (not) {
           callback(new Error('Unexpected status response. Got ' + body.status + ' ; Expected 403'));
           return false;
@@ -273,10 +269,6 @@ var apiSteps = function () {
   this.Then(/^I'm ?(not)* allowed to count documents in index "([^"]*)" and collection "([^"]*)"$/, function (not, index, collection, callback) {
     this.api.count({}, index, collection)
       .then(body => {
-        if (not && body.status === 403) {
-            callback();
-            return true;
-        }
         if (not) {
           callback(new Error('Unexpected status response. Got ' + body.status + ' ; Expected 403'));
           return false;
