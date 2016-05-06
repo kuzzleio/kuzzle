@@ -180,7 +180,7 @@ describe('Test: repositories/profileRepository', () => {
         .be.rejectedWith(BadRequestError);
     });
 
-    it('chould reject if a user uses the profile about to be deleted', () => {
+    it('should reject if a user uses the profile about to be deleted', () => {
       sandbox.stub(kuzzle.repositories.profile, 'profiles', {
         'test': {
           _id: 'test',
