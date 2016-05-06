@@ -2,7 +2,6 @@ var
   _ = require('lodash'),
   config = require('./config')(),
   mqtt = require('mqtt'),
-  uuid = require('node-uuid'),
   q = require('q'),
   ApiRT = require('./apiRT');
 
@@ -77,6 +76,7 @@ ApiMQTT.prototype.send = function (message, waitForAnswer) {
       var unpacked = JSON.parse((new Buffer(message)).toString());
 
       if (unpacked.error) {
+        unpacked.error.statusCode = unpacked.status;
         deferred.reject(unpacked.error);
       }
       else {

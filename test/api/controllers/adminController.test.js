@@ -4,6 +4,8 @@ var
   sinon = require('sinon'),
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
+  Profile = require.main.require('lib/api/core/models/security/profile'),
+  Role = require.main.require('lib/api/core/models/security/role'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
   ResponseObject = require.main.require('lib/api/core/models/responseObject'),
   PartialError = require.main.require('lib/api/core/errors/partialError');
@@ -91,7 +93,7 @@ describe('Test: admin controller', () => {
   describe('#getMapping', function () {
     it('should reject with a response object in case of error', function () {
       sandbox.stub(kuzzle.services.list.readEngine, 'getMapping').rejects({});
-      return should(kuzzle.funnel.controllers.admin.getMapping(requestObject)).be.rejectedWith(ResponseObject);
+      return should(kuzzle.funnel.controllers.admin.getMapping(requestObject)).be.rejected();
     });
 
     it('should fulfill with a response object', () => {
@@ -148,7 +150,7 @@ describe('Test: admin controller', () => {
     it('should reject with a response object in case of error', () => {
       sandbox.stub(kuzzle.statistics, 'getStats').rejects({});
 
-      return should(kuzzle.funnel.controllers.admin.getStats(requestObject)).be.rejectedWith(ResponseObject);
+      return should(kuzzle.funnel.controllers.admin.getStats(requestObject)).be.rejected();
     });
   });
 
@@ -180,7 +182,7 @@ describe('Test: admin controller', () => {
     it('should reject with a response object in case of error', () => {
       sandbox.stub(kuzzle.statistics, 'getLastStats').rejects({});
 
-      return should(kuzzle.funnel.controllers.admin.getLastStats(requestObject)).be.rejectedWith(ResponseObject);
+      return should(kuzzle.funnel.controllers.admin.getLastStats(requestObject)).be.rejected();
     });
   });
 
@@ -212,7 +214,7 @@ describe('Test: admin controller', () => {
     it('should reject with a response object in case of error', () => {
       sandbox.stub(kuzzle.statistics, 'getAllStats').rejects({});
 
-      return should(kuzzle.funnel.controllers.admin.getAllStats(requestObject)).be.rejectedWith(ResponseObject);
+      return should(kuzzle.funnel.controllers.admin.getAllStats(requestObject)).be.rejected();
     });
   });
 
@@ -227,7 +229,7 @@ describe('Test: admin controller', () => {
     it('should reject with a response object in case of error', () => {
       sandbox.stub(kuzzle.workerListener, 'add').rejects({});
 
-      return should(kuzzle.funnel.controllers.admin.truncateCollection(requestObject)).be.rejectedWith(ResponseObject);
+      return should(kuzzle.funnel.controllers.admin.truncateCollection(requestObject)).be.rejected();
     });
 
     it('should trigger a hook on a truncateCollection call', function (done) {
@@ -251,27 +253,29 @@ describe('Test: admin controller', () => {
   describe('#deleteIndexes', function () {
     var context = {
       token: {
-        user: {
-          profile: {
-            roles: [{
-                indexes: {
-                  '%text1': {
-                    _canDelete: true,
-                  },
-                  '%text2': {
-                    _canDelete: true,
-                  },
-                  '%text3': {
-                    _canDelete: false,
-                  }
-                }
-              }]
-          }
-        }
+        user: {}
       }
     };
 
-    it('should trigger a hook on a deleteIndexes call', function (done) {
+    before(function () {
+      var
+        profile = new Profile();
+        role = new Role();
+
+      role._id = 'deleteIndex';
+      role.controllers = {
+        '*': {
+          actions: {
+            '*': true
+          }
+        }
+      };
+      role.restrictedTo = [{index: '%text1'},{index: '%text2'}];
+      profile.roles = [role];
+      context.token.user.profile = profile;
+    });
+
+    it('should trigger a hook on a deleteIndexes call', done => {
       this.timeout(50);
       sandbox.stub(kuzzle.services.list.readEngine, 'listIndexes').resolves({indexes: []});
 
@@ -289,20 +293,32 @@ describe('Test: admin controller', () => {
     });
 
     it('should delete only the allowed indexes', () => {
-      var mock;
+      var
+        mock,
+        deleteIndexRequestObject = new RequestObject({
+          controller: 'admin',
+          action: 'deleteIndexes',
+          body: {indexes: ['%text1', '%text2', '%text3']}
+        }),
+        isActionAllowedStub = sandbox.stub(context.token.user.profile, 'isActionAllowed'),
+        workerListenerStub = requestObject => q({deleted: requestObject.data.body.indexes});
 
       this.timeout(50);
-      sandbox.stub(kuzzle.services.list.readEngine, 'listIndexes').resolves({indexes: ['%text1', '%text2', '%text3']});
-      mock = sandbox.mock(kuzzle.workerListener).expects('add').once().resolves({deleted: ['%text1', '%text2']});
+
+      sandbox.stub(kuzzle.services.list.readEngine, 'listIndexes').resolves({indexes: ['%text1', '%text2', '%text3', '%text4']});
+      sandbox.stub(kuzzle.workerListener, 'add', workerListenerStub);
+      isActionAllowedStub.withArgs({controller: 'admin', action: 'deleteIndex', index: '%text1'}).resolves(true);
+      isActionAllowedStub.withArgs({controller: 'admin', action: 'deleteIndex', index: '%text2'}).resolves(true);
+      isActionAllowedStub.withArgs({controller: 'admin', action: 'deleteIndex', index: '%text3'}).resolves(false);
+      isActionAllowedStub.withArgs({controller: 'admin', action: 'deleteIndex', index: '%text4'}).resolves(true);
       sandbox.spy(kuzzle.indexCache, 'add');
       sandbox.spy(kuzzle.indexCache, 'remove');
       sandbox.spy(kuzzle.indexCache, 'reset');
 
-      return kuzzle.funnel.controllers.admin.deleteIndexes(requestObject, context)
+      return kuzzle.funnel.controllers.admin.deleteIndexes(deleteIndexRequestObject, context)
         .then(response => {
-          mock.verify();
           should(response).be.instanceof(ResponseObject);
-          should(mock.getCall(0).args[0].data.body.indexes).match(['%text1', '%text2']);
+          should(response.data.body.deleted).match(['%text1', '%text2']);
           should(kuzzle.indexCache.add.called).be.false();
           should(kuzzle.indexCache.remove.calledTwice).be.true();
           should(kuzzle.indexCache.reset.called).be.false();
@@ -311,7 +327,7 @@ describe('Test: admin controller', () => {
 
     it('should reject with a response object in case of error', () => {
       sandbox.stub(kuzzle.services.list.readEngine, 'listIndexes').rejects();
-      return should(kuzzle.funnel.controllers.admin.deleteIndexes(requestObject, context)).be.rejectedWith(ResponseObject);
+      return should(kuzzle.funnel.controllers.admin.deleteIndexes(requestObject, context)).be.rejected();
     });
   });
 
@@ -326,7 +342,7 @@ describe('Test: admin controller', () => {
     it('should reject with a response object in case of error', () => {
       sandbox.stub(kuzzle.workerListener, 'add').rejects({});
 
-      return should(kuzzle.funnel.controllers.admin.createIndex(requestObject)).be.rejectedWith(ResponseObject);
+      return should(kuzzle.funnel.controllers.admin.createIndex(requestObject)).be.rejected();
     });
 
     it('should trigger a hook on a createIndex call', function (done) {
@@ -373,7 +389,7 @@ describe('Test: admin controller', () => {
     it('should reject with a response object in case of error', () => {
       sandbox.stub(kuzzle.workerListener, 'add').rejects({});
 
-      return should(kuzzle.funnel.controllers.admin.deleteIndex(requestObject)).be.rejectedWith(ResponseObject);
+      return should(kuzzle.funnel.controllers.admin.deleteIndex(requestObject)).be.rejected();
     });
 
     it('should trigger a hook on a deleteIndex call', function (done) {
@@ -436,7 +452,7 @@ describe('Test: admin controller', () => {
     it('should reject with a response object in case of error', () => {
       sandbox.stub(kuzzle.hotelClerk, 'removeRooms').rejects({});
 
-      return should(kuzzle.funnel.controllers.admin.removeRooms(requestObject)).be.rejectedWith(ResponseObject);
+      return should(kuzzle.funnel.controllers.admin.removeRooms(requestObject)).be.rejected();
     });
 
     it('should fulfill with a response object with partial errors, if any', () => {
@@ -462,7 +478,7 @@ describe('Test: admin controller', () => {
     it('should reject with a response object in case of error', () => {
       sandbox.stub(kuzzle.workerListener, 'add').rejects({});
 
-      return should(kuzzle.funnel.controllers.admin.refreshIndex(requestObject)).be.rejectedWith(ResponseObject);
+      return should(kuzzle.funnel.controllers.admin.refreshIndex(requestObject)).be.rejected();
     });
 
     it('should trigger a plugin hook', function (done) {

@@ -93,10 +93,10 @@ var resetRole = (roleId) => {
   });
 };
 
-var resetProfile = (profileId, roleId) => {
+var resetProfile = (profileId, role) => {
   var data = {
       _id: profileId,
-      roles: [ roleId ]
+      roles: [ role ]
   };
 
   return request({
@@ -150,19 +150,19 @@ var nextStep = (message) => {
       createAdminUser()
         .then((res) =>{
           console.log(ok('[✔] "' + name + '" user created with admin rights'));
-          return resetProfile('default', 'default');
+          return resetProfile('default', {_id: 'default'});
         })
         .then((res) => {
           console.log(ok('[✔] "default" profile reset'));
-          return resetProfile('admin', 'admin');
+          return resetProfile('admin', {_id: 'admin', allowInternalIndex: true});
         })
         .then((res) => {
           console.log(ok('[✔] "admin" profile reset'));
-          return resetProfile('anonymous', 'anonymous');
+          return resetProfile('anonymous', {_id: 'anonymous'});
         })
         .then((res) => {
           console.log(ok('[✔] "anonymous" profile reset'));
-          return resetRole('default')
+          return resetRole('default');
         })
         .then((res) => {
           console.log(ok('[✔] "default" role reset'));

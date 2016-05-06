@@ -5,7 +5,7 @@ var
   rewire = require('rewire'),
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
-  redisCommands = require('redis-commands'),
+  redisCommands = [],
   redisClientMock = require('../../mocks/services/redisClient.mock'),
   BadRequestError = require.main.require('lib/api/core/errors/badRequestError'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
@@ -62,6 +62,7 @@ before(function (done) {
   kuzzle = new Kuzzle();
   kuzzle.start(params, {dummy: true})
     .then(() => {
+      redisCommands = kuzzle.services.list.memoryStorage.commands;
       kuzzle.services.list.memoryStorage.client = redisClientMock;
 
       msController = new MemoryStorageController(kuzzle);
@@ -128,7 +129,7 @@ describe('Test: memoryStore controller', function () {
     it('should construct the allowed functions', () => {
       var
         blacklisted = MemoryStorageController.__get__('blacklist'),
-        allowed = _.difference(redisCommands.list, blacklisted);
+        allowed = _.difference(redisCommands, blacklisted);
 
       should(allowed).be.an.Array();
       should(allowed).not.be.empty();

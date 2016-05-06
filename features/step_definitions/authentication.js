@@ -17,7 +17,7 @@ var apiSteps = function () {
           return false;
         }
 
-        if (this.currentUser === null) {
+        if (this.currentUser === null || this.currentUser === undefined) {
           this.currentUser = {};
         }
 
@@ -77,6 +77,17 @@ var apiSteps = function () {
     }
 
     callback(new Error('Expected token to be ' + state + ', got: ' + JSON.stringify(this.currentToken.tokenValidity)));
+  });
+  
+  this.Then(/^I update current user with data \{(.*?)}$/, function (dataBody, callback) {
+    this.api.updateSelf(JSON.parse('{' + dataBody + '}'))
+      .then(body => {
+        if (body.error) {
+          return callback(new Error(body.error.message));
+        }
+        callback();
+      })
+      .catch(err => callback(err));
   });
 };
 

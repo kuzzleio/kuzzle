@@ -6,6 +6,26 @@ var
   io = require('socket.io-client'),
   ApiRT = require('./apiRT');
 
+var initSocket = function (socketName) {
+  var socket;
+
+  if (!socketName) {
+    socketName = 'client1';
+  }
+
+  if (!this.listSockets[socketName]) {
+    socket = io(config.ws, { 'force new connection': true });
+    this.listSockets[socketName] = socket;
+
+    // the default socket is the socket with name 'client1'
+    if (socketName === 'client1') {
+      this.socket = socket;
+    }
+  }
+
+  return socketName;
+};
+
 /** CONSTRUCT **/
 var ApiWebsocket = function () {
   ApiRT.call(this);
@@ -70,7 +90,8 @@ ApiWebsocket.prototype.send = function (msg, getAnswer, socketName) {
   if (listen) {
     this.listSockets[socketName].once(msg.requestId, function (result) {
       if (result.error) {
-        deferred.reject(result.error.message);
+        result.error.statusCode = result.status;
+        deferred.reject(result.error);
         return false;
       }
 
@@ -118,26 +139,6 @@ ApiWebsocket.prototype.sendAndListen = function (msg, socketName) {
   this.listSockets[socketName].emit(routename, msg);
 
   return deferred.promise;
-};
-
-var initSocket = function (socketName) {
-  var socket;
-
-  if (!socketName) {
-    socketName = 'client1';
-  }
-
-  if (!this.listSockets[socketName]) {
-    socket = io(config.ws, { 'force new connection': true });
-    this.listSockets[socketName] = socket;
-
-    // the default socket is the socket with name 'client1'
-    if ( socketName === 'client1' ) {
-      this.socket = socket;
-    }
-  }
-
-  return socketName;
 };
 
 module.exports = ApiWebsocket;

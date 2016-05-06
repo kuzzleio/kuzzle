@@ -499,10 +499,6 @@ describe('Test: Prepare database', function () {
             indexes: {
 
             },
-            add: (idx, collection) => {
-              should(idx).be.eql(context.kuzzle.config.internalIndex);
-              indexAdded.push({index: idx, collection});
-            }
           },
           pluginsManager: {
             trigger: function (event, data) {
@@ -533,6 +529,16 @@ describe('Test: Prepare database', function () {
           }
         }
       };
+
+      context.kuzzle.indexCache.add = (idx, collection) => {
+        should(idx).be.eql(context.kuzzle.config.internalIndex);
+        indexAdded.push({index: idx, collection});
+
+        if (!context.kuzzle.indexCache.indexes[idx]) {
+          context.kuzzle.indexCache.indexes[idx] = [];
+        }
+        context.kuzzle.indexCache.indexes[idx].push(collection);
+      };
     });
 
     it('should create a proper internal structure', function (done) {
@@ -543,10 +549,9 @@ describe('Test: Prepare database', function () {
           /*
             We expect these 9 request objects, in this order:
               - internal index creation
-              - profiles collection mapping
-              - users collection mapping
-              - users roles
-              - users profiles
+              - roles creation
+              - profiles creation
+              - users creation
            */
           should(requests.length).be.eql(10);
           should(indexAdded.length).be.eql(5);
@@ -554,43 +559,34 @@ describe('Test: Prepare database', function () {
           should(requests[0].controller).be.eql('admin');
           should(requests[0].action).be.eql('createIndex');
           should(requests[0].index).be.eql(context.kuzzle.config.internalIndex);
-
           should(indexAdded[0].index).be.eql(context.kuzzle.config.internalIndex);
           should(indexAdded[0].collection).be.undefined();
-
 
           should(requests[1].controller).be.eql('admin');
           should(requests[1].action).be.eql('updateMapping');
           should(requests[1].index).be.eql(context.kuzzle.config.internalIndex);
           should(requests[1].collection).be.eql('roles');
-
           should(indexAdded[1].index).be.eql(context.kuzzle.config.internalIndex);
           should(indexAdded[1].collection).be.eql('roles');
 
-          should(requests[2].controller).be.eql('admin');
-          should(requests[2].action).be.eql('updateMapping');
-          should(requests[2].index).be.eql(context.kuzzle.config.internalIndex);
-          should(requests[2].collection).be.eql('profiles');
+          should(requests[2].controller).be.eql('security');
+          should(requests[2].action).be.eql('createOrReplaceRole');
 
-          should(indexAdded[2].index).be.eql(context.kuzzle.config.internalIndex);
-          should(indexAdded[2].collection).be.eql('profiles');
-
-          should(requests[3].controller).be.eql('admin');
-          should(requests[3].action).be.eql('updateMapping');
-          should(requests[3].index).be.eql(context.kuzzle.config.internalIndex);
-          should(requests[3].collection).be.eql('users');
-
-          should(indexAdded[3].index).be.eql(context.kuzzle.config.internalIndex);
-          should(indexAdded[3].collection).be.eql('users');
+          should(requests[3].controller).be.eql('security');
+          should(requests[3].action).be.eql('createOrReplaceRole');
 
           should(requests[4].controller).be.eql('security');
           should(requests[4].action).be.eql('createOrReplaceRole');
 
-          should(requests[5].controller).be.eql('security');
-          should(requests[5].action).be.eql('createOrReplaceRole');
+          should(requests[5].controller).be.eql('admin');
+          should(requests[5].action).be.eql('updateMapping');
+          should(requests[5].index).be.eql(context.kuzzle.config.internalIndex);
+          should(requests[5].collection).be.eql('profiles');
+          should(indexAdded[3].index).be.eql(context.kuzzle.config.internalIndex);
+          should(indexAdded[3].collection).be.eql('profiles');
 
           should(requests[6].controller).be.eql('security');
-          should(requests[6].action).be.eql('createOrReplaceRole');
+          should(requests[6].action).be.eql('createOrReplaceProfile');
 
           should(requests[7].controller).be.eql('security');
           should(requests[7].action).be.eql('createOrReplaceProfile');
@@ -598,8 +594,12 @@ describe('Test: Prepare database', function () {
           should(requests[8].controller).be.eql('security');
           should(requests[8].action).be.eql('createOrReplaceProfile');
 
-          should(requests[9].controller).be.eql('security');
-          should(requests[9].action).be.eql('createOrReplaceProfile');
+          should(requests[9].controller).be.eql('admin');
+          should(requests[9].action).be.eql('updateMapping');
+          should(requests[9].index).be.eql(context.kuzzle.config.internalIndex);
+          should(requests[9].collection).be.eql('users');
+          should(indexAdded[4].index).be.eql(context.kuzzle.config.internalIndex);
+          should(indexAdded[4].collection).be.eql('users');
 
           done();
         })
@@ -607,7 +607,7 @@ describe('Test: Prepare database', function () {
     });
 
     it('should not do anything if the index already exists', function (done) {
-      context.kuzzle.indexCache.indexes[context.kuzzle.config.internalIndex] = {};
+      context.kuzzle.indexCache.indexes[context.kuzzle.config.internalIndex] = ['roles', 'profiles', 'users'];
       createInternalStructure.call(context)
         .then(function () {
           should(workerCalled).be.false();

@@ -131,11 +131,11 @@ describe('Test: repositories/repository', function () {
           if (error) {
             return q.reject(error);
           }
-          
+
           return q({hits: result});
         });
     },
-    search: () => q({hits: [{_id: 'role', _source: {indexes: {}}}], total: 1})
+    search: () => q({hits: [{_id: 'role', _source: {controllers: {}}}], total: 1})
   };
 
   mockWriteLayer = {

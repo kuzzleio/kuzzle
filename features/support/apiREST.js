@@ -6,8 +6,7 @@ var
   apiVersion = require('../../package.json').apiVersion,
   rewire = require('rewire'),
   RouterController = rewire('../../lib/api/controllers/routerController.js'),
-  routes,
-  util = require('util');
+  routes;
 
 var ApiREST = function () {
   this.world = null;
@@ -47,7 +46,6 @@ ApiREST.prototype.getRequest = function (index, collection, controller, action, 
     url = '',
     queryString = [],
     verb = 'GET',
-    json = true,
     result;
 
   if (index) {
@@ -65,10 +63,10 @@ ApiREST.prototype.getRequest = function (index, collection, controller, action, 
   }
 
   routes.some(route => {
-    if (route.controller === controller && route.action === action ) {
-      var
-        hits = [];
+    var
+      hits = [];
 
+    if (route.controller === controller && route.action === action) {
       verb = route.verb.toUpperCase();
 
       url += route.url.replace(/(:[^/]+)/g, function (match) {
@@ -133,8 +131,6 @@ ApiREST.prototype.getRequest = function (index, collection, controller, action, 
   return result;
 };
 
-
-
 ApiREST.prototype.disconnect = function () {};
 
 ApiREST.prototype.apiPath = function (path) {
@@ -166,9 +162,10 @@ ApiREST.prototype.get = function (id, index) {
   return this.callApi(options);
 };
 
-ApiREST.prototype.search = function (filters, index) {
+ApiREST.prototype.search = function (filters, index, collection) {
   var options = {
-    url: this.apiPath(((typeof index !== 'string') ? this.world.fakeIndex : index) + '/' + this.world.fakeCollection + '/_search'),
+    url: this.apiPath(((typeof index !== 'string') ? this.world.fakeIndex : index) + '/' +
+                        ((typeof collection !== 'string') ? this.world.fakeCollection : collection) + '/_search'),
     method: 'POST',
     json: filters
   };
@@ -176,9 +173,10 @@ ApiREST.prototype.search = function (filters, index) {
   return this.callApi(options);
 };
 
-ApiREST.prototype.count = function (filters, index) {
+ApiREST.prototype.count = function (filters, index, collection) {
   var options = {
-    url: this.apiPath(((typeof index !== 'string') ? this.world.fakeIndex : index) + '/' + this.world.fakeCollection + '/_count'),
+    url: this.apiPath(((typeof index !== 'string') ? this.world.fakeIndex : index) + '/' +
+                        ((typeof collection !== 'string') ? this.world.fakeCollection : collection) + '/_count'),
     method: 'POST',
     json: filters
   };
@@ -357,7 +355,7 @@ ApiREST.prototype.now = function () {
 
 ApiREST.prototype.truncateCollection = function (index, collection) {
   var options = {
-    url: this.apiPath(((typeof index !== 'string') ? this.world.fakeIndex : index) + '/' + (collection || this.world.fakeCollection) + '/_truncate'),
+    url: this.apiPath(((typeof index !== 'string') ? this.world.fakeIndex : index) + '/' + (collection || this.world.fakeCollection) + '/_truncate'),
     method: 'DELETE',
     json: true
   };
@@ -594,7 +592,7 @@ ApiREST.prototype.createUser = function (body, id) {
     method: 'POST',
     json: body
   };
-  
+
   if (id !== undefined) {
     if (body.body) {
       options.json.body._id = id;
@@ -606,7 +604,17 @@ ApiREST.prototype.createUser = function (body, id) {
       };
     }
   }
-  
+
+  return this.callApi(options);
+};
+
+ApiREST.prototype.updateSelf = function (body) {
+  var options = {
+    url: this.apiPath('_updateSelf'),
+    method: 'PUT',
+    json: body
+  };
+
   return this.callApi(options);
 };
 

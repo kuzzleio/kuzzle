@@ -25,6 +25,7 @@ describe('Test: routerController.routeMQListener', function () {
 
   before(function (done) {
     var
+      error,
       mockupFunnel = function (requestObject, context, callback) {
         forwardedObject = new ResponseObject(requestObject, {});
 
@@ -37,7 +38,8 @@ describe('Test: routerController.routeMQListener', function () {
           }
         }
         else {
-          callback(new ResponseObject(requestObject, new Error('rejected')));
+          error = new Error('rejected');
+          callback(error, new ResponseObject(requestObject, error));
         }
       },
       mockupSendMessage = replyChannel => {
@@ -168,14 +170,11 @@ describe('Test: routerController.routeMQListener', function () {
 
   it('should notify an AMQ client with an error object in case of rejection', function (done) {
     var
-      eventReceived = false,
       listener = kuzzle.services.list.mqBroker.listeners[router.routename].callback,
       body = {controller: 'write', collection: 'foobar', action: 'create', body: { resolve: false }, clientId: 'foobar'};
 
     mqMessage.content = JSON.stringify(body);
-    eventReceived = false;
 
-    kuzzle.once('log:error', () => eventReceived = true);
     listener(mqMessage);
 
     this.timeout(timeout);
@@ -187,7 +186,6 @@ describe('Test: routerController.routeMQListener', function () {
 
       try {
         should(messageSent).be.true();
-        should(eventReceived).be.true();
         done();
       }
       catch (e) {
@@ -201,15 +199,12 @@ describe('Test: routerController.routeMQListener', function () {
 
   it('should notify a MQTT client with an error object in case of rejection', function (done) {
     var
-      eventReceived = false,
       listener = kuzzle.services.list.mqBroker.listeners[router.routename].callback,
       body = {controller: 'write', collection: 'foobar', action: 'create', body: { resolve: false }, clientId: 'foobar'};
 
     mqMessage.content = JSON.stringify(body);
     delete mqMessage.properties;
-    eventReceived = false;
 
-    kuzzle.once('log:error', () => eventReceived = true);
     listener(mqMessage);
 
     this.timeout(timeout);
@@ -221,7 +216,6 @@ describe('Test: routerController.routeMQListener', function () {
 
       try {
         should(messageSent).be.true();
-        should(eventReceived).be.true();
         done();
       }
       catch (e) {

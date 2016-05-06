@@ -1,5 +1,20 @@
 *__note:__ the # at the end of lines are the pull request numbers on GitHub*
 
+# 1.0.0-RC2
+
+* Refactored CLI and Remote actions #208
+* Fixed index and filter removal path #236
+* Refactored ResponseObject #238
+* Added plugin worker and events documentation #237
+* Added the list of available API routes to root url #243
+* Added unit test stubs #240
+* Moved the embedded documentation to external "kuzzle-guide" repository #249
+* Removed obsolete internal broker queue #251
+* Added updateSelf action in auth controller #248
+* Fixed the plugin controller #256
+* Moved the plugin configurations in database #253
+* Refactored Error Response #255
+
 # 1.0.0-RC1
 
 * Fix getServerInfo route #231

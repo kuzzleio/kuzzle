@@ -8,19 +8,11 @@ var
 
 describe('Test: hotelClerk.countSubscription', function () {
   var
-    anonymousUser,
     kuzzle;
 
-  before(function (done) {
+  before(() => {
     kuzzle = new Kuzzle();
-    return kuzzle.start(params, {dummy: true})
-      .then(function () {
-        return kuzzle.repositories.user.anonymous();
-      })
-      .then(function (user) {
-        anonymousUser = user;
-        done();
-      });
+    return kuzzle.start(params, {dummy: true});
   });
 
   it('should reject the request if no room ID has been provided', function () {
@@ -40,45 +32,10 @@ describe('Test: hotelClerk.countSubscription', function () {
   });
 
   it('should return the right subscriptions count when handling a correct request', function () {
-    var
-      aContext,
-      anotherContext,
-      subscribeRequest = new RequestObject({
-        controller: 'subscribe',
-        action: 'on',
-        requestId: 'foo',
-        collection: 'bar',
-        index: 'test',
-        body: { term: { foo: 'bar' } }
-      }),
-      countRequest = new RequestObject({ body: {}});
+    var countRequest = new RequestObject({ body: { roomId: 'foobar'}});
+    kuzzle.hotelClerk.rooms.foobar = {customers: ['foo', 'bar']};
 
-    aContext = {
-      connection: {id: 'a connection'},
-      user: anonymousUser
-    };
-    anotherContext = {
-      connection: {id: 'another connection'},
-      user: anonymousUser
-    };
-
-    return kuzzle.hotelClerk.addSubscription(subscribeRequest, aContext)
-      .then(function (createdRoom) {
-        countRequest.data.body.roomId = createdRoom.roomId;
-        return kuzzle.hotelClerk.addSubscription(subscribeRequest, anotherContext);
-      })
-      .then(function () {
-        return kuzzle.hotelClerk.countSubscription(countRequest);
-      })
-      .then(function (response) {
-        should(response.count).be.exactly(2);
-        return kuzzle.hotelClerk.removeSubscription(countRequest, aContext);
-      })
-      .then(function () {
-        return kuzzle.hotelClerk.countSubscription(countRequest);
-      })
-      .then(function (response) {
-        should(response.count).be.exactly(1);
-      });
+    return kuzzle.hotelClerk.countSubscription(countRequest)
+      .then(response => should(response.count).be.exactly(2));
   });
 });
