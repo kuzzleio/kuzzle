@@ -501,8 +501,8 @@ describe('Test: memoryStore controller', function () {
 
       return msController.zrange(rq)
         .then(response => {
-          should(response.data.body.result.name).be.exactly('zrange');
-          should(response.data.body.result.args).be.eql([
+          should(response.data.body.name).be.exactly('zrange');
+          should(response.data.body.args).be.eql([
             'myKey',
             'startVal',
             'stopVal',
@@ -535,8 +535,8 @@ describe('Test: memoryStore controller', function () {
 
       msController.zrangebylex(rq)
         .then(response => {
-          should(response.data.body.result.name).be.exactly('zrangebylex');
-          should(response.data.body.result.args).be.eql(expected);
+          should(response.data.body.name).be.exactly('zrangebylex');
+          should(response.data.body.args).be.eql(expected);
 
           rq.action = 'zrevrangebylex';
 
@@ -546,8 +546,8 @@ describe('Test: memoryStore controller', function () {
           expected[1] = expected[2];
           expected[2] = 'minVal';
 
-          should(response.data.body.result.name).be.exactly('zrevrangebylex');
-          should(response.data.body.result.args).be.eql(expected);
+          should(response.data.body.name).be.exactly('zrevrangebylex');
+          should(response.data.body.args).be.eql(expected);
 
           done();
         })
@@ -580,8 +580,8 @@ describe('Test: memoryStore controller', function () {
 
       msController.zrangebyscore(rq)
         .then(response => {
-          should(response.data.body.result.name).be.exactly('zrangebyscore');
-          should(response.data.body.result.args).be.eql(expected);
+          should(response.data.body.name).be.exactly('zrangebyscore');
+          should(response.data.body.args).be.eql(expected);
 
           rq.action = 'zrevrangebyscore';
 
@@ -591,8 +591,8 @@ describe('Test: memoryStore controller', function () {
           expected[1] = expected[2];
           expected[2] = 'minVal';
 
-          should(response.data.body.result.name).be.exactly('zrevrangebyscore');
-          should(response.data.body.result.args).be.eql(expected);
+          should(response.data.body.name).be.exactly('zrevrangebyscore');
+          should(response.data.body.args).be.eql(expected);
 
           done();
         })

@@ -86,7 +86,7 @@ describe('Test service initialization function', function () {
   });
 
   it('should not init services in blacklist', function () {
-    var spy = sandbox.stub(kuzzle.internalEngine, 'get').rejects({});
+    var spy = sandbox.stub(kuzzle.internalEngine, 'get').resolves({});
 
     kuzzle.config = {
       services: {

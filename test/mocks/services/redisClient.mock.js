@@ -6,10 +6,8 @@ var
 redisCommands.forEach(command => {
   mock[command] = mock[command.toUpperCase()] = function () {
     return q({
-      result: {
-        name: command,
-        args: Array.prototype.slice.call(arguments)
-      }
+      name: command,
+      args: Array.prototype.slice.call(arguments)
     });
   };
 });

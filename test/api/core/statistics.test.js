@@ -2,10 +2,13 @@
   This component collects statistics and made them available to the admin controller
  */
 var
+  _ = require('lodash'),
   should = require('should'),
   q = require('q'),
   rewire = require('rewire'),
   params = require('rc')('kuzzle'),
+  sinon = require('sinon'),
+  sandbox = sinon.sandbox.create(),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   redisClientMock = require('../../mocks/services/redisClient.mock'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
@@ -52,6 +55,11 @@ describe('Test: statistics core component', function () {
     stats = new Statistics(kuzzle);
     cacheCalled = false;
   });
+
+  afterEach(() => {
+    sandbox.restore();
+  });
+
 
   it('should initialize with a set of exposed methods', function () {
     should(stats.startRequest).be.a.Function();
@@ -168,7 +176,10 @@ describe('Test: statistics core component', function () {
   it('should return the current frame from the cache when statistics snapshots have been taken', () => {
     stats.lastFrame = lastFrame;
     requestObject.data.body.startTime = lastFrame - 1000;
-    requestObject.data.body.stopTime = new Date(new Date().getTime() + 10000);
+    requestObject.data.body.stopTime = new Date(new Date().getTime() + 100000);
+
+    sandbox.stub(kuzzle.services.list.statsCache, 'getAllKeys').resolves([lastFrame, lastFrame + 100]);
+    sandbox.stub(kuzzle.services.list.statsCache, 'mget').resolves([JSON.stringify(fakeStats), JSON.stringify(fakeStats)]);
 
     return stats.getStats(requestObject)
       .then(response => {
@@ -184,7 +195,7 @@ describe('Test: statistics core component', function () {
 
   it('should return an empty statistics because the asked date is in the future', () => {
     stats.lastFrame = lastFrame;
-    requestObject.data.body.startTime = lastFrame + 10000;
+    requestObject.data.body.startTime = new Date(new Date().getTime() + 10000);
 
     return stats.getStats(requestObject)
       .then(response => {
@@ -198,6 +209,9 @@ describe('Test: statistics core component', function () {
     stats.lastFrame = lastFrame;
     requestObject.data.body.stopTime = new Date();
 
+    sandbox.stub(kuzzle.services.list.statsCache, 'getAllKeys').resolves([lastFrame, lastFrame + 100]);
+    sandbox.stub(kuzzle.services.list.statsCache, 'mget').resolves([JSON.stringify(fakeStats), JSON.stringify(fakeStats)]);
+
     return stats.getStats(requestObject)
       .then(response => {
         should(response.hits).be.an.Array();
@@ -208,6 +222,8 @@ describe('Test: statistics core component', function () {
 
   it('should get the last frame from the cache when statistics snapshots have been taken', () => {
     stats.lastFrame = lastFrame;
+
+    sandbox.stub(kuzzle.services.list.statsCache, 'get').resolves(JSON.stringify(fakeStats));
 
     return stats.getLastStats(requestObject)
       .then(response => {
@@ -236,6 +252,9 @@ describe('Test: statistics core component', function () {
   it('should return all saved statistics', () => {
     stats.lastFrame = lastFrame;
 
+    sandbox.stub(kuzzle.services.list.statsCache, 'getAllKeys').resolves([lastFrame, lastFrame + 100]);
+    sandbox.stub(kuzzle.services.list.statsCache, 'mget').resolves([JSON.stringify(fakeStats), JSON.stringify(fakeStats)]);
+
     return stats.getAllStats(requestObject)
       .then(response => {
         should(response.hits).be.an.Array();
@@ -260,30 +279,19 @@ describe('Test: statistics core component', function () {
     return should(stats.getAllStats(requestObject)).be.rejectedWith(BadRequestError);
   });
 
-  it('should write statistics frames in cache', function (done) {
-    var writeStats = Statistics.__get__('writeStats');
+  it('should write statistics frames in cache', () => {
+    var
+      writeStats = Statistics.__get__('writeStats'),
+      spy = sandbox.stub(kuzzle.services.list.statsCache, 'volatileSet').resolves();
 
-    stats.currentStats = fakeStats;
+    stats.currentStats = _.extend({}, fakeStats);
+
     writeStats.call(stats);
 
     should(stats.currentStats.completedRequest).be.empty();
     should(stats.currentStats.failedRequests).be.empty();
-
-    kuzzle.services.list.statsCache.get(stats.lastFrame)
-      .then(result => {
-        var unserialized;
-
-        try {
-          unserialized = JSON.parse(result);
-        }
-        catch (e) {
-          done('Invalid statistics frame retrieved: ' + result + '(error: ' + e + ')');
-        }
-
-        should(unserialized).match(fakeStats);
-        done();
-      })
-      .catch(error => done(error));
+    should(spy.calledOnce).be.true();
+    should(spy.calledWith(stats.lastFrame, JSON.stringify(fakeStats), stats.ttl)).be.true();
   });
 
   it('should reject the promise if the cache returns an error', () => {
