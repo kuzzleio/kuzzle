@@ -86,7 +86,8 @@ describe('Test the auth controller', function () {
               roles: [
                 {
                   _id: 'role1',
-                  indexes: {}
+                  controllers: {},
+                  restrictedTo: []
                 }
               ]
             }

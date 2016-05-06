@@ -97,6 +97,7 @@ ApiSTOMP.prototype.send = function (message, waitForAnswer) {
           var unpacked = JSON.parse(body);
 
           if (unpacked.error) {
+            unpacked.error.statusCode = unpacked.status;
             deferred.reject(unpacked.error);
           }
           else {

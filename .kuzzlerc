@@ -81,134 +81,64 @@
   // Default user profiles
   "userProfiles": {
     "admin": {
-      "roles": [ "admin" ]
+      "roles": [ {"_id": "admin", "allowInternalIndex": true} ]
     },
     "default": {
-      "roles": [ "default" ]
+      "roles": [ {"_id": "default"} ]
     },
     "anonymous": {
-      "roles": [ "anonymous" ]
+      "roles": [ {"_id": "anonymous"} ]
     }
   },
   // role template for all users before creating the first admin
   "roleWithoutAdmin": {
-    "indexes": {                // when we are in the ES level, before the indexes
-      "_canCreate": true,       // we can create indexes
-      "*": {                    // when we are in any index (except %kuzzle index)
-        "_canDelete": true,     // we can delete it
-        "collections": {        // when we are in an index
-          "_canCreate": true,   // we can create a collection in it
-          "*": {                // in nay collection
-            "_canDelete": true, // we can delete the collection
-            "controllers": {    // at the controller level
-              "*": {            // for any controller
-                "actions": {    // and at the action level
-                  "*": true     // we can do any action
-                }
-              }
-            }
-          }
+    "controllers": {    // at the controller level
+      "*": {            // for any controller
+        "actions": {    // and at the action level
+          "*": true     // we can do any action
         }
-      },
-      "%kuzzle": {                // into the %kuzzle index, only
-        "_canDelete": false,      // we cannot delete collections
-        "collections": {          // at the collection level, cannot create any collection by our own
-          "_canCreate": true,     // we can create collections
-          "*": {                  // for all the collections
-            "_canDelete": false,  // we cannot delete it
-            "controllers": {      // at the controller level
-              "*": {              // with all the controller only
-                "actions": {      // at the action level of the security controller
-                  "*": true       // we can do any action
-                  }
-                }
-              }
-            }
-          }
       }
     }
   },
   // Default security roles
   "userRoles": {
     "admin": {
-      "indexes": {
-        "_canCreate": true,
+      "controllers": {
         "*": {
-        "_canDelete": true,
-        "collections": {
-          "_canCreate": true,
-          "*": {
-            "_canDelete": true,
-            "controllers": {
-              "*": {
-                "actions": {
-                  "*": true
-                  }
-                }
-              }
-            }
+          "actions": {
+            "*": true
           }
-        },
-        "%kuzzle": {
-          "_canDelete": false,
-          "collections": {
-            "_canCreate": true,
-            "*": {
-              "_canDelete": false,
-              "controllers": {
-                "*": {
-                  "actions": {
-                    "*": true
-                    }
-                  }
-                }
-              }
-            }
         }
       }
     },
     "anonymous": {
-      "indexes": {
-        "_canCreate": false,
-        "*": {
-          "_canDelete": false,
-          "collections": {
-            "_canCreate": false,
-            "*": {
-              "_canDelete": false,
-              "controllers": {
-                "auth": {
-                  "actions": {
-                    "login": true,
-                    "checkToken": true,
-                    "getCurrentUser": true
-                  }
-                }
-              }
-            }
+      "controllers": {
+        "auth": {
+          "actions": {
+            "login": true,
+            "checkToken": true,
+            "getCurrentUser": true
+          }
+        },
+        "read": {
+          "actions": {
+            "serverInfo": true
           }
         }
       }
     },
     "default": {
-      "indexes": {
-        "_canCreate": false,
-        "*": {
-          "_canDelete": false,
-          "collections": {
-            "_canCreate": false,
-            "*": {
-              "_canDelete": false,
-              "controllers": {
-                "auth": {
-                  "actions": {
-                    "logout": true,
-                    "checkToken": true,
-                    "getCurrentUser": true
-                  }
-                }
-              }
-            }
+      "controllers": {
+        "auth": {
+          "actions": {
+            "logout": true,
+            "checkToken": true,
+            "getCurrentUser": true
+          }
+        },
+        "read": {
+          "actions": {
+            "serverInfo": true
           }
         }
       }

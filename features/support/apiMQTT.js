@@ -76,6 +76,7 @@ ApiMQTT.prototype.send = function (message, waitForAnswer) {
       var unpacked = JSON.parse((new Buffer(message)).toString());
 
       if (unpacked.error) {
+        unpacked.error.statusCode = unpacked.status;
         deferred.reject(unpacked.error);
       }
       else {

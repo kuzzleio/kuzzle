@@ -9,13 +9,52 @@ var
   Role = rewire('../../../../../lib/api/core/models/security/role'),
   internalIndex = require('rc')('kuzzle').internalIndex;
 
-describe('Test: security/roleTest', function () {
+describe('Test: security/roleTest', () => {
   var
     context = {
       connection: {type: 'test'},
       token : {
         user: {
           _id: -1
+        }
+      }
+    },
+    kuzzle = {
+      pluginsManager: {
+        trigger: () => {
+          return true;
+        }
+      },
+      indexCache: {
+        indexes: ['cachedIndex']
+      },
+      services: {
+        list: {
+          readEngine: {
+            search: requestObject => {
+              if (requestObject.data.body.filter.ids.values[0] !== 'foobar') {
+                return q({hits: [documentAda]});
+              } else {
+                return q({hits: [documentFalseAda]});
+              }
+            },
+            get: requestObject => {
+              if (requestObject.data.id === 'reject') {
+                return q.reject(new InternalError('Our Error'));
+              } else if (requestObject.data.id !== 'foobar') {
+                return q(documentAda);
+              } else {
+                return q(documentFalseAda);
+              }
+            },
+            mget: requestObject => {
+              if (requestObject.data.body.ids[0] !== 'foobar') {
+                return q({hits: [documentAda]});
+              } else {
+                return q({hits: [documentFalseAda]});
+              }
+            }
+          }
         }
       }
     },
@@ -52,360 +91,137 @@ describe('Test: security/roleTest', function () {
       }
     };
 
-  describe('#isActionValid', () => {
-    it('should disallow any action when no matching entry can be found', function () {
+  describe('#isActionAllowed', () => {
+    it('should disallow any action when no matching entry can be found', () => {
       var
         role = new Role();
 
-      role.indexes = {
-        index: {
-          collections: {
-            collection: {
-              controllers: {
-                controller: {
-                  actions: {}
-                }
-              }
-            }
-          }
+      role.controllers = {
+        controller: {
+          actions: {}
         }
       };
 
-      return role.isActionAllowed(requestObject, context)
+      return role.isActionAllowed(requestObject, context, kuzzle)
         .then(isAllowed => {
           should(isAllowed).be.false();
 
-          delete role.indexes.index.collections.collection.controllers.controller.actions;
-          return role.isActionAllowed(requestObject, context);
+          delete role.controllers.controller.actions;
+          return role.isActionAllowed(requestObject, context, kuzzle);
         })
         .then(isAllowed => {
           should(isAllowed).be.false();
 
-          delete role.indexes.index.collections.collection.controllers.controller;
-          return role.isActionAllowed(requestObject, context);
+          delete role.controllers.controller;
+          return role.isActionAllowed(requestObject, context, kuzzle);
         })
         .then(isAllowed => {
           should(isAllowed).be.false();
 
-          delete role.indexes.index.collections.collection.controllers;
-          return role.isActionAllowed(requestObject, context);
-        })
-        .then(isAllowed => {
-          should(isAllowed).be.false();
-
-          delete role.indexes.index.collections.collection;
-          return role.isActionAllowed(requestObject, context);
-        })
-        .then(isAllowed => {
-          should(isAllowed).be.false();
-
-          delete role.indexes.index.collections;
-          return role.isActionAllowed(requestObject, context);
-        })
-        .then(isAllowed => {
-          should(isAllowed).be.false();
-
-          delete role.indexes.index;
-          return role.isActionAllowed(requestObject, context);
-        })
-        .then(isAllowed => {
-          should(isAllowed).be.false();
-
-          delete role.indexes;
-          return role.isActionAllowed(requestObject, context);
+          delete role.controllers;
+          return role.isActionAllowed(requestObject, context, kuzzle);
         })
         .then(isAllowed => {
           should(isAllowed).be.false();
         });
+
     });
 
-    it('should allow an action explicitely set to true', function () {
+    it('should allow an action explicitely set to true', () => {
       var role = new Role();
 
-      role.indexes = {
-        index: {
-          collections: {
-            collection: {
-              controllers: {
-                controller: {
-                  actions: {
-                    action: true
-                  }
-                }
-              }
-            }
+      role.controllers = {
+        controller: {
+          actions: {
+            action: true
           }
         }
       };
 
-      return should(role.isActionAllowed(requestObject, context)).be.fulfilledWith(true);
+      return should(role.isActionAllowed(requestObject, context, kuzzle)).be.fulfilledWith(true);
     });
 
-    it('should allow a wildcard action', function () {
+    it('should allow a wildcard action', () => {
       var role = new Role();
-      role.indexes = {
+      role.controllers = {
         '*': {
-          collections: {
-            '*': {
-              controllers: {
-                '*': {
-                  actions: {
-                    '*': true
-                  }
-                }
-              }
-            }
+          actions: {
+            '*': true
           }
         }
       };
 
-      return should(role.isActionAllowed(requestObject, context)).be.fulfilledWith(true);
+      return should(role.isActionAllowed(requestObject, context, kuzzle)).be.fulfilledWith(true);
     });
 
-    it('should not allow security actions when the internal index is not set explicitly', function () {
+    it('should properly handle restrictions', () => {
       var
         role = new Role(),
         rq = {
-          controller: 'security',
-          action: 'some security action'
-        };
+          controller: 'controller',
+          action: 'action'
+        },
+        restrictions = [
+          {index: 'index1'},
+          {index: 'index2', collections: ['collection1']},
+          {index: 'index3', collections: ['collection1', 'collection2']}
+        ];
 
-      role.indexes = {
-        '*': {
-          collections: {
-            '*': {
-              controllers: {
-                '*': {
-                  actions: {
-                    '*': true
-                  }
-                }
-              }
-            }
+      role.controllers = {
+        controller: {
+          actions: {
+            action: true
           }
         }
       };
 
-      return should(role.isActionAllowed(rq, context)).be.fulfilledWith(false);
-    });
-
-    it('should allow/deny index creation according to indexes._canCreate right', function () {
-      var
-        roleAllow = new Role(),
-        roleDeny = new Role(),
-        rq = {
-          controller: 'admin',
-          action: 'createIndex'
-        };
-
-      roleAllow.indexes = {
-        '_canCreate': true,
-        '*': {
-          collections: {
-            '*': {
-              controllers: {
-                '*': {
-                  actions: {
-                    '*': true
-                  }
-                }
-              }
-            }
-          }
-        }
-      };
-
-      roleDeny.indexes = {
-        '_canCreate': false,
-        '*': {
-          collections: {
-            '*': {
-              controllers: {
-                '*': {
-                  actions: {
-                    '*': true
-                  }
-                }
-              }
-            }
-          }
-        }
-      };
-
-      return roleAllow.isActionAllowed(rq, context)
+      return role.isActionAllowed(rq, context, kuzzle)
         .then(isAllowed => {
           should(isAllowed).be.true();
-
-          return roleDeny.isActionAllowed(rq, context);
+          role.restrictedTo = restrictions;
+          return role.isActionAllowed(rq, context, kuzzle);
+        })
+        .then(isAllowed => {
+          should(isAllowed).be.true();
+          rq.index = 'index';
+          return role.isActionAllowed(rq, context, kuzzle);
         })
         .then(isAllowed => {
           should(isAllowed).be.false();
-        });
-    });
-
-    it('should allow/deny collection creation according to index._canCreate right', function () {
-      var
-        roleAllow = new Role(),
-        roleDeny = new Role(),
-        rq = {
-          controller: 'admin',
-          action: 'createCollection'
-        };
-
-      roleAllow.indexes = {
-        '_canCreate': true,
-        '*': {
-          collections: {
-            '*': {
-              controllers: {
-                '*': {
-                  actions: {
-                    '*': true
-                  }
-                }
-              }
-            }
-          }
-        }
-      };
-
-      roleDeny.indexes = {
-        '_canCreate': false,
-        '*': {
-          collections: {
-            '*': {
-              controllers: {
-                '*': {
-                  actions: {
-                    '*': true
-                  }
-                }
-              }
-            }
-          }
-        }
-      };
-
-      return roleAllow.isActionAllowed(rq, context)
+          rq.index = 'index1';
+          return role.isActionAllowed(rq, context, kuzzle);
+        })
         .then(isAllowed => {
           should(isAllowed).be.true();
-
-          return roleDeny.isActionAllowed(rq, context);
+          rq.index = 'index2';
+          return role.isActionAllowed(rq, context, kuzzle);
+        })
+        .then(isAllowed => {
+          should(isAllowed).be.true();
+          rq.collection = 'collection';
+          return role.isActionAllowed(rq, context, kuzzle);
         })
         .then(isAllowed => {
           should(isAllowed).be.false();
-        });
-    });
-
-    it('should allow/deny collection creation according to collection._canCreate right', function () {
-      var
-        roleAllow = new Role(),
-        roleDeny = new Role(),
-        rq = {
-          controller: 'admin',
-          action: 'createCollection'
-        };
-
-      roleAllow.indexes = {
-        '*': {
-          collections: {
-            '_canCreate': true,
-            '*': {
-              controllers: {
-                '*': {
-                  actions: {
-                    '*': true
-                  }
-                }
-              }
-            }
-          }
-        }
-      };
-
-      roleDeny.indexes = {
-        '*': {
-          collections: {
-            '_canCreate': false,
-            '*': {
-              controllers: {
-                '*': {
-                  actions: {
-                    '*': true
-                  }
-                }
-              }
-            }
-          }
-        }
-      };
-
-      return roleAllow.isActionAllowed(rq, context)
+          rq.collection = 'collection1';
+          return role.isActionAllowed(rq, context, kuzzle);
+        })
         .then(isAllowed => {
           should(isAllowed).be.true();
-
-          return roleDeny.isActionAllowed(rq, context);
+          rq.collection = 'collection2';
+          return role.isActionAllowed(rq, context, kuzzle);
         })
         .then(isAllowed => {
           should(isAllowed).be.false();
-        });
-    });
-
-    it('should allow/deny index deletion according to indexes._canDelete right', function () {
-      var
-        roleAllow = new Role(),
-        roleDeny = new Role(),
-        rq = {
-          controller: 'admin',
-          action: 'deleteIndex'
-        };
-
-      roleAllow.indexes = {
-        '*': {
-          '_canDelete': true,
-          collections: {
-            '*': {
-              controllers: {
-                '*': {
-                  actions: {
-                    '*': true
-                  }
-                }
-              }
-            }
-          }
-        }
-      };
-
-      roleDeny.indexes = {
-        '*': {
-          '_canDelete': false,
-          collections: {
-            '*': {
-              controllers: {
-                '*': {
-                  actions: {
-                    '*': true
-                  }
-                }
-              }
-            }
-          }
-        }
-      };
-
-      return roleAllow.isActionAllowed(rq, context)
-        .then(isAllowed => {
-          should(isAllowed).be.true();
-
-          return roleDeny.isActionAllowed(rq, context);
+          rq.index = 'index3';
+          return role.isActionAllowed(rq, context, kuzzle);
         })
         .then(isAllowed => {
-          should(isAllowed).be.false();
+          should(isAllowed).be.true();
         });
     });
 
-    it('should not allow any action on the internal index if no role has been explicitly set on it', function () {
+    it('should not allow any action on the internal index if no role has been explicitly set on it', () => {
       var
         role = new Role(),
         rq = {
@@ -413,115 +229,59 @@ describe('Test: security/roleTest', function () {
           collection: 'collection',
           controller: 'controller',
           action: 'action'
-        };
+        },
+        restrictions = [
+          {index: 'aaa', collections: ['aaa', 'bbb']}
+        ];
 
-      role.indexes = {
+      role.controllers = {
         '*': {
-          collections: {
-            '*': {
-              controllers: {
-                '*': {
-                  actions: {
-                    '*': true
-                  }
-                }
-              }
-            }
+          actions: {
+            '*': true
           }
         }
       };
 
-      return should(role.isActionAllowed(rq, context)).be.fulfilledWith(false);
+      return role.isActionAllowed(rq, context, kuzzle)
+        .then(isAllowed => {
+          should(isAllowed).be.false();
+          role.allowInternalIndex = true;
+          return role.isActionAllowed(rq, context, kuzzle);
+        })
+        .then(isAllowed => {
+          should(isAllowed).be.true();
+          role.restrictedTo = restrictions;
+          return role.isActionAllowed(rq, context, kuzzle);
+        })
+        .then(isAllowed => {
+          should(isAllowed).be.false();
+        });
     });
 
-    it('should properly handle overridden permissions', function () {
+    it('should properly handle overridden permissions', () => {
       var role = new Role();
-      role.indexes = {
-        '*': {
-          collections: {
-            '*': {
-              controllers: {
-                '*': {
-                  actions: {
-                    '*': true
-                  }
-                }
-              }
-            }
-          }
-        },
-        index: {
-          collections: {
-            '*': {
-              controllers: {
-                '*': {
-                  actions: {
-                    '*': false
-                  }
-                }
-              }
-            }
-          }
-        }
-      };
-
-      return role.isActionAllowed(requestObject, context)
-        .then(isAllowed => {
-          should(isAllowed).be.false();
-
-          role.indexes.index.collections['*'].controllers['*'].actions.action = true;
-
-          return role.isActionAllowed(requestObject, context);
-        })
-        .then(isAllowed => {
-          should(isAllowed).be.true();
-
-          role.indexes.index.collections['*'].controllers.controller = {
-            actions: {
-              '*': false
-            }
-          };
-
-          return role.isActionAllowed(requestObject, context);
-        })
-        .then(isAllowed => {
-          should(isAllowed).be.false();
-
-          role.indexes.index.collections['*'].controllers.controller.actions.action = true;
-
-          return role.isActionAllowed(requestObject, context);
-        })
-        .then(isAllowed => {
-          should(isAllowed).be.true();
-
-          role.indexes.index.collections.collection = {
-            controllers: {
-              '*': {
-                actions: {
-                  '*': false
-                }
-              }
-            }
-          };
-
-          return role.isActionAllowed(requestObject, context);
-        })
-        .then(isAllowed => {
-          should(isAllowed).be.false();
-
-          role.indexes.index.collections.collection.controllers.controller = {
+      role.controllers = {
+          '*': {
             actions: {
               '*': true
             }
-          };
+          },
+          controller: {
+            actions: {
+              '*': false
+            }
+          }
+        };
 
-          return role.isActionAllowed(requestObject, context);
+      return role.isActionAllowed(requestObject, context, kuzzle)
+        .then(isAllowed => {
+          should(isAllowed).be.false();
+          role.controllers.controller.actions.action = true;
+          return role.isActionAllowed(requestObject, context, kuzzle);
         })
         .then(isAllowed => {
           should(isAllowed).be.true();
-
-          role.indexes.index.collections.collection.controllers.controller.actions.action = false;
-
+          role.controllers.controller.actions.action = false;
           return role.isActionAllowed(requestObject, context);
         })
         .then(isAllowed => {
@@ -529,41 +289,169 @@ describe('Test: security/roleTest', function () {
         });
     });
 
-    it('should throw an error if an invalid function is given', function () {
-      var role = new Role(),
-        kuzzle = {
-          pluginsManager: {
-            trigger: () => {
-              return true;
-            }
-          },
-          services: {
-            list: {
-              readEngine: {
-                search: function (requestObject) {
-                  if (requestObject.data.body.filter.ids.values[0] !== 'foobar') {
-                    return q({hits: [documentAda]});
-                  }
-
-                  return q({hits: [documentFalseAda]});
-                }
-              }
-            }
-          }
+    it('should allow/deny collection creation according to index creation right', () => {
+      var
+        roleAllow = new Role(),
+        roleDeny = new Role(),
+        rq = {
+          controller: 'admin',
+          action: 'createCollection',
+          index: 'index',
+          collection: 'collection'
         };
 
-      role.indexes = {
+      roleAllow.controllers = {
+        admin: {
+          actions: {
+            createIndex: true,
+            createCollection: true
+          }
+        }
+      };
+
+      roleDeny.controllers = {
+        admin: {
+          actions: {
+            createInedx: false,
+            createCollection: true
+          }
+        }
+      };
+
+      return roleAllow.isActionAllowed(rq, context, kuzzle)
+        .then(isAllowed => {
+          should(isAllowed).be.true();
+          return roleDeny.isActionAllowed(rq, context, kuzzle);
+        })
+        .then(isAllowed => {
+          should(isAllowed).be.false();
+        });
+    });
+
+    it('should allow/deny document creation according to index/collection creation right', () => {
+      var
+        roleAllow = new Role(),
+        roleDeny1 = new Role(),
+        roleDeny2 = new Role(),
+        rq = {
+          controller: 'write',
+          action: 'create',
+          index: 'index',
+          collection: 'collection'
+        };
+
+      roleAllow.controllers = {
+        admin: {
+          actions: {
+            createIndex: true,
+            createCollection: true
+          }
+        },
+        write: {
+          actions: {
+            create: true
+          }
+        }
+      };
+
+      roleDeny1.controllers = {
+        admin: {
+          actions: {
+            createIndex: false,
+            createCollection: true
+          }
+        },
+        write: {
+          actions: {
+            create: true
+          }
+        }
+      };
+
+      roleDeny2.controllers = {
+        admin: {
+          actions: {
+            createIndex: true,
+            createCollection: false
+          }
+        },
+        write: {
+          actions: {
+            create: true
+          }
+        }
+      };
+
+      return roleAllow.isActionAllowed(rq, context, kuzzle)
+        .then(isAllowed => {
+          should(isAllowed).be.true();
+          return roleDeny1.isActionAllowed(rq, context, kuzzle);
+        })
+        .then(isAllowed => {
+          should(isAllowed).be.false();
+          return roleDeny2.isActionAllowed(rq, context, kuzzle);
+        })
+        .then(isAllowed => {
+          should(isAllowed).be.false();
+        });
+    });
+
+
+    it('should reject if the rights configuration is not either a boolean or a closure', () => {
+      var role = new Role();
+      role.controllers = {
         '*': {
-          collections: {
+          actions: {
+            '*': {an: 'object'}
+          }
+        }
+      };
+
+      return should(role.isActionAllowed(requestObject, context, kuzzle)).be.rejected();
+    });
+
+    it('should reject if the closure function return a non boolean value', () => {
+      var role = new Role();
+
+      role.controllers = {
+        '*': {
+          actions: {
+            '*': {test: 'return "retret";'}
+          }
+        }
+      };
+
+      return should(role.isActionAllowed(requestObject, context, kuzzle)).be.rejected();
+    });
+
+    it('should reject if an invalid function is given', () => {
+      var role = new Role();
+
+      role.controllers = {
+        '*': {
+          actions: {
             '*': {
-              controllers: {
-                '*': {
-                  actions: {
-                    '*': {
-                      test: '(some invalid code',
-                      args: {}
-                    }
-                  }
+              test: '(some invalid code',
+              args: {}
+            }
+          }
+        }
+      };
+
+      return should(role.isActionAllowed(requestObject, context, kuzzle)).be.rejectedWith(ParseError);
+    });
+
+    it('should reject if an invalid argument is given', () => {
+      var role = new Role();
+
+      role.controllers = {
+        '*': {
+          actions: {
+            '*': {
+              test: 'return args.document && args.document.id === $requestObject.data._id;',
+              args: {
+                document: {
+                  get: '$requestObject.data..id'
                 }
               }
             }
@@ -571,57 +459,10 @@ describe('Test: security/roleTest', function () {
         }
       };
 
-      return should(role.isActionAllowed(requestObject, context, {}, kuzzle)).be.rejectedWith(ParseError);
+      return should(role.isActionAllowed(requestObject, context, kuzzle)).be.rejectedWith(ParseError);
     });
 
-    it('should throw an error if an invalid argument is given', () => {
-      var role = new Role(),
-        kuzzle = {
-          pluginsManager: {
-            trigger: () => true
-          },
-          services: {
-            list: {
-              readEngine: {
-                search: rq => {
-                  if (rq.data.body.filter.ids.values[0] !== 'foobar') {
-                    return q({hits: [documentAda]});
-                  }
-
-                  return q({hits: [documentFalseAda]});
-                }
-              }
-            }
-          }
-        };
-
-      role.indexes = {
-        '*': {
-          collections: {
-            '*': {
-              controllers: {
-                '*': {
-                  actions: {
-                    '*': {
-                      test: '(some invalid code',
-                      args: {
-                        document: {
-                          get: '$requestObject.data..id'
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      };
-
-      return should(() => role.isActionAllowed(requestObject, context, {}, kuzzle)).throw(ParseError);
-    });
-
-    it('should handle a custom right function', function () {
+    it('should handle a custom right function', () => {
       var
         role = new Role(),
         noMatchRequestObject = {
@@ -630,40 +471,32 @@ describe('Test: security/roleTest', function () {
           action: 'noaction'
         };
 
-      role.indexes = {
+      role.controllers = {
         '*': {
-          collections: {
+          actions: {
             '*': {
-              controllers: {
-                '*': {
-                  actions: {
-                    '*': {
-                      args: {},
-                      test: 'return $requestObject.action === \'action\'; '
-                    }
-                  }
-                }
-              }
+              args: {},
+              test: 'return $requestObject.action === \'action\'; '
             }
           }
         }
       };
 
-      return role.isActionAllowed(requestObject, context)
+      return role.isActionAllowed(requestObject, context, kuzzle)
         .then(isAllowed => {
           should(isAllowed).be.true();
 
-          return role.isActionAllowed(noMatchRequestObject, context);
+          return role.isActionAllowed(noMatchRequestObject, context, kuzzle);
         })
         .then(isAllowed => {
           should(isAllowed).be.false();
           role.closures = {};
-          role.indexes['*'].collections['*'].controllers['*'].actions['*'] = {
+          role.controllers['*'].actions['*'] = {
             args: {},
             test: 'return $requestObject.action !== \'action\'; '
           };
 
-          return role.isActionAllowed(requestObject, context);
+          return role.isActionAllowed(requestObject, context, kuzzle);
         })
         .then(isAllowed => {
           should(isAllowed).be.false();
@@ -673,72 +506,41 @@ describe('Test: security/roleTest', function () {
     it('should allow/deny rights using custom function with args using get', () => {
       var
         roleAllow = new Role(),
-        roleDeny = new Role(),
-        kuzzle = {
-          services: {
-            list: {
-              readEngine: {
-                get: function (requestObject) {
-                  if (requestObject.data.id !== 'foobar') {
-                    return q(documentAda);
-                  }
+        roleDeny = new Role();
 
-                  return q(documentFalseAda);
-                }
-              }
-            }
-          }
-        };
-
-      roleAllow.indexes = {
+      roleAllow.controllers = {
         '*': {
-          collections: {
+          actions: {
             '*': {
-              controllers: {
-                '*': {
-                  actions: {
-                    '*': {
-                      args: {
-                        document: {
-                          action: {
-                            get: '$currentId'
-                          },
-                          index: 'bar',
-                          collection: 'barbar'
-                        }
-                      },
-                      test: 'return args.document && args.document.id === $requestObject.data._id;'
-                    }
-                  }
+              args: {
+                document: {
+                  action: {
+                    get: '$currentId'
+                  },
+                  index: 'bar',
+                  collection: 'barbar'
                 }
-              }
+              },
+              test: 'return args.document && args.document.id === $requestObject.data._id;'
             }
           }
         }
       };
 
-      roleDeny.indexes = {
+      roleDeny.controllers = {
         '*': {
-          collections: {
+          actions: {
             '*': {
-              controllers: {
-                '*': {
-                  actions: {
-                    '*': {
-                      args: {
-                        document: {
-                          action: {
-                            get: 'foobar'
-                          },
-                          index: 'bar',
-                          collection: 'barbar'
-                        }
-                      },
-                      test: 'return args.document && args.document.id === $requestObject.data._id;'
-                    }
-                  }
+              args: {
+                document: {
+                  action: {
+                    get: 'foobar'
+                  },
+                  index: 'bar',
+                  collection: 'barbar'
                 }
-              }
+              },
+              test: 'return args.document && args.document.id === $requestObject.data._id;'
             }
           }
         }
@@ -756,34 +558,19 @@ describe('Test: security/roleTest', function () {
       });
 
 
-      return roleAllow.isActionAllowed(requestObject, context, {}, kuzzle)
+      return roleAllow.isActionAllowed(requestObject, context, kuzzle)
         .then(isAllowed => {
           should(isAllowed).be.true();
 
-          return roleDeny.isActionAllowed(requestObject, context, {}, kuzzle);
+          return roleDeny.isActionAllowed(requestObject, context, kuzzle);
         })
         .then(isAllowed => should(isAllowed).be.false());
     });
 
-    it('should allow/deny rights using custom function with args using mget', function () {
+    it('should allow/deny rights using custom function with args using mget', () => {
       var
         roleAllow = new Role(),
         roleDeny = new Role(),
-        kuzzle = {
-          services: {
-            list: {
-              readEngine: {
-                mget: function (requestObject) {
-                  if (requestObject.data.body.ids[0] !== 'foobar') {
-                    return q({hits: [documentAda]});
-                  }
-
-                  return q({hits: [documentFalseAda]});
-                }
-              }
-            }
-          }
-        },
         requestObject = new RequestObject({
           controller: 'read',
           action: 'get',
@@ -795,65 +582,49 @@ describe('Test: security/roleTest', function () {
           }
         });
 
-      roleAllow.indexes = {
+      roleAllow.controllers = {
         '*': {
-          collections: {
+          actions: {
             '*': {
-              controllers: {
-                '*': {
-                  actions: {
-                    '*': {
-                      args: {
-                        documents: {
-                          action: {
-                            mget: ['$currentId']
-                          },
-                          index: 'bar',
-                          collection: 'barbar'
-                        }
-                      },
-                      test: 'return args.documents[0] && args.documents[0].id === $requestObject.data._id;'
-                    }
-                  }
+              args: {
+                documents: {
+                  action: {
+                    mget: ['$currentId']
+                  },
+                  index: 'bar',
+                  collection: 'barbar'
                 }
-              }
+              },
+              test: 'return args.documents[0] && args.documents[0].id === $requestObject.data._id;'
             }
           }
         }
       };
 
-      roleDeny.indexes = {
+      roleDeny.controllers = {
         '*': {
-          collections: {
+          actions: {
             '*': {
-              controllers: {
-                '*': {
-                  actions: {
-                    '*': {
-                      args: {
-                        documents: {
-                          action: {
-                            mget: ['foobar']
-                          },
-                          index: 'bar',
-                          collection: 'barbar'
-                        }
-                      },
-                      test: 'return args.documents[0] && args.documents[0].id === $requestObject.data._id;'
-                    }
-                  }
+              args: {
+                documents: {
+                  action: {
+                    mget: ['foobar']
+                  },
+                  index: 'bar',
+                  collection: 'barbar'
                 }
-              }
+              },
+              test: 'return args.documents[0] && args.documents[0].id === $requestObject.data._id;'
             }
           }
         }
       };
 
-      return roleAllow.isActionAllowed(requestObject, context, {}, kuzzle)
+      return roleAllow.isActionAllowed(requestObject, context, kuzzle)
         .then(isAllowed => {
           should(isAllowed).be.true();
 
-          return roleDeny.isActionAllowed(requestObject, context, {}, kuzzle);
+          return roleDeny.isActionAllowed(requestObject, context, kuzzle);
         })
         .then(isAllowed => should(isAllowed).be.false());
     });
@@ -862,21 +633,6 @@ describe('Test: security/roleTest', function () {
       var
         roleAllow = new Role(),
         roleDeny = new Role(),
-        kuzzle = {
-          services: {
-            list: {
-              readEngine: {
-                search: function (requestObject) {
-                  if (requestObject.data.body.filter.ids.values[0] !== 'foobar') {
-                    return q({hits: [documentAda]});
-                  }
-
-                  return q({hits: [documentFalseAda]});
-                }
-              }
-            }
-          }
-        },
         requestObject = new RequestObject({
           controller: 'read',
           action: 'get',
@@ -888,81 +644,65 @@ describe('Test: security/roleTest', function () {
           }
         });
 
-      roleAllow.indexes = {
+      roleAllow.controllers = {
         '*': {
-          collections: {
+          actions: {
             '*': {
-              controllers: {
-                '*': {
-                  actions: {
-                    '*': {
-                      args: {
-                        documents: {
-                          action: {
-                            search: {
-                              filter: {
-                                ids: {
-                                  values: [
-                                    '$requestObject.data._id'
-                                  ]
-                                }
-                              }
-                            }
-                          },
-                          index: 'bar',
-                          collection: 'barbar'
+              args: {
+                documents: {
+                  action: {
+                    search: {
+                      filter: {
+                        ids: {
+                          values: [
+                            '$requestObject.data._id'
+                          ]
                         }
-                      },
-                      test: 'return args.documents[0] && args.documents[0].id === $requestObject.data._id;'
+                      }
                     }
-                  }
+                  },
+                  index: 'bar',
+                  collection: 'barbar'
                 }
-              }
+              },
+              test: 'return args.documents[0] && args.documents[0].id === $requestObject.data._id;'
             }
           }
         }
       };
 
-      roleDeny.indexes = {
+      roleDeny.controllers = {
         '*': {
-          collections: {
+          actions: {
             '*': {
-              controllers: {
-                '*': {
-                  actions: {
-                    '*': {
-                      args: {
-                        documents: {
-                          action: {
-                            search: {
-                              filter: {
-                                ids: {
-                                  values: [
-                                    'foobar'
-                                  ]
-                                }
-                              }
-                            }
-                          },
-                          index: 'bar',
-                          collection: 'barbar'
+              args: {
+                documents: {
+                  action: {
+                    search: {
+                      filter: {
+                        ids: {
+                          values: [
+                            'foobar'
+                          ]
                         }
-                      },
-                      test: 'return args.documents[0] && args.documents[0].id === $requestObject.data._id;'
+                      }
                     }
-                  }
+                  },
+                  index: 'bar',
+                  collection: 'barbar'
                 }
-              }
+              },
+              test: 'return args.documents[0] && args.documents[0].id === $requestObject.data._id;'
             }
           }
         }
       };
 
-      return roleAllow.isActionAllowed(requestObject, context, {}, kuzzle)
+      return roleAllow.isActionAllowed(requestObject, context, kuzzle)
         .then(isAllowed => {
           should(isAllowed).be.true();
 
-          return roleDeny.isActionAllowed(requestObject, context, {}, kuzzle);
+          return roleDeny.isActionAllowed(requestObject, context, kuzzle);
         })
         .then(isAllowed => should(isAllowed).be.false());
     });
@@ -970,26 +710,6 @@ describe('Test: security/roleTest', function () {
     it('should not allow bad method call', () => {
       var
         role = new Role(),
-        kuzzle = {
-          pluginsManager: {
-            trigger: () => {
-              return true;
-            }
-          },
-          services: {
-            list: {
-              readEngine: {
-                get: function (requestObject) {
-                  if (requestObject.data.id !== 'foobar') {
-                    return q(documentAda);
-                  }
-
-                  return q(documentFalseAda);
-                }
-              }
-            }
-          }
-        },
         requestObject = new RequestObject({
           controller: 'read',
           action: 'get',
@@ -1001,52 +721,32 @@ describe('Test: security/roleTest', function () {
           }
         });
 
-      role.indexes = {
+      role.controllers = {
         '*': {
-          collections: {
+          actions: {
             '*': {
-              controllers: {
-                '*': {
-                  actions: {
-                    '*': {
-                      args: {
-                        document: {
-                          action: {
-                            foo: '$currentId'
-                          },
-                          index: 'bar',
-                          collection: 'barbar'
-                        }
-                      },
-                      test: 'return args.document && args.document.id === $requestObject.data._id;'
-                    }
-                  }
+              args: {
+                document: {
+                  action: {
+                    foo: '$currentId'
+                  },
+                  index: 'bar',
+                  collection: 'barbar'
                 }
-              }
+              },
+              test: 'return args.document && args.document.id === $requestObject.data._id;'
             }
           }
         }
       };
 
-      return role.isActionAllowed(requestObject, context, {}, kuzzle)
+      return role.isActionAllowed(requestObject, context, kuzzle)
         .then(isAllowed => should(isAllowed).be.false());
     });
 
     it('should not allow if read method throws an error', () => {
       var
         role = new Role(),
-        kuzzle = {
-          pluginsManager: {
-            trigger: () => true
-          },
-          services: {
-            list: {
-              readEngine: {
-                get: () => q.reject(new InternalError('Our Error'))
-              }
-            }
-          }
-        },
         requestObject = new RequestObject({
           controller: 'read',
           action: 'get',
@@ -1054,64 +754,35 @@ describe('Test: security/roleTest', function () {
           collection: 'barbar',
           index: 'bar',
           body: {
-            _id: documentAda._id
+            _id: 'reject'
           }
         });
 
-      role.indexes = {
+      role.controllers = {
         '*': {
-          collections: {
+          actions: {
             '*': {
-              controllers: {
-                '*': {
-                  actions: {
-                    '*': {
-                      args: {
-                        document: {
-                          action: {
-                            get: '$currentId'
-                          },
-                          index: 'bar',
-                          collection: 'barbar'
-                        }
-                      },
-                      test: 'return args.document && args.document.id === $requestObject.data._id;'
-                    }
-                  }
+              args: {
+                document: {
+                  action: {
+                    get: '$currentId'
+                  },
+                  index: 'bar',
+                  collection: 'barbar'
                 }
-              }
+              },
+              test: 'return args.document && args.document.id === $requestObject.data._id;'
             }
           }
         }
       };
 
-      return role.isActionAllowed(requestObject, context, {}, kuzzle)
-        .then(isActionAllowed => should(isActionAllowed).be.false());
+      return should(role.isActionAllowed(requestObject, context, kuzzle)).be.fulfilledWith(false);
     });
 
     it('should not allow if collection is not specified', () => {
       var
         role = new Role(),
-        kuzzle = {
-          pluginsManager: {
-            trigger: () => {
-              return true;
-            }
-          },
-          services: {
-            list: {
-              readEngine: {
-                get: (requestObject) => {
-                  if (requestObject.data.id !== 'foobar') {
-                    return q(documentAda);
-                  }
-
-                  return q(documentFalseAda);
-                }
-              }
-            }
-          }
-        },
         requestObject = new RequestObject({
           controller: 'read',
           action: 'get',
@@ -1123,409 +794,124 @@ describe('Test: security/roleTest', function () {
           }
         });
 
-      role.indexes = {
+      role.controllers = {
         '*': {
-          collections: {
+          actions: {
             '*': {
-              controllers: {
-                '*': {
-                  actions: {
-                    '*': {
-                      args: {
-                        document: {
-                          action: {
-                            get: '$currentId'
-                          },
-                          collection: 'barbar'
-                        }
-                      },
-                      test: 'return args.document && args.document.id === $requestObject.data._id;'
-                    }
-                  }
+              args: {
+                document: {
+                  action: {
+                    get: '$currentId'
+                  },
+                  collection: 'barbar'
                 }
-              }
+              },
+              test: 'return args.document && args.document.id === $requestObject.data._id;'
             }
           }
         }
       };
 
-      return role.isActionAllowed(requestObject, context, {}, kuzzle)
-        .then(isAllowed => should(isAllowed).be.false());
+      return should(role.isActionAllowed(requestObject, context, kuzzle)).be.fulfilledWith(false);
     });
   });
 
   describe('#validateDefinition', () => {
-    it('should reject the promise if the index is not an object', () => {
+    it('should reject the promise if the controllers definition is not an object', () => {
       var role = new Role();
-      role.indexes = true;
+      role.controllers = true;
 
-      return should(role.validateDefinition(context)).be.rejectedWith(BadRequestError, {message: 'The index definition must be an object'});
+      return should(role.validateDefinition(context)).be.rejectedWith(BadRequestError, {message: 'The "controllers" definition must be an object'});
     });
 
-    it('should reject the promise if the index definition is empty', () => {
+    it('should reject the promise if the controllers definition is empty', () => {
       var role = new Role();
-      role.indexes = {};
+      role.controllers = {};
 
-      return should(role.validateDefinition(context)).be.rejectedWith(BadRequestError, {message: 'The index definition cannot be empty'});
+      return should(role.validateDefinition(context)).be.rejectedWith(BadRequestError, {message: 'The "controllers" definition cannot be empty'});
     });
 
-    it('should reject the promise if the index element is not an object', () => {
+    it('should reject the promise if the controller element is not an object', () => {
       var role = new Role();
-      role.indexes = {
+      role.controllers = {
         '*': true
       };
 
-      return should(role.validateDefinition(context)).be.rejectedWith(BadRequestError, {message: 'Invalid index definition for *. Must be an object'});
-    });
-
-    it('should reject the promise if the index element is empty', () => {
-      var role = new Role();
-      role.indexes = {
-        '*': {}
-      };
-
-      return should(role.validateDefinition(context)).be.rejectedWith(BadRequestError, {message: 'Invalid index definition for *. Cannot be empty'});
-    });
-
-    it('should reject the promise if the collections attribute is missing from the index element', () => {
-      var role = new Role();
-      role.indexes = {
-        '*': {
-          wrongAttribute: true
-        }
-      };
-
-      return should(role.validateDefinition(context)).be.rejectedWith(BadRequestError, {message: 'Invalid index definition for *. `collections` attribute missing'});
-    });
-
-    it('should reject the promise if the collections attribute is not an object', () => {
-      var role = new Role();
-      role.indexes = {
-        '*': {
-          collections: true
-        }
-      };
-
-      return should(role.validateDefinition(context)).be.rejectedWith(BadRequestError, {message: 'Invalid index definition for *. `collections` attribute must be an object'});
-    });
-
-    it('should reject the promise if the collections attribute is empty', () => {
-      var role = new Role();
-      role.indexes = {
-        _canCreate: true,
-        '*': {
-          collections: {}
-        }
-      };
-
-      return should(role.validateDefinition(context)).be.rejectedWith(BadRequestError, {message: 'Invalid index definition for *. `collections` attribute cannot be empty'});
-    });
-
-    it('should reject the promise if the collection element is not an object', () => {
-      var role = new Role();
-      role.indexes = {
-        _canCreate: true,
-        '*': {
-          collections: {
-            invalid: true
-          }
-        }
-      };
-
-      return should(role.validateDefinition(context)).be.rejectedWith(BadRequestError, {message: 'Invalid definition for *,invalid. Must be an object'});
-    });
-
-    it('should reject the promise if the collection element is empty', () => {
-      var role = new Role();
-      role.indexes = {
-        _canCreate: true,
-        '*': {
-          collections: {
-            invalid: {}
-          }
-        }
-      };
-
-      return should(role.validateDefinition(context)).be.rejectedWith(BadRequestError, {message: 'Invalid definition for *,invalid. Cannot be empty'});
-    });
-
-    it('should reject the promise if the controllers attribute is missing', () => {
-      var role = new Role();
-      role.indexes = {
-        _canCreate: true,
-        index: {
-          collections: {
-            _canCreate: true,
-            collection: {
-              a: true
-            }
-          }
-        }
-      };
-
-      return should(role.validateDefinition(context)).be.rejectedWith(BadRequestError, {message: 'Invalid definition for index,collection. `controllers` attribute missing'});
-    });
-
-    it('should reject the promise is the controllers attribute is not an object', () => {
-      var role = new Role();
-      role.indexes = {
-        _canCreate: true,
-        index: {
-          collections: {
-            _canCreate: true,
-            collection: {
-              controllers: true
-            }
-          }
-        }
-      };
-
-      return should(role.validateDefinition(context)).be.rejectedWith(BadRequestError, {message: 'Invalid definition for index,collection. `controllers` attribute must be an object'});
-    });
-
-    it('should reject the promise if the controllers attribute is empty', () => {
-      var role = new Role();
-      role.indexes = {
-        _canCreate: true,
-        index: {
-          collections: {
-            _canCreate: true,
-            collection: {
-              controllers: {}
-            }
-          }
-        }
-      };
-
-      return should(role.validateDefinition(context)).be.rejectedWith(BadRequestError, {message: 'Invalid definition for index,collection. `controllers` attribute cannot be empty'});
-    });
-
-    it('should reject the promise is the controller element is not an object', () => {
-      var role = new Role();
-      role.indexes = {
-        _canCreate: true,
-        index: {
-          collections: {
-            _canCreate: true,
-            collection: {
-              controllers: {
-                controller: true
-              }
-            }
-          }
-        }
-      };
-
-      return should(role.validateDefinition(context)).be.rejectedWith(BadRequestError, {message: 'Invalid definition for index,collection,controller. Must be an object'});
+      return should(role.validateDefinition(context)).be.rejectedWith(BadRequestError, {message: 'Invalid definition for *. Must be an object'});
     });
 
     it('should reject the promise if the controller element is empty', () => {
       var role = new Role();
-      role.indexes = {
-        _canCreate: true,
-        index: {
-          collections: {
-            _canCreate: true,
-            collection: {
-              controllers: {
-                controller: {}
-              }
-            }
-          }
-        }
+      role.controllers = {
+        '*': {}
       };
 
-      return should(role.validateDefinition(context)).be.rejectedWith(BadRequestError, {message: 'Invalid definition for index,collection,controller. Cannot be empty'});
+      return should(role.validateDefinition(context)).be.rejectedWith(BadRequestError, {message: 'Invalid definition for *. Cannot be empty'});
     });
 
     it('should reject the promise if the actions attribute is missing', () => {
       var role = new Role();
-      role.indexes = {
-        _canCreate: true,
-        index: {
-          collections: {
-            _canCreate: true,
-            collection: {
-              controllers: {
-                controller: {
-                  a: true
-                }
-              }
-            }
-          }
+      role.controllers = {
+        controller: {
+          a: true
         }
       };
 
-      return should(role.validateDefinition(context)).be.rejectedWith(BadRequestError, {message: 'Invalid definition for index,collection,controller. `actions` attribute missing'});
+      return should(role.validateDefinition(context)).be.rejectedWith(BadRequestError, {message: 'Invalid definition for controller. `actions` attribute missing'});
     });
 
     it('should reject the promise is the actions attribute is not an object', () => {
       var role = new Role();
-      role.indexes = {
-        _canCreate: true,
-        index: {
-          collections: {
-            _canCreate: true,
-            collection: {
-              controllers: {
-                controller: {
-                  actions: true
-                }
-              }
-            }
-          }
+      role.controllers = {
+        controller: {
+          actions: true
         }
       };
 
-      return should(role.validateDefinition(context)).be.rejectedWith(BadRequestError, {message: 'Invalid definition for index,collection,controller. `actions` attribute must be an object'});
+      return should(role.validateDefinition(context)).be.rejectedWith(BadRequestError, {message: 'Invalid definition for controller. `actions` attribute must be an object'});
     });
 
     it('should reject the promise if the actions attribute is empty', () => {
       var role = new Role();
-      role.indexes = {
-        _canCreate: true,
-        index: {
-          collections: {
-            _canCreate: true,
-            collection: {
-              controllers: {
-                controller: {
-                  actions: {}
-                }
-              }
-            }
-          }
+      role.controllers = {
+        controller: {
+          actions: {}
         }
       };
 
-      return should(role.validateDefinition(context)).be.rejectedWith(BadRequestError, {message: 'Invalid definition for index,collection,controller. `actions` attribute cannot be empty'});
+      return should(role.validateDefinition(context)).be.rejectedWith(BadRequestError, {message: 'Invalid definition for controller. `actions` attribute cannot be empty'});
     });
 
     it('should reject the promise if the action right is neither a boolean or an object', () => {
       var role = new Role();
-      role.indexes = {
-        _canCreate: true,
-        index: {
-          collections: {
-            _canCreate: true,
-            collection: {
-              controllers: {
-                controller: {
-                  actions: {
-                    action: null
-                  }
-                }
-              }
-            }
+      role.controllers = {
+        controller: {
+          actions: {
+            action: null
           }
         }
       };
 
-      return should(role.validateDefinition(context)).be.rejectedWith(BadRequestError, {message: 'Invalid definition for index,collection,controller,action. Must be a boolean or an object'});
-    });
-
-    it('should reject if _canCreate is not boolean in indexes', () => {
-      var role = new Role();
-      role.indexes = {
-        _canCreate: {},
-        index1: {
-          collections: {
-            _canCreate: true,
-            collection1: {
-              controllers: {
-                controller: {
-                  actions: {
-                    action1: false,
-                    action2: true
-                  }
-                }
-
-              }
-            }
-          }
-        }
-      };
-
-      return should(role.validateDefinition(context)).be.rejectedWith('Invalid index definition for _canCreate. Must be an boolean');
-    });
-
-    it('should reject if _canCreate is not boolean in collections', () => {
-      var role = new Role();
-      role.indexes = {
-        _canCreate: true,
-        index1: {
-          collections: {
-            _canCreate: {},
-            collection1: {
-              controllers: {
-                controller: {
-                  actions: {
-                    action1: false,
-                    action2: true
-                  }
-                }
-
-              }
-            }
-          }
-        }
-      };
-
-      return should(role.validateDefinition(context)).be.rejectedWith('Invalid index definition for index1,_canCreate. Must be an boolean');
+      return should(role.validateDefinition(context)).be.rejectedWith(BadRequestError, {message: 'Invalid definition for controller,action. Must be a boolean or an object'});
     });
 
     it('should validate if only boolean rights are given', () => {
       var role = new Role();
-      role.indexes = {
-        _canCreate: true,
-        index1: {
-          collections: {
-            _canCreate: true,
-            collection1: {
-              controllers: {
-                controller: {
-                  actions: {
-                    action1: false,
-                    action2: true
-                  }
-                }
-
-              }
-            },
-            collection2: {
-              controllers: {
-                controller: {
-                  actions: {
-                    action: true
-                  }
-                }
-              }
-            }
+      role.controllers = {
+        controller1: {
+          actions: {
+            action1: false,
+            action2: true
           }
         },
-        index2: {
-          collections: {
-            _canCreate: true,
-            collection: {
-              controllers: {
-                controller1: {
-                  actions: {
-                    action: true
-                  }
-                },
-                controller2: {
-                  actions: {
-                    action: false
-                  }
-                }
-              }
-            }
+        controller2: {
+          actions: {
+            action3: true
           }
         }
       };
 
-      return role.validateDefinition(context)
-        .then(result => should(result).be.a.Boolean());
+      return should(role.validateDefinition(context)).be.fulfilledWith(true);
     });
 
     it('should reject the promise if the closure does not contain a "test" attribute', () => {
@@ -1558,22 +944,12 @@ describe('Test: security/roleTest', function () {
         })(() => {
           var role = new Role();
 
-          role.indexes = {
-            _canCreate: true,
-            index: {
-              collections: {
-                _canCreate: true,
-                collection: {
-                  controllers: {
-                    controller: {
-                      actions: {
-                        action: {
-                          args: {},
-                          test: 'a string'
-                        }
-                      }
-                    }
-                  }
+          role.controllers = {
+            controller: {
+              actions: {
+                action: {
+                  args: {},
+                  test: 'a string'
                 }
               }
             }
@@ -1593,22 +969,12 @@ describe('Test: security/roleTest', function () {
           }
         })(() => {
           var role = new Role();
-          role.indexes = {
-            _canCreate: true,
-            index: {
-              collections: {
-                _canCreate: true,
-                collection: {
-                  controllers: {
-                    controller: {
-                      actions: {
-                        action: {
-                          args: {},
-                          test: 'a string'
-                        }
-                      }
-                    }
-                  }
+          role.controllers = {
+            controller: {
+              actions: {
+                action: {
+                  args: {},
+                  test: 'a string'
                 }
               }
             }
@@ -1617,7 +983,7 @@ describe('Test: security/roleTest', function () {
           return role.validateDefinition(context);
         });
 
-      return should(foo).be.rejectedWith(BadRequestError, {message: 'Invalid definition for index,collection,controller,action. Error executing function'});
+      return should(foo).be.rejectedWith(BadRequestError, {message: 'Invalid definition for controller,action. Error executing function'});
     });
 
     it('should resolve the promise if the sandbox returned a boolean', () => {
@@ -1627,22 +993,12 @@ describe('Test: security/roleTest', function () {
         }
       })(() => {
         var role = new Role();
-        role.indexes = {
-          _canCreate: true,
-          index: {
-            collections: {
-              _canCreate: true,
-              collection: {
-                controllers: {
-                  controller: {
-                    actions: {
-                      action: {
-                        args: {},
-                        test: 'a string'
-                      }
-                    }
-                  }
-                }
+        role.controllers = {
+          controller: {
+            actions: {
+              action: {
+                args: {},
+                test: 'a string'
               }
             }
           }
