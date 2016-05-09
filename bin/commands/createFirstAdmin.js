@@ -1,12 +1,12 @@
+/* eslint-disable no-console */
+
 var
   readlineSync = require('readline-sync'),
   clc = require('cli-color'),
   error = clc.red,
-  warn = clc.yellow,
   question = clc.whiteBright,
   notice = clc.cyanBright,
   ok = clc.green.bold,
-  kuz = clc.greenBright.bold,
   request = require('request-promise'),
   rc = require('rc'),
   params = rc('kuzzle'),
@@ -20,8 +20,10 @@ var
       // get username
       prompt: '\n[❓] Which username for the first admin ?\nTip: avoid to name it admin, or root...\n: ',
       check: (userEntry) => {
-        var _name = userEntry.trim(),
-        badNames = ['admin','root'];
+        var
+          _name = userEntry.trim(),
+          badNames = ['admin','root'];
+
         if (badNames.indexOf(_name) === -1) {
           if (_name.length < 4) {
             console.log(ok('[✖] Username should have at least 4 chars'));
@@ -35,14 +37,16 @@ var
             console.log(notice('[ℹ] The username has been trimmed.'));
           }
           return true;
-        } else {
-          console.log(error('[✖] It is a bad idea to name an admin "' + _name + '"...'));
-          if (readlineSync.keyInYNStrict(question('[❓] Are you sure you want to name it "' + _name + '" ?'))) {
-            name = _name;
-            return true;
-          }
-          return false;
         }
+
+        console.log(error('[✖] It is a bad idea to name an admin "' + _name + '"...'));
+
+        if (readlineSync.keyInYNStrict(question('[❓] Are you sure you want to name it "' + _name + '" ?'))) {
+          name = _name;
+          return true;
+        }
+
+        return false;
       }
     },
     {
@@ -67,10 +71,10 @@ var
           password = userEntryBis;
           console.log(ok('[✔] Given password set'));
           return true;
-        } else {
-          console.log(error('[✖] The passwords you typed does not match...'));
-          return false;
         }
+
+        console.log(error('[✖] The passwords you typed does not match...'));
+        return false;
       }
     },
     {
@@ -94,10 +98,11 @@ var resetRole = (roleId) => {
 };
 
 var resetProfile = (profileId, role) => {
-  var data = {
+  var
+    data = {
       _id: profileId,
       roles: [ role ]
-  };
+    };
 
   return request({
     method: 'PUT',
@@ -145,71 +150,71 @@ var nextStep = (message) => {
     } else {
       nextStep(notice('███ Please retry...'));
     }
-  } else {
-    if (resetRoles) {
-      createAdminUser()
-        .then((res) =>{
-          console.log(ok('[✔] "' + name + '" user created with admin rights'));
-          return resetProfile('default', {_id: 'default'});
-        })
-        .then((res) => {
-          console.log(ok('[✔] "default" profile reset'));
-          return resetProfile('admin', {_id: 'admin', allowInternalIndex: true});
-        })
-        .then((res) => {
-          console.log(ok('[✔] "admin" profile reset'));
-          return resetProfile('anonymous', {_id: 'anonymous'});
-        })
-        .then((res) => {
-          console.log(ok('[✔] "anonymous" profile reset'));
-          return resetRole('default');
-        })
-        .then((res) => {
-          console.log(ok('[✔] "default" role reset'));
-          return resetRole('admin');
-        })
-        .then((res) => {
-          console.log(ok('[✔] "admin" role reset'));
-          return resetRole('anonymous');
-        })
-        .then((res) => {
-          console.log(ok('[✔] "anonymous" role reset'));
-          console.log('\n');
-          console.log(ok('[✔] Everything is finished'));
-        })
-        .catch((err) => {
-          console.log(error('[✖] Something whent terribly wrong:'));
-          switch(err.statusCode) {
-            case 409:
-              console.log(error('>>> This account already exists!'));
-              break;
-            case 401:
-              console.log(error('>>> You are not allowed to perform this operation.') + '\n>>>This probably means that there is already an admin, so this utility is not allowed to create a new one.');
-              break;
-            default:
-              console.log(err);
-          }
-        });
-    } else {
-      createAdminUser()
-        .then((res) =>{
-          console.log(ok('[✔] "' + name + '" user created with admin rights'));
-          console.log(notice('[ℹ] The roles and profiles have not been reseted.'));
-        })
-        .catch((err) => {
-          console.log(error('[✖] Something whent terribly wrong:'));
-          switch(err.statusCode) {
-            case 409:
-              console.log(error('>>> This account already exists!'));
-              break;
-            case 401:
-              console.log(error('>>> You are not allowed to perform this operation.') + '\n>>>This probably means that there is already an admin, so this utility is not allowed to create a new one.');
-              break;
-            default:
-              console.log(err);
-          }
-        });
-    }
+  }
+  else if (resetRoles) {
+    createAdminUser()
+      .then(() =>{
+        console.log(ok('[✔] "' + name + '" user created with admin rights'));
+        return resetProfile('default', {_id: 'default'});
+      })
+      .then(() => {
+        console.log(ok('[✔] "default" profile reset'));
+        return resetProfile('admin', {_id: 'admin', allowInternalIndex: true});
+      })
+      .then(() => {
+        console.log(ok('[✔] "admin" profile reset'));
+        return resetProfile('anonymous', {_id: 'anonymous'});
+      })
+      .then(() => {
+        console.log(ok('[✔] "anonymous" profile reset'));
+        return resetRole('default');
+      })
+      .then(() => {
+        console.log(ok('[✔] "default" role reset'));
+        return resetRole('admin');
+      })
+      .then(() => {
+        console.log(ok('[✔] "admin" role reset'));
+        return resetRole('anonymous');
+      })
+      .then(() => {
+        console.log(ok('[✔] "anonymous" role reset'));
+        console.log('\n');
+        console.log(ok('[✔] Everything is finished'));
+      })
+      .catch((err) => {
+        console.log(error('[✖] Something whent terribly wrong:'));
+        switch (err.statusCode) {
+          case 409:
+            console.log(error('>>> This account already exists!'));
+            break;
+          case 401:
+            console.log(error('>>> You are not allowed to perform this operation.') + '\n>>>This probably means that there is already an admin, so this utility is not allowed to create a new one.');
+            break;
+          default:
+            console.log(err);
+        }
+      });
+  }
+  else {
+    createAdminUser()
+      .then(() =>{
+        console.log(ok('[✔] "' + name + '" user created with admin rights'));
+        console.log(notice('[ℹ] The roles and profiles have not been reset.'));
+      })
+      .catch((err) => {
+        console.log(error('[✖] Something whent terribly wrong:'));
+        switch (err.statusCode) {
+          case 409:
+            console.log(error('>>> This account already exists!'));
+            break;
+          case 401:
+            console.log(error('>>> You are not allowed to perform this operation.') + '\n>>>This probably means that there is already an admin configured');
+            break;
+          default:
+            console.log(err);
+        }
+      });
   }
 };
 
@@ -230,12 +235,12 @@ module.exports = {
   action: () => {
 
     checkIfFistAdminNeeded()
-      .then((res) =>{
+      .then(() =>{
         // we can access to the admin role, so no admin account have been created yet
         console.log(ok('███ Kuzzle first admin creation'));
         nextStep();
       })
-      .catch((err) => {
+      .catch(() => {
         console.log(ok('[✔] The first admin has already been created'));
       });
   }
