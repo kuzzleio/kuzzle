@@ -1,10 +1,10 @@
 var
+  _ = require('lodash'),
   should = require('should'),
   q = require('q'),
   sinon = require('sinon'),
   rewire = require('rewire'),
   params = require('rc')('kuzzle'),
-  Profile = require.main.require('lib/api/core/models/security/profile'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
   NotFoundError = require.main.require('lib/api/core/errors/notFoundError'),
@@ -36,7 +36,7 @@ describe('Test: security controller - profiles', function () {
     it('should resolve to a responseObject on a createOrReplaceProfile call', () => {
       sandbox.stub(kuzzle.repositories.profile, 'validateAndSaveProfile').resolves({_id: 'test', _source: {}});
       return kuzzle.funnel.controllers.security.createOrReplaceProfile(new RequestObject({
-          body: {_id: 'test', roles: ['role1']}
+          body: {_id: 'test', roles: [{_id: 'role1'}]}
         }))
         .then(result => {
           should(result).be.an.instanceOf(ResponseObject);
@@ -88,7 +88,7 @@ describe('Test: security controller - profiles', function () {
       sandbox.stub(kuzzle.repositories.profile, 'loadProfile').resolves(null);
       return should(kuzzle.funnel.controllers.security.getProfile(new RequestObject({
           body: {_id: 'test'}
-        }))).be.rejected(NotFoundError);
+        }))).be.rejectedWith(NotFoundError);
     });
   });
 
@@ -105,7 +105,7 @@ describe('Test: security controller - profiles', function () {
     });
 
     it('should resolve to a responseObject on a mGetProfiles call', () => {
-      sandbox.stub(kuzzle.repositories.profile, 'loadMultiFromDatabase').resolves([{_id: 'test', _source: {roles: ['role']}}]);
+      sandbox.stub(kuzzle.repositories.profile, 'loadMultiFromDatabase').resolves([{_id: 'test', _source: {roles: [{_id: 'role'}]}}]);
       return kuzzle.funnel.controllers.security.mGetProfiles(new RequestObject({
           body: {ids: ['test']}
         }))
@@ -116,7 +116,8 @@ describe('Test: security controller - profiles', function () {
 
           should(result.data.body.hits[0]).be.an.Object();
           should(result.data.body.hits[0]._source.roles).be.an.Array();
-          should(result.data.body.hits[0]._source.roles[0]).be.a.String();
+          should(result.data.body.hits[0]._source.roles[0]).be.an.Object();
+          should(result.data.body.hits[0]._source.roles[0]._id).be.an.String();
         });
     });
 
@@ -150,7 +151,7 @@ describe('Test: security controller - profiles', function () {
     });
 
     it('should return a ResponseObject containing an array of profiles on searchProfile call with hydrate', () => {
-      sandbox.stub(kuzzle.repositories.profile, 'searchProfiles').resolves({hits: [{_id: 'test', _source: {}}]});
+      sandbox.stub(kuzzle.repositories.profile, 'searchProfiles').resolves({total: 1, hits: [{_id: 'test', roles: [ {_id: 'default'} ]}]});
       return kuzzle.funnel.controllers.security.searchProfiles(new RequestObject({
           body: {
             roles: ['role1'],
@@ -159,10 +160,11 @@ describe('Test: security controller - profiles', function () {
         }))
         .then(result => {
           var jsonResponse = result.toJson();
-
           should(result).be.an.instanceOf(ResponseObject);
           should(jsonResponse.result.hits).be.an.Array();
           should(jsonResponse.result.hits[0]._id).be.exactly('test');
+          should(jsonResponse.result.hits[0]._source.roles).be.an.Array();
+          should(jsonResponse.result.hits[0]._source.roles[0]._id).be.exactly('default');
         });
     });
 

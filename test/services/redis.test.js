@@ -2,20 +2,24 @@ var
   should = require('should'),
   q = require('q'),
   params = require('rc')('kuzzle'),
-  Redis = require.main.require('lib/services/redis'),
-  redisCommands = require('redis-commands'),
-  Kuzzle = require.main.require('lib/api/Kuzzle');
-
+  rewire = require('rewire'),
+  Redis = rewire('../../lib/services/redis'),
+  Ioredis = require('ioredis'),
+  redisCommands = (require('ioredis')()).getBuiltinCommands(),
+  Kuzzle = require.main.require('lib/api/Kuzzle'),
+  sinon = require('sinon');
 
 
 describe('Test redis service', function () {
   var
     kuzzle,
     dbname = 'unit-tests',
-    redis;
+    redis,
+    sandbox;
 
   before(function (done) {
     kuzzle = new Kuzzle();
+
     kuzzle.start(params, {dummy: true})
       .then(() => {
         kuzzle.config.cache.databases.push(dbname);
@@ -25,10 +29,14 @@ describe('Test redis service', function () {
       .catch(error => done(error));
   });
 
-  afterEach(function (done) {
-    redis.client.flushdb(() => done());
+  beforeEach(() => {
+    sandbox = sinon.sandbox.create();
   });
 
+  afterEach(function (done) {
+    redis.client.flushdb(() => done());
+    sandbox.restore();
+  });
 
   it('should init a redis client', function (done) {
     var r;
@@ -65,15 +73,15 @@ describe('Test redis service', function () {
   it('should raise an error if unable to connect', function (done) {
     var
       testredis,
-      savePort = kuzzle.config.cache.port;
+      savePort = kuzzle.config.cache.node.port;
 
-    kuzzle.config.cache.port = 1337;
+    kuzzle.config.cache.node.port = 1337;
     testredis = new Redis(kuzzle, {service: kuzzle.config.cache.databases[0]});
 
     testredis.init()
       .then(() => done('should have failed connecting to redis'))
       .catch(() => done())
-      .finally(() => kuzzle.config.cache.port = savePort);
+      .finally(() => kuzzle.config.cache.node.port = savePort);
   });
 
   it('should resolve 0 when add a key without value', function () {
@@ -270,11 +278,36 @@ describe('Test redis service', function () {
   });
 
   it('should implement all canonical methods', () => {
-    redisCommands.list.forEach(command => {
+    redisCommands.forEach(command => {
       if(command === 'client') {
         return true;
       }
+
       should(redis[command]).be.a.Function();
     });
+  });
+
+  it('should build a client instance of Cluster if several nodes are defined', () => {
+    var config = {
+      nodes: [
+        {host: 'fobar', port: 6379}
+      ]
+    };
+
+    sandbox.stub(Ioredis, 'Cluster').returns({});
+
+    Redis.__get__('buildClient')(config);
+    should(Ioredis.Cluster.called).be.true();
+  });
+
+  it('should build a client instance of Redis if only one node is defined', () => {
+    var config = {
+      node: {host: 'fobar', port: 6379}
+    };
+
+    sandbox.stub(Ioredis, 'Cluster').returns({});
+
+    Redis.__get__('buildClient')(config);
+    should(Ioredis.Cluster.called).be.false();
   });
 });

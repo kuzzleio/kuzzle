@@ -89,11 +89,11 @@ ApiRT.prototype.get = function (id, index) {
   return this.send(msg);
 };
 
-ApiRT.prototype.search = function (filters, index) {
+ApiRT.prototype.search = function (filters, index, collection) {
   var
     msg = {
       controller: 'read',
-      collection: this.world.fakeCollection,
+      collection: collection || this.world.fakeCollection,
       index: index || this.world.fakeIndex,
       action: 'search',
       body: filters
@@ -102,11 +102,11 @@ ApiRT.prototype.search = function (filters, index) {
   return this.send(msg);
 };
 
-ApiRT.prototype.count = function (filters, index) {
+ApiRT.prototype.count = function (filters, index, collection) {
   var
     msg = {
       controller: 'read',
-      collection: this.world.fakeCollection,
+      collection: collection || this.world.fakeCollection,
       index: index || this.world.fakeIndex,
       action: 'count',
       body: filters

@@ -38,6 +38,7 @@ var
           }
           return true;
         }
+
         console.log(error('[✖] It is a bad idea to name an admin "' + _name + '"...'));
 
         if (readlineSync.keyInYNStrict(question('[❓] Are you sure you want to name it "' + _name + '" ?'))) {
@@ -96,11 +97,11 @@ var resetRole = (roleId) => {
   });
 };
 
-var resetProfile = (profileId, roleId) => {
+var resetProfile = (profileId, role) => {
   var
     data = {
       _id: profileId,
-      roles: [ roleId ]
+      roles: [ role ]
     };
 
   return request({
@@ -154,15 +155,15 @@ var nextStep = (message) => {
     createAdminUser()
       .then(() =>{
         console.log(ok('[✔] "' + name + '" user created with admin rights'));
-        return resetProfile('default', 'default');
+        return resetProfile('default', {_id: 'default'});
       })
       .then(() => {
         console.log(ok('[✔] "default" profile reset'));
-        return resetProfile('admin', 'admin');
+        return resetProfile('admin', {_id: 'admin', allowInternalIndex: true});
       })
       .then(() => {
         console.log(ok('[✔] "admin" profile reset'));
-        return resetProfile('anonymous', 'anonymous');
+        return resetProfile('anonymous', {_id: 'anonymous'});
       })
       .then(() => {
         console.log(ok('[✔] "anonymous" profile reset'));
@@ -199,7 +200,7 @@ var nextStep = (message) => {
     createAdminUser()
       .then(() =>{
         console.log(ok('[✔] "' + name + '" user created with admin rights'));
-        console.log(notice('[ℹ] The roles and profiles have not been reseted.'));
+        console.log(notice('[ℹ] The roles and profiles have not been reset.'));
       })
       .catch((err) => {
         console.log(error('[✖] Something whent terribly wrong:'));
@@ -208,7 +209,7 @@ var nextStep = (message) => {
             console.log(error('>>> This account already exists!'));
             break;
           case 401:
-            console.log(error('>>> You are not allowed to perform this operation.') + '\n>>>This probably means that there is already an admin, so this utility is not allowed to create a new one.');
+            console.log(error('>>> You are not allowed to perform this operation.') + '\n>>>This probably means that there is already an admin configured');
             break;
           default:
             console.log(err);
