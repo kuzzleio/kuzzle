@@ -424,7 +424,7 @@ function checkOptions(plugin, options) {
   });
 
   if (installOptions > 0 && !options.install) {
-    console.error(clcNotice('Options --npmVersion, --path and --gitUrl only work with --install. Ignoring them from now on.'))
+    console.error(clcNotice('Options --npmVersion, --path and --gitUrl only work with --install. Ignoring them from now on.'));
   }
   else if (installOptions > 1) {
     console.error(clcError('Options --npmVersion, --path and --gitUrl are mutually exclusive'));
