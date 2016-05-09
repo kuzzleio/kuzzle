@@ -48,12 +48,6 @@
     "secret": "Kuzzle Rocks",
     "expiresIn": "1h"
   },
-  // Password Manager defaults.
-  "passwordManager": {
-    "secret": "jbsB8r69PFP39KdLtjVr25Z22",
-    "algorithm": "sha1",
-    "digest": "hex"
-  },
 
   // Default internal index
   "internalIndex": "%kuzzle",
