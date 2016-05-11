@@ -169,17 +169,15 @@ describe('Test redis service', function () {
 
   it('should allow listing keys using pattern matching', () => {
     return redis.searchKeys('s*')
-      .then(req => {
-        should(req.name).be.exactly('keys');
-        should(req.args).be.eql(['s*']);
+      .then(keys => {
+        should(keys).be.eql(['s0', 's1', 's2', 's3', 's4', 's5', 's6', 's7', 's8', 's9']);
       });
   });
 
   it('should retrieve all stored keys of a database', () => {
     return redis.getAllKeys()
-      .then(req => {
-        should(req.name).be.exactly('keys');
-        should(req.args).be.eql(['*']);
+      .then(keys => {
+        should(keys).be.eql(['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']);
       });
   });
 
