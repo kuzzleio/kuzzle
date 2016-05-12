@@ -191,6 +191,7 @@ function getPluginsList(db, cfg) {
 function installPlugins(plugin, options, dbService, kuzzleConfiguration) {
   var
     p = {},
+    pluginsListPromise,
     pluginsList;
 
   if (plugin) {
@@ -203,35 +204,37 @@ function installPlugins(plugin, options, dbService, kuzzleConfiguration) {
 
     p[plugin].activated = options.activated;
 
-    pluginsList = q(p);
+    pluginsListPromise = q(p);
   }
   else {
-    pluginsList = getPluginsList(dbService, kuzzleConfiguration);
+    pluginsListPromise = getPluginsList(dbService, kuzzleConfiguration);
   }
 
-  return pluginsList
+  return pluginsListPromise
     .then(plugins => {
-      acquirePlugins(plugins);
-
+      pluginsList = plugins;
+      return acquirePlugins(plugins);
+    })
+    .then(() => {
       console.log('███ kuzzle-plugins: Updating plugins configuration...');
 
       return updatePluginsConfiguration(
         dbService,
         kuzzleConfiguration.pluginsManager.dataCollection,
-        plugins);
+        pluginsList);
     });
 }
 
 /**
  * Download given plugins
  * @param plugins
- * @returns {boolean}
+ * @returns {Promise} resolved once all plugins are downloaded
  */
 function acquirePlugins(plugins) {
   var
-    newInstalled = false,
     installViaNpm = true,
-    pluginInstallId;
+    pluginInstallId,
+    promises = [];
 
   _.forEach(plugins, (plugin, name) => {
     if (plugin.path) {
@@ -254,26 +257,38 @@ function acquirePlugins(plugins) {
       return true;
     }
 
-    console.log('███ kuzzle-plugins: Downloading plugin: ', name);
-    newInstalled = true;
     if (installViaNpm) {
-      npmInstall(pluginInstallId);
+      promises.push(npmInstall(name, pluginInstallId));
     }
-
-    console.log('███ kuzzle-plugins: Plugin', name, 'downloaded');
   });
 
-  return newInstalled;
+  return q.all(promises);
 }
 
 /**
  * Install a plugin with NPM
- * @param plugin
+ * Returns a promise resolved once the plugin has been installed
+ *
+ * @param {string} name - plugin name
+ * @param {string} installId - argument provided to NPM to install the plugin
+ * @returns {Promise}
  */
-function npmInstall(plugin) {
-  return childProcess
-    .execSync('npm install ' + plugin)
-    .toString();
+function npmInstall(name, installId) {
+  var deferred = q.defer();
+
+  console.log('███ kuzzle-plugins: Downloading plugin: ', name);
+
+  childProcess.exec('npm install ' + installId, (err, stdout, stderr) => {
+    if (err) {
+      console.error(`Plugin download error. Full log:\n${stderr}`);
+      return deferred.reject(err);
+    }
+
+    console.log('███ kuzzle-plugins: Plugin', name, 'downloaded');
+    deferred.resolve();
+  });
+
+  return deferred.promise;
 }
 
 /**
