@@ -34,7 +34,7 @@ module.exports = function pluginsManager (plugin, options) {
   dbService.init();
 
   // Prevents multiple 'kuzzle install' to install plugins at the same time.
-  lockfile.lock('./node_modules', {retries: 1000, minTimeout: 200, maxTimeout: 1000, stale: 60000, update: 10000}, (err, release) => {
+  lockfile.lock('./node_modules', {retries: 1000, minTimeout: 200, maxTimeout: 1000}, (err, release) => {
     if (err) {
       console.error(clcError('███ kuzzle-plugins: Unable to acquire lock: '), err);
       process.exit(1);
