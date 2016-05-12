@@ -55,7 +55,6 @@ describe('Test: security controller - users', function () {
           }
           return q({_id: 'test'});
         };
-
       });
   });
 

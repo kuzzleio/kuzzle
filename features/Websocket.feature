@@ -1352,4 +1352,22 @@ Feature: Test websocket API
       """
     Then The ms result should match the json 11
 
+  @usingWebsocket
+  Scenario: autorefresh
+    When I check the autoRefresh status
+    Then The result should match the json false
+    When I write the document "documentGrace"
+    Then I don't find a document with "grace" in field "firstName"
+    Given I refresh the index
+    And I enable the autoRefresh
+    And I truncate the collection
+    When I write the document "documentGrace"
+    Then I find a document with "grace" in field "firstName"
+    When I check the autoRefresh status
+    Then The result should match the json true
+    Given I truncate the collection
+    And I write the document "documentGrace"
+    When I update the document with value "Josepha" in field "firstName"
+    Then I find a document with "josepha" in field "firstName"
+
 

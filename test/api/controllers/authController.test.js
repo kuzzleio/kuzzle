@@ -4,15 +4,16 @@ var
   q = require('q'),
   params = require('rc')('kuzzle'),
   passport = require('passport'),
+  sinon = require('sinon'),
   util = require('util'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
   ResponseObject = require.main.require('lib/api/core/models/responseObject'),
-  BadRequestError = require.main.require('lib/api/core/errors/badRequestError'),
-  NotFoundError = require.main.require('lib/api/core/errors/notFoundError'),
   Token = require.main.require('lib/api/core/models/security/token'),
   context = {},
+  redisClientMock = require('../../mocks/services/redisClient.mock'),
   requestObject,
+  sandbox = sinon.sandbox.create(),
   MockupWrapper,
   MockupStrategy;
 
@@ -62,11 +63,18 @@ MockupWrapper = function(MockupReturn) {
 describe('Test the auth controller', function () {
   var kuzzle;
 
-  beforeEach(function (done) {
+  beforeEach(() => {
+    sandbox.restore();
+
     requestObject = new RequestObject({ controller: 'auth', action: 'login', body: {strategy: 'mockup', username: 'jdoe'} }, {}, 'unit-test');
     kuzzle = new Kuzzle();
-    kuzzle.start(params, {dummy: true})
+    return kuzzle.start(params, {dummy: true})
+      .then(() => {
+        return kuzzle.services.list.tokenCache.init();
+      })
       .then(function () {
+        kuzzle.services.list.tokenCache.client = redisClientMock;
+
         kuzzle.repositories.user.load = function(t) {
           if ( t === 'unknown_user' ) {
             return q(null);
@@ -85,13 +93,12 @@ describe('Test the auth controller', function () {
             }
           });
         };
-        done();
       });
   });
 
   describe('#login', function () {
-    beforeEach(function () {
-      passport.use(new MockupStrategy('mockup', function(username, callback) {
+    beforeEach(() => {
+      return passport.use(new MockupStrategy('mockup', function(username, callback) {
         var
           deferred = q.defer(),
           user = {
@@ -103,18 +110,15 @@ describe('Test the auth controller', function () {
       }));
     });
 
-    it('should resolve to a valid jwt token if authentication succeed', function (done) {
-      this.timeout(500);
-
+    it('should resolve to a valid jwt token if authentication succeed', () => {
       kuzzle.funnel.controllers.auth.passport = new MockupWrapper('resolve');
-      kuzzle.funnel.controllers.auth.login(requestObject, {})
-        .then(function(response) {
+      return kuzzle.funnel.controllers.auth.login(requestObject, {})
+        .then(response => {
           var decodedToken = jwt.verify(response.data.body.jwt, params.jsonWebToken.secret);
           should(decodedToken._id).be.equal('jdoe');
-          done();
         })
-        .catch(function (error) {
-          done(error);
+        .catch(error => {
+          console.log(error);
         });
     });
 
@@ -207,6 +211,7 @@ describe('Test the auth controller', function () {
         });
     });
   });
+
   describe('#logout', function () {
 
     beforeEach(function () {
@@ -233,21 +238,19 @@ describe('Test the auth controller', function () {
 
     });
 
-    it('should emit a auth:afterLogout event', function (done) {
-      this.timeout(50);
+    it('should emit a auth:afterLogout event', () => {
+      var
+        spy = sandbox.stub(kuzzle.pluginsManager, 'trigger', (event, data) => q(data));
 
-      kuzzle.pluginsManager.trigger = function (event, data) {
-        if (event === 'auth:afterLogout' || event === 'auth:beforeLogout') {
-          return q(data);
-        }
-      };
+      sandbox.stub(kuzzle.repositories.token.cacheEngine, 'expire').resolves({});
 
-      kuzzle.funnel.controllers.auth.logout(requestObject, context)
+      return kuzzle.funnel.controllers.auth.logout(requestObject, context)
         .then(response => {
-          should(response).be.instanceof(ResponseObject);
-          done();
-        })
-        .catch(err => done(err));
+          should(response).be.an.instanceOf(ResponseObject);
+
+          should(spy.calledWith('auth:beforeLogout')).be.true();
+          should(spy.calledWith('auth:afterLogout')).be.true();
+        });
     });
 
     it('should emit an error if event emit raise an error', function () {
@@ -288,22 +291,6 @@ describe('Test the auth controller', function () {
       return should(kuzzle.funnel.controllers.auth.logout(requestObject, context)).be.rejected();
     });
 
-    it('should remove all room registration for current connexion', function (done) {
-      this.timeout(50);
-
-      kuzzle.hotelClerk.removeCustomerFromAllRooms = function(connection) {
-        should(connection).be.exactly(context.connection);
-        return q();
-      };
-
-      kuzzle.funnel.controllers.auth.logout(requestObject, context)
-        .then(response => {
-          should(response).be.instanceof(ResponseObject);
-          done();
-        })
-        .catch(err => done(err));
-    });
-
     it('should not remove room registration for connexion if there is no id', function (done) {
       var removeCustomerFromAllRooms = false;
       this.timeout(50);
@@ -322,6 +309,7 @@ describe('Test the auth controller', function () {
         })
         .catch(err => done(err));
     });
+
   });
 
   describe('#getCurrentUser', function () {

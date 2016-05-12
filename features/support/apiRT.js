@@ -621,12 +621,26 @@ ApiRT.prototype.callMemoryStorage = function (command, args) {
   return this.send(_.extend({
     controller: 'ms',
     action: command
-  }, args))
-    .then(response => {
-      this.world.memoryStorageResult = response;
+  }, args));
+};
 
-      return q(response);
-    });
+ApiRT.prototype.setAutoRefresh = function (index, autoRefresh) {
+  return this.send({
+    index: index,
+    controller: 'admin',
+    action: 'setAutoRefresh',
+    body: {
+      autoRefresh: autoRefresh
+    }
+  });
+};
+
+ApiRT.prototype.getAutoRefresh = function (index) {
+  return this.send({
+    index: index,
+    controller: 'admin',
+    action: 'getAutoRefresh'
+  });
 };
 
 module.exports = ApiRT;
