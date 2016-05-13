@@ -24,6 +24,25 @@ describe('Test: hotelClerk.getRealtimeCollections', function () {
       connection = {id: 'connectionid'},
       anonymousUser;
 
+    kuzzle.hotelClerk.rooms = {
+      foo: {
+        collection: 'foo',
+        index: index
+      },
+      bar: {
+        collection: 'bar',
+        index: index
+      },
+      foobar: {
+        collection: 'foo',
+        index: index
+      },
+      barfoo: {
+        collection: 'barfoo',
+        index: index
+      }
+    };
+
     return kuzzle.start(params, {dummy: true})
       .then(function () {
         return kuzzle.repositories.user.anonymous();
@@ -60,25 +79,6 @@ describe('Test: hotelClerk.getRealtimeCollections', function () {
       .then(() => {
         should(kuzzle.hotelClerk.getRealtimeCollections()).be.an.Array().and.match([{name: 'foobar'}]);
       });
-
-    kuzzle.hotelClerk.rooms = {
-      foo: {
-        collection: 'foo',
-        index: index
-      },
-      bar: {
-        collection: 'bar',
-        index: index
-      },
-      foobar: {
-        collection: 'foo',
-        index: index
-      },
-      barfoo: {
-        collection: 'barfoo',
-        index: index
-      }
-    };
 
     should(kuzzle.hotelClerk.getRealtimeCollections()).be.an.Array().and.match([{name: 'foo', index: index}, {name: 'bar', index: index}, {name: 'barfoo', index: index}]);
   });
