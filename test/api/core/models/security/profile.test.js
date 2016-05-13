@@ -26,34 +26,18 @@ describe('Test: security/profileTest', function () {
       disallowAllRole = new Role(),
       allowActionRole = new Role();
 
-    disallowAllRole.indexes = {
+    disallowAllRole.controllers = {
       '*': {
-        collections: {
-          '*': {
-            controllers: {
-              '*': {
-                actions: {
-                  '*': false
-                }
-              }
-            }
-          }
+        actions: {
+          '*': false
         }
       }
     };
 
-    allowActionRole.indexes = {
-      index: {
-        collections: {
-          collection: {
-            controllers: {
-              controller: {
-                actions: {
-                  action: true
-                }
-              }
-            }
-          }
+    allowActionRole.controllers = {
+      controller: {
+        actions: {
+          action: true
         }
       }
     };
@@ -68,6 +52,16 @@ describe('Test: security/profileTest', function () {
         profile.roles.push(allowActionRole);
         return profile.isActionAllowed(requestObject, context);
       })
-      .then(isAllowed => should(isAllowed).be.true());
+      .then(isAllowed => {
+        should(isAllowed).be.true();
+
+        allowActionRole.restrictedTo = [
+          {index: 'index1'},
+          {index: 'index2', collections: ['collection1']},
+          {index: 'index3', collections: ['collection1', 'collection2']}
+        ];
+        return profile.isActionAllowed(requestObject, context);
+      })
+      .then(isAllowed => should(isAllowed).be.false());
   });
 });

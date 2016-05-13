@@ -89,11 +89,11 @@ ApiRT.prototype.get = function (id, index) {
   return this.send(msg);
 };
 
-ApiRT.prototype.search = function (filters, index) {
+ApiRT.prototype.search = function (filters, index, collection) {
   var
     msg = {
       controller: 'read',
-      collection: this.world.fakeCollection,
+      collection: collection || this.world.fakeCollection,
       index: index || this.world.fakeIndex,
       action: 'search',
       body: filters
@@ -102,11 +102,11 @@ ApiRT.prototype.search = function (filters, index) {
   return this.send(msg);
 };
 
-ApiRT.prototype.count = function (filters, index) {
+ApiRT.prototype.count = function (filters, index, collection) {
   var
     msg = {
       controller: 'read',
-      collection: this.world.fakeCollection,
+      collection: collection || this.world.fakeCollection,
       index: index || this.world.fakeIndex,
       action: 'count',
       body: filters
@@ -621,12 +621,26 @@ ApiRT.prototype.callMemoryStorage = function (command, args) {
   return this.send(_.extend({
     controller: 'ms',
     action: command
-  }, args))
-    .then(response => {
-      this.world.memoryStorageResult = response;
+  }, args));
+};
 
-      return q(response);
-    });
+ApiRT.prototype.setAutoRefresh = function (index, autoRefresh) {
+  return this.send({
+    index: index,
+    controller: 'admin',
+    action: 'setAutoRefresh',
+    body: {
+      autoRefresh: autoRefresh
+    }
+  });
+};
+
+ApiRT.prototype.getAutoRefresh = function (index) {
+  return this.send({
+    index: index,
+    controller: 'admin',
+    action: 'getAutoRefresh'
+  });
 };
 
 module.exports = ApiRT;

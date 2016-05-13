@@ -14,8 +14,8 @@ describe('Test main file for hooks managers', function () {
       'foo:baz': ['foo:bar', 'foo:baz']
     },
     hooksConfig = {
-      'data:beforeCreate': ['write:add'],
-      'data:beforeUpdate': ['write:add']
+      'data:beforeCreate': ['write:emit'],
+      'data:beforeUpdate': ['write:emit']
     };
 
   beforeEach(function () {

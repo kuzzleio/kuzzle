@@ -3,6 +3,8 @@ var
   rewire = require('rewire'),
   q = require('q'),
   params = require('rc')('kuzzle'),
+  sinon = require('sinon'),
+  sandbox = sinon.sandbox.create(),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
   Worker = rewire('../../lib/workers/write');
@@ -17,7 +19,7 @@ describe('Testing: write worker', function () {
 
     return kuzzle.start(params, {dummy: true})
       .then(function () {
-        kuzzle.services.init = function () {};
+        kuzzle.services.init = function () {return q();};
 
         // we test successful write commands using a mockup 'create' action...
         kuzzle.services.list.writeEngine.create = function (request) { return q(request); };
@@ -38,6 +40,10 @@ describe('Testing: write worker', function () {
     });
   });
 
+  afterEach(() => {
+    sandbox.restore();
+  });
+
   it('should contain an init() function', function () {
     var writeWorker = new Worker(kuzzle);
     should(writeWorker.init).not.be.undefined().and.be.a.Function();
@@ -45,41 +51,30 @@ describe('Testing: write worker', function () {
 
   it('should return a promise when initializing', function () {
     var
+      spy = sandbox.stub(kuzzle.services, 'init').resolves({}),
       writeWorker = new Worker(kuzzle),
       result = writeWorker.init();
 
     should(result).be.a.Promise();
-    return should(result).be.fulfilled();
+    return should(result
+      .then(() => {
+        should(spy.calledWith({whitelist: ['broker', 'writeEngine']})).be.true();
+      })
+    ).be.fulfilled();
   });
 
-  it('should listen to the write task queue', function (done) {
+  it('should listen to the write task queue', () => {
     var
-      brokerListenCalled = false,
-      saveListen = kuzzle.services.list.broker.listen,
+      brokerSpy = sandbox.stub(kuzzle.services.list.broker, 'listen'),
       writeWorker;
 
-    this.timeout(50);
-
-    kuzzle.services.list.broker.listen = function (taskQueue) {
-      brokerListenCalled = true;
-
-      try {
-        should(taskQueue).be.exactly(kuzzle.config.queues.workerWriteTaskQueue);
-      }
-      catch (error) {
-        done(error);
-      }
-    };
+    sandbox.stub(kuzzle.services, 'init').resolves({});
 
     writeWorker = new Worker(kuzzle);
-    writeWorker.init()
-      .then(function () {
-        kuzzle.services.list.broker.listen = saveListen;
-        should(brokerListenCalled).be.true();
-        done();
-      })
-      .catch(function (error) {
-        done(error);
+    return writeWorker.init()
+      .then(() => {
+        should(brokerSpy.calledOnce).be.true();
+        should(brokerSpy.firstCall.args[0]).be.exactly(kuzzle.config.queues.workerWriteTaskQueue);
       });
   });
 

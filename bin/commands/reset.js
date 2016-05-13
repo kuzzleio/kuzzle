@@ -1,3 +1,5 @@
+/* eslint-disable no-console */
+
 var
   rc = require('rc'),
   params = rc('kuzzle'),
@@ -7,22 +9,19 @@ var
   clc = require('cli-color'),
   error = clc.red,
   warn = clc.yellow,
-  question = clc.whiteBright,
-  notice = clc.cyanBright,
-  ok = clc.green.bold,
-  kuz = clc.greenBright.bold;
+  notice = clc.cyanBright;
 
 module.exports = function () {
   var 
-    tmp, 
-    userIsSure = false, 
+    userIsSure = false,
     kuzzle = new Kuzzle();
 
   // check, if files are provided, if they exists
   if (params.fixtures) {
     try {
-      tmp = JSON.parse(fs.readFileSync(params.fixtures, 'utf8'));
-    } catch(e) {
+      JSON.parse(fs.readFileSync(params.fixtures, 'utf8'));
+    }
+    catch (e) {
       console.log(error('[✖] The file ' + params.fixtures + ' cannot be opened... aborting.'));
       process.exit(1);
     }
@@ -30,8 +29,9 @@ module.exports = function () {
 
   if (params.mappings) {
     try {
-      tmp = JSON.parse(fs.readFileSync(params.mappings, 'utf8'));
-    } catch(e) {
+      JSON.parse(fs.readFileSync(params.mappings, 'utf8'));
+    }
+    catch (e) {
       console.log(error('[✖] The file ' + params.mappings + ' cannot be opened... aborting.'));
       process.exit(1);
     }
@@ -48,15 +48,9 @@ module.exports = function () {
   }
 
   if (userIsSure) {
-
-    console.log(notice('[ℹ] Processing...\n')); 
-
+    console.log(notice('[ℹ] Processing...\n'));
     kuzzle.remoteActions.do('cleanAndPrepare', params);
-    
   } else {
-
     console.log(notice('[ℹ] Nothing have been done... you do not look that sure...'));
-
   }
-
 };

@@ -4,6 +4,7 @@ var
   sinon = require('sinon'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
   BadRequestError = require.main.require('lib/api/core/errors/badRequestError'),
+  ForbiddenError = require.main.require('lib/api/core/errors/forbiddenError'),
   UnauthorizedError = require.main.require('lib/api/core/errors/unauthorizedError'),
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
@@ -85,10 +86,11 @@ describe('funnelController.processRequest', function () {
     return should(processRequest(kuzzle, kuzzle.funnel.controllers, requestObject, context)).be.rejectedWith(BadRequestError);
   });
 
-  it('should reject the promise if the user is not allowed to execute the action', () => {
+  it('should reject the promise with UnauthorizedError if an anonymous user is not allowed to execute the action', () => {
     kuzzle.repositories.token.verifyToken.restore();
     sandbox.stub(kuzzle.repositories.token, 'verifyToken').resolves({
       user: {
+        _id: -1,
         profile: {
           isActionAllowed: sinon.stub().resolves(false)
         }
@@ -104,6 +106,28 @@ describe('funnelController.processRequest', function () {
         }),
         context)
     ).be.rejectedWith(UnauthorizedError);
+  });
+
+  it('should reject the promise with UnauthorizedError if an authenticated user is not allowed to execute the action', () => {
+    kuzzle.repositories.token.verifyToken.restore();
+    sandbox.stub(kuzzle.repositories.token, 'verifyToken').resolves({
+      user: {
+        _id: 'user',
+        profile: {
+          isActionAllowed: sinon.stub().resolves(false)
+        }
+      }
+    });
+
+    return should(
+      processRequest(kuzzle, kuzzle.funnel.controllers,
+        new RequestObject({
+          controller: 'read',
+          index: '@test',
+          action: 'get'
+        }),
+        context)
+    ).be.rejectedWith(ForbiddenError);
   });
 
   it('should resolve the promise if everything is ok', () => {

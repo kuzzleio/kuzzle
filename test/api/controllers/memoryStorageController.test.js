@@ -5,7 +5,8 @@ var
   rewire = require('rewire'),
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
-  redisCommands = require('redis-commands'),
+  Redis = require.main.require('lib/services/redis'),
+  redisCommands = [],
   redisClientMock = require('../../mocks/services/redisClient.mock'),
   BadRequestError = require.main.require('lib/api/core/errors/badRequestError'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
@@ -23,7 +24,7 @@ var
   testMapping,
   revertMapping;
 
-before(function (done) {
+before(() => {
   var wrapped = function (f) {
     return function () {
       if (called === undefined) {
@@ -60,8 +61,12 @@ before(function (done) {
   });
 
   kuzzle = new Kuzzle();
-  kuzzle.start(params, {dummy: true})
+  return kuzzle.start(params, {dummy: true})
     .then(() => {
+      return kuzzle.services.list.memoryStorage.init();
+    })
+    .then(() => {
+      redisCommands = kuzzle.services.list.memoryStorage.commands;
       kuzzle.services.list.memoryStorage.client = redisClientMock;
 
       msController = new MemoryStorageController(kuzzle);
@@ -95,8 +100,6 @@ before(function (done) {
       };
 
       revertMapping = MemoryStorageController.__set__(testMapping);
-
-      done();
     });
 });
 
@@ -128,7 +131,7 @@ describe('Test: memoryStore controller', function () {
     it('should construct the allowed functions', () => {
       var
         blacklisted = MemoryStorageController.__get__('blacklist'),
-        allowed = _.difference(redisCommands.list, blacklisted);
+        allowed = _.difference(redisCommands, blacklisted);
 
       should(allowed).be.an.Array();
       should(allowed).not.be.empty();
@@ -483,7 +486,7 @@ describe('Test: memoryStore controller', function () {
         });
     });
 
-    it('custom mapping checks - zrange', done => {
+    it('custom mapping checks - zrange', () => {
       var
         rq = new RequestObject({
           controller: 'memoryStore',
@@ -496,17 +499,15 @@ describe('Test: memoryStore controller', function () {
           }
         });
 
-      msController.zrange(rq)
+      return msController.zrange(rq)
         .then(response => {
-          should(response.data.body.result.name).be.exactly('zrange');
-          should(response.data.body.result.args).be.eql([
+          should(response.data.body.name).be.exactly('zrange');
+          should(response.data.body.args).be.eql([
             'myKey',
             'startVal',
             'stopVal',
             'WITHSCORES'
           ]);
-
-          done();
         });
     });
 
@@ -534,8 +535,8 @@ describe('Test: memoryStore controller', function () {
 
       msController.zrangebylex(rq)
         .then(response => {
-          should(response.data.body.result.name).be.exactly('zrangebylex');
-          should(response.data.body.result.args).be.eql(expected);
+          should(response.data.body.name).be.exactly('zrangebylex');
+          should(response.data.body.args).be.eql(expected);
 
           rq.action = 'zrevrangebylex';
 
@@ -545,8 +546,8 @@ describe('Test: memoryStore controller', function () {
           expected[1] = expected[2];
           expected[2] = 'minVal';
 
-          should(response.data.body.result.name).be.exactly('zrevrangebylex');
-          should(response.data.body.result.args).be.eql(expected);
+          should(response.data.body.name).be.exactly('zrevrangebylex');
+          should(response.data.body.args).be.eql(expected);
 
           done();
         })
@@ -579,8 +580,8 @@ describe('Test: memoryStore controller', function () {
 
       msController.zrangebyscore(rq)
         .then(response => {
-          should(response.data.body.result.name).be.exactly('zrangebyscore');
-          should(response.data.body.result.args).be.eql(expected);
+          should(response.data.body.name).be.exactly('zrangebyscore');
+          should(response.data.body.args).be.eql(expected);
 
           rq.action = 'zrevrangebyscore';
 
@@ -590,8 +591,8 @@ describe('Test: memoryStore controller', function () {
           expected[1] = expected[2];
           expected[2] = 'minVal';
 
-          should(response.data.body.result.name).be.exactly('zrevrangebyscore');
-          should(response.data.body.result.args).be.eql(expected);
+          should(response.data.body.name).be.exactly('zrevrangebyscore');
+          should(response.data.body.args).be.eql(expected);
 
           done();
         })

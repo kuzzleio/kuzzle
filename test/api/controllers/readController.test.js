@@ -26,7 +26,10 @@ describe('Test: read controller', function () {
 
     kuzzle = new Kuzzle();
     return kuzzle.start(params, {dummy: true})
-      .then(function () {
+      .then(() => {
+        return kuzzle.services.list.readEngine.init();
+      })
+      .then(() => {
         kuzzle.pluginsManager.plugins = {
           mocha: {
             name: 'test',
@@ -136,7 +139,7 @@ describe('Test: read controller', function () {
 
       kuzzle.hotelClerk.getRealtimeCollections = function () {
         realtime = true;
-        return ['foo', 'bar'];
+        return [{name: 'foo', index: 'index'}, {name: 'bar', index: 'index'}, {name: 'baz', index: 'wrong'}];
       };
 
       kuzzle.repositories.role.roles.anonymous = new Role();
@@ -158,7 +161,7 @@ describe('Test: read controller', function () {
     });
 
     it('should resolve to a full collections list', () => {
-      requestObject = new RequestObject({}, {}, '');
+      requestObject = new RequestObject({index: 'index'}, {}, '');
 
       return kuzzle.funnel.controllers.read.listCollections(requestObject, context)
         .then(result => {

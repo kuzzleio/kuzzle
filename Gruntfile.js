@@ -12,7 +12,7 @@ module.exports = function (grunt) {
       }
     },
     eslint: {
-      src: ['lib/**/*.js']
+      src: ['lib/**/*.js', 'bin/**/*.js']
     }
   });
 

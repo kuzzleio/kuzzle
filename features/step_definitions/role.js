@@ -24,7 +24,7 @@ var apiSteps = function () {
 
   this.Then(/^I'm ?(not)* able to find a role with id "([^"]*)"(?: with role "([^"]*)")?$/, function (not, id, role, callback) {
     var
-      index,
+      controller,
       main;
 
     id = this.idPrefix + id;
@@ -54,8 +54,8 @@ var apiSteps = function () {
             }
 
             if (role) {
-              index = Object.keys(this.roles[role].indexes)[0];
-              if (!body.result._source.indexes[index]) {
+              controller = Object.keys(this.roles[role].controllers)[0];
+              if (!body.result._source.controllers[controller]) {
                 if (not) {
                   return callbackAsync();
                 }
@@ -106,19 +106,19 @@ var apiSteps = function () {
       });
   });
 
-  this.Then(/^I'm able to find "(\d*)" role by searching index corresponding to role "([^"]*)"(?: from "([^"]*)" to "([^"]*)")?$/, function (count, role, from, size, callback) {
+  this.Then(/^I'm able to find "(\d*)" role by searching controller corresponding to role "([^"]*)"(?: from "([^"]*)" to "([^"]*)")?$/, function (count, role, from, size, callback) {
     var
       main,
-      index,
+      controller,
       body;
 
     if (!this.roles[role]) {
       return callback('Fixture for role ' + role + ' does not exist');
     }
 
-    index = Object.keys(this.roles[role].indexes)[0];
+    index = Object.keys(this.roles[role].controllers)[0];
     body = {
-      indexes : [index],
+      controllers : [controller],
       from: from || 0,
       size: size || 999
     };
@@ -213,6 +213,79 @@ var apiSteps = function () {
 
       callback();
     });
+  });
+
+  this.Then(/^I'm ?(not)* allowed to create a document in index "([^"]*)" and collection "([^"]*)"$/, function (not, index, collection, callback) {
+    var
+      document = this.documentGrace;
+
+    this.api.create(document, index, collection)
+      .then(body => {
+        if (not && body.status === 403) {
+            callback();
+            return true;
+        }
+        if (not) {
+          callback(new Error('Unexpected status response. Got ' + body.status + ' ; Expected 403'));
+          return false;
+        }
+        if (body.status === 200) {
+          callback();
+          return true;
+        }
+        callback(new Error('Unexpected status response. Got ' + body.status + ' ; Expected 200'));
+      })
+      .catch(error => {
+        if (not && error.statusCode === 403) {
+          callback();
+          return true;
+        }
+        callback(error);
+      });
+  });
+
+  this.Then(/^I'm ?(not)* allowed to search for documents in index "([^"]*)" and collection "([^"]*)"$/, function (not, index, collection, callback) {
+    this.api.search({}, index, collection)
+      .then(body => {
+        if (not) {
+          callback(new Error('Unexpected status response. Got ' + body.status + ' ; Expected 403'));
+          return false;
+        }
+        if (body.status === 200) {
+          callback();
+          return true;
+        }
+        callback(new Error('Unexpected status response. Got ' + body.status + ' ; Expected 200'));
+      })
+      .catch(error => {
+        if (not && error.statusCode === 403) {
+          callback();
+          return true;
+        }
+        callback(error);
+      });
+  });
+
+  this.Then(/^I'm ?(not)* allowed to count documents in index "([^"]*)" and collection "([^"]*)"$/, function (not, index, collection, callback) {
+    this.api.count({}, index, collection)
+      .then(body => {
+        if (not) {
+          callback(new Error('Unexpected status response. Got ' + body.status + ' ; Expected 403'));
+          return false;
+        }
+        if (body.status === 200) {
+          callback();
+          return true;
+        }
+        callback(new Error('Unexpected status response. Got ' + body.status + ' ; Expected 200'));
+      })
+      .catch(error => {
+        if (not && error.statusCode === 403) {
+          callback();
+          return true;
+        }
+        callback(error);
+      });
   });
 };
 

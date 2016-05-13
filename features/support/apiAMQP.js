@@ -72,7 +72,8 @@ ApiAMQP.prototype.send = function (message, waitForAnswer) {
               var unpacked = JSON.parse((new Buffer(reply.content)).toString());
 
               if (unpacked.error) {
-                deferred.reject(unpacked.error.message);
+                unpacked.error.statusCode = unpacked.status;
+                deferred.reject(unpacked.error);
               }
               else {
                 deferred.resolve(unpacked);
