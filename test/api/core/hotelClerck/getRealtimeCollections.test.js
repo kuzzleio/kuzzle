@@ -79,7 +79,5 @@ describe('Test: hotelClerk.getRealtimeCollections', function () {
       .then(() => {
         should(kuzzle.hotelClerk.getRealtimeCollections()).be.an.Array().and.match([{name: 'foobar'}]);
       });
-
-    should(kuzzle.hotelClerk.getRealtimeCollections()).be.an.Array().and.match([{name: 'foo', index: index}, {name: 'bar', index: index}, {name: 'barfoo', index: index}]);
   });
 });
