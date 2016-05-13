@@ -7,7 +7,8 @@ var
   Role = require.main.require('lib/api/core/models/security/role');
 
 describe('Test: hotelClerk.getRealtimeCollections', function () {
-  var collection = 'foobar';
+  var collection = 'foobar',
+    index = 'index';
 
   beforeEach(function () {
     kuzzle = new Kuzzle();
@@ -57,7 +58,7 @@ describe('Test: hotelClerk.getRealtimeCollections', function () {
         });
       })
       .then(() => {
-        should(kuzzle.hotelClerk.getRealtimeCollections()).be.an.Array().and.match([{name: 'foo', index: index}, {name: 'bar', index: index}, {name: 'barfoo', index: index}]);
+        should(kuzzle.hotelClerk.getRealtimeCollections()).be.an.Array().and.match([{name: 'foobar'}]);
       });
 
     kuzzle.hotelClerk.rooms = {
