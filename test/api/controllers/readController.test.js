@@ -86,7 +86,7 @@ describe('Test: read controller', function () {
 
       kuzzle.hotelClerk.getRealtimeCollections = function () {
         realtime = true;
-        return ['foo', 'bar'];
+        return [{name: 'foo', index: 'index'}, {name: 'bar', index: 'index'}, {name: 'baz', index: 'wrong'}];
       };
 
       kuzzle.repositories.role.roles.anonymous = new Role();
@@ -109,14 +109,10 @@ describe('Test: read controller', function () {
       stored = false;
     });
 
-    it('should resolve to a full collections list', function (done) {
-      var
-        requestObject = new RequestObject({}, {}, ''),
-        r = kuzzle.funnel.controllers.read.listCollections(requestObject, context);
+    it('should resolve to a full collections list', () => {
+      requestObject = new RequestObject({index: 'index'}, {}, '');
 
-      should(r).be.a.Promise();
-
-      r
+      return kuzzle.funnel.controllers.read.listCollections(requestObject, context)
         .then(result => {
           should(realtime).be.true();
           should(stored).be.true();
@@ -126,9 +122,7 @@ describe('Test: read controller', function () {
           should(result.data.body.collections.realtime).not.be.undefined().and.be.an.Array();
           should(result.data.body.collections.stored.sort()).match(['foo']);
           should(result.data.body.collections.realtime.sort()).match(['bar', 'foo']);
-          done();
-        })
-        .catch(error => done(error));
+        });
     });
 
     it('should trigger a plugin event', function (done) {
