@@ -1,5 +1,5 @@
 kuzzle:
-  image: kuzzleio/kuzzle:alpine
+  image: kuzzleio/kuzzle
   ports:
     - "7511:7511"
     - "7512:7512"

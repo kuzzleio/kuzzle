@@ -293,7 +293,12 @@ function updatePluginsConfiguration(db, collection, plugins) {
       pluginConfiguration;
 
     try {
-      pluginPackage = require(path.join(getPathPlugin(plugin, name), 'package.json'));
+      if (plugin.path) {
+        pluginPackage = require(path.join(plugin.path, 'package.json'));
+      }
+      else {
+        pluginPackage = require(path.join(getPathPlugin(plugin, name), 'package.json'));
+      }
     }
     catch (e) {
       console.error(clcError('███ kuzzle-plugins:'), 'There is a problem with plugin ' + name + '. Check the plugin installation directory');
@@ -419,7 +424,7 @@ function checkOptions(plugin, options) {
   });
 
   if (installOptions > 0 && !options.install) {
-    console.error(clcNotice('Options --npmVersion, --path and --gitUrl only work with --install. Ignoring them from now on.'))
+    console.error(clcNotice('Options --npmVersion, --path and --gitUrl only work with --install. Ignoring them from now on.'));
   }
   else if (installOptions > 1) {
     console.error(clcError('Options --npmVersion, --path and --gitUrl are mutually exclusive'));

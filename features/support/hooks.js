@@ -53,6 +53,7 @@ var myHooks = function () {
     setTimeout(() => {
       [api.world.fakeIndex, api.world.fakeAltIndex, api.world.fakeNewIndex].forEach(index => {
         promises.push(api.deleteIndex(index));
+        promises.push(api.setAutoRefresh(index, false));
       });
 
       q.all(promises)
@@ -204,9 +205,9 @@ function cleanSecurity (callback) {
     .catch(error => {
       if (error instanceof ReferenceError && error.message === '%kuzzle index not found') {
         // The %kuzzle index is not created yet. Is not a problem if the tests are run for the first time.
-        callback();
+        return callback();
       }
-      callback(error);
+      callback(error.message ? error.message : error);
     });
 }
 

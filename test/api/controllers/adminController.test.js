@@ -8,6 +8,7 @@ var
   Role = require.main.require('lib/api/core/models/security/role'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
   ResponseObject = require.main.require('lib/api/core/models/responseObject'),
+  BadRequestError = require.main.require('lib/api/core/errors/badRequestError'),
   PartialError = require.main.require('lib/api/core/errors/partialError');
 
 require('sinon-as-promised')(q.Promise);
@@ -491,4 +492,89 @@ describe('Test: admin controller', () => {
     });
 
   });
+
+  describe('#getAutoRefresh', function () {
+
+    it('should fulfill with a response object', () => {
+      sandbox.stub(kuzzle.workerListener, 'add').resolves({});
+
+      return kuzzle.funnel.controllers.admin.getAutoRefresh(requestObject)
+        .then(response => should(response).be.instanceOf(ResponseObject));
+    });
+
+    it ('should reject in case of error', () => {
+      sandbox.stub(kuzzle.workerListener, 'add').rejects({});
+
+      return should(kuzzle.funnel.controllers.admin.getAutoRefresh(requestObject)).be.rejectedWith();
+    });
+
+    it('should trigger a plugin hook', done => {
+      kuzzle.once('data:beforeGetAutoRefresh', o => {
+        should(o).be.exactly(requestObject);
+        done();
+      });
+
+      kuzzle.funnel.controllers.admin.getAutoRefresh(requestObject);
+    });
+  });
+
+  describe('#setAutoRefresh', function () {
+
+    it('should fulfill with a response object', () => {
+      var req = new RequestObject({
+        index: requestObject.index,
+        body: { autoRefresh: true }
+      });
+
+      sandbox.stub(kuzzle.workerListener, 'add').resolves({});
+
+      return kuzzle.funnel.controllers.admin.setAutoRefresh(req)
+        .then(response => should(response).be.an.instanceOf(ResponseObject));
+    });
+
+    it('should reject the promise if the autoRefresh value is not set', () => {
+      var req = new RequestObject({
+        index: requestObject.index,
+        body: {}
+      });
+
+      return should(kuzzle.funnel.controllers.admin.setAutoRefresh(req)).be.rejectedWith(BadRequestError);
+    });
+
+    it('should reject the promise if the autoRefresh value is not a boolean', () => {
+      var req = new RequestObject({
+        index: requestObject.index,
+        body: { autoRefresh: -999 }
+      });
+
+      return should(kuzzle.funnel.controllers.admin.setAutoRefresh(req)).be.rejectedWith(BadRequestError);
+    });
+
+    it('should reject the promise in case of error', () => {
+      var req = new RequestObject({
+        index: requestObject.index,
+        body: { autoRefresh: false }
+      });
+
+      sandbox.stub(kuzzle.workerListener, 'add').rejects({});
+
+      return should(kuzzle.funnel.controllers.admin.setAutoRefresh(req)).be.rejected();
+    });
+
+    it('should trigger a plugin hook', done => {
+      var req = new RequestObject({
+        index: requestObject.index,
+        body: { autoRefresh: true }
+      });
+
+      kuzzle.once('data:beforeSetAutoRefresh', o => {
+        should(o).be.exactly(req);
+        done();
+      });
+
+      kuzzle.funnel.controllers.admin.setAutoRefresh(req);
+    });
+
+  });
+
 });

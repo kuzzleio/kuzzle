@@ -1,5 +1,6 @@
 var
-  async = require('async');
+  async = require('async'),
+  q = require('q');
 
 var apiSteps = function () {
   this.When(/^I ?(can't)* write the document ?(?:"([^"]*)")?(?: in index "([^"]*)")?$/, function (cant, documentName, index, callback) {
@@ -14,7 +15,7 @@ var apiSteps = function () {
             return true;
           }
 
-          callback(new Error(body.error.message));
+          callback(body.error);
           return false;
         }
 
@@ -72,40 +73,19 @@ var apiSteps = function () {
       'Received document: ' + JSON.stringify(this.updatedResult)));
   });
 
-  this.Then(/^I update the document with value "([^"]*)" in field "([^"]*)"(?: in index "([^"]*)")?$/, function (value, field, index, callback) {
-    var main = function (callbackAsync) {
-      setTimeout(function () {
-        var body = {};
-        body[field] = value;
+  this.Then(/^I update the document with value "([^"]*)" in field "([^"]*)"(?: in index "([^"]*)")?$/, function (value, field, index) {
+    var body = {};
+    body[field] = value;
 
-        this.api.update(this.result._id, body, index)
-          .then((body) => {
-            if (body.error) {
-              callbackAsync(body.error.message);
-              return false;
-            }
-
-            if (!body.result) {
-              callbackAsync('No result provided');
-              return false;
-            }
-
-            callbackAsync();
-          })
-          .catch(function (error) {
-            callbackAsync(error);
-          });
-      }.bind(this), 20); // end setTimeout
-    };
-
-    async.retry(20, main.bind(this), function (err) {
-      if (err) {
-        callback(new Error(err));
-        return false;
-      }
-
-      callback();
-    });
+    return this.api.update(this.result._id, body, index)
+      .then(body => {
+        if (body.error) {
+          return q.reject(body.error);
+        }
+        if (!body.result) {
+          return q.reject('No result provided');
+        }
+      });
   });
 
   this.Then(/^I replace the document with "([^"]*)" document$/, function (documentName, callback) {
