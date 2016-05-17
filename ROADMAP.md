@@ -21,7 +21,7 @@ This roadmap lists the main features and their statuses on the Kuzzle open-sourc
 
 * Plugins configuration through the command-line interface (see [PR #253](https://github.com/kuzzleio/kuzzle/pull/253))
 * Added administrative functions to the command-line interface (see [PR #208](https://github.com/kuzzleio/kuzzle/pull/208))
-* Allow users to store data in memory cache using the API (see [PR #224](https://github.com/kuzzleio/kuzzle/pull/224))
+* Allow users to store data in memory storage using the API (see [PR #224](https://github.com/kuzzleio/kuzzle/pull/224))
 * Protect Kuzzle servers against flooding (see [PR #217](https://github.com/kuzzleio/kuzzle/pull/217))
 * Allow listener plugins to be multithreaded (see [PR #237](https://github.com/kuzzleio/kuzzle/pull/237))
 * Updated ElasticSearch to v2 (see [PR #201](https://github.com/kuzzleio/kuzzle/pull/201))
