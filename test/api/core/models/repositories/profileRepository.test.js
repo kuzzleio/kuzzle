@@ -7,6 +7,7 @@ var
   Role = require.main.require('lib/api/core/models/security/role'),
   Profile = require.main.require('lib/api/core/models/security/profile'),
   BadRequestError = require.main.require('lib/api/core/errors/badRequestError'),
+  ForbiddenError = require.main.require('lib/api/core/errors/forbiddenError'),
   InternalError = require.main.require('lib/api/core/errors/internalError'),
   NotFoundError = require.main.require('lib/api/core/errors/notFoundError'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
@@ -178,6 +179,19 @@ describe('Test: repositories/profileRepository', () => {
 
       return should(kuzzle.repositories.profile.deleteProfile(invalidProfileObject))
         .be.rejectedWith(BadRequestError);
+    });
+
+    it('should reject if a user uses the profile about to be deleted', () => {
+      sandbox.stub(kuzzle.repositories.profile, 'profiles', {
+        'test': {
+          _id: 'test',
+          roles: ['test']
+        }
+      });
+
+      sandbox.stub(kuzzle.repositories.user.readEngine, 'search').resolves({total: 1, hits: ['test']});
+
+      return should(kuzzle.repositories.profile.deleteProfile({_id: 'test'})).rejectedWith(ForbiddenError);
     });
 
     it('should return a raw delete response after deleting', () => {
