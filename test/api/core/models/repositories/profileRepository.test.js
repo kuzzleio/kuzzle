@@ -180,6 +180,19 @@ describe('Test: repositories/profileRepository', () => {
         .be.rejectedWith(BadRequestError);
     });
 
+    it('should reject if a user uses the profile about to be deleted', () => {
+      sandbox.stub(kuzzle.repositories.profile, 'profiles', {
+        'test': {
+          _id: 'test',
+          roles: ['test']
+        }
+      });
+
+      sandbox.stub(kuzzle.repositories.user.readEngine, 'search').resolves({total: 1, hits: ['test']});
+
+      return should(kuzzle.repositories.profile.deleteProfile({_id: 'test'})).rejectedWith(BadRequestError);
+    });
+
     it('should return a raw delete response after deleting', () => {
       var response = {_id: 'testprofile'};
 
