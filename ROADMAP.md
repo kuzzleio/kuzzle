@@ -5,7 +5,6 @@ This roadmap lists the main features and their statuses on the Kuzzle open-sourc
 
 ## Planned
 
-* Q2 2016: Plugins configuration through the command-line interface
 * Q2 2016: allow users to have multiple profiles
 * Q2 2016: iOS SDK
 * Q2 2016: Load Balancing of multiple Kuzzle servers
@@ -20,6 +19,7 @@ This roadmap lists the main features and their statuses on the Kuzzle open-sourc
 
 ## Done
 
+* Plugins configuration through the command-line interface (see [PR #253](https://github.com/kuzzleio/kuzzle/pull/253))
 * Added administrative functions to the command-line interface (see [PR #208](https://github.com/kuzzleio/kuzzle/pull/208))
 * Allow users to store data in memory cache using the API (see [PR #224](https://github.com/kuzzleio/kuzzle/pull/224))
 * Protect Kuzzle servers against flooding (see [PR #217](https://github.com/kuzzleio/kuzzle/pull/217))
