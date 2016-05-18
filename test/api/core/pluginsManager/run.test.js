@@ -178,8 +178,6 @@ describe('Test plugins manager run', function () {
     pluginMock.expects('foo').once();
     pluginMock.expects('bar').never();
 
-    pluginsManager.plugins = [plugin];
-
     return pluginsManager.run()
       .then(() => {
         kuzzle.emit('foo:bar');
