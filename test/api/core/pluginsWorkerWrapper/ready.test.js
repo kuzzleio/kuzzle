@@ -1,148 +1,119 @@
 var
   should = require('should'),
   rewire = require('rewire'),
+  sinon = require('sinon'),
   ready = rewire('../../../../lib/api/core/plugins/workerReady');
 
 describe('Test plugins manager run', function () {
-  var pluginMock = function () {
-    var
-      hookTriggered,
-      isMyFuncCalled,
-      pluginConfig;
-    return {
-      init: function(config, isDummy) {
-        pluginConfig = config;
-      },
-      myFunc: function(data, event) {
-        isMyFuncCalled = true;
-      },
-      hooks: {
-        'foo:bar': 'myFunc'
-      },
-      /** Mock only methods */
-      resetMock: function() {
-        hookTriggered = false;
-        pluginConfig = {};
-        isMyFuncCalled = false;
-      },
-      getHookTriggered: function() {
-        return hookTriggered;
-      },
-      getMyFuncCalled: function() {
-        return isMyFuncCalled;
-      },
-      getPluginConfig: function() {
-        return pluginConfig;
-      }
-      /** END - Mock only methods */
-    };
-  }();
-  var processMock = function () {
-    var
-      callbackList = {},
-      sentMessages = [];
-    var triggerData = {
-      trigger: {
-        topic: 'trigger',
-        data: {
-          event: 'foo:bar',
-          message: {
-            'firstName': 'Ada'
-          }
-        }
-      },
-      initialize: {
-        topic: 'initialize',
-        env: {
-          name: 'kpw:foo'
-        },
-        data: {
-          isDummy: true,
-          event: 'foo:bar',
-          message: {
-            'firstName': 'Ada'
-          },
-          config: {
-            'foo': 'bar'
-          }
-        }
-      }
-    };
-    return {
-      on: function (event, callback) {
-        if (!callbackList[event]) {
-          callbackList[event] = [];
-        }
+  var
+    sandbox,
+    plugin,
+    pluginMock;
 
-        callbackList[event].push(callback);
-      },
-      send: function (data) {
-        sentMessages.push(data);
-      },
-      /** Mock only methods */
-      triggerEvent: function (event) {
-        if (callbackList.message) {
-          callbackList.message.forEach(item => {
-            item(triggerData[event]);
-          });
-        }
-      },
-      resetMock: function () {
-        callbackList = [];
-        sentMessages = [];
-      },
-      getSentMessages: function () {
-        return sentMessages;
-      }
-      /** END - Mock only methods */
-    };
-  }();
   before(function() {
     ready.__set__('isDummy', true);
-    ready.__set__('plugin', pluginMock);
-    ready.__set__('process', processMock);
   });
 
   beforeEach(function () {
-    pluginMock.resetMock();
-    processMock.resetMock();
+    plugin = {
+      init: function () {},
+      foo: function () {},
+      bar: function () {},
+      baz: function () {}
+    };
+
+    sandbox = sinon.sandbox.create();
+    pluginMock = sandbox.mock(plugin);
+    ready.__set__('plugin', plugin);
   });
 
-  it('should send a ready message', function (done) {
-    ready();
-    should(processMock.getSentMessages()).length(1);
-    should(processMock.getSentMessages()[0].type).be.equal('ready');
-    done();
+  afterEach(() => {
+    sandbox.restore();
   });
 
-  it('should initialize with expected configuration', function (done) {
-    var config;
+  it('should initialize the plugin properly', function () {
+    var
+      config = { 'foobar': { bar: 'bar', qux: 'qux'}},
+      init = pluginMock.expects('init').once(),
+      processOn = sandbox.stub().callsArgWith(1, {
+        topic: 'initialize',
+        data: {
+          config,
+          isDummy: 'am I a dummy?'
+        }
+      }),
+      processSend = sandbox.spy();
+
+    ready.__set__('process', {on: processOn, send: processSend});
+    plugin.hooks = {
+      foo: 'bar',
+      baz: 'qux'
+    }
 
     ready();
-    processMock.triggerEvent('initialize');
-    should(pluginMock.getPluginConfig().foo).be.equal('bar');
-    done();
+
+    pluginMock.verify();
+
+    should(init.firstCall.calledWith(config, 'am I a dummy?')).be.true();
+
+    should(processSend.firstCall.calledWithMatch({
+      type: 'initialized',
+      data: {
+        events: ['foo', 'baz']
+      }
+    })).be.true();
+
+    should(processSend.secondCall.calledWithMatch({
+      type: 'ready',
+      data: {}
+    })).be.true();
   });
 
-  it('should send an initialized message when an initialize message is received', function (done) {
+  it('should call attached plugin function with a single target hook', function () {
+    var
+      init = pluginMock.expects('init').never(),
+      foo = pluginMock.expects('foo').never(),
+      bar = pluginMock.expects('bar').once(),
+      baz = pluginMock.expects('baz').never(),
+      processOn = sandbox.stub().callsArgWith(1, {
+        topic: 'trigger',
+        data: {
+          event: 'foo:bar',
+          message: ''
+        }
+      });
+
+    plugin.hooks = {
+      'foo:bar': 'bar'
+    };
+
+    ready.__set__('process', {on: processOn, send: () => {}});
+
     ready();
-    processMock.triggerEvent('initialize');
-    should(processMock.getSentMessages()).length(2);
-    should(processMock.getSentMessages()[0].type).be.equal('ready');
-    should(processMock.getSentMessages()[1].type).be.equal('initialized');
-    should(processMock.getSentMessages()[1].data.events).length(1);
-    done();
+    pluginMock.verify();
   });
 
-  it('should call attached plugin function when according event is triggered', function (done) {
+  it('should call attached plugin functions with a multi-target hook', () => {
+    var
+      init = pluginMock.expects('init').never(),
+      foo = pluginMock.expects('foo').once(),
+      bar = pluginMock.expects('bar').never(),
+      baz = pluginMock.expects('baz').twice(),
+      processOn = sandbox.stub().callsArgWith(1, {
+        topic: 'trigger',
+        data: {
+          event: 'foo:bar',
+          message: ''
+        }
+      });
+
+    plugin.hooks = {
+      'foo:bar': ['foo', 'baz', 'baz']
+    };
+
+    ready.__set__('process', {on: processOn, send: () => {}});
+
     ready();
-    processMock.triggerEvent('initialize');
-    should(processMock.getSentMessages()).length(2);
-    should(processMock.getSentMessages()[0].type).be.equal('ready');
-    should(processMock.getSentMessages()[1].type).be.equal('initialized');
-    should(processMock.getSentMessages()[1].data.events).length(1);
-    processMock.triggerEvent('trigger');
-    should(pluginMock.getMyFuncCalled()).be.true();
-    done();
+    pluginMock.verify();
   });
 });

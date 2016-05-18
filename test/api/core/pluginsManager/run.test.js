@@ -2,6 +2,7 @@ var
   should = require('should'),
   params = require('rc')('kuzzle'),
   rewire = require('rewire'),
+  sinon = require('sinon'),
   PluginsManager = rewire('../../../../lib/api/core/plugins/pluginsManager'),
   EventEmitter = require('eventemitter2').EventEmitter2,
   GatewayTimeoutError = require.main.require('lib/api/core/errors/gatewayTimeoutError'),
@@ -9,6 +10,9 @@ var
 
 describe('Test plugins manager run', function () {
   var
+    sandbox,
+    plugin,
+    pluginMock,
     contextObjects = [
       'ResponseObject',
       'NotificationObject',
@@ -177,23 +181,62 @@ describe('Test plugins manager run', function () {
   });
 
   it('should attach event hook on kuzzle object', function (done) {
-    pluginsManager.plugins = [{
-      object: {
-        init: function () {},
-        hooks: {
-          'test': 'myFunc'
+    var
+      plugin = {
+        object: {
+          init: function () {},
+          hooks: {
+            'foo:bar': 'foo',
+            'bar:foo': 'bar'
+          },
+          foo: function () {},
+          bar: function () {}
         },
-        myFunc: function () {
-          done();
-        }
+        config: {},
+        activated: true
       },
-      config: {},
-      activated: true
-    }];
+      pluginMock = sinon.mock(plugin.object);
 
+    pluginMock.expects('foo').once();
+    pluginMock.expects('bar').never();
+
+    pluginsManager.plugins = [plugin];
     pluginsManager.run()
       .then(() => {
-        kuzzle.emit('test');
+        kuzzle.emit('foo:bar');
+        pluginMock.verify();
+        done();
+      });
+  });
+
+  it('should attach multi-target hook on kuzzle object', function (done) {
+    var
+      plugin = {
+        object: {
+          init: function () {},
+          hooks: {
+            'foo:bar': ['foo', 'bar'],
+            'bar:foo': ['baz']
+          },
+          foo: function () {},
+          bar: function () {},
+          baz: function () {}
+        },
+        config: {},
+        activated: true
+      },
+      pluginMock = sinon.mock(plugin.object);
+
+    pluginMock.expects('foo').once();
+    pluginMock.expects('bar').once();
+    pluginMock.expects('baz').never();
+
+    pluginsManager.plugins = [plugin];
+    pluginsManager.run()
+      .then(() => {
+        kuzzle.emit('foo:bar');
+        pluginMock.verify();
+        done();
       });
   });
 
@@ -202,7 +245,7 @@ describe('Test plugins manager run', function () {
       object: {
         init: function () {},
         hooks: {
-          'foo:*': 'myFunc'
+          'foo:bar': 'myFunc'
         },
         myFunc: function () {
           done();
