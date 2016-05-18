@@ -48,7 +48,7 @@ describe('Test plugins manager run', function () {
     plugin.hooks = {
       foo: 'bar',
       baz: 'qux'
-    }
+    };
 
     ready();
 
