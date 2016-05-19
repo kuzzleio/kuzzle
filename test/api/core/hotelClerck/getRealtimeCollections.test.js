@@ -21,19 +21,23 @@ describe('Test: hotelClerk.getRealtimeCollections', function () {
   it('should return an array of unique collection names', function () {
     kuzzle.hotelClerk.rooms = {
       foo: {
-        collection: 'foo'
+        collection: 'foo',
+        index: index
       },
       bar: {
-        collection: 'bar'
+        collection: 'bar',
+        index: index
       },
       foobar: {
         collection: 'foo',
+        index: index
       },
       barfoo: {
-        collection: 'barfoo'
+        collection: 'barfoo',
+        index: index
       }
     };
 
-    should(kuzzle.hotelClerk.getRealtimeCollections()).be.an.Array().and.match(['foo', 'bar', 'barfoo']);
+    should(kuzzle.hotelClerk.getRealtimeCollections()).be.an.Array().and.match([{name: 'foo', index: index}, {name: 'bar', index: index}, {name: 'barfoo', index: index}]);
   });
 });
