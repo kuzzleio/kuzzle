@@ -7,7 +7,8 @@ var
   Role = require.main.require('lib/api/core/models/security/role');
 
 describe('Test: hotelClerk.getRealtimeCollections', function () {
-  var collection = 'foobar';
+  var collection = 'foobar',
+    index = 'index';
 
   beforeEach(function () {
     kuzzle = new Kuzzle();
@@ -22,6 +23,25 @@ describe('Test: hotelClerk.getRealtimeCollections', function () {
     var
       connection = {id: 'connectionid'},
       anonymousUser;
+
+    kuzzle.hotelClerk.rooms = {
+      foo: {
+        collection: 'foo',
+        index: index
+      },
+      bar: {
+        collection: 'bar',
+        index: index
+      },
+      foobar: {
+        collection: 'foo',
+        index: index
+      },
+      barfoo: {
+        collection: 'barfoo',
+        index: index
+      }
+    };
 
     return kuzzle.start(params, {dummy: true})
       .then(function () {
@@ -57,7 +77,7 @@ describe('Test: hotelClerk.getRealtimeCollections', function () {
         });
       })
       .then(() => {
-        should(kuzzle.hotelClerk.getRealtimeCollections()).be.an.Array().and.match([collection]);
+        should(kuzzle.hotelClerk.getRealtimeCollections()).be.an.Array().and.match([{name: 'foobar'}]);
       });
   });
 });
