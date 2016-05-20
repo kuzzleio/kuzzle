@@ -1,6 +1,7 @@
 var
   should = require('should'),
   rewire = require('rewire'),
+  md5 = require('crypto-md5'),
   methods = rewire('../../../../lib/api/dsl/methods'),
   BadRequestError = require.main.require('lib/api/core/errors/badRequestError'),
   InternalError = require.main.require('lib/api/core/errors/internalError');
@@ -64,7 +65,10 @@ describe('Test geoDistanceRange method', function () {
       },
       from: 111318,
       to: 111318
-    };
+    },
+    locationgeoDistanceRangekpbxyzbpv111320111317 = md5('locationgeoDistanceRangekpbxyzbpv111320111317'),
+    locationgeoDistanceRangekpbxyzbpv110 = md5('locationgeoDistanceRangekpbxyzbpv110'),
+    locationgeoDistanceRangekpbxyzbpv111318111318 = md5('locationgeoDistanceRangekpbxyzbpv111318111318');
 
   before(function () {
     methods.dsl.filtersTree = {};
@@ -101,31 +105,31 @@ describe('Test geoDistanceRange method', function () {
     // we must have only four functions
     
     should(Object.keys(methods.dsl.filtersTree[index][collection].fields.location)).have.length(4);
-    should(methods.dsl.filtersTree[index][collection].fields.location.locationgeoDistanceRangekpbxyzbpv111320111317).not.be.empty();
-    should(methods.dsl.filtersTree[index][collection].fields.location.locationgeoDistanceRangekpbxyzbpv110).not.be.empty();
-    should(methods.dsl.filtersTree[index][collection].fields.location.locationgeoDistanceRangekpbxyzbpv111318111318).not.be.empty();
-    should(methods.dsl.filtersTree[index][collection].fields.location['locationgeoDistanceRangekpbxyzbpv111312.96111319.05600000001']).not.be.empty();
+    should(methods.dsl.filtersTree[index][collection].fields.location[locationgeoDistanceRangekpbxyzbpv111320111317]).not.be.empty();
+    should(methods.dsl.filtersTree[index][collection].fields.location[locationgeoDistanceRangekpbxyzbpv110]).not.be.empty();
+    should(methods.dsl.filtersTree[index][collection].fields.location[locationgeoDistanceRangekpbxyzbpv111318111318]).not.be.empty();
+    should(methods.dsl.filtersTree[index][collection].fields.location[md5('locationgeoDistanceRangekpbxyzbpv111312.96111319.05600000001')]).not.be.empty();
   });
 
   it('should construct the filterTree with correct room list', function () {
     var rooms;
 
-    rooms = methods.dsl.filtersTree[index][collection].fields.location.locationgeoDistanceRangekpbxyzbpv111320111317.rooms;
+    rooms = methods.dsl.filtersTree[index][collection].fields.location[locationgeoDistanceRangekpbxyzbpv111320111317].rooms;
     should(rooms).be.an.Array();
     should(rooms).have.length(1);
     should(rooms[0]).be.exactly(roomId);
 
-    rooms = methods.dsl.filtersTree[index][collection].fields.location.locationgeoDistanceRangekpbxyzbpv110.rooms;
+    rooms = methods.dsl.filtersTree[index][collection].fields.location[locationgeoDistanceRangekpbxyzbpv110].rooms;
     should(rooms).be.an.Array();
     should(rooms).have.length(1);
     should(rooms[0]).be.exactly(roomId);
 
-    rooms = methods.dsl.filtersTree[index][collection].fields.location.locationgeoDistanceRangekpbxyzbpv111318111318.rooms;
+    rooms = methods.dsl.filtersTree[index][collection].fields.location[locationgeoDistanceRangekpbxyzbpv111318111318].rooms;
     should(rooms).be.an.Array();
     should(rooms).have.length(1);
     should(rooms[0]).be.exactly(roomId);
 
-    rooms = methods.dsl.filtersTree[index][collection].fields.location['locationgeoDistanceRangekpbxyzbpv111312.96111319.05600000001'].rooms;
+    rooms = methods.dsl.filtersTree[index][collection].fields.location[md5('locationgeoDistanceRangekpbxyzbpv111312.96111319.05600000001')].rooms;
     should(rooms).be.an.Array();
     should(rooms).have.length(1);
     should(rooms[0]).be.exactly(roomId);
@@ -135,30 +139,30 @@ describe('Test geoDistanceRange method', function () {
     var result;
 
     // test ok
-    result = methods.dsl.filtersTree[index][collection].fields.location.locationgeoDistanceRangekpbxyzbpv111320111317.fn(document);
+    result = methods.dsl.filtersTree[index][collection].fields.location[locationgeoDistanceRangekpbxyzbpv111320111317].fn(document);
     should(result).be.exactly(true);
 
     // test not ok
-    result = methods.dsl.filtersTree[index][collection].fields.location.locationgeoDistanceRangekpbxyzbpv110.fn(document);
+    result = methods.dsl.filtersTree[index][collection].fields.location[locationgeoDistanceRangekpbxyzbpv110].fn(document);
     should(result).be.exactly(false);
 
     // test human readable distance
-    result = methods.dsl.filtersTree[index][collection].fields.location.locationgeoDistanceRangekpbxyzbpv111318111318.fn(document);
+    result = methods.dsl.filtersTree[index][collection].fields.location[locationgeoDistanceRangekpbxyzbpv111318111318].fn(document);
     should(result).be.exactly(true);
 
     // test from == to
-    result = methods.dsl.filtersTree[index][collection].fields.location['locationgeoDistanceRangekpbxyzbpv111312.96111319.05600000001'].fn(document);
+    result = methods.dsl.filtersTree[index][collection].fields.location[md5('locationgeoDistanceRangekpbxyzbpv111312.96111319.05600000001')].fn(document);
     should(result).be.exactly(true);
 
   });
 
   it('should return false if no lat or lon members exists for the location member of the document', function () {
     // test ok
-    result = methods.dsl.filtersTree[index][collection].fields.location.locationgeoDistanceRangekpbxyzbpv111320111317.fn(documentBad);
+    result = methods.dsl.filtersTree[index][collection].fields.location[locationgeoDistanceRangekpbxyzbpv111320111317].fn(documentBad);
     should(result).be.exactly(false);
-    result = methods.dsl.filtersTree[index][collection].fields.location.locationgeoDistanceRangekpbxyzbpv111320111317.fn(documentBadLon);
+    result = methods.dsl.filtersTree[index][collection].fields.location[locationgeoDistanceRangekpbxyzbpv111320111317].fn(documentBadLon);
     should(result).be.exactly(false);
-    result = methods.dsl.filtersTree[index][collection].fields.location.locationgeoDistanceRangekpbxyzbpv111320111317.fn(documentBadLat);
+    result = methods.dsl.filtersTree[index][collection].fields.location[locationgeoDistanceRangekpbxyzbpv111320111317].fn(documentBadLat);
     should(result).be.exactly(false);
   });
 
