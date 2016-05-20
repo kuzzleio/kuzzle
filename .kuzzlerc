@@ -164,12 +164,12 @@
         "npmVersion": "2.0.2",
         "activated": true
       },
-      "kuzzle-plugin-socketio": {
-        "npmVersion": "1.0.8",
-        "activated": true
-      },
       "kuzzle-plugin-auth-passport-local": {
         "npmVersion": "1.3.5",
+        "activated": true
+      },
+      "kuzzle-plugin-websocket-demultiplexer": {
+        "npmVersion": "1.0.1",
         "activated": true
       }
     }
