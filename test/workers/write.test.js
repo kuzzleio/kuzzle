@@ -81,10 +81,10 @@ describe('Testing: write worker', function () {
   it('should respond with an error if an unknown action has been submitted', function (done) {
     var
       callback = Worker.__get__('onListenCB'),
-      saveAdd = kuzzle.services.list.broker.add,
+      saveAdd = kuzzle.services.list.broker.send,
       responded = false;
 
-    kuzzle.services.list.broker.add = function(queue, response) {
+    kuzzle.services.list.broker.send = function(queue, response) {
       try {
         should(queue).be.exactly(kuzzle.config.queues.workerWriteResponseQueue);
         should(response.status).be.exactly(400);
@@ -100,7 +100,7 @@ describe('Testing: write worker', function () {
 
     requestObject.action = 'foobar';
     callback.call(kuzzle, requestObject);
-    kuzzle.services.list.broker.add = saveAdd;
+    kuzzle.services.list.broker.send = saveAdd;
 
     should(responded).be.true();
   });
@@ -109,11 +109,11 @@ describe('Testing: write worker', function () {
     var
       callback = Worker.__get__('onListenCB'),
       responseQueue = false,
-      saveBrokerAdd = kuzzle.services.list.broker.add;
+      saveBrokerAdd = kuzzle.services.list.broker.send;
 
     this.timeout(50);
 
-    kuzzle.services.list.broker.add = function (queue, data) {
+    kuzzle.services.list.broker.send = function (queue, data) {
       try {
         should(data).match(requestObject);
       } catch (error) {
@@ -130,7 +130,7 @@ describe('Testing: write worker', function () {
     setTimeout(function () {
       try {
         should(responseQueue).be.true();
-        kuzzle.services.list.broker.add = saveBrokerAdd;
+        kuzzle.services.list.broker.send = saveBrokerAdd;
         done();
       }
       catch (error) {
@@ -143,11 +143,11 @@ describe('Testing: write worker', function () {
     var
       onListenCB = Worker.__get__('onListenCB'),
       responseQueue = false,
-      saveBrokerAdd = kuzzle.services.list.broker.add;
+      saveBrokerAdd = kuzzle.services.list.broker.send;
 
     this.timeout(50);
 
-    kuzzle.services.list.broker.add = function (queue, data) {
+    kuzzle.services.list.broker.send = function (queue, data) {
       try {
         should(data).be.an.Object();
         should(data.status).be.exactly(400);
@@ -172,7 +172,7 @@ describe('Testing: write worker', function () {
     setTimeout(function () {
       try {
         should(responseQueue).be.true();
-        kuzzle.services.list.broker.add = saveBrokerAdd;
+        kuzzle.services.list.broker.send = saveBrokerAdd;
         done();
       }
       catch (error) {

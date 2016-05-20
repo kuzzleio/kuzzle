@@ -2,6 +2,10 @@
   // Kuzzle REST listening port
   "port": 7511,
 
+  "cluster": {
+    "isMaster": true
+  },
+
   /*
    Internal collection used to store the service settings
   */

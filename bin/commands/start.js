@@ -60,7 +60,7 @@ module.exports = function () {
       /*
        Waits for at least one write worker to be connected to the server before trying to use them
        */
-      return kuzzle.services.list.broker.waitForListeners(kuzzle.config.queues.workerWriteTaskQueue);
+      return kuzzle.services.list.broker.waitForClients(kuzzle.config.queues.workerWriteTaskQueue);
     })
     .then(() => {
       var request;
@@ -132,7 +132,7 @@ module.exports = function () {
       }
     })
     .catch(err => {
-      console.error(err);
+      console.log(err.stack);
       process.exit(1);
     });
 };

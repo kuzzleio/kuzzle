@@ -63,10 +63,10 @@ describe('Testing: broker service', function () {
     });
 
     setTimeout(function () {
-      brokerServer.add(room, testMessage);
-      brokerClient1.add(room, testMessage);
-      brokerClient2.add(room, testMessage);
-      brokerClient3.add(room, testMessage);
+      brokerServer.send(room, testMessage);
+      brokerClient1.send(room, testMessage);
+      brokerClient2.send(room, testMessage);
+      brokerClient3.send(room, testMessage);
     }, 20);
 
     setTimeout(function () {
