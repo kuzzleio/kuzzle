@@ -1,6 +1,7 @@
 var
   should = require('should'),
   rewire = require('rewire'),
+  md5 = require('crypto-md5'),
   methods = rewire('../../../../lib/api/dsl/methods'),
   BadRequestError = require.main.require('lib/api/core/errors/badRequestError'),
   InternalError = require.main.require('lib/api/core/errors/internalError');
@@ -9,7 +10,11 @@ var
 
 describe('Test: dsl.termFunction method', function () {
   var
-    termFunction = methods.__get__('termFunction');
+    termFunction = methods.__get__('termFunction'),
+    termfoobar = md5('termfoobar'),
+    termsfoobarbaz = md5('termsfoobar,baz'),
+    nottermfoobar = md5('nottermfoobar'),
+    nottermsfoobarbaz = md5('nottermsfoobar,baz');
 
   beforeEach(function () {
     methods.dsl = { filtersTree: {} };
@@ -36,9 +41,9 @@ describe('Test: dsl.termFunction method', function () {
 
     termFunction('term', 'roomId', 'index', 'collection', filter)
       .then(function (formattedFilter) {
-        should.exist(formattedFilter['index.collection.foo.termfoobar']);
-        should(formattedFilter['index.collection.foo.termfoobar'].rooms).be.an.Array().and.match(['roomId']);
-        should(formattedFilter['index.collection.foo.termfoobar'].fn).be.a.Function();
+        should.exist(formattedFilter['index.collection.foo.' + termfoobar]);
+        should(formattedFilter['index.collection.foo.' + termfoobar].rooms).be.an.Array().and.match(['roomId']);
+        should(formattedFilter['index.collection.foo.' + termfoobar].fn).be.a.Function();
         done();
       })
       .catch(function (error) {
@@ -54,9 +59,9 @@ describe('Test: dsl.termFunction method', function () {
 
     termFunction('terms', 'roomId', 'index', 'collection', filter)
       .then(function (formattedFilter) {
-        should.exist(formattedFilter['index.collection.foo.termsfoobar,baz']);
-        should(formattedFilter['index.collection.foo.termsfoobar,baz'].rooms).be.an.Array().and.match(['roomId']);
-        should(formattedFilter['index.collection.foo.termsfoobar,baz'].fn).be.a.Function();
+        should.exist(formattedFilter['index.collection.foo.' + termsfoobarbaz]);
+        should(formattedFilter['index.collection.foo.' + termsfoobarbaz].rooms).be.an.Array().and.match(['roomId']);
+        should(formattedFilter['index.collection.foo.' + termsfoobarbaz].fn).be.a.Function();
         done();
       })
       .catch(function (error) {
@@ -72,9 +77,9 @@ describe('Test: dsl.termFunction method', function () {
 
     termFunction('term', 'roomId', 'index', 'collection', filter, true)
       .then(function (formattedFilter) {
-        should.exist(formattedFilter['index.collection.foo.nottermfoobar']);
-        should(formattedFilter['index.collection.foo.nottermfoobar'].rooms).be.an.Array().and.match(['roomId']);
-        should(formattedFilter['index.collection.foo.nottermfoobar'].fn).be.a.Function();
+        should.exist(formattedFilter['index.collection.foo.' + nottermfoobar]);
+        should(formattedFilter['index.collection.foo.' + nottermfoobar].rooms).be.an.Array().and.match(['roomId']);
+        should(formattedFilter['index.collection.foo.' + nottermfoobar].fn).be.a.Function();
         done();
       })
       .catch(function (error) {
@@ -90,9 +95,9 @@ describe('Test: dsl.termFunction method', function () {
 
     termFunction('terms', 'roomId', 'index', 'collection', filter, true)
       .then(function (formattedFilter) {
-        should.exist(formattedFilter['index.collection.foo.nottermsfoobar,baz']);
-        should(formattedFilter['index.collection.foo.nottermsfoobar,baz'].rooms).be.an.Array().and.match(['roomId']);
-        should(formattedFilter['index.collection.foo.nottermsfoobar,baz'].fn).be.a.Function();
+        should.exist(formattedFilter['index.collection.foo.' + nottermsfoobarbaz]);
+        should(formattedFilter['index.collection.foo.' + nottermsfoobarbaz].rooms).be.an.Array().and.match(['roomId']);
+        should(formattedFilter['index.collection.foo.' + nottermsfoobarbaz].fn).be.a.Function();
         done();
       })
       .catch(function (error) {
