@@ -31,7 +31,13 @@
     "bunyan": "^1.5.1",
     "cli-color": "^1.1.0",
     "commander": "2.9.0",
+<<<<<<< HEAD
     "elasticsearch": "10.1.3",
+=======
+    "crypto-md5": "^1.0.0",
+    "easy-circular-list": "^1.0.11",
+    "elasticsearch": "11.0.1",
+>>>>>>> 1d85b7b... Hash filter's value
     "eventemitter2": "^1.0.0",
     "finalhandler": "0.4.1",
     "geolib": "j33f/Geolib",

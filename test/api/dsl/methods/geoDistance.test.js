@@ -1,6 +1,7 @@
 var
   should = require('should'),
   rewire = require('rewire'),
+  md5 = require('crypto-md5'),
   methods = rewire('../../../../lib/api/dsl/methods'),
   BadRequestError = require.main.require('lib/api/core/errors/badRequestError'),
   InternalError = require.main.require('lib/api/core/errors/internalError');
@@ -45,7 +46,10 @@ describe('Test geoDistance method', function () {
         lon: 1,
       },
       distance: '365 219,816 Ft'
-    };
+    },
+    locationgeoDistancekpbxyzbpv111318 = md5('locationgeoDistancekpbxyzbpv111318'),
+    locationgeoDistancekpbxyzbpv111320 = md5('locationgeoDistancekpbxyzbpv111320'),
+    locationgeoDistancekpbxyzbpv111317 = md5('locationgeoDistancekpbxyzbpv111317');
 
   before(function () {
     methods.dsl.filtersTree = {};
@@ -75,31 +79,31 @@ describe('Test geoDistance method', function () {
     // we must have only four functions
     
     should(Object.keys(methods.dsl.filtersTree[index][collection].fields.location)).have.length(4);
-    should(methods.dsl.filtersTree[index][collection].fields.location.locationgeoDistancekpbxyzbpv111318).not.be.empty();
-    should(methods.dsl.filtersTree[index][collection].fields.location.locationgeoDistancekpbxyzbpv111320).not.be.empty();
-    should(methods.dsl.filtersTree[index][collection].fields.location.locationgeoDistancekpbxyzbpv111317).not.be.empty();
-    should(methods.dsl.filtersTree[index][collection].fields.location['locationgeoDistancekpbxyzbpv111318.9999168']).not.be.empty();
+    should(methods.dsl.filtersTree[index][collection].fields.location[locationgeoDistancekpbxyzbpv111318]).not.be.empty();
+    should(methods.dsl.filtersTree[index][collection].fields.location[locationgeoDistancekpbxyzbpv111320]).not.be.empty();
+    should(methods.dsl.filtersTree[index][collection].fields.location[locationgeoDistancekpbxyzbpv111317]).not.be.empty();
+    should(methods.dsl.filtersTree[index][collection].fields.location[md5('locationgeoDistancekpbxyzbpv111318.9999168')]).not.be.empty();
   });
 
   it('should construct the filterTree with correct room list', function () {
     var rooms;
 
-    rooms = methods.dsl.filtersTree[index][collection].fields.location.locationgeoDistancekpbxyzbpv111318.rooms;
+    rooms = methods.dsl.filtersTree[index][collection].fields.location[locationgeoDistancekpbxyzbpv111318].rooms;
     should(rooms).be.an.Array();
     should(rooms).have.length(1);
     should(rooms[0]).be.exactly(roomId);
 
-    rooms = methods.dsl.filtersTree[index][collection].fields.location.locationgeoDistancekpbxyzbpv111320.rooms;
+    rooms = methods.dsl.filtersTree[index][collection].fields.location[locationgeoDistancekpbxyzbpv111320].rooms;
     should(rooms).be.an.Array();
     should(rooms).have.length(1);
     should(rooms[0]).be.exactly(roomId);
 
-    rooms = methods.dsl.filtersTree[index][collection].fields.location.locationgeoDistancekpbxyzbpv111317.rooms;
+    rooms = methods.dsl.filtersTree[index][collection].fields.location[locationgeoDistancekpbxyzbpv111317].rooms;
     should(rooms).be.an.Array();
     should(rooms).have.length(1);
     should(rooms[0]).be.exactly(roomId);
 
-    rooms = methods.dsl.filtersTree[index][collection].fields.location['locationgeoDistancekpbxyzbpv111318.9999168'].rooms;
+    rooms = methods.dsl.filtersTree[index][collection].fields.location[md5('locationgeoDistancekpbxyzbpv111318.9999168')].rooms;
     should(rooms).be.an.Array();
     should(rooms).have.length(1);
     should(rooms[0]).be.exactly(roomId);
@@ -109,19 +113,19 @@ describe('Test geoDistance method', function () {
     var result;
 
     // test exact
-    result = methods.dsl.filtersTree[index][collection].fields.location.locationgeoDistancekpbxyzbpv111318.fn(document);
+    result = methods.dsl.filtersTree[index][collection].fields.location[locationgeoDistancekpbxyzbpv111318].fn(document);
     should(result).be.exactly(true);
 
     // test ok
-    result = methods.dsl.filtersTree[index][collection].fields.location.locationgeoDistancekpbxyzbpv111320.fn(document);
+    result = methods.dsl.filtersTree[index][collection].fields.location[locationgeoDistancekpbxyzbpv111320].fn(document);
     should(result).be.exactly(true);
 
     // test too far
-    result = methods.dsl.filtersTree[index][collection].fields.location.locationgeoDistancekpbxyzbpv111317.fn(document);
+    result = methods.dsl.filtersTree[index][collection].fields.location[locationgeoDistancekpbxyzbpv111317].fn(document);
     should(result).be.exactly(false);
 
     // test human readable distance
-    result = methods.dsl.filtersTree[index][collection].fields.location['locationgeoDistancekpbxyzbpv111318.9999168'].fn(document);
+    result = methods.dsl.filtersTree[index][collection].fields.location[md5('locationgeoDistancekpbxyzbpv111318.9999168')].fn(document);
     should(result).be.exactly(true);
 
   });

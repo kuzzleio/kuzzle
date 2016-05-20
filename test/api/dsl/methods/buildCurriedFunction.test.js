@@ -1,11 +1,13 @@
 var
   should = require('should'),
   rewire = require('rewire'),
+  md5 = require('crypto-md5');
   methods = rewire('../../../../lib/api/dsl/methods');
 
 describe('Test: dsl.buildCurriedFunction method', function () {
   var
-    buildCurriedFunction = methods.__get__('buildCurriedFunction');
+    buildCurriedFunction = methods.__get__('buildCurriedFunction'),
+    hasedFilter = md5('filter');
 
   beforeEach(function () {
     methods.dsl = { filtersTree: {} };
@@ -23,7 +25,7 @@ describe('Test: dsl.buildCurriedFunction method', function () {
     var result = buildCurriedFunction.call(methods, 'index', 'collection', 'field', 'gte', 42, 'filter', 'roomId');
 
     should.not.exist(result.error);
-    should(result.path).be.exactly('index.collection.field.filter');
+    should(result.path).be.exactly('index.collection.field.' + md5('filter'));
     should.exist(result.filter);
     should(result.filter.rooms).be.an.Array().and.match(['roomId']);
     should(result.filter.rooms.length).be.eql(1);
@@ -32,10 +34,10 @@ describe('Test: dsl.buildCurriedFunction method', function () {
     should.exist(methods.dsl.filtersTree.index.collection);
     should.exist(methods.dsl.filtersTree.index.collection.fields);
     should.exist(methods.dsl.filtersTree.index.collection.fields.field);
-    should.exist(methods.dsl.filtersTree.index.collection.fields.field.filter);
-    should(methods.dsl.filtersTree.index.collection.fields.field.filter.rooms).be.an.Array().and.match(['roomId']);
+    should.exist(methods.dsl.filtersTree.index.collection.fields.field[hasedFilter]);
+    should(methods.dsl.filtersTree.index.collection.fields.field[hasedFilter].rooms).be.an.Array().and.match(['roomId']);
     should(result.filter.rooms.length).be.eql(1);
-    should(methods.dsl.filtersTree.index.collection.fields.field.filter.fn).be.a.Function();
+    should(methods.dsl.filtersTree.index.collection.fields.field[hasedFilter].fn).be.a.Function();
 
     should.not.exist(methods.dsl.filtersTree.index.collection.rooms);
   });
@@ -44,8 +46,8 @@ describe('Test: dsl.buildCurriedFunction method', function () {
     buildCurriedFunction.call(methods, 'index', 'collection', 'field', 'gte', 42, 'filter', 'roomId');
     buildCurriedFunction.call(methods, 'index', 'collection', 'field', 'gte', 42, 'filter', 'roomId');
 
-    should(methods.dsl.filtersTree.index.collection.fields.field.filter.rooms).be.an.Array().and.match(['roomId']);
-    should(methods.dsl.filtersTree.index.collection.fields.field.filter.rooms.length).be.eql(1);
+    should(methods.dsl.filtersTree.index.collection.fields.field[hasedFilter].rooms).be.an.Array().and.match(['roomId']);
+    should(methods.dsl.filtersTree.index.collection.fields.field[hasedFilter].rooms.length).be.eql(1);
   });
 
   it('should also add the room to the global rooms list if the filter is global', function () {
