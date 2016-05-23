@@ -221,6 +221,20 @@ describe('Test: security controller - users', function () {
       })))
         .be.rejected();
     });
+
+    it('should update the profile correctly', () => {
+      sandbox.stub(kuzzle.repositories.user, 'load').resolves({_id: 'test', profile: 'default'});
+
+      return kuzzle.funnel.controllers.security.updateUser(new RequestObject({
+        _id: 'test',
+        body: {profile: 'anonymous'}
+      }))
+        .then(response => {
+          should(response).be.an.instanceOf(ResponseObject);
+          should(response.data.body._id).be.exactly('test');
+          should(response.data.body._source.profile).be.an.instanceOf(Object);
+        })
+    });
   });
 
   describe('#createOrReplaceUser', function () {
