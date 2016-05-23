@@ -1,5 +1,6 @@
 var
   should = require('should'),
+  md5 = require('crypto-md5'),
   methods = require.main.require('lib/api/dsl/methods');
 
 describe('Test terms method', function () {
@@ -19,8 +20,9 @@ describe('Test terms method', function () {
     },
     filter = {
       firstName: ['Grace', 'Jean']
-    };
-
+    },
+    termsfirstNameGraceJean = md5('termsfirstNameGrace,Jean'),
+    nottermsfirstNameGraceJean = md5('nottermsfirstNameGrace,Jean');
 
   before(function () {
     methods.dsl.filtersTree = {};
@@ -39,14 +41,14 @@ describe('Test terms method', function () {
   });
 
   it('should construct the filterTree with correct curried function name', function () {
-    should(methods.dsl.filtersTree[index][collection].fields.firstName['termsfirstNameGrace,Jean']).not.be.empty();
-    should(methods.dsl.filtersTree[index][collection].fields.firstName['nottermsfirstNameGrace,Jean']).not.be.empty();
+    should(methods.dsl.filtersTree[index][collection].fields.firstName[termsfirstNameGraceJean]).not.be.empty();
+    should(methods.dsl.filtersTree[index][collection].fields.firstName[nottermsfirstNameGraceJean]).not.be.empty();
   });
 
   it('should construct the filterTree with correct room list', function () {
     var
-      rooms = methods.dsl.filtersTree[index][collection].fields.firstName['termsfirstNameGrace,Jean'].rooms,
-      roomsNot = methods.dsl.filtersTree[index][collection].fields.firstName['nottermsfirstNameGrace,Jean'].rooms;
+      rooms = methods.dsl.filtersTree[index][collection].fields.firstName[termsfirstNameGraceJean].rooms,
+      roomsNot = methods.dsl.filtersTree[index][collection].fields.firstName[nottermsfirstNameGraceJean].rooms;
 
     should(rooms).be.an.Array();
     should(roomsNot).be.an.Array();
@@ -60,14 +62,14 @@ describe('Test terms method', function () {
 
   it('should construct the filterTree with correct functions terms', function () {
     var
-      resultMatch = methods.dsl.filtersTree[index][collection].fields.firstName['termsfirstNameGrace,Jean'].fn(documentGrace),
-      resultNotMatch = methods.dsl.filtersTree[index][collection].fields.firstName['termsfirstNameGrace,Jean'].fn(documentAda);
+      resultMatch = methods.dsl.filtersTree[index][collection].fields.firstName[termsfirstNameGraceJean].fn(documentGrace),
+      resultNotMatch = methods.dsl.filtersTree[index][collection].fields.firstName[termsfirstNameGraceJean].fn(documentAda);
 
     should(resultMatch).be.exactly(true);
     should(resultNotMatch).be.exactly(false);
 
-    resultMatch = methods.dsl.filtersTree[index][collection].fields.firstName['nottermsfirstNameGrace,Jean'].fn(documentAda);
-    resultNotMatch = methods.dsl.filtersTree[index][collection].fields.firstName['nottermsfirstNameGrace,Jean'].fn(documentGrace);
+    resultMatch = methods.dsl.filtersTree[index][collection].fields.firstName[nottermsfirstNameGraceJean].fn(documentAda);
+    resultNotMatch = methods.dsl.filtersTree[index][collection].fields.firstName[nottermsfirstNameGraceJean].fn(documentGrace);
 
     should(resultMatch).be.exactly(true);
     should(resultNotMatch).be.exactly(false);
