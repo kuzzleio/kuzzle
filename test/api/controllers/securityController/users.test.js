@@ -233,7 +233,7 @@ describe('Test: security controller - users', function () {
           should(response).be.an.instanceOf(ResponseObject);
           should(response.data.body._id).be.exactly('test');
           should(response.data.body._source.profile).be.an.instanceOf(Object);
-        })
+        });
     });
   });
 
