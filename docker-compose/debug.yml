@@ -1,5 +1,5 @@
 loadbalancer:
-  image: kuzzleio/lb-dev:alpine
+  image: kuzzleio/lb:alpine
   ports:
     - "7511:7511"
     - "7512:7512"
