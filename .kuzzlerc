@@ -169,7 +169,7 @@
         "activated": true
       },
       "kuzzle-plugin-websocket-demultiplexer": {
-        "npmVersion": "1.0.1",
+        "npmVersion": "1.0.2",
         "activated": true
       }
     }
