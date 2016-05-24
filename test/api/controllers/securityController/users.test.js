@@ -227,12 +227,13 @@ describe('Test: security controller - users', function () {
 
       return kuzzle.funnel.controllers.security.updateUser(new RequestObject({
         _id: 'test',
-        body: {profile: 'anonymous'}
+        body: {profile: 'anonymous', foo: 'bar'}
       }))
         .then(response => {
           should(response).be.an.instanceOf(ResponseObject);
           should(response.data.body._id).be.exactly('test');
           should(response.data.body._source.profile).be.an.instanceOf(Object);
+          should(response.data.body._source.foo).be.exactly('bar');
         });
     });
   });
