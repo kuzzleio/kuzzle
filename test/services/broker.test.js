@@ -15,6 +15,7 @@ describe('Testing: broker service', function () {
     brokerClient2,
     brokerClient3;
 
+
   before(function (done) {
     kuzzle = new Kuzzle();
     kuzzle.start(params, {dummy: true})
@@ -71,7 +72,7 @@ describe('Testing: broker service', function () {
 
     setTimeout(function () {
       try {
-        should(messagesReceived).be.exactly(4);
+        should(messagesReceived).be.exactly(3);
         done();
       }
       catch (e) {
@@ -80,38 +81,8 @@ describe('Testing: broker service', function () {
     }, 50);
   });
 
-  it('should support listenOnce() capabilities', function (done) {
-    var
-      room = 'unit-test-listenOnce-room',
-      testMessage = 'foobar',
-      messagesReceived = 0;
+  it('should allow to unsubscribe from a room', () => {
 
-    brokerServer.listenOnce(room, function (msg) {
-      should(msg).be.exactly(testMessage);
-      messagesReceived++;
-    });
-
-    brokerClient1.listenOnce(room, function (msg) {
-      should(msg).be.exactly(testMessage);
-      messagesReceived++;
-    });
-
-    setTimeout(function () {
-      brokerServer.add(room, testMessage);
-      brokerClient1.add(room, testMessage);
-      brokerClient2.add(room, testMessage);
-      brokerClient3.add(room, testMessage);
-    }, 20);
-
-    setTimeout(function () {
-      try {
-        should(messagesReceived).be.exactly(2);
-        done();
-      }
-      catch (e) {
-        done(e);
-      }
-    }, 50);
   });
 
   it('should send a message to only one of the registered listeners', function (done) {
@@ -124,21 +95,17 @@ describe('Testing: broker service', function () {
         messagesReceived++;
       };
 
-    brokerServer.listen(room, listen);
     brokerClient1.listen(room, listen);
     brokerClient2.listen(room, listen);
     brokerClient3.listen(room, listen);
 
     setTimeout(function () {
-      brokerServer.add(room, testMessage);
-      brokerClient1.add(room, testMessage);
-      brokerClient2.add(room, testMessage);
-      brokerClient3.add(room, testMessage);
+      brokerServer.send(room, testMessage);
     }, 20);
 
     setTimeout(function () {
       try {
-        should(messagesReceived).be.exactly(4);
+        should(messagesReceived).be.exactly(1);
         done();
       }
       catch (e) {
@@ -159,6 +126,7 @@ describe('Testing: broker service', function () {
 
     brokerServer.listen(room, listen);
     brokerClient1.listen(room, listen);
+    brokerClient2.listen(room, listen);
 
     setTimeout(function () {
       brokerServer.broadcast(room, testMessage);
@@ -177,12 +145,13 @@ describe('Testing: broker service', function () {
   });
 
   it('should wait for a listener to connect to a given room', function (done) {
-    var ret = brokerServer.waitForListeners('foo');
+    var ret = brokerServer.waitForClients('foo');
     this.timeout(300);
 
     setTimeout(() => {
       should(ret.inspect().state).be.eql('pending');
-      brokerServer.rooms.foo = { listeners: [{listener: function () {}}] };
+      // rooms[idx] is a Circular list object
+      brokerServer.handler.rooms.foo = { remove: () => {}, getSize: () => 0 };
 
       ret.then(() => done()).catch(err => done(err));
     }, 100);
