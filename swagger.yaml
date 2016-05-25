@@ -1,0 +1,2651 @@
+basePath: /api/1.0
+consumes:
+  - application/json
+host: sandbox.kuzzle.io:7511
+info:
+  contact:
+    email: hello@kuzzle.io
+    name: Kuzzle team
+    url: 'http://kuzzle.io'
+  description: The Kuzzle REST API
+  license:
+    name: Apache 2
+    url: 'http://opensource.org/licenses/apache2.0'
+  title: Kuzzle API
+  version: 1.0.0
+paths:
+  '/:index':
+    put:
+      description: 'Controller: admin. Action: createIndex.'
+      parameters:
+        - description: TODO
+          in: path
+          name: index
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/:index/:collection':
+    put:
+      description: 'Controller: write. Action: createCollection.'
+      parameters:
+        - description: TODO
+          in: path
+          name: index
+          required: 'true'
+          type: string
+        - description: TODO
+          in: path
+          name: collection
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/:index/:collection/:id':
+    put:
+      description: 'Controller: write. Action: createOrReplace.'
+      parameters:
+        - description: TODO
+          in: path
+          name: index
+          required: 'true'
+          type: string
+        - description: TODO
+          in: path
+          name: collection
+          required: 'true'
+          type: string
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/:index/:collection/:id/_:action':
+    put:
+      description: 'Controller: write. Action: undefined.'
+      parameters:
+        - description: TODO
+          in: path
+          name: index
+          required: 'true'
+          type: string
+        - description: TODO
+          in: path
+          name: collection
+          required: 'true'
+          type: string
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+        - description: TODO
+          in: path
+          name: action
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/:index/:collection/_bulk':
+    post:
+      description: 'Controller: bulk. Action: import.'
+      parameters:
+        - description: TODO
+          in: path
+          name: index
+          required: 'true'
+          type: string
+        - description: TODO
+          in: path
+          name: collection
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/:index/:collection/_count':
+    post:
+      description: 'Controller: read. Action: count.'
+      parameters:
+        - description: TODO
+          in: path
+          name: index
+          required: 'true'
+          type: string
+        - description: TODO
+          in: path
+          name: collection
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/:index/:collection/_create':
+    post:
+      description: 'Controller: write. Action: create.'
+      parameters:
+        - description: TODO
+          in: path
+          name: index
+          required: 'true'
+          type: string
+        - description: TODO
+          in: path
+          name: collection
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/:index/:collection/_mapping':
+    put:
+      description: 'Controller: admin. Action: updateMapping.'
+      parameters:
+        - description: TODO
+          in: path
+          name: index
+          required: 'true'
+          type: string
+        - description: TODO
+          in: path
+          name: collection
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/:index/:collection/_query':
+    delete:
+      description: 'Controller: write. Action: deleteByQuery.'
+      parameters:
+        - description: TODO
+          in: path
+          name: index
+          required: 'true'
+          type: string
+        - description: TODO
+          in: path
+          name: collection
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/:index/:collection/_search':
+    post:
+      description: 'Controller: read. Action: search.'
+      parameters:
+        - description: TODO
+          in: path
+          name: index
+          required: 'true'
+          type: string
+        - description: TODO
+          in: path
+          name: collection
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/:index/:collection/_truncate':
+    delete:
+      description: 'Controller: admin. Action: truncateCollection.'
+      parameters:
+        - description: TODO
+          in: path
+          name: index
+          required: 'true'
+          type: string
+        - description: TODO
+          in: path
+          name: collection
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/:index/_autoRefresh':
+    post:
+      description: 'Controller: admin. Action: setAutoRefresh.'
+      parameters:
+        - description: TODO
+          in: path
+          name: index
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/:index/_bulk':
+    post:
+      description: 'Controller: bulk. Action: import.'
+      parameters:
+        - description: TODO
+          in: path
+          name: index
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/:index/_listCollections':
+    get:
+      description: 'Controller: read. Action: listCollections.'
+      parameters:
+        - description: TODO
+          in: path
+          name: index
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/:index/_listCollections/:type':
+    get:
+      description: 'Controller: read. Action: listCollections.'
+      parameters:
+        - description: TODO
+          in: path
+          name: index
+          required: 'true'
+          type: string
+        - description: TODO
+          in: path
+          name: type
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/:index/_refresh':
+    post:
+      description: 'Controller: admin. Action: refreshIndex.'
+      parameters:
+        - description: TODO
+          in: path
+          name: index
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  /_bulk:
+    post:
+      description: 'Controller: bulk. Action: import.'
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  /_checkToken:
+    post:
+      description: 'Controller: auth. Action: checkToken.'
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  /_deleteIndexes:
+    delete:
+      description: 'Controller: admin. Action: deleteIndexes.'
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  /_getAllStats:
+    get:
+      description: 'Controller: admin. Action: getAllStats.'
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  /_getLastStats:
+    get:
+      description: 'Controller: admin. Action: getLastStats.'
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  /_getStats:
+    post:
+      description: 'Controller: admin. Action: getStats.'
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  /_listIndexes:
+    get:
+      description: 'Controller: read. Action: listIndexes.'
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  /_listSubscriptions:
+    get:
+      description: 'Controller: subscribe. Action: list.'
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  /_login:
+    post:
+      description: 'Controller: auth. Action: login.'
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/_login/:strategy':
+    post:
+      description: 'Controller: auth. Action: login.'
+      parameters:
+        - description: TODO
+          in: path
+          name: strategy
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  /_logout:
+    get:
+      description: 'Controller: auth. Action: logout.'
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  /_now:
+    get:
+      description: 'Controller: read. Action: now.'
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  /_updateSelf:
+    put:
+      description: 'Controller: auth. Action: updateSelf.'
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  /ms:
+    delete:
+      description: 'Controller: ms. Action: del.'
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/:id':
+    delete:
+      description: 'Controller: ms. Action: del.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/_append/:id':
+    post:
+      description: 'Controller: ms. Action: append.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  /ms/_bgrewriteaof:
+    post:
+      description: 'Controller: ms. Action: bgrewriteaof.'
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  /ms/_bgsave:
+    post:
+      description: 'Controller: ms. Action: bgsave.'
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/_bitop/:operation/:destkey':
+    post:
+      description: 'Controller: ms. Action: bitop.'
+      parameters:
+        - description: TODO
+          in: path
+          name: operation
+          required: 'true'
+          type: string
+        - description: TODO
+          in: path
+          name: destkey
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/_bitop/:operation/:destkey/:key':
+    post:
+      description: 'Controller: ms. Action: bitop.'
+      parameters:
+        - description: TODO
+          in: path
+          name: operation
+          required: 'true'
+          type: string
+        - description: TODO
+          in: path
+          name: destkey
+          required: 'true'
+          type: string
+        - description: TODO
+          in: path
+          name: key
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/_bitpos/:id/:bit':
+    get:
+      description: 'Controller: ms. Action: bitpos.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+        - description: TODO
+          in: path
+          name: bit
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  /ms/_blpop:
+    post:
+      description: 'Controller: ms. Action: blpop.'
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/_blpop/:id':
+    post:
+      description: 'Controller: ms. Action: blpop.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  /ms/_brpop:
+    post:
+      description: 'Controller: ms. Action: brpop.'
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/_brpop/:id':
+    post:
+      description: 'Controller: ms. Action: brpop.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  /ms/_brpoplpush:
+    post:
+      description: 'Controller: ms. Action: brpoplpush.'
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  /ms/_dbsize:
+    get:
+      description: 'Controller: ms. Action: dbsize.'
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/_decr/:id':
+    post:
+      description: 'Controller: ms. Action: decr.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/_decrby/:id':
+    post:
+      description: 'Controller: ms. Action: decrby.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  /ms/_discard:
+    post:
+      description: 'Controller: ms. Action: discard.'
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/_dump/:id':
+    get:
+      description: 'Controller: ms. Action: dump.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  /ms/_exec:
+    post:
+      description: 'Controller: ms. Action: exec.'
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/_exists/:id':
+    get:
+      description: 'Controller: ms. Action: exists.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/_expire/:id':
+    post:
+      description: 'Controller: ms. Action: expire.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/_expireat/:id':
+    post:
+      description: 'Controller: ms. Action: expireat.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  /ms/_flushdb:
+    post:
+      description: 'Controller: ms. Action: flushdb.'
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/_geoadd/:id':
+    post:
+      description: 'Controller: ms. Action: geoadd.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/_geohash/:id/:member':
+    get:
+      description: 'Controller: ms. Action: geohash.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+        - description: TODO
+          in: path
+          name: member
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/_geopos/:id/:member':
+    get:
+      description: 'Controller: ms. Action: geopos.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+        - description: TODO
+          in: path
+          name: member
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/_georadius/:id':
+    get:
+      description: 'Controller: ms. Action: georadius.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/_georadiusbymember/:id':
+    get:
+      description: 'Controller: ms. Action: georadiusbymember.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/_getbit/:id/:offset':
+    get:
+      description: 'Controller: ms. Action: getbit.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+        - description: TODO
+          in: path
+          name: offset
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/_getrange/:id/:start/:end':
+    get:
+      description: 'Controller: ms. Action: getrange.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+        - description: TODO
+          in: path
+          name: start
+          required: 'true'
+          type: string
+        - description: TODO
+          in: path
+          name: end
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/_getset/:id':
+    post:
+      description: 'Controller: ms. Action: getset.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/_goedist/:id/:member1/:member2':
+    get:
+      description: 'Controller: ms. Action: geodist.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+        - description: TODO
+          in: path
+          name: member1
+          required: 'true'
+          type: string
+        - description: TODO
+          in: path
+          name: member2
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/_hdel/:id':
+    delete:
+      description: 'Controller: ms. Action: hdel.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/_hget/:id/:field':
+    get:
+      description: 'Controller: ms. Action: hget.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+        - description: TODO
+          in: path
+          name: field
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/_hgetall/:id':
+    get:
+      description: 'Controller: ms. Action: hgetall.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/_hincrby/:id':
+    post:
+      description: 'Controller: ms. Action: hincrby.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/_hincrbyfloat/:id':
+    post:
+      description: 'Controller: ms. Action: hincrbyfloat.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/_hkeys/:id':
+    get:
+      description: 'Controller: ms. Action: hkeys.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/_hlen/:id':
+    get:
+      description: 'Controller: ms. Action: hlen.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/_hmget/:id/:field':
+    get:
+      description: 'Controller: ms. Action: hmget.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+        - description: TODO
+          in: path
+          name: field
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/_hmset/:id':
+    post:
+      description: 'Controller: ms. Action: hmset.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/_hset/:id':
+    post:
+      description: 'Controller: ms. Action: hset.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/_hsetnx/:id':
+    post:
+      description: 'Controller: ms. Action: hsetnx.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/_hstrlen/:id/:field':
+    get:
+      description: 'Controller: ms. Action: hstrlen.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+        - description: TODO
+          in: path
+          name: field
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/_hvals/:id':
+    get:
+      description: 'Controller: ms. Action: hvals.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/_incr/:id':
+    post:
+      description: 'Controller: ms. Action: incr.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/_incrby/:id':
+    post:
+      description: 'Controller: ms. Action: incrby.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/_incrbyfloat/:id':
+    post:
+      description: 'Controller: ms. Action: incrbyfloat.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  /ms/_info:
+    get:
+      description: 'Controller: ms. Action: info.'
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/_info/:section':
+    get:
+      description: 'Controller: ms. Action: info.'
+      parameters:
+        - description: TODO
+          in: path
+          name: section
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/_keys/:pattern':
+    get:
+      description: 'Controller: ms. Action: keys.'
+      parameters:
+        - description: TODO
+          in: path
+          name: pattern
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  /ms/_lastsave:
+    get:
+      description: 'Controller: ms. Action: lastsave.'
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/_lindex/:id/:idx':
+    get:
+      description: 'Controller: ms. Action: lindex.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+        - description: TODO
+          in: path
+          name: idx
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/_linsert/:id':
+    post:
+      description: 'Controller: ms. Action: linsert.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/_llen/:id':
+    get:
+      description: 'Controller: ms. Action: llen.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/_lpop/:id':
+    post:
+      description: 'Controller: ms. Action: lpop.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/_lpush/:id':
+    post:
+      description: 'Controller: ms. Action: lpush.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/_lpushx/:id':
+    post:
+      description: 'Controller: ms. Action: lpushx.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/_lrange/:id/:start/:stop':
+    get:
+      description: 'Controller: ms. Action: lrange.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+        - description: TODO
+          in: path
+          name: start
+          required: 'true'
+          type: string
+        - description: TODO
+          in: path
+          name: stop
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/_lrem/:id':
+    delete:
+      description: 'Controller: ms. Action: lrem.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/_lset/:id':
+    post:
+      description: 'Controller: ms. Action: lset.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/_ltrim/:id':
+    post:
+      description: 'Controller: ms. Action: ltrim.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  /ms/_mget:
+    get:
+      description: 'Controller: ms. Action: mget.'
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/_mget/:id':
+    get:
+      description: 'Controller: ms. Action: mget.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  /ms/_mset:
+    post:
+      description: 'Controller: ms. Action: mset.'
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/_mset/:id':
+    post:
+      description: 'Controller: ms. Action: mset.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  /ms/_msetnx:
+    post:
+      description: 'Controller: ms. Action: msetnx.'
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  /ms/_multi:
+    post:
+      description: 'Controller: ms. Action: multi.'
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  /ms/_object:
+    get:
+      description: 'Controller: ms. Action: object.'
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/_persist/:id':
+    post:
+      description: 'Controller: ms. Action: persist.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/_pexpire/:id':
+    post:
+      description: 'Controller: ms. Action: pexpire.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/_pexpireat/:id':
+    post:
+      description: 'Controller: ms. Action: pexpireat.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/_pfadd/:id':
+    post:
+      description: 'Controller: ms. Action: pfadd.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  /ms/_pfcount:
+    get:
+      description: 'Controller: ms. Action: pfcount.'
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/_pfcount/:id':
+    get:
+      description: 'Controller: ms. Action: pfcount.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  /ms/_pfmerge:
+    post:
+      description: 'Controller: ms. Action: pfmerge.'
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  /ms/_ping:
+    get:
+      description: 'Controller: ms. Action: ping.'
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  /ms/_psetex:
+    post:
+      description: 'Controller: ms. Action: psetex.'
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/_psetex/:id':
+    post:
+      description: 'Controller: ms. Action: psetex.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/_pttl/:id':
+    get:
+      description: 'Controller: ms. Action: pttl.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/_publish/:channel':
+    post:
+      description: 'Controller: ms. Action: publish.'
+      parameters:
+        - description: TODO
+          in: path
+          name: channel
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  /ms/_randomkey:
+    get:
+      description: 'Controller: ms. Action: randomkey.'
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/_rename/:id':
+    post:
+      description: 'Controller: ms. Action: rename.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/_renamenx/:id':
+    post:
+      description: 'Controller: ms. Action: renamenx.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/_restore/:id':
+    post:
+      description: 'Controller: ms. Action: restore.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/_rpop/:id':
+    post:
+      description: 'Controller: ms. Action: rpop.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  /ms/_rpoplpush:
+    post:
+      description: 'Controller: ms. Action: rpoplpush.'
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/_rpush/:id':
+    post:
+      description: 'Controller: ms. Action: rpush.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/_rpushx/:id':
+    post:
+      description: 'Controller: ms. Action: rpushx.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/_sadd/:id':
+    post:
+      description: 'Controller: ms. Action: sadd.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  /ms/_save:
+    post:
+      description: 'Controller: ms. Action: save.'
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/_scard/:id':
+    get:
+      description: 'Controller: ms. Action: scard.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/_sdiff/:id':
+    get:
+      description: 'Controller: ms. Action: sdiff.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  /ms/_sdiffstore:
+    post:
+      description: 'Controller: ms. Action: sdiffstore.'
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/_sdiffstore/:id':
+    post:
+      description: 'Controller: ms. Action: sdiffstore.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/_setbit/:id':
+    post:
+      description: 'Controller: ms. Action: setbit.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/_setex/:id':
+    post:
+      description: 'Controller: ms. Action: setex.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/_setnx/:id':
+    post:
+      description: 'Controller: ms. Action: setnx.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/_setrange/:id':
+    post:
+      description: 'Controller: ms. Action: setrange.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/_sinter/:id':
+    get:
+      description: 'Controller: ms. Action: sinter.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/_sinterstore/:id':
+    post:
+      description: 'Controller: ms. Action: sinterstore.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/_sismember/:id/:member':
+    get:
+      description: 'Controller: ms. Action: sismember.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+        - description: TODO
+          in: path
+          name: member
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/_smembers/:id':
+    get:
+      description: 'Controller: ms. Action: smembers.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  /ms/_smove:
+    post:
+      description: 'Controller: ms. Action: smove.'
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/_smove/:id':
+    post:
+      description: 'Controller: ms. Action: smove.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/_sort/:id':
+    post:
+      description: 'Controller: ms. Action: sort.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/_spop/:id':
+    post:
+      description: 'Controller: ms. Action: spop.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/_srandmember/:id':
+    get:
+      description: 'Controller: ms. Action: srandmember.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/_srandmember/:id/:count':
+    get:
+      description: 'Controller: ms. Action: srandmember.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+        - description: TODO
+          in: path
+          name: count
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/_srem/:id':
+    delete:
+      description: 'Controller: ms. Action: srem.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/_strlen/:id':
+    get:
+      description: 'Controller: ms. Action: strlen.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/_sunion/:id':
+    post:
+      description: 'Controller: ms. Action: sunion.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/_sunionstore/:id':
+    post:
+      description: 'Controller: ms. Action: sunionstore.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  /ms/_time:
+    get:
+      description: 'Controller: ms. Action: time.'
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/_ttl/:id':
+    get:
+      description: 'Controller: ms. Action: ttl.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/_type/:id':
+    get:
+      description: 'Controller: ms. Action: type.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/_zadd/:id':
+    post:
+      description: 'Controller: ms. Action: zadd.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/_zcard/:id':
+    get:
+      description: 'Controller: ms. Action: zcard.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/_zcount/:id/:min/:max':
+    get:
+      description: 'Controller: ms. Action: zcount.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+        - description: TODO
+          in: path
+          name: min
+          required: 'true'
+          type: string
+        - description: TODO
+          in: path
+          name: max
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/_zincrby/:id':
+    post:
+      description: 'Controller: ms. Action: zincrby.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  /ms/_zinterstore:
+    post:
+      description: 'Controller: ms. Action: zinterstore.'
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/_zlexcount/:id/:min/:max':
+    get:
+      description: 'Controller: ms. Action: zlexcount.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+        - description: TODO
+          in: path
+          name: min
+          required: 'true'
+          type: string
+        - description: TODO
+          in: path
+          name: max
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/_zrange/:id/:start/:stop':
+    get:
+      description: 'Controller: ms. Action: zrange.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+        - description: TODO
+          in: path
+          name: start
+          required: 'true'
+          type: string
+        - description: TODO
+          in: path
+          name: stop
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/_zrangebylex/:id/:min/:max':
+    get:
+      description: 'Controller: ms. Action: zrangebylex.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+        - description: TODO
+          in: path
+          name: min
+          required: 'true'
+          type: string
+        - description: TODO
+          in: path
+          name: max
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/_zrangebyscore/:id/:min/:max':
+    get:
+      description: 'Controller: ms. Action: zrangebyscore.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+        - description: TODO
+          in: path
+          name: min
+          required: 'true'
+          type: string
+        - description: TODO
+          in: path
+          name: max
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/_zrank/:id/:member':
+    get:
+      description: 'Controller: ms. Action: zrank.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+        - description: TODO
+          in: path
+          name: member
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/_zrem/:id':
+    delete:
+      description: 'Controller: ms. Action: zrem.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/_zremrangebylex/:id':
+    delete:
+      description: 'Controller: ms. Action: zremrangebylex.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/_zremrangebyscore/:id':
+    delete:
+      description: 'Controller: ms. Action: zremrangebyscore.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/_zrevrange/:id/:start/:stop':
+    get:
+      description: 'Controller: ms. Action: zrevrange.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+        - description: TODO
+          in: path
+          name: start
+          required: 'true'
+          type: string
+        - description: TODO
+          in: path
+          name: stop
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/_zrevrangebylex/:id/:min/:max':
+    get:
+      description: 'Controller: ms. Action: zrevrangebylex.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+        - description: TODO
+          in: path
+          name: min
+          required: 'true'
+          type: string
+        - description: TODO
+          in: path
+          name: max
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/_zrevrangebyscore/:id/:max/:min':
+    get:
+      description: 'Controller: ms. Action: zrevrangebyscore.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+        - description: TODO
+          in: path
+          name: max
+          required: 'true'
+          type: string
+        - description: TODO
+          in: path
+          name: min
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/_zrevrank/:id/:member':
+    get:
+      description: 'Controller: ms. Action: zrevrank.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+        - description: TODO
+          in: path
+          name: member
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/ms/_zscore/:id/:member':
+    get:
+      description: 'Controller: ms. Action: zscore.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+        - description: TODO
+          in: path
+          name: member
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  /ms/_zunionstore:
+    post:
+      description: 'Controller: ms. Action: zunionstore.'
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/profiles/:id':
+    put:
+      description: 'Controller: security. Action: createOrReplaceProfile.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/profiles/:id/_createOrReplace':
+    put:
+      description: 'Controller: security. Action: createOrReplaceProfile.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  /profiles/_create:
+    post:
+      description: 'Controller: security. Action: createProfile.'
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  /profiles/_mget:
+    post:
+      description: 'Controller: security. Action: mGetProfiles.'
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  /profiles/_search:
+    post:
+      description: 'Controller: security. Action: searchProfiles.'
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/roles/:id':
+    put:
+      description: 'Controller: security. Action: createOrReplaceRole.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/roles/:id/_createOrReplace':
+    put:
+      description: 'Controller: security. Action: createOrReplaceRole.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  /roles/_create:
+    post:
+      description: 'Controller: security. Action: createRole.'
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  /roles/_mget:
+    post:
+      description: 'Controller: security. Action: mGetRoles.'
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  /roles/_search:
+    post:
+      description: 'Controller: security. Action: searchRoles.'
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  '/users/:id':
+    put:
+      description: 'Controller: security. Action: createOrReplaceUser.'
+      parameters:
+        - description: TODO
+          in: path
+          name: id
+          required: 'true'
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  /users/_create:
+    post:
+      description: 'Controller: security. Action: createUser.'
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  /users/_me:
+    get:
+      description: 'Controller: auth. Action: getCurrentUser.'
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+  /users/_search:
+    post:
+      description: 'Controller: security. Action: searchUsers.'
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: ''
+          schema: {}
+produces:
+  - application/json
+schemes:
+  - http
+swagger: '2.0'
