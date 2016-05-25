@@ -1,6 +1,7 @@
 var
   should = require('should'),
   rewire = require('rewire'),
+  md5 = require('crypto-md5'),
   methods = rewire('../../../../lib/api/dsl/methods'),
   BadRequestError = require.main.require('lib/api/core/errors/badRequestError'),
   InternalError = require.main.require('lib/api/core/errors/internalError');
@@ -26,7 +27,9 @@ describe('Test ids method', function () {
     },
     filter = {
       values: ['idGrace']
-    };
+    },
+    idsIdidGrace = md5('ids_ididGrace'),
+    notidsIdidGrace = md5('notids_ididGrace');
 
 
   before(function () {
@@ -47,15 +50,15 @@ describe('Test ids method', function () {
 
   it('should construct the filterTree with correct curried function name', function () {
     /* jshint camelcase:false */
-    should(methods.dsl.filtersTree[index][collection].fields._id.ids_ididGrace).not.be.empty();
-    should(methods.dsl.filtersTree[index][collection].fields._id.notids_ididGrace).not.be.empty();
+    should(methods.dsl.filtersTree[index][collection].fields._id[idsIdidGrace]).not.be.empty();
+    should(methods.dsl.filtersTree[index][collection].fields._id[notidsIdidGrace]).not.be.empty();
   });
 
   it('should construct the filterTree with correct room list', function () {
     /* jshint camelcase:false */
     var
-      rooms = methods.dsl.filtersTree[index][collection].fields._id.ids_ididGrace.rooms,
-      roomsNot = methods.dsl.filtersTree[index][collection].fields._id.notids_ididGrace.rooms;
+      rooms = methods.dsl.filtersTree[index][collection].fields._id[idsIdidGrace].rooms,
+      roomsNot = methods.dsl.filtersTree[index][collection].fields._id[notidsIdidGrace].rooms;
 
     should(rooms).be.an.Array();
     should(roomsNot).be.an.Array();
@@ -70,14 +73,14 @@ describe('Test ids method', function () {
   it('should construct the filterTree with correct functions ids', function () {
     /* jshint camelcase:false */
     var
-      resultMatch = methods.dsl.filtersTree[index][collection].fields._id.ids_ididGrace.fn(documentGrace),
-      resultNotMatch = methods.dsl.filtersTree[index][collection].fields._id.ids_ididGrace.fn(documentAda);
+      resultMatch = methods.dsl.filtersTree[index][collection].fields._id[idsIdidGrace].fn(documentGrace),
+      resultNotMatch = methods.dsl.filtersTree[index][collection].fields._id[idsIdidGrace].fn(documentAda);
 
     should(resultMatch).be.exactly(true);
     should(resultNotMatch).be.exactly(false);
 
-    resultMatch = methods.dsl.filtersTree[index][collection].fields._id.notids_ididGrace.fn(documentAda);
-    resultNotMatch = methods.dsl.filtersTree[index][collection].fields._id.notids_ididGrace.fn(documentGrace);
+    resultMatch = methods.dsl.filtersTree[index][collection].fields._id[notidsIdidGrace].fn(documentAda);
+    resultNotMatch = methods.dsl.filtersTree[index][collection].fields._id[notidsIdidGrace].fn(documentGrace);
 
     should(resultMatch).be.exactly(true);
     should(resultNotMatch).be.exactly(false);
