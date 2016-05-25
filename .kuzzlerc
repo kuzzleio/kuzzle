@@ -8,12 +8,21 @@
   "serviceSettingsCollection": "services",
 
   /*
-   Host and port for the internal ipcBroker server
+  */
+  "lbBroker": {
+    "host": "localhost",
+    "port": 7331,
+    "retryInterval": 1000
+  },
+
+  /*
+   Host and port for the internal broker server
    This server handles internal communications between Kuzzle components
    */
-  "ipcBroker": {
+  "internalBroker": {
     "host": "localhost",
-    "port": 7911
+    "port": 7911,
+    "retryInterval": 1000
   },
 
   // Host and port for mqBroker service that handle communication with protocol like MQTT, STOMP and AMQP
@@ -162,10 +171,6 @@
     "defaultPlugins": {
       "kuzzle-plugin-logger": {
         "npmVersion": "2.0.2",
-        "activated": true
-      },
-      "kuzzle-plugin-socketio": {
-        "npmVersion": "1.0.8",
         "activated": true
       },
       "kuzzle-plugin-auth-passport-local": {
