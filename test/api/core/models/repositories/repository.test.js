@@ -1,10 +1,10 @@
 var
   q = require('q'),
   should = require('should'),
-  InternalError = require.main.require('lib/api/core/errors/internalError'),
-  NotFoundError = require.main.require('lib/api/core/errors/notFoundError'),
+  InternalError = require.main.require('kuzzle-common-objects').Errors.internalError,
+  NotFoundError = require.main.require('kuzzle-common-objects').Errors.notFoundError,
   Repository = require.main.require('lib/api/core/models/repositories/repository'),
-  RequestObject = require.main.require('lib/api/core/models/requestObject');
+  RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject;
 
 describe('Test: repositories/repository', function () {
   var

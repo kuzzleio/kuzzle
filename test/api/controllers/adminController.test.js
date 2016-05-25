@@ -6,10 +6,10 @@ var
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   Profile = require.main.require('lib/api/core/models/security/profile'),
   Role = require.main.require('lib/api/core/models/security/role'),
-  RequestObject = require.main.require('lib/api/core/models/requestObject'),
-  ResponseObject = require.main.require('lib/api/core/models/responseObject'),
-  BadRequestError = require.main.require('lib/api/core/errors/badRequestError'),
-  PartialError = require.main.require('lib/api/core/errors/partialError');
+  RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
+  ResponseObject = require.main.require('kuzzle-common-objects').Models.responseObject,
+  BadRequestError = require.main.require('kuzzle-common-objects').Errors.badRequestError,
+  PartialError = require.main.require('kuzzle-common-objects').Errors.partialError;
 
 require('sinon-as-promised')(q.Promise);
 

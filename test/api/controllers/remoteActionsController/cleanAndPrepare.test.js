@@ -5,7 +5,7 @@ var
   rewire = require('rewire'),
   should = require('should'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
-  RequestObject = require.main.require('lib/api/core/models/requestObject');
+  RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject;
 
 describe('Test: clean and prepare database remote action', function () {
 

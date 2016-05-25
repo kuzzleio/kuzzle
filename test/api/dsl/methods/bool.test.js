@@ -4,7 +4,7 @@ var
   rewire = require('rewire'),
   md5 = require('crypto-md5'),
   methods = rewire('../../../../lib/api/dsl/methods'),
-  BadRequestError = require.main.require('lib/api/core/errors/badRequestError');
+  BadRequestError = require.main.require('kuzzle-common-objects').Errors.badRequestError;
 
 describe('Test bool method', function () {
 

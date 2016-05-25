@@ -4,8 +4,8 @@ var
   q = require('q'),
   should = require('should'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
-  RequestObject = require.main.require('lib/api/core/models/requestObject'),
-  BadRequestError = require.main.require('lib/api/core/errors/badRequestError');
+  RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
+  BadRequestError = require.main.require('kuzzle-common-objects').Errors.badRequestError;
 
 
 describe('Test: clean database', function () {

@@ -5,9 +5,9 @@ var
   rewire = require('rewire'),
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
-  RequestObject = require.main.require('lib/api/core/models/requestObject'),
-  BadRequestError = require.main.require('lib/api/core/errors/badRequestError.js'),
-  NotFoundError = require.main.require('lib/api/core/errors/notFoundError'),
+  RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
+  BadRequestError = require.main.require('kuzzle-common-objects').Errors.badRequestError.js,
+  NotFoundError = require.main.require('kuzzle-common-objects').Errors.notFoundError,
   ES = rewire('../../../lib/services/elasticsearch');
 
 describe('Test: ElasticSearch service', function () {
