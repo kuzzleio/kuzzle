@@ -25,7 +25,7 @@ describe('Test: core/servers', function () {
         kuzzle.router.initRouterHttp = function () { httpServer = true; };
         kuzzle.router.routeMQListener = function () { mqServer = true; };
         kuzzle.router.routeHttp = function () { restRedirected = true; };
-        Servers.initAll(kuzzle, { port: port });
+        Servers.initAll(kuzzle, { httpPort: port });
         done();
       });
   });

@@ -1,6 +1,6 @@
 {
   // Kuzzle REST listening port
-  "port": 7511,
+  "httpPort": 7511,
 
   /*
    Internal collection used to store the service settings
