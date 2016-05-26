@@ -5,7 +5,7 @@ var
   util = require('util'),
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
-  ForbiddenError = require.main.require('lib/api/core/errors/forbiddenError'),
+  ForbiddenError = require.main.require('kuzzle-common-objects').Errors.forbiddenError,
   PassportWrapper = require.main.require('lib/api/core/auth/passportWrapper'),
   MockupStrategy;
 

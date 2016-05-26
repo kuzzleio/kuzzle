@@ -1,9 +1,9 @@
 var
   should = require('should'),
   q = require('q'),
-  RequestObject = require.main.require('lib/api/core/models/requestObject'),
-  InternalError = require.main.require('lib/api/core/errors/internalError'),
-  BadRequestError = require.main.require('lib/api/core/errors/badRequestError'),
+  RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
+  InternalError = require.main.require('kuzzle-common-objects').Errors.internalError,
+  BadRequestError = require.main.require('kuzzle-common-objects').Errors.badRequestError,
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle');
 

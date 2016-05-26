@@ -3,13 +3,13 @@ var
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   q = require('q'),
-  RequestObject = require.main.require('lib/api/core/models/requestObject'),
+  RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
   Token = require.main.require('lib/api/core/models/security/token'),
   User = require.main.require('lib/api/core/models/security/user'),
   Profile = require.main.require('lib/api/core/models/security/profile'),
   Role = require.main.require('lib/api/core/models/security/role'),
-  ResponseObject = require.main.require('lib/api/core/models/responseObject'),
-  PluginImplementationError = require.main.require('lib/api/core/errors/pluginImplementationError');
+  ResponseObject = require.main.require('kuzzle-common-objects').Models.responseObject,
+  PluginImplementationError = require.main.require('kuzzle-common-objects').Errors.pluginImplementationError;
 
 describe('Test: routerController', () => {
   describe('#newConnection', () => {

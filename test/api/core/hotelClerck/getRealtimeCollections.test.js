@@ -2,7 +2,7 @@ var
   should = require('should'),
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
-  RequestObject = require.main.require('lib/api/core/models/requestObject');
+  RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject;
 
 describe('Test: hotelClerk.getRealtimeCollections', function () {
   var

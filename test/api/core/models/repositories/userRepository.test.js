@@ -9,9 +9,9 @@ var
     },
     config: require.main.require('lib/config')(params)
   },
-  InternalError = require.main.require('lib/api/core/errors/internalError'),
-  NotFoundError = require.main.require('lib/api/core/errors/notFoundError'),
-  ResponseObject = require.main.require('lib/api/core/models/responseObject'),
+  InternalError = require.main.require('kuzzle-common-objects').Errors.internalError,
+  NotFoundError = require.main.require('kuzzle-common-objects').Errors.notFoundError,
+  ResponseObject = require.main.require('kuzzle-common-objects').Models.responseObject,
   Profile = require.main.require('lib/api/core/models/security/profile'),
   User = require.main.require('lib/api/core/models/security/user'),
   Repository = require.main.require('lib/api/core/models/repositories/repository'),

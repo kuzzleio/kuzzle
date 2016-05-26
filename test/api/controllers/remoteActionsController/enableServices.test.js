@@ -4,7 +4,7 @@ var
   q = require('q'),
   should = require('should'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
-  RequestObject = require.main.require('lib/api/core/models/requestObject');
+  RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject;
 
 describe('Test: enable services controller', function () {
   var 
