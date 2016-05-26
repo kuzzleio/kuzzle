@@ -32,7 +32,7 @@
     "cli-color": "^1.1.0",
     "commander": "2.9.0",
     "crypto-md5": "^1.0.0",
-    "easy-circular-list": "^1.0.11",
+    "easy-circular-list": "^1.0.13",
     "elasticsearch": "11.0.1",
     "eventemitter2": "^1.0.0",
     "finalhandler": "0.4.1",

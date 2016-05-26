@@ -10,7 +10,7 @@
   /*
   */
   "lbBroker": {
-    "host": "localhost",
+    "host": "loadbalancer",
     "port": 7331,
     "retryInterval": 1000
   },
