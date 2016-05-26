@@ -9,7 +9,7 @@
     "kuzzle": "./bin/kuzzle"
   },
   "scripts": {
-    "test": "npm run unit-testing --coverage && npm run functional-testing && npm run crawl-coverage && grunt",
+    "test": "grunt && npm run unit-testing --coverage && npm run functional-testing && npm run crawl-coverage",
     "unit-testing": "istanbul test _mocha",
     "functional-testing": "npm run cucumber",
     "cucumber": "cucumber.js",
