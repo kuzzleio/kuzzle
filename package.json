@@ -40,7 +40,7 @@
     "ioredis": "^1.15.1",
     "json-stable-stringify": "1.0.1",
     "jsonwebtoken": "^5.4.0",
-    "kuzzle-common-objects": "git+https://github.com/kuzzleio/kuzzle-common-objects.git",
+    "kuzzle-common-objects": "git+https://github.com/kuzzleio/kuzzle-common-objects.git#1.0.0",
     "lodash": "4.11.1",
     "ms": "^0.7.1",
     "ngeohash": "0.6.0",
