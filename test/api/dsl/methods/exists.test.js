@@ -1,6 +1,7 @@
 var
   should = require('should'),
   rewire = require('rewire'),
+  md5 = require('crypto-md5'),
   methods = rewire('../../../../lib/api/dsl/methods'),
   BadRequestError = require.main.require('lib/api/core/errors/badRequestError'),
   InternalError = require.main.require('lib/api/core/errors/internalError');
@@ -20,7 +21,8 @@ describe('Test exists method', function () {
     },
     filter = {
       field: 'lastName'
-    };
+    },
+    existslastName = md5('existslastName');
 
 
   before(function () {
@@ -37,14 +39,14 @@ describe('Test exists method', function () {
   });
 
   it('should construct the filterTree with correct curried function name', function () {
-    should(methods.dsl.filtersTree[index][collection].fields.lastName.existslastName).not.be.empty();
+    should(methods.dsl.filtersTree[index][collection].fields.lastName[existslastName]).not.be.empty();
   });
 
   it('should construct the filterTree with correct room list', function () {
     var rooms;
 
     // Test gt from filterGrace
-    rooms = methods.dsl.filtersTree[index][collection].fields.lastName.existslastName.rooms;
+    rooms = methods.dsl.filtersTree[index][collection].fields.lastName[existslastName].rooms;
     should(rooms).be.an.Array();
     should(rooms).have.length(1);
     should(rooms[0]).be.exactly(roomId);
@@ -53,9 +55,9 @@ describe('Test exists method', function () {
   it('should construct the filterTree with correct functions exists', function () {
     var result;
 
-    result = methods.dsl.filtersTree[index][collection].fields.lastName.existslastName.fn(documentGrace);
+    result = methods.dsl.filtersTree[index][collection].fields.lastName[existslastName].fn(documentGrace);
     should(result).be.exactly(true);
-    result = methods.dsl.filtersTree[index][collection].fields.lastName.existslastName.fn(documentAda);
+    result = methods.dsl.filtersTree[index][collection].fields.lastName[existslastName].fn(documentAda);
     should(result).be.exactly(false);
   });
 

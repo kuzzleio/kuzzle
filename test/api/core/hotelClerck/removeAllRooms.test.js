@@ -4,6 +4,7 @@ var
   BadRequestError = require.main.require('lib/api/core/errors/badRequestError'),
   NotFoundError = require.main.require('lib/api/core/errors/notFoundError'),
   params = require('rc')('kuzzle'),
+  md5 = require('crypto-md5'),
   Kuzzle = require.main.require('lib/api/Kuzzle');
 
 describe('Test: hotelClerk.removeRooms', function () {

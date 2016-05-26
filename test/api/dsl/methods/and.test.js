@@ -2,6 +2,7 @@ var
   should = require('should'),
   q = require('q'),
   rewire = require('rewire'),
+  md5 = require('crypto-md5'),
   methods = rewire('../../../../lib/api/dsl/methods');
 
 describe('Test and method', function () {
@@ -33,7 +34,9 @@ describe('Test and method', function () {
           hobby: 'computer'
         }
       }
-    ];
+    ],
+    termCity = md5('termcityNYC'),
+    termHobby = md5('termhobbycomputer');
 
 
   before(function () {
@@ -51,19 +54,19 @@ describe('Test and method', function () {
   });
 
   it('should construct the filterTree with correct curried function name', function () {
-    should(methods.dsl.filtersTree[index][collection].fields.city.termcityNYC).not.be.empty();
-    should(methods.dsl.filtersTree[index][collection].fields.hobby.termhobbycomputer).not.be.empty();
+    should(methods.dsl.filtersTree[index][collection].fields.city[termCity]).not.be.empty();
+    should(methods.dsl.filtersTree[index][collection].fields.hobby[termHobby]).not.be.empty();
   });
 
   it('should construct the filterTree with correct room list', function () {
     var rooms;
 
-    rooms = methods.dsl.filtersTree[index][collection].fields.city.termcityNYC.rooms;
+    rooms = methods.dsl.filtersTree[index][collection].fields.city[termCity].rooms;
     should(rooms).be.an.Array();
     should(rooms).have.length(1);
     should(rooms[0]).be.exactly(roomId);
 
-    rooms = methods.dsl.filtersTree[index][collection].fields.hobby.termhobbycomputer.rooms;
+    rooms = methods.dsl.filtersTree[index][collection].fields.hobby[termHobby].rooms;
     should(rooms).be.an.Array();
     should(rooms).have.length(1);
     should(rooms[0]).be.exactly(roomId);
@@ -72,14 +75,14 @@ describe('Test and method', function () {
   it('should construct the filterTree with correct functions', function () {
     var result;
 
-    result = methods.dsl.filtersTree[index][collection].fields.city.termcityNYC.fn(documentGrace);
+    result = methods.dsl.filtersTree[index][collection].fields.city[termCity].fn(documentGrace);
     should(result).be.exactly(true);
-    result = methods.dsl.filtersTree[index][collection].fields.city.termcityNYC.fn(documentAda);
+    result = methods.dsl.filtersTree[index][collection].fields.city[termCity].fn(documentAda);
     should(result).be.exactly(false);
 
-    result = methods.dsl.filtersTree[index][collection].fields.hobby.termhobbycomputer.fn(documentGrace);
+    result = methods.dsl.filtersTree[index][collection].fields.hobby[termHobby].fn(documentGrace);
     should(result).be.exactly(true);
-    result = methods.dsl.filtersTree[index][collection].fields.hobby.termhobbycomputer.fn(documentAda);
+    result = methods.dsl.filtersTree[index][collection].fields.hobby[termHobby].fn(documentAda);
     should(result).be.exactly(true);
   });
 

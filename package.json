@@ -31,6 +31,7 @@
     "bunyan": "^1.5.1",
     "cli-color": "^1.1.0",
     "commander": "2.9.0",
+    "crypto-md5": "^1.0.0",
     "easy-circular-list": "^1.0.11",
     "elasticsearch": "11.0.1",
     "eventemitter2": "^1.0.0",
