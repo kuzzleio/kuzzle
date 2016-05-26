@@ -60,7 +60,10 @@ module.exports = function () {
       /*
        Waits for at least one write worker to be connected to the server before trying to use them
        */
-      return kuzzle.services.list.broker.waitForClients(kuzzle.config.queues.workerWriteTaskQueue);
+      if (kuzzle.isServer) {
+        return kuzzle.services.list.broker.waitForClients(kuzzle.config.queues.workerWriteTaskQueue);
+      }
+      return q();
     })
     .then(() => {
       var request;
