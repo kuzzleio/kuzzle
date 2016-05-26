@@ -6,7 +6,7 @@ var
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
-  RequestObject = require.main.require('lib/api/core/models/requestObject'),
+  RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
   Worker = rewire('../../lib/workers/write');
 
 describe('Testing: write worker', function () {

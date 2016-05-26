@@ -6,9 +6,9 @@ var
   rewire = require('rewire'),
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
-  RequestObject = require.main.require('lib/api/core/models/requestObject'),
-  NotFoundError = require.main.require('lib/api/core/errors/notFoundError'),
-  ResponseObject = require.main.require('lib/api/core/models/responseObject');
+  RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
+  NotFoundError = require.main.require('kuzzle-common-objects').Errors.notFoundError,
+  ResponseObject = require.main.require('kuzzle-common-objects').Models.responseObject;
 
 require('sinon-as-promised')(q.Promise);
 

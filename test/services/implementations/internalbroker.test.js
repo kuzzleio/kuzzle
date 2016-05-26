@@ -8,7 +8,7 @@ var
   WSClientMock = require('../../mocks/services/ws.mock'),
   WSServerMock = require('../../mocks/services/ws.server.mock'),
   InternalBroker = rewire('../../../lib/services/internalbroker'),
-  InternalError = require.main.require('lib/api/core/errors/internalError'),
+  InternalError = require('kuzzle-common-objects').Errors.internalError,
   WSBrokerClient = require.main.require('lib/services/broker/wsBrokerClient'),
   WSBrokerServer = require.main.require('lib/services/broker/wsBrokerServer'),
   WSBrokerServerRewire = rewire('../../../lib/services/broker/wsBrokerServer');

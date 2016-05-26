@@ -8,7 +8,7 @@
 var
   should = require('should'),
   q = require('q'),
-  RequestObject = require.main.require('lib/api/core/models/requestObject'),
+  RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle');
 

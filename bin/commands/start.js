@@ -5,7 +5,7 @@ var
   rc = require('rc'),
   params = rc('kuzzle'),
   kuzzle = require('../../lib'),
-  RequestObject = require('../../lib/api/core/models/requestObject'),
+  RequestObject = require('kuzzle-common-objects').Models.requestObject,
   firstAdmin = require('./createFirstAdmin'),
   q = require('q'),
   clc = require('cli-color'),

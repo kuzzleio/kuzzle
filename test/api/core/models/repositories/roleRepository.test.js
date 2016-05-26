@@ -3,10 +3,9 @@ var
   sinon = require('sinon'),
   params = require('rc')('kuzzle'),
   should = require('should'),
-  BadRequestError = require.main.require('lib/api/core/errors/badRequestError'),
-  InternalError = require.main.require('lib/api/core/errors/internalError'),
-  NotFoundError = require.main.require('lib/api/core/errors/notFoundError'),
-  RequestObject = require.main.require('lib/api/core/models/requestObject'),
+  BadRequestError = require('kuzzle-common-objects').Errors.badRequestError,
+  InternalError = require.main.require('kuzzle-common-objects').Errors.internalError,
+  RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
   Role = require.main.require('lib/api/core/models/security/role'),
   Kuzzle = require.main.require('lib/api/Kuzzle');
 
