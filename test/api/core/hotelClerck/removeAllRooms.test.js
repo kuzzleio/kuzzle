@@ -1,8 +1,8 @@
 var
   should = require('should'),
-  RequestObject = require.main.require('lib/api/core/models/requestObject'),
-  BadRequestError = require.main.require('lib/api/core/errors/badRequestError'),
-  NotFoundError = require.main.require('lib/api/core/errors/notFoundError'),
+  RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
+  BadRequestError = require.main.require('kuzzle-common-objects').Errors.badRequestError,
+  NotFoundError = require.main.require('kuzzle-common-objects').Errors.notFoundError,
   params = require('rc')('kuzzle'),
   md5 = require('crypto-md5'),
   Kuzzle = require.main.require('lib/api/Kuzzle');

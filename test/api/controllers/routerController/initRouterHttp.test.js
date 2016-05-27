@@ -11,7 +11,7 @@ var
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   rewire = require('rewire'),
   RouterController = rewire('../../../../lib/api/controllers/routerController'),
-  RequestObject = require.main.require('lib/api/core/models/requestObject');
+  RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject;
 
 /*
  * This function helps keeping tests simple and clear while ensuring that

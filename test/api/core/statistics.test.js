@@ -11,8 +11,8 @@ var
   sandbox = sinon.sandbox.create(),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   redisClientMock = require('../../mocks/services/redisClient.mock'),
-  RequestObject = require.main.require('lib/api/core/models/requestObject'),
-  BadRequestError = require.main.require('lib/api/core/errors/badRequestError'),
+  RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
+  BadRequestError = require.main.require('kuzzle-common-objects').Errors.badRequestError,
   Statistics = rewire('../../../lib/api/core/statistics');
 
 describe('Test: statistics core component', function () {

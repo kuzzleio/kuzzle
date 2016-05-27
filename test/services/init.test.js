@@ -2,7 +2,9 @@ var
   should = require('should'),
   params = require('rc')('kuzzle'),
   sinon = require('sinon'),
+  q = require('q'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
+  Services = require.main.require('lib/services'),
   sandbox = sinon.sandbox.create();
 
 describe('Test service initialization function', function () {
@@ -99,7 +101,6 @@ describe('Test service initialization function', function () {
         should(kuzzle.services.list.writeEngine.client).be.null();
         should(spy.calledOnce).be.true();
       });
-
   });
 
   it('should throw error if service file doesn\'t exist', function (done) {
