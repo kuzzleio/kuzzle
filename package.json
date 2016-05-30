@@ -39,6 +39,7 @@
     "geolib": "j33f/Geolib",
     "ioredis": "^1.15.1",
     "json-stable-stringify": "1.0.1",
+    "json2yaml": "^1.1.0",
     "jsonwebtoken": "^5.4.0",
     "lodash": "4.11.1",
     "ms": "^0.7.1",
