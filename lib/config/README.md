@@ -6,3 +6,4 @@
 * services.js: list available services (see [../services/README.md](Services documentation))
 * workers.js: lists known workers (see [../workers/README.md](Workers documentation))
 * models the engine for data persistence.
+* httpRoutes.js: list Kuzzle HTTP routes

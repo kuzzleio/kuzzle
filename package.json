@@ -79,7 +79,8 @@
     "sinon": "1.17.3",
     "sinon-as-promised": "^4.0.0",
     "socket.io-client": "1.4.5",
-    "stomp-client": "0.8.1"
+    "stomp-client": "0.8.1",
+    "parser-yaml": "^0.1.1"
   },
   "engines": {
     "node": ">= 4.3.1",
