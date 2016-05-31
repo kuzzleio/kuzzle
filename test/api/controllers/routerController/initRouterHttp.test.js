@@ -10,6 +10,7 @@ var
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   rewire = require('rewire'),
+  yamlToJson = require('parser-yaml').parse,
   RouterController = rewire('../../../../lib/api/controllers/routerController'),
   RequestObject = require.main.require('lib/api/core/models/requestObject');
 
@@ -17,7 +18,7 @@ var
  * This function helps keeping tests simple and clear while ensuring that
  * responses are well-formed.
  */
-function parseHttpResponse(response) {
+function parseHttpResponse(response, yaml) {
   var
     deferred = q.defer(),
     data = '';
@@ -28,12 +29,22 @@ function parseHttpResponse(response) {
 
   response.on('end', function () {
     var result;
+    if (yaml === true) {
+      yamlToJson(data, (err, res) => {
+        if (err) {
+          deferred.reject(err);
+        }
 
-    try {
-      result = JSON.parse(data);
-    }
-    catch (e) {
-      deferred.reject(e);
+        result = res;
+      });
+    } 
+    else {
+      try {
+        result = JSON.parse(data);
+      }
+      catch (e) {
+        deferred.reject(e);
+      }
     }
 
     deferred.resolve(result);
@@ -802,6 +813,32 @@ describe('Test: routerController.initRouterHttp', function () {
           done();
         })
         .catch(function (error) {
+          done(error);
+        });
+    });
+  });
+
+  it('should create a GET route to get server the swagger.json', done => {
+    http.get('http://' + options.hostname + ':' + options.port + '/api/swagger.json', response => {
+      parseHttpResponse(response)
+        .then(result => {   
+          should(Object.keys(result.paths).length).be.above(1);
+          done();
+        })
+        .catch(error => {
+          done(error);
+        });
+    });
+  });
+
+  it('should create a GET route to get server the swagger.yaml', done => {
+    http.get('http://' + options.hostname + ':' + options.port + '/api/swagger.yaml', response => {
+      parseHttpResponse(response, true)
+        .then(result => {
+          should(Object.keys(result.paths).length).be.above(1);
+          done();
+        })
+        .catch(error => {
           done(error);
         });
     });
