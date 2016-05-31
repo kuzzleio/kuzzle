@@ -7,23 +7,14 @@ var
   InternalError = require.main.require('kuzzle-common-objects').Errors.internalError;
 
 describe('Test exists method', function () {
-
   var
     roomId = 'roomId',
     index = 'test',
     collection = 'collection',
-    documentGrace = {
-      firstName: 'Grace',
-      lastName: 'Hopper'
-    },
-    documentAda = {
-      firstName: 'Ada'
-    },
     filter = {
       field: 'lastName'
     },
     existslastName = md5('existslastName');
-
 
   before(function () {
     methods.dsl.filtersTree = {};
@@ -52,13 +43,13 @@ describe('Test exists method', function () {
     should(rooms[0]).be.exactly(roomId);
   });
 
-  it('should construct the filterTree with correct functions exists', function () {
-    var result;
-
-    result = methods.dsl.filtersTree[index][collection].fields.lastName[existslastName].fn(documentGrace);
-    should(result).be.exactly(true);
-    result = methods.dsl.filtersTree[index][collection].fields.lastName[existslastName].fn(documentAda);
-    should(result).be.exactly(false);
+  it('should construct the filterTree with correct exists arguments', function () {
+    should(methods.dsl.filtersTree[index][collection].fields.lastName[existslastName].args).match({
+      operator: 'exists',
+      not: undefined,
+      field: 'lastName',
+      value: 'lastName'
+    });
   });
 
   it('should return a rejected promise if the filter argument is empty', function () {

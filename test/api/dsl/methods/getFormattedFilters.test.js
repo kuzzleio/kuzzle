@@ -6,8 +6,6 @@ var
   methods = rewire('../../../../lib/api/dsl/methods'),
   BadRequestError = require.main.require('kuzzle-common-objects').Errors.badRequestError;
 
-
-
 describe('Test: dsl.getFormattedFilters method', function () {
   var
     getFormattedFilters = methods.__get__('getFormattedFilters'),
@@ -28,7 +26,7 @@ describe('Test: dsl.getFormattedFilters method', function () {
     return should(getFormattedFilters('roomId', 'index', 'collection', { foo: 'bar'})).be.rejectedWith(BadRequestError, { message: 'Function foo doesn\'t exist' });
   });
 
-  it('should return a resolved promise containing 1 formatted filter', function (done) {
+  it('should return a resolved promise containing 1 formatted filter', function () {
     var
       filter = {
         exists: {
@@ -36,52 +34,43 @@ describe('Test: dsl.getFormattedFilters method', function () {
         }
       };
 
-    getFormattedFilters('roomId', 'index', 'collection', filter)
+    return getFormattedFilters('roomId', 'index', 'collection', filter)
       .then(function (formattedFilter) {
         should.exist(formattedFilter['index.collection.foo.' + existsfoo]);
         should(formattedFilter['index.collection.foo.' + existsfoo]).be.an.Object();
         should.exist(formattedFilter['index.collection.foo.' + existsfoo].rooms);
         should(formattedFilter['index.collection.foo.' + existsfoo].rooms).be.an.Array().and.match(['roomId']);
         should(formattedFilter['index.collection.foo.' + existsfoo].rooms.length).eql(1);
-        should.exist(formattedFilter['index.collection.foo.' + existsfoo].fn);
-        done();
-      })
-      .catch(function (error) {
-        done(error);
+        should.exist(formattedFilter['index.collection.foo.' + existsfoo].args);
       });
   });
 
-  it('should be able to handle an array of filters', function (done) {
+  it('should be able to handle an array of filters', function () {
     var
       filters = [
         { exists: { field: 'foo' } },
         { exists: { field: 'bar' } }
       ];
 
-    getFormattedFilters('roomId', 'index', 'collection', filters)
+    return getFormattedFilters('roomId', 'index', 'collection', filters)
       .then(function (formattedFilter) {
         should.exist(formattedFilter['index.collection.foo.' + existsfoo]);
         should(formattedFilter['index.collection.foo.' + existsfoo]).be.an.Object();
         should.exist(formattedFilter['index.collection.foo.' + existsfoo].rooms);
         should(formattedFilter['index.collection.foo.' + existsfoo].rooms).be.an.Array().and.match(['roomId']);
         should(formattedFilter['index.collection.foo.' + existsfoo].rooms.length).eql(1);
-        should.exist(formattedFilter['index.collection.foo.' + existsfoo].fn);
+        should.exist(formattedFilter['index.collection.foo.' + existsfoo].args);
 
         should.exist(formattedFilter['index.collection.bar.' + existsbar]);
         should(formattedFilter['index.collection.bar.' + existsbar]).be.an.Object();
         should.exist(formattedFilter['index.collection.bar.' + existsbar].rooms);
         should(formattedFilter['index.collection.bar.' + existsbar].rooms).be.an.Array().and.match(['roomId']);
         should(formattedFilter['index.collection.bar.' + existsbar].rooms.length).eql(1);
-        should.exist(formattedFilter['index.collection.bar.' + existsbar].fn);
-
-        done();
-      })
-      .catch(function (error) {
-        done(error);
+        should.exist(formattedFilter['index.collection.bar.' + existsbar].args);
       });
   });
 
-  it('should ignore empty filters when an array of filters is provided', function (done) {
+  it('should ignore empty filters when an array of filters is provided', function () {
     var
       filters = [
         { exists: { field: 'foo' } },
@@ -89,30 +78,25 @@ describe('Test: dsl.getFormattedFilters method', function () {
         { exists: { field: 'bar' } }
       ];
 
-    getFormattedFilters('roomId', 'index', 'collection', filters)
+    return getFormattedFilters('roomId', 'index', 'collection', filters)
       .then(function (formattedFilter) {
         should.exist(formattedFilter['index.collection.foo.' + existsfoo]);
         should(formattedFilter['index.collection.foo.' + existsfoo]).be.an.Object();
         should.exist(formattedFilter['index.collection.foo.' + existsfoo].rooms);
         should(formattedFilter['index.collection.foo.' + existsfoo].rooms).be.an.Array().and.match(['roomId']);
         should(formattedFilter['index.collection.foo.' + existsfoo].rooms.length).eql(1);
-        should.exist(formattedFilter['index.collection.foo.' + existsfoo].fn);
+        should.exist(formattedFilter['index.collection.foo.' + existsfoo].args);
 
         should.exist(formattedFilter['index.collection.bar.' + existsbar]);
         should(formattedFilter['index.collection.bar.' + existsbar]).be.an.Object();
         should.exist(formattedFilter['index.collection.bar.' + existsbar].rooms);
         should(formattedFilter['index.collection.bar.' + existsbar].rooms).be.an.Array().and.match(['roomId']);
         should(formattedFilter['index.collection.bar.' + existsbar].rooms.length).eql(1);
-        should.exist(formattedFilter['index.collection.bar.' + existsbar].fn);
-
-        done();
-      })
-      .catch(function (error) {
-        done(error);
+        should.exist(formattedFilter['index.collection.bar.' + existsbar].args);
       });
   });
 
-  it('should invert the filter if the "not" argument is set to true', function (done) {
+  it('should invert the filter if the "not" argument is set to true', function () {
     var
       filter = {
         exists: {
@@ -120,18 +104,14 @@ describe('Test: dsl.getFormattedFilters method', function () {
         }
       };
 
-    getFormattedFilters('roomId', 'index', 'collection', filter, true)
+    return getFormattedFilters('roomId', 'index', 'collection', filter, true)
       .then(function (formattedFilter) {
         should.exist(formattedFilter['index.collection.foo.' + notexistsfoo]);
         should(formattedFilter['index.collection.foo.' + notexistsfoo]).be.an.Object();
         should.exist(formattedFilter['index.collection.foo.' + notexistsfoo].rooms);
         should(formattedFilter['index.collection.foo.' + notexistsfoo].rooms).be.an.Array().and.match(['roomId']);
         should(formattedFilter['index.collection.foo.' + notexistsfoo].rooms.length).eql(1);
-        should.exist(formattedFilter['index.collection.foo.' + notexistsfoo].fn);
-        done();
-      })
-      .catch(function (error) {
-        done(error);
+        should.exist(formattedFilter['index.collection.foo.' + notexistsfoo].args);
       });
   });
 

@@ -7,25 +7,10 @@ var
   BadRequestError = require.main.require('kuzzle-common-objects').Errors.badRequestError;
 
 describe('Test bool method', function () {
-
   var
     roomId = 'roomId',
     index = 'test',
     collection = 'collection',
-    documentGrace = {
-      firstName: 'Grace',
-      lastName: 'Hopper',
-      age: 85,
-      city: 'NYC',
-      hobby: 'computer'
-    },
-    documentAda = {
-      firstName: 'Ada',
-      lastName: 'Lovelace',
-      age: 36,
-      city: 'London',
-      hobby: 'computer'
-    },
     filter = {
       must : [
         {
@@ -127,38 +112,48 @@ describe('Test bool method', function () {
     should(rooms[0]).be.exactly(roomId);
   });
 
-  it('should construct the filterTree with correct functions', function () {
-    var result;
+  it('should construct the filterTree with correct arguments', function () {
+    should(methods.dsl.filtersTree[index][collection].fields.firstName[md5('termsfirstNameGrace,Ada')].args).match({
+      operator: 'terms',
+      not: undefined,
+      field: 'firstName',
+      value: ['Grace', 'Ada']
+    });
 
-    result = methods.dsl.filtersTree[index][collection].fields.firstName[md5('termsfirstNameGrace,Ada')].fn(documentGrace);
-    should(result).be.exactly(true);
-    result = methods.dsl.filtersTree[index][collection].fields.firstName[md5('termsfirstNameGrace,Ada')].fn(documentAda);
-    should(result).be.exactly(true);
+    should(methods.dsl.filtersTree[index][collection].fields.age[rangeagegte36].args).match({
+      operator: 'gte',
+      not: undefined,
+      field: 'age',
+      value: 36
+    });
 
-    result = methods.dsl.filtersTree[index][collection].fields.age[rangeagegte36].fn(documentGrace);
-    should(result).be.exactly(true);
-    result = methods.dsl.filtersTree[index][collection].fields.age[rangeagegte36].fn(documentAda);
-    should(result).be.exactly(true);
+    should(methods.dsl.filtersTree[index][collection].fields.age[rangeagelt85].args).match({
+      operator: 'lt',
+      not: undefined,
+      field: 'age',
+      value: 85
+    });
 
-    result = methods.dsl.filtersTree[index][collection].fields.age[rangeagelt85].fn(documentGrace);
-    should(result).be.exactly(false);
-    result = methods.dsl.filtersTree[index][collection].fields.age[rangeagelt85].fn(documentAda);
-    should(result).be.exactly(true);
+    should(methods.dsl.filtersTree[index][collection].fields.city[nottermcityNYC].args).match({
+      operator: 'term',
+      not: true,
+      field: 'city',
+      value: 'NYC'
+    });
 
-    result = methods.dsl.filtersTree[index][collection].fields.city[nottermcityNYC].fn(documentGrace);
-    should(result).be.exactly(false);
-    result = methods.dsl.filtersTree[index][collection].fields.city[nottermcityNYC].fn(documentAda);
-    should(result).be.exactly(true);
+    should(methods.dsl.filtersTree[index][collection].fields.hobby[termhobbycomputer].args).match({
+      operator: 'term',
+      not: undefined,
+      field: 'hobby',
+      value: 'computer'
+    });
 
-    result = methods.dsl.filtersTree[index][collection].fields.hobby[termhobbycomputer].fn(documentGrace);
-    should(result).be.exactly(true);
-    result = methods.dsl.filtersTree[index][collection].fields.hobby[termhobbycomputer].fn(documentAda);
-    should(result).be.exactly(true);
-
-    result = methods.dsl.filtersTree[index][collection].fields.lastName[existslastName].fn(documentGrace);
-    should(result).be.exactly(true);
-    result = methods.dsl.filtersTree[index][collection].fields.lastName[existslastName].fn(documentAda);
-    should(result).be.exactly(true);
+    should(methods.dsl.filtersTree[index][collection].fields.lastName[existslastName].args).match({
+      operator: 'exists',
+      not: undefined,
+      field: 'lastName',
+      value: 'lastName'
+    });
   });
 
   it('should return a rejected promise if an empty filter is provided', function () {
