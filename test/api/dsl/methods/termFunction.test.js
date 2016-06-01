@@ -2,20 +2,22 @@ var
   should = require('should'),
   rewire = require('rewire'),
   md5 = require('crypto-md5'),
-  methods = rewire('../../../../lib/api/dsl/methods'),
+  Methods = rewire('../../../../lib/api/dsl/methods'),
   BadRequestError = require.main.require('kuzzle-common-objects').Errors.badRequestError,
   InternalError = require.main.require('kuzzle-common-objects').Errors.internalError;
 
 describe('Test: dsl.termFunction method', function () {
   var
-    termFunction = methods.__get__('termFunction'),
+    methods,
+    termFunction = Methods.__get__('termFunction'),
     termfoobar = md5('termfoobar'),
     termsfoobarbaz = md5('termsfoobar,baz'),
     nottermfoobar = md5('nottermfoobar'),
     nottermsfoobarbaz = md5('nottermsfoobar,baz');
 
   beforeEach(function () {
-    methods.dsl = { filtersTree: {} };
+    methods = new Methods({filtersTree: {}});
+    termFunction = termFunction.bind(methods);
   });
 
   it('should return a rejected promise if the provided filter is empty', function () {
@@ -107,7 +109,7 @@ describe('Test: dsl.termFunction method', function () {
         foo: ['bar', 'baz']
       };
 
-    return methods.__with__({
+    return Methods.__with__({
       addToFiltersTree: function () { return new InternalError('rejected'); }
     })(function () {
       return should(termFunction('terms', 'roomId', 'index', 'collection', filter)).be.rejectedWith('rejected');

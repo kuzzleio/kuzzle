@@ -2,12 +2,13 @@ var
   should = require('should'),
   rewire = require('rewire'),
   md5 = require('crypto-md5'),
-  methods = rewire('../../../../lib/api/dsl/methods'),
+  Methods = rewire('../../../../lib/api/dsl/methods'),
   BadRequestError = require.main.require('kuzzle-common-objects').Errors.badRequestError,
   InternalError = require.main.require('kuzzle-common-objects').Errors.internalError;
 
 describe('Test range method', function () {
   var
+    methods,
     roomIdFilterGrace = 'roomIdGrace',
     roomIdFilterAda = 'roomIdAda',
     roomIdFilterAll = 'roomIdAll',
@@ -39,19 +40,13 @@ describe('Test range method', function () {
     notrangeagegte36 = md5('notrangeagegte36'),
     notrangeagelte85 = md5('notrangeagelte85');
 
-
   before(function () {
-    methods.dsl.filtersTree = {};
+    methods = new Methods({filtersTree: {}});
+
     return methods.range(roomIdFilterGrace, index, collection, filterGrace)
-      .then(function () {
-        return methods.range(roomIdFilterAda, index, collection, filterAda);
-      })
-      .then(function () {
-        return methods.range(roomIdFilterAll, index, collection, filterAll);
-      })
-      .then(function () {
-        return methods.range(roomIdFilterNobody, index, collection, filterAll, true);
-      });
+      .then(() => methods.range(roomIdFilterAda, index, collection, filterAda))
+      .then(() => methods.range(roomIdFilterAll, index, collection, filterAll))
+      .then(() => methods.range(roomIdFilterNobody, index, collection, filterAll, true));
   });
 
   it('should construct the filterTree object for the correct attribute', function () {
@@ -144,7 +139,7 @@ describe('Test range method', function () {
   });
 
   it('should return a rejected promise if addToFiltersTree fails', function () {
-    return methods.__with__({
+    return Methods.__with__({
       addToFiltersTree: function () { return new InternalError('rejected'); }
     })(function () {
       return should(methods.range(roomIdFilterGrace, index, collection, filterGrace)).be.rejectedWith('rejected');

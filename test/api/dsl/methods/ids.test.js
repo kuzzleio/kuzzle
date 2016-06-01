@@ -2,12 +2,13 @@ var
   should = require('should'),
   rewire = require('rewire'),
   md5 = require('crypto-md5'),
-  methods = rewire('../../../../lib/api/dsl/methods'),
+  Methods = rewire('../../../../lib/api/dsl/methods'),
   BadRequestError = require.main.require('kuzzle-common-objects').Errors.badRequestError,
   InternalError = require.main.require('kuzzle-common-objects').Errors.internalError;
 
 describe('Test ids method', function () {
   var
+    methods,
     roomIdMatch = 'roomIdMatch',
     roomIdNot = 'roomIdNotMatch',
     index = 'test',
@@ -19,7 +20,7 @@ describe('Test ids method', function () {
     notidsIdidGrace = md5('notids_ididGrace');
 
   before(function () {
-    methods.dsl.filtersTree = {};
+    methods = new Methods({filtersTree: {}});
     return methods.ids(roomIdMatch, index, collection, filter, false)
       .then(function() {
         return methods.ids(roomIdNot, index, collection, filter, true);
@@ -90,7 +91,7 @@ describe('Test ids method', function () {
   });
 
   it('should return a rejected promise if addToFiltersTree fails', function () {
-    return methods.__with__({
+    return Methods.__with__({
       addToFiltersTree: function () { return new InternalError('rejected'); }
     })(function () {
       return should(methods.ids(roomIdMatch, index, collection, filter, false)).be.rejectedWith('rejected');

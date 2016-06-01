@@ -2,13 +2,14 @@ var
   should = require('should'),
   rewire = require('rewire'),
   md5 = require('crypto-md5'),
-  methods = rewire('../../../../lib/api/dsl/methods'),
+  Methods = rewire('../../../../lib/api/dsl/methods'),
   BadRequestError = require.main.require('kuzzle-common-objects').Errors.badRequestError,
   InternalError = require.main.require('kuzzle-common-objects').Errors.internalError;
 
 
 describe('Test "geoPolygon" method', function () {
   var
+    methods,
     roomId = 'roomId',
     index = 'test',
     collection = 'collection',
@@ -47,7 +48,7 @@ describe('Test "geoPolygon" method', function () {
     locationgeoPolygons1zbfk3yns1zyd63zws1zned3z8s1z0gs3y0 = md5('locationgeoPolygons1zbfk3yns1zyd63zws1zned3z8s1z0gs3y0');
 
   before(function () {
-    methods.dsl.filtersTree = {};
+    methods = new Methods({filtersTree: {}});
 
     return methods.geoPolygon(roomId, index, collection, filterExact)
       .then(() => methods.geoPolygon(roomId, index, collection, filterLimit))
@@ -200,7 +201,7 @@ describe('Test "geoPolygon" method', function () {
   });
 
   it('should return a rejected promise if addToFiltersTree fails', function () {
-    return methods.__with__({
+    return Methods.__with__({
       addToFiltersTree: function () { return new InternalError('rejected'); }
     })(function () {
       return should(methods.geoPolygon(roomId, index, collection, filterExact)).be.rejectedWith('rejected');

@@ -3,10 +3,11 @@ var
   q = require('q'),
   rewire = require('rewire'),
   md5 = require('crypto-md5'),
-  methods = rewire('../../../../lib/api/dsl/methods');
+  Methods = rewire('../../../../lib/api/dsl/methods');
 
 describe('Test "and" method', function () {
   var
+    methods,
     roomId = 'roomId',
     index = 'index',
     collection = 'collection',
@@ -29,7 +30,7 @@ describe('Test "and" method', function () {
 
 
   before(function () {
-    methods.dsl.filtersTree = {};
+    methods = new Methods({filtersTree: {}});
     return methods.and(roomId, index, collection, filter);
   });
 
@@ -78,7 +79,7 @@ describe('Test "and" method', function () {
   });
 
   it('should return a rejected promise if getFormattedFilters fails', function () {
-    return methods.__with__({
+    return Methods.__with__({
       getFormattedFilters: function () { return q.reject(new Error('rejected')); }
     })(function () {
       return should(methods.and(roomId, index, collection, filter)).be.rejectedWith('rejected');

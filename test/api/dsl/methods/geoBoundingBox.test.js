@@ -2,12 +2,13 @@ var
   should = require('should'),
   rewire = require('rewire'),
   md5 = require('crypto-md5'),
-  methods = rewire('../../../../lib/api/dsl/methods'),
+  Methods = rewire('../../../../lib/api/dsl/methods'),
   BadRequestError = require.main.require('kuzzle-common-objects').Errors.badRequestError,
   InternalError = require.main.require('kuzzle-common-objects').Errors.internalError;
 
 describe('Test geoboundingbox method', function () {
   var
+    methods,
     roomId = 'roomId',
     index = 'test',
     collection = 'collection',
@@ -56,7 +57,7 @@ describe('Test geoboundingbox method', function () {
 
 
   before(function () {
-    methods.dsl.filtersTree = {};
+    methods = new Methods({filtersTree: {}});
     return methods.geoBoundingBox(roomId, index, collection, filterEngland)
       .then(function () {
         return methods.geoBoundingBox(roomId, index, collection, filterEngland2);
@@ -169,7 +170,7 @@ describe('Test geoboundingbox method', function () {
   });
 
   it('should return a rejected promise if addToFiltersTree fails', function () {
-    return methods.__with__({
+    return Methods.__with__({
       addToFiltersTree: function () { return new InternalError('rejected'); }
     })(function () {
       return should(methods.geoBoundingBox(roomId, index, collection, filterEngland)).be.rejectedWith('rejected');

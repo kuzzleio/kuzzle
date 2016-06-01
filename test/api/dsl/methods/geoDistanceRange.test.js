@@ -2,12 +2,13 @@ var
   should = require('should'),
   rewire = require('rewire'),
   md5 = require('crypto-md5'),
-  methods = rewire('../../../../lib/api/dsl/methods'),
+  Methods = rewire('../../../../lib/api/dsl/methods'),
   BadRequestError = require.main.require('kuzzle-common-objects').Errors.badRequestError,
   InternalError = require.main.require('kuzzle-common-objects').Errors.internalError;
 
 describe('Test geoDistanceRange method', function () {
   var
+    methods,
     roomId = 'roomId',
     index = 'test',
     collection = 'collection',
@@ -48,7 +49,7 @@ describe('Test geoDistanceRange method', function () {
     locationgeoDistanceRangekpbxyzbpv111318111318 = md5('locationgeoDistanceRangekpbxyzbpv111318111318');
 
   before(function () {
-    methods.dsl.filtersTree = {};
+    methods = new Methods({filtersTree: {}});
     return methods.geoDistanceRange(roomId, index, collection, filterOK)
       .then(function () {
         return methods.geoDistanceRange(roomId, index, collection, filterNOK);
@@ -245,7 +246,7 @@ describe('Test geoDistanceRange method', function () {
   });
 
   it('should return a rejected promise if addToFiltersTree fails', function () {
-    return methods.__with__({
+    return Methods.__with__({
       addToFiltersTree: function () { return new InternalError('rejected'); }
     })(function () {
       return should(methods.geoDistanceRange(roomId, index, collection, filterOK)).be.rejectedWith('rejected');

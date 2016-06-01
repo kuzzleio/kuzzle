@@ -1,10 +1,11 @@
 var
   should = require('should'),
   md5 = require('crypto-md5'),
-  methods = require.main.require('lib/api/dsl/methods');
+  Methods = require.main.require('lib/api/dsl/methods');
 
 describe('Test "terms" method', function () {
   var
+    methods,
     roomIdMatch = 'roomIdMatch',
     roomIdNot = 'roomIdNotMatch',
     index = 'index',
@@ -16,11 +17,10 @@ describe('Test "terms" method', function () {
     nottermsfirstNameGraceJean = md5('nottermsfirstNameGrace,Jean');
 
   before(function () {
-    methods.dsl.filtersTree = {};
+    methods = new Methods({filtersTree: {}});
+
     return methods.terms(roomIdMatch, index, collection, filter, false)
-      .then(function() {
-        return methods.terms(roomIdNot, index, collection, filter, true);
-      });
+      .then(() => methods.terms(roomIdNot, index, collection, filter, true));
   });
 
   it('should construct the filterTree object for the correct attribute', function () {

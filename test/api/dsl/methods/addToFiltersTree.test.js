@@ -2,15 +2,16 @@ var
   should = require('should'),
   rewire = require('rewire'),
   md5 = require('crypto-md5');
-  methods = rewire('../../../../lib/api/dsl/methods');
+  Methods = rewire('../../../../lib/api/dsl/methods');
 
 describe('Test: dsl.addToFiltersTree method', function () {
   var
-    addToFiltersTree = methods.__get__('addToFiltersTree'),
+    methods,
+    addToFiltersTree = Methods.__get__('addToFiltersTree'),
     hashedFilter = md5('filter');
 
   beforeEach(function () {
-    methods.dsl = { filtersTree: {} };
+    methods = new Methods({ filtersTree: {} });
   });
 
   it('should return an error if the provided operator is not supported', function () {

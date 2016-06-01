@@ -3,27 +3,28 @@ var
   rewire = require('rewire'),
   md5 = require('crypto-md5'),
   q = require('q'),
-  methods = rewire('../../../../lib/api/dsl/methods'),
+  Methods = rewire('../../../../lib/api/dsl/methods'),
   BadRequestError = require.main.require('kuzzle-common-objects').Errors.badRequestError;
 
 describe('Test: dsl.getFormattedFilters method', function () {
   var
-    getFormattedFilters = methods.__get__('getFormattedFilters'),
+    methods,
+    getFormattedFilters = Methods.__get__('getFormattedFilters'),
     existsfoo = md5('existsfoo'),
     notexistsfoo = md5('notexistsfoo'),
     existsbar = md5('existsbar'),
     notexistsbar = md5('notexistsbar');
 
   beforeEach(function () {
-    methods.dsl = { filtersTree: {} };
+    methods = new Methods({filtersTree: {}});
   });
 
   it('should return a rejected promise if the provided filter is empty', function () {
-    return should(getFormattedFilters('roomId', 'index', 'collection', {})).be.rejectedWith(BadRequestError, { message: 'Filters can\'t be empty' });
+    return should(getFormattedFilters.call(methods, 'roomId', 'index', 'collection', {})).be.rejectedWith(BadRequestError, { message: 'Filters can\'t be empty' });
   });
 
   it('should return a rejected promise if a filter refers to an unknown method name', function () {
-    return should(getFormattedFilters('roomId', 'index', 'collection', { foo: 'bar'})).be.rejectedWith(BadRequestError, { message: 'Function foo doesn\'t exist' });
+    return should(getFormattedFilters.call(methods, 'roomId', 'index', 'collection', { foo: 'bar'})).be.rejectedWith(BadRequestError, { message: 'Function foo doesn\'t exist' });
   });
 
   it('should return a resolved promise containing 1 formatted filter', function () {
@@ -34,7 +35,7 @@ describe('Test: dsl.getFormattedFilters method', function () {
         }
       };
 
-    return getFormattedFilters('roomId', 'index', 'collection', filter)
+    return getFormattedFilters.call(methods, 'roomId', 'index', 'collection', filter)
       .then(function (formattedFilter) {
         should.exist(formattedFilter['index.collection.foo.' + existsfoo]);
         should(formattedFilter['index.collection.foo.' + existsfoo]).be.an.Object();
@@ -52,7 +53,7 @@ describe('Test: dsl.getFormattedFilters method', function () {
         { exists: { field: 'bar' } }
       ];
 
-    return getFormattedFilters('roomId', 'index', 'collection', filters)
+    return getFormattedFilters.call(methods, 'roomId', 'index', 'collection', filters)
       .then(function (formattedFilter) {
         should.exist(formattedFilter['index.collection.foo.' + existsfoo]);
         should(formattedFilter['index.collection.foo.' + existsfoo]).be.an.Object();
@@ -78,7 +79,7 @@ describe('Test: dsl.getFormattedFilters method', function () {
         { exists: { field: 'bar' } }
       ];
 
-    return getFormattedFilters('roomId', 'index', 'collection', filters)
+    return getFormattedFilters.call(methods, 'roomId', 'index', 'collection', filters)
       .then(function (formattedFilter) {
         should.exist(formattedFilter['index.collection.foo.' + existsfoo]);
         should(formattedFilter['index.collection.foo.' + existsfoo]).be.an.Object();
@@ -104,7 +105,7 @@ describe('Test: dsl.getFormattedFilters method', function () {
         }
       };
 
-    return getFormattedFilters('roomId', 'index', 'collection', filter, true)
+    return getFormattedFilters.call(methods, 'roomId', 'index', 'collection', filter, true)
       .then(function (formattedFilter) {
         should.exist(formattedFilter['index.collection.foo.' + notexistsfoo]);
         should(formattedFilter['index.collection.foo.' + notexistsfoo]).be.an.Object();
@@ -125,6 +126,6 @@ describe('Test: dsl.getFormattedFilters method', function () {
 
     methods.exists = function () { return q.reject(new Error('rejected')); };
 
-    return should(getFormattedFilters('roomId', 'index', 'collection', filter)).be.rejectedWith('rejected');
+    return should(getFormattedFilters.call(methods, 'roomId', 'index', 'collection', filter)).be.rejectedWith('rejected');
   });
 });

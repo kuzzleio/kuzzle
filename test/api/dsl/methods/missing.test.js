@@ -2,12 +2,13 @@ var
   should = require('should'),
   rewire = require('rewire'),
   md5 = require('crypto-md5'),
-  methods = rewire('../../../../lib/api/dsl/methods'),
+  Methods = rewire('../../../../lib/api/dsl/methods'),
   BadRequestError = require.main.require('kuzzle-common-objects').Errors.badRequestError,
   InternalError = require.main.require('kuzzle-common-objects').Errors.internalError;
 
 describe('Test missing method', function () {
   var
+    methods,
     roomId = 'roomId',
     index = 'index',
     collection = 'collection',
@@ -21,7 +22,7 @@ describe('Test missing method', function () {
     missinglastName = md5('missinglastName');
 
   before(function () {
-    methods.dsl.filtersTree = {};
+    methods = new Methods({filtersTree: {}});
     return methods.missing(roomId, index, collection, filter, false);
   });
 
@@ -65,16 +66,16 @@ describe('Test missing method', function () {
   });
 
   it('should return a rejected promise if addToFiltersTree fails', function () {
-    return methods.__with__({
+    return Methods.__with__({
       addToFiltersTree: function () { return new InternalError('rejected'); }
     })(function () {
-      return should(methods.missing('foo', index, 'bar', { field: 'foo' }, false));
+      return should(methods.missing('foo', index, 'bar', { field: 'foo' }, false)).be.rejected();
     });
   });
 
   it('should register the filter in the lcao area in case of a "missing" filter', function () {
-    return methods.__with__({
-      buildCurriedFunction: function (index, collection, field, operatorName, value, curriedFunctionName, roomId, not, inGlobals) {
+    return Methods.__with__({
+      addToFiltersTree: function (index, collection, field, operatorName, value, curriedFunctionName, roomId, not, inGlobals) {
         should(inGlobals).be.false();
         should(curriedFunctionName).not.startWith('not');
         return { path: '' };
@@ -85,8 +86,8 @@ describe('Test missing method', function () {
   });
 
   it('should register the filter in the global area in case of a "not missing" filter', function () {
-    return methods.__with__({
-      buildCurriedFunction: function (index, collection, field, operatorName, value, curriedFunctionName, roomId, not, inGlobals) {
+    return Methods.__with__({
+      addToFiltersTree: function (index, collection, field, operatorName, value, curriedFunctionName, roomId, not, inGlobals) {
         should(inGlobals).be.true();
         should(curriedFunctionName).startWith('not');
         return { path: '' };

@@ -1,10 +1,11 @@
 var
   should = require('should'),
   md5 = require('crypto-md5'),
-  methods = require.main.require('lib/api/dsl/methods');
+  Methods = require.main.require('lib/api/dsl/methods');
 
 describe('Test "not" method', function () {
   var
+    methods,
     roomId = 'roomId',
     index = 'index',
     collection = 'collection',
@@ -16,7 +17,7 @@ describe('Test "not" method', function () {
     nottermcityLondon = md5('nottermcityLondon');
 
   before(function () {
-    methods.dsl.filtersTree = {};
+    methods = new Methods({filtersTree: {}});
     return methods.not(roomId, index, collection, filter);
   });
 

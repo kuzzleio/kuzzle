@@ -3,12 +3,12 @@ var
   rewire = require('rewire'),
   md5 = require('crypto-md5'),
   q = require('q'),
-  methods = rewire('../../../../lib/api/dsl/methods'),
+  Methods = rewire('../../../../lib/api/dsl/methods'),
   BadRequestError = require.main.require('kuzzle-common-objects').Errors.badRequestError;
 
 describe('Test or method', function () {
-
   var
+    methods,
     roomId = 'roomId',
     index = 'index',
     collection = 'collection',
@@ -30,11 +30,10 @@ describe('Test or method', function () {
     nottermcityLondon = md5('nottermcityLondon');
 
   before(function () {
-    methods.dsl.filtersTree = {};
+    methods = new Methods({filtersTree: {}});
+
     return methods.or(roomId, index, collection, filter)
-      .then(function () {
-        return methods.or(roomId, index, collection, filter, true);
-      });
+      .then(() => methods.or(roomId, index, collection, filter, true));
   });
 
   it('should construct the filterTree object for the correct attribute', function () {
@@ -98,7 +97,7 @@ describe('Test or method', function () {
   });
 
   it('should return a rejected promise if getFormattedFilters fails', function () {
-    return methods.__with__({
+    return Methods.__with__({
       getFormattedFilters: function () { return q.reject(new Error('rejected')); }
     })(function () {
       return should(methods.or(roomId, index, collection, filter)).be.rejectedWith('rejected');

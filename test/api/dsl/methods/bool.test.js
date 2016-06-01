@@ -3,11 +3,12 @@ var
   q = require('q'),
   rewire = require('rewire'),
   md5 = require('crypto-md5'),
-  methods = rewire('../../../../lib/api/dsl/methods'),
+  Methods = rewire('../../../../lib/api/dsl/methods'),
   BadRequestError = require.main.require('kuzzle-common-objects').Errors.badRequestError;
 
 describe('Test bool method', function () {
   var
+    methods,
     roomId = 'roomId',
     index = 'test',
     collection = 'collection',
@@ -54,7 +55,13 @@ describe('Test bool method', function () {
     existslastName = md5('existslastName');
 
   before(function () {
-    methods.dsl.filtersTree = {};
+    /*
+     since there is a "Methods.should()" function, we need to ask should.js
+     to not override it with itself -_-
+     */
+    should.noConflict();
+
+    methods = new Methods({filtersTree: {}});
     return methods.bool(roomId, index, collection, filter);
   });
 

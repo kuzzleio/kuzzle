@@ -2,12 +2,13 @@ var
   should = require('should'),
   rewire = require('rewire'),
   md5 = require('crypto-md5'),
-  methods = rewire('../../../../lib/api/dsl/methods'),
+  Methods = rewire('../../../../lib/api/dsl/methods'),
   BadRequestError = require.main.require('kuzzle-common-objects').Errors.badRequestError,
   InternalError = require.main.require('kuzzle-common-objects').Errors.internalError;
 
 describe('Test exists method', function () {
   var
+    methods,
     roomId = 'roomId',
     index = 'test',
     collection = 'collection',
@@ -17,7 +18,7 @@ describe('Test exists method', function () {
     existslastName = md5('existslastName');
 
   before(function () {
-    methods.dsl.filtersTree = {};
+    methods = new Methods({filtersTree: {}});
     return methods.exists(roomId, index, collection, filter);
   });
 
@@ -64,17 +65,17 @@ describe('Test exists method', function () {
     return should(methods.exists('foo', 'index', 'bar', { field: {foo: 'bar'} })).be.rejectedWith(BadRequestError);
   });
 
-  it('should return a rejected promise if buildCurriedFunction fails', function () {
-    return methods.__with__({
-      buildCurriedFunction: function () { return new InternalError('rejected'); }
+  it('should return a rejected promise if addToFiltersTree fails', function () {
+    return Methods.__with__({
+      addToFiltersTree: function () { return new InternalError('rejected'); }
     })(function () {
-      return should(methods.exists('foo', 'index', 'bar', { field: 'foo' }));
+      return should(methods.exists('foo', 'index', 'bar', { field: 'foo' })).be.rejected();
     });
   });
 
   it('should register the filter in the lcao area in case of a "exist" filter', function () {
-    return methods.__with__({
-      buildCurriedFunction: function (index, collection, field, operatorName, value, curriedFunctionName, roomId, not, inGlobals) {
+    return Methods.__with__({
+      addToFiltersTree: function (index, collection, field, operatorName, value, curriedFunctionName, roomId, not, inGlobals) {
         should(inGlobals).be.false();
         should(curriedFunctionName).not.startWith('not');
         return { path: '' };
@@ -85,8 +86,8 @@ describe('Test exists method', function () {
   });
 
   it('should register the filter in the global area in case of a "not exist" filter', function () {
-    return methods.__with__({
-      buildCurriedFunction: function (index, collection, field, operatorName, value, curriedFunctionName, roomId, not, inGlobals) {
+    return Methods.__with__({
+      addToFiltersTree: function (index, collection, field, operatorName, value, curriedFunctionName, roomId, not, inGlobals) {
         should(inGlobals).be.true();
         should(curriedFunctionName).startWith('not');
         return { path: '' };
