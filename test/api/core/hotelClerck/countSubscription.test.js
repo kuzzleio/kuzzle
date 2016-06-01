@@ -1,10 +1,10 @@
 var
   should = require('should'),
-  RequestObject = require.main.require('lib/api/core/models/requestObject'),
+  RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
-  BadRequestError = require.main.require('lib/api/core/errors/badRequestError'),
-  NotFoundError = require.main.require('lib/api/core/errors/notFoundError');
+  BadRequestError = require.main.require('kuzzle-common-objects').Errors.badRequestError,
+  NotFoundError = require.main.require('kuzzle-common-objects').Errors.notFoundError;
 
 describe('Test: hotelClerk.countSubscription', function () {
   var

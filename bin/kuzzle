@@ -8,6 +8,8 @@
  */
 var program = require('commander');
 
+program.option('-d, --debug', 'make errors more verbose');
+
 // $ kuzzle start
 program
   .command('start')
@@ -45,6 +47,7 @@ program
   .command('plugins')
   .arguments('[name]')
   .description('Manage plugins')
+  .option('--list', '*List current installed plugins')
   .option('--install', '*If plugin [name] is provided, installs it using --npmVersion, --gitUrl or --path. Otherwise, (re-)installs all listed plugins')
   .option('--get', '*Gets the plugin [name] current stored configuration')
   .option('--set <JSONObject>', '*Updates the plugin configuration with new properties')

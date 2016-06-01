@@ -5,7 +5,7 @@ var
   rc = require('rc'),
   params = rc('kuzzle'),
   kuzzle = require('../../lib'),
-  RequestObject = require('../../lib/api/core/models/requestObject'),
+  RequestObject = require('kuzzle-common-objects').Models.requestObject,
   firstAdmin = require('./createFirstAdmin'),
   q = require('q'),
   clc = require('cli-color'),
@@ -60,7 +60,10 @@ module.exports = function () {
       /*
        Waits for at least one write worker to be connected to the server before trying to use them
        */
-      return kuzzle.services.list.broker.waitForListeners(kuzzle.config.queues.workerWriteTaskQueue);
+      if (kuzzle.isServer) {
+        return kuzzle.services.list.broker.waitForClients(kuzzle.config.queues.workerWriteTaskQueue);
+      }
+      return q();
     })
     .then(() => {
       var request;
@@ -132,7 +135,7 @@ module.exports = function () {
       }
     })
     .catch(err => {
-      console.error(err);
+      console.error(err.stack);
       process.exit(1);
     });
 };

@@ -6,11 +6,11 @@ var
   should = require('should'),
   Role = require.main.require('lib/api/core/models/security/role'),
   Profile = require.main.require('lib/api/core/models/security/profile'),
-  BadRequestError = require.main.require('lib/api/core/errors/badRequestError'),
-  ForbiddenError = require.main.require('lib/api/core/errors/forbiddenError'),
-  InternalError = require.main.require('lib/api/core/errors/internalError'),
-  NotFoundError = require.main.require('lib/api/core/errors/notFoundError'),
-  RequestObject = require.main.require('lib/api/core/models/requestObject'),
+  BadRequestError = require.main.require('kuzzle-common-objects').Errors.badRequestError,
+  ForbiddenError = require.main.require('kuzzle-common-objects').Errors.forbiddenError,
+  InternalError = require.main.require('kuzzle-common-objects').Errors.internalError,
+  NotFoundError = require.main.require('kuzzle-common-objects').Errors.notFoundError,
+  RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
   Kuzzle = require.main.require('lib/api/Kuzzle');
 
 require('sinon-as-promised')(q.Promise);

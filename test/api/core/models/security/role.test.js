@@ -2,10 +2,10 @@ var
   should = require('should'),
   q = require('q'),
   rewire = require('rewire'),
-  BadRequestError = require.main.require('lib/api/core/errors/badRequestError'),
-  RequestObject = require.main.require('lib/api/core/models/requestObject'),
-  InternalError = require.main.require('lib/api/core/errors/internalError'),
-  ParseError = require.main.require('lib/api/core/errors/parseError'),
+  BadRequestError = require.main.require('kuzzle-common-objects').Errors.badRequestError,
+  RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
+  InternalError = require.main.require('kuzzle-common-objects').Errors.internalError,
+  ParseError = require.main.require('kuzzle-common-objects').Errors.parseError,
   Role = rewire('../../../../../lib/api/core/models/security/role'),
   internalIndex = require('rc')('kuzzle').internalIndex;
 
