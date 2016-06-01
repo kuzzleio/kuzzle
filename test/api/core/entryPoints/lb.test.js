@@ -3,15 +3,16 @@
  */
 var
   should = require('should'),
-  http = require('http'),
   rewire = require('rewire'),
   params = require('rc')('kuzzle'),
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
-  Lb = require.main.require('lib/api/core/entryPoints/lb');
+  Lb = rewire('../../../../lib/api/core/entryPoints/lb'),
+  RequestObject = require('kuzzle-common-objects').Models.requestObject,
+  ResponseObject = require('kuzzle-common-objects').Models.responseObject;
 
-describe('Test: entryPoints/http', function () {
+describe('Test: entryPoints/lb', function () {
   var
     kuzzle;
 
@@ -76,6 +77,63 @@ describe('Test: entryPoints/http', function () {
     should(spyListen.callCount).be.eql(1);
   });
 
+  it('should call the funnel execute on event onRequest', function () {
+    var
+      data = {request: {}, context: {connection: {type: 'socketio', id: 'myid'}}},
+      spyExecute = sandbox.stub(kuzzle.funnel, 'execute');
+
+    Lb.__get__('onRequest').call({kuzzle: kuzzle}, data);
+
+    should(spyExecute.callCount).be.eql(1);
+  });
+
+  it('should not call the funnel execute if information missing in data on event onRequest', function () {
+    var
+      data = {},
+      spyExecute = sandbox.stub(kuzzle.funnel, 'execute');
+
+    Lb.__get__('onRequest').call({kuzzle: kuzzle}, data);
+    should(spyExecute.callCount).be.eql(0);
+
+    data = {request: {}};
+    Lb.__get__('onRequest').call({kuzzle: kuzzle}, data);
+    should(spyExecute.callCount).be.eql(0);
+
+    data = {request: {}, context: {}};
+    Lb.__get__('onRequest').call({kuzzle: kuzzle}, data);
+    should(spyExecute.callCount).be.eql(0);
+
+    data = {request: {}, context: {connection: {}}};
+    Lb.__get__('onRequest').call({kuzzle: kuzzle}, data);
+    should(spyExecute.callCount).be.eql(0);
+  });
+
+  it('should call the funnel execute on event onRequest', function () {
+    var
+      data = {request: {}, context: {connection: {type: 'socketio', id: 'myid'}}},
+      spyExecute = sandbox.stub(kuzzle.funnel, 'execute'),
+      requestObject;
+
+    Lb.__get__('onRequest').call({kuzzle: kuzzle}, data);
+
+    requestObject = spyExecute.args[0][0];
+    should(requestObject).instanceOf(RequestObject);
+  });
+
+  it('should call the funnel execute and send the response on broker on event onRequest', function () {
+    var
+      data = {request: {}, context: {connection: {type: 'socketio', id: 'myid'}}},
+      spySend = sandbox.stub(kuzzle.services.list.lbBroker, 'send');
+
+    sandbox.stub(kuzzle.funnel, 'execute', (requestObject, context, cb) => {
+      var responseObject = new ResponseObject(requestObject, {});
+      cb(null, responseObject);
+    });
+    Lb.__get__('onRequest').call({kuzzle: kuzzle}, data);
+
+    should(spySend.calledWith('response')).be.true();
+  });
+
   it('should send a message on room "notify" on notify call', function () {
     var
       lb = new Lb(kuzzle),
@@ -96,6 +154,26 @@ describe('Test: entryPoints/http', function () {
     lb.broadcast(data);
     should(spyListen.calledWith('broadcast', data)).be.true();
     should(spyListen.callCount).be.eql(1);
+  });
+
+  it('should call the router newConnection on event onDisconnect', function () {
+    var
+      data = {context: {connection: {type: 'socketio', id: 'myid'}}},
+      spyRemoveConnection = sandbox.stub(kuzzle.router, 'removeConnection');
+
+    Lb.__get__('onDisconnect').call({kuzzle: kuzzle}, data);
+
+    should(spyRemoveConnection.calledWith(data.context)).be.true();
+  });
+
+  it('should not call the router if the data has no context on event onDisconnect', function () {
+    var
+      data = {context: {}},
+      spyRemoveConnection = sandbox.stub(kuzzle.router, 'newConnection');
+
+    Lb.__get__('onDisconnect').call({kuzzle: kuzzle}, data);
+
+    should(spyRemoveConnection.callCount).be.eql(0);
   });
 
 });
