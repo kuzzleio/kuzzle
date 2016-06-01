@@ -5,24 +5,11 @@ var
   md5 = require('crypto-md5'),
   methods = rewire('../../../../lib/api/dsl/methods');
 
-describe('Test and method', function () {
-
+describe('Test "and" method', function () {
   var
     roomId = 'roomId',
     index = 'index',
     collection = 'collection',
-    documentGrace = {
-      firstName: 'Grace',
-      lastName: 'Hopper',
-      city: 'NYC',
-      hobby: 'computer'
-    },
-    documentAda = {
-      firstName: 'Ada',
-      lastName: 'Lovelace',
-      city: 'London',
-      hobby: 'computer'
-    },
     filter = [
       {
         term: {
@@ -30,13 +17,15 @@ describe('Test and method', function () {
         }
       },
       {
-        term: {
-          hobby: 'computer'
+        not: {
+          term: {
+            hobby: 'computer'
+          }
         }
       }
     ],
     termCity = md5('termcityNYC'),
-    termHobby = md5('termhobbycomputer');
+    termHobby = md5('nottermhobbycomputer');
 
 
   before(function () {
@@ -53,7 +42,7 @@ describe('Test and method', function () {
     should(methods.dsl.filtersTree[index][collection].fields.hobby).not.be.empty();
   });
 
-  it('should construct the filterTree with correct curried function name', function () {
+  it('should construct the filterTree with correct encoded function name', function () {
     should(methods.dsl.filtersTree[index][collection].fields.city[termCity]).not.be.empty();
     should(methods.dsl.filtersTree[index][collection].fields.hobby[termHobby]).not.be.empty();
   });
@@ -72,18 +61,20 @@ describe('Test and method', function () {
     should(rooms[0]).be.exactly(roomId);
   });
 
-  it('should construct the filterTree with correct functions', function () {
-    var result;
+  it('should construct the filterTree with correct operator arguments', function () {
+    should(methods.dsl.filtersTree[index][collection].fields.city[termCity].args).match({
+      operator: 'term',
+      not: undefined,
+      field: 'city',
+      value: 'NYC'
+    });
 
-    result = methods.dsl.filtersTree[index][collection].fields.city[termCity].fn(documentGrace);
-    should(result).be.exactly(true);
-    result = methods.dsl.filtersTree[index][collection].fields.city[termCity].fn(documentAda);
-    should(result).be.exactly(false);
-
-    result = methods.dsl.filtersTree[index][collection].fields.hobby[termHobby].fn(documentGrace);
-    should(result).be.exactly(true);
-    result = methods.dsl.filtersTree[index][collection].fields.hobby[termHobby].fn(documentAda);
-    should(result).be.exactly(true);
+    should(methods.dsl.filtersTree[index][collection].fields.hobby[termHobby].args).match({
+      operator: 'term',
+      not: true,
+      field: 'hobby',
+      value: 'computer'
+    });
   });
 
   it('should return a rejected promise if getFormattedFilters fails', function () {

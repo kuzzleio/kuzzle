@@ -11,19 +11,6 @@ describe('Test geoboundingbox method', function () {
     roomId = 'roomId',
     index = 'test',
     collection = 'collection',
-    documentGrace = {
-      firstName: 'Grace',
-      lastName: 'Hopper',
-      'location.lat': 32.692742, // we can't test with nested document here
-      'location.lon': -97.114127
-    },
-    documentAda = {
-      firstName: 'Ada',
-      lastName: 'Lovelace',
-      'location.lat': 51.519291,
-      'location.lon': -0.149817
-    },
-
     // Test all supported formats
     filterEngland = {
       location: {
@@ -93,8 +80,8 @@ describe('Test geoboundingbox method', function () {
     should(methods.dsl.filtersTree[index][collection].fields.location).not.be.empty();
   });
 
-  it('should construct the filterTree with correct curried function name', function () {
-    // Coord are geoashed for build the curried function name
+  it('should construct the filterTree with correct encoded function name', function () {
+    // Coordinates are geohashed to encode the function name
     // because we have many times the same coord in filters,
     // we must have only three functions (one for filterEngland, and two for filterUSA)
 
@@ -123,26 +110,45 @@ describe('Test geoboundingbox method', function () {
     should(rooms[0]).be.exactly(roomId);
   });
 
-  it('should construct the filterTree with correct functions geoboundingbox', function () {
-    var result;
-
+  it('should construct the filterTree with correct geoboundingbox arguments', function () {
     // test filterEngland
-    result = methods.dsl.filtersTree[index][collection].fields.location[locationgeoBoundingBoxgcmfj457fu10ffy7m4].fn(documentGrace);
-    should(result).be.exactly(false);
-    result = methods.dsl.filtersTree[index][collection].fields.location[locationgeoBoundingBoxgcmfj457fu10ffy7m4].fn(documentAda);
-    should(result).be.exactly(true);
+    should(methods.dsl.filtersTree[index][collection].fields.location[locationgeoBoundingBoxgcmfj457fu10ffy7m4].args).match({
+      operator: 'geoBoundingBox',
+      not: undefined,
+      field: 'location',
+      value: {
+        top: -2.939744,
+        left: 52.394484,
+        right: 51.143628,
+        bottom: 1.180129
+      }
+    });
 
     // test filterUSA
-    result = methods.dsl.filtersTree[index][collection].fields.location[locationgeoBoundingBoxj042p0j0phsc9wnc4v].fn(documentGrace);
-    should(result).be.exactly(false);
-    result = methods.dsl.filtersTree[index][collection].fields.location[locationgeoBoundingBoxj042p0j0phsc9wnc4v].fn(documentAda);
-    should(result).be.exactly(false);
+    should(methods.dsl.filtersTree[index][collection].fields.location[locationgeoBoundingBoxj042p0j0phsc9wnc4v].args).match({
+      operator: 'geoBoundingBox',
+      not: undefined,
+      field: 'location',
+      value: {
+        top: 48.478867,
+        left: -125.074754,
+        right: -62.980026,
+        bottom: 24.87464
+      }
+    });
 
     // test filterUSA2
-    result = methods.dsl.filtersTree[index][collection].fields.location[locationgeoBoundingBoxc0x5c7zzzds7jw7zzz].fn(documentGrace);
-    should(result).be.exactly(true);
-    result = methods.dsl.filtersTree[index][collection].fields.location[locationgeoBoundingBoxc0x5c7zzzds7jw7zzz].fn(documentAda);
-    should(result).be.exactly(false);
+    should(methods.dsl.filtersTree[index][collection].fields.location[locationgeoBoundingBoxc0x5c7zzzds7jw7zzz].args).match({
+      operator: 'geoBoundingBox',
+      not: undefined,
+      field: 'location',
+      value: {
+        top: -125.09033203125,
+        left: 48.49365234375,
+        right: 24.89501953125,
+        bottom: -62.99560546875
+      }
+    });
   });
 
   it('should return a rejected promise if an empty filter is provided', function () {
@@ -162,9 +168,9 @@ describe('Test geoboundingbox method', function () {
     return should(methods.geoBoundingBox(roomId, index, collection, invalidFilter)).be.rejectedWith(BadRequestError, { message: 'Unable to parse coordinates' });
   });
 
-  it('should return a rejected promise if buildCurriedFunction fails', function () {
+  it('should return a rejected promise if addToFiltersTree fails', function () {
     return methods.__with__({
-      buildCurriedFunction: function () { return new InternalError('rejected'); }
+      addToFiltersTree: function () { return new InternalError('rejected'); }
     })(function () {
       return should(methods.geoBoundingBox(roomId, index, collection, filterEngland)).be.rejectedWith('rejected');
     });
