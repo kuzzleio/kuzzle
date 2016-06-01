@@ -7,18 +7,11 @@ var
   InternalError = require.main.require('kuzzle-common-objects').Errors.internalError;
 
 
-
-describe('Test geoPolygon method', function () {
+describe('Test "geoPolygon" method', function () {
   var
     roomId = 'roomId',
     index = 'test',
     collection = 'collection',
-    document = {
-      name: 'Zero',
-      'location.lat': 0, // we can't test with nested document here
-      'location.lon': 0
-    },
-
     filterExact = {
       location: {
         points: [
@@ -55,13 +48,10 @@ describe('Test geoPolygon method', function () {
 
   before(function () {
     methods.dsl.filtersTree = {};
-     methods.geoPolygon(roomId, index, collection, filterExact)
-      .then(function () {
-        return methods.geoPolygon(roomId, index, collection, filterLimit);
-      })
-      .then(function () {
-        return methods.geoPolygon(roomId, index, collection, filterOutside);
-      });
+
+    return methods.geoPolygon(roomId, index, collection, filterExact)
+      .then(() => methods.geoPolygon(roomId, index, collection, filterLimit))
+      .then(() => methods.geoPolygon(roomId, index, collection, filterOutside));
   });
 
   it('should construct the filterTree object for the correct attribute', function () {
@@ -72,8 +62,8 @@ describe('Test geoPolygon method', function () {
     should(methods.dsl.filtersTree[index][collection].fields.location).not.be.empty();
   });
 
-  it('should construct the filterTree with correct curried function name', function () {
-    // Coord are geoashed for build the curried function name
+  it('should construct the filterTree with correct encoded function name', function () {
+    // Coordinates are geohashed to build the encoded function name
     // because we have many times the same coord in filters,
     // we must have only four functions
     
@@ -104,20 +94,41 @@ describe('Test geoPolygon method', function () {
   });
 
   it('should construct the filterTree with correct functions geoPolygon', function () {
-    var result;
-
     // test exact
-    result = methods.dsl.filtersTree[index][collection].fields.location[locationgeoPolygonkpbdqcbnts00twy01mebpm9npc67zz631zyd].fn(document);
-    should(result).be.exactly(true);
+    should(methods.dsl.filtersTree[index][collection].fields.location[locationgeoPolygonkpbdqcbnts00twy01mebpm9npc67zz631zyd].args).match({
+      operator: 'geoPolygon',
+      not: undefined,
+      field: 'location',
+      value:
+        [ { lat: -1, lon: 1 },
+          { lat: 1, lon: 1 },
+          { lat: 1, lon: -1 },
+          { lat: -1, lon: -1 } ]
+    });
 
     // test outside
-    result = methods.dsl.filtersTree[index][collection].fields.location[locationgeoPolygonkpbxyzbpvs00twy01mebpvxypcr7zzzzzzzz].fn(document);
-    should(result).be.exactly(true);
+    should(methods.dsl.filtersTree[index][collection].fields.location[locationgeoPolygonkpbxyzbpvs00twy01mebpvxypcr7zzzzzzzz].args).match({
+      operator: 'geoPolygon',
+      not: undefined,
+      field: 'location',
+      value:
+        [ { lat: 0, lon: 1 },
+          { lat: 1, lon: 1 },
+          { lat: 1, lon: 0 },
+          { lat: 0, lon: 0 } ]
+    });
 
     // test on limit
-    result = methods.dsl.filtersTree[index][collection].fields.location[locationgeoPolygons1zbfk3yns1zyd63zws1zned3z8s1z0gs3y0].fn(document);
-    should(result).be.exactly(false);
-
+    should(methods.dsl.filtersTree[index][collection].fields.location[locationgeoPolygons1zbfk3yns1zyd63zws1zned3z8s1z0gs3y0].args).match({
+      operator: 'geoPolygon',
+      not: undefined,
+      field: 'location',
+      value:
+        [ { lat: 10, lon: 11 },
+          { lat: 11, lon: 11 },
+          { lat: 11, lon: 10 },
+          { lat: 10, lon: 10 } ]
+    });
   });
 
   it('should return a rejected promise if an empty filter is provided', function () {
@@ -188,9 +199,9 @@ describe('Test geoPolygon method', function () {
     return should(methods.geoPolygon(roomId, index, collection, invalidFilter)).be.rejectedWith(BadRequestError, { message: 'A polygon must be in array format' });
   });
 
-  it('should return a rejected promise if buildCurriedFunction fails', function () {
+  it('should return a rejected promise if addToFiltersTree fails', function () {
     return methods.__with__({
-      buildCurriedFunction: function () { return new InternalError('rejected'); }
+      addToFiltersTree: function () { return new InternalError('rejected'); }
     })(function () {
       return should(methods.geoPolygon(roomId, index, collection, filterExact)).be.rejectedWith('rejected');
     });

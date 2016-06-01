@@ -2,7 +2,7 @@ var
   should = require('should'),
   Dsl = require.main.require('lib/api/dsl/index');
 
-describe('Test: dsl.addCurriedFunction', function () {
+describe('Test: dsl.addSubscription', function () {
 
   var
     dsl,
@@ -26,19 +26,19 @@ describe('Test: dsl.addCurriedFunction', function () {
 
 
   it('should return an error when the filter is undefined', function () {
-    return should(dsl.addCurriedFunction(roomId, index, collection, undefined)).be.rejected();
+    return should(dsl.addSubscription(roomId, index, collection, undefined)).be.rejected();
   });
 
   it('should return an error when the filter doesn\'t exist', function () {
-    return should(dsl.addCurriedFunction(roomId, index, collection, fakeFilter)).be.rejected();
+    return should(dsl.addSubscription(roomId, index, collection, fakeFilter)).be.rejected();
   });
 
   it('should return an error when the filter is empty', function () {
-    return should(dsl.addCurriedFunction(roomId, index, collection, {})).be.rejected();
+    return should(dsl.addSubscription(roomId, index, collection, {})).be.rejected();
   });
 
   it('should resolve a promise when the filter exists', function () {
-    return should(dsl.addCurriedFunction(roomId, index, collection, filter)).not.be.rejected();
+    return should(dsl.addSubscription(roomId, index, collection, filter)).not.be.rejected();
   });
 
 });

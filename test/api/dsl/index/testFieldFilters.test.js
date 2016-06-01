@@ -87,8 +87,11 @@ describe('Test: dsl.testFieldFilters', function () {
         'foo.bar': {
           testFoobar: {
             rooms: rooms,
-            fn: function () {
-              return true;
+            args: {
+              operator: 'term',
+              not: false,
+              field: 'foo.bar',
+              value: 'bar'
             }
           }
         }
@@ -110,8 +113,11 @@ describe('Test: dsl.testFieldFilters', function () {
         'foo.bar': {
           testFoobar: {
             rooms: rooms,
-            fn: function () {
-              return true;
+            args: {
+              operator: 'term',
+              not: false,
+              field: 'foo.bar',
+              value: 'bar'
             }
           }
         }
