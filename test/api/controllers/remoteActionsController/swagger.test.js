@@ -39,7 +39,7 @@ describe('Test: Swagger files generation', () => {
     swagger(kuzzle)
       .then(() => {
         should(fs.writeFileSync.calledTwice).be.true();
-      })
+      });
   });
 
   it ('should fail if something goes wrong with the swagger files writing', () => {
