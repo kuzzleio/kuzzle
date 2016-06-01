@@ -28,7 +28,7 @@ describe('Test: entryPoints/http', function () {
     sandbox.restore();
   });
 
-  it('should have property kuzzle, params and a function init', function () {
+  it('should have property kuzzle, params and a function init on construct', function () {
     var httpServer = new HttpServer(kuzzle, {httpPort: httpPort});
 
     should(httpServer).have.property('kuzzle');
