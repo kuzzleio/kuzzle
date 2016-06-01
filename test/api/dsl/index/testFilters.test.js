@@ -2,8 +2,8 @@ var
   should = require('should'),
   q = require('q'),
   rewire = require('rewire'),
-  RequestObject = require.main.require('lib/api/core/models/requestObject'),
-  NotFoundError = require.main.require('lib/api/core/errors/notFoundError'),
+  RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
+  NotFoundError = require.main.require('kuzzle-common-objects').Errors.notFoundError,
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   Dsl = rewire('../../../../lib/api/dsl/index');

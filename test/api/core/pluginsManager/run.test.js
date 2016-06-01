@@ -5,7 +5,7 @@ var
   sinon = require('sinon'),
   PluginsManager = rewire('../../../../lib/api/core/plugins/pluginsManager'),
   EventEmitter = require('eventemitter2').EventEmitter2,
-  GatewayTimeoutError = require.main.require('lib/api/core/errors/gatewayTimeoutError'),
+  GatewayTimeoutError = require.main.require('kuzzle-common-objects').Errors.gatewayTimeoutError,
   workerPrefix = PluginsManager.__get__('workerPrefix');
 
 describe('Test plugins manager run', function () {

@@ -3,22 +3,14 @@ var
   rewire = require('rewire'),
   md5 = require('crypto-md5'),
   methods = rewire('../../../../lib/api/dsl/methods'),
-  BadRequestError = require.main.require('lib/api/core/errors/badRequestError'),
-  InternalError = require.main.require('lib/api/core/errors/internalError');
-
-
+  BadRequestError = require.main.require('kuzzle-common-objects').Errors.badRequestError,
+  InternalError = require.main.require('kuzzle-common-objects').Errors.internalError;
 
 describe('Test geoDistance method', function () {
   var
     roomId = 'roomId',
     index = 'test',
     collection = 'collection',
-    document = {
-      name: 'Zero',
-      'location.lat': 0, // we can't test with nested document here
-      'location.lon': 0
-    },
-
     filterExact = {
       location: {
         lat: 0,
@@ -73,8 +65,8 @@ describe('Test geoDistance method', function () {
     should(methods.dsl.filtersTree[index][collection].fields.location).not.be.empty();
   });
 
-  it('should construct the filterTree with correct curried function name', function () {
-    // Coord are geoashed for build the curried function name
+  it('should construct the filterTree with correct encoded function name', function () {
+    // Coordinates are geohashed to encode the function name
     // because we have many times the same coord in filters,
     // we must have only four functions
     
@@ -109,25 +101,34 @@ describe('Test geoDistance method', function () {
     should(rooms[0]).be.exactly(roomId);
   });
 
-  it('should construct the filterTree with correct functions geodistance', function () {
-    var result;
+  it('should construct the filterTree with correct geodistance arguments', function () {
+    should(methods.dsl.filtersTree[index][collection].fields.location[locationgeoDistancekpbxyzbpv111318].args).match({
+      operator: 'geoDistance',
+      not: undefined,
+      field: 'location',
+      value: { lat: 0, lon: 1, distance: 111318 }
+    });
 
-    // test exact
-    result = methods.dsl.filtersTree[index][collection].fields.location[locationgeoDistancekpbxyzbpv111318].fn(document);
-    should(result).be.exactly(true);
+    should(methods.dsl.filtersTree[index][collection].fields.location[locationgeoDistancekpbxyzbpv111320].args).match({
+      operator: 'geoDistance',
+      not: undefined,
+      field: 'location',
+      value: { lat: 0, lon: 1, distance: 111320 }
+    });
 
-    // test ok
-    result = methods.dsl.filtersTree[index][collection].fields.location[locationgeoDistancekpbxyzbpv111320].fn(document);
-    should(result).be.exactly(true);
+    should(methods.dsl.filtersTree[index][collection].fields.location[locationgeoDistancekpbxyzbpv111317].args).match({
+      operator: 'geoDistance',
+      not: undefined,
+      field: 'location',
+      value: { lat: 0, lon: 1, distance: 111317 }
+    });
 
-    // test too far
-    result = methods.dsl.filtersTree[index][collection].fields.location[locationgeoDistancekpbxyzbpv111317].fn(document);
-    should(result).be.exactly(false);
-
-    // test human readable distance
-    result = methods.dsl.filtersTree[index][collection].fields.location[md5('locationgeoDistancekpbxyzbpv111318.9999168')].fn(document);
-    should(result).be.exactly(true);
-
+    should(methods.dsl.filtersTree[index][collection].fields.location[md5('locationgeoDistancekpbxyzbpv111318.9999168')].args).match({
+      operator: 'geoDistance',
+      not: undefined,
+      field: 'location',
+      value: { lat: 0, lon: 1, distance: 111318.9999168 }
+    });
   });
 
   it('should return a rejected promise if an empty filter is provided', function () {
@@ -225,9 +226,9 @@ describe('Test geoDistance method', function () {
     return should(methods.geoDistance(roomId, index, collection, invalidFilter)).be.rejectedWith(BadRequestError, { message: 'Unable to parse the distance filter parameter' });
   });
 
-  it('should return a rejected promise if buildCurriedFunction fails', function () {
+  it('should return a rejected promise if addToFiltersTree fails', function () {
     return methods.__with__({
-      buildCurriedFunction: function () { return new InternalError('rejected'); }
+      addToFiltersTree: function () { return new InternalError('rejected'); }
     })(function () {
       return should(methods.geoDistance(roomId, index, collection, filterOK)).be.rejectedWith('rejected');
     });

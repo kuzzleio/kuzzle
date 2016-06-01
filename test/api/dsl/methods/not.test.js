@@ -3,21 +3,11 @@ var
   md5 = require('crypto-md5'),
   methods = require.main.require('lib/api/dsl/methods');
 
-describe('Test not method', function () {
+describe('Test "not" method', function () {
   var
     roomId = 'roomId',
     index = 'index',
     collection = 'collection',
-    documentGrace = {
-      firstName: 'Grace',
-      lastName: 'Hopper',
-      city: 'NYC'
-    },
-    documentAda = {
-      firstName: 'Ada',
-      lastName: 'Lovelace',
-      city: 'London'
-    },
     filter = {
       term: {
         city: 'London'
@@ -53,12 +43,9 @@ describe('Test not method', function () {
   });
 
   it('should construct the filterTree with correct functions', function () {
-    var result;
-
-    result = methods.dsl.filtersTree[index][collection].fields.city[nottermcityLondon].fn(documentGrace);
-    should(result).be.exactly(true);
-    result = methods.dsl.filtersTree[index][collection].fields.city[nottermcityLondon].fn(documentAda);
-    should(result).be.exactly(false);
+    should(methods.dsl.filtersTree[index][collection].fields.city[nottermcityLondon].args).match({
+      operator: 'term', not: true, field: 'city', value: 'London'
+    });
   });
 
   it('should pass an inverted "not" argument to the must function', function () {

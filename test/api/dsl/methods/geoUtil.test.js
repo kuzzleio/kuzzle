@@ -2,7 +2,7 @@ var
   should = require('should'),
   rewire = require('rewire'),
   methods = rewire('../../../../lib/api/dsl/methods'),
-  KuzzleError = require.main.require('lib/api/core/errors/kuzzleError'),
+  KuzzleError = require.main.require('kuzzle-common-objects').Errors.kuzzleError,
   geohash = require('ngeohash');
 
 

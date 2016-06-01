@@ -5,9 +5,9 @@ var
   rewire = require('rewire'),
   should = require('should'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
-  PartialError = require.main.require('lib/api/core/errors/partialError'),
-  InternalError = require.main.require('lib/api/core/errors/internalError'),
-  RequestObject = require.main.require('lib/api/core/models/requestObject');
+  PartialError = require.main.require('kuzzle-common-objects').Errors.partialError,
+  InternalError = require.main.require('kuzzle-common-objects').Errors.internalError,
+  RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject;
 
 describe('Test: Prepare database', function () {
   var 
