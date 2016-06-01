@@ -29,6 +29,7 @@ function parseHttpResponse(response, yaml) {
 
   response.on('end', function () {
     var result;
+
     if (yaml === true) {
       yamlToJson(data, (err, res) => {
         if (err) {
