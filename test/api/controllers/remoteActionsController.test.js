@@ -25,7 +25,7 @@ describe('Test: remote actions controller', function () {
       .then(() => {
         remoteActionsController = new RemoteActionsController(kuzzle);
 
-        kuzzle.services.list.broker.add = (rid, res) => {
+        kuzzle.services.list.broker.send = (rid, res) => {
           brokerInvoked = true;
           requestId = rid;
           responseObject = res;

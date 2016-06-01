@@ -31,10 +31,10 @@ describe('Test service initialization function', function () {
       .then(() => {
         should(kuzzle.services.list.broker).be.an.Object().and.not.be.empty();
         should(kuzzle.services.list.broker.init).be.a.Function();
-        should(kuzzle.services.list.broker.add).be.a.Function();
+        should(kuzzle.services.list.broker.send).be.a.Function();
         should(kuzzle.services.list.broker.broadcast).be.a.Function();
         should(kuzzle.services.list.broker.listen).be.a.Function();
-        should(kuzzle.services.list.broker.listenOnce).be.a.Function();
+        should(kuzzle.services.list.broker.unsubscribe).be.a.Function();
         should(kuzzle.services.list.broker.close).be.a.Function();
       });
   });

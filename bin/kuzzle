@@ -8,6 +8,8 @@
  */
 var program = require('commander');
 
+program.option('-d, --debug', 'make errors more verbose');
+
 // $ kuzzle start
 program
   .command('start')
