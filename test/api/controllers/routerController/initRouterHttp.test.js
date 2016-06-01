@@ -832,7 +832,7 @@ describe('Test: routerController.initRouterHttp', function () {
   });
 
   it('should create a GET route to get server the swagger.yaml', done => {
-    http.get('http://' + options.hostname + ':' + options.port + '/api/swagger.yaml', response => {
+    http.get('http://' + options.hostname + ':' + options.port + '/api/swagger.yml', response => {
       parseHttpResponse(response, true)
         .then(result => {
           should(Object.keys(result.paths).length).be.above(1);
