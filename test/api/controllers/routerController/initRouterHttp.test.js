@@ -821,8 +821,8 @@ describe('Test: routerController.initRouterHttp', function () {
   it('should create a GET route to get server the swagger.json', done => {
     http.get('http://' + options.hostname + ':' + options.port + '/api/swagger.json', response => {
       parseHttpResponse(response)
-        .then(result => {   
-          should(Object.keys(result.paths).length).be.above(1);
+        .then(result => {
+          should(Object.keys(result).length).be.above(1);
           done();
         })
         .catch(error => {
@@ -835,7 +835,7 @@ describe('Test: routerController.initRouterHttp', function () {
     http.get('http://' + options.hostname + ':' + options.port + '/api/swagger.yml', response => {
       parseHttpResponse(response, true)
         .then(result => {
-          should(Object.keys(result.paths).length).be.above(1);
+          should(Object.keys(result).length).be.above(1);
           done();
         })
         .catch(error => {
