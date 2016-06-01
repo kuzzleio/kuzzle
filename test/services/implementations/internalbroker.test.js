@@ -385,7 +385,7 @@ describe('Test: Internal broker', function () {
 
         response = server.broadcast('test', {foo: 'bar'}, client2.client.socket);
 
-        should(response).be.exactly(-1);
+        should(response).be.exactly(0);
         should(kuzzle.pluginsManager.trigger.lastCall).be.calledWith('log:error', error);
       });
 

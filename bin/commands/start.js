@@ -135,7 +135,7 @@ module.exports = function () {
       }
     })
     .catch(err => {
-      console.log(err.stack);
+      console.error(err.stack);
       process.exit(1);
     });
 };
