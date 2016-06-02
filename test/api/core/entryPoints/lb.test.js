@@ -33,7 +33,7 @@ describe('Test: entryPoints/lb', function () {
 
     should(lb).have.property('kuzzle');
     should(lb).have.property('channels');
-    should(lb.channels).be.empty;
+    should(lb.channels).be.empty();
 
     should(lb.init).be.a.Function();
     should(lb.joinChannel).be.a.Function();
