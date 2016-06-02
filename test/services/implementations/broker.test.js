@@ -52,6 +52,13 @@ describe('Test: Internal broker', function () {
     });
   });
 
+  describe('Internal broker constructor', () => {
+    it('should fail if no config match the broker type', () => {
+      var FakeBroker = new BrokerFactory('fakeBroker');
+      should((function () {new FakeBroker(kuzzle, {isServer: true});})).throw(Error);
+    });
+  });
+
   describe('Internal broker', () => {
     var
       client;
@@ -205,6 +212,13 @@ describe('Test: Internal broker', function () {
           room: 'room'
         }));
       });
+
+      it('should do nothing if socket is null', () => {
+        client.client.socket = null;
+
+        should(client.unsubscribe('room')).be.eql(false);
+        should(kuzzle.pluginsManager.trigger.callCount).be.eql(2);
+      });
     });
 
     describe('#close', () => {
@@ -217,6 +231,13 @@ describe('Test: Internal broker', function () {
         should(socket.close).be.calledOnce();
         should(client.client.socket).be.null();
         should(client.client.connected).be.null();
+      });
+
+      it('should do nothing if socket is null', () => {
+        client.client.socket = null;
+
+        should(client.close()).be.eql(false);
+        should(kuzzle.pluginsManager.trigger.callCount).be.eql(2);
       });
     });
 
