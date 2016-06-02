@@ -87,7 +87,7 @@ describe('Test: Swagger files generation', () => {
       });
   });
 
-  it ('should generate default swagger infos for basically described routes', () => {
+  it ('should generate default swagger infos for poorly described routes', () => {
     sandbox.stub(fs, 'writeFileSync', () => {
       return true;
     });
