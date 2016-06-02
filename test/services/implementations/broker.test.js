@@ -7,7 +7,7 @@ var
   CircularList = require('easy-circular-list'),
   WSClientMock = require('../../mocks/services/ws.mock'),
   WSServerMock = require('../../mocks/services/ws.server.mock'),
-  InternalBroker = rewire('../../../lib/services/internalbroker'),
+  BrokerFactory = rewire('../../../lib/services/broker'),
   InternalError = require('kuzzle-common-objects').Errors.internalError,
   WSBrokerClient = require.main.require('lib/services/broker/wsBrokerClient'),
   WSBrokerServer = require.main.require('lib/services/broker/wsBrokerServer'),
@@ -23,7 +23,7 @@ describe('Test: Internal broker', function () {
   before(() => {
     kuzzle = {
       config: {
-        broker: {
+        internalBroker: {
           host: 'host',
           port: 'port'
         }
@@ -45,12 +45,19 @@ describe('Test: Internal broker', function () {
     clock.restore();
   });
 
+  describe('Internal broker general constructor', () => {
+    it('should return a Broker', () => {
+      var InternalBroker = new BrokerFactory('internalBroker', false, false);
+      should(InternalBroker).be.Function();
+    });
+  });
 
   describe('Internal broker', () => {
     var
       client;
 
     beforeEach(() => {
+      var InternalBroker = new BrokerFactory('internalBroker');
       server = new InternalBroker(kuzzle, {isServer: true});
       server.handler.ws = (options, cb) => {
         cb();
@@ -115,13 +122,13 @@ describe('Test: Internal broker', function () {
       client;
 
     beforeEach(() => {
-      server = new WSBrokerServer(kuzzle);
+      server = new WSBrokerServer('internalBroker', kuzzle.config.internalBroker, kuzzle.pluginsManager);
       server.ws = (options, cb) => {
         cb();
         return new WSServerMock();
       };
 
-      client = new WSBrokerClient({}, kuzzle.pluginsManager);
+      client = new WSBrokerClient('internalBroker', {}, kuzzle.pluginsManager);
       client.ws = () => new WSClientMock(server.server);
 
       return q.all([
@@ -135,7 +142,7 @@ describe('Test: Internal broker', function () {
     describe('#init', () => {
 
       it('should attach events', () => {
-        var client = new WSBrokerClient({}, kuzzle.pluginsManager);
+        var client = new WSBrokerClient('internalBroker', kuzzle.config.internalBroker, kuzzle.pluginsManager);
         client.ws = () => new WSClientMock(server.server);
 
         return client.init()
@@ -234,7 +241,7 @@ describe('Test: Internal broker', function () {
 
       it('on open, should re-register if some callbacks were attached', () => {
         var
-          newClient = new WSBrokerClient({}, kuzzle.pluginsManager),
+          newClient = new WSBrokerClient('internalBroker', kuzzle.config.internalBroker, kuzzle.pluginsManager),
           cb = sinon.stub();
 
         newClient.ws = () => new WSClientMock(server.server);
@@ -305,15 +312,15 @@ describe('Test: Internal broker', function () {
     var client1, client2, client3;
 
     beforeEach(() => {
-      server = new WSBrokerServerRewire(kuzzle);
+      server = new WSBrokerServerRewire('internalBroker', {}, kuzzle.pluginsManager);
       server.ws = (options, cb) => {
         cb();
         return new WSServerMock();
       };
 
-      client1 = new WSBrokerClient({}, kuzzle.pluginsManager);
-      client2 = new WSBrokerClient({}, kuzzle.pluginsManager);
-      client3 = new WSBrokerClient({}, kuzzle.pluginsManager);
+      client1 = new WSBrokerClient('internalBroker', {}, kuzzle.pluginsManager);
+      client2 = new WSBrokerClient('internalBroker', {}, kuzzle.pluginsManager);
+      client3 = new WSBrokerClient('internalBroker', {}, kuzzle.pluginsManager);
       client1.ws = client2.ws = client3.ws = () => new WSClientMock(server.server);
 
       return q.all([
