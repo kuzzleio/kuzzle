@@ -2,7 +2,9 @@ var
   should = require('should'),
   params = require('rc')('kuzzle'),
   sinon = require('sinon'),
+  q = require('q'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
+  Services = require.main.require('lib/services'),
   sandbox = sinon.sandbox.create();
 
 describe('Test service initialization function', function () {
@@ -29,10 +31,10 @@ describe('Test service initialization function', function () {
       .then(() => {
         should(kuzzle.services.list.broker).be.an.Object().and.not.be.empty();
         should(kuzzle.services.list.broker.init).be.a.Function();
-        should(kuzzle.services.list.broker.add).be.a.Function();
+        should(kuzzle.services.list.broker.send).be.a.Function();
         should(kuzzle.services.list.broker.broadcast).be.a.Function();
         should(kuzzle.services.list.broker.listen).be.a.Function();
-        should(kuzzle.services.list.broker.listenOnce).be.a.Function();
+        should(kuzzle.services.list.broker.unsubscribe).be.a.Function();
         should(kuzzle.services.list.broker.close).be.a.Function();
       });
   });
@@ -99,7 +101,6 @@ describe('Test service initialization function', function () {
         should(kuzzle.services.list.writeEngine.client).be.null();
         should(spy.calledOnce).be.true();
       });
-
   });
 
   it('should throw error if service file doesn\'t exist', function (done) {

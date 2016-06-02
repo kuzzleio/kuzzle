@@ -3,7 +3,7 @@
  */
 var
   should = require('should'),
-  RequestObject = require.main.require('lib/api/core/models/requestObject'),
+  RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
   NotificationObject = require.main.require('lib/api/core/models/notificationObject');
 
 describe('Test: NotificationObject', function () {

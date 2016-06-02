@@ -1,8 +1,8 @@
 var
   should = require('should'),
   rewire = require('rewire'),
-  InternalError = require.main.require('lib/api/core/errors/internalError'),
-  GatewayTimeoutError = require.main.require('lib/api/core/errors/gatewayTimeoutError'),
+  InternalError = require.main.require('kuzzle-common-objects').Errors.internalError,
+  GatewayTimeoutError = require.main.require('kuzzle-common-objects').Errors.gatewayTimeoutError,
   Sandbox = rewire('../../../../lib/api/core/sandbox');
 
 describe('Test: sandbox/sandboxTest', () => {

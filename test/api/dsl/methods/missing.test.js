@@ -3,13 +3,10 @@ var
   rewire = require('rewire'),
   md5 = require('crypto-md5'),
   methods = rewire('../../../../lib/api/dsl/methods'),
-  BadRequestError = require.main.require('lib/api/core/errors/badRequestError'),
-  InternalError = require.main.require('lib/api/core/errors/internalError');
-
-
+  BadRequestError = require.main.require('kuzzle-common-objects').Errors.badRequestError,
+  InternalError = require.main.require('kuzzle-common-objects').Errors.internalError;
 
 describe('Test missing method', function () {
-
   var
     roomId = 'roomId',
     index = 'index',
@@ -18,14 +15,10 @@ describe('Test missing method', function () {
       firstName: 'Grace',
       lastName: 'Hopper'
     },
-    documentAda = {
-      firstName: 'Ada'
-    },
     filter = {
       field: 'lastName'
     },
     missinglastName = md5('missinglastName');
-
 
   before(function () {
     methods.dsl.filtersTree = {};
@@ -55,12 +48,12 @@ describe('Test missing method', function () {
   });
 
   it('should construct the filterTree with correct functions missing', function () {
-    var result;
-
-    result = methods.dsl.filtersTree[index][collection].fields.lastName[missinglastName].fn(documentAda);
-    should(result).be.exactly(true);
-    result = methods.dsl.filtersTree[index][collection].fields.lastName[missinglastName].fn(documentGrace);
-    should(result).be.exactly(false);
+    should(methods.dsl.filtersTree[index][collection].fields.lastName[missinglastName].args).match({
+      operator: 'missing',
+      not: false,
+      field: 'lastName',
+      value: 'lastName'
+    });
   });
 
   it('should return a rejected promise if the filter argument is empty', function () {
@@ -71,9 +64,9 @@ describe('Test missing method', function () {
     return should(methods.missing('foo', index, 'bar', { foo: 'bar' }, false)).be.rejectedWith(BadRequestError, { message: 'Filter \'missing\' must contains \'field\' attribute' });
   });
 
-  it('should return a rejected promise if buildCurriedFunction fails', function () {
+  it('should return a rejected promise if addToFiltersTree fails', function () {
     return methods.__with__({
-      buildCurriedFunction: function () { return new InternalError('rejected'); }
+      addToFiltersTree: function () { return new InternalError('rejected'); }
     })(function () {
       return should(methods.missing('foo', index, 'bar', { field: 'foo' }, false));
     });

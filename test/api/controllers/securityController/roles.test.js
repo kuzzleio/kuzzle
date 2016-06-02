@@ -4,8 +4,8 @@ var
   sinon = require('sinon'),
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
-  RequestObject = require.main.require('lib/api/core/models/requestObject'),
-  ResponseObject = require.main.require('lib/api/core/models/responseObject');
+  RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
+  ResponseObject = require.main.require('kuzzle-common-objects').Models.responseObject;
 
 describe('Test: security controller - roles', function () {
   var

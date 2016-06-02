@@ -3,32 +3,17 @@ var
   rewire = require('rewire'),
   md5 = require('crypto-md5'),
   methods = rewire('../../../../lib/api/dsl/methods'),
-  BadRequestError = require.main.require('lib/api/core/errors/badRequestError'),
-  InternalError = require.main.require('lib/api/core/errors/internalError');
-
-
+  BadRequestError = require.main.require('kuzzle-common-objects').Errors.badRequestError,
+  InternalError = require.main.require('kuzzle-common-objects').Errors.internalError;
 
 describe('Test range method', function () {
-
   var
     roomIdFilterGrace = 'roomIdGrace',
     roomIdFilterAda = 'roomIdAda',
     roomIdFilterAll = 'roomIdAll',
     roomIdFilterNobody = 'roomIdNobody',
-
     index = 'index',
     collection = 'collection',
-    documentGrace = {
-      firstName: 'Grace',
-      lastName: 'Hopper',
-      age: 85
-    },
-    documentAda = {
-      firstName: 'Ada',
-      lastName: 'Lovelace',
-      age: 36
-    },
-
     filterGrace = {
       age: {
         gt: 36,
@@ -77,7 +62,7 @@ describe('Test range method', function () {
     should(methods.dsl.filtersTree[index][collection].fields.age).not.be.empty();
   });
 
-  it('should construct the filterTree with correct curried function name', function () {
+  it('should construct the filterTree with correct encoded function name', function () {
     should(methods.dsl.filtersTree[index][collection].fields.age[rangeagegt36]).not.be.empty();
     should(methods.dsl.filtersTree[index][collection].fields.age[rangeagelte85]).not.be.empty();
     should(methods.dsl.filtersTree[index][collection].fields.age[rangeagegte36]).not.be.empty();
@@ -129,46 +114,38 @@ describe('Test range method', function () {
   });
 
   it('should construct the filterTree with correct functions range', function () {
-    var result;
+    should(methods.dsl.filtersTree[index][collection].fields.age[rangeagegt36].args).match({
+      operator: 'gt', not: undefined, field: 'age', value: 36
+    });
 
-    result = methods.dsl.filtersTree[index][collection].fields.age[rangeagegt36].fn(documentGrace);
-    should(result).be.exactly(true);
-    result = methods.dsl.filtersTree[index][collection].fields.age[rangeagegt36].fn(documentAda);
-    should(result).be.exactly(false);
+    should(methods.dsl.filtersTree[index][collection].fields.age[rangeagelte85].args).match({
+      operator: 'lte', not: undefined, field: 'age', value: 85
+    });
 
-    result = methods.dsl.filtersTree[index][collection].fields.age[rangeagelte85].fn(documentGrace);
-    should(result).be.exactly(true);
-    result = methods.dsl.filtersTree[index][collection].fields.age[rangeagelte85].fn(documentAda);
-    should(result).be.exactly(true);
+    should(methods.dsl.filtersTree[index][collection].fields.age[rangeagegte36].args).match({
+      operator: 'gte', not: undefined, field: 'age', value: 36
+    });
 
-    result = methods.dsl.filtersTree[index][collection].fields.age[rangeagegte36].fn(documentGrace);
-    should(result).be.exactly(true);
-    result = methods.dsl.filtersTree[index][collection].fields.age[rangeagegte36].fn(documentAda);
-    should(result).be.exactly(true);
+    should(methods.dsl.filtersTree[index][collection].fields.age[rangeagelt85].args).match({
+      operator: 'lt', not: undefined, field: 'age', value: 85
+    });
 
-    result = methods.dsl.filtersTree[index][collection].fields.age[rangeagelt85].fn(documentGrace);
-    should(result).be.exactly(false);
-    result = methods.dsl.filtersTree[index][collection].fields.age[rangeagelt85].fn(documentAda);
-    should(result).be.exactly(true);
+    should(methods.dsl.filtersTree[index][collection].fields.age[notrangeagegte36].args).match({
+      operator: 'gte', not: true, field: 'age', value: 36
+    });
 
-    result = methods.dsl.filtersTree[index][collection].fields.age[notrangeagegte36].fn(documentGrace);
-    should(result).be.exactly(false);
-    result = methods.dsl.filtersTree[index][collection].fields.age[notrangeagegte36].fn(documentAda);
-    should(result).be.exactly(false);
-
-    result = methods.dsl.filtersTree[index][collection].fields.age[notrangeagelte85].fn(documentGrace);
-    should(result).be.exactly(false);
-    result = methods.dsl.filtersTree[index][collection].fields.age[notrangeagelte85].fn(documentAda);
-    should(result).be.exactly(false);
+    should(methods.dsl.filtersTree[index][collection].fields.age[notrangeagelte85].args).match({
+      operator: 'lte', not: true, field: 'age', value: 85
+    });
   });
 
   it('should return a rejected promise if the filter is empty', function () {
     return should(methods.range(roomIdFilterGrace, index, collection, {})).be.rejectedWith(BadRequestError, { message: 'A filter can\'t be empty' });
   });
 
-  it('should return a rejected promise if buildCurriedFunction fails', function () {
+  it('should return a rejected promise if addToFiltersTree fails', function () {
     return methods.__with__({
-      buildCurriedFunction: function () { return new InternalError('rejected'); }
+      addToFiltersTree: function () { return new InternalError('rejected'); }
     })(function () {
       return should(methods.range(roomIdFilterGrace, index, collection, filterGrace)).be.rejectedWith('rejected');
     });

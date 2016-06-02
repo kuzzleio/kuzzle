@@ -1,9 +1,9 @@
 var
   should = require('should'),
   q = require('q'),
-  RequestObject = require.main.require('lib/api/core/models/requestObject'),
-  ResponseObject = require.main.require('lib/api/core/models/responseObject'),
-  ServiceUnavailableError = require.main.require('lib/api/core/errors/serviceUnavailableError'),
+  RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
+  ResponseObject = require.main.require('kuzzle-common-objects').Models.responseObject,
+  ServiceUnavailableError = require.main.require('kuzzle-common-objects').Errors.serviceUnavailableError,
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   rewire = require('rewire'),
