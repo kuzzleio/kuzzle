@@ -25,6 +25,10 @@ describe('Test: Swagger files generation', () => {
 
   beforeEach(() => {
     sandbox = sinon.sandbox.create();
+    sandbox.stub(kuzzle.config, 'httpRoutes', [
+      {verb: 'get', url: '/basic', controller: 'basic', action: 'basic'},
+      {verb: 'post', url: '/complete', controller: 'complete', action: 'complete', infos: {description: 'description'}}
+    ]);
   });
 
   afterEach(() => {
@@ -80,6 +84,30 @@ describe('Test: Swagger files generation', () => {
       .then((response) => {
         should(fs.writeFileSync.called).be.false();
         should(response.isWorker).be.true();
+      });
+  });
+
+  it ('should generate default swagger infos for basically described routes', () => {
+    sandbox.stub(fs, 'writeFileSync', () => {
+      return true;
+    });
+
+    swagger(kuzzle)
+      .then((response) => {
+        should(fs.writeFileSync.called).be.true();
+        should(response.paths['/' + kuzzle.config.apiVersion + '/basic'].description).be.eql('Controller: basic. Action: basic.');
+      });
+  });
+
+  it ('should the swagger infos described for routes which have them', () => {
+    sandbox.stub(fs, 'writeFileSync', () => {
+      return true;
+    });
+
+    swagger(kuzzle)
+      .then((response) => {
+        should(fs.writeFileSync.called).be.true();
+        should(response.paths['/' + kuzzle.config.apiVersion + '/complete'].description).be.eql('description\nController: complete. Action: complete.');
       });
   });
 });
