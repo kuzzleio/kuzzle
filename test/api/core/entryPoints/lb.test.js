@@ -156,7 +156,7 @@ describe('Test: entryPoints/lb', function () {
     should(spyListen.callCount).be.eql(1);
   });
 
-  it('should call the router newConnection on event onDisconnect', function () {
+  it('should call the router removeConnection on event onDisconnect', function () {
     var
       data = {context: {connection: {type: 'socketio', id: 'myid'}}},
       spyRemoveConnection = sandbox.stub(kuzzle.router, 'removeConnection');
@@ -168,12 +168,47 @@ describe('Test: entryPoints/lb', function () {
 
   it('should not call the router if the data has no context on event onDisconnect', function () {
     var
-      data = {context: {}},
-      spyRemoveConnection = sandbox.stub(kuzzle.router, 'newConnection');
+      data = {},
+      spyRemoveConnection = sandbox.stub(kuzzle.router, 'removeConnection');
 
     Lb.__get__('onDisconnect').call({kuzzle: kuzzle}, data);
 
     should(spyRemoveConnection.callCount).be.eql(0);
+  });
+
+  it('should call the router newConnection on event onConnection', function () {
+    var
+      data = {context: {connection: {type: 'socketio', id: 'myid'}}},
+      spyNewConnection = sandbox.stub(kuzzle.router, 'newConnection');
+
+    Lb.__get__('onConnection').call({kuzzle: kuzzle}, data);
+
+    should(spyNewConnection.calledWith(data.context.connection.type, data.context.connection.id)).be.true();
+  });
+
+  it('should not call the router if the data has no context on event onConnection', function () {
+    var
+      data = {},
+      spyNewConnection = sandbox.stub(kuzzle.router, 'newConnection');
+
+    Lb.__get__('onConnection').call({kuzzle: kuzzle}, data);
+    should(spyNewConnection.callCount).be.eql(0);
+
+    data.context = {};
+    Lb.__get__('onConnection').call({kuzzle: kuzzle}, data);
+    should(spyNewConnection.callCount).be.eql(0);
+
+    data.context = {connection: {}};
+    Lb.__get__('onConnection').call({kuzzle: kuzzle}, data);
+    should(spyNewConnection.callCount).be.eql(0);
+
+    data.context = {connection: {type: 'type'}};
+    Lb.__get__('onConnection').call({kuzzle: kuzzle}, data);
+    should(spyNewConnection.callCount).be.eql(0);
+
+    data.context = {connection: {type: 'type', id: 'id'}};
+    Lb.__get__('onConnection').call({kuzzle: kuzzle}, data);
+    should(spyNewConnection.callCount).be.eql(1);
   });
 
 });
