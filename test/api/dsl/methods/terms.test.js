@@ -3,21 +3,12 @@ var
   md5 = require('crypto-md5'),
   methods = require.main.require('lib/api/dsl/methods');
 
-describe('Test terms method', function () {
-
+describe('Test "terms" method', function () {
   var
     roomIdMatch = 'roomIdMatch',
     roomIdNot = 'roomIdNotMatch',
     index = 'index',
     collection = 'collection',
-    documentGrace = {
-      firstName: 'Grace',
-      lastName: 'Hopper'
-    },
-    documentAda = {
-      firstName: 'Ada',
-      lastName: 'Lovelace'
-    },
     filter = {
       firstName: ['Grace', 'Jean']
     },
@@ -61,18 +52,19 @@ describe('Test terms method', function () {
   });
 
   it('should construct the filterTree with correct functions terms', function () {
-    var
-      resultMatch = methods.dsl.filtersTree[index][collection].fields.firstName[termsfirstNameGraceJean].fn(documentGrace),
-      resultNotMatch = methods.dsl.filtersTree[index][collection].fields.firstName[termsfirstNameGraceJean].fn(documentAda);
+    should(methods.dsl.filtersTree[index][collection].fields.firstName[termsfirstNameGraceJean].args).match({
+      operator: 'terms',
+      not: false,
+      field: 'firstName',
+      value: [ 'Grace', 'Jean' ]
+    });
 
-    should(resultMatch).be.exactly(true);
-    should(resultNotMatch).be.exactly(false);
-
-    resultMatch = methods.dsl.filtersTree[index][collection].fields.firstName[nottermsfirstNameGraceJean].fn(documentAda);
-    resultNotMatch = methods.dsl.filtersTree[index][collection].fields.firstName[nottermsfirstNameGraceJean].fn(documentGrace);
-
-    should(resultMatch).be.exactly(true);
-    should(resultNotMatch).be.exactly(false);
+    should(methods.dsl.filtersTree[index][collection].fields.firstName[nottermsfirstNameGraceJean].args).match({
+      operator: 'terms',
+      not: true,
+      field: 'firstName',
+      value: [ 'Grace', 'Jean' ]
+    });
   });
 
 });

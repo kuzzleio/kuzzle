@@ -12,18 +12,6 @@ describe('Test or method', function () {
     roomId = 'roomId',
     index = 'index',
     collection = 'collection',
-    documentGrace = {
-      firstName: 'Grace',
-      lastName: 'Hopper',
-      city: 'NYC',
-      hobby: 'computer'
-    },
-    documentAda = {
-      firstName: 'Ada',
-      lastName: 'Lovelace',
-      city: 'London',
-      hobby: 'computer'
-    },
     filter = [
       {
         term: {
@@ -88,28 +76,25 @@ describe('Test or method', function () {
     should(rooms[0]).be.exactly(roomId);
   });
 
-  it('should construct the filterTree with correct functions', function () {
-    var result;
+  it('should construct the filterTree with correct arguments', function () {
+    should(methods.dsl.filtersTree[index][collection].fields.city[termcityNYC].args).match({
+      operator: 'term', not: undefined, field: 'city', value: 'NYC'
+    });
 
-    result = methods.dsl.filtersTree[index][collection].fields.city[termcityNYC].fn(documentGrace);
-    should(result).be.exactly(true);
-    result = methods.dsl.filtersTree[index][collection].fields.city[termcityNYC].fn(documentAda);
-    should(result).be.exactly(false);
+    should(methods.dsl.filtersTree[index][collection].fields.city[termcityLondon].args).match({
+      operator: 'term',
+      not: undefined,
+      field: 'city',
+      value: 'London'
+    });
 
-    result = methods.dsl.filtersTree[index][collection].fields.city[termcityLondon].fn(documentGrace);
-    should(result).be.exactly(false);
-    result = methods.dsl.filtersTree[index][collection].fields.city[termcityLondon].fn(documentAda);
-    should(result).be.exactly(true);
+    should(methods.dsl.filtersTree[index][collection].fields.city[nottermcityNYC].args).match({
+      operator: 'term', not: true, field: 'city', value: 'NYC'
+    });
 
-    result = methods.dsl.filtersTree[index][collection].fields.city[nottermcityNYC].fn(documentGrace);
-    should(result).be.exactly(false);
-    result = methods.dsl.filtersTree[index][collection].fields.city[nottermcityNYC].fn(documentAda);
-    should(result).be.exactly(true);
-
-    result = methods.dsl.filtersTree[index][collection].fields.city[nottermcityLondon].fn(documentGrace);
-    should(result).be.exactly(true);
-    result = methods.dsl.filtersTree[index][collection].fields.city[nottermcityLondon].fn(documentAda);
-    should(result).be.exactly(false);
+    should(methods.dsl.filtersTree[index][collection].fields.city[nottermcityLondon].args).match({
+      operator: 'term', not: true, field: 'city', value: 'London'
+    });
   });
 
   it('should return a rejected promise if getFormattedFilters fails', function () {

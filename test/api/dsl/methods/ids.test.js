@@ -6,31 +6,17 @@ var
   BadRequestError = require.main.require('kuzzle-common-objects').Errors.badRequestError,
   InternalError = require.main.require('kuzzle-common-objects').Errors.internalError;
 
-
-
 describe('Test ids method', function () {
-
   var
     roomIdMatch = 'roomIdMatch',
     roomIdNot = 'roomIdNotMatch',
     index = 'test',
     collection = 'collection',
-    documentGrace = {
-      _id: 'idGrace',
-      firstName: 'Grace',
-      lastName: 'Hopper'
-    },
-    documentAda = {
-      _id: 'idAda',
-      firstName: 'Ada',
-      lastName: 'Lovelace'
-    },
     filter = {
       values: ['idGrace']
     },
     idsIdidGrace = md5('ids_ididGrace'),
     notidsIdidGrace = md5('notids_ididGrace');
-
 
   before(function () {
     methods.dsl.filtersTree = {};
@@ -72,18 +58,19 @@ describe('Test ids method', function () {
 
   it('should construct the filterTree with correct functions ids', function () {
     /* jshint camelcase:false */
-    var
-      resultMatch = methods.dsl.filtersTree[index][collection].fields._id[idsIdidGrace].fn(documentGrace),
-      resultNotMatch = methods.dsl.filtersTree[index][collection].fields._id[idsIdidGrace].fn(documentAda);
+    should(methods.dsl.filtersTree[index][collection].fields._id[idsIdidGrace].args).match({
+      operator: 'terms',
+      not: false,
+      field: '_id',
+      value: [ 'idGrace' ]
+    });
 
-    should(resultMatch).be.exactly(true);
-    should(resultNotMatch).be.exactly(false);
-
-    resultMatch = methods.dsl.filtersTree[index][collection].fields._id[notidsIdidGrace].fn(documentAda);
-    resultNotMatch = methods.dsl.filtersTree[index][collection].fields._id[notidsIdidGrace].fn(documentGrace);
-
-    should(resultMatch).be.exactly(true);
-    should(resultNotMatch).be.exactly(false);
+    should(methods.dsl.filtersTree[index][collection].fields._id[notidsIdidGrace].args).match({
+      operator: 'terms',
+      not: true,
+      field: '_id',
+      value: [ 'idGrace' ]
+    });
   });
 
   it('should reject a promise if the filter is empty', function () {
@@ -102,9 +89,9 @@ describe('Test ids method', function () {
     return should(methods.ids(roomIdMatch, index, collection, {values: []})).be.rejectedWith(BadRequestError);
   });
 
-  it('should return a rejected promise if buildCurriedFunction fails', function () {
+  it('should return a rejected promise if addToFiltersTree fails', function () {
     return methods.__with__({
-      buildCurriedFunction: function () { return new InternalError('rejected'); }
+      addToFiltersTree: function () { return new InternalError('rejected'); }
     })(function () {
       return should(methods.ids(roomIdMatch, index, collection, filter, false)).be.rejectedWith('rejected');
     });
