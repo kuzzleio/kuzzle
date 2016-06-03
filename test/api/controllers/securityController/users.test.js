@@ -224,6 +224,7 @@ describe('Test: security controller - users', function () {
 
     it('should update the profile correctly', () => {
       sandbox.stub(kuzzle.repositories.user, 'load').resolves({_id: 'test', profile: 'default'});
+      sandbox.stub(kuzzle.repositories.profile, 'loadProfile').resolves({});
 
       return kuzzle.funnel.controllers.security.updateUser(new RequestObject({
         _id: 'test',
