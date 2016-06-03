@@ -52,7 +52,7 @@ describe('Test: routerController.initRouterHttp', function () {
     router,
     options = {
       hostname: 'localhost',
-      port: 6666
+      port: 9999
     };
 
   /*
