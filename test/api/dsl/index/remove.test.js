@@ -53,4 +53,8 @@ describe('Test: dsl.remove', function () {
         return should(dsl.remove(filterId)).be.rejected();
       });
   });
+
+  it('should fail if the provided filter ID is not a string', function () {
+    return should(dsl.remove(['foobar'])).be.rejectedWith('Expected a filterId, got a object');
+  });
 });
