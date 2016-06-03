@@ -2,6 +2,7 @@ var
   should = require('should'),
   rewire = require('rewire'),
   md5 = require('crypto-md5'),
+  Filters = require.main.require('lib/api/dsl/filters'),
   Methods = rewire('../../../../lib/api/dsl/methods'),
   BadRequestError = require.main.require('kuzzle-common-objects').Errors.badRequestError,
   InternalError = require.main.require('kuzzle-common-objects').Errors.internalError;
@@ -9,7 +10,7 @@ var
 describe('Test geoboundingbox method', function () {
   var
     methods,
-    roomId = 'roomId',
+    filterId = 'fakeFilterId',
     index = 'test',
     collection = 'collection',
     // Test all supported formats
@@ -55,30 +56,21 @@ describe('Test geoboundingbox method', function () {
     locationgeoBoundingBoxj042p0j0phsc9wnc4v = md5('locationgeoBoundingBoxj042p0j0phsc9wnc4v'),
     locationgeoBoundingBoxc0x5c7zzzds7jw7zzz = md5('locationgeoBoundingBoxc0x5c7zzzds7jw7zzz');
 
-
-  before(function () {
-    methods = new Methods({filtersTree: {}});
-    return methods.geoBoundingBox(roomId, index, collection, filterEngland)
-      .then(function () {
-        return methods.geoBoundingBox(roomId, index, collection, filterEngland2);
-      })
-      .then(function () {
-        return methods.geoBoundingBox(roomId, index, collection, filterEngland3);
-      })
-      .then(function () {
-        return methods.geoBoundingBox(roomId, index, collection, filterUSA);
-      })
-      .then(function () {
-        return methods.geoBoundingBox(roomId, index, collection, filterUSA2);
-      });
+  beforeEach(() => {
+    methods = new Methods(new Filters());
+    return methods.geoBoundingBox(filterId, index, collection, filterEngland)
+      .then(() => methods.geoBoundingBox(filterId, index, collection, filterEngland2))
+      .then(() => methods.geoBoundingBox(filterId, index, collection, filterEngland3))
+      .then(() => methods.geoBoundingBox(filterId, index, collection, filterUSA))
+      .then(() => methods.geoBoundingBox(filterId, index, collection, filterUSA2));
   });
 
   it('should construct the filterTree object for the correct attribute', function () {
-    should(methods.dsl.filtersTree).not.be.empty();
-    should(methods.dsl.filtersTree[index]).not.be.empty();
-    should(methods.dsl.filtersTree[index][collection]).not.be.empty();
-    should(methods.dsl.filtersTree[index][collection].fields).not.be.empty();
-    should(methods.dsl.filtersTree[index][collection].fields.location).not.be.empty();
+    should(methods.filters.filtersTree).not.be.empty();
+    should(methods.filters.filtersTree[index]).not.be.empty();
+    should(methods.filters.filtersTree[index][collection]).not.be.empty();
+    should(methods.filters.filtersTree[index][collection].fields).not.be.empty();
+    should(methods.filters.filtersTree[index][collection].fields.location).not.be.empty();
   });
 
   it('should construct the filterTree with correct encoded function name', function () {
@@ -86,34 +78,34 @@ describe('Test geoboundingbox method', function () {
     // because we have many times the same coord in filters,
     // we must have only three functions (one for filterEngland, and two for filterUSA)
 
-    should(Object.keys(methods.dsl.filtersTree[index][collection].fields.location)).have.length(3);
-    should(methods.dsl.filtersTree[index][collection].fields.location[locationgeoBoundingBoxgcmfj457fu10ffy7m4]).not.be.empty();
-    should(methods.dsl.filtersTree[index][collection].fields.location[locationgeoBoundingBoxj042p0j0phsc9wnc4v]).not.be.empty();
-    should(methods.dsl.filtersTree[index][collection].fields.location[locationgeoBoundingBoxc0x5c7zzzds7jw7zzz]).not.be.empty();
+    should(Object.keys(methods.filters.filtersTree[index][collection].fields.location)).have.length(3);
+    should(methods.filters.filtersTree[index][collection].fields.location[locationgeoBoundingBoxgcmfj457fu10ffy7m4]).not.be.empty();
+    should(methods.filters.filtersTree[index][collection].fields.location[locationgeoBoundingBoxj042p0j0phsc9wnc4v]).not.be.empty();
+    should(methods.filters.filtersTree[index][collection].fields.location[locationgeoBoundingBoxc0x5c7zzzds7jw7zzz]).not.be.empty();
   });
 
   it('should construct the filterTree with correct room list', function () {
-    var rooms;
+    var ids;
 
-    rooms = methods.dsl.filtersTree[index][collection].fields.location[locationgeoBoundingBoxgcmfj457fu10ffy7m4].rooms;
-    should(rooms).be.an.Array();
-    should(rooms).have.length(1);
-    should(rooms[0]).be.exactly(roomId);
+    ids = methods.filters.filtersTree[index][collection].fields.location[locationgeoBoundingBoxgcmfj457fu10ffy7m4].ids;
+    should(ids).be.an.Array();
+    should(ids).have.length(1);
+    should(ids[0]).be.exactly(filterId);
 
-    rooms = methods.dsl.filtersTree[index][collection].fields.location[locationgeoBoundingBoxj042p0j0phsc9wnc4v].rooms;
-    should(rooms).be.an.Array();
-    should(rooms).have.length(1);
-    should(rooms[0]).be.exactly(roomId);
+    ids = methods.filters.filtersTree[index][collection].fields.location[locationgeoBoundingBoxj042p0j0phsc9wnc4v].ids;
+    should(ids).be.an.Array();
+    should(ids).have.length(1);
+    should(ids[0]).be.exactly(filterId);
 
-    rooms = methods.dsl.filtersTree[index][collection].fields.location[locationgeoBoundingBoxc0x5c7zzzds7jw7zzz].rooms;
-    should(rooms).be.an.Array();
-    should(rooms).have.length(1);
-    should(rooms[0]).be.exactly(roomId);
+    ids = methods.filters.filtersTree[index][collection].fields.location[locationgeoBoundingBoxc0x5c7zzzds7jw7zzz].ids;
+    should(ids).be.an.Array();
+    should(ids).have.length(1);
+    should(ids[0]).be.exactly(filterId);
   });
 
   it('should construct the filterTree with correct geoboundingbox arguments', function () {
     // test filterEngland
-    should(methods.dsl.filtersTree[index][collection].fields.location[locationgeoBoundingBoxgcmfj457fu10ffy7m4].args).match({
+    should(methods.filters.filtersTree[index][collection].fields.location[locationgeoBoundingBoxgcmfj457fu10ffy7m4].args).match({
       operator: 'geoBoundingBox',
       not: undefined,
       field: 'location',
@@ -126,7 +118,7 @@ describe('Test geoboundingbox method', function () {
     });
 
     // test filterUSA
-    should(methods.dsl.filtersTree[index][collection].fields.location[locationgeoBoundingBoxj042p0j0phsc9wnc4v].args).match({
+    should(methods.filters.filtersTree[index][collection].fields.location[locationgeoBoundingBoxj042p0j0phsc9wnc4v].args).match({
       operator: 'geoBoundingBox',
       not: undefined,
       field: 'location',
@@ -139,7 +131,7 @@ describe('Test geoboundingbox method', function () {
     });
 
     // test filterUSA2
-    should(methods.dsl.filtersTree[index][collection].fields.location[locationgeoBoundingBoxc0x5c7zzzds7jw7zzz].args).match({
+    should(methods.filters.filtersTree[index][collection].fields.location[locationgeoBoundingBoxc0x5c7zzzds7jw7zzz].args).match({
       operator: 'geoBoundingBox',
       not: undefined,
       field: 'location',
@@ -166,14 +158,11 @@ describe('Test geoboundingbox method', function () {
         }
       };
 
-    return should(methods.geoBoundingBox(roomId, index, collection, invalidFilter)).be.rejectedWith(BadRequestError, { message: 'Unable to parse coordinates' });
+    return should(methods.geoBoundingBox(filterId, index, collection, invalidFilter)).be.rejectedWith(BadRequestError, { message: 'Unable to parse coordinates' });
   });
 
-  it('should return a rejected promise if addToFiltersTree fails', function () {
-    return Methods.__with__({
-      addToFiltersTree: function () { return new InternalError('rejected'); }
-    })(function () {
-      return should(methods.geoBoundingBox(roomId, index, collection, filterEngland)).be.rejectedWith('rejected');
-    });
+  it('should return a rejected promise if filters.add fails', function () {
+    methods.filters.add = function () { return new InternalError('rejected'); };
+    return should(methods.geoBoundingBox(filterId, index, collection, filterEngland)).be.rejectedWith('rejected');
   });
 });

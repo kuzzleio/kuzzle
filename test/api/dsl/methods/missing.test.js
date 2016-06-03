@@ -2,6 +2,7 @@ var
   should = require('should'),
   rewire = require('rewire'),
   md5 = require('crypto-md5'),
+  Filters = require.main.require('lib/api/dsl/filters'),
   Methods = rewire('../../../../lib/api/dsl/methods'),
   BadRequestError = require.main.require('kuzzle-common-objects').Errors.badRequestError,
   InternalError = require.main.require('kuzzle-common-objects').Errors.internalError;
@@ -9,7 +10,7 @@ var
 describe('Test missing method', function () {
   var
     methods,
-    roomId = 'roomId',
+    filterId = 'fakeFilterId',
     index = 'index',
     collection = 'collection',
     documentGrace = {
@@ -21,35 +22,35 @@ describe('Test missing method', function () {
     },
     missinglastName = md5('missinglastName');
 
-  before(function () {
-    methods = new Methods({filtersTree: {}});
-    return methods.missing(roomId, index, collection, filter, false);
+  beforeEach(function () {
+    methods = new Methods(new Filters());
+    return methods.missing(filterId, index, collection, filter, false);
   });
 
   it('should construct the filterTree object for the correct attribute', function () {
-    should(methods.dsl.filtersTree).not.be.empty();
-    should(methods.dsl.filtersTree[index]).not.be.empty();
-    should(methods.dsl.filtersTree[index][collection]).not.be.empty();
-    should(methods.dsl.filtersTree[index][collection].fields).not.be.empty();
-    should(methods.dsl.filtersTree[index][collection].fields.lastName).not.be.empty();
+    should(methods.filters.filtersTree).not.be.empty();
+    should(methods.filters.filtersTree[index]).not.be.empty();
+    should(methods.filters.filtersTree[index][collection]).not.be.empty();
+    should(methods.filters.filtersTree[index][collection].fields).not.be.empty();
+    should(methods.filters.filtersTree[index][collection].fields.lastName).not.be.empty();
   });
 
   it('should construct the filterTree with correct curried function name', function () {
-    should(methods.dsl.filtersTree[index][collection].fields.lastName[missinglastName]).not.be.empty();
+    should(methods.filters.filtersTree[index][collection].fields.lastName[missinglastName]).not.be.empty();
   });
 
   it('should construct the filterTree with correct room list', function () {
-    var rooms;
+    var ids;
 
     // Test gt from filterGrace
-    rooms = methods.dsl.filtersTree[index][collection].fields.lastName[missinglastName].rooms;
-    should(rooms).be.an.Array();
-    should(rooms).have.length(1);
-    should(rooms[0]).be.exactly(roomId);
+    ids = methods.filters.filtersTree[index][collection].fields.lastName[missinglastName].ids;
+    should(ids).be.an.Array();
+    should(ids).have.length(1);
+    should(ids[0]).be.exactly(filterId);
   });
 
   it('should construct the filterTree with correct functions missing', function () {
-    should(methods.dsl.filtersTree[index][collection].fields.lastName[missinglastName].args).match({
+    should(methods.filters.filtersTree[index][collection].fields.lastName[missinglastName].args).match({
       operator: 'missing',
       not: false,
       field: 'lastName',
@@ -66,34 +67,28 @@ describe('Test missing method', function () {
   });
 
   it('should return a rejected promise if addToFiltersTree fails', function () {
-    return Methods.__with__({
-      addToFiltersTree: function () { return new InternalError('rejected'); }
-    })(function () {
-      return should(methods.missing('foo', index, 'bar', { field: 'foo' }, false)).be.rejected();
-    });
+    methods.filters.add = function () { return new InternalError('rejected'); };
+
+    return should(methods.missing('foo', index, 'bar', { field: 'foo' }, false)).be.rejected();
   });
 
   it('should register the filter in the lcao area in case of a "missing" filter', function () {
-    return Methods.__with__({
-      addToFiltersTree: function (index, collection, field, operatorName, value, curriedFunctionName, roomId, not, inGlobals) {
-        should(inGlobals).be.false();
-        should(curriedFunctionName).not.startWith('not');
-        return { path: '' };
-      }
-    })(function () {
-      return should(methods.missing('foo', index, 'bar', { field: 'foo' }, false)).be.fulfilled();
-    });
+    methods.filters.add = function (index, collection, field, operatorName, value, curriedFunctionName, roomId, not, inGlobals) {
+      should(inGlobals).be.false();
+      should(curriedFunctionName).not.startWith('not');
+      return { path: '' };
+    };
+
+    return should(methods.missing('foo', index, 'bar', { field: 'foo' }, false)).be.fulfilled();
   });
 
   it('should register the filter in the global area in case of a "not missing" filter', function () {
-    return Methods.__with__({
-      addToFiltersTree: function (index, collection, field, operatorName, value, curriedFunctionName, roomId, not, inGlobals) {
-        should(inGlobals).be.true();
-        should(curriedFunctionName).startWith('not');
-        return { path: '' };
-      }
-    })(function () {
-      return should(methods.missing('foo', index, 'bar', { field: 'foo' }, true)).be.fulfilled();
-    });
+    methods.filters.add = function (index, collection, field, operatorName, value, curriedFunctionName, roomId, not, inGlobals) {
+      should(inGlobals).be.true();
+      should(curriedFunctionName).startWith('not');
+      return { path: '' };
+    };
+
+    return should(methods.missing('foo', index, 'bar', { field: 'foo' }, true)).be.fulfilled();
   });
 });

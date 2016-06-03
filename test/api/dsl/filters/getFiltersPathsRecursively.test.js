@@ -1,11 +1,11 @@
 var
   should = require('should'),
   rewire = require('rewire'),
-  Dsl = rewire('../../../../lib/api/dsl/index');
+  DslFilters = rewire('../../../../lib/api/dsl/filters');
 
 describe('Test: dsl.getFiltersPathsRecursively', function () {
   var
-    getFiltersPathsRecursively = Dsl.__get__('getFiltersPathsRecursively');
+    getFiltersPathsRecursively = DslFilters.__get__('getFiltersPathsRecursively');
 
   it('should be able to construct a filter path out of a complex filter', function () {
     var

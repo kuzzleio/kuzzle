@@ -3,6 +3,7 @@ var
   rewire = require('rewire'),
   md5 = require('crypto-md5'),
   q = require('q'),
+  Filters = require.main.require('lib/api/dsl/filters'),
   Methods = rewire('../../../../lib/api/dsl/methods'),
   BadRequestError = require.main.require('kuzzle-common-objects').Errors.badRequestError;
 
@@ -16,7 +17,7 @@ describe('Test: dsl.getFormattedFilters method', function () {
     notexistsbar = md5('notexistsbar');
 
   beforeEach(function () {
-    methods = new Methods({filtersTree: {}});
+    methods = new Methods(new Filters());
   });
 
   it('should return a rejected promise if the provided filter is empty', function () {
@@ -39,9 +40,9 @@ describe('Test: dsl.getFormattedFilters method', function () {
       .then(function (formattedFilter) {
         should.exist(formattedFilter['index.collection.foo.' + existsfoo]);
         should(formattedFilter['index.collection.foo.' + existsfoo]).be.an.Object();
-        should.exist(formattedFilter['index.collection.foo.' + existsfoo].rooms);
-        should(formattedFilter['index.collection.foo.' + existsfoo].rooms).be.an.Array().and.match(['roomId']);
-        should(formattedFilter['index.collection.foo.' + existsfoo].rooms.length).eql(1);
+        should.exist(formattedFilter['index.collection.foo.' + existsfoo].ids);
+        should(formattedFilter['index.collection.foo.' + existsfoo].ids).be.an.Array().and.match(['roomId']);
+        should(formattedFilter['index.collection.foo.' + existsfoo].ids.length).eql(1);
         should.exist(formattedFilter['index.collection.foo.' + existsfoo].args);
       });
   });
@@ -57,16 +58,16 @@ describe('Test: dsl.getFormattedFilters method', function () {
       .then(function (formattedFilter) {
         should.exist(formattedFilter['index.collection.foo.' + existsfoo]);
         should(formattedFilter['index.collection.foo.' + existsfoo]).be.an.Object();
-        should.exist(formattedFilter['index.collection.foo.' + existsfoo].rooms);
-        should(formattedFilter['index.collection.foo.' + existsfoo].rooms).be.an.Array().and.match(['roomId']);
-        should(formattedFilter['index.collection.foo.' + existsfoo].rooms.length).eql(1);
+        should.exist(formattedFilter['index.collection.foo.' + existsfoo].ids);
+        should(formattedFilter['index.collection.foo.' + existsfoo].ids).be.an.Array().and.match(['roomId']);
+        should(formattedFilter['index.collection.foo.' + existsfoo].ids.length).eql(1);
         should.exist(formattedFilter['index.collection.foo.' + existsfoo].args);
 
         should.exist(formattedFilter['index.collection.bar.' + existsbar]);
         should(formattedFilter['index.collection.bar.' + existsbar]).be.an.Object();
-        should.exist(formattedFilter['index.collection.bar.' + existsbar].rooms);
-        should(formattedFilter['index.collection.bar.' + existsbar].rooms).be.an.Array().and.match(['roomId']);
-        should(formattedFilter['index.collection.bar.' + existsbar].rooms.length).eql(1);
+        should.exist(formattedFilter['index.collection.bar.' + existsbar].ids);
+        should(formattedFilter['index.collection.bar.' + existsbar].ids).be.an.Array().and.match(['roomId']);
+        should(formattedFilter['index.collection.bar.' + existsbar].ids.length).eql(1);
         should.exist(formattedFilter['index.collection.bar.' + existsbar].args);
       });
   });
@@ -83,16 +84,16 @@ describe('Test: dsl.getFormattedFilters method', function () {
       .then(function (formattedFilter) {
         should.exist(formattedFilter['index.collection.foo.' + existsfoo]);
         should(formattedFilter['index.collection.foo.' + existsfoo]).be.an.Object();
-        should.exist(formattedFilter['index.collection.foo.' + existsfoo].rooms);
-        should(formattedFilter['index.collection.foo.' + existsfoo].rooms).be.an.Array().and.match(['roomId']);
-        should(formattedFilter['index.collection.foo.' + existsfoo].rooms.length).eql(1);
+        should.exist(formattedFilter['index.collection.foo.' + existsfoo].ids);
+        should(formattedFilter['index.collection.foo.' + existsfoo].ids).be.an.Array().and.match(['roomId']);
+        should(formattedFilter['index.collection.foo.' + existsfoo].ids.length).eql(1);
         should.exist(formattedFilter['index.collection.foo.' + existsfoo].args);
 
         should.exist(formattedFilter['index.collection.bar.' + existsbar]);
         should(formattedFilter['index.collection.bar.' + existsbar]).be.an.Object();
-        should.exist(formattedFilter['index.collection.bar.' + existsbar].rooms);
-        should(formattedFilter['index.collection.bar.' + existsbar].rooms).be.an.Array().and.match(['roomId']);
-        should(formattedFilter['index.collection.bar.' + existsbar].rooms.length).eql(1);
+        should.exist(formattedFilter['index.collection.bar.' + existsbar].ids);
+        should(formattedFilter['index.collection.bar.' + existsbar].ids).be.an.Array().and.match(['roomId']);
+        should(formattedFilter['index.collection.bar.' + existsbar].ids.length).eql(1);
         should.exist(formattedFilter['index.collection.bar.' + existsbar].args);
       });
   });
@@ -109,9 +110,9 @@ describe('Test: dsl.getFormattedFilters method', function () {
       .then(function (formattedFilter) {
         should.exist(formattedFilter['index.collection.foo.' + notexistsfoo]);
         should(formattedFilter['index.collection.foo.' + notexistsfoo]).be.an.Object();
-        should.exist(formattedFilter['index.collection.foo.' + notexistsfoo].rooms);
-        should(formattedFilter['index.collection.foo.' + notexistsfoo].rooms).be.an.Array().and.match(['roomId']);
-        should(formattedFilter['index.collection.foo.' + notexistsfoo].rooms.length).eql(1);
+        should.exist(formattedFilter['index.collection.foo.' + notexistsfoo].ids);
+        should(formattedFilter['index.collection.foo.' + notexistsfoo].ids).be.an.Array().and.match(['roomId']);
+        should(formattedFilter['index.collection.foo.' + notexistsfoo].ids.length).eql(1);
         should.exist(formattedFilter['index.collection.foo.' + notexistsfoo].args);
       });
   });
