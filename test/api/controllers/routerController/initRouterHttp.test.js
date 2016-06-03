@@ -43,7 +43,7 @@ function parseHttpResponse(response) {
 }
 
 
-describe.skip('Test: routerController.initRouterHttp', function () {
+describe('Test: routerController.initRouterHttp', function () {
   var
     kuzzle,
     server,
@@ -95,9 +95,7 @@ describe.skip('Test: routerController.initRouterHttp', function () {
           router.routeHttp(request, response);
         });
 
-        server.listen(options.port);
-
-        done();
+        server.listen(options.port, () => done());
       });
   });
 
