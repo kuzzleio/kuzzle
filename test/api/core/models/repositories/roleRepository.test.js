@@ -209,6 +209,7 @@ describe('Test: repositories/roleRepository', function () {
       sandbox.stub(kuzzle.repositories.role, 'roles', {myRole : {}});
 
       sandbox.stub(kuzzle.repositories.role, 'deleteFromDatabase').resolves();
+      sandbox.stub(kuzzle.repositories.profile, 'search').resolves({total: 0});
 
       return kuzzle.repositories.role.deleteRole({_id: 'myRole'})
         .then(() => {

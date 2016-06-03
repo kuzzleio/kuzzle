@@ -1,15 +1,19 @@
+loadbalancer:
+  image: kuzzleio/lb:alpine
+  ports:
+    - "7511:7511"
+    - "7512:7512"
+
 kuzzle:
   image: kuzzleio/test:alpine
   command: /run-test.sh
   volumes:
     - "..:/var/app"
-  ports:
-    - "7511:7511"
-    - "7512:7512"
   links:
     - rabbit
     - elasticsearch
     - redis
+    - loadbalancer
   environment:
     - MQ_BROKER_ENABLED=1
     - FEATURE_COVERAGE=1

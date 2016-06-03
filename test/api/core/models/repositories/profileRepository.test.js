@@ -198,6 +198,8 @@ describe('Test: repositories/profileRepository', () => {
       var response = {_id: 'testprofile'};
 
       sandbox.stub(kuzzle.repositories.profile, 'deleteFromDatabase').resolves(response);
+      sandbox.stub(kuzzle.repositories.user, 'search').resolves({total: 0});
+
       return should(kuzzle.repositories.profile.deleteProfile(testProfile))
         .be.fulfilledWith(response);
     });
