@@ -590,22 +590,14 @@ function removePlugin(plugin, db, cfg) {
     .then(result => {
       // Plugins imported using --path should not be deleted
       installedLocally = (result._source.npmVersion || result._source.gitUrl);
-
       return db.delete(cfg.pluginsManager.dataCollection, plugin);
     })
     .then(() => {
-      var
-        moduleDirectory;
-
       console.log('███ kuzzle-plugins: Plugin configuration deleted');
 
       if (installedLocally) {
         try {
-          moduleDirectory = require.resolve(plugin);
-
-          // instead of the module entry file, we need its installation directory
-          moduleDirectory = moduleDirectory.substr(0, moduleDirectory.indexOf(plugin)) + '/' + plugin;
-          return q.denodeify(rimraf)(moduleDirectory);
+          return q.denodeify(rimraf)(getPathPlugin({}, plugin));
         }
         catch (err) {
           return q.reject(new Error('Unable to remove the plugin module: ' + err));
