@@ -201,6 +201,7 @@ describe('Test: security controller - users', function () {
     it('should return a valid ResponseObject', () => {
       var mock = sandbox.mock(kuzzle.repositories.user).expects('persist').once().resolves({_id: 'test'});
 
+      sandbox.stub(kuzzle.repositories.profile, 'loadProfile').resolves({_id: 'anonymous', _source: {}});
       sandbox.stub(kuzzle.repositories.user, 'load').resolves({});
 
       return kuzzle.funnel.controllers.security.updateUser(new RequestObject({
@@ -223,6 +224,7 @@ describe('Test: security controller - users', function () {
     });
 
     it('should update the profile correctly', () => {
+      sandbox.stub(kuzzle.repositories.profile, 'loadProfile').resolves({_id: 'default', _source: {}});
       sandbox.stub(kuzzle.repositories.user, 'load').resolves({_id: 'test', profile: 'default'});
 
       return kuzzle.funnel.controllers.security.updateUser(new RequestObject({
