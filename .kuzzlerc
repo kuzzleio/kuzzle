@@ -176,10 +176,6 @@
       "kuzzle-plugin-auth-passport-local": {
         "npmVersion": "1.3.5",
         "activated": true
-      },
-      "kuzzle-plugin-websocket-demultiplexer": {
-        "npmVersion": "1.0.2",
-        "activated": true
       }
     }
   },
