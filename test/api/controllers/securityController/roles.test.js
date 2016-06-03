@@ -235,20 +235,20 @@ describe('Test: security controller - roles', function () {
 
   describe('#deleteRole', function () {
     it('should return response with on deleteRole call', done => {
+      var
+        spyDeleteRole,
+        role = {my: 'role'};
+
+      sandbox.stub(kuzzle.repositories.role, 'getRoleFromRequestObject').returns(role);
+      spyDeleteRole = sandbox.stub(kuzzle.repositories.role, 'deleteRole');
+
       kuzzle.funnel.controllers.security.deleteRole(new RequestObject({
         _id: 'test',
         body: {}
       }))
-        .then(result => {
-          var jsonResponse = result.toJson();
-
-          should(result).be.an.instanceOf(ResponseObject);
-          should(jsonResponse.result._id).be.exactly('test');
-
+        .then(() => {
+          should(spyDeleteRole.calledWith(role)).be.true();
           done();
-        })
-        .catch(error => {
-          done(error);
         });
     });
 
