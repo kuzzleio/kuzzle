@@ -17,14 +17,19 @@ describe('Test: Swagger files generation', () => {
     kuzzle,
     sandbox;
 
-  before(() => {
+  before((done) => {
     kuzzle = new Kuzzle();
 
-    return kuzzle.start(params, {dummy: true});    
+    kuzzle.start(params, {dummy: true})
+      .then(() => {
+        console.log('done');
+        done()
+    });
   });
 
   beforeEach(() => {
     sandbox = sinon.sandbox.create();
+
     sandbox.stub(kuzzle.config, 'httpRoutes', [
       {verb: 'get', url: '/basic', controller: 'basic', action: 'basic'},
       {verb: 'post', url: '/complete', controller: 'complete', action: 'complete', infos: {description: 'description'}}
