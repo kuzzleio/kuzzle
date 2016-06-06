@@ -20,11 +20,7 @@ describe('Test: Swagger files generation', () => {
   before((done) => {
     kuzzle = new Kuzzle();
 
-    kuzzle.start(params, {dummy: true})
-      .then(() => {
-        console.log('done');
-        done()
-    });
+    return kuzzle.start(params, {dummy: true})
   });
 
   beforeEach(() => {
