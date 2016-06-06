@@ -17,7 +17,7 @@ var
   UnauthorizedError = require.main.require('kuzzle-common-objects').Errors.unauthorizedError,
   Profile = require.main.require('lib/api/core/models/security/profile'),
   Token = require.main.require('lib/api/core/models/security/token'),
-  User = require.main.require('lib/api/core/models/security/user'),
+  User = require.main.require('lib/api/core/models/security/user')(kuzzle),
   Role = require.main.require('lib/api/core/models/security/role'),
   Repository = require.main.require('lib/api/core/models/repositories/repository'),
   TokenRepository = require.main.require('lib/api/core/models/repositories/tokenRepository')(kuzzle),

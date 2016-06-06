@@ -5,6 +5,7 @@ var
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
+  NotFoundError = require.main.require('kuzzle-common-objects').Errors.notFoundError,
   ResponseObject = require.main.require('kuzzle-common-objects').Models.responseObject;
 
 require('sinon-as-promised')(q.Promise);
@@ -91,7 +92,7 @@ describe('Test: security controller - users', function () {
         body: { _id: 'i.dont.exist' }
       }));
 
-      return should(promise).be.rejected();
+      return should(promise).be.rejectedWith(NotFoundError);
     });
   });
 
@@ -201,6 +202,7 @@ describe('Test: security controller - users', function () {
     it('should return a valid ResponseObject', () => {
       var mock = sandbox.mock(kuzzle.repositories.user).expects('persist').once().resolves({_id: 'test'});
 
+      sandbox.stub(kuzzle.repositories.profile, 'loadProfile').resolves({_id: 'anonymous', _source: {}});
       sandbox.stub(kuzzle.repositories.user, 'load').resolves({});
 
       return kuzzle.funnel.controllers.security.updateUser(new RequestObject({
@@ -223,8 +225,8 @@ describe('Test: security controller - users', function () {
     });
 
     it('should update the profile correctly', () => {
+      sandbox.stub(kuzzle.repositories.profile, 'loadProfile').resolves({_id: 'default', _source: {}});
       sandbox.stub(kuzzle.repositories.user, 'load').resolves({_id: 'test', profile: 'default'});
-      sandbox.stub(kuzzle.repositories.profile, 'loadProfile').resolves({});
 
       return kuzzle.funnel.controllers.security.updateUser(new RequestObject({
         _id: 'test',
@@ -261,6 +263,70 @@ describe('Test: security controller - users', function () {
         _id: 'test'
       })))
         .be.rejected();
+    });
+  });
+
+  describe('#getUserRights', function () {
+    it('should resolve to a responseObject on a getUserRights call', () => {
+      var loadUserStub = userId => {
+        return {
+          _id: userId,
+          _source: {},
+          getRights: () => {
+            return {
+              rights1: {
+                controller: 'read', action: 'get', index: 'foo', collection: 'bar',
+                value: 'allowed'
+              },
+              rights2: {
+                controller: 'write', action: 'delete', index: '*', collection: '*',
+                value: 'conditional'
+              }
+            };
+          }
+        };
+      };
+
+      sandbox.stub(kuzzle.repositories.user, 'load', loadUserStub);
+      return kuzzle.funnel.controllers.security.getUserRights(new RequestObject({
+          body: {_id: 'test'}
+        }))
+        .then(result => {
+          var filteredItem;
+
+          should(result).be.an.instanceOf(ResponseObject);
+          should(result.data.body.hits).be.an.Array();
+          should(result.data.body.hits).length(2);
+
+          filteredItem = result.data.body.hits.filter(item => {
+            return item.controller === 'read' &&
+                    item.action === 'get' &&
+                    item.index === 'foo' &&
+                    item.collection === 'bar';
+          });
+          should(filteredItem).length(1);
+          should(filteredItem[0].value).be.equal('allowed');
+
+          filteredItem = result.data.body.hits.filter(item => {
+            return item.controller === 'write' &&
+                    item.action === 'delete' &&
+                    item.index === '*' &&
+                    item.collection === '*';
+          });
+          should(filteredItem).length(1);
+          should(filteredItem[0].value).be.equal('conditional');
+        });
+    });
+
+    it('should reject to an error on a getUserRights call without id', () => {
+      return should(kuzzle.funnel.controllers.security.getUserRights(new RequestObject({body: {_id: ''}}))).be.rejected();
+    });
+
+    it('should reject NotFoundError on a getUserRights call with a bad id', () => {
+      sandbox.stub(kuzzle.repositories.user, 'load').resolves(null);
+      return should(kuzzle.funnel.controllers.security.getUserRights(new RequestObject({
+          body: { _id: 'i.dont.exist' }
+        }))).be.rejectedWith(NotFoundError);
     });
   });
 });
