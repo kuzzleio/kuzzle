@@ -47,7 +47,6 @@ describe('Test: Swagger files generation', () => {
   });
 
   it ('should create entries in the swagger files for the plugins', () => {
-
     sandbox.stub(fs, 'writeFileSync', () => {
       return true;
     });
