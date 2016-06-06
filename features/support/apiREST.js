@@ -514,6 +514,16 @@ ApiREST.prototype.getProfile = function (id) {
   return this.callApi(options);
 };
 
+ApiREST.prototype.getProfileRights = function (id) {
+  var options = {
+    url: this.apiPath('profiles/' + id + '/_rights'),
+    method: 'GET',
+    json: true
+  };
+
+  return this.callApi(options);
+};
+
 ApiREST.prototype.mGetProfiles = function (body) {
   var options = {
     url: this.apiPath('profiles/_mget'),
@@ -554,12 +564,32 @@ ApiREST.prototype.getUser = function (id) {
   return this.callApi(options);
 };
 
+ApiREST.prototype.getUserRights = function (id) {
+  var options = {
+    url: this.apiPath('users/' + id + '/_rights'),
+    method: 'GET',
+    json: true
+  };
+
+  return this.callApi(options);
+};
+
 ApiREST.prototype.getCurrentUser = function () {
   return this.callApi({
     url: this.apiPath('users/_me'),
     method: 'GET',
     json: true
   });
+};
+
+ApiREST.prototype.getMyRights = function (id) {
+  var options = {
+    url: this.apiPath('users/_me/_rights'),
+    method: 'GET',
+    json: true
+  };
+
+  return this.callApi(options);
 };
 
 ApiREST.prototype.searchUsers = function (body) {
