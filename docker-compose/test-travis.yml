@@ -1,5 +1,5 @@
-loadbalancer:
-  image: kuzzleio/lb:alpine
+proxy:
+  image: kuzzleio/proxy:alpine
   ports:
     - "7511:7511"
     - "7512:7512"
@@ -13,7 +13,7 @@ kuzzle:
     - rabbit
     - elasticsearch
     - redis
-    - loadbalancer
+    - proxy
   environment:
     - MQ_BROKER_ENABLED=1
     - FEATURE_COVERAGE=1
