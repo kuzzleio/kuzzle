@@ -17,7 +17,7 @@ describe('Test: Swagger files generation', () => {
     kuzzle,
     sandbox;
 
-  before((done) => {
+  before(() => {
     kuzzle = new Kuzzle();
 
     return kuzzle.start(params, {dummy: true});
