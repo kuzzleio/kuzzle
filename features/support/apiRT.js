@@ -493,6 +493,17 @@ ApiRT.prototype.getProfile = function (id) {
   return this.send(msg);
 };
 
+ApiRT.prototype.getProfileRights = function (id) {
+  var
+    msg = {
+      controller: 'security',
+      action: 'getProfileRights',
+      _id: id
+    };
+
+  return this.send(msg);
+};
+
 ApiRT.prototype.mGetProfiles = function (body) {
   var
     msg = {
@@ -546,10 +557,26 @@ ApiRT.prototype.getUser = function (id) {
   });
 };
 
+ApiRT.prototype.getUserRights = function (id) {
+  return this.send({
+    controller: 'security',
+    action: 'getUserRights',
+    _id: id
+  });
+};
+
 ApiRT.prototype.getCurrentUser = function () {
   return this.send({
     controller: 'auth',
     action: 'getCurrentUser'
+  });
+};
+
+ApiRT.prototype.getMyRights = function (id) {
+  return this.send({
+    controller: 'auth',
+    action: 'getMyRights',
+    _id: id
   });
 };
 
