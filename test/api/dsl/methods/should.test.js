@@ -2,11 +2,15 @@ var
   should = require('should'),
   rewire = require('rewire'),
   q = require('q'),
-  methods = rewire('../../../../lib/api/dsl/methods');
+  Methods = rewire('../../../../lib/api/dsl/methods');
 
 describe('Test: dsl.should method', function () {
+  var methods;
+
   before(function () {
-    methods.__set__('getFormattedFilters', function (roomId) {
+    should.noConflict();
+
+    Methods.__set__('getFormattedFilters', function (roomId) {
       if (roomId === 'resolve') {
         return q('resolved');
       }
@@ -14,6 +18,8 @@ describe('Test: dsl.should method', function () {
         return q.reject(new Error('rejected'));
       }
     });
+
+    methods = new Methods({filtersTree: {}});
   });
 
   it('should call the function "AND" in case of a should-not filter', function () {

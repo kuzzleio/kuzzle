@@ -46,7 +46,7 @@ describe('Test: notifier.publish', function () {
       notification = n;
     };
 
-    kuzzle.dsl.testFilters = () => q(rooms);
+    kuzzle.dsl.test = () => q(rooms);
 
     notification = null;
     cached = false;
@@ -130,8 +130,8 @@ describe('Test: notifier.publish', function () {
       });
   });
 
-  it('should return a rejected promise if testFilters fails', () => {
-    kuzzle.dsl.testFilters = () => q.reject(new Error(''));
+  it('should return a rejected promise if dsl.test fails', () => {
+    kuzzle.dsl.test = () => q.reject(new Error(''));
     return should(kuzzle.notifier.publish(new RequestObject(request))).be.rejected();
   });
 });

@@ -2,14 +2,15 @@ var
   should = require('should'),
   rewire = require('rewire'),
   md5 = require('crypto-md5'),
-  methods = rewire('../../../../lib/api/dsl/methods'),
+  Filters = require.main.require('lib/api/dsl/filters'),
+  Methods = rewire('../../../../lib/api/dsl/methods'),
   BadRequestError = require.main.require('kuzzle-common-objects').Errors.badRequestError,
   InternalError = require.main.require('kuzzle-common-objects').Errors.internalError;
 
-
 describe('Test "geoPolygon" method', function () {
   var
-    roomId = 'roomId',
+    methods,
+    filterId = 'fakeFilterId',
     index = 'test',
     collection = 'collection',
     filterExact = {
@@ -46,20 +47,20 @@ describe('Test "geoPolygon" method', function () {
     locationgeoPolygonkpbxyzbpvs00twy01mebpvxypcr7zzzzzzzz = md5('locationgeoPolygonkpbxyzbpvs00twy01mebpvxypcr7zzzzzzzz'),
     locationgeoPolygons1zbfk3yns1zyd63zws1zned3z8s1z0gs3y0 = md5('locationgeoPolygons1zbfk3yns1zyd63zws1zned3z8s1z0gs3y0');
 
-  before(function () {
-    methods.dsl.filtersTree = {};
+  beforeEach(function () {
+    methods = new Methods(new Filters());
 
-    return methods.geoPolygon(roomId, index, collection, filterExact)
-      .then(() => methods.geoPolygon(roomId, index, collection, filterLimit))
-      .then(() => methods.geoPolygon(roomId, index, collection, filterOutside));
+    return methods.geoPolygon(filterId, index, collection, filterExact)
+      .then(() => methods.geoPolygon(filterId, index, collection, filterLimit))
+      .then(() => methods.geoPolygon(filterId, index, collection, filterOutside));
   });
 
   it('should construct the filterTree object for the correct attribute', function () {
-    should(methods.dsl.filtersTree).not.be.empty();
-    should(methods.dsl.filtersTree[index]).not.be.empty();
-    should(methods.dsl.filtersTree[index][collection]).not.be.empty();
-    should(methods.dsl.filtersTree[index][collection].fields).not.be.empty();
-    should(methods.dsl.filtersTree[index][collection].fields.location).not.be.empty();
+    should(methods.filters.filtersTree).not.be.empty();
+    should(methods.filters.filtersTree[index]).not.be.empty();
+    should(methods.filters.filtersTree[index][collection]).not.be.empty();
+    should(methods.filters.filtersTree[index][collection].fields).not.be.empty();
+    should(methods.filters.filtersTree[index][collection].fields.location).not.be.empty();
   });
 
   it('should construct the filterTree with correct encoded function name', function () {
@@ -67,35 +68,35 @@ describe('Test "geoPolygon" method', function () {
     // because we have many times the same coord in filters,
     // we must have only four functions
     
-    should(Object.keys(methods.dsl.filtersTree[index][collection].fields.location)).have.length(3);
-    should(methods.dsl.filtersTree[index][collection].fields.location[locationgeoPolygonkpbdqcbnts00twy01mebpm9npc67zz631zyd]).not.be.empty();
-    should(methods.dsl.filtersTree[index][collection].fields.location[locationgeoPolygonkpbxyzbpvs00twy01mebpvxypcr7zzzzzzzz]).not.be.empty();
-    should(methods.dsl.filtersTree[index][collection].fields.location[locationgeoPolygons1zbfk3yns1zyd63zws1zned3z8s1z0gs3y0]).not.be.empty();
+    should(Object.keys(methods.filters.filtersTree[index][collection].fields.location)).have.length(3);
+    should(methods.filters.filtersTree[index][collection].fields.location[locationgeoPolygonkpbdqcbnts00twy01mebpm9npc67zz631zyd]).not.be.empty();
+    should(methods.filters.filtersTree[index][collection].fields.location[locationgeoPolygonkpbxyzbpvs00twy01mebpvxypcr7zzzzzzzz]).not.be.empty();
+    should(methods.filters.filtersTree[index][collection].fields.location[locationgeoPolygons1zbfk3yns1zyd63zws1zned3z8s1z0gs3y0]).not.be.empty();
   });
 
   it('should construct the filterTree with correct room list', function () {
-    var rooms;
+    var ids;
 
-    rooms = methods.dsl.filtersTree[index][collection].fields.location[locationgeoPolygonkpbdqcbnts00twy01mebpm9npc67zz631zyd].rooms;
-    should(rooms).be.an.Array();
-    should(rooms).have.length(1);
-    should(rooms[0]).be.exactly(roomId);
+    ids = methods.filters.filtersTree[index][collection].fields.location[locationgeoPolygonkpbdqcbnts00twy01mebpm9npc67zz631zyd].ids;
+    should(ids).be.an.Array();
+    should(ids).have.length(1);
+    should(ids[0]).be.exactly(filterId);
 
-    rooms = methods.dsl.filtersTree[index][collection].fields.location[locationgeoPolygonkpbxyzbpvs00twy01mebpvxypcr7zzzzzzzz].rooms;
-    should(rooms).be.an.Array();
-    should(rooms).have.length(1);
-    should(rooms[0]).be.exactly(roomId);
+    ids = methods.filters.filtersTree[index][collection].fields.location[locationgeoPolygonkpbxyzbpvs00twy01mebpvxypcr7zzzzzzzz].ids;
+    should(ids).be.an.Array();
+    should(ids).have.length(1);
+    should(ids[0]).be.exactly(filterId);
 
-    rooms = methods.dsl.filtersTree[index][collection].fields.location[locationgeoPolygons1zbfk3yns1zyd63zws1zned3z8s1z0gs3y0].rooms;
-    should(rooms).be.an.Array();
-    should(rooms).have.length(1);
-    should(rooms[0]).be.exactly(roomId);
+    ids = methods.filters.filtersTree[index][collection].fields.location[locationgeoPolygons1zbfk3yns1zyd63zws1zned3z8s1z0gs3y0].ids;
+    should(ids).be.an.Array();
+    should(ids).have.length(1);
+    should(ids[0]).be.exactly(filterId);
 
   });
 
   it('should construct the filterTree with correct functions geoPolygon', function () {
     // test exact
-    should(methods.dsl.filtersTree[index][collection].fields.location[locationgeoPolygonkpbdqcbnts00twy01mebpm9npc67zz631zyd].args).match({
+    should(methods.filters.filtersTree[index][collection].fields.location[locationgeoPolygonkpbdqcbnts00twy01mebpm9npc67zz631zyd].args).match({
       operator: 'geoPolygon',
       not: undefined,
       field: 'location',
@@ -107,7 +108,7 @@ describe('Test "geoPolygon" method', function () {
     });
 
     // test outside
-    should(methods.dsl.filtersTree[index][collection].fields.location[locationgeoPolygonkpbxyzbpvs00twy01mebpvxypcr7zzzzzzzz].args).match({
+    should(methods.filters.filtersTree[index][collection].fields.location[locationgeoPolygonkpbxyzbpvs00twy01mebpvxypcr7zzzzzzzz].args).match({
       operator: 'geoPolygon',
       not: undefined,
       field: 'location',
@@ -119,7 +120,7 @@ describe('Test "geoPolygon" method', function () {
     });
 
     // test on limit
-    should(methods.dsl.filtersTree[index][collection].fields.location[locationgeoPolygons1zbfk3yns1zyd63zws1zned3z8s1z0gs3y0].args).match({
+    should(methods.filters.filtersTree[index][collection].fields.location[locationgeoPolygons1zbfk3yns1zyd63zws1zned3z8s1z0gs3y0].args).match({
       operator: 'geoPolygon',
       not: undefined,
       field: 'location',
@@ -146,7 +147,7 @@ describe('Test "geoPolygon" method', function () {
         distance: 123
       };
 
-    return should(methods.geoPolygon(roomId, index, collection, invalidFilter)).be.rejectedWith(BadRequestError, { message: 'No point list found' });
+    return should(methods.geoPolygon(filterId, index, collection, invalidFilter)).be.rejectedWith(BadRequestError, { message: 'No point list found' });
   });
 
   it('should return a rejected promise if the location filter parameter is missing', function () {
@@ -155,11 +156,11 @@ describe('Test "geoPolygon" method', function () {
         distance: 123
       };
 
-    return should(methods.geoPolygon(roomId, index, collection, invalidFilter)).be.rejectedWith(BadRequestError, { message: 'No point list found' });
+    return should(methods.geoPolygon(filterId, index, collection, invalidFilter)).be.rejectedWith(BadRequestError, { message: 'No point list found' });
   });
 
   it('should handle the not parameter', function () {
-    return methods.geoPolygon(roomId, index, collection, filterExact, true);
+    return methods.geoPolygon(filterId, index, collection, filterExact, true);
   });
 
   it('should return a rejected promise if the location filter parameter does not contain a points member', function () {
@@ -171,7 +172,7 @@ describe('Test "geoPolygon" method', function () {
         }
       };
 
-    return should(methods.geoPolygon(roomId, index, collection, invalidFilter)).be.rejectedWith(BadRequestError, { message: 'No point list found' });
+    return should(methods.geoPolygon(filterId, index, collection, invalidFilter)).be.rejectedWith(BadRequestError, { message: 'No point list found' });
   });
 
   it('should return a rejected promise if the location filter parameter contain a points filter with less than 3 points', function () {
@@ -185,7 +186,7 @@ describe('Test "geoPolygon" method', function () {
         }
       };
 
-    return should(methods.geoPolygon(roomId, index, collection, invalidFilter)).be.rejectedWith(BadRequestError, { message: 'A polygon must have at least 3 points' });
+    return should(methods.geoPolygon(filterId, index, collection, invalidFilter)).be.rejectedWith(BadRequestError, { message: 'A polygon must have at least 3 points' });
   });
 
   it('should return a rejected promise if the location filter parameter contain a points filter wich is not an array', function () {
@@ -196,14 +197,11 @@ describe('Test "geoPolygon" method', function () {
         }
       };
 
-    return should(methods.geoPolygon(roomId, index, collection, invalidFilter)).be.rejectedWith(BadRequestError, { message: 'A polygon must be in array format' });
+    return should(methods.geoPolygon(filterId, index, collection, invalidFilter)).be.rejectedWith(BadRequestError, { message: 'A polygon must be in array format' });
   });
 
   it('should return a rejected promise if addToFiltersTree fails', function () {
-    return methods.__with__({
-      addToFiltersTree: function () { return new InternalError('rejected'); }
-    })(function () {
-      return should(methods.geoPolygon(roomId, index, collection, filterExact)).be.rejectedWith('rejected');
-    });
+    methods.filters.add = function () { return new InternalError('rejected'); };
+    return should(methods.geoPolygon(filterId, index, collection, filterExact)).be.rejectedWith('rejected');
   });
 });
