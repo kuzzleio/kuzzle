@@ -1,40 +1,40 @@
+loadbalancer:
+  image: kuzzleio/lb:alpine
+  ports:
+    - "7511:7511"
+    - "7512:7512"
+    - "8083:8080"
+
 kuzzle:
   image: kuzzleio/dev:alpine
   command: /run-debug.sh
   volumes:
     - "..:/var/app"
+  ports:
+    - "8080:8080"
+    - "8081:8081"
   links:
     - rabbit
     - elasticsearch
     - redis
-    - lb:loadbalancer
+    - loadbalancer
   environment:
     - MQ_BROKER_ENABLED=1
     - FEATURE_COVERAGE
-    - kuzzle__cluster__mode=master
 
-kuzzle2:
-  image: kuzzleio/dev:alpine
-  command: /run-debug.sh
-  volumes:
-    - "..:/var/app"
-  links:
-    - rabbit
-    - elasticsearch
-    - redis
-    - lb:loadbalancer
-    - kuzzle
-  environment:
-    - kuzzle__cluster__mode=slave
-    - kuzzle__cluster__master=kuzzle:7911
-
-lb:
-  image: kuzzleio/lb-dev
-  volumes:
-    - "../../kuzzle-load-balancer:/var/app"
+rabbit:
+  image: kuzzleio/rabbitmq:alpine
   ports:
-    - "7511:7511"
-    - "7512:7512"
+    - "61613:61613"
+    - "1883:1883"
+    - "5672:5672"
+    - "15672:15672"
+
+redis:
+  image: redis:3.0-alpine
+
+elasticsearch:
+  image: kuzzleio/elasticsearch:2.2
 
 rabbit:
   image: kuzzleio/rabbitmq:alpine
