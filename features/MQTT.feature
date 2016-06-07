@@ -308,6 +308,14 @@ Feature: Test MQTT API
     Then I'm able to find "2" profiles containing the role with id "role1"
 
   @usingMQTT @cleanSecurity
+  Scenario: get profile rights
+    Given I create a new role "role1" with id "role1"
+    And I create a new role "role2" with id "role2"
+    And I create a new profile "profile2" with id "profile2"
+    Then I'm able to find rights for profile "profile2"
+    Then I'm not able to find rights for profile "fake-profile"
+
+  @usingMQTT @cleanSecurity
   Scenario: user crudl
     When I create a new role "role1" with id "role1"
     And I create a new role "role2" with id "role2"
@@ -437,6 +445,24 @@ Feature: Test MQTT API
     And I'm not allowed to count documents in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test"
     And I'm not allowed to count documents in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test-alt"
     Then I log out
+
+  @usingMQTT @cleanSecurity
+  Scenario: get user rights
+    Given I create a new role "role1" with id "role1"
+    And I create a new role "role2" with id "role2"
+    And I create a new profile "profile2" with id "profile2"
+    And I create a user "user2" with id "user2-id"
+    Then I'm able to find rights for user "user2-id"
+    Then I'm not able to find rights for user "fakeuser-id"
+
+  @usingMQTT @cleanSecurity
+  Scenario: get my rights
+    Given I create a new role "role1" with id "role1"
+    And I create a new role "role2" with id "role2"
+    And I create a new profile "profile2" with id "profile2"
+    And I create a user "user2" with id "user2-id"
+    When I log in as user2-id:testpwd2 expiring in 1h
+    Then I'm able to find my rights
 
   @usingMQTT @cleanRedis
   Scenario: memory storage - misc
