@@ -1,5 +1,3 @@
-/* eslint-disable no-console */
-
 var
   rc = require('rc'),
   params = rc('kuzzle'),

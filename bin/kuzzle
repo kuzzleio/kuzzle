@@ -77,7 +77,7 @@ program
   .description('Empty all the Kuzzle storage and make it look like a virgin, touched for the very first time')
   .action(require('./commands/reset'));  
 
-// $ kuzzle likeAvirgin
+// $ kuzzle swagger
 program
   .command('swagger')
   .description('Generate the kuzzle-swagger.json and the kuzzle-swagger.yml files according to your current routes')
