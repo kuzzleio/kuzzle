@@ -1,5 +1,4 @@
 -b
---require should
 --reporter spec
 --recursive
 --slow 2000

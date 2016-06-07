@@ -55,7 +55,7 @@ describe('Test: hotelClerk.removeCustomerFromAllRooms', function () {
   });
 
   it('should clean up customers, rooms and filtersTree object', function () {
-    var mock = sandbox.mock(kuzzle.dsl).expects('removeRoom').twice().resolves();
+    var mock = sandbox.mock(kuzzle.dsl).expects('remove').twice().resolves();
 
     sandbox.spy(kuzzle.notifier, 'notify');
 
@@ -74,7 +74,7 @@ describe('Test: hotelClerk.removeCustomerFromAllRooms', function () {
 
   it('should send a notification to other users connected on that room', function () {
     var
-      mockDsl = sandbox.mock(kuzzle.dsl).expects('removeRoom').once().resolves(),
+      mockDsl = sandbox.mock(kuzzle.dsl).expects('remove').once().resolves(),
       mockNotify = sandbox.mock(kuzzle.notifier).expects('notify').once();
 
     kuzzle.hotelClerk.rooms.foo.customers.push('another connection');
@@ -100,7 +100,7 @@ describe('Test: hotelClerk.removeCustomerFromAllRooms', function () {
 
   it('should log an error if a problem occurs while unsubscribing', function (done) {
     this.timeout(500);
-    sandbox.stub(kuzzle.dsl, 'removeRoom').rejects();
+    sandbox.stub(kuzzle.dsl, 'remove').rejects();
 
     kuzzle.once('log:error', () => done());
 

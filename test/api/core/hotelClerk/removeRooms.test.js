@@ -134,7 +134,7 @@ describe('Test: hotelClerk.removeRooms', function () {
         should(response.acknowledge).be.true();
 
         should(kuzzle.hotelClerk.rooms).be.empty().Object();
-        should(kuzzle.dsl.filtersTree).be.empty().Object();
+        should(kuzzle.dsl.filters.filtersTree).be.empty().Object();
       });
   });
 
@@ -164,7 +164,7 @@ describe('Test: hotelClerk.removeRooms', function () {
         should(response.acknowledge).be.true();
 
         should(kuzzle.hotelClerk.rooms).be.empty().Object();
-        should(kuzzle.dsl.filtersTree).be.empty().Object();
+        should(kuzzle.dsl.filters.filtersTree).be.empty().Object();
       });
   });
 
@@ -203,7 +203,7 @@ describe('Test: hotelClerk.removeRooms', function () {
         should(response.acknowledge).be.true();
 
         should(kuzzle.hotelClerk.rooms).be.empty().Object();
-        should(kuzzle.dsl.filtersTree).be.empty().Object();
+        should(kuzzle.dsl.filters.filtersTree).be.empty().Object();
       });
   });
 
@@ -244,11 +244,11 @@ describe('Test: hotelClerk.removeRooms', function () {
         should(kuzzle.hotelClerk.rooms).be.Object();
         should(Object.keys(kuzzle.hotelClerk.rooms).length).be.exactly(1);
 
-        should(kuzzle.dsl.filtersTree).be.Object();
-        should(Object.keys(kuzzle.dsl.filtersTree).length).be.exactly(1);
-        should(Object.keys(kuzzle.dsl.filtersTree[index]).length).be.exactly(1);
-        should(kuzzle.dsl.filtersTree[index][collection1]).be.undefined();
-        should(kuzzle.dsl.filtersTree[index][collection2]).be.Object();
+        should(kuzzle.dsl.filters.filtersTree).be.Object();
+        should(Object.keys(kuzzle.dsl.filters.filtersTree).length).be.exactly(1);
+        should(Object.keys(kuzzle.dsl.filters.filtersTree[index]).length).be.exactly(1);
+        should(kuzzle.dsl.filters.filtersTree[index][collection1]).be.undefined();
+        should(kuzzle.dsl.filters.filtersTree[index][collection2]).be.Object();
       });
   });
 
@@ -279,7 +279,7 @@ describe('Test: hotelClerk.removeRooms', function () {
 
   it('should remove only listed rooms for the collection', function () {
     var
-      roomId = '9a83647ec2913bee3f3c1549c8a1ee7e',
+      roomId = 'fa2dc987b065e6d38beadabc970d92f1',
       requestObjectSubscribeFilter1 = new RequestObject({
         controller: 'subscribe',
         action: 'on',
@@ -348,7 +348,7 @@ describe('Test: hotelClerk.removeRooms', function () {
       .then((response) => {
         should(response.acknowledge).be.true();
         should(response.partialErrors.length).be.exactly(1);
-        should(response.partialErrors).be.an.Array().and.match(['The room with id ' + badRoomName + ' doesn\'t correspond to collection ' + collection1]);
+        should(response.partialErrors).be.an.Array().and.match([`No room with id ${badRoomName}`]);
       });
   });
 

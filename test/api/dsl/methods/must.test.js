@@ -2,11 +2,13 @@ var
   should = require('should'),
   rewire = require('rewire'),
   q = require('q'),
-  methods = rewire('../../../../lib/api/dsl/methods');
+  Methods = rewire('../../../../lib/api/dsl/methods');
 
 describe('Test: dsl.must method', function () {
+  var methods;
+
   before(function () {
-    methods.__set__('getFormattedFilters', function (roomId) {
+    Methods.__set__('getFormattedFilters', function (roomId) {
       if (roomId === 'resolve') {
         return q('resolved');
       }
@@ -14,6 +16,8 @@ describe('Test: dsl.must method', function () {
         return q.reject(new Error('rejected'));
       }
     });
+
+    methods = new Methods({filtersTree: {}});
   });
 
   it('should return an embedded object containing the result of getFormattedFilters', function () {
