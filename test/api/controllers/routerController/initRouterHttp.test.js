@@ -33,7 +33,7 @@ function parseHttpResponse(response, yaml) {
     if (yaml === true) {
       yamlToJson(data, (err, res) => {
         if (err) {
-          deferred.reject(err);
+          return deferred.reject(err);
         }
 
         result = res;
@@ -44,7 +44,7 @@ function parseHttpResponse(response, yaml) {
         result = JSON.parse(data);
       }
       catch (e) {
-        deferred.reject(e);
+        return deferred.reject(e);
       }
     }
 

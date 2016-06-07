@@ -37,20 +37,16 @@ describe('Test: Swagger files generation', () => {
   });
 
   it ('should create the swagger files when called', () => {
-    sandbox.stub(fs, 'writeFileSync', () => {
-      return true;
-    });
+    sandbox.stub(fs, 'writeFileSync').returns(true);
 
-    swagger(kuzzle)
+    return swagger(kuzzle)
       .then(() => {
-        should(fs.writeFileSync.calledTwice).be.true();
+        return should(fs.writeFileSync.calledTwice).be.true();
       });
   });
 
-  it ('should create entries in the swagger files for the plugins', () => {
-    sandbox.stub(fs, 'writeFileSync', () => {
-      return true;
-    });
+  it ('should create entries in the swagger files for the plugins', done => {
+    sandbox.stub(fs, 'writeFileSync').returns(true);
 
     sandbox.stub(kuzzle.pluginsManager, 'routes', [
       {verb: 'post', url: '/myplugin/bar', controller: 'myplugin/foo', action: 'bar'},
@@ -58,9 +54,10 @@ describe('Test: Swagger files generation', () => {
     ]);
 
     swagger(kuzzle)
-      .then((result) => {
+      .then(result => {
         should(result.paths['/1.0/_plugin/myplugin/bar']).be.an.Object();
-        should(result.paths['/1.0/_plugin/myplugin/bar/:name']).be.an.Object();
+        should(result.paths['/1.0/_plugin/myplugin/bar/{name}']).be.an.Object();
+        done();
       });
   });
 
@@ -69,45 +66,42 @@ describe('Test: Swagger files generation', () => {
       throw 'error';
     });
 
-    should(swagger(kuzzle)).be.rejectedWith(InternalError);
+    return should(swagger(kuzzle)).be.rejectedWith(InternalError);
   });
 
-  it ('should do nothing if Kuzzle is a worker', () => {
-    sandbox.stub(fs, 'writeFileSync', () => {
-      return true;
-    });
+  it ('should do nothing if Kuzzle is a worker', done => {
+    sandbox.stub(fs, 'writeFileSync').returns(true);
 
     sandbox.stub(kuzzle, 'isServer', false);
     sandbox.stub(kuzzle, 'isWorker', true);
 
     swagger(kuzzle)
-      .then((response) => {
+      .then(response => {
         should(fs.writeFileSync.called).be.false();
         should(response.isWorker).be.true();
+        done();
       });
   });
 
-  it ('should generate default swagger infos for poorly described routes', () => {
-    sandbox.stub(fs, 'writeFileSync', () => {
-      return true;
-    });
+  it ('should generate default swagger infos for poorly described routes', done => {
+    sandbox.stub(fs, 'writeFileSync').returns(true);
 
     swagger(kuzzle)
-      .then((response) => {
+      .then(response => {
         should(fs.writeFileSync.called).be.true();
-        should(response.paths['/' + kuzzle.config.apiVersion + '/basic'].description).be.eql('Controller: basic. Action: basic.');
+        should(response.paths['/' + kuzzle.config.apiVersion + '/basic'].get.description).be.eql('Controller: basic. Action: basic.');
+        done();
       });
   });
 
-  it ('should the swagger infos described for routes which have them', () => {
-    sandbox.stub(fs, 'writeFileSync', () => {
-      return true;
-    });
+  it ('should the swagger infos described for routes which have them', done => {
+    sandbox.stub(fs, 'writeFileSync').returns(true);
 
     swagger(kuzzle)
-      .then((response) => {
+      .then(response => {
         should(fs.writeFileSync.called).be.true();
-        should(response.paths['/' + kuzzle.config.apiVersion + '/complete'].description).be.eql('description\nController: complete. Action: complete.');
+        should(response.paths['/' + kuzzle.config.apiVersion + '/complete'].post.description).be.eql('description\nController: complete. Action: complete.');
+        done();
       });
   });
 });
