@@ -11,7 +11,7 @@ var
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   rewire = require('rewire'),
   yamlToJson = require('parser-yaml').parse,
-  fs = require('fs');
+  fs = require('fs'),
   RouterController = rewire('../../../../lib/api/controllers/routerController'),
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject;
 
@@ -53,8 +53,7 @@ function parseHttpResponse (response, yaml) {
   });
 
   return deferred.promise;
-};
-
+}
 
 describe('Test: routerController.initRouterHttp', () => {
   var
@@ -131,7 +130,7 @@ describe('Test: routerController.initRouterHttp', () => {
   afterEach(() => {
     fs.readFile = readFile;
     fs.writeFileSync = writeFileSync;
-  })
+  });
 
   it('should reply with a list of available routes on a simple GET query', done => {
     http.get(url, response => {
