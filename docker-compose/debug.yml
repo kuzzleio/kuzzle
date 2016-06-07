@@ -17,7 +17,7 @@ kuzzle:
     - rabbit
     - elasticsearch
     - redis
-    - proxy
+    - proxy:api
   environment:
     - MQ_BROKER_ENABLED=1
     - FEATURE_COVERAGE
