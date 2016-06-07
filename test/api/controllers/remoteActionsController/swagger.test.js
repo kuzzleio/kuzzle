@@ -62,9 +62,9 @@ describe('Test: Swagger files generation', () => {
   });
 
   it ('should fail if something goes wrong with the swagger files writing', () => {
-    sandbox.stub(fs, 'writeFileSync', () => {
-      throw 'error';
-    });
+    var wfs = sandbox.stub(fs, 'writeFileSync');
+    wfs.onCall(0).returns(true);
+    wfs.throws('error');
 
     return should(swagger(kuzzle)).be.rejectedWith(InternalError);
   });
