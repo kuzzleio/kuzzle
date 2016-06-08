@@ -2,6 +2,7 @@ var
   should = require('should'),
   q = require('q'),
   rewire = require('rewire'),
+  md5 = require('crypto-md5'),
   DslFilters = rewire('../../../../lib/api/dsl/filters'),
   Dsl = rewire('../../../../lib/api/dsl/index');
 
@@ -63,10 +64,8 @@ describe('Test: dsl.filters.testFieldFilters', function () {
       fields: {
         foobar: {
           testFoobar: {
-            rooms: [ 'foo', 'bar', 'baz' ],
-            fn: function () {
-              return false;
-            }
+            ids: [ 'foo', 'bar', 'baz' ],
+            args: {}
           }
         }
       }
@@ -79,21 +78,19 @@ describe('Test: dsl.filters.testFieldFilters', function () {
   it('should resolve to a list of filter IDs to notify if a document matches registered filters', function () {
     var
       result,
+      hashedFieldName = md5('foo.bar'),
       ids = [ 'foo', 'bar', 'baz' ];
 
     filters.filtersTree[index] = {};
-    filters.filtersTree[index][collection] = {
-      fields: {
-        'foo.bar': {
-          testFoobar: {
-            ids: ids,
-            args: {
-              operator: 'term',
-              not: false,
-              field: 'foo.bar',
-              value: 'bar'
-            }
-          }
+    filters.filtersTree[index][collection] = {fields: {}};
+    filters.filtersTree[index][collection].fields[hashedFieldName] = {
+      testFoobar: {
+        ids: ids,
+        args: {
+          operator: 'term',
+          not: false,
+          field: 'foo.bar',
+          value: 'bar'
         }
       }
     };
@@ -105,21 +102,19 @@ describe('Test: dsl.filters.testFieldFilters', function () {
   it('should return a rejected promise if findMatchingFilters fails', function () {
     var
       result,
+      hashedFieldName = md5('foo.bar'),
       ids = [ 'foo', 'bar', 'baz' ];
 
     filters.filtersTree[index] = {};
-    filters.filtersTree[index][collection] = {
-      fields: {
-        'foo.bar': {
-          testFoobar: {
-            ids: ids,
-            args: {
-              operator: 'term',
-              not: false,
-              field: 'foo.bar',
-              value: 'bar'
-            }
-          }
+    filters.filtersTree[index][collection] = {fields: {}};
+    filters.filtersTree[index][collection].fields[hashedFieldName] = {
+      testFoobar: {
+        ids: ids,
+        args: {
+          operator: 'term',
+          not: false,
+          field: 'foo.bar',
+          value: 'bar'
         }
       }
     };

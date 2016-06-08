@@ -18,7 +18,8 @@ describe('Test ids method', function () {
       values: ['idGrace']
     },
     idsIdidGrace = md5('ids_ididGrace'),
-    notidsIdidGrace = md5('notids_ididGrace');
+    notidsIdidGrace = md5('notids_ididGrace'),
+    fieldId = md5('_id');
 
   beforeEach(function () {
     methods = new Methods(new Filters());
@@ -31,20 +32,20 @@ describe('Test ids method', function () {
     should(methods.filters.filtersTree[index]).not.be.empty();
     should(methods.filters.filtersTree[index][collection]).not.be.empty();
     should(methods.filters.filtersTree[index][collection].fields).not.be.empty();
-    should(methods.filters.filtersTree[index][collection].fields._id).not.be.empty();
+    should(methods.filters.filtersTree[index][collection].fields[fieldId]).not.be.empty();
   });
 
   it('should construct the filterTree with correct curried function name', function () {
     /* jshint camelcase:false */
-    should(methods.filters.filtersTree[index][collection].fields._id[idsIdidGrace]).not.be.empty();
-    should(methods.filters.filtersTree[index][collection].fields._id[notidsIdidGrace]).not.be.empty();
+    should(methods.filters.filtersTree[index][collection].fields[fieldId][idsIdidGrace]).not.be.empty();
+    should(methods.filters.filtersTree[index][collection].fields[fieldId][notidsIdidGrace]).not.be.empty();
   });
 
   it('should construct the filterTree with correct room list', function () {
     /* jshint camelcase:false */
     var
-      ids = methods.filters.filtersTree[index][collection].fields._id[idsIdidGrace].ids,
-      idsNot = methods.filters.filtersTree[index][collection].fields._id[notidsIdidGrace].ids;
+      ids = methods.filters.filtersTree[index][collection].fields[fieldId][idsIdidGrace].ids,
+      idsNot = methods.filters.filtersTree[index][collection].fields[fieldId][notidsIdidGrace].ids;
 
     should(ids).be.an.Array();
     should(idsNot).be.an.Array();
@@ -58,14 +59,14 @@ describe('Test ids method', function () {
 
   it('should construct the filterTree with correct functions ids', function () {
     /* jshint camelcase:false */
-    should(methods.filters.filtersTree[index][collection].fields._id[idsIdidGrace].args).match({
+    should(methods.filters.filtersTree[index][collection].fields[fieldId][idsIdidGrace].args).match({
       operator: 'terms',
       not: false,
       field: '_id',
       value: [ 'idGrace' ]
     });
 
-    should(methods.filters.filtersTree[index][collection].fields._id[notidsIdidGrace].args).match({
+    should(methods.filters.filtersTree[index][collection].fields[fieldId][notidsIdidGrace].args).match({
       operator: 'terms',
       not: true,
       field: '_id',

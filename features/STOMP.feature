@@ -21,20 +21,20 @@ Feature: Test STOMP API
     Then I'm able to get the document
     And I'm not able to get the document in index "kuzzle-test-index-alt"
 
-  @usingSTOMP
-  Scenario: Replace a document
-    When I write the document "documentGrace"
-    Then I replace the document with "documentAda" document
-    Then my document has the value "Ada" in field "firstName"
-
   @usingSTOMP @unsubscribe
   Scenario: Create or Update a document
-    Given A room subscription listening to "lastName" having value "Hopper"
+    Given A room subscription listening to "info.city" having value "NYC"
     When I write the document "documentGrace"
     And I createOrReplace it
     Then I should have updated the document
     And I should receive a "update" notification
     And The notification should have metadata
+
+  @usingSTOMP
+  Scenario: Replace a document
+    When I write the document "documentGrace"
+    Then I replace the document with "documentAda" document
+    Then my document has the value "Ada" in field "firstName"
 
   @usingSTOMP
   Scenario: Update a document
@@ -80,11 +80,11 @@ Feature: Test STOMP API
     When I write the document "documentAda"
     Then I count 4 documents
     And I count 0 documents in index "kuzzle-test-index-alt"
-    And I count 2 documents with "NYC" in field "city"
+    And I count 2 documents with "NYC" in field "info.city"
     Then I truncate the collection
     And I count 0 documents
 
-  @removeSchema @usingSTOMP
+  @usingSTOMP
   Scenario: Change mapping
     When I write the document "documentGrace"
     Then I don't find a document with "Grace" in field "firstName"
@@ -95,7 +95,15 @@ Feature: Test STOMP API
 
   @usingSTOMP @unsubscribe
   Scenario: Document creation notifications
-    Given A room subscription listening to "lastName" having value "Hopper"
+    Given A room subscription listening to "info.city" having value "NYC"
+    When I write the document "documentGrace"
+    Then I should receive a "create" notification
+    And The notification should have a "_source" member
+    And The notification should have metadata
+
+  @usingSTOMP @unsubscribe
+  Scenario: Document creation notifications with not exists
+    Given A room subscription listening field "toto" doesn't exists
     When I write the document "documentGrace"
     Then I should receive a "create" notification
     And The notification should have a "_source" member
@@ -103,7 +111,7 @@ Feature: Test STOMP API
 
   @usingSTOMP @unsubscribe
   Scenario: Document delete notifications
-    Given A room subscription listening to "lastName" having value "Hopper"
+    Given A room subscription listening to "info.city" having value "NYC"
     When I write the document "documentGrace"
     Then I remove the document
     Then I should receive a "delete" notification
@@ -112,7 +120,7 @@ Feature: Test STOMP API
 
   @usingSTOMP @unsubscribe
   Scenario: Document update: new document notification
-    Given A room subscription listening to "lastName" having value "Hopper"
+    Given A room subscription listening to "info.hobby" having value "computer"
     When I write the document "documentAda"
     Then I update the document with value "Hopper" in field "lastName"
     Then I should receive a "update" notification
@@ -130,7 +138,7 @@ Feature: Test STOMP API
 
   @usingSTOMP @unsubscribe
   Scenario: Document replace: new document notification
-    Given A room subscription listening to "lastName" having value "Hopper"
+    Given A room subscription listening to "info.hobby" having value "computer"
     When I write the document "documentAda"
     Then I replace the document with "documentGrace" document
     Then I should receive a "update" notification
@@ -139,19 +147,11 @@ Feature: Test STOMP API
 
   @usingSTOMP @unsubscribe
   Scenario: Document replace: removed document notification
-    Given A room subscription listening to "lastName" having value "Hopper"
+    Given A room subscription listening to "info.city" having value "NYC"
     When I write the document "documentGrace"
     Then I replace the document with "documentAda" document
     Then I should receive a "update" notification
     And The notification should not have a "_source" member
-    And The notification should have metadata
-
-  @usingSTOMP @unsubscribe
-  Scenario: Document creation notifications with not exists
-    Given A room subscription listening field "toto" doesn't exists
-    When I write the document "documentGrace"
-    Then I should receive a "create" notification
-    And The notification should have a "_source" member
     And The notification should have metadata
 
   @usingSTOMP @unsubscribe
@@ -164,11 +164,11 @@ Feature: Test STOMP API
 
   @usingSTOMP @unsubscribe
   Scenario: Delete a document with a query
-    Given A room subscription listening to "lastName" having value "Hopper"
+    Given A room subscription listening to "info.city" having value "NYC"
     When I write the document "documentGrace"
     And I write the document "documentAda"
     And I refresh the index
-    Then I remove documents with field "hobby" equals to value "computer"
+    Then I remove documents with field "info.hobby" equals to value "computer"
     Then I should receive a "delete" notification
     And The notification should not have a "_source" member
     And The notification should have metadata
@@ -280,7 +280,7 @@ Feature: Test STOMP API
   Scenario: get profile without id triggers an error
     Then I cannot a profile without ID
 
-  @usingSTOMP
+  @usingSTOMP @cleanSecurity
   Scenario: creating a profile with an empty set of roles triggers an error
     Then I cannot create a profile with an empty set of roles
 
@@ -1370,7 +1370,6 @@ Feature: Test STOMP API
       """
     Then The ms result should match the json 11
 
-
   @usingSTOMP
   Scenario: autorefresh
     When I check the autoRefresh status
@@ -1388,3 +1387,4 @@ Feature: Test STOMP API
     And I write the document "documentGrace"
     When I update the document with value "Josepha" in field "firstName"
     Then I find a document with "josepha" in field "firstName"
+
