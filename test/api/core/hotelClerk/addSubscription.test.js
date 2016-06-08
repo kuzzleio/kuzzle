@@ -32,8 +32,8 @@ describe('Test: hotelClerk.addSubscription', function () {
   });
 
   it('should have object filtersTree, customers and rooms empty', function () {
-    should(kuzzle.dsl.filtersTree).be.an.Object();
-    should(kuzzle.dsl.filtersTree).be.empty();
+    should(kuzzle.dsl.filters.filtersTree).be.an.Object();
+    should(kuzzle.dsl.filters.filtersTree).be.empty();
 
     should(kuzzle.hotelClerk.rooms).be.an.Object();
     should(kuzzle.hotelClerk.rooms).be.empty();
@@ -60,8 +60,8 @@ describe('Test: hotelClerk.addSubscription', function () {
       .then(response => {
         var customer;
 
-        should(kuzzle.dsl.filtersTree).be.an.Object();
-        should(kuzzle.dsl.filtersTree).not.be.empty();
+        should(kuzzle.dsl.filters.filtersTree).be.an.Object();
+        should(kuzzle.dsl.filters.filtersTree).not.be.empty();
 
         should(kuzzle.hotelClerk.rooms).be.an.Object();
         should(kuzzle.hotelClerk.rooms).not.be.empty();

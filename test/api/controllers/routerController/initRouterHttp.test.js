@@ -107,9 +107,7 @@ describe('Test: routerController.initRouterHttp', () => {
           router.routeHttp(request, response);
         });
 
-        server.listen(options.port);
-
-        done();
+        server.listen(options.port, () => done());
       });
   });
 
