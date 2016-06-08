@@ -2,11 +2,11 @@ var
   should = require('should'),
   rewire = require('rewire'),
   sinon = require('sinon'),
-  Dsl = rewire('../../../../lib/api/dsl/index');
+  DslFilters = rewire('../../../../lib/api/dsl/filters');
 
 describe('Test: dsl.testFilterRecursively', function () {
   var
-    testFilterRecursively = Dsl.__get__('testFilterRecursively');
+    testFilterRecursively = DslFilters.__get__('testFilterRecursively');
 
   it('should return the result of the filter if no upper operand is provided', function () {
     var
@@ -81,16 +81,15 @@ describe('Test: dsl.testFilterRecursively', function () {
     stub.onSecondCall().returns(true);
     stub.onThirdCall().returns(true);
 
-    Dsl.__with__({
+    DslFilters.__with__({
       evalFilterArguments: stub
     })(function () {
-      var dsl = new Dsl({});
-      testFilterRecursively.call(dsl, {}, filters, {}, 'and');
+      testFilterRecursively({}, filters, {}, 'and');
       should(stub.callCount).be.eql(3);
       stub.reset();
 
       stub.onSecondCall().returns(false);
-      testFilterRecursively.call(dsl, {}, filters, {}, 'and');
+      testFilterRecursively({}, filters, {}, 'and');
       should(stub.callCount).be.eql(2);
     });
   });
@@ -114,17 +113,16 @@ describe('Test: dsl.testFilterRecursively', function () {
     stub.onSecondCall().returns(true);
     stub.onThirdCall().returns(true);
 
-    Dsl.__with__({
+    DslFilters.__with__({
       evalFilterArguments: stub
     })(function () {
-      var dsl = new Dsl({});
-      testFilterRecursively.call(dsl, {}, filters, {}, 'or');
+      testFilterRecursively({}, filters, {}, 'or');
       should(stub.callCount).be.eql(1);
       stub.reset();
 
       stub.onFirstCall().returns(false);
       stub.onSecondCall().returns(false);
-      testFilterRecursively.call(dsl, {}, filters, {}, 'or');
+      testFilterRecursively({}, filters, {}, 'or');
       should(stub.callCount).be.eql(3);
     });
   });

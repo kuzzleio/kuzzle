@@ -86,7 +86,7 @@ describe('Test: hotelClerk.removeSubscription', function () {
   });
 
   it('should not delete all subscriptions when we want to just remove one', function () {
-    var mock = sandbox.mock(kuzzle.dsl).expects('removeRoom').once().resolves();
+    var mock = sandbox.mock(kuzzle.dsl).expects('remove').once().resolves();
 
     sandbox.spy(kuzzle.notifier, 'notify');
 
@@ -105,7 +105,7 @@ describe('Test: hotelClerk.removeSubscription', function () {
   });
 
   it('should clean up customers, rooms and filtersTree object', function () {
-    var mock = sandbox.mock(kuzzle.dsl).expects('removeRoom').once().resolves();
+    var mock = sandbox.mock(kuzzle.dsl).expects('remove').once().resolves();
 
     sandbox.spy(kuzzle.notifier, 'notify');
     delete kuzzle.hotelClerk.rooms.bar;
@@ -126,7 +126,7 @@ describe('Test: hotelClerk.removeSubscription', function () {
 
   it('should send a notification to other users connected on that room', function () {
     var
-      mockDsl = sandbox.mock(kuzzle.dsl).expects('removeRoom').never(),
+      mockDsl = sandbox.mock(kuzzle.dsl).expects('remove').never(),
       mockNotify = sandbox.mock(kuzzle.notifier).expects('notify').once();
 
     kuzzle.hotelClerk.rooms.foo.customers.push('another connection');

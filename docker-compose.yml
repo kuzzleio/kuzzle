@@ -1,11 +1,15 @@
-kuzzle:
-  image: kuzzleio/kuzzle
+loadbalancer:
+  image: kuzzleio/lb:alpine
   ports:
     - "7511:7511"
     - "7512:7512"
+
+kuzzle:
+  image: kuzzleio/kuzzle
   links:
     - elasticsearch
     - redis
+    - loadbalancer
   environment:
     - FEATURE_COVERAGE
 

@@ -1,11 +1,13 @@
 var
   should = require('should'),
   md5 = require('crypto-md5'),
-  methods = require.main.require('lib/api/dsl/methods');
+  Filters = require.main.require('lib/api/dsl/filters'),
+  Methods = require.main.require('lib/api/dsl/methods');
 
 describe('Test "not" method', function () {
   var
-    roomId = 'roomId',
+    methods,
+    filterId = 'fakeFilterId',
     index = 'index',
     collection = 'collection',
     filter = {
@@ -15,35 +17,35 @@ describe('Test "not" method', function () {
     },
     nottermcityLondon = md5('nottermcityLondon');
 
-  before(function () {
-    methods.dsl.filtersTree = {};
-    return methods.not(roomId, index, collection, filter);
+  beforeEach(function () {
+    methods = new Methods(new Filters());
+    return methods.not(filterId, index, collection, filter);
   });
 
   it('should construct the filterTree object for the correct attribute', function () {
-    should(methods.dsl.filtersTree).not.be.empty();
-    should(methods.dsl.filtersTree[index]).not.be.empty();
-    should(methods.dsl.filtersTree[index][collection]).not.be.empty();
-    should(methods.dsl.filtersTree[index][collection].fields).not.be.empty();
-    should(methods.dsl.filtersTree[index][collection].fields.city).not.be.empty();
+    should(methods.filters.filtersTree).not.be.empty();
+    should(methods.filters.filtersTree[index]).not.be.empty();
+    should(methods.filters.filtersTree[index][collection]).not.be.empty();
+    should(methods.filters.filtersTree[index][collection].fields).not.be.empty();
+    should(methods.filters.filtersTree[index][collection].fields.city).not.be.empty();
   });
 
   it('should construct the filterTree with correct curried function name', function () {
-    should(methods.dsl.filtersTree[index][collection].fields.city[nottermcityLondon]).not.be.empty();
+    should(methods.filters.filtersTree[index][collection].fields.city[nottermcityLondon]).not.be.empty();
   });
 
   it('should construct the filterTree with correct room list', function () {
-    var rooms;
+    var ids;
 
     // Test gt from filterGrace
-    rooms = methods.dsl.filtersTree[index][collection].fields.city[nottermcityLondon].rooms;
-    should(rooms).be.an.Array();
-    should(rooms).have.length(1);
-    should(rooms[0]).be.exactly(roomId);
+    ids = methods.filters.filtersTree[index][collection].fields.city[nottermcityLondon].ids;
+    should(ids).be.an.Array();
+    should(ids).have.length(1);
+    should(ids[0]).be.exactly(filterId);
   });
 
   it('should construct the filterTree with correct functions', function () {
-    should(methods.dsl.filtersTree[index][collection].fields.city[nottermcityLondon].args).match({
+    should(methods.filters.filtersTree[index][collection].fields.city[nottermcityLondon].args).match({
       operator: 'term', not: true, field: 'city', value: 'London'
     });
   });
