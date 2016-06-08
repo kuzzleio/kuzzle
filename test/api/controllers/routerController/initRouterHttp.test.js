@@ -62,8 +62,6 @@ describe('Test: routerController.initRouterHttp', () => {
     url,
     path,
     router,
-    readFile,
-    writeFileSync,
     options = {
       hostname: 'localhost',
       port: 6666
@@ -117,19 +115,6 @@ describe('Test: routerController.initRouterHttp', () => {
 
   after(() => {
     server.close();
-  });
-
-  beforeEach(() => {
-    readFile = fs.readFile;
-    writeFileSync = fs.writeFileSync;
-
-    fs.readFile = (file, cb) => { cb(null, JSON.stringify({test: true, ok: true})); };
-    fs.writeFileSync = () => { return true; };    
-  });
-
-  afterEach(() => {
-    fs.readFile = readFile;
-    fs.writeFileSync = writeFileSync;
   });
 
   it('should reply with a list of available routes on a simple GET query', done => {
@@ -834,7 +819,7 @@ describe('Test: routerController.initRouterHttp', () => {
     });
   });
 
-  it('should create a GET route to get server the swagger.json when a json file has been generated', done => {
+  it('should create a GET route to get server the swagger.json', done => {
     http.get('http://' + options.hostname + ':' + options.port + '/api/swagger.json', response => {
       parseHttpResponse(response)
         .then(result => {
@@ -847,22 +832,7 @@ describe('Test: routerController.initRouterHttp', () => {
     });
   });
 
-  it('should create a GET route to get server the swagger.json when a json file has not been generated', done => {
-    readFile = (file,cb) => { cb('error'); };
-
-    http.get('http://' + options.hostname + ':' + options.port + '/api/swagger.json', response => {
-      parseHttpResponse(response)
-        .then(result => {
-          should(Object.keys(result).length).be.above(1);
-          done();
-        })
-        .catch(error => {
-          done(error);
-        });
-    });
-  });
-
-  it('should create a GET route to get server the swagger.yml when a yaml file has been generated', done => {
+  it('should create a GET route to get server the swagger.yml', done => {
     http.get('http://' + options.hostname + ':' + options.port + '/api/swagger.yml', response => {
       parseHttpResponse(response, true)
         .then(result => {
@@ -875,17 +845,4 @@ describe('Test: routerController.initRouterHttp', () => {
     });
   });
 
-  it('should create a GET route to get server the swagger.yml when a yaml file has not been generated', done => {
-    readFile = (file,cb) => { cb('error'); };
-    http.get('http://' + options.hostname + ':' + options.port + '/api/swagger.yml', response => {
-      parseHttpResponse(response, true)
-        .then(result => {
-          should(Object.keys(result).length).be.above(1);
-          done();
-        })
-        .catch(error => {
-          done(error);
-        });
-    });
-  });
 });
