@@ -43,7 +43,8 @@ describe('Test geoDistance method', function () {
     },
     locationgeoDistancekpbxyzbpv111318 = md5('locationgeoDistancekpbxyzbpv111318'),
     locationgeoDistancekpbxyzbpv111320 = md5('locationgeoDistancekpbxyzbpv111320'),
-    locationgeoDistancekpbxyzbpv111317 = md5('locationgeoDistancekpbxyzbpv111317');
+    locationgeoDistancekpbxyzbpv111317 = md5('locationgeoDistancekpbxyzbpv111317'),
+    fieldLocation = md5('location');
 
   beforeEach(function () {
     methods = new Methods(new Filters());
@@ -58,7 +59,7 @@ describe('Test geoDistance method', function () {
     should(methods.filters.filtersTree[index]).not.be.empty();
     should(methods.filters.filtersTree[index][collection]).not.be.empty();
     should(methods.filters.filtersTree[index][collection].fields).not.be.empty();
-    should(methods.filters.filtersTree[index][collection].fields.location).not.be.empty();
+    should(methods.filters.filtersTree[index][collection].fields[fieldLocation]).not.be.empty();
   });
 
   it('should construct the filterTree with correct encoded function name', function () {
@@ -66,60 +67,60 @@ describe('Test geoDistance method', function () {
     // because we have many times the same coord in filters,
     // we must have only four functions
     
-    should(Object.keys(methods.filters.filtersTree[index][collection].fields.location)).have.length(4);
-    should(methods.filters.filtersTree[index][collection].fields.location[locationgeoDistancekpbxyzbpv111318]).not.be.empty();
-    should(methods.filters.filtersTree[index][collection].fields.location[locationgeoDistancekpbxyzbpv111320]).not.be.empty();
-    should(methods.filters.filtersTree[index][collection].fields.location[locationgeoDistancekpbxyzbpv111317]).not.be.empty();
-    should(methods.filters.filtersTree[index][collection].fields.location[md5('locationgeoDistancekpbxyzbpv111318.9999168')]).not.be.empty();
+    should(Object.keys(methods.filters.filtersTree[index][collection].fields[fieldLocation])).have.length(4);
+    should(methods.filters.filtersTree[index][collection].fields[fieldLocation][locationgeoDistancekpbxyzbpv111318]).not.be.empty();
+    should(methods.filters.filtersTree[index][collection].fields[fieldLocation][locationgeoDistancekpbxyzbpv111320]).not.be.empty();
+    should(methods.filters.filtersTree[index][collection].fields[fieldLocation][locationgeoDistancekpbxyzbpv111317]).not.be.empty();
+    should(methods.filters.filtersTree[index][collection].fields[fieldLocation][md5('locationgeoDistancekpbxyzbpv111318.9999168')]).not.be.empty();
   });
 
   it('should construct the filterTree with correct room list', function () {
     var ids;
 
-    ids = methods.filters.filtersTree[index][collection].fields.location[locationgeoDistancekpbxyzbpv111318].ids;
+    ids = methods.filters.filtersTree[index][collection].fields[fieldLocation][locationgeoDistancekpbxyzbpv111318].ids;
     should(ids).be.an.Array();
     should(ids).have.length(1);
     should(ids[0]).be.exactly(filterId);
 
-    ids = methods.filters.filtersTree[index][collection].fields.location[locationgeoDistancekpbxyzbpv111320].ids;
+    ids = methods.filters.filtersTree[index][collection].fields[fieldLocation][locationgeoDistancekpbxyzbpv111320].ids;
     should(ids).be.an.Array();
     should(ids).have.length(1);
     should(ids[0]).be.exactly(filterId);
 
-    ids = methods.filters.filtersTree[index][collection].fields.location[locationgeoDistancekpbxyzbpv111317].ids;
+    ids = methods.filters.filtersTree[index][collection].fields[fieldLocation][locationgeoDistancekpbxyzbpv111317].ids;
     should(ids).be.an.Array();
     should(ids).have.length(1);
     should(ids[0]).be.exactly(filterId);
 
-    ids = methods.filters.filtersTree[index][collection].fields.location[md5('locationgeoDistancekpbxyzbpv111318.9999168')].ids;
+    ids = methods.filters.filtersTree[index][collection].fields[fieldLocation][md5('locationgeoDistancekpbxyzbpv111318.9999168')].ids;
     should(ids).be.an.Array();
     should(ids).have.length(1);
     should(ids[0]).be.exactly(filterId);
   });
 
   it('should construct the filterTree with correct geodistance arguments', function () {
-    should(methods.filters.filtersTree[index][collection].fields.location[locationgeoDistancekpbxyzbpv111318].args).match({
+    should(methods.filters.filtersTree[index][collection].fields[fieldLocation][locationgeoDistancekpbxyzbpv111318].args).match({
       operator: 'geoDistance',
       not: undefined,
       field: 'location',
       value: { lat: 0, lon: 1, distance: 111318 }
     });
 
-    should(methods.filters.filtersTree[index][collection].fields.location[locationgeoDistancekpbxyzbpv111320].args).match({
+    should(methods.filters.filtersTree[index][collection].fields[fieldLocation][locationgeoDistancekpbxyzbpv111320].args).match({
       operator: 'geoDistance',
       not: undefined,
       field: 'location',
       value: { lat: 0, lon: 1, distance: 111320 }
     });
 
-    should(methods.filters.filtersTree[index][collection].fields.location[locationgeoDistancekpbxyzbpv111317].args).match({
+    should(methods.filters.filtersTree[index][collection].fields[fieldLocation][locationgeoDistancekpbxyzbpv111317].args).match({
       operator: 'geoDistance',
       not: undefined,
       field: 'location',
       value: { lat: 0, lon: 1, distance: 111317 }
     });
 
-    should(methods.filters.filtersTree[index][collection].fields.location[md5('locationgeoDistancekpbxyzbpv111318.9999168')].args).match({
+    should(methods.filters.filtersTree[index][collection].fields[fieldLocation][md5('locationgeoDistancekpbxyzbpv111318.9999168')].args).match({
       operator: 'geoDistance',
       not: undefined,
       field: 'location',

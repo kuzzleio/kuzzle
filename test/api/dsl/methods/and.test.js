@@ -27,8 +27,9 @@ describe('Test "and" method', function () {
       }
     ],
     termCity = md5('termcityNYC'),
-    termHobby = md5('nottermhobbycomputer');
-
+    termHobby = md5('nottermhobbycomputer'),
+    fieldCity = md5('city'),
+    fieldHobby = md5('hobby');
 
   before(function () {
     methods = new Methods(new Filters());
@@ -40,38 +41,38 @@ describe('Test "and" method', function () {
     should(methods.filters.filtersTree[index]).not.be.empty();
     should(methods.filters.filtersTree[index][collection]).not.be.empty();
     should(methods.filters.filtersTree[index][collection].fields).not.be.empty();
-    should(methods.filters.filtersTree[index][collection].fields.city).not.be.empty();
-    should(methods.filters.filtersTree[index][collection].fields.hobby).not.be.empty();
+    should(methods.filters.filtersTree[index][collection].fields[fieldCity]).not.be.empty();
+    should(methods.filters.filtersTree[index][collection].fields[fieldHobby]).not.be.empty();
   });
 
   it('should construct the filterTree with correct encoded function name', function () {
-    should(methods.filters.filtersTree[index][collection].fields.city[termCity]).not.be.empty();
-    should(methods.filters.filtersTree[index][collection].fields.hobby[termHobby]).not.be.empty();
+    should(methods.filters.filtersTree[index][collection].fields[fieldCity][termCity]).not.be.empty();
+    should(methods.filters.filtersTree[index][collection].fields[fieldHobby][termHobby]).not.be.empty();
   });
 
   it('should construct the filterTree with the correct filter IDs list', function () {
     var ids;
 
-    ids = methods.filters.filtersTree[index][collection].fields.city[termCity].ids;
+    ids = methods.filters.filtersTree[index][collection].fields[fieldCity][termCity].ids;
     should(ids).be.an.Array();
     should(ids).have.length(1);
     should(ids[0]).be.exactly(filterId);
 
-    ids = methods.filters.filtersTree[index][collection].fields.hobby[termHobby].ids;
+    ids = methods.filters.filtersTree[index][collection].fields[fieldHobby][termHobby].ids;
     should(ids).be.an.Array();
     should(ids).have.length(1);
     should(ids[0]).be.exactly(filterId);
   });
 
   it('should construct the filterTree with correct operator arguments', function () {
-    should(methods.filters.filtersTree[index][collection].fields.city[termCity].args).match({
+    should(methods.filters.filtersTree[index][collection].fields[fieldCity][termCity].args).match({
       operator: 'term',
       not: undefined,
       field: 'city',
       value: 'NYC'
     });
 
-    should(methods.filters.filtersTree[index][collection].fields.hobby[termHobby].args).match({
+    should(methods.filters.filtersTree[index][collection].fields[fieldHobby][termHobby].args).match({
       operator: 'term',
       not: true,
       field: 'hobby',

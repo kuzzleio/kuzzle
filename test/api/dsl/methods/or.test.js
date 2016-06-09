@@ -28,7 +28,8 @@ describe('Test or method', function () {
     termcityNYC = md5('termcityNYC'),
     termcityLondon = md5('termcityLondon'),
     nottermcityNYC = md5('nottermcityNYC'),
-    nottermcityLondon = md5('nottermcityLondon');
+    nottermcityLondon = md5('nottermcityLondon'),
+    fieldCity = md5('city');
 
   beforeEach(function () {
     methods = new Methods(new Filters());
@@ -42,57 +43,57 @@ describe('Test or method', function () {
     should(methods.filters.filtersTree[index]).not.be.empty();
     should(methods.filters.filtersTree[index][collection]).not.be.empty();
     should(methods.filters.filtersTree[index][collection].fields).not.be.empty();
-    should(methods.filters.filtersTree[index][collection].fields.city).not.be.empty();
+    should(methods.filters.filtersTree[index][collection].fields[fieldCity]).not.be.empty();
   });
 
   it('should construct the filterTree with correct curried function name', function () {
-    should(methods.filters.filtersTree[index][collection].fields.city[termcityNYC]).not.be.empty();
-    should(methods.filters.filtersTree[index][collection].fields.city[termcityLondon]).not.be.empty();
-    should(methods.filters.filtersTree[index][collection].fields.city[nottermcityNYC]).not.be.empty();
-    should(methods.filters.filtersTree[index][collection].fields.city[nottermcityLondon]).not.be.empty();
+    should(methods.filters.filtersTree[index][collection].fields[fieldCity][termcityNYC]).not.be.empty();
+    should(methods.filters.filtersTree[index][collection].fields[fieldCity][termcityLondon]).not.be.empty();
+    should(methods.filters.filtersTree[index][collection].fields[fieldCity][nottermcityNYC]).not.be.empty();
+    should(methods.filters.filtersTree[index][collection].fields[fieldCity][nottermcityLondon]).not.be.empty();
   });
 
   it('should construct the filterTree with correct room list', function () {
     var ids;
 
-    ids = methods.filters.filtersTree[index][collection].fields.city[termcityNYC].ids;
+    ids = methods.filters.filtersTree[index][collection].fields[fieldCity][termcityNYC].ids;
     should(ids).be.an.Array();
     should(ids).have.length(1);
     should(ids[0]).be.exactly(filterId);
 
-    ids = methods.filters.filtersTree[index][collection].fields.city[termcityLondon].ids;
+    ids = methods.filters.filtersTree[index][collection].fields[fieldCity][termcityLondon].ids;
     should(ids).be.an.Array();
     should(ids).have.length(1);
     should(ids[0]).be.exactly(filterId);
 
-    ids = methods.filters.filtersTree[index][collection].fields.city[nottermcityNYC].ids;
+    ids = methods.filters.filtersTree[index][collection].fields[fieldCity][nottermcityNYC].ids;
     should(ids).be.an.Array();
     should(ids).have.length(1);
     should(ids[0]).be.exactly(filterId);
 
-    ids = methods.filters.filtersTree[index][collection].fields.city[nottermcityLondon].ids;
+    ids = methods.filters.filtersTree[index][collection].fields[fieldCity][nottermcityLondon].ids;
     should(ids).be.an.Array();
     should(ids).have.length(1);
     should(ids[0]).be.exactly(filterId);
   });
 
   it('should construct the filterTree with correct arguments', function () {
-    should(methods.filters.filtersTree[index][collection].fields.city[termcityNYC].args).match({
+    should(methods.filters.filtersTree[index][collection].fields[fieldCity][termcityNYC].args).match({
       operator: 'term', not: undefined, field: 'city', value: 'NYC'
     });
 
-    should(methods.filters.filtersTree[index][collection].fields.city[termcityLondon].args).match({
+    should(methods.filters.filtersTree[index][collection].fields[fieldCity][termcityLondon].args).match({
       operator: 'term',
       not: undefined,
       field: 'city',
       value: 'London'
     });
 
-    should(methods.filters.filtersTree[index][collection].fields.city[nottermcityNYC].args).match({
+    should(methods.filters.filtersTree[index][collection].fields[fieldCity][nottermcityNYC].args).match({
       operator: 'term', not: true, field: 'city', value: 'NYC'
     });
 
-    should(methods.filters.filtersTree[index][collection].fields.city[nottermcityLondon].args).match({
+    should(methods.filters.filtersTree[index][collection].fields[fieldCity][nottermcityLondon].args).match({
       operator: 'term', not: true, field: 'city', value: 'London'
     });
   });

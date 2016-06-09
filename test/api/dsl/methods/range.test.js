@@ -39,7 +39,8 @@ describe('Test range method', function () {
     rangeagegte36 = md5('rangeagegte36'),
     rangeagelt85 = md5('rangeagelt85'),
     notrangeagegte36 = md5('notrangeagegte36'),
-    notrangeagelte85 = md5('notrangeagelte85');
+    notrangeagelte85 = md5('notrangeagelte85'),
+    fieldAge = md5('age');
 
   beforeEach(function () {
     methods = new Methods(new Filters());
@@ -55,82 +56,82 @@ describe('Test range method', function () {
     should(methods.filters.filtersTree[index]).not.be.empty();
     should(methods.filters.filtersTree[index][collection]).not.be.empty();
     should(methods.filters.filtersTree[index][collection].fields).not.be.empty();
-    should(methods.filters.filtersTree[index][collection].fields.age).not.be.empty();
+    should(methods.filters.filtersTree[index][collection].fields[fieldAge]).not.be.empty();
   });
 
   it('should construct the filterTree with correct encoded function name', function () {
-    should(methods.filters.filtersTree[index][collection].fields.age[rangeagegt36]).not.be.empty();
-    should(methods.filters.filtersTree[index][collection].fields.age[rangeagelte85]).not.be.empty();
-    should(methods.filters.filtersTree[index][collection].fields.age[rangeagegte36]).not.be.empty();
-    should(methods.filters.filtersTree[index][collection].fields.age[rangeagelt85]).not.be.empty();
-    should(methods.filters.filtersTree[index][collection].fields.age[notrangeagegte36]).not.be.empty();
-    should(methods.filters.filtersTree[index][collection].fields.age[notrangeagelte85]).not.be.empty();
+    should(methods.filters.filtersTree[index][collection].fields[fieldAge][rangeagegt36]).not.be.empty();
+    should(methods.filters.filtersTree[index][collection].fields[fieldAge][rangeagelte85]).not.be.empty();
+    should(methods.filters.filtersTree[index][collection].fields[fieldAge][rangeagegte36]).not.be.empty();
+    should(methods.filters.filtersTree[index][collection].fields[fieldAge][rangeagelt85]).not.be.empty();
+    should(methods.filters.filtersTree[index][collection].fields[fieldAge][notrangeagegte36]).not.be.empty();
+    should(methods.filters.filtersTree[index][collection].fields[fieldAge][notrangeagelte85]).not.be.empty();
   });
 
   it('should construct the filterTree with correct room list', function () {
     var ids;
 
     // Test gt from filterGrace
-    ids = methods.filters.filtersTree[index][collection].fields.age[rangeagegt36].ids;
+    ids = methods.filters.filtersTree[index][collection].fields[fieldAge][rangeagegt36].ids;
     should(ids).be.an.Array();
     should(ids).have.length(1);
     should(ids[0]).be.exactly(filterIdFilterGrace);
 
     // Test lte from filterGrace and filterAll
-    ids = methods.filters.filtersTree[index][collection].fields.age[rangeagelte85].ids;
+    ids = methods.filters.filtersTree[index][collection].fields[fieldAge][rangeagelte85].ids;
     should(ids).be.an.Array();
     should(ids).have.length(2);
     should(ids).containEql(filterIdFilterGrace);
     should(ids).containEql(filterIdFilterAll);
 
     // Test gte from filterAda and filterAll
-    ids = methods.filters.filtersTree[index][collection].fields.age[rangeagegte36].ids;
+    ids = methods.filters.filtersTree[index][collection].fields[fieldAge][rangeagegte36].ids;
     should(ids).be.an.Array();
     should(ids).have.length(2);
     should(ids).containEql(filterIdFilterAda);
     should(ids).containEql(filterIdFilterAll);
 
     // Test lt from filterAda
-    ids = methods.filters.filtersTree[index][collection].fields.age[rangeagelt85].ids;
+    ids = methods.filters.filtersTree[index][collection].fields[fieldAge][rangeagelt85].ids;
     should(ids).be.an.Array();
     should(ids).have.length(1);
     should(ids[0]).be.exactly(filterIdFilterAda);
 
     // Test not gte from negative filterAll
-    ids = methods.filters.filtersTree[index][collection].fields.age[notrangeagegte36].ids;
+    ids = methods.filters.filtersTree[index][collection].fields[fieldAge][notrangeagegte36].ids;
     should(ids).be.an.Array();
     should(ids).have.length(1);
     should(ids[0]).be.exactly(filterIdFilterNobody);
 
     // Test not lte from negative filterAll
-    ids = methods.filters.filtersTree[index][collection].fields.age[notrangeagelte85].ids;
+    ids = methods.filters.filtersTree[index][collection].fields[fieldAge][notrangeagelte85].ids;
     should(ids).be.an.Array();
     should(ids).have.length(1);
     should(ids[0]).be.exactly(filterIdFilterNobody);
   });
 
   it('should construct the filterTree with correct functions range', function () {
-    should(methods.filters.filtersTree[index][collection].fields.age[rangeagegt36].args).match({
+    should(methods.filters.filtersTree[index][collection].fields[fieldAge][rangeagegt36].args).match({
       operator: 'gt', not: undefined, field: 'age', value: 36
     });
 
-    should(methods.filters.filtersTree[index][collection].fields.age[rangeagelte85].args).match({
+    should(methods.filters.filtersTree[index][collection].fields[fieldAge][rangeagelte85].args).match({
       operator: 'lte', not: undefined, field: 'age', value: 85
     });
 
-    should(methods.filters.filtersTree[index][collection].fields.age[rangeagegte36].args).match({
+    should(methods.filters.filtersTree[index][collection].fields[fieldAge][rangeagegte36].args).match({
       operator: 'gte', not: undefined, field: 'age', value: 36
     });
 
-    should(methods.filters.filtersTree[index][collection].fields.age[rangeagelt85].args).match({
+    should(methods.filters.filtersTree[index][collection].fields[fieldAge][rangeagelt85].args).match({
       operator: 'lt', not: undefined, field: 'age', value: 85
     });
 
-    should(methods.filters.filtersTree[index][collection].fields.age[notrangeagegte36].args).match({
+    should(methods.filters.filtersTree[index][collection].fields[fieldAge][notrangeagegte36].args).match({
       operator: 'gte', not: true, field: 'age', value: 36
     });
 
-    should(methods.filters.filtersTree[index][collection].fields.age[notrangeagelte85].args).match({
+    should(methods.filters.filtersTree[index][collection].fields[fieldAge][notrangeagelte85].args).match({
       operator: 'lte', not: true, field: 'age', value: 85
     });
   });

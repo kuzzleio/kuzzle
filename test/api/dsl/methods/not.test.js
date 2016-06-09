@@ -15,7 +15,8 @@ describe('Test "not" method', function () {
         city: 'London'
       }
     },
-    nottermcityLondon = md5('nottermcityLondon');
+    nottermcityLondon = md5('nottermcityLondon'),
+    fieldCity = md5('city');
 
   beforeEach(function () {
     methods = new Methods(new Filters());
@@ -27,25 +28,25 @@ describe('Test "not" method', function () {
     should(methods.filters.filtersTree[index]).not.be.empty();
     should(methods.filters.filtersTree[index][collection]).not.be.empty();
     should(methods.filters.filtersTree[index][collection].fields).not.be.empty();
-    should(methods.filters.filtersTree[index][collection].fields.city).not.be.empty();
+    should(methods.filters.filtersTree[index][collection].fields[fieldCity]).not.be.empty();
   });
 
   it('should construct the filterTree with correct curried function name', function () {
-    should(methods.filters.filtersTree[index][collection].fields.city[nottermcityLondon]).not.be.empty();
+    should(methods.filters.filtersTree[index][collection].fields[fieldCity][nottermcityLondon]).not.be.empty();
   });
 
   it('should construct the filterTree with correct room list', function () {
     var ids;
 
     // Test gt from filterGrace
-    ids = methods.filters.filtersTree[index][collection].fields.city[nottermcityLondon].ids;
+    ids = methods.filters.filtersTree[index][collection].fields[fieldCity][nottermcityLondon].ids;
     should(ids).be.an.Array();
     should(ids).have.length(1);
     should(ids[0]).be.exactly(filterId);
   });
 
   it('should construct the filterTree with correct functions', function () {
-    should(methods.filters.filtersTree[index][collection].fields.city[nottermcityLondon].args).match({
+    should(methods.filters.filtersTree[index][collection].fields[fieldCity][nottermcityLondon].args).match({
       operator: 'term', not: true, field: 'city', value: 'London'
     });
   });
