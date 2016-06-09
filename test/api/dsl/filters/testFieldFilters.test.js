@@ -2,55 +2,55 @@ var
   should = require('should'),
   q = require('q'),
   rewire = require('rewire'),
+  DslFilters = rewire('../../../../lib/api/dsl/filters'),
   Dsl = rewire('../../../../lib/api/dsl/index');
 
-describe('Test: dsl.testFieldFilters', function () {
+describe('Test: dsl.filters.testFieldFilters', function () {
   var
-    testFieldFilters = Dsl.__get__('testFieldFilters'),
-    dsl,
+    filters,
     index = 'test',
     collection = 'bar',
     data = { foo: { bar: 'bar' }},
     flattenBody;
 
   before(function () {
-    Dsl.__set__('testRooms', function (rooms) {
-      return q(rooms);
+    DslFilters.__set__('findMatchingFilters', function (ids) {
+      return q(ids);
     });
   });
 
   beforeEach(function () {
-    dsl = new Dsl();
+    filters = new DslFilters();
     flattenBody = Dsl.__get__('flattenObject')(data);
   });
 
   it('should return a promise when no fields are provided', function () {
-    var result = testFieldFilters.call(dsl, index, collection, {}, {});
+    var result = filters.testFieldFilters(index, collection, {}, {});
     return should(result).be.fulfilledWith([]);
   });
 
   it('should resolve to an empty array if the collection isn\'t yet listed', function () {
-    var result = testFieldFilters.call(dsl, index, 'nocollection', flattenBody, {});
+    var result = filters.testFieldFilters(index, 'nocollection', flattenBody, {});
     return should(result).be.fulfilledWith([]);
   });
 
   it('should resolve to an empty array if no field is registered on a given collection', function () {
     var result;
 
-    dsl.filtersTree[index] = {};
-    dsl.filtersTree[index][collection] = {};
+    filters.filtersTree[index] = {};
+    filters.filtersTree[index][collection] = {};
 
-    result = testFieldFilters.call(dsl, index, collection, flattenBody, {});
+    result = filters.testFieldFilters(index, collection, flattenBody, {});
     return should(result).be.fulfilledWith([]);
   });
 
   it('should resolve to an empty array if the tested fields aren\'t listed on a given collection', function () {
     var result;
 
-    dsl.filtersTree[index] = {};
-    dsl.filtersTree[index][collection] = { fields: { foobar: '' }};
+    filters.filtersTree[index] = {};
+    filters.filtersTree[index][collection] = { fields: { foobar: '' }};
 
-    result = testFieldFilters.call(dsl, index, collection, flattenBody, {});
+    result = filters.testFieldFilters(index, collection, flattenBody, {});
     return should(result).be.fulfilledWith([]);
   });
 
@@ -58,8 +58,8 @@ describe('Test: dsl.testFieldFilters', function () {
     var
       result;
 
-    dsl.filtersTree[index] = {};
-    dsl.filtersTree[index][collection] = {
+    filters.filtersTree[index] = {};
+    filters.filtersTree[index][collection] = {
       fields: {
         foobar: {
           testFoobar: {
@@ -72,21 +72,21 @@ describe('Test: dsl.testFieldFilters', function () {
       }
     };
 
-    result = testFieldFilters.call(dsl, index, collection, flattenBody, {});
+    result = filters.testFieldFilters(index, collection, flattenBody, {});
     return should(result).be.fulfilledWith([]);
   });
 
-  it('should resolve to a list of rooms to notify if a document matches registered filters', function () {
+  it('should resolve to a list of filter IDs to notify if a document matches registered filters', function () {
     var
       result,
-      rooms = [ 'foo', 'bar', 'baz' ];
+      ids = [ 'foo', 'bar', 'baz' ];
 
-    dsl.filtersTree[index] = {};
-    dsl.filtersTree[index][collection] = {
+    filters.filtersTree[index] = {};
+    filters.filtersTree[index][collection] = {
       fields: {
         'foo.bar': {
           testFoobar: {
-            rooms: rooms,
+            ids: ids,
             args: {
               operator: 'term',
               not: false,
@@ -98,21 +98,21 @@ describe('Test: dsl.testFieldFilters', function () {
       }
     };
 
-    result = testFieldFilters.call(dsl, index, collection, flattenBody, {});
-    return should(result).be.fulfilledWith(rooms);
+    result = filters.testFieldFilters(index, collection, flattenBody, {});
+    return should(result).be.fulfilledWith(ids);
   });
 
-  it('should return a rejected promise if testRooms fails', function () {
+  it('should return a rejected promise if findMatchingFilters fails', function () {
     var
       result,
-      rooms = [ 'foo', 'bar', 'baz' ];
+      ids = [ 'foo', 'bar', 'baz' ];
 
-    dsl.filtersTree[index] = {};
-    dsl.filtersTree[index][collection] = {
+    filters.filtersTree[index] = {};
+    filters.filtersTree[index][collection] = {
       fields: {
         'foo.bar': {
           testFoobar: {
-            rooms: rooms,
+            ids: ids,
             args: {
               operator: 'term',
               not: false,
@@ -124,10 +124,10 @@ describe('Test: dsl.testFieldFilters', function () {
       }
     };
 
-    return Dsl.__with__({
-      testRooms: function () { return q.reject(new Error('rejected')); }
+    return DslFilters.__with__({
+      findMatchingFilters: function () { return q.reject(new Error('rejected')); }
     })(function () {
-      result = testFieldFilters.call(dsl, index, collection, flattenBody, {});
+      result = filters.testFieldFilters(index, collection, flattenBody, {});
       return should(result).be.rejectedWith('rejected');
     });
   });

@@ -139,5 +139,42 @@ module.exports = function () {
 
   });
 
+  this.Then(/^I'm ?(not)* able to find rights for user "([^"]*)"$/, function (not, id, callback) {
+    id = this.idPrefix + id;
+
+    this.api.getUserRights(id)
+      .then(body => {
+        if (body.error) {
+          return callback(body.error.message);
+        }
+
+        if (not) {
+          return callback(`User with id ${id} exists`);
+        }
+
+        callback();
+      })
+      .catch(error => {
+        if (not) {
+          return callback();
+        }
+
+        callback(error);
+      });
+  });
+
+  this.Then(/^I'm able to find my rights$/, function (callback) {
+    this.api.getMyRights()
+      .then(body => {
+        if (body.error) {
+          return callback(body.error.message);
+        }
+
+        callback();
+      })
+      .catch(error => { callback(error); });
+
+  });
+
 };
 
