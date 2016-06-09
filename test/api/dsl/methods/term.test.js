@@ -15,7 +15,8 @@ describe('Test term method', function () {
       firstName: 'Grace'
     },
     termfirstNameGrace = md5('termfirstNameGrace'),
-    nottermfirstNameGrace = md5('nottermfirstNameGrace');
+    nottermfirstNameGrace = md5('nottermfirstNameGrace'),
+    fieldFirstName = md5('firstName');
 
 
   before(function () {
@@ -29,18 +30,18 @@ describe('Test term method', function () {
     should(methods.filters.filtersTree[index]).not.be.empty();
     should(methods.filters.filtersTree[index][collection]).not.be.empty();
     should(methods.filters.filtersTree[index][collection].fields).not.be.empty();
-    should(methods.filters.filtersTree[index][collection].fields.firstName).not.be.empty();
+    should(methods.filters.filtersTree[index][collection].fields[fieldFirstName]).not.be.empty();
   });
 
   it('should construct the filterTree with correct arguments', function () {
-    should(methods.filters.filtersTree[index][collection].fields.firstName[termfirstNameGrace].args).match({
+    should(methods.filters.filtersTree[index][collection].fields[fieldFirstName][termfirstNameGrace].args).match({
       operator: 'term',
       not: undefined,
       field: 'firstName',
       value: 'Grace'
     });
 
-    should(methods.filters.filtersTree[index][collection].fields.firstName[nottermfirstNameGrace].args).match({
+    should(methods.filters.filtersTree[index][collection].fields[fieldFirstName][nottermfirstNameGrace].args).match({
       operator: 'term',
       not: true,
       field: 'firstName',
@@ -50,8 +51,8 @@ describe('Test term method', function () {
 
   it('should construct the filterTree with correct room list', function () {
     var
-      ids = methods.filters.filtersTree[index][collection].fields.firstName[termfirstNameGrace].ids,
-      idsNot = methods.filters.filtersTree[index][collection].fields.firstName[nottermfirstNameGrace].ids;
+      ids = methods.filters.filtersTree[index][collection].fields[fieldFirstName][termfirstNameGrace].ids,
+      idsNot = methods.filters.filtersTree[index][collection].fields[fieldFirstName][nottermfirstNameGrace].ids;
 
     should(ids).be.an.Array();
     should(idsNot).be.an.Array();
