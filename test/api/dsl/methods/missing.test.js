@@ -24,7 +24,8 @@ describe('Test missing method', function () {
     filter = {
       field: 'lastName'
     },
-    missinglastName = md5('missinglastName');
+    missinglastName = md5('missinglastName'),
+    encodedLastName = md5('lastName');
 
 
   before(function () {
@@ -37,18 +38,18 @@ describe('Test missing method', function () {
     should(methods.dsl.filtersTree[index]).not.be.empty();
     should(methods.dsl.filtersTree[index][collection]).not.be.empty();
     should(methods.dsl.filtersTree[index][collection].fields).not.be.empty();
-    should(methods.dsl.filtersTree[index][collection].fields.lastName).not.be.empty();
+    should(methods.dsl.filtersTree[index][collection].fields[encodedLastName]).not.be.empty();
   });
 
   it('should construct the filterTree with correct curried function name', function () {
-    should(methods.dsl.filtersTree[index][collection].fields.lastName[missinglastName]).not.be.empty();
+    should(methods.dsl.filtersTree[index][collection].fields[encodedLastName][missinglastName]).not.be.empty();
   });
 
   it('should construct the filterTree with correct room list', function () {
     var rooms;
 
     // Test gt from filterGrace
-    rooms = methods.dsl.filtersTree[index][collection].fields.lastName[missinglastName].rooms;
+    rooms = methods.dsl.filtersTree[index][collection].fields[encodedLastName][missinglastName].rooms;
     should(rooms).be.an.Array();
     should(rooms).have.length(1);
     should(rooms[0]).be.exactly(roomId);
@@ -57,9 +58,9 @@ describe('Test missing method', function () {
   it('should construct the filterTree with correct functions missing', function () {
     var result;
 
-    result = methods.dsl.filtersTree[index][collection].fields.lastName[missinglastName].fn(documentAda);
+    result = methods.dsl.filtersTree[index][collection].fields[encodedLastName][missinglastName].fn(documentAda);
     should(result).be.exactly(true);
-    result = methods.dsl.filtersTree[index][collection].fields.lastName[missinglastName].fn(documentGrace);
+    result = methods.dsl.filtersTree[index][collection].fields[encodedLastName][missinglastName].fn(documentGrace);
     should(result).be.exactly(false);
   });
 

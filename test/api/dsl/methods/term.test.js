@@ -22,7 +22,8 @@ describe('Test term method', function () {
       firstName: 'Grace'
     },
     termfirstNameGrace = md5('termfirstNameGrace'),
-    nottermfirstNameGrace = md5('nottermfirstNameGrace');
+    nottermfirstNameGrace = md5('nottermfirstNameGrace'),
+    encodedFirstName = md5('firstName');
 
 
   before(function () {
@@ -38,18 +39,18 @@ describe('Test term method', function () {
     should(methods.dsl.filtersTree[index]).not.be.empty();
     should(methods.dsl.filtersTree[index][collection]).not.be.empty();
     should(methods.dsl.filtersTree[index][collection].fields).not.be.empty();
-    should(methods.dsl.filtersTree[index][collection].fields.firstName).not.be.empty();
+    should(methods.dsl.filtersTree[index][collection].fields[encodedFirstName]).not.be.empty();
   });
 
   it('should construct the filterTree with correct curried function name', function () {
-    should(methods.dsl.filtersTree[index][collection].fields.firstName[termfirstNameGrace]).not.be.empty();
-    should(methods.dsl.filtersTree[index][collection].fields.firstName[nottermfirstNameGrace]).not.be.empty();
+    should(methods.dsl.filtersTree[index][collection].fields[encodedFirstName][termfirstNameGrace]).not.be.empty();
+    should(methods.dsl.filtersTree[index][collection].fields[encodedFirstName][nottermfirstNameGrace]).not.be.empty();
   });
 
   it('should construct the filterTree with correct room list', function () {
     var
-      rooms = methods.dsl.filtersTree[index][collection].fields.firstName[termfirstNameGrace].rooms,
-      roomsNot = methods.dsl.filtersTree[index][collection].fields.firstName[nottermfirstNameGrace].rooms;
+      rooms = methods.dsl.filtersTree[index][collection].fields[encodedFirstName][termfirstNameGrace].rooms,
+      roomsNot = methods.dsl.filtersTree[index][collection].fields[encodedFirstName][nottermfirstNameGrace].rooms;
 
     should(rooms).be.an.Array();
     should(roomsNot).be.an.Array();
@@ -63,14 +64,14 @@ describe('Test term method', function () {
 
   it('should construct the filterTree with correct functions term', function () {
     var
-      resultMatch = methods.dsl.filtersTree[index][collection].fields.firstName[termfirstNameGrace].fn(documentGrace),
-      resultNotMatch = methods.dsl.filtersTree[index][collection].fields.firstName[termfirstNameGrace].fn(documentAda);
+      resultMatch = methods.dsl.filtersTree[index][collection].fields[encodedFirstName][termfirstNameGrace].fn(documentGrace),
+      resultNotMatch = methods.dsl.filtersTree[index][collection].fields[encodedFirstName][termfirstNameGrace].fn(documentAda);
 
     should(resultMatch).be.exactly(true);
     should(resultNotMatch).be.exactly(false);
 
-    resultMatch = methods.dsl.filtersTree[index][collection].fields.firstName[nottermfirstNameGrace].fn(documentAda);
-    resultNotMatch = methods.dsl.filtersTree[index][collection].fields.firstName[nottermfirstNameGrace].fn(documentGrace);
+    resultMatch = methods.dsl.filtersTree[index][collection].fields[encodedFirstName][nottermfirstNameGrace].fn(documentAda);
+    resultNotMatch = methods.dsl.filtersTree[index][collection].fields[encodedFirstName][nottermfirstNameGrace].fn(documentGrace);
 
     should(resultMatch).be.exactly(true);
     should(resultNotMatch).be.exactly(false);

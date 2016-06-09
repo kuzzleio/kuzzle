@@ -51,7 +51,8 @@ describe('Test geoPolygon method', function () {
     },
     locationgeoPolygonkpbdqcbnts00twy01mebpm9npc67zz631zyd = md5('locationgeoPolygonkpbdqcbnts00twy01mebpm9npc67zz631zyd'),
     locationgeoPolygonkpbxyzbpvs00twy01mebpvxypcr7zzzzzzzz = md5('locationgeoPolygonkpbxyzbpvs00twy01mebpvxypcr7zzzzzzzz'),
-    locationgeoPolygons1zbfk3yns1zyd63zws1zned3z8s1z0gs3y0 = md5('locationgeoPolygons1zbfk3yns1zyd63zws1zned3z8s1z0gs3y0');
+    locationgeoPolygons1zbfk3yns1zyd63zws1zned3z8s1z0gs3y0 = md5('locationgeoPolygons1zbfk3yns1zyd63zws1zned3z8s1z0gs3y0'),
+    encodedLocation = md5('location');
 
   before(function () {
     methods.dsl.filtersTree = {};
@@ -69,7 +70,7 @@ describe('Test geoPolygon method', function () {
     should(methods.dsl.filtersTree[index]).not.be.empty();
     should(methods.dsl.filtersTree[index][collection]).not.be.empty();
     should(methods.dsl.filtersTree[index][collection].fields).not.be.empty();
-    should(methods.dsl.filtersTree[index][collection].fields.location).not.be.empty();
+    should(methods.dsl.filtersTree[index][collection].fields[encodedLocation]).not.be.empty();
   });
 
   it('should construct the filterTree with correct curried function name', function () {
@@ -77,26 +78,26 @@ describe('Test geoPolygon method', function () {
     // because we have many times the same coord in filters,
     // we must have only four functions
     
-    should(Object.keys(methods.dsl.filtersTree[index][collection].fields.location)).have.length(3);
-    should(methods.dsl.filtersTree[index][collection].fields.location[locationgeoPolygonkpbdqcbnts00twy01mebpm9npc67zz631zyd]).not.be.empty();
-    should(methods.dsl.filtersTree[index][collection].fields.location[locationgeoPolygonkpbxyzbpvs00twy01mebpvxypcr7zzzzzzzz]).not.be.empty();
-    should(methods.dsl.filtersTree[index][collection].fields.location[locationgeoPolygons1zbfk3yns1zyd63zws1zned3z8s1z0gs3y0]).not.be.empty();
+    should(Object.keys(methods.dsl.filtersTree[index][collection].fields[encodedLocation])).have.length(3);
+    should(methods.dsl.filtersTree[index][collection].fields[encodedLocation][locationgeoPolygonkpbdqcbnts00twy01mebpm9npc67zz631zyd]).not.be.empty();
+    should(methods.dsl.filtersTree[index][collection].fields[encodedLocation][locationgeoPolygonkpbxyzbpvs00twy01mebpvxypcr7zzzzzzzz]).not.be.empty();
+    should(methods.dsl.filtersTree[index][collection].fields[encodedLocation][locationgeoPolygons1zbfk3yns1zyd63zws1zned3z8s1z0gs3y0]).not.be.empty();
   });
 
   it('should construct the filterTree with correct room list', function () {
     var rooms;
 
-    rooms = methods.dsl.filtersTree[index][collection].fields.location[locationgeoPolygonkpbdqcbnts00twy01mebpm9npc67zz631zyd].rooms;
+    rooms = methods.dsl.filtersTree[index][collection].fields[encodedLocation][locationgeoPolygonkpbdqcbnts00twy01mebpm9npc67zz631zyd].rooms;
     should(rooms).be.an.Array();
     should(rooms).have.length(1);
     should(rooms[0]).be.exactly(roomId);
 
-    rooms = methods.dsl.filtersTree[index][collection].fields.location[locationgeoPolygonkpbxyzbpvs00twy01mebpvxypcr7zzzzzzzz].rooms;
+    rooms = methods.dsl.filtersTree[index][collection].fields[encodedLocation][locationgeoPolygonkpbxyzbpvs00twy01mebpvxypcr7zzzzzzzz].rooms;
     should(rooms).be.an.Array();
     should(rooms).have.length(1);
     should(rooms[0]).be.exactly(roomId);
 
-    rooms = methods.dsl.filtersTree[index][collection].fields.location[locationgeoPolygons1zbfk3yns1zyd63zws1zned3z8s1z0gs3y0].rooms;
+    rooms = methods.dsl.filtersTree[index][collection].fields[encodedLocation][locationgeoPolygons1zbfk3yns1zyd63zws1zned3z8s1z0gs3y0].rooms;
     should(rooms).be.an.Array();
     should(rooms).have.length(1);
     should(rooms[0]).be.exactly(roomId);
@@ -107,15 +108,15 @@ describe('Test geoPolygon method', function () {
     var result;
 
     // test exact
-    result = methods.dsl.filtersTree[index][collection].fields.location[locationgeoPolygonkpbdqcbnts00twy01mebpm9npc67zz631zyd].fn(document);
+    result = methods.dsl.filtersTree[index][collection].fields[encodedLocation][locationgeoPolygonkpbdqcbnts00twy01mebpm9npc67zz631zyd].fn(document);
     should(result).be.exactly(true);
 
     // test outside
-    result = methods.dsl.filtersTree[index][collection].fields.location[locationgeoPolygonkpbxyzbpvs00twy01mebpvxypcr7zzzzzzzz].fn(document);
+    result = methods.dsl.filtersTree[index][collection].fields[encodedLocation][locationgeoPolygonkpbxyzbpvs00twy01mebpvxypcr7zzzzzzzz].fn(document);
     should(result).be.exactly(true);
 
     // test on limit
-    result = methods.dsl.filtersTree[index][collection].fields.location[locationgeoPolygons1zbfk3yns1zyd63zws1zned3z8s1z0gs3y0].fn(document);
+    result = methods.dsl.filtersTree[index][collection].fields[encodedLocation][locationgeoPolygons1zbfk3yns1zyd63zws1zned3z8s1z0gs3y0].fn(document);
     should(result).be.exactly(false);
 
   });

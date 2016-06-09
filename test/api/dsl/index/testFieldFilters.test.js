@@ -2,6 +2,7 @@ var
   should = require('should'),
   q = require('q'),
   rewire = require('rewire'),
+  md5 = require('crypto-md5'),
   RequestObject = require.main.require('lib/api/core/models/requestObject'),
   Dsl = rewire('../../../../lib/api/dsl/index');
 
@@ -84,15 +85,12 @@ describe('Test: dsl.testFieldFilters', function () {
       rooms = [ 'foo', 'bar', 'baz' ];
 
     dsl.filtersTree[requestObject.index] = {};
-    dsl.filtersTree[requestObject.index][requestObject.collection] = {
-      fields: {
-        'foo.bar': {
-          testFoobar: {
-            rooms: rooms,
-            fn: function () {
-              return true;
-            }
-          }
+    dsl.filtersTree[requestObject.index][requestObject.collection] = {fields: {}};
+    dsl.filtersTree[requestObject.index][requestObject.collection].fields[md5('foo.bar')] = {
+      testFoobar: {
+        rooms: rooms,
+        fn: function () {
+          return true;
         }
       }
     };
@@ -107,15 +105,12 @@ describe('Test: dsl.testFieldFilters', function () {
       rooms = [ 'foo', 'bar', 'baz' ];
 
     dsl.filtersTree[requestObject.index] = {};
-    dsl.filtersTree[requestObject.index][requestObject.collection] = {
-      fields: {
-        'foo.bar': {
-          testFoobar: {
-            rooms: rooms,
-            fn: function () {
-              return true;
-            }
-          }
+    dsl.filtersTree[requestObject.index][requestObject.collection] = {fields: {}};
+    dsl.filtersTree[requestObject.index][requestObject.collection].fields[md5('foo.bar')] = {
+      testFoobar: {
+        rooms: rooms,
+        fn: function () {
+          return true;
         }
       }
     };
