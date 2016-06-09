@@ -24,8 +24,7 @@
     "mode": "master",
     "clusterName": "kuzzle-cluster",
     "host": "",
-    "port": 7911,
-    "retryInterval": 2000
+    "port": 7911
   },
 
   /*
@@ -197,6 +196,11 @@
       "kuzzle-plugin-auth-passport-local": {
         "npmVersion": "1.4.0",
         "activated": true
+      },
+      "kuzzle-plugin-cluster": {
+        "path": "/var/kuzzle-plugin-cluster",
+        "activated": true,
+        "privileged": true
       }
     }
   },

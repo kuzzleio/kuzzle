@@ -10,7 +10,7 @@ describe('Test: dsl.must method', function () {
   before(function () {
     Methods.__set__('getFormattedFilters', function (roomId) {
       if (roomId === 'resolve') {
-        return q('resolved');
+        return q({filter: 'resolved'});
       }
       else {
         return q.reject(new Error('rejected'));
@@ -21,7 +21,7 @@ describe('Test: dsl.must method', function () {
   });
 
   it('should return an embedded object containing the result of getFormattedFilters', function () {
-    return should(methods.must('resolve', 'index', {}, {}, false)).be.fulfilledWith({and: 'resolved'});
+    return should(methods.must('resolve', 'index', {}, {}, false)).be.fulfilledWith({ diff: undefined, filter: {and: 'resolved'} });
   });
 
   it('should return a rejected promise if getFormattedFilters fails', function () {

@@ -83,9 +83,11 @@ describe('Test missing method', function () {
   });
 
   it('should register the filter in the global area in case of a "not missing" filter', function () {
-    methods.filters.add = function (index, collection, field, operatorName, value, curriedFunctionName, roomId, not, inGlobals) {
+    methods.filters.add = function (index, collection, field, operatorName, value, hashedFunctionName, roomId, not, inGlobals) {
+      var fn = md5(`${not ? 'not': ''}missing${field}`);
+
       should(inGlobals).be.true();
-      should(curriedFunctionName).startWith('not');
+      should(hashedFunctionName).be.exactly(fn);
       return { path: '' };
     };
 

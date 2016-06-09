@@ -325,6 +325,7 @@ function updatePluginsConfiguration(db, collection, plugins) {
 
     try {
       if (plugin.path) {
+        console.log(plugin.path, 'package.json');
         pluginPackage = require(path.join(plugin.path, 'package.json'));
       }
       else {
@@ -333,6 +334,7 @@ function updatePluginsConfiguration(db, collection, plugins) {
     }
     catch (e) {
       console.error(clcError('███ kuzzle-plugins:'), 'There is a problem with plugin ' + name + '. Check the plugin installation directory');
+      console.error(e);
     }
 
     // If there is no information about plugin in the package.json

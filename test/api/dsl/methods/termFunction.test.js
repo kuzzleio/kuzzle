@@ -41,6 +41,7 @@ describe('Test: dsl.termFunction method', function () {
       };
 
     return termFunction('term', 'roomId', 'index', 'collection', filter)
+      .then(response => response.filter)
       .then(function (formattedFilter) {
         should.exist(formattedFilter['index.collection.foo.' + termfoobar]);
         should(formattedFilter['index.collection.foo.' + termfoobar].ids).be.an.Array().and.match(['roomId']);
@@ -57,6 +58,7 @@ describe('Test: dsl.termFunction method', function () {
       };
 
     return termFunction('terms', 'roomId', 'index', 'collection', filter)
+      .then(response => response.filter)
       .then(function (formattedFilter) {
         should.exist(formattedFilter['index.collection.foo.' + termsfoobarbaz]);
         should(formattedFilter['index.collection.foo.' + termsfoobarbaz].ids).be.an.Array().and.match(['roomId']);
@@ -76,6 +78,7 @@ describe('Test: dsl.termFunction method', function () {
       };
 
     return termFunction('term', 'roomId', 'index', 'collection', filter, true)
+      .then(response => response.filter)
       .then(function (formattedFilter) {
         should.exist(formattedFilter['index.collection.foo.' + nottermfoobar]);
         should(formattedFilter['index.collection.foo.' + nottermfoobar].ids).be.an.Array().and.match(['roomId']);
@@ -92,6 +95,7 @@ describe('Test: dsl.termFunction method', function () {
       };
 
     return termFunction('terms', 'roomId', 'index', 'collection', filter, true)
+      .then(response => response.filter)
       .then(function (formattedFilter) {
         should.exist(formattedFilter['index.collection.foo.' + nottermsfoobarbaz]);
         should(formattedFilter['index.collection.foo.' + nottermsfoobarbaz].ids).be.an.Array().and.match(['roomId']);

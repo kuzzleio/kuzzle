@@ -1,0 +1,21 @@
+{
+  "apps": [{
+      "name"         : "KuzzleServer",
+      "script"       : "bin/kuzzle",
+      "args"         : ["start",  "--server"],
+      "watch"        : ["lib", "config", "bin", "../kuzzle-plugin-cluster"],
+      "ignore_watch" : ["node_modules", "config/defaultPlugins.json", "config/customPlugins.json"],
+      "node_args": "--debug=7000"
+    },
+    {
+      "name"         : "KuzzleWorker",
+      "exec_mode"    : "cluster",
+      "instances"    : 1,
+      "script"       : "bin/kuzzle",
+      "args"         : ["start", "--worker"],
+      "watch"        : ["lib", "config", "bin"],
+      "ignore_watch" : ["node_modules", "config/defaultPlugins.json", "config/customPlugins.json"],
+      "node_args": "--debug=7001"
+    }
+  ]
+}

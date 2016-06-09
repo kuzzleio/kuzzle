@@ -37,7 +37,9 @@ describe('Test: dsl.getFormattedFilters method', function () {
       };
 
     return getFormattedFilters.call(methods, 'roomId', 'index', 'collection', filter)
+      .then(response => response.filter)
       .then(function (formattedFilter) {
+        console.log(formattedFilter, existsfoo);
         should.exist(formattedFilter['index.collection.foo.' + existsfoo]);
         should(formattedFilter['index.collection.foo.' + existsfoo]).be.an.Object();
         should.exist(formattedFilter['index.collection.foo.' + existsfoo].ids);
@@ -55,6 +57,7 @@ describe('Test: dsl.getFormattedFilters method', function () {
       ];
 
     return getFormattedFilters.call(methods, 'roomId', 'index', 'collection', filters)
+      .then(response => response.filter)
       .then(function (formattedFilter) {
         should.exist(formattedFilter['index.collection.foo.' + existsfoo]);
         should(formattedFilter['index.collection.foo.' + existsfoo]).be.an.Object();
@@ -81,6 +84,7 @@ describe('Test: dsl.getFormattedFilters method', function () {
       ];
 
     return getFormattedFilters.call(methods, 'roomId', 'index', 'collection', filters)
+      .then(response => response.filter)
       .then(function (formattedFilter) {
         should.exist(formattedFilter['index.collection.foo.' + existsfoo]);
         should(formattedFilter['index.collection.foo.' + existsfoo]).be.an.Object();
@@ -107,6 +111,7 @@ describe('Test: dsl.getFormattedFilters method', function () {
       };
 
     return getFormattedFilters.call(methods, 'roomId', 'index', 'collection', filter, true)
+      .then(response => response.filter)
       .then(function (formattedFilter) {
         should.exist(formattedFilter['index.collection.foo.' + notexistsfoo]);
         should(formattedFilter['index.collection.foo.' + notexistsfoo]).be.an.Object();

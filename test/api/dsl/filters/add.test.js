@@ -1,13 +1,11 @@
 var
   should = require('should'),
   rewire = require('rewire'),
-  md5 = require('crypto-md5');
   DslFilters = rewire('../../../../lib/api/dsl/filters');
 
 describe('Test: dsl.filters.add', function () {
   var
-    filters,
-    hashedFilter = md5('filter');
+    filters;
 
   beforeEach(function () {
     filters = new DslFilters();
@@ -25,7 +23,7 @@ describe('Test: dsl.filters.add', function () {
     var result = filters.add('index', 'collection', 'field', 'gte', 42, 'filter', 'filterId');
 
     should.not.exist(result.error);
-    should(result.path).be.exactly('index.collection.field.' + md5('filter'));
+    should(result.path).be.exactly('index.collection.field.filter');
     should.exist(result.filter);
     should(result.filter.ids).be.an.Array().and.match(['filterId']);
     should(result.filter.ids.length).be.eql(1);
@@ -39,10 +37,10 @@ describe('Test: dsl.filters.add', function () {
     should.exist(filters.filtersTree.index.collection);
     should.exist(filters.filtersTree.index.collection.fields);
     should.exist(filters.filtersTree.index.collection.fields.field);
-    should.exist(filters.filtersTree.index.collection.fields.field[hashedFilter]);
-    should(filters.filtersTree.index.collection.fields.field[hashedFilter].ids).be.an.Array().and.match(['filterId']);
+    should.exist(filters.filtersTree.index.collection.fields.field.filter);
+    should(filters.filtersTree.index.collection.fields.field.filter.ids).be.an.Array().and.match(['filterId']);
     should(result.filter.ids.length).be.eql(1);
-    should(filters.filtersTree.index.collection.fields.field[hashedFilter].args).be.an.Object().and.match({
+    should(filters.filtersTree.index.collection.fields.field.filter.args).be.an.Object().and.match({
       operator: 'gte',
       not: undefined,
       field: 'field',
@@ -56,8 +54,8 @@ describe('Test: dsl.filters.add', function () {
     filters.add('index', 'collection', 'field', 'gte', 42, 'filter', 'filterId');
     filters.add('index', 'collection', 'field', 'gte', 42, 'filter', 'filterId');
 
-    should(filters.filtersTree.index.collection.fields.field[hashedFilter].ids).be.an.Array().and.match(['filterId']);
-    should(filters.filtersTree.index.collection.fields.field[hashedFilter].ids.length).be.eql(1);
+    should(filters.filtersTree.index.collection.fields.field.filter.ids).be.an.Array().and.match(['filterId']);
+    should(filters.filtersTree.index.collection.fields.field.filter.ids.length).be.eql(1);
   });
 
   it('should also add the room to the global rooms list if the filter is global', function () {
