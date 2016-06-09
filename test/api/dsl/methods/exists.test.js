@@ -22,7 +22,8 @@ describe('Test exists method', function () {
     filter = {
       field: 'lastName'
     },
-    existslastName = md5('existslastName');
+    existslastName = md5('existslastName'),
+    encodedLastName = md5('lastName');
 
 
   before(function () {
@@ -35,18 +36,18 @@ describe('Test exists method', function () {
     should(methods.dsl.filtersTree[index]).not.be.empty();
     should(methods.dsl.filtersTree[index][collection]).not.be.empty();
     should(methods.dsl.filtersTree[index][collection].fields).not.be.empty();
-    should(methods.dsl.filtersTree[index][collection].fields.lastName).not.be.empty();
+    should(methods.dsl.filtersTree[index][collection].fields[encodedLastName]).not.be.empty();
   });
 
   it('should construct the filterTree with correct curried function name', function () {
-    should(methods.dsl.filtersTree[index][collection].fields.lastName[existslastName]).not.be.empty();
+    should(methods.dsl.filtersTree[index][collection].fields[encodedLastName][existslastName]).not.be.empty();
   });
 
   it('should construct the filterTree with correct room list', function () {
     var rooms;
 
     // Test gt from filterGrace
-    rooms = methods.dsl.filtersTree[index][collection].fields.lastName[existslastName].rooms;
+    rooms = methods.dsl.filtersTree[index][collection].fields[encodedLastName][existslastName].rooms;
     should(rooms).be.an.Array();
     should(rooms).have.length(1);
     should(rooms[0]).be.exactly(roomId);
@@ -55,9 +56,9 @@ describe('Test exists method', function () {
   it('should construct the filterTree with correct functions exists', function () {
     var result;
 
-    result = methods.dsl.filtersTree[index][collection].fields.lastName[existslastName].fn(documentGrace);
+    result = methods.dsl.filtersTree[index][collection].fields[encodedLastName][existslastName].fn(documentGrace);
     should(result).be.exactly(true);
-    result = methods.dsl.filtersTree[index][collection].fields.lastName[existslastName].fn(documentAda);
+    result = methods.dsl.filtersTree[index][collection].fields[encodedLastName][existslastName].fn(documentAda);
     should(result).be.exactly(false);
   });
 

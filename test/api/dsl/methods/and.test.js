@@ -36,7 +36,9 @@ describe('Test and method', function () {
       }
     ],
     termCity = md5('termcityNYC'),
-    termHobby = md5('termhobbycomputer');
+    termHobby = md5('termhobbycomputer'),
+    encodedCity = md5('city'),
+    encodedHobby = md5('hobby');
 
 
   before(function () {
@@ -49,24 +51,24 @@ describe('Test and method', function () {
     should(methods.dsl.filtersTree[index]).not.be.empty();
     should(methods.dsl.filtersTree[index][collection]).not.be.empty();
     should(methods.dsl.filtersTree[index][collection].fields).not.be.empty();
-    should(methods.dsl.filtersTree[index][collection].fields.city).not.be.empty();
-    should(methods.dsl.filtersTree[index][collection].fields.hobby).not.be.empty();
+    should(methods.dsl.filtersTree[index][collection].fields[encodedCity]).not.be.empty();
+    should(methods.dsl.filtersTree[index][collection].fields[encodedHobby]).not.be.empty();
   });
 
   it('should construct the filterTree with correct curried function name', function () {
-    should(methods.dsl.filtersTree[index][collection].fields.city[termCity]).not.be.empty();
-    should(methods.dsl.filtersTree[index][collection].fields.hobby[termHobby]).not.be.empty();
+    should(methods.dsl.filtersTree[index][collection].fields[encodedCity][termCity]).not.be.empty();
+    should(methods.dsl.filtersTree[index][collection].fields[encodedHobby][termHobby]).not.be.empty();
   });
 
   it('should construct the filterTree with correct room list', function () {
     var rooms;
 
-    rooms = methods.dsl.filtersTree[index][collection].fields.city[termCity].rooms;
+    rooms = methods.dsl.filtersTree[index][collection].fields[encodedCity][termCity].rooms;
     should(rooms).be.an.Array();
     should(rooms).have.length(1);
     should(rooms[0]).be.exactly(roomId);
 
-    rooms = methods.dsl.filtersTree[index][collection].fields.hobby[termHobby].rooms;
+    rooms = methods.dsl.filtersTree[index][collection].fields[encodedHobby][termHobby].rooms;
     should(rooms).be.an.Array();
     should(rooms).have.length(1);
     should(rooms[0]).be.exactly(roomId);
@@ -75,14 +77,14 @@ describe('Test and method', function () {
   it('should construct the filterTree with correct functions', function () {
     var result;
 
-    result = methods.dsl.filtersTree[index][collection].fields.city[termCity].fn(documentGrace);
+    result = methods.dsl.filtersTree[index][collection].fields[encodedCity][termCity].fn(documentGrace);
     should(result).be.exactly(true);
-    result = methods.dsl.filtersTree[index][collection].fields.city[termCity].fn(documentAda);
+    result = methods.dsl.filtersTree[index][collection].fields[encodedCity][termCity].fn(documentAda);
     should(result).be.exactly(false);
 
-    result = methods.dsl.filtersTree[index][collection].fields.hobby[termHobby].fn(documentGrace);
+    result = methods.dsl.filtersTree[index][collection].fields[encodedHobby][termHobby].fn(documentGrace);
     should(result).be.exactly(true);
-    result = methods.dsl.filtersTree[index][collection].fields.hobby[termHobby].fn(documentAda);
+    result = methods.dsl.filtersTree[index][collection].fields[encodedHobby][termHobby].fn(documentAda);
     should(result).be.exactly(true);
   });
 
