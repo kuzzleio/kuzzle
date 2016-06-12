@@ -73,6 +73,7 @@ describe('Test: repositories/profileRepository', () => {
     sandbox = sinon.sandbox.create();
     sandbox.stub(kuzzle.repositories.profile, 'loadFromCache', stubs.profileRepository.loadFromCache);
     sandbox.stub(kuzzle.repositories.profile, 'persistToCache').resolves({});
+    sandbox.stub(kuzzle.repositories.profile, 'deleteFromCache').resolves({});
   });
 
   afterEach(() => {
