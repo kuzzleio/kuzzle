@@ -30,7 +30,8 @@ function initRoutes() {
         routes: []
       },
       config: {
-        apiVersion: '1.0'
+        apiVersion: '1.0',
+        httpRoutes: require('../../lib/config/httpRoutes')
       }
     });
 

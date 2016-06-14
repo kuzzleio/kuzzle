@@ -1,12 +1,14 @@
 var
   should = require('should'),
   rewire = require('rewire'),
-  methods = rewire('../../../../lib/api/dsl/methods');
-
-
+  Methods = rewire('../../../../lib/api/dsl/methods');
 
 describe('Test: dsl.mustNot method', function () {
+  var methods;
+  
   before(function () {
+    methods = new Methods({filtersTree: {}});
+
     methods.must = function (roomId, index, collection, filters, not) {
       should(roomId).be.exactly(not);
     };
