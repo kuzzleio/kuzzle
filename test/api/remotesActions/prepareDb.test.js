@@ -66,4 +66,3 @@ describe('Test: prepareDb remote action caller', function () {
     done();
   });  
 });
-

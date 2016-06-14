@@ -6,8 +6,6 @@ loadbalancer:
 
 kuzzle:
   image: kuzzleio/kuzzle
-  volumes:
-      - ".:/var/app"
   links:
     - elasticsearch
     - redis

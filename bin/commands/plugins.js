@@ -1,9 +1,7 @@
 var
   clc = require('cli-color'),
-  Kuzzle = require('../../lib/api'),
   childProcess = require('child_process'),
-  rc = require('rc'),
-  params = rc('kuzzle');
+  managePlugins = require('../../lib/api/controllers/remoteActions/managePlugins');
 
 var
   clcError = clc.red,
@@ -12,17 +10,24 @@ var
 /* eslint-disable no-console */
 
 module.exports = function pluginsManager (plugin, options) {
-  var
-    kuzzle = new Kuzzle();
-
   if (!childProcess.hasOwnProperty('execSync')) {
     console.error(clcError('███ kuzzle-plugins: Make sure you\'re using Node version >= 0.12'));
     process.exit(1);
   }
 
-  checkOptions(plugin, options);
+  checkOptions();
 
-  return kuzzle.remoteActions.do('managePlugins', params, options);
+  managePlugins(plugin, options)
+    .then(res => {
+      if (res) {
+        console.log(res);
+      }
+      process.exit(0);
+    })
+    .catch(err => {
+      console.error(clcError(err.message));
+      process.exit(1);
+    });
 
   /**
    * Check the command-line validity.
@@ -32,7 +37,7 @@ module.exports = function pluginsManager (plugin, options) {
    * @param plugin name
    * @param options provided on the command-line (commander object)
    */
-  function checkOptions(plugin, options) {
+  function checkOptions() {
     var
       requiredOptions,
       installOptions;
