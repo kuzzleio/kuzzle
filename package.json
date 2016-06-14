@@ -57,7 +57,6 @@
     "request-promise": "^3.0.0",
     "rimraf": "^2.5.2",
     "router": "1.1.4",
-    "walk": "2.3.9",
     "ws": "1.1.0"
   },
   "repository": {
