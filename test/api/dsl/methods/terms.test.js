@@ -15,7 +15,8 @@ describe('Test "terms" method', function () {
       firstName: ['Grace', 'Jean']
     },
     termsfirstNameGraceJean = md5('termsfirstNameGrace,Jean'),
-    nottermsfirstNameGraceJean = md5('nottermsfirstNameGrace,Jean');
+    nottermsfirstNameGraceJean = md5('nottermsfirstNameGrace,Jean'),
+    fieldFirstName = md5('firstName');
 
   beforeEach(function () {
     methods = new Methods(new Filters());
@@ -29,18 +30,18 @@ describe('Test "terms" method', function () {
     should(methods.filters.filtersTree[index]).not.be.empty();
     should(methods.filters.filtersTree[index][collection]).not.be.empty();
     should(methods.filters.filtersTree[index][collection].fields).not.be.empty();
-    should(methods.filters.filtersTree[index][collection].fields.firstName).not.be.empty();
+    should(methods.filters.filtersTree[index][collection].fields[fieldFirstName]).not.be.empty();
   });
 
   it('should construct the filterTree with correct curried function name', function () {
-    should(methods.filters.filtersTree[index][collection].fields.firstName[termsfirstNameGraceJean]).not.be.empty();
-    should(methods.filters.filtersTree[index][collection].fields.firstName[nottermsfirstNameGraceJean]).not.be.empty();
+    should(methods.filters.filtersTree[index][collection].fields[fieldFirstName][termsfirstNameGraceJean]).not.be.empty();
+    should(methods.filters.filtersTree[index][collection].fields[fieldFirstName][nottermsfirstNameGraceJean]).not.be.empty();
   });
 
   it('should construct the filterTree with correct room list', function () {
     var
-      ids = methods.filters.filtersTree[index][collection].fields.firstName[termsfirstNameGraceJean].ids,
-      idsNot = methods.filters.filtersTree[index][collection].fields.firstName[nottermsfirstNameGraceJean].ids;
+      ids = methods.filters.filtersTree[index][collection].fields[fieldFirstName][termsfirstNameGraceJean].ids,
+      idsNot = methods.filters.filtersTree[index][collection].fields[fieldFirstName][nottermsfirstNameGraceJean].ids;
 
     should(ids).be.an.Array();
     should(idsNot).be.an.Array();
@@ -53,14 +54,14 @@ describe('Test "terms" method', function () {
   });
 
   it('should construct the filterTree with correct functions terms', function () {
-    should(methods.filters.filtersTree[index][collection].fields.firstName[termsfirstNameGraceJean].args).match({
+    should(methods.filters.filtersTree[index][collection].fields[fieldFirstName][termsfirstNameGraceJean].args).match({
       operator: 'terms',
       not: false,
       field: 'firstName',
       value: [ 'Grace', 'Jean' ]
     });
 
-    should(methods.filters.filtersTree[index][collection].fields.firstName[nottermsfirstNameGraceJean].args).match({
+    should(methods.filters.filtersTree[index][collection].fields[fieldFirstName][nottermsfirstNameGraceJean].args).match({
       operator: 'terms',
       not: true,
       field: 'firstName',

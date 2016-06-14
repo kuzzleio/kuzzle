@@ -19,24 +19,28 @@ module.exports = function () {
     this.documentGrace = {
       firstName: 'Grace',
       lastName: 'Hopper',
-      age: 85,
+      info: {
+        age: 85,
+        city: 'NYC',
+        hobby: 'computer'
+      },
       location: {
         lat: 32.692742,
         lon: -97.114127
-      },
-      city: 'NYC',
-      hobby: 'computer'
+      }
     };
     this.documentAda = {
       firstName: 'Ada',
       lastName: 'Lovelace',
-      age: 36,
+      info: {
+        age: 36,
+        city: 'London',
+        hobby: 'computer'
+      },
       location: {
         lat: 51.519291,
         lon: -0.149817
-      },
-      city: 'London',
-      hobby: 'computer'
+      }
     };
     this.bulk = [
       { index:  {_id: 1 } },

@@ -45,7 +45,8 @@ describe('Test "geoPolygon" method', function () {
     },
     locationgeoPolygonkpbdqcbnts00twy01mebpm9npc67zz631zyd = md5('locationgeoPolygonkpbdqcbnts00twy01mebpm9npc67zz631zyd'),
     locationgeoPolygonkpbxyzbpvs00twy01mebpvxypcr7zzzzzzzz = md5('locationgeoPolygonkpbxyzbpvs00twy01mebpvxypcr7zzzzzzzz'),
-    locationgeoPolygons1zbfk3yns1zyd63zws1zned3z8s1z0gs3y0 = md5('locationgeoPolygons1zbfk3yns1zyd63zws1zned3z8s1z0gs3y0');
+    locationgeoPolygons1zbfk3yns1zyd63zws1zned3z8s1z0gs3y0 = md5('locationgeoPolygons1zbfk3yns1zyd63zws1zned3z8s1z0gs3y0'),
+    fieldLocation = md5('location');
 
   beforeEach(function () {
     methods = new Methods(new Filters());
@@ -60,7 +61,7 @@ describe('Test "geoPolygon" method', function () {
     should(methods.filters.filtersTree[index]).not.be.empty();
     should(methods.filters.filtersTree[index][collection]).not.be.empty();
     should(methods.filters.filtersTree[index][collection].fields).not.be.empty();
-    should(methods.filters.filtersTree[index][collection].fields.location).not.be.empty();
+    should(methods.filters.filtersTree[index][collection].fields[fieldLocation]).not.be.empty();
   });
 
   it('should construct the filterTree with correct encoded function name', function () {
@@ -68,26 +69,26 @@ describe('Test "geoPolygon" method', function () {
     // because we have many times the same coord in filters,
     // we must have only four functions
     
-    should(Object.keys(methods.filters.filtersTree[index][collection].fields.location)).have.length(3);
-    should(methods.filters.filtersTree[index][collection].fields.location[locationgeoPolygonkpbdqcbnts00twy01mebpm9npc67zz631zyd]).not.be.empty();
-    should(methods.filters.filtersTree[index][collection].fields.location[locationgeoPolygonkpbxyzbpvs00twy01mebpvxypcr7zzzzzzzz]).not.be.empty();
-    should(methods.filters.filtersTree[index][collection].fields.location[locationgeoPolygons1zbfk3yns1zyd63zws1zned3z8s1z0gs3y0]).not.be.empty();
+    should(Object.keys(methods.filters.filtersTree[index][collection].fields[fieldLocation])).have.length(3);
+    should(methods.filters.filtersTree[index][collection].fields[fieldLocation][locationgeoPolygonkpbdqcbnts00twy01mebpm9npc67zz631zyd]).not.be.empty();
+    should(methods.filters.filtersTree[index][collection].fields[fieldLocation][locationgeoPolygonkpbxyzbpvs00twy01mebpvxypcr7zzzzzzzz]).not.be.empty();
+    should(methods.filters.filtersTree[index][collection].fields[fieldLocation][locationgeoPolygons1zbfk3yns1zyd63zws1zned3z8s1z0gs3y0]).not.be.empty();
   });
 
   it('should construct the filterTree with correct room list', function () {
     var ids;
 
-    ids = methods.filters.filtersTree[index][collection].fields.location[locationgeoPolygonkpbdqcbnts00twy01mebpm9npc67zz631zyd].ids;
+    ids = methods.filters.filtersTree[index][collection].fields[fieldLocation][locationgeoPolygonkpbdqcbnts00twy01mebpm9npc67zz631zyd].ids;
     should(ids).be.an.Array();
     should(ids).have.length(1);
     should(ids[0]).be.exactly(filterId);
 
-    ids = methods.filters.filtersTree[index][collection].fields.location[locationgeoPolygonkpbxyzbpvs00twy01mebpvxypcr7zzzzzzzz].ids;
+    ids = methods.filters.filtersTree[index][collection].fields[fieldLocation][locationgeoPolygonkpbxyzbpvs00twy01mebpvxypcr7zzzzzzzz].ids;
     should(ids).be.an.Array();
     should(ids).have.length(1);
     should(ids[0]).be.exactly(filterId);
 
-    ids = methods.filters.filtersTree[index][collection].fields.location[locationgeoPolygons1zbfk3yns1zyd63zws1zned3z8s1z0gs3y0].ids;
+    ids = methods.filters.filtersTree[index][collection].fields[fieldLocation][locationgeoPolygons1zbfk3yns1zyd63zws1zned3z8s1z0gs3y0].ids;
     should(ids).be.an.Array();
     should(ids).have.length(1);
     should(ids[0]).be.exactly(filterId);
@@ -96,7 +97,7 @@ describe('Test "geoPolygon" method', function () {
 
   it('should construct the filterTree with correct functions geoPolygon', function () {
     // test exact
-    should(methods.filters.filtersTree[index][collection].fields.location[locationgeoPolygonkpbdqcbnts00twy01mebpm9npc67zz631zyd].args).match({
+    should(methods.filters.filtersTree[index][collection].fields[fieldLocation][locationgeoPolygonkpbdqcbnts00twy01mebpm9npc67zz631zyd].args).match({
       operator: 'geoPolygon',
       not: undefined,
       field: 'location',
@@ -108,7 +109,7 @@ describe('Test "geoPolygon" method', function () {
     });
 
     // test outside
-    should(methods.filters.filtersTree[index][collection].fields.location[locationgeoPolygonkpbxyzbpvs00twy01mebpvxypcr7zzzzzzzz].args).match({
+    should(methods.filters.filtersTree[index][collection].fields[fieldLocation][locationgeoPolygonkpbxyzbpvs00twy01mebpvxypcr7zzzzzzzz].args).match({
       operator: 'geoPolygon',
       not: undefined,
       field: 'location',
@@ -120,7 +121,7 @@ describe('Test "geoPolygon" method', function () {
     });
 
     // test on limit
-    should(methods.filters.filtersTree[index][collection].fields.location[locationgeoPolygons1zbfk3yns1zyd63zws1zned3z8s1z0gs3y0].args).match({
+    should(methods.filters.filtersTree[index][collection].fields[fieldLocation][locationgeoPolygons1zbfk3yns1zyd63zws1zned3z8s1z0gs3y0].args).match({
       operator: 'geoPolygon',
       not: undefined,
       field: 'location',

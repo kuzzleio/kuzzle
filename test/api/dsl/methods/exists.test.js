@@ -16,7 +16,8 @@ describe('Test exists method', function () {
     filter = {
       field: 'lastName'
     },
-    existslastName = md5('existslastName');
+    existslastName = md5('existslastName'),
+    fieldLastName = md5('lastName');
 
   beforeEach(function () {
     methods = new Methods(new Filters());
@@ -28,25 +29,25 @@ describe('Test exists method', function () {
     should(methods.filters.filtersTree[index]).not.be.empty();
     should(methods.filters.filtersTree[index][collection]).not.be.empty();
     should(methods.filters.filtersTree[index][collection].fields).not.be.empty();
-    should(methods.filters.filtersTree[index][collection].fields.lastName).not.be.empty();
+    should(methods.filters.filtersTree[index][collection].fields[fieldLastName]).not.be.empty();
   });
 
   it('should construct the filterTree with correct curried function name', function () {
-    should(methods.filters.filtersTree[index][collection].fields.lastName[existslastName]).not.be.empty();
+    should(methods.filters.filtersTree[index][collection].fields[fieldLastName][existslastName]).not.be.empty();
   });
 
   it('should construct the filterTree with correct room list', function () {
     var ids;
 
     // Test gt from filterGrace
-    ids = methods.filters.filtersTree[index][collection].fields.lastName[existslastName].ids;
+    ids = methods.filters.filtersTree[index][collection].fields[fieldLastName][existslastName].ids;
     should(ids).be.an.Array();
     should(ids).have.length(1);
     should(ids[0]).be.exactly(filterId);
   });
 
   it('should construct the filterTree with correct exists arguments', function () {
-    should(methods.filters.filtersTree[index][collection].fields.lastName[existslastName].args).match({
+    should(methods.filters.filtersTree[index][collection].fields[fieldLastName][existslastName].args).match({
       operator: 'exists',
       not: undefined,
       field: 'lastName',
