@@ -45,8 +45,6 @@ describe('Test: dsl.regexp method', () => {
   it('should call filter.add with proper values on a simple regex', () => {
     return methods.regexp(roomId, index, collection, { foo: '^test.*$' })
       .then(() => {
-        var hashedFunctionName = md5('regexpfoo/^test.*$/');
-
         should(methods.filters.add).be.calledOnce();
         should(methods.filters.add).be.calledWith(
           index,
@@ -54,7 +52,7 @@ describe('Test: dsl.regexp method', () => {
           'foo',
           'regexp',
           '/^test.*$/',
-          hashedFunctionName,
+          'regexpfoo/^test.*$/',
           roomId
         );
       });
@@ -63,8 +61,6 @@ describe('Test: dsl.regexp method', () => {
   it('should call filter.add with proper values when using the more complex form', () => {
     return methods.regexp(roomId, index, collection, { foo: { value: '^test.*$', flags: 'ig' }})
       .then(() => {
-        var hashedFunctionName = md5('regexpfoo/^test.*$/gi');
-
         should(methods.filters.add).be.calledOnce();
         should(methods.filters.add).be.calledWith(
           index,
@@ -72,7 +68,7 @@ describe('Test: dsl.regexp method', () => {
           'foo',
           'regexp',
           '/^test.*$/gi',
-          hashedFunctionName,
+          'regexpfoo/^test.*$/gi',
           roomId
         );
 

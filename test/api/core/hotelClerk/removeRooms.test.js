@@ -158,6 +158,9 @@ describe('Test: hotelClerk.removeRooms', function () {
       });
 
     return kuzzle.hotelClerk.addSubscription(requestObjectSubscribe, context)
+      .then(() => {
+        console.log(require('util').inspect(kuzzle.dsl.filters, {depth:9}));
+      })
       .then(() => kuzzle.hotelClerk.removeRooms(requestObjectRemove))
       .then(response => {
         should(response).have.property('acknowledge');
