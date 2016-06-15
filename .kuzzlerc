@@ -10,7 +10,7 @@
   /*
   */
   "lbBroker": {
-    "host": "loadbalancer",
+    "host": "api",
     "port": 7331,
     "retryInterval": 1000
   },

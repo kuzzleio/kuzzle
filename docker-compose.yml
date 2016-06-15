@@ -1,5 +1,5 @@
-loadbalancer:
-  image: kuzzleio/lb:alpine
+proxy:
+  image: kuzzleio/proxy:alpine
   ports:
     - "7511:7511"
     - "7512:7512"
@@ -9,7 +9,7 @@ kuzzle:
   links:
     - elasticsearch
     - redis
-    - loadbalancer
+    - proxy
   environment:
     - FEATURE_COVERAGE
 

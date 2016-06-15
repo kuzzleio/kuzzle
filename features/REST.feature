@@ -78,7 +78,7 @@ Feature: Test REST API
     When I write the document "documentAda"
     Then I count 4 documents
     And I count 0 documents in index "kuzzle-test-index-alt"
-    And I count 2 documents with "NYC" in field "city"
+    And I count 2 documents with "NYC" in field "info.city"
     Then I truncate the collection
     And I count 0 documents
 

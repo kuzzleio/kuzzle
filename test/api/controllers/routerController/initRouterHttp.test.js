@@ -10,6 +10,8 @@ var
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   rewire = require('rewire'),
+  yamlToJson = require('parser-yaml').parse,
+  fs = require('fs'),
   RouterController = rewire('../../../../lib/api/controllers/routerController'),
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject;
 
@@ -17,23 +19,34 @@ var
  * This function helps keeping tests simple and clear while ensuring that
  * responses are well-formed.
  */
-function parseHttpResponse(response) {
+function parseHttpResponse (response, yaml) {
   var
     deferred = q.defer(),
     data = '';
 
-  response.on('data', function (chunk) {
+  response.on('data', chunk => {
     data += chunk;
   });
 
-  response.on('end', function () {
+  response.on('end', () => {
     var result;
 
-    try {
-      result = JSON.parse(data);
-    }
-    catch (e) {
-      deferred.reject(e);
+    if (yaml === true) {
+      yamlToJson(data, (err, res) => {
+        if (err) {
+          return deferred.reject(err);
+        }
+
+        result = res;
+      });
+    } 
+    else {
+      try {
+        result = JSON.parse(data);
+      }
+      catch (e) {
+        return deferred.reject(e);
+      }
     }
 
     deferred.resolve(result);
@@ -42,8 +55,7 @@ function parseHttpResponse(response) {
   return deferred.promise;
 }
 
-
-describe('Test: routerController.initRouterHttp', function () {
+describe('Test: routerController.initRouterHttp', () => {
   var
     kuzzle,
     server,
@@ -63,11 +75,11 @@ describe('Test: routerController.initRouterHttp', function () {
    * with the params passed to it by initRouterHttp, so we can also test if
    * the answer is correctly constructed.
    */
-  before(function (done) {
+  before(done => {
     var mockResponse;
     kuzzle = new Kuzzle();
 
-    mockResponse = function (params, request, response) {
+    mockResponse = (params, request, response) => {
       if (!params.action) {
         params.action = request.params.action;
       }
@@ -77,7 +89,7 @@ describe('Test: routerController.initRouterHttp', function () {
     };
 
     kuzzle.start(params, {dummy: true})
-      .then(function () {
+      .then(() => {
         RouterController.__set__('executeFromRest', mockResponse);
 
         path = '/api/' + kuzzle.config.apiVersion;
@@ -91,7 +103,7 @@ describe('Test: routerController.initRouterHttp', function () {
         router = new RouterController(kuzzle);
         router.initRouterHttp();
 
-        server = http.createServer(function (request, response) {
+        server = http.createServer((request, response) => {
           router.routeHttp(request, response);
         });
 
@@ -99,14 +111,14 @@ describe('Test: routerController.initRouterHttp', function () {
       });
   });
 
-  after(function () {
+  after(() => {
     server.close();
   });
 
-  it('should reply with a list of available routes on a simple GET query', function (done) {
-    http.get(url, function (response) {
+  it('should reply with a list of available routes on a simple GET query', done => {
+    http.get(url, response => {
       parseHttpResponse(response)
-        .then(function (result) {
+        .then(result => {
           should(result.status).be.exactly(200);
           should(result.error).be.null();
           should(result.result.message).be.exactly('Available routes for this API version by verb.');
@@ -114,27 +126,27 @@ describe('Test: routerController.initRouterHttp', function () {
           should(result.result.routes['myplugin/foo']).be.an.Object();
           done();
         })
-        .catch(function (error) {
+        .catch(error => {
           done(error);
         });
     });
   });
 
-  it('should create a route for message publication', function (done) {
+  it('should create a route for message publication', done => {
     var request;
 
     options.method = 'POST';
     options.path= path + '/index/collection';
 
-    request = http.request(options, function (response) {
+    request = http.request(options, response => {
       parseHttpResponse(response)
-        .then(function (result) {
+        .then(result => {
           should(response.statusCode).be.exactly(200);
           should(result.controller).be.exactly('write');
           should(result.action).be.exactly('publish');
           done();
         })
-        .catch(function (error) {
+        .catch(error => {
           done(error);
         });
     });
@@ -143,21 +155,21 @@ describe('Test: routerController.initRouterHttp', function () {
     request.end();
   });
 
-  it('should create a route for document creation', function (done) {
+  it('should create a route for document creation', done => {
     var request;
 
     options.method = 'POST';
     options.path= path + '/index/collection/_create';
 
-    request = http.request(options, function (response) {
+    request = http.request(options, response => {
       parseHttpResponse(response)
-        .then(function (result) {
+        .then(result => {
           should(response.statusCode).be.exactly(200);
           should(result.controller).be.exactly('write');
           should(result.action).be.exactly('create');
           done();
         })
-        .catch(function (error) {
+        .catch(error => {
           done(error);
         });
     });
@@ -166,36 +178,36 @@ describe('Test: routerController.initRouterHttp', function () {
     request.end();
   });
 
-  it('should create a route for document retrieving', function (done) {
-    http.get(url + '/index/collection/documentID', function (response) {
+  it('should create a route for document retrieving', done => {
+    http.get(url + '/index/collection/documentID', response => {
       parseHttpResponse(response)
-        .then(function (result) {
+        .then(result => {
           should(response.statusCode).be.exactly(200);
           should(result.controller).be.exactly('read');
           should(result.action).be.exactly('get');
           done();
         })
-        .catch(function (error) {
+        .catch(error => {
           done(error);
         });
     });
   });
 
-  it('should create a route for document searches', function (done) {
+  it('should create a route for document searches', done => {
     var request;
 
     options.method = 'POST';
     options.path= path + '/index/collection/_search';
 
-    request = http.request(options, function (response) {
+    request = http.request(options, response => {
       parseHttpResponse(response)
-        .then(function (result) {
+        .then(result => {
           should(response.statusCode).be.exactly(200);
           should(result.controller).be.exactly('read');
           should(result.action).be.exactly('search');
           done();
         })
-        .catch(function (error) {
+        .catch(error => {
           done(error);
         });
     });
@@ -204,21 +216,21 @@ describe('Test: routerController.initRouterHttp', function () {
     request.end();
   });
 
-  it('should create a route for createOrReplace actions', function (done) {
+  it('should create a route for createOrReplace actions', done => {
     var request;
 
     options.method = 'PUT';
     options.path= path + '/index/collection/documentID';
 
-    request = http.request(options, function (response) {
+    request = http.request(options, response => {
       parseHttpResponse(response)
-        .then(function (result) {
+        .then(result => {
           should(response.statusCode).be.exactly(200);
           should(result.controller).be.exactly('write');
           should(result.action).be.exactly('createOrReplace');
           done();
         })
-        .catch(function (error) {
+        .catch(error => {
           done(error);
         });
     });
@@ -227,21 +239,21 @@ describe('Test: routerController.initRouterHttp', function () {
     request.end();
   });
 
-  it('should create a route for document updates', function (done) {
+  it('should create a route for document updates', done => {
     var request;
 
     options.method = 'PUT';
     options.path= path + '/index/collection/documentID/_update';
 
-    request = http.request(options, function (response) {
+    request = http.request(options, response => {
       parseHttpResponse(response)
-        .then(function (result) {
+        .then(result => {
           should(response.statusCode).be.exactly(200);
           should(result.controller).be.exactly('write');
           should(result.action).be.exactly('update');
           done();
         })
-        .catch(function (error) {
+        .catch(error => {
           done(error);
         });
     });
@@ -250,21 +262,21 @@ describe('Test: routerController.initRouterHttp', function () {
     request.end();
   });
 
-  it('should create a route for replace actions', function (done) {
+  it('should create a route for replace actions', done => {
     var request;
 
     options.method = 'PUT';
     options.path= path + '/index/collection/documentID/_replace';
 
-    request = http.request(options, function (response) {
+    request = http.request(options, response => {
       parseHttpResponse(response)
-        .then(function (result) {
+        .then(result => {
           should(response.statusCode).be.exactly(200);
           should(result.controller).be.exactly('write');
           should(result.action).be.exactly('replace');
           done();
         })
-        .catch(function (error) {
+        .catch(error => {
           done(error);
         });
     });
@@ -273,21 +285,21 @@ describe('Test: routerController.initRouterHttp', function () {
     request.end();
   });
 
-  it('should create a route for document counting', function (done) {
+  it('should create a route for document counting', done => {
     var request;
 
     options.method = 'POST';
     options.path= path + '/index/collection/_count';
 
-    request = http.request(options, function (response) {
+    request = http.request(options, response => {
       parseHttpResponse(response)
-        .then(function (result) {
+        .then(result => {
           should(response.statusCode).be.exactly(200);
           should(result.controller).be.exactly('read');
           should(result.action).be.exactly('count');
           done();
         })
-        .catch(function (error) {
+        .catch(error => {
           done(error);
         });
     });
@@ -296,21 +308,21 @@ describe('Test: routerController.initRouterHttp', function () {
     request.end();
   });
 
-  it('should create a route for document deletion, using a document ID', function (done) {
+  it('should create a route for document deletion, using a document ID', done => {
     var request;
 
     options.method = 'DELETE';
     options.path= path + '/index/collection/documentID';
 
-    request = http.request(options, function (response) {
+    request = http.request(options, response => {
       parseHttpResponse(response)
-        .then(function (result) {
+        .then(result => {
           should(response.statusCode).be.exactly(200);
           should(result.controller).be.exactly('write');
           should(result.action).be.exactly('delete');
           done();
         })
-        .catch(function (error) {
+        .catch(error => {
           done(error);
         });
     });
@@ -319,21 +331,21 @@ describe('Test: routerController.initRouterHttp', function () {
     request.end();
   });
 
-  it('should create a route for document deletion, using a query', function (done) {
+  it('should create a route for document deletion, using a query', done => {
     var request;
 
     options.method = 'DELETE';
     options.path= path + '/index/collection/_query';
 
-    request = http.request(options, function (response) {
+    request = http.request(options, response => {
       parseHttpResponse(response)
-        .then(function (result) {
+        .then(result => {
           should(response.statusCode).be.exactly(200);
           should(result.controller).be.exactly('write');
           should(result.action).be.exactly('deleteByQuery');
           done();
         })
-        .catch(function (error) {
+        .catch(error => {
           done(error);
         });
     });
@@ -342,21 +354,21 @@ describe('Test: routerController.initRouterHttp', function () {
     request.end();
   });
 
-  it('should create a route for collection mapping creation', function (done) {
+  it('should create a route for collection mapping creation', done => {
     var request;
 
     options.method = 'PUT';
     options.path= path + '/index/collection/_mapping';
 
-    request = http.request(options, function (response) {
+    request = http.request(options, response => {
       parseHttpResponse(response)
-        .then(function (result) {
+        .then(result => {
           should(response.statusCode).be.exactly(200);
           should(result.controller).be.exactly('admin');
           should(result.action).be.exactly('updateMapping');
           done();
         })
-        .catch(function (error) {
+        .catch(error => {
           done(error);
         });
     });
@@ -365,21 +377,21 @@ describe('Test: routerController.initRouterHttp', function () {
     request.end();
   });
 
-  it('should create a route for collection mapping retrieval', function (done) {
+  it('should create a route for collection mapping retrieval', done => {
     var request;
 
     options.method = 'GET';
     options.path= path + '/index/collection/_mapping';
 
-    request = http.request(options, function (response) {
+    request = http.request(options, response => {
       parseHttpResponse(response)
-        .then(function (result) {
+        .then(result => {
           should(response.statusCode).be.exactly(200);
           should(result.controller).be.exactly('admin');
           should(result.action).be.exactly('getMapping');
           done();
         })
-        .catch(function (error) {
+        .catch(error => {
           done(error);
         });
     });
@@ -388,21 +400,21 @@ describe('Test: routerController.initRouterHttp', function () {
     request.end();
   });
 
-  it('should create a route for bulk imports on a specific collection', function (done) {
+  it('should create a route for bulk imports on a specific collection', done => {
     var request;
 
     options.method = 'POST';
     options.path= path + '/index/collection/_bulk';
 
-    request = http.request(options, function (response) {
+    request = http.request(options, response => {
       parseHttpResponse(response)
-        .then(function (result) {
+        .then(result => {
           should(response.statusCode).be.exactly(200);
           should(result.controller).be.exactly('bulk');
           should(result.action).be.exactly('import');
           done();
         })
-        .catch(function (error) {
+        .catch(error => {
           done(error);
         });
     });
@@ -411,21 +423,21 @@ describe('Test: routerController.initRouterHttp', function () {
     request.end();
   });
 
-  it('should create a route for global bulk imports', function (done) {
+  it('should create a route for global bulk imports', done => {
     var request;
 
     options.method = 'POST';
     options.path= path + '/index/_bulk';
 
-    request = http.request(options, function (response) {
+    request = http.request(options, response => {
       parseHttpResponse(response)
-        .then(function (result) {
+        .then(result => {
           should(response.statusCode).be.exactly(200);
           should(result.controller).be.exactly('bulk');
           should(result.action).be.exactly('import');
           done();
         })
-        .catch(function (error) {
+        .catch(error => {
           done(error);
         });
     });
@@ -434,21 +446,21 @@ describe('Test: routerController.initRouterHttp', function () {
     request.end();
   });
 
-  it('should create a route for document deletion using PUT', function (done) {
+  it('should create a route for document deletion using PUT', done => {
     var request;
 
     options.method = 'PUT';
     options.path= path + '/index/collection/documentID/_delete';
 
-    request = http.request(options, function (response) {
+    request = http.request(options, response => {
       parseHttpResponse(response)
-        .then(function (result) {
+        .then(result => {
           should(response.statusCode).be.exactly(200);
           should(result.controller).be.exactly('write');
           should(result.action).be.exactly('delete');
           done();
         })
-        .catch(function (error) {
+        .catch(error => {
           done(error);
         });
     });
@@ -457,21 +469,21 @@ describe('Test: routerController.initRouterHttp', function () {
     request.end();
   });
 
-  it('should create a route for document creation using alternative path', function (done) {
+  it('should create a route for document creation using alternative path', done => {
     var request;
 
     options.method = 'PUT';
     options.path= path + '/index/collection/documentID/_create';
 
-    request = http.request(options, function (response) {
+    request = http.request(options, response => {
       parseHttpResponse(response)
-        .then(function (result) {
+        .then(result => {
           should(response.statusCode).be.exactly(200);
           should(result.controller).be.exactly('write');
           should(result.action).be.exactly('create');
           done();
         })
-        .catch(function (error) {
+        .catch(error => {
           done(error);
         });
     });
@@ -480,21 +492,21 @@ describe('Test: routerController.initRouterHttp', function () {
     request.end();
   });
 
-  it('should create a route for createOrReplace actions using alternative path', function (done) {
+  it('should create a route for createOrReplace actions using alternative path', done => {
     var request;
 
     options.method = 'PUT';
     options.path= path + '/index/collection/documentID/_createOrReplace';
 
-    request = http.request(options, function (response) {
+    request = http.request(options, response => {
       parseHttpResponse(response)
-        .then(function (result) {
+        .then(result => {
           should(response.statusCode).be.exactly(200);
           should(result.controller).be.exactly('write');
           should(result.action).be.exactly('createOrReplace');
           done();
         })
-        .catch(function (error) {
+        .catch(error => {
           done(error);
         });
     });
@@ -503,59 +515,59 @@ describe('Test: routerController.initRouterHttp', function () {
     request.end();
   });
 
-  it('should not create a route for code coverage by default', function (done) {
+  it('should not create a route for code coverage by default', done => {
     server.close();
 
     delete process.env.FEATURE_COVERAGE;
 
     router.initRouterHttp();
 
-    server = http.createServer(function (request, response) {
+    server = http.createServer((request, response) => {
       router.routeHttp(request, response);
     });
 
     server.listen(options.port);
 
-    http.get('http://' + options.hostname + ':' + options.port + '/coverage', function (response) {
+    http.get('http://' + options.hostname + ':' + options.port + '/coverage', response => {
       should(response.statusCode).be.exactly(404);
       done();
     });
   });
 
-  it('should create a route for code coverage when Kuzzle is started with FEATURE_COVERAGE=1', function (done) {
+  it('should create a route for code coverage when Kuzzle is started with FEATURE_COVERAGE=1', done => {
     server.close();
 
     process.env.FEATURE_COVERAGE = 1;
 
     router.initRouterHttp();
 
-    server = http.createServer(function (request, response) {
+    server = http.createServer((request, response) => {
       router.routeHttp(request, response);
     });
 
     server.listen(options.port);
 
-    http.get('http://' + options.hostname + ':' + options.port + '/coverage', function (response) {
+    http.get('http://' + options.hostname + ':' + options.port + '/coverage', response => {
       should(response.statusCode).be.exactly(200);
       done();
     });
   });
 
-  it('should create a route for the getStats command', function (done) {
+  it('should create a route for the getStats command', done => {
     var request;
 
     options.method = 'POST';
     options.path= path + '/_getStats';
 
-    request = http.request(options, function (response) {
+    request = http.request(options, response => {
       parseHttpResponse(response)
-        .then(function (result) {
+        .then(result => {
           should(response.statusCode).be.exactly(200);
           should(result.controller).be.exactly('admin');
           should(result.action).be.exactly('getStats');
           done();
         })
-        .catch(function (error) {
+        .catch(error => {
           done(error);
         });
     });
@@ -565,21 +577,21 @@ describe('Test: routerController.initRouterHttp', function () {
   });
 
 
-  it('should create a route for the getAllStats command', function (done) {
+  it('should create a route for the getAllStats command', done => {
     var request;
 
     options.method = 'GET';
     options.path= path + '/_getAllStats';
 
-    request = http.request(options, function (response) {
+    request = http.request(options, response => {
       parseHttpResponse(response)
-        .then(function (result) {
+        .then(result => {
           should(response.statusCode).be.exactly(200);
           should(result.controller).be.exactly('admin');
           should(result.action).be.exactly('getAllStats');
           done();
         })
-        .catch(function (error) {
+        .catch(error => {
           done(error);
         });
     });
@@ -588,8 +600,8 @@ describe('Test: routerController.initRouterHttp', function () {
     request.end();
   });
 
-  it('should create a default route for the listCollection command', function (done) {
-    http.get(url + '/index/_listCollections', function (response) {
+  it('should create a default route for the listCollection command', done => {
+    http.get(url + '/index/_listCollections', response => {
       parseHttpResponse(response)
         .then(result => {
           should(response.statusCode).be.exactly(200);
@@ -601,8 +613,8 @@ describe('Test: routerController.initRouterHttp', function () {
     });
   });
 
-  it('should create a GET route for listCollections', function (done) {
-    http.get(url + '/index/_listCollections/all', function (response) {
+  it('should create a GET route for listCollections', done => {
+    http.get(url + '/index/_listCollections/all', response => {
       parseHttpResponse(response)
         .then(result => {
           should(response.statusCode).be.exactly(200);
@@ -614,8 +626,8 @@ describe('Test: routerController.initRouterHttp', function () {
     });
   });
 
-  it('should create a route for the now command', function (done) {
-    http.get(url + '/_now', function (response) {
+  it('should create a route for the now command', done => {
+    http.get(url + '/_now', response => {
       parseHttpResponse(response)
         .then(result => {
           should(response.statusCode).be.exactly(200);
@@ -633,7 +645,7 @@ describe('Test: routerController.initRouterHttp', function () {
     options.method = 'PUT';
     options.path= path + '/index/collection';
 
-    request = http.request(options, function (response) {
+    request = http.request(options, response => {
       parseHttpResponse(response)
         .then(result => {
           should(response.statusCode).be.exactly(200);
@@ -654,7 +666,7 @@ describe('Test: routerController.initRouterHttp', function () {
     options.method = 'DELETE';
     options.path= path + '/index/collection/_truncate';
 
-    request = http.request(options, function (response) {
+    request = http.request(options, response => {
       parseHttpResponse(response)
         .then(result => {
           should(response.statusCode).be.exactly(200);
@@ -675,7 +687,7 @@ describe('Test: routerController.initRouterHttp', function () {
     options.method = 'GET';
     options.path= path + '/_listIndexes';
 
-    request = http.request(options, function (response) {
+    request = http.request(options, response => {
       parseHttpResponse(response)
         .then(result => {
           should(response.statusCode).be.exactly(200);
@@ -696,7 +708,7 @@ describe('Test: routerController.initRouterHttp', function () {
     options.method = 'PUT';
     options.path= path + '/index';
 
-    request = http.request(options, function (response) {
+    request = http.request(options, response => {
       parseHttpResponse(response)
         .then(result => {
           should(response.statusCode).be.exactly(200);
@@ -717,7 +729,7 @@ describe('Test: routerController.initRouterHttp', function () {
     options.method = 'DELETE';
     options.path= path + '/index';
 
-    request = http.request(options, function (response) {
+    request = http.request(options, response => {
       parseHttpResponse(response)
         .then(result => {
           should(response.statusCode).be.exactly(200);
@@ -738,7 +750,7 @@ describe('Test: routerController.initRouterHttp', function () {
     options.method = 'DELETE';
     options.path= path + '/_deleteIndexes';
 
-    request = http.request(options, function (response) {
+    request = http.request(options, response => {
       parseHttpResponse(response)
         .then(result => {
           should(response.statusCode).be.exactly(200);
@@ -753,35 +765,35 @@ describe('Test: routerController.initRouterHttp', function () {
     request.end();
   });
 
-  it('should create a GET route for plugin controller', function (done) {
-    http.get(url + '/_plugin/myplugin/bar/name', function (response) {
+  it('should create a GET route for plugin controller', done => {
+    http.get(url + '/_plugin/myplugin/bar/name', response => {
       parseHttpResponse(response)
-        .then(function (result) {
+        .then(result => {
           should(response.statusCode).be.exactly(200);
           should(result.controller).be.exactly('myplugin/foo');
           should(result.action).be.exactly('bar');
           done();
         })
-        .catch(function (error) {
+        .catch(error => {
           done(error);
         });
     });
   });
 
-  it('should create a POST route for plugin controller', function (done) {
+  it('should create a POST route for plugin controller', done => {
     var request;
     options.method = 'POST';
     options.path= path + '/_plugin/myplugin/bar';
 
-    request = http.request(options, function (response) {
+    request = http.request(options, response => {
       parseHttpResponse(response)
-        .then(function (result) {
+        .then(result => {
           should(response.statusCode).be.exactly(200);
           should(result.controller).be.exactly('myplugin/foo');
           should(result.action).be.exactly('bar');
           done();
         })
-        .catch(function (error) {
+        .catch(error => {
           done(error);
         });
     });
@@ -790,18 +802,45 @@ describe('Test: routerController.initRouterHttp', function () {
     request.end();
   });
 
-  it('should create a GET route to get server informations', function (done) {
-    http.get('http://' + options.hostname + ':' + options.port + '/api/_serverInfo', function (response) {
+  it('should create a GET route to get server informations', done => {
+    http.get('http://' + options.hostname + ':' + options.port + '/api/_serverInfo', response => {
       parseHttpResponse(response)
-        .then(function (result) {
+        .then(result => {
           should(response.statusCode).be.exactly(200);
           should(result.controller).be.exactly('read');
           should(result.action).be.exactly('serverInfo');
           done();
         })
-        .catch(function (error) {
+        .catch(error => {
           done(error);
         });
     });
   });
+
+  it('should create a GET route to get server the swagger.json', done => {
+    http.get('http://' + options.hostname + ':' + options.port + '/api/swagger.json', response => {
+      parseHttpResponse(response)
+        .then(result => {
+          should(Object.keys(result).length).be.above(1);
+          done();
+        })
+        .catch(error => {
+          done(error);
+        });
+    });
+  });
+
+  it('should create a GET route to get server the swagger.yml', done => {
+    http.get('http://' + options.hostname + ':' + options.port + '/api/swagger.yml', response => {
+      parseHttpResponse(response, true)
+        .then(result => {
+          should(Object.keys(result).length).be.above(1);
+          done();
+        })
+        .catch(error => {
+          done(error);
+        });
+    });
+  });
+
 });
