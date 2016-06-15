@@ -14,7 +14,8 @@ describe('Test: dsl.getFormattedFilters method', function () {
     existsfoo = md5('existsfoo'),
     notexistsfoo = md5('notexistsfoo'),
     existsbar = md5('existsbar'),
-    notexistsbar = md5('notexistsbar');
+    fieldFoo = md5('foo'),
+    fieldBar = md5('bar');
 
   beforeEach(function () {
     methods = new Methods(new Filters());
@@ -39,13 +40,12 @@ describe('Test: dsl.getFormattedFilters method', function () {
     return getFormattedFilters.call(methods, 'roomId', 'index', 'collection', filter)
       .then(response => response.filter)
       .then(function (formattedFilter) {
-        console.log(formattedFilter, existsfoo);
-        should.exist(formattedFilter['index.collection.foo.' + existsfoo]);
-        should(formattedFilter['index.collection.foo.' + existsfoo]).be.an.Object();
-        should.exist(formattedFilter['index.collection.foo.' + existsfoo].ids);
-        should(formattedFilter['index.collection.foo.' + existsfoo].ids).be.an.Array().and.match(['roomId']);
-        should(formattedFilter['index.collection.foo.' + existsfoo].ids.length).eql(1);
-        should.exist(formattedFilter['index.collection.foo.' + existsfoo].args);
+        should.exist(formattedFilter[`index.collection.${fieldFoo}.${existsfoo}`]);
+        should(formattedFilter[`index.collection.${fieldFoo}.${existsfoo}`]).be.an.Object();
+        should.exist(formattedFilter[`index.collection.${fieldFoo}.${existsfoo}`].ids);
+        should(formattedFilter[`index.collection.${fieldFoo}.${existsfoo}`].ids).be.an.Array().and.match(['roomId']);
+        should(formattedFilter[`index.collection.${fieldFoo}.${existsfoo}`].ids.length).eql(1);
+        should.exist(formattedFilter[`index.collection.${fieldFoo}.${existsfoo}`].args);
       });
   });
 
@@ -59,19 +59,19 @@ describe('Test: dsl.getFormattedFilters method', function () {
     return getFormattedFilters.call(methods, 'roomId', 'index', 'collection', filters)
       .then(response => response.filter)
       .then(function (formattedFilter) {
-        should.exist(formattedFilter['index.collection.foo.' + existsfoo]);
-        should(formattedFilter['index.collection.foo.' + existsfoo]).be.an.Object();
-        should.exist(formattedFilter['index.collection.foo.' + existsfoo].ids);
-        should(formattedFilter['index.collection.foo.' + existsfoo].ids).be.an.Array().and.match(['roomId']);
-        should(formattedFilter['index.collection.foo.' + existsfoo].ids.length).eql(1);
-        should.exist(formattedFilter['index.collection.foo.' + existsfoo].args);
+        should.exist(formattedFilter[`index.collection.${fieldFoo}.${existsfoo}`]);
+        should(formattedFilter[`index.collection.${fieldFoo}.${existsfoo}`]).be.an.Object();
+        should.exist(formattedFilter[`index.collection.${fieldFoo}.${existsfoo}`].ids);
+        should(formattedFilter[`index.collection.${fieldFoo}.${existsfoo}`].ids).be.an.Array().and.match(['roomId']);
+        should(formattedFilter[`index.collection.${fieldFoo}.${existsfoo}`].ids.length).eql(1);
+        should.exist(formattedFilter[`index.collection.${fieldFoo}.${existsfoo}`].args);
 
-        should.exist(formattedFilter['index.collection.bar.' + existsbar]);
-        should(formattedFilter['index.collection.bar.' + existsbar]).be.an.Object();
-        should.exist(formattedFilter['index.collection.bar.' + existsbar].ids);
-        should(formattedFilter['index.collection.bar.' + existsbar].ids).be.an.Array().and.match(['roomId']);
-        should(formattedFilter['index.collection.bar.' + existsbar].ids.length).eql(1);
-        should.exist(formattedFilter['index.collection.bar.' + existsbar].args);
+        should.exist(formattedFilter[`index.collection.${fieldBar}.${existsbar}`]);
+        should(formattedFilter[`index.collection.${fieldBar}.${existsbar}`]).be.an.Object();
+        should.exist(formattedFilter[`index.collection.${fieldBar}.${existsbar}`].ids);
+        should(formattedFilter[`index.collection.${fieldBar}.${existsbar}`].ids).be.an.Array().and.match(['roomId']);
+        should(formattedFilter[`index.collection.${fieldBar}.${existsbar}`].ids.length).eql(1);
+        should.exist(formattedFilter[`index.collection.${fieldBar}.${existsbar}`].args);
       });
   });
 
@@ -86,19 +86,19 @@ describe('Test: dsl.getFormattedFilters method', function () {
     return getFormattedFilters.call(methods, 'roomId', 'index', 'collection', filters)
       .then(response => response.filter)
       .then(function (formattedFilter) {
-        should.exist(formattedFilter['index.collection.foo.' + existsfoo]);
-        should(formattedFilter['index.collection.foo.' + existsfoo]).be.an.Object();
-        should.exist(formattedFilter['index.collection.foo.' + existsfoo].ids);
-        should(formattedFilter['index.collection.foo.' + existsfoo].ids).be.an.Array().and.match(['roomId']);
-        should(formattedFilter['index.collection.foo.' + existsfoo].ids.length).eql(1);
-        should.exist(formattedFilter['index.collection.foo.' + existsfoo].args);
+        should.exist(formattedFilter[`index.collection.${fieldFoo}.${existsfoo}`]);
+        should(formattedFilter[`index.collection.${fieldFoo}.${existsfoo}`]).be.an.Object();
+        should.exist(formattedFilter[`index.collection.${fieldFoo}.${existsfoo}`].ids);
+        should(formattedFilter[`index.collection.${fieldFoo}.${existsfoo}`].ids).be.an.Array().and.match(['roomId']);
+        should(formattedFilter[`index.collection.${fieldFoo}.${existsfoo}`].ids.length).eql(1);
+        should.exist(formattedFilter[`index.collection.${fieldFoo}.${existsfoo}`].args);
 
-        should.exist(formattedFilter['index.collection.bar.' + existsbar]);
-        should(formattedFilter['index.collection.bar.' + existsbar]).be.an.Object();
-        should.exist(formattedFilter['index.collection.bar.' + existsbar].ids);
-        should(formattedFilter['index.collection.bar.' + existsbar].ids).be.an.Array().and.match(['roomId']);
-        should(formattedFilter['index.collection.bar.' + existsbar].ids.length).eql(1);
-        should.exist(formattedFilter['index.collection.bar.' + existsbar].args);
+        should.exist(formattedFilter[`index.collection.${fieldBar}.${existsbar}`]);
+        should(formattedFilter[`index.collection.${fieldBar}.${existsbar}`]).be.an.Object();
+        should.exist(formattedFilter[`index.collection.${fieldBar}.${existsbar}`].ids);
+        should(formattedFilter[`index.collection.${fieldBar}.${existsbar}`].ids).be.an.Array().and.match(['roomId']);
+        should(formattedFilter[`index.collection.${fieldBar}.${existsbar}`].ids.length).eql(1);
+        should.exist(formattedFilter[`index.collection.${fieldBar}.${existsbar}`].args);
       });
   });
 
@@ -113,12 +113,12 @@ describe('Test: dsl.getFormattedFilters method', function () {
     return getFormattedFilters.call(methods, 'roomId', 'index', 'collection', filter, true)
       .then(response => response.filter)
       .then(function (formattedFilter) {
-        should.exist(formattedFilter['index.collection.foo.' + notexistsfoo]);
-        should(formattedFilter['index.collection.foo.' + notexistsfoo]).be.an.Object();
-        should.exist(formattedFilter['index.collection.foo.' + notexistsfoo].ids);
-        should(formattedFilter['index.collection.foo.' + notexistsfoo].ids).be.an.Array().and.match(['roomId']);
-        should(formattedFilter['index.collection.foo.' + notexistsfoo].ids.length).eql(1);
-        should.exist(formattedFilter['index.collection.foo.' + notexistsfoo].args);
+        should.exist(formattedFilter[`index.collection.${fieldFoo}.${notexistsfoo}`]);
+        should(formattedFilter[`index.collection.${fieldFoo}.${notexistsfoo}`]).be.an.Object();
+        should.exist(formattedFilter[`index.collection.${fieldFoo}.${notexistsfoo}`].ids);
+        should(formattedFilter[`index.collection.${fieldFoo}.${notexistsfoo}`].ids).be.an.Array().and.match(['roomId']);
+        should(formattedFilter[`index.collection.${fieldFoo}.${notexistsfoo}`].ids.length).eql(1);
+        should.exist(formattedFilter[`index.collection.${fieldFoo}.${notexistsfoo}`].args);
       });
   });
 

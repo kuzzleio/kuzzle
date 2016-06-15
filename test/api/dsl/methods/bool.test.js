@@ -53,7 +53,12 @@ describe('Test bool method', function () {
     rangeagelt85 = md5('rangeagelt85'),
     nottermcityNYC = md5('nottermcityNYC'),
     termhobbycomputer = md5('termhobbycomputer'),
-    existslastName = md5('existslastName');
+    existslastName = md5('existslastName'),
+    fieldFirstName = md5('firstName'),
+    fieldAge = md5('age'),
+    fieldCity = md5('city'),
+    fieldHobby = md5('hobby'),
+    fieldLastName = md5('lastName');
 
   before(function () {
     /*
@@ -71,92 +76,92 @@ describe('Test bool method', function () {
     should(methods.filters.filtersTree[index]).not.be.empty();
     should(methods.filters.filtersTree[index][collection]).not.be.empty();
     should(methods.filters.filtersTree[index][collection].fields).not.be.empty();
-    should(methods.filters.filtersTree[index][collection].fields.firstName).not.be.empty();
-    should(methods.filters.filtersTree[index][collection].fields.age).not.be.empty();
-    should(methods.filters.filtersTree[index][collection].fields.city).not.be.empty();
-    should(methods.filters.filtersTree[index][collection].fields.hobby).not.be.empty();
-    should(methods.filters.filtersTree[index][collection].fields.lastName).not.be.empty();
+    should(methods.filters.filtersTree[index][collection].fields[fieldFirstName]).not.be.empty();
+    should(methods.filters.filtersTree[index][collection].fields[fieldAge]).not.be.empty();
+    should(methods.filters.filtersTree[index][collection].fields[fieldCity]).not.be.empty();
+    should(methods.filters.filtersTree[index][collection].fields[fieldHobby]).not.be.empty();
+    should(methods.filters.filtersTree[index][collection].fields[fieldLastName]).not.be.empty();
   });
 
   it('should construct the filterTree with correct curried function name', function () {
-    should(methods.filters.filtersTree[index][collection].fields.firstName[md5('termsfirstNameGrace,Ada')]).not.be.empty();
-    should(methods.filters.filtersTree[index][collection].fields.age[rangeagegte36]).not.be.empty();
-    should(methods.filters.filtersTree[index][collection].fields.age[rangeagelt85]).not.be.empty();
-    should(methods.filters.filtersTree[index][collection].fields.city[nottermcityNYC]).not.be.empty();
-    should(methods.filters.filtersTree[index][collection].fields.hobby[termhobbycomputer]).not.be.empty();
-    should(methods.filters.filtersTree[index][collection].fields.lastName[existslastName]).not.be.empty();
+    should(methods.filters.filtersTree[index][collection].fields[fieldFirstName][md5('termsfirstNameGrace,Ada')]).not.be.empty();
+    should(methods.filters.filtersTree[index][collection].fields[fieldAge][rangeagegte36]).not.be.empty();
+    should(methods.filters.filtersTree[index][collection].fields[fieldAge][rangeagelt85]).not.be.empty();
+    should(methods.filters.filtersTree[index][collection].fields[fieldCity][nottermcityNYC]).not.be.empty();
+    should(methods.filters.filtersTree[index][collection].fields[fieldHobby][termhobbycomputer]).not.be.empty();
+    should(methods.filters.filtersTree[index][collection].fields[fieldLastName][existslastName]).not.be.empty();
   });
 
   it('should construct the filterTree with correct room list', function () {
     var ids;
 
-    ids = methods.filters.filtersTree[index][collection].fields.firstName[md5('termsfirstNameGrace,Ada')].ids;
+    ids = methods.filters.filtersTree[index][collection].fields[fieldFirstName][md5('termsfirstNameGrace,Ada')].ids;
     should(ids).be.an.Array();
     should(ids).have.length(1);
     should(ids[0]).be.exactly(filterId);
 
-    ids = methods.filters.filtersTree[index][collection].fields.age[rangeagegte36].ids;
+    ids = methods.filters.filtersTree[index][collection].fields[fieldAge][rangeagegte36].ids;
     should(ids).be.an.Array();
     should(ids).have.length(1);
     should(ids[0]).be.exactly(filterId);
-    ids = methods.filters.filtersTree[index][collection].fields.age[rangeagelt85].ids;
-    should(ids).be.an.Array();
-    should(ids).have.length(1);
-    should(ids[0]).be.exactly(filterId);
-
-    ids = methods.filters.filtersTree[index][collection].fields.city[nottermcityNYC].ids;
+    ids = methods.filters.filtersTree[index][collection].fields[fieldAge][rangeagelt85].ids;
     should(ids).be.an.Array();
     should(ids).have.length(1);
     should(ids[0]).be.exactly(filterId);
 
-    ids = methods.filters.filtersTree[index][collection].fields.hobby[termhobbycomputer].ids;
+    ids = methods.filters.filtersTree[index][collection].fields[fieldCity][nottermcityNYC].ids;
     should(ids).be.an.Array();
     should(ids).have.length(1);
     should(ids[0]).be.exactly(filterId);
 
-    ids = methods.filters.filtersTree[index][collection].fields.lastName[existslastName].ids;
+    ids = methods.filters.filtersTree[index][collection].fields[fieldHobby][termhobbycomputer].ids;
+    should(ids).be.an.Array();
+    should(ids).have.length(1);
+    should(ids[0]).be.exactly(filterId);
+
+    ids = methods.filters.filtersTree[index][collection].fields[fieldLastName][existslastName].ids;
     should(ids).be.an.Array();
     should(ids).have.length(1);
     should(ids[0]).be.exactly(filterId);
   });
 
   it('should construct the filterTree with correct arguments', function () {
-    should(methods.filters.filtersTree[index][collection].fields.firstName[md5('termsfirstNameGrace,Ada')].args).match({
+    should(methods.filters.filtersTree[index][collection].fields[fieldFirstName][md5('termsfirstNameGrace,Ada')].args).match({
       operator: 'terms',
       not: undefined,
       field: 'firstName',
       value: ['Grace', 'Ada']
     });
 
-    should(methods.filters.filtersTree[index][collection].fields.age[rangeagegte36].args).match({
+    should(methods.filters.filtersTree[index][collection].fields[fieldAge][rangeagegte36].args).match({
       operator: 'gte',
       not: undefined,
       field: 'age',
       value: 36
     });
 
-    should(methods.filters.filtersTree[index][collection].fields.age[rangeagelt85].args).match({
+    should(methods.filters.filtersTree[index][collection].fields[fieldAge][rangeagelt85].args).match({
       operator: 'lt',
       not: undefined,
       field: 'age',
       value: 85
     });
 
-    should(methods.filters.filtersTree[index][collection].fields.city[nottermcityNYC].args).match({
+    should(methods.filters.filtersTree[index][collection].fields[fieldCity][nottermcityNYC].args).match({
       operator: 'term',
       not: true,
       field: 'city',
       value: 'NYC'
     });
 
-    should(methods.filters.filtersTree[index][collection].fields.hobby[termhobbycomputer].args).match({
+    should(methods.filters.filtersTree[index][collection].fields[fieldHobby][termhobbycomputer].args).match({
       operator: 'term',
       not: undefined,
       field: 'hobby',
       value: 'computer'
     });
 
-    should(methods.filters.filtersTree[index][collection].fields.lastName[existslastName].args).match({
+    should(methods.filters.filtersTree[index][collection].fields[fieldLastName][existslastName].args).match({
       operator: 'exists',
       not: undefined,
       field: 'lastName',

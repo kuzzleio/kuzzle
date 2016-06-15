@@ -23,7 +23,7 @@ Feature: Test AMQP API
 
   @usingAMQP @unsubscribe
   Scenario: Create or Update a document
-    Given A room subscription listening to "lastName" having value "Hopper"
+    Given A room subscription listening to "info.city" having value "NYC"
     When I write the document "documentGrace"
     And I createOrReplace it
     Then I should have updated the document
@@ -80,11 +80,11 @@ Feature: Test AMQP API
     When I write the document "documentAda"
     Then I count 4 documents
     And I count 0 documents in index "kuzzle-test-index-alt"
-    And I count 2 documents with "NYC" in field "city"
+    And I count 2 documents with "NYC" in field "info.city"
     Then I truncate the collection
     And I count 0 documents
 
-  @removeSchema @usingAMQP
+  @usingAMQP
   Scenario: Change mapping
     When I write the document "documentGrace"
     Then I don't find a document with "Grace" in field "firstName"
@@ -95,7 +95,15 @@ Feature: Test AMQP API
 
   @usingAMQP @unsubscribe
   Scenario: Document creation notifications
-    Given A room subscription listening to "lastName" having value "Hopper"
+    Given A room subscription listening to "info.city" having value "NYC"
+    When I write the document "documentGrace"
+    Then I should receive a "create" notification
+    And The notification should have a "_source" member
+    And The notification should have metadata
+
+  @usingAMQP @unsubscribe
+  Scenario: Document creation notifications with not exists
+    Given A room subscription listening field "toto" doesn't exists
     When I write the document "documentGrace"
     Then I should receive a "create" notification
     And The notification should have a "_source" member
@@ -103,7 +111,7 @@ Feature: Test AMQP API
 
   @usingAMQP @unsubscribe
   Scenario: Document delete notifications
-    Given A room subscription listening to "lastName" having value "Hopper"
+    Given A room subscription listening to "info.city" having value "NYC"
     When I write the document "documentGrace"
     Then I remove the document
     Then I should receive a "delete" notification
@@ -112,7 +120,7 @@ Feature: Test AMQP API
 
   @usingAMQP @unsubscribe
   Scenario: Document update: new document notification
-    Given A room subscription listening to "lastName" having value "Hopper"
+    Given A room subscription listening to "info.hobby" having value "computer"
     When I write the document "documentAda"
     Then I update the document with value "Hopper" in field "lastName"
     Then I should receive a "update" notification
@@ -130,7 +138,7 @@ Feature: Test AMQP API
 
   @usingAMQP @unsubscribe
   Scenario: Document replace: new document notification
-    Given A room subscription listening to "lastName" having value "Hopper"
+    Given A room subscription listening to "info.hobby" having value "computer"
     When I write the document "documentAda"
     Then I replace the document with "documentGrace" document
     Then I should receive a "update" notification
@@ -139,19 +147,11 @@ Feature: Test AMQP API
 
   @usingAMQP @unsubscribe
   Scenario: Document replace: removed document notification
-    Given A room subscription listening to "lastName" having value "Hopper"
+    Given A room subscription listening to "info.city" having value "NYC"
     When I write the document "documentGrace"
     Then I replace the document with "documentAda" document
     Then I should receive a "update" notification
     And The notification should not have a "_source" member
-    And The notification should have metadata
-
-  @usingAMQP @unsubscribe
-  Scenario: Document creation notifications with not exists
-    Given A room subscription listening field "toto" doesn't exists
-    When I write the document "documentGrace"
-    Then I should receive a "create" notification
-    And The notification should have a "_source" member
     And The notification should have metadata
 
   @usingAMQP @unsubscribe
@@ -164,11 +164,11 @@ Feature: Test AMQP API
 
   @usingAMQP @unsubscribe
   Scenario: Delete a document with a query
-    Given A room subscription listening to "lastName" having value "Hopper"
+    Given A room subscription listening to "info.city" having value "NYC"
     When I write the document "documentGrace"
     And I write the document "documentAda"
     And I refresh the index
-    Then I remove documents with field "hobby" equals to value "computer"
+    Then I remove documents with field "info.hobby" equals to value "computer"
     Then I should receive a "delete" notification
     And The notification should not have a "_source" member
     And The notification should have metadata
@@ -246,8 +246,8 @@ Feature: Test AMQP API
 
   @usingAMQP @cleanSecurity
   Scenario: login user
-    Given I create a user "useradmin" with id "user1-id"
-    When I log in as user1-id:testpwd expiring in 1h
+    Given I create a user "useradmin" with id "useradmin-id"
+    When I log in as useradmin-id:testpwd expiring in 1h
     Then I write the document
     Then I check the JWT Token
     And The token is valid
@@ -306,6 +306,14 @@ Feature: Test AMQP API
     Given I update the profile with id "my-profile-2" by adding the role "role1"
     Then I'm able to find "2" profiles
     Then I'm able to find "2" profiles containing the role with id "role1"
+
+  @usingAMQP @cleanSecurity
+  Scenario: get profile rights
+    Given I create a new role "role1" with id "role1"
+    And I create a new role "role2" with id "role2"
+    And I create a new profile "profile2" with id "profile2"
+    Then I'm able to find rights for profile "profile2"
+    Then I'm not able to find rights for profile "fake-profile"
 
   @usingAMQP @cleanSecurity
   Scenario: user crudl
@@ -437,6 +445,24 @@ Feature: Test AMQP API
     And I'm not allowed to count documents in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test"
     And I'm not allowed to count documents in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test-alt"
     Then I log out
+
+  @usingAMQP @cleanSecurity
+  Scenario: get user rights
+    Given I create a new role "role1" with id "role1"
+    And I create a new role "role2" with id "role2"
+    And I create a new profile "profile2" with id "profile2"
+    And I create a user "user2" with id "user2-id"
+    Then I'm able to find rights for user "user2-id"
+    Then I'm not able to find rights for user "fakeuser-id"
+
+  @usingAMQP @cleanSecurity
+  Scenario: get my rights
+    Given I create a new role "role1" with id "role1"
+    And I create a new role "role2" with id "role2"
+    And I create a new profile "profile2" with id "profile2"
+    And I create a user "user2" with id "user2-id"
+    When I log in as user2-id:testpwd2 expiring in 1h
+    Then I'm able to find my rights
 
   @usingAMQP @cleanRedis
   Scenario: memory storage - misc
@@ -1361,3 +1387,4 @@ Feature: Test AMQP API
     And I write the document "documentGrace"
     When I update the document with value "Josepha" in field "firstName"
     Then I find a document with "josepha" in field "firstName"
+

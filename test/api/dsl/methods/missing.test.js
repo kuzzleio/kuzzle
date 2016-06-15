@@ -20,7 +20,8 @@ describe('Test missing method', function () {
     filter = {
       field: 'lastName'
     },
-    missinglastName = md5('missinglastName');
+    missinglastName = md5('missinglastName'),
+    fieldLastName = md5('lastName');
 
   beforeEach(function () {
     methods = new Methods(new Filters());
@@ -32,25 +33,25 @@ describe('Test missing method', function () {
     should(methods.filters.filtersTree[index]).not.be.empty();
     should(methods.filters.filtersTree[index][collection]).not.be.empty();
     should(methods.filters.filtersTree[index][collection].fields).not.be.empty();
-    should(methods.filters.filtersTree[index][collection].fields.lastName).not.be.empty();
+    should(methods.filters.filtersTree[index][collection].fields[fieldLastName]).not.be.empty();
   });
 
   it('should construct the filterTree with correct curried function name', function () {
-    should(methods.filters.filtersTree[index][collection].fields.lastName[missinglastName]).not.be.empty();
+    should(methods.filters.filtersTree[index][collection].fields[fieldLastName][missinglastName]).not.be.empty();
   });
 
   it('should construct the filterTree with correct room list', function () {
     var ids;
 
     // Test gt from filterGrace
-    ids = methods.filters.filtersTree[index][collection].fields.lastName[missinglastName].ids;
+    ids = methods.filters.filtersTree[index][collection].fields[fieldLastName][missinglastName].ids;
     should(ids).be.an.Array();
     should(ids).have.length(1);
     should(ids[0]).be.exactly(filterId);
   });
 
   it('should construct the filterTree with correct functions missing', function () {
-    should(methods.filters.filtersTree[index][collection].fields.lastName[missinglastName].args).match({
+    should(methods.filters.filtersTree[index][collection].fields[fieldLastName][missinglastName].args).match({
       operator: 'missing',
       not: false,
       field: 'lastName',

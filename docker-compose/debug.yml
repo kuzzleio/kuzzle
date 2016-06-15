@@ -1,7 +1,5 @@
-loadbalancer:
-  image: kuzzleio/lb-dev:alpine
-  volumes:
-    - "../../kuzzle-proxy:/var/app"
+proxy:
+  image: kuzzleio/proxy:alpine
   ports:
     - "7511:7511"
     - "7512:7512"
@@ -9,14 +7,9 @@ loadbalancer:
 
 kuzzle:
   image: kuzzleio/dev:alpine
-  command: /scripts/debug.sh
+  command: /run-debug.sh
   volumes:
     - "..:/var/app"
-    - "/tmp/kbis_node_modules:/var/app/node_modules"
-    - "../docker-compose/scripts:/scripts"
-    - "../docker-compose/config:/config"
-    - "../docker-compose/config/.kuzzlerc:/var/app/.kuzzlerc"
-    - "../../kuzzle-plugin-cluster:/var/kuzzle-plugin-cluster"
   ports:
     - "8080:8080"
     - "8081:8081"
@@ -24,56 +17,10 @@ kuzzle:
     - rabbit
     - elasticsearch
     - redis
-    - loadbalancer:loadbalancer
+    - proxy:api
   environment:
     - MQ_BROKER_ENABLED=1
     - FEATURE_COVERAGE
-
-kuzzle_bis:
-  image: kuzzleio/dev:alpine
-  command: /scripts/debug.sh
-  volumes:
-    - "..:/var/app"
-    - "/tmp/kbis_node_modules:/var/app/node_modules"
-    - "../docker-compose/scripts:/scripts"
-    - "../docker-compose/config:/config"
-    - "../docker-compose/config/.kuzzlerc:/var/app/.kuzzlerc"
-    - "../../kuzzle-plugin-cluster:/var/kuzzle-plugin-cluster"
-  links:
-    - rabbit
-    - elasticsearch
-    - redis
-    - loadbalancer:loadbalancer
-    - kuzzle:master
-  environment:
-    - MQ_BROKER_ENABLED=1
-    - FEATURE_COVERAGE
-    - kuzzle_cluster__mode=slave
-    - kuzzle_cluster__host=master
-    - kuzzle_cluster__port=7911
-
-kuzzle_ter:
-  image: kuzzleio/dev:alpine
-  command: /scripts/debug.sh
-  volumes:
-    - "..:/var/app"
-    - "/tmp/kter_node_modules:/var/app/node_modules"
-    - "../docker-compose/scripts:/scripts"
-    - "../docker-compose/config:/config"
-    - "../docker-compose/config/.kuzzlerc:/var/app/.kuzzlerc"
-    - "../../kuzzle-plugin-cluster:/var/kuzzle-plugin-cluster"
-  links:
-    - rabbit
-    - elasticsearch
-    - redis
-    - loadbalancer:loadbalancer
-    - kuzzle:master
-  environment:
-    - MQ_BROKER_ENABLED=1
-    - FEATURE_COVERAGE
-    - kuzzle_cluster__mode=slave
-    - kuzzle_cluster__host=master
-    - kuzzle_cluster__port=7911
 
 rabbit:
   image: kuzzleio/rabbitmq:alpine
@@ -88,6 +35,9 @@ redis:
 
 elasticsearch:
   image: kuzzleio/elasticsearch:2.2
+  environment:
+    - MQ_BROKER_ENABLED=1
+    - FEATURE_COVERAGE
 
 rabbit:
   image: kuzzleio/rabbitmq:alpine

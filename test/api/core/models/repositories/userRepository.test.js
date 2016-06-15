@@ -13,7 +13,7 @@ var
   NotFoundError = require.main.require('kuzzle-common-objects').Errors.notFoundError,
   ResponseObject = require.main.require('kuzzle-common-objects').Models.responseObject,
   Profile = require.main.require('lib/api/core/models/security/profile'),
-  User = require.main.require('lib/api/core/models/security/user'),
+  User = require.main.require('lib/api/core/models/security/user')(kuzzle),
   Repository = require.main.require('lib/api/core/models/repositories/repository'),
   UserRepository = require.main.require('lib/api/core/models/repositories/userRepository')(kuzzle),
   userRepository,
@@ -171,7 +171,7 @@ describe('Test: repositories/userRepository', function () {
     });
 
   });
-  
+
   describe('#load', function () {
     it('should resolve to user if good credentials are given', () => {
       return userRepository.load('userInCache')
