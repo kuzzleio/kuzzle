@@ -4,8 +4,8 @@ var
   q = require('q'),
   sinon = require('sinon'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
-  RequestObject = require.main.require('lib/api/core/models/requestObject'),
-  ResponseObject = require.main.require('lib/api/core/models/responseObject');
+  RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
+  ResponseObject = require.main.require('kuzzle-common-objects').Models.responseObject;
 
 require('sinon-as-promised')(q.Promise);
 

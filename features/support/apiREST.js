@@ -30,7 +30,8 @@ function initRoutes() {
         routes: []
       },
       config: {
-        apiVersion: '1.0'
+        apiVersion: '1.0',
+        httpRoutes: require('../../lib/config/httpRoutes')
       }
     });
 
@@ -162,9 +163,10 @@ ApiREST.prototype.get = function (id, index) {
   return this.callApi(options);
 };
 
-ApiREST.prototype.search = function (filters, index) {
+ApiREST.prototype.search = function (filters, index, collection) {
   var options = {
-    url: this.apiPath(((typeof index !== 'string') ? this.world.fakeIndex : index) + '/' + this.world.fakeCollection + '/_search'),
+    url: this.apiPath(((typeof index !== 'string') ? this.world.fakeIndex : index) + '/' +
+                        ((typeof collection !== 'string') ? this.world.fakeCollection : collection) + '/_search'),
     method: 'POST',
     json: filters
   };
@@ -172,9 +174,10 @@ ApiREST.prototype.search = function (filters, index) {
   return this.callApi(options);
 };
 
-ApiREST.prototype.count = function (filters, index) {
+ApiREST.prototype.count = function (filters, index, collection) {
   var options = {
-    url: this.apiPath(((typeof index !== 'string') ? this.world.fakeIndex : index) + '/' + this.world.fakeCollection + '/_count'),
+    url: this.apiPath(((typeof index !== 'string') ? this.world.fakeIndex : index) + '/' +
+                        ((typeof collection !== 'string') ? this.world.fakeCollection : collection) + '/_count'),
     method: 'POST',
     json: filters
   };
@@ -512,6 +515,16 @@ ApiREST.prototype.getProfile = function (id) {
   return this.callApi(options);
 };
 
+ApiREST.prototype.getProfileRights = function (id) {
+  var options = {
+    url: this.apiPath('profiles/' + id + '/_rights'),
+    method: 'GET',
+    json: true
+  };
+
+  return this.callApi(options);
+};
+
 ApiREST.prototype.mGetProfiles = function (body) {
   var options = {
     url: this.apiPath('profiles/_mget'),
@@ -552,12 +565,32 @@ ApiREST.prototype.getUser = function (id) {
   return this.callApi(options);
 };
 
+ApiREST.prototype.getUserRights = function (id) {
+  var options = {
+    url: this.apiPath('users/' + id + '/_rights'),
+    method: 'GET',
+    json: true
+  };
+
+  return this.callApi(options);
+};
+
 ApiREST.prototype.getCurrentUser = function () {
   return this.callApi({
     url: this.apiPath('users/_me'),
     method: 'GET',
     json: true
   });
+};
+
+ApiREST.prototype.getMyRights = function (id) {
+  var options = {
+    url: this.apiPath('users/_me/_rights'),
+    method: 'GET',
+    json: true
+  };
+
+  return this.callApi(options);
 };
 
 ApiREST.prototype.searchUsers = function (body) {
@@ -590,7 +623,7 @@ ApiREST.prototype.createUser = function (body, id) {
     method: 'POST',
     json: body
   };
-  
+
   if (id !== undefined) {
     if (body.body) {
       options.json.body._id = id;
@@ -602,7 +635,7 @@ ApiREST.prototype.createUser = function (body, id) {
       };
     }
   }
-  
+
   return this.callApi(options);
 };
 
@@ -633,12 +666,15 @@ ApiREST.prototype.refreshIndex = function (index) {
 };
 
 ApiREST.prototype.callMemoryStorage = function (command, args) {
-  return this.callApi(this.getRequest(null, null, 'ms', command, args))
-    .then(response => {
-      this.world.memoryStorageResult = response;
+  return this.callApi(this.getRequest(null, null, 'ms', command, args));
+};
 
-      return q(response);
-    });
+ApiREST.prototype.getAutoRefresh = function (index) {
+  return this.callApi(this.getRequest(index, null, 'admin', 'getAutoRefresh'));
+};
+
+ApiREST.prototype.setAutoRefresh = function (index, autoRefresh) {
+  return this.callApi(this.getRequest(index, null, 'admin', 'setAutoRefresh', { body: {autoRefresh: autoRefresh }}));
 };
 
 module.exports = ApiREST;

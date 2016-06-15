@@ -14,28 +14,33 @@ module.exports = function () {
     this.fakeAltIndex = 'kuzzle-test-index-alt';
     this.fakeNewIndex = 'kuzzle-test-index-new';
     this.fakeCollection = 'kuzzle-collection-test';
+    this.fakeAltCollection = 'kuzzle-collection-test-alt';
 
     this.documentGrace = {
       firstName: 'Grace',
       lastName: 'Hopper',
-      age: 85,
+      info: {
+        age: 85,
+        city: 'NYC',
+        hobby: 'computer'
+      },
       location: {
         lat: 32.692742,
         lon: -97.114127
-      },
-      city: 'NYC',
-      hobby: 'computer'
+      }
     };
     this.documentAda = {
       firstName: 'Ada',
       lastName: 'Lovelace',
-      age: 36,
+      info: {
+        age: 36,
+        city: 'London',
+        hobby: 'computer'
+      },
       location: {
         lat: 51.519291,
         lon: -0.149817
-      },
-      city: 'London',
-      hobby: 'computer'
+      }
     };
     this.bulk = [
       { index:  {_id: 1 } },
@@ -80,53 +85,76 @@ module.exports = function () {
 
     this.roles = {
       role1: {
-        indexes: {
-          'fakeIndex1': {
-            collections: {
-              'fakeCollection1': {
-                controllers: {
-                  'fakeController1': {
-                    actions: {
-                      'fakeAction1': true
-                    }
-                  }
-                }
-              }
+        controllers: {
+          '*': {
+            actions: {
+              '*': true
             }
           }
         }
       },
       role2: {
-        indexes: {
-          'fakeIndex2': {
-            collections: {
-              'fakeCollection2': {
-                controllers: {
-                  'fakeController2': {
-                    actions: {
-                      'fakeAction2': true
-                    }
-                  }
-                }
-              }
+        controllers: {
+          'read': {
+            actions: {
+              '*': true
             }
-          }
+          },
+          'auth': {actions: {logout: true}}
+        }
+      },
+      role3: {
+        controllers: {
+          'read': {
+            actions: {
+              'search': true
+            }
+          },
+          'auth': {actions: {logout: true}}
         }
       }
     };
 
     this.profiles = {
       profile1: {
-        roles: [this.idPrefix + 'role1']
+        roles: [{_id: this.idPrefix + 'role1'}]
       },
       profile2: {
-        roles: [this.idPrefix + 'role1', this.idPrefix + 'role2']
+        roles: [
+          {
+            _id: this.idPrefix + 'role1',
+            restrictedTo: [{index: this.fakeIndex}]
+          },
+          {
+            _id: this.idPrefix + 'role2'
+          }
+        ]
       },
       profile3: {
-        roles: [this.idPrefix + 'role2']
+        roles: [{
+          _id: this.idPrefix + 'role2',
+          restrictedTo: [{index: this.fakeAltIndex, collections:[this.fakeCollection]}]
+        }]
+      },
+      profile4: {
+        roles: [{
+          _id: this.idPrefix + 'role3'
+        }]
+      },
+      profile5: {
+        roles: [{
+          _id: this.idPrefix + 'role3',
+          restrictedTo: [{index: this.fakeIndex}]
+        }]
+      },
+      profile6: {
+        roles: [{
+          _id: this.idPrefix + 'role3',
+          restrictedTo: [{index: this.fakeIndex, collections:[this.fakeCollection]}]
+        }]
       },
       invalidProfile: {
-        roles: ['unexisting-role']
+        roles: [{_id: 'unexisting-role'}]
       },
       emptyProfile: {
         roles: []
@@ -134,7 +162,7 @@ module.exports = function () {
     };
 
     this.users = {
-      user1: {
+      useradmin: {
         name: {
           first: 'David',
           last: 'Bowie',
@@ -142,6 +170,10 @@ module.exports = function () {
         },
         profile: 'admin',
         password: 'testpwd'
+      },
+      user1: {
+        profile: this.idPrefix + 'profile1',
+        password: 'testpwd1'
       },
       user2: {
         name: {
@@ -151,6 +183,22 @@ module.exports = function () {
         hobby: 'Segway Polo',
         profile: this.idPrefix + 'profile2',
         password: 'testpwd2'
+      },
+      user3: {
+        profile: this.idPrefix + 'profile3',
+        password: 'testpwd3'
+      },
+      user4: {
+        profile: this.idPrefix + 'profile4',
+        password: 'testpwd4'
+      },
+      user5: {
+        profile: this.idPrefix + 'profile5',
+        password: 'testpwd5'
+      },
+      user6: {
+        profile: this.idPrefix + 'profile6',
+        password: 'testpwd6'
       },
       unexistingprofile: {
         name: 'John Doe',

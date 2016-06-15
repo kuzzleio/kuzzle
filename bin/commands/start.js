@@ -1,9 +1,11 @@
+/* eslint-disable no-console */
+
 var
   fs = require('fs'),
   rc = require('rc'),
   params = rc('kuzzle'),
   kuzzle = require('../../lib'),
-  RequestObject = require('../../lib/api/core/models/requestObject'),
+  RequestObject = require('kuzzle-common-objects').Models.requestObject,
   firstAdmin = require('./createFirstAdmin'),
   q = require('q'),
   clc = require('cli-color'),
@@ -11,10 +13,11 @@ var
   warn = clc.yellow,
   notice = clc.cyanBright,
   ok = clc.green.bold,
-  kuz = clc.greenBright.bold;
+  kuz = clc.greenBright.bold,
+  coverage;
 
-if (process.env.FEATURE_COVERAGE == 1) {
-  var coverage = require('istanbul-middleware');
+if (process.env.FEATURE_COVERAGE === '1' || process.env.FEATURE_COVERAGE === 1) {
+  coverage = require('istanbul-middleware');
   console.log(warn('Hook loader for coverage - ensure this is not production!'));
   coverage.hookLoader(__dirname+'/../lib');
 }
@@ -42,7 +45,7 @@ module.exports = function () {
 
       console.log(`
  ████████████████████████████████████
- ██     KUZZLE ` + (kuzzle.isServer ? 'SERVER' : 'WORKER') + ` STARTED      ██`);
+ ██     KUZZLE ` + (kuzzle.isServer ? 'SERVER' : 'WORKER') + ' STARTED      ██');
 
       if (kuzzle.isServer) {
         process.title = 'KuzzleServer';
@@ -57,7 +60,10 @@ module.exports = function () {
       /*
        Waits for at least one write worker to be connected to the server before trying to use them
        */
-      return kuzzle.services.list.broker.waitForListeners(kuzzle.config.queues.workerWriteTaskQueue);
+      if (kuzzle.isServer) {
+        return kuzzle.services.list.broker.waitForClients(kuzzle.config.queues.workerWriteTaskQueue);
+      }
+      return q();
     })
     .then(() => {
       var request;
@@ -85,7 +91,8 @@ module.exports = function () {
         if (params.fixtures) {
           try {
             JSON.parse(fs.readFileSync(params.fixtures, 'utf8'));
-          } catch(e) {
+          }
+          catch (e) {
             console.log(error('[✖] The file ' + params.fixtures + ' cannot be opened... aborting.'));
             process.exit(1);
           }
@@ -95,7 +102,8 @@ module.exports = function () {
         if (params.mappings) {
           try {
             JSON.parse(fs.readFileSync(params.mappings, 'utf8'));
-          } catch(e) {
+          }
+          catch (e) {
             console.log(error('[✖] The file ' + params.mappings + ' cannot be opened... aborting.'));
             process.exit(1);
           }
@@ -104,9 +112,9 @@ module.exports = function () {
 
         request = new RequestObject({controller: 'remoteActions', action: 'prepareDb', body: data});
         return kuzzle.remoteActionsController.actions.prepareDb(kuzzle, request);
-      } else {
-        return q();
       }
+
+      return q();
     })
     .then(() => {
       if (kuzzle.isServer) {
@@ -126,8 +134,8 @@ module.exports = function () {
           });
       }
     })
-    .catch(error => {
-      console.error(error);
+    .catch(err => {
+      console.error(err.stack);
       process.exit(1);
     });
 };

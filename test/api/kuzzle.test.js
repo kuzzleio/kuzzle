@@ -1,12 +1,8 @@
 var
   rc = require('rc'),
   q = require('q'),
-  rewire = require('rewire'),
-  should = require('should'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
-  PartialError = require.main.require('lib/api/core/errors/partialError'),
-  InternalError = require.main.require('lib/api/core/errors/internalError'),
-  prepareDb;
+  should = require('should');
 
 describe('Test kuzzle constructor', () => {
   var kuzzle;

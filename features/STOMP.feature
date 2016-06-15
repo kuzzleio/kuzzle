@@ -19,22 +19,22 @@ Feature: Test STOMP API
     When I write the document
     Then I should receive a document id
     Then I'm able to get the document
-    And I'm not able to get the document in index "index-test-alt"
+    And I'm not able to get the document in index "kuzzle-test-index-alt"
+
+  @usingSTOMP @unsubscribe
+  Scenario: Create or Update a document
+    Given A room subscription listening to "info.city" having value "NYC"
+    When I write the document "documentGrace"
+    And I createOrReplace it
+    Then I should have updated the document
+    And I should receive a "update" notification
+    And The notification should have metadata
 
   @usingSTOMP
   Scenario: Replace a document
     When I write the document "documentGrace"
     Then I replace the document with "documentAda" document
     Then my document has the value "Ada" in field "firstName"
-
-  @usingSTOMP @unsubscribe
-  Scenario: Create or Update a document
-    Given A room subscription listening to "lastName" having value "Hopper"
-    When I write the document "documentGrace"
-    And I createOrReplace it
-    Then I should have updated the document
-    And I should receive a "update" notification
-    And The notification should have metadata
 
   @usingSTOMP
   Scenario: Update a document
@@ -66,7 +66,7 @@ Feature: Test STOMP API
     Then I can retrieve actions from bulk import
 
   @usingSTOMP
-  Scenario: Delete type
+  Scenario: Truncate collection
     When I write the document
     Then I refresh the index
     Then I truncate the collection
@@ -80,11 +80,11 @@ Feature: Test STOMP API
     When I write the document "documentAda"
     Then I count 4 documents
     And I count 0 documents in index "kuzzle-test-index-alt"
-    And I count 2 documents with "NYC" in field "city"
+    And I count 2 documents with "NYC" in field "info.city"
     Then I truncate the collection
     And I count 0 documents
 
-  @removeSchema @usingSTOMP
+  @usingSTOMP
   Scenario: Change mapping
     When I write the document "documentGrace"
     Then I don't find a document with "Grace" in field "firstName"
@@ -95,7 +95,15 @@ Feature: Test STOMP API
 
   @usingSTOMP @unsubscribe
   Scenario: Document creation notifications
-    Given A room subscription listening to "lastName" having value "Hopper"
+    Given A room subscription listening to "info.city" having value "NYC"
+    When I write the document "documentGrace"
+    Then I should receive a "create" notification
+    And The notification should have a "_source" member
+    And The notification should have metadata
+
+  @usingSTOMP @unsubscribe
+  Scenario: Document creation notifications with not exists
+    Given A room subscription listening field "toto" doesn't exists
     When I write the document "documentGrace"
     Then I should receive a "create" notification
     And The notification should have a "_source" member
@@ -103,7 +111,7 @@ Feature: Test STOMP API
 
   @usingSTOMP @unsubscribe
   Scenario: Document delete notifications
-    Given A room subscription listening to "lastName" having value "Hopper"
+    Given A room subscription listening to "info.city" having value "NYC"
     When I write the document "documentGrace"
     Then I remove the document
     Then I should receive a "delete" notification
@@ -112,7 +120,7 @@ Feature: Test STOMP API
 
   @usingSTOMP @unsubscribe
   Scenario: Document update: new document notification
-    Given A room subscription listening to "lastName" having value "Hopper"
+    Given A room subscription listening to "info.hobby" having value "computer"
     When I write the document "documentAda"
     Then I update the document with value "Hopper" in field "lastName"
     Then I should receive a "update" notification
@@ -130,7 +138,7 @@ Feature: Test STOMP API
 
   @usingSTOMP @unsubscribe
   Scenario: Document replace: new document notification
-    Given A room subscription listening to "lastName" having value "Hopper"
+    Given A room subscription listening to "info.hobby" having value "computer"
     When I write the document "documentAda"
     Then I replace the document with "documentGrace" document
     Then I should receive a "update" notification
@@ -139,19 +147,11 @@ Feature: Test STOMP API
 
   @usingSTOMP @unsubscribe
   Scenario: Document replace: removed document notification
-    Given A room subscription listening to "lastName" having value "Hopper"
+    Given A room subscription listening to "info.city" having value "NYC"
     When I write the document "documentGrace"
     Then I replace the document with "documentAda" document
     Then I should receive a "update" notification
     And The notification should not have a "_source" member
-    And The notification should have metadata
-
-  @usingSTOMP @unsubscribe
-  Scenario: Document creation notifications with not exists
-    Given A room subscription listening field "toto" doesn't exists
-    When I write the document "documentGrace"
-    Then I should receive a "create" notification
-    And The notification should have a "_source" member
     And The notification should have metadata
 
   @usingSTOMP @unsubscribe
@@ -164,11 +164,11 @@ Feature: Test STOMP API
 
   @usingSTOMP @unsubscribe
   Scenario: Delete a document with a query
-    Given A room subscription listening to "lastName" having value "Hopper"
+    Given A room subscription listening to "info.city" having value "NYC"
     When I write the document "documentGrace"
     And I write the document "documentAda"
     And I refresh the index
-    Then I remove documents with field "hobby" equals to value "computer"
+    Then I remove documents with field "info.hobby" equals to value "computer"
     Then I should receive a "delete" notification
     And The notification should not have a "_source" member
     And The notification should have metadata
@@ -246,8 +246,8 @@ Feature: Test STOMP API
 
   @usingSTOMP @cleanSecurity
   Scenario: login user
-    Given I create a user "user1" with id "user1-id"
-    When I log in as user1-id:testpwd expiring in 1h
+    Given I create a user "useradmin" with id "useradmin-id"
+    When I log in as useradmin-id:testpwd expiring in 1h
     Then I write the document
     Then I check the JWT Token
     And The token is valid
@@ -262,15 +262,15 @@ Feature: Test STOMP API
     Then I'm able to find a role with id "test"
     And I update the role with id "test" with role "role2"
     Then I'm able to find a role with id "test" with role "role2"
-    Then I'm able to find "1" role by searching index corresponding to role "role2"
+    Then I'm able to find "1" role by searching controller corresponding to role "role2"
     And I delete the role with id "test"
     Then I'm not able to find a role with id "test"
     Then I create a new role "role1" with id "test"
     And I create a new role "role1" with id "test2"
     And I create a new role "role1" with id "test3"
     Then I'm able to do a multi get with "test,test2,test3" and get "3" roles
-    Then I'm able to find "3" role by searching index corresponding to role "role1"
-    Then I'm able to find "1" role by searching index corresponding to role "role1" from "0" to "1"
+    Then I'm able to find "3" role by searching controller corresponding to role "role1"
+    Then I'm able to find "1" role by searching controller corresponding to role "role1" from "0" to "1"
 
   @usingSTOMP @cleanSecurity
   Scenario: create an invalid profile with unexisting role triggers an error
@@ -280,7 +280,7 @@ Feature: Test STOMP API
   Scenario: get profile without id triggers an error
     Then I cannot a profile without ID
 
-  @usingSTOMP
+  @usingSTOMP @cleanSecurity
   Scenario: creating a profile with an empty set of roles triggers an error
     Then I cannot create a profile with an empty set of roles
 
@@ -308,33 +308,161 @@ Feature: Test STOMP API
     Then I'm able to find "2" profiles containing the role with id "role1"
 
   @usingSTOMP @cleanSecurity
+  Scenario: get profile rights
+    Given I create a new role "role1" with id "role1"
+    And I create a new role "role2" with id "role2"
+    And I create a new profile "profile2" with id "profile2"
+    Then I'm able to find rights for profile "profile2"
+    Then I'm not able to find rights for profile "fake-profile"
+
+  @usingSTOMP @cleanSecurity
   Scenario: user crudl
     When I create a new role "role1" with id "role1"
     And I create a new role "role2" with id "role2"
     And I create a new profile "profile2" with id "profile2"
-    And I create a new user "user1" with id "user1-id"
+    And I create a new user "useradmin" with id "useradmin-id"
     And I create a user "user2" with id "user2-id"
-    And I can't create a new user "user2" with id "user1-id"
-    Then I am able to get the user "user1-id" matching {"_id":"#prefix#user1-id","_source":{"profile":{"_id":"admin", "_source": {"roles":[{"_id":"admin"}]}}}}
+    And I can't create a new user "user2" with id "useradmin-id"
+    Then I am able to get the user "useradmin-id" matching {"_id":"#prefix#useradmin-id","_source":{"profile":{"_id":"admin", "_source": {"roles":[{"_id":"admin"}]}}}}
     Then I am able to get the user "user2-id" matching {"_id":"#prefix#user2-id","_source":{"profile":{"_id":"#prefix#profile2"}}}
     Then I search for {"regexp":{"_uid":"users.#prefix#.*"}} and find 2 users
     Then I delete the user "user2-id"
-    Then I search for {"regexp":{"_uid":"users.#prefix#.*"}} and find 1 users matching {"_id":"#prefix#user1-id","_source":{"name":{"first":"David","last":"Bowie"}}}
-    When I log in as user1-id:testpwd expiring in 1h
-    Then I am getting the current user, which matches {"_id":"#prefix#user1-id","_source":{"profile":{"_id":"admin"}}}
+    Then I search for {"regexp":{"_uid":"users.#prefix#.*"}} and find 1 users matching {"_id":"#prefix#useradmin-id","_source":{"name":{"first":"David","last":"Bowie"}}}
+    When I log in as useradmin-id:testpwd expiring in 1h
+    Then I am getting the current user, which matches {"_id":"#prefix#useradmin-id","_source":{"profile":{"_id":"admin"}}}
     Then I log out
     Then I am getting the current user, which matches {"_id":-1,"_source":{"profile":{"_id":"anonymous"}}}
 
   @usingSTOMP @cleanSecurity
   Scenario: user updateSelf
-    When I create a new user "user1" with id "user1-id"
-    Then I am able to get the user "user1-id" matching {"_id":"#prefix#user1-id","_source":{"profile":{"_id":"admin", "_source": {"roles":[{"_id":"admin"}]}}}}
-    When I log in as user1-id:testpwd expiring in 1h
-    Then I am getting the current user, which matches {"_id":"#prefix#user1-id","_source":{"profile":{"_id":"admin"}}}
+    When I create a new user "useradmin" with id "useradmin-id"
+    Then I am able to get the user "useradmin-id" matching {"_id":"#prefix#useradmin-id","_source":{"profile":{"_id":"admin", "_source": {"roles":[{"_id":"admin"}]}}}}
+    When I log in as useradmin-id:testpwd expiring in 1h
+    Then I am getting the current user, which matches {"_id":"#prefix#useradmin-id","_source":{"profile":{"_id":"admin"}}}
     Then I update current user with data {"foo":"bar"}
-    Then I am getting the current user, which matches {"_id":"#prefix#user1-id","_source":{"profile":{"_id":"admin"},"foo":"bar"}}
+    Then I am getting the current user, which matches {"_id":"#prefix#useradmin-id","_source":{"profile":{"_id":"admin"},"foo":"bar"}}
     Then I log out
     Then I am getting the current user, which matches {"_id":-1,"_source":{"profile":{"_id":"anonymous"}}}
+
+  @usingSTOMP @cleanSecurity
+  Scenario: user permissions
+    Given I create a new role "role1" with id "role1"
+    And I create a new role "role2" with id "role2"
+    And I create a new role "role3" with id "role3"
+    And I create a new profile "profile1" with id "profile1"
+    And I create a new profile "profile2" with id "profile2"
+    And I create a new profile "profile3" with id "profile3"
+    And I create a new profile "profile4" with id "profile4"
+    And I create a new profile "profile5" with id "profile5"
+    And I create a new profile "profile6" with id "profile6"
+    And I create a new user "user1" with id "user1-id"
+    And I create a new user "user2" with id "user2-id"
+    And I create a new user "user3" with id "user3-id"
+    And I create a new user "user4" with id "user4-id"
+    And I create a new user "user5" with id "user5-id"
+    And I create a new user "user6" with id "user6-id"
+    When I log in as user1-id:testpwd1 expiring in 1h
+    Then I'm allowed to create a document in index "kuzzle-test-index" and collection "kuzzle-collection-test"
+    And I'm allowed to create a document in index "kuzzle-test-index" and collection "kuzzle-collection-test-alt"
+    And I'm allowed to create a document in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test"
+    And I'm allowed to create a document in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test-alt"
+    And I'm allowed to search for documents in index "kuzzle-test-index" and collection "kuzzle-collection-test"
+    And I'm allowed to search for documents in index "kuzzle-test-index" and collection "kuzzle-collection-test-alt"
+    And I'm allowed to search for documents in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test"
+    And I'm allowed to search for documents in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test-alt"
+    And I'm allowed to count documents in index "kuzzle-test-index" and collection "kuzzle-collection-test"
+    And I'm allowed to count documents in index "kuzzle-test-index" and collection "kuzzle-collection-test-alt"
+    And I'm allowed to count documents in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test"
+    And I'm allowed to count documents in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test-alt"
+    Then I log out
+    When I log in as user2-id:testpwd2 expiring in 1h
+    Then I'm allowed to create a document in index "kuzzle-test-index" and collection "kuzzle-collection-test"
+    And I'm allowed to create a document in index "kuzzle-test-index" and collection "kuzzle-collection-test-alt"
+    And I'm not allowed to create a document in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test"
+    And I'm not allowed to create a document in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test-alt"
+    And I'm allowed to search for documents in index "kuzzle-test-index" and collection "kuzzle-collection-test"
+    And I'm allowed to search for documents in index "kuzzle-test-index" and collection "kuzzle-collection-test-alt"
+    And I'm allowed to search for documents in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test"
+    And I'm allowed to search for documents in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test-alt"
+    And I'm allowed to count documents in index "kuzzle-test-index" and collection "kuzzle-collection-test"
+    And I'm allowed to count documents in index "kuzzle-test-index" and collection "kuzzle-collection-test-alt"
+    And I'm allowed to count documents in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test"
+    And I'm allowed to count documents in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test-alt"
+    Then I log out
+    When I log in as user3-id:testpwd3 expiring in 1h
+    Then I'm not allowed to create a document in index "kuzzle-test-index" and collection "kuzzle-collection-test"
+    And I'm not allowed to create a document in index "kuzzle-test-index" and collection "kuzzle-collection-test-alt"
+    And I'm not allowed to create a document in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test"
+    And I'm not allowed to create a document in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test-alt"
+    And I'm not allowed to search for documents in index "kuzzle-test-index" and collection "kuzzle-collection-test"
+    And I'm not allowed to search for documents in index "kuzzle-test-index" and collection "kuzzle-collection-test-alt"
+    And I'm allowed to search for documents in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test"
+    And I'm not allowed to search for documents in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test-alt"
+    And I'm not allowed to count documents in index "kuzzle-test-index" and collection "kuzzle-collection-test"
+    And I'm not allowed to count documents in index "kuzzle-test-index" and collection "kuzzle-collection-test-alt"
+    And I'm allowed to count documents in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test"
+    And I'm not allowed to count documents in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test-alt"
+    Then I log out
+    When I log in as user4-id:testpwd4 expiring in 1h
+    Then I'm not allowed to create a document in index "kuzzle-test-index" and collection "kuzzle-collection-test"
+    And I'm not allowed to create a document in index "kuzzle-test-index" and collection "kuzzle-collection-test-alt"
+    And I'm not allowed to create a document in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test"
+    And I'm not allowed to create a document in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test-alt"
+    And I'm allowed to search for documents in index "kuzzle-test-index" and collection "kuzzle-collection-test"
+    And I'm allowed to search for documents in index "kuzzle-test-index" and collection "kuzzle-collection-test-alt"
+    And I'm allowed to search for documents in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test"
+    And I'm allowed to search for documents in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test-alt"
+    And I'm not allowed to count documents in index "kuzzle-test-index" and collection "kuzzle-collection-test"
+    And I'm not allowed to count documents in index "kuzzle-test-index" and collection "kuzzle-collection-test-alt"
+    And I'm not allowed to count documents in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test"
+    And I'm not allowed to count documents in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test-alt"
+    Then I log out
+    When I log in as user5-id:testpwd5 expiring in 1h
+    Then I'm not allowed to create a document in index "kuzzle-test-index" and collection "kuzzle-collection-test"
+    And I'm not allowed to create a document in index "kuzzle-test-index" and collection "kuzzle-collection-test-alt"
+    And I'm not allowed to create a document in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test"
+    And I'm not allowed to create a document in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test-alt"
+    And I'm allowed to search for documents in index "kuzzle-test-index" and collection "kuzzle-collection-test"
+    And I'm allowed to search for documents in index "kuzzle-test-index" and collection "kuzzle-collection-test-alt"
+    And I'm not allowed to search for documents in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test"
+    And I'm not allowed to search for documents in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test-alt"
+    And I'm not allowed to count documents in index "kuzzle-test-index" and collection "kuzzle-collection-test"
+    And I'm not allowed to count documents in index "kuzzle-test-index" and collection "kuzzle-collection-test-alt"
+    And I'm not allowed to count documents in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test"
+    And I'm not allowed to count documents in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test-alt"
+    Then I log out
+    When I log in as user6-id:testpwd6 expiring in 1h
+    Then I'm not allowed to create a document in index "kuzzle-test-index" and collection "kuzzle-collection-test"
+    And I'm not allowed to create a document in index "kuzzle-test-index" and collection "kuzzle-collection-test-alt"
+    And I'm not allowed to create a document in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test"
+    And I'm not allowed to create a document in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test-alt"
+    And I'm allowed to search for documents in index "kuzzle-test-index" and collection "kuzzle-collection-test"
+    And I'm not allowed to search for documents in index "kuzzle-test-index" and collection "kuzzle-collection-test-alt"
+    And I'm not allowed to search for documents in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test"
+    And I'm not allowed to search for documents in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test-alt"
+    And I'm not allowed to count documents in index "kuzzle-test-index" and collection "kuzzle-collection-test"
+    And I'm not allowed to count documents in index "kuzzle-test-index" and collection "kuzzle-collection-test-alt"
+    And I'm not allowed to count documents in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test"
+    And I'm not allowed to count documents in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test-alt"
+    Then I log out
+
+  @usingSTOMP @cleanSecurity
+  Scenario: get user rights
+    Given I create a new role "role1" with id "role1"
+    And I create a new role "role2" with id "role2"
+    And I create a new profile "profile2" with id "profile2"
+    And I create a user "user2" with id "user2-id"
+    Then I'm able to find rights for user "user2-id"
+    Then I'm not able to find rights for user "fakeuser-id"
+
+  @usingSTOMP @cleanSecurity
+  Scenario: get my rights
+    Given I create a new role "role1" with id "role1"
+    And I create a new role "role2" with id "role2"
+    And I create a new profile "profile2" with id "profile2"
+    And I create a user "user2" with id "user2-id"
+    When I log in as user2-id:testpwd2 expiring in 1h
+    Then I'm able to find my rights
 
   @usingSTOMP @cleanRedis
   Scenario: memory storage - misc
@@ -1241,4 +1369,22 @@ Feature: Test STOMP API
       { "_id": "#prefix#hll3" }
       """
     Then The ms result should match the json 11
+
+  @usingSTOMP
+  Scenario: autorefresh
+    When I check the autoRefresh status
+    Then The result should match the json false
+    When I write the document "documentGrace"
+    Then I don't find a document with "grace" in field "firstName"
+    Given I refresh the index
+    And I enable the autoRefresh
+    And I truncate the collection
+    When I write the document "documentGrace"
+    Then I find a document with "grace" in field "firstName"
+    When I check the autoRefresh status
+    Then The result should match the json true
+    Given I truncate the collection
+    And I write the document "documentGrace"
+    When I update the document with value "Josepha" in field "firstName"
+    Then I find a document with "josepha" in field "firstName"
 

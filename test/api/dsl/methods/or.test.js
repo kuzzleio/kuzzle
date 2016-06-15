@@ -1,28 +1,18 @@
 var
   should = require('should'),
   rewire = require('rewire'),
+  md5 = require('crypto-md5'),
   q = require('q'),
-  methods = rewire('../../../../lib/api/dsl/methods'),
-  BadRequestError = require.main.require('lib/api/core/errors/badRequestError');
+  Filters = require.main.require('lib/api/dsl/filters'),
+  Methods = rewire('../../../../lib/api/dsl/methods'),
+  BadRequestError = require.main.require('kuzzle-common-objects').Errors.badRequestError;
 
 describe('Test or method', function () {
-
   var
-    roomId = 'roomId',
+    methods,
+    filterId = 'fakeFilterId',
     index = 'index',
     collection = 'collection',
-    documentGrace = {
-      firstName: 'Grace',
-      lastName: 'Hopper',
-      city: 'NYC',
-      hobby: 'computer'
-    },
-    documentAda = {
-      firstName: 'Ada',
-      lastName: 'Lovelace',
-      city: 'London',
-      hobby: 'computer'
-    },
     filter = [
       {
         term: {
@@ -34,93 +24,93 @@ describe('Test or method', function () {
           city: 'London'
         }
       }
-    ];
+    ],
+    termcityNYC = md5('termcityNYC'),
+    termcityLondon = md5('termcityLondon'),
+    nottermcityNYC = md5('nottermcityNYC'),
+    nottermcityLondon = md5('nottermcityLondon'),
+    fieldCity = md5('city');
 
+  beforeEach(function () {
+    methods = new Methods(new Filters());
 
-  before(function () {
-    methods.dsl.filtersTree = {};
-    return methods.or(roomId, index, collection, filter)
-      .then(function () {
-        return methods.or(roomId, index, collection, filter, true);
-      });
+    return methods.or(filterId, index, collection, filter)
+      .then(() => methods.or(filterId, index, collection, filter, true));
   });
 
   it('should construct the filterTree object for the correct attribute', function () {
-    should(methods.dsl.filtersTree).not.be.empty();
-    should(methods.dsl.filtersTree[index]).not.be.empty();
-    should(methods.dsl.filtersTree[index][collection]).not.be.empty();
-    should(methods.dsl.filtersTree[index][collection].fields).not.be.empty();
-    should(methods.dsl.filtersTree[index][collection].fields.city).not.be.empty();
+    should(methods.filters.filtersTree).not.be.empty();
+    should(methods.filters.filtersTree[index]).not.be.empty();
+    should(methods.filters.filtersTree[index][collection]).not.be.empty();
+    should(methods.filters.filtersTree[index][collection].fields).not.be.empty();
+    should(methods.filters.filtersTree[index][collection].fields[fieldCity]).not.be.empty();
   });
 
   it('should construct the filterTree with correct curried function name', function () {
-    should(methods.dsl.filtersTree[index][collection].fields.city.termcityNYC).not.be.empty();
-    should(methods.dsl.filtersTree[index][collection].fields.city.termcityLondon).not.be.empty();
-    should(methods.dsl.filtersTree[index][collection].fields.city.nottermcityNYC).not.be.empty();
-    should(methods.dsl.filtersTree[index][collection].fields.city.nottermcityLondon).not.be.empty();
+    should(methods.filters.filtersTree[index][collection].fields[fieldCity][termcityNYC]).not.be.empty();
+    should(methods.filters.filtersTree[index][collection].fields[fieldCity][termcityLondon]).not.be.empty();
+    should(methods.filters.filtersTree[index][collection].fields[fieldCity][nottermcityNYC]).not.be.empty();
+    should(methods.filters.filtersTree[index][collection].fields[fieldCity][nottermcityLondon]).not.be.empty();
   });
 
   it('should construct the filterTree with correct room list', function () {
-    var rooms;
+    var ids;
 
-    rooms = methods.dsl.filtersTree[index][collection].fields.city.termcityNYC.rooms;
-    should(rooms).be.an.Array();
-    should(rooms).have.length(1);
-    should(rooms[0]).be.exactly(roomId);
+    ids = methods.filters.filtersTree[index][collection].fields[fieldCity][termcityNYC].ids;
+    should(ids).be.an.Array();
+    should(ids).have.length(1);
+    should(ids[0]).be.exactly(filterId);
 
-    rooms = methods.dsl.filtersTree[index][collection].fields.city.termcityLondon.rooms;
-    should(rooms).be.an.Array();
-    should(rooms).have.length(1);
-    should(rooms[0]).be.exactly(roomId);
+    ids = methods.filters.filtersTree[index][collection].fields[fieldCity][termcityLondon].ids;
+    should(ids).be.an.Array();
+    should(ids).have.length(1);
+    should(ids[0]).be.exactly(filterId);
 
-    rooms = methods.dsl.filtersTree[index][collection].fields.city.nottermcityNYC.rooms;
-    should(rooms).be.an.Array();
-    should(rooms).have.length(1);
-    should(rooms[0]).be.exactly(roomId);
+    ids = methods.filters.filtersTree[index][collection].fields[fieldCity][nottermcityNYC].ids;
+    should(ids).be.an.Array();
+    should(ids).have.length(1);
+    should(ids[0]).be.exactly(filterId);
 
-    rooms = methods.dsl.filtersTree[index][collection].fields.city.nottermcityLondon.rooms;
-    should(rooms).be.an.Array();
-    should(rooms).have.length(1);
-    should(rooms[0]).be.exactly(roomId);
+    ids = methods.filters.filtersTree[index][collection].fields[fieldCity][nottermcityLondon].ids;
+    should(ids).be.an.Array();
+    should(ids).have.length(1);
+    should(ids[0]).be.exactly(filterId);
   });
 
-  it('should construct the filterTree with correct functions', function () {
-    var result;
+  it('should construct the filterTree with correct arguments', function () {
+    should(methods.filters.filtersTree[index][collection].fields[fieldCity][termcityNYC].args).match({
+      operator: 'term', not: undefined, field: 'city', value: 'NYC'
+    });
 
-    result = methods.dsl.filtersTree[index][collection].fields.city.termcityNYC.fn(documentGrace);
-    should(result).be.exactly(true);
-    result = methods.dsl.filtersTree[index][collection].fields.city.termcityNYC.fn(documentAda);
-    should(result).be.exactly(false);
+    should(methods.filters.filtersTree[index][collection].fields[fieldCity][termcityLondon].args).match({
+      operator: 'term',
+      not: undefined,
+      field: 'city',
+      value: 'London'
+    });
 
-    result = methods.dsl.filtersTree[index][collection].fields.city.termcityLondon.fn(documentGrace);
-    should(result).be.exactly(false);
-    result = methods.dsl.filtersTree[index][collection].fields.city.termcityLondon.fn(documentAda);
-    should(result).be.exactly(true);
+    should(methods.filters.filtersTree[index][collection].fields[fieldCity][nottermcityNYC].args).match({
+      operator: 'term', not: true, field: 'city', value: 'NYC'
+    });
 
-    result = methods.dsl.filtersTree[index][collection].fields.city.nottermcityNYC.fn(documentGrace);
-    should(result).be.exactly(false);
-    result = methods.dsl.filtersTree[index][collection].fields.city.nottermcityNYC.fn(documentAda);
-    should(result).be.exactly(true);
-
-    result = methods.dsl.filtersTree[index][collection].fields.city.nottermcityLondon.fn(documentGrace);
-    should(result).be.exactly(true);
-    result = methods.dsl.filtersTree[index][collection].fields.city.nottermcityLondon.fn(documentAda);
-    should(result).be.exactly(false);
+    should(methods.filters.filtersTree[index][collection].fields[fieldCity][nottermcityLondon].args).match({
+      operator: 'term', not: true, field: 'city', value: 'London'
+    });
   });
 
   it('should return a rejected promise if getFormattedFilters fails', function () {
-    return methods.__with__({
+    return Methods.__with__({
       getFormattedFilters: function () { return q.reject(new Error('rejected')); }
     })(function () {
-      return should(methods.or(roomId, index, collection, filter)).be.rejectedWith('rejected');
+      return should(methods.or(filterId, index, collection, filter)).be.rejectedWith('rejected');
     });
   });
 
   it('should reject an error if the filter OR is not an array', function () {
-    return should(methods.or(roomId, collection, {})).be.rejectedWith(BadRequestError);
+    return should(methods.or(filterId, collection, {})).be.rejectedWith(BadRequestError);
   });
 
   it('should reject an error if the filter OR is an array with empty filters', function () {
-    return should(methods.or(roomId, collection, [{}])).be.rejectedWith(BadRequestError);
+    return should(methods.or(filterId, collection, [{}])).be.rejectedWith(BadRequestError);
   });
 });

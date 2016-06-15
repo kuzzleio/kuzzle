@@ -3,8 +3,8 @@ var
   q = require('q'),
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
-  RequestObject = require.main.require('lib/api/core/models/requestObject'),
-  ResponseObject = require.main.require('lib/api/core/models/responseObject'),
+  RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
+  ResponseObject = require.main.require('kuzzle-common-objects').Models.responseObject,
   Role = require.main.require('lib/api/core/models/security/role');
 
 describe('Test: read controller', function () {
@@ -26,7 +26,10 @@ describe('Test: read controller', function () {
 
     kuzzle = new Kuzzle();
     return kuzzle.start(params, {dummy: true})
-      .then(function () {
+      .then(() => {
+        return kuzzle.services.list.readEngine.init();
+      })
+      .then(() => {
         kuzzle.pluginsManager.plugins = {
           mocha: {
             name: 'test',
@@ -138,20 +141,7 @@ describe('Test: read controller', function () {
         realtime = true;
         return [{name: 'foo', index: 'index'}, {name: 'bar', index: 'index'}, {name: 'baz', index: 'wrong'}];
       };
-
-      kuzzle.repositories.role.roles.anonymous = new Role();
-      params.roleWithoutAdmin._id = 'anonymous';
-      return kuzzle.repositories.role.hydrate(kuzzle.repositories.role.roles.anonymous, params.roleWithoutAdmin)
-        .then(() => {
-          kuzzle.repositories.profile.profiles.anonymous = {_id: 'anonymous', roles: ['anonymous']};
-          return q(kuzzle.repositories.profile.profiles.anonymous);
-        })
-        .then(() => kuzzle.repositories.token.anonymous())
-        .then(token => {
-          context.token = token;
-        });
     });
-
     beforeEach(function () {
       realtime = false;
       stored = false;

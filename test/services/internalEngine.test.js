@@ -3,7 +3,7 @@ var
   sinon = require('sinon'),
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
-  NotFoundError = require.main.require('lib/api/core/errors/notFoundError');
+  NotFoundError = require.main.require('kuzzle-common-objects').Errors.notFoundError;
 
 require('sinon-as-promised');
 

@@ -89,11 +89,11 @@ ApiRT.prototype.get = function (id, index) {
   return this.send(msg);
 };
 
-ApiRT.prototype.search = function (filters, index) {
+ApiRT.prototype.search = function (filters, index, collection) {
   var
     msg = {
       controller: 'read',
-      collection: this.world.fakeCollection,
+      collection: collection || this.world.fakeCollection,
       index: index || this.world.fakeIndex,
       action: 'search',
       body: filters
@@ -102,11 +102,11 @@ ApiRT.prototype.search = function (filters, index) {
   return this.send(msg);
 };
 
-ApiRT.prototype.count = function (filters, index) {
+ApiRT.prototype.count = function (filters, index, collection) {
   var
     msg = {
       controller: 'read',
-      collection: this.world.fakeCollection,
+      collection: collection || this.world.fakeCollection,
       index: index || this.world.fakeIndex,
       action: 'count',
       body: filters
@@ -493,6 +493,17 @@ ApiRT.prototype.getProfile = function (id) {
   return this.send(msg);
 };
 
+ApiRT.prototype.getProfileRights = function (id) {
+  var
+    msg = {
+      controller: 'security',
+      action: 'getProfileRights',
+      _id: id
+    };
+
+  return this.send(msg);
+};
+
 ApiRT.prototype.mGetProfiles = function (body) {
   var
     msg = {
@@ -546,10 +557,26 @@ ApiRT.prototype.getUser = function (id) {
   });
 };
 
+ApiRT.prototype.getUserRights = function (id) {
+  return this.send({
+    controller: 'security',
+    action: 'getUserRights',
+    _id: id
+  });
+};
+
 ApiRT.prototype.getCurrentUser = function () {
   return this.send({
     controller: 'auth',
     action: 'getCurrentUser'
+  });
+};
+
+ApiRT.prototype.getMyRights = function (id) {
+  return this.send({
+    controller: 'auth',
+    action: 'getMyRights',
+    _id: id
   });
 };
 
@@ -621,12 +648,26 @@ ApiRT.prototype.callMemoryStorage = function (command, args) {
   return this.send(_.extend({
     controller: 'ms',
     action: command
-  }, args))
-    .then(response => {
-      this.world.memoryStorageResult = response;
+  }, args));
+};
 
-      return q(response);
-    });
+ApiRT.prototype.setAutoRefresh = function (index, autoRefresh) {
+  return this.send({
+    index: index,
+    controller: 'admin',
+    action: 'setAutoRefresh',
+    body: {
+      autoRefresh: autoRefresh
+    }
+  });
+};
+
+ApiRT.prototype.getAutoRefresh = function (index) {
+  return this.send({
+    index: index,
+    controller: 'admin',
+    action: 'getAutoRefresh'
+  });
 };
 
 module.exports = ApiRT;

@@ -8,6 +8,8 @@
  */
 var program = require('commander');
 
+program.option('-d, --debug', 'make errors more verbose');
+
 // $ kuzzle start
 program
   .command('start')
@@ -45,6 +47,7 @@ program
   .command('plugins')
   .arguments('[name]')
   .description('Manage plugins')
+  .option('--list', '*List current installed plugins')
   .option('--install', '*If plugin [name] is provided, installs it using --npmVersion, --gitUrl or --path. Otherwise, (re-)installs all listed plugins')
   .option('--get', '*Gets the plugin [name] current stored configuration')
   .option('--set <JSONObject>', '*Updates the plugin configuration with new properties')
@@ -73,6 +76,12 @@ program
   .option('--noint', 'non interractive mode, will perform the reset immediately')
   .description('Empty all the Kuzzle storage and make it look like a virgin, touched for the very first time')
   .action(require('./commands/reset'));  
+
+// $ kuzzle swagger
+program
+  .command('swagger')
+  .description('Generate the kuzzle-swagger.json and the kuzzle-swagger.yml files according to your current routes')
+  .action(require('./commands/swagger'));  
 
 // Run user command
 program.parse(process.argv);

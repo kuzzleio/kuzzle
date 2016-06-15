@@ -29,4 +29,9 @@ describe('Test: dsl.flattenObject', function () {
 
     should(result.foo).not.be.undefined().and.be.an.Array().and.match(arr);
   });
+
+  it('should automatically inject the provided ID', function () {
+    var result = flattenObject({ foo: { bar: 'bar', baz: { SchrodingerCat: 'Dead'}}}, 'foobar');
+    should(result._id).be.eql('foobar');
+  });
 });

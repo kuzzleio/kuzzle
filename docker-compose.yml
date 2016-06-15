@@ -1,11 +1,15 @@
-kuzzle:
-  image: kuzzleio/kuzzle
+proxy:
+  image: kuzzleio/proxy:alpine
   ports:
     - "7511:7511"
     - "7512:7512"
+
+kuzzle:
+  image: kuzzleio/kuzzle
   links:
     - elasticsearch
     - redis
+    - proxy
   environment:
     - FEATURE_COVERAGE
 

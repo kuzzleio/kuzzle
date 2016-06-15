@@ -10,12 +10,14 @@ var
     },
     config: require.main.require('lib/config')(params)
   },
+  sinon = require('sinon'),
+  sandbox = sinon.sandbox.create(),
   context = {connection: {id: 'papagayo'}},
-  InternalError = require.main.require('lib/api/core/errors/internalError'),
-  UnauthorizedError = require.main.require('lib/api/core/errors/unauthorizedError'),
+  InternalError = require.main.require('kuzzle-common-objects').Errors.internalError,
+  UnauthorizedError = require.main.require('kuzzle-common-objects').Errors.unauthorizedError,
   Profile = require.main.require('lib/api/core/models/security/profile'),
   Token = require.main.require('lib/api/core/models/security/token'),
-  User = require.main.require('lib/api/core/models/security/user'),
+  User = require.main.require('lib/api/core/models/security/user')(kuzzle),
   Role = require.main.require('lib/api/core/models/security/role'),
   Repository = require.main.require('lib/api/core/models/repositories/repository'),
   TokenRepository = require.main.require('lib/api/core/models/repositories/tokenRepository')(kuzzle),
@@ -64,18 +66,10 @@ beforeEach(function (done) {
         role = new Role(),
         user = new User();
 
-      role.indexes = {
+      role.controllers = {
         '*': {
-          collections: {
-            '*': {
-              controllers: {
-                '*': {
-                  actions: {
-                    '*': true
-                  }
-                }
-              }
-            }
+          actions: {
+            '*': true
           }
         }
       };
@@ -91,18 +85,10 @@ beforeEach(function (done) {
         role = new Role(),
         user = new User();
 
-      role.indexes = {
+      role.controllers = {
         '*': {
-          collections: {
-            '*': {
-              controllers: {
-                '*': {
-                  actions: {
-                    '*': true
-                  }
-                }
-              }
-            }
+          actions: {
+            '*': true
           }
         }
       };
@@ -135,6 +121,10 @@ beforeEach(function (done) {
   };
 
   done();
+});
+
+afterEach(() => {
+  sandbox.restore();
 });
 
 describe('Test: repositories/tokenRepository', function () {
@@ -327,21 +317,22 @@ describe('Test: repositories/tokenRepository', function () {
         });
     });
 
-    it('should reject the promise if hydrating fails', function (done) {
+    it('should reject the promise if hydrating fails', done => {
       var
         user = new User();
 
-      tokenRepository.hydrate = function() {
-        return q.reject();
-      };
-
       user._id = 'userInCache';
+      sandbox.stub(tokenRepository, 'hydrate').rejects({});
 
       tokenRepository.generateToken(user, context)
-        .catch(function (error) {
-          should(error).be.an.instanceOf(InternalError);
-          should(error.message).be.exactly('Unable to generate token for unknown user');
-          done();
+        .then(() => done(new Error()))
+        .catch(error => {
+          try{
+            should(error).be.an.instanceOf(InternalError);
+            should(error.message).be.exactly('Unable to generate token for unknown user');
+            done();
+          }
+          catch(e) { done(e); }
         });
     });
 

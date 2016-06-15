@@ -90,7 +90,8 @@ ApiWebsocket.prototype.send = function (msg, getAnswer, socketName) {
   if (listen) {
     this.listSockets[socketName].once(msg.requestId, function (result) {
       if (result.error) {
-        deferred.reject(result.error.message);
+        result.error.statusCode = result.status;
+        deferred.reject(result.error);
         return false;
       }
 

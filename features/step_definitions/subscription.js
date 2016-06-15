@@ -18,7 +18,7 @@ var apiSteps = function () {
   });
 
   this.Given(/^A room subscription listening to the whole collection$/, function (callback) {
-    this.api.subscribe()
+    this.api.subscribe({})
       .then(function (body) {
         if (body.error !== null) {
           callback(new Error(body.error.message));

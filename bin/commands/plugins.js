@@ -42,6 +42,24 @@ module.exports = function pluginsManager (plugin, options) {
 
     initializeInternalIndex(dbService, kuzzleConfiguration)
       .then(() => {
+
+        if (options.list) {
+          return getPluginsList(dbService, kuzzleConfiguration)
+            .then(pluginsInfos => {
+              Object.keys(pluginsInfos).forEach(name => {
+                if (pluginsInfos[name].activated) {
+                  console.log(clcOk(name + ' (activated)'));
+                }
+                else if (needInstall(pluginsInfos[name], name)) {
+                  console.log(clcNotice(name + ' (not installed)'));
+                }
+                else {
+                  console.log(clcNotice(name + ' (disabled)'));
+                }
+              });
+            });
+        }
+
         if (options.install) {
           if (plugin) {
             console.log('███ kuzzle-plugins: Installing plugin ' + plugin + '...');
@@ -88,8 +106,13 @@ module.exports = function pluginsManager (plugin, options) {
       .then(() => {
         release();
 
-        if (!plugin) {
-          console.log(clcOk('███ kuzzle-plugins: Plugins installed'));
+        if (options.install) {
+          if (plugin) {
+            console.log(clcOk('███ kuzzle-plugins: Plugin ' + plugin + ' installed'));
+          }
+          else {
+            console.log(clcOk('███ kuzzle-plugins: Plugins installed'));
+          }
         }
 
         process.exit(0);
@@ -117,7 +140,7 @@ module.exports = function pluginsManager (plugin, options) {
  * doesn't already exists
  *
  * @param db
- * @param indexName
+ * @param kuzzleConfiguration
  */
 function initializeInternalIndex(db, kuzzleConfiguration) {
   return db
@@ -233,7 +256,6 @@ function installPlugins(plugin, options, dbService, kuzzleConfiguration) {
 function acquirePlugins(plugins) {
   var
     installViaNpm = true,
-    pluginInstallId,
     promises = [];
 
   _.forEach(plugins, (plugin, name) => {
@@ -241,24 +263,18 @@ function acquirePlugins(plugins) {
       console.log('███ kuzzle-plugins: Plugin', name, 'uses local plugin. Config will be overrided with local changes.');
       installViaNpm = false;
     }
-    else if (plugin.gitUrl) {
-      pluginInstallId = plugin.gitUrl;
-    }
-    else if (plugin.npmVersion) {
-      pluginInstallId = name + '@' + plugin.npmVersion;
-    }
-    else {
+    else if (!plugin.gitUrl && !plugin.npmVersion) {
       console.error(clcError('███ kuzzle-plugins: Plugin'), name, 'provides no means of installation. Expected: path, git URL or npm version');
       process.exit(1);
     }
 
-    if (!plugin.path && !needInstall(plugin, name, pluginInstallId)) {
+    if (!needInstall(plugin, name)) {
       console.log('███ kuzzle-plugins: Plugin', name, 'is already installed. Skipping...');
       return true;
     }
 
     if (installViaNpm) {
-      promises.push(npmInstall(name, pluginInstallId));
+      promises.push(npmInstall(plugin, name));
     }
   });
 
@@ -269,16 +285,16 @@ function acquirePlugins(plugins) {
  * Install a plugin with NPM
  * Returns a promise resolved once the plugin has been installed
  *
+ * @param {string} plugin - plugin infos
  * @param {string} name - plugin name
- * @param {string} installId - argument provided to NPM to install the plugin
  * @returns {Promise}
  */
-function npmInstall(name, installId) {
+function npmInstall(plugin, name) {
   var deferred = q.defer();
 
   console.log('███ kuzzle-plugins: Downloading plugin: ', name);
 
-  childProcess.exec('npm install ' + installId, (err, stdout, stderr) => {
+  childProcess.exec('npm install ' + name + '@' + plugin.npmVersion, (err, stdout, stderr) => {
     if (err) {
       console.error(`Plugin download error. Full log:\n${stderr}`);
       return deferred.reject(err);
@@ -308,7 +324,12 @@ function updatePluginsConfiguration(db, collection, plugins) {
       pluginConfiguration;
 
     try {
-      pluginPackage = require(path.join(getPathPlugin(plugin, name), 'package.json'));
+      if (plugin.path) {
+        pluginPackage = require(path.join(plugin.path, 'package.json'));
+      }
+      else {
+        pluginPackage = require(path.join(getPathPlugin(plugin, name), 'package.json'));
+      }
     }
     catch (e) {
       console.error(clcError('███ kuzzle-plugins:'), 'There is a problem with plugin ' + name + '. Check the plugin installation directory');
@@ -347,18 +368,21 @@ function updatePluginsConfiguration(db, collection, plugins) {
  *
  * @param plugin
  * @param name
- * @param from previously installation information with version or git url with branch
  * @returns {boolean} true if the plugin must be installed, false if not
  */
-function needInstall(plugin, name, from) {
+function needInstall(plugin, name) {
   var
     packageDefinition,
     packagePath,
     pluginPath = getPathPlugin(plugin, name);
 
   // If we want to install a plugin with git, maybe there is no version and we want to 'pull' the plugin
-  if (from.indexOf('git') !== -1) {
+  if (plugin.gitUrl) {
     return true;
+  }
+
+  if (plugin.path) {
+    return false;
   }
 
   if (!fs.existsSync(pluginPath)) {
@@ -373,7 +397,7 @@ function needInstall(plugin, name, from) {
   packageDefinition = require(path.join(pluginPath, 'package.json'));
 
   // If version in package.json is different from the version the plugins.json, we want to install the updated plugin
-  return (packageDefinition._from !== from);
+  return (packageDefinition._from !== name + '@' + plugin.npmVersion);
 }
 
 /**
@@ -403,7 +427,7 @@ function checkOptions(plugin, options) {
     installOptions;
 
   // Check if at least one of the action option is supplied
-  requiredOptions = [0, 'install', 'remove', 'get', 'set', 'replace', 'unset', 'activate', 'deactivate']
+  requiredOptions = [0, 'install', 'remove', 'get', 'list', 'set', 'replace', 'unset', 'activate', 'deactivate']
     .reduce((p, c) => {
       return p + (options[c] !== undefined);
     });
@@ -422,9 +446,14 @@ function checkOptions(plugin, options) {
     process.exit(1);
   }
 
-  // --install is the only option working without specifying a plugin name
-  if (!plugin && !options.install) {
+  // --install and --list are the only options working without specifying a plugin name
+  if (!plugin && !options.install && !options.list) {
     console.error(clcError('A plugin [name] is required for this operation'));
+    process.exit(1);
+  }
+
+  if (options.install && options.list) {
+    console.error(clcError('Options --install and --list are mutually exclusive'));
     process.exit(1);
   }
 
@@ -434,7 +463,7 @@ function checkOptions(plugin, options) {
   });
 
   if (installOptions > 0 && !options.install) {
-    console.error(clcNotice('Options --npmVersion, --path and --gitUrl only work with --install. Ignoring them from now on.'))
+    console.error(clcNotice('Options --npmVersion, --path and --gitUrl only work with --install. Ignoring them from now on.'));
   }
   else if (installOptions > 1) {
     console.error(clcError('Options --npmVersion, --path and --gitUrl are mutually exclusive'));
@@ -561,22 +590,14 @@ function removePlugin(plugin, db, cfg) {
     .then(result => {
       // Plugins imported using --path should not be deleted
       installedLocally = (result._source.npmVersion || result._source.gitUrl);
-
       return db.delete(cfg.pluginsManager.dataCollection, plugin);
     })
     .then(() => {
-      var
-        moduleDirectory;
-
       console.log('███ kuzzle-plugins: Plugin configuration deleted');
 
       if (installedLocally) {
         try {
-          moduleDirectory = require.resolve(plugin);
-
-          // instead of the module entry file, we need its installation directory
-          moduleDirectory = moduleDirectory.substr(0, moduleDirectory.indexOf(plugin)) + '/' + plugin;
-          return q.denodeify(rimraf)(moduleDirectory);
+          return q.denodeify(rimraf)(getPathPlugin({}, plugin));
         }
         catch (err) {
           return q.reject(new Error('Unable to remove the plugin module: ' + err));

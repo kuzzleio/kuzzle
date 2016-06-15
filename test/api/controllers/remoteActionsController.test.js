@@ -3,8 +3,8 @@ var
   q = require('q'),
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
-  RequestObject = require.main.require('lib/api/core/models/requestObject'),
-  ResponseObject = require.main.require('lib/api/core/models/responseObject'),
+  RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
+  ResponseObject = require.main.require('kuzzle-common-objects').Models.responseObject,
   RemoteActionsController = require.main.require('lib/api/controllers/remoteActionsController');
 
 describe('Test: remote actions controller', function () {
@@ -25,7 +25,7 @@ describe('Test: remote actions controller', function () {
       .then(() => {
         remoteActionsController = new RemoteActionsController(kuzzle);
 
-        kuzzle.services.list.broker.add = (rid, res) => {
+        kuzzle.services.list.broker.send = (rid, res) => {
           brokerInvoked = true;
           requestId = rid;
           responseObject = res;

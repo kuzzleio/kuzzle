@@ -8,7 +8,7 @@ var
   rewire = require('rewire'),
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
-  RequestObject = require.main.require('lib/api/core/models/requestObject'),
+  RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
   Notifier = rewire('../../../../lib/api/core/notifier');
 
 describe('Test: notifier.send', function () {

@@ -113,6 +113,31 @@ var apiSteps = function () {
     });
   });
 
+  this.Then(/^I'm ?(not)* able to find rights for profile "([^"]*)"$/, {timeout: 20 * 1000}, function (not, id, callback) {
+    id = this.idPrefix + id;
+
+    this.api.getProfileRights(id)
+      .then(body => {
+        if (body.error) {
+          return callback(body.error.message);
+        }
+
+        if (not) {
+          return callback(`Profile with id ${id} exists`);
+        }
+
+        callback();
+      })
+      .catch(error => {
+        if (not) {
+          return callback();
+        }
+
+        callback(error);
+      });
+
+  });
+
   this.When(/^I delete the profile (?:with id )?"([^"]*)"$/, function (id, callback) {
     if (id) {
       id = this.idPrefix + id;

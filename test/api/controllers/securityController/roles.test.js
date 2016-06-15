@@ -1,82 +1,96 @@
 var
   should = require('should'),
   q = require('q'),
+  sinon = require('sinon'),
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
-  RequestObject = require.main.require('lib/api/core/models/requestObject'),
-  ResponseObject = require.main.require('lib/api/core/models/responseObject');
+  RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
+  ResponseObject = require.main.require('kuzzle-common-objects').Models.responseObject;
 
 describe('Test: security controller - roles', function () {
   var
     kuzzle,
-    error;
+    sandbox,
+    error,
+    mockResponse;
 
   before(() => {
     kuzzle = new Kuzzle();
 
-    return kuzzle.start(params, {dummy: true})
-      .then(function () {
-        // Mock
-        kuzzle.repositories.role.validateAndSaveRole = role => {
-          if (role._id === 'alreadyExists') {
-            return q.reject();
-          }
-
-          return q(role);
-        };
-        kuzzle.repositories.role.loadOneFromDatabase = id => {
-          if (id === 'badId') {
-            return q(null);
-          }
-
-          return q({
-            _index: kuzzle.config.internalIndex,
-            _type: 'roles',
-            _id: id,
-            _source: {}
-          });
-        };
-        kuzzle.repositories.role.loadMultiFromDatabase = ids => {
-          if (error) {
-            return q.reject(new Error('foobar'));
-          }
-
-          return q(ids.map(id => {
-            return {
-              _id: id,
-              _source: null
-            };
-          }));
-        };
-        kuzzle.services.list.readEngine.search = requestObject => {
-          if (error) {
-            return q.reject(new Error(''));
-          }
-
-          return q({
-            hits: [{_id: 'test'}],
-            total: 1
-          });
-        };
-        kuzzle.repositories.role.deleteFromDatabase = requestObject => {
-          if (error) {
-            return q.reject(new Error(''));
-          }
-
-          return q({_id: 'test'});
-        };
-      });
+    return kuzzle.start(params, {dummy: true});
   });
 
-  beforeEach(function () {
+  beforeEach(() => {
     error = false;
     mockResponse = {};
+
+    sandbox = sinon.sandbox.create();
+
+    sandbox.stub(kuzzle.repositories.role, 'validateAndSaveRole', role => {
+      if (role._id === 'alreadyExists') {
+        return q.reject();
+      }
+
+      return q(role);
+    });
+
+    sandbox.stub(kuzzle.repositories.role, 'loadOneFromDatabase', id => {
+      if (id === 'badId') {
+        return q(null);
+      }
+
+      return q({
+        _index: kuzzle.config.internalIndex,
+        _type: 'roles',
+        _id: id,
+        _source: {}
+      });
+    });
+
+    sandbox.stub(kuzzle.repositories.role, 'loadMultiFromDatabase', ids => {
+      if (error) {
+        return q.reject(new Error('foobar'));
+      }
+
+      return q(ids.map(id => {
+        return {
+          _id: id,
+          _source: null
+        };
+      }));
+    });
+
+    sandbox.stub(kuzzle.repositories.role, 'search', requestObject => {
+      if (error) {
+        return q.reject(new Error(''));
+      }
+
+      return q({
+        hits: [{_id: 'test'}],
+        total: 1
+      });
+    });
+
+    sandbox.stub(kuzzle.repositories.role, 'deleteFromDatabase', requestObject => {
+      if (error) {
+        return q.reject(new Error(''));
+      }
+
+      return q({_id: 'test'});
+    });
+    sandbox.mock(kuzzle.repositories.profile, 'profiles', {});
+    sandbox.mock(kuzzle.repositories.role, 'roles', {});
   });
+
+  afterEach(() => {
+    sandbox.restore();
+  });
+
 
   describe('#createOrReplaceRole', function () {
     it('should resolve to a responseObject on a createOrReplaceRole call', () => {
       return kuzzle.funnel.controllers.security.createOrReplaceRole(new RequestObject({
-          body: {_id: 'test', indexes: {}}
+          body: {_id: 'test', controllers: {}}
         }))
         .then(result => {
           should(result).be.an.instanceOf(ResponseObject);
@@ -94,7 +108,7 @@ describe('Test: security controller - roles', function () {
   describe('#createRole', function () {
     it('should reject when a role already exists with the id', () => {
       var promise = kuzzle.funnel.controllers.security.createRole(new RequestObject({
-        body: {_id: 'alreadyExists', indexes: {}}
+        body: {_id: 'alreadyExists', controllers: {}}
       }));
 
       return should(promise).be.rejected();
@@ -102,7 +116,7 @@ describe('Test: security controller - roles', function () {
 
     it('should resolve to a responseObject on a createRole call', () => {
       var promise = kuzzle.funnel.controllers.security.createRole(new RequestObject({
-        body: {_id: 'test', indexes: {}}
+        body: {_id: 'test', controllers: {}}
       }));
 
       return should(promise).be.fulfilled();
@@ -221,20 +235,20 @@ describe('Test: security controller - roles', function () {
 
   describe('#deleteRole', function () {
     it('should return response with on deleteRole call', done => {
+      var
+        spyDeleteRole,
+        role = {my: 'role'};
+
+      sandbox.stub(kuzzle.repositories.role, 'getRoleFromRequestObject').returns(role);
+      spyDeleteRole = sandbox.stub(kuzzle.repositories.role, 'deleteRole');
+
       kuzzle.funnel.controllers.security.deleteRole(new RequestObject({
         _id: 'test',
         body: {}
       }))
-        .then(result => {
-          var jsonResponse = result.toJson();
-
-          should(result).be.an.instanceOf(ResponseObject);
-          should(jsonResponse.result._id).be.exactly('test');
-
+        .then(() => {
+          should(spyDeleteRole.calledWith(role)).be.true();
           done();
-        })
-        .catch(error => {
-          done(error);
         });
     });
 

@@ -1,62 +1,58 @@
 var
   should = require('should'),
   rewire = require('rewire'),
-  methods = rewire('../../../../lib/api/dsl/methods'),
-  BadRequestError = require.main.require('lib/api/core/errors/badRequestError'),
-  InternalError = require.main.require('lib/api/core/errors/internalError');
+  md5 = require('crypto-md5'),
+  Filters = require.main.require('lib/api/dsl/filters'),
+  Methods = rewire('../../../../lib/api/dsl/methods'),
+  BadRequestError = require.main.require('kuzzle-common-objects').Errors.badRequestError,
+  InternalError = require.main.require('kuzzle-common-objects').Errors.internalError;
 
 describe('Test exists method', function () {
-
   var
-    roomId = 'roomId',
+    methods,
+    filterId = 'fakeFilterId',
     index = 'test',
     collection = 'collection',
-    documentGrace = {
-      firstName: 'Grace',
-      lastName: 'Hopper'
-    },
-    documentAda = {
-      firstName: 'Ada'
-    },
     filter = {
       field: 'lastName'
-    };
+    },
+    existslastName = md5('existslastName'),
+    fieldLastName = md5('lastName');
 
-
-  before(function () {
-    methods.dsl.filtersTree = {};
-    return methods.exists(roomId, index, collection, filter);
+  beforeEach(function () {
+    methods = new Methods(new Filters());
+    return methods.exists(filterId, index, collection, filter);
   });
 
   it('should construct the filterTree object for the correct attribute', function () {
-    should(methods.dsl.filtersTree).not.be.empty();
-    should(methods.dsl.filtersTree[index]).not.be.empty();
-    should(methods.dsl.filtersTree[index][collection]).not.be.empty();
-    should(methods.dsl.filtersTree[index][collection].fields).not.be.empty();
-    should(methods.dsl.filtersTree[index][collection].fields.lastName).not.be.empty();
+    should(methods.filters.filtersTree).not.be.empty();
+    should(methods.filters.filtersTree[index]).not.be.empty();
+    should(methods.filters.filtersTree[index][collection]).not.be.empty();
+    should(methods.filters.filtersTree[index][collection].fields).not.be.empty();
+    should(methods.filters.filtersTree[index][collection].fields[fieldLastName]).not.be.empty();
   });
 
   it('should construct the filterTree with correct curried function name', function () {
-    should(methods.dsl.filtersTree[index][collection].fields.lastName.existslastName).not.be.empty();
+    should(methods.filters.filtersTree[index][collection].fields[fieldLastName][existslastName]).not.be.empty();
   });
 
   it('should construct the filterTree with correct room list', function () {
-    var rooms;
+    var ids;
 
     // Test gt from filterGrace
-    rooms = methods.dsl.filtersTree[index][collection].fields.lastName.existslastName.rooms;
-    should(rooms).be.an.Array();
-    should(rooms).have.length(1);
-    should(rooms[0]).be.exactly(roomId);
+    ids = methods.filters.filtersTree[index][collection].fields[fieldLastName][existslastName].ids;
+    should(ids).be.an.Array();
+    should(ids).have.length(1);
+    should(ids[0]).be.exactly(filterId);
   });
 
-  it('should construct the filterTree with correct functions exists', function () {
-    var result;
-
-    result = methods.dsl.filtersTree[index][collection].fields.lastName.existslastName.fn(documentGrace);
-    should(result).be.exactly(true);
-    result = methods.dsl.filtersTree[index][collection].fields.lastName.existslastName.fn(documentAda);
-    should(result).be.exactly(false);
+  it('should construct the filterTree with correct exists arguments', function () {
+    should(methods.filters.filtersTree[index][collection].fields[fieldLastName][existslastName].args).match({
+      operator: 'exists',
+      not: undefined,
+      field: 'lastName',
+      value: 'lastName'
+    });
   });
 
   it('should return a rejected promise if the filter argument is empty', function () {
@@ -71,35 +67,28 @@ describe('Test exists method', function () {
     return should(methods.exists('foo', 'index', 'bar', { field: {foo: 'bar'} })).be.rejectedWith(BadRequestError);
   });
 
-  it('should return a rejected promise if buildCurriedFunction fails', function () {
-    return methods.__with__({
-      buildCurriedFunction: function () { return new InternalError('rejected'); }
-    })(function () {
-      return should(methods.exists('foo', 'index', 'bar', { field: 'foo' }));
-    });
+  it('should return a rejected promise if filters.add fails', function () {
+    methods.filters.add = () => new InternalError('rejected');
+    return should(methods.exists('foo', 'index', 'bar', { field: 'foo' })).be.rejected();
   });
 
-  it('should register the filter in the lcao area in case of a "exist" filter', function () {
-    return methods.__with__({
-      buildCurriedFunction: function (index, collection, field, operatorName, value, curriedFunctionName, roomId, not, inGlobals) {
-        should(inGlobals).be.false();
-        should(curriedFunctionName).not.startWith('not');
-        return { path: '' };
-      }
-    })(function () {
-      return should(methods.exists('foo', 'index', 'bar', { field: 'foo' })).be.fulfilled();
-    });
+  it('should register the filter in the local area in case of a "exist" filter', function () {
+    methods.filters.add = function (index, collection, field, operatorName, value, curriedFunctionName, roomId, not, inGlobals) {
+      should(inGlobals).be.false();
+      should(curriedFunctionName).not.startWith('not');
+      return {path: ''};
+    };
+
+    return should(methods.exists('foo', 'index', 'bar', { field: 'foo' })).be.fulfilled();
   });
 
   it('should register the filter in the global area in case of a "not exist" filter', function () {
-    return methods.__with__({
-      buildCurriedFunction: function (index, collection, field, operatorName, value, curriedFunctionName, roomId, not, inGlobals) {
-        should(inGlobals).be.true();
-        should(curriedFunctionName).startWith('not');
-        return { path: '' };
-      }
-    })(function () {
-      return should(methods.exists('foo', 'index', 'bar', { field: 'foo' }, true)).be.fulfilled();
-    });
+    methods.filters.add = function (index, collection, field, operatorName, value, curriedFunctionName, roomId, not, inGlobals) {
+      should(inGlobals).be.true();
+      should(curriedFunctionName).startWith('not');
+      return { path: '' };
+    };
+
+    return should(methods.exists('foo', 'index', 'bar', { field: 'foo' }, true)).be.fulfilled();
   });
 });

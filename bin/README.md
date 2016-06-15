@@ -65,6 +65,12 @@ You can perform a reset followed by a fixtures and/or mappings import by doing:
 $ kuzzle likeAvirgin --fixtures /path/to/the/fixtures/file.json --mappings /path/to/the/mappings/file.json
 ```
 
+## Reset the Kuzzle server from a script or cron
+
+```
+$ kuzzle likeAvirgin --pid `ps aux | grep [K]uzzleServer | awk '{print $1}'` --noint
+```
+
 # Getting help
 
 You can, of course, get some help by using the --help option. 
