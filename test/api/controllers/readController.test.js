@@ -142,20 +142,7 @@ describe('Test: read controller', function () {
         realtime = true;
         return [{name: 'foo', index: 'index'}, {name: 'bar', index: 'index'}, {name: 'baz', index: 'wrong'}];
       };
-
-      kuzzle.repositories.role.roles.anonymous = new Role();
-      params.roleWithoutAdmin._id = 'anonymous';
-      return kuzzle.repositories.role.hydrate(kuzzle.repositories.role.roles.anonymous, params.roleWithoutAdmin)
-        .then(() => {
-          kuzzle.repositories.profile.profiles.anonymous = {_id: 'anonymous', roles: ['anonymous']};
-          return q(kuzzle.repositories.profile.profiles.anonymous);
-        })
-        .then(() => kuzzle.repositories.token.anonymous())
-        .then(token => {
-          context.token = token;
-        });
     });
-
     beforeEach(function () {
       realtime = false;
       stored = false;

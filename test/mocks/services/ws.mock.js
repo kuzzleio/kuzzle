@@ -12,7 +12,15 @@ function WSMock (server) {
   this.listeners = {};
 
   // by calling process nextick, we allow the parent call to attach its own events in time
-  process.nextTick(() => this.server.emit('connection', this));
+  if (this.server) {
+    process.nextTick(() => {
+      this.server.emit('connection', this);
+    });
+  } else {
+    process.nextTick(() => {
+      this.emit('error', new Error('no WS server found'));
+    });
+  }
 
   this.on = (event, cb) => {
     cb = sinon.spy(cb);

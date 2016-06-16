@@ -25,7 +25,8 @@ describe('Test: Internal broker', function () {
       config: {
         internalBroker: {
           host: 'host',
-          port: 'port'
+          port: 'port',
+          retryInterval: 1000
         }
       },
       pluginsManager: {
@@ -137,13 +138,9 @@ describe('Test: Internal broker', function () {
         return new WSServerMock();
       };
 
-      client = new WSBrokerClient('internalBroker', {}, kuzzle.pluginsManager);
+      client = new WSBrokerClient('internalBroker', kuzzle.config.internalBroker, kuzzle.pluginsManager);
       client.ws = () => new WSClientMock(server.server);
 
-      return q.all([
-        server.init(),
-        client.init()
-      ]);
     });
 
     describe('#constructor', () => { });
@@ -151,44 +148,71 @@ describe('Test: Internal broker', function () {
     describe('#init', () => {
 
       it('should attach events', () => {
-        var anotherClient = new WSBrokerClient('internalBroker', kuzzle.config.internalBroker, kuzzle.pluginsManager);
-        anotherClient.ws = () => new WSClientMock(server.server);
 
-        return anotherClient.init()
+        return server.init()
+          .then(() => client.init())
           .then(response => {
             should(response).be.an.instanceOf(WSClientMock);
-            should(anotherClient.client.state).be.exactly('connected');
+            should(client.client.state).be.exactly('connected');
 
             // callbacks initiated by the client
-            should(anotherClient.client.socket.on.firstCall).be.calledWith('message');
-            should(anotherClient.client.socket.on.secondCall).be.calledWith('open');
-            should(anotherClient.client.socket.on.thirdCall).be.calledWith('close');
-            should(anotherClient.client.socket.on.getCall(3)).be.calledWith('error');
+            should(client.client.socket.on.firstCall).be.calledWith('message');
+            should(client.client.socket.on.secondCall).be.calledWith('open');
+            should(client.client.socket.on.thirdCall).be.calledWith('close');
+            should(client.client.socket.on.getCall(3)).be.calledWith('error');
 
             // callbacks initiated by the server
-            should(anotherClient.client.socket.on.getCall(4)).be.calledWith('message');
-            should(anotherClient.client.socket.on.getCall(5)).be.calledWith('close');
-            should(anotherClient.client.socket.on.getCall(6)).be.calledWith('error');
+            should(client.client.socket.on.getCall(4)).be.calledWith('message');
+            should(client.client.socket.on.getCall(5)).be.calledWith('close');
+            should(client.client.socket.on.getCall(6)).be.calledWith('error');
 
             // triggers
-            // a first call is done by the beforeEach hook
-            should(kuzzle.pluginsManager.trigger.callCount).be.exactly(2);
-            should(kuzzle.pluginsManager.trigger.secondCall).be.calledWith('internalBroker:connected', 'Connected to Kuzzle server');
+            should(kuzzle.pluginsManager.trigger.callCount).be.exactly(1);
+            should(kuzzle.pluginsManager.trigger.firstCall).be.calledWith('internalBroker:connected', 'Connected to Kuzzle server');
           });
       });
 
       it ('should return the current promise if already called', () => {
         var
-          beforeInitOnCalls = client.client.socket.on.callCount,
-          init = client.init();
+          beforeInitOnCalls;
 
-        should(init).be.fulfilled();
-        should(client.client.socket.on.callCount).be.exactly(beforeInitOnCalls);
+        return q.all([server.init(),client.init()])
+          .then(() => {
+            beforeInitOnCalls = client.client.socket.on.callCount;
+            return client.init();
+          })
+          .then(() => should(client.client.socket.on.callCount).be.exactly(beforeInitOnCalls));
       });
 
+      it('should wait for the broker server until the connection is established', (done) => {
+        var state = '';
+
+        sinon.spy(client, 'init');
+
+        // we init the client before the server.
+        // The promise is resolved once the server is up and the connection is established
+        // That means: there will be a timeout if the client is not able to retry the connection.
+        client.init()
+          .then(response => {
+            should(response).be.an.instanceOf(WSClientMock);
+            should(client.client.state).be.exactly('connected');
+            should(state).be.exactly('retrying');
+            should(client.init.callCount).be.exactly(2);
+            done();
+          })
+          .catch(err => done(err));
+
+        server.init()
+          .then(() => {
+            state = client.client.state; // should be "retrying", as the client should have already tried to reach the server without success
+            clock.tick(kuzzle.config.internalBroker.retryInterval); // should trigger a new client.init() call
+          });
+      });
     });
 
     describe('#listen & #unsubscribe', () => {
+      beforeEach(() => q.all([server.init(),client.init()]));
+
       it ('should store the cb and send the request to the server', () => {
         var cb = sinon.stub();
 
@@ -224,6 +248,8 @@ describe('Test: Internal broker', function () {
     });
 
     describe('#close', () => {
+      beforeEach(() => q.all([server.init(),client.init()]));
+
       it('should close the socket', () => {
         var socket = client.client.socket;
 
@@ -244,6 +270,8 @@ describe('Test: Internal broker', function () {
     });
 
     describe('#send', () => {
+      beforeEach(() => q.all([server.init(),client.init()]));
+
       it('should send properly envelopped data', () => {
         var
           data = {foo: 'bar'},
@@ -261,6 +289,7 @@ describe('Test: Internal broker', function () {
     });
 
     describe('#events', () => {
+      beforeEach(() => q.all([server.init(),client.init()]));
 
       it('on open, should re-register if some callbacks were attached', () => {
         var
