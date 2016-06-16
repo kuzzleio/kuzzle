@@ -9,7 +9,7 @@
 
   /*
   */
-  "lbBroker": {
+  "proxyBroker": {
     "host": "api",
     "port": 7331,
     "retryInterval": 1000
