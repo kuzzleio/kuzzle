@@ -80,15 +80,15 @@ describe('Test: hotelClerk.addSubscription', function () {
         customer = kuzzle.hotelClerk.customers[connection.id];
         should(customer).be.an.Object();
         should(customer).not.be.empty();
-        should(customer[roomId]).not.be.undefined().and.match(requestObject.metadata);
+        should(customer[roomId]).not.be.eql(undefined).and.match(requestObject.metadata);
 
-        should(kuzzle.hotelClerk.rooms[roomId].channels).be.an.Object().and.not.be.undefined();
+        should(kuzzle.hotelClerk.rooms[roomId].channels).be.an.Object().and.not.be.eql(undefined);
         should(Object.keys(kuzzle.hotelClerk.rooms[roomId].channels).length).be.exactly(1);
 
         channel = Object.keys(kuzzle.hotelClerk.rooms[roomId].channels)[0];
-        should(kuzzle.hotelClerk.rooms[roomId].channels[channel].scope).not.be.undefined().and.be.exactly('all');
-        should(kuzzle.hotelClerk.rooms[roomId].channels[channel].state).not.be.undefined().and.be.exactly('done');
-        should(kuzzle.hotelClerk.rooms[roomId].channels[channel].users).not.be.undefined().and.be.exactly('none');
+        should(kuzzle.hotelClerk.rooms[roomId].channels[channel].scope).not.be.eql(undefined).and.be.exactly('all');
+        should(kuzzle.hotelClerk.rooms[roomId].channels[channel].state).not.be.eql(undefined).and.be.exactly('done');
+        should(kuzzle.hotelClerk.rooms[roomId].channels[channel].users).not.be.eql(undefined).and.be.exactly('none');
       });
   });
 
@@ -248,7 +248,7 @@ describe('Test: hotelClerk.addSubscription', function () {
         kuzzle.hotelClerk.addSubscription(requestObject, {connection: {id: 'anotherID'}, user: null})
           .then(recreated => {
             should(recreated.roomId).be.exactly(response.roomId);
-            should(kuzzle.hotelClerk.rooms[recreated.roomId].destroyed).be.undefined();
+            should(kuzzle.hotelClerk.rooms[recreated.roomId].destroyed).be.eql(undefined);
             should(kuzzle.hotelClerk.rooms[recreated.roomId].customers.length).be.exactly(1);
             should(kuzzle.hotelClerk.rooms[recreated.roomId].customers).match(['anotherID']);
             done();
@@ -262,7 +262,7 @@ describe('Test: hotelClerk.addSubscription', function () {
 
   it('should allow to subscribe to an existing room', done => {
     var
-      roomId,
+      anotherRoomId,
       requestObject1 = new RequestObject({
         controller: 'subscribe',
         index: index,
@@ -288,13 +288,13 @@ describe('Test: hotelClerk.addSubscription', function () {
           }
         });
 
-        roomId = id;
-        requestObject2.body = {roomId: roomId};
+        anotherRoomId = id;
+        requestObject2.body = {roomId: anotherRoomId};
         return kuzzle.hotelClerk.join(requestObject2, {connection: 'connection2', user: null});
       })
       .then(result => {
         should(result).be.an.Object();
-        should(result).have.property('roomId', roomId);
+        should(result).have.property('roomId', anotherRoomId);
         should(result).have.property('channel');
         done();
       })

@@ -83,7 +83,7 @@ describe('Test: routerController.routeMQListener', function () {
   it('should register a global listener', function () {
     var listener = kuzzle.services.list.mqBroker.listeners[router.routename];
 
-    should(listener).not.be.undefined();
+    should(listener).not.be.eql(undefined);
     should(listener.type).be.exactly('listenExchange');
   });
 
@@ -102,7 +102,7 @@ describe('Test: routerController.routeMQListener', function () {
       }
 
       try {
-        should(forwardedObject.data.body).not.be.null();
+        should(forwardedObject.data.body).not.be.eql(null);
         should(forwardedObject.protocol).be.exactly('mq');
         should(forwardedObject.controller).be.exactly('write');
         should(forwardedObject.collection).be.exactly('foobar');
@@ -136,7 +136,7 @@ describe('Test: routerController.routeMQListener', function () {
       }
 
       try {
-        should(forwardedObject.data.body).not.be.null();
+        should(forwardedObject.data.body).not.be.eql(null);
         should(forwardedObject.protocol).be.exactly('mq');
         should(forwardedObject.controller).be.exactly('write');
         should(forwardedObject.collection).be.exactly('foobar');

@@ -22,6 +22,7 @@ describe('Test ids method', function () {
     fieldId = md5('_id');
 
   beforeEach(function () {
+    /** @type Methods */
     methods = new Methods(new Filters());
     return methods.ids(filterIdMatch, index, collection, filter, false)
       .then(() => methods.ids(filterIdNot, index, collection, filter, true));

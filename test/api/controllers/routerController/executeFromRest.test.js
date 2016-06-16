@@ -5,7 +5,7 @@
 
 var
   should = require('should'),
-  params = require('rc')('kuzzle'),
+  kuzzleParams = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   rewire = require('rewire'),
   RouterController = rewire('../../../../lib/api/controllers/routerController'),
@@ -57,7 +57,7 @@ describe('Test: routerController.executeFromRest', function () {
       };
 
     kuzzle = new Kuzzle();
-    kuzzle.start(params, {dummy: true})
+    kuzzle.start(kuzzleParams, {dummy: true})
       .then(function () {
         kuzzle.funnel.execute = mockupFunnel;
         RouterController.router = mockupRouterListener;
@@ -74,12 +74,12 @@ describe('Test: routerController.executeFromRest', function () {
     executeFromRest.call(kuzzle, callParams, {headers: {'content-type': 'application/json'}, params: { collection: 'foobar', index: '%test'}}, mockupResponse);
 
     should(mockupResponse.statusCode).be.exactly(400);
-    should(mockupResponse.header['Content-Type']).not.be.undefined();
+    should(mockupResponse.header['Content-Type']).not.be.eql(undefined);
     should(mockupResponse.header['Content-Type']).be.exactly('application/json');
-    should(mockupResponse.response.result).be.null();
+    should(mockupResponse.response.result).be.eql(null);
     should(mockupResponse.response.status).be.exactly(400);
-    should(mockupResponse.response.error).not.be.null();
-    should(mockupResponse.response.error.message).not.be.null();
+    should(mockupResponse.response.error).not.be.eql(null);
+    should(mockupResponse.response.error.message).not.be.eql(null);
     should(mockupResponse.response.error.message).be.exactly('The "controller" argument is missing');
   });
 
@@ -92,12 +92,12 @@ describe('Test: routerController.executeFromRest', function () {
     executeFromRest.call(kuzzle, params, data, mockupResponse);
 
     should(mockupResponse.statusCode).be.exactly(400);
-    should(mockupResponse.header['Content-Type']).not.be.undefined();
+    should(mockupResponse.header['Content-Type']).not.be.eql(undefined);
     should(mockupResponse.header['Content-Type']).be.exactly('application/json');
-    should(mockupResponse.response.result).be.null();
+    should(mockupResponse.response.result).be.eql(null);
     should(mockupResponse.response.status).be.exactly(400);
-    should(mockupResponse.response.error).not.be.null();
-    should(mockupResponse.response.error.message).not.be.null();
+    should(mockupResponse.response.error).not.be.eql(null);
+    should(mockupResponse.response.error.message).not.be.eql(null);
     should(mockupResponse.response.error.message).startWith('Invalid request content-type');
   });
 
@@ -110,12 +110,12 @@ describe('Test: routerController.executeFromRest', function () {
     executeFromRest.call(kuzzle, params, data, mockupResponse);
 
     should(mockupResponse.statusCode).be.exactly(400);
-    should(mockupResponse.header['Content-Type']).not.be.undefined();
+    should(mockupResponse.header['Content-Type']).not.be.eql(undefined);
     should(mockupResponse.header['Content-Type']).be.exactly('application/json');
-    should(mockupResponse.response.result).be.null();
+    should(mockupResponse.response.result).be.eql(null);
     should(mockupResponse.response.status).be.exactly(400);
-    should(mockupResponse.response.error).not.be.null();
-    should(mockupResponse.response.error.message).not.be.null();
+    should(mockupResponse.response.error).not.be.eql(null);
+    should(mockupResponse.response.error.message).not.be.eql(null);
     should(mockupResponse.response.error.message).startWith('Charset of the Request content-type must be utf-8');
   });
 
@@ -136,11 +136,11 @@ describe('Test: routerController.executeFromRest', function () {
 
       try {
         should(mockupResponse.statusCode).be.exactly(200);
-        should(mockupResponse.header['Content-Type']).not.be.undefined();
+        should(mockupResponse.header['Content-Type']).not.be.eql(undefined);
         should(mockupResponse.header['Content-Type']).be.exactly('application/json');
         should(mockupResponse.response.status).be.exactly(200);
-        should(mockupResponse.response.error).be.null();
-        should(mockupResponse.response).be.not.null();
+        should(mockupResponse.response.error).be.eql(null);
+        should(mockupResponse.response).be.not.eql(null);
         should(mockupResponse.response.action).be.exactly('create');
         should(mockupResponse.response.controller).be.exactly('write');
 
@@ -171,11 +171,11 @@ describe('Test: routerController.executeFromRest', function () {
 
       try {
         should(mockupResponse.statusCode).be.exactly(200);
-        should(mockupResponse.header['Content-Type']).not.be.undefined();
+        should(mockupResponse.header['Content-Type']).not.be.eql(undefined);
         should(mockupResponse.header['Content-Type']).be.exactly('application/json');
         should(mockupResponse.response.status).be.exactly(200);
-        should(mockupResponse.response.error).be.null();
-        should(mockupResponse.response).be.not.null();
+        should(mockupResponse.response.error).be.eql(null);
+        should(mockupResponse.response).be.not.eql(null);
         should(mockupResponse.response.action).be.exactly('create');
         should(mockupResponse.response.controller).be.exactly('write');
 
@@ -199,7 +199,7 @@ describe('Test: routerController.executeFromRest', function () {
         },
         params: {index: '%test', ollection: 'foobar'},
         originalUrl: 'http://host.url'
-    };
+      };
 
     mockupResponse.init();
     executeFromRest.call(kuzzle, params, data, mockupResponse);
@@ -213,11 +213,11 @@ describe('Test: routerController.executeFromRest', function () {
 
       try {
         should(mockupResponse.statusCode).be.exactly(200);
-        should(mockupResponse.header['Content-Type']).not.be.undefined();
+        should(mockupResponse.header['Content-Type']).not.be.eql(undefined);
         should(mockupResponse.header['Content-Type']).be.exactly('application/json');
         should(mockupResponse.response.status).be.exactly(200);
-        should(mockupResponse.response.error).be.null();
-        should(mockupResponse.response).be.not.null();
+        should(mockupResponse.response.error).be.eql(null);
+        should(mockupResponse.response).be.not.eql(null);
         should(mockupResponse.response.action).be.exactly('publish');
         should(mockupResponse.response.controller).be.exactly('write');
 
@@ -243,13 +243,13 @@ describe('Test: routerController.executeFromRest', function () {
     setTimeout(function () {
       try {
         should(mockupResponse.statusCode).be.exactly(500);
-        should(mockupResponse.header['Content-Type']).not.be.undefined();
+        should(mockupResponse.header['Content-Type']).not.be.eql(undefined);
         should(mockupResponse.header['Content-Type']).be.exactly('application/json');
         should(mockupResponse.response.status).be.exactly(500);
-        should(mockupResponse.response.error).not.be.null();
-        should(mockupResponse.response.error.message).not.be.null();
+        should(mockupResponse.response.error).not.be.eql(null);
+        should(mockupResponse.response.error.message).not.be.eql(null);
         should(mockupResponse.response.error.message).be.exactly('rejected');
-        should(mockupResponse.response.result).be.null();
+        should(mockupResponse.response.result).be.eql(null);
         done();
       }
       catch (e) {
@@ -261,7 +261,7 @@ describe('Test: routerController.executeFromRest', function () {
   it('should use the request content instead of the metadata to complete missing information', function (done) {
     var
       callParams = {controller: 'write' },
-      data = {headers: {'content-type': 'application/json'}, body: {resolve: true}, params: {index: '%test', collection: 'foobar',  action: 'create'}, originalUrl: 'http://host.url'};
+      data = {headers: {'content-type': 'application/json'}, body: {resolve: true}, params: {index: '%test', collection: 'foobar', action: 'create'}, originalUrl: 'http://host.url'};
 
     mockupResponse.init();
     executeFromRest.call(kuzzle, callParams, data, mockupResponse);
@@ -269,11 +269,11 @@ describe('Test: routerController.executeFromRest', function () {
     setTimeout(function () {
       try {
         should(mockupResponse.statusCode).be.exactly(200);
-        should(mockupResponse.header['Content-Type']).not.be.undefined();
+        should(mockupResponse.header['Content-Type']).not.be.eql(undefined);
         should(mockupResponse.header['Content-Type']).be.exactly('application/json');
         should(mockupResponse.response.status).be.exactly(200);
-        should(mockupResponse.response.error).be.null();
-        should(mockupResponse.response).be.not.null();
+        should(mockupResponse.response.error).be.eql(null);
+        should(mockupResponse.response).be.not.eql(null);
         should(mockupResponse.response.action).be.exactly('create');
         should(mockupResponse.response.controller).be.exactly('write');
         done();
@@ -287,7 +287,7 @@ describe('Test: routerController.executeFromRest', function () {
   it('should copy any found "id" identifier', function (done) {
     var
       callParams = {controller: 'write' },
-      data = {headers: {'content-type': 'application/json'}, body: {resolve: true}, params: {index: '%test', collection: 'foobar',  action: 'create', id: 'fakeid'}, originalUrl: 'http://host.url'};
+      data = {headers: {'content-type': 'application/json'}, body: {resolve: true}, params: {index: '%test', collection: 'foobar', action: 'create', id: 'fakeid'}, originalUrl: 'http://host.url'};
 
     mockupResponse.init();
     executeFromRest.call(kuzzle, callParams, data, mockupResponse);
@@ -295,11 +295,11 @@ describe('Test: routerController.executeFromRest', function () {
     setTimeout(function () {
       try {
         should(mockupResponse.statusCode).be.exactly(200);
-        should(mockupResponse.header['Content-Type']).not.be.undefined();
+        should(mockupResponse.header['Content-Type']).not.be.eql(undefined);
         should(mockupResponse.header['Content-Type']).be.exactly('application/json');
         should(mockupResponse.response.status).be.exactly(200);
-        should(mockupResponse.response.error).be.null();
-        should(mockupResponse.response).be.not.null();
+        should(mockupResponse.response.error).be.eql(null);
+        should(mockupResponse.response).be.not.eql(null);
         should(mockupResponse.response.action).be.exactly('create');
         should(mockupResponse.response.controller).be.exactly('write');
         should(savedRequestObject.data._id).be.exactly('fakeid');

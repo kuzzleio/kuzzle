@@ -1,6 +1,5 @@
 var
   should = require('should'),
-  q = require('q'),
   params = require('rc')('kuzzle'),
   rewire = require('rewire'),
   Redis = rewire('../../lib/services/redis'),
@@ -80,7 +79,7 @@ describe('Test redis service', function () {
     testredis.init()
       .then(() => done('should have failed connecting to redis'))
       .catch(() => done())
-      .finally(() => kuzzle.config.cache.node.port = savePort);
+      .finally(() => {kuzzle.config.cache.node.port = savePort;});
   });
 
   it('should resolve 0 when add a key without value', function () {

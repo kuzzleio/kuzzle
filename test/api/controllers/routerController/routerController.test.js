@@ -7,7 +7,6 @@ var
   Token = require.main.require('lib/api/core/models/security/token'),
   Profile = require.main.require('lib/api/core/models/security/profile'),
   Role = require.main.require('lib/api/core/models/security/role'),
-  ResponseObject = require.main.require('kuzzle-common-objects').Models.responseObject,
   PluginImplementationError = require.main.require('kuzzle-common-objects').Errors.pluginImplementationError;
 
 describe('Test: routerController', () => {
@@ -32,7 +31,7 @@ describe('Test: routerController', () => {
       should(context.connection).be.an.Object();
       should(context.connection.id).be.eql(userId);
       should(context.connection.type).be.eql(protocol);
-      should(context.token).be.null();
+      should(context.token).be.eql(null);
     });
 
     it('should declare a new connection to the statistics core component', () => {
@@ -44,7 +43,7 @@ describe('Test: routerController', () => {
         should(context.connection).be.an.Object();
         should(context.connection.id).be.eql(userId);
         should(context.connection.type).be.eql(protocol);
-        should(context.token).be.null();
+        should(context.token).be.eql(null);
         newConnectionDeclared = true;
       };
 
@@ -83,11 +82,11 @@ describe('Test: routerController', () => {
               user = new User();
 
             role.controllers = {
-                '*': {
-                  actions: {
-                    '*': true
-                  }
+              '*': {
+                actions: {
+                  '*': true
                 }
+              }
             };
 
             user._id = 'testUser';

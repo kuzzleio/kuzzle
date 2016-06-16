@@ -17,7 +17,8 @@ describe('Test: Prepare database', function () {
     indexCreated,
     internalIndexCreated,
     mappingsImported,
-    fixturesImported;
+    fixturesImported,
+    prepareDb;
 
   beforeEach(function (done) {
     prepareDb = rewire('../../../../lib/api/controllers/remoteActions/prepareDb');
@@ -140,7 +141,7 @@ describe('Test: Prepare database', function () {
       context.files.foo = null;
 
       readFile.call(context, 'foo')
-        .then(data => {
+        .then(() => {
           should(context.data.foo).be.eql({});
           done();
         })
@@ -152,7 +153,7 @@ describe('Test: Prepare database', function () {
       context.files.fixtures = 'fixtures';
 
       readFile.call(context, 'fixtures')
-        .then(data => {
+        .then(() => {
           should(context.data).be.an.Object().and.be.eql({fixtures: JSON.parse(fileContent)});
           done();
         })
@@ -171,14 +172,11 @@ describe('Test: Prepare database', function () {
       context,
       createIndexes,
       workerCalled,
-      indexCreated,
       indexAdded,
-      workerPromise,
-      prepareDb;
+      workerPromise;
 
     before(function () {
-      prepareDb = rewire('../../../../lib/api/controllers/remoteActions/prepareDb');
-      createIndexes = prepareDb.__get__('createIndexes');
+      createIndexes = rewire('../../../../lib/api/controllers/remoteActions/prepareDb').__get__('createIndexes');
     });
 
     beforeEach(function () {
@@ -198,7 +196,7 @@ describe('Test: Prepare database', function () {
             add: (rq) => {
               should(rq.controller).be.eql('admin');
               should(rq.action).be.eql('createIndex');
-              should(rq.index).not.be.undefined();
+              should(rq.index).not.be.eql(undefined);
               workerCalled = true;
               indexCreated.push(rq.index);
               return workerPromise;
@@ -206,7 +204,7 @@ describe('Test: Prepare database', function () {
           },
           indexCache: {
             indexes: {},
-            add: () => indexAdded = true
+            add: () => {indexAdded = true;}
           }
         },
         data: {
@@ -219,7 +217,7 @@ describe('Test: Prepare database', function () {
     it('should do nothing if there is no data mapping and no data fixtures', function (done) {
       createIndexes.call(context)
         .then(data => {
-          should(data).be.undefined();
+          should(data).be.eql(undefined);
           should(workerCalled).be.false();
           should(indexAdded).be.false();
           done();
@@ -236,7 +234,7 @@ describe('Test: Prepare database', function () {
 
       createIndexes.call(context)
         .then(data => {
-          should(data).be.undefined();
+          should(data).be.eql(undefined);
           should(workerCalled).be.true();
           should(indexAdded).be.true();
           should(indexCreated.length).be.eql(Object.keys(context.data.mappings).length);
@@ -255,7 +253,7 @@ describe('Test: Prepare database', function () {
 
       createIndexes.call(context)
         .then(data => {
-          should(data).be.undefined();
+          should(data).be.eql(undefined);
           should(workerCalled).be.true();
           should(indexAdded).be.true();
           should(indexCreated.length).be.eql(Object.keys(context.data.fixtures).length);
@@ -276,7 +274,7 @@ describe('Test: Prepare database', function () {
 
       createIndexes.call(context)
         .then(data => {
-          should(data).be.undefined();
+          should(data).be.eql(undefined);
           should(workerCalled).be.true();
           should(indexAdded).be.true();
           should(indexCreated.length).be.eql(1);
@@ -306,12 +304,10 @@ describe('Test: Prepare database', function () {
       importMapping,
       workerCalled,
       mappingCreated,
-      workerPromise,
-      prepareDb;
+      workerPromise;
 
     before(function () {
-      prepareDb = rewire('../../../../lib/api/controllers/remoteActions/prepareDb');
-      importMapping = prepareDb.__get__('importMapping');
+      importMapping = rewire('../../../../lib/api/controllers/remoteActions/prepareDb').__get__('importMapping');
     });
 
     beforeEach(function () {
@@ -358,7 +354,7 @@ describe('Test: Prepare database', function () {
 
       importMapping.call(context)
         .then(data => {
-          should(data).be.undefined();
+          should(data).be.eql(undefined);
           should(workerCalled).be.false();
           done();
         })
@@ -373,7 +369,7 @@ describe('Test: Prepare database', function () {
     it('should call the write worker with the right arguments to import mappings', function (done) {
       importMapping.call(context)
         .then(data => {
-          should(data).be.undefined();
+          should(data).be.eql(undefined);
           should(workerCalled).be.true();
           should(mappingCreated).be.eql(context.data.mappings.index.collection);
           done();
@@ -394,13 +390,10 @@ describe('Test: Prepare database', function () {
       stubCollection = 'collection',
       importFixtures,
       workerCalled,
-      fixturesImported,
-      workerPromise,
-      prepareDb;
+      workerPromise;
 
     before(function () {
-      prepareDb = rewire('../../../../lib/api/controllers/remoteActions/prepareDb');
-      importFixtures = prepareDb.__get__('importFixtures');
+      importFixtures = rewire('../../../../lib/api/controllers/remoteActions/prepareDb').__get__('importFixtures');
     });
 
     beforeEach(function () {
@@ -444,7 +437,7 @@ describe('Test: Prepare database', function () {
       context.data.fixtures = {};
       importFixtures.call(context)
         .then(data => {
-          should(data).be.undefined();
+          should(data).be.eql(undefined);
           should(workerCalled).be.false();
           done();
         })
@@ -454,7 +447,7 @@ describe('Test: Prepare database', function () {
     it('should call the write worker with the right request object', function (done) {
       importFixtures.call(context)
         .then(data => {
-          should(data).be.undefined();
+          should(data).be.eql(undefined);
           should(workerCalled).be.true();
           should(fixturesImported).be.eql(context.data.fixtures.index.collection);
           done();
@@ -480,11 +473,10 @@ describe('Test: Prepare database', function () {
       indexAdded,
       requests,
       createInternalStructure,
-      params = rc('kuzzle');
+      roleWithoutAdmin = rc('kuzzle').roleWithoutAdmin;
 
     before(function () {
-      prepareDb = rewire('../../../../lib/api/controllers/remoteActions/prepareDb');
-      createInternalStructure = prepareDb.__get__('createInternalStructure');
+      createInternalStructure = rewire('../../../../lib/api/controllers/remoteActions/prepareDb').__get__('createInternalStructure');
     });
 
     beforeEach(function () {
@@ -493,12 +485,10 @@ describe('Test: Prepare database', function () {
       requests = [];
 
       context = {
-        defaultRoleDefinition: params.roleWithoutAdmin,
+        defaultRoleDefinition: roleWithoutAdmin,
         kuzzle: {
           indexCache: {
-            indexes: {
-
-            },
+            indexes: {}
           },
           pluginsManager: {
             trigger: function (event, data) {
@@ -560,7 +550,7 @@ describe('Test: Prepare database', function () {
           should(requests[0].action).be.eql('createIndex');
           should(requests[0].index).be.eql(context.kuzzle.config.internalIndex);
           should(indexAdded[0].index).be.eql(context.kuzzle.config.internalIndex);
-          should(indexAdded[0].collection).be.undefined();
+          should(indexAdded[0].collection).be.eql(undefined);
 
           should(requests[1].controller).be.eql('admin');
           should(requests[1].action).be.eql('updateMapping');

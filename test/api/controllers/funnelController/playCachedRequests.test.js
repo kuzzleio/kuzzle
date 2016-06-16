@@ -1,6 +1,5 @@
 var
   should = require('should'),
-  q = require('q'),
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,

@@ -96,7 +96,7 @@ describe('Test: ElasticSearch service', function () {
 
       should(preparedData.type).be.exactly(requestObject.collection);
       should(preparedData.id).be.exactly(requestObject.data._id);
-      should(preparedData._id).be.undefined();
+      should(preparedData._id).be.eql(undefined);
       should(preparedData.index).be.exactly(requestObject.index);
 
       // we expect all properties expect _id to be carried over the new data object
@@ -287,7 +287,7 @@ describe('Test: ElasticSearch service', function () {
         .catch(() => {
           try {
             should(spy.calledOnce).be.true();
-            should(spy.firstCall.args[0].id).be.undefined();
+            should(spy.firstCall.args[0].id).be.eql(undefined);
             done();
           }
           catch(e) { done(e); }
@@ -314,7 +314,7 @@ describe('Test: ElasticSearch service', function () {
       elasticsearch.mget(requestObject)
         .catch(() => {
           try {
-            should(spy.firstCall.args[0].body.ids).be.undefined();
+            should(spy.firstCall.args[0].body.ids).be.eql(undefined);
             done();
           }
           catch(e) { done(e); }
@@ -387,7 +387,7 @@ describe('Test: ElasticSearch service', function () {
       elasticsearch.update(requestObject)
         .catch(() => {
           try{
-            should(spy.firstCall.args[0].id).be.undefined();
+            should(spy.firstCall.args[0].id).be.eql(undefined);
             done();
           }
           catch(e) { done(e); }
@@ -423,7 +423,7 @@ describe('Test: ElasticSearch service', function () {
       elasticsearch.delete(requestObject)
         .catch(() => {
           try {
-            should(spy.firstCall.args[0].id).be.undefined();
+            should(spy.firstCall.args[0].id).be.eql(undefined);
             done();
           }
           catch(e) { done(e); }
@@ -443,7 +443,7 @@ describe('Test: ElasticSearch service', function () {
           should(spy.firstCall.args[0].query).be.exactly(requestObject.data.query);
 
           // Ugly line in order to spot a random bug on this unit test
-          should(result.ids).not.be.undefined().and.be.an.Array();
+          should(result.ids).not.be.eql(undefined).and.be.an.Array();
           should(result.ids.length).be.exactly(0);
         })).be.fulfilled();
     });
@@ -465,18 +465,18 @@ describe('Test: ElasticSearch service', function () {
             var bulkData = spy.firstCall.args[0];
 
             // elasticsearch.client.bullk
-            should(bulkData.body).not.be.undefined().and.be.an.Array();
+            should(bulkData.body).not.be.eql(undefined).and.be.an.Array();
             should(bulkData.body.length).be.exactly(mockupIds.length);
 
             bulkData.body.forEach(function (cmd) {
               should(cmd).be.an.Object();
-              should(cmd.delete).not.be.undefined().and.be.an.Object();
+              should(cmd.delete).not.be.eql(undefined).and.be.an.Object();
               should(mockupIds.indexOf(cmd.delete._id)).not.be.eql(-1);
               should(cmd.delete._type).be.exactly(requestObject.collection);
             });
 
             // elasticserach.deleteByQuery
-            should(result.ids).not.be.undefined().and.be.an.Array();
+            should(result.ids).not.be.eql(undefined).and.be.an.Array();
             should(result.ids).match(mockupIds);
 
             // refreshIndexIfNeeded
@@ -703,8 +703,8 @@ describe('Test: ElasticSearch service', function () {
 
       return should(elasticsearch.getMapping(requestObject)
         .then(result => {
-          should(result[requestObject.index]).not.be.undefined();
-          should(result[requestObject.index].mappings).not.be.undefined();
+          should(result[requestObject.index]).not.be.eql(undefined);
+          should(result[requestObject.index].mappings).not.be.eql(undefined);
         })).be.fulfilled();
     });
 
@@ -731,11 +731,10 @@ describe('Test: ElasticSearch service', function () {
   describe('#getAllIdsFromQuery', function () {
     it('should be able to get every ids matching a query', () => {
       var
-        spy,
         getAllIdsFromQuery = ES.__get__('getAllIdsFromQuery'),
         ids = ['foo', 'bar'];
 
-      spy = sandbox.stub(elasticsearch.client, 'search').yields(null, {
+      sandbox.stub(elasticsearch.client, 'search').yields(null, {
         hits: {
           hits: [{_id: 'foo'}, {_id: 'bar'}],
           total: 2
@@ -890,7 +889,7 @@ describe('Test: ElasticSearch service', function () {
     });
 
     it('should reject the deleteIndex promise if elasticsearch throws an error', () => {
-      elasticsearch.client.indices.delete = function (data) {
+      elasticsearch.client.indices.delete = function () {
         return q.reject(new Error());
       };
 

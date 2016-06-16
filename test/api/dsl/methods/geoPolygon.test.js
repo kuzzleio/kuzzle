@@ -49,6 +49,7 @@ describe('Test "geoPolygon" method', function () {
     fieldLocation = md5('location');
 
   beforeEach(function () {
+    /** @type Methods */
     methods = new Methods(new Filters());
 
     return methods.geoPolygon(filterId, index, collection, filterExact)

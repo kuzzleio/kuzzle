@@ -1,5 +1,4 @@
 var
-  _ = require('lodash'),
   q = require('q'),
   sinon = require('sinon'),
   params = require('rc')('kuzzle'),
@@ -58,8 +57,8 @@ describe('Test: repositories/profileRepository', () => {
           );
         }
       }
-
-    };
+    },
+    sandbox;
 
   before(() => {
     kuzzle = new Kuzzle();
@@ -90,7 +89,7 @@ describe('Test: repositories/profileRepository', () => {
       sandbox.stub(kuzzle.services.list.readEngine, 'get').rejects(new NotFoundError('Not found'));
       return kuzzle.repositories.profile.loadProfile('idontexist')
         .then(result => {
-          should(result).be.null();
+          should(result).be.eql(null);
         });
     });
 
@@ -263,8 +262,8 @@ describe('Test: repositories/profileRepository', () => {
   describe('#searchProfiles', () => {
     it('should return a ResponseObject containing an array of profiles', () => {
       sandbox.stub(kuzzle.repositories.profile, 'search').resolves({
-          hits: [{_id: 'test'}],
-          total: 1
+        hits: [{_id: 'test'}],
+        total: 1
       });
 
       return kuzzle.repositories.profile.searchProfiles([])

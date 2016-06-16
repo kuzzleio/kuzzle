@@ -45,7 +45,7 @@ describe('Test: entryPoints/lb', function () {
   it('should init listeners on init call', function () {
     var
       lb = new Lb(kuzzle),
-      spyListen = sandbox.stub(lb.kuzzle.services.list.lbBroker, 'listen');
+      spyListen = sandbox.stub(kuzzle.services.list.lbBroker, 'listen');
 
     lb.init();
     should(spyListen.calledWith('request')).be.true();
@@ -59,7 +59,7 @@ describe('Test: entryPoints/lb', function () {
     var
       lb = new Lb(kuzzle),
       data = {my: 'data'},
-      spyListen = sandbox.stub(lb.kuzzle.services.list.lbBroker, 'send');
+      spyListen = sandbox.stub(kuzzle.services.list.lbBroker, 'send');
 
     lb.joinChannel(data);
     should(spyListen.calledWith('joinChannel', data)).be.true();
@@ -70,7 +70,7 @@ describe('Test: entryPoints/lb', function () {
     var
       lb = new Lb(kuzzle),
       data = {my: 'data'},
-      spyListen = sandbox.stub(lb.kuzzle.services.list.lbBroker, 'send');
+      spyListen = sandbox.stub(kuzzle.services.list.lbBroker, 'send');
 
     lb.leaveChannel(data);
     should(spyListen.calledWith('leaveChannel', data)).be.true();
@@ -138,7 +138,7 @@ describe('Test: entryPoints/lb', function () {
     var
       lb = new Lb(kuzzle),
       data = {my: 'data'},
-      spyListen = sandbox.stub(lb.kuzzle.services.list.lbBroker, 'send');
+      spyListen = sandbox.stub(kuzzle.services.list.lbBroker, 'send');
 
     lb.notify(data);
     should(spyListen.calledWith('notify', data)).be.true();
@@ -149,7 +149,7 @@ describe('Test: entryPoints/lb', function () {
     var
       lb = new Lb(kuzzle),
       data = {my: 'data'},
-      spyListen = sandbox.stub(lb.kuzzle.services.list.lbBroker, 'send');
+      spyListen = sandbox.stub(kuzzle.services.list.lbBroker, 'send');
 
     lb.broadcast(data);
     should(spyListen.calledWith('broadcast', data)).be.true();

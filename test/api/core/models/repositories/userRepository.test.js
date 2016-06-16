@@ -27,8 +27,7 @@ before(function (done) {
     mockWriteLayer,
     mockProfileRepository,
     userInCache,
-    userInDB,
-    forwardedResult;
+    userInDB;
 
   mockCacheEngine = {
     get: function (key) {
@@ -37,8 +36,8 @@ before(function (done) {
       }
       return q(null);
     },
-    volatileSet: function (key, value, ttl) { forwardedResult = {key: key, value: JSON.parse(value), ttl: ttl }; return q('OK'); },
-    expire: function (key, ttl) { forwardedResult = {key: key, ttl: ttl}; return q('OK'); }
+    volatileSet: function () {return q('OK');},
+    expire: function () {return q('OK'); }
   };
 
   mockReadEngine = {
@@ -185,7 +184,7 @@ describe('Test: repositories/userRepository', function () {
 
     it('should resolve to "null" if username is not found', () => {
       return userRepository.load('unknownUser')
-        .then(user => should(user).be.null());
+        .then(user => should(user).be.eql(null));
     });
 
     it('should reject the promise if an error occurred while fetching the user', () => {
@@ -232,13 +231,13 @@ describe('Test: repositories/userRepository', function () {
   describe('#defaultProfile', () => {
     it('should add the default profile when the user do not have any profile set', () => {
       var
-        userRepository = new UserRepository(),
+        userRepo = new UserRepository(),
         user = new User();
 
       user.name = 'No Profile';
       user._id = 'NoProfile';
 
-      return userRepository.hydrate(user, {})
+      return userRepo.hydrate(user, {})
         .then(result => should(result.profile._id).be.eql('default'));
     });
   });

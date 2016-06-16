@@ -38,12 +38,12 @@ describe('Test: token manager core component', function () {
   describe('#add', function () {
     it('should not add a token if the context does not contain a connection object', function () {
       tokenManager.add(token, {});
-      should(tokenManager.tokenizedConnections.foobar).be.undefined();
+      should(tokenManager.tokenizedConnections.foobar).be.eql(undefined);
     });
 
     it('should not add a token if the context connection does not contain an id', function () {
       tokenManager.add(token, {connection: {}});
-      should(tokenManager.tokenizedConnections.foobar).be.undefined();
+      should(tokenManager.tokenizedConnections.foobar).be.eql(undefined);
     });
 
     it('should add the token if the context is properly formatted', function () {
@@ -55,29 +55,29 @@ describe('Test: token manager core component', function () {
   });
 
   describe('#add', function () {
-    var token;
+    var anotherToken;
 
     beforeEach(function () {
-      token = {_id: 'foobar', expiresAt: Date.now()+1000};
+      anotherToken = {_id: 'foobar', expiresAt: Date.now()+1000};
     });
 
     it('should not add a token if the context does not contain a connection object', function () {
-      tokenManager.add(token, {});
-      should(tokenManager.tokenizedConnections.foobar).be.undefined();
+      tokenManager.add(anotherToken, {});
+      should(tokenManager.tokenizedConnections.foobar).be.eql(undefined);
     });
 
     it('should not add a token if the context connection does not contain an id', function () {
-      tokenManager.add(token, {connection: {}});
-      should(tokenManager.tokenizedConnections.foobar).be.undefined();
+      tokenManager.add(anotherToken, {connection: {}});
+      should(tokenManager.tokenizedConnections.foobar).be.eql(undefined);
     });
 
     it('should add the token if the context is properly formatted', function () {
       var
         context = {connection: {id: 'foo'}};
       
-      tokenManager.add(token, context);
+      tokenManager.add(anotherToken, context);
       should(tokenManager.tokenizedConnections.foobar).be.an.Object();
-      should(tokenManager.tokenizedConnections.foobar.expiresAt).be.eql(token.expiresAt);
+      should(tokenManager.tokenizedConnections.foobar.expiresAt).be.eql(anotherToken.expiresAt);
       should(tokenManager.tokenizedConnections.foobar.connection).be.eql(context.connection);
     });
   });
@@ -105,7 +105,7 @@ describe('Test: token manager core component', function () {
         connectionId = id;
       };
 
-      kuzzle.hotelClerk.removeCustomerFromAllRooms = () => subscriptionsCleaned = true;
+      kuzzle.hotelClerk.removeCustomerFromAllRooms = () => {subscriptionsCleaned = true;};
     });
 
     beforeEach(function () {
@@ -131,7 +131,7 @@ describe('Test: token manager core component', function () {
 
       tokenManager.checkTokensValidity();
 
-      should(notification).be.null();
+      should(notification).be.eql(null);
       should(subscriptionsCleaned).be.false();
       should(tokenManager.tokenizedConnections.foo).match({expiresAt: stubTokens.foo.expiresAt, connection: contextStub.connection});
       should(tokenManager.tokenizedConnections.bar).match({expiresAt: stubTokens.bar.expiresAt, connection: contextStub.connection});
@@ -162,7 +162,7 @@ describe('Test: token manager core component', function () {
       should(notification.requestId).be.eql('server notification');
       should(notification.controller).be.eql('auth');
       should(notification.action).be.eql('jwtTokenExpired');
-      should(tokenManager.tokenizedConnections.foo).be.undefined();
+      should(tokenManager.tokenizedConnections.foo).be.eql(undefined);
       should(tokenManager.tokenizedConnections.bar).match({expiresAt: stubTokens.bar.expiresAt, connection: contextStub.connection});
     });
 
@@ -185,8 +185,8 @@ describe('Test: token manager core component', function () {
       tokenManager.checkTokensValidity();
 
       should(subscriptionsCleaned).be.false();
-      should(notification).be.null();
-      should(tokenManager.tokenizedConnections.foo).be.undefined();
+      should(notification).be.eql(null);
+      should(tokenManager.tokenizedConnections.foo).be.eql(undefined);
       should(tokenManager.tokenizedConnections.bar).match({expiresAt: stubTokens.bar.expiresAt, connection: contextStub.connection});
     });
   });

@@ -65,12 +65,14 @@ describe('Test: Internal broker', function () {
 
     beforeEach(() => {
       var InternalBroker = new BrokerFactory('internalBroker');
+      /** @type InternalBroker */
       server = new InternalBroker(kuzzle, {isServer: true});
       server.handler.ws = (options, cb) => {
         cb();
         return new WSServerMock();
       };
 
+      /** @type InternalBroker */
       client = new InternalBroker(kuzzle, {isServer: false});
       client.handler.ws = () => new WSClientMock(server.handler.server);
 
@@ -149,24 +151,24 @@ describe('Test: Internal broker', function () {
     describe('#init', () => {
 
       it('should attach events', () => {
-        var client = new WSBrokerClient('internalBroker', kuzzle.config.internalBroker, kuzzle.pluginsManager);
-        client.ws = () => new WSClientMock(server.server);
+        var anotherClient = new WSBrokerClient('internalBroker', kuzzle.config.internalBroker, kuzzle.pluginsManager);
+        anotherClient.ws = () => new WSClientMock(server.server);
 
-        return client.init()
+        return anotherClient.init()
           .then(response => {
             should(response).be.an.instanceOf(WSClientMock);
-            should(client.client.state).be.exactly('connected');
+            should(anotherClient.client.state).be.exactly('connected');
 
             // callbacks initiated by the client
-            should(client.client.socket.on.firstCall).be.calledWith('message');
-            should(client.client.socket.on.secondCall).be.calledWith('open');
-            should(client.client.socket.on.thirdCall).be.calledWith('close');
-            should(client.client.socket.on.getCall(3)).be.calledWith('error');
+            should(anotherClient.client.socket.on.firstCall).be.calledWith('message');
+            should(anotherClient.client.socket.on.secondCall).be.calledWith('open');
+            should(anotherClient.client.socket.on.thirdCall).be.calledWith('close');
+            should(anotherClient.client.socket.on.getCall(3)).be.calledWith('error');
 
             // callbacks initiated by the server
-            should(client.client.socket.on.getCall(4)).be.calledWith('message');
-            should(client.client.socket.on.getCall(5)).be.calledWith('close');
-            should(client.client.socket.on.getCall(6)).be.calledWith('error');
+            should(anotherClient.client.socket.on.getCall(4)).be.calledWith('message');
+            should(anotherClient.client.socket.on.getCall(5)).be.calledWith('close');
+            should(anotherClient.client.socket.on.getCall(6)).be.calledWith('error');
 
             // triggers
             // a first call is done by the beforeEach hook
@@ -229,8 +231,8 @@ describe('Test: Internal broker', function () {
 
         should(client.client.state).be.exactly('disconnected');
         should(socket.close).be.calledOnce();
-        should(client.client.socket).be.null();
-        should(client.client.connected).be.null();
+        should(client.client.socket).be.eql(null);
+        should(client.client.connected).be.eql(null);
       });
 
       it('should do nothing if socket is null', () => {
@@ -333,6 +335,7 @@ describe('Test: Internal broker', function () {
     var client1, client2, client3;
 
     beforeEach(() => {
+      /** @type InternalBroker */
       server = new WSBrokerServerRewire('internalBroker', {}, kuzzle.pluginsManager);
       server.ws = (options, cb) => {
         cb();
@@ -422,7 +425,7 @@ describe('Test: Internal broker', function () {
     describe('#send', () => {
 
       it('should do nothing if the room does not exist', () => {
-        return should(server.send('idontexist')).be.undefined();
+        return should(server.send('idontexist')).be.eql(undefined);
       });
 
       it('should do nothing is the emitter is the only client', () => {
@@ -434,7 +437,7 @@ describe('Test: Internal broker', function () {
 
         response = server.send('test', {foo: 'bar'}, client1.client.socket);
 
-        should(response).be.undefined();
+        should(response).be.eql(undefined);
       });
 
       it('should send data to one of the other clients', () => {
@@ -574,7 +577,7 @@ describe('Test: Internal broker', function () {
 
         server.close();
 
-        should(server.server).be.null();
+        should(server.server).be.eql(null);
         should(socket.close).be.calledOnce();
       });
 
@@ -614,7 +617,7 @@ describe('Test: Internal broker', function () {
         }));
 
         should(server.rooms).be.eql({
-          test: new CircularList( [ clientSocket ])
+          test: new CircularList([clientSocket])
         });
       });
 

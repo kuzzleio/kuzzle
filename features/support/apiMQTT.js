@@ -72,8 +72,8 @@ ApiMQTT.prototype.send = function (message, waitForAnswer) {
   }
 
   if (listen) {
-    this.mqttClient.once('message', function (topic, message) {
-      var unpacked = JSON.parse((new Buffer(message)).toString());
+    this.mqttClient.once('message', (aTopic, aMessage) => {
+      var unpacked = JSON.parse((new Buffer(aMessage)).toString());
 
       if (unpacked.error) {
         unpacked.error.statusCode = unpacked.status;
@@ -82,7 +82,7 @@ ApiMQTT.prototype.send = function (message, waitForAnswer) {
       else {
         deferred.resolve(unpacked);
       }
-    }.bind(this));
+    });
   }
   else {
     deferred.resolve({});
@@ -104,7 +104,7 @@ ApiMQTT.prototype.sendAndListen = function (message) {
   this.subscribedRooms[message.clientId] = {};
   mqttListener.subscribe('mqtt.' + mqttListener.options.clientId);
 
-  mqttListener.once('message', function (topic, response) {
+  mqttListener.once('message', function (aTopic, response) {
     var unpacked = JSON.parse((new Buffer(response)).toString());
 
     if (unpacked.error) {
@@ -113,7 +113,7 @@ ApiMQTT.prototype.sendAndListen = function (message) {
       return false;
     }
 
-    mqttListener.on('message', function (topic, notification) {
+    mqttListener.on('message', function (anotherTopic, notification) {
       this.responses = JSON.parse((new Buffer(notification)).toString());
     }.bind(this));
 

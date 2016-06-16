@@ -27,14 +27,14 @@ describe('funnelController.execute', () => {
     kuzzle = new Kuzzle();
     kuzzle.start(params, {dummy: true})
       .then(() => {
-        FunnelController.__set__('processRequest', (kuzzle, controllers, requestObject, context) => {
+        FunnelController.__set__('processRequest', (funnelKuzzle, controllers, funnelRequestObject) => {
           processRequestCalled = true;
 
-          if (requestObject.errorMe) {
+          if (funnelRequestObject.errorMe) {
             return q.reject(new Error('errored on purpose'));
           }
 
-          return q(new ResponseObject(requestObject));
+          return q(new ResponseObject(funnelRequestObject));
         });
 
         FunnelController.__set__('playCachedRequests', function () {
@@ -62,13 +62,13 @@ describe('funnelController.execute', () => {
     it('should execute the request immediately if not overloaded', done => {
       funnel.execute(requestObject, context, (err, res) => {
         try {
-          should(err).be.null();
+          should(err).be.eql(null);
           should(res.status).be.exactly(200);
           should(res).be.instanceOf(ResponseObject);
           should(processRequestCalled).be.true();
           done();
-        } catch (err) {
-          done(err);
+        } catch (error) {
+          done(error);
         }
       });
     });
@@ -85,15 +85,15 @@ describe('funnelController.execute', () => {
           should(funnel.overloaded).be.false();
           should(requestReplayed).be.false();
           done();
-        } catch (err) {
-          done(err);
+        } catch (error) {
+          done(error);
         }
       });
     });
   });
 
   describe('#server:overload hook', function () {
-    it('should fire the hook the first time Kuzzle is in overloaded state', done => {
+    it('should fire the hook the first time Kuzzle is in overloaded state', /** @this {Mocha} */ function (done) {
       this.timeout(500);
 
       kuzzle.once('server:overload', function () {
@@ -105,7 +105,7 @@ describe('funnelController.execute', () => {
       });
     });
 
-    it('should fire the hook if the last one was fired more than 500ms ago', done => {
+    it('should fire the hook if the last one was fired more than 500ms ago', /** @this {Mocha} */ function (done) {
       this.timeout(500);
 
       kuzzle.once('server:overload', function () {
@@ -174,7 +174,7 @@ describe('funnelController.execute', () => {
       }, 100);
     });
 
-    it('should discard the request if the maxRetainedRequests property is reached', done => {
+    it('should discard the request if the maxRetainedRequests property is reached', /** @this {Mocha} */ function (done) {
       this.timeout(500);
 
       funnel.concurrentRequests = kuzzle.config.request.maxConcurrentRequests;

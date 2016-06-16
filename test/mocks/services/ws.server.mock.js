@@ -3,6 +3,9 @@ var
   util = require('util'),
   EventEmitter = require('events');
 
+/**
+ * @constructor
+ */
 function WSServerMock () {
   this.clients = [];
   this.listeners = { };

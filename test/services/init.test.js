@@ -2,9 +2,7 @@ var
   should = require('should'),
   params = require('rc')('kuzzle'),
   sinon = require('sinon'),
-  q = require('q'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
-  Services = require.main.require('lib/services'),
   sandbox = sinon.sandbox.create();
 
 describe('Test service initialization function', function () {
@@ -98,7 +96,7 @@ describe('Test service initialization function', function () {
 
     return kuzzle.services.init({blacklist: ['writeEngine']})
       .then(() => {
-        should(kuzzle.services.list.writeEngine.client).be.null();
+        should(kuzzle.services.list.writeEngine.client).be.eql(null);
         should(spy.calledOnce).be.true();
       });
   });

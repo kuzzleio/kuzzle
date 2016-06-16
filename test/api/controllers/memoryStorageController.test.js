@@ -1,11 +1,9 @@
 var
   _ = require('lodash'),
   should = require('should'),
-  q = require('q'),
   rewire = require('rewire'),
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
-  Redis = require.main.require('lib/services/redis'),
   redisCommands = [],
   redisClientMock = require('../../mocks/services/redisClient.mock'),
   BadRequestError = require.main.require('kuzzle-common-objects').Errors.badRequestError,
@@ -25,7 +23,7 @@ var
   revertMapping;
 
 before(() => {
-  var wrapped = function (f) {
+  var wrapped = (f) => {
     return function () {
       if (called === undefined) {
         called = {};
@@ -37,7 +35,7 @@ before(() => {
 
       return f.apply(this, Array.prototype.slice.call(arguments));
     };
-  }.bind(this);
+  };
 
   requestObject = new RequestObject({
     body: {
@@ -124,7 +122,7 @@ describe('Test: memoryStore controller', function () {
       should(blacklist).not.be.empty();
 
       blacklist.forEach(command => {
-        should(msController[command]).be.undefined();
+        should(msController[command]).be.eql(undefined);
       });
     });
 
@@ -152,11 +150,11 @@ describe('Test: memoryStore controller', function () {
     });
 
     it('should return the _id on the simple arg', function () {
-        var result = extractArgumentsFromRequestObject('simplearg', requestObject);
+      var result = extractArgumentsFromRequestObject('simplearg', requestObject);
 
-        should(result).be.an.Array();
-        should(result).length(1);
-        should(result[0]).be.exactly('myKey');
+      should(result).be.an.Array();
+      should(result).length(1);
+      should(result[0]).be.exactly('myKey');
     });
 
     it('should return an arg from the body', function () {
@@ -196,14 +194,14 @@ describe('Test: memoryStore controller', function () {
   describe('#extractArgumentsFromRequestObjectForSet', function () {
 
     it('should be called from extractArgumentsFromRequestObject when calling "set"', function () {
-      var result = extractArgumentsFromRequestObject('set', requestObject);
+      extractArgumentsFromRequestObject('set', requestObject);
 
       should(called.extractArgumentsFromRequestObjectForSet.called).be.true();
     });
 
     it('should handle the _id + value + no option case', function () {
       var
-        requestObject = new RequestObject({
+        request = new RequestObject({
           body: {
             _id: 'myKey',
             value: {
@@ -211,7 +209,7 @@ describe('Test: memoryStore controller', function () {
             }
           }
         }),
-        result = extractArgumentsFromRequestObjectForSet(requestObject);
+        result = extractArgumentsFromRequestObjectForSet(request);
 
       should(result).be.an.Array();
       should(result).length(2);
@@ -221,24 +219,24 @@ describe('Test: memoryStore controller', function () {
 
     it('should handle the _id + no value + no option case', function () {
       var
-        requestObject = new RequestObject({
+        request = new RequestObject({
           body: {
             _id: 'myKey',
             foo: 'bar'
           }
         }),
-        result = extractArgumentsFromRequestObjectForSet(requestObject);
+        result = extractArgumentsFromRequestObjectForSet(request);
 
       should(result).be.an.Array();
       should(result).length(2);
       should(result[0]).be.exactly('myKey');
-      should(result[1]).be.eql(requestObject.data.body);
+      should(result[1]).be.eql(request.data.body);
     });
 
     it('should handle the optional parameters', function () {
       // NB: This is an invalid message but the method lets Redis handle the error (cannot mix NX & XX params)
       var
-        requestObject = new RequestObject({
+        request = new RequestObject({
           body: {
             _id: 'myKey',
             value: {
@@ -250,19 +248,19 @@ describe('Test: memoryStore controller', function () {
             xx: true
           }
         }),
-        result = extractArgumentsFromRequestObjectForSet(requestObject);
+        result = extractArgumentsFromRequestObjectForSet(request);
 
       should(result).be.an.Array();
       should(result).length(6);
       should(result[0]).be.exactly('myKey');
-      should(result[1]).be.exactly(requestObject.data.body.value);
+      should(result[1]).be.exactly(request.data.body.value);
       should(result[2]).be.exactly('PS');
       should(result[3]).be.exactly(222);
       should(result[4]).be.exactly('NX');
       should(result[5]).be.exactly('XX');
 
-      delete requestObject.data.body.px;
-      result = extractArgumentsFromRequestObjectForSet(requestObject);
+      delete request.data.body.px;
+      result = extractArgumentsFromRequestObjectForSet(request);
 
       should(result).be.eql([
         'myKey',
@@ -286,12 +284,12 @@ describe('Test: memoryStore controller', function () {
 
     it ('should handle the request if no optional parameter is given', () => {
       var
-        requestObject = new RequestObject({
+        request = new RequestObject({
           body: {
             _id: 'myKey'
           }
         }),
-        result = extractArgumentsFromRequestObjectForSort(requestObject);
+        result = extractArgumentsFromRequestObjectForSort(request);
 
       should(result).be.an.Array();
       should(result).length(1);
@@ -300,7 +298,7 @@ describe('Test: memoryStore controller', function () {
 
     it('should handle a request with some optional parameters', () => {
       var
-        requestObject = new RequestObject({
+        request = new RequestObject({
           body: {
             _id: 'myKey',
             alpha: true,
@@ -312,7 +310,7 @@ describe('Test: memoryStore controller', function () {
             store: 'storeParam'
           }
         }),
-        result = extractArgumentsFromRequestObjectForSort(requestObject);
+        result = extractArgumentsFromRequestObjectForSort(request);
 
       should(result).be.an.Array();
       should(result).length(12);
@@ -332,7 +330,7 @@ describe('Test: memoryStore controller', function () {
 
     it('should extract any given argument', () => {
       var
-        requestObject = new RequestObject({
+        request = new RequestObject({
           body: {
             _id: 'myKey',
             nx: true,
@@ -348,14 +346,14 @@ describe('Test: memoryStore controller', function () {
             ]
           }
         }),
-        result = extractArgumentsFromRequestObjectForZAdd(requestObject);
+        result = extractArgumentsFromRequestObjectForZAdd(request);
 
       should(result).be.an.Array();
       should(result).length(12);
       should(result).eql(['myKey', 'NX', 'CH', 'INCR', 'scoreVal', 'memberVal', 1, 'm1', 2, 'm2', 3, 'm3']);
 
-      delete requestObject.data.body.nx;
-      result = extractArgumentsFromRequestObjectForZAdd(requestObject);
+      delete request.data.body.nx;
+      result = extractArgumentsFromRequestObjectForZAdd(request);
 
       should(result).eql([
         'myKey',
@@ -393,7 +391,7 @@ describe('Test: memoryStore controller', function () {
 
     it('should extract any given argument', () => {
       var
-        requestObject = new RequestObject({
+        request = new RequestObject({
           body: {
             _id: 'myKey',
             destination: 'destinationVal',
@@ -409,7 +407,7 @@ describe('Test: memoryStore controller', function () {
             aggregate: 'aggregateVal'
           }
         }),
-        result = extractArgumentsFromRequestObjectForZInterstore(requestObject);
+        result = extractArgumentsFromRequestObjectForZInterstore(request);
 
       should(result).be.an.Array();
       should(result).length(11);
@@ -430,20 +428,20 @@ describe('Test: memoryStore controller', function () {
 
     it('should throw an error an invalid keys parameter is given', () => {
       var
-        requestObject = new RequestObject({
+        request = new RequestObject({
           body: {
             keys: 'unvalid value'
           }
         });
 
-      should(extractArgumentsFromRequestObjectForZInterstore.bind(null, requestObject)).throw(BadRequestError);
+      should(extractArgumentsFromRequestObjectForZInterstore.bind(null, request)).throw(BadRequestError);
 
-      requestObject = new RequestObject({
+      request = new RequestObject({
         body: {
           weights: 'unvalid'
         }
       });
-      should(extractArgumentsFromRequestObjectForZInterstore.bind(null, requestObject)).throw(BadRequestError);
+      should(extractArgumentsFromRequestObjectForZInterstore.bind(null, request)).throw(BadRequestError);
 
     });
   });

@@ -96,7 +96,7 @@ describe('Test: notifier.notifyDocumentReplace', function () {
       should(mockupCacheService.addId).be.exactly(requestObject.data._id);
       should(mockupCacheService.room).be.an.Array();
       should(mockupCacheService.room[0]).be.exactly('foobar');
-      should(mockupCacheService.removeId).be.undefined();
+      should(mockupCacheService.removeId).be.eql(undefined);
 
       should(notification.scope).be.exactly('in');
       should(notification.action).be.exactly('update');
@@ -116,15 +116,15 @@ describe('Test: notifier.notifyDocumentReplace', function () {
 
     setTimeout(() => {
       should(notified).be.exactly(1);
-      should(mockupCacheService.addId).be.undefined();
-      should(mockupCacheService.room).be.undefined();
+      should(mockupCacheService.addId).be.eql(undefined);
+      should(mockupCacheService.room).be.eql(undefined);
       should(mockupCacheService.removeId).be.exactly(requestObject.data._id);
 
       should(notification.scope).be.exactly('out');
       should(notification.action).be.exactly('update');
       should(notification.state).be.eql('done');
       should(notification._id).be.eql(requestObject.data._id);
-      should(notification._source).be.undefined();
+      should(notification._source).be.eql(undefined);
 
       done();
     }, 20);

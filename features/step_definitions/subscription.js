@@ -4,14 +4,14 @@ var apiSteps = function () {
 
     filter.term[key] = value;
     this.api.subscribe(filter, socketName)
-      .then(function (body) {
+      .then(body => {
         if (body.error !== null) {
           callback(new Error(body.error.message));
           return false;
         }
 
         callback();
-      }.bind(this))
+      })
       .catch(function (error) {
         callback(new Error(error));
       });
@@ -19,14 +19,14 @@ var apiSteps = function () {
 
   this.Given(/^A room subscription listening to the whole collection$/, function (callback) {
     this.api.subscribe({})
-      .then(function (body) {
+      .then(body => {
         if (body.error !== null) {
           callback(new Error(body.error.message));
           return false;
         }
 
         callback();
-      }.bind(this))
+      })
       .catch(function (error) {
         callback(new Error(error));
       });
@@ -37,14 +37,14 @@ var apiSteps = function () {
 
     filter.not.exists.field = key;
     this.api.subscribe(filter)
-      .then(function (body) {
+      .then(body => {
         if (body.error !== null) {
           callback(new Error(body.error.message));
           return false;
         }
 
         callback();
-      }.bind(this))
+      })
       .catch(function (error) {
         callback(new Error(error));
       });
@@ -143,6 +143,8 @@ var apiSteps = function () {
   });
 
   this.Then(/^In my list there is a collection "([^"]*)" with ([\d]*) room and ([\d]*) subscriber$/, function(collection, countRooms, countSubscribers, callback) {
+    var rooms = Object.keys(this.result[this.fakeIndex][collection]);
+    var count = 0;
 
     if (!this.result[this.fakeIndex]) {
       return callback(new Error('No entry for index ' + this.fakeIndex));
@@ -152,13 +154,9 @@ var apiSteps = function () {
       return callback(new Error('No entry for collection ' + collection));
     }
 
-    var rooms = Object.keys(this.result[this.fakeIndex][collection]);
-
     if (rooms.length !== parseInt(countRooms)) {
       return callback(new Error('Wrong number rooms for collection ' + collection + '. Expected ' + countRooms + ' get ' + rooms.length));
     }
-
-    var count = 0;
 
     rooms.forEach(roomId => {
       count += this.result[this.fakeIndex][collection][roomId];

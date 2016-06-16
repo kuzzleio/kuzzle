@@ -120,7 +120,7 @@ describe('Test: write controller', function () {
       });
 
       kuzzle.funnel.controllers.write.create(requestObject)
-        .catch(error => done(error));
+        .catch(err => done(err));
     });
 
     it('should notify on successful document creation', () => {
@@ -183,8 +183,8 @@ describe('Test: write controller', function () {
       });
 
       kuzzle.funnel.controllers.write.createOrReplace(requestObject)
-        .catch(function (error) {
-          done(error);
+        .catch(function (err) {
+          done(err);
         });
     });
 
@@ -217,11 +217,11 @@ describe('Test: write controller', function () {
     });
 
     it('should notify on document creation', () => {
-      var requestObject = new RequestObject({body: {foo: 'bar'}}, {}, 'unit-test');
+      var request = new RequestObject({body: {foo: 'bar'}}, {}, 'unit-test');
 
       kuzzle.workerListener.add = () => q({ created: true });
 
-      return kuzzle.funnel.controllers.write.createOrReplace(requestObject)
+      return kuzzle.funnel.controllers.write.createOrReplace(request)
         .then(response => {
           should(response).be.instanceOf(ResponseObject);
           should(createDocumentNotification).be.true();
@@ -230,11 +230,11 @@ describe('Test: write controller', function () {
     });
 
     it('should notify on document replace', () => {
-      var requestObject = new RequestObject({body: {foo: 'bar'}}, {}, 'unit-test');
+      var request = new RequestObject({body: {foo: 'bar'}}, {}, 'unit-test');
 
       kuzzle.workerListener.add = () => q({ created: false });
 
-      return kuzzle.funnel.controllers.write.createOrReplace(requestObject)
+      return kuzzle.funnel.controllers.write.createOrReplace(request)
         .then(response => {
           should(response).be.instanceOf(ResponseObject);
           should(createDocumentNotification).be.false();
@@ -258,8 +258,8 @@ describe('Test: write controller', function () {
       });
 
       kuzzle.funnel.controllers.write.update(requestObject)
-        .catch(function (error) {
-          done(error);
+        .catch(function (err) {
+          done(err);
         });
     });
 
@@ -298,8 +298,8 @@ describe('Test: write controller', function () {
       });
 
       kuzzle.funnel.controllers.write.replace(requestObject)
-        .catch(function (error) {
-          done(error);
+        .catch(function (err) {
+          done(err);
         });
     });
 
@@ -338,8 +338,8 @@ describe('Test: write controller', function () {
       });
 
       kuzzle.funnel.controllers.write.delete(requestObject)
-        .catch(function (error) {
-          done(error);
+        .catch(function (err) {
+          done(err);
         });
     });
 
@@ -378,8 +378,8 @@ describe('Test: write controller', function () {
       });
 
       kuzzle.funnel.controllers.write.deleteByQuery(requestObject)
-        .catch(function (error) {
-          done(error);
+        .catch(function (err) {
+          done(err);
         });
     });
 

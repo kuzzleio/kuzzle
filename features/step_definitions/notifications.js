@@ -38,7 +38,7 @@ var apiSteps = function () {
   });
 
   this.Then(/^The notification should ?(not)* have a "([^"]*)" member/, function (not, member, callback) {
-    if ( (this.api.responses.result[member] || not) && !(this.api.responses.result[member] && not)) {
+    if ((this.api.responses.result[member] || not) && !(this.api.responses.result[member] && not)) {
       callback();
     }
     else {

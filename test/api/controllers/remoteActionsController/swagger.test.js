@@ -3,7 +3,6 @@ var
   fs = require('fs'),
   params = rc('kuzzle'),
   q = require('q'),
-  rewire = require('rewire'),
   should = require('should'),
   sinon = require('sinon'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),

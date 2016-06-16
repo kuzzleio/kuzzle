@@ -16,6 +16,7 @@ var mockupCacheService = {
   id: undefined,
 
   remove: function (id) {
+    console.log('called', id);
     this.id = id;
     return q({});
   },
@@ -96,12 +97,12 @@ describe('Test: notifier.notifyDocumentDelete', function () {
 
     setTimeout(() => {
       try {
-      should(notification.length).be.eql(ids.length);
-      should(notification.map(n => n._id)).match(ids);
-      done();
-    } catch (err) {
-      done(err);
-    }
+        should(notification.length).be.eql(ids.length);
+        should(notification.map(n => n._id)).match(ids);
+        done();
+      } catch (err) {
+        done(err);
+      }
     }, 20);
   });
 });

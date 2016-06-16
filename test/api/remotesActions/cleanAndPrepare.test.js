@@ -1,8 +1,7 @@
 var
-  rc = require('rc'),
-  q = require('q'),
   should = require('should'),
   rewire = require('rewire'),
+  /** @type remoteAction */
   cleanAndPrepare = rewire('../../../lib/api/remoteActions/cleanAndPrepare');
 
 
@@ -40,13 +39,13 @@ describe('Test: CleanAndPrepare remote action caller', function () {
   });
 
   it('should exit with status 1 if an error occurs', function (done) {
-    var response = cleanAndPrepare.onListenCB({error: 'error!'});
+    cleanAndPrepare.onListenCB({error: 'error!'});
     should (exitStatus).be.eql(1);
     done();
   });
 
   it('should exit with status 0 if everything ok', function (done) {
-    var response = cleanAndPrepare.onListenCB({});
+    cleanAndPrepare.onListenCB({});
     should (exitStatus).be.eql(0);
     done();
   });

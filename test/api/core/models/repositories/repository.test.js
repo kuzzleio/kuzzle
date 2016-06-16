@@ -18,6 +18,9 @@ describe('Test: repositories/repository', function () {
     cachedObject,
     uncachedObject;
 
+  /**
+   * @constructor
+   */
   ObjectConstructor = function () {
     this.type = 'testObject';
   };
@@ -171,7 +174,7 @@ describe('Test: repositories/repository', function () {
   describe('#loadOneFromDatabase', function () {
     it('should return null for an non existing id', () => {
       return repository.loadOneFromDatabase(-9999)
-        .then(result => should(result).be.null());
+        .then(result => should(result).be.eql(null));
     });
 
     it('should reject the promise in case of error', () => {
@@ -253,7 +256,7 @@ describe('Test: repositories/repository', function () {
   describe('#loadFromCache', function () {
     it('should return null for an non-existing id', () => {
       return repository.loadFromCache(-999)
-        .then(result => should(result).be.null());
+        .then(result => should(result).be.eql(null));
     });
 
     it('should reject the promise in case of error', () => {
@@ -278,7 +281,7 @@ describe('Test: repositories/repository', function () {
   describe('#load', function () {
     it('should return null for an non-existing id', () => {
       return repository.load(-999)
-        .then(result => should(result).be.null());
+        .then(result => should(result).be.eql(null));
     });
 
     it('should reject the promise in case of error', () => {
@@ -335,7 +338,7 @@ describe('Test: repositories/repository', function () {
       repository.readEngine = null;
 
       return repository.load('uncached')
-        .then(result => should(result).be.null());
+        .then(result => should(result).be.eql(null));
     });
   });
 
