@@ -31,8 +31,8 @@ describe('Test: repositories/profileRepository', () => {
     },
     stubs = {
       profileRepository:{
-        loadFromCache: (id, opts) => {
-          if (id !== 'testprofile-cached' ) {
+        loadFromCache: (id) => {
+          if (id !== 'testprofile-cached') {
             return q(null);
           }
           return q(testProfile);

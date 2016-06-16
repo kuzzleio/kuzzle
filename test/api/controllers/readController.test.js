@@ -5,8 +5,7 @@ var
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
-  ResponseObject = require.main.require('kuzzle-common-objects').Models.responseObject,
-  Role = require.main.require('lib/api/core/models/security/role');
+  ResponseObject = require.main.require('kuzzle-common-objects').Models.responseObject;
 
 describe('Test: read controller', function () {
   var
