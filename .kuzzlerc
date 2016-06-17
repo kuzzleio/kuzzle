@@ -195,7 +195,7 @@
         "activated": true
       },
       "kuzzle-plugin-auth-passport-local": {
-        "npmVersion": "1.4.0",
+        "npmVersion": "2.0.0",
         "activated": true
       }
     }
