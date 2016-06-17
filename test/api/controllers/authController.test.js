@@ -7,8 +7,8 @@ var
   sinon = require('sinon'),
   util = require('util'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
-  RequestObject = require.main.require('lib/api/core/models/requestObject'),
-  ResponseObject = require.main.require('lib/api/core/models/responseObject'),
+  RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
+  ResponseObject = require.main.require('kuzzle-common-objects').Models.responseObject,
   Token = require.main.require('lib/api/core/models/security/token'),
   context = {},
   redisClientMock = require('../../mocks/services/redisClient.mock'),
@@ -483,6 +483,63 @@ describe('Test the auth controller', function () {
         }
       }))
         .be.rejected();
+    });
+  });
+
+  describe('#getMyRights', function () {
+    var
+      rq = new RequestObject({body: {}}),
+      token = {
+        token: {user: { _id: 'test' }}
+      };
+
+    it('should be able to get current user\'s rights', () => {
+      var loadUserStub = userId => {
+        return {
+          _id: userId,
+          _source: {},
+          getRights: () => {
+            return {
+              rights1: {
+                controller: 'read', action: 'get', index: 'foo', collection: 'bar',
+                value: 'allowed'
+              },
+              rights2: {
+                controller: 'write', action: 'delete', index: '*', collection: '*',
+                value: 'conditional'
+              }
+            };
+          }
+        };
+      };
+
+      sandbox.stub(kuzzle.repositories.user, 'load', loadUserStub);
+      return kuzzle.funnel.controllers.auth.getMyRights(rq, token)
+        .then(result => {
+          var filteredItem;
+
+          should(result).be.an.instanceOf(ResponseObject);
+          should(result.data.body.hits).be.an.Array();
+          should(result.data.body.hits).length(2);
+
+          filteredItem = result.data.body.hits.filter(item => {
+            return item.controller === 'read' &&
+                    item.action === 'get' &&
+                    item.index === 'foo' &&
+                    item.collection === 'bar';
+          });
+          should(filteredItem).length(1);
+          should(filteredItem[0].value).be.equal('allowed');
+
+          filteredItem = result.data.body.hits.filter(item => {
+            return item.controller === 'write' &&
+                    item.action === 'delete' &&
+                    item.index === '*' &&
+                    item.collection === '*';
+          });
+          should(filteredItem).length(1);
+          should(filteredItem[0].value).be.equal('conditional');
+        });
     });
   });
 });

@@ -1,17 +1,23 @@
+proxy:
+  image: kuzzleio/proxy:alpine
+  ports:
+    - "7511:7511"
+    - "7512:7512"
+    - "8083:8080"
+
 kuzzle:
   image: kuzzleio/dev:alpine
   command: /run-debug.sh
   volumes:
     - "..:/var/app"
   ports:
-    - "7511:7511"
-    - "7512:7512"
     - "8080:8080"
     - "8081:8081"
   links:
     - rabbit
     - elasticsearch
     - redis
+    - proxy:api
   environment:
     - MQ_BROKER_ENABLED=1
     - FEATURE_COVERAGE

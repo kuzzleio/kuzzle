@@ -8,7 +8,7 @@
 var
   should = require('should'),
   q = require('q'),
-  RequestObject = require.main.require('lib/api/core/models/requestObject'),
+  RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle');
 
@@ -45,7 +45,7 @@ var mockupCacheService = {
   }
 };
 
-var mockupTestFilters = (index, collection, id) => {
+var mockupTestFilters = (index, collection, data, id) => {
   if (id === 'errorme') {
     return q.reject(new Error('rejected'));
   }
@@ -72,7 +72,7 @@ describe('Test: notifier.notifyDocumentUpdate', function () {
         kuzzle.services.list.readEngine = {
           get: r => q({_id: r.data._id, _source: requestObject.data.body})
         };
-        kuzzle.dsl.testFilters = mockupTestFilters;
+        kuzzle.dsl.test = mockupTestFilters;
         kuzzle.notifier.notify = function (rooms, r, n) {
           if (rooms.length > 0) {
             notified++;

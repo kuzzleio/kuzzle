@@ -9,7 +9,7 @@ var
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   rewire = require('rewire'),
   RouterController = rewire('../../../../lib/api/controllers/routerController'),
-  ResponseObject = require.main.require('lib/api/core/models/responseObject');
+  ResponseObject = require.main.require('kuzzle-common-objects').Models.responseObject;
 
 
 describe('Test: routerController.routeMQListener', function () {

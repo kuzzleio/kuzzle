@@ -6,9 +6,9 @@ var
   rewire = require('rewire'),
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
-  RequestObject = require.main.require('lib/api/core/models/requestObject'),
-  NotFoundError = require.main.require('lib/api/core/errors/notFoundError'),
-  ResponseObject = require.main.require('lib/api/core/models/responseObject');
+  RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
+  NotFoundError = require.main.require('kuzzle-common-objects').Errors.notFoundError,
+  ResponseObject = require.main.require('kuzzle-common-objects').Models.responseObject;
 
 require('sinon-as-promised')(q.Promise);
 
@@ -220,4 +220,69 @@ describe('Test: security controller - profiles', function () {
       }))).be.rejected();
     });
   });
+
+  describe('#getProfileRights', function () {
+    it('should resolve to a responseObject on a getProfileRights call', () => {
+      var loadProfileStub = profileId => {
+        return {
+          _id: profileId,
+          _source: {},
+          getRights: () => {
+            return {
+              rights1: {
+                controller: 'read', action: 'get', index: 'foo', collection: 'bar',
+                value: 'allowed'
+              },
+              rights2: {
+                controller: 'write', action: 'delete', index: '*', collection: '*',
+                value: 'conditional'
+              }
+            };
+          }
+        };
+      };
+
+      sandbox.stub(kuzzle.repositories.profile, 'loadProfile', loadProfileStub);
+      return kuzzle.funnel.controllers.security.getProfileRights(new RequestObject({
+          body: {_id: 'test'}
+        }))
+        .then(result => {
+          var filteredItem;
+
+          should(result).be.an.instanceOf(ResponseObject);
+          should(result.data.body.hits).be.an.Array();
+          should(result.data.body.hits).length(2);
+
+          filteredItem = result.data.body.hits.filter(item => {
+            return item.controller === 'read' &&
+                    item.action === 'get' &&
+                    item.index === 'foo' &&
+                    item.collection === 'bar';
+          });
+          should(filteredItem).length(1);
+          should(filteredItem[0].value).be.equal('allowed');
+
+          filteredItem = result.data.body.hits.filter(item => {
+            return item.controller === 'write' &&
+                    item.action === 'delete' &&
+                    item.index === '*' &&
+                    item.collection === '*';
+          });
+          should(filteredItem).length(1);
+          should(filteredItem[0].value).be.equal('conditional');
+        });
+    });
+
+    it('should reject to an error on a getProfileRights call without id', () => {
+      return should(kuzzle.funnel.controllers.security.getProfileRights(new RequestObject({body: {_id: ''}}))).be.rejected();
+    });
+
+    it('should reject NotFoundError on a getProfileRights call with a bad id', () => {
+      sandbox.stub(kuzzle.repositories.profile, 'loadProfile').resolves(null);
+      return should(kuzzle.funnel.controllers.security.getProfileRights(new RequestObject({
+          body: {_id: 'test'}
+        }))).be.rejectedWith(NotFoundError);
+    });
+  });
+
 });

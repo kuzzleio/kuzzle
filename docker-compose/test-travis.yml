@@ -1,3 +1,9 @@
+proxy:
+  image: kuzzleio/proxy:alpine
+  ports:
+    - "7511:7511"
+    - "7512:7512"
+
 kuzzle:
   image: kuzzleio/test:alpine
   command: /run-test-travis.sh
@@ -7,6 +13,7 @@ kuzzle:
     - rabbit
     - elasticsearch
     - redis
+    - proxy:api
   environment:
     - MQ_BROKER_ENABLED=1
     - FEATURE_COVERAGE=1

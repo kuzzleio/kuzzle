@@ -3,9 +3,9 @@ var
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   q = require('q'),
-  RequestObject = require.main.require('lib/api/core/models/requestObject'),
-  ResponseObject = require.main.require('lib/api/core/models/responseObject'),
-  PartialError = require.main.require('lib/api/core/errors/partialError');
+  RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
+  ResponseObject = require.main.require('kuzzle-common-objects').Models.responseObject,
+  PartialError = require.main.require('kuzzle-common-objects').Errors.partialError;
 
 describe('Test the bulk controller', function () {
   var

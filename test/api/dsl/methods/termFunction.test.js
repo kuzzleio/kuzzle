@@ -2,22 +2,24 @@ var
   should = require('should'),
   rewire = require('rewire'),
   md5 = require('crypto-md5'),
-  methods = rewire('../../../../lib/api/dsl/methods'),
-  BadRequestError = require.main.require('lib/api/core/errors/badRequestError'),
-  InternalError = require.main.require('lib/api/core/errors/internalError');
-
-
+  Filters = require.main.require('lib/api/dsl/filters'),
+  Methods = rewire('../../../../lib/api/dsl/methods'),
+  BadRequestError = require.main.require('kuzzle-common-objects').Errors.badRequestError,
+  InternalError = require.main.require('kuzzle-common-objects').Errors.internalError;
 
 describe('Test: dsl.termFunction method', function () {
   var
-    termFunction = methods.__get__('termFunction'),
+    methods,
+    termFunction = Methods.__get__('termFunction'),
     termfoobar = md5('termfoobar'),
     termsfoobarbaz = md5('termsfoobar,baz'),
     nottermfoobar = md5('nottermfoobar'),
-    nottermsfoobarbaz = md5('nottermsfoobar,baz');
+    nottermsfoobarbaz = md5('nottermsfoobar,baz'),
+    fieldFoo = md5('foo');
 
   beforeEach(function () {
-    methods.dsl = { filtersTree: {} };
+    methods = new Methods(new Filters());
+    termFunction = termFunction.bind(methods);
   });
 
   it('should return a rejected promise if the provided filter is empty', function () {
@@ -33,88 +35,84 @@ describe('Test: dsl.termFunction method', function () {
     return should(termFunction('terms', 'roomId', 'index', 'collection', filter)).be.rejectedWith(BadRequestError, { message: 'Filter terms must contains an array' });
   });
 
-  it('should create a valid "term" filter', function (done) {
+  it('should create a valid "term" filter', function () {
     var
       filter = {
         foo: 'bar'
       };
 
-    termFunction('term', 'roomId', 'index', 'collection', filter)
+    return termFunction('term', 'roomId', 'index', 'collection', filter)
       .then(function (formattedFilter) {
-        should.exist(formattedFilter['index.collection.foo.' + termfoobar]);
-        should(formattedFilter['index.collection.foo.' + termfoobar].rooms).be.an.Array().and.match(['roomId']);
-        should(formattedFilter['index.collection.foo.' + termfoobar].fn).be.a.Function();
-        done();
-      })
-      .catch(function (error) {
-        done(error);
+        should.exist(formattedFilter[`index.collection.${fieldFoo}.${termfoobar}`]);
+        should(formattedFilter[`index.collection.${fieldFoo}.${termfoobar}`].ids).be.an.Array().and.match(['roomId']);
+        should(formattedFilter[`index.collection.${fieldFoo}.${termfoobar}`].args).match({
+          operator: 'term', not: undefined, field: 'foo', value: 'bar'
+        });
       });
   });
 
-  it('should create a valid "terms" filter', function (done) {
+  it('should create a valid "terms" filter', function () {
     var
       filter = {
         foo: ['bar', 'baz']
       };
 
-    termFunction('terms', 'roomId', 'index', 'collection', filter)
+    return termFunction('terms', 'roomId', 'index', 'collection', filter)
       .then(function (formattedFilter) {
-        should.exist(formattedFilter['index.collection.foo.' + termsfoobarbaz]);
-        should(formattedFilter['index.collection.foo.' + termsfoobarbaz].rooms).be.an.Array().and.match(['roomId']);
-        should(formattedFilter['index.collection.foo.' + termsfoobarbaz].fn).be.a.Function();
-        done();
-      })
-      .catch(function (error) {
-        done(error);
+        should.exist(formattedFilter[`index.collection.${fieldFoo}.${termsfoobarbaz}`]);
+        should(formattedFilter[`index.collection.${fieldFoo}.${termsfoobarbaz}`].ids).be.an.Array().and.match(['roomId']);
+        should(formattedFilter[`index.collection.${fieldFoo}.${termsfoobarbaz}`].args).match({
+          operator: 'terms',
+          not: undefined,
+          field: 'foo',
+          value: [ 'bar', 'baz' ]
+        });
       });
   });
 
-  it('should create a valid "not-term" filter', function (done) {
+  it('should create a valid "not-term" filter', function () {
     var
       filter = {
         foo: 'bar'
       };
 
-    termFunction('term', 'roomId', 'index', 'collection', filter, true)
+    return termFunction('term', 'roomId', 'index', 'collection', filter, true)
       .then(function (formattedFilter) {
-        should.exist(formattedFilter['index.collection.foo.' + nottermfoobar]);
-        should(formattedFilter['index.collection.foo.' + nottermfoobar].rooms).be.an.Array().and.match(['roomId']);
-        should(formattedFilter['index.collection.foo.' + nottermfoobar].fn).be.a.Function();
-        done();
-      })
-      .catch(function (error) {
-        done(error);
+        should.exist(formattedFilter[`index.collection.${fieldFoo}.${nottermfoobar}`]);
+        should(formattedFilter[`index.collection.${fieldFoo}.${nottermfoobar}`].ids).be.an.Array().and.match(['roomId']);
+        should(formattedFilter[`index.collection.${fieldFoo}.${nottermfoobar}`].args).match({
+          operator: 'term', not: true, field: 'foo', value: 'bar'
+        });
       });
   });
 
-  it('should create a valid "not-terms" filter', function (done) {
+  it('should create a valid "not-terms" filter', function () {
     var
       filter = {
         foo: ['bar', 'baz']
       };
 
-    termFunction('terms', 'roomId', 'index', 'collection', filter, true)
+    return termFunction('terms', 'roomId', 'index', 'collection', filter, true)
       .then(function (formattedFilter) {
-        should.exist(formattedFilter['index.collection.foo.' + nottermsfoobarbaz]);
-        should(formattedFilter['index.collection.foo.' + nottermsfoobarbaz].rooms).be.an.Array().and.match(['roomId']);
-        should(formattedFilter['index.collection.foo.' + nottermsfoobarbaz].fn).be.a.Function();
-        done();
-      })
-      .catch(function (error) {
-        done(error);
+        should.exist(formattedFilter[`index.collection.${fieldFoo}.${nottermsfoobarbaz}`]);
+        should(formattedFilter[`index.collection.${fieldFoo}.${nottermsfoobarbaz}`].ids).be.an.Array().and.match(['roomId']);
+        should(formattedFilter[`index.collection.${fieldFoo}.${nottermsfoobarbaz}`].args).match({
+          operator: 'terms',
+          not: true,
+          field: 'foo',
+          value: [ 'bar', 'baz' ]
+        });
       });
   });
 
-  it('should return a rejected promise if buildCurriedFunction fails', function () {
+  it('should return a rejected promise if filters.add fails', function () {
     var
       filter = {
         foo: ['bar', 'baz']
       };
 
-    return methods.__with__({
-      buildCurriedFunction: function () { return new InternalError('rejected'); }
-    })(function () {
-      return should(termFunction('terms', 'roomId', 'index', 'collection', filter)).be.rejectedWith('rejected');
-    });
+    methods.filters.add = function () { return new InternalError('rejected'); };
+
+    return should(Methods.__get__('termFunction').call(methods, 'terms', 'roomId', 'index', 'collection', filter)).be.rejectedWith('rejected');
   });
 });

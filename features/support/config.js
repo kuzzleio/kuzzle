@@ -8,8 +8,8 @@ var config = require('rc')('kuzzle');
 module.exports = function () {
 
   var defaultUrls = {
-    url: 'http://localhost:7511',
-    ws: 'http://localhost:7512',
+    url: 'http://api:7511',
+    ws: 'http://api:7512',
     mqttUrl: 'mqtt://localhost:1883',
     amqpUrl: 'amqp://localhost:5672',
     stompUrl: 'stomp://localhost:61613'
@@ -17,6 +17,9 @@ module.exports = function () {
 
   if (process.env.KUZZLE_URL) {
     defaultUrls.url = process.env.KUZZLE_URL;
+  }
+  if (process.env.KUZZLE_WS_URL) {
+    defaultUrls.url = process.env.KUZZLE_WS_URL;
   }
   if (process.env.KUZZLE_MQTT_URL) {
     defaultUrls.mqttUrl = process.env.KUZZLE_MQTT_URL;

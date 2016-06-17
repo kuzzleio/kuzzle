@@ -6,11 +6,11 @@ var
   should = require('should'),
   Role = require.main.require('lib/api/core/models/security/role'),
   Profile = require.main.require('lib/api/core/models/security/profile'),
-  BadRequestError = require.main.require('lib/api/core/errors/badRequestError'),
-  ForbiddenError = require.main.require('lib/api/core/errors/forbiddenError'),
-  InternalError = require.main.require('lib/api/core/errors/internalError'),
-  NotFoundError = require.main.require('lib/api/core/errors/notFoundError'),
-  RequestObject = require.main.require('lib/api/core/models/requestObject'),
+  BadRequestError = require.main.require('kuzzle-common-objects').Errors.badRequestError,
+  ForbiddenError = require.main.require('kuzzle-common-objects').Errors.forbiddenError,
+  InternalError = require.main.require('kuzzle-common-objects').Errors.internalError,
+  NotFoundError = require.main.require('kuzzle-common-objects').Errors.notFoundError,
+  RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
   Kuzzle = require.main.require('lib/api/Kuzzle');
 
 require('sinon-as-promised')(q.Promise);
@@ -31,20 +31,12 @@ describe('Test: repositories/profileRepository', () => {
       roles: [ 'error' ]
     },
     stubs = {
-      readEngine: {
-        get: (requestObject) => {
-          var err;
-          if (requestObject.data._id === 'testprofile') {
-            return q(testProfilePlain);
+      profileRepository:{
+        loadFromCache: (id, opts) => {
+          if (id !== 'testprofile-cached' ) {
+            return q(null);
           }
-          if (requestObject.data._id === 'errorprofile') {
-            return q(errorProfilePlain);
-          }
-
-          err = new NotFoundError('Not found');
-          err.found = false;
-          err._id = requestObject.data._id;
-          return q.reject(err);
+          return q(testProfile);
         }
       },
       roleRepository:{
@@ -79,6 +71,9 @@ describe('Test: repositories/profileRepository', () => {
 
   beforeEach(() => {
     sandbox = sinon.sandbox.create();
+    sandbox.stub(kuzzle.repositories.profile, 'loadFromCache', stubs.profileRepository.loadFromCache);
+    sandbox.stub(kuzzle.repositories.profile, 'persistToCache').resolves({});
+    sandbox.stub(kuzzle.repositories.profile, 'deleteFromCache').resolves({});
   });
 
   afterEach(() => {
@@ -99,11 +94,11 @@ describe('Test: repositories/profileRepository', () => {
       return should(kuzzle.repositories.profile.loadProfile('id')).be.rejectedWith(InternalError);
     });
 
-    it('should load a profile if already in memory', () => {
+    it('should load a profile from cache if present', () => {
       sandbox.stub(kuzzle.repositories.role, 'loadRoles', stubs.roleRepository.loadRoles);
-      sandbox.stub(kuzzle.repositories.profile, 'profiles', {testprofile: testProfilePlain});
+      sandbox.stub(kuzzle.repositories.profile, 'refreshCacheTTL').resolves({});
 
-      return kuzzle.repositories.profile.loadProfile('testprofile')
+      return kuzzle.repositories.profile.loadProfile('testprofile-cached')
         .then(result => {
           should(result).be.an.instanceOf(Profile);
           should(result).be.eql(testProfile);
@@ -198,6 +193,8 @@ describe('Test: repositories/profileRepository', () => {
       var response = {_id: 'testprofile'};
 
       sandbox.stub(kuzzle.repositories.profile, 'deleteFromDatabase').resolves(response);
+      sandbox.stub(kuzzle.repositories.user, 'search').resolves({total: 0});
+
       return should(kuzzle.repositories.profile.deleteProfile(testProfile))
         .be.fulfilledWith(response);
     });
