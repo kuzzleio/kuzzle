@@ -139,9 +139,11 @@
       "controllers": {
         "auth": {
           "actions": {
-            "login": true,
+            "logout": true,
             "checkToken": true,
-            "getCurrentUser": true
+            "getMyRights": true,
+            "getCurrentUser": true,
+            "login": true
           }
         },
         "read": {
@@ -157,7 +159,10 @@
           "actions": {
             "logout": true,
             "checkToken": true,
-            "getCurrentUser": true
+            "getMyRights": true,
+            "updateSelf": true,
+            "getCurrentUser": true,
+            "login": true
           }
         },
         "read": {
