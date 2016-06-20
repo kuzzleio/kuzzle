@@ -143,8 +143,9 @@ var apiSteps = function () {
   });
 
   this.Then(/^In my list there is a collection "([^"]*)" with ([\d]*) room and ([\d]*) subscriber$/, function(collection, countRooms, countSubscribers, callback) {
-    var rooms = Object.keys(this.result[this.fakeIndex][collection]);
-    var count = 0;
+    var
+      rooms = Object.keys(this.result[this.fakeIndex][collection]),
+      count = 0;
 
     if (!this.result[this.fakeIndex]) {
       return callback(new Error('No entry for index ' + this.fakeIndex));
