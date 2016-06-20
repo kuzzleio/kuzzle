@@ -1,5 +1,4 @@
 var
-  md5 = require('crypto-md5'),
   sinon = require('sinon'),
   should = require('should'),
   Methods = require.main.require('lib/api/dsl/methods');
