@@ -155,9 +155,9 @@ describe('Test: read controller', function () {
           should(realtime).be.true();
           should(stored).be.true();
           should(result.data.body.type).be.exactly('all');
-          should(result.data.body.collections).not.be.eql(undefined).and.be.an.Object();
-          should(result.data.body.collections.stored).not.be.eql(undefined).and.be.an.Array();
-          should(result.data.body.collections.realtime).not.be.eql(undefined).and.be.an.Array();
+          should(result.data.body.collections).not.be.undefined().and.be.an.Object();
+          should(result.data.body.collections.stored).not.be.undefined().and.be.an.Array();
+          should(result.data.body.collections.realtime).not.be.undefined().and.be.an.Array();
           should(result.data.body.collections.stored.sort()).match(['foo']);
           should(result.data.body.collections.realtime.sort()).match(['bar', 'foo']);
         });
@@ -219,8 +219,8 @@ describe('Test: read controller', function () {
     it('should resolve to a number', function () {
       return kuzzle.funnel.controllers.read.now(requestObject)
         .then(result => {
-          should(result.data).not.be.eql(undefined);
-          should(result.data.body.now).not.be.eql(undefined).and.be.a.Number();
+          should(result.data).not.be.undefined();
+          should(result.data.body.now).not.be.undefined().and.be.a.Number();
         });
     });
   });

@@ -75,7 +75,7 @@ describe('Test: notifier.publish', function () {
 
     setTimeout(() => {
       should(notification.state).be.eql('pending');
-      should(notification.scope).be.eql(undefined);
+      should(notification.scope).be.undefined();
       should(notification._id).be.eql(request._id);
       should(notification._source).be.eql(request.body);
       should(cached).be.true();
@@ -92,7 +92,7 @@ describe('Test: notifier.publish', function () {
 
     setTimeout(() => {
       should(notification.state).be.eql('pending');
-      should(notification.scope).be.eql(undefined);
+      should(notification.scope).be.undefined();
       should(notification._id).be.eql(request._id);
       should(notification._source).be.eql(request.body);
       should(cached).be.true();
@@ -109,7 +109,7 @@ describe('Test: notifier.publish', function () {
 
     setTimeout(() => {
       should(notification.state).be.eql('pending');
-      should(notification.scope).be.eql(undefined);
+      should(notification.scope).be.undefined();
       should(notification._id).be.eql(request._id);
       should(notification._source).be.eql(request.body);
       should(cached).be.true();
@@ -124,7 +124,7 @@ describe('Test: notifier.publish', function () {
     return kuzzle.notifier.publish(new RequestObject(request))
       .then(result => {
         should(result).match({published: true});
-        should(notification).be.eql(null);
+        should(notification).be.null();
         should(cached).be.false();
         should(expired).be.false();
       });

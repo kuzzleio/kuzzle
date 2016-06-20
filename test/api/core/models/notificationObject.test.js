@@ -21,7 +21,7 @@ describe('Test: NotificationObject', function () {
   it('should have a toJSon prototype function', function () {
     var response = new NotificationObject(roomId, requestObject);
 
-    should(response.toJson).not.be.eql(undefined).and.be.a.Function();
+    should(response.toJson).not.be.undefined().and.be.a.Function();
   });
 
   it('should return a normalized count response', function () {
@@ -29,7 +29,7 @@ describe('Test: NotificationObject', function () {
       notificationObject = new NotificationObject(roomId, requestObject, {count: 42}),
       response = notificationObject.toJson();
 
-    should(response.error).be.eql(null);
+    should(response.error).be.null();
     should(response.status).be.a.Number().and.be.eql(200);
     should(response.action).be.exactly(requestObject.action);
     should(response.controller).be.exactly(requestObject.controller);
@@ -40,7 +40,7 @@ describe('Test: NotificationObject', function () {
     should(response.index).be.exactly(requestObject.index);
     should(response.collection).be.exactly(requestObject.collection);
 
-    should(response.result).not.be.eql(null).and.be.an.Object();
+    should(response.result).not.be.null().and.be.an.Object();
     should(response.result.count).be.exactly(42);
   });
 
@@ -49,7 +49,7 @@ describe('Test: NotificationObject', function () {
       notificationObject = new NotificationObject(roomId, requestObject, {channel: 'foobar'}),
       response = notificationObject.toJson();
 
-    should(response.error).be.eql(null);
+    should(response.error).be.null();
     should(response.status).be.a.Number().and.be.eql(200);
     should(response.action).be.exactly(requestObject.action);
     should(response.controller).be.exactly(requestObject.controller);
@@ -60,7 +60,7 @@ describe('Test: NotificationObject', function () {
     should(response.index).be.exactly(requestObject.index);
     should(response.collection).be.exactly(requestObject.collection);
 
-    should(response.result).not.be.eql(null).and.be.an.Object();
+    should(response.result).not.be.null().and.be.an.Object();
     should(response.result.channel).be.exactly('foobar');
   });
 
@@ -69,7 +69,7 @@ describe('Test: NotificationObject', function () {
       notificationObject = new NotificationObject(roomId, requestObject),
       response = notificationObject.toJson();
 
-    should(response.error).be.eql(null);
+    should(response.error).be.null();
     should(response.status).be.a.Number().and.be.eql(200);
     should(response.action).be.exactly(requestObject.action);
     should(response.controller).be.exactly(requestObject.controller);
@@ -80,6 +80,6 @@ describe('Test: NotificationObject', function () {
     should(response.index).be.exactly(requestObject.index);
     should(response.collection).be.exactly(requestObject.collection);
 
-    should(response.result).be.eql(undefined);
+    should(response.result).be.undefined();
   });
 });

@@ -74,9 +74,9 @@ describe('Test: statistics core component', function () {
   it('should register a new request when asked to', function () {
     requestObject.protocol = 'foobar';
     stats.startRequest(requestObject);
-    should(stats.currentStats.ongoingRequests.foobar).not.be.eql(undefined).and.be.exactly(1);
+    should(stats.currentStats.ongoingRequests.foobar).not.be.undefined().and.be.exactly(1);
     stats.startRequest(requestObject);
-    should(stats.currentStats.ongoingRequests.foobar).not.be.eql(undefined).and.be.exactly(2);
+    should(stats.currentStats.ongoingRequests.foobar).not.be.undefined().and.be.exactly(2);
   });
 
   it('should do nothing when startRequest is called with invalid arguments', function () {
@@ -90,11 +90,11 @@ describe('Test: statistics core component', function () {
     stats.currentStats.ongoingRequests.foobar = 2;
     requestObject.protocol = 'foobar';
     stats.completedRequest(requestObject);
-    should(stats.currentStats.ongoingRequests.foobar).not.be.eql(undefined).and.be.exactly(1);
-    should(stats.currentStats.completedRequests.foobar).not.be.eql(undefined).and.be.exactly(1);
+    should(stats.currentStats.ongoingRequests.foobar).not.be.undefined().and.be.exactly(1);
+    should(stats.currentStats.completedRequests.foobar).not.be.undefined().and.be.exactly(1);
     stats.completedRequest(requestObject);
-    should(stats.currentStats.ongoingRequests.foobar).not.be.eql(undefined).and.be.exactly(0);
-    should(stats.currentStats.completedRequests.foobar).not.be.eql(undefined).and.be.exactly(2);
+    should(stats.currentStats.ongoingRequests.foobar).not.be.undefined().and.be.exactly(0);
+    should(stats.currentStats.completedRequests.foobar).not.be.undefined().and.be.exactly(2);
   });
 
   it('should do nothing when completedRequest is called with invalid arguments', function () {
@@ -108,11 +108,11 @@ describe('Test: statistics core component', function () {
     stats.currentStats.ongoingRequests.foobar = 2;
     requestObject.protocol = 'foobar';
     stats.failedRequest(requestObject);
-    should(stats.currentStats.ongoingRequests.foobar).not.be.eql(undefined).and.be.exactly(1);
-    should(stats.currentStats.failedRequests.foobar).not.be.eql(undefined).and.be.exactly(1);
+    should(stats.currentStats.ongoingRequests.foobar).not.be.undefined().and.be.exactly(1);
+    should(stats.currentStats.failedRequests.foobar).not.be.undefined().and.be.exactly(1);
     stats.failedRequest(requestObject);
-    should(stats.currentStats.ongoingRequests.foobar).not.be.eql(undefined).and.be.exactly(0);
-    should(stats.currentStats.failedRequests.foobar).not.be.eql(undefined).and.be.exactly(2);
+    should(stats.currentStats.ongoingRequests.foobar).not.be.undefined().and.be.exactly(0);
+    should(stats.currentStats.failedRequests.foobar).not.be.undefined().and.be.exactly(2);
   });
 
   it('should do nothing when failedRequest is called with invalid arguments', function () {
@@ -125,9 +125,9 @@ describe('Test: statistics core component', function () {
   it('should handle new connections', function () {
     var connection = {type: 'foobar'};
     stats.newConnection(connection);
-    should(stats.currentStats.connections.foobar).not.be.eql(undefined).and.be.exactly(1);
+    should(stats.currentStats.connections.foobar).not.be.undefined().and.be.exactly(1);
     stats.newConnection(connection);
-    should(stats.currentStats.connections.foobar).not.be.eql(undefined).and.be.exactly(2);
+    should(stats.currentStats.connections.foobar).not.be.undefined().and.be.exactly(2);
   });
 
   it('should do nothing when newConnection is called with invalid arguments', function () {
@@ -144,7 +144,7 @@ describe('Test: statistics core component', function () {
     stats.dropConnection(connection);
     should(stats.currentStats.connections.foobar).be.exactly(1);
     stats.dropConnection(connection);
-    should(stats.currentStats.connections.foobar).be.eql(undefined);
+    should(stats.currentStats.connections.foobar).be.undefined();
   });
 
   it('should do nothing when dropConnection is called with invalid arguments', function () {

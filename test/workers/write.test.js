@@ -46,7 +46,7 @@ describe('Testing: write worker', function () {
 
   it('should contain an init() function', function () {
     var writeWorker = new Worker(kuzzle);
-    should(writeWorker.init).not.be.eql(undefined).and.be.a.Function();
+    should(writeWorker.init).not.be.undefined().and.be.a.Function();
   });
 
   it('should return a promise when initializing', function () {
@@ -88,7 +88,7 @@ describe('Testing: write worker', function () {
       try {
         should(queue).be.exactly(kuzzle.config.queues.workerWriteResponseQueue);
         should(response.status).be.exactly(400);
-        should(response.message).not.be.eql(null);
+        should(response.message).not.be.null();
         should(response.message).be.a.String().and.be.exactly('Write Worker: unknown action <foobar>');
         done();
       }

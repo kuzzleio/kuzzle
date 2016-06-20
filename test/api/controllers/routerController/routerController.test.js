@@ -31,7 +31,7 @@ describe('Test: routerController', () => {
       should(context.connection).be.an.Object();
       should(context.connection.id).be.eql(userId);
       should(context.connection.type).be.eql(protocol);
-      should(context.token).be.eql(null);
+      should(context.token).be.null();
     });
 
     it('should declare a new connection to the statistics core component', () => {
@@ -43,7 +43,7 @@ describe('Test: routerController', () => {
         should(context.connection).be.an.Object();
         should(context.connection.id).be.eql(userId);
         should(context.connection.type).be.eql(protocol);
-        should(context.token).be.eql(null);
+        should(context.token).be.null();
         newConnectionDeclared = true;
       };
 

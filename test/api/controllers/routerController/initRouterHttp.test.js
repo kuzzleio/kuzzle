@@ -118,7 +118,7 @@ describe('Test: routerController.initRouterHttp', () => {
       parseHttpResponse(response)
         .then(result => {
           should(result.status).be.exactly(200);
-          should(result.error).be.eql(null);
+          should(result.error).be.null();
           should(result.result.message).be.exactly('Available routes for this API version by verb.');
           should(result.result.routes).be.an.Object();
           should(result.result.routes['myplugin/foo']).be.an.Object();

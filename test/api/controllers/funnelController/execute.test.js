@@ -62,7 +62,7 @@ describe('funnelController.execute', () => {
     it('should execute the request immediately if not overloaded', done => {
       funnel.execute(requestObject, context, (err, res) => {
         try {
-          should(err).be.eql(null);
+          should(err).be.null();
           should(res.status).be.exactly(200);
           should(res).be.instanceOf(ResponseObject);
           should(processRequestCalled).be.true();

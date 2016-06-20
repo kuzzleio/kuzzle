@@ -257,8 +257,8 @@ describe('Test: Internal broker', function () {
 
         should(client.client.state).be.exactly('disconnected');
         should(socket.close).be.calledOnce();
-        should(client.client.socket).be.eql(null);
-        should(client.client.connected).be.eql(null);
+        should(client.client.socket).be.null();
+        should(client.client.connected).be.null();
       });
 
       it('should do nothing if socket is null', () => {
@@ -454,7 +454,7 @@ describe('Test: Internal broker', function () {
     describe('#send', () => {
 
       it('should do nothing if the room does not exist', () => {
-        return should(server.send('idontexist')).be.eql(undefined);
+        return should(server.send('idontexist')).be.undefined();
       });
 
       it('should do nothing is the emitter is the only client', () => {
@@ -466,7 +466,7 @@ describe('Test: Internal broker', function () {
 
         response = server.send('test', {foo: 'bar'}, client1.client.socket);
 
-        should(response).be.eql(undefined);
+        should(response).be.undefined();
       });
 
       it('should send data to one of the other clients', () => {
@@ -606,7 +606,7 @@ describe('Test: Internal broker', function () {
 
         server.close();
 
-        should(server.server).be.eql(null);
+        should(server.server).be.null();
         should(socket.close).be.calledOnce();
       });
 

@@ -33,6 +33,6 @@ describe('Test: dsl.filters.removeGlobalFilter', function () {
     filters.addCollectionSubscription('foo', 'index', 'collection');
     filters.removeGlobalFilter('foo');
 
-    should(filters.filtersTree.index).be.eql(undefined);
+    should(filters.filtersTree.index).be.undefined();
   });
 });

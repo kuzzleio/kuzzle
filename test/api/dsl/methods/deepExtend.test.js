@@ -21,9 +21,9 @@ describe('Test: dsl.deepExtend method', function () {
       result = deepExtend(f1, f2);
 
     should.exist(result.term);
-    should(result.term.foo).not.be.eql(undefined).and.be.exactly('bar');
+    should(result.term.foo).not.be.undefined().and.be.exactly('bar');
     should.exist(result.exists);
-    should(result.exists.field).not.be.eql(undefined).and.be.exactly('foobar');
+    should(result.exists.field).not.be.undefined().and.be.exactly('foobar');
   });
 
   it('should ignore duplicate values', function () {
@@ -49,9 +49,9 @@ describe('Test: dsl.deepExtend method', function () {
     should.exist(result.and);
     should(Object.keys(result).length).be.exactly(1);
     should.exist(result.and.term);
-    should(result.and.term.foo).not.be.eql(undefined).and.be.exactly('bar');
+    should(result.and.term.foo).not.be.undefined().and.be.exactly('bar');
     should.exist(result.and.exists);
-    should(result.and.exists.field).not.be.eql(undefined).and.be.exactly('foobar');
+    should(result.and.exists.field).not.be.undefined().and.be.exactly('foobar');
   });
 
   it('should merge "or" sub-filters', function () {
@@ -71,8 +71,8 @@ describe('Test: dsl.deepExtend method', function () {
     should.exist(result.or);
     should(Object.keys(result).length).be.exactly(1);
     should.exist(result.or.term);
-    should(result.or.term.foo).not.be.eql(undefined).and.be.exactly('bar');
+    should(result.or.term.foo).not.be.undefined().and.be.exactly('bar');
     should.exist(result.or.exists);
-    should(result.or.exists.field).not.be.eql(undefined).and.be.exactly('foobar');
+    should(result.or.exists.field).not.be.undefined().and.be.exactly('foobar');
   });
 });

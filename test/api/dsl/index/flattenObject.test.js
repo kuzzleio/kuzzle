@@ -16,10 +16,10 @@ describe('Test: dsl.flattenObject', function () {
 
     // the entry 'foo' must still exists because the user can perform a subscribe on {exists: {field: 'foo'}}
     should.exist(result.foo);
-    should(result['foo.bar']).not.be.eql(undefined).and.be.exactly('bar');
+    should(result['foo.bar']).not.be.undefined().and.be.exactly('bar');
     // the entry 'foo.baz' must still exists because the user can perform a subscribe on {exists: {field: 'foo.baz'}}
     should.exist(result['foo.baz']);
-    should(result['foo.baz.SchrodingerCat']).not.be.eql(undefined).and.be.exactly('Dead');
+    should(result['foo.baz.SchrodingerCat']).not.be.undefined().and.be.exactly('Dead');
   });
 
   it('should keep arrays unchanged', function () {
@@ -27,7 +27,7 @@ describe('Test: dsl.flattenObject', function () {
       arr = ['bar', 'baz'],
       result = flattenObject({ foo: arr});
 
-    should(result.foo).not.be.eql(undefined).and.be.an.Array().and.match(arr);
+    should(result.foo).not.be.undefined().and.be.an.Array().and.match(arr);
   });
 
   it('should automatically inject the provided ID', function () {

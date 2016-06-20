@@ -184,7 +184,7 @@ describe('Test: repositories/userRepository', function () {
 
     it('should resolve to "null" if username is not found', () => {
       return userRepository.load('unknownUser')
-        .then(user => should(user).be.eql(null));
+        .then(user => should(user).be.null());
     });
 
     it('should reject the promise if an error occurred while fetching the user', () => {

@@ -122,7 +122,7 @@ describe('Test: memoryStore controller', function () {
       should(blacklist).not.be.empty();
 
       blacklist.forEach(command => {
-        should(msController[command]).be.eql(undefined);
+        should(msController[command]).be.undefined();
       });
     });
 

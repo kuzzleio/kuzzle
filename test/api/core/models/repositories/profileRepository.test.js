@@ -84,7 +84,7 @@ describe('Test: repositories/profileRepository', () => {
       sandbox.stub(kuzzle.services.list.readEngine, 'get').rejects(new NotFoundError('Not found'));
       return kuzzle.repositories.profile.loadProfile('idontexist')
         .then(result => {
-          should(result).be.eql(null);
+          should(result).be.null();
         });
     });
 

@@ -58,8 +58,8 @@ describe('Test: dsl.testFilterRecursively', function () {
         }
       };
 
-    should(testFilterRecursively({}, filter1, {}, 'foo')).be.eql(undefined);
-    should(testFilterRecursively({}, filter2, {}, 'foo')).be.eql(undefined);
+    should(testFilterRecursively({}, filter1, {}, 'foo')).be.undefined();
+    should(testFilterRecursively({}, filter2, {}, 'foo')).be.undefined();
   });
 
   it('should return the final result of an AND filter set', function () {

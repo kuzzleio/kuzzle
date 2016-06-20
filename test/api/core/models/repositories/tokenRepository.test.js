@@ -437,7 +437,7 @@ describe('Test: repositories/tokenRepository', function () {
 });
 
 function assertIsAnonymous (token) {
-  should(token._id).be.eql(undefined);
+  should(token._id).be.undefined();
   should(token.user._id).be.exactly(-1);
   should(token.user).be.an.instanceOf(User);
 }

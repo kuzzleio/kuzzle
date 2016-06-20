@@ -38,12 +38,12 @@ describe('Test: token manager core component', function () {
   describe('#add', function () {
     it('should not add a token if the context does not contain a connection object', function () {
       tokenManager.add(token, {});
-      should(tokenManager.tokenizedConnections.foobar).be.eql(undefined);
+      should(tokenManager.tokenizedConnections.foobar).be.undefined();
     });
 
     it('should not add a token if the context connection does not contain an id', function () {
       tokenManager.add(token, {connection: {}});
-      should(tokenManager.tokenizedConnections.foobar).be.eql(undefined);
+      should(tokenManager.tokenizedConnections.foobar).be.undefined();
     });
 
     it('should add the token if the context is properly formatted', function () {
@@ -63,12 +63,12 @@ describe('Test: token manager core component', function () {
 
     it('should not add a token if the context does not contain a connection object', function () {
       tokenManager.add(anotherToken, {});
-      should(tokenManager.tokenizedConnections.foobar).be.eql(undefined);
+      should(tokenManager.tokenizedConnections.foobar).be.undefined();
     });
 
     it('should not add a token if the context connection does not contain an id', function () {
       tokenManager.add(anotherToken, {connection: {}});
-      should(tokenManager.tokenizedConnections.foobar).be.eql(undefined);
+      should(tokenManager.tokenizedConnections.foobar).be.undefined();
     });
 
     it('should add the token if the context is properly formatted', function () {
@@ -131,7 +131,7 @@ describe('Test: token manager core component', function () {
 
       tokenManager.checkTokensValidity();
 
-      should(notification).be.eql(null);
+      should(notification).be.null();
       should(subscriptionsCleaned).be.false();
       should(tokenManager.tokenizedConnections.foo).match({expiresAt: stubTokens.foo.expiresAt, connection: contextStub.connection});
       should(tokenManager.tokenizedConnections.bar).match({expiresAt: stubTokens.bar.expiresAt, connection: contextStub.connection});
@@ -162,7 +162,7 @@ describe('Test: token manager core component', function () {
       should(notification.requestId).be.eql('server notification');
       should(notification.controller).be.eql('auth');
       should(notification.action).be.eql('jwtTokenExpired');
-      should(tokenManager.tokenizedConnections.foo).be.eql(undefined);
+      should(tokenManager.tokenizedConnections.foo).be.undefined();
       should(tokenManager.tokenizedConnections.bar).match({expiresAt: stubTokens.bar.expiresAt, connection: contextStub.connection});
     });
 
@@ -185,8 +185,8 @@ describe('Test: token manager core component', function () {
       tokenManager.checkTokensValidity();
 
       should(subscriptionsCleaned).be.false();
-      should(notification).be.eql(null);
-      should(tokenManager.tokenizedConnections.foo).be.eql(undefined);
+      should(notification).be.null();
+      should(tokenManager.tokenizedConnections.foo).be.undefined();
       should(tokenManager.tokenizedConnections.bar).match({expiresAt: stubTokens.bar.expiresAt, connection: contextStub.connection});
     });
   });

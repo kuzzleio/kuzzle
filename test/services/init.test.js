@@ -96,7 +96,7 @@ describe('Test service initialization function', function () {
 
     return kuzzle.services.init({blacklist: ['writeEngine']})
       .then(() => {
-        should(kuzzle.services.list.writeEngine.client).be.eql(null);
+        should(kuzzle.services.list.writeEngine.client).be.null();
         should(spy.calledOnce).be.true();
       });
   });

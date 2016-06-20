@@ -246,7 +246,7 @@ describe('Test: hotelClerk.removeRooms', function () {
         should(kuzzle.dsl.filters.filtersTree).be.Object();
         should(Object.keys(kuzzle.dsl.filters.filtersTree).length).be.exactly(1);
         should(Object.keys(kuzzle.dsl.filters.filtersTree[index]).length).be.exactly(1);
-        should(kuzzle.dsl.filters.filtersTree[index][collection1]).be.eql(undefined);
+        should(kuzzle.dsl.filters.filtersTree[index][collection1]).be.undefined();
         should(kuzzle.dsl.filters.filtersTree[index][collection2]).be.Object();
       });
   });
@@ -309,7 +309,7 @@ describe('Test: hotelClerk.removeRooms', function () {
       .then(() => kuzzle.hotelClerk.removeRooms(requestObjectRemove))
       .then(() => {
         should(Object.keys(kuzzle.hotelClerk.rooms).length).be.exactly(1);
-        should(kuzzle.hotelClerk.rooms[roomName]).be.eql(undefined);
+        should(kuzzle.hotelClerk.rooms[roomName]).be.undefined();
       });
   });
 

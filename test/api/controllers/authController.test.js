@@ -372,7 +372,7 @@ describe('Test the auth controller', function () {
         .then(response => {
           should(response).be.instanceof(ResponseObject);
           should(response.data.body.valid).be.true();
-          should(response.data.body.state).be.eql(undefined);
+          should(response.data.body.state).be.undefined();
           should(response.data.body.expiresAt).be.eql(stubToken.expiresAt);
           done();
         })
@@ -390,7 +390,7 @@ describe('Test the auth controller', function () {
           should(response).be.instanceof(ResponseObject);
           should(response.data.body.valid).be.false();
           should(response.data.body.state).be.eql('foobar');
-          should(response.data.body.expiresAt).be.eql(undefined);
+          should(response.data.body.expiresAt).be.undefined();
           done();
         })
         .catch(err => done(err));
