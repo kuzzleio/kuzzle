@@ -16,28 +16,28 @@ describe('Test geoDistance method', function () {
     filterExact = {
       location: {
         lat: 0,
-        lon: 1,
+        lon: 1
       },
       distance: 111318
     },
     filterOK = {
       location: {
         lat: 0,
-        lon: 1,
+        lon: 1
       },
       distance: 111320
     },
     filterTooFar = {
       location: {
         lat: 0,
-        lon: 1,
+        lon: 1
       },
       distance: 111317
     },
     filterOkHumanReadable = {
       location: {
         lat: 0,
-        lon: 1,
+        lon: 1
       },
       distance: '365 219,816 Ft'
     },
@@ -47,6 +47,7 @@ describe('Test geoDistance method', function () {
     fieldLocation = md5('location');
 
   beforeEach(function () {
+    /** @type Methods */
     methods = new Methods(new Filters());
     return methods.geoDistance(filterId, index, collection, filterExact)
       .then(() => methods.geoDistance(filterId, index, collection, filterOK))

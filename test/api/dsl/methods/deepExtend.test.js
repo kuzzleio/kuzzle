@@ -40,9 +40,9 @@ describe('Test: dsl.deepExtend method', function () {
         }
       },
       f2 = {
-       and: {
-         exists: { field: 'foobar'}
-       }
+        and: {
+          exists: { field: 'foobar'}
+        }
       },
       result = deepExtend(f1, f2);
 

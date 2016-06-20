@@ -1,7 +1,7 @@
 {
   "name": "kuzzle",
   "author": "The Kuzzle Team <support@kuzzle.io>",
-  "version": "1.0.0-RC2",
+  "version": "1.0.0-RC3",
   "apiVersion": "1.0",
   "description": "Kuzzle is an open-source solution that handles all the data management through a secured API, with a large choice of protocols.",
   "main": "./lib/index.js",
@@ -15,7 +15,7 @@
     "cucumber": "cucumber.js",
     "crawl-coverage": "node coverage/scripts/feature-coverage-download.js",
     "codecov": "cat ./coverage/lcov.info | ./node_modules/.bin/codecov",
-    "lint": "jshint -c ./.jshintrc ./test ./features && eslint --max-warnings=0 ./lib ./bin",
+    "lint": "eslint --max-warnings=0 ./lib ./bin ./test ./features",
     "enable": "node bin/kuzzle enable",
     "disable": "node bin/kuzzle disable",
     "preversion": "git checkout master && git pull",
@@ -58,7 +58,6 @@
     "request-promise": "^3.0.0",
     "rimraf": "^2.5.2",
     "router": "1.1.4",
-    "walk": "2.3.9",
     "ws": "1.1.0"
   },
   "repository": {
@@ -71,7 +70,6 @@
     "eslint": "2.8.0",
     "istanbul": "0.4.3",
     "istanbul-middleware": "0.2.2",
-    "jshint": "^2.9.2",
     "mocha": "2.4.5",
     "mqtt": "1.8.0",
     "parser-yaml": "^0.1.1",

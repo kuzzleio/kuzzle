@@ -1,5 +1,4 @@
 var
-  _ = require('lodash'),
   q = require('q'),
   sinon = require('sinon'),
   params = require('rc')('kuzzle'),
@@ -31,20 +30,12 @@ describe('Test: repositories/profileRepository', () => {
       roles: [ 'error' ]
     },
     stubs = {
-      readEngine: {
-        get: (requestObject) => {
-          var err;
-          if (requestObject.data._id === 'testprofile') {
-            return q(testProfilePlain);
+      profileRepository:{
+        loadFromCache: (id) => {
+          if (id !== 'testprofile-cached') {
+            return q(null);
           }
-          if (requestObject.data._id === 'errorprofile') {
-            return q(errorProfilePlain);
-          }
-
-          err = new NotFoundError('Not found');
-          err.found = false;
-          err._id = requestObject.data._id;
-          return q.reject(err);
+          return q(testProfile);
         }
       },
       roleRepository:{
@@ -58,8 +49,8 @@ describe('Test: repositories/profileRepository', () => {
           );
         }
       }
-
-    };
+    },
+    sandbox;
 
   before(() => {
     kuzzle = new Kuzzle();
@@ -79,6 +70,9 @@ describe('Test: repositories/profileRepository', () => {
 
   beforeEach(() => {
     sandbox = sinon.sandbox.create();
+    sandbox.stub(kuzzle.repositories.profile, 'loadFromCache', stubs.profileRepository.loadFromCache);
+    sandbox.stub(kuzzle.repositories.profile, 'persistToCache').resolves({});
+    sandbox.stub(kuzzle.repositories.profile, 'deleteFromCache').resolves({});
   });
 
   afterEach(() => {
@@ -99,11 +93,11 @@ describe('Test: repositories/profileRepository', () => {
       return should(kuzzle.repositories.profile.loadProfile('id')).be.rejectedWith(InternalError);
     });
 
-    it('should load a profile if already in memory', () => {
+    it('should load a profile from cache if present', () => {
       sandbox.stub(kuzzle.repositories.role, 'loadRoles', stubs.roleRepository.loadRoles);
-      sandbox.stub(kuzzle.repositories.profile, 'profiles', {testprofile: testProfilePlain});
+      sandbox.stub(kuzzle.repositories.profile, 'refreshCacheTTL').resolves({});
 
-      return kuzzle.repositories.profile.loadProfile('testprofile')
+      return kuzzle.repositories.profile.loadProfile('testprofile-cached')
         .then(result => {
           should(result).be.an.instanceOf(Profile);
           should(result).be.eql(testProfile);
@@ -263,8 +257,8 @@ describe('Test: repositories/profileRepository', () => {
   describe('#searchProfiles', () => {
     it('should return a ResponseObject containing an array of profiles', () => {
       sandbox.stub(kuzzle.repositories.profile, 'search').resolves({
-          hits: [{_id: 'test'}],
-          total: 1
+        hits: [{_id: 'test'}],
+        total: 1
       });
 
       return kuzzle.repositories.profile.searchProfiles([])

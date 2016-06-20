@@ -34,25 +34,25 @@ describe('Test: security/roleTest', () => {
             search: requestObject => {
               if (requestObject.data.body.filter.ids.values[0] !== 'foobar') {
                 return q({hits: [documentAda]});
-              } else {
-                return q({hits: [documentFalseAda]});
               }
+
+              return q({hits: [documentFalseAda]});
             },
             get: requestObject => {
               if (requestObject.data.id === 'reject') {
                 return q.reject(new InternalError('Our Error'));
               } else if (requestObject.data.id !== 'foobar') {
                 return q(documentAda);
-              } else {
-                return q(documentFalseAda);
               }
+
+              return q(documentFalseAda);
             },
             mget: requestObject => {
               if (requestObject.data.body.ids[0] !== 'foobar') {
                 return q({hits: [documentAda]});
-              } else {
-                return q({hits: [documentFalseAda]});
               }
+
+              return q({hits: [documentFalseAda]});
             }
           }
         }
@@ -261,17 +261,17 @@ describe('Test: security/roleTest', () => {
     it('should properly handle overridden permissions', () => {
       var role = new Role();
       role.controllers = {
-          '*': {
-            actions: {
-              '*': true
-            }
-          },
-          controller: {
-            actions: {
-              '*': false
-            }
+        '*': {
+          actions: {
+            '*': true
           }
-        };
+        },
+        controller: {
+          actions: {
+            '*': false
+          }
+        }
+      };
 
       return role.isActionAllowed(requestObject, context, kuzzle)
         .then(isAllowed => {
@@ -506,7 +506,17 @@ describe('Test: security/roleTest', () => {
     it('should allow/deny rights using custom function with args using get', () => {
       var
         roleAllow = new Role(),
-        roleDeny = new Role();
+        roleDeny = new Role(),
+        request = new RequestObject({
+          controller: 'read',
+          action: 'get',
+          requestId: 'foo',
+          collection: 'barbar',
+          index: 'bar',
+          body: {
+            _id: documentAda._id
+          }
+        });
 
       roleAllow.controllers = {
         '*': {
@@ -546,23 +556,11 @@ describe('Test: security/roleTest', () => {
         }
       };
 
-      var requestObject = new RequestObject({
-        controller: 'read',
-        action: 'get',
-        requestId: 'foo',
-        collection: 'barbar',
-        index: 'bar',
-        body: {
-          _id: documentAda._id
-        }
-      });
-
-
-      return roleAllow.isActionAllowed(requestObject, context, kuzzle)
+      return roleAllow.isActionAllowed(request, context, kuzzle)
         .then(isAllowed => {
           should(isAllowed).be.true();
 
-          return roleDeny.isActionAllowed(requestObject, context, kuzzle);
+          return roleDeny.isActionAllowed(request, context, kuzzle);
         })
         .then(isAllowed => should(isAllowed).be.false());
     });
@@ -571,7 +569,7 @@ describe('Test: security/roleTest', () => {
       var
         roleAllow = new Role(),
         roleDeny = new Role(),
-        requestObject = new RequestObject({
+        request = new RequestObject({
           controller: 'read',
           action: 'get',
           requestId: 'foo',
@@ -620,11 +618,11 @@ describe('Test: security/roleTest', () => {
         }
       };
 
-      return roleAllow.isActionAllowed(requestObject, context, kuzzle)
+      return roleAllow.isActionAllowed(request, context, kuzzle)
         .then(isAllowed => {
           should(isAllowed).be.true();
 
-          return roleDeny.isActionAllowed(requestObject, context, kuzzle);
+          return roleDeny.isActionAllowed(request, context, kuzzle);
         })
         .then(isAllowed => should(isAllowed).be.false());
     });
@@ -633,7 +631,7 @@ describe('Test: security/roleTest', () => {
       var
         roleAllow = new Role(),
         roleDeny = new Role(),
-        requestObject = new RequestObject({
+        request = new RequestObject({
           controller: 'read',
           action: 'get',
           requestId: 'foo',
@@ -698,11 +696,11 @@ describe('Test: security/roleTest', () => {
         }
       };
 
-      return roleAllow.isActionAllowed(requestObject, context, kuzzle)
+      return roleAllow.isActionAllowed(request, context, kuzzle)
         .then(isAllowed => {
           should(isAllowed).be.true();
 
-          return roleDeny.isActionAllowed(requestObject, context, kuzzle);
+          return roleDeny.isActionAllowed(request, context, kuzzle);
         })
         .then(isAllowed => should(isAllowed).be.false());
     });
@@ -710,7 +708,7 @@ describe('Test: security/roleTest', () => {
     it('should not allow bad method call', () => {
       var
         role = new Role(),
-        requestObject = new RequestObject({
+        request = new RequestObject({
           controller: 'read',
           action: 'get',
           requestId: 'foo',
@@ -740,14 +738,14 @@ describe('Test: security/roleTest', () => {
         }
       };
 
-      return role.isActionAllowed(requestObject, context, kuzzle)
+      return role.isActionAllowed(request, context, kuzzle)
         .then(isAllowed => should(isAllowed).be.false());
     });
 
     it('should not allow if read method throws an error', () => {
       var
         role = new Role(),
-        requestObject = new RequestObject({
+        request = new RequestObject({
           controller: 'read',
           action: 'get',
           requestId: 'foo',
@@ -777,13 +775,13 @@ describe('Test: security/roleTest', () => {
         }
       };
 
-      return should(role.isActionAllowed(requestObject, context, kuzzle)).be.fulfilledWith(false);
+      return should(role.isActionAllowed(request, context, kuzzle)).be.fulfilledWith(false);
     });
 
     it('should not allow if collection is not specified', () => {
       var
         role = new Role(),
-        requestObject = new RequestObject({
+        request = new RequestObject({
           controller: 'read',
           action: 'get',
           requestId: 'foo',
@@ -812,7 +810,7 @@ describe('Test: security/roleTest', () => {
         }
       };
 
-      return should(role.isActionAllowed(requestObject, context, kuzzle)).be.fulfilledWith(false);
+      return should(role.isActionAllowed(request, context, kuzzle)).be.fulfilledWith(false);
     });
   });
 

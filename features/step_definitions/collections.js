@@ -45,14 +45,14 @@ var apiSteps = function () {
 
   this.Then(/^I change the schema(?: in index "([^"]*)")?$/, function (index, callback) {
     this.api.updateMapping()
-      .then(function (body) {
+      .then(body => {
         if (body.error !== null) {
           callback(new Error(body.error.message));
           return false;
         }
 
         callback();
-      }.bind(this))
+      })
       .catch(function (error) {
         callback(new Error(error));
       });

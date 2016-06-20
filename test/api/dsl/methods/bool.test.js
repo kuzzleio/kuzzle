@@ -67,6 +67,7 @@ describe('Test bool method', function () {
      */
     should.noConflict();
 
+    /** @type Methods */
     methods = new Methods(new Filters());
     return methods.bool(filterId, index, collection, filter);
   });

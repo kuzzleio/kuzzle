@@ -2,7 +2,6 @@ var
   should = require('should'),
   q = require('q'),
   sinon = require('sinon'),
-  RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle');
 
@@ -82,6 +81,6 @@ describe('Test: hotelClerk.listSubscription', function () {
 
         // should not return the collection bar
         should(response[index]).not.have.property('bar');
-     });
+      });
   });
 });

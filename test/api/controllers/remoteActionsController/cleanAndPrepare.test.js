@@ -2,7 +2,6 @@ var
   rc = require('rc'),
   params = rc('kuzzle'),
   q = require('q'),
-  rewire = require('rewire'),
   should = require('should'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject;

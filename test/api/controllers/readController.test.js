@@ -1,11 +1,11 @@
 var
   should = require('should'),
   q = require('q'),
+  /** @type {Params} */
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
-  ResponseObject = require.main.require('kuzzle-common-objects').Models.responseObject,
-  Role = require.main.require('lib/api/core/models/security/role');
+  ResponseObject = require.main.require('kuzzle-common-objects').Models.responseObject;
 
 describe('Test: read controller', function () {
   var
@@ -141,20 +141,7 @@ describe('Test: read controller', function () {
         realtime = true;
         return [{name: 'foo', index: 'index'}, {name: 'bar', index: 'index'}, {name: 'baz', index: 'wrong'}];
       };
-
-      kuzzle.repositories.role.roles.anonymous = new Role();
-      params.roleWithoutAdmin._id = 'anonymous';
-      return kuzzle.repositories.role.hydrate(kuzzle.repositories.role.roles.anonymous, params.roleWithoutAdmin)
-        .then(() => {
-          kuzzle.repositories.profile.profiles.anonymous = {_id: 'anonymous', roles: ['anonymous']};
-          return q(kuzzle.repositories.profile.profiles.anonymous);
-        })
-        .then(() => kuzzle.repositories.token.anonymous())
-        .then(token => {
-          context.token = token;
-        });
     });
-
     beforeEach(function () {
       realtime = false;
       stored = false;
@@ -188,7 +175,7 @@ describe('Test: read controller', function () {
       return should(kuzzle.funnel.controllers.read.listCollections(requestObject, context)).be.rejected();
     });
 
-   it('should only return stored collections with type = stored', function () {
+    it('should only return stored collections with type = stored', function () {
       requestObject = new RequestObject({body: {type: 'stored'}}, {}, '');
 
       return kuzzle.funnel.controllers.read.listCollections(requestObject, context).then(response => {

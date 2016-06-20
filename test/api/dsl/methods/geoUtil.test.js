@@ -2,10 +2,7 @@ var
   should = require('should'),
   rewire = require('rewire'),
   methods = rewire('../../../../lib/api/dsl/methods'),
-  KuzzleError = require.main.require('kuzzle-common-objects').Errors.kuzzleError,
   geohash = require('ngeohash');
-
-
 
 describe('Test geoUtil methods included in the DSL methods file', function () {
   var result,

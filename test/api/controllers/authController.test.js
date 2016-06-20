@@ -2,6 +2,7 @@ var
   should = require('should'),
   jwt = require('jsonwebtoken'),
   q = require('q'),
+  /** @type {Params} */
   params = require('rc')('kuzzle'),
   passport = require('passport'),
   sinon = require('sinon'),
@@ -17,6 +18,11 @@ var
   MockupWrapper,
   MockupStrategy;
 
+/**
+ * @param name
+ * @param verify
+ * @constructor
+ */
 MockupStrategy = function(name, verify) {
   passport.Strategy.call(this);
   this.name = name;
@@ -48,15 +54,14 @@ MockupStrategy.prototype.authenticate = function(req) {
 };
 
 MockupWrapper = function(MockupReturn) {
-  this.authenticate = function(request, strategy){
+  this.authenticate = function(request) {
     if (MockupReturn === 'resolve') {
       return q({_id: request.query.username});
     } else if (MockupReturn === 'oauth') {
       return q({headers: {Location: 'http://github.com'}});
     }
-    else {
-      return q.reject(new Error('Mockup Wrapper Error'));
-    }
+
+    return q.reject(new Error('Mockup Wrapper Error'));
   };
 };
 
@@ -76,7 +81,7 @@ describe('Test the auth controller', function () {
         kuzzle.services.list.tokenCache.client = redisClientMock;
 
         kuzzle.repositories.user.load = function(t) {
-          if ( t === 'unknown_user' ) {
+          if (t === 'unknown_user') {
             return q(null);
           }
           return q({
@@ -117,8 +122,9 @@ describe('Test the auth controller', function () {
           var decodedToken = jwt.verify(response.data.body.jwt, params.jsonWebToken.secret);
           should(decodedToken._id).be.equal('jdoe');
         })
-        .catch(error => {
-          console.log(error);
+        .catch(() => {
+          // This case must not raise
+          should(false).be.true();
         });
     });
 
@@ -216,8 +222,8 @@ describe('Test the auth controller', function () {
 
     beforeEach(function () {
       var
-       signedToken = jwt.sign({_id: 'admin'}, params.jsonWebToken.secret, {algorithm: params.jsonWebToken.algorithm}),
-       t = new Token();
+        signedToken = jwt.sign({_id: 'admin'}, params.jsonWebToken.secret, {algorithm: params.jsonWebToken.algorithm}),
+        t = new Token();
 
       t._id = signedToken;
 
@@ -350,11 +356,7 @@ describe('Test the auth controller', function () {
       };
 
     beforeEach(function () {
-      requestObject = new RequestObject({
-          action: 'checkToken',
-          controller: 'auth'
-        },
-        {body: {token: 'foobar'}});
+      requestObject = new RequestObject({action: 'checkToken', controller: 'auth'}, {body: {token: 'foobar'}});
     });
 
     it('should return a rejected promise if no token is provided', function () {
@@ -408,17 +410,15 @@ describe('Test the auth controller', function () {
   describe('#updateSelf', function () {
     var
       persistOptions,
-      kuzzle,
-      error;
+      anotherKuzzle;
 
     before(function (done) {
-      kuzzle = new Kuzzle();
-      kuzzle.start(params, {dummy: true})
+      anotherKuzzle = new Kuzzle();
+      anotherKuzzle.start(params, {dummy: true})
         .then(function () {
-
-          kuzzle.repositories.user.load = id => {
+          anotherKuzzle.repositories.user.load = id => {
             if (id === 'anonymous') {
-              return kuzzle.repositories.user.anonymous();
+              return anotherKuzzle.repositories.user.anonymous();
             }
             if (id === 'admin') {
               return {_id: 'admin', _source: { profile: 'admin' }};
@@ -427,7 +427,7 @@ describe('Test the auth controller', function () {
             return q(null);
           };
 
-          kuzzle.repositories.user.persist = (user, opts) => {
+          anotherKuzzle.repositories.user.persist = (user, opts) => {
             persistOptions = opts;
             return q(user);
           };
@@ -438,11 +438,10 @@ describe('Test the auth controller', function () {
 
     beforeEach(function () {
       persistOptions = {};
-      error = false;
     });
 
     it('should return a valid ResponseObject', done => {
-      kuzzle.funnel.controllers.auth.updateSelf(new RequestObject({
+      anotherKuzzle.funnel.controllers.auth.updateSelf(new RequestObject({
         body: { foo: 'bar' }
       }), { token: { user: { _id: 'admin' }, _id: 'admin' } })
         .then(response => {
@@ -456,21 +455,21 @@ describe('Test the auth controller', function () {
     });
 
     it('should reject if profile is specified', () => {
-      should(kuzzle.funnel.controllers.auth.updateSelf(new RequestObject({
+      should(anotherKuzzle.funnel.controllers.auth.updateSelf(new RequestObject({
         body: { foo: 'bar', profile: 'test' }
       }), { token: { user: { _id: 'admin' }, _id: 'admin' } }))
         .be.rejected();
     });
 
     it('should reject if _id is specified in the body', () => {
-      should(kuzzle.funnel.controllers.auth.updateSelf(new RequestObject({
+      should(anotherKuzzle.funnel.controllers.auth.updateSelf(new RequestObject({
         body: { foo: 'bar', _id: 'test' }
       }), { token: { user: { _id: 'admin' }, _id: 'admin' } }))
         .be.rejected();
     });
 
     it('should reject a the promise if current user is anonymous', () => {
-      should(kuzzle.funnel.controllers.auth.updateSelf(new RequestObject({
+      should(anotherKuzzle.funnel.controllers.auth.updateSelf(new RequestObject({
         body: {
           foo: 'bar'
         }
