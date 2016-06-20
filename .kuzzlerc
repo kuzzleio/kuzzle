@@ -9,7 +9,7 @@
 
   /*
   */
-  "lbBroker": {
+  "proxyBroker": {
     "host": "api",
     "port": 7331,
     "retryInterval": 1000
@@ -118,9 +118,11 @@
       "controllers": {
         "auth": {
           "actions": {
-            "login": true,
+            "logout": true,
             "checkToken": true,
-            "getCurrentUser": true
+            "getMyRights": true,
+            "getCurrentUser": true,
+            "login": true
           }
         },
         "read": {
@@ -136,7 +138,10 @@
           "actions": {
             "logout": true,
             "checkToken": true,
-            "getCurrentUser": true
+            "getMyRights": true,
+            "updateSelf": true,
+            "getCurrentUser": true,
+            "login": true
           }
         },
         "read": {
@@ -174,7 +179,7 @@
         "activated": true
       },
       "kuzzle-plugin-auth-passport-local": {
-        "npmVersion": "2.0.0",
+        "npmVersion": "2.0.1",
         "activated": true
       }
     }
