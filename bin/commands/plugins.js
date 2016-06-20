@@ -34,7 +34,7 @@ module.exports = function pluginsManager (plugin, options) {
     })
     .catch(err => {
       console.error(clcError(err.message));
-      process.exit(1);
+      process.exit(err.status);
     });
 
   /**
