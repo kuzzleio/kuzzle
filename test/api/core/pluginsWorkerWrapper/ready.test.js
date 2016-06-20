@@ -2,7 +2,7 @@ var
   should = require('should'),
   rewire = require('rewire'),
   sinon = require('sinon'),
-  PluginContext = require.main.require('lib/api/core/plugins/pluginsContext'),
+  PluginContext = require.main.require('lib/api/core/plugins/pluginContext'),
   ready = rewire('../../../../lib/api/core/plugins/workerReady');
 
 describe('Test plugins manager run', function () {
@@ -32,7 +32,7 @@ describe('Test plugins manager run', function () {
     sandbox.restore();
   });
 
-  it.only('should initialize the plugin properly', function () {
+  it('should initialize the plugin properly', function () {
     var
       config = { 'foobar': { bar: 'bar', qux: 'qux'}},
       init = pluginMock.expects('init').once(),
@@ -54,10 +54,7 @@ describe('Test plugins manager run', function () {
     ready();
 
     pluginMock.verify();
-    console.log(init.firstCall.args[1])
-    console.log(ready.__get__('PluginContext'))
-    console.log(init.firstCall.args[1] instanceof ready.__get__('PluginContext'))
-    should(init.firstCall.calledWith(config, sinon.match(new PluginContext(null, true)), 'am I a dummy?')).be.true();
+    should(init.firstCall.calledWithMatch(config, sinon.match.instanceOf(PluginContext), 'am I a dummy?')).be.true();
 
     should(processSend.firstCall.calledWithMatch({
       type: 'initialized',
