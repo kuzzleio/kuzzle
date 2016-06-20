@@ -120,7 +120,7 @@ ApiWebsocket.prototype.sendAndListen = function (msg, socketName) {
 
   socketName = initSocket.call(this, socketName);
   this.listSockets[socketName].once(msg.requestId, response => {
-    var listener = document => this.responses = document;
+    var listener = document => {this.responses = document;};
 
     if (response.error) {
       deferred.reject(response.error.message);

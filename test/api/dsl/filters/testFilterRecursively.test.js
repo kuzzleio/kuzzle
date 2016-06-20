@@ -63,19 +63,19 @@ describe('Test: dsl.testFilterRecursively', function () {
   });
 
   it('should return the final result of an AND filter set', function () {
-    var stub = sinon.stub();
-
-    filters = {
-      foo: {
-        args: {operator: 'term', not: true, field: 'foo.bar', value: 'bar'}
-      },
-      bar: {
-        args: {operator: 'term', not: true, field: 'foo.bar', value: 'bar'}
-      },
-      baz: {
-        args: {operator: 'term', not: true, field: 'foo.bar', value: 'bar'}
-      }
-    };
+    var
+      stub = sinon.stub(),
+      filters = {
+        foo: {
+          args: {operator: 'term', not: true, field: 'foo.bar', value: 'bar'}
+        },
+        bar: {
+          args: {operator: 'term', not: true, field: 'foo.bar', value: 'bar'}
+        },
+        baz: {
+          args: {operator: 'term', not: true, field: 'foo.bar', value: 'bar'}
+        }
+      };
 
     stub.onFirstCall().returns(true);
     stub.onSecondCall().returns(true);
@@ -95,19 +95,19 @@ describe('Test: dsl.testFilterRecursively', function () {
   });
 
   it('should return the final result of an OR filter set', function () {
-    var stub = sinon.stub();
-
-    filters = {
-      foo: {
-        args: {operator: 'term', not: true, field: 'foo.bar', value: 'bar'}
-      },
-      bar: {
-        args: {operator: 'term', not: true, field: 'foo.bar', value: 'bar'}
-      },
-      baz: {
-        args: {operator: 'term', not: true, field: 'foo.bar', value: 'bar'}
-      }
-    };
+    var
+      stub = sinon.stub(),
+      filters = {
+        foo: {
+          args: {operator: 'term', not: true, field: 'foo.bar', value: 'bar'}
+        },
+        bar: {
+          args: {operator: 'term', not: true, field: 'foo.bar', value: 'bar'}
+        },
+        baz: {
+          args: {operator: 'term', not: true, field: 'foo.bar', value: 'bar'}
+        }
+      };
 
     stub.onFirstCall().returns(true);
     stub.onSecondCall().returns(true);

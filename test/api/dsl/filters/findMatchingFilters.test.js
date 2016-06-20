@@ -1,7 +1,5 @@
 var
   should = require('should'),
-  params = require('rc')('kuzzle'),
-  Kuzzle = require.main.require('lib/api/Kuzzle'),
   rewire = require('rewire'),
   DslFilters = rewire('../../../../lib/api/dsl/filters');
 
@@ -38,18 +36,18 @@ describe('Test: dsl.filters.findMatchingFilters', function () {
     };
 
     DslFilters.__with__({
-      testFilterRecursively: function (filler, filters) {
-        return filters.returnValue;
+      testFilterRecursively: function (filler, filter) {
+        return filter.returnValue;
       }
     })(function () {
-        findMatchingFilters.call(filters, ['foo', 'bar', 'baz'])
-          .then(function (ids) {
-            should(ids).be.an.Array().and.match(['foo', 'baz']);
-            done();
-          })
-          .catch(function (e) {
-            done(e);
-          });
+      findMatchingFilters.call(filters, ['foo', 'bar', 'baz'])
+        .then(function (ids) {
+          should(ids).be.an.Array().and.match(['foo', 'baz']);
+          done();
+        })
+        .catch(function (e) {
+          done(e);
+        });
     });
   });
 

@@ -73,7 +73,7 @@ describe('Test exists method', function () {
   });
 
   it('should register the filter in the local area in case of a "exist" filter', function () {
-    methods.filters.add = function (index, collection, field, operatorName, value, curriedFunctionName, roomId, not, inGlobals) {
+    methods.filters.add = function (anIndex, aCollection, field, operatorName, value, curriedFunctionName, roomId, not, inGlobals) {
       should(inGlobals).be.false();
       should(curriedFunctionName).not.startWith('not');
       return {path: ''};
@@ -83,7 +83,7 @@ describe('Test exists method', function () {
   });
 
   it('should register the filter in the global area in case of a "not exist" filter', function () {
-    methods.filters.add = function (index, collection, field, operatorName, value, curriedFunctionName, roomId, not, inGlobals) {
+    methods.filters.add = function (anIndex, aCollection, field, operatorName, value, curriedFunctionName, roomId, not, inGlobals) {
       should(inGlobals).be.true();
       should(curriedFunctionName).startWith('not');
       return { path: '' };

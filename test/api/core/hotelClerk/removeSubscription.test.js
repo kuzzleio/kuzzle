@@ -20,7 +20,8 @@ describe('Test: hotelClerk.removeSubscription', function () {
     },
     index = 'test',
     collection = 'user',
-    unsubscribeRequest;
+    unsubscribeRequest,
+    sandbox;
 
 
   before(() => {

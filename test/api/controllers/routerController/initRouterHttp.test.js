@@ -7,13 +7,11 @@ var
   should = require('should'),
   http = require('http'),
   q = require('q'),
-  params = require('rc')('kuzzle'),
+  kuzzleParams = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   rewire = require('rewire'),
   yamlToJson = require('parser-yaml').parse,
-  fs = require('fs'),
-  RouterController = rewire('../../../../lib/api/controllers/routerController'),
-  RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject;
+  RouterController = rewire('../../../../lib/api/controllers/routerController');
 
 /*
  * This function helps keeping tests simple and clear while ensuring that
@@ -88,7 +86,7 @@ describe('Test: routerController.initRouterHttp', () => {
       response.end(JSON.stringify(params));
     };
 
-    kuzzle.start(params, {dummy: true})
+    kuzzle.start(kuzzleParams, {dummy: true})
       .then(() => {
         RouterController.__set__('executeFromRest', mockResponse);
 
@@ -97,7 +95,7 @@ describe('Test: routerController.initRouterHttp', () => {
 
         kuzzle.pluginsManager.routes = [
           {verb: 'get', url: '/myplugin/bar/:name', controller: 'myplugin/foo', action: 'bar'},
-          {verb: 'post', url: '/myplugin/bar', controller: 'myplugin/foo', action: 'bar'},
+          {verb: 'post', url: '/myplugin/bar', controller: 'myplugin/foo', action: 'bar'}
         ];
 
         router = new RouterController(kuzzle);

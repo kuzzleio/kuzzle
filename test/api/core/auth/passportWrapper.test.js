@@ -9,10 +9,12 @@ var
   PassportWrapper = require.main.require('lib/api/core/auth/passportWrapper'),
   MockupStrategy;
 
-
+/**
+ * @param name
+ * @param verify
+ * @constructor
+ */
 MockupStrategy = function(name, verify) {
-  var options = {};
-
   passport.Strategy.call(this);
   this.name = name;
   this._verify = verify;
@@ -20,7 +22,7 @@ MockupStrategy = function(name, verify) {
 };
 util.inherits(MockupStrategy, passport.Strategy);
 
-MockupStrategy.prototype.authenticate = function(req, options) {
+MockupStrategy.prototype.authenticate = function(req) {
   var
     self = this,
     username;
@@ -35,7 +37,7 @@ MockupStrategy.prototype.authenticate = function(req, options) {
   }
 
   try {
-      this._verify(username, verified);
+    this._verify(username, verified);
   } catch (ex) {
     return self.error(ex);
   }
@@ -53,23 +55,23 @@ describe('Test the passport Wrapper', function () {
       .then(function () {
         passportWrapper = new PassportWrapper(kuzzle);
 
-        passport.use(new MockupStrategy( 'mockup', function(username, callback) {
+        passport.use(new MockupStrategy('mockup', function(username, callback) {
           var
-            deferred = q.defer();
+            deferred = q.defer(),
             user = {
-                _id: username,
-                name: 'Johnny Cash'
-              };
+              _id: username,
+              name: 'Johnny Cash'
+            };
           deferred.resolve(user);
           deferred.promise.nodeify(callback);
           return deferred.promise;
         }));
 
-        passport.use(new MockupStrategy( 'null', function(username, callback) {
+        passport.use(new MockupStrategy('null', function(username, callback) {
           callback(null, false, {message: 'Empty User'});
         }));
 
-        passport.use(new MockupStrategy( 'error', function(username, callback) {
+        passport.use(new MockupStrategy('error', function(username, callback) {
           var
             deferred = q.defer();
           deferred.reject(new ForbiddenError('Bad Credentials'));

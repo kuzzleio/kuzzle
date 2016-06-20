@@ -57,9 +57,9 @@ describe('Test geoBoundingBox operator', function () {
         right: 43.607466,
         bottom: 3.912785
       },
-      document = { 'foo.lon': 3.912785 };
+      anotherDocument = { 'foo.lon': 3.912785 };
 
-    should(operators.geoBoundingBox('foo', box, document)).be.false();
+    should(operators.geoBoundingBox('foo', box, anotherDocument)).be.false();
   });
 
   it('should return false if the document does not contain a longitude', function () {
@@ -70,8 +70,8 @@ describe('Test geoBoundingBox operator', function () {
         right: 43.607466,
         bottom: 3.912785
       },
-      document = { 'foo.lat': 43.607466 };
+      anotherDocument = { 'foo.lat': 43.607466 };
 
-    should(operators.geoBoundingBox('foo', box, document)).be.false();
+    should(operators.geoBoundingBox('foo', box, anotherDocument)).be.false();
   });
 });
