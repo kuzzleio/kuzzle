@@ -1,5 +1,39 @@
 *__note:__ the # at the end of lines are the pull request numbers on GitHub*
 
+# 1.0.0-RC3
+
+* Temporary fix repositories #312
+* Add Errors objects into PluginContext #310
+* Fix issue #295 : Kuzzle Worker doesn't start correctly
+* Add swagger support #281 #307
+* Fix filtering issues: #302, #263
+* Fix docker-compose images #261 #278 #300
+* Share DSL to plugins #291
+* Roles refactoring #232 #286
+* Fixed status code 0 on default HTTP route #297
+* Update plugins dependencies #293
+* Add communication with Kuzzle proxy #284
+* Fix plugins installation implementation #290
+* Replace eval with arguments storage #289
+* Split internal broker into client and server #285
+* Add cli plugins --list option #288
+* Implements kuzzle-common-objects #283
+* Little fix on closure args definition #279
+* Expose httpPort config in context #280
+* Fix user profile update #275
+* Allow plugins to register an event on multiple functions #274
+* Fix realtime collections listing #267
+* Make roles impossible to remove if profiles still use them #259
+* Fix issue #264 : ./bin/kuzzle install fails
+* ElasticSearch autorefresh workaround #257
+* Path plugins configuration now taken from plugins dir #260
+* Remove unnecessary passport local plugin default config #258
+* Redis Cluster + Worker & Services catch error #254
+
+# 1.0.0-RC2.1
+
+* Solves issue #264
+
 # 1.0.0-RC2
 
 * Refactored CLI and Remote actions #208
