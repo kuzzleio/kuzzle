@@ -9,7 +9,7 @@ kuzzle:
   links:
     - elasticsearch
     - redis
-    - proxy
+    - proxy:api
   environment:
     - FEATURE_COVERAGE
 
