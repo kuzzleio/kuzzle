@@ -1,5 +1,4 @@
 var
-  rc = require('rc'),
   q = require('q'),
   should = require('should'),
   rewire = require('rewire'),
@@ -176,7 +175,7 @@ describe('Test: managePlugins remote action caller', function () {
           statSync: function() {
             return {
               mtime: new Date() - 3600001
-            }
+            };
           },
           unlinkSync: function() {},
           closeSync: function() {},
@@ -230,7 +229,7 @@ describe('Test: managePlugins remote action caller', function () {
           statSync: function() {
             return {
               mtime: new Date() - 3600001
-            }
+            };
           },
           unlinkSync: function() {},
           closeSync: function() {},
@@ -265,7 +264,7 @@ describe('Test: managePlugins remote action caller', function () {
           statSync: function() {
             return {
               mtime: new Date()
-            }
+            };
           }
         },
         'childProcess': {
@@ -297,7 +296,7 @@ describe('Test: managePlugins remote action caller', function () {
           statSync: function() {
             return {
               mtime: new Date() - 3600001
-            }
+            };
           },
           unlinkSync: function() {},
           closeSync: function() {},
@@ -431,24 +430,24 @@ describe('Test: managePlugins remote action caller', function () {
             pluginsManager: {
               dataCollection: 'collection',
               defaultPlugins: {
-                "kuzzle-fake-plugin": {
+                'kuzzle-fake-plugin': {
                   npmVersion: 42,
                   activated: true
                 },
-                "kuzzle-other-fake-plugin": {
+                'kuzzle-other-fake-plugin': {
                   path: 'fake-path',
                   activated: false
                 }
               }
             },
-            "mqBroker": {
-              "host" : "rabbit",
-              "port": 5672
+            'mqBroker': {
+              'host' : 'rabbit',
+              'port': 5672
             },
-            "jsonWebToken": {
-              "algorithm": "HS256",
-              "secret": "Kuzzle Rocks",
-              "expiresIn": "1h"
+            'jsonWebToken': {
+              'algorithm': 'HS256',
+              'secret': 'Kuzzle Rocks',
+              'expiresIn': '1h'
             }
           }
         };
