@@ -1,5 +1,4 @@
 var
-  _ = require('lodash'),
   q = require('q'),
   sinon = require('sinon'),
   params = require('rc')('kuzzle'),
@@ -32,8 +31,8 @@ describe('Test: repositories/profileRepository', () => {
     },
     stubs = {
       profileRepository:{
-        loadFromCache: (id, opts) => {
-          if (id !== 'testprofile-cached' ) {
+        loadFromCache: (id) => {
+          if (id !== 'testprofile-cached') {
             return q(null);
           }
           return q(testProfile);
@@ -50,8 +49,8 @@ describe('Test: repositories/profileRepository', () => {
           );
         }
       }
-
-    };
+    },
+    sandbox;
 
   before(() => {
     kuzzle = new Kuzzle();
@@ -258,8 +257,8 @@ describe('Test: repositories/profileRepository', () => {
   describe('#searchProfiles', () => {
     it('should return a ResponseObject containing an array of profiles', () => {
       sandbox.stub(kuzzle.repositories.profile, 'search').resolves({
-          hits: [{_id: 'test'}],
-          total: 1
+        hits: [{_id: 'test'}],
+        total: 1
       });
 
       return kuzzle.repositories.profile.searchProfiles([])

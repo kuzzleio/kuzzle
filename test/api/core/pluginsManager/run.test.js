@@ -1,5 +1,6 @@
 var
   should = require('should'),
+  /** @type {Params} */
   params = require('rc')('kuzzle'),
   rewire = require('rewire'),
   sinon = require('sinon'),

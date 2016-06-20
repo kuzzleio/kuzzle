@@ -4,14 +4,14 @@ var
 var apiSteps = function () {
   this.Then(/^I remove the document(?: in index "([^"]*)")?$/, function (index, callback) {
     this.api.deleteById(this.result._id, index)
-      .then(function (body) {
+      .then(body => {
         if (body.error !== null) {
           callback(body.error.message);
           return false;
         }
 
         callback();
-      }.bind(this))
+      })
       .catch(function (error) {
         callback(error);
       });
@@ -25,7 +25,7 @@ var apiSteps = function () {
         filter.query.match[field] = value;
 
         this.api.deleteByQuery(filter, index)
-          .then(function (body) {
+          .then(body => {
             if (body.error) {
               callbackAsync(body.error.message);
               return false;
@@ -37,7 +37,7 @@ var apiSteps = function () {
             }
 
             callbackAsync();
-          }.bind(this))
+          })
           .catch(function (error) {
             callbackAsync(error);
           });

@@ -1,9 +1,7 @@
 var
-  rc = require('rc'),
-  params = rc('kuzzle'),
-  q = require('q'),
   should = require('should'),
   rewire = require('rewire'),
+  /** @type remoteAction */
   prepareDb = rewire('../../../lib/api/remoteActions/prepareDb');
 
 
@@ -41,19 +39,19 @@ describe('Test: prepareDb remote action caller', function () {
   });
 
   it('should exit with status 1 if an error occurs', function (done) {
-    var response = prepareDb.onListenCB({error: 'error!'});
+    prepareDb.onListenCB({error: 'error!'});
     should (exitStatus).be.eql(1);
     done();
   });
 
   it('should exit with status 0 if everything ok', function (done) {
-    var response = prepareDb.onListenCB({data: {body: {isWorker: false}}});
+    prepareDb.onListenCB({data: {body: {isWorker: false}}});
     should (exitStatus).be.eql(0);
     done();
   });
 
   it('should exit with status 0 if everything ok even if we are in a worker', function (done) {
-    var response = prepareDb.onListenCB({data: {body: {isWorker: true}}});
+    prepareDb.onListenCB({data: {body: {isWorker: true}}});
     should (exitStatus).be.eql(0);
     done();
   });

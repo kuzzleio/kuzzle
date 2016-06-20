@@ -10,14 +10,14 @@ var apiSteps = function () {
     id = this.idPrefix + id;
 
     this.api.createOrReplaceProfile(id, this.profiles[profile])
-      .then(function (body) {
+      .then(body => {
         if (body.error) {
           callback(new Error(body.error.message));
           return false;
         }
 
         callback();
-      }.bind(this))
+      })
       .catch(function (error) {
         callback(error);
       });
@@ -25,30 +25,30 @@ var apiSteps = function () {
 
   this.Then(/^I cannot create an invalid profile$/, {timeout: 20 * 1000}, function (callback) {
     this.api.createOrReplaceProfile('invalid-profile', this.profiles.invalidProfile)
-      .then(function (body) {
+      .then(body => {
         if (body.error) {
           callback();
           return true;
         }
 
         callback(new Error('Creating profile with unexisting role succeeded. Expected to throw.'));
-      }.bind(this))
-      .catch(function (error) {
+      })
+      .catch(function () {
         callback();
       });
   });
 
   this.Then(/^I cannot create a profile with an empty set of roles$/, {timeout: 20 * 1000}, function (callback) {
     this.api.createOrReplaceProfile('invalid-profile', this.profiles.empty)
-      .then(function (body) {
+      .then(body => {
         if (body.error) {
           callback();
           return true;
         }
 
         callback(new Error('Creating profile without roles succeeded. Expected to throw.'));
-      }.bind(this))
-      .catch(function (error) {
+      })
+      .catch(function () {
         callback();
       });
   });
@@ -63,7 +63,7 @@ var apiSteps = function () {
 
         callback(new Error('Getting profile without id succeeded. Expected to throw.'));
       })
-      .catch(error => {
+      .catch(() => {
         callback();
       });
   });

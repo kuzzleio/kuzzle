@@ -1,7 +1,6 @@
 var
   should = require('should'),
   _ = require('lodash'),
-  q = require('q'),
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   WLoader = require('../../lib/workers/index');
