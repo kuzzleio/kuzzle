@@ -19,7 +19,11 @@ module.exports = function pluginsManager (plugin, options) {
 
   managePlugins(plugin, options)
     .then(res => {
-      if (res) {
+      if (res instanceof Array) {
+        for (var v in res) {
+          console.log(res[v]);
+        }
+      } else {
         console.log(res);
       }
       process.exit(0);

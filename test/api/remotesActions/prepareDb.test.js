@@ -1,6 +1,5 @@
 var
   rc = require('rc'),
-  params = rc('kuzzle'),
   q = require('q'),
   should = require('should'),
   rewire = require('rewire'),
