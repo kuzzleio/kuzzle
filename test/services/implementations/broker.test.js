@@ -12,7 +12,6 @@ var
   WSBrokerClient = require.main.require('lib/services/broker/wsBrokerClient'),
   WSBrokerServer = require.main.require('lib/services/broker/wsBrokerServer'),
   WSBrokerServerRewire = rewire('../../../lib/services/broker/wsBrokerServer');
-require('should-sinon');
 
 describe('Test: Internal broker', function () {
   var
