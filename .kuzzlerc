@@ -7,6 +7,12 @@
   */
   "serviceSettingsCollection": "services",
 
+  "default": {
+    "services": {
+        "initTimeout": 10000
+    }
+  },
+
   /*
   */
   "proxyBroker": {

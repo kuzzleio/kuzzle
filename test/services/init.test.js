@@ -1,23 +1,32 @@
 var
   should = require('should'),
   params = require('rc')('kuzzle'),
+  rewire = require('rewire'),
   sinon = require('sinon'),
   q = require('q'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
-  Services = require.main.require('lib/services'),
+  Services = rewire('../../lib/services'),
   sandbox = sinon.sandbox.create();
 
 describe('Test service initialization function', function () {
 
   var
+    clock,
     kuzzle;
+  
+  before(() => {
+    clock = sinon.useFakeTimers(Date.now());
+  });
+  
+  after(() => {
+    clock.restore();
+  });
 
   beforeEach(() => {
     kuzzle = new Kuzzle();
     return kuzzle.start(params, {dummy: true})
       .then(() => {
         kuzzle.removeAllListeners();
-
         kuzzle.internalEngine.client.transport = {};
       });
   });
@@ -91,6 +100,11 @@ describe('Test service initialization function', function () {
     var spy = sandbox.stub(kuzzle.internalEngine, 'get').resolves({});
 
     kuzzle.config = {
+      default: {
+        services: {
+          initTimeout: 10000
+        }
+      },
       services: {
         writeEngine: 'elasticsearch'
       }
@@ -102,22 +116,89 @@ describe('Test service initialization function', function () {
         should(spy.calledOnce).be.true();
       });
   });
-
-  it('should throw error if service file doesn\'t exist', function (done) {
+  
+  it('should propagate the internalEngine rejections', () => {
+    var 
+      error = new Error();
+    
+    sandbox.stub(kuzzle.internalEngine, 'get').rejects(error);
+    
     kuzzle.config = {
-      services: {
-        writeEngine: 'foo'
-      }
+      default: {services: {initTimeout: 1000}},
+      services: {myService: 'foo'}
     };
+    
+    return should(kuzzle.services.init())
+      .be.rejectedWith(error);
+  });
+  
+  describe('#registerService', () => {
+    var 
+      registerService = Services.__get__('registerService'),
+      scope;
+    
+    beforeEach(() => {
+      scope = {
+        kuzzle: {
+          config: {
+            default: {services: {initTimeout: 10000 }},
+            services: { }
+          },
+          pluginsManager: {
+            trigger: sinon.spy()
+          }
+        },
+        list: {}
 
-    try {
-      kuzzle.services.init();
-      done(new Error());
-    }
-    catch (e) {
-      done();
-    }
+      };
+    });
+    
+    it('should throw an error if the service file doesn\'t exist', () => {
+      scope.kuzzle.config.services = { writeEngine: 'foo' };
+      
+      should(() => registerService.call(scope, 'writeEngine', {}))
+        .throw('File services/foo.js not found to initialize service writeEngine');
+      
+      should(scope.kuzzle.pluginsManager.trigger).be.calledOnce();
+      should(scope.kuzzle.pluginsManager.trigger).be.calledWith('log:error',
+        'File services/foo.js not found to initialize service writeEngine');
+    });
 
+    it('should reject the promise if the service did not init in time', () => {
+      scope.kuzzle.config.services.myService = 'foo';
+      
+      // we need to mock require in the function's scope module.
+      return Services.__with__({
+        require: () => function () {
+          this.init = () => q.defer().promise;
+        }
+      })(() => {
+        var r = registerService.call(scope, 'myService', { timeout: 1000 }, true);
+        clock.tick(1000);
+        
+        return should(r).be.rejectedWith('[FATAL] Service "myService" failed to init within 1000ms');
+      });
+    });
+    
+    it('should reject the promise with the error received from the service', () => {
+      var 
+        myError = new Error('test');
+      
+      scope.kuzzle.config.services.myService = 'foo';
+
+      // we need to mock require in the function's scope module.
+      return Services.__with__({
+        require: () => function () {
+          this.init = () => q.reject(myError);
+        }
+      })(() => {
+        return should(registerService.call(scope, 'myService', {}, true))
+          .be.rejectedWith(myError);
+      });
+      
+    });
+    
   });
 
+  
 });

@@ -137,7 +137,6 @@ describe('Test: Internal broker', function () {
 
       client = new WSBrokerClient('internalBroker', kuzzle.config.internalBroker, kuzzle.pluginsManager);
       client.ws = () => new WSClientMock(server.server);
-
     });
 
     describe('#constructor', () => { });
@@ -183,8 +182,8 @@ describe('Test: Internal broker', function () {
       it('should wait for the broker server until the connection is established', (done) => {
         var state = '';
 
-        sinon.spy(client, 'init');
-
+        sinon.spy(client, '_connect');
+        
         // we init the client before the server.
         // The promise is resolved once the server is up and the connection is established
         // That means: there will be a timeout if the client is not able to retry the connection.
@@ -193,11 +192,11 @@ describe('Test: Internal broker', function () {
             should(response).be.an.instanceOf(WSClientMock);
             should(client.client.state).be.exactly('connected');
             should(state).be.exactly('retrying');
-            should(client.init.callCount).be.exactly(2);
+            should(client._connect.callCount).be.exactly(2);
             done();
           })
           .catch(err => done(err));
-
+        
         server.init()
           .then(() => {
             state = client.client.state; // should be "retrying", as the client should have already tried to reach the server without success
@@ -321,7 +320,7 @@ describe('Test: Internal broker', function () {
 
       it('on close should try reconnecting if :close was not explicitly called', () => {
         var
-          initSpy = sandbox.spy(client, 'init'),
+          connectSpy = sandbox.spy(client, '_connect'),
           closeSpy = sandbox.spy(client, 'close'),
           socket = client.client.socket;
 
@@ -331,12 +330,12 @@ describe('Test: Internal broker', function () {
         should(closeSpy).be.calledOnce();
 
         clock.tick(2000);
-        should(initSpy).be.calledOnce();
+        should(connectSpy).be.calledOnce();
       });
 
       it('on error should set the client state to retrying and retry to connect', () => {
         var
-          initSpy = sandbox.spy(client, 'init'),
+          connectSpy = sandbox.spy(client, '_connect'),
           closeSpy = sandbox.spy(client, 'close'),
           socket = client.client.socket;
 
@@ -347,14 +346,12 @@ describe('Test: Internal broker', function () {
         should(client.client.state).be.exactly('retrying');
 
         clock.tick(2000);
-        should(initSpy).be.calledOnce();
-
+        should(connectSpy).be.calledOnce();
       });
 
     });
 
   });
-
 
   describe('Server', () => {
     var client1, client2, client3;
