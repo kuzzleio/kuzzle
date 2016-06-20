@@ -16,7 +16,6 @@ var mockupCacheService = {
   id: undefined,
 
   remove: function (id) {
-    console.log('called', id);
     this.id = id;
     return q({});
   },
