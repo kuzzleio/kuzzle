@@ -478,8 +478,9 @@ describe('Test: memoryStore controller', function () {
 
           done();
         })
-        .catch(error => {
-          console.log(error);
+        .catch(() => {
+          // This case must not raise
+          should(false).be.true();
           done();
         });
     });

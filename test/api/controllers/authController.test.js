@@ -122,8 +122,9 @@ describe('Test the auth controller', function () {
           var decodedToken = jwt.verify(response.data.body.jwt, params.jsonWebToken.secret);
           should(decodedToken._id).be.equal('jdoe');
         })
-        .catch(error => {
-          console.log(error);
+        .catch(() => {
+          // This case must not raise
+          should(false).be.true();
         });
     });
 

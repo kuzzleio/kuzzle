@@ -1017,8 +1017,9 @@ describe('Test: ElasticSearch service', function () {
           should(spy.called).be.true();
           should(response).be.eql({ foo: 'bar' });
         })
-        .catch(err => {
-          console.log(err);
+        .catch(() => {
+          // This case must not raise
+          should(false).be.true();
         })
 
       ).be.fulfilled();
