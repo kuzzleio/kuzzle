@@ -41,7 +41,7 @@ describe('Plugins manager: getPluginsList', function () {
     sandbox.stub(kuzzle.internalEngine, 'search').resolves({hits: [
       {'_id': 'foo', _source: { config: {}}},
       {'_id': 'bar', _source: { config: {}}},
-      {'_id': 'foobar', _source: { config: {}}},
+      {'_id': 'foobar', _source: { config: {}}}
     ]});
 
     return getPluginsList(kuzzle, true)
@@ -58,7 +58,7 @@ describe('Plugins manager: getPluginsList', function () {
     sandbox.stub(kuzzle.internalEngine, 'search').resolves({hits: [
       {'_id': 'foo', _source: { config: { 'loadedBy': 'server' }}},
       {'_id': 'bar', _source: { config: { 'loadedBy': 'worker' }}},
-      {'_id': 'foobar', _source: { config: { 'loadedBy': 'all' }}},
+      {'_id': 'foobar', _source: { config: { 'loadedBy': 'all' }}}
     ]});
 
     return getPluginsList(kuzzle, true)
@@ -74,7 +74,7 @@ describe('Plugins manager: getPluginsList', function () {
     sandbox.stub(kuzzle.internalEngine, 'search').resolves({hits: [
       {'_id': 'foo', _source: { config: { 'loadedBy': 'server' }}},
       {'_id': 'bar', _source: { config: { 'loadedBy': 'worker' }}},
-      {'_id': 'foobar', _source: { config: { 'loadedBy': 'all' }}},
+      {'_id': 'foobar', _source: { config: { 'loadedBy': 'all' }}}
     ]});
 
     return getPluginsList(kuzzle, false)

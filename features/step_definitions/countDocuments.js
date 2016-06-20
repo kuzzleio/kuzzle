@@ -6,7 +6,7 @@ var apiSteps = function () {
     var main = function (callbackAsync) {
       setTimeout(function () {
         this.api.count({}, index)
-          .then(function (body) {
+          .then(body => {
             if (body.error) {
               callbackAsync(body.error.message);
               return false;
@@ -18,7 +18,7 @@ var apiSteps = function () {
             }
 
             callbackAsync();
-          }.bind(this))
+          })
           .catch(function (error) {
             callbackAsync(error);
           });
@@ -51,7 +51,7 @@ var apiSteps = function () {
         filter.query.match[field] = value;
 
         this.api.count(filter, index)
-          .then(function (body) {
+          .then(body => {
             if (body.error) {
               callbackAsync(body.error.message);
               return false;
@@ -63,7 +63,7 @@ var apiSteps = function () {
             }
 
             callbackAsync();
-          }.bind(this))
+          })
           .catch(function (error) {
             callbackAsync(new Error(error));
           });

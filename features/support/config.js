@@ -3,8 +3,12 @@
  * You can change these url in .kuzzlerc file in root folder or you can define environment variable like KUZZLE_URL, KUZZLE_MQTT_URL, KUZZLE_AMQP_URL, KUZZLE_STOMP_URL
  */
 
+/** @type {Params} */
 var config = require('rc')('kuzzle');
 
+/**
+ * @returns {{url: string, ws: string, mqttUrl: string, amqpUrl: string, stompUrl: string}}
+ */
 module.exports = function () {
 
   var defaultUrls = {

@@ -8,7 +8,9 @@ var
   ApiRT = require('./apiRT');
 
 
-/** CONSTRUCT **/
+/**
+ * @constructor
+ */
 var ApiSTOMP = function () {
   this.stompUrl = undefined;
   this.stompClient = undefined;
@@ -129,7 +131,7 @@ ApiSTOMP.prototype.sendAndListen = function (message) {
   message.clientId = uuid.v1();
   self.subscribedRooms[message.clientId] = {};
 
-  this.send.call(this, message)
+  this.send(message)
     .then(function (response) {
       roomClient.connect(function () {
         var topic = '/topic/' + response.result.channel;

@@ -9,8 +9,6 @@ require('sinon-as-promised')(q.Promise);
 describe('PluginsManager: init()', () => {
   var
     kuzzle,
-    sandbox,
-    engineMock,
     pluginsManager;
 
   before(() => {

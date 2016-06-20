@@ -29,9 +29,8 @@ module.exports = function () {
         if (not) {
           return callback();
         }
-        else {
-          callback(error);
-        }
+
+        callback(error);
       });
   });
 
@@ -87,8 +86,8 @@ module.exports = function () {
             match = match.replace(/#prefix#/g, this.idPrefix);
             matchFunc = _.matches(JSON.parse('{' + match + '}'));
             if (!body.result.hits.every(hit => {
-                return matchFunc(hit);
-              })) {
+              return matchFunc(hit);
+            })) {
               return cb(new Error('Error: ' + JSON.stringify(body.result.hits) + ' does not match ' + match));
             }
           }

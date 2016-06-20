@@ -19,6 +19,7 @@ describe('Test "not" method', function () {
     fieldCity = md5('city');
 
   beforeEach(function () {
+    /** @type Methods */
     methods = new Methods(new Filters());
     return methods.not(filterId, index, collection, filter);
   });
@@ -52,7 +53,7 @@ describe('Test "not" method', function () {
   });
 
   it('should pass an inverted "not" argument to the must function', function () {
-    methods.must = function (roomId, index, collection, filters, not) {
+    methods.must = function (roomId, anIndex, aCollection, filters, not) {
       should(roomId).be.exactly(not);
     };
 

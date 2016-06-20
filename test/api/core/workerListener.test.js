@@ -88,8 +88,9 @@ describe('Test: workerListener', function () {
 
   it('should only trigger a log response when receiving an unknown response', function (done) {
     var
-      workerListener = new WorkerListener(kuzzle, kuzzle.config.queues.workerWriteResponseQueue),
       responseObject;
+
+    new WorkerListener(kuzzle, kuzzle.config.queues.workerWriteResponseQueue);
 
     this.timeout(50);
 

@@ -731,11 +731,10 @@ describe('Test: ElasticSearch service', function () {
   describe('#getAllIdsFromQuery', function () {
     it('should be able to get every ids matching a query', () => {
       var
-        spy,
         getAllIdsFromQuery = ES.__get__('getAllIdsFromQuery'),
         ids = ['foo', 'bar'];
 
-      spy = sandbox.stub(elasticsearch.client, 'search').yields(null, {
+      sandbox.stub(elasticsearch.client, 'search').yields(null, {
         hits: {
           hits: [{_id: 'foo'}, {_id: 'bar'}],
           total: 2
@@ -890,7 +889,7 @@ describe('Test: ElasticSearch service', function () {
     });
 
     it('should reject the deleteIndex promise if elasticsearch throws an error', () => {
-      elasticsearch.client.indices.delete = function (data) {
+      elasticsearch.client.indices.delete = function () {
         return q.reject(new Error());
       };
 
@@ -1018,8 +1017,9 @@ describe('Test: ElasticSearch service', function () {
           should(spy.called).be.true();
           should(response).be.eql({ foo: 'bar' });
         })
-        .catch(err => {
-          console.log(err);
+        .catch(() => {
+          // This case must not raise
+          should(false).be.true();
         })
 
       ).be.fulfilled();

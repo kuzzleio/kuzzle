@@ -27,6 +27,7 @@ describe('Test: notifier.notify', function () {
     Notifier.__with__({
       send: function() { didSomething++; }
     })(function () {
+      /** @type {Notifier} */
       notifier = new Notifier(kuzzle);
       notifier.notify(null, {}, {});
       notifier.notify([], {}, {});
@@ -44,6 +45,7 @@ describe('Test: notifier.notify', function () {
     Notifier.__with__({
       send: function() { didSomething++; }
     })(function () {
+      /** @type {Notifier} */
       notifier = new Notifier(kuzzle);
       notifier.notify('foobar', {}, {});
     });
@@ -59,6 +61,7 @@ describe('Test: notifier.notify', function () {
     Notifier.__with__({
       send: function () { didSomething++; }
     })(function () {
+      /** @type {Notifier} */
       notifier = new Notifier(kuzzle);
       notifier.notify(['foo', 'bar', 'baz'], {}, {});
     });

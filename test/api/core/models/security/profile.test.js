@@ -21,7 +21,7 @@ describe('Test: security/profileTest', function () {
 
   it('should allow the action if one of the roles allows it', () => {
     var
-      context = {connection: null, user: null},
+      anotherContext = {connection: null, user: null},
       profile = new Profile(),
       disallowAllRole = new Role(),
       allowActionRole = new Role();
@@ -45,12 +45,12 @@ describe('Test: security/profileTest', function () {
     profile.roles.push(disallowAllRole);
 
 
-    return profile.isActionAllowed(requestObject, context)
+    return profile.isActionAllowed(requestObject, anotherContext)
       .then(isAllowed => {
         should(isAllowed).be.false();
 
         profile.roles.push(allowActionRole);
-        return profile.isActionAllowed(requestObject, context);
+        return profile.isActionAllowed(requestObject, anotherContext);
       })
       .then(isAllowed => {
         should(isAllowed).be.true();
@@ -60,7 +60,7 @@ describe('Test: security/profileTest', function () {
           {index: 'index2', collections: ['collection1']},
           {index: 'index3', collections: ['collection1', 'collection2']}
         ];
-        return profile.isActionAllowed(requestObject, context);
+        return profile.isActionAllowed(requestObject, anotherContext);
       })
       .then(isAllowed => should(isAllowed).be.false());
   });
@@ -126,8 +126,7 @@ describe('Test: security/profileTest', function () {
         should(filteredItem.every(item => item.value === 'allowed')).be.equal(true);
 
         filteredItem = rights.filter(item => {
-          return item.controller === 'write' &&
-                  item.action === 'publish';
+          return item.controller === 'write' && item.action === 'publish';
         });
         should(filteredItem).length(1);
         should(filteredItem[0].index).be.equal('index2');
@@ -135,17 +134,15 @@ describe('Test: security/profileTest', function () {
         should(filteredItem[0].value).be.equal('allowed');
 
         filteredItem = rights.filter(item => {
-          return item.controller === 'write' &&
-                  item.action === 'update';
+          return item.controller === 'write' && item.action === 'update';
         });
         should(filteredItem.every(item => {
-          return (item.index === '*' && item.collection === '*' && item.value === 'conditional' ) ||
+          return (item.index === '*' && item.collection === '*' && item.value === 'conditional') ||
             (item.index === 'index2' && item.collection === '*' && item.value === 'allowed');
         })).be.equal(true);
 
         filteredItem = rights.filter(item => {
-          return item.controller === 'write' &&
-                  item.action === 'delete';
+          return item.controller === 'write' && item.action === 'delete';
         });
         should(filteredItem).length(1);
         should(filteredItem[0].index).be.equal('*');
@@ -153,8 +150,7 @@ describe('Test: security/profileTest', function () {
         should(filteredItem[0].value).be.equal('conditional');
 
         filteredItem = rights.filter(item => {
-          return item.controller === 'read' &&
-                  item.action === 'listIndexes';
+          return item.controller === 'read' && item.action === 'listIndexes';
         });
         should(filteredItem).length(0);
 
