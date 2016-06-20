@@ -1,4 +1,5 @@
 -b
+-r should-sinon
 --reporter spec
 --recursive
 --slow 2000
