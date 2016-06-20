@@ -1,5 +1,4 @@
 var
-  
   should = require('should'),
   q = require('q'),
   rewire = require('rewire'),
