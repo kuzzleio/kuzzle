@@ -140,7 +140,7 @@ describe('Test: routerController.executeFromRest', function () {
         should(mockupResponse.header['Content-Type']).be.exactly('application/json');
         should(mockupResponse.response.status).be.exactly(200);
         should(mockupResponse.response.error).be.null();
-        should(mockupResponse.response).be.not.eql(null);
+        should(mockupResponse.response).be.not.null();
         should(mockupResponse.response.action).be.exactly('create');
         should(mockupResponse.response.controller).be.exactly('write');
 
@@ -175,7 +175,7 @@ describe('Test: routerController.executeFromRest', function () {
         should(mockupResponse.header['Content-Type']).be.exactly('application/json');
         should(mockupResponse.response.status).be.exactly(200);
         should(mockupResponse.response.error).be.null();
-        should(mockupResponse.response).be.not.eql(null);
+        should(mockupResponse.response).be.not.null();
         should(mockupResponse.response.action).be.exactly('create');
         should(mockupResponse.response.controller).be.exactly('write');
 
@@ -217,7 +217,7 @@ describe('Test: routerController.executeFromRest', function () {
         should(mockupResponse.header['Content-Type']).be.exactly('application/json');
         should(mockupResponse.response.status).be.exactly(200);
         should(mockupResponse.response.error).be.null();
-        should(mockupResponse.response).be.not.eql(null);
+        should(mockupResponse.response).be.not.null();
         should(mockupResponse.response.action).be.exactly('publish');
         should(mockupResponse.response.controller).be.exactly('write');
 
@@ -273,7 +273,7 @@ describe('Test: routerController.executeFromRest', function () {
         should(mockupResponse.header['Content-Type']).be.exactly('application/json');
         should(mockupResponse.response.status).be.exactly(200);
         should(mockupResponse.response.error).be.null();
-        should(mockupResponse.response).be.not.eql(null);
+        should(mockupResponse.response).be.not.null();
         should(mockupResponse.response.action).be.exactly('create');
         should(mockupResponse.response.controller).be.exactly('write');
         done();
@@ -299,7 +299,7 @@ describe('Test: routerController.executeFromRest', function () {
         should(mockupResponse.header['Content-Type']).be.exactly('application/json');
         should(mockupResponse.response.status).be.exactly(200);
         should(mockupResponse.response.error).be.null();
-        should(mockupResponse.response).be.not.eql(null);
+        should(mockupResponse.response).be.not.null();
         should(mockupResponse.response.action).be.exactly('create');
         should(mockupResponse.response.controller).be.exactly('write');
         should(savedRequestObject.data._id).be.exactly('fakeid');
