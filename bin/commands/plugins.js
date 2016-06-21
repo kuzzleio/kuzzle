@@ -255,12 +255,13 @@ function installPlugins(plugin, options, dbService, kuzzleConfiguration) {
  */
 function acquirePlugins(plugins) {
   var
-    installViaNpm = true,
     promises = [];
 
   _.forEach(plugins, (plugin, name) => {
+    var installViaNpm = true;
+    
     if (plugin.path) {
-      console.log('███ kuzzle-plugins: Plugin', name, 'uses local plugin. Config will be overrided with local changes.');
+      console.log('███ kuzzle-plugins: Plugin', name, 'uses local plugin. Config will be overridden with local changes.');
       installViaNpm = false;
     }
     else if (!plugin.gitUrl && !plugin.npmVersion) {
@@ -612,3 +613,5 @@ function removePlugin(plugin, db, cfg) {
       }
     });
 }
+
+
