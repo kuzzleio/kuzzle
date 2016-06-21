@@ -3,6 +3,10 @@ var
   util = require('util'),
   EventEmitter = require('events');
 
+/**
+ * @param server
+ * @constructor
+ */
 function WSMock (server) {
   this.server = server;
   this.listeners = {};

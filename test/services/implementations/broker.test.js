@@ -12,7 +12,6 @@ var
   WSBrokerClient = require.main.require('lib/services/broker/wsBrokerClient'),
   WSBrokerServer = require.main.require('lib/services/broker/wsBrokerServer'),
   WSBrokerServerRewire = rewire('../../../lib/services/broker/wsBrokerServer');
-require('should-sinon');
 
 describe('Test: Internal broker', function () {
   var
@@ -66,12 +65,14 @@ describe('Test: Internal broker', function () {
 
     beforeEach(() => {
       var InternalBroker = new BrokerFactory('internalBroker');
+      /** @type InternalBroker */
       server = new InternalBroker(kuzzle, {isServer: true});
       server.handler.ws = (options, cb) => {
         cb();
         return new WSServerMock();
       };
 
+      /** @type InternalBroker */
       client = new InternalBroker(kuzzle, {isServer: false});
       client.handler.ws = () => new WSClientMock(server.handler.server);
 
@@ -146,6 +147,7 @@ describe('Test: Internal broker', function () {
     describe('#init', () => {
 
       it('should attach events', () => {
+
         return server.init()
           .then(() => client.init())
           .then(response => {
@@ -361,6 +363,7 @@ describe('Test: Internal broker', function () {
     var client1, client2, client3;
 
     beforeEach(() => {
+      /** @type InternalBroker */
       server = new WSBrokerServerRewire('internalBroker', {}, kuzzle.pluginsManager);
       server.ws = (options, cb) => {
         cb();
@@ -642,7 +645,7 @@ describe('Test: Internal broker', function () {
         }));
 
         should(server.rooms).be.eql({
-          test: new CircularList( [ clientSocket ])
+          test: new CircularList([clientSocket])
         });
       });
 

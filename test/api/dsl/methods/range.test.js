@@ -43,6 +43,7 @@ describe('Test range method', function () {
     fieldAge = md5('age');
 
   beforeEach(function () {
+    /** @type Methods */
     methods = new Methods(new Filters());
 
     return methods.range(filterIdFilterGrace, index, collection, filterGrace)

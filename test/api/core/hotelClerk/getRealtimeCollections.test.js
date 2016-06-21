@@ -1,13 +1,12 @@
 var
   should = require('should'),
   params = require('rc')('kuzzle'),
-  Kuzzle = require.main.require('lib/api/Kuzzle'),
-  RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject;
+  Kuzzle = require.main.require('lib/api/Kuzzle');
 
 describe('Test: hotelClerk.getRealtimeCollections', function () {
   var
     index = 'foo',
-    collection = 'bar';
+    kuzzle;
 
   beforeEach(function () {
     kuzzle = new Kuzzle();

@@ -1,10 +1,7 @@
 var
-  md5 = require('crypto-md5'),
   sinon = require('sinon'),
   should = require('should'),
-  Methods = require.main.require('lib/api/dsl/methods'),
-  sandbox = sinon.sandbox.create();
-require('should-sinon');
+  Methods = require.main.require('lib/api/dsl/methods');
 
 describe('Test: dsl.regexp method', () => {
   var
@@ -14,27 +11,42 @@ describe('Test: dsl.regexp method', () => {
     methods;
 
   methods = new Methods({});
-  methods.filters.add = sinon.spy(() => {
-    return {
-      diff: {},
-      path: 'path',
-      filters: {}
-    };
-  });
-
+  
   beforeEach(() => {
-    sandbox.restore();
-    methods.filters.add.reset();
+    methods.filters.add = sinon.spy(() => {
+      return {
+        diff: {},
+        path: 'path',
+        filters: {}
+      };
+    });
   });
 
   it('should reject the promise if the argument is not valid', () => {
     return should(methods.regexp(roomId, index, collection, 'invalid'))
       .be.rejectedWith('Regexp argument must be an object');
   });
+  
+  it('should reject the promise if more than one field if given', () => {
+    return should(methods.regexp(roomId, index, collection, { 
+      first: '.*',
+      second: '.*'
+    }))
+      .be.rejectedWith('Regexp can take only one field entry');
+  });
 
   it('should reject the promise if an invalid regexp is given', () => {
     return should(methods.regexp(roomId, index, collection, { foo: '(unclosed parenthesis' }))
       .be.rejectedWith(SyntaxError);
+  });
+  
+  it('should reject the promise if filters::add returns an error', () => {
+    var error = new Error('');
+    
+    methods.filters.add = sinon.stub().returns(error);
+    
+    return should(methods.regexp(roomId, index, collection, { foo: '.*'}))
+      .be.rejectedWith(error);
   });
 
   it('should reject the promise if no regex is given', () => {

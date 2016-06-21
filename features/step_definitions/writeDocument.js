@@ -1,5 +1,4 @@
 var
-  async = require('async'),
   q = require('q');
 
 var apiSteps = function () {
@@ -74,15 +73,16 @@ var apiSteps = function () {
   });
 
   this.Then(/^I update the document with value "([^"]*)" in field "([^"]*)"(?: in index "([^"]*)")?$/, function (value, field, index) {
-    var body = {};
-    body[field] = value;
+    var body = {
+      [field]: value
+    };
 
     return this.api.update(this.result._id, body, index)
-      .then(body => {
-        if (body.error) {
-          return q.reject(body.error);
+      .then(aBody => {
+        if (aBody.error) {
+          return q.reject(aBody.error);
         }
-        if (!body.result) {
+        if (!aBody.result) {
           return q.reject('No result provided');
         }
       });

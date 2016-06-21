@@ -9,14 +9,14 @@ var apiSteps = function () {
     id = this.idPrefix + id;
 
     this.api.createOrReplaceRole(id, this.roles[role])
-      .then(function (body) {
+      .then(body => {
         if (body.error) {
           callback(new Error(body.error.message));
           return false;
         }
 
         callback();
-      }.bind(this))
+      })
       .catch(function (error) {
         callback(error);
       });
@@ -116,7 +116,7 @@ var apiSteps = function () {
       return callback('Fixture for role ' + role + ' does not exist');
     }
 
-    index = Object.keys(this.roles[role].controllers)[0];
+    // todo : This test seams to have been wrongly adapted, controller variable is undefined
     body = {
       controllers : [controller],
       from: from || 0,
@@ -126,17 +126,17 @@ var apiSteps = function () {
     main = function (callbackAsync) {
       setTimeout(() => {
         this.api.searchRoles(body)
-          .then(body => {
-            if (body.error) {
-              callbackAsync(body.error.message);
+          .then(aBody => {
+            if (aBody.error) {
+              callbackAsync(aBody.error.message);
               return false;
             }
 
-            if (!body.result.hits) {
-              body.result.hits = body.result.hits.filter(doc => doc._id.indexOf(this.idPrefix));
+            if (!aBody.result.hits) {
+              aBody.result.hits = aBody.result.hits.filter(doc => doc._id.indexOf(this.idPrefix));
 
-              if (body.result.hits.length !== parseInt(count)) {
-                return callbackAsync('Expected ' + count + ' roles, get ' + body.result.hits.length);
+              if (aBody.result.hits.length !== parseInt(count)) {
+                return callbackAsync('Expected ' + count + ' roles, get ' + aBody.result.hits.length);
               }
             }
 
@@ -222,8 +222,8 @@ var apiSteps = function () {
     this.api.create(document, index, collection)
       .then(body => {
         if (not && body.status === 403) {
-            callback();
-            return true;
+          callback();
+          return true;
         }
         if (not) {
           callback(new Error('Unexpected status response. Got ' + body.status + ' ; Expected 403'));

@@ -1,9 +1,7 @@
 var
   _ = require('lodash'),
-  q = require('q'),
   config = require('./config')(),
   rp = require('request-promise'),
-  apiVersion = require('../../package.json').apiVersion,
   rewire = require('rewire'),
   RouterController = rewire('../../lib/api/controllers/routerController.js'),
   routes;
@@ -21,6 +19,9 @@ ApiREST.prototype.init = function (world) {
   this.world = world;
 };
 
+/**
+ * @this ApiREST
+ */
 function initRoutes() {
   var
     context = {},
@@ -150,8 +151,6 @@ ApiREST.prototype.callApi = function (options) {
   }
   options.json = true;
   
-  console.log(options);
-
   return rp(options);
 };
 
@@ -198,7 +197,7 @@ ApiREST.prototype.create = function (body, index, collection, jwtToken) {
     body
   };
 
-  if (Boolean(jwtToken)) {
+  if (jwtToken) {
     options.headers = {
       authorization: 'Bearer ' + jwtToken
     };
@@ -403,8 +402,6 @@ ApiREST.prototype.getServerInfo = function () {
 
   return this.callApi(options)
     .then(res => {
-      console.log(res);
-      apiVersion = res.result.serverInfo.kuzzle.api.version;
       return res;
     });
 };
@@ -565,7 +562,7 @@ ApiREST.prototype.getCurrentUser = function () {
   });
 };
 
-ApiREST.prototype.getMyRights = function (id) {
+ApiREST.prototype.getMyRights = function () {
   var options = {
     url: this.apiPath('users/_me/_rights'),
     method: 'GET'

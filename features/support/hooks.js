@@ -116,7 +116,7 @@ var myHooks = function () {
         this.api.disconnect();
         callback();
       })
-      .catch(e => { callback(); });
+      .catch(() => { callback(); });
   });
 
   this.After({tags: ['@unsubscribe']}, function (scenario, callback) {
