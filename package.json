@@ -71,6 +71,7 @@
     "istanbul": "0.4.3",
     "istanbul-middleware": "0.2.2",
     "mocha": "2.4.5",
+    "mock-require": "^1.3.0",
     "mqtt": "1.8.0",
     "parser-yaml": "^0.1.1",
     "rewire": "2.5.1",
