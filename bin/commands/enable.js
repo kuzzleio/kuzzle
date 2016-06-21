@@ -5,7 +5,7 @@ var
 
 module.exports = function () {
 
-  var kuzzle = new Kuzzle(false);
+  var kuzzle = new Kuzzle();
 
   kuzzle.remoteActions.do('enableServices', params, {enable: true});
 
