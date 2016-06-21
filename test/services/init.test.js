@@ -3,7 +3,6 @@ var
   params = require('rc')('kuzzle'),
   rewire = require('rewire'),
   sinon = require('sinon'),
-  q = require('q'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   Services = rewire('../../lib/services'),
   sandbox = sinon.sandbox.create();

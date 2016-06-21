@@ -14,9 +14,8 @@ describe('Test: dsl.should method', function () {
       if (roomId === 'resolve') {
         return q('resolved');
       }
-      else {
-        return q.reject(new Error('rejected'));
-      }
+
+      return q.reject(new Error('rejected'));
     });
 
     methods = new Methods({filtersTree: {}});

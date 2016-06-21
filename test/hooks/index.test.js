@@ -1,10 +1,6 @@
 var
   should = require('should'),
-  params = require('rc')('kuzzle'),
-  _ = require('lodash'),
   Kuzzle = require.main.require('lib/api/Kuzzle');
-
-
 
 describe('Test main file for hooks managers', function () {
   var

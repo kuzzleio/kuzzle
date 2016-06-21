@@ -13,10 +13,6 @@ describe('Test missing method', function () {
     filterId = 'fakeFilterId',
     index = 'index',
     collection = 'collection',
-    documentGrace = {
-      firstName: 'Grace',
-      lastName: 'Hopper'
-    },
     filter = {
       field: 'lastName'
     },
@@ -24,6 +20,7 @@ describe('Test missing method', function () {
     fieldLastName = md5('lastName');
 
   beforeEach(function () {
+    /** @type Methods */
     methods = new Methods(new Filters());
     return methods.missing(filterId, index, collection, filter, false);
   });
@@ -74,7 +71,7 @@ describe('Test missing method', function () {
   });
 
   it('should register the filter in the lcao area in case of a "missing" filter', function () {
-    methods.filters.add = function (index, collection, field, operatorName, value, curriedFunctionName, roomId, not, inGlobals) {
+    methods.filters.add = function (anIndex, aCollection, field, operatorName, value, curriedFunctionName, roomId, not, inGlobals) {
       should(inGlobals).be.false();
       should(curriedFunctionName).not.startWith('not');
       return { path: '' };
@@ -84,7 +81,7 @@ describe('Test missing method', function () {
   });
 
   it('should register the filter in the global area in case of a "not missing" filter', function () {
-    methods.filters.add = function (index, collection, field, operatorName, value, curriedFunctionName, roomId, not, inGlobals) {
+    methods.filters.add = function (anIndex, aCollection, field, operatorName, value, curriedFunctionName, roomId, not, inGlobals) {
       should(inGlobals).be.true();
       should(curriedFunctionName).startWith('not');
       return { path: '' };
