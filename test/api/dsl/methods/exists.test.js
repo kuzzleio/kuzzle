@@ -83,7 +83,7 @@ describe('Test exists method', function () {
   });
 
   it('should register the filter in the global area in case of a "not exist" filter', function () {
-    methods.filters.add = function (anIndex, aCollection, field, operatorName, value, curriedFunctionName, roomId, not, inGlobals) {
+    methods.filters.add = function (anIndex, aCollection, field, operatorName, value, encodedFunctionName, roomId, not, inGlobals) {
       should(inGlobals).be.true();
       should(encodedFunctionName).be.exactly('notexistsfoo');
       return { path: '' };

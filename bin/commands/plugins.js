@@ -35,8 +35,7 @@ module.exports = function pluginsManager (plugin, options) {
     .catch(err => {
       console.error(clcError(err.message));
       process.exit(err.status);
-        pluginsList);
-}
+    });
 
   /**
    * Check the command-line validity.
@@ -56,7 +55,6 @@ module.exports = function pluginsManager (plugin, options) {
       .reduce((p, c) => {
         return p + (options[c] !== undefined);
       });
-    promises = [];
 
     if (requiredOptions > 1) {
       console.error(clcError('Only one plugin action is allowed'));
