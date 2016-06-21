@@ -7,6 +7,8 @@
   */
   "serviceSettingsCollection": "services",
 
+  "servicesDefaultInitTimeout": 10000,
+
   /*
    Cluster settings.
      # mode   [master|slave]
