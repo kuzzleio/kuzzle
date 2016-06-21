@@ -1,4 +1,5 @@
 var
+  q = require('q'),
   should = require('should'),
   params = require('rc')('kuzzle'),
   rewire = require('rewire'),

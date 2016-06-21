@@ -7,11 +7,7 @@
   */
   "serviceSettingsCollection": "services",
 
-  "default": {
-    "services": {
-        "initTimeout": 10000
-    }
-  },
+  "servicesDefaultInitTimeout": 10000,
 
   /*
   */
