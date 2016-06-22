@@ -74,7 +74,7 @@ describe('Test exists method', function () {
 
   it('should register the filter in the local area in case of a "exist" filter', function () {
     methods.filters.add = function (anIndex, aCollection, field, operatorName, value, curriedFunctionName, roomId, not, inGlobals) {
-      should(inGlobals).be.false();
+      should(inGlobals).be.undefined();
       should(curriedFunctionName).not.startWith('not');
       return {path: ''};
     };

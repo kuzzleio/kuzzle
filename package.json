@@ -11,8 +11,8 @@
   "scripts": {
     "test": "npm run --silent lint && npm run unit-testing --coverage && npm run functional-testing && npm run crawl-coverage",
     "unit-testing": "istanbul test _mocha",
-    "functional-testing": "npm run cucumber --fail-fast",
-    "cucumber": "cucumber.js",
+    "functional-testing": "npm run cucumber",
+    "cucumber": "cucumber.js --fail-fast",
     "crawl-coverage": "node coverage/scripts/feature-coverage-download.js",
     "codecov": "cat ./coverage/lcov.info | ./node_modules/.bin/codecov",
     "lint": "eslint --max-warnings=0 ./lib ./bin ./test ./features",
