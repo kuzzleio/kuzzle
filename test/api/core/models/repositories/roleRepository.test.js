@@ -57,12 +57,6 @@ describe('Test: repositories/roleRepository', function () {
       return should(kuzzle.repositories.role.loadRoles([-999, -998])).be.rejectedWith(InternalError);
     });
 
-    it('should reject the promise if some error occurs during the hydratation', () => {
-      sandbox.stub(kuzzle.services.list.readEngine, 'mget').resolves({hits: [{_id: 'anonymous', found: true}]});
-      sandbox.stub(kuzzle.repositories.role, 'hydrate').rejects(new InternalError('Error'));
-      return should(kuzzle.repositories.role.loadRoles(['anonymous'])).be.rejectedWith(InternalError);
-    });
-
     it('should retrieve some persisted roles', () => {
       sandbox.stub(kuzzle.services.list.readEngine, 'mget').resolves({
         hits: [{_id: 'persisted1', found: true, _source: persistedObject1},

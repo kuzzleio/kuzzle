@@ -177,23 +177,6 @@ describe('Test: repositories/tokenRepository', function () {
         })
         .catch(err => { done(err); });
     });
-
-    it('should reject the promise if an error is thrown by the prototype hydrate call', () => {
-      var
-        protoHydrate = Repository.prototype.hydrate,
-        token = new Token();
-
-      Repository.prototype.hydrate = () => {
-        return q.reject(new InternalError('Error'));
-      };
-
-      return should(tokenRepository.hydrate(token, {})
-        .catch(err => {
-          Repository.prototype.hydrate = protoHydrate;
-
-          return q.reject(err);
-        })).be.rejectedWith(InternalError);
-    });
   });
 
   describe('#verifyToken', function () {
@@ -314,25 +297,6 @@ describe('Test: repositories/tokenRepository', function () {
         })
         .catch(function (error) {
           done(error);
-        });
-    });
-
-    it('should reject the promise if hydrating fails', done => {
-      var
-        user = new User();
-
-      user._id = 'userInCache';
-      sandbox.stub(tokenRepository, 'hydrate').rejects({});
-
-      tokenRepository.generateToken(user, context)
-        .then(() => done(new Error()))
-        .catch(error => {
-          try{
-            should(error).be.an.instanceOf(InternalError);
-            should(error.message).be.exactly('Unable to generate token for unknown user');
-            done();
-          }
-          catch(e) { done(e); }
         });
     });
 

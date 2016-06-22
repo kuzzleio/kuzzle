@@ -133,21 +133,6 @@ describe('Test: repositories/userRepository', function () {
         .then(result => assertIsAnonymous(result));
     });
 
-    it('should reject the promise if an error is thrown by the prototype hydrate call', () => {
-      var
-        protoHydrate = Repository.prototype.hydrate,
-        user = new User();
-
-      Repository.prototype.hydrate = () => q.reject(new InternalError('Error'));
-
-      return should(userRepository.hydrate(user, {})
-        .catch(err => {
-          Repository.prototype.hydrate = protoHydrate;
-
-          return q.reject(err);
-        })).be.rejectedWith(InternalError);
-    });
-
     it('should reject the promise if the profile cannot be found', () => {
       var user = new User();
 
@@ -178,8 +163,8 @@ describe('Test: repositories/userRepository', function () {
         .then(user => {
           should(user._id).be.exactly('userInCache');
           should(user.name).be.exactly('Johnny Cash');
-          should(user.profile).be.an.instanceOf(Profile);
-          should(user.profile._id).be.exactly('userincacheprofile');
+          should(user.profile).be.a.String();
+          should(user.profile).be.exactly('userincacheprofile');
         });
     });
 
@@ -205,7 +190,6 @@ describe('Test: repositories/userRepository', function () {
       return userRepository.anonymous()
         .then(user => {
           var result = userRepository.serializeToCache(user);
-
           should(result).not.be.an.instanceOf(User);
           should(result).be.an.Object();
           should(result._id).be.exactly(-1);
@@ -219,8 +203,7 @@ describe('Test: repositories/userRepository', function () {
     it('should compute a user id if not set', () => {
       var user = new User();
       user.name = 'John Doe';
-      user.profile = new Profile();
-      user.profile._id = 'a profile';
+      user.profile = 'a profile';
 
       userRepository.persist(user);
 
@@ -239,7 +222,7 @@ describe('Test: repositories/userRepository', function () {
       user._id = 'NoProfile';
 
       return userRepository.hydrate(user, {})
-        .then(result => should(result.profile._id).be.eql('default'));
+        .then(result => should(result.profile).be.eql('default'));
     });
   });
 });
@@ -247,6 +230,6 @@ describe('Test: repositories/userRepository', function () {
 function assertIsAnonymous (user) {
   should(user._id).be.exactly(-1);
   should(user.name).be.exactly('Anonymous');
-  should(user.profile).be.an.instanceOf(Profile);
-  should(user.profile._id).be.exactly('anonymous');
+  should(user.profile).be.an.instanceOf(String);
+  should(user.profile).be.exactly('anonymous');
 }

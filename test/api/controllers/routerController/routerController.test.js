@@ -1,5 +1,6 @@
 var
   should = require('should'),
+  sinon = require('sinon'),
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   q = require('q'),
@@ -9,6 +10,8 @@ var
   Role = require.main.require('lib/api/core/models/security/role'),
   ResponseObject = require.main.require('kuzzle-common-objects').Models.responseObject,
   PluginImplementationError = require.main.require('kuzzle-common-objects').Errors.pluginImplementationError;
+
+require('sinon-as-promised')(q.Promise);
 
 describe('Test: routerController', () => {
   describe('#newConnection', () => {
@@ -74,7 +77,7 @@ describe('Test: routerController', () => {
       kuzzle = new Kuzzle();
       kuzzle.start(params, {dummy: true})
         .then(() => {
-          var User = require.main.require('lib/api/core/models/security/user')(kuzzle);
+          var User = require.main.require('lib/api/core/models/security/user');
 
           kuzzle.repositories.token.verifyToken = function() {
             var
@@ -89,10 +92,18 @@ describe('Test: routerController', () => {
                   }
                 }
             };
-
-            user._id = 'testUser';
-            user.profile = new Profile();
-            user.profile.roles = [role];
+            user = {
+              _id: 'user',
+              profile: 'profile',
+              getProfile: () => {
+                return q({
+                  _id: 'profile',
+                  roles: ['role'],
+                  getRoles: sinon.stub().resolves(role),
+                  isActionAllowed: sinon.stub().resolves(true)
+                });
+              }
+            };
 
             token._id = 'fake-token';
             token.user = user;

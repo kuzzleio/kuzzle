@@ -221,7 +221,7 @@ describe('Test: repositories/repository', function () {
         });
     });
 
-    it('should return a list of hydrated object when parameter hydrate is set', () => {
+/*    it('should return a list of hydrated object when parameter hydrate is set', () => {
       return repository.loadMultiFromDatabase(['persisted'], true)
         .then(results => {
           should(results).be.an.Array();
@@ -233,18 +233,18 @@ describe('Test: repositories/repository', function () {
             should(result.name).be.exactly('persisted');
           });
         });
-    });
+    });*/
 
-    it('should return a list of plain object when parameter hydrate is false', () => {
-      return repository.loadMultiFromDatabase(['persisted'], false)
+    it('should return a list of plain object', () => {
+      return repository.loadMultiFromDatabase(['persisted'])
         .then(results => {
           should(results).be.an.Array();
           should(results).not.be.empty();
 
           results.forEach(result => {
-            should(result).not.be.instanceOf(ObjectConstructor);
+            should(result).be.instanceOf(Object);
             should(result._id).be.exactly(-1);
-            should(result._source.name).be.exactly('persisted');
+            should(result.name).be.exactly('persisted');
           });
         });
     });
@@ -392,31 +392,6 @@ describe('Test: repositories/repository', function () {
       should(forwardedObject.ttl).be.exactly(500);
     });
 
-  });
-
-  describe('#hydrate', function () {
-    it('should return a properly hydrated object with a plain old object', () => {
-      var
-        object = new ObjectConstructor(),
-        data = {
-          value1: {
-            test: true
-          },
-          type: 'myType'
-        };
-
-      return repository.hydrate(object, data)
-        .then(result => {
-          should(result).be.an.instanceOf(ObjectConstructor);
-          should(result.type).be.exactly('myType');
-          should(result.value1).be.eql({test: true});
-          should(result.value1.test).be.true();
-        });
-    });
-
-    it('should return a rejected promise if the provided data is not an object', function () {
-      return should(repository.hydrate(new ObjectConstructor(), 'foobar')).be.rejectedWith(InternalError);
-    });
   });
 
   describe('#serializeToCache', () => {

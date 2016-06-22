@@ -33,7 +33,7 @@ describe('Test: repositories/profileRepository', () => {
     stubs = {
       profileRepository:{
         loadFromCache: (id, opts) => {
-          if (id !== 'testprofile-cached' ) {
+          if (id !== 'testprofile-cached') {
             return q(null);
           }
           return q(testProfile);
@@ -58,13 +58,8 @@ describe('Test: repositories/profileRepository', () => {
     return kuzzle.start(params, {dummy: true})
     .then(() => {
       testProfile = new Profile();
-      testProfile._id = 'testprofile';
-      testProfile.roles = [];
-      testProfile.roles[0] = new Role();
-      testProfile.roles[0]._id = 'test';
-      testProfile.roles[0].restrictedTo = [{index: 'index'}];
-      testProfile.roles[1] = new Role();
-      testProfile.roles[1]._id = 'test2';
+      testProfile._id = testProfilePlain._id;
+      testProfile.roles = testProfilePlain.roles;
     });
 
   });
@@ -140,21 +135,8 @@ describe('Test: repositories/profileRepository', () => {
 
   describe('#hydrate', () => {
     it('should reject the promise in case of error', () => {
-      sandbox.stub(kuzzle.services.list.readEngine, 'get').resolves(errorProfilePlain);
-      sandbox.stub(kuzzle.repositories.role, 'loadRoles').rejects(new InternalError('Error'));
+      sandbox.stub(kuzzle.services.list.readEngine, 'get').rejects(new InternalError('Error'));
       return should(kuzzle.repositories.profile.loadProfile('errorprofile')).be.rejectedWith(InternalError);
-    });
-
-    it('should hydrate a profille with its roles', () => {
-      var p = new Profile();
-
-      sandbox.stub(kuzzle.repositories.role, 'loadRoles', stubs.roleRepository.loadRoles);
-      return kuzzle.repositories.profile.hydrate(p, testProfilePlain)
-        .then((result) => {
-          should(result.roles[0]).be.an.instanceOf(Role);
-          should(result.roles[0]._id).be.equal('test');
-          should(result.roles[0].restrictedTo).match([{index: 'index'}]);
-        });
     });
 
     it('should throw if the profile contains unexisting roles', () => {
