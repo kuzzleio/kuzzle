@@ -277,6 +277,10 @@ describe('Test: read controller', function () {
           should(res.result.serverInfo.kuzzle.api).be.an.Object();
           should(res.result.serverInfo.kuzzle.api.version).be.a.String();
           should(res.result.serverInfo.kuzzle.api.routes).be.an.Object();
+          should(res.result.serverInfo.kuzzle.api.routes.read.get).be.an.Object();
+          should(res.result.serverInfo.kuzzle.api.routes.read.get.name).be.exactly('get');
+          should(res.result.serverInfo.kuzzle.api.routes.read.get.method).be.a.String();
+          should(res.result.serverInfo.kuzzle.api.routes.read.get.route).be.a.String();
           should(res.result.serverInfo.kuzzle.plugins).be.an.Object();
           should(res.result.serverInfo.kuzzle.system).be.an.Object();
           should(res.result.serverInfo.services).be.an.Object();
