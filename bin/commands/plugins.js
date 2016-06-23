@@ -19,16 +19,8 @@ module.exports = function pluginsManager (plugin, options) {
 
   managePlugins(plugin, options)
     .then(res => {
-      var
-        v;
-      if (res instanceof Array) {
-        for (v in res) {
-          if (res[v] !== undefined) {
-            console.log(res[v]);
-          }
-        }
-      } else {
-        console.log(res);
+      if (options.debug) {
+        console.dir(res, {depth: null, colors: true});
       }
       process.exit(0);
     })
