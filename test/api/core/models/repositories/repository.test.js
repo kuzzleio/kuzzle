@@ -90,8 +90,7 @@ describe('Test: repositories/repository', () => {
         promises = [];
 
       forwardedObject = requestObject;
-console.log('fo', forwardedObject.data.body.ids);
-      console.log('ro',requestObject.data.body.ids);
+
       requestObject.data.body.ids.forEach(id => {
         var req = new RequestObject({
           controller: 'read',
