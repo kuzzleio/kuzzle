@@ -102,7 +102,7 @@ ApiAMQP.prototype.sendAndListen = function (message) {
   message.clientId = uuid.v1();
   this.subscribedRooms[message.clientId] = {};
 
-  this.send.call(this, message)
+  this.send(message)
     .then(response => {
       this.amqpClient.then(connection => { return connection.createChannel(); })
       .then(channel => {

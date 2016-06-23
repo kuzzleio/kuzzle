@@ -21,10 +21,6 @@ describe('Test: security controller - users', function () {
       .then(function () {
         // Mock
         kuzzle.services.list.readEngine.search = () => {
-          if (error) {
-            return q.reject(new Error(''));
-          }
-
           return q({
             hits: [{_id: 'admin', _source: { profile: 'admin' }}],
             total: 1
@@ -32,9 +28,6 @@ describe('Test: security controller - users', function () {
         };
 
         kuzzle.repositories.user.load = id => {
-          if (error) {
-            return q.reject(new Error(''));
-          }
           if (id === 'anonymous') {
             return kuzzle.repositories.user.anonymous();
           }
@@ -45,15 +38,11 @@ describe('Test: security controller - users', function () {
           return q(null);
         };
 
-        kuzzle.repositories.user.persist = (user, opts) => {
-          persistOptions = opts;
+        kuzzle.repositories.user.persist = (user) => {
           return q(user);
         };
 
         kuzzle.repositories.user.deleteFromDatabase = () => {
-          if (error) {
-            return q.reject(new Error(''));
-          }
           return q({_id: 'test'});
         };
       });
@@ -87,8 +76,10 @@ describe('Test: security controller - users', function () {
     });
 
     it('should reject with NotFoundError when the user is not found', () => {
+      var promise;
+
       sandbox.stub(kuzzle.repositories.user, 'load').resolves(null);
-      var promise = kuzzle.funnel.controllers.security.getUser(new RequestObject({
+      promise = kuzzle.funnel.controllers.security.getUser(new RequestObject({
         body: { _id: 'i.dont.exist' }
       }));
 
@@ -289,8 +280,8 @@ describe('Test: security controller - users', function () {
 
       sandbox.stub(kuzzle.repositories.user, 'load', loadUserStub);
       return kuzzle.funnel.controllers.security.getUserRights(new RequestObject({
-          body: {_id: 'test'}
-        }))
+        body: {_id: 'test'}
+      }))
         .then(result => {
           var filteredItem;
 
@@ -325,8 +316,8 @@ describe('Test: security controller - users', function () {
     it('should reject NotFoundError on a getUserRights call with a bad id', () => {
       sandbox.stub(kuzzle.repositories.user, 'load').resolves(null);
       return should(kuzzle.funnel.controllers.security.getUserRights(new RequestObject({
-          body: { _id: 'i.dont.exist' }
-        }))).be.rejectedWith(NotFoundError);
+        body: { _id: 'i.dont.exist' }
+      }))).be.rejectedWith(NotFoundError);
     });
   });
 });

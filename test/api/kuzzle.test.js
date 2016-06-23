@@ -1,6 +1,5 @@
 var
   rc = require('rc'),
-  q = require('q'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   should = require('should');
 
@@ -31,7 +30,6 @@ describe('Test kuzzle constructor', () => {
 
   describe('#remoteActions', () => {
     var
-      kuzzle,
       processExit,
       params,
       exitStatus = 0;

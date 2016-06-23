@@ -1,6 +1,3 @@
-var
-  _ = require('lodash');
-
 var apiSteps = function () {
   this.When(/^I get the last statistics frame$/, function (callback) {
     this.api.getLastStats()

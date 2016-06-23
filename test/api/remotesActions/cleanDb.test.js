@@ -1,8 +1,7 @@
 var
-  rc = require('rc'),
-  q = require('q'),
   should = require('should'),
   rewire = require('rewire'),
+  /** @type remoteAction */
   cleanDb = rewire('../../../lib/api/remoteActions/cleanDb');
 
 
@@ -39,13 +38,13 @@ describe('Test: cleanDb remote action caller', function () {
   });
 
   it('should exit with status 1 if an error occurs', function (done) {
-    var response = cleanDb.onListenCB({error: 'error!'});
+    cleanDb.onListenCB({error: 'error!'});
     should (exitStatus).be.eql(1);
     done();
   });
 
   it('should exit with status 0 if everything ok', function (done) {
-    var response = cleanDb.onListenCB({});
+    cleanDb.onListenCB({});
     should (exitStatus).be.eql(0);
     done();
   });

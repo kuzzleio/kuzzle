@@ -14,7 +14,6 @@ var
   ResponseObject = require.main.require('kuzzle-common-objects').Models.responseObject,
   Profile = require.main.require('lib/api/core/models/security/profile'),
   User = require.main.require('lib/api/core/models/security/user')(kuzzle),
-  Repository = require.main.require('lib/api/core/models/repositories/repository'),
   UserRepository = require.main.require('lib/api/core/models/repositories/userRepository')(kuzzle),
   userRepository,
   userInvalidProfile;
@@ -27,8 +26,7 @@ before(function (done) {
     mockWriteLayer,
     mockProfileRepository,
     userInCache,
-    userInDB,
-    forwardedResult;
+    userInDB;
 
   mockCacheEngine = {
     get: function (key) {
@@ -37,8 +35,8 @@ before(function (done) {
       }
       return q(null);
     },
-    volatileSet: function (key, value, ttl) { forwardedResult = {key: key, value: JSON.parse(value), ttl: ttl }; return q('OK'); },
-    expire: function (key, ttl) { forwardedResult = {key: key, ttl: ttl}; return q('OK'); }
+    volatileSet: function () {return q('OK');},
+    expire: function () {return q('OK'); }
   };
 
   mockReadEngine = {
@@ -190,6 +188,7 @@ describe('Test: repositories/userRepository', function () {
       return userRepository.anonymous()
         .then(user => {
           var result = userRepository.serializeToCache(user);
+
           should(result).not.be.an.instanceOf(User);
           should(result).be.an.Object();
           should(result._id).be.exactly(-1);
@@ -215,8 +214,9 @@ describe('Test: repositories/userRepository', function () {
   describe('#defaultProfile', () => {
     it('should add the default profile when the user do not have any profile set', () => {
       var
-        userRepository = new UserRepository(),
         user = new User();
+
+      userRepository = new UserRepository();
 
       user.name = 'No Profile';
       user._id = 'NoProfile';

@@ -17,8 +17,12 @@ describe('Test: repositories/roleRepository', function () {
     ObjectConstructor,
     forwardedObject,
     persistedObject1,
-    persistedObject2;
+    persistedObject2,
+    sandbox;
 
+  /**
+   * @constructor
+   */
   ObjectConstructor = function () {
     this.type = 'testObject';
   };
@@ -153,16 +157,10 @@ describe('Test: repositories/roleRepository', function () {
 
     it('should construct a correct filter according to controllers', () => {
       var
-        savedFilter,
-        savedFrom,
-        savedSize,
-        savedHydrate;
+        savedFilter;
 
-      sandbox.stub(kuzzle.repositories.role, 'search', (filter, from, size, hydrate) => {
+      sandbox.stub(kuzzle.repositories.role, 'search', (filter) => {
         savedFilter = filter;
-        savedFrom = from;
-        savedSize = size;
-        savedHydrate = hydrate;
 
         return q();
       });

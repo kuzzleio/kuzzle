@@ -322,7 +322,7 @@ describe('InternalEngine', () => {
         .resolves();
 
       return kuzzle.internalEngine.delete(collection, id)
-        .then(result => {
+        .then(() => {
           mock.verify();
           should(mock.args[0].length).be.eql(1);
           should(mock.args[0][0]).match({
@@ -347,7 +347,7 @@ describe('InternalEngine', () => {
         .resolves();
 
       return kuzzle.internalEngine.createInternalIndex()
-        .then(result => {
+        .then(() => {
           mock.verify();
           should(mock.args[0].length).be.eql(1);
           should(mock.args[0][0]).match({index: kuzzle.config.internalIndex});

@@ -18,6 +18,9 @@ describe('Test: repositories/repository', () => {
     cachedObject,
     uncachedObject;
 
+  /**
+   * @constructor
+   */
   ObjectConstructor = function () {
     this.type = 'testObject';
   };

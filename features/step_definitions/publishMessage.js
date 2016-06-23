@@ -1,7 +1,7 @@
 var apiSteps = function () {
   this.When(/^I publish a message$/, function (callback) {
     this.api.publish(this.documentGrace)
-      .then(function (body) {
+      .then(body => {
         if (body.error) {
           callback(new Error(body.error.message));
           return false;
@@ -14,7 +14,7 @@ var apiSteps = function () {
 
         this.result = body;
         callback();
-      }.bind(this))
+      })
       .catch(function (error) {
         callback(error);
       });

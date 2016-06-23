@@ -20,6 +20,7 @@ describe('Test term method', function () {
 
 
   before(function () {
+    /** @type Methods */
     methods = new Methods(new Filters());
     return methods.term(filterIdMatch, index, collection, filter)
       .then(() => methods.term(filterIdNot, index, collection, filter, true));

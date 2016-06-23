@@ -262,7 +262,7 @@ describe('Test: hotelClerk.addSubscription', function () {
 
   it('should allow to subscribe to an existing room', done => {
     var
-      roomId,
+      anotherRoomId,
       requestObject1 = new RequestObject({
         controller: 'subscribe',
         index: index,
@@ -288,13 +288,13 @@ describe('Test: hotelClerk.addSubscription', function () {
           }
         });
 
-        roomId = id;
-        requestObject2.body = {roomId: roomId};
+        anotherRoomId = id;
+        requestObject2.body = {roomId: anotherRoomId};
         return kuzzle.hotelClerk.join(requestObject2, {connection: 'connection2', user: null});
       })
       .then(result => {
         should(result).be.an.Object();
-        should(result).have.property('roomId', roomId);
+        should(result).have.property('roomId', anotherRoomId);
         should(result).have.property('channel');
         done();
       })
