@@ -10,7 +10,6 @@ module.exports = function () {
 
     id = this.idPrefix + id;
 
-
     this.api[method](userObject, id)
       .then(body => {
         if (body.error) {

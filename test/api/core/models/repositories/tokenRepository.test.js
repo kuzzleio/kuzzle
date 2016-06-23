@@ -18,7 +18,7 @@ var
   UnauthorizedError = require.main.require('kuzzle-common-objects').Errors.unauthorizedError,
   Profile = require.main.require('lib/api/core/models/security/profile'),
   Token = require.main.require('lib/api/core/models/security/token'),
-  User = require.main.require('lib/api/core/models/security/user')(kuzzle),
+  User = require.main.require('lib/api/core/models/security/user'),
   Role = require.main.require('lib/api/core/models/security/role'),
   Repository = require.main.require('lib/api/core/models/repositories/repository'),
   TokenRepository = require.main.require('lib/api/core/models/repositories/tokenRepository')(kuzzle),
@@ -63,8 +63,10 @@ beforeEach(function (done) {
     anonymous: function () {
       var
         role = new Role(),
+        profile = new Profile(),
         user = new User();
 
+      role._id = 'anonymous'
       role.controllers = {
         '*': {
           actions: {
@@ -74,16 +76,18 @@ beforeEach(function (done) {
       };
 
       user._id = -1;
-      user.profile = new Profile();
-      user.profile.roles = [role];
+      user.profile = 'anonymous';
+      profile.roles = [{_id: role._id}];
 
       return q(user);
     },
     admin: function () {
       var
         role = new Role(),
+        profile = new Profile(),
         user = new User();
 
+      role._id = 'admin'
       role.controllers = {
         '*': {
           actions: {
@@ -93,8 +97,8 @@ beforeEach(function (done) {
       };
 
       user._id = 'admin';
-      user.profile = new Profile();
-      user.profile.roles = [role];
+      user.profile = 'admin';
+      profile.roles = [{_id: role._id}];
 
       return q(user);
     }
@@ -180,6 +184,9 @@ describe('Test: repositories/tokenRepository', function () {
 
   describe('#verifyToken', function () {
     it('should reject the promise if the jwt is invalid', function () {
+      console.log('tokenRepository.verifyToken("invalidToken")', tokenRepository.verifyToken('invalidToken'))
+      console.log('tokenRepository.verifyToken', tokenRepository.verifyToken)
+
       return should(tokenRepository.verifyToken('invalidToken')).be.rejectedWith(UnauthorizedError, {
         details: {
           subCode: UnauthorizedError.prototype.subCodes.JsonWebTokenError,
@@ -324,7 +331,7 @@ describe('Test: repositories/tokenRepository', function () {
           should(result).not.be.an.instanceOf(Token);
           should(result).be.an.Object();
           should(result._id).be.exactly(undefined);
-          should(result.user).be.exactly(-1);
+          should(result.user._id).be.exactly(-1);
 
           done();
         })

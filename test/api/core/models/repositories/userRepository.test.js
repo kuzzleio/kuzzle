@@ -13,7 +13,7 @@ var
   NotFoundError = require.main.require('kuzzle-common-objects').Errors.notFoundError,
   ResponseObject = require.main.require('kuzzle-common-objects').Models.responseObject,
   Profile = require.main.require('lib/api/core/models/security/profile'),
-  User = require.main.require('lib/api/core/models/security/user')(kuzzle),
+  User = require.main.require('lib/api/core/models/security/user'),
   UserRepository = require.main.require('lib/api/core/models/repositories/userRepository')(kuzzle),
   userRepository,
   userInvalidProfile;

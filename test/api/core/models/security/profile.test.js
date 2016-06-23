@@ -68,7 +68,7 @@ describe('Test: security/profileTest', function () {
       }
     };
 
-    profile.roles = ['disallowAllRole'];
+    profile.roles = [{_id: 'disallowAllRole'}];
 
     sandbox.stub(kuzzle.repositories.role, 'loadRoles', (_roles) => {
       var result = [];
@@ -82,7 +82,7 @@ describe('Test: security/profileTest', function () {
       .then(isAllowed => {
         should(isAllowed).be.false();
 
-        profile.roles.push('allowActionRole');
+        profile.roles.push({_id: 'allowActionRole'});
         profile._roles = null;
         return profile.isActionAllowed(requestObject, context, kuzzle);
       })
@@ -132,7 +132,7 @@ describe('Test: security/profileTest', function () {
     };
     profile.roles.push(role3);
 
-    return profile.getRights()
+    return profile.getRights(kuzzle)
       .then(rights => {
         var filteredItem;
 

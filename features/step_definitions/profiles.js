@@ -221,7 +221,7 @@ var apiSteps = function () {
     profileId = this.idPrefix + profileId;
 
     this.api.createOrReplaceProfile(profileId, {
-      roles: [roleId]
+      roles: [{_id: roleId}]
     })
     .then(response => {
       if (response.error) {
@@ -231,7 +231,7 @@ var apiSteps = function () {
 
       callback();
     })
-    .catch(function (error) {
+    .catch(error => {
       callback(error);
     });
   });

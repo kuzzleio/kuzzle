@@ -297,7 +297,7 @@ describe('Test: repositories/profileRepository', () => {
       sandbox.stub(kuzzle.repositories.profile, 'persistToDatabase', profile => q({_id: profile._id}));
       sandbox.stub(kuzzle.repositories.role, 'loadRoles', stubs.roleRepository.loadRoles);
 
-      testProfile.roles = ['anonymous'];
+      testProfile.roles = [{_id: 'anonymous'}];
 
       return kuzzle.repositories.profile.validateAndSaveProfile(testProfile)
         .then((result) => {

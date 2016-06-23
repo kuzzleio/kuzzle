@@ -40,7 +40,7 @@ describe('Test: hotelClerk.listSubscription', function () {
   });
 
   it('should return a correct list according to subscribe on filter', function () {
-    context.token.user.profile.isActionAllowed = sinon.stub().resolves(true);
+    context.token.user.isActionAllowed = sinon.stub().resolves(true);
     kuzzle.hotelClerk.rooms[roomName] = {index, collection, roomId: 'foobar', customers: ['foo']};
 
     return kuzzle.hotelClerk.listSubscriptions(context)
@@ -66,8 +66,8 @@ describe('Test: hotelClerk.listSubscription', function () {
       }
     };
 
-    context.token.user.profile.isActionAllowed = sinon.stub().resolves(true);
-    context.token.user.profile.isActionAllowed.onSecondCall().resolves(false);
+    context.token.user.isActionAllowed = sinon.stub().resolves(true);
+    context.token.user.isActionAllowed.onSecondCall().resolves(false);
 
     return kuzzle.hotelClerk.listSubscriptions(context)
       .then(response => {

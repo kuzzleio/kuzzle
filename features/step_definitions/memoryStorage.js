@@ -19,7 +19,6 @@ module.exports = function () {
 
     return this.api.callMemoryStorage(command, realArgs)
       .then(response => {
-        // console.log(realArgs, response);
         if (response.error) {
           return q.reject(response.error);
         }

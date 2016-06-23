@@ -39,7 +39,7 @@ describe('Test: security/userTest', function () {
     sandbox.stub(user, 'getProfile').resolves(profile);
     sandbox.stub(profile, 'getRights').resolves(profileRights);
 
-    return user.getRights()
+    return user.getRights(kuzzle)
       .then(rights => {
         should(rights).be.an.Object();
         should(rights).be.exactly(profileRights);

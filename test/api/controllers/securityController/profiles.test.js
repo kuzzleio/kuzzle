@@ -103,7 +103,7 @@ describe('Test: security controller - profiles', function () {
     });
 
     it('should resolve to a responseObject on a mGetProfiles call', () => {
-      sandbox.stub(kuzzle.repositories.profile, 'loadMultiFromDatabase').resolves([{_id: 'test', _source: {roles: [{_id: 'role'}]}}]);
+      sandbox.stub(kuzzle.repositories.profile, 'loadMultiFromDatabase').resolves([{_id: 'test', roles: [{_id: 'role'}]}]);
       return kuzzle.funnel.controllers.security.mGetProfiles(new RequestObject({
         body: {ids: ['test']}
       }))
@@ -111,7 +111,7 @@ describe('Test: security controller - profiles', function () {
           should(result).be.an.instanceOf(ResponseObject);
           should(result.data.body.hits).be.an.Array();
           should(result.data.body.hits).not.be.empty();
-
+console.log('result.data.body.hits[0]', result.data.body.hits[0])
           should(result.data.body.hits[0]).be.an.Object();
           should(result.data.body.hits[0]._source.roles).be.an.Array();
           should(result.data.body.hits[0]._source.roles[0]).be.an.Object();
@@ -158,6 +158,7 @@ describe('Test: security controller - profiles', function () {
       }))
         .then(result => {
           var jsonResponse = result.toJson();
+          console.log('jsonResponse.result.hits[0]', jsonResponse.result.hits[0])
           should(result).be.an.instanceOf(ResponseObject);
           should(jsonResponse.result.hits).be.an.Array();
           should(jsonResponse.result.hits[0]._id).be.exactly('test');

@@ -127,9 +127,7 @@ ApiREST.prototype.getRequest = function (index, collection, controller, action, 
   if (verb !== 'GET') {
     result.body = { body: args.body };
   }
-
-  // console.log(util.inspect(result, { depth: 6 }));
-
+  
   return result;
 };
 

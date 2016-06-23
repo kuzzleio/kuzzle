@@ -20,7 +20,6 @@ var myHooks = function () {
           })
           .catch(() => {
             // ignoring errors
-            // console.log('Error deleting index ' + index + '. Ignoring...');
             deferred.resolve({});
           });
 

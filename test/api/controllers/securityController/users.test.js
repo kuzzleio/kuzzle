@@ -103,18 +103,18 @@ describe('Test: security controller - users', function () {
         });
     });
 
-    it('should return some unhydrated users when asked', () => {
-      sandbox.stub(kuzzle.repositories.user, 'search').resolves({hits: [{_id: 'admin', _source: {profile: 'admin'}}]});
-      return kuzzle.funnel.controllers.security.searchUsers(new RequestObject({
-        body: { hydrate: false }
-      }))
-        .then(response => {
-          should(response).be.an.instanceOf(ResponseObject);
-          response.data.body.hits.every(doc => {
-            should(doc._source.profile).be.a.String();
-          });
-        });
-    });
+    // it('should return some unhydrated users when asked', () => {
+    //   sandbox.stub(kuzzle.repositories.user, 'search').resolves({hits: [{_id: 'admin', _source: {profile: 'admin'}}]});
+    //   return kuzzle.funnel.controllers.security.searchUsers(new RequestObject({
+    //     body: { hydrate: false }
+    //   }))
+    //     .then(response => {
+    //       should(response).be.an.instanceOf(ResponseObject);
+    //       response.data.body.hits.every(doc => {
+    //         should(doc._source.profile).be.a.String();
+    //       });
+    //     });
+    // });
 
     it('should reject with a response object in case of error', () => {
       sandbox.stub(kuzzle.repositories.user, 'search').rejects();
@@ -150,7 +150,7 @@ describe('Test: security controller - users', function () {
   });
 
   describe('#createUser', function () {
-    it('should return a valid a valid response', () => {
+    it('should return a valid response', () => {
       var mock = sandbox.mock(kuzzle.repositories.user).expects('persist').once().resolves({_id: 'test'});
       sandbox.stub(kuzzle.repositories.user, 'hydrate').resolves();
 
