@@ -6,7 +6,7 @@ var
   Repository = require.main.require('lib/api/core/models/repositories/repository'),
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject;
 
-describe('Test: repositories/repository', function () {
+describe('Test: repositories/repository', () => {
   var
     forwardedObject,
     persistedObject,
@@ -35,7 +35,7 @@ describe('Test: repositories/repository', function () {
   uncachedObject.name = 'uncached';
 
   mockCacheEngine = {
-    get: function (key) {
+    get: key => {
       if (key === repository.index + '/' + repository.collection + '/persisted') {
         return q(JSON.stringify(persistedObject));
       }
@@ -58,7 +58,7 @@ describe('Test: repositories/repository', function () {
   };
 
   mockReadEngine = {
-    get: function (requestObject, forward) {
+    get: (requestObject, forward) => {
       var err;
       if (forward !== false) {
         forwardedObject = requestObject;
@@ -85,13 +85,14 @@ describe('Test: repositories/repository', function () {
       err._id = requestObject.data._id;
       return q.reject(err);
     },
-    mget: function (requestObject) {
+    mget: requestObject => {
       var
         promises = [];
 
       forwardedObject = requestObject;
-
-      requestObject.data.body.ids.forEach(function (id) {
+console.log('fo', forwardedObject.data.body.ids);
+      console.log('ro',requestObject.data.body.ids);
+      requestObject.data.body.ids.forEach(id => {
         var req = new RequestObject({
           controller: 'read',
           action: 'get',
@@ -139,13 +140,13 @@ describe('Test: repositories/repository', function () {
   };
 
   mockWriteLayer = {
-    execute: function (o) {
+    execute: o => {
       forwardedObject = o;
     },
     delete: requestObject => q(requestObject)
   };
 
-  before(function () {
+  before(() => {
     var mockKuzzle = {
       config: require.main.require('lib/config')(require('rc')('kuzzle'))
     };
@@ -160,7 +161,7 @@ describe('Test: repositories/repository', function () {
     });
   });
 
-  beforeEach(function () {
+  beforeEach(() => {
     forwardedObject = null;
     repository.ObjectConstructor = ObjectConstructor;
     repository.readEngine = mockReadEngine;
@@ -168,7 +169,7 @@ describe('Test: repositories/repository', function () {
     repository.cacheEngine = mockCacheEngine;
   });
 
-  describe('#loadOneFromDatabase', function () {
+  describe('#loadOneFromDatabase', () => {
     it('should return null for an non existing id', () => {
       return repository.loadOneFromDatabase(-9999)
         .then(result => should(result).be.null());
@@ -200,14 +201,14 @@ describe('Test: repositories/repository', function () {
 
   });
 
-  describe('#loadMultiFromDatabase', function () {
+  describe('#loadMultiFromDatabase', () => {
     it('should return an empty array for an non existing id', () => {
       return repository.loadMultiFromDatabase([-999, -998, -997])
         .then(results => should(results).be.an.Array().and.have.length(0));
     });
 
     it('should reject the promise in case of error', () => {
-      return should(repository.loadMultiFromDatabase(['error'])).be.rejectedWith(InternalError);
+      return should(repository.loadMultiFromDatabase('error')).be.rejectedWith(InternalError);
     });
 
     it('should create a valid requestObject request for the readEngine', () => {
@@ -250,7 +251,7 @@ describe('Test: repositories/repository', function () {
     });
   });
 
-  describe('#loadFromCache', function () {
+  describe('#loadFromCache', () => {
     it('should return null for an non-existing id', () => {
       return repository.loadFromCache(-999)
         .then(result => should(result).be.null());
@@ -275,7 +276,7 @@ describe('Test: repositories/repository', function () {
     });
   });
 
-  describe('#load', function () {
+  describe('#load', () => {
     it('should return null for an non-existing id', () => {
       return repository.load(-999)
         .then(result => should(result).be.null());
@@ -406,7 +407,7 @@ describe('Test: repositories/repository', function () {
     });
   });
 
-  describe('#search', function () {
+  describe('#search', () => {
     it('should return a list from database', () => {
       return repository.search({}, 0, 10, false)
         .then(response => {

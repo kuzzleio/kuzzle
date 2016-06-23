@@ -35,11 +35,7 @@ describe('funnelController.processRequest', function () {
       return q({
         user: {
           _id: 'user',
-          getProfile: () => {
-            return q({
-              isActionAllowed: sinon.stub().resolves(true)
-            });
-          }
+          isActionAllowed: sinon.stub().resolves(true)
         }
       });
     });
@@ -97,11 +93,7 @@ describe('funnelController.processRequest', function () {
       return q({
         user: {
           _id: -1,
-          getProfile: () => {
-            return q({
-              isActionAllowed: sinon.stub().resolves(false)
-            });
-          }
+          isActionAllowed: sinon.stub().resolves(false)
         }
       });
     });
@@ -123,11 +115,7 @@ describe('funnelController.processRequest', function () {
       return q({
         user: {
           _id: 'user',
-          getProfile: () => {
-            return q({
-              isActionAllowed: sinon.stub().resolves(false)
-            });
-          }
+          isActionAllowed: sinon.stub().resolves(false)
         }
       });
     });
