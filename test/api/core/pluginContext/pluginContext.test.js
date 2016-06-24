@@ -126,18 +126,25 @@ describe('Plugin Context', () => {
 
     should(context.accessors.users.create).be.a.Function();
 
-    return context.accessors.users.create({foo: 'bar'})
+    return context.accessors.users.create('foobar', {foo: 'bar'})
       .then(userInfo => {
-        should(userInfo).match({foo: 'bar', profile: 'default'});
+        should(userInfo).match({_id: 'foobar', foo: 'bar', profile: 'default'});
         should(hydrStub.calledOnce).be.true();
         should(persStub.calledOnce).be.true();
       });
   });
 
-  it('should reject user creation with incorrect argument', () => {
+  it('should reject user creation with incorrect name argument', () => {
     var
       context = new PluginContext(kuzzle);
 
     return should(context.accessors.users.create(['incorrect'])).be.rejectedWith(PluginImplementationError);
   });
+
+  it('should reject user creation with incorrect userInfo argument', () => {
+    var
+      context = new PluginContext(kuzzle);
+    return should(context.accessors.users.create('foo', ['incorrect'])).be.rejectedWith(PluginImplementationError);
+  });
+
 });
