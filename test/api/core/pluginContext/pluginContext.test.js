@@ -9,7 +9,7 @@ var
 
 require('sinon-as-promised');
 
-describe.only('Plugin Context', () => {
+describe('Plugin Context', () => {
   var
     kuzzle,
     sandbox;
