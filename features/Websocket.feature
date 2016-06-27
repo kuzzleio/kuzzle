@@ -323,26 +323,26 @@ Feature: Test websocket API
     And I create a new user "useradmin" with id "useradmin-id"
     And I create a user "user2" with id "user2-id"
     And I can't create a new user "user2" with id "useradmin-id"
-    Then I am able to get the user "useradmin-id" matching {"_id":"#prefix#useradmin-id","_source":{"profile":{"_id":"admin", "_source": {"roles":[{"_id":"admin"}]}}}}
-    Then I am able to get the user "user2-id" matching {"_id":"#prefix#user2-id","_source":{"profile":{"_id":"#prefix#profile2"}}}
+    Then I am able to get the user "useradmin-id" matching {"_id":"#prefix#useradmin-id","_source":{"profile":"admin"}}
+    Then I am able to get the user "user2-id" matching {"_id":"#prefix#user2-id","_source":{"profile":"#prefix#profile2"}}
     Then I search for {"regexp":{"_uid":"users.#prefix#.*"}} and find 2 users
     Then I delete the user "user2-id"
     Then I search for {"regexp":{"_uid":"users.#prefix#.*"}} and find 1 users matching {"_id":"#prefix#useradmin-id","_source":{"name":{"first":"David","last":"Bowie"}}}
     When I log in as useradmin-id:testpwd expiring in 1h
-    Then I am getting the current user, which matches {"_id":"#prefix#useradmin-id","_source":{"profile":{"_id":"admin"}}}
+    Then I am getting the current user, which matches {"_id":"#prefix#useradmin-id","_source":{"profile":"admin"}}
     Then I log out
-    Then I am getting the current user, which matches {"_id":-1,"_source":{"profile":{"_id":"anonymous"}}}
+    Then I am getting the current user, which matches {"_id":-1,"_source":{"profile":"anonymous"}}
 
   @usingWebsocket @cleanSecurity
   Scenario: user updateSelf
     When I create a new user "useradmin" with id "useradmin-id"
-    Then I am able to get the user "useradmin-id" matching {"_id":"#prefix#useradmin-id","_source":{"profile":{"_id":"admin", "_source": {"roles":[{"_id":"admin"}]}}}}
+    Then I am able to get the user "useradmin-id" matching {"_id":"#prefix#useradmin-id","_source":{"profile":"admin"}}
     When I log in as useradmin-id:testpwd expiring in 1h
-    Then I am getting the current user, which matches {"_id":"#prefix#useradmin-id","_source":{"profile":{"_id":"admin"}}}
+    Then I am getting the current user, which matches {"_id":"#prefix#useradmin-id","_source":{"profile":"admin"}}
     Then I update current user with data {"foo":"bar"}
-    Then I am getting the current user, which matches {"_id":"#prefix#useradmin-id","_source":{"profile":{"_id":"admin"},"foo":"bar"}}
+    Then I am getting the current user, which matches {"_id":"#prefix#useradmin-id","_source":{"profile":"admin","foo":"bar"}}
     Then I log out
-    Then I am getting the current user, which matches {"_id":-1,"_source":{"profile":{"_id":"anonymous"}}}
+    Then I am getting the current user, which matches {"_id":-1,"_source":{"profile":"anonymous"}}
 
   @usingWebsocket @cleanSecurity @unsubscribe
   Scenario: token expiration

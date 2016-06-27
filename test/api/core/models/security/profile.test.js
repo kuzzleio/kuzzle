@@ -73,7 +73,7 @@ describe('Test: security/profileTest', function () {
     sandbox.stub(kuzzle.repositories.role, 'loadRoles', (_roles) => {
       var result = [];
       _roles.forEach(role => {
-        result.push(roles[role]);
+        result.push(roles[role._id]);
       });
       return q(result);
     });
@@ -104,24 +104,32 @@ describe('Test: security/profileTest', function () {
       profile = new Profile(),
       role1 = new Role(),
       role2 = new Role(),
-      role3 = new Role();
+      role3 = new Role(),
+      roles = {
+        role1: role1,
+        role2: role2,
+        role3: role3
+      };
 
+    role1._id = 'role1';
     role1.controllers = {
       read: {
         actions: { '*': true }
       }
     };
     role1.restrictedTo = [{ index: 'index1', collections: ['collection1', 'collection2'] }];
-    profile.roles.push(role1);
+    profile.roles.push({_id: role1._id, restrictedTo: role1.restrictedTo});
 
+    role2._id = 'role2';
     role2.controllers = {
       write: {
         actions: { publish: true, create: true, update: true }
       }
     };
     role2.restrictedTo = [{index: 'index2'}];
-    profile.roles.push(role2);
+    profile.roles.push({_id: role2._id, restrictedTo: role2.restrictedTo});
 
+    role3._id = 'role3';
     role3.controllers = {
       read: {
         actions: { get: true, count: true, search: true }
@@ -130,7 +138,15 @@ describe('Test: security/profileTest', function () {
         actions: { update: {test: 'return true;'}, create: true, delete: {test: 'return true;'} }
       }
     };
-    profile.roles.push(role3);
+    profile.roles.push({_id: role3._id, restrictedTo: role3.restrictedTo});
+
+    sandbox.stub(kuzzle.repositories.role, 'loadRoles', (_roles) => {
+      var result = [];
+      _roles.forEach(role => {
+        result.push(roles[role._id]);
+      });
+      return q(result);
+    });
 
     return profile.getRights(kuzzle)
       .then(rights => {

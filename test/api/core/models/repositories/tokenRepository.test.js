@@ -66,7 +66,7 @@ beforeEach(function (done) {
         profile = new Profile(),
         user = new User();
 
-      role._id = 'anonymous'
+      role._id = 'anonymous';
       role.controllers = {
         '*': {
           actions: {
@@ -87,7 +87,7 @@ beforeEach(function (done) {
         profile = new Profile(),
         user = new User();
 
-      role._id = 'admin'
+      role._id = 'admin';
       role.controllers = {
         '*': {
           actions: {
@@ -184,8 +184,6 @@ describe('Test: repositories/tokenRepository', function () {
 
   describe('#verifyToken', function () {
     it('should reject the promise if the jwt is invalid', function () {
-      console.log('tokenRepository.verifyToken("invalidToken")', tokenRepository.verifyToken('invalidToken'))
-      console.log('tokenRepository.verifyToken', tokenRepository.verifyToken)
 
       return should(tokenRepository.verifyToken('invalidToken')).be.rejectedWith(UnauthorizedError, {
         details: {

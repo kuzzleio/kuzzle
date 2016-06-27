@@ -408,7 +408,7 @@ describe('Test: repositories/repository', () => {
       should(Object.keys(serialized).length).be.exactly(Object.keys(persistedObject).length);
       Object.keys(repository.serializeToCache(persistedObject)).forEach(key => {
         should(persistedObject[key]).be.exactly(serialized[key]);
-      })
+      });
     });
   });
 

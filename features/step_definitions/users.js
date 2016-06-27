@@ -50,7 +50,7 @@ module.exports = function () {
           match = match.replace(/#prefix#/g, this.idPrefix);
           matchObject = JSON.parse('{' + match + '}');
           if (!_.matches(matchObject)(body.result)) {
-            return callback(new Error('Error: ' + JSON.stringify(body.result) + ' does not match ' + match));
+            return callback(new Error('Error: ' + JSON.stringify(body.result) + ' does not match {' + match + '}'));
           }
         }
 

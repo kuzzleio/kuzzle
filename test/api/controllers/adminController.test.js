@@ -1,6 +1,5 @@
 var
   should = require('should'),
-  _ = require('lodash'),
   q = require('q'),
   sinon = require('sinon'),
   params = require('rc')('kuzzle'),

@@ -111,7 +111,6 @@ describe('Test: security controller - profiles', function () {
           should(result).be.an.instanceOf(ResponseObject);
           should(result.data.body.hits).be.an.Array();
           should(result.data.body.hits).not.be.empty();
-console.log('result.data.body.hits[0]', result.data.body.hits[0])
           should(result.data.body.hits[0]).be.an.Object();
           should(result.data.body.hits[0]._source.roles).be.an.Array();
           should(result.data.body.hits[0]._source.roles[0]).be.an.Object();
@@ -158,7 +157,7 @@ console.log('result.data.body.hits[0]', result.data.body.hits[0])
       }))
         .then(result => {
           var jsonResponse = result.toJson();
-          console.log('jsonResponse.result.hits[0]', jsonResponse.result.hits[0])
+
           should(result).be.an.instanceOf(ResponseObject);
           should(jsonResponse.result.hits).be.an.Array();
           should(jsonResponse.result.hits[0]._id).be.exactly('test');

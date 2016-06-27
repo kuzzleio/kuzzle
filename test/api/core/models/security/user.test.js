@@ -5,7 +5,7 @@ var
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   kuzzle = new Kuzzle(),
   Profile = require.main.require('lib/api/core/models/security/profile'),
-  User = require.main.require('lib/api/core/models/security/user')(kuzzle);
+  User = require.main.require('lib/api/core/models/security/user');
 
 require('sinon-as-promised')(q.Promise);
 

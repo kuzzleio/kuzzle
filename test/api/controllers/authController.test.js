@@ -319,7 +319,6 @@ describe('Test the auth controller', function () {
 
       kuzzle.funnel.controllers.auth.getCurrentUser(rq, token)
         .then(response => {
-          console.log(response.data.body)
           should(response.data.body._id).be.exactly('admin');
           should(response.data.body._source.profile).be.exactly('admin');
 
