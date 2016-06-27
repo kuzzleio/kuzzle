@@ -139,7 +139,6 @@ describe('Test: Internal broker', function () {
 
       client = new WSBrokerClient('internalBroker', kuzzle.config.internalBroker, kuzzle.pluginsManager);
       client.ws = () => new WSClientMock(server.server);
-
     });
 
     describe('#constructor', () => { });
@@ -186,8 +185,8 @@ describe('Test: Internal broker', function () {
       it('should wait for the broker server until the connection is established', (done) => {
         var state = '';
 
-        sinon.spy(client, 'init');
-
+        sinon.spy(client, '_connect');
+        
         // we init the client before the server.
         // The promise is resolved once the server is up and the connection is established
         // That means: there will be a timeout if the client is not able to retry the connection.
@@ -196,11 +195,11 @@ describe('Test: Internal broker', function () {
             should(response).be.an.instanceOf(WSClientMock);
             should(client.client.state).be.exactly('connected');
             should(state).be.exactly('retrying');
-            should(client.init.callCount).be.exactly(2);
+            should(client._connect.callCount).be.exactly(2);
             done();
           })
           .catch(err => done(err));
-
+        
         server.init()
           .then(() => {
             state = client.client.state; // should be "retrying", as the client should have already tried to reach the server without success
@@ -257,7 +256,6 @@ describe('Test: Internal broker', function () {
         should(client.client.state).be.exactly('disconnected');
         should(socket.close).be.calledOnce();
         should(client.client.socket).be.null();
-        should(client.client.connected).be.null();
       });
 
       it('should do nothing if socket is null', () => {
@@ -311,6 +309,15 @@ describe('Test: Internal broker', function () {
             }));
           });
       });
+      
+      it('on open, should trigger a warning if the client was already connected', () => {
+        var 
+          socket = client.client.socket;
+        
+        socket.emit('open', 1);
+        
+        should(client.pluginsManager.trigger).be.calledWith('log:warn', '[internalBroker] Node is connected while it was previously already.');
+      });
 
       it('on close should do nothing if :close was explicitly called', () => {
         var socket = client.client.socket;
@@ -324,40 +331,46 @@ describe('Test: Internal broker', function () {
 
       it('on close should try reconnecting if :close was not explicitly called', () => {
         var
-          initSpy = sandbox.spy(client, 'init'),
+          connectSpy = sandbox.spy(client, '_connect'),
           closeSpy = sandbox.spy(client, 'close'),
           socket = client.client.socket;
 
+        // calling multiple times to check only one retry is issued
         socket.emit('close', 1);
+        client.client.state = 'test';
+        socket.emit('close', 1);
+        client.client.state = 'test';
+        socket.emit('close', 1);
+        client.client.state = 'test';
 
-        should(socket.listeners.close[0]).be.calledOnce();
-        should(closeSpy).be.calledOnce();
-
-        clock.tick(2000);
-        should(initSpy).be.calledOnce();
+        clock.tick(20000);
+        
+        should(socket.listeners.close[0]).have.callCount(3);
+        should(closeSpy).have.callCount(3);
+        should(connectSpy).be.calledOnce();
       });
 
       it('on error should set the client state to retrying and retry to connect', () => {
         var
-          initSpy = sandbox.spy(client, 'init'),
+          connectSpy = sandbox.spy(client, '_connect'),
           closeSpy = sandbox.spy(client, 'close'),
           socket = client.client.socket;
 
         socket.emit('error', new Error('test'));
+        socket.emit('error', new Error('test'));
+        socket.emit('error', new Error('test'));
 
-        should(socket.listeners.error[0]).be.calledOnce();
-        should(closeSpy).be.calledOnce();
+        clock.tick(20000);
+        
+        should(socket.listeners.error[0]).be.have.callCount(3);
+        should(closeSpy).be.have.callCount(3);
         should(client.client.state).be.exactly('retrying');
-
-        clock.tick(2000);
-        should(initSpy).be.calledOnce();
-
+        should(connectSpy).be.calledOnce();
       });
 
     });
 
   });
-
 
   describe('Server', () => {
     var client1, client2, client3;
