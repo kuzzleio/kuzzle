@@ -116,36 +116,28 @@ describe('Test the auth controller', function () {
     });
 
     it('should resolve to a valid jwt token if authentication succeed', () => {
-      kuzzle.funnel.controllers.auth.passport = new MockupWrapper('resolve');
+      kuzzle.passport = new MockupWrapper('resolve');
       return kuzzle.funnel.controllers.auth.login(requestObject, {})
         .then(response => {
           var decodedToken = jwt.verify(response.data.body.jwt, params.jsonWebToken.secret);
           should(decodedToken._id).be.equal('jdoe');
-        })
-        .catch(() => {
-          // This case must not raise
-          should(false).be.true();
         });
     });
 
-    it('should resolve to a redirect url', function(done) {
+    it('should resolve to a redirect url', function() {
       this.timeout(50);
 
-      kuzzle.funnel.controllers.auth.passport = new MockupWrapper('oauth');
-      kuzzle.funnel.controllers.auth.login(requestObject, {})
+      kuzzle.passport = new MockupWrapper('oauth');
+      return kuzzle.funnel.controllers.auth.login(requestObject, {})
         .then(function(response) {
           should(response.data.body.headers.Location).be.equal('http://github.com');
-          done();
-        })
-        .catch(function (error) {
-          done(error);
         });
     });
 
     it('should use local strategy if no one is set', function (done) {
       this.timeout(50);
 
-      kuzzle.funnel.controllers.auth.passport = {
+      kuzzle.passport = {
         authenticate: function(data, strategy) {
           should(strategy).be.exactly('local');
           done();
@@ -163,7 +155,7 @@ describe('Test the auth controller', function () {
 
       requestObject.data.body.expiresIn = '1s';
 
-      kuzzle.funnel.controllers.auth.passport = new MockupWrapper('resolve');
+      kuzzle.passport = new MockupWrapper('resolve');
       kuzzle.funnel.controllers.auth.login(requestObject, {connection: {id: 'banana'}})
         .then(function(response) {
           var decodedToken = jwt.verify(response.data.body.jwt, params.jsonWebToken.secret);
@@ -200,7 +192,7 @@ describe('Test the auth controller', function () {
         done();
       };
 
-      kuzzle.funnel.controllers.auth.passport = new MockupWrapper('resolve');
+      kuzzle.passport = new MockupWrapper('resolve');
       kuzzle.funnel.controllers.auth.login(requestObject, context)
         .catch(function (error) {
           done(error);
@@ -209,7 +201,7 @@ describe('Test the auth controller', function () {
 
     it('should reject if authentication failure', function (done) {
       this.timeout(50);
-      kuzzle.funnel.controllers.auth.passport = new MockupWrapper('reject');
+      kuzzle.passport = new MockupWrapper('reject');
       kuzzle.funnel.controllers.auth.login(requestObject)
         .catch((error) => {
           should(error.message).be.exactly('Mockup Wrapper Error');
