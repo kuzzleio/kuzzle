@@ -3,13 +3,13 @@ var
   childProcess = require('child_process'),
   managePlugins = require('../../lib/api/controllers/remoteActions/managePlugins');
 
-var
-  clcError = clc.red,
-  clcNotice = clc.cyan;
-
 /* eslint-disable no-console */
 
 module.exports = function pluginsManager (plugin, options) {
+  var
+    clcError = string => options.parent.noColors ? string : clc.red(string),
+    clcNotice = string => options.parent.noColors ? string : clc.cyan(string);
+  
   if (!childProcess.hasOwnProperty('execSync')) {
     console.error(clcError('███ kuzzle-plugins: Make sure you\'re using Node version >= 0.12'));
     process.exit(1);
