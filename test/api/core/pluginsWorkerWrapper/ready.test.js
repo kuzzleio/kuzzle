@@ -2,6 +2,7 @@ var
   should = require('should'),
   rewire = require('rewire'),
   sinon = require('sinon'),
+  PluginContext = require.main.require('lib/api/core/plugins/pluginContext'),
   ready = rewire('../../../../lib/api/core/plugins/workerReady');
 
 describe('Test plugins manager run', function () {
@@ -53,8 +54,7 @@ describe('Test plugins manager run', function () {
     ready();
 
     pluginMock.verify();
-
-    should(init.firstCall.calledWith(config, 'am I a dummy?')).be.true();
+    should(init.firstCall.calledWithMatch(config, sinon.match.instanceOf(PluginContext), 'am I a dummy?')).be.true();
 
     should(processSend.firstCall.calledWithMatch({
       type: 'initialized',
