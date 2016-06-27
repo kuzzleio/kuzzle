@@ -224,20 +224,6 @@ describe('Test: repositories/repository', () => {
         });
     });
 
-/*    it('should return a list of hydrated object when parameter hydrate is set', () => {
-      return repository.loadMultiFromDatabase(['persisted'], true)
-        .then(results => {
-          should(results).be.an.Array();
-          should(results).not.be.empty();
-
-          results.forEach(result => {
-            should(result).be.instanceOf(ObjectConstructor);
-            should(result._id).be.exactly(-1);
-            should(result.name).be.exactly('persisted');
-          });
-        });
-    });*/
-
     it('should return a list of plain object', () => {
       return repository.loadMultiFromDatabase(['persisted'])
         .then(results => {
@@ -400,11 +386,7 @@ describe('Test: repositories/repository', () => {
   describe('#serializeToCache', () => {
     it('should return the same object', () => {
       var serialized = repository.serializeToCache(persistedObject);
-/*
-      // these does not work...
-      should(repository.serializeToCache(persistedObject)).be.exactly(persistedObject);
-      should(_.isEqual(repository.serializeToCache(persistedObject), persistedObject)).be.true();
-*/
+
       should(Object.keys(serialized).length).be.exactly(Object.keys(persistedObject).length);
       Object.keys(repository.serializeToCache(persistedObject)).forEach(key => {
         should(persistedObject[key]).be.exactly(serialized[key]);
@@ -427,15 +409,5 @@ describe('Test: repositories/repository', () => {
           should(response.total).be.exactly(1);
         });
     });
-
-/*    it('should construct role if hydrate is true', () => {
-      return repository.search({}, 0, 10, true)
-        .then(response => {
-          should(response).be.an.Object();
-          should(response.hits).be.an.Array();
-          should(response.total).be.exactly(1);
-          should(response.hits[0].type).be.exactly('testObject');
-        });
-    });*/
   });
 });

@@ -62,19 +62,6 @@ describe('Test: security controller - users', function () {
         .be.rejected();
     });
 
-/*    it('should return an hydrated responseObject', () => {
-      sandbox.stub(kuzzle.repositories.user, 'load').resolves({_id: -1, profile: {_id: 'anonymous'}});
-      return kuzzle.funnel.controllers.security.getUser(new RequestObject({
-        body: { _id: 'anonymous' }
-      }))
-        .then(response => {
-          should(response).be.an.instanceOf(ResponseObject);
-          should(response.data.body._id).be.exactly(-1);
-          should(response.data.body._source.profile).not.be.empty().Object();
-          should(response.data.body._source.profile._id).be.exactly('anonymous');
-        });
-    });*/
-
     it('should reject with NotFoundError when the user is not found', () => {
       var promise;
 
@@ -102,19 +89,6 @@ describe('Test: security controller - users', function () {
           should(response.data.body).match({hits: [{_id: 'admin'}], total: 1});
         });
     });
-
-    // it('should return some unhydrated users when asked', () => {
-    //   sandbox.stub(kuzzle.repositories.user, 'search').resolves({hits: [{_id: 'admin', _source: {profile: 'admin'}}]});
-    //   return kuzzle.funnel.controllers.security.searchUsers(new RequestObject({
-    //     body: { hydrate: false }
-    //   }))
-    //     .then(response => {
-    //       should(response).be.an.instanceOf(ResponseObject);
-    //       response.data.body.hits.every(doc => {
-    //         should(doc._source.profile).be.a.String();
-    //       });
-    //     });
-    // });
 
     it('should reject with a response object in case of error', () => {
       sandbox.stub(kuzzle.repositories.user, 'search').rejects();
