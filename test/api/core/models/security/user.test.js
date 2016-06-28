@@ -10,6 +10,7 @@ require('sinon-as-promised')(q.Promise);
 
 describe('Test: security/userTest', () => {
   var
+    kuzzle,
     sandbox,
     profile = new Profile(),
     user = new User();
@@ -26,7 +27,7 @@ describe('Test: security/userTest', () => {
       profile: {
         loadProfile: sinon.stub().resolves(profile)
       }
-    }
+    };
   });
 
   afterEach(() => {
@@ -35,8 +36,6 @@ describe('Test: security/userTest', () => {
 
   it('should retrieve the good rights list', () => {
     var
-      profile = new Profile(),
-      user = new User(),
       profileRights = {
         rights1: {
           controller: 'read', action: 'get', index: 'foo', collection: 'bar',

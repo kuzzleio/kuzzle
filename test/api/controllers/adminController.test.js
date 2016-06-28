@@ -14,7 +14,7 @@ var
 
 require('sinon-as-promised')(q.Promise);
 
-describe('Test: admin controller', () => {
+describe('Test: admin controller', function () {
   var
     kuzzle,
     sandbox,
@@ -37,8 +37,8 @@ describe('Test: admin controller', () => {
     sandbox.restore();
   });
 
-  describe('#updateMapping', () => {
-    it('should activate a hook on a mapping update call', (done) => {
+  describe('#updateMapping', function () {
+    it('should activate a hook on a mapping update call', function (done) {
       this.timeout(50);
       sandbox.stub(kuzzle.workerListener, 'add').resolves({});
 
