@@ -334,6 +334,13 @@ describe('Test: admin controller', function () {
       sandbox.stub(kuzzle.services.list.readEngine, 'listIndexes').rejects();
       return should(kuzzle.funnel.controllers.admin.deleteIndexes(requestObject, context)).be.rejected();
     });
+
+    it('should reject with an error in case of error when loading user', () => {
+      sandbox.stub(kuzzle.services.list.readEngine, 'listIndexes').rejects();
+      kuzzle.repositories.user.load.restore();
+      sandbox.stub(kuzzle.repositories.user, 'load').rejects();
+      return should(kuzzle.funnel.controllers.admin.deleteIndexes(requestObject, context)).be.rejected();
+    });
   });
 
   describe('#createIndex', () => {

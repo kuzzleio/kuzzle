@@ -99,7 +99,19 @@ describe('Test: repositories/profileRepository', () => {
       sandbox.stub(kuzzle.services.list.readEngine, 'get').resolves(testProfilePlain);
       sandbox.stub(kuzzle.repositories.role, 'loadRoles', stubs.roleRepository.loadRoles);
       return kuzzle.repositories.profile.loadProfile('testprofile')
-        .then(function (result) {
+        .then(result => {
+          should(result).be.an.instanceOf(Profile);
+          should(result).be.eql(testProfile);
+        });
+    });
+
+    it('should load a profile even if the given parameter is a Profile object', () => {
+      var profileObject = new Profile();
+      profileObject._id = 'testprofile';
+      sandbox.stub(kuzzle.services.list.readEngine, 'get').resolves(testProfilePlain);
+      sandbox.stub(kuzzle.repositories.role, 'loadRoles', stubs.roleRepository.loadRoles);
+      return kuzzle.repositories.profile.loadProfile(profileObject)
+        .then(result => {
           should(result).be.an.instanceOf(Profile);
           should(result).be.eql(testProfile);
         });

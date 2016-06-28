@@ -79,6 +79,10 @@ describe('Test: repositories/repository', () => {
         return q(uncachedObject);
       }
 
+      if (requestObject.data._id === 'source') {
+        return q({_id:'theId', _source: {foo: 'bar'}});
+      }
+
       if (requestObject.data._id === 'error') {
         return q.reject(new InternalError('Error'));
       }
@@ -138,7 +142,15 @@ describe('Test: repositories/repository', () => {
           return q({hits: result});
         });
     },
-    search: () => q({hits: [{_id: 'role', _source: {controllers: {}}}], total: 1})
+    search: (requestObject) => {
+      if (requestObject.data.body.filter.empty) {
+        return q({});
+      }
+      if (requestObject.data.body.filter.error) {
+        return q.reject({});
+      }
+      return q({hits: [{_id: 'role', _source: {controllers: {}}}], total: 1});
+    }
   };
 
   mockWriteLayer = {
@@ -201,6 +213,13 @@ describe('Test: repositories/repository', () => {
         });
     });
 
+    it('should handle correctly the responses containing _id and _source', () => {
+      return repository.loadOneFromDatabase('source')
+        .then(result => {
+          should(result._id).be.exactly('theId');
+          should(result.foo).be.exactly('bar');
+        });
+    });
   });
 
   describe('#loadMultiFromDatabase', () => {
@@ -235,6 +254,28 @@ describe('Test: repositories/repository', () => {
             should(result._id).be.exactly(-1);
             should(result.name).be.exactly('persisted');
           });
+        });
+    });
+
+    it('should handle list of objects as an argument', () => {
+      return repository.loadMultiFromDatabase([{_id:'persisted'}])
+        .then(results => {
+          should(results).be.an.Array();
+          should(results).not.be.empty();
+
+          results.forEach(result => {
+            should(result).be.instanceOf(Object);
+            should(result._id).be.exactly(-1);
+            should(result.name).be.exactly('persisted');
+          });
+        });
+    });
+
+    it('should respond with an empty array if no result found', () => {
+      return repository.loadMultiFromDatabase([{_id:'null'}])
+        .then(results => {
+          should(results).be.an.Array();
+          should(results).be.empty();
         });
     });
   });
@@ -402,12 +443,26 @@ describe('Test: repositories/repository', () => {
 
   describe('#search', () => {
     it('should return a list from database', () => {
-      return repository.search({}, 0, 10, false)
+      return repository.search({filter:'nofilter'}, 0, 10, false)
         .then(response => {
           should(response).be.an.Object();
           should(response.hits).be.an.Array();
           should(response.total).be.exactly(1);
         });
+    });
+
+    it('should return an list if no hits', () => {
+      return repository.search({empty:true}, 0, 10, false)
+        .then(response => {
+          should(response).be.an.Object();
+          should(response.hits).be.an.Array();
+          should(response.hits).be.empty();
+          should(response.total).be.exactly(0);
+        });
+    });
+
+    it('should be rejected with an error if something goes wrong', () => {
+      return should(repository.search({error:true}, 0, 10, false)).be.rejected();
     });
   });
 });
