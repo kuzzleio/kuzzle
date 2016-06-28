@@ -14,9 +14,10 @@ var
   context = {},
   redisClientMock = require('../../mocks/services/redisClient.mock'),
   requestObject,
-  sandbox = sinon.sandbox.create(),
   MockupWrapper,
   MockupStrategy;
+
+require('sinon-as-promised')(q.Promise);
 
 /**
  * @param name
@@ -66,10 +67,12 @@ MockupWrapper = function(MockupReturn) {
 };
 
 describe('Test the auth controller', function () {
-  var kuzzle;
+  var
+    kuzzle,
+    sandbox;
 
   beforeEach(() => {
-    sandbox.restore();
+    sandbox = sinon.sandbox.create();
 
     requestObject = new RequestObject({ controller: 'auth', action: 'login', body: {strategy: 'mockup', username: 'jdoe'} }, {}, 'unit-test');
     kuzzle = new Kuzzle();
@@ -90,6 +93,10 @@ describe('Test the auth controller', function () {
           });
         };
       });
+  });
+
+  afterEach(() => {
+    sandbox.restore();
   });
 
   describe('#login', function () {
@@ -314,7 +321,7 @@ describe('Test the auth controller', function () {
       var
         rq = new RequestObject({body: {}}),
         token = {
-          token: {user: { _id: 'admin' }}
+          token: {user: 'admin'}
         };
 
       kuzzle.funnel.controllers.auth.getCurrentUser(rq, token)
@@ -331,7 +338,7 @@ describe('Test the auth controller', function () {
       var promise = kuzzle.funnel.controllers.auth.getCurrentUser(new RequestObject({
         body: {}
       }), {
-        token: { user: { _id: 'unknown_user' } }
+        token: { user: 'unknown_user' }
       });
 
       return should(promise).be.rejected();
@@ -432,7 +439,7 @@ describe('Test the auth controller', function () {
     it('should return a valid ResponseObject', done => {
       anotherKuzzle.funnel.controllers.auth.updateSelf(new RequestObject({
         body: { foo: 'bar' }
-      }), { token: { user: { _id: 'admin' }, _id: 'admin' } })
+      }), { token: { user: 'admin', _id: 'admin' }})
         .then(response => {
           should(response).be.an.instanceOf(ResponseObject);
           should(persistOptions.database.method).be.exactly('update');
@@ -446,14 +453,14 @@ describe('Test the auth controller', function () {
     it('should reject if profile is specified', () => {
       should(anotherKuzzle.funnel.controllers.auth.updateSelf(new RequestObject({
         body: { foo: 'bar', profile: 'test' }
-      }), { token: { user: { _id: 'admin' }, _id: 'admin' } }))
+      }), { token: { user: 'admin', _id: 'admin' }}))
         .be.rejected();
     });
 
     it('should reject if _id is specified in the body', () => {
       should(anotherKuzzle.funnel.controllers.auth.updateSelf(new RequestObject({
         body: { foo: 'bar', _id: 'test' }
-      }), { token: { user: { _id: 'admin' }, _id: 'admin' } }))
+      }), { token: { user: 'admin', _id: 'admin' }}))
         .be.rejected();
     });
 
@@ -478,7 +485,7 @@ describe('Test the auth controller', function () {
     var
       rq = new RequestObject({body: {}}),
       token = {
-        token: {user: { _id: 'test' }}
+        token: {user: 'test' }
       };
 
     it('should be able to get current user\'s rights', () => {
