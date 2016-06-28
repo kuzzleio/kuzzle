@@ -89,14 +89,8 @@ describe('funnelController.processRequest', function () {
 
   it('should reject the promise with UnauthorizedError if an anonymous user is not allowed to execute the action', () => {
     kuzzle.repositories.token.verifyToken.restore();
-    sandbox.stub(kuzzle.repositories.token, 'verifyToken', () => {
-      return q({
-        user: {
-          _id: -1,
-          isActionAllowed: sinon.stub().resolves(false)
-        }
-      });
-    });
+    sandbox.stub(kuzzle.repositories.user, 'load').resolves({_id: -1, isActionAllowed: sandbox.stub().resolves(false)});
+    sandbox.stub(kuzzle.repositories.token, 'verifyToken').resolves({user: -1});
 
     return should(
       processRequest(kuzzle, kuzzle.funnel.controllers,
@@ -111,14 +105,8 @@ describe('funnelController.processRequest', function () {
 
   it('should reject the promise with UnauthorizedError if an authenticated user is not allowed to execute the action', () => {
     kuzzle.repositories.token.verifyToken.restore();
-    sandbox.stub(kuzzle.repositories.token, 'verifyToken', () => {
-      return q({
-        user: {
-          _id: 'user',
-          isActionAllowed: sinon.stub().resolves(false)
-        }
-      });
-    });
+    sandbox.stub(kuzzle.repositories.user, 'load').resolves({_id: 'user', isActionAllowed: sandbox.stub().resolves(false)});
+    sandbox.stub(kuzzle.repositories.token, 'verifyToken').resolves({user: 'user'});
 
     return should(
       processRequest(kuzzle, kuzzle.funnel.controllers,
@@ -132,15 +120,16 @@ describe('funnelController.processRequest', function () {
   });
 
   it('should resolve the promise if everything is ok', () => {
-    var object = {
+    var requestObject = new RequestObject({
       requestId: 'requestId',
       controller: 'read',
       action: 'listIndexes',
       collection: 'collection'
-    };
+    });
 
-    var requestObject = new RequestObject(object);
-
+    kuzzle.repositories.token.verifyToken.restore();
+    sandbox.stub(kuzzle.repositories.user, 'load').resolves({_id: 'user', isActionAllowed: sandbox.stub().resolves(true)});
+    sandbox.stub(kuzzle.repositories.token, 'verifyToken').resolves({user: 'user'});
     sandbox.stub(kuzzle.funnel.controllers.read, 'listIndexes').resolves();
 
     return processRequest(kuzzle, kuzzle.funnel.controllers, requestObject, context);

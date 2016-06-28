@@ -12,6 +12,16 @@ var
 require('sinon-as-promised')(q.Promise);
 
 describe('Test: routerController', () => {
+  var sandbox;
+
+  beforeEach(() => {
+    sandbox = sinon.sandbox.create();
+  });
+
+  afterEach(() => {
+    sandbox.restore();
+  });
+
   describe('#newConnection', () => {
     var
       kuzzle,
@@ -120,7 +130,11 @@ describe('Test: routerController', () => {
     });
 
     it('should return a fulfilled promise with the right arguments', (done) => {
-      kuzzle.router.execute(requestObject, context, done);
+      sandbox.stub(kuzzle.repositories.user, 'load').resolves({_id: 'user', isActionAllowed: sandbox.stub().resolves(true)});
+      sandbox.stub(kuzzle.repositories.token, 'verifyToken').resolves({user: 'user'});
+      sandbox.stub(kuzzle.funnel.controllers.read, 'listIndexes').resolves();
+
+      kuzzle.router.execute(requestObject, { connection: { type: 'foo', id: 'bar' }, token: {user: 'user'} }, done);
     });
 
     it('should return an error if no request object is provided', (done) => {

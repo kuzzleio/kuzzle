@@ -329,7 +329,7 @@ describe('Test: repositories/tokenRepository', function () {
           should(result).not.be.an.instanceOf(Token);
           should(result).be.an.Object();
           should(result._id).be.exactly(undefined);
-          should(result.user._id).be.exactly(-1);
+          should(result.user).be.exactly(-1);
 
           done();
         })
@@ -407,6 +407,5 @@ describe('Test: repositories/tokenRepository', function () {
 
 function assertIsAnonymous (token) {
   should(token._id).be.undefined();
-  should(token.user._id).be.exactly(-1);
-  should(token.user).be.an.instanceOf(User);
+  should(token.user).be.exactly(-1);
 }

@@ -25,7 +25,7 @@ var apiSteps = function () {
         this.currentUser.token = body.result.jwt;
         callback();
       })
-      .catch(function (error) {
+      .catch((error) => {
         callback(error);
       });
   });
