@@ -10,27 +10,6 @@
   "servicesDefaultInitTimeout": 10000,
 
   /*
-   Cluster settings.
-     # mode   [master|slave]
-       sets the mode in which Kuzzle runs. Will be replaced by the lb election shortly.
-       When set to master, Kuzzle internal broker is used.
-     # clusterName
-       the channel on which the cluster messages are spread.
-     # host
-       *slave only* - The master host
-     # port
-       *slave only* - The master port
-     # retryInterval
-  */
-  "cluster": {
-    "mode": "master",
-    "clusterName": "kuzzle-cluster",
-    "host": "",
-    "port": 7911,
-    "retryInterval": 2000
-  },
-
-  /*
   */
   "proxyBroker": {
     "host": "api",
