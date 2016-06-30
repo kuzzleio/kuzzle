@@ -233,10 +233,10 @@ describe('Test: Internal broker', function () {
       });
     });
 
-    describe('#send', () => {
+    describe('#send & broadcast', () => {
       beforeEach(() => q.all([server.init(),client.init()]));
 
-      it('should send properly envelopped data', () => {
+      it('`send` should send properly envelopped data', () => {
         var
           data = {foo: 'bar'},
           socket = client.client.socket;
@@ -250,6 +250,22 @@ describe('Test: Internal broker', function () {
           data: data
         }));
       });
+
+      it('`broadcast` should send properly envelopped data', () => {
+        var
+          data = {foo: 'bar'},
+          socket = client.client.socket;
+
+        client.broadcast('room', data);
+
+        should(socket.send).be.calledOnce();
+        should(socket.send).be.calledWith(JSON.stringify({
+          action: 'broadcast',
+          room: 'room',
+          data: data
+        }));
+      });
+      
     });
 
     describe('#events', () => {
