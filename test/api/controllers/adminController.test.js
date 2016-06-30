@@ -1,5 +1,6 @@
 var
   should = require('should'),
+  _ = require('lodash'),
   q = require('q'),
   sinon = require('sinon'),
   params = require('rc')('kuzzle'),
@@ -255,12 +256,13 @@ describe('Test: admin controller', function () {
   describe('#deleteIndexes', () => {
     var context = {
       token: {
-        user: new User()
+        userId: 'deleteIndex'
       }
     };
 
     before(() => {
       var
+        user = _.assignIn(new User(), {_id:'deleteIndex', profile: 'deleteIndex'});
         profile = new Profile(),
         role = new Role();
 
@@ -272,11 +274,12 @@ describe('Test: admin controller', function () {
           }
         }
       };
-      context.token.user.profile = 'deleteIndex';
+      context.token.userId = 'deleteIndex';
       role.restrictedTo = [{index: '%text1'},{index: '%text2'}];
-      profile.roles = [{_id: role._id, restrictedTo: role.restrictedTo}];
+      profile._id = 'deleteIndex';
+      profile.policies = [{_id: role._id, restrictedTo: role.restrictedTo}];
 
-      sandbox.stub(kuzzle.repositories.user, 'load').resolves(context.token.user);
+      sandbox.stub(kuzzle.repositories.user, 'load').resolves(user);
       sandbox.stub(kuzzle.repositories.profile, 'loadProfile').resolves(profile);
       sandbox.stub(kuzzle.repositories.role, 'loadRoles').resolves([role]);
     });
@@ -305,7 +308,7 @@ describe('Test: admin controller', function () {
           action: 'deleteIndexes',
           body: {indexes: ['%text1', '%text2', '%text3']}
         }),
-        isActionAllowedStub = sandbox.stub(context.token.user, 'isActionAllowed'),
+        isActionAllowedStub = sandbox.stub(user, 'isActionAllowed'),
         workerListenerStub = request => q({deleted: request.data.body.indexes});
 
       this.timeout(50);

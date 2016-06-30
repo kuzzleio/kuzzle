@@ -112,9 +112,9 @@ describe('Test: security controller - profiles', function () {
           should(result.data.body.hits).be.an.Array();
           should(result.data.body.hits).not.be.empty();
           should(result.data.body.hits[0]).be.an.Object();
-          should(result.data.body.hits[0]._source.roles).be.an.Array();
-          should(result.data.body.hits[0]._source.roles[0]).be.an.Object();
-          should(result.data.body.hits[0]._source.roles[0]._id).be.an.String();
+          should(result.data.body.hits[0]._source.policies).be.an.Array();
+          should(result.data.body.hits[0]._source.policies[0]).be.an.Object();
+          should(result.data.body.hits[0]._source.policies[0]._id).be.an.String();
         });
     });
 
@@ -161,8 +161,8 @@ describe('Test: security controller - profiles', function () {
           should(result).be.an.instanceOf(ResponseObject);
           should(jsonResponse.result.hits).be.an.Array();
           should(jsonResponse.result.hits[0]._id).be.exactly('test');
-          should(jsonResponse.result.hits[0]._source.roles).be.an.Array();
-          should(jsonResponse.result.hits[0]._source.roles[0]._id).be.exactly('default');
+          should(jsonResponse.result.hits[0]._source.policies).be.an.Array();
+          should(jsonResponse.result.hits[0]._source.policies[0]._id).be.exactly('default');
         });
     });
 

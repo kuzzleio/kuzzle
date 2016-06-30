@@ -22,7 +22,7 @@ describe('Test: security controller - users', function () {
         // Mock
         kuzzle.services.list.readEngine.search = () => {
           return q({
-            hits: [{_id: 'admin', _source: { profile: 'admin' }}],
+            hits: [{_id: 'admin', _source: { profileId: 'admin' }}],
             total: 1
           });
         };
@@ -76,7 +76,7 @@ describe('Test: security controller - users', function () {
 
   describe('#searchUsers', function () {
     it('should return a valid responseObject', () => {
-      sandbox.stub(kuzzle.repositories.user, 'search').resolves({hits: [{_id: 'admin', _source: {profile: 'admin'}}]});
+      sandbox.stub(kuzzle.repositories.user, 'search').resolves({hits: [{_id: 'admin', _source: {profileId: 'admin'}}]});
       return kuzzle.funnel.controllers.security.searchUsers(new RequestObject({
         body: {
           filter: {},
@@ -129,7 +129,7 @@ describe('Test: security controller - users', function () {
       sandbox.stub(kuzzle.repositories.user, 'hydrate').resolves();
 
       return kuzzle.funnel.controllers.security.createUser(new RequestObject({
-        body: { _id: 'test', name: 'John Doe', profile: 'anonymous' }
+        body: { _id: 'test', name: 'John Doe', profileId: 'anonymous' }
       }))
         .then(response => {
           mock.verify();
@@ -144,7 +144,7 @@ describe('Test: security controller - users', function () {
         mockHydrate = sandbox.mock(kuzzle.repositories.user).expects('hydrate').once().resolves();
 
       return kuzzle.funnel.controllers.security.createUser(new RequestObject({
-        body: { name: 'John Doe', profile: 'anonymous' }
+        body: { name: 'John Doe', profileId: 'anonymous' }
       }))
         .then(response => {
           mockHydrate.verify();
@@ -191,11 +191,11 @@ describe('Test: security controller - users', function () {
 
     it('should update the profile correctly', () => {
       sandbox.stub(kuzzle.repositories.profile, 'loadProfile').resolves({_id: 'default', _source: {}});
-      sandbox.stub(kuzzle.repositories.user, 'load').resolves({_id: 'test', profile: 'default'});
+      sandbox.stub(kuzzle.repositories.user, 'load').resolves({_id: 'test', profileId: 'default'});
 
       return kuzzle.funnel.controllers.security.updateUser(new RequestObject({
         _id: 'test',
-        body: {profile: 'anonymous', foo: 'bar'}
+        body: {profileId: 'anonymous', foo: 'bar'}
       }))
         .then(response => {
           should(response).be.an.instanceOf(ResponseObject);
@@ -214,7 +214,7 @@ describe('Test: security controller - users', function () {
       return kuzzle.funnel.controllers.security.createOrReplaceUser(new RequestObject({
         body: {
           _id: 'test',
-          profile: 'admin'
+          profileId: 'admin'
         }
       }))
         .then(response => {

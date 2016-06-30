@@ -164,7 +164,7 @@ var apiSteps = function () {
       main;
 
     if (roleId) {
-      body.roles.push(this.idPrefix + roleId);
+      body.policies.push(this.idPrefix + roleId);
     }
 
     main = function (callbackAsync) {
@@ -221,7 +221,7 @@ var apiSteps = function () {
     profileId = this.idPrefix + profileId;
 
     this.api.createOrReplaceProfile(profileId, {
-      roles: [{_id: roleId}]
+      policies: [{_id: roleId}]
     })
     .then(response => {
       if (response.error) {

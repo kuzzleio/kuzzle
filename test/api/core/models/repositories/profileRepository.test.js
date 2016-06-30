@@ -54,7 +54,7 @@ describe('Test: repositories/profileRepository', () => {
     .then(() => {
       testProfile = new Profile();
       testProfile._id = testProfilePlain._id;
-      testProfile.roles = testProfilePlain.roles;
+      testProfile.policies = testProfilePlain.policies;
     });
 
   });
@@ -230,16 +230,16 @@ describe('Test: repositories/profileRepository', () => {
           should(result).not.be.an.instanceOf(Profile);
           should(result).be.an.Object();
           should(profile._id).be.exactly('testprofile');
-          should(result.roles).be.an.Array();
-          should(result.roles).have.length(2);
-          should(result.roles[0]).be.an.Object();
-          should(result.roles[0]).not.be.an.instanceOf(Role);
-          should(result.roles[0]._id).be.exactly('test');
-          should(result.roles[0].restrictedTo).be.an.Array();
-          should(result.roles[1]).be.an.Object();
-          should(result.roles[1]).not.be.an.instanceOf(Role);
-          should(result.roles[1]._id).be.exactly('test2');
-          should(result.roles[1].restrictedTo).be.empty();
+          should(result.policies).be.an.Array();
+          should(result.policies).have.length(2);
+          should(result.policies[0]).be.an.Object();
+          should(result.policies[0]).not.be.an.instanceOf(Role);
+          should(result.policies[0]._id).be.exactly('test');
+          should(result.policies[0].restrictedTo).be.an.Array();
+          should(result.policies[1]).be.an.Object();
+          should(result.policies[1]).not.be.an.instanceOf(Role);
+          should(result.policies[1]._id).be.exactly('test2');
+          should(result.policies[1].restrictedTo).be.empty();
         });
     });
   });
@@ -309,7 +309,7 @@ describe('Test: repositories/profileRepository', () => {
       sandbox.stub(kuzzle.repositories.profile, 'persistToDatabase', profile => q({_id: profile._id}));
       sandbox.stub(kuzzle.repositories.role, 'loadRoles', stubs.roleRepository.loadRoles);
 
-      testProfile.roles = [{_id: 'anonymous'}];
+      testProfile.policies = [{_id: 'anonymous'}];
 
       return kuzzle.repositories.profile.validateAndSaveProfile(testProfile)
         .then((result) => {
@@ -328,7 +328,7 @@ describe('Test: repositories/profileRepository', () => {
       sandbox.stub(kuzzle.repositories.role, 'loadRoles', stubs.roleRepository.loadRoles);
 
       return kuzzle.repositories.profile.hydrate(profile, {})
-        .then(result => should(result.roles[0]._id).be.eql('default'));
+        .then(result => should(result.policies[0]._id).be.eql('default'));
     });
   });
 });

@@ -56,7 +56,7 @@ beforeEach(function (done) {
     load: function (username) {
       var user = new User();
       user._id = username;
-      user.profile = 'anonymous';
+      user.profileId = 'anonymous';
 
       return q(user);
     },
@@ -76,8 +76,8 @@ beforeEach(function (done) {
       };
 
       user._id = -1;
-      user.profile = 'anonymous';
-      profile.roles = [{_id: role._id}];
+      user.profileId = 'anonymous';
+      profile.policies = [{_id: role._id}];
 
       return q(user);
     },
@@ -97,8 +97,8 @@ beforeEach(function (done) {
       };
 
       user._id = 'admin';
-      user.profile = 'admin';
-      profile.roles = [{_id: role._id}];
+      user.profileId = 'admin';
+      profile.policies = [{_id: role._id}];
 
       return q(user);
     }
@@ -407,5 +407,5 @@ describe('Test: repositories/tokenRepository', function () {
 
 function assertIsAnonymous (token) {
   should(token._id).be.undefined();
-  should(token.user).be.exactly(-1);
+  should(token.userId).be.exactly(-1);
 }

@@ -34,9 +34,7 @@ describe('Test: hotelClerk.removeRooms', function () {
         context = {
           connection: connection,
           token: {
-            user: {
-              profile: {}
-            }
+            user: ''
           }
         };
       });

@@ -91,7 +91,7 @@ describe('Test: routerController', () => {
             var
               token = new Token(),
               role = new Role(),
-              user = new User();
+              user;
 
             role.controllers = {
               '*': {
@@ -100,9 +100,10 @@ describe('Test: routerController', () => {
                 }
               }
             };
+            
             user = {
               _id: 'user',
-              profile: 'profile',
+              profileId: 'profile',
               isActionAllowed: sinon.stub().resolves(true),
               getProfile: () => {
                 return q({
@@ -115,7 +116,7 @@ describe('Test: routerController', () => {
             };
 
             token._id = 'fake-token';
-            token.user = user;
+            token.userId = user._id;
 
             return q(token);
           };

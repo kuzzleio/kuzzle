@@ -18,7 +18,7 @@ describe('Test: security/userTest', () => {
   profile._id = 'profile';
   profile.isActionAllowed = sinon.stub().resolves(true);
   profile._id = 'profile';
-  user.profile = 'profile';
+  user.profileId = 'profile';
 
   beforeEach(() => {
     sandbox = sinon.sandbox.create();
