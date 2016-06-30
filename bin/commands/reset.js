@@ -6,13 +6,13 @@ var
   Kuzzle = require('../../lib/api'),
   readlineSync = require('readline-sync'),
   fs = require('fs'),
-  clc = require('cli-color'),
-  error = clc.red,
-  warn = clc.yellow,
-  notice = clc.cyanBright;
+  clc = require('cli-color');
 
-module.exports = function () {
-  var 
+module.exports = function (options) {
+  var
+    error = string => options.parent.noColors ? string : clc.red(string),
+    warn = string => options.parent.noColors ? string : clc.yellow(string),
+    notice = string => options.parent.noColors ? string : clc.cyanBright(string),
     userIsSure = false,
     kuzzle = new Kuzzle();
 
