@@ -108,8 +108,8 @@ describe('Test: routerController', () => {
               getProfile: () => {
                 return q({
                   _id: 'profile',
-                  roles: ['role'],
-                  getRoles: sinon.stub().resolves(role),
+                  policies: ['role'],
+                  getRoles: sinon.stub().resolves([role]),
                   isActionAllowed: sinon.stub().resolves(true)
                 });
               }

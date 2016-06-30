@@ -20,7 +20,7 @@ describe('Test: repositories/profileRepository', () => {
     testProfile,
     testProfilePlain = {
       _id: 'testprofile',
-      roles: [
+      policies: [
         {_id: 'test', restrictedTo: [{index: 'index'}]},
         {_id: 'test2'}
       ]
@@ -149,7 +149,7 @@ describe('Test: repositories/profileRepository', () => {
     it('should throw if the profile contains unexisting roles', () => {
       var p = new Profile();
       sandbox.stub(kuzzle.repositories.role, 'loadRoles').resolves([]);
-      return should(kuzzle.repositories.profile.hydrate(p, { roles: [{_id: 'notExistingRole' }] })).be.rejectedWith(NotFoundError);
+      return should(kuzzle.repositories.profile.hydrate(p, { policies: [{_id: 'notExistingRole' }] })).be.rejectedWith(NotFoundError);
     });
   });
 
@@ -169,7 +169,7 @@ describe('Test: repositories/profileRepository', () => {
       sandbox.stub(kuzzle.repositories.profile, 'profiles', {
         'test': {
           _id: 'test',
-          roles: ['test']
+          policies: ['test']
         }
       });
 
@@ -191,7 +191,7 @@ describe('Test: repositories/profileRepository', () => {
     it('should reject when trying to delete admin', () => {
       var profile = {
         _id: 'admin',
-        roles: [ {_id: 'admin'} ]
+        policies: [ {_id: 'admin'} ]
       };
 
       return should(kuzzle.repositories.profile.deleteProfile(profile))
@@ -201,7 +201,7 @@ describe('Test: repositories/profileRepository', () => {
     it('should reject when trying to delete default', () => {
       var profile = {
         _id: 'default',
-        roles: [ {_id: 'default'} ]
+        policies: [ {_id: 'default'} ]
       };
 
       return should(kuzzle.repositories.profile.deleteProfile(profile))
@@ -211,7 +211,7 @@ describe('Test: repositories/profileRepository', () => {
     it('should reject when trying to delete anonymous', () => {
       var profile = {
         _id: 'anonymous',
-        roles: [ {_id: 'anonymous'} ]
+        policies: [ {_id: 'anonymous'} ]
       };
 
       return should(kuzzle.repositories.profile.deleteProfile(profile))
@@ -299,7 +299,7 @@ describe('Test: repositories/profileRepository', () => {
 
       return kuzzle.repositories.profile.validateAndSaveProfile(testProfile)
         .then((result) => {
-          should(kuzzle.repositories.profile.profiles[testProfile._id]).match({roles: [{_id: 'test'}]});
+          should(kuzzle.repositories.profile.profiles[testProfile._id]).match({policies: [{_id: 'test'}]});
           should(result).be.an.Object();
           should(result._id).be.eql(testProfile._id);
         });
@@ -313,7 +313,7 @@ describe('Test: repositories/profileRepository', () => {
 
       return kuzzle.repositories.profile.validateAndSaveProfile(testProfile)
         .then((result) => {
-          should(kuzzle.repositories.profile.profiles[testProfile._id]).match({roles: [{_id: 'anonymous'}]});
+          should(kuzzle.repositories.profile.profiles[testProfile._id]).match({policies: [{_id: 'anonymous'}]});
           should(result).be.an.Object();
           should(result._id).be.eql(testProfile._id);
         });

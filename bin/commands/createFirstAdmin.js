@@ -101,7 +101,7 @@ var resetProfile = (profileId, role) => {
   var
     data = {
       _id: profileId,
-      roles: [ role ]
+      policies: [ role ]
     };
 
   return request({

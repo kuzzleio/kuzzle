@@ -41,7 +41,7 @@ describe('Test: security controller', function () {
 
   it('should be rejected if creating a profile with bad roles property form', () => {
     var promise = kuzzle.funnel.controllers.security.createOrReplaceProfile(new RequestObject({
-      body: { _id: 'test', roles: 'not-an-array-role' }
+      body: { _id: 'test', policies: 'not-an-array-roleIds' }
     }));
 
     return should(promise).be.rejected();

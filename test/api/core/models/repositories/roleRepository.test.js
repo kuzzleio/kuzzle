@@ -199,7 +199,7 @@ describe('Test: repositories/roleRepository', function () {
       sandbox.stub(kuzzle.repositories.profile, 'profiles', {
         'test': {
           _id: 'test',
-          roles: ['test']
+          policies: ['test']
         }
       });
       sandbox.stub(kuzzle.repositories.role, 'roles', {

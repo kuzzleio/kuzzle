@@ -117,10 +117,10 @@ module.exports = function () {
 
     this.profiles = {
       profile1: {
-        roles: [{_id: this.idPrefix + 'role1'}]
+        policies: [{_id: this.idPrefix + 'role1'}]
       },
       profile2: {
-        roles: [
+        policies: [
           {
             _id: this.idPrefix + 'role1',
             restrictedTo: [{index: this.fakeIndex}]
@@ -131,33 +131,33 @@ module.exports = function () {
         ]
       },
       profile3: {
-        roles: [{
+        policies: [{
           _id: this.idPrefix + 'role2',
           restrictedTo: [{index: this.fakeAltIndex, collections:[this.fakeCollection]}]
         }]
       },
       profile4: {
-        roles: [{
+        policies: [{
           _id: this.idPrefix + 'role3'
         }]
       },
       profile5: {
-        roles: [{
+        policies: [{
           _id: this.idPrefix + 'role3',
           restrictedTo: [{index: this.fakeIndex}]
         }]
       },
       profile6: {
-        roles: [{
+        policies: [{
           _id: this.idPrefix + 'role3',
           restrictedTo: [{index: this.fakeIndex, collections:[this.fakeCollection]}]
         }]
       },
       invalidProfile: {
-        roles: [{_id: 'unexisting-role'}]
+        policies: [{_id: 'unexisting-role'}]
       },
       emptyProfile: {
-        roles: []
+        policies: []
       }
     };
 
