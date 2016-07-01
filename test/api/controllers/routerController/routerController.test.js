@@ -85,8 +85,6 @@ describe('Test: routerController', () => {
       kuzzle = new Kuzzle();
       kuzzle.start(params, {dummy: true})
         .then(() => {
-          var User = require.main.require('lib/api/core/models/security/user');
-
           kuzzle.repositories.token.verifyToken = function() {
             var
               token = new Token(),

@@ -254,17 +254,20 @@ describe('Test: admin controller', function () {
   });
 
   describe('#deleteIndexes', () => {
-    var context = {
-      token: {
-        userId: 'deleteIndex'
-      }
-    };
+    var
+      context = {
+        token: {
+          userId: 'deleteIndex'
+        }
+      },
+      user,
+      profile,
+      role;
 
     before(() => {
-      var
-        user = _.assignIn(new User(), {_id:'deleteIndex', profile: 'deleteIndex'});
-        profile = new Profile(),
-        role = new Role();
+      user = _.assignIn(new User(), {_id:'deleteIndex', profileId: 'deleteIndex'});
+      profile = new Profile();
+      role = new Role();
 
       role._id = 'deleteIndex';
       role.controllers = {
