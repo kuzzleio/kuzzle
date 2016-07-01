@@ -60,7 +60,7 @@ var apiSteps = function () {
                   return callbackAsync();
                 }
 
-                return callbackAsync('The role hasn\'t right for index index');
+                return callbackAsync(`Could not find role ${id}`);
               }
             }
 
