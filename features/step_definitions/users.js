@@ -57,6 +57,8 @@ module.exports = function () {
         callback();
       })
       .catch(error => { callback(error); });
+
+
   });
 
   this.Then(/^I search for {(.*?)} and find (\d+) users(?: matching {(.*?)})?$/, function (filter, count, match, callback) {
