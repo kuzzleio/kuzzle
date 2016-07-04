@@ -320,6 +320,19 @@ describe('Test: Internal broker', function () {
         should(client.client.socket).be.an.instanceOf(WSClientMock);
       });
 
+      it('on close should not try to reconnect if explicitly asked so', () => {
+        var socket = client.client.socket;
+
+        client.reconnect = false;
+        client.state = 'connected';
+        client.retryTimer = 'something';
+
+        socket.emit('close', 1);
+
+        should(client.client.socket).be.null();
+        should(client.retryTimer).be.null();
+      });
+
       it('on close should try reconnecting if :close was not explicitly called', () => {
         var
           connectSpy = sandbox.spy(client, '_connect'),
@@ -365,6 +378,18 @@ describe('Test: Internal broker', function () {
         should(client.onErrorHandlers[0]).be.calledThrice();
       });
 
+      it('on error should not try to reconnect if asked so', () => {
+        var socket = client.client.socket;
+        
+        client.reconnect = false;
+        client.retryTimer = 'something';
+        
+        socket.emit('error', 1);
+        
+        should(client.client.socket).be.null();
+        should(client.retryTimer).be.null();
+      });
+      
     });
 
   });
