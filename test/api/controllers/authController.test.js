@@ -321,7 +321,7 @@ describe('Test the auth controller', function () {
       var
         rq = new RequestObject({body: {}}),
         token = {
-          token: {user: 'admin'}
+          token: {userId: 'admin'}
         };
 
       kuzzle.funnel.controllers.auth.getCurrentUser(rq, token)
@@ -338,7 +338,7 @@ describe('Test the auth controller', function () {
       var promise = kuzzle.funnel.controllers.auth.getCurrentUser(new RequestObject({
         body: {}
       }), {
-        token: { user: 'unknown_user' }
+        token: { userId: 'unknown_user' }
       });
 
       return should(promise).be.rejected();
@@ -439,7 +439,7 @@ describe('Test the auth controller', function () {
     it('should return a valid ResponseObject', done => {
       anotherKuzzle.funnel.controllers.auth.updateSelf(new RequestObject({
         body: { foo: 'bar' }
-      }), { token: { user: 'admin', _id: 'admin' }})
+      }), { token: { userId: 'admin', _id: 'admin' }})
         .then(response => {
           should(response).be.an.instanceOf(ResponseObject);
           should(persistOptions.database.method).be.exactly('update');
@@ -453,14 +453,14 @@ describe('Test the auth controller', function () {
     it('should reject if profile is specified', () => {
       should(anotherKuzzle.funnel.controllers.auth.updateSelf(new RequestObject({
         body: { foo: 'bar', profileId: 'test' }
-      }), { token: { user: 'admin', _id: 'admin' }}))
+      }), { token: { userId: 'admin', _id: 'admin' }}))
         .be.rejected();
     });
 
     it('should reject if _id is specified in the body', () => {
       should(anotherKuzzle.funnel.controllers.auth.updateSelf(new RequestObject({
         body: { foo: 'bar', _id: 'test' }
-      }), { token: { user: 'admin', _id: 'admin' }}))
+      }), { token: { userId: 'admin', _id: 'admin' }}))
         .be.rejected();
     });
 
@@ -471,7 +471,7 @@ describe('Test the auth controller', function () {
         }
       }), {
         token: {
-          user: {
+          userId: {
             _id: -1
           },
           _id: null
@@ -485,7 +485,7 @@ describe('Test the auth controller', function () {
     var
       rq = new RequestObject({body: {}}),
       token = {
-        token: {user: 'test' }
+        token: {userId: 'test' }
       };
 
     it('should be able to get current user\'s rights', () => {

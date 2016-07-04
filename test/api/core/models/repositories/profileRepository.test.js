@@ -277,9 +277,9 @@ describe('Test: repositories/profileRepository', () => {
           should(result.filter).have.ownProperty('or');
           should(result.filter.or).be.an.Array();
           should(result.filter.or[0]).have.ownProperty('terms');
-          should(result.filter.or[0].terms).have.ownProperty('roles._id');
-          should(result.filter.or[0].terms['roles._id']).be.an.Array();
-          should(result.filter.or[0].terms['roles._id'][0]).be.exactly('role1');
+          should(result.filter.or[0].terms).have.ownProperty('policies._id');
+          should(result.filter.or[0].terms['policies._id']).be.an.Array();
+          should(result.filter.or[0].terms['policies._id'][0]).be.exactly('role1');
         });
     });
   });

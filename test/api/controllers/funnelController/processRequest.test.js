@@ -33,10 +33,7 @@ describe('funnelController.processRequest', function () {
     sandbox = sinon.sandbox.create();
     sandbox.stub(kuzzle.repositories.token, 'verifyToken', () => {
       return q({
-        user: {
-          _id: 'user',
-          isActionAllowed: sinon.stub().resolves(true)
-        }
+        userId: 'user'
       });
     });
   });
@@ -90,7 +87,7 @@ describe('funnelController.processRequest', function () {
   it('should reject the promise with UnauthorizedError if an anonymous user is not allowed to execute the action', () => {
     kuzzle.repositories.token.verifyToken.restore();
     sandbox.stub(kuzzle.repositories.user, 'load').resolves({_id: -1, isActionAllowed: sandbox.stub().resolves(false)});
-    sandbox.stub(kuzzle.repositories.token, 'verifyToken').resolves({user: -1});
+    sandbox.stub(kuzzle.repositories.token, 'verifyToken').resolves({userId: -1});
 
     return should(
       processRequest(kuzzle, kuzzle.funnel.controllers,

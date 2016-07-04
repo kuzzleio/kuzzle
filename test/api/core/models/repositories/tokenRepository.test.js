@@ -329,7 +329,7 @@ describe('Test: repositories/tokenRepository', function () {
           should(result).not.be.an.instanceOf(Token);
           should(result).be.an.Object();
           should(result._id).be.exactly(undefined);
-          should(result.user).be.exactly(-1);
+          should(result.userId).be.exactly(-1);
 
           done();
         })
