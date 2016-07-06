@@ -65,7 +65,6 @@ describe('Test: repositories/profileRepository', () => {
       testProfile.roles[1] = new Role();
       testProfile.roles[1]._id = 'test2';
     });
-
   });
 
   beforeEach(() => {
@@ -132,8 +131,8 @@ describe('Test: repositories/profileRepository', () => {
         body: testProfilePlain
       });
 
-      return should(kuzzle.repositories.profile.buildProfileFromRequestObject(validProfileObject))
-        .be.fulfilledWith(testProfilePlain);
+      return kuzzle.repositories.profile.buildProfileFromRequestObject(validProfileObject)
+        .then(profile => should(profile).match(testProfilePlain));
     });
   });
 

@@ -4,7 +4,7 @@ var
   rewire = require('rewire'),
   Redis = rewire('../../lib/services/redis'),
   IORedis = require('ioredis'),
-  redisCommands = (require('ioredis')()).getBuiltinCommands(),
+  redisCommands = (require('ioredis')({lazyConnect: true})).getBuiltinCommands(),
   EventEmitter = require('eventemitter2').EventEmitter2,
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   sinon = require('sinon'),
@@ -306,7 +306,7 @@ describe('Test redis service', function () {
   it('should build a client instance of Cluster if several nodes are defined', () => {
     var config = {
       nodes: [
-        {host: 'fobar', port: 6379}
+        {host: 'foobar', port: 6379, lazyConnect: true}
       ]
     };
 
@@ -318,7 +318,7 @@ describe('Test redis service', function () {
 
   it('should build a client instance of Redis if only one node is defined', () => {
     var config = {
-      node: {host: 'fobar', port: 6379}
+      node: {host: 'foobar', port: 6379, lazyConnect: true},
     };
 
     sandbox.stub(IORedis, 'Cluster').returns({});

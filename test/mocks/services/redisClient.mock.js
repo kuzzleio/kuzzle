@@ -1,6 +1,6 @@
 var
   EventEmitter = require('eventemitter2').EventEmitter2,
-  redisCommands = (require('ioredis')()).getBuiltinCommands(),
+  redisCommands = (require('ioredis')({lazyConnect: true})).getBuiltinCommands(),
   q = require('q'),
   mock = {};
 

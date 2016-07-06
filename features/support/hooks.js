@@ -4,7 +4,7 @@ var
   q = require('q');
 
 var myHooks = function () {
-  this.BeforeFeature((event, callback) => {
+  this.registerHandler('BeforeFeature', (event, callback) => {
     var
       api = restApi(),
       fixtures = require('../fixtures/functionalTestsFixtures.json'),
@@ -48,7 +48,7 @@ var myHooks = function () {
       });
   });
 
-  this.AfterFeature((event, callback) => {
+  this.registerHandler('AfterFeature', (event, callback) => {
     var
       api = restApi(),
       promises = [];
@@ -61,10 +61,16 @@ var myHooks = function () {
       });
 
       q.all(promises)
-        .then(() => {
-          callback();
-        })
-        .catch(error => { callback(new Error(error)); });
+        .then(() => callback())
+        .catch(error => {
+          // Ignores deleteIndex errors if they occur because the deleted index
+          // does not exists
+          if (error.statusCode === 400 && error.error.action === 'deleteIndex') {
+            return callback();
+          }
+
+          callback(new Error(error));
+        });
     }, 0);
 
   });
