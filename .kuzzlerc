@@ -7,6 +7,8 @@
   */
   "serviceSettingsCollection": "services",
 
+  "servicesDefaultInitTimeout": 10000,
+
   /*
   */
   "proxyBroker": {
@@ -179,8 +181,9 @@
         "activated": true
       },
       "kuzzle-plugin-auth-passport-local": {
-        "npmVersion": "2.0.1",
-        "activated": true
+        "npmVersion": "2.0.3",
+        "activated": true,
+        "loadedBy": "server"
       }
     }
   },

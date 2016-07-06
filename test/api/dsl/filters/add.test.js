@@ -37,6 +37,20 @@ describe('Test: dsl.filters.add', function () {
       field,
       value: 42
     });
+    
+    should(result.diff).be.eql({
+      ft: {
+        i: 'index',
+        c: 'collection',
+        f: field,
+        fi: 'filterId',
+        o: 'gte',
+        v: 42,
+        fn: 'filter',
+        n: undefined,
+        g: undefined
+      }
+    });
 
     should.exist(filters.filtersTree.index.collection);
     should.exist(filters.filtersTree.index.collection.fields);
@@ -55,19 +69,34 @@ describe('Test: dsl.filters.add', function () {
   });
 
   it('should not add a room to the same filter if it is already assigned to it', function () {
+    var result;
+    
     filters.add('index', 'collection', field, 'gte', 42, 'filter', 'filterId');
-    filters.add('index', 'collection', field, 'gte', 42, 'filter', 'filterId');
+    result = filters.add('index', 'collection', field, 'gte', 42, 'filter', 'filterId');
 
     should(filters.filtersTree.index.collection.fields[hashedField][hashedFilter].ids).be.an.Array().and.match(['filterId']);
     should(filters.filtersTree.index.collection.fields[hashedField][hashedFilter].ids.length).be.eql(1);
+    should(result.diff).be.false();
   });
 
   it('should also add the room to the global rooms list if the filter is global', function () {
-    filters.add('index', 'collection', field, 'gte', 42, 'filter', 'filterId', false, true);
-    filters.add('index', 'collection', field, 'gte', 42, 'filter', 'filterId', false, true);
+    var result = filters.add('index', 'collection', field, 'gte', 42, 'filter', 'filterId', false, true);
 
     should.exist(filters.filtersTree.index.collection.globalFilterIds);
     should(filters.filtersTree.index.collection.globalFilterIds).be.an.Array().and.match(['filterId']);
     should(filters.filtersTree.index.collection.globalFilterIds.length).be.eql(1);
+    should(result.diff).be.eql({
+      ft: {
+        i: 'index',
+        c: 'collection',
+        f: field,
+        o: 'gte',
+        v: 42,
+        fn: 'filter',
+        fi: 'filterId',
+        n: false,
+        g: true
+      }
+    });
   });
 });

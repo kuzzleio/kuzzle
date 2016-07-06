@@ -8,9 +8,8 @@ var
   InternalEngine = require('../../../../lib/services/internalEngine'),
   lockFile = require('proper-lockfile'),
   path = require('path'),
-  clc = require('cli-color'),
-  clcOk = clc.green.bold,
-  clcNotice = clc.cyan,
+  clcOk = managePlugins.__get__('clcOk'),
+  clcNotice = managePlugins.__get__('clcNotice'),
   sandbox;
 
 require('sinon-as-promised')(q.Promise);
@@ -31,8 +30,13 @@ describe('Test: managePlugins remote action caller', function () {
 
     sandbox.stub(lockFile, 'lock').yields(undefined, () => {});
     managePlugins.__set__({
-      'DatabaseService': function () {
+      DatabaseService: function () {
         return internalEngineStub;
+      },
+      console: {
+        log: sinon.spy(),
+        error: sinon.spy(),
+        dir: sinon.spy()
       }
     });
   });

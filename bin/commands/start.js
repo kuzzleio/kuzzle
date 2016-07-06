@@ -6,23 +6,26 @@ var
   params = rc('kuzzle'),
   kuzzle = require('../../lib'),
   RequestObject = require('kuzzle-common-objects').Models.requestObject,
-  firstAdmin = require('./createFirstAdmin'),
+  FirstAdmin = require('./createFirstAdmin'),
   q = require('q'),
   clc = require('cli-color'),
-  error = clc.red,
-  warn = clc.yellow,
-  notice = clc.cyanBright,
-  ok = clc.green.bold,
-  kuz = clc.greenBright.bold,
   coverage;
 
-if (process.env.FEATURE_COVERAGE === '1' || process.env.FEATURE_COVERAGE === 1) {
-  coverage = require('istanbul-middleware');
-  console.log(warn('Hook loader for coverage - ensure this is not production!'));
-  coverage.hookLoader(__dirname+'/../lib');
-}
+module.exports = function (options) {
+  var
+    error = string => options.parent.noColors ? string : clc.red(string),
+    warn = string => options.parent.noColors ? string : clc.yellow(string),
+    notice = string => options.parent.noColors ? string : clc.cyanBright(string),
+    ok = string => options.parent.noColors ? string : clc.green.bold(string),
+    kuz = string => options.parent.noColors ? string : clc.greenBright.bold(string),
+    firstAdmin = new FirstAdmin(options, false);
+  
+  if (process.env.FEATURE_COVERAGE === '1' || process.env.FEATURE_COVERAGE === 1) {
+    coverage = require('istanbul-middleware');
+    console.log(warn('Hook loader for coverage - ensure this is not production!'));
+    coverage.hookLoader(__dirname+'/../lib');
+  }
 
-module.exports = function () {
   console.log(kuz('Starting Kuzzle'), (kuzzle.isServer ? notice('Server') : warn('Worker')));
 
   kuzzle.start(params)

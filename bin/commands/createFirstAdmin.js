@@ -3,16 +3,16 @@
 var
   readlineSync = require('readline-sync'),
   clc = require('cli-color'),
-  error = clc.red,
-  question = clc.whiteBright,
-  notice = clc.cyanBright,
-  ok = clc.green.bold,
   request = require('request-promise'),
   rc = require('rc'),
   params = rc('kuzzle'),
   name,
   password,
   resetRoles = false,
+  error,
+  question,
+  notice,
+  ok,
   step = 0,
   // steps definitions
   steps = [
@@ -230,11 +230,22 @@ var checkIfFistAdminNeeded = () => {
 
 process.stdin.setEncoding('utf8');
 
-module.exports = {
-  check: checkIfFistAdminNeeded,
-  action: () => {
-
-    checkIfFistAdminNeeded()
+module.exports = function FirstAdmin (options, run) {
+  if (!(this instanceof FirstAdmin)) {
+    return new FirstAdmin(options);
+  }
+  
+  run = (run === undefined) || run;
+  
+  error = string => options.parent.noColors ? string : clc.red(string);
+  question = string => options.parent.noColors ? string : clc.whiteBright(string);
+  notice = string => options.parent.noColors ? string : clc.cyanBright(string);
+  ok = string => options.parent.noColors ? string : clc.green.bold(string);
+  
+  this.check = checkIfFistAdminNeeded.bind(this);
+  
+  if (run) {
+    this.check()
       .then(() =>{
         // we can access to the admin role, so no admin account have been created yet
         console.log(ok('███ Kuzzle first admin creation'));
@@ -245,3 +256,4 @@ module.exports = {
       });
   }
 };
+
