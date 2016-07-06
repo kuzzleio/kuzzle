@@ -17,7 +17,16 @@ describe('Test: dsl.filters.addCollectionSubscription', function () {
 
   it('should initialize the filtersTree object correctly when adding a new collection', function () {
     return filters.addCollectionSubscription('foo', index, 'bar')
-      .then(function () {
+      .then(response => {
+        should(response.diff).be.eql([
+          {ftG: {
+            i: index,
+            c: 'bar',
+            fi: 'foo'
+          }} 
+        ]);
+        should(response.filter).be.exactly('foo');
+        
         should(filters.filtersTree[index]).be.an.Object();
         should(filters.filtersTree[index].bar).be.an.Object();
         should(filters.filtersTree[index].bar.globalFilterIds).be.an.Array();
@@ -28,10 +37,19 @@ describe('Test: dsl.filters.addCollectionSubscription', function () {
 
   it('should not add the same room multiple times in the same collection', function () {
     return filters.addCollectionSubscription('foo', index, 'bar')
-      .then(function () {
+      .then(response => {
+        should(response.diff).be.eql([
+          {ftG: {
+            i: index,
+            c: 'bar',
+            fi: 'foo'
+          }}
+        ]);
         return filters.addCollectionSubscription('foo', index, 'bar');
       })
-      .then(function () {
+      .then(response => {
+        should(response.diff).be.false();
+        
         should(filters.filtersTree[index]).be.an.Object();
         should(filters.filtersTree[index].bar).be.an.Object();
         should(filters.filtersTree[index].bar.globalFilterIds).be.an.Array();

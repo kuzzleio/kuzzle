@@ -5,7 +5,7 @@
 
 var
   should = require('should'),
-  params = require('rc')('kuzzle'),
+  kuzzleParams = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   rewire = require('rewire'),
   RouterController = rewire('../../../../lib/api/controllers/routerController'),
@@ -57,7 +57,7 @@ describe('Test: routerController.executeFromRest', function () {
       };
 
     kuzzle = new Kuzzle();
-    kuzzle.start(params, {dummy: true})
+    kuzzle.start(kuzzleParams, {dummy: true})
       .then(function () {
         kuzzle.funnel.execute = mockupFunnel;
         RouterController.router = mockupRouterListener;
@@ -199,7 +199,7 @@ describe('Test: routerController.executeFromRest', function () {
         },
         params: {index: '%test', ollection: 'foobar'},
         originalUrl: 'http://host.url'
-    };
+      };
 
     mockupResponse.init();
     executeFromRest.call(kuzzle, params, data, mockupResponse);
@@ -261,7 +261,7 @@ describe('Test: routerController.executeFromRest', function () {
   it('should use the request content instead of the metadata to complete missing information', function (done) {
     var
       callParams = {controller: 'write' },
-      data = {headers: {'content-type': 'application/json'}, body: {resolve: true}, params: {index: '%test', collection: 'foobar',  action: 'create'}, originalUrl: 'http://host.url'};
+      data = {headers: {'content-type': 'application/json'}, body: {resolve: true}, params: {index: '%test', collection: 'foobar', action: 'create'}, originalUrl: 'http://host.url'};
 
     mockupResponse.init();
     executeFromRest.call(kuzzle, callParams, data, mockupResponse);
@@ -287,7 +287,7 @@ describe('Test: routerController.executeFromRest', function () {
   it('should copy any found "id" identifier', function (done) {
     var
       callParams = {controller: 'write' },
-      data = {headers: {'content-type': 'application/json'}, body: {resolve: true}, params: {index: '%test', collection: 'foobar',  action: 'create', id: 'fakeid'}, originalUrl: 'http://host.url'};
+      data = {headers: {'content-type': 'application/json'}, body: {resolve: true}, params: {index: '%test', collection: 'foobar', action: 'create', id: 'fakeid'}, originalUrl: 'http://host.url'};
 
     mockupResponse.init();
     executeFromRest.call(kuzzle, callParams, data, mockupResponse);

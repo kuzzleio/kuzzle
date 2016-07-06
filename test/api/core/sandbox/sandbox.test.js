@@ -64,6 +64,7 @@ describe('Test: sandbox/sandboxTest', () => {
         process: { execArgv: [] }
       });
 
+      /** @type {Sandbox} */
       sandbox = new LocalSandbox();
       sandbox.timeout = 10000;
 
@@ -96,7 +97,7 @@ describe('Test: sandbox/sandboxTest', () => {
     it('should allocate a new debug port if needed', function (done) {
       var
         LocalSandbox = rewire('../../../../lib/api/core/sandbox'),
-        sandbox,
+        anotherSandbox,
         timer,
         revert;
 
@@ -109,21 +110,22 @@ describe('Test: sandbox/sandboxTest', () => {
         }
       });
 
-      sandbox = new LocalSandbox();
-      sandbox.timeout = 10000;
+      /** @type {Sandbox} */
+      anotherSandbox = new LocalSandbox();
+      anotherSandbox.timeout = 10000;
 
-      sandbox.run({
+      anotherSandbox.run({
         code: 'while(true) {}'
       });
 
       timer = setInterval(() => {
         var result;
 
-        if (sandbox.child === null) {
+        if (anotherSandbox.child === null) {
           return;
         }
 
-        result = sandbox.child.spawnargs.some(arg => {
+        result = anotherSandbox.child.spawnargs.some(arg => {
           var
             port,
             match = arg.match(/^(--debug|--debug-(?:brk|port))=(\d+)$/);
@@ -140,7 +142,7 @@ describe('Test: sandbox/sandboxTest', () => {
         should(result).be.true();
 
         revert();
-        sandbox.child.kill();
+        anotherSandbox.child.kill();
         clearInterval(timer);
         timer = null;
 
@@ -149,8 +151,8 @@ describe('Test: sandbox/sandboxTest', () => {
     });
 
     it('should execute the given code', done => {
-      var sandbox = new Sandbox();
-      sandbox.run({
+      var anotherSandbox = new Sandbox();
+      anotherSandbox.run({
         code: '(function () { var a = 1; var b = 4; return (a + b); })()'
       })
         .then(result => {
@@ -163,8 +165,8 @@ describe('Test: sandbox/sandboxTest', () => {
     });
 
     it('should be able to modify the given context', done => {
-      var sandbox = new Sandbox();
-      sandbox.run({
+      var anotherSandbox = new Sandbox();
+      anotherSandbox.run({
         sandbox: {
           i: 5
         },

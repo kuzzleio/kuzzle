@@ -3,8 +3,6 @@
  */
 var
   should = require('should'),
-  http = require('http'),
-  rewire = require('rewire'),
   params = require('rc')('kuzzle'),
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),

@@ -8,7 +8,9 @@
  */
 var program = require('commander');
 
-program.option('-d, --debug', 'make errors more verbose');
+program
+  .option('-d, --debug', 'make errors more verbose')
+  .option('--noColors', 'do not use ANSI coloring')
 
 // $ kuzzle start
 program
@@ -56,6 +58,7 @@ program
   .option('--remove', '*Removes the supplied plugin [name] from Kuzzle')
   .option('--activate', '*Marks the plugin as "activated" (Kuzzle ignores deactivated plugins)')
   .option('--deactivate', '*Marks the plugin as "deactivated" (Kuzzle ignores deactivated plugins)')
+  .option('--importConfig <file>', '*Import a configuration from a file for a given plugin')
   .option('-v, --npmVersion <version>', 'Installs plugin <version> from NPM (work only with --install)')
   .option('-u, --gitUrl <url>', 'Installs plugin from a GIT repo <url> (work only with --install)')
   .option('-p, --path <path>', 'Installs a plugin from directory <path> (work only with --install)')
@@ -65,7 +68,7 @@ program
 program
   .command('createFirstAdmin')
   .description('Create the first administrator')
-  .action(require('./commands/createFirstAdmin').action);
+  .action(require('./commands/createFirstAdmin'));
 
 // $ kuzzle likeAvirgin
 program

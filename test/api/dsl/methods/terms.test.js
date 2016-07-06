@@ -19,6 +19,7 @@ describe('Test "terms" method', function () {
     fieldFirstName = md5('firstName');
 
   beforeEach(function () {
+    /** @type Methods */
     methods = new Methods(new Filters());
 
     return methods.terms(filterIdMatch, index, collection, filter, false)

@@ -8,11 +8,11 @@ var
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
-  Lb = rewire('../../../../lib/api/core/entryPoints/lb'),
+  KuzzleProxy = rewire('../../../../lib/api/core/entryPoints/kuzzleProxy'),
   RequestObject = require('kuzzle-common-objects').Models.requestObject,
   ResponseObject = require('kuzzle-common-objects').Models.responseObject;
 
-describe('Test: entryPoints/lb', function () {
+describe('Test: entryPoints/proxy', function () {
   var
     kuzzle;
 
@@ -29,25 +29,25 @@ describe('Test: entryPoints/lb', function () {
   });
 
   it('should construct the right object', function () {
-    var lb = new Lb(kuzzle);
+    var proxy = new KuzzleProxy(kuzzle);
 
-    should(lb).have.property('kuzzle');
-    should(lb).have.property('channels');
-    should(lb.channels).be.empty();
+    should(proxy).have.property('kuzzle');
+    should(proxy).have.property('channels');
+    should(proxy.channels).be.empty();
 
-    should(lb.init).be.a.Function();
-    should(lb.joinChannel).be.a.Function();
-    should(lb.leaveChannel).be.a.Function();
-    should(lb.notify).be.a.Function();
-    should(lb.broadcast).be.a.Function();
+    should(proxy.init).be.a.Function();
+    should(proxy.joinChannel).be.a.Function();
+    should(proxy.leaveChannel).be.a.Function();
+    should(proxy.notify).be.a.Function();
+    should(proxy.broadcast).be.a.Function();
   });
 
   it('should init listeners on init call', function () {
     var
-      lb = new Lb(kuzzle),
-      spyListen = sandbox.stub(lb.kuzzle.services.list.lbBroker, 'listen');
+      proxy = new KuzzleProxy(kuzzle),
+      spyListen = sandbox.stub(proxy.kuzzle.services.list.proxyBroker, 'listen');
 
-    lb.init();
+    proxy.init();
     should(spyListen.calledWith('request')).be.true();
     should(spyListen.calledWith('connection')).be.true();
     should(spyListen.calledWith('disconnect')).be.true();
@@ -57,22 +57,22 @@ describe('Test: entryPoints/lb', function () {
 
   it('should send a message on room "joinChannel" on joinChannel call', function () {
     var
-      lb = new Lb(kuzzle),
+      proxy = new KuzzleProxy(kuzzle),
       data = {my: 'data'},
-      spyListen = sandbox.stub(lb.kuzzle.services.list.lbBroker, 'send');
+      spyListen = sandbox.stub(proxy.kuzzle.services.list.proxyBroker, 'send');
 
-    lb.joinChannel(data);
+    proxy.joinChannel(data);
     should(spyListen.calledWith('joinChannel', data)).be.true();
     should(spyListen.callCount).be.eql(1);
   });
 
   it('should send a message on room "leaveChannel" on leaveChannel call', function () {
     var
-      lb = new Lb(kuzzle),
+      proxy = new KuzzleProxy(kuzzle),
       data = {my: 'data'},
-      spyListen = sandbox.stub(lb.kuzzle.services.list.lbBroker, 'send');
+      spyListen = sandbox.stub(proxy.kuzzle.services.list.proxyBroker, 'send');
 
-    lb.leaveChannel(data);
+    proxy.leaveChannel(data);
     should(spyListen.calledWith('leaveChannel', data)).be.true();
     should(spyListen.callCount).be.eql(1);
   });
@@ -82,7 +82,7 @@ describe('Test: entryPoints/lb', function () {
       data = {request: {}, context: {connection: {type: 'socketio', id: 'myid'}}},
       spyExecute = sandbox.stub(kuzzle.funnel, 'execute');
 
-    Lb.__get__('onRequest').call({kuzzle: kuzzle}, data);
+    KuzzleProxy.__get__('onRequest').call({kuzzle: kuzzle}, data);
 
     should(spyExecute.callCount).be.eql(1);
   });
@@ -92,19 +92,19 @@ describe('Test: entryPoints/lb', function () {
       data = {},
       spyExecute = sandbox.stub(kuzzle.funnel, 'execute');
 
-    Lb.__get__('onRequest').call({kuzzle: kuzzle}, data);
+    KuzzleProxy.__get__('onRequest').call({kuzzle: kuzzle}, data);
     should(spyExecute.callCount).be.eql(0);
 
     data = {request: {}};
-    Lb.__get__('onRequest').call({kuzzle: kuzzle}, data);
+    KuzzleProxy.__get__('onRequest').call({kuzzle: kuzzle}, data);
     should(spyExecute.callCount).be.eql(0);
 
     data = {request: {}, context: {}};
-    Lb.__get__('onRequest').call({kuzzle: kuzzle}, data);
+    KuzzleProxy.__get__('onRequest').call({kuzzle: kuzzle}, data);
     should(spyExecute.callCount).be.eql(0);
 
     data = {request: {}, context: {connection: {}}};
-    Lb.__get__('onRequest').call({kuzzle: kuzzle}, data);
+    KuzzleProxy.__get__('onRequest').call({kuzzle: kuzzle}, data);
     should(spyExecute.callCount).be.eql(0);
   });
 
@@ -114,7 +114,7 @@ describe('Test: entryPoints/lb', function () {
       spyExecute = sandbox.stub(kuzzle.funnel, 'execute'),
       requestObject;
 
-    Lb.__get__('onRequest').call({kuzzle: kuzzle}, data);
+    KuzzleProxy.__get__('onRequest').call({kuzzle: kuzzle}, data);
 
     requestObject = spyExecute.args[0][0];
     should(requestObject).instanceOf(RequestObject);
@@ -123,35 +123,35 @@ describe('Test: entryPoints/lb', function () {
   it('should call the funnel execute and send the response on broker on event onRequest', function () {
     var
       data = {request: {}, context: {connection: {type: 'socketio', id: 'myid'}}},
-      spySend = sandbox.stub(kuzzle.services.list.lbBroker, 'send');
+      spySend = sandbox.stub(kuzzle.services.list.proxyBroker, 'send');
 
     sandbox.stub(kuzzle.funnel, 'execute', (requestObject, context, cb) => {
       var responseObject = new ResponseObject(requestObject, {});
       cb(null, responseObject);
     });
-    Lb.__get__('onRequest').call({kuzzle: kuzzle}, data);
+    KuzzleProxy.__get__('onRequest').call({kuzzle: kuzzle}, data);
 
     should(spySend.calledWith('response')).be.true();
   });
 
   it('should send a message on room "notify" on notify call', function () {
     var
-      lb = new Lb(kuzzle),
+      proxy = new KuzzleProxy(kuzzle),
       data = {my: 'data'},
-      spyListen = sandbox.stub(lb.kuzzle.services.list.lbBroker, 'send');
+      spyListen = sandbox.stub(proxy.kuzzle.services.list.proxyBroker, 'send');
 
-    lb.notify(data);
+    proxy.notify(data);
     should(spyListen.calledWith('notify', data)).be.true();
     should(spyListen.callCount).be.eql(1);
   });
 
   it('should send a message on room "broadcast" on broadcast call', function () {
     var
-      lb = new Lb(kuzzle),
+      proxy = new KuzzleProxy(kuzzle),
       data = {my: 'data'},
-      spyListen = sandbox.stub(lb.kuzzle.services.list.lbBroker, 'send');
+      spyListen = sandbox.stub(proxy.kuzzle.services.list.proxyBroker, 'send');
 
-    lb.broadcast(data);
+    proxy.broadcast(data);
     should(spyListen.calledWith('broadcast', data)).be.true();
     should(spyListen.callCount).be.eql(1);
   });
@@ -161,7 +161,7 @@ describe('Test: entryPoints/lb', function () {
       data = {context: {connection: {type: 'socketio', id: 'myid'}}},
       spyRemoveConnection = sandbox.stub(kuzzle.router, 'removeConnection');
 
-    Lb.__get__('onDisconnect').call({kuzzle: kuzzle}, data);
+    KuzzleProxy.__get__('onDisconnect').call({kuzzle: kuzzle}, data);
 
     should(spyRemoveConnection.calledWith(data.context)).be.true();
   });
@@ -171,7 +171,7 @@ describe('Test: entryPoints/lb', function () {
       data = {},
       spyRemoveConnection = sandbox.stub(kuzzle.router, 'removeConnection');
 
-    Lb.__get__('onDisconnect').call({kuzzle: kuzzle}, data);
+    KuzzleProxy.__get__('onDisconnect').call({kuzzle: kuzzle}, data);
 
     should(spyRemoveConnection.callCount).be.eql(0);
   });
@@ -181,7 +181,7 @@ describe('Test: entryPoints/lb', function () {
       data = {context: {connection: {type: 'socketio', id: 'myid'}}},
       spyNewConnection = sandbox.stub(kuzzle.router, 'newConnection');
 
-    Lb.__get__('onConnection').call({kuzzle: kuzzle}, data);
+    KuzzleProxy.__get__('onConnection').call({kuzzle: kuzzle}, data);
 
     should(spyNewConnection.calledWith(data.context.connection.type, data.context.connection.id)).be.true();
   });
@@ -191,23 +191,23 @@ describe('Test: entryPoints/lb', function () {
       data = {},
       spyNewConnection = sandbox.stub(kuzzle.router, 'newConnection');
 
-    Lb.__get__('onConnection').call({kuzzle: kuzzle}, data);
+    KuzzleProxy.__get__('onConnection').call({kuzzle: kuzzle}, data);
     should(spyNewConnection.callCount).be.eql(0);
 
     data.context = {};
-    Lb.__get__('onConnection').call({kuzzle: kuzzle}, data);
+    KuzzleProxy.__get__('onConnection').call({kuzzle: kuzzle}, data);
     should(spyNewConnection.callCount).be.eql(0);
 
     data.context = {connection: {}};
-    Lb.__get__('onConnection').call({kuzzle: kuzzle}, data);
+    KuzzleProxy.__get__('onConnection').call({kuzzle: kuzzle}, data);
     should(spyNewConnection.callCount).be.eql(0);
 
     data.context = {connection: {type: 'type'}};
-    Lb.__get__('onConnection').call({kuzzle: kuzzle}, data);
+    KuzzleProxy.__get__('onConnection').call({kuzzle: kuzzle}, data);
     should(spyNewConnection.callCount).be.eql(0);
 
     data.context = {connection: {type: 'type', id: 'id'}};
-    Lb.__get__('onConnection').call({kuzzle: kuzzle}, data);
+    KuzzleProxy.__get__('onConnection').call({kuzzle: kuzzle}, data);
     should(spyNewConnection.callCount).be.eql(1);
   });
 

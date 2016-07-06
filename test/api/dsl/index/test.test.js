@@ -65,6 +65,7 @@ describe('Test: dsl.test', function () {
     };
 
   beforeEach(() => {
+    /** @type Dsl */
     dsl = new Dsl();
     return dsl.register(filterId, index, collection, filterGrace);
   });
@@ -79,7 +80,7 @@ describe('Test: dsl.test', function () {
   });
 
   it('should return empty array when document doesn\'t match', function () {
-    return dsl.test('fakeIndex', 'fakeCollection',  {})
+    return dsl.test('fakeIndex', 'fakeCollection', {})
       .then(function (filters) {
         should(filters).be.an.Array();
         should(filters).be.empty();

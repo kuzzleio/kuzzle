@@ -53,7 +53,6 @@ describe('Test: statistics core component', function () {
     });
 
     stats = new Statistics(kuzzle);
-    cacheCalled = false;
   });
 
   afterEach(() => {

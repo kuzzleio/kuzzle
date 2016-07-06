@@ -3,7 +3,6 @@
  */
 var
   should = require('should'),
-  rewire = require('rewire'),
   params = require('rc')('kuzzle'),
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
@@ -11,9 +10,7 @@ var
   MqServer = require.main.require('lib/api/core/entryPoints/mq');
 
 describe('Test: entryPoints/http', function () {
-  var
-    kuzzle,
-    httpPort = 6667;
+  var kuzzle;
 
   before(function (done) {
     kuzzle = new Kuzzle();

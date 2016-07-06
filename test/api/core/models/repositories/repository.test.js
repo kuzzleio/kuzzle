@@ -18,6 +18,9 @@ describe('Test: repositories/repository', function () {
     cachedObject,
     uncachedObject;
 
+  /**
+   * @constructor
+   */
   ObjectConstructor = function () {
     this.type = 'testObject';
   };
@@ -366,14 +369,14 @@ describe('Test: repositories/repository', function () {
       repository.persistToCache(persistedObject, {ttl: false});
 
       should(forwardedObject.op).be.exactly('set');
-      should(forwardedObject.value).be.eql(persistedObject);
+      should(forwardedObject.value).match(persistedObject);
     });
 
     it('should set the object with a ttl by default', () => {
       repository.persistToCache(persistedObject, {ttl: 500});
 
       should(forwardedObject.op).be.exactly('volatileSet');
-      should(forwardedObject.value).be.eql(persistedObject);
+      should(forwardedObject.value).match(persistedObject);
       should(forwardedObject.ttl).be.exactly(500);
     });
   });

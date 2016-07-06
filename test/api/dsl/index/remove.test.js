@@ -2,13 +2,11 @@ var
   should = require('should'),
   q = require('q'),
   rewire = require('rewire'),
-  params = require('rc')('kuzzle'),
   Dsl = rewire('../../../../lib/api/dsl/index');
 
 describe('Test: dsl.remove', function () {
   var
     dsl,
-    roomName = 'roomNameGrace',
     index = 'test',
     collection = 'user',
     filterId = 'foo',
@@ -28,7 +26,7 @@ describe('Test: dsl.remove', function () {
 
   it('should remove a filter containing field filters', () => {
     return dsl.register(filterId, index, collection, filter)
-      .then(result => {
+      .then(() => {
         should(dsl.filters.filtersTree).not.be.empty().Object();
         return dsl.remove(filterId);
       })
@@ -37,7 +35,7 @@ describe('Test: dsl.remove', function () {
 
   it('should remove a room containing global filters', () => {
     return dsl.register(filterId, index, collection, {})
-      .then(result => {
+      .then(() => {
         should(dsl.filters.filtersTree).not.be.empty().Object();
         return dsl.remove(filterId);
       })
@@ -45,10 +43,10 @@ describe('Test: dsl.remove', function () {
   });
 
   it('should return a rejected promise on fail', function () {
-    dsl.filters.removeFieldFilter = () => q.reject(new Error('rejected'));
+    dsl.filters.removeFilter = () => q.reject(new Error('rejected'));
 
     return dsl.register(filterId, index, collection, {})
-      .then(result => {
+      .then(() => {
         should(dsl.filters.filtersTree).not.be.empty().Object();
         return should(dsl.remove(filterId)).be.rejected();
       });

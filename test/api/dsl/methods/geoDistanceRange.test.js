@@ -40,7 +40,7 @@ describe('Test geoDistanceRange method', function () {
     filterEqual = {
       location: {
         lat: 0,
-        lon: 1,
+        lon: 1
       },
       from: 111318,
       to: 111318
@@ -51,6 +51,7 @@ describe('Test geoDistanceRange method', function () {
     fieldLocation = md5('location');
 
   beforeEach(function () {
+    /** @type Methods */
     methods = new Methods(new Filters());
     return methods.geoDistanceRange(filterId, index, collection, filterOK)
       .then(() => methods.geoDistanceRange(filterId, index, collection, filterNOK))

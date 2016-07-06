@@ -1,5 +1,22 @@
 *__note:__ the # at the end of lines are the pull request numbers on GitHub*
 
+# 1.0.0-RC4
+
+* Add new hooks allowing to manage Kuzzle internal states #329
+* Add a `--noColors` option to the command-line interface #330
+* Remove `remoteActions` core component from the plugin context #331
+* Overhaul of the plugin context to make it simpler and more consistent #316, #323, #333
+* Add a ``--importConfig`` flag to the plugin management part of the CLI #315
+* Improve code documentation, IDE integration and lint checks #317
+* Add regular expression support to the real-time DSL #321
+* Fix #339: unsubscribing from a subfilter cleans all related global filters #340
+* Fix #335: startup sequence fails if the index cache initialization takes too long #336
+* Fix #337: cannot install npm-based plugins after installing a plugin from a directory path #338
+* Fix #322: broker client does not initialize if an error occurs on its first try #324
+* Fix #302: unable to unsubscribe filters containing nested attributes #304
+* Fix: plugin installation from a git repository doesn't work #325
+
+
 # 1.0.0-RC3
 
 * Temporary fix repositories #312

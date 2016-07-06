@@ -260,7 +260,7 @@ describe('Test: admin controller', () => {
 
     before(function () {
       var
-        profile = new Profile();
+        profile = new Profile(),
         role = new Role();
 
       role._id = 'deleteIndex';
@@ -295,14 +295,13 @@ describe('Test: admin controller', () => {
 
     it('should delete only the allowed indexes', () => {
       var
-        mock,
         deleteIndexRequestObject = new RequestObject({
           controller: 'admin',
           action: 'deleteIndexes',
           body: {indexes: ['%text1', '%text2', '%text3']}
         }),
         isActionAllowedStub = sandbox.stub(context.token.user.profile, 'isActionAllowed'),
-        workerListenerStub = requestObject => q({deleted: requestObject.data.body.indexes});
+        workerListenerStub = request => q({deleted: request.data.body.indexes});
 
       this.timeout(50);
 

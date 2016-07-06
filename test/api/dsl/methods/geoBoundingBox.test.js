@@ -58,6 +58,7 @@ describe('Test geoboundingbox method', function () {
     fieldLocation = md5('location');
 
   beforeEach(() => {
+    /** @type Methods */
     methods = new Methods(new Filters());
     return methods.geoBoundingBox(filterId, index, collection, filterEngland)
       .then(() => methods.geoBoundingBox(filterId, index, collection, filterEngland2))

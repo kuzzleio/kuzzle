@@ -1,9 +1,7 @@
 var
   _ = require('lodash'),
-  q = require('q'),
   config = require('./config')(),
   rp = require('request-promise'),
-  apiVersion = require('../../package.json').apiVersion,
   rewire = require('rewire'),
   RouterController = rewire('../../lib/api/controllers/routerController.js'),
   routes;
@@ -21,6 +19,9 @@ ApiREST.prototype.init = function (world) {
   this.world = world;
 };
 
+/**
+ * @this ApiREST
+ */
 function initRoutes() {
   var
     context = {},
@@ -119,8 +120,7 @@ ApiREST.prototype.getRequest = function (index, collection, controller, action, 
 
   result = {
     url: this.apiPath(url),
-    method: verb,
-    json: true
+    method: verb
   };
 
   if (verb !== 'GET') {
@@ -149,15 +149,15 @@ ApiREST.prototype.callApi = function (options) {
     }
     options.headers = _.extend(options.headers, {authorization: 'Bearer ' + this.world.currentUser.token});
   }
-
+  options.json = true;
+  
   return rp(options);
 };
 
 ApiREST.prototype.get = function (id, index) {
   var options = {
     url: this.apiPath(((typeof index !== 'string') ? this.world.fakeIndex : index) + '/' + this.world.fakeCollection + '/' + id),
-    method: 'GET',
-    json: true
+    method: 'GET'
   };
 
   return this.callApi(options);
@@ -168,7 +168,7 @@ ApiREST.prototype.search = function (filters, index, collection) {
     url: this.apiPath(((typeof index !== 'string') ? this.world.fakeIndex : index) + '/' +
                         ((typeof collection !== 'string') ? this.world.fakeCollection : collection) + '/_search'),
     method: 'POST',
-    json: filters
+    body: filters
   };
 
   return this.callApi(options);
@@ -179,7 +179,7 @@ ApiREST.prototype.count = function (filters, index, collection) {
     url: this.apiPath(((typeof index !== 'string') ? this.world.fakeIndex : index) + '/' +
                         ((typeof collection !== 'string') ? this.world.fakeCollection : collection) + '/_count'),
     method: 'POST',
-    json: filters
+    body: filters
   };
 
   return this.callApi(options);
@@ -194,10 +194,10 @@ ApiREST.prototype.create = function (body, index, collection, jwtToken) {
       '/_create'
     ),
     method: 'POST',
-    json: body
+    body
   };
 
-  if (Boolean(jwtToken)) {
+  if (jwtToken) {
     options.headers = {
       authorization: 'Bearer ' + jwtToken
     };
@@ -210,7 +210,7 @@ ApiREST.prototype.publish = function (body, index) {
   var options = {
     url: this.apiPath(((typeof index !== 'string') ? this.world.fakeIndex : index) + '/' + this.world.fakeCollection),
     method: 'POST',
-    json: body
+    body
   };
 
   return this.callApi(options);
@@ -220,7 +220,7 @@ ApiREST.prototype.createOrReplace = function (body, index, collection) {
   var options = {
     url: this.apiPath(((typeof index !== 'string') ? this.world.fakeIndex : index) + '/' + ((typeof collection !== 'string') ? this.world.fakeCollection : collection) + '/' + body._id),
     method: 'PUT',
-    json: body
+    body
   };
 
   return this.callApi(options);
@@ -230,7 +230,7 @@ ApiREST.prototype.replace = function (body, index, collection) {
   var options = {
     url: this.apiPath(((typeof index !== 'string') ? this.world.fakeIndex : index) + '/' + ((typeof collection !== 'string') ? this.world.fakeCollection : collection) + '/' + body._id + '/_replace'),
     method: 'PUT',
-    json: body
+    body
   };
 
   return this.callApi(options);
@@ -240,7 +240,7 @@ ApiREST.prototype.update = function (id, body, index) {
   var options = {
     url: this.apiPath(((typeof index !== 'string') ? this.world.fakeIndex : index) + '/' + this.world.fakeCollection + '/' + id + '/_update'),
     method: 'PUT',
-    json: body
+    body
   };
 
   return this.callApi(options);
@@ -249,8 +249,7 @@ ApiREST.prototype.update = function (id, body, index) {
 ApiREST.prototype.deleteById = function (id, index) {
   var options = {
     url: this.apiPath(((typeof index !== 'string') ? this.world.fakeIndex : index) + '/' + this.world.fakeCollection + '/' + id),
-    method: 'DELETE',
-    json: true
+    method: 'DELETE'
   };
 
   return this.callApi(options);
@@ -260,7 +259,7 @@ ApiREST.prototype.deleteByQuery = function (filters, index, collection) {
   var options = {
     url: this.apiPath(((typeof index !== 'string') ? this.world.fakeIndex : index) + '/' + (collection || this.world.fakeCollection) + '/_query'),
     method: 'DELETE',
-    json: filters
+    body: filters
   };
 
   return this.callApi(options);
@@ -270,7 +269,7 @@ ApiREST.prototype.bulkImport = function (bulk, index) {
   var options = {
     url: this.apiPath(((typeof index !== 'string') ? this.world.fakeIndex : index) + '/' + this.world.fakeCollection + '/_bulk'),
     method: 'POST',
-    json: bulk
+    body: bulk
   };
 
   return this.callApi(options);
@@ -280,7 +279,7 @@ ApiREST.prototype.globalBulkImport = function (bulk) {
   var options = {
     url: this.apiPath('_bulk'),
     method: 'POST',
-    json: bulk
+    body: bulk
   };
 
   return this.callApi(options);
@@ -290,7 +289,7 @@ ApiREST.prototype.updateMapping = function (index) {
   var options = {
     url: this.apiPath(((typeof index !== 'string') ? this.world.fakeIndex : index) + '/' + this.world.fakeCollection + '/_mapping'),
     method: 'PUT',
-    json: this.world.schema
+    body: this.world.schema
   };
 
   return this.callApi(options);
@@ -300,7 +299,7 @@ ApiREST.prototype.getStats = function (dates) {
   var options = {
     url: this.apiPath('_getStats'),
     method: 'POST',
-    json: dates
+    body: dates
   };
 
   return this.callApi(options);
@@ -309,8 +308,7 @@ ApiREST.prototype.getStats = function (dates) {
 ApiREST.prototype.getLastStats = function () {
   var options = {
     url: this.apiPath('_getLastStats'),
-    method: 'GET',
-    json: {}
+    method: 'GET'
   };
 
   return this.callApi(options);
@@ -319,8 +317,7 @@ ApiREST.prototype.getLastStats = function () {
 ApiREST.prototype.getAllStats = function () {
   var options = {
     url: this.apiPath('_getAllStats'),
-    method: 'GET',
-    json: {}
+    method: 'GET'
   };
 
   return this.callApi(options);
@@ -333,8 +330,7 @@ ApiREST.prototype.listCollections = function (index, type) {
 
   options = {
     url: this.apiPath(index + '/_listCollections'),
-    method: 'GET',
-    json: true
+    method: 'GET'
   };
 
   if (type) {
@@ -347,8 +343,7 @@ ApiREST.prototype.listCollections = function (index, type) {
 ApiREST.prototype.now = function () {
   var options = {
     url: this.apiPath('_now'),
-    method: 'GET',
-    json: true
+    method: 'GET'
   };
 
   return this.callApi(options);
@@ -357,8 +352,7 @@ ApiREST.prototype.now = function () {
 ApiREST.prototype.truncateCollection = function (index, collection) {
   var options = {
     url: this.apiPath(((typeof index !== 'string') ? this.world.fakeIndex : index) + '/' + (collection || this.world.fakeCollection) + '/_truncate'),
-    method: 'DELETE',
-    json: true
+    method: 'DELETE'
   };
 
   return this.callApi(options);
@@ -367,8 +361,7 @@ ApiREST.prototype.truncateCollection = function (index, collection) {
 ApiREST.prototype.listIndexes = function () {
   var options = {
     url: this.apiPath('_listIndexes'),
-    method: 'GET',
-    json: true
+    method: 'GET'
   };
 
   return this.callApi(options);
@@ -377,8 +370,7 @@ ApiREST.prototype.listIndexes = function () {
 ApiREST.prototype.deleteIndexes = function () {
   var options = {
     url: this.apiPath('_deleteIndexes'),
-    method: 'DELETE',
-    json: true
+    method: 'DELETE'
   };
 
   return this.callApi(options);
@@ -387,8 +379,7 @@ ApiREST.prototype.deleteIndexes = function () {
 ApiREST.prototype.createIndex = function (index) {
   var options = {
     url: this.apiPath(index),
-    method: 'PUT',
-    json: true
+    method: 'PUT'
   };
 
   return this.callApi(options);
@@ -397,8 +388,7 @@ ApiREST.prototype.createIndex = function (index) {
 ApiREST.prototype.deleteIndex = function (index) {
   var options = {
     url: this.apiPath(index),
-    method: 'DELETE',
-    json: true
+    method: 'DELETE'
   };
 
   return this.callApi(options);
@@ -407,13 +397,11 @@ ApiREST.prototype.deleteIndex = function (index) {
 ApiREST.prototype.getServerInfo = function () {
   var options = {
     url: this.apiBasePath('_serverInfo'),
-    method: 'GET',
-    json: true
+    method: 'GET'
   };
 
   return this.callApi(options)
     .then(res => {
-      apiVersion = res.result.serverInfo.kuzzle.api.version;
       return res;
     });
 };
@@ -422,7 +410,7 @@ ApiREST.prototype.login = function (strategy, credentials) {
   var options = {
     url: this.apiPath('_login'),
     method: 'POST',
-    json: {
+    body: {
       strategy: strategy,
       username: credentials.username,
       password: credentials.password
@@ -436,7 +424,6 @@ ApiREST.prototype.logout = function (jwtToken) {
   var options = {
     url: this.apiPath('_logout'),
     method: 'GET',
-    json: {},
     headers: {
       authorization: 'Bearer ' + jwtToken
     }
@@ -449,7 +436,7 @@ ApiREST.prototype.createOrReplaceRole = function (id, body) {
   var options = {
     url: this.apiPath('roles/' + id),
     method: 'PUT',
-    json: body
+    body
   };
 
   return this.callApi(options);
@@ -458,8 +445,7 @@ ApiREST.prototype.createOrReplaceRole = function (id, body) {
 ApiREST.prototype.getRole = function (id) {
   var options = {
     url: this.apiPath('roles/' + id),
-    method: 'GET',
-    json: true
+    method: 'GET'
   };
 
   return this.callApi(options);
@@ -469,7 +455,7 @@ ApiREST.prototype.mGetRoles = function (body) {
   var options = {
     url: this.apiPath('roles/_mget'),
     method: 'POST',
-    json: body
+    body
   };
 
   return this.callApi(options);
@@ -479,7 +465,7 @@ ApiREST.prototype.searchRoles = function (body) {
   var options = {
     url: this.apiPath('roles/_search'),
     method: 'POST',
-    json: body
+    body
   };
 
   return this.callApi(options);
@@ -488,8 +474,7 @@ ApiREST.prototype.searchRoles = function (body) {
 ApiREST.prototype.deleteRole = function (id) {
   var options = {
     url: this.apiPath('roles/' + id),
-    method: 'DELETE',
-    json: true
+    method: 'DELETE'
   };
 
   return this.callApi(options);
@@ -499,7 +484,7 @@ ApiREST.prototype.createOrReplaceProfile = function (id, body) {
   var options = {
     url: this.apiPath('profiles/' + id),
     method: 'PUT',
-    json: body
+    body
   };
 
   return this.callApi(options);
@@ -508,8 +493,7 @@ ApiREST.prototype.createOrReplaceProfile = function (id, body) {
 ApiREST.prototype.getProfile = function (id) {
   var options = {
     url: this.apiPath('profiles/' + id),
-    method: 'GET',
-    json: true
+    method: 'GET'
   };
 
   return this.callApi(options);
@@ -518,8 +502,7 @@ ApiREST.prototype.getProfile = function (id) {
 ApiREST.prototype.getProfileRights = function (id) {
   var options = {
     url: this.apiPath('profiles/' + id + '/_rights'),
-    method: 'GET',
-    json: true
+    method: 'GET'
   };
 
   return this.callApi(options);
@@ -529,7 +512,7 @@ ApiREST.prototype.mGetProfiles = function (body) {
   var options = {
     url: this.apiPath('profiles/_mget'),
     method: 'POST',
-    json: body
+    body
   };
 
   return this.callApi(options);
@@ -539,7 +522,7 @@ ApiREST.prototype.searchProfiles = function (body) {
   var options = {
     url: this.apiPath('profiles/_search'),
     method: 'POST',
-    json: body
+    body
   };
 
   return this.callApi(options);
@@ -548,8 +531,7 @@ ApiREST.prototype.searchProfiles = function (body) {
 ApiREST.prototype.deleteProfile = function (id) {
   var options = {
     url: this.apiPath('profiles/' + id),
-    method: 'DELETE',
-    json: true
+    method: 'DELETE'
   };
 
   return this.callApi(options);
@@ -558,8 +540,7 @@ ApiREST.prototype.deleteProfile = function (id) {
 ApiREST.prototype.getUser = function (id) {
   var options = {
     url: this.apiPath('users/' + id),
-    method: 'GET',
-    json: true
+    method: 'GET'
   };
 
   return this.callApi(options);
@@ -568,8 +549,7 @@ ApiREST.prototype.getUser = function (id) {
 ApiREST.prototype.getUserRights = function (id) {
   var options = {
     url: this.apiPath('users/' + id + '/_rights'),
-    method: 'GET',
-    json: true
+    method: 'GET'
   };
 
   return this.callApi(options);
@@ -578,16 +558,14 @@ ApiREST.prototype.getUserRights = function (id) {
 ApiREST.prototype.getCurrentUser = function () {
   return this.callApi({
     url: this.apiPath('users/_me'),
-    method: 'GET',
-    json: true
+    method: 'GET'
   });
 };
 
-ApiREST.prototype.getMyRights = function (id) {
+ApiREST.prototype.getMyRights = function () {
   var options = {
     url: this.apiPath('users/_me/_rights'),
-    method: 'GET',
-    json: true
+    method: 'GET'
   };
 
   return this.callApi(options);
@@ -597,15 +575,14 @@ ApiREST.prototype.searchUsers = function (body) {
   return this.callApi({
     url: this.apiPath('users/_search'),
     method: 'POST',
-    json: { filter: body }
+    body: { filter: body }
   });
 };
 
 ApiREST.prototype.deleteUser = function (id) {
   return this.callApi({
     url: this.apiPath('users/' + id),
-    method: 'DELETE',
-    json: true
+    method: 'DELETE'
   });
 };
 
@@ -613,7 +590,7 @@ ApiREST.prototype.createOrReplaceUser = function (body, id) {
   return this.callApi({
     url: this.apiPath('users/' + id),
     method: 'PUT',
-    json: body
+    body
   });
 };
 
@@ -621,15 +598,15 @@ ApiREST.prototype.createUser = function (body, id) {
   var options = {
     url: this.apiPath('users/_create'),
     method: 'POST',
-    json: body
+    body
   };
 
   if (id !== undefined) {
     if (body.body) {
-      options.json.body._id = id;
+      options.body.body._id = id;
     }
     else {
-      options.json = {
+      options.body = {
         _id: id,
         body: body
       };
@@ -643,7 +620,7 @@ ApiREST.prototype.updateSelf = function (body) {
   var options = {
     url: this.apiPath('_updateSelf'),
     method: 'PUT',
-    json: body
+    body
   };
 
   return this.callApi(options);
@@ -653,15 +630,14 @@ ApiREST.prototype.checkToken = function (token) {
   return this.callApi({
     url: this.apiPath('_checkToken'),
     method: 'POST',
-    json: {token}
+    body: {token}
   });
 };
 
 ApiREST.prototype.refreshIndex = function (index) {
   return this.callApi({
     url: this.apiPath(index + '/_refresh'),
-    method: 'POST',
-    json: true
+    method: 'POST'
   });
 };
 

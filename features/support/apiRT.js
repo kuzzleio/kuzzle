@@ -7,7 +7,6 @@
 
 var
   _ = require('lodash'),
-  q = require('q'),
   ApiRT = function () {
     this.world = null;
     this.clientId = null;

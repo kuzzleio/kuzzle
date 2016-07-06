@@ -2,6 +2,7 @@ var
   jwt = require('jsonwebtoken'),
   q = require('q'),
   should = require('should'),
+  /** @type {Params} */
   params = require('rc')('kuzzle'),
   kuzzle = {
     repositories: {},
@@ -28,8 +29,7 @@ beforeEach(function (done) {
     mockCacheEngine,
     mockProfileRepository,
     mockUserRepository,
-    tokenInCache,
-    forwardedResult;
+    tokenInCache;
 
   mockCacheEngine = {
     get: function (key) {
@@ -38,11 +38,10 @@ beforeEach(function (done) {
       }
       return q(null);
     },
-    volatileSet: function (key, value, ttl) {
-      forwardedResult = {key: key, value: JSON.parse(value), ttl: ttl };
+    volatileSet: function () {
       return q('OK');
     },
-    expire: function (key, ttl) { return q(forwardedResult = {key: key, ttl: ttl}); }
+    expire: function (key, ttl) { return q({key: key, ttl: ttl}); }
   };
 
   mockProfileRepository = {
@@ -115,8 +114,8 @@ beforeEach(function (done) {
 
 
   kuzzle.tokenManager = {
-    add: function (token, context) {},
-    expire: function (token) {},
+    add: function () {},
+    expire: function () {},
     checkTokensValidity: function () {}
   };
 
@@ -440,11 +439,5 @@ describe('Test: repositories/tokenRepository', function () {
 function assertIsAnonymous (token) {
   should(token._id).be.undefined();
   should(token.user._id).be.exactly(-1);
-  should(token.user).be.an.instanceOf(User);
-}
-
-function assertIsAdmin (token) {
-  should(token._id).be.undefined();
-  should(token.user._id).be.exactly('admin');
   should(token.user).be.an.instanceOf(User);
 }

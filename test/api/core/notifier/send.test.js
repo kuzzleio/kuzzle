@@ -73,13 +73,13 @@ describe('Test: notifier.send', function () {
   it('should emit a protocol:notify hook when a connection ID is provided', function (done) {
     var
       room = 'foo',
-      channel = 'stubChannel',
+      anotherChannel = 'stubChannel',
       connectionId = 'Brian Kernighan';
 
     this.timeout(50);
 
     kuzzle.services.list.mqBroker.addExchange = function (replyTopic, msg) {
-      should(replyTopic).be.exactly(channel);
+      should(replyTopic).be.exactly(anotherChannel);
       should(msg).be.an.Object();
       should(msg.action).be.eql(notification.action);
       should(msg.result._id).be.eql(notification._id);
@@ -90,7 +90,7 @@ describe('Test: notifier.send', function () {
 
     kuzzle.once('protocol:notify', (data) => {
       should(data).be.an.Object();
-      should(data.channel).be.eql(channel);
+      should(data.channel).be.eql(anotherChannel);
       should(data.payload).be.an.Object();
       should(data.payload.action).be.eql(notification.action);
       should(data.payload.result._id).be.eql(notification._id);

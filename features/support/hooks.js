@@ -4,7 +4,7 @@ var
   q = require('q');
 
 var myHooks = function () {
-  this.BeforeFeature((event, callback) => {
+  this.registerHandler('BeforeFeature', (event, callback) => {
     var
       api = restApi(),
       fixtures = require('../fixtures/functionalTestsFixtures.json'),
@@ -41,10 +41,14 @@ var myHooks = function () {
     promises.reduce(q.when, q())
       .then(() => {
         callback();
+      })
+      .catch(error => {
+        console.error(error);
+        callback(error);
       });
   });
 
-  this.AfterFeature((event, callback) => {
+  this.registerHandler('AfterFeature', (event, callback) => {
     var
       api = restApi(),
       promises = [];
@@ -57,10 +61,16 @@ var myHooks = function () {
       });
 
       q.all(promises)
-        .then(() => {
-          callback();
-        })
-        .catch(error => { callback(new Error(error)); });
+        .then(() => callback())
+        .catch(error => {
+          // Ignores deleteIndex errors if they occur because the deleted index
+          // does not exists
+          if (error.statusCode === 400 && error.error.action === 'deleteIndex') {
+            return callback();
+          }
+
+          callback(new Error(error));
+        });
     }, 0);
 
   });
@@ -112,7 +122,7 @@ var myHooks = function () {
         this.api.disconnect();
         callback();
       })
-      .catch(e => { callback(); });
+      .catch(() => { callback(); });
   });
 
   this.After({tags: ['@unsubscribe']}, function (scenario, callback) {
