@@ -49,6 +49,17 @@ describe('Test: dsl.removeFilterPath', function () {
     should(filters.filtersTree.anIndex.aCollection.fields.aField.randomFilter.ids).be.an.Array().and.match(['foo']);
   });
 
+  it('should not delete the entire filter if there is still global filters on it', () => {
+    filters.filtersTree.anIndex.aCollection.fields.aField.randomFilter.ids = [ 'foo' ];
+    filters.filtersTree.anIndex.aCollection.globalFilterIds = [ 'bar' ];
+    removeFilterPath.call(filters, 'foo', 'anIndex.aCollection.aField.randomFilter');
+
+    should.exist(filters.filtersTree.anIndex.aCollection);
+    should(filters.filtersTree.anIndex.aCollection.fields).be.empty();
+    should.exist(filters.filtersTree.anIndex.aCollection.globalFilterIds);
+    should(filters.filtersTree.anIndex.aCollection.globalFilterIds).match(['bar']);
+  });
+
   it('should do nothing if the provided filter ID is not listed in the filter path', function () {
     var ids = [ 'foo', 'bar' ];
 
