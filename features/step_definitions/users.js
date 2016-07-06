@@ -20,7 +20,7 @@ module.exports = function () {
         }
 
         if (not) {
-          return callback(new Error());
+          return callback(new Error(JSON.stringify(body)));
         }
         return callback();
       })

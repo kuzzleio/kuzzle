@@ -37,7 +37,12 @@ describe('Test: dsl.filters.addSubscription', function () {
   });
 
   it('should resolve a promise when the filter exists', function () {
-    return should(filters.addSubscription(roomId, index, collection, filter)).not.be.rejected();
+    return should(filters.addSubscription(roomId, index, collection, filter)
+      .then(response => {
+        should(response.diff).be.an.Array();
+        should(response.diff).have.length(1);
+      })
+    ).not.be.rejected();
   });
 
 });

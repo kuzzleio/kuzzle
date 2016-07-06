@@ -229,7 +229,7 @@ describe('Test: hotelClerk.addSubscription', function () {
       });
 
     delete requestObject.data.body;
-    
+
     return should(kuzzle.hotelClerk.addSubscription(requestObject, context)).be.fulfilled();
   });
 

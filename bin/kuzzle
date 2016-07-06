@@ -8,7 +8,9 @@
  */
 var program = require('commander');
 
-program.option('-d, --debug', 'make errors more verbose');
+program
+  .option('-d, --debug', 'make errors more verbose')
+  .option('--noColors', 'do not use ANSI coloring')
 
 // $ kuzzle start
 program
@@ -66,7 +68,7 @@ program
 program
   .command('createFirstAdmin')
   .description('Create the first administrator')
-  .action(require('./commands/createFirstAdmin').action);
+  .action(require('./commands/createFirstAdmin'));
 
 // $ kuzzle likeAvirgin
 program

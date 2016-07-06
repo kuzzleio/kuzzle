@@ -40,6 +40,10 @@ var myHooks = function () {
     promises.reduce(q.when, q())
       .then(() => {
         callback();
+      })
+      .catch(error => {
+        console.error(error);
+        callback(error);
       });
   });
 

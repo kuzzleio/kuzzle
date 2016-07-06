@@ -26,8 +26,8 @@ var apiSteps = function () {
 
         callback();
       })
-      .catch((error) => {
-        callback(error);
+      .catch(function (error) {
+        callback(error.message);
       });
   });
 
