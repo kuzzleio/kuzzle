@@ -43,7 +43,7 @@ describe('Test: dsl.remove', function () {
   });
 
   it('should return a rejected promise on fail', function () {
-    dsl.filters.removeFieldFilter = () => q.reject(new Error('rejected'));
+    dsl.filters.removeFilter = () => q.reject(new Error('rejected'));
 
     return dsl.register(filterId, index, collection, {})
       .then(() => {
