@@ -194,6 +194,8 @@ describe('Test: security controller - roles', function () {
 
   describe('#updateRole', function () {
     it('should return a valid ResponseObject', done => {
+      kuzzle.repositories.role.roles = [];
+
       kuzzle.repositories.role.validateAndSaveRole = role => {
         if (role._id === 'alreadyExists') {
           return q.reject();

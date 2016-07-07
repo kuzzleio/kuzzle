@@ -77,7 +77,6 @@ describe('Test: security/profileTest', function () {
         should(isAllowed).be.false();
 
         profile.policies.push({_id: 'allowActionRole'});
-        profile._roles = null;
         return profile.isActionAllowed(requestObject, context, kuzzle);
       })
       .then(isAllowed => {
@@ -94,7 +93,6 @@ describe('Test: security/profileTest', function () {
             ]
           }
         ];
-        profile._roles = null;
 
         return profile.isActionAllowed(requestObject, context, kuzzle);
       })

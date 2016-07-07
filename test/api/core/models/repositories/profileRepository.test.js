@@ -105,16 +105,11 @@ describe('Test: repositories/profileRepository', () => {
         });
     });
 
-    it('should load a profile even if the given parameter is a Profile object', () => {
+    it('should raise an error if the given parameter is a Profile object', () => {
       var profileObject = new Profile();
       profileObject._id = 'testprofile';
-      sandbox.stub(kuzzle.services.list.readEngine, 'get').resolves(testProfilePlain);
-      sandbox.stub(kuzzle.repositories.role, 'loadRoles', stubs.roleRepository.loadRoles);
-      return kuzzle.repositories.profile.loadProfile(profileObject)
-        .then(result => {
-          should(result).be.an.instanceOf(Profile);
-          should(result).be.eql(testProfile);
-        });
+
+      should(kuzzle.repositories.profile.loadProfile(profileObject)).be.rejectedWith('A profileId must be provided');
     });
   });
 
