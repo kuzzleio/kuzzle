@@ -5,7 +5,7 @@ proxy:
     - "7512:7512"
 
 kuzzle:
-  image: kuzzleio/kuzzle
+  image: kuzzleio/kuzzle:1.0.0-RC4
   links:
     - elasticsearch
     - redis
