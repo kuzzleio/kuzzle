@@ -183,15 +183,6 @@ describe('Test: repositories/roleRepository', function () {
     });
 
     it('should reject if a profile uses the role about to be deleted', () => {
-      sandbox.stub(kuzzle.repositories.profile, 'profiles', {
-        'test': {
-          _id: 'test',
-          policies: ['test']
-        }
-      });
-      sandbox.stub(kuzzle.repositories.role, 'roles', {
-        'test': {}
-      });
       sandbox.stub(kuzzle.repositories.profile.readEngine, 'search').resolves({total: 1, hits: ['test']});
 
       return should(kuzzle.repositories.role.deleteRole({_id: 'test'})).rejectedWith(BadRequestError);
