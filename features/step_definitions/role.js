@@ -55,7 +55,7 @@ var apiSteps = function () {
 
             if (role) {
               controller = Object.keys(this.roles[role].controllers)[0];
-              if (!body.result.controllers[controller]) {
+              if (!body.result._source.controllers[controller]) {
                 if (not) {
                   return callbackAsync();
                 }
