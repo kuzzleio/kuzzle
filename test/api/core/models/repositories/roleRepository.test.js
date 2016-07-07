@@ -99,19 +99,6 @@ describe('Test: repositories/roleRepository', function () {
           should(results[0]._id).be.exactly('anonymous');
         });
     });
-
-    it('should retrieve only the roles that exist', () => {
-      sandbox.stub(kuzzle.services.list.readEngine, 'mget').resolves({
-        hits: [{_id: 'anonymous', found: true, _source: {}}]
-      });
-      return kuzzle.repositories.role.loadRoles([{_id: 'anonymous', restrictedTo: 'restrictedToValue'}, 'idontexist'])
-        .then(results => {
-          should(results).be.an.Array().and.have.length(1);
-          should(results[0]).be.an.instanceOf(Role);
-          should(results[0]._id).be.exactly('anonymous');
-          should(results[0].restrictedTo).be.exactly('restrictedToValue');
-        });
-    });
   });
 
   describe('#loadRole', function () {
