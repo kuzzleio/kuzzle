@@ -117,10 +117,10 @@ module.exports = function () {
 
     this.profiles = {
       profile1: {
-        roles: [{_id: this.idPrefix + 'role1'}]
+        policies: [{_id: this.idPrefix + 'role1'}]
       },
       profile2: {
-        roles: [
+        policies: [
           {
             _id: this.idPrefix + 'role1',
             restrictedTo: [{index: this.fakeIndex}]
@@ -131,33 +131,33 @@ module.exports = function () {
         ]
       },
       profile3: {
-        roles: [{
+        policies: [{
           _id: this.idPrefix + 'role2',
           restrictedTo: [{index: this.fakeAltIndex, collections:[this.fakeCollection]}]
         }]
       },
       profile4: {
-        roles: [{
+        policies: [{
           _id: this.idPrefix + 'role3'
         }]
       },
       profile5: {
-        roles: [{
+        policies: [{
           _id: this.idPrefix + 'role3',
           restrictedTo: [{index: this.fakeIndex}]
         }]
       },
       profile6: {
-        roles: [{
+        policies: [{
           _id: this.idPrefix + 'role3',
           restrictedTo: [{index: this.fakeIndex, collections:[this.fakeCollection]}]
         }]
       },
       invalidProfile: {
-        roles: [{_id: 'unexisting-role'}]
+        policies: [{_id: 'unexisting-role'}]
       },
       emptyProfile: {
-        roles: []
+        policies: []
       }
     };
 
@@ -168,11 +168,11 @@ module.exports = function () {
           last: 'Bowie',
           real: 'David Robert Jones'
         },
-        profile: 'admin',
+        profileId: 'admin',
         password: 'testpwd'
       },
       user1: {
-        profile: this.idPrefix + 'profile1',
+        profileId: this.idPrefix + 'profile1',
         password: 'testpwd1'
       },
       user2: {
@@ -181,32 +181,32 @@ module.exports = function () {
           last: 'Wozniak'
         },
         hobby: 'Segway Polo',
-        profile: this.idPrefix + 'profile2',
+        profileId: this.idPrefix + 'profile2',
         password: 'testpwd2'
       },
       user3: {
-        profile: this.idPrefix + 'profile3',
+        profileId: this.idPrefix + 'profile3',
         password: 'testpwd3'
       },
       user4: {
-        profile: this.idPrefix + 'profile4',
+        profileId: this.idPrefix + 'profile4',
         password: 'testpwd4'
       },
       user5: {
-        profile: this.idPrefix + 'profile5',
+        profileId: this.idPrefix + 'profile5',
         password: 'testpwd5'
       },
       user6: {
-        profile: this.idPrefix + 'profile6',
+        profileId: this.idPrefix + 'profile6',
         password: 'testpwd6'
       },
       unexistingprofile: {
         name: 'John Doe',
-        profile: this.idPrefix + 'i-dont-exist'
+        profileId: this.idPrefix + 'i-dont-exist'
       },
       invalidprofileType: {
         name: 'John Doe',
-        profile: null
+        profileId: null
       }
     };
 

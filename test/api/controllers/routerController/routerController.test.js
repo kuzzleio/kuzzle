@@ -1,15 +1,27 @@
 var
   should = require('should'),
+  sinon = require('sinon'),
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   q = require('q'),
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
   Token = require.main.require('lib/api/core/models/security/token'),
-  Profile = require.main.require('lib/api/core/models/security/profile'),
   Role = require.main.require('lib/api/core/models/security/role'),
   PluginImplementationError = require.main.require('kuzzle-common-objects').Errors.pluginImplementationError;
 
+require('sinon-as-promised')(q.Promise);
+
 describe('Test: routerController', () => {
+  var sandbox;
+
+  beforeEach(() => {
+    sandbox = sinon.sandbox.create();
+  });
+
+  afterEach(() => {
+    sandbox.restore();
+  });
+
   describe('#newConnection', () => {
     var
       kuzzle,
@@ -73,13 +85,11 @@ describe('Test: routerController', () => {
       kuzzle = new Kuzzle();
       kuzzle.start(params, {dummy: true})
         .then(() => {
-          var User = require.main.require('lib/api/core/models/security/user')(kuzzle);
-
           kuzzle.repositories.token.verifyToken = function() {
             var
               token = new Token(),
               role = new Role(),
-              user = new User();
+              user;
 
             role.controllers = {
               '*': {
@@ -88,13 +98,23 @@ describe('Test: routerController', () => {
                 }
               }
             };
-
-            user._id = 'testUser';
-            user.profile = new Profile();
-            user.profile.roles = [role];
+            
+            user = {
+              _id: 'user',
+              profileId: 'profile',
+              isActionAllowed: sinon.stub().resolves(true),
+              getProfile: () => {
+                return q({
+                  _id: 'profile',
+                  policies: ['role'],
+                  getRoles: sinon.stub().resolves([role]),
+                  isActionAllowed: sinon.stub().resolves(true)
+                });
+              }
+            };
 
             token._id = 'fake-token';
-            token.user = user;
+            token.userId = user._id;
 
             return q(token);
           };
@@ -109,7 +129,11 @@ describe('Test: routerController', () => {
     });
 
     it('should return a fulfilled promise with the right arguments', (done) => {
-      kuzzle.router.execute(requestObject, context, done);
+      sandbox.stub(kuzzle.repositories.user, 'load').resolves({_id: 'user', isActionAllowed: sandbox.stub().resolves(true)});
+      sandbox.stub(kuzzle.repositories.token, 'verifyToken').resolves({user: 'user'});
+      sandbox.stub(kuzzle.funnel.controllers.read, 'listIndexes').resolves();
+
+      kuzzle.router.execute(requestObject, { connection: { type: 'foo', id: 'bar' }, token: {user: 'user'} }, done);
     });
 
     it('should return an error if no request object is provided', (done) => {

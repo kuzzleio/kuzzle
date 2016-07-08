@@ -1,7 +1,13 @@
 var
   should = require('should'),
+  q = require('q'),
+  params = require('rc')('kuzzle'),
+  Kuzzle = require.main.require('lib/api/Kuzzle'),
+  sinon = require('sinon'),
   Profile = require.main.require('lib/api/core/models/security/profile'),
   Role = require.main.require('lib/api/core/models/security/role');
+
+require('sinon-as-promised')(q.Promise);
 
 describe('Test: security/profileTest', function () {
   var
@@ -11,9 +17,24 @@ describe('Test: security/profileTest', function () {
       collection: 'collection',
       controller: 'controller',
       action: 'action'
-    };
+    },
+    kuzzle,
+    sandbox;
 
-  it('should disallow any action when no role be found', function () {
+  before(() => {
+    kuzzle = new Kuzzle();
+    return kuzzle.start(params, {dummy: true});
+  });
+
+  beforeEach(() => {
+    sandbox = sinon.sandbox.create();
+  });
+
+  afterEach(() => {
+    sandbox.restore();
+  });
+
+  it('should disallow any action when no role be found', () => {
     var profile = new Profile();
 
     return should(profile.isActionAllowed(requestObject, context)).be.fulfilledWith(false);
@@ -21,12 +42,16 @@ describe('Test: security/profileTest', function () {
 
   it('should allow the action if one of the roles allows it', () => {
     var
-      anotherContext = {connection: null, user: null},
       profile = new Profile(),
-      disallowAllRole = new Role(),
-      allowActionRole = new Role();
+      roles = {
+        disallowAllRole: new Role(),
+        allowActionRole: new Role()
+      };
 
-    disallowAllRole.controllers = {
+    context = {connection: null, user: null};
+
+    roles.disallowAllRole._id = 'disallowAllRole';
+    roles.disallowAllRole.controllers = {
       '*': {
         actions: {
           '*': false
@@ -34,7 +59,8 @@ describe('Test: security/profileTest', function () {
       }
     };
 
-    allowActionRole.controllers = {
+    roles.allowActionRole._id = 'allowActionRole';
+    roles.allowActionRole.controllers = {
       controller: {
         actions: {
           action: true
@@ -42,25 +68,33 @@ describe('Test: security/profileTest', function () {
       }
     };
 
-    profile.roles.push(disallowAllRole);
+    profile.policies = [{_id: 'disallowAllRole'}];
 
+    sandbox.stub(kuzzle.repositories.role, 'loadRole', roleId => q(roles[roleId]));
 
-    return profile.isActionAllowed(requestObject, anotherContext)
+    return profile.isActionAllowed(requestObject, context, kuzzle)
       .then(isAllowed => {
         should(isAllowed).be.false();
 
-        profile.roles.push(allowActionRole);
-        return profile.isActionAllowed(requestObject, anotherContext);
+        profile.policies.push({_id: 'allowActionRole'});
+        return profile.isActionAllowed(requestObject, context, kuzzle);
       })
       .then(isAllowed => {
         should(isAllowed).be.true();
 
-        allowActionRole.restrictedTo = [
-          {index: 'index1'},
-          {index: 'index2', collections: ['collection1']},
-          {index: 'index3', collections: ['collection1', 'collection2']}
+        profile.policies = [
+          {_id: 'disallowAllRole'},
+          {
+            _id: 'allowActionRole',
+            restrictedTo: [
+              {index: 'index1'},
+              {index: 'index2', collections: ['collection1']},
+              {index: 'index3', collections: ['collection1', 'collection2']}
+            ]
+          }
         ];
-        return profile.isActionAllowed(requestObject, anotherContext);
+
+        return profile.isActionAllowed(requestObject, context, kuzzle);
       })
       .then(isAllowed => should(isAllowed).be.false());
   });
@@ -70,24 +104,32 @@ describe('Test: security/profileTest', function () {
       profile = new Profile(),
       role1 = new Role(),
       role2 = new Role(),
-      role3 = new Role();
+      role3 = new Role(),
+      roles = {
+        role1: role1,
+        role2: role2,
+        role3: role3
+      };
 
+    role1._id = 'role1';
     role1.controllers = {
       read: {
         actions: { '*': true }
       }
     };
-    role1.restrictedTo = [{ index: 'index1', collections: ['collection1', 'collection2'] }];
-    profile.roles.push(role1);
 
+    profile.policies.push({_id: role1._id, restrictedTo: [{ index: 'index1', collections: ['collection1', 'collection2'] }]});
+
+    role2._id = 'role2';
     role2.controllers = {
       write: {
         actions: { publish: true, create: true, update: true }
       }
     };
-    role2.restrictedTo = [{index: 'index2'}];
-    profile.roles.push(role2);
 
+    profile.policies.push({_id: role2._id, restrictedTo: [{index: 'index2'}]});
+
+    role3._id = 'role3';
     role3.controllers = {
       read: {
         actions: { get: true, count: true, search: true }
@@ -96,9 +138,11 @@ describe('Test: security/profileTest', function () {
         actions: { update: {test: 'return true;'}, create: true, delete: {test: 'return true;'} }
       }
     };
-    profile.roles.push(role3);
+    profile.policies.push({_id: role3._id});
 
-    return profile.getRights()
+    sandbox.stub(kuzzle.repositories.role, 'loadRole', roleId => q(roles[roleId]));
+
+    return profile.getRights(kuzzle)
       .then(rights => {
         var filteredItem;
 

@@ -86,13 +86,13 @@
   // Default user profiles
   "userProfiles": {
     "admin": {
-      "roles": [ {"_id": "admin", "allowInternalIndex": true} ]
+      "policies": [ {"_id": "admin", "allowInternalIndex": true} ]
     },
     "default": {
-      "roles": [ {"_id": "default"} ]
+      "policies": [ {"_id": "default"} ]
     },
     "anonymous": {
-      "roles": [ {"_id": "anonymous"} ]
+      "policies": [ {"_id": "anonymous"} ]
     }
   },
   // role template for all users before creating the first admin

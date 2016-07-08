@@ -101,7 +101,7 @@ var resetProfile = (profileId, role) => {
   var
     data = {
       _id: profileId,
-      roles: [ role ]
+      policies: [ role ]
     };
 
   return request({
@@ -116,7 +116,7 @@ var createAdminUser = () => {
   var data = {
     _id: name,
     password: password,
-    profile: 'admin'
+    profileId: 'admin'
   };
 
   return request({

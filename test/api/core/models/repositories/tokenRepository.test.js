@@ -18,7 +18,7 @@ var
   UnauthorizedError = require.main.require('kuzzle-common-objects').Errors.unauthorizedError,
   Profile = require.main.require('lib/api/core/models/security/profile'),
   Token = require.main.require('lib/api/core/models/security/token'),
-  User = require.main.require('lib/api/core/models/security/user')(kuzzle),
+  User = require.main.require('lib/api/core/models/security/user'),
   Role = require.main.require('lib/api/core/models/security/role'),
   Repository = require.main.require('lib/api/core/models/repositories/repository'),
   TokenRepository = require.main.require('lib/api/core/models/repositories/tokenRepository')(kuzzle),
@@ -56,15 +56,17 @@ beforeEach(function (done) {
     load: function (username) {
       var user = new User();
       user._id = username;
-      user.profile = 'anonymous';
+      user.profileId = 'anonymous';
 
       return q(user);
     },
     anonymous: function () {
       var
         role = new Role(),
+        profile = new Profile(),
         user = new User();
 
+      role._id = 'anonymous';
       role.controllers = {
         '*': {
           actions: {
@@ -74,16 +76,18 @@ beforeEach(function (done) {
       };
 
       user._id = -1;
-      user.profile = new Profile();
-      user.profile.roles = [role];
+      user.profileId = 'anonymous';
+      profile.policies = [{_id: role._id}];
 
       return q(user);
     },
     admin: function () {
       var
         role = new Role(),
+        profile = new Profile(),
         user = new User();
 
+      role._id = 'admin';
       role.controllers = {
         '*': {
           actions: {
@@ -93,8 +97,8 @@ beforeEach(function (done) {
       };
 
       user._id = 'admin';
-      user.profile = new Profile();
-      user.profile.roles = [role];
+      user.profileId = 'admin';
+      profile.policies = [{_id: role._id}];
 
       return q(user);
     }
@@ -176,27 +180,11 @@ describe('Test: repositories/tokenRepository', function () {
         })
         .catch(err => { done(err); });
     });
-
-    it('should reject the promise if an error is thrown by the prototype hydrate call', () => {
-      var
-        protoHydrate = Repository.prototype.hydrate,
-        token = new Token();
-
-      Repository.prototype.hydrate = () => {
-        return q.reject(new InternalError('Error'));
-      };
-
-      return should(tokenRepository.hydrate(token, {})
-        .catch(err => {
-          Repository.prototype.hydrate = protoHydrate;
-
-          return q.reject(err);
-        })).be.rejectedWith(InternalError);
-    });
   });
 
   describe('#verifyToken', function () {
     it('should reject the promise if the jwt is invalid', function () {
+
       return should(tokenRepository.verifyToken('invalidToken')).be.rejectedWith(UnauthorizedError, {
         details: {
           subCode: UnauthorizedError.prototype.subCodes.JsonWebTokenError,
@@ -316,25 +304,6 @@ describe('Test: repositories/tokenRepository', function () {
         });
     });
 
-    it('should reject the promise if hydrating fails', done => {
-      var
-        user = new User();
-
-      user._id = 'userInCache';
-      sandbox.stub(tokenRepository, 'hydrate').rejects({});
-
-      tokenRepository.generateToken(user, context)
-        .then(() => done(new Error()))
-        .catch(error => {
-          try{
-            should(error).be.an.instanceOf(InternalError);
-            should(error.message).be.exactly('Unable to generate token for unknown user');
-            done();
-          }
-          catch(e) { done(e); }
-        });
-    });
-
     it('should return an internal error if an error append when generating token', (done) => {
       var
         user = new User();
@@ -360,7 +329,7 @@ describe('Test: repositories/tokenRepository', function () {
           should(result).not.be.an.instanceOf(Token);
           should(result).be.an.Object();
           should(result._id).be.exactly(undefined);
-          should(result.user).be.exactly(-1);
+          should(result.userId).be.exactly(-1);
 
           done();
         })
@@ -438,6 +407,5 @@ describe('Test: repositories/tokenRepository', function () {
 
 function assertIsAnonymous (token) {
   should(token._id).be.undefined();
-  should(token.user._id).be.exactly(-1);
-  should(token.user).be.an.instanceOf(User);
+  should(token.userId).be.exactly(-1);
 }

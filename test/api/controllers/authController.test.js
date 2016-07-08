@@ -14,9 +14,10 @@ var
   context = {},
   redisClientMock = require('../../mocks/services/redisClient.mock'),
   requestObject,
-  sandbox = sinon.sandbox.create(),
   MockupWrapper,
   MockupStrategy;
+
+require('sinon-as-promised')(q.Promise);
 
 /**
  * @param name
@@ -66,10 +67,12 @@ MockupWrapper = function(MockupReturn) {
 };
 
 describe('Test the auth controller', function () {
-  var kuzzle;
+  var
+    kuzzle,
+    sandbox;
 
   beforeEach(() => {
-    sandbox.restore();
+    sandbox = sinon.sandbox.create();
 
     requestObject = new RequestObject({ controller: 'auth', action: 'login', body: {strategy: 'mockup', username: 'jdoe'} }, {}, 'unit-test');
     kuzzle = new Kuzzle();
@@ -86,19 +89,14 @@ describe('Test the auth controller', function () {
           }
           return q({
             _id: t,
-            profile: {
-              _id: t,
-              roles: [
-                {
-                  _id: 'role1',
-                  controllers: {},
-                  restrictedTo: []
-                }
-              ]
-            }
+            profileId: t
           });
         };
       });
+  });
+
+  afterEach(() => {
+    sandbox.restore();
   });
 
   describe('#login', function () {
@@ -315,15 +313,13 @@ describe('Test the auth controller', function () {
       var
         rq = new RequestObject({body: {}}),
         token = {
-          token: {user: { _id: 'admin' }}
+          token: {userId: 'admin'}
         };
 
       kuzzle.funnel.controllers.auth.getCurrentUser(rq, token)
         .then(response => {
           should(response.data.body._id).be.exactly('admin');
-          should(response.data.body._source).not.be.empty().Object();
-          should(response.data.body._source.profile).not.be.empty().Object();
-          should(response.data.body._source.profile._id).be.exactly('admin');
+          should(response.data.body._source.profileId).be.exactly('admin');
 
           done();
         })
@@ -334,7 +330,7 @@ describe('Test the auth controller', function () {
       var promise = kuzzle.funnel.controllers.auth.getCurrentUser(new RequestObject({
         body: {}
       }), {
-        token: { user: { _id: 'unknown_user' } }
+        token: { userId: 'unknown_user' }
       });
 
       return should(promise).be.rejected();
@@ -413,7 +409,7 @@ describe('Test the auth controller', function () {
               return anotherKuzzle.repositories.user.anonymous();
             }
             if (id === 'admin') {
-              return {_id: 'admin', _source: { profile: 'admin' }};
+              return {_id: 'admin', _source: { profileID: 'admin' }};
             }
 
             return q(null);
@@ -435,7 +431,7 @@ describe('Test the auth controller', function () {
     it('should return a valid ResponseObject', done => {
       anotherKuzzle.funnel.controllers.auth.updateSelf(new RequestObject({
         body: { foo: 'bar' }
-      }), { token: { user: { _id: 'admin' }, _id: 'admin' } })
+      }), { token: { userId: 'admin', _id: 'admin' }})
         .then(response => {
           should(response).be.an.instanceOf(ResponseObject);
           should(persistOptions.database.method).be.exactly('update');
@@ -448,15 +444,15 @@ describe('Test the auth controller', function () {
 
     it('should reject if profile is specified', () => {
       should(anotherKuzzle.funnel.controllers.auth.updateSelf(new RequestObject({
-        body: { foo: 'bar', profile: 'test' }
-      }), { token: { user: { _id: 'admin' }, _id: 'admin' } }))
+        body: { foo: 'bar', profileId: 'test' }
+      }), { token: { userId: 'admin', _id: 'admin' }}))
         .be.rejected();
     });
 
     it('should reject if _id is specified in the body', () => {
       should(anotherKuzzle.funnel.controllers.auth.updateSelf(new RequestObject({
         body: { foo: 'bar', _id: 'test' }
-      }), { token: { user: { _id: 'admin' }, _id: 'admin' } }))
+      }), { token: { userId: 'admin', _id: 'admin' }}))
         .be.rejected();
     });
 
@@ -467,7 +463,7 @@ describe('Test the auth controller', function () {
         }
       }), {
         token: {
-          user: {
+          userId: {
             _id: -1
           },
           _id: null
@@ -481,7 +477,7 @@ describe('Test the auth controller', function () {
     var
       rq = new RequestObject({body: {}}),
       token = {
-        token: {user: { _id: 'test' }}
+        token: {userId: 'test' }
       };
 
     it('should be able to get current user\'s rights', () => {

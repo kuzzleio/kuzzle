@@ -6,7 +6,7 @@ var
   Repository = require.main.require('lib/api/core/models/repositories/repository'),
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject;
 
-describe('Test: repositories/repository', function () {
+describe('Test: repositories/repository', () => {
   var
     forwardedObject,
     persistedObject,
@@ -38,7 +38,7 @@ describe('Test: repositories/repository', function () {
   uncachedObject.name = 'uncached';
 
   mockCacheEngine = {
-    get: function (key) {
+    get: key => {
       if (key === repository.index + '/' + repository.collection + '/persisted') {
         return q(JSON.stringify(persistedObject));
       }
@@ -61,7 +61,7 @@ describe('Test: repositories/repository', function () {
   };
 
   mockReadEngine = {
-    get: function (requestObject, forward) {
+    get: (requestObject, forward) => {
       var err;
       if (forward !== false) {
         forwardedObject = requestObject;
@@ -79,6 +79,10 @@ describe('Test: repositories/repository', function () {
         return q(uncachedObject);
       }
 
+      if (requestObject.data._id === 'source') {
+        return q({_id:'theId', _source: {foo: 'bar'}});
+      }
+
       if (requestObject.data._id === 'error') {
         return q.reject(new InternalError('Error'));
       }
@@ -88,13 +92,13 @@ describe('Test: repositories/repository', function () {
       err._id = requestObject.data._id;
       return q.reject(err);
     },
-    mget: function (requestObject) {
+    mget: requestObject => {
       var
         promises = [];
 
       forwardedObject = requestObject;
 
-      requestObject.data.body.ids.forEach(function (id) {
+      requestObject.data.body.ids.forEach(id => {
         var req = new RequestObject({
           controller: 'read',
           action: 'get',
@@ -138,17 +142,25 @@ describe('Test: repositories/repository', function () {
           return q({hits: result});
         });
     },
-    search: () => q({hits: [{_id: 'role', _source: {controllers: {}}}], total: 1})
+    search: (requestObject) => {
+      if (requestObject.data.body.filter.empty) {
+        return q({});
+      }
+      if (requestObject.data.body.filter.error) {
+        return q.reject({});
+      }
+      return q({hits: [{_id: 'role', _source: {controllers: {}}}], total: 1});
+    }
   };
 
   mockWriteLayer = {
-    execute: function (o) {
+    execute: o => {
       forwardedObject = o;
     },
     delete: requestObject => q(requestObject)
   };
 
-  before(function () {
+  before(() => {
     var mockKuzzle = {
       config: require.main.require('lib/config')(require('rc')('kuzzle'))
     };
@@ -163,7 +175,7 @@ describe('Test: repositories/repository', function () {
     });
   });
 
-  beforeEach(function () {
+  beforeEach(() => {
     forwardedObject = null;
     repository.ObjectConstructor = ObjectConstructor;
     repository.readEngine = mockReadEngine;
@@ -171,7 +183,7 @@ describe('Test: repositories/repository', function () {
     repository.cacheEngine = mockCacheEngine;
   });
 
-  describe('#loadOneFromDatabase', function () {
+  describe('#loadOneFromDatabase', () => {
     it('should return null for an non existing id', () => {
       return repository.loadOneFromDatabase(-9999)
         .then(result => should(result).be.null());
@@ -201,16 +213,23 @@ describe('Test: repositories/repository', function () {
         });
     });
 
+    it('should handle correctly the responses containing _id and _source', () => {
+      return repository.loadOneFromDatabase('source')
+        .then(result => {
+          should(result._id).be.exactly('theId');
+          should(result.foo).be.exactly('bar');
+        });
+    });
   });
 
-  describe('#loadMultiFromDatabase', function () {
+  describe('#loadMultiFromDatabase', () => {
     it('should return an empty array for an non existing id', () => {
       return repository.loadMultiFromDatabase([-999, -998, -997])
         .then(results => should(results).be.an.Array().and.have.length(0));
     });
 
     it('should reject the promise in case of error', () => {
-      return should(repository.loadMultiFromDatabase(['error'])).be.rejectedWith(InternalError);
+      return should(repository.loadMultiFromDatabase('error')).be.rejectedWith(InternalError);
     });
 
     it('should create a valid requestObject request for the readEngine', () => {
@@ -224,36 +243,44 @@ describe('Test: repositories/repository', function () {
         });
     });
 
-    it('should return a list of hydrated object when parameter hydrate is set', () => {
-      return repository.loadMultiFromDatabase(['persisted'], true)
+    it('should return a list of plain object', () => {
+      return repository.loadMultiFromDatabase(['persisted'])
         .then(results => {
           should(results).be.an.Array();
           should(results).not.be.empty();
 
           results.forEach(result => {
-            should(result).be.instanceOf(ObjectConstructor);
+            should(result).be.instanceOf(Object);
             should(result._id).be.exactly(-1);
             should(result.name).be.exactly('persisted');
           });
         });
     });
 
-    it('should return a list of plain object when parameter hydrate is false', () => {
-      return repository.loadMultiFromDatabase(['persisted'], false)
+    it('should handle list of objects as an argument', () => {
+      return repository.loadMultiFromDatabase([{_id:'persisted'}])
         .then(results => {
           should(results).be.an.Array();
           should(results).not.be.empty();
 
           results.forEach(result => {
-            should(result).not.be.instanceOf(ObjectConstructor);
+            should(result).be.instanceOf(Object);
             should(result._id).be.exactly(-1);
-            should(result._source.name).be.exactly('persisted');
+            should(result.name).be.exactly('persisted');
           });
+        });
+    });
+
+    it('should respond with an empty array if no result found', () => {
+      return repository.loadMultiFromDatabase([{_id:'null'}])
+        .then(results => {
+          should(results).be.an.Array();
+          should(results).be.empty();
         });
     });
   });
 
-  describe('#loadFromCache', function () {
+  describe('#loadFromCache', () => {
     it('should return null for an non-existing id', () => {
       return repository.loadFromCache(-999)
         .then(result => should(result).be.null());
@@ -278,7 +305,7 @@ describe('Test: repositories/repository', function () {
     });
   });
 
-  describe('#load', function () {
+  describe('#load', () => {
     it('should return null for an non-existing id', () => {
       return repository.load(-999)
         .then(result => should(result).be.null());
@@ -397,34 +424,14 @@ describe('Test: repositories/repository', function () {
 
   });
 
-  describe('#hydrate', function () {
-    it('should return a properly hydrated object with a plain old object', () => {
-      var
-        object = new ObjectConstructor(),
-        data = {
-          value1: {
-            test: true
-          },
-          type: 'myType'
-        };
-
-      return repository.hydrate(object, data)
-        .then(result => {
-          should(result).be.an.instanceOf(ObjectConstructor);
-          should(result.type).be.exactly('myType');
-          should(result.value1).be.eql({test: true});
-          should(result.value1.test).be.true();
-        });
-    });
-
-    it('should return a rejected promise if the provided data is not an object', function () {
-      return should(repository.hydrate(new ObjectConstructor(), 'foobar')).be.rejectedWith(InternalError);
-    });
-  });
-
   describe('#serializeToCache', () => {
     it('should return the same object', () => {
-      should(repository.serializeToCache(persistedObject)).be.exactly(persistedObject);
+      var serialized = repository.serializeToCache(persistedObject);
+
+      should(Object.keys(serialized).length).be.exactly(Object.keys(persistedObject).length);
+      Object.keys(repository.serializeToCache(persistedObject)).forEach(key => {
+        should(persistedObject[key]).be.exactly(serialized[key]);
+      });
     });
   });
 
@@ -434,9 +441,9 @@ describe('Test: repositories/repository', function () {
     });
   });
 
-  describe('#search', function () {
+  describe('#search', () => {
     it('should return a list from database', () => {
-      return repository.search({}, 0, 10, false)
+      return repository.search({filter:'nofilter'}, 0, 10, false)
         .then(response => {
           should(response).be.an.Object();
           should(response.hits).be.an.Array();
@@ -444,14 +451,18 @@ describe('Test: repositories/repository', function () {
         });
     });
 
-    it('should construct role if hydrate is true', () => {
-      return repository.search({}, 0, 10, true)
+    it('should return an list if no hits', () => {
+      return repository.search({empty:true}, 0, 10, false)
         .then(response => {
           should(response).be.an.Object();
           should(response.hits).be.an.Array();
-          should(response.total).be.exactly(1);
-          should(response.hits[0].type).be.exactly('testObject');
+          should(response.hits).be.empty();
+          should(response.total).be.exactly(0);
         });
+    });
+
+    it('should be rejected with an error if something goes wrong', () => {
+      return should(repository.search({error:true}, 0, 10, false)).be.rejected();
     });
   });
 });

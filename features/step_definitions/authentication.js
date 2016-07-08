@@ -23,6 +23,7 @@ var apiSteps = function () {
 
         this.currentToken = { jwt: body.result.jwt };
         this.currentUser.token = body.result.jwt;
+
         callback();
       })
       .catch(function (error) {

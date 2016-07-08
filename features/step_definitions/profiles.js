@@ -159,12 +159,12 @@ var apiSteps = function () {
 
   this.Then(/^I'm able to find "([\d]*)" profiles(?: containing the role with id "([^"]*)")?$/, function (profilesCount, roleId, callback) {
     var body = {
-        roles: []
+        policies: []
       },
       main;
 
     if (roleId) {
-      body.roles.push(this.idPrefix + roleId);
+      body.policies.push(this.idPrefix + roleId);
     }
 
     main = function (callbackAsync) {
@@ -221,7 +221,7 @@ var apiSteps = function () {
     profileId = this.idPrefix + profileId;
 
     this.api.createOrReplaceProfile(profileId, {
-      roles: [roleId]
+      policies: [{_id: roleId}]
     })
     .then(response => {
       if (response.error) {
@@ -231,7 +231,7 @@ var apiSteps = function () {
 
       callback();
     })
-    .catch(function (error) {
+    .catch(error => {
       callback(error);
     });
   });

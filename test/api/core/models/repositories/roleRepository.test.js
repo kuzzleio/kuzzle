@@ -61,12 +61,6 @@ describe('Test: repositories/roleRepository', function () {
       return should(kuzzle.repositories.role.loadRoles([-999, -998])).be.rejectedWith(InternalError);
     });
 
-    it('should reject the promise if some error occurs during the hydratation', () => {
-      sandbox.stub(kuzzle.services.list.readEngine, 'mget').resolves({hits: [{_id: 'anonymous', found: true}]});
-      sandbox.stub(kuzzle.repositories.role, 'hydrate').rejects(new InternalError('Error'));
-      return should(kuzzle.repositories.role.loadRoles(['anonymous'])).be.rejectedWith(InternalError);
-    });
-
     it('should retrieve some persisted roles', () => {
       sandbox.stub(kuzzle.services.list.readEngine, 'mget').resolves({
         hits: [{_id: 'persisted1', found: true, _source: persistedObject1},
@@ -189,15 +183,6 @@ describe('Test: repositories/roleRepository', function () {
     });
 
     it('should reject if a profile uses the role about to be deleted', () => {
-      sandbox.stub(kuzzle.repositories.profile, 'profiles', {
-        'test': {
-          _id: 'test',
-          roles: ['test']
-        }
-      });
-      sandbox.stub(kuzzle.repositories.role, 'roles', {
-        'test': {}
-      });
       sandbox.stub(kuzzle.repositories.profile.readEngine, 'search').resolves({total: 1, hits: ['test']});
 
       return should(kuzzle.repositories.role.deleteRole({_id: 'test'})).rejectedWith(BadRequestError);

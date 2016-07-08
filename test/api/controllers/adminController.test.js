@@ -1,9 +1,11 @@
 var
   should = require('should'),
+  _ = require('lodash'),
   q = require('q'),
   sinon = require('sinon'),
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
+  User = require.main.require('lib/api/core/models/security/user'),
   Profile = require.main.require('lib/api/core/models/security/profile'),
   Role = require.main.require('lib/api/core/models/security/role'),
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
@@ -13,7 +15,7 @@ var
 
 require('sinon-as-promised')(q.Promise);
 
-describe('Test: admin controller', () => {
+describe('Test: admin controller', function () {
   var
     kuzzle,
     sandbox,
@@ -41,7 +43,7 @@ describe('Test: admin controller', () => {
       this.timeout(50);
       sandbox.stub(kuzzle.workerListener, 'add').resolves({});
 
-      kuzzle.once('data:beforeUpdateMapping', function (obj) {
+      kuzzle.once('data:beforeUpdateMapping', (obj) => {
         try {
           should(obj).be.exactly(requestObject);
           done();
@@ -52,7 +54,7 @@ describe('Test: admin controller', () => {
       });
 
       kuzzle.funnel.controllers.admin.updateMapping(requestObject)
-        .catch(function (error) {
+        .catch(error => {
           done(error);
         });
     });
@@ -91,8 +93,8 @@ describe('Test: admin controller', () => {
     });
   });
 
-  describe('#getMapping', function () {
-    it('should reject with a response object in case of error', function () {
+  describe('#getMapping', () => {
+    it('should reject with a response object in case of error', () => {
       sandbox.stub(kuzzle.services.list.readEngine, 'getMapping').rejects({});
       return should(kuzzle.funnel.controllers.admin.getMapping(requestObject)).be.rejected();
     });
@@ -105,11 +107,11 @@ describe('Test: admin controller', () => {
         });
     });
 
-    it('should activate a hook on a get mapping call', function (done) {
+    it('should activate a hook on a get mapping call', (done) => {
       this.timeout(50);
       sandbox.stub(kuzzle.services.list.readEngine, 'getMapping').resolves({});
 
-      kuzzle.once('data:beforeGetMapping', function (obj) {
+      kuzzle.once('data:beforeGetMapping', (obj) => {
         try {
           should(obj).be.exactly(requestObject);
           done();
@@ -123,12 +125,12 @@ describe('Test: admin controller', () => {
     });
   });
 
-  describe('#getStats', function () {
-    it('should trigger a hook on a getStats call', function (done) {
+  describe('#getStats', () => {
+    it('should trigger a hook on a getStats call', (done) => {
       this.timeout(50);
       sandbox.stub(kuzzle.statistics, 'getStats').resolves({});
 
-      kuzzle.once('data:beforeGetStats', function (obj) {
+      kuzzle.once('data:beforeGetStats', (obj) => {
         try {
           should(obj).be.exactly(requestObject);
           done();
@@ -155,12 +157,12 @@ describe('Test: admin controller', () => {
     });
   });
 
-  describe('#getLastStats', function () {
-    it('should trigger a hook on a getLastStats call', function (done) {
+  describe('#getLastStats', () => {
+    it('should trigger a hook on a getLastStats call', (done) => {
       this.timeout(50);
       sandbox.stub(kuzzle.statistics, 'getLastStats').resolves({});
 
-      kuzzle.once('data:beforeGetLastStats', function (obj) {
+      kuzzle.once('data:beforeGetLastStats', (obj) => {
         try {
           should(obj).be.exactly(requestObject);
           done();
@@ -187,12 +189,12 @@ describe('Test: admin controller', () => {
     });
   });
 
-  describe('#getAllStats', function () {
-    it('should trigger a hook on a getAllStats call', function (done) {
+  describe('#getAllStats', () => {
+    it('should trigger a hook on a getAllStats call', (done) => {
       this.timeout(50);
       sandbox.stub(kuzzle.statistics, 'getAllStats').resolves({});
 
-      kuzzle.once('data:beforeGetAllStats', function (obj) {
+      kuzzle.once('data:beforeGetAllStats', (obj) => {
         try {
           should(obj).be.exactly(requestObject);
           done();
@@ -219,7 +221,7 @@ describe('Test: admin controller', () => {
     });
   });
 
-  describe('#truncateCollection', function () {
+  describe('#truncateCollection', () => {
     it('should fulfill with a response object', () => {
       sandbox.stub(kuzzle.workerListener, 'add').resolves({});
 
@@ -233,7 +235,7 @@ describe('Test: admin controller', () => {
       return should(kuzzle.funnel.controllers.admin.truncateCollection(requestObject)).be.rejected();
     });
 
-    it('should trigger a hook on a truncateCollection call', function (done) {
+    it('should trigger a hook on a truncateCollection call', (done) => {
       this.timeout(50);
       sandbox.stub(kuzzle.workerListener, 'add').resolves({});
 
@@ -251,17 +253,21 @@ describe('Test: admin controller', () => {
     });
   });
 
-  describe('#deleteIndexes', function () {
-    var context = {
-      token: {
-        user: {}
-      }
-    };
+  describe('#deleteIndexes', () => {
+    var
+      context = {
+        token: {
+          userId: 'deleteIndex'
+        }
+      },
+      user,
+      profile,
+      role;
 
-    before(function () {
-      var
-        profile = new Profile(),
-        role = new Role();
+    before(() => {
+      user = _.assignIn(new User(), {_id:'deleteIndex', profileId: 'deleteIndex'});
+      profile = new Profile();
+      role = new Role();
 
       role._id = 'deleteIndex';
       role.controllers = {
@@ -271,16 +277,21 @@ describe('Test: admin controller', () => {
           }
         }
       };
+      context.token.userId = 'deleteIndex';
       role.restrictedTo = [{index: '%text1'},{index: '%text2'}];
-      profile.roles = [role];
-      context.token.user.profile = profile;
+      profile._id = 'deleteIndex';
+      profile.policies = [{_id: role._id, restrictedTo: role.restrictedTo}];
+
+      sandbox.stub(kuzzle.repositories.user, 'load').resolves(user);
+      sandbox.stub(kuzzle.repositories.profile, 'loadProfile').resolves(profile);
+      sandbox.stub(kuzzle.repositories.role, 'loadRoles').resolves([role]);
     });
 
     it('should trigger a hook on a deleteIndexes call', done => {
       this.timeout(50);
       sandbox.stub(kuzzle.services.list.readEngine, 'listIndexes').resolves({indexes: []});
 
-      kuzzle.once('data:beforeDeleteIndexes', function (obj) {
+      kuzzle.once('data:beforeDeleteIndexes', (obj) => {
         try {
           should(obj).be.exactly(requestObject);
           done();
@@ -300,7 +311,7 @@ describe('Test: admin controller', () => {
           action: 'deleteIndexes',
           body: {indexes: ['%text1', '%text2', '%text3']}
         }),
-        isActionAllowedStub = sandbox.stub(context.token.user.profile, 'isActionAllowed'),
+        isActionAllowedStub = sandbox.stub(user, 'isActionAllowed'),
         workerListenerStub = request => q({deleted: request.data.body.indexes});
 
       this.timeout(50);
@@ -329,9 +340,16 @@ describe('Test: admin controller', () => {
       sandbox.stub(kuzzle.services.list.readEngine, 'listIndexes').rejects();
       return should(kuzzle.funnel.controllers.admin.deleteIndexes(requestObject, context)).be.rejected();
     });
+
+    it('should reject with an error in case of error when loading user', () => {
+      sandbox.stub(kuzzle.services.list.readEngine, 'listIndexes').rejects();
+      kuzzle.repositories.user.load.restore();
+      sandbox.stub(kuzzle.repositories.user, 'load').rejects();
+      return should(kuzzle.funnel.controllers.admin.deleteIndexes(requestObject, context)).be.rejected();
+    });
   });
 
-  describe('#createIndex', function () {
+  describe('#createIndex', () => {
     it('should fulfill with a response object', () => {
       sandbox.stub(kuzzle.workerListener, 'add').resolves({});
 
@@ -345,11 +363,11 @@ describe('Test: admin controller', () => {
       return should(kuzzle.funnel.controllers.admin.createIndex(requestObject)).be.rejected();
     });
 
-    it('should trigger a hook on a createIndex call', function (done) {
+    it('should trigger a hook on a createIndex call', (done) => {
       this.timeout(50);
       sandbox.stub(kuzzle.workerListener, 'add').resolves({});
 
-      kuzzle.once('data:beforeCreateIndex', function (obj) {
+      kuzzle.once('data:beforeCreateIndex', (obj) => {
         try {
           should(obj).be.exactly(requestObject);
           done();
@@ -379,7 +397,7 @@ describe('Test: admin controller', () => {
     });
   });
 
-  describe('#deleteIndex', function () {
+  describe('#deleteIndex', () => {
     it('should fulfill with a response object', () => {
       sandbox.stub(kuzzle.workerListener, 'add').resolves({});
       return kuzzle.funnel.controllers.admin.deleteIndex(requestObject)
@@ -392,11 +410,11 @@ describe('Test: admin controller', () => {
       return should(kuzzle.funnel.controllers.admin.deleteIndex(requestObject)).be.rejected();
     });
 
-    it('should trigger a hook on a deleteIndex call', function (done) {
+    it('should trigger a hook on a deleteIndex call', (done) => {
       this.timeout(50);
       sandbox.stub(kuzzle.workerListener, 'add').resolves({});
 
-      kuzzle.once('data:beforeDeleteIndex', function (obj) {
+      kuzzle.once('data:beforeDeleteIndex', (obj) => {
         try {
           should(obj).be.exactly(requestObject);
           done();
@@ -425,8 +443,8 @@ describe('Test: admin controller', () => {
     });
   });
 
-  describe('#removeRooms', function () {
-    it('should trigger a plugin hook', function (done) {
+  describe('#removeRooms', () => {
+    it('should trigger a plugin hook', (done) => {
       this.timeout(50);
       sandbox.stub(kuzzle.hotelClerk, 'removeRooms').resolves({});
 
@@ -467,7 +485,7 @@ describe('Test: admin controller', () => {
     });
   });
 
-  describe('#refreshIndex', function () {
+  describe('#refreshIndex', () => {
     it('should fulfill with a response object', () => {
       sandbox.stub(kuzzle.workerListener, 'add').resolves({});
 
@@ -481,7 +499,7 @@ describe('Test: admin controller', () => {
       return should(kuzzle.funnel.controllers.admin.refreshIndex(requestObject)).be.rejected();
     });
 
-    it('should trigger a plugin hook', function (done) {
+    it('should trigger a plugin hook', (done) => {
       kuzzle.once('data:beforeRefreshIndex', o => {
         should(o).be.exactly(requestObject);
         done();
@@ -492,7 +510,7 @@ describe('Test: admin controller', () => {
 
   });
 
-  describe('#getAutoRefresh', function () {
+  describe('#getAutoRefresh', () => {
 
     it('should fulfill with a response object', () => {
       sandbox.stub(kuzzle.workerListener, 'add').resolves({});
@@ -517,7 +535,7 @@ describe('Test: admin controller', () => {
     });
   });
 
-  describe('#setAutoRefresh', function () {
+  describe('#setAutoRefresh', () => {
 
     it('should fulfill with a response object', () => {
       var req = new RequestObject({
