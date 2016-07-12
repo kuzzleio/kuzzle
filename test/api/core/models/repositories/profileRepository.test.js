@@ -112,6 +112,25 @@ describe('Test: repositories/profileRepository', () => {
     });
   });
 
+  describe('#loadProfiles', () => {
+    it('should not load a not existing profile', () => {
+      var
+        existingProfile = new Profile(),
+        stub = sandbox.stub(kuzzle.services.list.readEngine, 'get');
+
+      existingProfile._id = 'existingProfile';
+      stub.onCall(0).rejects(new NotFoundError('Not found'));
+      stub.onCall(1).resolves(existingProfile);
+
+      return kuzzle.repositories.profile.loadProfiles(['idontexist', 'existingProfile'])
+        .then(result => {
+          should(result).be.an.Array();
+          should(result.length).be.eql(1);
+          should(result[0]._id).be.eql('existingProfile');
+        });
+    });
+  });
+
   describe('#buildProfileFromRequestObject', () => {
     it('should reject when no id is provided', () => {
       var invalidProfileObject = new RequestObject({
