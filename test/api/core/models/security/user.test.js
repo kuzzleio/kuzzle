@@ -76,4 +76,18 @@ describe('Test: security/userTest', () => {
       });
   });
 
+  it('should respond false if the user have no profileIds', () => {
+    user.profilesIds = [];
+    return user.isActionAllowed({}, {}, kuzzle)
+      .then(isActionAllowed => {
+        should(isActionAllowed).be.a.Boolean();
+        should(isActionAllowed).be.false();
+        should(profile.isActionAllowed.called).be.true();
+      });
+  });
+
+  it('should rejects if the loadProfiles throws an error', () => {
+    sandbox.stub(user, 'getProfiles').rejects('error');
+    should(user.isActionAllowed({}, {}, kuzzle)).be.rejectedWith('error');
+  });
 });

@@ -129,6 +129,22 @@ describe('Test: repositories/profileRepository', () => {
           should(result[0]._id).be.eql('existingProfile');
         });
     });
+
+    it('should rejects when no profileIds is given', () => {
+      should(kuzzle.repositories.profile.loadProfiles()).be.rejectedWith('Missing profilesIds');
+    });
+
+    it('should respond with an emty array when profileIds is an empty array', () => {
+      return kuzzle.repositories.profile.loadProfiles([])
+        .then(response => {
+          should(response).be.an.Array();
+          should(response).be.eql([]);
+        });
+    });
+
+    it('should rejects when profileIds contains some non string entry', () => {
+      should(kuzzle.repositories.profile.loadProfiles([12])).be.rejectedWith('An array of strings must be provided as profilesIds');
+    });
   });
 
   describe('#buildProfileFromRequestObject', () => {
