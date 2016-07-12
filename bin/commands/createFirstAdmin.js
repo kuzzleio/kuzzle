@@ -116,7 +116,7 @@ var createAdminUser = () => {
   var data = {
     _id: name,
     password: password,
-    profileId: 'admin'
+    profilesIds: ['admin']
   };
 
   return request({

@@ -56,7 +56,7 @@ beforeEach(function (done) {
     load: function (username) {
       var user = new User();
       user._id = username;
-      user.profileId = 'anonymous';
+      user.profilesIds = ['anonymous'];
 
       return q(user);
     },
@@ -76,7 +76,7 @@ beforeEach(function (done) {
       };
 
       user._id = -1;
-      user.profileId = 'anonymous';
+      user.profilesIds = ['anonymous'];
       profile.policies = [{_id: role._id}];
 
       return q(user);
@@ -97,7 +97,7 @@ beforeEach(function (done) {
       };
 
       user._id = 'admin';
-      user.profileId = 'admin';
+      user.profilesIds = ['admin'];
       profile.policies = [{_id: role._id}];
 
       return q(user);

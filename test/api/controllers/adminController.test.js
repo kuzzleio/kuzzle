@@ -265,7 +265,7 @@ describe('Test: admin controller', function () {
       role;
 
     before(() => {
-      user = _.assignIn(new User(), {_id:'deleteIndex', profileId: 'deleteIndex'});
+      user = _.assignIn(new User(), {_id:'deleteIndex', profilesIds: ['deleteIndex']});
       profile = new Profile();
       role = new Role();
 
