@@ -1,5 +1,5 @@
 var
-  q = require('q'),
+  Promise = require('bluebird'),
   sinon = require('sinon'),
   params = require('rc')('kuzzle'),
   should = require('should'),
@@ -12,7 +12,7 @@ var
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
   Kuzzle = require.main.require('lib/api/Kuzzle');
 
-require('sinon-as-promised')(q.Promise);
+require('sinon-as-promised')(Promise);
 
 describe('Test: repositories/profileRepository', () => {
   var
@@ -29,14 +29,14 @@ describe('Test: repositories/profileRepository', () => {
       profileRepository:{
         loadFromCache: (id) => {
           if (id !== 'testprofile-cached') {
-            return q(null);
+            return Promise.resolve(null);
           }
-          return q(testProfile);
+          return Promise.resolve(testProfile);
         }
       },
       roleRepository:{
         loadRoles: (keys) => {
-          return q(keys
+          return Promise.resolve(keys
             .map((key) => {
               var role = new Role();
               role._id = key;
@@ -259,7 +259,7 @@ describe('Test: repositories/profileRepository', () => {
 
     it('should properly format the roles filter', () => {
       sandbox.stub(kuzzle.repositories.profile, 'search', (filter) => {
-        return q({
+        return Promise.resolve({
           hits: [{_id: 'test'}],
           total: 1,
           filter: filter
@@ -288,7 +288,7 @@ describe('Test: repositories/profileRepository', () => {
     });
 
     it('should properly persist the profile', () => {
-      sandbox.stub(kuzzle.repositories.profile, 'persistToDatabase', profile => q({_id: profile._id}));
+      sandbox.stub(kuzzle.repositories.profile, 'persistToDatabase', profile => Promise.resolve({_id: profile._id}));
       sandbox.stub(kuzzle.repositories.role, 'loadRoles', stubs.roleRepository.loadRoles);
 
       return kuzzle.repositories.profile.validateAndSaveProfile(testProfile)
@@ -300,7 +300,7 @@ describe('Test: repositories/profileRepository', () => {
     });
 
     it('should properly persist the profile with a non object role', () => {
-      sandbox.stub(kuzzle.repositories.profile, 'persistToDatabase', profile => q({_id: profile._id}));
+      sandbox.stub(kuzzle.repositories.profile, 'persistToDatabase', profile => Promise.resolve({_id: profile._id}));
       sandbox.stub(kuzzle.repositories.role, 'loadRoles', stubs.roleRepository.loadRoles);
 
       testProfile.policies = [{_id: 'anonymous'}];

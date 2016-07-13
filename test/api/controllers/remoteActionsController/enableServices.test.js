@@ -1,7 +1,7 @@
 var
   rc = require('rc'),
   params = rc('kuzzle'),
-  q = require('q'),
+  Promise = require('bluebird'),
   should = require('should'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject;
@@ -19,7 +19,7 @@ describe('Test: enable services controller', function () {
           foo: {
             toggle: function (enable) {
               serviceEnable = enable;
-              return q();
+              return Promise.resolve();
             }
           },
           bar: {}

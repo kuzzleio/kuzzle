@@ -2,7 +2,7 @@ var
   _ = require('lodash'),
   config = require('./config')(),
   mqtt = require('mqtt'),
-  q = require('q'),
+  Promise = require('bluebird'),
   ApiRT = require('./apiRT');
 
 
@@ -54,7 +54,6 @@ ApiMQTT.prototype.unsubscribe = function (room, clientId) {
 
 ApiMQTT.prototype.send = function (message, waitForAnswer) {
   var
-    deferred = q.defer(),
     topic = 'kuzzle',
     listen = (waitForAnswer !== undefined) ? waitForAnswer : true;
 
@@ -72,30 +71,28 @@ ApiMQTT.prototype.send = function (message, waitForAnswer) {
   }
 
   if (listen) {
-    this.mqttClient.once('message', (aTopic, aMessage) => {
-      var unpacked = JSON.parse((new Buffer(aMessage)).toString());
+    return new Promise((resolve, reject) => {
+      this.mqttClient.once('message', (aTopic, aMessage) => {
+        var unpacked = JSON.parse((new Buffer(aMessage)).toString());
 
-      if (unpacked.error) {
-        unpacked.error.statusCode = unpacked.status;
-        deferred.reject(unpacked.error);
-      }
-      else {
-        deferred.resolve(unpacked);
-      }
+        if (unpacked.error) {
+          unpacked.error.statusCode = unpacked.status;
+          return reject(unpacked.error);
+        }
+
+        resolve(unpacked);
+      });
+
+      this.mqttClient.publish(topic, JSON.stringify(message));
     });
-  }
-  else {
-    deferred.resolve({});
   }
 
   this.mqttClient.publish(topic, JSON.stringify(message));
-
-  return deferred.promise;
+  return Promise.resolve({});
 };
 
 ApiMQTT.prototype.sendAndListen = function (message) {
   var
-    deferred = q.defer(),
     topic = 'kuzzle',
     mqttListener = mqtt.connect(config.mqttUrl);
 
@@ -104,26 +101,26 @@ ApiMQTT.prototype.sendAndListen = function (message) {
   this.subscribedRooms[message.clientId] = {};
   mqttListener.subscribe('mqtt.' + mqttListener.options.clientId);
 
-  mqttListener.once('message', function (aTopic, response) {
-    var unpacked = JSON.parse((new Buffer(response)).toString());
+  return new Promise((resolve, reject) => {
+    mqttListener.once('message', (aTopic, response) => {
+      var unpacked = JSON.parse((new Buffer(response)).toString());
 
-    if (unpacked.error) {
-      mqttListener.end(true);
-      deferred.reject(unpacked.error);
-      return false;
-    }
+      if (unpacked.error) {
+        mqttListener.end(true);
+        return reject(unpacked.error);
+      }
 
-    mqttListener.on('message', function (anotherTopic, notification) {
-      this.responses = JSON.parse((new Buffer(notification)).toString());
-    }.bind(this));
+      mqttListener.on('message', (anotherTopic, notification) => {
+        this.responses = JSON.parse((new Buffer(notification)).toString());
+      });
 
-    mqttListener.subscribe(unpacked.result.channel);
-    this.subscribedRooms[message.clientId][unpacked.result.roomId] = mqttListener;
-    deferred.resolve(unpacked);
-  }.bind(this));
+      mqttListener.subscribe(unpacked.result.channel);
+      this.subscribedRooms[message.clientId][unpacked.result.roomId] = mqttListener;
+      resolve(unpacked);
+    });
 
-  mqttListener.publish(topic, JSON.stringify(message));
-  return deferred.promise;
+    mqttListener.publish(topic, JSON.stringify(message));
+  });
 };
 
 module.exports = ApiMQTT;

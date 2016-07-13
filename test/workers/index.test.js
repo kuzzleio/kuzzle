@@ -1,9 +1,11 @@
 var
   should = require('should'),
+  Promise = require('bluebird'),
   _ = require('lodash'),
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
-  WLoader = require('../../lib/workers/index');
+  WLoader = require('../../lib/workers/index'),
+  sinon = require('sinon');
 
 describe('Testing: workers loader', function () {
   var
@@ -11,23 +13,21 @@ describe('Testing: workers loader', function () {
     loader,
     workersList = [];
 
-  before(function (done) {
+  before(() => {
     kuzzle = new Kuzzle();
-    kuzzle.start(params, {dummy: true})
-      .then(function () {
+    return kuzzle.start(params, {dummy: true})
+      .then(() => {
         Object.keys(kuzzle.config.workers).forEach(function (workerGroup) {
           kuzzle.config.workers[workerGroup].forEach(function (worker) {
             workersList.push(worker);
           });
         });
 
+        kuzzle.services.list.broker.listen = sinon.stub();
+        kuzzle.services.init = sinon.stub().resolves();
         workersList = _.uniq(workersList);
 
         loader = new WLoader(kuzzle);
-        done();
-      })
-      .catch(function (error) {
-        done(error);
       });
   });
 
@@ -40,10 +40,11 @@ describe('Testing: workers loader', function () {
   });
 
   it('should initialize a list of loaded workers when starting', function () {
-    loader.init();
-
-    should(Object.keys(loader.list).length).be.exactly(workersList.length);
-    should(Object.keys(loader.list)).match(workersList);
+    return loader.init()
+      .then(() => {
+        should(Object.keys(loader.list).length).be.exactly(workersList.length);
+        should(Object.keys(loader.list)).match(workersList);
+      });
   });
 
   it('should not load a worker multiple times', function () {
@@ -56,40 +57,31 @@ describe('Testing: workers loader', function () {
       baz: ['write']
     };
 
-    loader.init();
-    kuzzle.config.workers = saved;
+    return loader.init()
+      .then(() => {
+        kuzzle.config.workers = saved;
 
-    should(Object.keys(loader.list).length).be.exactly(workersList.length);
-    should(Object.keys(loader.list)).match(workersList);
+        should(Object.keys(loader.list).length).be.exactly(workersList.length);
+        should(Object.keys(loader.list)).match(workersList);
+      });
   });
 
   it('should be reentrant', function () {
-    loader.init();
-    loader.init();
-    loader.init();
-
-    should(Object.keys(loader.list).length).be.exactly(workersList.length);
-    should(Object.keys(loader.list)).match(workersList);
+    return Promise.all([loader.init(), loader.init(), loader.init()])
+      .then(() => {
+        should(Object.keys(loader.list).length).be.exactly(workersList.length);
+        should(Object.keys(loader.list)).match(workersList);
+      });
   });
 
-  it('should raise an error and continue if a worker cannot be loaded', function () {
+  it('should raise an error if a worker cannot be loaded', function () {
     var
-      saved = kuzzle.config.workers,
-      error = false;
+      saved = kuzzle.config.workers;
 
     kuzzle.config.workers = {
       foo: ['foo', 'write', 'bar']
     };
 
-    kuzzle.once('log:error', function () {
-      error = true;
-    });
-
-    loader.init();
-    kuzzle.config.workers = saved;
-
-    should(Object.keys(loader.list).length).be.exactly(workersList.length);
-    should(Object.keys(loader.list)).match(workersList);
-    should(error).be.true();
+    return should(loader.init()).be.rejected();
   });
 });

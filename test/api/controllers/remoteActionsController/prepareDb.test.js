@@ -1,7 +1,7 @@
 var
   rc = require('rc'),
   params = rc('kuzzle'),
-  q = require('q'),
+  Promise = require('bluebird'),
   rewire = require('rewire'),
   should = require('should'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
@@ -23,11 +23,11 @@ describe('Test: Prepare database', function () {
   beforeEach(function (done) {
     prepareDb = rewire('../../../../lib/api/controllers/remoteActions/prepareDb');
 
-    prepareDb.__set__('createInternalStructure', function () { internalIndexCreated = true; return q(); });
-    prepareDb.__set__('readFile', (filename) => { filesRead.push(filename); return q(); });
-    prepareDb.__set__('createIndexes', function () { indexCreated = true; return q(); });
-    prepareDb.__set__('importMapping', function () { mappingsImported = true; return q(); });
-    prepareDb.__set__('importFixtures', function () { fixturesImported = true; return q(); });
+    prepareDb.__set__('createInternalStructure', function () { internalIndexCreated = true; return Promise.resolve(); });
+    prepareDb.__set__('readFile', (filename) => { filesRead.push(filename); return Promise.resolve(); });
+    prepareDb.__set__('createIndexes', function () { indexCreated = true; return Promise.resolve(); });
+    prepareDb.__set__('importMapping', function () { mappingsImported = true; return Promise.resolve(); });
+    prepareDb.__set__('importFixtures', function () { fixturesImported = true; return Promise.resolve(); });
 
     kuzzle = new Kuzzle();
     kuzzle.start(params, {dummy: true})
@@ -40,7 +40,7 @@ describe('Test: Prepare database', function () {
           writeEngine: {},
           readEngine: {
             listIndexes: function () {
-              return q({
+              return Promise.resolve({
                 data: {
                   body: {
                     indexes: ['foo', 'bar']
@@ -181,7 +181,7 @@ describe('Test: Prepare database', function () {
 
     beforeEach(function () {
       workerCalled = false;
-      workerPromise = q();
+      workerPromise = Promise.resolve();
       indexCreated = [];
       indexAdded = false;
 
@@ -189,7 +189,7 @@ describe('Test: Prepare database', function () {
         kuzzle: {
           pluginsManager: {
             trigger: function (event, data) {
-              return q(data);
+              return Promise.resolve(data);
             }
           },
           workerListener: {
@@ -285,7 +285,7 @@ describe('Test: Prepare database', function () {
     });
 
     it('should return a rejected promise if an index creation fails', function () {
-      workerPromise = q.reject(new Error('failed'));
+      workerPromise = Promise.reject(new Error('failed'));
       context.data.mappings = {
         'foo': 'foo',
         'bar': 'bar',
@@ -312,14 +312,14 @@ describe('Test: Prepare database', function () {
 
     beforeEach(function () {
       workerCalled = false;
-      workerPromise = q();
+      workerPromise = Promise.resolve();
       mappingCreated = null;
 
       context = {
         kuzzle: {
           pluginsManager: {
             trigger: function (event, data) {
-              return q(data);
+              return Promise.resolve(data);
             }
           },
           workerListener: {
@@ -378,7 +378,7 @@ describe('Test: Prepare database', function () {
     });
 
     it('should return a rejected promise if the mapping creation fails', function () {
-      workerPromise = q.reject(new Error('rejected'));
+      workerPromise = Promise.reject(new Error('rejected'));
       return should(importMapping.call(context)).be.rejectedWith(InternalError);
     });
   });
@@ -398,14 +398,14 @@ describe('Test: Prepare database', function () {
 
     beforeEach(function () {
       workerCalled = false;
-      workerPromise = q();
+      workerPromise = Promise.resolve();
       fixturesImported = null;
 
       context = {
         kuzzle: {
           pluginsManager: {
             trigger: function (event, data) {
-              return q(data);
+              return Promise.resolve(data);
             }
           },
           workerListener: {
@@ -456,12 +456,12 @@ describe('Test: Prepare database', function () {
     });
 
     it('should return a rejected promise if a fixture import fails', function () {
-      workerPromise = q.reject(new Error('rejected'));
+      workerPromise = Promise.reject(new Error('rejected'));
       return should(importFixtures.call(context)).be.rejectedWith(InternalError);
     });
 
     it('should filter errors when they are about documents that already exist', function () {
-      workerPromise = q.reject(new PartialError('rejected', [{status: 409}]));
+      workerPromise = Promise.reject(new PartialError('rejected', [{status: 409}]));
       return should(importFixtures.call(context)).be.fulfilled();
     });
   });
@@ -492,14 +492,14 @@ describe('Test: Prepare database', function () {
           },
           pluginsManager: {
             trigger: function (event, data) {
-              return q(data);
+              return Promise.resolve(data);
             }
           },
           workerListener: {
             add: (rq) => {
               requests.push(rq);
               workerCalled = true;
-              return q();
+              return Promise.resolve();
             }
           },
           config: {

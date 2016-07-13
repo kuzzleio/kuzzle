@@ -1,13 +1,13 @@
 var
   should = require('should'),
-  q = require('q'),
+  Promise = require('bluebird'),
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   sinon = require('sinon'),
   Profile = require.main.require('lib/api/core/models/security/profile'),
   Role = require.main.require('lib/api/core/models/security/role');
 
-require('sinon-as-promised')(q.Promise);
+require('sinon-as-promised')(Promise);
 
 describe('Test: security/profileTest', function () {
   var
@@ -70,7 +70,7 @@ describe('Test: security/profileTest', function () {
 
     profile.policies = [{_id: 'disallowAllRole'}];
 
-    sandbox.stub(kuzzle.repositories.role, 'loadRole', roleId => q(roles[roleId]));
+    sandbox.stub(kuzzle.repositories.role, 'loadRole', roleId => Promise.resolve(roles[roleId]));
 
     return profile.isActionAllowed(requestObject, context, kuzzle)
       .then(isAllowed => {
@@ -140,7 +140,7 @@ describe('Test: security/profileTest', function () {
     };
     profile.policies.push({_id: role3._id});
 
-    sandbox.stub(kuzzle.repositories.role, 'loadRole', roleId => q(roles[roleId]));
+    sandbox.stub(kuzzle.repositories.role, 'loadRole', roleId => Promise.resolve(roles[roleId]));
 
     return profile.getRights(kuzzle)
       .then(rights => {

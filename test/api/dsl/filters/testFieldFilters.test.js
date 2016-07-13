@@ -1,6 +1,6 @@
 var
   should = require('should'),
-  q = require('q'),
+  Promise = require('bluebird'),
   rewire = require('rewire'),
   md5 = require('crypto-md5'),
   DslFilters = rewire('../../../../lib/api/dsl/filters'),
@@ -16,7 +16,7 @@ describe('Test: dsl.filters.testFieldFilters', function () {
 
   before(function () {
     DslFilters.__set__('findMatchingFilters', function (ids) {
-      return q(ids);
+      return ids;
     });
   });
 
@@ -25,37 +25,35 @@ describe('Test: dsl.filters.testFieldFilters', function () {
     flattenBody = Dsl.__get__('flattenObject')(data);
   });
 
-  it('should return a promise when no fields are provided', function () {
-    var result = filters.testFieldFilters(index, collection, {}, {});
-    return should(result).be.fulfilledWith([]);
+  it('should return an empty array when no fields are provided', function () {
+    should(filters.testFieldFilters(index, collection, {}, {})).be.empty();
   });
 
-  it('should resolve to an empty array if the collection isn\'t yet listed', function () {
-    var result = filters.testFieldFilters(index, 'nocollection', flattenBody, {});
-    return should(result).be.fulfilledWith([]);
+  it('should return an empty array if the collection isn\'t yet listed', function () {
+    should(filters.testFieldFilters(index, 'nocollection', flattenBody, {})).be.empty();
   });
 
-  it('should resolve to an empty array if no field is registered on a given collection', function () {
+  it('should return an empty array if no field is registered on a given collection', function () {
     var result;
 
     filters.filtersTree[index] = {};
     filters.filtersTree[index][collection] = {};
 
     result = filters.testFieldFilters(index, collection, flattenBody, {});
-    return should(result).be.fulfilledWith([]);
+    should(result).be.empty();
   });
 
-  it('should resolve to an empty array if the tested fields aren\'t listed on a given collection', function () {
+  it('should return an empty array if the tested fields aren\'t listed on a given collection', function () {
     var result;
 
     filters.filtersTree[index] = {};
     filters.filtersTree[index][collection] = { fields: { foobar: '' }};
 
     result = filters.testFieldFilters(index, collection, flattenBody, {});
-    return should(result).be.fulfilledWith([]);
+    should(result).be.empty();
   });
 
-  it('should resolve to an empty array if no filter match the given document', function () {
+  it('should return an empty array if no filter match the given document', function () {
     var
       result;
 
@@ -72,10 +70,10 @@ describe('Test: dsl.filters.testFieldFilters', function () {
     };
 
     result = filters.testFieldFilters(index, collection, flattenBody, {});
-    return should(result).be.fulfilledWith([]);
+    should(result).be.empty();
   });
 
-  it('should resolve to a list of filter IDs to notify if a document matches registered filters', function () {
+  it('should return a list of filter IDs to notify if a document matches registered filters', function () {
     var
       result,
       hashedFieldName = md5('foo.bar'),
@@ -96,34 +94,6 @@ describe('Test: dsl.filters.testFieldFilters', function () {
     };
 
     result = filters.testFieldFilters(index, collection, flattenBody, {});
-    return should(result).be.fulfilledWith(ids);
-  });
-
-  it('should return a rejected promise if findMatchingFilters fails', function () {
-    var
-      result,
-      hashedFieldName = md5('foo.bar'),
-      ids = [ 'foo', 'bar', 'baz' ];
-
-    filters.filtersTree[index] = {};
-    filters.filtersTree[index][collection] = {fields: {}};
-    filters.filtersTree[index][collection].fields[hashedFieldName] = {
-      testFoobar: {
-        ids: ids,
-        args: {
-          operator: 'term',
-          not: false,
-          field: 'foo.bar',
-          value: 'bar'
-        }
-      }
-    };
-
-    return DslFilters.__with__({
-      findMatchingFilters: function () { return q.reject(new Error('rejected')); }
-    })(function () {
-      result = filters.testFieldFilters(index, collection, flattenBody, {});
-      return should(result).be.rejectedWith('rejected');
-    });
+    should(result).match(ids);
   });
 });

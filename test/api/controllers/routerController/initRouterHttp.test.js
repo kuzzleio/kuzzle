@@ -6,7 +6,7 @@
 var
   should = require('should'),
   http = require('http'),
-  q = require('q'),
+  Promise = require('bluebird'),
   kuzzleParams = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   rewire = require('rewire'),
@@ -19,38 +19,37 @@ var
  */
 function parseHttpResponse (response, yaml) {
   var
-    deferred = q.defer(),
     data = '';
 
   response.on('data', chunk => {
     data += chunk;
   });
 
-  response.on('end', () => {
-    var result;
+  return new Promise((resolve, reject) => {
+    response.on('end', () => {
+      var result;
 
-    if (yaml === true) {
-      yamlToJson(data, (err, res) => {
-        if (err) {
-          return deferred.reject(err);
+      if (yaml === true) {
+        yamlToJson(data, (err, res) => {
+          if (err) {
+            return reject(err);
+          }
+
+          result = res;
+        });
+      }
+      else {
+        try {
+          result = JSON.parse(data);
         }
-
-        result = res;
-      });
-    } 
-    else {
-      try {
-        result = JSON.parse(data);
+        catch (e) {
+          return reject(e);
+        }
       }
-      catch (e) {
-        return deferred.reject(e);
-      }
-    }
 
-    deferred.resolve(result);
+      resolve(result);
+    });
   });
-
-  return deferred.promise;
 }
 
 describe('Test: routerController.initRouterHttp', () => {

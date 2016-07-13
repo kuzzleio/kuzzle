@@ -1,5 +1,5 @@
 var
-  q = require('q'),
+  Promise = require('bluebird'),
   should = require('should'),
   InternalError = require.main.require('kuzzle-common-objects').Errors.internalError,
   NotFoundError = require.main.require('kuzzle-common-objects').Errors.notFoundError,
@@ -40,24 +40,24 @@ describe('Test: repositories/repository', () => {
   mockCacheEngine = {
     get: key => {
       if (key === repository.index + '/' + repository.collection + '/persisted') {
-        return q(JSON.stringify(persistedObject));
+        return Promise.resolve(JSON.stringify(persistedObject));
       }
       if (key === repository.index + '/' + repository.collection + '/cached') {
-        return q(JSON.stringify(cachedObject));
+        return Promise.resolve(JSON.stringify(cachedObject));
       }
       if (key === repository.index + '/' + repository.collection + '/error') {
-        return q.reject(new InternalError('Error'));
+        return Promise.reject(new InternalError('Error'));
       }
       if (key === repository.index + '/' + repository.collection + '/string') {
-        return q('a string');
+        return Promise.resolve('a string');
       }
 
-      return q(null);
+      return Promise.resolve(null);
     },
-    set: (key, value) => { forwardedObject = {op: 'set', key: key, value: JSON.parse(value)}; return q('OK'); },
-    volatileSet: (key, value, ttl) => { forwardedObject = {op: 'volatileSet', key: key, value: JSON.parse(value), ttl: ttl }; return q('OK'); },
-    expire: (key, ttl) => { forwardedObject = {op: 'expire', key: key, ttl: ttl}; return q('OK'); },
-    persist: key => { forwardedObject = {op: 'persist', key: key}; return q('OK'); }
+    set: (key, value) => { forwardedObject = {op: 'set', key: key, value: JSON.parse(value)}; return Promise.resolve('OK'); },
+    volatileSet: (key, value, ttl) => { forwardedObject = {op: 'volatileSet', key: key, value: JSON.parse(value), ttl: ttl }; return Promise.resolve('OK'); },
+    expire: (key, ttl) => { forwardedObject = {op: 'expire', key: key, ttl: ttl}; return Promise.resolve('OK'); },
+    persist: key => { forwardedObject = {op: 'persist', key: key}; return Promise.resolve('OK'); }
   };
 
   mockReadEngine = {
@@ -68,29 +68,31 @@ describe('Test: repositories/repository', () => {
       }
 
       if (requestObject.data._id === 'persisted') {
-        return q(persistedObject);
+        return Promise.resolve(persistedObject);
       }
 
       if (requestObject.data._id === 'uncached') {
-        return q(uncachedObject);
+        return Promise.resolve(uncachedObject);
       }
 
       if (requestObject.data._id === 'cached') {
-        return q(uncachedObject);
+        return Promise.resolve(uncachedObject);
       }
 
       if (requestObject.data._id === 'source') {
-        return q({_id:'theId', _source: {foo: 'bar'}});
+        return Promise.resolve({_id:'theId', _source: {foo: 'bar'}});
       }
 
       if (requestObject.data._id === 'error') {
-        return q.reject(new InternalError('Error'));
+        return Promise.reject(new InternalError('Error'));
       }
 
+      return Promise.resolve({found: false});
+/*
       err = new NotFoundError('Not found');
       err.found = false;
       err._id = requestObject.data._id;
-      return q.reject(err);
+      return Promise.reject(err);*/
     },
     mget: requestObject => {
       var
@@ -113,43 +115,30 @@ describe('Test: repositories/repository', () => {
         promises.push(mockReadEngine.get(req, false));
       });
 
-      return q.allSettled(promises)
+      return Promise.all(promises)
         .then(results => {
+          console.dir(results, {depth: null})
           var
-            error,
             result = results
               .map(r => {
-                if (r.state === 'rejected') {
-                  if (r.reason.status === 404) {
-                    return { found: false };
-                  }
-
-                  error = r.reason;
-                  return null;
-                }
-
                 return {
-                  found: (r.value.found === undefined) ? true : r.value.found,
-                  _source: {name: r.value.name},
-                  _id: r.value._id
+                  found: (r.found === undefined) ? true : r.found,
+                  _source: {name: r.name},
+                  _id: r._id
                 };
               });
 
-          if (error) {
-            return q.reject(error);
-          }
-
-          return q({hits: result});
+          return {hits: result};
         });
     },
     search: (requestObject) => {
       if (requestObject.data.body.filter.empty) {
-        return q({});
+        return Promise.resolve({});
       }
       if (requestObject.data.body.filter.error) {
-        return q.reject({});
+        return Promise.reject({});
       }
-      return q({hits: [{_id: 'role', _source: {controllers: {}}}], total: 1});
+      return Promise.resolve({hits: [{_id: 'role', _source: {controllers: {}}}], total: 1});
     }
   };
 
@@ -157,7 +146,7 @@ describe('Test: repositories/repository', () => {
     execute: o => {
       forwardedObject = o;
     },
-    delete: requestObject => q(requestObject)
+    delete: requestObject => Promise.resolve(requestObject)
   };
 
   before(() => {

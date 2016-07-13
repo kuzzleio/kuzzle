@@ -1,5 +1,5 @@
 var
-  q = require('q'),
+  Promise = require('bluebird'),
   should = require('should'),
   params = require('rc')('kuzzle'),
   kuzzle = {
@@ -31,36 +31,36 @@ before(function (done) {
   mockCacheEngine = {
     get: function (key) {
       if (key === userRepository.index + '/' + userRepository.collection + '/userInCache') {
-        return q(JSON.stringify(userInCache));
+        return Promise.resolve(JSON.stringify(userInCache));
       }
-      return q(null);
+      return Promise.resolve(null);
     },
-    volatileSet: function () {return q('OK');},
-    expire: function () {return q('OK'); }
+    volatileSet: function () {return Promise.resolve('OK');},
+    expire: function () {return Promise.resolve('OK'); }
   };
 
   mockReadEngine = {
     get: function (requestObject) {
       if (requestObject.data._id === 'userInDB') {
-        return q(new ResponseObject(requestObject, userInDB));
+        return Promise.resolve(new ResponseObject(requestObject, userInDB));
       }
 
-      return q(new NotFoundError('User not found in db'));
+      return Promise.resolve(new NotFoundError('User not found in db'));
     }
   };
 
   mockWriteLayer = {
-    execute: () => q({})
+    execute: () => Promise.resolve({})
   };
 
   mockProfileRepository = {
     loadProfile: function (profileKey) {
       var profile = new Profile();
       if (profileKey === 'notfound') {
-        return q(null);
+        return Promise.resolve(null);
       }
       profile._id = profileKey;
-      return q(profile);
+      return Promise.resolve(profile);
     }
   };
   userInCache = {
@@ -107,18 +107,17 @@ describe('Test: repositories/userRepository', function () {
   });
 
   describe('#hydrate', function () {
-    it('should return the given user if the given data is not a valid object', function (done) {
+    it('should return the given user if the given data is not a valid object', function () {
       var
         u = new User();
 
-      q.all([
+      return Promise.all([
         userRepository.hydrate(u, null),
         userRepository.hydrate(u),
         userRepository.hydrate(u, 'a scalar')
       ])
-        .then(function (results) {
+        .then(results => {
           results.forEach(user => should(user).be.exactly(u));
-          done();
         });
     });
 
@@ -139,19 +138,15 @@ describe('Test: repositories/userRepository', function () {
   });
 
   describe('#load', function () {
-    it('should return the anonymous user when the anonymous or -1 id is given', done => {
-      q.all([
+    it('should return the anonymous user when the anonymous or -1 id is given', () => {
+      return Promise.all([
         userRepository.load(-1),
         userRepository.load('anonymous')
       ])
         .then(users => {
           users.every(user => { assertIsAnonymous(user); });
-
-          done();
-        })
-        .catch(error => { done(error); });
+        });
     });
-
   });
 
   describe('#load', function () {
@@ -171,13 +166,13 @@ describe('Test: repositories/userRepository', function () {
     });
 
     it('should reject the promise if an error occurred while fetching the user', () => {
-      userRepository.load = () => q.reject(new InternalError('Error'));
+      userRepository.load = () => Promise.reject(new InternalError('Error'));
 
       return should(userRepository.load('userInCache')
         .catch(err => {
           delete userRepository.load;
 
-          return q.reject(err);
+          return Promise.reject(err);
         })).be.rejectedWith(InternalError);
     });
   });

@@ -1,6 +1,5 @@
 var
   should = require('should'),
-  q = require('q'),
   rewire = require('rewire'),
   DslFilters = rewire('../../../../lib/api/dsl/filters'),
   Dsl = rewire('../../../../lib/api/dsl/index');
@@ -19,7 +18,7 @@ describe('Test: dsl.filters.testGlobalsFilters', function () {
       should(ids).be.an.Array();
       should(body).be.exactly(flattenBody);
       should(cache).match(cachedResult);
-      return q(ids);
+      return ids;
     });
 
     filters = new DslFilters();
@@ -28,19 +27,19 @@ describe('Test: dsl.filters.testGlobalsFilters', function () {
     flattenBody = Dsl.__get__('flattenObject')(data);
   });
 
-  it('should resolve to an empty array if there if the collection doesn\'t contain a room array', function () {
-    return should(filters.testGlobalsFilters(index, collection, flattenBody, cachedResult)).be.fulfilledWith([]);
+  it('should return an empty array if there if the collection doesn\'t contain a room array', function () {
+    should(filters.testGlobalsFilters(index, collection, flattenBody, cachedResult)).be.empty();
   });
 
-  it('should resolve to an empty array if there is no rooms registered on that collection', function () {
+  it('should an empty array if there is no rooms registered on that collection', function () {
     filters.filtersTree[index][collection].rooms = [];
-    return should(filters.testGlobalsFilters(index, collection, flattenBody, cachedResult)).be.fulfilledWith([]);
+    should(filters.testGlobalsFilters(index, collection, flattenBody, cachedResult)).be.empty();
   });
 
   it('should call the testRooms with the appropriate set of arguments', function () {
     var ids = ['Excuse', 'me', 'while', 'I', 'kiss', 'the', 'sky'];
 
     filters.filtersTree[index][collection].globalFilterIds = ids;
-    return should(filters.testGlobalsFilters(index, collection, flattenBody, cachedResult)).be.fulfilledWith(ids);
+    should(filters.testGlobalsFilters(index, collection, flattenBody, cachedResult)).match(ids);
   });
 });

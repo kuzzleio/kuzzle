@@ -1,6 +1,6 @@
 var
   should = require('should'),
-  q = require('q'),
+  Promise = require('bluebird'),
   rewire = require('rewire'),
   Dsl = rewire('../../../../lib/api/dsl/index');
 
@@ -40,16 +40,6 @@ describe('Test: dsl.remove', function () {
         return dsl.remove(filterId);
       })
       .then(() => should(dsl.filters.filtersTree).be.empty().Object());
-  });
-
-  it('should return a rejected promise on fail', function () {
-    dsl.filters.removeFilter = () => q.reject(new Error('rejected'));
-
-    return dsl.register(filterId, index, collection, {})
-      .then(() => {
-        should(dsl.filters.filtersTree).not.be.empty().Object();
-        return should(dsl.remove(filterId)).be.rejected();
-      });
   });
 
   it('should fail if the provided filter ID is not a string', function () {

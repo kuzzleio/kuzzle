@@ -1,7 +1,7 @@
 var
   _ = require('lodash'),
   async = require('async'),
-  q = require('q');
+  Promise = require('bluebird');
 
 var myHooks = function () {
   this.registerHandler('BeforeFeature', (event, callback) => {
@@ -12,39 +12,22 @@ var myHooks = function () {
 
     Object.keys(fixtures).forEach(index => {
       promises.push((function () {
-        var deferred = q.defer();
-
-        api.deleteIndex(index)
-          .then(response => {
-            deferred.resolve(response);
-          })
-          .catch(() => {
+        return new Promise(resolve => {
+          api.deleteIndex(index)
+            .then(response => resolve(response))
             // ignoring errors
-            deferred.resolve({});
-          });
-
-        return deferred.promise;
+            .catch(() => resolve({}));
+        });
       }));
 
       Object.keys(fixtures[index]).forEach(collection => {
-        promises.push(() => {
-          return api.bulkImport(fixtures[index][collection], index, collection);
-        });
+        promises.push(() => api.bulkImport(fixtures[index][collection], index, collection));
       });
 
-      promises.push(() => {
-        return api.refreshIndex(index);
-      });
+      promises.push(() => api.refreshIndex(index));
     });
 
-    promises.reduce(q.when, q())
-      .then(() => {
-        callback();
-      })
-      .catch(error => {
-        console.error(error);
-        callback(error);
-      });
+    Promise.each(promises).asCallback(callback);
   });
 
   this.registerHandler('AfterFeature', (event, callback) => {
@@ -59,7 +42,7 @@ var myHooks = function () {
         promises.push(api.setAutoRefresh(index, false));
       });
 
-      q.all(promises)
+      Promise.all(promises)
         .then(() => callback())
         .catch(error => {
           // Ignores deleteIndex errors if they occur because the deleted index
@@ -184,7 +167,7 @@ function cleanSecurity (callback) {
   this.api.listIndexes()
     .then(response => {
       if (response.result.indexes.indexOf('%kuzzle') === -1) {
-        return q.reject(new ReferenceError('%kuzzle index not found'));
+        return Promise.reject(new ReferenceError('%kuzzle index not found'));
       }
     })
     .then(() => {

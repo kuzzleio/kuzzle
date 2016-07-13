@@ -79,8 +79,7 @@ describe('Test: hotelClerk.removeRooms', function () {
     return should(kuzzle.hotelClerk.removeRooms(requestObject)).rejectedWith(NotFoundError);
   });
 
-  it('should reject an error if there is no subscription on this collection', function () {
-
+  it('should reject an error if there is no subscription on this collection', () => {
     var
       requestObjectSubscribe = new RequestObject({
         controller: 'subscribe',
@@ -101,7 +100,7 @@ describe('Test: hotelClerk.removeRooms', function () {
 
     return kuzzle.hotelClerk.addSubscription(requestObjectSubscribe, context)
       .then(() => {
-        should(kuzzle.hotelClerk.removeRooms(requestObject)).rejectedWith(BadRequestError);
+        return should(kuzzle.hotelClerk.removeRooms(requestObject)).rejectedWith(NotFoundError);
       });
   });
 

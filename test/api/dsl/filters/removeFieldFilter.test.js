@@ -12,6 +12,6 @@ describe('Test: dsl.removeFieldFilter', function () {
   });
 
   it('should do nothing if no filters are provided', function () {
-    return should(DslFilters.__get__('removeFieldFilter').call(filters, null)).be.fulfilled();
+    should(DslFilters.__get__('removeFieldFilter').call(filters, null)).be.false();
   });
 });

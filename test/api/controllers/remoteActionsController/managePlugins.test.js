@@ -1,5 +1,5 @@
 var
-  q = require('q'),
+  Promise = require('bluebird'),
   should = require('should'),
   rewire = require('rewire'),
   sinon = require('sinon'),
@@ -12,7 +12,7 @@ var
   clcNotice = managePlugins.__get__('clcNotice'),
   sandbox;
 
-require('sinon-as-promised')(q.Promise);
+require('sinon-as-promised')(Promise);
 
 describe('Test: managePlugins remote action caller', function () {
   var

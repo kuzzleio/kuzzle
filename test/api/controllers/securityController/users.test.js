@@ -1,5 +1,5 @@
 var
-  q = require('q'),
+  Promise = require('bluebird'),
   should = require('should'),
   sinon = require('sinon'),
   params = require('rc')('kuzzle'),
@@ -8,7 +8,7 @@ var
   NotFoundError = require.main.require('kuzzle-common-objects').Errors.notFoundError,
   ResponseObject = require.main.require('kuzzle-common-objects').Models.responseObject;
 
-require('sinon-as-promised')(q.Promise);
+require('sinon-as-promised')(Promise);
 
 describe('Test: security controller - users', function () {
   var
@@ -21,7 +21,7 @@ describe('Test: security controller - users', function () {
       .then(function () {
         // Mock
         kuzzle.services.list.readEngine.search = () => {
-          return q({
+          return Promise.resolve({
             hits: [{_id: 'admin', _source: { profileId: 'admin' }}],
             total: 1
           });
@@ -35,15 +35,15 @@ describe('Test: security controller - users', function () {
             return kuzzle.repositories.user.admin();
           }
 
-          return q(null);
+          return Promise.resolve(null);
         };
 
         kuzzle.repositories.user.persist = (user) => {
-          return q(user);
+          return Promise.resolve(user);
         };
 
         kuzzle.repositories.user.deleteFromDatabase = () => {
-          return q({_id: 'test'});
+          return Promise.resolve({_id: 'test'});
         };
       });
   });

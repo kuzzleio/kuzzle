@@ -7,7 +7,7 @@
  */
 var
   should = require('should'),
-  q = require('q'),
+  Promise = require('bluebird'),
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle');
@@ -26,25 +26,25 @@ var mockupCacheService = {
       this.addId = id;
       this.room = room;
     }
-    return q({});
+    return Promise.resolve({});
   },
 
   remove: function (id, room) {
     if (room.length > 0) {
       this.removeId = id;
     }
-    return q({});
+    return Promise.resolve({});
   },
 
   search: function (id) {
     if (['removeme', 'addme'].indexOf(id) !== -1) {
-      return q(['foobar']);
+      return Promise.resolve(['foobar']);
     }
     else if (id === 'errorme') {
-      return q.reject(new Error('rejected'));
+      return Promise.reject(new Error('rejected'));
     }
 
-    return q([]);
+    return Promise.resolve([]);
   }
 };
 

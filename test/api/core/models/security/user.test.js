@@ -1,12 +1,12 @@
 var
-  q = require('q'),
+  Promise = require('bluebird'),
   should = require('should'),
   sinon = require('sinon'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   Profile = require.main.require('lib/api/core/models/security/profile'),
   User = require.main.require('lib/api/core/models/security/user');
 
-require('sinon-as-promised')(q.Promise);
+require('sinon-as-promised')(Promise);
 
 describe('Test: security/userTest', () => {
   var

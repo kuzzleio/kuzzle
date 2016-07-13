@@ -2,7 +2,7 @@ var
   should = require('should'),
   rewire = require('rewire'),
   md5 = require('crypto-md5'),
-  q = require('q'),
+  Promise = require('bluebird'),
   Filters = require.main.require('lib/api/dsl/filters'),
   Methods = rewire('../../../../lib/api/dsl/methods'),
   BadRequestError = require.main.require('kuzzle-common-objects').Errors.badRequestError;
@@ -100,7 +100,7 @@ describe('Test or method', function () {
 
   it('should return a rejected promise if getFormattedFilters fails', function () {
     return Methods.__with__({
-      getFormattedFilters: function () { return q.reject(new Error('rejected')); }
+      getFormattedFilters: function () { return Promise.reject(new Error('rejected')); }
     })(function () {
       return should(methods.or(filterId, index, collection, filter)).be.rejectedWith('rejected');
     });

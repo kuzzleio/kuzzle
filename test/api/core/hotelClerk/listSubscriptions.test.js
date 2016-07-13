@@ -1,11 +1,11 @@
 var
   should = require('should'),
-  q = require('q'),
+  Promise = require('bluebird'),
   sinon = require('sinon'),
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle');
 
-require('sinon-as-promised')(q.Promise);
+require('sinon-as-promised')(Promise);
 
 describe('Test: hotelClerk.listSubscription', function () {
   var
@@ -72,10 +72,7 @@ describe('Test: hotelClerk.listSubscription', function () {
       }
     };
     sandbox.stub(kuzzle.repositories.user, 'load').resolves({_id: 'user', isActionAllowed: r => {
-      if (r.collection === 'foo') {
-        return q(true);
-      }
-      return q(false);
+      return Promise.resolve(r.collection === 'foo');
     }});
 
     return kuzzle.hotelClerk.listSubscriptions(context)
