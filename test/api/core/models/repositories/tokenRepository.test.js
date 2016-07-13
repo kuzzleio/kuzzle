@@ -77,7 +77,7 @@ beforeEach(function (done) {
 
       user._id = -1;
       user.profilesIds = ['anonymous'];
-      profile.policies = [{_id: role._id}];
+      profile.policies = [{roleId: role._id}];
 
       return q(user);
     },
@@ -98,7 +98,7 @@ beforeEach(function (done) {
 
       user._id = 'admin';
       user.profilesIds = ['admin'];
-      profile.policies = [{_id: role._id}];
+      profile.policies = [{roleId: role._id}];
 
       return q(user);
     }

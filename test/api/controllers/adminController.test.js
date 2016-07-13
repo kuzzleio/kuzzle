@@ -280,7 +280,7 @@ describe('Test: admin controller', function () {
       context.token.userId = 'deleteIndex';
       role.restrictedTo = [{index: '%text1'},{index: '%text2'}];
       profile._id = 'deleteIndex';
-      profile.policies = [{_id: role._id, restrictedTo: role.restrictedTo}];
+      profile.policies = [{roleId: role._id, restrictedTo: role.restrictedTo}];
 
       sandbox.stub(kuzzle.repositories.user, 'load').resolves(user);
       sandbox.stub(kuzzle.repositories.profile, 'loadProfile').resolves(profile);

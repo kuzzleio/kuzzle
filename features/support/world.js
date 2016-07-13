@@ -117,44 +117,44 @@ module.exports = function () {
 
     this.profiles = {
       profile1: {
-        policies: [{_id: this.idPrefix + 'role1'}]
+        policies: [{roleId: this.idPrefix + 'role1'}]
       },
       profile2: {
         policies: [
           {
-            _id: this.idPrefix + 'role1',
+            roleId: this.idPrefix + 'role1',
             restrictedTo: [{index: this.fakeIndex}]
           },
           {
-            _id: this.idPrefix + 'role2'
+            roleId: this.idPrefix + 'role2'
           }
         ]
       },
       profile3: {
         policies: [{
-          _id: this.idPrefix + 'role2',
+          roleId: this.idPrefix + 'role2',
           restrictedTo: [{index: this.fakeAltIndex, collections:[this.fakeCollection]}]
         }]
       },
       profile4: {
         policies: [{
-          _id: this.idPrefix + 'role3'
+          roleId: this.idPrefix + 'role3'
         }]
       },
       profile5: {
         policies: [{
-          _id: this.idPrefix + 'role3',
+          roleId: this.idPrefix + 'role3',
           restrictedTo: [{index: this.fakeIndex}]
         }]
       },
       profile6: {
         policies: [{
-          _id: this.idPrefix + 'role3',
+          roleId: this.idPrefix + 'role3',
           restrictedTo: [{index: this.fakeIndex, collections:[this.fakeCollection]}]
         }]
       },
       invalidProfile: {
-        policies: [{_id: 'unexisting-role'}]
+        policies: [{roleId: 'unexisting-role'}]
       },
       emptyProfile: {
         policies: []
