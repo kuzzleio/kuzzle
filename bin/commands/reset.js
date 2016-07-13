@@ -13,6 +13,7 @@ module.exports = function (options) {
     error = string => options.parent.noColors ? string : clc.red(string),
     warn = string => options.parent.noColors ? string : clc.yellow(string),
     notice = string => options.parent.noColors ? string : clc.cyanBright(string),
+    ok = string => options.parent.noColors ? string: clc.green.bold(string),
     userIsSure = false,
     kuzzle = new Kuzzle();
 
@@ -49,7 +50,24 @@ module.exports = function (options) {
 
   if (userIsSure) {
     console.log(notice('[ℹ] Processing...\n'));
-    kuzzle.remoteActions.do('cleanAndPrepare', params);
+    return kuzzle.remoteActions.do('cleanAndPrepare', {
+        pid: params.pid,
+        fixtures: params.fixtures,
+        mappings: params.mappings
+      },
+      {
+        pid: params.pid,
+        debug: options.parent.debug
+      }
+    )
+      .then(response => {
+        console.log(ok('[✔] Kuzzle is now like a virgin, touched for the very first time!'));
+        process.exit(0);
+      })
+      .catch(error => {
+        console.error(error);
+        process.exit(1);
+      });
   } else {
     console.log(notice('[ℹ] Nothing have been done... you do not look that sure...'));
   }

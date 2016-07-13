@@ -1,12 +1,27 @@
-var
-  childProcess = require('child_process');
-
-// "kuzzle install" is an alias for "kuzzle plugins --install"
+var 
+  params = require('rc')('kuzzle'),
+  Kuzzle = require('../../lib/api'),
+  RequestObject = require('kuzzle-common-objects').Models.requestObject;
 
 module.exports = function () {
-  childProcess
-    .spawn(require.main.filename, ['plugins', '--install'], {stdio: 'inherit'})
-    .on('close', code => {
-      process.exit(code);
+  var 
+    kuzzle = new Kuzzle(),
+    requestObject = new RequestObject({
+      body: {install: true}
     });
+
+  console.log('███ kuzzle-plugins: Starting plugins installation...');
+  
+  kuzzle.start(params, {dummy: true})
+    .then(() => kuzzle.remoteActionsController.actions.managePlugins(requestObject))
+    .then(() => {
+      console.log('███ kuzzle-plugins: Plugins installed');
+      process.exit(0);
+    })
+    .catch(error => {
+      console.dir(error, {depth: null});
+      process.exit(1);
+    })
 };
+
+
