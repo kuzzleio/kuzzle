@@ -34,11 +34,11 @@ ApiAMQP.prototype.init = function (world) {
 ApiAMQP.prototype.disconnect = function () {
   if (this.amqpClient) {
     this.amqpClient
-      .then(connection => connection.close.bind(connection))
-      .catch(err => console.error('error= ', err));
-
-    this.amqpClient = null;
-    this.amqpChannel = null;
+      .then(connection => {
+        connection.close.bind(connection);
+        this.amqpClient = null;
+        this.amqpChannel = null;
+      });
   }
 };
 
