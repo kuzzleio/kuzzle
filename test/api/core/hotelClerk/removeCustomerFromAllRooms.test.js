@@ -51,7 +51,7 @@ describe('Test: hotelClerk.removeCustomerFromAllRooms', function () {
   });
 
   it('should do nothing when a bad connectionId is given', function () {
-    return should(kuzzle.hotelClerk.removeCustomerFromAllRooms({id: 'unknown'})).be.rejected();
+    return should(kuzzle.hotelClerk.removeCustomerFromAllRooms({id: 'unknown'})).be.fulfilledWith(undefined);
   });
 
   it('should clean up customers, rooms and filtersTree object', function () {
