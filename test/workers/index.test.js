@@ -75,9 +75,6 @@ describe('Testing: workers loader', function () {
   });
 
   it('should raise an error if a worker cannot be loaded', function () {
-    var
-      saved = kuzzle.config.workers;
-
     kuzzle.config.workers = {
       foo: ['foo', 'write', 'bar']
     };

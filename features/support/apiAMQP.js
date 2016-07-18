@@ -33,10 +33,9 @@ ApiAMQP.prototype.init = function (world) {
 
 ApiAMQP.prototype.disconnect = function () {
   if (this.amqpClient) {
-    this.amqpClient.then(function (connection) {
-      connection.close();
-    })
-      .catch();
+    this.amqpClient
+      .then(connection => connection.close.bind(connection))
+      .catch(err => console.error('error= ', err));
 
     this.amqpClient = null;
     this.amqpChannel = null;
@@ -61,31 +60,35 @@ ApiAMQP.prototype.send = function (message, waitForAnswer) {
     message.headers = _.extend(message.headers, {authorization: 'Bearer ' + this.world.currentUser.token});
   }
 
-  return this.amqpChannel.then(channel => {
-    if (listen) {
-      return channel.assertQueue(null, {autoDelete: true, exclusive: true, durable: false})
-        .then(queue => {
-          return channel.consume(queue.queue, reply => {
-            channel.ack(reply);
-            channel.cancel(reply.fields.consumerTag).then(() => {
-              var unpacked = JSON.parse((new Buffer(reply.content)).toString());
+  return new Promise((resolve, reject) => {
+    this.amqpChannel.then(channel => {
+      if (listen) {
+        channel.assertQueue(null, {autoDelete: true, exclusive: true, durable: false})
+          .then(queue => {
+            channel.consume(queue.queue, reply => {
+              channel.ack(reply);
+              channel.cancel(reply.fields.consumerTag).then(() => {
+                var unpacked = JSON.parse((new Buffer(reply.content)).toString());
 
-              if (unpacked.error) {
-                unpacked.error.statusCode = unpacked.status;
-                return Promise.reject(unpacked.error);
-              }
+                if (unpacked.error) {
+                  unpacked.error.statusCode = unpacked.status;
+                  return reject(unpacked.error);
+                }
 
-              return unpacked;
+                resolve(unpacked);
+              });
+            })
+            .then(() => {
+              channel.publish(KUZZLE_EXCHANGE, topic, new Buffer(JSON.stringify(message)), {replyTo: queue.queue});
             });
           })
-          .then(() => {
-            return channel.publish(KUZZLE_EXCHANGE, topic, new Buffer(JSON.stringify(message)), {replyTo: queue.queue});
-          });
-        })
-        .catch(error => Promise.reject(error.message));
-    }
-
-    return channel.publish(KUZZLE_EXCHANGE, topic, new Buffer(JSON.stringify(message)));
+          .catch(error => reject(error.message));
+      }
+      else {
+        channel.publish(KUZZLE_EXCHANGE, topic, new Buffer(JSON.stringify(message)));
+        return resolve({});
+      }
+    });
   });
 };
 
@@ -100,8 +103,9 @@ ApiAMQP.prototype.sendAndListen = function (message) {
   return this.send(message)
     .then(response => {
       sendResponse = response;
-      return this.amqpClient.then(connection => connection.createChannel());
+      return this.amqpClient;
     })
+    .then(connection => connection.createChannel())
     .then(response => {
       channel = response;
       this.subscribedRooms[message.clientId][sendResponse.result.roomId] = channel;

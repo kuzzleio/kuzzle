@@ -1,6 +1,5 @@
 var
   should = require('should'),
-  Promise = require('bluebird'),
   rewire = require('rewire'),
   md5 = require('crypto-md5'),
   DslFilters = rewire('../../../../lib/api/dsl/filters'),

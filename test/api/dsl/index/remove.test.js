@@ -1,6 +1,5 @@
 var
   should = require('should'),
-  Promise = require('bluebird'),
   rewire = require('rewire'),
   Dsl = rewire('../../../../lib/api/dsl/index');
 

@@ -205,7 +205,7 @@ describe('Test: repositories/tokenRepository', function () {
         details: {
           subCode: UnauthorizedError.prototype.subCodes.TokenExpired
         }
-        });
+      });
     });
 
     it('should reject the promise if an error occurred while fetching the user from the cache', () => {

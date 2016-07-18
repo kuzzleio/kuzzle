@@ -1,6 +1,5 @@
 var
   should = require('should'),
-  Promise = require('bluebird'),
   rewire = require('rewire'),
   NotFoundError = require.main.require('kuzzle-common-objects').Errors.notFoundError,
   Dsl = rewire('../../../../lib/api/dsl/index');

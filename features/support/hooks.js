@@ -11,23 +11,18 @@ var myHooks = function () {
       promises = [];
 
     Object.keys(fixtures).forEach(index => {
-      promises.push((function () {
-        return new Promise(resolve => {
-          api.deleteIndex(index)
-            .then(response => resolve(response))
-            // ignoring errors
-            .catch(() => resolve({}));
-        });
+      promises.push(() => new Promise(resolve => {
+        api.deleteIndex(index)
+          .then(response => resolve(response))
+          // ignoring errors
+          .catch(() => resolve({}));
       }));
 
-      Object.keys(fixtures[index]).forEach(collection => {
-        promises.push(() => api.bulkImport(fixtures[index][collection], index, collection));
-      });
-
+      promises.push(() => api.createIndex(index));
       promises.push(() => api.refreshIndex(index));
     });
 
-    Promise.each(promises).asCallback(callback);
+    Promise.each(promises, promise => promise()).asCallback(callback);
   });
 
   this.registerHandler('AfterFeature', (event, callback) => {
@@ -54,7 +49,6 @@ var myHooks = function () {
           callback(new Error(error));
         });
     }, 0);
-
   });
 
   /**
@@ -99,12 +93,10 @@ var myHooks = function () {
 
   this.After(function (scenario, callback) {
     this.api.truncateCollection()
-      .then(() => {
-        this.api.refreshIndex(this.fakeIndex);
-        this.api.disconnect();
-        callback();
-      })
-      .catch(() => { callback(); });
+      .then(() => this.api.refreshIndex(this.fakeIndex))
+      .then(() => this.api.disconnect())
+      .then(() => callback())
+      .catch(() => callback());
   });
 
   this.After({tags: ['@unsubscribe']}, function (scenario, callback) {

@@ -565,7 +565,6 @@ describe('Test: ElasticSearch service', function () {
 
           should(result.errors).be.true();
           should(result.partialErrors).be.an.Array().and.match([{status: 404}]).and.match([{error: /^DocumentMissingException/}]);
-          console.dir(result, {depth:null})
         })).be.fulfilled();
     });
 

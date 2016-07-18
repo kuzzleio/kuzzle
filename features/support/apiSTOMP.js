@@ -30,7 +30,7 @@ ApiSTOMP.prototype.init = function (world) {
     this.stompClient = new Stomp(this.stompUrl[0], this.stompUrl[1], 'guest', 'guest', '1.0', '/');
 
     this.stompConnected = new Promise(resolve => {
-      this.stompClient.connect(function (sessionId) {
+      this.stompClient.connect(sessionId => {
         resolve(sessionId);
       });
     });
@@ -87,12 +87,10 @@ ApiSTOMP.prototype.send = function (message, waitForAnswer) {
     message.headers = _.extend(message.headers, {authorization: 'Bearer ' + this.world.currentUser.token});
   }
 
-  return this.stompConnected
-    .then(() => {
-      this.stompClient.publish(destination, JSON.stringify(message), messageHeader);
-
-      if (listen) {
-        return new Promise((resolve, reject) => {
+  return new Promise((resolve, reject) => {
+    this.stompConnected
+      .then(() => {
+        if (listen) {
           messageHeader['reply-to'] = uuid.v4();
           this.stompClient.subscribe('/queue/' + messageHeader['reply-to'], (body, headers) => {
             var unpacked = JSON.parse(body);
@@ -107,11 +105,14 @@ ApiSTOMP.prototype.send = function (message, waitForAnswer) {
 
             this.stompClient.unsubscribe(headers.destination);
           });
-        });
-      }
+        }
+        else {
+          resolve({});
+        }
 
-      return {};
-    });
+        this.stompClient.publish(destination, JSON.stringify(message), messageHeader);
+      });
+  });
 };
 
 ApiSTOMP.prototype.sendAndListen = function (message) {

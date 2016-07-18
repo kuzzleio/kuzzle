@@ -2,7 +2,6 @@ var
   Promise = require('bluebird'),
   should = require('should'),
   InternalError = require.main.require('kuzzle-common-objects').Errors.internalError,
-  NotFoundError = require.main.require('kuzzle-common-objects').Errors.notFoundError,
   Repository = require.main.require('lib/api/core/models/repositories/repository'),
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject;
 
@@ -62,7 +61,6 @@ describe('Test: repositories/repository', () => {
 
   mockReadEngine = {
     get: (requestObject, forward) => {
-      var err;
       if (forward !== false) {
         forwardedObject = requestObject;
       }
@@ -88,11 +86,6 @@ describe('Test: repositories/repository', () => {
       }
 
       return Promise.resolve({found: false});
-/*
-      err = new NotFoundError('Not found');
-      err.found = false;
-      err._id = requestObject.data._id;
-      return Promise.reject(err);*/
     },
     mget: requestObject => {
       var
@@ -117,7 +110,6 @@ describe('Test: repositories/repository', () => {
 
       return Promise.all(promises)
         .then(results => {
-          console.dir(results, {depth: null})
           var
             result = results
               .map(r => {
