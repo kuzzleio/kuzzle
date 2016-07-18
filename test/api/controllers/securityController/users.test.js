@@ -90,7 +90,7 @@ describe('Test: security controller - users', function () {
       }))
         .then(response => {
           should(response).be.an.instanceOf(ResponseObject);
-          should(response.data.body).match({hits: [{_id: 'admin'}], total: 4});
+          should(response.data.body).match({hits: [{_id: 'admin'}], total: 2});
         });
     });
 

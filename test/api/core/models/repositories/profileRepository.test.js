@@ -134,6 +134,10 @@ describe('Test: repositories/profileRepository', () => {
       should(kuzzle.repositories.profile.loadProfiles()).be.rejectedWith('Missing profilesIds');
     });
 
+    it('should rejects when no profileIds is not an Array', () => {
+      should(kuzzle.repositories.profile.loadProfiles(42)).be.rejectedWith('An array of strings must be provided as profilesIds');
+    });
+
     it('should respond with an emty array when profileIds is an empty array', () => {
       return kuzzle.repositories.profile.loadProfiles([])
         .then(response => {
