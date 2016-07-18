@@ -21,8 +21,8 @@ describe('Test: repositories/profileRepository', () => {
     testProfilePlain = {
       _id: 'testprofile',
       policies: [
-        {_id: 'test', restrictedTo: [{index: 'index'}]},
-        {_id: 'test2'}
+        {roleId: 'test', restrictedTo: [{index: 'index'}]},
+        {roleId: 'test2'}
       ]
     },
     stubs = {
@@ -112,6 +112,45 @@ describe('Test: repositories/profileRepository', () => {
     });
   });
 
+  describe('#loadProfiles', () => {
+    it('should not load a not existing profile', () => {
+      var
+        existingProfile = new Profile(),
+        stub = sandbox.stub(kuzzle.services.list.readEngine, 'get');
+
+      existingProfile._id = 'existingProfile';
+      stub.onCall(0).rejects(new NotFoundError('Not found'));
+      stub.onCall(1).resolves(existingProfile);
+
+      return kuzzle.repositories.profile.loadProfiles(['idontexist', 'existingProfile'])
+        .then(result => {
+          should(result).be.an.Array();
+          should(result.length).be.eql(1);
+          should(result[0]._id).be.eql('existingProfile');
+        });
+    });
+
+    it('should rejects when no profileIds is given', () => {
+      should(kuzzle.repositories.profile.loadProfiles()).be.rejectedWith('Missing profilesIds');
+    });
+
+    it('should rejects when no profileIds is not an Array', () => {
+      should(kuzzle.repositories.profile.loadProfiles(42)).be.rejectedWith('An array of strings must be provided as profilesIds');
+    });
+
+    it('should respond with an emty array when profileIds is an empty array', () => {
+      return kuzzle.repositories.profile.loadProfiles([])
+        .then(response => {
+          should(response).be.an.Array();
+          should(response).be.eql([]);
+        });
+    });
+
+    it('should rejects when profileIds contains some non string entry', () => {
+      should(kuzzle.repositories.profile.loadProfiles([12])).be.rejectedWith('An array of strings must be provided as profilesIds');
+    });
+  });
+
   describe('#buildProfileFromRequestObject', () => {
     it('should reject when no id is provided', () => {
       var invalidProfileObject = new RequestObject({
@@ -143,7 +182,7 @@ describe('Test: repositories/profileRepository', () => {
     it('should throw if the profile contains unexisting roles', () => {
       var p = new Profile();
       sandbox.stub(kuzzle.repositories.role, 'loadRoles').resolves([]);
-      return should(kuzzle.repositories.profile.hydrate(p, { policies: [{_id: 'notExistingRole' }] })).be.rejectedWith(NotFoundError);
+      return should(kuzzle.repositories.profile.hydrate(p, { policies: [{roleId: 'notExistingRole' }] })).be.rejectedWith(NotFoundError);
     });
   });
 
@@ -163,7 +202,7 @@ describe('Test: repositories/profileRepository', () => {
       sandbox.stub(kuzzle.repositories.profile, 'profiles', {
         'test': {
           _id: 'test',
-          policies: ['test']
+          policies: [{roleId:'test'}]
         }
       });
 
@@ -185,7 +224,7 @@ describe('Test: repositories/profileRepository', () => {
     it('should reject when trying to delete admin', () => {
       var profile = {
         _id: 'admin',
-        policies: [ {_id: 'admin'} ]
+        policies: [ {roleId: 'admin'} ]
       };
 
       return should(kuzzle.repositories.profile.deleteProfile(profile))
@@ -195,7 +234,7 @@ describe('Test: repositories/profileRepository', () => {
     it('should reject when trying to delete default', () => {
       var profile = {
         _id: 'default',
-        policies: [ {_id: 'default'} ]
+        policies: [ {roleId: 'default'} ]
       };
 
       return should(kuzzle.repositories.profile.deleteProfile(profile))
@@ -205,7 +244,7 @@ describe('Test: repositories/profileRepository', () => {
     it('should reject when trying to delete anonymous', () => {
       var profile = {
         _id: 'anonymous',
-        policies: [ {_id: 'anonymous'} ]
+        policies: [ {roleId: 'anonymous'} ]
       };
 
       return should(kuzzle.repositories.profile.deleteProfile(profile))
@@ -218,9 +257,8 @@ describe('Test: repositories/profileRepository', () => {
       sandbox.stub(kuzzle.services.list.readEngine, 'get').resolves(testProfilePlain);
       sandbox.stub(kuzzle.repositories.role, 'loadRoles', stubs.roleRepository.loadRoles);
       return kuzzle.repositories.profile.loadProfile('testprofile')
-        .then(function (profile) {
+        .then(profile => {
           var result = kuzzle.repositories.profile.serializeToDatabase(profile);
-
           should(result).not.be.an.instanceOf(Profile);
           should(result).be.an.Object();
           should(profile._id).be.exactly('testprofile');
@@ -228,11 +266,11 @@ describe('Test: repositories/profileRepository', () => {
           should(result.policies).have.length(2);
           should(result.policies[0]).be.an.Object();
           should(result.policies[0]).not.be.an.instanceOf(Role);
-          should(result.policies[0]._id).be.exactly('test');
+          should(result.policies[0].roleId).be.exactly('test');
           should(result.policies[0].restrictedTo).be.an.Array();
           should(result.policies[1]).be.an.Object();
           should(result.policies[1]).not.be.an.instanceOf(Role);
-          should(result.policies[1]._id).be.exactly('test2');
+          should(result.policies[1].roleId).be.exactly('test2');
           should(result.policies[1].restrictedTo).be.empty();
         });
     });
@@ -271,9 +309,9 @@ describe('Test: repositories/profileRepository', () => {
           should(result.filter).have.ownProperty('or');
           should(result.filter.or).be.an.Array();
           should(result.filter.or[0]).have.ownProperty('terms');
-          should(result.filter.or[0].terms).have.ownProperty('policies._id');
-          should(result.filter.or[0].terms['policies._id']).be.an.Array();
-          should(result.filter.or[0].terms['policies._id'][0]).be.exactly('role1');
+          should(result.filter.or[0].terms).have.ownProperty('policies.roleId');
+          should(result.filter.or[0].terms['policies.roleId']).be.an.Array();
+          should(result.filter.or[0].terms['policies.roleId'][0]).be.exactly('role1');
         });
     });
   });
@@ -293,7 +331,7 @@ describe('Test: repositories/profileRepository', () => {
 
       return kuzzle.repositories.profile.validateAndSaveProfile(testProfile)
         .then((result) => {
-          should(kuzzle.repositories.profile.profiles[testProfile._id]).match({policies: [{_id: 'test'}]});
+          should(kuzzle.repositories.profile.profiles[testProfile._id]).match({policies: [{roleId: 'test'}]});
           should(result).be.an.Object();
           should(result._id).be.eql(testProfile._id);
         });
@@ -303,11 +341,11 @@ describe('Test: repositories/profileRepository', () => {
       sandbox.stub(kuzzle.repositories.profile, 'persistToDatabase', profile => q({_id: profile._id}));
       sandbox.stub(kuzzle.repositories.role, 'loadRoles', stubs.roleRepository.loadRoles);
 
-      testProfile.policies = [{_id: 'anonymous'}];
+      testProfile.policies = [{roleId: 'anonymous'}];
 
       return kuzzle.repositories.profile.validateAndSaveProfile(testProfile)
         .then((result) => {
-          should(kuzzle.repositories.profile.profiles[testProfile._id]).match({policies: [{_id: 'anonymous'}]});
+          should(kuzzle.repositories.profile.profiles[testProfile._id]).match({policies: [{roleId: 'anonymous'}]});
           should(result).be.an.Object();
           should(result._id).be.eql(testProfile._id);
         });
@@ -322,7 +360,7 @@ describe('Test: repositories/profileRepository', () => {
       sandbox.stub(kuzzle.repositories.role, 'loadRoles', stubs.roleRepository.loadRoles);
 
       return kuzzle.repositories.profile.hydrate(profile, {})
-        .then(result => should(result.policies[0]._id).be.eql('default'));
+        .then(result => should(result.policies[0].roleId).be.eql('default'));
     });
   });
 });

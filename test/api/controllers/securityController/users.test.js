@@ -22,7 +22,7 @@ describe('Test: security controller - users', function () {
         // Mock
         kuzzle.services.list.readEngine.search = () => {
           return q({
-            hits: [{_id: 'admin', _source: { profileId: 'admin' }}],
+            hits: [{_id: 'admin', _source: { profilesIds: ['admin'] }}],
             total: 1
           });
         };
@@ -77,9 +77,10 @@ describe('Test: security controller - users', function () {
   describe('#searchUsers', function () {
     it('should return a valid responseObject', () => {
       sandbox.stub(kuzzle.repositories.user, 'search').resolves({
-        hits: [{_id: 'admin', _source: {profileId: 'admin'}}, {_id: 'admin2', _source: {profileId: 'admin'}}],
-        total: 4
+        hits: [{_id: 'admin', _source: {profilesIds: ['admin']}}],
+        total: 2
       });
+
       return kuzzle.funnel.controllers.security.searchUsers(new RequestObject({
         body: {
           filter: {},
@@ -89,7 +90,7 @@ describe('Test: security controller - users', function () {
       }))
         .then(response => {
           should(response).be.an.instanceOf(ResponseObject);
-          should(response.data.body).match({hits: [{_id: 'admin'}], total: 4});
+          should(response.data.body).match({hits: [{_id: 'admin'}], total: 2});
         });
     });
 
@@ -132,7 +133,7 @@ describe('Test: security controller - users', function () {
       sandbox.stub(kuzzle.repositories.user, 'hydrate').resolves();
 
       return kuzzle.funnel.controllers.security.createUser(new RequestObject({
-        body: { _id: 'test', name: 'John Doe', profileId: 'anonymous' }
+        body: { _id: 'test', name: 'John Doe', profilesIds: ['anonymous'] }
       }))
         .then(response => {
           mock.verify();
@@ -147,7 +148,7 @@ describe('Test: security controller - users', function () {
         mockHydrate = sandbox.mock(kuzzle.repositories.user).expects('hydrate').once().resolves();
 
       return kuzzle.funnel.controllers.security.createUser(new RequestObject({
-        body: { name: 'John Doe', profileId: 'anonymous' }
+        body: { name: 'John Doe', profilesIds: ['anonymous'] }
       }))
         .then(response => {
           mockHydrate.verify();
@@ -198,7 +199,7 @@ describe('Test: security controller - users', function () {
 
       return kuzzle.funnel.controllers.security.updateUser(new RequestObject({
         _id: 'test',
-        body: {profileId: 'anonymous', foo: 'bar'}
+        body: {profilesIds: ['anonymous'], foo: 'bar'}
       }))
         .then(response => {
           should(response).be.an.instanceOf(ResponseObject);
@@ -217,7 +218,7 @@ describe('Test: security controller - users', function () {
       return kuzzle.funnel.controllers.security.createOrReplaceUser(new RequestObject({
         body: {
           _id: 'test',
-          profileId: 'admin'
+          profilesIds: ['admin']
         }
       }))
         .then(response => {

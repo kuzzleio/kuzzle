@@ -221,7 +221,7 @@ var apiSteps = function () {
     profileId = this.idPrefix + profileId;
 
     this.api.createOrReplaceProfile(profileId, {
-      policies: [{_id: roleId}]
+      policies: [{roleId: roleId}]
     })
     .then(response => {
       if (response.error) {

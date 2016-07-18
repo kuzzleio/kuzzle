@@ -117,44 +117,44 @@ module.exports = function () {
 
     this.profiles = {
       profile1: {
-        policies: [{_id: this.idPrefix + 'role1'}]
+        policies: [{roleId: this.idPrefix + 'role1'}]
       },
       profile2: {
         policies: [
           {
-            _id: this.idPrefix + 'role1',
+            roleId: this.idPrefix + 'role1',
             restrictedTo: [{index: this.fakeIndex}]
           },
           {
-            _id: this.idPrefix + 'role2'
+            roleId: this.idPrefix + 'role2'
           }
         ]
       },
       profile3: {
         policies: [{
-          _id: this.idPrefix + 'role2',
+          roleId: this.idPrefix + 'role2',
           restrictedTo: [{index: this.fakeAltIndex, collections:[this.fakeCollection]}]
         }]
       },
       profile4: {
         policies: [{
-          _id: this.idPrefix + 'role3'
+          roleId: this.idPrefix + 'role3'
         }]
       },
       profile5: {
         policies: [{
-          _id: this.idPrefix + 'role3',
+          roleId: this.idPrefix + 'role3',
           restrictedTo: [{index: this.fakeIndex}]
         }]
       },
       profile6: {
         policies: [{
-          _id: this.idPrefix + 'role3',
+          roleId: this.idPrefix + 'role3',
           restrictedTo: [{index: this.fakeIndex, collections:[this.fakeCollection]}]
         }]
       },
       invalidProfile: {
-        policies: [{_id: 'unexisting-role'}]
+        policies: [{roleId: 'unexisting-role'}]
       },
       emptyProfile: {
         policies: []
@@ -168,11 +168,11 @@ module.exports = function () {
           last: 'Bowie',
           real: 'David Robert Jones'
         },
-        profileId: 'admin',
+        profilesIds: ['admin'],
         password: 'testpwd'
       },
       user1: {
-        profileId: this.idPrefix + 'profile1',
+        profilesIds: [this.idPrefix + 'profile1'],
         password: 'testpwd1'
       },
       user2: {
@@ -181,32 +181,32 @@ module.exports = function () {
           last: 'Wozniak'
         },
         hobby: 'Segway Polo',
-        profileId: this.idPrefix + 'profile2',
+        profilesIds: [this.idPrefix + 'profile2'],
         password: 'testpwd2'
       },
       user3: {
-        profileId: this.idPrefix + 'profile3',
+        profilesIds: [this.idPrefix + 'profile3'],
         password: 'testpwd3'
       },
       user4: {
-        profileId: this.idPrefix + 'profile4',
+        profilesIds: [this.idPrefix + 'profile4'],
         password: 'testpwd4'
       },
       user5: {
-        profileId: this.idPrefix + 'profile5',
+        profilesIds: [this.idPrefix + 'profile5'],
         password: 'testpwd5'
       },
       user6: {
-        profileId: this.idPrefix + 'profile6',
+        profilesIds: [this.idPrefix + 'profile6'],
         password: 'testpwd6'
       },
       unexistingprofile: {
         name: 'John Doe',
-        profileId: this.idPrefix + 'i-dont-exist'
+        profilesIds: [this.idPrefix + 'i-dont-exist']
       },
       invalidprofileType: {
         name: 'John Doe',
-        profileId: null
+        profilesIds: [null]
       }
     };
 

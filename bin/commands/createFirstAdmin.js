@@ -116,7 +116,7 @@ var createAdminUser = () => {
   var data = {
     _id: name,
     password: password,
-    profileId: 'admin'
+    profilesIds: ['admin']
   };
 
   return request({
@@ -155,15 +155,15 @@ var nextStep = (message) => {
     createAdminUser()
       .then(() =>{
         console.log(ok('[✔] "' + name + '" user created with admin rights'));
-        return resetProfile('default', {_id: 'default'});
+        return resetProfile('default', {roleId: 'default'});
       })
       .then(() => {
         console.log(ok('[✔] "default" profile reset'));
-        return resetProfile('admin', {_id: 'admin', allowInternalIndex: true});
+        return resetProfile('admin', {roleId: 'admin', allowInternalIndex: true});
       })
       .then(() => {
         console.log(ok('[✔] "admin" profile reset'));
-        return resetProfile('anonymous', {_id: 'anonymous'});
+        return resetProfile('anonymous', {roleId: 'anonymous'});
       })
       .then(() => {
         console.log(ok('[✔] "anonymous" profile reset'));
