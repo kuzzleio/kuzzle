@@ -76,7 +76,11 @@ describe('Test: security controller - users', function () {
 
   describe('#searchUsers', function () {
     it('should return a valid responseObject', () => {
-      sandbox.stub(kuzzle.repositories.user, 'search').resolves({hits: [{_id: 'admin', _source: {profilesIds: ['admin']}}]});
+      sandbox.stub(kuzzle.repositories.user, 'search').resolves({
+        hits: [{_id: 'admin', _source: {profilesIds: ['admin']}}],
+        total: 2
+      });
+
       return kuzzle.funnel.controllers.security.searchUsers(new RequestObject({
         body: {
           filter: {},
@@ -86,7 +90,7 @@ describe('Test: security controller - users', function () {
       }))
         .then(response => {
           should(response).be.an.instanceOf(ResponseObject);
-          should(response.data.body).match({hits: [{_id: 'admin'}], total: 1});
+          should(response.data.body).match({hits: [{_id: 'admin'}], total: 4});
         });
     });
 
