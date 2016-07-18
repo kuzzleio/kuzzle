@@ -1,5 +1,6 @@
 var
   Promise = require('bluebird'),
+  _ = require('lodash'),
   should = require('should'),
   params = require('rc')('kuzzle'),
   kuzzle = {
@@ -61,22 +62,36 @@ before(function (done) {
       }
       profile._id = profileKey;
       return Promise.resolve(profile);
+    },
+    loadProfiles: function (profileKeys) {
+      var
+        profile,
+        profiles = [];
+
+      profileKeys.forEach(profileKey => {
+        profile = new Profile();
+        if (profileKey !== 'notfound') {
+          profile._id = profileKey;
+          profiles.push(_.assignIn({}, profile));
+        }
+      });
+      return Promise.resolve(profiles);
     }
   };
   userInCache = {
     _id: 'userInCache',
     name: 'Johnny Cash',
-    profileId: 'userincacheprofile',
+    profilesIds: ['userincacheprofile'],
     password: encryptedPassword
   };
   userInDB = {
     _id: 'userInDB',
     name: 'Debbie Jones',
-    profileId: 'userindbprofile'
+    profilesIds: ['userindbprofile']
   };
   userInvalidProfile = {
     _id: 'userInvalidProfile',
-    profileId: 'notfound'
+    profilesIds: ['notfound']
   };
 
   userRepository = new UserRepository();
@@ -123,7 +138,7 @@ describe('Test: repositories/userRepository', function () {
 
     it('should return the anonymous user if no _id is set', () => {
       var user = new User();
-      user.profileId = 'a profile';
+      user.profilesIds = 'a profile';
 
       return userRepository.hydrate(user, {})
         .then(result => assertIsAnonymous(result));
@@ -133,7 +148,7 @@ describe('Test: repositories/userRepository', function () {
       var user = new User();
 
       return should(userRepository.hydrate(user, userInvalidProfile))
-        .be.rejectedWith(InternalError);
+        .be.rejectedWith(NotFoundError);
     });
   });
 
@@ -147,16 +162,14 @@ describe('Test: repositories/userRepository', function () {
           users.every(user => { assertIsAnonymous(user); });
         });
     });
-  });
 
-  describe('#load', function () {
     it('should resolve to user if good credentials are given', () => {
       return userRepository.load('userInCache')
         .then(user => {
           should(user._id).be.exactly('userInCache');
           should(user.name).be.exactly('Johnny Cash');
-          should(user.profileId).be.a.String();
-          should(user.profileId).be.exactly('userincacheprofile');
+          should(user.profilesIds).be.an.Array();
+          should(user.profilesIds[0]).be.exactly('userincacheprofile');
         });
     });
 
@@ -186,8 +199,8 @@ describe('Test: repositories/userRepository', function () {
           should(result).not.be.an.instanceOf(User);
           should(result).be.an.Object();
           should(result._id).be.exactly(-1);
-          should(result.profileId).be.a.String();
-          should(result.profileId).be.exactly('anonymous');
+          should(result.profilesIds).be.an.Array();
+          should(result.profilesIds[0]).be.exactly('anonymous');
         });
     });
   });
@@ -196,7 +209,7 @@ describe('Test: repositories/userRepository', function () {
     it('should compute a user id if not set', () => {
       var user = new User();
       user.name = 'John Doe';
-      user.profileId = 'a profile';
+      user.profilesIds = ['a profile'];
 
       userRepository.persist(user);
 
@@ -216,7 +229,9 @@ describe('Test: repositories/userRepository', function () {
       user._id = 'NoProfile';
 
       return userRepository.hydrate(user, {})
-        .then(result => should(result.profileId).be.eql('default'));
+        .then(result => {
+          return should(result.profilesIds[0]).be.eql('default');
+        });
     });
   });
 });
@@ -224,6 +239,6 @@ describe('Test: repositories/userRepository', function () {
 function assertIsAnonymous (user) {
   should(user._id).be.exactly(-1);
   should(user.name).be.exactly('Anonymous');
-  should(user.profileId).be.an.instanceOf(String);
-  should(user.profileId).be.exactly('anonymous');
+  should(user.profilesIds).be.an.instanceOf(Array);
+  should(user.profilesIds[0]).be.exactly('anonymous');
 }

@@ -508,10 +508,10 @@ describe('Test: Prepare database', function () {
           funnel: {
             controllers: {
               security: {
-                createOrReplaceRole: (requestObject) => {
+                createOrReplaceRole: requestObject => {
                   requests.push(requestObject);
                 },
-                createOrReplaceProfile: (requestObject) => {
+                createOrReplaceProfile: requestObject => {
                   requests.push(requestObject);
                 }
               }

@@ -56,7 +56,7 @@ beforeEach(function (done) {
     load: function (username) {
       var user = new User();
       user._id = username;
-      user.profileId = 'anonymous';
+      user.profilesIds = ['anonymous'];
 
       return Promise.resolve(user);
     },
@@ -76,8 +76,8 @@ beforeEach(function (done) {
       };
 
       user._id = -1;
-      user.profileId = 'anonymous';
-      profile.policies = [{_id: role._id}];
+      user.profilesIds = ['anonymous'];
+      profile.policies = [{roleId: role._id}];
 
       return Promise.resolve(user);
     },
@@ -97,8 +97,8 @@ beforeEach(function (done) {
       };
 
       user._id = 'admin';
-      user.profileId = 'admin';
-      profile.policies = [{_id: role._id}];
+      user.profilesIds = ['admin'];
+      profile.policies = [{roleId: role._id}];
 
       return Promise.resolve(user);
     }

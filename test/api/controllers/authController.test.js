@@ -89,7 +89,7 @@ describe('Test the auth controller', function () {
           }
           return Promise.resolve({
             _id: t,
-            profileId: t
+            profilesIds: [t]
           });
         };
       });
@@ -313,7 +313,7 @@ describe('Test the auth controller', function () {
       kuzzle.funnel.controllers.auth.getCurrentUser(rq, token)
         .then(response => {
           should(response.data.body._id).be.exactly('admin');
-          should(response.data.body._source.profileId).be.exactly('admin');
+          should(response.data.body._source.profilesIds).be.eql(['admin']);
 
           done();
         })
@@ -403,7 +403,7 @@ describe('Test the auth controller', function () {
               return anotherKuzzle.repositories.user.anonymous();
             }
             if (id === 'admin') {
-              return {_id: 'admin', _source: { profileID: 'admin' }};
+              return {_id: 'admin', _source: { profilesId: ['admin'] }};
             }
 
             return Promise.resolve(null);
@@ -438,7 +438,7 @@ describe('Test the auth controller', function () {
 
     it('should reject if profile is specified', () => {
       should(anotherKuzzle.funnel.controllers.auth.updateSelf(new RequestObject({
-        body: { foo: 'bar', profileId: 'test' }
+        body: { foo: 'bar', profilesIds: ['test'] }
       }), { token: { userId: 'admin', _id: 'admin' }}))
         .be.rejected();
     });

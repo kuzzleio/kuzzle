@@ -18,14 +18,15 @@ describe('Test: security/userTest', () => {
   profile._id = 'profile';
   profile.isActionAllowed = sinon.stub().resolves(true);
   profile._id = 'profile';
-  user.profileId = 'profile';
+  user.profilesIds = ['profile'];
 
   beforeEach(() => {
     sandbox = sinon.sandbox.create();
     kuzzle = new Kuzzle();
     kuzzle.repositories = {
       profile: {
-        loadProfile: sinon.stub().resolves(profile)
+        loadProfile: sinon.stub().resolves(profile),
+        loadProfiles: sinon.stub().resolves([profile])
       }
     };
   });
@@ -47,21 +48,22 @@ describe('Test: security/userTest', () => {
         }
       };
 
-    sandbox.stub(user, 'getProfile').resolves(profile);
+    sandbox.stub(user, 'getProfiles').resolves([profile]);
     sandbox.stub(profile, 'getRights').resolves(profileRights);
 
     return user.getRights(kuzzle)
       .then(rights => {
         should(rights).be.an.Object();
-        should(rights).be.exactly(profileRights);
+        should(rights).match(profileRights);
       });
   });
 
   it('should retrieve the profile', () => {
-    return user.getProfile(kuzzle)
+    return user.getProfiles(kuzzle)
       .then(p => {
-        should(p).be.an.Object();
-        should(p).be.exactly(profile);
+        should(p).be.an.Array();
+        should(p[0]).be.an.Object();
+        should(p[0]).be.exactly(profile);
       });
   });
 
@@ -74,4 +76,18 @@ describe('Test: security/userTest', () => {
       });
   });
 
+  it('should respond false if the user have no profileIds', () => {
+    user.profilesIds = [];
+    return user.isActionAllowed({}, {}, kuzzle)
+      .then(isActionAllowed => {
+        should(isActionAllowed).be.a.Boolean();
+        should(isActionAllowed).be.false();
+        should(profile.isActionAllowed.called).be.true();
+      });
+  });
+
+  it('should rejects if the loadProfiles throws an error', () => {
+    sandbox.stub(user, 'getProfiles').rejects('error');
+    should(user.isActionAllowed({}, {}, kuzzle)).be.rejectedWith('error');
+  });
 });
