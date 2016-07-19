@@ -310,13 +310,12 @@ describe('Test: hotelClerk.removeRooms', function () {
       });
   });
 
-  it('should return a response with partial error if a roomId doesn\'t correspond to the collection', function () {
+  it('should return a response with partial error if a roomId doesn\'t correspond to the index', function () {
     var
-      badRoomName = '0ca6c2f9b4cc6450a63e3fe848ec7138',
+      index2RoomName = 'e6255f81a2934ad02636a8ebf533dd46',
       requestObjectSubscribe1 = new RequestObject({
         controller: 'subscribe',
         action: 'on',
-        requestId: roomName,
         index: index,
         collection: collection1,
         body: {}
@@ -324,7 +323,42 @@ describe('Test: hotelClerk.removeRooms', function () {
       requestObjectSubscribe2 = new RequestObject({
         controller: 'subscribe',
         action: 'on',
+        index: 'index2',
+        collection: collection1,
+        body: {}
+      }),
+      requestObjectRemove = new RequestObject({
+        controller: 'admin',
+        action: 'removeRooms',
         requestId: roomName,
+        index: index,
+        collection: collection1,
+        body: {rooms: [index2RoomName]}
+      });
+
+    return kuzzle.hotelClerk.addSubscription(requestObjectSubscribe1, context)
+      .then(() => kuzzle.hotelClerk.addSubscription(requestObjectSubscribe2, context))
+      .then(() => kuzzle.hotelClerk.removeRooms(requestObjectRemove))
+      .then((response) => {
+        should(response.acknowledge).be.true();
+        should(response.partialErrors.length).be.exactly(1);
+        should(response.partialErrors).be.an.Array().and.match([`The room ${index2RoomName} does not match index ${index}`]);
+      });
+  });
+
+  it('should return a response with partial error if a roomId doesn\'t correspond to the collection', function () {
+    var
+      collection2RoomName = '36a737bfc8da2f3c1673137a3b159d4a',
+      requestObjectSubscribe1 = new RequestObject({
+        controller: 'subscribe',
+        action: 'on',
+        index: index,
+        collection: collection1,
+        body: {}
+      }),
+      requestObjectSubscribe2 = new RequestObject({
+        controller: 'subscribe',
+        action: 'on',
         index: index,
         collection: collection2,
         body: {}
@@ -335,7 +369,7 @@ describe('Test: hotelClerk.removeRooms', function () {
         requestId: roomName,
         index: index,
         collection: collection1,
-        body: {rooms: [badRoomName]}
+        body: {rooms: [collection2RoomName]}
       });
 
     return kuzzle.hotelClerk.addSubscription(requestObjectSubscribe1, context)
@@ -344,7 +378,7 @@ describe('Test: hotelClerk.removeRooms', function () {
       .then((response) => {
         should(response.acknowledge).be.true();
         should(response.partialErrors.length).be.exactly(1);
-        should(response.partialErrors).be.an.Array().and.match([`No room with id ${badRoomName}`]);
+        should(response.partialErrors).be.an.Array().and.match([`The room ${collection2RoomName} does not match collection ${collection1}`]);
       });
   });
 
