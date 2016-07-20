@@ -117,7 +117,6 @@ describe('Test: routerController.initRouterHttp', () => {
     http.get(url, response => {
       parseHttpResponse(response)
         .then(result => {
-          console.log(url, result);
           should(response.statusCode).be.exactly(200);
           should(result.controller).be.exactly('read');
           should(result.action).be.exactly('serverInfo');
