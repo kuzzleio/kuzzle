@@ -1,5 +1,5 @@
 var
-  q = require('q'),
+  Promise = require('bluebird'),
   should = require('should'),
   params = require('rc')('kuzzle'),
   rewire = require('rewire'),
@@ -170,7 +170,7 @@ describe('Test service initialization function', function () {
       // we need to mock require in the function's scope module.
       return Services.__with__({
         require: () => function () {
-          this.init = () => q.defer().promise;
+          this.init = () => new Promise(() => {});
         }
       })(() => {
         var r = registerService.call(scope, 'myService', { timeout: 1000 }, true);
@@ -189,7 +189,7 @@ describe('Test service initialization function', function () {
       // we need to mock require in the function's scope module.
       return Services.__with__({
         require: () => function () {
-          this.init = () => q.reject(myError);
+          this.init = () => Promise.reject(myError);
         }
       })(() => {
         return should(registerService.call(scope, 'myService', {}, true))

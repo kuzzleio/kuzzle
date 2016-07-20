@@ -1,6 +1,5 @@
 var
   should = require('should'),
-  q = require('q'),
   passport = require('passport'),
   util = require('util'),
   params = require('rc')('kuzzle'),
@@ -56,15 +55,10 @@ describe('Test the passport Wrapper', function () {
         passportWrapper = new PassportWrapper(kuzzle);
 
         passport.use(new MockupStrategy('mockup', function(username, callback) {
-          var
-            deferred = q.defer(),
-            user = {
-              _id: username,
-              name: 'Johnny Cash'
-            };
-          deferred.resolve(user);
-          deferred.promise.nodeify(callback);
-          return deferred.promise;
+          callback(null, {
+            _id: username,
+            name: 'Johnny Cash'
+          });
         }));
 
         passport.use(new MockupStrategy('null', function(username, callback) {
@@ -72,11 +66,7 @@ describe('Test the passport Wrapper', function () {
         }));
 
         passport.use(new MockupStrategy('error', function(username, callback) {
-          var
-            deferred = q.defer();
-          deferred.reject(new ForbiddenError('Bad Credentials'));
-          deferred.promise.nodeify(callback);
-          return deferred.promise;
+          callback(new ForbiddenError('Bad Credentials'));
         }));
 
         done();

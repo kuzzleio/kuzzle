@@ -1,13 +1,13 @@
 var
   should = require('should'),
   params = require('rc')('kuzzle'),
-  q = require('q'),
+  Promise = require('bluebird'),
   sinon = require('sinon'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
   ResponseObject = require.main.require('kuzzle-common-objects').Models.responseObject;
 
-require('sinon-as-promised')(q.Promise);
+require('sinon-as-promised')(Promise);
 
 describe('Test: subscribe controller', function () {
   var

@@ -1,5 +1,5 @@
 var
-  q = require('q'),
+  Promise = require('bluebird'),
   rewire = require('rewire'),
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
@@ -76,7 +76,7 @@ describe('Test: Internal broker', function () {
       client = new InternalBroker(kuzzle, {isServer: false});
       client.ws = () => new WSClientMock(server.server);
 
-      return q.all([
+      return Promise.all([
         server.init(),
         client.init()
       ]);
@@ -141,7 +141,7 @@ describe('Test: Internal broker', function () {
         var
           beforeInitOnCalls;
 
-        return q.all([server.init(),client.init()])
+        return Promise.all([server.init(),client.init()])
           .then(() => {
             beforeInitOnCalls = client.client.socket.on.callCount;
             return client.init();
@@ -176,7 +176,7 @@ describe('Test: Internal broker', function () {
     });
 
     describe('#listen & #unsubscribe', () => {
-      beforeEach(() => q.all([server.init(),client.init()]));
+      beforeEach(() => Promise.all([server.init(),client.init()]));
 
       it ('should store the cb and send the request to the server', () => {
         var cb = sinon.stub();
@@ -213,7 +213,7 @@ describe('Test: Internal broker', function () {
     });
 
     describe('#close', () => {
-      beforeEach(() => q.all([server.init(),client.init()]));
+      beforeEach(() => Promise.all([server.init(),client.init()]));
 
       it('should close the socket', () => {
         var socket = client.client.socket;
@@ -234,7 +234,7 @@ describe('Test: Internal broker', function () {
     });
 
     describe('#send & broadcast', () => {
-      beforeEach(() => q.all([server.init(),client.init()]));
+      beforeEach(() => Promise.all([server.init(),client.init()]));
 
       it('`send` should send properly envelopped data', () => {
         var
@@ -274,7 +274,7 @@ describe('Test: Internal broker', function () {
         client.onCloseHandlers = [];
         client.onErrorHandlers = [];
         
-        return q.all([server.init(),client.init()]);
+        return Promise.all([server.init(),client.init()]);
       });
 
       it('on open, should re-register if some callbacks were attached', () => {
@@ -411,7 +411,7 @@ describe('Test: Internal broker', function () {
       client3 = new WSBrokerClient('internalBroker', {}, kuzzle.pluginsManager);
       client1.ws = client2.ws = client3.ws = () => new WSClientMock(server.server);
 
-      return q.all([
+      return Promise.all([
         server.init(),
         client1.init(),
         client2.init(),
@@ -602,13 +602,13 @@ describe('Test: Internal broker', function () {
 
         // wait 1h
         clock.tick(1000 * 3600);
-        should(response.inspect().state).be.exactly('pending');
+        should(response.isPending()).be.true();
       });
 
       it('should resolve the promise once a client connects to the room', () => {
         var response = server.waitForClients('test');
 
-        should(response.inspect().state).be.exactly('pending');
+        should(response.isPending()).be.true();
 
         server.rooms = { test: true };
         clock.tick(200);

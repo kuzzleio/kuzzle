@@ -1,6 +1,6 @@
 var
   should = require('should'),
-  q = require('q'),
+  Promise = require('bluebird'),
   rewire = require('rewire'),
   md5 = require('crypto-md5'),
   Filters = require.main.require('lib/api/dsl/filters'),
@@ -183,7 +183,7 @@ describe('Test bool method', function () {
   it('should return a rejected promise if one of the bool sub-methods fails', function () {
     var f = { must: [ { foo: 'bar' } ] };
 
-    methods.must = function () { return q.reject(new Error('rejected')); };
+    methods.must = function () { return Promise.reject(new Error('rejected')); };
     return should(methods.bool(filterId, index, collection, f)).be.rejectedWith('rejected');
   });
 });

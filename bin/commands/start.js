@@ -7,7 +7,7 @@ var
   kuzzle = require('../../lib'),
   RequestObject = require('kuzzle-common-objects').Models.requestObject,
   FirstAdmin = require('./createFirstAdmin'),
-  q = require('q'),
+  Promise = require('bluebird'),
   clc = require('cli-color'),
   coverage;
 
@@ -66,7 +66,7 @@ module.exports = function (options) {
       if (kuzzle.isServer) {
         return kuzzle.services.list.broker.waitForClients(kuzzle.config.queues.workerWriteTaskQueue);
       }
-      return q();
+      return Promise.resolve();
     })
     .then(() => {
       var request;
@@ -83,7 +83,7 @@ module.exports = function (options) {
         }
       }
 
-      return q();
+      return Promise.resolve();
     })
     .then(() => {
       var 
@@ -117,7 +117,7 @@ module.exports = function (options) {
         return kuzzle.remoteActionsController.actions.prepareDb(kuzzle, request);
       }
 
-      return q();
+      return Promise.resolve();
     })
     .then(() => {
       if (kuzzle.isServer) {

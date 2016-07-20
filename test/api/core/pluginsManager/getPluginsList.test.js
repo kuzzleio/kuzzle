@@ -1,13 +1,13 @@
 var
   should = require('should'),
   rewire = require('rewire'),
-  q = require('q'),
+  Promise = require('bluebird'),
   sinon = require('sinon'),
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   PluginsManager = rewire('../../../../lib/api/core/plugins/pluginsManager');
 
-require('sinon-as-promised')(q.Promise);
+require('sinon-as-promised')(Promise);
 
 describe('Plugins manager: getPluginsList', function () {
   var 

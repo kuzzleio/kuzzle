@@ -5,7 +5,7 @@
  */
 var
   should = require('should'),
-  q = require('q'),
+  Promise = require('bluebird'),
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject;
@@ -25,7 +25,7 @@ describe('Test: notifier.publish', function () {
     return kuzzle.start(params, {dummy: true})
       .then(() => {
         kuzzle.services.list.notificationCache = {
-          add: function () { cached = true; return q({}); },
+          add: function () { cached = true; return Promise.resolve({}); },
           expire: function () { expired = true; }
         };
       });
@@ -46,7 +46,7 @@ describe('Test: notifier.publish', function () {
       notification = n;
     };
 
-    kuzzle.dsl.test = () => q(rooms);
+    kuzzle.dsl.test = () => Promise.resolve(rooms);
 
     notification = null;
     cached = false;
@@ -131,7 +131,7 @@ describe('Test: notifier.publish', function () {
   });
 
   it('should return a rejected promise if dsl.test fails', () => {
-    kuzzle.dsl.test = () => q.reject(new Error(''));
+    kuzzle.dsl.test = () => Promise.reject(new Error(''));
     return should(kuzzle.notifier.publish(new RequestObject(request))).be.rejected();
   });
 });

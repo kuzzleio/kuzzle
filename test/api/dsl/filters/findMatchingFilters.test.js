@@ -13,16 +13,16 @@ describe('Test: dsl.filters.findMatchingFilters', function () {
   });
 
   it('should return a rejected promise when the room to test does\'t exist', function () {
-    return should(findMatchingFilters.call(filters, ['foo'], {}, {})).be.rejected();
+    should(findMatchingFilters.call(filters, ['foo'], {}, {})).be.empty();
   });
 
   it('should mark the filter as notifiable if no filter are provided', function () {
     filters.filters.foo = {};
 
-    return should(findMatchingFilters.call(filters, ['foo'], {}, {})).be.fulfilledWith(['foo']);
+    should(findMatchingFilters.call(filters, ['foo'], {}, {})).match(['foo']);
   });
 
-  it('should return the correct list of rooms whose filters are matching', function (done) {
+  it('should return the correct list of rooms whose filters are matching', function () {
     filters.filters = {
       foo: {
         encodedFilters: { returnValue: true }
@@ -40,20 +40,13 @@ describe('Test: dsl.filters.findMatchingFilters', function () {
         return filter.returnValue;
       }
     })(function () {
-      findMatchingFilters.call(filters, ['foo', 'bar', 'baz'])
-        .then(function (ids) {
-          should(ids).be.an.Array().and.match(['foo', 'baz']);
-          done();
-        })
-        .catch(function (e) {
-          done(e);
-        });
+      should(findMatchingFilters.call(filters, ['foo', 'bar', 'baz'])).match(['foo', 'baz']);
     });
   });
 
   it('should not return duplicate room ids', function () {
     filters.filters.foo = {};
 
-    return should(findMatchingFilters.call(filters, ['foo', 'foo'], {}, {})).be.fulfilledWith(['foo']);
+    should(findMatchingFilters.call(filters, ['foo', 'foo'], {}, {})).match(['foo']);
   });
 });

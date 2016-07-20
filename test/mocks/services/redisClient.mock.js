@@ -1,12 +1,12 @@
 var
   EventEmitter = require('eventemitter2').EventEmitter2,
   redisCommands = (require('ioredis')({lazyConnect: true})).getBuiltinCommands(),
-  q = require('q'),
+  Promise = require('bluebird'),
   mock = {};
 
 redisCommands.forEach(command => {
   mock[command] = mock[command.toUpperCase()] = function () {
-    return q({
+    return Promise.resolve({
       name: command,
       args: Array.prototype.slice.call(arguments)
     });

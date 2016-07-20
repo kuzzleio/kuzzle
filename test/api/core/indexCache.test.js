@@ -1,10 +1,9 @@
 var
   should = require('should'),
-  q = require('q'),
+  Promise = require('bluebird'),
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   IndexCache = require.main.require('lib/api/core/indexCache');
-
 
 describe('Test: core/indexCache', function () {
   var
@@ -17,7 +16,7 @@ describe('Test: core/indexCache', function () {
       .then(function () {
         kuzzle.services.list.readEngine = {
           listIndexes: () => {
-            return q({ indexes: ['foo'] });
+            return Promise.resolve({ indexes: ['foo'] });
           },
 
           listCollections: () => {
@@ -27,7 +26,7 @@ describe('Test: core/indexCache', function () {
               }
             };
 
-            return q(stubResponse);
+            return Promise.resolve(stubResponse);
           }
         };
 

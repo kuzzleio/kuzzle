@@ -1,6 +1,6 @@
 var
   jwt = require('jsonwebtoken'),
-  q = require('q'),
+  Promise = require('bluebird'),
   should = require('should'),
   /** @type {Params} */
   params = require('rc')('kuzzle'),
@@ -34,21 +34,21 @@ beforeEach(function (done) {
   mockCacheEngine = {
     get: function (key) {
       if (key === tokenRepository.index + '/' + tokenRepository.collection + '/tokenInCache') {
-        return q(JSON.stringify(tokenInCache));
+        return Promise.resolve(JSON.stringify(tokenInCache));
       }
-      return q(null);
+      return Promise.resolve(null);
     },
     volatileSet: function () {
-      return q('OK');
+      return Promise.resolve('OK');
     },
-    expire: function (key, ttl) { return q({key: key, ttl: ttl}); }
+    expire: function (key, ttl) { return Promise.resolve({key: key, ttl: ttl}); }
   };
 
   mockProfileRepository = {
     loadProfile: function (profileKey) {
       var profile = new Profile();
       profile._id = profileKey;
-      return q(profile);
+      return Promise.resolve(profile);
     }
   };
 
@@ -58,7 +58,7 @@ beforeEach(function (done) {
       user._id = username;
       user.profilesIds = ['anonymous'];
 
-      return q(user);
+      return Promise.resolve(user);
     },
     anonymous: function () {
       var
@@ -79,7 +79,7 @@ beforeEach(function (done) {
       user.profilesIds = ['anonymous'];
       profile.policies = [{roleId: role._id}];
 
-      return q(user);
+      return Promise.resolve(user);
     },
     admin: function () {
       var
@@ -100,7 +100,7 @@ beforeEach(function (done) {
       user.profilesIds = ['admin'];
       profile.policies = [{roleId: role._id}];
 
-      return q(user);
+      return Promise.resolve(user);
     }
   };
 
@@ -153,21 +153,16 @@ describe('Test: repositories/tokenRepository', function () {
   });
 
   describe('#hydrate', function () {
-    it('should return the given token if the given data is not a valid object', function (done) {
+    it('should return the given token if the given data is not a valid object', function () {
       var
         t = new Token();
 
-      q.all([
+      return Promise.all([
         tokenRepository.hydrate(t, null),
         tokenRepository.hydrate(t),
         tokenRepository.hydrate(t, 'a scalar')
       ])
-        .then(function (results) {
-          results.forEach(function (token) {
-            should(token).be.exactly(t);
-          });
-          done();
-        });
+        .then(results => results.forEach(token => should(token).be.exactly(t)));
     });
 
     it('should return the anonymous token if no _id is set', done => {
@@ -184,7 +179,6 @@ describe('Test: repositories/tokenRepository', function () {
 
   describe('#verifyToken', function () {
     it('should reject the promise if the jwt is invalid', function () {
-
       return should(tokenRepository.verifyToken('invalidToken')).be.rejectedWith(UnauthorizedError, {
         details: {
           subCode: UnauthorizedError.prototype.subCodes.JsonWebTokenError,
@@ -199,65 +193,32 @@ describe('Test: repositories/tokenRepository', function () {
 
       token = jwt.sign({_id: -99999}, params.jsonWebToken.secret, {algorithm: params.jsonWebToken.algorithm});
 
-      should(tokenRepository.verifyToken(token)).be.rejectedWith(UnauthorizedError, {
-        message: 'Token invalid'
+      return should(tokenRepository.verifyToken(token)).be.rejectedWith(UnauthorizedError, {
+        message: 'Invalid token'
       });
     });
 
-    it('shoud reject the promise if the jwt is expired', function (done) {
-      var token = jwt.sign({_id: -1}, params.jsonWebToken.secret, {algorithm: params.jsonWebToken.algorithm, expiresIn: 1});
+    it('shoud reject the promise if the jwt is expired', function () {
+      var token = jwt.sign({_id: -1}, params.jsonWebToken.secret, {algorithm: params.jsonWebToken.algorithm, expiresIn: 0});
 
-      setTimeout(function () {
-        should(tokenRepository.verifyToken(token)).be.rejectedWith(UnauthorizedError, {
-          details: {
-            subCode: UnauthorizedError.prototype.subCodes.TokenExpired
-          }
-        });
-        done();
-      }, 101);
+      return should(tokenRepository.verifyToken(token)).be.rejectedWith(UnauthorizedError, {
+        details: {
+          subCode: UnauthorizedError.prototype.subCodes.TokenExpired
+        }
+      });
     });
 
     it('should reject the promise if an error occurred while fetching the user from the cache', () => {
       var token = jwt.sign({_id: 'auser'}, params.jsonWebToken.secret, {algorithm: params.jsonWebToken.algorithm});
 
-      tokenRepository.loadFromCache = () => {
-        return q.reject(new InternalError('Error'));
-      };
+      sandbox.stub(tokenRepository, 'loadFromCache').rejects(new InternalError('Error'));
 
-      return should(tokenRepository.verifyToken(token)
-        .catch(err => {
-          delete tokenRepository.loadFromCache;
-
-          return q.reject(err);
-        })).be.rejectedWith(InternalError);
+      return should(tokenRepository.verifyToken(token)).be.rejectedWith(InternalError);
     });
 
-
-    it('should reject the promise if an untrapped error is raised', () => {
-      var token = jwt.sign({_id: null}, params.jsonWebToken.secret, {algorithm: params.jsonWebToken.algorithm});
-
-      tokenRepository.anonymous = () => {
-        throw new InternalError('Uncaught error');
-      };
-      should(tokenRepository.verifyToken(token)
-        .catch(err => {
-          delete tokenRepository.anonymous;
-
-          return q.reject(err);
-        })).be.rejectedWith(InternalError, {details: {message: 'Uncaught error'}});
-    });
-
-    it('should load the anonymous user if the token is null', function (done) {
-
-      tokenRepository.verifyToken(null)
-        .then(function (userToken) {
-          assertIsAnonymous(userToken);
-
-          done();
-        })
-        .catch(function (error) {
-          done(error);
-        });
+    it('should load the anonymous user if the token is null', () => {
+      return tokenRepository.verifyToken(null)
+        .then(userToken => assertIsAnonymous(userToken));
     });
   });
 
@@ -278,7 +239,7 @@ describe('Test: repositories/tokenRepository', function () {
         .catch(err => {
           kuzzle.config.jsonWebToken.algorithm = params.jsonWebToken.algorithm;
 
-          return q.reject(err);
+          return Promise.reject(err);
         })).be.rejectedWith(InternalError);
     });
 
@@ -386,7 +347,7 @@ describe('Test: repositories/tokenRepository', function () {
         user = new User();
 
       Repository.prototype.expireFromCache = function () {
-        return q.reject();
+        return Promise.reject();
       };
 
       user._id = 'userInCache';

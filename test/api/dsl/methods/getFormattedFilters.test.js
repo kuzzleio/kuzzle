@@ -2,7 +2,7 @@ var
   should = require('should'),
   rewire = require('rewire'),
   md5 = require('crypto-md5'),
-  q = require('q'),
+  Promise = require('bluebird'),
   Filters = require.main.require('lib/api/dsl/filters'),
   Methods = rewire('../../../../lib/api/dsl/methods'),
   BadRequestError = require.main.require('kuzzle-common-objects').Errors.badRequestError;
@@ -130,7 +130,7 @@ describe('Test: dsl.getFormattedFilters method', function () {
         }
       };
 
-    methods.exists = function () { return q.reject(new Error('rejected')); };
+    methods.exists = function () { return Promise.reject(new Error('rejected')); };
 
     return should(getFormattedFilters.call(methods, 'roomId', 'index', 'collection', filter)).be.rejectedWith('rejected');
   });

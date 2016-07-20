@@ -1,7 +1,7 @@
 var
   should = require('should'),
   _ = require('lodash'),
-  q = require('q'),
+  Promise = require('bluebird'),
   sinon = require('sinon'),
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
@@ -13,7 +13,7 @@ var
   BadRequestError = require.main.require('kuzzle-common-objects').Errors.badRequestError,
   PartialError = require.main.require('kuzzle-common-objects').Errors.partialError;
 
-require('sinon-as-promised')(q.Promise);
+require('sinon-as-promised')(Promise);
 
 describe('Test: admin controller', function () {
   var
@@ -87,7 +87,7 @@ describe('Test: admin controller', function () {
           should(kuzzle.indexCache.add.called).be.false();
           should(kuzzle.indexCache.remove.called).be.false();
           should(kuzzle.indexCache.reset.called).be.false();
-          return q.reject();
+          return Promise.reject();
         })
       ).be.rejected();
     });
@@ -312,7 +312,7 @@ describe('Test: admin controller', function () {
           body: {indexes: ['%text1', '%text2', '%text3']}
         }),
         isActionAllowedStub = sandbox.stub(user, 'isActionAllowed'),
-        workerListenerStub = request => q({deleted: request.data.body.indexes});
+        workerListenerStub = request => Promise.resolve({deleted: request.data.body.indexes});
 
       this.timeout(50);
 

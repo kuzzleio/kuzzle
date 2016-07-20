@@ -1,7 +1,7 @@
 var
   should = require('should'),
   rewire = require('rewire'),
-  q = require('q'),
+  Promise = require('bluebird'),
   Methods = rewire('../../../../lib/api/dsl/methods');
 
 describe('Test: dsl.must method', function () {
@@ -10,10 +10,10 @@ describe('Test: dsl.must method', function () {
   before(function () {
     Methods.__set__('getFormattedFilters', function (roomId) {
       if (roomId === 'resolve') {
-        return q({filter: 'resolved'});
+        return Promise.resolve({filter: 'resolved'});
       }
 
-      return q.reject(new Error('rejected'));
+      return Promise.reject(new Error('rejected'));
     });
 
     methods = new Methods({filtersTree: {}});

@@ -1,7 +1,7 @@
 var
   should = require('should'),
   jwt = require('jsonwebtoken'),
-  q = require('q'),
+  Promise = require('bluebird'),
   /** @type {Params} */
   params = require('rc')('kuzzle'),
   passport = require('passport'),
@@ -17,7 +17,7 @@ var
   MockupWrapper,
   MockupStrategy;
 
-require('sinon-as-promised')(q.Promise);
+require('sinon-as-promised')(Promise);
 
 /**
  * @param name
@@ -57,12 +57,12 @@ MockupStrategy.prototype.authenticate = function(req) {
 MockupWrapper = function(MockupReturn) {
   this.authenticate = function(request) {
     if (MockupReturn === 'resolve') {
-      return q({_id: request.query.username});
+      return Promise.resolve({_id: request.query.username});
     } else if (MockupReturn === 'oauth') {
-      return q({headers: {Location: 'http://github.com'}});
+      return Promise.resolve({headers: {Location: 'http://github.com'}});
     }
 
-    return q.reject(new Error('Mockup Wrapper Error'));
+    return Promise.reject(new Error('Mockup Wrapper Error'));
   };
 };
 
@@ -85,9 +85,9 @@ describe('Test the auth controller', function () {
 
         kuzzle.repositories.user.load = function(t) {
           if (t === 'unknown_user') {
-            return q(null);
+            return Promise.resolve(null);
           }
-          return q({
+          return Promise.resolve({
             _id: t,
             profilesIds: [t]
           });
@@ -102,14 +102,7 @@ describe('Test the auth controller', function () {
   describe('#login', function () {
     beforeEach(() => {
       return passport.use(new MockupStrategy('mockup', function(username, callback) {
-        var
-          deferred = q.defer(),
-          user = {
-            _id: username
-          };
-        deferred.resolve(user);
-        deferred.promise.nodeify(callback);
-        return deferred.promise;
+        callback(null, {_id: username});
       }));
     });
 
@@ -139,13 +132,14 @@ describe('Test the auth controller', function () {
         authenticate: function(data, strategy) {
           should(strategy).be.exactly('local');
           done();
-          return q.reject();
+          return Promise.reject('foo');
         }
       };
 
       delete requestObject.data.body.strategy;
 
-      kuzzle.funnel.controllers.auth.login(requestObject, {});
+      kuzzle.funnel.controllers.auth.login(requestObject, {})
+        .catch(err => should(err).be.eql('foo'));
     });
 
     it('should be able to set authentication expiration', function (done) {
@@ -236,7 +230,7 @@ describe('Test the auth controller', function () {
 
     it('should emit a auth:afterLogout event', () => {
       var
-        spy = sandbox.stub(kuzzle.pluginsManager, 'trigger', (event, data) => q(data));
+        spy = sandbox.stub(kuzzle.pluginsManager, 'trigger', (event, data) => Promise.resolve(data));
 
       sandbox.stub(kuzzle.repositories.token.cacheEngine, 'expire').resolves({});
 
@@ -254,7 +248,7 @@ describe('Test the auth controller', function () {
 
       kuzzle.pluginsManager.trigger = function (event) {
         if (event === 'auth:afterLogout' || event === 'auth:beforeLogout') {
-          return q.reject();
+          return Promise.reject();
         }
       };
 
@@ -266,7 +260,7 @@ describe('Test the auth controller', function () {
 
       kuzzle.repositories.token.expire = function(token) {
         should(token).be.exactly(context.token);
-        return q();
+        return Promise.resolve();
       };
 
       kuzzle.funnel.controllers.auth.logout(requestObject, context)
@@ -281,7 +275,7 @@ describe('Test the auth controller', function () {
       this.timeout(50);
 
       kuzzle.repositories.token.expire = function() {
-        return q.reject();
+        return Promise.reject();
       };
 
       return should(kuzzle.funnel.controllers.auth.logout(requestObject, context)).be.rejected();
@@ -293,7 +287,7 @@ describe('Test the auth controller', function () {
 
       kuzzle.hotelClerk.removeCustomerFromAllRooms = function() {
         removeCustomerFromAllRooms = true;
-        return q.reject();
+        return Promise.reject();
       };
 
       delete context.connection.id;
@@ -354,7 +348,7 @@ describe('Test the auth controller', function () {
     it('should return a valid response if the token is valid', function (done) {
       kuzzle.repositories.token.verifyToken = arg => {
         should(arg).be.eql(requestObject.data.body.token);
-        return q(stubToken);
+        return Promise.resolve(stubToken);
       };
 
       kuzzle.funnel.controllers.auth.checkToken(requestObject)
@@ -371,7 +365,7 @@ describe('Test the auth controller', function () {
     it('should return a valid response if the token is not valid', function (done) {
       kuzzle.repositories.token.verifyToken = arg => {
         should(arg).be.eql(requestObject.data.body.token);
-        return q.reject({status: 401, message: 'foobar'});
+        return Promise.reject({status: 401, message: 'foobar'});
       };
 
       kuzzle.funnel.controllers.auth.checkToken(requestObject)
@@ -388,7 +382,7 @@ describe('Test the auth controller', function () {
     it('should return a rejected promise if an error occurs', function () {
       kuzzle.repositories.token.verifyToken = arg => {
         should(arg).be.eql(requestObject.data.body.token);
-        return q.reject({status: 500});
+        return Promise.reject({status: 500});
       };
 
       return should(kuzzle.funnel.controllers.auth.checkToken(requestObject)).be.rejected();
@@ -412,12 +406,12 @@ describe('Test the auth controller', function () {
               return {_id: 'admin', _source: { profilesId: ['admin'] }};
             }
 
-            return q(null);
+            return Promise.resolve(null);
           };
 
           anotherKuzzle.repositories.user.persist = (user, opts) => {
             persistOptions = opts;
-            return q(user);
+            return Promise.resolve(user);
           };
 
           done();

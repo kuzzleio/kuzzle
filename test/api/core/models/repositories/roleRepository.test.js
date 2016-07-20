@@ -1,5 +1,5 @@
 var
-  q = require('q'),
+  Promise = require('bluebird'),
   sinon = require('sinon'),
   params = require('rc')('kuzzle'),
   should = require('should'),
@@ -9,7 +9,7 @@ var
   Role = require.main.require('lib/api/core/models/security/role'),
   Kuzzle = require.main.require('lib/api/Kuzzle');
 
-require('sinon-as-promised')(q.Promise);
+require('sinon-as-promised')(Promise);
 
 describe('Test: repositories/roleRepository', function () {
   var
@@ -143,7 +143,7 @@ describe('Test: repositories/roleRepository', function () {
         savedSize = size;
         savedHydrate = hydrate;
 
-        return q();
+        return Promise.resolve();
       });
 
       return kuzzle.repositories.role.searchRole(new RequestObject({body: {from: 1, size: 3, hydrate: false}}))
@@ -162,7 +162,7 @@ describe('Test: repositories/roleRepository', function () {
       sandbox.stub(kuzzle.repositories.role, 'search', (filter) => {
         savedFilter = filter;
 
-        return q();
+        return Promise.resolve();
       });
 
       return kuzzle.repositories.role.searchRole(new RequestObject({body: {controllers: ['test']}}))
@@ -259,7 +259,7 @@ describe('Test: repositories/roleRepository', function () {
 
       sandbox.stub(kuzzle.repositories.role.writeLayer, 'execute', requestObject => {
         forwardedObject = requestObject;
-        return q({});
+        return Promise.resolve({});
       });
 
       return kuzzle.repositories.role.validateAndSaveRole(role)

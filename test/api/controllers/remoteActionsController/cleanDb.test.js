@@ -1,7 +1,7 @@
 var
   rc = require('rc'),
   params = rc('kuzzle'),
-  q = require('q'),
+  Promise = require('bluebird'),
   should = require('should'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
@@ -22,7 +22,7 @@ describe('Test: clean database', function () {
           writeEngine: {},
           readEngine: {
             listIndexes: function () {
-              return q({
+              return Promise.resolve({
                 data: {
                   body: {
                     indexes: ['foo', 'bar']
@@ -67,7 +67,7 @@ describe('Test: clean database', function () {
           should(data).be.exactly('Reset done: Kuzzle is now like a virgin, touched for the very first time !');
         }
 
-        return q(data);
+        return Promise.resolve(data);
       }
     };
 
@@ -76,7 +76,7 @@ describe('Test: clean database', function () {
         should(requestObject.controller).be.eql('admin');
         should(requestObject.action).be.eql('deleteIndexes');
         workerCalled = true;
-        return q();
+        return Promise.resolve();
       }
     };
 
@@ -100,7 +100,7 @@ describe('Test: clean database', function () {
       writeEngine: {},
       readEngine: {
         listIndexes: function () {
-          return q({
+          return Promise.resolve({
             data: {
               body: {
                 indexes: ['foo', 'bar']
@@ -120,7 +120,7 @@ describe('Test: clean database', function () {
         workerCalled = true;
         should(requestObject.controller).be.eql('admin');
         should(requestObject.action).be.eql('deleteIndexes');
-        return q.reject('error');
+        return Promise.reject('error');
       }
     };
 
@@ -131,7 +131,7 @@ describe('Test: clean database', function () {
           hasFiredCleanDbError = true;
         }
 
-        return q(data);
+        return Promise.resolve(data);
       }
     };
 

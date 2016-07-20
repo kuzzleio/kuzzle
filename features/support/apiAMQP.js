@@ -2,7 +2,7 @@ var
   _ = require('lodash'),
   config = require('./config')(),
   amqp = require('amqplib'),
-  q = require('q'),
+  Promise = require('bluebird'),
   uuid = require('node-uuid'),
   KUZZLE_EXCHANGE = 'amq.topic',
   ApiRT = require('./apiRT');
@@ -20,7 +20,7 @@ ApiAMQP.prototype = new ApiRT();
 ApiAMQP.prototype.init = function (world) {
   this.world = world;
   this.responses = null;
-  this.clientId = uuid.v1();
+  this.clientId = uuid.v4();
   this.subscribedRooms = {};
 
   if (!this.amqpClient) {
@@ -33,19 +33,17 @@ ApiAMQP.prototype.init = function (world) {
 
 ApiAMQP.prototype.disconnect = function () {
   if (this.amqpClient) {
-    this.amqpClient.then(function (connection) {
-      connection.close();
-    })
-      .catch();
-
-    this.amqpClient = null;
-    this.amqpChannel = null;
+    this.amqpClient
+      .then(connection => {
+        connection.close.bind(connection);
+        this.amqpClient = null;
+        this.amqpChannel = null;
+      });
   }
 };
 
 ApiAMQP.prototype.send = function (message, waitForAnswer) {
   var
-    deferred = q.defer(),
     topic = 'kuzzle',
     listen = (waitForAnswer !== undefined) ? waitForAnswer : true;
 
@@ -62,68 +60,68 @@ ApiAMQP.prototype.send = function (message, waitForAnswer) {
     message.headers = _.extend(message.headers, {authorization: 'Bearer ' + this.world.currentUser.token});
   }
 
-  this.amqpChannel.then(channel => {
-    if (listen) {
-      channel.assertQueue(null, {autoDelete: true, exclusive: true, durable: false})
-        .then(queue => {
-          channel.consume(queue.queue, reply => {
-            channel.ack(reply);
-            channel.cancel(reply.fields.consumerTag).then(() => {
-              var unpacked = JSON.parse((new Buffer(reply.content)).toString());
+  return new Promise((resolve, reject) => {
+    this.amqpChannel.then(channel => {
+      if (listen) {
+        channel.assertQueue(null, {autoDelete: true, exclusive: true, durable: false})
+          .then(queue => {
+            channel.consume(queue.queue, reply => {
+              channel.ack(reply);
+              channel.cancel(reply.fields.consumerTag).then(() => {
+                var unpacked = JSON.parse((new Buffer(reply.content)).toString());
 
-              if (unpacked.error) {
-                unpacked.error.statusCode = unpacked.status;
-                deferred.reject(unpacked.error);
-              }
-              else {
-                deferred.resolve(unpacked);
-              }
+                if (unpacked.error) {
+                  unpacked.error.statusCode = unpacked.status;
+                  return reject(unpacked.error);
+                }
+
+                resolve(unpacked);
+              });
+            })
+            .then(() => {
+              channel.publish(KUZZLE_EXCHANGE, topic, new Buffer(JSON.stringify(message)), {replyTo: queue.queue});
             });
           })
-          .then(() => {
-            channel.publish(KUZZLE_EXCHANGE, topic, new Buffer(JSON.stringify(message)), { replyTo: queue.queue });
-          });
-        })
-        .catch(error => deferred.reject(error.message));
-    }
-    else {
-      channel.publish(KUZZLE_EXCHANGE, topic, new Buffer(JSON.stringify(message)));
-      deferred.resolve({});
-    }
+          .catch(error => reject(error.message));
+      }
+      else {
+        channel.publish(KUZZLE_EXCHANGE, topic, new Buffer(JSON.stringify(message)));
+        return resolve({});
+      }
+    });
   });
-
-  return deferred.promise;
 };
 
 ApiAMQP.prototype.sendAndListen = function (message) {
   var
-    deferred = q.defer();
+    sendResponse,
+    channel;
 
-  message.clientId = uuid.v1();
+  message.clientId = uuid.v4();
   this.subscribedRooms[message.clientId] = {};
 
-  this.send(message)
+  return this.send(message)
     .then(response => {
-      this.amqpClient.then(connection => { return connection.createChannel(); })
-      .then(channel => {
-        this.subscribedRooms[message.clientId][response.result.roomId] = channel;
-
-        channel.assertQueue(response.result.channel)
-          .then(() => { return channel.bindQueue(response.result.channel, KUZZLE_EXCHANGE, response.result.channel); })
-          .then(() => {
-            channel.consume(response.result.channel, reply => {
-              var notification = JSON.parse((new Buffer(reply.content)).toString());
-              channel.ack(reply);
-              this.responses = notification;
-            });
-          })
-          .then(() => { deferred.resolve(response); });
-      });
+      sendResponse = response;
+      return this.amqpClient;
     })
-    .catch(error => deferred.reject(new Error(error.message)));
+    .then(connection => connection.createChannel())
+    .then(response => {
+      channel = response;
+      this.subscribedRooms[message.clientId][sendResponse.result.roomId] = channel;
+      return channel.assertQueue(sendResponse.result.channel);
+    })
+    .then(() => channel.bindQueue(sendResponse.result.channel, KUZZLE_EXCHANGE, sendResponse.result.channel))
+    .then(() => {
+      channel.consume(sendResponse.result.channel, reply => {
+        var notification = JSON.parse((new Buffer(reply.content)).toString());
+        channel.ack(reply);
+        this.responses = notification;
+      });
 
-  return deferred.promise;
+      return sendResponse;
+    })
+    .catch(error => Promise.reject(new Error(error.message)));
 };
-
 
 module.exports = ApiAMQP;

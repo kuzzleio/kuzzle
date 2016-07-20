@@ -1,6 +1,6 @@
 var
   should = require('should'),
-  q = require('q'),
+  Promise = require('bluebird'),
   sinon = require('sinon'),
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
   BadRequestError = require.main.require('kuzzle-common-objects').Errors.badRequestError,
@@ -11,7 +11,7 @@ var
   rewire = require('rewire'),
   FunnelController = rewire('../../../../lib/api/controllers/funnelController');
 
-require('sinon-as-promised')(q.Promise);
+require('sinon-as-promised')(Promise);
 
 describe('funnelController.processRequest', function () {
   var
@@ -32,7 +32,7 @@ describe('funnelController.processRequest', function () {
   beforeEach(() => {
     sandbox = sinon.sandbox.create();
     sandbox.stub(kuzzle.repositories.token, 'verifyToken', () => {
-      return q({
+      return Promise.resolve({
         userId: 'user'
       });
     });
