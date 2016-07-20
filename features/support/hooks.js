@@ -99,21 +99,6 @@ var myHooks = function () {
     callback();
   });
 
-  this.Before({tags: ['@usingMQTT']}, function (scenario, callback) {
-    this.api = setAPI(this, 'MQTT');
-    callback();
-  });
-
-  this.Before({tags: ['@usingAMQP']}, function (scenario, callback) {
-    this.api = setAPI(this, 'AMQP');
-    callback();
-  });
-
-  this.Before({tags: ['@usingSTOMP']}, function (scenario, callback) {
-    this.api = setAPI(this, 'STOMP');
-    callback();
-  });
-
   this.After(function (scenario, callback) {
     this.api.truncateCollection()
       .then(() => {
