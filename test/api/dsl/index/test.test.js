@@ -1,6 +1,5 @@
 var
   should = require('should'),
-  q = require('q'),
   rewire = require('rewire'),
   NotFoundError = require.main.require('kuzzle-common-objects').Errors.notFoundError,
   Dsl = rewire('../../../../lib/api/dsl/index');
@@ -93,16 +92,5 @@ describe('Test: dsl.test', function () {
 
   it('should return an error if no collection is provided', function () {
     return should(dsl.test(index, null, dataGrace)).be.rejectedWith(NotFoundError);
-  });
-
-  it('should reject the promise if testFieldFilter fails', () => {
-    dsl.filters.testFieldFilters = () => q.reject(new Error('rejected'));
-
-    return should(dsl.test(index, collection, dataGrace)).be.rejectedWith('rejected');
-  });
-
-  it('should reject the promise if testGlobalsFilter fails', () => {
-    dsl.filters.testGlobalsFilters = () => q.reject(new Error('rejected'));
-    return should(dsl.test(index, collection, dataGrace)).be.rejectedWith('rejected');
   });
 });

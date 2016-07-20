@@ -198,6 +198,6 @@
      Requests submitted while the queue is full are discarded with a 503 error
      code ("Service temporary unavailable")
      */
-    "maxRetainedRequests": 2000
+    "maxRetainedRequests": 10000
   }
 }

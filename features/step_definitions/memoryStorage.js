@@ -1,5 +1,5 @@
 var
-  q = require('q'),
+  Promise = require('bluebird'),
   should = require('should');
 
 
@@ -13,14 +13,14 @@ module.exports = function () {
         realArgs = JSON.parse(args.replace(/#prefix#/g, this.idPrefix));
       }
       catch(err) {
-        return q.reject(err);
+        return Promise.reject(err);
       }
     }
 
     return this.api.callMemoryStorage(command, realArgs)
       .then(response => {
         if (response.error) {
-          return q.reject(response.error);
+          return Promise.reject(response.error);
         }
 
         this.memoryStorageResult = response;

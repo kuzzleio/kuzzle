@@ -1,28 +1,32 @@
 var
-  q = require('q'),
+  Promise = require('bluebird'),
   should = require('should'),
   sinon = require('sinon'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   Profile = require.main.require('lib/api/core/models/security/profile'),
   User = require.main.require('lib/api/core/models/security/user');
 
-require('sinon-as-promised')(q.Promise);
+require('sinon-as-promised')(Promise);
 
 describe('Test: security/userTest', () => {
   var
     kuzzle,
     sandbox,
-    profile = new Profile(),
-    user = new User();
-
-  profile._id = 'profile';
-  profile.isActionAllowed = sinon.stub().resolves(true);
-  profile._id = 'profile';
-  user.profilesIds = ['profile'];
+    profile,
+    user;
 
   beforeEach(() => {
     sandbox = sinon.sandbox.create();
     kuzzle = new Kuzzle();
+
+    profile = new Profile();
+    profile._id = 'profile';
+    profile.isActionAllowed = sinon.stub().resolves(true);
+    profile._id = 'profile';
+
+    user = new User();
+    user.profilesIds = ['profile'];
+
     kuzzle.repositories = {
       profile: {
         loadProfile: sinon.stub().resolves(profile),
@@ -82,12 +86,12 @@ describe('Test: security/userTest', () => {
       .then(isActionAllowed => {
         should(isActionAllowed).be.a.Boolean();
         should(isActionAllowed).be.false();
-        should(profile.isActionAllowed.called).be.true();
+        should(profile.isActionAllowed.called).be.false();
       });
   });
 
   it('should rejects if the loadProfiles throws an error', () => {
     sandbox.stub(user, 'getProfiles').rejects('error');
-    should(user.isActionAllowed({}, {}, kuzzle)).be.rejectedWith('error');
+    return should(user.isActionAllowed({}, {}, kuzzle)).be.rejectedWith('error');
   });
 });

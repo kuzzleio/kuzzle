@@ -1,6 +1,6 @@
 var
   should = require('should'),
-  q = require('q'),
+  Promise = require('bluebird'),
   rewire = require('rewire'),
   BadRequestError = require.main.require('kuzzle-common-objects').Errors.badRequestError,
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
@@ -33,26 +33,26 @@ describe('Test: security/roleTest', () => {
           readEngine: {
             search: requestObject => {
               if (requestObject.data.body.filter.ids.values[0] !== 'foobar') {
-                return q({hits: [documentAda]});
+                return Promise.resolve({hits: [documentAda]});
               }
 
-              return q({hits: [documentFalseAda]});
+              return Promise.resolve({hits: [documentFalseAda]});
             },
             get: requestObject => {
               if (requestObject.data.id === 'reject') {
-                return q.reject(new InternalError('Our Error'));
+                return Promise.reject(new InternalError('Our Error'));
               } else if (requestObject.data.id !== 'foobar') {
-                return q(documentAda);
+                return Promise.resolve(documentAda);
               }
 
-              return q(documentFalseAda);
+              return Promise.resolve(documentFalseAda);
             },
             mget: requestObject => {
               if (requestObject.data.body.ids[0] !== 'foobar') {
-                return q({hits: [documentAda]});
+                return Promise.resolve({hits: [documentAda]});
               }
 
-              return q({hits: [documentFalseAda]});
+              return Promise.resolve({hits: [documentFalseAda]});
             }
           }
         }
@@ -937,7 +937,7 @@ describe('Test: security/roleTest', () => {
       var foo =
         Role.__with__({
           Sandbox: function () {
-            this.run = () => q.reject(new Error('our unit test error'));
+            this.run = () => Promise.reject(new Error('our unit test error'));
           }
         })(() => {
           var role = new Role();
@@ -963,7 +963,7 @@ describe('Test: security/roleTest', () => {
       var foo =
         Role.__with__({
           Sandbox: function () {
-            this.run = () => q({result: 'I am not a boolean'});
+            this.run = () => Promise.resolve({result: 'I am not a boolean'});
           }
         })(() => {
           var role = new Role();
@@ -987,7 +987,7 @@ describe('Test: security/roleTest', () => {
     it('should resolve the promise if the sandbox returned a boolean', () => {
       return Role.__with__({
         Sandbox: function () {
-          this.run = () => q({ result: true });
+          this.run = () => Promise.resolve({ result: true });
         }
       })(() => {
         var role = new Role();

@@ -7,7 +7,7 @@
  */
 var
   should = require('should'),
-  q = require('q'),
+  Promise = require('bluebird'),
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle');
@@ -17,15 +17,15 @@ var mockupCacheService = {
 
   remove: function (id) {
     this.id = id;
-    return q({});
+    return Promise.resolve({});
   },
 
   search: function (id) {
     if (id === 'errorme') {
-      return q.reject(new Error());
+      return Promise.reject(new Error());
     }
 
-    return q(['']);
+    return Promise.resolve(['']);
   }
 };
 

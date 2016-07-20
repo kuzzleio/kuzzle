@@ -27,7 +27,7 @@ describe('InternalEngine', () => {
 
   describe('#init', () => {
     it('should act as a singleton', () => {
-      should(kuzzle.internalEngine.init()).be.exactly(kuzzle.internalEngine);
+      return should(kuzzle.internalEngine.init()).be.fulfilledWith(kuzzle.internalEngine);
     });
   });
 

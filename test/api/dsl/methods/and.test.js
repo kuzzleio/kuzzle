@@ -1,6 +1,6 @@
 var
   should = require('should'),
-  q = require('q'),
+  Promise = require('bluebird'),
   rewire = require('rewire'),
   md5 = require('crypto-md5'),
   Filters = require.main.require('lib/api/dsl/filters'),
@@ -82,7 +82,7 @@ describe('Test "and" method', function () {
 
   it('should return a rejected promise if getFormattedFilters fails', function () {
     return Methods.__with__({
-      getFormattedFilters: function () { return q.reject(new Error('rejected')); }
+      getFormattedFilters: function () { return Promise.reject(new Error('rejected')); }
     })(function () {
       return should(methods.and(filterId, index, collection, filter)).be.rejectedWith('rejected');
     });

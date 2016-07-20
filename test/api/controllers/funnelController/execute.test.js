@@ -1,6 +1,6 @@
 var
   should = require('should'),
-  q = require('q'),
+  Promise = require('bluebird'),
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
   ResponseObject = require.main.require('kuzzle-common-objects').Models.responseObject,
   ServiceUnavailableError = require.main.require('kuzzle-common-objects').Errors.serviceUnavailableError,
@@ -18,30 +18,29 @@ describe('funnelController.execute', () => {
     context,
     requestReplayed;
 
-  before(function (callback) {
+  before(() => {
     context = {
       connection: {id: 'connectionid'},
       token: null
     };
 
     kuzzle = new Kuzzle();
-    kuzzle.start(params, {dummy: true})
+    
+    return kuzzle.start(params, {dummy: true})
       .then(() => {
         FunnelController.__set__('processRequest', (funnelKuzzle, controllers, funnelRequestObject) => {
           processRequestCalled = true;
 
           if (funnelRequestObject.errorMe) {
-            return q.reject(new Error('errored on purpose'));
+            return Promise.reject(new Error('errored on purpose'));
           }
 
-          return q(new ResponseObject(funnelRequestObject));
+          return Promise.resolve(new ResponseObject(funnelRequestObject));
         });
 
         FunnelController.__set__('playCachedRequests', function () {
           requestReplayed = true;
         });
-
-        callback();
       });
   });
 

@@ -1,6 +1,6 @@
 var
   should = require('should'),
-  q = require('q'),
+  Promise = require('bluebird'),
   /** @type {Params} */
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
@@ -18,10 +18,10 @@ describe('Test: read controller', function () {
   before(() => {
     mockFunction = () => {
       if (error) {
-        return q.reject(new Error('foobar'));
+        return Promise.reject(new Error('foobar'));
       }
 
-      return q(mockResponse);
+      return Promise.resolve(mockResponse);
     };
 
     kuzzle = new Kuzzle();
@@ -130,11 +130,11 @@ describe('Test: read controller', function () {
     before(function () {
       kuzzle.services.list.readEngine.listCollections = function() {
         if (error) {
-          return q.reject(new Error('foobar'));
+          return Promise.reject(new Error('foobar'));
         }
 
         stored = true;
-        return q({collections: {stored: ['foo']}});
+        return Promise.resolve({collections: {stored: ['foo']}});
       };
 
       kuzzle.hotelClerk.getRealtimeCollections = function () {
@@ -254,10 +254,10 @@ describe('Test: read controller', function () {
         if (kuzzle.services.list[service].getInfos) {
           kuzzle.services.list[service].getInfos = () => {
             if (error) {
-              return q.reject(new Error('foobar'));
+              return Promise.reject(new Error('foobar'));
             }
 
-            return q({});
+            return Promise.resolve({});
           };
         }
       });

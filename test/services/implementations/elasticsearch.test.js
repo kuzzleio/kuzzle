@@ -1,6 +1,6 @@
 var
   should = require('should'),
-  q = require('q'),
+  Promise = require('bluebird'),
   sinon = require('sinon'),
   rewire = require('rewire'),
   params = require('rc')('kuzzle'),
@@ -79,9 +79,8 @@ describe('Test: ElasticSearch service', function () {
   });
 
   describe('#init', function () {
-    it('should initialize properly', function (done) {
-      should(elasticsearch.init()).be.exactly(elasticsearch);
-      done();
+    it('should initialize properly', function () {
+      return should(elasticsearch.init()).be.fulfilledWith(elasticsearch);
     });
   });
 
@@ -498,7 +497,7 @@ describe('Test: ElasticSearch service', function () {
       requestObject.data.body = {};
 
       return ES.__with__({
-        getAllIdsFromQuery: () => q(['foo', 'bar'])
+        getAllIdsFromQuery: () => Promise.resolve(['foo', 'bar'])
       })(function () {
         return should(elasticsearch.deleteByQuery(requestObject)).be.rejected();
       });
@@ -890,7 +889,7 @@ describe('Test: ElasticSearch service', function () {
 
     it('should reject the deleteIndex promise if elasticsearch throws an error', () => {
       elasticsearch.client.indices.delete = function () {
-        return q.reject(new Error());
+        return Promise.reject(new Error());
       };
 
       return should(elasticsearch.deleteIndex(requestObject)).be.rejected();

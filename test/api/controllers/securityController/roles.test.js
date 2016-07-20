@@ -1,6 +1,6 @@
 var
   should = require('should'),
-  q = require('q'),
+  Promise = require('bluebird'),
   sinon = require('sinon'),
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
@@ -26,18 +26,18 @@ describe('Test: security controller - roles', function () {
 
     sandbox.stub(kuzzle.repositories.role, 'validateAndSaveRole', role => {
       if (role._id === 'alreadyExists') {
-        return q.reject();
+        return Promise.reject();
       }
 
-      return q(role);
+      return Promise.resolve(role);
     });
 
     sandbox.stub(kuzzle.repositories.role, 'loadOneFromDatabase', id => {
       if (id === 'badId') {
-        return q(null);
+        return Promise.resolve(null);
       }
 
-      return q({
+      return Promise.resolve({
         _index: kuzzle.config.internalIndex,
         _type: 'roles',
         _id: id,
@@ -47,10 +47,10 @@ describe('Test: security controller - roles', function () {
 
     sandbox.stub(kuzzle.repositories.role, 'loadMultiFromDatabase', ids => {
       if (error) {
-        return q.reject(new Error('foobar'));
+        return Promise.reject(new Error('foobar'));
       }
 
-      return q(ids.map(id => {
+      return Promise.resolve(ids.map(id => {
         return {
           _id: id,
           _source: null
@@ -60,10 +60,10 @@ describe('Test: security controller - roles', function () {
 
     sandbox.stub(kuzzle.repositories.role, 'search', () => {
       if (error) {
-        return q.reject(new Error(''));
+        return Promise.reject(new Error(''));
       }
 
-      return q({
+      return Promise.resolve({
         hits: [{_id: 'test'}],
         total: 1
       });
@@ -71,10 +71,10 @@ describe('Test: security controller - roles', function () {
 
     sandbox.stub(kuzzle.repositories.role, 'deleteFromDatabase', () => {
       if (error) {
-        return q.reject(new Error(''));
+        return Promise.reject(new Error(''));
       }
 
-      return q({_id: 'test'});
+      return Promise.resolve({_id: 'test'});
     });
     sandbox.mock(kuzzle.repositories.profile, 'profiles', {});
     sandbox.mock(kuzzle.repositories.role, 'roles', {});
@@ -198,10 +198,10 @@ describe('Test: security controller - roles', function () {
 
       kuzzle.repositories.role.validateAndSaveRole = role => {
         if (role._id === 'alreadyExists') {
-          return q.reject();
+          return Promise.reject();
         }
 
-        return q(role);
+        return Promise.resolve(role);
       };
 
       kuzzle.funnel.controllers.security.updateRole(new RequestObject({

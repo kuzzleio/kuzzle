@@ -2,7 +2,7 @@ var
   should = require('should'),
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
-  q = require('q'),
+  Promise = require('bluebird'),
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
   ResponseObject = require.main.require('kuzzle-common-objects').Models.responseObject,
   PartialError = require.main.require('kuzzle-common-objects').Errors.partialError;
@@ -37,7 +37,7 @@ describe('Test the bulk controller', function () {
   });
 
   it('should return a response object', () => {
-    kuzzle.workerListener.add = () => q({});
+    kuzzle.workerListener.add = () => Promise.resolve({});
     return should(
       kuzzle.funnel.controllers.bulk.import(requestObject)
         .then(response => {
@@ -50,7 +50,7 @@ describe('Test the bulk controller', function () {
 
   it('should handle partial errors', () => {
     kuzzle.workerListener.add = () => {
-      return q({partialErrors: ['foo', 'bar']});
+      return Promise.resolve({partialErrors: ['foo', 'bar']});
     };
 
     return should(
@@ -64,7 +64,7 @@ describe('Test the bulk controller', function () {
   });
 
   it('should return a ResponseObject in a rejected promise in case of error', () => {
-    kuzzle.workerListener.add = () => q.reject(new Error('foobar'));
+    kuzzle.workerListener.add = () => Promise.reject(new Error('foobar'));
 
     return should(
       kuzzle.funnel.controllers.bulk.import(requestObject)
@@ -72,7 +72,7 @@ describe('Test the bulk controller', function () {
           should(response).be.instanceOf(ResponseObject);
           should(response.error).not.be.null();
           should(response.error.message).be.eql('foobar');
-          return q.reject();
+          return Promise.reject();
         })
     ).be.rejected();
   });
