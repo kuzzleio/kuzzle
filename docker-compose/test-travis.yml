@@ -10,12 +10,10 @@ kuzzle:
   volumes:
     - "..:/var/app"
   links:
-    - rabbit
     - elasticsearch
     - redis
     - proxy:api
   environment:
-    - MQ_BROKER_ENABLED=1
     - FEATURE_COVERAGE=1
     # Travis env var must be propagated into the container
     - TRAVIS
@@ -25,9 +23,6 @@ kuzzle:
     - TRAVIS_JOB_ID
     - TRAVIS_PULL_REQUEST
     - TRAVIS_REPO_SLUG
-
-rabbit:
-  image: kuzzleio/rabbitmq:alpine
 
 redis:
   image: redis:3.0-alpine

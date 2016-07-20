@@ -47,22 +47,6 @@ describe('Test service initialization function', function () {
         should(kuzzle.services.list.broker.close).be.a.Function();
       });
   });
-
-  it('should build a MQ broker service with correct methods', function () {
-    return kuzzle.start(params, {dummy: true})
-      .then(() => {
-        should(kuzzle.services.list.mqBroker).be.an.Object().and.not.be.empty();
-        should(kuzzle.services.list.mqBroker.init).be.a.Function();
-        should(kuzzle.services.list.mqBroker.toggle).be.a.Function();
-        should(kuzzle.services.list.mqBroker.add).be.a.Function();
-        should(kuzzle.services.list.mqBroker.addExchange).be.a.Function();
-        should(kuzzle.services.list.mqBroker.listenExchange).be.a.Function();
-        should(kuzzle.services.list.mqBroker.replyTo).be.a.Function();
-        should(kuzzle.services.list.mqBroker.listen).be.a.Function();
-        should(kuzzle.services.list.mqBroker.listenOnce).be.a.Function();
-        should(kuzzle.services.list.mqBroker.close).be.a.Function();
-      });
-  });
   
   it('should build a readEngine service with correct methods', function () {
     return kuzzle.start(params, {dummy: true})

@@ -444,10 +444,6 @@ describe('Test: managePlugins remote action caller', function () {
                 }
               }
             },
-            'mqBroker': {
-              'host' : 'rabbit',
-              'port': 5672
-            },
             'jsonWebToken': {
               'algorithm': 'HS256',
               'secret': 'Kuzzle Rocks',

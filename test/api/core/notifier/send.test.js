@@ -45,16 +45,6 @@ describe('Test: notifier.send', function () {
 
     this.timeout(50);
 
-    kuzzle.services.list.mqBroker.addExchange = function (replyTopic, msg) {
-      should(replyTopic).be.exactly(channel);
-      should(msg).be.an.Object();
-      should(msg.action).be.eql(notification.action);
-      should(msg.result._id).be.eql(notification._id);
-      should(msg.result._source).be.eql(notification._source);
-      should(msg.state).be.eql(notification.state);
-      should(msg.scope).be.eql(notification.scope);
-    };
-
     kuzzle.once('protocol:broadcast', (data) => {
       should(data).be.an.Object();
       should(data.channel).be.eql(channel);
@@ -77,16 +67,6 @@ describe('Test: notifier.send', function () {
       connectionId = 'Brian Kernighan';
 
     this.timeout(50);
-
-    kuzzle.services.list.mqBroker.addExchange = function (replyTopic, msg) {
-      should(replyTopic).be.exactly(anotherChannel);
-      should(msg).be.an.Object();
-      should(msg.action).be.eql(notification.action);
-      should(msg.result._id).be.eql(notification._id);
-      should(msg.result._source).be.eql(notification._source);
-      should(msg.state).be.eql(notification.state);
-      should(msg.scope).be.eql(notification.scope);
-    };
 
     kuzzle.once('protocol:notify', (data) => {
       should(data).be.an.Object();

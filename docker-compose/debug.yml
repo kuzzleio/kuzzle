@@ -14,21 +14,11 @@ kuzzle:
     - "8080:8080"
     - "8081:8081"
   links:
-    - rabbit
     - elasticsearch
     - redis
     - proxy:api
   environment:
-    - MQ_BROKER_ENABLED=1
     - FEATURE_COVERAGE
-
-rabbit:
-  image: kuzzleio/rabbitmq:alpine
-  ports:
-    - "61613:61613"
-    - "1883:1883"
-    - "5672:5672"
-    - "15672:15672"
 
 redis:
   image: redis:3.0-alpine
