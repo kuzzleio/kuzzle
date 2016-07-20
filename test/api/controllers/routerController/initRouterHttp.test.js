@@ -112,15 +112,13 @@ describe('Test: routerController.initRouterHttp', () => {
     server.close();
   });
 
-  it('should reply with a list of available routes on a simple GET query', done => {
+  it('should reply with the read:serverInfo action on a simple GET query', done => {
     http.get(url, response => {
       parseHttpResponse(response)
         .then(result => {
-          should(result.status).be.exactly(200);
-          should(result.error).be.null();
-          should(result.result.message).be.exactly('Available routes for this API version by verb.');
-          should(result.result.routes).be.an.Object();
-          should(result.result.routes['myplugin/foo']).be.an.Object();
+          should(response.statusCode).be.exactly(200);
+          should(result.controller).be.exactly('read');
+          should(result.action).be.exactly('serverInfo');
           done();
         })
         .catch(error => {
