@@ -92,7 +92,7 @@ describe('Test: hotelClerk.addSubscription', function () {
       });
   });
 
-  it('should trigger a protocol:joinChannel hook', function (done) {
+  it('should trigger a proxy:joinChannel hook', function (done) {
     var requestObject = new RequestObject({
       controller: 'subscribe',
       collection: collection,
@@ -102,7 +102,7 @@ describe('Test: hotelClerk.addSubscription', function () {
 
     this.timeout(50);
 
-    kuzzle.once('protocol:joinChannel', (data) => {
+    kuzzle.once('proxy:joinChannel', (data) => {
       should(data).be.an.Object();
       should(data.channel).be.a.String();
       should(data.id).be.eql(context.connection.id);

@@ -151,10 +151,10 @@ describe('Test: hotelClerk.removeSubscription', function () {
       });
   });
 
-  it('should trigger a protocol:leaveChannel hook', function (done) {
+  it('should trigger a proxy:leaveChannel hook', function (done) {
     this.timeout(50);
 
-    kuzzle.once('protocol:leaveChannel', (data) => {
+    kuzzle.once('proxy:leaveChannel', (data) => {
       should(data).be.an.Object();
       should(data.channel).be.a.String();
       should(data.id).be.eql(context.connection.id);
