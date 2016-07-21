@@ -79,7 +79,6 @@ Using a Vagrant virtual machine:
 You may also run unit and functional tests separately, or with additional arguments.
 For more information, check the [unit testing](test/README.md) and the [functional testing](features/README.md) documentation.
 
-
 # Contributing to Kuzzle
 
 See [contributing documentation](./CONTRIBUTING.md)
