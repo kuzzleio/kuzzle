@@ -20,6 +20,9 @@ describe('Test: security/roleTest', () => {
       }
     },
     kuzzle = {
+      rawParams: {
+        internalIndex: '%kuzzle'
+      },
       pluginsManager: {
         trigger: () => {
           return true;
