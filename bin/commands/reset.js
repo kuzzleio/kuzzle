@@ -50,7 +50,8 @@ module.exports = function (options) {
 
   if (userIsSure) {
     console.log(notice('[ℹ] Processing...\n'));
-    return kuzzle.remoteActions.do('cleanAndPrepare', {
+    return kuzzle.remoteActions.do('cleanAndPrepare',
+      {
         pid: params.pid,
         fixtures: params.fixtures,
         mappings: params.mappings
@@ -58,17 +59,16 @@ module.exports = function (options) {
       {
         pid: params.pid,
         debug: options.parent.debug
-      }
-    )
-      .then(response => {
+      })
+      .then(() => {
         console.log(ok('[✔] Kuzzle is now like a virgin, touched for the very first time!'));
         process.exit(0);
       })
-      .catch(error => {
-        console.error(error);
+      .catch(err => {
+        console.error(err);
         process.exit(1);
       });
-  } else {
-    console.log(notice('[ℹ] Nothing have been done... you do not look that sure...'));
   }
+
+  console.log(notice('[ℹ] Nothing have been done... you do not look that sure...'));
 };

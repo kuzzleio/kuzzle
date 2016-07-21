@@ -1,4 +1,6 @@
-var 
+/* eslint-disable no-console */
+
+var
   params = require('rc')('kuzzle'),
   Kuzzle = require('../../lib/api'),
   RequestObject = require('kuzzle-common-objects').Models.requestObject;
@@ -21,7 +23,7 @@ module.exports = function () {
     .catch(error => {
       console.dir(error, {depth: null});
       process.exit(1);
-    })
+    });
 };
 
 

@@ -1,611 +1,674 @@
 var
-  rc = require('rc'),
-  params = rc('kuzzle'),
-  q = require('q'),
   rewire = require('rewire'),
   should = require('should'),
-  Kuzzle = require.main.require('lib/api/Kuzzle'),
-  PartialError = require.main.require('kuzzle-common-objects').Errors.partialError,
-  InternalError = require.main.require('kuzzle-common-objects').Errors.internalError,
-  RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject;
+  sinon = require('sinon'),
+  PartialError = require('kuzzle-common-objects').Errors.partialError,
+  InternalError = require('kuzzle-common-objects').Errors.internalError,
+  RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
+  ResponseObject = require('kuzzle-common-objects').Models.responseObject,
+  PrepareDb = rewire('../../../../lib/api/controllers/remoteActions/prepareDb'),
+  sandbox = sinon.sandbox.create();
 
 describe('Test: Prepare database', function () {
   var 
-    kuzzle,
-    request,
-    filesRead,
-    indexCreated,
-    internalIndexCreated,
-    mappingsImported,
-    fixturesImported,
-    prepareDb;
+    kuzzle;
 
-  beforeEach(function (done) {
-    prepareDb = rewire('../../../../lib/api/controllers/remoteActions/prepareDb');
-
-    prepareDb.__set__('createInternalStructure', function () { internalIndexCreated = true; return q(); });
-    prepareDb.__set__('readFile', (filename) => { filesRead.push(filename); return q(); });
-    prepareDb.__set__('createIndexes', function () { indexCreated = true; return q(); });
-    prepareDb.__set__('importMapping', function () { mappingsImported = true; return q(); });
-    prepareDb.__set__('importFixtures', function () { fixturesImported = true; return q(); });
-
-    kuzzle = new Kuzzle();
-    kuzzle.start(params, {dummy: true})
-      .then(() => {
-        kuzzle.config = {
-          internalIndex: 'foobar'
-        };
-
-        kuzzle.services.list = {
-          writeEngine: {},
-          readEngine: {
-            listIndexes: function () {
-              return q({
-                data: {
-                  body: {
-                    indexes: ['foo', 'bar']
-                  }
-                }
-              });
-            }
+  beforeEach(() => {
+    kuzzle = {
+      funnel: {
+        controllers: {
+          admin: {
+            createIndex: sandbox.stub().resolves(new ResponseObject()),
+            updateMapping: sandbox.stub().resolves(new ResponseObject())
+          },
+          bulk: {
+            import: sandbox.stub().resolves(new ResponseObject())
           }
-        };
+        }
+      },
+      indexCache: {
+        add: sandbox.spy(),
+        indexes: {}
+      },
+      internalEngine: {
+        index: 'testIndex',
+        createIndex: sandbox.stub().resolves(),
+        createInternalIndex: sandbox.stub().resolves(),
+        createOrReplace: sandbox.stub().resolves(),
+        updateMapping: sandbox.stub().resolves()
+      },
+      isServer: true,
+      pluginsManager: {
+        trigger: sandbox.spy()
+      },
+      rawParams: {
+        roleWithoutAdmin: {
+          foo: 'bar'
+        }
+      }
+    };
 
-        filesRead = [];
-        indexCreated = false;
-        mappingsImported = false;
-        fixturesImported = false;
-        internalIndexCreated = false;
+    PrepareDb.__set__({
+      _data: {
+        fixtures: {},
+        mappings: {}
+      },
+      _files: {
+        fixtures: null,
+        mappings: null
+      }
+    });
 
-        done();
-      });
+    PrepareDb(kuzzle);
   });
 
-  it('should store fixtures and mappings filename if provided', function (done) {
-    kuzzle.isServer = true;
-    request = new RequestObject({controller: 'remoteActions', action: 'prepareDb', body: {fixtures: 'fixtures.json', mappings: 'mappings.json'}});
-
-    prepareDb(kuzzle, request)
-      .then(() => {
-        var files = prepareDb.__get__('files');
-        should(files.fixtures).be.eql('fixtures.json');
-        should(files.mappings).be.eql('mappings.json');
-        done();
-      })
-      .catch(err => done(err));
+  afterEach(() => {
+    sandbox.restore();
   });
 
-  it('should execute the right call chain', function (done) {
-    kuzzle.isServer = true;
-    request = new RequestObject({controller: 'remoteActions', action: 'prepareDb', body: {}});
-
-    prepareDb(kuzzle, request)
-      .then(function () {
-        should(filesRead).match(['mappings', 'fixtures']);
-        should(indexCreated).be.true();
-        should(mappingsImported).be.true();
-        should(fixturesImported).be.true();
-        should(internalIndexCreated).be.true();
-        done();
-      })
-      .catch(err => done(err));
-  });
-
-  it('should do nothing if not in a kuzzle server instance', function (done) {
-    kuzzle.isServer = false;
-    kuzzle.isWorker = true;
-    request = new RequestObject({controller: 'remoteActions', action: 'prepareDb', body: {}});
-
-    prepareDb(kuzzle, request)
-      .then(function () {
-        should(filesRead).match([]);
-        should(indexCreated).be.false();
-        should(mappingsImported).be.false();
-        should(fixturesImported).be.false();
-        should(internalIndexCreated).be.false();
-        done();
-      })
-      .catch(err => done(err));
-  });
-
-  describe('#readFile', function () {
+  describe('#prepareDb', () => {
     var
-      context,
-      readFile,
-      fileContent = '';
+      prepareDb = PrepareDb.__get__('prepareDb'),
+      createInternalStructureStub,
+      readFileStub,
+      createIndexesStub,
+      importMappingStub,
+      importFixturesStub,
+      reset;
 
-    before(function () {
-      prepareDb = rewire('../../../../lib/api/controllers/remoteActions/prepareDb');
-      prepareDb.__set__('fs', {
-        readFileSync: function () { return fileContent; }
+    beforeEach(() => {
+      reset = PrepareDb.__set__({
+        createInternalStructure: sandbox.stub().resolves(),
+        readFile: sandbox.stub().resolves(),
+        createIndexes: sandbox.stub().resolves(),
+        importMapping: sandbox.stub().resolves(),
+        importFixtures: sandbox.stub().resolves()
       });
 
-      readFile = prepareDb.__get__('readFile');
+      createInternalStructureStub = PrepareDb.__get__('createInternalStructure');
+      readFileStub = PrepareDb.__get__('readFile');
+      createIndexesStub = PrepareDb.__get__('createIndexes');
+      importMappingStub = PrepareDb.__get__('importMapping');
+      importFixturesStub = PrepareDb.__get__('importFixtures');
     });
 
-    beforeEach(function () {
-      context = {
-        kuzzle: {
-          pluginsManager: {
-            trigger: function () {
-            }
-          }
-        },
-        files: {},
-        data: {}
-      };
+    afterEach(() => {
+      reset();
     });
 
-    it('should do nothing if the corresponding env variable is not set', function (done) {
-      context.data = { foo: 'bar' };
-      context.files.foo = null;
+    it('should do nothing if kuzzle is not a server', () => {
+      var
+        request = new RequestObject({body: 'bar'});
 
-      readFile.call(context, 'foo')
+      kuzzle.isServer = false;
+
+      return prepareDb(request)
+        .then(response => {
+          should(response).be.eql({isWorker: true});
+          should(createInternalStructureStub).have.callCount(0);
+        });
+    });
+
+    it('should store fixtures and mappings filename if provided', () => {
+      var request = new RequestObject({controller: 'remoteActions', action: 'prepareDb', body: {fixtures: 'fixtures.json', mappings: 'mappings.json'}});
+
+      return prepareDb(request)
         .then(() => {
-          should(context.data.foo).be.eql({});
-          done();
-        })
-        .catch(err => done(err));
+          var files = PrepareDb.__get__('_files');
+          should(files.fixtures).be.eql('fixtures.json');
+          should(files.mappings).be.eql('mappings.json');
+        });
     });
 
-    it('should return the parsed content of the file', function (done) {
-      fileContent = '{"foo": "bar"}';
-      context.files.fixtures = 'fixtures';
+    it('should execute the right call chain', () => {
+      var request = new RequestObject({controller: 'remoteActions', action: 'prepareDb', body: {}});
 
-      readFile.call(context, 'fixtures')
+      return prepareDb(request)
         .then(() => {
-          should(context.data).be.an.Object().and.be.eql({fixtures: JSON.parse(fileContent)});
-          done();
-        })
-        .catch(err => done(err));
+          should(createInternalStructureStub).be.calledOnce();
+          should(readFileStub).be.calledTwice();
+          should(createIndexesStub).be.calledOnce();
+          should(importMappingStub).be.calledOnce();
+          should(importFixturesStub).be.calledOnce();
+        });
+    });
+
+    it('should reject the promise if something goes wrong', () => {
+      var
+        error = new Error('test'),
+        request = new RequestObject({});
+
+      return PrepareDb.__with__({
+        createInternalStructure: sandbox.stub().rejects(error)
+      })(() => {
+        return should(prepareDb(request)).be.rejectedWith('test');
+      });
+    });
+
+  });
+
+  describe('#readFile', () => {
+    var
+      readFile = PrepareDb.__get__('readFile'),
+      reset,
+      readFileSyncStub;
+
+    beforeEach(() => {
+      reset = PrepareDb.__set__({
+        fs: {
+          readFileSync: sandbox.stub()
+        }
+      });
+
+      readFileSyncStub = PrepareDb.__get__('fs').readFileSync;
+    });
+
+    afterEach(() => {
+      reset();
+    });
+
+    it('should do nothing if the corresponding env variable is not set', () => {
+      return PrepareDb.__with__({
+        _data: {foo: 'bar'},
+        _files: {foo: null}
+      })(() => {
+        return readFile('foo')
+          .then(() => {
+            should(kuzzle.pluginsManager.trigger).be.calledOnce();
+            should(kuzzle.pluginsManager.trigger).be.calledWithExactly('log:info', '== No default foo file specified in env vars: continue.');
+            should(PrepareDb.__get__('_data').foo).be.eql({});
+          });
+      });
+    });
+
+    it('should return the parsed content of the file', () => {
+      readFileSyncStub.returns('{"foo": "bar"}');
+
+      return PrepareDb.__with__({
+        _files: {fixtures: 'fixtures'}
+      })(() => {
+        return readFile('fixtures')
+          .then(() => {
+            var data = PrepareDb.__get__('_data');
+
+            should(data).be.eql({
+              fixtures: {foo: 'bar'},
+              mappings: {}
+            });
+          });
+      });
     });
 
     it('should return a rejected promise if the file content is not a valid JSON object', function () {
-      fileContent = 'not a valid JSON content';
-      context.files.fixtures = 'fixtures';
-      return should(readFile.call(context, 'fixtures')).be.rejected();
+      readFileSyncStub.returns('Invalid JSON');
+
+      return PrepareDb.__with__({
+        _files: {fixtures: 'fixtures'}
+      })(() => {
+        return should(readFile('fixtures'))
+          .be.rejectedWith('Error while loading the file fixtures');
+      });
     });
+
   });
 
-  describe('#createIndexes', function () {
+  describe('#createIndexes', () => {
     var
-      context,
-      createIndexes,
-      workerCalled,
-      indexAdded,
-      workerPromise;
+      createIndexes = PrepareDb.__get__('createIndexes');
 
-    before(function () {
-      createIndexes = rewire('../../../../lib/api/controllers/remoteActions/prepareDb').__get__('createIndexes');
+    it('should do nothing if there is no data mapping and no data fixtures', () => {
+      return createIndexes()
+        .then(() => {
+          should(kuzzle.internalEngine.createIndex).have.callCount(0);
+        });
     });
 
-    beforeEach(function () {
-      workerCalled = false;
-      workerPromise = q();
-      indexCreated = [];
-      indexAdded = false;
-
-      context = {
-        kuzzle: {
-          pluginsManager: {
-            trigger: function (event, data) {
-              return q(data);
-            }
+    it('should create indexes', () => {
+      return PrepareDb.__with__({
+        _data: {
+          mappings: {
+            foo: 'foo',
+            bar: 'bar'
           },
-          workerListener: {
-            add: (rq) => {
-              should(rq.controller).be.eql('admin');
-              should(rq.action).be.eql('createIndex');
-              should(rq.index).not.be.undefined();
-              workerCalled = true;
-              indexCreated.push(rq.index);
-              return workerPromise;
-            }
-          },
-          indexCache: {
-            indexes: {},
-            add: () => {indexAdded = true;}
+          fixtures: {
+            baz: 'baz'
           }
-        },
-        data: {
-          fixtures: {},
-          mappings: {}
         }
-      };
+      })(() => {
+        return createIndexes()
+          .then(() => {
+            var createIndex = kuzzle.funnel.controllers.admin.createIndex;
+            should(createIndex).be.calledThrice();
+            should(createIndex.firstCall.args[0]).match({
+              index: 'foo',
+              controller: 'admin',
+              action: 'createIndex'
+            });
+            should(createIndex.secondCall.args[0]).match({
+              index: 'bar',
+              controller: 'admin',
+              action: 'createIndex'
+            });
+            should(createIndex.thirdCall.args[0]).match({
+              index: 'baz',
+              controller: 'admin',
+              action: 'createIndex'
+            });
+          });
+      });
     });
 
-    it('should do nothing if there is no data mapping and no data fixtures', function (done) {
-      createIndexes.call(context)
-        .then(data => {
-          should(data).be.undefined();
-          should(workerCalled).be.false();
-          should(indexAdded).be.false();
-          done();
-        })
-        .catch(err => done(err));
-    });
+    it('should not try to create index that already exists', () => {
+      kuzzle.indexCache.indexes.bar = true;
 
-    it('should call workers correctly to create data mappings indexes', function (done) {
-      context.data.mappings = {
-        'foo': 'foo',
-        'bar': 'bar',
-        'qux': 'qux'
-      };
+      return PrepareDb.__with__({
+        _data: {
+          mappings: {
+            foo: 'foo',
+            bar: 'bar'
+          },
+          fixtures: {
+            baz: 'baz'
+          }
+        }
+      })(() => {
+        return createIndexes()
+          .then(() => {
+            var createIndex = kuzzle.funnel.controllers.admin.createIndex;
 
-      createIndexes.call(context)
-        .then(data => {
-          should(data).be.undefined();
-          should(workerCalled).be.true();
-          should(indexAdded).be.true();
-          should(indexCreated.length).be.eql(Object.keys(context.data.mappings).length);
-          should(indexCreated.sort()).match(Object.keys(context.data.mappings).sort());
-          done();
-        })
-        .catch(err => done(err));
-    });
-
-    it('should call workers correctly to create data fixtures indexes', function (done) {
-      context.data.fixtures = {
-        'foo': 'foo',
-        'bar': 'bar',
-        'qux': 'qux'
-      };
-
-      createIndexes.call(context)
-        .then(data => {
-          should(data).be.undefined();
-          should(workerCalled).be.true();
-          should(indexAdded).be.true();
-          should(indexCreated.length).be.eql(Object.keys(context.data.fixtures).length);
-          should(indexCreated.sort()).match(Object.keys(context.data.fixtures).sort());
-          done();
-        })
-        .catch(err => done(err));
-    });
-
-    it('should not try to create index that already exists', function (done) {
-      context.data.mappings = {
-        'foo': 'foo',
-        'bar': 'bar',
-        'qux': 'qux'
-      };
-
-      context.kuzzle.indexCache.indexes = { foo: ['foo'], bar: ['bar']};
-
-      createIndexes.call(context)
-        .then(data => {
-          should(data).be.undefined();
-          should(workerCalled).be.true();
-          should(indexAdded).be.true();
-          should(indexCreated.length).be.eql(1);
-          should(indexCreated).match(['qux']);
-          done();
-        })
-        .catch(err => done(err));
+            should(createIndex).be.calledTwice();
+            should(createIndex.firstCall.args[0]).match({
+              index: 'foo',
+              controller: 'admin',
+              action: 'createIndex'
+            });
+            should(createIndex.secondCall.args[0]).match({
+              index: 'baz',
+              controller: 'admin',
+              action: 'createIndex'
+            });
+          });
+      });
     });
 
     it('should return a rejected promise if an index creation fails', function () {
-      workerPromise = q.reject(new Error('failed'));
-      context.data.mappings = {
-        'foo': 'foo',
-        'bar': 'bar',
-        'qux': 'qux'
-      };
+      var error = new Error('test');
 
-      return should(createIndexes.call(context)).be.rejectedWith(InternalError);
+      kuzzle.funnel.controllers.admin.createIndex.rejects(error);
+
+      return PrepareDb.__with__({
+        _data: {
+          fixtures: {
+            foo: 'foo'
+          },
+          mappings: {}
+        }
+      })(() => {
+        return should(createIndexes())
+          .be.rejectedWith(InternalError);
+      });
     });
   });
 
-  describe('#importMapping', function () {
+  describe('#importMapping', () => {
     var
-      context,
-      stubIndex = 'index',
-      stubCollection = 'collection',
-      importMapping,
-      workerCalled,
-      mappingCreated,
-      workerPromise;
+      importMapping = PrepareDb.__get__('importMapping'),
+      reset;
 
-    before(function () {
-      importMapping = rewire('../../../../lib/api/controllers/remoteActions/prepareDb').__get__('importMapping');
-    });
-
-    beforeEach(function () {
-      workerCalled = false;
-      workerPromise = q();
-      mappingCreated = null;
-
-      context = {
-        kuzzle: {
-          pluginsManager: {
-            trigger: function (event, data) {
-              return q(data);
-            }
-          },
-          workerListener: {
-            add: (rq) => {
-              should(rq.controller).be.eql('admin');
-              should(rq.action).be.eql('updateMapping');
-              should(rq.index).be.eql(stubIndex);
-              should(rq.collection).be.eql(stubCollection);
-              should(rq.data.body).be.an.Object();
-              workerCalled = true;
-              mappingCreated = rq.data.body;
-              return workerPromise;
-            }
-          }
-        },
-        data: {
+    beforeEach(() => {
+      reset = PrepareDb.__set__({
+        _data: {
+          fixtures: {},
           mappings: {
             index: {
               collection: {
                 properties: {
-                  foo: { type: 'string'}
+                  foo: {type: 'string'}
                 }
               }
             }
           }
         }
-      };
+      });
     });
 
-    it('should do nothing if there is no mapping to import', function (done) {
-      context.data.mappings = {};
-
-      importMapping.call(context)
-        .then(data => {
-          should(data).be.undefined();
-          should(workerCalled).be.false();
-          done();
-        })
-        .catch(err => done(err));
+    afterEach(() => {
+      reset();
     });
 
-    it('should return a rejected promise if the mapping file is not properly formatted', function () {
-      context.data.mappings.index.collection = { foo: 'bar' };
-      return should(importMapping.call(context)).be.rejectedWith(InternalError);
+    it('should do nothing if there is no mapping to import', () => {
+      return PrepareDb.__with__({
+        _data: {
+          fixtures: {},
+          mappings: {}
+        }
+      })(() => {
+        return importMapping()
+          .then(() => {
+            should(kuzzle.funnel.controllers.admin.updateMapping).have.callCount(0);
+          });
+      });
     });
 
-    it('should call the write worker with the right arguments to import mappings', function (done) {
-      importMapping.call(context)
-        .then(data => {
-          should(data).be.undefined();
-          should(workerCalled).be.true();
-          should(mappingCreated).be.eql(context.data.mappings.index.collection);
-          done();
-        })
-        .catch(err => done(err));
+    it('should return a rejected promise if the mapping file is not properly formatted', () => {
+      return PrepareDb.__with__({
+        _data: {
+          fixtures: {},
+          mappings: {foo: 'bar'}
+        }
+      })(() => {
+        return should(importMapping()).be.rejectedWith(InternalError);
+      });
     });
 
-    it('should return a rejected promise if the mapping creation fails', function () {
-      workerPromise = q.reject(new Error('rejected'));
-      return should(importMapping.call(context)).be.rejectedWith(InternalError);
+    it('should call the write worker with the right arguments to import mappings', () => {
+      return importMapping()
+        .then(() => {
+          var updateMapping = kuzzle.funnel.controllers.admin.updateMapping;
+
+          should(updateMapping).be.calledOnce();
+          should(updateMapping.firstCall.args[0]).match({
+            controller: 'admin',
+            action: 'updateMapping',
+            index: 'index',
+            collection: 'collection',
+            data: {
+              body: {
+                properties: {
+                  foo: {
+                    type: 'string'
+                  }
+                }
+              }
+            }
+          });
+        });
+    });
+
+    it('should return a rejected promise if the mapping creation fails', () => {
+      var error = new Error(error);
+
+      kuzzle.funnel.controllers.admin.updateMapping.rejects(error);
     });
   });
 
-  describe('#importFixtures', function () {
+  describe('#importFixtures', () => {
     var
-      context,
-      stubIndex = 'index',
-      stubCollection = 'collection',
-      importFixtures,
-      workerCalled,
-      workerPromise;
+      importFixtures = PrepareDb.__get__('importFixtures'),
+      reset;
 
-    before(function () {
-      importFixtures = rewire('../../../../lib/api/controllers/remoteActions/prepareDb').__get__('importFixtures');
-    });
-
-    beforeEach(function () {
-      workerCalled = false;
-      workerPromise = q();
-      fixturesImported = null;
-
-      context = {
-        kuzzle: {
-          pluginsManager: {
-            trigger: function (event, data) {
-              return q(data);
-            }
-          },
-          workerListener: {
-            add: (rq) => {
-              should(rq.controller).be.eql('bulk');
-              should(rq.action).be.eql('import');
-              should(rq.index).be.eql(stubIndex);
-              should(rq.collection).be.eql(stubCollection);
-              should(rq.data.body).be.an.Object();
-              workerCalled = true;
-              fixturesImported = rq.data.body;
-              return workerPromise;
-            }
-          }
-        },
-        data: {
+    beforeEach(() => {
+      reset = PrepareDb.__set__({
+        _data: {
           fixtures: {
             index: {
               collection: {
-                foo: {bar: 'qux'}
+                foo: 'bar'
               }
             }
           }
         }
-      };
+      });
     });
 
-    it('should do nothing if there is no fixtures to import', function (done) {
-      context.data.fixtures = {};
-      importFixtures.call(context)
-        .then(data => {
-          should(data).be.undefined();
-          should(workerCalled).be.false();
-          done();
-        })
-        .catch(err => done(err));
+    afterEach(() => {
+      reset();
     });
 
-    it('should call the write worker with the right request object', function (done) {
-      importFixtures.call(context)
-        .then(data => {
-          should(data).be.undefined();
-          should(workerCalled).be.true();
-          should(fixturesImported).be.eql(context.data.fixtures.index.collection);
-          done();
-        })
-        .catch(err => done(err));
+    it('should do nothing if there is no fixtures to import', () => {
+      return PrepareDb.__with__({
+        _data: {
+          fixtures: {}
+        }
+      })(() => {
+        return importFixtures()
+          .then(() => {
+            should(kuzzle.funnel.controllers.bulk.import).have.callCount(0);
+          });
+
+      });
     });
 
-    it('should return a rejected promise if a fixture import fails', function () {
-      workerPromise = q.reject(new Error('rejected'));
-      return should(importFixtures.call(context)).be.rejectedWith(InternalError);
+    it('should call the write worker with the right request object', () => {
+      return importFixtures()
+        .then(() => {
+          var importAction = kuzzle.funnel.controllers.bulk.import;
+
+          should(importAction).be.calledOnce();
+          should(importAction.firstCall.args[0]).match({
+            controller: 'bulk',
+            action: 'import',
+            index: 'index',
+            collection: 'collection',
+            data: {
+              body: {
+                foo: 'bar'
+              }
+            }
+          });
+        });
     });
 
-    it('should filter errors when they are about documents that already exist', function () {
-      workerPromise = q.reject(new PartialError('rejected', [{status: 409}]));
-      return should(importFixtures.call(context)).be.fulfilled();
+    it('should return a rejected promise if a fixture import fails', () => {
+      var error = new Error('test');
+
+      kuzzle.funnel.controllers.bulk.import.rejects(error);
+
+      return should(importFixtures()).be.rejectedWith(error);
+    });
+
+    it('should return a rejected promise if the controller returned an error', () => {
+      var response = new ResponseObject({}, new InternalError('test'));
+
+      kuzzle.funnel.controllers.bulk.import.resolves(response);
+
+      return should(importFixtures()).be.rejectedWith(response.error);
+    });
+
+    it('should return a rejected promise if a partial error containing serious errors was raised', () => {
+      var response = new ResponseObject({}, new PartialError('test', [
+        {status: 409},
+        {status: 500}
+      ]));
+
+      kuzzle.funnel.controllers.bulk.import.resolves(response);
+
+      return should(importFixtures()).be.rejectedWith(PartialError);
+    });
+
+    it('should filter errors when they are about documents that already exist', () => {
+      var response = new ResponseObject({}, new PartialError('test', [
+        {status: 409},
+        {status: 409}
+      ]));
+
+      kuzzle.funnel.controllers.bulk.import.resolves(response);
+
+      return should(importFixtures()).be.fulfilled();
     });
   });
 
   describe('#createInternalStructure', function () {
     var
-      context,
-      workerCalled,
-      indexAdded,
-      requests,
-      createInternalStructure,
-      roleWithoutAdmin = rc('kuzzle').roleWithoutAdmin;
+      createInternalStructure = PrepareDb.__get__('createInternalStructure'),
+      reset,
+      createInternalIndexStub,
+      createRolleCollectionStub,
+      createProfileCollecitonStub,
+      createUserCollectionStub;
 
-    before(function () {
-      createInternalStructure = rewire('../../../../lib/api/controllers/remoteActions/prepareDb').__get__('createInternalStructure');
+    beforeEach(() => {
+      reset = PrepareDb.__set__({
+        createInternalIndex: sandbox.stub().resolves(),
+        createRoleCollection: sandbox.stub().resolves(),
+        createProfileCollection: sandbox.stub().resolves(),
+        createUserCollection: sandbox.stub().resolves()
+      });
+
+      createInternalIndexStub = PrepareDb.__get__('createInternalIndex');
+      createRolleCollectionStub = PrepareDb.__get__('createRoleCollection');
+      createProfileCollecitonStub = PrepareDb.__get__('createProfileCollection');
+      createUserCollectionStub = PrepareDb.__get__('createUserCollection');
     });
 
-    beforeEach(function () {
-      workerCalled = false;
-      indexAdded = [];
-      requests = [];
+    afterEach(() => {
+      reset();
+    });
 
-      context = {
-        defaultRoleDefinition: roleWithoutAdmin,
-        kuzzle: {
-          indexCache: {
-            indexes: {}
-          },
-          pluginsManager: {
-            trigger: function (event, data) {
-              return q(data);
-            }
-          },
-          workerListener: {
-            add: (rq) => {
-              requests.push(rq);
-              workerCalled = true;
-              return q();
-            }
-          },
-          config: {
-            internalIndex: 'foobar'
-          },
-          funnel: {
-            controllers: {
-              security: {
-                createOrReplaceRole: (requestObject) => {
-                  requests.push(requestObject);
-                },
-                createOrReplaceProfile: (requestObject) => {
-                  requests.push(requestObject);
+    it('should create a proper internal structure', () => {
+      return createInternalStructure()
+        .then(() => {
+          should(createInternalIndexStub).be.calledOnce();
+          should(createRolleCollectionStub).be.calledOnce();
+          should(createProfileCollecitonStub).be.calledOnce();
+          should(createUserCollectionStub).be.calledOnce();
+        });
+    });
+
+  });
+
+  describe('#createInternalIndex', () => {
+    var
+      createInternalIndex = PrepareDb.__get__('createInternalIndex');
+
+    it('should do nothing if the index already exists', () => {
+      kuzzle.indexCache.indexes.testIndex = true;
+
+      return createInternalIndex()
+        .then(() => {
+          should(kuzzle.internalEngine.createInternalIndex).have.callCount(0);
+        });
+    });
+
+    it('should create the index and populate the index cache', () => {
+      return createInternalIndex()
+        .then(() => {
+          should(kuzzle.internalEngine.createInternalIndex).be.calledOnce();
+          should(kuzzle.indexCache.add).be.calledOnce();
+          should(kuzzle.indexCache.add).be.calledWithExactly('testIndex');
+        });
+    });
+
+  });
+
+  describe('#createRoleCollection', () => {
+    var
+      role = 'role',
+      createRoleCollection = PrepareDb.__get__('createRoleCollection');
+
+    it('should do nothing if the roles collection already exists', () => {
+      kuzzle.indexCache.indexes.testIndex = ['roles'];
+
+      return createRoleCollection(role)
+        .then(() => {
+          should(kuzzle.internalEngine.createOrReplace).have.callCount(0);
+        });
+    });
+
+    it('should create the roles collection and the default roles', () => {
+      kuzzle.indexCache.indexes = {testIndex: []};
+
+      return createRoleCollection(role)
+        .then(() => {
+          should(kuzzle.internalEngine.updateMapping).be.calledOnce();
+          should(kuzzle.internalEngine.updateMapping).be.calledWithExactly('roles', role);
+          should(kuzzle.internalEngine.createOrReplace).be.calledThrice();
+          should(kuzzle.internalEngine.createOrReplace.firstCall).be.calledWithExactly('roles', 'anonymous', role);
+          should(kuzzle.internalEngine.createOrReplace.secondCall).be.calledWithExactly('roles', 'default', role);
+          should(kuzzle.internalEngine.createOrReplace.thirdCall).be.calledWithExactly('roles', 'admin', role);
+        });
+    });
+
+  });
+
+  describe('#createProfileCollection', () => {
+    var
+      createProfileCollection = PrepareDb.__get__('createProfileCollection');
+
+    it('should do nothing if the collection already exists', () => {
+      kuzzle.indexCache.indexes.testIndex = ['profiles'];
+
+      return createProfileCollection()
+        .then(() => {
+          should(kuzzle.internalEngine.updateMapping).have.callCount(0);
+          should(kuzzle.internalEngine.createOrReplace).have.callCount(0);
+        });
+
+    });
+
+    it('should create the mapping, update the index cache and set the default profiles', () => {
+      kuzzle.indexCache.indexes.testIndex = [];
+
+      return createProfileCollection()
+        .then(() => {
+          should(kuzzle.internalEngine.updateMapping).be.calledOnce();
+          should(kuzzle.internalEngine.updateMapping).be.calledWith('profiles', {
+            properties: {
+              policies: {
+                properties: {
+                  _id: {
+                    index: 'not_analyzed',
+                    type: 'string'
+                  }
                 }
               }
             }
-          }
-        }
-      };
-
-      context.kuzzle.indexCache.add = (idx, collection) => {
-        should(idx).be.eql(context.kuzzle.config.internalIndex);
-        indexAdded.push({index: idx, collection});
-
-        if (!context.kuzzle.indexCache.indexes[idx]) {
-          context.kuzzle.indexCache.indexes[idx] = [];
-        }
-        context.kuzzle.indexCache.indexes[idx].push(collection);
-      };
+          });
+          should(kuzzle.indexCache.add).be.calledOnce();
+          should(kuzzle.indexCache.add).be.calledWithExactly(kuzzle.internalEngine.index, 'profiles');
+          should(kuzzle.internalEngine.createOrReplace).be.calledThrice();
+          should(kuzzle.internalEngine.createOrReplace.firstCall).be.calledWith('profiles', 'default', {
+            policies: [{_id: 'default', allowInternalIndex: true}]
+          });
+          should(kuzzle.internalEngine.createOrReplace.secondCall).be.calledWith('profiles', 'anonymous', {
+            policies: [{_id: 'anonymous', allowInternalIndex: true}]
+          });
+          should(kuzzle.internalEngine.createOrReplace.thirdCall).be.calledWith('profiles', 'admin', {
+            policies: [{_id: 'admin', allowInternalIndex: true}]
+          });
+        });
     });
 
-    it('should create a proper internal structure', function (done) {
-      createInternalStructure.call(context)
-        .then(function () {
-          should(workerCalled).be.true();
-
-          /*
-            We expect these 9 request objects, in this order:
-              - internal index creation
-              - roles creation
-              - profiles creation
-              - users creation
-           */
-          should(requests.length).be.eql(10);
-          should(indexAdded.length).be.eql(5);
-
-          should(requests[0].controller).be.eql('admin');
-          should(requests[0].action).be.eql('createIndex');
-          should(requests[0].index).be.eql(context.kuzzle.config.internalIndex);
-          should(indexAdded[0].index).be.eql(context.kuzzle.config.internalIndex);
-          should(indexAdded[0].collection).be.undefined();
-
-          should(requests[1].controller).be.eql('admin');
-          should(requests[1].action).be.eql('updateMapping');
-          should(requests[1].index).be.eql(context.kuzzle.config.internalIndex);
-          should(requests[1].collection).be.eql('roles');
-          should(indexAdded[1].index).be.eql(context.kuzzle.config.internalIndex);
-          should(indexAdded[1].collection).be.eql('roles');
-
-          should(requests[2].controller).be.eql('security');
-          should(requests[2].action).be.eql('createOrReplaceRole');
-
-          should(requests[3].controller).be.eql('security');
-          should(requests[3].action).be.eql('createOrReplaceRole');
-
-          should(requests[4].controller).be.eql('security');
-          should(requests[4].action).be.eql('createOrReplaceRole');
-
-          should(requests[5].controller).be.eql('admin');
-          should(requests[5].action).be.eql('updateMapping');
-          should(requests[5].index).be.eql(context.kuzzle.config.internalIndex);
-          should(requests[5].collection).be.eql('profiles');
-          should(indexAdded[3].index).be.eql(context.kuzzle.config.internalIndex);
-          should(indexAdded[3].collection).be.eql('profiles');
-
-          should(requests[6].controller).be.eql('security');
-          should(requests[6].action).be.eql('createOrReplaceProfile');
-
-          should(requests[7].controller).be.eql('security');
-          should(requests[7].action).be.eql('createOrReplaceProfile');
-
-          should(requests[8].controller).be.eql('security');
-          should(requests[8].action).be.eql('createOrReplaceProfile');
-
-          should(requests[9].controller).be.eql('admin');
-          should(requests[9].action).be.eql('updateMapping');
-          should(requests[9].index).be.eql(context.kuzzle.config.internalIndex);
-          should(requests[9].collection).be.eql('users');
-          should(indexAdded[4].index).be.eql(context.kuzzle.config.internalIndex);
-          should(indexAdded[4].collection).be.eql('users');
-
-          done();
-        })
-        .catch(err => done(err));
-    });
-
-    it('should not do anything if the index already exists', function (done) {
-      context.kuzzle.indexCache.indexes[context.kuzzle.config.internalIndex] = ['roles', 'profiles', 'users'];
-      createInternalStructure.call(context)
-        .then(function () {
-          should(workerCalled).be.false();
-          should(requests.length).be.eql(0);
-          should(indexAdded.length).be.eql(0);
-          done();
-        })
-        .catch(err => done(err));
-    });
   });
+
+  describe('#createUserCollection', () => {
+    var
+      createUserCollection = PrepareDb.__get__('createUserCollection');
+
+    it('should do nothing if the mapping is already set', () => {
+      kuzzle.indexCache.indexes.testIndex = ['users'];
+
+      return createUserCollection()
+        .then(() => {
+          should(kuzzle.internalEngine.updateMapping).have.callCount(0);
+          should(kuzzle.internalEngine.createOrReplace).have.callCount(0);
+        });
+    });
+
+    it('should create the mapping and update the index cache', () => {
+      kuzzle.indexCache.indexes.testIndex = [];
+
+      return createUserCollection()
+        .then(() => {
+          should(kuzzle.internalEngine.updateMapping).be.calledOnce();
+          should(kuzzle.internalEngine.updateMapping).be.calledWith('users', {
+            properties: {
+              profileId: {
+                index: 'not_analyzed',
+                type: 'string'
+              },
+              password: {
+                index: 'no',
+                type: 'string'
+              }
+            }
+          });
+          should(kuzzle.indexCache.add).be.calledOnce();
+          should(kuzzle.indexCache.add).be.calledWithExactly(kuzzle.internalEngine.index, 'users');
+        });
+    });
+
+
+  });
+
 });

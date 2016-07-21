@@ -6,7 +6,6 @@ var
   params = rc('kuzzle'),
   kuzzle = require('../../lib'),
   RequestObject = require('kuzzle-common-objects').Models.requestObject,
-  FirstAdmin = require('./createFirstAdminOld'),
   q = require('q'),
   clc = require('cli-color'),
   coverage;
@@ -17,9 +16,8 @@ module.exports = function (options) {
     warn = string => options.parent.noColors ? string : clc.yellow(string),
     notice = string => options.parent.noColors ? string : clc.cyanBright(string),
     ok = string => options.parent.noColors ? string : clc.green.bold(string),
-    kuz = string => options.parent.noColors ? string : clc.greenBright.bold(string),
-    firstAdmin = new FirstAdmin(options, false);
-  
+    kuz = string => options.parent.noColors ? string : clc.greenBright.bold(string);
+
   if (process.env.FEATURE_COVERAGE === '1' || process.env.FEATURE_COVERAGE === 1) {
     coverage = require('istanbul-middleware');
     console.log(warn('Hook loader for coverage - ensure this is not production!'));

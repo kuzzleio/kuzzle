@@ -1,67 +1,79 @@
 var
-  rc = require('rc'),
-  params = rc('kuzzle'),
-  q = require('q'),
   should = require('should'),
-  Kuzzle = require.main.require('lib/api/Kuzzle'),
-  RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject;
+  sinon = require('sinon'),
+  BadRequestError = require('kuzzle-common-objects').Errors.badRequestError,
+  RequestObject = require('kuzzle-common-objects').Models.requestObject,
+  sandbox = sinon.sandbox.create();
 
 describe('Test: enable services controller', function () {
   var 
     kuzzle,
-    serviceEnable;
+    enableServices;
 
-  beforeEach(function (done) {
-    kuzzle = new Kuzzle();
-    kuzzle.start(params, {dummy: true})
-      .then(function () {
-        kuzzle.services.list = {
-          foo: {
-            toggle: function (enable) {
-              serviceEnable = enable;
-              return q();
-            }
-          },
-          bar: {}
-        };
-        kuzzle.isServer = true;
+  beforeEach(() => {
+    kuzzle = {
+      isServer: true,
+      services: {
+        list: {
+          dummy: {},
+          foo: {toggle: sandbox.spy()}
+        }
+      }
+    };
+    enableServices = require('../../../../lib/api/controllers/remoteActions/enableServices')(kuzzle);
 
-        done();
-      });
   });
 
-  it('return a rejected promise if no service is given', function () {
+  afterEach(() => {
+    sandbox.restore();
+  });
+
+  it('return a rejected promise if no service is given', () => {
     var request = new RequestObject({controller: 'remoteActions', action: 'enableServices', body: {}});
     
-    return should(kuzzle.remoteActionsController.actions.enableServices(kuzzle, request)).be.rejected();
+    return should(enableServices(request)).be.rejectedWith(BadRequestError, {message: 'Missing service name'});
   });
 
-  it('return a rejected promise if the enable paramerter is not set', function () {
+  it('return a rejected promise if the enable parameter is not set', () => {
     var request = new RequestObject({controller: 'remoteActions', action: 'enableServices', body: {service: 'foo'}});
     
-    return should(kuzzle.remoteActionsController.actions.enableServices(kuzzle, request)).be.rejected();
+    return should(enableServices(request)).be.rejectedWith(BadRequestError, {message: 'Missing enable/disable tag'});
   });
 
-  it('return a rejected promise if the service is unknown', function () {
-    var request = new RequestObject({controller: 'remoteActions', action: 'enableServices', body: {service: 'baz'}});
+  it('return a rejected promise if the service is unknown', () => {
+    var request = new RequestObject({controller: 'remoteActions', action: 'enableServices', body: {enable: true, service: 'baz'}});
     
-    return should(kuzzle.remoteActionsController.actions.enableServices(kuzzle, request)).be.rejected();
+    return should(enableServices(request)).be.rejectedWith(BadRequestError, {message: 'Unknown or deactivated service: baz'});
   });
 
-  it('return a rejected promise if the service does not support toggle', function () {
-    var request = new RequestObject({controller: 'remoteActions', action: 'enableServices', body: {service: 'bar'}});
+  it('return a rejected promise if the service does not support toggle', () => {
+    var request = new RequestObject({
+      controller: 'remoteActions',
+      action: 'enableServices',
+      body: {
+        enable: true,
+        service: 'dummy'
+      }
+    });
     
-    return should(kuzzle.remoteActionsController.actions.enableServices(kuzzle, request)).be.rejected();
+    return should(enableServices(request)).be.rejectedWith(BadRequestError, {
+      message: 'The service dummy doesn\'t support on-the-fly disabling/enabling'
+    });
   });
 
-  it('should toggle the service if the service exists and the enable parameter is set', function (done) {
-    var request = new RequestObject({controller: 'remoteActions', action: 'enableServices', body: {service: 'foo', enable: true}});
-    
-    kuzzle.remoteActionsController.actions.enableServices(kuzzle, request)
-      .then(() => {
-        should(serviceEnable).be.true();
-        done();
-      })
-      .catch(err => done(err));
+  it('should toggle the service if the service exists and the enable parameter is set', () => {
+    var request = new RequestObject({
+      controller: 'remoteActions',
+      action: 'enableServices',
+      body: {
+        service: 'foo',
+        enable: true
+      }
+    });
+
+    enableServices(request);
+
+    should(kuzzle.services.list.foo.toggle).be.calledOnce();
+    should(kuzzle.services.list.foo.toggle).be.calledWithExactly(true);
   });
 });
