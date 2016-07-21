@@ -2,14 +2,14 @@ var
   rc = require('rc'),
   fs = require('fs'),
   params = rc('kuzzle'),
-  q = require('q'),
+  Promise = require('bluebird'),
   should = require('should'),
   sinon = require('sinon'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   InternalError = require.main.require('kuzzle-common-objects').Errors.internalError,
   swagger = require.main.require('lib/api/controllers/remoteActions/swagger');
 
-require('sinon-as-promised')(q.Promise);
+require('sinon-as-promised')(Promise);
 
 describe('Test: Swagger files generation', () => {
   var

@@ -1,10 +1,10 @@
 var
-  q = require('q'),
+  Promise = require('bluebird'),
   sinon = require('sinon'),
   rewire = require('rewire'),
   PluginsManager = rewire('../../../../lib/api/core/plugins/pluginsManager');
 
-require('sinon-as-promised')(q.Promise);
+require('sinon-as-promised')(Promise);
 
 describe('PluginsManager: init()', () => {
   var

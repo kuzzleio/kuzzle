@@ -1,12 +1,12 @@
 var
   should = require('should'),
-  q = require('q'),
+  Promise = require('bluebird'),
   sinon = require('sinon'),
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle');
 
-require('sinon-as-promised')(q.Promise);
+require('sinon-as-promised')(Promise);
 
 describe('Test: hotelClerk.removeCustomerFromAllRooms', function () {
   var
@@ -51,7 +51,7 @@ describe('Test: hotelClerk.removeCustomerFromAllRooms', function () {
   });
 
   it('should do nothing when a bad connectionId is given', function () {
-    return should(kuzzle.hotelClerk.removeCustomerFromAllRooms({id: 'unknown'})).be.rejected();
+    return should(kuzzle.hotelClerk.removeCustomerFromAllRooms({id: 'unknown'})).be.fulfilledWith(undefined);
   });
 
   it('should clean up customers, rooms and filtersTree object', function () {
@@ -98,12 +98,10 @@ describe('Test: hotelClerk.removeCustomerFromAllRooms', function () {
       });
   });
 
-  it('should log an error if a problem occurs while unsubscribing', function (done) {
+  it('should log an error if a problem occurs while unsubscribing', () => {
     this.timeout(500);
     sandbox.stub(kuzzle.dsl, 'remove').rejects();
 
-    kuzzle.once('log:error', () => done());
-
-    kuzzle.hotelClerk.removeCustomerFromAllRooms(connection);
+    return should(kuzzle.hotelClerk.removeCustomerFromAllRooms(connection)).be.rejected();
   });
 });

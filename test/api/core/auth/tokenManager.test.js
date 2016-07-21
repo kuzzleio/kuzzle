@@ -105,7 +105,7 @@ describe('Test: token manager core component', function () {
         connectionId = id;
       };
 
-      kuzzle.hotelClerk.removeCustomerFromAllRooms = () => {subscriptionsCleaned = true;};
+      kuzzle.hotelClerk.removeCustomerFromAllRooms = () => {subscriptionsCleaned = true; return Promise.resolve();};
     });
 
     beforeEach(function () {

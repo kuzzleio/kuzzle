@@ -1,5 +1,5 @@
 var
-  q = require('q'),
+  Promise = require('bluebird'),
   should = require('should'),
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
@@ -15,7 +15,7 @@ describe('Test: security controller', function () {
     kuzzle.start(params, {dummy: true})
       .then(function () {
         kuzzle.repositories.role.validateAndSaveRole = role => {
-          return q(role);
+          return Promise.resolve(role);
         };
 
         done();
@@ -41,7 +41,7 @@ describe('Test: security controller', function () {
 
   it('should be rejected if creating a profile with bad roles property form', () => {
     var promise = kuzzle.funnel.controllers.security.createOrReplaceProfile(new RequestObject({
-      body: { _id: 'test', policies: 'not-an-array-roleIds' }
+      body: { roleId: 'test', policies: 'not-an-array-roleIds' }
     }));
 
     return should(promise).be.rejected();

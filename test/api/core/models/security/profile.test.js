@@ -1,13 +1,13 @@
 var
   should = require('should'),
-  q = require('q'),
+  Promise = require('bluebird'),
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   sinon = require('sinon'),
   Profile = require.main.require('lib/api/core/models/security/profile'),
   Role = require.main.require('lib/api/core/models/security/role');
 
-require('sinon-as-promised')(q.Promise);
+require('sinon-as-promised')(Promise);
 
 describe('Test: security/profileTest', function () {
   var
@@ -68,15 +68,15 @@ describe('Test: security/profileTest', function () {
       }
     };
 
-    profile.policies = [{_id: 'disallowAllRole'}];
+    profile.policies = [{roleId: 'disallowAllRole'}];
 
-    sandbox.stub(kuzzle.repositories.role, 'loadRole', roleId => q(roles[roleId]));
+    sandbox.stub(kuzzle.repositories.role, 'loadRole', roleId => Promise.resolve(roles[roleId]));
 
     return profile.isActionAllowed(requestObject, context, kuzzle)
       .then(isAllowed => {
         should(isAllowed).be.false();
 
-        profile.policies.push({_id: 'allowActionRole'});
+        profile.policies.push({roleId: 'allowActionRole'});
         return profile.isActionAllowed(requestObject, context, kuzzle);
       })
       .then(isAllowed => {
@@ -118,7 +118,7 @@ describe('Test: security/profileTest', function () {
       }
     };
 
-    profile.policies.push({_id: role1._id, restrictedTo: [{ index: 'index1', collections: ['collection1', 'collection2'] }]});
+    profile.policies.push({roleId: role1._id, restrictedTo: [{ index: 'index1', collections: ['collection1', 'collection2'] }]});
 
     role2._id = 'role2';
     role2.controllers = {
@@ -127,7 +127,7 @@ describe('Test: security/profileTest', function () {
       }
     };
 
-    profile.policies.push({_id: role2._id, restrictedTo: [{index: 'index2'}]});
+    profile.policies.push({roleId: role2._id, restrictedTo: [{index: 'index2'}]});
 
     role3._id = 'role3';
     role3.controllers = {
@@ -138,9 +138,9 @@ describe('Test: security/profileTest', function () {
         actions: { update: {test: 'return true;'}, create: true, delete: {test: 'return true;'} }
       }
     };
-    profile.policies.push({_id: role3._id});
+    profile.policies.push({roleId: role3._id});
 
-    sandbox.stub(kuzzle.repositories.role, 'loadRole', roleId => q(roles[roleId]));
+    sandbox.stub(kuzzle.repositories.role, 'loadRole', roleId => Promise.resolve(roles[roleId]));
 
     return profile.getRights(kuzzle)
       .then(rights => {

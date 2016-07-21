@@ -2,7 +2,7 @@
 
 var
   clc = require('cli-color'),
-  q = require('q'),
+  Promise = require('bluebird'),
   readlineSync = require('readline-sync'),
   rc = require('rc'),
   Kuzzle = require('../../lib/api'),
@@ -21,7 +21,7 @@ function getUserName () {
     return getUserName();
   }
 
-  return q(username);
+  return Promise.resolve(username);
 }
 
 function getPassword () {
@@ -41,7 +41,7 @@ function getPassword () {
     return getPassword();
   }
 
-  return q(password);
+  return Promise.resolve(password);
 }
 
 function shouldWeResetRoles () {

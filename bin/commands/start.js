@@ -6,7 +6,8 @@ var
   params = rc('kuzzle'),
   kuzzle = require('../../lib'),
   RequestObject = require('kuzzle-common-objects').Models.requestObject,
-  q = require('q'),
+  FirstAdmin = require('./createFirstAdmin'),
+  Promise = require('bluebird'),
   clc = require('cli-color'),
   coverage;
 
@@ -17,7 +18,7 @@ module.exports = function (options) {
     notice = string => options.parent.noColors ? string : clc.cyanBright(string),
     ok = string => options.parent.noColors ? string : clc.green.bold(string),
     kuz = string => options.parent.noColors ? string : clc.greenBright.bold(string);
-
+  
   if (process.env.FEATURE_COVERAGE === '1' || process.env.FEATURE_COVERAGE === 1) {
     coverage = require('istanbul-middleware');
     console.log(warn('Hook loader for coverage - ensure this is not production!'));
@@ -64,7 +65,7 @@ module.exports = function (options) {
       if (kuzzle.isServer) {
         return kuzzle.services.list.broker.waitForClients(kuzzle.config.queues.workerWriteTaskQueue);
       }
-      return q();
+      return Promise.resolve();
     })
     .then(() => {
       var request;
@@ -81,7 +82,7 @@ module.exports = function (options) {
         }
       }
 
-      return q();
+      return Promise.resolve();
     })
     .then(() => {
       var 
@@ -110,12 +111,12 @@ module.exports = function (options) {
           }
           data.mappings = params.mappings;
         }
-        
+
         request = new RequestObject({controller: 'remoteActions', action: 'prepareDb', body: data});
-        return kuzzle.remoteActionsController.actions.prepareDb(request);
+        return kuzzle.remoteActionsController.actions.prepareDb(kuzzle, request);
       }
 
-      return q();
+      return Promise.resolve();
     })
     .then(() => {
       if (kuzzle.isServer) {
@@ -123,7 +124,7 @@ module.exports = function (options) {
  ████████████████████████████████████
  ██          KUZZLE READY          ██
  ████████████████████████████████████`);
-        kuzzle.remoteActionsController.actions.adminExists()
+        return kuzzle.remoteActionsController.actions.adminExists()
           .then((res) => {
             if (res) {
               console.log(ok('[✔] It seems that you already have an admin account.'));
@@ -132,8 +133,6 @@ module.exports = function (options) {
               console.log(notice('[ℹ] There is no administrator user yet. You can use the CLI or the back-office to create one.'));
               console.log(notice('[ℹ] Entering no-administrator mode: everyone has administrator rights.'));
             }
-          })
-          .catch(() => {
           });
       }
     })

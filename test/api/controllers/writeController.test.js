@@ -1,6 +1,6 @@
 var
   should = require('should'),
-  q = require('q'),
+  Promise = require('bluebird'),
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
@@ -40,10 +40,10 @@ describe('Test: write controller', function () {
             messagePublished = true;
 
             if (error) {
-              return q.reject(new Error(''));
+              return Promise.reject(new Error(''));
             }
 
-            return q({});
+            return Promise.resolve({});
           }
         };
 
@@ -54,10 +54,10 @@ describe('Test: write controller', function () {
   beforeEach(function () {
     kuzzle.workerListener.add = rq => {
       if (error) {
-        return q.reject(new Error(''));
+        return Promise.reject(new Error(''));
       }
 
-      return q(rq);
+      return Promise.resolve(rq);
     };
 
     requestObject = new RequestObject({body: {foo: 'bar'}}, {}, 'unit-test');
@@ -219,7 +219,7 @@ describe('Test: write controller', function () {
     it('should notify on document creation', () => {
       var request = new RequestObject({body: {foo: 'bar'}}, {}, 'unit-test');
 
-      kuzzle.workerListener.add = () => q({ created: true });
+      kuzzle.workerListener.add = () => Promise.resolve({ created: true });
 
       return kuzzle.funnel.controllers.write.createOrReplace(request)
         .then(response => {
@@ -232,7 +232,7 @@ describe('Test: write controller', function () {
     it('should notify on document replace', () => {
       var request = new RequestObject({body: {foo: 'bar'}}, {}, 'unit-test');
 
-      kuzzle.workerListener.add = () => q({ created: false });
+      kuzzle.workerListener.add = () => Promise.resolve({ created: false });
 
       return kuzzle.funnel.controllers.write.createOrReplace(request)
         .then(response => {

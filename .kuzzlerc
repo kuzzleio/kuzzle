@@ -26,13 +26,6 @@
     "port": 7911,
     "retryInterval": 1000
   },
-
-  // Host and port for mqBroker service that handle communication with protocol like MQTT, STOMP and AMQP
-  // Only make sense if environment variable MQ_BROKER_ENABLED is set to 1
-  "mqBroker": {
-    "host" : "rabbit",
-    "port": 5672
-  },
   /*
    Host and port for the internalEngine service: the light database service
    called by Kuzzle core components. Can be an array
@@ -86,13 +79,13 @@
   // Default user profiles
   "userProfiles": {
     "admin": {
-      "policies": [ {"_id": "admin", "allowInternalIndex": true} ]
+      "policies": [ {"roleId": "admin", "allowInternalIndex": true} ]
     },
     "default": {
-      "policies": [ {"_id": "default"} ]
+      "policies": [ {"roleId": "default"} ]
     },
     "anonymous": {
-      "policies": [ {"_id": "anonymous"} ]
+      "policies": [ {"roleId": "anonymous"} ]
     }
   },
   // role template for all users before creating the first admin
@@ -205,6 +198,6 @@
      Requests submitted while the queue is full are discarded with a 503 error
      code ("Service temporary unavailable")
      */
-    "maxRetainedRequests": 2000
+    "maxRetainedRequests": 10000
   }
 }

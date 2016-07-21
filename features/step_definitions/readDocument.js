@@ -1,6 +1,6 @@
 var
   async = require('async'),
-  q = require('q');
+  Promise = require('bluebird');
 
 var apiSteps = function () {
   this.Then(/^I'm ?(not)* able to get the document(?: in index "([^"]*)")?$/, function (not, index, callback) {
@@ -109,23 +109,23 @@ var apiSteps = function () {
       .then(function (body) {
         if (body.error !== null) {
           if (dont) {
-            return q();
+            return Promise.resolve();
           }
 
-          return q.reject(body.error);
+          return Promise.reject(body.error);
         }
 
         if (body.result && body.result.hits && body.result.total !== 0) {
-          if (dont) { return q.reject('A document exists for the filter'); }
-          return q();
+          if (dont) { return Promise.reject('A document exists for the filter'); }
+          return Promise.resolve();
         }
 
-        if (dont) { return q(); }
-        return q.reject('No result for filter search');
+        if (dont) { return Promise.resolve(); }
+        return Promise.reject('No result for filter search');
       })
       .catch(error => {
-        if (dont) { return q(); }
-        return q.reject(error);
+        if (dont) { return Promise.resolve(); }
+        return Promise.reject(error);
       });
   });
 

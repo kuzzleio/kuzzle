@@ -1,6 +1,6 @@
 var
   should = require('should'),
-  q = require('q'),
+  Promise = require('bluebird'),
   sinon = require('sinon'),
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
@@ -8,7 +8,7 @@ var
   NotFoundError = require.main.require('kuzzle-common-objects').Errors.notFoundError,
   ResponseObject = require.main.require('kuzzle-common-objects').Models.responseObject;
 
-require('sinon-as-promised')(q.Promise);
+require('sinon-as-promised')(Promise);
 
 describe('Test: security controller - profiles', function () {
   var
@@ -34,7 +34,7 @@ describe('Test: security controller - profiles', function () {
     it('should resolve to a responseObject on a createOrReplaceProfile call', () => {
       sandbox.stub(kuzzle.repositories.profile, 'validateAndSaveProfile').resolves({_id: 'test', _source: {}});
       return kuzzle.funnel.controllers.security.createOrReplaceProfile(new RequestObject({
-        body: {_id: 'test', policies: [{_id: 'role1'}]}
+        body: {_id: 'test', policies: [{roleId: 'role1'}]}
       }))
         .then(result => {
           should(result).be.an.instanceOf(ResponseObject);
@@ -61,7 +61,7 @@ describe('Test: security controller - profiles', function () {
     it('should resolve to a responseObject on a createProfile call', () => {
       sandbox.stub(kuzzle.repositories.profile, 'validateAndSaveProfile').resolves({_id: 'test', _source: {}});
       return should(kuzzle.funnel.controllers.security.createProfile(new RequestObject({
-        body: {_id: 'test', policies: ['role1']}
+        body: {_id: 'test', policies: [{roleId:'role1'}]}
       }))).be.fulfilled();
     });
   });
@@ -103,7 +103,7 @@ describe('Test: security controller - profiles', function () {
     });
 
     it('should resolve to a responseObject on a mGetProfiles call', () => {
-      sandbox.stub(kuzzle.repositories.profile, 'loadMultiFromDatabase').resolves([{_id: 'test', policies: [{_id: 'role'}]}]);
+      sandbox.stub(kuzzle.repositories.profile, 'loadMultiFromDatabase').resolves([{_id: 'test', policies: [{roleId: 'role'}]}]);
       return kuzzle.funnel.controllers.security.mGetProfiles(new RequestObject({
         body: {ids: ['test']}
       }))
@@ -114,7 +114,7 @@ describe('Test: security controller - profiles', function () {
           should(result.data.body.hits[0]).be.an.Object();
           should(result.data.body.hits[0]._source.policies).be.an.Array();
           should(result.data.body.hits[0]._source.policies[0]).be.an.Object();
-          should(result.data.body.hits[0]._source.policies[0]._id).be.an.String();
+          should(result.data.body.hits[0]._source.policies[0].roleId).be.an.String();
         });
     });
 
@@ -148,7 +148,7 @@ describe('Test: security controller - profiles', function () {
     });
 
     it('should return a ResponseObject containing an array of profiles on searchProfile call with hydrate', () => {
-      sandbox.stub(kuzzle.repositories.profile, 'searchProfiles').resolves({total: 1, hits: [{_id: 'test', policies: [ {_id: 'default'} ]}]});
+      sandbox.stub(kuzzle.repositories.profile, 'searchProfiles').resolves({total: 1, hits: [{_id: 'test', policies: [ {roleId: 'default'} ]}]});
       return kuzzle.funnel.controllers.security.searchProfiles(new RequestObject({
         body: {
           policies: ['role1']
@@ -161,7 +161,7 @@ describe('Test: security controller - profiles', function () {
           should(jsonResponse.result.hits).be.an.Array();
           should(jsonResponse.result.hits[0]._id).be.exactly('test');
           should(jsonResponse.result.hits[0]._source.policies).be.an.Array();
-          should(jsonResponse.result.hits[0]._source.policies[0]._id).be.exactly('default');
+          should(jsonResponse.result.hits[0]._source.policies[0].roleId).be.exactly('default');
         });
     });
 

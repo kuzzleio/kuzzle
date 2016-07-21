@@ -4,14 +4,9 @@ var
 var apiSteps = function () {
   this.Then(/^I count ([\d]*) documents(?: in index "([^"]*)")?$/, function (number, index, callback) {
     var main = function (callbackAsync) {
-      setTimeout(function () {
+      setTimeout(() => {
         this.api.count({}, index)
           .then(body => {
-            if (body.error) {
-              callbackAsync(body.error.message);
-              return false;
-            }
-
             if (body.result.count !== parseInt(number)) {
               callbackAsync('No correct value for count. Expected ' + number + ', got ' + body.result.count);
               return false;
@@ -19,16 +14,14 @@ var apiSteps = function () {
 
             callbackAsync();
           })
-          .catch(function (error) {
-            callbackAsync(error);
-          });
-      }.bind(this), 100); // end setTimeout
+          .catch(error => callbackAsync(error));
+      }, 100); // end setTimeout
     };
 
     async.retry(20, main.bind(this), function (err) {
       if (err) {
         if (err.message) {
-          err = err.message;
+          err = `${err.statusCode}: ${err.message}`;
         }
 
         callback(new Error(err));

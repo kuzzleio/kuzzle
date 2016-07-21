@@ -1,6 +1,6 @@
 var
   should = require('should'),
-  q = require('q'),
+  Promise = require('bluebird'),
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
   InternalError = require.main.require('kuzzle-common-objects').Errors.internalError,
   BadRequestError = require.main.require('kuzzle-common-objects').Errors.badRequestError,
@@ -275,7 +275,7 @@ describe('Test: hotelClerk.addSubscription', function () {
         should(result).have.property('channel');
         should(result).have.property('roomId');
 
-        return q(result.roomId);
+        return Promise.resolve(result.roomId);
       })
       .then(id => {
         var requestObject2 = new RequestObject({

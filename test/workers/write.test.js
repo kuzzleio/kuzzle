@@ -1,7 +1,7 @@
 var
   should = require('should'),
   rewire = require('rewire'),
-  q = require('q'),
+  Promise = require('bluebird'),
   params = require('rc')('kuzzle'),
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
@@ -19,13 +19,13 @@ describe('Testing: write worker', function () {
 
     return kuzzle.start(params, {dummy: true})
       .then(function () {
-        kuzzle.services.init = function () {return q();};
+        kuzzle.services.init = function () {return Promise.resolve();};
 
         // we test successful write commands using a mockup 'create' action...
-        kuzzle.services.list.writeEngine.create = function (request) { return q(request); };
+        kuzzle.services.list.writeEngine.create = function (request) { return Promise.resolve(request); };
 
         // ...and failed write command with a mockup 'update' action
-        kuzzle.services.list.writeEngine.update = function () { return q.reject(new Error('rejected')); };
+        kuzzle.services.list.writeEngine.update = function () { return Promise.reject(new Error('rejected')); };
       });
   });
 

@@ -4,7 +4,7 @@
 var
   _ = require('lodash'),
   should = require('should'),
-  q = require('q'),
+  Promise = require('bluebird'),
   rewire = require('rewire'),
   params = require('rc')('kuzzle'),
   sinon = require('sinon'),
@@ -297,7 +297,7 @@ describe('Test: statistics core component', function () {
     var statsCache = kuzzle.services.list.statsCache;
 
     kuzzle.services.list.statsCache = {
-      get: () => { return q.reject(new Error()); }
+      get: () => { return Promise.reject(new Error()); }
     };
 
     stats.lastFrame = Date.now();
@@ -306,7 +306,7 @@ describe('Test: statistics core component', function () {
       stats.getLastStats(requestObject)
         .catch(error => {
           kuzzle.services.list.statsCache = statsCache;
-          return q.reject(error);
+          return Promise.reject(error);
         })
     ).be.rejected();
   });

@@ -7,7 +7,7 @@
  */
 var
   should = require('should'),
-  q = require('q'),
+  Promise = require('bluebird'),
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle');
@@ -26,34 +26,34 @@ var mockupCacheService = {
       this.addId = id;
       this.room = room;
     }
-    return q({});
+    return Promise.resolve({});
   },
 
   remove: function (id, room) {
     if (room.length > 0) {
       this.removeId = id;
     }
-    return q({});
+    return Promise.resolve({});
   },
 
   search: function (id) {
     if (id === 'removeme') {
-      return q(['foobar']);
+      return Promise.resolve(['foobar']);
     }
 
-    return q([]);
+    return Promise.resolve([]);
   }
 };
 
 var mockupTestFilters = (index, collection, data, id) => {
   if (id === 'errorme') {
-    return q.reject(new Error('rejected'));
+    return Promise.reject(new Error('rejected'));
   }
   else if (id === 'removeme') {
-    return q([]);
+    return Promise.resolve([]);
   }
   
-  return q(['foobar']);
+  return Promise.resolve(['foobar']);
 };
 
 describe('Test: notifier.notifyDocumentUpdate', function () {
@@ -70,7 +70,7 @@ describe('Test: notifier.notifyDocumentUpdate', function () {
       .then(function () {
         kuzzle.services.list.notificationCache = mockupCacheService;
         kuzzle.services.list.readEngine = {
-          get: r => q({_id: r.data._id, _source: requestObject.data.body})
+          get: r => Promise.resolve({_id: r.data._id, _source: requestObject.data.body})
         };
         kuzzle.dsl.test = mockupTestFilters;
         kuzzle.notifier.notify = function (rooms, r, n) {

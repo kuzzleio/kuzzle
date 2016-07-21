@@ -3,13 +3,13 @@ var
   sinon = require('sinon'),
   params = require('rc')('kuzzle'),
   Kuzzle = require.main.require('lib/api/Kuzzle'),
-  q = require('q'),
+  Promise = require('bluebird'),
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
   Token = require.main.require('lib/api/core/models/security/token'),
   Role = require.main.require('lib/api/core/models/security/role'),
   PluginImplementationError = require.main.require('kuzzle-common-objects').Errors.pluginImplementationError;
 
-require('sinon-as-promised')(q.Promise);
+require('sinon-as-promised')(Promise);
 
 describe('Test: routerController', () => {
   var sandbox;
@@ -101,12 +101,12 @@ describe('Test: routerController', () => {
             
             user = {
               _id: 'user',
-              profileId: 'profile',
+              profilesIds: ['profile'],
               isActionAllowed: sinon.stub().resolves(true),
               getProfile: () => {
-                return q({
+                return Promise.resolve({
                   _id: 'profile',
-                  policies: ['role'],
+                  policies: [{roleId: 'role'}],
                   getRoles: sinon.stub().resolves([role]),
                   isActionAllowed: sinon.stub().resolves(true)
                 });
@@ -116,7 +116,7 @@ describe('Test: routerController', () => {
             token._id = 'fake-token';
             token.userId = user._id;
 
-            return q(token);
+            return Promise.resolve(token);
           };
 
           return kuzzle.router.newConnection('foo', 'bar');
