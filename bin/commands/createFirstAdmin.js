@@ -45,7 +45,7 @@ function getPassword () {
 }
 
 function shouldWeResetRoles () {
-  return q(readlineSync.keyInYN(clcQuestion('[❓] Reset roles?')));
+  return Promise.resolve(readlineSync.keyInYN(clcQuestion('[❓] Reset roles?')));
 }
 
 function confirm (username, resetRoles) {
@@ -55,7 +55,7 @@ function confirm (username, resetRoles) {
     msg += ' and reset default roles';
   }
   msg += '.\nConfirm? ';
-  return q(readlineSync.keyInYN(clcQuestion(msg)));
+  return Promise.resolve(readlineSync.keyInYN(clcQuestion(msg)));
 }
 
 module.exports = function (options) {

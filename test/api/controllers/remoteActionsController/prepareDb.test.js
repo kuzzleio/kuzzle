@@ -571,7 +571,13 @@ describe('Test: Prepare database', function () {
       return createRoleCollection(role)
         .then(() => {
           should(kuzzle.internalEngine.updateMapping).be.calledOnce();
-          should(kuzzle.internalEngine.updateMapping).be.calledWithExactly('roles', role);
+          should(kuzzle.internalEngine.updateMapping).be.calledWith('roles', {
+            properties: {
+              controllers: {
+                enabled: false
+              }
+            }
+          });
           should(kuzzle.internalEngine.createOrReplace).be.calledThrice();
           should(kuzzle.internalEngine.createOrReplace.firstCall).be.calledWithExactly('roles', 'anonymous', role);
           should(kuzzle.internalEngine.createOrReplace.secondCall).be.calledWithExactly('roles', 'default', role);
@@ -618,13 +624,13 @@ describe('Test: Prepare database', function () {
           should(kuzzle.indexCache.add).be.calledWithExactly(kuzzle.internalEngine.index, 'profiles');
           should(kuzzle.internalEngine.createOrReplace).be.calledThrice();
           should(kuzzle.internalEngine.createOrReplace.firstCall).be.calledWith('profiles', 'default', {
-            policies: [{_id: 'default', allowInternalIndex: true}]
+            policies: [{roleId: 'default', allowInternalIndex: true}]
           });
           should(kuzzle.internalEngine.createOrReplace.secondCall).be.calledWith('profiles', 'anonymous', {
-            policies: [{_id: 'anonymous', allowInternalIndex: true}]
+            policies: [{roleId: 'anonymous', allowInternalIndex: true}]
           });
           should(kuzzle.internalEngine.createOrReplace.thirdCall).be.calledWith('profiles', 'admin', {
-            policies: [{_id: 'admin', allowInternalIndex: true}]
+            policies: [{roleId: 'admin', allowInternalIndex: true}]
           });
         });
     });

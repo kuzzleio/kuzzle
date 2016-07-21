@@ -606,7 +606,7 @@ describe('Test: managePlugins remote action caller', function () {
       kuzzle.internalEngine.get.resolves({_source: {npmVersion: '42'}});
 
       return ManagePlugins
-        .__with__('q.denodeify', sandbox.stub().throws(error))(
+        .__with__('getPluginPath', sandbox.stub().throws(error))(
           () => {
             return should(removePlugin('test'))
               .be.rejectedWith('Unable to remove the plugin module: Error: test');

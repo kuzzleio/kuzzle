@@ -6,7 +6,6 @@ var
   params = rc('kuzzle'),
   kuzzle = require('../../lib'),
   RequestObject = require('kuzzle-common-objects').Models.requestObject,
-  FirstAdmin = require('./createFirstAdmin'),
   Promise = require('bluebird'),
   clc = require('cli-color'),
   coverage;
@@ -113,7 +112,7 @@ module.exports = function (options) {
         }
 
         request = new RequestObject({controller: 'remoteActions', action: 'prepareDb', body: data});
-        return kuzzle.remoteActionsController.actions.prepareDb(kuzzle, request);
+        return kuzzle.remoteActionsController.actions.prepareDb(request);
       }
 
       return Promise.resolve();

@@ -1,5 +1,5 @@
 var
-  q = require('q'),
+  Promise = require('bluebird'),
   rewire = require('rewire'),
   should = require('should'),
   sinon = require('sinon'),
@@ -16,19 +16,18 @@ describe('InternalEngine', () => {
     reset = InternalEngine.__set__({
       Elasticsearch: {
         Client: function () {
-          this.create = q;
-          this.delete = q;
-          this.exists = q;
-          this.get = q;
-          this.index = q;
-          this.mget = q;
-          this.update = q;
-          this.search = q;
+          this.create = Promise.resolve;
+          this.delete = Promise.resolve;
+          this.exists = Promise.resolve;
+          this.get = Promise.resolve;
+          this.index = Promise.resolve;
+          this.mget = Promise.resolve;
+          this.update = Promise.resolve;
+          this.search = Promise.resolve;
 
           this.indices = {
-            create: q,
-            exists: q
-
+            create: Promise.resolve,
+            exists: Promise.resolve
           };
         }
       }
