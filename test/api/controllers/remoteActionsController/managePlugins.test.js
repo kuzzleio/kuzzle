@@ -4,6 +4,7 @@ var
   sinon = require('sinon'),
   mock = require('mock-require'),
   lockFile = require('proper-lockfile'),
+  RequestObject = require('kuzzle-common-objects').Models.requestObject,
   ManagePlugins = rewire('../../../../lib/api/controllers/remoteActions/managePlugins'),
   sandbox = sinon.sandbox.create();
 
@@ -43,6 +44,196 @@ describe('Test: managePlugins remote action caller', function () {
   afterEach(() => {
     sandbox.restore();
     mock.stopAll();
+  });
+
+  describe('#pluginsManager', () => {
+    var
+      pluginsManager = ManagePlugins.__get__('pluginsManager'),
+      reset,
+      lockStub,
+      releaseStub,
+      getPluginsListStub,
+      installPluginsStub,
+      getPluginConfigurationStub,
+      setPluginConfigurationStub,
+      importPluginConfigurationStub,
+      unsetPluginConfigurationStub,
+      replacePluginConfigurationStub,
+      removePluginStub;
+
+    beforeEach(() => {
+      releaseStub = sinon.stub();
+      reset = ManagePlugins.__set__({
+        lockfile: {
+          lock: sandbox.stub().yields(undefined, releaseStub)
+        },
+        initializeInternalIndex: sandbox.stub().resolves(),
+        getPluginsList: sandbox.spy(),
+        installPlugins: sandbox.spy(),
+        getPluginConfiguration: sandbox.spy(),
+        setPluginConfiguration: sandbox.spy(),
+        importPluginConfiguration: sandbox.spy(),
+        unsetPluginConfiguration: sandbox.spy(),
+        replacePluginConfiguration: sandbox.spy(),
+        removePlugin: sandbox.spy()
+      });
+
+      lockStub = ManagePlugins.__get__('lockfile').lock;
+      getPluginsListStub = ManagePlugins.__get__('getPluginsList');
+      installPluginsStub = ManagePlugins.__get__('installPlugins');
+      getPluginConfigurationStub = ManagePlugins.__get__('getPluginConfiguration');
+      setPluginConfigurationStub = ManagePlugins.__get__('setPluginConfiguration');
+      importPluginConfigurationStub = ManagePlugins.__get__('importPluginConfiguration');
+      unsetPluginConfigurationStub = ManagePlugins.__get__('unsetPluginConfiguration');
+      replacePluginConfigurationStub = ManagePlugins.__get__('replacePluginConfiguration');
+      removePluginStub = ManagePlugins.__get__('removePlugin');
+    });
+
+    afterEach(() => {
+      reset();
+    });
+
+    it('should call getPluginsList if --list option is given', () => {
+      var request = new RequestObject({body: {list: true}});
+
+      return pluginsManager(request)
+        .then(() => {
+          should(lockStub).be.calledOnce();
+          should(getPluginsListStub).be.calledOnce();
+          should(releaseStub).be.calledOnce();
+        });
+    });
+
+    it('should call installPlugins if --install option is given', () => {
+      var request = new RequestObject({_id: 'test', body: {install: true}});
+
+      return pluginsManager(request)
+        .then(() => {
+          should(installPluginsStub).be.calledOnce();
+          should(installPluginsStub).be.calledWith('test', {install: true});
+        });
+
+    });
+
+    it('should call getPluginConfiguration if --get is given', () => {
+      var request = new RequestObject({_id: 'test', body: {get: true}});
+
+      return pluginsManager(request)
+        .then(() => {
+          should(getPluginConfigurationStub).be.calledOnce();
+          should(getPluginConfigurationStub).be.calledWithExactly('test');
+        });
+    });
+
+    it('should call setPluginConfiguration if --set is given', () => {
+      var request = new RequestObject({_id: 'test', body: {set: true}});
+
+      return pluginsManager(request)
+        .then(() => {
+          should(setPluginConfigurationStub).be.calledOnce();
+          should(setPluginConfigurationStub).be.calledWith('test', true);
+        });
+    });
+
+    it('should call importPluginConfiguration if --importConfig is given', () => {
+      var request = new RequestObject({_id: 'test', body: {importConfig: true}});
+
+      return pluginsManager(request)
+        .then(() => {
+          should(importPluginConfigurationStub).be.calledOnce();
+          should(importPluginConfigurationStub).be.calledWithExactly('test', true);
+        });
+    });
+
+    it('should call unsetPluginConfiguration if --unset is given', () => {
+      var request = new RequestObject({_id: 'test', body: {unset: true}});
+
+      return pluginsManager(request)
+        .then(() => {
+          should(unsetPluginConfigurationStub).be.calledOnce();
+          should(unsetPluginConfigurationStub).be.calledWithExactly('test', true);
+        });
+    });
+
+    it('should call replacePluginConfiguration if --replace is given', () => {
+      var request = new RequestObject({_id: 'test', body: {replace: true}});
+
+      return pluginsManager(request)
+        .then(() => {
+          should(replacePluginConfigurationStub).be.calledOnce();
+          should(replacePluginConfigurationStub).be.calledWithExactly('test', true);
+        });
+    });
+
+    it('should call removePlugin if --remove is given', () => {
+      var request = new RequestObject({_id: 'test', body: {remove: true}});
+
+      return pluginsManager(request)
+        .then(() => {
+          should(removePluginStub).be.calledOnce();
+          should(removePluginStub).be.calledWithExactly('test');
+        });
+    });
+
+    it('should activate the plugin if required', () => {
+      var request = new RequestObject({_id: 'test', body: {activate: true}});
+
+      return pluginsManager(request)
+        .then(() => {
+          should(kuzzle.internalEngine.update).be.calledOnce();
+          should(kuzzle.internalEngine.update).be.calledWith('collection', 'test', {activated: true});
+          should(getPluginConfigurationStub).be.calledOnce();
+          sinon.assert.callOrder(kuzzle.internalEngine.update, getPluginConfigurationStub);
+        });
+    });
+
+    it('should deactivate the plugin if required', () => {
+      var request = new RequestObject({_id: 'test', body: {deactivate: true}});
+
+      return pluginsManager(request)
+        .then(() => {
+          should(kuzzle.internalEngine.update).be.calledOnce();
+          should(kuzzle.internalEngine.update).be.calledWith('collection', 'test', {activated: false});
+          should(getPluginConfigurationStub).be.calledOnce();
+          sinon.assert.callOrder(kuzzle.internalEngine.update, getPluginConfigurationStub);
+        });
+    });
+
+    it('should release the lock in case of error', done => {
+      var
+        error = new Error('test'),
+        request = new RequestObject({_id: 'test'});
+
+      ManagePlugins.__with__({
+        initializeInternalIndex: sinon.stub().rejects(error)
+      })(() => {
+        return pluginsManager(request)
+          .catch(err => {
+            should(err).be.eql(error);
+            should(releaseStub).be.calledOnce();
+            done();
+          });
+      });
+    });
+
+    it('should retry if a 503 error is received', () => {
+      var
+        error = {message: 'test', status: 503},
+        request = new RequestObject({_id: 'test'}),
+        stub = sinon.stub().resolves('test');
+
+      return ManagePlugins.__with__({
+        setTimeout: stub,
+        initializeInternalIndex: sinon.stub().rejects(error)
+      })(() => {
+        return pluginsManager(request)
+          .then(response => {
+            should(response).equal('test');
+            should(stub).be.calledOnce();
+          });
+      });
+    });
+
   });
 
   describe('#initializeInternalIndex', () => {
@@ -364,6 +555,63 @@ describe('Test: managePlugins remote action caller', function () {
           should(childProcessExecStub).be.calledOnce();
           should(childProcessExecStub).be.calledWith('npm install someUrl');
         });
+    });
+
+  });
+
+  describe('#updatePluginsConfiguration', () => {
+    var
+      updatePluginsConfiguration = ManagePlugins.__get__('updatePluginsConfiguration'),
+      reset;
+
+    beforeEach(() => {
+      reset = ManagePlugins.__set__({
+        getPathPlugin: sinon.stub(),
+
+      });
+    });
+
+    afterEach(() => {
+      reset();
+    });
+
+    it('should return a rejected promise if the path plugin package.json cannot be found', () => {
+      var error = new Error('error');
+
+      return ManagePlugins.__with__({
+        require: () => { throw error; }
+      })(() => {
+        return should(updatePluginsConfiguration({test: {path: 'fake'}}))
+          .be.rejectedWith(error);
+      });
+    });
+
+    it('should return a rejected promise if the npm plugin package.json cannot be found', () => {
+      var error = new Error('error');
+
+      return ManagePlugins.__with__({
+        require: () => { throw error; }
+      })(() => {
+        return should(updatePluginsConfiguration({test: {}}))
+          .be.rejectedWith(error);
+      });
+    });
+
+    it('should update the plugin configuration', () => {
+      return ManagePlugins.__with__({
+        require: () => { return {pluginInfo: {test: true}}; }
+      })(() => {
+        return updatePluginsConfiguration({test: {foo: 'bar', defaultConfig: {bar: 'baz'}}})
+          .then(() => {
+            should(kuzzle.internalEngine.createOrReplace).be.calledOnce();
+            should(kuzzle.internalEngine.createOrReplace).be.calledWith('collection', 'test', {
+              activated: true,
+              config: {bar: 'baz'},
+              foo: 'bar',
+              test: true
+            });
+          });
+      });
     });
 
   });
