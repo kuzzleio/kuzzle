@@ -35,8 +35,6 @@ module.exports = function pluginsManager (plugin, options) {
     }
   }
   
-  console.log(data);
-
   return kuzzle.remoteActions.do('managePlugins', data, {pid: options.pid, debug: options.parent.debug})
     .then(res => {
       if (options.list) {
