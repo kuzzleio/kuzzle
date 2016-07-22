@@ -64,6 +64,8 @@ module.exports = function (options) {
     password,
     resetRoles;
 
+  process.stdin.setEncoding('utf8');
+
   if (options.parent.noColors) {
     clcError = clcOk = clcQuestion = string => string;
   }
