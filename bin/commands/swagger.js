@@ -1,10 +1,10 @@
 var
   rc = require('rc'),
   params = rc('kuzzle'),
-  Kuzzle = require('../../lib/api');
+  KuzzleServer = require('../../lib/api/kuzzleServer');
 
 module.exports = function () {
-  var kuzzle = new Kuzzle();
+  var kuzzle = new KuzzleServer();
 
   kuzzle.remoteActions.do('swagger', params);
 };
