@@ -3,9 +3,12 @@ var
   Promise = require('bluebird'),
   _ = require('lodash'),
   params = require('rc')('kuzzle'),
-  Kuzzle = require.main.require('lib/api/Kuzzle'),
+  KuzzleWorker = require.main.require('lib/api/kuzzleWorker'),
   WLoader = require('../../lib/workers/index'),
-  sinon = require('sinon');
+  sinon = require('sinon'),
+  sandbox = sinon.sandbox.create();
+
+require('sinon-as-promised');
 
 describe('Testing: workers loader', function () {
   var
@@ -14,8 +17,12 @@ describe('Testing: workers loader', function () {
     workersList = [];
 
   before(() => {
-    kuzzle = new Kuzzle();
-    return kuzzle.start(params, {dummy: true})
+    kuzzle = new KuzzleWorker();
+  });
+
+  beforeEach(function () {
+    sandbox.stub(kuzzle.internalEngine, 'get').resolves({});
+    return kuzzle.services.init({whitelist: []})
       .then(() => {
         Object.keys(kuzzle.config.workers).forEach(function (workerGroup) {
           kuzzle.config.workers[workerGroup].forEach(function (worker) {
@@ -24,15 +31,15 @@ describe('Testing: workers loader', function () {
         });
 
         kuzzle.services.list.broker.listen = sinon.stub();
-        kuzzle.services.init = sinon.stub().resolves();
+        sandbox.stub(kuzzle.services, 'init').resolves();
         workersList = _.uniq(workersList);
 
         loader = new WLoader(kuzzle);
       });
   });
 
-  beforeEach(function () {
-    loader.list = {};
+  afterEach(() => {
+    sandbox.restore();
   });
 
   it('should have an init() function', function () {

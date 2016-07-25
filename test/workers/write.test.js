@@ -5,39 +5,38 @@ var
   params = require('rc')('kuzzle'),
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
-  Kuzzle = require.main.require('lib/api/Kuzzle'),
+  KuzzleWorker = require.main.require('lib/api/kuzzleWorker'),
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
   Worker = rewire('../../lib/workers/write');
+
+require('sinon-as-promised');
 
 describe('Testing: write worker', function () {
   var
     kuzzle,
+    spy,
     requestObject;
 
   before(() => {
-    kuzzle = new Kuzzle();
-
-    return kuzzle.start(params, {dummy: true})
-      .then(function () {
-        kuzzle.services.init = function () {return Promise.resolve();};
-
-        // we test successful write commands using a mockup 'create' action...
-        kuzzle.services.list.writeEngine.create = function (request) { return Promise.resolve(request); };
-
-        // ...and failed write command with a mockup 'update' action
-        kuzzle.services.list.writeEngine.update = function () { return Promise.reject(new Error('rejected')); };
-      });
+    kuzzle = new KuzzleWorker();
   });
 
   beforeEach(function () {
-    requestObject = new RequestObject({
-      controller: 'write',
-      action: 'create',
-      protocol: 'protocol',
-      requestId: 'My name is Ozymandias, king of kings',
-      collection: 'Look on my works, ye Mighty, and despair!',
-      body: {}
-    });
+    sandbox.stub(kuzzle.internalEngine, 'get').resolves({});
+    return kuzzle.services.init({whitelist: []})
+      .then(() => {
+        spy = sandbox.stub(kuzzle.services, 'init').resolves();
+        sandbox.stub(kuzzle.services.list.writeEngine, 'create', (request) => Promise.resolve(request));
+        sandbox.stub(kuzzle.services.list.writeEngine, 'update').rejects(new Error('rejected'));
+        requestObject = new RequestObject({
+          controller: 'write',
+          action: 'create',
+          protocol: 'protocol',
+          requestId: 'My name is Ozymandias, king of kings',
+          collection: 'Look on my works, ye Mighty, and despair!',
+          body: {}
+        });
+      });
   });
 
   afterEach(() => {
@@ -51,7 +50,6 @@ describe('Testing: write worker', function () {
 
   it('should return a promise when initializing', function () {
     var
-      spy = sandbox.stub(kuzzle.services, 'init').resolves({}),
       writeWorker = new Worker(kuzzle),
       result = writeWorker.init();
 
@@ -68,8 +66,6 @@ describe('Testing: write worker', function () {
       brokerSpy = sandbox.stub(kuzzle.services.list.broker, 'listen'),
       writeWorker;
 
-    sandbox.stub(kuzzle.services, 'init').resolves({});
-
     writeWorker = new Worker(kuzzle);
     return writeWorker.init()
       .then(() => {
@@ -81,10 +77,9 @@ describe('Testing: write worker', function () {
   it('should respond with an error if an unknown action has been submitted', function (done) {
     var
       callback = Worker.__get__('onListenCB'),
-      saveAdd = kuzzle.services.list.broker.send,
       responded = false;
 
-    kuzzle.services.list.broker.send = function(queue, response) {
+    sandbox.stub(kuzzle.services.list.broker, 'send', function(queue, response) {
       try {
         should(queue).be.exactly(kuzzle.config.queues.workerWriteResponseQueue);
         should(response.status).be.exactly(400);
@@ -96,11 +91,10 @@ describe('Testing: write worker', function () {
         done(error);
       }
       responded = true;
-    };
+    });
 
     requestObject.action = 'foobar';
     callback.call(kuzzle, requestObject);
-    kuzzle.services.list.broker.send = saveAdd;
 
     should(responded).be.true();
   });
@@ -108,12 +102,11 @@ describe('Testing: write worker', function () {
   it('should respond to the response queue and to the notifier queue when a query is successfully completed', function (done) {
     var
       callback = Worker.__get__('onListenCB'),
-      responseQueue = false,
-      saveBrokerAdd = kuzzle.services.list.broker.send;
+      responseQueue = false;
 
     this.timeout(50);
 
-    kuzzle.services.list.broker.send = function (queue, data) {
+    sandbox.stub(kuzzle.services.list.broker, 'send', function (queue, data) {
       try {
         should(data).match(requestObject);
       } catch (error) {
@@ -123,14 +116,13 @@ describe('Testing: write worker', function () {
       if (queue === kuzzle.config.queues.workerWriteResponseQueue) {
         responseQueue = true;
       }
-    };
+    });
 
     callback.call(kuzzle, requestObject);
 
     setTimeout(function () {
       try {
         should(responseQueue).be.true();
-        kuzzle.services.list.broker.send = saveBrokerAdd;
         done();
       }
       catch (error) {
@@ -142,12 +134,11 @@ describe('Testing: write worker', function () {
   it('should respond to the client when an error occurs', function (done) {
     var
       onListenCB = Worker.__get__('onListenCB'),
-      responseQueue = false,
-      saveBrokerAdd = kuzzle.services.list.broker.send;
+      responseQueue = false;
 
     this.timeout(50);
 
-    kuzzle.services.list.broker.send = function (queue, data) {
+    sandbox.stub(kuzzle.services.list.broker, 'send', function (queue, data) {
       try {
         should(data).be.an.Object();
         should(data.status).be.exactly(400);
@@ -164,7 +155,7 @@ describe('Testing: write worker', function () {
       else {
         done(new Error('Message sent to an unknown queue: ' + queue));
       }
-    };
+    });
 
     requestObject.action = 'update';
     onListenCB.call(kuzzle, requestObject);
@@ -172,7 +163,6 @@ describe('Testing: write worker', function () {
     setTimeout(function () {
       try {
         should(responseQueue).be.true();
-        kuzzle.services.list.broker.send = saveBrokerAdd;
         done();
       }
       catch (error) {
