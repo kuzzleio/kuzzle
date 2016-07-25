@@ -9,8 +9,6 @@ var
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
   Worker = rewire('../../lib/workers/write');
 
-require('sinon-as-promised');
-
 describe('Testing: write worker', function () {
   var
     kuzzle,

@@ -8,8 +8,6 @@ var
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create();
 
-require('sinon-as-promised');
-
 describe('Testing: workers loader', function () {
   var
     kuzzle,

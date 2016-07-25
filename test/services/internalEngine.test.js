@@ -5,8 +5,6 @@ var
   KuzzleServer = require.main.require('lib/api/kuzzleServer'),
   NotFoundError = require.main.require('kuzzle-common-objects').Errors.notFoundError;
 
-require('sinon-as-promised');
-
 describe('InternalEngine', () => {
   var
     kuzzle,

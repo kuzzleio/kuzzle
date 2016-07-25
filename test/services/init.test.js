@@ -8,8 +8,6 @@ var
   Services = rewire('../../lib/services'),
   sandbox = sinon.sandbox.create();
 
-require('sinon-as-promised')(Promise);
-
 describe('Test service initialization function', function () {
 
   var
