@@ -6,9 +6,9 @@ var
   IORedis = require('ioredis'),
   redisCommands = (require('ioredis')({lazyConnect: true})).getBuiltinCommands(),
   EventEmitter = require('eventemitter2').EventEmitter2,
-  Kuzzle = require.main.require('lib/api/Kuzzle'),
+  KuzzleServer = require.main.require('lib/api/kuzzleServer'),
   sinon = require('sinon'),
-  redisClientMock = require('../mocks/services/redisClient.mock');
+  RedisClientMock = require('../mocks/services/redisClient.mock');
 
 
 describe('Test redis service', function () {
@@ -19,17 +19,15 @@ describe('Test redis service', function () {
     sandbox = sinon.sandbox.create();
 
   before(() => {
-    kuzzle = new Kuzzle();
+    kuzzle = new KuzzleServer();
+    kuzzle.config.cache.databases.push(dbname);
+    redis = new Redis(kuzzle, {service: dbname});
+    return Redis.__with__('buildClient', () => new RedisClientMock())(() => {
+      return redis.init();
+    });
+  });
 
-    return kuzzle.start(params, {dummy: true})
-      .then(() => {
-        kuzzle.config.cache.databases.push(dbname);
-        redis = new Redis(kuzzle, {service: dbname});
-        return redis.init();
-      })
-      .then(() => {
-        redis.client = redisClientMock;
-      });
+  beforeEach(() => {
   });
 
   afterEach(() => {
@@ -40,20 +38,7 @@ describe('Test redis service', function () {
     var
       myRedis = new Redis(kuzzle, {service: dbname});
 
-    return Redis.__with__('buildClient', () => {
-      var
-        Client = function () {
-          this.getBuiltinCommands = () => [];
-          this.select = (index, cb) => cb(null, {});
-          this.flushdb = cb => cb(null, {});
-
-          setTimeout(() => { this.emit('ready'); }, 1);
-        };
-
-      Client.prototype = new EventEmitter();
-
-      return new Client();
-    })(() => {
+    return Redis.__with__('buildClient', () => new RedisClientMock())(() => {
       return myRedis.init()
         .then(() => {
           should(myRedis).have.property('client');

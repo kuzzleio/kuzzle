@@ -2,7 +2,7 @@ var
   should = require('should'),
   sinon = require('sinon'),
   params = require('rc')('kuzzle'),
-  Kuzzle = require.main.require('lib/api/Kuzzle'),
+  KuzzleServer = require.main.require('lib/api/kuzzleServer'),
   NotFoundError = require.main.require('kuzzle-common-objects').Errors.notFoundError;
 
 require('sinon-as-promised');
@@ -13,8 +13,7 @@ describe('InternalEngine', () => {
     sandbox;
 
   before(() => {
-    kuzzle = new Kuzzle();
-    return kuzzle.start(params, {dummy: true});
+    kuzzle = new KuzzleServer();
   });
 
   beforeEach(() => {

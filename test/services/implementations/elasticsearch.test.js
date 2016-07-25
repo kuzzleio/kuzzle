@@ -4,7 +4,7 @@ var
   sinon = require('sinon'),
   rewire = require('rewire'),
   params = require('rc')('kuzzle'),
-  Kuzzle = require.main.require('lib/api/Kuzzle'),
+  KuzzleServer = require.main.require('lib/api/kuzzleServer'),
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
   BadRequestError = require.main.require('kuzzle-common-objects').Errors.badRequestError,
   NotFoundError = require.main.require('kuzzle-common-objects').Errors.notFoundError,
@@ -45,20 +45,8 @@ describe('Test: ElasticSearch service', function () {
 
 
   before(()=> {
-    kuzzle = new Kuzzle();
-    return kuzzle.start(params, {dummy: true})
-      .then(() => {
-        kuzzle.pluginsManager = {
-          trigger: () => {}
-        };
-
-        elasticsearch = new ES(kuzzle, {service: engineType});
-
-        // we make sure the services won't ever be able to connect to elasticsearch
-        elasticsearch.init();
-        elasticsearch.client.transport = {};
-        kuzzle.internalEngine.client.transport = {};
-      });
+    kuzzle = new KuzzleServer();
+    elasticsearch = new ES(kuzzle, {service: engineType});
   });
 
   beforeEach(() => {
