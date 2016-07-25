@@ -1,13 +1,13 @@
 var
   rc = require('rc'),
-  Kuzzle = require.main.require('lib/api/Kuzzle'),
+  KuzzleServer = require.main.require('lib/api/kuzzleServer'),
   should = require('should');
 
-describe('Test kuzzle constructor', () => {
+describe('Test kuzzle server constructor', () => {
   var kuzzle;
 
   before(() => {
-    kuzzle = new Kuzzle();
+    kuzzle = new KuzzleServer();
   });
 
   it('should construct a kuzzle object', () => {
@@ -15,12 +15,33 @@ describe('Test kuzzle constructor', () => {
 
     should(kuzzle.hooks).be.an.Object();
     should(kuzzle.workers).be.an.Object();
+    should(kuzzle.services).be.an.Object();
     should(kuzzle.remoteActions).be.an.Object();
+
+    should(kuzzle.internalEngine).be.an.Object();
+    should(kuzzle.pluginsManager).be.an.Object();
+    should(kuzzle.tokenManager).be.an.Object();
+    should(kuzzle.indexCache).be.an.Object();
+
+    should(kuzzle.passport).be.an.Object();
+    should(kuzzle.funnel).be.an.Object();
+    should(kuzzle.router).be.an.Object();
+
+    should(kuzzle.hotelClerk).be.an.Object();
+    should(kuzzle.dsl).be.an.Object();
+    should(kuzzle.notifier).be.an.Object();
+    should(kuzzle.statistics).be.an.Object();
+    should(kuzzle.workerListener).be.an.Object();
+
+    should(kuzzle.clusterManager).be.an.Object();
+    should(kuzzle.entryPoints).be.an.Object();
+
+    should(kuzzle.remoteActionsController).be.an.Object();
 
     should(kuzzle.start).be.a.Function();
   });
 
-  it('should construct a kuzzle object with emit and listen event', (done) => {
+  it('should construct a kuzzle server object with emit and listen event', (done) => {
     kuzzle.on('event', () => {
       done();
     });
@@ -41,7 +62,7 @@ describe('Test kuzzle constructor', () => {
         exitStatus = status;
       };
 
-      kuzzle = new Kuzzle();
+      kuzzle = new KuzzleServer();
     });
 
     after(() => {
