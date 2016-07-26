@@ -9,8 +9,9 @@ var
   params = require('rc')('kuzzle'),
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
-  Kuzzle = require.main.require('lib/api/Kuzzle'),
-  redisClientMock = require('../../mocks/services/redisClient.mock'),
+  KuzzleServer = require.main.require('lib/api/kuzzleServer'),
+  Redis = rewire('../../../lib/services/redis'),
+  RedisClientMock = require('../../mocks/services/redisClient.mock'),
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
   BadRequestError = require.main.require('kuzzle-common-objects').Errors.badRequestError,
   Statistics = rewire('../../../lib/api/core/statistics');
@@ -19,6 +20,7 @@ describe('Test: statistics core component', function () {
   var
     requestObject,
     kuzzle,
+    dbname = 'unit-tests',
     stats,
     lastFrame = Date.now(),
     fakeStats = {
@@ -28,19 +30,15 @@ describe('Test: statistics core component', function () {
       failedRequests: { qux: 667 }
     };
 
-  before(function (done) {
-    kuzzle = new Kuzzle();
-    kuzzle.start(params, {dummy: true})
-      .then(() => {
-        return kuzzle.services.list.statsCache.init(kuzzle, {service: 'statsCache'});
-      })
-      .then(service => {
-        service.client = redisClientMock;
-        return service.volatileSet(lastFrame, JSON.stringify(fakeStats), 30)
-            .then(() => service.volatileSet(lastFrame + 100, JSON.stringify(fakeStats), 30));
-      })
-      .then(() => done())
-      .catch(error => done(error));
+  before(function () {
+    kuzzle = new KuzzleServer();
+    kuzzle.config.cache.databases.push(dbname);
+    kuzzle.services.list.statsCache = new Redis(kuzzle, {service: dbname});
+    return Redis.__with__('buildClient', () => new RedisClientMock())(() => {
+      return kuzzle.services.list.statsCache.init()
+        .then(() => kuzzle.services.list.statsCache.volatileSet(lastFrame, JSON.stringify(fakeStats), 30))
+        .then(() => kuzzle.services.list.statsCache.volatileSet(lastFrame + 100, JSON.stringify(fakeStats), 30));
+    });
   });
 
   beforeEach(function () {
@@ -168,7 +166,7 @@ describe('Test: statistics core component', function () {
         ['completedRequests', 'connections', 'failedRequests', 'ongoingRequests'].forEach(k => {
           should(response.hits[0][k]).match(fakeStats[k]);
         });
-        should(response.hits[0].timestamp).match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.[0-9.]+Z)?$/);
+        should(response.hits[0].timestamp).be.a.Number();
       });
   });
 
@@ -188,7 +186,7 @@ describe('Test: statistics core component', function () {
         ['completedRequests', 'connections', 'failedRequests', 'ongoingRequests'].forEach(k => {
           should(response.hits[0][k]).match(fakeStats[k]);
         });
-        should(response.hits[0].timestamp).match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.[0-9.]+Z)?$/);
+        should(response.hits[0].timestamp).be.a.Number();
       });
   });
 
@@ -221,16 +219,15 @@ describe('Test: statistics core component', function () {
 
   it('should get the last frame from the cache when statistics snapshots have been taken', () => {
     stats.lastFrame = lastFrame;
-
     sandbox.stub(kuzzle.services.list.statsCache, 'get').resolves(JSON.stringify(fakeStats));
 
-    return stats.getLastStats(requestObject)
+    stats.getLastStats(requestObject)
       .then(response => {
         should(response).be.an.Object();
         ['completedRequests', 'connections', 'failedRequests', 'ongoingRequests'].forEach(k => {
           should(response[k]).match(fakeStats[k]);
         });
-        should(response.timestamp).match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.[0-9.]+Z)?$/);
+        should(response.timestamp).be.a.Number();
       });
   });
 
@@ -262,11 +259,11 @@ describe('Test: statistics core component', function () {
         ['completedRequests', 'connections', 'failedRequests', 'ongoingRequests'].forEach(k => {
           should(response.hits[0][k]).match(fakeStats[k]);
         });
-        should(response.hits[0].timestamp).match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.[0-9.]+Z)?$/);
+        should(response.hits[0].timestamp).be.a.Number();
         ['completedRequests', 'connections', 'failedRequests', 'ongoingRequests'].forEach(k => {
           should(response.hits[1][k]).match(fakeStats[k]);
         });
-        should(response.hits[1].timestamp).match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.[0-9.]+Z)?$/);
+        should(response.hits[1].timestamp).be.a.Number();
       });
   });
 

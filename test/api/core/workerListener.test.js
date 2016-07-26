@@ -3,19 +3,21 @@
  */
 var
   should = require('should'),
-  rewire = require('rewire'),
   uuid = require('node-uuid'),
   params = require('rc')('kuzzle'),
-  Kuzzle = require.main.require('lib/api/Kuzzle'),
+  sinon = require('sinon'),
+  sandbox = sinon.sandbox.create(),
+  KuzzleServer = require.main.require('lib/api/kuzzleServer'),
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
   ResponseObject = require.main.require('kuzzle-common-objects').Models.responseObject,
-  WorkerListener = rewire('../../../lib/api/core/workerListener');
+  WorkerListener = require.main.require('lib/api/core/workerListener');
 
 describe('Test: workerListener', function () {
   var
     kuzzle,
     registered,
     listenCallback,
+    spy,
     controllers = ['write', 'subscribe', 'read', 'admin', 'bulk'],
     requestObject = new RequestObject({
       controller: '',
@@ -25,39 +27,44 @@ describe('Test: workerListener', function () {
       body: { foo: 'bar' }
     });
 
-  before(function (done) {
-    kuzzle = new Kuzzle();
-    kuzzle.start(params, {dummy: true})
-      .then(function () {
-        kuzzle.services.list.broker.listen = function (room, cb) {
-          registered++;
-          listenCallback = cb;
-        };
+  before(function () {
+    kuzzle = new KuzzleServer();
+  });
 
-        done();
+  beforeEach(function () {
+    sandbox.stub(kuzzle.internalEngine, 'get').resolves({});
+    return kuzzle.services.init({whitelist: []})
+      .then(() => {
+        spy = sandbox.stub(kuzzle.services.list.broker, 'listen', (room, cb) => {
+            listenCallback = cb;
+        });
       });
   });
 
+  afterEach(() => {
+    sandbox.restore();
+  });
+
   it('should register only once, when the component is been instantiated', function () {
-    var workerListener;
+    var workerListener = new WorkerListener(kuzzle);
 
-    registered = 0;
-
-    workerListener = new WorkerListener(kuzzle, kuzzle.config.queues.workerWriteResponseQueue);
+    workerListener.startListener(kuzzle.config.queues.workerWriteResponseQueue);
     controllers.forEach(function (controller) {
       requestObject.controller = controller;
       requestObject.requestId = uuid.v1();
       workerListener.add(requestObject, {});
     });
 
-    should(registered).be.exactly(1);
+    should(spy.calledOnce).be.true();
   });
 
   it('should resolved the stored promise when receiving a success response', function () {
     var
-      workerListener = new WorkerListener(kuzzle, kuzzle.config.queues.workerWriteResponseQueue),
+      workerListener = new WorkerListener(kuzzle),
       responseObject,
       promise;
+
+    workerListener.startListener(kuzzle.config.queues.workerWriteResponseQueue);
 
     requestObject.controller = 'write';
     requestObject.requestId = uuid.v1();
@@ -76,6 +83,8 @@ describe('Test: workerListener', function () {
       responseObject,
       promise;
 
+    workerListener.startListener(kuzzle.config.queues.workerWriteResponseQueue);
+
     requestObject.controller = 'write';
     requestObject.requestId = uuid.v1();
     promise = workerListener.add(requestObject, { id: 'foobar'});
@@ -88,9 +97,10 @@ describe('Test: workerListener', function () {
 
   it('should only trigger a log response when receiving an unknown response', function (done) {
     var
+      workerListener = new WorkerListener(kuzzle),
       responseObject;
 
-    new WorkerListener(kuzzle, kuzzle.config.queues.workerWriteResponseQueue);
+    workerListener.startListener(kuzzle.config.queues.workerWriteResponseQueue);
 
     this.timeout(50);
 
