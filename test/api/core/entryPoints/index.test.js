@@ -3,13 +3,13 @@
  */
 var
   should = require('should'),
-  Kuzzle = require.main.require('lib/api/Kuzzle'),
+  KuzzleServer = require.main.require('lib/api/kuzzleServer'),
   sandbox = require('sinon').sandbox.create(),
   EntryPoints = require.main.require('lib/api/core/entryPoints'),
   KuzzleProxy = require.main.require('lib/api/core/entryPoints/kuzzleProxy'),
   Http = require.main.require('lib/api/core/entryPoints/http');
 
-describe('Test: core/entryPoints', function () {
+describe('Test: core/entryPoints', () => {
 
   var httpPort = 6667;
 
@@ -17,9 +17,9 @@ describe('Test: core/entryPoints', function () {
     sandbox.restore();
   });
 
-  it('should create instance of proxy/http server on creation', function () {
+  it('should create instance of proxy/http server on creation', () => {
     var
-      kuzzle = new Kuzzle(),
+      kuzzle = new KuzzleServer(),
       entryPoints = new EntryPoints(kuzzle, {httpPort: httpPort});
 
     should(entryPoints).be.an.Object();
@@ -27,9 +27,9 @@ describe('Test: core/entryPoints', function () {
     should(entryPoints.http).be.instanceOf(Http);
   });
 
-  it('should call init of each entry points', function () {
+  it('should call init of each entry points', () => {
     var
-      kuzzle = new Kuzzle(),
+      kuzzle = new KuzzleServer(),
       entryPoints = new EntryPoints(kuzzle, {httpPort: httpPort}),
       spyProxy = sandbox.stub(entryPoints.proxy, 'init'),
       spyHttp = sandbox.stub(entryPoints.http, 'init');

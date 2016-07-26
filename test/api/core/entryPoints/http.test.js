@@ -6,27 +6,23 @@ var
   params = require('rc')('kuzzle'),
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
-  Kuzzle = require.main.require('lib/api/Kuzzle'),
+  KuzzleServer = require.main.require('lib/api/kuzzleServer'),
   HttpServer = require.main.require('lib/api/core/entryPoints/http');
 
-describe('Test: entryPoints/http', function () {
+describe('Test: entryPoints/http', () => {
   var
     kuzzle,
     httpPort = 6667;
 
-  before(function (done) {
-    kuzzle = new Kuzzle();
-    kuzzle.start(params, {dummy: true})
-      .then(function () {
-        done();
-      });
+  before(() => {
+    kuzzle = new KuzzleServer();
   });
 
   afterEach(() => {
     sandbox.restore();
   });
 
-  it('should have property kuzzle, params and a function init on construct', function () {
+  it('should have property kuzzle, params and a function init on construct', () => {
     var httpServer = new HttpServer(kuzzle, {httpPort: httpPort});
 
     should(httpServer).have.property('kuzzle');
@@ -34,13 +30,13 @@ describe('Test: entryPoints/http', function () {
     should(httpServer.init).be.a.Function();
   });
 
-  it('should call initRouterHttp and routeHttp on init and create the HTTP server', function () {
+  it('should call initRouterHttp and routeHttp on init and create the HTTP server', () => {
     var
       httpServer = new HttpServer(kuzzle, {httpPort: httpPort}),
       spyInitRouterHttp = sandbox.stub(kuzzle.router, 'initRouterHttp'),
       spyRouteHttp = sandbox.stub(kuzzle.router, 'routeHttp'),
       stubListen = sandbox.stub(),
-      spyCreateServer = sandbox.stub(httpServer.http, 'createServer', function (cb) {
+      spyCreateServer = sandbox.stub(httpServer.http, 'createServer', cb => {
         cb();
         return {listen: stubListen};
       });
