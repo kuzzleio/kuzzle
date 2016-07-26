@@ -97,7 +97,7 @@ describe('Test: security controller - users', function () {
     it('should reject with a response object in case of error', () => {
       sandbox.stub(kuzzle.repositories.user, 'search').rejects();
       return should(kuzzle.funnel.controllers.security.searchUsers(new RequestObject({
-        body: {hydrate: false}
+        body: {}
       }))).be.rejected();
     });
   });
