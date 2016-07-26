@@ -13,9 +13,10 @@ describe('Test: clean database', function () {
   beforeEach(() => {
     kuzzle = {
       indexCache: {
-        reset: sandbox.spy()
+        remove: sandbox.spy()
       },
       internalEngine: {
+        index: 'testIndex',
         deleteIndex: sandbox.stub().resolves('deleteIndex')
       },
       isServer: true
@@ -39,8 +40,9 @@ describe('Test: clean database', function () {
       .then(response => {
         should(response).be.exactly('deleteIndex');
         should(kuzzle.internalEngine.deleteIndex).be.calledOnce();
-        should(kuzzle.internalEngine.deleteIndex).be.calledWithExactly('_all');
-        should(kuzzle.indexCache.reset).be.calledOnce();
+        should(kuzzle.internalEngine.deleteIndex).be.calledWithExactly('testIndex');
+        should(kuzzle.indexCache.remove).be.calledOnce();
+        should(kuzzle.indexCache.remove).be.calledWith('testIndex');
       });
   });
 
