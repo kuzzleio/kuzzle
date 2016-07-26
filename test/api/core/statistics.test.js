@@ -16,7 +16,7 @@ var
   BadRequestError = require.main.require('kuzzle-common-objects').Errors.badRequestError,
   Statistics = rewire('../../../lib/api/core/statistics');
 
-describe('Test: statistics core component', function () {
+describe('Test: statistics core component', () => {
   var
     requestObject,
     kuzzle,
@@ -30,7 +30,7 @@ describe('Test: statistics core component', function () {
       failedRequests: { qux: 667 }
     };
 
-  before(function () {
+  before(() => {
     kuzzle = new KuzzleServer();
     kuzzle.config.cache.databases.push(dbname);
     kuzzle.services.list.statsCache = new Redis(kuzzle, {service: dbname});
@@ -41,7 +41,7 @@ describe('Test: statistics core component', function () {
     });
   });
 
-  beforeEach(function () {
+  beforeEach(() => {
     requestObject = new RequestObject({
       controller: 'admin',
       action: '',
@@ -58,7 +58,7 @@ describe('Test: statistics core component', function () {
   });
 
 
-  it('should initialize with a set of exposed methods', function () {
+  it('should initialize with a set of exposed methods', () => {
     should(stats.startRequest).be.a.Function();
     should(stats.completedRequest).be.a.Function();
     should(stats.failedRequest).be.a.Function();
@@ -69,7 +69,7 @@ describe('Test: statistics core component', function () {
     should(stats.getAllStats).be.a.Function();
   });
 
-  it('should register a new request when asked to', function () {
+  it('should register a new request when asked to', () => {
     requestObject.protocol = 'foobar';
     stats.startRequest(requestObject);
     should(stats.currentStats.ongoingRequests.foobar).not.be.undefined().and.be.exactly(1);
@@ -77,14 +77,14 @@ describe('Test: statistics core component', function () {
     should(stats.currentStats.ongoingRequests.foobar).not.be.undefined().and.be.exactly(2);
   });
 
-  it('should do nothing when startRequest is called with invalid arguments', function () {
+  it('should do nothing when startRequest is called with invalid arguments', () => {
     should(stats.startRequest()).be.false();
     should(stats.currentStats.ongoingRequests).be.empty();
     should(stats.startRequest(requestObject)).be.false();
     should(stats.currentStats.ongoingRequests).be.empty();
   });
 
-  it('should handle completed requests', function () {
+  it('should handle completed requests', () => {
     stats.currentStats.ongoingRequests.foobar = 2;
     requestObject.protocol = 'foobar';
     stats.completedRequest(requestObject);
@@ -95,14 +95,14 @@ describe('Test: statistics core component', function () {
     should(stats.currentStats.completedRequests.foobar).not.be.undefined().and.be.exactly(2);
   });
 
-  it('should do nothing when completedRequest is called with invalid arguments', function () {
+  it('should do nothing when completedRequest is called with invalid arguments', () => {
     should(stats.completedRequest()).be.false();
     should(stats.currentStats.completedRequests).be.empty();
     should(stats.completedRequest(requestObject)).be.false();
     should(stats.currentStats.completedRequests).be.empty();
   });
 
-  it('should handle failed requests', function () {
+  it('should handle failed requests', () => {
     stats.currentStats.ongoingRequests.foobar = 2;
     requestObject.protocol = 'foobar';
     stats.failedRequest(requestObject);
@@ -113,14 +113,14 @@ describe('Test: statistics core component', function () {
     should(stats.currentStats.failedRequests.foobar).not.be.undefined().and.be.exactly(2);
   });
 
-  it('should do nothing when failedRequest is called with invalid arguments', function () {
+  it('should do nothing when failedRequest is called with invalid arguments', () => {
     should(stats.failedRequest()).be.false();
     should(stats.currentStats.failedRequests).be.empty();
     should(stats.failedRequest(requestObject)).be.false();
     should(stats.currentStats.failedRequests).be.empty();
   });
 
-  it('should handle new connections', function () {
+  it('should handle new connections', () => {
     var connection = {type: 'foobar'};
     stats.newConnection(connection);
     should(stats.currentStats.connections.foobar).not.be.undefined().and.be.exactly(1);
@@ -128,14 +128,14 @@ describe('Test: statistics core component', function () {
     should(stats.currentStats.connections.foobar).not.be.undefined().and.be.exactly(2);
   });
 
-  it('should do nothing when newConnection is called with invalid arguments', function () {
+  it('should do nothing when newConnection is called with invalid arguments', () => {
     should(stats.newConnection()).be.false();
     should(stats.currentStats.connections).be.empty();
     should(stats.newConnection(requestObject)).be.false();
     should(stats.currentStats.connections).be.empty();
   });
 
-  it('should be able to unregister a connection', function () {
+  it('should be able to unregister a connection', () => {
     var connection = {type: 'foobar'};
 
     stats.currentStats.connections.foobar = 2;
@@ -145,7 +145,7 @@ describe('Test: statistics core component', function () {
     should(stats.currentStats.connections.foobar).be.undefined();
   });
 
-  it('should do nothing when dropConnection is called with invalid arguments', function () {
+  it('should do nothing when dropConnection is called with invalid arguments', () => {
     should(stats.dropConnection()).be.false();
     should(stats.currentStats.connections).be.empty();
     should(stats.dropConnection(requestObject)).be.false();

@@ -6,16 +6,16 @@ var
   KuzzleServer = require.main.require('lib/api/kuzzleServer'),
   IndexCache = require.main.require('lib/api/core/indexCache');
 
-describe('Test: core/indexCache', function () {
+describe('Test: core/indexCache', () => {
   var
     indexCache,
     kuzzle;
 
-  before(function () {
+  before(() => {
     kuzzle = new KuzzleServer();
   });
 
-  beforeEach(function () {
+  beforeEach(() => {
     sandbox.stub(kuzzle.internalEngine, 'get').resolves({});
     return kuzzle.services.init({whitelist: []})
       .then(() => {
@@ -33,9 +33,8 @@ describe('Test: core/indexCache', function () {
     sandbox.restore();
   });
 
-  describe('#init', function () {
-    it('should initialize the index cache properly', function (done) {
-      this.timeout(50);
+  describe('#init', () => {
+    it('should initialize the index cache properly', done => {
       indexCache.init();
 
       setTimeout(() => {
@@ -46,20 +45,20 @@ describe('Test: core/indexCache', function () {
     });
   });
 
-  describe('#add', function () {
-    it('should add a single index to the index cache', function () {
+  describe('#add', () => {
+    it('should add a single index to the index cache', () => {
       indexCache.add('foobar');
       should(indexCache.indexes).have.keys('foobar');
       should(indexCache.indexes.foobar).be.an.Array().and.be.empty();
     });
 
-    it('should add a new collection to the index cache', function () {
+    it('should add a new collection to the index cache', () => {
       indexCache.add('index', 'collection');
       should(indexCache.indexes).have.keys('index');
       should(indexCache.indexes.index).be.an.Array().and.match(['collection']);
     });
 
-    it('should not add a collection if it is already in cache', function () {
+    it('should not add a collection if it is already in cache', () => {
       indexCache.add('index', 'collection');
       indexCache.add('index', 'collection');
 
@@ -67,20 +66,20 @@ describe('Test: core/indexCache', function () {
       should(indexCache.indexes.index).be.an.Array().and.match(['collection']);
     });
 
-    it('should do nothing if no index is provided', function () {
+    it('should do nothing if no index is provided', () => {
       indexCache.add();
       should(indexCache.indexes).be.empty();
     });
   });
 
-  describe('#remove', function () {
-    it('should remove an index from the cache', function () {
+  describe('#remove', () => {
+    it('should remove an index from the cache', () => {
       indexCache.add('index', 'collection');
       indexCache.remove('index');
       should(indexCache.indexes).be.empty();
     });
 
-    it('should remove a single collection from the cache', function () {
+    it('should remove a single collection from the cache', () => {
       indexCache.add('index', 'collection1');
       indexCache.add('index', 'collection2');
       indexCache.remove('index', 'collection1');
@@ -88,28 +87,28 @@ describe('Test: core/indexCache', function () {
       should(indexCache.indexes.index).be.an.Array().and.match(['collection2']);
     });
 
-    it('should do nothing if the index does not exist', function () {
+    it('should do nothing if the index does not exist', () => {
       indexCache.add('index', 'collection');
       indexCache.remove('foo');
       should(indexCache.indexes).match({index: ['collection']});
     });
 
-    it('should do nothing if the collection does not exist', function () {
+    it('should do nothing if the collection does not exist', () => {
       indexCache.add('index', 'collection');
       indexCache.remove('index', 'foo');
       should(indexCache.indexes).match({index: ['collection']});
     });
   });
 
-  describe('#reset', function () {
-    it('should empty the index cache if invoked with no argument', function () {
+  describe('#reset', () => {
+    it('should empty the index cache if invoked with no argument', () => {
       indexCache.add('index1', 'collection');
       indexCache.add('index2', 'collection');
       indexCache.reset();
       should(indexCache.indexes).be.an.Object().and.be.empty();
     });
 
-    it('should remove all collections of an index', function () {
+    it('should remove all collections of an index', () => {
       indexCache.add('index', 'collection1');
       indexCache.add('index', 'collection2');
       indexCache.reset('index');

@@ -8,7 +8,7 @@ var
   Services = rewire('../../lib/services'),
   sandbox = sinon.sandbox.create();
 
-describe('Test service initialization function', function () {
+describe('Test service initialization function', () => {
 
   var
     clock,
@@ -32,7 +32,7 @@ describe('Test service initialization function', function () {
     sandbox.restore();
   });
 
-  it('should build an internal broker service with correct methods', function () {
+  it('should build an internal broker service with correct methods', () => {
     return kuzzle.services.init({whitelist: []})
       .then(() => {
         should(kuzzle.services.list.broker).be.an.Object().and.not.be.empty();
@@ -45,7 +45,7 @@ describe('Test service initialization function', function () {
       });
   });
 
-  it('should build a readEngine service with correct methods', function () {
+  it('should build a readEngine service with correct methods', () => {
     return kuzzle.services.init({whitelist: []})
       .then(() => {
         should(kuzzle.services.list.readEngine).be.an.Object();
@@ -55,7 +55,7 @@ describe('Test service initialization function', function () {
       });
   });
 
-  it('should build a writeEngine service with correct methods', function () {
+  it('should build a writeEngine service with correct methods', () => {
     return kuzzle.services.init({whitelist: []})
       .then(() => {
         should(kuzzle.services.list.writeEngine).be.an.Object();
@@ -67,7 +67,7 @@ describe('Test service initialization function', function () {
       });
   });
 
-  it('should build a cache service', function () {
+  it('should build a cache service', () => {
     return kuzzle.services.init({whitelist: []})
       .then(() => {
         should(kuzzle.services.list.notificationCache).be.an.Object();
@@ -77,7 +77,7 @@ describe('Test service initialization function', function () {
       });
   });
 
-  it('should not init services in blacklist', function () {
+  it('should not init services in blacklist', () => {
     kuzzle.config = {
       default: {
         services: {

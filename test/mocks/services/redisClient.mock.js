@@ -8,7 +8,7 @@ var
 function RedisClientMock () {
   this.getBuiltinCommands = getBuiltinCommands;
 
-  this.scanStream = function (options) {
+  this.scanStream = options => {
     var Stream = function () {
       setTimeout(() => {
         var

@@ -2,7 +2,7 @@ var
   should = require('should'),
   KuzzleServer = require.main.require('lib/api/kuzzleServer');
 
-describe('Test main file for hooks managers', function () {
+describe('Test main file for hooks managers', () => {
   var
     kuzzle,
     badHooksConfig = {
@@ -14,12 +14,12 @@ describe('Test main file for hooks managers', function () {
       'data:beforeUpdate': ['write:emit']
     };
 
-  beforeEach(function () {
+  beforeEach(() => {
     kuzzle = new KuzzleServer();
     kuzzle.removeAllListeners();
   });
 
-  it('should be rejected on init when a hook is undefined in config', function () {
+  it('should be rejected on init when a hook is undefined in config', () => {
     var pInit;
 
     kuzzle.config = {
@@ -30,7 +30,7 @@ describe('Test main file for hooks managers', function () {
     return should(pInit).be.rejected();
   });
 
-  it('should be resolve when the config is valid', function () {
+  it('should be resolve when the config is valid', () => {
     var pInit;
 
     kuzzle.config = {
@@ -41,7 +41,7 @@ describe('Test main file for hooks managers', function () {
     return should(pInit).be.fulfilled();
   });
 
-  it('should attach event and trigger corresponding function according to config file', function (done) {
+  it('should attach event and trigger corresponding function according to config file', () => {
     kuzzle.config = {
       hooks: hooksConfig
     };
@@ -57,8 +57,6 @@ describe('Test main file for hooks managers', function () {
 
     should(kuzzle.listeners('data:beforeCreate')[0]).be.a.Function();
     should(kuzzle.listeners('data:beforeUpdate')[0]).be.a.Function();
-
-    done();
 
   });
 });
