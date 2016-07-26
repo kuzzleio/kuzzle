@@ -1,21 +1,15 @@
 /* eslint-disable no-console */
 
 var
-  params = require('rc')('kuzzle'),
-  Kuzzle = require('../../lib/api'),
-  RequestObject = require('kuzzle-common-objects').Models.requestObject;
+  Kuzzle = require('../../lib/api');
 
-module.exports = function () {
+module.exports = function (options) {
   var 
-    kuzzle = new Kuzzle(),
-    requestObject = new RequestObject({
-      body: {install: true}
-    });
+    kuzzle = new Kuzzle();
 
   console.log('███ kuzzle-plugins: Starting plugins installation...');
-  
-  kuzzle.start(params, {dummy: true})
-    .then(() => kuzzle.remoteActionsController.actions.managePlugins(requestObject))
+
+  kuzzle.remoteActions.do('managePlugins', {install: true}, {pid: options.pid, debug: options.parent.debug})
     .then(() => {
       console.log('███ kuzzle-plugins: Plugins installed');
       process.exit(0);
