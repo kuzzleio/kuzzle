@@ -1,7 +1,10 @@
 var
   should = require('should'),
+  sinon = require('sinon'),
+  sandbox = sinon.sandbox.create(),
   Promise = require('bluebird'),
   rewire = require('rewire'),
+  KuzzleServer = require.main.require('lib/api/kuzzleServer'),
   BadRequestError = require.main.require('kuzzle-common-objects').Errors.badRequestError,
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
   InternalError = require.main.require('kuzzle-common-objects').Errors.internalError,
@@ -11,50 +14,12 @@ var
 
 describe('Test: security/roleTest', () => {
   var
+    kuzzle,
     context = {
       connection: {type: 'test'},
       token : {
         user: {
           _id: -1
-        }
-      }
-    },
-    kuzzle = {
-      pluginsManager: {
-        trigger: () => {
-          return true;
-        }
-      },
-      indexCache: {
-        indexes: ['cachedIndex']
-      },
-      services: {
-        list: {
-          readEngine: {
-            search: requestObject => {
-              if (requestObject.data.body.filter.ids.values[0] !== 'foobar') {
-                return Promise.resolve({hits: [documentAda]});
-              }
-
-              return Promise.resolve({hits: [documentFalseAda]});
-            },
-            get: requestObject => {
-              if (requestObject.data.id === 'reject') {
-                return Promise.reject(new InternalError('Our Error'));
-              } else if (requestObject.data.id !== 'foobar') {
-                return Promise.resolve(documentAda);
-              }
-
-              return Promise.resolve(documentFalseAda);
-            },
-            mget: requestObject => {
-              if (requestObject.data.body.ids[0] !== 'foobar') {
-                return Promise.resolve({hits: [documentAda]});
-              }
-
-              return Promise.resolve({hits: [documentFalseAda]});
-            }
-          }
         }
       }
     },
@@ -89,7 +54,48 @@ describe('Test: security/roleTest', () => {
         city: 'London',
         hobby: 'computer'
       }
+    },
+    stubs = {
+      readEngine:{
+        search: requestObject => {
+          if (requestObject.data.body.filter.ids.values[0] !== 'foobar') {
+            return Promise.resolve({hits: [documentAda]});
+          }
+          return Promise.resolve({hits: [documentFalseAda]});
+        },
+        get: requestObject => {
+          if (requestObject.data.id === 'reject') {
+            return Promise.reject(new InternalError('Our Error'));
+          } else if (requestObject.data.id !== 'foobar') {
+            return Promise.resolve(documentAda);
+          }
+          return Promise.resolve(documentFalseAda);
+        },
+        mget: requestObject => {
+          if (requestObject.data.body.ids[0] !== 'foobar') {
+            return Promise.resolve({hits: [documentAda]});
+          }
+          return Promise.resolve({hits: [documentFalseAda]});
+        }
+      }
     };
+  before(() => {
+    kuzzle = new KuzzleServer();
+  });
+
+  beforeEach(() => {
+    sandbox.stub(kuzzle.internalEngine, 'get').resolves({});
+    return kuzzle.services.init({whitelist: []})
+      .then(() => {
+        sandbox.stub(kuzzle.services.list.readEngine, 'get', stubs.readEngine.get);
+        sandbox.stub(kuzzle.services.list.readEngine, 'mget', stubs.readEngine.mget);
+        sandbox.stub(kuzzle.services.list.readEngine, 'search', stubs.readEngine.search);
+      });
+  });
+
+  afterEach(() => {
+    sandbox.restore();
+  });
 
   describe('#isActionAllowed', () => {
     it('should disallow any action when no matching entry can be found', () => {

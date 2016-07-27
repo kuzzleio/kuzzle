@@ -1,13 +1,12 @@
 var
   should = require('should'),
+  sinon = require('sinon'),
+  sandbox = sinon.sandbox.create(),
   Promise = require('bluebird'),
   params = require('rc')('kuzzle'),
-  Kuzzle = require.main.require('lib/api/Kuzzle'),
-  sinon = require('sinon'),
+  KuzzleServer = require.main.require('lib/api/kuzzleServer'),
   Profile = require.main.require('lib/api/core/models/security/profile'),
   Role = require.main.require('lib/api/core/models/security/role');
-
-require('sinon-as-promised')(Promise);
 
 describe('Test: security/profileTest', function () {
   var
@@ -18,16 +17,10 @@ describe('Test: security/profileTest', function () {
       controller: 'controller',
       action: 'action'
     },
-    kuzzle,
-    sandbox;
+    kuzzle;
 
   before(() => {
-    kuzzle = new Kuzzle();
-    return kuzzle.start(params, {dummy: true});
-  });
-
-  beforeEach(() => {
-    sandbox = sinon.sandbox.create();
+    kuzzle = new KuzzleServer();
   });
 
   afterEach(() => {

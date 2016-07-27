@@ -2,11 +2,10 @@ var
   Promise = require('bluebird'),
   should = require('should'),
   sinon = require('sinon'),
-  Kuzzle = require.main.require('lib/api/Kuzzle'),
+  KuzzleServer = require.main.require('lib/api/kuzzleServer'),
   Profile = require.main.require('lib/api/core/models/security/profile'),
   User = require.main.require('lib/api/core/models/security/user');
 
-require('sinon-as-promised')(Promise);
 
 describe('Test: security/userTest', () => {
   var
@@ -17,7 +16,7 @@ describe('Test: security/userTest', () => {
 
   beforeEach(() => {
     sandbox = sinon.sandbox.create();
-    kuzzle = new Kuzzle();
+    kuzzle = new KuzzleServer();
 
     profile = new Profile();
     profile._id = 'profile';
