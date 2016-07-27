@@ -11,7 +11,7 @@ var
   Notifier = require.main.require('lib/api/core/notifier'),
   NotificationObject = require.main.require('lib/api/core/models/notificationObject');
 
-describe.only('Test: notifier.notify', function () {
+describe('Test: notifier.notify', function () {
   var
     kuzzle,
     sandbox,
@@ -52,7 +52,7 @@ describe.only('Test: notifier.notify', function () {
     should(dispatchStub.calledOnce).be.true();
     should(triggerStub.calledOnce).be.true();
     should(dispatchStub.calledWithMatch('broadcast', data)).be.true();
-    should(triggerStub.calledWithMatch('protocol:broadcast', data)).be.true();
+    should(triggerStub.calledWithMatch('proxy:broadcast', data)).be.true();
   });
 
   it('should notify instead of broadcasting if there is a connection ID', () => {
@@ -64,7 +64,7 @@ describe.only('Test: notifier.notify', function () {
     should(dispatchStub.calledOnce).be.true();
     should(triggerStub.calledOnce).be.true();
     should(dispatchStub.calledWithMatch('notify', data)).be.true();
-    should(triggerStub.calledWithMatch('protocol:notify', data)).be.true();
+    should(triggerStub.calledWithMatch('proxy:notify', data)).be.true();
   });
 
   it('should aggregate channels from multiple rooms', () => {
@@ -80,6 +80,6 @@ describe.only('Test: notifier.notify', function () {
     should(dispatchStub.calledOnce).be.true();
     should(triggerStub.calledOnce).be.true();
     should(dispatchStub.calledWithMatch('broadcast', data)).be.true();
-    should(triggerStub.calledWithMatch('protocol:broadcast', data)).be.true();
+    should(triggerStub.calledWithMatch('proxy:broadcast', data)).be.true();
   });
 });
