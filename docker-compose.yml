@@ -1,6 +1,7 @@
 proxy:
   image: kuzzleio/proxy:alpine
   ports:
+    - "5713:5713"
     - "7511:7511"
     - "7512:7512"
 
