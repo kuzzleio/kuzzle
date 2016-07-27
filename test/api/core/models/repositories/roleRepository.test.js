@@ -133,24 +133,21 @@ describe('Test: repositories/roleRepository', () => {
       var
         savedFilter,
         savedFrom,
-        savedSize,
-        savedHydrate;
+        savedSize;
 
-      sandbox.stub(kuzzle.repositories.role, 'search', (filter, from, size, hydrate) => {
+      sandbox.stub(kuzzle.repositories.role, 'search', (filter, from, size) => {
         savedFilter = filter;
         savedFrom = from;
         savedSize = size;
-        savedHydrate = hydrate;
 
         return Promise.resolve();
       });
 
-      return kuzzle.repositories.role.searchRole(new RequestObject({body: {from: 1, size: 3, hydrate: false}}))
+      return kuzzle.repositories.role.searchRole(new RequestObject({body: {from: 1, size: 3}}))
         .then(() => {
           should(savedFilter).be.eql({});
           should(savedFrom).be.eql(1);
           should(savedSize).be.eql(3);
-          should(savedHydrate).be.false();
         });
     });
 

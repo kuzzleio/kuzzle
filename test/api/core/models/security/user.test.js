@@ -12,6 +12,7 @@ describe('Test: security/userTest', () => {
     kuzzle,
     sandbox,
     profile,
+    profile2,
     user;
 
   beforeEach(() => {
@@ -21,15 +22,18 @@ describe('Test: security/userTest', () => {
     profile = new Profile();
     profile._id = 'profile';
     profile.isActionAllowed = sinon.stub().resolves(true);
-    profile._id = 'profile';
+
+    profile2 = new Profile();
+    profile2._id = 'profile2';
+    profile2.isActionAllowed = sinon.stub().resolves(false);
 
     user = new User();
-    user.profilesIds = ['profile'];
+    user.profilesIds = ['profile', 'profile2'];
 
     kuzzle.repositories = {
       profile: {
         loadProfile: sinon.stub().resolves(profile),
-        loadProfiles: sinon.stub().resolves([profile])
+        loadProfiles: sinon.stub().resolves([profile, profile2])
       }
     };
   });
@@ -49,15 +53,62 @@ describe('Test: security/userTest', () => {
           controller: 'write', action: 'delete', index: '*', collection: '*',
           value: 'conditional'
         }
+      },
+      profileRights2 = {
+        rights1: {
+          controller: 'read', action: 'get', index: 'foo', collection: 'bar',
+          value: 'conditional'
+        },
+        rights3: {
+          controller: 'write', action: 'create', index: 'foo', collection: 'bar',
+          value: 'allowed'
+        }
       };
 
-    sandbox.stub(user, 'getProfiles').resolves([profile]);
+    sandbox.stub(user, 'getProfiles').resolves([profile, profile2]);
     sandbox.stub(profile, 'getRights').resolves(profileRights);
+    sandbox.stub(profile2, 'getRights').resolves(profileRights2);
 
     return user.getRights(kuzzle)
       .then(rights => {
+        var filteredItem;
+
         should(rights).be.an.Object();
-        should(rights).match(profileRights);
+        rights = Object.keys(rights).reduce((array, item) => array.concat(rights[item]), []);
+        should(rights).be.an.Array();
+
+        filteredItem = rights.filter(item => {
+          return item.controller === 'read' &&
+                  item.action === 'get';
+        });
+        should(filteredItem).length(1);
+        should(filteredItem[0].index).be.equal('foo');
+        should(filteredItem[0].collection).be.equal('bar');
+        should(filteredItem[0].value).be.equal('allowed');
+
+        filteredItem = rights.filter(item => {
+          return item.controller === 'write' &&
+                  item.action === 'delete';
+        });
+        should(filteredItem).length(1);
+        should(filteredItem[0].index).be.equal('*');
+        should(filteredItem[0].collection).be.equal('*');
+        should(filteredItem[0].value).be.equal('conditional');
+
+        filteredItem = rights.filter(item => {
+          return item.controller === 'write' &&
+                  item.action === 'create';
+        });
+        should(filteredItem).length(1);
+        should(filteredItem[0].index).be.equal('foo');
+        should(filteredItem[0].collection).be.equal('bar');
+        should(filteredItem[0].value).be.equal('allowed');
+
+        filteredItem = rights.filter(item => {
+          return item.controller === 'read' && item.action === 'listIndexes';
+        });
+        should(filteredItem).length(0);
+
       });
   });
 
