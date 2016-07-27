@@ -1,5 +1,7 @@
 proxy:
-  image: kuzzleio/proxy:alpine
+############# UPDATE TO kuzzleio/proxy:alpine
+############# WHEN RELEASING RC5
+  image: kuzzleio/proxy:develop
   ports:
     - "5713:5713"
     - "7511:7511"
