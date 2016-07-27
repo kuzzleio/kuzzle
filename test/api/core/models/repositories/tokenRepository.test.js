@@ -4,16 +4,9 @@ var
   should = require('should'),
   /** @type {Params} */
   params = require('rc')('kuzzle'),
-  kuzzle = {
-    repositories: {},
-    services: {
-      list: {}
-    },
-    config: require.main.require('lib/config')(params)
-  },
+  KuzzleServer = require.main.require('lib/api/kuzzleServer'),
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
-  context = {connection: {id: 'papagayo'}},
   InternalError = require.main.require('kuzzle-common-objects').Errors.internalError,
   UnauthorizedError = require.main.require('kuzzle-common-objects').Errors.unauthorizedError,
   Profile = require.main.require('lib/api/core/models/security/profile'),
@@ -21,139 +14,142 @@ var
   User = require.main.require('lib/api/core/models/security/user'),
   Role = require.main.require('lib/api/core/models/security/role'),
   Repository = require.main.require('lib/api/core/models/repositories/repository'),
-  TokenRepository = require.main.require('lib/api/core/models/repositories/tokenRepository')(kuzzle),
-  tokenRepository;
+  TokenRepository = require.main.require('lib/api/core/models/repositories/tokenRepository');
 
-beforeEach(function (done) {
+describe('Test: repositories/tokenRepository', () => {
   var
-    mockCacheEngine,
-    mockProfileRepository,
-    mockUserRepository,
-    tokenInCache;
+    context = {connection: {id: 'papagayo'}},
+    kuzzle,
+    tokenRepository;
 
-  mockCacheEngine = {
-    get: function (key) {
-      if (key === tokenRepository.index + '/' + tokenRepository.collection + '/tokenInCache') {
-        return Promise.resolve(JSON.stringify(tokenInCache));
+  before(() => {
+    kuzzle = new KuzzleServer();
+  });
+
+  beforeEach(() => {
+    var
+      mockCacheEngine,
+      mockProfileRepository,
+      mockUserRepository,
+      tokenInCache;
+
+    mockCacheEngine = {
+      get: key => {
+        if (key === tokenRepository.index + '/' + tokenRepository.collection + '/tokenInCache') {
+          return Promise.resolve(JSON.stringify(tokenInCache));
+        }
+        return Promise.resolve(null);
+      },
+      volatileSet: () => Promise.resolve('OK'),
+      expire: (key, ttl) => Promise.resolve({key: key, ttl: ttl})
+    };
+
+    mockProfileRepository = {
+      loadProfile: profileKey => {
+        var profile = new Profile();
+        profile._id = profileKey;
+        return Promise.resolve(profile);
       }
-      return Promise.resolve(null);
-    },
-    volatileSet: function () {
-      return Promise.resolve('OK');
-    },
-    expire: function (key, ttl) { return Promise.resolve({key: key, ttl: ttl}); }
-  };
+    };
 
-  mockProfileRepository = {
-    loadProfile: function (profileKey) {
-      var profile = new Profile();
-      profile._id = profileKey;
-      return Promise.resolve(profile);
-    }
-  };
+    mockUserRepository = {
+      load: username => {
+        var user = new User();
+        user._id = username;
+        user.profilesIds = ['anonymous'];
 
-  mockUserRepository = {
-    load: function (username) {
-      var user = new User();
-      user._id = username;
-      user.profilesIds = ['anonymous'];
+        return Promise.resolve(user);
+      },
+      anonymous: () => {
+        var
+          role = new Role(),
+          profile = new Profile(),
+          user = new User();
 
-      return Promise.resolve(user);
-    },
-    anonymous: function () {
-      var
-        role = new Role(),
-        profile = new Profile(),
-        user = new User();
-
-      role._id = 'anonymous';
-      role.controllers = {
-        '*': {
-          actions: {
-            '*': true
+        role._id = 'anonymous';
+        role.controllers = {
+          '*': {
+            actions: {
+              '*': true
+            }
           }
-        }
-      };
+        };
 
-      user._id = -1;
-      user.profilesIds = ['anonymous'];
-      profile.policies = [{roleId: role._id}];
+        user._id = -1;
+        user.profilesIds = ['anonymous'];
+        profile.policies = [{roleId: role._id}];
 
-      return Promise.resolve(user);
-    },
-    admin: function () {
-      var
-        role = new Role(),
-        profile = new Profile(),
-        user = new User();
+        return Promise.resolve(user);
+      },
+      admin: () => {
+        var
+          role = new Role(),
+          profile = new Profile(),
+          user = new User();
 
-      role._id = 'admin';
-      role.controllers = {
-        '*': {
-          actions: {
-            '*': true
+        role._id = 'admin';
+        role.controllers = {
+          '*': {
+            actions: {
+              '*': true
+            }
           }
-        }
-      };
+        };
 
-      user._id = 'admin';
-      user.profilesIds = ['admin'];
-      profile.policies = [{roleId: role._id}];
+        user._id = 'admin';
+        user.profilesIds = ['admin'];
+        profile.policies = [{roleId: role._id}];
 
-      return Promise.resolve(user);
-    }
-  };
+        return Promise.resolve(user);
+      }
+    };
 
-  tokenInCache = {
-    _id: 'tokenInCache',
-    user: 'admin'
-  };
+    tokenInCache = {
+      _id: 'tokenInCache',
+      user: 'admin'
+    };
 
-  tokenRepository = new TokenRepository();
-  tokenRepository.cacheEngine = mockCacheEngine;
+    kuzzle.repositories.profile = mockProfileRepository;
+    kuzzle.repositories.user = mockUserRepository;
 
-  kuzzle.repositories = {};
-  kuzzle.repositories.profile = mockProfileRepository;
-  kuzzle.repositories.user = mockUserRepository;
+    tokenRepository = new TokenRepository(kuzzle);
+    tokenRepository.cacheEngine = mockCacheEngine;
 
+    kuzzle.tokenManager = {
+      add: () => {},
+      expire: () => {},
+      checkTokensValidity: () => {}
+    };
 
-  kuzzle.tokenManager = {
-    add: function () {},
-    expire: function () {},
-    checkTokensValidity: function () {}
-  };
+  });
 
-  done();
-});
+  afterEach(() => {
+    sandbox.restore();
+  });
 
-afterEach(() => {
-  sandbox.restore();
-});
-
-describe('Test: repositories/tokenRepository', function () {
   describe('#constructor', () => {
     it('should take into account the options given', () => {
-      var repository = new TokenRepository({ ttl: 1000 });
+      var repository = new TokenRepository(kuzzle, { ttl: 1000 });
 
       should(repository.ttl).be.exactly(1000);
     });
   });
 
-  describe('#anonymous', function () {
-    it('should return a valid anonymous token', function (done) {
+  describe('#anonymous', () => {
+    it('should return a valid anonymous token', done => {
       tokenRepository.anonymous()
-        .then(function (token) {
+        .then(token => {
           assertIsAnonymous(token);
           done();
         })
-        .catch(function (error) {
+        .catch(error => {
           done(error);
         });
     });
   });
 
-  describe('#hydrate', function () {
-    it('should return the given token if the given data is not a valid object', function () {
+  describe('#hydrate', () => {
+    it('should return the given token if the given data is not a valid object', () => {
       var
         t = new Token();
 
@@ -177,8 +173,8 @@ describe('Test: repositories/tokenRepository', function () {
     });
   });
 
-  describe('#verifyToken', function () {
-    it('should reject the promise if the jwt is invalid', function () {
+  describe('#verifyToken', () => {
+    it('should reject the promise if the jwt is invalid', () => {
       return should(tokenRepository.verifyToken('invalidToken')).be.rejectedWith(UnauthorizedError, {
         details: {
           subCode: UnauthorizedError.prototype.subCodes.JsonWebTokenError,
@@ -187,7 +183,7 @@ describe('Test: repositories/tokenRepository', function () {
       });
     });
 
-    it('should reject the token if the uuid is not known', function () {
+    it('should reject the token if the uuid is not known', () => {
       var
         token;
 
@@ -198,7 +194,7 @@ describe('Test: repositories/tokenRepository', function () {
       });
     });
 
-    it('shoud reject the promise if the jwt is expired', function () {
+    it('shoud reject the promise if the jwt is expired', () => {
       var token = jwt.sign({_id: -1}, params.jsonWebToken.secret, {algorithm: params.jsonWebToken.algorithm, expiresIn: 0});
 
       return should(tokenRepository.verifyToken(token)).be.rejectedWith(UnauthorizedError, {
@@ -222,12 +218,12 @@ describe('Test: repositories/tokenRepository', function () {
     });
   });
 
-  describe('#generateToken', function () {
-    it('should reject the promise if the username is null', function () {
+  describe('#generateToken', () => {
+    it('should reject the promise if the username is null', () => {
       return should(tokenRepository.generateToken(null)).be.rejectedWith(InternalError);
     });
 
-    it('should reject the promise if the context is null', function () {
+    it('should reject the promise if the context is null', () => {
       return should(tokenRepository.generateToken(new User(), null)).be.rejectedWith(InternalError);
     });
 
@@ -243,7 +239,7 @@ describe('Test: repositories/tokenRepository', function () {
         })).be.rejectedWith(InternalError);
     });
 
-    it('should resolve to the good jwt token for a given username', function (done) {
+    it('should resolve to the good jwt token for a given username', done => {
       var
         user = new User(),
         checkToken = jwt.sign({_id: 'userInCache'}, params.jsonWebToken.secret, {
@@ -254,37 +250,36 @@ describe('Test: repositories/tokenRepository', function () {
       user._id = 'userInCache';
 
       tokenRepository.generateToken(user, context)
-        .then(function (token) {
+        .then(token => {
           should(token).be.an.instanceOf(Token);
           should(token._id).be.exactly(checkToken);
 
           done();
         })
-        .catch(function (error) {
+        .catch(error => {
           done(error);
         });
     });
 
-    it('should return an internal error if an error append when generating token', (done) => {
+    it('should return an internal error if an error append when generating token', () => {
       var
         user = new User();
 
       user._id = 'userInCache';
 
       tokenRepository.generateToken(user, context, {expiresIn: 'toto'})
-        .catch(function (error) {
+        .catch(error => {
           should(error).be.an.instanceOf(InternalError);
           should(error.message).be.exactly('Error while generating token');
-          done();
         });
     });
 
   });
 
-  describe('#serializeToCache', function () {
-    it('should return a valid plain object', function (done) {
+  describe('#serializeToCache', () => {
+    it('should return a valid plain object', () => {
       tokenRepository.anonymous()
-        .then(function (token) {
+        .then(token => {
           var result = tokenRepository.serializeToCache(token);
 
           should(result).not.be.an.instanceOf(Token);
@@ -292,71 +287,55 @@ describe('Test: repositories/tokenRepository', function () {
           should(result._id).be.exactly(undefined);
           should(result.userId).be.exactly(-1);
 
-          done();
-        })
-        .catch(function (error) {
-          done(error);
         });
     });
   });
 
   describe('#expire', () => {
-    it('should be able to expires a token', (done) => {
+    it('should be able to expires a token', done => {
       var
         user = new User();
 
       user._id = 'userInCache';
 
       tokenRepository.generateToken(user, context)
-        .then(function (token) {
-          return tokenRepository.expire(token);
-        })
-        .then(() => {
-          done();
-        })
-        .catch(function (error) {
-          done(error);
-        });
+        .then(token =>tokenRepository.expire(token))
+        .then(() => done())
+        .catch(error => done(error));
     });
 
-    it('should expire token in the token manager', (done) => {
+    it('should expire token in the token manager', () => {
       var
         tokenManagerExpired = false,
         user = new User();
 
-      kuzzle.tokenManager.expire = function () {
+      kuzzle.tokenManager.expire = () => {
         tokenManagerExpired = true;
       };
       user._id = 'userInCache';
 
       tokenRepository.generateToken(user, context)
-        .then(function (token) {
-          return tokenRepository.expire(token);
-        })
+        .then(token => tokenRepository.expire(token))
         .then(() => {
           should(tokenManagerExpired).be.exactly(true);
-          done();
-        })
-        .catch(function (error) {
-          done(error);
         });
     });
 
-    it('should return an internal error if an error append when expires a token', (done) => {
+    it('should return an internal error if an error append when expires a token', done => {
       var
         user = new User();
 
-      Repository.prototype.expireFromCache = function () {
+      Repository.prototype.expireFromCache = () => {
         return Promise.reject();
       };
 
       user._id = 'userInCache';
 
       tokenRepository.generateToken(user, context)
-        .then(function (token) {
+        .then(token => {
           return tokenRepository.expire(token);
         })
-        .catch(function (error) {
+        .catch(error => {
           should(error).be.an.instanceOf(InternalError);
           should(error.message).be.exactly('Error expiring token');
           done();

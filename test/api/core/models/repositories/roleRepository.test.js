@@ -1,29 +1,27 @@
 var
   Promise = require('bluebird'),
   sinon = require('sinon'),
+  sandbox = sinon.sandbox.create(),
   params = require('rc')('kuzzle'),
   should = require('should'),
   BadRequestError = require('kuzzle-common-objects').Errors.badRequestError,
   InternalError = require.main.require('kuzzle-common-objects').Errors.internalError,
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
   Role = require.main.require('lib/api/core/models/security/role'),
-  Kuzzle = require.main.require('lib/api/Kuzzle');
+  KuzzleServer = require.main.require('lib/api/kuzzleServer');
 
-require('sinon-as-promised')(Promise);
-
-describe('Test: repositories/roleRepository', function () {
+describe('Test: repositories/roleRepository', () => {
   var
     kuzzle,
     ObjectConstructor,
     forwardedObject,
     persistedObject1,
-    persistedObject2,
-    sandbox;
+    persistedObject2;
 
   /**
    * @constructor
    */
-  ObjectConstructor = function () {
+  ObjectConstructor = function() {
     this.type = 'testObject';
   };
 
@@ -33,20 +31,21 @@ describe('Test: repositories/roleRepository', function () {
   persistedObject2 = new ObjectConstructor();
   persistedObject2._id = 'persisted2';
 
-  before(function () {
-    kuzzle = new Kuzzle();
-    return kuzzle.start(params, {dummy: true});
+  before(() => {
+    kuzzle = new KuzzleServer();
   });
 
-  beforeEach(function () {
-    sandbox = sinon.sandbox.create();
+  beforeEach(() => {
+    sandbox.stub(kuzzle.internalEngine, 'get').resolves({});
+    return kuzzle.services.init({whitelist: []})
+      .then(()=> kuzzle.repositories.init());
   });
 
   afterEach(() => {
     sandbox.restore();
   });
 
-  describe('#loadRoles', function () {
+  describe('#loadRoles', () => {
     it('should return an empty array when loading some non-existing roles', () => {
       sandbox.stub(kuzzle.services.list.readEngine, 'mget').resolves({hits: [{_id: 'idontexist', found: false}]});
       return kuzzle.repositories.role.loadRoles(['idontexist'])
@@ -101,7 +100,7 @@ describe('Test: repositories/roleRepository', function () {
     });
   });
 
-  describe('#loadRole', function () {
+  describe('#loadRole', () => {
     it('should return a bad request error when no _id is provided', () => {
       return should(kuzzle.repositories.role.loadRole({})).rejectedWith(BadRequestError);
     });
@@ -129,7 +128,7 @@ describe('Test: repositories/roleRepository', function () {
     });
   });
 
-  describe('#searchRole', function () {
+  describe('#searchRole', () => {
     it('should call repository search without filter and with parameters from requestObject', () => {
       var
         savedFilter,
@@ -177,7 +176,7 @@ describe('Test: repositories/roleRepository', function () {
     });
   });
 
-  describe('#deleteRole', function () {
+  describe('#deleteRole', () => {
     it('should reject if there is no _id', () => {
       return should(kuzzle.repositories.role.deleteRole({})).rejectedWith(BadRequestError);
     });
@@ -202,7 +201,7 @@ describe('Test: repositories/roleRepository', function () {
     });
   });
 
-  describe('#getRoleFromRequestObject', function () {
+  describe('#getRoleFromRequestObject', () => {
     it('should build a valid role object', () => {
       var
         controllers = {
@@ -230,7 +229,7 @@ describe('Test: repositories/roleRepository', function () {
     });
   });
 
-  describe('#validateAndSaveRole', function () {
+  describe('#validateAndSaveRole', () => {
     it('should reject the promise if no id is defined', () => {
       var role = new Role();
 

@@ -1,6 +1,7 @@
 var
   Promise = require('bluebird'),
   sinon = require('sinon'),
+  sandbox = sinon.sandbox.create(),
   params = require('rc')('kuzzle'),
   should = require('should'),
   Role = require.main.require('lib/api/core/models/security/role'),
@@ -10,9 +11,7 @@ var
   InternalError = require.main.require('kuzzle-common-objects').Errors.internalError,
   NotFoundError = require.main.require('kuzzle-common-objects').Errors.notFoundError,
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
-  Kuzzle = require.main.require('lib/api/Kuzzle');
-
-require('sinon-as-promised')(Promise);
+  KuzzleServer = require.main.require('lib/api/kuzzleServer');
 
 describe('Test: repositories/profileRepository', () => {
   var
@@ -45,24 +44,24 @@ describe('Test: repositories/profileRepository', () => {
           );
         }
       }
-    },
-    sandbox;
+    };
 
   before(() => {
-    kuzzle = new Kuzzle();
-    return kuzzle.start(params, {dummy: true})
-    .then(() => {
-      testProfile = new Profile();
-      testProfile._id = testProfilePlain._id;
-      testProfile.policies = testProfilePlain.policies;
-    });
+    kuzzle = new KuzzleServer();
+    testProfile = new Profile();
+    testProfile._id = testProfilePlain._id;
+    testProfile.policies = testProfilePlain.policies;
   });
 
   beforeEach(() => {
-    sandbox = sinon.sandbox.create();
-    sandbox.stub(kuzzle.repositories.profile, 'loadFromCache', stubs.profileRepository.loadFromCache);
-    sandbox.stub(kuzzle.repositories.profile, 'persistToCache').resolves({});
-    sandbox.stub(kuzzle.repositories.profile, 'deleteFromCache').resolves({});
+    sandbox.stub(kuzzle.internalEngine, 'get').resolves({});
+    return kuzzle.services.init({whitelist: []})
+      .then(()=> kuzzle.repositories.init())
+      .then(() => {
+        sandbox.stub(kuzzle.repositories.profile, 'loadFromCache', stubs.profileRepository.loadFromCache);
+        sandbox.stub(kuzzle.repositories.profile, 'persistToCache').resolves({});
+        sandbox.stub(kuzzle.repositories.profile, 'deleteFromCache').resolves({});
+      });
   });
 
   afterEach(() => {

@@ -3,112 +3,108 @@ var
   _ = require('lodash'),
   should = require('should'),
   params = require('rc')('kuzzle'),
-  kuzzle = {
-    repositories: {},
-    services: {
-      list: {}
-    },
-    config: require.main.require('lib/config')(params)
-  },
+  KuzzleServer = require.main.require('lib/api/kuzzleServer'),
   InternalError = require.main.require('kuzzle-common-objects').Errors.internalError,
   NotFoundError = require.main.require('kuzzle-common-objects').Errors.notFoundError,
   ResponseObject = require.main.require('kuzzle-common-objects').Models.responseObject,
   Profile = require.main.require('lib/api/core/models/security/profile'),
   User = require.main.require('lib/api/core/models/security/user'),
-  UserRepository = require.main.require('lib/api/core/models/repositories/userRepository')(kuzzle),
-  userRepository,
-  userInvalidProfile;
+  UserRepository = require.main.require('lib/api/core/models/repositories/userRepository');
 
-before(function (done) {
+describe('Test: repositories/userRepository', () => {
   var
-    encryptedPassword = '5c4ec74fd64bb57c05b4948f3a7e9c7d450f069a',
-    mockCacheEngine,
-    mockReadEngine,
-    mockWriteLayer,
-    mockProfileRepository,
-    userInCache,
-    userInDB;
+    kuzzle,
+    userRepository,
+    userInvalidProfile;
 
-  mockCacheEngine = {
-    get: function (key) {
-      if (key === userRepository.index + '/' + userRepository.collection + '/userInCache') {
-        return Promise.resolve(JSON.stringify(userInCache));
-      }
-      return Promise.resolve(null);
-    },
-    volatileSet: function () {return Promise.resolve('OK');},
-    expire: function () {return Promise.resolve('OK'); }
-  };
+  before(() => {
+    var
+      encryptedPassword = '5c4ec74fd64bb57c05b4948f3a7e9c7d450f069a',
+      mockCacheEngine,
+      mockReadEngine,
+      mockWriteLayer,
+      mockProfileRepository,
+      userInCache,
+      userInDB;
 
-  mockReadEngine = {
-    get: function (requestObject) {
-      if (requestObject.data._id === 'userInDB') {
-        return Promise.resolve(new ResponseObject(requestObject, userInDB));
-      }
-
-      return Promise.resolve(new NotFoundError('User not found in db'));
-    }
-  };
-
-  mockWriteLayer = {
-    execute: () => Promise.resolve({})
-  };
-
-  mockProfileRepository = {
-    loadProfile: function (profileKey) {
-      var profile = new Profile();
-      if (profileKey === 'notfound') {
-        return Promise.resolve(null);
-      }
-      profile._id = profileKey;
-      return Promise.resolve(profile);
-    },
-    loadProfiles: function (profileKeys) {
-      var
-        profile,
-        profiles = [];
-
-      profileKeys.forEach(profileKey => {
-        profile = new Profile();
-        if (profileKey !== 'notfound') {
-          profile._id = profileKey;
-          profiles.push(_.assignIn({}, profile));
+    kuzzle = new KuzzleServer();
+    mockCacheEngine = {
+      get: key => {
+        if (key === userRepository.index + '/' + userRepository.collection + '/userInCache') {
+          return Promise.resolve(JSON.stringify(userInCache));
         }
-      });
-      return Promise.resolve(profiles);
-    }
-  };
-  userInCache = {
-    _id: 'userInCache',
-    name: 'Johnny Cash',
-    profilesIds: ['userincacheprofile'],
-    password: encryptedPassword
-  };
-  userInDB = {
-    _id: 'userInDB',
-    name: 'Debbie Jones',
-    profilesIds: ['userindbprofile']
-  };
-  userInvalidProfile = {
-    _id: 'userInvalidProfile',
-    profilesIds: ['notfound']
-  };
+        return Promise.resolve(null);
+      },
+      volatileSet: () => {return Promise.resolve('OK');},
+      expire: () => {return Promise.resolve('OK'); }
+    };
 
-  userRepository = new UserRepository();
-  userRepository.cacheEngine = mockCacheEngine;
-  userRepository.readEngine = mockReadEngine;
-  userRepository.writeLayer = mockWriteLayer;
+    mockReadEngine = {
+      get: requestObject => {
+        if (requestObject.data._id === 'userInDB') {
+          return Promise.resolve(new ResponseObject(requestObject, userInDB));
+        }
 
-  kuzzle.repositories = {};
-  kuzzle.repositories.profile = mockProfileRepository;
+        return Promise.resolve(new NotFoundError('User not found in db'));
+      }
+    };
 
-  done();
-});
+    mockWriteLayer = {
+      execute: () => Promise.resolve({})
+    };
 
-describe('Test: repositories/userRepository', function () {
+    mockProfileRepository = {
+      loadProfile: profileKey => {
+        var profile = new Profile();
+        if (profileKey === 'notfound') {
+          return Promise.resolve(null);
+        }
+        profile._id = profileKey;
+        return Promise.resolve(profile);
+      },
+      loadProfiles: profileKeys => {
+        var
+          profile,
+          profiles = [];
+
+        profileKeys.forEach(profileKey => {
+          profile = new Profile();
+          if (profileKey !== 'notfound') {
+            profile._id = profileKey;
+            profiles.push(_.assignIn({}, profile));
+          }
+        });
+        return Promise.resolve(profiles);
+      }
+    };
+    userInCache = {
+      _id: 'userInCache',
+      name: 'Johnny Cash',
+      profilesIds: ['userincacheprofile'],
+      password: encryptedPassword
+    };
+    userInDB = {
+      _id: 'userInDB',
+      name: 'Debbie Jones',
+      profilesIds: ['userindbprofile']
+    };
+    userInvalidProfile = {
+      _id: 'userInvalidProfile',
+      profilesIds: ['notfound']
+    };
+
+    kuzzle.repositories.profile = mockProfileRepository;
+
+    userRepository = new UserRepository(kuzzle);
+    userRepository.cacheEngine = mockCacheEngine;
+    userRepository.readEngine = mockReadEngine;
+    userRepository.writeLayer = mockWriteLayer;
+
+  });
+
   describe('#constructor', () => {
     it('should take into account the options given', () => {
-      var repository = new UserRepository({ ttl: 1000 });
+      var repository = new UserRepository(kuzzle, { ttl: 1000 });
 
       should(repository.ttl).be.exactly(1000);
     });
@@ -223,7 +219,7 @@ describe('Test: repositories/userRepository', function () {
       var
         user = new User();
 
-      userRepository = new UserRepository();
+      userRepository = new UserRepository(kuzzle);
 
       user.name = 'No Profile';
       user._id = 'NoProfile';
