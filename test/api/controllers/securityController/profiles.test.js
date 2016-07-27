@@ -112,22 +112,11 @@ describe('Test: security controller - profiles', function () {
           should(result.data.body.hits).be.an.Array();
           should(result.data.body.hits).not.be.empty();
           should(result.data.body.hits[0]).be.an.Object();
+          should(result.data.body.hits[0]._id).be.an.String();
+          should(result.data.body.hits[0]._source).be.an.Object();
           should(result.data.body.hits[0]._source.policies).be.an.Array();
           should(result.data.body.hits[0]._source.policies[0]).be.an.Object();
           should(result.data.body.hits[0]._source.policies[0].roleId).be.an.String();
-        });
-    });
-
-    it('should resolve to a responseObject with roles on a mGetProfiles call with hydrate', () => {
-      sandbox.stub(kuzzle.repositories.profile, 'loadMultiFromDatabase').resolves([{_id: 'test', _source: {}}]);
-      return kuzzle.funnel.controllers.security.mGetProfiles(new RequestObject({
-        body: {ids: ['test'], hydrate: true}
-      }))
-        .then(result => {
-          should(result).be.an.instanceOf(ResponseObject);
-          should(result.data.body.hits).be.an.Array();
-          should(result.data.body.hits).not.be.empty();
-          should(result.data.body.hits[0]).be.an.Object();
         });
     });
   });
