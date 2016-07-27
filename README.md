@@ -9,7 +9,7 @@
 For UI and linked objects developers, Kuzzle is an open-source solution that handles all the data management
 (CRUD, real-time storage, search, high-level features, etc;).
 
-Kuzzle features are accessible through a secured API. It can be used through a large choice of protocols such as REST, Websocket or Message Queuing protocols.
+Kuzzle features are accessible through a secured API. It can be used through a large choice of protocols such as REST, Websocket or MQTT.
 
 Kuzzle uses [Elasticsearch filter DSL](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-filters.html) (see [filters syntax](http://kuzzle.io/guide/#filtering-syntax) for more details) as filtering language, and [Redis](http://redis.io/) to manage filters cache.
 
@@ -78,7 +78,6 @@ Using a Vagrant virtual machine:
 
 You may also run unit and functional tests separately, or with additional arguments.
 For more information, check the [unit testing](test/README.md) and the [functional testing](features/README.md) documentation.
-
 
 # Contributing to Kuzzle
 
