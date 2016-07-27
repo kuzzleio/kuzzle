@@ -4,9 +4,7 @@ var
   sinon = require('sinon'),
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
   params = require('rc')('kuzzle'),
-  Kuzzle = require.main.require('lib/api/Kuzzle');
-
-require('sinon-as-promised')(Promise);
+  KuzzleServer = require.main.require('lib/api/kuzzleServer');
 
 describe('Test: hotelClerk.removeCustomerFromAllRooms', function () {
   var
@@ -17,9 +15,7 @@ describe('Test: hotelClerk.removeCustomerFromAllRooms', function () {
     sandbox;
 
   before(() => {
-    kuzzle = new Kuzzle();
-
-    return kuzzle.start(params, {dummy: true});
+    kuzzle = new KuzzleServer();
   });
 
   beforeEach(() => {
@@ -44,6 +40,9 @@ describe('Test: hotelClerk.removeCustomerFromAllRooms', function () {
         channels: ['barfoo']
       }
     };
+
+    sandbox.stub(kuzzle.internalEngine, 'get').resolves({});
+    return kuzzle.services.init({whitelist: []});
   });
 
   afterEach(() => {

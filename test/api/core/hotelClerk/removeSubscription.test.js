@@ -2,13 +2,12 @@ var
   should = require('should'),
   Promise = require('bluebird'),
   sinon = require('sinon'),
+  sandbox = sinon.sandbox.create(),
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
   BadRequestError = require.main.require('kuzzle-common-objects').Errors.badRequestError,
   NotFoundError = require.main.require('kuzzle-common-objects').Errors.notFoundError,
   params = require('rc')('kuzzle'),
-  Kuzzle = require.main.require('lib/api/Kuzzle');
-
-require('sinon-as-promised')(Promise);
+  KuzzleServer = require.main.require('lib/api/kuzzleServer');
 
 describe('Test: hotelClerk.removeSubscription', function () {
   var
@@ -20,18 +19,11 @@ describe('Test: hotelClerk.removeSubscription', function () {
     },
     index = 'test',
     collection = 'user',
-    unsubscribeRequest,
-    sandbox;
+    unsubscribeRequest;
 
-
-  before(() => {
-    kuzzle = new Kuzzle();
-
-    return kuzzle.start(params, {dummy: true});
-  });
 
   beforeEach(() => {
-    sandbox = sinon.sandbox.create();
+    kuzzle = new KuzzleServer();
 
     unsubscribeRequest = new RequestObject({
       controller: 'subscribe',
@@ -60,6 +52,9 @@ describe('Test: hotelClerk.removeSubscription', function () {
         channels: ['barfoo']
       }
     };
+
+    sandbox.stub(kuzzle.internalEngine, 'get').resolves({});
+    return kuzzle.services.init({whitelist: []});
   });
 
   afterEach(() => {

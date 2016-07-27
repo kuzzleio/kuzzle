@@ -2,15 +2,13 @@ var
   should = require('should'),
   Promise = require('bluebird'),
   sinon = require('sinon'),
+  sandbox = sinon.sandbox.create(),
   params = require('rc')('kuzzle'),
-  Kuzzle = require.main.require('lib/api/Kuzzle');
-
-require('sinon-as-promised')(Promise);
+  KuzzleServer = require.main.require('lib/api/kuzzleServer');
 
 describe('Test: hotelClerk.listSubscription', function () {
   var
     kuzzle,
-    sandbox,
     connection = {id: 'connectionid'},
     context,
     roomName = 'roomName',
@@ -18,18 +16,17 @@ describe('Test: hotelClerk.listSubscription', function () {
     collection = 'user';
 
   beforeEach(() => {
-    sandbox = sinon.sandbox.create();
-    kuzzle = new Kuzzle();
+    kuzzle = new KuzzleServer();
 
-    return kuzzle.start(params, {dummy: true})
-      .then(() => {
-        context = {
-          connection: connection,
-          token: {
-            user: 'user'
-          }
-        };
-      });
+    context = {
+      connection: connection,
+      token: {
+        user: 'user'
+      }
+    };
+
+    sandbox.stub(kuzzle.internalEngine, 'get').resolves({});
+    return kuzzle.services.init({whitelist: []});
   });
 
   afterEach(() => {

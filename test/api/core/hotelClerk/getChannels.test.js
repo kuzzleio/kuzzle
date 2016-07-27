@@ -1,11 +1,13 @@
 var
   should = require('should'),
+  sinon = require('sinon'),
+  sandbox = sinon.sandbox.create(),
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
   NotificationObject = require.main.require('lib/api/core/models/notificationObject'),
   params = require('rc')('kuzzle'),
-  Kuzzle = require.main.require('lib/api/Kuzzle');
+  KuzzleServer = require.main.require('lib/api/kuzzleServer');
 
-describe('Test: hotelClerk.getChannels', function () {
+describe('Test: hotelClerk.getChannels', () => {
   var
     kuzzle,
     context = {
@@ -32,20 +34,19 @@ describe('Test: hotelClerk.getChannels', function () {
       city: 'NYC',
       hobby: 'computer'
     };
-    //notificationObject;
 
-  beforeEach(function () {
-    kuzzle = new Kuzzle();
+  beforeEach(() => {
+    kuzzle = new KuzzleServer();
     kuzzle.removeAllListeners();
-
-    return kuzzle.start(params, {dummy: true});
+    sandbox.stub(kuzzle.internalEngine, 'get').resolves({});
+    return kuzzle.services.init({whitelist: []});
   });
 
-  it('should return an empty array if the room does not exist', function () {
+  it('should return an empty array if the room does not exist', () => {
     should(kuzzle.hotelClerk.getChannels('foo', {})).be.an.Array().and.be.empty();
   });
 
-  it('should return the right channels depending on the response state', function (done) {
+  it('should return the right channels depending on the response state', done => {
     var
       roomId,
       notification,
@@ -91,7 +92,7 @@ describe('Test: hotelClerk.getChannels', function () {
       .catch(error => done(error));
   });
 
-  it('should return the right channels depending on the response scope', function (done) {
+  it('should return the right channels depending on the response scope', done => {
     var
       roomId,
       notification,
@@ -139,7 +140,7 @@ describe('Test: hotelClerk.getChannels', function () {
       .catch(error => done(error));
   });
 
-  it('should return the right channels depending on the user event type', function (done) {
+  it('should return the right channels depending on the user event type', done => {
     var
       roomId,
       notification,

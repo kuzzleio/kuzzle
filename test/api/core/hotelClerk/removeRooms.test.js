@@ -1,10 +1,12 @@
 var
   should = require('should'),
+  sinon = require('sinon'),
+  sandbox = sinon.sandbox.create(),
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
   BadRequestError = require.main.require('kuzzle-common-objects').Errors.badRequestError,
   NotFoundError = require.main.require('kuzzle-common-objects').Errors.notFoundError,
   params = require('rc')('kuzzle'),
-  Kuzzle = require.main.require('lib/api/Kuzzle');
+  KuzzleServer = require.main.require('lib/api/kuzzleServer');
 
 describe('Test: hotelClerk.removeRooms', function () {
   var
@@ -26,18 +28,23 @@ describe('Test: hotelClerk.removeRooms', function () {
       }
     };
 
-  beforeEach(() => {
-    kuzzle = new Kuzzle();
 
-    return kuzzle.start(params, {dummy: true})
-      .then(() => {
-        context = {
-          connection: connection,
-          token: {
-            user: ''
-          }
-        };
-      });
+  beforeEach(() => {
+    kuzzle = new KuzzleServer();
+
+    context = {
+      connection: connection,
+      token: {
+        user: ''
+      }
+    };
+
+    sandbox.stub(kuzzle.internalEngine, 'get').resolves({});
+    return kuzzle.services.init({whitelist: []});
+  });
+
+  afterEach(() => {
+    sandbox.restore();
   });
 
   it('should reject an error if no index provided', function () {
