@@ -6,12 +6,14 @@
 var
   should = require('should'),
   rewire = require('rewire'),
+  sinon = require('sinon'),
+  sandbox = sinon.sandbox.create(),
   params = require('rc')('kuzzle'),
-  Kuzzle = require.main.require('lib/api/Kuzzle'),
+  KuzzleServer = require.main.require('lib/api/kuzzleServer'),
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
   Notifier = rewire('../../../../lib/api/core/notifier');
 
-describe('Test: notifier.send', function () {
+describe('Test: notifier.send', () => {
   var
     kuzzle,
     channel = 'stubChannel',
@@ -32,11 +34,19 @@ describe('Test: notifier.send', function () {
     };
 
   before(function () {
-    kuzzle = new Kuzzle();
-    return kuzzle.start(params, {dummy: true})
+    kuzzle = new KuzzleServer();
+  });
+
+  beforeEach(function () {
+    sandbox.stub(kuzzle.internalEngine, 'get').resolves({});
+    return kuzzle.services.init({whitelist: []})
       .then(() => {
-        kuzzle.hotelClerk.getChannels = () => [channel];
+        sandbox.stub(kuzzle.hotelClerk, 'getChannels', () => [channel]);
       });
+  });
+
+  afterEach(() => {
+    sandbox.restore();
   });
 
   it('should emit a proxy:broadcast hook on channels to be notified', function (done) {

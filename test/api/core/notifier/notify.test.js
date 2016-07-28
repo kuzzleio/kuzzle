@@ -6,27 +6,25 @@
 var
   should = require('should'),
   rewire = require('rewire'),
-  params = require('rc')('kuzzle'),
-  Kuzzle = require.main.require('lib/api/Kuzzle'),
+  KuzzleServer = require.main.require('lib/api/kuzzleServer'),
   Notifier = rewire('../../../../lib/api/core/notifier');
 
-describe('Test: notifier.notify', function () {
+describe('Test: notifier.notify', () => {
   var
     kuzzle;
 
-  before(function () {
-    kuzzle = new Kuzzle();
-    return kuzzle.start(params, {dummy: true});
+  before(() => {
+    kuzzle = new KuzzleServer();
   });
 
-  it('should do nothing when no rooms to notify are provided', function () {
+  it('should do nothing when no rooms to notify are provided', () => {
     var
       notifier,
       didSomething = 0;
 
     Notifier.__with__({
-      send: function() { didSomething++; }
-    })(function () {
+      send: () => { didSomething++; }
+    })(() => {
       /** @type {Notifier} */
       notifier = new Notifier(kuzzle);
       notifier.notify(null, {}, {});
@@ -37,14 +35,14 @@ describe('Test: notifier.notify', function () {
     should(didSomething).be.exactly(0);
   });
 
-  it('should be able to notify when only one room is provided', function () {
+  it('should be able to notify when only one room is provided', () => {
     var
       notifier,
       didSomething = 0;
 
     Notifier.__with__({
-      send: function() { didSomething++; }
-    })(function () {
+      send: () => { didSomething++; }
+    })(() => {
       /** @type {Notifier} */
       notifier = new Notifier(kuzzle);
       notifier.notify('foobar', {}, {});
@@ -53,14 +51,14 @@ describe('Test: notifier.notify', function () {
     should(didSomething).be.exactly(1);
   });
 
-  it('should be able to notify when multiple rooms are provided', function () {
+  it('should be able to notify when multiple rooms are provided', () => {
     var
       notifier,
       didSomething = 0;
 
     Notifier.__with__({
-      send: function () { didSomething++; }
-    })(function () {
+      send: () => { didSomething++; }
+    })(() => {
       /** @type {Notifier} */
       notifier = new Notifier(kuzzle);
       notifier.notify(['foo', 'bar', 'baz'], {}, {});
