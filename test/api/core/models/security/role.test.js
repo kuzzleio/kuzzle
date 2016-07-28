@@ -20,6 +20,9 @@ describe('Test: security/roleTest', () => {
       }
     },
     kuzzle = {
+      rawParams: {
+        internalIndex: '%kuzzle'
+      },
       pluginsManager: {
         trigger: () => {
           return true;
@@ -282,7 +285,7 @@ describe('Test: security/roleTest', () => {
         .then(isAllowed => {
           should(isAllowed).be.true();
           role.controllers.controller.actions.action = false;
-          return role.isActionAllowed(requestObject, context);
+          return role.isActionAllowed(requestObject, context, kuzzle);
         })
         .then(isAllowed => {
           should(isAllowed).be.false();

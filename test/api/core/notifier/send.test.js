@@ -39,13 +39,13 @@ describe('Test: notifier.send', function () {
       });
   });
 
-  it('should emit a protocol:broadcast hook on channels to be notified', function (done) {
+  it('should emit a proxy:broadcast hook on channels to be notified', function (done) {
     var
       room = 'foo';
 
     this.timeout(50);
 
-    kuzzle.once('protocol:broadcast', (data) => {
+    kuzzle.once('proxy:broadcast', (data) => {
       should(data).be.an.Object();
       should(data.channel).be.eql(channel);
       should(data.payload).be.an.Object();
@@ -60,7 +60,7 @@ describe('Test: notifier.send', function () {
     (Notifier.__get__('send')).call(kuzzle, room, requestObject, notification);
   });
 
-  it('should emit a protocol:notify hook when a connection ID is provided', function (done) {
+  it('should emit a proxy:notify hook when a connection ID is provided', function (done) {
     var
       room = 'foo',
       anotherChannel = 'stubChannel',
@@ -68,7 +68,7 @@ describe('Test: notifier.send', function () {
 
     this.timeout(50);
 
-    kuzzle.once('protocol:notify', (data) => {
+    kuzzle.once('proxy:notify', (data) => {
       should(data).be.an.Object();
       should(data.channel).be.eql(anotherChannel);
       should(data.payload).be.an.Object();
