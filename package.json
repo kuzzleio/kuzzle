@@ -43,7 +43,7 @@
     "json-stable-stringify": "1.0.1",
     "json2yaml": "^1.1.0",
     "jsonwebtoken": "^7.0.1",
-    "kuzzle-common-objects": "^1.0.1",
+    "kuzzle-common-objects": "^1.0.2",
     "lodash": "4.13.1",
     "ms": "^0.7.1",
     "ngeohash": "0.6.0",
