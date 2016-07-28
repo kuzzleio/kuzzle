@@ -9,6 +9,7 @@ kuzzle:
   volumes:
     - "..:/var/app"
     - "./scripts/run-test.sh:/run.sh"
+    - "./config:/config"
   links:
     - elasticsearch
     - redis

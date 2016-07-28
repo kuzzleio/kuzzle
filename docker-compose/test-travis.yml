@@ -9,7 +9,8 @@ kuzzle:
   command: sh -c '/run.sh; npm codecov'
   volumes:
     - "..:/var/app"
-    - ".scripts/run-test.sh:/run.sh"
+    - "./scripts/run-test.sh:/run.sh"
+    - "./config:/config"
   links:
     - elasticsearch
     - redis
