@@ -5,7 +5,7 @@ var
   DslFilters = rewire('../../../../lib/api/dsl/filters'),
   Dsl = rewire('../../../../lib/api/dsl/index');
 
-describe('Test: dsl.filters.testFieldFilters', function () {
+describe('Test: dsl.filters.testFieldFilters', () => {
   var
     filters,
     index = 'test',
@@ -13,26 +13,24 @@ describe('Test: dsl.filters.testFieldFilters', function () {
     data = { foo: { bar: 'bar' }},
     flattenBody;
 
-  before(function () {
-    DslFilters.__set__('findMatchingFilters', function (ids) {
-      return ids;
-    });
+  before(() => {
+    DslFilters.__set__('findMatchingFilters', ids => ids);
   });
 
-  beforeEach(function () {
+  beforeEach(() => {
     filters = new DslFilters();
     flattenBody = Dsl.__get__('flattenObject')(data);
   });
 
-  it('should return an empty array when no fields are provided', function () {
+  it('should return an empty array when no fields are provided', () => {
     should(filters.testFieldFilters(index, collection, {}, {})).be.empty();
   });
 
-  it('should return an empty array if the collection isn\'t yet listed', function () {
+  it('should return an empty array if the collection isn\'t yet listed', () => {
     should(filters.testFieldFilters(index, 'nocollection', flattenBody, {})).be.empty();
   });
 
-  it('should return an empty array if no field is registered on a given collection', function () {
+  it('should return an empty array if no field is registered on a given collection', () => {
     var result;
 
     filters.filtersTree[index] = {};
@@ -42,7 +40,7 @@ describe('Test: dsl.filters.testFieldFilters', function () {
     should(result).be.empty();
   });
 
-  it('should return an empty array if the tested fields aren\'t listed on a given collection', function () {
+  it('should return an empty array if the tested fields aren\'t listed on a given collection', () => {
     var result;
 
     filters.filtersTree[index] = {};
@@ -52,7 +50,7 @@ describe('Test: dsl.filters.testFieldFilters', function () {
     should(result).be.empty();
   });
 
-  it('should return an empty array if no filter match the given document', function () {
+  it('should return an empty array if no filter match the given document', () => {
     var
       result;
 
@@ -72,7 +70,7 @@ describe('Test: dsl.filters.testFieldFilters', function () {
     should(result).be.empty();
   });
 
-  it('should return a list of filter IDs to notify if a document matches registered filters', function () {
+  it('should return a list of filter IDs to notify if a document matches registered filters', () => {
     var
       result,
       hashedFieldName = md5('foo.bar'),

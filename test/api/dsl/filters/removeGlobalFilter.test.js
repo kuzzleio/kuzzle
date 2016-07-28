@@ -3,16 +3,16 @@ var
   rewire = require('rewire'),
   DslFilters = rewire('../../../../lib/api/dsl/filters');
 
-describe('Test: dsl.filters.removeGlobalFilter', function () {
+describe('Test: dsl.filters.removeGlobalFilter', () => {
   var
     filters,
     removeGlobalFilter = DslFilters.__get__('removeGlobalFilter');
 
-  beforeEach(function () {
+  beforeEach(() => {
     filters = new DslFilters();
   });
 
-  it('should do nothing if the index or the collection does not exist', function () {
+  it('should do nothing if the index or the collection does not exist', () => {
     should(removeGlobalFilter.call(filters, 'fake')).be.false();
 
     filters.filtersTree.foobar = {};
@@ -22,7 +22,7 @@ describe('Test: dsl.filters.removeGlobalFilter', function () {
     should(removeGlobalFilter.call(filters, 'fake')).be.false();
   });
 
-  it('should do nothing if the filter ID does not exist', function () {
+  it('should do nothing if the filter ID does not exist', () => {
     filters.addCollectionSubscription('foo', 'index', 'collection');
     removeGlobalFilter.call(filters, 'bar');
 
@@ -30,7 +30,7 @@ describe('Test: dsl.filters.removeGlobalFilter', function () {
     should(filters.filtersTree.index.collection.globalFilterIds[0]).be.exactly('foo');
   });
 
-  it('should remove the entire index tree if this is the last filter to be removed on it', function () {
+  it('should remove the entire index tree if this is the last filter to be removed on it', () => {
     filters.addCollectionSubscription('foo', 'index', 'collection');
     removeGlobalFilter.call(filters, 'foo');
 

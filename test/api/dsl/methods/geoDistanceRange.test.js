@@ -7,7 +7,7 @@ var
   BadRequestError = require.main.require('kuzzle-common-objects').Errors.badRequestError,
   InternalError = require.main.require('kuzzle-common-objects').Errors.internalError;
 
-describe('Test geoDistanceRange method', function () {
+describe('Test geoDistanceRange method', () => {
   var
     methods,
     filterId = 'fakeFilterId',
@@ -50,7 +50,7 @@ describe('Test geoDistanceRange method', function () {
     locationgeoDistanceRangekpbxyzbpv111318111318 = md5('locationgeoDistanceRangekpbxyzbpv111318111318'),
     fieldLocation = md5('location');
 
-  beforeEach(function () {
+  beforeEach(() => {
     /** @type Methods */
     methods = new Methods(new Filters());
     return methods.geoDistanceRange(filterId, index, collection, filterOK)
@@ -59,14 +59,14 @@ describe('Test geoDistanceRange method', function () {
       .then(() => methods.geoDistanceRange(filterId, index, collection, filterEqual));
   });
 
-  it('should construct the filterTree object for the correct attribute', function () {
+  it('should construct the filterTree object for the correct attribute', () => {
     should(methods.filters.filtersTree).not.be.empty();
     should(methods.filters.filtersTree[index]).not.be.empty();
     should(methods.filters.filtersTree[index][collection]).not.be.empty();
     should(methods.filters.filtersTree[index][collection].fields).not.be.empty();
     should(methods.filters.filtersTree[index][collection].fields[fieldLocation]).not.be.empty();
   });
-  it('should ', function () {
+  it('should ', () => {
     should(methods.filters.filtersTree).not.be.empty();
     should(methods.filters.filtersTree[index]).not.be.empty();
     should(methods.filters.filtersTree[index][collection]).not.be.empty();
@@ -74,11 +74,11 @@ describe('Test geoDistanceRange method', function () {
     should(methods.filters.filtersTree[index][collection].fields[fieldLocation]).not.be.empty();
   });
 
-  it('should construct the filterTree with correct encoded function name', function () {
+  it('should construct the filterTree with correct encoded function name', () => {
     // Coordinates are geohashed to encode the function name
     // because we have many times the same coord in filters,
     // we must have only four functions
-    
+
     should(Object.keys(methods.filters.filtersTree[index][collection].fields[fieldLocation])).have.length(4);
     should(methods.filters.filtersTree[index][collection].fields[fieldLocation][locationgeoDistanceRangekpbxyzbpv111320111317]).not.be.empty();
     should(methods.filters.filtersTree[index][collection].fields[fieldLocation][locationgeoDistanceRangekpbxyzbpv110]).not.be.empty();
@@ -86,7 +86,7 @@ describe('Test geoDistanceRange method', function () {
     should(methods.filters.filtersTree[index][collection].fields[fieldLocation][md5('locationgeoDistanceRangekpbxyzbpv111312.96111319.05600000001')]).not.be.empty();
   });
 
-  it('should construct the filterTree with correct room list', function () {
+  it('should construct the filterTree with correct room list', () => {
     var ids;
 
     ids = methods.filters.filtersTree[index][collection].fields[fieldLocation][locationgeoDistanceRangekpbxyzbpv111320111317].ids;
@@ -110,7 +110,7 @@ describe('Test geoDistanceRange method', function () {
     should(ids[0]).be.exactly(filterId);
   });
 
-  it('should construct the filterTree with correct functions geoDistanceRange', function () {
+  it('should construct the filterTree with correct functions geoDistanceRange', () => {
     should(methods.filters.filtersTree[index][collection].fields[fieldLocation][locationgeoDistanceRangekpbxyzbpv111320111317].args).match({
       operator: 'geoDistanceRange',
       not: undefined,
@@ -141,11 +141,11 @@ describe('Test geoDistanceRange method', function () {
   });
 
 
-  it('should return a rejected promise if an empty filter is provided', function () {
+  it('should return a rejected promise if an empty filter is provided', () => {
     return should(methods.geoDistanceRange('foo', index, 'bar', {})).be.rejectedWith(BadRequestError, { message: 'Missing filter' });
   });
 
-  it('should handle correctly the case when from and to comes first, before the location', function () {
+  it('should handle correctly the case when from and to comes first, before the location', () => {
     /* jshint camelcase: false */
     var
       underscoreFilter = {
@@ -163,7 +163,7 @@ describe('Test geoDistanceRange method', function () {
     return methods.geoDistanceRange(filterId, index, collection, underscoreFilter);
   });
 
-  it('should handle the not parameter', function () {
+  it('should handle the not parameter', () => {
     var
       notFilter = {
         from: 123,
@@ -177,7 +177,7 @@ describe('Test geoDistanceRange method', function () {
     return methods.geoDistanceRange(filterId, index, collection, notFilter, true);
   });
 
-  it('should return a rejected promise if the geolocalisation filter is invalid', function () {
+  it('should return a rejected promise if the geolocalisation filter is invalid', () => {
     var
       invalidFilter = {
         location: {
@@ -192,7 +192,7 @@ describe('Test geoDistanceRange method', function () {
     return should(methods.geoDistanceRange(filterId, index, collection, invalidFilter)).be.rejectedWith(BadRequestError, { message: 'Unable to parse coordinates' });
   });
 
-  it('should return a rejected promise if the from filter parameter is missing', function () {
+  it('should return a rejected promise if the from filter parameter is missing', () => {
     var
       invalidFilter = {
         location: {
@@ -205,7 +205,7 @@ describe('Test geoDistanceRange method', function () {
     return should(methods.geoDistanceRange(filterId, index, collection, invalidFilter)).be.rejectedWith(BadRequestError, { message: 'No from parameter given' });
   });
 
-  it('should return a rejected promise if the to filter parameter is missing', function () {
+  it('should return a rejected promise if the to filter parameter is missing', () => {
     var
       invalidFilter = {
         location: {
@@ -218,7 +218,7 @@ describe('Test geoDistanceRange method', function () {
     return should(methods.geoDistanceRange(filterId, index, collection, invalidFilter)).be.rejectedWith(BadRequestError, { message: 'No to parameter given' });
   });
 
-  it('should return a rejected promise if the location filter parameter is missing', function () {
+  it('should return a rejected promise if the location filter parameter is missing', () => {
     var
       invalidFilter = {
         from: 123,
@@ -228,7 +228,7 @@ describe('Test geoDistanceRange method', function () {
     return should(methods.geoDistanceRange(filterId, index, collection, invalidFilter)).be.rejectedWith(BadRequestError, { message: 'No location field given' });
   });
 
-  it('should return a rejected promise if the distance filter parameter is missing', function () {
+  it('should return a rejected promise if the distance filter parameter is missing', () => {
     var
       invalidFilter = {
         location: {
@@ -242,8 +242,8 @@ describe('Test geoDistanceRange method', function () {
     return should(methods.geoDistanceRange(filterId, index, collection, invalidFilter)).be.rejectedWith(BadRequestError, { message: 'Unable to parse the distance filter parameter' });
   });
 
-  it('should return a rejected promise if addToFiltersTree fails', function () {
-    methods.filters.add = function () { return new InternalError('rejected'); };
+  it('should return a rejected promise if addToFiltersTree fails', () => {
+    methods.filters.add = () => { return new InternalError('rejected'); };
     return should(methods.geoDistanceRange(filterId, index, collection, filterOK)).be.rejectedWith('rejected');
   });
 });

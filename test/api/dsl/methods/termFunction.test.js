@@ -7,7 +7,7 @@ var
   BadRequestError = require.main.require('kuzzle-common-objects').Errors.badRequestError,
   InternalError = require.main.require('kuzzle-common-objects').Errors.internalError;
 
-describe('Test: dsl.termFunction method', function () {
+describe('Test: dsl.termFunction method', () => {
   var
     methods,
     termFunction = Methods.__get__('termFunction'),
@@ -17,16 +17,16 @@ describe('Test: dsl.termFunction method', function () {
     nottermsfoobarbaz = md5('nottermsfoobar,baz'),
     fieldFoo = md5('foo');
 
-  beforeEach(function () {
+  beforeEach(() => {
     methods = new Methods(new Filters());
     termFunction = termFunction.bind(methods);
   });
 
-  it('should return a rejected promise if the provided filter is empty', function () {
+  it('should return a rejected promise if the provided filter is empty', () => {
     return should(termFunction('term', 'roomId', 'collection', {})).be.rejectedWith(BadRequestError, { message: 'A filter can\'t be empty' });
   });
 
-  it('should return a rejected promise if the value given for a "terms" filter is not an array', function () {
+  it('should return a rejected promise if the value given for a "terms" filter is not an array', () => {
     var
       filter = {
         foo: 'bar'
@@ -35,7 +35,7 @@ describe('Test: dsl.termFunction method', function () {
     return should(termFunction('terms', 'roomId', 'index', 'collection', filter)).be.rejectedWith(BadRequestError, { message: 'Filter terms must contains an array' });
   });
 
-  it('should create a valid "term" filter', function () {
+  it('should create a valid "term" filter', () => {
     var
       filter = {
         foo: 'bar'
@@ -43,7 +43,7 @@ describe('Test: dsl.termFunction method', function () {
 
     return termFunction('term', 'roomId', 'index', 'collection', filter)
       .then(response => response.filter)
-      .then(function (formattedFilter) {
+      .then(formattedFilter => {
         should.exist(formattedFilter[`index.collection.${fieldFoo}.${termfoobar}`]);
         should(formattedFilter[`index.collection.${fieldFoo}.${termfoobar}`].ids).be.an.Array().and.match(['roomId']);
         should(formattedFilter[`index.collection.${fieldFoo}.${termfoobar}`].args).match({
@@ -52,7 +52,7 @@ describe('Test: dsl.termFunction method', function () {
       });
   });
 
-  it('should create a valid "terms" filter', function () {
+  it('should create a valid "terms" filter', () => {
     var
       filter = {
         foo: ['bar', 'baz']
@@ -60,7 +60,7 @@ describe('Test: dsl.termFunction method', function () {
 
     return termFunction('terms', 'roomId', 'index', 'collection', filter)
       .then(response => response.filter)
-      .then(function (formattedFilter) {
+      .then(formattedFilter => {
         should.exist(formattedFilter[`index.collection.${fieldFoo}.${termsfoobarbaz}`]);
         should(formattedFilter[`index.collection.${fieldFoo}.${termsfoobarbaz}`].ids).be.an.Array().and.match(['roomId']);
         should(formattedFilter[`index.collection.${fieldFoo}.${termsfoobarbaz}`].args).match({
@@ -72,7 +72,7 @@ describe('Test: dsl.termFunction method', function () {
       });
   });
 
-  it('should create a valid "not-term" filter', function () {
+  it('should create a valid "not-term" filter', () => {
     var
       filter = {
         foo: 'bar'
@@ -80,7 +80,7 @@ describe('Test: dsl.termFunction method', function () {
 
     return termFunction('term', 'roomId', 'index', 'collection', filter, true)
       .then(response => response.filter)
-      .then(function (formattedFilter) {
+      .then(formattedFilter => {
         should.exist(formattedFilter[`index.collection.${fieldFoo}.${nottermfoobar}`]);
         should(formattedFilter[`index.collection.${fieldFoo}.${nottermfoobar}`].ids).be.an.Array().and.match(['roomId']);
         should(formattedFilter[`index.collection.${fieldFoo}.${nottermfoobar}`].args).match({
@@ -89,7 +89,7 @@ describe('Test: dsl.termFunction method', function () {
       });
   });
 
-  it('should create a valid "not-terms" filter', function () {
+  it('should create a valid "not-terms" filter', () => {
     var
       filter = {
         foo: ['bar', 'baz']
@@ -97,7 +97,7 @@ describe('Test: dsl.termFunction method', function () {
 
     return termFunction('terms', 'roomId', 'index', 'collection', filter, true)
       .then(response => response.filter)
-      .then(function (formattedFilter) {
+      .then(formattedFilter => {
         should.exist(formattedFilter[`index.collection.${fieldFoo}.${nottermsfoobarbaz}`]);
         should(formattedFilter[`index.collection.${fieldFoo}.${nottermsfoobarbaz}`].ids).be.an.Array().and.match(['roomId']);
         should(formattedFilter[`index.collection.${fieldFoo}.${nottermsfoobarbaz}`].args).match({
@@ -109,13 +109,13 @@ describe('Test: dsl.termFunction method', function () {
       });
   });
 
-  it('should return a rejected promise if filters.add fails', function () {
+  it('should return a rejected promise if filters.add fails', () => {
     var
       filter = {
         foo: ['bar', 'baz']
       };
 
-    methods.filters.add = function () { return new InternalError('rejected'); };
+    methods.filters.add = () => { return new InternalError('rejected'); };
 
     return should(Methods.__get__('termFunction').call(methods, 'terms', 'roomId', 'index', 'collection', filter)).be.rejectedWith('rejected');
   });

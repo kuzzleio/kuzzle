@@ -2,7 +2,7 @@ var
   should = require('should'),
   operators = require.main.require('lib/api/dsl/operators');
 
-describe('Test "geoDistanceRange" operator', function () {
+describe('Test "geoDistanceRange" operator', () => {
   var
     field = 'location',
     valueOK = {
@@ -30,7 +30,7 @@ describe('Test "geoDistanceRange" operator', function () {
     };
 
 
-  it('should return false if no lat or lon members exists for the location member of the document', function () {
+  it('should return false if no lat or lon members exists for the location member of the document', () => {
     should(operators.geoDistanceRange(field, valueOK, {
       name: 'Bad',
       'location.lol': 0,
@@ -50,7 +50,7 @@ describe('Test "geoDistanceRange" operator', function () {
     })).be.false();
   });
 
-  it('should test distance ranges correctly', function () {
+  it('should test distance ranges correctly', () => {
     should(operators.geoDistanceRange(field, valueOK, document)).be.true();
     should(operators.geoDistanceRange(field, valueNOK, document)).be.false();
     should(operators.geoDistanceRange(field, valueEqual, document)).be.true();

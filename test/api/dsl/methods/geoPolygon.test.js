@@ -7,7 +7,7 @@ var
   BadRequestError = require.main.require('kuzzle-common-objects').Errors.badRequestError,
   InternalError = require.main.require('kuzzle-common-objects').Errors.internalError;
 
-describe('Test "geoPolygon" method', function () {
+describe('Test "geoPolygon" method', () => {
   var
     methods,
     filterId = 'fakeFilterId',
@@ -48,7 +48,7 @@ describe('Test "geoPolygon" method', function () {
     locationgeoPolygons1zbfk3yns1zyd63zws1zned3z8s1z0gs3y0 = md5('locationgeoPolygons1zbfk3yns1zyd63zws1zned3z8s1z0gs3y0'),
     fieldLocation = md5('location');
 
-  beforeEach(function () {
+  beforeEach(() => {
     /** @type Methods */
     methods = new Methods(new Filters());
 
@@ -57,7 +57,7 @@ describe('Test "geoPolygon" method', function () {
       .then(() => methods.geoPolygon(filterId, index, collection, filterOutside));
   });
 
-  it('should construct the filterTree object for the correct attribute', function () {
+  it('should construct the filterTree object for the correct attribute', () => {
     should(methods.filters.filtersTree).not.be.empty();
     should(methods.filters.filtersTree[index]).not.be.empty();
     should(methods.filters.filtersTree[index][collection]).not.be.empty();
@@ -65,18 +65,18 @@ describe('Test "geoPolygon" method', function () {
     should(methods.filters.filtersTree[index][collection].fields[fieldLocation]).not.be.empty();
   });
 
-  it('should construct the filterTree with correct encoded function name', function () {
+  it('should construct the filterTree with correct encoded function name', () => {
     // Coordinates are geohashed to build the encoded function name
     // because we have many times the same coord in filters,
     // we must have only four functions
-    
+
     should(Object.keys(methods.filters.filtersTree[index][collection].fields[fieldLocation])).have.length(3);
     should(methods.filters.filtersTree[index][collection].fields[fieldLocation][locationgeoPolygonkpbdqcbnts00twy01mebpm9npc67zz631zyd]).not.be.empty();
     should(methods.filters.filtersTree[index][collection].fields[fieldLocation][locationgeoPolygonkpbxyzbpvs00twy01mebpvxypcr7zzzzzzzz]).not.be.empty();
     should(methods.filters.filtersTree[index][collection].fields[fieldLocation][locationgeoPolygons1zbfk3yns1zyd63zws1zned3z8s1z0gs3y0]).not.be.empty();
   });
 
-  it('should construct the filterTree with correct room list', function () {
+  it('should construct the filterTree with correct room list', () => {
     var ids;
 
     ids = methods.filters.filtersTree[index][collection].fields[fieldLocation][locationgeoPolygonkpbdqcbnts00twy01mebpm9npc67zz631zyd].ids;
@@ -96,7 +96,7 @@ describe('Test "geoPolygon" method', function () {
 
   });
 
-  it('should construct the filterTree with correct functions geoPolygon', function () {
+  it('should construct the filterTree with correct functions geoPolygon', () => {
     // test exact
     should(methods.filters.filtersTree[index][collection].fields[fieldLocation][locationgeoPolygonkpbdqcbnts00twy01mebpm9npc67zz631zyd].args).match({
       operator: 'geoPolygon',
@@ -134,11 +134,11 @@ describe('Test "geoPolygon" method', function () {
     });
   });
 
-  it('should return a rejected promise if an empty filter is provided', function () {
+  it('should return a rejected promise if an empty filter is provided', () => {
     return should(methods.geoPolygon('foo', index, 'bar', {})).be.rejectedWith(BadRequestError, { message: 'Missing filter' });
   });
 
-  it('should return a rejected promise if the geolocalisation filter is invalid', function () {
+  it('should return a rejected promise if the geolocalisation filter is invalid', () => {
     var
       invalidFilter = {
         location: {
@@ -152,7 +152,7 @@ describe('Test "geoPolygon" method', function () {
     return should(methods.geoPolygon(filterId, index, collection, invalidFilter)).be.rejectedWith(BadRequestError, { message: 'No point list found' });
   });
 
-  it('should return a rejected promise if the location filter parameter is missing', function () {
+  it('should return a rejected promise if the location filter parameter is missing', () => {
     var
       invalidFilter = {
         distance: 123
@@ -161,11 +161,11 @@ describe('Test "geoPolygon" method', function () {
     return should(methods.geoPolygon(filterId, index, collection, invalidFilter)).be.rejectedWith(BadRequestError, { message: 'No point list found' });
   });
 
-  it('should handle the not parameter', function () {
+  it('should handle the not parameter', () => {
     return methods.geoPolygon(filterId, index, collection, filterExact, true);
   });
 
-  it('should return a rejected promise if the location filter parameter does not contain a points member', function () {
+  it('should return a rejected promise if the location filter parameter does not contain a points member', () => {
     var
       invalidFilter = {
         location: {
@@ -177,7 +177,7 @@ describe('Test "geoPolygon" method', function () {
     return should(methods.geoPolygon(filterId, index, collection, invalidFilter)).be.rejectedWith(BadRequestError, { message: 'No point list found' });
   });
 
-  it('should return a rejected promise if the location filter parameter contain a points filter with less than 3 points', function () {
+  it('should return a rejected promise if the location filter parameter contain a points filter with less than 3 points', () => {
     var
       invalidFilter = {
         location: {
@@ -191,7 +191,7 @@ describe('Test "geoPolygon" method', function () {
     return should(methods.geoPolygon(filterId, index, collection, invalidFilter)).be.rejectedWith(BadRequestError, { message: 'A polygon must have at least 3 points' });
   });
 
-  it('should return a rejected promise if the location filter parameter contain a points filter wich is not an array', function () {
+  it('should return a rejected promise if the location filter parameter contain a points filter wich is not an array', () => {
     var
       invalidFilter = {
         location: {
@@ -202,8 +202,8 @@ describe('Test "geoPolygon" method', function () {
     return should(methods.geoPolygon(filterId, index, collection, invalidFilter)).be.rejectedWith(BadRequestError, { message: 'A polygon must be in array format' });
   });
 
-  it('should return a rejected promise if addToFiltersTree fails', function () {
-    methods.filters.add = function () { return new InternalError('rejected'); };
+  it('should return a rejected promise if addToFiltersTree fails', () => {
+    methods.filters.add = () => { return new InternalError('rejected'); };
     return should(methods.geoPolygon(filterId, index, collection, filterExact)).be.rejectedWith('rejected');
   });
 });

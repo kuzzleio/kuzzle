@@ -4,7 +4,7 @@ var
   Filters = require.main.require('lib/api/dsl/filters'),
   Methods = require.main.require('lib/api/dsl/methods');
 
-describe('Test term method', function () {
+describe('Test term method', () => {
   var
     methods,
     filterIdMatch = 'matching filter ID',
@@ -19,14 +19,14 @@ describe('Test term method', function () {
     fieldFirstName = md5('firstName');
 
 
-  before(function () {
+  before(() => {
     /** @type Methods */
     methods = new Methods(new Filters());
     return methods.term(filterIdMatch, index, collection, filter)
       .then(() => methods.term(filterIdNot, index, collection, filter, true));
   });
 
-  it('should construct the filterTree object for the correct attribute', function () {
+  it('should construct the filterTree object for the correct attribute', () => {
     should(methods.filters.filtersTree).not.be.empty();
     should(methods.filters.filtersTree[index]).not.be.empty();
     should(methods.filters.filtersTree[index][collection]).not.be.empty();
@@ -34,7 +34,7 @@ describe('Test term method', function () {
     should(methods.filters.filtersTree[index][collection].fields[fieldFirstName]).not.be.empty();
   });
 
-  it('should construct the filterTree with correct arguments', function () {
+  it('should construct the filterTree with correct arguments', () => {
     should(methods.filters.filtersTree[index][collection].fields[fieldFirstName][termfirstNameGrace].args).match({
       operator: 'term',
       not: undefined,
@@ -50,7 +50,7 @@ describe('Test term method', function () {
     });
   });
 
-  it('should construct the filterTree with correct room list', function () {
+  it('should construct the filterTree with correct room list', () => {
     var
       ids = methods.filters.filtersTree[index][collection].fields[fieldFirstName][termfirstNameGrace].ids,
       idsNot = methods.filters.filtersTree[index][collection].fields[fieldFirstName][nottermfirstNameGrace].ids;

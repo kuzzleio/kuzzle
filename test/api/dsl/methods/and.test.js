@@ -6,7 +6,7 @@ var
   Filters = require.main.require('lib/api/dsl/filters'),
   Methods = rewire('../../../../lib/api/dsl/methods');
 
-describe('Test "and" method', function () {
+describe('Test "and" method', () => {
   var
     methods,
     filterId = 'fakeFilterId',
@@ -31,12 +31,12 @@ describe('Test "and" method', function () {
     fieldCity = md5('city'),
     fieldHobby = md5('hobby');
 
-  before(function () {
+  before(() => {
     methods = new Methods(new Filters());
     return methods.and(filterId, index, collection, filter);
   });
 
-  it('should construct the filterTree object for the correct attribute', function () {
+  it('should construct the filterTree object for the correct attribute', () => {
     should(methods.filters.filtersTree).not.be.empty();
     should(methods.filters.filtersTree[index]).not.be.empty();
     should(methods.filters.filtersTree[index][collection]).not.be.empty();
@@ -45,12 +45,12 @@ describe('Test "and" method', function () {
     should(methods.filters.filtersTree[index][collection].fields[fieldHobby]).not.be.empty();
   });
 
-  it('should construct the filterTree with correct encoded function name', function () {
+  it('should construct the filterTree with correct encoded function name', () => {
     should(methods.filters.filtersTree[index][collection].fields[fieldCity][termCity]).not.be.empty();
     should(methods.filters.filtersTree[index][collection].fields[fieldHobby][termHobby]).not.be.empty();
   });
 
-  it('should construct the filterTree with the correct filter IDs list', function () {
+  it('should construct the filterTree with the correct filter IDs list', () => {
     var ids;
 
     ids = methods.filters.filtersTree[index][collection].fields[fieldCity][termCity].ids;
@@ -64,7 +64,7 @@ describe('Test "and" method', function () {
     should(ids[0]).be.exactly(filterId);
   });
 
-  it('should construct the filterTree with correct operator arguments', function () {
+  it('should construct the filterTree with correct operator arguments', () => {
     should(methods.filters.filtersTree[index][collection].fields[fieldCity][termCity].args).match({
       operator: 'term',
       not: undefined,
@@ -80,10 +80,10 @@ describe('Test "and" method', function () {
     });
   });
 
-  it('should return a rejected promise if getFormattedFilters fails', function () {
+  it('should return a rejected promise if getFormattedFilters fails', () => {
     return Methods.__with__({
-      getFormattedFilters: function () { return Promise.reject(new Error('rejected')); }
-    })(function () {
+      getFormattedFilters: () => { return Promise.reject(new Error('rejected')); }
+    })(() => {
       return should(methods.and(filterId, index, collection, filter)).be.rejectedWith('rejected');
     });
   });
