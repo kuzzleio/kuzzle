@@ -60,6 +60,7 @@ describe('Test: ElasticSearch service', () => {
       index: index,
       body: documentAda
     });
+    elasticsearch.init();
   });
 
   afterEach(() => {
