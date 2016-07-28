@@ -55,6 +55,8 @@ describe('funnelController.playCachedRequests', function () {
     funnel = new FunnelController(kuzzle);
     funnel.init();
     funnel.lastOverloadTime = 0;
+    funnel.overloadWarned = true;
+    
     funnel.execute = function (r, c, cb) {
       executeCalled = true;
 
