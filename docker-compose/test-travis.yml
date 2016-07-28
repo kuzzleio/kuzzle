@@ -6,9 +6,10 @@ proxy:
 
 kuzzle:
   image: kuzzleio/test:alpine
-  command: /run-test-travis.sh
+  command: sh -c '/run.sh; npm codecov'
   volumes:
     - "..:/var/app"
+    - ".scripts/run-test.sh:/run.sh"
   links:
     - elasticsearch
     - redis

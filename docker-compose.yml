@@ -10,6 +10,8 @@ kuzzle:
     - elasticsearch
     - redis
     - proxy:api
+  volumes:
+    - "./docker-compose/scripts/run.sh:/run.sh"
   environment:
     - FEATURE_COVERAGE
 

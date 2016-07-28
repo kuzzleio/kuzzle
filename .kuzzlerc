@@ -170,7 +170,7 @@
      */
     "defaultPlugins": {
       "kuzzle-plugin-logger": {
-        "npmVersion": "2.0.2",
+        "npmVersion": "2.0.3",
         "activated": true
       },
       "kuzzle-plugin-auth-passport-local": {
