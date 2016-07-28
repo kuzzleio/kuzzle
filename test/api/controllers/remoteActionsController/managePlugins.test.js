@@ -220,16 +220,19 @@ describe('Test: managePlugins remote action caller', function () {
       var
         error = {message: 'test', status: 503},
         request = new RequestObject({_id: 'test'}),
-        stub = sinon.stub().resolves('test');
+        setTimeoutStub = sinon.stub().yields('test'),
+        indexStub = sinon.stub();
+
+      indexStub.onFirstCall().rejects(error);
+      indexStub.resolves({});
 
       return ManagePlugins.__with__({
-        setTimeout: stub,
-        initializeInternalIndex: sinon.stub().rejects(error)
+        setTimeout: setTimeoutStub,
+        initializeInternalIndex: indexStub
       })(() => {
         return pluginsManager(request)
-          .then(response => {
-            should(response).equal('test');
-            should(stub).be.calledOnce();
+          .then(() => {
+            should(setTimeoutStub).be.calledOnce();
           });
       });
     });
