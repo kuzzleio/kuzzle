@@ -10,9 +10,11 @@ proxy:
 
 kuzzle:
   image: kuzzleio/dev:alpine
-  command: /run-debug.sh
+  command: /run.sh
   volumes:
     - "..:/var/app"
+    - "./scripts/run-dev.sh:/run.sh"
+    - "./config:/config"
   ports:
     - "8080:8080"
     - "8081:8081"

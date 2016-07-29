@@ -1,0 +1,15 @@
+{
+  "apps": [{
+    "name"         : "KuzzleServer",
+    "script"       : "bin/kuzzle",
+    "args"         : ["start",  "--server"]
+  },
+    {
+      "name"         : "KuzzleWorker",
+      "exec_mode"    : "cluster",
+      "instances"    : 1,
+      "script"       : "bin/kuzzle",
+      "args"         : ["start", "--worker"]
+    }
+  ]
+}
