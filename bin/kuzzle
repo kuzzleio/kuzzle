@@ -67,6 +67,7 @@ program
 // $ kuzzle createFirstAdmin
 program
   .command('createFirstAdmin')
+  .option('--pid <pid>', '[integer] the pid of Kuzzle server - required')
   .description('Create the first administrator')
   .action(require('./commands/createFirstAdmin'));
 
