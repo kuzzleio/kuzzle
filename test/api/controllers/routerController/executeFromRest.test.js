@@ -6,12 +6,12 @@
 var
   should = require('should'),
   kuzzleParams = require('rc')('kuzzle'),
-  Kuzzle = require.main.require('lib/api/Kuzzle'),
+  KuzzleServer = require.main.require('lib/api/kuzzleServer'),
   rewire = require('rewire'),
   RouterController = rewire('../../../../lib/api/controllers/routerController'),
   ResponseObject = require.main.require('kuzzle-common-objects').Models.responseObject;
 
-describe('Test: routerController.executeFromRest', function () {
+describe('Test: routerController.executeFromRest', () => {
   var
     timer,
     timeout = 500,
@@ -30,7 +30,7 @@ describe('Test: routerController.executeFromRest', function () {
     savedRequestObject,
     executeFromRest;
 
-  before(function (done) {
+  before(() => {
     var
       error,
       mockupFunnel = function (requestObject, context, callback) {
@@ -52,22 +52,18 @@ describe('Test: routerController.executeFromRest', function () {
       },
       mockupRouterListener = {
         listener: {
-          add: function () { return true; }
+          add: () => { return true; }
         }
       };
 
-    kuzzle = new Kuzzle();
-    kuzzle.start(kuzzleParams, {dummy: true})
-      .then(function () {
-        kuzzle.funnel.execute = mockupFunnel;
-        RouterController.router = mockupRouterListener;
+    kuzzle = new KuzzleServer();
+    kuzzle.funnel.execute = mockupFunnel;
+    RouterController.router = mockupRouterListener;
 
-        executeFromRest = RouterController.__get__('executeFromRest');
-        done();
-      });
+    executeFromRest = RouterController.__get__('executeFromRest');
   });
 
-  it('should reject requests when the controller is not provided', function () {
+  it('should reject requests when the controller is not provided', () => {
     var callParams = { action: 'create' };
 
     mockupResponse.init();
@@ -83,7 +79,7 @@ describe('Test: routerController.executeFromRest', function () {
     should(mockupResponse.response.error.message).be.exactly('The "controller" argument is missing');
   });
 
-  it('should reject requests when the content-type is not application/json', function () {
+  it('should reject requests when the content-type is not application/json', () => {
     var
       params = { action: 'create', controller: 'write' },
       data = {_body: true, headers: {'content-type': 'application/x-www-form-urlencoded'}, body: {resolve: true}, params: {collection: 'foobar', index: '%test'}};
@@ -101,7 +97,7 @@ describe('Test: routerController.executeFromRest', function () {
     should(mockupResponse.response.error.message).startWith('Invalid request content-type');
   });
 
-  it('should reject requests when the content-type charset is not utf-8', function () {
+  it('should reject requests when the content-type charset is not utf-8', () => {
     var
       params = { action: 'create', controller: 'write' },
       data = {_body: true, headers: {'content-type': 'application/json; charset=iso-8859-15'}, body: {resolve: true}, params: {collection: 'foobar', index: '%test'}};
@@ -240,7 +236,7 @@ describe('Test: routerController.executeFromRest', function () {
     mockupResponse.init();
     executeFromRest.call(kuzzle, callParams, data, mockupResponse);
 
-    setTimeout(function () {
+    setTimeout(() => {
       try {
         should(mockupResponse.statusCode).be.exactly(500);
         should(mockupResponse.header['Content-Type']).not.be.undefined();
@@ -266,7 +262,7 @@ describe('Test: routerController.executeFromRest', function () {
     mockupResponse.init();
     executeFromRest.call(kuzzle, callParams, data, mockupResponse);
 
-    setTimeout(function () {
+    setTimeout(() => {
       try {
         should(mockupResponse.statusCode).be.exactly(200);
         should(mockupResponse.header['Content-Type']).not.be.undefined();
@@ -292,7 +288,7 @@ describe('Test: routerController.executeFromRest', function () {
     mockupResponse.init();
     executeFromRest.call(kuzzle, callParams, data, mockupResponse);
 
-    setTimeout(function () {
+    setTimeout(() => {
       try {
         should(mockupResponse.statusCode).be.exactly(200);
         should(mockupResponse.header['Content-Type']).not.be.undefined();
