@@ -6,7 +6,6 @@ var
   params = rc('kuzzle'),
   kuzzle = require('../../lib'),
   RequestObject = require('kuzzle-common-objects').Models.requestObject,
-  FirstAdmin = require('./createFirstAdmin'),
   Promise = require('bluebird'),
   clc = require('cli-color'),
   coverage;
@@ -17,8 +16,7 @@ module.exports = function (options) {
     warn = string => options.parent.noColors ? string : clc.yellow(string),
     notice = string => options.parent.noColors ? string : clc.cyanBright(string),
     ok = string => options.parent.noColors ? string : clc.green.bold(string),
-    kuz = string => options.parent.noColors ? string : clc.greenBright.bold(string),
-    firstAdmin = new FirstAdmin(options, false);
+    kuz = string => options.parent.noColors ? string : clc.greenBright.bold(string);
   
   if (process.env.FEATURE_COVERAGE === '1' || process.env.FEATURE_COVERAGE === 1) {
     coverage = require('istanbul-middleware');
@@ -114,7 +112,7 @@ module.exports = function (options) {
         }
 
         request = new RequestObject({controller: 'remoteActions', action: 'prepareDb', body: data});
-        return kuzzle.remoteActionsController.actions.prepareDb(kuzzle, request);
+        return kuzzle.remoteActionsController.actions.prepareDb(request);
       }
 
       return Promise.resolve();
@@ -125,15 +123,15 @@ module.exports = function (options) {
  ████████████████████████████████████
  ██          KUZZLE READY          ██
  ████████████████████████████████████`);
-        firstAdmin.check()
+        return kuzzle.remoteActionsController.actions.adminExists()
           .then((res) => {
-            if (res.result.total === 0) {
-              console.log(notice('[ℹ] There is no administrator user yet. You can use the CLI or the back-office to create one.'));
+            if (res) {
+              console.log(ok('[✔] It seems that you already have an admin account.'));
             }
-            console.log(notice('[ℹ] Entering no-administrator mode: everyone has administrator rights.'));
-          })
-          .catch(() => {
-            console.log(ok('[✔] It seems that you already have an admin account.'));
+            else {
+              console.log(notice('[ℹ] There is no administrator user yet. You can use the CLI or the back-office to create one.'));
+              console.log(notice('[ℹ] Entering no-administrator mode: everyone has administrator rights.'));
+            }
           });
       }
     })

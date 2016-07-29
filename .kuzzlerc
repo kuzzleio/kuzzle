@@ -198,6 +198,14 @@
      Requests submitted while the queue is full are discarded with a 503 error
      code ("Service temporary unavailable")
      */
-    "maxRetainedRequests": 10000
+    "maxRetainedRequests": 50000,
+
+    /*
+     Number of retained requests after which warnings
+     are issued, both with logging and server:overload events.
+
+     Recommended value: roughly 10% of the maxRetainedRequests value
+     */
+     "warnRetainedRequestsLimit": 5000
   }
 }

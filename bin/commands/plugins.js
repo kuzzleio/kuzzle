@@ -1,14 +1,17 @@
 var
   clc = require('cli-color'),
   childProcess = require('child_process'),
-  managePlugins = require('../../lib/api/controllers/remoteActions/managePlugins');
+  Kuzzle = require('../../lib/api');
 
 /* eslint-disable no-console */
 
 module.exports = function pluginsManager (plugin, options) {
   var
     clcError = string => options.parent.noColors ? string : clc.red(string),
-    clcNotice = string => options.parent.noColors ? string : clc.cyan(string);
+    clcNotice = string => options.parent.noColors ? string : clc.cyan(string),
+    clcOk = string => options.parent.noColors ? string: clc.green.bold(string),
+    kuzzle = new Kuzzle(),
+    data = {};
   
   if (!childProcess.hasOwnProperty('execSync')) {
     console.error(clcError('███ kuzzle-plugins: Make sure you\'re using Node version >= 0.12'));
@@ -16,12 +19,47 @@ module.exports = function pluginsManager (plugin, options) {
   }
 
   checkOptions();
+  
+  options.options.forEach(opt => {
+    var k = opt.long.replace(/^--/, '');
+    data[k] = options[k];
+  });
+  data._id = plugin;
 
-  managePlugins(plugin, options)
+  if (options.install) {
+    if (plugin) {
+      console.log('███ kuzzle-plugins: Installing plugin ' + plugin + '...');
+    }
+    else {
+      console.log('███ kuzzle-plugins: Starting plugins installation...');
+    }
+  }
+  
+  return kuzzle.remoteActions.do('managePlugins', data, {pid: options.pid, debug: options.parent.debug})
     .then(res => {
-      if (options.debug) {
+      if (options.list) {
+        console.dir(res.data.body, {depth: null, colors: !options.parent.noColors});
+      }
+      else if (options.install) {
+        if (plugin) {
+          console.log(clcOk('███ kuzzle-plugins: Plugin ' + plugin + ' installed'));
+        }
+        else {
+          console.log(clcOk('███ kuzzle-plugins: Plugins installed'));
+        }
+      }
+      else if (options.importConfig) {
+        console.log(clcOk('[✔] Successfully imported configuration'));
+      }  
+      else {
+        console.dir(res.data.body, {depth: null, colors: !options.parent.noColrs});
+      }
+
+      if (options.parent.debug) {
+        console.log('\n\nDebug: -------------------------------------------');
         console.dir(res, {depth: null, colors: true});
       }
+      
       process.exit(0);
     })
     .catch(err => {
