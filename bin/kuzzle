@@ -76,7 +76,7 @@ program
   .description('start a Kuzzle server|worker node')
   .option('-p, --port <port>', 'Kuzzle port number', parseInt)
   .option('-s, --server', 'start Kuzzle in server mode (default)')
-  .option('-s, --worker', 'start Kuzzle in worker mode')
+  .option('-w, --worker', 'start Kuzzle in worker mode')
   .option('    --likeAvirgin', 'delete Kuzzle configuration and users from database')
   .option('    --fixtures <fixtures>', 'import some fixtures from file')
   .option('    --mappings <mappings>', 'load and apply mappings from file')
