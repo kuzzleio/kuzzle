@@ -28,6 +28,8 @@ describe('funnelController.execute', () => {
     
     return kuzzle.start(params, {dummy: true})
       .then(() => {
+        kuzzle.config.request.warnRetainedRequestsLimit = -1;
+
         FunnelController.__set__('processRequest', (funnelKuzzle, controllers, funnelRequestObject) => {
           processRequestCalled = true;
 
