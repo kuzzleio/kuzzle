@@ -82,12 +82,6 @@ program
   .option('    --mappings <mappings>', 'load and apply mappings from file')
   .action(require('./commands/start'));
 
-// $ kuzzle swagger
-program
-  .command('swagger')
-  .description('generate kuzzle-swagger.{json,yml} definition files')
-  .action(require('./commands/swagger'));  
-
 // Run user command
 program.parse(process.argv);
 
