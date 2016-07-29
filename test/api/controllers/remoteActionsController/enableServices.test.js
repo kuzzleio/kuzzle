@@ -3,65 +3,57 @@ var
   params = rc('kuzzle'),
   Promise = require('bluebird'),
   should = require('should'),
-  Kuzzle = require.main.require('lib/api/Kuzzle'),
+  KuzzleServer = require.main.require('lib/api/kuzzleServer'),
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject;
 
-describe('Test: enable services controller', function () {
-  var 
+describe('Test: enable services controller', () => {
+  var
     kuzzle,
     serviceEnable;
 
-  beforeEach(function (done) {
-    kuzzle = new Kuzzle();
-    kuzzle.start(params, {dummy: true})
-      .then(function () {
-        kuzzle.services.list = {
-          foo: {
-            toggle: function (enable) {
-              serviceEnable = enable;
-              return Promise.resolve();
-            }
-          },
-          bar: {}
-        };
-        kuzzle.isServer = true;
-
-        done();
-      });
+  beforeEach(() => {
+    kuzzle = new KuzzleServer();
+    kuzzle.services.list = {
+      foo: {
+        toggle: enable => {
+          serviceEnable = enable;
+          return Promise.resolve();
+        }
+      },
+      bar: {}
+    };
   });
 
-  it('return a rejected promise if no service is given', function () {
+  it('return a rejected promise if no service is given', () => {
     var request = new RequestObject({controller: 'remoteActions', action: 'enableServices', body: {}});
-    
+
     return should(kuzzle.remoteActionsController.actions.enableServices(kuzzle, request)).be.rejected();
   });
 
-  it('return a rejected promise if the enable paramerter is not set', function () {
+  it('return a rejected promise if the enable paramerter is not set', () => {
     var request = new RequestObject({controller: 'remoteActions', action: 'enableServices', body: {service: 'foo'}});
-    
+
     return should(kuzzle.remoteActionsController.actions.enableServices(kuzzle, request)).be.rejected();
   });
 
-  it('return a rejected promise if the service is unknown', function () {
+  it('return a rejected promise if the service is unknown', () => {
     var request = new RequestObject({controller: 'remoteActions', action: 'enableServices', body: {service: 'baz'}});
-    
+
     return should(kuzzle.remoteActionsController.actions.enableServices(kuzzle, request)).be.rejected();
   });
 
-  it('return a rejected promise if the service does not support toggle', function () {
+  it('return a rejected promise if the service does not support toggle', () => {
     var request = new RequestObject({controller: 'remoteActions', action: 'enableServices', body: {service: 'bar'}});
-    
+
     return should(kuzzle.remoteActionsController.actions.enableServices(kuzzle, request)).be.rejected();
   });
 
-  it('should toggle the service if the service exists and the enable parameter is set', function (done) {
+  it('should toggle the service if the service exists and the enable parameter is set', () => {
     var request = new RequestObject({controller: 'remoteActions', action: 'enableServices', body: {service: 'foo', enable: true}});
-    
-    kuzzle.remoteActionsController.actions.enableServices(kuzzle, request)
+
+    return kuzzle.remoteActionsController.actions.enableServices(kuzzle, request)
       .then(() => {
         should(serviceEnable).be.true();
-        done();
-      })
-      .catch(err => done(err));
+      });
   });
 });

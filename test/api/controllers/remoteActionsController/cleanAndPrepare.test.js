@@ -3,35 +3,40 @@ var
   params = rc('kuzzle'),
   Promise = require('bluebird'),
   should = require('should'),
-  Kuzzle = require.main.require('lib/api/Kuzzle'),
+  sinon = require('sinon'),
+  sandbox = sinon.sandbox.create(),
+  KuzzleServer = require.main.require('lib/api/kuzzleServer'),
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject;
 
-describe('Test: clean and prepare database remote action', function () {
+describe('Test: clean and prepare database remote action', () => {
+  var
+    kuzzle;
+
+  before(() => {
+    kuzzle = new KuzzleServer();
+  });
+
+  beforeEach(() => {
+    sandbox.stub(kuzzle.internalEngine, 'get').resolves({});
+    return kuzzle.services.init({whitelist: []})
+      .then(() => {
+      });
+  })
+
+  afterEach(() => {
+    sandbox.restore();
+  });
 
   it('should call cleanDb and prepareDb', () => {
-    var 
-      cleanDbCalled = false,
-      prepareDbCalled = false,
+    var
       request = new RequestObject({controller: 'remoteActions', action: 'cleanAndPrepare', body: {}}),
-      kuzzle;
+      cleanDbCalled = sandbox.stub(kuzzle.remoteActionsController.actions, 'cleanDb').resolves(),
+      prepareDbCalled = sandbox.stub(kuzzle.remoteActionsController.actions, 'prepareDb').resolves();
 
-    kuzzle = new Kuzzle();
-    return kuzzle.start(params, {dummy: true})
+    return kuzzle.remoteActionsController.actions.cleanAndPrepare(kuzzle, request)
       .then(() => {
-        kuzzle.remoteActionsController.actions.cleanDb = function () {
-          cleanDbCalled = true;
-          return Promise.resolve();
-        };
-        kuzzle.remoteActionsController.actions.prepareDb = function () {
-          prepareDbCalled = true;
-          return Promise.resolve();
-        };
-
-        return kuzzle.remoteActionsController.actions.cleanAndPrepare(kuzzle, request);
-      })
-      .then(() => {
-        should(cleanDbCalled).be.true();
-        should(prepareDbCalled).be.true();
+        should(cleanDbCalled.calledOnce).be.true();
+        should(prepareDbCalled.calledOnce).be.true();
       });
   });
 });

@@ -1,8 +1,8 @@
 var
-  Promise = require('bluebird'),
   should = require('should'),
   rewire = require('rewire'),
   sinon = require('sinon'),
+  sandbox = sinon.sandbox.create(),
   mock = require('mock-require'),
   managePlugins = rewire('../../../../lib/api/controllers/remoteActions/managePlugins'),
   InternalEngine = require('../../../../lib/services/internalEngine'),
@@ -12,14 +12,11 @@ var
   clcNotice = managePlugins.__get__('clcNotice'),
   sandbox;
 
-require('sinon-as-promised')(Promise);
-
-describe('Test: managePlugins remote action caller', function () {
+describe('Test: managePlugins remote action caller', () => {
   var
     internalEngineStub;
 
   beforeEach(() => {
-    sandbox = sinon.sandbox.create();
     internalEngineStub = sandbox.stub(new InternalEngine({config:{}}));
 
     internalEngineStub.createInternalIndex.resolves();
@@ -45,7 +42,7 @@ describe('Test: managePlugins remote action caller', function () {
     sandbox.restore();
   });
 
-  describe('importConfig tests', function() {
+  describe('importConfig tests', () => {
 
     it('should raise an error if configuration file does not exist', () => {
       var options = {
@@ -54,7 +51,7 @@ describe('Test: managePlugins remote action caller', function () {
 
       managePlugins.__set__({
         'fs': {
-          readFileSync: function () {
+          readFileSync: () => {
             throw new Error();
           }
         }
@@ -70,7 +67,7 @@ describe('Test: managePlugins remote action caller', function () {
       internalEngineStub.get.rejects();
       managePlugins.__set__({
         'fs': {
-          readFileSync: function () {
+          readFileSync: () => {
             return '{"test": true}';
           }
         }
@@ -86,7 +83,7 @@ describe('Test: managePlugins remote action caller', function () {
       internalEngineStub.get.rejects();
       managePlugins.__set__({
         'fs': {
-          readFileSync: function () {
+          readFileSync: () => {
             return 'not a json';
           }
         }
@@ -103,7 +100,7 @@ describe('Test: managePlugins remote action caller', function () {
       internalEngineStub.get.resolves({_source: {}});
       managePlugins.__set__({
         'fs': {
-          readFileSync: function () {
+          readFileSync: () => {
             return '{"test": true}';
           }
         }
@@ -112,8 +109,8 @@ describe('Test: managePlugins remote action caller', function () {
     });
   });
 
-  describe('install tests', function() {
-    it('should reinstall all plugins which exists in the database with a configuration', function() {
+  describe('install tests', () => {
+    it('should reinstall all plugins which exists in the database with a configuration', () => {
       var
         options = {
           install: '--path'
@@ -124,7 +121,7 @@ describe('Test: managePlugins remote action caller', function () {
       return should(managePlugins(undefined, options)).be.fulfilled();
     });
 
-    it('should reinstall all plugins which exists in the database without a configuration', function() {
+    it('should reinstall all plugins which exists in the database without a configuration', () => {
       var
         options = {
           install: true,
@@ -136,7 +133,7 @@ describe('Test: managePlugins remote action caller', function () {
       return should(managePlugins(undefined, options)).be.fulfilled();
     });
 
-    it('should install a new plugin from a path', function() {
+    it('should install a new plugin from a path', () => {
       var
         options = {
           install: true,
@@ -147,10 +144,10 @@ describe('Test: managePlugins remote action caller', function () {
       mock('fake/package.json', {});
       managePlugins.__set__({
         'fs': {
-          existsSync: function () {
+          existsSync: () => {
             return true;
           },
-          readFileSync: function () {
+          readFileSync: () => {
             return '{}';
           }
         }
@@ -159,7 +156,7 @@ describe('Test: managePlugins remote action caller', function () {
       return should(managePlugins('fake', options)).be.fulfilled();
     });
 
-    it('should install a new plugin from a git url', function() {
+    it('should install a new plugin from a git url', () => {
       var
         options = {
           install: true,
@@ -170,23 +167,23 @@ describe('Test: managePlugins remote action caller', function () {
       mock('fake/package.json', {});
       managePlugins.__set__({
         'fs': {
-          existsSync: function() {
+          existsSync: () => {
             return true;
           },
-          readFileSync: function() {
+          readFileSync: () => {
             return '{}';
           },
-          statSync: function() {
+          statSync: () => {
             return {
               mtime: new Date() - 3600001
             };
           },
-          unlinkSync: function() {},
-          closeSync: function() {},
-          openSync: function() {}
+          unlinkSync: () => {},
+          closeSync: () => {},
+          openSync: () => {}
         },
         'childProcess': {
-          exec: function(name, cb) {
+          exec: (name, cb) => {
             cb(undefined);
           }
         }
@@ -194,7 +191,7 @@ describe('Test: managePlugins remote action caller', function () {
       return should(managePlugins('fake', options)).be.fulfilled();
     });
 
-    it('should exit because there are no means of installation', function(done) {
+    it('should exit because there are no means of installation', done => {
       var
         options = {
           install: true
@@ -213,7 +210,7 @@ describe('Test: managePlugins remote action caller', function () {
       managePlugins('fake', options);
     });
 
-    it('should reject a promise if the npm package cannot be downloaded', function() {
+    it('should reject a promise if the npm package cannot be downloaded', () => {
       var
         options = {
           install: true,
@@ -224,23 +221,23 @@ describe('Test: managePlugins remote action caller', function () {
       mock('fake/package.json', {});
       managePlugins.__set__({
         'fs': {
-          existsSync: function() {
+          existsSync: () => {
             return true;
           },
-          readFileSync: function() {
+          readFileSync: () => {
             return '{}';
           },
-          statSync: function() {
+          statSync: () => {
             return {
               mtime: new Date() - 3600001
             };
           },
-          unlinkSync: function() {},
-          closeSync: function() {},
-          openSync: function() {}
+          unlinkSync: () => {},
+          closeSync: () => {},
+          openSync: () => {}
         },
         'childProcess': {
-          exec: function(name, cb) {
+          exec: (name, cb) => {
             cb({});
           }
         }
@@ -248,7 +245,7 @@ describe('Test: managePlugins remote action caller', function () {
       return should(managePlugins('fake', options)).be.rejected();
     });
 
-    it('should not install a plugin from a git url because it is less than one hour old', function() {
+    it('should not install a plugin from a git url because it is less than one hour old', () => {
       var
         options = {
           install: true,
@@ -259,20 +256,20 @@ describe('Test: managePlugins remote action caller', function () {
       mock('fake/package.json', {});
       managePlugins.__set__({
         'fs': {
-          existsSync: function() {
+          existsSync: () => {
             return true;
           },
-          readFileSync: function() {
+          readFileSync: () => {
             return '{}';
           },
-          statSync: function() {
+          statSync: () => {
             return {
               mtime: new Date()
             };
           }
         },
         'childProcess': {
-          exec: function(name, cb) {
+          exec: (name, cb) => {
             cb(undefined);
           }
         }
@@ -280,7 +277,7 @@ describe('Test: managePlugins remote action caller', function () {
       return should(managePlugins('fake', options)).be.fulfilled();
     });
 
-    it('should install a new plugin from a npm version', function() {
+    it('should install a new plugin from a npm version', () => {
       var
         options = {
           install: true,
@@ -291,23 +288,23 @@ describe('Test: managePlugins remote action caller', function () {
       mock('fake/package.json', {});
       managePlugins.__set__({
         'fs': {
-          existsSync: function() {
+          existsSync: () => {
             return true;
           },
-          readFileSync: function() {
+          readFileSync: () => {
             return '{}';
           },
-          statSync: function() {
+          statSync: () => {
             return {
               mtime: new Date() - 3600001
             };
           },
-          unlinkSync: function() {},
-          closeSync: function() {},
-          openSync: function() {}
+          unlinkSync: () => {},
+          closeSync: () => {},
+          openSync: () => {}
         },
         'childProcess': {
-          exec: function(name, cb) {
+          exec: (name, cb) => {
             cb(undefined);
           }
         }
@@ -317,8 +314,8 @@ describe('Test: managePlugins remote action caller', function () {
 
   });
 
-  describe('get tests', function() {
-    it('should get configuraton properly', function() {
+  describe('get tests', () => {
+    it('should get configuraton properly', () => {
       var
         options = {
           get: true
@@ -328,8 +325,8 @@ describe('Test: managePlugins remote action caller', function () {
     });
   });
 
-  describe('set tests', function() {
-    it('should reject because configuration is not JSON format', function() {
+  describe('set tests', () => {
+    it('should reject because configuration is not JSON format', () => {
       var
         options = {
           set: 'not json'
@@ -338,7 +335,7 @@ describe('Test: managePlugins remote action caller', function () {
       return should(managePlugins('fake', options)).be.rejected();
     });
 
-    it('should set configuration properly', function() {
+    it('should set configuration properly', () => {
       var
         options = {
           set: '{"test": true}'
@@ -348,8 +345,8 @@ describe('Test: managePlugins remote action caller', function () {
     });
   });
 
-  describe('unset tests', function() {
-    it('should reject because property does not exit', function() {
+  describe('unset tests', () => {
+    it('should reject because property does not exit', () => {
       var
         options = {
           unset: 'fake'
@@ -358,7 +355,7 @@ describe('Test: managePlugins remote action caller', function () {
       return should(managePlugins('fake', options)).be.rejected();
     });
 
-    it('should unset configuration properly', function() {
+    it('should unset configuration properly', () => {
       var
         options = {
           unset: 'test'
@@ -368,8 +365,8 @@ describe('Test: managePlugins remote action caller', function () {
     });
   });
 
-  describe('replace tests', function() {
-    it('should reject because content is not JSON format', function() {
+  describe('replace tests', () => {
+    it('should reject because content is not JSON format', () => {
       var
         options = {
           replace: 'not json'
@@ -378,7 +375,7 @@ describe('Test: managePlugins remote action caller', function () {
       return should(managePlugins('fake', options)).be.rejected();
     });
 
-    it('should replace configuration properly', function() {
+    it('should replace configuration properly', () => {
       var
         options = {
           replace: '{"test": true}'
@@ -388,8 +385,8 @@ describe('Test: managePlugins remote action caller', function () {
     });
   });
 
-  describe('remove tests', function() {
-    it('should reject because the plugin does not exist', function() {
+  describe('remove tests', () => {
+    it('should reject because the plugin does not exist', () => {
       var
         options = {
           remove: 'bad-plugin'
@@ -399,7 +396,7 @@ describe('Test: managePlugins remote action caller', function () {
       return should(managePlugins('fake', options)).be.rejected();
     });
 
-    it('should reject because an error occured during deletion', function() {
+    it('should reject because an error occured during deletion', () => {
       var
         options = {
           remove: 'fake-plugin'
@@ -413,7 +410,7 @@ describe('Test: managePlugins remote action caller', function () {
       return should(managePlugins('fake', options)).be.rejected();
     });
 
-    it('should properly delete a plugin', function() {
+    it('should properly delete a plugin', () => {
       var
         options = {
           remove: 'fake-plugin'
@@ -423,8 +420,8 @@ describe('Test: managePlugins remote action caller', function () {
     });
   });
 
-  describe('list tests', function() {
-    it('should return the default plugins list', function() {
+  describe('list tests', () => {
+    it('should return the default plugins list', () => {
       var
         options = {
           list: true
@@ -458,7 +455,7 @@ describe('Test: managePlugins remote action caller', function () {
       return should(managePlugins('fake', options)).be.fulfilledWith([clcOk('kuzzle-fake-plugin (activated)'), clcNotice('kuzzle-other-fake-plugin (disabled)')]);
     });
 
-    it('should return the plugins list from database', function() {
+    it('should return the plugins list from database', () => {
       var
         options = {
           list: true
@@ -472,8 +469,8 @@ describe('Test: managePlugins remote action caller', function () {
     });
   });
 
-  describe('deactivate tests', function() {
-    it('should deactivate a plugin', function () {
+  describe('deactivate tests', () => {
+    it('should deactivate a plugin', () => {
       var
         options = {
           deactivate: 'fake-plugin'
@@ -484,8 +481,8 @@ describe('Test: managePlugins remote action caller', function () {
     });
   });
 
-  describe('list tests', function() {
-    it('should activate a plugin', function () {
+  describe('list tests', () => {
+    it('should activate a plugin', () => {
       var
         options = {
           activate: 'fake-plugin'

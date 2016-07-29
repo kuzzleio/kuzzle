@@ -5,11 +5,9 @@ var
   Promise = require('bluebird'),
   should = require('should'),
   sinon = require('sinon'),
-  Kuzzle = require.main.require('lib/api/Kuzzle'),
+  KuzzleServer = require.main.require('lib/api/kuzzleServer'),
   InternalError = require.main.require('kuzzle-common-objects').Errors.internalError,
   swagger = require.main.require('lib/api/controllers/remoteActions/swagger');
-
-require('sinon-as-promised')(Promise);
 
 describe('Test: Swagger files generation', () => {
   var
@@ -17,9 +15,7 @@ describe('Test: Swagger files generation', () => {
     sandbox;
 
   before(() => {
-    kuzzle = new Kuzzle();
-
-    return kuzzle.start(params, {dummy: true});
+    kuzzle = new KuzzleServer();
   });
 
   beforeEach(() => {

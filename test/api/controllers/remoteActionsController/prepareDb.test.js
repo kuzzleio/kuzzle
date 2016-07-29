@@ -4,13 +4,17 @@ var
   Promise = require('bluebird'),
   rewire = require('rewire'),
   should = require('should'),
-  Kuzzle = require.main.require('lib/api/Kuzzle'),
+  sinon = require('sinon'),
+  sandbox = sinon.sandbox.create(),
+  KuzzleServer = require.main.require('lib/api/kuzzleServer'),
+  KuzzleWorker = require.main.require('lib/api/kuzzleWorker'),
   PartialError = require.main.require('kuzzle-common-objects').Errors.partialError,
   InternalError = require.main.require('kuzzle-common-objects').Errors.internalError,
-  RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject;
+  RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
+  prepareDb = rewire('../../../../lib/api/controllers/remoteActions/prepareDb');
 
-describe('Test: Prepare database', function () {
-  var 
+describe('Test: Prepare database', () => {
+  var
     kuzzle,
     request,
     filesRead,
@@ -18,117 +22,110 @@ describe('Test: Prepare database', function () {
     internalIndexCreated,
     mappingsImported,
     fixturesImported,
-    prepareDb;
+    backupFunctions;
 
-  beforeEach(function (done) {
-    prepareDb = rewire('../../../../lib/api/controllers/remoteActions/prepareDb');
+  before(() => {
+    kuzzle = new KuzzleServer();
+  });
 
+  beforeEach(() => {
+    backupFunctions = {
+      createInternalStructure: prepareDb.__get__('createInternalStructure'),
+      readFile: prepareDb.__get__('readFile'),
+      fs: prepareDb.__get__('fs'),
+      createIndexes: prepareDb.__get__('createIndexes'),
+      importMapping: prepareDb.__get__('importMapping'),
+      importFixtures: prepareDb.__get__('importFixtures')
+    };
     prepareDb.__set__('createInternalStructure', function () { internalIndexCreated = true; return Promise.resolve(); });
     prepareDb.__set__('readFile', (filename) => { filesRead.push(filename); return Promise.resolve(); });
     prepareDb.__set__('createIndexes', function () { indexCreated = true; return Promise.resolve(); });
     prepareDb.__set__('importMapping', function () { mappingsImported = true; return Promise.resolve(); });
     prepareDb.__set__('importFixtures', function () { fixturesImported = true; return Promise.resolve(); });
 
-    kuzzle = new Kuzzle();
-    kuzzle.start(params, {dummy: true})
+    sandbox.stub(kuzzle.internalEngine, 'get').resolves({});
+    return kuzzle.services.init({whitelist: []})
       .then(() => {
-        kuzzle.config = {
-          internalIndex: 'foobar'
-        };
+        kuzzle.config.internalIndex = 'foobar';
 
-        kuzzle.services.list = {
-          writeEngine: {},
-          readEngine: {
-            listIndexes: function () {
-              return Promise.resolve({
-                data: {
-                  body: {
-                    indexes: ['foo', 'bar']
-                  }
-                }
-              });
+        sandbox.stub(kuzzle.services.list.readEngine, 'listIndexes').resolves({
+          data: {
+            body: {
+              indexes: ['foo', 'bar']
             }
           }
-        };
+        });
 
         filesRead = [];
         indexCreated = false;
         mappingsImported = false;
         fixturesImported = false;
         internalIndexCreated = false;
-
-        done();
       });
   });
 
-  it('should store fixtures and mappings filename if provided', function (done) {
-    kuzzle.isServer = true;
+  afterEach(() => {
+    sandbox.restore();
+    Object.keys(backupFunctions).forEach(item => {
+      prepareDb.__set__(item, backupFunctions[item]);
+    });
+  });
+
+  it('should store fixtures and mappings filename if provided', () => {
     request = new RequestObject({controller: 'remoteActions', action: 'prepareDb', body: {fixtures: 'fixtures.json', mappings: 'mappings.json'}});
 
-    prepareDb(kuzzle, request)
+    return prepareDb(kuzzle, request)
       .then(() => {
         var files = prepareDb.__get__('files');
         should(files.fixtures).be.eql('fixtures.json');
         should(files.mappings).be.eql('mappings.json');
-        done();
-      })
-      .catch(err => done(err));
+      });
   });
 
-  it('should execute the right call chain', function (done) {
-    kuzzle.isServer = true;
+  it('should execute the right call chain', () => {
     request = new RequestObject({controller: 'remoteActions', action: 'prepareDb', body: {}});
 
-    prepareDb(kuzzle, request)
-      .then(function () {
+    return prepareDb(kuzzle, request)
+      .then(() => {
         should(filesRead).match(['mappings', 'fixtures']);
         should(indexCreated).be.true();
         should(mappingsImported).be.true();
         should(fixturesImported).be.true();
         should(internalIndexCreated).be.true();
-        done();
-      })
-      .catch(err => done(err));
+      });
   });
 
-  it('should do nothing if not in a kuzzle server instance', function (done) {
-    kuzzle.isServer = false;
-    kuzzle.isWorker = true;
+  it('should do nothing if not in a kuzzle server instance', () => {
+    var kuzzleWorker = new KuzzleWorker();
     request = new RequestObject({controller: 'remoteActions', action: 'prepareDb', body: {}});
 
-    prepareDb(kuzzle, request)
-      .then(function () {
+    return prepareDb(kuzzleWorker, request)
+      .then(() => {
         should(filesRead).match([]);
         should(indexCreated).be.false();
         should(mappingsImported).be.false();
         should(fixturesImported).be.false();
         should(internalIndexCreated).be.false();
-        done();
-      })
-      .catch(err => done(err));
+      });
   });
 
-  describe('#readFile', function () {
+  describe('#readFile', () => {
     var
       context,
       readFile,
       fileContent = '';
 
-    before(function () {
-      prepareDb = rewire('../../../../lib/api/controllers/remoteActions/prepareDb');
+    beforeEach(() => {
       prepareDb.__set__('fs', {
-        readFileSync: function () { return fileContent; }
+        readFileSync: () => { return fileContent; }
       });
 
+      prepareDb.__set__('readFile', backupFunctions.readFile);
       readFile = prepareDb.__get__('readFile');
-    });
-
-    beforeEach(function () {
       context = {
         kuzzle: {
           pluginsManager: {
-            trigger: function () {
-            }
+            trigger: () => Promise.resolve({})
           }
         },
         files: {},
@@ -136,38 +133,34 @@ describe('Test: Prepare database', function () {
       };
     });
 
-    it('should do nothing if the corresponding env variable is not set', function (done) {
+    it('should do nothing if the corresponding env variable is not set', () => {
       context.data = { foo: 'bar' };
       context.files.foo = null;
 
-      readFile.call(context, 'foo')
+      return readFile.call(context, 'foo')
         .then(() => {
           should(context.data.foo).be.eql({});
-          done();
-        })
-        .catch(err => done(err));
+        });
     });
 
-    it('should return the parsed content of the file', function (done) {
+    it('should return the parsed content of the file', () => {
       fileContent = '{"foo": "bar"}';
       context.files.fixtures = 'fixtures';
 
-      readFile.call(context, 'fixtures')
+      return readFile.call(context, 'fixtures')
         .then(() => {
           should(context.data).be.an.Object().and.be.eql({fixtures: JSON.parse(fileContent)});
-          done();
-        })
-        .catch(err => done(err));
+        });
     });
 
-    it('should return a rejected promise if the file content is not a valid JSON object', function () {
+    it('should return a rejected promise if the file content is not a valid JSON object', () => {
       fileContent = 'not a valid JSON content';
       context.files.fixtures = 'fixtures';
       return should(readFile.call(context, 'fixtures')).be.rejected();
     });
   });
 
-  describe('#createIndexes', function () {
+  describe('#createIndexes', () => {
     var
       context,
       createIndexes,
@@ -175,11 +168,11 @@ describe('Test: Prepare database', function () {
       indexAdded,
       workerPromise;
 
-    before(function () {
-      createIndexes = rewire('../../../../lib/api/controllers/remoteActions/prepareDb').__get__('createIndexes');
+    before(() => {
+      createIndexes = prepareDb.__get__('createIndexes');
     });
 
-    beforeEach(function () {
+    beforeEach(() => {
       workerCalled = false;
       workerPromise = Promise.resolve();
       indexCreated = [];
@@ -188,9 +181,7 @@ describe('Test: Prepare database', function () {
       context = {
         kuzzle: {
           pluginsManager: {
-            trigger: function (event, data) {
-              return Promise.resolve(data);
-            }
+            trigger: (event, data) => Promise.resolve(data)
           },
           workerListener: {
             add: (rq) => {
@@ -214,56 +205,50 @@ describe('Test: Prepare database', function () {
       };
     });
 
-    it('should do nothing if there is no data mapping and no data fixtures', function (done) {
-      createIndexes.call(context)
+    it('should do nothing if there is no data mapping and no data fixtures', () => {
+      return createIndexes.call(context)
         .then(data => {
           should(data).be.undefined();
           should(workerCalled).be.false();
           should(indexAdded).be.false();
-          done();
-        })
-        .catch(err => done(err));
+        });
     });
 
-    it('should call workers correctly to create data mappings indexes', function (done) {
+    it('should call workers correctly to create data mappings indexes', () => {
       context.data.mappings = {
         'foo': 'foo',
         'bar': 'bar',
         'qux': 'qux'
       };
 
-      createIndexes.call(context)
+      return createIndexes.call(context)
         .then(data => {
           should(data).be.undefined();
           should(workerCalled).be.true();
           should(indexAdded).be.true();
           should(indexCreated.length).be.eql(Object.keys(context.data.mappings).length);
           should(indexCreated.sort()).match(Object.keys(context.data.mappings).sort());
-          done();
-        })
-        .catch(err => done(err));
+        });
     });
 
-    it('should call workers correctly to create data fixtures indexes', function (done) {
+    it('should call workers correctly to create data fixtures indexes', () => {
       context.data.fixtures = {
         'foo': 'foo',
         'bar': 'bar',
         'qux': 'qux'
       };
 
-      createIndexes.call(context)
+      return createIndexes.call(context)
         .then(data => {
           should(data).be.undefined();
           should(workerCalled).be.true();
           should(indexAdded).be.true();
           should(indexCreated.length).be.eql(Object.keys(context.data.fixtures).length);
           should(indexCreated.sort()).match(Object.keys(context.data.fixtures).sort());
-          done();
-        })
-        .catch(err => done(err));
+        });
     });
 
-    it('should not try to create index that already exists', function (done) {
+    it('should not try to create index that already exists', () => {
       context.data.mappings = {
         'foo': 'foo',
         'bar': 'bar',
@@ -272,19 +257,17 @@ describe('Test: Prepare database', function () {
 
       context.kuzzle.indexCache.indexes = { foo: ['foo'], bar: ['bar']};
 
-      createIndexes.call(context)
+      return createIndexes.call(context)
         .then(data => {
           should(data).be.undefined();
           should(workerCalled).be.true();
           should(indexAdded).be.true();
           should(indexCreated.length).be.eql(1);
           should(indexCreated).match(['qux']);
-          done();
-        })
-        .catch(err => done(err));
+        });
     });
 
-    it('should return a rejected promise if an index creation fails', function () {
+    it('should return a rejected promise if an index creation fails', () => {
       workerPromise = Promise.reject(new Error('failed'));
       context.data.mappings = {
         'foo': 'foo',
@@ -296,7 +279,7 @@ describe('Test: Prepare database', function () {
     });
   });
 
-  describe('#importMapping', function () {
+  describe('#importMapping', () => {
     var
       context,
       stubIndex = 'index',
@@ -306,11 +289,11 @@ describe('Test: Prepare database', function () {
       mappingCreated,
       workerPromise;
 
-    before(function () {
-      importMapping = rewire('../../../../lib/api/controllers/remoteActions/prepareDb').__get__('importMapping');
+    before(() => {
+      importMapping = prepareDb.__get__('importMapping');
     });
 
-    beforeEach(function () {
+    beforeEach(() => {
       workerCalled = false;
       workerPromise = Promise.resolve();
       mappingCreated = null;
@@ -318,9 +301,7 @@ describe('Test: Prepare database', function () {
       context = {
         kuzzle: {
           pluginsManager: {
-            trigger: function (event, data) {
-              return Promise.resolve(data);
-            }
+            trigger: (event, data) => Promise.resolve(data)
           },
           workerListener: {
             add: (rq) => {
@@ -349,41 +330,37 @@ describe('Test: Prepare database', function () {
       };
     });
 
-    it('should do nothing if there is no mapping to import', function (done) {
+    it('should do nothing if there is no mapping to import', () => {
       context.data.mappings = {};
 
-      importMapping.call(context)
+      return importMapping.call(context)
         .then(data => {
           should(data).be.undefined();
           should(workerCalled).be.false();
-          done();
-        })
-        .catch(err => done(err));
+        });
     });
 
-    it('should return a rejected promise if the mapping file is not properly formatted', function () {
+    it('should return a rejected promise if the mapping file is not properly formatted', () => {
       context.data.mappings.index.collection = { foo: 'bar' };
       return should(importMapping.call(context)).be.rejectedWith(InternalError);
     });
 
-    it('should call the write worker with the right arguments to import mappings', function (done) {
+    it('should call the write worker with the right arguments to import mappings', () => {
       importMapping.call(context)
         .then(data => {
           should(data).be.undefined();
           should(workerCalled).be.true();
           should(mappingCreated).be.eql(context.data.mappings.index.collection);
-          done();
-        })
-        .catch(err => done(err));
+        });
     });
 
-    it('should return a rejected promise if the mapping creation fails', function () {
+    it('should return a rejected promise if the mapping creation fails', () => {
       workerPromise = Promise.reject(new Error('rejected'));
       return should(importMapping.call(context)).be.rejectedWith(InternalError);
     });
   });
 
-  describe('#importFixtures', function () {
+  describe('#importFixtures', () => {
     var
       context,
       stubIndex = 'index',
@@ -392,11 +369,11 @@ describe('Test: Prepare database', function () {
       workerCalled,
       workerPromise;
 
-    before(function () {
-      importFixtures = rewire('../../../../lib/api/controllers/remoteActions/prepareDb').__get__('importFixtures');
+    before(() => {
+      importFixtures = prepareDb.__get__('importFixtures');
     });
 
-    beforeEach(function () {
+    beforeEach(() => {
       workerCalled = false;
       workerPromise = Promise.resolve();
       fixturesImported = null;
@@ -404,9 +381,7 @@ describe('Test: Prepare database', function () {
       context = {
         kuzzle: {
           pluginsManager: {
-            trigger: function (event, data) {
-              return Promise.resolve(data);
-            }
+            trigger: (event, data) => Promise.resolve(data)
           },
           workerListener: {
             add: (rq) => {
@@ -433,40 +408,36 @@ describe('Test: Prepare database', function () {
       };
     });
 
-    it('should do nothing if there is no fixtures to import', function (done) {
+    it('should do nothing if there is no fixtures to import', () => {
       context.data.fixtures = {};
-      importFixtures.call(context)
+      return importFixtures.call(context)
         .then(data => {
           should(data).be.undefined();
           should(workerCalled).be.false();
-          done();
-        })
-        .catch(err => done(err));
+        });
     });
 
-    it('should call the write worker with the right request object', function (done) {
-      importFixtures.call(context)
+    it('should call the write worker with the right request object', () => {
+      return importFixtures.call(context)
         .then(data => {
           should(data).be.undefined();
           should(workerCalled).be.true();
           should(fixturesImported).be.eql(context.data.fixtures.index.collection);
-          done();
-        })
-        .catch(err => done(err));
+        });
     });
 
-    it('should return a rejected promise if a fixture import fails', function () {
+    it('should return a rejected promise if a fixture import fails', () => {
       workerPromise = Promise.reject(new Error('rejected'));
       return should(importFixtures.call(context)).be.rejectedWith(InternalError);
     });
 
-    it('should filter errors when they are about documents that already exist', function () {
+    it('should filter errors when they are about documents that already exist', () => {
       workerPromise = Promise.reject(new PartialError('rejected', [{status: 409}]));
       return should(importFixtures.call(context)).be.fulfilled();
     });
   });
 
-  describe('#createInternalStructure', function () {
+  describe('#createInternalStructure', () => {
     var
       context,
       workerCalled,
@@ -475,11 +446,11 @@ describe('Test: Prepare database', function () {
       createInternalStructure,
       roleWithoutAdmin = rc('kuzzle').roleWithoutAdmin;
 
-    before(function () {
-      createInternalStructure = rewire('../../../../lib/api/controllers/remoteActions/prepareDb').__get__('createInternalStructure');
+    before(() => {
+      createInternalStructure = prepareDb.__get__('createInternalStructure');
     });
 
-    beforeEach(function () {
+    beforeEach(() => {
       workerCalled = false;
       indexAdded = [];
       requests = [];
@@ -491,9 +462,7 @@ describe('Test: Prepare database', function () {
             indexes: {}
           },
           pluginsManager: {
-            trigger: function (event, data) {
-              return Promise.resolve(data);
-            }
+            trigger: (event, data) => Promise.resolve(data)
           },
           workerListener: {
             add: (rq) => {
@@ -531,9 +500,9 @@ describe('Test: Prepare database', function () {
       };
     });
 
-    it('should create a proper internal structure', function (done) {
-      createInternalStructure.call(context)
-        .then(function () {
+    it('should create a proper internal structure', () => {
+      return createInternalStructure.call(context)
+        .then(() => {
           should(workerCalled).be.true();
 
           /*
@@ -591,21 +560,17 @@ describe('Test: Prepare database', function () {
           should(indexAdded[4].index).be.eql(context.kuzzle.config.internalIndex);
           should(indexAdded[4].collection).be.eql('users');
 
-          done();
-        })
-        .catch(err => done(err));
+        });
     });
 
-    it('should not do anything if the index already exists', function (done) {
+    it('should not do anything if the index already exists', () => {
       context.kuzzle.indexCache.indexes[context.kuzzle.config.internalIndex] = ['roles', 'profiles', 'users'];
-      createInternalStructure.call(context)
-        .then(function () {
+      return createInternalStructure.call(context)
+        .then(() => {
           should(workerCalled).be.false();
           should(requests.length).be.eql(0);
           should(indexAdded.length).be.eql(0);
-          done();
-        })
-        .catch(err => done(err));
+        });
     });
   });
 });

@@ -1,12 +1,14 @@
 var
   should = require('should'),
+  sinon = require('sinon'),
+  sandbox = sinon.sandbox.create(),
   params = require('rc')('kuzzle'),
-  Kuzzle = require.main.require('lib/api/Kuzzle'),
+  KuzzleServer = require.main.require('lib/api/kuzzleServer'),
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
   ResponseObject = require.main.require('kuzzle-common-objects').Models.responseObject,
   RemoteActionsController = require.main.require('lib/api/controllers/remoteActionsController');
 
-describe('Test: remote actions controller', function () {
+describe('Test: remote actions controller', () => {
   var
     kuzzle,
     oldProcessExit = process.exit,
@@ -18,21 +20,11 @@ describe('Test: remote actions controller', function () {
   before(() => {
     process.exit = () => true;
 
-    kuzzle = new Kuzzle();
-
-    return kuzzle.start(params, {dummy: true})
-      .then(() => {
-        remoteActionsController = new RemoteActionsController(kuzzle);
-
-        kuzzle.services.list.broker.send = (rid, res) => {
-          brokerInvoked = true;
-          requestId = rid;
-          responseObject = res;
-        };
-      });
+    kuzzle = new KuzzleServer();
+    remoteActionsController = new RemoteActionsController(kuzzle);
   });
 
-  after(function () {
+  after(() => {
     process.exit = oldProcessExit;
   });
 
@@ -40,6 +32,19 @@ describe('Test: remote actions controller', function () {
     brokerInvoked = false;
     requestId = null;
     responseObject = null;
+    sandbox.stub(kuzzle.internalEngine, 'get').resolves({});
+    return kuzzle.services.init({whitelist: []})
+      .then(() => {
+        sandbox.stub(kuzzle.services.list.broker, 'send', (rid, res) => {
+          brokerInvoked = true;
+          requestId = rid;
+          responseObject = res;
+        });
+      });
+  });
+
+  afterEach(() => {
+    sandbox.restore();
   });
 
   it('should fail if there is no action given', () => {
