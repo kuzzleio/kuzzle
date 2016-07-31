@@ -11,9 +11,7 @@ var
   Promise = require('bluebird'),
   params = require('rc')('kuzzle'),
   KuzzleServer = require.main.require('lib/api/kuzzleServer'),
-  RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
-  Redis = rewire('../../../../lib/services/redis'),
-  RedisClientMock = require('../../../mocks/services/redisClient.mock');
+  RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject;
 
 describe('Test: notifier.publish', () => {
   var
@@ -27,13 +25,7 @@ describe('Test: notifier.publish', () => {
     rooms = ['foo'];
 
   before(() => {
-    var dbname = 'unit-tests';
     kuzzle = new KuzzleServer();
-    kuzzle.config.cache.databases.push(dbname);
-    redis = new Redis(kuzzle, {service: dbname});
-    return Redis.__with__('buildClient', () => new RedisClientMock())(() => {
-      return redis.init();
-    });
   });
 
   beforeEach(function () {
