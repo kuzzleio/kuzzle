@@ -1,41 +1,41 @@
 var
   Promise = require('bluebird'),
   should = require('should'),
+  sinon = require('sinon'),
+  sandbox = sinon.sandbox.create(),
   params = require('rc')('kuzzle'),
-  Kuzzle = require.main.require('lib/api/Kuzzle'),
+  KuzzleServer = require.main.require('lib/api/kuzzleServer'),
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
   ResponseObject = require.main.require('kuzzle-common-objects').Models.responseObject;
 
-describe('Test: security controller', function () {
+describe('Test: security controller', () => {
   var
     kuzzle;
 
-  before(function (done) {
-    kuzzle = new Kuzzle();
-    kuzzle.start(params, {dummy: true})
-      .then(function () {
-        kuzzle.repositories.role.validateAndSaveRole = role => {
-          return Promise.resolve(role);
-        };
+  before(() => {
+    kuzzle = new KuzzleServer();
+  });
 
-        done();
-      })
-      .catch((error) => {
-        done(error);
+  beforeEach(() => {
+    sandbox.stub(kuzzle.internalEngine, 'get').resolves({});
+    return kuzzle.services.init({whitelist: []})
+      .then(() => kuzzle.funnel.init())
+      .then(() => {
+        sandbox.stub(kuzzle.repositories.role,'validateAndSaveRole', role => Promise.resolve(role));
       });
   });
 
-  it('should resolve to a responseObject on a createOrUpdateRole call', done => {
-    kuzzle.funnel.controllers.security.createOrReplaceRole(new RequestObject({
+  afterEach(() => {
+    sandbox.restore();
+  });
+
+  it('should resolve to a responseObject on a createOrUpdateRole call', () => {
+    return kuzzle.funnel.controllers.security.createOrReplaceRole(new RequestObject({
       body: { _id: 'test', indexes: {} }
     }))
       .then(result => {
         should(result).be.an.instanceOf(ResponseObject);
         should(result.data.body._id).be.exactly('test');
-        done();
-      })
-      .catch(error => {
-        done(error);
       });
   });
 
