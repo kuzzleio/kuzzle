@@ -1,35 +1,25 @@
 var
   should = require('should'),
   rewire = require('rewire'),
-  Promise = require('bluebird'),
   sinon = require('sinon'),
-  params = require('rc')('kuzzle'),
-  Kuzzle = require.main.require('lib/api/Kuzzle'),
+  sandbox = sinon.sandbox.create(),
+  KuzzleServer = require.main.require('lib/api/kuzzleServer'),
   PluginsManager = rewire('../../../../lib/api/core/plugins/pluginsManager');
 
-require('sinon-as-promised')(Promise);
-
-describe('Plugins manager: getPluginsList', function () {
-  var 
+describe('Plugins manager: getPluginsList', () => {
+  var
     getPluginsList,
-    sandbox,
     kuzzle;
 
   before(() => {
     getPluginsList = PluginsManager.__get__('getPluginsList');
-
-    kuzzle = new Kuzzle();
-    return kuzzle.start(params, {dummy: true});
-  });
-
-  beforeEach(() => {
-    sandbox = sinon.sandbox.create();
+    kuzzle = new KuzzleServer();
   });
 
   afterEach(() => {
     sandbox.restore();
   });
- 
+
   it('should not return any plugin if the database search returns nothing', () => {
     sandbox.stub(kuzzle.internalEngine, 'search').resolves({hits: []});
 

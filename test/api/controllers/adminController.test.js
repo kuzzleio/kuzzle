@@ -3,8 +3,8 @@ var
   _ = require('lodash'),
   Promise = require('bluebird'),
   sinon = require('sinon'),
-  params = require('rc')('kuzzle'),
-  Kuzzle = require.main.require('lib/api/Kuzzle'),
+  sandbox = sinon.sandbox.create(),
+  KuzzleServer = require.main.require('lib/api/kuzzleServer'),
   User = require.main.require('lib/api/core/models/security/user'),
   Profile = require.main.require('lib/api/core/models/security/profile'),
   Role = require.main.require('lib/api/core/models/security/role'),
@@ -13,32 +13,29 @@ var
   BadRequestError = require.main.require('kuzzle-common-objects').Errors.badRequestError,
   PartialError = require.main.require('kuzzle-common-objects').Errors.partialError;
 
-require('sinon-as-promised')(Promise);
-
-describe('Test: admin controller', function () {
+describe('Test: admin controller', () => {
   var
     kuzzle,
-    sandbox,
     index = '%text',
     collection = 'unit-test-adminController',
     requestObject;
 
   before(() => {
-    kuzzle = new Kuzzle();
-
-    return kuzzle.start(params, {dummy: true});
+    kuzzle = new KuzzleServer();
   });
 
   beforeEach(() => {
-    sandbox = sinon.sandbox.create();
     requestObject = new RequestObject({ controller: 'admin' }, {index, collection}, 'unit-test');
+    sandbox.stub(kuzzle.internalEngine, 'get').resolves({});
+    return kuzzle.services.init({whitelist: []})
+      .then(() => kuzzle.funnel.init());
   });
 
   afterEach(() => {
     sandbox.restore();
   });
 
-  describe('#updateMapping', function () {
+  describe('#updateMapping', () => {
     it('should activate a hook on a mapping update call', function (done) {
       this.timeout(50);
       sandbox.stub(kuzzle.workerListener, 'add').resolves({});
@@ -60,7 +57,6 @@ describe('Test: admin controller', function () {
     });
 
     it('should add the new collection to the cache', () => {
-      this.timeout(50);
       sandbox.stub(kuzzle.workerListener, 'add').resolves({});
       sandbox.spy(kuzzle.indexCache, 'add');
       sandbox.spy(kuzzle.indexCache, 'remove');
@@ -107,7 +103,7 @@ describe('Test: admin controller', function () {
         });
     });
 
-    it('should activate a hook on a get mapping call', (done) => {
+    it('should activate a hook on a get mapping call', function(done) {
       this.timeout(50);
       sandbox.stub(kuzzle.services.list.readEngine, 'getMapping').resolves({});
 
@@ -126,7 +122,7 @@ describe('Test: admin controller', function () {
   });
 
   describe('#getStats', () => {
-    it('should trigger a hook on a getStats call', (done) => {
+    it('should trigger a hook on a getStats call', function(done) {
       this.timeout(50);
       sandbox.stub(kuzzle.statistics, 'getStats').resolves({});
 
@@ -158,7 +154,7 @@ describe('Test: admin controller', function () {
   });
 
   describe('#getLastStats', () => {
-    it('should trigger a hook on a getLastStats call', (done) => {
+    it('should trigger a hook on a getLastStats call', function(done) {
       this.timeout(50);
       sandbox.stub(kuzzle.statistics, 'getLastStats').resolves({});
 
@@ -190,7 +186,7 @@ describe('Test: admin controller', function () {
   });
 
   describe('#getAllStats', () => {
-    it('should trigger a hook on a getAllStats call', (done) => {
+    it('should trigger a hook on a getAllStats call', function(done) {
       this.timeout(50);
       sandbox.stub(kuzzle.statistics, 'getAllStats').resolves({});
 
@@ -235,7 +231,7 @@ describe('Test: admin controller', function () {
       return should(kuzzle.funnel.controllers.admin.truncateCollection(requestObject)).be.rejected();
     });
 
-    it('should trigger a hook on a truncateCollection call', (done) => {
+    it('should trigger a hook on a truncateCollection call', function (done) {
       this.timeout(50);
       sandbox.stub(kuzzle.workerListener, 'add').resolves({});
 
@@ -264,7 +260,7 @@ describe('Test: admin controller', function () {
       profile,
       role;
 
-    before(() => {
+    beforeEach(() => {
       user = _.assignIn(new User(), {_id:'deleteIndex', profilesIds: ['deleteIndex']});
       profile = new Profile();
       role = new Role();
@@ -287,7 +283,7 @@ describe('Test: admin controller', function () {
       sandbox.stub(kuzzle.repositories.role, 'loadRoles').resolves([role]);
     });
 
-    it('should trigger a hook on a deleteIndexes call', done => {
+    it('should trigger a hook on a deleteIndexes call', function (done) {
       this.timeout(50);
       sandbox.stub(kuzzle.services.list.readEngine, 'listIndexes').resolves({indexes: []});
 
@@ -313,8 +309,6 @@ describe('Test: admin controller', function () {
         }),
         isActionAllowedStub = sandbox.stub(user, 'isActionAllowed'),
         workerListenerStub = request => Promise.resolve({deleted: request.data.body.indexes});
-
-      this.timeout(50);
 
       sandbox.stub(kuzzle.services.list.readEngine, 'listIndexes').resolves({indexes: ['%text1', '%text2', '%text3', '%text4']});
       sandbox.stub(kuzzle.workerListener, 'add', workerListenerStub);
@@ -363,7 +357,7 @@ describe('Test: admin controller', function () {
       return should(kuzzle.funnel.controllers.admin.createIndex(requestObject)).be.rejected();
     });
 
-    it('should trigger a hook on a createIndex call', (done) => {
+    it('should trigger a hook on a createIndex call', function (done) {
       this.timeout(50);
       sandbox.stub(kuzzle.workerListener, 'add').resolves({});
 
@@ -381,7 +375,6 @@ describe('Test: admin controller', function () {
     });
 
     it('should add the new index to the cache', () => {
-      this.timeout(50);
       sandbox.stub(kuzzle.workerListener, 'add').resolves({});
       sandbox.spy(kuzzle.indexCache, 'add');
       sandbox.spy(kuzzle.indexCache, 'remove');
@@ -410,8 +403,7 @@ describe('Test: admin controller', function () {
       return should(kuzzle.funnel.controllers.admin.deleteIndex(requestObject)).be.rejected();
     });
 
-    it('should trigger a hook on a deleteIndex call', (done) => {
-      this.timeout(50);
+    it('should trigger a hook on a deleteIndex call', function (done) {
       sandbox.stub(kuzzle.workerListener, 'add').resolves({});
 
       kuzzle.once('data:beforeDeleteIndex', (obj) => {
@@ -444,7 +436,7 @@ describe('Test: admin controller', function () {
   });
 
   describe('#removeRooms', () => {
-    it('should trigger a plugin hook', (done) => {
+    it('should trigger a plugin hook', function (done) {
       this.timeout(50);
       sandbox.stub(kuzzle.hotelClerk, 'removeRooms').resolves({});
 

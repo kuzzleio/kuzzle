@@ -1,15 +1,13 @@
 var
   should = require('should'),
-  Promise = require('bluebird'),
-  params = require('rc')('kuzzle'),
-  Kuzzle = require.main.require('lib/api/Kuzzle'),
   sinon = require('sinon'),
+  sandbox = sinon.sandbox.create(),
+  Promise = require('bluebird'),
+  KuzzleServer = require.main.require('lib/api/kuzzleServer'),
   Profile = require.main.require('lib/api/core/models/security/profile'),
   Role = require.main.require('lib/api/core/models/security/role');
 
-require('sinon-as-promised')(Promise);
-
-describe('Test: security/profileTest', function () {
+describe('Test: security/profileTest', () => {
   var
     context = {connection: null, user: null},
     requestObject = {
@@ -18,16 +16,10 @@ describe('Test: security/profileTest', function () {
       controller: 'controller',
       action: 'action'
     },
-    kuzzle,
-    sandbox;
+    kuzzle;
 
   before(() => {
-    kuzzle = new Kuzzle();
-    return kuzzle.start(params, {dummy: true});
-  });
-
-  beforeEach(() => {
-    sandbox = sinon.sandbox.create();
+    kuzzle = new KuzzleServer();
   });
 
   afterEach(() => {
@@ -99,7 +91,7 @@ describe('Test: security/profileTest', function () {
       .then(isAllowed => should(isAllowed).be.false());
   });
 
-  it('should retrieve the good rights list', function () {
+  it('should retrieve the good rights list', () => {
     var
       profile = new Profile(),
       role1 = new Role(),

@@ -7,7 +7,7 @@ var
   BadRequestError = require.main.require('kuzzle-common-objects').Errors.badRequestError,
   InternalError = require.main.require('kuzzle-common-objects').Errors.internalError;
 
-describe('Test geoboundingbox method', function () {
+describe('Test geoboundingbox method', () => {
   var
     methods,
     filterId = 'fakeFilterId',
@@ -67,7 +67,7 @@ describe('Test geoboundingbox method', function () {
       .then(() => methods.geoBoundingBox(filterId, index, collection, filterUSA2));
   });
 
-  it('should construct the filterTree object for the correct attribute', function () {
+  it('should construct the filterTree object for the correct attribute', () => {
     should(methods.filters.filtersTree).not.be.empty();
     should(methods.filters.filtersTree[index]).not.be.empty();
     should(methods.filters.filtersTree[index][collection]).not.be.empty();
@@ -75,7 +75,7 @@ describe('Test geoboundingbox method', function () {
     should(methods.filters.filtersTree[index][collection].fields[fieldLocation]).not.be.empty();
   });
 
-  it('should construct the filterTree with correct encoded function name', function () {
+  it('should construct the filterTree with correct encoded function name', () => {
     // Coordinates are geohashed to encode the function name
     // because we have many times the same coord in filters,
     // we must have only three functions (one for filterEngland, and two for filterUSA)
@@ -86,7 +86,7 @@ describe('Test geoboundingbox method', function () {
     should(methods.filters.filtersTree[index][collection].fields[fieldLocation][locationgeoBoundingBoxc0x5c7zzzds7jw7zzz]).not.be.empty();
   });
 
-  it('should construct the filterTree with correct room list', function () {
+  it('should construct the filterTree with correct room list', () => {
     var ids;
 
     ids = methods.filters.filtersTree[index][collection].fields[fieldLocation][locationgeoBoundingBoxgcmfj457fu10ffy7m4].ids;
@@ -105,7 +105,7 @@ describe('Test geoboundingbox method', function () {
     should(ids[0]).be.exactly(filterId);
   });
 
-  it('should construct the filterTree with correct geoboundingbox arguments', function () {
+  it('should construct the filterTree with correct geoboundingbox arguments', () => {
     // test filterEngland
     should(methods.filters.filtersTree[index][collection].fields[fieldLocation][locationgeoBoundingBoxgcmfj457fu10ffy7m4].args).match({
       operator: 'geoBoundingBox',
@@ -146,11 +146,11 @@ describe('Test geoboundingbox method', function () {
     });
   });
 
-  it('should return a rejected promise if an empty filter is provided', function () {
+  it('should return a rejected promise if an empty filter is provided', () => {
     return should(methods.geoBoundingBox('foo', index, 'bar', {})).be.rejectedWith(BadRequestError, { message: 'Missing filter' });
   });
 
-  it('should return a rejected promise if the geolocalisation filter is invalid', function () {
+  it('should return a rejected promise if the geolocalisation filter is invalid', () => {
     var
       invalidFilter = {
         location: {
@@ -163,8 +163,8 @@ describe('Test geoboundingbox method', function () {
     return should(methods.geoBoundingBox(filterId, index, collection, invalidFilter)).be.rejectedWith(BadRequestError, { message: 'Unable to parse coordinates' });
   });
 
-  it('should return a rejected promise if filters.add fails', function () {
-    methods.filters.add = function () { return new InternalError('rejected'); };
+  it('should return a rejected promise if filters.add fails', () => {
+    methods.filters.add = () => { return new InternalError('rejected'); };
     return should(methods.geoBoundingBox(filterId, index, collection, filterEngland)).be.rejectedWith('rejected');
   });
 });

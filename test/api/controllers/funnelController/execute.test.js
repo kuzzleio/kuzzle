@@ -1,11 +1,12 @@
 var
   should = require('should'),
+  sinon = require('sinon'),
+  sandbox = sinon.sandbox.create(),
   Promise = require('bluebird'),
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
   ResponseObject = require.main.require('kuzzle-common-objects').Models.responseObject,
   ServiceUnavailableError = require.main.require('kuzzle-common-objects').Errors.serviceUnavailableError,
-  params = require('rc')('kuzzle'),
-  Kuzzle = require.main.require('lib/api/Kuzzle'),
+  KuzzleServer = require.main.require('lib/api/kuzzleServer'),
   rewire = require('rewire'),
   FunnelController = rewire('../../../../lib/api/controllers/funnelController');
 
@@ -24,26 +25,23 @@ describe('funnelController.execute', () => {
       token: null
     };
 
-    kuzzle = new Kuzzle();
-    
-    return kuzzle.start(params, {dummy: true})
-      .then(() => {
-        kuzzle.config.request.warnRetainedRequestsLimit = -1;
+    kuzzle = new KuzzleServer();
 
-        FunnelController.__set__('processRequest', (funnelKuzzle, controllers, funnelRequestObject) => {
-          processRequestCalled = true;
+    kuzzle.config.request.warnRetainedRequestsLimit = -1;
 
-          if (funnelRequestObject.errorMe) {
-            return Promise.reject(new Error('errored on purpose'));
-          }
+    FunnelController.__set__('processRequest', (funnelKuzzle, controllers, funnelRequestObject) => {
+      processRequestCalled = true;
 
-          return Promise.resolve(new ResponseObject(funnelRequestObject));
-        });
+      if (funnelRequestObject.errorMe) {
+        return Promise.reject(new Error('errored on purpose'));
+      }
 
-        FunnelController.__set__('playCachedRequests', function () {
-          requestReplayed = true;
-        });
-      });
+      return Promise.resolve(new ResponseObject(funnelRequestObject));
+    });
+
+    FunnelController.__set__('playCachedRequests', () => {
+      requestReplayed = true;
+    });
   });
 
   beforeEach(() => {
@@ -55,11 +53,19 @@ describe('funnelController.execute', () => {
       action: 'bar'
     });
 
-    funnel = new FunnelController(kuzzle);
-    funnel.init();
+    sandbox.stub(kuzzle.internalEngine, 'get').resolves({});
+    return kuzzle.services.init({whitelist: []})
+      .then(() => {
+        funnel = new FunnelController(kuzzle);
+        funnel.init();
+      });
   });
 
-  describe('#normal state', function () {
+  afterEach(() => {
+    sandbox.restore();
+  });
+
+  describe('#normal state', () => {
     it('should execute the request immediately if not overloaded', done => {
       funnel.execute(requestObject, context, (err, res) => {
         try {
@@ -93,11 +99,11 @@ describe('funnelController.execute', () => {
     });
   });
 
-  describe('#server:overload hook', function () {
+  describe('#server:overload hook', () => {
     it('should fire the hook the first time Kuzzle is in overloaded state', /** @this {Mocha} */ function (done) {
       this.timeout(500);
 
-      kuzzle.once('server:overload', function () {
+      kuzzle.once('server:overload', () => {
         done();
       });
 
@@ -109,7 +115,7 @@ describe('funnelController.execute', () => {
     it('should fire the hook if the last one was fired more than 500ms ago', /** @this {Mocha} */ function (done) {
       this.timeout(500);
 
-      kuzzle.once('server:overload', function () {
+      kuzzle.once('server:overload', () => {
         done();
       });
 
@@ -119,7 +125,7 @@ describe('funnelController.execute', () => {
     });
 
     it('should not fire the hook if one was fired less than 500ms ago', done => {
-      var listener = function () {
+      var listener = () => {
         done(new Error('server:overload hook fired unexpectedly'));
       };
 
@@ -135,7 +141,7 @@ describe('funnelController.execute', () => {
     });
   });
 
-  describe('#overloaded state', function () {
+  describe('#overloaded state', () => {
     it('should enter overloaded state if the maxConcurrentRequests property is reached', done => {
       var callback = () => {
         done(new Error('Request executed. It should have been queued instead'));

@@ -1,11 +1,11 @@
 var
   should = require('should'),
   sinon = require('sinon'),
-  BadRequestError = require.main.require('kuzzle-common-objects').Errors.badRequestError,
-  sandbox = sinon.sandbox.create();
+  sandbox = sinon.sandbox.create(),
+  BadRequestError = require.main.require('kuzzle-common-objects').Errors.badRequestError;
 
 
-describe('Test: clean database', function () {
+describe('Test: clean database', () => {
   var
     cleanDb,
     kuzzle;

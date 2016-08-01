@@ -2,15 +2,15 @@ var
   rewire = require('rewire'),
   should = require('should'),
   sinon = require('sinon'),
+  sandbox = sinon.sandbox.create(),
   PartialError = require('kuzzle-common-objects').Errors.partialError,
   InternalError = require('kuzzle-common-objects').Errors.internalError,
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
   ResponseObject = require('kuzzle-common-objects').Models.responseObject,
-  PrepareDb = rewire('../../../../lib/api/controllers/remoteActions/prepareDb'),
-  sandbox = sinon.sandbox.create();
+  PrepareDb = rewire('../../../../lib/api/controllers/remoteActions/prepareDb');
 
-describe('Test: Prepare database', function () {
-  var 
+describe('Test: Prepare database', () => {
+  var
     kuzzle;
 
   beforeEach(() => {
@@ -199,7 +199,7 @@ describe('Test: Prepare database', function () {
       });
     });
 
-    it('should return a rejected promise if the file content is not a valid JSON object', function () {
+    it('should return a rejected promise if the file content is not a valid JSON object', () => {
       readFileSyncStub.returns('Invalid JSON');
 
       return PrepareDb.__with__({
@@ -291,7 +291,7 @@ describe('Test: Prepare database', function () {
       });
     });
 
-    it('should return a rejected promise if an index creation fails', function () {
+    it('should return a rejected promise if an index creation fails', () => {
       var error = new Error('test');
 
       kuzzle.funnel.controllers.admin.createIndex.rejects(error);
@@ -488,7 +488,7 @@ describe('Test: Prepare database', function () {
     });
   });
 
-  describe('#createInternalStructure', function () {
+  describe('#createInternalStructure', () => {
     var
       createInternalStructure = PrepareDb.__get__('createInternalStructure'),
       reset,

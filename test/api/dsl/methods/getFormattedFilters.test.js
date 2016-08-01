@@ -7,7 +7,7 @@ var
   Methods = rewire('../../../../lib/api/dsl/methods'),
   BadRequestError = require.main.require('kuzzle-common-objects').Errors.badRequestError;
 
-describe('Test: dsl.getFormattedFilters method', function () {
+describe('Test: dsl.getFormattedFilters method', () => {
   var
     methods,
     getFormattedFilters = Methods.__get__('getFormattedFilters'),
@@ -17,19 +17,19 @@ describe('Test: dsl.getFormattedFilters method', function () {
     fieldFoo = md5('foo'),
     fieldBar = md5('bar');
 
-  beforeEach(function () {
+  beforeEach(() => {
     methods = new Methods(new Filters());
   });
 
-  it('should return a rejected promise if the provided filter is empty', function () {
+  it('should return a rejected promise if the provided filter is empty', () => {
     return should(getFormattedFilters.call(methods, 'roomId', 'index', 'collection', {})).be.rejectedWith(BadRequestError, { message: 'Filters can\'t be empty' });
   });
 
-  it('should return a rejected promise if a filter refers to an unknown method name', function () {
+  it('should return a rejected promise if a filter refers to an unknown method name', () => {
     return should(getFormattedFilters.call(methods, 'roomId', 'index', 'collection', { foo: 'bar'})).be.rejectedWith(BadRequestError, { message: 'Function foo doesn\'t exist' });
   });
 
-  it('should return a resolved promise containing 1 formatted filter', function () {
+  it('should return a resolved promise containing 1 formatted filter', () => {
     var
       filter = {
         exists: {
@@ -39,7 +39,7 @@ describe('Test: dsl.getFormattedFilters method', function () {
 
     return getFormattedFilters.call(methods, 'roomId', 'index', 'collection', filter)
       .then(response => response.filter)
-      .then(function (formattedFilter) {
+      .then(formattedFilter => {
         should.exist(formattedFilter[`index.collection.${fieldFoo}.${existsfoo}`]);
         should(formattedFilter[`index.collection.${fieldFoo}.${existsfoo}`]).be.an.Object();
         should.exist(formattedFilter[`index.collection.${fieldFoo}.${existsfoo}`].ids);
@@ -49,7 +49,7 @@ describe('Test: dsl.getFormattedFilters method', function () {
       });
   });
 
-  it('should be able to handle an array of filters', function () {
+  it('should be able to handle an array of filters', () => {
     var
       filters = [
         { exists: { field: 'foo' } },
@@ -58,7 +58,7 @@ describe('Test: dsl.getFormattedFilters method', function () {
 
     return getFormattedFilters.call(methods, 'roomId', 'index', 'collection', filters)
       .then(response => response.filter)
-      .then(function (formattedFilter) {
+      .then(formattedFilter => {
         should.exist(formattedFilter[`index.collection.${fieldFoo}.${existsfoo}`]);
         should(formattedFilter[`index.collection.${fieldFoo}.${existsfoo}`]).be.an.Object();
         should.exist(formattedFilter[`index.collection.${fieldFoo}.${existsfoo}`].ids);
@@ -75,7 +75,7 @@ describe('Test: dsl.getFormattedFilters method', function () {
       });
   });
 
-  it('should ignore empty filters when an array of filters is provided', function () {
+  it('should ignore empty filters when an array of filters is provided', () => {
     var
       filters = [
         { exists: { field: 'foo' } },
@@ -85,7 +85,7 @@ describe('Test: dsl.getFormattedFilters method', function () {
 
     return getFormattedFilters.call(methods, 'roomId', 'index', 'collection', filters)
       .then(response => response.filter)
-      .then(function (formattedFilter) {
+      .then(formattedFilter => {
         should.exist(formattedFilter[`index.collection.${fieldFoo}.${existsfoo}`]);
         should(formattedFilter[`index.collection.${fieldFoo}.${existsfoo}`]).be.an.Object();
         should.exist(formattedFilter[`index.collection.${fieldFoo}.${existsfoo}`].ids);
@@ -102,7 +102,7 @@ describe('Test: dsl.getFormattedFilters method', function () {
       });
   });
 
-  it('should invert the filter if the "not" argument is set to true', function () {
+  it('should invert the filter if the "not" argument is set to true', () => {
     var
       filter = {
         exists: {
@@ -112,7 +112,7 @@ describe('Test: dsl.getFormattedFilters method', function () {
 
     return getFormattedFilters.call(methods, 'roomId', 'index', 'collection', filter, true)
       .then(response => response.filter)
-      .then(function (formattedFilter) {
+      .then(formattedFilter => {
         should.exist(formattedFilter[`index.collection.${fieldFoo}.${notexistsfoo}`]);
         should(formattedFilter[`index.collection.${fieldFoo}.${notexistsfoo}`]).be.an.Object();
         should.exist(formattedFilter[`index.collection.${fieldFoo}.${notexistsfoo}`].ids);
@@ -122,7 +122,7 @@ describe('Test: dsl.getFormattedFilters method', function () {
       });
   });
 
-  it('should return a rejected promise if the called method name fails', function () {
+  it('should return a rejected promise if the called method name fails', () => {
     var
       filter = {
         exists: {
@@ -130,7 +130,7 @@ describe('Test: dsl.getFormattedFilters method', function () {
         }
       };
 
-    methods.exists = function () { return Promise.reject(new Error('rejected')); };
+    methods.exists = () => { return Promise.reject(new Error('rejected')); };
 
     return should(getFormattedFilters.call(methods, 'roomId', 'index', 'collection', filter)).be.rejectedWith('rejected');
   });

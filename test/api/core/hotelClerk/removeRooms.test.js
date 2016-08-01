@@ -1,12 +1,13 @@
 var
   should = require('should'),
+  sinon = require('sinon'),
+  sandbox = sinon.sandbox.create(),
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
   BadRequestError = require.main.require('kuzzle-common-objects').Errors.badRequestError,
   NotFoundError = require.main.require('kuzzle-common-objects').Errors.notFoundError,
-  params = require('rc')('kuzzle'),
-  Kuzzle = require.main.require('lib/api/Kuzzle');
+  KuzzleServer = require.main.require('lib/api/kuzzleServer');
 
-describe('Test: hotelClerk.removeRooms', function () {
+describe('Test: hotelClerk.removeRooms', () => {
   var
     kuzzle,
     connection = {id: 'connectionid'},
@@ -26,21 +27,26 @@ describe('Test: hotelClerk.removeRooms', function () {
       }
     };
 
-  beforeEach(() => {
-    kuzzle = new Kuzzle();
 
-    return kuzzle.start(params, {dummy: true})
-      .then(() => {
-        context = {
-          connection: connection,
-          token: {
-            user: ''
-          }
-        };
-      });
+  beforeEach(() => {
+    kuzzle = new KuzzleServer();
+
+    context = {
+      connection: connection,
+      token: {
+        user: ''
+      }
+    };
+
+    sandbox.stub(kuzzle.internalEngine, 'get').resolves({});
+    return kuzzle.services.init({whitelist: []});
   });
 
-  it('should reject an error if no index provided', function () {
+  afterEach(() => {
+    sandbox.restore();
+  });
+
+  it('should reject an error if no index provided', () => {
     var requestObject = new RequestObject({
       controller: 'admin',
       action: 'removeRooms',
@@ -53,7 +59,7 @@ describe('Test: hotelClerk.removeRooms', function () {
     return should(kuzzle.hotelClerk.removeRooms(requestObject)).rejectedWith(BadRequestError);
   });
 
-  it('should reject an error if no collection provided', function () {
+  it('should reject an error if no collection provided', () => {
     var requestObject = new RequestObject({
       controller: 'admin',
       action: 'removeRooms',
@@ -66,7 +72,7 @@ describe('Test: hotelClerk.removeRooms', function () {
     return should(kuzzle.hotelClerk.removeRooms(requestObject)).rejectedWith(BadRequestError);
   });
 
-  it('should reject an error if there is no subscription on this index', function () {
+  it('should reject an error if there is no subscription on this index', () => {
     var requestObject = new RequestObject({
       controller: 'admin',
       action: 'removeRooms',
@@ -104,7 +110,7 @@ describe('Test: hotelClerk.removeRooms', function () {
       });
   });
 
-  it('should remove room in global subscription for provided collection', function () {
+  it('should remove room in global subscription for provided collection', () => {
     var
       requestObjectSubscribe = new RequestObject({
         controller: 'subscribe',
@@ -134,7 +140,7 @@ describe('Test: hotelClerk.removeRooms', function () {
       });
   });
 
-  it('should remove room for subscription with filter for provided collection', function () {
+  it('should remove room for subscription with filter for provided collection', () => {
     var
       requestObjectSubscribe = new RequestObject({
         controller: 'subscribe',
@@ -164,7 +170,7 @@ describe('Test: hotelClerk.removeRooms', function () {
       });
   });
 
-  it('should remove room for global and filter subscription provided collection', function () {
+  it('should remove room for global and filter subscription provided collection', () => {
     var
       requestObjectSubscribeGlobal = new RequestObject({
         controller: 'subscribe',
@@ -203,7 +209,7 @@ describe('Test: hotelClerk.removeRooms', function () {
       });
   });
 
-  it('should remove only room for provided collection', function () {
+  it('should remove only room for provided collection', () => {
     var
       requestObjectSubscribeCollection1 = new RequestObject({
         controller: 'subscribe',
@@ -248,7 +254,7 @@ describe('Test: hotelClerk.removeRooms', function () {
       });
   });
 
-  it('should reject an error if room is provided but is not an array', function () {
+  it('should reject an error if room is provided but is not an array', () => {
     var
       requestObjectSubscribeCollection1 = new RequestObject({
         controller: 'subscribe',
@@ -273,7 +279,7 @@ describe('Test: hotelClerk.removeRooms', function () {
       });
   });
 
-  it('should remove only listed rooms for the collection', function () {
+  it('should remove only listed rooms for the collection', () => {
     var
       roomId = 'fa2dc987b065e6d38beadabc970d92f1',
       requestObjectSubscribeFilter1 = new RequestObject({
@@ -310,7 +316,7 @@ describe('Test: hotelClerk.removeRooms', function () {
       });
   });
 
-  it('should return a response with partial error if a roomId doesn\'t correspond to the index', function () {
+  it('should return a response with partial error if a roomId doesn\'t correspond to the index', () => {
     var
       index2RoomName = 'e6255f81a2934ad02636a8ebf533dd46',
       requestObjectSubscribe1 = new RequestObject({
@@ -346,7 +352,7 @@ describe('Test: hotelClerk.removeRooms', function () {
       });
   });
 
-  it('should return a response with partial error if a roomId doesn\'t correspond to the collection', function () {
+  it('should return a response with partial error if a roomId doesn\'t correspond to the collection', () => {
     var
       collection2RoomName = '36a737bfc8da2f3c1673137a3b159d4a',
       requestObjectSubscribe1 = new RequestObject({
@@ -382,7 +388,7 @@ describe('Test: hotelClerk.removeRooms', function () {
       });
   });
 
-  it('should return a response with partial error if a roomId doesn\'t exist', function () {
+  it('should return a response with partial error if a roomId doesn\'t exist', () => {
     var
       badRoomName = 'badRoomId',
       requestObjectSubscribe = new RequestObject({

@@ -3,14 +3,14 @@
 var
   rc = require('rc'),
   params = rc('kuzzle'),
-  Kuzzle = require('../../lib/api');
+  KuzzleServer = require('../../lib/api/kuzzleServer');
 
 module.exports = function () {
-  var 
+  var
     data = {},
     service,
-    kuzzle = new Kuzzle();
-  
+    kuzzle = new KuzzleServer();
+
   service = params._[2];
   if (!service) {
     console.error('Error: missing required argument: service name');

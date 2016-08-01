@@ -7,140 +7,126 @@
  */
 var
   should = require('should'),
+  sinon = require('sinon'),
+  sandbox = sinon.sandbox.create(),
   Promise = require('bluebird'),
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
-  params = require('rc')('kuzzle'),
-  Kuzzle = require.main.require('lib/api/Kuzzle');
+  KuzzleServer = require.main.require('lib/api/kuzzleServer');
 
-var mockupCacheService = {
-  addId: undefined,
-  removeId: undefined,
-  room: undefined,
-
-  init: function () {
-    this.addId = this.removeId = this.room = undefined;
-  },
-
-  add: function (id, room) {
-    if (room.length > 0) {
-      this.addId = id;
-      this.room = room;
-    }
-    return Promise.resolve({});
-  },
-
-  remove: function (id, room) {
-    if (room.length > 0) {
-      this.removeId = id;
-    }
-    return Promise.resolve({});
-  },
-
-  search: function (id) {
-    if (id === 'removeme') {
-      return Promise.resolve(['foobar']);
-    }
-
-    return Promise.resolve([]);
-  }
-};
-
-var mockupTestFilters = (index, collection, data, id) => {
-  if (id === 'errorme') {
-    return Promise.reject(new Error('rejected'));
-  }
-  else if (id === 'removeme') {
-    return Promise.resolve([]);
-  }
-  
-  return Promise.resolve(['foobar']);
-};
-
-describe('Test: notifier.notifyDocumentUpdate', function () {
+describe('Test: notifier.notifyDocumentUpdate', () => {
   var
+    mockupCacheService = {
+      addId: undefined,
+      removeId: undefined,
+      room: undefined,
+
+      init: function () {
+        this.addId = this.removeId = this.room = undefined;
+      },
+
+      add: function (id, room) {
+        if (room.length > 0) {
+          this.addId = id;
+          this.room = room;
+        }
+        return Promise.resolve({});
+      },
+
+      remove: function (id, room) {
+        if (room.length > 0) {
+          this.removeId = id;
+        }
+        return Promise.resolve({});
+      },
+
+      search: function (id) {
+        if (id === 'removeme') {
+          return Promise.resolve(['foobar']);
+        }
+
+        return Promise.resolve([]);
+      }
+    },
     kuzzle,
     requestObject,
     notified = 0,
     notification;
 
   before(() => {
-    kuzzle = new Kuzzle();
-    
-    return kuzzle.start(params, {dummy: true})
-      .then(function () {
+    kuzzle = new KuzzleServer();
+  });
+
+  beforeEach(() => {
+    sandbox.stub(kuzzle.internalEngine, 'get').resolves({});
+    return kuzzle.services.init({whitelist: []})
+      .then(() => {
+        requestObject = new RequestObject({
+          controller: 'write',
+          action: 'update',
+          requestId: 'foo',
+          collection: 'bar',
+          _id: 'Sir Isaac Newton is the deadliest son-of-a-bitch in space',
+          body: { foo: 'bar' }
+        });
+
         kuzzle.services.list.notificationCache = mockupCacheService;
-        kuzzle.services.list.readEngine = {
-          get: r => Promise.resolve({_id: r.data._id, _source: requestObject.data.body})
-        };
-        kuzzle.dsl.test = mockupTestFilters;
         kuzzle.notifier.notify = function (rooms, r, n) {
           if (rooms.length > 0) {
             notified++;
             notification = n;
           }
         };
+
+        notified = 0;
+        notification = null;
+        mockupCacheService.init();
       });
   });
-  
-  beforeEach(() => {
-    requestObject = new RequestObject({
-      controller: 'write',
-      action: 'update',
-      requestId: 'foo',
-      collection: 'bar',
-      _id: 'Sir Isaac Newton is the deadliest son-of-a-bitch in space',
-      body: { foo: 'bar' }
-    });
-    
-    notified = 0;
-    notification = null;
-    mockupCacheService.init();
+
+  afterEach(() => {
+    sandbox.restore();
   });
 
-  it('should notify subscribers when an updated document entered their scope', (done) => {
-    this.timeout(50);
-    
+  it('should notify subscribers when an updated document entered their scope', () => {
     requestObject.data._id = 'addme';
 
-    kuzzle.notifier.notifyDocumentUpdate(requestObject);
+    sandbox.stub(kuzzle.dsl, 'test').resolves(['foobar']);
+    sandbox.stub(kuzzle.services.list.readEngine, 'get').resolves({_id: 'addme', _source: requestObject.data.body});
 
-    setTimeout(() => {
-      should(notified).be.exactly(1);
-      should(mockupCacheService.addId).be.exactly(requestObject.data._id);
-      should(mockupCacheService.room).be.an.Array();
-      should(mockupCacheService.room[0]).be.exactly('foobar');
-      should(mockupCacheService.removeId).be.undefined();
+    return kuzzle.notifier.notifyDocumentUpdate(requestObject)
+      .then(() => {
+        should(notified).be.exactly(1);
+        should(mockupCacheService.addId).be.exactly(requestObject.data._id);
+        should(mockupCacheService.room).be.an.Array();
+        should(mockupCacheService.room[0]).be.exactly('foobar');
+        should(mockupCacheService.removeId).be.undefined();
 
-      should(notification.scope).be.exactly('in');
-      should(notification.action).be.exactly('update');
-      should(notification.state).be.eql('done');
-      should(notification._id).be.eql(requestObject.data._id);
-      should(notification._source).be.eql(requestObject.data.body);
-
-      done();
-    }, 20);
+        should(notification.scope).be.exactly('in');
+        should(notification.action).be.exactly('update');
+        should(notification.state).be.eql('done');
+        should(notification._id).be.eql(requestObject.data._id);
+        should(notification._source).be.eql(requestObject.data.body);
+      });
   });
 
-  it('should notify subscribers when an updated document left their scope', function (done) {
-    this.timeout(50);
-
+  it('should notify subscribers when an updated document left their scope', () => {
     requestObject.data._id = 'removeme';
 
-    kuzzle.notifier.notifyDocumentUpdate(requestObject);
+    sandbox.stub(kuzzle.dsl, 'test').resolves([]);
+    sandbox.stub(kuzzle.services.list.readEngine, 'get').resolves({_id: 'removeme', _source: requestObject.data.body});
 
-    setTimeout(() => {
-      should(notified).be.exactly(1);
-      should(mockupCacheService.addId).be.undefined();
-      should(mockupCacheService.room).be.undefined();
-      should(mockupCacheService.removeId).be.exactly(requestObject.data._id);
+    return kuzzle.notifier.notifyDocumentUpdate(requestObject)
+      .then(() => {
+        should(notified).be.exactly(1);
+        should(mockupCacheService.addId).be.undefined();
+        should(mockupCacheService.room).be.undefined();
+        should(mockupCacheService.removeId).be.exactly(requestObject.data._id);
 
-      should(notification.scope).be.exactly('out');
-      should(notification.action).be.exactly('update');
-      should(notification.state).be.eql('done');
-      should(notification._id).be.eql(requestObject.data._id);
-      should(notification._source).be.undefined();
-
-      done();
-    }, 20);
+        should(notification.scope).be.exactly('out');
+        should(notification.action).be.exactly('update');
+        should(notification.state).be.eql('done');
+        should(notification._id).be.eql(requestObject.data._id);
+        should(notification._source).be.undefined();
+      });
   });
 });

@@ -5,22 +5,22 @@ var
   PluginContext = require.main.require('lib/api/core/plugins/pluginContext'),
   ready = rewire('../../../../lib/api/core/plugins/workerReady');
 
-describe('Test plugins manager run', function () {
+describe('Test plugins Worker Wrapper', () => {
   var
     sandbox,
     plugin,
     pluginMock;
 
-  before(function() {
+  before(() => {
     ready.__set__('isDummy', true);
   });
 
-  beforeEach(function () {
+  beforeEach(() => {
     plugin = {
-      init: function () {},
-      foo: function () {},
-      bar: function () {},
-      baz: function () {}
+      init: () => {},
+      foo: () => {},
+      bar: () => {},
+      baz: () => {}
     };
 
     sandbox = sinon.sandbox.create();
@@ -32,7 +32,7 @@ describe('Test plugins manager run', function () {
     sandbox.restore();
   });
 
-  it('should initialize the plugin properly', function () {
+  it('should initialize the plugin properly', () => {
     var
       config = { 'foobar': { bar: 'bar', qux: 'qux'}},
       init = pluginMock.expects('init').once(),
@@ -69,7 +69,7 @@ describe('Test plugins manager run', function () {
     })).be.true();
   });
 
-  it('should call attached plugin function with a single target hook', function () {
+  it('should call attached plugin function with a single target hook', () => {
     var
       processOn = sandbox.stub().callsArgWith(1, {
         topic: 'trigger',

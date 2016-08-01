@@ -1,37 +1,52 @@
 var
   EventEmitter = require('eventemitter2').EventEmitter2,
-  redisCommands = (require('ioredis')({lazyConnect: true})).getBuiltinCommands(),
-  Promise = require('bluebird'),
-  mock = {};
+  getBuiltinCommands = (require('ioredis')({lazyConnect: true})).getBuiltinCommands,
+  redisCommands = getBuiltinCommands(),
+  Promise = require('bluebird');
 
-redisCommands.forEach(command => {
-  mock[command] = mock[command.toUpperCase()] = function () {
-    return Promise.resolve({
-      name: command,
-      args: Array.prototype.slice.call(arguments)
-    });
+
+function RedisClientMock () {
+  this.getBuiltinCommands = getBuiltinCommands;
+
+  this.scanStream = options => {
+    var Stream = function () {
+      setTimeout(() => {
+        var
+          prefix = options && options.match ? options.match.replace(/[\*\?]/g, '') : 'k',
+          i,
+          keys = [];
+
+        for (i=0; i < 10; i++) {
+          keys.push(prefix + i);
+        }
+
+        this.emit('data', keys);
+        this.emit('end', true);
+      }, 50);
+    };
+    Stream.prototype = new EventEmitter();
+
+    return new Stream();
   };
-});
 
-mock.scanStream = function (options) {
-  var Stream = function () {
-    setTimeout(() => {
-      var
-        prefix = options && options.match ? options.match.replace(/[\*\?]/g, '') : 'k',
-        i,
-        keys = [];
+  redisCommands.forEach(command => {
+    this[command] = this[command.toUpperCase()] = function () {
+      return Promise.resolve({
+        name: command,
+        args: Array.prototype.slice.call(arguments)
+      });
+    };
+  });
 
-      for (i=0; i < 10; i++) {
-        keys.push(prefix + i);
-      }
+  this.select = this.SELECT = (key, callback) => callback(null);
 
-      this.emit('data', keys);
-      this.emit('end', true);
-    }, 50);
-  };
-  Stream.prototype = new EventEmitter();
+  this.flushdb = this.FLUSHDB = callback => callback(null);
 
-  return new Stream();
-};
+  process.nextTick(() => {
+    this.emit('ready');
+  });
+}
 
-module.exports = mock;
+RedisClientMock.prototype = new EventEmitter();
+
+module.exports = RedisClientMock;

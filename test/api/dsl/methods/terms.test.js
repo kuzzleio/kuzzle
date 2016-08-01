@@ -4,7 +4,7 @@ var
   Filters = require.main.require('lib/api/dsl/filters'),
   Methods = require.main.require('lib/api/dsl/methods');
 
-describe('Test "terms" method', function () {
+describe('Test "terms" method', () => {
   var
     methods,
     filterIdMatch = 'filterIdMatch',
@@ -18,7 +18,7 @@ describe('Test "terms" method', function () {
     nottermsfirstNameGraceJean = md5('nottermsfirstNameGrace,Jean'),
     fieldFirstName = md5('firstName');
 
-  beforeEach(function () {
+  beforeEach(() => {
     /** @type Methods */
     methods = new Methods(new Filters());
 
@@ -26,7 +26,7 @@ describe('Test "terms" method', function () {
       .then(() => methods.terms(filterIdNotMatch, index, collection, filter, true));
   });
 
-  it('should construct the filterTree object for the correct attribute', function () {
+  it('should construct the filterTree object for the correct attribute', () => {
     should(methods.filters.filtersTree).not.be.empty();
     should(methods.filters.filtersTree[index]).not.be.empty();
     should(methods.filters.filtersTree[index][collection]).not.be.empty();
@@ -34,12 +34,12 @@ describe('Test "terms" method', function () {
     should(methods.filters.filtersTree[index][collection].fields[fieldFirstName]).not.be.empty();
   });
 
-  it('should construct the filterTree with correct curried function name', function () {
+  it('should construct the filterTree with correct curried function name', () => {
     should(methods.filters.filtersTree[index][collection].fields[fieldFirstName][termsfirstNameGraceJean]).not.be.empty();
     should(methods.filters.filtersTree[index][collection].fields[fieldFirstName][nottermsfirstNameGraceJean]).not.be.empty();
   });
 
-  it('should construct the filterTree with correct room list', function () {
+  it('should construct the filterTree with correct room list', () => {
     var
       ids = methods.filters.filtersTree[index][collection].fields[fieldFirstName][termsfirstNameGraceJean].ids,
       idsNot = methods.filters.filtersTree[index][collection].fields[fieldFirstName][nottermsfirstNameGraceJean].ids;
@@ -54,7 +54,7 @@ describe('Test "terms" method', function () {
     should(idsNot[0]).be.exactly(filterIdNotMatch);
   });
 
-  it('should construct the filterTree with correct functions terms', function () {
+  it('should construct the filterTree with correct functions terms', () => {
     should(methods.filters.filtersTree[index][collection].fields[fieldFirstName][termsfirstNameGraceJean].args).match({
       operator: 'terms',
       not: false,

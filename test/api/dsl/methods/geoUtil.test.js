@@ -4,40 +4,40 @@ var
   methods = rewire('../../../../lib/api/dsl/methods'),
   geohash = require('ngeohash');
 
-describe('Test geoUtil methods included in the DSL methods file', function () {
+describe('Test geoUtil methods included in the DSL methods file', () => {
   var result,
     lat = -74.1,
     lon = 40.73;
 
-  it('Point: form { lat: -74.1, lon: 40.73 }', function () {
+  it('Point: form { lat: -74.1, lon: 40.73 }', () => {
     result = methods.__get__('geoUtil').constructPoint({ lat: -74.1, lon: 40.73 });
     should(result.lat).be.exactly(lat);
     should(result.lon).be.exactly(lon);
   });
 
-  it('Point: form { latLon: { lat: -74.1, lon: 40.73 } }', function () {
+  it('Point: form { latLon: { lat: -74.1, lon: 40.73 } }', () => {
     result = methods.__get__('geoUtil').constructPoint({ latLon: { lat: -74.1, lon: 40.73 }});
     should(result.lat).be.exactly(lat);
     should(result.lon).be.exactly(lon);
   });
 
-  it('Point: form { latLon: [ -74.1, 40.73 ] }', function () {
+  it('Point: form { latLon: [ -74.1, 40.73 ] }', () => {
     result = methods.__get__('geoUtil').constructPoint({ latLon: [ -74.1, 40.73 ] });
     should(result.lat).be.exactly(lat);
     should(result.lon).be.exactly(lon);
   });
 
-  it('Point: form { latLon: "40.73, -74.1" }', function () {
+  it('Point: form { latLon: "40.73, -74.1" }', () => {
     result = methods.__get__('geoUtil').constructPoint({ latLon: '40.73, -74.1' });
     should(result.lat).be.exactly(lat);
     should(result.lon).be.exactly(lon);
   });
-  it('Point: geohash form', function () {
+  it('Point: geohash form', () => {
     result = methods.__get__('geoUtil').constructPoint({ latLon: 'dr5r9ydj2y73' });
     should(Math.round(result.lat)).be.exactly(Math.round(lon));
     should(Math.round(result.lon)).be.exactly(Math.round(lat));
   });
-  it('should throw an error if bad coordinates are given', function () {
+  it('should throw an error if bad coordinates are given', () => {
     try {
       result = methods.__get__('geoUtil').constructPoint('foo', 'bar', {});
       return false;
@@ -45,23 +45,23 @@ describe('Test geoUtil methods included in the DSL methods file', function () {
       return true;
     }
   });
-  it('Point: should handle a [0,0] coordinates', function () {
+  it('Point: should handle a [0,0] coordinates', () => {
     result = methods.__get__('geoUtil').constructPoint({ lat: 0, lon: 0 });
     should(result.lat).be.exactly(0);
     should(result.lon).be.exactly(0);
   });
 
-  it ('getDistance: should handle localized string like "365 219,816 Ft"', function () {
+  it ('getDistance: should handle localized string like "365 219,816 Ft"', () => {
     result = methods.__get__('geoUtil').getDistance('365 219,816 Ft');
     should(result).be.exactly(111318.9999168);
   });
 
-  it ('getDistance: should handle strings with no space like "1km"', function () {
+  it ('getDistance: should handle strings with no space like "1km"', () => {
     result = methods.__get__('geoUtil').getDistance('1km');
     should(result).be.exactly(1000);
   });
 
-  it ('Polygon: should throw an error if some points are in a non valid format (bad point)', function () {
+  it ('Polygon: should throw an error if some points are in a non valid format (bad point)', () => {
     var
       polygon = {
         points: [
@@ -80,7 +80,7 @@ describe('Test geoUtil methods included in the DSL methods file', function () {
 
   });
 
-  it ('Polygon: should throw an error if some points are in a non valid format (bad array of coordinates)', function () {
+  it ('Polygon: should throw an error if some points are in a non valid format (bad array of coordinates)', () => {
     var
       polygon = {
         points: [
@@ -98,7 +98,7 @@ describe('Test geoUtil methods included in the DSL methods file', function () {
 
   });
 
-  it ('Polygon: should throw an error if some points are in a non valid format (bad object)', function () {
+  it ('Polygon: should throw an error if some points are in a non valid format (bad object)', () => {
     var
       polygon = {
         points: [
@@ -114,8 +114,8 @@ describe('Test geoUtil methods included in the DSL methods file', function () {
       return true;
     }
   });
-  
-  it ('Polygon: should handle correctly all points format (string)', function () {
+
+  it ('Polygon: should handle correctly all points format (string)', () => {
     var
       polygon = {
         points: [
@@ -133,8 +133,8 @@ describe('Test geoUtil methods included in the DSL methods file', function () {
       return false;
     }
   });
-  
-  it ('Polygon: should handle correctly all points format (string)', function () {
+
+  it ('Polygon: should handle correctly all points format (string)', () => {
     var
       polygon = {
         points: [

@@ -5,8 +5,8 @@ var
   Promise = require('bluebird'),
   readlineSync = require('readline-sync'),
   rc = require('rc'),
-  Kuzzle = require('../../lib/api'),
-  kuzzle = new Kuzzle(),
+  KuzzleServer = require('../../lib/api/kuzzleServer'),
+  kuzzle = new KuzzleServer(),
   params = rc('kuzzle'),
   clcQuestion = clc.whiteBright,
   clcOk = clc.green.bold,
@@ -122,8 +122,8 @@ module.exports = function (options) {
         });
     })
     .then(() => {
-            
+
     })
     .catch(err => console.log(err));
-  
+
 };

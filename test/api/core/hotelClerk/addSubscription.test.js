@@ -1,13 +1,14 @@
 var
   should = require('should'),
+  sinon = require('sinon'),
+  sandbox = sinon.sandbox.create(),
   Promise = require('bluebird'),
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
   InternalError = require.main.require('kuzzle-common-objects').Errors.internalError,
   BadRequestError = require.main.require('kuzzle-common-objects').Errors.badRequestError,
-  params = require('rc')('kuzzle'),
-  Kuzzle = require.main.require('lib/api/Kuzzle');
+  KuzzleServer = require.main.require('lib/api/kuzzleServer');
 
-describe('Test: hotelClerk.addSubscription', function () {
+describe('Test: hotelClerk.addSubscription', () => {
   var
     kuzzle,
     roomId,
@@ -27,11 +28,12 @@ describe('Test: hotelClerk.addSubscription', function () {
     };
 
   beforeEach(() => {
-    kuzzle = new Kuzzle();
-    return kuzzle.start(params, {dummy: true});
+    kuzzle = new KuzzleServer();
+    sandbox.stub(kuzzle.internalEngine, 'get').resolves({});
+    return kuzzle.services.init({whitelist: []});
   });
 
-  it('should have object filtersTree, customers and rooms empty', function () {
+  it('should have object filtersTree, customers and rooms empty', () => {
     should(kuzzle.dsl.filters.filtersTree).be.an.Object();
     should(kuzzle.dsl.filters.filtersTree).be.empty();
 
@@ -42,7 +44,7 @@ describe('Test: hotelClerk.addSubscription', function () {
     should(kuzzle.hotelClerk.customers).be.empty();
   });
 
-  it('should have the new room and customer', function () {
+  it('should have the new room and customer', () => {
     var requestObject = new RequestObject({
       controller: 'subscribe',
       action: 'on',
@@ -92,15 +94,13 @@ describe('Test: hotelClerk.addSubscription', function () {
       });
   });
 
-  it('should trigger a proxy:joinChannel hook', function (done) {
+  it('should trigger a proxy:joinChannel hook', done => {
     var requestObject = new RequestObject({
       controller: 'subscribe',
       collection: collection,
       index: index,
       body: filter
     });
-
-    this.timeout(50);
 
     kuzzle.once('proxy:joinChannel', (data) => {
       should(data).be.an.Object();
@@ -132,7 +132,7 @@ describe('Test: hotelClerk.addSubscription', function () {
       });
   });
 
-  it('should reject an error when a filter is unknown', function () {
+  it('should reject an error when a filter is unknown', () => {
     var
       pAddSubscription,
       requestObject = new RequestObject({
@@ -147,7 +147,7 @@ describe('Test: hotelClerk.addSubscription', function () {
     return should(pAddSubscription).be.rejected();
   });
 
-  it('should reject with an error if no index is provided', function () {
+  it('should reject with an error if no index is provided', () => {
     var
       pAddSubscription,
       requestObject = new RequestObject({
@@ -161,7 +161,7 @@ describe('Test: hotelClerk.addSubscription', function () {
     return should(pAddSubscription).be.rejectedWith(BadRequestError);
   });
 
-  it('should reject with an error if no collection is provided', function () {
+  it('should reject with an error if no collection is provided', () => {
     var
       pAddSubscription,
       requestObject = new RequestObject({
@@ -220,7 +220,7 @@ describe('Test: hotelClerk.addSubscription', function () {
       });
   });
 
-  it('should allow subscribing with an empty filter', function () {
+  it('should allow subscribing with an empty filter', () => {
     var
       requestObject = new RequestObject({
         controller: 'subscribe',
@@ -233,7 +233,7 @@ describe('Test: hotelClerk.addSubscription', function () {
     return should(kuzzle.hotelClerk.addSubscription(requestObject, context)).be.fulfilled();
   });
 
-  it('should delay a room creation if it has been marked for destruction', function (done) {
+  it('should delay a room creation if it has been marked for destruction', done => {
     var
       requestObject = new RequestObject({
         controller: 'subscribe',
@@ -318,7 +318,7 @@ describe('Test: hotelClerk.addSubscription', function () {
       .be.rejectedWith(InternalError);
   });
 
-  it('should reject the subscription if the given state argument is incorrect', function () {
+  it('should reject the subscription if the given state argument is incorrect', () => {
     return should(kuzzle.hotelClerk.addSubscription(
       new RequestObject({
         collection: collection,
@@ -332,7 +332,7 @@ describe('Test: hotelClerk.addSubscription', function () {
       .be.rejectedWith(BadRequestError);
   });
 
-  it('should reject the subscription if the given scope argument is incorrect', function () {
+  it('should reject the subscription if the given scope argument is incorrect', () => {
     return should(kuzzle.hotelClerk.addSubscription(
       new RequestObject({
         collection: collection,
@@ -346,7 +346,7 @@ describe('Test: hotelClerk.addSubscription', function () {
       .be.rejectedWith(BadRequestError);
   });
 
-  it('should reject the subscription if the given users argument is incorrect', function () {
+  it('should reject the subscription if the given users argument is incorrect', () => {
     return should(kuzzle.hotelClerk.addSubscription(
       new RequestObject({
         collection: collection,
@@ -360,7 +360,7 @@ describe('Test: hotelClerk.addSubscription', function () {
       .be.rejectedWith(BadRequestError);
   });
 
-  it('should treat null/undefined filters as empty filters', function (done) {
+  it('should treat null/undefined filters as empty filters', done => {
     var
       requestObject1 = new RequestObject({
         controller: 'subscribe',

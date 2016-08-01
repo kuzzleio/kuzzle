@@ -2,7 +2,7 @@ var
   should = require('should'),
   operators = require.main.require('lib/api/dsl/operators');
 
-describe('Test "geoDistance" operator', function () {
+describe('Test "geoDistance" operator', () => {
   var
     field = 'location',
     document = {
@@ -26,7 +26,7 @@ describe('Test "geoDistance" operator', function () {
       distance: 111317
     };
 
-  it('should test geodistance correctly', function () {
+  it('should test geodistance correctly', () => {
     // exact distance
     should(operators.geoDistance(field, valueExact, document)).be.true();
 
@@ -37,7 +37,7 @@ describe('Test "geoDistance" operator', function () {
     should(operators.geoDistance(field, valueTooFar, document)).be.false();
   });
 
-  it('should ignore documents without latitude coordinate', function () {
+  it('should ignore documents without latitude coordinate', () => {
     var doc = {
       name: 'Zero',
       'location.lon': 0
@@ -46,7 +46,7 @@ describe('Test "geoDistance" operator', function () {
     should(operators.geoDistance(field, valueOK, doc)).be.false();
   });
 
-  it('should ignore documents without longitude coordinate', function () {
+  it('should ignore documents without longitude coordinate', () => {
     var doc = {
       name: 'Zero',
       'location.lat': 0

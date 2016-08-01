@@ -7,7 +7,7 @@ var
   BadRequestError = require.main.require('kuzzle-common-objects').Errors.badRequestError,
   InternalError = require.main.require('kuzzle-common-objects').Errors.internalError;
 
-describe('Test range method', function () {
+describe('Test range method', () => {
   var
     methods,
     filterIdFilterGrace = 'filterIdGrace',
@@ -42,7 +42,7 @@ describe('Test range method', function () {
     notrangeagelte85 = md5('notrangeagelte85'),
     fieldAge = md5('age');
 
-  beforeEach(function () {
+  beforeEach(() => {
     /** @type Methods */
     methods = new Methods(new Filters());
 
@@ -52,7 +52,7 @@ describe('Test range method', function () {
       .then(() => methods.range(filterIdFilterNobody, index, collection, filterAll, true));
   });
 
-  it('should construct the filterTree object for the correct attribute', function () {
+  it('should construct the filterTree object for the correct attribute', () => {
     should(methods.filters.filtersTree).not.be.empty();
     should(methods.filters.filtersTree[index]).not.be.empty();
     should(methods.filters.filtersTree[index][collection]).not.be.empty();
@@ -60,7 +60,7 @@ describe('Test range method', function () {
     should(methods.filters.filtersTree[index][collection].fields[fieldAge]).not.be.empty();
   });
 
-  it('should construct the filterTree with correct encoded function name', function () {
+  it('should construct the filterTree with correct encoded function name', () => {
     should(methods.filters.filtersTree[index][collection].fields[fieldAge][rangeagegt36]).not.be.empty();
     should(methods.filters.filtersTree[index][collection].fields[fieldAge][rangeagelte85]).not.be.empty();
     should(methods.filters.filtersTree[index][collection].fields[fieldAge][rangeagegte36]).not.be.empty();
@@ -69,7 +69,7 @@ describe('Test range method', function () {
     should(methods.filters.filtersTree[index][collection].fields[fieldAge][notrangeagelte85]).not.be.empty();
   });
 
-  it('should construct the filterTree with correct room list', function () {
+  it('should construct the filterTree with correct room list', () => {
     var ids;
 
     // Test gt from filterGrace
@@ -111,7 +111,7 @@ describe('Test range method', function () {
     should(ids[0]).be.exactly(filterIdFilterNobody);
   });
 
-  it('should construct the filterTree with correct functions range', function () {
+  it('should construct the filterTree with correct functions range', () => {
     should(methods.filters.filtersTree[index][collection].fields[fieldAge][rangeagegt36].args).match({
       operator: 'gt', not: undefined, field: 'age', value: 36
     });
@@ -137,12 +137,12 @@ describe('Test range method', function () {
     });
   });
 
-  it('should return a rejected promise if the filter is empty', function () {
+  it('should return a rejected promise if the filter is empty', () => {
     return should(methods.range(filterIdFilterGrace, index, collection, {})).be.rejectedWith(BadRequestError, { message: 'A filter can\'t be empty' });
   });
 
-  it('should return a rejected promise if addToFiltersTree fails', function () {
-    methods.filters.add = function () { return new InternalError('rejected'); };
+  it('should return a rejected promise if addToFiltersTree fails', () => {
+    methods.filters.add = () => { return new InternalError('rejected'); };
 
     return should(methods.range(filterIdFilterGrace, index, collection, filterGrace)).be.rejectedWith('rejected');
   });

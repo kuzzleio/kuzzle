@@ -7,25 +7,13 @@
  */
 var
   should = require('should'),
+  sinon = require('sinon'),
+  sandbox = sinon.sandbox.create(),
   Promise = require('bluebird'),
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
-  params = require('rc')('kuzzle'),
-  Kuzzle = require.main.require('lib/api/Kuzzle');
+  KuzzleServer = require.main.require('lib/api/kuzzleServer');
 
-var mockupCacheService = {
-  id: undefined,
-  room: undefined,
-
-  search: function () { return Promise.resolve(['foobar']); },
-  remove: function () { return Promise.resolve({}); },
-  add: function (id, room) {
-    this.id = id;
-    this.room = room;
-    return Promise.resolve({});
-  }
-};
-
-describe('Test: notifier.notifyDocumentCreate', function () {
+describe('Test: notifier.notifyDocumentCreate', () => {
   var
     kuzzle,
     requestObject = new RequestObject({
@@ -34,16 +22,31 @@ describe('Test: notifier.notifyDocumentCreate', function () {
       requestId: 'foo',
       collection: 'bar'
     }),
+    mockupCacheService = {
+      id: undefined,
+      room: undefined,
+
+      search: () => { return Promise.resolve(['foobar']); },
+      remove: () => { return Promise.resolve({}); },
+      add: function(id, room) {
+        this.id = id;
+        this.room = room;
+        return Promise.resolve({});
+      }
+    },
     newDocument = { _id: 'WhoYouGonnaCall?', _source: {foo: 'bar'}},
     notifiedRooms,
     savedResponse,
     notification;
 
-  before(function () {
-    kuzzle = new Kuzzle();
+  before(() => {
+    kuzzle = new KuzzleServer();
+  });
 
-    return kuzzle.start(params, {dummy: true})
-      .then(function () {
+  beforeEach(() => {
+    sandbox.stub(kuzzle.internalEngine, 'get').resolves({});
+    return kuzzle.services.init({whitelist: []})
+      .then(() => {
         kuzzle.services.list.notificationCache = mockupCacheService;
         kuzzle.notifier.notify = (rooms, r, n) => {
           notifiedRooms = rooms;
@@ -53,26 +56,27 @@ describe('Test: notifier.notifyDocumentCreate', function () {
       });
   });
 
-  it('should notify registered users when a document has been created with correct attributes', (done) => {
-    this.timeout(50);
-    kuzzle.notifier.notifyDocumentCreate(requestObject, newDocument);
+  afterEach(() => {
+    sandbox.restore();
+  });
 
-    setTimeout(() => {
-      should(notifiedRooms).be.an.Array();
-      should(notifiedRooms.length).be.exactly(1);
-      should(notifiedRooms[0]).be.exactly('foobar');
-      should(mockupCacheService.id).be.exactly(newDocument._id);
-      should(mockupCacheService.room).be.an.Array();
-      should(mockupCacheService.room[0]).be.exactly('foobar');
+  it('should notify registered users when a document has been created with correct attributes', () => {
+    return kuzzle.notifier.notifyDocumentCreate(requestObject, newDocument)
+      .then(() => {
+        should(notifiedRooms).be.an.Array();
+        should(notifiedRooms.length).be.exactly(1);
+        should(notifiedRooms[0]).be.exactly('foobar');
+        should(mockupCacheService.id).be.exactly(newDocument._id);
+        should(mockupCacheService.room).be.an.Array();
+        should(mockupCacheService.room[0]).be.exactly('foobar');
 
-      should(savedResponse).be.exactly(requestObject);
-      should(notification).be.an.Object();
-      should(notification._id).be.exactly(newDocument._id);
-      should(notification._source).match(newDocument._source);
-      should(notification.state).be.exactly('done');
-      should(notification.scope).be.exactly('in');
-      should(notification.action).be.exactly('create');
-      done();
-    }, 20);
+        should(savedResponse).be.exactly(requestObject);
+        should(notification).be.an.Object();
+        should(notification._id).be.exactly(newDocument._id);
+        should(notification._source).match(newDocument._source);
+        should(notification.state).be.exactly('done');
+        should(notification.scope).be.exactly('in');
+        should(notification.action).be.exactly('create');
+      });
   });
 });

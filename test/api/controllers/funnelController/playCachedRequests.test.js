@@ -1,12 +1,13 @@
 var
   should = require('should'),
-  params = require('rc')('kuzzle'),
-  Kuzzle = require.main.require('lib/api/Kuzzle'),
+  sinon = require('sinon'),
+  sandbox = sinon.sandbox.create(),
+  KuzzleServer = require.main.require('lib/api/kuzzleServer'),
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
   rewire = require('rewire'),
   FunnelController = rewire('../../../../lib/api/controllers/funnelController');
 
-describe('funnelController.playCachedRequests', function () {
+describe('funnelController.playCachedRequests', () => {
   var
     kuzzle,
     funnel,
@@ -18,7 +19,7 @@ describe('funnelController.playCachedRequests', function () {
     setTimeoutCalled,
     playCachedRequests;
 
-  before(function (done) {
+  before(() => {
     context = {
       connection: {id: 'connectionid'},
       token: null
@@ -31,42 +32,45 @@ describe('funnelController.playCachedRequests', function () {
 
     callback = () => {};
 
-    kuzzle = new Kuzzle();
-    kuzzle.start(params, {dummy: true})
-      .then(() => {
-        FunnelController.__set__('setTimeout', function () {
-          setTimeoutCalled = true;
-        });
+    kuzzle = new KuzzleServer();
+    FunnelController.__set__('setTimeout', () => {
+      setTimeoutCalled = true;
+    });
 
-        FunnelController.__set__('process', {
-          nextTick: () => { nextTickCalled = true; }
-        });
+    FunnelController.__set__('process', {
+      nextTick: () => { nextTickCalled = true; }
+    });
 
-        playCachedRequests = FunnelController.__get__('playCachedRequests');
-        done();
-      });
+    playCachedRequests = FunnelController.__get__('playCachedRequests');
   });
 
-  beforeEach(function () {
+  beforeEach(() => {
     executeCalled = false;
     nextTickCalled = false;
     setTimeoutCalled = false;
 
-    funnel = new FunnelController(kuzzle);
-    funnel.init();
-    funnel.lastOverloadTime = 0;
-    funnel.overloadWarned = true;
-    
-    funnel.execute = function (r, c, cb) {
-      executeCalled = true;
+    sandbox.stub(kuzzle.internalEngine, 'get').resolves({});
+    return kuzzle.services.init({whitelist: []})
+      .then(() => {
+        funnel = new FunnelController(kuzzle);
+        funnel.init();
+        funnel.lastOverloadTime = 0;
+        funnel.overloadWarned = true;
+        sandbox.stub(funnel, 'execute', (r, c, cb) => {
+          executeCalled = true;
 
-      should(r).be.eql(requestObject);
-      should(c).be.eql(context);
-      should(cb).be.eql(callback);
-    };
+          should(r).be.eql(requestObject);
+          should(c).be.eql(context);
+          should(cb).be.eql(callback);
+        });
+      });
   });
 
-  describe('#returning to normal state', function () {
+  afterEach(() => {
+    sandbox.restore();
+  });
+
+  describe('#returning to normal state', () => {
     it('should return to normal state if there is no more cached request to play', function (done) {
       this.timeout(500);
 
@@ -82,7 +86,7 @@ describe('funnelController.playCachedRequests', function () {
       playCachedRequests(kuzzle, funnel);
     });
   });
-  
+
   it('should fire a log hook if the last one was fired more than 500ms ago', function (done) {
     this.timeout(500);
 
@@ -117,8 +121,8 @@ describe('funnelController.playCachedRequests', function () {
     }, 200);
   });
 
-  describe('#replaying requests', function () {
-    it('should do nothing if there is no room to replay request yet', function () {
+  describe('#replaying requests', () => {
+    it('should do nothing if there is no room to replay request yet', () => {
       funnel.cachedRequests = 1;
       funnel.concurrentRequests = kuzzle.config.request.maxConcurrentRequests;
       playCachedRequests(kuzzle, funnel);
@@ -128,7 +132,7 @@ describe('funnelController.playCachedRequests', function () {
       should(executeCalled).be.false();
     });
 
-    it('should resubmit a request and itself if there is room for a new request', function () {
+    it('should resubmit a request and itself if there is room for a new request', () => {
       funnel.cachedRequests = 1;
       funnel.concurrentRequests = 0;
       funnel.requestsCache = [{requestObject, context, callback}];

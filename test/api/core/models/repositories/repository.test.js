@@ -1,12 +1,14 @@
 var
   Promise = require('bluebird'),
   should = require('should'),
+  KuzzleServer = require.main.require('lib/api/kuzzleServer'),
   InternalError = require.main.require('kuzzle-common-objects').Errors.internalError,
   Repository = require.main.require('lib/api/core/models/repositories/repository'),
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject;
 
 describe('Test: repositories/repository', () => {
   var
+    kuzzle,
     forwardedObject,
     persistedObject,
     repository,
@@ -142,18 +144,15 @@ describe('Test: repositories/repository', () => {
   };
 
   before(() => {
-    var mockKuzzle = {
-      config: require.main.require('lib/config')(require('rc')('kuzzle'))
-    };
+    kuzzle = new KuzzleServer();
 
-    repository = new Repository(mockKuzzle, {
-      index: '%test',
-      collection: 'repository',
-      ObjectConstructor: ObjectConstructor,
-      readEngine: mockReadEngine,
-      writeLayer: mockWriteLayer,
-      cacheEngine: mockCacheEngine
-    });
+    repository = new Repository(kuzzle);
+    repository.index = '%test';
+    repository.collection = 'repository';
+    repository.ObjectConstructor = ObjectConstructor;
+    repository.readEngine = mockReadEngine;
+    repository.writeLayer = mockWriteLayer;
+    repository.cacheEngine = mockCacheEngine;
   });
 
   beforeEach(() => {

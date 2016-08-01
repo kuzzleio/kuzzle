@@ -1,23 +1,21 @@
 var
   should = require('should'),
-  params = require('rc')('kuzzle'),
-  Kuzzle = require.main.require('lib/api/Kuzzle');
+  KuzzleServer = require.main.require('lib/api/kuzzleServer');
 
-describe('Test: hotelClerk.getRealtimeCollections', function () {
+describe('Test: hotelClerk.getRealtimeCollections', () => {
   var
     index = 'foo',
     kuzzle;
 
-  beforeEach(function () {
-    kuzzle = new Kuzzle();
-    return kuzzle.start(params, {dummy: true});
+  beforeEach(() => {
+    kuzzle = new KuzzleServer();
   });
 
-  it('should return an empty array if there is no subscription', function () {
+  it('should return an empty array if there is no subscription', () => {
     should(kuzzle.hotelClerk.getRealtimeCollections()).be.an.Array().and.be.empty();
   });
 
-  it('should return an array of unique collection names', function () {
+  it('should return an array of unique collection names', () => {
     kuzzle.hotelClerk.rooms = {
       foo: {
         collection: 'foo',

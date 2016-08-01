@@ -2,13 +2,13 @@ var
   should = require('should'),
   rewire = require('rewire'),
   sinon = require('sinon'),
+  sandbox = sinon.sandbox.create(),
   mock = require('mock-require'),
   lockFile = require('proper-lockfile'),
   RequestObject = require('kuzzle-common-objects').Models.requestObject,
-  ManagePlugins = rewire('../../../../lib/api/controllers/remoteActions/managePlugins'),
-  sandbox = sinon.sandbox.create();
+  ManagePlugins = rewire('../../../../lib/api/controllers/remoteActions/managePlugins');
 
-describe('Test: managePlugins remote action caller', function () {
+describe('Test: managePlugins remote action caller', () => {
   var
     kuzzle;
 
@@ -378,7 +378,7 @@ describe('Test: managePlugins remote action caller', function () {
       });
     });
 
-    it('should install a new plugin from a path', function () {
+    it('should install a new plugin from a path', () => {
       return installPlugins('foo', {path: 'fake', activated: 'activated'})
         .then(() => {
           should(acquirePluginSpy).be.calledOnce();
@@ -391,7 +391,7 @@ describe('Test: managePlugins remote action caller', function () {
         });
     });
 
-    it('should install a new plugin from a git url', function () {
+    it('should install a new plugin from a git url', () => {
       return installPlugins('foo', {gitUrl: 'fake', activated: 'activated'})
         .then(() => {
           should(acquirePluginSpy).be.calledOnce();

@@ -2,7 +2,7 @@ var
   should = require('should'),
   operators = require.main.require('lib/api/dsl/operators');
 
-describe('Test "geoPolygon" operator', function () {
+describe('Test "geoPolygon" operator', () => {
   var
     field = 'location',
     valueInside = [
