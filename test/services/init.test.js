@@ -95,6 +95,21 @@ describe('Test service initialization function', () => {
       });
   });
 
+  it('should init a service that has no custom settings', () => {
+    var
+      error = new Error('Not found index');
+
+    error.status = 404;
+    kuzzle.internalEngine.get.restore();
+    sandbox.stub(kuzzle.internalEngine, 'get').rejects(error);
+
+    return kuzzle.services.init({whitelist: ['writeEngine']})
+      .then(() => {
+        should(kuzzle.services.list.writeEngine).be.an.Object();
+      });
+
+  });
+
   it('should propagate the internalEngine rejections', () => {
     var
       error = new Error();

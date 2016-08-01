@@ -45,6 +45,54 @@ describe('Test redis service', () => {
     });
   });
 
+  it('should flush publicCache for common services', () => {
+    var
+      myRedis = new Redis(kuzzle, {service: dbname}),
+      myRedisClient = new RedisClientMock(),
+      spy = sandbox.spy(myRedisClient, 'flushdb');
+
+    return Redis.__with__('buildClient', () => myRedisClient)(() => {
+      return myRedis.init()
+        .then(() => {
+          should(myRedis).have.property('client');
+          should(myRedis.client).be.an.Object();
+          should(spy.calledOnce).be.true();
+        });
+    });
+  });
+
+  it('should not flush publicCache for memoryStorage service', () => {
+    var
+      myRedis = new Redis(kuzzle, {service: 'memoryStorage'}),
+      myRedisClient = new RedisClientMock(),
+      spy = sandbox.spy(myRedisClient, 'flushdb');
+
+    return Redis.__with__('buildClient', () => myRedisClient)(() => {
+      return myRedis.init()
+        .then(() => {
+          should(myRedis).have.property('client');
+          should(myRedis.client).be.an.Object();
+          should(spy.called).be.false();
+        });
+    });
+  });
+
+  it('should reject if an error occurs during flushdb', () => {
+    var
+      myRedis = new Redis(kuzzle, {service: dbname}),
+      myRedisClient = new RedisClientMock();
+
+    sandbox.stub(myRedisClient, 'flushdb', callback => callback(new Error('flushdb error')));
+
+    return Redis.__with__('buildClient', () => myRedisClient)(() => {
+      return myRedis.init()
+        .then(() => should.fail('An error should be raised'))
+        .catch((err) => {
+          should(err.message).be.equal('flushdb error');
+        });
+    });
+  });
+
   it('should stop initialization if an unknown database identifier is provided', () => {
     var testredis = new Redis(kuzzle, {service: 'foobar'});
 
