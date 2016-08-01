@@ -7,12 +7,17 @@ var
   should = require('should'),
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
+  rewire = require('rewire'),
   KuzzleServer = require.main.require('lib/api/kuzzleServer'),
+  Redis = rewire('../../../../lib/services/redis'),
+  RedisClientMock = require('../../../mocks/services/redisClient.mock'),
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject;
 
 describe('Test: notifier.publish', () => {
   var
+    dbname = 'unit-tests',
     kuzzle,
+    notificationCache,
     notification,
     request,
     spyNotificationCacheAdd,
@@ -21,6 +26,11 @@ describe('Test: notifier.publish', () => {
 
   before(() => {
     kuzzle = new KuzzleServer();
+    kuzzle.config.cache.databases.push(dbname);
+    notificationCache = new Redis(kuzzle, {service: dbname});
+    return Redis.__with__('buildClient', () => new RedisClientMock())(() => {
+      return notificationCache.init();
+    });
   });
 
   beforeEach(function () {
@@ -36,7 +46,7 @@ describe('Test: notifier.publish', () => {
           body: { youAre: 'fabulous too' },
           metadata: {}
         };
-
+        kuzzle.services.list.notificationCache = notificationCache;
         spyNotificationCacheAdd = sandbox.stub(kuzzle.services.list.notificationCache, 'add').resolves({});
         spyNotificationCacheExpire = sandbox.stub(kuzzle.services.list.notificationCache, 'expire').resolves({});
         sandbox.stub(kuzzle.notifier, 'notify', (r, rq, n) => {notification = n;});
