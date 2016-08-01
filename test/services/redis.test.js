@@ -9,7 +9,7 @@ var
   RedisClientMock = require('../mocks/services/redisClient.mock');
 
 
-describe('Test redis service', function () {
+describe('Test redis service', () => {
   var
     kuzzle,
     dbname = 'unit-tests',
@@ -45,7 +45,7 @@ describe('Test redis service', function () {
     });
   });
 
-  it('should stop initialization if an unknown database identifier is provided', function () {
+  it('should stop initialization if an unknown database identifier is provided', () => {
     var testredis = new Redis(kuzzle, {service: 'foobar'});
 
     return should(testredis.init()).be.rejected();
@@ -65,15 +65,15 @@ describe('Test redis service', function () {
       .finally(() => {kuzzle.config.cache.node.port = savePort;});
   });
 
-  it('should resolve 0 when add a key without value', function () {
+  it('should resolve 0 when add a key without value', () => {
     return should(redis.add('foo')).fulfilledWith(0);
   });
 
-  it('should resolve 0 when add a key with an empty array', function () {
+  it('should resolve 0 when add a key with an empty array', () => {
     return should(redis.add('foo', [])).fulfilledWith(0);
   });
 
-  it('should resolve 1 when add a key with one value', function () {
+  it('should resolve 1 when add a key with one value', () => {
     return redis.add('foo', 'bar')
       .then(req => {
         should(req.name).be.exactly('sadd');
@@ -81,7 +81,7 @@ describe('Test redis service', function () {
       });
   });
 
-  it('should resolve 2 when add a key with an array with 2 values', function () {
+  it('should resolve 2 when add a key with an array with 2 values', () => {
     return redis.add('foo', ['bar', 'baz'])
       .then(req => {
         should(req.name).be.exactly('sadd');
@@ -89,7 +89,7 @@ describe('Test redis service', function () {
       });
   });
 
-  it('should remove a specific value for a key', function () {
+  it('should remove a specific value for a key', () => {
     return redis.remove('foo', 'bar')
       .then(req => {
         should(req.name).be.exactly('srem');
@@ -97,7 +97,7 @@ describe('Test redis service', function () {
       });
   });
 
-  it('should remove several values for a key', function () {
+  it('should remove several values for a key', () => {
     return redis.remove('foo', ['bar', 'baz'])
       .then(req => {
         should(req.name).be.exactly('srem');
@@ -105,7 +105,7 @@ describe('Test redis service', function () {
       });
   });
 
-  it('should remove the key', function () {
+  it('should remove the key', () => {
     return redis.remove('foo')
       .then(req => {
         should(req.name).be.exactly('del');
@@ -113,7 +113,7 @@ describe('Test redis service', function () {
       });
   });
 
-  it('should search values for a specific key', function () {
+  it('should search values for a specific key', () => {
     return redis.search('foo')
       .then(req => {
         should(req.name).be.exactly('smembers');
@@ -145,7 +145,7 @@ describe('Test redis service', function () {
       });
   });
 
-  it('should do nothing when attempting to retrieve values from an empty list of keys', function () {
+  it('should do nothing when attempting to retrieve values from an empty list of keys', () => {
     return should(redis.mget([])).be.fulfilledWith([]);
   });
 

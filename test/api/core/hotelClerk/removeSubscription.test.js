@@ -7,7 +7,7 @@ var
   NotFoundError = require.main.require('kuzzle-common-objects').Errors.notFoundError,
   KuzzleServer = require.main.require('lib/api/kuzzleServer');
 
-describe('Test: hotelClerk.removeSubscription', function () {
+describe('Test: hotelClerk.removeSubscription', () => {
   var
     kuzzle,
     connection = {id: 'connectionid'},
@@ -59,7 +59,7 @@ describe('Test: hotelClerk.removeSubscription', function () {
     sandbox.restore();
   });
 
-  it('should do nothing when a bad connectionId is given', function () {
+  it('should do nothing when a bad connectionId is given', () => {
     var
       badContext = {
         connection: {id: 'unknown'},
@@ -69,23 +69,23 @@ describe('Test: hotelClerk.removeSubscription', function () {
     return should(kuzzle.hotelClerk.removeSubscription(unsubscribeRequest, badContext)).be.rejectedWith(NotFoundError);
   });
 
-  it('should do nothing when a badly formed unsubscribe request is provided', function () {
+  it('should do nothing when a badly formed unsubscribe request is provided', () => {
     delete unsubscribeRequest.data.body;
     return should(kuzzle.hotelClerk.removeSubscription(unsubscribeRequest, context)).be.rejectedWith(BadRequestError);
   });
 
-  it('should do nothing if a bad room name is given', function () {
+  it('should do nothing if a bad room name is given', () => {
     unsubscribeRequest.data.body.roomId = 'qux';
     return should(kuzzle.hotelClerk.removeSubscription(unsubscribeRequest, context)).be.rejectedWith(NotFoundError);
   });
 
-  it('should not delete all subscriptions when we want to just remove one', function () {
+  it('should not delete all subscriptions when we want to just remove one', () => {
     var mock = sandbox.mock(kuzzle.dsl).expects('remove').once().resolves();
 
     sandbox.spy(kuzzle.notifier, 'notify');
 
     return kuzzle.hotelClerk.removeSubscription(unsubscribeRequest, context)
-      .finally(function () {
+      .finally(() => {
         mock.verify();
         should(kuzzle.notifier.notify.called).be.false();
 
@@ -98,7 +98,7 @@ describe('Test: hotelClerk.removeSubscription', function () {
       });
   });
 
-  it('should clean up customers, rooms and filtersTree object', function () {
+  it('should clean up customers, rooms and filtersTree object', () => {
     var mock = sandbox.mock(kuzzle.dsl).expects('remove').once().resolves();
 
     sandbox.spy(kuzzle.notifier, 'notify');
@@ -106,7 +106,7 @@ describe('Test: hotelClerk.removeSubscription', function () {
     delete kuzzle.hotelClerk.customers[connection.id].bar;
 
     return kuzzle.hotelClerk.removeSubscription(unsubscribeRequest, context)
-      .finally(function () {
+      .finally(() => {
         mock.verify();
         should(kuzzle.notifier.notify.called).be.false();
 
@@ -118,7 +118,7 @@ describe('Test: hotelClerk.removeSubscription', function () {
       });
   });
 
-  it('should send a notification to other users connected on that room', function () {
+  it('should send a notification to other users connected on that room', () => {
     var
       mockDsl = sandbox.mock(kuzzle.dsl).expects('remove').never(),
       mockNotify = sandbox.mock(kuzzle.notifier).expects('notify').once();

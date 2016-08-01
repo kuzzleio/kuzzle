@@ -8,7 +8,7 @@ var
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
   Worker = rewire('../../lib/workers/write');
 
-describe('Testing: write worker', function () {
+describe('Testing: write worker', () => {
   var
     kuzzle,
     spy,
@@ -18,7 +18,7 @@ describe('Testing: write worker', function () {
     kuzzle = new KuzzleWorker();
   });
 
-  beforeEach(function () {
+  beforeEach(() => {
     sandbox.stub(kuzzle.internalEngine, 'get').resolves({});
     return kuzzle.services.init({whitelist: []})
       .then(() => {
@@ -40,12 +40,12 @@ describe('Testing: write worker', function () {
     sandbox.restore();
   });
 
-  it('should contain an init() function', function () {
+  it('should contain an init() function', () => {
     var writeWorker = new Worker(kuzzle);
     should(writeWorker.init).not.be.undefined().and.be.a.Function();
   });
 
-  it('should return a promise when initializing', function () {
+  it('should return a promise when initializing', () => {
     var
       writeWorker = new Worker(kuzzle),
       result = writeWorker.init();
@@ -117,7 +117,7 @@ describe('Testing: write worker', function () {
 
     callback.call(kuzzle, requestObject);
 
-    setTimeout(function () {
+    setTimeout(() => {
       try {
         should(responseQueue).be.true();
         done();
@@ -157,7 +157,7 @@ describe('Testing: write worker', function () {
     requestObject.action = 'update';
     onListenCB.call(kuzzle, requestObject);
 
-    setTimeout(function () {
+    setTimeout(() => {
       try {
         should(responseQueue).be.true();
         done();

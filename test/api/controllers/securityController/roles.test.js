@@ -14,8 +14,6 @@ describe('Test: security controller - roles', () => {
 
   before(() => {
     kuzzle = new KuzzleServer();
-
-//    return kuzzle.start(params, {dummy: true});
   });
 
   beforeEach(() => {

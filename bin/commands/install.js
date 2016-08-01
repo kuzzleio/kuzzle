@@ -1,12 +1,37 @@
-var
-  childProcess = require('child_process');
+/* eslint-disable no-console */
 
-// "kuzzle install" is an alias for "kuzzle plugins --install"
+var
+  params = require('rc')('kuzzle'),
+  InternalEngine = require('../../lib/services/internalEngine'),
+  KuzzleServer = require('../../lib/api/kuzzleServer'),
+  PluginsManager = require('../../lib/api/core/plugins/pluginsManager'),
+  RemoteActionsController = require('../../lib/api/controllers/remoteActionsController'),
+  RequestObject = require('kuzzle-common-objects').Models.requestObject;
 
 module.exports = function () {
-  childProcess
-    .spawn(require.main.filename, ['plugins', '--install'], {stdio: 'inherit'})
-    .on('close', code => {
-      process.exit(code);
+  var
+    kuzzle = new KuzzleServer(),
+    requestObject = new RequestObject({
+      body: {install: true}
+    });
+
+  console.log('███ kuzzle-plugins: Starting plugins installation...');
+
+  kuzzle.config = require('../../lib/config/')(params);
+  kuzzle.pluginsManager = new PluginsManager(kuzzle);
+  kuzzle.internalEngine = new InternalEngine(kuzzle);
+  kuzzle.remoteActionsController = new RemoteActionsController(kuzzle);
+
+  kuzzle.internalEngine.init()
+    .then(() => kuzzle.remoteActionsController.actions.managePlugins(requestObject))
+    .then(() => {
+      console.log('███ kuzzle-plugins: Plugins installed');
+      process.exit(0);
+    })
+    .catch(error => {
+      console.dir(error, {depth: null});
+      process.exit(1);
     });
 };
+
+

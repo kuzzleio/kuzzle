@@ -1,15 +1,20 @@
 proxy:
-  image: kuzzleio/proxy:alpine
+############# UPDATE TO kuzzleio/proxy:alpine
+############# WHEN RELEASING RC5
+  image: kuzzleio/proxy:develop
   ports:
     - "7511:7511"
     - "7512:7512"
+    - "7513:7513"
     - "8083:8080"
 
 kuzzle:
   image: kuzzleio/dev:alpine
-  command: /run-debug.sh
+  command: /run.sh
   volumes:
     - "..:/var/app"
+    - "./scripts/run-dev.sh:/run.sh"
+    - "./config:/config"
   ports:
     - "8080:8080"
     - "8081:8081"

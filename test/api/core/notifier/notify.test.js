@@ -5,65 +5,81 @@
  */
 var
   should = require('should'),
-  rewire = require('rewire'),
+  sinon = require('sinon'),
+  sandbox = sinon.sandbox.create(),
   KuzzleServer = require.main.require('lib/api/kuzzleServer'),
-  Notifier = rewire('../../../../lib/api/core/notifier');
+  Notifier = require.main.require('lib/api/core/notifier'),
+  NotificationObject = require.main.require('lib/api/core/models/notificationObject');
 
 describe('Test: notifier.notify', () => {
   var
-    kuzzle;
+    kuzzle,
+    notifier,
+    notification,
+    dispatchStub,
+    triggerStub,
+    getChannelsStub;
 
   before(() => {
     kuzzle = new KuzzleServer();
+    notification = new NotificationObject({}, {});
+  });
+
+  beforeEach(() => {
+    dispatchStub = sandbox.stub(kuzzle.entryPoints.proxy, 'dispatch');
+    triggerStub = sandbox.stub(kuzzle.pluginsManager, 'trigger');
+    getChannelsStub = sandbox.stub(kuzzle.hotelClerk, 'getChannels').returns(['foobar']);
+    notifier = new Notifier(kuzzle);
+  });
+
+  afterEach(() => {
+    sandbox.restore();
   });
 
   it('should do nothing when no rooms to notify are provided', () => {
-    var
-      notifier,
-      didSomething = 0;
-
-    Notifier.__with__({
-      send: () => { didSomething++; }
-    })(() => {
-      /** @type {Notifier} */
-      notifier = new Notifier(kuzzle);
-      notifier.notify(null, {}, {});
-      notifier.notify([], {}, {});
-      notifier.notify(undefined, {}, {});
-    });
-
-    should(didSomething).be.exactly(0);
+    should(notifier.notify(undefined, {}, {})).be.false();
+    should(dispatchStub.called).be.false();
+    should(triggerStub.called).be.false();
+    should(getChannelsStub.called).be.false();
   });
 
-  it('should be able to notify when only one room is provided', () => {
-    var
-      notifier,
-      didSomething = 0;
+  it('should be able to broadcast when only one room is provided', () => {
+    var data = {payload: notification.toJson(), channels: ['foobar'], id: undefined};
 
-    Notifier.__with__({
-      send: () => { didSomething++; }
-    })(() => {
-      /** @type {Notifier} */
-      notifier = new Notifier(kuzzle);
-      notifier.notify('foobar', {}, {});
-    });
+    notifier.notify('foobar', {}, {});
 
-    should(didSomething).be.exactly(1);
+    should(getChannelsStub.calledOnce).be.true();
+    should(dispatchStub.calledOnce).be.true();
+    should(triggerStub.calledOnce).be.true();
+    should(dispatchStub.calledWithMatch('broadcast', data)).be.true();
+    should(triggerStub.calledWithMatch('proxy:broadcast', data)).be.true();
   });
 
-  it('should be able to notify when multiple rooms are provided', () => {
-    var
-      notifier,
-      didSomething = 0;
+  it('should notify instead of broadcasting if there is a connection ID', () => {
+    var data = {payload: notification.toJson(), channels: ['foobar'], id: 'someID'};
 
-    Notifier.__with__({
-      send: () => { didSomething++; }
-    })(() => {
-      /** @type {Notifier} */
-      notifier = new Notifier(kuzzle);
-      notifier.notify(['foo', 'bar', 'baz'], {}, {});
-    });
+    notifier.notify('foobar', {}, {}, 'someID');
 
-    should(didSomething).be.exactly(3);
+    should(getChannelsStub.calledOnce).be.true();
+    should(dispatchStub.calledOnce).be.true();
+    should(triggerStub.calledOnce).be.true();
+    should(dispatchStub.calledWithMatch('notify', data)).be.true();
+    should(triggerStub.calledWithMatch('proxy:notify', data)).be.true();
+  });
+
+  it('should aggregate channels from multiple rooms', () => {
+    var data = {payload: notification.toJson(), channels: ['foo', 'bar', 'baz'], id: undefined};
+
+    getChannelsStub.onCall(0).returns(['foo']);
+    getChannelsStub.onCall(1).returns(['bar']);
+    getChannelsStub.onCall(2).returns(['baz']);
+
+    notifier.notify(['room1', 'room2', 'room3'], {}, {});
+
+    should(getChannelsStub.calledThrice).be.true();
+    should(dispatchStub.calledOnce).be.true();
+    should(triggerStub.calledOnce).be.true();
+    should(dispatchStub.calledWithMatch('broadcast', data)).be.true();
+    should(triggerStub.calledWithMatch('proxy:broadcast', data)).be.true();
   });
 });

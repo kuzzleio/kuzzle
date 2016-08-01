@@ -55,7 +55,7 @@ describe('Test: Internal broker', () => {
   describe('Internal broker constructor', () => {
     it('should fail if no config match the broker type', () => {
       var FakeBroker = new BrokerFactory('fakeBroker');
-      should((function () {new FakeBroker(kuzzle, {isServer: true});})).throw(Error);
+      should((() => {new FakeBroker(kuzzle, {isServer: true});})).throw(Error);
     });
   });
 

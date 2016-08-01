@@ -7,7 +7,7 @@ var
   Profile = require.main.require('lib/api/core/models/security/profile'),
   Role = require.main.require('lib/api/core/models/security/role');
 
-describe('Test: security/profileTest', function () {
+describe('Test: security/profileTest', () => {
   var
     context = {connection: null, user: null},
     requestObject = {
@@ -91,7 +91,7 @@ describe('Test: security/profileTest', function () {
       .then(isAllowed => should(isAllowed).be.false());
   });
 
-  it('should retrieve the good rights list', function () {
+  it('should retrieve the good rights list', () => {
     var
       profile = new Profile(),
       role1 = new Role(),

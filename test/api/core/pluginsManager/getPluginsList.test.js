@@ -6,7 +6,7 @@ var
   KuzzleServer = require.main.require('lib/api/kuzzleServer'),
   PluginsManager = rewire('../../../../lib/api/core/plugins/pluginsManager');
 
-describe('Plugins manager: getPluginsList', function () {
+describe('Plugins manager: getPluginsList', () => {
   var
     getPluginsList,
     kuzzle;

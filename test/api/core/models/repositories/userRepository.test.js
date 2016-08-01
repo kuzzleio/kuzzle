@@ -109,15 +109,15 @@ describe('Test: repositories/userRepository', () => {
     });
   });
 
-  describe('#anonymous', function () {
-    it('should return a valid anonymous user', function () {
+  describe('#anonymous', () => {
+    it('should return a valid anonymous user', () => {
       return userRepository.anonymous()
         .then(user => assertIsAnonymous(user));
     });
   });
 
-  describe('#hydrate', function () {
-    it('should return the given user if the given data is not a valid object', function () {
+  describe('#hydrate', () => {
+    it('should return the given user if the given data is not a valid object', () => {
       var
         u = new User();
 
@@ -147,7 +147,7 @@ describe('Test: repositories/userRepository', () => {
     });
   });
 
-  describe('#load', function () {
+  describe('#load', () => {
     it('should return the anonymous user when the anonymous or -1 id is given', () => {
       return Promise.all([
         userRepository.load(-1),
@@ -185,7 +185,7 @@ describe('Test: repositories/userRepository', () => {
     });
   });
 
-  describe('#serializeToCache', function () {
+  describe('#serializeToCache', () => {
     it('should return a valid plain object', () => {
       return userRepository.anonymous()
         .then(user => {

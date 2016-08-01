@@ -1,20 +1,16 @@
 var
   should = require('should'),
   sinon = require('sinon'),
+  sandbox = sinon.sandbox.create(),
   KuzzleServer = require.main.require('lib/api/kuzzleServer'),
   NotFoundError = require.main.require('kuzzle-common-objects').Errors.notFoundError;
 
 describe('InternalEngine', () => {
   var
-    kuzzle,
-    sandbox;
+    kuzzle;
 
   before(() => {
     kuzzle = new KuzzleServer();
-  });
-
-  beforeEach(() => {
-    sandbox = sinon.sandbox.create();
   });
 
   afterEach(() => {
@@ -337,21 +333,36 @@ describe('InternalEngine', () => {
 
   describe('#createInternalIndex', () => {
     it('should forward the request to elasticsearch', () => {
-      var mock = sandbox.mock(kuzzle.internalEngine.client.indices)
-        .expects('create')
-        .once()
-        .resolves();
+      var
+        createStub = sandbox.stub(kuzzle.internalEngine.client.indices, 'create').resolves(),
+        existsStub = sandbox.stub(kuzzle.internalEngine.client.indices, 'exists').resolves(false);
 
       return kuzzle.internalEngine.createInternalIndex()
         .then(() => {
-          mock.verify();
-          should(mock.args[0].length).be.eql(1);
-          should(mock.args[0][0]).match({index: kuzzle.config.internalIndex});
+          should(existsStub).be.calledOnce();
+          should(existsStub).be.calledWith({index: kuzzle.internalEngine.index});
+          should(createStub).be.calledOnce();
+          should(createStub).be.calledWith({index: kuzzle.internalEngine.index});
+        });
+    });
+
+    it('should not try to create an existing index', () => {
+      var
+        createStub = sandbox.stub(kuzzle.internalEngine.client.indices, 'create').resolves(),
+        existsStub = sandbox.stub(kuzzle.internalEngine.client.indices, 'exists').resolves(true);
+
+      return kuzzle.internalEngine.createInternalIndex()
+        .then(() => {
+          should(existsStub).be.calledOnce();
+          should(existsStub).be.calledWith({index: kuzzle.internalEngine.index});
+          should(createStub).have.callCount(0);
         });
     });
 
     it('should reject the promise if creating the internal index fails', () => {
+      sandbox.stub(kuzzle.internalEngine.client.indices, 'exists').resolves(false);
       sandbox.stub(kuzzle.internalEngine.client.indices, 'create').rejects();
+
       return should(kuzzle.internalEngine.createInternalIndex()).be.rejected();
     });
   });

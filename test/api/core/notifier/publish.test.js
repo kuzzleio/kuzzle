@@ -33,7 +33,7 @@ describe('Test: notifier.publish', () => {
     });
   });
 
-  beforeEach(function () {
+  beforeEach(() => {
     sandbox.stub(kuzzle.internalEngine, 'get').resolves({});
     return kuzzle.services.init({whitelist: []})
       .then(() => {

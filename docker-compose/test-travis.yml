@@ -1,14 +1,19 @@
 proxy:
-  image: kuzzleio/proxy:alpine
+############# UPDATE TO kuzzleio/proxy:alpine
+############# WHEN RELEASING RC5
+  image: kuzzleio/proxy:develop
   ports:
     - "7511:7511"
     - "7512:7512"
+    - "7513:7513"
 
 kuzzle:
   image: kuzzleio/test:alpine
-  command: /run-test-travis.sh
+  command: sh -c '/run.sh; npm run codecov'
   volumes:
     - "..:/var/app"
+    - "./scripts/run-test.sh:/run.sh"
+    - "./config:/config"
   links:
     - elasticsearch
     - redis

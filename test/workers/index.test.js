@@ -7,7 +7,7 @@ var
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create();
 
-describe('Testing: workers loader', function () {
+describe('Testing: workers loader', () => {
   var
     kuzzle,
     loader,
@@ -17,7 +17,7 @@ describe('Testing: workers loader', function () {
     kuzzle = new KuzzleWorker();
   });
 
-  beforeEach(function () {
+  beforeEach(() => {
     sandbox.stub(kuzzle.internalEngine, 'get').resolves({});
     return kuzzle.services.init({whitelist: []})
       .then(() => {
@@ -39,11 +39,11 @@ describe('Testing: workers loader', function () {
     sandbox.restore();
   });
 
-  it('should have an init() function', function () {
+  it('should have an init() function', () => {
     should(loader.init).be.a.Function();
   });
 
-  it('should initialize a list of loaded workers when starting', function () {
+  it('should initialize a list of loaded workers when starting', () => {
     return loader.init()
       .then(() => {
         should(Object.keys(loader.list).length).be.exactly(workersList.length);
@@ -51,7 +51,7 @@ describe('Testing: workers loader', function () {
       });
   });
 
-  it('should not load a worker multiple times', function () {
+  it('should not load a worker multiple times', () => {
     var
       saved = kuzzle.config.workers;
 
@@ -70,7 +70,7 @@ describe('Testing: workers loader', function () {
       });
   });
 
-  it('should be reentrant', function () {
+  it('should be reentrant', () => {
     return Promise.all([loader.init(), loader.init(), loader.init()])
       .then(() => {
         should(Object.keys(loader.list).length).be.exactly(workersList.length);
@@ -78,7 +78,7 @@ describe('Testing: workers loader', function () {
       });
   });
 
-  it('should raise an error if a worker cannot be loaded', function () {
+  it('should raise an error if a worker cannot be loaded', () => {
     kuzzle.config.workers = {
       foo: ['foo', 'write', 'bar']
     };

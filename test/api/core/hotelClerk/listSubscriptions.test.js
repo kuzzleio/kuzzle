@@ -5,7 +5,7 @@ var
   sandbox = sinon.sandbox.create(),
   KuzzleServer = require.main.require('lib/api/kuzzleServer');
 
-describe('Test: hotelClerk.listSubscription', function () {
+describe('Test: hotelClerk.listSubscription', () => {
   var
     kuzzle,
     connection = {id: 'connectionid'},
@@ -32,14 +32,14 @@ describe('Test: hotelClerk.listSubscription', function () {
     sandbox.restore();
   });
 
-  it('should return an empty object if there is no room', function () {
+  it('should return an empty object if there is no room', () => {
     return kuzzle.hotelClerk.listSubscriptions(context)
       .then(response => {
         should(response).be.empty().Object();
       });
   });
 
-  it('should return a correct list according to subscribe on filter', function () {
+  it('should return a correct list according to subscribe on filter', () => {
 
     sandbox.stub(kuzzle.repositories.user, 'load').resolves({_id: 'user', isActionAllowed: sandbox.stub().resolves(true)});
 
@@ -55,7 +55,7 @@ describe('Test: hotelClerk.listSubscription', function () {
       });
   });
 
-  it('should return a correct list according to subscribe on filter and user right', function () {
+  it('should return a correct list according to subscribe on filter and user right', () => {
     kuzzle.hotelClerk.rooms = {
       'foo': {
         index, collection: 'foo', roomId: 'foo', customers: ['foo']

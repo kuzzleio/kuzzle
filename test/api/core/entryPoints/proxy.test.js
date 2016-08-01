@@ -38,8 +38,7 @@ describe('Test: entryPoints/proxy', () => {
     should(proxy.init).be.a.Function();
     should(proxy.joinChannel).be.a.Function();
     should(proxy.leaveChannel).be.a.Function();
-    should(proxy.notify).be.a.Function();
-    should(proxy.broadcast).be.a.Function();
+    should(proxy.dispatch).be.a.Function();
   });
 
   it('should init listeners on init call', () => {
@@ -140,7 +139,7 @@ describe('Test: entryPoints/proxy', () => {
       data = {my: 'data'},
       spyListen = sandbox.stub(proxy.kuzzle.services.list.proxyBroker, 'send');
 
-    proxy.notify(data);
+    proxy.dispatch('notify', data);
     should(spyListen.calledWith('notify', data)).be.true();
     should(spyListen.callCount).be.eql(1);
   });
@@ -151,7 +150,7 @@ describe('Test: entryPoints/proxy', () => {
       data = {my: 'data'},
       spyListen = sandbox.stub(proxy.kuzzle.services.list.proxyBroker, 'send');
 
-    proxy.broadcast(data);
+    proxy.dispatch('broadcast', data);
     should(spyListen.calledWith('broadcast', data)).be.true();
     should(spyListen.callCount).be.eql(1);
   });

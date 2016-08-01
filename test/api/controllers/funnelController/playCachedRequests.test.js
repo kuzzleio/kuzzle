@@ -54,6 +54,8 @@ describe('funnelController.playCachedRequests', () => {
       .then(() => {
         funnel = new FunnelController(kuzzle);
         funnel.init();
+        funnel.lastOverloadTime = 0;
+        funnel.overloadWarned = true;
         sandbox.stub(funnel, 'execute', (r, c, cb) => {
           executeCalled = true;
 
