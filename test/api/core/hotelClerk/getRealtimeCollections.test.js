@@ -1,6 +1,6 @@
 var
   should = require('should'),
-  KuzzleServer = require.main.require('lib/api/kuzzleServer');
+  Kuzzle = require.main.require('lib/api/kuzzle');
 
 describe('Test: hotelClerk.getRealtimeCollections', () => {
   var
@@ -8,7 +8,7 @@ describe('Test: hotelClerk.getRealtimeCollections', () => {
     kuzzle;
 
   beforeEach(() => {
-    kuzzle = new KuzzleServer();
+    kuzzle = new Kuzzle();
   });
 
   it('should return an empty array if there is no subscription', () => {

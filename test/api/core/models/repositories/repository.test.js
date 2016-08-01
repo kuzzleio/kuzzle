@@ -1,7 +1,7 @@
 var
   Promise = require('bluebird'),
   should = require('should'),
-  KuzzleServer = require.main.require('lib/api/kuzzleServer'),
+  Kuzzle = require.main.require('lib/api/kuzzle'),
   InternalError = require.main.require('kuzzle-common-objects').Errors.internalError,
   Repository = require.main.require('lib/api/core/models/repositories/repository'),
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject;
@@ -144,7 +144,7 @@ describe('Test: repositories/repository', () => {
   };
 
   before(() => {
-    kuzzle = new KuzzleServer();
+    kuzzle = new Kuzzle();
 
     repository = new Repository(kuzzle);
     repository.index = '%test';

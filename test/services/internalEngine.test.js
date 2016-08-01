@@ -2,7 +2,7 @@ var
   should = require('should'),
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
-  KuzzleServer = require.main.require('lib/api/kuzzleServer'),
+  Kuzzle = require.main.require('lib/api/kuzzle'),
   NotFoundError = require.main.require('kuzzle-common-objects').Errors.notFoundError;
 
 describe('InternalEngine', () => {
@@ -10,7 +10,7 @@ describe('InternalEngine', () => {
     kuzzle;
 
   before(() => {
-    kuzzle = new KuzzleServer();
+    kuzzle = new Kuzzle();
   });
 
   afterEach(() => {

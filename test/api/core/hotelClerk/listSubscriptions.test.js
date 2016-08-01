@@ -3,7 +3,7 @@ var
   Promise = require('bluebird'),
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
-  KuzzleServer = require.main.require('lib/api/kuzzleServer');
+  Kuzzle = require.main.require('lib/api/kuzzle');
 
 describe('Test: hotelClerk.listSubscription', () => {
   var
@@ -15,7 +15,7 @@ describe('Test: hotelClerk.listSubscription', () => {
     collection = 'user';
 
   beforeEach(() => {
-    kuzzle = new KuzzleServer();
+    kuzzle = new Kuzzle();
 
     context = {
       connection: connection,

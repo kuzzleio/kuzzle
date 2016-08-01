@@ -3,7 +3,7 @@ var
   rewire = require('rewire'),
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
-  KuzzleServer = require.main.require('lib/api/kuzzleServer'),
+  Kuzzle = require.main.require('lib/api/kuzzle'),
   PluginsManager = rewire('../../../../lib/api/core/plugins/pluginsManager');
 
 describe('Plugins manager: getPluginsList', () => {
@@ -13,7 +13,7 @@ describe('Plugins manager: getPluginsList', () => {
 
   before(() => {
     getPluginsList = PluginsManager.__get__('getPluginsList');
-    kuzzle = new KuzzleServer();
+    kuzzle = new Kuzzle();
   });
 
   afterEach(() => {

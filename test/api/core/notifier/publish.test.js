@@ -8,7 +8,7 @@ var
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
   rewire = require('rewire'),
-  KuzzleServer = require.main.require('lib/api/kuzzleServer'),
+  Kuzzle = require.main.require('lib/api/kuzzle'),
   Redis = rewire('../../../../lib/services/redis'),
   RedisClientMock = require('../../../mocks/services/redisClient.mock'),
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject;
@@ -25,7 +25,7 @@ describe('Test: notifier.publish', () => {
     rooms = ['foo'];
 
   before(() => {
-    kuzzle = new KuzzleServer();
+    kuzzle = new Kuzzle();
     kuzzle.config.cache.databases.push(dbname);
     notificationCache = new Redis(kuzzle, {service: dbname});
     return Redis.__with__('buildClient', () => new RedisClientMock())(() => {

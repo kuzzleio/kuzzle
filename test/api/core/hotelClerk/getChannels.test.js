@@ -4,7 +4,7 @@ var
   sandbox = sinon.sandbox.create(),
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
   NotificationObject = require.main.require('lib/api/core/models/notificationObject'),
-  KuzzleServer = require.main.require('lib/api/kuzzleServer');
+  Kuzzle = require.main.require('lib/api/kuzzle');
 
 describe('Test: hotelClerk.getChannels', () => {
   var
@@ -35,7 +35,7 @@ describe('Test: hotelClerk.getChannels', () => {
     };
 
   beforeEach(() => {
-    kuzzle = new KuzzleServer();
+    kuzzle = new Kuzzle();
     kuzzle.removeAllListeners();
     sandbox.stub(kuzzle.internalEngine, 'get').resolves({});
     return kuzzle.services.init({whitelist: []});

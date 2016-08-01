@@ -6,7 +6,7 @@ var
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
   ResponseObject = require.main.require('kuzzle-common-objects').Models.responseObject,
   ServiceUnavailableError = require.main.require('kuzzle-common-objects').Errors.serviceUnavailableError,
-  KuzzleServer = require.main.require('lib/api/kuzzleServer'),
+  Kuzzle = require.main.require('lib/api/kuzzle'),
   rewire = require('rewire'),
   FunnelController = rewire('../../../../lib/api/controllers/funnelController');
 
@@ -25,7 +25,7 @@ describe('funnelController.execute', () => {
       token: null
     };
 
-    kuzzle = new KuzzleServer();
+    kuzzle = new Kuzzle();
 
     kuzzle.config.request.warnRetainedRequestsLimit = -1;
 

@@ -11,7 +11,7 @@ var
   sandbox = sinon.sandbox.create(),
   Promise = require('bluebird'),
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
-  KuzzleServer = require.main.require('lib/api/kuzzleServer');
+  Kuzzle = require.main.require('lib/api/kuzzle');
 
 describe('Test: notifier.notifyDocumentDelete', () => {
   var
@@ -36,7 +36,7 @@ describe('Test: notifier.notifyDocumentDelete', () => {
     };
 
   before(() => {
-    kuzzle = new KuzzleServer();
+    kuzzle = new Kuzzle();
   });
 
   beforeEach(() => {

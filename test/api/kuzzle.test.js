@@ -1,13 +1,13 @@
 var
   rc = require('rc'),
-  KuzzleServer = require.main.require('lib/api/kuzzleServer'),
+  Kuzzle = require.main.require('lib/api/kuzzle'),
   should = require('should');
 
 describe('Test kuzzle server constructor', () => {
   var kuzzle;
 
   before(() => {
-    kuzzle = new KuzzleServer();
+    kuzzle = new Kuzzle();
   });
 
   it('should construct a kuzzle object', () => {
@@ -62,7 +62,7 @@ describe('Test kuzzle server constructor', () => {
         exitStatus = status;
       };
 
-      kuzzle = new KuzzleServer();
+      kuzzle = new Kuzzle();
     });
 
     after(() => {

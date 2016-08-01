@@ -1,7 +1,7 @@
 var
   PluginContext = require.main.require('lib/api/core/plugins/pluginContext'),
   PluginImplementationError = require('kuzzle-common-objects').Errors.pluginImplementationError,
-  KuzzleServer = require.main.require('lib/api/kuzzleServer'),
+  Kuzzle = require.main.require('lib/api/kuzzle'),
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
   should = require('should'),
@@ -12,7 +12,7 @@ describe('Plugin Context', () => {
     kuzzle;
 
   before(() => {
-    kuzzle = new KuzzleServer();
+    kuzzle = new Kuzzle();
   });
 
   beforeEach(() => {

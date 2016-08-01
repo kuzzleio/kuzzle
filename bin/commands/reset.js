@@ -3,7 +3,7 @@
 var
   rc = require('rc'),
   params = rc('kuzzle'),
-  KuzzleServer = require('../../lib/api/kuzzleServer'),
+  KuzzleServer = require('../../lib/api/kuzzle'),
   readlineSync = require('readline-sync'),
   fs = require('fs'),
   clc = require('cli-color');

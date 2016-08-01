@@ -5,8 +5,7 @@ var
   rc = require('rc'),
   params = rc('kuzzle'),
   //kuzzle = require('../../lib'),
-  KuzzleServer = require('../../lib/api/kuzzleServer'),
-  KuzzleWorker = require('../../lib/api/kuzzleWorker'),
+  Kuzzle = require('../../lib/api/kuzzle'),
   RequestObject = require('kuzzle-common-objects').Models.requestObject,
   Promise = require('bluebird'),
   clc = require('cli-color'),
@@ -27,7 +26,7 @@ var
 
 module.exports = function (options) {
   var
-    kuzzle = (options.server ? new KuzzleServer() : new KuzzleWorker()),
+    kuzzle = new Kuzzle(),
     error = string => options.parent.noColors ? string : clc.red(string),
     warn = string => options.parent.noColors ? string : clc.yellow(string),
     notice = string => options.parent.noColors ? string : clc.cyanBright(string),
@@ -55,27 +54,7 @@ module.exports = function (options) {
 
   kuzzle.start(params)
     .then(() => {
-      console.log(kuzzleLogo);
-      process.title = 'KuzzleServer';
-      console.log(`
- ████████████████████████████████████
- ██     KUZZLE SERVER STARTED      ██
- ██   ...WAITING FOR WORKERS...    ██
- ████████████████████████████████████`);
-
-      /*
-      Waits for at least one write worker to be connected to the server before trying to use them
-      */
-      return kuzzle.services.list.broker.waitForClients(kuzzle.config.queues.workerWriteTaskQueue);
-    })
-    .then(() => {
       var request;
-
-      console.log(`
- ████████████████████████████████████
- ██        WORKER CONNECTED        ██
- ██    ...PREPARING DATABASE...    ██
- ████████████████████████████████████`);
 
       if (params.likeAvirgin) {
         request = new RequestObject({controller: 'remoteActions', action: 'cleanDb', body: {}});

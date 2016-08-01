@@ -2,7 +2,7 @@ var
   should = require('should'),
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
-  KuzzleServer = require.main.require('lib/api/kuzzleServer'),
+  Kuzzle = require.main.require('lib/api/kuzzle'),
   IndexCache = require.main.require('lib/api/core/indexCache');
 
 describe('Test: core/indexCache', () => {
@@ -11,7 +11,7 @@ describe('Test: core/indexCache', () => {
     kuzzle;
 
   before(() => {
-    kuzzle = new KuzzleServer();
+    kuzzle = new Kuzzle();
   });
 
   beforeEach(() => {

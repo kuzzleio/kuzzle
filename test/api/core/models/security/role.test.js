@@ -4,7 +4,7 @@ var
   sandbox = sinon.sandbox.create(),
   Promise = require('bluebird'),
   rewire = require('rewire'),
-  KuzzleServer = require.main.require('lib/api/kuzzleServer'),
+  Kuzzle = require.main.require('lib/api/kuzzle'),
   BadRequestError = require.main.require('kuzzle-common-objects').Errors.badRequestError,
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
   InternalError = require.main.require('kuzzle-common-objects').Errors.internalError,
@@ -80,7 +80,7 @@ describe('Test: security/roleTest', () => {
       }
     };
   before(() => {
-    kuzzle = new KuzzleServer();
+    kuzzle = new Kuzzle();
   });
 
   beforeEach(() => {

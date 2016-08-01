@@ -6,7 +6,7 @@ var
   rewire = require('rewire'),
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
-  KuzzleServer = require.main.require('lib/api/kuzzleServer'),
+  Kuzzle = require.main.require('lib/api/kuzzle'),
   KuzzleProxy = rewire('../../../../lib/api/core/entryPoints/kuzzleProxy'),
   RequestObject = require('kuzzle-common-objects').Models.requestObject,
   ResponseObject = require('kuzzle-common-objects').Models.responseObject;
@@ -16,7 +16,7 @@ describe('Test: entryPoints/proxy', () => {
     kuzzle;
 
   before(() => {
-    kuzzle = new KuzzleServer();
+    kuzzle = new Kuzzle();
   });
 
   beforeEach(() => {

@@ -1,6 +1,6 @@
 var
   should = require('should'),
-  KuzzleServer = require.main.require('lib/api/kuzzleServer'),
+  Kuzzle = require.main.require('lib/api/kuzzle'),
   NotificationObject = require.main.require('lib/api/core/models/notificationObject'),
   TokenManager = require.main.require('lib/api/core/auth/tokenManager');
 
@@ -12,7 +12,7 @@ describe('Test: token manager core component', () => {
     tokenManager;
 
   before(() => {
-    kuzzle = new KuzzleServer();
+    kuzzle = new Kuzzle();
     kuzzle.hotelClerk.customers = {
       'foobar': {
         'room1': {},

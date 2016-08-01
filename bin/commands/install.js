@@ -3,7 +3,7 @@
 var
   params = require('rc')('kuzzle'),
   InternalEngine = require('../../lib/services/internalEngine'),
-  KuzzleServer = require('../../lib/api/kuzzleServer'),
+  KuzzleServer = require('../../lib/api/kuzzle'),
   PluginsManager = require('../../lib/api/core/plugins/pluginsManager'),
   RemoteActionsController = require('../../lib/api/controllers/remoteActionsController'),
   RequestObject = require('kuzzle-common-objects').Models.requestObject;

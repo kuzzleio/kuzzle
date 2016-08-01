@@ -3,7 +3,7 @@
 var
   rc = require('rc'),
   params = rc('kuzzle'),
-  KuzzleServer = require('../../lib/api/kuzzleServer');
+  KuzzleServer = require('../../lib/api/kuzzle');
 
 module.exports = function () {
   var

@@ -3,7 +3,7 @@ var
   should = require('should'),
   rewire = require('rewire'),
   sinon = require('sinon'),
-  KuzzleServer = require.main.require('lib/api/kuzzleServer'),
+  Kuzzle = require.main.require('lib/api/kuzzle'),
   Services = rewire('../../lib/services'),
   sandbox = sinon.sandbox.create();
 
@@ -23,7 +23,7 @@ describe('Test service initialization function', () => {
   });
 
   beforeEach(() => {
-    kuzzle = new KuzzleServer();
+    kuzzle = new Kuzzle();
     spy = sandbox.stub(kuzzle.internalEngine, 'get').resolves({});
   });
 

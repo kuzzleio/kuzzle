@@ -5,7 +5,7 @@ var
   should = require('should'),
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
-  KuzzleServer = require.main.require('lib/api/kuzzleServer'),
+  Kuzzle = require.main.require('lib/api/kuzzle'),
   HttpServer = require.main.require('lib/api/core/entryPoints/http');
 
 describe('Test: entryPoints/http', () => {
@@ -14,7 +14,7 @@ describe('Test: entryPoints/http', () => {
     httpPort = 6667;
 
   before(() => {
-    kuzzle = new KuzzleServer();
+    kuzzle = new Kuzzle();
   });
 
   afterEach(() => {

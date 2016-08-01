@@ -9,83 +9,78 @@
 var program = require('commander');
 
 program
+  .version(require('../package.json').version)
   .option('-d, --debug', 'make errors more verbose')
-  .option('--noColors', 'do not use ANSI coloring')
+  .option('-C, --noColors', 'do not use ANSI coloring');
 
-// $ kuzzle start
+// $ kuzzle createFirstAdmin
 program
-  .command('start')
-  .option('--port <port>', 'Kuzzle port number', parseInt)
-  .option('--server', 'start an instance without workers')
-  .option('--worker', 'spawn a single set of workers instead of starting a Kuzzle instance')
-  .option('--likeAvirgin', 'reset before start, so that Kuzzle is like a virgin, touched for the very first time')
-  .option('--fixtures <fixtures>', 'allow you to load a fixtures file')
-  .option('--mappings <mappings>', 'allow you to load and apply a mappings file')
-  .description('Start a Kuzzle instance')
-  .action(require('./commands/start'));
-
-// $ kuzzle enable <service>
-program
-  .command('enable')
-  .option('--pid <pid>', '[all|integer] the pid to apply the action - required')
-  .description('Enable a service without reloading Kuzzle')
-  .action(require('./commands/enable'));
+  .command('createFirstAdmin')
+  .description('create the first administrator user')
+  .option('--pid <pid>', '[integer] the pid of Kuzzle server - required')
+  .action(require('./commands/createFirstAdmin'));
 
 // $ kuzzle.js disable <service>
 program
   .command('disable')
+  .description('disable a service without reloading Kuzzle')
   .option('--pid <pid>', '[all|integer] the pid to apply the action - required option')
-  .description('Disable a service without reloading Kuzzle')
   .action(require('./commands/disable'));
+
+// $ kuzzle enable <service>
+program
+  .command('enable')
+  .description('enable a service without reloading Kuzzle')
+  .option('--pid <pid>', '[all|integer] the pid to apply the action - required')
+  .action(require('./commands/enable'));
 
 // $ kuzzle install
 program
   .command('install')
-  .description('Install all listed plugins, and refresh their configuration.')
+  .description('install all plugins configured in .kuzzlerc')
   .action(require('./commands/install'));
+
+// $ kuzzle likeAvirgin
+program
+  .command('likeAvirgin')
+  .description('delete Kuzzle configuration and users from database. Makes Kuzzle look like a virgin, touched for the very first time')
+  .option('--pid <pid>', '[all|integer] the pid to apply the action')
+  .option('--fixtures <fixtures>', 'import some fixtures from file')
+  .option('--mappings <mappings>', 'load and apply mappings from file')
+  .option('--noint', 'non interractive mode, will perform the reset immediately')
+  .action(require('./commands/reset'));
 
 // $ kuzzle plugins
 program
   .command('plugins')
   .arguments('[name]')
-  .description('Manage plugins')
-  .option('--list', '*List current installed plugins')
-  .option('--install', '*If plugin [name] is provided, installs it using --npmVersion, --gitUrl or --path. Otherwise, (re-)installs all listed plugins')
-  .option('--get', '*Gets the plugin [name] current stored configuration')
-  .option('--set <JSONObject>', '*Updates the plugin configuration with new properties')
-  .option('--replace <JSONObject>', '*Replaces a plugin configuration with a new one')
-  .option('--unset <property>', '*Deletes the property [property] from the plugin configuration')
-  .option('--remove', '*Removes the supplied plugin [name] from Kuzzle')
-  .option('--activate', '*Marks the plugin as "activated" (Kuzzle ignores deactivated plugins)')
-  .option('--deactivate', '*Marks the plugin as "deactivated" (Kuzzle ignores deactivated plugins)')
-  .option('--importConfig <file>', '*Import a configuration from a file for a given plugin')
-  .option('-v, --npmVersion <version>', 'Installs plugin <version> from NPM (work only with --install)')
-  .option('-u, --gitUrl <url>', 'Installs plugin from a GIT repo <url> (work only with --install)')
-  .option('-p, --path <path>', 'Installs a plugin from directory <path> (work only with --install)')
+  .description('manage plugins')
+  .option('    --list', 'list currently installed plugins')
+  .option('    --install', 'if plugin [name] is provided, install it from --npmVersion, --gitUrl or --path, otherwise, (re-)install all listed plugins')
+  .option('    --remove', 'removes plugin [name] from Kuzzle')
+  .option('    --activate', 'mark the plugin as "activated" (Kuzzle ignores deactivated plugins)')
+  .option('    --deactivate', 'mark the plugin as "deactivated" (Kuzzle ignores deactivated plugins)')
+  .option('    --importConfig <file>', 'import a configuration from a file for a given plugin')
+  .option('    --get', 'get plugin [name] configuration stored in Kuzzle')
+  .option('    --set <JSONObject>', 'merge current plugin configuration with JSONObject')
+  .option('    --unset <property>', 'unset property from the plugin configuration')
+  .option('    --replace <JSONObject>', 'erase the plugin configuration and apply JSONObject instead')
+  .option('-v, --npmVersion <version>', 'install plugin <version> from npm')
+  .option('-u, --gitUrl <url>', 'install plugin from a git repository')
+  .option('-p, --path <path>', 'install plugin from the file system')
   .action(require('./commands/plugins'));
 
-// $ kuzzle createFirstAdmin
+// $ kuzzle start
 program
-  .command('createFirstAdmin')
-  .option('--pid <pid>', '[integer] the pid of Kuzzle server - required')
-  .description('Create the first administrator')
-  .action(require('./commands/createFirstAdmin'));
-
-// $ kuzzle likeAvirgin
-program
-  .command('likeAvirgin')
-  .option('--pid <pid>', '[all|integer] the pid to apply the action - mandatory option')
-  .option('--fixtures <fixtures>', 'allow you to specify a fixtures file')
-  .option('--mappings <mappings>', 'allow you to specify a mappings file')
-  .option('--noint', 'non interractive mode, will perform the reset immediately')
-  .description('Empty all the Kuzzle storage and make it look like a virgin, touched for the very first time')
-  .action(require('./commands/reset'));  
-
-// $ kuzzle swagger
-program
-  .command('swagger')
-  .description('Generate the kuzzle-swagger.json and the kuzzle-swagger.yml files according to your current routes')
-  .action(require('./commands/swagger'));  
+  .command('start')
+  .description('start a Kuzzle server|worker node')
+  .option('-p, --port <port>', 'Kuzzle port number', parseInt)
+  .option('-s, --server', 'start Kuzzle in server mode (default)')
+  .option('-w, --worker', 'start Kuzzle in worker mode')
+  .option('    --likeAvirgin', 'delete Kuzzle configuration and users from database')
+  .option('    --fixtures <fixtures>', 'import some fixtures from file')
+  .option('    --mappings <mappings>', 'load and apply mappings from file')
+  .action(require('./commands/start'));
 
 // Run user command
 program.parse(process.argv);

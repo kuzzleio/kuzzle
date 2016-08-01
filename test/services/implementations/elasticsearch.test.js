@@ -3,7 +3,7 @@ var
   Promise = require('bluebird'),
   sinon = require('sinon'),
   rewire = require('rewire'),
-  KuzzleServer = require.main.require('lib/api/kuzzleServer'),
+  Kuzzle = require.main.require('lib/api/kuzzle'),
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
   BadRequestError = require.main.require('kuzzle-common-objects').Errors.badRequestError,
   NotFoundError = require.main.require('kuzzle-common-objects').Errors.notFoundError,
@@ -44,7 +44,7 @@ describe('Test: ElasticSearch service', () => {
 
 
   before(()=> {
-    kuzzle = new KuzzleServer();
+    kuzzle = new Kuzzle();
     elasticsearch = new ES(kuzzle, {service: engineType});
   });
 

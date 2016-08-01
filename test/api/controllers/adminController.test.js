@@ -4,7 +4,7 @@ var
   Promise = require('bluebird'),
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
-  KuzzleServer = require.main.require('lib/api/kuzzleServer'),
+  AdminController = require.main.require('lib/api/controllers/adminController'),
   User = require.main.require('lib/api/core/models/security/user'),
   Profile = require.main.require('lib/api/core/models/security/profile'),
   Role = require.main.require('lib/api/core/models/security/role'),
@@ -15,20 +15,32 @@ var
 
 describe('Test: admin controller', () => {
   var
+    adminController,
     kuzzle,
     index = '%text',
     collection = 'unit-test-adminController',
     requestObject;
 
-  before(() => {
-    kuzzle = new KuzzleServer();
-  });
-
   beforeEach(() => {
+    kuzzle = {
+      indexCache: {
+        add: sinon.spy(),
+        remove: sinon.spy()
+      },
+      pluginsManager: {
+        trigger: sinon.spy(function () {return Promise.resolve(arguments[0]);})
+      },
+      services: {
+        list: {
+          writeEngine: {
+            updateMapping: sinon.stub().resolves()
+
+          }
+        }
+      }
+    };
+    adminController = new AdminController(kuzzle);
     requestObject = new RequestObject({ controller: 'admin' }, {index, collection}, 'unit-test');
-    sandbox.stub(kuzzle.internalEngine, 'get').resolves({});
-    return kuzzle.services.init({whitelist: []})
-      .then(() => kuzzle.funnel.init());
   });
 
   afterEach(() => {
@@ -36,23 +48,12 @@ describe('Test: admin controller', () => {
   });
 
   describe('#updateMapping', () => {
-    it('should activate a hook on a mapping update call', function (done) {
-      this.timeout(50);
-      sandbox.stub(kuzzle.workerListener, 'add').resolves({});
-
-      kuzzle.once('data:beforeUpdateMapping', (obj) => {
-        try {
-          should(obj).be.exactly(requestObject);
-          done();
-        }
-        catch (e) {
-          done(e);
-        }
-      });
-
-      kuzzle.funnel.controllers.admin.updateMapping(requestObject)
-        .catch(error => {
-          done(error);
+    it('should activate a hook on a mapping update call', () => {
+      return adminController.updateMapping(requestObject)
+        .then(() => {
+          should(kuzzle.pluginsManager.trigger).be.calledTwice();
+          should(kuzzle.pluginsManager.trigger.firstCall).be.calledWith('data:beforeUpdateMapping', requestObject);
+          should(kuzzle.pluginsManager.trigger.secondCall).be.calledWith('data:afterUpdateMapping');
         });
     });
 

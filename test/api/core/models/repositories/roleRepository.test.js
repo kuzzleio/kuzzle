@@ -7,7 +7,7 @@ var
   InternalError = require.main.require('kuzzle-common-objects').Errors.internalError,
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
   Role = require.main.require('lib/api/core/models/security/role'),
-  KuzzleServer = require.main.require('lib/api/kuzzleServer');
+  Kuzzle = require.main.require('lib/api/kuzzle');
 
 describe('Test: repositories/roleRepository', () => {
   var
@@ -31,7 +31,7 @@ describe('Test: repositories/roleRepository', () => {
   persistedObject2._id = 'persisted2';
 
   before(() => {
-    kuzzle = new KuzzleServer();
+    kuzzle = new Kuzzle();
   });
 
   beforeEach(() => {

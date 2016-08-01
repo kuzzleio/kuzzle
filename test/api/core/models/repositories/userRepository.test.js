@@ -2,7 +2,7 @@ var
   Promise = require('bluebird'),
   _ = require('lodash'),
   should = require('should'),
-  KuzzleServer = require.main.require('lib/api/kuzzleServer'),
+  Kuzzle = require.main.require('lib/api/kuzzle'),
   InternalError = require.main.require('kuzzle-common-objects').Errors.internalError,
   NotFoundError = require.main.require('kuzzle-common-objects').Errors.notFoundError,
   ResponseObject = require.main.require('kuzzle-common-objects').Models.responseObject,
@@ -26,7 +26,7 @@ describe('Test: repositories/userRepository', () => {
       userInCache,
       userInDB;
 
-    kuzzle = new KuzzleServer();
+    kuzzle = new Kuzzle();
     mockCacheEngine = {
       get: key => {
         if (key === userRepository.index + '/' + userRepository.collection + '/userInCache') {

@@ -8,7 +8,7 @@ var
   rewire = require('rewire'),
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
-  KuzzleServer = require.main.require('lib/api/kuzzleServer'),
+  Kuzzle = require.main.require('lib/api/kuzzle'),
   Redis = rewire('../../../lib/services/redis'),
   RedisClientMock = require('../../mocks/services/redisClient.mock'),
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
@@ -30,7 +30,7 @@ describe('Test: statistics core component', () => {
     };
 
   before(() => {
-    kuzzle = new KuzzleServer();
+    kuzzle = new Kuzzle();
     kuzzle.config.cache.databases.push(dbname);
     kuzzle.services.list.statsCache = new Redis(kuzzle, {service: dbname});
     return Redis.__with__('buildClient', () => new RedisClientMock())(() => {

@@ -9,7 +9,7 @@ var
   sandbox = sinon.sandbox.create(),
   http = require('http'),
   Promise = require('bluebird'),
-  KuzzleServer = require.main.require('lib/api/kuzzleServer'),
+  Kuzzle = require.main.require('lib/api/kuzzle'),
   rewire = require('rewire'),
   yamlToJson = require('parser-yaml').parse,
   RouterController = rewire('../../../../lib/api/controllers/routerController');
@@ -74,7 +74,7 @@ describe('Test: routerController.initRouterHttp', () => {
    * the answer is correctly constructed.
    */
   before(() => {
-    kuzzle = new KuzzleServer();
+    kuzzle = new Kuzzle();
   });
 
   beforeEach(done => {

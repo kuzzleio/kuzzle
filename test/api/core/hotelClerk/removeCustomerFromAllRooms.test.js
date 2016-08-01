@@ -2,7 +2,7 @@ var
   should = require('should'),
   sinon = require('sinon'),
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
-  KuzzleServer = require.main.require('lib/api/kuzzleServer');
+  Kuzzle = require.main.require('lib/api/kuzzle');
 
 describe('Test: hotelClerk.removeCustomerFromAllRooms', () => {
   var
@@ -13,7 +13,7 @@ describe('Test: hotelClerk.removeCustomerFromAllRooms', () => {
     sandbox;
 
   before(() => {
-    kuzzle = new KuzzleServer();
+    kuzzle = new Kuzzle();
   });
 
   beforeEach(() => {

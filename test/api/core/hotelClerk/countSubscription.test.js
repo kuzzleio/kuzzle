@@ -1,7 +1,7 @@
 var
   should = require('should'),
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
-  KuzzleServer = require.main.require('lib/api/kuzzleServer'),
+  Kuzzle = require.main.require('lib/api/kuzzle'),
   BadRequestError = require.main.require('kuzzle-common-objects').Errors.badRequestError,
   NotFoundError = require.main.require('kuzzle-common-objects').Errors.notFoundError;
 
@@ -10,7 +10,7 @@ describe('Test: hotelClerk.countSubscription', () => {
     kuzzle;
 
   before(() => {
-    kuzzle = new KuzzleServer();
+    kuzzle = new Kuzzle();
   });
 
   it('should reject the request if no room ID has been provided', () => {

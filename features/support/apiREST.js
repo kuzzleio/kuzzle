@@ -148,7 +148,7 @@ ApiREST.prototype.callApi = function (options) {
     options.headers = _.extend(options.headers, {authorization: 'Bearer ' + this.world.currentUser.token});
   }
   options.json = true;
-  
+
   return rp(options);
 };
 
