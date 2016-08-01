@@ -1,10 +1,8 @@
 var
   should = require('should'),
   rewire = require('rewire'),
-  Promise = require('bluebird'),
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
-  params = require('rc')('kuzzle'),
   KuzzleServer = require.main.require('lib/api/kuzzleServer'),
   PluginsManager = rewire('../../../../lib/api/core/plugins/pluginsManager');
 

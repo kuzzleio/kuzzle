@@ -2,7 +2,6 @@ var
   Promise = require('bluebird'),
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
-  params = require('rc')('kuzzle'),
   should = require('should'),
   BadRequestError = require('kuzzle-common-objects').Errors.badRequestError,
   InternalError = require.main.require('kuzzle-common-objects').Errors.internalError,

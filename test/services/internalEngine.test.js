@@ -1,7 +1,6 @@
 var
   should = require('should'),
   sinon = require('sinon'),
-  params = require('rc')('kuzzle'),
   KuzzleServer = require.main.require('lib/api/kuzzleServer'),
   NotFoundError = require.main.require('kuzzle-common-objects').Errors.notFoundError;
 

@@ -8,14 +8,13 @@ var
 describe('PluginsManager: init()', () => {
   var
     kuzzle,
-    loadPlugins,
     loadPluginsCalled,
     pluginsManager;
 
   before(() => {
     kuzzle = new KuzzleServer();
     pluginsManager = new PluginsManager(kuzzle);
-    loadPlugins = PluginsManager.__set__('loadPlugins', plugins => {
+    PluginsManager.__set__('loadPlugins', () => {
       loadPluginsCalled = true;
     });
   });
@@ -23,7 +22,7 @@ describe('PluginsManager: init()', () => {
   it('should load plugins at init', () => {
     loadPluginsCalled = false;
     return PluginsManager.__with__({
-      getPluginsList: (kuzzle, isServer) => {
+      getPluginsList: () => {
         return Promise.resolve({
           plugin1: {foo: 'bar'},
           plugin2: {foo: 'baz'}

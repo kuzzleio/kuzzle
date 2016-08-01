@@ -1,12 +1,10 @@
 var
   should = require('should'),
-  Promise = require('bluebird'),
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
   BadRequestError = require.main.require('kuzzle-common-objects').Errors.badRequestError,
   NotFoundError = require.main.require('kuzzle-common-objects').Errors.notFoundError,
-  params = require('rc')('kuzzle'),
   KuzzleServer = require.main.require('lib/api/kuzzleServer');
 
 describe('Test: hotelClerk.removeSubscription', function () {

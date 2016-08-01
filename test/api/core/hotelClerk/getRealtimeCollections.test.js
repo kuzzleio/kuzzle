@@ -1,6 +1,5 @@
 var
   should = require('should'),
-  params = require('rc')('kuzzle'),
   KuzzleServer = require.main.require('lib/api/kuzzleServer');
 
 describe('Test: hotelClerk.getRealtimeCollections', () => {

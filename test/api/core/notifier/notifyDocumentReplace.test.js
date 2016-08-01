@@ -11,7 +11,6 @@ var
   sandbox = sinon.sandbox.create(),
   Promise = require('bluebird'),
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
-  params = require('rc')('kuzzle'),
   KuzzleServer = require.main.require('lib/api/kuzzleServer');
 
 

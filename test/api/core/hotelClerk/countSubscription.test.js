@@ -1,7 +1,6 @@
 var
   should = require('should'),
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
-  params = require('rc')('kuzzle'),
   KuzzleServer = require.main.require('lib/api/kuzzleServer'),
   BadRequestError = require.main.require('kuzzle-common-objects').Errors.badRequestError,
   NotFoundError = require.main.require('kuzzle-common-objects').Errors.notFoundError;

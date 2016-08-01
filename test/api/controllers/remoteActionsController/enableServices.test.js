@@ -1,6 +1,4 @@
 var
-  rc = require('rc'),
-  params = rc('kuzzle'),
   Promise = require('bluebird'),
   should = require('should'),
   KuzzleServer = require.main.require('lib/api/kuzzleServer'),

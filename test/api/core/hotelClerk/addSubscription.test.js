@@ -6,7 +6,6 @@ var
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
   InternalError = require.main.require('kuzzle-common-objects').Errors.internalError,
   BadRequestError = require.main.require('kuzzle-common-objects').Errors.badRequestError,
-  params = require('rc')('kuzzle'),
   KuzzleServer = require.main.require('lib/api/kuzzleServer');
 
 describe('Test: hotelClerk.addSubscription', () => {

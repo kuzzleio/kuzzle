@@ -4,7 +4,6 @@ var
   Promise = require('bluebird'),
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
-  params = require('rc')('kuzzle'),
   KuzzleServer = require.main.require('lib/api/kuzzleServer'),
   User = require.main.require('lib/api/core/models/security/user'),
   Profile = require.main.require('lib/api/core/models/security/profile'),

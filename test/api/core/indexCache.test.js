@@ -1,6 +1,5 @@
 var
   should = require('should'),
-  params = require('rc')('kuzzle'),
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
   KuzzleServer = require.main.require('lib/api/kuzzleServer'),

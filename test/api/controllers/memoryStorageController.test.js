@@ -4,10 +4,9 @@ var
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
   rewire = require('rewire'),
-  params = require('rc')('kuzzle'),
   KuzzleServer = require.main.require('lib/api/kuzzleServer'),
   Redis = rewire('../../../lib/services/redis'),
-  RedisClientMock = require('../../mocks/services/redisClient.mock');
+  RedisClientMock = require('../../mocks/services/redisClient.mock'),
   BadRequestError = require.main.require('kuzzle-common-objects').Errors.badRequestError,
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
   ResponseObject = require.main.require('kuzzle-common-objects').Models.responseObject,
@@ -27,8 +26,7 @@ describe('Test: memoryStorage controller', () => {
     requestObject,
     testMapping,
     origMapping,
-    kuzzle,
-    redis;
+    kuzzle;
 
   before(() => {
     var
@@ -88,7 +86,7 @@ describe('Test: memoryStorage controller', () => {
     kuzzle.config.cache.databases.push(dbname);
     kuzzle.services.list.memoryStorage = new Redis(kuzzle, {service: dbname});
     return Redis.__with__('buildClient', () => new RedisClientMock())(() => {
-      return kuzzle.services.list.memoryStorage.init()
+      return kuzzle.services.list.memoryStorage.init();
     });
   });
 

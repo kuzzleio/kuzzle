@@ -4,7 +4,6 @@ var
   jwt = require('jsonwebtoken'),
   ms = require('ms'),
   Promise = require('bluebird'),
-  rewire = require('rewire'),
   /** @type {Params} */
   params = require('rc')('kuzzle'),
   passport = require('passport'),
@@ -56,7 +55,6 @@ MockupStrategy.prototype.authenticate = function(req) {
 
 describe('Test the auth controller', () => {
   var
-    dbname = 'unit-tests',
     kuzzle;
 
   before(() => {
@@ -69,10 +67,11 @@ describe('Test the auth controller', () => {
     return kuzzle.services.init({whitelist: []})
       .then(() => kuzzle.funnel.init())
       .then(() => {
-        sandbox.stub(kuzzle.repositories.token, 'generateToken', (user, context, opts) => {
-          var token = new Token(),
-          expiresIn = ms(opts.expiresIn);
-          encodedToken = jwt.sign({_id: user._id}, kuzzle.config.jsonWebToken.secret, opts);
+        sandbox.stub(kuzzle.repositories.token, 'generateToken', (user, gtcontext, opts) => {
+          var
+            token = new Token(),
+            expiresIn = ms(opts.expiresIn),
+            encodedToken = jwt.sign({_id: user._id}, kuzzle.config.jsonWebToken.secret, opts);
 
           _.assignIn(token, {
             _id: encodedToken,

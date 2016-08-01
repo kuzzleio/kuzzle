@@ -1,8 +1,5 @@
 var
-  rc = require('rc'),
   fs = require('fs'),
-  params = rc('kuzzle'),
-  Promise = require('bluebird'),
   should = require('should'),
   sinon = require('sinon'),
   KuzzleServer = require.main.require('lib/api/kuzzleServer'),

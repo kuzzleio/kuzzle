@@ -7,7 +7,6 @@ var
   BadRequestError = require.main.require('kuzzle-common-objects').Errors.badRequestError,
   ForbiddenError = require.main.require('kuzzle-common-objects').Errors.forbiddenError,
   UnauthorizedError = require.main.require('kuzzle-common-objects').Errors.unauthorizedError,
-  params = require('rc')('kuzzle'),
   KuzzleServer = require.main.require('lib/api/kuzzleServer'),
   rewire = require('rewire'),
   FunnelController = rewire('../../../../lib/api/controllers/funnelController');

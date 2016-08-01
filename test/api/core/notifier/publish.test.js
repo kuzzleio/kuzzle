@@ -5,11 +5,8 @@
  */
 var
   should = require('should'),
-  rewire = require('rewire'),
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
-  Promise = require('bluebird'),
-  params = require('rc')('kuzzle'),
   KuzzleServer = require.main.require('lib/api/kuzzleServer'),
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject;
 
@@ -17,8 +14,6 @@ describe('Test: notifier.publish', () => {
   var
     kuzzle,
     notification,
-    cached,
-    expired,
     request,
     spyNotificationCacheAdd,
     spyNotificationCacheExpire,
@@ -47,8 +42,6 @@ describe('Test: notifier.publish', () => {
         sandbox.stub(kuzzle.notifier, 'notify', (r, rq, n) => {notification = n;});
 
         notification = null;
-        cached = false;
-        expired = false;
       });
   });
 

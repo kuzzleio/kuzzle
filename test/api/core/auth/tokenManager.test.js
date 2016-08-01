@@ -1,6 +1,5 @@
 var
   should = require('should'),
-  params = require('rc')('kuzzle'),
   KuzzleServer = require.main.require('lib/api/kuzzleServer'),
   NotificationObject = require.main.require('lib/api/core/models/notificationObject'),
   TokenManager = require.main.require('lib/api/core/auth/tokenManager');

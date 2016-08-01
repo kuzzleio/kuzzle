@@ -3,7 +3,6 @@ var
   Promise = require('bluebird'),
   sinon = require('sinon'),
   rewire = require('rewire'),
-  params = require('rc')('kuzzle'),
   KuzzleServer = require.main.require('lib/api/kuzzleServer'),
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
   BadRequestError = require.main.require('kuzzle-common-objects').Errors.badRequestError,

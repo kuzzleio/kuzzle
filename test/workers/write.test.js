@@ -2,7 +2,6 @@ var
   should = require('should'),
   rewire = require('rewire'),
   Promise = require('bluebird'),
-  params = require('rc')('kuzzle'),
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
   KuzzleWorker = require.main.require('lib/api/kuzzleWorker'),

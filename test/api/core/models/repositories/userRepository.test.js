@@ -2,7 +2,6 @@ var
   Promise = require('bluebird'),
   _ = require('lodash'),
   should = require('should'),
-  params = require('rc')('kuzzle'),
   KuzzleServer = require.main.require('lib/api/kuzzleServer'),
   InternalError = require.main.require('kuzzle-common-objects').Errors.internalError,
   NotFoundError = require.main.require('kuzzle-common-objects').Errors.notFoundError,

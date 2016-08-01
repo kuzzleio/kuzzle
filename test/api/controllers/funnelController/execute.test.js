@@ -6,7 +6,6 @@ var
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
   ResponseObject = require.main.require('kuzzle-common-objects').Models.responseObject,
   ServiceUnavailableError = require.main.require('kuzzle-common-objects').Errors.serviceUnavailableError,
-  params = require('rc')('kuzzle'),
   KuzzleServer = require.main.require('lib/api/kuzzleServer'),
   rewire = require('rewire'),
   FunnelController = rewire('../../../../lib/api/controllers/funnelController');
@@ -57,7 +56,7 @@ describe('funnelController.execute', () => {
       .then(() => {
         funnel = new FunnelController(kuzzle);
         funnel.init();
-      })
+      });
   });
 
   afterEach(() => {

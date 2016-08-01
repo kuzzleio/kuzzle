@@ -2,7 +2,6 @@ var
   should = require('should'),
   Promise = require('bluebird'),
   _ = require('lodash'),
-  params = require('rc')('kuzzle'),
   KuzzleWorker = require.main.require('lib/api/kuzzleWorker'),
   WLoader = require('../../lib/workers/index'),
   sinon = require('sinon'),

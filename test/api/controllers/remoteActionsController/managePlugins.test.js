@@ -9,8 +9,7 @@ var
   lockFile = require('proper-lockfile'),
   path = require('path'),
   clcOk = managePlugins.__get__('clcOk'),
-  clcNotice = managePlugins.__get__('clcNotice'),
-  sandbox;
+  clcNotice = managePlugins.__get__('clcNotice');
 
 describe('Test: managePlugins remote action caller', () => {
   var

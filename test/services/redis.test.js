@@ -1,11 +1,9 @@
 var
   should = require('should'),
-  params = require('rc')('kuzzle'),
   rewire = require('rewire'),
   Redis = rewire('../../lib/services/redis'),
   IORedis = require('ioredis'),
   redisCommands = (require('ioredis')({lazyConnect: true})).getBuiltinCommands(),
-  EventEmitter = require('eventemitter2').EventEmitter2,
   KuzzleServer = require.main.require('lib/api/kuzzleServer'),
   sinon = require('sinon'),
   RedisClientMock = require('../mocks/services/redisClient.mock');

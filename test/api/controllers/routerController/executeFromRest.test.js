@@ -5,7 +5,6 @@
 
 var
   should = require('should'),
-  kuzzleParams = require('rc')('kuzzle'),
   KuzzleServer = require.main.require('lib/api/kuzzleServer'),
   rewire = require('rewire'),
   RouterController = rewire('../../../../lib/api/controllers/routerController'),

@@ -1,7 +1,7 @@
 var
   EventEmitter = require('eventemitter2').EventEmitter2,
   getBuiltinCommands = (require('ioredis')({lazyConnect: true})).getBuiltinCommands,
-  redisCommands = getBuiltinCommands();
+  redisCommands = getBuiltinCommands(),
   Promise = require('bluebird');
 
 

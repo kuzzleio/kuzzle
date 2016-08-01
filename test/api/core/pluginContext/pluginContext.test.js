@@ -1,7 +1,6 @@
 var
   PluginContext = require.main.require('lib/api/core/plugins/pluginContext'),
   PluginImplementationError = require('kuzzle-common-objects').Errors.pluginImplementationError,
-  params = require('rc')('kuzzle'),
   KuzzleServer = require.main.require('lib/api/kuzzleServer'),
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),

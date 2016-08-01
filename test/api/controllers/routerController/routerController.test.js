@@ -2,7 +2,6 @@ var
   should = require('should'),
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
-  params = require('rc')('kuzzle'),
   KuzzleServer = require.main.require('lib/api/kuzzleServer'),
   Promise = require('bluebird'),
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
@@ -119,7 +118,7 @@ describe('Test: routerController', () => {
       return kuzzle.router.newConnection('foo', 'bar')
         .then(res => {
           context = res;
-        })
+        });
     });
 
     it('should return a fulfilled promise with the right arguments', (done) => {
@@ -194,7 +193,7 @@ describe('Test: routerController', () => {
       return kuzzle.router.newConnection('foo', 'bar')
         .then(res => {
           context = res;
-        })
+        });
     });
 
     it('should remove the context from the context pool', () => {

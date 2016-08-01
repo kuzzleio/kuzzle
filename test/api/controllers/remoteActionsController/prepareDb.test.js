@@ -1,6 +1,5 @@
 var
   rc = require('rc'),
-  params = rc('kuzzle'),
   Promise = require('bluebird'),
   rewire = require('rewire'),
   should = require('should'),

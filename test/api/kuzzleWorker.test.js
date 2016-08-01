@@ -1,5 +1,4 @@
 var
-  rc = require('rc'),
   KuzzleWorker = require.main.require('lib/api/kuzzleWorker'),
   should = require('should');
 

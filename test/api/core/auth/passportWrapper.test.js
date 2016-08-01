@@ -2,7 +2,6 @@ var
   should = require('should'),
   passport = require('passport'),
   util = require('util'),
-  params = require('rc')('kuzzle'),
   KuzzleServer = require.main.require('lib/api/kuzzleServer'),
   ForbiddenError = require.main.require('kuzzle-common-objects').Errors.forbiddenError,
   PassportWrapper = require.main.require('lib/api/core/auth/passportWrapper'),

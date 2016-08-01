@@ -1,5 +1,4 @@
 var
-  Promise = require('bluebird'),
   should = require('should'),
   sinon = require('sinon'),
   KuzzleServer = require.main.require('lib/api/kuzzleServer'),

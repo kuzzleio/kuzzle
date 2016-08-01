@@ -3,7 +3,6 @@ var
   Promise = require('bluebird'),
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
-  params = require('rc')('kuzzle'),
   KuzzleServer = require.main.require('lib/api/kuzzleServer'),
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
   ResponseObject = require.main.require('kuzzle-common-objects').Models.responseObject;
@@ -134,9 +133,8 @@ describe('Test: write controller', () => {
       kuzzle.notifier.publish.restore();
       messagePublished = sandbox.stub(kuzzle.notifier, 'publish').rejects(new Error(''));
       return kuzzle.funnel.controllers.write.publish(requestObject)
-        .then(() => shoud.fail('Expected promise to be rejected'))
+        .then(() => should.fail('Expected promise to be rejected'))
         .catch(response => {
-          console.log(response);
           should(response).be.instanceOf(Error);
           should(messagePublished.calledOnce).be.true();
         });

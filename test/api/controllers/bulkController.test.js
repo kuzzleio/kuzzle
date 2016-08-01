@@ -1,10 +1,8 @@
 var
   should = require('should'),
-  params = require('rc')('kuzzle'),
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
   KuzzleServer = require.main.require('lib/api/kuzzleServer'),
-  Promise = require('bluebird'),
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
   ResponseObject = require.main.require('kuzzle-common-objects').Models.responseObject,
   PartialError = require.main.require('kuzzle-common-objects').Errors.partialError;

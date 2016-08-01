@@ -57,22 +57,22 @@ describe('Test: security/roleTest', () => {
     },
     stubs = {
       readEngine:{
-        search: requestObject => {
-          if (requestObject.data.body.filter.ids.values[0] !== 'foobar') {
+        search: rq => {
+          if (rq.data.body.filter.ids.values[0] !== 'foobar') {
             return Promise.resolve({hits: [documentAda]});
           }
           return Promise.resolve({hits: [documentFalseAda]});
         },
-        get: requestObject => {
-          if (requestObject.data.id === 'reject') {
+        get: rq => {
+          if (rq.data.id === 'reject') {
             return Promise.reject(new InternalError('Our Error'));
-          } else if (requestObject.data.id !== 'foobar') {
+          } else if (rq.data.id !== 'foobar') {
             return Promise.resolve(documentAda);
           }
           return Promise.resolve(documentFalseAda);
         },
-        mget: requestObject => {
-          if (requestObject.data.body.ids[0] !== 'foobar') {
+        mget: rq => {
+          if (rq.data.body.ids[0] !== 'foobar') {
             return Promise.resolve({hits: [documentAda]});
           }
           return Promise.resolve({hits: [documentFalseAda]});

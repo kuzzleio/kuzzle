@@ -9,7 +9,6 @@ var
   sandbox = sinon.sandbox.create(),
   http = require('http'),
   Promise = require('bluebird'),
-  kuzzleParams = require('rc')('kuzzle'),
   KuzzleServer = require.main.require('lib/api/kuzzleServer'),
   rewire = require('rewire'),
   yamlToJson = require('parser-yaml').parse,
@@ -110,7 +109,7 @@ describe('Test: routerController.initRouterHttp', () => {
         });
 
         server.listen(options.port, () => done());
-      })
+      });
   });
 
   afterEach(() => {

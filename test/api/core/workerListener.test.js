@@ -4,7 +4,6 @@
 var
   should = require('should'),
   uuid = require('node-uuid'),
-  params = require('rc')('kuzzle'),
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
   KuzzleServer = require.main.require('lib/api/kuzzleServer'),
@@ -15,7 +14,6 @@ var
 describe('Test: workerListener', () => {
   var
     kuzzle,
-    registered,
     listenCallback,
     spy,
     controllers = ['write', 'subscribe', 'read', 'admin', 'bulk'],
@@ -36,7 +34,7 @@ describe('Test: workerListener', () => {
     return kuzzle.services.init({whitelist: []})
       .then(() => {
         spy = sandbox.stub(kuzzle.services.list.broker, 'listen', (room, cb) => {
-            listenCallback = cb;
+          listenCallback = cb;
         });
       });
   });

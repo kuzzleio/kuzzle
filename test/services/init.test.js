@@ -1,7 +1,6 @@
 var
   Promise = require('bluebird'),
   should = require('should'),
-  params = require('rc')('kuzzle'),
   rewire = require('rewire'),
   sinon = require('sinon'),
   KuzzleServer = require.main.require('lib/api/kuzzleServer'),

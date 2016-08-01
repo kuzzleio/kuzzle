@@ -28,7 +28,7 @@ var
 
 module.exports = function (options) {
   var
-    kuzzle = (options.server ? new KuzzleServer() : new KuzzleWorker());
+    kuzzle = (options.server ? new KuzzleServer() : new KuzzleWorker()),
     error = string => options.parent.noColors ? string : clc.red(string),
     warn = string => options.parent.noColors ? string : clc.yellow(string),
     notice = string => options.parent.noColors ? string : clc.cyanBright(string),
@@ -90,31 +90,31 @@ module.exports = function (options) {
         request,
         data = {};
 
-        if (params.fixtures) {
-          try {
-            JSON.parse(fs.readFileSync(params.fixtures, 'utf8'));
-          }
-          catch (e) {
-            console.log(error('[✖] The file ' + params.fixtures + ' cannot be opened... aborting.'));
-            process.exit(1);
-          }
-          data.fixtures = params.fixtures;
+      if (params.fixtures) {
+        try {
+          JSON.parse(fs.readFileSync(params.fixtures, 'utf8'));
         }
-
-        if (params.mappings) {
-          try {
-            JSON.parse(fs.readFileSync(params.mappings, 'utf8'));
-          }
-          catch (e) {
-            console.log(error('[✖] The file ' + params.mappings + ' cannot be opened... aborting.'));
-            process.exit(1);
-          }
-          data.mappings = params.mappings;
+        catch (e) {
+          console.log(error('[✖] The file ' + params.fixtures + ' cannot be opened... aborting.'));
+          process.exit(1);
         }
+        data.fixtures = params.fixtures;
+      }
 
-        request = new RequestObject({controller: 'remoteActions', action: 'prepareDb', body: data});
-        return kuzzle.remoteActionsController.actions.prepareDb(kuzzle, request)
-          .catch(() => Promise.resolve());
+      if (params.mappings) {
+        try {
+          JSON.parse(fs.readFileSync(params.mappings, 'utf8'));
+        }
+        catch (e) {
+          console.log(error('[✖] The file ' + params.mappings + ' cannot be opened... aborting.'));
+          process.exit(1);
+        }
+        data.mappings = params.mappings;
+      }
+
+      request = new RequestObject({controller: 'remoteActions', action: 'prepareDb', body: data});
+      return kuzzle.remoteActionsController.actions.prepareDb(kuzzle, request)
+        .catch(() => Promise.resolve());
     })
     .then(() => {
       console.log(`

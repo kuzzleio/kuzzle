@@ -1,9 +1,7 @@
 var
   should = require('should'),
-  Promise = require('bluebird'),
   sinon = require('sinon'),
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
-  params = require('rc')('kuzzle'),
   KuzzleServer = require.main.require('lib/api/kuzzleServer');
 
 describe('Test: hotelClerk.removeCustomerFromAllRooms', function () {

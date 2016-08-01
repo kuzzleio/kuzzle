@@ -53,7 +53,7 @@ describe('Test: notifier.notifyDocumentCreate', () => {
           savedResponse = r;
           notification = n;
         };
-      })
+      });
   });
 
   afterEach(() => {

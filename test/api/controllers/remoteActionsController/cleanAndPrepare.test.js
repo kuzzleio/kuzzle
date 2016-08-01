@@ -1,7 +1,4 @@
 var
-  rc = require('rc'),
-  params = rc('kuzzle'),
-  Promise = require('bluebird'),
   should = require('should'),
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
@@ -21,7 +18,7 @@ describe('Test: clean and prepare database remote action', () => {
     return kuzzle.services.init({whitelist: []})
       .then(() => {
       });
-  })
+  });
 
   afterEach(() => {
     sandbox.restore();
