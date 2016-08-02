@@ -96,19 +96,6 @@ describe('Test: Prepare database', () => {
       reset();
     });
 
-    it('should do nothing if kuzzle is not a server', () => {
-      var
-        request = new RequestObject({body: 'bar'});
-
-      kuzzle.isServer = false;
-
-      return prepareDb(request)
-        .then(response => {
-          should(response).be.eql({isWorker: true});
-          should(createInternalStructureStub).have.callCount(0);
-        });
-    });
-
     it('should store fixtures and mappings filename if provided', () => {
       var request = new RequestObject({controller: 'remoteActions', action: 'prepareDb', body: {fixtures: 'fixtures.json', mappings: 'mappings.json'}});
 

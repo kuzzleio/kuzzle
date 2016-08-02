@@ -15,6 +15,7 @@ describe('Tests: api/remoteActions/index.js', () => {
     kuzzle = {
       services: {},
       internalEngine: {
+        init: sinon.stub().resolves(),
         search : () => Promise.resolve({hits: []})
       }
     };
@@ -195,6 +196,9 @@ describe('Tests: api/remoteActions/index.js', () => {
       return remoteActions.do.call(context, 'test', {})
         .then(response => {
           should(response).be.exactly('promise');
+
+          should(kuzzle.internalEngine.init).be.calledOnce();
+
           should(kuzzle.services.list.broker.listen).be.calledOnce();
           should(kuzzle.services.list.broker.listen.firstCall.args[1]).be.a.Function();
           should(kuzzle.services.list.broker.broadcast).be.calledOnce();

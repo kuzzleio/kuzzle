@@ -1,7 +1,8 @@
 var
   rc = require('rc'),
-  Kuzzle = require.main.require('lib/api/kuzzle'),
-  should = require('should');
+  rewire = require('rewire'),
+  should = require('should'),
+  Kuzzle = rewire('../../lib/api/kuzzle');
 
 describe('Test kuzzle server constructor', () => {
   var kuzzle;
@@ -14,7 +15,6 @@ describe('Test kuzzle server constructor', () => {
     should(kuzzle).be.an.Object();
 
     should(kuzzle.hooks).be.an.Object();
-    should(kuzzle.workers).be.an.Object();
     should(kuzzle.services).be.an.Object();
     should(kuzzle.remoteActions).be.an.Object();
 
@@ -31,9 +31,7 @@ describe('Test kuzzle server constructor', () => {
     should(kuzzle.dsl).be.an.Object();
     should(kuzzle.notifier).be.an.Object();
     should(kuzzle.statistics).be.an.Object();
-    should(kuzzle.workerListener).be.an.Object();
 
-    should(kuzzle.clusterManager).be.an.Object();
     should(kuzzle.entryPoints).be.an.Object();
 
     should(kuzzle.remoteActionsController).be.an.Object();

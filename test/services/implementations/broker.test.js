@@ -66,14 +66,14 @@ describe('Test: Internal broker', () => {
     beforeEach(() => {
       var InternalBroker = new BrokerFactory('internalBroker');
       /** @type InternalBroker */
-      server = new InternalBroker(kuzzle, {isServer: true});
+      server = new InternalBroker(kuzzle);
       server.ws = (options, cb) => {
         cb();
         return new WSServerMock();
       };
 
       /** @type InternalBroker */
-      client = new InternalBroker(kuzzle, {isServer: false});
+      client = new InternalBroker(kuzzle, {client: true});
       client.ws = () => new WSClientMock(server.server);
 
       return Promise.all([
@@ -82,7 +82,7 @@ describe('Test: Internal broker', () => {
       ]);
     });
 
-    it('should instanciate a broker', () => {
+    it('should instantiate a broker', () => {
       should(client).be.an.instanceOf(WSBrokerClient);
       should(server).be.an.instanceOf(WSBrokerServer);
     });
