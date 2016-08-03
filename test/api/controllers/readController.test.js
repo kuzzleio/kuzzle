@@ -27,7 +27,10 @@ describe('Test: read controller', () => {
             version: '0.1',
             activated: false,
             object: {
-              hooks: []
+              hooks: [],
+              pipes: [],
+              controllers: [],
+              routes: []
             }
           }
         };
