@@ -5,10 +5,11 @@
 
 var
   should = require('should'),
+  sinon = require('sinon'),
+  sandbox = sinon.sandbox.create(),
   http = require('http'),
   Promise = require('bluebird'),
-  kuzzleParams = require('rc')('kuzzle'),
-  Kuzzle = require.main.require('lib/api/Kuzzle'),
+  KuzzleServer = require.main.require('lib/api/kuzzleServer'),
   rewire = require('rewire'),
   yamlToJson = require('parser-yaml').parse,
   RouterController = rewire('../../../../lib/api/controllers/routerController');
@@ -72,20 +73,23 @@ describe('Test: routerController.initRouterHttp', () => {
    * with the params passed to it by initRouterHttp, so we can also test if
    * the answer is correctly constructed.
    */
-  before(done => {
-    var mockResponse;
-    kuzzle = new Kuzzle();
+  before(() => {
+    kuzzle = new KuzzleServer();
+  });
 
-    mockResponse = (params, request, response) => {
-      if (!params.action) {
-        params.action = request.params.action;
-      }
+  beforeEach(done => {
+    var
+      mockResponse = (params, request, response) => {
+        if (!params.action) {
+          params.action = request.params.action;
+        }
 
-      response.writeHead(200, {'Content-Type': 'application/json'});
-      response.end(JSON.stringify(params));
-    };
+        response.writeHead(200, {'Content-Type': 'application/json'});
+        response.end(JSON.stringify(params));
+      };
 
-    kuzzle.start(kuzzleParams, {dummy: true})
+    sandbox.stub(kuzzle.internalEngine, 'get').resolves({});
+    return kuzzle.services.init({whitelist: []})
       .then(() => {
         RouterController.__set__('executeFromRest', mockResponse);
 
@@ -108,9 +112,11 @@ describe('Test: routerController.initRouterHttp', () => {
       });
   });
 
-  after(() => {
+  afterEach(() => {
     server.close();
+    sandbox.restore();
   });
+
 
   it('should reply with the read:serverInfo action on a simple GET query', done => {
     http.get(url, response => {

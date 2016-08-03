@@ -153,7 +153,7 @@ describe('Test: sandbox/sandboxTest', () => {
     it('should execute the given code', done => {
       var anotherSandbox = new Sandbox();
       anotherSandbox.run({
-        code: '(function () { var a = 1; var b = 4; return (a + b); })()'
+        code: '(() => { var a = 1; var b = 4; return (a + b); })()'
       })
         .then(result => {
           should(result.result).be.exactly(5);

@@ -1,9 +1,11 @@
 var
   rewire = require('rewire'),
   should = require('should'),
+  params = require('rc')('kuzzle'),
+  Promise = require('bluebird'),
   sinon = require('sinon'),
-  RemoteActions = rewire('../../../lib/api/remoteActions/index'),
-  sandbox = sinon.sandbox.create();
+  sandbox = sinon.sandbox.create(),
+  RemoteActions = rewire('../../../lib/api/remoteActions/index');
 
 describe('Tests: api/remoteActions/index.js', () => {
   var
@@ -11,7 +13,10 @@ describe('Tests: api/remoteActions/index.js', () => {
 
   beforeEach(() => {
     kuzzle = {
-      services: {}
+      services: {},
+      internalEngine: {
+        search : () => Promise.resolve({hits: []})
+      }
     };
   });
 
@@ -81,7 +86,8 @@ describe('Tests: api/remoteActions/index.js', () => {
         config: sinon.stub().returns({
           queues: {
             remoteActionsQueue: 'queue'
-          }
+          },
+          pluginsManager: params.pluginsManager
         }),
         console: {
           log: sinon.spy(),
@@ -130,7 +136,7 @@ describe('Tests: api/remoteActions/index.js', () => {
       var
         context = {
           actions: {
-            test: {isPidMandatory: true, onListenCB: function () {}}
+            test: {isPidMandatory: true, onListenCB: () => {}}
           }
         };
 
@@ -154,7 +160,7 @@ describe('Tests: api/remoteActions/index.js', () => {
             actions: {
               test: {
                 isPidMandatory: true,
-                onListenCB: function () {}
+                onListenCB: () => {}
               }
             }
           };

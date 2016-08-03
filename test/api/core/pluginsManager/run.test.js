@@ -9,7 +9,7 @@ var
   GatewayTimeoutError = require.main.require('kuzzle-common-objects').Errors.gatewayTimeoutError,
   workerPrefix = PluginsManager.__get__('workerPrefix');
 
-describe('Test plugins manager run', function () {
+describe('Test plugins manager run', () => {
   var
     sandbox,
     plugin,
@@ -18,7 +18,7 @@ describe('Test plugins manager run', function () {
     pluginsManager,
     pm2Mock;
 
-  before(function () {
+  before(() => {
     pm2Mock = function () {
       /* jshint -W106 */
       var universalProcess = {
@@ -96,13 +96,13 @@ describe('Test plugins manager run', function () {
           callback(null);
         },
         /** Mock only methods */
-        resetMock: function () {
+        resetMock: () => {
           busListeners = {};
           processList = [];
           uniqueness = 0;
           sentMessages = [];
         },
-        getProcessList: function () {
+        getProcessList: () => {
           return processList;
         },
         getSentMessages: function() {
@@ -116,7 +116,7 @@ describe('Test plugins manager run', function () {
             });
           }
         },
-        initializeList: function () {
+        initializeList: () => {
           processList = [{process: universalProcess}];
         }
         /** END - Mock only methods */
@@ -124,8 +124,8 @@ describe('Test plugins manager run', function () {
     }();
 
     PluginsManager.__set__('console', {
-      log: function () {},
-      error: function () {}
+      log: () => {},
+      error: () => {}
     });
 
     PluginsManager.__set__('pm2', pm2Mock);
@@ -145,7 +145,7 @@ describe('Test plugins manager run', function () {
 
     plugin = {
       object: {
-        init: function () {}
+        init: () => {}
       },
       config: {},
       activated: true
@@ -173,8 +173,8 @@ describe('Test plugins manager run', function () {
       'bar:foo': 'bar'
     };
 
-    plugin.object.foo = function () {};
-    plugin.object.bar = function () {};
+    plugin.object.foo = () => {};
+    plugin.object.bar = () => {};
 
     pluginMock.expects('foo').once();
     pluginMock.expects('bar').never();
@@ -192,9 +192,9 @@ describe('Test plugins manager run', function () {
       'bar:foo': ['baz']
     };
 
-    plugin.object.foo = function () {};
-    plugin.object.bar = function () {};
-    plugin.object.baz = function () {};
+    plugin.object.foo = () => {};
+    plugin.object.bar = () => {};
+    plugin.object.baz = () => {};
 
     pluginMock.expects('foo').once();
     pluginMock.expects('bar').once();
@@ -213,8 +213,8 @@ describe('Test plugins manager run', function () {
       'bar:foo': 'bar'
     };
 
-    plugin.object.foo = function () {};
-    plugin.object.bar = function () {};
+    plugin.object.foo = () => {};
+    plugin.object.bar = () => {};
 
     pluginMock.expects('foo').once();
     pluginMock.expects('bar').never();
@@ -232,8 +232,8 @@ describe('Test plugins manager run', function () {
       'bar:foo': 'bar'
     };
 
-    plugin.object.foo = function () {};
-    plugin.object.bar = function () {};
+    plugin.object.foo = () => {};
+    plugin.object.bar = () => {};
 
     pluginMock.expects('foo').once().callsArg(1);
     pluginMock.expects('bar').never().callsArg(1);
@@ -249,8 +249,8 @@ describe('Test plugins manager run', function () {
       'bar:foo': 'bar'
     };
 
-    plugin.object.foo = function () {};
-    plugin.object.bar = function () {};
+    plugin.object.foo = () => {};
+    plugin.object.bar = () => {};
 
     pluginMock.expects('foo').once().callsArg(1);
     pluginMock.expects('bar').never().callsArg(1);
@@ -266,9 +266,9 @@ describe('Test plugins manager run', function () {
       'bar:foo': 'bar'
     };
 
-    plugin.object.foo = function () {};
-    plugin.object.bar = function () {};
-    plugin.object.baz = function () {};
+    plugin.object.foo = () => {};
+    plugin.object.bar = () => {};
+    plugin.object.baz = () => {};
 
     pluginMock.expects('foo').once().callsArg(1);
     pluginMock.expects('bar').never().callsArg(1);
@@ -284,7 +284,7 @@ describe('Test plugins manager run', function () {
       'foo:bar': 'foo'
     };
 
-    plugin.object.foo = function () {};
+    plugin.object.foo = () => {};
 
     pluginMock.expects('foo').once().callsArgWith(1, new Error('foobar'));
 
@@ -302,7 +302,7 @@ describe('Test plugins manager run', function () {
       'foo:bar': 'foo'
     };
 
-    plugin.object.foo = function () {};
+    plugin.object.foo = () => {};
     fooStub = sandbox.stub(plugin.object, 'foo', function (ev, cb) {
       setTimeout(() => cb(), 50);
     });
@@ -320,7 +320,7 @@ describe('Test plugins manager run', function () {
       'foo:bar': 'foo'
     };
 
-    plugin.object.foo = function () {}; // does not call the callback
+    plugin.object.foo = () => {}; // does not call the callback
 
     return should(pluginsManager.run()
       .then(() => pluginsManager.trigger('foo:bar'))).be.rejectedWith(GatewayTimeoutError);
@@ -331,7 +331,7 @@ describe('Test plugins manager run', function () {
       'foo': 'FooController'
     };
 
-    plugin.object.FooController = function () {};
+    plugin.object.FooController = () => {};
     pluginMock.expects('FooController').once().calledOn(plugin.object);
 
     return pluginsManager.run()

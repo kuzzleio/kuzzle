@@ -1,52 +1,45 @@
 var
   should = require('should'),
-  params = require('rc')('kuzzle'),
-  Kuzzle = require.main.require('lib/api/Kuzzle'),
+  KuzzleServer = require.main.require('lib/api/kuzzleServer'),
   NotificationObject = require.main.require('lib/api/core/models/notificationObject'),
   TokenManager = require.main.require('lib/api/core/auth/tokenManager');
 
-describe('Test: token manager core component', function () {
+describe('Test: token manager core component', () => {
   var
     kuzzle,
     token,
     contextStub,
     tokenManager;
 
-  before(function (done) {
-    kuzzle = new Kuzzle();
-    kuzzle.start(params, {dummy: true})
-      .then(() => {
-        kuzzle.hotelClerk.customers = {
-          'foobar': {
-            'room1': {},
-            'room2': {},
-            'room3': {}
-          }
-        };
-
-        contextStub = {connection: {id: 'foobar'}};
-        done();
-      })
-      .catch(err => done(err));
+  before(() => {
+    kuzzle = new KuzzleServer();
+    kuzzle.hotelClerk.customers = {
+      'foobar': {
+        'room1': {},
+        'room2': {},
+        'room3': {}
+      }
+    };
+    contextStub = {connection: {id: 'foobar'}};
   });
 
-  beforeEach(function () {
+  beforeEach(() => {
     tokenManager = new TokenManager(kuzzle);
     token = {_id: 'foobar', expiresAt: Date.now()+1000};
   });
 
-  describe('#add', function () {
-    it('should not add a token if the context does not contain a connection object', function () {
+  describe('#add', () => {
+    it('should not add a token if the context does not contain a connection object', () => {
       tokenManager.add(token, {});
       should(tokenManager.tokenizedConnections.foobar).be.undefined();
     });
 
-    it('should not add a token if the context connection does not contain an id', function () {
+    it('should not add a token if the context connection does not contain an id', () => {
       tokenManager.add(token, {connection: {}});
       should(tokenManager.tokenizedConnections.foobar).be.undefined();
     });
 
-    it('should add the token if the context is properly formatted', function () {
+    it('should add the token if the context is properly formatted', () => {
       tokenManager.add(token, contextStub);
       should(tokenManager.tokenizedConnections.foobar).be.an.Object();
       should(tokenManager.tokenizedConnections.foobar.expiresAt).be.eql(token.expiresAt);
@@ -54,27 +47,27 @@ describe('Test: token manager core component', function () {
     });
   });
 
-  describe('#add', function () {
+  describe('#add', () => {
     var anotherToken;
 
-    beforeEach(function () {
+    beforeEach(() => {
       anotherToken = {_id: 'foobar', expiresAt: Date.now()+1000};
     });
 
-    it('should not add a token if the context does not contain a connection object', function () {
+    it('should not add a token if the context does not contain a connection object', () => {
       tokenManager.add(anotherToken, {});
       should(tokenManager.tokenizedConnections.foobar).be.undefined();
     });
 
-    it('should not add a token if the context connection does not contain an id', function () {
+    it('should not add a token if the context connection does not contain an id', () => {
       tokenManager.add(anotherToken, {connection: {}});
       should(tokenManager.tokenizedConnections.foobar).be.undefined();
     });
 
-    it('should add the token if the context is properly formatted', function () {
+    it('should add the token if the context is properly formatted', () => {
       var
         context = {connection: {id: 'foo'}};
-      
+
       tokenManager.add(anotherToken, context);
       should(tokenManager.tokenizedConnections.foobar).be.an.Object();
       should(tokenManager.tokenizedConnections.foobar.expiresAt).be.eql(anotherToken.expiresAt);
@@ -82,8 +75,8 @@ describe('Test: token manager core component', function () {
     });
   });
 
-  describe('#expire', function () {
-    it('should force a token to expire when called', function () {
+  describe('#expire', () => {
+    it('should force a token to expire when called', () => {
       tokenManager.add(token, contextStub);
       tokenManager.expire({_id: 'foobar'});
 
@@ -91,14 +84,14 @@ describe('Test: token manager core component', function () {
     });
   });
 
-  describe('#checkTokensValidity', function () {
+  describe('#checkTokensValidity', () => {
     var
       notification,
       rooms,
       connectionId,
       subscriptionsCleaned;
 
-    before(function () {
+    before(() => {
       kuzzle.notifier.notify = (r, msg, id) => {
         rooms = r;
         notification = msg;
@@ -108,14 +101,14 @@ describe('Test: token manager core component', function () {
       kuzzle.hotelClerk.removeCustomerFromAllRooms = () => {subscriptionsCleaned = true; return Promise.resolve();};
     });
 
-    beforeEach(function () {
+    beforeEach(() => {
       notification = null;
       rooms = null;
       connectionId = '';
       subscriptionsCleaned = false;
     });
 
-    it('should do nothing if no token has expired', function () {
+    it('should do nothing if no token has expired', () => {
       var stubTokens = {
         foo: {
           _id: 'foo',
@@ -137,7 +130,7 @@ describe('Test: token manager core component', function () {
       should(tokenManager.tokenizedConnections.bar).match({expiresAt: stubTokens.bar.expiresAt, connection: contextStub.connection});
     });
 
-    it('should clean up subscriptions upon a token expiration', function () {
+    it('should clean up subscriptions upon a token expiration', () => {
       var
         stubTokens = {
           foo: {
@@ -166,7 +159,7 @@ describe('Test: token manager core component', function () {
       should(tokenManager.tokenizedConnections.bar).match({expiresAt: stubTokens.bar.expiresAt, connection: contextStub.connection});
     });
 
-    it('should behave correctly if the token does not match any subscription', function () {
+    it('should behave correctly if the token does not match any subscription', () => {
       var
         stubTokens = {
           foo: {

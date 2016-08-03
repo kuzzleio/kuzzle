@@ -1,28 +1,25 @@
 var
   should = require('should'),
-  params = require('rc')('kuzzle'),
-  Promise = require('bluebird'),
   sinon = require('sinon'),
-  Kuzzle = require.main.require('lib/api/Kuzzle'),
+  sandbox = sinon.sandbox.create(),
+  KuzzleServer = require.main.require('lib/api/kuzzleServer'),
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
   ResponseObject = require.main.require('kuzzle-common-objects').Models.responseObject;
 
-require('sinon-as-promised')(Promise);
-
-describe('Test: subscribe controller', function () {
+describe('Test: subscribe controller', () => {
   var
     kuzzle,
-    sandbox,
     requestObject;
 
   before(() => {
-    kuzzle = new Kuzzle();
-    return kuzzle.start(params, {dummy: true});
+    kuzzle = new KuzzleServer();
   });
 
   beforeEach(() => {
     requestObject = new RequestObject({index: 'test', collection: 'collection', controller: 'subscribe'}, {}, 'unit-test');
-    sandbox = sinon.sandbox.create();
+    sandbox.stub(kuzzle.internalEngine, 'get').resolves({});
+    return kuzzle.services.init({whitelist: []})
+      .then(() => kuzzle.funnel.init());
   });
 
   afterEach(() => {
@@ -30,7 +27,7 @@ describe('Test: subscribe controller', function () {
   });
 
   describe('#on', () => {
-    it('should forward new subscriptions to the hotelClerk core component', function () {
+    it('should forward new subscriptions to the hotelClerk core component', () => {
       sandbox.stub(kuzzle.hotelClerk, 'addSubscription').resolves();
 
       return kuzzle.funnel.controllers.subscribe.on(requestObject)
@@ -44,7 +41,7 @@ describe('Test: subscribe controller', function () {
   });
 
   describe('#off', () => {
-    it('should forward unsubscribes queries to the hotelClerk core component', function () {
+    it('should forward unsubscribes queries to the hotelClerk core component', () => {
       sandbox.stub(kuzzle.hotelClerk, 'removeSubscription').resolves();
       return kuzzle.funnel.controllers.subscribe.off(requestObject)
         .then(response => should(response).be.instanceOf(ResponseObject));
@@ -57,7 +54,7 @@ describe('Test: subscribe controller', function () {
   });
 
   describe('#count', () => {
-    it('should forward subscription counts queries to the hotelClerk core component', function () {
+    it('should forward subscription counts queries to the hotelClerk core component', () => {
       sandbox.stub(kuzzle.hotelClerk, 'countSubscription').resolves();
       return kuzzle.funnel.controllers.subscribe.count(requestObject)
         .then(response => should(response).be.instanceOf(ResponseObject));
@@ -69,7 +66,7 @@ describe('Test: subscribe controller', function () {
     });
   });
 
-  describe('#list', function () {
+  describe('#list', () => {
     it('should trigger a hook and return a promise', function (done) {
       this.timeout(50);
       sandbox.stub(kuzzle.hotelClerk, 'listSubscriptions').resolves();
@@ -78,7 +75,7 @@ describe('Test: subscribe controller', function () {
       kuzzle.funnel.controllers.subscribe.list(requestObject);
     });
 
-    it('should forward subscription list query to the hotelClerk core component', function () {
+    it('should forward subscription list query to the hotelClerk core component', () => {
       sandbox.stub(kuzzle.hotelClerk, 'listSubscriptions').resolves();
       return kuzzle.funnel.controllers.subscribe.list(requestObject)
         .then(response => should(response).be.instanceOf(ResponseObject));
@@ -90,8 +87,8 @@ describe('Test: subscribe controller', function () {
     });
   });
 
-  describe('#join', function () {
-    it('should forward subscription join query to the hotelClerk core component', function () {
+  describe('#join', () => {
+    it('should forward subscription join query to the hotelClerk core component', () => {
       sandbox.stub(kuzzle.hotelClerk, 'join').resolves();
       return kuzzle.funnel.controllers.subscribe.join(requestObject)
         .then(response => should(response).be.instanceOf(ResponseObject));

@@ -4,18 +4,18 @@ var
   md5 = require('crypto-md5'),
   DslFilters = rewire('../../../../lib/api/dsl/filters');
 
-describe('Test: dsl.filters.add', function () {
+describe('Test: dsl.filters.add', () => {
   var
     filters,
     field = 'some.field',
     hashedField = md5(field),
     hashedFilter = md5('filter');
 
-  beforeEach(function () {
+  beforeEach(() => {
     filters = new DslFilters();
   });
 
-  it('should return an error if the provided operator is not supported', function () {
+  it('should return an error if the provided operator is not supported', () => {
     var result = filters.add('', '', '', 'foobar', '', '', '', false, false);
     should(result).be.an.Object();
     should(result.status).be.exactly(400);
@@ -23,7 +23,7 @@ describe('Test: dsl.filters.add', function () {
     should(result.message).be.exactly('Operator foobar doesn\'t exist');
   });
 
-  it('should initializes the filter tree using the provided arguments', function () {
+  it('should initializes the filter tree using the provided arguments', () => {
     var result = filters.add('index', 'collection', field, 'gte', 42, 'filter', 'filterId');
 
     should.not.exist(result.error);
@@ -37,7 +37,7 @@ describe('Test: dsl.filters.add', function () {
       field,
       value: 42
     });
-    
+
     should(result.diff).be.eql({
       ft: {
         i: 'index',
@@ -68,9 +68,9 @@ describe('Test: dsl.filters.add', function () {
     should.not.exist(filters.filtersTree.index.collection.ids);
   });
 
-  it('should not add a room to the same filter if it is already assigned to it', function () {
+  it('should not add a room to the same filter if it is already assigned to it', () => {
     var result;
-    
+
     filters.add('index', 'collection', field, 'gte', 42, 'filter', 'filterId');
     result = filters.add('index', 'collection', field, 'gte', 42, 'filter', 'filterId');
 
@@ -79,7 +79,7 @@ describe('Test: dsl.filters.add', function () {
     should(result.diff).be.false();
   });
 
-  it('should also add the room to the global rooms list if the filter is global', function () {
+  it('should also add the room to the global rooms list if the filter is global', () => {
     var result = filters.add('index', 'collection', field, 'gte', 42, 'filter', 'filterId', false, true);
 
     should.exist(filters.filtersTree.index.collection.globalFilterIds);

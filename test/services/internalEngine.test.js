@@ -1,55 +1,16 @@
 var
-  Promise = require('bluebird'),
-  rewire = require('rewire'),
   should = require('should'),
   sinon = require('sinon'),
-  InternalEngine = rewire('../../lib/services/internalEngine'),
-  NotFoundError = require('kuzzle-common-objects').Errors.notFoundError,
-  sandbox = sinon.sandbox.create();
+  sandbox = sinon.sandbox.create(),
+  KuzzleServer = require.main.require('lib/api/kuzzleServer'),
+  NotFoundError = require.main.require('kuzzle-common-objects').Errors.notFoundError;
 
 describe('InternalEngine', () => {
   var
-    kuzzle,
-    reset;
+    kuzzle;
 
   before(() => {
-    reset = InternalEngine.__set__({
-      Elasticsearch: {
-        Client: function () {
-          this.create = Promise.resolve;
-          this.delete = Promise.resolve;
-          this.exists = Promise.resolve;
-          this.get = Promise.resolve;
-          this.index = Promise.resolve;
-          this.mget = Promise.resolve;
-          this.update = Promise.resolve;
-          this.search = Promise.resolve;
-
-          this.indices = {
-            create: Promise.resolve,
-            exists: Promise.resolve
-          };
-        }
-      }
-    });
-
-    kuzzle = {
-      config: {
-        internalIndex: 'testIndex',
-        internalEngine: {
-          hosts: 'engineHost',
-          apiVersion: '2.3'
-        }
-      }
-    };
-    kuzzle.internalEngine = new InternalEngine(kuzzle);
-  });
-
-  after(() => {
-    reset();
-  });
-
-  beforeEach(() => {
+    kuzzle = new KuzzleServer();
   });
 
   afterEach(() => {

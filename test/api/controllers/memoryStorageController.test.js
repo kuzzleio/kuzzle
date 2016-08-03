@@ -1,123 +1,127 @@
 var
   _ = require('lodash'),
   should = require('should'),
+  sinon = require('sinon'),
+  sandbox = sinon.sandbox.create(),
   rewire = require('rewire'),
-  params = require('rc')('kuzzle'),
-  Kuzzle = require.main.require('lib/api/Kuzzle'),
-  redisCommands = [],
-  redisClientMock = require('../../mocks/services/redisClient.mock'),
+  KuzzleServer = require.main.require('lib/api/kuzzleServer'),
+  Redis = rewire('../../../lib/services/redis'),
+  RedisClientMock = require('../../mocks/services/redisClient.mock'),
   BadRequestError = require.main.require('kuzzle-common-objects').Errors.badRequestError,
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
   ResponseObject = require.main.require('kuzzle-common-objects').Models.responseObject,
-  MemoryStorageController = rewire('../../../lib/api/controllers/memoryStorageController.js'),
-  msController,
-  kuzzle,
-  called,
-  extractArgumentsFromRequestObject = MemoryStorageController.__get__('extractArgumentsFromRequestObject'),
-  extractArgumentsFromRequestObjectForSet = MemoryStorageController.__get__('extractArgumentsFromRequestObjectForSet'),
-  extractArgumentsFromRequestObjectForSort = MemoryStorageController.__get__('extractArgumentsFromRequestObjectForSort'),
-  extractArgumentsFromRequestObjectForZAdd = MemoryStorageController.__get__('extractArgumentsFromRequestObjectForZAdd'),
-  extractArgumentsFromRequestObjectForZInterstore = MemoryStorageController.__get__('extractArgumentsFromRequestObjectForZInterstore'),
-  requestObject,
-  testMapping,
-  revertMapping;
+  MemoryStorageController = rewire('../../../lib/api/controllers/memoryStorageController.js');
 
-before(() => {
-  var wrapped = (f) => {
-    return function () {
-      if (called === undefined) {
-        called = {};
-      }
-      called[f.name] = {
-        called: true,
-        args: Array.prototype.slice.call(arguments)
+describe('Test: memoryStorage controller', () => {
+
+  var
+    dbname = 'unit-tests',
+    msController,
+    called,
+    extractArgumentsFromRequestObject,
+    extractArgumentsFromRequestObjectForSet,
+    extractArgumentsFromRequestObjectForSort,
+    extractArgumentsFromRequestObjectForZAdd,
+    extractArgumentsFromRequestObjectForZInterstore,
+    requestObject,
+    testMapping,
+    origMapping,
+    kuzzle;
+
+  before(() => {
+    var
+      wrapped = f => {
+        return function () {
+          if (called === undefined) {
+            called = {};
+          }
+          called[f.name] = {
+            called: true,
+            args: Array.prototype.slice.call(arguments)
+          };
+          return f.apply(this, Array.prototype.slice.call(arguments));
+        };
       };
 
-      return f.apply(this, Array.prototype.slice.call(arguments));
-    };
-  };
-
-  requestObject = new RequestObject({
-    body: {
-      _id: 'myKey',
-      someArg: 'someValue',
-      arrArg: [ 'I', 'am', 'sorry', 'Dave' ],
-      arrArg2: [ 'All', 'your', 'base', 'are', 'belong', 'to', 'us' ]
-    }
-  });
-
-  extractArgumentsFromRequestObjectForSet = wrapped(extractArgumentsFromRequestObjectForSet);
-  extractArgumentsFromRequestObjectForSort = wrapped(extractArgumentsFromRequestObjectForSort);
-  extractArgumentsFromRequestObjectForZAdd = wrapped(extractArgumentsFromRequestObjectForZAdd);
-  extractArgumentsFromRequestObjectForZInterstore = wrapped(extractArgumentsFromRequestObjectForZInterstore);
-
-  MemoryStorageController.__set__({
-    extractArgumentsFromRequestObjectForSet: extractArgumentsFromRequestObjectForSet,
-    extractArgumentsFromRequestObjectForSort: extractArgumentsFromRequestObjectForSort,
-    extractArgumentsFromRequestObjectForZAdd: extractArgumentsFromRequestObjectForZAdd,
-    extractArgumentsFromRequestObjectForZInterstore: extractArgumentsFromRequestObjectForZInterstore
-  });
-
-  kuzzle = new Kuzzle();
-  return kuzzle.start(params, {dummy: true})
-    .then(() => {
-      return kuzzle.services.list.memoryStorage.init();
-    })
-    .then(() => {
-      redisCommands = kuzzle.services.list.memoryStorage.commands;
-      kuzzle.services.list.memoryStorage.client = redisClientMock;
-
-      msController = new MemoryStorageController(kuzzle);
-
-      testMapping = {
-        mapping: {
-          noarg: null,
-          simplearg: {
-            key: ['_id']
-          },
-          bodyarg: {
-            arg: ['body', 'someArg']
-          },
-          skiparg: {
-            arg1: {skip: true, path: ['body', 'missing']},
-            arg2: {skip: true, path: ['body', 'someArg']}
-          },
-          mergearg: {
-            arg: {merge: true, path: ['body', 'arrArg']}
-          },
-          maparg: {
-            arg: {
-              merge: true,
-              path: ['body', 'arrArg2'],
-              map: arg => {
-                return arg.map(e => { return e.toUpperCase(); });
-              }
-            }
+    testMapping = {
+      noarg: null,
+      simplearg: {
+        key: ['_id']
+      },
+      bodyarg: {
+        arg: ['body', 'someArg']
+      },
+      skiparg: {
+        arg1: {skip: true, path: ['body', 'missing']},
+        arg2: {skip: true, path: ['body', 'someArg']}
+      },
+      mergearg: {
+        arg: {merge: true, path: ['body', 'arrArg']}
+      },
+      maparg: {
+        arg: {
+          merge: true,
+          path: ['body', 'arrArg2'],
+          map: arg => {
+            return arg.map(e => { return e.toUpperCase(); });
           }
         }
-      };
+      }
+    };
 
-      revertMapping = MemoryStorageController.__set__(testMapping);
+    extractArgumentsFromRequestObject = wrapped(MemoryStorageController.__get__('extractArgumentsFromRequestObject'));
+    extractArgumentsFromRequestObjectForSet = wrapped(MemoryStorageController.__get__('extractArgumentsFromRequestObjectForSet'));
+    extractArgumentsFromRequestObjectForSort = wrapped(MemoryStorageController.__get__('extractArgumentsFromRequestObjectForSort'));
+    extractArgumentsFromRequestObjectForZAdd = wrapped(MemoryStorageController.__get__('extractArgumentsFromRequestObjectForZAdd'));
+    extractArgumentsFromRequestObjectForZInterstore = wrapped(MemoryStorageController.__get__('extractArgumentsFromRequestObjectForZInterstore'));
+
+    MemoryStorageController.__set__({
+      extractArgumentsFromRequestObjectForSet: extractArgumentsFromRequestObjectForSet,
+      extractArgumentsFromRequestObjectForSort: extractArgumentsFromRequestObjectForSort,
+      extractArgumentsFromRequestObjectForZAdd: extractArgumentsFromRequestObjectForZAdd,
+      extractArgumentsFromRequestObjectForZInterstore: extractArgumentsFromRequestObjectForZInterstore
     });
-});
 
-beforeEach(function () {
-  called = {
-    extractArgumentsFromRequestObjectForSet: false,
-    extractArgumentsFromRequestObjectForSort: false,
-    extractArgumentsFromRequestObjectForZAdd: false,
-    extractArgumentsFromRequestObjectForZInterstore: false,
-    extractArgumentsFromRequestObjectForZRangeByLex: false,
-    extractArgumentsFromRequestObjectForZRangeByScore: false
-  };
-});
+    kuzzle = new KuzzleServer();
+    kuzzle.config.cache.databases.push(dbname);
+    kuzzle.services.list.memoryStorage = new Redis(kuzzle, {service: dbname});
+    return Redis.__with__('buildClient', () => new RedisClientMock())(() => {
+      return kuzzle.services.list.memoryStorage.init();
+    });
+  });
 
-describe('Test: memoryStore controller', function () {
+  beforeEach(() => {
+    requestObject = new RequestObject({
+      body: {
+        _id: 'myKey',
+        someArg: 'someValue',
+        arrArg: [ 'I', 'am', 'sorry', 'Dave' ],
+        arrArg2: [ 'All', 'your', 'base', 'are', 'belong', 'to', 'us' ]
+      }
+    });
 
-  describe('#constructor', function () {
+    called = {
+      extractArgumentsFromRequestObjectForSet: false,
+      extractArgumentsFromRequestObjectForSort: false,
+      extractArgumentsFromRequestObjectForZAdd: false,
+      extractArgumentsFromRequestObjectForZInterstore: false,
+      extractArgumentsFromRequestObjectForZRangeByLex: false,
+      extractArgumentsFromRequestObjectForZRangeByScore: false
+    };
+
+    msController = new MemoryStorageController(kuzzle);
+    origMapping = MemoryStorageController.__get__('mapping');
+    MemoryStorageController.__set__({mapping: testMapping});
+  });
+
+  afterEach(() => {
+    sandbox.restore();
+    MemoryStorageController.__set__({mapping: origMapping});
+  });
+
+  describe('#constructor', () => {
     it('should not expose blacklisted methods', () => {
       var blacklist = MemoryStorageController.__get__('blacklist');
-
       should(blacklist).be.an.Array();
       should(blacklist).not.be.empty();
 
@@ -129,8 +133,7 @@ describe('Test: memoryStore controller', function () {
     it('should construct the allowed functions', () => {
       var
         blacklisted = MemoryStorageController.__get__('blacklist'),
-        allowed = _.difference(redisCommands, blacklisted);
-
+        allowed = _.difference(kuzzle.services.list.memoryStorage.commands, blacklisted);
       should(allowed).be.an.Array();
       should(allowed).not.be.empty();
 
@@ -140,7 +143,7 @@ describe('Test: memoryStore controller', function () {
     });
   });
 
-  describe('#extractArgumentsFromRequestObject', function () {
+  describe('#extractArgumentsFromRequestObject', () => {
 
     it('should return an empty array when the mapping does not list args', () => {
       var result = extractArgumentsFromRequestObject('noarg', requestObject);
@@ -149,7 +152,7 @@ describe('Test: memoryStore controller', function () {
       should(result).be.empty();
     });
 
-    it('should return the _id on the simple arg', function () {
+    it('should return the _id on the simple arg', () => {
       var result = extractArgumentsFromRequestObject('simplearg', requestObject);
 
       should(result).be.an.Array();
@@ -157,7 +160,7 @@ describe('Test: memoryStore controller', function () {
       should(result[0]).be.exactly('myKey');
     });
 
-    it('should return an arg from the body', function () {
+    it('should return an arg from the body', () => {
       var result = extractArgumentsFromRequestObject('bodyarg', requestObject);
 
       should(result).be.an.Array();
@@ -165,7 +168,7 @@ describe('Test: memoryStore controller', function () {
       should(result[0]).be.exactly('someValue');
     });
 
-    it('should skip an missing argument if asked', function () {
+    it('should skip an missing argument if asked', () => {
       var result = extractArgumentsFromRequestObject('skiparg', requestObject);
 
       should(result).be.an.Array();
@@ -173,7 +176,7 @@ describe('Test: memoryStore controller', function () {
       should(result[0]).be.exactly('someValue');
     });
 
-    it('should merge the arguments if asked', function () {
+    it('should merge the arguments if asked', () => {
       var result = extractArgumentsFromRequestObject('mergearg', requestObject);
 
       should(result).be.an.Array();
@@ -181,7 +184,7 @@ describe('Test: memoryStore controller', function () {
       should(result).match(['I', 'am', 'sorry', 'Dave']);
     });
 
-    it('should map the argument if asked', function () {
+    it('should map the argument if asked', () => {
       var result = extractArgumentsFromRequestObject('maparg', requestObject);
 
       should(result).be.an.Array();
@@ -191,15 +194,15 @@ describe('Test: memoryStore controller', function () {
 
   });
 
-  describe('#extractArgumentsFromRequestObjectForSet', function () {
+  describe('#extractArgumentsFromRequestObjectForSet', () => {
 
-    it('should be called from extractArgumentsFromRequestObject when calling "set"', function () {
+    it('should be called from extractArgumentsFromRequestObject when calling "set"', () => {
       extractArgumentsFromRequestObject('set', requestObject);
 
       should(called.extractArgumentsFromRequestObjectForSet.called).be.true();
     });
 
-    it('should handle the _id + value + no option case', function () {
+    it('should handle the _id + value + no option case', () => {
       var
         request = new RequestObject({
           body: {
@@ -217,7 +220,7 @@ describe('Test: memoryStore controller', function () {
       should(result[1]).eql({ foo: 'bar'});
     });
 
-    it('should handle the _id + no value + no option case', function () {
+    it('should handle the _id + no value + no option case', () => {
       var
         request = new RequestObject({
           body: {
@@ -233,7 +236,7 @@ describe('Test: memoryStore controller', function () {
       should(result[1]).be.eql(request.data.body);
     });
 
-    it('should handle the optional parameters', function () {
+    it('should handle the optional parameters', () => {
       // NB: This is an invalid message but the method lets Redis handle the error (cannot mix NX & XX params)
       var
         request = new RequestObject({
@@ -273,7 +276,7 @@ describe('Test: memoryStore controller', function () {
 
   });
 
-  describe('#extractArgumentsFromRequestObjectForSort', function () {
+  describe('#extractArgumentsFromRequestObjectForSort', () => {
 
     it('should be called when extractArgumentsFromRequestObject is called with the "sort" command', () => {
       extractArgumentsFromRequestObject('sort', requestObject);
@@ -319,7 +322,7 @@ describe('Test: memoryStore controller', function () {
 
   });
 
-  describe('#extractArgumentsFromRequestObjectForZAdd', function () {
+  describe('#extractArgumentsFromRequestObjectForZAdd', () => {
 
     it('should be called from extractArgumentsFromRequestObject when the command "zadd" is called', () => {
       extractArgumentsFromRequestObject('zadd', requestObject);
@@ -373,7 +376,7 @@ describe('Test: memoryStore controller', function () {
 
   });
 
-  describe('#extractArgumentsFromRequestObjectForZInterstore', function () {
+  describe('#extractArgumentsFromRequestObjectForZInterstore', () => {
 
     it('should be called from extractArgumentsFromRequestObject for the "zinterstore" command', () => {
       extractArgumentsFromRequestObject('zinterstore', requestObject);
@@ -446,19 +449,13 @@ describe('Test: memoryStore controller', function () {
     });
   });
 
-  describe('#generated functions', function () {
+  describe('#generated functions', () => {
 
-    before(function () {
-      revertMapping();
+    beforeEach(() => {
+      MemoryStorageController.__set__({mapping: origMapping});
     });
 
-    after(function () {
-      MemoryStorageController.__set__({
-        mapping: testMapping
-      });
-    });
-
-    it('should return a valid ResponseObject', done => {
+    it('should return a valid ResponseObject', () => {
       var rq = new RequestObject({
         controller: 'memoryStore',
         action: 'set',
@@ -468,22 +465,13 @@ describe('Test: memoryStore controller', function () {
         }
       });
 
-      msController.set(rq)
+      return msController.set(rq)
         .then(response => {
           should(response).be.an.instanceOf(ResponseObject);
-          should(response.data.body.result.name).be.exactly('set');
-          should(response.data.body.result.args).length(2);
-          should(response.data.body.result.args[0]).be.exactly('myKey');
-          should(response.data.body.result.args[1]).be.eql(rq.data.body);
-
-          done();
-        })
-        .catch(() => {
-          // This case must not raise
-          // todo : It seams the test is going in this branch, it should not happen
-          // should(false).be.true();
-
-          done();
+          should(response.data.body.name).be.exactly('set');
+          should(response.data.body.args).length(2);
+          should(response.data.body.args[0]).be.exactly('myKey');
+          should(response.data.body.args[1]).be.eql(rq.data.body);
         });
     });
 
@@ -512,7 +500,7 @@ describe('Test: memoryStore controller', function () {
         });
     });
 
-    it('custom mapping checks - zrangebylex', done => {
+    it('custom mapping checks - zrangebylex', () => {
       var
         rq = new RequestObject({
           controller: 'memoryStore',
@@ -534,7 +522,7 @@ describe('Test: memoryStore controller', function () {
           'countVal'
         ];
 
-      msController.zrangebylex(rq)
+      return msController.zrangebylex(rq)
         .then(response => {
           should(response.data.body.name).be.exactly('zrangebylex');
           should(response.data.body.args).be.eql(expected);
@@ -550,12 +538,10 @@ describe('Test: memoryStore controller', function () {
           should(response.data.body.name).be.exactly('zrevrangebylex');
           should(response.data.body.args).be.eql(expected);
 
-          done();
-        })
-        .catch(err => done(err));
+        });
     });
 
-    it('custom mapping checks - zrangebyscore', done => {
+    it('custom mapping checks - zrangebyscore', () => {
       var
         rq = new RequestObject({
           controller: 'memoryStore',
@@ -579,7 +565,7 @@ describe('Test: memoryStore controller', function () {
           'countVal'
         ];
 
-      msController.zrangebyscore(rq)
+      return msController.zrangebyscore(rq)
         .then(response => {
           should(response.data.body.name).be.exactly('zrangebyscore');
           should(response.data.body.args).be.eql(expected);
@@ -595,9 +581,7 @@ describe('Test: memoryStore controller', function () {
           should(response.data.body.name).be.exactly('zrevrangebyscore');
           should(response.data.body.args).be.eql(expected);
 
-          done();
-        })
-        .catch(err => done(err));
+        });
     });
 
   });

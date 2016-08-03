@@ -1,26 +1,21 @@
 var
   PluginContext = require.main.require('lib/api/core/plugins/pluginContext'),
   PluginImplementationError = require('kuzzle-common-objects').Errors.pluginImplementationError,
-  params = require('rc')('kuzzle'),
-  Kuzzle = require.main.require('lib/api/Kuzzle'),
+  KuzzleServer = require.main.require('lib/api/kuzzleServer'),
   sinon = require('sinon'),
+  sandbox = sinon.sandbox.create(),
   should = require('should'),
   _ = require('lodash');
 
-require('sinon-as-promised');
-
 describe('Plugin Context', () => {
   var
-    kuzzle,
-    sandbox;
+    kuzzle;
 
   before(() => {
-    kuzzle = new Kuzzle();
-    return kuzzle.start(params, {dummy: true});
+    kuzzle = new KuzzleServer();
   });
 
   beforeEach(() => {
-    sandbox = sinon.sandbox.create();
     kuzzle.isServer = true;
   });
 

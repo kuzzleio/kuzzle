@@ -4,7 +4,7 @@ var
   Filters = require.main.require('lib/api/dsl/filters'),
   Methods = require.main.require('lib/api/dsl/methods');
 
-describe('Test "not" method', function () {
+describe('Test "not" method', () => {
   var
     methods,
     filterId = 'fakeFilterId',
@@ -18,13 +18,13 @@ describe('Test "not" method', function () {
     nottermcityLondon = md5('nottermcityLondon'),
     fieldCity = md5('city');
 
-  beforeEach(function () {
+  beforeEach(() => {
     /** @type Methods */
     methods = new Methods(new Filters());
     return methods.not(filterId, index, collection, filter);
   });
 
-  it('should construct the filterTree object for the correct attribute', function () {
+  it('should construct the filterTree object for the correct attribute', () => {
     should(methods.filters.filtersTree).not.be.empty();
     should(methods.filters.filtersTree[index]).not.be.empty();
     should(methods.filters.filtersTree[index][collection]).not.be.empty();
@@ -32,11 +32,11 @@ describe('Test "not" method', function () {
     should(methods.filters.filtersTree[index][collection].fields[fieldCity]).not.be.empty();
   });
 
-  it('should construct the filterTree with correct curried function name', function () {
+  it('should construct the filterTree with correct curried function name', () => {
     should(methods.filters.filtersTree[index][collection].fields[fieldCity][nottermcityLondon]).not.be.empty();
   });
 
-  it('should construct the filterTree with correct room list', function () {
+  it('should construct the filterTree with correct room list', () => {
     var ids;
 
     // Test gt from filterGrace
@@ -46,14 +46,14 @@ describe('Test "not" method', function () {
     should(ids[0]).be.exactly(filterId);
   });
 
-  it('should construct the filterTree with correct functions', function () {
+  it('should construct the filterTree with correct functions', () => {
     should(methods.filters.filtersTree[index][collection].fields[fieldCity][nottermcityLondon].args).match({
       operator: 'term', not: true, field: 'city', value: 'London'
     });
   });
 
-  it('should pass an inverted "not" argument to the must function', function () {
-    methods.must = function (roomId, anIndex, aCollection, filters, not) {
+  it('should pass an inverted "not" argument to the must function', () => {
+    methods.must = (roomId, anIndex, aCollection, filters, not) => {
       should(roomId).be.exactly(not);
     };
 

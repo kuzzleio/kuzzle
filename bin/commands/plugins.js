@@ -1,7 +1,7 @@
 var
   clc = require('cli-color'),
   childProcess = require('child_process'),
-  Kuzzle = require('../../lib/api');
+  KuzzleServer = require('../../lib/api/kuzzleServer');
 
 /* eslint-disable no-console */
 
@@ -10,16 +10,16 @@ module.exports = function pluginsManager (plugin, options) {
     clcError = string => options.parent.noColors ? string : clc.red(string),
     clcNotice = string => options.parent.noColors ? string : clc.cyan(string),
     clcOk = string => options.parent.noColors ? string: clc.green.bold(string),
-    kuzzle = new Kuzzle(),
+    kuzzle = new KuzzleServer(),
     data = {};
-  
+
   if (!childProcess.hasOwnProperty('execSync')) {
     console.error(clcError('███ kuzzle-plugins: Make sure you\'re using Node version >= 0.12'));
     process.exit(1);
   }
 
   checkOptions();
-  
+
   options.options.forEach(opt => {
     var k = opt.long.replace(/^--/, '');
     data[k] = options[k];
@@ -34,7 +34,7 @@ module.exports = function pluginsManager (plugin, options) {
       console.log('███ kuzzle-plugins: Starting plugins installation...');
     }
   }
-  
+
   return kuzzle.remoteActions.do('managePlugins', data, {pid: options.pid, debug: options.parent.debug})
     .then(res => {
       if (options.list) {
@@ -50,7 +50,7 @@ module.exports = function pluginsManager (plugin, options) {
       }
       else if (options.importConfig) {
         console.log(clcOk('[✔] Successfully imported configuration'));
-      }  
+      }
       else {
         console.dir(res.data.body, {depth: null, colors: !options.parent.noColrs});
       }
@@ -59,7 +59,7 @@ module.exports = function pluginsManager (plugin, options) {
         console.log('\n\nDebug: -------------------------------------------');
         console.dir(res, {depth: null, colors: true});
       }
-      
+
       process.exit(0);
     })
     .catch(err => {

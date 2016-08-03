@@ -1,17 +1,15 @@
 var
   should = require('should'),
-  params = require('rc')('kuzzle'),
   rewire = require('rewire'),
   Redis = rewire('../../lib/services/redis'),
   IORedis = require('ioredis'),
   redisCommands = (require('ioredis')({lazyConnect: true})).getBuiltinCommands(),
-  EventEmitter = require('eventemitter2').EventEmitter2,
-  Kuzzle = require.main.require('lib/api/Kuzzle'),
+  KuzzleServer = require.main.require('lib/api/kuzzleServer'),
   sinon = require('sinon'),
-  redisClientMock = require('../mocks/services/redisClient.mock');
+  RedisClientMock = require('../mocks/services/redisClient.mock');
 
 
-describe('Test redis service', function () {
+describe('Test redis service', () => {
   var
     kuzzle,
     dbname = 'unit-tests',
@@ -19,17 +17,15 @@ describe('Test redis service', function () {
     sandbox = sinon.sandbox.create();
 
   before(() => {
-    kuzzle = new Kuzzle();
+    kuzzle = new KuzzleServer();
+    kuzzle.config.cache.databases.push(dbname);
+    redis = new Redis(kuzzle, {service: dbname});
+    return Redis.__with__('buildClient', () => new RedisClientMock())(() => {
+      return redis.init();
+    });
+  });
 
-    return kuzzle.start(params, {dummy: true})
-      .then(() => {
-        kuzzle.config.cache.databases.push(dbname);
-        redis = new Redis(kuzzle, {service: dbname});
-        return redis.init();
-      })
-      .then(() => {
-        redis.client = redisClientMock;
-      });
+  beforeEach(() => {
   });
 
   afterEach(() => {
@@ -40,20 +36,7 @@ describe('Test redis service', function () {
     var
       myRedis = new Redis(kuzzle, {service: dbname});
 
-    return Redis.__with__('buildClient', () => {
-      var
-        Client = function () {
-          this.getBuiltinCommands = () => [];
-          this.select = (index, cb) => cb(null, {});
-          this.flushdb = cb => cb(null, {});
-
-          setTimeout(() => { this.emit('ready'); }, 1);
-        };
-
-      Client.prototype = new EventEmitter();
-
-      return new Client();
-    })(() => {
+    return Redis.__with__('buildClient', () => new RedisClientMock())(() => {
       return myRedis.init()
         .then(() => {
           should(myRedis).have.property('client');
@@ -62,7 +45,55 @@ describe('Test redis service', function () {
     });
   });
 
-  it('should stop initialization if an unknown database identifier is provided', function () {
+  it('should flush publicCache for common services', () => {
+    var
+      myRedis = new Redis(kuzzle, {service: dbname}),
+      myRedisClient = new RedisClientMock(),
+      spy = sandbox.spy(myRedisClient, 'flushdb');
+
+    return Redis.__with__('buildClient', () => myRedisClient)(() => {
+      return myRedis.init()
+        .then(() => {
+          should(myRedis).have.property('client');
+          should(myRedis.client).be.an.Object();
+          should(spy.calledOnce).be.true();
+        });
+    });
+  });
+
+  it('should not flush publicCache for memoryStorage service', () => {
+    var
+      myRedis = new Redis(kuzzle, {service: 'memoryStorage'}),
+      myRedisClient = new RedisClientMock(),
+      spy = sandbox.spy(myRedisClient, 'flushdb');
+
+    return Redis.__with__('buildClient', () => myRedisClient)(() => {
+      return myRedis.init()
+        .then(() => {
+          should(myRedis).have.property('client');
+          should(myRedis.client).be.an.Object();
+          should(spy.called).be.false();
+        });
+    });
+  });
+
+  it('should reject if an error occurs during flushdb', () => {
+    var
+      myRedis = new Redis(kuzzle, {service: dbname}),
+      myRedisClient = new RedisClientMock();
+
+    sandbox.stub(myRedisClient, 'flushdb', callback => callback(new Error('flushdb error')));
+
+    return Redis.__with__('buildClient', () => myRedisClient)(() => {
+      return myRedis.init()
+        .then(() => should.fail('An error should be raised'))
+        .catch((err) => {
+          should(err.message).be.equal('flushdb error');
+        });
+    });
+  });
+
+  it('should stop initialization if an unknown database identifier is provided', () => {
     var testredis = new Redis(kuzzle, {service: 'foobar'});
 
     return should(testredis.init()).be.rejected();
@@ -82,15 +113,15 @@ describe('Test redis service', function () {
       .finally(() => {kuzzle.config.cache.node.port = savePort;});
   });
 
-  it('should resolve 0 when add a key without value', function () {
+  it('should resolve 0 when add a key without value', () => {
     return should(redis.add('foo')).fulfilledWith(0);
   });
 
-  it('should resolve 0 when add a key with an empty array', function () {
+  it('should resolve 0 when add a key with an empty array', () => {
     return should(redis.add('foo', [])).fulfilledWith(0);
   });
 
-  it('should resolve 1 when add a key with one value', function () {
+  it('should resolve 1 when add a key with one value', () => {
     return redis.add('foo', 'bar')
       .then(req => {
         should(req.name).be.exactly('sadd');
@@ -98,7 +129,7 @@ describe('Test redis service', function () {
       });
   });
 
-  it('should resolve 2 when add a key with an array with 2 values', function () {
+  it('should resolve 2 when add a key with an array with 2 values', () => {
     return redis.add('foo', ['bar', 'baz'])
       .then(req => {
         should(req.name).be.exactly('sadd');
@@ -106,7 +137,7 @@ describe('Test redis service', function () {
       });
   });
 
-  it('should remove a specific value for a key', function () {
+  it('should remove a specific value for a key', () => {
     return redis.remove('foo', 'bar')
       .then(req => {
         should(req.name).be.exactly('srem');
@@ -114,7 +145,7 @@ describe('Test redis service', function () {
       });
   });
 
-  it('should remove several values for a key', function () {
+  it('should remove several values for a key', () => {
     return redis.remove('foo', ['bar', 'baz'])
       .then(req => {
         should(req.name).be.exactly('srem');
@@ -122,7 +153,7 @@ describe('Test redis service', function () {
       });
   });
 
-  it('should remove the key', function () {
+  it('should remove the key', () => {
     return redis.remove('foo')
       .then(req => {
         should(req.name).be.exactly('del');
@@ -130,7 +161,7 @@ describe('Test redis service', function () {
       });
   });
 
-  it('should search values for a specific key', function () {
+  it('should search values for a specific key', () => {
     return redis.search('foo')
       .then(req => {
         should(req.name).be.exactly('smembers');
@@ -162,7 +193,7 @@ describe('Test redis service', function () {
       });
   });
 
-  it('should do nothing when attempting to retrieve values from an empty list of keys', function () {
+  it('should do nothing when attempting to retrieve values from an empty list of keys', () => {
     return should(redis.mget([])).be.fulfilledWith([]);
   });
 

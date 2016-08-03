@@ -2,15 +2,12 @@ var
   should = require('should'),
   Promise = require('bluebird'),
   sinon = require('sinon'),
-  params = require('rc')('kuzzle'),
-  Kuzzle = require.main.require('lib/api/Kuzzle');
+  sandbox = sinon.sandbox.create(),
+  KuzzleServer = require.main.require('lib/api/kuzzleServer');
 
-require('sinon-as-promised')(Promise);
-
-describe('Test: hotelClerk.listSubscription', function () {
+describe('Test: hotelClerk.listSubscription', () => {
   var
     kuzzle,
-    sandbox,
     connection = {id: 'connectionid'},
     context,
     roomName = 'roomName',
@@ -18,32 +15,31 @@ describe('Test: hotelClerk.listSubscription', function () {
     collection = 'user';
 
   beforeEach(() => {
-    sandbox = sinon.sandbox.create();
-    kuzzle = new Kuzzle();
+    kuzzle = new KuzzleServer();
 
-    return kuzzle.start(params, {dummy: true})
-      .then(() => {
-        context = {
-          connection: connection,
-          token: {
-            user: 'user'
-          }
-        };
-      });
+    context = {
+      connection: connection,
+      token: {
+        user: 'user'
+      }
+    };
+
+    sandbox.stub(kuzzle.internalEngine, 'get').resolves({});
+    return kuzzle.services.init({whitelist: []});
   });
 
   afterEach(() => {
     sandbox.restore();
   });
 
-  it('should return an empty object if there is no room', function () {
+  it('should return an empty object if there is no room', () => {
     return kuzzle.hotelClerk.listSubscriptions(context)
       .then(response => {
         should(response).be.empty().Object();
       });
   });
 
-  it('should return a correct list according to subscribe on filter', function () {
+  it('should return a correct list according to subscribe on filter', () => {
 
     sandbox.stub(kuzzle.repositories.user, 'load').resolves({_id: 'user', isActionAllowed: sandbox.stub().resolves(true)});
 
@@ -59,7 +55,7 @@ describe('Test: hotelClerk.listSubscription', function () {
       });
   });
 
-  it('should return a correct list according to subscribe on filter and user right', function () {
+  it('should return a correct list according to subscribe on filter and user right', () => {
     kuzzle.hotelClerk.rooms = {
       'foo': {
         index, collection: 'foo', roomId: 'foo', customers: ['foo']

@@ -5,8 +5,8 @@ var
   RequestObject = require('kuzzle-common-objects').Models.requestObject,
   sandbox = sinon.sandbox.create();
 
-describe('Test: enable services controller', function () {
-  var 
+describe('Test: enable services controller', () => {
+  var
     kuzzle,
     enableServices;
 
@@ -30,19 +30,19 @@ describe('Test: enable services controller', function () {
 
   it('return a rejected promise if no service is given', () => {
     var request = new RequestObject({controller: 'remoteActions', action: 'enableServices', body: {}});
-    
+
     return should(enableServices(request)).be.rejectedWith(BadRequestError, {message: 'Missing service name'});
   });
 
   it('return a rejected promise if the enable parameter is not set', () => {
     var request = new RequestObject({controller: 'remoteActions', action: 'enableServices', body: {service: 'foo'}});
-    
+
     return should(enableServices(request)).be.rejectedWith(BadRequestError, {message: 'Missing enable/disable tag'});
   });
 
   it('return a rejected promise if the service is unknown', () => {
     var request = new RequestObject({controller: 'remoteActions', action: 'enableServices', body: {enable: true, service: 'baz'}});
-    
+
     return should(enableServices(request)).be.rejectedWith(BadRequestError, {message: 'Unknown or deactivated service: baz'});
   });
 
@@ -55,7 +55,7 @@ describe('Test: enable services controller', function () {
         service: 'dummy'
       }
     });
-    
+
     return should(enableServices(request)).be.rejectedWith(BadRequestError, {
       message: 'The service dummy doesn\'t support on-the-fly disabling/enabling'
     });

@@ -3,14 +3,13 @@ var
   Promise = require('bluebird'),
   sinon = require('sinon'),
   rewire = require('rewire'),
-  params = require('rc')('kuzzle'),
-  Kuzzle = require.main.require('lib/api/Kuzzle'),
+  KuzzleServer = require.main.require('lib/api/kuzzleServer'),
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
   BadRequestError = require.main.require('kuzzle-common-objects').Errors.badRequestError,
   NotFoundError = require.main.require('kuzzle-common-objects').Errors.notFoundError,
   ES = rewire('../../../lib/services/elasticsearch');
 
-describe('Test: ElasticSearch service', function () {
+describe('Test: ElasticSearch service', () => {
   var
     kuzzle = {},
     sandbox = sinon.sandbox.create(),
@@ -45,20 +44,8 @@ describe('Test: ElasticSearch service', function () {
 
 
   before(()=> {
-    kuzzle = new Kuzzle();
-    return kuzzle.start(params, {dummy: true})
-      .then(() => {
-        kuzzle.pluginsManager = {
-          trigger: () => {}
-        };
-
-        elasticsearch = new ES(kuzzle, {service: engineType});
-
-        // we make sure the services won't ever be able to connect to elasticsearch
-        elasticsearch.init();
-        elasticsearch.client.transport = {};
-        kuzzle.internalEngine.client.transport = {};
-      });
+    kuzzle = new KuzzleServer();
+    elasticsearch = new ES(kuzzle, {service: engineType});
   });
 
   beforeEach(() => {
@@ -72,20 +59,21 @@ describe('Test: ElasticSearch service', function () {
       index: index,
       body: documentAda
     });
+    elasticsearch.init();
   });
 
   afterEach(() => {
     sandbox.restore();
   });
 
-  describe('#init', function () {
-    it('should initialize properly', function () {
+  describe('#init', () => {
+    it('should initialize properly', () => {
       return should(elasticsearch.init()).be.fulfilledWith(elasticsearch);
     });
   });
 
-  describe('#cleanData', function () {
-    it('should prepare the data for elasticsearch', function () {
+  describe('#cleanData', () => {
+    it('should prepare the data for elasticsearch', () => {
       var
         cleanData = ES.__get__('cleanData'),
         preparedData;
@@ -99,7 +87,7 @@ describe('Test: ElasticSearch service', function () {
       should(preparedData.index).be.exactly(requestObject.index);
 
       // we expect all properties expect _id to be carried over the new data object
-      Object.keys(requestObject.data).forEach(function (member) {
+      Object.keys(requestObject.data).forEach(member => {
         if (member !== '_id') {
           should(preparedData[member]).be.exactly(requestObject.data[member]);
         }
@@ -107,14 +95,14 @@ describe('Test: ElasticSearch service', function () {
     });
   });
 
-  describe('#search', function () {
+  describe('#search', () => {
     it('should be able to search documents', () => {
       var spy = sandbox.stub(elasticsearch.client, 'search').resolves({total: 0, hits: []});
 
       requestObject.data.body = filter;
 
       return elasticsearch.search(requestObject)
-        .then(function (result) {
+        .then(result => {
           should(spy.firstCall.args[0].body).be.exactly(filter);
           should(result).be.an.Object();
           should(result.total).be.exactly(0);
@@ -136,7 +124,7 @@ describe('Test: ElasticSearch service', function () {
     });
   });
 
-  describe('#create', function () {
+  describe('#create', () => {
     it('should allow creating documents', () => {
       var
         spy = sandbox.stub(elasticsearch.client, 'create').resolves({}),
@@ -157,15 +145,15 @@ describe('Test: ElasticSearch service', function () {
       })).be.fulfilled();
     });
 
-    it('should reject the create promise if elasticsearch throws an error', function () {
+    it('should reject the create promise if elasticsearch throws an error', () => {
       sandbox.stub(elasticsearch.client, 'create').rejects({});
 
       return should(elasticsearch.create(requestObject)).be.rejected();
     });
   });
 
-  describe('#createOrReplace', function () {
-    it('should support createOrReplace capability', function () {
+  describe('#createOrReplace', () => {
+    it('should support createOrReplace capability', () => {
       var
         refreshIndexIfNeeded = ES.__get__('refreshIndexIfNeeded'),
         refreshIndexSpy = sandbox.spy(refreshIndexIfNeeded),
@@ -198,7 +186,7 @@ describe('Test: ElasticSearch service', function () {
     });
   });
 
-  describe('#replace', function () {
+  describe('#replace', () => {
     it('should support replace capability', () => {
       var
         spy = sandbox.stub(elasticsearch.client, 'index').resolves({}),
@@ -257,7 +245,7 @@ describe('Test: ElasticSearch service', function () {
     });
   });
 
-  describe('#get', function () {
+  describe('#get', () => {
     it('should allow getting a single document', () => {
       var spy = sandbox.stub(elasticsearch.client, 'get').resolves({});
 
@@ -277,7 +265,7 @@ describe('Test: ElasticSearch service', function () {
     });
   });
 
-  describe('#mget', function () {
+  describe('#mget', () => {
     it('should return a rejected promise if getting a single document fails', done => {
       var
         spy = sandbox.stub(elasticsearch.client, 'get').rejects({});
@@ -321,7 +309,7 @@ describe('Test: ElasticSearch service', function () {
     });
   });
 
-  describe('#count', function () {
+  describe('#count', () => {
     it('should allow counting documents using a provided filter', () => {
       var spy = sandbox.stub(elasticsearch.client, 'count').resolves({});
 
@@ -347,7 +335,7 @@ describe('Test: ElasticSearch service', function () {
       ).be.fulfilled();
     });
 
-    it('should return a rejected promise if the count fails', function () {
+    it('should return a rejected promise if the count fails', () => {
       sandbox.stub(elasticsearch.client, 'count').rejects({});
 
       requestObject.data.body = {};
@@ -357,8 +345,8 @@ describe('Test: ElasticSearch service', function () {
     });
   });
 
-  describe('#update', function () {
-    it('should allow to update a document', function () {
+  describe('#update', () => {
+    it('should allow to update a document', () => {
       var
         refreshIndexIfNeeded = ES.__get__('refreshIndexIfNeeded'),
         refreshIndexSpy = sandbox.spy(refreshIndexIfNeeded),
@@ -394,7 +382,7 @@ describe('Test: ElasticSearch service', function () {
     });
   });
 
-  describe('#delete', function () {
+  describe('#delete', () => {
     it('should allow to delete a document', () => {
       var
         refreshIndexIfNeeded = ES.__get__('refreshIndexIfNeeded'),
@@ -430,7 +418,7 @@ describe('Test: ElasticSearch service', function () {
     });
   });
 
-  describe('#deleteByQuery', function () {
+  describe('#deleteByQuery', () => {
     it('should return an empty result array when no document has been deleted using a filter', () => {
       var spy = sandbox.stub(elasticsearch.client, 'search').yields(null, {hits: {hits: [], total: 0}});
 
@@ -467,7 +455,7 @@ describe('Test: ElasticSearch service', function () {
             should(bulkData.body).not.be.undefined().and.be.an.Array();
             should(bulkData.body.length).be.exactly(mockupIds.length);
 
-            bulkData.body.forEach(function (cmd) {
+            bulkData.body.forEach(cmd => {
               should(cmd).be.an.Object();
               should(cmd.delete).not.be.undefined().and.be.an.Object();
               should(mockupIds.indexOf(cmd.delete._id)).not.be.eql(-1);
@@ -498,7 +486,7 @@ describe('Test: ElasticSearch service', function () {
 
       return ES.__with__({
         getAllIdsFromQuery: () => Promise.resolve(['foo', 'bar'])
-      })(function () {
+      })(() => {
         return should(elasticsearch.deleteByQuery(requestObject)).be.rejected();
       });
     });
@@ -510,7 +498,7 @@ describe('Test: ElasticSearch service', function () {
     });
   });
 
-  describe('#import', function () {
+  describe('#import', () => {
     it('should support bulk data import', () => {
       var
         refreshIndexIfNeeded = ES.__get__('refreshIndexIfNeeded'),
@@ -663,7 +651,7 @@ describe('Test: ElasticSearch service', function () {
     });
   });
 
-  describe('#updateMapping', function () {
+  describe('#updateMapping', () => {
     it('should have mapping capabilities', () => {
       var spy = sandbox.stub(elasticsearch.client.indices, 'putMapping').resolves({});
 
@@ -693,7 +681,7 @@ describe('Test: ElasticSearch service', function () {
     });
   });
 
-  describe('#getMapping', function () {
+  describe('#getMapping', () => {
     it('should allow users to retrieve a mapping', () => {
       var mappings = {};
       mappings[index] = {mappings: {}};
@@ -727,7 +715,7 @@ describe('Test: ElasticSearch service', function () {
     });
   });
 
-  describe('#getAllIdsFromQuery', function () {
+  describe('#getAllIdsFromQuery', () => {
     it('should be able to get every ids matching a query', () => {
       var
         getAllIdsFromQuery = ES.__get__('getAllIdsFromQuery'),
@@ -782,7 +770,7 @@ describe('Test: ElasticSearch service', function () {
     });
   });
 
-  describe('#listCollections', function () {
+  describe('#listCollections', () => {
     it('should allow listing all available collections', () => {
       var mappings = {};
 
@@ -803,7 +791,7 @@ describe('Test: ElasticSearch service', function () {
     });
   });
 
-  describe('#createCollection', function () {
+  describe('#createCollection', () => {
     it('should allow creating a new collection', () => {
       sandbox.stub(elasticsearch.client.indices, 'putMapping').resolves({});
 
@@ -818,7 +806,7 @@ describe('Test: ElasticSearch service', function () {
     });
   });
 
-  describe('#truncateCollection', function () {
+  describe('#truncateCollection', () => {
     it('should allow truncating an existing collection', () => {
       var spy = sandbox.stub(elasticsearch, 'deleteByQuery').resolves({});
 
@@ -832,7 +820,7 @@ describe('Test: ElasticSearch service', function () {
     });
   });
 
-  describe('#reset', function () {
+  describe('#reset', () => {
     it('should allow deleting all indexes', () => {
       var spy = sandbox.stub(elasticsearch.client.indices, 'delete').resolves({});
 
@@ -859,7 +847,7 @@ describe('Test: ElasticSearch service', function () {
     });
   });
 
-  describe('#createIndex', function () {
+  describe('#createIndex', () => {
     it('should be able to create index', () => {
       var spy = sandbox.stub(elasticsearch.client.indices, 'create').resolves({});
 
@@ -876,7 +864,7 @@ describe('Test: ElasticSearch service', function () {
     });
   });
 
-  describe('#deleteIndex', function () {
+  describe('#deleteIndex', () => {
     it('should be able to delete index', () => {
       var spy = sandbox.stub(elasticsearch.client.indices, 'delete').resolves({});
 
@@ -888,7 +876,7 @@ describe('Test: ElasticSearch service', function () {
     });
 
     it('should reject the deleteIndex promise if elasticsearch throws an error', () => {
-      elasticsearch.client.indices.delete = function () {
+      elasticsearch.client.indices.delete = () => {
         return Promise.reject(new Error());
       };
 
@@ -896,7 +884,7 @@ describe('Test: ElasticSearch service', function () {
     });
   });
 
-  describe('#listIndexes', function () {
+  describe('#listIndexes', () => {
     it('should allow listing indexes', () => {
       sandbox.stub(elasticsearch.client.indices, 'getMapping').resolves({indexes: []});
 
@@ -910,7 +898,7 @@ describe('Test: ElasticSearch service', function () {
     });
   });
 
-  describe('#getInfos', function () {
+  describe('#getInfos', () => {
     it('should allow getting elasticsearch informations', () => {
       var
         output = {version: {}, indices: {store: {}}};
@@ -923,7 +911,7 @@ describe('Test: ElasticSearch service', function () {
     });
   });
 
-  describe('#refreshIndex', function () {
+  describe('#refreshIndex', () => {
     it('should send a valid request to es client', () => {
       sandbox.stub(elasticsearch.client.indices, 'refresh').resolves(requestObject);
 
@@ -934,7 +922,7 @@ describe('Test: ElasticSearch service', function () {
     });
   });
 
-  describe('#getAutoRefresh', function () {
+  describe('#getAutoRefresh', () => {
     it('should reflect the current autoRefresh status', () => {
       return should(elasticsearch.getAutoRefresh(requestObject)
         .then(response => {
@@ -951,7 +939,7 @@ describe('Test: ElasticSearch service', function () {
     });
   });
 
-  describe('#setAutoRefresh', function () {
+  describe('#setAutoRefresh', () => {
     it('should toggle the autoRefresh status', () => {
       var
         spy = sandbox.stub(kuzzle.internalEngine, 'createOrReplace').resolves({}),
@@ -975,7 +963,7 @@ describe('Test: ElasticSearch service', function () {
     });
   });
 
-  describe('#refreshIndexIfNeeded', function () {
+  describe('#refreshIndexIfNeeded', () => {
     it('should not refresh the index if autoRefresh is set to false', () => {
       var
         refreshIndexIfNeeded = ES.__get__('refreshIndexIfNeeded'),

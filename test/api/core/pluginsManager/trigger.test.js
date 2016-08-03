@@ -5,9 +5,9 @@ var
   PluginsManager = rewire('../../../../lib/api/core/plugins/pluginsManager'),
   EventEmitter = require('eventemitter2').EventEmitter2;
 
-describe('Test plugins manager trigger', function () {
-  before(function () {
-    PluginsManager.__set__('console', {log: function () {}, error: function () {}});
+describe('Test plugins manager trigger', () => {
+  before(() => {
+    PluginsManager.__set__('console', {log: () => {}, error: () => {}});
   });
 
   it('should trigger hooks event', function (done) {
@@ -25,11 +25,11 @@ describe('Test plugins manager trigger', function () {
 
     pluginsManager.plugins = [{
       object: {
-        init: function () {},
+        init: () => {},
         hooks: {
           'foo:*': 'myFunc'
         },
-        myFunc: function () {
+        myFunc: () => {
           done();
         }
       },

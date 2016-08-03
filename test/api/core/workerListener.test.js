@@ -3,19 +3,19 @@
  */
 var
   should = require('should'),
-  rewire = require('rewire'),
   uuid = require('node-uuid'),
-  params = require('rc')('kuzzle'),
-  Kuzzle = require.main.require('lib/api/Kuzzle'),
+  sinon = require('sinon'),
+  sandbox = sinon.sandbox.create(),
+  KuzzleServer = require.main.require('lib/api/kuzzleServer'),
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
   ResponseObject = require.main.require('kuzzle-common-objects').Models.responseObject,
-  WorkerListener = rewire('../../../lib/api/core/workerListener');
+  WorkerListener = require.main.require('lib/api/core/workerListener');
 
-describe('Test: workerListener', function () {
+describe('Test: workerListener', () => {
   var
     kuzzle,
-    registered,
     listenCallback,
+    spy,
     controllers = ['write', 'subscribe', 'read', 'admin', 'bulk'],
     requestObject = new RequestObject({
       controller: '',
@@ -25,39 +25,44 @@ describe('Test: workerListener', function () {
       body: { foo: 'bar' }
     });
 
-  before(function (done) {
-    kuzzle = new Kuzzle();
-    kuzzle.start(params, {dummy: true})
-      .then(function () {
-        kuzzle.services.list.broker.listen = function (room, cb) {
-          registered++;
-          listenCallback = cb;
-        };
+  before(() => {
+    kuzzle = new KuzzleServer();
+  });
 
-        done();
+  beforeEach(() => {
+    sandbox.stub(kuzzle.internalEngine, 'get').resolves({});
+    return kuzzle.services.init({whitelist: []})
+      .then(() => {
+        spy = sandbox.stub(kuzzle.services.list.broker, 'listen', (room, cb) => {
+          listenCallback = cb;
+        });
       });
   });
 
-  it('should register only once, when the component is been instantiated', function () {
-    var workerListener;
+  afterEach(() => {
+    sandbox.restore();
+  });
 
-    registered = 0;
+  it('should register only once, when the component is been instantiated', () => {
+    var workerListener = new WorkerListener(kuzzle);
 
-    workerListener = new WorkerListener(kuzzle, kuzzle.config.queues.workerWriteResponseQueue);
-    controllers.forEach(function (controller) {
+    workerListener.startListener(kuzzle.config.queues.workerWriteResponseQueue);
+    controllers.forEach(controller => {
       requestObject.controller = controller;
       requestObject.requestId = uuid.v1();
       workerListener.add(requestObject, {});
     });
 
-    should(registered).be.exactly(1);
+    should(spy.calledOnce).be.true();
   });
 
-  it('should resolved the stored promise when receiving a success response', function () {
+  it('should resolved the stored promise when receiving a success response', () => {
     var
-      workerListener = new WorkerListener(kuzzle, kuzzle.config.queues.workerWriteResponseQueue),
+      workerListener = new WorkerListener(kuzzle),
       responseObject,
       promise;
+
+    workerListener.startListener(kuzzle.config.queues.workerWriteResponseQueue);
 
     requestObject.controller = 'write';
     requestObject.requestId = uuid.v1();
@@ -70,11 +75,13 @@ describe('Test: workerListener', function () {
     return should(promise).be.fulfilledWith(responseObject);
   });
 
-  it('should reject the stored promise when receiving an errored response', function () {
+  it('should reject the stored promise when receiving an errored response', () => {
     var
       workerListener = new WorkerListener(kuzzle, kuzzle.config.queues.workerWriteResponseQueue),
       responseObject,
       promise;
+
+    workerListener.startListener(kuzzle.config.queues.workerWriteResponseQueue);
 
     requestObject.controller = 'write';
     requestObject.requestId = uuid.v1();
@@ -86,13 +93,12 @@ describe('Test: workerListener', function () {
     return should(promise).be.rejectedWith(responseObject);
   });
 
-  it('should only trigger a log response when receiving an unknown response', function (done) {
+  it('should only trigger a log response when receiving an unknown response', done => {
     var
+      workerListener = new WorkerListener(kuzzle),
       responseObject;
 
-    new WorkerListener(kuzzle, kuzzle.config.queues.workerWriteResponseQueue);
-
-    this.timeout(50);
+    workerListener.startListener(kuzzle.config.queues.workerWriteResponseQueue);
 
     kuzzle.once('log:verbose', () => done());
 

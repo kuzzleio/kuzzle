@@ -6,15 +6,14 @@
 var
   should = require('should'),
   sinon = require('sinon'),
-  params = require('rc')('kuzzle'),
-  Kuzzle = require.main.require('lib/api/Kuzzle'),
+  sandbox = sinon.sandbox.create(),
+  KuzzleServer = require.main.require('lib/api/kuzzleServer'),
   Notifier = require.main.require('lib/api/core/notifier'),
   NotificationObject = require.main.require('lib/api/core/models/notificationObject');
 
-describe('Test: notifier.notify', function () {
+describe('Test: notifier.notify', () => {
   var
     kuzzle,
-    sandbox,
     notifier,
     notification,
     dispatchStub,
@@ -22,18 +21,19 @@ describe('Test: notifier.notify', function () {
     getChannelsStub;
 
   before(() => {
-    kuzzle = new Kuzzle();
+    kuzzle = new KuzzleServer();
     notification = new NotificationObject({}, {});
-    sandbox = sinon.sandbox.create();
-    return kuzzle.start(params, {dummy: true});
   });
 
   beforeEach(() => {
-    sandbox.restore();
     dispatchStub = sandbox.stub(kuzzle.entryPoints.proxy, 'dispatch');
     triggerStub = sandbox.stub(kuzzle.pluginsManager, 'trigger');
     getChannelsStub = sandbox.stub(kuzzle.hotelClerk, 'getChannels').returns(['foobar']);
     notifier = new Notifier(kuzzle);
+  });
+
+  afterEach(() => {
+    sandbox.restore();
   });
 
   it('should do nothing when no rooms to notify are provided', () => {

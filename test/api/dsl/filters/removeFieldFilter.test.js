@@ -3,15 +3,15 @@ var
   rewire = require('rewire'),
   DslFilters = rewire('../../../../lib/api/dsl/filters');
 
-describe('Test: dsl.removeFieldFilter', function () {
+describe('Test: dsl.removeFieldFilter', () => {
   var
     filters;
 
-  beforeEach(function () {
+  beforeEach(() => {
     filters = new DslFilters();
   });
 
-  it('should do nothing if no filters are provided', function () {
+  it('should do nothing if no filters are provided', () => {
     should(DslFilters.__get__('removeFieldFilter').call(filters, null)).be.false();
   });
 });
