@@ -133,56 +133,13 @@ describe('Tests: api/remoteActions/index.js', () => {
       });
     });
 
-    it('should exit with a return code 1 if the pid is mandatory and not provided', () => {
-      var
-        context = {
-          actions: {
-            test: {isPidMandatory: true, onListenCB: () => {}}
-          }
-        };
-
-      remoteActions.do.call(context, 'test', {});
-
-      should(consoleSpy).be.calledOnce();
-      should(consoleSpy).be.calledWith('The PID parameter is mandatory.');
-      should(exitSpy).be.calledOnce();
-      should(exitSpy).be.calledWithExactly(1);
-    });
-
-    it('should exit with error if the given pid does not exist', () => {
-      var
-        error = new Error('test');
-
-      RemoteActions.__with__({
-        'process.kill': sinon.stub().throws(error)
-      })(() => {
-        var
-          context = {
-            actions: {
-              test: {
-                isPidMandatory: true,
-                onListenCB: () => {}
-              }
-            }
-          };
-
-        remoteActions.do.call(context, 'test', {pid: 42});
-
-        should(consoleSpy).be.calledOnce();
-        should(consoleSpy).be.calledWith('The process 42 does not exist');
-        should(exitSpy).be.calledOnce();
-        should(exitSpy).be.calledWithExactly(1);
-      });
-    });
-
-    it('should broadcast the action if pid is set to all', () => {
+    it('should send the action given', () => {
       var
         data = {foo: 'bar'},
         context = {
           kuzzle: kuzzle,
           actions: {
             test: {
-              isPidMandatory: false,
               onListenCB: sinon.spy(),
               initTimeout: sinon.spy(),
               prepareData: sinon.stub().returns(data),
@@ -196,49 +153,10 @@ describe('Tests: api/remoteActions/index.js', () => {
       return remoteActions.do.call(context, 'test', {})
         .then(response => {
           should(response).be.exactly('promise');
-
-          should(kuzzle.internalEngine.init).be.calledOnce();
-
-          should(kuzzle.services.list.broker.listen).be.calledOnce();
-          should(kuzzle.services.list.broker.listen.firstCall.args[1]).be.a.Function();
-          should(kuzzle.services.list.broker.broadcast).be.calledOnce();
-          should(kuzzle.services.list.broker.broadcast.firstCall.args[0]).be.exactly('queue');
-          should(kuzzle.services.list.broker.broadcast.firstCall.args[1]).match({
-            controller: 'actions',
-            action: 'test',
-            data: {
-              body: data
-            }
-          });
-          should(context.actions.test.initTimeout).be.calledOnce();
-        });
-    });
-
-    it('should send the action if a pid is given', () => {
-      var
-        data = {foo: 'bar'},
-        context = {
-          kuzzle: kuzzle,
-          actions: {
-            test: {
-              isPidMandatory: true,
-              onListenCB: sinon.spy(),
-              initTimeout: sinon.spy(),
-              prepareData: sinon.stub().returns(data),
-              deferred: {
-                promise: 'promise'
-              }
-            }
-          }
-        };
-
-      return remoteActions.do.call(context, 'test', {pid: 42})
-        .then(response => {
-          should(response).be.exactly('promise');
           should(kuzzle.services.list.broker.listen).be.calledOnce();
           should(kuzzle.services.list.broker.listen.firstCall.args[1]).be.a.Function();
           should(kuzzle.services.list.broker.send).be.calledOnce();
-          should(kuzzle.services.list.broker.send.firstCall.args[0]).be.exactly('queue-42');
+          should(kuzzle.services.list.broker.send.firstCall.args[0]).be.exactly('queue');
           should(kuzzle.services.list.broker.send.firstCall.args[1]).match({
             controller: 'actions',
             action: 'test',

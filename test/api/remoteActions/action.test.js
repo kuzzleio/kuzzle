@@ -19,7 +19,6 @@ describe('Tests: remoteActionController action client', () => {
       should(action.deferred.reject).be.a.Function();
       should(action.deferred.promise).be.a.Promise();
       should(action.timeoutTimer).be.null();
-      should(action.isPidMandatory).be.true();
     });
 
     it('should override methods with given ones', () => {

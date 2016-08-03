@@ -4,7 +4,6 @@ var
   fs = require('fs'),
   rc = require('rc'),
   params = rc('kuzzle'),
-  //kuzzle = require('../../lib'),
   Kuzzle = require('../../lib/api/kuzzle'),
   RequestObject = require('kuzzle-common-objects').Models.requestObject,
   Promise = require('bluebird'),
@@ -38,19 +37,7 @@ module.exports = function (options) {
     console.log(warn('Hook loader for coverage - ensure this is not production!'));
     coverage.hookLoader(__dirname+'/../lib');
   }
-  console.log(kuz('Starting Kuzzle'), (options.server ? notice('Server') : warn('Worker')));
-
-  if (options.worker) {
-    return kuzzle.start(params)
-      .then(() => {
-        console.log(kuzzleLogo);
-        process.title = 'KuzzleWorker';
-        console.log(`
- ████████████████████████████████████
- ██     KUZZLE WORKER STARTED      ██
- ████████████████████████████████████`);
-      });
-  }
+  console.log(kuz('Starting Kuzzle'));
 
   kuzzle.start(params)
     .then(() => {
@@ -94,9 +81,10 @@ module.exports = function (options) {
         .catch(() => Promise.resolve());
     })
     .then(() => {
+      console.log(kuzzleLogo);
       console.log(`
  ████████████████████████████████████
- ██          KUZZLE READY          ██
+ ██         KUZZLE IS READY        ██
  ████████████████████████████████████`);
       return kuzzle.remoteActionsController.actions.adminExists()
         .then((res) => {
