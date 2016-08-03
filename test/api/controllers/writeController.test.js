@@ -1,9 +1,9 @@
 var
   should = require('should'),
-  Promise = require('bluebird'),
   sinon = require('sinon'),
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
   ResponseObject = require.main.require('kuzzle-common-objects').Models.responseObject,
+  KuzzleMock = require('../../mocks/kuzzle.mock'),
   WriteController = require('../../../lib/api/controllers/writeController');
 
 /*
@@ -21,38 +21,9 @@ describe('Test: write controller', () => {
 
 
   beforeEach(() => {
-    trigger = sinon.spy(function () { return Promise.resolve(arguments[1]); });
-    engine = {
-      create: sinon.stub().resolves(foo),
-      createCollection: sinon.stub().resolves(foo),
-      createOrReplace: sinon.stub().resolves(foo),
-      delete: sinon.stub().resolves(foo),
-      deleteByQuery: sinon.stub().resolves(Object.assign(foo, {ids: 'responseIds'})),
-      replace: sinon.stub().resolves(foo),
-      update: sinon.stub().resolves(foo)
-    };
-
-    kuzzle = {
-      indexCache: {
-        add: sinon.spy(),
-        remove: sinon.spy()
-      },
-      notifier: {
-        notifyDocumentCreate: sinon.spy(),
-        notifyDocumentDelete: sinon.spy(),
-        notifyDocumentReplace: sinon.spy(),
-        notifyDocumentUpdate: sinon.spy(),
-        publish: sinon.stub().resolves(foo)
-      },
-      pluginsManager: {
-        trigger: trigger
-      },
-      services: {
-        list: {
-          writeEngine: engine
-        }
-      }
-    };
+    kuzzle = new KuzzleMock();
+    engine = kuzzle.services.list.writeEngine;
+    trigger = kuzzle.pluginsManager.trigger;
     controller = new WriteController(kuzzle);
 
     requestObject = new RequestObject({body: {foo: 'bar'}}, {}, 'unit-test');
@@ -170,7 +141,7 @@ describe('Test: write controller', () => {
     });
 
     it('should trigger a "create" notification if the docuemnt did not exist', () => {
-      engine.createOrReplace.resolves(Object.assign(foo, {created: true}));
+      engine.createOrReplace.resolves(Object.assign({}, foo, {created: true}));
 
       return controller.createOrReplace(requestObject)
         .then(response => {
@@ -325,7 +296,10 @@ describe('Test: write controller', () => {
             status: 200,
             error: null,
             data: {
-              body: Object.assign(foo, {ids: 'responseIds'})
+              body: {
+                foo: 'bar',
+                ids: 'responseIds'
+              }
             }
           });
         });

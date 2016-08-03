@@ -1,7 +1,6 @@
 var
-  rewire = require('rewire'),
   should = require('should'),
-  Kuzzle = rewire('../../lib/api/kuzzle');
+  Kuzzle = require('../../lib/api/kuzzle');
 
 describe('Test kuzzle server constructor', () => {
   var kuzzle;

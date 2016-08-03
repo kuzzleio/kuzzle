@@ -1,11 +1,10 @@
 var
-  Promise = require('bluebird'),
   should = require('should'),
-  sinon = require('sinon'),
   BulkController = require('../../../lib/api/controllers/bulkController'),
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
   ResponseObject = require.main.require('kuzzle-common-objects').Models.responseObject,
-  PartialError = require.main.require('kuzzle-common-objects').Errors.partialError;
+  PartialError = require.main.require('kuzzle-common-objects').Errors.partialError,
+  KuzzleMock = require('../../mocks/kuzzle.mock');
 
 describe('Test the bulk controller', () => {
   var
@@ -13,21 +12,11 @@ describe('Test the bulk controller', () => {
     kuzzle,
     foo = {foo: 'bar'},
     requestObject = new RequestObject({ controller: 'bulk' }, { collection: 'unit-test-bulkController' }, 'unit-test'),
-    stub = sinon.stub().resolves(foo);
+    stub;
 
   beforeEach(() => {
-    kuzzle = {
-      pluginsManager: {
-        trigger: sinon.spy(function () { return Promise.resolve(arguments[1]); })
-      },
-      services: {
-        list: {
-          writeEngine: {
-            import: stub
-          }
-        }
-      }
-    };
+    kuzzle = new KuzzleMock();
+    stub = kuzzle.services.list.writeEngine.import;
     controller = new BulkController(kuzzle);
   });
 

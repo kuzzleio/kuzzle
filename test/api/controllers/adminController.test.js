@@ -1,13 +1,13 @@
 var
   Promise = require('bluebird'),
-  rewire = require('rewire'),
   should = require('should'),
   sinon = require('sinon'),
-  AdminController = rewire('../../../lib/api/controllers/adminController'),
+  AdminController = require('../../../lib/api/controllers/adminController'),
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
   ResponseObject = require.main.require('kuzzle-common-objects').Models.responseObject,
   BadRequestError = require.main.require('kuzzle-common-objects').Errors.badRequestError,
   PartialError = require.main.require('kuzzle-common-objects').Errors.partialError,
+  KuzzleMock = require('../../mocks/kuzzle.mock'),
   sandbox = sinon.sandbox.create();
 
 describe('Test: admin controller', () => {
@@ -20,37 +20,8 @@ describe('Test: admin controller', () => {
     requestObject;
 
   beforeEach(() => {
-    kuzzle = {
-      indexCache: {
-        add: sinon.spy(),
-        remove: sinon.spy()
-      },
-      pluginsManager: {
-        trigger: sinon.spy(function () {return Promise.resolve(arguments[1]);})
-      },
-      services: {
-        list: {
-          writeEngine: {
-            createIndex: sinon.stub().resolves(foo),
-            deleteIndex: sinon.stub().resolves(foo),
-            deleteIndexes: sinon.stub().resolves({deleted: ['a', 'e', 'i']}),
-            getAutoRefresh: sinon.stub().resolves(false),
-            getMapping: sinon.stub().resolves(foo),
-            listIndexes: sinon.stub().resolves({indexes: ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i']}),
-            refreshIndex: sinon.stub().resolves(foo),
-            setAutoRefresh: sinon.stub().resolves(true),
-            truncateCollection: sinon.stub().resolves(foo),
-            updateMapping: sinon.stub().resolves(foo)
-          }
-        }
-      },
-      statistics: {
-        getAllStats: sinon.stub().resolves(foo),
-        getLastStats: sinon.stub().resolves(foo),
-        getStats: sinon.stub().resolves(foo)
-      }
-    };
-    kuzzle.services.list.readEngine = kuzzle.services.list.writeEngine;
+    kuzzle = new KuzzleMock();
+
     adminController = new AdminController(kuzzle);
     requestObject = new RequestObject({ controller: 'admin' }, {index, collection}, 'unit-test');
   });
@@ -93,8 +64,8 @@ describe('Test: admin controller', () => {
           should(kuzzle.pluginsManager.trigger.firstCall).be.calledWith('data:beforeGetMapping', requestObject);
           should(kuzzle.pluginsManager.trigger.secondCall).be.calledWith('data:afterGetMapping');
 
-          should(kuzzle.services.list.writeEngine.getMapping).be.calledOnce();
-          should(kuzzle.services.list.writeEngine.getMapping).be.calledWith(requestObject);
+          should(kuzzle.services.list.readEngine.getMapping).be.calledOnce();
+          should(kuzzle.services.list.readEngine.getMapping).be.calledWith(requestObject);
 
           should(response).be.instanceof(ResponseObject);
         });
