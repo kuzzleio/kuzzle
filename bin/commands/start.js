@@ -4,7 +4,6 @@ var
   fs = require('fs'),
   rc = require('rc'),
   params = rc('kuzzle'),
-  //kuzzle = require('../../lib'),
   KuzzleServer = require('../../lib/api/kuzzleServer'),
   KuzzleWorker = require('../../lib/api/kuzzleWorker'),
   RequestObject = require('kuzzle-common-objects').Models.requestObject,
