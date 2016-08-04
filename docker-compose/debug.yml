@@ -28,4 +28,4 @@ redis:
   image: redis:3.0-alpine
 
 elasticsearch:
-  image: kuzzleio/elasticsearch:2.2
+  image: kuzzleio/elasticsearch:2.3.4
