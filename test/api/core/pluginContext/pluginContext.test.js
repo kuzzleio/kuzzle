@@ -2,6 +2,7 @@ var
   rewire = require('rewire'),
   should = require('should'),
   sinon = require('sinon'),
+  KuzzleMock = require('../../../mocks/kuzzle.mock'),
   PluginContext = rewire('../../../../lib/api/core/plugins/pluginContext'),
   PluginImplementationError = require('kuzzle-common-objects').Errors.pluginImplementationError,
   _ = require('lodash');
@@ -12,22 +13,7 @@ describe('Plugin Context', () => {
     context;
 
   beforeEach(() => {
-    kuzzle = {
-      config: 'kuzzleConfig',
-      passport: {
-        use: 'passportUse'
-      },
-      repositories: {
-        user: {
-          load: sinon.spy()
-        }
-      },
-      router: {
-        newConnection: function () {},
-        execute: function () {},
-        removeConnection: function () {}
-      }
-    };
+    kuzzle = new KuzzleMock();
     context = new PluginContext(kuzzle);
   });
 

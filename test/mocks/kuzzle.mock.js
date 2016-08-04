@@ -1,8 +1,22 @@
 var
   sinon = require('sinon'),
+  Kuzzle = require('../../lib/api/kuzzle'),
   foo = {foo: 'bar'};
 
+/**
+ * @constructor
+ */
 function KuzzleMock () {
+  var k;
+
+  for (k in this) {
+    if (!this.hasOwnProperty(k)) {
+      this[k] = function () {               // eslint-disable-line no-loop-func
+        throw new Error(`Kuzzle original property ${k} is not mocked`);
+      };
+    }
+  }
+
   this.indexCache = {
     add: sinon.spy(),
     remove: sinon.spy()
@@ -16,8 +30,24 @@ function KuzzleMock () {
     publish: sinon.stub().resolves(foo)
   };
 
+  this.passport = {
+    use: sinon.spy()
+  };
+
   this.pluginsManager = {
     trigger: sinon.spy(function () {return Promise.resolve(arguments[1]);})
+  };
+
+  this.repositories = {
+    user: {
+      load: sinon.stub().resolves(foo)
+    }
+  };
+
+  this.router = {
+    execute: sinon.stub().resolves(foo),
+    newConnection: sinon.stub().resolves(foo),
+    removeConnection: sinon.spy()
   };
 
   this.services = {
@@ -54,6 +84,9 @@ function KuzzleMock () {
     getStats: sinon.stub().resolves(foo)
   };
 }
+
+KuzzleMock.prototype = new Kuzzle();
+KuzzleMock.prototype.constructor = Kuzzle;
 
 module.exports = KuzzleMock;
 
