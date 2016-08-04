@@ -3,13 +3,13 @@
 var
   rc = require('rc'),
   params = rc('kuzzle'),
-  KuzzleServer = require('../../lib/api/kuzzleServer');
+  Kuzzle = require('../../lib/api/kuzzle');
 
 module.exports = function () {
   var
     data = {},
     service,
-    kuzzle = new KuzzleServer();
+    kuzzle = new Kuzzle();
 
   service = params._[2];
   if (!service) {

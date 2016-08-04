@@ -2,7 +2,7 @@ var
   should = require('should'),
   rewire = require('rewire'),
   Promise = require('bluebird'),
-  KuzzleServer = require.main.require('lib/api/kuzzleServer'),
+  Kuzzle = require.main.require('lib/api/kuzzle'),
   PluginsManager = rewire('../../../../lib/api/core/plugins/pluginsManager');
 
 describe('PluginsManager: init()', () => {
@@ -12,7 +12,7 @@ describe('PluginsManager: init()', () => {
     pluginsManager;
 
   before(() => {
-    kuzzle = new KuzzleServer();
+    kuzzle = new Kuzzle();
     pluginsManager = new PluginsManager(kuzzle);
     PluginsManager.__set__('loadPlugins', () => {
       loadPluginsCalled = true;

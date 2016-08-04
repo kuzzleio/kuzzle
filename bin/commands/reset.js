@@ -3,7 +3,7 @@
 var
   rc = require('rc'),
   params = rc('kuzzle'),
-  KuzzleServer = require('../../lib/api/kuzzleServer'),
+  Kuzzle = require('../../lib/api/kuzzle'),
   readlineSync = require('readline-sync'),
   fs = require('fs'),
   clc = require('cli-color');
@@ -15,7 +15,7 @@ module.exports = function (options) {
     notice = string => options.parent.noColors ? string : clc.cyanBright(string),
     ok = string => options.parent.noColors ? string: clc.green.bold(string),
     userIsSure = false,
-    kuzzle = new KuzzleServer();
+    kuzzle = new Kuzzle();
 
   // check, if files are provided, if they exists
   if (params.fixtures) {

@@ -6,7 +6,7 @@ var
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
   InternalError = require.main.require('kuzzle-common-objects').Errors.internalError,
   BadRequestError = require.main.require('kuzzle-common-objects').Errors.badRequestError,
-  KuzzleServer = require.main.require('lib/api/kuzzleServer');
+  Kuzzle = require.main.require('lib/api/kuzzle');
 
 describe('Test: hotelClerk.addSubscription', () => {
   var
@@ -28,7 +28,7 @@ describe('Test: hotelClerk.addSubscription', () => {
     };
 
   beforeEach(() => {
-    kuzzle = new KuzzleServer();
+    kuzzle = new Kuzzle();
     sandbox.stub(kuzzle.internalEngine, 'get').resolves({});
     return kuzzle.services.init({whitelist: []});
   });

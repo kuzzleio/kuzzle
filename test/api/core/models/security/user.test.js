@@ -1,7 +1,7 @@
 var
   should = require('should'),
   sinon = require('sinon'),
-  KuzzleServer = require.main.require('lib/api/kuzzleServer'),
+  Kuzzle = require.main.require('lib/api/kuzzle'),
   Profile = require.main.require('lib/api/core/models/security/profile'),
   User = require.main.require('lib/api/core/models/security/user');
 
@@ -16,7 +16,7 @@ describe('Test: security/userTest', () => {
 
   beforeEach(() => {
     sandbox = sinon.sandbox.create();
-    kuzzle = new KuzzleServer();
+    kuzzle = new Kuzzle();
 
     profile = new Profile();
     profile._id = 'profile';

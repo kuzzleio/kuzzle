@@ -1,7 +1,7 @@
 var
   clc = require('cli-color'),
   childProcess = require('child_process'),
-  KuzzleServer = require('../../lib/api/kuzzleServer');
+  Kuzzle = require('../../lib/api/kuzzle');
 
 /* eslint-disable no-console */
 
@@ -10,7 +10,7 @@ module.exports = function pluginsManager (plugin, options) {
     clcError = string => options.parent.noColors ? string : clc.red(string),
     clcNotice = string => options.parent.noColors ? string : clc.cyan(string),
     clcOk = string => options.parent.noColors ? string: clc.green.bold(string),
-    kuzzle = new KuzzleServer(),
+    kuzzle = new Kuzzle(),
     data = {};
 
   if (!childProcess.hasOwnProperty('execSync')) {

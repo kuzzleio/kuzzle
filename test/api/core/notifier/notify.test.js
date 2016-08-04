@@ -7,7 +7,7 @@ var
   should = require('should'),
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
-  KuzzleServer = require.main.require('lib/api/kuzzleServer'),
+  Kuzzle = require.main.require('lib/api/kuzzle'),
   Notifier = require.main.require('lib/api/core/notifier'),
   NotificationObject = require.main.require('lib/api/core/models/notificationObject');
 
@@ -21,7 +21,7 @@ describe('Test: notifier.notify', () => {
     getChannelsStub;
 
   before(() => {
-    kuzzle = new KuzzleServer();
+    kuzzle = new Kuzzle();
     notification = new NotificationObject({}, {});
   });
 

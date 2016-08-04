@@ -5,7 +5,7 @@ var
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
   BadRequestError = require.main.require('kuzzle-common-objects').Errors.badRequestError,
   NotFoundError = require.main.require('kuzzle-common-objects').Errors.notFoundError,
-  KuzzleServer = require.main.require('lib/api/kuzzleServer');
+  Kuzzle = require.main.require('lib/api/kuzzle');
 
 describe('Test: hotelClerk.removeRooms', () => {
   var
@@ -29,7 +29,7 @@ describe('Test: hotelClerk.removeRooms', () => {
 
 
   beforeEach(() => {
-    kuzzle = new KuzzleServer();
+    kuzzle = new Kuzzle();
 
     context = {
       connection: connection,

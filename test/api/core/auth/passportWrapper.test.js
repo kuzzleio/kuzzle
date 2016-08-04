@@ -2,7 +2,7 @@ var
   should = require('should'),
   passport = require('passport'),
   util = require('util'),
-  KuzzleServer = require.main.require('lib/api/kuzzleServer'),
+  Kuzzle = require.main.require('lib/api/kuzzle'),
   ForbiddenError = require.main.require('kuzzle-common-objects').Errors.forbiddenError,
   PassportWrapper = require.main.require('lib/api/core/auth/passportWrapper'),
   MockupStrategy;
@@ -48,7 +48,7 @@ describe('Test the passport Wrapper', () => {
     passportWrapper;
 
   before(() => {
-    kuzzle = new KuzzleServer();
+    kuzzle = new Kuzzle();
     passportWrapper = new PassportWrapper(kuzzle);
 
     passport.use(new MockupStrategy('mockup', (username, callback) => {

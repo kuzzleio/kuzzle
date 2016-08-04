@@ -3,7 +3,7 @@
  */
 var
   should = require('should'),
-  KuzzleServer = require.main.require('lib/api/kuzzleServer'),
+  Kuzzle = require.main.require('lib/api/kuzzle'),
   sandbox = require('sinon').sandbox.create(),
   EntryPoints = require.main.require('lib/api/core/entryPoints'),
   KuzzleProxy = require.main.require('lib/api/core/entryPoints/kuzzleProxy'),
@@ -19,7 +19,7 @@ describe('Test: core/entryPoints', () => {
 
   it('should create instance of proxy/http server on creation', () => {
     var
-      kuzzle = new KuzzleServer(),
+      kuzzle = new Kuzzle(),
       entryPoints = new EntryPoints(kuzzle, {httpPort: httpPort});
 
     should(entryPoints).be.an.Object();
@@ -29,7 +29,7 @@ describe('Test: core/entryPoints', () => {
 
   it('should call init of each entry points', () => {
     var
-      kuzzle = new KuzzleServer(),
+      kuzzle = new Kuzzle(),
       entryPoints = new EntryPoints(kuzzle, {httpPort: httpPort}),
       spyProxy = sandbox.stub(entryPoints.proxy, 'init'),
       spyHttp = sandbox.stub(entryPoints.http, 'init');

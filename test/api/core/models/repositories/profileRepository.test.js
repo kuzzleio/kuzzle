@@ -10,7 +10,7 @@ var
   InternalError = require.main.require('kuzzle-common-objects').Errors.internalError,
   NotFoundError = require.main.require('kuzzle-common-objects').Errors.notFoundError,
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
-  KuzzleServer = require.main.require('lib/api/kuzzleServer');
+  Kuzzle = require.main.require('lib/api/kuzzle');
 
 describe('Test: repositories/profileRepository', () => {
   var
@@ -46,7 +46,7 @@ describe('Test: repositories/profileRepository', () => {
     };
 
   before(() => {
-    kuzzle = new KuzzleServer();
+    kuzzle = new Kuzzle();
     testProfile = new Profile();
     testProfile._id = testProfilePlain._id;
     testProfile.policies = testProfilePlain.policies;

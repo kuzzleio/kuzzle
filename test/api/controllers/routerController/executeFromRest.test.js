@@ -5,7 +5,7 @@
 
 var
   should = require('should'),
-  KuzzleServer = require.main.require('lib/api/kuzzleServer'),
+  Kuzzle = require.main.require('lib/api/kuzzle'),
   rewire = require('rewire'),
   RouterController = rewire('../../../../lib/api/controllers/routerController'),
   ResponseObject = require.main.require('kuzzle-common-objects').Models.responseObject;
@@ -55,7 +55,7 @@ describe('Test: routerController.executeFromRest', () => {
         }
       };
 
-    kuzzle = new KuzzleServer();
+    kuzzle = new Kuzzle();
     kuzzle.funnel.execute = mockupFunnel;
     RouterController.router = mockupRouterListener;
 

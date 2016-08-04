@@ -2,7 +2,7 @@ var
   should = require('should'),
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
-  KuzzleServer = require.main.require('lib/api/kuzzleServer'),
+  Kuzzle = require.main.require('lib/api/kuzzle'),
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
   rewire = require('rewire'),
   FunnelController = rewire('../../../../lib/api/controllers/funnelController');
@@ -32,7 +32,7 @@ describe('funnelController.playCachedRequests', () => {
 
     callback = () => {};
 
-    kuzzle = new KuzzleServer();
+    kuzzle = new Kuzzle();
     FunnelController.__set__('setTimeout', () => {
       setTimeoutCalled = true;
     });

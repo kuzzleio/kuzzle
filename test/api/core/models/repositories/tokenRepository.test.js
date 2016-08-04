@@ -4,7 +4,7 @@ var
   should = require('should'),
   /** @type {Params} */
   params = require('rc')('kuzzle'),
-  KuzzleServer = require.main.require('lib/api/kuzzleServer'),
+  Kuzzle = require.main.require('lib/api/kuzzle'),
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
   InternalError = require.main.require('kuzzle-common-objects').Errors.internalError,
@@ -23,7 +23,7 @@ describe('Test: repositories/tokenRepository', () => {
     tokenRepository;
 
   before(() => {
-    kuzzle = new KuzzleServer();
+    kuzzle = new Kuzzle();
   });
 
   beforeEach(() => {

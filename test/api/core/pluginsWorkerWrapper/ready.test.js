@@ -2,18 +2,16 @@ var
   should = require('should'),
   rewire = require('rewire'),
   sinon = require('sinon'),
+  sandbox = sinon.sandbox.create(),
   PluginContext = require.main.require('lib/api/core/plugins/pluginContext'),
   ready = rewire('../../../../lib/api/core/plugins/workerReady');
 
 describe('Test plugins Worker Wrapper', () => {
   var
-    sandbox,
     plugin,
-    pluginMock;
+    pluginMock,
+    reset;
 
-  before(() => {
-    ready.__set__('isDummy', true);
-  });
 
   beforeEach(() => {
     plugin = {
@@ -23,13 +21,15 @@ describe('Test plugins Worker Wrapper', () => {
       baz: () => {}
     };
 
-    sandbox = sinon.sandbox.create();
     pluginMock = sandbox.mock(plugin);
-    ready.__set__('plugin', plugin);
+    reset = ready.__set__({
+      plugin
+    });
   });
 
   afterEach(() => {
     sandbox.restore();
+    reset();
   });
 
   it('should initialize the plugin properly', () => {
@@ -45,28 +45,46 @@ describe('Test plugins Worker Wrapper', () => {
       }),
       processSend = sandbox.spy();
 
-    ready.__set__('process', {on: processOn, send: processSend});
     plugin.hooks = {
       foo: 'bar',
       baz: 'qux'
     };
 
-    ready();
-
-    pluginMock.verify();
-    should(init.firstCall.calledWithMatch(config, sinon.match.instanceOf(PluginContext), 'am I a dummy?')).be.true();
-
-    should(processSend.firstCall.calledWithMatch({
-      type: 'initialized',
-      data: {
-        events: ['foo', 'baz']
+    ready.__with__({
+      process: {
+        env: {
+          name: 'foo'
+        },
+        on: processOn,
+        send: processSend
+      },
+      require: function () {
+        return function () {
+          return plugin;
+        };
       }
-    })).be.true();
+    })(() => {
+      ready();
 
-    should(processSend.secondCall.calledWithMatch({
-      type: 'ready',
-      data: {}
-    })).be.true();
+      pluginMock.verify();
+
+      should(init).be.calledWith(config, sinon.match.instanceOf(PluginContext));
+
+      should(processSend.firstCall.calledWithMatch({
+        type: 'initialized',
+        data: {
+          events: ['foo', 'baz']
+        }
+      })).be.true();
+
+      should(processSend.secondCall.calledWithMatch({
+        type: 'ready',
+        data: {}
+      })).be.true();
+
+    });
+
+
   });
 
   it('should call attached plugin function with a single target hook', () => {

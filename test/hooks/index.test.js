@@ -1,6 +1,6 @@
 var
   should = require('should'),
-  KuzzleServer = require.main.require('lib/api/kuzzleServer');
+  Kuzzle = require.main.require('lib/api/kuzzle');
 
 describe('Test main file for hooks managers', () => {
   var
@@ -15,7 +15,7 @@ describe('Test main file for hooks managers', () => {
     };
 
   beforeEach(() => {
-    kuzzle = new KuzzleServer();
+    kuzzle = new Kuzzle();
     kuzzle.removeAllListeners();
   });
 

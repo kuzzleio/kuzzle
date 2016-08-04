@@ -1,8 +1,6 @@
 var
   should = require('should'),
-  sinon = require('sinon'),
-  sandbox = sinon.sandbox.create(),
-  BadRequestError = require.main.require('kuzzle-common-objects').Errors.badRequestError;
+  sinon = require('sinon');
 
 
 describe('Test: clean database', () => {
@@ -13,11 +11,11 @@ describe('Test: clean database', () => {
   beforeEach(() => {
     kuzzle = {
       indexCache: {
-        remove: sandbox.spy()
+        remove: sinon.spy()
       },
       internalEngine: {
         index: 'testIndex',
-        deleteIndex: sandbox.stub().resolves('deleteIndex')
+        deleteIndex: sinon.stub().resolves('deleteIndex')
       },
       isServer: true
     };
@@ -25,15 +23,6 @@ describe('Test: clean database', () => {
     cleanDb = require('../../../../lib/api/controllers/remoteActions/cleanDb')(kuzzle);
   });
 
-  afterEach(() => {
-    sandbox.reset();
-  });
-
-  it('should reject the promise if kuzzle is not a server instance', () => {
-    kuzzle.isServer = false;
-
-    return should(cleanDb()).be.rejectedWith(BadRequestError);
-  });
 
   it('should clean the database', () => {
     return cleanDb()

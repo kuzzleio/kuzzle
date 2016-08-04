@@ -3,7 +3,7 @@ var
   rewire = require('rewire'),
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
-  KuzzleServer = require.main.require('lib/api/kuzzleServer'),
+  Kuzzle = require.main.require('lib/api/kuzzle'),
   PluginsManager = rewire('../../../../lib/api/core/plugins/pluginsManager');
 
 describe('Plugins manager: getPluginsList', () => {
@@ -13,7 +13,7 @@ describe('Plugins manager: getPluginsList', () => {
 
   before(() => {
     getPluginsList = PluginsManager.__get__('getPluginsList');
-    kuzzle = new KuzzleServer();
+    kuzzle = new Kuzzle();
   });
 
   afterEach(() => {
@@ -39,38 +39,6 @@ describe('Plugins manager: getPluginsList', () => {
         should(plugins).be.an.Object().and.not.be.empty();
         should(plugins).have.properties(['foo', 'bar', 'foobar']);
         should(plugins.foo).have.property('config').and.not.have.property('_source');
-        should(plugins.bar).have.property('config').and.not.have.property('_source');
-        should(plugins.foobar).have.property('config').and.not.have.property('_source');
-      });
-  });
-
-  it('should only return server plugins on a server instance', () => {
-    sandbox.stub(kuzzle.internalEngine, 'search').resolves({hits: [
-      {'_id': 'foo', _source: { config: { 'loadedBy': 'server' }}},
-      {'_id': 'bar', _source: { config: { 'loadedBy': 'worker' }}},
-      {'_id': 'foobar', _source: { config: { 'loadedBy': 'all' }}}
-    ]});
-
-    return getPluginsList(kuzzle, true)
-      .then(plugins => {
-        should(plugins).be.an.Object().and.not.be.empty();
-        should(plugins).have.properties(['foo', 'foobar']).and.not.have.property('bar');
-        should(plugins.foo).have.property('config').and.not.have.property('_source');
-        should(plugins.foobar).have.property('config').and.not.have.property('_source');
-      });
-  });
-
-  it('should only return worker plugins on a worker instance', () => {
-    sandbox.stub(kuzzle.internalEngine, 'search').resolves({hits: [
-      {'_id': 'foo', _source: { config: { 'loadedBy': 'server' }}},
-      {'_id': 'bar', _source: { config: { 'loadedBy': 'worker' }}},
-      {'_id': 'foobar', _source: { config: { 'loadedBy': 'all' }}}
-    ]});
-
-    return getPluginsList(kuzzle, false)
-      .then(plugins => {
-        should(plugins).be.an.Object().and.not.be.empty();
-        should(plugins).have.properties(['bar', 'foobar']).and.not.have.property('foo');
         should(plugins.bar).have.property('config').and.not.have.property('_source');
         should(plugins.foobar).have.property('config').and.not.have.property('_source');
       });

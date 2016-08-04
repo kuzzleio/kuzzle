@@ -4,8 +4,7 @@ var
   fs = require('fs'),
   rc = require('rc'),
   params = rc('kuzzle'),
-  KuzzleServer = require('../../lib/api/kuzzleServer'),
-  KuzzleWorker = require('../../lib/api/kuzzleWorker'),
+  Kuzzle = require('../../lib/api/kuzzle'),
   RequestObject = require('kuzzle-common-objects').Models.requestObject,
   Promise = require('bluebird'),
   clc = require('cli-color'),
@@ -26,7 +25,7 @@ var
 
 module.exports = function (options) {
   var
-    kuzzle = (options.server ? new KuzzleServer() : new KuzzleWorker()),
+    kuzzle = new Kuzzle(),
     error = string => options.parent.noColors ? string : clc.red(string),
     warn = string => options.parent.noColors ? string : clc.yellow(string),
     notice = string => options.parent.noColors ? string : clc.cyanBright(string),
@@ -38,43 +37,11 @@ module.exports = function (options) {
     console.log(warn('Hook loader for coverage - ensure this is not production!'));
     coverage.hookLoader(__dirname+'/../lib');
   }
-  console.log(kuz('Starting Kuzzle'), (options.server ? notice('Server') : warn('Worker')));
-
-  if (options.worker) {
-    return kuzzle.start(params)
-      .then(() => {
-        console.log(kuzzleLogo);
-        process.title = 'KuzzleWorker';
-        console.log(`
- ████████████████████████████████████
- ██     KUZZLE WORKER STARTED      ██
- ████████████████████████████████████`);
-      });
-  }
+  console.log(kuz('Starting Kuzzle'));
 
   kuzzle.start(params)
     .then(() => {
-      console.log(kuzzleLogo);
-      process.title = 'KuzzleServer';
-      console.log(`
- ████████████████████████████████████
- ██     KUZZLE SERVER STARTED      ██
- ██   ...WAITING FOR WORKERS...    ██
- ████████████████████████████████████`);
-
-      /*
-      Waits for at least one write worker to be connected to the server before trying to use them
-      */
-      return kuzzle.services.list.broker.waitForClients(kuzzle.config.queues.workerWriteTaskQueue);
-    })
-    .then(() => {
       var request;
-
-      console.log(`
- ████████████████████████████████████
- ██        WORKER CONNECTED        ██
- ██    ...PREPARING DATABASE...    ██
- ████████████████████████████████████`);
 
       if (params.likeAvirgin) {
         request = new RequestObject({controller: 'remoteActions', action: 'cleanDb', body: {}});
@@ -114,9 +81,10 @@ module.exports = function (options) {
         .catch(() => Promise.resolve());
     })
     .then(() => {
+      console.log(kuzzleLogo);
       console.log(`
  ████████████████████████████████████
- ██          KUZZLE READY          ██
+ ██         KUZZLE IS READY        ██
  ████████████████████████████████████`);
       return kuzzle.remoteActionsController.actions.adminExists()
         .then((res) => {

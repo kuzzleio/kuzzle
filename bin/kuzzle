@@ -17,21 +17,18 @@ program
 program
   .command('createFirstAdmin')
   .description('create the first administrator user')
-  .option('--pid <pid>', '[integer] the pid of Kuzzle server - required')
   .action(require('./commands/createFirstAdmin'));
 
 // $ kuzzle.js disable <service>
 program
   .command('disable')
   .description('disable a service without reloading Kuzzle')
-  .option('--pid <pid>', '[all|integer] the pid to apply the action - required option')
   .action(require('./commands/disable'));
 
 // $ kuzzle enable <service>
 program
   .command('enable')
   .description('enable a service without reloading Kuzzle')
-  .option('--pid <pid>', '[all|integer] the pid to apply the action - required')
   .action(require('./commands/enable'));
 
 // $ kuzzle install
@@ -44,7 +41,6 @@ program
 program
   .command('likeAvirgin')
   .description('delete Kuzzle configuration and users from database. Makes Kuzzle look like a virgin, touched for the very first time')
-  .option('--pid <pid>', '[all|integer] the pid to apply the action')
   .option('--fixtures <fixtures>', 'import some fixtures from file')
   .option('--mappings <mappings>', 'load and apply mappings from file')
   .option('--noint', 'non interractive mode, will perform the reset immediately')
@@ -73,10 +69,8 @@ program
 // $ kuzzle start
 program
   .command('start')
-  .description('start a Kuzzle server|worker node')
+  .description('start a Kuzzle instance')
   .option('-p, --port <port>', 'Kuzzle port number', parseInt)
-  .option('-s, --server', 'start Kuzzle in server mode (default)')
-  .option('-w, --worker', 'start Kuzzle in worker mode')
   .option('    --likeAvirgin', 'delete Kuzzle configuration and users from database')
   .option('    --fixtures <fixtures>', 'import some fixtures from file')
   .option('    --mappings <mappings>', 'load and apply mappings from file')

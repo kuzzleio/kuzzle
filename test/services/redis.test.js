@@ -4,7 +4,7 @@ var
   Redis = rewire('../../lib/services/redis'),
   IORedis = require('ioredis'),
   redisCommands = (require('ioredis')({lazyConnect: true})).getBuiltinCommands(),
-  KuzzleServer = require.main.require('lib/api/kuzzleServer'),
+  Kuzzle = require.main.require('lib/api/kuzzle'),
   sinon = require('sinon'),
   RedisClientMock = require('../mocks/services/redisClient.mock');
 
@@ -17,7 +17,7 @@ describe('Test redis service', () => {
     sandbox = sinon.sandbox.create();
 
   before(() => {
-    kuzzle = new KuzzleServer();
+    kuzzle = new Kuzzle();
     kuzzle.config.cache.databases.push(dbname);
     redis = new Redis(kuzzle, {service: dbname});
     return Redis.__with__('buildClient', () => new RedisClientMock())(() => {
