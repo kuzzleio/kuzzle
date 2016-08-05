@@ -32,7 +32,8 @@ module.exports = {
   security: {
     jwt: {
       algorithm: 'HS256',
-      expiresIn: '1h'
+      expiresIn: '1h',
+      secret: 'Kuzzle rocks'
     },
     default: {
       role: {
