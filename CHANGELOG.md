@@ -1,5 +1,9 @@
 *__note:__ the # at the end of lines are the pull request numbers on GitHub*
 
+# 1.0.0-RC5
+
+* https://github.com/kuzzleio/kuzzle/releases/tag/1.0.0-RC5
+
 # 1.0.0-RC4
 
 * Add new hooks allowing to manage Kuzzle internal states #329
