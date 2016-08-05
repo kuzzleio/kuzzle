@@ -121,7 +121,7 @@ describe('Test: hotelClerk.addSubscription', () => {
     });
     var response;
 
-    return kuzzle.hotelClerk.addSubscription(requestObject, context)
+    kuzzle.hotelClerk.addSubscription(requestObject, context)
       .then(result => {
         response = result;
         return kuzzle.hotelClerk.addSubscription(requestObject, context);
@@ -206,7 +206,7 @@ describe('Test: hotelClerk.addSubscription', () => {
       }),
       response;
 
-    return kuzzle.hotelClerk.addSubscription(requestObject1, context)
+    kuzzle.hotelClerk.addSubscription(requestObject1, context)
       .then(result => {
         response = result;
         return kuzzle.hotelClerk.addSubscription(requestObject2, context);
@@ -376,7 +376,7 @@ describe('Test: hotelClerk.addSubscription', () => {
       }),
       response;
 
-    return kuzzle.hotelClerk.addSubscription(requestObject1, context)
+    kuzzle.hotelClerk.addSubscription(requestObject1, context)
       .then(result => {
         response = result;
         return kuzzle.hotelClerk.addSubscription(requestObject2, context);

@@ -89,7 +89,7 @@ describe('Test: routerController.initRouterHttp', () => {
       };
 
     sandbox.stub(kuzzle.internalEngine, 'get').resolves({});
-    return kuzzle.services.init({whitelist: []})
+    kuzzle.services.init({whitelist: []})
       .then(() => {
         RouterController.__set__('executeFromRest', mockResponse);
 
@@ -108,7 +108,7 @@ describe('Test: routerController.initRouterHttp', () => {
           router.routeHttp(request, response);
         });
 
-        server.listen(options.port, () => done());
+        server.listen(options.port, done);
       });
   });
 
