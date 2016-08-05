@@ -4,31 +4,31 @@
 var
   should = require('should'),
   rewire = require('rewire'),
-  params = require('rc')('kuzzle'),
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
-  Kuzzle = require.main.require('lib/api/Kuzzle'),
+  Kuzzle = require.main.require('lib/api/kuzzle'),
   KuzzleProxy = rewire('../../../../lib/api/core/entryPoints/kuzzleProxy'),
   RequestObject = require('kuzzle-common-objects').Models.requestObject,
   ResponseObject = require('kuzzle-common-objects').Models.responseObject;
 
-describe('Test: entryPoints/proxy', function () {
+describe('Test: entryPoints/proxy', () => {
   var
     kuzzle;
 
-  before(function (done) {
+  before(() => {
     kuzzle = new Kuzzle();
-    kuzzle.start(params, {dummy: true})
-      .then(function () {
-        done();
-      });
+  });
+
+  beforeEach(() => {
+    sandbox.stub(kuzzle.internalEngine, 'get').resolves({});
+    return kuzzle.services.init({whitelist: []});
   });
 
   afterEach(() => {
     sandbox.restore();
   });
 
-  it('should construct the right object', function () {
+  it('should construct the right object', () => {
     var proxy = new KuzzleProxy(kuzzle);
 
     should(proxy).have.property('kuzzle');
@@ -38,11 +38,10 @@ describe('Test: entryPoints/proxy', function () {
     should(proxy.init).be.a.Function();
     should(proxy.joinChannel).be.a.Function();
     should(proxy.leaveChannel).be.a.Function();
-    should(proxy.notify).be.a.Function();
-    should(proxy.broadcast).be.a.Function();
+    should(proxy.dispatch).be.a.Function();
   });
 
-  it('should init listeners on init call', function () {
+  it('should init listeners on init call', () => {
     var
       proxy = new KuzzleProxy(kuzzle),
       spyListen = sandbox.stub(proxy.kuzzle.services.list.proxyBroker, 'listen');
@@ -55,7 +54,7 @@ describe('Test: entryPoints/proxy', function () {
     should(spyListen.callCount).be.eql(4);
   });
 
-  it('should send a message on room "joinChannel" on joinChannel call', function () {
+  it('should send a message on room "joinChannel" on joinChannel call', () => {
     var
       proxy = new KuzzleProxy(kuzzle),
       data = {my: 'data'},
@@ -66,7 +65,7 @@ describe('Test: entryPoints/proxy', function () {
     should(spyListen.callCount).be.eql(1);
   });
 
-  it('should send a message on room "leaveChannel" on leaveChannel call', function () {
+  it('should send a message on room "leaveChannel" on leaveChannel call', () => {
     var
       proxy = new KuzzleProxy(kuzzle),
       data = {my: 'data'},
@@ -77,7 +76,7 @@ describe('Test: entryPoints/proxy', function () {
     should(spyListen.callCount).be.eql(1);
   });
 
-  it('should call the funnel execute on event onRequest', function () {
+  it('should call the funnel execute on event onRequest', () => {
     var
       data = {request: {}, context: {connection: {type: 'socketio', id: 'myid'}}},
       spyExecute = sandbox.stub(kuzzle.funnel, 'execute');
@@ -87,7 +86,7 @@ describe('Test: entryPoints/proxy', function () {
     should(spyExecute.callCount).be.eql(1);
   });
 
-  it('should not call the funnel execute if information missing in data on event onRequest', function () {
+  it('should not call the funnel execute if information missing in data on event onRequest', () => {
     var
       data = {},
       spyExecute = sandbox.stub(kuzzle.funnel, 'execute');
@@ -108,7 +107,7 @@ describe('Test: entryPoints/proxy', function () {
     should(spyExecute.callCount).be.eql(0);
   });
 
-  it('should call the funnel execute on event onRequest', function () {
+  it('should call the funnel execute on event onRequest', () => {
     var
       data = {request: {}, context: {connection: {type: 'socketio', id: 'myid'}}},
       spyExecute = sandbox.stub(kuzzle.funnel, 'execute'),
@@ -120,7 +119,7 @@ describe('Test: entryPoints/proxy', function () {
     should(requestObject).instanceOf(RequestObject);
   });
 
-  it('should call the funnel execute and send the response on broker on event onRequest', function () {
+  it('should call the funnel execute and send the response on broker on event onRequest', () => {
     var
       data = {request: {}, context: {connection: {type: 'socketio', id: 'myid'}}},
       spySend = sandbox.stub(kuzzle.services.list.proxyBroker, 'send');
@@ -134,29 +133,29 @@ describe('Test: entryPoints/proxy', function () {
     should(spySend.calledWith('response')).be.true();
   });
 
-  it('should send a message on room "notify" on notify call', function () {
+  it('should send a message on room "notify" on notify call', () => {
     var
       proxy = new KuzzleProxy(kuzzle),
       data = {my: 'data'},
       spyListen = sandbox.stub(proxy.kuzzle.services.list.proxyBroker, 'send');
 
-    proxy.notify(data);
+    proxy.dispatch('notify', data);
     should(spyListen.calledWith('notify', data)).be.true();
     should(spyListen.callCount).be.eql(1);
   });
 
-  it('should send a message on room "broadcast" on broadcast call', function () {
+  it('should send a message on room "broadcast" on broadcast call', () => {
     var
       proxy = new KuzzleProxy(kuzzle),
       data = {my: 'data'},
       spyListen = sandbox.stub(proxy.kuzzle.services.list.proxyBroker, 'send');
 
-    proxy.broadcast(data);
+    proxy.dispatch('broadcast', data);
     should(spyListen.calledWith('broadcast', data)).be.true();
     should(spyListen.callCount).be.eql(1);
   });
 
-  it('should call the router removeConnection on event onDisconnect', function () {
+  it('should call the router removeConnection on event onDisconnect', () => {
     var
       data = {context: {connection: {type: 'socketio', id: 'myid'}}},
       spyRemoveConnection = sandbox.stub(kuzzle.router, 'removeConnection');
@@ -166,7 +165,7 @@ describe('Test: entryPoints/proxy', function () {
     should(spyRemoveConnection.calledWith(data.context)).be.true();
   });
 
-  it('should not call the router if the data has no context on event onDisconnect', function () {
+  it('should not call the router if the data has no context on event onDisconnect', () => {
     var
       data = {},
       spyRemoveConnection = sandbox.stub(kuzzle.router, 'removeConnection');
@@ -176,7 +175,7 @@ describe('Test: entryPoints/proxy', function () {
     should(spyRemoveConnection.callCount).be.eql(0);
   });
 
-  it('should call the router newConnection on event onConnection', function () {
+  it('should call the router newConnection on event onConnection', () => {
     var
       data = {context: {connection: {type: 'socketio', id: 'myid'}}},
       spyNewConnection = sandbox.stub(kuzzle.router, 'newConnection');
@@ -186,7 +185,7 @@ describe('Test: entryPoints/proxy', function () {
     should(spyNewConnection.calledWith(data.context.connection.type, data.context.connection.id)).be.true();
   });
 
-  it('should not call the router if the data has no context on event onConnection', function () {
+  it('should not call the router if the data has no context on event onConnection', () => {
     var
       data = {},
       spyNewConnection = sandbox.stub(kuzzle.router, 'newConnection');

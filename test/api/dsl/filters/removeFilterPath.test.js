@@ -3,12 +3,12 @@ var
   rewire = require('rewire'),
   DslFilters = rewire('../../../../lib/api/dsl/filters');
 
-describe('Test: dsl.removeFilterPath', function () {
+describe('Test: dsl.removeFilterPath', () => {
   var
     filters,
     removeFilterPath = DslFilters.__get__('removeFilterPath');
 
-  beforeEach(function () {
+  beforeEach(() => {
     filters = new DslFilters();
     filters.filtersTree = {
       anIndex: {
@@ -38,7 +38,7 @@ describe('Test: dsl.removeFilterPath', function () {
     };
   });
 
-  it('should not delete the entire filter if another room use it', function () {
+  it('should not delete the entire filter if another room use it', () => {
     filters.filtersTree.anIndex.aCollection.fields.aField.randomFilter.ids = [ 'foo', 'bar' ];
     removeFilterPath.call(filters, 'bar', 'anIndex.aCollection.aField.randomFilter');
 
@@ -60,7 +60,7 @@ describe('Test: dsl.removeFilterPath', function () {
     should(filters.filtersTree.anIndex.aCollection.globalFilterIds).match(['bar']);
   });
 
-  it('should do nothing if the provided filter ID is not listed in the filter path', function () {
+  it('should do nothing if the provided filter ID is not listed in the filter path', () => {
     var ids = [ 'foo', 'bar' ];
 
     filters.filtersTree.anIndex.aCollection.fields.aField.randomFilter.ids = ids;
@@ -73,7 +73,7 @@ describe('Test: dsl.removeFilterPath', function () {
     should(filters.filtersTree.anIndex.aCollection.fields.aField.randomFilter.ids).be.an.Array().and.match(ids);
   });
 
-  it('should remove the entire collection if there is no filter IDs left', function () {
+  it('should remove the entire collection if there is no filter IDs left', () => {
     filters.filtersTree.anIndex.aCollection.fields.aField.randomFilter.ids = [ 'foo' ];
     removeFilterPath.call(filters, 'foo', 'anIndex.aCollection.aField.randomFilter');
 
@@ -83,7 +83,7 @@ describe('Test: dsl.removeFilterPath', function () {
     should.not.exist(filters.filtersTree.anIndex.aCollection);
   });
 
-  it('should remove the entire index if there is no room left', function () {
+  it('should remove the entire index if there is no room left', () => {
     filters.filtersTree.anIndex.aCollection.fields.aField.randomFilter.ids = [ 'foo' ];
     filters.filtersTree.anIndex.bCollection.fields.aField.randomFilter.ids = [ 'foo' ];
     removeFilterPath.call(filters, 'foo', 'anIndex.aCollection.aField.randomFilter');
@@ -92,7 +92,7 @@ describe('Test: dsl.removeFilterPath', function () {
     should(filters.filtersTree).be.an.Object().and.be.empty();
   });
 
-  it('should not delete any other filter than the one we provided', function () {
+  it('should not delete any other filter than the one we provided', () => {
     filters.filtersTree.anIndex.aCollection.fields.aField.randomFilter.ids = [ 'foo' ];
     filters.filtersTree.anIndex.aCollection.fields.anotherField = {
       anotherFilter: {

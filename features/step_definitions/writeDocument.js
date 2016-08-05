@@ -1,5 +1,5 @@
 var
-  q = require('q');
+  Promise = require('bluebird');
 
 var apiSteps = function () {
   this.When(/^I ?(can't)* write the document ?(?:"([^"]*)")?(?: in index "([^"]*)")?$/, function (cant, documentName, index, callback) {
@@ -80,10 +80,10 @@ var apiSteps = function () {
     return this.api.update(this.result._id, body, index)
       .then(aBody => {
         if (aBody.error) {
-          return q.reject(aBody.error);
+          return Promise.reject(aBody.error);
         }
         if (!aBody.result) {
-          return q.reject('No result provided');
+          return Promise.reject('No result provided');
         }
       });
   });

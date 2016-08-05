@@ -1,13 +1,11 @@
 var
   should = require('should'),
-  q = require('q'),
+  Promise = require('bluebird'),
   sinon = require('sinon'),
-  params = require('rc')('kuzzle'),
-  Kuzzle = require.main.require('lib/api/Kuzzle');
+  sandbox = sinon.sandbox.create(),
+  Kuzzle = require.main.require('lib/api/kuzzle');
 
-require('sinon-as-promised')(q.Promise);
-
-describe('Test: hotelClerk.listSubscription', function () {
+describe('Test: hotelClerk.listSubscription', () => {
   var
     kuzzle,
     connection = {id: 'connectionid'},
@@ -19,28 +17,32 @@ describe('Test: hotelClerk.listSubscription', function () {
   beforeEach(() => {
     kuzzle = new Kuzzle();
 
-    return kuzzle.start(params, {dummy: true})
-      .then(() => {
-        context = {
-          connection: connection,
-          token: {
-            user: {
-              profile: {}
-            }
-          }
-        };
-      });
+    context = {
+      connection: connection,
+      token: {
+        user: 'user'
+      }
+    };
+
+    sandbox.stub(kuzzle.internalEngine, 'get').resolves({});
+    return kuzzle.services.init({whitelist: []});
   });
 
-  it('should return an empty object if there is no room', function () {
+  afterEach(() => {
+    sandbox.restore();
+  });
+
+  it('should return an empty object if there is no room', () => {
     return kuzzle.hotelClerk.listSubscriptions(context)
       .then(response => {
         should(response).be.empty().Object();
       });
   });
 
-  it('should return a correct list according to subscribe on filter', function () {
-    context.token.user.profile.isActionAllowed = sinon.stub().resolves(true);
+  it('should return a correct list according to subscribe on filter', () => {
+
+    sandbox.stub(kuzzle.repositories.user, 'load').resolves({_id: 'user', isActionAllowed: sandbox.stub().resolves(true)});
+
     kuzzle.hotelClerk.rooms[roomName] = {index, collection, roomId: 'foobar', customers: ['foo']};
 
     return kuzzle.hotelClerk.listSubscriptions(context)
@@ -53,7 +55,7 @@ describe('Test: hotelClerk.listSubscription', function () {
       });
   });
 
-  it('should return a correct list according to subscribe on filter and user right', function () {
+  it('should return a correct list according to subscribe on filter and user right', () => {
     kuzzle.hotelClerk.rooms = {
       'foo': {
         index, collection: 'foo', roomId: 'foo', customers: ['foo']
@@ -65,9 +67,9 @@ describe('Test: hotelClerk.listSubscription', function () {
         index, collection: 'foo', roomId: 'foobar', customers: ['foo', 'bar']
       }
     };
-
-    context.token.user.profile.isActionAllowed = sinon.stub().resolves(true);
-    context.token.user.profile.isActionAllowed.onSecondCall().resolves(false);
+    sandbox.stub(kuzzle.repositories.user, 'load').resolves({_id: 'user', isActionAllowed: r => {
+      return Promise.resolve(r.collection === 'foo');
+    }});
 
     return kuzzle.hotelClerk.listSubscriptions(context)
       .then(response => {

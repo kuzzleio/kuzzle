@@ -1,16 +1,13 @@
 var
   should = require('should'),
-  q = require('q'),
   sinon = require('sinon'),
+  sandbox = sinon.sandbox.create(),
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
   BadRequestError = require.main.require('kuzzle-common-objects').Errors.badRequestError,
   NotFoundError = require.main.require('kuzzle-common-objects').Errors.notFoundError,
-  params = require('rc')('kuzzle'),
-  Kuzzle = require.main.require('lib/api/Kuzzle');
+  Kuzzle = require.main.require('lib/api/kuzzle');
 
-require('sinon-as-promised')(q.Promise);
-
-describe('Test: hotelClerk.removeSubscription', function () {
+describe('Test: hotelClerk.removeSubscription', () => {
   var
     kuzzle,
     connection = {id: 'connectionid'},
@@ -20,18 +17,11 @@ describe('Test: hotelClerk.removeSubscription', function () {
     },
     index = 'test',
     collection = 'user',
-    unsubscribeRequest,
-    sandbox;
+    unsubscribeRequest;
 
-
-  before(() => {
-    kuzzle = new Kuzzle();
-
-    return kuzzle.start(params, {dummy: true});
-  });
 
   beforeEach(() => {
-    sandbox = sinon.sandbox.create();
+    kuzzle = new Kuzzle();
 
     unsubscribeRequest = new RequestObject({
       controller: 'subscribe',
@@ -60,13 +50,16 @@ describe('Test: hotelClerk.removeSubscription', function () {
         channels: ['barfoo']
       }
     };
+
+    sandbox.stub(kuzzle.internalEngine, 'get').resolves({});
+    return kuzzle.services.init({whitelist: []});
   });
 
   afterEach(() => {
     sandbox.restore();
   });
 
-  it('should do nothing when a bad connectionId is given', function () {
+  it('should do nothing when a bad connectionId is given', () => {
     var
       badContext = {
         connection: {id: 'unknown'},
@@ -76,23 +69,23 @@ describe('Test: hotelClerk.removeSubscription', function () {
     return should(kuzzle.hotelClerk.removeSubscription(unsubscribeRequest, badContext)).be.rejectedWith(NotFoundError);
   });
 
-  it('should do nothing when a badly formed unsubscribe request is provided', function () {
+  it('should do nothing when a badly formed unsubscribe request is provided', () => {
     delete unsubscribeRequest.data.body;
     return should(kuzzle.hotelClerk.removeSubscription(unsubscribeRequest, context)).be.rejectedWith(BadRequestError);
   });
 
-  it('should do nothing if a bad room name is given', function () {
+  it('should do nothing if a bad room name is given', () => {
     unsubscribeRequest.data.body.roomId = 'qux';
     return should(kuzzle.hotelClerk.removeSubscription(unsubscribeRequest, context)).be.rejectedWith(NotFoundError);
   });
 
-  it('should not delete all subscriptions when we want to just remove one', function () {
+  it('should not delete all subscriptions when we want to just remove one', () => {
     var mock = sandbox.mock(kuzzle.dsl).expects('remove').once().resolves();
 
     sandbox.spy(kuzzle.notifier, 'notify');
 
     return kuzzle.hotelClerk.removeSubscription(unsubscribeRequest, context)
-      .finally(function () {
+      .finally(() => {
         mock.verify();
         should(kuzzle.notifier.notify.called).be.false();
 
@@ -105,7 +98,7 @@ describe('Test: hotelClerk.removeSubscription', function () {
       });
   });
 
-  it('should clean up customers, rooms and filtersTree object', function () {
+  it('should clean up customers, rooms and filtersTree object', () => {
     var mock = sandbox.mock(kuzzle.dsl).expects('remove').once().resolves();
 
     sandbox.spy(kuzzle.notifier, 'notify');
@@ -113,7 +106,7 @@ describe('Test: hotelClerk.removeSubscription', function () {
     delete kuzzle.hotelClerk.customers[connection.id].bar;
 
     return kuzzle.hotelClerk.removeSubscription(unsubscribeRequest, context)
-      .finally(function () {
+      .finally(() => {
         mock.verify();
         should(kuzzle.notifier.notify.called).be.false();
 
@@ -125,7 +118,7 @@ describe('Test: hotelClerk.removeSubscription', function () {
       });
   });
 
-  it('should send a notification to other users connected on that room', function () {
+  it('should send a notification to other users connected on that room', () => {
     var
       mockDsl = sandbox.mock(kuzzle.dsl).expects('remove').never(),
       mockNotify = sandbox.mock(kuzzle.notifier).expects('notify').once();
@@ -151,10 +144,10 @@ describe('Test: hotelClerk.removeSubscription', function () {
       });
   });
 
-  it('should trigger a protocol:leaveChannel hook', function (done) {
+  it('should trigger a proxy:leaveChannel hook', function (done) {
     this.timeout(50);
 
-    kuzzle.once('protocol:leaveChannel', (data) => {
+    kuzzle.once('proxy:leaveChannel', (data) => {
       should(data).be.an.Object();
       should(data.channel).be.a.String();
       should(data.id).be.eql(context.connection.id);

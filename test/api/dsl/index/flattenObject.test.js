@@ -3,15 +3,15 @@ var
   rewire = require('rewire'),
   Dsl = rewire('../../../../lib/api/dsl/index');
 
-describe('Test: dsl.flattenObject', function () {
+describe('Test: dsl.flattenObject', () => {
   var
     flattenObject = Dsl.__get__('flattenObject');
 
-  it('should return an empty object when given one as an argument', function () {
+  it('should return an empty object when given one as an argument', () => {
     should(flattenObject({})).be.an.Object().and.be.empty();
   });
 
-  it('should flatten an object', function () {
+  it('should flatten an object', () => {
     var result = flattenObject({ foo: { bar: 'bar', baz: { SchrodingerCat: 'Dead'}}});
 
     // the entry 'foo' must still exists because the user can perform a subscribe on {exists: {field: 'foo'}}
@@ -22,7 +22,7 @@ describe('Test: dsl.flattenObject', function () {
     should(result['foo.baz.SchrodingerCat']).not.be.undefined().and.be.exactly('Dead');
   });
 
-  it('should keep arrays unchanged', function () {
+  it('should keep arrays unchanged', () => {
     var
       arr = ['bar', 'baz'],
       result = flattenObject({ foo: arr});
@@ -30,7 +30,7 @@ describe('Test: dsl.flattenObject', function () {
     should(result.foo).not.be.undefined().and.be.an.Array().and.match(arr);
   });
 
-  it('should automatically inject the provided ID', function () {
+  it('should automatically inject the provided ID', () => {
     var result = flattenObject({ foo: { bar: 'bar', baz: { SchrodingerCat: 'Dead'}}}, 'foobar');
     should(result._id).be.eql('foobar');
   });

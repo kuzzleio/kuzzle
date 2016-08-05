@@ -1,10 +1,9 @@
 var
   should = require('should'),
-  q = require('q'),
   rewire = require('rewire'),
   Dsl = rewire('../../../../lib/api/dsl/index');
 
-describe('Test: dsl.remove', function () {
+describe('Test: dsl.remove', () => {
   var
     dsl,
     index = 'test',
@@ -20,7 +19,7 @@ describe('Test: dsl.remove', function () {
     dsl = new Dsl();
   });
 
-  it('should return a promise', function () {
+  it('should return a promise', () => {
     return should(dsl.remove('foo')).be.fulfilled();
   });
 
@@ -42,17 +41,7 @@ describe('Test: dsl.remove', function () {
       .then(() => should(dsl.filters.filtersTree).be.empty().Object());
   });
 
-  it('should return a rejected promise on fail', function () {
-    dsl.filters.removeFilter = () => q.reject(new Error('rejected'));
-
-    return dsl.register(filterId, index, collection, {})
-      .then(() => {
-        should(dsl.filters.filtersTree).not.be.empty().Object();
-        return should(dsl.remove(filterId)).be.rejected();
-      });
-  });
-
-  it('should fail if the provided filter ID is not a string', function () {
+  it('should fail if the provided filter ID is not a string', () => {
     return should(dsl.remove(['foobar'])).be.rejectedWith('Expected a filterId, got a object');
   });
 });

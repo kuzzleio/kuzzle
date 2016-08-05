@@ -1,35 +1,39 @@
 var
-  rc = require('rc'),
-  params = rc('kuzzle'),
-  q = require('q'),
   should = require('should'),
-  Kuzzle = require.main.require('lib/api/Kuzzle'),
+  sinon = require('sinon'),
+  sandbox = sinon.sandbox.create(),
+  Kuzzle = require.main.require('lib/api/kuzzle'),
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject;
 
-describe('Test: clean and prepare database remote action', function () {
+describe('Test: clean and prepare database remote action', () => {
+  var
+    kuzzle;
 
-  it('should call cleanDb and prepareDb', function (done) {
-    var 
-      cleanDbCalled = false,
-      prepareDbCalled = false,
-      request = new RequestObject({controller: 'remoteActions', action: 'cleanAndPrepare', body: {}}),
-      kuzzle;
-
+  before(() => {
     kuzzle = new Kuzzle();
-    kuzzle.start(params, {dummy: true})
-      .then(() => {
-        kuzzle.remoteActionsController.actions.cleanDb = function () { cleanDbCalled = true; return q(); };
-        kuzzle.remoteActionsController.actions.prepareDb = function () { prepareDbCalled = true; return q(); };
+  });
 
-        kuzzle.remoteActionsController.actions.cleanAndPrepare(kuzzle, request)
-          .then(function () {
-            should(cleanDbCalled).be.true();
-            should(prepareDbCalled).be.true();
-            done();
-          })
-          .catch((err) => {
-            done(err);
-          });
+  beforeEach(() => {
+    sandbox.stub(kuzzle.internalEngine, 'get').resolves({});
+    return kuzzle.services.init({whitelist: []})
+      .then(() => {
+      });
+  });
+
+  afterEach(() => {
+    sandbox.restore();
+  });
+
+  it('should call cleanDb and prepareDb', () => {
+    var
+      request = new RequestObject({controller: 'remoteActions', action: 'cleanAndPrepare', body: {}}),
+      cleanDbCalled = sandbox.stub(kuzzle.remoteActionsController.actions, 'cleanDb').resolves(),
+      prepareDbCalled = sandbox.stub(kuzzle.remoteActionsController.actions, 'prepareDb').resolves();
+
+    return kuzzle.remoteActionsController.actions.cleanAndPrepare(kuzzle, request)
+      .then(() => {
+        should(cleanDbCalled.calledOnce).be.true();
+        should(prepareDbCalled.calledOnce).be.true();
       });
   });
 });

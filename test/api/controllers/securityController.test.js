@@ -1,47 +1,46 @@
 var
-  q = require('q'),
+  Promise = require('bluebird'),
   should = require('should'),
-  params = require('rc')('kuzzle'),
-  Kuzzle = require.main.require('lib/api/Kuzzle'),
+  sinon = require('sinon'),
+  sandbox = sinon.sandbox.create(),
+  Kuzzle = require.main.require('lib/api/kuzzle'),
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
   ResponseObject = require.main.require('kuzzle-common-objects').Models.responseObject;
 
-describe('Test: security controller', function () {
+describe('Test: security controller', () => {
   var
     kuzzle;
 
-  before(function (done) {
+  before(() => {
     kuzzle = new Kuzzle();
-    kuzzle.start(params, {dummy: true})
-      .then(function () {
-        kuzzle.repositories.role.validateAndSaveRole = role => {
-          return q(role);
-        };
+  });
 
-        done();
-      })
-      .catch((error) => {
-        done(error);
+  beforeEach(() => {
+    sandbox.stub(kuzzle.internalEngine, 'get').resolves({});
+    return kuzzle.services.init({whitelist: []})
+      .then(() => kuzzle.funnel.init())
+      .then(() => {
+        sandbox.stub(kuzzle.repositories.role,'validateAndSaveRole', role => Promise.resolve(role));
       });
   });
 
-  it('should resolve to a responseObject on a createOrUpdateRole call', done => {
-    kuzzle.funnel.controllers.security.createOrReplaceRole(new RequestObject({
+  afterEach(() => {
+    sandbox.restore();
+  });
+
+  it('should resolve to a responseObject on a createOrUpdateRole call', () => {
+    return kuzzle.funnel.controllers.security.createOrReplaceRole(new RequestObject({
       body: { _id: 'test', indexes: {} }
     }))
       .then(result => {
         should(result).be.an.instanceOf(ResponseObject);
         should(result.data.body._id).be.exactly('test');
-        done();
-      })
-      .catch(error => {
-        done(error);
       });
   });
 
   it('should be rejected if creating a profile with bad roles property form', () => {
     var promise = kuzzle.funnel.controllers.security.createOrReplaceProfile(new RequestObject({
-      body: { _id: 'test', roles: 'not-an-array-role' }
+      body: { roleId: 'test', policies: 'not-an-array-roleIds' }
     }));
 
     return should(promise).be.rejected();

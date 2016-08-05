@@ -6,7 +6,7 @@ var
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
   NotificationObject = require.main.require('lib/api/core/models/notificationObject');
 
-describe('Test: NotificationObject', function () {
+describe('Test: NotificationObject', () => {
   var
     roomId = 'fakeroomid',
     requestObject = new RequestObject({
@@ -18,13 +18,13 @@ describe('Test: NotificationObject', function () {
       body: { foo: 'bar' }
     });
 
-  it('should have a toJSon prototype function', function () {
+  it('should have a toJSon prototype function', () => {
     var response = new NotificationObject(roomId, requestObject);
 
     should(response.toJson).not.be.undefined().and.be.a.Function();
   });
 
-  it('should return a normalized count response', function () {
+  it('should return a normalized count response', () => {
     var
       notificationObject = new NotificationObject(roomId, requestObject, {count: 42}),
       response = notificationObject.toJson();
@@ -44,7 +44,7 @@ describe('Test: NotificationObject', function () {
     should(response.result.count).be.exactly(42);
   });
 
-  it('should return a normalized channel response', function () {
+  it('should return a normalized channel response', () => {
     var
       notificationObject = new NotificationObject(roomId, requestObject, {channel: 'foobar'}),
       response = notificationObject.toJson();
@@ -64,7 +64,7 @@ describe('Test: NotificationObject', function () {
     should(response.result.channel).be.exactly('foobar');
   });
 
-  it('should return a normalized subscription response', function () {
+  it('should return a normalized subscription response', () => {
     var
       notificationObject = new NotificationObject(roomId, requestObject),
       response = notificationObject.toJson();

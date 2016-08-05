@@ -1,11 +1,10 @@
 var
   should = require('should'),
-  q = require('q'),
   rewire = require('rewire'),
   DslFilters = rewire('../../../../lib/api/dsl/filters'),
   Dsl = rewire('../../../../lib/api/dsl/index');
 
-describe('Test: dsl.filters.testGlobalsFilters', function () {
+describe('Test: dsl.filters.testGlobalsFilters', () => {
   var
     filters,
     index = 'foo',
@@ -14,12 +13,12 @@ describe('Test: dsl.filters.testGlobalsFilters', function () {
     cachedResult = { Goldorak: 'GO!' },
     data = {foo: {bar: 'bar'}};
 
-  before(function () {
-    DslFilters.__set__('findMatchingFilters', function (ids, body, cache) {
+  before(() => {
+    DslFilters.__set__('findMatchingFilters', (ids, body, cache) => {
       should(ids).be.an.Array();
       should(body).be.exactly(flattenBody);
       should(cache).match(cachedResult);
-      return q(ids);
+      return ids;
     });
 
     filters = new DslFilters();
@@ -28,19 +27,19 @@ describe('Test: dsl.filters.testGlobalsFilters', function () {
     flattenBody = Dsl.__get__('flattenObject')(data);
   });
 
-  it('should resolve to an empty array if there if the collection doesn\'t contain a room array', function () {
-    return should(filters.testGlobalsFilters(index, collection, flattenBody, cachedResult)).be.fulfilledWith([]);
+  it('should return an empty array if there if the collection doesn\'t contain a room array', () => {
+    should(filters.testGlobalsFilters(index, collection, flattenBody, cachedResult)).be.empty();
   });
 
-  it('should resolve to an empty array if there is no rooms registered on that collection', function () {
+  it('should an empty array if there is no rooms registered on that collection', () => {
     filters.filtersTree[index][collection].rooms = [];
-    return should(filters.testGlobalsFilters(index, collection, flattenBody, cachedResult)).be.fulfilledWith([]);
+    should(filters.testGlobalsFilters(index, collection, flattenBody, cachedResult)).be.empty();
   });
 
-  it('should call the testRooms with the appropriate set of arguments', function () {
+  it('should call the testRooms with the appropriate set of arguments', () => {
     var ids = ['Excuse', 'me', 'while', 'I', 'kiss', 'the', 'sky'];
 
     filters.filtersTree[index][collection].globalFilterIds = ids;
-    return should(filters.testGlobalsFilters(index, collection, flattenBody, cachedResult)).be.fulfilledWith(ids);
+    should(filters.testGlobalsFilters(index, collection, flattenBody, cachedResult)).match(ids);
   });
 });

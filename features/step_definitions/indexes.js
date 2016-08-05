@@ -1,6 +1,6 @@
 var
   async = require('async'),
-  q = require('q');
+  Promise = require('bluebird');
 
 var apiSteps = function () {
   this.When(/^I create an index named "([^"]*)"$/, function (index, callback) {
@@ -135,7 +135,7 @@ var apiSteps = function () {
     return this.api.setAutoRefresh(idx, autoRefresh)
       .then(body => {
         if (body.error) {
-          return q.reject(new Error(body.error.message));
+          return Promise.reject(new Error(body.error.message));
         }
 
         this.result = body;
@@ -151,7 +151,7 @@ var apiSteps = function () {
     return this.api.getAutoRefresh(idx)
       .then(body => {
         if (body.error) {
-          return q.reject(body.error);
+          return Promise.reject(body.error);
         }
 
         this.result = body;

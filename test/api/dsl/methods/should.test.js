@@ -1,29 +1,29 @@
 var
   should = require('should'),
   rewire = require('rewire'),
-  q = require('q'),
+  Promise = require('bluebird'),
   Methods = rewire('../../../../lib/api/dsl/methods');
 
-describe('Test: dsl.should method', function () {
+describe('Test: dsl.should method', () => {
   var methods;
 
-  before(function () {
+  before(() => {
     should.noConflict();
 
     Methods.__set__('getFormattedFilters', function (roomId) {
       if (roomId === 'resolve') {
-        return q('resolved');
+        return Promise.resolve('resolved');
       }
 
-      return q.reject(new Error('rejected'));
+      return Promise.reject(new Error('rejected'));
     });
 
     methods = new Methods({filtersTree: {}});
   });
 
-  it('should call the function "AND" in case of a should-not filter', function () {
+  it('should call the function "AND" in case of a should-not filter', () => {
     var andIsCalled = false;
-    methods.and = function () {
+    methods.and = () => {
       andIsCalled = true;
     };
 
@@ -31,9 +31,9 @@ describe('Test: dsl.should method', function () {
     should(andIsCalled).be.exactly(true);
   });
 
-  it('should call the function "OR" in case of a should filter', function () {
+  it('should call the function "OR" in case of a should filter', () => {
     var orIsCalled = false;
-    methods.or = function () {
+    methods.or = () => {
       orIsCalled = true;
     };
 

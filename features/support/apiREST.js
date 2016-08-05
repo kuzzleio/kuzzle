@@ -126,9 +126,7 @@ ApiREST.prototype.getRequest = function (index, collection, controller, action, 
   if (verb !== 'GET') {
     result.body = { body: args.body };
   }
-
-  // console.log(util.inspect(result, { depth: 6 }));
-
+  
   return result;
 };
 
@@ -150,7 +148,7 @@ ApiREST.prototype.callApi = function (options) {
     options.headers = _.extend(options.headers, {authorization: 'Bearer ' + this.world.currentUser.token});
   }
   options.json = true;
-  
+
   return rp(options);
 };
 

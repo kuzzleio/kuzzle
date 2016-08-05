@@ -1,14 +1,10 @@
 var
   should = require('should'),
-  q = require('q'),
   sinon = require('sinon'),
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
-  params = require('rc')('kuzzle'),
-  Kuzzle = require.main.require('lib/api/Kuzzle');
+  Kuzzle = require.main.require('lib/api/kuzzle');
 
-require('sinon-as-promised')(q.Promise);
-
-describe('Test: hotelClerk.removeCustomerFromAllRooms', function () {
+describe('Test: hotelClerk.removeCustomerFromAllRooms', () => {
   var
     kuzzle,
     connection = {id: 'connectionid'},
@@ -18,8 +14,6 @@ describe('Test: hotelClerk.removeCustomerFromAllRooms', function () {
 
   before(() => {
     kuzzle = new Kuzzle();
-
-    return kuzzle.start(params, {dummy: true});
   });
 
   beforeEach(() => {
@@ -44,23 +38,26 @@ describe('Test: hotelClerk.removeCustomerFromAllRooms', function () {
         channels: ['barfoo']
       }
     };
+
+    sandbox.stub(kuzzle.internalEngine, 'get').resolves({});
+    return kuzzle.services.init({whitelist: []});
   });
 
   afterEach(() => {
     sandbox.restore();
   });
 
-  it('should do nothing when a bad connectionId is given', function () {
-    return should(kuzzle.hotelClerk.removeCustomerFromAllRooms({id: 'unknown'})).be.rejected();
+  it('should do nothing when a bad connectionId is given', () => {
+    return should(kuzzle.hotelClerk.removeCustomerFromAllRooms({id: 'unknown'})).be.fulfilledWith(undefined);
   });
 
-  it('should clean up customers, rooms and filtersTree object', function () {
+  it('should clean up customers, rooms and filtersTree object', () => {
     var mock = sandbox.mock(kuzzle.dsl).expects('remove').twice().resolves();
 
     sandbox.spy(kuzzle.notifier, 'notify');
 
     return kuzzle.hotelClerk.removeCustomerFromAllRooms(connection)
-      .finally(function () {
+      .finally(() => {
         mock.verify();
         should(kuzzle.notifier.notify.called).be.false();
 
@@ -72,7 +69,7 @@ describe('Test: hotelClerk.removeCustomerFromAllRooms', function () {
       });
   });
 
-  it('should send a notification to other users connected on that room', function () {
+  it('should send a notification to other users connected on that room', () => {
     var
       mockDsl = sandbox.mock(kuzzle.dsl).expects('remove').once().resolves(),
       mockNotify = sandbox.mock(kuzzle.notifier).expects('notify').once();
@@ -98,12 +95,10 @@ describe('Test: hotelClerk.removeCustomerFromAllRooms', function () {
       });
   });
 
-  it('should log an error if a problem occurs while unsubscribing', function (done) {
+  it('should log an error if a problem occurs while unsubscribing', function () {
     this.timeout(500);
     sandbox.stub(kuzzle.dsl, 'remove').rejects();
 
-    kuzzle.once('log:error', () => done());
-
-    kuzzle.hotelClerk.removeCustomerFromAllRooms(connection);
+    return should(kuzzle.hotelClerk.removeCustomerFromAllRooms(connection)).be.rejected();
   });
 });

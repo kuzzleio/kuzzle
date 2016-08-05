@@ -1,79 +1,60 @@
 var
   should = require('should'),
-  params = require('rc')('kuzzle'),
-  Kuzzle = require.main.require('lib/api/Kuzzle'),
-  q = require('q'),
+  BulkController = require('../../../lib/api/controllers/bulkController'),
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
   ResponseObject = require.main.require('kuzzle-common-objects').Models.responseObject,
-  PartialError = require.main.require('kuzzle-common-objects').Errors.partialError;
+  PartialError = require.main.require('kuzzle-common-objects').Errors.partialError,
+  KuzzleMock = require('../../mocks/kuzzle.mock');
 
-describe('Test the bulk controller', function () {
+describe('Test the bulk controller', () => {
   var
+    controller,
     kuzzle,
-    requestObject = new RequestObject({ controller: 'bulk' }, { collection: 'unit-test-bulkController' }, 'unit-test');
+    foo = {foo: 'bar'},
+    requestObject = new RequestObject({ controller: 'bulk' }, { collection: 'unit-test-bulkController' }, 'unit-test'),
+    stub;
 
-  before(function () {
-    kuzzle = new Kuzzle();
-    return kuzzle.start(params, {dummy: true});
+  beforeEach(() => {
+    kuzzle = new KuzzleMock();
+    stub = kuzzle.services.list.writeEngine.import;
+    controller = new BulkController(kuzzle);
   });
 
-  it('should activate a hook on a bulk import request', function (done) {
-    this.timeout(50);
+  it('should trigger the proper methods and resolve to a valid response', () => {
+    return controller.import(requestObject)
+      .then(response => {
+        var
+          engine = kuzzle.services.list.writeEngine,
+          trigger = kuzzle.pluginsManager.trigger;
 
-    kuzzle.once('data:beforeBulkImport', function (obj) {
-      try {
-        should(obj).be.exactly(requestObject);
-        done();
-      }
-      catch (e) {
-        done(e);
-      }
-    });
+        should(trigger).be.calledTwice();
+        should(trigger.firstCall).be.calledWith('data:beforeBulkImport', requestObject);
 
-    kuzzle.funnel.controllers.bulk.import(requestObject)
-      .catch(function (error) {
-        done(error);
+        should(engine.import).be.calledOnce();
+        should(engine.import).be.calledWith(requestObject);
+
+        should(trigger.secondCall).be.calledWith('data:afterBulkImport');
+
+        should(response).be.an.instanceOf(ResponseObject);
+        should(response).match({
+          status: 200,
+          error: null,
+          data: {
+            body: foo
+          }
+        });
       });
   });
 
-  it('should return a response object', () => {
-    kuzzle.workerListener.add = () => q({});
-    return should(
-      kuzzle.funnel.controllers.bulk.import(requestObject)
-        .then(response => {
-          should(response).be.instanceOf(ResponseObject);
-          should(response.status).be.eql(200);
-          should(response.error).be.null();
-        })
-    ).be.fulfilled();
-  });
-
   it('should handle partial errors', () => {
-    kuzzle.workerListener.add = () => {
-      return q({partialErrors: ['foo', 'bar']});
-    };
+    stub.resolves({partialErrors: ['foo', 'bar']});
 
-    return should(
-      kuzzle.funnel.controllers.bulk.import(requestObject)
-        .then(response => {
-          should(response).be.instanceOf(ResponseObject);
-          should(response.status).be.eql(206);
-          should(response.error).be.instanceOf(PartialError);
-        })
-    ).be.fulfilled();
+    return controller.import(requestObject)
+      .then(response => {
+        should(response).be.instanceOf(ResponseObject);
+        should(response.status).be.eql(206);
+        should(response.error).be.instanceOf(PartialError);
+      });
   });
 
-  it('should return a ResponseObject in a rejected promise in case of error', () => {
-    kuzzle.workerListener.add = () => q.reject(new Error('foobar'));
-
-    return should(
-      kuzzle.funnel.controllers.bulk.import(requestObject)
-        .catch(response => {
-          should(response).be.instanceOf(ResponseObject);
-          should(response.error).not.be.null();
-          should(response.error.message).be.eql('foobar');
-          return q.reject();
-        })
-    ).be.rejected();
-  });
 });

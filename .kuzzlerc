@@ -26,13 +26,6 @@
     "port": 7911,
     "retryInterval": 1000
   },
-
-  // Host and port for mqBroker service that handle communication with protocol like MQTT, STOMP and AMQP
-  // Only make sense if environment variable MQ_BROKER_ENABLED is set to 1
-  "mqBroker": {
-    "host" : "rabbit",
-    "port": 5672
-  },
   /*
    Host and port for the internalEngine service: the light database service
    called by Kuzzle core components. Can be an array
@@ -86,13 +79,13 @@
   // Default user profiles
   "userProfiles": {
     "admin": {
-      "roles": [ {"_id": "admin", "allowInternalIndex": true} ]
+      "policies": [ {"roleId": "admin", "allowInternalIndex": true} ]
     },
     "default": {
-      "roles": [ {"_id": "default"} ]
+      "policies": [ {"roleId": "default"} ]
     },
     "anonymous": {
-      "roles": [ {"_id": "anonymous"} ]
+      "policies": [ {"roleId": "anonymous"} ]
     }
   },
   // role template for all users before creating the first admin
@@ -177,13 +170,12 @@
      */
     "defaultPlugins": {
       "kuzzle-plugin-logger": {
-        "npmVersion": "2.0.2",
+        "npmVersion": "2.0.4",
         "activated": true
       },
       "kuzzle-plugin-auth-passport-local": {
-        "npmVersion": "2.0.3",
-        "activated": true,
-        "loadedBy": "server"
+        "npmVersion": "2.0.4",
+        "activated": true
       }
     }
   },
@@ -205,6 +197,14 @@
      Requests submitted while the queue is full are discarded with a 503 error
      code ("Service temporary unavailable")
      */
-    "maxRetainedRequests": 2000
+    "maxRetainedRequests": 50000,
+
+    /*
+     Number of retained requests after which warnings
+     are issued, both with logging and server:overload events.
+
+     Recommended value: roughly 10% of the maxRetainedRequests value
+     */
+     "warnRetainedRequestsLimit": 5000
   }
 }

@@ -1,42 +1,16 @@
-# Managing Kuzzle service
-
-The Kuzzle service is launched by [kuzzle](kuzzle) command line.
-
+# Managing Kuzzle
 
 ```
 $ kuzzle install
 ```
 
-will install plugins declared in `config/defaultPlugins.json` and in `config/customPlugins.json`
+Installs plugins declared in Kuzzle `.kuzzlerc` configuration file.  
 
 ```
 $ kuzzle start
 ```
 
-will launch internally [./commands/kuzzle-start.js](./commands/kuzzle-start.js)
-
-For features like watch mode, multi-thread support from [pm2](https://www.npmjs.com/package/pm2), you can use [app-start.js](../app-start.js)
-
-# Enable/Disable services
-
-You can enable services in a running Kuzzle without restarting it with a simple command line:
-
-```
-$ kuzzle enable <service> --pid <PID|all>
-```
-
-Where:
-
-* service is the Kuzzle service name you want to activate (for instance: mqBroker)
-* PID is the processus ID of the Kuzzle server or worker you want to control. Use 'all' if you want to broadcast a service activation to a Kuzzle server and all its workers.
-
-You can disable a service with:
-
-```
-$ kuzzle disable <service> --pid <PID|all>
-```
-
-**Note:** All services containing a toggle() method can be activated or deactivated on the fly. Some vital services can't be togglable. 
+Starts a Kuzzle instance in the foreground.
 
 # Create the first administrative user account
 
@@ -48,10 +22,12 @@ $ kuzzle createFirstAdmin
 
 will guide you through the creation process of the first admin user and fix the rights to other user types if needed.
 
+**Note:** This command is interactive and let you choose to reset the roles rights or not.
+
 # Reset Kuzzle
 
 ```
-$ kuzzle likeAvirgin --pid <PID|all>
+$ kuzzle likeAvirgin 
 ```
 
 will allow you to reset Kuzzle and restore it as if it is freshly installed.
@@ -68,7 +44,7 @@ $ kuzzle likeAvirgin --fixtures /path/to/the/fixtures/file.json --mappings /path
 ## Reset the Kuzzle server from a script or cron
 
 ```
-$ kuzzle likeAvirgin --pid `ps aux | grep [K]uzzleServer | awk '{print $1}'` --noint
+$ kuzzle likeAvirgin --noint
 ```
 
 # Getting help
@@ -82,11 +58,5 @@ $ kuzzle --help
 $ kuzzle start --help
 $ kuzzle likeAvirgin --help
 ```
-**Note:** This command is interactive and let you choose to reset the roles rights or not.
 
-# Contributing
 
-As an example, to implement your custom "kuzzle stop" action:
-
-* create kuzzle-stop.js,
-* modify kuzzle accordingly.

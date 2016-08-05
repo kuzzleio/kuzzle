@@ -3,18 +3,18 @@ var
   rewire = require('rewire'),
   methods = rewire('../../../../lib/api/dsl/methods');
 
-describe('Test: dsl.deepExtend method', function () {
+describe('Test: dsl.deepExtend method', () => {
   var
     deepExtend = methods.__get__('deepExtend');
 
-  it('should return the other filter if one is empty', function () {
+  it('should return the other filter if one is empty', () => {
     var filter = { foo: 'bar' };
 
     should(deepExtend({}, filter)).be.exactly(filter);
     should(deepExtend(filter, {})).be.exactly(filter);
   });
 
-  it('should be able to merge two simple filters', function () {
+  it('should be able to merge two simple filters', () => {
     var
       f1 = { term: { foo: 'bar' }},
       f2 = { exists: { field: 'foobar'}},
@@ -26,13 +26,13 @@ describe('Test: dsl.deepExtend method', function () {
     should(result.exists.field).not.be.undefined().and.be.exactly('foobar');
   });
 
-  it('should ignore duplicate values', function () {
+  it('should ignore duplicate values', () => {
     var filter = { foo: 'bar' };
 
     should(deepExtend(filter, filter)).match(filter);
   });
 
-  it('should merge "and" sub-filters', function () {
+  it('should merge "and" sub-filters', () => {
     var
       f1 = {
         and: {
@@ -54,7 +54,7 @@ describe('Test: dsl.deepExtend method', function () {
     should(result.and.exists.field).not.be.undefined().and.be.exactly('foobar');
   });
 
-  it('should merge "or" sub-filters', function () {
+  it('should merge "or" sub-filters', () => {
     var
       f1 = {
         or: {

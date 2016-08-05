@@ -1,7 +1,10 @@
 var
   should = require('should'),
-  q = require('q'),
+  sinon = require('sinon'),
+  sandbox = sinon.sandbox.create(),
+  Promise = require('bluebird'),
   rewire = require('rewire'),
+  Kuzzle = require.main.require('lib/api/kuzzle'),
   BadRequestError = require.main.require('kuzzle-common-objects').Errors.badRequestError,
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
   InternalError = require.main.require('kuzzle-common-objects').Errors.internalError,
@@ -11,50 +14,12 @@ var
 
 describe('Test: security/roleTest', () => {
   var
+    kuzzle,
     context = {
       connection: {type: 'test'},
       token : {
         user: {
           _id: -1
-        }
-      }
-    },
-    kuzzle = {
-      pluginsManager: {
-        trigger: () => {
-          return true;
-        }
-      },
-      indexCache: {
-        indexes: ['cachedIndex']
-      },
-      services: {
-        list: {
-          readEngine: {
-            search: requestObject => {
-              if (requestObject.data.body.filter.ids.values[0] !== 'foobar') {
-                return q({hits: [documentAda]});
-              }
-
-              return q({hits: [documentFalseAda]});
-            },
-            get: requestObject => {
-              if (requestObject.data.id === 'reject') {
-                return q.reject(new InternalError('Our Error'));
-              } else if (requestObject.data.id !== 'foobar') {
-                return q(documentAda);
-              }
-
-              return q(documentFalseAda);
-            },
-            mget: requestObject => {
-              if (requestObject.data.body.ids[0] !== 'foobar') {
-                return q({hits: [documentAda]});
-              }
-
-              return q({hits: [documentFalseAda]});
-            }
-          }
         }
       }
     },
@@ -89,7 +54,48 @@ describe('Test: security/roleTest', () => {
         city: 'London',
         hobby: 'computer'
       }
+    },
+    stubs = {
+      readEngine:{
+        search: rq => {
+          if (rq.data.body.filter.ids.values[0] !== 'foobar') {
+            return Promise.resolve({hits: [documentAda]});
+          }
+          return Promise.resolve({hits: [documentFalseAda]});
+        },
+        get: rq => {
+          if (rq.data.id === 'reject') {
+            return Promise.reject(new InternalError('Our Error'));
+          } else if (rq.data.id !== 'foobar') {
+            return Promise.resolve(documentAda);
+          }
+          return Promise.resolve(documentFalseAda);
+        },
+        mget: rq => {
+          if (rq.data.body.ids[0] !== 'foobar') {
+            return Promise.resolve({hits: [documentAda]});
+          }
+          return Promise.resolve({hits: [documentFalseAda]});
+        }
+      }
     };
+  before(() => {
+    kuzzle = new Kuzzle();
+  });
+
+  beforeEach(() => {
+    sandbox.stub(kuzzle.internalEngine, 'get').resolves({});
+    return kuzzle.services.init({whitelist: []})
+      .then(() => {
+        sandbox.stub(kuzzle.services.list.readEngine, 'get', stubs.readEngine.get);
+        sandbox.stub(kuzzle.services.list.readEngine, 'mget', stubs.readEngine.mget);
+        sandbox.stub(kuzzle.services.list.readEngine, 'search', stubs.readEngine.search);
+      });
+  });
+
+  afterEach(() => {
+    sandbox.restore();
+  });
 
   describe('#isActionAllowed', () => {
     it('should disallow any action when no matching entry can be found', () => {
@@ -282,7 +288,7 @@ describe('Test: security/roleTest', () => {
         .then(isAllowed => {
           should(isAllowed).be.true();
           role.controllers.controller.actions.action = false;
-          return role.isActionAllowed(requestObject, context);
+          return role.isActionAllowed(requestObject, context, kuzzle);
         })
         .then(isAllowed => {
           should(isAllowed).be.false();
@@ -937,7 +943,7 @@ describe('Test: security/roleTest', () => {
       var foo =
         Role.__with__({
           Sandbox: function () {
-            this.run = () => q.reject(new Error('our unit test error'));
+            this.run = () => Promise.reject(new Error('our unit test error'));
           }
         })(() => {
           var role = new Role();
@@ -963,7 +969,7 @@ describe('Test: security/roleTest', () => {
       var foo =
         Role.__with__({
           Sandbox: function () {
-            this.run = () => q({result: 'I am not a boolean'});
+            this.run = () => Promise.resolve({result: 'I am not a boolean'});
           }
         })(() => {
           var role = new Role();
@@ -987,7 +993,7 @@ describe('Test: security/roleTest', () => {
     it('should resolve the promise if the sandbox returned a boolean', () => {
       return Role.__with__({
         Sandbox: function () {
-          this.run = () => q({ result: true });
+          this.run = () => Promise.resolve({ result: true });
         }
       })(() => {
         var role = new Role();

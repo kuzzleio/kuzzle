@@ -7,7 +7,7 @@ var
   BadRequestError = require.main.require('kuzzle-common-objects').Errors.badRequestError,
   InternalError = require.main.require('kuzzle-common-objects').Errors.internalError;
 
-describe('Test missing method', function () {
+describe('Test missing method', () => {
   var
     methods,
     filterId = 'fakeFilterId',
@@ -19,13 +19,13 @@ describe('Test missing method', function () {
     missinglastName = md5('missinglastName'),
     fieldLastName = md5('lastName');
 
-  beforeEach(function () {
+  beforeEach(() => {
     /** @type Methods */
     methods = new Methods(new Filters());
     return methods.missing(filterId, index, collection, filter, false);
   });
 
-  it('should construct the filterTree object for the correct attribute', function () {
+  it('should construct the filterTree object for the correct attribute', () => {
     should(methods.filters.filtersTree).not.be.empty();
     should(methods.filters.filtersTree[index]).not.be.empty();
     should(methods.filters.filtersTree[index][collection]).not.be.empty();
@@ -33,11 +33,11 @@ describe('Test missing method', function () {
     should(methods.filters.filtersTree[index][collection].fields[fieldLastName]).not.be.empty();
   });
 
-  it('should construct the filterTree with correct curried function name', function () {
+  it('should construct the filterTree with correct curried function name', () => {
     should(methods.filters.filtersTree[index][collection].fields[fieldLastName][missinglastName]).not.be.empty();
   });
 
-  it('should construct the filterTree with correct room list', function () {
+  it('should construct the filterTree with correct room list', () => {
     var ids;
 
     // Test gt from filterGrace
@@ -47,7 +47,7 @@ describe('Test missing method', function () {
     should(ids[0]).be.exactly(filterId);
   });
 
-  it('should construct the filterTree with correct functions missing', function () {
+  it('should construct the filterTree with correct functions missing', () => {
     should(methods.filters.filtersTree[index][collection].fields[fieldLastName][missinglastName].args).match({
       operator: 'missing',
       not: false,
@@ -56,22 +56,22 @@ describe('Test missing method', function () {
     });
   });
 
-  it('should return a rejected promise if the filter argument is empty', function () {
+  it('should return a rejected promise if the filter argument is empty', () => {
     return should(methods.missing('foo', index, 'bar', {}, false)).be.rejectedWith(BadRequestError, { message: 'A filter can\'t be empty' });
   });
 
-  it('should return a rejected promise if the filter argument is invalid', function () {
+  it('should return a rejected promise if the filter argument is invalid', () => {
     return should(methods.missing('foo', index, 'bar', { foo: 'bar' }, false)).be.rejectedWith(BadRequestError, { message: 'Filter \'missing\' must contains \'field\' attribute' });
   });
 
-  it('should return a rejected promise if addToFiltersTree fails', function () {
-    methods.filters.add = function () { return new InternalError('rejected'); };
+  it('should return a rejected promise if addToFiltersTree fails', () => {
+    methods.filters.add = () => { return new InternalError('rejected'); };
 
     return should(methods.missing('foo', index, 'bar', { field: 'foo' }, false)).be.rejected();
   });
 
-  it('should register the filter in the lcao area in case of a "missing" filter', function () {
-    methods.filters.add = function (anIndex, aCollection, field, operatorName, value, curriedFunctionName, roomId, not, inGlobals) {
+  it('should register the filter in the lcao area in case of a "missing" filter', () => {
+    methods.filters.add = (anIndex, aCollection, field, operatorName, value, curriedFunctionName, roomId, not, inGlobals) => {
       should(inGlobals).be.false();
       should(curriedFunctionName).not.startWith('not');
       return { path: '' };
@@ -80,8 +80,8 @@ describe('Test missing method', function () {
     return should(methods.missing('foo', index, 'bar', { field: 'foo' }, false)).be.fulfilled();
   });
 
-  it('should register the filter in the global area in case of a "not missing" filter', function () {
-    methods.filters.add = function (anIndex, aCollection, field, operatorName, value, encodedFunctionName, roomId, not, inGlobals) {
+  it('should register the filter in the global area in case of a "not missing" filter', () => {
+    methods.filters.add = (anIndex, aCollection, field, operatorName, value, encodedFunctionName, roomId, not, inGlobals) => {
       should(inGlobals).be.true();
       should(encodedFunctionName).be.exactly('notmissingfoo');
       return { path: '' };

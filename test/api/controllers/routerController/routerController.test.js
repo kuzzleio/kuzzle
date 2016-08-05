@@ -1,25 +1,37 @@
 var
   should = require('should'),
-  params = require('rc')('kuzzle'),
-  Kuzzle = require.main.require('lib/api/Kuzzle'),
-  q = require('q'),
+  sinon = require('sinon'),
+  sandbox = sinon.sandbox.create(),
+  Kuzzle = require.main.require('lib/api/kuzzle'),
+  Promise = require('bluebird'),
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
   Token = require.main.require('lib/api/core/models/security/token'),
-  Profile = require.main.require('lib/api/core/models/security/profile'),
   Role = require.main.require('lib/api/core/models/security/role'),
   PluginImplementationError = require.main.require('kuzzle-common-objects').Errors.pluginImplementationError;
 
 describe('Test: routerController', () => {
+  var kuzzle;
+
+  before(() => {
+    kuzzle = new Kuzzle();
+  });
+
+  beforeEach(() => {
+    sandbox.stub(kuzzle.internalEngine, 'get').resolves({});
+    return kuzzle.services.init({whitelist: []})
+      .then(() => {
+        kuzzle.funnel.init();
+      });
+  });
+
+  afterEach(() => {
+    sandbox.restore();
+  });
+
   describe('#newConnection', () => {
     var
-      kuzzle,
       protocol = 'foo',
       userId = 'bar';
-
-    before(() => {
-      kuzzle = new Kuzzle();
-      return kuzzle.start(params, {dummy: true});
-    });
 
     it('should return a promise', () => {
       return should(kuzzle.router.newConnection(protocol, userId)).be.fulfilled();
@@ -62,54 +74,60 @@ describe('Test: routerController', () => {
 
   describe('#execute', () => {
     var
-      kuzzle,
       context,
       requestObject = new RequestObject({
         controller: 'read',
         action: 'now'
       });
 
-    before((done) => {
-      kuzzle = new Kuzzle();
-      kuzzle.start(params, {dummy: true})
-        .then(() => {
-          var User = require.main.require('lib/api/core/models/security/user')(kuzzle);
+    before(() => {
+      sandbox.stub(kuzzle.repositories.token, 'verifyToken', () => {
+        var
+          token = new Token(),
+          role = new Role(),
+          user;
 
-          kuzzle.repositories.token.verifyToken = function() {
-            var
-              token = new Token(),
-              role = new Role(),
-              user = new User();
+        role.controllers = {
+          '*': {
+            actions: {
+              '*': true
+            }
+          }
+        };
 
-            role.controllers = {
-              '*': {
-                actions: {
-                  '*': true
-                }
-              }
-            };
+        user = {
+          _id: 'user',
+          profilesIds: ['profile'],
+          isActionAllowed: sinon.stub().resolves(true),
+          getProfile: () => {
+            return Promise.resolve({
+              _id: 'profile',
+              policies: [{roleId: 'role'}],
+              getRoles: sinon.stub().resolves([role]),
+              isActionAllowed: sinon.stub().resolves(true)
+            });
+          }
+        };
 
-            user._id = 'testUser';
-            user.profile = new Profile();
-            user.profile.roles = [role];
+        token._id = 'fake-token';
+        token.userId = user._id;
 
-            token._id = 'fake-token';
-            token.user = user;
+        return Promise.resolve(token);
+      });
 
-            return q(token);
-          };
-
-          return kuzzle.router.newConnection('foo', 'bar');
-        })
+      return kuzzle.router.newConnection('foo', 'bar')
         .then(res => {
           context = res;
-          done();
-        })
-        .catch(error => done(error));
+        });
     });
 
     it('should return a fulfilled promise with the right arguments', (done) => {
-      kuzzle.router.execute(requestObject, context, done);
+      sandbox.stub(kuzzle.repositories.user, 'load').resolves({_id: 'user', isActionAllowed: sandbox.stub().resolves(true)});
+      kuzzle.repositories.token.verifyToken.restore();
+      sandbox.stub(kuzzle.repositories.token, 'verifyToken').resolves({user: 'user'});
+      sandbox.stub(kuzzle.funnel.controllers.read, 'listIndexes').resolves();
+
+      kuzzle.router.execute(requestObject, { connection: { type: 'foo', id: 'bar' }, token: {user: 'user'} }, done);
     });
 
     it('should return an error if no request object is provided', (done) => {
@@ -169,20 +187,13 @@ describe('Test: routerController', () => {
 
   describe('#removeConnection', () => {
     var
-      kuzzle,
       context;
 
-    beforeEach((done) => {
-      kuzzle = new Kuzzle();
-      kuzzle.start(params, {dummy: true})
-        .then(() => {
-          return kuzzle.router.newConnection('foo', 'bar');
-        })
+    beforeEach(() => {
+      return kuzzle.router.newConnection('foo', 'bar')
         .then(res => {
           context = res;
-          done();
-        })
-        .catch(error => done(error));
+        });
     });
 
     it('should remove the context from the context pool', () => {

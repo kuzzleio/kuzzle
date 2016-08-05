@@ -1,13 +1,13 @@
 var
   should = require('should'),
-  q = require('q'),
+  Promise = require('bluebird'),
   rewire = require('rewire'),
   md5 = require('crypto-md5'),
   Filters = require.main.require('lib/api/dsl/filters'),
   Methods = rewire('../../../../lib/api/dsl/methods'),
   BadRequestError = require.main.require('kuzzle-common-objects').Errors.badRequestError;
 
-describe('Test bool method', function () {
+describe('Test bool method', () => {
   var
     methods,
     filterId = 'fakeFilterId',
@@ -60,7 +60,7 @@ describe('Test bool method', function () {
     fieldHobby = md5('hobby'),
     fieldLastName = md5('lastName');
 
-  before(function () {
+  before(() => {
     /*
      since there is a "Methods.should()" function, we need to ask should.js
      to not override it with itself -_-
@@ -72,7 +72,7 @@ describe('Test bool method', function () {
     return methods.bool(filterId, index, collection, filter);
   });
 
-  it('should construct the filterTree object for the correct attribute', function () {
+  it('should construct the filterTree object for the correct attribute', () => {
     should(methods.filters.filtersTree).not.be.empty();
     should(methods.filters.filtersTree[index]).not.be.empty();
     should(methods.filters.filtersTree[index][collection]).not.be.empty();
@@ -84,7 +84,7 @@ describe('Test bool method', function () {
     should(methods.filters.filtersTree[index][collection].fields[fieldLastName]).not.be.empty();
   });
 
-  it('should construct the filterTree with correct curried function name', function () {
+  it('should construct the filterTree with correct curried function name', () => {
     should(methods.filters.filtersTree[index][collection].fields[fieldFirstName][md5('termsfirstNameGrace,Ada')]).not.be.empty();
     should(methods.filters.filtersTree[index][collection].fields[fieldAge][rangeagegte36]).not.be.empty();
     should(methods.filters.filtersTree[index][collection].fields[fieldAge][rangeagelt85]).not.be.empty();
@@ -93,7 +93,7 @@ describe('Test bool method', function () {
     should(methods.filters.filtersTree[index][collection].fields[fieldLastName][existslastName]).not.be.empty();
   });
 
-  it('should construct the filterTree with correct room list', function () {
+  it('should construct the filterTree with correct room list', () => {
     var ids;
 
     ids = methods.filters.filtersTree[index][collection].fields[fieldFirstName][md5('termsfirstNameGrace,Ada')].ids;
@@ -126,7 +126,7 @@ describe('Test bool method', function () {
     should(ids[0]).be.exactly(filterId);
   });
 
-  it('should construct the filterTree with correct arguments', function () {
+  it('should construct the filterTree with correct arguments', () => {
     should(methods.filters.filtersTree[index][collection].fields[fieldFirstName][md5('termsfirstNameGrace,Ada')].args).match({
       operator: 'terms',
       not: undefined,
@@ -170,20 +170,20 @@ describe('Test bool method', function () {
     });
   });
 
-  it('should return a rejected promise if an empty filter is provided', function () {
+  it('should return a rejected promise if an empty filter is provided', () => {
     return should(methods.bool(filterId, index, collection, {})).be.rejectedWith(BadRequestError, { message: 'A filter can\'t be empty' });
   });
 
-  it('should return a rejected promise if the filter contains an invalid key', function () {
+  it('should return a rejected promise if the filter contains an invalid key', () => {
     var f = { foo: 'bar' };
 
     return should(methods.bool(filterId, index, collection, f)).be.rejectedWith(BadRequestError, { message: 'Function foo doesn\'t exist' });
   });
 
-  it('should return a rejected promise if one of the bool sub-methods fails', function () {
+  it('should return a rejected promise if one of the bool sub-methods fails', () => {
     var f = { must: [ { foo: 'bar' } ] };
 
-    methods.must = function () { return q.reject(new Error('rejected')); };
+    methods.must = () => { return Promise.reject(new Error('rejected')); };
     return should(methods.bool(filterId, index, collection, f)).be.rejectedWith('rejected');
   });
 });

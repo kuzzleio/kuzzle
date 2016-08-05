@@ -1,11 +1,10 @@
 var
   should = require('should'),
-  q = require('q'),
   rewire = require('rewire'),
   NotFoundError = require.main.require('kuzzle-common-objects').Errors.notFoundError,
   Dsl = rewire('../../../../lib/api/dsl/index');
 
-describe('Test: dsl.test', function () {
+describe('Test: dsl.test', () => {
   var
     dsl,
     filterId = 'foobar',
@@ -70,7 +69,7 @@ describe('Test: dsl.test', function () {
     return dsl.register(filterId, index, collection, filterGrace);
   });
 
-  it('should return an array with my filter id when document matches', function () {
+  it('should return an array with my filter id when document matches', () => {
     return dsl.test(index, collection, dataGrace)
       .then(filters => {
         should(filters).be.an.Array();
@@ -79,30 +78,19 @@ describe('Test: dsl.test', function () {
       });
   });
 
-  it('should return empty array when document doesn\'t match', function () {
+  it('should return empty array when document doesn\'t match', () => {
     return dsl.test('fakeIndex', 'fakeCollection', {})
-      .then(function (filters) {
+      .then(filters => {
         should(filters).be.an.Array();
         should(filters).be.empty();
       });
   });
 
-  it('should return an error if no index is provided', function () {
+  it('should return an error if no index is provided', () => {
     return should(dsl.test(null, collection, dataGrace)).be.rejectedWith(NotFoundError);
   });
 
-  it('should return an error if no collection is provided', function () {
+  it('should return an error if no collection is provided', () => {
     return should(dsl.test(index, null, dataGrace)).be.rejectedWith(NotFoundError);
-  });
-
-  it('should reject the promise if testFieldFilter fails', () => {
-    dsl.filters.testFieldFilters = () => q.reject(new Error('rejected'));
-
-    return should(dsl.test(index, collection, dataGrace)).be.rejectedWith('rejected');
-  });
-
-  it('should reject the promise if testGlobalsFilter fails', () => {
-    dsl.filters.testGlobalsFilters = () => q.reject(new Error('rejected'));
-    return should(dsl.test(index, collection, dataGrace)).be.rejectedWith('rejected');
   });
 });

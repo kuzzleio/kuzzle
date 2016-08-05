@@ -4,11 +4,11 @@ var
   sinon = require('sinon'),
   DslFilters = rewire('../../../../lib/api/dsl/filters');
 
-describe('Test: dsl.testFilterRecursively', function () {
+describe('Test: dsl.testFilterRecursively', () => {
   var
     testFilterRecursively = DslFilters.__get__('testFilterRecursively');
 
-  it('should return the result of the filter if no upper operand is provided', function () {
+  it('should return the result of the filter if no upper operand is provided', () => {
     var
       filter1 = {
         foo: {
@@ -35,7 +35,7 @@ describe('Test: dsl.testFilterRecursively', function () {
     should(testFilterRecursively({}, filter2, {})).be.false();
   });
 
-  it('should do nothing if a wrong upper operand argument is provided', function () {
+  it('should do nothing if a wrong upper operand argument is provided', () => {
     var
       filter1 = {
         foo: {
@@ -62,7 +62,7 @@ describe('Test: dsl.testFilterRecursively', function () {
     should(testFilterRecursively({}, filter2, {}, 'foo')).be.undefined();
   });
 
-  it('should return the final result of an AND filter set', function () {
+  it('should return the final result of an AND filter set', () => {
     var
       stub = sinon.stub(),
       filters = {
@@ -83,7 +83,7 @@ describe('Test: dsl.testFilterRecursively', function () {
 
     DslFilters.__with__({
       evalFilterArguments: stub
-    })(function () {
+    })(() => {
       testFilterRecursively({}, filters, {}, 'and');
       should(stub.callCount).be.eql(3);
       stub.reset();
@@ -94,7 +94,7 @@ describe('Test: dsl.testFilterRecursively', function () {
     });
   });
 
-  it('should return the final result of an OR filter set', function () {
+  it('should return the final result of an OR filter set', () => {
     var
       stub = sinon.stub(),
       filters = {
@@ -115,7 +115,7 @@ describe('Test: dsl.testFilterRecursively', function () {
 
     DslFilters.__with__({
       evalFilterArguments: stub
-    })(function () {
+    })(() => {
       testFilterRecursively({}, filters, {}, 'or');
       should(stub.callCount).be.eql(1);
       stub.reset();

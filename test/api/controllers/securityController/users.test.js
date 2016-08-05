@@ -1,84 +1,58 @@
 var
-  q = require('q'),
+  Promise = require('bluebird'),
   should = require('should'),
   sinon = require('sinon'),
-  params = require('rc')('kuzzle'),
-  Kuzzle = require.main.require('lib/api/Kuzzle'),
+  sandbox = sinon.sandbox.create(),
+  Kuzzle = require.main.require('lib/api/kuzzle'),
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
   NotFoundError = require.main.require('kuzzle-common-objects').Errors.notFoundError,
   ResponseObject = require.main.require('kuzzle-common-objects').Models.responseObject;
 
-require('sinon-as-promised')(q.Promise);
-
-describe('Test: security controller - users', function () {
+describe('Test: security controller - users', () => {
   var
-    kuzzle,
-    sandbox;
+    kuzzle;
 
   before(() => {
     kuzzle = new Kuzzle();
-    return kuzzle.start(params, {dummy: true})
-      .then(function () {
-        // Mock
-        kuzzle.services.list.readEngine.search = () => {
-          return q({
-            hits: [{_id: 'admin', _source: { profile: 'admin' }}],
-            total: 1
-          });
-        };
+  });
 
-        kuzzle.repositories.user.load = id => {
+  beforeEach(() => {
+    sandbox.stub(kuzzle.internalEngine, 'get').resolves({});
+    return kuzzle.services.init({whitelist: []})
+      .then(() => kuzzle.funnel.init())
+      .then(() => {
+        sandbox.stub(kuzzle.services.list.readEngine, 'search').resolves({
+          hits: [{_id: 'admin', _source: { profilesIds: ['admin'] }}],
+          total: 1
+        });
+
+        sandbox.stub(kuzzle.repositories.user, 'load', id => {
           if (id === 'anonymous') {
             return kuzzle.repositories.user.anonymous();
           }
           if (id === 'admin') {
             return kuzzle.repositories.user.admin();
           }
+          return Promise.resolve(null);
+        });
 
-          return q(null);
-        };
-
-        kuzzle.repositories.user.persist = (user) => {
-          return q(user);
-        };
-
-        kuzzle.repositories.user.deleteFromDatabase = () => {
-          return q({_id: 'test'});
-        };
+        sandbox.stub(kuzzle.repositories.user, 'deleteFromDatabase').resolves({_id: 'test'});
       });
-  });
-
-  beforeEach(function () {
-    sandbox = sinon.sandbox.create();
   });
 
   afterEach(() => {
     sandbox.restore();
   });
 
-  describe('#getUser', function () {
+  describe('#getUser', () => {
     it('should reject the promise if no id is given', () => {
       return should(kuzzle.funnel.controllers.security.getUser(new RequestObject({})))
         .be.rejected();
     });
 
-    it('should return an hydrated responseObject', () => {
-      sandbox.stub(kuzzle.repositories.user, 'load').resolves({_id: -1, profile: {_id: 'anonymous'}});
-      return kuzzle.funnel.controllers.security.getUser(new RequestObject({
-        body: { _id: 'anonymous' }
-      }))
-        .then(response => {
-          should(response).be.an.instanceOf(ResponseObject);
-          should(response.data.body._id).be.exactly(-1);
-          should(response.data.body._source.profile).not.be.empty().Object();
-          should(response.data.body._source.profile._id).be.exactly('anonymous');
-        });
-    });
-
     it('should reject with NotFoundError when the user is not found', () => {
       var promise;
 
-      sandbox.stub(kuzzle.repositories.user, 'load').resolves(null);
       promise = kuzzle.funnel.controllers.security.getUser(new RequestObject({
         body: { _id: 'i.dont.exist' }
       }));
@@ -87,9 +61,13 @@ describe('Test: security controller - users', function () {
     });
   });
 
-  describe('#searchUsers', function () {
+  describe('#searchUsers', () => {
     it('should return a valid responseObject', () => {
-      sandbox.stub(kuzzle.repositories.user, 'search').resolves({hits: [{_id: 'admin', _source: {profile: 'admin'}}]});
+      sandbox.stub(kuzzle.repositories.user, 'search').resolves({
+        hits: [{_id: 'admin', _source: {profilesIds: ['admin']}}],
+        total: 2
+      });
+
       return kuzzle.funnel.controllers.security.searchUsers(new RequestObject({
         body: {
           filter: {},
@@ -99,20 +77,7 @@ describe('Test: security controller - users', function () {
       }))
         .then(response => {
           should(response).be.an.instanceOf(ResponseObject);
-          should(response.data.body).match({hits: [{_id: 'admin'}], total: 1});
-        });
-    });
-
-    it('should return some unhydrated users when asked', () => {
-      sandbox.stub(kuzzle.repositories.user, 'search').resolves({hits: [{_id: 'admin', _source: {profile: 'admin'}}]});
-      return kuzzle.funnel.controllers.security.searchUsers(new RequestObject({
-        body: { hydrate: false }
-      }))
-        .then(response => {
-          should(response).be.an.instanceOf(ResponseObject);
-          response.data.body.hits.every(doc => {
-            should(doc._source.profile).be.a.String();
-          });
+          should(response.data.body).match({hits: [{_id: 'admin'}], total: 2});
         });
     });
 
@@ -124,7 +89,7 @@ describe('Test: security controller - users', function () {
     });
   });
 
-  describe('#deleteUser', function () {
+  describe('#deleteUser', () => {
     it('should return a valid responseObject', () => {
       sandbox.stub(kuzzle.repositories.user, 'delete').resolves();
       return kuzzle.funnel.controllers.security.deleteUser(new RequestObject({
@@ -149,13 +114,13 @@ describe('Test: security controller - users', function () {
     });
   });
 
-  describe('#createUser', function () {
-    it('should return a valid a valid response', () => {
+  describe('#createUser', () => {
+    it('should return a valid response', () => {
       var mock = sandbox.mock(kuzzle.repositories.user).expects('persist').once().resolves({_id: 'test'});
       sandbox.stub(kuzzle.repositories.user, 'hydrate').resolves();
 
       return kuzzle.funnel.controllers.security.createUser(new RequestObject({
-        body: { _id: 'test', name: 'John Doe', profile: 'anonymous' }
+        body: { _id: 'test', name: 'John Doe', profilesIds: ['anonymous'] }
       }))
         .then(response => {
           mock.verify();
@@ -170,7 +135,7 @@ describe('Test: security controller - users', function () {
         mockHydrate = sandbox.mock(kuzzle.repositories.user).expects('hydrate').once().resolves();
 
       return kuzzle.funnel.controllers.security.createUser(new RequestObject({
-        body: { name: 'John Doe', profile: 'anonymous' }
+        body: { name: 'John Doe', profilesIds: ['anonymous'] }
       }))
         .then(response => {
           mockHydrate.verify();
@@ -189,12 +154,11 @@ describe('Test: security controller - users', function () {
     });
   });
 
-  describe('#updateUser', function () {
+  describe('#updateUser', () => {
     it('should return a valid ResponseObject', () => {
       var mock = sandbox.mock(kuzzle.repositories.user).expects('persist').once().resolves({_id: 'test'});
 
       sandbox.stub(kuzzle.repositories.profile, 'loadProfile').resolves({_id: 'anonymous', _source: {}});
-      sandbox.stub(kuzzle.repositories.user, 'load').resolves({});
 
       return kuzzle.funnel.controllers.security.updateUser(new RequestObject({
         _id: 'test',
@@ -216,12 +180,14 @@ describe('Test: security controller - users', function () {
     });
 
     it('should update the profile correctly', () => {
+      sandbox.stub(kuzzle.repositories.user,'persist', user => Promise.resolve(user));
       sandbox.stub(kuzzle.repositories.profile, 'loadProfile').resolves({_id: 'default', _source: {}});
-      sandbox.stub(kuzzle.repositories.user, 'load').resolves({_id: 'test', profile: 'default'});
+      kuzzle.repositories.user.load.restore();
+      sandbox.stub(kuzzle.repositories.user, 'load').resolves({_id: 'test', profileId: 'default'});
 
       return kuzzle.funnel.controllers.security.updateUser(new RequestObject({
         _id: 'test',
-        body: {profile: 'anonymous', foo: 'bar'}
+        body: {profilesIds: ['anonymous'], foo: 'bar'}
       }))
         .then(response => {
           should(response).be.an.instanceOf(ResponseObject);
@@ -232,7 +198,7 @@ describe('Test: security controller - users', function () {
     });
   });
 
-  describe('#createOrReplaceUser', function () {
+  describe('#createOrReplaceUser', () => {
     it('should return a valid responseObject', () => {
       sandbox.stub(kuzzle.repositories.user, 'hydrate').resolves();
       sandbox.stub(kuzzle.repositories.user, 'persist').resolves({_id: 'test'});
@@ -240,7 +206,7 @@ describe('Test: security controller - users', function () {
       return kuzzle.funnel.controllers.security.createOrReplaceUser(new RequestObject({
         body: {
           _id: 'test',
-          profile: 'admin'
+          profilesIds: ['admin']
         }
       }))
         .then(response => {
@@ -257,7 +223,7 @@ describe('Test: security controller - users', function () {
     });
   });
 
-  describe('#getUserRights', function () {
+  describe('#getUserRights', () => {
     it('should resolve to a responseObject on a getUserRights call', () => {
       var loadUserStub = userId => {
         return {
@@ -278,6 +244,7 @@ describe('Test: security controller - users', function () {
         };
       };
 
+      kuzzle.repositories.user.load.restore();
       sandbox.stub(kuzzle.repositories.user, 'load', loadUserStub);
       return kuzzle.funnel.controllers.security.getUserRights(new RequestObject({
         body: {_id: 'test'}
@@ -314,7 +281,6 @@ describe('Test: security controller - users', function () {
     });
 
     it('should reject NotFoundError on a getUserRights call with a bad id', () => {
-      sandbox.stub(kuzzle.repositories.user, 'load').resolves(null);
       return should(kuzzle.funnel.controllers.security.getUserRights(new RequestObject({
         body: { _id: 'i.dont.exist' }
       }))).be.rejectedWith(NotFoundError);

@@ -3,14 +3,14 @@ var
   should = require('should'),
   operators = require.main.require('lib/api/dsl/operators');
 
-describe('Test to operator', function () {
-  it('should call the lte() operator with same arguments', function () {
+describe('Test to operator', () => {
+  it('should call the lte() operator with same arguments', () => {
     var
       argumentsMatch = false,
       called = false,
       saved = operators.lte;
 
-    operators.lte = function (field, value, document) {
+    operators.lte = (field, value, document) => {
       if (field === 'foo' && value === 0 && document.toString() === {}.toString()) {
         argumentsMatch = true;
       }

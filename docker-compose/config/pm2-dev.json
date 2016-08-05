@@ -1,0 +1,10 @@
+{
+  "apps": [{
+    "name"         : "KuzzleServer",
+    "script"       : "bin/kuzzle",
+    "args"         : ["start"],
+    "watch"        : ["lib", "config", "bin"],
+    "ignore_watch" : ["node_modules"],
+    "node_args": "--debug=7000"
+  }]
+}

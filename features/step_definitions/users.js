@@ -10,7 +10,6 @@ module.exports = function () {
 
     id = this.idPrefix + id;
 
-
     this.api[method](userObject, id)
       .then(body => {
         if (body.error) {
@@ -51,13 +50,15 @@ module.exports = function () {
           match = match.replace(/#prefix#/g, this.idPrefix);
           matchObject = JSON.parse('{' + match + '}');
           if (!_.matches(matchObject)(body.result)) {
-            return callback(new Error('Error: ' + JSON.stringify(body.result) + ' does not match ' + match));
+            return callback(new Error('Error: ' + JSON.stringify(body.result) + ' does not match {' + match + '}'));
           }
         }
 
         callback();
       })
       .catch(error => { callback(error); });
+
+
   });
 
   this.Then(/^I search for {(.*?)} and find (\d+) users(?: matching {(.*?)})?$/, function (filter, count, match, callback) {

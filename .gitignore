@@ -26,7 +26,7 @@ docker-compose-custom.yml
 .tags
 
 # Kuzzle
-kuzzle-*.log
+/*.log
 
 #swagger
 kuzzle-swagger.*

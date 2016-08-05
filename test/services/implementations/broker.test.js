@@ -1,5 +1,5 @@
 var
-  q = require('q'),
+  Promise = require('bluebird'),
   rewire = require('rewire'),
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
@@ -13,7 +13,7 @@ var
   WSBrokerServer = require.main.require('lib/services/broker/wsBrokerServer'),
   WSBrokerServerRewire = rewire('../../../lib/services/broker/wsBrokerServer');
 
-describe('Test: Internal broker', function () {
+describe('Test: Internal broker', () => {
   var
     clock,
     server,
@@ -55,7 +55,7 @@ describe('Test: Internal broker', function () {
   describe('Internal broker constructor', () => {
     it('should fail if no config match the broker type', () => {
       var FakeBroker = new BrokerFactory('fakeBroker');
-      should((function () {new FakeBroker(kuzzle, {isServer: true});})).throw(Error);
+      should((() => {new FakeBroker(kuzzle, {isServer: true});})).throw(Error);
     });
   });
 
@@ -66,23 +66,23 @@ describe('Test: Internal broker', function () {
     beforeEach(() => {
       var InternalBroker = new BrokerFactory('internalBroker');
       /** @type InternalBroker */
-      server = new InternalBroker(kuzzle, {isServer: true});
+      server = new InternalBroker(kuzzle);
       server.ws = (options, cb) => {
         cb();
         return new WSServerMock();
       };
 
       /** @type InternalBroker */
-      client = new InternalBroker(kuzzle, {isServer: false});
+      client = new InternalBroker(kuzzle, {client: true});
       client.ws = () => new WSClientMock(server.server);
 
-      return q.all([
+      return Promise.all([
         server.init(),
         client.init()
       ]);
     });
 
-    it('should instanciate a broker', () => {
+    it('should instantiate a broker', () => {
       should(client).be.an.instanceOf(WSBrokerClient);
       should(server).be.an.instanceOf(WSBrokerServer);
     });
@@ -141,7 +141,7 @@ describe('Test: Internal broker', function () {
         var
           beforeInitOnCalls;
 
-        return q.all([server.init(),client.init()])
+        return Promise.all([server.init(),client.init()])
           .then(() => {
             beforeInitOnCalls = client.client.socket.on.callCount;
             return client.init();
@@ -153,7 +153,7 @@ describe('Test: Internal broker', function () {
         var state = '';
 
         sinon.spy(client, '_connect');
-        
+
         // we init the client before the server.
         // The promise is resolved once the server is up and the connection is established
         // That means: there will be a timeout if the client is not able to retry the connection.
@@ -166,7 +166,7 @@ describe('Test: Internal broker', function () {
             done();
           })
           .catch(err => done(err));
-        
+
         server.init()
           .then(() => {
             state = client.client.state; // should be "retrying", as the client should have already tried to reach the server without success
@@ -176,7 +176,7 @@ describe('Test: Internal broker', function () {
     });
 
     describe('#listen & #unsubscribe', () => {
-      beforeEach(() => q.all([server.init(),client.init()]));
+      beforeEach(() => Promise.all([server.init(),client.init()]));
 
       it ('should store the cb and send the request to the server', () => {
         var cb = sinon.stub();
@@ -213,7 +213,7 @@ describe('Test: Internal broker', function () {
     });
 
     describe('#close', () => {
-      beforeEach(() => q.all([server.init(),client.init()]));
+      beforeEach(() => Promise.all([server.init(),client.init()]));
 
       it('should close the socket', () => {
         var socket = client.client.socket;
@@ -234,7 +234,7 @@ describe('Test: Internal broker', function () {
     });
 
     describe('#send & broadcast', () => {
-      beforeEach(() => q.all([server.init(),client.init()]));
+      beforeEach(() => Promise.all([server.init(),client.init()]));
 
       it('`send` should send properly envelopped data', () => {
         var
@@ -265,7 +265,7 @@ describe('Test: Internal broker', function () {
           data: data
         }));
       });
-      
+
     });
 
     describe('#events', () => {
@@ -273,8 +273,8 @@ describe('Test: Internal broker', function () {
         client.onConnectHandlers = [];
         client.onCloseHandlers = [];
         client.onErrorHandlers = [];
-        
-        return q.all([server.init(),client.init()]);
+
+        return Promise.all([server.init(),client.init()]);
       });
 
       it('on open, should re-register if some callbacks were attached', () => {
@@ -300,13 +300,13 @@ describe('Test: Internal broker', function () {
             should(newClient.onConnectHandlers[0]).be.calledOnce();
           });
       });
-      
+
       it('on open, should trigger a warning if the client was already connected', () => {
-        var 
+        var
           socket = client.client.socket;
-        
+
         socket.emit('open', 1);
-        
+
         should(client.pluginsManager.trigger).be.calledWith('log:warn', '[internalBroker] Node is connected while it was previously already.');
       });
 
@@ -320,12 +320,25 @@ describe('Test: Internal broker', function () {
         should(client.client.socket).be.an.instanceOf(WSClientMock);
       });
 
+      it('on close should not try to reconnect if explicitly asked so', () => {
+        var socket = client.client.socket;
+
+        client.reconnect = false;
+        client.state = 'connected';
+        client.retryTimer = 'something';
+
+        socket.emit('close', 1);
+
+        should(client.client.socket).be.null();
+        should(client.retryTimer).be.null();
+      });
+
       it('on close should try reconnecting if :close was not explicitly called', () => {
         var
           connectSpy = sandbox.spy(client, '_connect'),
           closeSpy = sandbox.spy(client, 'close'),
           socket = client.client.socket;
-        
+
         client.onCloseHandlers.push(sinon.spy());
 
         // calling multiple times to check only one retry is issued
@@ -337,7 +350,7 @@ describe('Test: Internal broker', function () {
         client.client.state = 'test';
 
         clock.tick(20000);
-        
+
         should(socket.listeners.close[0]).have.callCount(3);
         should(closeSpy).have.callCount(3);
         should(connectSpy).be.calledOnce();
@@ -349,7 +362,7 @@ describe('Test: Internal broker', function () {
           connectSpy = sandbox.spy(client, '_connect'),
           closeSpy = sandbox.spy(client, 'close'),
           socket = client.client.socket;
-        
+
         client.onErrorHandlers.push(sinon.spy());
 
         socket.emit('error', new Error('test'));
@@ -357,12 +370,24 @@ describe('Test: Internal broker', function () {
         socket.emit('error', new Error('test'));
 
         clock.tick(20000);
-        
+
         should(socket.listeners.error[0]).be.have.callCount(3);
         should(closeSpy).be.have.callCount(3);
         should(client.client.state).be.exactly('retrying');
         should(connectSpy).be.calledOnce();
         should(client.onErrorHandlers[0]).be.calledThrice();
+      });
+
+      it('on error should not try to reconnect if asked so', () => {
+        var socket = client.client.socket;
+
+        client.reconnect = false;
+        client.retryTimer = 'something';
+
+        socket.emit('error', 1);
+
+        should(client.client.socket).be.null();
+        should(client.retryTimer).be.null();
       });
 
     });
@@ -386,14 +411,14 @@ describe('Test: Internal broker', function () {
       client3 = new WSBrokerClient('internalBroker', {}, kuzzle.pluginsManager);
       client1.ws = client2.ws = client3.ws = () => new WSClientMock(server.server);
 
-      return q.all([
+      return Promise.all([
         server.init(),
         client1.init(),
         client2.init(),
         client3.init()
       ]);
     });
-    
+
     describe('#init', () => {
 
       it('should reject the promise if already started', () => {
@@ -577,13 +602,13 @@ describe('Test: Internal broker', function () {
 
         // wait 1h
         clock.tick(1000 * 3600);
-        should(response.inspect().state).be.exactly('pending');
+        should(response.isPending()).be.true();
       });
 
       it('should resolve the promise once a client connects to the room', () => {
         var response = server.waitForClients('test');
 
-        should(response.inspect().state).be.exactly('pending');
+        should(response.isPending()).be.true();
 
         server.rooms = { test: true };
         clock.tick(200);
@@ -742,19 +767,19 @@ describe('Test: Internal broker', function () {
       });
 
       it('server error', () => {
-        var 
+        var
           serverSocket = server.server,
           error = new Error();
-        
+
         server.onErrorHandlers.push(sinon.spy());
-        
+
         serverSocket.emit('error', error);
-        
+
         should(server.pluginsManager.trigger).have.callCount(4);
         should(server.pluginsManager.trigger.lastCall).be.calledWith('log:error');
         should(server.onErrorHandlers[0]).be.calledOnce();
       });
-      
+
     });
 
   });
