@@ -9,6 +9,7 @@ proxy:
 
 kuzzle:
   image: kuzzleio/test:alpine
+  command: /run.sh
   volumes:
     - "..:/var/app"
     - "./scripts/run-test.sh:/run.sh"
