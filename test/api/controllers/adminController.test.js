@@ -579,7 +579,7 @@ describe('Test: admin controller', () => {
       return adminController.createFirstAdmin(request)
         .then(() => {
           should(createOrReplaceUser).be.calledOnce();
-          should(createOrReplaceUser).be.calledWithMatch({data: {_id: 'toto', body: {password: 'pwd', profilesIds: ['admin'], reset: true}}});
+          should(createOrReplaceUser).be.calledWithMatch({data: {_id: 'toto', body: {password: 'pwd', profilesIds: ['admin']}}});
           should(resetRolesStub).have.callCount(1);
           should(resetProfilesStub).have.callCount(1);
         });
