@@ -11,11 +11,6 @@ kuzzle:
     - elasticsearch
     - redis
     - proxy:api
-  volumes:
-    - "./docker-compose/scripts/run.sh:/run.sh"
-    - "./docker-compose/config:/config"
-  environment:
-    - FEATURE_COVERAGE
 
 redis:
   image: redis:3.0-alpine
