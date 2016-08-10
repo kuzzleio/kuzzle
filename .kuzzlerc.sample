@@ -1,210 +1,285 @@
 {
-  // Kuzzle REST listening port
-  "httpPort": 7511,
+  // -------------------------------------------------------------------------
+  // Kuzzle configuration sample file
+  // 
+  // You can copy this file to a valid [rc](https://github.com/dominictarr/rc)
+  // file location to customize Kuzzle configuration
+  // -------------------------------------------------------------------------
 
+
+  // The plugins section let you define which plugins should be loaded on
+  // Kuzzle first start.
+  // cf: Kuzzle documentation on http://kuzzle.io/guide/#plugins for more
+  // information on managing plugins
   /*
-   Internal collection used to store the service settings
-  */
-  "serviceSettingsCollection": "services",
+  "plugins": {
+    // [Common]
+    //   * pipeWarnTime: time in ms after wich a warning will be emitted to
+    //     the logger if the pipe action has not completed
+    //   * pipeTimeout: time in ms after which a pipe action will be killed
+    //     if it has not completed
+    "common": {
+      "pipeWarnTime": 40,
+      "pipeTimeout": 250
+    },
 
-  "servicesDefaultInitTimeout": 10000,
-
-  /*
-  */
-  "proxyBroker": {
-    "host": "api",
-    "port": 7331,
-    "retryInterval": 1000
-  },
-
-  /*
-   Host and port for the internal broker server
-   This server handles internal communications between Kuzzle components
-   */
-  "internalBroker": {
-    "host": "localhost",
-    "port": 7911,
-    "retryInterval": 1000
-  },
-  /*
-   Host and port for the internalEngine service: the light database service
-   called by Kuzzle core components. Can be an array
-   */
-  "internalEngine": {
-    "host": "elasticsearch",
-    "port": "9200"
-  },
-  // Host and port for the readEngine service: the database called when we read a data. Can be an array.
-  "readEngine": {
-    "host": "elasticsearch",
-    "port": "9200"
-  },
-  // Host and port for the writeEngine service: the database called when we write a data. Can be an array.
-  "writeEngine": {
-    /*
-     autoRefresh: an index => boolean container object.
-     If the autoRefresh is set to true for a given index, all write calls will be followed by a refresh request.
-
-     /!\ Enabling the autoRefresh can lead to performance issues.
-     cf https://www.elastic.co/guide/en/elasticsearch/guide/current/near-real-time.html#refresh-api
-
-     "autoRefresh": { "index1": true|false }
-    */
-    "dataCollection": "writeEngine",
-    "host": "elasticsearch",
-    "port": "9200"
-  },
-  // Kuzzle internal cache configuration
-  "cache": {
-    "node": {
-      "host": "redis",
-      "port": 6379
+    // Each next block entry is a plugin configuration.
+    // A plugin can be installed from 3 different sources:
+    //   * from a npm package: the entry must be the package name in npm and 
+    //     the version must be specified usind the "npmVersion" property
+    //   * from a git repository: the git repository url must be specified 
+    //     using the "gitUrl" property
+    //   * from a local directory: the location of the package must be 
+    //     specified using the "path" property
+    "kuzzle-plugin-logger": {
+      "npmVersion": "2.0.4",
+      "activated": true
+    },
+    "kuzzle-plugin-auth-passport-local": {
+      "npmVersion": "2.0.4",
+      "activated": true
     }
   },
-  // JWT defaults.
-  "jsonWebToken": {
-    "algorithm": "HS256",
-    "secret": "Kuzzle Rocks",
-    "expiresIn": "1h"
+  */
+
+  // The queues used in Kuzzle internal communication
+  /*
+  "queues": {
+    "remoteActionQueue": "remote-action-queue"
   },
+  */
 
-  // Default internal index
-  "internalIndex": "%kuzzle",
-
-  // repositories defaults
+  // The repositories are used internally by Kuzzle to store its data (users,
+  // permissions, configuration etc.)
+  /* 
   "repositories": {
-    "cacheTTL": 1440
+    // [Common]
+    //   * cacheTTL: the time in the objects should be kepts in cache
+    // Decreasing this value will lower Redis memory and disk consumption at
+    // the cost of increasing the queries rate to the database
+    "common": {
+      "cacheTTL": 1440
+    }
   },
+  */
 
-  // Default user profiles
-  "userProfiles": {
-    "admin": {
-      "policies": [ {"roleId": "admin", "allowInternalIndex": true} ]
+  // The security section contains the configuration for Kuzzle permissions
+  // mechanism
+  /*
+  "security": {
+    // [jwt]
+    // configuration for npm 
+    // [jsonwebtoken package](https://github.com/auth0/node-jsonwebtoken)
+    // 
+    //   * algorithm: hash/encryption method used to sign the token
+    //   * expiresIn: expressed in seconds or a rouchg/ms compatible string
+    //   * secret: a string or buffer containing either the secret for HMAC
+    //     algorithms, or the PEM encoded private key for RSA and ECDSA.
+    //     Please set this value to a private string
+    "jwt": {
+      "algorithm": "HS256",
+      "expiresIn": "1h",
+      "secret": "Change me"
     },
+    // [default]
+    // The default role described here defines the permissions for the 
+    // anonymous user until an administrator user is created.
+    // By default, all users are granted all permissions until an administrator
+    // is defined.
     "default": {
-      "policies": [ {"roleId": "default"} ]
-    },
-    "anonymous": {
-      "policies": [ {"roleId": "anonymous"} ]
-    }
-  },
-  // role template for all users before creating the first admin
-  "roleWithoutAdmin": {
-    "controllers": {    // at the controller level
-      "*": {            // for any controller
-        "actions": {    // and at the action level
-          "*": true     // we can do any action
-        }
-      }
-    }
-  },
-  // Default security roles
-  "userRoles": {
-    "admin": {
-      "controllers": {
-        "*": {
-          "actions": {
-            "*": true
+      "role": {
+        "controllers": {
+          "*": {
+            "actions": {
+              "*": true
+            }
           }
         }
       }
     },
-    "anonymous": {
-      "controllers": {
-        "auth": {
-          "actions": {
-            "logout": true,
-            "checkToken": true,
-            "getMyRights": true,
-            "getCurrentUser": true,
-            "login": true
-          }
+    // [standard]
+    // Permissions used when creating an administrator user, either using the
+    // CLI or the Back Office.
+    // 
+    // By default, the admin user is granted all permissions.
+    // Anonymous and non-administrator users are restricted to the "serverInfo"
+    // action.
+    "standard": {
+      "profiles": {
+        "admin": {
+          "policies": [ {"roleId": "admin", "allowInternalIndex": true} ]
         },
-        "read": {
-          "actions": {
-            "serverInfo": true
-          }
-        }
-      }
-    },
-    "default": {
-      "controllers": {
-        "auth": {
-          "actions": {
-            "logout": true,
-            "checkToken": true,
-            "getMyRights": true,
-            "updateSelf": true,
-            "getCurrentUser": true,
-            "login": true
-          }
+        "default": {
+          "policies": [ {"roleId": "default"} ]
         },
-        "read": {
-          "actions": {
-            "serverInfo": true
-          }
+        "anonymous": {
+          "policies": [ {"roleId": "anonymous"} ]
         }
-      }
-    }
-  },
-  "pluginsManager": {
-    /*
-     The maximum number of milliseconds a Pipe Plugin should take on a single request
-     before a warning is issued
-     */
-    "pipeWarnTime": 40,
-
-    /*
-     The maximum number of milliseconds a Pipe Plugin should take on a single request.
-     If this timeout is reached, the request is rejected with a plugin timeout error.
-     */
-    "pipeTimeout": 250,
-
-    /*
-     Name of the database collection where the plugins configuration are stored
-     */
-    "dataCollection": "plugins",
-
-    /*
-     List of plugins installed when Kuzzle starts for the first time
-     */
-    "defaultPlugins": {
-      "kuzzle-plugin-logger": {
-        "npmVersion": "2.0.4",
-        "activated": true
       },
-      "kuzzle-plugin-auth-passport-local": {
-        "npmVersion": "2.0.4",
-        "activated": true
+      "roles": {
+        "admin": {
+          "controllers": {
+            "*": {
+              "actions": {
+                "*": true
+              }
+            }
+          }
+        },
+        "default": {
+          "controllers": {
+            "auth": {
+              "actions": {
+                "checkToken": true,
+                "getCurrentUser": true,
+                "getMyRights": true,
+                "login": true,
+                "logout": true,
+                "updateSelf": true
+              }
+            },
+            "read": {
+              "actions": {
+                "serverInfo": true
+              }
+            }
+          }
+        },
+        "anonymous": {
+          "controllers": {
+            "auth": {
+              "actions": {
+                "checkToken": true,
+                "getCurrentUser": true,
+                "getMyRights": true,
+                "login": true,
+                "logout": true
+              }
+            },
+            "read": {
+              "actions": {
+                "serverInfo": true
+              }
+            }
+          }
+        }
       }
     }
   },
-  "request": {
-    /*
-     Maximum number of client requests that can be simultaneously processed by Kuzzle.
-     Any submitted request beyond that threshold will be queued and executed once the
-     maximum number of concurrent request becomes lower than that limit.
-     */
+  */
+
+  // Configuration for Kuzzle server
+  /*
+  "server": {
+    // * http port: port on which Kuzzle will expose its REST api
+    // * maxConcurrentRequests: Number of requests Kuzzle treats simultaneously.
+    //   Requests received above this limit are bufferized.
+    // * maxRetainedRequests: Maximum number of requests that can be bufferized.
+    //   Requests received above this limit are discarded.
+    // * warningRetainedRequestsLimit: Number of bufferized requests after
+    //   which Kuzzle will throw warnings to the logger
+    "http": {
+      "port": 7511
+    },
     "maxConcurrentRequests": 50,
-
-    /*
-     Maximum number of requests that can be queued while waiting for the number of
-     concurrent requests to diminish.
-     As these requests are queued in memory, careful monitoring should be performed
-     before raising this limit, and tuning the NodsJS maximum memory limit may
-     be necessary.
-
-     Requests submitted while the queue is full are discarded with a 503 error
-     code ("Service temporary unavailable")
-     */
     "maxRetainedRequests": 50000,
+    "warningRetainedRequestsLimit": 5000
+  },
+  */
 
+  // The services are the external components Kuzzle relies on.
+  /*
+  "services": {
+    // [common]
+    //   * defaultInitTimeout: Time in ms after which a service is considered
+    //     failing if it has not init.
+    //   * retryInterval: Default interval in ms between Kuzzle tries to init
+    //     the service again on first failure.
+    "common": {
+      "defaultInitTimeout": 10000,
+      "retryInterval": 1000
+    },
+
+    // [cache]
+    // The cache service relies on Redis
+    //   node:
+    //     * host: The host on which Redis can be reached. Can take an IP 
+    //       address, an URI or a hostname
+    //     * port: The port on which Redis is running
+    "cache": {
+      "backend": "redis",
+      "aliases": [
+        "notificationCache",
+        "statsCache",
+        "securityCache",
+        "internalCache",
+        "tokenCache",
+        "memoryStorage"
+      ],
+      "databases": [
+        "notificationCache",
+        "statsCache",
+        "securityCache",
+        "internalCache",
+        "tokenCache",
+        "memoryStorage"
+      ],
+      "node": {
+        "host": "redis",
+        "port": 6379
+      }
+    },
+
+    // [internalBroker]
+    // The internalBroker is used for internal Kuzzle communication, 
+    // notably to transport messages between the CLI and the server.
+    //   * host: Host of Kuzzle server. Change this if you want to use the CLI
+    //     from a different host than the one Kuzzle is running on.
+    //   * port: Port on which Kuzzle broker exposes itself.
+    "internalBroker": {
+      "aliases": ["broker"],
+      "host": "localhost",
+      "port": 7911,
+      "retryInterval": 1000
+    },
+    // [proxyBroker]
+    // The proxy broker is used to communicate between the Proxy and Kuzzle
+    // server.
+    //   * host: the host on which the proxy can be reached. Can be a hostname,
+    //     an IP address or an URI. 
+    //   * port: the port on which the proxy is listening
+    "proxyBroker": {
+      "host": "localhost",
+      "port": 7331,
+      "retryInterval": 1000
+    },
+    // [db]
+    // The database layer is by default relying on elasticsearch and is 
+    // currently the only available backend.
+    //   * host: The host on which elasticsearch can be reached. Can be a
+    //     hostname, an URI or an IP address.
+    //   * port: The port on which elasticsearch is listening
+    //   * apiVersion: The version of elasticsearch to use. The only supported
+    //     value for this setting is "2.3" for the moment
+    "db": {
+      "backend": "elasticsearch",
+      "aliases": ["readEngine", "writeEngine"],
+      "host": "elasticsearch",
+      "port": 9200,
+      "apiVersion": "2.3"
+    },
+    */
+
+    // Configuration for Kuzzle internal statistics module
+    //   * ttl: Time in s for which the statistics framed are stored
+    //   * statsInterval: Time in s between statistics framed are comitted to 
+    //     the cache engine
     /*
-     Number of retained requests after which warnings
-     are issued, both with logging and server:overload events.
-
-     Recommended value: roughly 10% of the maxRetainedRequests value
-     */
-     "warnRetainedRequestsLimit": 5000
+    "stats": {
+      "ttl": 3600,
+      "statsInterval": 10
+    }
+    */
   }
+
 }
