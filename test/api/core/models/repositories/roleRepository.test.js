@@ -46,7 +46,7 @@ describe('Test: repositories/roleRepository', () => {
 
   describe('#loadRoles', () => {
     it('should return an empty array when loading some non-existing roles', () => {
-      sandbox.stub(kuzzle.services.list.readEngine, 'mget').resolves({hits: [{_id: 'idontexist', found: false}]});
+      sandbox.stub(kuzzle.internalEngine, 'mget').resolves({hits: [{_id: 'idontexist', found: false}]});
       return kuzzle.repositories.role.loadRoles(['idontexist'])
         .then(result => {
           should(result).be.an.Array();
@@ -60,7 +60,7 @@ describe('Test: repositories/roleRepository', () => {
     });
 
     it('should retrieve some persisted roles', () => {
-      sandbox.stub(kuzzle.services.list.readEngine, 'mget').resolves({
+      sandbox.stub(kuzzle.internalEngine, 'mget').resolves({
         hits: [{_id: 'persisted1', found: true, _source: persistedObject1},
               {_id: 'persisted2', found: true, _source: persistedObject2}]
       });
@@ -75,7 +75,7 @@ describe('Test: repositories/roleRepository', () => {
     });
 
     it('should retrieve the default roles', () => {
-      sandbox.stub(kuzzle.services.list.readEngine, 'mget').resolves({
+      sandbox.stub(kuzzle.internalEngine, 'mget').resolves({
         hits: [{_id: 'anonymous', found: true, _source: {}}]
       });
       return kuzzle.repositories.role.loadRoles(['anonymous'])
@@ -87,7 +87,7 @@ describe('Test: repositories/roleRepository', () => {
     });
 
     it('should retrieve only the roles that exist', () => {
-      sandbox.stub(kuzzle.services.list.readEngine, 'mget').resolves({
+      sandbox.stub(kuzzle.internalEngine, 'mget').resolves({
         hits: [{_id: 'anonymous', found: true, _source: {}}]
       });
       return kuzzle.repositories.role.loadRoles(['anonymous', 'idontexist'])
@@ -178,7 +178,7 @@ describe('Test: repositories/roleRepository', () => {
     });
 
     it('should reject if a profile uses the role about to be deleted', () => {
-      sandbox.stub(kuzzle.repositories.profile.readEngine, 'search').resolves({total: 1, hits: ['test']});
+      sandbox.stub(kuzzle.internalEngine, 'search').resolves({total: 1, hits: ['test']});
 
       return should(kuzzle.repositories.role.deleteRole({_id: 'test'})).rejectedWith(BadRequestError);
     });
@@ -239,7 +239,7 @@ describe('Test: repositories/roleRepository', () => {
       return should(kuzzle.repositories.role.validateAndSaveRole(role)).be.rejectedWith(BadRequestError);
     });
 
-    it('persist the role to the database when ok', () => {
+    it('should persist the role to the database when ok', () => {
       var
         controllers = {
           controller: {
@@ -252,15 +252,16 @@ describe('Test: repositories/roleRepository', () => {
       role._id = 'test';
       role.controllers = controllers;
 
-      sandbox.stub(kuzzle.repositories.role.writeLayer, 'execute', requestObject => {
-        forwardedObject = requestObject;
+      sandbox.stub(kuzzle.repositories.role.storageEngine, 'createOrReplace', (type, id, content) => {
+        forwardedObject = {type, id, content};
         return Promise.resolve({});
       });
 
       return kuzzle.repositories.role.validateAndSaveRole(role)
         .then(() => {
-          should(forwardedObject.data._id).be.exactly('test');
-          should(forwardedObject.data.body.controllers).be.eql(controllers);
+          should(forwardedObject.id).be.exactly('test');
+          should(forwardedObject.content.controllers).be.eql(controllers);
+          should(forwardedObject.type).be.eql('roles');
         });
     });
   });

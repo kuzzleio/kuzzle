@@ -13,6 +13,10 @@ describe('InternalEngine', () => {
     kuzzle = new Kuzzle();
   });
 
+  beforeEach(() => {
+    kuzzle.internalEngine.init();
+  });
+
   afterEach(() => {
     sandbox.restore();
   });
@@ -42,7 +46,7 @@ describe('InternalEngine', () => {
           should(mock.args[0][0]).match({
             index: kuzzle.config.internalIndex,
             type: collection,
-            body: filters
+            body: {filter: filters}
           });
 
           should(result).be.an.Object().and.not.be.empty();

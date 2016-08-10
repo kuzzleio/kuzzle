@@ -93,7 +93,8 @@ describe('Test: repositories/profileRepository', () => {
     });
 
     it('should load a profile from the db', () => {
-      sandbox.stub(kuzzle.services.list.readEngine, 'get').resolves(testProfilePlain);
+      kuzzle.internalEngine.get.restore();
+      sandbox.stub(kuzzle.internalEngine, 'get').resolves(testProfilePlain);
       sandbox.stub(kuzzle.repositories.role, 'loadRoles', stubs.roleRepository.loadRoles);
       return kuzzle.repositories.profile.loadProfile('testprofile')
         .then(result => {
@@ -114,7 +115,10 @@ describe('Test: repositories/profileRepository', () => {
     it('should not load a not existing profile', () => {
       var
         existingProfile = new Profile(),
-        stub = sandbox.stub(kuzzle.services.list.readEngine, 'get');
+        stub;
+
+      kuzzle.internalEngine.get.restore();
+      stub = sandbox.stub(kuzzle.internalEngine, 'get');
 
       existingProfile._id = 'existingProfile';
       stub.onCall(0).rejects(new NotFoundError('Not found'));
@@ -173,7 +177,7 @@ describe('Test: repositories/profileRepository', () => {
 
   describe('#hydrate', () => {
     it('should reject the promise in case of error', () => {
-      sandbox.stub(kuzzle.services.list.readEngine, 'get').rejects(new InternalError('Error'));
+      sandbox.stub(kuzzle.repositories.profile, 'load').rejects(new InternalError('Error'));
       return should(kuzzle.repositories.profile.loadProfile('errorprofile')).be.rejectedWith(InternalError);
     });
 
@@ -204,7 +208,7 @@ describe('Test: repositories/profileRepository', () => {
         }
       });
 
-      sandbox.stub(kuzzle.repositories.user.readEngine, 'search').resolves({total: 1, hits: ['test']});
+      sandbox.stub(kuzzle.internalEngine, 'search').resolves({total: 1, hits: ['test']});
 
       return should(kuzzle.repositories.profile.deleteProfile({_id: 'test'})).rejectedWith(ForbiddenError);
     });
@@ -252,7 +256,7 @@ describe('Test: repositories/profileRepository', () => {
 
   describe('#serializeToDatabase', () => {
     it('should return a plain flat object', () => {
-      sandbox.stub(kuzzle.services.list.readEngine, 'get').resolves(testProfilePlain);
+      sandbox.stub(kuzzle.repositories.profile, 'load').resolves(testProfilePlain);
       sandbox.stub(kuzzle.repositories.role, 'loadRoles', stubs.roleRepository.loadRoles);
       return kuzzle.repositories.profile.loadProfile('testprofile')
         .then(profile => {

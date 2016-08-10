@@ -5,7 +5,6 @@ var
   Kuzzle = require.main.require('lib/api/kuzzle'),
   InternalError = require.main.require('kuzzle-common-objects').Errors.internalError,
   NotFoundError = require.main.require('kuzzle-common-objects').Errors.notFoundError,
-  ResponseObject = require.main.require('kuzzle-common-objects').Models.responseObject,
   Profile = require.main.require('lib/api/core/models/security/profile'),
   User = require.main.require('lib/api/core/models/security/user'),
   UserRepository = require.main.require('lib/api/core/models/repositories/userRepository');
@@ -20,8 +19,7 @@ describe('Test: repositories/userRepository', () => {
     var
       encryptedPassword = '5c4ec74fd64bb57c05b4948f3a7e9c7d450f069a',
       mockCacheEngine,
-      mockReadEngine,
-      mockWriteLayer,
+      mockStorageEngine,
       mockProfileRepository,
       userInCache,
       userInDB;
@@ -38,18 +36,15 @@ describe('Test: repositories/userRepository', () => {
       expire: () => {return Promise.resolve('OK'); }
     };
 
-    mockReadEngine = {
-      get: requestObject => {
-        if (requestObject.data._id === 'userInDB') {
-          return Promise.resolve(new ResponseObject(requestObject, userInDB));
+    mockStorageEngine = {
+      get: (type, id) => {
+        if (id === 'userInDB') {
+          return Promise.resolve(userInDB);
         }
 
         return Promise.resolve(new NotFoundError('User not found in db'));
-      }
-    };
-
-    mockWriteLayer = {
-      execute: () => Promise.resolve({})
+      },
+      createOrReplace: () => Promise.resolve({})
     };
 
     mockProfileRepository = {
@@ -96,8 +91,7 @@ describe('Test: repositories/userRepository', () => {
 
     userRepository = new UserRepository(kuzzle);
     userRepository.cacheEngine = mockCacheEngine;
-    userRepository.readEngine = mockReadEngine;
-    userRepository.writeLayer = mockWriteLayer;
+    userRepository.storageEngine = mockStorageEngine;
 
   });
 
