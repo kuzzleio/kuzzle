@@ -2,49 +2,49 @@
  * This component initializes
  */
 var
+  rewire = require('rewire'),
   should = require('should'),
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
-  Kuzzle = require.main.require('lib/api/kuzzle'),
-  HttpServer = require.main.require('lib/api/core/entryPoints/http');
+  KuzzleMock = require('../../../mocks/kuzzle.mock'),
+  HttpServer = rewire('../../../../lib/api/core/entryPoints/http');
 
 describe('Test: entryPoints/http', () => {
   var
     kuzzle,
-    httpPort = 6667;
+    httpServer;
 
-  before(() => {
-    kuzzle = new Kuzzle();
+  beforeEach(() => {
+    kuzzle = new KuzzleMock();
+    httpServer = new HttpServer(kuzzle);
   });
 
   afterEach(() => {
     sandbox.restore();
   });
 
-  it('should have property kuzzle, params and a function init on construct', () => {
-    var httpServer = new HttpServer(kuzzle, {httpPort: httpPort});
-
+  it('should have property kuzzle and an init function on construct', () => {
     should(httpServer).have.property('kuzzle');
-    should(httpServer).have.property('params');
     should(httpServer.init).be.a.Function();
   });
 
-  it('should call initRouterHttp and routeHttp on init and create the HTTP server', () => {
+  it('should call initHttpRouter and routeHttp on init and create the HTTP server', () => {
     var
-      httpServer = new HttpServer(kuzzle, {httpPort: httpPort}),
-      spyInitRouterHttp = sandbox.stub(kuzzle.router, 'initRouterHttp'),
-      spyRouteHttp = sandbox.stub(kuzzle.router, 'routeHttp'),
-      stubListen = sandbox.stub(),
-      spyCreateServer = sandbox.stub(httpServer.http, 'createServer', cb => {
-        cb();
-        return {listen: stubListen};
-      });
+      stubListen = sinon.spy(),
+      spyCreateServer = sinon.stub().yields().returns({listen: stubListen});
 
-    httpServer.init();
+    HttpServer.__with__({
+      http: {
+        createServer: spyCreateServer
+      }
+    })(() => {
+      httpServer.init();
 
-    should(spyInitRouterHttp.calledOnce).be.true();
-    should(spyRouteHttp.calledOnce).be.true();
-    should(spyCreateServer.calledOnce).be.true();
-    should(stubListen.calledWith(httpPort)).be.true();
+      should(kuzzle.router.initHttpRouter).be.calledOnce();
+      should(spyCreateServer).be.calledOnce();
+      should(kuzzle.router.routeHttp).be.calledOnce();
+      should(stubListen).be.calledOnce();
+      should(stubListen).be.calledWithExactly(kuzzle.config.server.http.port);
+    });
   });
 });

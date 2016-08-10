@@ -1,6 +1,8 @@
 var
+  _ = require('lodash'),
   sinon = require('sinon'),
   Kuzzle = require('../../lib/api/kuzzle'),
+  config = require('../../lib/config'),
   foo = {foo: 'bar'};
 
 /**
@@ -17,9 +19,18 @@ function KuzzleMock () {
     }
   }
 
+  // we need a deep copy here
+  this.config = _.merge({}, config);
+
   this.indexCache = {
     add: sinon.spy(),
     remove: sinon.spy()
+  };
+
+  this.internalEngine = {
+    get: sinon.stub().resolves(foo),
+    index: 'internalIndex',
+    init: sinon.stub().resolves()
   };
 
   this.notifier = {
@@ -46,8 +57,10 @@ function KuzzleMock () {
 
   this.router = {
     execute: sinon.stub().resolves(foo),
+    initHttpRouter: sinon.spy(),
     newConnection: sinon.stub().resolves(foo),
-    removeConnection: sinon.spy()
+    removeConnection: sinon.spy(),
+    routeHttp: sinon.spy()
   };
 
   this.services = {

@@ -31,8 +31,8 @@ describe('Test: statistics core component', () => {
 
   before(() => {
     kuzzle = new Kuzzle();
-    kuzzle.config.cache.databases.push(dbname);
-    kuzzle.services.list.statsCache = new Redis(kuzzle, {service: dbname});
+    kuzzle.config.services.cache.databases.push(dbname);
+    kuzzle.services.list.statsCache = new Redis(kuzzle, {service: dbname}, kuzzle.config.services.cache);
     return Redis.__with__('buildClient', () => new RedisClientMock())(() => {
       return kuzzle.services.list.statsCache.init()
         .then(() => kuzzle.services.list.statsCache.volatileSet(lastFrame, JSON.stringify(fakeStats), 30))
