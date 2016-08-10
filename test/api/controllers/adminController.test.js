@@ -496,7 +496,7 @@ describe('Test: admin controller', () => {
       return adminController.adminExists()
         .then((response) => {
           should(response).match({data: {body: false}});
-        })
+        });
     });
 
     it('should return true if there is result', () => {
@@ -505,7 +505,7 @@ describe('Test: admin controller', () => {
       return adminController.adminExists()
         .then((response) => {
           should(response).match({data: {body: true}});
-        })
+        });
     });
   });
 
@@ -533,8 +533,6 @@ describe('Test: admin controller', () => {
     });
 
     it('should do nothing if admin already exists', () => {
-      adminController.adminExists = sandbox.stub().resolves({data: {body: true}});
-
       var request = new RequestObject({
         _id: 'toto',
         body: {
@@ -542,18 +540,20 @@ describe('Test: admin controller', () => {
         }
       });
 
-      return should(adminController.createFirstAdmin(request)).be.rejected()
+      adminController.adminExists = sandbox.stub().resolves({data: {body: true}});
+
+      return should(adminController.createFirstAdmin(request)).be.rejected();
     });
 
     it('should create the admin user and not reset roles & profiles if not asked to', () => {
-      adminController.adminExists = sandbox.stub().resolves({data: {body: false}});
-
       var request = new RequestObject({
         _id: 'toto',
         body: {
           password: 'pwd'
         }
       });
+
+      adminController.adminExists = sandbox.stub().resolves({data: {body: false}});
 
       return adminController.createFirstAdmin(request)
         .then(() => {
@@ -565,9 +565,6 @@ describe('Test: admin controller', () => {
     });
 
     it('should create the admin user and reset roles & profiles if asked to', () => {
-      adminController.adminExists = sandbox.stub().resolves({data: {body: false}});
-      sandbox.stub(adminController, 'refreshIndex').resolves({});
-
       var request = new RequestObject({
         _id: 'toto',
         body: {
@@ -575,6 +572,9 @@ describe('Test: admin controller', () => {
           reset: true
         }
       });
+
+      adminController.adminExists = sandbox.stub().resolves({data: {body: false}});
+      sandbox.stub(adminController, 'refreshIndex').resolves({});
 
       return adminController.createFirstAdmin(request)
         .then(() => {
