@@ -5,7 +5,7 @@ var
   ms = require('ms'),
   Promise = require('bluebird'),
   /** @type {Params} */
-  params = require('rc')('kuzzle'),
+  params = require('../../../lib/config'),
   passport = require('passport'),
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
@@ -71,7 +71,7 @@ describe('Test the auth controller', () => {
           var
             token = new Token(),
             expiresIn = ms(opts.expiresIn),
-            encodedToken = jwt.sign({_id: user._id}, kuzzle.config.jsonWebToken.secret, opts);
+            encodedToken = jwt.sign({_id: user._id}, kuzzle.config.security.jwt.secret, opts);
 
           _.assignIn(token, {
             _id: encodedToken,
@@ -110,7 +110,7 @@ describe('Test the auth controller', () => {
       sandbox.stub(kuzzle.passport, 'authenticate', request => Promise.resolve({_id: request.query.username}));
       return kuzzle.funnel.controllers.auth.login(requestObject, {})
         .then(response => {
-          var decodedToken = jwt.verify(response.data.body.jwt, params.jsonWebToken.secret);
+          var decodedToken = jwt.verify(response.data.body.jwt, params.security.jwt.secret);
           should(decodedToken._id).be.equal('jdoe');
         });
     });
@@ -147,12 +147,12 @@ describe('Test the auth controller', () => {
       sandbox.stub(kuzzle.passport, 'authenticate', request => Promise.resolve({_id: request.query.username}));
       kuzzle.funnel.controllers.auth.login(requestObject, {connection: {id: 'banana'}})
         .then(response => {
-          var decodedToken = jwt.verify(response.data.body.jwt, params.jsonWebToken.secret);
+          var decodedToken = jwt.verify(response.data.body.jwt, params.security.jwt.secret);
           should(decodedToken._id).be.equal('jdoe');
 
           setTimeout(() => {
             try {
-              jwt.verify(response.data.body.jwt, params.jsonWebToken.secret);
+              jwt.verify(response.data.body.jwt, params.security.jwt.secret);
             }
             catch (err) {
               should(err).be.an.instanceOf(jwt.TokenExpiredError);
@@ -196,7 +196,7 @@ describe('Test the auth controller', () => {
 
     beforeEach(() => {
       var
-        signedToken = jwt.sign({_id: 'admin'}, params.jsonWebToken.secret, {algorithm: params.jsonWebToken.algorithm}),
+        signedToken = jwt.sign({_id: 'admin'}, params.security.jwt.secret, {algorithm: params.security.jwt.algorithm}),
         t = new Token();
 
       t._id = signedToken;

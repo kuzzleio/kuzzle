@@ -45,7 +45,7 @@ describe('Test: ElasticSearch service', () => {
 
   before(()=> {
     kuzzle = new Kuzzle();
-    elasticsearch = new ES(kuzzle, {service: engineType});
+    elasticsearch = new ES(kuzzle, {service: engineType}, kuzzle.config.services.db);
   });
 
   beforeEach(() => {

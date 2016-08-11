@@ -1,6 +1,6 @@
 var
   /** @type {Params} */
-  params = require('rc')('kuzzle'),
+  params = require('../../../../lib/config'),
   rewire = require('rewire'),
   PluginsManager = rewire('../../../../lib/api/core/plugins/pluginsManager'),
   EventEmitter = require('eventemitter2').EventEmitter2;
@@ -19,7 +19,7 @@ describe('Test plugins manager trigger', () => {
       }),
       pluginsManager;
 
-    kuzzle.config = {pluginsManager: params.pluginsManager};
+    kuzzle.config = {plugins: params.plugins};
 
     pluginsManager = new PluginsManager(kuzzle);
 

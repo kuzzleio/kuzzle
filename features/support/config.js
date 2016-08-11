@@ -4,7 +4,7 @@
  */
 
 /** @type {Params} */
-var config = require('rc')('kuzzle');
+var config = require('../../lib/config');
 
 /**
  * @returns {{url: string, ws: string}}

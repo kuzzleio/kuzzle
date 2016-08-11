@@ -13,10 +13,14 @@ describe('Test: remoteActionsController/createFirstAdmin', () => {
   beforeEach(() => {
     kuzzle = {
       config: {
-        defaultUserRoles: {
-          admin: 'adminDefaultRole',
-          default: 'defaultDefaultRole',
-          anonymous: 'anonymousDefaultRole'
+        security: {
+          standard: {
+            roles: {
+              admin: 'adminDefaultRole',
+              default: 'defaultDefaultRole',
+              anonymous: 'anonymousDefaultRole'
+            }
+          }
         }
       },
       funnel: {

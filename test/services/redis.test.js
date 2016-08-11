@@ -18,8 +18,8 @@ describe('Test redis service', () => {
 
   before(() => {
     kuzzle = new Kuzzle();
-    kuzzle.config.cache.databases.push(dbname);
-    redis = new Redis(kuzzle, {service: dbname});
+    kuzzle.config.services.cache.databases.push(dbname);
+    redis = new Redis(kuzzle, {service: dbname}, kuzzle.config.services.cache);
     return Redis.__with__('buildClient', () => new RedisClientMock())(() => {
       return redis.init();
     });
@@ -34,7 +34,7 @@ describe('Test redis service', () => {
 
   it('should init a redis client', () => {
     var
-      myRedis = new Redis(kuzzle, {service: dbname});
+      myRedis = new Redis(kuzzle, {service: dbname}, kuzzle.config.services.cache);
 
     return Redis.__with__('buildClient', () => new RedisClientMock())(() => {
       return myRedis.init()
@@ -47,7 +47,7 @@ describe('Test redis service', () => {
 
   it('should flush publicCache for common services', () => {
     var
-      myRedis = new Redis(kuzzle, {service: dbname}),
+      myRedis = new Redis(kuzzle, {service: dbname}, kuzzle.config.services.cache),
       myRedisClient = new RedisClientMock(),
       spy = sandbox.spy(myRedisClient, 'flushdb');
 
@@ -63,7 +63,7 @@ describe('Test redis service', () => {
 
   it('should not flush publicCache for memoryStorage service', () => {
     var
-      myRedis = new Redis(kuzzle, {service: 'memoryStorage'}),
+      myRedis = new Redis(kuzzle, {service: 'memoryStorage'}, kuzzle.config.services.cache),
       myRedisClient = new RedisClientMock(),
       spy = sandbox.spy(myRedisClient, 'flushdb');
 
@@ -79,7 +79,7 @@ describe('Test redis service', () => {
 
   it('should reject if an error occurs during flushdb', () => {
     var
-      myRedis = new Redis(kuzzle, {service: dbname}),
+      myRedis = new Redis(kuzzle, {service: dbname}, kuzzle.config.services.cache),
       myRedisClient = new RedisClientMock();
 
     sandbox.stub(myRedisClient, 'flushdb', callback => callback(new Error('flushdb error')));
@@ -94,7 +94,7 @@ describe('Test redis service', () => {
   });
 
   it('should stop initialization if an unknown database identifier is provided', () => {
-    var testredis = new Redis(kuzzle, {service: 'foobar'});
+    var testredis = new Redis(kuzzle, {service: 'foobar'}, kuzzle.config.services.cache);
 
     return should(testredis.init()).be.rejected();
   });
@@ -102,15 +102,15 @@ describe('Test redis service', () => {
   it('should raise an error if unable to connect', function (done) {
     var
       testredis,
-      savePort = kuzzle.config.cache.node.port;
+      savePort = kuzzle.config.services.cache.node.port;
 
-    kuzzle.config.cache.node.port = 1337;
-    testredis = new Redis(kuzzle, {service: kuzzle.config.cache.databases[0]});
+    kuzzle.config.services.cache.node.port = 1337;
+    testredis = new Redis(kuzzle, {service: kuzzle.config.services.cache.databases[0]}, kuzzle.config.services.cache);
 
     testredis.init()
       .then(() => done('should have failed connecting to redis'))
       .catch(() => done())
-      .finally(() => {kuzzle.config.cache.node.port = savePort;});
+      .finally(() => {kuzzle.config.services.cache.node.port = savePort;});
   });
 
   it('should resolve 0 when add a key without value', () => {

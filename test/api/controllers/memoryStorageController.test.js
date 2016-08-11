@@ -83,8 +83,8 @@ describe('Test: memoryStorage controller', () => {
     });
 
     kuzzle = new Kuzzle();
-    kuzzle.config.cache.databases.push(dbname);
-    kuzzle.services.list.memoryStorage = new Redis(kuzzle, {service: dbname});
+    kuzzle.config.services.cache.databases.push(dbname);
+    kuzzle.services.list.memoryStorage = new Redis(kuzzle, {service: dbname}, kuzzle.config.services.cache);
     return Redis.__with__('buildClient', () => new RedisClientMock())(() => {
       return kuzzle.services.list.memoryStorage.init();
     });
