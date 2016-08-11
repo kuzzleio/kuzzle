@@ -252,7 +252,7 @@ describe('Test: repositories/roleRepository', () => {
       role._id = 'test';
       role.controllers = controllers;
 
-      sandbox.stub(kuzzle.repositories.role.storageEngine, 'createOrReplace', (type, id, content) => {
+      sandbox.stub(kuzzle.repositories.role.databaseEngine, 'createOrReplace', (type, id, content) => {
         forwardedObject = {type, id, content};
         return Promise.resolve({});
       });

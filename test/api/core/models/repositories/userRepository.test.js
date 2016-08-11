@@ -19,7 +19,7 @@ describe('Test: repositories/userRepository', () => {
     var
       encryptedPassword = '5c4ec74fd64bb57c05b4948f3a7e9c7d450f069a',
       mockCacheEngine,
-      mockStorageEngine,
+      mockDatabaseEngine,
       mockProfileRepository,
       userInCache,
       userInDB;
@@ -36,7 +36,7 @@ describe('Test: repositories/userRepository', () => {
       expire: () => {return Promise.resolve('OK'); }
     };
 
-    mockStorageEngine = {
+    mockDatabaseEngine = {
       get: (type, id) => {
         if (id === 'userInDB') {
           return Promise.resolve(userInDB);
@@ -91,7 +91,7 @@ describe('Test: repositories/userRepository', () => {
 
     userRepository = new UserRepository(kuzzle);
     userRepository.cacheEngine = mockCacheEngine;
-    userRepository.storageEngine = mockStorageEngine;
+    userRepository.databaseEngine = mockDatabaseEngine;
 
   });
 

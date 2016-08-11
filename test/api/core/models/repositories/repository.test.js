@@ -13,7 +13,7 @@ describe('Test: repositories/repository', () => {
     repository,
     ObjectConstructor,
     mockCacheEngine,
-    mockStorageEngine,
+    mockDatabaseEngine,
     cachedObject,
     uncachedObject;
 
@@ -59,7 +59,7 @@ describe('Test: repositories/repository', () => {
     persist: key => { forwardedObject = {op: 'persist', key: key}; return Promise.resolve('OK'); }
   };
 
-  mockStorageEngine = {
+  mockDatabaseEngine = {
     get: (type, id) => {
       if (id === 'persisted') {
         return Promise.resolve(persistedObject);
@@ -88,7 +88,7 @@ describe('Test: repositories/repository', () => {
         promises = [];
 
       ids.forEach(id => {
-        promises.push(mockStorageEngine.get(repository.collection, id));
+        promises.push(mockDatabaseEngine.get(repository.collection, id));
       });
 
       return Promise.all(promises)
@@ -136,7 +136,7 @@ describe('Test: repositories/repository', () => {
   beforeEach(() => {
     forwardedObject = null;
     repository.ObjectConstructor = ObjectConstructor;
-    repository.storageEngine = mockStorageEngine;
+    repository.databaseEngine = mockDatabaseEngine;
     repository.cacheEngine = mockCacheEngine;
   });
 
@@ -274,7 +274,7 @@ describe('Test: repositories/repository', () => {
         });
     });
 
-    it('should return a valid ObjectConstructor instance if found only in storageEngine', () => {
+    it('should return a valid ObjectConstructor instance if found only in databaseEngine', () => {
       return repository.load('uncached')
         .then(result => {
           should(result).be.an.instanceOf(ObjectConstructor);
@@ -284,7 +284,7 @@ describe('Test: repositories/repository', () => {
         });
     });
 
-    it('should get content only from storageEngine if cacheEngine is null', () => {
+    it('should get content only from databaseEngine if cacheEngine is null', () => {
       repository.cacheEngine = null;
 
       return repository.load('cached')
@@ -296,8 +296,8 @@ describe('Test: repositories/repository', () => {
         });
     });
 
-    it('should get content only from cacheEngine if storageEngine is null', () => {
-      repository.storageEngine = null;
+    it('should get content only from cacheEngine if databaseEngine is null', () => {
+      repository.databaseEngine = null;
 
       return repository.load('uncached')
         .then(result => should(result).be.null());
