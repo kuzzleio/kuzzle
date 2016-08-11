@@ -21,7 +21,7 @@ describe('Test: security controller - users', () => {
     return kuzzle.services.init({whitelist: []})
       .then(() => kuzzle.funnel.init())
       .then(() => {
-        sandbox.stub(kuzzle.services.list.readEngine, 'search').resolves({
+        sandbox.stub(kuzzle.services.list.storageEngine, 'search').resolves({
           hits: [{_id: 'admin', _source: { profilesIds: ['admin'] }}],
           total: 1
         });

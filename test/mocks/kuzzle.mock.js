@@ -65,11 +65,9 @@ function KuzzleMock () {
 
   this.services = {
     list: {
-      readEngine: {
+      storageEngine: {
         getMapping: sinon.stub().resolves(foo),
-        listIndexes: sinon.stub().resolves({indexes: ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i']})
-      },
-      writeEngine: {
+        listIndexes: sinon.stub().resolves({indexes: ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i']}),
         create: sinon.stub().resolves(foo),
         createCollection: sinon.stub().resolves(foo),
         createIndex: sinon.stub().resolves(foo),
@@ -79,7 +77,6 @@ function KuzzleMock () {
         deleteIndex: sinon.stub().resolves(foo),
         deleteIndexes: sinon.stub().resolves({deleted: ['a', 'e', 'i']}),
         getAutoRefresh: sinon.stub().resolves(false),
-        getMapping: sinon.stub().resolves(foo),
         import: sinon.stub().resolves(foo),
         refreshIndex: sinon.stub().resolves(foo),
         replace: sinon.stub().resolves(foo),

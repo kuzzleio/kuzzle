@@ -56,7 +56,7 @@ describe('Test: security/roleTest', () => {
       }
     },
     stubs = {
-      readEngine:{
+      storageEngine:{
         search: rq => {
           if (rq.data.body.filter.ids.values[0] !== 'foobar') {
             return Promise.resolve({hits: [documentAda]});
@@ -88,9 +88,9 @@ describe('Test: security/roleTest', () => {
     sandbox.stub(kuzzle.internalEngine, 'get').resolves({});
     return kuzzle.services.init({whitelist: []})
       .then(() => {
-        sandbox.stub(kuzzle.services.list.readEngine, 'get', stubs.readEngine.get);
-        sandbox.stub(kuzzle.services.list.readEngine, 'mget', stubs.readEngine.mget);
-        sandbox.stub(kuzzle.services.list.readEngine, 'search', stubs.readEngine.search);
+        sandbox.stub(kuzzle.services.list.storageEngine, 'get', stubs.storageEngine.get);
+        sandbox.stub(kuzzle.services.list.storageEngine, 'mget', stubs.storageEngine.mget);
+        sandbox.stub(kuzzle.services.list.storageEngine, 'search', stubs.storageEngine.search);
       });
   });
 

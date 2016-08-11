@@ -16,7 +16,7 @@ describe('Test the bulk controller', () => {
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
-    stub = kuzzle.services.list.writeEngine.import;
+    stub = kuzzle.services.list.storageEngine.import;
     controller = new BulkController(kuzzle);
   });
 
@@ -24,7 +24,7 @@ describe('Test the bulk controller', () => {
     return controller.import(requestObject)
       .then(response => {
         var
-          engine = kuzzle.services.list.writeEngine,
+          engine = kuzzle.services.list.storageEngine,
           trigger = kuzzle.pluginsManager.trigger;
 
         should(trigger).be.calledTwice();

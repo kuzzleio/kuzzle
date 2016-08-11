@@ -38,8 +38,8 @@ describe('Test: admin controller', () => {
           should(kuzzle.pluginsManager.trigger.firstCall).be.calledWith('data:beforeUpdateMapping', requestObject);
           should(kuzzle.pluginsManager.trigger.secondCall).be.calledWith('data:afterUpdateMapping');
 
-          should(kuzzle.services.list.writeEngine.updateMapping).be.calledOnce();
-          should(kuzzle.services.list.writeEngine.updateMapping).be.calledWith(requestObject);
+          should(kuzzle.services.list.storageEngine.updateMapping).be.calledOnce();
+          should(kuzzle.services.list.storageEngine.updateMapping).be.calledWith(requestObject);
 
           should(kuzzle.indexCache.add).be.calledOnce();
           should(kuzzle.indexCache.add).be.calledWith(requestObject.index, requestObject.collection);
@@ -64,8 +64,8 @@ describe('Test: admin controller', () => {
           should(kuzzle.pluginsManager.trigger.firstCall).be.calledWith('data:beforeGetMapping', requestObject);
           should(kuzzle.pluginsManager.trigger.secondCall).be.calledWith('data:afterGetMapping');
 
-          should(kuzzle.services.list.readEngine.getMapping).be.calledOnce();
-          should(kuzzle.services.list.readEngine.getMapping).be.calledWith(requestObject);
+          should(kuzzle.services.list.storageEngine.getMapping).be.calledOnce();
+          should(kuzzle.services.list.storageEngine.getMapping).be.calledWith(requestObject);
 
           should(response).be.instanceof(ResponseObject);
         });
@@ -150,7 +150,7 @@ describe('Test: admin controller', () => {
       return adminController.truncateCollection(requestObject)
         .then(response => {
           var
-            truncate = kuzzle.services.list.writeEngine.truncateCollection,
+            truncate = kuzzle.services.list.storageEngine.truncateCollection,
             trigger = kuzzle.pluginsManager.trigger;
 
           should(trigger).be.calledTwice();
@@ -203,7 +203,7 @@ describe('Test: admin controller', () => {
       return adminController.deleteIndexes(requestObject, {token: {userId: 42}})
         .then(response => {
           var
-            engine = kuzzle.services.list.writeEngine,
+            engine = kuzzle.services.list.storageEngine,
             trigger = kuzzle.pluginsManager.trigger;
 
           should(kuzzle.repositories.user.load).be.calledOnce();
@@ -259,7 +259,7 @@ describe('Test: admin controller', () => {
       return adminController.createIndex(requestObject)
         .then(response => {
           var
-            createIndex = kuzzle.services.list.writeEngine.createIndex,
+            createIndex = kuzzle.services.list.storageEngine.createIndex,
             trigger = kuzzle.pluginsManager.trigger;
 
           should(trigger).be.calledTwice();
@@ -285,7 +285,7 @@ describe('Test: admin controller', () => {
       return adminController.deleteIndex(requestObject)
         .then(response => {
           var
-            deleteIndex = kuzzle.services.list.writeEngine.deleteIndex,
+            deleteIndex = kuzzle.services.list.storageEngine.deleteIndex,
             trigger = kuzzle.pluginsManager.trigger;
 
           should(trigger).be.calledTwice();
@@ -382,7 +382,7 @@ describe('Test: admin controller', () => {
       return adminController.refreshIndex(requestObject)
         .then(response => {
           var
-            engine = kuzzle.services.list.writeEngine,
+            engine = kuzzle.services.list.storageEngine,
             trigger = kuzzle.pluginsManager.trigger;
 
           should(trigger).be.calledTwice();
@@ -410,7 +410,7 @@ describe('Test: admin controller', () => {
       return adminController.getAutoRefresh(requestObject)
         .then(response => {
           var
-            engine = kuzzle.services.list.writeEngine,
+            engine = kuzzle.services.list.storageEngine,
             trigger = kuzzle.pluginsManager.trigger;
 
           should(trigger).be.calledTwice();
@@ -442,7 +442,7 @@ describe('Test: admin controller', () => {
       return adminController.setAutoRefresh(requestObject)
         .then(response => {
           var
-            engine = kuzzle.services.list.writeEngine,
+            engine = kuzzle.services.list.storageEngine,
             trigger = kuzzle.pluginsManager.trigger;
 
           should(trigger).be.calledTwice();

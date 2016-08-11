@@ -263,7 +263,7 @@
     //     value for this setting is "2.3" for the moment
     "db": {
       "backend": "elasticsearch",
-      "aliases": ["readEngine", "writeEngine"],
+      "aliases": ["storageEngine"],
       "host": "elasticsearch",
       "port": 9200,
       "apiVersion": "2.3"
