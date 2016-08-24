@@ -10,7 +10,7 @@ var
   InternalError = require.main.require('kuzzle-common-objects').Errors.internalError,
   ParseError = require.main.require('kuzzle-common-objects').Errors.parseError,
   Role = rewire('../../../../../lib/api/core/models/security/role'),
-  internalIndex = require('rc')('kuzzle').internalIndex;
+  internalIndex;
 
 describe('Test: security/roleTest', () => {
   var
@@ -81,6 +81,7 @@ describe('Test: security/roleTest', () => {
     };
   before(() => {
     kuzzle = new Kuzzle();
+    internalIndex = kuzzle.internalEngine.index;
   });
 
   beforeEach(() => {

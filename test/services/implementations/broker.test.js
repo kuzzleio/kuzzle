@@ -22,10 +22,12 @@ describe('Test: Internal broker', () => {
   before(() => {
     kuzzle = {
       config: {
-        internalBroker: {
-          host: 'host',
-          port: 'port',
-          retryInterval: 1000
+        services: {
+          internalBroker: {
+            host: 'host',
+            port: 'port',
+            retryInterval: 1000
+          }
         }
       },
       pluginsManager: {
@@ -66,14 +68,14 @@ describe('Test: Internal broker', () => {
     beforeEach(() => {
       var InternalBroker = new BrokerFactory('internalBroker');
       /** @type InternalBroker */
-      server = new InternalBroker(kuzzle);
+      server = new InternalBroker(kuzzle, undefined, kuzzle.config.services.internalBroker);
       server.ws = (options, cb) => {
         cb();
         return new WSServerMock();
       };
 
       /** @type InternalBroker */
-      client = new InternalBroker(kuzzle, {client: true});
+      client = new InternalBroker(kuzzle, {client: true}, kuzzle.config.services.internalBroker);
       client.ws = () => new WSClientMock(server.server);
 
       return Promise.all([
@@ -98,13 +100,13 @@ describe('Test: Internal broker', () => {
       client;
 
     beforeEach(() => {
-      server = new WSBrokerServer('internalBroker', kuzzle.config.internalBroker, kuzzle.pluginsManager);
+      server = new WSBrokerServer('internalBroker', kuzzle.config.services.internalBroker, kuzzle.pluginsManager);
       server.ws = (options, cb) => {
         cb();
         return new WSServerMock();
       };
 
-      client = new WSBrokerClient('internalBroker', kuzzle.config.internalBroker, kuzzle.pluginsManager);
+      client = new WSBrokerClient('internalBroker', kuzzle.config.services.internalBroker, kuzzle.pluginsManager);
       client.ws = () => new WSClientMock(server.server);
     });
 
@@ -170,7 +172,7 @@ describe('Test: Internal broker', () => {
         server.init()
           .then(() => {
             state = client.client.state; // should be "retrying", as the client should have already tried to reach the server without success
-            clock.tick(kuzzle.config.internalBroker.retryInterval); // should trigger a new client.init() call
+            clock.tick(kuzzle.config.services.internalBroker.retryInterval); // should trigger a new client.init() call
           });
       });
     });
@@ -279,7 +281,7 @@ describe('Test: Internal broker', () => {
 
       it('on open, should re-register if some callbacks were attached', () => {
         var
-          newClient = new WSBrokerClient('internalBroker', kuzzle.config.internalBroker, kuzzle.pluginsManager),
+          newClient = new WSBrokerClient('internalBroker', kuzzle.config.services.internalBroker, kuzzle.pluginsManager),
           cb = sinon.stub();
 
         newClient.ws = () => new WSClientMock(server.server);

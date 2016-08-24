@@ -1,7 +1,7 @@
 var
   should = require('should'),
   /** @type {Params} */
-  params = require('rc')('kuzzle'),
+  params = require('../../../../lib/config'),
   rewire = require('rewire'),
   sinon = require('sinon'),
   PluginsManager = rewire('../../../../lib/api/core/plugins/pluginsManager'),
@@ -137,7 +137,7 @@ describe('Test plugins manager run', () => {
       maxListeners: 30,
       delimiter: ':'
     });
-    kuzzle.config = { pluginsManager: params.pluginsManager };
+    kuzzle.config = { plugins: params.plugins };
 
     pluginsManager = new PluginsManager(kuzzle);
     pm2Mock.resetMock();

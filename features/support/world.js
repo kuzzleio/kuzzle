@@ -1,10 +1,7 @@
-var
-  rc = require('rc');
-
 module.exports = function () {
   this.World = function World () {
     this.api = null;
-    this.kuzzleConfig = rc('kuzzle');
+    this.kuzzleConfig = require('../../lib/config');
     this.idPrefix = 'kuzzle-functional-tests-';
 
     this.currentUser = null;
