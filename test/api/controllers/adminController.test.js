@@ -590,7 +590,20 @@ describe('Test: admin controller', () => {
     it('should call createOrReplace roles with all default roles', () => {
       var
         createOrReplace = sandbox.stub().resolves(),
-        mock = {internalEngine: {createOrReplace}, config: {defaultUserRoles: {admin: 'admin', default: 'default', anonymous: 'anonymous'}}};
+        mock = {
+          internalEngine: {
+            createOrReplace
+          },
+          config: {
+            security: {
+              standard: {
+                roles: {
+                  admin: 'admin', default: 'default', anonymous: 'anonymous'
+                }
+              }
+            }
+          }
+        };
 
       return AdminController.__get__('resetRoles').call(mock)
         .then(() => {

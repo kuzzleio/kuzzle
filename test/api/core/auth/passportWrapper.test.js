@@ -4,6 +4,7 @@ var
   util = require('util'),
   Kuzzle = require.main.require('lib/api/kuzzle'),
   ForbiddenError = require.main.require('kuzzle-common-objects').Errors.forbiddenError,
+  PassportResponse = require.main.require('lib/api/core/auth/passportResponse'),
   PassportWrapper = require.main.require('lib/api/core/auth/passportWrapper'),
   MockupStrategy;
 
@@ -16,7 +17,6 @@ MockupStrategy = function(name, verify) {
   passport.Strategy.call(this);
   this.name = name;
   this._verify = verify;
-
 };
 util.inherits(MockupStrategy, passport.Strategy);
 
@@ -32,6 +32,7 @@ MockupStrategy.prototype.authenticate = function(req) {
     if (err) { return self.error(err); }
     if (!user) { return self.fail(info); }
     self.success(user, info);
+    self.redirect(user);
   }
 
   try {
@@ -72,13 +73,11 @@ describe('Test the passport Wrapper', () => {
     return should(passportWrapper.authenticate({body: {username: 'jdoe'}}, 'nostrategy')).be.rejectedWith('Unknown authentication strategy "nostrategy"');
   });
 
-  it('should resolve to the user if good credentials', done => {
-    passportWrapper.authenticate({body: {username: 'jdoe'}}, 'mockup')
+  it('should resolve to the user if good credentials', () => {
+    return passportWrapper.authenticate({body: {username: 'jdoe'}}, 'mockup')
       .then(userObject => {
         should(userObject._id).be.equal('jdoe');
-        done();
-      })
-      .catch(err =>done(err));
+      });
   });
 
   it('should reject if user is null', () => {
@@ -87,6 +86,18 @@ describe('Test the passport Wrapper', () => {
 
   it('should reject in case of authenticate error', () => {
     return should(passportWrapper.authenticate({body: {username: 'jdoe'}}, 'error')).be.rejectedWith('Bad Credentials');
+  });
+
+  it('should return a PassportResponse if the strategy calls a HTTP redirection', () => {
+    MockupStrategy.prototype.authenticate = function() {
+      this.redirect('http://example.org');
+    };
+    return passportWrapper.authenticate({body: {username: 'jdoe'}}, 'mockup')
+      .then(response => {
+        should(response).be.an.instanceOf(PassportResponse);
+        should(response.statusCode).be.equal(302);
+        should(response.getHeader('Location')).be.equal('http://example.org');
+      });
   });
 
   it('should reject a promise because an exception has been thrown', () => {
