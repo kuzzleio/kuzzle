@@ -147,7 +147,7 @@ describe('Test: repositories/userRepository', () => {
         .then((result) => {
           should(result.profilesIds).be.an.instanceOf(Array);
           should(result.profilesIds[0]).be.exactly('admin');
-        })
+        });
     });
 
     it('should reject the promise if the profile cannot be found', () => {
