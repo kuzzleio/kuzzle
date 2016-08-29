@@ -225,7 +225,8 @@ describe('Test: Prepare database', () => {
             bar: 'bar'
           },
           fixtures: {
-            baz: 'baz'
+            baz: 'baz',
+            foo: 're-foo'
           }
         }
       })(() => {

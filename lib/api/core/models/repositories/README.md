@@ -68,10 +68,10 @@ If no matching document could be found, an empty array is returned.
 ## search
 
 ```javascript
-Repository.prototype.search = function (filter, from, size, hydrate) {...}
+Repository.prototype.search = function (filter, from, size) {...}
 ```
 
-This method tries to load document from databaseEngine or the business objects (according to hydrate parameter) from the database matching the given ids.
+This method tries to load documents matching the given ids from the databaseEngine.
 
 ### parameters
 
@@ -87,13 +87,9 @@ Starting offset (default: 0).
 
 Number of hits to return (default: 20).
 
-* *Boolean* hydrate
-
-If hydrate is true, the function resolve a ResponseObject with a list of business objects. If hydrate is false, resolve a ResponseObject with documents directly from databaseEngine. (default: false).
-
 ### returns
 
-Returns a promise that resolves a ResponseObject that contains either a list of business objects or a list of document from databaseEngine according to the parameter hydrate.
+Returns a promise that resolves a ResponseObject that contains a list of documents from databaseEngine.
 
 
 ## loadFromCache
