@@ -56,7 +56,7 @@ describe('Test: repositories/tokenRepository', () => {
       load: username => {
         var user = new User();
         user._id = username;
-        user.profilesIds = ['anonymous'];
+        user.profileIds = ['anonymous'];
 
         return Promise.resolve(user);
       },
@@ -76,7 +76,7 @@ describe('Test: repositories/tokenRepository', () => {
         };
 
         user._id = -1;
-        user.profilesIds = ['anonymous'];
+        user.profileIds = ['anonymous'];
         profile.policies = [{roleId: role._id}];
 
         return Promise.resolve(user);
@@ -97,7 +97,7 @@ describe('Test: repositories/tokenRepository', () => {
         };
 
         user._id = 'admin';
-        user.profilesIds = ['admin'];
+        user.profileIds = ['admin'];
         profile.policies = [{roleId: role._id}];
 
         return Promise.resolve(user);
