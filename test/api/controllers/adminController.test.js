@@ -486,7 +486,7 @@ describe('Test: admin controller', () => {
 
       return adminController.adminExists()
         .then(() => {
-          should(kuzzle.internalEngine.search).be.calledWithMatch('users', {query: {terms: {profilesIds: ['admin']}}});
+          should(kuzzle.internalEngine.search).be.calledWithMatch('users', {query: {terms: {profileIds: ['admin']}}});
         });
     });
 
@@ -558,7 +558,7 @@ describe('Test: admin controller', () => {
       return adminController.createFirstAdmin(request)
         .then(() => {
           should(createOrReplaceUser).be.calledOnce();
-          should(createOrReplaceUser).be.calledWithMatch({data: {_id: 'toto', body: {password: 'pwd', profilesIds: ['admin']}}});
+          should(createOrReplaceUser).be.calledWithMatch({data: {_id: 'toto', body: {password: 'pwd', profileIds: ['admin']}}});
           should(resetRolesStub).have.callCount(0);
           should(resetProfilesStub).have.callCount(0);
         });
@@ -579,7 +579,7 @@ describe('Test: admin controller', () => {
       return adminController.createFirstAdmin(request)
         .then(() => {
           should(createOrReplaceUser).be.calledOnce();
-          should(createOrReplaceUser).be.calledWithMatch({data: {_id: 'toto', body: {password: 'pwd', profilesIds: ['admin']}}});
+          should(createOrReplaceUser).be.calledWithMatch({data: {_id: 'toto', body: {password: 'pwd', profileIds: ['admin']}}});
           should(resetRolesStub).have.callCount(1);
           should(resetProfilesStub).have.callCount(1);
         });

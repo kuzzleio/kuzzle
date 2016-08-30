@@ -27,7 +27,7 @@ describe('Test: security/userTest', () => {
     profile2.isActionAllowed = sinon.stub().resolves(false);
 
     user = new User();
-    user.profilesIds = ['profile', 'profile2'];
+    user.profileIds = ['profile', 'profile2'];
 
     kuzzle.repositories = {
       profile: {
@@ -130,7 +130,7 @@ describe('Test: security/userTest', () => {
   });
 
   it('should respond false if the user have no profileIds', () => {
-    user.profilesIds = [];
+    user.profileIds = [];
     return user.isActionAllowed({}, {}, kuzzle)
       .then(isActionAllowed => {
         should(isActionAllowed).be.a.Boolean();

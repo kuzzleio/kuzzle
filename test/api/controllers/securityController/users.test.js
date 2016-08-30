@@ -22,7 +22,7 @@ describe('Test: security controller - users', () => {
       .then(() => kuzzle.funnel.init())
       .then(() => {
         sandbox.stub(kuzzle.services.list.storageEngine, 'search').resolves({
-          hits: [{_id: 'admin', _source: { profilesIds: ['admin'] }}],
+          hits: [{_id: 'admin', _source: { profileIds: ['admin'] }}],
           total: 1
         });
 
@@ -64,7 +64,7 @@ describe('Test: security controller - users', () => {
   describe('#searchUsers', () => {
     it('should return a valid responseObject', () => {
       sandbox.stub(kuzzle.repositories.user, 'search').resolves({
-        hits: [{_id: 'admin', _source: {profilesIds: ['admin']}}],
+        hits: [{_id: 'admin', _source: {profileIds: ['admin']}}],
         total: 2
       });
 
@@ -120,7 +120,7 @@ describe('Test: security controller - users', () => {
       sandbox.stub(kuzzle.repositories.user, 'hydrate').resolves();
 
       return kuzzle.funnel.controllers.security.createUser(new RequestObject({
-        body: { _id: 'test', name: 'John Doe', profilesIds: ['anonymous'] }
+        body: { _id: 'test', name: 'John Doe', profileIds: ['anonymous'] }
       }))
         .then(response => {
           mock.verify();
@@ -135,7 +135,7 @@ describe('Test: security controller - users', () => {
         mockHydrate = sandbox.mock(kuzzle.repositories.user).expects('hydrate').once().resolves();
 
       return kuzzle.funnel.controllers.security.createUser(new RequestObject({
-        body: { name: 'John Doe', profilesIds: ['anonymous'] }
+        body: { name: 'John Doe', profileIds: ['anonymous'] }
       }))
         .then(response => {
           mockHydrate.verify();
@@ -187,7 +187,7 @@ describe('Test: security controller - users', () => {
 
       return kuzzle.funnel.controllers.security.updateUser(new RequestObject({
         _id: 'test',
-        body: {profilesIds: ['anonymous'], foo: 'bar'}
+        body: {profileIds: ['anonymous'], foo: 'bar'}
       }))
         .then(response => {
           should(response).be.an.instanceOf(ResponseObject);
@@ -206,7 +206,7 @@ describe('Test: security controller - users', () => {
       return kuzzle.funnel.controllers.security.createOrReplaceUser(new RequestObject({
         body: {
           _id: 'test',
-          profilesIds: ['admin']
+          profileIds: ['admin']
         }
       }))
         .then(response => {

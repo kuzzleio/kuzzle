@@ -165,11 +165,11 @@ module.exports = function () {
           last: 'Bowie',
           real: 'David Robert Jones'
         },
-        profilesIds: ['admin'],
+        profileIds: ['admin'],
         password: 'testpwd'
       },
       user1: {
-        profilesIds: [this.idPrefix + 'profile1'],
+        profileIds: [this.idPrefix + 'profile1'],
         password: 'testpwd1'
       },
       user2: {
@@ -178,32 +178,32 @@ module.exports = function () {
           last: 'Wozniak'
         },
         hobby: 'Segway Polo',
-        profilesIds: [this.idPrefix + 'profile2'],
+        profileIds: [this.idPrefix + 'profile2'],
         password: 'testpwd2'
       },
       user3: {
-        profilesIds: [this.idPrefix + 'profile3'],
+        profileIds: [this.idPrefix + 'profile3'],
         password: 'testpwd3'
       },
       user4: {
-        profilesIds: [this.idPrefix + 'profile4'],
+        profileIds: [this.idPrefix + 'profile4'],
         password: 'testpwd4'
       },
       user5: {
-        profilesIds: [this.idPrefix + 'profile5'],
+        profileIds: [this.idPrefix + 'profile5'],
         password: 'testpwd5'
       },
       user6: {
-        profilesIds: [this.idPrefix + 'profile6'],
+        profileIds: [this.idPrefix + 'profile6'],
         password: 'testpwd6'
       },
       unexistingprofile: {
         name: 'John Doe',
-        profilesIds: [this.idPrefix + 'i-dont-exist']
+        profileIds: [this.idPrefix + 'i-dont-exist']
       },
       invalidprofileType: {
         name: 'John Doe',
-        profilesIds: [null]
+        profileIds: [null]
       }
     };
 
