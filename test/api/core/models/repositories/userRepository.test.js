@@ -133,6 +133,17 @@ describe('Test: repositories/userRepository', () => {
         .then(result => assertIsAnonymous(result));
     });
 
+    it('should convert a profilesIds string into array', () => {
+      var user = new User();
+      user._id = 'admin';
+
+      return userRepository.hydrate(user, {profilesIds: 'admin'})
+        .then((result) => {
+          should(result.profilesIds).be.an.instanceOf(Array);
+          should(result.profilesIds[0]).be.exactly('admin');
+        });
+    });
+
     it('should reject the promise if the profile cannot be found', () => {
       var user = new User();
 
