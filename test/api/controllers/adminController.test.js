@@ -495,7 +495,7 @@ describe('Test: admin controller', () => {
 
       return adminController.adminExists()
         .then((response) => {
-          should(response).match({data: {body: false}});
+          should(response).match({data: {body: {exists: false}}});
         });
     });
 
@@ -504,7 +504,7 @@ describe('Test: admin controller', () => {
 
       return adminController.adminExists()
         .then((response) => {
-          should(response).match({data: {body: true}});
+          should(response).match({data: {body: {exists: true}}});
         });
     });
   });
@@ -540,7 +540,7 @@ describe('Test: admin controller', () => {
         }
       });
 
-      adminController.adminExists = sandbox.stub().resolves({data: {body: true}});
+      adminController.adminExists = sandbox.stub().resolves({data: {body: {exists: true}}});
 
       return should(adminController.createFirstAdmin(request)).be.rejected();
     });
@@ -553,7 +553,7 @@ describe('Test: admin controller', () => {
         }
       });
 
-      adminController.adminExists = sandbox.stub().resolves({data: {body: false}});
+      adminController.adminExists = sandbox.stub().resolves({data: {body: {exists: false}}});
 
       return adminController.createFirstAdmin(request)
         .then(() => {
@@ -573,7 +573,7 @@ describe('Test: admin controller', () => {
         }
       });
 
-      adminController.adminExists = sandbox.stub().resolves({data: {body: false}});
+      adminController.adminExists = sandbox.stub().resolves({data: {body: {exists: false}}});
       sandbox.stub(adminController, 'refreshIndex').resolves({});
 
       return adminController.createFirstAdmin(request)

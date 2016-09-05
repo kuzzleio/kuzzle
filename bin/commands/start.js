@@ -88,7 +88,7 @@ module.exports = function (options) {
  ████████████████████████████████████`);
       return kuzzle.remoteActionsController.actions.adminExists()
         .then((res) => {
-          if (res) {
+          if (res.data.body.exists) {
             console.log(ok('[✔] It seems that you already have an admin account.'));
           }
           else {
