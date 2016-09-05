@@ -159,7 +159,7 @@ module.exports = {
       retryInterval: 1000
     },
     db: {
-      aliases: ['readEngine', 'writeEngine'],
+      aliases: ['storageEngine'],
       backend: 'elasticsearch',
       host: 'elasticsearch',
       port: 9200,

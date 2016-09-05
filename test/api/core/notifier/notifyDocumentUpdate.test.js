@@ -91,7 +91,7 @@ describe('Test: notifier.notifyDocumentUpdate', () => {
     requestObject.data._id = 'addme';
 
     sandbox.stub(kuzzle.dsl, 'test').resolves(['foobar']);
-    sandbox.stub(kuzzle.services.list.readEngine, 'get').resolves({_id: 'addme', _source: requestObject.data.body});
+    sandbox.stub(kuzzle.services.list.storageEngine, 'get').resolves({_id: 'addme', _source: requestObject.data.body});
 
     return kuzzle.notifier.notifyDocumentUpdate(requestObject)
       .then(() => {
@@ -113,7 +113,7 @@ describe('Test: notifier.notifyDocumentUpdate', () => {
     requestObject.data._id = 'removeme';
 
     sandbox.stub(kuzzle.dsl, 'test').resolves([]);
-    sandbox.stub(kuzzle.services.list.readEngine, 'get').resolves({_id: 'removeme', _source: requestObject.data.body});
+    sandbox.stub(kuzzle.services.list.storageEngine, 'get').resolves({_id: 'removeme', _source: requestObject.data.body});
 
     return kuzzle.notifier.notifyDocumentUpdate(requestObject)
       .then(() => {

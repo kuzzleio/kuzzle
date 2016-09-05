@@ -17,7 +17,7 @@ describe('Test: ElasticSearch service', () => {
     collection = 'unit-tests-elasticsearch',
     createdDocumentId = 'id-test',
     elasticsearch,
-    engineType = 'readEngine',
+    engineType = 'storageEngine',
     requestObject,
     documentAda = {
       firstName: 'Ada',

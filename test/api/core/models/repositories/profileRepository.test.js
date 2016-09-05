@@ -69,7 +69,7 @@ describe('Test: repositories/profileRepository', () => {
 
   describe('#loadProfile', () => {
     it('should return null if the profile does not exist', () => {
-      sandbox.stub(kuzzle.services.list.readEngine, 'get').rejects(new NotFoundError('Not found'));
+      sandbox.stub(kuzzle.services.list.storageEngine, 'get').rejects(new NotFoundError('Not found'));
       return kuzzle.repositories.profile.loadProfile('idontexist')
         .then(result => {
           should(result).be.null();
