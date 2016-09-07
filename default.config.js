@@ -111,7 +111,8 @@ module.exports = {
 
   server: {
     http: {
-      port: 7511
+      port: 7511,
+      maxRequestSize: '1MB'
     },
     maxConcurrentRequests: 50,
     maxRetainedRequests: 50000,

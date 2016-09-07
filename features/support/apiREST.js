@@ -30,10 +30,7 @@ function initRoutes() {
       pluginsManager: {
         routes: []
       },
-      config: {
-        apiVersion: '1.0',
-        httpRoutes: require('../../lib/config/httpRoutes')
-      }
+      config: require('../../default.config')
     });
 
   Router.prototype.use = Router.prototype.get = Router.prototype.post = Router.prototype.delete = Router.prototype.put = function () {};
