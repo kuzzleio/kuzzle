@@ -1,19 +1,50 @@
 var
+  rewire = require('rewire'),
   should = require('should'),
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
-  Kuzzle = require.main.require('lib/api/kuzzle'),
+  InternalEngine = rewire('../../lib/services/internalEngine'),
+  KuzzleMock = require('../mocks/kuzzle.mock'),
   NotFoundError = require.main.require('kuzzle-common-objects').Errors.notFoundError;
 
 describe('InternalEngine', () => {
   var
-    kuzzle;
+    kuzzle,
+    reset;
 
-  before(() => {
-    kuzzle = new Kuzzle();
+  beforeEach(() => {
+    reset = InternalEngine.__set__({
+      Elasticsearch: {
+        Client: function () {
+          this.indices = {
+            create: () => {},
+            exists: () => {}
+          };
+
+          this.create = () => {};
+          this.delete = () => {};
+          this.exists = () => {};
+          this.get = () => {};
+          this.index = () => {};
+          this.mget = () => {};
+          this.search = () => {};
+          this.update = () => {};
+
+        }
+      }
+    });
+    kuzzle = new KuzzleMock();
+    kuzzle.internalEngine = new InternalEngine(kuzzle);
+
+    return kuzzle.internalEngine.init();
+  });
+
+  beforeEach(() => {
+    kuzzle.internalEngine.init();
   });
 
   afterEach(() => {
+    reset();
     sandbox.restore();
   });
 
@@ -40,9 +71,9 @@ describe('InternalEngine', () => {
           mock.verify();
           should(mock.args[0].length).be.eql(1);
           should(mock.args[0][0]).match({
-            index: kuzzle.config.internalIndex,
+            index: '%kuzzle',
             type: collection,
-            body: filters
+            body: {filter: filters}
           });
 
           should(result).be.an.Object().and.not.be.empty();
@@ -66,7 +97,7 @@ describe('InternalEngine', () => {
           mock.verify();
           should(mock.args[0].length).be.eql(1);
           should(mock.args[0][0]).match({
-            index: kuzzle.config.internalIndex,
+            index: '%kuzzle',
             type: collection,
             body: {}
           });
@@ -100,7 +131,7 @@ describe('InternalEngine', () => {
           mock.verify();
           should(mock.args[0].length).be.eql(1);
           should(mock.args[0][0]).match({
-            index: kuzzle.config.internalIndex,
+            index: '%kuzzle',
             type: collection,
             id
           });
@@ -132,7 +163,7 @@ describe('InternalEngine', () => {
           mock.verify();
           should(mock.args[0].length).be.eql(1);
           should(mock.args[0][0]).match({
-            index: kuzzle.config.internalIndex,
+            index: '%kuzzle',
             type: collection,
             body: {
               ids
@@ -169,7 +200,7 @@ describe('InternalEngine', () => {
           mock.verify();
           should(mock.args[0].length).be.eql(1);
           should(mock.args[0][0]).match({
-            index: kuzzle.config.internalIndex,
+            index: '%kuzzle',
             type: collection,
             id,
             body: content
@@ -204,7 +235,7 @@ describe('InternalEngine', () => {
           mock.verify();
           should(mock.args[0].length).be.eql(1);
           should(mock.args[0][0]).match({
-            index: kuzzle.config.internalIndex,
+            index: '%kuzzle',
             type: collection,
             id,
             body: content
@@ -239,7 +270,7 @@ describe('InternalEngine', () => {
           mock.verify();
           should(mock.args[0].length).be.eql(1);
           should(mock.args[0][0]).match({
-            index: kuzzle.config.internalIndex,
+            index: '%kuzzle',
             type: collection,
             id,
             body: {
@@ -277,7 +308,7 @@ describe('InternalEngine', () => {
           mock.verify();
           should(mock.args[0].length).be.eql(1);
           should(mock.args[0][0]).match({
-            index: kuzzle.config.internalIndex,
+            index: '%kuzzle',
             type: collection,
             id,
             body: content
@@ -318,7 +349,7 @@ describe('InternalEngine', () => {
           mock.verify();
           should(mock.args[0].length).be.eql(1);
           should(mock.args[0][0]).match({
-            index: kuzzle.config.internalIndex,
+            index: '%kuzzle',
             type: collection,
             id
           });

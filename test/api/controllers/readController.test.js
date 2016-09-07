@@ -43,19 +43,19 @@ describe('Test: read controller', () => {
 
   describe('#search', () => {
     it('should fulfill with a response object', () => {
-      sandbox.stub(kuzzle.services.list.readEngine, 'search').resolves({});
+      sandbox.stub(kuzzle.services.list.storageEngine, 'search').resolves({});
       return kuzzle.funnel.controllers.read.search(requestObject)
         .then(response => should(response).be.instanceOf(ResponseObject));
     });
 
     it('should reject with a response object in case of error', () => {
-      sandbox.stub(kuzzle.services.list.readEngine, 'search').rejects(new Error('foobar'));
+      sandbox.stub(kuzzle.services.list.storageEngine, 'search').rejects(new Error('foobar'));
       return should(kuzzle.funnel.controllers.read.search(requestObject)).be.rejected();
     });
 
     it('should trigger a plugin event', function (done) {
       this.timeout(50);
-      sandbox.stub(kuzzle.services.list.readEngine, 'search').resolves({});
+      sandbox.stub(kuzzle.services.list.storageEngine, 'search').resolves({});
       kuzzle.once('data:beforeSearch', () => done());
       kuzzle.funnel.controllers.read.search(requestObject);
     });
@@ -63,19 +63,19 @@ describe('Test: read controller', () => {
 
   describe('#get', () => {
     it('should fulfill with a response object', () => {
-      sandbox.stub(kuzzle.services.list.readEngine, 'get').resolves({});
+      sandbox.stub(kuzzle.services.list.storageEngine, 'get').resolves({});
       return kuzzle.funnel.controllers.read.get(requestObject)
         .then(response => should(response).be.instanceOf(ResponseObject));
     });
 
     it('should reject with a response object in case of error', () => {
-      sandbox.stub(kuzzle.services.list.readEngine, 'get').rejects(new Error('foobar'));
+      sandbox.stub(kuzzle.services.list.storageEngine, 'get').rejects(new Error('foobar'));
       return should(kuzzle.funnel.controllers.read.get(requestObject)).be.rejected();
     });
 
     it('should trigger a plugin event', function (done) {
       this.timeout(50);
-      sandbox.stub(kuzzle.services.list.readEngine, 'get').resolves({});
+      sandbox.stub(kuzzle.services.list.storageEngine, 'get').resolves({});
       kuzzle.once('data:beforeGet', () => done());
       kuzzle.funnel.controllers.read.get(requestObject);
     });
@@ -83,19 +83,19 @@ describe('Test: read controller', () => {
 
   describe('#count', () => {
     it('should fulfill with a response object', () => {
-      sandbox.stub(kuzzle.services.list.readEngine, 'count').resolves({});
+      sandbox.stub(kuzzle.services.list.storageEngine, 'count').resolves({});
       return kuzzle.funnel.controllers.read.count(requestObject)
         .then(response => should(response).be.instanceOf(ResponseObject));
     });
 
     it('should reject with a response object in case of error', () => {
-      sandbox.stub(kuzzle.services.list.readEngine, 'count').rejects(new Error('foobar'));
+      sandbox.stub(kuzzle.services.list.storageEngine, 'count').rejects(new Error('foobar'));
       return should(kuzzle.funnel.controllers.read.count(requestObject)).be.rejected();
     });
 
     it('should emit a data:count hook when counting', function (done) {
       this.timeout(50);
-      sandbox.stub(kuzzle.services.list.readEngine, 'count').resolves({});
+      sandbox.stub(kuzzle.services.list.storageEngine, 'count').resolves({});
       kuzzle.once('data:beforeCount', () => done());
       kuzzle.funnel.controllers.read.count(requestObject);
     });
@@ -111,7 +111,7 @@ describe('Test: read controller', () => {
       };
 
     beforeEach(() => {
-      stored = sandbox.stub(kuzzle.services.list.readEngine, 'listCollections').resolves({collections: {stored: ['foo']}});
+      stored = sandbox.stub(kuzzle.services.list.storageEngine, 'listCollections').resolves({collections: {stored: ['foo']}});
       realtime = sandbox.stub(kuzzle.hotelClerk, 'getRealtimeCollections', () => {
         return [{name: 'foo', index: 'index'}, {name: 'bar', index: 'index'}, {name: 'baz', index: 'wrong'}];
       });
@@ -167,15 +167,15 @@ describe('Test: read controller', () => {
     });
 
     it('should reject with a response object if getting stored collections fails', () => {
-      kuzzle.services.list.readEngine.listCollections.restore();
-      sandbox.stub(kuzzle.services.list.readEngine, 'listCollections').rejects(new Error('foobar'));
+      kuzzle.services.list.storageEngine.listCollections.restore();
+      sandbox.stub(kuzzle.services.list.storageEngine, 'listCollections').rejects(new Error('foobar'));
       requestObject = new RequestObject({body: {type: 'stored'}}, {}, '');
       return should(kuzzle.funnel.controllers.read.listCollections(requestObject, context)).be.rejected();
     });
 
     it('should reject with a response object if getting all collections fails', () => {
-      kuzzle.services.list.readEngine.listCollections.restore();
-      sandbox.stub(kuzzle.services.list.readEngine, 'listCollections').rejects(new Error('foobar'));
+      kuzzle.services.list.storageEngine.listCollections.restore();
+      sandbox.stub(kuzzle.services.list.storageEngine, 'listCollections').rejects(new Error('foobar'));
       requestObject = new RequestObject({body: {type: 'all'}}, {}, '');
       return should(kuzzle.funnel.controllers.read.listCollections(requestObject, context)).be.rejected();
     });
@@ -200,19 +200,19 @@ describe('Test: read controller', () => {
 
   describe('#listIndexes', () => {
     it('should fulfill with a response object', () => {
-      sandbox.stub(kuzzle.services.list.readEngine, 'listIndexes').resolves({});
+      sandbox.stub(kuzzle.services.list.storageEngine, 'listIndexes').resolves({});
       return kuzzle.funnel.controllers.read.listIndexes(requestObject)
         .then(response => should(response).be.instanceOf(ResponseObject));
     });
 
     it('should reject with a response object in case of error', () => {
-      sandbox.stub(kuzzle.services.list.readEngine, 'listIndexes').rejects(new Error('foobar'));
+      sandbox.stub(kuzzle.services.list.storageEngine, 'listIndexes').rejects(new Error('foobar'));
       return should(kuzzle.funnel.controllers.read.listIndexes(requestObject)).be.rejected();
     });
 
     it('should emit a data:listIndexes hook when reading indexes', function (done) {
       this.timeout(50);
-      sandbox.stub(kuzzle.services.list.readEngine, 'listIndexes').resolves({});
+      sandbox.stub(kuzzle.services.list.storageEngine, 'listIndexes').resolves({});
       kuzzle.once('data:beforeListIndexes', () => done());
       kuzzle.funnel.controllers.read.listIndexes(requestObject);
     });

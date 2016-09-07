@@ -15,6 +15,13 @@ describe('Test: Prepare database', () => {
 
   beforeEach(() => {
     kuzzle = {
+      config: {
+        security: {
+          default: {
+            role: 'defaultRole'
+          }
+        }
+      },
       funnel: {
         controllers: {
           admin: {
@@ -218,7 +225,8 @@ describe('Test: Prepare database', () => {
             bar: 'bar'
           },
           fixtures: {
-            baz: 'baz'
+            baz: 'baz',
+            foo: 're-foo'
           }
         }
       })(() => {

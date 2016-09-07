@@ -17,7 +17,7 @@ describe('Test: ElasticSearch service', () => {
     collection = 'unit-tests-elasticsearch',
     createdDocumentId = 'id-test',
     elasticsearch,
-    engineType = 'readEngine',
+    engineType = 'storageEngine',
     requestObject,
     documentAda = {
       firstName: 'Ada',
@@ -45,7 +45,7 @@ describe('Test: ElasticSearch service', () => {
 
   before(()=> {
     kuzzle = new Kuzzle();
-    elasticsearch = new ES(kuzzle, {service: engineType});
+    elasticsearch = new ES(kuzzle, {service: engineType}, kuzzle.config.services.db);
   });
 
   beforeEach(() => {

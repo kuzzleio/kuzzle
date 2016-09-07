@@ -97,7 +97,7 @@ describe('Test: routerController', () => {
 
         user = {
           _id: 'user',
-          profilesIds: ['profile'],
+          profileIds: ['profile'],
           isActionAllowed: sinon.stub().resolves(true),
           getProfile: () => {
             return Promise.resolve({

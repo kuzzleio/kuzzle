@@ -25,15 +25,9 @@ The ttl to use for the CacheEngine. If set to false, the objects get an unlimite
 
 The constructor function for the business objects. The load* methods will return some new instances of this function.
 
-* *function* readEngine (optional)
+* *function* databaseEngine (optional)
 
-The read engine to use to retrieve the business objects from the database. Defaults to Kuzzle's readEngine (elasticsearch).
-
-* *function* writeLayer (optional)
-
-The write layer to use to persist business objects to the database.  
-This layer exposes only a `execute` function, taking a `RequestObject` object as an argument, and returning a promise.  
-Defaults to Kuzzle's write workers.
+The read engine to use to retrieve the business objects to/from the database. Defaults to Kuzzle's internalEngine (elasticsearch).
 
 * *function* cacheEngine (optional)
 
@@ -74,16 +68,16 @@ If no matching document could be found, an empty array is returned.
 ## search
 
 ```javascript
-Repository.prototype.search = function (filter, from, size, hydrate) {...}
+Repository.prototype.search = function (filter, from, size) {...}
 ```
 
-This method tries to load document from readEngine or the business objects (according to hydrate parameter) from the database matching the given ids.
+This method tries to load documents matching the given ids from the databaseEngine.
 
 ### parameters
 
 * *object* filter
 
-The filter sent to the readEngine in order to retrieve documents.
+The filter sent to the databaseEngine in order to retrieve documents.
 
 * *Integer* from
 
@@ -93,13 +87,9 @@ Starting offset (default: 0).
 
 Number of hits to return (default: 20).
 
-* *Boolean* hydrate
-
-If hydrate is true, the function resolve a ResponseObject with a list of business objects. If hydrate is false, resolve a ResponseObject with documents directly from readEngine. (default: false).
-
 ### returns
 
-Returns a promise that resolves a ResponseObject that contains either a list of business objects or a list of document from readEngine according to the parameter hydrate.
+Returns a promise that resolves a ResponseObject that contains a list of documents from databaseEngine.
 
 
 ## loadFromCache

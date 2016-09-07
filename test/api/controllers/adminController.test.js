@@ -2,7 +2,8 @@ var
   Promise = require('bluebird'),
   should = require('should'),
   sinon = require('sinon'),
-  AdminController = require('../../../lib/api/controllers/adminController'),
+  rewire = require('rewire'),
+  AdminController = rewire('../../../lib/api/controllers/adminController'),
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
   ResponseObject = require.main.require('kuzzle-common-objects').Models.responseObject,
   BadRequestError = require.main.require('kuzzle-common-objects').Errors.badRequestError,
@@ -38,8 +39,8 @@ describe('Test: admin controller', () => {
           should(kuzzle.pluginsManager.trigger.firstCall).be.calledWith('data:beforeUpdateMapping', requestObject);
           should(kuzzle.pluginsManager.trigger.secondCall).be.calledWith('data:afterUpdateMapping');
 
-          should(kuzzle.services.list.writeEngine.updateMapping).be.calledOnce();
-          should(kuzzle.services.list.writeEngine.updateMapping).be.calledWith(requestObject);
+          should(kuzzle.services.list.storageEngine.updateMapping).be.calledOnce();
+          should(kuzzle.services.list.storageEngine.updateMapping).be.calledWith(requestObject);
 
           should(kuzzle.indexCache.add).be.calledOnce();
           should(kuzzle.indexCache.add).be.calledWith(requestObject.index, requestObject.collection);
@@ -64,8 +65,8 @@ describe('Test: admin controller', () => {
           should(kuzzle.pluginsManager.trigger.firstCall).be.calledWith('data:beforeGetMapping', requestObject);
           should(kuzzle.pluginsManager.trigger.secondCall).be.calledWith('data:afterGetMapping');
 
-          should(kuzzle.services.list.readEngine.getMapping).be.calledOnce();
-          should(kuzzle.services.list.readEngine.getMapping).be.calledWith(requestObject);
+          should(kuzzle.services.list.storageEngine.getMapping).be.calledOnce();
+          should(kuzzle.services.list.storageEngine.getMapping).be.calledWith(requestObject);
 
           should(response).be.instanceof(ResponseObject);
         });
@@ -150,7 +151,7 @@ describe('Test: admin controller', () => {
       return adminController.truncateCollection(requestObject)
         .then(response => {
           var
-            truncate = kuzzle.services.list.writeEngine.truncateCollection,
+            truncate = kuzzle.services.list.storageEngine.truncateCollection,
             trigger = kuzzle.pluginsManager.trigger;
 
           should(trigger).be.calledTwice();
@@ -203,7 +204,7 @@ describe('Test: admin controller', () => {
       return adminController.deleteIndexes(requestObject, {token: {userId: 42}})
         .then(response => {
           var
-            engine = kuzzle.services.list.writeEngine,
+            engine = kuzzle.services.list.storageEngine,
             trigger = kuzzle.pluginsManager.trigger;
 
           should(kuzzle.repositories.user.load).be.calledOnce();
@@ -259,7 +260,7 @@ describe('Test: admin controller', () => {
       return adminController.createIndex(requestObject)
         .then(response => {
           var
-            createIndex = kuzzle.services.list.writeEngine.createIndex,
+            createIndex = kuzzle.services.list.storageEngine.createIndex,
             trigger = kuzzle.pluginsManager.trigger;
 
           should(trigger).be.calledTwice();
@@ -285,7 +286,7 @@ describe('Test: admin controller', () => {
       return adminController.deleteIndex(requestObject)
         .then(response => {
           var
-            deleteIndex = kuzzle.services.list.writeEngine.deleteIndex,
+            deleteIndex = kuzzle.services.list.storageEngine.deleteIndex,
             trigger = kuzzle.pluginsManager.trigger;
 
           should(trigger).be.calledTwice();
@@ -382,7 +383,7 @@ describe('Test: admin controller', () => {
       return adminController.refreshIndex(requestObject)
         .then(response => {
           var
-            engine = kuzzle.services.list.writeEngine,
+            engine = kuzzle.services.list.storageEngine,
             trigger = kuzzle.pluginsManager.trigger;
 
           should(trigger).be.calledTwice();
@@ -410,7 +411,7 @@ describe('Test: admin controller', () => {
       return adminController.getAutoRefresh(requestObject)
         .then(response => {
           var
-            engine = kuzzle.services.list.writeEngine,
+            engine = kuzzle.services.list.storageEngine,
             trigger = kuzzle.pluginsManager.trigger;
 
           should(trigger).be.calledTwice();
@@ -442,7 +443,7 @@ describe('Test: admin controller', () => {
       return adminController.setAutoRefresh(requestObject)
         .then(response => {
           var
-            engine = kuzzle.services.list.writeEngine,
+            engine = kuzzle.services.list.storageEngine,
             trigger = kuzzle.pluginsManager.trigger;
 
           should(trigger).be.calledTwice();
@@ -477,7 +478,156 @@ describe('Test: admin controller', () => {
       return should(adminController.setAutoRefresh(requestObject))
         .be.rejectedWith(BadRequestError, {message: 'Invalid type for autoRefresh, expected Boolean got number'});
     });
-
   });
 
+  describe('#adminExists', () => {
+    it('should call search with right filter', () => {
+      kuzzle.internalEngine = {search: sandbox.stub().resolves({hits: []})};
+
+      return adminController.adminExists()
+        .then(() => {
+          should(kuzzle.internalEngine.search).be.calledWithMatch('users', {query: {terms: {profileIds: ['admin']}}});
+        });
+    });
+
+    it('should return false if there is no result', () => {
+      kuzzle.internalEngine = {search: sandbox.stub().resolves({hits: []})};
+
+      return adminController.adminExists()
+        .then((response) => {
+          should(response).match({data: {body: {exists: false}}});
+        });
+    });
+
+    it('should return true if there is result', () => {
+      kuzzle.internalEngine = {search: sandbox.stub().resolves({hits: ['user1', 'user2', 'user3']})};
+
+      return adminController.adminExists()
+        .then((response) => {
+          should(response).match({data: {body: {exists: true}}});
+        });
+    });
+  });
+
+  describe('#createFirstAdmin', () => {
+    var
+      reset,
+      resetRolesStub,
+      resetProfilesStub,
+      createOrReplaceUser;
+
+    beforeEach(() => {
+      reset = AdminController.__set__({
+        resetRoles: sandbox.stub().resolves(),
+        resetProfiles: sandbox.stub().resolves()
+      });
+      resetRolesStub = AdminController.__get__('resetRoles');
+      resetProfilesStub = AdminController.__get__('resetProfiles');
+      createOrReplaceUser = sandbox.stub().resolves();
+
+      kuzzle.funnel = {controllers: {security: {createOrReplaceUser}}};
+    });
+
+    afterEach(() => {
+      reset();
+    });
+
+    it('should do nothing if admin already exists', () => {
+      var request = new RequestObject({
+        _id: 'toto',
+        body: {
+          password: 'pwd'
+        }
+      });
+
+      adminController.adminExists = sandbox.stub().resolves({data: {body: {exists: true}}});
+
+      return should(adminController.createFirstAdmin(request)).be.rejected();
+    });
+
+    it('should create the admin user and not reset roles & profiles if not asked to', () => {
+      var request = new RequestObject({
+        _id: 'toto',
+        body: {
+          password: 'pwd'
+        }
+      });
+
+      adminController.adminExists = sandbox.stub().resolves({data: {body: {exists: false}}});
+
+      return adminController.createFirstAdmin(request)
+        .then(() => {
+          should(createOrReplaceUser).be.calledOnce();
+          should(createOrReplaceUser).be.calledWithMatch({data: {_id: 'toto', body: {password: 'pwd', profileIds: ['admin']}}});
+          should(resetRolesStub).have.callCount(0);
+          should(resetProfilesStub).have.callCount(0);
+        });
+    });
+
+    it('should create the admin user and reset roles & profiles if asked to', () => {
+      var request = new RequestObject({
+        _id: 'toto',
+        body: {
+          password: 'pwd',
+          reset: true
+        }
+      });
+
+      adminController.adminExists = sandbox.stub().resolves({data: {body: {exists: false}}});
+      sandbox.stub(adminController, 'refreshIndex').resolves({});
+
+      return adminController.createFirstAdmin(request)
+        .then(() => {
+          should(createOrReplaceUser).be.calledOnce();
+          should(createOrReplaceUser).be.calledWithMatch({data: {_id: 'toto', body: {password: 'pwd', profileIds: ['admin']}}});
+          should(resetRolesStub).have.callCount(1);
+          should(resetProfilesStub).have.callCount(1);
+        });
+    });
+  });
+
+  describe('#resetRoles', () => {
+    it('should call createOrReplace roles with all default roles', () => {
+      var
+        createOrReplace = sandbox.stub().resolves(),
+        mock = {
+          internalEngine: {
+            createOrReplace
+          },
+          config: {
+            security: {
+              standard: {
+                roles: {
+                  admin: 'admin', default: 'default', anonymous: 'anonymous'
+                }
+              }
+            }
+          }
+        };
+
+      return AdminController.__get__('resetRoles').call(mock)
+        .then(() => {
+          should(createOrReplace).have.callCount(3);
+          should(createOrReplace.firstCall).be.calledWith('roles', 'admin', 'admin');
+          should(createOrReplace.secondCall).be.calledWith('roles', 'default', 'default');
+          should(createOrReplace.thirdCall).be.calledWith('roles', 'anonymous', 'anonymous');
+        });
+    });
+  });
+
+  describe('#resetProfiles', () => {
+    it('should call createOrReplace profiles with all default profiles and rights policies', () => {
+      var
+        createOrReplace = sandbox.stub().resolves(),
+        mock = {internalEngine: {createOrReplace}};
+
+      return AdminController.__get__('resetProfiles').call(mock)
+        .then(() => {
+          should(createOrReplace).have.callCount(3);
+          should(createOrReplace.firstCall).be.calledWithMatch('profiles', 'admin', {policies: [{roleId: 'admin', allowInternalIndex: true}]});
+          should(createOrReplace.secondCall).be.calledWithMatch('profiles', 'anonymous', {policies: [{roleId: 'anonymous'}]});
+          should(createOrReplace.thirdCall).be.calledWithMatch('profiles', 'default', {policies: [{roleId: 'default'}]});
+        });
+    });
+  });
 });

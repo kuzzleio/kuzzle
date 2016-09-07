@@ -1,7 +1,6 @@
 /* eslint-disable no-console */
 
 var
-  params = require('rc')('kuzzle'),
   InternalEngine = require('../../lib/services/internalEngine'),
   Kuzzle = require('../../lib/api/kuzzle'),
   PluginsManager = require('../../lib/api/core/plugins/pluginsManager'),
@@ -17,7 +16,7 @@ module.exports = function () {
 
   console.log('███ kuzzle-plugins: Starting plugins installation...');
 
-  kuzzle.config = require('../../lib/config/')(params);
+  kuzzle.config = require('../../lib/config');
   kuzzle.pluginsManager = new PluginsManager(kuzzle);
   kuzzle.internalEngine = new InternalEngine(kuzzle);
   kuzzle.remoteActionsController = new RemoteActionsController(kuzzle);

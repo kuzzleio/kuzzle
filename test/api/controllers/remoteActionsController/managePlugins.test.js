@@ -20,8 +20,9 @@ describe('Test: managePlugins remote action caller', () => {
   beforeEach(() => {
     kuzzle = {
       config: {
-        pluginsManager: {
-          dataCollection: 'collection'
+        plugins: {
+          common: 'common',
+          defaultPlugin: 'defaultPlugin'
         }
       },
       internalEngine: {
@@ -181,7 +182,7 @@ describe('Test: managePlugins remote action caller', () => {
       return pluginsManager(request)
         .then(() => {
           should(kuzzle.internalEngine.update).be.calledOnce();
-          should(kuzzle.internalEngine.update).be.calledWith('collection', 'test', {activated: true});
+          should(kuzzle.internalEngine.update).be.calledWith('plugins', 'test', {activated: true});
           should(getPluginConfigurationStub).be.calledOnce();
           sinon.assert.callOrder(kuzzle.internalEngine.update, getPluginConfigurationStub);
         });
@@ -193,7 +194,7 @@ describe('Test: managePlugins remote action caller', () => {
       return pluginsManager(request)
         .then(() => {
           should(kuzzle.internalEngine.update).be.calledOnce();
-          should(kuzzle.internalEngine.update).be.calledWith('collection', 'test', {activated: false});
+          should(kuzzle.internalEngine.update).be.calledWith('plugins', 'test', {activated: false});
           should(getPluginConfigurationStub).be.calledOnce();
           sinon.assert.callOrder(kuzzle.internalEngine.update, getPluginConfigurationStub);
         });
@@ -264,7 +265,7 @@ describe('Test: managePlugins remote action caller', () => {
       return initializeInternalIndex()
         .then(() => {
           should(kuzzle.internalEngine.updateMapping).be.calledOnce();
-          should(kuzzle.internalEngine.updateMapping).be.calledWith('collection',
+          should(kuzzle.internalEngine.updateMapping).be.calledWith('plugins',
             {properties: {config: {enabled: false}}}
           );
         });
@@ -329,7 +330,7 @@ describe('Test: managePlugins remote action caller', () => {
         .then(() => {
           should(readFileSyncStub).be.calledOnce();
           should(kuzzle.internalEngine.createOrReplace).be.calledOnce();
-          should(kuzzle.internalEngine.createOrReplace).be.calledWith('collection', 'plugin', {config: {foo: 'bar'}});
+          should(kuzzle.internalEngine.createOrReplace).be.calledWith('plugins', 'plugin', {config: {foo: 'bar'}});
         });
     });
 
@@ -446,7 +447,7 @@ describe('Test: managePlugins remote action caller', () => {
 
       return getPluginsList()
         .then(plugins => {
-          should(plugins).be.exactly(kuzzle.config.pluginsManager.defaultPlugins);
+          should(plugins).be.eql({ defaultPlugin: kuzzle.config.plugins.defaultPlugin });
         });
     });
 
@@ -607,7 +608,7 @@ describe('Test: managePlugins remote action caller', () => {
         return updatePluginsConfiguration({test: {foo: 'bar', defaultConfig: {bar: 'baz'}}})
           .then(() => {
             should(kuzzle.internalEngine.createOrReplace).be.calledOnce();
-            should(kuzzle.internalEngine.createOrReplace).be.calledWith('collection', 'test', {
+            should(kuzzle.internalEngine.createOrReplace).be.calledWith('plugins', 'test', {
               activated: true,
               config: {bar: 'baz'},
               foo: 'bar',
@@ -743,7 +744,7 @@ describe('Test: managePlugins remote action caller', () => {
       return ManagePlugins.__get__('getPluginConfiguration')('test')
         .then(response => {
           should(kuzzle.internalEngine.get).be.calledOnce();
-          should(kuzzle.internalEngine.get).be.calledWithExactly('collection', 'test');
+          should(kuzzle.internalEngine.get).be.calledWithExactly('plugins', 'test');
           should(response).be.exactly(data._source);
         });
     });
@@ -767,9 +768,9 @@ describe('Test: managePlugins remote action caller', () => {
         return setPluginConfiguration('test', '{"foo":"bar"}')
           .then(() => {
             should(kuzzle.internalEngine.get).be.calledOnce();
-            should(kuzzle.internalEngine.get).be.calledWithExactly('collection', 'test');
+            should(kuzzle.internalEngine.get).be.calledWithExactly('plugins', 'test');
             should(kuzzle.internalEngine.update).be.calledOnce();
-            should(kuzzle.internalEngine.update).be.calledWithMatch('collection',
+            should(kuzzle.internalEngine.update).be.calledWithMatch('plugins',
               'test',
               {
                 config: {
@@ -806,9 +807,9 @@ describe('Test: managePlugins remote action caller', () => {
         return unsetPluginConfiguration('test', 'property')
           .then(() => {
             should(kuzzle.internalEngine.get).be.calledOnce();
-            should(kuzzle.internalEngine.get).be.calledWithExactly('collection', 'test');
+            should(kuzzle.internalEngine.get).be.calledWithExactly('plugins', 'test');
             should(kuzzle.internalEngine.replace).be.calledOnce();
-            should(kuzzle.internalEngine.replace).be.calledWithExactly('collection',
+            should(kuzzle.internalEngine.replace).be.calledWithExactly('plugins',
               'test',
               {config: {}}
             );
@@ -836,8 +837,8 @@ describe('Test: managePlugins remote action caller', () => {
         return replacePluginConfiguration('test', '{"foo":"bar"}')
           .then(() => {
             should(kuzzle.internalEngine.get).be.calledOnce();
-            should(kuzzle.internalEngine.get).be.calledWithExactly('collection', 'test');
-            should(kuzzle.internalEngine.replace).be.calledWithExactly('collection',
+            should(kuzzle.internalEngine.get).be.calledWithExactly('plugins', 'test');
+            should(kuzzle.internalEngine.replace).be.calledWithExactly('plugins',
               'test',
               {config: {foo: 'bar'}}
             );
@@ -891,7 +892,7 @@ describe('Test: managePlugins remote action caller', () => {
           .then(response => {
             should(response).be.eql({installedLocally: 'gitUrl'});
             should(kuzzle.internalEngine.delete).be.calledOnce();
-            should(kuzzle.internalEngine.delete).be.calledWithExactly('collection', 'test');
+            should(kuzzle.internalEngine.delete).be.calledWithExactly('plugins', 'test');
             should(ManagePlugins.__get__('rimraf')).be.calledOnce();
             should(ManagePlugins.__get__('rimraf')).be.calledWith('path');
           });

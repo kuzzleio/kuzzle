@@ -53,7 +53,7 @@ function parseHttpResponse (response, yaml) {
   });
 }
 
-describe('Test: routerController.initRouterHttp', () => {
+describe('Test: routerController.initHttpRouter', () => {
   var
     kuzzle,
     server,
@@ -67,10 +67,10 @@ describe('Test: routerController.initRouterHttp', () => {
 
   /*
    * In order to test the presence of these routes, we need first to create a
-   * listening server, and then use the initRouterHttp function to create these.
+   * listening server, and then use the initHttpRouter function to create these.
    *
    * We rewire the 'executeFromRest' function into a mockup that will answer
-   * with the params passed to it by initRouterHttp, so we can also test if
+   * with the params passed to it by initHttpRouter, so we can also test if
    * the answer is correctly constructed.
    */
   before(() => {
@@ -102,7 +102,7 @@ describe('Test: routerController.initRouterHttp', () => {
         ];
 
         router = new RouterController(kuzzle);
-        router.initRouterHttp();
+        router.initHttpRouter();
 
         server = http.createServer((request, response) => {
           router.routeHttp(request, response);
@@ -521,7 +521,7 @@ describe('Test: routerController.initRouterHttp', () => {
 
     delete process.env.FEATURE_COVERAGE;
 
-    router.initRouterHttp();
+    router.initHttpRouter();
 
     server = http.createServer((request, response) => {
       router.routeHttp(request, response);
@@ -540,7 +540,7 @@ describe('Test: routerController.initRouterHttp', () => {
 
     process.env.FEATURE_COVERAGE = 1;
 
-    router.initRouterHttp();
+    router.initHttpRouter();
 
     server = http.createServer((request, response) => {
       router.routeHttp(request, response);

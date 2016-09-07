@@ -26,8 +26,7 @@ describe('funnelController.execute', () => {
     };
 
     kuzzle = new Kuzzle();
-
-    kuzzle.config.request.warnRetainedRequestsLimit = -1;
+    kuzzle.config.server.warnRetainedRequestsLimit = -1;
 
     FunnelController.__set__('processRequest', (funnelKuzzle, controllers, funnelRequestObject) => {
       processRequestCalled = true;
@@ -147,7 +146,7 @@ describe('funnelController.execute', () => {
         done(new Error('Request executed. It should have been queued instead'));
       };
 
-      funnel.concurrentRequests = kuzzle.config.request.maxConcurrentRequests;
+      funnel.concurrentRequests = kuzzle.config.server.maxConcurrentRequests;
 
       funnel.execute(requestObject, context, callback);
 
@@ -166,7 +165,7 @@ describe('funnelController.execute', () => {
         done(new Error('Request executed. It should have been queued instead'));
       };
 
-      funnel.concurrentRequests = kuzzle.config.request.maxConcurrentRequests;
+      funnel.concurrentRequests = kuzzle.config.server.maxConcurrentRequests;
       funnel.overloaded = true;
 
       funnel.execute(requestObject, context, callback);
@@ -184,15 +183,15 @@ describe('funnelController.execute', () => {
     it('should discard the request if the maxRetainedRequests property is reached', /** @this {Mocha} */ function (done) {
       this.timeout(500);
 
-      funnel.concurrentRequests = kuzzle.config.request.maxConcurrentRequests;
-      funnel.cachedRequests = kuzzle.config.request.maxRetainedRequests;
+      funnel.concurrentRequests = kuzzle.config.server.maxConcurrentRequests;
+      funnel.cachedRequests = kuzzle.config.server.maxRetainedRequests;
       funnel.overloaded = true;
 
       funnel.execute(requestObject, context, (err, res) => {
         should(funnel.overloaded).be.true();
         should(requestReplayed).be.false();
         should(processRequestCalled).be.false();
-        should(funnel.cachedRequests).be.eql(kuzzle.config.request.maxRetainedRequests);
+        should(funnel.cachedRequests).be.eql(kuzzle.config.server.maxRetainedRequests);
         should(funnel.requestsCache).be.empty();
         should(err).be.instanceOf(ServiceUnavailableError);
         should(err.status).be.eql(503);

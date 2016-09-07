@@ -1,6 +1,8 @@
 var
+  _ = require('lodash'),
   sinon = require('sinon'),
   Kuzzle = require('../../lib/api/kuzzle'),
+  config = require('../../lib/config'),
   foo = {foo: 'bar'};
 
 /**
@@ -17,9 +19,18 @@ function KuzzleMock () {
     }
   }
 
+  // we need a deep copy here
+  this.config = _.merge({}, config);
+
   this.indexCache = {
     add: sinon.spy(),
     remove: sinon.spy()
+  };
+
+  this.internalEngine = {
+    get: sinon.stub().resolves(foo),
+    index: 'internalIndex',
+    init: sinon.stub().resolves()
   };
 
   this.notifier = {
@@ -46,17 +57,17 @@ function KuzzleMock () {
 
   this.router = {
     execute: sinon.stub().resolves(foo),
+    initHttpRouter: sinon.spy(),
     newConnection: sinon.stub().resolves(foo),
-    removeConnection: sinon.spy()
+    removeConnection: sinon.spy(),
+    routeHttp: sinon.spy()
   };
 
   this.services = {
     list: {
-      readEngine: {
+      storageEngine: {
         getMapping: sinon.stub().resolves(foo),
-        listIndexes: sinon.stub().resolves({indexes: ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i']})
-      },
-      writeEngine: {
+        listIndexes: sinon.stub().resolves({indexes: ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i']}),
         create: sinon.stub().resolves(foo),
         createCollection: sinon.stub().resolves(foo),
         createIndex: sinon.stub().resolves(foo),
@@ -66,7 +77,6 @@ function KuzzleMock () {
         deleteIndex: sinon.stub().resolves(foo),
         deleteIndexes: sinon.stub().resolves({deleted: ['a', 'e', 'i']}),
         getAutoRefresh: sinon.stub().resolves(false),
-        getMapping: sinon.stub().resolves(foo),
         import: sinon.stub().resolves(foo),
         refreshIndex: sinon.stub().resolves(foo),
         replace: sinon.stub().resolves(foo),
