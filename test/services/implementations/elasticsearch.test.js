@@ -505,21 +505,57 @@ describe('Test: ElasticSearch service', () => {
         refreshIndexSpy = sandbox.spy(refreshIndexIfNeeded),
         spy = sandbox.stub(elasticsearch.client, 'bulk').resolves({});
 
-      requestObject.data.body = [
-        {index: {_id: 1, _type: collection, _index: index}},
-        {firstName: 'foo'},
-        {index: {_id: 2, _type: collection, _index: index}},
-        {firstName: 'bar'},
-        {update: {_id: 1, _type: collection, _index: index}},
-        {doc: {firstName: 'foobar'}},
-        {delete: {_id: 2, _type: collection, _index: index}}
-      ];
+      requestObject.data.body = {
+        bulkData: [
+          {index: {_id: 1, _type: collection, _index: index}},
+          {firstName: 'foo'},
+          {index: {_id: 2, _type: collection, _index: index}},
+          {firstName: 'bar'},
+          {update: {_id: 1, _type: collection, _index: index}},
+          {doc: {firstName: 'foobar'}},
+          {delete: {_id: 2, _type: collection, _index: index}}
+        ]
+      };
 
       return should(
         ES.__with__('refreshIndexIfNeeded', refreshIndexSpy)(() => {
           return elasticsearch.import(requestObject)
             .then(() => {
-              should(spy.firstCall.args[0].body).be.exactly(requestObject.data.body);
+              should(spy.firstCall.args[0].body).be.exactly(requestObject.data.body.bulkData);
+
+              should(refreshIndexSpy.calledOnce).be.true();
+            });
+        })
+      ).be.fulfilled();
+    });
+
+    it('should inject only the allowed optional parameters', () => {
+      var
+        refreshIndexIfNeeded = ES.__get__('refreshIndexIfNeeded'),
+        refreshIndexSpy = sandbox.spy(refreshIndexIfNeeded),
+        spy = sandbox.stub(elasticsearch.client, 'bulk').resolves({});
+
+      requestObject.data = {
+        body: {
+          bulkData: []
+        },
+        consistency: 'foo',
+        refresh: true,
+        routing: 'foo/bar',
+        timeout: 999,
+        fields: 'foo, bar, baz'
+      };
+
+      return should(
+        ES.__with__('refreshIndexIfNeeded', refreshIndexSpy)(() => {
+          return elasticsearch.import(requestObject)
+            .then(() => {
+              should(spy.firstCall.args[0].consistency).be.exactly('foo');
+              should(spy.firstCall.args[0].refresh).be.exactly(true);
+              should(spy.firstCall.args[0].routing).be.exactly('foo/bar');
+              should(spy.firstCall.args[0].timeout).be.exactly(999);
+              should(spy.firstCall.args[0].fields).be.exactly('foo, bar, baz');
+              should(spy.firstCall.args[0].foo).be.undefined();
 
               should(refreshIndexSpy.calledOnce).be.true();
             });
@@ -536,20 +572,22 @@ describe('Test: ElasticSearch service', () => {
         }
       });
 
-      requestObject.data.body = [
-        {index: {_id: 1, _type: collection, _index: index}},
-        {firstName: 'foo'},
-        {index: {_id: 2, _type: collection, _index: index}},
-        {firstName: 'bar'},
-        {update: {_id: 12, _type: collection, _index: index}},
-        {doc: {firstName: 'foobar'}},
-        {update: {_id: 212, _type: collection, _index: index}},
-        {doc: {firstName: 'foobar'}}
-      ];
+      requestObject.data.body = {
+        bulkData: [
+          {index: {_id: 1, _type: collection, _index: index}},
+          {firstName: 'foo'},
+          {index: {_id: 2, _type: collection, _index: index}},
+          {firstName: 'bar'},
+          {update: {_id: 12, _type: collection, _index: index}},
+          {doc: {firstName: 'foobar'}},
+          {update: {_id: 212, _type: collection, _index: index}},
+          {doc: {firstName: 'foobar'}}
+        ]
+      };
 
       return should(elasticsearch.import(requestObject)
         .then(result => {
-          should(spy.firstCall.args[0].body).be.exactly(requestObject.data.body);
+          should(spy.firstCall.args[0].body).be.exactly(requestObject.data.body.bulkData);
 
           should(result.errors).be.true();
           should(result.partialErrors).be.an.Array().and.match([{status: 404}]).and.match([{error: /^DocumentMissingException/}]);
@@ -566,15 +604,17 @@ describe('Test: ElasticSearch service', () => {
         ]
       });
 
-      requestObject.data.body = [
-        {index: {_id: 1, _index: index}},
-        {firstName: 'foo'},
-        {index: {_id: 2, _index: 'indexAlt'}},
-        {firstName: 'bar'},
-        {update: {_id: 1, _index: index}},
-        {doc: {firstName: 'foobar'}},
-        {delete: {_id: 2, _index: 'indexAlt'}}
-      ];
+      requestObject.data.body = {
+        bulkData: [
+          {index: {_id: 1, _index: index}},
+          {firstName: 'foo'},
+          {index: {_id: 2, _index: 'indexAlt'}},
+          {firstName: 'bar'},
+          {update: {_id: 1, _index: index}},
+          {doc: {firstName: 'foobar'}},
+          {delete: {_id: 2, _index: 'indexAlt'}}
+        ]
+      };
 
       return should(elasticsearch.import(requestObject)
         .then(() => {
@@ -594,15 +634,17 @@ describe('Test: ElasticSearch service', () => {
     });
 
     it('should reject the import promise if elasticsearch throws an error', () => {
-      requestObject.data.body = [
-        {index: {_id: 1, _index: index}},
-        {firstName: 'foo'},
-        {index: {_id: 2, _index: index}},
-        {firstName: 'bar'},
-        {update: {_id: 1, _index: index}},
-        {doc: {firstName: 'foobar'}},
-        {delete: {_id: 2, _index: index}}
-      ];
+      requestObject.data.body = {
+        bulkData: [
+          {index: {_id: 1, _index: index}},
+          {firstName: 'foo'},
+          {index: {_id: 2, _index: index}},
+          {firstName: 'bar'},
+          {update: {_id: 1, _index: index}},
+          {doc: {firstName: 'foobar'}},
+          {delete: {_id: 2, _index: index}}
+        ]
+      };
 
       sandbox.stub(elasticsearch.client, 'bulk').rejects({});
 
@@ -614,18 +656,25 @@ describe('Test: ElasticSearch service', () => {
       return should(elasticsearch.import(requestObject)).be.rejected();
     });
 
+    it('should return a rejected promise if body contains no bulkData parameter', () => {
+      delete requestObject.data.body.bulkData;
+      return should(elasticsearch.import(requestObject)).be.rejected();
+    });
+
     it('should return a rejected promise if no type has been provided, locally or globally', () => {
       delete requestObject.collection;
 
-      requestObject.data.body = [
-        {index: {_id: 1, _type: collection, _index: index}},
-        {firstName: 'foo'},
-        {index: {_id: 2, _type: collection, _index: index}},
-        {firstName: 'bar'},
-        {update: {_id: 1, _index: index}},
-        {doc: {firstName: 'foobar'}},
-        {delete: {_id: 2, _type: collection, _index: index}}
-      ];
+      requestObject.data.body = {
+        bulkData: [
+          {index: {_id: 1, _type: collection, _index: index}},
+          {firstName: 'foo'},
+          {index: {_id: 2, _type: collection, _index: index}},
+          {firstName: 'bar'},
+          {update: {_id: 1, _index: index}},
+          {doc: {firstName: 'foobar'}},
+          {delete: {_id: 2, _type: collection, _index: index}}
+        ]
+      };
 
       sandbox.stub(elasticsearch.client, 'bulk').resolves({});
 
@@ -635,15 +684,17 @@ describe('Test: ElasticSearch service', () => {
     it('should return a rejected promise if no index has been provided, locally or globally', () => {
       delete requestObject.index;
 
-      requestObject.data.body = [
-        {index: {_id: 1, _type: collection, _index: index}},
-        {firstName: 'foo'},
-        {index: {_id: 2, _type: collection, _index: index}},
-        {firstName: 'bar'},
-        {update: {_id: 1, _type: collection}},
-        {doc: {firstName: 'foobar'}},
-        {delete: {_id: 2, _type: collection, _index: index}}
-      ];
+      requestObject.data.body = {
+        bulkData: [
+          {index: {_id: 1, _type: collection, _index: index}},
+          {firstName: 'foo'},
+          {index: {_id: 2, _type: collection, _index: index}},
+          {firstName: 'bar'},
+          {update: {_id: 1, _type: collection}},
+          {doc: {firstName: 'foobar'}},
+          {delete: {_id: 2, _type: collection, _index: index}}
+        ]
+      };
 
       sandbox.stub(elasticsearch.client, 'bulk').resolves({});
 

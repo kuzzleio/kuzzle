@@ -174,7 +174,7 @@ ApiRT.prototype.bulkImport = function (bulk, index, collection) {
       collection: collection || this.world.fakeCollection,
       index: index || this.world.fakeIndex,
       action: 'import',
-      body: bulk
+      body: {bulkData: bulk}
     };
 
   return this.send(msg);
@@ -185,7 +185,7 @@ ApiRT.prototype.globalBulkImport = function (bulk) {
     msg = {
       controller: 'bulk',
       action: 'import',
-      body: bulk
+      body: {bulkData: bulk}
     };
 
   return this.send(msg);
