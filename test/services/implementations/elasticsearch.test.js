@@ -7,6 +7,7 @@ var
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
   BadRequestError = require.main.require('kuzzle-common-objects').Errors.badRequestError,
   NotFoundError = require.main.require('kuzzle-common-objects').Errors.notFoundError,
+  InternalError = require.main.require('kuzzle-common-objects').Errors.internalError,
   ES = rewire('../../../lib/services/elasticsearch');
 
 describe('Test: ElasticSearch service', () => {
@@ -368,12 +369,41 @@ describe('Test: ElasticSearch service', () => {
       ).be.fulfilled();
     });
 
-    it('should return a rejected promise if an update fails', done => {
-      var spy = sandbox.stub(elasticsearch.client, 'update').rejects({});
+    it('should return a rejected promise with a NotFoundError when updating a document which does not exist', done => {
+      var spy;
+      var esError = {
+        displayName: 'NotFound',
+        body: {
+          error: {
+            reason: 'foo'
+          }
+        }
+      };
+      esError.body.error['resource.id'] = 'bar';
+      spy = sandbox.stub(elasticsearch.client, 'update').rejects(esError);
 
       elasticsearch.update(requestObject)
-        .catch(() => {
+        .catch((error) => {
           try{
+            should(error).be.instanceOf(NotFoundError);
+            should(error.message).be.equal('foo: bar');
+            should(spy.firstCall.args[0].id).be.undefined();
+            done();
+          }
+          catch(e) { done(e); }
+        });
+    });
+
+    it('should return a rejected promise with an Error if an update fails for unknow reason', done => {
+      var spy = sandbox.stub(elasticsearch.client, 'update').rejects({});
+      var spyTrigger = sandbox.stub(kuzzle.pluginsManager, 'trigger');
+
+      elasticsearch.update(requestObject)
+        .catch((error) => {
+          try{
+            should(spyTrigger.firstCall.args[0]).be.equal('log:warn');
+            should(spyTrigger.firstCall.args[1]).be.instanceOf(InternalError);
+            should(error).be.instanceOf(Error);
             should(spy.firstCall.args[0].id).be.undefined();
             done();
           }
@@ -718,12 +748,21 @@ describe('Test: ElasticSearch service', () => {
         })).be.fulfilled();
     });
 
-    it('should reject bad mapping input', done => {
-      var spy = sandbox.stub(elasticsearch.client.indices, 'putMapping').rejects({});
+    it('should reject and handle error for bad mapping input', done => {
+      var spy = sandbox.stub(elasticsearch.client.indices, 'putMapping').rejects({
+        displayName: 'BadRequest',
+        body: {
+          error: {
+            reason: 'foo'
+          }
+        }
+      });
 
       elasticsearch.updateMapping(requestObject)
-        .catch(() => {
+        .catch((error) => {
           try {
+            should(error).be.instanceOf(BadRequestError);
+            should(error.message).be.equal('foo');
             should(spy.firstCall.args[0]).not.have.key('properties');
             done();
           }
