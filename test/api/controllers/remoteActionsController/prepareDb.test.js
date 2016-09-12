@@ -654,7 +654,7 @@ describe('Test: Prepare database', () => {
           should(kuzzle.internalEngine.updateMapping).be.calledOnce();
           should(kuzzle.internalEngine.updateMapping).be.calledWith('users', {
             properties: {
-              profileId: {
+              profileIds: {
                 index: 'not_analyzed',
                 type: 'string'
               },
