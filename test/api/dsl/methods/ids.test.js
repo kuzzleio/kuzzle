@@ -61,14 +61,14 @@ describe('Test ids method', () => {
   it('should construct the filterTree with correct functions ids', () => {
     /* jshint camelcase:false */
     should(methods.filters.filtersTree[index][collection].fields[fieldId][idsIdidGrace].args).match({
-      operator: 'terms',
+      operator: 'in',
       not: false,
       field: '_id',
       value: [ 'idGrace' ]
     });
 
     should(methods.filters.filtersTree[index][collection].fields[fieldId][notidsIdidGrace].args).match({
-      operator: 'terms',
+      operator: 'in',
       not: true,
       field: '_id',
       value: [ 'idGrace' ]

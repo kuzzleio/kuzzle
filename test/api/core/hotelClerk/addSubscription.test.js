@@ -22,7 +22,7 @@ describe('Test: hotelClerk.addSubscription', () => {
     index = 'test',
     collection = 'user',
     filter = {
-      term: {
+      equals: {
         firstName: 'Ada'
       }
     };
@@ -140,7 +140,7 @@ describe('Test: hotelClerk.addSubscription', () => {
         action: 'on',
         collection: collection,
         index: index,
-        body: {badterm : {firstName: 'Ada'}}
+        body: {badkeyword : {firstName: 'Ada'}}
       });
 
     pAddSubscription = kuzzle.hotelClerk.addSubscription(requestObject, context);
@@ -183,7 +183,7 @@ describe('Test: hotelClerk.addSubscription', () => {
         collection: collection,
         index: index,
         body: {
-          term: {
+          equals: {
             firstName: 'Ada'
           },
           exists: {
@@ -199,7 +199,7 @@ describe('Test: hotelClerk.addSubscription', () => {
           exists: {
             field: 'lastName'
           },
-          term: {
+          equals: {
             firstName: 'Ada'
           }
         }

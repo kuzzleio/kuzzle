@@ -486,7 +486,7 @@ describe('Test: admin controller', () => {
 
       return adminController.adminExists()
         .then(() => {
-          should(kuzzle.internalEngine.search).be.calledWithMatch('users', {query: {terms: {profileIds: ['admin']}}});
+          should(kuzzle.internalEngine.search).be.calledWithMatch('users', {query: {in: {profileIds: ['admin']}}});
         });
     });
 

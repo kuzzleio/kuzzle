@@ -17,12 +17,12 @@ describe('Test: hotelClerk.removeRooms', () => {
     collection1 = 'user',
     collection2 = 'foo',
     filter1 = {
-      term: {
+      equals: {
         firstName: 'Ada'
       }
     },
     filter2 = {
-      term: {
+      equals: {
         name: 'foo'
       }
     };
@@ -281,7 +281,7 @@ describe('Test: hotelClerk.removeRooms', () => {
 
   it('should remove only listed rooms for the collection', () => {
     var
-      roomId = 'fa2dc987b065e6d38beadabc970d92f1',
+      roomId = '3018d23a7d0400aaff4c2dadbcd2c3e1',
       requestObjectSubscribeFilter1 = new RequestObject({
         controller: 'subscribe',
         action: 'on',
