@@ -310,10 +310,10 @@ describe('Test: repositories/profileRepository', () => {
         .then(result => {
           should(result.filter).have.ownProperty('or');
           should(result.filter.or).be.an.Array();
-          should(result.filter.or[0]).have.ownProperty('in');
-          should(result.filter.or[0].in).have.ownProperty('policies.roleId');
-          should(result.filter.or[0].in['policies.roleId']).be.an.Array();
-          should(result.filter.or[0].in['policies.roleId'][0]).be.exactly('role1');
+          should(result.filter.or[0]).have.ownProperty('terms');
+          should(result.filter.or[0].terms).have.ownProperty('policies.roleId');
+          should(result.filter.or[0].terms['policies.roleId']).be.an.Array();
+          should(result.filter.or[0].terms['policies.roleId'][0]).be.exactly('role1');
         });
     });
   });
