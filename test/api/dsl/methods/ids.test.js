@@ -37,13 +37,11 @@ describe('Test ids method', () => {
   });
 
   it('should construct the filterTree with correct curried function name', () => {
-    /* jshint camelcase:false */
     should(methods.filters.filtersTree[index][collection].fields[fieldId][idsIdidGrace]).not.be.empty();
     should(methods.filters.filtersTree[index][collection].fields[fieldId][notidsIdidGrace]).not.be.empty();
   });
 
   it('should construct the filterTree with correct room list', () => {
-    /* jshint camelcase:false */
     var
       ids = methods.filters.filtersTree[index][collection].fields[fieldId][idsIdidGrace].ids,
       idsNot = methods.filters.filtersTree[index][collection].fields[fieldId][notidsIdidGrace].ids;
@@ -59,7 +57,6 @@ describe('Test ids method', () => {
   });
 
   it('should construct the filterTree with correct functions ids', () => {
-    /* jshint camelcase:false */
     should(methods.filters.filtersTree[index][collection].fields[fieldId][idsIdidGrace].args).match({
       operator: 'terms',
       not: false,

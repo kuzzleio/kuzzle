@@ -59,7 +59,6 @@ module.exports = function () {
     ];
 
 
-    /* jshint camelcase: false */
     this.schema = {
       properties: {
         firstName: {
@@ -73,7 +72,6 @@ module.exports = function () {
         }
       }
     };
-    /* jshint camelcase: true */
 
     this.metadata = {
       iwant: 'to break free',
