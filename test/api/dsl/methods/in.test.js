@@ -4,7 +4,7 @@ var
   Filters = require.main.require('lib/api/dsl/filters'),
   Methods = require.main.require('lib/api/dsl/methods');
 
-describe('Test "terms" method', () => {
+describe('Test "in" method', () => {
   var
     methods,
     filterIdMatch = 'filterIdMatch',
@@ -14,16 +14,16 @@ describe('Test "terms" method', () => {
     filter = {
       firstName: ['Grace', 'Jean']
     },
-    termsfirstNameGraceJean = md5('termsfirstNameGrace,Jean'),
-    nottermsfirstNameGraceJean = md5('nottermsfirstNameGrace,Jean'),
+    infirstNameGraceJean = md5('infirstNameGrace,Jean'),
+    notinfirstNameGraceJean = md5('notinfirstNameGrace,Jean'),
     fieldFirstName = md5('firstName');
 
   beforeEach(() => {
     /** @type Methods */
     methods = new Methods(new Filters());
 
-    return methods.terms(filterIdMatch, index, collection, filter, false)
-      .then(() => methods.terms(filterIdNotMatch, index, collection, filter, true));
+    return methods.in(filterIdMatch, index, collection, filter, false)
+      .then(() => methods.in(filterIdNotMatch, index, collection, filter, true));
   });
 
   it('should construct the filterTree object for the correct attribute', () => {
@@ -35,14 +35,14 @@ describe('Test "terms" method', () => {
   });
 
   it('should construct the filterTree with correct curried function name', () => {
-    should(methods.filters.filtersTree[index][collection].fields[fieldFirstName][termsfirstNameGraceJean]).not.be.empty();
-    should(methods.filters.filtersTree[index][collection].fields[fieldFirstName][nottermsfirstNameGraceJean]).not.be.empty();
+    should(methods.filters.filtersTree[index][collection].fields[fieldFirstName][infirstNameGraceJean]).not.be.empty();
+    should(methods.filters.filtersTree[index][collection].fields[fieldFirstName][notinfirstNameGraceJean]).not.be.empty();
   });
 
   it('should construct the filterTree with correct room list', () => {
     var
-      ids = methods.filters.filtersTree[index][collection].fields[fieldFirstName][termsfirstNameGraceJean].ids,
-      idsNot = methods.filters.filtersTree[index][collection].fields[fieldFirstName][nottermsfirstNameGraceJean].ids;
+      ids = methods.filters.filtersTree[index][collection].fields[fieldFirstName][infirstNameGraceJean].ids,
+      idsNot = methods.filters.filtersTree[index][collection].fields[fieldFirstName][notinfirstNameGraceJean].ids;
 
     should(ids).be.an.Array();
     should(idsNot).be.an.Array();
@@ -55,15 +55,15 @@ describe('Test "terms" method', () => {
   });
 
   it('should construct the filterTree with correct functions terms', () => {
-    should(methods.filters.filtersTree[index][collection].fields[fieldFirstName][termsfirstNameGraceJean].args).match({
-      operator: 'terms',
+    should(methods.filters.filtersTree[index][collection].fields[fieldFirstName][infirstNameGraceJean].args).match({
+      operator: 'in',
       not: false,
       field: 'firstName',
       value: [ 'Grace', 'Jean' ]
     });
 
-    should(methods.filters.filtersTree[index][collection].fields[fieldFirstName][nottermsfirstNameGraceJean].args).match({
-      operator: 'terms',
+    should(methods.filters.filtersTree[index][collection].fields[fieldFirstName][notinfirstNameGraceJean].args).match({
+      operator: 'in',
       not: true,
       field: 'firstName',
       value: [ 'Grace', 'Jean' ]

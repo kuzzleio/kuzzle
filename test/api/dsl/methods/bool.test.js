@@ -16,7 +16,7 @@ describe('Test bool method', () => {
     filter = {
       must : [
         {
-          terms : {
+          in : {
             firstName : ['Grace', 'Ada']
           }
         },
@@ -31,14 +31,14 @@ describe('Test bool method', () => {
       ],
       'must_not' : [
         {
-          term: {
+          equals: {
             city: 'NYC'
           }
         }
       ],
       should : [
         {
-          term : {
+          equals: {
             hobby : 'computer'
           }
         },
@@ -51,8 +51,8 @@ describe('Test bool method', () => {
     },
     rangeagegte36 = md5('rangeagegte36'),
     rangeagelt85 = md5('rangeagelt85'),
-    nottermcityNYC = md5('nottermcityNYC'),
-    termhobbycomputer = md5('termhobbycomputer'),
+    notequalscityNYC = md5('notequalscityNYC'),
+    equalshobbycomputer = md5('equalshobbycomputer'),
     existslastName = md5('existslastName'),
     fieldFirstName = md5('firstName'),
     fieldAge = md5('age'),
@@ -85,18 +85,18 @@ describe('Test bool method', () => {
   });
 
   it('should construct the filterTree with correct curried function name', () => {
-    should(methods.filters.filtersTree[index][collection].fields[fieldFirstName][md5('termsfirstNameGrace,Ada')]).not.be.empty();
+    should(methods.filters.filtersTree[index][collection].fields[fieldFirstName][md5('infirstNameGrace,Ada')]).not.be.empty();
     should(methods.filters.filtersTree[index][collection].fields[fieldAge][rangeagegte36]).not.be.empty();
     should(methods.filters.filtersTree[index][collection].fields[fieldAge][rangeagelt85]).not.be.empty();
-    should(methods.filters.filtersTree[index][collection].fields[fieldCity][nottermcityNYC]).not.be.empty();
-    should(methods.filters.filtersTree[index][collection].fields[fieldHobby][termhobbycomputer]).not.be.empty();
+    should(methods.filters.filtersTree[index][collection].fields[fieldCity][notequalscityNYC]).not.be.empty();
+    should(methods.filters.filtersTree[index][collection].fields[fieldHobby][equalshobbycomputer]).not.be.empty();
     should(methods.filters.filtersTree[index][collection].fields[fieldLastName][existslastName]).not.be.empty();
   });
 
   it('should construct the filterTree with correct room list', () => {
     var ids;
 
-    ids = methods.filters.filtersTree[index][collection].fields[fieldFirstName][md5('termsfirstNameGrace,Ada')].ids;
+    ids = methods.filters.filtersTree[index][collection].fields[fieldFirstName][md5('infirstNameGrace,Ada')].ids;
     should(ids).be.an.Array();
     should(ids).have.length(1);
     should(ids[0]).be.exactly(filterId);
@@ -110,12 +110,12 @@ describe('Test bool method', () => {
     should(ids).have.length(1);
     should(ids[0]).be.exactly(filterId);
 
-    ids = methods.filters.filtersTree[index][collection].fields[fieldCity][nottermcityNYC].ids;
+    ids = methods.filters.filtersTree[index][collection].fields[fieldCity][notequalscityNYC].ids;
     should(ids).be.an.Array();
     should(ids).have.length(1);
     should(ids[0]).be.exactly(filterId);
 
-    ids = methods.filters.filtersTree[index][collection].fields[fieldHobby][termhobbycomputer].ids;
+    ids = methods.filters.filtersTree[index][collection].fields[fieldHobby][equalshobbycomputer].ids;
     should(ids).be.an.Array();
     should(ids).have.length(1);
     should(ids[0]).be.exactly(filterId);
@@ -127,8 +127,8 @@ describe('Test bool method', () => {
   });
 
   it('should construct the filterTree with correct arguments', () => {
-    should(methods.filters.filtersTree[index][collection].fields[fieldFirstName][md5('termsfirstNameGrace,Ada')].args).match({
-      operator: 'terms',
+    should(methods.filters.filtersTree[index][collection].fields[fieldFirstName][md5('infirstNameGrace,Ada')].args).match({
+      operator: 'in',
       not: undefined,
       field: 'firstName',
       value: ['Grace', 'Ada']
@@ -148,15 +148,15 @@ describe('Test bool method', () => {
       value: 85
     });
 
-    should(methods.filters.filtersTree[index][collection].fields[fieldCity][nottermcityNYC].args).match({
-      operator: 'term',
+    should(methods.filters.filtersTree[index][collection].fields[fieldCity][notequalscityNYC].args).match({
+      operator: 'equals',
       not: true,
       field: 'city',
       value: 'NYC'
     });
 
-    should(methods.filters.filtersTree[index][collection].fields[fieldHobby][termhobbycomputer].args).match({
-      operator: 'term',
+    should(methods.filters.filtersTree[index][collection].fields[fieldHobby][equalshobbycomputer].args).match({
+      operator: 'equals',
       not: undefined,
       field: 'hobby',
       value: 'computer'

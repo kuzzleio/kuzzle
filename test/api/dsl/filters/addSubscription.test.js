@@ -14,7 +14,7 @@ describe('Test: dsl.filters.addSubscription', () => {
       }
     },
     filter = {
-      terms: {
+      in: {
         city: ['NYC', 'London']
       }
     };

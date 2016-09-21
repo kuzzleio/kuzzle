@@ -25,7 +25,7 @@ describe('Test: dsl.test', () => {
       bool: {
         must: [
           {
-            terms: {
+            in: {
               city: ['NYC', 'London']
             }
           },
@@ -40,7 +40,7 @@ describe('Test: dsl.test', () => {
                 }
               },
               {
-                term: {
+                equals: {
                   hobby: 'computer'
                 }
               }

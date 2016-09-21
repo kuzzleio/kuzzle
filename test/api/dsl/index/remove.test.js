@@ -10,7 +10,7 @@ describe('Test: dsl.remove', () => {
     collection = 'user',
     filterId = 'foo',
     filter = {
-      terms: {
+      in: {
         city: ['NYC', 'London']
       }
     };
