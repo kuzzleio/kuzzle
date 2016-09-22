@@ -21,14 +21,14 @@ describe('Test: dsl.should method', () => {
     methods = new Methods({filtersTree: {}});
   });
 
-  it('should call the function "AND" in case of a should-not filter', () => {
-    var andIsCalled = false;
-    methods.and = () => {
-      andIsCalled = true;
+  it('should call the function "OR" in case of a should-not filter', () => {
+    var orIsCalled = false;
+    methods.or = () => {
+      orIsCalled = true;
     };
 
     methods.should('roomId', 'index', {}, {}, true);
-    should(andIsCalled).be.exactly(true);
+    should(orIsCalled).be.exactly(true);
   });
 
   it('should call the function "OR" in case of a should filter', () => {
