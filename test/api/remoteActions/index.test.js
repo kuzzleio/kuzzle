@@ -56,12 +56,13 @@ describe('Tests: api/remoteActions/index.js', () => {
           adminExists: action,
           cleanAndPrepare: action,
           cleanDb: action,
+          clearCache: action,
           createFirstAdmin: action,
           enableServices: action,
           managePlugins: action,
           prepareDb: action
         });
-        should(spy).have.callCount(7);
+        should(spy).have.callCount(8);
       });
     });
 
