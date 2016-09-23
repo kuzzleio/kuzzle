@@ -394,7 +394,7 @@ describe('Test: ElasticSearch service', () => {
         });
     });
 
-    it('should return a rejected promise with a NotFoundError when updating a document which does not exist', done => {
+    it('should return a rejected promise with a customised NotFoundError when elasticsearch throws a known error', done => {
       var spy;
       var esError = {
         displayName: 'NotFound',
