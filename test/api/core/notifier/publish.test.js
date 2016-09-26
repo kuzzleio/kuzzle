@@ -17,19 +17,19 @@ describe('Test: notifier.publish', () => {
   var
     dbname = 'unit-tests',
     kuzzle,
-    notificationCache,
+    internalCache,
     notification,
     request,
-    spyNotificationCacheAdd,
-    spyNotificationCacheExpire,
+    spyInternalCacheAdd,
+    spyInternalCacheExpire,
     rooms = ['foo'];
 
   before(() => {
     kuzzle = new Kuzzle();
     kuzzle.config.services.cache.databases.push(dbname);
-    notificationCache = new Redis(kuzzle, {service: dbname}, kuzzle.config.services.cache);
+    internalCache = new Redis(kuzzle, {service: dbname}, kuzzle.config.services.cache);
     return Redis.__with__('buildClient', () => new RedisClientMock())(() => {
-      return notificationCache.init();
+      return internalCache.init();
     });
   });
 
@@ -46,9 +46,9 @@ describe('Test: notifier.publish', () => {
           body: { youAre: 'fabulous too' },
           metadata: {}
         };
-        kuzzle.services.list.notificationCache = notificationCache;
-        spyNotificationCacheAdd = sandbox.stub(kuzzle.services.list.notificationCache, 'add').resolves({});
-        spyNotificationCacheExpire = sandbox.stub(kuzzle.services.list.notificationCache, 'expire').resolves({});
+        kuzzle.services.list.internalCache = internalCache;
+        spyInternalCacheAdd = sandbox.stub(kuzzle.services.list.internalCache, 'add').resolves({});
+        spyInternalCacheExpire = sandbox.stub(kuzzle.services.list.internalCache, 'expire').resolves({});
         sandbox.stub(kuzzle.notifier, 'notify', (r, rq, n) => {notification = n;});
 
         notification = null;
@@ -68,8 +68,8 @@ describe('Test: notifier.publish', () => {
         should(notification.scope).be.eql('in');
         should(notification._id).be.eql(request._id);
         should(notification._source).be.eql(request.body);
-        should(spyNotificationCacheAdd.called).be.false();
-        should(spyNotificationCacheExpire.called).be.false();
+        should(spyInternalCacheAdd.called).be.false();
+        should(spyInternalCacheExpire.called).be.false();
       });
   });
 
@@ -83,8 +83,8 @@ describe('Test: notifier.publish', () => {
         should(notification.scope).be.undefined();
         should(notification._id).be.eql(request._id);
         should(notification._source).be.eql(request.body);
-        should(spyNotificationCacheAdd.calledOnce).be.true();
-        should(spyNotificationCacheExpire.calledOnce).be.true();
+        should(spyInternalCacheAdd.calledOnce).be.true();
+        should(spyInternalCacheExpire.calledOnce).be.true();
       });
   });
 
@@ -98,8 +98,8 @@ describe('Test: notifier.publish', () => {
         should(notification.scope).be.undefined();
         should(notification._id).be.eql(request._id);
         should(notification._source).be.eql(request.body);
-        should(spyNotificationCacheAdd.calledOnce).be.true();
-        should(spyNotificationCacheExpire.calledOnce).be.true();
+        should(spyInternalCacheAdd.calledOnce).be.true();
+        should(spyInternalCacheExpire.calledOnce).be.true();
       });
   });
 
@@ -113,8 +113,8 @@ describe('Test: notifier.publish', () => {
         should(notification.scope).be.undefined();
         should(notification._id).be.eql(request._id);
         should(notification._source).be.eql(request.body);
-        should(spyNotificationCacheAdd.calledOnce).be.true();
-        should(spyNotificationCacheExpire.calledOnce).be.true();
+        should(spyInternalCacheAdd.calledOnce).be.true();
+        should(spyInternalCacheExpire.calledOnce).be.true();
       });
   });
 
@@ -125,8 +125,8 @@ describe('Test: notifier.publish', () => {
       .then(result => {
         should(result).match({published: true});
         should(notification).be.null();
-        should(spyNotificationCacheAdd.called).be.false();
-        should(spyNotificationCacheExpire.called).be.false();
+        should(spyInternalCacheAdd.called).be.false();
+        should(spyInternalCacheExpire.called).be.false();
       });
   });
 

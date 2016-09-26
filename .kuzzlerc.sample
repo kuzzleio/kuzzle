@@ -1,7 +1,7 @@
 {
   // -------------------------------------------------------------------------
   // Kuzzle configuration sample file
-  // 
+  //
   // You can copy this file to a valid [rc](https://github.com/dominictarr/rc)
   // file location to customize Kuzzle configuration
   // -------------------------------------------------------------------------
@@ -25,11 +25,11 @@
 
     // Each next block entry is a plugin configuration.
     // A plugin can be installed from 3 different sources:
-    //   * from a npm package: the entry must be the package name in npm and 
+    //   * from a npm package: the entry must be the package name in npm and
     //     the version must be specified usind the "npmVersion" property
-    //   * from a git repository: the git repository url must be specified 
+    //   * from a git repository: the git repository url must be specified
     //     using the "gitUrl" property
-    //   * from a local directory: the location of the package must be 
+    //   * from a local directory: the location of the package must be
     //     specified using the "path" property
     "kuzzle-plugin-logger": {
       "npmVersion": "2.0.4",
@@ -51,7 +51,7 @@
 
   // The repositories are used internally by Kuzzle to store its data (users,
   // permissions, configuration etc.)
-  /* 
+  /*
   "repositories": {
     // [Common]
     //   * cacheTTL: the time in the objects should be kepts in cache
@@ -68,9 +68,9 @@
   /*
   "security": {
     // [jwt]
-    // configuration for npm 
+    // configuration for npm
     // [jsonwebtoken package](https://github.com/auth0/node-jsonwebtoken)
-    // 
+    //
     //   * algorithm: hash/encryption method used to sign the token
     //   * expiresIn: expressed in seconds or a rouchg/ms compatible string
     //   * secret: a string or buffer containing either the secret for HMAC
@@ -82,7 +82,7 @@
       "secret": "Change me"
     },
     // [default]
-    // The default role described here defines the permissions for the 
+    // The default role described here defines the permissions for the
     // anonymous user until an administrator user is created.
     // By default, all users are granted all permissions until an administrator
     // is defined.
@@ -100,7 +100,7 @@
     // [standard]
     // Permissions used when creating an administrator user, either using the
     // CLI or the Back Office.
-    // 
+    //
     // By default, the admin user is granted all permissions.
     // Anonymous and non-administrator users are restricted to the "serverInfo"
     // action.
@@ -207,25 +207,17 @@
     // [cache]
     // The cache service relies on Redis
     //   node:
-    //     * host: The host on which Redis can be reached. Can take an IP 
+    //     * host: The host on which Redis can be reached. Can take an IP
     //       address, an URI or a hostname
     //     * port: The port on which Redis is running
     "cache": {
       "backend": "redis",
       "aliases": [
-        "notificationCache",
-        "statsCache",
-        "securityCache",
         "internalCache",
-        "tokenCache",
         "memoryStorage"
       ],
       "databases": [
-        "notificationCache",
-        "statsCache",
-        "securityCache",
         "internalCache",
-        "tokenCache",
         "memoryStorage"
       ],
       "node": {
@@ -235,7 +227,7 @@
     },
 
     // [internalBroker]
-    // The internalBroker is used for internal Kuzzle communication, 
+    // The internalBroker is used for internal Kuzzle communication,
     // notably to transport messages between the CLI and the server.
     //   * host: Host of Kuzzle server. Change this if you want to use the CLI
     //     from a different host than the one Kuzzle is running on.
@@ -250,7 +242,7 @@
     // The proxy broker is used to communicate between the Proxy and Kuzzle
     // server.
     //   * host: the host on which the proxy can be reached. Can be a hostname,
-    //     an IP address or an URI. 
+    //     an IP address or an URI.
     //   * port: the port on which the proxy is listening
     "proxyBroker": {
       "host": "localhost",
@@ -258,7 +250,7 @@
       "retryInterval": 1000
     },
     // [db]
-    // The database layer is by default relying on elasticsearch and is 
+    // The database layer is by default relying on elasticsearch and is
     // currently the only available backend.
     //   * host: The host on which elasticsearch can be reached. Can be a
     //     hostname, an URI or an IP address.
@@ -276,7 +268,7 @@
 
     // Configuration for Kuzzle internal statistics module
     //   * ttl: Time in s for which the statistics framed are stored
-    //   * statsInterval: Time in s between statistics framed are comitted to 
+    //   * statsInterval: Time in s between statistics framed are comitted to
     //     the cache engine
     /*
     "stats": {

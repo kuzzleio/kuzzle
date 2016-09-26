@@ -128,19 +128,11 @@ module.exports = {
     cache: {
       backend: 'redis',
       aliases: [
-        'notificationCache',
-        'statsCache',
-        'securityCache',
         'internalCache',
-        'tokenCache',
         'memoryStorage'
       ],
       databases: [
-        'notificationCache',
-        'statsCache',
-        'securityCache',
         'internalCache',
-        'tokenCache',
         'memoryStorage'
       ],
       node: {

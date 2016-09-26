@@ -113,6 +113,7 @@ describe('Test: repositories/tokenRepository', () => {
     kuzzle.repositories.user = mockUserRepository;
 
     tokenRepository = new TokenRepository(kuzzle);
+    tokenRepository.init();
     tokenRepository.cacheEngine = mockCacheEngine;
 
     kuzzle.tokenManager = {
