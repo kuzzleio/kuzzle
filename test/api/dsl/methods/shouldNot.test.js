@@ -5,7 +5,7 @@ var
   Promise = require('bluebird'),
   Methods = rewire('../../../../lib/api/dsl/methods');
 
-describe('Test: dsl.should method', () => {
+describe('Test: dsl.shouldNot method', () => {
   var
     methods,
     sandbox;
@@ -22,8 +22,15 @@ describe('Test: dsl.should method', () => {
 
   it('should call the function "OR" in case of a should filter', () => {
     sandbox.stub(methods, 'or');
-    methods.should('roomId', 'index', {}, {}, false);
+    methods.shouldNot('roomId', 'index', {}, {}, false);
     should(methods.or.called).be.true();
-    should(methods.or.calledWith('roomId', 'index', {}, {}, false)).be.true();
+    should(methods.or.calledWith('roomId', 'index', {}, {}, true)).be.true();
+  });
+
+  it('should force the "not" argument to "true" if undefined', () => {
+    sandbox.stub(methods, 'or');
+    methods.shouldNot('roomId', 'index', {}, {});
+    should(methods.or.called).be.true();
+    should(methods.or.calledWith('roomId', 'index', {}, {}, true)).be.true();
   });
 });
