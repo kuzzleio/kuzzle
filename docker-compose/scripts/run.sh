@@ -19,6 +19,8 @@ if ! (echo ${E} | grep -E '"status":"(yellow|green)"' > /dev/null); then
     exit 1
 fi
 
+echo "" > node_modules/pm2/lib/keymetrics
+
 npm install
 
 echo "Starting Kuzzle..."
