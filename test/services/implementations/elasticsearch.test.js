@@ -373,6 +373,7 @@ describe('Test: ElasticSearch service', () => {
       var spy;
       var esError = {
         displayName: 'NotFound',
+        message: 'test',
         body: {
           error: {
             reason: 'foo'
@@ -422,7 +423,10 @@ describe('Test: ElasticSearch service', () => {
     });
 
     it('should return a rejected promise with an Error if an update fails for unknow reason', done => {
-      var spy = sandbox.stub(elasticsearch.client, 'update').rejects({});
+      var esError = {
+        message: 'unknow error'
+      };
+      var spy = sandbox.stub(elasticsearch.client, 'update').rejects(esError);
       var spyTrigger = sandbox.stub(kuzzle.pluginsManager, 'trigger');
 
       elasticsearch.update(requestObject)
@@ -727,6 +731,7 @@ describe('Test: ElasticSearch service', () => {
     it('should reject and handle error for bad mapping input', done => {
       var spy = sandbox.stub(elasticsearch.client.indices, 'putMapping').rejects({
         displayName: 'BadRequest',
+        message: 'test',
         body: {
           error: {
             reason: 'foo'
