@@ -36,9 +36,9 @@ module.exports = function (database, options) {
     console.log(warn('[ℹ] This operation cannot be undone.\n'));
     userIsSure = params.noint || readlineSync.question('[❓] Are you sure? If so, please type "I am sure" (if not just press [Enter]): ') === 'I am sure';
   } else if (database) {
-    userIsSure = readlineSync.keyInYN(question('[❓] Do you want t clear Kuzzle internal cache for "'.concat(database, '".')));
+    userIsSure = readlineSync.keyInYN(question('[❓] Do you want to clear Kuzzle internal cache for "'.concat(database, '".')));
   } else {
-    userIsSure = readlineSync.keyInYN(question('[❓] Do you want t clear all Kuzzle internal cache'));
+    userIsSure = readlineSync.keyInYN(question('[❓] Do you want to clear all Kuzzle internal cache'));
   }
 
   if (userIsSure) {
