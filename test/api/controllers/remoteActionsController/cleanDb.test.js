@@ -10,13 +10,6 @@ describe('Test: clean database', () => {
 
   beforeEach(() => {
     kuzzle = {
-      config: {
-        services: {
-          cache: {
-            aliases: ['memoryStorage', 'foo', 'bar']
-          }
-        }
-      },
       indexCache: {
         remove: sinon.spy()
       },
@@ -29,10 +22,7 @@ describe('Test: clean database', () => {
           memoryStorage: {
             flushdb: callback => callback(null)
           },
-          foo: {
-            flushdb: callback => callback(null)
-          },
-          bar: {
+          internalCache: {
             flushdb: callback => callback(null)
           }
         }
@@ -54,18 +44,16 @@ describe('Test: clean database', () => {
       });
   });
 
-  it('should clean the memoryStorage and the internal caches', () => {
+  it('should clean the memoryStorage and the internalCache', () => {
     var spies = {
       memoryStorage: sinon.spy(kuzzle.services.list.memoryStorage, 'flushdb'),
-      foo: sinon.spy(kuzzle.services.list.foo, 'flushdb'),
-      bar: sinon.spy(kuzzle.services.list.bar, 'flushdb')
+      internalCache: sinon.spy(kuzzle.services.list.internalCache, 'flushdb')
     };
 
     return cleanDb()
       .then(() => {
         should(spies.memoryStorage).be.calledOnce();
-        should(spies.foo).be.calledOnce();
-        should(spies.bar).be.calledOnce();
+        should(spies.internalCache).be.calledOnce();
       });
   });
 
