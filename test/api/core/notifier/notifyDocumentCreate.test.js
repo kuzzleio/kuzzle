@@ -66,7 +66,7 @@ describe('Test: notifier.notifyDocumentCreate', () => {
         should(notifiedRooms).be.an.Array();
         should(notifiedRooms.length).be.exactly(1);
         should(notifiedRooms[0]).be.exactly('foobar');
-        should(mockupCacheService.id).be.exactly('notification/' + newDocument._id);
+        should(mockupCacheService.id).be.exactly('notif/' + newDocument._id);
         should(mockupCacheService.room).be.an.Array();
         should(mockupCacheService.room[0]).be.exactly('foobar');
 

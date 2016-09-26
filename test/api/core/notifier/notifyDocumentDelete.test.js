@@ -74,7 +74,7 @@ describe('Test: notifier.notifyDocumentDelete', () => {
 
     return kuzzle.notifier.notifyDocumentDelete(requestObject, ['foobar'])
       .then(() => {
-        should(mockupCacheService.id).be.exactly('notification/foobar');
+        should(mockupCacheService.id).be.exactly('notif/foobar');
 
         should(notification.length).be.eql(1);
         should(notification[0].scope).be.exactly('out');

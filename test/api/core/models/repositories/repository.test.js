@@ -38,16 +38,16 @@ describe('Test: repositories/repository', () => {
 
   mockCacheEngine = {
     get: key => {
-      if (key === 'repositories/' + repository.index + '/' + repository.collection + '/persisted') {
+      if (key === 'repos/' + repository.index + '/' + repository.collection + '/persisted') {
         return Promise.resolve(JSON.stringify(persistedObject));
       }
-      if (key === 'repositories/' + repository.index + '/' + repository.collection + '/cached') {
+      if (key === 'repos/' + repository.index + '/' + repository.collection + '/cached') {
         return Promise.resolve(JSON.stringify(cachedObject));
       }
-      if (key === 'repositories/' + repository.index + '/' + repository.collection + '/error') {
+      if (key === 'repos/' + repository.index + '/' + repository.collection + '/error') {
         return Promise.reject(new InternalError('Error'));
       }
-      if (key === 'repositories/' + repository.index + '/' + repository.collection + '/string') {
+      if (key === 'repos/' + repository.index + '/' + repository.collection + '/string') {
         return Promise.resolve('a string');
       }
 

@@ -27,7 +27,7 @@ describe('Test: repositories/userRepository', () => {
     kuzzle = new Kuzzle();
     mockCacheEngine = {
       get: key => {
-        if (key === 'repositories/' + userRepository.index + '/' + userRepository.collection + '/userInCache') {
+        if (key === 'repos/' + userRepository.index + '/' + userRepository.collection + '/userInCache') {
           return Promise.resolve(JSON.stringify(userInCache));
         }
         return Promise.resolve(null);

@@ -41,10 +41,10 @@ describe('Test: notifier.notifyDocumentReplace', () => {
       },
 
       search: function (id) {
-        if (['notification/removeme', 'notification/addme'].indexOf(id) !== -1) {
+        if (['notif/removeme', 'notif/addme'].indexOf(id) !== -1) {
           return Promise.resolve(['foobar']);
         }
-        else if (id === 'notification/errorme') {
+        else if (id === 'notif/errorme') {
           return Promise.reject(new Error('rejected'));
         }
 
@@ -95,7 +95,7 @@ describe('Test: notifier.notifyDocumentReplace', () => {
     return kuzzle.notifier.notifyDocumentReplace(requestObject)
       .then(() => {
         should(notified).be.exactly(1);
-        should(mockupCacheService.addId).be.exactly('notification/' + requestObject.data._id);
+        should(mockupCacheService.addId).be.exactly('notif/' + requestObject.data._id);
         should(mockupCacheService.room).be.an.Array();
         should(mockupCacheService.room[0]).be.exactly('foobar');
         should(mockupCacheService.removeId).be.undefined();
@@ -115,7 +115,7 @@ describe('Test: notifier.notifyDocumentReplace', () => {
         should(notified).be.exactly(1);
         should(mockupCacheService.addId).be.undefined();
         should(mockupCacheService.room).be.undefined();
-        should(mockupCacheService.removeId).be.exactly('notification/' + requestObject.data._id);
+        should(mockupCacheService.removeId).be.exactly('notif/' + requestObject.data._id);
 
         should(notification.scope).be.exactly('out');
         should(notification.action).be.exactly('update');
