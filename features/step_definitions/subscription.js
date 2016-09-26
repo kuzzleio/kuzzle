@@ -109,13 +109,15 @@ var apiSteps = function () {
     this.api.countSubscription()
       .then(function (response) {
         if (response.error) {
-          callback(new Error(response.error.message));
-          return false;
+          return callback(new Error(response.error.message));
         }
 
-        if (!response.result.count || response.result.count !== parseInt(number)) {
-          callback(new Error('No correct value for count. Expected ' + number + ', got ' + response.result));
-          return false;
+        if (!response.result.count) {
+          return callback(new Error('Expected a "count" value in response'));
+        }
+
+        if (response.result.count !== parseInt(number)) {
+          return callback(new Error('No correct value for count. Expected ' + number + ', got ' + response.result.count));
         }
 
         callback();
