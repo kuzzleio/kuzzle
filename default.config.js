@@ -135,7 +135,7 @@ module.exports = {
     },
     memoryStorage: {
       backend: 'redis',
-      database: 1,
+      database: 5,
       node: {
         host: 'redis',
         port: 6379

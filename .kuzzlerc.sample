@@ -222,14 +222,14 @@
 
     // [memoryStorage]
     // The Redis memoryStorage Engine
-    //   database: the ID of the redis database (default: 1, when using same redis server as internalCache)
+    //   database: the ID of the redis database (default: 5, when using same redis server as internalCache)
     //   node:
     //     * host: The host on which Redis can be reached. Can take an IP
     //       address, an URI or a hostname
     //     * port: The port on which Redis is running
     memoryStorage: {
       backend: 'redis',
-      database: 1,
+      database: 5,
       node: {
         host: 'redis',
         port: 6379
