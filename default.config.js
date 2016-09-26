@@ -127,7 +127,6 @@ module.exports = {
 
     internalCache: {
       backend: 'redis',
-      database: 0,
       node: {
         host: 'redis',
         port: 6379

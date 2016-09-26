@@ -206,33 +206,64 @@
 
     // [internalCache]
     // The cache service relies on Redis
-    //   database: the ID of the redis database (default: 0)
+    // sample settings for Redis service (see also https://github.com/luin/ioredis):
+    //
+    // 1. using a single Redis database:
     //   node:
-    //     * host: The host on which Redis can be reached. Can take an IP
-    //       address, an URI or a hostname
+    //     * host: The host on which Redis can be reached.
+    //       Can take an IP address, an URI or a hostname
     //     * port: The port on which Redis is running
-    internalCache: {
-      backend: 'redis',
-      database: 0,
-      node: {
-        host: 'redis',
-        port: 6379
+    //   database: (optional) the ID of the redis database (default: 0)
+    "internalCache": {
+      "backend": "redis",
+      "node": {
+        "host": "redis",
+        "port": 6379
       }
+    },
+    // 2. using a master/slaves Redis instance with Redis sentinels (cf. http://redis.io/topics/sentinel):
+    //   node:
+    //     * sentinels: array of sentinels instances:
+    //       * host: the host on which the sentinel can be reached.
+    //         Can take an IP address, an URI or a hostname
+    //       * port: The port on which the sentinel is running
+    //     * name: a group of Redis instances composed of a master and one or more slaves
+    //   database: (optional) the ID of the redis database (default: 0)
+    "internalCache": {
+      "backend": "redis",
+      "node": {
+        "sentinels": [
+          {"host": "sentinel-host-1", "port": 26379},
+          {"host": "sentinel-host-2", "port": 26379}
+        ],
+        "name": "kuzzle"
+      }
+    },
+    // 3. using a redis cluster (cf. http://redis.io/topics/cluster-spec):
+    //   nodes: array of master nodes of the cluster
+    //     * host: The host on which the Redis node can be reached.
+    //       Can take an IP address, an URI or a hostname
+    //     * port: The port on which Redis is running
+    // (NB: in cluster mode, Redis uses only 1 database)
+    "internalCache": {
+      "backend": "redis",
+      "nodes": [
+        {"host": "redis-1", "port": 6379},
+        {"host": "redis-2", "port": 6379},
+        {"host": "redis-3', "port": 6379}
+      ]
     },
 
     // [memoryStorage]
     // The Redis memoryStorage Engine
-    //   database: the ID of the redis database (default: 5, when using same redis server as internalCache)
-    //   node:
-    //     * host: The host on which Redis can be reached. Can take an IP
-    //       address, an URI or a hostname
-    //     * port: The port on which Redis is running
-    memoryStorage: {
-      backend: 'redis',
-      database: 5,
-      node: {
-        host: 'redis',
-        port: 6379
+    // (see "internalCache" above for sample settings)
+    // (NB: by default, the memoryStorage uses the same redis server as internalCache, on database number "5")
+    "memoryStorage": {
+      "backend": "redis",
+      "database": 5,
+      "node": {
+        "host": "redis",
+        "port": 6379
       }
     },
 
