@@ -125,16 +125,17 @@ module.exports = {
       retryInterval: 1000
     },
 
-    cache: {
+    internalCache: {
       backend: 'redis',
-      aliases: [
-        'internalCache',
-        'memoryStorage'
-      ],
-      databases: [
-        'internalCache',
-        'memoryStorage'
-      ],
+      database: 0,
+      node: {
+        host: 'redis',
+        port: 6379
+      }
+    },
+    memoryStorage: {
+      backend: 'redis',
+      database: 1,
       node: {
         host: 'redis',
         port: 6379

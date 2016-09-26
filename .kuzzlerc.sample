@@ -204,25 +204,35 @@
       "retryInterval": 1000
     },
 
-    // [cache]
+    // [internalCache]
     // The cache service relies on Redis
+    //   database: the ID of the redis database (default: 0)
     //   node:
     //     * host: The host on which Redis can be reached. Can take an IP
     //       address, an URI or a hostname
     //     * port: The port on which Redis is running
-    "cache": {
-      "backend": "redis",
-      "aliases": [
-        "internalCache",
-        "memoryStorage"
-      ],
-      "databases": [
-        "internalCache",
-        "memoryStorage"
-      ],
-      "node": {
-        "host": "redis",
-        "port": 6379
+    internalCache: {
+      backend: 'redis',
+      database: 0,
+      node: {
+        host: 'redis',
+        port: 6379
+      }
+    },
+
+    // [memoryStorage]
+    // The Redis memoryStorage Engine
+    //   database: the ID of the redis database (default: 1, when using same redis server as internalCache)
+    //   node:
+    //     * host: The host on which Redis can be reached. Can take an IP
+    //       address, an URI or a hostname
+    //     * port: The port on which Redis is running
+    memoryStorage: {
+      backend: 'redis',
+      database: 1,
+      node: {
+        host: 'redis',
+        port: 6379
       }
     },
 

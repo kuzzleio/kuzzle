@@ -5,7 +5,7 @@ var
   Promise = require('bluebird');
 
 
-function RedisClientMock () {
+function RedisClientMock (err) {
   this.getBuiltinCommands = getBuiltinCommands;
 
   this.scanStream = options => {
@@ -38,13 +38,11 @@ function RedisClientMock () {
     };
   });
 
-  this.select = this.SELECT = (key, callback) => callback(null);
+  this.select = this.SELECT = (key, callback) => key > 16 ? callback('Unknown database') : callback(null);
 
   this.flushdb = this.FLUSHDB = callback => callback(null);
 
-  process.nextTick(() => {
-    this.emit('ready');
-  });
+  process.nextTick(() => err ? this.emit('error', err) : this.emit('ready'));
 }
 
 RedisClientMock.prototype = new EventEmitter();

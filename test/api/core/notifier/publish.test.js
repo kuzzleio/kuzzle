@@ -26,8 +26,7 @@ describe('Test: notifier.publish', () => {
 
   before(() => {
     kuzzle = new Kuzzle();
-    kuzzle.config.services.cache.databases.push(dbname);
-    internalCache = new Redis(kuzzle, {service: dbname}, kuzzle.config.services.cache);
+    internalCache = new Redis(kuzzle, {service: dbname}, kuzzle.config.services.internalCache);
     return Redis.__with__('buildClient', () => new RedisClientMock())(() => {
       return internalCache.init();
     });
