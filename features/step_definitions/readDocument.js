@@ -102,8 +102,7 @@ var apiSteps = function () {
   });
 
   this.Then(/^I ?(don't)* find a document with "([^"]*)"(?: in field "([^"]*)")?(?: in index "([^"]*)")?$/, function (dont, value, field, index) {
-    var filters = {filter: { term: {}}};
-    filters.filter.term[field] = value;
+    var filters = {filter: { term: { [field]: value }}};
 
     return this.api.search(filters, index)
       .then(function (body) {

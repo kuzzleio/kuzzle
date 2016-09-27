@@ -13,7 +13,7 @@ describe('Test: dsl.testFilterRecursively', () => {
       filter1 = {
         foo: {
           args: {
-            operator: 'term',
+            operator: 'equals',
             not: true,
             field: 'foo',
             value: 'bar'
@@ -23,7 +23,7 @@ describe('Test: dsl.testFilterRecursively', () => {
       filter2 = {
         foo: {
           args: {
-            operator: 'term',
+            operator: 'equals',
             not: false,
             field: 'foo',
             value: 'bar'
@@ -40,7 +40,7 @@ describe('Test: dsl.testFilterRecursively', () => {
       filter1 = {
         foo: {
           args: {
-            operator: 'term',
+            operator: 'equals',
             not: true,
             field: 'foo.bar',
             value: 'bar'
@@ -50,7 +50,7 @@ describe('Test: dsl.testFilterRecursively', () => {
       filter2 = {
         foo: {
           args: {
-            operator: 'term',
+            operator: 'equals',
             not: false,
             field: 'foo.bar',
             value: 'bar'
@@ -67,13 +67,13 @@ describe('Test: dsl.testFilterRecursively', () => {
       stub = sinon.stub(),
       filters = {
         foo: {
-          args: {operator: 'term', not: true, field: 'foo.bar', value: 'bar'}
+          args: {operator: 'equals', not: true, field: 'foo.bar', value: 'bar'}
         },
         bar: {
-          args: {operator: 'term', not: true, field: 'foo.bar', value: 'bar'}
+          args: {operator: 'equals', not: true, field: 'foo.bar', value: 'bar'}
         },
         baz: {
-          args: {operator: 'term', not: true, field: 'foo.bar', value: 'bar'}
+          args: {operator: 'equals', not: true, field: 'foo.bar', value: 'bar'}
         }
       };
 
@@ -99,13 +99,13 @@ describe('Test: dsl.testFilterRecursively', () => {
       stub = sinon.stub(),
       filters = {
         foo: {
-          args: {operator: 'term', not: true, field: 'foo.bar', value: 'bar'}
+          args: {operator: 'equals', not: true, field: 'foo.bar', value: 'bar'}
         },
         bar: {
-          args: {operator: 'term', not: true, field: 'foo.bar', value: 'bar'}
+          args: {operator: 'equals', not: true, field: 'foo.bar', value: 'bar'}
         },
         baz: {
-          args: {operator: 'term', not: true, field: 'foo.bar', value: 'bar'}
+          args: {operator: 'equals', not: true, field: 'foo.bar', value: 'bar'}
         }
       };
 

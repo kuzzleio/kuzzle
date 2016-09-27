@@ -20,12 +20,11 @@ describe('Test plugins manager run', () => {
 
   before(() => {
     pm2Mock = function () {
-      /* jshint -W106 */
       var universalProcess = {
         name: workerPrefix + 'testPlugin',
         pm_id: 42
       };
-      /* jshint +W106 */
+
       var busData = {
         'initialized': {
           process: universalProcess,
@@ -58,23 +57,19 @@ describe('Test plugins manager run', () => {
         },
         delete: function (pmId, callback) {
           processList = processList.filter(item => {
-            /* jshint -W106 */
             return item.process.pm_id !== pmId;
-            /* jshint +W106 */
           });
           callback(null);
         },
         start: function (processSpec, callback) {
           var i;
           for(i = 0; i < processSpec.instances; i++) {
-            /* jshint -W106 */
             processList.push({
               process: {
                 name: processSpec.name,
                 pm_id: uniqueness++
               }
             });
-            /* jshint +W106 */
           }
           callback();
         },
@@ -459,9 +454,7 @@ describe('Test plugins manager run', () => {
     pluginsManager.run()
       .then(() => {
         should(pm2Mock.getProcessList()).length(1);
-        /* jshint -W106 */
         should(pm2Mock.getProcessList()[0].process.pm_id).not.equal(42);
-        /* jshint +W106 */
         done();
       });
   });

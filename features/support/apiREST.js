@@ -123,7 +123,7 @@ ApiREST.prototype.getRequest = function (index, collection, controller, action, 
   if (verb !== 'GET') {
     result.body = { body: args.body };
   }
-  
+
   return result;
 };
 
@@ -264,7 +264,7 @@ ApiREST.prototype.bulkImport = function (bulk, index) {
   var options = {
     url: this.apiPath(((typeof index !== 'string') ? this.world.fakeIndex : index) + '/' + this.world.fakeCollection + '/_bulk'),
     method: 'POST',
-    body: bulk
+    body: {bulkData: bulk}
   };
 
   return this.callApi(options);
@@ -274,7 +274,7 @@ ApiREST.prototype.globalBulkImport = function (bulk) {
   var options = {
     url: this.apiPath('_bulk'),
     method: 'POST',
-    body: bulk
+    body: {bulkData: bulk}
   };
 
   return this.callApi(options);

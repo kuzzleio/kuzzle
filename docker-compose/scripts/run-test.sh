@@ -21,6 +21,8 @@ fi
 
 npm install
 
+echo "" > node_modules/pm2/lib/keymetrics
+
 echo "Starting Kuzzle..."
 
 node bin/kuzzle install \
