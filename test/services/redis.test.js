@@ -45,7 +45,7 @@ describe('Test redis service', () => {
     });
   });
 
-  it('should flush publicCache for common services', () => {
+  it('should not flush publicCache', () => {
     var
       myRedis = new Redis(kuzzle, {service: dbname}, kuzzle.config.services.cache),
       myRedisClient = new RedisClientMock(),
@@ -56,39 +56,7 @@ describe('Test redis service', () => {
         .then(() => {
           should(myRedis).have.property('client');
           should(myRedis.client).be.an.Object();
-          should(spy.calledOnce).be.true();
-        });
-    });
-  });
-
-  it('should not flush publicCache for memoryStorage service', () => {
-    var
-      myRedis = new Redis(kuzzle, {service: 'memoryStorage'}, kuzzle.config.services.cache),
-      myRedisClient = new RedisClientMock(),
-      spy = sandbox.spy(myRedisClient, 'flushdb');
-
-    return Redis.__with__('buildClient', () => myRedisClient)(() => {
-      return myRedis.init()
-        .then(() => {
-          should(myRedis).have.property('client');
-          should(myRedis.client).be.an.Object();
-          should(spy.called).be.false();
-        });
-    });
-  });
-
-  it('should reject if an error occurs during flushdb', () => {
-    var
-      myRedis = new Redis(kuzzle, {service: dbname}, kuzzle.config.services.cache),
-      myRedisClient = new RedisClientMock();
-
-    sandbox.stub(myRedisClient, 'flushdb', callback => callback(new Error('flushdb error')));
-
-    return Redis.__with__('buildClient', () => myRedisClient)(() => {
-      return myRedis.init()
-        .then(() => should.fail('An error should be raised'))
-        .catch((err) => {
-          should(err.message).be.equal('flushdb error');
+          should(spy.calledOnce).be.false();
         });
     });
   });

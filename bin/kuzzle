@@ -37,6 +37,12 @@ program
   .description('install all plugins configured in .kuzzlerc')
   .action(require('./commands/install'));
 
+// $ kuzzle clearCache
+program
+  .command('clearCache')
+  .description('clear internal caches in Redis')
+  .action(require('./commands/clearCache'));
+
 // $ kuzzle likeAvirgin
 program
   .command('likeAvirgin')
