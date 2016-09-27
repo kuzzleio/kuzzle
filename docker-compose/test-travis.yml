@@ -26,6 +26,8 @@ kuzzle:
     - TRAVIS_JOB_ID
     - TRAVIS_PULL_REQUEST
     - TRAVIS_REPO_SLUG
+    - kuzzle_services__db__host=elasticsearch
+    - kuzzle_services__cache__node__host=redis
 
 redis:
   image: redis:3.0-alpine
