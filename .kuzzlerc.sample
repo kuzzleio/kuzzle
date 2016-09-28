@@ -217,7 +217,7 @@
     "internalCache": {
       "backend": "redis",
       "node": {
-        "host": "redis",
+        "host": "localhost",
         "port": 6379
       }
     },
@@ -234,7 +234,8 @@
       "node": {
         "sentinels": [
           {"host": "sentinel-host-1", "port": 26379},
-          {"host": "sentinel-host-2", "port": 26379}
+          {"host": "sentinel-host-2", "port": 26379},
+          {"host": "sentinel-host-3", "port": 26379}
         ],
         "name": "kuzzle"
       }
@@ -262,7 +263,7 @@
       "backend": "redis",
       "database": 5,
       "node": {
-        "host": "redis",
+        "host": "localhost",
         "port": 6379
       }
     },

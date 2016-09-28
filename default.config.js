@@ -128,7 +128,7 @@ module.exports = {
     internalCache: {
       backend: 'redis',
       node: {
-        host: 'redis',
+        host: 'localhost',
         port: 6379
       }
     },
@@ -136,7 +136,7 @@ module.exports = {
       backend: 'redis',
       database: 5,
       node: {
-        host: 'redis',
+        host: 'localhost',
         port: 6379
       }
     },
@@ -154,7 +154,7 @@ module.exports = {
     db: {
       aliases: ['storageEngine'],
       backend: 'elasticsearch',
-      host: 'elasticsearch',
+      host: 'localhost',
       port: 9200,
       apiVersion: '2.3'
     }
