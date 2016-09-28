@@ -73,8 +73,7 @@ module.exports = function (options) {
 
   return kuzzle.remoteActions.do('adminExists', params)
     .then(adminExists => {
-      if (adminExists.data.body) {
-
+      if (adminExists.data.body.exists) {
         console.log('An administrator account already exists.');
         process.exit(0);
       }
