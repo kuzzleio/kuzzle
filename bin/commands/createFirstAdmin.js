@@ -114,6 +114,8 @@ module.exports = function (options) {
         console.log(clcOk('   - default'));
         console.log(clcOk('   - anonymous'));
       }
+
+      process.exit(0);
     })
     .catch(err => {
       console.error(clcError(err));
