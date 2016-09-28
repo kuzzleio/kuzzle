@@ -7,7 +7,7 @@ proxy:
 
 kuzzle:
   image: kuzzleio/test:alpine
-  command: sh -c '/run.sh; npm run codecov'
+  command: sh -c '/run.sh && npm run codecov'
   volumes:
     - "..:/var/app"
     - "./scripts/run-test.sh:/run.sh"
