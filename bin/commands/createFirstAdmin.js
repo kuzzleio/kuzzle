@@ -79,48 +79,43 @@ module.exports = function (options) {
         process.exit(0);
       }
 
-      getUserName()
-        .then(response => {
-          username = response;
-          return getPassword();
-        })
-        .then(pwd => {
-          password = pwd;
-          return shouldWeResetRoles();
-        })
-        .then(response => {
-          resetRoles = response;
-
-          return confirm(username, resetRoles);
-        })
-        .then(response => {
-          if (!response) {
-            process.exit(0);
-          }
-
-          return kuzzle.remoteActions.do('createFirstAdmin', {
-            _id: username,
-            password,
-            reset: resetRoles
-          },
-          {pid: params.pid, debug: options.parent.debug});
-        })
-        .then(() => {
-          console.log(clcOk(`[✔] "${username}" administrator account created`));
-
-          if (resetRoles) {
-            console.log(clcOk('[✔] Rights restriction applied to the following roles: '));
-            console.log(clcOk('   - default'));
-            console.log(clcOk('   - anonymous'));
-          }
-
-          process.exit(0);
-        })
-        .catch(err => {
-          console.error(err);
-          process.exit(1);
-        });
+      return getUserName();
     })
-    .catch(err => console.log(err));
+    .then(response => {
+      username = response;
+      return getPassword();
+    })
+    .then(pwd => {
+      password = pwd;
+      return shouldWeResetRoles();
+    })
+    .then(response => {
+      resetRoles = response;
 
+      return confirm(username, resetRoles);
+    })
+    .then(response => {
+      if (!response) {
+        process.exit(0);
+      }
+
+      return kuzzle.remoteActions.do('createFirstAdmin', {
+        _id: username,
+        password,
+        reset: resetRoles
+      }, {pid: params.pid, debug: options.parent.debug});
+    })
+    .then(() => {
+      console.log(clcOk(`[✔] "${username}" administrator account created`));
+
+      if (resetRoles) {
+        console.log(clcOk('[✔] Rights restriction applied to the following roles: '));
+        console.log(clcOk('   - default'));
+        console.log(clcOk('   - anonymous'));
+      }
+    })
+    .catch(err => {
+      console.error(clcError(err));
+      process.exit(1);
+    });
 };
