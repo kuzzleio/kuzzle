@@ -18,6 +18,6 @@ redis:
 elasticsearch:
   image: kuzzleio/elasticsearch:2.3.4
   environment:
-    - kuzzle_services__db__host: elasticsearch
-    - kuzzle_services__cache__node__host: redis
+    - kuzzle_services__db__host=elasticsearch
+    - kuzzle_services__cache__node__host=redis
 
