@@ -2,6 +2,10 @@
 
 # 1.0.0-RC6
 
+* Hotfix "createFirstAdmin" CLI command #409
+
+# 1.0.0-RC6
+
 * https://github.com/kuzzleio/kuzzle/releases/tag/1.0.0-RC6
 
 # 1.0.0-RC5
