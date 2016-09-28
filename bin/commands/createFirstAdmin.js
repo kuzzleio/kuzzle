@@ -10,7 +10,8 @@ var
   params = rc('kuzzle'),
   clcQuestion = clc.whiteBright,
   clcOk = clc.green.bold,
-  clcError = clc.red;
+  clcError = clc.red,
+  clcWarn = clc.yellow;
 
 function getUserName () {
   var username;
@@ -95,6 +96,7 @@ module.exports = function (options) {
     })
     .then(response => {
       if (!response) {
+        console.log(clcWarn('Aborting'));
         process.exit(0);
       }
 
