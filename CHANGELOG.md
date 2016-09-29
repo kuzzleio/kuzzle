@@ -2,7 +2,7 @@
 
 # 1.0.0-RC6.2
 
-* Hotfix POST data not being forwarded to controller plugins extending Kuzzle's API #409
+* https://github.com/kuzzleio/kuzzle/releases/tag/1.0.0-RC6.2
 
 # 1.0.0-RC6.1
 
