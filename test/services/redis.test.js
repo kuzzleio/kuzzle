@@ -4,7 +4,7 @@ var
   Redis = rewire('../../lib/services/redis'),
   IORedis = require('ioredis'),
   redisCommands = (require('ioredis')({lazyConnect: true})).getBuiltinCommands(),
-  Kuzzle = require.main.require('lib/api/kuzzle'),
+  KuzzleMock = require('../mocks/kuzzle.mock'),
   sinon = require('sinon'),
   RedisClientMock = require('../mocks/services/redisClient.mock');
 
@@ -17,9 +17,8 @@ describe('Test redis service', () => {
     sandbox = sinon.sandbox.create();
 
   before(() => {
-    kuzzle = new Kuzzle();
-    kuzzle.config.services.cache.databases.push(dbname);
-    redis = new Redis(kuzzle, {service: dbname}, kuzzle.config.services.cache);
+    kuzzle = new KuzzleMock();
+    redis = new Redis(kuzzle, {service: dbname}, {});
     return Redis.__with__('buildClient', () => new RedisClientMock())(() => {
       return redis.init();
     });
@@ -32,22 +31,41 @@ describe('Test redis service', () => {
     sandbox.restore();
   });
 
-  it('should init a redis client', () => {
+  it('should init a redis client with default (0) database', () => {
     var
-      myRedis = new Redis(kuzzle, {service: dbname}, kuzzle.config.services.cache);
+      myRedis = new Redis(kuzzle, {service: dbname}, {}),
+      myRedisClient = new RedisClientMock(),
+      spy = sandbox.spy(myRedisClient, 'select');
 
-    return Redis.__with__('buildClient', () => new RedisClientMock())(() => {
+    return Redis.__with__('buildClient', () => myRedisClient)(() => {
       return myRedis.init()
         .then(() => {
           should(myRedis).have.property('client');
           should(myRedis.client).be.an.Object();
+          should(spy).not.be.called();
+        });
+    });
+  });
+
+  it('should select the good database at init if > 0', () => {
+    var
+      myRedis = new Redis(kuzzle, {service: dbname}, {database: 1}),
+      myRedisClient = new RedisClientMock(),
+      spy = sandbox.spy(myRedisClient, 'select');
+
+    return Redis.__with__('buildClient', () => myRedisClient)(() => {
+      return myRedis.init()
+        .then(() => {
+          should(myRedis).have.property('client');
+          should(myRedis.client).be.an.Object();
+          should(spy).be.calledWith(1);
         });
     });
   });
 
   it('should not flush publicCache', () => {
     var
-      myRedis = new Redis(kuzzle, {service: dbname}, kuzzle.config.services.cache),
+      myRedis = new Redis(kuzzle, {service: dbname}, {}),
       myRedisClient = new RedisClientMock(),
       spy = sandbox.spy(myRedisClient, 'flushdb');
 
@@ -56,29 +74,27 @@ describe('Test redis service', () => {
         .then(() => {
           should(myRedis).have.property('client');
           should(myRedis.client).be.an.Object();
-          should(spy.calledOnce).be.false();
+          should(spy).not.be.called();
         });
     });
   });
 
-  it('should stop initialization if an unknown database identifier is provided', () => {
-    var testredis = new Redis(kuzzle, {service: 'foobar'}, kuzzle.config.services.cache);
+  it('should raise an error if unable to connect', () => {
+    var testredis = new Redis(kuzzle, {service: dbname}, {});
 
-    return should(testredis.init()).be.rejected();
+    return Redis.__with__('buildClient', () => new RedisClientMock('connection error'))(() => {
+      return should(testredis.init()).be.rejected();
+    });
   });
 
-  it('should raise an error if unable to connect', function (done) {
+  it('should raise an error if unable to select the database', () => {
     var
-      testredis,
-      savePort = kuzzle.config.services.cache.node.port;
+      testredis = new Redis(kuzzle, {service: dbname}, {database: 17});
 
-    kuzzle.config.services.cache.node.port = 1337;
-    testredis = new Redis(kuzzle, {service: kuzzle.config.services.cache.databases[0]}, kuzzle.config.services.cache);
+    return Redis.__with__('buildClient', () => new RedisClientMock())(() => {
+      return should(testredis.init()).be.rejected();
+    });
 
-    testredis.init()
-      .then(() => done('should have failed connecting to redis'))
-      .catch(() => done())
-      .finally(() => {kuzzle.config.services.cache.node.port = savePort;});
   });
 
   it('should resolve 0 when add a key without value', () => {

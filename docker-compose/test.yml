@@ -19,7 +19,8 @@ kuzzle:
   environment:
     - FEATURE_COVERAGE=1
     - kuzzle_services__db__host=elasticsearch
-    - kuzzle_services__cache__node__host=redis
+    - kuzzle_services__internalCache__node__host=redis
+    - kuzzle_services__memoryStorage__node__host=redis
 
 redis:
   image: redis:3.0-alpine
