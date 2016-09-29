@@ -6,7 +6,7 @@ var
   Kuzzle = require.main.require('lib/api/kuzzle'),
   PluginsManager = rewire('../../../../lib/api/core/plugins/pluginsManager');
 
-describe.only('PluginsManager: init()', () => {
+describe('PluginsManager: init()', () => {
   var
     kuzzle,
     pluginsManager;
