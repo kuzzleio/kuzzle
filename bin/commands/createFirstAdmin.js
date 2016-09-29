@@ -10,12 +10,13 @@ var
   params = rc('kuzzle'),
   clcQuestion = clc.whiteBright,
   clcOk = clc.green.bold,
-  clcError = clc.red;
+  clcError = clc.red,
+  clcWarn = clc.yellow;
 
 function getUserName () {
   var username;
 
-  username = readlineSync.question(clcQuestion('\n[❓] Please enter a username for the first admin\n'));
+  username = readlineSync.question(clcQuestion('\n[❓] First administrator account name\n'));
 
   if (username.length === 0) {
     return getUserName();
@@ -29,7 +30,7 @@ function getPassword () {
     password,
     confirmation;
 
-  password = readlineSync.question(clcQuestion('\n[❓] Please enter a password for the account\n'),
+  password = readlineSync.question(clcQuestion('\n[❓] First administrator account password\n'),
     {hideEchoBack: true}
   );
   confirmation = readlineSync.question(clcQuestion('Please confirm your password\n'),
@@ -45,15 +46,16 @@ function getPassword () {
 }
 
 function shouldWeResetRoles () {
-  return Promise.resolve(readlineSync.keyInYN(clcQuestion('[❓] Reset roles?')));
+  return Promise.resolve(readlineSync.keyInYN(clcQuestion('[❓] Restrict rights of the default and anonymous roles?')));
 }
 
 function confirm (username, resetRoles) {
-  var msg = `\n[❓] About to create admin user "${username}"`;
+  var msg = `\n[❓] About to create the administrator account "${username}"`;
 
   if (resetRoles) {
-    msg += ' and reset default roles';
+    msg += ' and restrict rights of the default and anonymous roles';
   }
+
   msg += '.\nConfirm? ';
   return Promise.resolve(readlineSync.keyInYN(clcQuestion(msg)));
 }
@@ -72,58 +74,51 @@ module.exports = function (options) {
 
   return kuzzle.remoteActions.do('adminExists', params)
     .then(adminExists => {
-      if (adminExists.data.body) {
-        console.log('admin user is already set');
+      if (adminExists.data.body.exists) {
+        console.log('An administrator account already exists.');
         process.exit(0);
       }
 
-      getUserName()
-        .then(response => {
-          username = response;
-          return getPassword();
-        })
-        .then(pwd => {
-          password = pwd;
-          return shouldWeResetRoles();
-        })
-        .then(response => {
-          resetRoles = response;
+      return getUserName();
+    })
+    .then(response => {
+      username = response;
+      return getPassword();
+    })
+    .then(pwd => {
+      password = pwd;
+      return shouldWeResetRoles();
+    })
+    .then(response => {
+      resetRoles = response;
 
-          return confirm(username, resetRoles);
-        })
-        .then(response => {
-          if (!response) {
-            process.exit(0);
-          }
+      return confirm(username, resetRoles);
+    })
+    .then(response => {
+      if (!response) {
+        console.log(clcWarn('Aborting'));
+        process.exit(0);
+      }
 
-          return kuzzle.remoteActions.do('createFirstAdmin', {
-            _id: username,
-            password,
-            reset: resetRoles
-          },
-          {pid: params.pid, debug: options.parent.debug});
-        })
-        .then(() => {
-          console.log(clcOk(`[✔] "${username}" user created with admin rights`));
-
-          if (resetRoles) {
-            console.log(clcOk('[✔] "default" profile reset'));
-            console.log(clcOk('[✔] "admin" profile reset'));
-            console.log(clcOk('[✔] "anonymous" profile reset'));
-            console.log(clcOk('[✔] "default" role reset'));
-            console.log(clcOk('[✔] "admin" role reset'));
-            console.log(clcOk('[✔] "anonymous" role reset'));
-          }
-          process.exit(0);
-        })
-        .catch(err => {
-          console.error(err);
-          process.exit(1);
-        });
+      return kuzzle.remoteActions.do('createFirstAdmin', {
+        _id: username,
+        password,
+        reset: resetRoles
+      }, {pid: params.pid, debug: options.parent.debug});
     })
     .then(() => {
+      console.log(clcOk(`[✔] "${username}" administrator account created`));
 
+      if (resetRoles) {
+        console.log(clcOk('[✔] Rights restriction applied to the following roles: '));
+        console.log(clcOk('   - default'));
+        console.log(clcOk('   - anonymous'));
+      }
+
+      process.exit(0);
     })
-    .catch(err => console.log(err));
-
+    .catch(err => {
+      console.error(clcError(err));
+      process.exit(1);
+    });
 };

@@ -167,7 +167,7 @@ describe('Tests: remoteActionController action client', () => {
         action.timeOutCB();
 
         should(consoleSpy).be.calledOnce();
-        should(consoleSpy).be.calledWithExactly('could not contact Kuzzle in time. Aborting.');
+        should(consoleSpy).be.calledWithExactly('Unable to connect to Kuzzle');
         should(processSpy).be.calledOnce();
         should(processSpy).be.calledWithExactly(1);
       });

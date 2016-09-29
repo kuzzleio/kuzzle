@@ -7,6 +7,10 @@
 * Rename a couple of DSL keywords to avoid confusion with Elasticsearch's DSL #392
 * Remove `createFilterId` from the real-time engine exposed methods. The filter's unique ID is now returned by the `register` method #401 
 
+# 1.0.0-RC6.1
+
+* Hotfix "createFirstAdmin" CLI command #409
+
 # 1.0.0-RC6
 
 * https://github.com/kuzzleio/kuzzle/releases/tag/1.0.0-RC6
