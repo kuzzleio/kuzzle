@@ -1,5 +1,9 @@
 *__note:__ the # at the end of lines are the pull request numbers on GitHub*
 
+# 1.0.0-RC6.1
+
+* Hotfix "createFirstAdmin" CLI command #409
+
 # 1.0.0-RC6
 
 * https://github.com/kuzzleio/kuzzle/releases/tag/1.0.0-RC6
