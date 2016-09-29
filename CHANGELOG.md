@@ -6,7 +6,7 @@
 
 * Rename a couple of DSL keywords to avoid confusion with Elasticsearch's DSL #392
 
-# 1.0.0-RC6
+# 1.0.0-RC6.1
 
 * Hotfix "createFirstAdmin" CLI command #409
 
