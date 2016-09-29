@@ -7,7 +7,7 @@ var
 describe('Test: dsl.test', () => {
   var
     dsl,
-    filterId = 'foobar',
+    filterId,
     index = 'index',
     collection = 'user',
     dataGrace = {
@@ -66,7 +66,10 @@ describe('Test: dsl.test', () => {
   beforeEach(() => {
     /** @type Dsl */
     dsl = new Dsl();
-    return dsl.register(filterId, index, collection, filterGrace);
+    return dsl.register(index, collection, filterGrace)
+      .then(response => {
+        filterId = response.id;
+      });
   });
 
   it('should return an array with my filter id when document matches', () => {
