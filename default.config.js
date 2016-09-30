@@ -1,3 +1,6 @@
+/**
+ * @class KuzzleConfiguration
+ */
 module.exports = {
   hooks: require('./lib/config/hooks'),
 
@@ -172,6 +175,62 @@ module.exports = {
   stats: {
     ttl: 3600,
     statsInterval: 10
+  },
+  /** @type {DocumentSpecification} */
+  validation: {
+    myIndex: {
+      myCollection: {
+        strict: true,
+        fields: {
+          myField: {
+            mandatory: true,
+            type: 'string',
+            default_value: 'a string',
+            multivalued: {
+              value: true,
+              minCount: 1
+            },
+            type_options: {
+              length: {
+                min: 1
+              }
+            }
+          }
+        },
+        validators: [
+          {
+            papat: {
+              toto: 'caca'
+            }
+          }
+        ]
+      },
+      mySecondCollection: {
+        strict: true,
+        fields: {
+          myField: {
+            mandatory: true,
+            type: 'string',
+            default_value: 'a string',
+            multivalued: {
+              value: true,
+              minCount: 1
+            },
+            type_options: {
+              length: {
+                min: 1
+              }
+            }
+          }
+        },
+        validators: [
+          {
+            term: {
+              toto: 'caca'
+            }
+          }
+        ]
+      }
+    }
   }
-
 };

@@ -1,0 +1,32 @@
+var BaseConstructor = require('../baseType');
+
+/**
+ * @constructor
+ * TODO: Refactor the class name
+ */
+function StringType () {
+  // TODO: choose a type name
+  this.typeName = 'string';
+}
+
+StringType.prototype = new BaseConstructor();
+
+/**
+ * @param {string} fieldName
+ * @param {CollectionSpecification} collectionSpecification
+ * @param {*} document
+ */
+StringType.prototype.validate = function (fieldName, collectionSpecification, document) {
+  // TODO
+};
+
+/**
+ * @param {FieldSpecification} fieldSpecification
+ * @return {boolean|FieldSpecification}
+ * @throws InternalError
+ */
+StringType.prototype.validateFieldSpecification = function (fieldSpecification) {
+  // TODO
+};
+
+module.exports = StringType;
