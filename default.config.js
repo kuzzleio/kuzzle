@@ -208,7 +208,7 @@ module.exports = {
         },
         validators: [
           {
-            term: {
+            equals: {
               myField: 'test'
             }
           }
