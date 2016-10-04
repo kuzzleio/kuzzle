@@ -114,6 +114,7 @@ module.exports = {
       port: 7511,
       maxRequestSize: '1MB'
     },
+    maxRequestHistorySize: 50,
     maxConcurrentRequests: 50,
     maxRetainedRequests: 50000,
     warningRetainedRequestsLimit: 5000
@@ -166,12 +167,14 @@ module.exports = {
       port: 9200,
       apiVersion: '2.3'
     }
-
   },
 
   stats: {
     ttl: 3600,
     statsInterval: 10
+  },
+  dump: {
+    path: './dump/',
+    dateFormat: 'YYYYMMDD-HHmm'
   }
-
 };

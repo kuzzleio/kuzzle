@@ -82,6 +82,12 @@ program
   .option('    --mappings <mappings>', 'load and apply mappings from file')
   .action(require('./commands/start'));
 
+// $ kuzzle createFirstAdmin
+program
+  .command('dump')
+  .description('create a dump of current state of kuzzle')
+  .action(require('./commands/dump'));
+
 // Run user command
 program.parse(process.argv);
 
