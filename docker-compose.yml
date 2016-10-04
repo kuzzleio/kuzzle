@@ -1,23 +1,22 @@
 proxy:
   image: kuzzleio/proxy:alpine
   ports:
-    - "7511:7511"
-    - "7512:7512"
-    - "7513:7513"
+    - "7511-7513:7511-7513"
 
 kuzzle:
   image: kuzzleio/kuzzle:1.0.0-RC6.2
   links:
     - elasticsearch
     - redis
-    - proxy:api
+    - proxy
 
 redis:
-  image: redis:3.0-alpine
+  image: redis:3.2-alpine
 
 elasticsearch:
   image: kuzzleio/elasticsearch:2.3.4
   environment:
     - kuzzle_services__db__host=elasticsearch
     - kuzzle_services__cache__node__host=redis
+    - kuzzle_services__proxyBroker__host=proxy
 

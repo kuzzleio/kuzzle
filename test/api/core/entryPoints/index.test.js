@@ -32,12 +32,14 @@ describe('Test: core/entryPoints', () => {
       kuzzle = new Kuzzle(),
       entryPoints = new EntryPoints(kuzzle, {httpPort: httpPort}),
       spyProxy = sandbox.stub(entryPoints.proxy, 'init'),
-      spyHttp = sandbox.stub(entryPoints.http, 'init');
+      spyHttp = sandbox.stub(entryPoints.http, 'init').resolves();
 
 
-    entryPoints.init();
+    return entryPoints.init()
+      .then(() => {
+        should(spyProxy.callCount).be.eql(1);
+        should(spyHttp.callCount).be.eql(1);
+      });
 
-    should(spyProxy.callCount).be.eql(1);
-    should(spyHttp.callCount).be.eql(1);
   });
 });

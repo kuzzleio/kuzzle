@@ -38,6 +38,7 @@
     "elasticsearch": "11.0.1",
     "eventemitter2": "^2.1.0",
     "finalhandler": "0.5.0",
+    "freeport": "^1.0.5",
     "geolib": "j33f/Geolib",
     "ioredis": "^2.2.0",
     "json-stable-stringify": "1.0.1",
