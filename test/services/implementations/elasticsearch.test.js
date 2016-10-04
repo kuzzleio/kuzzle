@@ -7,7 +7,6 @@ var
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
   BadRequestError = require.main.require('kuzzle-common-objects').Errors.badRequestError,
   NotFoundError = require.main.require('kuzzle-common-objects').Errors.notFoundError,
-  InternalError = require.main.require('kuzzle-common-objects').Errors.internalError,
   ES = rewire('../../../lib/services/elasticsearch');
 
 describe('Test: ElasticSearch service', () => {
