@@ -16,12 +16,12 @@ describe('Test: dsl.deepExtend method', () => {
 
   it('should be able to merge two simple filters', () => {
     var
-      f1 = { term: { foo: 'bar' }},
+      f1 = { equals: { foo: 'bar' }},
       f2 = { exists: { field: 'foobar'}},
       result = deepExtend(f1, f2);
 
-    should.exist(result.term);
-    should(result.term.foo).not.be.undefined().and.be.exactly('bar');
+    should.exist(result.equals);
+    should(result.equals.foo).not.be.undefined().and.be.exactly('bar');
     should.exist(result.exists);
     should(result.exists.field).not.be.undefined().and.be.exactly('foobar');
   });
@@ -36,7 +36,7 @@ describe('Test: dsl.deepExtend method', () => {
     var
       f1 = {
         and: {
-          term: { foo: 'bar' }
+          equals: { foo: 'bar' }
         }
       },
       f2 = {
@@ -48,8 +48,8 @@ describe('Test: dsl.deepExtend method', () => {
 
     should.exist(result.and);
     should(Object.keys(result).length).be.exactly(1);
-    should.exist(result.and.term);
-    should(result.and.term.foo).not.be.undefined().and.be.exactly('bar');
+    should.exist(result.and.equals);
+    should(result.and.equals.foo).not.be.undefined().and.be.exactly('bar');
     should.exist(result.and.exists);
     should(result.and.exists.field).not.be.undefined().and.be.exactly('foobar');
   });
@@ -58,7 +58,7 @@ describe('Test: dsl.deepExtend method', () => {
     var
       f1 = {
         or: {
-          term: { foo: 'bar' }
+          equals: { foo: 'bar' }
         }
       },
       f2 = {
@@ -70,8 +70,8 @@ describe('Test: dsl.deepExtend method', () => {
 
     should.exist(result.or);
     should(Object.keys(result).length).be.exactly(1);
-    should.exist(result.or.term);
-    should(result.or.term.foo).not.be.undefined().and.be.exactly('bar');
+    should.exist(result.or.equals);
+    should(result.or.equals.foo).not.be.undefined().and.be.exactly('bar');
     should.exist(result.or.exists);
     should(result.or.exists.field).not.be.undefined().and.be.exactly('foobar');
   });

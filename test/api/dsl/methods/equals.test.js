@@ -4,7 +4,7 @@ var
   Filters = require.main.require('lib/api/dsl/filters'),
   Methods = require.main.require('lib/api/dsl/methods');
 
-describe('Test term method', () => {
+describe('Test equals method', () => {
   var
     methods,
     filterIdMatch = 'matching filter ID',
@@ -14,16 +14,16 @@ describe('Test term method', () => {
     filter = {
       firstName: 'Grace'
     },
-    termfirstNameGrace = md5('termfirstNameGrace'),
-    nottermfirstNameGrace = md5('nottermfirstNameGrace'),
+    equalsfirstNameGrace = md5('equalsfirstNameGrace'),
+    notequalsfirstNameGrace = md5('notequalsfirstNameGrace'),
     fieldFirstName = md5('firstName');
 
 
   before(() => {
     /** @type Methods */
     methods = new Methods(new Filters());
-    return methods.term(filterIdMatch, index, collection, filter)
-      .then(() => methods.term(filterIdNot, index, collection, filter, true));
+    return methods.equals(filterIdMatch, index, collection, filter)
+      .then(() => methods.equals(filterIdNot, index, collection, filter, true));
   });
 
   it('should construct the filterTree object for the correct attribute', () => {
@@ -35,15 +35,15 @@ describe('Test term method', () => {
   });
 
   it('should construct the filterTree with correct arguments', () => {
-    should(methods.filters.filtersTree[index][collection].fields[fieldFirstName][termfirstNameGrace].args).match({
-      operator: 'term',
+    should(methods.filters.filtersTree[index][collection].fields[fieldFirstName][equalsfirstNameGrace].args).match({
+      operator: 'equals',
       not: undefined,
       field: 'firstName',
       value: 'Grace'
     });
 
-    should(methods.filters.filtersTree[index][collection].fields[fieldFirstName][nottermfirstNameGrace].args).match({
-      operator: 'term',
+    should(methods.filters.filtersTree[index][collection].fields[fieldFirstName][notequalsfirstNameGrace].args).match({
+      operator: 'equals',
       not: true,
       field: 'firstName',
       value: 'Grace'
@@ -52,8 +52,8 @@ describe('Test term method', () => {
 
   it('should construct the filterTree with correct room list', () => {
     var
-      ids = methods.filters.filtersTree[index][collection].fields[fieldFirstName][termfirstNameGrace].ids,
-      idsNot = methods.filters.filtersTree[index][collection].fields[fieldFirstName][nottermfirstNameGrace].ids;
+      ids = methods.filters.filtersTree[index][collection].fields[fieldFirstName][equalsfirstNameGrace].ids,
+      idsNot = methods.filters.filtersTree[index][collection].fields[fieldFirstName][notequalsfirstNameGrace].ids;
 
     should(ids).be.an.Array();
     should(idsNot).be.an.Array();

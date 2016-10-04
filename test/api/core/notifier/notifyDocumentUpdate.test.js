@@ -40,7 +40,7 @@ describe('Test: notifier.notifyDocumentUpdate', () => {
       },
 
       search: function (id) {
-        if (id === 'removeme') {
+        if (id === 'notif/removeme') {
           return Promise.resolve(['foobar']);
         }
 
@@ -69,7 +69,7 @@ describe('Test: notifier.notifyDocumentUpdate', () => {
           body: { foo: 'bar' }
         });
 
-        kuzzle.services.list.notificationCache = mockupCacheService;
+        kuzzle.services.list.internalCache = mockupCacheService;
         kuzzle.notifier.notify = function (rooms, r, n) {
           if (rooms.length > 0) {
             notified++;
@@ -96,7 +96,7 @@ describe('Test: notifier.notifyDocumentUpdate', () => {
     return kuzzle.notifier.notifyDocumentUpdate(requestObject)
       .then(() => {
         should(notified).be.exactly(1);
-        should(mockupCacheService.addId).be.exactly(requestObject.data._id);
+        should(mockupCacheService.addId).be.exactly('notif/' + requestObject.data._id);
         should(mockupCacheService.room).be.an.Array();
         should(mockupCacheService.room[0]).be.exactly('foobar');
         should(mockupCacheService.removeId).be.undefined();
@@ -120,7 +120,7 @@ describe('Test: notifier.notifyDocumentUpdate', () => {
         should(notified).be.exactly(1);
         should(mockupCacheService.addId).be.undefined();
         should(mockupCacheService.room).be.undefined();
-        should(mockupCacheService.removeId).be.exactly(requestObject.data._id);
+        should(mockupCacheService.removeId).be.exactly('notif/' + requestObject.data._id);
 
         should(notification.scope).be.exactly('out');
         should(notification.action).be.exactly('update');

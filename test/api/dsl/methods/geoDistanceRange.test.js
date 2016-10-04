@@ -146,7 +146,6 @@ describe('Test geoDistanceRange method', () => {
   });
 
   it('should handle correctly the case when from and to comes first, before the location', () => {
-    /* jshint camelcase: false */
     var
       underscoreFilter = {
         from: 123,
@@ -158,7 +157,6 @@ describe('Test geoDistanceRange method', () => {
           }
         }
       };
-    /* jshint camelcase: true */
 
     return methods.geoDistanceRange(filterId, index, collection, underscoreFilter);
   });

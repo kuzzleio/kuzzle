@@ -6,7 +6,7 @@ proxy:
     - "7513:7513"
 
 kuzzle:
-  image: kuzzleio/kuzzle:1.0.0-RC6
+  image: kuzzleio/kuzzle:1.0.0-RC6.2
   links:
     - elasticsearch
     - redis
@@ -17,3 +17,7 @@ redis:
 
 elasticsearch:
   image: kuzzleio/elasticsearch:2.3.4
+  environment:
+    - kuzzle_services__db__host=elasticsearch
+    - kuzzle_services__cache__node__host=redis
+

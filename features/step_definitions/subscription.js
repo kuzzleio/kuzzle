@@ -1,8 +1,11 @@
 var apiSteps = function () {
   this.Given(/^A room subscription listening to "([^"]*)" having value "([^"]*)"(?: with socket "([^"]*)")?$/, function (key, value, socketName, callback) {
-    var filter = { term: {} };
+    var filter = {
+      equals: {
+        [key]: value
+      }
+    };
 
-    filter.term[key] = value;
     this.api.subscribe(filter, socketName)
       .then(body => {
         if (body.error !== null) {
@@ -33,9 +36,8 @@ var apiSteps = function () {
   });
 
   this.Given(/^A room subscription listening field "([^"]*)" doesn't exists$/, function (key, callback) {
-    var filter = {not: {exists: {field : null}}};
+    var filter = {not: {exists: {field : key}}};
 
-    filter.not.exists.field = key;
     this.api.subscribe(filter)
       .then(body => {
         if (body.error !== null) {
@@ -107,13 +109,15 @@ var apiSteps = function () {
     this.api.countSubscription()
       .then(function (response) {
         if (response.error) {
-          callback(new Error(response.error.message));
-          return false;
+          return callback(new Error(response.error.message));
         }
 
-        if (!response.result.count || response.result.count !== parseInt(number)) {
-          callback(new Error('No correct value for count. Expected ' + number + ', got ' + response.result));
-          return false;
+        if (!response.result.count) {
+          return callback(new Error('Expected a "count" value in response'));
+        }
+
+        if (response.result.count !== parseInt(number)) {
+          return callback(new Error('No correct value for count. Expected ' + number + ', got ' + response.result.count));
         }
 
         callback();

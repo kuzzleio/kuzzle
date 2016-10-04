@@ -41,10 +41,10 @@ describe('Test: notifier.notifyDocumentReplace', () => {
       },
 
       search: function (id) {
-        if (['removeme', 'addme'].indexOf(id) !== -1) {
+        if (['notif/removeme', 'notif/addme'].indexOf(id) !== -1) {
           return Promise.resolve(['foobar']);
         }
-        else if (id === 'errorme') {
+        else if (id === 'notif/errorme') {
           return Promise.reject(new Error('rejected'));
         }
 
@@ -72,7 +72,7 @@ describe('Test: notifier.notifyDocumentReplace', () => {
           _id: 'Sir Isaac Newton is the deadliest son-of-a-bitch in space',
           body: { foo: 'bar' }
         });
-        kuzzle.services.list.notificationCache = mockupCacheService;
+        kuzzle.services.list.internalCache = mockupCacheService;
         kuzzle.notifier.notify = (rooms, r, n) => {
           if (rooms.length > 0) {
             notified++;
@@ -95,7 +95,7 @@ describe('Test: notifier.notifyDocumentReplace', () => {
     return kuzzle.notifier.notifyDocumentReplace(requestObject)
       .then(() => {
         should(notified).be.exactly(1);
-        should(mockupCacheService.addId).be.exactly(requestObject.data._id);
+        should(mockupCacheService.addId).be.exactly('notif/' + requestObject.data._id);
         should(mockupCacheService.room).be.an.Array();
         should(mockupCacheService.room[0]).be.exactly('foobar');
         should(mockupCacheService.removeId).be.undefined();
@@ -115,7 +115,7 @@ describe('Test: notifier.notifyDocumentReplace', () => {
         should(notified).be.exactly(1);
         should(mockupCacheService.addId).be.undefined();
         should(mockupCacheService.room).be.undefined();
-        should(mockupCacheService.removeId).be.exactly(requestObject.data._id);
+        should(mockupCacheService.removeId).be.exactly('notif/' + requestObject.data._id);
 
         should(notification.scope).be.exactly('out');
         should(notification.action).be.exactly('update');
