@@ -186,32 +186,23 @@ module.exports = {
             mandatory: true,
             type: 'string',
             default_value: 'a string',
-            multivalued: {
-              value: true,
-              minCount: 1
-            },
             type_options: {
               length: {
-                min: 1
+                min: 2,
+                max: 5
               }
             }
-          }
-        },
-        validators: [
-          {
-            papat: {
-              toto: 'caca'
+          },
+          myObject: {
+            mandatory: false,
+            type: 'object',
+            type_options: {
+              strict: true
             }
-          }
-        ]
-      },
-      mySecondCollection: {
-        strict: true,
-        fields: {
-          myField: {
-            mandatory: true,
+          },
+          'myObject.mySubField': {
+            mandatory: false,
             type: 'string',
-            default_value: 'a string',
             multivalued: {
               value: true,
               minCount: 1
@@ -226,7 +217,7 @@ module.exports = {
         validators: [
           {
             term: {
-              toto: 'caca'
+              myField: 'test'
             }
           }
         ]
