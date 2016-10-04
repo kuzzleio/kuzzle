@@ -170,8 +170,8 @@ module.exports = {
   },
   /** @type {DocumentSpecification} */
   validation: {
-    myIndex: {
-      myCollection: {
+    myindex: {
+      mycollection: {
         strict: true,
         fields: {
           myField: {
@@ -181,12 +181,12 @@ module.exports = {
             type_options: {
               length: {
                 min: 2,
-                max: 5
+                max: 10
               }
             }
           },
           myObject: {
-            mandatory: false,
+            mandatory: true,
             type: 'object',
             type_options: {
               strict: true
@@ -208,8 +208,8 @@ module.exports = {
         },
         validators: [
           {
-            equals: {
-              myField: 'test'
+            regexp: {
+              myField: '^test.*$'
             }
           }
         ]
