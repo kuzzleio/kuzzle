@@ -25,6 +25,5 @@ echo "" > node_modules/pm2/lib/keymetrics
 
 echo "Starting Kuzzle..."
 
-node bin/kuzzle install \
-    && pm2 start /config/pm2.json \
+pm2 start /config/pm2.json \
     && npm test

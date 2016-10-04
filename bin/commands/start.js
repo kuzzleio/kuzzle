@@ -40,6 +40,7 @@ module.exports = function (options) {
   console.log(kuz('Starting Kuzzle'));
 
   kuzzle.start(params)
+    // like a virgin
     .then(() => {
       var request;
 
@@ -49,6 +50,7 @@ module.exports = function (options) {
       }
       return Promise.resolve();
     })
+    // fixtures
     .then(() => {
       var
         request,
