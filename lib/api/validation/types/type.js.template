@@ -4,31 +4,30 @@ var
 /**
  * @constructor
  */
-function ValidationType () {
+function MyNewType () {
   this.typeName = 'string';
   this.allowChildren = false;
 }
 
-ValidationType.prototype = new BaseConstructor();
+MyNewType.prototype = new BaseConstructor();
 
 /**
- * @param {StructuredFieldSpecification} fieldSpecificationSubset
+ * @param {StructuredFieldSpecification} fieldSpec
  * @param {*} fieldValue
  */
-ValidationType.prototype.validate = function (fieldSpecificationSubset, fieldValue) {
+MyNewType.prototype.validate = function (fieldSpec, fieldValue) {
   // TODO
   return true;
 };
 
 /**
- * @param {FieldSpecification} fieldSpecification
+ * @param {FieldSpecification} fieldSpec
  * @return {boolean|FieldSpecification}
  * @throws InternalError
- * @this ValidationType
  */
-ValidationType.prototype.validateFieldSpecification = function (fieldSpecification) {
+MyNewType.prototype.validateFieldSpecification = function (fieldSpec) {
   // TODO
   return true;
 };
 
-module.exports = ValidationType;
+module.exports = MyNewType;
