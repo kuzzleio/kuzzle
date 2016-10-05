@@ -8,7 +8,10 @@
 
 ### Breaking changes
 
-* CLI: remove `service` command
+* CLI: `service` commands removed #405
+* Kuzzle `bulk`.`import` action now expects a `body.bulkData` property that contains an array #387
+* DSL: `term` and `terms` operators are repectively replaced by `equals`and `in` #392
+* DSL: filters ids cannot be set manually anymore #401 
 
 # 1.0.0-RC6.2
 
