@@ -161,7 +161,6 @@ describe('Test geoDistance method', () => {
   });
 
   it('should handle correctly the case when the location is noted with the underscore notation', () => {
-    /* jshint camelcase: false */
     var
       underscoreFilter = {
         distance: 111318,
@@ -172,7 +171,6 @@ describe('Test geoDistance method', () => {
           }
         }
       };
-    /* jshint camelcase: true */
 
     return methods.geoDistance(filterId, index, collection, underscoreFilter);
   });

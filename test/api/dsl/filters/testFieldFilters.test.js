@@ -82,7 +82,7 @@ describe('Test: dsl.filters.testFieldFilters', () => {
       testFoobar: {
         ids: ids,
         args: {
-          operator: 'term',
+          operator: 'equals',
           not: false,
           field: 'foo.bar',
           value: 'bar'

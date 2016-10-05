@@ -14,20 +14,20 @@ describe('Test "and" method', () => {
     collection = 'collection',
     filter = [
       {
-        term: {
+        equals: {
           city: 'NYC'
         }
       },
       {
         not: {
-          term: {
+          equals: {
             hobby: 'computer'
           }
         }
       }
     ],
-    termCity = md5('termcityNYC'),
-    termHobby = md5('nottermhobbycomputer'),
+    equalsCity = md5('equalscityNYC'),
+    equalsHobby = md5('notequalshobbycomputer'),
     fieldCity = md5('city'),
     fieldHobby = md5('hobby');
 
@@ -46,34 +46,34 @@ describe('Test "and" method', () => {
   });
 
   it('should construct the filterTree with correct encoded function name', () => {
-    should(methods.filters.filtersTree[index][collection].fields[fieldCity][termCity]).not.be.empty();
-    should(methods.filters.filtersTree[index][collection].fields[fieldHobby][termHobby]).not.be.empty();
+    should(methods.filters.filtersTree[index][collection].fields[fieldCity][equalsCity]).not.be.empty();
+    should(methods.filters.filtersTree[index][collection].fields[fieldHobby][equalsHobby]).not.be.empty();
   });
 
   it('should construct the filterTree with the correct filter IDs list', () => {
     var ids;
 
-    ids = methods.filters.filtersTree[index][collection].fields[fieldCity][termCity].ids;
+    ids = methods.filters.filtersTree[index][collection].fields[fieldCity][equalsCity].ids;
     should(ids).be.an.Array();
     should(ids).have.length(1);
     should(ids[0]).be.exactly(filterId);
 
-    ids = methods.filters.filtersTree[index][collection].fields[fieldHobby][termHobby].ids;
+    ids = methods.filters.filtersTree[index][collection].fields[fieldHobby][equalsHobby].ids;
     should(ids).be.an.Array();
     should(ids).have.length(1);
     should(ids[0]).be.exactly(filterId);
   });
 
   it('should construct the filterTree with correct operator arguments', () => {
-    should(methods.filters.filtersTree[index][collection].fields[fieldCity][termCity].args).match({
-      operator: 'term',
+    should(methods.filters.filtersTree[index][collection].fields[fieldCity][equalsCity].args).match({
+      operator: 'equals',
       not: undefined,
       field: 'city',
       value: 'NYC'
     });
 
-    should(methods.filters.filtersTree[index][collection].fields[fieldHobby][termHobby].args).match({
-      operator: 'term',
+    should(methods.filters.filtersTree[index][collection].fields[fieldHobby][equalsHobby].args).match({
+      operator: 'equals',
       not: true,
       field: 'hobby',
       value: 'computer'

@@ -1,5 +1,18 @@
 *__note:__ the # at the end of lines are the pull request numbers on GitHub*
 
+# Current
+
+# 1.0.0-RC7
+
+* https://github.com/kuzzleio/kuzzle/releases/tag/1.0.0-RC7
+
+### Breaking changes
+
+* CLI: `service` commands removed #405
+* Kuzzle `bulk`.`import` action now expects a `body.bulkData` property that contains an array #387
+* DSL: `term` and `terms` operators are repectively replaced by `equals`and `in` #392
+* DSL: filters ids cannot be set manually anymore #401 
+
 # 1.0.0-RC6.2
 
 * https://github.com/kuzzleio/kuzzle/releases/tag/1.0.0-RC6.2
@@ -11,6 +24,12 @@
 # 1.0.0-RC6
 
 * https://github.com/kuzzleio/kuzzle/releases/tag/1.0.0-RC6
+
+### Breaking changes
+
+* Rename a couple of DSL keywords to avoid confusion with Elasticsearch's DSL #392
+* Remove `createFilterId` from the real-time engine exposed methods. The filter's unique ID is now returned by the `register` method #401 
+
 
 # 1.0.0-RC5
 

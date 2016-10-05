@@ -43,7 +43,7 @@ describe('Test: notifier.notifyDocumentDelete', () => {
     sandbox.stub(kuzzle.internalEngine, 'get').resolves({});
     return kuzzle.services.init({whitelist: []})
       .then(() => {
-        kuzzle.services.list.notificationCache = mockupCacheService;
+        kuzzle.services.list.internalCache = mockupCacheService;
         kuzzle.notifier.notify = (rooms, r,n) => {
           should(r).be.exactly(requestObject);
           notification.push(n);
@@ -74,7 +74,7 @@ describe('Test: notifier.notifyDocumentDelete', () => {
 
     return kuzzle.notifier.notifyDocumentDelete(requestObject, ['foobar'])
       .then(() => {
-        should(mockupCacheService.id).be.exactly('foobar');
+        should(mockupCacheService.id).be.exactly('notif/foobar');
 
         should(notification.length).be.eql(1);
         should(notification[0].scope).be.exactly('out');

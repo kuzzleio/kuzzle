@@ -111,7 +111,6 @@ module.exports = {
 
   server: {
     http: {
-      port: 7511,
       maxRequestSize: '1MB'
     },
     maxConcurrentRequests: 50,
@@ -125,26 +124,18 @@ module.exports = {
       retryInterval: 1000
     },
 
-    cache: {
+    internalCache: {
       backend: 'redis',
-      aliases: [
-        'notificationCache',
-        'statsCache',
-        'securityCache',
-        'internalCache',
-        'tokenCache',
-        'memoryStorage'
-      ],
-      databases: [
-        'notificationCache',
-        'statsCache',
-        'securityCache',
-        'internalCache',
-        'tokenCache',
-        'memoryStorage'
-      ],
       node: {
-        host: 'redis',
+        host: 'localhost',
+        port: 6379
+      }
+    },
+    memoryStorage: {
+      backend: 'redis',
+      database: 5,
+      node: {
+        host: 'localhost',
         port: 6379
       }
     },
@@ -155,14 +146,14 @@ module.exports = {
       retryInterval: 1000
     },
     proxyBroker: {
-      host: 'api',
+      host: 'localhost',
       port: 7331,
       retryInterval: 1000
     },
     db: {
       aliases: ['storageEngine'],
       backend: 'elasticsearch',
-      host: 'elasticsearch',
+      host: 'localhost',
       port: 9200,
       apiVersion: '2.3'
     }

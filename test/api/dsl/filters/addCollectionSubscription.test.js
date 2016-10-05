@@ -25,7 +25,7 @@ describe('Test: dsl.filters.addCollectionSubscription', () => {
             fi: 'foo'
           }} 
         ]);
-        should(response.filter).be.exactly('foo');
+        should(response.id).be.exactly('foo');
 
         should(filters.filtersTree[index]).be.an.Object();
         should(filters.filtersTree[index].bar).be.an.Object();
