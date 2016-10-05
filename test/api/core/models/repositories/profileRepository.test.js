@@ -273,7 +273,7 @@ describe('Test: repositories/profileRepository', () => {
           should(result.policies[1]).be.an.Object();
           should(result.policies[1]).not.be.an.instanceOf(Role);
           should(result.policies[1].roleId).be.exactly('test2');
-          should(result.policies[1].restrictedTo).be.empty();
+          should(result.policies[1]).not.have.property('restrictedRo');
         });
     });
   });

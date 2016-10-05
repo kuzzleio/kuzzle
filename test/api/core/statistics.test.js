@@ -279,7 +279,7 @@ describe('Test: statistics core component', () => {
 
     writeStats.call(stats);
 
-    should(stats.currentStats.completedRequest).be.empty();
+    should(stats.currentStats.completedRequests).be.empty();
     should(stats.currentStats.failedRequests).be.empty();
     should(spy.calledOnce).be.true();
     should(spy.calledWith('stats/' + stats.lastFrame, JSON.stringify(fakeStats), stats.ttl)).be.true();
