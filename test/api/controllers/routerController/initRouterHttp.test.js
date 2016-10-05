@@ -577,7 +577,6 @@ describe('Test: routerController.initHttpRouter', () => {
     request.end();
   });
 
-
   it('should create a route for the getAllStats command', done => {
     var request;
 
@@ -590,6 +589,29 @@ describe('Test: routerController.initHttpRouter', () => {
           should(response.statusCode).be.exactly(200);
           should(result.controller).be.exactly('admin');
           should(result.action).be.exactly('getAllStats');
+          done();
+        })
+        .catch(error => {
+          done(error);
+        });
+    });
+
+    request.write('foobar');
+    request.end();
+  });
+
+  it('should create a route for the getConfig command', done => {
+    var request;
+
+    options.method = 'GET';
+    options.path= path + '/_getConfig';
+
+    request = http.request(options, response => {
+      parseHttpResponse(response)
+        .then(result => {
+          should(response.statusCode).be.exactly(200);
+          should(result.controller).be.exactly('admin');
+          should(result.action).be.exactly('getConfig');
           done();
         })
         .catch(error => {
