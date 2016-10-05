@@ -33,18 +33,40 @@ describe('Test: entryPoints/http', () => {
       stubListen = sinon.spy(),
       spyCreateServer = sinon.stub().yields().returns({listen: stubListen});
 
-    HttpServer.__with__({
+    return HttpServer.__with__({
       http: {
         createServer: spyCreateServer
       }
     })(() => {
-      httpServer.init();
-
-      should(kuzzle.router.initHttpRouter).be.calledOnce();
-      should(spyCreateServer).be.calledOnce();
-      should(kuzzle.router.routeHttp).be.calledOnce();
-      should(stubListen).be.calledOnce();
-      should(stubListen).be.calledWithExactly(kuzzle.config.server.http.port);
+      return httpServer.init()
+        .then(() => {
+          should(kuzzle.router.initHttpRouter).be.calledOnce();
+          should(spyCreateServer).be.calledOnce();
+          should(kuzzle.router.routeHttp).be.calledOnce();
+          should(stubListen).be.calledOnce();
+          should(stubListen).be.calledWithExactly(kuzzle.config.server.http.port);
+        });
     });
   });
+
+  it('should use the port defined in the configuration if any', () => {
+    var
+      stubListen = sinon.spy(),
+      spyCreateServer = sinon.stub().yields().returns({listen: stubListen});
+
+    kuzzle.config.server.http.port = 999;
+
+    return HttpServer.__with__({
+      http: {
+        createServer: spyCreateServer
+      }
+    })(() => {
+      return httpServer.init()
+        .then(() => {
+          should(stubListen).calledOnce();
+          should(stubListen).calledWithExactly(999);
+        });
+    });
+  });
+
 });
