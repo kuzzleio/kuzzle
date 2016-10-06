@@ -14,11 +14,11 @@ module.exports = function (options) {
 
   console.log(notice('[ℹ] Creating dump file...'));
 
-  kuzzle.remoteActions.do('dump', {prefix: 'cli'})
+  kuzzle.remoteActions.do('dump', {sufix: 'cli'})
     .then(dumpPath => {
       console.log(ok('[✔] Done!'));
       console.log('\n' + warn(`[ℹ] Dump has been successfully generated in "${dumpPath.data.body}" folder`));
-      console.log(warn('[ℹ] You can send it at the kuzzle core team at support@kuzzle.io'));
+      console.log(warn('[ℹ] You can send the folder to the kuzzle core team at support@kuzzle.io'));
       process.exit(0);
     })
     .catch(err => {
