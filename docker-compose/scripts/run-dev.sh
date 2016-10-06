@@ -23,9 +23,8 @@ npm install
 
 echo "Starting Kuzzle..."
 
-node bin/kuzzle install && pm2 start /config/pm2-dev.json
-
+node bin/kuzzle install
+pm2 start /config/pm2.json --silent
 nohup node-inspector --web-port=8080 --debug-port=7000 > /dev/null 2>&1&
 pm2 sendSignal -s SIGUSR1 KuzzleServer
-
 pm2 logs

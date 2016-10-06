@@ -1,6 +1,6 @@
 #!/bin/sh
 
-ELASTIC="elasticsearch:9200"
+ELASTIC=${READ_ENGINE_HOST:-elasticsearch:9200}
 
 echo "Waiting for elasticsearch to be available"
 while ! curl -f -s -o /dev/null "http://$ELASTIC"
@@ -23,6 +23,6 @@ npm install
 
 echo "Starting Kuzzle..."
 
-node bin/kuzzle install \
-    && pm2 start /config/pm2.json \
-    && npm test
+node bin/kuzzle install
+pm2 start /config/pm2.json --silent
+npm test
