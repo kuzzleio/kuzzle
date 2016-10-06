@@ -53,7 +53,7 @@ function parseHttpResponse (response, yaml) {
   });
 }
 
-describe('Test: routerController.initRouterHttp', () => {
+describe('Test: routerController.initHttpRouter', () => {
   var
     kuzzle,
     server,
@@ -67,10 +67,10 @@ describe('Test: routerController.initRouterHttp', () => {
 
   /*
    * In order to test the presence of these routes, we need first to create a
-   * listening server, and then use the initRouterHttp function to create these.
+   * listening server, and then use the initHttpRouter function to create these.
    *
    * We rewire the 'executeFromRest' function into a mockup that will answer
-   * with the params passed to it by initRouterHttp, so we can also test if
+   * with the params passed to it by initHttpRouter, so we can also test if
    * the answer is correctly constructed.
    */
   before(() => {
@@ -102,7 +102,7 @@ describe('Test: routerController.initRouterHttp', () => {
         ];
 
         router = new RouterController(kuzzle);
-        router.initRouterHttp();
+        router.initHttpRouter();
 
         server = http.createServer((request, response) => {
           router.routeHttp(request, response);
@@ -521,7 +521,7 @@ describe('Test: routerController.initRouterHttp', () => {
 
     delete process.env.FEATURE_COVERAGE;
 
-    router.initRouterHttp();
+    router.initHttpRouter();
 
     server = http.createServer((request, response) => {
       router.routeHttp(request, response);
@@ -540,7 +540,7 @@ describe('Test: routerController.initRouterHttp', () => {
 
     process.env.FEATURE_COVERAGE = 1;
 
-    router.initRouterHttp();
+    router.initHttpRouter();
 
     server = http.createServer((request, response) => {
       router.routeHttp(request, response);
@@ -577,7 +577,6 @@ describe('Test: routerController.initRouterHttp', () => {
     request.end();
   });
 
-
   it('should create a route for the getAllStats command', done => {
     var request;
 
@@ -590,6 +589,29 @@ describe('Test: routerController.initRouterHttp', () => {
           should(response.statusCode).be.exactly(200);
           should(result.controller).be.exactly('admin');
           should(result.action).be.exactly('getAllStats');
+          done();
+        })
+        .catch(error => {
+          done(error);
+        });
+    });
+
+    request.write('foobar');
+    request.end();
+  });
+
+  it('should create a route for the getConfig command', done => {
+    var request;
+
+    options.method = 'GET';
+    options.path= path + '/_getConfig';
+
+    request = http.request(options, response => {
+      parseHttpResponse(response)
+        .then(result => {
+          should(response.statusCode).be.exactly(200);
+          should(result.controller).be.exactly('admin');
+          should(result.action).be.exactly('getConfig');
           done();
         })
         .catch(error => {

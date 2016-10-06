@@ -17,7 +17,7 @@ describe('Test: ElasticSearch service', () => {
     collection = 'unit-tests-elasticsearch',
     createdDocumentId = 'id-test',
     elasticsearch,
-    engineType = 'readEngine',
+    engineType = 'storageEngine',
     requestObject,
     documentAda = {
       firstName: 'Ada',
@@ -45,7 +45,7 @@ describe('Test: ElasticSearch service', () => {
 
   before(()=> {
     kuzzle = new Kuzzle();
-    elasticsearch = new ES(kuzzle, {service: engineType});
+    elasticsearch = new ES(kuzzle, {service: engineType}, kuzzle.config.services.db);
   });
 
   beforeEach(() => {
@@ -368,12 +368,74 @@ describe('Test: ElasticSearch service', () => {
       ).be.fulfilled();
     });
 
-    it('should return a rejected promise if an update fails', done => {
-      var spy = sandbox.stub(elasticsearch.client, 'update').rejects({});
+    it('should return a rejected promise with a NotFoundError when updating a document which does not exist', done => {
+      var spy;
+      var esError = {
+        displayName: 'NotFound',
+        message: 'test',
+        body: {
+          error: {
+            reason: 'foo'
+          }
+        }
+      };
+      esError.body.error['resource.id'] = 'bar';
+      spy = sandbox.stub(elasticsearch.client, 'update').rejects(esError);
 
       elasticsearch.update(requestObject)
-        .catch(() => {
+        .catch((error) => {
           try{
+            should(error).be.instanceOf(NotFoundError);
+            should(error.message).be.equal('foo: bar');
+            should(spy.firstCall.args[0].id).be.undefined();
+            done();
+          }
+          catch(e) { done(e); }
+        });
+    });
+
+    it('should return a rejected promise with a customised NotFoundError when elasticsearch throws a known error', done => {
+      var spy;
+      var esError = {
+        displayName: 'NotFound',
+        message: '[index_not_found_exception] no such index, with { resource.type=index_or_alias resource.id=banana index=banana }',
+        body: {
+          error: {
+            reason: 'foo'
+          }
+        }
+      };
+      spy = sandbox.stub(elasticsearch.client, 'update').rejects(esError);
+
+      elasticsearch.update(requestObject)
+        .catch((error) => {
+          try{
+            should(error).be.instanceOf(NotFoundError);
+            should(error.message).be.equal('Index "banana" does not exist, please create it first');
+            should(error.internalError).eql(esError);
+            should(error.service).be.equal('elasticsearch');
+            should(spy.firstCall.args[0].id).be.undefined();
+            done();
+          }
+          catch(e) { done(e); }
+        });
+    });
+
+    it('should return a rejected promise with an Error if an update fails for unknown reason', done => {
+      var esError = {
+        message: 'banana error'
+      };
+      var spy = sandbox.stub(elasticsearch.client, 'update').rejects(esError);
+      var spyTrigger = sandbox.stub(kuzzle.pluginsManager, 'trigger');
+
+      elasticsearch.update(requestObject)
+        .catch((error) => {
+          try{
+            should(spyTrigger.firstCall).be.calledWithExactly(
+              'log:warn',
+              '[warning] unhandled elasticsearch error:\nbanana error'
+            );
+            should(error).be.instanceOf(Error);
             should(spy.firstCall.args[0].id).be.undefined();
             done();
           }
@@ -505,21 +567,57 @@ describe('Test: ElasticSearch service', () => {
         refreshIndexSpy = sandbox.spy(refreshIndexIfNeeded),
         spy = sandbox.stub(elasticsearch.client, 'bulk').resolves({});
 
-      requestObject.data.body = [
-        {index: {_id: 1, _type: collection, _index: index}},
-        {firstName: 'foo'},
-        {index: {_id: 2, _type: collection, _index: index}},
-        {firstName: 'bar'},
-        {update: {_id: 1, _type: collection, _index: index}},
-        {doc: {firstName: 'foobar'}},
-        {delete: {_id: 2, _type: collection, _index: index}}
-      ];
+      requestObject.data.body = {
+        bulkData: [
+          {index: {_id: 1, _type: collection, _index: index}},
+          {firstName: 'foo'},
+          {index: {_id: 2, _type: collection, _index: index}},
+          {firstName: 'bar'},
+          {update: {_id: 1, _type: collection, _index: index}},
+          {doc: {firstName: 'foobar'}},
+          {delete: {_id: 2, _type: collection, _index: index}}
+        ]
+      };
 
       return should(
         ES.__with__('refreshIndexIfNeeded', refreshIndexSpy)(() => {
           return elasticsearch.import(requestObject)
             .then(() => {
-              should(spy.firstCall.args[0].body).be.exactly(requestObject.data.body);
+              should(spy.firstCall.args[0].body).be.exactly(requestObject.data.body.bulkData);
+
+              should(refreshIndexSpy.calledOnce).be.true();
+            });
+        })
+      ).be.fulfilled();
+    });
+
+    it('should inject only the allowed optional parameters', () => {
+      var
+        refreshIndexIfNeeded = ES.__get__('refreshIndexIfNeeded'),
+        refreshIndexSpy = sandbox.spy(refreshIndexIfNeeded),
+        spy = sandbox.stub(elasticsearch.client, 'bulk').resolves({});
+
+      requestObject.data = {
+        body: {
+          bulkData: []
+        },
+        consistency: 'foo',
+        refresh: true,
+        routing: 'foo/bar',
+        timeout: 999,
+        fields: 'foo, bar, baz'
+      };
+
+      return should(
+        ES.__with__('refreshIndexIfNeeded', refreshIndexSpy)(() => {
+          return elasticsearch.import(requestObject)
+            .then(() => {
+              should(spy.firstCall.args[0].consistency).be.exactly('foo');
+              should(spy.firstCall.args[0].refresh).be.exactly(true);
+              should(spy.firstCall.args[0].routing).be.exactly('foo/bar');
+              should(spy.firstCall.args[0].timeout).be.exactly(999);
+              should(spy.firstCall.args[0].fields).be.exactly('foo, bar, baz');
+              should(spy.firstCall.args[0].foo).be.undefined();
 
               should(refreshIndexSpy.calledOnce).be.true();
             });
@@ -536,20 +634,22 @@ describe('Test: ElasticSearch service', () => {
         }
       });
 
-      requestObject.data.body = [
-        {index: {_id: 1, _type: collection, _index: index}},
-        {firstName: 'foo'},
-        {index: {_id: 2, _type: collection, _index: index}},
-        {firstName: 'bar'},
-        {update: {_id: 12, _type: collection, _index: index}},
-        {doc: {firstName: 'foobar'}},
-        {update: {_id: 212, _type: collection, _index: index}},
-        {doc: {firstName: 'foobar'}}
-      ];
+      requestObject.data.body = {
+        bulkData: [
+          {index: {_id: 1, _type: collection, _index: index}},
+          {firstName: 'foo'},
+          {index: {_id: 2, _type: collection, _index: index}},
+          {firstName: 'bar'},
+          {update: {_id: 12, _type: collection, _index: index}},
+          {doc: {firstName: 'foobar'}},
+          {update: {_id: 212, _type: collection, _index: index}},
+          {doc: {firstName: 'foobar'}}
+        ]
+      };
 
       return should(elasticsearch.import(requestObject)
         .then(result => {
-          should(spy.firstCall.args[0].body).be.exactly(requestObject.data.body);
+          should(spy.firstCall.args[0].body).be.exactly(requestObject.data.body.bulkData);
 
           should(result.errors).be.true();
           should(result.partialErrors).be.an.Array().and.match([{status: 404}]).and.match([{error: /^DocumentMissingException/}]);
@@ -566,15 +666,17 @@ describe('Test: ElasticSearch service', () => {
         ]
       });
 
-      requestObject.data.body = [
-        {index: {_id: 1, _index: index}},
-        {firstName: 'foo'},
-        {index: {_id: 2, _index: 'indexAlt'}},
-        {firstName: 'bar'},
-        {update: {_id: 1, _index: index}},
-        {doc: {firstName: 'foobar'}},
-        {delete: {_id: 2, _index: 'indexAlt'}}
-      ];
+      requestObject.data.body = {
+        bulkData: [
+          {index: {_id: 1, _index: index}},
+          {firstName: 'foo'},
+          {index: {_id: 2, _index: 'indexAlt'}},
+          {firstName: 'bar'},
+          {update: {_id: 1, _index: index}},
+          {doc: {firstName: 'foobar'}},
+          {delete: {_id: 2, _index: 'indexAlt'}}
+        ]
+      };
 
       return should(elasticsearch.import(requestObject)
         .then(() => {
@@ -594,15 +696,17 @@ describe('Test: ElasticSearch service', () => {
     });
 
     it('should reject the import promise if elasticsearch throws an error', () => {
-      requestObject.data.body = [
-        {index: {_id: 1, _index: index}},
-        {firstName: 'foo'},
-        {index: {_id: 2, _index: index}},
-        {firstName: 'bar'},
-        {update: {_id: 1, _index: index}},
-        {doc: {firstName: 'foobar'}},
-        {delete: {_id: 2, _index: index}}
-      ];
+      requestObject.data.body = {
+        bulkData: [
+          {index: {_id: 1, _index: index}},
+          {firstName: 'foo'},
+          {index: {_id: 2, _index: index}},
+          {firstName: 'bar'},
+          {update: {_id: 1, _index: index}},
+          {doc: {firstName: 'foobar'}},
+          {delete: {_id: 2, _index: index}}
+        ]
+      };
 
       sandbox.stub(elasticsearch.client, 'bulk').rejects({});
 
@@ -614,18 +718,25 @@ describe('Test: ElasticSearch service', () => {
       return should(elasticsearch.import(requestObject)).be.rejected();
     });
 
+    it('should return a rejected promise if body contains no bulkData parameter', () => {
+      delete requestObject.data.body.bulkData;
+      return should(elasticsearch.import(requestObject)).be.rejected();
+    });
+
     it('should return a rejected promise if no type has been provided, locally or globally', () => {
       delete requestObject.collection;
 
-      requestObject.data.body = [
-        {index: {_id: 1, _type: collection, _index: index}},
-        {firstName: 'foo'},
-        {index: {_id: 2, _type: collection, _index: index}},
-        {firstName: 'bar'},
-        {update: {_id: 1, _index: index}},
-        {doc: {firstName: 'foobar'}},
-        {delete: {_id: 2, _type: collection, _index: index}}
-      ];
+      requestObject.data.body = {
+        bulkData: [
+          {index: {_id: 1, _type: collection, _index: index}},
+          {firstName: 'foo'},
+          {index: {_id: 2, _type: collection, _index: index}},
+          {firstName: 'bar'},
+          {update: {_id: 1, _index: index}},
+          {doc: {firstName: 'foobar'}},
+          {delete: {_id: 2, _type: collection, _index: index}}
+        ]
+      };
 
       sandbox.stub(elasticsearch.client, 'bulk').resolves({});
 
@@ -635,15 +746,17 @@ describe('Test: ElasticSearch service', () => {
     it('should return a rejected promise if no index has been provided, locally or globally', () => {
       delete requestObject.index;
 
-      requestObject.data.body = [
-        {index: {_id: 1, _type: collection, _index: index}},
-        {firstName: 'foo'},
-        {index: {_id: 2, _type: collection, _index: index}},
-        {firstName: 'bar'},
-        {update: {_id: 1, _type: collection}},
-        {doc: {firstName: 'foobar'}},
-        {delete: {_id: 2, _type: collection, _index: index}}
-      ];
+      requestObject.data.body = {
+        bulkData: [
+          {index: {_id: 1, _type: collection, _index: index}},
+          {firstName: 'foo'},
+          {index: {_id: 2, _type: collection, _index: index}},
+          {firstName: 'bar'},
+          {update: {_id: 1, _type: collection}},
+          {doc: {firstName: 'foobar'}},
+          {delete: {_id: 2, _type: collection, _index: index}}
+        ]
+      };
 
       sandbox.stub(elasticsearch.client, 'bulk').resolves({});
 
@@ -667,12 +780,22 @@ describe('Test: ElasticSearch service', () => {
         })).be.fulfilled();
     });
 
-    it('should reject bad mapping input', done => {
-      var spy = sandbox.stub(elasticsearch.client.indices, 'putMapping').rejects({});
+    it('should reject and handle error for bad mapping input', done => {
+      var spy = sandbox.stub(elasticsearch.client.indices, 'putMapping').rejects({
+        displayName: 'BadRequest',
+        message: 'test',
+        body: {
+          error: {
+            reason: 'foo'
+          }
+        }
+      });
 
       elasticsearch.updateMapping(requestObject)
-        .catch(() => {
+        .catch((error) => {
           try {
+            should(error).be.instanceOf(BadRequestError);
+            should(error.message).be.equal('foo');
             should(spy.firstCall.args[0]).not.have.key('properties');
             done();
           }

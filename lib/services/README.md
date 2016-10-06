@@ -2,7 +2,7 @@
 
 In Kuzzle, a Service module is the implementation of the interface to different components of the application (think of a *system* service).
 
-A Service can be added to different engines. For example, Elasticsearch is used by both the writeEngine and the readEngine (see [index.js](./index.js)).
+A Service can be added to different engines. For example, Redis cache is used by many cache engines as well as the memory storage (see [default.config.js](../../default.config.js)).
 
 ## Available services
 
@@ -24,5 +24,3 @@ For instance, Kuzzle uses Elasticsearch for persistent data storage. If we want 
 ## Use an existing service for a new Kuzzle engine
 Kuzzle uses Redis for its notification engine.
 You may want to reuse this Redis service to, for instance, store user sessions.
-
-You can see how elasticsearch service is already used by both the writeEngine and the readEngine for this purpose in the [index.js](./index.js).

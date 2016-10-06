@@ -1,6 +1,6 @@
 var
   _ = require('lodash'),
-  config = require('./config')(),
+  config = require('./config'),
   rp = require('request-promise'),
   rewire = require('rewire'),
   RouterController = rewire('../../lib/api/controllers/routerController.js'),
@@ -8,13 +8,14 @@ var
 
 var ApiREST = function () {
   this.world = null;
+
+  this.baseUri = `${config.scheme}://${config.host}:${config.ports.rest}`;
 };
 
 ApiREST.prototype.init = function (world) {
   if (routes === undefined) {
     initRoutes.call(this);
   }
-
 
   this.world = world;
 };
@@ -30,15 +31,12 @@ function initRoutes() {
       pluginsManager: {
         routes: []
       },
-      config: {
-        apiVersion: '1.0',
-        httpRoutes: require('../../lib/config/httpRoutes')
-      }
+      config: require('../../default.config')
     });
 
   Router.prototype.use = Router.prototype.get = Router.prototype.post = Router.prototype.delete = Router.prototype.put = function () {};
 
-  routerController.initRouterHttp.call(context);
+  routerController.initHttpRouter.call(context);
 
   this.routes = routes = RouterController.__get__('routes');
 }
@@ -126,18 +124,18 @@ ApiREST.prototype.getRequest = function (index, collection, controller, action, 
   if (verb !== 'GET') {
     result.body = { body: args.body };
   }
-  
+
   return result;
 };
 
 ApiREST.prototype.disconnect = function () {};
 
 ApiREST.prototype.apiPath = function (path) {
-  return encodeURI(config.url + '/api/1.0/' + path);
+  return encodeURI(this.baseUri + '/api/1.0/' + path);
 };
 
 ApiREST.prototype.apiBasePath = function (path) {
-  return encodeURI(config.url + '/api/' + path);
+  return encodeURI(this.baseUri + '/api/' + path);
 };
 
 ApiREST.prototype.callApi = function (options) {
@@ -267,7 +265,7 @@ ApiREST.prototype.bulkImport = function (bulk, index) {
   var options = {
     url: this.apiPath(((typeof index !== 'string') ? this.world.fakeIndex : index) + '/' + this.world.fakeCollection + '/_bulk'),
     method: 'POST',
-    body: bulk
+    body: {bulkData: bulk}
   };
 
   return this.callApi(options);
@@ -277,7 +275,7 @@ ApiREST.prototype.globalBulkImport = function (bulk) {
   var options = {
     url: this.apiPath('_bulk'),
     method: 'POST',
-    body: bulk
+    body: {bulkData: bulk}
   };
 
   return this.callApi(options);

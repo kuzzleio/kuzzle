@@ -1,18 +1,18 @@
 var
-  Promise = require('bluebird'),
-  should = require('should'),
   rewire = require('rewire'),
+  should = require('should'),
   sinon = require('sinon'),
-  Kuzzle = require.main.require('lib/api/kuzzle'),
-  Services = rewire('../../lib/services'),
-  sandbox = sinon.sandbox.create();
+  Promise = require('bluebird'),
+  KuzzleMock = require('../mocks/kuzzle.mock'),
+  Services = rewire('../../lib/services');
 
-describe('Test service initialization function', () => {
-
+describe('Test: lib/services/', () => {
   var
     clock,
-    spy,
-    kuzzle;
+    kuzzle,
+    reset,
+    services,
+    requireSpy;
 
   before(() => {
     clock = sinon.useFakeTimers(Date.now());
@@ -23,176 +23,199 @@ describe('Test service initialization function', () => {
   });
 
   beforeEach(() => {
-    kuzzle = new Kuzzle();
-    spy = sandbox.stub(kuzzle.internalEngine, 'get').resolves({});
+    requireSpy = sinon.spy();
+
+    reset = Services.__set__({
+      require: sinon.stub().returns(requireSpy)
+    });
+    kuzzle = new KuzzleMock();
+    services = new Services(kuzzle);
   });
 
   afterEach(() => {
-    sandbox.restore();
+    reset();
   });
 
-  it('should build an internal broker service with correct methods', () => {
-    return kuzzle.services.init({whitelist: []})
-      .then(() => {
-        should(kuzzle.services.list.broker).be.an.Object().and.not.be.empty();
-        should(kuzzle.services.list.broker.init).be.a.Function();
-        should(kuzzle.services.list.broker.send).be.a.Function();
-        should(kuzzle.services.list.broker.broadcast).be.a.Function();
-        should(kuzzle.services.list.broker.listen).be.a.Function();
-        should(kuzzle.services.list.broker.unsubscribe).be.a.Function();
-        should(kuzzle.services.list.broker.close).be.a.Function();
-      });
-  });
-
-  it('should build a readEngine service with correct methods', () => {
-    return kuzzle.services.init({whitelist: []})
-      .then(() => {
-        should(kuzzle.services.list.readEngine).be.an.Object();
-        should(kuzzle.services.list.readEngine.init).be.a.Function();
-        should(kuzzle.services.list.readEngine.search).be.a.Function();
-        should(kuzzle.services.list.readEngine.get).be.a.Function();
-      });
-  });
-
-  it('should build a writeEngine service with correct methods', () => {
-    return kuzzle.services.init({whitelist: []})
-      .then(() => {
-        should(kuzzle.services.list.writeEngine).be.an.Object();
-        should(kuzzle.services.list.writeEngine.init).be.a.Function();
-        should(kuzzle.services.list.writeEngine.create).be.a.Function();
-        should(kuzzle.services.list.writeEngine.update).be.a.Function();
-        should(kuzzle.services.list.writeEngine.deleteByQuery).be.a.Function();
-        should(kuzzle.services.list.writeEngine.import).be.a.Function();
-      });
-  });
-
-  it('should build a cache service', () => {
-    return kuzzle.services.init({whitelist: []})
-      .then(() => {
-        should(kuzzle.services.list.notificationCache).be.an.Object();
-        should(kuzzle.services.list.notificationCache.add).be.a.Function();
-        should(kuzzle.services.list.notificationCache.remove).be.a.Function();
-        should(kuzzle.services.list.notificationCache.search).be.a.Function();
-      });
-  });
-
-  it('should not init services in blacklist', () => {
-    kuzzle.config = {
-      default: {
-        services: {
-          initTimeout: 10000
-        }
-      },
-      services: {
-        writeEngine: 'elasticsearch'
-      }
-    };
-
-    return kuzzle.services.init({blacklist: ['writeEngine']})
-      .then(() => {
-        should(kuzzle.services.list.writeEngine.client).be.null();
-        should(spy.calledOnce).be.true();
-      });
-  });
-
-  it('should init a service that has no custom settings', () => {
+  describe('#init', () => {
     var
-      error = new Error('Not found index');
+      r,
+      registerService;
 
-    error.status = 404;
-    kuzzle.internalEngine.get.restore();
-    sandbox.stub(kuzzle.internalEngine, 'get').rejects(error);
-
-    return kuzzle.services.init({whitelist: ['writeEngine']})
-      .then(() => {
-        should(kuzzle.services.list.writeEngine).be.an.Object();
+    beforeEach(() => {
+      r = Services.__set__({
+        registerService: sinon.stub().resolves()
       });
+      registerService = Services.__get__('registerService');
+    });
 
-  });
+    afterEach(() => {
+      r();
+    });
 
-  it('should propagate the internalEngine rejections', () => {
-    var
-      error = new Error();
+    it('should register the services', () => {
+      return services.init()
+        .then(() => {
+          should(Object.keys(kuzzle.config.services).length).be.greaterThan(2);
 
-    kuzzle.internalEngine.get.restore();
-    sandbox.stub(kuzzle.internalEngine, 'get').rejects(error);
+          Object.keys(kuzzle.config.services)
+            .filter(key => key !== 'common')
+            .forEach(service => {
+              should(kuzzle.internalEngine.get).be.calledWith('services', service);
+              should(registerService).be.calledWith(service);
+            });
+        });
+    });
 
-    kuzzle.config = {
-      default: {services: {initTimeout: 1000}},
-      services: {myService: 'foo'}
-    };
+    it('should still return a resolved promise if some services do not have any configuration in db', () => {
+      var error = new Error('test');
+      error.status = 404;
 
-    return should(kuzzle.services.init())
-      .be.rejectedWith(error);
+      kuzzle.internalEngine.get.onCall(0).returns(Promise.reject(error));
+      kuzzle.internalEngine.get.returns(Promise.resolve({_source: {foo: 'bar'}}));
+
+      return services.init()
+        .then(() => {
+          should(Object.keys(kuzzle.config.services).length).be.greaterThan(2);
+
+          Object.keys(kuzzle.config.services)
+            .filter(key => key !== 'common')
+            .forEach(service => {
+              should(kuzzle.internalEngine.get).be.calledWith('services', service);
+              should(registerService).be.calledWith(service);
+            });
+        });
+    });
+
+    it('should return a rejected promise if something wrong occurred while fetching the configuration from the db', () => {
+      var error = new Error('test');
+      kuzzle.internalEngine.get.rejects(error);
+
+      return should(services.init()).be.rejectedWith(error);
+    });
+
+    it('whitelist', () => {
+      kuzzle.config.services = {
+        ok: true,
+        alsoOk: true,
+        notOk: true
+      };
+
+      return services.init({whitelist: ['ok', 'alsoOk']})
+        .then(() => {
+          should(registerService).be.calledWith('ok', {service: 'ok'}, true);
+          should(registerService).be.calledWith('alsoOk', {service: 'alsoOk'}, true);
+          should(registerService).be.calledWith('notOk', {service: 'notOk'}, false);
+        });
+    });
+
+    it('blacklist', () => {
+      kuzzle.config.services = {
+        ok: true,
+        alsoOk: true,
+        notOk: true
+      };
+
+      return services.init({blacklist: ['notOk']})
+        .then(() => {
+          should(registerService).be.calledWith('ok', {service: 'ok'}, true);
+          should(registerService).be.calledWith('alsoOk', {service: 'alsoOk'}, true);
+          should(registerService).be.calledWith('notOk', {service: 'notOk'}, false);
+        });
+    });
+
   });
 
   describe('#registerService', () => {
     var
-      registerService = Services.__get__('registerService'),
-      scope;
+      context,
+      options = {},
+      registerService = Services.__get__('registerService');
 
     beforeEach(() => {
-      scope = {
-        kuzzle: {
-          config: {
-            default: {services: {initTimeout: 10000 }},
-            services: { }
-          },
-          pluginsManager: {
-            trigger: sinon.spy()
-          }
-        },
-        list: {}
-
+      context = {
+        list: {},
+        kuzzle
       };
     });
 
-    it('should throw an error if the service file doesn\'t exist', () => {
-      scope.kuzzle.config.services = { writeEngine: 'foo' };
+    it('should require the service', () => {
+      kuzzle.config.services.serviceName = {};
 
-      should(() => registerService.call(scope, 'writeEngine', {}))
-        .throw('File services/foo.js not found to initialize service writeEngine');
-
-      should(scope.kuzzle.pluginsManager.trigger).be.calledOnce();
-      should(scope.kuzzle.pluginsManager.trigger).be.calledWith('log:error',
-        'File services/foo.js not found to initialize service writeEngine');
+      return registerService.call(context, 'serviceName', options, false)
+        .then(() => {
+          should(Services.__get__('require')).be.calledOnce();
+          should(Services.__get__('require')).be.calledWith('./serviceName');
+        });
     });
 
-    it('should reject the promise if the service did not init in time', () => {
-      scope.kuzzle.config.services.myService = 'foo';
+    it('should require the backend if defined', () => {
+      kuzzle.config.services.serviceName = {
+        backend: 'backend'
+      };
 
-      // we need to mock require in the function's scope module.
+      return registerService.call(context, 'serviceName', options, false)
+        .then(() => {
+          should(Services.__get__('require')).be.calledOnce();
+          should(Services.__get__('require')).be.calledWith('./backend');
+        });
+    });
+
+    it('should define as many aliases as defined', () => {
+      kuzzle.config.services.serviceName = {
+        aliases: [
+          'someAlias',
+          'someOtherAlias',
+          'andYetAnotherOne'
+        ]
+      };
+
+      return registerService.call(context, 'serviceName', options, false)
+        .then(() => {
+          var req = Services.__get__('require');
+
+          should(req).be.calledThrice();
+          should(req).be.calledWith('./serviceName');
+
+          should(context.list).have.properties([
+            'someAlias',
+            'someOtherAlias',
+            'andYetAnotherOne'
+          ]);
+        });
+    });
+
+    it('should return a rejected promise if the service did not init in time', () => {
       return Services.__with__({
         require: () => function () {
           this.init = () => new Promise(() => {});
         }
       })(() => {
-        var r = registerService.call(scope, 'myService', { timeout: 1000 }, true);
+        var r;
+
+        kuzzle.config.services.serviceName = {};
+        r = registerService.call(context, 'serviceName', {timeout: 1000}, true);
+
         clock.tick(1000);
 
-        return should(r).be.rejectedWith('[FATAL] Service "myService" failed to init within 1000ms');
+        return should(r).be.rejectedWith('[FATAL] Service "serviceName[serviceName]" failed to init within 1000ms');
       });
     });
 
-    it('should reject the promise with the error received from the service', () => {
-      var
-        myError = new Error('test');
+    it('should return a rejected promise if some error was thrown during init', () => {
+      var error = new Error('test');
 
-      scope.kuzzle.config.services.myService = 'foo';
-
-      // we need to mock require in the function's scope module.
       return Services.__with__({
         require: () => function () {
-          this.init = () => Promise.reject(myError);
+          this.init = () => Promise.reject(error);
         }
       })(() => {
-        return should(registerService.call(scope, 'myService', {}, true))
-          .be.rejectedWith(myError);
-      });
+        kuzzle.config.services.serviceName = {};
 
+        return should(registerService.call(context, 'serviceName', options, true))
+          .be.rejectedWith(error);
+      });
     });
 
   });
-
 
 });

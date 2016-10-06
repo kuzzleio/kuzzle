@@ -3,8 +3,7 @@ var
   should = require('should'),
   Kuzzle = require.main.require('lib/api/kuzzle'),
   InternalError = require.main.require('kuzzle-common-objects').Errors.internalError,
-  Repository = require.main.require('lib/api/core/models/repositories/repository'),
-  RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject;
+  Repository = require.main.require('lib/api/core/models/repositories/repository');
 
 describe('Test: repositories/repository', () => {
   var
@@ -14,8 +13,7 @@ describe('Test: repositories/repository', () => {
     repository,
     ObjectConstructor,
     mockCacheEngine,
-    mockReadEngine,
-    mockWriteLayer,
+    mockDatabaseEngine,
     cachedObject,
     uncachedObject;
 
@@ -40,16 +38,16 @@ describe('Test: repositories/repository', () => {
 
   mockCacheEngine = {
     get: key => {
-      if (key === repository.index + '/' + repository.collection + '/persisted') {
+      if (key === 'repos/' + repository.index + '/' + repository.collection + '/persisted') {
         return Promise.resolve(JSON.stringify(persistedObject));
       }
-      if (key === repository.index + '/' + repository.collection + '/cached') {
+      if (key === 'repos/' + repository.index + '/' + repository.collection + '/cached') {
         return Promise.resolve(JSON.stringify(cachedObject));
       }
-      if (key === repository.index + '/' + repository.collection + '/error') {
+      if (key === 'repos/' + repository.index + '/' + repository.collection + '/error') {
         return Promise.reject(new InternalError('Error'));
       }
-      if (key === repository.index + '/' + repository.collection + '/string') {
+      if (key === 'repos/' + repository.index + '/' + repository.collection + '/string') {
         return Promise.resolve('a string');
       }
 
@@ -61,53 +59,36 @@ describe('Test: repositories/repository', () => {
     persist: key => { forwardedObject = {op: 'persist', key: key}; return Promise.resolve('OK'); }
   };
 
-  mockReadEngine = {
-    get: (requestObject, forward) => {
-      if (forward !== false) {
-        forwardedObject = requestObject;
-      }
-
-      if (requestObject.data._id === 'persisted') {
+  mockDatabaseEngine = {
+    get: (type, id) => {
+      if (id === 'persisted') {
         return Promise.resolve(persistedObject);
       }
 
-      if (requestObject.data._id === 'uncached') {
+      if (id === 'uncached') {
         return Promise.resolve(uncachedObject);
       }
 
-      if (requestObject.data._id === 'cached') {
+      if (id === 'cached') {
         return Promise.resolve(uncachedObject);
       }
 
-      if (requestObject.data._id === 'source') {
+      if (id === 'source') {
         return Promise.resolve({_id:'theId', _source: {foo: 'bar'}});
       }
 
-      if (requestObject.data._id === 'error') {
+      if (id === 'error') {
         return Promise.reject(new InternalError('Error'));
       }
 
       return Promise.resolve({found: false});
     },
-    mget: requestObject => {
+    mget: (type, ids) => {
       var
         promises = [];
 
-      forwardedObject = requestObject;
-
-      requestObject.data.body.ids.forEach(id => {
-        var req = new RequestObject({
-          controller: 'read',
-          action: 'get',
-          requestId: 'foo',
-          collection: repository.collection,
-          index: repository.index,
-          body: {
-            _id: id
-          }
-        });
-
-        promises.push(mockReadEngine.get(req, false));
+      ids.forEach(id => {
+        promises.push(mockDatabaseEngine.get(repository.collection, id));
       });
 
       return Promise.all(promises)
@@ -125,22 +106,23 @@ describe('Test: repositories/repository', () => {
           return {hits: result};
         });
     },
-    search: (requestObject) => {
-      if (requestObject.data.body.filter.empty) {
+    search: (type, filter) => {
+      if (filter.empty) {
         return Promise.resolve({});
       }
-      if (requestObject.data.body.filter.error) {
+      if (filter.error) {
         return Promise.reject({});
       }
       return Promise.resolve({hits: [{_id: 'role', _source: {controllers: {}}}], total: 1});
-    }
-  };
-
-  mockWriteLayer = {
-    execute: o => {
-      forwardedObject = o;
     },
-    delete: requestObject => Promise.resolve(requestObject)
+    createOrReplace: (type, id, content) => {
+      forwardedObject = {type, id, content};
+      return Promise.resolve(content);
+    },
+    delete: (type, id) => {
+      forwardedObject = {type, id};
+      return Promise.resolve(id);
+    }
   };
 
   before(() => {
@@ -149,17 +131,13 @@ describe('Test: repositories/repository', () => {
     repository = new Repository(kuzzle);
     repository.index = '%test';
     repository.collection = 'repository';
-    repository.ObjectConstructor = ObjectConstructor;
-    repository.readEngine = mockReadEngine;
-    repository.writeLayer = mockWriteLayer;
-    repository.cacheEngine = mockCacheEngine;
+    repository.init({});
   });
 
   beforeEach(() => {
     forwardedObject = null;
     repository.ObjectConstructor = ObjectConstructor;
-    repository.readEngine = mockReadEngine;
-    repository.writeLayer = mockWriteLayer;
+    repository.databaseEngine = mockDatabaseEngine;
     repository.cacheEngine = mockCacheEngine;
   });
 
@@ -171,17 +149,6 @@ describe('Test: repositories/repository', () => {
 
     it('should reject the promise in case of error', () => {
       return should(repository.loadOneFromDatabase('error')).be.rejectedWith(InternalError);
-    });
-
-    it('should create a valid requestObject request for the readEngine', () => {
-      return repository.loadOneFromDatabase(-9999)
-        .then(() => {
-          should(forwardedObject).be.instanceOf(RequestObject);
-          should(forwardedObject.controller).be.exactly('read');
-          should(forwardedObject.action).be.exactly('get');
-          should(forwardedObject.data._id).be.exactly(-9999);
-          should(forwardedObject.collection).be.exactly(repository.collection);
-        });
     });
 
     it('should return a valid ObjectConstructor instance if found', () => {
@@ -210,17 +177,6 @@ describe('Test: repositories/repository', () => {
 
     it('should reject the promise in case of error', () => {
       return should(repository.loadMultiFromDatabase('error')).be.rejectedWith(InternalError);
-    });
-
-    it('should create a valid requestObject request for the readEngine', () => {
-      return repository.loadMultiFromDatabase([-999, 'persisted', -998])
-        .then(() => {
-          should(forwardedObject).be.instanceOf(RequestObject);
-          should(forwardedObject.controller).be.exactly('read');
-          should(forwardedObject.action).be.exactly('mget');
-          should(forwardedObject.collection).be.exactly(repository.collection);
-          should(forwardedObject.data.body.ids).be.eql([-999, 'persisted', -998]);
-        });
     });
 
     it('should return a list of plain object', () => {
@@ -319,7 +275,7 @@ describe('Test: repositories/repository', () => {
         });
     });
 
-    it('should return a valid ObjectConstructor instance if found only in readEngine', () => {
+    it('should return a valid ObjectConstructor instance if found only in databaseEngine', () => {
       return repository.load('uncached')
         .then(result => {
           should(result).be.an.instanceOf(ObjectConstructor);
@@ -329,7 +285,7 @@ describe('Test: repositories/repository', () => {
         });
     });
 
-    it('should get content only from readEngine if cacheEngine is null', () => {
+    it('should get content only from databaseEngine if cacheEngine is null', () => {
       repository.cacheEngine = null;
 
       return repository.load('cached')
@@ -341,8 +297,8 @@ describe('Test: repositories/repository', () => {
         });
     });
 
-    it('should get content only from cacheEngine if readEngine is null', () => {
-      repository.readEngine = null;
+    it('should get content only from cacheEngine if databaseEngine is null', () => {
+      repository.databaseEngine = null;
 
       return repository.load('uncached')
         .then(result => should(result).be.null());
@@ -350,24 +306,25 @@ describe('Test: repositories/repository', () => {
   });
 
   describe('#persistToDatabase', () => {
-    it('should construct a valid requestObject', () => {
-      repository.persistToDatabase(persistedObject);
-
-      should(forwardedObject).be.an.instanceOf(RequestObject);
-      should(forwardedObject.data.body).be.eql(persistedObject);
+    it('should call the createOrReplace method of internal Engine', () => {
+      return repository.persistToDatabase(persistedObject)
+        .then(() => {
+          should(forwardedObject.content).be.eql(persistedObject);
+          should(forwardedObject.type).be.eql(repository.collection);
+          should(forwardedObject.id).be.eql(persistedObject._id);
+        });
     });
   });
 
   describe('#deleteFromDatabase', () => {
     it('should construct a valid requestObject', () => {
-      repository.deleteFromDatabase('test');
-
-      should(forwardedObject).be.an.instanceOf(RequestObject);
-      should(forwardedObject).match({
-        data: { _id: 'test' },
-        controller: 'write',
-        action: 'delete'
-      });
+      return repository.deleteFromDatabase('test')
+        .then(() => {
+          should(forwardedObject).match({
+            id: 'test',
+            type: repository.collection
+          });
+        });
     });
   });
 

@@ -18,8 +18,8 @@ describe('Test: core/indexCache', () => {
     sandbox.stub(kuzzle.internalEngine, 'get').resolves({});
     return kuzzle.services.init({whitelist: []})
       .then(() => {
-        sandbox.stub(kuzzle.services.list.readEngine, 'listIndexes').resolves({ indexes: ['foo'] });
-        sandbox.stub(kuzzle.services.list.readEngine, 'listCollections').resolves({
+        sandbox.stub(kuzzle.services.list.storageEngine, 'listIndexes').resolves({ indexes: ['foo'] });
+        sandbox.stub(kuzzle.services.list.storageEngine, 'listCollections').resolves({
           collections: {
             stored: ['bar', 'baz', 'qux']
           }

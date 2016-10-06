@@ -3,7 +3,7 @@ var
   Promise = require('bluebird'),
   should = require('should'),
   /** @type {Params} */
-  params = require('rc')('kuzzle'),
+  params = require('../../../../../lib/config'),
   Kuzzle = require.main.require('lib/api/kuzzle'),
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
@@ -56,7 +56,7 @@ describe('Test: repositories/tokenRepository', () => {
       load: username => {
         var user = new User();
         user._id = username;
-        user.profilesIds = ['anonymous'];
+        user.profileIds = ['anonymous'];
 
         return Promise.resolve(user);
       },
@@ -76,7 +76,7 @@ describe('Test: repositories/tokenRepository', () => {
         };
 
         user._id = -1;
-        user.profilesIds = ['anonymous'];
+        user.profileIds = ['anonymous'];
         profile.policies = [{roleId: role._id}];
 
         return Promise.resolve(user);
@@ -97,7 +97,7 @@ describe('Test: repositories/tokenRepository', () => {
         };
 
         user._id = 'admin';
-        user.profilesIds = ['admin'];
+        user.profileIds = ['admin'];
         profile.policies = [{roleId: role._id}];
 
         return Promise.resolve(user);
@@ -113,6 +113,7 @@ describe('Test: repositories/tokenRepository', () => {
     kuzzle.repositories.user = mockUserRepository;
 
     tokenRepository = new TokenRepository(kuzzle);
+    tokenRepository.init();
     tokenRepository.cacheEngine = mockCacheEngine;
 
     kuzzle.tokenManager = {
@@ -187,7 +188,7 @@ describe('Test: repositories/tokenRepository', () => {
       var
         token;
 
-      token = jwt.sign({_id: -99999}, params.jsonWebToken.secret, {algorithm: params.jsonWebToken.algorithm});
+      token = jwt.sign({_id: -99999}, params.security.jwt.secret, {algorithm: params.security.jwt.algorithm});
 
       return should(tokenRepository.verifyToken(token)).be.rejectedWith(UnauthorizedError, {
         message: 'Invalid token'
@@ -195,7 +196,7 @@ describe('Test: repositories/tokenRepository', () => {
     });
 
     it('shoud reject the promise if the jwt is expired', () => {
-      var token = jwt.sign({_id: -1}, params.jsonWebToken.secret, {algorithm: params.jsonWebToken.algorithm, expiresIn: 0});
+      var token = jwt.sign({_id: -1}, params.security.jwt.secret, {algorithm: params.security.jwt.algorithm, expiresIn: 0});
 
       return should(tokenRepository.verifyToken(token)).be.rejectedWith(UnauthorizedError, {
         details: {
@@ -205,7 +206,7 @@ describe('Test: repositories/tokenRepository', () => {
     });
 
     it('should reject the promise if an error occurred while fetching the user from the cache', () => {
-      var token = jwt.sign({_id: 'auser'}, params.jsonWebToken.secret, {algorithm: params.jsonWebToken.algorithm});
+      var token = jwt.sign({_id: 'auser'}, params.security.jwt.secret, {algorithm: params.security.jwt.algorithm});
 
       sandbox.stub(tokenRepository, 'loadFromCache').rejects(new InternalError('Error'));
 
@@ -228,12 +229,13 @@ describe('Test: repositories/tokenRepository', () => {
     });
 
     it('should reject the promise if an error occurred while generating the token', () => {
+      var algorithm = kuzzle.config.security.jwt.algorithm;
 
-      kuzzle.config.jsonWebToken.algorithm = 'fake JWT ALgorithm';
+      kuzzle.config.security.jwt.algorithm = 'fake JWT ALgorithm';
 
       return should(tokenRepository.generateToken(new User(), context)
         .catch(err => {
-          kuzzle.config.jsonWebToken.algorithm = params.jsonWebToken.algorithm;
+          kuzzle.config.security.jwt.algorithm = algorithm;
 
           return Promise.reject(err);
         })).be.rejectedWith(InternalError);
@@ -242,9 +244,9 @@ describe('Test: repositories/tokenRepository', () => {
     it('should resolve to the good jwt token for a given username', done => {
       var
         user = new User(),
-        checkToken = jwt.sign({_id: 'userInCache'}, params.jsonWebToken.secret, {
-          algorithm: params.jsonWebToken.algorithm,
-          expiresIn: params.jsonWebToken.expiresIn
+        checkToken = jwt.sign({_id: 'userInCache'}, params.security.jwt.secret, {
+          algorithm: params.security.jwt.algorithm,
+          expiresIn: params.security.jwt.expiresIn
         });
 
       user._id = 'userInCache';

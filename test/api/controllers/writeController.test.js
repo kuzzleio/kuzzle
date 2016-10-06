@@ -22,7 +22,7 @@ describe('Test: write controller', () => {
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
-    engine = kuzzle.services.list.writeEngine;
+    engine = kuzzle.services.list.storageEngine;
     trigger = kuzzle.pluginsManager.trigger;
     controller = new WriteController(kuzzle);
 

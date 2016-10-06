@@ -1,31 +1,13 @@
-/**
- * This file allow to retrieve configuration easily.
- * You can change these url in .kuzzlerc file in root folder or you can define environment variable like KUZZLE_URL, KUZZLE_MQTT_URL, KUZZLE_AMQP_URL, KUZZLE_STOMP_URL
- */
+var
+  rc = require('rc'),
+  kuzzleConfig = require('../../lib/config');
 
-/** @type {Params} */
-var config = require('rc')('kuzzle');
-
-/**
- * @returns {{url: string, ws: string}}
- */
-module.exports = function () {
-
-  var defaultUrls = {
-    url: 'http://api:7511',
-    ws: 'http://api:7512'
-  };
-
-  if (process.env.KUZZLE_URL) {
-    defaultUrls.url = process.env.KUZZLE_URL;
+module.exports = rc('kuzzle', {
+  scheme: 'http',
+  host: kuzzleConfig.services.proxyBroker.host,
+  ports: {
+    rest: 7511,
+    io: 7512,
+    ws: 7513
   }
-  if (process.env.KUZZLE_WS_URL) {
-    defaultUrls.url = process.env.KUZZLE_WS_URL;
-  }
-
-  if (config.port) {
-    defaultUrls.url = 'http://api:' + config.port;
-  }
-
-  return defaultUrls;
-};
+});

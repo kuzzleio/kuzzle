@@ -19,23 +19,17 @@ program
   .description('create the first administrator user')
   .action(require('./commands/createFirstAdmin'));
 
-// $ kuzzle.js disable <service>
-program
-  .command('disable')
-  .description('disable a service without reloading Kuzzle')
-  .action(require('./commands/disable'));
-
-// $ kuzzle enable <service>
-program
-  .command('enable')
-  .description('enable a service without reloading Kuzzle')
-  .action(require('./commands/enable'));
-
 // $ kuzzle install
 program
   .command('install')
   .description('install all plugins configured in .kuzzlerc')
   .action(require('./commands/install'));
+
+// $ kuzzle clearCache
+program
+  .command('clearCache')
+  .description('clear internal caches in Redis')
+  .action(require('./commands/clearCache'));
 
 // $ kuzzle likeAvirgin
 program

@@ -11,11 +11,11 @@ describe('Test "not" method', () => {
     index = 'index',
     collection = 'collection',
     filter = {
-      term: {
+      equals: {
         city: 'London'
       }
     },
-    nottermcityLondon = md5('nottermcityLondon'),
+    notequalscityLondon = md5('notequalscityLondon'),
     fieldCity = md5('city');
 
   beforeEach(() => {
@@ -33,22 +33,22 @@ describe('Test "not" method', () => {
   });
 
   it('should construct the filterTree with correct curried function name', () => {
-    should(methods.filters.filtersTree[index][collection].fields[fieldCity][nottermcityLondon]).not.be.empty();
+    should(methods.filters.filtersTree[index][collection].fields[fieldCity][notequalscityLondon]).not.be.empty();
   });
 
   it('should construct the filterTree with correct room list', () => {
     var ids;
 
     // Test gt from filterGrace
-    ids = methods.filters.filtersTree[index][collection].fields[fieldCity][nottermcityLondon].ids;
+    ids = methods.filters.filtersTree[index][collection].fields[fieldCity][notequalscityLondon].ids;
     should(ids).be.an.Array();
     should(ids).have.length(1);
     should(ids[0]).be.exactly(filterId);
   });
 
   it('should construct the filterTree with correct functions', () => {
-    should(methods.filters.filtersTree[index][collection].fields[fieldCity][nottermcityLondon].args).match({
-      operator: 'term', not: true, field: 'city', value: 'London'
+    should(methods.filters.filtersTree[index][collection].fields[fieldCity][notequalscityLondon].args).match({
+      operator: 'equals', not: true, field: 'city', value: 'London'
     });
   });
 

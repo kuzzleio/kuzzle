@@ -1,10 +1,9 @@
 var
   rewire = require('rewire'),
   should = require('should'),
-  params = require('rc')('kuzzle'),
-  Promise = require('bluebird'),
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
+  KuzzleMock = require('../../mocks/kuzzle.mock'),
   RemoteActions = rewire('../../../lib/api/remoteActions/index');
 
 describe('Tests: api/remoteActions/index.js', () => {
@@ -12,13 +11,7 @@ describe('Tests: api/remoteActions/index.js', () => {
     kuzzle;
 
   beforeEach(() => {
-    kuzzle = {
-      services: {},
-      internalEngine: {
-        init: sinon.stub().resolves(),
-        search : () => Promise.resolve({hits: []})
-      }
-    };
+    kuzzle = new KuzzleMock();
   });
 
   afterEach(() => {
@@ -35,7 +28,6 @@ describe('Tests: api/remoteActions/index.js', () => {
           stub = RemoteActions.__get__('initActions'),
           remoteActions = new RemoteActions(kuzzle);
 
-        should(remoteActions.kuzzle).be.exactly(kuzzle);
         should(remoteActions.actions).eql({});
         should(remoteActions.do).be.a.Function();
         should(stub).be.calledOnce();
@@ -64,12 +56,13 @@ describe('Tests: api/remoteActions/index.js', () => {
           adminExists: action,
           cleanAndPrepare: action,
           cleanDb: action,
+          clearCache: action,
           createFirstAdmin: action,
           enableServices: action,
           managePlugins: action,
           prepareDb: action
         });
-        should(spy).have.callCount(7);
+        should(spy).have.callCount(8);
       });
     });
 
@@ -83,19 +76,18 @@ describe('Tests: api/remoteActions/index.js', () => {
       reset;
 
     beforeEach(() => {
+      var requireStub = sinon.stub();
+      requireStub.withArgs('../../config').returns(kuzzle.config);
+      requireStub.returns();
+
       reset = RemoteActions.__set__({
-        config: sinon.stub().returns({
-          queues: {
-            remoteActionsQueue: 'queue'
-          },
-          pluginsManager: params.pluginsManager
-        }),
         console: {
           log: sinon.spy(),
           error: sinon.spy()
         },
-        require: sinon.stub().returns(),
-        pluginsManager: sinon.stub().returns({
+        require: requireStub,
+        PluginsManager: sinon.stub().returns({
+          init: sinon.stub().resolves(),
           run: sinon.stub().resolves()
         }),
         process: {
@@ -156,7 +148,7 @@ describe('Tests: api/remoteActions/index.js', () => {
           should(kuzzle.services.list.broker.listen).be.calledOnce();
           should(kuzzle.services.list.broker.listen.firstCall.args[1]).be.a.Function();
           should(kuzzle.services.list.broker.send).be.calledOnce();
-          should(kuzzle.services.list.broker.send.firstCall.args[0]).be.exactly('queue');
+          should(kuzzle.services.list.broker.send.firstCall.args[0]).be.exactly('remote-actions-queue');
           should(kuzzle.services.list.broker.send.firstCall.args[1]).match({
             controller: 'actions',
             action: 'test',

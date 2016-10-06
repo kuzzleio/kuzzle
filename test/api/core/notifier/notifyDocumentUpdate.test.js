@@ -40,7 +40,7 @@ describe('Test: notifier.notifyDocumentUpdate', () => {
       },
 
       search: function (id) {
-        if (id === 'removeme') {
+        if (id === 'notif/removeme') {
           return Promise.resolve(['foobar']);
         }
 
@@ -69,7 +69,7 @@ describe('Test: notifier.notifyDocumentUpdate', () => {
           body: { foo: 'bar' }
         });
 
-        kuzzle.services.list.notificationCache = mockupCacheService;
+        kuzzle.services.list.internalCache = mockupCacheService;
         kuzzle.notifier.notify = function (rooms, r, n) {
           if (rooms.length > 0) {
             notified++;
@@ -91,12 +91,12 @@ describe('Test: notifier.notifyDocumentUpdate', () => {
     requestObject.data._id = 'addme';
 
     sandbox.stub(kuzzle.dsl, 'test').resolves(['foobar']);
-    sandbox.stub(kuzzle.services.list.readEngine, 'get').resolves({_id: 'addme', _source: requestObject.data.body});
+    sandbox.stub(kuzzle.services.list.storageEngine, 'get').resolves({_id: 'addme', _source: requestObject.data.body});
 
     return kuzzle.notifier.notifyDocumentUpdate(requestObject)
       .then(() => {
         should(notified).be.exactly(1);
-        should(mockupCacheService.addId).be.exactly(requestObject.data._id);
+        should(mockupCacheService.addId).be.exactly('notif/' + requestObject.data._id);
         should(mockupCacheService.room).be.an.Array();
         should(mockupCacheService.room[0]).be.exactly('foobar');
         should(mockupCacheService.removeId).be.undefined();
@@ -113,14 +113,14 @@ describe('Test: notifier.notifyDocumentUpdate', () => {
     requestObject.data._id = 'removeme';
 
     sandbox.stub(kuzzle.dsl, 'test').resolves([]);
-    sandbox.stub(kuzzle.services.list.readEngine, 'get').resolves({_id: 'removeme', _source: requestObject.data.body});
+    sandbox.stub(kuzzle.services.list.storageEngine, 'get').resolves({_id: 'removeme', _source: requestObject.data.body});
 
     return kuzzle.notifier.notifyDocumentUpdate(requestObject)
       .then(() => {
         should(notified).be.exactly(1);
         should(mockupCacheService.addId).be.undefined();
         should(mockupCacheService.room).be.undefined();
-        should(mockupCacheService.removeId).be.exactly(requestObject.data._id);
+        should(mockupCacheService.removeId).be.exactly('notif/' + requestObject.data._id);
 
         should(notification.scope).be.exactly('out');
         should(notification.action).be.exactly('update');
