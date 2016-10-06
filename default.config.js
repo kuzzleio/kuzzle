@@ -181,22 +181,22 @@ module.exports = {
           myEnum: {
             mandatory: false,
             type: 'enum',
-            type_options: {
+            typeOptions: {
               values: ['toto', 'titi', 'tutu']
             }
           },
           myUrl: {
             mandatory: false,
             type: 'url',
-            type_options: {
+            typeOptions: {
               not_empty: true
             }
           },
           myField: {
             mandatory: true,
             type: 'string',
-            default_value: 'a string',
-            type_options: {
+            defaultValue: 'a string',
+            typeOptions: {
               length: {
                 min: 2,
                 max: 10
@@ -206,7 +206,7 @@ module.exports = {
           myObject: {
             mandatory: true,
             type: 'object',
-            type_options: {
+            typeOptions: {
               strict: true
             }
           },
@@ -217,7 +217,7 @@ module.exports = {
               value: true,
               minCount: 1
             },
-            type_options: {
+            typeOptions: {
               length: {
                 min: 1
               }
