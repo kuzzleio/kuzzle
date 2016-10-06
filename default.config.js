@@ -174,6 +174,24 @@ module.exports = {
       mycollection: {
         strict: true,
         fields: {
+          myBool: {
+            mandatory: false,
+            type: 'boolean'
+          },
+          myEnum: {
+            mandatory: false,
+            type: 'enum',
+            type_options: {
+              values: ['toto', 'titi', 'tutu']
+            }
+          },
+          myUrl: {
+            mandatory: false,
+            type: 'url',
+            type_options: {
+              not_empty: true
+            }
+          },
           myField: {
             mandatory: true,
             type: 'string',
