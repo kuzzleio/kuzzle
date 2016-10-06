@@ -2,6 +2,5 @@ node_modules
 dump
 vagrant
 Vagrantfile
-coverage
 .git
 .idea

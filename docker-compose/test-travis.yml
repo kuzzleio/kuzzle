@@ -15,6 +15,10 @@ kuzzle:
     - redis
     - proxy
   environment:
+    - kuzzle_services__db__host=elasticsearch
+    - kuzzle_services__internalCache__node__host=redis
+    - kuzzle_services__memoryStorage__node__host=redis
+    - kuzzle_services__proxyBroker__host=proxy
     - FEATURE_COVERAGE=1
     # Travis env var must be propagated into the container
     - TRAVIS
@@ -24,10 +28,6 @@ kuzzle:
     - TRAVIS_JOB_ID
     - TRAVIS_PULL_REQUEST
     - TRAVIS_REPO_SLUG
-    - kuzzle_services__db__host=elasticsearch
-    - kuzzle_services__internalCache__node__host=redis
-    - kuzzle_services__memoryStorage__node__host=redis
-    - kuzzle_services__proxyBroker__host=proxy
 
 redis:
   image: redis:3.2-alpine
