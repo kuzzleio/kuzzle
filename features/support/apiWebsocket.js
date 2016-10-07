@@ -1,6 +1,6 @@
 var
   _ = require('lodash'),
-  config = require('./config')(),
+  config = require('./config'),
   Promise = require('bluebird'),
   uuid = require('node-uuid'),
   io = require('socket.io-client'),
@@ -14,7 +14,9 @@ var initSocket = function (socketName) {
   }
 
   if (!this.listSockets[socketName]) {
-    socket = io(config.ws, { 'force new connection': true });
+    socket = io(`${config.scheme}://${config.host}:${config.ports.io}`, {
+      'force new connection': true
+    });
     this.listSockets[socketName] = socket;
 
     // the default socket is the socket with name 'client1'

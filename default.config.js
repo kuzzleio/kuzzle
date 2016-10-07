@@ -114,7 +114,6 @@ module.exports = {
 
   server: {
     http: {
-      port: 7511,
       maxRequestSize: '1MB'
     },
     maxConcurrentRequests: 50,
@@ -150,7 +149,7 @@ module.exports = {
       retryInterval: 1000
     },
     proxyBroker: {
-      host: 'api',
+      host: 'localhost',
       port: 7331,
       retryInterval: 1000
     },
