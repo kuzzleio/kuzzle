@@ -2,10 +2,12 @@
 
 ELASTIC=${READ_ENGINE_HOST:-elasticsearch:9200}
 
+npm install
+
 echo "[$(date --rfc-3339 seconds)] - Waiting for elasticsearch to be available"
 while ! curl -f -s -o /dev/null "http://$ELASTIC"
 do
-    echo "[$(date --rfc-3339 seconds)] - still trying connecting to http://$ELASTIC"
+    echo "[$(date --rfc-3339 seconds)] - Still trying to connect to http://$ELASTIC"
     sleep 1
 done
 # create a tmp index just to force the shards to init
@@ -18,8 +20,6 @@ if ! (echo ${E} | grep -E '"status":"(yellow|green)"' > /dev/null); then
     echo "[$(date --rfc-3339 seconds)] - Could not connect to elasticsearch in time. Aborting..."
     exit 1
 fi
-
-npm install
 
 echo "" > node_modules/pm2/lib/keymetrics
 echo "[$(date --rfc-3339 seconds)] - Starting Kuzzle..."
