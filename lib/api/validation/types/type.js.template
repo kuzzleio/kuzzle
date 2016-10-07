@@ -14,8 +14,9 @@ MyNewType.prototype = new BaseConstructor();
 /**
  * @param {TypeOptions} typeOptions
  * @param {*} fieldValue
+ * @param {string[]} errorMessages
  */
-MyNewType.prototype.validate = function (typeOptions, fieldValue) {
+MyNewType.prototype.validate = function (typeOptions, fieldValue, errorMessages) {
   // TODO
   return true;
 };

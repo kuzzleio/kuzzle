@@ -185,15 +185,19 @@ module.exports = {
               values: ['toto', 'titi', 'tutu']
             }
           },
+          myShape: {
+            mandatory: false,
+            type: 'geo_shape'
+          },
           myUrl: {
             mandatory: false,
             type: 'url',
             typeOptions: {
-              not_empty: true
+              notEmpty: true
             }
           },
           myField: {
-            mandatory: true,
+            mandatory: false,
             type: 'string',
             defaultValue: 'a string',
             typeOptions: {
@@ -204,7 +208,7 @@ module.exports = {
             }
           },
           myObject: {
-            mandatory: true,
+            mandatory: false,
             type: 'object',
             typeOptions: {
               strict: true
