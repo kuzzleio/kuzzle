@@ -1,30 +1,29 @@
-proxy:
-  image: kuzzleio/proxy
-  ports:
-    - "7511-7513:7511-7513"
+version: '2'
 
-kuzzle:
-  image: kuzzleio/dev
-  command: sh -c 'chmod 755 /run.sh && /run.sh'
-  volumes:
-    - "..:/var/app"
-    - "./scripts/run-dev.sh:/run.sh"
-    - "./config/pm2-dev.json:/config/pm2.json"
-  ports:
-    - "8080:8080"
-  links:
-    - elasticsearch
-    - redis
-    - proxy
-  environment:
-    - kuzzle_services__db__host=elasticsearch
-    - kuzzle_services__internalCache__node__host=redis
-    - kuzzle_services__memoryStorage__node__host=redis
-    - kuzzle_services__proxyBroker__host=proxy
-    - FEATURE_COVERAGE=1
+services:
+  proxy:
+    image: kuzzleio/proxy
+    ports:
+      - "7511-7513:7511-7513"
 
-redis:
-  image: redis:3.2-alpine
+  kuzzle:
+    image: kuzzleio/dev
+    command: sh -c 'chmod 755 /run.sh && /run.sh'
+    volumes:
+      - "..:/var/app"
+      - "./scripts/run-dev.sh:/run.sh"
+      - "./config/pm2-dev.json:/config/pm2.json"
+    ports:
+      - "8080:8080"
+    environment:
+      - kuzzle_services__db__host=elasticsearch
+      - kuzzle_services__internalCache__node__host=redis
+      - kuzzle_services__memoryStorage__node__host=redis
+      - kuzzle_services__proxyBroker__host=proxy
+      - FEATURE_COVERAGE=1
 
-elasticsearch:
-  image: kuzzleio/elasticsearch:2.3.4
+  redis:
+    image: redis:3.2-alpine
+
+  elasticsearch:
+    image: kuzzleio/elasticsearch:2.3.4
