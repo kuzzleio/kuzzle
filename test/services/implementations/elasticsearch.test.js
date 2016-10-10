@@ -171,7 +171,7 @@ describe('Test: ElasticSearch service', () => {
         refreshIndexSpy = sandbox.spy(refreshIndexIfNeeded);
 
       sandbox.stub(elasticsearch.client, 'get').resolves({_source: {_kuzzle_info: {active: false}}});
-      requestObject.data.id = 42;
+      requestObject.data._id = 42;
 
       return should(ES.__with__('refreshIndexIfNeeded', refreshIndexSpy)(() => {
         return elasticsearch.create(requestObject)
@@ -194,7 +194,7 @@ describe('Test: ElasticSearch service', () => {
         refreshIndexSpy = sandbox.spy(refreshIndexIfNeeded);
 
       sandbox.stub(elasticsearch.client, 'get').rejects();
-      requestObject.data.id = 42;
+      requestObject.data._id = 42;
 
       return should(ES.__with__('refreshIndexIfNeeded', refreshIndexSpy)(() => {
         return elasticsearch.create(requestObject)
@@ -220,15 +220,14 @@ describe('Test: ElasticSearch service', () => {
     it('should reject the create promise if client.index throws an error', () => {
       sandbox.stub(elasticsearch.client, 'get').resolves({_source: {_kuzzle_info: {active: false}}});
       sandbox.stub(elasticsearch.client, 'index').rejects();
-
-      requestObject.data.id = 42;
+      requestObject.data._id = '42';
 
       return should(elasticsearch.create(requestObject)).be.rejected();
     });
 
     it('should reject a promise if the document already exists', () => {
       sandbox.stub(elasticsearch.client, 'get').resolves({_source: {_kuzzle_info: {active: true}}});
-      requestObject.data.id = 42;
+      requestObject.data._id = 42;
 
       return should(elasticsearch.create(requestObject)).be.rejected();
     });
