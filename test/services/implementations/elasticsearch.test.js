@@ -217,7 +217,7 @@ describe('Test: ElasticSearch service', () => {
       return should(elasticsearch.create(requestObject)).be.rejected();
     });
 
-    it('should reject the create promise if client.index throws an error', () => {
+    it.only('should reject the create promise if client.index throws an error', () => {
       sandbox.stub(elasticsearch.client, 'get').resolves({_source: {_kuzzle_info: {active: false}}});
       sandbox.stub(elasticsearch.client, 'index').rejects();
       requestObject.data._id = '42';
