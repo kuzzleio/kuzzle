@@ -40,7 +40,6 @@
     "finalhandler": "0.5.0",
     "freeport": "^1.0.5",
     "geolib": "j33f/Geolib",
-    "glob": "^7.1.0",
     "ioredis": "^2.2.0",
     "json-stable-stringify": "1.0.1",
     "json2yaml": "^1.1.0",

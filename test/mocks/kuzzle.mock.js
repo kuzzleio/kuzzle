@@ -56,7 +56,8 @@ function KuzzleMock () {
   };
 
   this.validation = {
-    validate: sinon.spy(function () {return Promise.resolve(arguments[0]);})
+    validate: sinon.spy(function () {return Promise.resolve(arguments[0]);}),
+    addType: sinon.spy()
   };
 
   this.router = {

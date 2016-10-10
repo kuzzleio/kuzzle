@@ -34,6 +34,8 @@ describe('Test kuzzle server constructor', () => {
 
     should(kuzzle.remoteActionsController).be.an.Object();
 
+    should(kuzzle.validation).be.an.Object();
+
     should(kuzzle.start).be.a.Function();
   });
 
