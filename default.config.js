@@ -213,7 +213,7 @@ module.exports = {
               strict: true
             }
           },
-          'myObject.mySubField': {
+          'myObject/mySubField': {
             mandatory: false,
             type: 'string',
             multivalued: {
