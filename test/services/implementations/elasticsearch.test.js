@@ -219,7 +219,7 @@ describe('Test: ElasticSearch service', () => {
 
     it('should reject the create promise if client.index throws an error', () => {
       sandbox.stub(elasticsearch.client, 'get').resolves({_source: {_kuzzle_info: {active: false}}});
-      sandbox.stub(elasticsearch.client, 'index').rejects();
+      elasticsearch.client.index = sandbox.stub(elasticsearch.client, 'index').rejects();
 
       requestObject.data.id = 42;
 
