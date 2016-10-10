@@ -5,7 +5,7 @@ proxy:
 
 kuzzle:
   image: kuzzleio/dev
-  command: sh -c 'chmod 755 /run.sh && /run.sh && npm run codecov'
+  command: sh -c 'chmod 755 /run.sh && /run.sh'
   volumes:
     - "..:/var/app"
     - "./scripts/run-test.sh:/run.sh"
