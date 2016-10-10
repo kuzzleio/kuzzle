@@ -8,7 +8,6 @@ describe('Test: dsl.remove', () => {
     dsl,
     index = 'test',
     collection = 'user',
-    filterId = 'foo',
     filter = {
       in: {
         city: ['NYC', 'London']
@@ -24,19 +23,19 @@ describe('Test: dsl.remove', () => {
   });
 
   it('should remove a filter containing field filters', () => {
-    return dsl.register(filterId, index, collection, filter)
-      .then(() => {
+    return dsl.register(index, collection, filter)
+      .then(response => {
         should(dsl.filters.filtersTree).not.be.empty().Object();
-        return dsl.remove(filterId);
+        return dsl.remove(response.id);
       })
       .then(() => should(dsl.filters.filtersTree).be.empty().Object());
   });
 
   it('should remove a room containing global filters', () => {
-    return dsl.register(filterId, index, collection, {})
-      .then(() => {
+    return dsl.register(index, collection, {})
+      .then(response => {
         should(dsl.filters.filtersTree).not.be.empty().Object();
-        return dsl.remove(filterId);
+        return dsl.remove(response.id);
       })
       .then(() => should(dsl.filters.filtersTree).be.empty().Object());
   });

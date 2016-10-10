@@ -2,7 +2,7 @@
 
 [![Join the chat at https://gitter.im/kuzzleio/kuzzle](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/kuzzleio/kuzzle?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
-<p align=center> ![logo](http://kuzzle.io/guide/images/kuzzle.svg)
+<p align=center> ![logo](http://kuzzle.io/wp-content/uploads/2016/09/logo_kuzzle_line_png.png)
 
 # About Kuzzle
 

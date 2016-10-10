@@ -39,7 +39,7 @@
     "no-undef": 2,
     "no-undef-init": 1,
     "no-unreachable": 2,
-    "no-unused-expressions": 2,
+    "no-unused-expressions": [2, {"allowShortCircuit": true}],
     "no-useless-call": 2,
     "no-with": 2,
     "quotes": [2, "single"],

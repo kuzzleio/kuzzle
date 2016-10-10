@@ -4,7 +4,6 @@
 var
   _ = require('lodash'),
   should = require('should'),
-  Promise = require('bluebird'),
   rewire = require('rewire'),
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
@@ -31,12 +30,9 @@ describe('Test: statistics core component', () => {
 
   before(() => {
     kuzzle = new Kuzzle();
-    kuzzle.config.services.cache.databases.push(dbname);
-    kuzzle.services.list.statsCache = new Redis(kuzzle, {service: dbname}, kuzzle.config.services.cache);
+    kuzzle.services.list.internalCache = new Redis(kuzzle, {service: dbname}, kuzzle.config.services.internalCache);
     return Redis.__with__('buildClient', () => new RedisClientMock())(() => {
-      return kuzzle.services.list.statsCache.init()
-        .then(() => kuzzle.services.list.statsCache.volatileSet(lastFrame, JSON.stringify(fakeStats), 30))
-        .then(() => kuzzle.services.list.statsCache.volatileSet(lastFrame + 100, JSON.stringify(fakeStats), 30));
+      return kuzzle.services.list.internalCache.init();
     });
   });
 
@@ -174,8 +170,8 @@ describe('Test: statistics core component', () => {
     requestObject.data.body.startTime = lastFrame - 1000;
     requestObject.data.body.stopTime = new Date(new Date().getTime() + 100000);
 
-    sandbox.stub(kuzzle.services.list.statsCache, 'getAllKeys').resolves([lastFrame, lastFrame + 100]);
-    sandbox.stub(kuzzle.services.list.statsCache, 'mget').resolves([JSON.stringify(fakeStats), JSON.stringify(fakeStats)]);
+    sandbox.stub(kuzzle.services.list.internalCache, 'searchKeys').resolves(['stats/' + lastFrame, 'stats/'.concat(lastFrame + 100)]);
+    sandbox.stub(kuzzle.services.list.internalCache, 'mget').resolves([JSON.stringify(fakeStats), JSON.stringify(fakeStats)]);
 
     return stats.getStats(requestObject)
       .then(response => {
@@ -205,8 +201,8 @@ describe('Test: statistics core component', () => {
     stats.lastFrame = lastFrame;
     requestObject.data.body.stopTime = new Date();
 
-    sandbox.stub(kuzzle.services.list.statsCache, 'getAllKeys').resolves([lastFrame, lastFrame + 100]);
-    sandbox.stub(kuzzle.services.list.statsCache, 'mget').resolves([JSON.stringify(fakeStats), JSON.stringify(fakeStats)]);
+    sandbox.stub(kuzzle.services.list.internalCache, 'searchKeys').resolves(['stats/' + lastFrame, 'stats/'.concat(lastFrame + 100)]);
+    sandbox.stub(kuzzle.services.list.internalCache, 'mget').resolves([JSON.stringify(fakeStats), JSON.stringify(fakeStats)]);
 
     return stats.getStats(requestObject)
       .then(response => {
@@ -218,7 +214,7 @@ describe('Test: statistics core component', () => {
 
   it('should get the last frame from the cache when statistics snapshots have been taken', () => {
     stats.lastFrame = lastFrame;
-    sandbox.stub(kuzzle.services.list.statsCache, 'get').resolves(JSON.stringify(fakeStats));
+    sandbox.stub(kuzzle.services.list.internalCache, 'get').resolves(JSON.stringify(fakeStats));
 
     stats.getLastStats(requestObject)
       .then(response => {
@@ -247,8 +243,8 @@ describe('Test: statistics core component', () => {
   it('should return all saved statistics', () => {
     stats.lastFrame = lastFrame;
 
-    sandbox.stub(kuzzle.services.list.statsCache, 'getAllKeys').resolves([lastFrame, lastFrame + 100]);
-    sandbox.stub(kuzzle.services.list.statsCache, 'mget').resolves([JSON.stringify(fakeStats), JSON.stringify(fakeStats)]);
+    sandbox.stub(kuzzle.services.list.internalCache, 'searchKeys').resolves(['stats/' + lastFrame, 'stats/'.concat(lastFrame + 100)]);
+    sandbox.stub(kuzzle.services.list.internalCache, 'mget').resolves([JSON.stringify(fakeStats), JSON.stringify(fakeStats)]);
 
     return stats.getAllStats(requestObject)
       .then(response => {
@@ -277,34 +273,24 @@ describe('Test: statistics core component', () => {
   it('should write statistics frames in cache', () => {
     var
       writeStats = Statistics.__get__('writeStats'),
-      spy = sandbox.stub(kuzzle.services.list.statsCache, 'volatileSet').resolves();
+      spy = sandbox.stub(kuzzle.services.list.internalCache, 'volatileSet').resolves();
 
     stats.currentStats = _.extend({}, fakeStats);
 
     writeStats.call(stats);
 
-    should(stats.currentStats.completedRequest).be.empty();
+    should(stats.currentStats.completedRequests).be.empty();
     should(stats.currentStats.failedRequests).be.empty();
     should(spy.calledOnce).be.true();
-    should(spy.calledWith(stats.lastFrame, JSON.stringify(fakeStats), stats.ttl)).be.true();
+    should(spy.calledWith('stats/' + stats.lastFrame, JSON.stringify(fakeStats), stats.ttl)).be.true();
   });
 
   it('should reject the promise if the cache returns an error', () => {
-    var statsCache = kuzzle.services.list.statsCache;
-
-    kuzzle.services.list.statsCache = {
-      get: () => { return Promise.reject(new Error()); }
-    };
-
     stats.lastFrame = Date.now();
 
-    return should(
-      stats.getLastStats(requestObject)
-        .catch(error => {
-          kuzzle.services.list.statsCache = statsCache;
-          return Promise.reject(error);
-        })
-    ).be.rejected();
+    sandbox.stub(kuzzle.services.list.internalCache, 'get').rejects(new Error());
+
+    return should(stats.getLastStats(requestObject)).be.rejected();
   });
 });
 
