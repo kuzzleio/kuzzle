@@ -55,6 +55,10 @@ function KuzzleMock () {
     }
   };
 
+  this.validation = {
+    validate: sinon.spy(function () {return Promise.resolve(arguments[0]);})
+  };
+
   this.router = {
     execute: sinon.stub().resolves(foo),
     initHttpRouter: sinon.spy(),

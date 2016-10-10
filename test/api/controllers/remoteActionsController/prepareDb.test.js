@@ -490,20 +490,23 @@ describe('Test: Prepare database', () => {
       createInternalIndexStub,
       createRolleCollectionStub,
       createProfileCollecitonStub,
-      createUserCollectionStub;
+      createUserCollectionStub,
+      createValidationCollectionStub;
 
     beforeEach(() => {
       reset = PrepareDb.__set__({
         createInternalIndex: sandbox.stub().resolves(),
         createRoleCollection: sandbox.stub().resolves(),
         createProfileCollection: sandbox.stub().resolves(),
-        createUserCollection: sandbox.stub().resolves()
+        createUserCollection: sandbox.stub().resolves(),
+        createValidationCollection: sandbox.stub().resolves()
       });
 
       createInternalIndexStub = PrepareDb.__get__('createInternalIndex');
       createRolleCollectionStub = PrepareDb.__get__('createRoleCollection');
       createProfileCollecitonStub = PrepareDb.__get__('createProfileCollection');
       createUserCollectionStub = PrepareDb.__get__('createUserCollection');
+      createValidationCollectionStub = PrepareDb.__get__('createValidationCollection');
     });
 
     afterEach(() => {
@@ -517,6 +520,7 @@ describe('Test: Prepare database', () => {
           should(createRolleCollectionStub).be.calledOnce();
           should(createProfileCollecitonStub).be.calledOnce();
           should(createUserCollectionStub).be.calledOnce();
+          should(createValidationCollectionStub).be.calledOnce();
         });
     });
 
