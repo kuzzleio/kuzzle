@@ -5,6 +5,8 @@ COPY ./ /var/app/
 COPY ./docker-compose/scripts/run.sh /run.sh
 COPY ./docker-compose/config/pm2.json /config/pm2.json
 
+WORKDIR /var/app
+
 RUN apt-get update && apt-get install -y \
       build-essential \
       curl \
@@ -21,3 +23,5 @@ RUN apt-get update && apt-get install -y \
     && apt-get autoremove -y \
     && chmod 755 /run.sh \
     && rm -rf /var/lib/apt/lists/*
+
+CMD ["/run.sh"]
