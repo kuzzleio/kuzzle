@@ -211,6 +211,7 @@ describe('Test: ElasticSearch service', () => {
     });
 
     it('should reject the create promise if elasticsearch throws an error', () => {
+      sandbox.stub(elasticsearch.client, 'get').rejects({});
       sandbox.stub(elasticsearch.client, 'create').rejects({});
 
       return should(elasticsearch.create(requestObject)).be.rejected();
