@@ -48,12 +48,47 @@ describe('Test: ElasticSearch service', () => {
         bool: {
           must: [
             {
-              term: {
-                '_kuzzle_info.active': true
+              bool: {
+                should: [
+                  {
+                    term: {
+                      '_kuzzle_info.active': true
+                    }
+                  },
+                  {
+                    missing: {
+                      'field': '_kuzzle_info'
+                    }
+                  }
+                ]
               }
             },
             {
               filter: filter.query.filter
+            }
+          ]
+        }
+      }
+    },
+    raw_kuzzle_info = {
+      query: {
+        bool: {
+          must: [
+            {
+              bool: {
+                should: [
+                  {
+                    term: {
+                      '_kuzzle_info.active': true
+                    }
+                  },
+                  {
+                    missing: {
+                      'field': '_kuzzle_info'
+                    }
+                  }
+                ]
+              }
             }
           ]
         }
@@ -217,9 +252,9 @@ describe('Test: ElasticSearch service', () => {
       return should(elasticsearch.create(requestObject)).be.rejected();
     });
 
-    it.only('should reject the create promise if client.index throws an error', () => {
+    it('should reject the create promise if client.index throws an error', () => {
       sandbox.stub(elasticsearch.client, 'get').resolves({_source: {_kuzzle_info: {active: false}}});
-      sandbox.stub(elasticsearch.client, 'index').rejects();
+      sandbox.stub(elasticsearch.client, 'index').rejects({});
       requestObject.data._id = '42';
 
       return should(elasticsearch.create(requestObject)).be.rejected();
@@ -404,7 +439,7 @@ describe('Test: ElasticSearch service', () => {
 
       return should(elasticsearch.count(requestObject)
         .then(() => {
-          should(spy.firstCall.args[0].body).be.deepEqual({ query: { bool: { must: [ { term: { '_kuzzle_info.active': true } } ] } } });
+          should(spy.firstCall.args[0].body).be.deepEqual(raw_kuzzle_info);
         })
       ).be.fulfilled();
     });
@@ -415,9 +450,10 @@ describe('Test: ElasticSearch service', () => {
       requestObject.data.body = {};
       requestObject.data.query = {foo: 'bar'};
 
+      raw_kuzzle_info.query.bool.must.push(requestObject.data.query);
       return should(elasticsearch.count(requestObject)
         .then(() => {
-          should(spy.firstCall.args[0].body).be.deepEqual({ query: { bool: { must: [ { term: { '_kuzzle_info.active': true } }, { foo: 'bar' } ] } } });
+          should(spy.firstCall.args[0].body).be.deepEqual(raw_kuzzle_info);
         })
       ).be.fulfilled();
     });
