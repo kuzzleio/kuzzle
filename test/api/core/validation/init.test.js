@@ -13,6 +13,7 @@ describe('Test: validation initialization', () => {
     defaultTypesFiles = Validation.__get__('defaultTypesFiles'),
     getValidationConfiguration = Validation.__get__('getValidationConfiguration'),
     checkAllowedProperties = Validation.__get__('checkAllowedProperties'),
+    curateStructuredFields = Validation.__get__('curateStructuredFields'),
     kuzzle;
 
   beforeEach(() => {
@@ -23,6 +24,7 @@ describe('Test: validation initialization', () => {
     Validation.__set__('defaultTypesFiles', defaultTypesFiles);
     Validation.__set__('getValidationConfiguration', getValidationConfiguration);
     Validation.__set__('checkAllowedProperties', checkAllowedProperties);
+    Validation.__set__('curateStructuredFields', curateStructuredFields);
   });
 
   it('should have the expected structure', () => {
@@ -261,16 +263,156 @@ describe('Test: validation initialization', () => {
     });
   });
 
-  describe('#curateCollectionSpecification', () => {
+  describe.only('#curateCollectionSpecification', () => {
+    var
+      checkAllowedPropertiesStub = sandbox.stub();
+
+    it('should return a default specification if there an empty collection specification is provided', () => {
+      var
+        indexName = 'anIndex',
+        collectionName = 'aCollection',
+        collectionSpec = {
+        },
+        dryRun = false,
+        expectedReturn = {
+          strict: false,
+          fields: {},
+          validators: null
+        };
+
+      checkAllowedPropertiesStub.returns(true);
+      Validation.__set__('checkAllowedProperties', checkAllowedPropertiesStub);
+
+      return validation.curateCollectionSpecification(indexName, collectionName, collectionSpec, dryRun)
+        .then(returnedSpec => {
+          should(returnedSpec).be.deepEqual(expectedReturn);
+        });
+    });
+
+    it('should reject an error if the collection specification provides a not allowed property', () => {
+      var
+        indexName = 'anIndex',
+        collectionName = 'aCollection',
+        collectionSpec = {
+          foo: 'bar'
+        },
+        dryRun = false;
+
+      checkAllowedPropertiesStub.returns(false);
+      Validation.__set__('checkAllowedProperties', checkAllowedPropertiesStub);
+
+      return validation.curateCollectionSpecification(indexName, collectionName, collectionSpec, dryRun)
+        .should.be.rejectedWith('The collection specification has invalid properties.');
+    });
+
+    it('should return structured fields when a collection specification is provided', () => {
+      var
+        indexName = 'anIndex',
+        structureCollectionValidationStub = sandbox.spy(function () {return arguments[0].fields;}),
+        collectionName = 'aCollection',
+        collectionSpec = {
+          fields: {
+            some: 'field'
+          }
+        },
+        dryRun = false,
+        expectedReturn = {
+          strict: false,
+          fields: {
+            some: 'field'
+          },
+          validators: null
+        };
+
+      checkAllowedPropertiesStub.returns(true);
+      Validation.__set__('checkAllowedProperties', checkAllowedPropertiesStub);
+      validation.structureCollectionValidation = structureCollectionValidationStub;
+
+      return validation.curateCollectionSpecification(indexName, collectionName, collectionSpec, dryRun)
+        .then(returnedSpec => {
+          should(returnedSpec).be.deepEqual(expectedReturn);
+        });
+    });
+
+    it('should reject an error if the field specification throws an error', () => {
+      var
+        indexName = 'anIndex',
+        structureCollectionValidationStub = sandbox.stub().throws({message: 'an error'}),
+        collectionName = 'aCollection',
+        collectionSpec = {
+          fields: {
+            some: 'field'
+          }
+        },
+        dryRun = false;
+
+      checkAllowedPropertiesStub.returns(true);
+      Validation.__set__('checkAllowedProperties', checkAllowedPropertiesStub);
+      validation.structureCollectionValidation = structureCollectionValidationStub;
+
+      return validation.curateCollectionSpecification(indexName, collectionName, collectionSpec, dryRun)
+        .should.be.rejectedWith('an error');
+    });
     /**
      * TODO
      */
   });
 
   describe('#structureCollectionValidation', () => {
-    /**
-     * TODO
-     */
+    it('should return a structured collection specification if configuration is correct', () => {
+      var
+        curateFieldSpecificationStub = sandbox.spy(function () {return arguments[0];}),
+        curateStructuredFieldsStub = sandbox.spy(function () {return arguments[1];}),
+        collectionSpec = {
+          fields: {
+            aField: {a: 'field'},
+            anotherField: {another: 'field'},
+            'aField/aSubField': {a: 'subField'}
+          }
+        },
+        expectedRawFields = {
+          1: [{a: 'field', path: ['aField'], depth: 1}, {another: 'field', path: ['anotherField'], depth: 1}],
+          2: [{a: 'subField', path: ['aField', 'aSubField'], depth: 2}]
+        };
+
+      validation.curateFieldSpecification = curateFieldSpecificationStub;
+      Validation.__set__('curateStructuredFields', curateStructuredFieldsStub);
+
+      should(validation.structureCollectionValidation(collectionSpec)).be.deepEqual(expectedRawFields);
+      should(curateFieldSpecificationStub.callCount).be.eql(3);
+      should(curateStructuredFieldsStub.callCount).be.eql(1);
+      should(curateStructuredFieldsStub.args[0][1]).be.deepEqual(expectedRawFields);
+      should(curateStructuredFieldsStub.args[0][2]).be.eql(2);
+    });
+
+    it('should return an empty object if no field is specified', () => {
+      var
+        collectionSpec = {fields: {}};
+
+      should(validation.structureCollectionValidation(collectionSpec)).be.deepEqual({});
+    });
+
+    it('should throw an error if one of the field curation throws an error', () => {
+      var
+        curateFieldSpecificationStub = sandbox.stub().throws(new Error('an error')),
+        collectionSpec = {
+          fields: {
+            aField: {a: 'field'},
+            anotherField: {another: 'field'},
+            'aField/aSubField': {a: 'subField'}
+          }
+        };
+
+      validation.curateFieldSpecification = curateFieldSpecificationStub;
+
+      (() => {
+        validation.structureCollectionValidation(collectionSpec);
+      }).should.throw('Specification for the field aField triggered an error');
+
+      should(curateFieldSpecificationStub.callCount).be.eql(1);
+      should(kuzzle.pluginsManager.trigger.callCount).be.eql(1);
+      should(kuzzle.pluginsManager.trigger.args[0][0]).be.eql('log:error');
+    });
   });
 
   describe('#curateFieldSpecification', () => {
