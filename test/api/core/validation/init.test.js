@@ -14,6 +14,7 @@ describe('Test: validation initialization', () => {
     getValidationConfiguration = Validation.__get__('getValidationConfiguration'),
     checkAllowedProperties = Validation.__get__('checkAllowedProperties'),
     curateStructuredFields = Validation.__get__('curateStructuredFields'),
+    Dsl = Validation.__get__('Dsl'),
     kuzzle;
 
   beforeEach(() => {
@@ -25,6 +26,7 @@ describe('Test: validation initialization', () => {
     Validation.__set__('getValidationConfiguration', getValidationConfiguration);
     Validation.__set__('checkAllowedProperties', checkAllowedProperties);
     Validation.__set__('curateStructuredFields', curateStructuredFields);
+    Validation.__set__('Dsl', Dsl);
   });
 
   it('should have the expected structure', () => {
@@ -263,7 +265,7 @@ describe('Test: validation initialization', () => {
     });
   });
 
-  describe.only('#curateCollectionSpecification', () => {
+  describe('#curateCollectionSpecification', () => {
     var
       checkAllowedPropertiesStub = sandbox.stub();
 
@@ -341,7 +343,7 @@ describe('Test: validation initialization', () => {
         collectionName = 'aCollection',
         collectionSpec = {
           fields: {
-            some: 'field'
+            some: 'bad field'
           }
         },
         dryRun = false;
@@ -353,9 +355,58 @@ describe('Test: validation initialization', () => {
       return validation.curateCollectionSpecification(indexName, collectionName, collectionSpec, dryRun)
         .should.be.rejectedWith('an error');
     });
-    /**
-     * TODO
-     */
+
+    it('should return a treated collection specification if validators are valid', () => {
+      var
+        indexName = 'anIndex',
+        curateValidatorFilterStub = sandbox.spy(function () {return Promise.resolve({id: 'aFilterId'});}),
+        collectionName = 'aCollection',
+        collectionSpec = {
+          validators: [
+            'some',
+            'validators'
+          ]
+        },
+        dryRun = true,
+        expectedReturn = {
+          strict: false,
+          fields: {},
+          validators: 'aFilterId'
+        };
+
+      checkAllowedPropertiesStub.returns(true);
+      Validation.__set__('checkAllowedProperties', checkAllowedPropertiesStub);
+      validation.curateValidatorFilter = curateValidatorFilterStub;
+
+      return validation.curateCollectionSpecification(indexName, collectionName, collectionSpec, dryRun)
+        .then(returnedSpec => {
+          should(returnedSpec).be.deepEqual(expectedReturn);
+          should(curateValidatorFilterStub.args[0][0]).be.eql(indexName);
+          should(curateValidatorFilterStub.args[0][1]).be.eql(collectionName);
+          should(curateValidatorFilterStub.args[0][2]).be.eql(collectionSpec.validators);
+          should(curateValidatorFilterStub.args[0][3]).be.eql(dryRun);
+        });
+    });
+
+    it('should reject an error if validators are not valid', () => {
+      var
+        indexName = 'anIndex',
+        curateValidatorFilterStub = sandbox.spy(function () {return Promise.reject({an: 'error'});}),
+        collectionName = 'aCollection',
+        collectionSpec = {
+          validators: [
+            'bad validators'
+          ]
+        },
+        dryRun = false;
+
+      checkAllowedPropertiesStub.returns(true);
+      Validation.__set__('checkAllowedProperties', checkAllowedPropertiesStub);
+      validation.curateValidatorFilter = curateValidatorFilterStub;
+
+      return validation.curateCollectionSpecification(indexName, collectionName, collectionSpec, dryRun)
+        .should.be.rejectedWith('Validator specification of the collection triggered an error');
+    });
   });
 
   describe('#structureCollectionValidation', () => {
@@ -754,8 +805,66 @@ describe('Test: validation initialization', () => {
   });
 
   describe('#curateValidatorFilter', () => {
-    /**
-     * TODO
-     */
+    it('should return a promise if everything goes as expected', () => {
+      var
+        registerStub = sandbox.stub().resolves({}),
+        dslStub = sandbox.stub().returns({
+          register: registerStub
+        }),
+        indexName = 'anIndex',
+        collectionName= 'aCollection',
+        validatorFilter = [{some: 'filters'}],
+        dryRun = false,
+        expectedQuery = {
+          bool: {
+            must: validatorFilter
+          }
+        };
+
+      Validation.__set__('Dsl', dslStub);
+      validation.dsl = {
+        register: registerStub
+      };
+
+      return validation.curateValidatorFilter(indexName, collectionName, validatorFilter, dryRun)
+        .then(() => {
+          should(dslStub.callCount).be.eql(1);
+          should(registerStub.callCount).be.eql(2);
+          should(registerStub.args[0][0]).be.eql(indexName);
+          should(registerStub.args[0][1]).be.eql(collectionName);
+          should(registerStub.args[0][2]).be.deepEqual(expectedQuery);
+          should(registerStub.args[1][0]).be.eql(indexName);
+          should(registerStub.args[1][1]).be.eql(collectionName);
+          should(registerStub.args[1][2]).be.deepEqual(expectedQuery);
+        });
+    });
+
+    it('should return a promise if everything goes as expected and avoid registration if dryRun is true', () => {
+      var
+        registerStub = sandbox.stub().resolves({}),
+        dslStub = sandbox.stub().returns({
+          register: registerStub
+        }),
+        indexName = 'anIndex',
+        collectionName= 'aCollection',
+        validatorFilter = [{some: 'filters'}],
+        dryRun = false,
+        expectedQuery = {
+          bool: {
+            must: validatorFilter
+          }
+        };
+
+      Validation.__set__('Dsl', dslStub);
+
+      return validation.curateValidatorFilter(indexName, collectionName, validatorFilter, dryRun)
+        .then(() => {
+          should(dslStub.callCount).be.eql(1);
+          should(registerStub.callCount).be.eql(1);
+          should(registerStub.args[0][0]).be.eql(indexName);
+          should(registerStub.args[0][1]).be.eql(collectionName);
+          should(registerStub.args[0][2]).be.deepEqual(expectedQuery);
+        });
+    });
   });
 });
