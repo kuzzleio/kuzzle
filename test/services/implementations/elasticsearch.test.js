@@ -261,6 +261,7 @@ describe('Test: ElasticSearch service', () => {
     });
 
     it('should reject a promise if the document already exists', () => {
+      sandbox.stub(elasticsearch.client, 'create').rejects({});
       sandbox.stub(elasticsearch.client, 'get').resolves({_source: {_kuzzle_info: {active: true}}});
       requestObject.data._id = 42;
 
