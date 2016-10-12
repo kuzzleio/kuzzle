@@ -184,7 +184,7 @@ describe('Test: validation.validate', () => {
         controllerName = 'aController',
         actionName = 'anAction',
         id = null,
-        structuredError = false,
+        verbose = false,
         documentBody = {},
         requestObject = {
           index: indexName,
@@ -210,7 +210,7 @@ describe('Test: validation.validate', () => {
 
       validation.recurseFieldValidation = recurseFieldValidationStub;
 
-      return validation.validationPromise(requestObject, structuredError)
+      return validation.validationPromise(requestObject, verbose)
         .then((result) => {
           should(result).be.deepEqual({
             documentBody,
@@ -223,7 +223,7 @@ describe('Test: validation.validate', () => {
           should(typeof recurseFieldValidationStub.args[0][2]).be.eql('undefined');
           should(recurseFieldValidationStub.args[0][3]).be.false();
           should(recurseFieldValidationStub.args[0][4]).be.eql([]);
-          should(recurseFieldValidationStub.args[0][5]).be.eql(structuredError);
+          should(recurseFieldValidationStub.args[0][5]).be.eql(verbose);
         });
     });
     it('should return a validation if there is no specification', () => {
@@ -232,7 +232,7 @@ describe('Test: validation.validate', () => {
         controllerName = 'aController',
         actionName = 'anAction',
         id = null,
-        structuredError = false,
+        verbose = false,
         documentBody = {},
         requestObject = {
           index: indexName,
@@ -249,7 +249,7 @@ describe('Test: validation.validate', () => {
 
       validation.recurseFieldValidation = recurseFieldValidationStub;
 
-      return validation.validationPromise(requestObject, structuredError)
+      return validation.validationPromise(requestObject, verbose)
         .then((result) => {
           should(result).be.deepEqual({
             documentBody,
@@ -266,7 +266,7 @@ describe('Test: validation.validate', () => {
         controllerName = 'aController',
         actionName = 'anAction',
         id = null,
-        structuredError = true,
+        verbose = true,
         documentBody = {},
         requestObject = {
           index: indexName,
@@ -292,7 +292,7 @@ describe('Test: validation.validate', () => {
 
       validation.recurseFieldValidation = recurseFieldValidationStub;
 
-      return validation.validationPromise(requestObject, structuredError)
+      return validation.validationPromise(requestObject, verbose)
         .then((result) => {
           should(result).be.deepEqual({
             documentBody,
@@ -305,7 +305,7 @@ describe('Test: validation.validate', () => {
           should(typeof recurseFieldValidationStub.args[0][2]).be.eql('undefined');
           should(recurseFieldValidationStub.args[0][3]).be.false();
           should(recurseFieldValidationStub.args[0][4]).be.eql({});
-          should(recurseFieldValidationStub.args[0][5]).be.eql(structuredError);
+          should(recurseFieldValidationStub.args[0][5]).be.eql(verbose);
         });
     });
 
@@ -320,7 +320,7 @@ describe('Test: validation.validate', () => {
           test: testStub
         },
         id = 'anId',
-        structuredError = false,
+        verbose = false,
         documentBody = {},
         requestObject = {
           index: indexName,
@@ -350,7 +350,7 @@ describe('Test: validation.validate', () => {
       validation.recurseFieldValidation = recurseFieldValidationStub;
       validation.dsl = dsl;
 
-      return validation.validationPromise(requestObject, structuredError)
+      return validation.validationPromise(requestObject, verbose)
         .then((result) => {
           should(result).be.deepEqual({
             documentBody,
@@ -363,7 +363,7 @@ describe('Test: validation.validate', () => {
           should(recurseFieldValidationStub.args[0][2]).be.eql(specification[indexName][collectionName].fields.children);
           should(recurseFieldValidationStub.args[0][3]).be.true();
           should(recurseFieldValidationStub.args[0][4]).be.eql([]);
-          should(recurseFieldValidationStub.args[0][5]).be.eql(structuredError);
+          should(recurseFieldValidationStub.args[0][5]).be.eql(verbose);
           should(testStub.callCount).be.eql(1);
           should(testStub.args[0][0]).be.deepEqual(indexName);
           should(testStub.args[0][1]).be.deepEqual(collectionName);
@@ -383,7 +383,7 @@ describe('Test: validation.validate', () => {
           test: testStub
         },
         id = 'anId',
-        structuredError = false,
+        verbose = false,
         documentBody = {},
         requestObject = {
           index: indexName,
@@ -414,7 +414,7 @@ describe('Test: validation.validate', () => {
       validation.dsl = dsl;
       Validation.__set__('manageErrorMessage', sandbox.spy(function() {throw new Error(arguments[2]);}));
 
-      return validation.validationPromise(requestObject, structuredError)
+      return validation.validationPromise(requestObject, verbose)
         .should.rejectedWith('error');
     });
 
@@ -429,7 +429,7 @@ describe('Test: validation.validate', () => {
           test: testStub
         },
         id = 'anId',
-        structuredError = false,
+        verbose = false,
         documentBody = {},
         requestObject = {
           index: indexName,
@@ -460,7 +460,7 @@ describe('Test: validation.validate', () => {
       validation.dsl = dsl;
       Validation.__set__('manageErrorMessage', sandbox.spy(function() {throw new Error(arguments[2]);}));
 
-      return validation.validationPromise(requestObject, structuredError)
+      return validation.validationPromise(requestObject, verbose)
         .should.rejectedWith('The document does not match validation filters.');
     });
 
@@ -470,7 +470,7 @@ describe('Test: validation.validate', () => {
         controllerName = 'aController',
         actionName = 'anAction',
         id = null,
-        structuredError = false,
+        verbose = false,
         documentBody = {},
         requestObject = {
           index: indexName,
@@ -500,7 +500,7 @@ describe('Test: validation.validate', () => {
       validation.recurseFieldValidation = recurseFieldValidationStub;
       Validation.__set__('manageErrorMessage', sandbox.spy(function() {throw new Error(arguments[2]);}));
 
-      return validation.validationPromise(requestObject, structuredError)
+      return validation.validationPromise(requestObject, verbose)
         .should.rejectedWith('The document validation is strict; it can not add unspecified sub-fields.');
     });
 
@@ -510,7 +510,7 @@ describe('Test: validation.validate', () => {
         controllerName = 'aController',
         actionName = 'anAction',
         id = null,
-        structuredError = false,
+        verbose = false,
         documentBody = {},
         requestObject = {
           index: indexName,
@@ -540,7 +540,7 @@ describe('Test: validation.validate', () => {
       validation.recurseFieldValidation = recurseFieldValidationStub;
       Validation.__set__('manageErrorMessage', sandbox.spy(function() {throw new Error(arguments[2]);}));
 
-      return validation.validationPromise(requestObject, structuredError)
+      return validation.validationPromise(requestObject, verbose)
         .should.rejectedWith('not_strictness');
     });
     /**

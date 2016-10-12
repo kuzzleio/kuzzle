@@ -37,7 +37,7 @@ describe('Test: validation utilities', () => {
     var
       curateStructuredFields = Validation.__get__('curateStructuredFields');
 
-    it('should return a structured representation of fields', () => {
+    it('should return a verbose representation of fields', () => {
       var
         maxDepth = 3,
         typeAllowChildren = ['object'],
@@ -175,34 +175,34 @@ describe('Test: validation utilities', () => {
     var
       manageErrorMessage = Validation.__get__('manageErrorMessage');
 
-    it('should throw an error structured is false and context is not document', () => {
+    it('should throw an error if verbose is false and context is not document', () => {
       var
         context = ['aField', 'aSubField'],
-        structured = false,
+        verbose = false,
         message = 'a message',
         errorHolder = [];
 
       (() => {
-        manageErrorMessage(context, errorHolder, message, structured);
+        manageErrorMessage(context, errorHolder, message, verbose);
       }).should.throw('Field aField.aSubField: a message');
     });
 
-    it('should add a message at the begining of the errorHolder when structured is false and context is document', () => {
+    it('should add a message at the begining of the errorHolder when verbose is false and context is document', () => {
       var
         context = 'document',
-        structured = false,
+        verbose = false,
         message = 'a message',
         errorHolder = ['an existing message'];
 
       (() => {
-        manageErrorMessage(context, errorHolder, message, structured);
+        manageErrorMessage(context, errorHolder, message, verbose);
       }).should.throw('Document: a message');
     });
 
-    it('should add a message in the errorHolder in a structured way when structured is true and context is not document', () => {
+    it('should add a message in the errorHolder in a verbose way when verbose is true and context is not document', () => {
       var
         context = ['aField', 'aSubField'],
-        structured = true,
+        verbose = true,
         message = 'a message',
         errorHolder = {},
         expectedErrorHolder = {
@@ -219,15 +219,15 @@ describe('Test: validation utilities', () => {
           }
         };
 
-      manageErrorMessage(context, errorHolder, message, structured);
+      manageErrorMessage(context, errorHolder, message, verbose);
 
       should(errorHolder).be.deepEqual(expectedErrorHolder);
     });
 
-    it('should add a message in the errorHolder in a structured way when structured is true and context is not document', () => {
+    it('should add a message in the errorHolder in a verbose way when verbose is true and context is not document', () => {
       var
         context = ['aField', 'aSubField'],
-        structured = true,
+        verbose = true,
         message = 'a message',
         errorHolder = {
           fieldScope: {
@@ -256,15 +256,15 @@ describe('Test: validation utilities', () => {
           }
         };
 
-      manageErrorMessage(context, errorHolder, message, structured);
+      manageErrorMessage(context, errorHolder, message, verbose);
 
       should(errorHolder).be.deepEqual(expectedErrorHolder);
     });
 
-    it('should add a message in the errorHolder in a structured way when structured is true and context is not document', () => {
+    it('should add a message in the errorHolder in a verbose way when verbose is true and context is not document', () => {
       var
         context = ['aField', 'aSubField'],
-        structured = true,
+        verbose = true,
         message = 'a message',
         errorHolder = {
           fieldScope: {
@@ -298,30 +298,30 @@ describe('Test: validation utilities', () => {
           }
         };
 
-      manageErrorMessage(context, errorHolder, message, structured);
+      manageErrorMessage(context, errorHolder, message, verbose);
 
       should(errorHolder).be.deepEqual(expectedErrorHolder);
     });
 
-    it('should add the message in the documentScope of the errorHolder when structured is true and context is document', () => {
+    it('should add the message in the documentScope of the errorHolder when verbose is true and context is document', () => {
       var
         context = 'document',
-        structured = true,
+        verbose = true,
         message = 'a message',
         errorHolder = {},
         expectedErrorHolder = {
           documentScope: ['a message']
         };
 
-      manageErrorMessage(context, errorHolder, message, structured);
+      manageErrorMessage(context, errorHolder, message, verbose);
 
       should(errorHolder).be.deepEqual(expectedErrorHolder);
     });
 
-    it('should add the message in the documentScope of the errorHolder when structured is true and context is document', () => {
+    it('should add the message in the documentScope of the errorHolder when verbose is true and context is document', () => {
       var
         context = 'document',
-        structured = true,
+        verbose = true,
         message = 'a message',
         errorHolder = {
           documentScope: ['an existing message']
@@ -330,7 +330,7 @@ describe('Test: validation utilities', () => {
           documentScope: ['an existing message', 'a message']
         };
 
-      manageErrorMessage(context, errorHolder, message, structured);
+      manageErrorMessage(context, errorHolder, message, verbose);
 
       should(errorHolder).be.deepEqual(expectedErrorHolder);
     });
