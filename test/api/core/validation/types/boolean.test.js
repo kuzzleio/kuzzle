@@ -1,0 +1,56 @@
+var
+  BaseType = require('../../../../../lib/api/core/validation/baseType'),
+  BooleanType = require('../../../../../lib/api/core/validation/types/boolean'),
+  should = require('should');
+
+describe('Test: validation/types/boolean', () => {
+  it('should derivate from BaseType', () => {
+    var booleanType = new BooleanType();
+
+    should(BaseType.prototype.isPrototypeOf(booleanType)).be.true();
+  });
+
+  it('should construct properly', () => {
+    var booleanType = new BooleanType();
+
+    should(typeof booleanType.typeName).be.eql('string');
+    should(typeof booleanType.allowChildren).be.eql('boolean');
+    should(Array.isArray(booleanType.allowedTypeOptions)).be.true();
+  });
+
+  it('should override functions properly',() => {
+    should(typeof BooleanType.prototype.validate).be.eql('function');
+    should(typeof BooleanType.prototype.validateFieldSpecification).be.eql('function');
+  });
+
+  describe('#validate', () => {
+    it('should return true if fieldValue is a boolean', () => {
+      var
+        booleanType = new BooleanType(),
+        typeOptions = {},
+        fieldValue = true,
+        errorMessages = [];
+
+      should(booleanType.validate(typeOptions, fieldValue, errorMessages)).be.true();
+    });
+
+    it('should return false if fieldValue is not a boolean', () => {
+      var
+        booleanType = new BooleanType(),
+        typeOptions = {},
+        fieldValue = 'string',
+        errorMessages = [];
+
+      should(booleanType.validate(typeOptions, fieldValue, errorMessages)).be.false();
+      should(errorMessages).be.deepEqual(['The field must be of type boolean.']);
+    });
+  });
+
+  describe('#validateFieldSpecification', () => {
+    it('should always return true', () => {
+      var booleanType = new BooleanType();
+
+      should(booleanType.validateFieldSpecification()).be.true();
+    });
+  });
+});

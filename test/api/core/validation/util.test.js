@@ -354,6 +354,8 @@ describe('Test: validation utilities', () => {
       return getValidationConfiguration(kuzzle)
         .then(result => {
           should(result).be.deepEqual(kuzzle.config.validation);
+          should(kuzzle.internalEngine.search.callCount).be.eql(1);
+          should(kuzzle.internalEngine.search.args[0][0]).be.eql('validations');
         });
     });
 

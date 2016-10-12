@@ -10,7 +10,6 @@ describe('Test: validation initialization', () => {
   var
     validation,
     sandbox = sinon.sandbox.create(),
-    defaultTypesFiles = Validation.__get__('defaultTypesFiles'),
     getValidationConfiguration = Validation.__get__('getValidationConfiguration'),
     checkAllowedProperties = Validation.__get__('checkAllowedProperties'),
     curateStructuredFields = Validation.__get__('curateStructuredFields'),
@@ -22,7 +21,6 @@ describe('Test: validation initialization', () => {
     validation = new Validation(kuzzle);
     sandbox.reset();
     mockRequire.stopAll();
-    Validation.__set__('defaultTypesFiles', defaultTypesFiles);
     Validation.__set__('getValidationConfiguration', getValidationConfiguration);
     Validation.__set__('checkAllowedProperties', checkAllowedProperties);
     Validation.__set__('curateStructuredFields', curateStructuredFields);
@@ -41,21 +39,32 @@ describe('Test: validation initialization', () => {
   it('should add the type provided in defaultTypesFiles', () => {
     var
       validationStub = sandbox.spy(() => {}),
-      anotherValidationStub = sandbox.spy(() => {}),
       addTypeStub = sandbox.stub();
 
-    Validation.__set__('defaultTypesFiles', ['aFile', 'anotherFile']);
-
-    mockRequire('../../../../lib/api/core/validation/types/aFile', validationStub);
-    mockRequire('../../../../lib/api/core/validation/types/anotherFile', anotherValidationStub);
+    [
+      'anything',
+      'boolean',
+      'date',
+      'email',
+      'enum',
+      'geoPoint',
+      'geoShape',
+      'integer',
+      'ipAddress',
+      'numeric',
+      'object',
+      'string',
+      'url'
+    ].forEach(fileName => {
+      mockRequire('../../../../lib/api/core/validation/types/'+ fileName, validationStub);
+    });
 
     validation.addType = addTypeStub;
 
     validation.init();
 
-    should(validationStub.callCount).be.eql(1);
-    should(anotherValidationStub.callCount).be.eql(1);
-    should(addTypeStub.callCount).be.eql(2);
+    should(validationStub.callCount).be.eql(13);
+    should(addTypeStub.callCount).be.eql(13);
   });
 
 
@@ -120,14 +129,14 @@ describe('Test: validation initialization', () => {
     });
   });
 
-  describe('#validateSpecification', () => {
+  describe('#isValidSpecification', () => {
     it('should resolve true if the specification is correct', () => {
       var
         curateCollectionSpecificationStub = sandbox.stub().resolves({});
 
       validation.curateCollectionSpecification = curateCollectionSpecificationStub;
 
-      return validation.validateSpecification('anIndex', 'aCollection', {a: 'specification'})
+      return validation.isValidSpecification('anIndex', 'aCollection', {a: 'specification'})
         .then(result => {
           should(curateCollectionSpecificationStub.callCount).be.eql(1);
           should(result).be.true();
@@ -140,7 +149,7 @@ describe('Test: validation initialization', () => {
 
       validation.curateCollectionSpecification = curateCollectionSpecificationStub;
 
-      return validation.validateSpecification('anIndex', 'aCollection', {a: 'bad specification'})
+      return validation.isValidSpecification('anIndex', 'aCollection', {a: 'bad specification'})
         .then(result => {
           should(curateCollectionSpecificationStub.callCount).be.eql(1);
           should(result).be.false();
