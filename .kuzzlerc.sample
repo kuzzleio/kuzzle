@@ -1,7 +1,7 @@
 {
   // -------------------------------------------------------------------------
   // Kuzzle configuration sample file
-  // 
+  //
   // You can copy this file to a valid [rc](https://github.com/dominictarr/rc)
   // file location to customize Kuzzle configuration
   // -------------------------------------------------------------------------
@@ -25,11 +25,11 @@
 
     // Each next block entry is a plugin configuration.
     // A plugin can be installed from 3 different sources:
-    //   * from a npm package: the entry must be the package name in npm and 
+    //   * from a npm package: the entry must be the package name in npm and
     //     the version must be specified usind the "npmVersion" property
-    //   * from a git repository: the git repository url must be specified 
+    //   * from a git repository: the git repository url must be specified
     //     using the "gitUrl" property
-    //   * from a local directory: the location of the package must be 
+    //   * from a local directory: the location of the package must be
     //     specified using the "path" property
     "kuzzle-plugin-logger": {
       "npmVersion": "2.0.4",
@@ -51,7 +51,7 @@
 
   // The repositories are used internally by Kuzzle to store its data (users,
   // permissions, configuration etc.)
-  /* 
+  /*
   "repositories": {
     // [Common]
     //   * cacheTTL: the time in the objects should be kepts in cache
@@ -68,9 +68,9 @@
   /*
   "security": {
     // [jwt]
-    // configuration for npm 
+    // configuration for npm
     // [jsonwebtoken package](https://github.com/auth0/node-jsonwebtoken)
-    // 
+    //
     //   * algorithm: hash/encryption method used to sign the token
     //   * expiresIn: expressed in seconds or a rouchg/ms compatible string
     //   * secret: a string or buffer containing either the secret for HMAC
@@ -82,7 +82,7 @@
       "secret": "Change me"
     },
     // [default]
-    // The default role described here defines the permissions for the 
+    // The default role described here defines the permissions for the
     // anonymous user until an administrator user is created.
     // By default, all users are granted all permissions until an administrator
     // is defined.
@@ -100,7 +100,7 @@
     // [standard]
     // Permissions used when creating an administrator user, either using the
     // CLI or the Back Office.
-    // 
+    //
     // By default, the admin user is granted all permissions.
     // Anonymous and non-administrator users are restricted to the "serverInfo"
     // action.
@@ -171,7 +171,10 @@
   // Configuration for Kuzzle server
   /*
   "server": {
-    // * http port: port on which Kuzzle will expose its REST api
+    // * http port: port on which Kuzzle will expose its REST api.
+    //   If unset or set to a falsy value (default), Kuzzle will use a random
+    //   available port within the *ephemeral port range* defined by
+    //   /proc/sys/net/ipv4/ip_local_port_range.
     // * http maxRequestSize: the size limit of a request. If it's a string, the
          value is passed to the "bytes" library (https://www.npmjs.com/package/bytes).
          If this is a number, then the value specifies the number of bytes.
@@ -182,7 +185,7 @@
     // * warningRetainedRequestsLimit: Number of bufferized requests after
     //   which Kuzzle will throw warnings to the logger
     "http": {
-      "port": 7511,
+      "port": false,
       "maxRequestSize": "1MB"
     },
     "maxConcurrentRequests": 50,
@@ -204,38 +207,72 @@
       "retryInterval": 1000
     },
 
-    // [cache]
+    // [internalCache]
     // The cache service relies on Redis
+    // sample settings for Redis service (see also https://github.com/luin/ioredis):
+    //
+    // 1. using a single Redis database:
     //   node:
-    //     * host: The host on which Redis can be reached. Can take an IP 
-    //       address, an URI or a hostname
+    //     * host: The host on which Redis can be reached.
+    //       Can take an IP address, an URI or a hostname
     //     * port: The port on which Redis is running
-    "cache": {
+    //   database: (optional) the ID of the redis database (default: 0)
+    "internalCache": {
       "backend": "redis",
-      "aliases": [
-        "notificationCache",
-        "statsCache",
-        "securityCache",
-        "internalCache",
-        "tokenCache",
-        "memoryStorage"
-      ],
-      "databases": [
-        "notificationCache",
-        "statsCache",
-        "securityCache",
-        "internalCache",
-        "tokenCache",
-        "memoryStorage"
-      ],
       "node": {
-        "host": "redis",
+        "host": "localhost",
+        "port": 6379
+      }
+    },
+    // 2. using a master/slaves Redis instance with Redis sentinels (cf. http://redis.io/topics/sentinel):
+    //   node:
+    //     * sentinels: array of sentinels instances:
+    //       * host: the host on which the sentinel can be reached.
+    //         Can take an IP address, an URI or a hostname
+    //       * port: The port on which the sentinel is running
+    //     * name: a group of Redis instances composed of a master and one or more slaves
+    //   database: (optional) the ID of the redis database (default: 0)
+    "internalCache": {
+      "backend": "redis",
+      "node": {
+        "sentinels": [
+          {"host": "sentinel-host-1", "port": 26379},
+          {"host": "sentinel-host-2", "port": 26379},
+          {"host": "sentinel-host-3", "port": 26379}
+        ],
+        "name": "kuzzle"
+      }
+    },
+    // 3. using a redis cluster (cf. http://redis.io/topics/cluster-spec):
+    //   nodes: array of master nodes of the cluster
+    //     * host: The host on which the Redis node can be reached.
+    //       Can take an IP address, an URI or a hostname
+    //     * port: The port on which Redis is running
+    // (NB: in cluster mode, Redis uses only 1 database)
+    "internalCache": {
+      "backend": "redis",
+      "nodes": [
+        {"host": "redis-1", "port": 6379},
+        {"host": "redis-2", "port": 6379},
+        {"host": "redis-3', "port": 6379}
+      ]
+    },
+
+    // [memoryStorage]
+    // The Redis memoryStorage Engine
+    // (see "internalCache" above for sample settings)
+    // (NB: by default, the memoryStorage uses the same redis server as internalCache, on database number "5")
+    "memoryStorage": {
+      "backend": "redis",
+      "database": 5,
+      "node": {
+        "host": "localhost",
         "port": 6379
       }
     },
 
     // [internalBroker]
-    // The internalBroker is used for internal Kuzzle communication, 
+    // The internalBroker is used for internal Kuzzle communication,
     // notably to transport messages between the CLI and the server.
     //   * host: Host of Kuzzle server. Change this if you want to use the CLI
     //     from a different host than the one Kuzzle is running on.
@@ -250,7 +287,7 @@
     // The proxy broker is used to communicate between the Proxy and Kuzzle
     // server.
     //   * host: the host on which the proxy can be reached. Can be a hostname,
-    //     an IP address or an URI. 
+    //     an IP address or an URI.
     //   * port: the port on which the proxy is listening
     "proxyBroker": {
       "host": "localhost",
@@ -258,7 +295,7 @@
       "retryInterval": 1000
     },
     // [db]
-    // The database layer is by default relying on elasticsearch and is 
+    // The database layer is by default relying on elasticsearch and is
     // currently the only available backend.
     //   * host: The host on which elasticsearch can be reached. Can be a
     //     hostname, an URI or an IP address.
@@ -276,7 +313,7 @@
 
     // Configuration for Kuzzle internal statistics module
     //   * ttl: Time in s for which the statistics framed are stored
-    //   * statsInterval: Time in s between statistics framed are comitted to 
+    //   * statsInterval: Time in s between statistics framed are comitted to
     //     the cache engine
     /*
     "stats": {

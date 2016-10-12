@@ -1,13 +1,11 @@
 proxy:
   image: kuzzleio/proxy:alpine
   ports:
-    - "7511:7511"
-    - "7512:7512"
-    - "7513:7513"
+    - "7511-7513:7511-7513"
 
 kuzzle:
   image: kuzzleio/test:alpine
-  command: sh -c '/run.sh; npm run codecov'
+  command: sh -c '/run.sh && npm run codecov'
   volumes:
     - "..:/var/app"
     - "./scripts/run-test.sh:/run.sh"
@@ -15,7 +13,7 @@ kuzzle:
   links:
     - elasticsearch
     - redis
-    - proxy:api
+    - proxy
   environment:
     - FEATURE_COVERAGE=1
     # Travis env var must be propagated into the container
@@ -26,9 +24,13 @@ kuzzle:
     - TRAVIS_JOB_ID
     - TRAVIS_PULL_REQUEST
     - TRAVIS_REPO_SLUG
+    - kuzzle_services__db__host=elasticsearch
+    - kuzzle_services__internalCache__node__host=redis
+    - kuzzle_services__memoryStorage__node__host=redis
+    - kuzzle_services__proxyBroker__host=proxy
 
 redis:
-  image: redis:3.0-alpine
+  image: redis:3.2-alpine
 
 elasticsearch:
   image: kuzzleio/elasticsearch:2.3.4

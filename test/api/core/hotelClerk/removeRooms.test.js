@@ -12,7 +12,6 @@ describe('Test: hotelClerk.removeRooms', () => {
     kuzzle,
     connection = {id: 'connectionid'},
     context,
-    roomName,
     index = 'test',
     collection1 = 'user',
     collection2 = 'foo',
@@ -50,7 +49,6 @@ describe('Test: hotelClerk.removeRooms', () => {
     var requestObject = new RequestObject({
       controller: 'admin',
       action: 'removeRooms',
-      requestId: roomName,
       index: undefined,
       collection: collection1,
       body: {}
@@ -63,7 +61,6 @@ describe('Test: hotelClerk.removeRooms', () => {
     var requestObject = new RequestObject({
       controller: 'admin',
       action: 'removeRooms',
-      requestId: roomName,
       index: index,
       collection: undefined,
       body: {}
@@ -76,7 +73,6 @@ describe('Test: hotelClerk.removeRooms', () => {
     var requestObject = new RequestObject({
       controller: 'admin',
       action: 'removeRooms',
-      requestId: roomName,
       index: index,
       collection: collection1,
       body: {}
@@ -90,7 +86,6 @@ describe('Test: hotelClerk.removeRooms', () => {
       requestObjectSubscribe = new RequestObject({
         controller: 'subscribe',
         action: 'on',
-        requestId: roomName,
         index: index,
         collection: collection1,
         body: {}
@@ -98,7 +93,6 @@ describe('Test: hotelClerk.removeRooms', () => {
       requestObject = new RequestObject({
         controller: 'admin',
         action: 'removeRooms',
-        requestId: roomName,
         index: index,
         collection: collection2,
         body: {}
@@ -115,7 +109,6 @@ describe('Test: hotelClerk.removeRooms', () => {
       requestObjectSubscribe = new RequestObject({
         controller: 'subscribe',
         action: 'on',
-        requestId: roomName,
         index: index,
         collection: collection1,
         body: {}
@@ -123,7 +116,6 @@ describe('Test: hotelClerk.removeRooms', () => {
       requestObjectRemove = new RequestObject({
         controller: 'admin',
         action: 'removeRooms',
-        requestId: roomName,
         index: index,
         collection: collection1,
         body: {}
@@ -145,7 +137,6 @@ describe('Test: hotelClerk.removeRooms', () => {
       requestObjectSubscribe = new RequestObject({
         controller: 'subscribe',
         action: 'on',
-        requestId: roomName,
         index: index,
         collection: collection1,
         body: filter1
@@ -153,7 +144,6 @@ describe('Test: hotelClerk.removeRooms', () => {
       requestObjectRemove = new RequestObject({
         controller: 'admin',
         action: 'removeRooms',
-        requestId: roomName,
         index: index,
         collection: collection1,
         body: {}
@@ -175,7 +165,6 @@ describe('Test: hotelClerk.removeRooms', () => {
       requestObjectSubscribeGlobal = new RequestObject({
         controller: 'subscribe',
         action: 'on',
-        requestId: roomName,
         index: index,
         collection: collection1,
         body: {}
@@ -183,7 +172,6 @@ describe('Test: hotelClerk.removeRooms', () => {
       requestObjectSubscribeFilter = new RequestObject({
         controller: 'subscribe',
         action: 'on',
-        requestId: roomName,
         index: index,
         collection: collection1,
         body: filter1
@@ -191,7 +179,6 @@ describe('Test: hotelClerk.removeRooms', () => {
       requestObjectRemove = new RequestObject({
         controller: 'admin',
         action: 'removeRooms',
-        requestId: roomName,
         index: index,
         collection: collection1,
         body: {}
@@ -214,7 +201,6 @@ describe('Test: hotelClerk.removeRooms', () => {
       requestObjectSubscribeCollection1 = new RequestObject({
         controller: 'subscribe',
         action: 'on',
-        requestId: roomName,
         index: index,
         collection: collection1,
         body: {}
@@ -222,7 +208,6 @@ describe('Test: hotelClerk.removeRooms', () => {
       requestObjectSubscribeCollection2 = new RequestObject({
         controller: 'subscribe',
         action: 'on',
-        requestId: roomName,
         index: index,
         collection: collection2,
         body: {}
@@ -230,7 +215,6 @@ describe('Test: hotelClerk.removeRooms', () => {
       requestObjectRemove = new RequestObject({
         controller: 'admin',
         action: 'removeRooms',
-        requestId: roomName,
         index: index,
         collection: collection1,
         body: {}
@@ -259,7 +243,6 @@ describe('Test: hotelClerk.removeRooms', () => {
       requestObjectSubscribeCollection1 = new RequestObject({
         controller: 'subscribe',
         action: 'on',
-        requestId: roomName,
         index: index,
         collection: collection1,
         body: {}
@@ -267,7 +250,6 @@ describe('Test: hotelClerk.removeRooms', () => {
       requestObjectRemove = new RequestObject({
         controller: 'admin',
         action: 'removeRooms',
-        requestId: roomName,
         index: index,
         collection: collection1,
         body: {rooms: {}}
@@ -312,7 +294,7 @@ describe('Test: hotelClerk.removeRooms', () => {
       .then(() => kuzzle.hotelClerk.removeRooms(requestObjectRemove))
       .then(() => {
         should(Object.keys(kuzzle.hotelClerk.rooms).length).be.exactly(1);
-        should(kuzzle.hotelClerk.rooms[roomName]).be.undefined();
+        should(kuzzle.hotelClerk.rooms[roomId]).be.undefined();
       });
   });
 
@@ -336,7 +318,6 @@ describe('Test: hotelClerk.removeRooms', () => {
       requestObjectRemove = new RequestObject({
         controller: 'admin',
         action: 'removeRooms',
-        requestId: roomName,
         index: index,
         collection: collection1,
         body: {rooms: [index2RoomName]}
@@ -372,7 +353,6 @@ describe('Test: hotelClerk.removeRooms', () => {
       requestObjectRemove = new RequestObject({
         controller: 'admin',
         action: 'removeRooms',
-        requestId: roomName,
         index: index,
         collection: collection1,
         body: {rooms: [collection2RoomName]}
@@ -394,7 +374,6 @@ describe('Test: hotelClerk.removeRooms', () => {
       requestObjectSubscribe = new RequestObject({
         controller: 'subscribe',
         action: 'on',
-        requestId: roomName,
         index: index,
         collection: collection1,
         body: {}
@@ -402,7 +381,6 @@ describe('Test: hotelClerk.removeRooms', () => {
       requestObjectRemove = new RequestObject({
         controller: 'admin',
         action: 'removeRooms',
-        requestId: roomName,
         index: index,
         collection: collection1,
         body: {rooms: [badRoomName]}

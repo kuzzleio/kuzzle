@@ -7,7 +7,6 @@ var
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
   BadRequestError = require.main.require('kuzzle-common-objects').Errors.badRequestError,
   NotFoundError = require.main.require('kuzzle-common-objects').Errors.notFoundError,
-  InternalError = require.main.require('kuzzle-common-objects').Errors.internalError,
   ES = rewire('../../../lib/services/elasticsearch');
 
 describe('Test: ElasticSearch service', () => {
@@ -373,6 +372,7 @@ describe('Test: ElasticSearch service', () => {
       var spy;
       var esError = {
         displayName: 'NotFound',
+        message: 'test',
         body: {
           error: {
             reason: 'foo'
@@ -394,15 +394,47 @@ describe('Test: ElasticSearch service', () => {
         });
     });
 
-    it('should return a rejected promise with an Error if an update fails for unknow reason', done => {
-      var spy = sandbox.stub(elasticsearch.client, 'update').rejects({});
+    it('should return a rejected promise with a customised NotFoundError when elasticsearch throws a known error', done => {
+      var spy;
+      var esError = {
+        displayName: 'NotFound',
+        message: '[index_not_found_exception] no such index, with { resource.type=index_or_alias resource.id=banana index=banana }',
+        body: {
+          error: {
+            reason: 'foo'
+          }
+        }
+      };
+      spy = sandbox.stub(elasticsearch.client, 'update').rejects(esError);
+
+      elasticsearch.update(requestObject)
+        .catch((error) => {
+          try{
+            should(error).be.instanceOf(NotFoundError);
+            should(error.message).be.equal('Index "banana" does not exist, please create it first');
+            should(error.internalError).eql(esError);
+            should(error.service).be.equal('elasticsearch');
+            should(spy.firstCall.args[0].id).be.undefined();
+            done();
+          }
+          catch(e) { done(e); }
+        });
+    });
+
+    it('should return a rejected promise with an Error if an update fails for unknown reason', done => {
+      var esError = {
+        message: 'banana error'
+      };
+      var spy = sandbox.stub(elasticsearch.client, 'update').rejects(esError);
       var spyTrigger = sandbox.stub(kuzzle.pluginsManager, 'trigger');
 
       elasticsearch.update(requestObject)
         .catch((error) => {
           try{
-            should(spyTrigger.firstCall.args[0]).be.equal('log:warn');
-            should(spyTrigger.firstCall.args[1]).be.instanceOf(InternalError);
+            should(spyTrigger.firstCall).be.calledWithExactly(
+              'log:warn',
+              '[warning] unhandled elasticsearch error:\nbanana error'
+            );
             should(error).be.instanceOf(Error);
             should(spy.firstCall.args[0].id).be.undefined();
             done();
@@ -751,6 +783,7 @@ describe('Test: ElasticSearch service', () => {
     it('should reject and handle error for bad mapping input', done => {
       var spy = sandbox.stub(elasticsearch.client.indices, 'putMapping').rejects({
         displayName: 'BadRequest',
+        message: 'test',
         body: {
           error: {
             reason: 'foo'

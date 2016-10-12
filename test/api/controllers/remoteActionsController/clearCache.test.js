@@ -11,51 +11,42 @@ describe('Test: clear cache', () => {
 
   beforeEach(() => {
     kuzzle = {
-      config: {
-        services: {
-          cache: {
-            aliases: ['memoryStorage', 'foo', 'bar']
-          }
-        }
-      },
       services: {
         list: {
+          internalCache: {
+            flushdb: callback => callback(null)
+          },
           memoryStorage: {
-            flushdb: callback => {
-              callback(null);
-            }
-          },
-          foo: {
-            flushdb: callback => {
-              callback(null);
-            }
-          },
-          bar: {
-            flushdb: callback => {
-              callback(null);
-            }
-          },
+            flushdb: callback => callback(null)
+          }
         }
       }
     };
 
     spies = {
       memoryStorage: sinon.spy(kuzzle.services.list.memoryStorage, 'flushdb'),
-      foo: sinon.spy(kuzzle.services.list.foo, 'flushdb'),
-      bar: sinon.spy(kuzzle.services.list.bar, 'flushdb')
+      internalCache: sinon.spy(kuzzle.services.list.internalCache, 'flushdb')
     };
 
     clearCache = require('../../../../lib/api/controllers/remoteActions/clearCache')(kuzzle);
   });
 
-
-  it('should clean explicitely any volatile database', () => {
-    var request = {data: {body: {database: 'foo'}}};
+  it('should clean the internalStorage by default if no database name is provided', () => {
+    var request = {data: {body: {}}};
 
     return clearCache(request)
       .then(() => {
-        should(spies.foo).be.calledOnce();
-        should(spies.bar).not.be.called();
+        should(spies.internalCache).be.calledOnce();
+        should(spies.memoryStorage).not.be.called();
+      });
+  });
+
+  it('should clean explicitely the internalCache', () => {
+    var request = {data: {body: {database: 'internalCache'}}};
+
+    return clearCache(request)
+      .then(() => {
+        should(spies.internalCache).be.calledOnce();
         should(spies.memoryStorage).not.be.called();
       });
   });
@@ -65,8 +56,7 @@ describe('Test: clear cache', () => {
 
     return clearCache(request)
       .then(() => {
-        should(spies.foo).not.be.called();
-        should(spies.bar).not.be.called();
+        should(spies.internalCache).not.be.called();
         should(spies.memoryStorage).be.calledOnce();
       });
   });
@@ -75,17 +65,6 @@ describe('Test: clear cache', () => {
     var request = {data: {body: {database: 'fake'}}};
 
     should(clearCache(request)).be.rejected();
-  });
-
-  it('should clean all volatile redis dbs if no database name is provided', () => {
-    var request = {data: {body: {}}};
-
-    return clearCache(request)
-      .then(() => {
-        should(spies.foo).be.calledOnce();
-        should(spies.bar).be.calledOnce();
-        should(spies.memoryStorage).not.be.called();
-      });
   });
 
 });
