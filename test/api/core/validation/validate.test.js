@@ -9,7 +9,7 @@ describe('Test: validation.validate', () => {
   var
     validation,
     sandbox = sinon.sandbox.create(),
-    addErrorMessage = Validation.__get__('addErrorMessage'),
+    manageErrorMessage = Validation.__get__('manageErrorMessage'),
     checkAllowedProperties = Validation.__get__('checkAllowedProperties'),
     kuzzle,
     indexName = 'anIndex',
@@ -19,7 +19,7 @@ describe('Test: validation.validate', () => {
     kuzzle = new KuzzleMock();
     validation = new Validation(kuzzle);
     sandbox.reset();
-    Validation.__set__('addErrorMessage', addErrorMessage);
+    Validation.__set__('manageErrorMessage', manageErrorMessage);
     Validation.__set__('checkAllowedProperties', checkAllowedProperties);
   });
 
@@ -55,13 +55,8 @@ describe('Test: validation.validate', () => {
         .then(result => {
           should(result).be.deepEqual(requestObject);
           should(validationPromiseStub.callCount).be.eql(1);
-          should(validationPromiseStub.args[0][0]).be.eql(indexName);
-          should(validationPromiseStub.args[0][1]).be.eql(collectionName);
-          should(validationPromiseStub.args[0][2]).be.eql(controllerName);
-          should(validationPromiseStub.args[0][3]).be.eql(actionName);
-          should(validationPromiseStub.args[0][4]).be.eql(id);
-          should(validationPromiseStub.args[0][5]).be.deepEqual(requestObject.data.body);
-          should(validationPromiseStub.args[0][6]).be.false();
+          should(validationPromiseStub.args[0][0]).be.deepEqual(requestObject);
+          should(validationPromiseStub.args[0][1]).be.false();
         });
     });
 
@@ -94,13 +89,8 @@ describe('Test: validation.validate', () => {
         .then(result => {
           should(result).be.deepEqual(requestObject);
           should(validationPromiseStub.callCount).be.eql(1);
-          should(validationPromiseStub.args[0][0]).be.eql(indexName);
-          should(validationPromiseStub.args[0][1]).be.eql(collectionName);
-          should(validationPromiseStub.args[0][2]).be.eql(controllerName);
-          should(validationPromiseStub.args[0][3]).be.eql(actionName);
-          should(typeof validationPromiseStub.args[0][4]).be.eql('undefined');
-          should(validationPromiseStub.args[0][5]).be.deepEqual(requestObject.data.body);
-          should(validationPromiseStub.args[0][6]).be.false();
+          should(validationPromiseStub.args[0][0]).be.deepEqual(requestObject);
+          should(validationPromiseStub.args[0][1]).be.false();
         });
     });
 
@@ -196,6 +186,16 @@ describe('Test: validation.validate', () => {
         id = null,
         structuredError = false,
         documentBody = {},
+        requestObject = {
+          index: indexName,
+          collection: collectionName,
+          controller: controllerName,
+          action: actionName,
+          data: {
+            _id: id,
+            body: documentBody
+          }
+        },
         specification = {
           [indexName]: {
             [collectionName]: {
@@ -210,7 +210,7 @@ describe('Test: validation.validate', () => {
 
       validation.recurseFieldValidation = recurseFieldValidationStub;
 
-      return validation.validationPromise(indexName, collectionName, controllerName, actionName, id, documentBody, structuredError)
+      return validation.validationPromise(requestObject, structuredError)
         .then((result) => {
           should(result).be.deepEqual({
             documentBody,
@@ -233,13 +233,23 @@ describe('Test: validation.validate', () => {
         actionName = 'anAction',
         id = null,
         structuredError = false,
-        documentBody = {};
+        documentBody = {},
+        requestObject = {
+          index: indexName,
+          collection: collectionName,
+          controller: controllerName,
+          action: actionName,
+          data: {
+            _id: id,
+            body: documentBody
+          }
+        };
 
       validation.specification = {};
 
       validation.recurseFieldValidation = recurseFieldValidationStub;
 
-      return validation.validationPromise(indexName, collectionName, controllerName, actionName, id, documentBody, structuredError)
+      return validation.validationPromise(requestObject, structuredError)
         .then((result) => {
           should(result).be.deepEqual({
             documentBody,
@@ -258,6 +268,16 @@ describe('Test: validation.validate', () => {
         id = null,
         structuredError = true,
         documentBody = {},
+        requestObject = {
+          index: indexName,
+          collection: collectionName,
+          controller: controllerName,
+          action: actionName,
+          data: {
+            _id: id,
+            body: documentBody
+          }
+        },
         specification = {
           [indexName]: {
             [collectionName]: {
@@ -272,7 +292,7 @@ describe('Test: validation.validate', () => {
 
       validation.recurseFieldValidation = recurseFieldValidationStub;
 
-      return validation.validationPromise(indexName, collectionName, controllerName, actionName, id, documentBody, structuredError)
+      return validation.validationPromise(requestObject, structuredError)
         .then((result) => {
           should(result).be.deepEqual({
             documentBody,
@@ -302,6 +322,16 @@ describe('Test: validation.validate', () => {
         id = 'anId',
         structuredError = false,
         documentBody = {},
+        requestObject = {
+          index: indexName,
+          collection: collectionName,
+          controller: controllerName,
+          action: actionName,
+          data: {
+            _id: id,
+            body: documentBody
+          }
+        },
         specification = {
           [indexName]: {
             [collectionName]: {
@@ -320,7 +350,7 @@ describe('Test: validation.validate', () => {
       validation.recurseFieldValidation = recurseFieldValidationStub;
       validation.dsl = dsl;
 
-      return validation.validationPromise(indexName, collectionName, controllerName, actionName, id, documentBody, structuredError)
+      return validation.validationPromise(requestObject, structuredError)
         .then((result) => {
           should(result).be.deepEqual({
             documentBody,
@@ -342,9 +372,9 @@ describe('Test: validation.validate', () => {
         });
     });
 
-    it('should return an unvalid status when field validation fails', () => {
+    it('should throw when field validation fails', () => {
       var
-        recurseFieldValidationStub = sandbox.stub().returns(false),
+        recurseFieldValidationStub = sandbox.stub().throws({message: 'error'}),
         controllerName = 'aController',
         actionName = 'anAction',
         filterId = 'someFilter',
@@ -355,6 +385,16 @@ describe('Test: validation.validate', () => {
         id = 'anId',
         structuredError = false,
         documentBody = {},
+        requestObject = {
+          index: indexName,
+          collection: collectionName,
+          controller: controllerName,
+          action: actionName,
+          data: {
+            _id: id,
+            body: documentBody
+          }
+        },
         specification = {
           [indexName]: {
             [collectionName]: {
@@ -372,27 +412,10 @@ describe('Test: validation.validate', () => {
       validation.specification = specification;
       validation.recurseFieldValidation = recurseFieldValidationStub;
       validation.dsl = dsl;
-      Validation.__set__('addErrorMessage', sandbox.spy(function() {arguments[1].push(arguments[2]);}));
+      Validation.__set__('manageErrorMessage', sandbox.spy(function() {throw new Error(arguments[2]);}));
 
-      return validation.validationPromise(indexName, collectionName, controllerName, actionName, id, documentBody, structuredError)
-        .then((result) => {
-          should(result).be.deepEqual({
-            documentBody,
-            errorMessages: ['The document is not valid due to field validation.'],
-            validation: false
-          });
-          should(recurseFieldValidationStub.callCount).be.eql(1);
-          should(recurseFieldValidationStub.args[0][0]).be.deepEqual(documentBody);
-          should(recurseFieldValidationStub.args[0][1]).be.eql(null);
-          should(recurseFieldValidationStub.args[0][2]).be.eql(specification[indexName][collectionName].fields.children);
-          should(recurseFieldValidationStub.args[0][3]).be.true();
-          should(recurseFieldValidationStub.args[0][5]).be.eql(structuredError);
-          should(testStub.callCount).be.eql(1);
-          should(testStub.args[0][0]).be.deepEqual(indexName);
-          should(testStub.args[0][1]).be.deepEqual(collectionName);
-          should(testStub.args[0][2]).be.deepEqual(documentBody);
-          should(testStub.args[0][3]).be.deepEqual(id);
-        });
+      return validation.validationPromise(requestObject, structuredError)
+        .should.rejectedWith('error');
     });
 
     it('should return an unvalid status when validator validation fails', () => {
@@ -408,6 +431,16 @@ describe('Test: validation.validate', () => {
         id = 'anId',
         structuredError = false,
         documentBody = {},
+        requestObject = {
+          index: indexName,
+          collection: collectionName,
+          controller: controllerName,
+          action: actionName,
+          data: {
+            _id: id,
+            body: documentBody
+          }
+        },
         specification = {
           [indexName]: {
             [collectionName]: {
@@ -425,27 +458,10 @@ describe('Test: validation.validate', () => {
       validation.specification = specification;
       validation.recurseFieldValidation = recurseFieldValidationStub;
       validation.dsl = dsl;
-      Validation.__set__('addErrorMessage', sandbox.spy(function() {arguments[1].push(arguments[2]);}));
+      Validation.__set__('manageErrorMessage', sandbox.spy(function() {throw new Error(arguments[2]);}));
 
-      return validation.validationPromise(indexName, collectionName, controllerName, actionName, id, documentBody, structuredError)
-        .then((result) => {
-          should(result).be.deepEqual({
-            documentBody,
-            errorMessages: ['The document does not match validation filters.'],
-            validation: false
-          });
-          should(recurseFieldValidationStub.callCount).be.eql(1);
-          should(recurseFieldValidationStub.args[0][0]).be.deepEqual(documentBody);
-          should(recurseFieldValidationStub.args[0][1]).be.eql(null);
-          should(recurseFieldValidationStub.args[0][2]).be.eql(specification[indexName][collectionName].fields.children);
-          should(recurseFieldValidationStub.args[0][3]).be.true();
-          should(recurseFieldValidationStub.args[0][5]).be.eql(structuredError);
-          should(testStub.callCount).be.eql(1);
-          should(testStub.args[0][0]).be.deepEqual(indexName);
-          should(testStub.args[0][1]).be.deepEqual(collectionName);
-          should(testStub.args[0][2]).be.deepEqual(documentBody);
-          should(testStub.args[0][3]).be.deepEqual(id);
-        });
+      return validation.validationPromise(requestObject, structuredError)
+        .should.rejectedWith('The document does not match validation filters.');
     });
 
     it('should intercept a strictness error and set the message accordingly return a validation if the specification is empty', () => {
@@ -456,6 +472,16 @@ describe('Test: validation.validate', () => {
         id = null,
         structuredError = false,
         documentBody = {},
+        requestObject = {
+          index: indexName,
+          collection: collectionName,
+          controller: controllerName,
+          action: actionName,
+          data: {
+            _id: id,
+            body: documentBody
+          }
+        },
         specification = {
           [indexName]: {
             [collectionName]: {
@@ -472,16 +498,10 @@ describe('Test: validation.validate', () => {
 
       validation.specification = specification;
       validation.recurseFieldValidation = recurseFieldValidationStub;
-      Validation.__set__('addErrorMessage', sandbox.spy(function() {return arguments[1].push(arguments[2]);}));
+      Validation.__set__('manageErrorMessage', sandbox.spy(function() {throw new Error(arguments[2]);}));
 
-      return validation.validationPromise(indexName, collectionName, controllerName, actionName, id, documentBody, structuredError)
-        .then((result) => {
-          should(result).be.deepEqual({
-            documentBody,
-            errorMessages: ['The document validation is strict; it can not add unspecified sub-fields.'],
-            validation: false
-          });
-        });
+      return validation.validationPromise(requestObject, structuredError)
+        .should.rejectedWith('The document validation is strict; it can not add unspecified sub-fields.');
     });
 
     it('should throw back any other error happening during field validation', () => {
@@ -492,6 +512,16 @@ describe('Test: validation.validate', () => {
         id = null,
         structuredError = false,
         documentBody = {},
+        requestObject = {
+          index: indexName,
+          collection: collectionName,
+          controller: controllerName,
+          action: actionName,
+          data: {
+            _id: id,
+            body: documentBody
+          }
+        },
         specification = {
           [indexName]: {
             [collectionName]: {
@@ -508,9 +538,9 @@ describe('Test: validation.validate', () => {
 
       validation.specification = specification;
       validation.recurseFieldValidation = recurseFieldValidationStub;
-      Validation.__set__('addErrorMessage', sandbox.spy(function() {return arguments[1].push(arguments[2]);}));
+      Validation.__set__('manageErrorMessage', sandbox.spy(function() {throw new Error(arguments[2]);}));
 
-      return validation.validationPromise(indexName, collectionName, controllerName, actionName, id, documentBody, structuredError)
+      return validation.validationPromise(requestObject, structuredError)
         .should.rejectedWith('not_strictness');
     });
     /**

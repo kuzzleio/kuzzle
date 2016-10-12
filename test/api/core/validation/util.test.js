@@ -171,21 +171,20 @@ describe('Test: validation utilities', () => {
     });
   });
 
-  describe('#addErrorMessage', () => {
+  describe('#manageErrorMessage', () => {
     var
-      addErrorMessage = Validation.__get__('addErrorMessage');
+      manageErrorMessage = Validation.__get__('manageErrorMessage');
 
-    it('should add a message at the end of the errorHolder when structured is false and context is not document', () => {
+    it('should throw an error structured is false and context is not document', () => {
       var
         context = ['aField', 'aSubField'],
         structured = false,
         message = 'a message',
-        errorHolder = ['an existing message'],
-        expectedErrorHolder = ['an existing message', 'Field aField.aSubField: a message'];
+        errorHolder = [];
 
-      addErrorMessage(context, errorHolder, message, structured);
-
-      should(errorHolder).be.deepEqual(expectedErrorHolder);
+      (() => {
+        manageErrorMessage(context, errorHolder, message, structured);
+      }).should.throw('Field aField.aSubField: a message');
     });
 
     it('should add a message at the begining of the errorHolder when structured is false and context is document', () => {
@@ -193,12 +192,11 @@ describe('Test: validation utilities', () => {
         context = 'document',
         structured = false,
         message = 'a message',
-        errorHolder = ['an existing message'],
-        expectedErrorHolder = ['Document: a message', 'an existing message'];
+        errorHolder = ['an existing message'];
 
-      addErrorMessage(context, errorHolder, message, structured);
-
-      should(errorHolder).be.deepEqual(expectedErrorHolder);
+      (() => {
+        manageErrorMessage(context, errorHolder, message, structured);
+      }).should.throw('Document: a message');
     });
 
     it('should add a message in the errorHolder in a structured way when structured is true and context is not document', () => {
@@ -221,7 +219,7 @@ describe('Test: validation utilities', () => {
           }
         };
 
-      addErrorMessage(context, errorHolder, message, structured);
+      manageErrorMessage(context, errorHolder, message, structured);
 
       should(errorHolder).be.deepEqual(expectedErrorHolder);
     });
@@ -258,7 +256,7 @@ describe('Test: validation utilities', () => {
           }
         };
 
-      addErrorMessage(context, errorHolder, message, structured);
+      manageErrorMessage(context, errorHolder, message, structured);
 
       should(errorHolder).be.deepEqual(expectedErrorHolder);
     });
@@ -300,7 +298,7 @@ describe('Test: validation utilities', () => {
           }
         };
 
-      addErrorMessage(context, errorHolder, message, structured);
+      manageErrorMessage(context, errorHolder, message, structured);
 
       should(errorHolder).be.deepEqual(expectedErrorHolder);
     });
@@ -315,7 +313,7 @@ describe('Test: validation utilities', () => {
           documentScope: ['a message']
         };
 
-      addErrorMessage(context, errorHolder, message, structured);
+      manageErrorMessage(context, errorHolder, message, structured);
 
       should(errorHolder).be.deepEqual(expectedErrorHolder);
     });
@@ -332,7 +330,7 @@ describe('Test: validation utilities', () => {
           documentScope: ['an existing message', 'a message']
         };
 
-      addErrorMessage(context, errorHolder, message, structured);
+      manageErrorMessage(context, errorHolder, message, structured);
 
       should(errorHolder).be.deepEqual(expectedErrorHolder);
     });
