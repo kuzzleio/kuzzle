@@ -156,8 +156,12 @@ module.exports = {
       host: 'localhost',
       port: 9200,
       apiVersion: '2.3'
-    }
+    },
 
+    garbageCollector: {
+      cleanInterval: 1000,
+      maxDocumentDeletion: 50
+    }
   },
 
   stats: {
