@@ -16,6 +16,8 @@ describe('Test: validation/types/geoShape', () => {
     should(typeof geoShapeType.typeName).be.eql('string');
     should(typeof geoShapeType.allowChildren).be.eql('boolean');
     should(Array.isArray(geoShapeType.allowedTypeOptions)).be.true();
+    should(geoShapeType.typeName).be.eql('geo_shape');
+    should(geoShapeType.allowChildren).be.false();
   });
 
   it('should override functions properly',() => {

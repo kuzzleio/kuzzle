@@ -16,6 +16,8 @@ describe('Test: validation/types/numeric', () => {
     should(typeof numericType.typeName).be.eql('string');
     should(typeof numericType.allowChildren).be.eql('boolean');
     should(Array.isArray(numericType.allowedTypeOptions)).be.true();
+    should(numericType.typeName).be.eql('numeric');
+    should(numericType.allowChildren).be.false();
   });
 
   it('should override functions properly',() => {

@@ -16,6 +16,8 @@ describe('Test: validation/types/geoPoint', () => {
     should(typeof geoPointType.typeName).be.eql('string');
     should(typeof geoPointType.allowChildren).be.eql('boolean');
     should(Array.isArray(geoPointType.allowedTypeOptions)).be.true();
+    should(geoPointType.typeName).be.eql('geo_point');
+    should(geoPointType.allowChildren).be.false();
   });
 
   it('should override functions properly',() => {

@@ -16,6 +16,8 @@ describe('Test: validation/types/anything', () => {
     should(typeof anythingType.typeName).be.eql('string');
     should(typeof anythingType.allowChildren).be.eql('boolean');
     should(Array.isArray(anythingType.allowedTypeOptions)).be.true();
+    should(anythingType.typeName).be.eql('anything');
+    should(anythingType.allowChildren).be.false();
   });
 
   it('should override functions properly',() => {

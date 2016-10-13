@@ -1,26 +1,28 @@
 var
   BaseType = require('../../../../../lib/api/core/validation/baseType'),
-  AnythingType = require('../../../../../lib/api/core/validation/types/date'),
+  DateType = require('../../../../../lib/api/core/validation/types/date'),
   should = require('should');
 
 describe('Test: validation/types/date', () => {
   it('should derivate from BaseType', () => {
-    var anythingType = new AnythingType();
+    var dateType = new DateType();
 
-    should(BaseType.prototype.isPrototypeOf(anythingType)).be.true();
+    should(BaseType.prototype.isPrototypeOf(dateType)).be.true();
   });
 
   it('should construct properly', () => {
-    var anythingType = new AnythingType();
+    var dateType = new DateType();
 
-    should(typeof anythingType.typeName).be.eql('string');
-    should(typeof anythingType.allowChildren).be.eql('boolean');
-    should(Array.isArray(anythingType.allowedTypeOptions)).be.true();
+    should(typeof dateType.typeName).be.eql('string');
+    should(typeof dateType.allowChildren).be.eql('boolean');
+    should(Array.isArray(dateType.allowedTypeOptions)).be.true();
+    should(dateType.typeName).be.eql('date');
+    should(dateType.allowChildren).be.false();
   });
 
   it('should override functions properly',() => {
-    should(typeof AnythingType.prototype.validate).be.eql('function');
-    should(typeof AnythingType.prototype.validateFieldSpecification).be.eql('function');
+    should(typeof DateType.prototype.validate).be.eql('function');
+    should(typeof DateType.prototype.validateFieldSpecification).be.eql('function');
   });
 
   describe('#validate', () => {

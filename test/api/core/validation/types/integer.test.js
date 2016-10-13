@@ -16,6 +16,8 @@ describe('Test: validation/types/integer', () => {
     should(typeof integerType.typeName).be.eql('string');
     should(typeof integerType.allowChildren).be.eql('boolean');
     should(Array.isArray(integerType.allowedTypeOptions)).be.true();
+    should(integerType.typeName).be.eql('integer');
+    should(integerType.allowChildren).be.false();
   });
 
   it('should override functions properly',() => {

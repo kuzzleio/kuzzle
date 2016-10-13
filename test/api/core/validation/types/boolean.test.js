@@ -16,6 +16,8 @@ describe('Test: validation/types/boolean', () => {
     should(typeof booleanType.typeName).be.eql('string');
     should(typeof booleanType.allowChildren).be.eql('boolean');
     should(Array.isArray(booleanType.allowedTypeOptions)).be.true();
+    should(booleanType.typeName).be.eql('boolean');
+    should(booleanType.allowChildren).be.false();
   });
 
   it('should override functions properly',() => {

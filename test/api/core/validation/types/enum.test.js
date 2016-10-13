@@ -16,6 +16,8 @@ describe('Test: validation/types/enum', () => {
     should(typeof enumType.typeName).be.eql('string');
     should(typeof enumType.allowChildren).be.eql('boolean');
     should(Array.isArray(enumType.allowedTypeOptions)).be.true();
+    should(enumType.typeName).be.eql('enum');
+    should(enumType.allowChildren).be.false();
   });
 
   it('should override functions properly',() => {
