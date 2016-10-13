@@ -17,8 +17,11 @@ describe('InternalEngine', () => {
         Client: function () {
           this.indices = {
             create: sinon.stub().resolves(),
+            delete: sinon.stub().resolves(),
             exists: sinon.stub().resolves(),
-            getMapping: sinon.stub().resolves()
+            getMapping: sinon.stub().resolves(),
+            putMapping: sinon.stub().resolves(),
+            refresh: sinon.stub().resolves()
           };
 
           this.create = sinon.stub().resolves();
@@ -345,7 +348,7 @@ describe('InternalEngine', () => {
     it('should not try to create an existing index', () => {
       var
         createStub = kuzzle.internalEngine.client.indices.create,
-        existsStub = kuzzle.internalEngine.client.indices.exists.resolves(false);
+        existsStub = kuzzle.internalEngine.client.indices.exists.resolves(true);
 
       return kuzzle.internalEngine.createInternalIndex()
         .then(() => {
@@ -365,22 +368,81 @@ describe('InternalEngine', () => {
 
   describe('#listIndexes', () => {
     it('should forward the request to elasticsearch', () => {
-      kuzzle.internalEngine.client.getMapping.resolves({
+      kuzzle.internalEngine.client.indices.getMapping.resolves({
         index1: {foo: 'bar'},
         index2: {foo: 'bar'}
       });
 
       return kuzzle.internalEngine.listIndexes()
         .then(result => {
-          should(kuzzle.internalEngine.client.getMapping)
-            .be.calledOnce()
-            .be.calledWithMatch({
-              index: kuzzle.internalEngine.index
-            });
+          should(kuzzle.internalEngine.client.indices.getMapping)
+            .be.calledOnce();
+          should(kuzzle.internalEngine.client.indices.getMapping.firstCall.args)
+            .have.length(0);
+
 
           should(result).match(['index1', 'index2']);
         });
 
     });
   });
+
+  describe('#getMapping', () => {
+    it('should forward the request to elasticseach', () => {
+      var data = {foo: 'bar'};
+
+      return kuzzle.internalEngine.getMapping(data)
+        .then(() => {
+          should(kuzzle.internalEngine.client.indices.getMapping)
+            .be.calledOnce()
+            .be.calledWithExactly(data);
+        });
+    });
+  });
+
+  describe('#deleteIndex', () => {
+    it('should forward the request to elasticsearch', () => {
+      return kuzzle.internalEngine.deleteIndex()
+        .then(() => {
+          should(kuzzle.internalEngine.client.indices.delete)
+            .be.calledOnce()
+            .be.calledWithMatch({
+              index: kuzzle.internalEngine.index
+            });
+        });
+    });
+  });
+
+  describe('#updateMapping', () => {
+    it('should forward the request to elasticsearch', () => {
+      var
+        type = 'collection',
+        mapping = {foo: 'bar'};
+
+      return kuzzle.internalEngine.updateMapping(type, mapping)
+        .then(() => {
+          should(kuzzle.internalEngine.client.indices.putMapping)
+            .be.calledOnce()
+            .be.calledWithMatch({
+              index: kuzzle.internalEngine.index,
+              type,
+              body: mapping
+            });
+        });
+    });
+  });
+
+  describe('#refresh', () => {
+    it ('should forward the request to elasticsearch', () => {
+      return kuzzle.internalEngine.refresh()
+        .then(() => {
+          should(kuzzle.internalEngine.client.indices.refresh)
+            .be.calledOnce()
+            .be.calledWithMatch({
+              index: kuzzle.internalEngine.index
+            });
+        });
+    });
+  });
+
 });

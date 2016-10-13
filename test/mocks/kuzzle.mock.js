@@ -35,28 +35,33 @@ function KuzzleMock () {
   };
 
   this.indexCache = {
-    add: sinon.spy(),
-    exists: sinon.spy(),
+    add: sinon.stub(),
+    exists: sinon.stub(),
     init: sinon.stub().resolves(),
     initInternal: sinon.stub().resolves(),
-    remove: sinon.spy(),
-    reset: sinon.spy()
+    remove: sinon.stub(),
+    reset: sinon.stub()
   };
 
   this.internalEngine = {
     bootstrap: {
+      adminExists: sinon.stub().resolves(true),
       all: sinon.stub().resolves(),
       createCollections: sinon.stub().resolves(),
       createRolesCollection: sinon.stub().resolves(),
       createProfilesCollection: sinon.stub().resolves(),
       createUsersCollection: sinon.stub().resolves(),
-      createPluginsCollection: sinon.stub().resolves(),
-      adminExists: sinon.stub().resolves(true)
+      createPluginsCollection: sinon.stub().resolves()
     },
+    createInternalIndex: sinon.stub().resolves(),
+    createOrReplace: sinon.stub().resolves(),
     deleteIndex: sinon.stub().resolves(),
     get: sinon.stub().resolves(foo),
     index: 'internalIndex',
-    init: sinon.stub().resolves()
+    init: sinon.stub().resolves(),
+    refresh: sinon.stub().resolves(),
+    search: sinon.stub().resolves(),
+    updateMapping: sinon.stub().resolves()
   };
 
   this.notifier = {
