@@ -29,8 +29,7 @@ describe('Test: validation.validate', () => {
         validationPromiseStub = sandbox.spy(function () {
           return Promise.resolve({
             validation: true,
-            errorMessages: [],
-            documentBody: arguments[5]
+            errorMessages: []
           });
         }),
         controllerName = 'write',
@@ -53,7 +52,10 @@ describe('Test: validation.validate', () => {
 
       return validation.validate(requestObject)
         .then(result => {
-          should(result).be.deepEqual(requestObject);
+          should(result).be.deepEqual({
+            validation: true,
+            errorMessages: []
+          });
           should(validationPromiseStub.callCount).be.eql(1);
           should(validationPromiseStub.args[0][0]).be.deepEqual(requestObject);
           should(validationPromiseStub.args[0][1]).be.false();
@@ -65,8 +67,7 @@ describe('Test: validation.validate', () => {
         validationPromiseStub = sandbox.spy(function () {
           return Promise.resolve({
             validation: true,
-            errorMessages: [],
-            documentBody: arguments[5]
+            errorMessages: []
           });
         }),
         controllerName = 'aController',
@@ -87,7 +88,10 @@ describe('Test: validation.validate', () => {
 
       return validation.validate(requestObject)
         .then(result => {
-          should(result).be.deepEqual(requestObject);
+          should(result).be.deepEqual({
+            validation: true,
+            errorMessages: []
+          });
           should(validationPromiseStub.callCount).be.eql(1);
           should(validationPromiseStub.args[0][0]).be.deepEqual(requestObject);
           should(validationPromiseStub.args[0][1]).be.false();
@@ -111,11 +115,7 @@ describe('Test: validation.validate', () => {
         };
 
       validation.validationPromise = sandbox.spy(function () {
-        return Promise.resolve({
-          validation: false,
-          errorMessages: ['anError'],
-          documentBody: null
-        });
+        return Promise.reject({message: 'anError'});
       });
 
       return validation.validate(requestObject)
@@ -195,28 +195,23 @@ describe('Test: validation.validate', () => {
             _id: id,
             body: documentBody
           }
-        },
-        specification = {
-          [indexName]: {
-            [collectionName]: {
-              strict: false,
-              fields: {},
-              validators: null
-            }
-          }
         };
 
-      validation.specification = specification;
+      validation.specification = {
+        [indexName]: {
+          [collectionName]: {
+            strict: false,
+            fields: {},
+            validators: null
+          }
+        }
+      };
 
       validation.recurseFieldValidation = recurseFieldValidationStub;
 
       return validation.validationPromise(requestObject, verbose)
         .then((result) => {
-          should(result).be.deepEqual({
-            documentBody,
-            errorMessages: [],
-            validation: true
-          });
+          should(result).be.deepEqual(requestObject);
           should(recurseFieldValidationStub.callCount).be.eql(1);
           should(recurseFieldValidationStub.args[0][0]).be.eql(documentBody);
           should(recurseFieldValidationStub.args[0][1]).be.eql(null);
@@ -251,11 +246,7 @@ describe('Test: validation.validate', () => {
 
       return validation.validationPromise(requestObject, verbose)
         .then((result) => {
-          should(result).be.deepEqual({
-            documentBody,
-            errorMessages: [],
-            validation: true
-          });
+          should(result).be.deepEqual(requestObject);
           should(recurseFieldValidationStub.callCount).be.eql(0);
         });
     });
@@ -277,25 +268,23 @@ describe('Test: validation.validate', () => {
             _id: id,
             body: documentBody
           }
-        },
-        specification = {
-          [indexName]: {
-            [collectionName]: {
-              strict: false,
-              fields: {},
-              validators: null
-            }
-          }
         };
 
-      validation.specification = specification;
+      validation.specification = {
+        [indexName]: {
+          [collectionName]: {
+            strict: false,
+            fields: {},
+            validators: null
+          }
+        }
+      };
 
       validation.recurseFieldValidation = recurseFieldValidationStub;
 
       return validation.validationPromise(requestObject, verbose)
         .then((result) => {
           should(result).be.deepEqual({
-            documentBody,
             errorMessages: {},
             validation: true
           });
@@ -352,11 +341,7 @@ describe('Test: validation.validate', () => {
 
       return validation.validationPromise(requestObject, verbose)
         .then((result) => {
-          should(result).be.deepEqual({
-            documentBody,
-            errorMessages: [],
-            validation: true
-          });
+          should(result).be.deepEqual(requestObject);
           should(recurseFieldValidationStub.callCount).be.eql(1);
           should(recurseFieldValidationStub.args[0][0]).be.deepEqual(documentBody);
           should(recurseFieldValidationStub.args[0][1]).be.eql(null);
@@ -394,22 +379,21 @@ describe('Test: validation.validate', () => {
             _id: id,
             body: documentBody
           }
-        },
-        specification = {
-          [indexName]: {
-            [collectionName]: {
-              strict: true,
-              fields: {
-                children: {
-                  aField: 'validation'
-                }
-              },
-              validators: filterId
-            }
-          }
         };
 
-      validation.specification = specification;
+      validation.specification = {
+        [indexName]: {
+          [collectionName]: {
+            strict: true,
+            fields: {
+              children: {
+                aField: 'validation'
+              }
+            },
+            validators: filterId
+          }
+        }
+      };
       validation.recurseFieldValidation = recurseFieldValidationStub;
       validation.dsl = dsl;
       Validation.__set__('manageErrorMessage', sandbox.spy(function() {throw new Error(arguments[2]);}));
@@ -440,22 +424,21 @@ describe('Test: validation.validate', () => {
             _id: id,
             body: documentBody
           }
-        },
-        specification = {
-          [indexName]: {
-            [collectionName]: {
-              strict: true,
-              fields: {
-                children: {
-                  aField: 'validation'
-                }
-              },
-              validators: filterId
-            }
-          }
         };
 
-      validation.specification = specification;
+      validation.specification = {
+        [indexName]: {
+          [collectionName]: {
+            strict: true,
+            fields: {
+              children: {
+                aField: 'validation'
+              }
+            },
+            validators: filterId
+          }
+        }
+      };
       validation.recurseFieldValidation = recurseFieldValidationStub;
       validation.dsl = dsl;
       Validation.__set__('manageErrorMessage', sandbox.spy(function() {throw new Error(arguments[2]);}));
@@ -481,22 +464,22 @@ describe('Test: validation.validate', () => {
             _id: id,
             body: documentBody
           }
-        },
-        specification = {
-          [indexName]: {
-            [collectionName]: {
-              strict: true,
-              fields: {
-                children: {
-                  aField: 'validation'
-                }
-              },
-              validators: null
-            }
-          }
         };
 
-      validation.specification = specification;
+      validation.specification = {
+        [indexName]: {
+          [collectionName]: {
+            strict: true,
+            fields: {
+              children: {
+                aField: 'validation'
+              }
+            },
+            validators: null
+          }
+        }
+      };
+
       validation.recurseFieldValidation = recurseFieldValidationStub;
       Validation.__set__('manageErrorMessage', sandbox.spy(function() {throw new Error(arguments[2]);}));
 
@@ -521,22 +504,21 @@ describe('Test: validation.validate', () => {
             _id: id,
             body: documentBody
           }
-        },
-        specification = {
-          [indexName]: {
-            [collectionName]: {
-              strict: true,
-              fields: {
-                children: {
-                  aField: 'validation'
-                }
-              },
-              validators: null
-            }
-          }
         };
 
-      validation.specification = specification;
+      validation.specification = {
+        [indexName]: {
+          [collectionName]: {
+            strict: true,
+            fields: {
+              children: {
+                aField: 'validation'
+              }
+            },
+            validators: null
+          }
+        }
+      };
       validation.recurseFieldValidation = recurseFieldValidationStub;
       Validation.__set__('manageErrorMessage', sandbox.spy(function() {throw new Error(arguments[2]);}));
 
