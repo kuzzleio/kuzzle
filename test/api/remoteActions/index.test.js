@@ -54,15 +54,13 @@ describe('Tests: api/remoteActions/index.js', () => {
 
         should(context.actions).match({
           adminExists: action,
-          cleanAndPrepare: action,
-          cleanDb: action,
           clearCache: action,
+          cleanDb: action,
           createFirstAdmin: action,
-          enableServices: action,
           managePlugins: action,
-          prepareDb: action
+          data: action
         });
-        should(spy).have.callCount(8);
+        should(spy).have.callCount(6);
       });
     });
 
@@ -70,8 +68,6 @@ describe('Tests: api/remoteActions/index.js', () => {
 
   describe('#do', () => {
     var
-      consoleSpy,
-      exitSpy,
       remoteActions,
       reset;
 
@@ -101,8 +97,6 @@ describe('Tests: api/remoteActions/index.js', () => {
           send: sinon.spy()
         })
       });
-      consoleSpy = RemoteActions.__get__('console').log;
-      exitSpy = RemoteActions.__get__('process').exit;
       remoteActions = new RemoteActions(kuzzle);
     });
 
@@ -110,22 +104,7 @@ describe('Tests: api/remoteActions/index.js', () => {
       reset();
     });
 
-    it('should exit with a return code 1 if the action could not be found', () => {
-      var error = new Error('test');
-
-      RemoteActions.__with__({
-        require: sinon.stub().throws(error)
-      })(() => {
-        remoteActions.do('fake', {});
-
-        should(consoleSpy).be.calledOnce();
-        should(consoleSpy).be.calledWith('Action fake does not exist');
-        should(exitSpy).be.calledOnce();
-        should(exitSpy).be.calledWithExactly(1);
-      });
-    });
-
-    it('should send the action given', () => {
+    it('should send the action to the internalBroker', () => {
       var
         data = {foo: 'bar'},
         context = {
