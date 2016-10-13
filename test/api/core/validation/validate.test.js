@@ -447,7 +447,7 @@ describe('Test: validation.validate', () => {
         .should.rejectedWith('The document does not match validation filters.');
     });
 
-    it('should intercept a strictness error and set the message accordingly return a validation if the specification is empty', () => {
+    it('should intercept a strictness error and set the message accordingly', () => {
       var
         recurseFieldValidationStub = sandbox.stub().throws({message: 'strictness'}),
         controllerName = 'aController',
@@ -485,6 +485,61 @@ describe('Test: validation.validate', () => {
 
       return validation.validationPromise(requestObject, verbose)
         .should.rejectedWith('The document validation is strict; it can not add unspecified sub-fields.');
+    });
+
+    it('should intercept a strictness error and set the message accordingly', () => {
+      var
+        recurseFieldValidationStub = sandbox.stub().throws({message: 'strictness'}),
+        manageErrorMessageStub = sandbox.stub(),
+        controllerName = 'aController',
+        actionName = 'anAction',
+        id = null,
+        verbose = true,
+        documentBody = {},
+        requestObject = {
+          index: indexName,
+          collection: collectionName,
+          controller: controllerName,
+          action: actionName,
+          data: {
+            _id: id,
+            body: documentBody
+          }
+        };
+
+      validation.specification = {
+        [indexName]: {
+          [collectionName]: {
+            strict: true,
+            fields: {
+              children: {
+                aField: 'validation'
+              }
+            },
+            validators: null
+          }
+        }
+      };
+
+      validation.recurseFieldValidation = recurseFieldValidationStub;
+      Validation.__set__('manageErrorMessage', manageErrorMessageStub);
+
+      return validation.validationPromise(requestObject, verbose)
+        .then((result) => {
+          should(result).be.deepEqual({
+            errorMessages: {},
+            validation: false
+          });
+          should(recurseFieldValidationStub.callCount).be.eql(1);
+          should(recurseFieldValidationStub.args[0][0]).be.eql(documentBody);
+          should(recurseFieldValidationStub.args[0][1]).be.eql(null);
+          should(recurseFieldValidationStub.args[0][2]).be.deepEqual({aField: 'validation'});
+          should(recurseFieldValidationStub.args[0][3]).be.true();
+          should(recurseFieldValidationStub.args[0][4]).be.eql({});
+          should(recurseFieldValidationStub.args[0][5]).be.eql(verbose);
+          should(manageErrorMessageStub.callCount).be.eql(1);
+          should(manageErrorMessageStub.args[0][2]).be.eql('The document validation is strict; it can not add unspecified sub-fields.');
+        });
     });
 
     it('should throw back any other error happening during field validation', () => {
