@@ -4,15 +4,13 @@ var
   should = require('should');
 
 describe('Test: validation/types/email', () => {
-  it('should derivate from BaseType', () => {
-    var emailType = new EmailType();
+  var emailType = new EmailType();
 
+  it('should derivate from BaseType', () => {
     should(BaseType.prototype.isPrototypeOf(emailType)).be.true();
   });
 
   it('should construct properly', () => {
-    var emailType = new EmailType();
-
     should(typeof emailType.typeName).be.eql('string');
     should(typeof emailType.allowChildren).be.eql('boolean');
     should(Array.isArray(emailType.allowedTypeOptions)).be.true();
@@ -26,8 +24,6 @@ describe('Test: validation/types/email', () => {
   });
 
   describe('#validate', () => {
-    var emailType = new EmailType();
-
     it('should return true if the value is valid', () => {
       should(emailType.validate({notEmpty: true}, 'user@domain.com', [])).be.true();
     });

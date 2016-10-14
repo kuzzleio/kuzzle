@@ -4,15 +4,13 @@ var
   should = require('should');
 
 describe('Test: validation/types/ipAddress', () => {
-  it('should derivate from BaseType', () => {
-    var ipAddressType = new IpAddressType();
+  var ipAddressType = new IpAddressType();
 
+  it('should derivate from BaseType', () => {
     should(BaseType.prototype.isPrototypeOf(ipAddressType)).be.true();
   });
 
   it('should construct properly', () => {
-    var ipAddressType = new IpAddressType();
-
     should(typeof ipAddressType.typeName).be.eql('string');
     should(typeof ipAddressType.allowChildren).be.eql('boolean');
     should(Array.isArray(ipAddressType.allowedTypeOptions)).be.true();
@@ -26,8 +24,6 @@ describe('Test: validation/types/ipAddress', () => {
   });
 
   describe('#validate', () => {
-    var ipAddressType = new IpAddressType();
-
     it('should return true if the value is valid', () => {
       should(ipAddressType.validate({notEmpty: true}, '127.0.0.1', [])).be.true();
     });

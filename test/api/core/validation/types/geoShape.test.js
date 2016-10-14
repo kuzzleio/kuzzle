@@ -4,15 +4,13 @@ var
   should = require('should');
 
 describe('Test: validation/types/geoShape', () => {
-  it('should derivate from BaseType', () => {
-    var geoShapeType = new GeoShapeType();
+  var geoShapeType = new GeoShapeType();
 
+  it('should derivate from BaseType', () => {
     should(BaseType.prototype.isPrototypeOf(geoShapeType)).be.true();
   });
 
   it('should construct properly', () => {
-    var geoShapeType = new GeoShapeType();
-
     should(typeof geoShapeType.typeName).be.eql('string');
     should(typeof geoShapeType.allowChildren).be.eql('boolean');
     should(Array.isArray(geoShapeType.allowedTypeOptions)).be.true();

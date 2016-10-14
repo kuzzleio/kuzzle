@@ -4,15 +4,13 @@ var
   should = require('should');
 
 describe('Test: validation/types/url', () => {
-  it('should derivate from BaseType', () => {
-    var urlType = new UrlType();
+  var urlType = new UrlType();
 
+  it('should derivate from BaseType', () => {
     should(BaseType.prototype.isPrototypeOf(urlType)).be.true();
   });
 
   it('should construct properly', () => {
-    var urlType = new UrlType();
-
     should(typeof urlType.typeName).be.eql('string');
     should(typeof urlType.allowChildren).be.eql('boolean');
     should(Array.isArray(urlType.allowedTypeOptions)).be.true();
@@ -26,8 +24,6 @@ describe('Test: validation/types/url', () => {
   });
 
   describe('#validate', () => {
-    var urlType = new UrlType();
-
     it('should return true if the value is valid', () => {
       should(urlType.validate({notEmpty: true}, 'http://www.domain.com/', [])).be.true();
     });
@@ -59,8 +55,6 @@ describe('Test: validation/types/url', () => {
   });
 
   describe('#validateFieldSpecification', () => {
-    var urlType = new UrlType();
-
     it('should return default typeOptions if there is no typeOptions', () => {
       should(urlType.validateFieldSpecification({})).be.deepEqual({
         notEmpty: false

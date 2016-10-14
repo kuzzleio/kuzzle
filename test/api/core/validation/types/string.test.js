@@ -4,15 +4,13 @@ var
   should = require('should');
 
 describe('Test: validation/types/string', () => {
-  it('should derivate from BaseType', () => {
-    var stringType = new StringType();
+  var stringType = new StringType();
 
+  it('should derivate from BaseType', () => {
     should(BaseType.prototype.isPrototypeOf(stringType)).be.true();
   });
 
   it('should construct properly', () => {
-    var stringType = new StringType();
-
     should(typeof stringType.typeName).be.eql('string');
     should(typeof stringType.allowChildren).be.eql('boolean');
     should(Array.isArray(stringType.allowedTypeOptions)).be.true();
@@ -59,9 +57,7 @@ describe('Test: validation/types/string', () => {
   });
 
   describe('#validateFieldSpecification', () => {
-    var stringType = new StringType();
-
-    it('should return default typeOptions if there is no typeOptions', () => {
+    it('should return true if there is no typeOptions', () => {
       should(stringType.validateFieldSpecification({})).be.true();
     });
 
