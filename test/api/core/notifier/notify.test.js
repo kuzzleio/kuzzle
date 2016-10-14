@@ -43,22 +43,10 @@ describe('Test: notifier.notify', () => {
     should(getChannelsStub.called).be.false();
   });
 
-  it('should be able to broadcast when only one room is provided', () => {
-    var data = {payload: notification.toJson(), channels: ['foobar'], id: undefined};
-
-    notifier.notify('foobar', {}, {});
-
-    should(getChannelsStub.calledOnce).be.true();
-    should(dispatchStub.calledOnce).be.true();
-    should(triggerStub.calledOnce).be.true();
-    should(dispatchStub.calledWithMatch('broadcast', data)).be.true();
-    should(triggerStub.calledWithMatch('proxy:broadcast', data)).be.true();
-  });
-
   it('should notify instead of broadcasting if there is a connection ID', () => {
     var data = {payload: notification.toJson(), channels: ['foobar'], id: 'someID'};
 
-    notifier.notify('foobar', {}, {}, 'someID');
+    notifier.notify(['foobar'], {}, {}, 'someID');
 
     should(getChannelsStub.calledOnce).be.true();
     should(dispatchStub.calledOnce).be.true();
