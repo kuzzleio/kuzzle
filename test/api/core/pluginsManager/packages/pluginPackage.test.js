@@ -1,0 +1,465 @@
+var
+  sinon = require('sinon'),
+  sandbox = sinon.sandbox.create(),
+  rewire = require('rewire'),
+  should = require('should'),
+  KuzzleMock = require('../../../../mocks/kuzzle.mock'),
+  PluginPackage = rewire('../../../../../lib/api/core/plugins/packages/pluginPackage');
+
+describe('plugins/packages/pluginPackage', () => {
+  var
+    kuzzle,
+    pkg;
+
+  beforeEach(() => {
+    kuzzle = new KuzzleMock();
+    pkg = new PluginPackage(kuzzle, 'plugin', {});
+  });
+
+  afterEach(() => {
+    sandbox.restore();
+  });
+
+  describe('#constructor', () => {
+    it('should do its job', () => {
+      var
+        def = {foo: 'bar'};
+
+      sandbox.stub(PluginPackage.prototype, 'setDefinition');
+
+      pkg = new PluginPackage(kuzzle, 'plugin', def);
+
+      should(pkg).be.an.instanceOf(PluginPackage);
+      should(pkg.name).be.exactly('plugin');
+      should(PluginPackage.prototype.setDefinition)
+        .be.calledOnce()
+        .be.calledWithExactly(def);
+    });
+  });
+
+  describe('#setDefinition', () => {
+    it('should populate the object attributes', () => {
+      pkg.setDefinition({
+        path: 'path',
+        gitUrl: 'will be overridden',
+        url: 'url',
+        npmVersion: 'will be overridden',
+        version: 'version',
+        activated: 'activated',
+        foo: 'bar'
+      });
+
+      should(pkg).not.have.property('foo');
+      should(pkg.path).be.exactly('path');
+      should(pkg).not.have.property('gitUrl');
+      should(pkg.url).be.exactly('url');
+      should(pkg).not.have.property('npmVersion');
+      should(pkg.version).be.exactly('version');
+      should(pkg.activated).be.exactly('activated');
+    });
+  });
+
+  describe('#dbConfiguration', () => {
+    it('should return the configuration stored in ES', () => {
+      kuzzle.internalEngine.get.resolves({
+        _id: 'plugin',
+        _source: {
+          version: 'version',
+          npmVersion: 'not used',
+          url: 'url',
+          gitUrl: 'not used'
+        }
+      });
+
+      return pkg.dbConfiguration()
+        .then(config => {
+          should(config).match({
+            version: 'version',
+            url: 'url'
+          });
+          should(config).not.have.property('gitUrl');
+          should(config).not.have.property('npmVersion');
+        });
+    });
+  });
+
+  describe('#updateDbConfiguration', () => {
+    it('should write the given config to ES', () => {
+      var config = {
+        foo: 'bar'
+      };
+
+      kuzzle.internalEngine.createOrReplace.resolves({
+        _id: 'id',
+        _source: 'source'
+      });
+
+      return pkg.updateDbConfiguration(config)
+        .then(response => {
+          should(response).be.exactly('source');
+          should(kuzzle.internalEngine.createOrReplace)
+            .be.calledOnce()
+            .be.calledWithMatch('plugins', pkg.name, {
+              version: pkg.version,
+              activated: pkg.activated,
+              config
+            });
+        });
+    });
+  });
+
+  describe('#setActivate', () => {
+    it('should toggle the activation status in ES', () => {
+      pkg.dbConfiguration = sandbox.stub().resolves({
+        config: 'config'
+      });
+      pkg.updateDbConfiguration = sandbox.stub().resolves('OK');
+
+      return pkg.setActivate('activated')
+        .then(response => {
+          should(response).be.exactly('OK');
+
+          should(pkg.dbConfiguration)
+            .be.calledOnce();
+
+          should(pkg.updateDbConfiguration)
+            .be.calledOnce()
+            .be.calledWithExactly('config');
+
+          should(pkg.activated).be.exactly('activated');
+        });
+    });
+
+    it('should do nothing if the packaged is marked as deleted', () => {
+      pkg.dbConfiguration = sandbox.stub().resolves({
+        deleted: true
+      });
+      pkg.updateDbConfiguration = sinon.stub();
+
+      return pkg.setActivate('activated')
+        .then(response => {
+          should(response).match({deleted: true});
+          should(pkg.updateDbConfiguration).have.callCount(0);
+        });
+    });
+  });
+
+  describe('#localConfiguration', () => {
+    it('should read the local configuration and merge it with kuzzle s one', () => {
+      kuzzle.config.plugins.plugin = {
+        config: {
+          bar: 'baz'
+        }
+      };
+
+      return PluginPackage.__with__({
+        require: () => {
+          return {
+            pluginInfo: {
+              defaultConfig: {
+                foo: 'bar'
+              }
+            }
+          };
+        }
+      })(() => {
+        var result = pkg.localConfiguration();
+
+        should(result).match({
+          foo: 'bar',
+          bar: 'baz'
+        });
+      });
+    });
+  });
+
+  describe('#isInstalled', () => {
+    it('should return true if a local configuration is found', () => {
+      return PluginPackage.__with__({
+        require: () => true
+      })(() => {
+        var result = pkg.isInstalled();
+
+        should(result).be.true();
+      });
+    });
+
+    it('should return false if no local configuration is found', () => {
+      return PluginPackage.__with__({
+        require: () => { throw new Error('error') }
+      })(() => {
+        var result = pkg.isInstalled();
+
+        should(result).be.false();
+      });
+    });
+  });
+
+  describe('#needsInstall', () => {
+    it('should return true if the plugin package is not installed', () => {
+      pkg.isInstalled = sinon.stub().returns(false);
+      pkg.dbConfiguration = sinon.stub();
+
+      return pkg.needsInstall()
+        .then(result => {
+          should(result).be.true();
+          should(pkg.dbConfiguration)
+            .have.callCount(0);
+        });
+    });
+
+    it('should return true if no configuration is found in db', () => {
+      pkg.isInstalled = sinon.stub().returns(true);
+      pkg.dbConfiguration = sinon.stub().rejects(new Error('Not Found'));
+
+      return pkg.needsInstall()
+        .then(result => {
+          should(result).be.true();
+        });
+    });
+
+    it('should reject the promise if some unexpected error occurred', () => {
+      pkg.isInstalled = sinon.stub().returns(true);
+      pkg.dbConfiguration = sinon.stub().rejects(new Error('unexpected'));
+
+      return should(pkg.needsInstall()).be.rejectedWith('unexpected');
+    });
+
+    it('should return fails if the package is marked as deleted', () => {
+      pkg.isInstalled = sinon.stub().returns(true);
+      pkg.dbConfiguration = sinon.stub().resolves({deleted: true});
+
+      return pkg.needsInstall()
+        .then(result => {
+          should(result).be.false();
+        });
+    });
+
+    it('should rely on compareVersion to get the result', () => {
+      pkg.isInstalled = sinon.stub().returns(true);
+      pkg.dbConfiguration = sinon.stub().resolves({
+        version: 'db version'
+      });
+      pkg.localVersion = sinon.stub().returns('local version');
+
+      return PluginPackage.__with__({
+        compareVersions: sinon.stub().returns(-42)
+      })(() => {
+        return pkg.needsInstall()
+          .then(result => {
+            should(result).be.false();
+
+            should(PluginPackage.__get__('compareVersions'))
+              .be.calledOnce()
+              .be.calledWithExactly('db version', 'local version');
+          });
+      });
+    });
+  });
+
+  describe('#needsToBeDeleted', () => {
+    it('should immediately return fals if the plugin is not installed', () => {
+      pkg.isInstalled = sinon.stub().returns(false);
+      pkg.dbConfiguration = sinon.stub();
+
+      return pkg.needsToBeDeleted()
+        .then(result => {
+          should(result).be.false();
+          should(pkg.dbConfiguration).have.callCount(0);
+        });
+    });
+
+    it('should return false if no db configuration was found', () => {
+      pkg.isInstalled = sinon.stub().returns(true);
+      pkg.dbConfiguration = sinon.stub().rejects(new Error('Not Found'));
+
+      return pkg.needsToBeDeleted()
+        .then(result => {
+          should(result).be.false();
+        });
+    });
+
+    it('should reject the promise if some unexpected error occurred', () => {
+      pkg.isInstalled = sinon.stub().returns(true);
+      pkg.dbConfiguration = sinon.stub().rejects(new Error('unexpected'));
+
+      return should(pkg.needsToBeDeleted())
+        .be.rejectedWith('unexpected');
+    });
+
+    it('should return the deleted flag from the db', () => {
+      pkg.isInstalled = sinon.stub().returns(true);
+      pkg.dbConfiguration = sinon.stub().resolves({
+        deleted: 0
+      });
+
+      return pkg.needsToBeDeleted()
+        .then(result => {
+          should(result).be.false();
+        });
+    });
+  });
+
+  describe('#loccalVersion', () => {
+    it('should return the version from local package', () => {
+      return PluginPackage.__with__({
+        require: () => {
+          return {
+            version: 'version'
+          };
+        }
+      })(() => {
+        var result = pkg.localVersion();
+
+        should(result).be.exactly('version');
+      });
+    });
+  });
+
+  describe('#install', () => {
+    var
+      exec,
+      reset;
+
+    beforeEach(() => {
+      pkg.localVersion = sinon.stub().returns('version');
+      pkg.localConfiguration = sinon.stub().returns('local configuration');
+      pkg.updateDbConfiguration = sinon.stub().resolves();
+
+      exec = sinon.stub().yields(undefined, 'out');
+      reset = PluginPackage.__set__({
+        exec
+      });
+    });
+
+    afterEach(() => {
+      reset();
+    });
+
+    it('should allow installing a package from npm repos', () => {
+      return pkg.install()
+        .then(() => {
+          should(exec)
+            .be.calledOnce()
+            .be.calledWith('npm install plugin');
+
+          should(pkg.updateDbConfiguration)
+            .be.calledOnce();
+        });
+    });
+
+    it('should install a package from a local path', () => {
+      pkg.path = '/some/path';
+
+      return pkg.install()
+        .then(() => {
+          should(exec)
+            .be.calledOnce()
+            .be.calledWith('npm install /some/path');
+
+          should(pkg.updateDbConfiguration)
+            .be.calledOnce()
+            .be.calledWith('local configuration');
+        });
+    });
+
+    it('should install a package from an url', () => {
+      pkg.path = '/some/path';
+      pkg.url = 'http://some.url';
+
+      return pkg.install()
+        .then(() => {
+          should(exec)
+            .be.calledOnce()
+            .be.calledWith('npm install http://some.url');
+        });
+    });
+
+    it('should allow setting a version', () => {
+      pkg.version = 'version';
+
+      return pkg.install()
+        .then(() => {
+          should(exec)
+            .be.calledOnce()
+            .be.calledWith('npm install plugin@version');
+        })
+    });
+
+    it('should deal with commitish versions', () => {
+      pkg.url = 'https://github.com/some/repo.git';
+      pkg.version = 'version';
+
+      return pkg.install()
+        .then(() => {
+          should(exec)
+            .be.calledOnce()
+            .be.calledWith('npm install https://github.com/some/repo.git#version');
+        });
+    });
+
+    it('should not add the version if we install a package from a remote tar', () => {
+      pkg.url = 'http://some/tar.gz';
+      pkg.version = 'version';
+
+      return pkg.install()
+        .then(() => {
+          should(exec)
+            .be.calledOnce()
+            .be.calledWith('npm install http://some/tar.gz');
+        });
+    });
+
+    it('should reject the promise if npm failed', () => {
+      var error = new Error('error');
+
+      return PluginPackage.__with__({
+        exec: sinon.stub().yields(error)
+      })(() => {
+        return should(pkg.install())
+          .be.rejectedWith(error);
+      });
+    });
+  });
+
+  describe('#delete', () => {
+    it('should mark the package as deleted and remove the local installation dir', () => {
+      return PluginPackage.__with__({
+        rimraf: sinon.stub().yields()
+      })(() => {
+        return pkg.delete()
+          .then(() => {
+            should(kuzzle.internalEngine.createOrReplace)
+              .be.calledOnce()
+              .be.calledWithMatch('plugins', pkg.name, {deleted: true});
+
+            should(PluginPackage.__get__('rimraf'))
+              .be.calledOnce()
+              .be.calledWith(`${kuzzle.rootPath}/node_modules/${pkg.name}`);
+
+            should(pkg.deleted).be.true();
+          });
+      });
+    });
+  });
+
+  describe('#setConfigurationProperty', () => {
+    it('should update the configuration in ES' , () => {
+      pkg.dbConfiguration = sinon.stub().resolves({
+        config: {
+          foo: 'bar'
+        }
+      });
+      pkg.updateDbConfiguration = sinon.stub().resolve({ _source: 'ok' });
+
+      return pkg.setConfigurationProperty({
+        bar: 'baz'
+      })(() => {
+        should()
+      });
+
+    });
+  });
+
+
+});

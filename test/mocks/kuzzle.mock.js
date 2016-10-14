@@ -109,6 +109,8 @@ function KuzzleMock () {
 
   this.resetStorage = sinon.stub().resolves();
 
+  this.rootPath = '/kuzzle';
+
   this.router = {
     execute: sinon.stub().resolves(foo),
     initHttpRouter: sinon.spy(),

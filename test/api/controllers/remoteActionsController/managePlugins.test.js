@@ -3,7 +3,7 @@ var
   should = require('should'),
   rewire = require('rewire'),
   sinon = require('sinon'),
-  PluginPackageMock = require('../../../mocks/pluginPackage.mock'),
+  PluginPackageMock = require('../../../mocks/plugins/pluginPackage.mock'),
   RequestObject = require('kuzzle-common-objects').Models.requestObject,
   ManagePlugins = rewire('../../../../lib/api/controllers/remoteActions/managePlugins');
 
