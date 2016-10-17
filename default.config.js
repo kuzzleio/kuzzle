@@ -159,8 +159,7 @@ module.exports = {
     },
 
     garbageCollector: {
-      cleanInterval: 1000,
-      maxDocumentDeletion: 50
+      cleanInterval: 86400000
     }
   },
 

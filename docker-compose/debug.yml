@@ -11,7 +11,6 @@ kuzzle:
     - "..:/var/app"
     - "./scripts/run-dev.sh:/run.sh"
     - "./config:/config"
-    - "../../kuzzle-plugin-documents-garbage-collector:/var/kuzzle-plugin-documents-garbage-collector"
   ports:
     - "8080:8080"
   links:
