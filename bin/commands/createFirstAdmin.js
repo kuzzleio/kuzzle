@@ -60,7 +60,7 @@ function confirm (username, resetRoles) {
   return Promise.resolve(readlineSync.keyInYN(clcQuestion(msg)));
 }
 
-module.exports = function (options) {
+function commandCreateFirstAdmin (options) {
   var
     username,
     password,
@@ -121,4 +121,6 @@ module.exports = function (options) {
       console.error(clcError(err));
       process.exit(1);
     });
-};
+}
+
+module.exports = commandCreateFirstAdmin;

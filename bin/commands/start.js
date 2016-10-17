@@ -23,7 +23,7 @@ var
                 ▀████▀
                   ▀▀`;
 
-module.exports = function (options) {
+function commandStart (options) {
   var
     kuzzle = new Kuzzle(),
     error = string => options.parent.noColors ? string : clc.red(string),
@@ -101,4 +101,6 @@ module.exports = function (options) {
       console.error(err.stack);
       process.exit(1);
     });
-};
+}
+
+module.exports = commandStart;
