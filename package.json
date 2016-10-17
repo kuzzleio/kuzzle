@@ -42,7 +42,6 @@
     "geolib": "j33f/Geolib",
     "ioredis": "^2.2.0",
     "json-stable-stringify": "1.0.1",
-    "json-stringify-safe": "^5.0.1",
     "json2yaml": "^1.1.0",
     "jsonwebtoken": "^7.1.7",
     "kuzzle-common-objects": "^1.0.2",
