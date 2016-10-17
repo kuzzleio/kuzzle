@@ -166,6 +166,17 @@ module.exports = {
   },
   dump: {
     path: './dump/',
-    dateFormat: 'YYYYMMDD-HHmm'
+    dateFormat: 'YYYYMMDD-HHmm',
+    handledErrors: {
+      active: true,
+      whitelist: [
+        'Error',
+        'RangeError',
+        'TypeError',
+        'KuzzleError',
+        'InternalError',
+        'PluginImplementationError'
+      ]
+    }
   }
 };
