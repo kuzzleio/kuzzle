@@ -345,7 +345,9 @@ describe('plugins/packages/pluginPackage', () => {
       pkg.localConfiguration = sinon.stub().returns('local configuration');
       pkg.updateDbConfiguration = sinon.stub().resolves();
 
-      exec = sinon.stub().yields(undefined, 'out');
+      exec = sinon.stub().yields(undefined, 'plugin@1.0.0 node_modules/plugin\n' +
+        '├── lodash.create@3.1.1 (lodash._isiterateecall@3.0.9, lodash._basecreate@3.0.3, lodash._baseassign@3.2.0)\n' +
+        '└── glob@7.0.5 (path-is-absolute@1.0.1, inherits@2.0.3, fs.realpath@1.0.0, minimatch@3.0.3, once@1.4.0, inflight@1.0.6)\n');
       reset = PluginPackage.__set__({
         exec
       });
@@ -438,6 +440,42 @@ describe('plugins/packages/pluginPackage', () => {
         return should(pkg.install())
           .be.rejectedWith(error);
       });
+    });
+
+    it('should get the name and the version from npm install output and send a warning if the given name does not match', () => {
+      pkg.name = 'invalid';
+
+      return PluginPackage.__with__({
+        console: {
+          warn: sinon.spy()
+        }
+      })(() => {
+        return pkg.install()
+          .then(() => {
+            should(exec)
+              .be.calledOnce()
+              .be.calledWith('npm install invalid');
+
+            should(PluginPackage.__get__('console.warn'))
+              .be.calledOnce()
+              .be.calledWith('WARNING: Given plugin name "invalid" does not match its packages.json name "plugin".\n' +
+                'If you installed this plugin by other means than the CLI, please update Kuzzle configuration to use proper name "plugin".');
+
+            should(pkg.name).be.exactly('plugin');
+            should(pkg.version).be.exactly('1.0.0');
+          });
+      });
+    });
+
+    it('should get the name and the version and if not match, reject the promise if the plugins manager is init', () => {
+      pkg.name = 'invalid';
+      kuzzle.pluginsManager.isInit = true;
+
+      return should(pkg.install())
+        .be.rejectedWith(BadRequestError, {
+          message: 'WARNING: Given plugin name "invalid" does not match its packages.json name "plugin".\n' +
+          'If you installed this plugin by other means than the CLI, please update Kuzzle configuration to use proper name "plugin".'
+        });
     });
   });
 
