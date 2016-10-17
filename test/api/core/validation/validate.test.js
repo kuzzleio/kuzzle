@@ -42,10 +42,7 @@ describe('Test: validation.validate', () => {
     it('should return the modified requestObject if everything is valid and use _id if action is an update', () => {
       var
         validationPromiseStub = sandbox.spy(function () {
-          return Promise.resolve({
-            validation: true,
-            errorMessages: []
-          });
+          return Promise.resolve({validation: true, errorMessages: []});
         }),
         controllerName = 'write',
         actionName = 'update',
@@ -55,22 +52,14 @@ describe('Test: validation.validate', () => {
           collection: collectionName,
           controller: controllerName,
           action: actionName,
-          data: {
-            _id: id,
-            body: {
-              some: 'content'
-            }
-          }
+          data: {_id: id, body: {some: 'content'}}
         };
 
       validation.validationPromise = validationPromiseStub;
 
       return validation.validate(requestObject)
         .then(result => {
-          should(result).be.deepEqual({
-            validation: true,
-            errorMessages: []
-          });
+          should(result).be.deepEqual({validation: true,errorMessages: []});
           should(validationPromiseStub.callCount).be.eql(1);
           should(validationPromiseStub.args[0][0]).be.deepEqual(requestObject);
           should(validationPromiseStub.args[0][1]).be.false();
@@ -80,10 +69,7 @@ describe('Test: validation.validate', () => {
     it('should return the modified requestObject if everything is valid', () => {
       var
         validationPromiseStub = sandbox.spy(function () {
-          return Promise.resolve({
-            validation: true,
-            errorMessages: []
-          });
+          return Promise.resolve({validation: true,errorMessages: []});
         }),
         controllerName = 'aController',
         actionName = 'anAction',
@@ -103,10 +89,7 @@ describe('Test: validation.validate', () => {
 
       return validation.validate(requestObject)
         .then(result => {
-          should(result).be.deepEqual({
-            validation: true,
-            errorMessages: []
-          });
+          should(result).be.deepEqual({validation: true, errorMessages: []});
           should(validationPromiseStub.callCount).be.eql(1);
           should(validationPromiseStub.args[0][0]).be.deepEqual(requestObject);
           should(validationPromiseStub.args[0][1]).be.false();
@@ -122,11 +105,7 @@ describe('Test: validation.validate', () => {
           collection: collectionName,
           controller: controllerName,
           action: actionName,
-          data: {
-            body: {
-              some: 'content'
-            }
-          }
+          data: {body: {some: 'content'}}
         };
 
       validation.validationPromise = sandbox.spy(function () {
@@ -179,11 +158,7 @@ describe('Test: validation.validate', () => {
           collection: collectionName,
           controller: controllerName,
           action: actionName,
-          data: {
-            body: {
-              some: 'content'
-            }
-          }
+          data: {body: {some: 'content'}}
         };
 
       (() => {
@@ -206,19 +181,14 @@ describe('Test: validation.validate', () => {
           collection: collectionName,
           controller: controllerName,
           action: actionName,
-          data: {
-            _id: id,
-            body: documentBody
-          }
+          data: {_id: id, body: documentBody}
         };
 
       validation.specification = {
         [indexName]: {
           [collectionName]: {
             strict: false,
-            fields: {
-              children: {}
-            },
+            fields: {children: {}},
             validators: null
           }
         }
@@ -250,10 +220,7 @@ describe('Test: validation.validate', () => {
           collection: collectionName,
           controller: controllerName,
           action: actionName,
-          data: {
-            _id: id,
-            body: documentBody
-          }
+          data: {_id: id, body: documentBody}
         };
 
       validation.specification = {};
@@ -280,19 +247,14 @@ describe('Test: validation.validate', () => {
           collection: collectionName,
           controller: controllerName,
           action: actionName,
-          data: {
-            _id: id,
-            body: documentBody
-          }
+          data: {_id: id, body: documentBody}
         };
 
       validation.specification = {
         [indexName]: {
           [collectionName]: {
             strict: false,
-            fields: {
-              children: {}
-            },
+            fields: {children: {}},
             validators: null
           }
         }
@@ -302,10 +264,7 @@ describe('Test: validation.validate', () => {
 
       return validation.validationPromise(requestObject, verbose)
         .then((result) => {
-          should(result).be.deepEqual({
-            errorMessages: {},
-            validation: true
-          });
+          should(result).be.deepEqual({errorMessages: {}, validation: true});
           should(recurseFieldValidationStub.callCount).be.eql(1);
           should(recurseFieldValidationStub.args[0][0]).be.eql(documentBody);
           should(typeof recurseFieldValidationStub.args[0][1]).be.eql('object');
@@ -322,9 +281,7 @@ describe('Test: validation.validate', () => {
         actionName = 'anAction',
         filterId = 'someFilter',
         testStub = sandbox.stub().resolves([filterId, 'anotherFilter']),
-        dsl = {
-          test: testStub
-        },
+        dsl = {test: testStub},
         id = 'anId',
         verbose = false,
         documentBody = {},
@@ -333,20 +290,13 @@ describe('Test: validation.validate', () => {
           collection: collectionName,
           controller: controllerName,
           action: actionName,
-          data: {
-            _id: id,
-            body: documentBody
-          }
+          data: {_id: id, body: documentBody}
         },
         specification = {
           [indexName]: {
             [collectionName]: {
               strict: true,
-              fields: {
-                children: {
-                  aField: 'validation'
-                }
-              },
+              fields: {children: {aField: 'validation'}},
               validators: filterId
             }
           }
@@ -380,32 +330,23 @@ describe('Test: validation.validate', () => {
         actionName = 'update',
         filterId = 'someFilter',
         testStub = sandbox.stub().resolves([filterId, 'anotherFilter']),
-        dsl = {
-          test: testStub
-        },
+        dsl = {test: testStub},
         id = 'anId',
         verbose = false,
-        documentBody = {
-          foo: 'barbar'
-        },
+        documentBody = {foo: 'barbar'},
         requestObject = {
           index: indexName,
           collection: collectionName,
           controller: controllerName,
           action: actionName,
-          data: {
-            _id: id,
-            body: documentBody
-          }
+          data: {_id: id, body: documentBody}
         };
 
       validation.specification = {
         [indexName]: {
           [collectionName]: {
             strict: true,
-            fields: {
-              children: {}
-            }
+            fields: {children: {}}
           }
         }
       };
@@ -443,21 +384,14 @@ describe('Test: validation.validate', () => {
           collection: collectionName,
           controller: controllerName,
           action: actionName,
-          data: {
-            _id: id,
-            body: documentBody
-          }
+          data: {_id: id, body: documentBody}
         };
 
       validation.specification = {
         [indexName]: {
           [collectionName]: {
             strict: true,
-            fields: {
-              children: {
-                aField: 'validation'
-              }
-            },
+            fields: {children: {aField: 'validation'}},
             validators: filterId
           }
         }
@@ -488,21 +422,14 @@ describe('Test: validation.validate', () => {
           collection: collectionName,
           controller: controllerName,
           action: actionName,
-          data: {
-            _id: id,
-            body: documentBody
-          }
+          data: {_id: id, body: documentBody}
         };
 
       validation.specification = {
         [indexName]: {
           [collectionName]: {
             strict: true,
-            fields: {
-              children: {
-                aField: 'validation'
-              }
-            },
+            fields: {children: {aField: 'validation'}},
             validators: filterId
           }
         }
@@ -528,21 +455,14 @@ describe('Test: validation.validate', () => {
           collection: collectionName,
           controller: controllerName,
           action: actionName,
-          data: {
-            _id: id,
-            body: documentBody
-          }
+          data: {_id: id, body: documentBody}
         };
 
       validation.specification = {
         [indexName]: {
           [collectionName]: {
             strict: true,
-            fields: {
-              children: {
-                aField: 'validation'
-              }
-            },
+            fields: {children: {aField: 'validation'}},
             validators: null
           }
         }
@@ -569,21 +489,14 @@ describe('Test: validation.validate', () => {
           collection: collectionName,
           controller: controllerName,
           action: actionName,
-          data: {
-            _id: id,
-            body: documentBody
-          }
+          data: {_id: id, body: documentBody}
         };
 
       validation.specification = {
         [indexName]: {
           [collectionName]: {
             strict: true,
-            fields: {
-              children: {
-                aField: 'validation'
-              }
-            },
+            fields: {children: {aField: 'validation'}},
             validators: null
           }
         }
@@ -594,10 +507,7 @@ describe('Test: validation.validate', () => {
 
       return validation.validationPromise(requestObject, verbose)
         .then((result) => {
-          should(result).be.deepEqual({
-            errorMessages: {},
-            validation: false
-          });
+          should(result).be.deepEqual({errorMessages: {}, validation: false});
           should(recurseFieldValidationStub.callCount).be.eql(1);
           should(recurseFieldValidationStub.args[0][0]).be.eql(documentBody);
           should(recurseFieldValidationStub.args[0][1]).be.deepEqual({aField: 'validation'});
@@ -622,21 +532,14 @@ describe('Test: validation.validate', () => {
           collection: collectionName,
           controller: controllerName,
           action: actionName,
-          data: {
-            _id: id,
-            body: documentBody
-          }
+          data: {_id: id, body: documentBody}
         };
 
       validation.specification = {
         [indexName]: {
           [collectionName]: {
             strict: true,
-            fields: {
-              children: {
-                aField: 'validation'
-              }
-            },
+            fields: {children: {aField: 'validation'}},
             validators: null
           }
         }
@@ -653,21 +556,11 @@ describe('Test: validation.validate', () => {
     it('should update document with defaults if fields are missing or null', () => {
       var
         isUpdate = false,
-        documentSubset = {
-          aField: {
-            anotherSubField: 'some value'
-          },
-          aDefaultField: null
-        },
+        documentSubset = {aField: {anotherSubField: 'some value'}, aDefaultField: null},
         collectionSpecSubset = {
           aField: {
             type: 'typeChildren',
-            children: {
-              aSubField: {
-                type: 'typeNoChild',
-                defaultValue: 'another default'
-              }
-            }
+            children: {aSubField: {type: 'typeNoChild', defaultValue: 'another default'}}
           },
           aDefaultField: {
             type: 'typeNoChild',
@@ -691,35 +584,17 @@ describe('Test: validation.validate', () => {
     it('should update document with defaults only if fields are null in write/update mode', () => {
       var
         isUpdate = true,
-        documentSubset = {
-          aField: {
-            anotherSubField: 'some value',
-            aSubField: null
-          }
-        },
+        documentSubset = {aField: {anotherSubField: 'some value',aSubField: null}},
         collectionSpecSubset = {
           aField: {
             type: 'typeChildren',
-            children: {
-              aSubField: {
-                type: 'typeNoChild',
-                defaultValue: 'another default'
-              }
-            }
+            children: {aSubField: {type: 'typeNoChild', defaultValue: 'another default'}}
           },
-          aDefaultField: {
-            type: 'typeNoChild',
-            defaultValue: 'some default'
-          },
-          aNormalField: {
-            type: 'typeNoChild'
-          }
+          aDefaultField: {type: 'typeNoChild', defaultValue: 'some default'},
+          aNormalField: {type: 'typeNoChild'}
         },
         expectedResult = {
-          aField: {
-            anotherSubField: 'some value',
-            aSubField: 'another default'
-          }
+          aField: {anotherSubField: 'some value', aSubField: 'another default'}
         };
 
       should(validation.recurseApplyDefault(isUpdate, documentSubset, collectionSpecSubset)).deepEqual(expectedResult);
@@ -730,47 +605,23 @@ describe('Test: validation.validate', () => {
         isUpdate = true,
         documentSubset = {
           aField: [
-            {
-              anotherSubField: 'some value',
-              aSubField: null
-            },
-            {
-              anotherSubField: 'some other value',
-              aSubField: null
-            }
+            {anotherSubField: 'some value', aSubField: null},
+            {anotherSubField: 'some other value', aSubField: null}
           ]
         },
         collectionSpecSubset = {
           aField: {
             type: 'typeChildren',
-            multivalues: {
-              value: true,
-            },
-            children: {
-              aSubField: {
-                type: 'typeNoChild',
-                defaultValue: 'another default'
-              }
-            }
+            multivalues: {value: true},
+            children: {aSubField: {type: 'typeNoChild', defaultValue: 'another default'}}
           },
-          aDefaultField: {
-            type: 'typeNoChild',
-            defaultValue: 'some default'
-          },
-          aNormalField: {
-            type: 'typeNoChild'
-          }
+          aDefaultField: {type: 'typeNoChild', defaultValue: 'some default'},
+          aNormalField: {type: 'typeNoChild'}
         },
         expectedResult = {
           aField: [
-            {
-              anotherSubField: 'some value',
-              aSubField: 'another default'
-            },
-            {
-              anotherSubField: 'some other value',
-              aSubField: 'another default'
-            }
+            {anotherSubField: 'some value', aSubField: 'another default'},
+            {anotherSubField: 'some other value', aSubField: 'another default'}
           ]
         };
 
