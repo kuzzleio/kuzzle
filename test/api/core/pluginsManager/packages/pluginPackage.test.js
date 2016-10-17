@@ -1,4 +1,5 @@
 var
+  BadRequestError = require('kuzzle-common-objects').Errors.badRequestError,
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
   rewire = require('rewire'),
@@ -79,6 +80,24 @@ describe('plugins/packages/pluginPackage', () => {
           });
           should(config).not.have.property('gitUrl');
           should(config).not.have.property('npmVersion');
+        });
+    });
+
+    it('should be back compatible with npmVersion and gitUrl notations', () => {
+      kuzzle.internalEngine.get.resolves({
+        _id: 'plugin',
+        _source: {
+          npmVersion: 'npmVersion',
+          gitUrl: 'gitUrl'
+        }
+      });
+
+      return pkg.dbConfiguration()
+        .then(config => {
+          should(config).match({
+            version: 'npmVersion',
+            url: 'gitUrl'
+          });
         });
     });
   });
@@ -186,7 +205,7 @@ describe('plugins/packages/pluginPackage', () => {
 
     it('should return false if no local configuration is found', () => {
       return PluginPackage.__with__({
-        require: () => { throw new Error('error') }
+        require: () => { throw new Error('error'); }
       })(() => {
         var result = pkg.isInstalled();
 
@@ -383,7 +402,7 @@ describe('plugins/packages/pluginPackage', () => {
           should(exec)
             .be.calledOnce()
             .be.calledWith('npm install plugin@version');
-        })
+        });
     });
 
     it('should deal with commitish versions', () => {
@@ -450,14 +469,122 @@ describe('plugins/packages/pluginPackage', () => {
           foo: 'bar'
         }
       });
-      pkg.updateDbConfiguration = sinon.stub().resolve({ _source: 'ok' });
+      pkg.updateDbConfiguration = sinon.stub().resolves({ _source: 'ok' });
 
       return pkg.setConfigurationProperty({
         bar: 'baz'
-      })(() => {
-        should()
-      });
+      })
+        .then(() => {
+          should(pkg.updateDbConfiguration)
+            .be.calledOnce()
+            .be.calledWithMatch({
+              foo: 'bar',
+              bar: 'baz'
+            });
+        });
+    });
 
+    it('should do nothing if the plugin package is marked for deletion', () => {
+      pkg.dbConfiguration = sinon.stub().resolves({ deleted: true });
+      pkg.updateDbConfiguration = sinon.spy();
+
+      return pkg.setConfigurationProperty({
+        foo: 'bar'
+      })
+        .then(response => {
+          should(response).match({
+            deleted: true
+          });
+          should(pkg.updateDbConfiguration)
+            .have.callCount(0);
+        });
+    });
+  });
+
+  describe('#unsetConfigurationProperty', () => {
+    it('should update the configuration in db', () => {
+      pkg.dbConfiguration = sinon.stub().resolves({
+        config: {
+          foo: 'bar'
+        }
+      });
+      pkg.updateDbConfiguration = sinon.stub().resolves({_source: 'ok'});
+
+      return pkg.unsetConfigurationProperty('foo')
+        .then(() => {
+          should(pkg.updateDbConfiguration)
+            .be.calledOnce();
+          should(pkg.updateDbConfiguration.firstCall.args[0])
+            .not.have.property('foo');
+        });
+    });
+
+    it('should reject the promise if the given key does not exist', () => {
+      pkg.dbConfiguration = sinon.stub().resolves({
+        config: {}
+      });
+      return should(pkg.unsetConfigurationProperty('foo'))
+        .be.rejectedWith(BadRequestError, {message: 'Property foo not found in plugin configuration'});
+    });
+
+    it('should do nothing if the plugin package is marked for deletion', () => {
+      pkg.dbConfiguration = sinon.stub().resolves({deleted: true});
+      pkg.updateDbConfiguration = sinon.spy();
+
+      return pkg.unsetConfigurationProperty('koo')
+        .then(response => {
+          should(response).match({deleted: true});
+          should(pkg.updateDbConfiguration)
+            .have.callCount(0);
+        });
+
+    });
+  });
+
+  describe('#importConfigurationFromFile', () => {
+    it('should reject the promise if the file does not exist', () => {
+      var error = new Error('test');
+
+      return PluginPackage.__with__({
+        fs: {
+          readFileSync: sinon.stub().throws(error)
+        }
+      })(() => {
+        return should(pkg.importConfigurationFromFile('path'))
+          .be.rejectedWith(BadRequestError, {message: 'Error opening file path: test'});
+      });
+    });
+
+    it('should reject the promise if the file does not contain some valid JSON', () => {
+      return PluginPackage.__with__({
+        fs: {
+          readFileSync: sinon.stub().returns('{ invalid json }')
+        }
+      })(() => {
+        return (should(pkg.importConfigurationFromFile('path')))
+          .be.rejectedWith(BadRequestError, {message: 'Unable to parse path: SyntaxError: Unexpected token  '});
+      });
+    });
+
+    it('should update the db configuration using the file content', () => {
+      pkg.updateDbConfiguration = sinon.stub().resolves({_source: 'ok'});
+
+      return PluginPackage.__with__({
+        fs: {
+          readFileSync: sinon.stub().returns('{"foo":"bar"}')
+        }
+      })(() => {
+        return pkg.importConfigurationFromFile('path')
+          .then(result => {
+            should(result).be.exactly('ok');
+
+            should(pkg.updateDbConfiguration)
+              .be.calledOnce()
+              .be.calledWithMatch({
+                foo: 'bar'
+              });
+          });
+      });
     });
   });
 
