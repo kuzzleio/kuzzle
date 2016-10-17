@@ -4,15 +4,13 @@ var
   should = require('should');
 
 describe('Test: validation/types/anything', () => {
-  it('should derivate from BaseType', () => {
-    var anythingType = new AnythingType();
+  var anythingType = new AnythingType();
 
+  it('should derivate from BaseType', () => {
     should(BaseType.prototype.isPrototypeOf(anythingType)).be.true();
   });
 
   it('should construct properly', () => {
-    var anythingType = new AnythingType();
-
     should(typeof anythingType.typeName).be.eql('string');
     should(typeof anythingType.allowChildren).be.eql('boolean');
     should(Array.isArray(anythingType.allowedTypeOptions)).be.true();
@@ -27,16 +25,12 @@ describe('Test: validation/types/anything', () => {
 
   describe('#validate', () => {
     it('should always return true', () => {
-      var anythingType = new AnythingType();
-
       should(anythingType.validate()).be.true();
     });
   });
 
   describe('#validateFieldSpecification', () => {
     it('should always return true', () => {
-      var anythingType = new AnythingType();
-
       should(anythingType.validateFieldSpecification()).be.true();
     });
   });

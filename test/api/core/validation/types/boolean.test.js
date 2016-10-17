@@ -4,15 +4,13 @@ var
   should = require('should');
 
 describe('Test: validation/types/boolean', () => {
-  it('should derivate from BaseType', () => {
-    var booleanType = new BooleanType();
+  var booleanType = new BooleanType();
 
+  it('should derivate from BaseType', () => {
     should(BaseType.prototype.isPrototypeOf(booleanType)).be.true();
   });
 
   it('should construct properly', () => {
-    var booleanType = new BooleanType();
-
     should(typeof booleanType.typeName).be.eql('string');
     should(typeof booleanType.allowChildren).be.eql('boolean');
     should(Array.isArray(booleanType.allowedTypeOptions)).be.true();
@@ -28,7 +26,6 @@ describe('Test: validation/types/boolean', () => {
   describe('#validate', () => {
     it('should return true if fieldValue is a boolean', () => {
       var
-        booleanType = new BooleanType(),
         typeOptions = {},
         fieldValue = true,
         errorMessages = [];
@@ -38,7 +35,6 @@ describe('Test: validation/types/boolean', () => {
 
     it('should return false if fieldValue is not a boolean', () => {
       var
-        booleanType = new BooleanType(),
         typeOptions = {},
         fieldValue = 'string',
         errorMessages = [];
@@ -50,8 +46,6 @@ describe('Test: validation/types/boolean', () => {
 
   describe('#validateFieldSpecification', () => {
     it('should always return true', () => {
-      var booleanType = new BooleanType();
-
       should(booleanType.validateFieldSpecification()).be.true();
     });
   });

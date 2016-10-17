@@ -4,15 +4,13 @@ var
   should = require('should');
 
 describe('Test: validation/types/enum', () => {
-  it('should derivate from BaseType', () => {
-    var enumType = new EnumType();
+  var enumType = new EnumType();
 
+  it('should derivate from BaseType', () => {
     should(BaseType.prototype.isPrototypeOf(enumType)).be.true();
   });
 
   it('should construct properly', () => {
-    var enumType = new EnumType();
-
     should(typeof enumType.typeName).be.eql('string');
     should(typeof enumType.allowChildren).be.eql('boolean');
     should(Array.isArray(enumType.allowedTypeOptions)).be.true();
@@ -26,14 +24,42 @@ describe('Test: validation/types/enum', () => {
   });
 
   describe('#validate', () => {
-    /**
-     * TODO
-     */
+    var typeOptions = {
+      values: ['a string', 'another string', 'one more string']
+    };
+
+    it('should return true if fieldValue has a valid value', () => {
+      should(enumType.validate(typeOptions, 'another string')).be.true();
+    });
+
+    it('should return false if the value is not valid', () => {
+      var errorMessage = [];
+
+      should(enumType.validate(typeOptions, 'not the string you are looking for', errorMessage)).be.false();
+      should(errorMessage).be.deepEqual([`The field only accepts following values: "${typeOptions.values.join(', ')}".`]);
+    });
+
+    it('should return false if the value is not valid', () => {
+      var errorMessage = [];
+
+      should(enumType.validate(typeOptions, {not: 'a string'}, errorMessage)).be.false();
+      should(errorMessage).be.deepEqual(['The field must be a string.']);
+    });
   });
 
   describe('#validateFieldSpecification', () => {
-    /**
-     * TODO
-     */
+    it('should return false if no values are provided', () => {
+      should(enumType.validateFieldSpecification({values: []})).be.false();
+    });
+
+    it('should return false if a value is not a string', () => {
+      should(enumType.validateFieldSpecification({values: [true, 42, 'a string']})).be.false();
+    });
+
+    it('should return true if all provided values are strings', () => {
+      should(enumType.validateFieldSpecification({
+        values: ['a string', 'another string', 'one more string']
+      })).be.true();
+    });
   });
 });
