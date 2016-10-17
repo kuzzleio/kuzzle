@@ -9,6 +9,10 @@ var
   ResponseObject = require('kuzzle-common-objects').Models.responseObject,
   PrepareDb = rewire('../../../../lib/api/controllers/remoteActions/prepareDb');
 
+/**
+ * TODO test for validation
+ */
+
 describe('Test: Prepare database', () => {
   var
     kuzzle;
