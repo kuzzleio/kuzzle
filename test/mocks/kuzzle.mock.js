@@ -71,6 +71,9 @@ function KuzzleMock () {
   this.services = {
     list: {
       storageEngine: {
+        get: sinon.stub().resolves({
+          _source: foo
+        }),
         getMapping: sinon.stub().resolves(foo),
         listIndexes: sinon.stub().resolves({indexes: ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i']}),
         create: sinon.stub().resolves(foo),

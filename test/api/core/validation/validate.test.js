@@ -5,7 +5,7 @@ var
   Validation = rewire('../../../../lib/api/core/validation'),
   KuzzleMock = require('../../../mocks/kuzzle.mock');
 
-describe.only('Test: validation.validate', () => {
+describe('Test: validation.validate', () => {
   var
     validation,
     sandbox = sinon.sandbox.create(),
@@ -13,11 +13,26 @@ describe.only('Test: validation.validate', () => {
     checkAllowedProperties = Validation.__get__('checkAllowedProperties'),
     kuzzle,
     indexName = 'anIndex',
-    collectionName = 'aCollection';
+    collectionName = 'aCollection',
+    typeValidateStub = sandbox.stub(),
+    typeChildren = {
+      typeName: 'typeChildren',
+      allowChildren: true,
+      validate: typeValidateStub,
+      validateFieldSpecification: () => {},
+      getStrictness: () => true
+    },
+    typeNoChild = {
+      typeName: 'typeNoChild',
+      allowChildren: false,
+      validate: typeValidateStub,
+      validateFieldSpecification: () => {}
+    };
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
     validation = new Validation(kuzzle);
+    [typeChildren, typeNoChild].forEach(type => validation.addType(type));
     sandbox.reset();
     Validation.__set__('manageErrorMessage', manageErrorMessage);
     Validation.__set__('checkAllowedProperties', checkAllowedProperties);
@@ -201,7 +216,9 @@ describe.only('Test: validation.validate', () => {
         [indexName]: {
           [collectionName]: {
             strict: false,
-            fields: {},
+            fields: {
+              children: {}
+            },
             validators: null
           }
         }
@@ -214,11 +231,10 @@ describe.only('Test: validation.validate', () => {
           should(result).be.deepEqual(requestObject);
           should(recurseFieldValidationStub.callCount).be.eql(1);
           should(recurseFieldValidationStub.args[0][0]).be.eql(documentBody);
-          should(recurseFieldValidationStub.args[0][1]).be.eql(null);
-          should(typeof recurseFieldValidationStub.args[0][2]).be.eql('undefined');
-          should(recurseFieldValidationStub.args[0][3]).be.false();
-          should(recurseFieldValidationStub.args[0][4]).be.eql([]);
-          should(recurseFieldValidationStub.args[0][5]).be.eql(verbose);
+          should(typeof recurseFieldValidationStub.args[0][1]).be.eql('object');
+          should(recurseFieldValidationStub.args[0][2]).be.false();
+          should(recurseFieldValidationStub.args[0][3]).be.eql([]);
+          should(recurseFieldValidationStub.args[0][4]).be.eql(verbose);
         });
     });
     it('should return a validation if there is no specification', () => {
@@ -274,7 +290,9 @@ describe.only('Test: validation.validate', () => {
         [indexName]: {
           [collectionName]: {
             strict: false,
-            fields: {},
+            fields: {
+              children: {}
+            },
             validators: null
           }
         }
@@ -290,11 +308,10 @@ describe.only('Test: validation.validate', () => {
           });
           should(recurseFieldValidationStub.callCount).be.eql(1);
           should(recurseFieldValidationStub.args[0][0]).be.eql(documentBody);
-          should(recurseFieldValidationStub.args[0][1]).be.eql(null);
-          should(typeof recurseFieldValidationStub.args[0][2]).be.eql('undefined');
-          should(recurseFieldValidationStub.args[0][3]).be.false();
-          should(recurseFieldValidationStub.args[0][4]).be.eql({});
-          should(recurseFieldValidationStub.args[0][5]).be.eql(verbose);
+          should(typeof recurseFieldValidationStub.args[0][1]).be.eql('object');
+          should(recurseFieldValidationStub.args[0][2]).be.false();
+          should(recurseFieldValidationStub.args[0][3]).be.eql({});
+          should(recurseFieldValidationStub.args[0][4]).be.eql(verbose);
         });
     });
 
@@ -344,16 +361,67 @@ describe.only('Test: validation.validate', () => {
           should(result).be.deepEqual(requestObject);
           should(recurseFieldValidationStub.callCount).be.eql(1);
           should(recurseFieldValidationStub.args[0][0]).be.deepEqual(documentBody);
-          should(recurseFieldValidationStub.args[0][1]).be.eql(null);
-          should(recurseFieldValidationStub.args[0][2]).be.eql(specification[indexName][collectionName].fields.children);
-          should(recurseFieldValidationStub.args[0][3]).be.true();
-          should(recurseFieldValidationStub.args[0][4]).be.eql([]);
-          should(recurseFieldValidationStub.args[0][5]).be.eql(verbose);
+          should(recurseFieldValidationStub.args[0][1]).be.deepEqual(specification[indexName][collectionName].fields.children);
+          should(recurseFieldValidationStub.args[0][2]).be.true();
+          should(recurseFieldValidationStub.args[0][3]).be.eql([]);
+          should(recurseFieldValidationStub.args[0][4]).be.eql(verbose);
           should(testStub.callCount).be.eql(1);
           should(testStub.args[0][0]).be.deepEqual(indexName);
           should(testStub.args[0][1]).be.deepEqual(collectionName);
           should(testStub.args[0][2]).be.deepEqual(documentBody);
           should(testStub.args[0][3]).be.deepEqual(id);
+        });
+    });
+
+    it('should trigger all validation if specification enables them', () => {
+      var
+        recurseFieldValidationStub = sandbox.stub().returns(true),
+        controllerName = 'write',
+        actionName = 'update',
+        filterId = 'someFilter',
+        testStub = sandbox.stub().resolves([filterId, 'anotherFilter']),
+        dsl = {
+          test: testStub
+        },
+        id = 'anId',
+        verbose = false,
+        documentBody = {
+          foo: 'barbar'
+        },
+        requestObject = {
+          index: indexName,
+          collection: collectionName,
+          controller: controllerName,
+          action: actionName,
+          data: {
+            _id: id,
+            body: documentBody
+          }
+        };
+
+      validation.specification = {
+        [indexName]: {
+          [collectionName]: {
+            strict: true,
+            fields: {
+              children: {}
+            }
+          }
+        }
+      };
+
+      validation.recurseFieldValidation = recurseFieldValidationStub;
+      validation.dsl = dsl;
+
+      return validation.validationPromise(requestObject, verbose)
+        .then((result) => {
+          should(result).be.deepEqual(requestObject);
+          should(recurseFieldValidationStub.callCount).be.eql(1);
+          should(recurseFieldValidationStub.args[0][0]).be.deepEqual(documentBody);
+          should(recurseFieldValidationStub.args[0][1]).be.deepEqual({});
+          should(recurseFieldValidationStub.args[0][2]).be.true();
+          should(recurseFieldValidationStub.args[0][3]).be.eql([]);
+          should(recurseFieldValidationStub.args[0][4]).be.eql(verbose);
         });
     });
 
@@ -532,11 +600,10 @@ describe.only('Test: validation.validate', () => {
           });
           should(recurseFieldValidationStub.callCount).be.eql(1);
           should(recurseFieldValidationStub.args[0][0]).be.eql(documentBody);
-          should(recurseFieldValidationStub.args[0][1]).be.eql(null);
-          should(recurseFieldValidationStub.args[0][2]).be.deepEqual({aField: 'validation'});
-          should(recurseFieldValidationStub.args[0][3]).be.true();
-          should(recurseFieldValidationStub.args[0][4]).be.eql({});
-          should(recurseFieldValidationStub.args[0][5]).be.eql(verbose);
+          should(recurseFieldValidationStub.args[0][1]).be.deepEqual({aField: 'validation'});
+          should(recurseFieldValidationStub.args[0][2]).be.true();
+          should(recurseFieldValidationStub.args[0][3]).be.eql({});
+          should(recurseFieldValidationStub.args[0][4]).be.eql(verbose);
           should(manageErrorMessageStub.callCount).be.eql(1);
           should(manageErrorMessageStub.args[0][2]).be.eql('The document validation is strict; it can not add unspecified sub-fields.');
         });
@@ -580,8 +647,137 @@ describe.only('Test: validation.validate', () => {
       return validation.validationPromise(requestObject, verbose)
         .should.rejectedWith('not_strictness');
     });
+  });
+
+  describe('#recurseApplyDefault', () => {
+    it('should update document with defaults if fields are missing or null', () => {
+      var
+        isUpdate = false,
+        documentSubset = {
+          aField: {
+            anotherSubField: 'some value'
+          },
+          aDefaultField: null
+        },
+        collectionSpecSubset = {
+          aField: {
+            type: 'typeChildren',
+            children: {
+              aSubField: {
+                type: 'typeNoChild',
+                defaultValue: 'another default'
+              }
+            }
+          },
+          aDefaultField: {
+            type: 'typeNoChild',
+            defaultValue: 'some default'
+          },
+          aNormalField: {
+            type: 'typeNoChild'
+          }
+        },
+        expectedResult = {
+          aField: {
+            anotherSubField: 'some value',
+            aSubField: 'another default'
+          },
+          aDefaultField: 'some default'
+        };
+
+      should(validation.recurseApplyDefault(isUpdate, documentSubset, collectionSpecSubset)).deepEqual(expectedResult);
+    });
+
+    it('should update document with defaults only if fields are null in write/update mode', () => {
+      var
+        isUpdate = true,
+        documentSubset = {
+          aField: {
+            anotherSubField: 'some value',
+            aSubField: null
+          }
+        },
+        collectionSpecSubset = {
+          aField: {
+            type: 'typeChildren',
+            children: {
+              aSubField: {
+                type: 'typeNoChild',
+                defaultValue: 'another default'
+              }
+            }
+          },
+          aDefaultField: {
+            type: 'typeNoChild',
+            defaultValue: 'some default'
+          },
+          aNormalField: {
+            type: 'typeNoChild'
+          }
+        },
+        expectedResult = {
+          aField: {
+            anotherSubField: 'some value',
+            aSubField: 'another default'
+          }
+        };
+
+      should(validation.recurseApplyDefault(isUpdate, documentSubset, collectionSpecSubset)).deepEqual(expectedResult);
+    });
+
+    it('should update document with defined defaults in multivalued fields', () => {
+      var
+        isUpdate = true,
+        documentSubset = {
+          aField: [
+            {
+              anotherSubField: 'some value',
+              aSubField: null
+            },
+            {
+              anotherSubField: 'some other value',
+              aSubField: null
+            }
+          ]
+        },
+        collectionSpecSubset = {
+          aField: {
+            type: 'typeChildren',
+            multivalues: {
+              value: true,
+            },
+            children: {
+              aSubField: {
+                type: 'typeNoChild',
+                defaultValue: 'another default'
+              }
+            }
+          },
+          aDefaultField: {
+            type: 'typeNoChild',
+            defaultValue: 'some default'
+          },
+          aNormalField: {
+            type: 'typeNoChild'
+          }
+        },
+        expectedResult = {
+          aField: [
+            {
+              anotherSubField: 'some value',
+              aSubField: 'another default'
+            },
+            {
+              anotherSubField: 'some other value',
+              aSubField: 'another default'
+            }
+          ]
+        };
+
+      should(validation.recurseApplyDefault(isUpdate, documentSubset, collectionSpecSubset)).deepEqual(expectedResult);
+    });
     /**
-     * TODO (update case)
+     * TODO
      */
   });
 
