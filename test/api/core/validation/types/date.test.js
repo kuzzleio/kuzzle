@@ -5,7 +5,7 @@ var
   sinon = require('sinon'),
   should = require('should');
 
-describe.only('Test: validation/types/date', () => {
+describe('Test: validation/types/date', () => {
   'use strict';
   var
     dateType = new DateType(),
@@ -104,7 +104,51 @@ describe.only('Test: validation/types/date', () => {
       should(dateType.validate(typeOptions, '1234567890', [])).be.true();
     });
 
-    it('should return true if the date is after the min date', () => {
+    it('should return false if the date is before the min date', () => {
+      var
+        errorMessages = [],
+        typeOptions = {
+          formats: ['epoch_millis'],
+          range: {min: {}}
+        };
+
+      DateType.__set__('formatMap', {
+        epoch_millis: formatStub
+      });
+      isValidStub.returns(true);
+      isBeforeStub.returns(true);
+      formatStub.returns({
+        isValid: isValidStub,
+        isBefore: isBeforeStub
+      });
+
+      should(dateType.validate(typeOptions, '1234567890', errorMessages)).be.false();
+      should(errorMessages).be.deepEqual(['The provided date is before the defined minimum.']);
+    });
+
+    it('should call moment.utc if min equals the string "NOW"', () => {
+      var
+        typeOptions = {
+          formats: ['epoch_millis'],
+          range: {min: 'NOW'}
+        };
+
+      DateType.__set__('formatMap', {
+        epoch_millis: formatStub
+      });
+      utcStub.returns({});
+      isValidStub.returns(true);
+      isBeforeStub.returns(false);
+      formatStub.returns({
+        isValid: isValidStub,
+        isBefore: isBeforeStub
+      });
+
+      should(dateType.validate(typeOptions, '1234567890', [])).be.true();
+      should(utcStub.callCount).be.eql(1);
+    });
+
+    it('should return true if the date is before the max date', () => {
       var
         typeOptions = {
           formats: ['epoch_millis'],
@@ -118,6 +162,53 @@ describe.only('Test: validation/types/date', () => {
       DateType.__set__('formatMap', {
         epoch_millis: formatStub
       });
+      isValidStub.returns(true);
+      isBeforeStub.returns(false);
+      formatStub.returns({
+        isValid: isValidStub
+      });
+
+      should(dateType.validate(typeOptions, '1234567890', [])).be.true();
+    });
+
+    it('should return false if the date is after the max date', () => {
+      var
+        errorMessages = [],
+        typeOptions = {
+          formats: ['epoch_millis'],
+          range: {
+            max: {
+              isBefore: isBeforeStub
+            }
+          }
+        };
+
+      DateType.__set__('formatMap', {
+        epoch_millis: formatStub
+      });
+      isValidStub.returns(true);
+      isBeforeStub.returns(true);
+      formatStub.returns({
+        isValid: isValidStub
+      });
+
+      should(dateType.validate(typeOptions, '1234567890', errorMessages)).be.false();
+      should(errorMessages).be.deepEqual(['The provided date is after the defined maximum.']);
+    });
+
+    it('should call moment.utc if max equals the string "NOW"', () => {
+      var
+        typeOptions = {
+          formats: ['epoch_millis'],
+          range: {
+            max: 'NOW'
+          }
+        };
+
+      DateType.__set__('formatMap', {
+        epoch_millis: formatStub
+      });
+      utcStub.returns({isBefore: isBeforeStub});
       isValidStub.returns(true);
       isBeforeStub.returns(false);
       formatStub.returns({

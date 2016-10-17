@@ -5,7 +5,7 @@ var
   Validation = rewire('../../../../lib/api/core/validation'),
   KuzzleMock = require('../../../mocks/kuzzle.mock');
 
-describe('Test: validation.validate', () => {
+describe.only('Test: validation.validate', () => {
   var
     validation,
     sandbox = sinon.sandbox.create(),

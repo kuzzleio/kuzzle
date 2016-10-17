@@ -25,8 +25,15 @@ describe('Test: validation/types/object', () => {
   });
 
   describe('#validate', () => {
-    it('should always return true', () => {
-      should(objectType.validate()).be.true();
+    it('should return true if the value is an object', () => {
+      should(objectType.validate({}, {})).be.true();
+    });
+
+    it('should return false if the value is not an object', () => {
+      var errorMessages = [];
+
+      should(objectType.validate({}, 'a string', errorMessages)).be.false();
+      should(errorMessages).be.deepEqual(['The value must be an object.']);
     });
   });
 
