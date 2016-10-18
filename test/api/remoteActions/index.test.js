@@ -63,7 +63,78 @@ describe('Tests: api/remoteActions/index.js', () => {
         should(spy).have.callCount(6);
       });
     });
+  });
 
+  describe('#initActions - managePlugins timeoutCB', () => {
+    it('should set a custom timeoutCB for the managePlugins action', () => {
+      var action = {
+        foo: 'bar',
+        timeout: 1000,
+        initTimeout: sinon.spy()
+      };
+
+      RemoteActions.__with__({
+        Action: sinon.stub().returns(action),
+        console: {
+          error: sinon.spy()
+        },
+        process: {
+          exit: sinon.spy(),
+          stdout: {
+            write: sinon.spy()
+          }
+        }
+      })(() => {
+        var
+          context = {actions: {}},
+          initActions = RemoteActions.__get__('initActions'),
+          managePluginsArgs,
+          timeoutCB;
+
+        initActions.call(context);
+
+        should(RemoteActions.__get__('Action'))
+          .be.have.callCount(6);
+
+        managePluginsArgs = RemoteActions.__get__('Action').getCall(4).args[0];
+        should(managePluginsArgs).match({
+          timeout: 1000
+        });
+
+        timeoutCB = managePluginsArgs.timeOutCB;
+        should(timeoutCB)
+          .be.an.instanceOf(Function);
+
+        // first call - should init maxTimeout and spent
+        timeoutCB.call(action);
+
+        should(action.timeout).be.exactly(1000);
+        should(action.maxTimeout).be.exactly(5 * 60 * 1000);
+        should(action.spent).be.exactly(action.timeout * 2);
+        should(RemoteActions.__get__('process.stdout.write'))
+          .be.calledOnce()
+          .be.calledWith('.');
+        should(RemoteActions.__get__('console.error'))
+          .have.callCount(0);
+
+        // second call after max timeout is reached
+        action.spent = (5 * 60 * 1000);
+        timeoutCB.call(action);
+
+        should(action.spent).be.exactly(5 * 60 * 1000 + action.timeout);
+        // no additional call on process.stdout.write
+        should(RemoteActions.__get__('process.stdout.write'))
+          .be.calledOnce()
+          .be.calledWith('.');
+        should(RemoteActions.__get__('console.error'))
+          .be.calledOnce()
+          .be.calledWith('No response from Kuzzle within ̀300s. Exiting');
+        should(RemoteActions.__get__('process.exit'))
+          .be.calledOnce()
+          .be.calledWith(1);
+
+      });
+    });
   });
 
   describe('#do', () => {
@@ -140,6 +211,27 @@ describe('Tests: api/remoteActions/index.js', () => {
 
     });
 
+    it('should output the error to the console if any', () => {
+      var
+        error = new Error('test'),
+        context = {
+          actions: {
+            action: {
+              onListenCB: sinon.spy()
+            }
+          }
+        };
+
+      kuzzle.internalEngine.init.rejects(error);
+
+      return remoteActions.do.call(context, 'action', 'data', {debug: true})
+        .catch(err => {
+          should(err).be.exactly(error);
+          should(RemoteActions.__get__('console.error'))
+            .be.calledOnce()
+            .be.calledWith(error.stack);
+        });
+    });
   });
 
 });

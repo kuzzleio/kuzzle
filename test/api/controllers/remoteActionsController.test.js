@@ -1,83 +1,159 @@
 var
+  rewire = require('rewire'),
   should = require('should'),
   sinon = require('sinon'),
-  sandbox = sinon.sandbox.create(),
-  Kuzzle = require.main.require('lib/api/kuzzle'),
-  RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
-  ResponseObject = require.main.require('kuzzle-common-objects').Models.responseObject,
-  RemoteActionsController = require.main.require('lib/api/controllers/remoteActionsController');
+  BadRequestError = require('kuzzle-common-objects').Errors.badRequestError,
+  KuzzleMock = require('../../mocks/kuzzle.mock'),
+  NotFoundError = require('kuzzle-common-objects').Errors.notFoundError,
+  RemoteActionsController = rewire('../../../lib/api/controllers/remoteActionsController');
 
-describe('Test: remote actions controller', () => {
+describe('lib/api/controllers/remoteActionsController', () => {
   var
     kuzzle,
-    oldProcessExit = process.exit,
-    remoteActionsController,
-    brokerInvoked,
-    requestId,
-    responseObject;
-
-  before(() => {
-    process.exit = () => true;
-
-    kuzzle = new Kuzzle();
-    remoteActionsController = new RemoteActionsController(kuzzle);
-  });
-
-  after(() => {
-    process.exit = oldProcessExit;
-  });
+    remoteActions,
+    reset,
+    cleanDbStub,
+    clearCacheStub,
+    managePluginsStub,
+    dataStub;
 
   beforeEach(() => {
-    brokerInvoked = false;
-    requestId = null;
-    responseObject = null;
-    sandbox.stub(kuzzle.internalEngine, 'get').resolves({});
-    return kuzzle.services.init({whitelist: []})
-      .then(() => {
-        sandbox.stub(kuzzle.services.list.broker, 'send', (rid, res) => {
-          brokerInvoked = true;
-          requestId = rid;
-          responseObject = res;
-        });
-      });
+    var
+      requireMock = sinon.stub();
+
+    cleanDbStub = sinon.stub();
+    clearCacheStub = sinon.stub();
+    managePluginsStub = sinon.stub();
+    dataStub = sinon.stub();
+
+    requireMock.withArgs('./remoteActions/cleanDb').returns(() => cleanDbStub);
+    requireMock.withArgs('./remoteActions/clearCache').returns(() => clearCacheStub);
+    requireMock.withArgs('./remoteActions/managePlugins').returns(() => managePluginsStub);
+    requireMock.withArgs('./remoteActions/data').returns(() => dataStub);
+
+    kuzzle = new KuzzleMock();
+
+    reset = RemoteActionsController.__set__({
+      require: requireMock,
+      ResponseObject: sinon.spy()
+    });
+    remoteActions = new RemoteActionsController(kuzzle);
   });
 
   afterEach(() => {
-    sandbox.restore();
+    reset();
   });
 
-  it('should fail if there is no action given', () => {
-    var request = new RequestObject({controller: 'remoteActions', action: null, body: {}});
+  describe('#init', () => {
+    it('should set the actions and register itself to Kuzzle broker', () => {
+      remoteActions.init();
 
-    remoteActionsController.onListenCB(request);
-    should(brokerInvoked).be.true();
-    should(requestId).be.eql(request.requestId);
-    should(responseObject).be.instanceOf(ResponseObject);
-    should(responseObject.status).be.eql(400);
-    should(responseObject.error.message).be.eql('No action given.');
+      should(remoteActions.actions.adminExists)
+        .be.exactly(kuzzle.funnel.controllers.admin.adminExists);
+      should(remoteActions.actions.createFirstAdmin)
+        .be.exactly(kuzzle.funnel.controllers.admin.createFirstAdmin);
+      should(remoteActions.actions.cleanDb)
+        .be.exactly(cleanDbStub);
+      should(remoteActions.actions.clearCache)
+        .be.exactly(clearCacheStub);
+      should(remoteActions.actions.managePlugins)
+        .be.exactly(managePluginsStub);
+      should(remoteActions.actions.data)
+        .be.exactly(dataStub);
+
+      should(kuzzle.services.list.broker.listen)
+        .be.calledOnce()
+        .be.calledWith(kuzzle.config.queues.remoteActionsQueue, remoteActions.onListenCB);
+
+      should(kuzzle.pluginsManager.trigger)
+        .be.calledOnce()
+        .be.calledWith('log:info', 'Remote actions controller initialized');
+    });
   });
 
-  it('should fail if the given action does not exist', () => {
-    var request = new RequestObject({controller: 'remoteActions', action: 'foo', body: {}});
+  describe('#onListenCB', () => {
+    it('should send an error if no action is provided', () => {
+      return remoteActions.onListenCB({
+        requestId: 'test'
+      })
+        .then(() => {
+          should(RemoteActionsController.__get__('ResponseObject'))
+            .be.calledOnce()
+            .be.calledWithMatch({requestId: 'test'}, {
+              message: 'No action given.'
+            });
 
-    remoteActionsController.onListenCB(request);
+          should(RemoteActionsController.__get__('ResponseObject').firstCall.args[1])
+            .be.an.instanceOf(BadRequestError);
 
-    should(brokerInvoked).be.true();
-    should(requestId).be.eql(request.requestId);
-    should(responseObject).be.instanceOf(ResponseObject);
-    should(responseObject.status).be.eql(404);
-    should(responseObject.error.message).be.eql('The action "foo" do not exist.');
+          should(kuzzle.services.list.broker.send)
+            .be.calledOnce()
+            .be.calledWith('test', RemoteActionsController.__get__('ResponseObject').returnValues[0]);
+        });
+    });
+
+    it('should send an error if the provided action does not exist', () => {
+      remoteActions.init();
+
+      return remoteActions.onListenCB({
+        requestId: 'test',
+        action: 'invalid'
+      })
+        .then(() => {
+          should(RemoteActionsController.__get__('ResponseObject'))
+            .be.calledOnce()
+            .be.calledWithMatch({requestId: 'test'}, {
+              message: 'The action "invalid" does not exist.'
+            });
+
+          should(RemoteActionsController.__get__('ResponseObject').firstCall.args[1])
+            .be.an.instanceOf(NotFoundError);
+
+          should(kuzzle.services.list.broker.send)
+            .be.calledOnce()
+            .be.calledWith('test', RemoteActionsController.__get__('ResponseObject').returnValues[0]);
+        });
+    });
+
+    it('should send the response to the broker', () => {
+      remoteActions.init();
+      remoteActions.actions.data.resolves('ok');
+
+      return remoteActions.onListenCB({
+        requestId: 'test',
+        action: 'data'
+      })
+        .then(() => {
+          should(RemoteActionsController.__get__('ResponseObject'))
+            .be.calledOnce()
+            .be.calledWithMatch({requestId: 'test'}, 'ok');
+
+          should(kuzzle.services.list.broker.send)
+            .be.calledOnce()
+            .be.calledWith('test', RemoteActionsController.__get__('ResponseObject').returnValues[0]);
+        });
+    });
+
+    it('should send the error gotten from the controller back to the broker', () => {
+      var error = new Error('test');
+
+      remoteActions.init();
+      remoteActions.actions.data.rejects(error);
+
+      return remoteActions.onListenCB({
+        requestId: 'test',
+        action: 'data'
+      })
+        .then(() => {
+          should(RemoteActionsController.__get__('ResponseObject'))
+            .be.calledOnce()
+            .be.calledWithMatch({requestId: 'test'}, error);
+
+          should(kuzzle.services.list.broker.send)
+            .be.calledOnce()
+            .be.calledWith('test', RemoteActionsController.__get__('ResponseObject').returnValues[0]);
+        });
+    });
   });
 
-  it('should fail if the given action triggers some error', () => {
-    var request = new RequestObject({controller: 'remoteActions', action: 'enable', body: {service: 'broker', enable: true}});
-
-    remoteActionsController.onListenCB(request);
-
-    should(brokerInvoked).be.true();
-    should(requestId).be.eql(request.requestId);
-    should(responseObject).be.instanceOf(ResponseObject);
-    should(responseObject.status).be.eql(404);
-    should(responseObject.error.message).be.eql('The action "enable" do not exist.');
-  });
 });

@@ -60,17 +60,6 @@ describe('Test: managePlugins remote action caller', () => {
           should(pkg.install).be.calledOnce();
         });
     });
-
-    it('should install all plugins if no plugin name is given', () => {
-      return managePlugins({ data: { body: { install: true }}})
-        .then(() => {
-          should(kuzzle.pluginsManager.trigger)
-            .be.calledOnce()
-            .be.calledWith('log:info', '███ kuzzle-plugins: Starting plugins installation...');
-
-          should(kuzzle.pluginsManager.packages.bootstrap).be.calledOnce();
-        });
-    });
   });
 
   describe('--get', () => {

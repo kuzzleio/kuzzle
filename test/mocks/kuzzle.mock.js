@@ -27,6 +27,12 @@ function KuzzleMock () {
   };
 
   this.funnel = {
+    controllers: {
+      admin: {
+        adminExists: sinon.spy(),
+        createFirstAdmin: sinon.spy()
+      }
+    },
     init: sinon.spy()
   };
 
@@ -122,6 +128,10 @@ function KuzzleMock () {
   this.services = {
     init: sinon.stub().resolves(),
     list: {
+      broker: {
+        listen: sinon.spy(),
+        send: sinon.spy()
+      },
       internalCache: {
         flushdb: sinon.stub().resolves()
       },
