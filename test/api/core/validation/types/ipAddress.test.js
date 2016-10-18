@@ -55,8 +55,6 @@ describe('Test: validation/types/ipAddress', () => {
   });
 
   describe('#validateFieldSpecification', () => {
-    var ipAddressType = new IpAddressType();
-
     it('should return default typeOptions if there is no typeOptions', () => {
       should(ipAddressType.validateFieldSpecification({})).be.deepEqual({
         notEmpty: false
