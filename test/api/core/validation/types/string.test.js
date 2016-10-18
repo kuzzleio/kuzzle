@@ -24,8 +24,6 @@ describe('Test: validation/types/string', () => {
   });
 
   describe('#validate', () => {
-    var stringType = new StringType();
-
     it('should return true if the value is valid', () => {
       should(stringType.validate({}, 'a string', [])).be.true();
     });

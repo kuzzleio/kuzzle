@@ -56,7 +56,6 @@ describe('Test: validation/types/email', () => {
 
 
   describe('#validateFieldSpecification', () => {
-    var emailType = new EmailType();
 
     it('should return default typeOptions if there is no typeOptions', () => {
       should(emailType.validateFieldSpecification({})).be.deepEqual({
