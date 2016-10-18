@@ -155,6 +155,20 @@ describe('Test: validation initialization', () => {
           should(result.isValid).be.false();
         });
     });
+
+    it('should resolve false and provide errors if the specification is not correct and we want some verbose errors', () => {
+      var
+        curateCollectionSpecificationStub = sandbox.stub().rejects({});
+
+      validation.curateCollectionSpecification = curateCollectionSpecificationStub;
+
+      return validation.isValidSpecification('anIndex', 'aCollection', {a: 'bad specification'}, true)
+        .then(result => {
+          should(curateCollectionSpecificationStub.callCount).be.eql(1);
+          should(result.isValid).be.false();
+          should(result.errors.length).be.eql(1);
+        });
+    });
   });
 
   describe('#addType', () => {
