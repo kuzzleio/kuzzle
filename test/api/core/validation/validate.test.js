@@ -930,7 +930,7 @@ describe('Test: validation.validate', () => {
       should(errorMessages).be.deepEqual({fieldScope: {children: {anotherField: {messages: ['The field is mandatory.']}}}});
     });
 
-    it('should return false if one of the subfields is not valid', () => {
+    it('should return false if one of the subfields is not valid in verbose mode', () => {
       var
         errorMessages = {},
         documentSubset = {
@@ -965,6 +965,118 @@ describe('Test: validation.validate', () => {
 
       should(validation.isValidField('aField', documentSubset, collectionSubset, true, errorMessages, true)).be.false();
       should(errorMessages).be.deepEqual({fieldScope: {children: {aField: {children: {aSubField: {messages: ['An error has occurred during validation.']}}}}}});
+    });
+
+    it('should throw an error if one of the subfields is not valid in non verbose mode', () => {
+      var
+        errorMessages = [],
+        documentSubset = {
+          aField: {
+            aSubField: 'bad value'
+          }
+        },
+        collectionSubset = {
+          aField: {
+            path: ['aField'],
+            type: 'typeChildren',
+            multivalued: {
+              value: false
+            },
+            children: {
+              aSubField: {
+                path: ['aField', 'aSubField'],
+                type: 'typeNoChild',
+                multivalued: {
+                  value: false
+                }
+              }
+            }
+          }
+        };
+
+      getStrictnessStub.returns(true);
+
+      typeValidateStub
+        .onFirstCall().returns(true)
+        .onSecondCall().returns(false);
+
+      (() => {
+        validation.isValidField('aField', documentSubset, collectionSubset, true, errorMessages, false);
+      }).should.throw('Field aField.aSubField: An error has occurred during validation.');
+    });
+
+    it('should return false if one of the subfields throws an error in verbose mode', () => {
+      var
+        errorMessages = {},
+        documentSubset = {
+          aField: {
+            aSubField: 'bad value'
+          }
+        },
+        collectionSubset = {
+          aField: {
+            path: ['aField'],
+            type: 'typeChildren',
+            multivalued: {
+              value: false
+            },
+            children: {
+              aSubField: {
+                path: ['aField', 'aSubField'],
+                type: 'typeNoChild',
+                multivalued: {
+                  value: false
+                }
+              }
+            }
+          }
+        };
+
+      getStrictnessStub.returns(true);
+
+      typeValidateStub
+        .onFirstCall().returns(true)
+        .onSecondCall().throws({message: 'an error'});
+
+      should(validation.isValidField('aField', documentSubset, collectionSubset, true, errorMessages, true)).be.false();
+      should(errorMessages).be.deepEqual({fieldScope: {children: {aField: {messages: ['an error']}}}});
+    });
+
+    it('should return false if one of the subfields throws an strictness error in verbose mode', () => {
+      var
+        errorMessages = {},
+        documentSubset = {
+          aField: {
+            aSubField: 'bad value'
+          }
+        },
+        collectionSubset = {
+          aField: {
+            path: ['aField'],
+            type: 'typeChildren',
+            multivalued: {
+              value: false
+            },
+            children: {
+              aSubField: {
+                path: ['aField', 'aSubField'],
+                type: 'typeNoChild',
+                multivalued: {
+                  value: false
+                }
+              }
+            }
+          }
+        };
+
+      getStrictnessStub.returns(true);
+
+      typeValidateStub
+        .onFirstCall().returns(true)
+        .onSecondCall().throws({message: 'strictness'});
+
+      should(validation.isValidField('aField', documentSubset, collectionSubset, true, errorMessages, true)).be.false();
+      should(errorMessages).be.deepEqual({fieldScope: {children: {aField: {messages: ['The field is set to "strict"; cannot add unspecified subField.']}}}});
     });
   });
 });
