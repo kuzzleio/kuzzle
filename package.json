@@ -14,7 +14,7 @@
     "functional-testing": "npm run cucumber",
     "cucumber": "cucumber.js --fail-fast",
     "crawl-coverage": "node coverage/scripts/feature-coverage-download.js",
-    "codecov": "istanbul cover ./node_modules/mocha/bin/_mocha --report lcovonly -- -R spec && ./node_modules/mocha/bin/codecov",
+    "codecov": "istanbul cover ./node_modules/mocha/bin/_mocha -- -R spec && ./node_modules/.bin/codecov",
     "lint": "eslint --max-warnings=0 ./lib ./bin ./test ./features",
     "enable": "node bin/kuzzle enable",
     "disable": "node bin/kuzzle disable",
@@ -68,7 +68,7 @@
     "url": "git://github.com/kuzzleio/kuzzle.git"
   },
   "devDependencies": {
-    "codecov.io": "^0.1.6",
+    "codecov": "^1.0.1",
     "cucumber": "1.3.1",
     "eslint": "3.7.1",
     "istanbul": "0.4.5",
