@@ -15,12 +15,13 @@ describe('Test: validation.validate', () => {
     indexName = 'anIndex',
     collectionName = 'aCollection',
     typeValidateStub = sandbox.stub(),
+    getStrictnessStub = sandbox.stub(),
     typeChildren = {
       typeName: 'typeChildren',
       allowChildren: true,
       validate: typeValidateStub,
       validateFieldSpecification: () => {},
-      getStrictness: () => true
+      getStrictness: () => getStrictnessStub
     },
     typeNoChild = {
       typeName: 'typeNoChild',
@@ -627,14 +628,343 @@ describe('Test: validation.validate', () => {
 
       should(validation.recurseApplyDefault(isUpdate, documentSubset, collectionSpecSubset)).deepEqual(expectedResult);
     });
-    /**
-     * TODO
-     */
   });
 
   describe('#recurseFieldValidation', () => {
-    /**
-     * TODO
-     */
+    it('should throw an error if validation is strict and a property is not allowed', () => {
+      (() => {
+        validation.recurseFieldValidation({anotherField: 'some value'}, {aField: {some: 'specification'}}, true, [], false);
+      }).should.throw('strictness');
+    });
+
+    it('should throw an exception if isValidField throws an exception', () => {
+      var isValidFieldStub = sandbox.stub().throws({message: 'an error'});
+
+      validation.isValidField = isValidFieldStub;
+      try {
+        validation.recurseFieldValidation({
+          anotherField: 'some value',
+          aField: 'some value'
+        }, {
+          aField: {some: 'specification'},
+          anotherField: {some: 'other specification'},
+        }, false, [], false);
+      }
+      catch (error) {
+        should(isValidFieldStub.callCount).be.eql(1);
+        should(error).be.deepEqual({message: 'an error'});
+      }
+    });
+
+    it('should return true if every fields are valid in verbose mode', () => {
+      var isValidFieldStub = sandbox.stub().returns(true);
+
+      validation.isValidField = isValidFieldStub;
+      should(validation.recurseFieldValidation({
+        anotherField: 'some value',
+        aField: 'some value'
+      }, {
+        aField: {some: 'specification'},
+        anotherField: {some: 'other specification'},
+      }, false, [], true)).be.true();
+      should(isValidFieldStub.callCount).be.eql(2);
+    });
+
+    it('should return true if every fields are valid in none verbose mode', () => {
+      var isValidFieldStub = sandbox.stub().returns(true);
+
+      validation.isValidField = isValidFieldStub;
+      should(validation.recurseFieldValidation({
+        anotherField: 'some value',
+        aField: 'some value'
+      }, {
+        aField: {some: 'specification'},
+        anotherField: {some: 'other specification'},
+      }, true, [], false)).be.true();
+      should(isValidFieldStub.callCount).be.eql(2);
+    });
+
+    it('should return false if a field is not valid in verbose mode', () => {
+      var isValidFieldStub = sandbox.stub().returns(false);
+
+      validation.isValidField = isValidFieldStub;
+      should(validation.recurseFieldValidation({
+        anotherField: 'some value',
+        aField: 'some value'
+      }, {
+        aField: {some: 'specification'},
+        anotherField: {some: 'other specification'},
+      }, false, [], true)).be.false();
+      should(isValidFieldStub.callCount).be.eql(2);
+    });
+
+    it('should return false if a field is not valid in none verbose mode', () => {
+      var isValidFieldStub = sandbox.stub().returns(false);
+
+      validation.isValidField = isValidFieldStub;
+      should(validation.recurseFieldValidation({
+        anotherField: 'some value',
+        aField: 'some value'
+      }, {
+        aField: {some: 'specification'},
+        anotherField: {some: 'other specification'},
+      }, true, [], false)).be.false();
+      should(isValidFieldStub.callCount).be.eql(1);
+    });
+  });
+
+  describe('#isValidField', () => {
+    it('should return true if the field is correct', () => {
+      var
+        documentSubset = {
+          aField: 'some value'
+        },
+        collectionSubset = {
+          aField: {
+            type: 'typeNoChild',
+            multivalued: {
+              value: false
+            }
+          }
+        };
+
+      typeValidateStub.returns(true);
+
+      should(validation.isValidField('aField', documentSubset, collectionSubset, true, [], false)).be.true();
+    });
+
+    it('should return true if the field is correct as multivalued', () => {
+      var
+        documentSubset = {
+          aField: ['some value', 'some other value']
+        },
+        collectionSubset = {
+          aField: {
+            type: 'typeNoChild',
+            multivalued: {
+              value: true
+            }
+          }
+        };
+
+      typeValidateStub.returns(true);
+
+      should(validation.isValidField('aField', documentSubset, collectionSubset, true, [], false)).be.true();
+    });
+
+    it('should throw an exception if validation of the field returns false in non verbose', () => {
+      var
+        errorMessages = [],
+        documentSubset = {
+          aField: 'some value',
+        },
+        collectionSubset = {
+          aField: {
+            path: ['aField'],
+            type: 'typeNoChild',
+            multivalued: {
+              value: false
+            }
+          }
+        };
+
+      typeValidateStub.returns(false);
+
+      try {
+        validation.isValidField('aField', documentSubset, collectionSubset, true, errorMessages, false);
+      }
+      catch (error) {
+        should(error.message).be.eql('Field aField: An error has occurred during validation.');
+      }
+    });
+
+    it('should returns false in verbose mode', () => {
+      var
+        errorMessages = {},
+        documentSubset = {
+          aField: 'some value',
+        },
+        collectionSubset = {
+          aField: {
+            path: ['aField'],
+            type: 'typeNoChild',
+            multivalued: {
+              value: false
+            }
+          }
+        };
+
+      typeValidateStub.returns(false);
+
+      should(validation.isValidField('aField', documentSubset, collectionSubset, true, errorMessages, true)).be.false();
+      should(errorMessages).be.deepEqual({fieldScope: {children: {aField: {messages: ['An error has occurred during validation.']}}}});
+    });
+
+    it('should return true if the field is correct as multivalued', () => {
+      var
+        documentSubset = {
+          aField: ['some value', 'some other value']
+        },
+        collectionSubset = {
+          aField: {
+            type: 'typeNoChild',
+            multivalued: {
+              value: true,
+              minCount: 2
+            }
+          }
+        };
+
+      typeValidateStub.returns(true);
+
+      should(validation.isValidField('aField', documentSubset, collectionSubset, true, [], false)).be.true();
+    });
+
+    it('should return false if the field is not an array and it should be multivalued', () => {
+      var
+        errorMessages = {},
+        documentSubset = {
+          aField: 'some other value'
+        },
+        collectionSubset = {
+          aField: {
+            path: ['aField'],
+            type: 'typeNoChild',
+            multivalued: {
+              value: true
+            }
+          }
+        };
+
+      typeValidateStub.returns(true);
+
+      should(validation.isValidField('aField', documentSubset, collectionSubset, true, errorMessages, true)).be.false();
+      should(errorMessages).be.deepEqual({fieldScope: {children: {aField: {messages: ['The field must be multivalued, unary value provided.']}}}});
+    });
+
+    it('should return false if the field has not enough elements', () => {
+      var
+        errorMessages = {},
+        documentSubset = {
+          aField: ['some value']
+        },
+        collectionSubset = {
+          aField: {
+            path: ['aField'],
+            type: 'typeNoChild',
+            multivalued: {
+              value: true,
+              minCount: 2
+            }
+          }
+        };
+
+      typeValidateStub.returns(true);
+
+      should(validation.isValidField('aField', documentSubset, collectionSubset, true, errorMessages, true)).be.false();
+      should(errorMessages).be.deepEqual({fieldScope: {children: {aField: {messages: ['Not enough elements. Minimum count is set to 2.']}}}});
+    });
+
+    it('should return false if the field has too much elements', () => {
+      var
+        errorMessages = {},
+        documentSubset = {
+          aField: ['some value', 'some other value', 'and yet another']
+        },
+        collectionSubset = {
+          aField: {
+            path: ['aField'],
+            type: 'typeNoChild',
+            multivalued: {
+              value: true,
+              maxCount: 2
+            }
+          }
+        };
+
+      typeValidateStub.returns(true);
+
+      should(validation.isValidField('aField', documentSubset, collectionSubset, true, errorMessages, true)).be.false();
+      should(errorMessages).be.deepEqual({fieldScope: {children: {aField: {messages: ['Too many elements. Maximum count is set to 2.']}}}});
+    });
+
+    it('should return false if the field provides an array but is not multivalued', () => {
+      var
+        errorMessages = {},
+        documentSubset = {
+          aField: ['some value', 'some other value', 'and yet another']
+        },
+        collectionSubset = {
+          aField: {
+            path: ['aField'],
+            type: 'typeNoChild',
+            multivalued: {
+              value: false
+            }
+          }
+        };
+
+      typeValidateStub.returns(true);
+
+      should(validation.isValidField('aField', documentSubset, collectionSubset, true, errorMessages, true)).be.false();
+      should(errorMessages).be.deepEqual({fieldScope: {children: {aField: {messages: ['The field is not a multivalued field; Multiple values provided.']}}}});
+    });
+
+    it('should return false if the field is mandatory but not provided', () => {
+      var
+        errorMessages = {},
+        documentSubset = {
+          aField: ['some value', 'some other value', 'and yet another']
+        },
+        collectionSubset = {
+          anotherField: {
+            path: ['anotherField'],
+            type: 'typeNoChild',
+            mandatory: true
+          }
+        };
+
+      typeValidateStub.returns(true);
+
+      should(validation.isValidField('anotherField', documentSubset, collectionSubset, true, errorMessages, true)).be.false();
+      should(errorMessages).be.deepEqual({fieldScope: {children: {anotherField: {messages: ['The field is mandatory.']}}}});
+    });
+
+    it('should return false if one of the subfields is not valid', () => {
+      var
+        errorMessages = {},
+        documentSubset = {
+          aField: {
+            aSubField: 'bad value'
+          }
+        },
+        collectionSubset = {
+          aField: {
+            path: ['aField'],
+            type: 'typeChildren',
+            multivalued: {
+              value: false
+            },
+            children: {
+              aSubField: {
+                path: ['aField', 'aSubField'],
+                type: 'typeNoChild',
+                multivalued: {
+                  value: false
+                }
+              }
+            }
+          }
+        };
+
+      getStrictnessStub.returns(true);
+
+      typeValidateStub
+        .onFirstCall().returns(true)
+        .onSecondCall().returns(false);
+
+      should(validation.isValidField('aField', documentSubset, collectionSubset, true, errorMessages, true)).be.false();
+      should(errorMessages).be.deepEqual({fieldScope: {children: {aField: {children: {aSubField: {messages: ['An error has occurred during validation.']}}}}}});
+    });
   });
 });
