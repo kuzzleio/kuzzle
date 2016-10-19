@@ -158,7 +158,7 @@ describe('Test: validation initialization', () => {
 
     it('should resolve false and provide errors if the specification is not correct and we want some verbose errors', () => {
       var
-        curateCollectionSpecificationStub = sandbox.stub().rejects({});
+        curateCollectionSpecificationStub = sandbox.stub().resolves({isValid: false, errors: ['some error']});
 
       validation.curateCollectionSpecification = curateCollectionSpecificationStub;
 
@@ -330,6 +330,27 @@ describe('Test: validation initialization', () => {
         .should.be.rejectedWith('anIndex.aCollection: the collection specification has invalid properties.');
     });
 
+    it('should reject an error if the collection specification provides a not allowed property in verbose mode', () => {
+      var
+        indexName = 'anIndex',
+        collectionName = 'aCollection',
+        collectionSpec = {
+          foo: 'bar'
+        },
+        dryRun = false,
+        verboseErrors = true;
+
+      checkAllowedPropertiesStub.returns(false);
+      Validation.__set__('checkAllowedProperties', checkAllowedPropertiesStub);
+
+      return validation.curateCollectionSpecification(indexName, collectionName, collectionSpec, dryRun, verboseErrors)
+        .then(response => {
+          should(response.isValid).be.false();
+          should(response.errors.length).be.eql(1);
+          should(response.errors[0]).be.eql(`${indexName}.${collectionName}: the collection specification has invalid properties.`);
+        });
+    });
+
     it('should return structured fields when a collection specification is provided', () => {
       var
         indexName = 'anIndex',
@@ -359,6 +380,36 @@ describe('Test: validation initialization', () => {
         });
     });
 
+    it('should return structured fields when a collection specification is provided even in verbose mode', () => {
+      var
+        indexName = 'anIndex',
+        structureCollectionValidationStub = sandbox.spy(function () {return arguments[0].fields;}),
+        collectionName = 'aCollection',
+        collectionSpec = {
+          fields: {
+            some: 'field'
+          }
+        },
+        dryRun = false,
+        verboseErrors = true,
+        expectedReturn = {
+          strict: false,
+          fields: {
+            some: 'field'
+          },
+          validators: null
+        };
+
+      checkAllowedPropertiesStub.returns(true);
+      Validation.__set__('checkAllowedProperties', checkAllowedPropertiesStub);
+      validation.structureCollectionValidation = structureCollectionValidationStub;
+
+      return validation.curateCollectionSpecification(indexName, collectionName, collectionSpec, dryRun, verboseErrors)
+        .then(returnedSpec => {
+          should(returnedSpec).be.deepEqual(expectedReturn);
+        });
+    });
+
     it('should reject an error if the field specification throws an error', () => {
       var
         indexName = 'anIndex',
@@ -377,6 +428,31 @@ describe('Test: validation initialization', () => {
 
       return validation.curateCollectionSpecification(indexName, collectionName, collectionSpec, dryRun)
         .should.be.rejectedWith('an error');
+    });
+
+    it('should reject an error if the field specification returns an error in verbose mode', () => {
+      var
+        indexName = 'anIndex',
+        structureCollectionValidationStub = sandbox.stub().returns({isValid: false, errors: ['an error']}),
+        collectionName = 'aCollection',
+        collectionSpec = {
+          fields: {
+            some: 'bad field'
+          }
+        },
+        dryRun = false,
+        verboseErrors = true;
+
+      checkAllowedPropertiesStub.returns(true);
+      Validation.__set__('checkAllowedProperties', checkAllowedPropertiesStub);
+      validation.structureCollectionValidation = structureCollectionValidationStub;
+
+      return validation.curateCollectionSpecification(indexName, collectionName, collectionSpec, dryRun, verboseErrors)
+        .catch(response => {
+          should(response.isValid).be.false();
+          should(response.errors.length).be.eql(1);
+          should(response.errors[0]).be.eql('an error');
+        });
     });
 
     it('should return a treated collection specification if validators are valid', () => {
@@ -486,6 +562,39 @@ describe('Test: validation initialization', () => {
       should(kuzzle.pluginsManager.trigger.callCount).be.eql(1);
       should(kuzzle.pluginsManager.trigger.args[0][0]).be.eql('log:error');
     });
+
+    it('should return an error array if one of the field curation returns an error in verbose mode', () => {
+      var
+        curateFieldSpecificationStub = sandbox.stub(),
+        indexName = 'anIndex',
+        collectionName = 'aCollection',
+        verboseErrors = true,
+        collectionSpec = {
+          fields: {
+            aField: {a: 'field'},
+            anotherField: {another: 'field'},
+            'aField/aSubField': {a: 'subField'}
+          }
+        },
+        response;
+
+      curateFieldSpecificationStub.onCall(0).returns({isValid: false, errors: ['error one']});
+      curateFieldSpecificationStub.onCall(1).returns({isValid: false, errors: ['error two']});
+      curateFieldSpecificationStub.onCall(2).returns({isValid: false, errors: ['error three']});
+
+      validation.curateFieldSpecification = curateFieldSpecificationStub;
+
+      response = validation.structureCollectionValidation(collectionSpec, indexName, collectionName, verboseErrors);
+
+      should(response.isValid).be.false();
+      should(response.errors.length).be.eql(3);
+      should(response.errors[0]).be.eql('error one');
+      should(response.errors[1]).be.eql('error two');
+      should(response.errors[2]).be.eql('error three');
+      should(curateFieldSpecificationStub.callCount).be.eql(3);
+      should(kuzzle.pluginsManager.trigger.callCount).be.eql(3);
+      should(kuzzle.pluginsManager.trigger.args[0][0]).be.eql('log:error');
+    });
   });
 
   describe('#curateFieldSpecification', () => {
@@ -498,7 +607,7 @@ describe('Test: validation initialization', () => {
 
     it('should validate and curate field specifications with default configuration', () => {
       var
-        typeValidateSpecValidation = sandbox.stub().returns(true),
+        typeValidateSpecValidation = sandbox.stub().returns({}),
         fieldSpec = {
           type: 'string'
         },
@@ -557,9 +666,27 @@ describe('Test: validation initialization', () => {
       }).should.throw('Field of type string is not specified properly');
     });
 
-    it('should validate typeOptions from the field type', () => {
+    it('should return an error if type validation returns false with verbose mode', () => {
       var
         typeValidateSpecValidation = sandbox.stub().returns(true),
+        checkAllowedPropertiesStub = sandbox.stub().returns(false),
+        fieldSpec = {
+          type: 'string'
+        },
+        response;
+
+      validation.types.string = {validateFieldSpecification: typeValidateSpecValidation};
+      Validation.__set__('checkAllowedProperties', checkAllowedPropertiesStub);
+
+      response = validation.curateFieldSpecification(fieldSpec, 'anIndex', 'aCollection', 'aField', true);
+      should(response.isValid).be.false();
+      should(response.errors.length).be.eql(1);
+      should(response.errors[0]).eql('Field anIndex.aCollection.aField of type string is not specified properly');
+    });
+
+    it('should validate typeOptions from the field type', () => {
+      var
+        typeValidateSpecValidation = sandbox.stub().returns({some: 'options'}),
         fieldSpec = {
           type: 'string',
           typeOptions: {
@@ -628,6 +755,25 @@ describe('Test: validation initialization', () => {
         validation.curateFieldSpecification(fieldSpec);
       }).should.throw(anError);
     });
+
+    it('should returns an error if a field specification format is invalid in verbose mode', () => {
+      var
+        anError = {isValid: false, errors: ['an error']},
+        curateFieldSpecificationFormatLocalStub = sandbox.stub().returns({isValid: false, errors: ['an error']}),
+        fieldSpec = {
+          type: 'string',
+          typeOptions: {
+            some: 'options'
+          }
+        },
+        response;
+
+      validation.curateFieldSpecificationFormat = curateFieldSpecificationFormatLocalStub;
+
+      response = validation.curateFieldSpecification(fieldSpec, 'anIndex', 'aCollection', 'aField', true);
+
+      should(response).be.deepEqual(anError);
+    });
   });
 
   describe('#curateFieldSpecificationFormat', () => {
@@ -650,6 +796,29 @@ describe('Test: validation initialization', () => {
       (() => {
         validation.curateFieldSpecificationFormat(fieldSpec);
       }).should.throw('The field undefined.undefined.undefined specification has invalid properties.');
+    });
+
+    it('should return an error if the field specification is wrong in verbose mode', () => {
+      var
+        fieldSpec = {
+          type: 'aType',
+          foo: 'bar'
+        },
+        indexName = 'anIndex',
+        collectionName = 'aCollection',
+        fieldName = 'aField',
+        verboseErrors = true,
+        response;
+
+      checkAllowedPropertiesStub.returns(false);
+
+      response = validation.curateFieldSpecificationFormat(fieldSpec, indexName, collectionName, fieldName, verboseErrors);
+      should(response.isValid).be.false();
+      should(response.errors.length).be.eql(2);
+      should(response.errors).be.eql([
+        'The field anIndex.aCollection.aField specification has invalid properties.',
+        'In anIndex.aCollection.aField: aType is not a recognized type.'
+      ]);
     });
 
     it('should throw an error if the field specification does not contain all mandatory fields', () => {
