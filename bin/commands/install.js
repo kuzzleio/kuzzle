@@ -7,7 +7,7 @@ var
   RemoteActionsController = require('../../lib/api/controllers/remoteActionsController'),
   RequestObject = require('kuzzle-common-objects').Models.requestObject;
 
-module.exports = function () {
+function commandInstall() {
   var
     kuzzle = new Kuzzle(),
     requestObject = new RequestObject({
@@ -31,4 +31,8 @@ module.exports = function () {
       console.dir(error, {depth: null});
       process.exit(1);
     });
-};
+}
+
+module.exports = commandInstall;
+
+
