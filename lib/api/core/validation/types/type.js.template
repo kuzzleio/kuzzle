@@ -7,9 +7,10 @@ var
 function MyNewType () {
   this.typeName = 'my_new_type';
   this.allowChildren = false;
+  this.allowedTypeOptions = [];
 }
 
-MyNewType.prototype = new BaseConstructor();
+util.inherits(MyNewType, BaseConstructor);
 
 /**
  * @param {TypeOptions} typeOptions
