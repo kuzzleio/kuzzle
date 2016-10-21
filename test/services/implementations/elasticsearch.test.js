@@ -149,16 +149,35 @@ describe('Test: ElasticSearch service', () => {
   });
 
   describe('#search', () => {
-    it('should be able to search documents', () => {
-      var spy = sandbox.stub(elasticsearch.client, 'search').resolves({total: 0, hits: []});
+    it('should be able to search documents with info from kuzzle', () => {
+      var spy = sandbox.stub(elasticsearch.client, 'search').resolves({total: 0, hits: [{_source: {_kuzzle_info: {active: true}}}]}),
+        modifiedRequestObject;
 
       requestObject.data.body = filter;
-      return elasticsearch.search(requestObject)
+      modifiedRequestObject = JSON.parse(JSON.stringify(requestObject));
+      return elasticsearch.search(modifiedRequestObject)
         .then(result => {
           should(spy.firstCall.args[0].body).be.deepEqual(filterAfterActiveAdded);
           should(result).be.an.Object();
           should(result.total).be.exactly(0);
           should(result.hits).be.an.Array();
+          should(result.hits[0]._kuzzle_info.active).be.true();
+        });
+    });
+
+    it('should be able to search documents without info from kuzzle', () => {
+      var spy = sandbox.stub(elasticsearch.client, 'search').resolves({total: 0, hits: [{_source: {}}]}),
+        modifiedRequestObject;
+
+      requestObject.data.body = filter;
+      modifiedRequestObject = JSON.parse(JSON.stringify(requestObject));
+      return elasticsearch.search(modifiedRequestObject)
+        .then(result => {
+          should(spy.firstCall.args[0].body).be.deepEqual(filterAfterActiveAdded);
+          should(result).be.an.Object();
+          should(result.total).be.exactly(0);
+          should(result.hits).be.an.Array();
+          should(result.hits[0]._kuzzle_info).be.Undefined();
         });
     });
 
@@ -573,9 +592,8 @@ describe('Test: ElasticSearch service', () => {
       var
         refreshIndexIfNeeded = ES.__get__('refreshIndexIfNeeded'),
         refreshIndexSpy = sandbox.spy(refreshIndexIfNeeded),
-        spy = sandbox.stub(elasticsearch.client, 'delete').resolves({});
+        spy = sandbox.stub(elasticsearch.client, 'update').resolves({});
 
-      delete requestObject.data.body;
       requestObject.data._id = createdDocumentId;
 
       return should(
@@ -591,7 +609,7 @@ describe('Test: ElasticSearch service', () => {
     });
 
     it('should return a rejected promise if a delete fails', done => {
-      var spy = sandbox.stub(elasticsearch.client, 'delete').rejects({});
+      var spy = sandbox.stub(elasticsearch.client, 'update').rejects({});
 
       elasticsearch.delete(requestObject)
         .catch(() => {
@@ -637,7 +655,95 @@ describe('Test: ElasticSearch service', () => {
           .then(result => {
             var bulkData = spy.firstCall.args[0];
 
-            // elasticsearch.client.bullk
+            // elasticsearch.client.bulk
+            should(bulkData.body).not.be.undefined().and.be.an.Array();
+            should(bulkData.body.length).be.exactly(mockupIds.length * 2);
+
+            bulkData.body.forEach(cmd => {
+              should(cmd).be.an.Object();
+              if (cmd.update) {
+                should(cmd.update).not.be.undefined().and.be.an.Object();
+                should(mockupIds.indexOf(cmd.update._id)).not.be.eql(-1);
+                should(cmd.update._type).be.exactly(requestObject.collection);
+              } else {
+                should(cmd.doc).not.be.undefined().and.be.an.Object();
+                should(cmd.doc._kuzzle_info.active).be.false();
+              }
+            });
+
+            // elasticserach.deleteByQuery
+            should(result.ids).not.be.undefined().and.be.an.Array();
+            should(result.ids).match(mockupIds);
+
+            // refreshIndexIfNeeded
+            should(refreshIndexSpy.calledOnce).be.true();
+          })
+        ).be.fulfilled();
+      });
+    });
+
+    it('should return a rejected promise if the delete by query fails because of a bad filter', () => {
+      sandbox.stub(elasticsearch.client, 'search').yields(new Error(), {});
+
+      return should(elasticsearch.deleteByQuery(requestObject)).be.rejected();
+    });
+
+    it('should return a rejected promise if the delete by query fails because of a bulk failure', () => {
+      sandbox.stub(elasticsearch.client, 'bulk').rejects({});
+
+
+      requestObject.data.body = {};
+
+      return ES.__with__({
+        getAllIdsFromQuery: () => Promise.resolve(['foo', 'bar'])
+      })(() => {
+        return should(elasticsearch.deleteByQuery(requestObject)).be.rejected();
+      });
+    });
+
+    it('should return a rejected promise if the delete by query fails because the filter is null', () => {
+      requestObject.data.body = null;
+
+      return should(elasticsearch.deleteByQuery(requestObject)).be.rejected();
+    });
+  });
+
+  describe('#deleteByQueryFromTrash', () => {
+    it('should return an empty result array when no document has been deleted using a filter', () => {
+      var spy = sandbox.stub(elasticsearch.client, 'search').yields(null, {hits: {hits: [], total: 0}});
+
+      delete requestObject.data.body;
+      requestObject.data.filter = {term: {firstName: 'no way any document can be returned with this filter'}};
+
+      return should(elasticsearch.deleteByQueryFromTrash(requestObject)
+        .then(result => {
+          should(spy.firstCall.args[0].query).be.exactly(requestObject.data.query);
+
+          // Ugly line in order to spot a random bug on this unit test
+          should(result.ids).not.be.undefined().and.be.an.Array();
+          should(result.ids.length).be.exactly(0);
+        })).be.fulfilled();
+    });
+
+    it('should allow to delete inactive documents using a provided filter from the trash', () => {
+      var
+        refreshIndexIfNeeded = ES.__get__('refreshIndexIfNeeded'),
+        refreshIndexSpy = sandbox.spy(refreshIndexIfNeeded),
+        mockupIds = ['foo', 'bar', 'baz'],
+        spy = sandbox.stub(elasticsearch.client, 'bulk').resolves(mockupIds),
+        getAllIdsStub = sinon.stub().resolves(mockupIds);
+
+      sandbox.stub(elasticsearch.client, 'search').yields(null, {hits: {hits: [{_id: 'foo'}, {_id: 'bar'}, {_id: 'baz'}], total: mockupIds.length}});
+
+      return ES.__with__({
+        getAllIdsFromQuery: getAllIdsStub,
+        refreshIndexIfNeeded: refreshIndexSpy
+      })(() => {
+        return should(elasticsearch.deleteByQueryFromTrash(requestObject)
+          .then(result => {
+            var bulkData = spy.firstCall.args[0];
+
+            // elasticsearch.client.bulk
             should(bulkData.body).not.be.undefined().and.be.an.Array();
             should(bulkData.body.length).be.exactly(mockupIds.length);
 
@@ -662,25 +768,26 @@ describe('Test: ElasticSearch service', () => {
     it('should return a rejected promise if the delete by query fails because of a bad filter', () => {
       sandbox.stub(elasticsearch.client, 'search').yields(new Error(), {});
 
-      return should(elasticsearch.deleteByQuery(requestObject)).be.rejected();
+      return should(elasticsearch.deleteByQueryFromTrash(requestObject)).be.rejected();
     });
 
     it('should return a rejected promise if the delete by query fails because of a bulk failure', () => {
       sandbox.stub(elasticsearch.client, 'bulk').rejects({});
+      sandbox.stub(elasticsearch.client, 'search').yields(new Error(), {});
 
       requestObject.data.body = {};
 
       return ES.__with__({
         getAllIdsFromQuery: () => Promise.resolve(['foo', 'bar'])
       })(() => {
-        return should(elasticsearch.deleteByQuery(requestObject)).be.rejected();
+        return should(elasticsearch.deleteByQueryFromTrash(requestObject)).be.rejected();
       });
     });
 
     it('should return a rejected promise if the delete by query fails because the filter is null', () => {
       requestObject.data.body = null;
 
-      return should(elasticsearch.deleteByQuery(requestObject)).be.rejected();
+      return should(elasticsearch.deleteByQueryFromTrash(requestObject)).be.rejected();
     });
   });
 
@@ -691,6 +798,7 @@ describe('Test: ElasticSearch service', () => {
         refreshIndexSpy = sandbox.spy(refreshIndexIfNeeded),
         spy = sandbox.stub(elasticsearch.client, 'bulk').resolves({});
 
+      sandbox.stub(elasticsearch.client, 'search').yields(null, {hits: {hits: [], total: 0}});
       requestObject.data.body = {
         bulkData: [
           {index: {_id: 1, _type: collection, _index: index}},
@@ -721,6 +829,7 @@ describe('Test: ElasticSearch service', () => {
         refreshIndexSpy = sandbox.spy(refreshIndexIfNeeded),
         spy = sandbox.stub(elasticsearch.client, 'bulk').resolves({});
 
+      sandbox.stub(elasticsearch.client, 'search').yields(null, {hits: {hits: [], total: 0}});
       requestObject.data = {
         body: {
           bulkData: []
@@ -758,6 +867,7 @@ describe('Test: ElasticSearch service', () => {
         }
       });
 
+      sandbox.stub(elasticsearch.client, 'search').yields(null, {hits: {hits: [], total: 0}});
       requestObject.data.body = {
         bulkData: [
           {index: {_id: 1, _type: collection, _index: index}},
@@ -790,6 +900,7 @@ describe('Test: ElasticSearch service', () => {
         ]
       });
 
+      sandbox.stub(elasticsearch.client, 'search').yields(null, {hits: {hits: [], total: 0}});
       requestObject.data.body = {
         bulkData: [
           {index: {_id: 1, _index: index}},
@@ -1261,12 +1372,6 @@ describe('Test: ElasticSearch service', () => {
         })
 
       ).be.fulfilled();
-    });
-  });
-
-  describe('#addActiveFilter', () => {
-    it('should add a query to filter by active state', () => {
-
     });
   });
 });
