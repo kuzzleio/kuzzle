@@ -67,10 +67,10 @@ describe('Plugin Context', () => {
     });
 
     it('should expose a correctly constructed validation accessor', () => {
-      var router = context.accessors.validation;
+      var validation = context.accessors.validation;
 
-      should(router.addType).be.eql(kuzzle.validation.addType.bind(kuzzle.validation));
-      should(router.validate).be.eql(kuzzle.validation.validate.bind(kuzzle.validation));
+      should(validation.addType).be.eql(kuzzle.validation.addType.bind(kuzzle.validation));
+      should(validation.validate).be.eql(kuzzle.validation.validationPromise.bind(kuzzle.validation));
     });
 
     it('should expose a users.load accessor', () => {

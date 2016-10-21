@@ -68,7 +68,7 @@ describe('Test: validation/types/geoShape', () => {
       getDistanceStub = sandbox.stub();
 
     before(() => {
-      GeoShapeType.__set__('geoUtils', {
+      GeoShapeType.__set__('geoUtil', {
         getDistance: getDistanceStub
       });
     });

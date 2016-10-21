@@ -57,6 +57,7 @@ function KuzzleMock () {
 
   this.validation = {
     validate: sinon.spy(function () {return Promise.resolve(arguments[0]);}),
+    validationPromise: sinon.spy(function () {return Promise.resolve(arguments[0]);}),
     addType: sinon.spy()
   };
 
