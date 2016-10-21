@@ -48,7 +48,7 @@ module.exports = function pluginsManager (plugin, options) {
         console.log(clcOk('[✔] Successfully imported configuration'));
       }
       else {
-        console.dir(res.data.body, {depth: null, colors: !options.parent.noColrs});
+        console.dir(res.data.body, {depth: null, colors: !options.parent.noColors});
       }
 
       if (options.parent.debug) {
