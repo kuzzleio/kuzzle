@@ -8,6 +8,7 @@ npm-debug.log*
 !/coverage/scripts
 # Plugin config folder
 config/plugins/
+dump
 
 # IDE
 .idea

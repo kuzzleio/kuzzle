@@ -11,16 +11,22 @@ services:
     command: sh -c 'chmod 755 /run.sh && /run.sh'
     volumes:
       - "..:/var/app"
-      - "./scripts/run-dev.sh:/run.sh"
-      - "./config/pm2-dev.json:/config/pm2.json"
-    ports:
-      - "8080:8080"
+      - "./scripts/run-test.sh:/run.sh"
+      - "./config/pm2.json:/config/pm2.json"
     environment:
       - kuzzle_services__db__host=elasticsearch
       - kuzzle_services__internalCache__node__host=redis
       - kuzzle_services__memoryStorage__node__host=redis
       - kuzzle_services__proxyBroker__host=proxy
       - FEATURE_COVERAGE=1
+      # Travis env var must be propagated into the container
+      - TRAVIS
+      - TRAVIS_COMMIT
+      - TRAVIS_JOB_NUMBER
+      - TRAVIS_BRANCH
+      - TRAVIS_JOB_ID
+      - TRAVIS_PULL_REQUEST
+      - TRAVIS_REPO_SLUG
 
   redis:
     image: redis:3.2-alpine

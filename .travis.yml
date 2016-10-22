@@ -2,7 +2,7 @@ sudo: required
 services:
 - docker
 script:
-- docker-compose -f docker-compose/test-travis.yml run kuzzle
+- docker-compose -f docker-compose/test.yml run kuzzle
 notifications:
   webhooks:
     urls:
