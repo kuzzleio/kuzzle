@@ -631,7 +631,7 @@ describe('Test: admin controller', () => {
 
   describe('#getSpecifications', () => {
     it('should call internalEngine with the right id', () => {
-      kuzzle.internalEngine.get =  sandbox.stub().resolves({_source: {foo: 'bar'}});
+      kuzzle.internalEngine.get = sandbox.stub().resolves({_source: {foo: 'bar'}});
 
       return adminController.getSpecifications(requestObject)
         .then(response => {
@@ -654,11 +654,9 @@ describe('Test: admin controller', () => {
   });
 
   describe('#updateSpecifications', () => {
-    it.only('should call internalEngine with the right id', () => {
-      var preparedQuery = {
-
-      }
-
+    it('should create or replace specifications', () => {
+      index = 'myindex';
+      collection = 'mycollection';
       requestObject.data.body = {
         myindex: {
           mycollection: {
@@ -674,21 +672,65 @@ describe('Test: admin controller', () => {
         }
       };
 
-      kuzzle.internalEngine.get =  sandbox.stub().resolves({_source: {foo: 'bar'}});
-      return adminController.getSpecifications(requestObject)
+      kuzzle.validation.isValidSpecification = sandbox.stub().resolves({isValid: true});
+      kuzzle.validation.curateSpecification = sandbox.stub().resolves();
+
+      return adminController.updateSpecifications(requestObject)
         .then(response => {
-          should(kuzzle.pluginsManager.trigger).be.calledTwice();
+          should(kuzzle.pluginsManager.trigger).be.calledThrice();
           should(kuzzle.pluginsManager.trigger.firstCall).be.calledWith('data:beforeUpdateSpecifications', requestObject);
           should(kuzzle.pluginsManager.trigger.secondCall).be.calledWith('data:afterUpdateSpecifications');
+          should(kuzzle.internalEngine.refresh).be.calledOnce();
+          should(kuzzle.validation.curateSpecification).be.called();
           should(kuzzle.internalEngine.createOrReplace).be.calledOnce();
           should(kuzzle.internalEngine.createOrReplace).be.calledWithMatch('validations', `${index}#${collection}`);
           should(response).match({
             status: 200,
             error: null,
             data: {
-              body: {
-                foo: 'bar'
+              body: requestObject.data.body
+            }
+          });
+        });
+    });
+
+    it('should not create or replace specifications if the specs are wrong', () => {
+      index = 'myindex';
+      collection = 'mycollection';
+      requestObject.data.body = {
+        myindex: {
+          mycollection: {
+            strict: true,
+            fields: {
+              myField: {
+                mandatory: true,
+                type: 'bad bad',
+                defaultValue: 42
               }
+            }
+          }
+        }
+      };
+
+      kuzzle.validation.isValidSpecification = sandbox.stub().resolves({isValid: false, errors: ['bad bad is a bad type !']});
+      kuzzle.validation.curateSpecification = sandbox.stub();
+
+      return adminController.updateSpecifications(requestObject)
+        .then(response => {
+          should(kuzzle.pluginsManager.trigger).be.calledThrice();
+          should(kuzzle.pluginsManager.trigger.firstCall).be.calledWith('data:beforeUpdateSpecifications', requestObject);
+          should(kuzzle.pluginsManager.trigger.secondCall).be.calledWith('data:afterUpdateSpecifications');
+          should(kuzzle.internalEngine.refresh).not.be.called();
+          should(kuzzle.validation.curateSpecification).not.be.called();
+          should(kuzzle.internalEngine.createOrReplace).not.be.called();
+          should(response).match({
+            status: 400,
+            error: {
+              _source: {body: requestObject.data.body},
+              message: 'Internal error'
+            },
+            data: {
+              body: null
             }
           });
         });

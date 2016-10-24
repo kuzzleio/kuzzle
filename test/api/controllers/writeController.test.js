@@ -350,7 +350,7 @@ describe('Test: write controller', () => {
     });
   });
 
-  describe.only('#validateDocument', () => {
+  describe('#validateDocument', () => {
     it('should trigger the proper method, send the right response with the right status code when the given document satisfy the specifications', () => {
       var expected = {
         errorMessages: {},
@@ -400,7 +400,9 @@ describe('Test: write controller', () => {
           should(response).match({
             status: 400,
             error: expected.errorMessages,
-            result: expected
+            data: {
+              body: expected
+            }
           });
         });
     });

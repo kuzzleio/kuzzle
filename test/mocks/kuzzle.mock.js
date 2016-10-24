@@ -118,6 +118,8 @@ function KuzzleMock () {
   this.rootPath = '/kuzzle';
 
   this.validation = {
+    init: sinon.spy(),
+    curateSpecification: sinon.spy(function () {return Promise.resolve();}),
     validate: sinon.spy(function () {return Promise.resolve(arguments[0]);}),
     addType: sinon.spy()
   };
