@@ -40,6 +40,7 @@ function commandStart (options) {
   console.log(kuz('Starting Kuzzle'));
 
   kuzzle.start(params)
+    // like a virgin
     .then(() => {
       var request;
 
@@ -49,36 +50,52 @@ function commandStart (options) {
       }
       return Promise.resolve();
     })
+    // fixtures && mapping
     .then(() => {
-      var
-        request,
-        data = {};
+      var fixtures;
 
       if (params.fixtures) {
         try {
-          JSON.parse(fs.readFileSync(params.fixtures, 'utf8'));
+          fixtures = JSON.parse(fs.readFileSync(params.fixtures, 'utf8'));
         }
         catch (e) {
           console.log(error('[✖] The file ' + params.fixtures + ' cannot be opened... aborting.'));
           process.exit(1);
         }
-        data.fixtures = params.fixtures;
+
+        return kuzzle.services.list.storageEngine.import(new RequestObject({
+          body: {
+            bulkData: fixtures
+          }
+        }));
       }
+    })
+    .then(() => {
+      var
+        mappings,
+        promises = [];
 
       if (params.mappings) {
         try {
-          JSON.parse(fs.readFileSync(params.mappings, 'utf8'));
+          mappings = JSON.parse(fs.readFileSync(params.mappings, 'utf8'));
         }
         catch (e) {
           console.log(error('[✖] The file ' + params.mappings + ' cannot be opened... aborting.'));
           process.exit(1);
         }
-        data.mappings = params.mappings;
-      }
 
-      request = new RequestObject({controller: 'remoteActions', action: 'prepareDb', body: data});
-      return kuzzle.remoteActionsController.actions.prepareDb(request)
-        .catch(() => Promise.resolve());
+        Object.keys(mappings).forEach(index => {
+          Object.keys(mappings[index]).forEach(collection => {
+            promises.push(kuzzle.services.list.storageEngine.updateMapping(new RequestObject({
+              index,
+              collection,
+              body: mappings[index][collection]
+            })));
+          });
+        });
+
+        return Promise.all(promises);
+      }
     })
     .then(() => {
       console.log(kuzzleLogo);
@@ -86,9 +103,9 @@ function commandStart (options) {
  ████████████████████████████████████
  ██         KUZZLE IS READY        ██
  ████████████████████████████████████`);
-      return kuzzle.remoteActionsController.actions.adminExists()
+      return kuzzle.internalEngine.bootstrap.adminExists()
         .then((res) => {
-          if (res.data.body.exists) {
+          if (res) {
             console.log(ok('[✔] It seems that you already have an admin account.'));
           }
           else {
