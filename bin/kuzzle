@@ -31,7 +31,7 @@ program
   .description('delete Kuzzle configuration and users from database. Makes Kuzzle look like a virgin, touched for the very first time')
   .option('--fixtures <fixtures>', 'import some fixtures from file')
   .option('--mappings <mappings>', 'load and apply mappings from file')
-  .option('--noint', 'non interractive mode, will perform the reset immediately')
+  .option('--noint', 'non interactive mode, will perform the reset immediately')
   .action(require('./commands/reset'));
 
 // $ kuzzle plugins
@@ -40,16 +40,16 @@ program
   .arguments('[name]')
   .description('manage plugins')
   .option('    --list', 'list currently installed plugins')
-  .option('    --install', 'if plugin [name] is provided, install it from --version, --url or --path, otherwise, (re-)install all listed plugins')
-  .option('    --remove', 'removes plugin [name] from Kuzzle')
-  .option('    --activate', 'mark the plugin as "activated" (Kuzzle ignores deactivated plugins)')
-  .option('    --deactivate', 'mark the plugin as "deactivated" (Kuzzle ignores deactivated plugins)')
-  .option('    --importConfig <file>', 'import a configuration from a file for a given plugin')
+  .option('    --install', 'install a new plugin package from npm repository if [name] if provided or from --path or --url options')
+  .option('    --remove', 'remove plugin [name] from Kuzzle')
+  .option('    --activate', 'mark the plugin as "activated"')
+  .option('    --deactivate', 'mark the plugin as "deactivated"')
+  .option('    --importConfig <file>', 'import plugin [name] configuration from <file>')
   .option('    --get', 'get plugin [name] configuration stored in Kuzzle')
   .option('    --set <JSONObject>', 'merge current plugin configuration with JSONObject')
   .option('    --unset <property>', 'unset property from the plugin configuration')
   .option('    --replace <JSONObject>', 'erase the plugin configuration and apply JSONObject instead')
-  .option('-v, --packageVersion <version>', 'install plugin <version> from npm')
+  .option('-v, --packageVersion <version>', 'plugin <version> to install (npm repository or git only)')
   .option('-u, --url <url>', 'install plugin from a git repository or a remote tarball')
   .option('-p, --path <path>', 'install plugin from the file system')
   .action(require('./commands/plugins'));
