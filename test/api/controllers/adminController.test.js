@@ -482,16 +482,14 @@ describe('Test: admin controller', () => {
 
   describe('#adminExists', () => {
     it('should call search with right filter', () => {
-      kuzzle.internalEngine = {search: sandbox.stub().resolves({hits: []})};
-
       return adminController.adminExists()
         .then(() => {
-          should(kuzzle.internalEngine.search).be.calledWithMatch('users', {query: {in: {profileIds: ['admin']}}});
+          should(kuzzle.internalEngine.bootstrap.adminExists).be.calledOnce();
         });
     });
 
     it('should return false if there is no result', () => {
-      kuzzle.internalEngine = {search: sandbox.stub().resolves({hits: []})};
+      kuzzle.internalEngine.bootstrap.adminExists.resolves(false);
 
       return adminController.adminExists()
         .then((response) => {
@@ -500,7 +498,7 @@ describe('Test: admin controller', () => {
     });
 
     it('should return true if there is result', () => {
-      kuzzle.internalEngine = {search: sandbox.stub().resolves({hits: ['user1', 'user2', 'user3']})};
+      kuzzle.internalEngine.bootstrap.adminExists.resolves(true);
 
       return adminController.adminExists()
         .then((response) => {

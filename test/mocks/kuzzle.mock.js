@@ -22,18 +22,56 @@ function KuzzleMock () {
   // we need a deep copy here
   this.config = _.merge({}, config);
 
+  this.entryPoints = {
+    init: sinon.spy()
+  };
+
+  this.funnel = {
+    controllers: {
+      admin: {
+        adminExists: sinon.spy(),
+        createFirstAdmin: sinon.spy()
+      }
+    },
+    init: sinon.spy()
+  };
+
+  this.hooks = {
+    init: sinon.spy()
+  };
+
   this.indexCache = {
-    add: sinon.spy(),
-    remove: sinon.spy()
+    add: sinon.stub(),
+    exists: sinon.stub(),
+    init: sinon.stub().resolves(),
+    initInternal: sinon.stub().resolves(),
+    remove: sinon.stub(),
+    reset: sinon.stub()
   };
 
   this.internalEngine = {
+    bootstrap: {
+      adminExists: sinon.stub().resolves(true),
+      all: sinon.stub().resolves(),
+      createCollections: sinon.stub().resolves(),
+      createRolesCollection: sinon.stub().resolves(),
+      createProfilesCollection: sinon.stub().resolves(),
+      createUsersCollection: sinon.stub().resolves(),
+      createPluginsCollection: sinon.stub().resolves()
+    },
+    createInternalIndex: sinon.stub().resolves(),
+    createOrReplace: sinon.stub().resolves(),
+    deleteIndex: sinon.stub().resolves(),
     get: sinon.stub().resolves(foo),
     index: 'internalIndex',
-    init: sinon.stub().resolves()
+    init: sinon.stub().resolves(),
+    refresh: sinon.stub().resolves(),
+    search: sinon.stub().resolves(),
+    updateMapping: sinon.stub().resolves()
   };
 
   this.notifier = {
+    init: sinon.spy(),
     notifyDocumentCreate: sinon.spy(),
     notifyDocumentDelete: sinon.spy(),
     notifyDocumentReplace: sinon.spy(),
@@ -46,14 +84,38 @@ function KuzzleMock () {
   };
 
   this.pluginsManager = {
+    init: sinon.stub().resolves(),
+    packages: {
+      bootstrap: sinon.stub().resolves(),
+      definitions: sinon.stub().resolves([]),
+      getPackage: sinon.stub().resolves(),
+    },
+    run: sinon.stub().resolves(),
     trigger: sinon.spy(function () {return Promise.resolve(arguments[1]);})
   };
 
+  this.remoteActionsController = {
+    init: sinon.stub().resolves(),
+    actions: {
+      adminExists: sinon.stub().resolves(),
+      createFirstAdmin: sinon.stub().resolves(),
+      cleanAndPrepare: sinon.stub().resolves(),
+      cleanDb: sinon.stub().resolves(),
+      managePlugins: sinon.stub().resolves(),
+      data: sinon.stub().resolves()
+    }
+  };
+
   this.repositories = {
+    init: sinon.stub().resolves(),
     user: {
       load: sinon.stub().resolves(foo)
     }
   };
+
+  this.resetStorage = sinon.stub().resolves();
+
+  this.rootPath = '/kuzzle';
 
   this.validation = {
     validate: sinon.spy(function () {return Promise.resolve(arguments[0]);}),
@@ -69,7 +131,18 @@ function KuzzleMock () {
   };
 
   this.services = {
+    init: sinon.stub().resolves(),
     list: {
+      broker: {
+        listen: sinon.spy(),
+        send: sinon.spy()
+      },
+      internalCache: {
+        flushdb: sinon.stub().resolves()
+      },
+      memoryStorage: {
+        flushdb: sinon.stub().resolves()
+      },
       storageEngine: {
         get: sinon.stub().resolves({
           _source: foo
@@ -99,7 +172,8 @@ function KuzzleMock () {
   this.statistics = {
     getAllStats: sinon.stub().resolves(foo),
     getLastStats: sinon.stub().resolves(foo),
-    getStats: sinon.stub().resolves(foo)
+    getStats: sinon.stub().resolves(foo),
+    init: sinon.spy()
   };
 }
 

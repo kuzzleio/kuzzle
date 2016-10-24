@@ -50,16 +50,11 @@ module.exports = function (options) {
 
   if (userIsSure) {
     console.log(notice('[ℹ] Processing...\n'));
-    return kuzzle.remoteActions.do('cleanAndPrepare',
-      {
-        pid: params.pid,
+    return kuzzle.remoteActions.do('cleanDb', {}, {debug: options.parent.debug})
+      .then(() => kuzzle.remoteActions.do('data', {
         fixtures: params.fixtures,
         mappings: params.mappings
-      },
-      {
-        pid: params.pid,
-        debug: options.parent.debug
-      })
+      }, {debug: options.parent.debug}))
       .then(() => {
         console.log(ok('[✔] Kuzzle is now like a virgin, touched for the very first time!'));
         process.exit(0);
