@@ -25,7 +25,6 @@ fi
 echo "" > node_modules/pm2/lib/keymetrics
 echo "[$(date --rfc-3339 seconds)] - Starting Kuzzle..."
 
-node bin/kuzzle install
 pm2 start --silent /config/pm2.json
 nohup node-inspector --web-port=8080 --debug-port=7000 > /dev/null 2>&1&
 pm2 sendSignal -s SIGUSR1 KuzzleServer

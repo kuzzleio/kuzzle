@@ -14,7 +14,6 @@ describe('Test: dump', () => {
     consoleLogSpy,
     getAllStatsSpy,
     dump,
-    spies,
     kuzzle;
 
   afterEach(() => {
@@ -48,17 +47,17 @@ describe('Test: dump', () => {
 
     dump = rewire('../../../../lib/api/controllers/remoteActions/dump');
 
-    dump.__set__("fs", {
+    dump.__set__('fs', {
       writeFileSync: writeFileSyncSpy,
       copySync: copySyncSpy
     });
 
-    dump.__set__("mkdirp", {
+    dump.__set__('mkdirp', {
       sync: mkdirpSyncSpy
     });
 
-    dump.__set__("core", coreSpy);
-    dump.__set__("console", {
+    dump.__set__('core', coreSpy);
+    dump.__set__('console', {
       log: consoleLogSpy
     });
 
@@ -81,10 +80,13 @@ describe('Test: dump', () => {
         done();
       })
       .catch(error => done(error));
-  })
+  });
 
   it('should generate dump files', done => {
-    var baseDumpPath = '/tmp/'.concat((new Date()).getFullYear());
+    var
+      processDump,
+      osDump,
+      baseDumpPath = '/tmp/'.concat((new Date()).getFullYear());
 
     dump()
       .then(() => {
@@ -97,11 +99,11 @@ describe('Test: dump', () => {
         should(writeFileSyncSpy.getCall(1).args[1]).be.exactly(JSON.stringify(kuzzle.pluginsManager.plugins, null, ' ').concat('\n'));
 
         should(writeFileSyncSpy.getCall(2).args[0]).be.exactly(baseDumpPath.concat('/nodejs.json'));
-        var processDump = JSON.parse(writeFileSyncSpy.getCall(2).args[1]);
+        processDump = JSON.parse(writeFileSyncSpy.getCall(2).args[1]);
         should(processDump).have.keys('env', 'config', 'argv', 'versions', 'release', 'moduleLoadList');
 
         should(writeFileSyncSpy.getCall(3).args[0]).be.exactly(baseDumpPath.concat('/os.json'));
-        var osDump = JSON.parse(writeFileSyncSpy.getCall(3).args[1]);
+        osDump = JSON.parse(writeFileSyncSpy.getCall(3).args[1]);
         should(osDump).have.keys('platform', 'loadavg', 'uptime', 'cpus', 'mem', 'networkInterfaces');
         should(osDump.mem).have.keys('total', 'free');
 
@@ -115,7 +117,7 @@ describe('Test: dump', () => {
         done();
       })
       .catch(error => done(error));
-  })
+  });
 
   it('should copy pm2 logs files if any', done => {
     var baseDumpPath = '/tmp/'.concat((new Date()).getFullYear());
@@ -128,5 +130,6 @@ describe('Test: dump', () => {
         done();
       })
       .catch(error => done(error));
-  })
-})
+  });
+});
+

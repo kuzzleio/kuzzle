@@ -4,7 +4,7 @@ var
   clc = require('cli-color'),
   Kuzzle = require('../../lib/api/kuzzle');
 
-module.exports = function (options) {
+module.exports = function commandDump (options) {
   var
     error = string => options.parent.noColors ? string : clc.red(string),
     ok = string => options.parent.noColors ? string: clc.green.bold(string),

@@ -27,7 +27,6 @@ fi
 echo "" > node_modules/pm2/lib/keymetrics
 echo "[$(date --rfc-3339 seconds)] - Starting Kuzzle..."
 
-node bin/kuzzle install
 pm2 start --silent /config/pm2.json
 npm test
 npm run codecov
