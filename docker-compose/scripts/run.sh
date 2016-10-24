@@ -23,5 +23,5 @@ npm install
 
 echo "Starting Kuzzle..."
 
-pm2 start /config/pm2.json --silent
+node bin/kuzzle install && pm2 start /config/pm2.json --silent
 pm2 logs

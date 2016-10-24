@@ -1,8 +1,9 @@
 var
   should = require('should'),
   rewire = require('rewire'),
+  Promise = require('bluebird'),
   sinon = require('sinon'),
-  KuzzleMock = require('../../../mocks/kuzzle.mock'),
+  Kuzzle = require.main.require('lib/api/kuzzle'),
   PluginsManager = rewire('../../../../lib/api/core/plugins/pluginsManager');
 
 describe('PluginsManager: init()', () => {
@@ -10,33 +11,43 @@ describe('PluginsManager: init()', () => {
     kuzzle,
     pluginsManager;
 
-  beforeEach(() => {
-    kuzzle = new KuzzleMock();
+  before(() => {
+    kuzzle = new Kuzzle();
     pluginsManager = new PluginsManager(kuzzle);
-    pluginsManager.packages = kuzzle.pluginsManager.packages;
   });
 
   it('should load plugins at init', () => {
-    var
-      defs = {
-        plugin1: {foo: 'bar'},
-        plugin2: {foo: 'baz'}
-      },
-      spy = sinon.spy();
-
-    kuzzle.pluginsManager.packages.definitions.resolves(defs);
+    var loadPluginsStub = sinon.stub();
 
     return PluginsManager.__with__({
-      loadPlugins: spy
+      getPluginsList: () => {
+        return Promise.resolve({
+          plugin1: {foo: 'bar'},
+          plugin2: {foo: 'baz'}
+        });
+      },
+      loadPlugins: loadPluginsStub
     })(() => {
       return pluginsManager.init()
         .then(() => {
-          should(kuzzle.pluginsManager.packages.definitions)
-            .be.calledOnce();
+          should(loadPluginsStub.called).be.true();
+          should(pluginsManager.plugins).match({ plugin1: { foo: 'bar' }, plugin2: { foo: 'baz' } });
+        });
+    });
+  });
 
-          should(spy)
-            .be.calledOnce()
-            .be.calledWith(defs);
+  it('should discard a plugin if it fails to load', () => {
+    return PluginsManager.__with__({
+      getPluginsList: () => {
+        return Promise.resolve({
+          plugin1: {foo: 'bar'},
+          plugin2: {foo: 'baz'}
+        });
+      }
+    })(() => {
+      return pluginsManager.init()
+        .then(() => {
+          should(pluginsManager.plugins).match({});
         });
     });
   });
