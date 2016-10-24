@@ -736,4 +736,84 @@ describe('Test: admin controller', () => {
         });
     });
   });
+
+  describe('#validateSpecifications', () => {
+    it('should call the right functions and respond with the right response', () => {
+      requestObject.data.body = {
+        myindex: {
+          mycollection: {
+            strict: true,
+            fields: {
+              myField: {
+                mandatory: true,
+                type: 'integer',
+                defaultValue: 42
+              }
+            }
+          }
+        }
+      };
+
+      AdminController.__set__({
+        prepareSpecificationValidation: sandbox.stub().resolves({error: false, specifications: requestObject.data.body})
+      });
+
+      return adminController.validateSpecifications(requestObject)
+        .then(response => {
+          should(kuzzle.pluginsManager.trigger).be.calledTwice();
+          should(kuzzle.pluginsManager.trigger.firstCall).be.calledWith('data:beforeValidateSpecifications', requestObject);
+          should(kuzzle.pluginsManager.trigger.secondCall).be.calledWith('data:afterValidateSpecifications');
+          should(response).match({
+            status: 200,
+            error: null,
+            data: {
+              body: requestObject.data.body
+            }
+          });
+        });
+    });
+
+    it('should call the right functions and respond with the right response if there is an error', () => {
+      requestObject.data.body = {
+        myindex: {
+          mycollection: {
+            strict: true,
+            fields: {
+              myField: {
+                mandatory: true,
+                type: 'bad bad',
+                defaultValue: 42
+              }
+            }
+          }
+        }
+      };
+
+      AdminController.__set__({
+        prepareSpecificationValidation: sandbox.stub().resolves({error: true, responseObject: {
+          status: 400,
+          data: { body: requestObject.data.body}
+        }})
+      });
+
+      return adminController.validateSpecifications(requestObject)
+        .then(response => {
+          should(kuzzle.pluginsManager.trigger).be.calledTwice();
+          should(kuzzle.pluginsManager.trigger.firstCall).be.calledWith('data:beforeValidateSpecifications', requestObject);
+          should(kuzzle.pluginsManager.trigger.secondCall).be.calledWith('data:afterValidateSpecifications');
+          should(response).match({
+            status: 400,
+            error: {
+              message: 'Internal error',
+              _source: {
+                body: requestObject.data.body
+              }
+            },
+            data: {
+              body: null
+            }
+          });
+        });
+    });
+  });
 });
