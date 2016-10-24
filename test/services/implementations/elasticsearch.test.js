@@ -9,7 +9,7 @@ var
   NotFoundError = require.main.require('kuzzle-common-objects').Errors.notFoundError,
   ES = rewire('../../../lib/services/elasticsearch');
 
-describe.only('Test: ElasticSearch service', () => {
+describe('Test: ElasticSearch service', () => {
   var
     kuzzle = {},
     sandbox = sinon.sandbox.create(),
@@ -929,17 +929,17 @@ describe.only('Test: ElasticSearch service', () => {
 
   describe('#getMapping', () => {
     it('should allow users to retrieve a mapping', () => {
-      var result = {};
+      var indiceResult = {};
       var mappings = {
         'unit-tests-elasticsearch': {properties: {}}
       };
 
-      result[index] = {mappings};
+      indiceResult[index] = {mappings};
 
-      sandbox.stub(elasticsearch.client.indices, 'getMapping').resolves(result);
+      sandbox.stub(elasticsearch.client.indices, 'getMapping').resolves(indiceResult);
 
       return should(elasticsearch.getMapping(requestObject)
-        .then(() => {
+        .then(result => {
           should(result[requestObject.index]).not.be.undefined();
           should(result[requestObject.index].mappings).not.be.undefined();
         })).be.fulfilled();
