@@ -8,7 +8,7 @@ var
   fs = require('fs'),
   clc = require('cli-color');
 
-module.exports = function (options) {
+function commandReset (options) {
   var
     error = string => options.parent.noColors ? string : clc.red(string),
     warn = string => options.parent.noColors ? string : clc.yellow(string),
@@ -66,4 +66,6 @@ module.exports = function (options) {
   }
 
   console.log(notice('[ℹ] Nothing have been done... you do not look that sure...'));
-};
+}
+
+module.exports = commandReset;
