@@ -32,11 +32,11 @@
     //   * from a local directory: the location of the package must be
     //     specified using the "path" property
     "kuzzle-plugin-logger": {
-      "npmVersion": "2.0.4",
+      "version": "2.0.4",
       "activated": true
     },
     "kuzzle-plugin-auth-passport-local": {
-      "npmVersion": "2.0.4",
+      "version": "2.0.4",
       "activated": true
     }
   },
