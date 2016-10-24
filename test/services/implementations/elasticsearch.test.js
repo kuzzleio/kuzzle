@@ -9,7 +9,7 @@ var
   NotFoundError = require.main.require('kuzzle-common-objects').Errors.notFoundError,
   ES = rewire('../../../lib/services/elasticsearch');
 
-describe('Test: ElasticSearch service', () => {
+describe.only('Test: ElasticSearch service', () => {
   var
     kuzzle = {},
     sandbox = sinon.sandbox.create(),
@@ -46,7 +46,8 @@ describe('Test: ElasticSearch service', () => {
     filterAfterActiveAdded = {
       query: {
         bool: {
-          must: [
+          must: [filter.query],
+          filter: [
             {
               bool: {
                 should: [
@@ -62,9 +63,6 @@ describe('Test: ElasticSearch service', () => {
                   }
                 ]
               }
-            },
-            {
-              filter: filter.query.filter
             }
           ]
         }
@@ -73,7 +71,8 @@ describe('Test: ElasticSearch service', () => {
     raw_kuzzle_info = {
       query: {
         bool: {
-          must: [
+          must: [],
+          filter: [
             {
               bool: {
                 should: [
