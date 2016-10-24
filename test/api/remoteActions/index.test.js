@@ -95,9 +95,9 @@ describe('Tests: api/remoteActions/index.js', () => {
         initActions.call(context);
 
         should(RemoteActions.__get__('Action'))
-          .be.have.callCount(6);
+          .be.have.callCount(7);
 
-        managePluginsArgs = RemoteActions.__get__('Action').getCall(4).args[0];
+        managePluginsArgs = RemoteActions.__get__('Action').getCall(6).args[0];
         should(managePluginsArgs).match({
           timeout: 1000
         });

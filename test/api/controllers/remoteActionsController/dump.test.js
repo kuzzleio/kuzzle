@@ -36,6 +36,7 @@ describe('Test: dump', () => {
         }
       },
       pluginsManager: {
+        getPluginsConfig: () => { return {'foo': {}}; },
         plugins: {
           'foo': {}
         }

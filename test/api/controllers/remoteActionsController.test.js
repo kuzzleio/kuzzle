@@ -15,6 +15,7 @@ describe('lib/api/controllers/remoteActionsController', () => {
     cleanDbStub,
     clearCacheStub,
     managePluginsStub,
+    dumpStub,
     dataStub;
 
   beforeEach(() => {
@@ -25,11 +26,13 @@ describe('lib/api/controllers/remoteActionsController', () => {
     clearCacheStub = sinon.stub();
     managePluginsStub = sinon.stub();
     dataStub = sinon.stub();
+    dumpStub = sinon.stub();
 
     requireMock.withArgs('./remoteActions/cleanDb').returns(() => cleanDbStub);
     requireMock.withArgs('./remoteActions/clearCache').returns(() => clearCacheStub);
     requireMock.withArgs('./remoteActions/managePlugins').returns(() => managePluginsStub);
     requireMock.withArgs('./remoteActions/data').returns(() => dataStub);
+    requireMock.withArgs('./remoteActions/dump').returns(() => dumpStub);
 
     kuzzle = new KuzzleMock();
 
@@ -60,6 +63,8 @@ describe('lib/api/controllers/remoteActionsController', () => {
         .be.exactly(managePluginsStub);
       should(remoteActions.actions.data)
         .be.exactly(dataStub);
+      should(remoteActions.actions.dump)
+        .be.exactly(dumpStub);
 
       should(kuzzle.services.list.broker.listen)
         .be.calledOnce()

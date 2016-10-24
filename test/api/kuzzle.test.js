@@ -1,7 +1,8 @@
 var
   sinon = require('sinon'),
   should = require('should'),
-  Kuzzle = require('../../lib/api/kuzzle'),
+  rewire = require('rewire'),
+  Kuzzle = rewire('../../lib/api/kuzzle'),
   KuzzleMock = require('../mocks/kuzzle.mock');
 
 describe('/lib/api/kuzzle.js', () => {
@@ -146,8 +147,7 @@ describe('/lib/api/kuzzle.js', () => {
 
     it('should start all services and register errors handlers on kuzzle.start', () => {
       var
-        kuzzleMock,
-        remoteActionDumpSpy = sinon.stub().returns(Promise.resolve()),
+        mock,
         processExitSpy = sinon.spy(),
         processOnSpy = sinon.spy(),
         processRemoveAllListenersSpy = sinon.spy();
@@ -163,49 +163,26 @@ describe('/lib/api/kuzzle.js', () => {
         error: sinon.spy()
       });
 
-      kuzzleMock = {
-        internalEngine: {
-          init: sinon.stub().returns(Promise.resolve())
-        },
-        pluginsManager: {
-          init: sinon.stub().returns(Promise.resolve()),
-          run: sinon.stub().returns(Promise.resolve()),
-          trigger: sinon.spy()
-        },
-        services: {
-          init: sinon.stub().returns(Promise.resolve())
-        },
-        indexCache: {
-          init: sinon.stub().returns(Promise.resolve())
-        },
-        funnel: {
-          init: sinon.spy()
-        },
-        notifier: {
-          init: sinon.spy()
-        },
-        statistics: {
-          init: sinon.spy()
-        },
-        hooks: {
-          init: sinon.spy()
-        },
-        entryPoints: {
-          init: sinon.spy()
-        },
-        repositories: {
-          init: sinon.stub().returns(Promise.resolve())
-        },
-        remoteActionsController: {
-          init: sinon.stub().returns(Promise.resolve()),
-          actions: {
-            dump: remoteActionDumpSpy
-          }
-        },
-      };
-
+      mock = new KuzzleMock();
       kuzzle = new Kuzzle();
-      kuzzle.start.call(kuzzleMock);
+
+      [
+        'entryPoints',
+        'funnel',
+        'hooks',
+        'indexCache',
+        'internalEngine',
+        'notifier',
+        'pluginsManager',
+        'remoteActionsController',
+        'repositories',
+        'services',
+        'statistics'
+      ].forEach(k => {
+        kuzzle[k] = mock[k];
+      });
+
+      kuzzle.start();
 
       should(processRemoveAllListenersSpy.getCall(0).args[0]).be.exactly('unhandledRejection');
       should(processOnSpy.getCall(0).args[0]).be.exactly('unhandledRejection');
