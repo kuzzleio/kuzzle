@@ -133,16 +133,25 @@ describe('Tests: remoteActionController action client', () => {
 
     it('should start the timer', () => {
       return Action.__with__({
-        setTimeout: sinon.spy()
+        setTimeout: sinon.spy(),
+        'Function.prototype.bind': sinon.spy(Function.prototype.bind)
       })(() => {
         var
           action = new Action(),
-          stub = Action.__get__('setTimeout');
+          bindSpy = Action.__get__('Function.prototype.bind'),
+          setTimeoutSpy = Action.__get__('setTimeout');
 
         action.initTimeout();
 
-        should(stub).be.calledOnce();
-        should(stub).be.calledWithExactly(action.timeOutCB, 5000);
+        // Function.prototype.bind returns a *new* function
+        should(bindSpy)
+          .be.calledTwice();
+        should(bindSpy.thisValues[1])
+          .be.exactly(action.timeOutCB);
+
+        should(setTimeoutSpy)
+          .be.calledOnce()
+          .be.calledWith(bindSpy.returnValues[1]);
       });
     });
 

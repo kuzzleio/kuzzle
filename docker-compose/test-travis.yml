@@ -1,5 +1,5 @@
 proxy:
-  image: kuzzleio/proxy:alpine
+  image: kuzzleio/proxy:1.0.0-RC6
   ports:
     - "7511-7513:7511-7513"
 
