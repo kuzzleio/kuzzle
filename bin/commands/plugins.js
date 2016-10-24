@@ -5,7 +5,7 @@ var
 
 /* eslint-disable no-console */
 
-function commandPlugin (plugin, options) {
+module.exports = function pluginsManager (plugin, options) {
   var
     clcError = string => options.parent.noColors ? string : clc.red(string),
     clcNotice = string => options.parent.noColors ? string : clc.cyan(string),
@@ -24,31 +24,35 @@ function commandPlugin (plugin, options) {
     var k = opt.long.replace(/^--/, '');
     data[k] = options[k];
   });
-  if (data.packageVersion) {
-    data.version = data.packageVersion;
-    delete data.data.packageVersion;
-  }
   data._id = plugin;
 
   if (options.install) {
-    console.log('███ kuzzle-plugins: Installing plugin...');
+    if (plugin) {
+      console.log('███ kuzzle-plugins: Installing plugin ' + plugin + '...');
+    }
+    else {
+      console.log('███ kuzzle-plugins: Starting plugins installation...');
+    }
   }
 
   return kuzzle.remoteActions.do('managePlugins', data, {pid: options.pid, debug: options.parent.debug})
     .then(res => {
-      console.log('');
-
       if (options.list) {
         console.dir(res.data.body, {depth: null, colors: !options.parent.noColors});
       }
       else if (options.install) {
-        console.log(clcOk(`███ kuzzle-plugins: Plugin ${res.data.body.name}@${res.data.body.version}:\n${JSON.stringify(res.data.body.config, undefined, 2)}`));
+        if (plugin) {
+          console.log(clcOk('███ kuzzle-plugins: Plugin ' + plugin + ' installed'));
+        }
+        else {
+          console.log(clcOk('███ kuzzle-plugins: Plugins installed'));
+        }
       }
       else if (options.importConfig) {
         console.log(clcOk('[✔] Successfully imported configuration'));
       }
       else {
-        console.dir(res.data.body, {depth: null, colors: !options.parent.noColors});
+        console.dir(res.data.body, {depth: null, colors: !options.parent.noColrs});
       }
 
       if (options.parent.debug) {
@@ -73,7 +77,8 @@ function commandPlugin (plugin, options) {
    */
   function checkOptions() {
     var
-      requiredOptions;
+      requiredOptions,
+      installOptions;
 
     // Check if at least one of the action option is supplied
     requiredOptions = [0, 'install', 'remove', 'get', 'list', 'set', 'replace', 'unset', 'activate', 'deactivate', 'importConfig']
@@ -95,45 +100,32 @@ function commandPlugin (plugin, options) {
       process.exit(1);
     }
 
-    // --list are the only options working without specifying a plugin name
+    // --install and --list are the only options working without specifying a plugin name
     if (!plugin && !options.install && !options.list) {
       console.error(clcError('A plugin [name] is required for this operation'));
       process.exit(1);
     }
 
-    if (options.install) {
-      if (options.list) {
-        console.error(clcError('Options --install and --list are mutually exclusive'));
-        process.exit(1);
-      }
-
-      if (options.path && options.url) {
-        console.error(clcError('Options --path and --url are mutually exclusive'));
-        process.exit(1);
-      }
-
-      if (plugin && options.path) {
-        console.error(clcError('Option --path and <plugin> are mutually exclusive'));
-        process.exit(1);
-      }
-
-      if(plugin && options.url) {
-        console.error(clcError('Option --url and <plugin> are mutually exclusive'));
-        process.exit(1);
-      }
-
-      if (options.packageVersion && options.path) {
-        console.warn(clcNotice('Warning: Cannot set a version when installing from local path. The packages.json version will be used instead.'));
-        delete options.packageVersion;
-      }
-
-      if (!plugin && !options.path && !options.url) {
-        console.error(clcError('No installation information provided. Needs at least <plugin>, --path or --url option to be set.'));
-        process.exit(1);
-      }
+    if (options.install && options.list) {
+      console.error(clcError('Options --install and --list are mutually exclusive'));
+      process.exit(1);
     }
 
-  }
-}
+    // Checking mutually exclusive --install options
+    installOptions = [0, 'npmVersion', 'gitUrl', 'path'].reduce((p, c) => {
+      return p + (options[c] !== undefined);
+    });
 
-module.exports = commandPlugin;
+    if (installOptions > 0 && !options.install) {
+      console.error(clcNotice('Options --npmVersion, --path and --gitUrl only work with --install. Ignoring them from now on.'));
+    }
+    else if (installOptions > 1) {
+      console.error(clcError('Options --npmVersion, --path and --gitUrl are mutually exclusive'));
+      process.exit(1);
+    }
+    else if (installOptions === 0 && options.install && plugin) {
+      console.error(clcError('An installation configuration must be provided, with --npmVersion, --gitUrl or --path'));
+      process.exit(1);
+    }
+  }
+};

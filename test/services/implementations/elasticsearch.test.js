@@ -26,71 +26,19 @@ describe('Test: ElasticSearch service', () => {
       hobby: 'computer'
     },
     filter = {
-      query: {
-        filter: {
-          and: [
-            {
-              term: {
-                city: 'NYC'
-              }
-            },
-            {
-              term: {
-                hobby: 'computer'
-              }
+      filter: {
+        and: [
+          {
+            term: {
+              city: 'NYC'
             }
-          ]
-        }
-      }
-    },
-    filterAfterActiveAdded = {
-      query: {
-        bool: {
-          must: [filter.query],
-          filter: [
-            {
-              bool: {
-                should: [
-                  {
-                    term: {
-                      '_kuzzle_info.active': true
-                    }
-                  },
-                  {
-                    missing: {
-                      'field': '_kuzzle_info'
-                    }
-                  }
-                ]
-              }
+          },
+          {
+            term: {
+              hobby: 'computer'
             }
-          ]
-        }
-      }
-    },
-    raw_kuzzle_info = {
-      query: {
-        bool: {
-          must: [],
-          filter: [
-            {
-              bool: {
-                should: [
-                  {
-                    term: {
-                      '_kuzzle_info.active': true
-                    }
-                  },
-                  {
-                    missing: {
-                      'field': '_kuzzle_info'
-                    }
-                  }
-                ]
-              }
-            }
-          ]
-        }
+          }
+        ]
       }
     };
 
@@ -152,9 +100,10 @@ describe('Test: ElasticSearch service', () => {
       var spy = sandbox.stub(elasticsearch.client, 'search').resolves({total: 0, hits: []});
 
       requestObject.data.body = filter;
+
       return elasticsearch.search(requestObject)
         .then(result => {
-          should(spy.firstCall.args[0].body).be.deepEqual(filterAfterActiveAdded);
+          should(spy.firstCall.args[0].body).be.exactly(filter);
           should(result).be.an.Object();
           should(result.total).be.exactly(0);
           should(result.hits).be.an.Array();
@@ -176,59 +125,11 @@ describe('Test: ElasticSearch service', () => {
   });
 
   describe('#create', () => {
-    it('should allow creating documents if the document does not already exists', () => {
+    it('should allow creating documents', () => {
       var
         spy = sandbox.stub(elasticsearch.client, 'create').resolves({}),
         refreshIndexIfNeeded = ES.__get__('refreshIndexIfNeeded'),
         refreshIndexSpy = sandbox.spy(refreshIndexIfNeeded);
-
-      sandbox.stub(elasticsearch.client, 'get').rejects();
-
-      return should(ES.__with__('refreshIndexIfNeeded', refreshIndexSpy)(() => {
-        return elasticsearch.create(requestObject)
-          .then(() => {
-            var data = spy.firstCall.args[0];
-
-            should(data.index).be.exactly(index);
-            should(data.type).be.exactly(collection);
-            should(data.body).be.exactly(documentAda);
-
-            should(refreshIndexSpy.calledOnce).be.true();
-          });
-      })).be.fulfilled();
-    });
-
-    it('should replace a document because it already exists but is inactive', () => {
-      var
-        spy = sandbox.stub(elasticsearch.client, 'index').resolves({}),
-        refreshIndexIfNeeded = ES.__get__('refreshIndexIfNeeded'),
-        refreshIndexSpy = sandbox.spy(refreshIndexIfNeeded);
-
-      sandbox.stub(elasticsearch.client, 'get').resolves({_source: {_kuzzle_info: {active: false}}});
-      requestObject.data._id = 42;
-
-      return should(ES.__with__('refreshIndexIfNeeded', refreshIndexSpy)(() => {
-        return elasticsearch.create(requestObject)
-          .then(() => {
-            var data = spy.firstCall.args[0];
-
-            should(data.index).be.exactly(index);
-            should(data.type).be.exactly(collection);
-            should(data.body).be.exactly(documentAda);
-
-            should(refreshIndexSpy.calledOnce).be.true();
-          });
-      })).be.fulfilled();
-    });
-
-    it('should create a document with a non existing id', () => {
-      var
-        spy = sandbox.stub(elasticsearch.client, 'create').resolves({}),
-        refreshIndexIfNeeded = ES.__get__('refreshIndexIfNeeded'),
-        refreshIndexSpy = sandbox.spy(refreshIndexIfNeeded);
-
-      sandbox.stub(elasticsearch.client, 'get').rejects();
-      requestObject.data._id = 42;
 
       return should(ES.__with__('refreshIndexIfNeeded', refreshIndexSpy)(() => {
         return elasticsearch.create(requestObject)
@@ -245,24 +146,7 @@ describe('Test: ElasticSearch service', () => {
     });
 
     it('should reject the create promise if elasticsearch throws an error', () => {
-      sandbox.stub(elasticsearch.client, 'get').rejects({});
       sandbox.stub(elasticsearch.client, 'create').rejects({});
-
-      return should(elasticsearch.create(requestObject)).be.rejected();
-    });
-
-    it('should reject the create promise if client.index throws an error', () => {
-      sandbox.stub(elasticsearch.client, 'get').resolves({_source: {_kuzzle_info: {active: false}}});
-      sandbox.stub(elasticsearch.client, 'index').rejects({});
-      requestObject.data._id = '42';
-
-      return should(elasticsearch.create(requestObject)).be.rejected();
-    });
-
-    it('should reject a promise if the document already exists', () => {
-      sandbox.stub(elasticsearch.client, 'create').rejects({});
-      sandbox.stub(elasticsearch.client, 'get').resolves({_source: {_kuzzle_info: {active: true}}});
-      requestObject.data._id = 42;
 
       return should(elasticsearch.create(requestObject)).be.rejected();
     });
@@ -363,7 +247,7 @@ describe('Test: ElasticSearch service', () => {
 
   describe('#get', () => {
     it('should allow getting a single document', () => {
-      var spy = sandbox.stub(elasticsearch.client, 'get').resolves({_source: {_kuzzle_info: {active: true}}});
+      var spy = sandbox.stub(elasticsearch.client, 'get').resolves({});
 
       delete requestObject.data.body;
       requestObject.data._id = createdDocumentId;
@@ -372,12 +256,6 @@ describe('Test: ElasticSearch service', () => {
         .then(() => {
           should(spy.firstCall.args[0].id).be.exactly(createdDocumentId);
         })).be.fulfilled();
-    });
-
-    it('should reject requests when document is on inactive stat', () => {
-      sandbox.stub(elasticsearch.client, 'get').resolves({_source: {_kuzzle_info: {active: false}}});
-
-      return should(elasticsearch.get(requestObject)).be.rejected();
     });
 
     it('should reject requests when the user search for a document with id _search', () => {
@@ -439,7 +317,7 @@ describe('Test: ElasticSearch service', () => {
 
       return should(elasticsearch.count(requestObject)
         .then(() => {
-          should(spy.firstCall.args[0].body).be.deepEqual(raw_kuzzle_info);
+          should(spy.firstCall.args[0].body).have.keys();
         })
       ).be.fulfilled();
     });
@@ -450,10 +328,9 @@ describe('Test: ElasticSearch service', () => {
       requestObject.data.body = {};
       requestObject.data.query = {foo: 'bar'};
 
-      raw_kuzzle_info.query.bool.must.push(requestObject.data.query);
       return should(elasticsearch.count(requestObject)
         .then(() => {
-          should(spy.firstCall.args[0].body).be.deepEqual(raw_kuzzle_info);
+          should(spy.firstCall.args[0].body).be.an.instanceOf(Object).and.have.property('query', {foo: 'bar'});
         })
       ).be.fulfilled();
     });
@@ -929,14 +806,10 @@ describe('Test: ElasticSearch service', () => {
 
   describe('#getMapping', () => {
     it('should allow users to retrieve a mapping', () => {
-      var indiceResult = {};
-      var mappings = {
-        'unit-tests-elasticsearch': {properties: {}}
-      };
+      var mappings = {};
+      mappings[index] = {mappings: {}};
 
-      indiceResult[index] = {mappings};
-
-      sandbox.stub(elasticsearch.client.indices, 'getMapping').resolves(indiceResult);
+      sandbox.stub(elasticsearch.client.indices, 'getMapping').resolves(mappings);
 
       return should(elasticsearch.getMapping(requestObject)
         .then(result => {
@@ -1261,11 +1134,8 @@ describe('Test: ElasticSearch service', () => {
 
       ).be.fulfilled();
     });
+
+
   });
 
-  describe('#addActiveFilter', () => {
-    it('should add a query to filter by active state', () => {
-
-    });
-  });
 });
