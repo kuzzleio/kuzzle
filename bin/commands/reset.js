@@ -8,7 +8,7 @@ var
   fs = require('fs'),
   clc = require('cli-color');
 
-module.exports = function (options) {
+function commandReset (options) {
   var
     error = string => options.parent.noColors ? string : clc.red(string),
     warn = string => options.parent.noColors ? string : clc.yellow(string),
@@ -50,16 +50,11 @@ module.exports = function (options) {
 
   if (userIsSure) {
     console.log(notice('[ℹ] Processing...\n'));
-    return kuzzle.remoteActions.do('cleanAndPrepare',
-      {
-        pid: params.pid,
+    return kuzzle.remoteActions.do('cleanDb', {}, {debug: options.parent.debug})
+      .then(() => kuzzle.remoteActions.do('data', {
         fixtures: params.fixtures,
         mappings: params.mappings
-      },
-      {
-        pid: params.pid,
-        debug: options.parent.debug
-      })
+      }, {debug: options.parent.debug}))
       .then(() => {
         console.log(ok('[✔] Kuzzle is now like a virgin, touched for the very first time!'));
         process.exit(0);
@@ -71,4 +66,6 @@ module.exports = function (options) {
   }
 
   console.log(notice('[ℹ] Nothing have been done... you do not look that sure...'));
-};
+}
+
+module.exports = commandReset;
