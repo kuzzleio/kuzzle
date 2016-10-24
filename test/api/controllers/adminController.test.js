@@ -630,4 +630,70 @@ describe('Test: admin controller', () => {
         });
     });
   });
+
+  describe('#getSpecifications', () => {
+    it('should call internalEngine with the right id', () => {
+      kuzzle.internalEngine.get =  sandbox.stub().resolves({_source: {foo: 'bar'}});
+
+      return adminController.getSpecifications(requestObject)
+        .then(response => {
+          should(kuzzle.pluginsManager.trigger).be.calledTwice();
+          should(kuzzle.pluginsManager.trigger.firstCall).be.calledWith('data:beforeGetSpecifications', requestObject);
+          should(kuzzle.pluginsManager.trigger.secondCall).be.calledWith('data:afterGetSpecifications');
+          should(kuzzle.internalEngine.get).be.calledOnce();
+          should(kuzzle.internalEngine.get).be.calledWithMatch('validations', `${index}#${collection}`);
+          should(response).match({
+            status: 200,
+            error: null,
+            data: {
+              body: {
+                foo: 'bar'
+              }
+            }
+          });
+        });
+    });
+  });
+
+  describe('#updateSpecifications', () => {
+    it.only('should call internalEngine with the right id', () => {
+      var preparedQuery = {
+
+      }
+
+      requestObject.data.body = {
+        myindex: {
+          mycollection: {
+            strict: true,
+            fields: {
+              myField: {
+                mandatory: true,
+                type: 'integer',
+                defaultValue: 42
+              }
+            }
+          }
+        }
+      };
+
+      kuzzle.internalEngine.get =  sandbox.stub().resolves({_source: {foo: 'bar'}});
+      return adminController.getSpecifications(requestObject)
+        .then(response => {
+          should(kuzzle.pluginsManager.trigger).be.calledTwice();
+          should(kuzzle.pluginsManager.trigger.firstCall).be.calledWith('data:beforeUpdateSpecifications', requestObject);
+          should(kuzzle.pluginsManager.trigger.secondCall).be.calledWith('data:afterUpdateSpecifications');
+          should(kuzzle.internalEngine.createOrReplace).be.calledOnce();
+          should(kuzzle.internalEngine.createOrReplace).be.calledWithMatch('validations', `${index}#${collection}`);
+          should(response).match({
+            status: 200,
+            error: null,
+            data: {
+              body: {
+                foo: 'bar'
+              }
+            }
+          });
+        });
+    });
+  });
 });

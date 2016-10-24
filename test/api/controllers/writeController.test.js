@@ -350,4 +350,60 @@ describe('Test: write controller', () => {
     });
   });
 
+  describe.only('#validateDocument', () => {
+    it('should trigger the proper method, send the right response with the right status code when the given document satisfy the specifications', () => {
+      var expected = {
+        errorMessages: {},
+        validation: true
+      };
+
+      kuzzle.validation = {
+        validationPromise: sinon.stub().resolves(expected)
+      };
+
+      return controller.validateDocument(requestObject)
+        .then(response => {
+          should(kuzzle.validation.validationPromise).be.calledOnce();
+          should(response).match({
+            status: 200,
+            error: null,
+            data: {
+              body: expected
+            }
+          });
+        });
+    });
+
+    it('should trigger the proper method, send the right response with the right status code when the given document do not satisfy the specifications', () => {
+      var expected = {
+        errorMessages: {
+          fieldScope: {
+            children: {
+              myField: {
+                messages: [
+                  'The field must be an integer.'
+                ]
+              }
+            }
+          }
+        },
+        validation: false
+      };
+
+      kuzzle.validation = {
+        validationPromise: sinon.stub().resolves(expected)
+      };
+
+      return controller.validateDocument(requestObject)
+        .then(response => {
+          should(kuzzle.validation.validationPromise).be.calledOnce();
+          should(response).match({
+            status: 400,
+            error: expected.errorMessages,
+            result: expected
+          });
+        });
+    });
+  });
+
 });
