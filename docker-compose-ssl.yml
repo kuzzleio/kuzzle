@@ -1,6 +1,6 @@
 # HAProxy uses a self signed certificate. You have to accept the exception
 # in your browser. A proper certificate should be used for non development purposes.
-# In this setup, all exposes ports are using SSL.
+# In this setup, all exposed ports are using SSL.
 version: '2'
 
 services:
