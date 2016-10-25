@@ -10,6 +10,13 @@ var
 describe('Test: data handler', () => {
   var
     data,
+    fixtures = {
+      'index': {
+        'collection': [
+          {'action': {'param': 'value'}}
+        ]
+      }
+    },
     kuzzle;
 
   beforeEach(() => {
@@ -26,10 +33,10 @@ describe('Test: data handler', () => {
       req = new RequestObject({
         index: 'index',
         collection: 'collection',
-        body: {fixtures: 'fixtures'}
+        body: {fixtures: fixtures}
       });
 
-    kuzzle.services.list.storageEngine.import.resolves({data: {body: 'response'}});
+    kuzzle.services.list.storageEngine.import.resolves({items: 'response'});
 
     return data(req)
       .then(response => {
@@ -39,7 +46,7 @@ describe('Test: data handler', () => {
         should(kuzzle.services.list.storageEngine.import).be.calledOnce();
         should(importArg.index).be.exactly('index');
         should(importArg.collection).be.exactly('collection');
-        should(importArg.data.body).be.eql({bulkData: 'fixtures'});
+        should(importArg.data.body).be.eql({bulkData: fixtures.index.collection});
       });
   });
 
@@ -109,7 +116,7 @@ describe('Test: data handler', () => {
       index: 'index',
       collection: 'collection',
       body: {
-        fixtures: 'fixtures',
+        fixtures: fixtures,
         mappings: {
           index: { collection: 'mapping' }
         }
