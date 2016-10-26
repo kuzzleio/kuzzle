@@ -5,12 +5,13 @@ module.exports = {
 
   plugins: {
     common: {
+      workerPrefix: 'kpw:',
       pipeWarnTime: 40,
       pipeTimeout: 250
     },
 
     'kuzzle-plugin-logger': {
-      version: '2.0.4',
+      version: '2.0.5',
       activated: true
     },
     'kuzzle-plugin-auth-passport-local': {

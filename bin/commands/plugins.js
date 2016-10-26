@@ -26,7 +26,7 @@ function commandPlugin (plugin, options) {
   });
   if (data.packageVersion) {
     data.version = data.packageVersion;
-    delete data.data.packageVersion;
+    delete data.packageVersion;
   }
   data._id = plugin;
 
@@ -42,7 +42,11 @@ function commandPlugin (plugin, options) {
         console.dir(res.data.body, {depth: null, colors: !options.parent.noColors});
       }
       else if (options.install) {
-        console.log(clcOk(`███ kuzzle-plugins: Plugin ${res.data.body.name}@${res.data.body.version}:\n${JSON.stringify(res.data.body.config, undefined, 2)}`));
+        if (res.data.body.success) {
+          console.log(clcOk(`███ kuzzle-plugins: Plugin ${res.data.body.name}@${res.data.body.version}:\n${JSON.stringify(res.data.body.config, undefined, 2)}`));
+        } else {
+          console.log(clcError('███ kuzzle-plugins: An error occurred while installing plugin, for more information, please check kuzzle error logs'));
+        }
       }
       else if (options.importConfig) {
         console.log(clcOk('[✔] Successfully imported configuration'));
