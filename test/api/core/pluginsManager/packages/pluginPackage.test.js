@@ -351,7 +351,7 @@ describe('plugins/packages/pluginPackage', () => {
       reset;
 
     beforeEach(() => {
-      pkg.localVersion = sinon.stub().returns('version');
+      pkg.localVersion = sinon.stub().returns('local version');
       pkg.localConfiguration = sinon.stub().returns('local configuration');
       pkg.updateDbConfiguration = sinon.stub().resolves();
 
