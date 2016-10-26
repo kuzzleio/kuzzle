@@ -13,11 +13,11 @@ module.exports = {
     },
 
     'kuzzle-plugin-logger': {
-      npmVersion: '2.0.4',
+      version: '2.0.4',
       activated: true
     },
     'kuzzle-plugin-auth-passport-local': {
-      npmVersion: '2.0.4',
+      version: '2.0.4',
       activated: true
     }
   },
