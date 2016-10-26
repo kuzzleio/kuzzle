@@ -47,7 +47,7 @@
     "jsonwebtoken": "^7.1.7",
     "kuzzle-common-objects": "^1.0.2",
     "lodash": "4.16.3",
-    "ms": "^0.7.1",
+    "ms": "0.7.1",
     "ngeohash": "0.6.0",
     "node-units": "0.1.7",
     "node-uuid": "1.4.7",
