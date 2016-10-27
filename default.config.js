@@ -33,6 +33,7 @@ module.exports = {
   },
 
   security: {
+    restrictedProfileIds: ['default'],
     jwt: {
       algorithm: 'HS256',
       expiresIn: '1h',
