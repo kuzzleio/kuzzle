@@ -1,3 +1,6 @@
+/**
+ * @class KuzzleConfiguration
+ */
 module.exports = {
   hooks: require('./lib/config/hooks'),
 
@@ -163,6 +166,8 @@ module.exports = {
   stats: {
     ttl: 3600,
     statsInterval: 10
+  },
+  /** @type {DocumentSpecification} */
+  validation: {
   }
-
 };

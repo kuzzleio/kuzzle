@@ -60,6 +60,10 @@ describe('/lib/api/kuzzle.js', () => {
           should(kuzzle.internalEngine.bootstrap.all)
             .be.calledOnce();
 
+          should(kuzzle.validation).be.an.Object();
+
+          should(kuzzle.start).be.a.Function();
+
           sinon.assert.callOrder(
             kuzzle.pluginsManager.trigger,
             kuzzle.internalEngine.deleteIndex,
