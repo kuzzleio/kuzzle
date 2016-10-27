@@ -113,16 +113,17 @@ function KuzzleMock () {
     }
   };
 
-  this.resetStorage = sinon.stub().resolves();
-
-  this.rootPath = '/kuzzle';
-
   this.validation = {
     init: sinon.spy(),
     curateSpecification: sinon.spy(function () {return Promise.resolve();}),
     validate: sinon.spy(function () {return Promise.resolve(arguments[0]);}),
+    validationPromise: sinon.spy(function () {return Promise.resolve(arguments[0]);}),
     addType: sinon.spy()
   };
+
+  this.resetStorage = sinon.stub().resolves();
+
+  this.rootPath = '/kuzzle';
 
   this.router = {
     execute: sinon.stub().resolves(foo),

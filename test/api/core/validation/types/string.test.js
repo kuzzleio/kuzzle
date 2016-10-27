@@ -43,14 +43,14 @@ describe('Test: validation/types/string', () => {
       var errorMessage = [];
 
       should(stringType.validate({length: {min: 10}}, 'a string', errorMessage)).be.false();
-      should(errorMessage).be.deepEqual(['The string is not long enough.']);
+      should(errorMessage).be.deepEqual(['Invalid string length. Expected min: 10. Received: 8 "a string"']);
     });
 
     it('should return false if the value is not valid', () => {
       var errorMessage = [];
 
       should(stringType.validate({length: {max: 5}}, 'a string', errorMessage)).be.false();
-      should(errorMessage).be.deepEqual(['The string is too long.']);
+      should(errorMessage).be.deepEqual(['Invalid string length. Expected max: 5. Received: 8 "a string"']);
     });
   });
 
