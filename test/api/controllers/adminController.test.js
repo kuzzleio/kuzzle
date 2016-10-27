@@ -24,7 +24,7 @@ describe('Test: admin controller', () => {
     kuzzle = new KuzzleMock();
 
     adminController = new AdminController(kuzzle);
-    requestObject = new RequestObject({ controller: 'admin' }, {index, collection}, 'unit-test');
+    requestObject = new RequestObject({controller: 'admin'}, {index, collection}, 'unit-test');
   });
 
   afterEach(() => {
@@ -556,7 +556,12 @@ describe('Test: admin controller', () => {
       return adminController.createFirstAdmin(request)
         .then(() => {
           should(createOrReplaceUser).be.calledOnce();
-          should(createOrReplaceUser).be.calledWithMatch({data: {_id: 'toto', body: {password: 'pwd', profileIds: ['admin']}}});
+          should(createOrReplaceUser).be.calledWithMatch({
+            data: {
+              _id: 'toto',
+              body: {password: 'pwd', profileIds: ['admin']}
+            }
+          });
           should(resetRolesStub).have.callCount(0);
           should(resetProfilesStub).have.callCount(0);
         });
@@ -577,7 +582,12 @@ describe('Test: admin controller', () => {
       return adminController.createFirstAdmin(request)
         .then(() => {
           should(createOrReplaceUser).be.calledOnce();
-          should(createOrReplaceUser).be.calledWithMatch({data: {_id: 'toto', body: {password: 'pwd', profileIds: ['admin']}}});
+          should(createOrReplaceUser).be.calledWithMatch({
+            data: {
+              _id: 'toto',
+              body: {password: 'pwd', profileIds: ['admin']}
+            }
+          });
           should(resetRolesStub).have.callCount(1);
           should(resetProfilesStub).have.callCount(1);
         });
@@ -622,7 +632,12 @@ describe('Test: admin controller', () => {
       return AdminController.__get__('resetProfiles').call(mock)
         .then(() => {
           should(createOrReplace).have.callCount(3);
-          should(createOrReplace.firstCall).be.calledWithMatch('profiles', 'admin', {policies: [{roleId: 'admin', allowInternalIndex: true}]});
+          should(createOrReplace.firstCall).be.calledWithMatch('profiles', 'admin', {
+            policies: [{
+              roleId: 'admin',
+              allowInternalIndex: true
+            }]
+          });
           should(createOrReplace.secondCall).be.calledWithMatch('profiles', 'anonymous', {policies: [{roleId: 'anonymous'}]});
           should(createOrReplace.thirdCall).be.calledWithMatch('profiles', 'default', {policies: [{roleId: 'default'}]});
         });
@@ -712,7 +727,10 @@ describe('Test: admin controller', () => {
         }
       };
 
-      kuzzle.validation.isValidSpecification = sandbox.stub().resolves({isValid: false, errors: ['bad bad is a bad type !']});
+      kuzzle.validation.isValidSpecification = sandbox.stub().resolves({
+        isValid: false,
+        errors: ['bad bad is a bad type !']
+      });
       kuzzle.validation.curateSpecification = sandbox.stub();
 
       return adminController.updateSpecifications(requestObject)
@@ -790,10 +808,12 @@ describe('Test: admin controller', () => {
       };
 
       AdminController.__set__({
-        prepareSpecificationValidation: sandbox.stub().resolves({error: true, responseObject: {
-          status: 400,
-          data: { body: requestObject.data.body}
-        }})
+        prepareSpecificationValidation: sandbox.stub().resolves({
+          error: true, responseObject: {
+            status: 400,
+            data: {body: requestObject.data.body}
+          }
+        })
       });
 
       return adminController.validateSpecifications(requestObject)
@@ -813,6 +833,38 @@ describe('Test: admin controller', () => {
               body: null
             }
           });
+        });
+    });
+  });
+
+  describe('#deleteSpecifications', () => {
+    it('should call the right functions and respond with the right response if the validation specification exists', () => {
+      kuzzle.internalEngine.delete = sandbox.stub().resolves();
+
+      kuzzle.validation.specification = {};
+      kuzzle.validation.specification[index] = {};
+      kuzzle.validation.specification[index][collection] = {};
+
+      return adminController.deleteSpecifications(requestObject)
+        .then(response => {
+          should(kuzzle.internalEngine.delete).be.calledOnce();
+          should(kuzzle.pluginsManager.trigger).be.calledThrice();
+          should(kuzzle.pluginsManager.trigger.firstCall).be.calledWith('data:beforeDeleteSpecifications', requestObject);
+          should(kuzzle.pluginsManager.trigger.secondCall).be.calledWith('data:afterDeleteSpecifications');
+          should(response).match({status: 200});
+        });
+    });
+    it('should resolves if there is no specification set', () => {
+      kuzzle.internalEngine.delete = sandbox.stub().rejects({status: 404});
+      kuzzle.validation.specification = {};
+
+      return adminController.deleteSpecifications(requestObject)
+        .then(response => {
+          should(kuzzle.internalEngine.delete).not.be.called();
+          should(kuzzle.pluginsManager.trigger).be.calledThrice();
+          should(kuzzle.pluginsManager.trigger.firstCall).be.calledWith('data:beforeDeleteSpecifications', requestObject);
+          should(kuzzle.pluginsManager.trigger.secondCall).be.calledWith('data:afterDeleteSpecifications');
+          should(response).match({status: 200});
         });
     });
   });

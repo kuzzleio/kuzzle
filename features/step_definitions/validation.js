@@ -24,7 +24,7 @@ module.exports = function () {
       myField: 42
     },
     notValidDocument = {
-      myField: "fooBarBaz"
+      myField: 'fooBarBaz'
     };
 
   this.When(/^There is (no)?(a)? specifications? for index "([^"]*)" and collection "([^"]*)"$/, {}, function(no, some, index, collection, callback) {
@@ -85,12 +85,11 @@ module.exports = function () {
         return callback();
       }
       return callback(new Error('Status code is not 200, but ' + this.statusCode));
-    } else {
-      if (an) {
-        return callback();
-      }
-      return callback(new Error('Status code is ' + this.statusCode + ', but an error message was expected'));
     }
+    if (an) {
+      return callback();
+    }
+    return callback(new Error('Status code is ' + this.statusCode + ', but an error message was expected'));
   });
 
   this.When(/^I post a(n in)? ?valid specification$/, {}, function(not, callback) {
