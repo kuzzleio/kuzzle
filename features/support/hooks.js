@@ -113,6 +113,12 @@ var myHooks = function () {
   this.After({tags: ['@cleanRedis']}, function (scenario, callback) {
     cleanRedis.call(this, callback);
   });
+  this.Before({tags: ['@cleanValidations']}, function (scenario, callback) {
+    cleanValidations.call(this, callback);
+  });
+  this.After({tags: ['@cleanValidations']}, function (scenario, callback) {
+    cleanValidations.call(this, callback);
+  });
 };
 
 module.exports = myHooks;
@@ -193,5 +199,27 @@ function cleanRedis(callback) {
       callback();
     })
     .catch(error => callback(error));
-
 }
+
+
+function cleanValidations(callback) {
+  this.api.listIndexes()
+    .then(response => {
+      if (response.result.indexes.indexOf('%kuzzle') === -1) {
+        return Promise.reject(new ReferenceError('%kuzzle index not found'));
+      }
+    })
+    .then(() => {
+      return this.api.deleteByQuery(
+        { filter: { regexp: { _uid: 'validations.' + this.api.world.fakeIndex + '.' + this.api.world.fakeCollection } } },
+        '%kuzzle',
+        'validations'
+      );
+    })
+    .then(() => {
+      callback();
+    })
+    .catch(error => callback(error));
+}
+
+
