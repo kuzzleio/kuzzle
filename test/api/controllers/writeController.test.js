@@ -32,7 +32,7 @@ describe('Test: write controller', () => {
 
   describe('#create', () => {
     it('should trigger the proper methods and resolve to a valid response', () => {
-      return controller.create(requestObject)
+      return controller.create(requestObject, {token: {userId: 42}})
         .then(response => {
           should(requestObject.isValid).be.calledOnce();
 
@@ -160,7 +160,7 @@ describe('Test: write controller', () => {
 
   describe('#update', () => {
     it('should trigger the proper methods and resolve to a valid response', () => {
-      return controller.update(requestObject)
+      return controller.update(requestObject, {token: {userId: '42'}})
         .then(response => {
           should(requestObject.isValid).be.calledOnce();
 

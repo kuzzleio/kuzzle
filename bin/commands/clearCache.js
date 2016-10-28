@@ -7,7 +7,7 @@ var
   readlineSync = require('readline-sync'),
   clc = require('cli-color');
 
-module.exports = function (database, options) {
+function commandClearCache (database, options) {
   var
     error,
     warn,
@@ -53,4 +53,6 @@ module.exports = function (database, options) {
   }
 
   console.log(notice('[ℹ] Nothing have been done... you do not look that sure...'));
-};
+}
+
+module.exports = commandClearCache;
