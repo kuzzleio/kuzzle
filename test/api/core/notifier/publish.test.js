@@ -131,7 +131,7 @@ describe('Test: notifier.publish', () => {
 
     sandbox.stub(kuzzle.dsl, 'test').returns([]);
 
-    result = kuzzle.notifier.publish(new RequestObject(request))
+    result = kuzzle.notifier.publish(new RequestObject(request));
     should(result).match({published: true});
     should(notification).be.null();
     setTimeout(() => {

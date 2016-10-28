@@ -610,7 +610,7 @@ describe('plugins/packages/pluginPackage', () => {
         }
       })(() => {
         return (should(pkg.importConfigurationFromFile('path')))
-          .be.rejectedWith(BadRequestError, {message: 'Unable to parse path: SyntaxError: Unexpected token  '});
+          .be.rejectedWith(BadRequestError, {message: 'Unable to parse path: SyntaxError: Unexpected token   in JSON at position 1'});
       });
     });
 
