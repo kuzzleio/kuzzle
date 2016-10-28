@@ -579,7 +579,7 @@ describe('plugins/packages/pluginPackage', () => {
     });
   });
 
-  describe('#importConfigurationFromFile', () => {
+  describe.only('#importConfigurationFromFile', () => {
     it('should reject the promise if the file does not exist', () => {
       var error = new Error('test');
 
@@ -599,11 +599,9 @@ describe('plugins/packages/pluginPackage', () => {
           readFileSync: sinon.stub().returns('{ invalid json }')
         }
       })(() => {
-
-        pkg.importConfigurationFromFile('path')
-          .catch(err => {
-            should(err).be.an.instanceOf(BadRequestError);
-            should(err.message).be.exactly('Unable to parse path: Unexpected token   in JSON at position 1');
+        return should(pkg.importConfigurationFromFile('path'))
+          .be.rejectedWith(BadRequestError, {
+            message: 'Unable to parse path: Unexpected token   in JSON at position 1'
           });
       });
     });
