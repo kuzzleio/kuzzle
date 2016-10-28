@@ -154,6 +154,46 @@ describe('Test: security controller - users', () => {
     });
   });
 
+  describe('#createRestrictedUser', () => {
+    it('should return a valid response', () => {
+      var mock = sandbox.mock(kuzzle.repositories.user).expects('persist').once().resolves({_id: 'test'});
+      sandbox.stub(kuzzle.repositories.user, 'hydrate').resolves();
+
+      return kuzzle.funnel.controllers.security.createRestrictedUser(new RequestObject({
+        body: { _id: 'test', name: 'John Doe' }
+      }))
+        .then(response => {
+          mock.verify();
+          should(response).be.an.instanceOf(ResponseObject);
+          should(mock.getCall(0).args[1]).match({database: {method: 'create'}});
+        });
+    });
+
+    it('should compute a user id if none is provided', () => {
+      var
+        mockPersist = sandbox.mock(kuzzle.repositories.user).expects('persist').once().resolves({_id: 'test'}),
+        mockHydrate = sandbox.mock(kuzzle.repositories.user).expects('hydrate').once().resolves();
+
+      return kuzzle.funnel.controllers.security.createRestrictedUser(new RequestObject({
+        body: { name: 'John Doe' }
+      }))
+        .then(response => {
+          mockHydrate.verify();
+          mockPersist.verify();
+          should(response).be.an.instanceOf(ResponseObject);
+          should(mockPersist.getCall(0).args[1]).match({database: {method: 'create'}});
+          should(mockHydrate.getCall(0).args[1]._id).match(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
+        });
+    });
+
+    it('should reject the promise if a profile is given', () => {
+      return should(kuzzle.funnel.controllers.security.createRestrictedUser(new RequestObject({
+        body: { profileIds: ['foo']}
+      })))
+        .be.rejected();
+    });
+  });
+
   describe('#updateUser', () => {
     it('should return a valid ResponseObject', () => {
       var mock = sandbox.mock(kuzzle.repositories.user).expects('persist').once().resolves({_id: 'test'});
