@@ -171,7 +171,10 @@
   // Configuration for Kuzzle server
   /*
   "server": {
-    // * http port: port on which Kuzzle will expose its REST api
+    // * http port: port on which Kuzzle will expose its REST api.
+    //   If unset or set to a falsy value (default), Kuzzle will use a random
+    //   available port within the *ephemeral port range* defined by
+    //   /proc/sys/net/ipv4/ip_local_port_range.
     // * http maxRequestSize: the size limit of a request. If it's a string, the
          value is passed to the "bytes" library (https://www.npmjs.com/package/bytes).
          If this is a number, then the value specifies the number of bytes.
@@ -182,7 +185,7 @@
     // * warningRetainedRequestsLimit: Number of bufferized requests after
     //   which Kuzzle will throw warnings to the logger
     "http": {
-      "port": 7511,
+      "port": false,
       "maxRequestSize": "1MB"
     },
     "maxConcurrentRequests": 50,

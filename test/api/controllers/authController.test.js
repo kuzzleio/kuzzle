@@ -70,8 +70,13 @@ describe('Test the auth controller', () => {
         sandbox.stub(kuzzle.repositories.token, 'generateToken', (user, gtcontext, opts) => {
           var
             token = new Token(),
-            expiresIn = ms(opts.expiresIn),
+            expiresIn,
             encodedToken = jwt.sign({_id: user._id}, kuzzle.config.security.jwt.secret, opts);
+
+          if (!opts.expiresIn) {
+            opts.expiresIn = 0;
+          }
+          expiresIn = ms(opts.expiresIn);
 
           _.assignIn(token, {
             _id: encodedToken,
