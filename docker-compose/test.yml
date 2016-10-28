@@ -13,6 +13,10 @@ services:
       - "..:/var/app"
       - "./scripts/run-test.sh:/run.sh"
       - "./config/pm2.json:/config/pm2.json"
+    depends_on:
+      - proxy
+      - redis
+      - elasticsearch
     environment:
       - kuzzle_services__db__host=elasticsearch
       - kuzzle_services__internalCache__node__host=redis
