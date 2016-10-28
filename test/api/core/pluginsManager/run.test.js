@@ -6,8 +6,7 @@ var
   sinon = require('sinon'),
   PluginsManager = rewire('../../../../lib/api/core/plugins/pluginsManager'),
   EventEmitter = require('eventemitter2').EventEmitter2,
-  GatewayTimeoutError = require.main.require('kuzzle-common-objects').Errors.gatewayTimeoutError,
-  workerPrefix = PluginsManager.__get__('workerPrefix');
+  GatewayTimeoutError = require.main.require('kuzzle-common-objects').Errors.gatewayTimeoutError;
 
 describe('Test plugins manager run', () => {
   var
@@ -21,7 +20,7 @@ describe('Test plugins manager run', () => {
   before(() => {
     pm2Mock = function () {
       var universalProcess = {
-        name: workerPrefix + 'testPlugin',
+        name: params.plugins.common.workerPrefix + 'testPlugin',
         pm_id: 42
       };
 
@@ -394,9 +393,9 @@ describe('Test plugins manager run', () => {
     return pluginsManager.run()
       .then(() => {
         pm2Mock.triggerOnBus('initialized');
-        should(pluginsManager.workers[workerPrefix + 'testPlugin']).be.an.Object();
-        should(pluginsManager.workers[workerPrefix + 'testPlugin'].pmIds).be.an.Object();
-        should(pluginsManager.workers[workerPrefix + 'testPlugin'].pmIds.getSize()).be.equal(1);
+        should(pluginsManager.workers[params.plugins.common.workerPrefix + 'testPlugin']).be.an.Object();
+        should(pluginsManager.workers[params.plugins.common.workerPrefix + 'testPlugin'].pmIds).be.an.Object();
+        should(pluginsManager.workers[params.plugins.common.workerPrefix + 'testPlugin'].pmIds.getSize()).be.equal(1);
       });
   });
 
@@ -408,12 +407,12 @@ describe('Test plugins manager run', () => {
     return pluginsManager.run()
       .then(() => {
         pm2Mock.triggerOnBus('initialized');
-        should(pluginsManager.workers[workerPrefix + 'testPlugin']).be.an.Object();
-        should(pluginsManager.workers[workerPrefix + 'testPlugin'].pmIds).be.an.Object();
-        should(pluginsManager.workers[workerPrefix + 'testPlugin'].pmIds.getSize()).be.equal(1);
+        should(pluginsManager.workers[params.plugins.common.workerPrefix + 'testPlugin']).be.an.Object();
+        should(pluginsManager.workers[params.plugins.common.workerPrefix + 'testPlugin'].pmIds).be.an.Object();
+        should(pluginsManager.workers[params.plugins.common.workerPrefix + 'testPlugin'].pmIds.getSize()).be.equal(1);
 
         pm2Mock.triggerOnBus('process:event');
-        should.not.exist(pluginsManager.workers[workerPrefix + 'testPlugin']);
+        should.not.exist(pluginsManager.workers[params.plugins.common.workerPrefix + 'testPlugin']);
       });
   });
 
@@ -430,9 +429,9 @@ describe('Test plugins manager run', () => {
       .then(() => {
         pm2Mock.triggerOnBus('initialized');
 
-        should(pluginsManager.workers[workerPrefix + 'testPlugin']).be.an.Object();
-        should(pluginsManager.workers[workerPrefix + 'testPlugin'].pmIds).be.an.Object();
-        should(pluginsManager.workers[workerPrefix + 'testPlugin'].pmIds.getSize()).be.equal(1);
+        should(pluginsManager.workers[params.plugins.common.workerPrefix + 'testPlugin']).be.an.Object();
+        should(pluginsManager.workers[params.plugins.common.workerPrefix + 'testPlugin'].pmIds).be.an.Object();
+        should(pluginsManager.workers[params.plugins.common.workerPrefix + 'testPlugin'].pmIds.getSize()).be.equal(1);
 
         triggerWorkers.call(pluginsManager, 'foo:bar', {
           'firstName': 'Ada'

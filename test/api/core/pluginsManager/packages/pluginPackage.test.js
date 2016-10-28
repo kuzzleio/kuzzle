@@ -435,10 +435,16 @@ describe('plugins/packages/pluginPackage', () => {
       var error = new Error('error');
 
       return PluginPackage.__with__({
-        exec: sinon.stub().yields(error)
+        exec: sinon.stub().throws(error)
       })(() => {
         return should(pkg.install())
-          .be.rejectedWith(error);
+          .be.fulfilledWith({
+            success: false,
+            error,
+            name: pkg.name,
+            version: pkg.version,
+            config: pkg.config,
+          });
       });
     });
 
@@ -471,10 +477,12 @@ describe('plugins/packages/pluginPackage', () => {
       pkg.name = 'invalid';
       kuzzle.pluginsManager.isInit = true;
 
-      return should(pkg.install())
-        .be.rejectedWith(BadRequestError, {
-          message: 'WARNING: Given plugin name "invalid" does not match its packages.json name "plugin".\n' +
-          'If you installed this plugin by other means than the CLI, please update Kuzzle configuration to use proper name "plugin".'
+      return pkg.install()
+        .then(result => {
+          should(result.success).be.exactly(false);
+          should(result.error).be.an.instanceOf(BadRequestError);
+          should(result.error.message).be.exactly('WARNING: Given plugin name "invalid" does not match its packages.json name "plugin".\n' +
+            'If you installed this plugin by other means than the CLI, please update Kuzzle configuration to use proper name "plugin".');
         });
     });
   });
@@ -600,7 +608,7 @@ describe('plugins/packages/pluginPackage', () => {
         }
       })(() => {
         return (should(pkg.importConfigurationFromFile('path')))
-          .be.rejectedWith(BadRequestError, {message: 'Unable to parse path: SyntaxError: Unexpected token  '});
+          .be.rejectedWith(BadRequestError, {message: 'Unable to parse path: SyntaxError: Unexpected token   in JSON at position 1'});
       });
     });
 

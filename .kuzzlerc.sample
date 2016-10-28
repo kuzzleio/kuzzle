@@ -14,11 +14,13 @@
   /*
   "plugins": {
     // [Common]
+    //   * workerPrefix: process name prefix for plugins worker
     //   * pipeWarnTime: time in ms after which a warning will be emitted to
     //     the logger if the pipe action has not completed
     //   * pipeTimeout: time in ms after which a pipe action will be killed
     //     if it has not completed
     "common": {
+      "workerPrefix": "kpw:",
       "pipeWarnTime": 40,
       "pipeTimeout": 250
     },
@@ -32,7 +34,7 @@
     //   * from a local directory: the location of the package must be
     //     specified using the "path" property
     "kuzzle-plugin-logger": {
-      "version": "2.0.4",
+      "version": "2.0.5",
       "activated": true
     },
     "kuzzle-plugin-auth-passport-local": {

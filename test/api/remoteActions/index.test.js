@@ -129,7 +129,7 @@ describe('Tests: api/remoteActions/index.js', () => {
           .be.calledWith('.');
         should(RemoteActions.__get__('console.error'))
           .be.calledOnce()
-          .be.calledWith('No response from Kuzzle within ̀300s. Exiting');
+          .be.calledWith('ERROR: No response from Kuzzle within ̀300s. Exiting');
         should(RemoteActions.__get__('process.exit'))
           .be.calledOnce()
           .be.calledWith(1);

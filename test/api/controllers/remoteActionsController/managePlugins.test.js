@@ -44,14 +44,23 @@ describe('Test: managePlugins remote action caller', () => {
 
   describe('--install', () => {
     it('should install a single plugin package if a plugin name is provided', () => {
+
+      pkg.install.resolves({
+        success: true,
+        name: 'banana',
+        version: '42'
+      });
+
       return managePlugins(new RequestObject({
         _id: 'plugin',
         body: { install: true, foo: 'bar' }
       }))
         .then(() => {
-          should(kuzzle.pluginsManager.trigger)
-            .be.calledOnce()
+          should(kuzzle.pluginsManager.trigger.getCall(0))
             .be.calledWithExactly('log:info', '███ kuzzle-plugins: Installing plugin plugin...');
+
+          should(kuzzle.pluginsManager.trigger.getCall(1))
+            .be.calledWithExactly('log:info', '███ kuzzle-plugins: Plugin banana@42 installed successfully. Restart kuzzle to enable it');
 
           should(pkg.setDefinition)
             .be.calledOnce()
