@@ -1,3 +1,6 @@
+/**
+ * @class KuzzleConfiguration
+ */
 module.exports = {
   hooks: require('./lib/config/hooks'),
 
@@ -159,12 +162,18 @@ module.exports = {
       port: 9200,
       apiVersion: '2.3'
     }
+
   },
 
   stats: {
     ttl: 3600,
     statsInterval: 10
   },
+
+  /** @type {DocumentSpecification} */
+  validation: {
+  },
+
   dump: {
     path: './dump/',
     dateFormat: 'YYYYMMDD-HHmm',
@@ -180,4 +189,5 @@ module.exports = {
       ]
     }
   }
+
 };
