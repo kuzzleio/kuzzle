@@ -579,7 +579,7 @@ describe('plugins/packages/pluginPackage', () => {
     });
   });
 
-  describe.only('#importConfigurationFromFile', () => {
+  describe('#importConfigurationFromFile', () => {
     it('should reject the promise if the file does not exist', () => {
       var error = new Error('test');
 
