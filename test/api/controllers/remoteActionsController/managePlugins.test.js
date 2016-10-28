@@ -311,7 +311,7 @@ describe('Test: managePlugins remote action caller', () => {
           readFileSync: sandbox.stub().returns('I am not a valid json')
         }
       })(() => {
-        return should(importPluginConfiguration()).be.rejectedWith('Unable to parse undefined: SyntaxError: Unexpected token I');
+        return should(importPluginConfiguration()).be.rejectedWith('Unable to parse undefined: SyntaxError: Unexpected token I in JSON at position 0');
       });
     });
 
@@ -756,7 +756,7 @@ describe('Test: managePlugins remote action caller', () => {
 
     it('should reject the promise if an invalid json is given', () => {
       return should(setPluginConfiguration('test', 'Invalid json'))
-        .be.rejectedWith('Unable to parse Invalid json. Expected: JSON Object\nSyntaxError: Unexpected token I');
+        .be.rejectedWith('Unable to parse Invalid json. Expected: JSON Object\nSyntaxError: Unexpected token I in JSON at position 0');
     });
 
     it('should update the plugin configuration', () => {
@@ -825,7 +825,7 @@ describe('Test: managePlugins remote action caller', () => {
 
     it('should reject the promise if an invalid JSON is given', () => {
       return should(replacePluginConfiguration('test', 'Invalid JSON'))
-        .be.rejectedWith('Unable to parse the new plugin configuration. Expected: JSON Object\nSyntaxError: Unexpected token I');
+        .be.rejectedWith('Unable to parse the new plugin configuration. Expected: JSON Object\nSyntaxError: Unexpected token I in JSON at position 0');
     });
 
     it('should replace the plugin configuration', () => {
