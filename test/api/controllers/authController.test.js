@@ -77,6 +77,7 @@ describe('Test the auth controller', () => {
             opts.expiresIn = 0;
           }
           expiresIn = ms(opts.expiresIn);
+
           _.assignIn(token, {
             _id: encodedToken,
             userId: user._id,

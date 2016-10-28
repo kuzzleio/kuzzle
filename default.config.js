@@ -1,3 +1,6 @@
+/**
+ * @class KuzzleConfiguration
+ */
 module.exports = {
   hooks: require('./lib/config/hooks'),
 
@@ -30,6 +33,7 @@ module.exports = {
   },
 
   security: {
+    restrictedProfileIds: ['default'],
     jwt: {
       algorithm: 'HS256',
       expiresIn: '1h',
@@ -163,6 +167,8 @@ module.exports = {
   stats: {
     ttl: 3600,
     statsInterval: 10
+  },
+  /** @type {DocumentSpecification} */
+  validation: {
   }
-
 };

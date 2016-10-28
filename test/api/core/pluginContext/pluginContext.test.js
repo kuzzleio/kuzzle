@@ -32,6 +32,7 @@ describe('Plugin Context', () => {
       should(context.constructors.Dsl).be.a.Function();
       should(context.constructors.RequestObject).be.a.Function();
       should(context.constructors.ResponseObject).be.a.Function();
+      should(context.constructors.BaseValidationType).be.a.Function();
 
       should(new context.constructors.Dsl).be.instanceOf(Dsl);
       should(new context.constructors.RequestObject({})).be.instanceOf(RequestObject);
@@ -54,7 +55,7 @@ describe('Plugin Context', () => {
 
     it('should expose the right accessors', () => {
       should(context.accessors).be.an.Object().and.not.be.empty();
-      should(context.accessors).have.properties(['router', 'users']);
+      should(context.accessors).have.properties(['passport', 'router', 'users', 'validation']);
     });
 
     it('should expose a correctly constructed router accessor', () => {
@@ -63,6 +64,13 @@ describe('Plugin Context', () => {
       should(router.newConnection).be.eql(kuzzle.router.newConnection.bind(kuzzle.router));
       should(router.execute).be.eql(kuzzle.router.execute.bind(kuzzle.router));
       should(router.removeConnection).be.eql(kuzzle.router.execute.bind(kuzzle.router));
+    });
+
+    it('should expose a correctly constructed validation accessor', () => {
+      var validation = context.accessors.validation;
+
+      should(validation.addType).be.eql(kuzzle.validation.addType.bind(kuzzle.validation));
+      should(validation.validate).be.eql(kuzzle.validation.validationPromise.bind(kuzzle.validation));
     });
 
     it('should expose a users.load accessor', () => {

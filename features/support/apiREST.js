@@ -612,6 +612,28 @@ ApiREST.prototype.createUser = function (body, id) {
   return this.callApi(options);
 };
 
+ApiREST.prototype.createRestrictedUser = function (body, id) {
+  var options = {
+    url: this.apiPath('users/_createRestricted'),
+    method: 'POST',
+    body
+  };
+
+  if (id !== undefined) {
+    if (body.body) {
+      options.body.body._id = id;
+    }
+    else {
+      options.body = {
+        _id: id,
+        body: body
+      };
+    }
+  }
+
+  return this.callApi(options);
+};
+
 ApiREST.prototype.updateSelf = function (body) {
   var options = {
     url: this.apiPath('_updateSelf'),

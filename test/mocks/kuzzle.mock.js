@@ -113,6 +113,12 @@ function KuzzleMock () {
     }
   };
 
+  this.validation = {
+    validate: sinon.spy(function () {return Promise.resolve(arguments[0]);}),
+    validationPromise: sinon.spy(function () {return Promise.resolve(arguments[0]);}),
+    addType: sinon.spy()
+  };
+
   this.resetStorage = sinon.stub().resolves();
 
   this.rootPath = '/kuzzle';
@@ -139,6 +145,9 @@ function KuzzleMock () {
         flushdb: sinon.stub().resolves()
       },
       storageEngine: {
+        get: sinon.stub().resolves({
+          _source: foo
+        }),
         getMapping: sinon.stub().resolves(foo),
         listIndexes: sinon.stub().resolves({indexes: ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i']}),
         create: sinon.stub().resolves(foo),
