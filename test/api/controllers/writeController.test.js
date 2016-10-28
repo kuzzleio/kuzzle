@@ -32,12 +32,14 @@ describe('Test: write controller', () => {
 
   describe('#create', () => {
     it('should trigger the proper methods and resolve to a valid response', () => {
-      return controller.create(requestObject)
+      return controller.create(requestObject, {token: {userId: 42}})
         .then(response => {
           should(requestObject.isValid).be.calledOnce();
 
           should(kuzzle.pluginsManager.trigger).be.calledTwice();
           should(kuzzle.pluginsManager.trigger.firstCall).be.calledWith('data:beforeCreate');
+
+          should(kuzzle.validation.validate).be.calledOnce();
 
           should(engine.create).be.calledOnce();
           should(engine.create).be.calledWith(requestObject);
@@ -76,6 +78,8 @@ describe('Test: write controller', () => {
           should(trigger).be.calledTwice();
           should(trigger.firstCall).be.calledWith('data:beforePublish');
 
+          should(kuzzle.validation.validate).be.calledOnce();
+
           should(kuzzle.notifier.publish).be.calledOnce();
           should(kuzzle.notifier.publish).be.calledWith(requestObject);
 
@@ -108,6 +112,8 @@ describe('Test: write controller', () => {
 
           should(trigger).be.calledTwice();
           should(trigger.firstCall).be.calledWith('data:beforeCreateOrReplace', requestObject);
+
+          should(kuzzle.validation.validate).be.calledOnce();
 
           should(engine.createOrReplace).be.calledOnce();
           should(engine.createOrReplace).be.calledWith(requestObject);
@@ -160,12 +166,14 @@ describe('Test: write controller', () => {
 
   describe('#update', () => {
     it('should trigger the proper methods and resolve to a valid response', () => {
-      return controller.update(requestObject)
+      return controller.update(requestObject, {token: {userId: '42'}})
         .then(response => {
           should(requestObject.isValid).be.calledOnce();
 
           should(trigger).be.calledTwice();
           should(trigger.firstCall).be.calledWith('data:beforeUpdate', requestObject);
+
+          should(kuzzle.validation.validate).be.calledOnce();
 
           should(engine.update).be.calledOnce();
           should(engine.update).be.calledWith(requestObject);
@@ -203,6 +211,8 @@ describe('Test: write controller', () => {
 
           should(trigger).be.calledTwice();
           should(trigger.firstCall).be.calledWith('data:beforeReplace', requestObject);
+
+          should(kuzzle.validation.validate).be.calledOnce();
 
           should(engine.replace).be.calledOnce();
           should(engine.replace).be.calledWith(requestObject);

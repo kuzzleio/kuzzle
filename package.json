@@ -35,6 +35,7 @@
     "bunyan": "^1.8.1",
     "cli-color": "^1.1.0",
     "commander": "2.9.0",
+    "compare-versions": "^3.0.0",
     "crypto-md5": "^1.0.0",
     "easy-circular-list": "^1.0.13",
     "elasticsearch": "11.0.1",
@@ -49,6 +50,7 @@
     "jsonwebtoken": "^7.1.7",
     "kuzzle-common-objects": "^1.0.2",
     "lodash": "4.16.3",
+    "moment": "^2.15.1",
     "ms": "^0.7.1",
     "ngeohash": "0.6.0",
     "node-interval-tree": "^0.2.1",
@@ -64,6 +66,7 @@
     "router": "1.1.4",
     "sorted-array": "^2.0.1",
     "utf-8-validate": "^1.2.1",
+    "validator": "^6.0.0",
     "ws": "1.1.1"
   },
   "repository": {

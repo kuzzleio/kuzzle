@@ -1,3 +1,6 @@
+/**
+ * @class KuzzleConfiguration
+ */
 module.exports = {
   hooks: require('./lib/config/hooks'),
 
@@ -10,11 +13,11 @@ module.exports = {
     },
 
     'kuzzle-plugin-logger': {
-      npmVersion: '2.0.4',
+      version: '2.0.4',
       activated: true
     },
     'kuzzle-plugin-auth-passport-local': {
-      npmVersion: '2.0.4',
+      version: '2.0.4',
       activated: true
     }
   },
@@ -30,6 +33,7 @@ module.exports = {
   },
 
   security: {
+    restrictedProfileIds: ['default'],
     jwt: {
       algorithm: 'HS256',
       expiresIn: '1h',
@@ -163,6 +167,8 @@ module.exports = {
   stats: {
     ttl: 3600,
     statsInterval: 10
+  },
+  /** @type {DocumentSpecification} */
+  validation: {
   }
-
 };
