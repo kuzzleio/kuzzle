@@ -257,6 +257,10 @@ Feature: Test websocket API
     And The token is invalid
 
   @usingWebsocket @cleanSecurity
+  Scenario: create restricted user
+    Then I create a restricted user "restricteduser1" with id "restricteduser1-id"
+
+  @usingWebsocket @cleanSecurity
   Scenario: Create/get/search/update/delete role
     When I create a new role "role1" with id "test"
     Then I'm able to find a role with id "test"
