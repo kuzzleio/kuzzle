@@ -14,6 +14,7 @@
     "functional-testing": "npm run cucumber",
     "cucumber": "cucumber.js --fail-fast",
     "crawl-coverage": "node coverage/scripts/feature-coverage-download.js",
+    "codecov": "codecov",
     "lint": "eslint --max-warnings=0 ./lib ./bin ./test ./features",
     "enable": "node bin/kuzzle enable",
     "disable": "node bin/kuzzle disable",
