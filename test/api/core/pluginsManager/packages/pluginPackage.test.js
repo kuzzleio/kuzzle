@@ -609,8 +609,10 @@ describe('plugins/packages/pluginPackage', () => {
           readFileSync: sinon.stub().returns('{ invalid json }')
         }
       })(() => {
-        return (should(pkg.importConfigurationFromFile('path')))
-          .be.rejectedWith(BadRequestError, {message: 'Unable to parse path: SyntaxError: Unexpected token  '});
+        return should(pkg.importConfigurationFromFile('path'))
+          .be.rejectedWith(BadRequestError, {
+            message: 'Unable to parse path: Unexpected token   in JSON at position 1'
+          });
       });
     });
 

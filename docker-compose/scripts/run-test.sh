@@ -1,27 +1,32 @@
 #!/bin/sh
 
-ELASTIC="elasticsearch:9200"
+set -e
 
-echo "Waiting for elasticsearch to be available"
-while ! curl -f -s -o /dev/null "http://$ELASTIC"
-do
-    echo "$(date) - still trying connecting to http://$ELASTIC"
-    sleep 1
-done
-# create a tmp index just to force the shards to init
-curl -XPUT -s -o /dev/null "http://$ELASTIC/%25___tmp"
-echo "Elasticsearch is up. Waiting for shards to be active (can take a while)"
-E=$(curl -s "http://${ELASTIC}/_cluster/health?wait_for_status=yellow&wait_for_active_shards=1&timeout=60s")
-curl -XDELETE -s -o /dev/null "http://$ELASTIC/%25___tmp"
-
-if ! (echo ${E} | grep -E '"status":"(yellow|green)"' > /dev/null); then
-    echo "Could not connect to elasticsearch in time. Aborting..."
-    exit 1
-fi
+ELASTIC_HOST=${kuzzle_services__db__host:-elasticsearch}
+ELASTIC_PORT=${kuzzle_services__db__port:-9200}
 
 npm install
 
-echo "Starting Kuzzle..."
+echo "[$(date --rfc-3339 seconds)] - Waiting for elasticsearch to be available"
+while ! curl -f -s -o /dev/null "http://$ELASTIC_HOST:$ELASTIC_PORT"
+do
+    echo "[$(date --rfc-3339 seconds)] - Still trying to connect to http://$ELASTIC_HOST:$ELASTIC_PORT"
+    sleep 1
+done
+# create a tmp index just to force the shards to init
+curl -XPUT -s -o /dev/null "http://$ELASTIC_HOST:$ELASTIC_PORT/%25___tmp"
+echo "[$(date --rfc-3339 seconds)] - Elasticsearch is up. Waiting for shards to be active (can take a while)"
+E=$(curl -s "http://$ELASTIC_HOST:$ELASTIC_PORT/_cluster/health?wait_for_status=yellow&wait_for_active_shards=1&timeout=60s")
+curl -XDELETE -s -o /dev/null "http://$ELASTIC_HOST:$ELASTIC_PORT/%25___tmp"
 
-pm2 start /config/pm2.json --silent \
-    && npm test
+if ! (echo ${E} | grep -E '"status":"(yellow|green)"' > /dev/null); then
+    echo "[$(date --rfc-3339 seconds)] - Could not connect to elasticsearch in time. Aborting..."
+    exit 1
+fi
+
+echo "" > node_modules/pm2/lib/keymetrics
+echo "[$(date --rfc-3339 seconds)] - Starting Kuzzle..."
+
+pm2 start --silent /config/pm2.json
+npm test
+npm run codecov
