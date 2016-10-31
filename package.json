@@ -10,11 +10,10 @@
   },
   "scripts": {
     "test": "npm run --silent lint && npm run unit-testing --coverage && npm run functional-testing && npm run crawl-coverage",
-    "unit-testing": "istanbul test _mocha",
+    "unit-testing": "istanbul cover ./node_modules/mocha/bin/_mocha --report lcovonly -- -R spec",
     "functional-testing": "npm run cucumber",
     "cucumber": "cucumber.js --fail-fast",
     "crawl-coverage": "node coverage/scripts/feature-coverage-download.js",
-    "codecov": "cat ./coverage/lcov.info | ./node_modules/.bin/codecov",
     "lint": "eslint --max-warnings=0 ./lib ./bin ./test ./features",
     "enable": "node bin/kuzzle enable",
     "disable": "node bin/kuzzle disable",
@@ -72,7 +71,7 @@
     "url": "git://github.com/kuzzleio/kuzzle.git"
   },
   "devDependencies": {
-    "codecov.io": "^0.1.6",
+    "codecov": "1.0.1",
     "cucumber": "1.3.1",
     "eslint": "3.7.1",
     "istanbul": "0.4.5",
