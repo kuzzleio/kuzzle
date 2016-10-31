@@ -46,7 +46,7 @@ program
   .option('    --deactivate', 'mark the plugin as "deactivated"')
   .option('    --importConfig <file>', 'import plugin [name] configuration from <file>')
   .option('    --get', 'get plugin [name] configuration stored in Kuzzle')
-  .option('    --set <JSONObject>', 'merge current plugin configuration with JSONObject')
+  .option('    --set <JSONObject> [name]', 'merge plugin [name] configuration with JSONObject')
   .option('    --unset <property>', 'unset property from the plugin configuration')
   .option('    --replace <JSONObject>', 'erase the plugin configuration and apply JSONObject instead')
   .option('-v, --packageVersion <version>', 'plugin <version> to install (npm repository or git only)')
