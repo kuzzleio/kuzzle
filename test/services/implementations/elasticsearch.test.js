@@ -200,7 +200,7 @@ describe('Test: ElasticSearch service', () => {
     });
   });
 
-  describe.only('#scroll', () => {
+  describe('#scroll', () => {
     it('should be able to scroll an old search', () => {
       var spy = sandbox.stub(elasticsearch.client, 'scroll').resolves({total: 0, hits: []});
 
