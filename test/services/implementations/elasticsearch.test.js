@@ -161,6 +161,31 @@ describe('Test: ElasticSearch service', () => {
         });
     });
 
+    it('should be able to search with from/size and scroll arguments', () => {
+      var spy = sandbox.stub(elasticsearch.client, 'search').resolves({total: 0, hits: [], _scroll_id: 'banana42'});
+
+      requestObject.data.body = filter;
+      requestObject.data.body.from = 0;
+      requestObject.data.body.size = 1;
+      requestObject.data.body.scroll = '30s';
+
+      return elasticsearch.search(requestObject)
+        .then(result => {
+          should(spy.firstCall.args[0]).be.deepEqual({
+            from: 0,
+            size: 1,
+            scroll: '30s',
+            index: index,
+            type: collection,
+            body: filterAfterActiveAdded
+          });
+          should(result).be.an.Object();
+          should(result.total).be.exactly(0);
+          should(result.hits).be.an.Array();
+          should(result._scroll_id).be.an.exactly('banana42');
+        });
+    });
+
     it('should return a rejected promise if a search fails', done => {
       var spy = sandbox.stub(elasticsearch.client, 'search').rejects({});
 
@@ -168,6 +193,50 @@ describe('Test: ElasticSearch service', () => {
         .catch(() => {
           try {
             should(spy.firstCall.args[0].body).not.be.exactly(filter);
+            done();
+          }
+          catch(e) { done(e); }
+        });
+    });
+  });
+
+  describe.only('#scroll', () => {
+    it('should be able to scroll an old search', () => {
+      var spy = sandbox.stub(elasticsearch.client, 'scroll').resolves({total: 0, hits: []});
+
+      requestObject.data.body = {scrollId: 'banana42'};
+
+      return elasticsearch.scroll(requestObject)
+        .then(result => {
+          should(spy.firstCall.args[0]).be.deepEqual({scrollId: 'banana42'});
+          should(result).be.an.Object();
+          should(result.total).be.exactly(0);
+          should(result.hits).be.an.Array();
+        });
+    });
+
+    it('should return a rejected promise if no scrollId is given', done => {
+      sandbox.stub(elasticsearch.client, 'scroll').resolves({total: 0, hits: []});
+
+      requestObject.data.body = {};
+
+      elasticsearch.scroll(requestObject)
+        .catch(err => {
+          try {
+            should(err).be.an.instanceOf(BadRequestError);
+            should(err.message).be.exactly('The action scroll can\'t be done without a scrollId');
+            done();
+          }
+          catch(e) { done(e); }
+        });
+    });
+
+    it('should return a rejected promise if a scroll fails', done => {
+      sandbox.stub(elasticsearch.client, 'scroll').rejects({});
+
+      elasticsearch.scroll(requestObject)
+        .catch(() => {
+          try {
             done();
           }
           catch(e) { done(e); }

@@ -48,6 +48,30 @@ describe('Test: read controller', () => {
         .then(response => should(response).be.instanceOf(ResponseObject));
     });
 
+    /*it('should fulfill with a response object', () => {
+      var searchStub = sandbox.stub(kuzzle.services.list.storageEngine, 'search').resolves({});
+
+      requestObject = new RequestObject({
+        index: '%test',
+        collection: 'unit-test-readcontroller',
+        from: 0,
+        size: 1,
+        scroll: '30s'
+      });
+
+      return kuzzle.funnel.controllers.read.search(requestObject)
+        .then(response => {
+          should(response).be.instanceOf(ResponseObject);
+          should(searchStub.calledWithMatch({
+            index: '%test',
+            collection: 'unit-test-readcontroller',
+            from: 0,
+            size: 1,
+            scroll: '30s'
+          })).be.exactly(true);
+        });
+    });*/
+
     it('should reject with a response object in case of error', () => {
       sandbox.stub(kuzzle.services.list.storageEngine, 'search').rejects(new Error('foobar'));
       return should(kuzzle.funnel.controllers.read.search(requestObject)).be.rejected();
@@ -58,6 +82,26 @@ describe('Test: read controller', () => {
       sandbox.stub(kuzzle.services.list.storageEngine, 'search').resolves({});
       kuzzle.once('data:beforeSearch', () => done());
       kuzzle.funnel.controllers.read.search(requestObject);
+    });
+  });
+
+  describe('#scroll', () => {
+    it('should fulfill with a response object', () => {
+      sandbox.stub(kuzzle.services.list.storageEngine, 'scroll').resolves({});
+      return kuzzle.funnel.controllers.read.scroll(requestObject)
+        .then(response => should(response).be.instanceOf(ResponseObject));
+    });
+
+    it('should reject with a response object in case of error', () => {
+      sandbox.stub(kuzzle.services.list.storageEngine, 'scroll').rejects(new Error('foobar'));
+      return should(kuzzle.funnel.controllers.read.scroll(requestObject)).be.rejected();
+    });
+
+    it('should trigger a plugin event', function (done) {
+      this.timeout(50);
+      sandbox.stub(kuzzle.services.list.storageEngine, 'scroll').resolves({});
+      kuzzle.once('data:beforeScroll', () => done());
+      kuzzle.funnel.controllers.read.scroll(requestObject);
     });
   });
 
