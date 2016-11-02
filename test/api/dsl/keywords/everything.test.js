@@ -24,7 +24,7 @@ describe('DSL.keyword.everything', () => {
     });
   });
 
-  describe('#storage', () => {
+  describe('#storage', () => {
     it('should register an empty filter correctly', () => {
       return dsl.register('index', 'collection', {})
         .then(subscription => {

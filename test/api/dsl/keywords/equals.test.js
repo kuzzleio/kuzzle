@@ -164,7 +164,7 @@ describe('DSL.keyword.equals', () => {
     it('should destroy the whole structure when removing the last item', () => {
       return dsl.register('index', 'collection', {equals: {foo: 'bar'}})
         .then(subscription => dsl.remove(subscription.id))
-        .then(() => {
+        .then(() => {
           should(dsl.storage.foPairs).be.an.Object().and.be.empty();
         });
     });
