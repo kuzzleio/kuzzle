@@ -48,30 +48,6 @@ describe('Test: read controller', () => {
         .then(response => should(response).be.instanceOf(ResponseObject));
     });
 
-    /*it('should fulfill with a response object', () => {
-      var searchStub = sandbox.stub(kuzzle.services.list.storageEngine, 'search').resolves({});
-
-      requestObject = new RequestObject({
-        index: '%test',
-        collection: 'unit-test-readcontroller',
-        from: 0,
-        size: 1,
-        scroll: '30s'
-      });
-
-      return kuzzle.funnel.controllers.read.search(requestObject)
-        .then(response => {
-          should(response).be.instanceOf(ResponseObject);
-          should(searchStub.calledWithMatch({
-            index: '%test',
-            collection: 'unit-test-readcontroller',
-            from: 0,
-            size: 1,
-            scroll: '30s'
-          })).be.exactly(true);
-        });
-    });*/
-
     it('should reject with a response object in case of error', () => {
       sandbox.stub(kuzzle.services.list.storageEngine, 'search').rejects(new Error('foobar'));
       return should(kuzzle.funnel.controllers.read.search(requestObject)).be.rejected();
