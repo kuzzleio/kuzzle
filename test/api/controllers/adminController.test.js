@@ -709,7 +709,7 @@ describe('Test: admin controller', () => {
         });
     });
 
-    it('should not create or replace specifications if the specs are wrong', () => {
+    it('should rejects and do not create or replace specifications if the specs are wrong', () => {
       index = 'myindex';
       collection = 'mycollection';
       requestObject.data.body = {
@@ -734,21 +734,18 @@ describe('Test: admin controller', () => {
       kuzzle.validation.curateSpecification = sandbox.stub();
 
       return adminController.updateSpecifications(requestObject)
-        .then(response => {
-          should(kuzzle.pluginsManager.trigger).be.calledThrice();
+        .catch(response => {
+          should(kuzzle.pluginsManager.trigger).be.calledOnce();
           should(kuzzle.pluginsManager.trigger.firstCall).be.calledWith('data:beforeUpdateSpecifications', requestObject);
-          should(kuzzle.pluginsManager.trigger.secondCall).be.calledWith('data:afterUpdateSpecifications');
           should(kuzzle.internalEngine.refresh).not.be.called();
           should(kuzzle.validation.curateSpecification).not.be.called();
           should(kuzzle.internalEngine.createOrReplace).not.be.called();
           should(response).match({
             status: 400,
-            error: {
-              _source: {body: requestObject.data.body},
-              message: 'Internal error'
-            },
+            message: 'Some errors with provided specifications.',
+            error: [ 'bad bad is a bad type !' ],
             data: {
-              body: null
+              body: requestObject.data.body
             }
           });
         });
