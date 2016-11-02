@@ -39,7 +39,7 @@
     "crypto-md5": "^1.0.0",
     "easy-circular-list": "^1.0.13",
     "elasticsearch": "11.0.1",
-    "espresso-logic-minimizer": "scottinet/espresso-logic-minimizer#node-gyp-c99",
+    "espresso-logic-minimizer": "^1.0.5",
     "eventemitter2": "^2.1.0",
     "finalhandler": "0.5.0",
     "freeport": "^1.0.5",
