@@ -627,6 +627,19 @@ ApiRT.prototype.createUser = function (body, id) {
   return this.send(msg);
 };
 
+ApiRT.prototype.createRestrictedUser = function (body, id) {
+  var msg = {
+    controller: 'security',
+    action: 'createRestrictedUser',
+    body: body
+  };
+  if (id !== undefined) {
+    msg._id = id;
+  }
+
+  return this.send(msg);
+};
+
 ApiRT.prototype.checkToken = function (token) {
   return this.send({
     controller: 'auth',

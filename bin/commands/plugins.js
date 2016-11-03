@@ -26,7 +26,7 @@ function commandPlugin (plugin, options) {
   });
   if (data.packageVersion) {
     data.version = data.packageVersion;
-    delete data.data.packageVersion;
+    delete data.packageVersion;
   }
   data._id = plugin;
 

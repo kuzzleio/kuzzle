@@ -142,6 +142,10 @@ Feature: Test REST API
     And The token is invalid
 
   @usingREST @cleanSecurity
+  Scenario: create restricted user
+    Then I create a restricted user "restricteduser1" with id "restricteduser1-id"
+
+  @usingREST @cleanSecurity
   Scenario: Create/get/search/update/delete role
     When I create a new role "role1" with id "test"
     Then I'm able to find a role with id "test"

@@ -67,6 +67,10 @@
   // mechanism
   /*
   "security": {
+    // [restrictedProfileIds]
+    // The profileIds applied to a user created with the route
+    // users/_createRestricted
+    restrictedProfileIds: ['default'],
     // [jwt]
     // configuration for npm
     // [jsonwebtoken package](https://github.com/auth0/node-jsonwebtoken)
@@ -319,6 +323,14 @@
     "stats": {
       "ttl": 3600,
       "statsInterval": 10
+    }
+    */
+
+    // [validation]
+    // Defines the specifications used to validate data.
+    // Please refer to the guide for more information.
+    /*
+    validation: {
     }
     */
   }

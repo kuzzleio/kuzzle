@@ -3,10 +3,20 @@ var
   async = require('async');
 
 module.exports = function () {
-  this.When(/^I (can't )?create a (new )?user "(.*?)" with id "(.*?)"$/, {timeout: 20000}, function (not, isNew, user, id, callback) {
+  this.When(/^I (can't )?create a (new )?(restricted )?user "(.*?)" with id "(.*?)"$/, {timeout: 20000}, function (not, isNew, isRestricted, user, id, callback) {
     var
       userObject = this.users[user],
-      method = isNew ? 'createUser' : 'createOrReplaceUser';
+      method;
+
+    if (isRestricted) {
+      method = 'createRestrictedUser';
+    }
+    else if (isNew) {
+      method = 'createUser';
+    }
+    else {
+      method = 'createOrReplaceUser';
+    }
 
     id = this.idPrefix + id;
 
