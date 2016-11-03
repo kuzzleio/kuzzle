@@ -51,7 +51,7 @@
     "node-units": "0.1.7",
     "node-uuid": "1.4.7",
     "passport": "0.3.2",
-    "pm2": "2.0.18",
+    "pm2": "2.0.19",
     "portfinder": "^1.0.5",
     "proper-lockfile": "^2.0.0",
     "rc": "1.1.6",
