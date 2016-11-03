@@ -16,8 +16,6 @@
     "crawl-coverage": "node coverage/scripts/feature-coverage-download.js",
     "codecov": "cat ./coverage/lcov.info | ./node_modules/.bin/codecov",
     "lint": "eslint --max-warnings=0 ./lib ./bin ./test ./features",
-    "enable": "node bin/kuzzle enable",
-    "disable": "node bin/kuzzle disable",
     "preversion": "git checkout master && git pull",
     "postversion": "git push && git push --tags"
   },
