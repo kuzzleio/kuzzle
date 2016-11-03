@@ -155,7 +155,7 @@ describe('DSL.keyword.equals', () => {
     it('should not match if the document is in another collection', () => {
       return dsl.register('index', 'collection', {equals: {foo: 'bar'}})
         .then(() => {
-          should(dsl.test('index', 'collection', {foo: 'qux'})).be.an.Array().and.empty();
+          should(dsl.test('index', 'foobar', {foo: 'qux'})).be.an.Array().and.empty();
         });
     });
   });
