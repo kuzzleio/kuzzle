@@ -237,6 +237,16 @@ describe('plugins/packages/pluginPackage', () => {
         });
     });
 
+    it('should return true if no version is found in the configuration from db', () => {
+      pkg.isInstalled = sinon.stub().returns(true);
+      pkg.dbConfiguration = sinon.stub().resolves({});
+
+      return pkg.needsInstall()
+        .then(result => {
+          should(result).be.true();
+        });
+    });
+
     it('should reject the promise if some unexpected error occurred', () => {
       pkg.isInstalled = sinon.stub().returns(true);
       pkg.dbConfiguration = sinon.stub().rejects(new Error('unexpected'));
@@ -341,7 +351,7 @@ describe('plugins/packages/pluginPackage', () => {
       reset;
 
     beforeEach(() => {
-      pkg.localVersion = sinon.stub().returns('version');
+      pkg.localVersion = sinon.stub().returns('local version');
       pkg.localConfiguration = sinon.stub().returns('local configuration');
       pkg.updateDbConfiguration = sinon.stub().resolves();
 
@@ -599,8 +609,10 @@ describe('plugins/packages/pluginPackage', () => {
           readFileSync: sinon.stub().returns('{ invalid json }')
         }
       })(() => {
-        return (should(pkg.importConfigurationFromFile('path')))
-          .be.rejectedWith(BadRequestError, {message: 'Unable to parse path: SyntaxError: Unexpected token  '});
+        return should(pkg.importConfigurationFromFile('path'))
+          .be.rejectedWith(BadRequestError, {
+            message: 'Unable to parse path: Unexpected token   in JSON at position 1'
+          });
       });
     });
 

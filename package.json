@@ -1,7 +1,7 @@
 {
   "name": "kuzzle",
   "author": "The Kuzzle Team <support@kuzzle.io>",
-  "version": "1.0.0-RC7",
+  "version": "1.0.0-RC7.1",
   "apiVersion": "1.0",
   "description": "Kuzzle is an open-source solution that handles all the data management through a secured API, with a large choice of protocols.",
   "main": "./lib/index.js",
@@ -16,8 +16,6 @@
     "crawl-coverage": "node coverage/scripts/feature-coverage-download.js",
     "codecov": "cat ./coverage/lcov.info | ./node_modules/.bin/codecov",
     "lint": "eslint --max-warnings=0 ./lib ./bin ./test ./features",
-    "enable": "node bin/kuzzle enable",
-    "disable": "node bin/kuzzle disable",
     "preversion": "git checkout master && git pull",
     "postversion": "git push && git push --tags"
   },
@@ -47,12 +45,13 @@
     "jsonwebtoken": "^7.1.7",
     "kuzzle-common-objects": "^1.0.2",
     "lodash": "4.16.3",
+    "moment": "^2.15.1",
     "ms": "^0.7.1",
     "ngeohash": "0.6.0",
     "node-units": "0.1.7",
     "node-uuid": "1.4.7",
     "passport": "0.3.2",
-    "pm2": "2.0.18",
+    "pm2": "2.0.19",
     "portfinder": "^1.0.5",
     "proper-lockfile": "^2.0.0",
     "rc": "1.1.6",
@@ -60,6 +59,7 @@
     "rimraf": "^2.5.4",
     "router": "1.1.4",
     "utf-8-validate": "^1.2.1",
+    "validator": "^6.0.0",
     "ws": "1.1.1"
   },
   "repository": {
