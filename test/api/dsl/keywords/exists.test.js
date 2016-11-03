@@ -184,7 +184,7 @@ describe('DSL.keyword.exists', () => {
         .then(subscription => {
           fooSubfilter = dsl.storage.filters[subscription.id].subfilters[0];
 
-          return dsl.register('index', 'collection', {exists: {field: 'bar'}})
+          return dsl.register('index', 'collection', {exists: {field: 'bar'}});
         })
         .then(subscription => dsl.remove(subscription.id))
         .then(() => {
