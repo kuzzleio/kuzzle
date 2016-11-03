@@ -10,7 +10,7 @@ describe('Test: clean database', () => {
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
-    cleanDb = require('../../../../lib/api/controllers/remoteActions/cleanDb')(kuzzle);
+    cleanDb = require('../../../../lib/api/controllers/cli/cleanDb')(kuzzle);
   });
 
   it('should call kuzzle.resetStorage', () => {
