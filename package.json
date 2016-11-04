@@ -13,7 +13,7 @@
     "unit-testing": "istanbul test _mocha",
     "functional-testing": "npm run cucumber",
     "cucumber": "cucumber.js --fail-fast",
-    "crawl-coverage": "node coverage/scripts/feature-coverage-download.js",
+    "crawl-coverage": "node docker-compose/scripts/feature-coverage-download.js",
     "codecov": "cat ./coverage/lcov.info | ./node_modules/.bin/codecov",
     "lint": "eslint --max-warnings=0 ./lib ./bin ./test ./features",
     "preversion": "git checkout master && git pull",
