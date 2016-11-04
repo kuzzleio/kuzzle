@@ -28,7 +28,7 @@ describe('Test: clear cache', () => {
       internalCache: sinon.spy(kuzzle.services.list.internalCache, 'flushdb')
     };
 
-    clearCache = require('../../../../lib/api/controllers/remoteActions/clearCache')(kuzzle);
+    clearCache = require('../../../../lib/api/controllers/cli/clearCache')(kuzzle);
   });
 
   it('should clean the internalStorage by default if no database name is provided', () => {
