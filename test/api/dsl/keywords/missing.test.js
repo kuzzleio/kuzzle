@@ -23,7 +23,7 @@ describe('DSL.keyword.missing', () => {
                 field: 'foo'
               }
             }
-          })
+          });
         });
     });
   });
