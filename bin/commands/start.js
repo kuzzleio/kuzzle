@@ -8,20 +8,14 @@ var
   RequestObject = require('kuzzle-common-objects').Models.requestObject,
   Promise = require('bluebird'),
   clc = require('cli-color'),
-  coverage,
-  kuzzleLogo = `
-      ▄▄▄▄▄      ▄███▄      ▄▄▄▄
-   ▄█████████▄▄█████████▄▄████████▄
-  ██████████████████████████████████
-   ▀██████████████████████████████▀
-    ▄███████████████████████████▄
-  ▄███████████████████████████████▄
- ▀█████████████████████████████████▀
-   ▀██▀        ▀██████▀       ▀██▀
-          ██     ████    ██
-                ▄████▄
-                ▀████▀
-                  ▀▀`;
+  coverage;
+  /*kuzzleLogo = `
+                       ______     _____    
+     _  ___   _ _____ |__  / |   | ____|   
+    | |/ / | | |__  /   / /| |   |  _|     
+    | ' /| | | | / /   / /_| |___| |_      
+    | . \\| |_| |/ /_  /____|_____|_____| 
+    |_|\\_\\\\___//____|    SERVER READY`;*/
 
 function commandStart (options) {
   var
@@ -37,7 +31,7 @@ function commandStart (options) {
     console.log(warn('Hook loader for coverage - ensure this is not production!'));
     coverage.hookLoader(__dirname+'/../lib');
   }
-  console.log(kuz('Starting Kuzzle'));
+  console.log(kuz('[ℹ] Starting Kuzzle server'));
 
   kuzzle.start(params)
     // like a virgin
@@ -98,11 +92,7 @@ function commandStart (options) {
       }
     })
     .then(() => {
-      console.log(kuzzleLogo);
-      console.log(`
- ████████████████████████████████████
- ██         KUZZLE IS READY        ██
- ████████████████████████████████████`);
+      console.log(kuz('[✔] Kuzzle server ready'));
       return kuzzle.internalEngine.bootstrap.adminExists()
         .then((res) => {
           if (res) {

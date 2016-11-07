@@ -99,7 +99,7 @@ function KuzzleMock () {
     trigger: sinon.spy(function () {return Promise.resolve(arguments[1]);})
   };
 
-  this.remoteActionsController = {
+  this.cliController = {
     init: sinon.stub().resolves(),
     actions: {
       adminExists: sinon.stub().resolves(),
