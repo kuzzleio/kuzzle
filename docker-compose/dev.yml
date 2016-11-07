@@ -23,7 +23,7 @@ services:
       - FEATURE_COVERAGE=1
 
   redis:
-    image: redis:3.2-alpine
+    image: redis:3.2
 
   elasticsearch:
-    image: kuzzleio/elasticsearch:2.3.4
+    image: elasticsearch:2.3.4

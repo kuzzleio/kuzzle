@@ -94,7 +94,7 @@ function KuzzleMock () {
     trigger: sinon.spy(function () {return Promise.resolve(arguments[1]);})
   };
 
-  this.remoteActionsController = {
+  this.cliController = {
     init: sinon.stub().resolves(),
     actions: {
       adminExists: sinon.stub().resolves(),
@@ -114,6 +114,8 @@ function KuzzleMock () {
   };
 
   this.validation = {
+    init: sinon.spy(),
+    curateSpecification: sinon.spy(function () {return Promise.resolve();}),
     validate: sinon.spy(function () {return Promise.resolve(arguments[0]);}),
     validationPromise: sinon.spy(function () {return Promise.resolve(arguments[0]);}),
     addType: sinon.spy()

@@ -2,10 +2,10 @@ var
   rewire = require('rewire'),
   should = require('should'),
   sinon = require('sinon'),
-  Action = rewire('../../../lib/api/remoteActions/action'),
+  Action = rewire('../../../lib/api/cli/action'),
   sandbox = sinon.sandbox.create();
 
-describe('Tests: remoteActionController action client', () => {
+describe('Tests: cliController action client', () => {
   afterEach(() => {
     sandbox.restore();
   });

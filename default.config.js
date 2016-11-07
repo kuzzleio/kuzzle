@@ -24,7 +24,7 @@ module.exports = {
   },
 
   queues: {
-    remoteActionsQueue: 'remote-actions-queue'
+    cliQueue: 'cli-queue'
   },
 
   repositories: {

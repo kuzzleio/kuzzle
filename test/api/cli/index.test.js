@@ -4,9 +4,9 @@ var
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
   KuzzleMock = require('../../mocks/kuzzle.mock'),
-  RemoteActions = rewire('../../../lib/api/remoteActions/index');
+  Cli = rewire('../../../lib/api/cli/index');
 
-describe('Tests: api/remoteActions/index.js', () => {
+describe('Tests: api/cli/index.js', () => {
   var
     kuzzle;
 
@@ -21,15 +21,15 @@ describe('Tests: api/remoteActions/index.js', () => {
   describe('#constructor', () => {
 
     it('should build proper properties', () => {
-      RemoteActions.__with__({
+      Cli.__with__({
         initActions: sinon.spy()
       })(() => {
         var
-          stub = RemoteActions.__get__('initActions'),
-          remoteActions = new RemoteActions(kuzzle);
+          stub = Cli.__get__('initActions'),
+          cli = new Cli(kuzzle);
 
-        should(remoteActions.actions).eql({});
-        should(remoteActions.do).be.a.Function();
+        should(cli.actions).eql({});
+        should(cli.do).be.a.Function();
         should(stub).be.calledOnce();
       });
     });
@@ -38,17 +38,17 @@ describe('Tests: api/remoteActions/index.js', () => {
 
   describe('#initActions', () => {
     var
-      initActions = RemoteActions.__get__('initActions');
+      initActions = Cli.__get__('initActions');
 
     it('should set the client actions', () => {
       var action = {foo: 'bar'};
 
-      RemoteActions.__with__({
+      Cli.__with__({
         Action: sinon.stub().returns(action)
       })(() => {
         var
           context = {actions: {}},
-          spy = RemoteActions.__get__('Action');
+          spy = Cli.__get__('Action');
 
         initActions.call(context);
 
@@ -61,7 +61,7 @@ describe('Tests: api/remoteActions/index.js', () => {
           data: action,
           dump: action
         });
-        should(spy).have.callCount(7);
+        should(spy).have.callCount(6);
       });
     });
   });
@@ -74,7 +74,7 @@ describe('Tests: api/remoteActions/index.js', () => {
         initTimeout: sinon.spy()
       };
 
-      RemoteActions.__with__({
+      Cli.__with__({
         Action: sinon.stub().returns(action),
         console: {
           error: sinon.spy()
@@ -88,16 +88,16 @@ describe('Tests: api/remoteActions/index.js', () => {
       })(() => {
         var
           context = {actions: {}},
-          initActions = RemoteActions.__get__('initActions'),
+          initActions = Cli.__get__('initActions'),
           managePluginsArgs,
           timeoutCB;
 
         initActions.call(context);
 
-        should(RemoteActions.__get__('Action'))
+        should(Cli.__get__('Action'))
           .be.have.callCount(7);
 
-        managePluginsArgs = RemoteActions.__get__('Action').getCall(6).args[0];
+        managePluginsArgs = Cli.__get__('Action').getCall(4).args[0];
         should(managePluginsArgs).match({
           timeout: 1000
         });
@@ -112,10 +112,10 @@ describe('Tests: api/remoteActions/index.js', () => {
         should(action.timeout).be.exactly(1000);
         should(action.maxTimeout).be.exactly(5 * 60 * 1000);
         should(action.spent).be.exactly(action.timeout * 2);
-        should(RemoteActions.__get__('process.stdout.write'))
+        should(Cli.__get__('process.stdout.write'))
           .be.calledOnce()
           .be.calledWith('.');
-        should(RemoteActions.__get__('console.error'))
+        should(Cli.__get__('console.error'))
           .have.callCount(0);
 
         // second call after max timeout is reached
@@ -124,13 +124,13 @@ describe('Tests: api/remoteActions/index.js', () => {
 
         should(action.spent).be.exactly(5 * 60 * 1000 + action.timeout);
         // no additional call on process.stdout.write
-        should(RemoteActions.__get__('process.stdout.write'))
+        should(Cli.__get__('process.stdout.write'))
           .be.calledOnce()
           .be.calledWith('.');
-        should(RemoteActions.__get__('console.error'))
+        should(Cli.__get__('console.error'))
           .be.calledOnce()
-          .be.calledWith('ERROR: No response from Kuzzle within ̀300s. Exiting');
-        should(RemoteActions.__get__('process.exit'))
+          .be.calledWith('No response from Kuzzle within ̀300s. Exiting');
+        should(Cli.__get__('process.exit'))
           .be.calledOnce()
           .be.calledWith(1);
 
@@ -140,9 +140,7 @@ describe('Tests: api/remoteActions/index.js', () => {
 
   describe('#do', () => {
     var
-      // consoleSpy,
-      // exitSpy,
-      remoteActions,
+      cli,
       reset;
 
     beforeEach(() => {
@@ -150,7 +148,7 @@ describe('Tests: api/remoteActions/index.js', () => {
       requireStub.withArgs('../../config').returns(kuzzle.config);
       requireStub.returns();
 
-      reset = RemoteActions.__set__({
+      reset = Cli.__set__({
         console: {
           log: sinon.spy(),
           error: sinon.spy()
@@ -171,9 +169,7 @@ describe('Tests: api/remoteActions/index.js', () => {
           send: sinon.spy()
         })
       });
-      // consoleSpy = RemoteActions.__get__('console').log;
-      // exitSpy = RemoteActions.__get__('process').exit;
-      remoteActions = new RemoteActions(kuzzle);
+      cli = new Cli(kuzzle);
     });
 
     afterEach(() => {
@@ -197,13 +193,13 @@ describe('Tests: api/remoteActions/index.js', () => {
           }
         };
 
-      return remoteActions.do.call(context, 'test', {})
+      return cli.do.call(context, 'test', {})
         .then(response => {
           should(response).be.exactly('promise');
           should(kuzzle.services.list.broker.listen).be.calledOnce();
           should(kuzzle.services.list.broker.listen.firstCall.args[1]).be.a.Function();
           should(kuzzle.services.list.broker.send).be.calledOnce();
-          should(kuzzle.services.list.broker.send.firstCall.args[0]).be.exactly('remote-actions-queue');
+          should(kuzzle.services.list.broker.send.firstCall.args[0]).be.exactly('cli-queue');
           should(kuzzle.services.list.broker.send.firstCall.args[1]).match({
             controller: 'actions',
             action: 'test',
@@ -229,10 +225,10 @@ describe('Tests: api/remoteActions/index.js', () => {
 
       kuzzle.internalEngine.init.rejects(error);
 
-      return remoteActions.do.call(context, 'action', 'data', {debug: true})
+      return cli.do.call(context, 'action', 'data', {debug: true})
         .catch(err => {
           should(err).be.exactly(error);
-          should(RemoteActions.__get__('console.error'))
+          should(Cli.__get__('console.error'))
             .be.calledOnce()
             .be.calledWith(error.stack);
         });

@@ -5,9 +5,9 @@ var
   sinon = require('sinon'),
   PluginPackageMock = require('../../../mocks/plugins/pluginPackage.mock'),
   RequestObject = require('kuzzle-common-objects').Models.requestObject,
-  ManagePlugins = rewire('../../../../lib/api/controllers/remoteActions/managePlugins');
+  ManagePlugins = rewire('../../../../lib/api/controllers/cli/managePlugins');
 
-describe('Test: managePlugins remote action caller', () => {
+describe('Test: managePlugins cli actions', () => {
   var
     managePlugins,
     pkg,
