@@ -257,6 +257,10 @@ Feature: Test websocket API
     And The token is invalid
 
   @usingWebsocket @cleanSecurity
+  Scenario: create restricted user
+    Then I create a restricted user "restricteduser1" with id "restricteduser1-id"
+
+  @usingWebsocket @cleanSecurity
   Scenario: Create/get/search/update/delete role
     When I create a new role "role1" with id "test"
     Then I'm able to find a role with id "test"
@@ -1396,4 +1400,48 @@ Feature: Test websocket API
     When I update the document with value "Josepha" in field "firstName"
     Then I find a document with "josepha" in field "firstName"
 
+  @usingREST @cleanValidations
+  Scenario: Validation - getSpecification & updateSpecification
+    When There is no specifications for index "kuzzle-test-index" and collection "kuzzle-collection-test"
+    Then I put a not valid specification for index "kuzzle-test-index" and collection "kuzzle-collection-test"
+    And There is an error message
+    When There is no specifications for index "kuzzle-test-index" and collection "kuzzle-collection-test"
+    Then I put a valid specification for index "kuzzle-test-index" and collection "kuzzle-collection-test"
+    And There is no error message
+    And There is a specification for index "kuzzle-test-index" and collection "kuzzle-collection-test"
+
+  @usingREST @cleanValidations
+  Scenario: Validation - validateSpecification
+    When I post a valid specification
+    Then There is no error message
+    When I post an invalid specification
+    Then There is an error message
+
+  @usingREST @cleanValidations
+  Scenario: Validation - validateDocument
+    When I put a valid specification for index "kuzzle-test-index" and collection "kuzzle-collection-test"
+    Then There is no error message
+    When I post a valid document
+    Then There is no error message
+    When I post an invalid document
+    Then There is an error message
+
+  @usingREST @cleanValidations
+  Scenario: Validation - validateDocument
+    When I put a valid specification for index "kuzzle-test-index" and collection "kuzzle-collection-test"
+    Then There is no error message
+    When I post a valid document
+    Then There is no error message
+    When I post an invalid document
+    Then There is an error message
+
+  @usingREST @cleanValidations
+  Scenario: Validation - deleteSpecifications
+    When I put a valid specification for index "kuzzle-test-index" and collection "kuzzle-collection-test"
+    Then There is no error message
+    When I delete the specifications for index "kuzzle-test-index" and collection "kuzzle-collection-test"
+    Then There is no error message
+    And There is no specifications for index "kuzzle-test-index" and collection "kuzzle-collection-test"
+    When I delete the specifications again for index "kuzzle-test-index" and collection "kuzzle-collection-test"
+    Then There is no error message
 

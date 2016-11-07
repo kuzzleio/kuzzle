@@ -40,7 +40,7 @@ program
   .arguments('[name]')
   .description('manage plugins')
   .option('    --list', 'list currently installed plugins')
-  .option('    --install', 'install a new plugin package from npm repository if [name] if provided or from --path or --url options')
+  .option('    --install', 'install a new plugin package from npm repository if [name] is provided or from --path or --url options')
   .option('    --remove', 'remove plugin [name] from Kuzzle')
   .option('    --activate', 'mark the plugin as "activated"')
   .option('    --deactivate', 'mark the plugin as "deactivated"')

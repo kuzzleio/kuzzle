@@ -8,19 +8,21 @@ var
   fs = require('fs'),
   clc = require('cli-color');
 
-module.exports = function (options) {
+function commandReset (options) {
   var
     error = string => options.parent.noColors ? string : clc.red(string),
     warn = string => options.parent.noColors ? string : clc.yellow(string),
     notice = string => options.parent.noColors ? string : clc.cyanBright(string),
     ok = string => options.parent.noColors ? string: clc.green.bold(string),
     userIsSure = false,
-    kuzzle = new Kuzzle();
+    kuzzle = new Kuzzle(),
+    fixturesContent,
+    mappingsContent;
 
   // check, if files are provided, if they exists
   if (params.fixtures) {
     try {
-      JSON.parse(fs.readFileSync(params.fixtures, 'utf8'));
+      fixturesContent = JSON.parse(fs.readFileSync(params.fixtures, 'utf8'));
     }
     catch (e) {
       console.log(error('[✖] The file ' + params.fixtures + ' cannot be opened... aborting.'));
@@ -30,7 +32,7 @@ module.exports = function (options) {
 
   if (params.mappings) {
     try {
-      JSON.parse(fs.readFileSync(params.mappings, 'utf8'));
+      mappingsContent = JSON.parse(fs.readFileSync(params.mappings, 'utf8'));
     }
     catch (e) {
       console.log(error('[✖] The file ' + params.mappings + ' cannot be opened... aborting.'));
@@ -51,10 +53,12 @@ module.exports = function (options) {
   if (userIsSure) {
     console.log(notice('[ℹ] Processing...\n'));
     return kuzzle.remoteActions.do('cleanDb', {}, {debug: options.parent.debug})
-      .then(() => kuzzle.remoteActions.do('data', {
-        fixtures: params.fixtures,
-        mappings: params.mappings
-      }, {debug: options.parent.debug}))
+      .then(() => {
+        return kuzzle.remoteActions.do('data', {
+          fixtures: fixturesContent,
+          mappings: mappingsContent
+        }, {debug: options.parent.debug});
+      })
       .then(() => {
         console.log(ok('[✔] Kuzzle is now like a virgin, touched for the very first time!'));
         process.exit(0);
@@ -65,5 +69,7 @@ module.exports = function (options) {
       });
   }
 
-  console.log(notice('[ℹ] Nothing have been done... you do not look that sure...'));
-};
+  console.log(notice('[ℹ] Nothing done: you do not look that sure...'));
+}
+
+module.exports = commandReset;

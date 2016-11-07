@@ -94,7 +94,7 @@ function KuzzleMock () {
     trigger: sinon.spy(function () {return Promise.resolve(arguments[1]);})
   };
 
-  this.remoteActionsController = {
+  this.cliController = {
     init: sinon.stub().resolves(),
     actions: {
       adminExists: sinon.stub().resolves(),
@@ -111,6 +111,14 @@ function KuzzleMock () {
     user: {
       load: sinon.stub().resolves(foo)
     }
+  };
+
+  this.validation = {
+    init: sinon.spy(),
+    curateSpecification: sinon.spy(function () {return Promise.resolve();}),
+    validate: sinon.spy(function () {return Promise.resolve(arguments[0]);}),
+    validationPromise: sinon.spy(function () {return Promise.resolve(arguments[0]);}),
+    addType: sinon.spy()
   };
 
   this.resetStorage = sinon.stub().resolves();
@@ -139,6 +147,9 @@ function KuzzleMock () {
         flushdb: sinon.stub().resolves()
       },
       storageEngine: {
+        get: sinon.stub().resolves({
+          _source: foo
+        }),
         getMapping: sinon.stub().resolves(foo),
         listIndexes: sinon.stub().resolves({indexes: ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i']}),
         create: sinon.stub().resolves(foo),

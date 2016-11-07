@@ -195,6 +195,9 @@ module.exports = function () {
         profileIds: [this.idPrefix + 'profile6'],
         password: 'testpwd6'
       },
+      restricteduser1: {
+        password: 'testpwd1'
+      },
       unexistingprofile: {
         name: 'John Doe',
         profileIds: [this.idPrefix + 'i-dont-exist']

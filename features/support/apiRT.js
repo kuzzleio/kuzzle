@@ -627,6 +627,19 @@ ApiRT.prototype.createUser = function (body, id) {
   return this.send(msg);
 };
 
+ApiRT.prototype.createRestrictedUser = function (body, id) {
+  var msg = {
+    controller: 'security',
+    action: 'createRestrictedUser',
+    body: body
+  };
+  if (id !== undefined) {
+    msg._id = id;
+  }
+
+  return this.send(msg);
+};
+
 ApiRT.prototype.checkToken = function (token) {
   return this.send({
     controller: 'auth',
@@ -666,6 +679,49 @@ ApiRT.prototype.getAutoRefresh = function (index) {
     index: index,
     controller: 'admin',
     action: 'getAutoRefresh'
+  });
+};
+
+ApiRT.prototype.getSpecifications = function (index, collection) {
+  return this.send({
+    index: index,
+    collection: collection,
+    controller: 'admin',
+    action: 'getSpecifications'
+  });
+};
+
+ApiRT.prototype.updateSpecifications = function (specifications) {
+  return this.send({
+    index: null,
+    collection: null,
+    controller: 'admin',
+    action : 'updateSpecifications',
+    body: specifications
+  });
+};
+
+ApiRT.prototype.validateSpecifications = function (specifications) {
+  return this.send({
+    index: null,
+    collection: null,
+    controller: 'admin',
+    action : 'validateSpecifications',
+    body: specifications
+  });
+};
+
+ApiRT.prototype.validateDocument = function (index, collection, document) {
+  return this.create(document, index, collection);
+};
+
+ApiRT.prototype.deleteSpecifications = function (index, collection) {
+  return this.send({
+    index: index,
+    collection: collection,
+    controller: 'admin',
+    action : 'deleteSpecifications',
+    body: null
   });
 };
 

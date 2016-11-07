@@ -5,7 +5,7 @@ var
 
 /* eslint-disable no-console */
 
-module.exports = function pluginsManager (plugin, options) {
+function commandPlugin (plugin, options) {
   var
     clcError = string => options.parent.noColors ? string : clc.red(string),
     clcNotice = string => options.parent.noColors ? string : clc.cyan(string),
@@ -26,7 +26,7 @@ module.exports = function pluginsManager (plugin, options) {
   });
   if (data.packageVersion) {
     data.version = data.packageVersion;
-    delete data.data.packageVersion;
+    delete data.packageVersion;
   }
   data._id = plugin;
 
@@ -134,4 +134,6 @@ module.exports = function pluginsManager (plugin, options) {
     }
 
   }
-};
+}
+
+module.exports = commandPlugin;
