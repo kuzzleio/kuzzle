@@ -13,7 +13,7 @@ var
  * are already tested in the normal keyword unit tests
  */
 
-describe.only('DSL.keyword.notgeospatial', () => {
+describe('DSL.keyword.notgeospatial', () => {
   let dsl;
 
   beforeEach(() => {
