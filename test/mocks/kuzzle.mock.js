@@ -40,6 +40,10 @@ function KuzzleMock () {
     init: sinon.spy()
   };
 
+  this.hotelClerk = {
+    getRealtimeCollections: sinon.stub()
+  };
+
   this.indexCache = {
     add: sinon.stub(),
     exists: sinon.stub(),
@@ -90,6 +94,7 @@ function KuzzleMock () {
       definitions: sinon.stub().resolves([]),
       getPackage: sinon.stub().resolves(),
     },
+    plugins: {},
     run: sinon.stub().resolves(),
     trigger: sinon.spy(function () {return Promise.resolve(arguments[1]);})
   };
@@ -135,21 +140,27 @@ function KuzzleMock () {
     init: sinon.stub().resolves(),
     list: {
       broker: {
+        getInfos: sinon.stub().resolves(),
         listen: sinon.spy(),
         send: sinon.spy()
       },
       internalCache: {
-        flushdb: sinon.stub().resolves()
+        flushdb: sinon.stub().resolves(),
+        getInfos: sinon.stub().resolves()
       },
       memoryStorage: {
-        flushdb: sinon.stub().resolves()
+        flushdb: sinon.stub().resolves(),
+        getInfos: sinon.stub().resolves()
       },
       storageEngine: {
         get: sinon.stub().resolves({
           _source: foo
         }),
+        getInfos: sinon.stub().resolves(),
         getMapping: sinon.stub().resolves(foo),
         listIndexes: sinon.stub().resolves({indexes: ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i']}),
+        collectionExists: sinon.stub().resolves(),
+        count: sinon.stub().resolves(42),
         create: sinon.stub().resolves(foo),
         createCollection: sinon.stub().resolves(foo),
         createIndex: sinon.stub().resolves(foo),
@@ -160,8 +171,11 @@ function KuzzleMock () {
         deleteIndexes: sinon.stub().resolves({deleted: ['a', 'e', 'i']}),
         getAutoRefresh: sinon.stub().resolves(false),
         import: sinon.stub().resolves(foo),
+        indexExists: sinon.stub().resolves(),
+        listCollections: sinon.stub().resolves(),
         refreshIndex: sinon.stub().resolves(foo),
         replace: sinon.stub().resolves(foo),
+        search: sinon.stub().resolves(),
         setAutoRefresh: sinon.stub().resolves(true),
         truncateCollection: sinon.stub().resolves(foo),
         update: sinon.stub().resolves(foo),

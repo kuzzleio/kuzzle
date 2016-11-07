@@ -210,6 +210,17 @@ Feature: Test websocket API
     And I list "stored" data collections
     Then I can find a stored collection kuzzle-collection-test
 
+  @usingWebsocket
+  Scenario: Index and collection existence
+    When I check if index "%kuzzle" exists
+    Then The result should match the json true
+    When I check if index "idontexist" exists
+    Then The result should match the json false
+    When I check if collection "users" exists on index "%kuzzle"
+    Then The result should match the json true
+    When I check if collection "idontexist" exists on index "%kuzzle"
+    Then The result should match the json false
+
   @usingWebsocket @unsubscribe
   Scenario: list known realtime collections
     Given A room subscription listening to "lastName" having value "Hopper"

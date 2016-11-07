@@ -113,6 +113,17 @@ Feature: Test REST API
     Then I can find a stored collection kuzzle-collection-test
 
   @usingREST
+  Scenario: Index and collection existence
+    When I check if index "%kuzzle" exists
+    Then The result should match the json true
+    When I check if index "idontexist" exists
+    Then The result should match the json false
+    When I check if collection "users" exists on index "%kuzzle"
+    Then The result should match the json true
+    When I check if collection "idontexist" exists on index "%kuzzle"
+    Then The result should match the json false
+
+  @usingREST
   Scenario: list known realtime collections
     When I list "realtime" data collections
     Then I can not find a realtime collection
