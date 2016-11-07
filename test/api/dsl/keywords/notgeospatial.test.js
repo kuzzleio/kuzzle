@@ -13,7 +13,7 @@ var
  * are already tested in the normal keyword unit tests
  */
 
-describe('DSL.keyword.notgeospatial', () => {
+describe.only('DSL.keyword.notgeospatial', () => {
   let dsl;
 
   beforeEach(() => {
@@ -181,6 +181,106 @@ describe('DSL.keyword.notgeospatial', () => {
     it('should reject a shape if the point is right on its border', () => {
       let result = dsl.test('index', 'collection', {foo: {lat: 43.5810609, lon: 3.8433703}});
       should(result.sort()).match([distanceId, distanceRangeId, polygonId].sort());
+    });
+  });
+
+  describe('#removal', () => {
+    let filter, filterId;
+
+    beforeEach(() => {
+      filter = {not: {geoBoundingBox: {foo: {bottom: 43.5810609, left: 3.8433703, top: 43.6331979, right: 3.9282093}}}};
+      return dsl.register('index', 'collection', filter)
+        .then(subscription => {
+          filterId = subscription.id;
+        });
+    });
+
+    it('should destroy the whole structure when removing the last item', () => {
+      return dsl.remove(filterId)
+        .then(() => {
+          should(dsl.storage.foPairs).be.an.Object().and.be.empty();
+        });
+    });
+
+    it('should remove a single subfilter from a multi-filter condition', () => {
+      let sf;
+
+      return dsl.register('index', 'collection', {and: [filter, {equals: {foo: 'bar'}}]})
+        .then(subscription => {
+          sf = dsl.storage.filters[subscription.id].subfilters[0];
+          return dsl.remove(filterId);
+        })
+        .then(() => {
+          should(dsl.storage.foPairs.index.collection.notgeospatial).be.instanceOf(FieldOperand);
+          should(dsl.storage.foPairs.index.collection.notgeospatial.keys.array).match(['foo']);
+          should(dsl.storage.foPairs.index.collection.notgeospatial.fields.foo.ids.array[0].subfilters).match([sf]);
+        });
+    });
+
+    it('should remove a value from the list if its last subfilter is removed', () => {
+      let
+        promise,
+        cond;
+
+      promise = dsl.register('index', 'collection', {
+        not: {
+          geoDistance: {
+            foo: {
+              lat: 43.5764455,
+              lon: 3.948711
+            },
+            distance: '2000m'
+          }
+        }
+      });
+
+      return promise
+        .then(subscription => {
+          cond = new NotGeospatialCondition(
+            dsl.storage.filters[subscription.id].subfilters[0].conditions[0].id,
+            dsl.storage.filters[subscription.id].subfilters[0]
+          );
+          return dsl.remove(filterId);
+        })
+        .then(() => {
+          should(dsl.storage.foPairs.index.collection.notgeospatial).be.instanceOf(FieldOperand);
+          should(dsl.storage.foPairs.index.collection.notgeospatial.keys.array).match(['foo']);
+          should(dsl.storage.foPairs.index.collection.notgeospatial.fields.foo.ids.array).match([cond]);
+        });
+    });
+
+    it('should remove a field from the list if its last value to test is removed', () => {
+      let
+        promise,
+        cond;
+
+      promise = dsl.register('index', 'collection', {
+        not: {
+          geoDistance: {
+            bar: {
+              lat: 43.5764455,
+              lon: 3.948711
+            },
+            distance: '2000m'
+          }
+        }
+      });
+
+      return promise
+        .then(subscription => {
+          cond = new NotGeospatialCondition(
+            dsl.storage.filters[subscription.id].subfilters[0].conditions[0].id,
+            dsl.storage.filters[subscription.id].subfilters[0]
+          );
+
+          should(dsl.storage.foPairs.index.collection.notgeospatial.keys.array).match(['bar', 'foo']);
+          return dsl.remove(filterId);
+        })
+        .then(() => {
+          should(dsl.storage.foPairs.index.collection.notgeospatial).be.instanceOf(FieldOperand);
+          should(dsl.storage.foPairs.index.collection.notgeospatial.keys.array).match(['bar']);
+          should(dsl.storage.foPairs.index.collection.notgeospatial.fields.bar.ids.array).match([cond]);
+        });
     });
   });
 });
