@@ -9,7 +9,7 @@ var
   NotFoundError = require.main.require('kuzzle-common-objects').Errors.notFoundError,
   ES = rewire('../../../lib/services/elasticsearch');
 
-describe.only('Test: ElasticSearch service', () => {
+describe('Test: ElasticSearch service', () => {
   var
     kuzzle = {},
     sandbox = sinon.sandbox.create(),
