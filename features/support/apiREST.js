@@ -86,7 +86,7 @@ ApiREST.prototype.getRequest = function (index, collection, controller, action, 
         }
 
         return '';
-      }).substring(0);
+      });
 
       // add extra aguments in the query string
       if (verb === 'GET') {
