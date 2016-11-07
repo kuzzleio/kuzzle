@@ -61,7 +61,7 @@ describe('Tests: api/cli/index.js', () => {
           data: action,
           dump: action
         });
-        should(spy).have.callCount(6);
+        should(spy).have.callCount(7);
       });
     });
   });
@@ -97,7 +97,7 @@ describe('Tests: api/cli/index.js', () => {
         should(Cli.__get__('Action'))
           .be.have.callCount(7);
 
-        managePluginsArgs = Cli.__get__('Action').getCall(4).args[0];
+        managePluginsArgs = Cli.__get__('Action').getCall(6).args[0];
         should(managePluginsArgs).match({
           timeout: 1000
         });
@@ -129,7 +129,7 @@ describe('Tests: api/cli/index.js', () => {
           .be.calledWith('.');
         should(Cli.__get__('console.error'))
           .be.calledOnce()
-          .be.calledWith('No response from Kuzzle within ̀300s. Exiting');
+          .be.calledWith('ERROR: No response from Kuzzle within ̀300s. Exiting');
         should(Cli.__get__('process.exit'))
           .be.calledOnce()
           .be.calledWith(1);

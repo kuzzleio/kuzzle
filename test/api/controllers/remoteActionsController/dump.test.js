@@ -46,7 +46,7 @@ describe('Test: dump', () => {
       }
     };
 
-    dump = rewire('../../../../lib/api/controllers/remoteActions/dump');
+    dump = rewire('../../../../lib/api/controllers/cli/dump');
 
     dump.__set__('fs', {
       writeFileSync: writeFileSyncSpy,
