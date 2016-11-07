@@ -104,15 +104,13 @@ describe('DSL.keyword.notgeospatial', () => {
 
   describe('#match', () => {
     let
-      bboxId,
       distanceId,
       distanceRangeId,
       polygonId;
 
     beforeEach(() => {
       return dsl.register('index', 'collection', {not: {geoBoundingBox: {foo: {bottom: 43.5810609, left: 3.8433703, top: 43.6331979, right: 3.9282093}}}})
-        .then(subscription => {
-          bboxId = subscription.id;
+        .then(() => {
           return dsl.register('index', 'collection', {
             not: {
               geoDistance: {
