@@ -5,7 +5,7 @@ var
   InternalError = require('kuzzle-common-objects').Errors.internalError,
   KuzzleMock = require('../../../mocks/kuzzle.mock'),
   RequestObject = require('kuzzle-common-objects').Models.requestObject,
-  dataHandler = require('../../../../lib/api/controllers/remoteActions/data');
+  dataHandler = require('../../../../lib/api/controllers/cli/data');
 
 describe('Test: data handler', () => {
   var

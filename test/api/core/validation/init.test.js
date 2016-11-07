@@ -817,9 +817,7 @@ describe('Test: validation initialization', () => {
     it('should return a promise if everything goes as expected', () => {
       var
         registerStub = sandbox.stub().resolves({}),
-        dslStub = sandbox.stub().returns({
-          register: registerStub
-        }),
+        validateStub = sandbox.stub().resolves({}),
         indexName = 'anIndex',
         collectionName= 'aCollection',
         validatorFilter = [{some: 'filters'}],
@@ -830,49 +828,46 @@ describe('Test: validation initialization', () => {
           }
         };
 
-      Validation.__set__('Dsl', dslStub);
       validation.dsl = {
-        register: registerStub
+        register: registerStub,
+        validate: validateStub
       };
 
       return validation.curateValidatorFilter(indexName, collectionName, validatorFilter, dryRun)
         .then(() => {
-          should(dslStub.callCount).be.eql(1);
-          should(registerStub.callCount).be.eql(2);
+          should(validateStub.callCount).be.eql(1);
+          should(validateStub.args[0][0]).be.deepEqual(expectedQuery);
+          should(registerStub.callCount).be.eql(1);
           should(registerStub.args[0][0]).be.eql(indexName);
           should(registerStub.args[0][1]).be.eql(collectionName);
           should(registerStub.args[0][2]).be.deepEqual(expectedQuery);
-          should(registerStub.args[1][0]).be.eql(indexName);
-          should(registerStub.args[1][1]).be.eql(collectionName);
-          should(registerStub.args[1][2]).be.deepEqual(expectedQuery);
         });
     });
 
     it('should return a promise if everything goes as expected and avoid registration if dryRun is true', () => {
       var
         registerStub = sandbox.stub().resolves({}),
-        dslStub = sandbox.stub().returns({
-          register: registerStub
-        }),
+        validateStub = sandbox.stub().resolves({}),
         indexName = 'anIndex',
         collectionName= 'aCollection',
         validatorFilter = [{some: 'filters'}],
-        dryRun = false,
+        dryRun = true,
         expectedQuery = {
           bool: {
             must: validatorFilter
           }
         };
 
-      Validation.__set__('Dsl', dslStub);
+      validation.dsl = {
+        register: registerStub,
+        validate: validateStub
+      };
 
       return validation.curateValidatorFilter(indexName, collectionName, validatorFilter, dryRun)
         .then(() => {
-          should(dslStub.callCount).be.eql(1);
-          should(registerStub.callCount).be.eql(1);
-          should(registerStub.args[0][0]).be.eql(indexName);
-          should(registerStub.args[0][1]).be.eql(collectionName);
-          should(registerStub.args[0][2]).be.deepEqual(expectedQuery);
+          should(validateStub.callCount).be.eql(1);
+          should(registerStub.callCount).be.eql(0);
+          should(validateStub.args[0][0]).be.deepEqual(expectedQuery);
         });
     });
   });
