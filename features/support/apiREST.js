@@ -172,8 +172,8 @@ ApiREST.prototype.search = function (filters, index, collection) {
 
 ApiREST.prototype.scroll = function (scrollId) {
   var options = {
-    url: this.apiPath('/_scroll/'.concat(scrollId)),
-    method: 'GET'
+    url: this.apiPath('_scroll/'.concat(scrollId)),
+    method: 'POST'
   };
 
   return this.callApi(options);
