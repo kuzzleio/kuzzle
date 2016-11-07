@@ -1,0 +1,147 @@
+var
+  should = require('should').noConflict(),
+  BadRequestError = require('kuzzle-common-objects').Errors.badRequestError,
+  DSL = require('../../../../lib/api/dsl');
+
+describe('DSL API', () => {
+  let dsl;
+
+  beforeEach(() => {
+    dsl = new DSL();
+  });
+
+  describe('#prototypes', () => {
+    it('should expose the expected methods', () => {
+      should(dsl.validate).be.a.Function();
+      should(dsl.register).be.a.Function();
+      should(dsl.exists).be.a.Function();
+      should(dsl.getFilterIds).be.a.Function();
+      should(dsl.test).be.a.Function();
+      should(dsl.remove).be.a.Function();
+    });
+  });
+
+  describe('#validate', () => {
+    it('should resolve to "true" if a filter is valid', () => {
+      return should(dsl.validate({equals: {foo: 'bar'}})).be.fulfilledWith(true);
+    });
+
+    it('should resolve to a BadRequestError if a filter is not valid', () => {
+      return should(dsl.validate({foo: 'bar'})).be.rejectedWith(BadRequestError);
+    });
+  });
+
+  describe('#register', () => {
+    it('should resolve to a BadRequestError if a filter is not valid', () => {
+      return should(dsl.register('i', 'c', {foo: 'bar'})).be.rejectedWith(BadRequestError);
+    });
+
+    it('should resolve to a cluster diff object if the registration succeeds', () => {
+      return dsl.register('i', 'c', {not: {and: [{exists: {field: 'bar'}}, {equals: {foo: 'bar'}}]}})
+        .then(result => {
+          should(result).be.an.Object();
+          should(result.diff).be.an.Object().and.match({
+            ftAdd:
+            { i: 'i',
+              c: 'c',
+              f:
+                [ [ { exists: { field: 'bar' }, not: true } ],
+                  [ { equals: { foo: 'bar' }, not: true } ] ] }
+          });
+
+          should(result.id).be.a.String();
+        });
+    });
+
+    it('should resolve to a "no diff" object if the room already exists', () => {
+      let id;
+
+      return dsl.register('i', 'c', {not: {and: [{exists: {field: 'bar'}}, {equals: {foo: 'bar'}}]}})
+        .then(result => {
+          id = result.id;
+
+          return dsl.register('i', 'c', {
+            or: [
+              {not: { exists: { field: 'bar' }}},
+              {not: { equals: { foo: 'bar' }}}
+            ]
+          });
+        })
+        .then(result => {
+          let bool = {
+            bool: {
+              must_not: [
+                {exists: { field: 'bar' }},
+                {equals: { foo: 'bar' }}
+              ]
+            }
+          };
+
+          should(result.diff).be.false();
+          should(result.id).be.eql(id);
+
+          return dsl.register('i', 'c', bool);
+        })
+        .then(result => {
+          should(result.diff).be.false();
+          should(result.id).be.eql(id);
+        });
+    });
+  });
+
+  describe('#exists', () => {
+    it('should return true if a filter exists on the provided index and collection', () => {
+      return dsl.register('i', 'c', {equals: {foo: 'bar'}})
+        .then(() => {
+          should(dsl.exists('i', 'c')).be.true();
+        });
+    });
+
+    it('should return false if no filter exists on a provided collection', () => {
+      return dsl.register('i', 'c', {equals: {foo: 'bar'}})
+        .then(() => {
+          should(dsl.exists('i', 'foo')).be.false();
+        });
+    });
+
+    it('should return false if no filter exists on a provided index', () => {
+      return dsl.register('i', 'c', {equals: {foo: 'bar'}})
+        .then(() => {
+          should(dsl.exists('foo', 'c')).be.false();
+        });
+    });
+  });
+
+  describe('#getFilterIds', () => {
+    it('should return an empty array if no filter exist on the provided index and collection', () => {
+      return dsl.register('i', 'c', {equals: {foo: 'bar'}})
+        .then(() => {
+          should(dsl.getFilterIds('foo', 'bar')).be.an.Array().and.be.empty();
+        });
+    });
+
+    it('should return the list of registered filter IDs on the provided index and collection', () => {
+      let ids = [];
+      return dsl.register('i', 'c', {equals: {foo: 'bar'}})
+        .then(result => {
+          ids.push(result.id);
+          return dsl.register('i', 'c', {exists: {field: 'foo'}});
+        })
+        .then(result => {
+          ids.push(result.id);
+          should(dsl.getFilterIds('i', 'c').sort()).match(ids.sort());
+        });
+    });
+  });
+
+  describe('#test', () => {
+    /*
+     we only check the special case of no registered filter on the provided
+     index and collection, as all other checks are performed in
+     test/api/dsl/keywords unit tests files
+     */
+    it('should return an empty array if there is no filter registered on an index or collection', () => {
+      should(dsl.test('i', 'c', {foo: 'bar'})).be.an.Array().and.be.empty();
+    });
+  });
+});

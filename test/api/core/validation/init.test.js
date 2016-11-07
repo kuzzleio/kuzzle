@@ -312,8 +312,8 @@ describe('Test: validation initialization', () => {
       checkAllowedPropertiesStub.returns(false);
       Validation.__set__('checkAllowedProperties', checkAllowedPropertiesStub);
 
-      return validation.curateCollectionSpecification(indexName, collectionName, collectionSpec, dryRun)
-        .should.be.rejectedWith('The collection specification has invalid properties.');
+      return should(validation.curateCollectionSpecification(indexName, collectionName, collectionSpec, dryRun))
+        .be.rejectedWith('The collection specification has invalid properties.');
     });
 
     it('should return structured fields when a collection specification is provided', () => {
@@ -361,8 +361,8 @@ describe('Test: validation initialization', () => {
       Validation.__set__('checkAllowedProperties', checkAllowedPropertiesStub);
       validation.structureCollectionValidation = structureCollectionValidationStub;
 
-      return validation.curateCollectionSpecification(indexName, collectionName, collectionSpec, dryRun)
-        .should.be.rejectedWith('an error');
+      return should(validation.curateCollectionSpecification(indexName, collectionName, collectionSpec, dryRun))
+        .be.rejectedWith('an error');
     });
 
     it('should return a treated collection specification if validators are valid', () => {
@@ -413,8 +413,8 @@ describe('Test: validation initialization', () => {
       Validation.__set__('checkAllowedProperties', checkAllowedPropertiesStub);
       validation.curateValidatorFilter = curateValidatorFilterStub;
 
-      return validation.curateCollectionSpecification(indexName, collectionName, collectionSpec, dryRun)
-        .should.be.rejectedWith('Validator specification of the collection triggered an error');
+      return should(validation.curateCollectionSpecification(indexName, collectionName, collectionSpec, dryRun))
+        .be.rejectedWith('Validator specification of the collection triggered an error');
     });
   });
 
@@ -465,9 +465,9 @@ describe('Test: validation initialization', () => {
 
       validation.curateFieldSpecification = curateFieldSpecificationStub;
 
-      (() => {
+      should(() => {
         validation.structureCollectionValidation(collectionSpec);
-      }).should.throw('Specification for the field aField triggered an error');
+      }).throw('Specification for the field aField triggered an error');
 
       should(curateFieldSpecificationStub.callCount).be.eql(1);
       should(kuzzle.pluginsManager.trigger.callCount).be.eql(1);
@@ -533,9 +533,9 @@ describe('Test: validation initialization', () => {
 
       validation.types.string = {validateFieldSpecification: typeValidateSpecValidation};
 
-      (() => {
+      should(() => {
         validation.curateFieldSpecification(fieldSpec);
-      }).should.throw('Field of type string is not specified properly');
+      }).throw('Field of type string is not specified properly');
     });
 
     it('should validate typeOptions from the field type', () => {
@@ -581,9 +581,9 @@ describe('Test: validation initialization', () => {
         allowedTypeOptions: ['another']
       };
 
-      (() => {
+      should(() => {
         validation.curateFieldSpecification(fieldSpec);
-      }).should.throw('Field of type string is not specified properly');
+      }).throw('Field of type string is not specified properly');
     });
 
     it('should throw an error if an option of typeOptions is invalid', () => {
@@ -602,9 +602,9 @@ describe('Test: validation initialization', () => {
         allowedTypeOptions: ['some']
       };
 
-      (() => {
+      should(() => {
         validation.curateFieldSpecification(fieldSpec);
-      }).should.throw(anError);
+      }).throw(anError);
     });
   });
 
@@ -625,9 +625,9 @@ describe('Test: validation initialization', () => {
 
       checkAllowedPropertiesStub.returns(false);
 
-      (() => {
+      should(() => {
         validation.curateFieldSpecificationFormat(fieldSpec);
-      }).should.throw('The field specification has invalid properties.');
+      }).throw('The field specification has invalid properties.');
     });
 
     it('should throw an error if the field specification does not contain all mandatory fields', () => {
@@ -638,9 +638,9 @@ describe('Test: validation initialization', () => {
 
       checkAllowedPropertiesStub.returns(true);
 
-      (() => {
+      should(() => {
         validation.curateFieldSpecificationFormat(fieldSpec);
-      }).should.throw('type is a mandatory field specification property.');
+      }).throw('type is a mandatory field specification property.');
     });
 
     it('should throw an error if the field specification contains a not recognized type', () => {
@@ -656,9 +656,9 @@ describe('Test: validation initialization', () => {
         string: 'aType'
       };
 
-      (() => {
+      should(() => {
         validation.curateFieldSpecificationFormat(fieldSpec);
-      }).should.throw('not_recognized is not a recognized type.');
+      }).throw('not_recognized is not a recognized type.');
     });
 
     it('should throw an error if the multivalued field is malformed', () => {
@@ -678,9 +678,9 @@ describe('Test: validation initialization', () => {
         string: 'aType'
       };
 
-      (() => {
+      should(() => {
         validation.curateFieldSpecificationFormat(fieldSpec);
-      }).should.throw('The multivalued field specification has invalid properties.');
+      }).throw('The multivalued field specification has invalid properties.');
     });
 
     it('should throw an error if the multivalued field is malformed', () => {
@@ -698,9 +698,9 @@ describe('Test: validation initialization', () => {
         string: 'aType'
       };
 
-      (() => {
+      should(() => {
         validation.curateFieldSpecificationFormat(fieldSpec);
-      }).should.throw('"value" is a mandatory property for multivalued field specification.');
+      }).throw('"value" is a mandatory property for multivalued field specification.');
     });
 
     it('should throw an error if the multivalued field is malformed', () => {
@@ -721,9 +721,9 @@ describe('Test: validation initialization', () => {
         string: 'aType'
       };
 
-      (() => {
+      should(() => {
         validation.curateFieldSpecificationFormat(fieldSpec);
-      }).should.throw('"minCount" is not valid when multivalued field is disabled.');
+      }).throw('"minCount" is not valid when multivalued field is disabled.');
     });
 
     it('should throw an error if the multivalued field is malformed', () => {
@@ -744,9 +744,9 @@ describe('Test: validation initialization', () => {
         string: 'aType'
       };
 
-      (() => {
+      should(() => {
         validation.curateFieldSpecificationFormat(fieldSpec);
-      }).should.throw('"maxCount" is not valid when multivalued field is disabled.');
+      }).throw('"maxCount" is not valid when multivalued field is disabled.');
     });
 
     it('should throw an error if the multivalued field is malformed', () => {
@@ -768,9 +768,9 @@ describe('Test: validation initialization', () => {
         string: 'aType'
       };
 
-      (() => {
+      should(() => {
         validation.curateFieldSpecificationFormat(fieldSpec);
-      }).should.throw('"minCount" can not be greater than "maxCount".');
+      }).throw('"minCount" can not be greater than "maxCount".');
     });
 
     it('should return true if specification is well formed', () => {

@@ -121,6 +121,16 @@ describe('DSL.keyword.equals', () => {
         });
     });
 
+    it('should match a document on its provided id', () => {
+      return dsl.register('index', 'collection', {equals: {_id: 'foo'}})
+        .then(subscription => {
+          var result = dsl.test('index', 'collection', {foo: 'bar'}, 'foo');
+
+          should(result).be.an.Array().and.not.empty();
+          should(result[0]).be.eql(subscription.id);
+        });
+    });
+
     it('should not match if the document contains the field with another value', () => {
       return dsl.register('index', 'collection', {equals: {foo: 'bar'}})
         .then(() => {
