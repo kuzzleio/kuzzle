@@ -41,12 +41,15 @@ describe('Test: ElasticSearch service', () => {
             }
           ]
         }
-      }
+      },
+      sort: {},
+      aggregations: {},
+      aggs: {}
     },
     filterAfterActiveAdded = {
       query: {
         bool: {
-          must: [filter.query],
+          must: filter.query,
           filter: [
             {
               bool: {
@@ -66,12 +69,14 @@ describe('Test: ElasticSearch service', () => {
             }
           ]
         }
-      }
+      },
+      sort: {},
+      aggregations: {},
+      aggs: {}
     },
     raw_kuzzle_info = {
       query: {
         bool: {
-          must: [],
           filter: [
             {
               bool: {
@@ -450,7 +455,7 @@ describe('Test: ElasticSearch service', () => {
       requestObject.data.body = {};
       requestObject.data.query = {foo: 'bar'};
 
-      raw_kuzzle_info.query.bool.must.push(requestObject.data.query);
+      raw_kuzzle_info.query.bool.must = requestObject.data.query;
       return should(elasticsearch.count(requestObject)
         .then(() => {
           should(spy.firstCall.args[0].body).be.deepEqual(raw_kuzzle_info);

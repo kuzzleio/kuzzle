@@ -22,7 +22,8 @@ describe('/lib/api/kuzzle.js', () => {
       'cliController',
       'repositories',
       'services',
-      'statistics'
+      'statistics',
+      'validation'
     ].forEach(k => {
       kuzzle[k] = mock[k];
     });
