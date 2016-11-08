@@ -59,15 +59,6 @@ function commandStart (options) {
           process.exit(1);
         }
 
-        /**
-        return kuzzle.services.list.storageEngine.import(new RequestObject({
-          body: {
-            bulkData: {
-              import: fixtures
-            }
-          }
-        }));*/
-
         Object.keys(fixtures).forEach(index => {
           Object.keys(fixtures[index]).forEach(collection => {
             promises.push(kuzzle.services.list.storageEngine.import(new RequestObject({
