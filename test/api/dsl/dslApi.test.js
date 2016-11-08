@@ -1,7 +1,8 @@
 var
   should = require('should').noConflict(),
   BadRequestError = require('kuzzle-common-objects').Errors.badRequestError,
-  DSL = require('../../../../lib/api/dsl');
+  NotFoundError = require('kuzzle-common-objects').Errors.notFoundError;
+  DSL = require('../../../lib/api/dsl');
 
 describe('DSL API', () => {
   let dsl;
@@ -87,6 +88,24 @@ describe('DSL API', () => {
           should(result.id).be.eql(id);
         });
     });
+
+    it('should not recreate an already existing subfilter', () => {
+      let ids = [];
+
+      return dsl.register('i', 'c', {or: [{equals: {foo: 'bar'}}, {exists: {field: 'bar'}}]})
+        .then(subscription => {
+          ids.push(subscription.id);
+          return dsl.register('i', 'c', {equals: {foo: 'bar'}});
+        })
+        .then(subscription => {
+          let sfs = dsl.storage.filters[subscription.id].subfilters;
+
+          ids.push(subscription.id);
+          should(sfs).be.an.Array();
+          should(sfs.length).be.eql(1);
+          should(dsl.storage.subfilters.i.c[sfs[0].id].filters.map(f => f.id).sort()).match(ids.sort());
+        });
+    });
   });
 
   describe('#exists', () => {
@@ -142,6 +161,40 @@ describe('DSL API', () => {
      */
     it('should return an empty array if there is no filter registered on an index or collection', () => {
       should(dsl.test('i', 'c', {foo: 'bar'})).be.an.Array().and.be.empty();
+    });
+  });
+
+  describe('#remove', () => {
+    it('should reject if the filter ID does not exist', () => {
+      return should(dsl.remove('foo')).be.rejectedWith(NotFoundError);
+    });
+
+    it('should unsubscribe a filter from a multi-filter subfilter', () => {
+      let
+        ids = [],
+        sf;
+
+      return dsl.register('i', 'c', {or: [{equals: {foo: 'bar'}}, {exists: {field: 'bar'}}]})
+        .then(subscription => {
+          ids.push(subscription.id);
+          return dsl.register('i', 'c', {equals: {foo: 'bar'}});
+        })
+        .then(subscription => {
+          let sfs = dsl.storage.filters[subscription.id].subfilters;
+
+          ids.push(subscription.id);
+          should(sfs).be.an.Array();
+          should(sfs.length).be.eql(1);
+          should(sfs[0].filters.length).be.eql(2);
+          should(sfs[0].filters.map(f => f.id).sort()).match(ids.sort());
+
+          sf = sfs[0];
+          return dsl.remove(subscription.id);
+        })
+        .then(() => {
+          should(sf.filters.length).be.eql(1);
+          should(dsl.storage.subfilters.i.c[sf.id].filters.map(f => f.id)).match([ids[0]]);
+        });
     });
   });
 });
