@@ -181,7 +181,7 @@ module.exports = {
     handledErrors: {
       active: true,
       whitelist: [
-        'Error',
+        // 'Error',
         'RangeError',
         'TypeError',
         'KuzzleError',
