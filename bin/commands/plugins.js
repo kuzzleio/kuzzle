@@ -34,7 +34,7 @@ function commandPlugin (plugin, options) {
     console.log('███ kuzzle-plugins: Installing plugin...');
   }
 
-  return kuzzle.remoteActions.do('managePlugins', data, {pid: options.pid, debug: options.parent.debug})
+  return kuzzle.cli.do('managePlugins', data, {pid: options.pid, debug: options.parent.debug})
     .then(res => {
       console.log('');
 
