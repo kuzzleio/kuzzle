@@ -1,3 +1,5 @@
+'use strict';
+
 /**
  * These test cases are dedicated to check that subscriptions indexation,
  * removal and re-indexation are well-performed

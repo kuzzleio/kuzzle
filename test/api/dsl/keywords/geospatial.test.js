@@ -1,3 +1,5 @@
+'use strict';
+
 var
   should = require('should'),
   DSL = require('../../../../lib/api/dsl');

@@ -1,3 +1,5 @@
+'use strict';
+
 var
   should = require('should'),
   FieldOperand = require('../../../../lib/api/dsl/storage/objects/fieldOperand'),

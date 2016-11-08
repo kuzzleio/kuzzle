@@ -1,3 +1,5 @@
+'use strict';
+
 var
   should = require('should'),
   BadRequestError = require('kuzzle-common-objects').Errors.badRequestError,

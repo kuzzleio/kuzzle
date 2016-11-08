@@ -1,3 +1,5 @@
+'use strict';
+
 /**
  * Tests the notify function of the Notifier core component.
  * Besides the init() function, this is the only exposed method to the world, and this is the
