@@ -14,7 +14,6 @@ RUN apt-get update && apt-get install -y \
       g++ \
       python \
     && npm install \
-    && node bin/kuzzle plugins --install \
     && apt-get clean \
     && apt-get remove -y \
       build-essential \
