@@ -6,7 +6,7 @@ var
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
   ResponseObject = require.main.require('kuzzle-common-objects').Models.responseObject;
 
-describe('Test: subscribe controller', () => {
+describe.skip('Test: subscribe controller', () => {
   var
     kuzzle,
     requestObject;

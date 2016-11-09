@@ -31,12 +31,19 @@ describe('PluginsManager: init()', () => {
     })(() => {
       return pluginsManager.init()
         .then(() => {
-          should(kuzzle.pluginsManager.packages.definitions)
-            .be.calledOnce();
+          try {
+            should(kuzzle.pluginsManager.packages.definitions)
+              .be.calledOnce();
 
-          should(spy)
-            .be.calledOnce()
-            .be.calledWith(defs);
+            should(spy)
+              .be.calledOnce()
+              .be.calledWith(defs);
+
+            return Promise.resolve();
+          }
+          catch (error) {
+            return Promise.reject(error);
+          }
         });
     });
   });

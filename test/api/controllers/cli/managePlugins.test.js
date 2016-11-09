@@ -37,7 +37,14 @@ describe('Test: managePlugins cli actions', () => {
         }
       }))
         .then(() => {
-          should(kuzzle.pluginsManager.packages.definitions).be.calledOnce();
+          try {
+            should(kuzzle.pluginsManager.packages.definitions).be.calledOnce();
+
+            return Promise.resolve();
+          }
+          catch (error) {
+            return Promise.reject(error);
+          }
         });
     });
   });
@@ -49,15 +56,22 @@ describe('Test: managePlugins cli actions', () => {
         body: { install: true, foo: 'bar' }
       }))
         .then(() => {
-          should(kuzzle.pluginsManager.trigger)
-            .be.calledOnce()
-            .be.calledWithExactly('log:info', '███ kuzzle-plugins: Installing plugin plugin...');
+          try {
+            should(kuzzle.pluginsManager.trigger)
+              .be.calledOnce()
+              .be.calledWithExactly('log:info', '███ kuzzle-plugins: Installing plugin plugin...');
 
-          should(pkg.setDefinition)
-            .be.calledOnce()
-            .be.calledWith({install: true, foo: 'bar'});
+            should(pkg.setDefinition)
+              .be.calledOnce()
+              .be.calledWith({install: true, foo: 'bar'});
 
-          should(pkg.install).be.calledOnce();
+            should(pkg.install).be.calledOnce();
+
+            return Promise.resolve();
+          }
+          catch (error) {
+            return Promise.reject(error);
+          }
         });
     });
   });
@@ -75,10 +89,17 @@ describe('Test: managePlugins cli actions', () => {
         }
       })
         .then(response => {
-          should(response).be.exactly('bar');
+          try {
+            should(response).be.exactly('bar');
 
-          should(kuzzle.pluginsManager.packages.definitions)
-            .be.calledOnce();
+            should(kuzzle.pluginsManager.packages.definitions)
+              .be.calledOnce();
+
+            return Promise.resolve();
+          }
+          catch (error) {
+            return Promise.reject(error);
+          }
         });
     });
   });
@@ -94,11 +115,18 @@ describe('Test: managePlugins cli actions', () => {
         }
       })
         .then(() => {
-          should(pkg.setConfigurationProperty)
-            .be.calledOnce()
-            .be.calledWith({
-              foo: 'bar'
-            });
+          try {
+            should(pkg.setConfigurationProperty)
+              .be.calledOnce()
+              .be.calledWith({
+                foo: 'bar'
+              });
+
+            return Promise.resolve();
+          }
+          catch (error) {
+            return Promise.reject(error);
+          }
         });
     });
 
@@ -126,13 +154,20 @@ describe('Test: managePlugins cli actions', () => {
         }
       })
       .then(() => {
-        should(kuzzle.pluginsManager.packages.getPackage)
-          .be.calledOnce()
-          .be.calledWithExactly('foo');
+        try {
+          should(kuzzle.pluginsManager.packages.getPackage)
+            .be.calledOnce()
+            .be.calledWithExactly('foo');
 
-        should(pkg.importConfigurationFromFile)
-          .be.calledOnce()
-          .be.calledWithExactly('file');
+          should(pkg.importConfigurationFromFile)
+            .be.calledOnce()
+            .be.calledWithExactly('file');
+
+          return Promise.resolve();
+        }
+        catch (error) {
+          return Promise.reject(error);
+        }
       });
     });
   });
@@ -148,13 +183,20 @@ describe('Test: managePlugins cli actions', () => {
         }
       })
         .then(() => {
-          should(kuzzle.pluginsManager.packages.getPackage)
-            .be.calledOnce()
-            .be.calledWithExactly('foo');
+          try {
+            should(kuzzle.pluginsManager.packages.getPackage)
+              .be.calledOnce()
+              .be.calledWithExactly('foo');
 
-          should(pkg.unsetConfigurationProperty)
-            .be.calledOnce()
-            .be.calledWithExactly('bar');
+            should(pkg.unsetConfigurationProperty)
+              .be.calledOnce()
+              .be.calledWithExactly('bar');
+
+            return Promise.resolve();
+          }
+          catch (error) {
+            return Promise.reject(error);
+          }
         });
     });
   });
@@ -170,13 +212,20 @@ describe('Test: managePlugins cli actions', () => {
         }
       })
         .then(() => {
-          should(kuzzle.pluginsManager.packages.getPackage)
-            .be.calledOnce()
-            .be.calledWithExactly('foo');
+          try {
+            should(kuzzle.pluginsManager.packages.getPackage)
+              .be.calledOnce()
+              .be.calledWithExactly('foo');
 
-          should(pkg.updateDbConfiguration)
-            .be.calledOnce()
-            .be.calledWith({foo: 'bar'});
+            should(pkg.updateDbConfiguration)
+              .be.calledOnce()
+              .be.calledWith({foo: 'bar'});
+
+            return Promise.resolve();
+          }
+          catch (error) {
+            return Promise.reject(error);
+          }
         });
     });
 
@@ -202,12 +251,19 @@ describe('Test: managePlugins cli actions', () => {
         }
       })
         .then(() => {
-          should(kuzzle.pluginsManager.packages.getPackage)
-            .be.calledOnce()
-            .be.calledWithExactly('foo');
+          try {
+            should(kuzzle.pluginsManager.packages.getPackage)
+              .be.calledOnce()
+              .be.calledWithExactly('foo');
 
-          should(pkg.delete)
-            .be.calledOnce();
+            should(pkg.delete)
+              .be.calledOnce();
+
+            return Promise.resolve();
+          }
+          catch (error) {
+            return Promise.reject(error);
+          }
         });
     });
   });
@@ -223,13 +279,20 @@ describe('Test: managePlugins cli actions', () => {
         }
       })
         .then(() => {
-          should(kuzzle.pluginsManager.packages.getPackage)
-            .be.calledOnce()
-            .be.calledWithExactly('foo');
+          try {
+            should(kuzzle.pluginsManager.packages.getPackage)
+              .be.calledOnce()
+              .be.calledWithExactly('foo');
 
-          should(pkg.setActivate)
-            .be.calledOnce()
-            .be.calledWithExactly(true);
+            should(pkg.setActivate)
+              .be.calledOnce()
+              .be.calledWithExactly(true);
+
+            return Promise.resolve();
+          }
+          catch (error) {
+            return Promise.reject(error);
+          }
         });
     });
 
@@ -243,13 +306,20 @@ describe('Test: managePlugins cli actions', () => {
         }
       })
         .then(() => {
-          should(kuzzle.pluginsManager.packages.getPackage)
-            .be.calledOnce()
-            .be.calledWithExactly('foo');
+          try {
+            should(kuzzle.pluginsManager.packages.getPackage)
+              .be.calledOnce()
+              .be.calledWithExactly('foo');
 
-          should(pkg.setActivate)
-            .be.calledOnce()
-            .be.calledWithExactly(false);
+            should(pkg.setActivate)
+              .be.calledOnce()
+              .be.calledWithExactly(false);
+
+            return Promise.resolve();
+          }
+          catch (error) {
+            return Promise.reject(error);
+          }
         });
     });
   });
@@ -259,16 +329,23 @@ describe('Test: managePlugins cli actions', () => {
       .then(() => {
         var lock = ManagePlugins.__get__('lockfile').lock;
 
-        should(lock)
-          .be.calledOnce();
+        try {
+          should(lock)
+            .be.calledOnce();
 
-        should(release)
-          .be.calledOnce();
+          should(release)
+            .be.calledOnce();
 
-        sinon.assert.callOrder(
-          lock,
-          release
-        );
+          sinon.assert.callOrder(
+            lock,
+            release
+          );
+
+          return Promise.resolve();
+        }
+        catch (error) {
+          return Promise.reject(error);
+        }
       });
   });
 

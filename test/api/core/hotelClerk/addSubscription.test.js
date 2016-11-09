@@ -8,7 +8,7 @@ var
   BadRequestError = require.main.require('kuzzle-common-objects').Errors.badRequestError,
   Kuzzle = require.main.require('lib/api/kuzzle');
 
-describe('Test: hotelClerk.addSubscription', () => {
+describe.skip('Test: hotelClerk.addSubscription', () => {
   var
     kuzzle,
     roomId,

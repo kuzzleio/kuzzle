@@ -2,6 +2,7 @@ var
   should = require('should'),
   sinon = require('sinon'),
   rewire = require('rewire'),
+  BadRequestError = require('kuzzle-common-objects').Errors.badRequestError,
   Validation = rewire('../../../../lib/api/core/validation'),
   KuzzleMock = require('../../../mocks/kuzzle.mock');
 
@@ -369,7 +370,7 @@ describe('Test: validation.validate', () => {
 
     it('should throw when field validation fails', () => {
       var
-        recurseFieldValidationStub = sandbox.stub().throws({message: 'error'}),
+        error = new Error('Mocked error'),
         controllerName = 'aController',
         actionName = 'anAction',
         filterId = 'someFilter',
@@ -397,12 +398,12 @@ describe('Test: validation.validate', () => {
           }
         }
       };
-      validation.recurseFieldValidation = recurseFieldValidationStub;
+      sandbox.stub(validation, 'recurseFieldValidation').throws(error);
       validation.dsl = dsl;
       Validation.__set__('manageErrorMessage', sandbox.spy(function() {throw new Error(arguments[2]);}));
 
       return validation.validationPromise(requestObject, verbose)
-        .should.rejectedWith('error');
+        .should.rejectedWith(error);
     });
 
     it('should return an unvalid status when validator validation fails', () => {
@@ -445,7 +446,7 @@ describe('Test: validation.validate', () => {
 
     it('should intercept a strictness error and set the message accordingly', () => {
       var
-        recurseFieldValidationStub = sandbox.stub().throws({message: 'strictness'}),
+        error = new BadRequestError('strictness'),
         controllerName = 'aController',
         actionName = 'anAction',
         id = null,
@@ -469,7 +470,7 @@ describe('Test: validation.validate', () => {
         }
       };
 
-      validation.recurseFieldValidation = recurseFieldValidationStub;
+      sandbox.stub(validation, 'recurseFieldValidation').throws(error);
       Validation.__set__('manageErrorMessage', sandbox.spy(function() {throw new Error(arguments[2]);}));
 
       return validation.validationPromise(requestObject, verbose)
@@ -478,7 +479,8 @@ describe('Test: validation.validate', () => {
 
     it('should intercept a strictness error and set the message accordingly', () => {
       var
-        recurseFieldValidationStub = sandbox.stub().throws({message: 'strictness'}),
+        error = new Error('strictness'),
+        recurseFieldValidationStub = sandbox.stub(validation, 'recurseFieldValidation').throws(error),
         manageErrorMessageStub = sandbox.stub(),
         controllerName = 'aController',
         actionName = 'anAction',
@@ -503,7 +505,6 @@ describe('Test: validation.validate', () => {
         }
       };
 
-      validation.recurseFieldValidation = recurseFieldValidationStub;
       Validation.__set__('manageErrorMessage', manageErrorMessageStub);
 
       return validation.validationPromise(requestObject, verbose)
@@ -522,7 +523,7 @@ describe('Test: validation.validate', () => {
 
     it('should throw back any other error happening during field validation', () => {
       var
-        recurseFieldValidationStub = sandbox.stub().throws({message: 'not_strictness'}),
+        error = new BadRequestError('not_strictness'),
         controllerName = 'aController',
         actionName = 'anAction',
         id = null,
@@ -545,11 +546,11 @@ describe('Test: validation.validate', () => {
           }
         }
       };
-      validation.recurseFieldValidation = recurseFieldValidationStub;
+      sandbox.stub(validation, 'recurseFieldValidation').throws(error);
       Validation.__set__('manageErrorMessage', sandbox.spy(function() {throw new Error(arguments[2]);}));
 
       return validation.validationPromise(requestObject, verbose)
-        .should.rejectedWith('not_strictness');
+        .should.rejectedWith(error);
     });
   });
 
@@ -632,9 +633,13 @@ describe('Test: validation.validate', () => {
 
   describe('#recurseFieldValidation', () => {
     it('should throw an error if validation is strict and a property is not allowed', () => {
-      (() => {
+      try {
         validation.recurseFieldValidation({anotherField: 'some value'}, {aField: {some: 'specification'}}, true, [], false);
-      }).should.throw('strictness');
+      }
+      catch (error) {
+        should(error).be.an.instanceOf(BadRequestError);
+        should(error.message).be.exactly('strictness');
+      }
     });
 
     it('should throw an exception if isValidField throws an exception', () => {

@@ -4,7 +4,7 @@ var
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
   Kuzzle = require.main.require('lib/api/kuzzle');
 
-describe('Test: hotelClerk.removeCustomerFromAllRooms', () => {
+describe.skip('Test: hotelClerk.removeCustomerFromAllRooms', () => {
   var
     kuzzle,
     connection = {id: 'connectionid'},

@@ -428,19 +428,26 @@ describe('Test plugins manager run', () => {
 
     return pluginsManager.run()
       .then(() => {
-        pm2Mock.triggerOnBus('initialized');
+        try {
+          pm2Mock.triggerOnBus('initialized');
 
-        should(pluginsManager.workers[workerPrefix + 'testPlugin']).be.an.Object();
-        should(pluginsManager.workers[workerPrefix + 'testPlugin'].pmIds).be.an.Object();
-        should(pluginsManager.workers[workerPrefix + 'testPlugin'].pmIds.getSize()).be.equal(1);
+          should(pluginsManager.workers[workerPrefix + 'testPlugin']).be.an.Object();
+          should(pluginsManager.workers[workerPrefix + 'testPlugin'].pmIds).be.an.Object();
+          should(pluginsManager.workers[workerPrefix + 'testPlugin'].pmIds.getSize()).be.equal(1);
 
-        triggerWorkers.call(pluginsManager, 'foo:bar', {
-          'firstName': 'Ada'
-        });
+          triggerWorkers.call(pluginsManager, 'foo:bar', {
+            'firstName': 'Ada'
+          });
 
-        should(pm2Mock.getSentMessages()).be.an.Array().and.length(1);
-        should(pm2Mock.getSentMessages()[0]).be.an.Object();
-        should(pm2Mock.getSentMessages()[0].data.message.firstName).be.equal('Ada');
+          should(pm2Mock.getSentMessages()).be.an.Array().and.length(1);
+          should(pm2Mock.getSentMessages()[0]).be.an.Object();
+          should(pm2Mock.getSentMessages()[0].data.message.firstName).be.equal('Ada');
+
+          return Promise.resolve();
+        }
+        catch (error) {
+          return Promise.reject(error);
+        }
       });
   });
 
