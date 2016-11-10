@@ -297,23 +297,22 @@ describe('Test: repositories/profileRepository', () => {
         });
     });
 
-    it('should properly format the roles filter', () => {
-      sandbox.stub(kuzzle.repositories.profile, 'search', (filter) => {
+    it('should properly format the roles query', () => {
+      var stub = sandbox.stub(kuzzle.repositories.profile, 'search', () => {
         return Promise.resolve({
           hits: [{_id: 'test'}],
-          total: 1,
-          filter: filter
+          total: 1
         });
       });
 
       return kuzzle.repositories.profile.searchProfiles(['role1'])
-        .then(result => {
-          should(result.filter).have.ownProperty('or');
-          should(result.filter.or).be.an.Array();
-          should(result.filter.or[0]).have.ownProperty('terms');
-          should(result.filter.or[0].terms).have.ownProperty('policies.roleId');
-          should(result.filter.or[0].terms['policies.roleId']).be.an.Array();
-          should(result.filter.or[0].terms['policies.roleId'][0]).be.exactly('role1');
+        .then(() => {
+          should(stub.firstCall.args[0].query).have.ownProperty('bool');
+          should(stub.firstCall.args[0].query.bool.should).be.an.Array();
+          should(stub.firstCall.args[0].query.bool.should[0]).have.ownProperty('terms');
+          should(stub.firstCall.args[0].query.bool.should[0].terms).have.ownProperty('policies.roleId');
+          should(stub.firstCall.args[0].query.bool.should[0].terms['policies.roleId']).be.an.Array();
+          should(stub.firstCall.args[0].query.bool.should[0].terms['policies.roleId'][0]).be.exactly('role1');
         });
     });
   });

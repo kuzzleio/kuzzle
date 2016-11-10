@@ -159,23 +159,23 @@ ApiREST.prototype.get = function (id, index) {
   return this.callApi(options);
 };
 
-ApiREST.prototype.search = function (filters, index, collection) {
+ApiREST.prototype.search = function (query, index, collection) {
   var options = {
     url: this.apiPath(((typeof index !== 'string') ? this.world.fakeIndex : index) + '/' +
                         ((typeof collection !== 'string') ? this.world.fakeCollection : collection) + '/_search'),
     method: 'POST',
-    body: filters
+    body: query
   };
 
   return this.callApi(options);
 };
 
-ApiREST.prototype.count = function (filters, index, collection) {
+ApiREST.prototype.count = function (query, index, collection) {
   var options = {
     url: this.apiPath(((typeof index !== 'string') ? this.world.fakeIndex : index) + '/' +
                         ((typeof collection !== 'string') ? this.world.fakeCollection : collection) + '/_count'),
     method: 'POST',
-    body: filters
+    body: query
   };
 
   return this.callApi(options);
@@ -251,11 +251,11 @@ ApiREST.prototype.deleteById = function (id, index) {
   return this.callApi(options);
 };
 
-ApiREST.prototype.deleteByQuery = function (filters, index, collection) {
+ApiREST.prototype.deleteByQuery = function (query, index, collection) {
   var options = {
     url: this.apiPath(((typeof index !== 'string') ? this.world.fakeIndex : index) + '/' + (collection || this.world.fakeCollection) + '/_query'),
     method: 'DELETE',
-    body: filters
+    body: query
   };
 
   return this.callApi(options);
@@ -533,6 +533,16 @@ ApiREST.prototype.deleteProfile = function (id) {
   return this.callApi(options);
 };
 
+ApiREST.prototype.searchValidations = function (body) {
+  var options = {
+    url: this.apiPath('%kuzzle/validations/_search'),
+    method: 'POST',
+    body
+  };
+
+  return this.callApi(options);
+};
+
 ApiREST.prototype.getUser = function (id) {
   var options = {
     url: this.apiPath('users/' + id),
@@ -571,7 +581,7 @@ ApiREST.prototype.searchUsers = function (body) {
   return this.callApi({
     url: this.apiPath('users/_search'),
     method: 'POST',
-    body: { filter: body }
+    body: { query: body }
   });
 };
 

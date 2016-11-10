@@ -75,9 +75,9 @@ This method tries to load documents matching the given ids from the databaseEngi
 
 ### parameters
 
-* *object* filter
+* *object* query
 
-The filter sent to the databaseEngine in order to retrieve documents.
+The query sent to the databaseEngine in order to retrieve documents.
 
 * *Integer* from
 

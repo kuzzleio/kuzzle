@@ -481,7 +481,7 @@ describe('Test: admin controller', () => {
   });
 
   describe('#adminExists', () => {
-    it('should call search with right filter', () => {
+    it('should call search with right query', () => {
       return adminController.adminExists()
         .then(() => {
           should(kuzzle.internalEngine.bootstrap.adminExists).be.calledOnce();

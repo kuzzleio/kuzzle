@@ -27,8 +27,8 @@ describe('Test: ElasticSearch service', () => {
     },
     filter = {
       query: {
-        filter: {
-          and: [
+        bool: {
+          query: [
             {
               term: {
                 city: 'NYC'
@@ -50,51 +50,55 @@ describe('Test: ElasticSearch service', () => {
       query: {
         bool: {
           must: filter.query,
-          filter: [
-            {
-              bool: {
-                should: [
-                  {
-                    term: {
-                      '_kuzzle_info.active': true
-                    }
-                  },
-                  {
-                    missing: {
-                      'field': '_kuzzle_info'
+          filter: {
+            bool: {
+              should: [
+                {
+                  term: {
+                    '_kuzzle_info.active': true
+                  }
+                },
+                {
+                  bool: {
+                    must_not: {
+                      exists: {
+                        'field': '_kuzzle_info'
+                      }
                     }
                   }
-                ]
-              }
+                }
+              ]
             }
-          ]
+          }
         }
       },
       sort: {},
       aggregations: {},
       aggs: {}
     },
-    raw_kuzzle_info = {
+    rawKuzzleInfo = {
       query: {
         bool: {
-          filter: [
-            {
-              bool: {
-                should: [
-                  {
-                    term: {
-                      '_kuzzle_info.active': true
-                    }
-                  },
-                  {
-                    missing: {
-                      'field': '_kuzzle_info'
+          filter: {
+            bool: {
+              should: [
+                {
+                  term: {
+                    '_kuzzle_info.active': true
+                  }
+                },
+                {
+                  bool: {
+                    must_not: {
+                      exists: {
+                        'field': '_kuzzle_info'
+                      }
                     }
                   }
-                ]
-              }
+                }
+              ]
             }
-          ]
+          }
         }
       }
     };
@@ -183,7 +187,7 @@ describe('Test: ElasticSearch service', () => {
   describe('#create', () => {
     it('should allow creating documents if the document does not already exists', () => {
       var
-        spy = sandbox.stub(elasticsearch.client, 'create').resolves({}),
+        spy = sandbox.stub(elasticsearch.client, 'index').resolves({}),
         refreshIndexIfNeeded = ES.__get__('refreshIndexIfNeeded'),
         refreshIndexSpy = sandbox.spy(refreshIndexIfNeeded);
 
@@ -251,7 +255,7 @@ describe('Test: ElasticSearch service', () => {
 
     it('should reject the create promise if elasticsearch throws an error', () => {
       sandbox.stub(elasticsearch.client, 'get').rejects({});
-      sandbox.stub(elasticsearch.client, 'create').rejects({});
+      sandbox.stub(elasticsearch.client, 'index').rejects({});
 
       return should(elasticsearch.create(requestObject)).be.rejected();
     });
@@ -444,7 +448,7 @@ describe('Test: ElasticSearch service', () => {
 
       return should(elasticsearch.count(requestObject)
         .then(() => {
-          should(spy.firstCall.args[0].body).be.deepEqual(raw_kuzzle_info);
+          should(spy.firstCall.args[0].body).be.deepEqual(rawKuzzleInfo);
         })
       ).be.fulfilled();
     });
@@ -455,10 +459,10 @@ describe('Test: ElasticSearch service', () => {
       requestObject.data.body = {};
       requestObject.data.query = {foo: 'bar'};
 
-      raw_kuzzle_info.query.bool.must = requestObject.data.query;
+      rawKuzzleInfo.query.bool.must = requestObject.data.query;
       return should(elasticsearch.count(requestObject)
         .then(() => {
-          should(spy.firstCall.args[0].body).be.deepEqual(raw_kuzzle_info);
+          should(spy.firstCall.args[0].body).be.deepEqual(rawKuzzleInfo);
         })
       ).be.fulfilled();
     });
@@ -613,7 +617,7 @@ describe('Test: ElasticSearch service', () => {
       var spy = sandbox.stub(elasticsearch.client, 'search').yields(null, {hits: {hits: [], total: 0}});
 
       delete requestObject.data.body;
-      requestObject.data.filter = {term: {firstName: 'no way any document can be returned with this filter'}};
+      requestObject.data.query = {term: {firstName: 'no way any document can be returned with this filter'}};
 
       return should(elasticsearch.deleteByQuery(requestObject)
         .then(result => {

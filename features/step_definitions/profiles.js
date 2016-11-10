@@ -188,7 +188,7 @@ var apiSteps = function () {
           }
 
           if (!response.result.hits) {
-            response.result.hits = response.result.hits.filter(doc => doc._id.indexOf(this.idPrefix));
+            response.result.hits = response.result.hits.query(doc => doc._id.indexOf(this.idPrefix));
 
             if (response.result.hits.length !== parseInt(profilesCount)) {
               return callbackAsync(`Expected ${profilesCount} profiles. Got ${response.result.hits.length}`);

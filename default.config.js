@@ -159,7 +159,7 @@ module.exports = {
       backend: 'elasticsearch',
       host: 'localhost',
       port: 9200,
-      apiVersion: '2.3'
+      apiVersion: '5.0'
     }
 
   },

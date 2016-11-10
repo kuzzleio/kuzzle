@@ -55,11 +55,11 @@ describe('InternalEngine', () => {
     it('should harmonize search results', () => {
       var
         collection = 'collection',
-        filters = { 'some': 'filters' };
+        query = { 'some': 'filters' };
 
       kuzzle.internalEngine.client.search.resolves({hits: { hits: ['foo', 'bar'], total: 123}});
 
-      return kuzzle.internalEngine.search(collection, filters)
+      return kuzzle.internalEngine.search(collection, query)
         .then(result => {
           should(kuzzle.internalEngine.client.search)
             .be.calledOnce()
@@ -67,7 +67,7 @@ describe('InternalEngine', () => {
               index: kuzzle.internalEngine.index,
               type: collection,
               body: {
-                filter: filters,
+                query: query,
                 from: 0,
                 size: 20
               }
@@ -93,7 +93,6 @@ describe('InternalEngine', () => {
               index: kuzzle.internalEngine.index,
               type: collection,
               body: {
-                filter: {},
                 from: 0,
                 size: 20
               }

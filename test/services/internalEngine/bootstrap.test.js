@@ -255,7 +255,7 @@ describe('services/internalEngine/bootstrap.js', () => {
             .be.calledOnce()
             .be.calledWithMatch('users', {
               query: {
-                in: {
+                terms: {
                   profileIds: ['admin']
                 }
               }

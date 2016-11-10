@@ -154,25 +154,82 @@ function cleanSecurity (callback) {
       }
     })
     .then(() => {
+      return this.api.searchUsers({
+        query: {
+          match_all: {}
+        },
+        from: 0,
+        size: 9999
+      });
+    })
+    .then(results => {
+      var regex = new RegExp('^' + this.idPrefix);
+      results = results.result.hits.query(r => r._id.match(regex)).map(r => r._id);
       return this.api.deleteByQuery(
-        { filter: { regexp: { _uid: 'users.' + this.idPrefix + '.*' } } },
+        {
+          query: {
+            ids: {
+              type: 'users',
+              values: results
+            }
+          }
+        },
         '%kuzzle',
         'users'
       );
     })
     .then(() => {
+      return this.api.searchProfiles({
+        query: {
+          match_all: {}
+        },
+        from: 0,
+        size: 9999
+      });
+    })
+    .then(results => {
+      var regex = new RegExp('^' + this.idPrefix);
+      results = results.result.hits.query(r => r._id.match(regex)).map(r => r._id);
       return this.api.deleteByQuery(
-        { filter: { regexp: { _uid: 'profiles.' + this.idPrefix + '.*' } } },
+        {
+          query: {
+            ids: {
+              type: 'profiles',
+              values: results
+            }
+          }
+        },
         '%kuzzle',
         'profiles'
       );
     })
     .then(() => {
+      return this.api.searchRoles({
+        query: {
+          match_all: {}
+        },
+        from: 0,
+        size: 9999
+      });
+    })
+    .then(results => {
+      var regex = new RegExp('^' + this.idPrefix);
+      results = results.result.hits.query(r => r._id.match(regex)).map(r => r._id);
       return this.api.deleteByQuery(
-        {filter: { regexp: { _uid: 'roles.' + this.idPrefix + '.*' } } },
+        {
+          query: {
+            ids: {
+              type: 'roles',
+              values: results
+            }
+          }
+        },
         '%kuzzle',
         'roles'
       );
+    })
+    .then(() => {
+      return this.api.refreshIndex('%kuzzle');
     })
     .then(() => {
       callback();
@@ -210,11 +267,32 @@ function cleanValidations(callback) {
       }
     })
     .then(() => {
+      return this.api.searchValidations({
+        query: {
+          match_all: {}
+        }
+      });
+    })
+    .then(results => {
+      var regex = new RegExp('^' + this.idPrefix);
+      results = results.result.hits.query(r => r._id.match(regex)).map(r => r._id);
       return this.api.deleteByQuery(
-        { filter: { regexp: { _uid: 'validations.' + this.api.world.fakeIndex + '.' + this.api.world.fakeCollection } } },
+        {
+          query: {
+            ids: {
+              type: 'validations',
+              values: results
+            }
+          },
+          from: 0,
+          size: 9999
+        },
         '%kuzzle',
         'validations'
       );
+    })
+    .then(() => {
+      return this.api.refreshIndex('%kuzzle');
     })
     .then(() => {
       callback();

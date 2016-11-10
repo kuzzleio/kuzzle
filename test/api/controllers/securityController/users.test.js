@@ -70,7 +70,6 @@ describe('Test: security controller - users', () => {
 
       return kuzzle.funnel.controllers.security.searchUsers(new RequestObject({
         body: {
-          filter: {},
           from: 0,
           size: 200
         }

@@ -58,7 +58,7 @@ describe('Test: security/roleTest', () => {
     stubs = {
       storageEngine:{
         search: rq => {
-          if (rq.data.body.filter.ids.values[0] !== 'foobar') {
+          if (rq.data.body.query.ids.values[0] !== 'foobar') {
             return Promise.resolve({hits: [documentAda]});
           }
           return Promise.resolve({hits: [documentFalseAda]});
@@ -657,7 +657,7 @@ describe('Test: security/roleTest', () => {
                 documents: {
                   action: {
                     search: {
-                      filter: {
+                      query: {
                         ids: {
                           values: [
                             '$requestObject.data._id'
@@ -684,7 +684,7 @@ describe('Test: security/roleTest', () => {
                 documents: {
                   action: {
                     search: {
-                      filter: {
+                      query: {
                         ids: {
                           values: [
                             'foobar'
