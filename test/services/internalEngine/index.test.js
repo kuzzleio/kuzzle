@@ -79,6 +79,33 @@ describe('InternalEngine', () => {
         });
     });
 
+    it('should harmonize search results', () => {
+      var
+        collection = 'collection',
+        query = { query: {'some': 'filters'} };
+
+      kuzzle.internalEngine.client.search.resolves({hits: { hits: ['foo', 'bar'], total: 123}});
+
+      return kuzzle.internalEngine.search(collection, query)
+        .then(result => {
+          should(kuzzle.internalEngine.client.search)
+            .be.calledOnce()
+            .be.calledWithMatch({
+              index: kuzzle.internalEngine.index,
+              type: collection,
+              body: {
+                query: query,
+                from: 0,
+                size: 20
+              }
+            });
+
+          should(result).be.an.Object().and.not.be.empty();
+          should(result.total).be.eql(123);
+          should(result.hits).be.an.Array().and.match(['foo', 'bar']);
+        });
+    });
+
     it('should perform a search on an empty filter if the filters argument is missing', () => {
       var
         collection = 'collection';
