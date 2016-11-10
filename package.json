@@ -57,7 +57,6 @@
     "rc": "1.1.6",
     "readline-sync": "^1.4.4",
     "rimraf": "^2.5.4",
-    "router": "1.1.4",
     "utf-8-validate": "^1.2.1",
     "validator": "^6.0.0",
     "ws": "1.1.1"
