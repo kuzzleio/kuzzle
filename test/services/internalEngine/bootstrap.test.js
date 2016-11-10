@@ -247,7 +247,7 @@ describe('services/internalEngine/bootstrap.js', () => {
 
   describe('#adminExists', () => {
     it('should return true if an admin exists', () => {
-      bootstrap.engine.search.resolves({hits: {total: 1}});
+      bootstrap.engine.search.resolves({total: 1});
 
       return bootstrap.adminExists()
         .then(result => {
