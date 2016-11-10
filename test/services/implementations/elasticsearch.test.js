@@ -25,6 +25,19 @@ describe('Test: ElasticSearch service', () => {
       city: 'London',
       hobby: 'computer'
     },
+    filter,
+    filterAfterActiveAdded,
+    raw_kuzzle_info;
+
+
+  before(()=> {
+    kuzzle = new Kuzzle();
+    elasticsearch = new ES(kuzzle, {service: engineType}, kuzzle.config.services.db);
+  });
+
+  beforeEach(() => {
+    elasticsearch.autoRefresh = {};
+
     filter = {
       query: {
         filter: {
@@ -45,7 +58,7 @@ describe('Test: ElasticSearch service', () => {
       sort: {},
       aggregations: {},
       aggs: {}
-    },
+    };
     filterAfterActiveAdded = {
       query: {
         bool: {
@@ -73,7 +86,8 @@ describe('Test: ElasticSearch service', () => {
       sort: {},
       aggregations: {},
       aggs: {}
-    },
+    };
+
     raw_kuzzle_info = {
       query: {
         bool: {
@@ -98,15 +112,6 @@ describe('Test: ElasticSearch service', () => {
         }
       }
     };
-
-
-  before(()=> {
-    kuzzle = new Kuzzle();
-    elasticsearch = new ES(kuzzle, {service: engineType}, kuzzle.config.services.db);
-  });
-
-  beforeEach(() => {
-    elasticsearch.autoRefresh = {};
 
     requestObject = new RequestObject({
       controller: 'write',
@@ -152,7 +157,7 @@ describe('Test: ElasticSearch service', () => {
     });
   });
 
-  describe('#search', () => {
+  describe.only('#search', () => {
     it('should be able to search documents', () => {
       var spy = sandbox.stub(elasticsearch.client, 'search').resolves({total: 0, hits: []});
 
