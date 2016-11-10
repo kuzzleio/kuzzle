@@ -72,7 +72,7 @@ describe('Test: write controller', () => {
           catch(error) {
             return Promise.reject(error);
           }
-      });
+        });
     });
   });
 

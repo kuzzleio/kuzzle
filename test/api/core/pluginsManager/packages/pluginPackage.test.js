@@ -598,9 +598,9 @@ describe('plugins/packages/pluginPackage', () => {
             should(pkg.updateDbConfiguration)
               .be.calledOnce()
               .be.calledWithMatch({
-              foo: 'bar',
-              bar: 'baz'
-            });
+                foo: 'bar',
+                bar: 'baz'
+              });
 
             return Promise.resolve();
           }
@@ -733,8 +733,8 @@ describe('plugins/packages/pluginPackage', () => {
               should(pkg.updateDbConfiguration)
                 .be.calledOnce()
                 .be.calledWithMatch({
-                foo: 'bar'
-              });
+                  foo: 'bar'
+                });
 
               return Promise.resolve();
             }
