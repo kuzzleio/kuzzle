@@ -36,4 +36,4 @@ services:
     image: redis:3.2
 
   elasticsearch:
-    image: elasticsearch:latest
+    image: elasticsearch:5.0
