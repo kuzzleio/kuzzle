@@ -176,10 +176,11 @@ module.exports = {
   },
 
   dump: {
+    enabled: false,
     path: './dump/',
     dateFormat: 'YYYYMMDD-HHmm',
     handledErrors: {
-      active: true,
+      enabled: true,
       whitelist: [
         // 'Error',
         'RangeError',

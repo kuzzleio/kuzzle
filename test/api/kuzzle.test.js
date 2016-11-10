@@ -150,7 +150,7 @@ describe('/lib/api/kuzzle.js', () => {
 
     });
 
-    it('should start all services and register errors handlers on kuzzle.start', () => {
+    it('should start all services and register errors handlers if enabled on kuzzle.start', () => {
       var
         mock,
         processExitSpy = sinon.spy(),
@@ -186,6 +186,8 @@ describe('/lib/api/kuzzle.js', () => {
       ].forEach(k => {
         kuzzle[k] = mock[k];
       });
+
+      kuzzle.config.dump.enabled = true;
 
       kuzzle.start();
 
