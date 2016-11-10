@@ -157,7 +157,7 @@ describe('Test: ElasticSearch service', () => {
     });
   });
 
-  describe.only('#search', () => {
+  describe('#search', () => {
     it('should be able to search documents', () => {
       var spy = sandbox.stub(elasticsearch.client, 'search').resolves({total: 0, hits: []});
 
