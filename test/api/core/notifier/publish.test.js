@@ -1,3 +1,5 @@
+'use strict';
+
 /**
  * Tests the notify function of the Notifier core component.
  * Besides the init() function, this is the only exposed method to the world, and this is the
@@ -58,79 +60,86 @@ describe('Test: notifier.publish', () => {
     sandbox.restore();
   });
 
-  it('should publish messages', () => {
-    sandbox.stub(kuzzle.dsl, 'test').resolves(rooms);
-    return kuzzle.notifier.publish(new RequestObject(request))
-      .then(result => {
-        should(result).match({published: true});
-        should(notification.state).be.eql('done');
-        should(notification.scope).be.eql('in');
-        should(notification._id).be.eql(request._id);
-        should(notification._source).be.eql(request.body);
-        should(spyInternalCacheAdd.called).be.false();
-        should(spyInternalCacheExpire.called).be.false();
-      });
+  it('should publish messages', (done) => {
+    let result;
+
+    sandbox.stub(kuzzle.dsl, 'test').returns(rooms);
+
+    result = kuzzle.notifier.publish(new RequestObject(request));
+    should(result).match({published: true});
+    should(notification.state).be.eql('done');
+    should(notification.scope).be.eql('in');
+    should(notification._id).be.eql(request._id);
+    should(notification._source).be.eql(request.body);
+
+    setTimeout(() => {
+      should(spyInternalCacheAdd.called).be.false();
+      should(spyInternalCacheExpire.called).be.false();
+      done();
+    }, 20);
   });
 
-  it('should cache the document in case of a create document request', () => {
-    sandbox.stub(kuzzle.dsl, 'test').resolves(rooms);
+  it('should cache the document in case of a create document request', (done) => {
+    sandbox.stub(kuzzle.dsl, 'test').returns(rooms);
 
     request.action = 'create';
-    return kuzzle.notifier.publish(new RequestObject(request))
-      .then(() => {
-        should(notification.state).be.eql('pending');
-        should(notification.scope).be.undefined();
-        should(notification._id).be.eql(request._id);
-        should(notification._source).be.eql(request.body);
-        should(spyInternalCacheAdd.calledOnce).be.true();
-        should(spyInternalCacheExpire.calledOnce).be.true();
-      });
+    kuzzle.notifier.publish(new RequestObject(request));
+    should(notification.state).be.eql('pending');
+    should(notification.scope).be.undefined();
+    should(notification._id).be.eql(request._id);
+    should(notification._source).be.eql(request.body);
+
+    setTimeout(() => {
+      should(spyInternalCacheAdd.calledOnce).be.true();
+      should(spyInternalCacheExpire.calledOnce).be.true();
+      done();
+    }, 20);
   });
 
-  it('should cache the document in case of a createOrReplace document request', () => {
-    sandbox.stub(kuzzle.dsl, 'test').resolves(rooms);
+  it('should cache the document in case of a createOrReplace document request', (done) => {
+    sandbox.stub(kuzzle.dsl, 'test').returns(rooms);
 
     request.action = 'createOrReplace';
-    return kuzzle.notifier.publish(new RequestObject(request))
-      .then(() => {
-        should(notification.state).be.eql('pending');
-        should(notification.scope).be.undefined();
-        should(notification._id).be.eql(request._id);
-        should(notification._source).be.eql(request.body);
-        should(spyInternalCacheAdd.calledOnce).be.true();
-        should(spyInternalCacheExpire.calledOnce).be.true();
-      });
+    kuzzle.notifier.publish(new RequestObject(request));
+    should(notification.state).be.eql('pending');
+    should(notification.scope).be.undefined();
+    should(notification._id).be.eql(request._id);
+    should(notification._source).be.eql(request.body);
+    setTimeout(() => {
+      should(spyInternalCacheAdd.calledOnce).be.true();
+      should(spyInternalCacheExpire.calledOnce).be.true();
+      done();
+    }, 20);
   });
 
-  it('should cache the document in case of a replace document request', () => {
-    sandbox.stub(kuzzle.dsl, 'test').resolves(rooms);
+  it('should cache the document in case of a replace document request', (done) => {
+    sandbox.stub(kuzzle.dsl, 'test').returns(rooms);
 
     request.action = 'replace';
-    return kuzzle.notifier.publish(new RequestObject(request))
-      .then(() => {
-        should(notification.state).be.eql('pending');
-        should(notification.scope).be.undefined();
-        should(notification._id).be.eql(request._id);
-        should(notification._source).be.eql(request.body);
-        should(spyInternalCacheAdd.calledOnce).be.true();
-        should(spyInternalCacheExpire.calledOnce).be.true();
-      });
+    kuzzle.notifier.publish(new RequestObject(request));
+    should(notification.state).be.eql('pending');
+    should(notification.scope).be.undefined();
+    should(notification._id).be.eql(request._id);
+    should(notification._source).be.eql(request.body);
+    setTimeout(() => {
+      should(spyInternalCacheAdd.calledOnce).be.true();
+      should(spyInternalCacheExpire.calledOnce).be.true();
+      done();
+    }, 20);
   });
 
-  it('should do nothing if there is no room to notify', () => {
-    sandbox.stub(kuzzle.dsl, 'test').resolves([]);
+  it('should do nothing if there is no room to notify', (done) => {
+    let result;
 
-    return kuzzle.notifier.publish(new RequestObject(request))
-      .then(result => {
-        should(result).match({published: true});
-        should(notification).be.null();
-        should(spyInternalCacheAdd.called).be.false();
-        should(spyInternalCacheExpire.called).be.false();
-      });
-  });
+    sandbox.stub(kuzzle.dsl, 'test').returns([]);
 
-  it('should return a rejected promise if dsl.test fails', () => {
-    sandbox.stub(kuzzle.dsl, 'test').rejects(new Error(''));
-    return should(kuzzle.notifier.publish(new RequestObject(request))).be.rejected();
+    result = kuzzle.notifier.publish(new RequestObject(request));
+    should(result).match({published: true});
+    should(notification).be.null();
+    setTimeout(() => {
+      should(spyInternalCacheAdd.called).be.false();
+      should(spyInternalCacheExpire.called).be.false();
+      done();
+    }, 20);
   });
 });

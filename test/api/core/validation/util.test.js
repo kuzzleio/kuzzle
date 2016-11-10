@@ -92,9 +92,9 @@ describe('Test: validation utilities', () => {
           3: [{path: ['aField', 'aSubField', 'aSubSubField'], type: 'object'}, {path: ['aField', 'aSubField', 'anotherSubSubField'], type: 'object'}]
         };
 
-      (() => {
+      should(() => {
         curateStructuredFields(typeAllowChildren, fields, maxDepth);
-      }).should.throw();
+      }).throw();
     });
 
     it('should throw an error if a parent has not the appropriate type', () => {
@@ -106,9 +106,9 @@ describe('Test: validation utilities', () => {
           2: [{path: ['aField', 'aSubField'], type: 'object'}, {path: ['aField', 'anotherSubField'], type: 'object'}]
         };
 
-      (() => {
+      should(() => {
         curateStructuredFields(typeAllowChildren, fields, maxDepth);
-      }).should.throw();
+      }).throw();
     });
   });
 
@@ -165,9 +165,9 @@ describe('Test: validation utilities', () => {
         },
         fieldPath = ['foo', 'bar', 'baz'];
 
-      (() => {
+      should(() => {
         getParent(structuredField, fieldPath);
-      }).should.throw();
+      }).throw();
     });
   });
 
@@ -182,9 +182,9 @@ describe('Test: validation utilities', () => {
         message = 'a message',
         errorHolder = [];
 
-      (() => {
+      should(() => {
         manageErrorMessage(context, errorHolder, message, verbose);
-      }).should.throw('Field aField.aSubField: a message');
+      }).throw('Field aField.aSubField: a message');
     });
 
     it('should add a message at the begining of the errorHolder when verbose is false and context is document', () => {
@@ -194,9 +194,9 @@ describe('Test: validation utilities', () => {
         message = 'a message',
         errorHolder = ['an existing message'];
 
-      (() => {
+      should(() => {
         manageErrorMessage(context, errorHolder, message, verbose);
-      }).should.throw('Document: a message');
+      }).throw('Document: a message');
     });
 
     it('should add a message in the errorHolder in a verbose way when verbose is true and context is not document', () => {

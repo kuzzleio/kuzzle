@@ -17,7 +17,7 @@ util.inherits(MyNewType, BaseConstructor);
  * @param {*} fieldValue
  * @param {string[]} errorMessages
  */
-MyNewType.prototype.validate = function (typeOptions, fieldValue, errorMessages) {
+MyNewType.prototype.validate = function validate (typeOptions, fieldValue, errorMessages) {
   // TODO
   return true;
 };
@@ -27,7 +27,7 @@ MyNewType.prototype.validate = function (typeOptions, fieldValue, errorMessages)
  * @return {boolean|TypeOptions}
  * @throws InternalError
  */
-MyNewType.prototype.validateFieldSpecification = function (typeOptions) {
+MyNewType.prototype.validateFieldSpecification = function validateFieldSpecification (typeOptions) {
   // TODO
   return true;
 };

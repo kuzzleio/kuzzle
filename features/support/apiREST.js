@@ -671,4 +671,62 @@ ApiREST.prototype.setAutoRefresh = function (index, autoRefresh) {
   return this.callApi(this.getRequest(index, null, 'admin', 'setAutoRefresh', { body: {autoRefresh: autoRefresh }}));
 };
 
+ApiREST.prototype.getSpecifications = function (index, collection) {
+  var options = {
+    url: this.apiPath(index + '/' + collection + '/_specifications'),
+    method: 'GET'
+  };
+
+  return this.callApi(options);
+};
+
+ApiREST.prototype.updateSpecifications = function (specifications) {
+  var options = {
+    url: this.apiPath('_specifications'),
+    method: 'PUT',
+    body: specifications
+  };
+
+  return this.callApi(options);
+};
+
+ApiREST.prototype.validateSpecifications = function (specifications) {
+  var options = {
+    url: this.apiPath('_validateSpecifications'),
+    method: 'POST',
+    body: specifications
+  };
+
+  return this.callApi(options);
+};
+
+ApiREST.prototype.validateDocument = function (index, collection, document) {
+  var options = {
+    url: this.apiPath(index + '/' + collection + '/_validate'),
+    method: 'POST',
+    body: document
+  };
+
+  return this.callApi(options);
+};
+
+ApiREST.prototype.postDocument = function (index, collection, document) {
+  var options = {
+    url: this.apiPath(index + '/' + collection + '/_create'),
+    method: 'PUT',
+    body: document
+  };
+
+  return this.callApi(options);
+};
+
+ApiREST.prototype.deleteSpecifications = function (index, collection) {
+  var options = {
+    url: this.apiPath(index + '/' + collection + '/_specifications'),
+    method: 'DELETE'
+  };
+
+  return this.callApi(options);
+};
+
 module.exports = ApiREST;

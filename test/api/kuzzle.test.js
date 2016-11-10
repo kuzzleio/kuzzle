@@ -19,10 +19,11 @@ describe('/lib/api/kuzzle.js', () => {
       'internalEngine',
       'notifier',
       'pluginsManager',
-      'remoteActionsController',
+      'cliController',
       'repositories',
       'services',
-      'statistics'
+      'statistics',
+      'validation'
     ].forEach(k => {
       kuzzle[k] = mock[k];
     });
@@ -122,7 +123,7 @@ describe('/lib/api/kuzzle.js', () => {
           should(kuzzle.repositories.init)
             .be.calledOnce();
 
-          should(kuzzle.remoteActionsController.init)
+          should(kuzzle.cliController.init)
             .be.calledOnce();
 
           sinon.assert.callOrder(
@@ -141,7 +142,7 @@ describe('/lib/api/kuzzle.js', () => {
             kuzzle.entryPoints.init,
             kuzzle.repositories.init,
             kuzzle.pluginsManager.trigger,
-            kuzzle.remoteActionsController.init,
+            kuzzle.cliController.init,
             kuzzle.pluginsManager.trigger
           );
         });

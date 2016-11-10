@@ -33,24 +33,21 @@ describe('Test: validation/types/geoPoint', () => {
 
   describe('#validate', () => {
     var
-      constructPointStub = sandbox.stub(),
-      geoUtil = {
-        constructPoint: constructPointStub
-      };
+      convertGeopointStub = sandbox.stub();
 
-    GeoPointType.__set__('geoUtil', geoUtil);
+    GeoPointType.__set__('convertGeopoint', convertGeopointStub);
 
     it('should return true if the geoPoint is valid', () => {
-      constructPointStub.returns(true);
+      convertGeopointStub.returns(true);
       should(geoPointType.validate({}, {lat: 25.2, lon: 17.3}), []).be.true();
     });
 
     it('should return false if the geoPoint is not valid', () => {
       var errorMessages = [];
 
-      constructPointStub.throws({message: 'an Error'});
+      convertGeopointStub.returns(null);
       should(geoPointType.validate({}, {not: 'a geopoint'}, errorMessages)).be.false();
-      should(errorMessages).be.deepEqual(['an Error']);
+      should(errorMessages).be.deepEqual(['Invalid GeoPoint format']);
     });
   });
 
