@@ -114,8 +114,7 @@ describe('Test: validation.validate', () => {
         return Promise.reject({message: 'anError'});
       });
 
-      return validation.validate(requestObject)
-        .should.rejectedWith('anError');
+      return should(validation.validate(requestObject)).rejectedWith('anError');
     });
 
     it('should throw an error if the requestObject has no data property', () => {
@@ -129,9 +128,9 @@ describe('Test: validation.validate', () => {
           action: actionName
         };
 
-      (() => {
+      should(() => {
         validation.validate(requestObject);
-      }).should.throw('The request object must provide data');
+      }).throw('The request object must provide data');
     });
 
     it('should throw an error if the data has no body property', () => {
@@ -146,9 +145,9 @@ describe('Test: validation.validate', () => {
           data: {}
         };
 
-      (() => {
+      should(() => {
         validation.validate(requestObject);
-      }).should.throw('The request object must provide a document body');
+      }).throw('The request object must provide a document body');
     });
 
     it('should throw an error if request is an update and _id is not provided', () => {
@@ -163,9 +162,9 @@ describe('Test: validation.validate', () => {
           data: {body: {some: 'content'}}
         };
 
-      (() => {
+      should(() => {
         validation.validate(requestObject);
-      }).should.throw('Update request must provide an _id.');
+      }).throw('Update request must provide an _id.');
     });
   });
 
@@ -282,7 +281,7 @@ describe('Test: validation.validate', () => {
         controllerName = 'aController',
         actionName = 'anAction',
         filterId = 'someFilter',
-        testStub = sandbox.stub().resolves([filterId, 'anotherFilter']),
+        testStub = sandbox.stub().returns([filterId, 'anotherFilter']),
         dsl = {test: testStub},
         id = 'anId',
         verbose = false,
@@ -402,8 +401,8 @@ describe('Test: validation.validate', () => {
       validation.dsl = dsl;
       Validation.__set__('manageErrorMessage', sandbox.spy(function() {throw new Error(arguments[2]);}));
 
-      return validation.validationPromise(requestObject, verbose)
-        .should.rejectedWith(error);
+      return should(validation.validationPromise(requestObject, verbose))
+        .be.rejectedWith(error);
     });
 
     it('should return an unvalid status when validator validation fails', () => {
@@ -440,8 +439,8 @@ describe('Test: validation.validate', () => {
       validation.dsl = dsl;
       Validation.__set__('manageErrorMessage', sandbox.spy(function() {throw new Error(arguments[2]);}));
 
-      return validation.validationPromise(requestObject, verbose)
-        .should.rejectedWith('The document does not match validation filters.');
+      return should(validation.validationPromise(requestObject, verbose))
+        .be.rejectedWith('The document does not match validation filters.');
     });
 
     it('should intercept a strictness error and set the message accordingly', () => {
@@ -473,8 +472,8 @@ describe('Test: validation.validate', () => {
       sandbox.stub(validation, 'recurseFieldValidation').throws(error);
       Validation.__set__('manageErrorMessage', sandbox.spy(function() {throw new Error(arguments[2]);}));
 
-      return validation.validationPromise(requestObject, verbose)
-        .should.rejectedWith('The document validation is strict; it can not add unspecified sub-fields.');
+      return should(validation.validationPromise(requestObject, verbose))
+        .be.rejectedWith('The document validation is strict; it can not add unspecified sub-fields.');
     });
 
     it('should intercept a strictness error and set the message accordingly', () => {
@@ -509,15 +508,23 @@ describe('Test: validation.validate', () => {
 
       return validation.validationPromise(requestObject, verbose)
         .then((result) => {
-          should(result).be.deepEqual({errorMessages: {}, validation: false});
-          should(recurseFieldValidationStub.callCount).be.eql(1);
-          should(recurseFieldValidationStub.args[0][0]).be.eql(documentBody);
-          should(recurseFieldValidationStub.args[0][1]).be.deepEqual({aField: 'validation'});
-          should(recurseFieldValidationStub.args[0][2]).be.true();
-          should(recurseFieldValidationStub.args[0][3]).be.eql({});
-          should(recurseFieldValidationStub.args[0][4]).be.eql(verbose);
-          should(manageErrorMessageStub.callCount).be.eql(1);
-          should(manageErrorMessageStub.args[0][2]).be.eql('The document validation is strict; it can not add unspecified sub-fields.');
+
+          try {
+            should(result).be.deepEqual({errorMessages: {}, validation: false});
+            should(recurseFieldValidationStub.callCount).be.eql(1);
+            should(recurseFieldValidationStub.args[0][0]).be.eql(documentBody);
+            should(recurseFieldValidationStub.args[0][1]).be.deepEqual({aField: 'validation'});
+            should(recurseFieldValidationStub.args[0][2]).be.true();
+            should(recurseFieldValidationStub.args[0][3]).be.eql({});
+            should(recurseFieldValidationStub.args[0][4]).be.eql(verbose);
+            should(manageErrorMessageStub.callCount).be.eql(1);
+            should(manageErrorMessageStub.args[0][2]).be.eql('The document validation is strict; it can not add unspecified sub-fields.');
+
+            return Promise.resolve();
+          }
+          catch (err) {
+            return Promise.reject(err);
+          }
         });
     });
 
@@ -549,8 +556,8 @@ describe('Test: validation.validate', () => {
       sandbox.stub(validation, 'recurseFieldValidation').throws(error);
       Validation.__set__('manageErrorMessage', sandbox.spy(function() {throw new Error(arguments[2]);}));
 
-      return validation.validationPromise(requestObject, verbose)
-        .should.rejectedWith(error);
+      return should(validation.validationPromise(requestObject, verbose))
+        .be.rejectedWith(error);
     });
   });
 
@@ -1005,9 +1012,9 @@ describe('Test: validation.validate', () => {
         .onFirstCall().returns(true)
         .onSecondCall().returns(false);
 
-      (() => {
+      should(() => {
         validation.isValidField('aField', documentSubset, collectionSubset, true, errorMessages, false);
-      }).should.throw('Field aField.aSubField: An error has occurred during validation.');
+      }).throw('Field aField.aSubField: An error has occurred during validation.');
     });
 
     it('should return false if one of the subfields throws an error in verbose mode', () => {
