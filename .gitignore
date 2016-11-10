@@ -3,9 +3,7 @@ node_modules
 npm-debug.log*
 .node_history
 # Exclude coverage report
-!/coverage/
-/coverage/*
-!/coverage/scripts
+coverage
 # Plugin config folder
 config/plugins/
 dump

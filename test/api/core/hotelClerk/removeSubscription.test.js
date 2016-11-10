@@ -98,7 +98,7 @@ describe('Test: hotelClerk.removeSubscription', () => {
       });
   });
 
-  it('should clean up customers, rooms and filtersTree object', () => {
+  it('should clean up customers, rooms object', () => {
     var mock = sandbox.mock(kuzzle.dsl).expects('remove').once().resolves();
 
     sandbox.spy(kuzzle.notifier, 'notify');
@@ -131,7 +131,7 @@ describe('Test: hotelClerk.removeSubscription', () => {
         mockNotify.verify();
 
         // testing roomId argument
-        should(mockNotify.args[0][0]).be.exactly('foo');
+        should(mockNotify.args[0][0]).match(['foo']);
 
         // testing requestObject argument
         should(mockNotify.args[0][1]).be.instanceOf(RequestObject);
@@ -147,6 +147,8 @@ describe('Test: hotelClerk.removeSubscription', () => {
   it('should trigger a proxy:leaveChannel hook', function (done) {
     this.timeout(50);
 
+    sandbox.stub(kuzzle.dsl, 'remove').resolves();
+
     kuzzle.once('proxy:leaveChannel', (data) => {
       should(data).be.an.Object();
       should(data.channel).be.a.String();
@@ -154,6 +156,6 @@ describe('Test: hotelClerk.removeSubscription', () => {
       done();
     });
 
-    kuzzle.hotelClerk.removeSubscription(unsubscribeRequest, context);
+    kuzzle.hotelClerk.removeSubscription(unsubscribeRequest, context).catch(e => done(e));
   });
 });

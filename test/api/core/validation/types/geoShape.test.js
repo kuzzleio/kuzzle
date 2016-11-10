@@ -65,12 +65,10 @@ describe('Test: validation/types/geoShape', () => {
   describe('#recursiveShapeValidation', () => {
     var
       checkStructureStub = sandbox.stub(),
-      getDistanceStub = sandbox.stub();
+      convertDistanceStub = sandbox.stub();
 
     before(() => {
-      GeoShapeType.__set__('geoUtil', {
-        getDistance: getDistanceStub
-      });
+      GeoShapeType.__set__('convertDistance', convertDistanceStub);
     });
 
     beforeEach(() => {
@@ -192,7 +190,7 @@ describe('Test: validation/types/geoShape', () => {
         };
 
       checkStructureStub.returns(true);
-      getDistanceStub.returns(10);
+      convertDistanceStub.returns(10);
       GeoShapeType.__set__('isPoint', isPointStub);
 
       should(geoShapeType.recursiveShapeValidation(allowedShapes, shape, [])).be.true();
@@ -321,7 +319,7 @@ describe('Test: validation/types/geoShape', () => {
         };
 
       checkStructureStub.returns(true);
-      getDistanceStub.throws({message: 'an error'});
+      convertDistanceStub.throws({message: 'an error'});
       GeoShapeType.__set__('isPoint', isPointStub);
 
       should(geoShapeType.recursiveShapeValidation(allowedShapes, shape, errorMessages)).be.false();
@@ -341,7 +339,7 @@ describe('Test: validation/types/geoShape', () => {
         };
 
       checkStructureStub.returns(true);
-      getDistanceStub.returns('a string');
+      convertDistanceStub.returns('a string');
       GeoShapeType.__set__('isPoint', isPointStub);
 
       should(geoShapeType.recursiveShapeValidation(allowedShapes, shape, errorMessages)).be.false();

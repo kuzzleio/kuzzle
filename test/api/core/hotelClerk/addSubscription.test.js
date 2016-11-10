@@ -33,10 +33,7 @@ describe('Test: hotelClerk.addSubscription', () => {
     return kuzzle.services.init({whitelist: []});
   });
 
-  it('should have object filtersTree, customers and rooms empty', () => {
-    should(kuzzle.dsl.filters.filtersTree).be.an.Object();
-    should(kuzzle.dsl.filters.filtersTree).be.empty();
-
+  it('should have object customers and rooms empty', () => {
     should(kuzzle.hotelClerk.rooms).be.an.Object();
     should(kuzzle.hotelClerk.rooms).be.empty();
 
@@ -61,9 +58,6 @@ describe('Test: hotelClerk.addSubscription', () => {
     return kuzzle.hotelClerk.addSubscription(requestObject, context)
       .then(response => {
         var customer;
-
-        should(kuzzle.dsl.filters.filtersTree).be.an.Object();
-        should(kuzzle.dsl.filters.filtersTree).not.be.empty();
 
         should(kuzzle.hotelClerk.rooms).be.an.Object();
         should(kuzzle.hotelClerk.rooms).not.be.empty();
@@ -109,7 +103,7 @@ describe('Test: hotelClerk.addSubscription', () => {
       done();
     });
 
-    kuzzle.hotelClerk.addSubscription(requestObject, context);
+    kuzzle.hotelClerk.addSubscription(requestObject, context).catch(e => done(e));
   });
 
   it('should return the same response when the user has already subscribed to the filter', done => {
@@ -183,11 +177,19 @@ describe('Test: hotelClerk.addSubscription', () => {
         collection: collection,
         index: index,
         body: {
-          equals: {
-            firstName: 'Ada'
-          },
-          exists: {
-            field: 'lastName'
+          not: {
+            or: [
+              {
+                equals: {
+                  firstName: 'Ada'
+                },
+              },
+              {
+                exists: {
+                  field: 'lastName'
+                }
+              }
+            ]
           }
         }
       }),
@@ -196,12 +198,22 @@ describe('Test: hotelClerk.addSubscription', () => {
         collection: collection,
         index: index,
         body: {
-          exists: {
-            field: 'lastName'
-          },
-          equals: {
-            firstName: 'Ada'
-          }
+          and: [
+            {
+              not: {
+                exists: {
+                  field: 'lastName'
+                }
+              }
+            },
+            {
+              not: {
+                equals: {
+                  firstName: 'Ada'
+                }
+              }
+            }
+          ]
         }
       }),
       response;
