@@ -164,7 +164,7 @@ function cleanSecurity (callback) {
     })
     .then(results => {
       var regex = new RegExp('^' + this.idPrefix);
-      results = results.result.hits.query(r => r._id.match(regex)).map(r => r._id);
+      results = results.result.hits.filter(r => r._id.match(regex)).map(r => r._id);
       return this.api.deleteByQuery(
         {
           query: {
@@ -189,7 +189,7 @@ function cleanSecurity (callback) {
     })
     .then(results => {
       var regex = new RegExp('^' + this.idPrefix);
-      results = results.result.hits.query(r => r._id.match(regex)).map(r => r._id);
+      results = results.result.hits.filter(r => r._id.match(regex)).map(r => r._id);
       return this.api.deleteByQuery(
         {
           query: {
@@ -214,7 +214,7 @@ function cleanSecurity (callback) {
     })
     .then(results => {
       var regex = new RegExp('^' + this.idPrefix);
-      results = results.result.hits.query(r => r._id.match(regex)).map(r => r._id);
+      results = results.result.hits.filter(r => r._id.match(regex)).map(r => r._id);
       return this.api.deleteByQuery(
         {
           query: {
@@ -275,7 +275,7 @@ function cleanValidations(callback) {
     })
     .then(results => {
       var regex = new RegExp('^' + this.idPrefix);
-      results = results.result.hits.query(r => r._id.match(regex)).map(r => r._id);
+      results = results.result.hits.filter(r => r._id.match(regex)).map(r => r._id);
       return this.api.deleteByQuery(
         {
           query: {
