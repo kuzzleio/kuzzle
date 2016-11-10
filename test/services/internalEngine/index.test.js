@@ -94,7 +94,7 @@ describe('InternalEngine', () => {
               index: kuzzle.internalEngine.index,
               type: collection,
               body: {
-                query: query,
+                query: query.query,
                 from: 0,
                 size: 20
               }
