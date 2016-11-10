@@ -611,14 +611,18 @@ describe('plugins/packages/pluginPackage', () => {
       });
     });
 
-    it('should reject the promise if the file does not contain some valid JSON', () => {
-      return PluginPackage.__with__({
+    it('should reject the promise if the file does not contain some valid JSON', done => {
+      PluginPackage.__with__({
         fs: {
           readFileSync: sinon.stub().returns('{ invalid json }')
         }
       })(() => {
-        return (should(pkg.importConfigurationFromFile('path')))
-          .be.rejectedWith(BadRequestError, {message: 'Unable to parse path: Unexpected token   in JSON at position 1'});
+        pkg.importConfigurationFromFile('path')
+          .catch(error => {
+            should(error).be.an.instanceOf(BadRequestError);
+            should(error.message.indexOf('Unable to parse path: Unexpected token')).be.greaterThan(-1);
+            done();
+          });
       });
     });
 
