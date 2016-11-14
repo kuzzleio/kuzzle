@@ -102,7 +102,7 @@ var apiSteps = function () {
   });
 
   this.Then(/^I ?(don't)* find a document with "([^"]*)"(?: in field "([^"]*)")?(?: in index "([^"]*)")?(?: with scroll "([^"]*)")?$/, function (dont, value, field, index, scroll) {
-    var query = {query: { term: { [field]: value }}};
+    var query = {query: { match: { [field]: value }}};
 
     if (scroll) {
       query.scroll = scroll;
