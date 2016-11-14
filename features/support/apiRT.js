@@ -101,6 +101,19 @@ ApiRT.prototype.search = function (filters, index, collection) {
   return this.send(msg);
 };
 
+ApiRT.prototype.scroll = function (scrollId) {
+  var
+    msg = {
+      controller: 'read',
+      action: 'scroll',
+      body: {
+        scrollId
+      }
+    };
+
+  return this.send(msg);
+};
+
 ApiRT.prototype.count = function (filters, index, collection) {
   var
     msg = {

@@ -61,6 +61,26 @@ describe('Test: read controller', () => {
     });
   });
 
+  describe('#scroll', () => {
+    it('should fulfill with a response object', () => {
+      sandbox.stub(kuzzle.services.list.storageEngine, 'scroll').resolves({});
+      return kuzzle.funnel.controllers.read.scroll(requestObject)
+        .then(response => should(response).be.instanceOf(ResponseObject));
+    });
+
+    it('should reject with a response object in case of error', () => {
+      sandbox.stub(kuzzle.services.list.storageEngine, 'scroll').rejects(new Error('foobar'));
+      return should(kuzzle.funnel.controllers.read.scroll(requestObject)).be.rejected();
+    });
+
+    it('should trigger a plugin event', function (done) {
+      this.timeout(50);
+      sandbox.stub(kuzzle.services.list.storageEngine, 'scroll').resolves({});
+      kuzzle.once('data:beforeScroll', () => done());
+      kuzzle.funnel.controllers.read.scroll(requestObject);
+    });
+  });
+
   describe('#get', () => {
     it('should fulfill with a response object', () => {
       sandbox.stub(kuzzle.services.list.storageEngine, 'get').resolves({});
