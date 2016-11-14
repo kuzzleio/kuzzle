@@ -51,7 +51,7 @@ describe('Test: hotelClerk.removeCustomerFromAllRooms', () => {
     return should(kuzzle.hotelClerk.removeCustomerFromAllRooms({id: 'unknown'})).be.fulfilledWith(undefined);
   });
 
-  it('should clean up customers, rooms and filtersTree object', () => {
+  it('should clean up customers, rooms object', () => {
     var mock = sandbox.mock(kuzzle.dsl).expects('remove').twice().resolves();
 
     sandbox.spy(kuzzle.notifier, 'notify');
@@ -82,7 +82,7 @@ describe('Test: hotelClerk.removeCustomerFromAllRooms', () => {
         mockNotify.verify();
 
         // testing roomId argument
-        should(mockNotify.args[0][0]).be.exactly('foo');
+        should(mockNotify.args[0][0]).match(['foo']);
 
         // testing requestObject argument
         should(mockNotify.args[0][1]).be.instanceOf(RequestObject);
