@@ -14,11 +14,13 @@
   /*
   "plugins": {
     // [Common]
+    //   * workerPrefix: process name prefix for plugins worker
     //   * pipeWarnTime: time in ms after which a warning will be emitted to
     //     the logger if the pipe action has not completed
     //   * pipeTimeout: time in ms after which a pipe action will be killed
     //     if it has not completed
     "common": {
+      "workerPrefix": "kpw:",
       "pipeWarnTime": 40,
       "pipeTimeout": 250
     },
@@ -32,7 +34,7 @@
     //   * from a local directory: the location of the package must be
     //     specified using the "path" property
     "kuzzle-plugin-logger": {
-      "version": "2.0.4",
+      "version": "2.0.5",
       "activated": true
     },
     "kuzzle-plugin-auth-passport-local": {
@@ -315,24 +317,49 @@
     },
     */
 
-    // Configuration for Kuzzle internal statistics module
-    //   * ttl: Time in s for which the statistics framed are stored
-    //   * statsInterval: Time in s between statistics framed are comitted to
-    //     the cache engine
-    /*
-    "stats": {
-      "ttl": 3600,
-      "statsInterval": 10
-    }
-    */
-
-    // [validation]
-    // Defines the specifications used to validate data.
-    // Please refer to the guide for more information.
-    /*
-    validation: {
-    }
-    */
+  // Configuration for Kuzzle internal statistics module
+  //   * ttl: Time in s for which the statistics framed are stored
+  //   * statsInterval: Time in s between statistics framed are comitted to
+  //     the cache engine
+  /*
+  "stats": {
+    "ttl": 3600,
+    "statsInterval": 10
   }
+  */
 
+  // [validation]
+  // Defines the specifications used to validate data.
+  // Please refer to the guide for more information.
+  /*
+  validation: {
+  }
+  */
+
+  // [dump]
+  // Defines how kuzzle handle crash information
+  //  * enabled: Boolean to enable/disable dumping information when kuzzle crash
+  //  * path: Directory path where the dumps are stored
+  //  * dateFormat: Format used to generate dump name (see http://momentjs.com for formats)
+  //  * handledErrors: Used to generate dump on known errors (does not restart kuzzle)
+  //    * enabled: Boolean to enable/disable dumping information when handled error occurs
+  //    * whitelist: Array of error type to trigger a dump generation
+  /*
+  dump: {
+    enabled: false,
+    path: './dump/',
+    dateFormat: 'YYYYMMDD-HHmm',
+    handledErrors: {
+      enabled: true,
+      whitelist: [
+        'Error',
+        'RangeError',
+        'TypeError',
+        'KuzzleError',
+        'InternalError',
+        'PluginImplementationError'
+      ]
+    }
+  }
+  */
 }

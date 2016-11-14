@@ -34,7 +34,7 @@ function commandPlugin (plugin, options) {
     console.log('███ kuzzle-plugins: Installing plugin...');
   }
 
-  return kuzzle.remoteActions.do('managePlugins', data, {pid: options.pid, debug: options.parent.debug})
+  return kuzzle.cli.do('managePlugins', data, {pid: options.pid, debug: options.parent.debug})
     .then(res => {
       console.log('');
 
@@ -42,7 +42,11 @@ function commandPlugin (plugin, options) {
         console.dir(res.data.body, {depth: null, colors: !options.parent.noColors});
       }
       else if (options.install) {
-        console.log(clcOk(`███ kuzzle-plugins: Plugin ${res.data.body.name}@${res.data.body.version}:\n${JSON.stringify(res.data.body.config, undefined, 2)}`));
+        if (res.data.body.success) {
+          console.log(clcOk(`███ kuzzle-plugins: Plugin ${res.data.body.name}@${res.data.body.version}:\n${JSON.stringify(res.data.body.config, undefined, 2)}`));
+        } else {
+          console.log(clcError('███ kuzzle-plugins: An error occurred while installing plugin, for more information, please check kuzzle error logs'));
+        }
       }
       else if (options.importConfig) {
         console.log(clcOk('[✔] Successfully imported configuration'));
