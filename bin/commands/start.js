@@ -40,7 +40,7 @@ function commandStart (options) {
 
       if (params.likeAvirgin) {
         request = new RequestObject({controller: 'remoteActions', action: 'cleanDb', body: {}});
-        return kuzzle.remoteActionsController.actions.cleanDb(kuzzle, request);
+        return kuzzle.cliController.actions.cleanDb(kuzzle, request);
       }
       return Promise.resolve();
     })

@@ -39,6 +39,13 @@ describe('Test plugins Worker Wrapper', () => {
       processOn = sandbox.stub().callsArgWith(1, {
         topic: 'initialize',
         data: {
+          kuzzleConfig: {
+            plugins: {
+              common: {
+                workerPrefix: 'kpw:'
+              }
+            }
+          },
           config,
           isDummy: 'am I a dummy?'
         }

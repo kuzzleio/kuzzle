@@ -23,7 +23,7 @@ var apiSteps = function () {
     }
 
     if (!collection) {
-      if (this.result.collections[type].length === 0) {
+      if (this.result.collections.length === 0) {
         if (not) {
           return callback();
         }
@@ -32,7 +32,7 @@ var apiSteps = function () {
       }
     }
 
-    if (this.result.collections[type].indexOf(collection) !== -1) {
+    if (this.result.collections.filter(item => item.type === type && item.name === collection).length !== 0) {
       if (not) {
         return callback('Expected collection ' + collection + ' not to appear in the collection list');
       }
