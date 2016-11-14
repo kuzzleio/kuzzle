@@ -15,6 +15,7 @@ describe('lib/api/controllers/cliController', () => {
     cleanDbStub,
     clearCacheStub,
     managePluginsStub,
+    dumpStub,
     dataStub;
 
   beforeEach(() => {
@@ -25,11 +26,13 @@ describe('lib/api/controllers/cliController', () => {
     clearCacheStub = sinon.stub();
     managePluginsStub = sinon.stub();
     dataStub = sinon.stub();
+    dumpStub = sinon.stub();
 
     requireMock.withArgs('./cli/cleanDb').returns(() => cleanDbStub);
     requireMock.withArgs('./cli/clearCache').returns(() => clearCacheStub);
     requireMock.withArgs('./cli/managePlugins').returns(() => managePluginsStub);
     requireMock.withArgs('./cli/data').returns(() => dataStub);
+    requireMock.withArgs('./cli/dump').returns(() => dumpStub);
 
     kuzzle = new KuzzleMock();
 
@@ -60,6 +63,8 @@ describe('lib/api/controllers/cliController', () => {
         .be.exactly(managePluginsStub);
       should(cli.actions.data)
         .be.exactly(dataStub);
+      should(cli.actions.dump)
+        .be.exactly(dumpStub);
 
       should(kuzzle.services.list.broker.listen)
         .be.calledOnce()

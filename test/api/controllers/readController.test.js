@@ -61,6 +61,26 @@ describe('Test: read controller', () => {
     });
   });
 
+  describe('#scroll', () => {
+    it('should fulfill with a response object', () => {
+      sandbox.stub(kuzzle.services.list.storageEngine, 'scroll').resolves({});
+      return kuzzle.funnel.controllers.read.scroll(requestObject)
+        .then(response => should(response).be.instanceOf(ResponseObject));
+    });
+
+    it('should reject with a response object in case of error', () => {
+      sandbox.stub(kuzzle.services.list.storageEngine, 'scroll').rejects(new Error('foobar'));
+      return should(kuzzle.funnel.controllers.read.scroll(requestObject)).be.rejected();
+    });
+
+    it('should trigger a plugin event', function (done) {
+      this.timeout(50);
+      sandbox.stub(kuzzle.services.list.storageEngine, 'scroll').resolves({});
+      kuzzle.once('data:beforeScroll', () => done());
+      kuzzle.funnel.controllers.read.scroll(requestObject);
+    });
+  });
+
   describe('#get', () => {
     it('should fulfill with a response object', () => {
       sandbox.stub(kuzzle.services.list.storageEngine, 'get').resolves({});
@@ -126,11 +146,8 @@ describe('Test: read controller', () => {
           should(realtime.called).be.true();
           should(stored.called).be.true();
           should(result.data.body.type).be.exactly('all');
-          should(result.data.body.collections).not.be.undefined().and.be.an.Object();
-          should(result.data.body.collections.stored).not.be.undefined().and.be.an.Array();
-          should(result.data.body.collections.realtime).not.be.undefined().and.be.an.Array();
-          should(result.data.body.collections.stored.sort()).match(['foo']);
-          should(result.data.body.collections.realtime.sort()).match(['bar', 'foo']);
+          should(result.data.body.collections).not.be.undefined().and.be.an.Array();
+          should(result.data.body.collections).deepEqual([{name: 'bar', type: 'realtime'}, {name: 'foo', type: 'realtime'}, {name: 'foo', type: 'stored'}]);
         });
     });
 
@@ -165,6 +182,68 @@ describe('Test: read controller', () => {
         should(stored.called).be.false();
       });
     });
+
+    it('should return a portion of the collection list if from and size are specified', () => {
+      requestObject = new RequestObject({index: 'index', body: {type: 'all', from: 2, size: 3}}, {}, '');
+      kuzzle.services.list.storageEngine.listCollections.restore();
+      stored = sandbox.stub(kuzzle.services.list.storageEngine, 'listCollections').resolves({collections: {stored: ['astored', 'bstored', 'cstored', 'dstored', 'estored']}});
+      kuzzle.hotelClerk.getRealtimeCollections.restore();
+      realtime = sandbox.stub(kuzzle.hotelClerk, 'getRealtimeCollections', () => {
+        return [{name: 'arealtime', index: 'index'}, {name: 'brealtime', index: 'index'}, {name: 'crealtime', index: 'index'}, {name: 'drealtime', index: 'index'}, {name: 'erealtime', index: 'index'}, {name: 'baz', index: 'wrong'}];
+      });
+
+      return kuzzle.funnel.controllers.read.listCollections(requestObject, context).then(response => {
+        should(response.data.body.collections).be.deepEqual([
+          {name: 'brealtime', type: 'realtime'},
+          {name: 'bstored', type: 'stored'},
+          {name: 'crealtime', type: 'realtime'}
+        ]);
+        should(response.data.body.type).be.exactly('all');
+        should(realtime.called).be.true();
+        should(stored.called).be.true();
+      });
+    });
+
+    it('should return a portion of the collection list if from is specified', () => {
+      requestObject = new RequestObject({index: 'index', body: {type: 'all', from: 8}}, {}, '');
+      kuzzle.services.list.storageEngine.listCollections.restore();
+      stored = sandbox.stub(kuzzle.services.list.storageEngine, 'listCollections').resolves({collections: {stored: ['astored', 'bstored', 'cstored', 'dstored', 'estored']}});
+      kuzzle.hotelClerk.getRealtimeCollections.restore();
+      realtime = sandbox.stub(kuzzle.hotelClerk, 'getRealtimeCollections', () => {
+        return [{name: 'arealtime', index: 'index'}, {name: 'brealtime', index: 'index'}, {name: 'crealtime', index: 'index'}, {name: 'drealtime', index: 'index'}, {name: 'erealtime', index: 'index'}, {name: 'baz', index: 'wrong'}];
+      });
+
+      return kuzzle.funnel.controllers.read.listCollections(requestObject, context).then(response => {
+        should(response.data.body.collections).be.deepEqual([
+          {name: 'erealtime', type: 'realtime'},
+          {name: 'estored', type: 'stored'}
+        ]);
+        should(response.data.body.type).be.exactly('all');
+        should(realtime.called).be.true();
+        should(stored.called).be.true();
+      });
+    });
+
+    it('should return a portion of the collection list if size is specified', () => {
+      requestObject = new RequestObject({index: 'index', body: {type: 'all', size: 2}}, {}, '');
+      kuzzle.services.list.storageEngine.listCollections.restore();
+      stored = sandbox.stub(kuzzle.services.list.storageEngine, 'listCollections').resolves({collections: {stored: ['astored', 'bstored', 'cstored', 'dstored', 'estored']}});
+      kuzzle.hotelClerk.getRealtimeCollections.restore();
+      realtime = sandbox.stub(kuzzle.hotelClerk, 'getRealtimeCollections', () => {
+        return [{name: 'arealtime', index: 'index'}, {name: 'brealtime', index: 'index'}, {name: 'crealtime', index: 'index'}, {name: 'drealtime', index: 'index'}, {name: 'erealtime', index: 'index'}, {name: 'baz', index: 'wrong'}];
+      });
+
+      return kuzzle.funnel.controllers.read.listCollections(requestObject, context).then(response => {
+        should(response.data.body.collections).be.deepEqual([
+          {name: 'arealtime', type: 'realtime'},
+          {name: 'astored', type: 'stored'}
+        ]);
+        should(response.data.body.type).be.exactly('all');
+        should(realtime.called).be.true();
+        should(stored.called).be.true();
+      });
+    });
+
 
     it('should reject with a response object if getting stored collections fails', () => {
       kuzzle.services.list.storageEngine.listCollections.restore();

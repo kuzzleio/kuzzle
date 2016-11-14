@@ -101,17 +101,27 @@ var apiSteps = function () {
     });
   });
 
-  this.Then(/^I ?(don't)* find a document with "([^"]*)"(?: in field "([^"]*)")?(?: in index "([^"]*)")?$/, function (dont, value, field, index) {
+  this.Then(/^I ?(don't)* find a document with "([^"]*)"(?: in field "([^"]*)")?(?: in index "([^"]*)")?(?: with scroll "([^"]*)")?$/, function (dont, value, field, index, scroll) {
     var query = {query: { term: { [field]: value }}};
 
+    if (scroll) {
+      query.scroll = scroll;
+      query.from = 0;
+      query.size = 1;
+    }
+
     return this.api.search(query, index)
-      .then(function (body) {
+      .then(body => {
         if (body.error !== null) {
           if (dont) {
             return Promise.resolve();
           }
 
           return Promise.reject(body.error);
+        }
+
+        if (body.result && body.result._scroll_id) {
+          this.scrollId = body.result._scroll_id;
         }
 
         if (body.result && body.result.hits && body.result.total !== 0) {
@@ -121,6 +131,39 @@ var apiSteps = function () {
 
         if (dont) { return Promise.resolve(); }
         return Promise.reject('No result for query search');
+      })
+      .catch(error => {
+        if (dont) { return Promise.resolve(); }
+        return Promise.reject(error);
+      });
+  });
+
+  this.Then(/^I ?(don't)* be able to scroll previous search$/, function (dont) {
+    if (!this.scrollId) {
+      if (!dont) {
+        return Promise.reject('No scroll id from previous search available');
+      }
+
+      return Promise.resolve();
+    }
+
+    return this.api.scroll(this.scrollId)
+      .then(body => {
+        if (body.error !== null) {
+          if (dont) {
+            return Promise.resolve();
+          }
+
+          return Promise.reject(body.error);
+        }
+
+        if (body.result && body.result.hits && body.result.hits.length > 0) {
+          if (dont) { return Promise.reject('A document exists for the scrollId'); }
+          return Promise.resolve();
+        }
+
+        if (dont) { return Promise.resolve(); }
+        return Promise.reject('No result for scrollId search');
       })
       .catch(error => {
         if (dont) { return Promise.resolve(); }

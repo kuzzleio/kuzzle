@@ -170,6 +170,15 @@ ApiREST.prototype.search = function (query, index, collection) {
   return this.callApi(options);
 };
 
+ApiREST.prototype.scroll = function (scrollId) {
+  var options = {
+    url: this.apiPath('_scroll/'.concat(scrollId)),
+    method: 'POST'
+  };
+
+  return this.callApi(options);
+};
+
 ApiREST.prototype.count = function (query, index, collection) {
   var options = {
     url: this.apiPath(((typeof index !== 'string') ? this.world.fakeIndex : index) + '/' +

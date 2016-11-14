@@ -14,6 +14,9 @@ describe('InternalEngine', () => {
   beforeEach(() => {
     reset = InternalEngine.__set__({
       Elasticsearch: {
+        errors: {
+          NoConnections: sinon.stub()
+        },
         Client: function () {
           this.indices = {
             create: sinon.stub().resolves(),
