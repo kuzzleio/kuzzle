@@ -64,17 +64,17 @@ describe('Test: managePlugins cli actions', () => {
       }))
         .then(() => {
           try {
-	        should(kuzzle.pluginsManager.trigger.getCall(0))
-	          .be.calledWithExactly('log:info', '███ kuzzle-plugins: Installing plugin plugin...');
+            should(kuzzle.pluginsManager.trigger.getCall(0))
+              .be.calledWithExactly('log:info', '███ kuzzle-plugins: Installing plugin plugin...');
 
-	        should(kuzzle.pluginsManager.trigger.getCall(1))
-	          .be.calledWithExactly('log:info', '███ kuzzle-plugins: Plugin banana@42 installed successfully. Restart kuzzle to enable it');
+            should(kuzzle.pluginsManager.trigger.getCall(1))
+              .be.calledWithExactly('log:info', '███ kuzzle-plugins: Plugin banana@42 installed successfully. Restart kuzzle to enable it');
 
-	        should(pkg.setDefinition)
-	          .be.calledOnce()
-	          .be.calledWith({install: true, foo: 'bar'});
+            should(pkg.setDefinition)
+              .be.calledOnce()
+              .be.calledWith({install: true, foo: 'bar'});
 
-	        should(pkg.install).be.calledOnce();
+            should(pkg.install).be.calledOnce();
 
             return Promise.resolve();
           }
