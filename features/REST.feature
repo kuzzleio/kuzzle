@@ -83,6 +83,16 @@ Feature: Test REST API
     And I count 0 documents
 
   @usingREST
+  Scenario: Search with scroll documents
+    When I write the document "documentGrace"
+    When I write the document "documentGrace"
+    When I write the document "documentGrace"
+    When I write the document "documentGrace"
+    And I refresh the index
+    Then I find a document with "Grace" in field "firstName" with scroll "5m"
+    And I be able to scroll previous search
+
+  @usingREST
   Scenario: Change mapping
     When I write the document "documentGrace"
     Then I don't find a document with "Grace" in field "firstName"

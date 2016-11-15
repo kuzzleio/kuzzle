@@ -40,13 +40,15 @@ function commandStart (options) {
 
       if (params.likeAvirgin) {
         request = new RequestObject({controller: 'remoteActions', action: 'cleanDb', body: {}});
-        return kuzzle.remoteActionsController.actions.cleanDb(kuzzle, request);
+        return kuzzle.cliController.actions.cleanDb(kuzzle, request);
       }
       return Promise.resolve();
     })
     // fixtures && mapping
     .then(() => {
-      var fixtures;
+      var
+        fixtures,
+        promises = [];
 
       if (params.fixtures) {
         try {
@@ -57,11 +59,19 @@ function commandStart (options) {
           process.exit(1);
         }
 
-        return kuzzle.services.list.storageEngine.import(new RequestObject({
-          body: {
-            bulkData: fixtures
-          }
-        }));
+        Object.keys(fixtures).forEach(index => {
+          Object.keys(fixtures[index]).forEach(collection => {
+            promises.push(kuzzle.services.list.storageEngine.import(new RequestObject({
+              index,
+              collection,
+              body: {
+                bulkData: fixtures[index][collection]
+              }
+            })));
+          });
+        });
+
+        return Promise.all(promises);
       }
     })
     .then(() => {
