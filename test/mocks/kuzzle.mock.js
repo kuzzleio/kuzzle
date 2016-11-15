@@ -96,6 +96,7 @@ function KuzzleMock () {
     },
     plugins: {},
     run: sinon.stub().resolves(),
+    getPluginsConfig: sinon.stub().returns({}),
     trigger: sinon.spy(function () {return Promise.resolve(arguments[1]);})
   };
 
@@ -178,6 +179,7 @@ function KuzzleMock () {
         refreshIndex: sinon.stub().resolves(foo),
         replace: sinon.stub().resolves(foo),
         search: sinon.stub().resolves(),
+        scroll: sinon.stub().resolves(),
         setAutoRefresh: sinon.stub().resolves(true),
         truncateCollection: sinon.stub().resolves(foo),
         update: sinon.stub().resolves(foo),
