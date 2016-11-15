@@ -44,7 +44,7 @@ describe('Test: validation.validate', () => {
     it('should return the modified requestObject if everything is valid and use _id if action is an update', () => {
       var
         validationPromiseStub = sandbox.spy(function () {
-          return Promise.resolve({validation: true, errorMessages: []});
+          return Promise.resolve({valid: true, errorMessages: []});
         }),
         controllerName = 'write',
         actionName = 'update',
@@ -61,7 +61,7 @@ describe('Test: validation.validate', () => {
 
       return validation.validate(requestObject)
         .then(result => {
-          should(result).be.deepEqual({validation: true,errorMessages: []});
+          should(result).be.deepEqual({valid: true,errorMessages: []});
           should(validationPromiseStub.callCount).be.eql(1);
           should(validationPromiseStub.args[0][0]).be.deepEqual(requestObject);
           should(validationPromiseStub.args[0][1]).be.false();
@@ -71,7 +71,7 @@ describe('Test: validation.validate', () => {
     it('should return the modified requestObject if everything is valid', () => {
       var
         validationPromiseStub = sandbox.spy(function () {
-          return Promise.resolve({validation: true,errorMessages: []});
+          return Promise.resolve({valid: true,errorMessages: []});
         }),
         controllerName = 'aController',
         actionName = 'anAction',
@@ -91,7 +91,7 @@ describe('Test: validation.validate', () => {
 
       return validation.validate(requestObject)
         .then(result => {
-          should(result).be.deepEqual({validation: true, errorMessages: []});
+          should(result).be.deepEqual({valid: true, errorMessages: []});
           should(validationPromiseStub.callCount).be.eql(1);
           should(validationPromiseStub.args[0][0]).be.deepEqual(requestObject);
           should(validationPromiseStub.args[0][1]).be.false();
@@ -265,7 +265,7 @@ describe('Test: validation.validate', () => {
 
       return validation.validationPromise(requestObject, verbose)
         .then((result) => {
-          should(result).be.deepEqual({errorMessages: {}, validation: true});
+          should(result).be.deepEqual({errorMessages: {}, valid: true});
           should(recurseFieldValidationStub.callCount).be.eql(1);
           should(recurseFieldValidationStub.args[0][0]).be.eql(documentBody);
           should(typeof recurseFieldValidationStub.args[0][1]).be.eql('object');
@@ -510,7 +510,7 @@ describe('Test: validation.validate', () => {
         .then((result) => {
 
           try {
-            should(result).be.deepEqual({errorMessages: {}, validation: false});
+            should(result).be.deepEqual({errorMessages: {}, valid: false});
             should(recurseFieldValidationStub.callCount).be.eql(1);
             should(recurseFieldValidationStub.args[0][0]).be.eql(documentBody);
             should(recurseFieldValidationStub.args[0][1]).be.deepEqual({aField: 'validation'});

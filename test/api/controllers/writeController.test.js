@@ -424,7 +424,7 @@ describe('Test: write controller', () => {
         validationPromise: sinon.stub().resolves(expected)
       };
 
-      return controller.validateDocument(requestObject)
+      return controller.validate(requestObject)
         .then(response => {
           try {
             should(kuzzle.validation.validationPromise).be.calledOnce();
@@ -457,19 +457,19 @@ describe('Test: write controller', () => {
             }
           }
         },
-        validation: false
+        valid: false
       };
 
       kuzzle.validation = {
         validationPromise: sinon.stub().resolves(expected)
       };
 
-      return controller.validateDocument(requestObject)
+      return controller.validate(requestObject)
         .then(response => {
           try {
             should(kuzzle.validation.validationPromise).be.calledOnce();
             should(response).match({
-              status: 400,
+              status: 200,
               error: expected.errorMessages,
               data: {
                 body: expected
