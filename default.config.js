@@ -114,9 +114,6 @@ module.exports = {
   },
 
   server: {
-    http: {
-      maxRequestSize: '1MB'
-    },
     maxConcurrentRequests: 50,
     maxRetainedRequests: 50000,
     warningRetainedRequestsLimit: 5000

@@ -3,6 +3,8 @@ version: '2'
 services:
   proxy:
     image: kuzzleio/proxy
+    volumes:
+      - "../../kuzzle-proxy:/var/app"
     ports:
       - "7511-7513:7511-7513"
 
@@ -20,7 +22,6 @@ services:
       - kuzzle_services__internalCache__node__host=redis
       - kuzzle_services__memoryStorage__node__host=redis
       - kuzzle_services__proxyBroker__host=proxy
-      - FEATURE_COVERAGE=1
 
   redis:
     image: redis:3.2

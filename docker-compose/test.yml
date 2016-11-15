@@ -22,7 +22,6 @@ services:
       - kuzzle_services__internalCache__node__host=redis
       - kuzzle_services__memoryStorage__node__host=redis
       - kuzzle_services__proxyBroker__host=proxy
-      - FEATURE_COVERAGE=1
       # Travis env var must be propagated into the container
       - TRAVIS
       - TRAVIS_COMMIT
