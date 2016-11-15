@@ -42,11 +42,18 @@ describe('Test: data handler', () => {
       .then(response => {
         var importArg = kuzzle.services.list.storageEngine.import.firstCall.args[0];
 
-        should(response).be.eql(['response']);
-        should(kuzzle.services.list.storageEngine.import).be.calledOnce();
-        should(importArg.index).be.exactly('index');
-        should(importArg.collection).be.exactly('collection');
-        should(importArg.data.body).be.eql({bulkData: fixtures.index.collection});
+        try {
+          should(response).be.eql(['response']);
+          should(kuzzle.services.list.storageEngine.import).be.calledOnce();
+          should(importArg.index).be.exactly('index');
+          should(importArg.collection).be.exactly('collection');
+          should(importArg.data.body).be.eql({bulkData: fixtures.index.collection});
+
+          return Promise.resolve();
+        }
+        catch (error) {
+          return Promise.reject(error);
+        }
       });
   });
 
@@ -95,19 +102,26 @@ describe('Test: data handler', () => {
           arg2 = kuzzle.services.list.storageEngine.updateMapping.secondCall.args[0],
           arg3 = kuzzle.services.list.storageEngine.updateMapping.thirdCall.args[0];
 
-        should(kuzzle.services.list.storageEngine.updateMapping).be.calledThrice();
+        try {
+          should(kuzzle.services.list.storageEngine.updateMapping).be.calledThrice();
 
-        should(arg1.index).be.exactly('index1');
-        should(arg1.collection).be.exactly('col1');
-        should(arg1.data.body).be.eql('col1');
+          should(arg1.index).be.exactly('index1');
+          should(arg1.collection).be.exactly('col1');
+          should(arg1.data.body).be.eql('col1');
 
-        should(arg2.index).be.exactly('index1');
-        should(arg2.collection).be.exactly('col2');
-        should(arg2.data.body).be.eql('col2');
+          should(arg2.index).be.exactly('index1');
+          should(arg2.collection).be.exactly('col2');
+          should(arg2.data.body).be.eql('col2');
 
-        should(arg3.index).be.exactly('index2');
-        should(arg3.collection).be.exactly('col1');
-        should(arg3.data.body).be.eql('col1');
+          should(arg3.index).be.exactly('index2');
+          should(arg3.collection).be.exactly('col1');
+          should(arg3.data.body).be.eql('col1');
+
+          return Promise.resolve();
+        }
+        catch (error) {
+          return Promise.reject(error);
+        }
       });
   });
 
@@ -127,8 +141,15 @@ describe('Test: data handler', () => {
 
     return data(req)
       .then(() => {
-        should(kuzzle.services.list.storageEngine.import).be.calledOnce();
-        should(kuzzle.services.list.storageEngine.updateMapping).be.calledOnce();
+        try {
+          should(kuzzle.services.list.storageEngine.import).be.calledOnce();
+          should(kuzzle.services.list.storageEngine.updateMapping).be.calledOnce();
+
+          return Promise.resolve();
+        }
+        catch (error) {
+          return Promise.reject(error);
+        }
       });
   });
 

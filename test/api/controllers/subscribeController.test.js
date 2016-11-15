@@ -35,8 +35,9 @@ describe('Test: subscribe controller', () => {
     });
 
     it('should reject with a response object in case of error', () => {
-      sandbox.stub(kuzzle.hotelClerk, 'addSubscription').rejects();
-      return should(kuzzle.funnel.controllers.subscribe.on(requestObject)).be.rejected();
+      var error = new Error('Mocked error');
+      sandbox.stub(kuzzle.hotelClerk, 'addSubscription').rejects(error);
+      return should(kuzzle.funnel.controllers.subscribe.on(requestObject)).be.rejectedWith(error);
     });
   });
 
@@ -48,8 +49,9 @@ describe('Test: subscribe controller', () => {
     });
 
     it('should reject with a response object in case of error', () => {
-      sandbox.stub(kuzzle.hotelClerk, 'removeSubscription').rejects();
-      return should(kuzzle.funnel.controllers.subscribe.off(requestObject)).be.rejected();
+      var error = new Error('Mocked error');
+      sandbox.stub(kuzzle.hotelClerk, 'removeSubscription').rejects(error);
+      return should(kuzzle.funnel.controllers.subscribe.off(requestObject)).be.rejectedWith(error);
     });
   });
 
@@ -61,8 +63,9 @@ describe('Test: subscribe controller', () => {
     });
 
     it('should reject with a response object in case of error', () => {
-      sandbox.stub(kuzzle.hotelClerk, 'countSubscription').rejects();
-      return should(kuzzle.funnel.controllers.subscribe.count(requestObject)).be.rejected();
+      var error = new Error('Mocked error');
+      sandbox.stub(kuzzle.hotelClerk, 'countSubscription').rejects(error);
+      return should(kuzzle.funnel.controllers.subscribe.count(requestObject)).be.rejectedWith(error);
     });
   });
 
@@ -82,8 +85,9 @@ describe('Test: subscribe controller', () => {
     });
 
     it('should reject with a response object in case of error', () => {
-      sandbox.stub(kuzzle.hotelClerk, 'listSubscriptions').rejects();
-      return should(kuzzle.funnel.controllers.subscribe.list(requestObject)).be.rejected();
+      var error = new Error('Mocked error');
+      sandbox.stub(kuzzle.hotelClerk, 'listSubscriptions').rejects(error);
+      return should(kuzzle.funnel.controllers.subscribe.list(requestObject)).be.rejectedWith(error);
     });
   });
 
@@ -95,8 +99,9 @@ describe('Test: subscribe controller', () => {
     });
 
     it('should reject with a response object in case of error', () => {
-      sandbox.stub(kuzzle.hotelClerk, 'join').rejects();
-      return should(kuzzle.funnel.controllers.subscribe.join(requestObject)).be.rejected();
+      var error = new Error('Mocked error');
+      sandbox.stub(kuzzle.hotelClerk, 'join').rejects(error);
+      return should(kuzzle.funnel.controllers.subscribe.join(requestObject)).be.rejectedWith(error);
     });
 
     it('should trigger a hook and return a promise', function (done) {

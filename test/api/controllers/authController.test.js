@@ -13,6 +13,8 @@ var
   Kuzzle = require.main.require('lib/api/kuzzle'),
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
   ResponseObject = require.main.require('kuzzle-common-objects').Models.responseObject,
+  UnauthorizedError = require.main.require('kuzzle-common-objects').Errors.unauthorizedError,
+  InternalError = require.main.require('kuzzle-common-objects').Errors.internalError,
   Token = require.main.require('lib/api/core/models/security/token'),
   context = {},
   requestObject,
@@ -145,7 +147,7 @@ describe('Test the auth controller', () => {
     });
 
     it('should be able to set authentication expiration', function (done) {
-      this.timeout(1100);
+      this.timeout(1200);
 
       requestObject.data.body.expiresIn = '1s';
 
@@ -239,13 +241,15 @@ describe('Test the auth controller', () => {
     });
 
     it('should emit an error if event emit raise an error', () => {
+      var error = new Error('Mocked error');
+
       sandbox.stub(kuzzle.pluginsManager, 'trigger', event => {
         if (event === 'auth:afterLogout' || event === 'auth:beforeLogout') {
-          return Promise.reject();
+          return Promise.reject(error);
         }
       });
 
-      return should(kuzzle.funnel.controllers.auth.logout(requestObject, context)).be.rejected();
+      return should(kuzzle.funnel.controllers.auth.logout(requestObject, context)).be.rejectedWith(error);
     });
 
     it('should expire token', () => {
@@ -262,13 +266,15 @@ describe('Test the auth controller', () => {
     });
 
     it('should emit an error if token cannot be expired', () => {
+      var error = new Error('Mocked error');
       kuzzle.repositories.token.expire.restore();
-      sandbox.stub(kuzzle.repositories.token, 'expire').rejects();
-      return should(kuzzle.funnel.controllers.auth.logout(requestObject, context)).be.rejected();
+      sandbox.stub(kuzzle.repositories.token, 'expire').rejects(error);
+      return should(kuzzle.funnel.controllers.auth.logout(requestObject, context)).be.rejectedWith(error);
     });
 
     it('should not remove room registration for connexion if there is no id', () => {
-      var spy = sandbox.stub(kuzzle.hotelClerk, 'removeCustomerFromAllRooms').rejects();
+      var error = new Error('Mocked error');
+      var spy = sandbox.stub(kuzzle.hotelClerk, 'removeCustomerFromAllRooms').rejects(error);
 
       delete context.connection.id;
       return kuzzle.funnel.controllers.auth.logout(requestObject, context)
@@ -337,7 +343,8 @@ describe('Test the auth controller', () => {
     it('should return a valid response if the token is not valid', () => {
       sandbox.stub(kuzzle.repositories.token, 'verifyToken', arg => {
         should(arg).be.eql(requestObject.data.body.token);
-        return Promise.reject({status: 401, message: 'foobar'});
+
+        return Promise.reject(new UnauthorizedError('foobar'));
       });
 
       return kuzzle.funnel.controllers.auth.checkToken(requestObject)
@@ -350,12 +357,13 @@ describe('Test the auth controller', () => {
     });
 
     it('should return a rejected promise if an error occurs', () => {
+      var error = new InternalError('Foobar');
       sandbox.stub(kuzzle.repositories.token, 'verifyToken', arg => {
         should(arg).be.eql(requestObject.data.body.token);
-        return Promise.reject({status: 500});
+        return Promise.reject(error);
       });
 
-      return should(kuzzle.funnel.controllers.auth.checkToken(requestObject)).be.rejected();
+      return should(kuzzle.funnel.controllers.auth.checkToken(requestObject)).be.rejectedWith(error);
     });
   });
 

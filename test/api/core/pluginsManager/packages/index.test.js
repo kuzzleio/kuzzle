@@ -64,24 +64,31 @@ describe('plugins/packages/index.js', () => {
 
       return packages.definitions()
         .then(result => {
-          should(result).match({
-            plugin1: { prop: 'blah', config: {} },
-            plugin2: { prop: 666 },
-            plugin3: { prop: true }
-          });
+          try {
+            should(result).match({
+              plugin1: { prop: 'blah', config: {} },
+              plugin2: { prop: 666 },
+              plugin3: { prop: true }
+            });
 
-          should(Package)
-            .be.calledThrice()
-            .be.calledWith(kuzzle, 'plugin1')
-            .be.calledWith(kuzzle, 'plugin2')
-            .be.calledWith(kuzzle, 'plugin4');
+            should(Package)
+              .be.calledThrice()
+              .be.calledWith(kuzzle, 'plugin1')
+              .be.calledWith(kuzzle, 'plugin2')
+              .be.calledWith(kuzzle, 'plugin4');
 
-          should(PluginPackageMock.prototype.localConfiguration)
-            .be.calledThrice();
+            should(PluginPackageMock.prototype.localConfiguration)
+              .be.calledThrice();
 
-          should(kuzzle.internalEngine.search)
-            .be.calledOnce()
-            .be.calledWith('plugins');
+            should(kuzzle.internalEngine.search)
+              .be.calledOnce()
+              .be.calledWith('plugins');
+
+            return Promise.resolve();
+          }
+          catch (error) {
+            return Promise.reject(error);
+          }
         });
     });
   });
@@ -103,20 +110,27 @@ describe('plugins/packages/index.js', () => {
 
       return packages.bootstrap()
         .then(() => {
-          should(packages.definitions)
-            .be.calledOnce();
+          try {
+            should(packages.definitions)
+              .be.calledOnce();
 
-          should(Package)
-            .have.callCount(4);
+            should(Package)
+              .have.callCount(4);
 
-          should(PluginPackageMock.prototype.needsToBeDeleted)
-            .have.callCount(4);
+            should(PluginPackageMock.prototype.needsToBeDeleted)
+              .have.callCount(4);
 
-          should(PluginPackageMock.prototype.delete)
-            .be.calledOnce();
+            should(PluginPackageMock.prototype.delete)
+              .be.calledOnce();
 
-          should(PluginPackageMock.prototype.install)
-            .be.calledOnce();
+            should(PluginPackageMock.prototype.install)
+              .be.calledOnce();
+
+            return Promise.resolve();
+          }
+          catch (error) {
+            return Promise.reject(error);
+          }
         });
     });
 
@@ -128,13 +142,20 @@ describe('plugins/packages/index.js', () => {
 
       packages.bootstrap()
         .catch(e => {
-          should(PluginPackagesManager.__get__('console.error'))
-            .be.calledOnce()
-            .be.calledWith(error, error.stack);
+          try {
+            should(PluginPackagesManager.__get__('console.error'))
+              .be.calledOnce()
+              .be.calledWith(error, error.stack);
 
-          should(e).be.exactly(error);
+            should(e).be.exactly(error);
 
-          done();
+            done();
+
+            return Promise.resolve();
+          }
+          catch (err) {
+            return Promise.reject(err);
+          }
         });
     });
   });
