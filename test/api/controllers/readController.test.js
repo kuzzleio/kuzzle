@@ -9,6 +9,8 @@ var
 
 describe('Test: read controller', () => {
   var
+    stored,
+    realtime,
     controller,
     kuzzle,
     requestObject;
