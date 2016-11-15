@@ -393,9 +393,16 @@ describe('Test plugins manager run', () => {
     return pluginsManager.run()
       .then(() => {
         pm2Mock.triggerOnBus('initialized');
-        should(pluginsManager.workers[params.plugins.common.workerPrefix + 'testPlugin']).be.an.Object();
-        should(pluginsManager.workers[params.plugins.common.workerPrefix + 'testPlugin'].pmIds).be.an.Object();
-        should(pluginsManager.workers[params.plugins.common.workerPrefix + 'testPlugin'].pmIds.getSize()).be.equal(1);
+        try {
+          should(pluginsManager.workers[params.plugins.common.workerPrefix + 'testPlugin']).be.an.Object();
+          should(pluginsManager.workers[params.plugins.common.workerPrefix + 'testPlugin'].pmIds).be.an.Object();
+          should(pluginsManager.workers[params.plugins.common.workerPrefix + 'testPlugin'].pmIds.getSize()).be.equal(1);
+      
+          return Promise.resolve();
+        }
+        catch (error) {
+          return Promise.reject(error);
+        }
       });
   });
 
@@ -406,13 +413,20 @@ describe('Test plugins manager run', () => {
 
     return pluginsManager.run()
       .then(() => {
-        pm2Mock.triggerOnBus('initialized');
-        should(pluginsManager.workers[params.plugins.common.workerPrefix + 'testPlugin']).be.an.Object();
-        should(pluginsManager.workers[params.plugins.common.workerPrefix + 'testPlugin'].pmIds).be.an.Object();
-        should(pluginsManager.workers[params.plugins.common.workerPrefix + 'testPlugin'].pmIds.getSize()).be.equal(1);
+        try {
+          pm2Mock.triggerOnBus('initialized');
+          should(pluginsManager.workers[params.plugins.common.workerPrefix + 'testPlugin']).be.an.Object();
+          should(pluginsManager.workers[params.plugins.common.workerPrefix + 'testPlugin'].pmIds).be.an.Object();
+          should(pluginsManager.workers[params.plugins.common.workerPrefix + 'testPlugin'].pmIds.getSize()).be.equal(1);
 
-        pm2Mock.triggerOnBus('process:event');
-        should.not.exist(pluginsManager.workers[params.plugins.common.workerPrefix + 'testPlugin']);
+          pm2Mock.triggerOnBus('process:event');
+          should.not.exist(pluginsManager.workers[params.plugins.common.workerPrefix + 'testPlugin']);
+      
+          return Promise.resolve();
+        }
+        catch (error) {
+          return Promise.reject(error);
+        }
       });
   });
 
@@ -427,19 +441,26 @@ describe('Test plugins manager run', () => {
 
     return pluginsManager.run()
       .then(() => {
-        pm2Mock.triggerOnBus('initialized');
+        try {
+          pm2Mock.triggerOnBus('initialized');
 
-        should(pluginsManager.workers[params.plugins.common.workerPrefix + 'testPlugin']).be.an.Object();
-        should(pluginsManager.workers[params.plugins.common.workerPrefix + 'testPlugin'].pmIds).be.an.Object();
-        should(pluginsManager.workers[params.plugins.common.workerPrefix + 'testPlugin'].pmIds.getSize()).be.equal(1);
+          should(pluginsManager.workers[params.plugins.common.workerPrefix + 'testPlugin']).be.an.Object();
+          should(pluginsManager.workers[params.plugins.common.workerPrefix + 'testPlugin'].pmIds).be.an.Object();
+          should(pluginsManager.workers[params.plugins.common.workerPrefix + 'testPlugin'].pmIds.getSize()).be.equal(1);
 
-        triggerWorkers.call(pluginsManager, 'foo:bar', {
-          'firstName': 'Ada'
-        });
+          triggerWorkers.call(pluginsManager, 'foo:bar', {
+            'firstName': 'Ada'
+          });
 
-        should(pm2Mock.getSentMessages()).be.an.Array().and.length(1);
-        should(pm2Mock.getSentMessages()[0]).be.an.Object();
-        should(pm2Mock.getSentMessages()[0].data.message.firstName).be.equal('Ada');
+          should(pm2Mock.getSentMessages()).be.an.Array().and.length(1);
+          should(pm2Mock.getSentMessages()[0]).be.an.Object();
+          should(pm2Mock.getSentMessages()[0].data.message.firstName).be.equal('Ada');
+      
+          return Promise.resolve();
+        }
+        catch (error) {
+          return Promise.reject(error);
+        }
       });
   });
 

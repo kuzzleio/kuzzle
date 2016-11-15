@@ -13,6 +13,10 @@ services:
       - "..:/var/app"
       - "./scripts/run-dev.sh:/run.sh"
       - "./config/pm2-dev.json:/config/pm2.json"
+    depends_on:
+      - proxy
+      - redis
+      - elasticsearch
     ports:
       - "8080:8080"
     environment:
@@ -20,6 +24,7 @@ services:
       - kuzzle_services__internalCache__node__host=redis
       - kuzzle_services__memoryStorage__node__host=redis
       - kuzzle_services__proxyBroker__host=proxy
+      - NODE_ENV=development
       - FEATURE_COVERAGE=1
 
   redis:

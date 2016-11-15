@@ -207,49 +207,55 @@ describe('Test: admin controller', () => {
             engine = kuzzle.services.list.storageEngine,
             trigger = kuzzle.pluginsManager.trigger;
 
-          should(kuzzle.repositories.user.load).be.calledOnce();
-          should(kuzzle.repositories.user.load).be.calledWith(42);
+          try {
+            should(kuzzle.repositories.user.load).be.calledOnce();
+            should(kuzzle.repositories.user.load).be.calledWith(42);
 
-          should(isActionAllowedStub).have.callCount(5);
+            should(isActionAllowedStub).have.callCount(5);
 
-          should(trigger).be.calledTwice();
-          should(trigger.firstCall).be.calledWith('data:beforeDeleteIndexes');
-          should(trigger.firstCall.args[1]).be.an.instanceOf(RequestObject);
-          should(trigger.firstCall.args[1]).match({
-            data: {
-              body: {
-                indexes: ['a', 'e', 'i']
+            should(trigger).be.calledTwice();
+            should(trigger.firstCall).be.calledWith('data:beforeDeleteIndexes');
+            should(trigger.firstCall.args[1]).be.an.instanceOf(RequestObject);
+            should(trigger.firstCall.args[1]).match({
+              data: {
+                body: {
+                  indexes: ['a', 'e', 'i']
+                }
               }
-            }
-          });
+            });
 
-          should(engine.deleteIndexes).be.calledOnce();
-          should(engine.deleteIndexes.firstCall.args[0]).be.an.instanceOf(RequestObject);
-          should(engine.deleteIndexes.firstCall.args[0]).match({
-            data: {
-              body: {
-                indexes: ['a', 'e', 'i']
+            should(engine.deleteIndexes).be.calledOnce();
+            should(engine.deleteIndexes.firstCall.args[0]).be.an.instanceOf(RequestObject);
+            should(engine.deleteIndexes.firstCall.args[0]).match({
+              data: {
+                body: {
+                  indexes: ['a', 'e', 'i']
+                }
               }
-            }
-          });
+            });
 
-          should(kuzzle.indexCache.remove).be.calledThrice();
-          should(kuzzle.indexCache.remove.getCall(0)).be.calledWith('a');
-          should(kuzzle.indexCache.remove.getCall(1)).be.calledWith('e');
-          should(kuzzle.indexCache.remove.getCall(2)).be.calledWith('i');
+            should(kuzzle.indexCache.remove).be.calledThrice();
+            should(kuzzle.indexCache.remove.getCall(0)).be.calledWith('a');
+            should(kuzzle.indexCache.remove.getCall(1)).be.calledWith('e');
+            should(kuzzle.indexCache.remove.getCall(2)).be.calledWith('i');
 
-          should(trigger.secondCall).be.calledWith('data:afterDeleteIndexes');
+            should(trigger.secondCall).be.calledWith('data:afterDeleteIndexes');
 
-          should(response).be.an.instanceOf(ResponseObject);
-          should(response).match({
-            status: 200,
-            error: null,
-            data: {
-              body: {
-                deleted: ['a', 'e', 'i']
+            should(response).be.an.instanceOf(ResponseObject);
+            should(response).match({
+              status: 200,
+              error: null,
+              data: {
+                body: {
+                  deleted: ['a', 'e', 'i']
+                }
               }
-            }
-          });
+            });
+            return Promise.resolve();
+          }
+          catch (error) {
+            return Promise.reject(error);
+          }
         });
     });
 
@@ -615,10 +621,16 @@ describe('Test: admin controller', () => {
 
       return AdminController.__get__('resetRoles').call(mock)
         .then(() => {
-          should(createOrReplace).have.callCount(3);
-          should(createOrReplace.firstCall).be.calledWith('roles', 'admin', 'admin');
-          should(createOrReplace.secondCall).be.calledWith('roles', 'default', 'default');
-          should(createOrReplace.thirdCall).be.calledWith('roles', 'anonymous', 'anonymous');
+          try {
+            should(createOrReplace).have.callCount(3);
+            should(createOrReplace.firstCall).be.calledWith('roles', 'admin', 'admin');
+            should(createOrReplace.secondCall).be.calledWith('roles', 'default', 'default');
+            should(createOrReplace.thirdCall).be.calledWith('roles', 'anonymous', 'anonymous');
+            return Promise.resolve();
+          }
+          catch (error) {
+            return Promise.reject(error);
+          }
         });
     });
   });
@@ -631,15 +643,22 @@ describe('Test: admin controller', () => {
 
       return AdminController.__get__('resetProfiles').call(mock)
         .then(() => {
-          should(createOrReplace).have.callCount(3);
-          should(createOrReplace.firstCall).be.calledWithMatch('profiles', 'admin', {
-            policies: [{
-              roleId: 'admin',
-              allowInternalIndex: true
-            }]
-          });
-          should(createOrReplace.secondCall).be.calledWithMatch('profiles', 'anonymous', {policies: [{roleId: 'anonymous'}]});
-          should(createOrReplace.thirdCall).be.calledWithMatch('profiles', 'default', {policies: [{roleId: 'default'}]});
+
+          try {
+            should(createOrReplace).have.callCount(3);
+            should(createOrReplace.firstCall).be.calledWithMatch('profiles', 'admin', {
+              policies: [{
+                roleId: 'admin',
+                allowInternalIndex: true
+              }]
+            });
+            should(createOrReplace.secondCall).be.calledWithMatch('profiles', 'anonymous', {policies: [{roleId: 'anonymous'}]});
+            should(createOrReplace.thirdCall).be.calledWithMatch('profiles', 'default', {policies: [{roleId: 'default'}]});
+            return Promise.resolve();
+          }
+          catch (error) {
+            return Promise.reject(error);
+          }
         });
     });
   });
@@ -650,20 +669,26 @@ describe('Test: admin controller', () => {
 
       return adminController.getSpecifications(requestObject)
         .then(response => {
-          should(kuzzle.pluginsManager.trigger).be.calledTwice();
-          should(kuzzle.pluginsManager.trigger.firstCall).be.calledWith('data:beforeGetSpecifications', requestObject);
-          should(kuzzle.pluginsManager.trigger.secondCall).be.calledWith('data:afterGetSpecifications');
-          should(kuzzle.internalEngine.get).be.calledOnce();
-          should(kuzzle.internalEngine.get).be.calledWithMatch('validations', `${index}#${collection}`);
-          should(response).match({
-            status: 200,
-            error: null,
-            data: {
-              body: {
-                foo: 'bar'
+          try {
+            should(kuzzle.pluginsManager.trigger).be.calledTwice();
+            should(kuzzle.pluginsManager.trigger.firstCall).be.calledWith('data:beforeGetSpecifications', requestObject);
+            should(kuzzle.pluginsManager.trigger.secondCall).be.calledWith('data:afterGetSpecifications');
+            should(kuzzle.internalEngine.get).be.calledOnce();
+            should(kuzzle.internalEngine.get).be.calledWithMatch('validations', `${index}#${collection}`);
+            should(response).match({
+              status: 200,
+              error: null,
+              data: {
+                body: {
+                  foo: 'bar'
+                }
               }
-            }
-          });
+            });
+            return Promise.resolve();
+          }
+          catch (error) {
+            return Promise.reject(error);
+          }
         });
     });
   });
@@ -692,20 +717,27 @@ describe('Test: admin controller', () => {
 
       return adminController.updateSpecifications(requestObject)
         .then(response => {
-          should(kuzzle.pluginsManager.trigger).be.calledThrice();
-          should(kuzzle.pluginsManager.trigger.firstCall).be.calledWith('data:beforeUpdateSpecifications', requestObject);
-          should(kuzzle.pluginsManager.trigger.secondCall).be.calledWith('data:afterUpdateSpecifications');
-          should(kuzzle.internalEngine.refresh).be.calledOnce();
-          should(kuzzle.validation.curateSpecification).be.called();
-          should(kuzzle.internalEngine.createOrReplace).be.calledOnce();
-          should(kuzzle.internalEngine.createOrReplace).be.calledWithMatch('validations', `${index}#${collection}`);
-          should(response).match({
-            status: 200,
-            error: null,
-            data: {
-              body: requestObject.data.body
-            }
-          });
+          try {
+            should(kuzzle.pluginsManager.trigger).be.calledThrice();
+            should(kuzzle.pluginsManager.trigger.firstCall).be.calledWith('data:beforeUpdateSpecifications', requestObject);
+            should(kuzzle.pluginsManager.trigger.secondCall).be.calledWith('data:afterUpdateSpecifications');
+            should(kuzzle.internalEngine.refresh).be.calledOnce();
+            should(kuzzle.validation.curateSpecification).be.called();
+            should(kuzzle.internalEngine.createOrReplace).be.calledOnce();
+            should(kuzzle.internalEngine.createOrReplace).be.calledWithMatch('validations', `${index}#${collection}`);
+            should(response).match({
+              status: 200,
+              error: null,
+              data: {
+                body: requestObject.data.body
+              }
+            });
+
+            return Promise.resolve();
+          }
+          catch (error) {
+            return Promise.reject(error);
+          }
         });
     });
 
@@ -734,20 +766,23 @@ describe('Test: admin controller', () => {
       kuzzle.validation.curateSpecification = sandbox.stub();
 
       return adminController.updateSpecifications(requestObject)
-        .catch(response => {
-          should(kuzzle.pluginsManager.trigger).be.calledOnce();
-          should(kuzzle.pluginsManager.trigger.firstCall).be.calledWith('data:beforeUpdateSpecifications', requestObject);
-          should(kuzzle.internalEngine.refresh).not.be.called();
-          should(kuzzle.validation.curateSpecification).not.be.called();
-          should(kuzzle.internalEngine.createOrReplace).not.be.called();
-          should(response).match({
-            status: 400,
-            message: 'Some errors with provided specifications.',
-            error: [ 'bad bad is a bad type !' ],
-            data: {
-              body: requestObject.data.body
-            }
-          });
+        .catch(error => {
+          try {
+            should(kuzzle.pluginsManager.trigger).be.calledOnce();
+            should(kuzzle.pluginsManager.trigger.firstCall).be.calledWith('data:beforeUpdateSpecifications', requestObject);
+            should(kuzzle.internalEngine.refresh).not.be.called();
+            should(kuzzle.validation.curateSpecification).not.be.called();
+            should(kuzzle.internalEngine.createOrReplace).not.be.called();
+
+            should(error).be.an.instanceOf(BadRequestError);
+            should(error.message).be.exactly('Some errors with provided specifications.');
+            should(error.details).match([ 'bad bad is a bad type !' ]);
+
+            return Promise.resolve();
+          }
+          catch (er) {
+            return Promise.reject(er);
+          }
         });
     });
   });
@@ -775,16 +810,23 @@ describe('Test: admin controller', () => {
 
       return adminController.validateSpecifications(requestObject)
         .then(response => {
-          should(kuzzle.pluginsManager.trigger).be.calledTwice();
-          should(kuzzle.pluginsManager.trigger.firstCall).be.calledWith('data:beforeValidateSpecifications', requestObject);
-          should(kuzzle.pluginsManager.trigger.secondCall).be.calledWith('data:afterValidateSpecifications');
-          should(response).match({
-            status: 200,
-            error: null,
-            data: {
-              body: requestObject.data.body
-            }
-          });
+          try {
+            should(kuzzle.pluginsManager.trigger).be.calledTwice();
+            should(kuzzle.pluginsManager.trigger.firstCall).be.calledWith('data:beforeValidateSpecifications', requestObject);
+            should(kuzzle.pluginsManager.trigger.secondCall).be.calledWith('data:afterValidateSpecifications');
+            should(response).match({
+              status: 200,
+              error: null,
+              data: {
+                body: requestObject.data.body
+              }
+            });
+
+            return Promise.resolve();
+          }
+          catch (error) {
+            return Promise.reject(error);
+          }
         });
     });
 
@@ -815,21 +857,29 @@ describe('Test: admin controller', () => {
 
       return adminController.validateSpecifications(requestObject)
         .then(response => {
-          should(kuzzle.pluginsManager.trigger).be.calledTwice();
-          should(kuzzle.pluginsManager.trigger.firstCall).be.calledWith('data:beforeValidateSpecifications', requestObject);
-          should(kuzzle.pluginsManager.trigger.secondCall).be.calledWith('data:afterValidateSpecifications');
-          should(response).match({
-            status: 400,
-            error: {
-              message: 'Internal error',
-              _source: {
-                body: requestObject.data.body
+
+          try {
+            should(kuzzle.pluginsManager.trigger).be.calledTwice();
+            should(kuzzle.pluginsManager.trigger.firstCall).be.calledWith('data:beforeValidateSpecifications', requestObject);
+            should(kuzzle.pluginsManager.trigger.secondCall).be.calledWith('data:afterValidateSpecifications');
+            should(response).match({
+              status: 400,
+              error: {
+                message: 'Internal error',
+                _source: {
+                  body: requestObject.data.body
+                }
+              },
+              data: {
+                body: null
               }
-            },
-            data: {
-              body: null
-            }
-          });
+            });
+
+            return Promise.resolve();
+          }
+          catch (error) {
+            return Promise.reject(error);
+          }
         });
     });
   });
@@ -844,11 +894,19 @@ describe('Test: admin controller', () => {
 
       return adminController.deleteSpecifications(requestObject)
         .then(response => {
-          should(kuzzle.internalEngine.delete).be.calledOnce();
-          should(kuzzle.pluginsManager.trigger).be.calledThrice();
-          should(kuzzle.pluginsManager.trigger.firstCall).be.calledWith('data:beforeDeleteSpecifications', requestObject);
-          should(kuzzle.pluginsManager.trigger.secondCall).be.calledWith('data:afterDeleteSpecifications');
-          should(response).match({status: 200});
+
+          try {
+            should(kuzzle.internalEngine.delete).be.calledOnce();
+            should(kuzzle.pluginsManager.trigger).be.calledThrice();
+            should(kuzzle.pluginsManager.trigger.firstCall).be.calledWith('data:beforeDeleteSpecifications', requestObject);
+            should(kuzzle.pluginsManager.trigger.secondCall).be.calledWith('data:afterDeleteSpecifications');
+            should(response).match({status: 200});
+
+            return Promise.resolve();
+          }
+          catch (error) {
+            return Promise.reject(error);
+          }
         });
     });
     it('should resolves if there is no specification set', () => {
@@ -857,11 +915,18 @@ describe('Test: admin controller', () => {
 
       return adminController.deleteSpecifications(requestObject)
         .then(response => {
-          should(kuzzle.internalEngine.delete).not.be.called();
-          should(kuzzle.pluginsManager.trigger).be.calledThrice();
-          should(kuzzle.pluginsManager.trigger.firstCall).be.calledWith('data:beforeDeleteSpecifications', requestObject);
-          should(kuzzle.pluginsManager.trigger.secondCall).be.calledWith('data:afterDeleteSpecifications');
-          should(response).match({status: 200});
+          try {
+            should(kuzzle.internalEngine.delete).not.be.called();
+            should(kuzzle.pluginsManager.trigger).be.calledThrice();
+            should(kuzzle.pluginsManager.trigger.firstCall).be.calledWith('data:beforeDeleteSpecifications', requestObject);
+            should(kuzzle.pluginsManager.trigger.secondCall).be.calledWith('data:afterDeleteSpecifications');
+            should(response).match({status: 200});
+
+            return Promise.resolve();
+          }
+          catch (error) {
+            return Promise.reject(error);
+          }
         });
     });
   });

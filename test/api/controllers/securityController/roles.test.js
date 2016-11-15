@@ -25,7 +25,7 @@ describe('Test: security controller - roles', () => {
       .then(() => {
         sandbox.stub(kuzzle.repositories.role, 'validateAndSaveRole', role => {
           if (role._id === 'alreadyExists') {
-            return Promise.reject();
+            return Promise.reject(new Error('Mocked error'));
           }
 
           return Promise.resolve(role);
@@ -99,7 +99,7 @@ describe('Test: security controller - roles', () => {
     it('should reject with a response object in case of error', () => {
       return should(kuzzle.funnel.controllers.security.createOrReplaceRole(new RequestObject({
         body: {_id: 'alreadyExists', indexes: {}}
-      }))).be.rejected();
+      }))).be.rejectedWith(new Error('Mocked error'));
     });
   });
 
@@ -109,7 +109,7 @@ describe('Test: security controller - roles', () => {
         body: {_id: 'alreadyExists', controllers: {}}
       }));
 
-      return should(promise).be.rejected();
+      return should(promise).be.rejectedWith(new Error('Mocked error'));
     });
 
     it('should resolve to a responseObject on a createRole call', () => {

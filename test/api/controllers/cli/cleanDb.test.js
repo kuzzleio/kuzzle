@@ -16,7 +16,14 @@ describe('Test: clean database', () => {
   it('should call kuzzle.resetStorage', () => {
     return cleanDb()
       .then(() => {
-        should(kuzzle.resetStorage).be.calledOnce();
+        try {
+          should(kuzzle.resetStorage).be.calledOnce();
+
+          return Promise.resolve();
+        }
+        catch (error) {
+          return Promise.reject(error);
+        }
       });
   });
 
