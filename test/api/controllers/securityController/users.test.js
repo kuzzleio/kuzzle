@@ -82,10 +82,11 @@ describe('Test: security controller - users', () => {
     });
 
     it('should reject with a response object in case of error', () => {
-      sandbox.stub(kuzzle.repositories.user, 'search').rejects();
+      var error = new Error('Mocked error');
+      sandbox.stub(kuzzle.repositories.user, 'search').rejects(error);
       return should(kuzzle.funnel.controllers.security.searchUsers(new RequestObject({
         body: {hydrate: false}
-      }))).be.rejected();
+      }))).be.rejectedWith(error);
     });
   });
 
@@ -107,10 +108,11 @@ describe('Test: security controller - users', () => {
     });
 
     it('should reject with a response object in case of error', () => {
-      sandbox.stub(kuzzle.repositories.user, 'delete').rejects();
+      var error = new Error('Mocked error');
+      sandbox.stub(kuzzle.repositories.user, 'delete').rejects(error);
       return should(kuzzle.funnel.controllers.security.deleteUser(new RequestObject({
         body: {_id: 'test'}
-      }))).be.rejected();
+      }))).be.rejectedWith(error);
     });
   });
 
@@ -149,6 +151,46 @@ describe('Test: security controller - users', () => {
     it('should reject the promise if no profile is given', () => {
       return should(kuzzle.funnel.controllers.security.createUser(new RequestObject({
         body: {}
+      })))
+        .be.rejected();
+    });
+  });
+
+  describe('#createRestrictedUser', () => {
+    it('should return a valid response', () => {
+      var mock = sandbox.mock(kuzzle.repositories.user).expects('persist').once().resolves({_id: 'test'});
+      sandbox.stub(kuzzle.repositories.user, 'hydrate').resolves();
+
+      return kuzzle.funnel.controllers.security.createRestrictedUser(new RequestObject({
+        body: { _id: 'test', name: 'John Doe' }
+      }))
+        .then(response => {
+          mock.verify();
+          should(response).be.an.instanceOf(ResponseObject);
+          should(mock.getCall(0).args[1]).match({database: {method: 'create'}});
+        });
+    });
+
+    it('should compute a user id if none is provided', () => {
+      var
+        mockPersist = sandbox.mock(kuzzle.repositories.user).expects('persist').once().resolves({_id: 'test'}),
+        mockHydrate = sandbox.mock(kuzzle.repositories.user).expects('hydrate').once().resolves();
+
+      return kuzzle.funnel.controllers.security.createRestrictedUser(new RequestObject({
+        body: { name: 'John Doe' }
+      }))
+        .then(response => {
+          mockHydrate.verify();
+          mockPersist.verify();
+          should(response).be.an.instanceOf(ResponseObject);
+          should(mockPersist.getCall(0).args[1]).match({database: {method: 'create'}});
+          should(mockHydrate.getCall(0).args[1]._id).match(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
+        });
+    });
+
+    it('should reject the promise if a profile is given', () => {
+      return should(kuzzle.funnel.controllers.security.createRestrictedUser(new RequestObject({
+        body: { profileIds: ['foo']}
       })))
         .be.rejected();
     });

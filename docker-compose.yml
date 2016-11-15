@@ -1,23 +1,26 @@
-proxy:
-  image: kuzzleio/proxy:1.0.0-RC6
-  ports:
-    - "7511-7513:7511-7513"
+version: '2'
 
-kuzzle:
-  image: kuzzleio/kuzzle:1.0.0-RC7
-  links:
-    - elasticsearch
-    - redis
-    - proxy
-  environment:
-    - kuzzle_services__db__host=elasticsearch
-    - kuzzle_services__internalCache__node__host=redis
-    - kuzzle_services__memoryStorage__node__host=redis
-    - kuzzle_services__proxyBroker__host=proxy
+services:
+  proxy:
+    image: kuzzleio/proxy
+    ports:
+      - "7511-7513:7511-7513"
 
-redis:
-  image: redis:3.2-alpine
+  kuzzle:
+    image: kuzzleio/kuzzle
+    depends_on:
+      - proxy
+      - redis
+      - elasticsearch
+    environment:
+      - kuzzle_services__db__host=elasticsearch
+      - kuzzle_services__internalCache__node__host=redis
+      - kuzzle_services__memoryStorage__node__host=redis
+      - kuzzle_services__proxyBroker__host=proxy
+      - NODE_ENV=production
 
-elasticsearch:
-  image: kuzzleio/elasticsearch:2.3.4
+  redis:
+    image: redis:3.2
 
+  elasticsearch:
+    image: elasticsearch:2.3.4

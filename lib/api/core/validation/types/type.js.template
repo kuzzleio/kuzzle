@@ -1,0 +1,35 @@
+var
+  BaseConstructor = require('../baseType');
+
+/**
+ * @constructor
+ */
+function MyNewType () {
+  this.typeName = 'my_new_type';
+  this.allowChildren = false;
+  this.allowedTypeOptions = [];
+}
+
+util.inherits(MyNewType, BaseConstructor);
+
+/**
+ * @param {TypeOptions} typeOptions
+ * @param {*} fieldValue
+ * @param {string[]} errorMessages
+ */
+MyNewType.prototype.validate = function validate (typeOptions, fieldValue, errorMessages) {
+  // TODO
+  return true;
+};
+
+/**
+ * @param {TypeOptions} typeOptions
+ * @return {boolean|TypeOptions}
+ * @throws InternalError
+ */
+MyNewType.prototype.validateFieldSpecification = function validateFieldSpecification (typeOptions) {
+  // TODO
+  return true;
+};
+
+module.exports = MyNewType;

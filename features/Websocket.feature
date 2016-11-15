@@ -84,6 +84,16 @@ Feature: Test websocket API
     Then I truncate the collection
     And I count 0 documents
 
+  @usingREST
+  Scenario: Search with scroll documents
+    When I write the document "documentGrace"
+    When I write the document "documentGrace"
+    When I write the document "documentGrace"
+    When I write the document "documentGrace"
+    And I refresh the index
+    Then I find a document with "Grace" in field "firstName" with scroll "5m"
+    And I be able to scroll previous search
+
   @usingWebsocket
   Scenario: Change mapping
     When I write the document "documentGrace"
@@ -210,6 +220,17 @@ Feature: Test websocket API
     And I list "stored" data collections
     Then I can find a stored collection kuzzle-collection-test
 
+  @usingWebsocket
+  Scenario: Index and collection existence
+    When I check if index "%kuzzle" exists
+    Then The result should match the json true
+    When I check if index "idontexist" exists
+    Then The result should match the json false
+    When I check if collection "users" exists on index "%kuzzle"
+    Then The result should match the json true
+    When I check if collection "idontexist" exists on index "%kuzzle"
+    Then The result should match the json false
+
   @usingWebsocket @unsubscribe
   Scenario: list known realtime collections
     Given A room subscription listening to "lastName" having value "Hopper"
@@ -255,6 +276,10 @@ Feature: Test websocket API
     Then I can't write the document
     Then I check the JWT Token
     And The token is invalid
+
+  @usingWebsocket @cleanSecurity
+  Scenario: create restricted user
+    Then I create a restricted user "restricteduser1" with id "restricteduser1-id"
 
   @usingWebsocket @cleanSecurity
   Scenario: Create/get/search/update/delete role
@@ -1396,4 +1421,48 @@ Feature: Test websocket API
     When I update the document with value "Josepha" in field "firstName"
     Then I find a document with "josepha" in field "firstName"
 
+  @usingREST @cleanValidations
+  Scenario: Validation - getSpecification & updateSpecification
+    When There is no specifications for index "kuzzle-test-index" and collection "kuzzle-collection-test"
+    Then I put a not valid specification for index "kuzzle-test-index" and collection "kuzzle-collection-test"
+    And There is an error message
+    When There is no specifications for index "kuzzle-test-index" and collection "kuzzle-collection-test"
+    Then I put a valid specification for index "kuzzle-test-index" and collection "kuzzle-collection-test"
+    And There is no error message
+    And There is a specification for index "kuzzle-test-index" and collection "kuzzle-collection-test"
+
+  @usingREST @cleanValidations
+  Scenario: Validation - validateSpecification
+    When I post a valid specification
+    Then There is no error message
+    When I post an invalid specification
+    Then There is an error message
+
+  @usingREST @cleanValidations
+  Scenario: Validation - validateDocument
+    When I put a valid specification for index "kuzzle-test-index" and collection "kuzzle-collection-test"
+    Then There is no error message
+    When I post a valid document
+    Then There is no error message
+    When I post an invalid document
+    Then There is an error message
+
+  @usingREST @cleanValidations
+  Scenario: Validation - validateDocument
+    When I put a valid specification for index "kuzzle-test-index" and collection "kuzzle-collection-test"
+    Then There is no error message
+    When I post a valid document
+    Then There is no error message
+    When I post an invalid document
+    Then There is an error message
+
+  @usingREST @cleanValidations
+  Scenario: Validation - deleteSpecifications
+    When I put a valid specification for index "kuzzle-test-index" and collection "kuzzle-collection-test"
+    Then There is no error message
+    When I delete the specifications for index "kuzzle-test-index" and collection "kuzzle-collection-test"
+    Then There is no error message
+    And There is no specifications for index "kuzzle-test-index" and collection "kuzzle-collection-test"
+    When I delete the specifications again for index "kuzzle-test-index" and collection "kuzzle-collection-test"
+    Then There is no error message
 

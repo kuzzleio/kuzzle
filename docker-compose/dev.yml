@@ -1,0 +1,34 @@
+version: '2'
+
+services:
+  proxy:
+    image: kuzzleio/proxy
+    ports:
+      - "7511-7513:7511-7513"
+
+  kuzzle:
+    image: kuzzleio/dev
+    command: sh -c 'chmod 755 /run.sh && /run.sh'
+    volumes:
+      - "..:/var/app"
+      - "./scripts/run-dev.sh:/run.sh"
+      - "./config/pm2-dev.json:/config/pm2.json"
+    depends_on:
+      - proxy
+      - redis
+      - elasticsearch
+    ports:
+      - "8080:8080"
+    environment:
+      - kuzzle_services__db__host=elasticsearch
+      - kuzzle_services__internalCache__node__host=redis
+      - kuzzle_services__memoryStorage__node__host=redis
+      - kuzzle_services__proxyBroker__host=proxy
+      - NODE_ENV=development
+      - FEATURE_COVERAGE=1
+
+  redis:
+    image: redis:3.2
+
+  elasticsearch:
+    image: elasticsearch:2.3.4

@@ -2,39 +2,21 @@ var
   should = require('should'),
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
-  Kuzzle = require.main.require('lib/api/kuzzle'),
-  RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
-  ResponseObject = require.main.require('kuzzle-common-objects').Models.responseObject;
+  KuzzleMock = require('../../mocks/kuzzle.mock'),
+  RequestObject = require('kuzzle-common-objects').Models.requestObject,
+  ResponseObject = require('kuzzle-common-objects').Models.responseObject,
+  ReadController = require('../../../lib/api/controllers/readController');
 
 describe('Test: read controller', () => {
   var
+    controller,
     kuzzle,
     requestObject;
 
-  before(() => {
-    kuzzle = new Kuzzle();
-  });
-
   beforeEach(() => {
+    kuzzle = new KuzzleMock();
+    controller = new ReadController(kuzzle);
     requestObject = new RequestObject({index: '%test', collection: 'unit-test-readcontroller'});
-    sandbox.stub(kuzzle.internalEngine, 'get').resolves({});
-    return kuzzle.services.init({whitelist: []})
-      .then(() => kuzzle.funnel.init())
-      .then(() => {
-        kuzzle.pluginsManager.plugins = {
-          mocha: {
-            name: 'test',
-            version: '0.1',
-            activated: false,
-            object: {
-              hooks: [],
-              pipes: [],
-              controllers: [],
-              routes: []
-            }
-          }
-        };
-      });
   });
 
   afterEach(() => {
@@ -43,154 +25,252 @@ describe('Test: read controller', () => {
 
   describe('#search', () => {
     it('should fulfill with a response object', () => {
-      sandbox.stub(kuzzle.services.list.storageEngine, 'search').resolves({});
-      return kuzzle.funnel.controllers.read.search(requestObject)
+      return controller.search(requestObject)
         .then(response => should(response).be.instanceOf(ResponseObject));
     });
 
     it('should reject with a response object in case of error', () => {
-      sandbox.stub(kuzzle.services.list.storageEngine, 'search').rejects(new Error('foobar'));
-      return should(kuzzle.funnel.controllers.read.search(requestObject)).be.rejected();
+      kuzzle.services.list.storageEngine.search.rejects(new Error('foobar'));
+      return should(controller.search(requestObject))
+        .be.rejectedWith('foobar');
     });
 
-    it('should trigger a plugin event', function (done) {
-      this.timeout(50);
-      sandbox.stub(kuzzle.services.list.storageEngine, 'search').resolves({});
-      kuzzle.once('data:beforeSearch', () => done());
-      kuzzle.funnel.controllers.read.search(requestObject);
+    it('should trigger a plugin event', function () {
+      return controller.search(requestObject)
+        .then(() => {
+          should(kuzzle.pluginsManager.trigger)
+            .be.calledTwice()
+            .be.calledWith('data:beforeSearch')
+            .be.calledWith('data:afterSearch');
+        });
+    });
+  });
+
+  describe('#scroll', () => {
+    it('should fulfill with a response object', () => {
+      kuzzle.services.list.storageEngine.scroll.resolves({});
+      return controller.scroll(requestObject)
+        .then(response => should(response).be.instanceOf(ResponseObject));
+    });
+
+    it('should reject with a response object in case of error', () => {
+      kuzzle.services.list.storageEngine.scroll.rejects(new Error('foobar'));
+      return should(controller.scroll(requestObject)).be.rejected();
+    });
+
+    it('should trigger a plugin event', function () {
+      kuzzle.services.list.storageEngine.scroll.resolves({});
+      return controller.scroll(requestObject)
+        .then(() => {
+          try {
+            should(kuzzle.pluginsManager.trigger)
+              .be.calledTwice()
+              .be.calledWith('data:beforeScroll')
+              .be.calledWith('data:afterScroll');
+
+            return Promise.resolve();
+          }
+          catch (error) {
+            return Promise.reject(error);
+          }
+        });
     });
   });
 
   describe('#get', () => {
     it('should fulfill with a response object', () => {
-      sandbox.stub(kuzzle.services.list.storageEngine, 'get').resolves({});
-      return kuzzle.funnel.controllers.read.get(requestObject)
+      return controller.get(requestObject)
         .then(response => should(response).be.instanceOf(ResponseObject));
     });
 
     it('should reject with a response object in case of error', () => {
-      sandbox.stub(kuzzle.services.list.storageEngine, 'get').rejects(new Error('foobar'));
-      return should(kuzzle.funnel.controllers.read.get(requestObject)).be.rejected();
+      kuzzle.services.list.storageEngine.get.rejects(new Error('foobar'));
+      return should(controller.get(requestObject)).be.rejected();
     });
 
-    it('should trigger a plugin event', function (done) {
-      this.timeout(50);
-      sandbox.stub(kuzzle.services.list.storageEngine, 'get').resolves({});
-      kuzzle.once('data:beforeGet', () => done());
-      kuzzle.funnel.controllers.read.get(requestObject);
+    it('should trigger a plugin event', function () {
+      return controller.get(requestObject)
+        .then(() => {
+          should(kuzzle.pluginsManager.trigger)
+            .be.calledTwice()
+            .be.calledWith('data:beforeGet')
+            .be.calledWith('data:afterGet');
+        });
     });
   });
 
   describe('#count', () => {
     it('should fulfill with a response object', () => {
-      sandbox.stub(kuzzle.services.list.storageEngine, 'count').resolves({});
-      return kuzzle.funnel.controllers.read.count(requestObject)
+      return controller.count(requestObject)
         .then(response => should(response).be.instanceOf(ResponseObject));
     });
 
     it('should reject with a response object in case of error', () => {
-      sandbox.stub(kuzzle.services.list.storageEngine, 'count').rejects(new Error('foobar'));
-      return should(kuzzle.funnel.controllers.read.count(requestObject)).be.rejected();
+      kuzzle.services.list.storageEngine.count.rejects(new Error('foobar'));
+      return should(controller.count(requestObject)).be.rejected();
     });
 
-    it('should emit a data:count hook when counting', function (done) {
-      this.timeout(50);
-      sandbox.stub(kuzzle.services.list.storageEngine, 'count').resolves({});
-      kuzzle.once('data:beforeCount', () => done());
-      kuzzle.funnel.controllers.read.count(requestObject);
+    it('should emit a data:count hook when counting', function () {
+      return controller.count(requestObject)
+        .then(() => {
+          should(kuzzle.pluginsManager.trigger)
+            .be.calledTwice()
+            .be.calledWith('data:beforeCount')
+            .be.calledWith('data:afterCount');
+        });
     });
   });
 
   describe('#listCollections', () => {
     var
-      realtime,
-      stored,
       context = {
         connection: {id: 'connectionid'},
         token: null
       };
 
     beforeEach(() => {
-      stored = sandbox.stub(kuzzle.services.list.storageEngine, 'listCollections').resolves({collections: {stored: ['foo']}});
-      realtime = sandbox.stub(kuzzle.hotelClerk, 'getRealtimeCollections', () => {
-        return [{name: 'foo', index: 'index'}, {name: 'bar', index: 'index'}, {name: 'baz', index: 'wrong'}];
-      });
-
+      kuzzle.services.list.storageEngine.listCollections.resolves({collections: {stored: ['foo']}});
+      kuzzle.hotelClerk.getRealtimeCollections.returns([
+        {name: 'foo', index: 'index'},
+        {name: 'bar', index: 'index'},
+        {name: 'baz', index: 'wrong'}
+      ]);
     });
 
     it('should resolve to a full collections list', () => {
       requestObject = new RequestObject({index: 'index'}, {}, '');
 
-      return kuzzle.funnel.controllers.read.listCollections(requestObject, context)
+      return controller.listCollections(requestObject, context)
         .then(result => {
-          should(realtime.called).be.true();
-          should(stored.called).be.true();
+          should(kuzzle.hotelClerk.getRealtimeCollections).be.calledOnce();
+          should(kuzzle.services.list.storageEngine.listCollections).be.calledOnce();
           should(result.data.body.type).be.exactly('all');
-          should(result.data.body.collections).not.be.undefined().and.be.an.Object();
-          should(result.data.body.collections.stored).not.be.undefined().and.be.an.Array();
-          should(result.data.body.collections.realtime).not.be.undefined().and.be.an.Array();
-          should(result.data.body.collections.stored.sort()).match(['foo']);
-          should(result.data.body.collections.realtime.sort()).match(['bar', 'foo']);
+          should(result.data.body.collections).not.be.undefined().and.be.an.Array();
+          should(result.data.body.collections).deepEqual([{name: 'bar', type: 'realtime'}, {name: 'foo', type: 'realtime'}, {name: 'foo', type: 'stored'}]);
         });
     });
 
-    it('should trigger a plugin event', function (done) {
-      this.timeout(50);
-      kuzzle.once('data:beforeListCollections', () => done());
-      kuzzle.funnel.controllers.read.listCollections(requestObject);
+    it('should trigger a plugin event', function () {
+      return controller.listCollections(requestObject)
+        .then(() => {
+          should(kuzzle.pluginsManager.trigger)
+            .be.calledTwice()
+            .be.calledWith('data:beforeListCollections')
+            .be.calledWith('data:afterListCollections');
+        });
     });
 
     it('should reject the request if an invalid "type" argument is provided', () => {
       requestObject = new RequestObject({body: {type: 'foo'}}, {}, '');
 
-      return should(kuzzle.funnel.controllers.read.listCollections(requestObject, context)).be.rejected();
+      return should(controller.listCollections(requestObject, context)).be.rejected();
     });
 
     it('should only return stored collections with type = stored', () => {
       requestObject = new RequestObject({body: {type: 'stored'}}, {}, '');
 
-      return kuzzle.funnel.controllers.read.listCollections(requestObject, context).then(response => {
-        should(response.data.body.type).be.exactly('stored');
-        should(realtime.called).be.false();
-        should(stored.called).be.true();
-      });
+      return controller.listCollections(requestObject, context)
+        .then(response => {
+          should(response.data.body.type).be.exactly('stored');
+          should(kuzzle.hotelClerk.getRealtimeCollections.called).be.false();
+          should(kuzzle.services.list.storageEngine.listCollections.called).be.true();
+        });
     });
 
     it('should only return realtime collections with type = realtime', () => {
       requestObject = new RequestObject({body: {type: 'realtime'}}, {}, '');
 
-      return kuzzle.funnel.controllers.read.listCollections(requestObject, context).then(response => {
-        should(response.data.body.type).be.exactly('realtime');
-        should(realtime.called).be.true();
-        should(stored.called).be.false();
+      return controller.listCollections(requestObject, context)
+        .then(response => {
+          should(response.data.body.type).be.exactly('realtime');
+          should(kuzzle.hotelClerk.getRealtimeCollections.called).be.true();
+          should(kuzzle.services.list.storageEngine.listCollections.called).be.false();
+        });
+    });
+
+    it('should return a portion of the collection list if from and size are specified', () => {
+      requestObject = new RequestObject({index: 'index', body: {type: 'all', from: 2, size: 3}}, {}, '');
+      kuzzle.services.list.storageEngine.listCollections.resolves({collections: {stored: ['astored', 'bstored', 'cstored', 'dstored', 'estored']}});
+      kuzzle.hotelClerk.getRealtimeCollections.returns([
+        {name: 'arealtime', index: 'index'}, {name: 'brealtime', index: 'index'}, {name: 'crealtime', index: 'index'}, {name: 'drealtime', index: 'index'}, {name: 'erealtime', index: 'index'}, {name: 'baz', index: 'wrong'}
+      ]);
+
+      return controller.listCollections(requestObject, context).then(response => {
+        should(response.data.body.collections).be.deepEqual([
+          {name: 'brealtime', type: 'realtime'},
+          {name: 'bstored', type: 'stored'},
+          {name: 'crealtime', type: 'realtime'}
+        ]);
+        should(response.data.body.type).be.exactly('all');
+        should(kuzzle.hotelClerk.getRealtimeCollections.called).be.true();
+        should(kuzzle.services.list.storageEngine.listCollections.called).be.true();
       });
     });
 
+    it('should return a portion of the collection list if from is specified', () => {
+      requestObject = new RequestObject({index: 'index', body: {type: 'all', from: 8}}, {}, '');
+      kuzzle.services.list.storageEngine.listCollections.resolves({collections: {stored: ['astored', 'bstored', 'cstored', 'dstored', 'estored']}});
+      kuzzle.hotelClerk.getRealtimeCollections.returns([
+        {name: 'arealtime', index: 'index'}, {name: 'brealtime', index: 'index'}, {name: 'crealtime', index: 'index'}, {name: 'drealtime', index: 'index'}, {name: 'erealtime', index: 'index'}, {name: 'baz', index: 'wrong'}
+      ]);
+
+      return controller.listCollections(requestObject, context).then(response => {
+        should(response.data.body.collections).be.deepEqual([
+          {name: 'erealtime', type: 'realtime'},
+          {name: 'estored', type: 'stored'}
+        ]);
+        should(response.data.body.type).be.exactly('all');
+        should(kuzzle.hotelClerk.getRealtimeCollections.called).be.true();
+        should(kuzzle.services.list.storageEngine.listCollections.called).be.true();
+      });
+    });
+
+    it('should return a portion of the collection list if size is specified', () => {
+      requestObject = new RequestObject({index: 'index', body: {type: 'all', size: 2}}, {}, '');
+      kuzzle.services.list.storageEngine.listCollections.resolves({collections: {stored: ['astored', 'bstored', 'cstored', 'dstored', 'estored']}});
+      kuzzle.hotelClerk.getRealtimeCollections.returns([
+        {name: 'arealtime', index: 'index'}, {name: 'brealtime', index: 'index'}, {name: 'crealtime', index: 'index'}, {name: 'drealtime', index: 'index'}, {name: 'erealtime', index: 'index'}, {name: 'baz', index: 'wrong'}
+      ]);
+
+      return controller.listCollections(requestObject, context).then(response => {
+        should(response.data.body.collections).be.deepEqual([
+          {name: 'arealtime', type: 'realtime'},
+          {name: 'astored', type: 'stored'}
+        ]);
+        should(response.data.body.type).be.exactly('all');
+        should(kuzzle.hotelClerk.getRealtimeCollections.called).be.true();
+        should(kuzzle.services.list.storageEngine.listCollections.called).be.true();
+      });
+    });
+
+
     it('should reject with a response object if getting stored collections fails', () => {
-      kuzzle.services.list.storageEngine.listCollections.restore();
-      sandbox.stub(kuzzle.services.list.storageEngine, 'listCollections').rejects(new Error('foobar'));
+      kuzzle.services.list.storageEngine.listCollections.rejects(new Error('foobar'));
       requestObject = new RequestObject({body: {type: 'stored'}}, {}, '');
-      return should(kuzzle.funnel.controllers.read.listCollections(requestObject, context)).be.rejected();
+      return should(controller.listCollections(requestObject, context)).be.rejected();
     });
 
     it('should reject with a response object if getting all collections fails', () => {
-      kuzzle.services.list.storageEngine.listCollections.restore();
-      sandbox.stub(kuzzle.services.list.storageEngine, 'listCollections').rejects(new Error('foobar'));
+      kuzzle.services.list.storageEngine.listCollections.rejects(new Error('foobar'));
       requestObject = new RequestObject({body: {type: 'all'}}, {}, '');
-      return should(kuzzle.funnel.controllers.read.listCollections(requestObject, context)).be.rejected();
+      return should(controller.listCollections(requestObject, context)).be.rejected();
     });
 
   });
 
   describe('#now', () => {
-    it('should trigger a plugin event', function (done) {
-      this.timeout(50);
-      kuzzle.once('data:beforeNow', () => done());
-      kuzzle.funnel.controllers.read.now(requestObject);
+    it('should trigger a plugin event', function () {
+      return controller.now(requestObject)
+        .then(() => {
+          should(kuzzle.pluginsManager.trigger)
+            .be.calledTwice()
+            .be.calledWith('data:beforeNow')
+            .be.calledWith('data:afterNow');
+        });
     });
 
     it('should resolve to a number', () => {
-      return kuzzle.funnel.controllers.read.now(requestObject)
+      return controller.now(requestObject)
         .then(result => {
           should(result.data).not.be.undefined();
           should(result.data.body.now).not.be.undefined().and.be.a.Number();
@@ -200,34 +280,29 @@ describe('Test: read controller', () => {
 
   describe('#listIndexes', () => {
     it('should fulfill with a response object', () => {
-      sandbox.stub(kuzzle.services.list.storageEngine, 'listIndexes').resolves({});
-      return kuzzle.funnel.controllers.read.listIndexes(requestObject)
+      return controller.listIndexes(requestObject)
         .then(response => should(response).be.instanceOf(ResponseObject));
     });
 
     it('should reject with a response object in case of error', () => {
-      sandbox.stub(kuzzle.services.list.storageEngine, 'listIndexes').rejects(new Error('foobar'));
-      return should(kuzzle.funnel.controllers.read.listIndexes(requestObject)).be.rejected();
+      kuzzle.services.list.storageEngine.listIndexes.rejects(new Error('foobar'));
+      return should(controller.listIndexes(requestObject)).be.rejected();
     });
 
-    it('should emit a data:listIndexes hook when reading indexes', function (done) {
-      this.timeout(50);
-      sandbox.stub(kuzzle.services.list.storageEngine, 'listIndexes').resolves({});
-      kuzzle.once('data:beforeListIndexes', () => done());
-      kuzzle.funnel.controllers.read.listIndexes(requestObject);
+    it('should emit a data:listIndexes hook when reading indexes', function () {
+      return controller.listIndexes(requestObject)
+        .then(() => {
+          should(kuzzle.pluginsManager.trigger)
+            .be.calledTwice()
+            .be.calledWith('data:beforeListIndexes')
+            .be.calledWith('data:afterListIndexes');
+        });
     });
   });
 
   describe('#serverInfo', () => {
     it('should return a properly formatted server information object', () => {
-      Object.keys(kuzzle.services.list).forEach(service => {
-        if (kuzzle.services.list[service].getInfos) {
-          sandbox.stub(kuzzle.services.list[service], 'getInfos').resolves({});
-        }
-      });
-
-      requestObject = new RequestObject({});
-      return kuzzle.funnel.controllers.read.serverInfo(requestObject)
+      return controller.serverInfo(requestObject)
         .then(res => {
           res = res.toJson();
           should(res.status).be.exactly(200);
@@ -239,10 +314,6 @@ describe('Test: read controller', () => {
           should(res.result.serverInfo.kuzzle.api).be.an.Object();
           should(res.result.serverInfo.kuzzle.api.version).be.a.String();
           should(res.result.serverInfo.kuzzle.api.routes).be.an.Object();
-          should(res.result.serverInfo.kuzzle.api.routes.read.get).be.an.Object();
-          should(res.result.serverInfo.kuzzle.api.routes.read.get.name).be.exactly('get');
-          should(res.result.serverInfo.kuzzle.api.routes.read.get.method).be.a.String();
-          should(res.result.serverInfo.kuzzle.api.routes.read.get.route).be.a.String();
           should(res.result.serverInfo.kuzzle.plugins).be.an.Object();
           should(res.result.serverInfo.kuzzle.system).be.an.Object();
           should(res.result.serverInfo.services).be.an.Object();
@@ -250,12 +321,56 @@ describe('Test: read controller', () => {
     });
 
     it('should reject with a response object in case of error', () => {
-      Object.keys(kuzzle.services.list).forEach(service => {
-        if (kuzzle.services.list[service].getInfos) {
-          sandbox.stub(kuzzle.services.list[service], 'getInfos').rejects(new Error('foobar'));
-        }
-      });
-      return should(kuzzle.funnel.controllers.read.serverInfo(requestObject)).be.rejected();
+      kuzzle.services.list.broker.getInfos.rejects(new Error('foobar'));
+      return should(controller.serverInfo(requestObject)).be.rejected();
     });
   });
+
+  describe('#collectionExists', () => {
+    it('should call the storageEngine', () => {
+      kuzzle.services.list.storageEngine.collectionExists.resolves('result');
+      return controller.collectionExists(requestObject)
+        .then(response => {
+          should(response).match({
+            error: null,
+            data: {
+              body: 'result'
+            }
+          });
+
+          should(kuzzle.pluginsManager.trigger)
+            .be.calledTwice()
+            .be.calledWith('data:beforeCollectionExists')
+            .be.calledWith('data:afterCollectionExists');
+
+          should(kuzzle.services.list.storageEngine.collectionExists)
+            .be.calledOnce();
+        });
+    });
+  });
+
+  describe('#indexExists', () => {
+    it('should call the storagEngine', () => {
+      kuzzle.services.list.storageEngine.indexExists.resolves('result');
+      return controller.indexExists(requestObject)
+        .then(response => {
+          should(response).match({
+            error: null,
+            data: {
+              body: 'result'
+            }
+          });
+
+          should(kuzzle.pluginsManager.trigger)
+            .be.calledTwice()
+            .be.calledWith('data:beforeIndexExists')
+            .be.calledWith('data:afterIndexExists');
+
+          should(kuzzle.services.list.storageEngine.indexExists)
+            .be.calledOnce();
+        });
+    });
+
+  });
+
 });
