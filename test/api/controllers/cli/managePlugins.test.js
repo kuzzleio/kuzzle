@@ -51,21 +51,30 @@ describe('Test: managePlugins cli actions', () => {
 
   describe('--install', () => {
     it('should install a single plugin package if a plugin name is provided', () => {
+
+      pkg.install.resolves({
+        success: true,
+        name: 'banana',
+        version: '42'
+      });
+
       return managePlugins(new RequestObject({
         _id: 'plugin',
         body: { install: true, foo: 'bar' }
       }))
         .then(() => {
           try {
-            should(kuzzle.pluginsManager.trigger)
-              .be.calledOnce()
-              .be.calledWithExactly('log:info', '███ kuzzle-plugins: Installing plugin plugin...');
+	        should(kuzzle.pluginsManager.trigger.getCall(0))
+	          .be.calledWithExactly('log:info', '███ kuzzle-plugins: Installing plugin plugin...');
 
-            should(pkg.setDefinition)
-              .be.calledOnce()
-              .be.calledWith({install: true, foo: 'bar'});
+	        should(kuzzle.pluginsManager.trigger.getCall(1))
+	          .be.calledWithExactly('log:info', '███ kuzzle-plugins: Plugin banana@42 installed successfully. Restart kuzzle to enable it');
 
-            should(pkg.install).be.calledOnce();
+	        should(pkg.setDefinition)
+	          .be.calledOnce()
+	          .be.calledWith({install: true, foo: 'bar'});
+
+	        should(pkg.install).be.calledOnce();
 
             return Promise.resolve();
           }
