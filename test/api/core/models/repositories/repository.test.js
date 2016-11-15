@@ -111,7 +111,7 @@ describe('Test: repositories/repository', () => {
         return Promise.resolve({});
       }
       if (query.error) {
-        return Promise.reject({});
+        return Promise.reject(new Error('Mocked error'));
       }
       return Promise.resolve({hits: [{_id: 'role', _source: {controllers: {}}}], total: 1});
     },
@@ -399,7 +399,7 @@ describe('Test: repositories/repository', () => {
     });
 
     it('should be rejected with an error if something goes wrong', () => {
-      return should(repository.search({error:true}, 0, 10, false)).be.rejected();
+      return should(repository.search({error:true}, 0, 10, false)).be.rejectedWith(new Error('Mocked error'));
     });
   });
 });

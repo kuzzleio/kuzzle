@@ -121,33 +121,40 @@ describe('Plugin Context', () => {
     it('should allow to create a user', () => {
       return createUser(repository, 'foo', 'profile', {foo: 'bar'})
         .then(response => {
-          should(repository.ObjectConstructor).be.calledOnce();
+          try {
+            should(repository.ObjectConstructor).be.calledOnce();
 
-          should(repository.hydrate).be.calledOnce();
-          should(repository.hydrate).be.calledWith({}, {
-            _id: 'foo',
-            foo: 'bar',
-            profileIds: ['profile']
-          });
+            should(repository.hydrate).be.calledOnce();
+            should(repository.hydrate).be.calledWith({}, {
+              _id: 'foo',
+              foo: 'bar',
+              profileIds: ['profile']
+            });
 
-          should(repository.persist).be.calledOnce();
-          should(repository.persist.firstCall.args[1]).be.eql({
-            database: {
-              method: 'create'
-            }
-          });
+            should(repository.persist).be.calledOnce();
+            should(repository.persist.firstCall.args[1]).be.eql({
+              database: {
+                method: 'create'
+              }
+            });
 
-          sinon.assert.callOrder(
-            repository.ObjectConstructor,
-            repository.hydrate,
-            repository.persist
-          );
+            sinon.assert.callOrder(
+              repository.ObjectConstructor,
+              repository.hydrate,
+              repository.persist
+            );
 
-          should(response).be.eql({
-            _id: 'foo',
-            foo: 'bar',
-            profileIds: ['profile']
-          });
+            should(response).be.eql({
+              _id: 'foo',
+              foo: 'bar',
+              profileIds: ['profile']
+            });
+
+            return Promise.resolve();
+          }
+          catch (error) {
+            return Promise.reject(error);
+          }
         });
     });
 

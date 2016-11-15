@@ -58,14 +58,21 @@ describe('Test: hotelClerk.removeCustomerFromAllRooms', () => {
 
     return kuzzle.hotelClerk.removeCustomerFromAllRooms(connection)
       .finally(() => {
-        mock.verify();
-        should(kuzzle.notifier.notify.called).be.false();
+        try {
+          mock.verify();
+          should(kuzzle.notifier.notify.called).be.false();
 
-        should(kuzzle.hotelClerk.rooms).be.an.Object();
-        should(kuzzle.hotelClerk.rooms).be.empty();
+          should(kuzzle.hotelClerk.rooms).be.an.Object();
+          should(kuzzle.hotelClerk.rooms).be.empty();
 
-        should(kuzzle.hotelClerk.customers).be.an.Object();
-        should(kuzzle.hotelClerk.customers).be.empty();
+          should(kuzzle.hotelClerk.customers).be.an.Object();
+          should(kuzzle.hotelClerk.customers).be.empty();
+
+          return Promise.resolve();
+        }
+        catch (error) {
+          return Promise.reject(error);
+        }
       });
   });
 
@@ -78,27 +85,35 @@ describe('Test: hotelClerk.removeCustomerFromAllRooms', () => {
 
     return kuzzle.hotelClerk.removeCustomerFromAllRooms(connection)
       .finally(() => {
-        mockDsl.verify();
-        mockNotify.verify();
+        try {
+          mockDsl.verify();
+          mockNotify.verify();
 
-        // testing roomId argument
-        should(mockNotify.args[0][0]).match(['foo']);
+          // testing roomId argument
+          should(mockNotify.args[0][0]).match(['foo']);
 
-        // testing requestObject argument
-        should(mockNotify.args[0][1]).be.instanceOf(RequestObject);
-        should(mockNotify.args[0][1].controller).be.exactly('subscribe');
-        should(mockNotify.args[0][1].action).be.exactly('off');
-        should(mockNotify.args[0][1].index).be.exactly(index);
+          // testing requestObject argument
+          should(mockNotify.args[0][1]).be.instanceOf(RequestObject);
+          should(mockNotify.args[0][1].controller).be.exactly('subscribe');
+          should(mockNotify.args[0][1].action).be.exactly('off');
+          should(mockNotify.args[0][1].index).be.exactly(index);
 
-        // testing payload argument
-        should(mockNotify.args[0][2].count).be.exactly(1);
+          // testing payload argument
+          should(mockNotify.args[0][2].count).be.exactly(1);
+
+          return Promise.resolve();
+        }
+        catch (error) {
+          return Promise.reject(error);
+        }
       });
   });
 
   it('should log an error if a problem occurs while unsubscribing', function () {
+    var error = new Error('Mocked error');
     this.timeout(500);
-    sandbox.stub(kuzzle.dsl, 'remove').rejects();
+    sandbox.stub(kuzzle.dsl, 'remove').rejects(error);
 
-    return should(kuzzle.hotelClerk.removeCustomerFromAllRooms(connection)).be.rejected();
+    return should(kuzzle.hotelClerk.removeCustomerFromAllRooms(connection)).be.rejectedWith(error);
   });
 });
