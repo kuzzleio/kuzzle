@@ -52,6 +52,16 @@ describe('Test: token manager core component', () => {
       should(tokenManager.expire(token)).be.true();
       should(tokenManager.tokens.array).be.an.Array().and.be.empty();
     });
+
+    it('should do nothing if the provided token is invalid', () => {
+      should(tokenManager.expire({_id: 'foo'})).be.false();
+      should(tokenManager.expire({expiresAt: 'foo'})).be.false();
+      should(tokenManager.expire({bar: 'foo'})).be.false();
+    });
+
+    it('should do nothing if the provided token has not been previously registered', () => {
+      should(tokenManager.expire(token)).be.false();
+    });
   });
 
   describe('#checkTokensValidity', () => {
