@@ -141,7 +141,7 @@ describe('Test: ElasticSearch service', () => {
         preparedData;
 
       requestObject.data._id = 'foobar';
-      preparedData = cleanData.call(elasticsearch, requestObject);
+      preparedData = cleanData.call(elasticsearch, requestObject, kuzzle);
 
       should(preparedData.type).be.exactly(requestObject.collection);
       should(preparedData.id).be.exactly(requestObject.data._id);
@@ -1378,14 +1378,21 @@ describe('Test: ElasticSearch service', () => {
 
       return elasticsearch.indexExists(requestObject)
         .then(response => {
-          should(response).be.true();
+          try {
+            should(response).be.true();
 
-          should(spy)
-            .be.calledOnce();
+            should(spy)
+              .be.calledOnce();
 
-          should(spy.firstCall.args[0]).match({
-            index: '%test'
-          });
+            should(spy.firstCall.args[0]).match({
+              index: '%test'
+            });
+
+            return Promise.resolve();
+          }
+          catch (error) {
+            return Promise.reject(error);
+          }
         });
     });
 
@@ -1415,14 +1422,21 @@ describe('Test: ElasticSearch service', () => {
 
       return elasticsearch.collectionExists(requestObject)
         .then(() => {
-          should(spy)
-            .be.calledOnce();
+          try {
+            should(spy)
+              .be.calledOnce();
 
-          should(spy.firstCall.args[0])
-            .match({
-              index,
-              type: collection
-            });
+            should(spy.firstCall.args[0])
+              .match({
+                index,
+                type: collection
+              });
+
+            return Promise.resolve();
+          }
+          catch (error) {
+            return Promise.reject(error);
+          }
         });
     });
 
