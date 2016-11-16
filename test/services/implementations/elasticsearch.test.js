@@ -931,6 +931,22 @@ describe('Test: ElasticSearch service', () => {
       return should(elasticsearch.import(requestObject)).be.rejectedWith(error);
     });
 
+    it('should return a rejected promise if bulk data try to write into internal index', () => {
+      requestObject.data.body = {
+        bulkData: [
+          {index: {_id: 1, _index: index}},
+          {firstName: 'foo'},
+          {index: {_id: 2, _index: '%kuzzle'}},
+          {firstName: 'bar'},
+          {update: {_id: 1, _index: index}},
+          {doc: {firstName: 'foobar'}},
+          {delete: {_id: 2, _index: index}}
+        ]
+      };
+
+      return should(elasticsearch.import(requestObject)).be.rejectedWith(BadRequestError);
+    });
+
     it('should return a rejected promise if no body is provided', () => {
       delete requestObject.data.body;
       return should(elasticsearch.import(requestObject)).be.rejectedWith(BadRequestError);

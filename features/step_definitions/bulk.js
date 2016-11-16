@@ -71,17 +71,29 @@ var apiSteps = function () {
     });
   });
 
-  this.When(/^I do a bulk import(?: from index "([^"]*)")?$/, function (index, callback) {
+  this.When(/^I ?(can't)* do a bulk import(?: from index "([^"]*)")?$/, function (not, index, callback) {
     this.api.bulkImport(this.bulk, index)
       .then(body => {
         if (body.error !== null) {
+          if (not) {
+            callback();
+            return;
+          }
           callback(new Error(body.error.message));
           return false;
         }
 
+        if (not) {
+          callback(new Error('User can do a bulk import on a restricted index'));
+          return false;
+        }
         callback();
       })
       .catch(function (error) {
+        if (not) {
+          callback();
+          return;
+        }
         callback(error);
       });
   });

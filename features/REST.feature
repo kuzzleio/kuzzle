@@ -59,6 +59,10 @@ Feature: Test REST API
     Then I can retrieve actions from bulk import
 
   @usingREST
+  Scenario: Can't do a bulk import on internal index
+    When I can't do a bulk import from index "%kuzzle"
+
+  @usingREST
   Scenario: Global Bulk import
     When I do a global bulk import
     Then I can retrieve actions from bulk import
