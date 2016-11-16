@@ -232,9 +232,6 @@ function cleanSecurity (callback) {
         });
     })
     .then(() => {
-      return this.api.refreshIndex('%kuzzle');
-    })
-    .then(() => {
       callback();
     })
     .catch(error => {
@@ -294,9 +291,6 @@ function cleanValidations(callback) {
           // discard errors
           return Promise.resolve();
         });
-    })
-    .then(() => {
-      return this.api.refreshIndex('%kuzzle');
     })
     .then(() => {
       callback();

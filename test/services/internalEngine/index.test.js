@@ -130,16 +130,17 @@ describe('InternalEngine', () => {
       return kuzzle.internalEngine.search(collection)
         .then(result => {
           try {
-            should(kuzzle.internalEngine.client.search)
-              .be.calledOnce()
-              .be.calledWithMatch({
-                index: kuzzle.internalEngine.index,
-                type: collection,
-                body: {
-                  from: 0,
-                  size: 20
-                }
-              });
+            should(kuzzle.internalEngine.client.search.calledOnce)
+              .be.true();
+
+            should(kuzzle.internalEngine.client.search.calledWithMatch({
+              index: kuzzle.internalEngine.index,
+              type: collection,
+              body: {
+                from: 0,
+                size: 20
+              }
+            })).be.true();
 
             should(result).be.an.Object().and.not.be.empty();
             should(result.total).be.eql(123);
