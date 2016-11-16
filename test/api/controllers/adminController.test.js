@@ -693,6 +693,44 @@ describe('Test: admin controller', () => {
     });
   });
 
+  describe('#searchSpecifications', () => {
+    it('should call internalEngine with the right data', () => {
+      kuzzle.internalEngine.search = sandbox.stub().resolves({hits: [{_id: 'bar'}]});
+
+      requestObject.data.body = {
+        from: 0,
+        size: 1,
+        query: {
+          match_all: {}
+        }
+      };
+
+      return adminController.searchSpecifications(requestObject)
+        .then(response => {
+          try {
+            should(kuzzle.pluginsManager.trigger).be.calledTwice();
+            should(kuzzle.pluginsManager.trigger.firstCall).be.calledWith('data:beforeSearchSpecifications', requestObject);
+            should(kuzzle.pluginsManager.trigger.secondCall).be.calledWith('data:afterSearchSpecifications');
+            should(kuzzle.internalEngine.search).be.calledOnce();
+            should(kuzzle.internalEngine.search).be.calledWithMatch('validations', requestObject.data.body.query, requestObject.data.body.from, requestObject.data.body.size);
+            should(response).match({
+              status: 200,
+              error: null,
+              data: {
+                body: {
+                  hits: [{_id: 'bar'}]
+                }
+              }
+            });
+            return Promise.resolve();
+          }
+          catch (error) {
+            return Promise.reject(error);
+          }
+        });
+    });
+  });
+
   describe('#updateSpecifications', () => {
     it('should create or replace specifications', () => {
       index = 'myindex';

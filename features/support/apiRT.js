@@ -564,8 +564,8 @@ ApiRT.prototype.deleteProfile = function (id) {
 ApiRT.prototype.searchValidations = function (body) {
   var
     msg = {
-      controller: 'read',
-      action: 'search',
+      controller: 'admin',
+      action: 'searchSpecifications',
       body
     };
 
