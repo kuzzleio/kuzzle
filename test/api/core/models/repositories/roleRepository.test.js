@@ -128,14 +128,14 @@ describe('Test: repositories/roleRepository', () => {
   });
 
   describe('#searchRole', () => {
-    it('should call repository search without filter and with parameters from requestObject', () => {
+    it('should call repository search without query and with parameters from requestObject', () => {
       var
-        savedFilter,
+        savedQuery,
         savedFrom,
         savedSize;
 
-      sandbox.stub(kuzzle.repositories.role, 'search', (filter, from, size) => {
-        savedFilter = filter;
+      sandbox.stub(kuzzle.repositories.role, 'search', (query, from, size) => {
+        savedQuery = query;
         savedFrom = from;
         savedSize = size;
 
@@ -144,30 +144,36 @@ describe('Test: repositories/roleRepository', () => {
 
       return kuzzle.repositories.role.searchRole(new RequestObject({body: {from: 1, size: 3}}))
         .then(() => {
-          should(savedFilter).be.eql({});
+          should(savedQuery).be.eql({query: {}});
           should(savedFrom).be.eql(1);
           should(savedSize).be.eql(3);
         });
     });
 
-    it('should construct a correct filter according to controllers', () => {
+    it('should construct a correct query according to controllers', () => {
       var
-        savedFilter;
+        savedQuery;
 
-      sandbox.stub(kuzzle.repositories.role, 'search', (filter) => {
-        savedFilter = filter;
+      sandbox.stub(kuzzle.repositories.role, 'search', (query) => {
+        savedQuery = query;
 
         return Promise.resolve();
       });
 
       return kuzzle.repositories.role.searchRole(new RequestObject({body: {controllers: ['test']}}))
         .then(() => {
-          should(savedFilter).be.eql({or: [
-            // specific controller name provided
-            {exists: {field: 'controllers.test'}},
-            // default filter
-            {exists: {field: 'controllers.*'}}
-          ]});
+          should(savedQuery).be.eql({
+            query: {
+              bool: {
+                should: [
+                  // specific controller name provided
+                  {exists: {field: 'controllers.test'}},
+                  // default filter
+                  {exists: {field: 'controllers.*'}}
+                ]
+              }
+            }
+          });
         });
     });
   });

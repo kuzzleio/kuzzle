@@ -133,7 +133,7 @@ var apiSteps = function () {
             }
 
             if (!aBody.result.hits) {
-              aBody.result.hits = aBody.result.hits.filter(doc => doc._id.indexOf(this.idPrefix));
+              aBody.result.hits = aBody.result.hits.query(doc => doc._id.indexOf(this.idPrefix));
 
               if (aBody.result.hits.length !== parseInt(count)) {
                 return callbackAsync('Expected ' + count + ' roles, get ' + aBody.result.hits.length);
