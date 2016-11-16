@@ -706,6 +706,23 @@ ApiRT.prototype.getAutoRefresh = function (index) {
   });
 };
 
+ApiRT.prototype.indexExists = function (index) {
+  return this.send({
+    index,
+    controller: 'read',
+    action: 'indexExists'
+  });
+};
+
+ApiRT.prototype.collectionExists = function (index, collection) {
+  return this.send({
+    index,
+    collection,
+    controller: 'read',
+    action: 'collectionExists'
+  });
+};
+
 ApiRT.prototype.getSpecifications = function (index, collection) {
   return this.send({
     index: index,

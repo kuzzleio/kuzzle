@@ -335,7 +335,7 @@ describe('Test: ElasticSearch service', () => {
       sandbox.stub(elasticsearch.client, 'get').rejects(new Error('Mocked get error'));
       sandbox.stub(elasticsearch.client, 'index').rejects(error);
 
-      return should(elasticsearch.index(requestObject)).be.rejectedWith(error);
+      return should(elasticsearch.create(requestObject)).be.rejectedWith(error);
     });
 
     it('should reject the create promise if client.index throws an error', () => {
@@ -1374,4 +1374,79 @@ describe('Test: ElasticSearch service', () => {
 
     });
   });
+
+  describe('#indexExists', () => {
+    it('should call es indices.exists method', () => {
+      var
+        spy = sandbox.stub(elasticsearch.client.indices, 'exists').resolves(true);
+
+      return elasticsearch.indexExists(requestObject)
+        .then(response => {
+          should(response).be.true();
+
+          should(spy)
+            .be.calledOnce();
+
+          should(spy.firstCall.args[0]).match({
+            index: '%test'
+          });
+        });
+    });
+
+    it('should format the error', () => {
+      var
+        error = new Error('test'),
+        spy = sandbox.spy(elasticsearch, 'formatESError');
+
+      sandbox.stub(elasticsearch.client.indices, 'exists').rejects(error);
+
+      return elasticsearch.indexExists(requestObject)
+        .then(() => {
+          throw new Error('this should not occur');
+        })
+        .catch(() => {
+          should(spy)
+            .be.calledOnce()
+            .be.calledWith(error);
+        });
+    });
+  });
+
+  describe('#collectionExists', () => {
+    it('should call es indices.existType method', () => {
+      var
+        spy = sandbox.stub(elasticsearch.client.indices, 'existsType').resolves(true);
+
+      return elasticsearch.collectionExists(requestObject)
+        .then(() => {
+          should(spy)
+            .be.calledOnce();
+
+          should(spy.firstCall.args[0])
+            .match({
+              index,
+              type: collection
+            });
+        });
+    });
+
+    it('should format errors', () => {
+      var
+        error = new Error('test'),
+        spy = sinon.spy(elasticsearch, 'formatESError');
+
+      sandbox.stub(elasticsearch.client.indices, 'existsType').rejects(error);
+
+      return elasticsearch.collectionExists(requestObject)
+        .then(() => {
+          throw new Error('this should not happen');
+        })
+        .catch(() => {
+          should(spy)
+            .be.calledOnce()
+            .be.calledWith(error);
+        });
+    });
+  });
+
 });
