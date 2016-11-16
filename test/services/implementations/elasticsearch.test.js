@@ -335,7 +335,7 @@ describe('Test: ElasticSearch service', () => {
       sandbox.stub(elasticsearch.client, 'get').rejects(new Error('Mocked get error'));
       sandbox.stub(elasticsearch.client, 'index').rejects(error);
 
-      return should(elasticsearch.index(requestObject)).be.rejectedWith(error);
+      return should(elasticsearch.create(requestObject)).be.rejectedWith(error);
     });
 
     it('should reject the create promise if client.index throws an error', () => {
