@@ -83,7 +83,7 @@ describe('InternalEngine', () => {
             return Promise.resolve();
           }
           catch(error) {
-            return Promise.error(error);
+            return Promise.reject(error);
           }
         });
     });
@@ -116,7 +116,7 @@ describe('InternalEngine', () => {
             return Promise.resolve();
           }
           catch(error) {
-            return Promise.error(error);
+            return Promise.reject(error);
           }
         });
     });
@@ -146,7 +146,7 @@ describe('InternalEngine', () => {
             should(result.hits).be.an.Array().and.match(['foo', 'bar']);
           }
           catch(error) {
-            return Promise.error(error);
+            return Promise.reject(error);
           }
         });
     });
@@ -182,7 +182,7 @@ describe('InternalEngine', () => {
             return Promise.resolve();
           }
           catch(error) {
-            return Promise.error(error);
+            return Promise.reject(error);
           }
         });
     });
@@ -220,7 +220,7 @@ describe('InternalEngine', () => {
             return Promise.resolve();
           }
           catch(error) {
-            return Promise.error(error);
+            return Promise.reject(error);
           }
         });
     });
@@ -259,7 +259,7 @@ describe('InternalEngine', () => {
             return Promise.resolve();
           }
           catch(error) {
-            return Promise.error(error);
+            return Promise.reject(error);
           }
         });
     });
@@ -297,7 +297,7 @@ describe('InternalEngine', () => {
             return Promise.resolve();
           }
           catch(error) {
-            return Promise.error(error);
+            return Promise.reject(error);
           }
         });
     });
@@ -338,7 +338,7 @@ describe('InternalEngine', () => {
             return Promise.resolve();
           }
           catch(error) {
-            return Promise.error(error);
+            return Promise.reject(error);
           }
         });
     });
@@ -377,7 +377,7 @@ describe('InternalEngine', () => {
             return Promise.resolve();
           }
           catch(error) {
-            return Promise.error(error);
+            return Promise.reject(error);
           }
         });
     });
@@ -417,7 +417,7 @@ describe('InternalEngine', () => {
             return Promise.resolve();
           }
           catch(error) {
-            return Promise.error(error);
+            return Promise.reject(error);
           }
         });
     });
@@ -446,7 +446,7 @@ describe('InternalEngine', () => {
             return Promise.resolve();
           }
           catch(error) {
-            return Promise.error(error);
+            return Promise.reject(error);
           }
         });
     });
@@ -466,7 +466,7 @@ describe('InternalEngine', () => {
             return Promise.resolve();
           }
           catch(error) {
-            return Promise.error(error);
+            return Promise.reject(error);
           }
         });
     });
@@ -502,7 +502,7 @@ describe('InternalEngine', () => {
             return Promise.resolve();
           }
           catch(error) {
-            return Promise.error(error);
+            return Promise.reject(error);
           }
 
         });
@@ -524,7 +524,7 @@ describe('InternalEngine', () => {
             return Promise.resolve();
           }
           catch(error) {
-            return Promise.error(error);
+            return Promise.reject(error);
           }
         });
     });
@@ -543,7 +543,7 @@ describe('InternalEngine', () => {
             return Promise.resolve();
           }
           catch(error) {
-            return Promise.error(error);
+            return Promise.reject(error);
           }
         });
     });
@@ -569,7 +569,7 @@ describe('InternalEngine', () => {
             return Promise.resolve();
           }
           catch(error) {
-            return Promise.error(error);
+            return Promise.reject(error);
           }
         });
     });
@@ -589,7 +589,7 @@ describe('InternalEngine', () => {
             return Promise.resolve();
           }
           catch(error) {
-            return Promise.error(error);
+            return Promise.reject(error);
           }
         });
     });

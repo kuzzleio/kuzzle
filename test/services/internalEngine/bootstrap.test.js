@@ -57,7 +57,7 @@ describe('services/internalEngine/bootstrap.js', () => {
             return Promise.resolve();
           }
           catch(error) {
-            return Promise.error(error);
+            return Promise.reject(error);
           }
         });
     });
@@ -116,11 +116,12 @@ describe('services/internalEngine/bootstrap.js', () => {
             return Promise.resolve();
           }
           catch(error) {
-            return Promise.error(error);
+            return Promise.reject(error);
           }
         });
     });
   });
+
 
   describe('#createRolesCollection', () => {
     it('should create mapping and add default roles', () => {
@@ -145,7 +146,7 @@ describe('services/internalEngine/bootstrap.js', () => {
             return Promise.resolve();
           }
           catch(error) {
-            return Promise.error(error);
+            return Promise.reject(error);
           }
         });
     });
@@ -162,7 +163,7 @@ describe('services/internalEngine/bootstrap.js', () => {
             return Promise.resolve();
           }
           catch(error) {
-            return Promise.error(error);
+            return Promise.reject(error);
           }
         });
     });
@@ -184,7 +185,7 @@ describe('services/internalEngine/bootstrap.js', () => {
             return Promise.resolve();
           }
           catch(error) {
-            return Promise.error(error);
+            return Promise.reject(error);
           }
         });
     });
@@ -201,7 +202,7 @@ describe('services/internalEngine/bootstrap.js', () => {
             return Promise.resolve();
           }
           catch(error) {
-            return Promise.error(error);
+            return Promise.reject(error);
           }
         });
     });
@@ -219,8 +220,7 @@ describe('services/internalEngine/bootstrap.js', () => {
                   policies: {
                     properties: {
                       _id: {
-                        index: 'not_analyzed',
-                        type: 'string'
+                        type: 'keyword'
                       }
                     }
                   }
@@ -245,7 +245,7 @@ describe('services/internalEngine/bootstrap.js', () => {
             return Promise.resolve();
           }
           catch(error) {
-            return Promise.error(error);
+            return Promise.reject(error);
           }
         });
     });
@@ -261,7 +261,7 @@ describe('services/internalEngine/bootstrap.js', () => {
             return Promise.resolve();
           }
           catch(error) {
-            return Promise.error(error);
+            return Promise.reject(error);
           }
         });
     });
@@ -277,12 +277,11 @@ describe('services/internalEngine/bootstrap.js', () => {
               .be.calledWithMatch('users', {
                 properties: {
                   profileIds: {
-                    index: 'not_analyzed',
-                    type: 'string'
+                    type: 'keyword'
                   },
                   password: {
-                    index: 'no',
-                    type: 'string'
+                    index: 'false',
+                    type: 'keyword'
                   }
                 }
               });
@@ -290,7 +289,7 @@ describe('services/internalEngine/bootstrap.js', () => {
             return Promise.resolve();
           }
           catch(error) {
-            return Promise.error(error);
+            return Promise.reject(error);
           }
         });
     });
@@ -306,7 +305,7 @@ describe('services/internalEngine/bootstrap.js', () => {
             return Promise.resolve();
           }
           catch(error) {
-            return Promise.error(error);
+            return Promise.reject(error);
           }
         });
     });
@@ -334,7 +333,7 @@ describe('services/internalEngine/bootstrap.js', () => {
             return Promise.resolve();
           }
           catch(error) {
-            return Promise.error(error);
+            return Promise.reject(error);
           }
         });
     });
@@ -350,7 +349,7 @@ describe('services/internalEngine/bootstrap.js', () => {
             return Promise.resolve();
           }
           catch(error) {
-            return Promise.error(error);
+            return Promise.reject(error);
           }
         });
     });

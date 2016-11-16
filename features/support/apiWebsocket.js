@@ -96,7 +96,7 @@ ApiWebsocket.prototype.send = function (msg, getAnswer, socketName) {
     return new Promise((resolve, reject) => {
       this.listSockets[socketName].once(msg.requestId, result => {
         if (result.error) {
-          let error = new Error(result.error);
+          let error = new Error(result.error.message);
           error.details = result.error._source || {};
           error.statusCode = result.status;
           return reject(error);
