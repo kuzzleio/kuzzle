@@ -58,11 +58,11 @@ describe('InternalEngine', () => {
     it('should harmonize search results', () => {
       var
         collection = 'collection',
-        filters = { 'some': 'filters' };
+        query = { 'some': 'filters' };
 
       kuzzle.internalEngine.client.search.resolves({hits: { hits: ['foo', 'bar'], total: 123}});
 
-      return kuzzle.internalEngine.search(collection, filters)
+      return kuzzle.internalEngine.search(collection, query)
         .then(result => {
           try {
             should(kuzzle.internalEngine.client.search)
@@ -71,7 +71,40 @@ describe('InternalEngine', () => {
                 index: kuzzle.internalEngine.index,
                 type: collection,
                 body: {
-                  filter: filters,
+                  query: query,
+                  from: 0,
+                  size: 20
+                }
+              });
+
+            should(result).be.an.Object().and.not.be.empty();
+            should(result.total).be.eql(123);
+            should(result.hits).be.an.Array().and.match(['foo', 'bar']);
+            return Promise.resolve();
+          }
+          catch(error) {
+            return Promise.error(error);
+          }
+        });
+    });
+
+    it('should harmonize search results', () => {
+      var
+        collection = 'collection',
+        query = { query: {'some': 'filters'} };
+
+      kuzzle.internalEngine.client.search.resolves({hits: { hits: ['foo', 'bar'], total: 123}});
+
+      return kuzzle.internalEngine.search(collection, query)
+        .then(result => {
+          try {
+            should(kuzzle.internalEngine.client.search)
+              .be.calledOnce()
+              .be.calledWithMatch({
+                index: kuzzle.internalEngine.index,
+                type: collection,
+                body: {
+                  query: query.query,
                   from: 0,
                   size: 20
                 }
@@ -103,7 +136,6 @@ describe('InternalEngine', () => {
                 index: kuzzle.internalEngine.index,
                 type: collection,
                 body: {
-                  filter: {},
                   from: 0,
                   size: 20
                 }
@@ -112,7 +144,6 @@ describe('InternalEngine', () => {
             should(result).be.an.Object().and.not.be.empty();
             should(result.total).be.eql(123);
             should(result.hits).be.an.Array().and.match(['foo', 'bar']);
-            return Promise.resolve();
           }
           catch(error) {
             return Promise.error(error);

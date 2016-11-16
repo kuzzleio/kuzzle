@@ -102,15 +102,15 @@ var apiSteps = function () {
   });
 
   this.Then(/^I ?(don't)* find a document with "([^"]*)"(?: in field "([^"]*)")?(?: in index "([^"]*)")?(?: with scroll "([^"]*)")?$/, function (dont, value, field, index, scroll) {
-    var filters = {filter: { match: { [field]: value }}};
+    var query = {query: { match: { [field]: value }}};
 
     if (scroll) {
-      filters.scroll = scroll;
-      filters.from = 0;
-      filters.size = 1;
+      query.scroll = scroll;
+      query.from = 0;
+      query.size = 1;
     }
 
-    return this.api.search(filters, index)
+    return this.api.search(query, index)
       .then(body => {
         if (body.error !== null) {
           if (dont) {
@@ -125,12 +125,12 @@ var apiSteps = function () {
         }
 
         if (body.result && body.result.hits && body.result.total !== 0) {
-          if (dont) { return Promise.reject('A document exists for the filter'); }
+          if (dont) { return Promise.reject('A document exists for the query'); }
           return Promise.resolve();
         }
 
         if (dont) { return Promise.resolve(); }
-        return Promise.reject('No result for filter search');
+        return Promise.reject('No result for query search');
       })
       .catch(error => {
         if (dont) { return Promise.resolve(); }

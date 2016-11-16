@@ -35,15 +35,15 @@ var apiSteps = function () {
   this.Then(/^I count ([\d]*) documents with "([^"]*)" in field "([^"]*)(?: in index "([^"]*)")?"/, function (number, value, field, index, callback) {
     var main = function (callbackAsync) {
       setTimeout(function () {
-        var filter = {
+        var query = {
           query: {
             match: {}
           }
         };
 
-        filter.query.match[field] = value;
+        query.query.match[field] = value;
 
-        this.api.count(filter, index)
+        this.api.count(query, index)
           .then(body => {
             if (body.error) {
               callbackAsync(body.error.message);
