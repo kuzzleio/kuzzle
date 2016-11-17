@@ -624,6 +624,7 @@ describe('Test: ElasticSearch service', () => {
 
       spy = sandbox.stub(elasticsearch.client, 'update').rejects(esError);
 
+
       elasticsearch.update(requestObject)
         .catch((error) => {
           try{

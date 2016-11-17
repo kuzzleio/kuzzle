@@ -759,7 +759,6 @@ describe('Test: admin controller', () => {
             should(kuzzle.pluginsManager.trigger).be.calledThrice();
             should(kuzzle.pluginsManager.trigger.firstCall).be.calledWith('data:beforeUpdateSpecifications', requestObject);
             should(kuzzle.pluginsManager.trigger.secondCall).be.calledWith('data:afterUpdateSpecifications');
-            should(kuzzle.internalEngine.refresh).be.calledOnce();
             should(kuzzle.validation.curateSpecification).be.called();
             should(kuzzle.internalEngine.createOrReplace).be.calledOnce();
             should(kuzzle.internalEngine.createOrReplace).be.calledWithMatch('validations', `${index}#${collection}`);
@@ -808,7 +807,6 @@ describe('Test: admin controller', () => {
           try {
             should(kuzzle.pluginsManager.trigger).be.calledOnce();
             should(kuzzle.pluginsManager.trigger.firstCall).be.calledWith('data:beforeUpdateSpecifications', requestObject);
-            should(kuzzle.internalEngine.refresh).not.be.called();
             should(kuzzle.validation.curateSpecification).not.be.called();
             should(kuzzle.internalEngine.createOrReplace).not.be.called();
 
