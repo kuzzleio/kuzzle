@@ -69,14 +69,14 @@ describe('Test: Internal broker', () => {
       var InternalBroker = new BrokerFactory('internalBroker');
       /** @type InternalBroker */
       server = new InternalBroker(kuzzle, undefined, kuzzle.config.services.internalBroker);
-      server.ws = (options, cb) => {
+      server.ws = cb => {
+        server.wss = new WSServerMock();
         cb();
-        return new WSServerMock();
       };
 
       /** @type InternalBroker */
       client = new InternalBroker(kuzzle, {client: true}, kuzzle.config.services.internalBroker);
-      client.ws = () => new WSClientMock(server.server);
+      client.ws = () => new WSClientMock(server.wss);
 
       return Promise.all([
         server.init(),
@@ -101,13 +101,13 @@ describe('Test: Internal broker', () => {
 
     beforeEach(() => {
       server = new WSBrokerServer('internalBroker', kuzzle.config.services.internalBroker, kuzzle.pluginsManager);
-      server.ws = (options, cb) => {
+      server.ws = cb => {
+        server.wss = new WSServerMock();
         cb();
-        return new WSServerMock();
       };
 
       client = new WSBrokerClient('internalBroker', kuzzle.config.services.internalBroker, kuzzle.pluginsManager);
-      client.ws = () => new WSClientMock(server.server);
+      client.ws = () => new WSClientMock(server.wss);
     });
 
     describe('#constructor', () => { });
@@ -276,7 +276,7 @@ describe('Test: Internal broker', () => {
         client.onCloseHandlers = [];
         client.onErrorHandlers = [];
 
-        return Promise.all([server.init(),client.init()]);
+        return Promise.all([server.init(), client.init()]);
       });
 
       it('on open, should re-register if some callbacks were attached', () => {
@@ -284,7 +284,7 @@ describe('Test: Internal broker', () => {
           newClient = new WSBrokerClient('internalBroker', kuzzle.config.services.internalBroker, kuzzle.pluginsManager),
           cb = sinon.stub();
 
-        newClient.ws = () => new WSClientMock(server.server);
+        newClient.ws = () => new WSClientMock(server.wss);
         newClient.handlers = {
           room: [ cb ]
         };
@@ -402,16 +402,16 @@ describe('Test: Internal broker', () => {
     beforeEach(() => {
       /** @type InternalBroker */
       server = new WSBrokerServerRewire('internalBroker', {}, kuzzle.pluginsManager);
-      server.ws = (options, cb) => {
+      server.ws = cb => {
+        server.wss = new WSServerMock();
         cb();
-        return new WSServerMock();
       };
       server.onErrorHandlers = [];
 
-      client1 = new WSBrokerClient('internalBroker', {}, kuzzle.pluginsManager);
-      client2 = new WSBrokerClient('internalBroker', {}, kuzzle.pluginsManager);
-      client3 = new WSBrokerClient('internalBroker', {}, kuzzle.pluginsManager);
-      client1.ws = client2.ws = client3.ws = () => new WSClientMock(server.server);
+      client1 = new WSBrokerClient('internalBroker', {host: 'host', port: 42}, kuzzle.pluginsManager);
+      client2 = new WSBrokerClient('internalBroker', {host: 'host', port: 42}, kuzzle.pluginsManager);
+      client3 = new WSBrokerClient('internalBroker', {host: 'host', port: 42}, kuzzle.pluginsManager);
+      client1.ws = client2.ws = client3.ws = () => new WSClientMock(server.wss);
 
       return Promise.all([
         server.init(),
@@ -428,7 +428,7 @@ describe('Test: Internal broker', () => {
       });
 
       it('should attach some callbacks', () => {
-        var socket = server.server;
+        var socket = server.wss;
 
         // 1st listener is injected in the mock to emit the 'open' event
         should(socket.on).be.calledThrice();
@@ -640,11 +640,11 @@ describe('Test: Internal broker', () => {
     describe('#close', () => {
 
       it('should close the underlying socket', () => {
-        var socket = server.server;
+        var socket = server.wss;
 
         server.close();
 
-        should(server.server).be.null();
+        should(server.wss).be.null();
         should(socket.close).be.calledOnce();
       });
 
@@ -654,7 +654,7 @@ describe('Test: Internal broker', () => {
 
       it('should close the client connection and clean up the rooms', () => {
         var
-          clientSocket = new WSClientMock(server.server),
+          clientSocket = new WSClientMock(server.wss),
           removeClient = WSBrokerServerRewire.__get__('removeClient');
 
         server.rooms = {
@@ -673,7 +673,7 @@ describe('Test: Internal broker', () => {
 
       it('client listen', () => {
         var
-          serverSocket = server.server,
+          serverSocket = server.wss,
           clientSocket = new WSClientMock(serverSocket);
 
         serverSocket.emit('connection', clientSocket);
@@ -690,7 +690,7 @@ describe('Test: Internal broker', () => {
 
       it('client unsubscribe', () => {
         var
-          serverSocket = server.server,
+          serverSocket = server.wss,
           clientSocket = new WSClientMock(serverSocket);
 
         server.rooms = {
@@ -709,7 +709,7 @@ describe('Test: Internal broker', () => {
 
       it('client send', () => {
         var
-          serverSocket = server.server,
+          serverSocket = server.wss,
           clientSocket = new WSClientMock(serverSocket),
           dispatchSpy = sandbox.spy(server, 'dispatch'),
           sendSpy = sandbox.spy(server, 'send');
@@ -730,7 +730,7 @@ describe('Test: Internal broker', () => {
 
       it('client broadcast', () => {
         var
-          serverSocket = server.server,
+          serverSocket = server.wss,
           clientSocket = new WSClientMock(serverSocket),
           dispatchSpy = sandbox.spy(server, 'dispatch'),
           broadcastSpy = sandbox.spy(server, 'broadcast');
@@ -752,7 +752,7 @@ describe('Test: Internal broker', () => {
 
       it('client close', () => {
         var
-          serverSocket = server.server,
+          serverSocket = server.wss,
           clientSocket = new WSClientMock(serverSocket),
           removeClientSpy = sinon.spy();
 
@@ -770,7 +770,7 @@ describe('Test: Internal broker', () => {
 
       it('server error', () => {
         var
-          serverSocket = server.server,
+          serverSocket = server.wss,
           error = new Error();
 
         server.onErrorHandlers.push(sinon.spy());
