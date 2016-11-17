@@ -544,7 +544,7 @@ ApiREST.prototype.deleteProfile = function (id) {
 
 ApiREST.prototype.searchValidations = function (body) {
   var options = {
-    url: this.apiPath('%kuzzle/validations/_search'),
+    url: this.apiPath('validations/_search'),
     method: 'POST',
     body
   };

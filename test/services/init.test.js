@@ -69,7 +69,7 @@ describe('Test: lib/services/', () => {
             return Promise.resolve();
           }
           catch(error) {
-            return Promise.error(error);
+            return Promise.reject(error);
           }
         });
     });
@@ -96,7 +96,7 @@ describe('Test: lib/services/', () => {
             return Promise.resolve();
           }
           catch(err) {
-            return Promise.error(err);
+            return Promise.reject(err);
           }
         });
     });
@@ -125,7 +125,7 @@ describe('Test: lib/services/', () => {
             return Promise.resolve();
           }
           catch(error) {
-            return Promise.error(error);
+            return Promise.reject(error);
           }
         });
     });
@@ -147,7 +147,7 @@ describe('Test: lib/services/', () => {
             return Promise.resolve();
           }
           catch(error) {
-            return Promise.error(error);
+            return Promise.reject(error);
           }
         });
     });
@@ -179,7 +179,7 @@ describe('Test: lib/services/', () => {
             return Promise.resolve();
           }
           catch(error) {
-            return Promise.error(error);
+            return Promise.reject(error);
           }
         });
     });
@@ -198,7 +198,7 @@ describe('Test: lib/services/', () => {
             return Promise.resolve();
           }
           catch(error) {
-            return Promise.error(error);
+            return Promise.reject(error);
           }
         });
     });
@@ -229,7 +229,7 @@ describe('Test: lib/services/', () => {
             return Promise.resolve();
           }
           catch(error) {
-            return Promise.error(error);
+            return Promise.reject(error);
           }
         });
     });

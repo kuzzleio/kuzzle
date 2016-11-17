@@ -125,12 +125,12 @@ var apiSteps = function () {
         }
 
         if (body.result && body.result.hits && body.result.total !== 0) {
-          if (dont) { return Promise.reject('A document exists for the query'); }
+          if (dont) { return Promise.reject(new Error('A document exists for the query')); }
           return Promise.resolve();
         }
 
         if (dont) { return Promise.resolve(); }
-        return Promise.reject('No result for query search');
+        return Promise.reject(new Error('No result for query search'));
       })
       .catch(error => {
         if (dont) { return Promise.resolve(); }

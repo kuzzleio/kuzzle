@@ -38,4 +38,20 @@ module.exports = function () {
     }
   });
 
+  this.Then(/^The result should raise an error with message "(.*?)"$/, function (message, callback) {
+    var
+      val = this.result.error.error || this.result.error;
+
+    try {
+      should(val.message).be.eql(message);
+      callback();
+    }
+    catch(err) {
+      if (err instanceof should.AssertionError) {
+        return callback(new Error(`"${val.message}" does not match "${message}"`));
+      }
+
+      return callback(err);
+    }
+  });
 };

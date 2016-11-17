@@ -7,13 +7,15 @@ exports.getReturn = function () {
   this.api[action].apply(this.api, args)
     .then(response => {
       if (response.error) {
-        return cb(new Error(response.error));
+        this.result = response;
+        return cb();
       }
 
       this.result = response;
       cb();
     })
     .catch(error => {
-      cb(error);
+      this.result = error;
+      cb();
     });
 };

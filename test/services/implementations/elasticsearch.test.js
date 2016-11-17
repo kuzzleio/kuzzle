@@ -145,7 +145,7 @@ describe('Test: ElasticSearch service', () => {
         preparedData;
 
       requestObject.data._id = 'foobar';
-      preparedData = cleanData.call(elasticsearch, requestObject);
+      preparedData = cleanData.call(elasticsearch, requestObject, kuzzle);
 
       should(preparedData.type).be.exactly(requestObject.collection);
       should(preparedData.id).be.exactly(requestObject.data._id);
@@ -624,6 +624,7 @@ describe('Test: ElasticSearch service', () => {
 
       spy = sandbox.stub(elasticsearch.client, 'update').rejects(esError);
 
+
       elasticsearch.update(requestObject)
         .catch((error) => {
           try{
@@ -818,7 +819,7 @@ describe('Test: ElasticSearch service', () => {
           bulkData: []
         },
         consistency: 'foo',
-        refresh: true,
+        refresh: 'wait_for',
         routing: 'foo/bar',
         timeout: 999,
         fields: 'foo, bar, baz'
@@ -829,7 +830,7 @@ describe('Test: ElasticSearch service', () => {
           return elasticsearch.import(requestObject)
             .then(() => {
               should(spy.firstCall.args[0].consistency).be.exactly('foo');
-              should(spy.firstCall.args[0].refresh).be.exactly(true);
+              should(spy.firstCall.args[0].refresh).be.exactly('wait_for');
               should(spy.firstCall.args[0].routing).be.exactly('foo/bar');
               should(spy.firstCall.args[0].timeout).be.exactly(999);
               should(spy.firstCall.args[0].fields).be.exactly('foo, bar, baz');
@@ -929,6 +930,22 @@ describe('Test: ElasticSearch service', () => {
       sandbox.stub(elasticsearch.client, 'bulk').rejects(error);
 
       return should(elasticsearch.import(requestObject)).be.rejectedWith(error);
+    });
+
+    it('should return a rejected promise if bulk data try to write into internal index', () => {
+      requestObject.data.body = {
+        bulkData: [
+          {index: {_id: 1, _index: index}},
+          {firstName: 'foo'},
+          {index: {_id: 2, _index: '%kuzzle'}},
+          {firstName: 'bar'},
+          {update: {_id: 1, _index: index}},
+          {doc: {firstName: 'foobar'}},
+          {delete: {_id: 2, _index: index}}
+        ]
+      };
+
+      return should(elasticsearch.import(requestObject)).be.rejectedWith(BadRequestError);
     });
 
     it('should return a rejected promise if no body is provided', () => {
@@ -1382,14 +1399,21 @@ describe('Test: ElasticSearch service', () => {
 
       return elasticsearch.indexExists(requestObject)
         .then(response => {
-          should(response).be.true();
+          try {
+            should(response).be.true();
 
-          should(spy)
-            .be.calledOnce();
+            should(spy)
+              .be.calledOnce();
 
-          should(spy.firstCall.args[0]).match({
-            index: '%test'
-          });
+            should(spy.firstCall.args[0]).match({
+              index: '%test'
+            });
+
+            return Promise.resolve();
+          }
+          catch (error) {
+            return Promise.reject(error);
+          }
         });
     });
 
@@ -1419,14 +1443,21 @@ describe('Test: ElasticSearch service', () => {
 
       return elasticsearch.collectionExists(requestObject)
         .then(() => {
-          should(spy)
-            .be.calledOnce();
+          try {
+            should(spy)
+              .be.calledOnce();
 
-          should(spy.firstCall.args[0])
-            .match({
-              index,
-              type: collection
-            });
+            should(spy.firstCall.args[0])
+              .match({
+                index,
+                type: collection
+              });
+
+            return Promise.resolve();
+          }
+          catch (error) {
+            return Promise.reject(error);
+          }
         });
     });
 

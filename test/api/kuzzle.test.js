@@ -79,7 +79,7 @@ describe('/lib/api/kuzzle.js', () => {
             return Promise.resolve();
           }
           catch(error) {
-            return Promise.error(error);
+            return Promise.reject(error);
           }
         });
     });
@@ -158,7 +158,7 @@ describe('/lib/api/kuzzle.js', () => {
             return Promise.resolve();
           }
           catch(error) {
-            return Promise.error(error);
+            return Promise.reject(error);
           }
         });
 
