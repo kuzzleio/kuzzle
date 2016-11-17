@@ -220,7 +220,8 @@ describe('services/internalEngine/bootstrap.js', () => {
                   policies: {
                     properties: {
                       _id: {
-                        type: 'keyword'
+                        index: 'not_analyzed',
+                        type: 'string'
                       }
                     }
                   }
@@ -277,11 +278,12 @@ describe('services/internalEngine/bootstrap.js', () => {
               .be.calledWithMatch('users', {
                 properties: {
                   profileIds: {
-                    type: 'keyword'
+                    index: 'not_analyzed',
+                    type: 'string'
                   },
                   password: {
-                    index: 'false',
-                    type: 'keyword'
+                    index: 'no',
+                    type: 'string'
                   }
                 }
               });
