@@ -57,7 +57,7 @@ describe('services/internalEngine/bootstrap.js', () => {
             return Promise.resolve();
           }
           catch(error) {
-            return Promise.error(error);
+            return Promise.reject(error);
           }
         });
     });
@@ -116,11 +116,12 @@ describe('services/internalEngine/bootstrap.js', () => {
             return Promise.resolve();
           }
           catch(error) {
-            return Promise.error(error);
+            return Promise.reject(error);
           }
         });
     });
   });
+
 
   describe('#createRolesCollection', () => {
     it('should create mapping and add default roles', () => {
@@ -145,7 +146,7 @@ describe('services/internalEngine/bootstrap.js', () => {
             return Promise.resolve();
           }
           catch(error) {
-            return Promise.error(error);
+            return Promise.reject(error);
           }
         });
     });
@@ -162,7 +163,7 @@ describe('services/internalEngine/bootstrap.js', () => {
             return Promise.resolve();
           }
           catch(error) {
-            return Promise.error(error);
+            return Promise.reject(error);
           }
         });
     });
@@ -184,7 +185,7 @@ describe('services/internalEngine/bootstrap.js', () => {
             return Promise.resolve();
           }
           catch(error) {
-            return Promise.error(error);
+            return Promise.reject(error);
           }
         });
     });
@@ -201,7 +202,7 @@ describe('services/internalEngine/bootstrap.js', () => {
             return Promise.resolve();
           }
           catch(error) {
-            return Promise.error(error);
+            return Promise.reject(error);
           }
         });
     });
@@ -245,7 +246,7 @@ describe('services/internalEngine/bootstrap.js', () => {
             return Promise.resolve();
           }
           catch(error) {
-            return Promise.error(error);
+            return Promise.reject(error);
           }
         });
     });
@@ -261,7 +262,7 @@ describe('services/internalEngine/bootstrap.js', () => {
             return Promise.resolve();
           }
           catch(error) {
-            return Promise.error(error);
+            return Promise.reject(error);
           }
         });
     });
@@ -290,7 +291,7 @@ describe('services/internalEngine/bootstrap.js', () => {
             return Promise.resolve();
           }
           catch(error) {
-            return Promise.error(error);
+            return Promise.reject(error);
           }
         });
     });
@@ -306,7 +307,7 @@ describe('services/internalEngine/bootstrap.js', () => {
             return Promise.resolve();
           }
           catch(error) {
-            return Promise.error(error);
+            return Promise.reject(error);
           }
         });
     });
@@ -334,7 +335,7 @@ describe('services/internalEngine/bootstrap.js', () => {
             return Promise.resolve();
           }
           catch(error) {
-            return Promise.error(error);
+            return Promise.reject(error);
           }
         });
     });
@@ -350,7 +351,7 @@ describe('services/internalEngine/bootstrap.js', () => {
             return Promise.resolve();
           }
           catch(error) {
-            return Promise.error(error);
+            return Promise.reject(error);
           }
         });
     });

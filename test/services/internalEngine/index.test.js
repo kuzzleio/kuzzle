@@ -83,7 +83,7 @@ describe('InternalEngine', () => {
             return Promise.resolve();
           }
           catch(error) {
-            return Promise.error(error);
+            return Promise.reject(error);
           }
         });
     });
@@ -116,7 +116,7 @@ describe('InternalEngine', () => {
             return Promise.resolve();
           }
           catch(error) {
-            return Promise.error(error);
+            return Promise.reject(error);
           }
         });
     });
@@ -130,23 +130,24 @@ describe('InternalEngine', () => {
       return kuzzle.internalEngine.search(collection)
         .then(result => {
           try {
-            should(kuzzle.internalEngine.client.search)
-              .be.calledOnce()
-              .be.calledWithMatch({
-                index: kuzzle.internalEngine.index,
-                type: collection,
-                body: {
-                  from: 0,
-                  size: 20
-                }
-              });
+            should(kuzzle.internalEngine.client.search.calledOnce)
+              .be.true();
+
+            should(kuzzle.internalEngine.client.search.calledWithMatch({
+              index: kuzzle.internalEngine.index,
+              type: collection,
+              body: {
+                from: 0,
+                size: 20
+              }
+            })).be.true();
 
             should(result).be.an.Object().and.not.be.empty();
             should(result.total).be.eql(123);
             should(result.hits).be.an.Array().and.match(['foo', 'bar']);
           }
           catch(error) {
-            return Promise.error(error);
+            return Promise.reject(error);
           }
         });
     });
@@ -182,7 +183,7 @@ describe('InternalEngine', () => {
             return Promise.resolve();
           }
           catch(error) {
-            return Promise.error(error);
+            return Promise.reject(error);
           }
         });
     });
@@ -220,7 +221,7 @@ describe('InternalEngine', () => {
             return Promise.resolve();
           }
           catch(error) {
-            return Promise.error(error);
+            return Promise.reject(error);
           }
         });
     });
@@ -259,7 +260,7 @@ describe('InternalEngine', () => {
             return Promise.resolve();
           }
           catch(error) {
-            return Promise.error(error);
+            return Promise.reject(error);
           }
         });
     });
@@ -297,7 +298,7 @@ describe('InternalEngine', () => {
             return Promise.resolve();
           }
           catch(error) {
-            return Promise.error(error);
+            return Promise.reject(error);
           }
         });
     });
@@ -338,7 +339,7 @@ describe('InternalEngine', () => {
             return Promise.resolve();
           }
           catch(error) {
-            return Promise.error(error);
+            return Promise.reject(error);
           }
         });
     });
@@ -377,7 +378,7 @@ describe('InternalEngine', () => {
             return Promise.resolve();
           }
           catch(error) {
-            return Promise.error(error);
+            return Promise.reject(error);
           }
         });
     });
@@ -417,7 +418,7 @@ describe('InternalEngine', () => {
             return Promise.resolve();
           }
           catch(error) {
-            return Promise.error(error);
+            return Promise.reject(error);
           }
         });
     });
@@ -446,7 +447,7 @@ describe('InternalEngine', () => {
             return Promise.resolve();
           }
           catch(error) {
-            return Promise.error(error);
+            return Promise.reject(error);
           }
         });
     });
@@ -466,7 +467,7 @@ describe('InternalEngine', () => {
             return Promise.resolve();
           }
           catch(error) {
-            return Promise.error(error);
+            return Promise.reject(error);
           }
         });
     });
@@ -483,8 +484,8 @@ describe('InternalEngine', () => {
   describe('#listIndexes', () => {
     it('should forward the request to elasticsearch', () => {
       kuzzle.internalEngine.client.indices.getMapping.resolves({
-        index1: {foo: 'bar'},
-        index2: {foo: 'bar'}
+        index1: {mappings: {foo: 'bar'}},
+        index2: {mappings: {foo: 'bar'}}
       });
 
       return kuzzle.internalEngine.listIndexes()
@@ -502,7 +503,39 @@ describe('InternalEngine', () => {
             return Promise.resolve();
           }
           catch(error) {
-            return Promise.error(error);
+            return Promise.reject(error);
+          }
+
+        });
+
+    });
+  });
+
+  describe('#listCollections', () => {
+    it('should forward the request to elasticsearch', () => {
+      kuzzle.internalEngine.client.indices.getMapping.resolves({
+        index1: {mappings: {foo: 'bar', baz: 'qux'}},
+        index2: {mappings: {foo: 'bar'}}
+      });
+
+      return kuzzle.internalEngine.listCollections('index1')
+        .then(result => {
+          try {
+            should(kuzzle.internalEngine.client.indices.getMapping)
+              .be.calledOnce();
+
+            should(kuzzle.internalEngine.client.indices.getMapping.firstCall.args)
+              .have.length(1);
+
+            should(kuzzle.internalEngine.client.indices.getMapping.firstCall.args[0])
+              .be.deepEqual({index: 'index1'});
+
+            should(result).match(['foo', 'baz']);
+
+            return Promise.resolve();
+          }
+          catch(error) {
+            return Promise.reject(error);
           }
 
         });
@@ -524,7 +557,7 @@ describe('InternalEngine', () => {
             return Promise.resolve();
           }
           catch(error) {
-            return Promise.error(error);
+            return Promise.reject(error);
           }
         });
     });
@@ -543,7 +576,7 @@ describe('InternalEngine', () => {
             return Promise.resolve();
           }
           catch(error) {
-            return Promise.error(error);
+            return Promise.reject(error);
           }
         });
     });
@@ -569,7 +602,7 @@ describe('InternalEngine', () => {
             return Promise.resolve();
           }
           catch(error) {
-            return Promise.error(error);
+            return Promise.reject(error);
           }
         });
     });
@@ -589,7 +622,7 @@ describe('InternalEngine', () => {
             return Promise.resolve();
           }
           catch(error) {
-            return Promise.error(error);
+            return Promise.reject(error);
           }
         });
     });

@@ -7,6 +7,8 @@ var
 
 describe('Test: core/indexCache', () => {
   var
+    listIndexesStub,
+    listCollectionsStub,
     indexCache,
     kuzzle;
 
@@ -18,12 +20,8 @@ describe('Test: core/indexCache', () => {
     sandbox.stub(kuzzle.internalEngine, 'get').resolves({});
     return kuzzle.services.init({whitelist: []})
       .then(() => {
-        sandbox.stub(kuzzle.services.list.storageEngine, 'listIndexes').resolves({ indexes: ['foo'] });
-        sandbox.stub(kuzzle.services.list.storageEngine, 'listCollections').resolves({
-          collections: {
-            stored: ['bar', 'baz', 'qux']
-          }
-        });
+        listIndexesStub = sandbox.stub(kuzzle.internalEngine, 'listIndexes').resolves(['foo']);
+        listCollectionsStub = sandbox.stub(kuzzle.internalEngine, 'listCollections').resolves(['bar', 'baz', 'qux']);
         indexCache = new IndexCache(kuzzle);
       });
   });
@@ -37,6 +35,8 @@ describe('Test: core/indexCache', () => {
       indexCache.init();
 
       setTimeout(() => {
+        should(listIndexesStub.calledOnce).be.true();
+        should(listCollectionsStub.calledOnce).be.true();
         should(indexCache.indexes).be.an.Object().and.have.keys('foo');
         should(indexCache.indexes.foo).be.an.Array().and.match(['bar', 'baz', 'qux']);
         done();
