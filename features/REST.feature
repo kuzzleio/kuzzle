@@ -1350,4 +1350,4 @@ Feature: Test REST API
     Then There is no error message
     And There is no specifications for index "kuzzle-test-index" and collection "kuzzle-collection-test"
     When I delete the specifications again for index "kuzzle-test-index" and collection "kuzzle-collection-test"
-    Then There is an error message
+    Then There is no error message
