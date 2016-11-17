@@ -163,20 +163,21 @@ function cleanSecurity (callback) {
       });
     })
     .then(results => {
-      var regex = new RegExp('^' + this.idPrefix);
+      var
+        promises = [],
+        regex = new RegExp('^' + this.idPrefix);
+
       results = results.result.hits.filter(r => r._id.match(regex)).map(r => r._id);
-      return this.api.deleteByQuery(
-        {
-          query: {
-            ids: {
-              type: 'users',
-              values: results
-            }
-          }
-        },
-        '%kuzzle',
-        'users'
-      );
+
+      results.forEach(id => {
+        promises.push(this.api.deleteUser(id));
+      });
+
+      return Promise.all(promises)
+        .catch(() => {
+          // discard errors
+          return Promise.resolve();
+        });
     })
     .then(() => {
       return this.api.searchProfiles({
@@ -188,20 +189,21 @@ function cleanSecurity (callback) {
       });
     })
     .then(results => {
-      var regex = new RegExp('^' + this.idPrefix);
+      var
+        promises = [],
+        regex = new RegExp('^' + this.idPrefix);
+
       results = results.result.hits.filter(r => r._id.match(regex)).map(r => r._id);
-      return this.api.deleteByQuery(
-        {
-          query: {
-            ids: {
-              type: 'profiles',
-              values: results
-            }
-          }
-        },
-        '%kuzzle',
-        'profiles'
-      );
+
+      results.forEach(id => {
+        promises.push(this.api.deleteProfile(id));
+      });
+
+      return Promise.all(promises)
+        .catch(() => {
+          // discard errors
+          return Promise.resolve();
+        });
     })
     .then(() => {
       return this.api.searchRoles({
@@ -213,23 +215,21 @@ function cleanSecurity (callback) {
       });
     })
     .then(results => {
-      var regex = new RegExp('^' + this.idPrefix);
+      var
+        promises = [],
+        regex = new RegExp('^' + this.idPrefix);
+
       results = results.result.hits.filter(r => r._id.match(regex)).map(r => r._id);
-      return this.api.deleteByQuery(
-        {
-          query: {
-            ids: {
-              type: 'roles',
-              values: results
-            }
-          }
-        },
-        '%kuzzle',
-        'roles'
-      );
-    })
-    .then(() => {
-      return this.api.refreshIndex('%kuzzle');
+
+      results.forEach(id => {
+        promises.push(this.api.deleteRole(id));
+      });
+
+      return Promise.all(promises)
+        .catch(() => {
+          // discard errors
+          return Promise.resolve();
+        });
     })
     .then(() => {
       callback();
@@ -250,7 +250,7 @@ function cleanRedis(callback) {
         return this.api.callMemoryStorage('del', { body: { keys: response.result } });
       }
 
-      return;
+      return null;
     })
     .then(() => {
       callback();
@@ -270,29 +270,27 @@ function cleanValidations(callback) {
       return this.api.searchValidations({
         query: {
           match_all: {}
-        }
+        },
+        from: 0,
+        size: 9999
       });
     })
     .then(results => {
-      var regex = new RegExp('^' + this.idPrefix);
+      var
+        promises = [],
+        regex = new RegExp('^' + this.idPrefix);
+
       results = results.result.hits.filter(r => r._id.match(regex)).map(r => r._id);
-      return this.api.deleteByQuery(
-        {
-          query: {
-            ids: {
-              type: 'validations',
-              values: results
-            }
-          },
-          from: 0,
-          size: 9999
-        },
-        '%kuzzle',
-        'validations'
-      );
-    })
-    .then(() => {
-      return this.api.refreshIndex('%kuzzle');
+
+      results.forEach(id => {
+        promises.push(this.api.deleteSpecifications(id));
+      });
+
+      return Promise.all(promises)
+        .catch(() => {
+          // discard errors
+          return Promise.resolve();
+        });
     })
     .then(() => {
       callback();

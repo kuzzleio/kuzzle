@@ -59,6 +59,10 @@ Feature: Test REST API
     Then I can retrieve actions from bulk import
 
   @usingREST
+  Scenario: Can't do a bulk import on internal index
+    When I can't do a bulk import from index "%kuzzle"
+
+  @usingREST
   Scenario: Global Bulk import
     When I do a global bulk import
     Then I can retrieve actions from bulk import
@@ -125,13 +129,16 @@ Feature: Test REST API
   @usingREST
   Scenario: Index and collection existence
     When I check if index "%kuzzle" exists
-    Then The result should match the json true
+    Then The result should raise an error with message "Index "%kuzzle" is protected, please use appropriated routes instead"
     When I check if index "idontexist" exists
     Then The result should match the json false
     When I check if collection "users" exists on index "%kuzzle"
+    Then The result should raise an error with message "Index "%kuzzle" is protected, please use appropriated routes instead"
+    When I write the document "documentGrace"
+    When I check if index "kuzzle-test-index" exists
     Then The result should match the json true
-    When I check if collection "idontexist" exists on index "%kuzzle"
-    Then The result should match the json false
+    When I check if collection "kuzzle-collection-test" exists on index "kuzzle-test-index"
+    Then The result should match the json true
 
   @usingREST
   Scenario: list known realtime collections
