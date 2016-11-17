@@ -818,7 +818,7 @@ describe('Test: ElasticSearch service', () => {
           bulkData: []
         },
         consistency: 'foo',
-        refresh: true,
+        refresh: 'wait_for',
         routing: 'foo/bar',
         timeout: 999,
         fields: 'foo, bar, baz'
@@ -829,7 +829,7 @@ describe('Test: ElasticSearch service', () => {
           return elasticsearch.import(requestObject)
             .then(() => {
               should(spy.firstCall.args[0].consistency).be.exactly('foo');
-              should(spy.firstCall.args[0].refresh).be.exactly(true);
+              should(spy.firstCall.args[0].refresh).be.exactly('wait_for');
               should(spy.firstCall.args[0].routing).be.exactly('foo/bar');
               should(spy.firstCall.args[0].timeout).be.exactly(999);
               should(spy.firstCall.args[0].fields).be.exactly('foo, bar, baz');
