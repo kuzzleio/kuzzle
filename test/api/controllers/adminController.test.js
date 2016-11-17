@@ -412,6 +412,33 @@ describe('Test: admin controller', () => {
     });
   });
 
+  describe('#refreshInternalIndex', () => {
+    it('should trigger the proper methods and resolve to a valid response', () => {
+      return adminController.refreshInternalIndex(requestObject)
+        .then(response => {
+          var
+            trigger = kuzzle.pluginsManager.trigger;
+
+          should(trigger).be.calledTwice();
+          should(trigger.firstCall).be.calledWith('data:beforeRefreshInternalIndex', requestObject);
+          should(trigger.secondCall).be.calledWith('data:afterRefreshInternalIndex');
+
+          should(kuzzle.internalEngine.refresh).be.calledOnce();
+
+          should(response).be.an.instanceOf(ResponseObject);
+          should(response).match({
+            status: 200,
+            error: null,
+            data: {
+              body: {
+                acknowledged: true
+              }
+            }
+          });
+        });
+    });
+  });
+
   describe('#getAutoRefresh', () => {
     it('should trigger the proper methods and resolve to a valid response', () => {
       return adminController.getAutoRefresh(requestObject)
@@ -759,6 +786,7 @@ describe('Test: admin controller', () => {
             should(kuzzle.pluginsManager.trigger).be.calledThrice();
             should(kuzzle.pluginsManager.trigger.firstCall).be.calledWith('data:beforeUpdateSpecifications', requestObject);
             should(kuzzle.pluginsManager.trigger.secondCall).be.calledWith('data:afterUpdateSpecifications');
+            should(kuzzle.internalEngine.refresh).be.calledOnce();
             should(kuzzle.validation.curateSpecification).be.called();
             should(kuzzle.internalEngine.createOrReplace).be.calledOnce();
             should(kuzzle.internalEngine.createOrReplace).be.calledWithMatch('validations', `${index}#${collection}`);
@@ -807,6 +835,7 @@ describe('Test: admin controller', () => {
           try {
             should(kuzzle.pluginsManager.trigger).be.calledOnce();
             should(kuzzle.pluginsManager.trigger.firstCall).be.calledWith('data:beforeUpdateSpecifications', requestObject);
+            should(kuzzle.internalEngine.refresh).not.be.called();
             should(kuzzle.validation.curateSpecification).not.be.called();
             should(kuzzle.internalEngine.createOrReplace).not.be.called();
 

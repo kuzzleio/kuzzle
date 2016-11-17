@@ -129,11 +129,11 @@ Feature: Test REST API
   @usingREST
   Scenario: Index and collection existence
     When I check if index "%kuzzle" exists
-    Then The result should raise an error with message "Index "%kuzzle" is protected, please use appropriated routes instead"
+    Then The result should raise an error with message "Cannot operate on Kuzzle internal index "%kuzzle""
     When I check if index "idontexist" exists
     Then The result should match the json false
     When I check if collection "users" exists on index "%kuzzle"
-    Then The result should raise an error with message "Index "%kuzzle" is protected, please use appropriated routes instead"
+    Then The result should raise an error with message "Cannot operate on Kuzzle internal index "%kuzzle""
     When I write the document "documentGrace"
     When I check if index "kuzzle-test-index" exists
     Then The result should match the json true
