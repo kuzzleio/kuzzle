@@ -10,7 +10,7 @@
   },
   "scripts": {
     "test": "npm run --silent lint && npm run unit-testing --coverage && npm run functional-testing && npm run crawl-coverage",
-    "unit-testing": "istanbul cover ./node_modules/mocha/bin/_mocha --report lcovonly -- -R spec",
+    "unit-testing": "istanbul cover ./node_modules/mocha/bin/_mocha -- -R spec",
     "functional-testing": "npm run cucumber",
     "cucumber": "cucumber.js --fail-fast",
     "codecov": "codecov",
