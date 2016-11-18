@@ -71,7 +71,7 @@ module.exports = function () {
 
   });
 
-  this.Then(/^I search for {(.*?)} and find (\d+) users(?: matching {(.*?)})?$/, function (filter, count, match, callback) {
+  this.Then(/^I search for {(.*?)} and find (\d+) users(?: matching {(.*?)})?$/, function (query, count, match, callback) {
     var run;
 
     if (count) {
@@ -79,9 +79,9 @@ module.exports = function () {
     }
 
     run = (cb) => {
-      filter = filter.replace(/#prefix#/g, this.idPrefix);
+      query = query.replace(/#prefix#/g, this.idPrefix);
 
-      this.api.searchUsers(JSON.parse('{' + filter + '}'))
+      this.api.searchUsers(JSON.parse('{' + query + '}'))
         .then(body => {
           var matchFunc;
 

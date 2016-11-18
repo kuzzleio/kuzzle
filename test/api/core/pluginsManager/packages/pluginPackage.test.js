@@ -115,14 +115,21 @@ describe('plugins/packages/pluginPackage', () => {
 
       return pkg.updateDbConfiguration(config)
         .then(response => {
-          should(response).be.exactly('source');
-          should(kuzzle.internalEngine.createOrReplace)
-            .be.calledOnce()
-            .be.calledWithMatch('plugins', pkg.name, {
-              version: pkg.version,
-              activated: pkg.activated,
-              config
-            });
+          try {
+            should(response).be.exactly('source');
+            should(kuzzle.internalEngine.createOrReplace)
+              .be.calledOnce()
+              .be.calledWithMatch('plugins', pkg.name, {
+                version: pkg.version,
+                activated: pkg.activated,
+                config
+              });
+
+            return Promise.resolve();
+          }
+          catch (error) {
+            return Promise.reject(error);
+          }
         });
     });
   });
@@ -136,16 +143,23 @@ describe('plugins/packages/pluginPackage', () => {
 
       return pkg.setActivate('activated')
         .then(response => {
-          should(response).be.exactly('OK');
+          try {
+            should(response).be.exactly('OK');
 
-          should(pkg.dbConfiguration)
-            .be.calledOnce();
+            should(pkg.dbConfiguration)
+              .be.calledOnce();
 
-          should(pkg.updateDbConfiguration)
-            .be.calledOnce()
-            .be.calledWithExactly('config');
+            should(pkg.updateDbConfiguration)
+              .be.calledOnce()
+              .be.calledWithExactly('config');
 
-          should(pkg.activated).be.exactly('activated');
+            should(pkg.activated).be.exactly('activated');
+
+            return Promise.resolve();
+          }
+          catch (error) {
+            return Promise.reject(error);
+          }
         });
     });
 
@@ -370,12 +384,20 @@ describe('plugins/packages/pluginPackage', () => {
     it('should allow installing a package from npm repos', () => {
       return pkg.install()
         .then(() => {
-          should(exec)
-            .be.calledOnce()
-            .be.calledWith('npm install plugin');
 
-          should(pkg.updateDbConfiguration)
-            .be.calledOnce();
+          try {
+            should(exec)
+              .be.calledOnce()
+              .be.calledWith('npm install plugin');
+
+            should(pkg.updateDbConfiguration)
+              .be.calledOnce();
+
+            return Promise.resolve();
+          }
+          catch (error) {
+            return Promise.reject(error);
+          }
         });
     });
 
@@ -384,13 +406,20 @@ describe('plugins/packages/pluginPackage', () => {
 
       return pkg.install()
         .then(() => {
-          should(exec)
-            .be.calledOnce()
-            .be.calledWith('npm install /some/path');
+          try {
+            should(exec)
+              .be.calledOnce()
+              .be.calledWith('npm install /some/path');
 
-          should(pkg.updateDbConfiguration)
-            .be.calledOnce()
-            .be.calledWith('local configuration');
+            should(pkg.updateDbConfiguration)
+              .be.calledOnce()
+              .be.calledWith('local configuration');
+
+            return Promise.resolve();
+          }
+          catch (error) {
+            return Promise.reject(error);
+          }
         });
     });
 
@@ -400,9 +429,16 @@ describe('plugins/packages/pluginPackage', () => {
 
       return pkg.install()
         .then(() => {
-          should(exec)
-            .be.calledOnce()
-            .be.calledWith('npm install http://some.url');
+          try {
+            should(exec)
+              .be.calledOnce()
+              .be.calledWith('npm install http://some.url');
+
+            return Promise.resolve();
+          }
+          catch (error) {
+            return Promise.reject(error);
+          }
         });
     });
 
@@ -411,9 +447,16 @@ describe('plugins/packages/pluginPackage', () => {
 
       return pkg.install()
         .then(() => {
-          should(exec)
-            .be.calledOnce()
-            .be.calledWith('npm install plugin@version');
+          try {
+            should(exec)
+              .be.calledOnce()
+              .be.calledWith('npm install plugin@version');
+
+            return Promise.resolve();
+          }
+          catch (error) {
+            return Promise.reject(error);
+          }
         });
     });
 
@@ -423,9 +466,16 @@ describe('plugins/packages/pluginPackage', () => {
 
       return pkg.install()
         .then(() => {
-          should(exec)
-            .be.calledOnce()
-            .be.calledWith('npm install https://github.com/some/repo.git#version');
+          try {
+            should(exec)
+              .be.calledOnce()
+              .be.calledWith('npm install https://github.com/some/repo.git#version');
+
+            return Promise.resolve();
+          }
+          catch (error) {
+            return Promise.reject(error);
+          }
         });
     });
 
@@ -435,9 +485,16 @@ describe('plugins/packages/pluginPackage', () => {
 
       return pkg.install()
         .then(() => {
-          should(exec)
-            .be.calledOnce()
-            .be.calledWith('npm install http://some/tar.gz');
+          try {
+            should(exec)
+              .be.calledOnce()
+              .be.calledWith('npm install http://some/tar.gz');
+
+            return Promise.resolve();
+          }
+          catch (error) {
+            return Promise.reject(error);
+          }
         });
     });
 
@@ -445,10 +502,16 @@ describe('plugins/packages/pluginPackage', () => {
       var error = new Error('error');
 
       return PluginPackage.__with__({
-        exec: sinon.stub().yields(error)
+        exec: sinon.stub().throws(error)
       })(() => {
         return should(pkg.install())
-          .be.rejectedWith(error);
+          .be.fulfilledWith({
+            success: false,
+            error,
+            name: pkg.name,
+            version: pkg.version,
+            config: pkg.config,
+          });
       });
     });
 
@@ -462,17 +525,24 @@ describe('plugins/packages/pluginPackage', () => {
       })(() => {
         return pkg.install()
           .then(() => {
-            should(exec)
-              .be.calledOnce()
-              .be.calledWith('npm install invalid');
+            try {
+              should(exec)
+                .be.calledOnce()
+                .be.calledWith('npm install invalid');
 
-            should(PluginPackage.__get__('console.warn'))
-              .be.calledOnce()
-              .be.calledWith('WARNING: Given plugin name "invalid" does not match its packages.json name "plugin".\n' +
+              should(PluginPackage.__get__('console.warn'))
+                .be.calledOnce()
+                .be.calledWith('WARNING: Given plugin name "invalid" does not match its packages.json name "plugin".\n' +
                 'If you installed this plugin by other means than the CLI, please update Kuzzle configuration to use proper name "plugin".');
 
-            should(pkg.name).be.exactly('plugin');
-            should(pkg.version).be.exactly('1.0.0');
+              should(pkg.name).be.exactly('plugin');
+              should(pkg.version).be.exactly('1.0.0');
+
+              return Promise.resolve();
+            }
+            catch (error) {
+              return Promise.reject(error);
+            }
           });
       });
     });
@@ -481,10 +551,12 @@ describe('plugins/packages/pluginPackage', () => {
       pkg.name = 'invalid';
       kuzzle.pluginsManager.isInit = true;
 
-      return should(pkg.install())
-        .be.rejectedWith(BadRequestError, {
-          message: 'WARNING: Given plugin name "invalid" does not match its packages.json name "plugin".\n' +
-          'If you installed this plugin by other means than the CLI, please update Kuzzle configuration to use proper name "plugin".'
+      return pkg.install()
+        .then(result => {
+          should(result.success).be.exactly(false);
+          should(result.error).be.an.instanceOf(BadRequestError);
+          should(result.error.message).be.exactly('WARNING: Given plugin name "invalid" does not match its packages.json name "plugin".\n' +
+            'If you installed this plugin by other means than the CLI, please update Kuzzle configuration to use proper name "plugin".');
         });
     });
   });
@@ -496,15 +568,22 @@ describe('plugins/packages/pluginPackage', () => {
       })(() => {
         return pkg.delete()
           .then(() => {
-            should(kuzzle.internalEngine.createOrReplace)
-              .be.calledOnce()
-              .be.calledWithMatch('plugins', pkg.name, {deleted: true});
+            try {
+              should(kuzzle.internalEngine.createOrReplace)
+                .be.calledOnce()
+                .be.calledWithMatch('plugins', pkg.name, {deleted: true});
 
-            should(PluginPackage.__get__('rimraf'))
-              .be.calledOnce()
-              .be.calledWith(`${kuzzle.rootPath}/node_modules/${pkg.name}`);
+              should(PluginPackage.__get__('rimraf'))
+                .be.calledOnce()
+                .be.calledWith(`${kuzzle.rootPath}/node_modules/${pkg.name}`);
 
-            should(pkg.deleted).be.true();
+              should(pkg.deleted).be.true();
+
+              return Promise.resolve();
+            }
+            catch (error) {
+              return Promise.reject(error);
+            }
           });
       });
     });
@@ -523,12 +602,19 @@ describe('plugins/packages/pluginPackage', () => {
         bar: 'baz'
       })
         .then(() => {
-          should(pkg.updateDbConfiguration)
-            .be.calledOnce()
-            .be.calledWithMatch({
-              foo: 'bar',
-              bar: 'baz'
-            });
+          try {
+            should(pkg.updateDbConfiguration)
+              .be.calledOnce()
+              .be.calledWithMatch({
+                foo: 'bar',
+                bar: 'baz'
+              });
+
+            return Promise.resolve();
+          }
+          catch (error) {
+            return Promise.reject(error);
+          }
         });
     });
 
@@ -540,11 +626,18 @@ describe('plugins/packages/pluginPackage', () => {
         foo: 'bar'
       })
         .then(response => {
-          should(response).match({
-            deleted: true
-          });
-          should(pkg.updateDbConfiguration)
-            .have.callCount(0);
+          try {
+            should(response).match({
+              deleted: true
+            });
+            should(pkg.updateDbConfiguration)
+              .have.callCount(0);
+
+            return Promise.resolve();
+          }
+          catch (error) {
+            return Promise.reject(error);
+          }
         });
     });
   });
@@ -560,10 +653,17 @@ describe('plugins/packages/pluginPackage', () => {
 
       return pkg.unsetConfigurationProperty('foo')
         .then(() => {
-          should(pkg.updateDbConfiguration)
-            .be.calledOnce();
-          should(pkg.updateDbConfiguration.firstCall.args[0])
-            .not.have.property('foo');
+          try {
+            should(pkg.updateDbConfiguration)
+              .be.calledOnce();
+            should(pkg.updateDbConfiguration.firstCall.args[0])
+              .not.have.property('foo');
+
+            return Promise.resolve();
+          }
+          catch (error) {
+            return Promise.reject(error);
+          }
         });
     });
 
@@ -581,9 +681,16 @@ describe('plugins/packages/pluginPackage', () => {
 
       return pkg.unsetConfigurationProperty('koo')
         .then(response => {
-          should(response).match({deleted: true});
-          should(pkg.updateDbConfiguration)
-            .have.callCount(0);
+          try {
+            should(response).match({deleted: true});
+            should(pkg.updateDbConfiguration)
+              .have.callCount(0);
+
+            return Promise.resolve();
+          }
+          catch (error) {
+            return Promise.reject(error);
+          }
         });
 
     });
@@ -628,13 +735,20 @@ describe('plugins/packages/pluginPackage', () => {
       })(() => {
         return pkg.importConfigurationFromFile('path')
           .then(result => {
-            should(result).be.exactly('ok');
+            try {
+              should(result).be.exactly('ok');
 
-            should(pkg.updateDbConfiguration)
-              .be.calledOnce()
-              .be.calledWithMatch({
-                foo: 'bar'
-              });
+              should(pkg.updateDbConfiguration)
+                .be.calledOnce()
+                .be.calledWithMatch({
+                  foo: 'bar'
+                });
+
+              return Promise.resolve();
+            }
+            catch (error) {
+              return Promise.reject(error);
+            }
           });
       });
     });

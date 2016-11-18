@@ -21,13 +21,6 @@ ApiREST.prototype.getRequest = function (index, collection, controller, action, 
     verb = 'GET',
     result;
 
-  if (index) {
-    url += index + '/';
-  }
-  if (collection) {
-    url += collection + '/';
-  }
-
   if (!args) {
     args = {};
   }
@@ -42,8 +35,15 @@ ApiREST.prototype.getRequest = function (index, collection, controller, action, 
     if (route.controller === controller && route.action === action) {
       verb = route.verb.toUpperCase();
 
-      url += route.url.replace(/(:[^/]+)/g, function (match) {
+      url = route.url.replace(/(:[^/]+)/g, function (match) {
         hits.push(match.substring(1));
+
+        if (match === ':index') {
+          return index;
+        }
+        if (match === ':collection') {
+          return collection;
+        }
 
         if (match === ':_id') {
           if (args._id) {
@@ -133,23 +133,32 @@ ApiREST.prototype.get = function (id, index) {
   return this.callApi(options);
 };
 
-ApiREST.prototype.search = function (filters, index, collection) {
+ApiREST.prototype.search = function (query, index, collection) {
   var options = {
     url: this.apiPath(((typeof index !== 'string') ? this.world.fakeIndex : index) + '/' +
                         ((typeof collection !== 'string') ? this.world.fakeCollection : collection) + '/_search'),
     method: 'POST',
-    body: filters
+    body: query
   };
 
   return this.callApi(options);
 };
 
-ApiREST.prototype.count = function (filters, index, collection) {
+ApiREST.prototype.scroll = function (scrollId) {
+  var options = {
+    url: this.apiPath('_scroll/'.concat(scrollId)),
+    method: 'POST'
+  };
+
+  return this.callApi(options);
+};
+
+ApiREST.prototype.count = function (query, index, collection) {
   var options = {
     url: this.apiPath(((typeof index !== 'string') ? this.world.fakeIndex : index) + '/' +
                         ((typeof collection !== 'string') ? this.world.fakeCollection : collection) + '/_count'),
     method: 'POST',
-    body: filters
+    body: query
   };
 
   return this.callApi(options);
@@ -225,11 +234,11 @@ ApiREST.prototype.deleteById = function (id, index) {
   return this.callApi(options);
 };
 
-ApiREST.prototype.deleteByQuery = function (filters, index, collection) {
+ApiREST.prototype.deleteByQuery = function (query, index, collection) {
   var options = {
     url: this.apiPath(((typeof index !== 'string') ? this.world.fakeIndex : index) + '/' + (collection || this.world.fakeCollection) + '/_query'),
     method: 'DELETE',
-    body: filters
+    body: query
   };
 
   return this.callApi(options);
@@ -507,6 +516,16 @@ ApiREST.prototype.deleteProfile = function (id) {
   return this.callApi(options);
 };
 
+ApiREST.prototype.searchValidations = function (body) {
+  var options = {
+    url: this.apiPath('validations/_search'),
+    method: 'POST',
+    body
+  };
+
+  return this.callApi(options);
+};
+
 ApiREST.prototype.getUser = function (id) {
   var options = {
     url: this.apiPath('users/' + id),
@@ -545,7 +564,7 @@ ApiREST.prototype.searchUsers = function (body) {
   return this.callApi({
     url: this.apiPath('users/_search'),
     method: 'POST',
-    body: { filter: body }
+    body: { query: body }
   });
 };
 
@@ -643,6 +662,14 @@ ApiREST.prototype.getAutoRefresh = function (index) {
 
 ApiREST.prototype.setAutoRefresh = function (index, autoRefresh) {
   return this.callApi(this.getRequest(index, null, 'admin', 'setAutoRefresh', { body: {autoRefresh: autoRefresh }}));
+};
+
+ApiREST.prototype.indexExists = function (index) {
+  return this.callApi(this.getRequest(index, null, 'read', 'indexExists'));
+};
+
+ApiREST.prototype.collectionExists = function (index, collection) {
+  return this.callApi(this.getRequest(index, collection, 'read', 'collectionExists'));
 };
 
 ApiREST.prototype.getSpecifications = function (index, collection) {

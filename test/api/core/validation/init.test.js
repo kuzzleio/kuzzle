@@ -145,9 +145,7 @@ describe('Test: validation initialization', () => {
 
     it('should resolve false if the specification is not correct', () => {
       var
-        curateCollectionSpecificationStub = sandbox.stub().rejects({});
-
-      validation.curateCollectionSpecification = curateCollectionSpecificationStub;
+        curateCollectionSpecificationStub = sandbox.stub(validation, 'curateCollectionSpecification').rejects(new Error('Mocked error'));
 
       return validation.isValidSpecification('anIndex', 'aCollection', {a: 'bad specification'})
         .then(result => {
@@ -158,9 +156,7 @@ describe('Test: validation initialization', () => {
 
     it('should resolve false and provide errors if the specification is not correct and we want some verbose errors', () => {
       var
-        curateCollectionSpecificationStub = sandbox.stub().resolves({isValid: false, errors: ['some error']});
-
-      validation.curateCollectionSpecification = curateCollectionSpecificationStub;
+        curateCollectionSpecificationStub = sandbox.stub(validation, 'curateCollectionSpecification').resolves({isValid: false, errors: ['some error']});
 
       return validation.isValidSpecification('anIndex', 'aCollection', {a: 'bad specification'}, true)
         .then(result => {
@@ -413,7 +409,7 @@ describe('Test: validation initialization', () => {
     it('should reject an error if the field specification throws an error', () => {
       var
         indexName = 'anIndex',
-        structureCollectionValidationStub = sandbox.stub().throws({message: 'an error'}),
+        structureCollectionValidationStub = sandbox.stub().throws(new Error('an error')),
         collectionName = 'aCollection',
         collectionSpec = {
           fields: {
@@ -433,7 +429,6 @@ describe('Test: validation initialization', () => {
     it('should reject an error if the field specification returns an error in verbose mode', () => {
       var
         indexName = 'anIndex',
-        structureCollectionValidationStub = sandbox.stub().returns({isValid: false, errors: ['an error']}),
         collectionName = 'aCollection',
         collectionSpec = {
           fields: {
@@ -443,15 +438,16 @@ describe('Test: validation initialization', () => {
         dryRun = false,
         verboseErrors = true;
 
+      sandbox.stub(validation, 'structureCollectionValidation').returns({isValid: false, errors: ['an error']});
+
       checkAllowedPropertiesStub.returns(true);
       Validation.__set__('checkAllowedProperties', checkAllowedPropertiesStub);
-      validation.structureCollectionValidation = structureCollectionValidationStub;
 
       return validation.curateCollectionSpecification(indexName, collectionName, collectionSpec, dryRun, verboseErrors)
-        .catch(response => {
-          should(response.isValid).be.false();
-          should(response.errors.length).be.eql(1);
-          should(response.errors[0]).be.eql('an error');
+        .catch(error => {
+          should(error.message).be.exactly('an error');
+          should(error.details.length).be.exactly(1);
+          should(error.details[0]).be.exactly('an error');
         });
     });
 

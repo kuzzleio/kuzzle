@@ -88,27 +88,40 @@ ApiRT.prototype.get = function (id, index) {
   return this.send(msg);
 };
 
-ApiRT.prototype.search = function (filters, index, collection) {
+ApiRT.prototype.search = function (query, index, collection) {
   var
     msg = {
       controller: 'read',
       collection: collection || this.world.fakeCollection,
       index: index || this.world.fakeIndex,
       action: 'search',
-      body: filters
+      body: query
     };
 
   return this.send(msg);
 };
 
-ApiRT.prototype.count = function (filters, index, collection) {
+ApiRT.prototype.scroll = function (scrollId) {
+  var
+    msg = {
+      controller: 'read',
+      action: 'scroll',
+      body: {
+        scrollId
+      }
+    };
+
+  return this.send(msg);
+};
+
+ApiRT.prototype.count = function (query, index, collection) {
   var
     msg = {
       controller: 'read',
       collection: collection || this.world.fakeCollection,
       index: index || this.world.fakeIndex,
       action: 'count',
-      body: filters
+      body: query
     };
 
   return this.send(msg);
@@ -141,14 +154,14 @@ ApiRT.prototype.deleteById = function (id, index) {
   return this.send(msg);
 };
 
-ApiRT.prototype.deleteByQuery = function (filters, index, collection) {
+ApiRT.prototype.deleteByQuery = function (query, index, collection) {
   var
     msg = {
       controller: 'write',
       collection: collection || this.world.fakeCollection,
       index: index || this.world.fakeIndex,
       action: 'deleteByQuery',
-      body: filters
+      body: query
     };
 
   return this.send(msg);
@@ -548,6 +561,17 @@ ApiRT.prototype.deleteProfile = function (id) {
   return this.send(msg);
 };
 
+ApiRT.prototype.searchValidations = function (body) {
+  var
+    msg = {
+      controller: 'admin',
+      action: 'searchSpecifications',
+      body
+    };
+
+  return this.send(msg);
+};
+
 ApiRT.prototype.getUser = function (id) {
   return this.send({
     controller: 'security',
@@ -584,7 +608,7 @@ ApiRT.prototype.searchUsers = function (body) {
     controller: 'security',
     action: 'searchUsers',
     body: {
-      filter: body
+      query: body
     }
   });
 };
@@ -679,6 +703,23 @@ ApiRT.prototype.getAutoRefresh = function (index) {
     index: index,
     controller: 'admin',
     action: 'getAutoRefresh'
+  });
+};
+
+ApiRT.prototype.indexExists = function (index) {
+  return this.send({
+    index,
+    controller: 'read',
+    action: 'indexExists'
+  });
+};
+
+ApiRT.prototype.collectionExists = function (index, collection) {
+  return this.send({
+    index,
+    collection,
+    controller: 'read',
+    action: 'collectionExists'
   });
 };
 

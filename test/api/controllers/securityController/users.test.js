@@ -70,7 +70,6 @@ describe('Test: security controller - users', () => {
 
       return kuzzle.funnel.controllers.security.searchUsers(new RequestObject({
         body: {
-          filter: {},
           from: 0,
           size: 200
         }
@@ -82,10 +81,11 @@ describe('Test: security controller - users', () => {
     });
 
     it('should reject with a response object in case of error', () => {
-      sandbox.stub(kuzzle.repositories.user, 'search').rejects();
+      var error = new Error('Mocked error');
+      sandbox.stub(kuzzle.repositories.user, 'search').rejects(error);
       return should(kuzzle.funnel.controllers.security.searchUsers(new RequestObject({
         body: {hydrate: false}
-      }))).be.rejected();
+      }))).be.rejectedWith(error);
     });
   });
 
@@ -107,10 +107,11 @@ describe('Test: security controller - users', () => {
     });
 
     it('should reject with a response object in case of error', () => {
-      sandbox.stub(kuzzle.repositories.user, 'delete').rejects();
+      var error = new Error('Mocked error');
+      sandbox.stub(kuzzle.repositories.user, 'delete').rejects(error);
       return should(kuzzle.funnel.controllers.security.deleteUser(new RequestObject({
         body: {_id: 'test'}
-      }))).be.rejected();
+      }))).be.rejectedWith(error);
     });
   });
 

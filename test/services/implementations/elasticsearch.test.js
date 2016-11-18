@@ -25,10 +25,23 @@ describe('Test: ElasticSearch service', () => {
       city: 'London',
       hobby: 'computer'
     },
+    filter,
+    filterAfterActiveAdded,
+    rawKuzzleInfo;
+
+
+  before(()=> {
+    kuzzle = new Kuzzle();
+    elasticsearch = new ES(kuzzle, {service: engineType}, kuzzle.config.services.db);
+  });
+
+  beforeEach(() => {
+    elasticsearch.autoRefresh = {};
+
     filter = {
       query: {
-        filter: {
-          and: [
+        bool: {
+          query: [
             {
               term: {
                 city: 'NYC'
@@ -45,68 +58,64 @@ describe('Test: ElasticSearch service', () => {
       sort: {},
       aggregations: {},
       aggs: {}
-    },
+    };
     filterAfterActiveAdded = {
       query: {
         bool: {
           must: filter.query,
-          filter: [
-            {
-              bool: {
-                should: [
-                  {
-                    term: {
-                      '_kuzzle_info.active': true
-                    }
-                  },
-                  {
-                    missing: {
-                      'field': '_kuzzle_info'
+          filter: {
+            bool: {
+              should: [
+                {
+                  term: {
+                    '_kuzzle_info.active': true
+                  }
+                },
+                {
+                  bool: {
+                    must_not: {
+                      exists: {
+                        'field': '_kuzzle_info'
+                      }
                     }
                   }
-                ]
-              }
+                }
+              ]
             }
-          ]
+          }
         }
       },
       sort: {},
       aggregations: {},
       aggs: {}
-    },
-    raw_kuzzle_info = {
+    };
+
+    rawKuzzleInfo = {
       query: {
         bool: {
-          filter: [
-            {
-              bool: {
-                should: [
-                  {
-                    term: {
-                      '_kuzzle_info.active': true
-                    }
-                  },
-                  {
-                    missing: {
-                      'field': '_kuzzle_info'
+          filter: {
+            bool: {
+              should: [
+                {
+                  term: {
+                    '_kuzzle_info.active': true
+                  }
+                },
+                {
+                  bool: {
+                    must_not: {
+                      exists: {
+                        'field': '_kuzzle_info'
+                      }
                     }
                   }
-                ]
-              }
+                }
+              ]
             }
-          ]
+          }
         }
       }
     };
-
-
-  before(()=> {
-    kuzzle = new Kuzzle();
-    elasticsearch = new ES(kuzzle, {service: engineType}, kuzzle.config.services.db);
-  });
-
-  beforeEach(() => {
-    elasticsearch.autoRefresh = {};
 
     requestObject = new RequestObject({
       controller: 'write',
@@ -136,7 +145,7 @@ describe('Test: ElasticSearch service', () => {
         preparedData;
 
       requestObject.data._id = 'foobar';
-      preparedData = cleanData.call(elasticsearch, requestObject);
+      preparedData = cleanData.call(elasticsearch, requestObject, kuzzle);
 
       should(preparedData.type).be.exactly(requestObject.collection);
       should(preparedData.id).be.exactly(requestObject.data._id);
@@ -166,8 +175,33 @@ describe('Test: ElasticSearch service', () => {
         });
     });
 
+    it('should be able to search with from/size and scroll arguments', () => {
+      var spy = sandbox.stub(elasticsearch.client, 'search').resolves({total: 0, hits: [], _scroll_id: 'banana42'});
+
+      requestObject.data.body = filter;
+      requestObject.data.body.from = 0;
+      requestObject.data.body.size = 1;
+      requestObject.data.body.scroll = '30s';
+
+      return elasticsearch.search(requestObject)
+        .then(result => {
+          should(spy.firstCall.args[0]).be.deepEqual({
+            from: 0,
+            size: 1,
+            scroll: '30s',
+            index: index,
+            type: collection,
+            body: filterAfterActiveAdded
+          });
+          should(result).be.an.Object();
+          should(result.total).be.exactly(0);
+          should(result.hits).be.an.Array();
+          should(result._scroll_id).be.an.exactly('banana42');
+        });
+    });
+
     it('should return a rejected promise if a search fails', done => {
-      var spy = sandbox.stub(elasticsearch.client, 'search').rejects({});
+      var spy = sandbox.stub(elasticsearch.client, 'search').rejects(new Error('Mocked error'));
 
       elasticsearch.search(requestObject)
         .catch(() => {
@@ -180,14 +214,58 @@ describe('Test: ElasticSearch service', () => {
     });
   });
 
+  describe('#scroll', () => {
+    it('should be able to scroll an old search', () => {
+      var spy = sandbox.stub(elasticsearch.client, 'scroll').resolves({total: 0, hits: []});
+
+      requestObject.data.body = {scrollId: 'banana42'};
+
+      return elasticsearch.scroll(requestObject)
+        .then(result => {
+          should(spy.firstCall.args[0]).be.deepEqual({scrollId: 'banana42'});
+          should(result).be.an.Object();
+          should(result.total).be.exactly(0);
+          should(result.hits).be.an.Array();
+        });
+    });
+
+    it('should return a rejected promise if no scrollId is given', done => {
+      sandbox.stub(elasticsearch.client, 'scroll').resolves({total: 0, hits: []});
+
+      requestObject.data.body = {};
+
+      elasticsearch.scroll(requestObject)
+        .catch(err => {
+          try {
+            should(err).be.an.instanceOf(BadRequestError);
+            should(err.message).be.exactly('The action scroll can\'t be done without a scrollId');
+            done();
+          }
+          catch(e) { done(e); }
+        });
+    });
+
+    it('should return a rejected promise if a scroll fails', done => {
+      sandbox.stub(elasticsearch.client, 'scroll').rejects({});
+
+      elasticsearch.scroll(requestObject)
+        .catch(() => {
+          try {
+            done();
+          }
+          catch(e) { done(e); }
+        });
+    });
+  });
+
   describe('#create', () => {
     it('should allow creating documents if the document does not already exists', () => {
       var
-        spy = sandbox.stub(elasticsearch.client, 'create').resolves({}),
+        spy = sandbox.stub(elasticsearch.client, 'index').resolves({}),
         refreshIndexIfNeeded = ES.__get__('refreshIndexIfNeeded'),
         refreshIndexSpy = sandbox.spy(refreshIndexIfNeeded);
 
-      sandbox.stub(elasticsearch.client, 'get').rejects();
+      sandbox.stub(elasticsearch.client, 'get').rejects(new Error('Mocked error'));
 
       return should(ES.__with__('refreshIndexIfNeeded', refreshIndexSpy)(() => {
         return elasticsearch.create(requestObject)
@@ -228,11 +306,14 @@ describe('Test: ElasticSearch service', () => {
 
     it('should create a document with a non existing id', () => {
       var
+        error = new Error('Mocked error'),
         spy = sandbox.stub(elasticsearch.client, 'create').resolves({}),
         refreshIndexIfNeeded = ES.__get__('refreshIndexIfNeeded'),
         refreshIndexSpy = sandbox.spy(refreshIndexIfNeeded);
 
-      sandbox.stub(elasticsearch.client, 'get').rejects();
+      error.displayName = 'NotFound';
+
+      sandbox.stub(elasticsearch.client, 'get').rejects(error);
       requestObject.data._id = 42;
 
       return should(ES.__with__('refreshIndexIfNeeded', refreshIndexSpy)(() => {
@@ -250,26 +331,29 @@ describe('Test: ElasticSearch service', () => {
     });
 
     it('should reject the create promise if elasticsearch throws an error', () => {
-      sandbox.stub(elasticsearch.client, 'get').rejects({});
-      sandbox.stub(elasticsearch.client, 'create').rejects({});
+      var error = new Error('Mocked create error');
+      sandbox.stub(elasticsearch.client, 'get').rejects(new Error('Mocked get error'));
+      sandbox.stub(elasticsearch.client, 'index').rejects(error);
 
-      return should(elasticsearch.create(requestObject)).be.rejected();
+      return should(elasticsearch.create(requestObject)).be.rejectedWith(error);
     });
 
     it('should reject the create promise if client.index throws an error', () => {
+      var error = new Error('Mocked index error');
       sandbox.stub(elasticsearch.client, 'get').resolves({_source: {_kuzzle_info: {active: false}}});
-      sandbox.stub(elasticsearch.client, 'index').rejects({});
+      sandbox.stub(elasticsearch.client, 'index').rejects(error);
       requestObject.data._id = '42';
 
-      return should(elasticsearch.create(requestObject)).be.rejected();
+      return should(elasticsearch.create(requestObject)).be.rejectedWith(error);
     });
 
     it('should reject a promise if the document already exists', () => {
-      sandbox.stub(elasticsearch.client, 'create').rejects({});
+      var error = new Error('Mocked create error');
+      sandbox.stub(elasticsearch.client, 'create').rejects(error);
       sandbox.stub(elasticsearch.client, 'get').resolves({_source: {_kuzzle_info: {active: true}}});
       requestObject.data._id = 42;
 
-      return should(elasticsearch.create(requestObject)).be.rejected();
+      return should(elasticsearch.create(requestObject)).be.rejectedWith(error);
     });
   });
 
@@ -300,10 +384,11 @@ describe('Test: ElasticSearch service', () => {
     });
 
     it('should reject the createOrReplace promise if elasticsearch throws an error', () => {
-      sandbox.stub(elasticsearch.client, 'index').rejects({});
+      var error = new Error('Mocked error');
+      sandbox.stub(elasticsearch.client, 'index').rejects(error);
 
       requestObject.data._id = createdDocumentId;
-      return should(elasticsearch.createOrReplace(requestObject)).be.rejected();
+      return should(elasticsearch.createOrReplace(requestObject)).be.rejectedWith(error);
     });
   });
 
@@ -336,12 +421,13 @@ describe('Test: ElasticSearch service', () => {
     });
 
     it('should reject the replace promise if elasticsearch throws an error', () => {
+      var error = new Error('Mocked error');
       sandbox.stub(elasticsearch.client, 'exists').resolves(true);
-      sandbox.stub(elasticsearch.client, 'index').rejects({});
+      sandbox.stub(elasticsearch.client, 'index').rejects(error);
 
       requestObject.data._id = createdDocumentId;
 
-      return should(elasticsearch.replace(requestObject)).be.rejected();
+      return should(elasticsearch.replace(requestObject)).be.rejectedWith(error);
     });
 
     it('should throw a NotFoundError Exception if document already exists', done => {
@@ -382,7 +468,7 @@ describe('Test: ElasticSearch service', () => {
     it('should reject requests when document is on inactive stat', () => {
       sandbox.stub(elasticsearch.client, 'get').resolves({_source: {_kuzzle_info: {active: false}}});
 
-      return should(elasticsearch.get(requestObject)).be.rejected();
+      return should(elasticsearch.get(requestObject)).be.rejectedWith(NotFoundError);
     });
 
     it('should reject requests when the user search for a document with id _search', () => {
@@ -395,7 +481,7 @@ describe('Test: ElasticSearch service', () => {
   describe('#mget', () => {
     it('should return a rejected promise if getting a single document fails', done => {
       var
-        spy = sandbox.stub(elasticsearch.client, 'get').rejects({});
+        spy = sandbox.stub(elasticsearch.client, 'get').rejects(new Error('Mocked error'));
 
       elasticsearch.get(requestObject)
         .catch(() => {
@@ -421,7 +507,7 @@ describe('Test: ElasticSearch service', () => {
     });
 
     it('should return a rejected promise if getting some multiple documents fails', done => {
-      var spy = sandbox.stub(elasticsearch.client, 'mget').rejects({});
+      var spy = sandbox.stub(elasticsearch.client, 'mget').rejects(new Error('Mocked error'));
 
       requestObject.data.body = {};
 
@@ -444,7 +530,7 @@ describe('Test: ElasticSearch service', () => {
 
       return should(elasticsearch.count(requestObject)
         .then(() => {
-          should(spy.firstCall.args[0].body).be.deepEqual(raw_kuzzle_info);
+          should(spy.firstCall.args[0].body).be.deepEqual(rawKuzzleInfo);
         })
       ).be.fulfilled();
     });
@@ -455,21 +541,22 @@ describe('Test: ElasticSearch service', () => {
       requestObject.data.body = {};
       requestObject.data.query = {foo: 'bar'};
 
-      raw_kuzzle_info.query.bool.must = requestObject.data.query;
+      rawKuzzleInfo.query.bool.must = requestObject.data.query;
       return should(elasticsearch.count(requestObject)
         .then(() => {
-          should(spy.firstCall.args[0].body).be.deepEqual(raw_kuzzle_info);
+          should(spy.firstCall.args[0].body).be.deepEqual(rawKuzzleInfo);
         })
       ).be.fulfilled();
     });
 
     it('should return a rejected promise if the count fails', () => {
-      sandbox.stub(elasticsearch.client, 'count').rejects({});
+      var error = new Error('Mocked error');
+      sandbox.stub(elasticsearch.client, 'count').rejects(error);
 
       requestObject.data.body = {};
       requestObject.data.query = {foo: 'bar'};
 
-      return should(elasticsearch.count(requestObject)).be.rejected();
+      return should(elasticsearch.count(requestObject)).be.rejectedWith(error);
     });
   });
 
@@ -497,16 +584,17 @@ describe('Test: ElasticSearch service', () => {
     });
 
     it('should return a rejected promise with a NotFoundError when updating a document which does not exist', done => {
-      var spy;
-      var esError = {
-        displayName: 'NotFound',
-        message: 'test',
-        body: {
-          error: {
-            reason: 'foo'
-          }
+      var
+        esError = new Error('test'),
+        spy;
+
+      esError.displayName = 'NotFound';
+      esError.body = {
+        error: {
+          reason: 'foo'
         }
       };
+
       esError.body.error['resource.id'] = 'bar';
       spy = sandbox.stub(elasticsearch.client, 'update').rejects(esError);
 
@@ -523,17 +611,19 @@ describe('Test: ElasticSearch service', () => {
     });
 
     it('should return a rejected promise with a customised NotFoundError when elasticsearch throws a known error', done => {
-      var spy;
-      var esError = {
-        displayName: 'NotFound',
-        message: '[index_not_found_exception] no such index, with { resource.type=index_or_alias resource.id=banana index=banana }',
-        body: {
-          error: {
-            reason: 'foo'
-          }
+      var
+        esError = new Error('[index_not_found_exception] no such index, with { resource.type=index_or_alias resource.id=banana index=banana }'),
+        spy;
+
+      esError.displayName = 'NotFound';
+      esError.body = {
+        error: {
+          reason: 'foo'
         }
       };
+
       spy = sandbox.stub(elasticsearch.client, 'update').rejects(esError);
+
 
       elasticsearch.update(requestObject)
         .catch((error) => {
@@ -550,9 +640,7 @@ describe('Test: ElasticSearch service', () => {
     });
 
     it('should return a rejected promise with an Error if an update fails for unknown reason', done => {
-      var esError = {
-        message: 'banana error'
-      };
+      var esError = new Error('banana error');
       var spy = sandbox.stub(elasticsearch.client, 'update').rejects(esError);
       var spyTrigger = sandbox.stub(kuzzle.pluginsManager, 'trigger');
 
@@ -595,7 +683,7 @@ describe('Test: ElasticSearch service', () => {
     });
 
     it('should return a rejected promise if a delete fails', done => {
-      var spy = sandbox.stub(elasticsearch.client, 'delete').rejects({});
+      var spy = sandbox.stub(elasticsearch.client, 'delete').rejects(new Error('Mocked error'));
 
       elasticsearch.delete(requestObject)
         .catch(() => {
@@ -613,7 +701,7 @@ describe('Test: ElasticSearch service', () => {
       var spy = sandbox.stub(elasticsearch.client, 'search').yields(null, {hits: {hits: [], total: 0}});
 
       delete requestObject.data.body;
-      requestObject.data.filter = {term: {firstName: 'no way any document can be returned with this filter'}};
+      requestObject.data.query = {term: {firstName: 'no way any document can be returned with this filter'}};
 
       return should(elasticsearch.deleteByQuery(requestObject)
         .then(result => {
@@ -670,21 +758,22 @@ describe('Test: ElasticSearch service', () => {
     });
 
     it('should return a rejected promise if the delete by query fails because of a bulk failure', () => {
-      sandbox.stub(elasticsearch.client, 'bulk').rejects({});
+      var error = new Error('Mocked error');
+      sandbox.stub(elasticsearch.client, 'bulk').rejects(error);
 
       requestObject.data.body = {};
 
       return ES.__with__({
         getAllIdsFromQuery: () => Promise.resolve(['foo', 'bar'])
       })(() => {
-        return should(elasticsearch.deleteByQuery(requestObject)).be.rejected();
+        return should(elasticsearch.deleteByQuery(requestObject)).be.rejectedWith(error);
       });
     });
 
     it('should return a rejected promise if the delete by query fails because the filter is null', () => {
       requestObject.data.body = null;
 
-      return should(elasticsearch.deleteByQuery(requestObject)).be.rejected();
+      return should(elasticsearch.deleteByQuery(requestObject)).be.rejectedWith(BadRequestError);
     });
   });
 
@@ -730,7 +819,7 @@ describe('Test: ElasticSearch service', () => {
           bulkData: []
         },
         consistency: 'foo',
-        refresh: true,
+        refresh: 'wait_for',
         routing: 'foo/bar',
         timeout: 999,
         fields: 'foo, bar, baz'
@@ -741,7 +830,7 @@ describe('Test: ElasticSearch service', () => {
           return elasticsearch.import(requestObject)
             .then(() => {
               should(spy.firstCall.args[0].consistency).be.exactly('foo');
-              should(spy.firstCall.args[0].refresh).be.exactly(true);
+              should(spy.firstCall.args[0].refresh).be.exactly('wait_for');
               should(spy.firstCall.args[0].routing).be.exactly('foo/bar');
               should(spy.firstCall.args[0].timeout).be.exactly(999);
               should(spy.firstCall.args[0].fields).be.exactly('foo, bar, baz');
@@ -824,6 +913,8 @@ describe('Test: ElasticSearch service', () => {
     });
 
     it('should reject the import promise if elasticsearch throws an error', () => {
+      var error = new Error('Mocked error');
+
       requestObject.data.body = {
         bulkData: [
           {index: {_id: 1, _index: index}},
@@ -836,19 +927,35 @@ describe('Test: ElasticSearch service', () => {
         ]
       };
 
-      sandbox.stub(elasticsearch.client, 'bulk').rejects({});
+      sandbox.stub(elasticsearch.client, 'bulk').rejects(error);
 
-      return should(elasticsearch.import(requestObject)).be.rejected();
+      return should(elasticsearch.import(requestObject)).be.rejectedWith(error);
+    });
+
+    it('should return a rejected promise if bulk data try to write into internal index', () => {
+      requestObject.data.body = {
+        bulkData: [
+          {index: {_id: 1, _index: index}},
+          {firstName: 'foo'},
+          {index: {_id: 2, _index: '%kuzzle'}},
+          {firstName: 'bar'},
+          {update: {_id: 1, _index: index}},
+          {doc: {firstName: 'foobar'}},
+          {delete: {_id: 2, _index: index}}
+        ]
+      };
+
+      return should(elasticsearch.import(requestObject)).be.rejectedWith(BadRequestError);
     });
 
     it('should return a rejected promise if no body is provided', () => {
       delete requestObject.data.body;
-      return should(elasticsearch.import(requestObject)).be.rejected();
+      return should(elasticsearch.import(requestObject)).be.rejectedWith(BadRequestError);
     });
 
     it('should return a rejected promise if body contains no bulkData parameter', () => {
       delete requestObject.data.body.bulkData;
-      return should(elasticsearch.import(requestObject)).be.rejected();
+      return should(elasticsearch.import(requestObject)).be.rejectedWith(BadRequestError);
     });
 
     it('should return a rejected promise if no type has been provided, locally or globally', () => {
@@ -868,7 +975,7 @@ describe('Test: ElasticSearch service', () => {
 
       sandbox.stub(elasticsearch.client, 'bulk').resolves({});
 
-      return should(elasticsearch.import(requestObject)).be.rejected();
+      return should(elasticsearch.import(requestObject)).be.rejectedWith(BadRequestError);
     });
 
     it('should return a rejected promise if no index has been provided, locally or globally', () => {
@@ -909,21 +1016,24 @@ describe('Test: ElasticSearch service', () => {
     });
 
     it('should reject and handle error for bad mapping input', done => {
-      var spy = sandbox.stub(elasticsearch.client.indices, 'putMapping').rejects({
-        displayName: 'BadRequest',
-        message: 'test',
-        body: {
-          error: {
-            reason: 'foo'
-          }
+      var
+        spy,
+        error = new Error('test');
+
+      error.displayName = 'BadRequest';
+      error.body = {
+        error: {
+          reason: 'foo'
         }
-      });
+      };
+
+      spy = sandbox.stub(elasticsearch.client.indices, 'putMapping').rejects(error);
 
       elasticsearch.updateMapping(requestObject)
-        .catch((error) => {
+        .catch((err) => {
           try {
-            should(error).be.instanceOf(BadRequestError);
-            should(error.message).be.equal('foo');
+            should(err).be.instanceOf(BadRequestError);
+            should(err.message).be.equal('foo');
             should(spy.firstCall.args[0]).not.have.key('properties');
             done();
           }
@@ -964,9 +1074,10 @@ describe('Test: ElasticSearch service', () => {
     });
 
     it('should reject the getMapping promise if elasticsearch throws an error', () => {
-      sandbox.stub(elasticsearch.client.indices, 'getMapping').rejects({});
+      var error = new Error('Mocked error');
+      sandbox.stub(elasticsearch.client.indices, 'getMapping').rejects(error);
 
-      return should(elasticsearch.getMapping(requestObject)).be.rejected();
+      return should(elasticsearch.getMapping(requestObject)).be.rejectedWith(error);
     });
   });
 
@@ -1038,11 +1149,12 @@ describe('Test: ElasticSearch service', () => {
     });
 
     it('should reject the listCollections promise if elasticsearch throws an error', () => {
-      sandbox.stub(elasticsearch.client.indices, 'getMapping').rejects({});
+      var error = new Error('Mocked error');
+      sandbox.stub(elasticsearch.client.indices, 'getMapping').rejects(error);
 
       requestObject.index = 'kuzzle-unit-tests-fakeindex';
       delete requestObject.data.body;
-      return should(elasticsearch.listCollections(requestObject)).be.rejected();
+      return should(elasticsearch.listCollections(requestObject)).be.rejectedWith(error);
     });
   });
 
@@ -1055,9 +1167,10 @@ describe('Test: ElasticSearch service', () => {
     });
 
     it('should reject the createCollection promise if elasticsearch throws an error', () => {
-      sandbox.stub(elasticsearch.client.indices, 'putMapping').rejects({});
+      var error = new Error('Mocked error');
+      sandbox.stub(elasticsearch.client.indices, 'putMapping').rejects(error);
 
-      return should(elasticsearch.createCollection(requestObject)).be.rejected();
+      return should(elasticsearch.createCollection(requestObject)).be.rejectedWith(error);
     });
   });
 
@@ -1091,14 +1204,16 @@ describe('Test: ElasticSearch service', () => {
     });
 
     it('should return a rejected promise if the reset fails while deleting all indexes', () => {
-      var indexes = { index: []};
+      var
+        error = new Error('Mocked delete error'),
+        indexes = { index: []};
 
       indexes[kuzzle.config.internalIndex] = [];
 
       sandbox.stub(elasticsearch.client.indices, 'getMapping').resolves(indexes);
-      sandbox.stub(elasticsearch.client.indices, 'delete').rejects({});
+      sandbox.stub(elasticsearch.client.indices, 'delete').rejects(error);
 
-      return should(elasticsearch.deleteIndexes(requestObject)).be.rejected();
+      return should(elasticsearch.deleteIndexes(requestObject)).be.rejectedWith(error);
     });
   });
 
@@ -1113,9 +1228,10 @@ describe('Test: ElasticSearch service', () => {
     });
 
     it('should reject the createIndex promise if elasticsearch throws an error', () => {
-      sandbox.stub(elasticsearch.client.indices, 'create').rejects({});
+      var error = new Error('Mocked error');
+      sandbox.stub(elasticsearch.client.indices, 'create').rejects(error);
 
-      return should(elasticsearch.createIndex(requestObject)).be.rejected();
+      return should(elasticsearch.createIndex(requestObject)).be.rejectedWith(error);
     });
   });
 
@@ -1147,9 +1263,10 @@ describe('Test: ElasticSearch service', () => {
     });
 
     it('should reject the listIndexes promise if elasticsearch throws an error', () => {
-      sandbox.stub(elasticsearch.client.indices, 'getMapping').rejects({});
+      var error = new Error('Mocked error');
+      sandbox.stub(elasticsearch.client.indices, 'getMapping').rejects(error);
 
-      return should(elasticsearch.listIndexes(requestObject)).be.rejected();
+      return should(elasticsearch.listIndexes(requestObject)).be.rejectedWith(error);
     });
   });
 
@@ -1247,8 +1364,9 @@ describe('Test: ElasticSearch service', () => {
 
     it('should not block execution in case the index could not be refreshed', () => {
       var
+        error = new Error('Mocked error'),
         refreshIndexIfNeeded = ES.__get__('refreshIndexIfNeeded'),
-        spy = sandbox.stub(elasticsearch.client.indices, 'refresh').rejects({}),
+        spy = sandbox.stub(elasticsearch.client.indices, 'refresh').rejects(error),
         pluginSpy = sandbox.spy(kuzzle.pluginsManager, 'trigger');
 
       elasticsearch.autoRefresh[requestObject.index] = true;
@@ -1273,4 +1391,93 @@ describe('Test: ElasticSearch service', () => {
 
     });
   });
+
+  describe('#indexExists', () => {
+    it('should call es indices.exists method', () => {
+      var
+        spy = sandbox.stub(elasticsearch.client.indices, 'exists').resolves(true);
+
+      return elasticsearch.indexExists(requestObject)
+        .then(response => {
+          try {
+            should(response).be.true();
+
+            should(spy)
+              .be.calledOnce();
+
+            should(spy.firstCall.args[0]).match({
+              index: '%test'
+            });
+
+            return Promise.resolve();
+          }
+          catch (error) {
+            return Promise.reject(error);
+          }
+        });
+    });
+
+    it('should format the error', () => {
+      var
+        error = new Error('test'),
+        spy = sandbox.spy(elasticsearch, 'formatESError');
+
+      sandbox.stub(elasticsearch.client.indices, 'exists').rejects(error);
+
+      return elasticsearch.indexExists(requestObject)
+        .then(() => {
+          throw new Error('this should not occur');
+        })
+        .catch(() => {
+          should(spy)
+            .be.calledOnce()
+            .be.calledWith(error);
+        });
+    });
+  });
+
+  describe('#collectionExists', () => {
+    it('should call es indices.existType method', () => {
+      var
+        spy = sandbox.stub(elasticsearch.client.indices, 'existsType').resolves(true);
+
+      return elasticsearch.collectionExists(requestObject)
+        .then(() => {
+          try {
+            should(spy)
+              .be.calledOnce();
+
+            should(spy.firstCall.args[0])
+              .match({
+                index,
+                type: collection
+              });
+
+            return Promise.resolve();
+          }
+          catch (error) {
+            return Promise.reject(error);
+          }
+        });
+    });
+
+    it('should format errors', () => {
+      var
+        error = new Error('test'),
+        spy = sinon.spy(elasticsearch, 'formatESError');
+
+      sandbox.stub(elasticsearch.client.indices, 'existsType').rejects(error);
+
+      return elasticsearch.collectionExists(requestObject)
+        .then(() => {
+          throw new Error('this should not happen');
+        })
+        .catch(() => {
+          should(spy)
+            .be.calledOnce()
+            .be.calledWith(error);
+        });
+    });
+  });
+
 });

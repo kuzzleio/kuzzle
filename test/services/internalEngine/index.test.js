@@ -14,6 +14,9 @@ describe('InternalEngine', () => {
   beforeEach(() => {
     reset = InternalEngine.__set__({
       Elasticsearch: {
+        errors: {
+          NoConnections: sinon.stub()
+        },
         Client: function () {
           this.indices = {
             create: sinon.stub().resolves(),
@@ -55,27 +58,66 @@ describe('InternalEngine', () => {
     it('should harmonize search results', () => {
       var
         collection = 'collection',
-        filters = { 'some': 'filters' };
+        query = { 'some': 'filters' };
 
       kuzzle.internalEngine.client.search.resolves({hits: { hits: ['foo', 'bar'], total: 123}});
 
-      return kuzzle.internalEngine.search(collection, filters)
+      return kuzzle.internalEngine.search(collection, query)
         .then(result => {
-          should(kuzzle.internalEngine.client.search)
-            .be.calledOnce()
-            .be.calledWithMatch({
-              index: kuzzle.internalEngine.index,
-              type: collection,
-              body: {
-                filter: filters,
-                from: 0,
-                size: 20
-              }
-            });
+          try {
+            should(kuzzle.internalEngine.client.search)
+              .be.calledOnce()
+              .be.calledWithMatch({
+                index: kuzzle.internalEngine.index,
+                type: collection,
+                body: {
+                  query: query,
+                  from: 0,
+                  size: 20
+                }
+              });
 
-          should(result).be.an.Object().and.not.be.empty();
-          should(result.total).be.eql(123);
-          should(result.hits).be.an.Array().and.match(['foo', 'bar']);
+            should(result).be.an.Object().and.not.be.empty();
+            should(result.total).be.eql(123);
+            should(result.hits).be.an.Array().and.match(['foo', 'bar']);
+            return Promise.resolve();
+          }
+          catch(error) {
+            return Promise.reject(error);
+          }
+        });
+    });
+
+    it('should harmonize search results', () => {
+      var
+        collection = 'collection',
+        query = { query: {'some': 'filters'} };
+
+      kuzzle.internalEngine.client.search.resolves({hits: { hits: ['foo', 'bar'], total: 123}});
+
+      return kuzzle.internalEngine.search(collection, query)
+        .then(result => {
+          try {
+            should(kuzzle.internalEngine.client.search)
+              .be.calledOnce()
+              .be.calledWithMatch({
+                index: kuzzle.internalEngine.index,
+                type: collection,
+                body: {
+                  query: query.query,
+                  from: 0,
+                  size: 20
+                }
+              });
+
+            should(result).be.an.Object().and.not.be.empty();
+            should(result.total).be.eql(123);
+            should(result.hits).be.an.Array().and.match(['foo', 'bar']);
+            return Promise.resolve();
+          }
+          catch(error) {
+            return Promise.reject(error);
+          }
         });
     });
 
@@ -87,28 +129,34 @@ describe('InternalEngine', () => {
 
       return kuzzle.internalEngine.search(collection)
         .then(result => {
-          should(kuzzle.internalEngine.client.search)
-            .be.calledOnce()
-            .be.calledWithMatch({
+          try {
+            should(kuzzle.internalEngine.client.search.calledOnce)
+              .be.true();
+
+            should(kuzzle.internalEngine.client.search.calledWithMatch({
               index: kuzzle.internalEngine.index,
               type: collection,
               body: {
-                filter: {},
                 from: 0,
                 size: 20
               }
-            });
+            })).be.true();
 
-          should(result).be.an.Object().and.not.be.empty();
-          should(result.total).be.eql(123);
-          should(result.hits).be.an.Array().and.match(['foo', 'bar']);
+            should(result).be.an.Object().and.not.be.empty();
+            should(result.total).be.eql(123);
+            should(result.hits).be.an.Array().and.match(['foo', 'bar']);
+          }
+          catch(error) {
+            return Promise.reject(error);
+          }
         });
     });
 
     it('should rejects the promise if the search fails', () => {
-      kuzzle.internalEngine.client.search.rejects();
+      var error = new Error('Mocked error');
+      kuzzle.internalEngine.client.search.rejects(error);
 
-      return should(kuzzle.internalEngine.search('foo')).be.rejected();
+      return should(kuzzle.internalEngine.search('foo')).be.rejectedWith(error);
     });
   });
 
@@ -122,21 +170,28 @@ describe('InternalEngine', () => {
 
       return kuzzle.internalEngine.get(collection, id)
         .then(result => {
-          should(kuzzle.internalEngine.client.get)
-            .be.calledOnce()
-            .be.calledWithMatch({
-              index: kuzzle.internalEngine.index,
-              type: collection,
-              id
-            });
+          try {
+            should(kuzzle.internalEngine.client.get)
+              .be.calledOnce()
+              .be.calledWithMatch({
+                index: kuzzle.internalEngine.index,
+                type: collection,
+                id
+              });
 
-          should(result).be.an.Object().and.match({'foo': 'bar'});
+            should(result).be.an.Object().and.match({'foo': 'bar'});
+            return Promise.resolve();
+          }
+          catch(error) {
+            return Promise.reject(error);
+          }
         });
     });
 
     it('should reject the promise if getting the document fails', () => {
-      kuzzle.internalEngine.client.get.rejects();
-      return should(kuzzle.internalEngine.get('foo', 'bar')).be.rejected();
+      var error = new Error('Mocked error');
+      kuzzle.internalEngine.client.get.rejects(error);
+      return should(kuzzle.internalEngine.get('foo', 'bar')).be.rejectedWith(error);
     });
   });
 
@@ -150,24 +205,31 @@ describe('InternalEngine', () => {
 
       return kuzzle.internalEngine.mget(collection, ids)
         .then(result => {
-          should(kuzzle.internalEngine.client.mget)
-            .be.calledOnce()
-            .be.calledWithMatch({
-              index: '%kuzzle', type: collection,
-              body: {
-                ids
-              }
-            });
+          try {
+            should(kuzzle.internalEngine.client.mget)
+              .be.calledOnce()
+              .be.calledWithMatch({
+                index: '%kuzzle', type: collection,
+                body: {
+                  ids
+                }
+              });
 
-          should(result).be.an.Object().and.not.be.empty();
-          should(result).not.have.property('docs');
-          should(result).match({hits: ['foo', 'bar']});
+            should(result).be.an.Object().and.not.be.empty();
+            should(result).not.have.property('docs');
+            should(result).match({hits: ['foo', 'bar']});
+            return Promise.resolve();
+          }
+          catch(error) {
+            return Promise.reject(error);
+          }
         });
     });
 
     it('should reject the promise if getting the document fails', () => {
-      kuzzle.internalEngine.client.mget.rejects();
-      return should(kuzzle.internalEngine.mget('foo', ['bar'])).be.rejected();
+      var error = new Error('Mocked error');
+      kuzzle.internalEngine.client.mget.rejects(error);
+      return should(kuzzle.internalEngine.mget('foo', ['bar'])).be.rejectedWith(error);
     });
   });
 
@@ -182,23 +244,31 @@ describe('InternalEngine', () => {
 
       return kuzzle.internalEngine.create(collection, id, content)
         .then(result => {
-          should(kuzzle.internalEngine.client.create)
-            .be.calledOnce()
-            .be.calledWithMatch({
-              index: '%kuzzle',
-              type: collection,
-              id,
-              body: content
-            });
+          try {
+            should(kuzzle.internalEngine.client.create)
+              .be.calledOnce()
+              .be.calledWithMatch({
+                index: '%kuzzle',
+                type: collection,
+                id,
+                body: content
+              });
 
-          should(result).be.an.Object().and.not.be.empty();
-          should(result).match({id, _source: content});
+            should(result).be.an.Object().and.not.be.empty();
+            should(result).match({id, _source: content});
+
+            return Promise.resolve();
+          }
+          catch(error) {
+            return Promise.reject(error);
+          }
         });
     });
 
     it('should reject the promise if creating the document fails', () => {
-      kuzzle.internalEngine.client.create.rejects();
-      return should(kuzzle.internalEngine.create('foo', 'bar', {'baz': 'qux'})).be.rejected();
+      var error = new Error('Mocked error');
+      kuzzle.internalEngine.client.create.rejects(error);
+      return should(kuzzle.internalEngine.create('foo', 'bar', {'baz': 'qux'})).be.rejectedWith(error);
     });
   });
 
@@ -213,23 +283,30 @@ describe('InternalEngine', () => {
 
       return kuzzle.internalEngine.createOrReplace(collection, id, content)
         .then(result => {
-          should(kuzzle.internalEngine.client.index)
-            .be.calledOnce()
-            .be.calledWithMatch({
-              index: '%kuzzle',
-              type: collection,
-              id,
-              body: content
-            });
+          try {
+            should(kuzzle.internalEngine.client.index)
+              .be.calledOnce()
+              .be.calledWithMatch({
+                index: '%kuzzle',
+                type: collection,
+                id,
+                body: content
+              });
 
-          should(result).be.an.Object().and.not.be.empty();
-          should(result).match({id, _source: content});
+            should(result).be.an.Object().and.not.be.empty();
+            should(result).match({id, _source: content});
+            return Promise.resolve();
+          }
+          catch(error) {
+            return Promise.reject(error);
+          }
         });
     });
 
     it('should reject the promise if creating the document fails', () => {
-      kuzzle.internalEngine.client.index.rejects();
-      return should(kuzzle.internalEngine.createOrReplace('foo', 'bar', {'baz': 'qux'})).be.rejected();
+      var error = new Error('Mocked error');
+      kuzzle.internalEngine.client.index.rejects(error);
+      return should(kuzzle.internalEngine.createOrReplace('foo', 'bar', {'baz': 'qux'})).be.rejectedWith(error);
     });
   });
 
@@ -244,25 +321,33 @@ describe('InternalEngine', () => {
 
       return kuzzle.internalEngine.update(collection, id, content)
         .then(result => {
-          should(kuzzle.internalEngine.client.update)
-            .be.calledOnce()
-            .be.calledWithMatch({
-              index: '%kuzzle',
-              type: collection,
-              id,
-              body: {
-                doc: content
-              }
-            });
+          try {
+            should(kuzzle.internalEngine.client.update)
+              .be.calledOnce()
+              .be.calledWithMatch({
+                index: '%kuzzle',
+                type: collection,
+                id,
+                body: {
+                  doc: content
+                }
+              });
 
 
-          should(result).be.an.Object().and.not.be.empty();
+            should(result).be.an.Object().and.not.be.empty();
+
+            return Promise.resolve();
+          }
+          catch(error) {
+            return Promise.reject(error);
+          }
         });
     });
 
     it('should reject the promise if creating the document fails', () => {
-      kuzzle.internalEngine.client.update.rejects();
-      return should(kuzzle.internalEngine.update('foo', 'bar', {'baz': 'qux'})).be.rejected();
+      var error = new Error('Mocked error');
+      kuzzle.internalEngine.client.update.rejects(error);
+      return should(kuzzle.internalEngine.update('foo', 'bar', {'baz': 'qux'})).be.rejectedWith(error);
     });
   });
 
@@ -278,17 +363,23 @@ describe('InternalEngine', () => {
 
       return kuzzle.internalEngine.replace(collection, id, content)
         .then(result => {
-          should(kuzzle.internalEngine.client.index)
-            .be.calledOnce()
-            .be.calledWithMatch({
-              index: '%kuzzle',
-              type: collection,
-              id,
-              body: content
-            });
+          try {
+            should(kuzzle.internalEngine.client.index)
+              .be.calledOnce()
+              .be.calledWithMatch({
+                index: '%kuzzle',
+                type: collection,
+                id,
+                body: content
+              });
 
-          should(result).be.an.Object().and.not.be.empty();
-          should(result).match({id, _source: content});
+            should(result).be.an.Object().and.not.be.empty();
+            should(result).match({id, _source: content});
+            return Promise.resolve();
+          }
+          catch(error) {
+            return Promise.reject(error);
+          }
         });
     });
 
@@ -298,9 +389,10 @@ describe('InternalEngine', () => {
     });
 
     it('should rejects the promise if the replace action fails', () => {
+      var error = new Error('Mocked error');
       kuzzle.internalEngine.client.exists.resolves(true);
-      kuzzle.internalEngine.client.index.rejects();
-      return should(kuzzle.internalEngine.replace('foo', 'bar', {'baz': 'qux'})).be.rejected();
+      kuzzle.internalEngine.client.index.rejects(error);
+      return should(kuzzle.internalEngine.replace('foo', 'bar', {'baz': 'qux'})).be.rejectedWith(error);
     });
   });
 
@@ -314,19 +406,27 @@ describe('InternalEngine', () => {
 
       return kuzzle.internalEngine.delete(collection, id)
         .then(() => {
-          should(kuzzle.internalEngine.client.delete)
-            .be.calledOnce()
-            .be.calledWithMatch({
-              index: '%kuzzle',
-              type: collection,
-              id
-            });
+          try {
+            should(kuzzle.internalEngine.client.delete)
+              .be.calledOnce()
+              .be.calledWithMatch({
+                index: '%kuzzle',
+                type: collection,
+                id
+              });
+
+            return Promise.resolve();
+          }
+          catch(error) {
+            return Promise.reject(error);
+          }
         });
     });
 
     it('should reject the promise if deleting the document fails', () => {
-      kuzzle.internalEngine.client.delete.rejects();
-      return should(kuzzle.internalEngine.delete('foo', 'bar')).be.rejected();
+      var error = new Error('Mocked error');
+      kuzzle.internalEngine.client.delete.rejects(error);
+      return should(kuzzle.internalEngine.delete('foo', 'bar')).be.rejectedWith(error);
     });
   });
 
@@ -338,10 +438,17 @@ describe('InternalEngine', () => {
 
       return kuzzle.internalEngine.createInternalIndex()
         .then(() => {
-          should(existsStub).be.calledOnce();
-          should(existsStub).be.calledWith({index: kuzzle.internalEngine.index});
-          should(createStub).be.calledOnce();
-          should(createStub).be.calledWith({index: kuzzle.internalEngine.index});
+          try {
+            should(existsStub).be.calledOnce();
+            should(existsStub).be.calledWith({index: kuzzle.internalEngine.index});
+            should(createStub).be.calledOnce();
+            should(createStub).be.calledWith({index: kuzzle.internalEngine.index});
+
+            return Promise.resolve();
+          }
+          catch(error) {
+            return Promise.reject(error);
+          }
         });
     });
 
@@ -352,36 +459,85 @@ describe('InternalEngine', () => {
 
       return kuzzle.internalEngine.createInternalIndex()
         .then(() => {
-          should(existsStub).be.calledOnce();
-          should(existsStub).be.calledWith({index: kuzzle.internalEngine.index});
-          should(createStub).have.callCount(0);
+          try {
+            should(existsStub).be.calledOnce();
+            should(existsStub).be.calledWith({index: kuzzle.internalEngine.index});
+            should(createStub).have.callCount(0);
+
+            return Promise.resolve();
+          }
+          catch(error) {
+            return Promise.reject(error);
+          }
         });
     });
 
     it('should reject the promise if creating the internal index fails', () => {
+      var error = new Error('Mocked error');
       kuzzle.internalEngine.client.indices.exists.resolves(false);
-      kuzzle.internalEngine.client.indices.create.rejects();
+      kuzzle.internalEngine.client.indices.create.rejects(error);
 
-      return should(kuzzle.internalEngine.createInternalIndex()).be.rejected();
+      return should(kuzzle.internalEngine.createInternalIndex()).be.rejectedWith(error);
     });
   });
 
   describe('#listIndexes', () => {
     it('should forward the request to elasticsearch', () => {
       kuzzle.internalEngine.client.indices.getMapping.resolves({
-        index1: {foo: 'bar'},
-        index2: {foo: 'bar'}
+        index1: {mappings: {foo: 'bar'}},
+        index2: {mappings: {foo: 'bar'}}
       });
 
       return kuzzle.internalEngine.listIndexes()
         .then(result => {
-          should(kuzzle.internalEngine.client.indices.getMapping)
-            .be.calledOnce();
-          should(kuzzle.internalEngine.client.indices.getMapping.firstCall.args)
-            .have.length(0);
+          try {
+            should(kuzzle.internalEngine.client.indices.getMapping)
+              .be.calledOnce();
+
+            should(kuzzle.internalEngine.client.indices.getMapping.firstCall.args)
+              .have.length(0);
+
+            should(result).match(['index1', 'index2']);
 
 
-          should(result).match(['index1', 'index2']);
+            return Promise.resolve();
+          }
+          catch(error) {
+            return Promise.reject(error);
+          }
+
+        });
+
+    });
+  });
+
+  describe('#listCollections', () => {
+    it('should forward the request to elasticsearch', () => {
+      kuzzle.internalEngine.client.indices.getMapping.resolves({
+        index1: {mappings: {foo: 'bar', baz: 'qux'}},
+        index2: {mappings: {foo: 'bar'}}
+      });
+
+      return kuzzle.internalEngine.listCollections('index1')
+        .then(result => {
+          try {
+            should(kuzzle.internalEngine.client.indices.getMapping)
+              .be.calledOnce();
+
+            should(kuzzle.internalEngine.client.indices.getMapping.firstCall.args)
+              .have.length(1);
+
+            should(kuzzle.internalEngine.client.indices.getMapping.firstCall.args[0])
+              .be.deepEqual({index: 'index1'});
+
+            should(result).match(['foo', 'baz']);
+
+            return Promise.resolve();
+          }
+          catch(error) {
+            return Promise.reject(error);
+          }
+
         });
 
     });
@@ -393,9 +549,16 @@ describe('InternalEngine', () => {
 
       return kuzzle.internalEngine.getMapping(data)
         .then(() => {
-          should(kuzzle.internalEngine.client.indices.getMapping)
-            .be.calledOnce()
-            .be.calledWithExactly(data);
+          try {
+            should(kuzzle.internalEngine.client.indices.getMapping)
+              .be.calledOnce()
+              .be.calledWithExactly(data);
+
+            return Promise.resolve();
+          }
+          catch(error) {
+            return Promise.reject(error);
+          }
         });
     });
   });
@@ -404,11 +567,17 @@ describe('InternalEngine', () => {
     it('should forward the request to elasticsearch', () => {
       return kuzzle.internalEngine.deleteIndex()
         .then(() => {
-          should(kuzzle.internalEngine.client.indices.delete)
-            .be.calledOnce()
-            .be.calledWithMatch({
-              index: kuzzle.internalEngine.index
-            });
+          try {
+            should(kuzzle.internalEngine.client.indices.delete)
+              .be.calledOnce()
+              .be.calledWithMatch({
+                index: kuzzle.internalEngine.index
+              });
+            return Promise.resolve();
+          }
+          catch(error) {
+            return Promise.reject(error);
+          }
         });
     });
   });
@@ -421,13 +590,20 @@ describe('InternalEngine', () => {
 
       return kuzzle.internalEngine.updateMapping(type, mapping)
         .then(() => {
-          should(kuzzle.internalEngine.client.indices.putMapping)
-            .be.calledOnce()
-            .be.calledWithMatch({
-              index: kuzzle.internalEngine.index,
-              type,
-              body: mapping
-            });
+          try {
+            should(kuzzle.internalEngine.client.indices.putMapping)
+              .be.calledOnce()
+              .be.calledWithMatch({
+                index: kuzzle.internalEngine.index,
+                type,
+                body: mapping
+              });
+
+            return Promise.resolve();
+          }
+          catch(error) {
+            return Promise.reject(error);
+          }
         });
     });
   });
@@ -436,11 +612,18 @@ describe('InternalEngine', () => {
     it ('should forward the request to elasticsearch', () => {
       return kuzzle.internalEngine.refresh()
         .then(() => {
-          should(kuzzle.internalEngine.client.indices.refresh)
-            .be.calledOnce()
-            .be.calledWithMatch({
-              index: kuzzle.internalEngine.index
-            });
+          try {
+            should(kuzzle.internalEngine.client.indices.refresh)
+              .be.calledOnce()
+              .be.calledWithMatch({
+                index: kuzzle.internalEngine.index
+              });
+
+            return Promise.resolve();
+          }
+          catch(error) {
+            return Promise.reject(error);
+          }
         });
     });
   });

@@ -32,26 +32,33 @@ describe('services/internalEngine/bootstrap.js', () => {
 
       return bootstrap.all()
         .then(() => {
-          should(bootstrap.engine.createInternalIndex)
-            .be.calledOnce();
 
-          should(bootstrap.createCollections)
-            .be.calledOnce();
+          try {
+            should(bootstrap.engine.createInternalIndex)
+              .be.calledOnce();
 
-          should(bootstrap.engine.refresh)
-            .be.calledOnce();
+            should(bootstrap.createCollections)
+              .be.calledOnce();
 
-          should(kuzzle.indexCache.add)
-            .be.calledOnce()
-            .be.calledWithExactly(bootstrap.engine.index);
+            should(bootstrap.engine.refresh)
+              .be.calledOnce();
 
-          sinon.assert.callOrder(
-            bootstrap.engine.createInternalIndex,
-            bootstrap.createCollections,
-            bootstrap.engine.refresh,
-            kuzzle.indexCache.add
-          );
+            should(kuzzle.indexCache.add)
+              .be.calledOnce()
+              .be.calledWithExactly(bootstrap.engine.index);
 
+            sinon.assert.callOrder(
+              bootstrap.engine.createInternalIndex,
+              bootstrap.createCollections,
+              bootstrap.engine.refresh,
+              kuzzle.indexCache.add
+            );
+
+            return Promise.resolve();
+          }
+          catch(error) {
+            return Promise.reject(error);
+          }
         });
     });
 
@@ -89,43 +96,58 @@ describe('services/internalEngine/bootstrap.js', () => {
 
       return bootstrap.createCollections()
         .then(() => {
-          should(bootstrap.createPluginsCollection)
-            .be.calledOnce();
-          should(bootstrap.createRolesCollection)
-            .be.calledOnce();
-          should(bootstrap.createProfilesCollection)
-            .be.calledOnce();
-          should(bootstrap.createUsersCollection)
-            .be.calledOnce();
+          try {
+            should(bootstrap.createPluginsCollection)
+              .be.calledOnce();
+            should(bootstrap.createRolesCollection)
+              .be.calledOnce();
+            should(bootstrap.createProfilesCollection)
+              .be.calledOnce();
+            should(bootstrap.createUsersCollection)
+              .be.calledOnce();
 
-          sinon.assert.callOrder(
-            bootstrap.createPluginsCollection,
-            bootstrap.createRolesCollection,
-            bootstrap.createProfilesCollection,
-            bootstrap.createUsersCollection
-          );
+            sinon.assert.callOrder(
+              bootstrap.createPluginsCollection,
+              bootstrap.createRolesCollection,
+              bootstrap.createProfilesCollection,
+              bootstrap.createUsersCollection
+            );
+
+            return Promise.resolve();
+          }
+          catch(error) {
+            return Promise.reject(error);
+          }
         });
     });
   });
+
 
   describe('#createRolesCollection', () => {
     it('should create mapping and add default roles', () => {
       return bootstrap.createRolesCollection()
         .then(() => {
-          should(bootstrap.engine.updateMapping)
-            .be.calledOnce()
-            .be.calledWithMatch('roles', {
-              properties: {
-                controllers: { enabled: false }
-              }
-            });
+          try {
+            should(bootstrap.engine.updateMapping)
+              .be.calledOnce()
+              .be.calledWithMatch('roles', {
+                properties: {
+                  controllers: { enabled: false }
+                }
+              });
 
-          should(bootstrap.engine.createOrReplace)
-            .be.calledThrice();
-          should(bootstrap.engine.createOrReplace)
-            .be.calledWithExactly('roles', 'admin', kuzzle.config.security.default.role)
-            .be.calledWithExactly('roles', 'default', kuzzle.config.security.default.role)
-            .be.calledWithExactly('roles', 'anonymous', kuzzle.config.security.default.role);
+            should(bootstrap.engine.createOrReplace)
+              .be.calledThrice();
+            should(bootstrap.engine.createOrReplace)
+              .be.calledWithExactly('roles', 'admin', kuzzle.config.security.default.role)
+              .be.calledWithExactly('roles', 'default', kuzzle.config.security.default.role)
+              .be.calledWithExactly('roles', 'anonymous', kuzzle.config.security.default.role);
+
+            return Promise.resolve();
+          }
+          catch(error) {
+            return Promise.reject(error);
+          }
         });
     });
 
@@ -134,8 +156,15 @@ describe('services/internalEngine/bootstrap.js', () => {
 
       return bootstrap.createRolesCollection()
         .then(() => {
-          should(bootstrap.engine.updateMapping)
-            .have.callCount(0);
+          try {
+            should(bootstrap.engine.updateMapping)
+              .have.callCount(0);
+
+            return Promise.resolve();
+          }
+          catch(error) {
+            return Promise.reject(error);
+          }
         });
     });
   });
@@ -144,13 +173,20 @@ describe('services/internalEngine/bootstrap.js', () => {
     it('should create the mapping', () => {
       return bootstrap.createPluginsCollection()
         .then(() => {
-          should(bootstrap.engine.updateMapping)
-            .be.calledOnce()
-            .be.calledWithMatch('plugins', {
-              properties: {
-                config: {enabled: false}
-              }
-            });
+          try {
+            should(bootstrap.engine.updateMapping)
+              .be.calledOnce()
+              .be.calledWithMatch('plugins', {
+                properties: {
+                  config: {enabled: false}
+                }
+              });
+
+            return Promise.resolve();
+          }
+          catch(error) {
+            return Promise.reject(error);
+          }
         });
     });
 
@@ -159,8 +195,15 @@ describe('services/internalEngine/bootstrap.js', () => {
 
       return bootstrap.createPluginsCollection()
         .then(() => {
-          should(bootstrap.engine.updateMapping)
-            .have.callCount(0);
+          try {
+            should(bootstrap.engine.updateMapping)
+              .have.callCount(0);
+
+            return Promise.resolve();
+          }
+          catch(error) {
+            return Promise.reject(error);
+          }
         });
     });
   });
@@ -169,36 +212,42 @@ describe('services/internalEngine/bootstrap.js', () => {
     it('should set the mapping and inject the default profiles', () => {
       return bootstrap.createProfilesCollection()
         .then(() => {
-          should(bootstrap.engine.updateMapping)
-            .be.calledOnce()
-            .be.calledWithMatch('profiles', {
-              properties: {
-                policies: {
-                  properties: {
-                    _id: {
-                      index: 'not_analyzed',
-                      type: 'string'
+          try {
+            should(bootstrap.engine.updateMapping)
+              .be.calledOnce()
+              .be.calledWithMatch('profiles', {
+                properties: {
+                  policies: {
+                    properties: {
+                      _id: {
+                        index: 'not_analyzed',
+                        type: 'string'
+                      }
                     }
                   }
                 }
-              }
-            });
+              });
 
-          should(bootstrap.engine.createOrReplace)
-            .be.calledThrice()
-            .be.calledWithMatch('profiles', 'admin', {
-              policies: [{roleId: 'admin', allowInternalIndex: true}]
-            })
-            .be.calledWithMatch('profiles', 'default', {
-              policies: [{roleId: 'default', allowInternalIndex: true}]
-            })
-            .be.calledWithMatch('profiles', 'anonymous', {
-              policies: [{roleId: 'anonymous', allowInternalIndex: true}]
-            });
+            should(bootstrap.engine.createOrReplace)
+              .be.calledThrice()
+              .be.calledWithMatch('profiles', 'admin', {
+                policies: [{roleId: 'admin', allowInternalIndex: true}]
+              })
+              .be.calledWithMatch('profiles', 'default', {
+                policies: [{roleId: 'default', allowInternalIndex: true}]
+              })
+              .be.calledWithMatch('profiles', 'anonymous', {
+                policies: [{roleId: 'anonymous', allowInternalIndex: true}]
+              });
 
-          should(kuzzle.indexCache.add)
-            .be.calledOnce()
-            .be.calledWithExactly(kuzzle.internalEngine.index, 'profiles');
+            should(kuzzle.indexCache.add)
+              .be.calledOnce()
+              .be.calledWithExactly(kuzzle.internalEngine.index, 'profiles');
+            return Promise.resolve();
+          }
+          catch(error) {
+            return Promise.reject(error);
+          }
         });
     });
 
@@ -207,8 +256,14 @@ describe('services/internalEngine/bootstrap.js', () => {
 
       return bootstrap.createProfilesCollection()
         .then(() => {
-          should(bootstrap.engine.updateMapping)
-            .have.callCount(0);
+          try {
+            should(bootstrap.engine.updateMapping)
+              .have.callCount(0);
+            return Promise.resolve();
+          }
+          catch(error) {
+            return Promise.reject(error);
+          }
         });
     });
   });
@@ -217,20 +272,27 @@ describe('services/internalEngine/bootstrap.js', () => {
     it('should set the mapping', () => {
       return bootstrap.createUsersCollection()
         .then(() => {
-          should(bootstrap.engine.updateMapping)
-            .be.calledOnce()
-            .be.calledWithMatch('users', {
-              properties: {
-                profileIds: {
-                  index: 'not_analyzed',
-                  type: 'string'
-                },
-                password: {
-                  index: 'no',
-                  type: 'string'
+          try {
+            should(bootstrap.engine.updateMapping)
+              .be.calledOnce()
+              .be.calledWithMatch('users', {
+                properties: {
+                  profileIds: {
+                    index: 'not_analyzed',
+                    type: 'string'
+                  },
+                  password: {
+                    index: 'no',
+                    type: 'string'
+                  }
                 }
-              }
-            });
+              });
+
+            return Promise.resolve();
+          }
+          catch(error) {
+            return Promise.reject(error);
+          }
         });
     });
 
@@ -239,29 +301,42 @@ describe('services/internalEngine/bootstrap.js', () => {
 
       return bootstrap.createUsersCollection()
         .then(() => {
-          should(bootstrap.engine.updateMapping)
-            .have.callCount(0);
+          try {
+            should(bootstrap.engine.updateMapping)
+              .have.callCount(0);
+            return Promise.resolve();
+          }
+          catch(error) {
+            return Promise.reject(error);
+          }
         });
     });
   });
 
   describe('#adminExists', () => {
     it('should return true if an admin exists', () => {
-      bootstrap.engine.search.resolves({hits: {total: 1}});
+      bootstrap.engine.search.resolves({total: 1});
 
       return bootstrap.adminExists()
         .then(result => {
-          should(bootstrap.engine.search)
-            .be.calledOnce()
-            .be.calledWithMatch('users', {
-              query: {
-                in: {
-                  profileIds: ['admin']
+          try {
+            should(bootstrap.engine.search)
+              .be.calledOnce()
+              .be.calledWithMatch('users', {
+                query: {
+                  terms: {
+                    profileIds: ['admin']
+                  }
                 }
-              }
-            }, 0, 0);
+              }, 0, 0);
 
-          should(result).be.true();
+            should(result).be.true();
+
+            return Promise.resolve();
+          }
+          catch(error) {
+            return Promise.reject(error);
+          }
         });
     });
 
@@ -270,7 +345,14 @@ describe('services/internalEngine/bootstrap.js', () => {
 
       return bootstrap.adminExists()
         .then(result => {
-          should(result).be.false();
+          try {
+            should(result).be.false();
+
+            return Promise.resolve();
+          }
+          catch(error) {
+            return Promise.reject(error);
+          }
         });
     });
 

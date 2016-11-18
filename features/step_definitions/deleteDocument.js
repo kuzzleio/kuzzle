@@ -20,11 +20,11 @@ var apiSteps = function () {
   this.Then(/^I remove documents with field "([^"]*)" equals to value "([^"]*)"(?: in index "([^"]*)")?$/, function (field, value, index, callback) {
     var main = function (callbackAsync) {
       setTimeout(function () {
-        var filter = { query: { match: {} } };
+        var query = { query: { match: {} } };
 
-        filter.query.match[field] = value;
+        query.query.match[field] = value;
 
-        this.api.deleteByQuery(filter, index)
+        this.api.deleteByQuery(query, index)
           .then(body => {
             if (body.error) {
               callbackAsync(body.error.message);

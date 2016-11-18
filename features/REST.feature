@@ -59,6 +59,10 @@ Feature: Test REST API
     Then I can retrieve actions from bulk import
 
   @usingREST
+  Scenario: Can't do a bulk import on internal index
+    When I can't do a bulk import from index "%kuzzle"
+
+  @usingREST
   Scenario: Global Bulk import
     When I do a global bulk import
     Then I can retrieve actions from bulk import
@@ -81,6 +85,16 @@ Feature: Test REST API
     And I count 2 documents with "NYC" in field "info.city"
     Then I truncate the collection
     And I count 0 documents
+
+  @usingREST
+  Scenario: Search with scroll documents
+    When I write the document "documentGrace"
+    When I write the document "documentGrace"
+    When I write the document "documentGrace"
+    When I write the document "documentGrace"
+    And I refresh the index
+    Then I find a document with "Grace" in field "firstName" with scroll "5m"
+    And I be able to scroll previous search
 
   @usingREST
   Scenario: Change mapping
@@ -111,6 +125,20 @@ Feature: Test REST API
     When I write the document "documentGrace"
     And I list "stored" data collections
     Then I can find a stored collection kuzzle-collection-test
+
+  @usingREST
+  Scenario: Index and collection existence
+    When I check if index "%kuzzle" exists
+    Then The result should raise an error with message "Cannot operate on Kuzzle internal index "%kuzzle""
+    When I check if index "idontexist" exists
+    Then The result should match the json false
+    When I check if collection "users" exists on index "%kuzzle"
+    Then The result should raise an error with message "Cannot operate on Kuzzle internal index "%kuzzle""
+    When I write the document "documentGrace"
+    When I check if index "kuzzle-test-index" exists
+    Then The result should match the json true
+    When I check if collection "kuzzle-collection-test" exists on index "kuzzle-test-index"
+    Then The result should match the json true
 
   @usingREST
   Scenario: list known realtime collections
@@ -216,9 +244,9 @@ Feature: Test REST API
     And I can't create a new user "user2" with id "useradmin-id"
     Then I am able to get the user "useradmin-id" matching {"_id":"#prefix#useradmin-id","_source":{"profileIds":["admin"]}}
     Then I am able to get the user "user2-id" matching {"_id":"#prefix#user2-id","_source":{"profileIds":["#prefix#profile2"]}}
-    Then I search for {"regexp":{"_uid":"users.#prefix#.*"}} and find 2 users
+    Then I search for {"ids":{"type": "users", "values":["#prefix#useradmin-id", "#prefix#user2-id"]}} and find 2 users
     Then I delete the user "user2-id"
-    Then I search for {"regexp":{"_uid":"users.#prefix#.*"}} and find 1 users matching {"_id":"#prefix#useradmin-id","_source":{"name":{"first":"David","last":"Bowie"}}}
+    Then I search for {"ids":{"type": "users", "values":["#prefix#useradmin-id"]}} and find 1 users matching {"_id":"#prefix#useradmin-id","_source":{"name":{"first":"David","last":"Bowie"}}}
     When I log in as useradmin-id:testpwd expiring in 1h
     Then I am getting the current user, which matches {"_id":"#prefix#useradmin-id","_source":{"profileIds":["admin"]}}
     Then I log out

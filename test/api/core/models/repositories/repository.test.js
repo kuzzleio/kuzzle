@@ -106,12 +106,12 @@ describe('Test: repositories/repository', () => {
           return {hits: result};
         });
     },
-    search: (type, filter) => {
-      if (filter.empty) {
+    search: (type, query) => {
+      if (query.empty) {
         return Promise.resolve({});
       }
-      if (filter.error) {
-        return Promise.reject({});
+      if (query.error) {
+        return Promise.reject(new Error('Mocked error'));
       }
       return Promise.resolve({hits: [{_id: 'role', _source: {controllers: {}}}], total: 1});
     },
@@ -380,7 +380,7 @@ describe('Test: repositories/repository', () => {
 
   describe('#search', () => {
     it('should return a list from database', () => {
-      return repository.search({filter:'nofilter'}, 0, 10, false)
+      return repository.search({query:'noquery'}, 0, 10, false)
         .then(response => {
           should(response).be.an.Object();
           should(response.hits).be.an.Array();
@@ -399,7 +399,7 @@ describe('Test: repositories/repository', () => {
     });
 
     it('should be rejected with an error if something goes wrong', () => {
-      return should(repository.search({error:true}, 0, 10, false)).be.rejected();
+      return should(repository.search({error:true}, 0, 10, false)).be.rejectedWith(new Error('Mocked error'));
     });
   });
 });

@@ -328,7 +328,7 @@ describe('Test: repositories/tokenRepository', () => {
         user = new User();
 
       Repository.prototype.expireFromCache = () => {
-        return Promise.reject();
+        return Promise.reject(new Error('Mocked error'));
       };
 
       user._id = 'userInCache';

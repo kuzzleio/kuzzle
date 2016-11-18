@@ -8,12 +8,13 @@ module.exports = {
 
   plugins: {
     common: {
+      workerPrefix: 'kpw:',
       pipeWarnTime: 40,
       pipeTimeout: 250
     },
 
     'kuzzle-plugin-logger': {
-      version: '2.0.4',
+      version: '2.0.5',
       activated: true
     },
     'kuzzle-plugin-auth-passport-local': {
@@ -114,6 +115,7 @@ module.exports = {
   },
 
   server: {
+    maxRequestHistorySize: 50,
     maxConcurrentRequests: 50,
     maxRetainedRequests: 50000,
     warningRetainedRequestsLimit: 5000
@@ -156,7 +158,7 @@ module.exports = {
       backend: 'elasticsearch',
       host: 'localhost',
       port: 9200,
-      apiVersion: '2.3'
+      apiVersion: '5.0'
     }
 
   },
@@ -165,7 +167,25 @@ module.exports = {
     ttl: 3600,
     statsInterval: 10
   },
+
   /** @type {DocumentSpecification} */
   validation: {
+  },
+
+  dump: {
+    enabled: false,
+    path: './dump/',
+    dateFormat: 'YYYYMMDD-HHmm',
+    handledErrors: {
+      enabled: true,
+      whitelist: [
+        // 'Error',
+        'RangeError',
+        'TypeError',
+        'KuzzleError',
+        'InternalError',
+        'PluginImplementationError'
+      ]
+    }
   }
 };

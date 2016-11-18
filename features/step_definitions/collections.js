@@ -1,3 +1,5 @@
+var stepUtils = require('../support/stepUtils');
+
 var apiSteps = function () {
   this.When(/^I list "([^"]*)" data collections(?: in index "([^"]*)")?$/, function (type, index, callback) {
     this.api.listCollections(index, type)
@@ -23,7 +25,7 @@ var apiSteps = function () {
     }
 
     if (!collection) {
-      if (this.result.collections[type].length === 0) {
+      if (this.result.collections.length === 0) {
         if (not) {
           return callback();
         }
@@ -32,7 +34,7 @@ var apiSteps = function () {
       }
     }
 
-    if (this.result.collections[type].indexOf(collection) !== -1) {
+    if (this.result.collections.filter(item => item.type === type && item.name === collection).length !== 0) {
       if (not) {
         return callback('Expected collection ' + collection + ' not to appear in the collection list');
       }
@@ -68,6 +70,14 @@ var apiSteps = function () {
         callback();
       })
       .catch(error => callback(error));
+  });
+
+  this.When(/^I check if index "(.*?)" exists$/, function (index, cb) {
+    return stepUtils.getReturn.call(this, 'indexExists', index, cb);
+  });
+
+  this.When(/I check if collection "(.*?)" exists on index "(.*?)"$/, function (collection, index, cb) {
+    return stepUtils.getReturn.call(this, 'collectionExists', index, collection, cb);
   });
 };
 
