@@ -27,8 +27,8 @@ describe('Test: routerController.httpRequest', () => {
         ]
       },
       funnel: {
-        execute: function (rq, c, cb) {
-          response = new ResponseObject(rq, {status: 1234});
+        execute: function (r, c, cb) {
+          response = new ResponseObject(r, {status: 1234});
           cb(null, response);
         }
       }
@@ -139,7 +139,7 @@ describe('Test: routerController.httpRequest', () => {
   });
 
   it('should register the base route /_serverInfo', (done) => {
-    rq.url = `/api/_serverInfo`;
+    rq.url = '/api/_serverInfo';
     rq.method = 'GET';
 
     rc.router.route(rq, result => {
@@ -160,7 +160,7 @@ describe('Test: routerController.httpRequest', () => {
   });
 
   it('should register the swagger JSON auto-generator route', (done) => {
-    rq.url = `/api/swagger.json`;
+    rq.url = '/api/swagger.json';
     rq.method = 'GET';
 
     rc.router.route(rq, result => {
@@ -178,7 +178,7 @@ describe('Test: routerController.httpRequest', () => {
   });
 
   it('should register the swagger YAML auto-generator route', (done) => {
-    rq.url = `/api/swagger.yml`;
+    rq.url = '/api/swagger.yml';
     rq.method = 'GET';
 
     rc.router.route(rq, result => {

@@ -7,7 +7,7 @@ const
   HttpResponse = require.main.require('lib/api/core/entryPoints/httpResponse'),
   Router = require.main.require('lib/api/core/httpRouter');
 
-describe.only('core/httpRouter', () => {
+describe('core/httpRouter', () => {
   let
     router,
     handler,
@@ -110,6 +110,52 @@ describe.only('core/httpRouter', () => {
         data: {
           body: {
             foo: 'bar'
+          }
+        }
+      });
+    });
+
+    it('should return dynamic values for parametric routes', () => {
+      router.post('/foo/:bar/:baz', handler);
+
+      rq.url = '/foo/hello/world';
+      rq.method = 'POST';
+      rq.headers['content-type'] = 'application/json';
+      rq.content = '{"foo": "bar"}';
+
+      router.route(rq, callback);
+      should(handler.calledOnce).be.true();
+      should(handler.firstCall.args[0]).match({
+        requestId: rq.requestId,
+        headers: rq.headers,
+        data: {
+          body: {
+            foo: 'bar',
+            bar: 'hello',
+            baz: 'world'
+          }
+        }
+      });
+    });
+
+    it('should unnescape dynamic values for parametric routes', () => {
+      router.post('/foo/:bar/:baz', handler);
+
+      rq.url = '/foo/hello/%25world';
+      rq.method = 'POST';
+      rq.headers['content-type'] = 'application/json';
+      rq.content = '{"foo": "bar"}';
+
+      router.route(rq, callback);
+      should(handler.calledOnce).be.true();
+      should(handler.firstCall.args[0]).match({
+        requestId: rq.requestId,
+        headers: rq.headers,
+        data: {
+          body: {
+            foo: 'bar',
+            bar: 'hello',
+            baz: '%world'
           }
         }
       });
