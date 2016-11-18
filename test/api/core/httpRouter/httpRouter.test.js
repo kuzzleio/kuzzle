@@ -143,7 +143,7 @@ describe('core/httpRouter', () => {
 
       rq.url = '/foo/hello/%25world';
       rq.method = 'POST';
-      rq.headers['content-type'] = 'application/json';
+      rq.headers['content-type'] = 'application/json; charset=utf-8';
       rq.content = '{"foo": "bar"}';
 
       router.route(rq, callback);
@@ -207,7 +207,7 @@ describe('core/httpRouter', () => {
       rq.url = '/foo/bar';
       rq.method = 'POST';
       rq.headers['content-type'] = 'application/foobar';
-      rq.content = '"id": "foobar", "body": {"foo": "bar"}}';
+      rq.content = '{"id": "foobar", "body": {"foo": "bar"}}';
 
       router.route(rq, callback);
       should(handler.called).be.false();
@@ -219,6 +219,26 @@ describe('core/httpRouter', () => {
         status: 400
       });
       should(callback.firstCall.args[0].content).startWith('{"status":400,"error":{"message":"Invalid request content-type');
+    });
+
+    it('should send an error if the charset is not utf-8', () => {
+      router.post('/foo/bar', handler);
+
+      rq.url = '/foo/bar';
+      rq.method = 'POST';
+      rq.headers['content-type'] = 'application/json; charset=iso8859-1';
+      rq.content = '{"id": "foobar", "body": {"foo": "bar"}}';
+
+      router.route(rq, callback);
+      should(handler.called).be.false();
+      should(callback.calledOnce).be.true();
+      should(callback.firstCall.args[0]).be.instanceOf(HttpResponse);
+      should(callback.firstCall.args[0]).match({
+        id: rq.requestId,
+        type: 'application/json',
+        status: 400
+      });
+      should(callback.firstCall.args[0].content).startWith('{"status":400,"error":{"message":"Invalid request charset');
     });
 
     it('should return an error if the route does not exist', () => {
