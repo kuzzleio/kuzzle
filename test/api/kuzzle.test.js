@@ -148,10 +148,10 @@ describe('/lib/api/kuzzle.js', () => {
               kuzzle.notifier.init,
               kuzzle.statistics.init,
               kuzzle.hooks.init,
-              kuzzle.entryPoints.init,
               kuzzle.repositories.init,
               kuzzle.pluginsManager.trigger,
               kuzzle.cliController.init,
+              kuzzle.entryPoints.init,
               kuzzle.pluginsManager.trigger
             );
 

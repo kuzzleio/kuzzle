@@ -7,7 +7,7 @@ var
   should = require('should'),
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
-  Kuzzle = require.main.require('lib/api/kuzzle'),
+  Kuzzle = require('../../../mocks/kuzzle.mock'),
   Notifier = require.main.require('lib/api/core/notifier'),
   NotificationObject = require.main.require('lib/api/core/models/notificationObject');
 
@@ -21,14 +21,17 @@ describe('Test: notifier.notify', () => {
     addToChannelsStub;
 
   before(() => {
-    kuzzle = new Kuzzle();
-    notification = new NotificationObject({}, {});
   });
 
   beforeEach(() => {
-    dispatchStub = sandbox.stub(kuzzle.entryPoints.proxy, 'dispatch');
-    triggerStub = sandbox.stub(kuzzle.pluginsManager, 'trigger');
-    addToChannelsStub = sandbox.stub(kuzzle.hotelClerk, 'addToChannels', c => c.push('foobar'));
+    kuzzle = new Kuzzle();
+    notification = new NotificationObject({}, {});
+
+    dispatchStub = kuzzle.entryPoints.proxy.dispatch;
+    triggerStub = kuzzle.pluginsManager.trigger;
+    kuzzle.hotelClerk.addToChannels = sinon.spy(c => c.push('foobar'));
+    addToChannelsStub = kuzzle.hotelClerk.addToChannels;
+
     notifier = new Notifier(kuzzle);
   });
 
