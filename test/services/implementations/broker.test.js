@@ -1,4 +1,5 @@
 var
+  path = require('path'),
   Promise = require('bluebird'),
   rewire = require('rewire'),
   sinon = require('sinon'),
@@ -10,6 +11,7 @@ var
   BrokerFactory = rewire('../../../lib/services/broker'),
   InternalError = require('kuzzle-common-objects').Errors.internalError,
   WSBrokerClient = require.main.require('lib/services/broker/wsBrokerClient'),
+  WSBrokerClientRewire = rewire('../../../lib/services/broker/wsBrokerClient'),
   WSBrokerServer = require.main.require('lib/services/broker/wsBrokerServer'),
   WSBrokerServerRewire = rewire('../../../lib/services/broker/wsBrokerServer');
 
@@ -110,7 +112,49 @@ describe('Test: Internal broker', () => {
       client.ws = () => new WSClientMock(server.wss);
     });
 
-    describe('#constructor', () => { });
+    describe('#constructor', () => {
+
+      it('should throw if no valid configuration is given', () => {
+        return should(() => new WSBrokerClient('broker', {}))
+          .throw(InternalError, {message: 'No endpoint configuration given to connect.'});
+      });
+
+      it('should connect to a TCP host', () => {
+        client = new WSBrokerClient('broker', {host: 'host', port: 'port'});
+        should(client.server).match({
+          address: 'ws://host:port',
+          transport: 'tcp'
+        });
+      });
+
+      it('should connect to a Unix socket', () => {
+        client = new WSBrokerClient('broker', {socket: 'socket'});
+        should(client.server).match({
+          address: 'ws+unix://' + path.resolve('.') + '/socket',
+          transport: 'unix',
+          path: 'socket'
+        });
+      });
+
+    });
+
+    describe('#ws', () => {
+
+      it('should construct a WS client', () => {
+        client = new WSBrokerClientRewire('broker', {socket: 'socket'});
+
+        WSBrokerClientRewire.__with__({
+          WS: sinon.spy()
+        })(() => {
+          client.ws();
+
+          should(WSBrokerClientRewire.__get__('WS'))
+            .be.calledOnce()
+            .be.calledWith('ws+unix://' + path.resolve('.') + '/socket', {perMessageDeflate: false});
+        });
+      });
+
+    });
 
     describe('#init', () => {
 
@@ -180,6 +224,16 @@ describe('Test: Internal broker', () => {
     describe('#listen & #unsubscribe', () => {
       beforeEach(() => Promise.all([server.init(),client.init()]));
 
+      it('should log an error if listen is called while no socket is defined', () => {
+        client.client.socket = null;
+
+        client.listen();
+
+        should(client.pluginsManager.trigger)
+          .be.calledWith('log:error', 'No socket for broker internalBroker');
+
+      });
+
       it ('should store the cb and send the request to the server', () => {
         var cb = sinon.stub();
 
@@ -237,6 +291,22 @@ describe('Test: Internal broker', () => {
 
     describe('#send & broadcast', () => {
       beforeEach(() => Promise.all([server.init(),client.init()]));
+
+      it('should log an error if no client socket is set', () => {
+        client = {
+          client: {},
+          eventName: 'test',
+          pluginsManager: {
+            trigger: sinon.spy()
+          }
+        };
+
+        WSBrokerClientRewire.__get__('emit').call(client);
+
+        should(client.pluginsManager.trigger)
+          .be.calledOnce()
+          .be.calledWith('log:error', 'No socket for broker test');
+      });
 
       it('`send` should send properly envelopped data', () => {
         var
@@ -397,11 +467,14 @@ describe('Test: Internal broker', () => {
   });
 
   describe('Server', () => {
-    var client1, client2, client3;
+    var
+      client1, client2, client3,
+      ws;
 
     beforeEach(() => {
       /** @type InternalBroker */
       server = new WSBrokerServerRewire('internalBroker', {}, kuzzle.pluginsManager);
+      ws = server.ws;
       server.ws = cb => {
         server.wss = new WSServerMock();
         cb();
@@ -421,14 +494,182 @@ describe('Test: Internal broker', () => {
       ]);
     });
 
+    describe('#ws', () => {
+      var
+        reset;
+
+      beforeEach(() => {
+        reset = WSBrokerServerRewire.__set__({
+          fs: {
+            unlinkSync: sinon.spy()
+          },
+          http: {
+            createServer: sinon.stub().returns({
+              listen: sinon.stub(),
+              on: sinon.spy()
+            })
+          },
+          net: {
+            connect: sinon.stub().returns({
+              on: sinon.spy()
+            })
+          },
+          WS: sinon.spy(WSServerMock)
+        });
+      });
+
+      afterEach(() => {
+        reset();
+      });
+
+      it('should trigger an error if no valid connection option is given', () => {
+        return should(() => {
+          ws.call(server, () => {});
+        })
+          .throw(InternalError, {message: 'Invalid configuration provided for internalBroker. Either "port" or "socket" must be provided.'});
+      });
+
+      it('should create a TCP host:port based Websocket server', () => {
+        var
+          cb = sinon.spy(),
+          httpServer;
+
+        server = new WSBrokerServerRewire('broker', {host: 'host', port: 'port'}, kuzzle.pluginsManager);
+        server.ws(cb);
+
+        should(WSBrokerServerRewire.__get__('http.createServer'))
+          .be.calledOnce();
+
+        httpServer = WSBrokerServerRewire.__get__('http.createServer').firstCall.returnValue;
+
+        should(httpServer.listen)
+          .be.calledOnce()
+          .be.calledWith('port', 'host');
+
+        httpServer.listen.firstCall.args[2]();
+
+        should(WSBrokerServerRewire.__get__('WS'))
+          .be.calledOnce()
+          .be.calledWith({ server: httpServer }, {perMessageDeflate: false});
+
+        should(cb)
+          .be.calledOnce();
+      });
+
+      it('should create a TCP port based Websocket server', () => {
+        var
+          cb = sinon.spy(),
+          httpServer;
+
+        server = new WSBrokerServerRewire('broker', {port: 'port'}, kuzzle.pluginsManager);
+        server.ws(cb);
+
+        httpServer = WSBrokerServerRewire.__get__('http.createServer').firstCall.returnValue;
+
+        should(httpServer.listen)
+          .be.calledOnce()
+          .be.calledWith('port');
+        should(httpServer.listen.firstCall.args)
+          .have.length(2);
+      });
+
+
+      it('should create a unix socket based Websocket server', () => {
+        var
+          error = new Error('test'),
+          httpServer,
+          httpServerOnErrorCB,
+          netErrorCB;
+
+        server = new WSBrokerServerRewire('broker', {socket: 'socket'}, kuzzle.pluginsManager);
+        server.ws(() => {});
+
+        httpServer = WSBrokerServerRewire.__get__('http.createServer').firstCall.returnValue;
+
+        should(httpServer.on)
+          .be.calledOnce()
+          .be.calledWith('error');
+
+        httpServerOnErrorCB = httpServer.on.firstCall.args[1];
+
+        should(httpServer.listen)
+          .be.calledOnce()
+          .be.calledWith('socket');
+
+        // Errors handling
+
+        // != EADDRINUSE => rethrow
+        should(() => httpServerOnErrorCB(error))
+          .throw(error);
+
+        // no error on net.connect => socket is actually in use => rethrow
+        error.code = 'EADDRINUSE';
+        WSBrokerServerRewire.__with__('net.connect', sinon.stub().yields())(() => {
+          should(() => httpServerOnErrorCB(error))
+            .throw(error);
+        });
+
+        // error received on net layer
+        httpServerOnErrorCB(error);
+        netErrorCB = WSBrokerServerRewire.__get__('net.connect').firstCall.returnValue.on.firstCall.args[1];
+
+        // != ECONNREFUSED => rethrow
+        should(() => netErrorCB(error))
+          .throw(error);
+
+        // ECONNREFUSED => delete socket file and try again
+        error.code = 'ECONNREFUSED';
+        server.wss = null;
+        netErrorCB(error);
+
+        should(WSBrokerServerRewire.__get__('fs.unlinkSync'))
+          .be.calledOnce()
+          .be.calledWith('socket');
+
+        should(httpServer.listen)
+          .be.calledTwice();
+
+        // second http.server listen call should not include any callback
+        should(httpServer.listen.secondCall.args)
+          .have.length(1);
+
+        server.wss = new WSServerMock();
+
+        netErrorCB(error);
+        should(server.wss.close)
+          .be.calledOnce();
+
+        server.wss.close.firstCall.args[0]();
+        should(httpServer.listen)
+          .be.calledThrice();
+
+        should(httpServer.listen.thirdCall.args)
+          .have.length(1);
+
+      });
+
+
+    });
+
     describe('#init', () => {
+
+      it('should resolve and warn if the broker is disabled', () => {
+        server.isDisabled = true;
+
+        return server.init()
+          .then(() => {
+            should(server.pluginsManager.trigger)
+              .be.calledWith('log:warn', 'Internal broker disabled by configuration');
+          });
+      });
 
       it('should reject the promise if already started', () => {
         return should(server.init()).be.rejectedWith(InternalError);
       });
 
       it('should attach some callbacks', () => {
-        var socket = server.wss;
+        var
+          socket = server.wss;
 
         // 1st listener is injected in the mock to emit the 'open' event
         should(socket.on).be.calledThrice();
@@ -650,6 +891,17 @@ describe('Test: Internal broker', () => {
 
     });
 
+    describe('#socket', () => {
+
+      it('is just a getter', () => {
+        var result = server.socket();
+
+        should(result)
+          .be.exactly(server.wss);
+      });
+
+    });
+
     describe('#removeClient', () => {
 
       it('should close the client connection and clean up the rooms', () => {
@@ -660,11 +912,18 @@ describe('Test: Internal broker', () => {
         server.rooms = {
           test: new CircularList([clientSocket])
         };
+        server.onCloseHandlers = [
+          sinon.spy()
+        ];
 
         removeClient.call(server, clientSocket);
 
         should(server.rooms).be.eql({ });
         should(server.rooms).be.empty();
+
+        should(server.onCloseHandlers[0])
+          .be.calledOnce()
+          .be.calledWith('test');
       });
 
     });

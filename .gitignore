@@ -27,6 +27,7 @@ docker-compose-custom.yml
 # Kuzzle
 /*.log
 /run
+!/run/.keep
 
 #swagger
 kuzzle-swagger.*
