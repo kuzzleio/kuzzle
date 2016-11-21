@@ -2,7 +2,7 @@ version: '2'
 
 services:
   proxy:
-    image: kuzzleio/proxy
+    image: kuzzleio/proxy:develop
     ports:
       - "7511-7513:7511-7513"
 
