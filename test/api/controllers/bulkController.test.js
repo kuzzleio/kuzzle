@@ -47,7 +47,7 @@ describe('Test the bulk controller', () => {
   });
 
   it('should handle partial errors', () => {
-    stub.resolves({partialErrors: ['foo', 'bar']});
+    stub.returns(Promise.resolve({partialErrors: ['foo', 'bar']}));
 
     return controller.import(requestObject)
       .then(response => {

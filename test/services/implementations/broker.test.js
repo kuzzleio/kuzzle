@@ -599,17 +599,11 @@ describe('Test: Internal broker', () => {
         return should(server.waitForClients('test')).be.fulfilled();
       });
 
-      it('should never resolve if no client connects', () => {
+      it('should never resolve unless a client connects', () => {
         var response = server.waitForClients('test');
 
         // wait 1h
         clock.tick(1000 * 3600);
-        should(response.isPending()).be.true();
-      });
-
-      it('should resolve the promise once a client connects to the room', () => {
-        var response = server.waitForClients('test');
-
         should(response.isPending()).be.true();
 
         server.rooms = { test: true };
@@ -617,7 +611,6 @@ describe('Test: Internal broker', () => {
 
         return should(response).be.fulfilled();
       });
-
     });
 
     describe('#unsubscribe', () => {

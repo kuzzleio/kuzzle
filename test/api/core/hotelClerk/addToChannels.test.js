@@ -37,7 +37,7 @@ describe('Test: hotelClerk.addToChannels', () => {
   beforeEach(() => {
     kuzzle = new Kuzzle();
     kuzzle.removeAllListeners();
-    sandbox.stub(kuzzle.internalEngine, 'get').resolves({});
+    sandbox.stub(kuzzle.internalEngine, 'get').returns(Promise.resolve({}));
     return kuzzle.services.init({whitelist: []});
   });
 

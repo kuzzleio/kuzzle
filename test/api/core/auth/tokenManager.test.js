@@ -28,6 +28,13 @@ describe('Test: token manager core component', () => {
     token = {_id: 'foobar', expiresAt: Date.now()+1000};
   });
 
+
+  afterEach(() => {
+    if (tokenManager.timer) {
+      clearTimeout(tokenManager.timer);
+    }
+  });
+
   describe('#add', () => {
     it('should not add a token if the context does not contain a connection object', () => {
       tokenManager.add(token, {});

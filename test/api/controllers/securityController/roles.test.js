@@ -19,7 +19,7 @@ describe('Test: security controller - roles', () => {
   beforeEach(() => {
     error = false;
 
-    sandbox.stub(kuzzle.internalEngine, 'get').resolves({});
+    sandbox.stub(kuzzle.internalEngine, 'get').returns(Promise.resolve({}));
     return kuzzle.services.init({whitelist: []})
       .then(() => kuzzle.funnel.init())
       .then(() => {

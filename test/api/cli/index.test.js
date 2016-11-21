@@ -155,15 +155,15 @@ describe('Tests: api/cli/index.js', () => {
         },
         require: requireStub,
         PluginsManager: sinon.stub().returns({
-          init: sinon.stub().resolves(),
-          run: sinon.stub().resolves()
+          init: sinon.stub().returns(Promise.resolve()),
+          run: sinon.stub().returns(Promise.resolve())
         }),
         process: {
           exit: sinon.spy(),
           kill: sinon.spy()
         },
         InternalBroker: sinon.stub().returns({
-          init: sinon.stub().resolves(),
+          init: sinon.stub().returns(Promise.resolve()),
           listen: sinon.spy(),
           broadcast: sinon.spy(),
           send: sinon.spy()
@@ -223,7 +223,7 @@ describe('Tests: api/cli/index.js', () => {
           }
         };
 
-      kuzzle.internalEngine.init.rejects(error);
+      kuzzle.internalEngine.init.returns(Promise.reject(error));
 
       return cli.do.call(context, 'action', 'data', {debug: true})
         .catch(err => {

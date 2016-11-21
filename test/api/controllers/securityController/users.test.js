@@ -17,14 +17,14 @@ describe('Test: security controller - users', () => {
   });
 
   beforeEach(() => {
-    sandbox.stub(kuzzle.internalEngine, 'get').resolves({});
+    sandbox.stub(kuzzle.internalEngine, 'get').returns(Promise.resolve({}));
     return kuzzle.services.init({whitelist: []})
       .then(() => kuzzle.funnel.init())
       .then(() => {
-        sandbox.stub(kuzzle.services.list.storageEngine, 'search').resolves({
+        sandbox.stub(kuzzle.services.list.storageEngine, 'search').returns(Promise.resolve({
           hits: [{_id: 'admin', _source: { profileIds: ['admin'] }}],
           total: 1
-        });
+        }));
 
         sandbox.stub(kuzzle.repositories.user, 'load', id => {
           if (id === 'anonymous') {
@@ -36,7 +36,8 @@ describe('Test: security controller - users', () => {
           return Promise.resolve(null);
         });
 
-        sandbox.stub(kuzzle.repositories.user, 'deleteFromDatabase').resolves({_id: 'test'});
+        sandbox.stub(kuzzle.repositories.user, 'deleteFromDatabase').returns(Promise.resolve({_id: 'test'}));
+        return null;
       });
   });
 
@@ -63,10 +64,10 @@ describe('Test: security controller - users', () => {
 
   describe('#searchUsers', () => {
     it('should return a valid responseObject', () => {
-      sandbox.stub(kuzzle.repositories.user, 'search').resolves({
+      sandbox.stub(kuzzle.repositories.user, 'search').returns(Promise.resolve({
         hits: [{_id: 'admin', _source: {profileIds: ['admin']}}],
         total: 2
-      });
+      }));
 
       return kuzzle.funnel.controllers.security.searchUsers(new RequestObject({
         body: {
@@ -82,7 +83,7 @@ describe('Test: security controller - users', () => {
 
     it('should reject with a response object in case of error', () => {
       var error = new Error('Mocked error');
-      sandbox.stub(kuzzle.repositories.user, 'search').rejects(error);
+      sandbox.stub(kuzzle.repositories.user, 'search').returns(Promise.reject(error));
       return should(kuzzle.funnel.controllers.security.searchUsers(new RequestObject({
         body: {hydrate: false}
       }))).be.rejectedWith(error);
@@ -91,7 +92,7 @@ describe('Test: security controller - users', () => {
 
   describe('#deleteUser', () => {
     it('should return a valid responseObject', () => {
-      sandbox.stub(kuzzle.repositories.user, 'delete').resolves();
+      sandbox.stub(kuzzle.repositories.user, 'delete').returns(Promise.resolve());
       return kuzzle.funnel.controllers.security.deleteUser(new RequestObject({
         body: { _id: 'test' }
       }))
@@ -108,7 +109,7 @@ describe('Test: security controller - users', () => {
 
     it('should reject with a response object in case of error', () => {
       var error = new Error('Mocked error');
-      sandbox.stub(kuzzle.repositories.user, 'delete').rejects(error);
+      sandbox.stub(kuzzle.repositories.user, 'delete').returns(Promise.reject(error));
       return should(kuzzle.funnel.controllers.security.deleteUser(new RequestObject({
         body: {_id: 'test'}
       }))).be.rejectedWith(error);
@@ -117,8 +118,8 @@ describe('Test: security controller - users', () => {
 
   describe('#createUser', () => {
     it('should return a valid response', () => {
-      var mock = sandbox.mock(kuzzle.repositories.user).expects('persist').once().resolves({_id: 'test'});
-      sandbox.stub(kuzzle.repositories.user, 'hydrate').resolves();
+      var mock = sandbox.mock(kuzzle.repositories.user).expects('persist').once().returns(Promise.resolve({_id: 'test'}));
+      sandbox.stub(kuzzle.repositories.user, 'hydrate').returns(Promise.resolve());
 
       return kuzzle.funnel.controllers.security.createUser(new RequestObject({
         body: { _id: 'test', name: 'John Doe', profileIds: ['anonymous'] }
@@ -132,8 +133,8 @@ describe('Test: security controller - users', () => {
 
     it('should compute a user id if none is provided', () => {
       var
-        mockPersist = sandbox.mock(kuzzle.repositories.user).expects('persist').once().resolves({_id: 'test'}),
-        mockHydrate = sandbox.mock(kuzzle.repositories.user).expects('hydrate').once().resolves();
+        mockPersist = sandbox.mock(kuzzle.repositories.user).expects('persist').once().returns(Promise.resolve({_id: 'test'})),
+        mockHydrate = sandbox.mock(kuzzle.repositories.user).expects('hydrate').once().returns(Promise.resolve());
 
       return kuzzle.funnel.controllers.security.createUser(new RequestObject({
         body: { name: 'John Doe', profileIds: ['anonymous'] }
@@ -157,8 +158,8 @@ describe('Test: security controller - users', () => {
 
   describe('#createRestrictedUser', () => {
     it('should return a valid response', () => {
-      var mock = sandbox.mock(kuzzle.repositories.user).expects('persist').once().resolves({_id: 'test'});
-      sandbox.stub(kuzzle.repositories.user, 'hydrate').resolves();
+      var mock = sandbox.mock(kuzzle.repositories.user).expects('persist').once().returns(Promise.resolve({_id: 'test'}));
+      sandbox.stub(kuzzle.repositories.user, 'hydrate').returns(Promise.resolve());
 
       return kuzzle.funnel.controllers.security.createRestrictedUser(new RequestObject({
         body: { _id: 'test', name: 'John Doe' }
@@ -172,8 +173,8 @@ describe('Test: security controller - users', () => {
 
     it('should compute a user id if none is provided', () => {
       var
-        mockPersist = sandbox.mock(kuzzle.repositories.user).expects('persist').once().resolves({_id: 'test'}),
-        mockHydrate = sandbox.mock(kuzzle.repositories.user).expects('hydrate').once().resolves();
+        mockPersist = sandbox.mock(kuzzle.repositories.user).expects('persist').once().returns(Promise.resolve({_id: 'test'})),
+        mockHydrate = sandbox.mock(kuzzle.repositories.user).expects('hydrate').once().returns(Promise.resolve());
 
       return kuzzle.funnel.controllers.security.createRestrictedUser(new RequestObject({
         body: { name: 'John Doe' }
@@ -197,9 +198,9 @@ describe('Test: security controller - users', () => {
 
   describe('#updateUser', () => {
     it('should return a valid ResponseObject', () => {
-      var mock = sandbox.mock(kuzzle.repositories.user).expects('persist').once().resolves({_id: 'test'});
+      var mock = sandbox.mock(kuzzle.repositories.user).expects('persist').once().returns(Promise.resolve({_id: 'test'}));
 
-      sandbox.stub(kuzzle.repositories.profile, 'loadProfile').resolves({_id: 'anonymous', _source: {}});
+      sandbox.stub(kuzzle.repositories.profile, 'loadProfile').returns(Promise.resolve({_id: 'anonymous', _source: {}}));
 
       return kuzzle.funnel.controllers.security.updateUser(new RequestObject({
         _id: 'test',
@@ -222,9 +223,9 @@ describe('Test: security controller - users', () => {
 
     it('should update the profile correctly', () => {
       sandbox.stub(kuzzle.repositories.user,'persist', user => Promise.resolve(user));
-      sandbox.stub(kuzzle.repositories.profile, 'loadProfile').resolves({_id: 'default', _source: {}});
+      sandbox.stub(kuzzle.repositories.profile, 'loadProfile').returns(Promise.resolve({_id: 'default', _source: {}}));
       kuzzle.repositories.user.load.restore();
-      sandbox.stub(kuzzle.repositories.user, 'load').resolves({_id: 'test', profileId: 'default'});
+      sandbox.stub(kuzzle.repositories.user, 'load').returns(Promise.resolve({_id: 'test', profileId: 'default'}));
 
       return kuzzle.funnel.controllers.security.updateUser(new RequestObject({
         _id: 'test',
@@ -241,8 +242,8 @@ describe('Test: security controller - users', () => {
 
   describe('#createOrReplaceUser', () => {
     it('should return a valid responseObject', () => {
-      sandbox.stub(kuzzle.repositories.user, 'hydrate').resolves();
-      sandbox.stub(kuzzle.repositories.user, 'persist').resolves({_id: 'test'});
+      sandbox.stub(kuzzle.repositories.user, 'hydrate').returns(Promise.resolve());
+      sandbox.stub(kuzzle.repositories.user, 'persist').returns(Promise.resolve({_id: 'test'}));
 
       return kuzzle.funnel.controllers.security.createOrReplaceUser(new RequestObject({
         body: {

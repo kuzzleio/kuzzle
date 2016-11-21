@@ -32,7 +32,7 @@ describe('Test: core/entryPoints', () => {
       kuzzle = new Kuzzle(),
       entryPoints = new EntryPoints(kuzzle, {httpPort: httpPort}),
       spyProxy = sandbox.stub(entryPoints.proxy, 'init'),
-      spyHttp = sandbox.stub(entryPoints.http, 'init').resolves();
+      spyHttp = sandbox.stub(entryPoints.http, 'init').returns(Promise.resolve());
 
 
     return entryPoints.init()

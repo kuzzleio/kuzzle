@@ -1,4 +1,6 @@
-var
+'use strict';
+
+const
   rewire = require('rewire'),
   BaseType = require('../../../../../lib/api/core/validation/baseType'),
   DateType = rewire('../../../../../lib/api/core/validation/types/date'),

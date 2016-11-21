@@ -1,5 +1,6 @@
 var
   should = require('should'),
+  Promise = require('bluebird'),
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
@@ -37,7 +38,8 @@ describe('Test: hotelClerk.removeRooms', () => {
       }
     };
 
-    sandbox.stub(kuzzle.internalEngine, 'get').resolves({});
+    sandbox.stub(kuzzle.internalEngine, 'get').returns(Promise.resolve({}));
+    sandbox.stub(kuzzle.dsl, 'remove').returns(Promise.resolve({}));
     return kuzzle.services.init({whitelist: []});
   });
 

@@ -88,7 +88,7 @@ describe('Test: routerController.initHttpRouter', () => {
         response.end(JSON.stringify(params));
       };
 
-    sandbox.stub(kuzzle.internalEngine, 'get').resolves({});
+    sandbox.stub(kuzzle.internalEngine, 'get').returns(Promise.resolve({}));
     kuzzle.services.init({whitelist: []})
       .then(() => {
         RouterController.__set__('executeFromRest', mockResponse);

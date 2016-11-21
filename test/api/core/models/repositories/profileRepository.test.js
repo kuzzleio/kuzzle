@@ -53,13 +53,14 @@ describe('Test: repositories/profileRepository', () => {
   });
 
   beforeEach(() => {
-    sandbox.stub(kuzzle.internalEngine, 'get').resolves({});
+    sandbox.stub(kuzzle.internalEngine, 'get').returns(Promise.resolve({}));
     return kuzzle.services.init({whitelist: []})
       .then(()=> kuzzle.repositories.init())
       .then(() => {
         sandbox.stub(kuzzle.repositories.profile, 'loadFromCache', stubs.profileRepository.loadFromCache);
-        sandbox.stub(kuzzle.repositories.profile, 'persistToCache').resolves({});
-        sandbox.stub(kuzzle.repositories.profile, 'deleteFromCache').resolves({});
+        sandbox.stub(kuzzle.repositories.profile, 'persistToCache').returns(Promise.resolve({}));
+        sandbox.stub(kuzzle.repositories.profile, 'deleteFromCache').returns(Promise.resolve({}));
+        return null;
       });
   });
 
@@ -69,7 +70,8 @@ describe('Test: repositories/profileRepository', () => {
 
   describe('#loadProfile', () => {
     it('should return null if the profile does not exist', () => {
-      sandbox.stub(kuzzle.services.list.storageEngine, 'get').rejects(new NotFoundError('Not found'));
+      kuzzle.internalEngine.get.restore();
+      sandbox.stub(kuzzle.internalEngine, 'get').returns(Promise.reject(new NotFoundError('Not found')));
       return kuzzle.repositories.profile.loadProfile('idontexist')
         .then(result => {
           should(result).be.null();
@@ -77,13 +79,13 @@ describe('Test: repositories/profileRepository', () => {
     });
 
     it('should reject the promise in case of error', () => {
-      sandbox.stub(kuzzle.repositories.profile, 'loadOneFromDatabase').rejects(new InternalError('Error'));
+      sandbox.stub(kuzzle.repositories.profile, 'loadOneFromDatabase').returns(Promise.reject(new InternalError('Error')));
       return should(kuzzle.repositories.profile.loadProfile('id')).be.rejectedWith(InternalError);
     });
 
     it('should load a profile from cache if present', () => {
       sandbox.stub(kuzzle.repositories.role, 'loadRoles', stubs.roleRepository.loadRoles);
-      sandbox.stub(kuzzle.repositories.profile, 'refreshCacheTTL').resolves({});
+      sandbox.stub(kuzzle.repositories.profile, 'refreshCacheTTL').returns(Promise.resolve({}));
 
       return kuzzle.repositories.profile.loadProfile('testprofile-cached')
         .then(result => {
@@ -94,7 +96,7 @@ describe('Test: repositories/profileRepository', () => {
 
     it('should load a profile from the db', () => {
       kuzzle.internalEngine.get.restore();
-      sandbox.stub(kuzzle.internalEngine, 'get').resolves(testProfilePlain);
+      sandbox.stub(kuzzle.internalEngine, 'get').returns(Promise.resolve(testProfilePlain));
       sandbox.stub(kuzzle.repositories.role, 'loadRoles', stubs.roleRepository.loadRoles);
       return kuzzle.repositories.profile.loadProfile('testprofile')
         .then(result => {
@@ -121,8 +123,8 @@ describe('Test: repositories/profileRepository', () => {
       stub = sandbox.stub(kuzzle.internalEngine, 'get');
 
       existingProfile._id = 'existingProfile';
-      stub.onCall(0).rejects(new NotFoundError('Not found'));
-      stub.onCall(1).resolves(existingProfile);
+      stub.onCall(0).returns(Promise.reject(new NotFoundError('Not found')));
+      stub.onCall(1).returns(Promise.resolve(existingProfile));
 
       return kuzzle.repositories.profile.loadProfiles(['idontexist', 'existingProfile'])
         .then(result => {
@@ -177,13 +179,13 @@ describe('Test: repositories/profileRepository', () => {
 
   describe('#hydrate', () => {
     it('should reject the promise in case of error', () => {
-      sandbox.stub(kuzzle.repositories.profile, 'load').rejects(new InternalError('Error'));
+      sandbox.stub(kuzzle.repositories.profile, 'load').returns(Promise.reject(new InternalError('Error')));
       return should(kuzzle.repositories.profile.loadProfile('errorprofile')).be.rejectedWith(InternalError);
     });
 
     it('should throw if the profile contains unexisting roles', () => {
       var p = new Profile();
-      sandbox.stub(kuzzle.repositories.role, 'loadRoles').resolves([]);
+      sandbox.stub(kuzzle.repositories.role, 'loadRoles').returns(Promise.resolve([]));
       return should(kuzzle.repositories.profile.hydrate(p, { policies: [{roleId: 'notExistingRole' }] })).be.rejectedWith(NotFoundError);
     });
   });
@@ -208,7 +210,7 @@ describe('Test: repositories/profileRepository', () => {
         }
       });
 
-      sandbox.stub(kuzzle.internalEngine, 'search').resolves({total: 1, hits: ['test']});
+      sandbox.stub(kuzzle.internalEngine, 'search').returns(Promise.resolve({total: 1, hits: ['test']}));
 
       return should(kuzzle.repositories.profile.deleteProfile({_id: 'test'})).rejectedWith(ForbiddenError);
     });
@@ -216,8 +218,8 @@ describe('Test: repositories/profileRepository', () => {
     it('should return a raw delete response after deleting', () => {
       var response = {_id: 'testprofile'};
 
-      sandbox.stub(kuzzle.repositories.profile, 'deleteFromDatabase').resolves(response);
-      sandbox.stub(kuzzle.repositories.user, 'search').resolves({total: 0});
+      sandbox.stub(kuzzle.repositories.profile, 'deleteFromDatabase').returns(Promise.resolve(response));
+      sandbox.stub(kuzzle.repositories.user, 'search').returns(Promise.resolve({total: 0}));
 
       return should(kuzzle.repositories.profile.deleteProfile(testProfile))
         .be.fulfilledWith(response);
@@ -256,7 +258,7 @@ describe('Test: repositories/profileRepository', () => {
 
   describe('#serializeToDatabase', () => {
     it('should return a plain flat object', () => {
-      sandbox.stub(kuzzle.repositories.profile, 'load').resolves(testProfilePlain);
+      sandbox.stub(kuzzle.repositories.profile, 'load').returns(Promise.resolve(testProfilePlain));
       sandbox.stub(kuzzle.repositories.role, 'loadRoles', stubs.roleRepository.loadRoles);
       return kuzzle.repositories.profile.loadProfile('testprofile')
         .then(profile => {
@@ -280,10 +282,10 @@ describe('Test: repositories/profileRepository', () => {
 
   describe('#searchProfiles', () => {
     it('should return a ResponseObject containing an array of profiles', () => {
-      sandbox.stub(kuzzle.repositories.profile, 'search').resolves({
+      sandbox.stub(kuzzle.repositories.profile, 'search').returns(Promise.resolve({
         hits: [{_id: 'test'}],
         total: 1
-      });
+      }));
 
       return kuzzle.repositories.profile.searchProfiles([])
         .then(result => {

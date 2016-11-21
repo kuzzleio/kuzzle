@@ -65,7 +65,8 @@ describe('Test the auth controller', () => {
 
   beforeEach(() => {
     requestObject = new RequestObject({ controller: 'auth', action: 'login', body: {strategy: 'mockup', username: 'jdoe'} }, {}, 'unit-test');
-    sandbox.stub(kuzzle.internalEngine, 'get').resolves({});
+    sandbox.stub(kuzzle.internalEngine, 'get').returns(Promise.resolve({}));
+
     return kuzzle.services.init({whitelist: []})
       .then(() => kuzzle.funnel.init())
       .then(() => {
@@ -89,7 +90,7 @@ describe('Test the auth controller', () => {
           return token;
         });
 
-        sandbox.stub(kuzzle.repositories.token, 'persistToCache').resolves();
+        sandbox.stub(kuzzle.repositories.token, 'persistToCache').returns(Promise.resolve());
         sandbox.stub(kuzzle.repositories.user, 'load', t => {
           if (t === 'unknown_user') {
             return Promise.resolve(null);
@@ -99,6 +100,8 @@ describe('Test the auth controller', () => {
             profileIds: [t]
           });
         });
+
+        return null;
       });
   });
 
@@ -123,7 +126,7 @@ describe('Test the auth controller', () => {
     });
 
     it('should resolve to a redirect url', () => {
-      sandbox.stub(kuzzle.passport, 'authenticate').resolves({headers: {Location: 'http://github.com'}});
+      sandbox.stub(kuzzle.passport, 'authenticate').returns(Promise.resolve({headers: {Location: 'http://github.com'}}));
 
       return kuzzle.funnel.controllers.auth.login(requestObject, {})
         .then(response => {
@@ -190,7 +193,7 @@ describe('Test the auth controller', () => {
     });
 
     it('should reject if authentication failure', () => {
-      sandbox.stub(kuzzle.passport, 'authenticate').rejects(new Error('Mockup Wrapper Error'));
+      sandbox.stub(kuzzle.passport, 'authenticate').returns(Promise.reject(new Error('Mockup Wrapper Error')));
       return kuzzle.funnel.controllers.auth.login(requestObject)
         .then(() => should.fail('Authenticate should have reject'))
         .catch((error) => {
@@ -223,7 +226,7 @@ describe('Test the auth controller', () => {
         }
       }, {}, 'unit-test');
 
-      sandbox.stub(kuzzle.repositories.token, 'expire').resolves();
+      sandbox.stub(kuzzle.repositories.token, 'expire').returns(Promise.resolve());
 
     });
 
@@ -268,21 +271,9 @@ describe('Test the auth controller', () => {
     it('should emit an error if token cannot be expired', () => {
       var error = new Error('Mocked error');
       kuzzle.repositories.token.expire.restore();
-      sandbox.stub(kuzzle.repositories.token, 'expire').rejects(error);
+      sandbox.stub(kuzzle.repositories.token, 'expire').returns(Promise.reject(error));
       return should(kuzzle.funnel.controllers.auth.logout(requestObject, context)).be.rejectedWith(error);
     });
-
-    it('should not remove room registration for connexion if there is no id', () => {
-      var error = new Error('Mocked error');
-      var spy = sandbox.stub(kuzzle.hotelClerk, 'removeCustomerFromAllRooms').rejects(error);
-
-      delete context.connection.id;
-      return kuzzle.funnel.controllers.auth.logout(requestObject, context)
-        .then(() => {
-          should(spy.called).be.false();
-        });
-    });
-
   });
 
   describe('#getCurrentUser', () => {

@@ -19,22 +19,22 @@ describe('InternalEngine', () => {
         },
         Client: function () {
           this.indices = {
-            create: sinon.stub().resolves(),
-            delete: sinon.stub().resolves(),
-            exists: sinon.stub().resolves(),
-            getMapping: sinon.stub().resolves(),
-            putMapping: sinon.stub().resolves(),
-            refresh: sinon.stub().resolves()
+            create: sinon.stub().returns(Promise.resolve()),
+            delete: sinon.stub().returns(Promise.resolve()),
+            exists: sinon.stub().returns(Promise.resolve()),
+            getMapping: sinon.stub().returns(Promise.resolve()),
+            putMapping: sinon.stub().returns(Promise.resolve()),
+            refresh: sinon.stub().returns(Promise.resolve())
           };
 
-          this.create = sinon.stub().resolves();
-          this.delete = sinon.stub().resolves();
-          this.exists = sinon.stub().resolves();
-          this.get = sinon.stub().resolves();
-          this.index = sinon.stub().resolves();
-          this.mget = sinon.stub().resolves();
-          this.search = sinon.stub().resolves();
-          this.update = sinon.stub().resolves();
+          this.create = sinon.stub().returns(Promise.resolve());
+          this.delete = sinon.stub().returns(Promise.resolve());
+          this.exists = sinon.stub().returns(Promise.resolve());
+          this.get = sinon.stub().returns(Promise.resolve());
+          this.index = sinon.stub().returns(Promise.resolve());
+          this.mget = sinon.stub().returns(Promise.resolve());
+          this.search = sinon.stub().returns(Promise.resolve());
+          this.update = sinon.stub().returns(Promise.resolve());
         }
       }
     });
@@ -60,7 +60,7 @@ describe('InternalEngine', () => {
         collection = 'collection',
         query = { 'some': 'filters' };
 
-      kuzzle.internalEngine.client.search.resolves({hits: { hits: ['foo', 'bar'], total: 123}});
+      kuzzle.internalEngine.client.search.returns(Promise.resolve({hits: { hits: ['foo', 'bar'], total: 123}}));
 
       return kuzzle.internalEngine.search(collection, query)
         .then(result => {
@@ -93,7 +93,7 @@ describe('InternalEngine', () => {
         collection = 'collection',
         query = { query: {'some': 'filters'} };
 
-      kuzzle.internalEngine.client.search.resolves({hits: { hits: ['foo', 'bar'], total: 123}});
+      kuzzle.internalEngine.client.search.returns(Promise.resolve({hits: { hits: ['foo', 'bar'], total: 123}}));
 
       return kuzzle.internalEngine.search(collection, query)
         .then(result => {
@@ -125,7 +125,7 @@ describe('InternalEngine', () => {
       var
         collection = 'collection';
 
-      kuzzle.internalEngine.client.search.resolves({hits: {hits: ['foo', 'bar']}, total: 123});
+      kuzzle.internalEngine.client.search.returns(Promise.resolve({hits: {hits: ['foo', 'bar']}, total: 123}));
 
       return kuzzle.internalEngine.search(collection)
         .then(result => {
@@ -154,7 +154,7 @@ describe('InternalEngine', () => {
 
     it('should rejects the promise if the search fails', () => {
       var error = new Error('Mocked error');
-      kuzzle.internalEngine.client.search.rejects(error);
+      kuzzle.internalEngine.client.search.returns(Promise.reject(error));
 
       return should(kuzzle.internalEngine.search('foo')).be.rejectedWith(error);
     });
@@ -166,7 +166,7 @@ describe('InternalEngine', () => {
         collection = 'foo',
         id = 'bar';
 
-      kuzzle.internalEngine.client.get.resolves({foo: 'bar'});
+      kuzzle.internalEngine.client.get.returns(Promise.resolve({foo: 'bar'}));
 
       return kuzzle.internalEngine.get(collection, id)
         .then(result => {
@@ -190,7 +190,7 @@ describe('InternalEngine', () => {
 
     it('should reject the promise if getting the document fails', () => {
       var error = new Error('Mocked error');
-      kuzzle.internalEngine.client.get.rejects(error);
+      kuzzle.internalEngine.client.get.returns(Promise.reject(error));
       return should(kuzzle.internalEngine.get('foo', 'bar')).be.rejectedWith(error);
     });
   });
@@ -201,7 +201,7 @@ describe('InternalEngine', () => {
         collection = 'foo',
         ids = ['bar', 'qux'];
 
-      kuzzle.internalEngine.client.mget.resolves({docs: ['foo', 'bar']});
+      kuzzle.internalEngine.client.mget.returns(Promise.resolve({docs: ['foo', 'bar']}));
 
       return kuzzle.internalEngine.mget(collection, ids)
         .then(result => {
@@ -228,7 +228,7 @@ describe('InternalEngine', () => {
 
     it('should reject the promise if getting the document fails', () => {
       var error = new Error('Mocked error');
-      kuzzle.internalEngine.client.mget.rejects(error);
+      kuzzle.internalEngine.client.mget.returns(Promise.reject(error));
       return should(kuzzle.internalEngine.mget('foo', ['bar'])).be.rejectedWith(error);
     });
   });
@@ -240,7 +240,7 @@ describe('InternalEngine', () => {
         id = 'bar',
         content = {'foo': 'bar'};
 
-      kuzzle.internalEngine.client.create.resolves({id});
+      kuzzle.internalEngine.client.create.returns(Promise.resolve({id}));
 
       return kuzzle.internalEngine.create(collection, id, content)
         .then(result => {
@@ -267,7 +267,7 @@ describe('InternalEngine', () => {
 
     it('should reject the promise if creating the document fails', () => {
       var error = new Error('Mocked error');
-      kuzzle.internalEngine.client.create.rejects(error);
+      kuzzle.internalEngine.client.create.returns(Promise.reject(error));
       return should(kuzzle.internalEngine.create('foo', 'bar', {'baz': 'qux'})).be.rejectedWith(error);
     });
   });
@@ -279,7 +279,7 @@ describe('InternalEngine', () => {
         id = 'bar',
         content = {'foo': 'bar'};
 
-      kuzzle.internalEngine.client.index.resolves({id});
+      kuzzle.internalEngine.client.index.returns(Promise.resolve({id}));
 
       return kuzzle.internalEngine.createOrReplace(collection, id, content)
         .then(result => {
@@ -305,7 +305,7 @@ describe('InternalEngine', () => {
 
     it('should reject the promise if creating the document fails', () => {
       var error = new Error('Mocked error');
-      kuzzle.internalEngine.client.index.rejects(error);
+      kuzzle.internalEngine.client.index.returns(Promise.reject(error));
       return should(kuzzle.internalEngine.createOrReplace('foo', 'bar', {'baz': 'qux'})).be.rejectedWith(error);
     });
   });
@@ -317,7 +317,7 @@ describe('InternalEngine', () => {
         id = 'bar',
         content = {'foo': 'bar'};
 
-      kuzzle.internalEngine.client.update.resolves({id});
+      kuzzle.internalEngine.client.update.returns(Promise.resolve({id}));
 
       return kuzzle.internalEngine.update(collection, id, content)
         .then(result => {
@@ -346,7 +346,7 @@ describe('InternalEngine', () => {
 
     it('should reject the promise if creating the document fails', () => {
       var error = new Error('Mocked error');
-      kuzzle.internalEngine.client.update.rejects(error);
+      kuzzle.internalEngine.client.update.returns(Promise.reject(error));
       return should(kuzzle.internalEngine.update('foo', 'bar', {'baz': 'qux'})).be.rejectedWith(error);
     });
   });
@@ -358,8 +358,8 @@ describe('InternalEngine', () => {
         id = 'bar',
         content = {'foo': 'bar'};
 
-      kuzzle.internalEngine.client.index.resolves({id});
-      kuzzle.internalEngine.client.exists.resolves(true);
+      kuzzle.internalEngine.client.index.returns(Promise.resolve({id}));
+      kuzzle.internalEngine.client.exists.returns(Promise.resolve(true));
 
       return kuzzle.internalEngine.replace(collection, id, content)
         .then(result => {
@@ -384,14 +384,14 @@ describe('InternalEngine', () => {
     });
 
     it('should rejects the promise if the document does not exist', () => {
-      kuzzle.internalEngine.client.exists.resolves(false);
+      kuzzle.internalEngine.client.exists.returns(Promise.resolve(false));
       return should(kuzzle.internalEngine.replace('foo', 'bar', {'baz': 'qux'})).be.rejectedWith(NotFoundError);
     });
 
     it('should rejects the promise if the replace action fails', () => {
       var error = new Error('Mocked error');
-      kuzzle.internalEngine.client.exists.resolves(true);
-      kuzzle.internalEngine.client.index.rejects(error);
+      kuzzle.internalEngine.client.exists.returns(Promise.resolve(true));
+      kuzzle.internalEngine.client.index.returns(Promise.reject(error));
       return should(kuzzle.internalEngine.replace('foo', 'bar', {'baz': 'qux'})).be.rejectedWith(error);
     });
   });
@@ -402,7 +402,7 @@ describe('InternalEngine', () => {
         collection = 'foo',
         id = 'bar';
 
-      kuzzle.internalEngine.client.delete.resolves();
+      kuzzle.internalEngine.client.delete.returns(Promise.resolve());
 
       return kuzzle.internalEngine.delete(collection, id)
         .then(() => {
@@ -425,7 +425,7 @@ describe('InternalEngine', () => {
 
     it('should reject the promise if deleting the document fails', () => {
       var error = new Error('Mocked error');
-      kuzzle.internalEngine.client.delete.rejects(error);
+      kuzzle.internalEngine.client.delete.returns(Promise.reject(error));
       return should(kuzzle.internalEngine.delete('foo', 'bar')).be.rejectedWith(error);
     });
   });
@@ -434,7 +434,7 @@ describe('InternalEngine', () => {
     it('should forward the request to elasticsearch', () => {
       var
         createStub = kuzzle.internalEngine.client.indices.create,
-        existsStub = kuzzle.internalEngine.client.indices.exists.resolves(false);
+        existsStub = kuzzle.internalEngine.client.indices.exists.returns(Promise.resolve(false));
 
       return kuzzle.internalEngine.createInternalIndex()
         .then(() => {
@@ -455,7 +455,7 @@ describe('InternalEngine', () => {
     it('should not try to create an existing index', () => {
       var
         createStub = kuzzle.internalEngine.client.indices.create,
-        existsStub = kuzzle.internalEngine.client.indices.exists.resolves(true);
+        existsStub = kuzzle.internalEngine.client.indices.exists.returns(Promise.resolve(true));
 
       return kuzzle.internalEngine.createInternalIndex()
         .then(() => {
@@ -474,8 +474,8 @@ describe('InternalEngine', () => {
 
     it('should reject the promise if creating the internal index fails', () => {
       var error = new Error('Mocked error');
-      kuzzle.internalEngine.client.indices.exists.resolves(false);
-      kuzzle.internalEngine.client.indices.create.rejects(error);
+      kuzzle.internalEngine.client.indices.exists.returns(Promise.resolve(false));
+      kuzzle.internalEngine.client.indices.create.returns(Promise.reject(error));
 
       return should(kuzzle.internalEngine.createInternalIndex()).be.rejectedWith(error);
     });
@@ -483,10 +483,10 @@ describe('InternalEngine', () => {
 
   describe('#listIndexes', () => {
     it('should forward the request to elasticsearch', () => {
-      kuzzle.internalEngine.client.indices.getMapping.resolves({
+      kuzzle.internalEngine.client.indices.getMapping.returns(Promise.resolve({
         index1: {mappings: {foo: 'bar'}},
         index2: {mappings: {foo: 'bar'}}
-      });
+      }));
 
       return kuzzle.internalEngine.listIndexes()
         .then(result => {
@@ -513,10 +513,10 @@ describe('InternalEngine', () => {
 
   describe('#listCollections', () => {
     it('should forward the request to elasticsearch', () => {
-      kuzzle.internalEngine.client.indices.getMapping.resolves({
+      kuzzle.internalEngine.client.indices.getMapping.returns(Promise.resolve({
         index1: {mappings: {foo: 'bar', baz: 'qux'}},
         index2: {mappings: {foo: 'bar'}}
-      });
+      }));
 
       return kuzzle.internalEngine.listCollections('index1')
         .then(result => {

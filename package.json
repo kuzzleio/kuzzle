@@ -9,11 +9,10 @@
     "kuzzle": "./bin/kuzzle"
   },
   "scripts": {
-    "test": "npm run --silent lint && npm run unit-testing --coverage && npm run functional-testing && npm run crawl-coverage",
-    "unit-testing": "istanbul cover ./node_modules/mocha/bin/_mocha --report lcovonly -- -R spec",
+    "test": "npm run --silent lint && npm run unit-testing && npm run functional-testing",
+    "unit-testing": "istanbul cover _mocha",
     "functional-testing": "npm run cucumber",
     "cucumber": "cucumber.js --fail-fast",
-    "crawl-coverage": "node docker-compose/scripts/feature-coverage-download.js",
     "codecov": "codecov",
     "lint": "eslint --max-warnings=0 ./lib ./bin ./test ./features",
     "preversion": "git checkout master && git pull",
@@ -89,7 +88,6 @@
     "should": "11.1.0",
     "should-sinon": "0.0.5",
     "sinon": "1.17.6",
-    "sinon-as-promised": "^4.0.2",
     "socket.io-client": "1.4.8"
   },
   "engines": {

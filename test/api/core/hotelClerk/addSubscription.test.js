@@ -29,7 +29,7 @@ describe('Test: hotelClerk.addSubscription', () => {
 
   beforeEach(() => {
     kuzzle = new Kuzzle();
-    sandbox.stub(kuzzle.internalEngine, 'get').resolves({});
+    sandbox.stub(kuzzle.internalEngine, 'get').returns(Promise.resolve({}));
     return kuzzle.services.init({whitelist: []});
   });
 

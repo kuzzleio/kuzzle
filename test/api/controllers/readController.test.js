@@ -30,7 +30,7 @@ describe('Test: read controller', () => {
     });
 
     it('should reject with a response object in case of error', () => {
-      kuzzle.services.list.storageEngine.search.rejects(new Error('foobar'));
+      kuzzle.services.list.storageEngine.search.returns(Promise.reject(new Error('foobar')));
       return should(controller.search(requestObject))
         .be.rejectedWith('foobar');
     });
@@ -48,18 +48,18 @@ describe('Test: read controller', () => {
 
   describe('#scroll', () => {
     it('should fulfill with a response object', () => {
-      kuzzle.services.list.storageEngine.scroll.resolves({});
+      kuzzle.services.list.storageEngine.scroll.returns(Promise.resolve({}));
       return controller.scroll(requestObject)
         .then(response => should(response).be.instanceOf(ResponseObject));
     });
 
     it('should reject with a response object in case of error', () => {
-      kuzzle.services.list.storageEngine.scroll.rejects(new Error('foobar'));
+      kuzzle.services.list.storageEngine.scroll.returns(Promise.reject(new Error('foobar')));
       return should(controller.scroll(requestObject)).be.rejected();
     });
 
     it('should trigger a plugin event', function () {
-      kuzzle.services.list.storageEngine.scroll.resolves({});
+      kuzzle.services.list.storageEngine.scroll.returns(Promise.resolve({}));
       return controller.scroll(requestObject)
         .then(() => {
           try {
@@ -84,7 +84,7 @@ describe('Test: read controller', () => {
     });
 
     it('should reject with a response object in case of error', () => {
-      kuzzle.services.list.storageEngine.get.rejects(new Error('foobar'));
+      kuzzle.services.list.storageEngine.get.returns(Promise.reject(new Error('foobar')));
       return should(controller.get(requestObject)).be.rejected();
     });
 
@@ -106,7 +106,7 @@ describe('Test: read controller', () => {
     });
 
     it('should reject with a response object in case of error', () => {
-      kuzzle.services.list.storageEngine.count.rejects(new Error('foobar'));
+      kuzzle.services.list.storageEngine.count.returns(Promise.reject(new Error('foobar')));
       return should(controller.count(requestObject)).be.rejected();
     });
 
@@ -129,7 +129,7 @@ describe('Test: read controller', () => {
       };
 
     beforeEach(() => {
-      kuzzle.services.list.storageEngine.listCollections.resolves({collections: {stored: ['foo']}});
+      kuzzle.services.list.storageEngine.listCollections.returns(Promise.resolve({collections: {stored: ['foo']}}));
       kuzzle.hotelClerk.getRealtimeCollections.returns([
         {name: 'foo', index: 'index'},
         {name: 'bar', index: 'index'},
@@ -190,7 +190,7 @@ describe('Test: read controller', () => {
 
     it('should return a portion of the collection list if from and size are specified', () => {
       requestObject = new RequestObject({index: 'index', body: {type: 'all', from: 2, size: 3}}, {}, '');
-      kuzzle.services.list.storageEngine.listCollections.resolves({collections: {stored: ['astored', 'bstored', 'cstored', 'dstored', 'estored']}});
+      kuzzle.services.list.storageEngine.listCollections.returns(Promise.resolve({collections: {stored: ['astored', 'bstored', 'cstored', 'dstored', 'estored']}}));
       kuzzle.hotelClerk.getRealtimeCollections.returns([
         {name: 'arealtime', index: 'index'}, {name: 'brealtime', index: 'index'}, {name: 'crealtime', index: 'index'}, {name: 'drealtime', index: 'index'}, {name: 'erealtime', index: 'index'}, {name: 'baz', index: 'wrong'}
       ]);
@@ -209,7 +209,7 @@ describe('Test: read controller', () => {
 
     it('should return a portion of the collection list if from is specified', () => {
       requestObject = new RequestObject({index: 'index', body: {type: 'all', from: 8}}, {}, '');
-      kuzzle.services.list.storageEngine.listCollections.resolves({collections: {stored: ['astored', 'bstored', 'cstored', 'dstored', 'estored']}});
+      kuzzle.services.list.storageEngine.listCollections.returns(Promise.resolve({collections: {stored: ['astored', 'bstored', 'cstored', 'dstored', 'estored']}}));
       kuzzle.hotelClerk.getRealtimeCollections.returns([
         {name: 'arealtime', index: 'index'}, {name: 'brealtime', index: 'index'}, {name: 'crealtime', index: 'index'}, {name: 'drealtime', index: 'index'}, {name: 'erealtime', index: 'index'}, {name: 'baz', index: 'wrong'}
       ]);
@@ -227,7 +227,7 @@ describe('Test: read controller', () => {
 
     it('should return a portion of the collection list if size is specified', () => {
       requestObject = new RequestObject({index: 'index', body: {type: 'all', size: 2}}, {}, '');
-      kuzzle.services.list.storageEngine.listCollections.resolves({collections: {stored: ['astored', 'bstored', 'cstored', 'dstored', 'estored']}});
+      kuzzle.services.list.storageEngine.listCollections.returns(Promise.resolve({collections: {stored: ['astored', 'bstored', 'cstored', 'dstored', 'estored']}}));
       kuzzle.hotelClerk.getRealtimeCollections.returns([
         {name: 'arealtime', index: 'index'}, {name: 'brealtime', index: 'index'}, {name: 'crealtime', index: 'index'}, {name: 'drealtime', index: 'index'}, {name: 'erealtime', index: 'index'}, {name: 'baz', index: 'wrong'}
       ]);
@@ -245,13 +245,13 @@ describe('Test: read controller', () => {
 
 
     it('should reject with a response object if getting stored collections fails', () => {
-      kuzzle.services.list.storageEngine.listCollections.rejects(new Error('foobar'));
+      kuzzle.services.list.storageEngine.listCollections.returns(Promise.reject(new Error('foobar')));
       requestObject = new RequestObject({body: {type: 'stored'}}, {}, '');
       return should(controller.listCollections(requestObject, context)).be.rejected();
     });
 
     it('should reject with a response object if getting all collections fails', () => {
-      kuzzle.services.list.storageEngine.listCollections.rejects(new Error('foobar'));
+      kuzzle.services.list.storageEngine.listCollections.returns(Promise.reject(new Error('foobar')));
       requestObject = new RequestObject({body: {type: 'all'}}, {}, '');
       return should(controller.listCollections(requestObject, context)).be.rejected();
     });
@@ -285,7 +285,7 @@ describe('Test: read controller', () => {
     });
 
     it('should reject with a response object in case of error', () => {
-      kuzzle.services.list.storageEngine.listIndexes.rejects(new Error('foobar'));
+      kuzzle.services.list.storageEngine.listIndexes.returns(Promise.reject(new Error('foobar')));
       return should(controller.listIndexes(requestObject)).be.rejected();
     });
 
@@ -321,14 +321,14 @@ describe('Test: read controller', () => {
     });
 
     it('should reject with a response object in case of error', () => {
-      kuzzle.services.list.broker.getInfos.rejects(new Error('foobar'));
+      kuzzle.services.list.broker.getInfos.returns(Promise.reject(new Error('foobar')));
       return should(controller.serverInfo(requestObject)).be.rejected();
     });
   });
 
   describe('#collectionExists', () => {
     it('should call the storageEngine', () => {
-      kuzzle.services.list.storageEngine.collectionExists.resolves('result');
+      kuzzle.services.list.storageEngine.collectionExists.returns(Promise.resolve('result'));
       return controller.collectionExists(requestObject)
         .then(response => {
           should(response).match({
@@ -351,7 +351,7 @@ describe('Test: read controller', () => {
 
   describe('#indexExists', () => {
     it('should call the storagEngine', () => {
-      kuzzle.services.list.storageEngine.indexExists.resolves('result');
+      kuzzle.services.list.storageEngine.indexExists.returns(Promise.resolve('result'));
       return controller.indexExists(requestObject)
         .then(response => {
           should(response).match({

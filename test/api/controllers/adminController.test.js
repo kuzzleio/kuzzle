@@ -4,10 +4,10 @@ var
   sinon = require('sinon'),
   rewire = require('rewire'),
   AdminController = rewire('../../../lib/api/controllers/adminController'),
-  RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
-  ResponseObject = require.main.require('kuzzle-common-objects').Models.responseObject,
-  BadRequestError = require.main.require('kuzzle-common-objects').Errors.badRequestError,
-  PartialError = require.main.require('kuzzle-common-objects').Errors.partialError,
+  RequestObject = require('kuzzle-common-objects').Models.requestObject,
+  ResponseObject = require('kuzzle-common-objects').Models.responseObject,
+  BadRequestError = require('kuzzle-common-objects').Errors.badRequestError,
+  PartialError = require('kuzzle-common-objects').Errors.partialError,
   KuzzleMock = require('../../mocks/kuzzle.mock'),
   sandbox = sinon.sandbox.create();
 
@@ -332,7 +332,7 @@ describe('Test: admin controller', () => {
     });
 
     it('should trigger the proper methods and resolve to a valid response', () => {
-      stub.resolves(foo);
+      stub.returns(Promise.resolve(foo));
 
       return adminController.removeRooms(requestObject)
         .then(response => {
@@ -366,7 +366,7 @@ describe('Test: admin controller', () => {
           'error3'
         ];
 
-      stub.resolves({partialErrors});
+      stub.returns(Promise.resolve({partialErrors}));
 
       return adminController.removeRooms(requestObject)
         .then(response => {
@@ -522,7 +522,7 @@ describe('Test: admin controller', () => {
     });
 
     it('should return false if there is no result', () => {
-      kuzzle.internalEngine.bootstrap.adminExists.resolves(false);
+      kuzzle.internalEngine.bootstrap.adminExists.returns(Promise.resolve(false));
 
       return adminController.adminExists()
         .then((response) => {
@@ -531,7 +531,7 @@ describe('Test: admin controller', () => {
     });
 
     it('should return true if there is result', () => {
-      kuzzle.internalEngine.bootstrap.adminExists.resolves(true);
+      kuzzle.internalEngine.bootstrap.adminExists.returns(Promise.resolve(true));
 
       return adminController.adminExists()
         .then((response) => {
@@ -549,12 +549,12 @@ describe('Test: admin controller', () => {
 
     beforeEach(() => {
       reset = AdminController.__set__({
-        resetRoles: sandbox.stub().resolves(),
-        resetProfiles: sandbox.stub().resolves()
+        resetRoles: sandbox.stub().returns(Promise.resolve()),
+        resetProfiles: sandbox.stub().returns(Promise.resolve())
       });
       resetRolesStub = AdminController.__get__('resetRoles');
       resetProfilesStub = AdminController.__get__('resetProfiles');
-      createOrReplaceUser = sandbox.stub().resolves();
+      createOrReplaceUser = sandbox.stub().returns(Promise.resolve());
 
       kuzzle.funnel = {controllers: {security: {createOrReplaceUser}}};
     });
@@ -571,7 +571,7 @@ describe('Test: admin controller', () => {
         }
       });
 
-      adminController.adminExists = sandbox.stub().resolves({data: {body: {exists: true}}});
+      adminController.adminExists = sandbox.stub().returns(Promise.resolve({data: {body: {exists: true}}}));
 
       return should(adminController.createFirstAdmin(request)).be.rejected();
     });
@@ -584,7 +584,7 @@ describe('Test: admin controller', () => {
         }
       });
 
-      adminController.adminExists = sandbox.stub().resolves({data: {body: {exists: false}}});
+      adminController.adminExists = sandbox.stub().returns(Promise.resolve({data: {body: {exists: false}}}));
 
       return adminController.createFirstAdmin(request)
         .then(() => {
@@ -609,8 +609,8 @@ describe('Test: admin controller', () => {
         }
       });
 
-      adminController.adminExists = sandbox.stub().resolves({data: {body: {exists: false}}});
-      sandbox.stub(adminController, 'refreshIndex').resolves({});
+      adminController.adminExists = sandbox.stub().returns(Promise.resolve({data: {body: {exists: false}}}));
+      sandbox.stub(adminController, 'refreshIndex').returns(Promise.resolve({}));
 
       return adminController.createFirstAdmin(request)
         .then(() => {
@@ -630,7 +630,7 @@ describe('Test: admin controller', () => {
   describe('#resetRoles', () => {
     it('should call createOrReplace roles with all default roles', () => {
       var
-        createOrReplace = sandbox.stub().resolves(),
+        createOrReplace = sandbox.stub().returns(Promise.resolve()),
         mock = {
           internalEngine: {
             createOrReplace
@@ -665,7 +665,7 @@ describe('Test: admin controller', () => {
   describe('#resetProfiles', () => {
     it('should call createOrReplace profiles with all default profiles and rights policies', () => {
       var
-        createOrReplace = sandbox.stub().resolves(),
+        createOrReplace = sandbox.stub().returns(Promise.resolve()),
         mock = {internalEngine: {createOrReplace}};
 
       return AdminController.__get__('resetProfiles').call(mock)
@@ -692,7 +692,7 @@ describe('Test: admin controller', () => {
 
   describe('#getSpecifications', () => {
     it('should call internalEngine with the right id', () => {
-      kuzzle.internalEngine.get = sandbox.stub().resolves({_source: {foo: 'bar'}});
+      kuzzle.internalEngine.get = sandbox.stub().returns(Promise.resolve({_source: {foo: 'bar'}}));
 
       return adminController.getSpecifications(requestObject)
         .then(response => {
@@ -722,7 +722,7 @@ describe('Test: admin controller', () => {
 
   describe('#searchSpecifications', () => {
     it('should call internalEngine with the right data', () => {
-      kuzzle.internalEngine.search = sandbox.stub().resolves({hits: [{_id: 'bar'}]});
+      kuzzle.internalEngine.search = sandbox.stub().returns(Promise.resolve({hits: [{_id: 'bar'}]}));
 
       requestObject.data.body = {
         from: 0,
@@ -777,8 +777,8 @@ describe('Test: admin controller', () => {
         }
       };
 
-      kuzzle.validation.isValidSpecification = sandbox.stub().resolves({isValid: true});
-      kuzzle.validation.curateSpecification = sandbox.stub().resolves();
+      kuzzle.validation.isValidSpecification = sandbox.stub().returns(Promise.resolve({isValid: true}));
+      kuzzle.validation.curateSpecification = sandbox.stub().returns(Promise.resolve());
 
       return adminController.updateSpecifications(requestObject)
         .then(response => {
@@ -824,10 +824,10 @@ describe('Test: admin controller', () => {
         }
       };
 
-      kuzzle.validation.isValidSpecification = sandbox.stub().resolves({
+      kuzzle.validation.isValidSpecification = sandbox.stub().returns(Promise.resolve({
         isValid: false,
         errors: ['bad bad is a bad type !']
-      });
+      }));
       kuzzle.validation.curateSpecification = sandbox.stub();
 
       return adminController.updateSpecifications(requestObject)
@@ -870,7 +870,7 @@ describe('Test: admin controller', () => {
       };
 
       AdminController.__set__({
-        prepareSpecificationValidation: sandbox.stub().resolves({error: false, specifications: requestObject.data.body})
+        prepareSpecificationValidation: sandbox.stub().returns(Promise.resolve({error: false, specifications: requestObject.data.body}))
       });
 
       return adminController.validateSpecifications(requestObject)
@@ -912,12 +912,12 @@ describe('Test: admin controller', () => {
       };
 
       AdminController.__set__({
-        prepareSpecificationValidation: sandbox.stub().resolves({
+        prepareSpecificationValidation: sandbox.stub().returns(Promise.resolve({
           error: true, responseObject: {
             status: 400,
             data: {body: requestObject.data.body}
           }
-        })
+        }))
       });
 
       return adminController.validateSpecifications(requestObject)
@@ -951,7 +951,7 @@ describe('Test: admin controller', () => {
 
   describe('#deleteSpecifications', () => {
     it('should call the right functions and respond with the right response if the validation specification exists', () => {
-      kuzzle.internalEngine.delete = sandbox.stub().resolves();
+      kuzzle.internalEngine.delete = sandbox.stub().returns(Promise.resolve());
 
       kuzzle.validation.specification = {};
       kuzzle.validation.specification[index] = {};
@@ -974,8 +974,9 @@ describe('Test: admin controller', () => {
           }
         });
     });
+
     it('should resolves if there is no specification set', () => {
-      kuzzle.internalEngine.delete = sandbox.stub().rejects({status: 404});
+      kuzzle.internalEngine.delete = sandbox.stub();
       kuzzle.validation.specification = {};
 
       return adminController.deleteSpecifications(requestObject)

@@ -35,7 +35,7 @@ describe('Test: repositories/roleRepository', () => {
   });
 
   beforeEach(() => {
-    sandbox.stub(kuzzle.internalEngine, 'get').resolves({});
+    sandbox.stub(kuzzle.internalEngine, 'get').returns(Promise.resolve({}));
     return kuzzle.services.init({whitelist: []})
       .then(()=> kuzzle.repositories.init());
   });
@@ -46,7 +46,7 @@ describe('Test: repositories/roleRepository', () => {
 
   describe('#loadRoles', () => {
     it('should return an empty array when loading some non-existing roles', () => {
-      sandbox.stub(kuzzle.internalEngine, 'mget').resolves({hits: [{_id: 'idontexist', found: false}]});
+      sandbox.stub(kuzzle.internalEngine, 'mget').returns(Promise.resolve({hits: [{_id: 'idontexist', found: false}]}));
       return kuzzle.repositories.role.loadRoles(['idontexist'])
         .then(result => {
           should(result).be.an.Array();
@@ -55,15 +55,15 @@ describe('Test: repositories/roleRepository', () => {
     });
 
     it('should reject the promise if some error occurs fetching data from the DB', () => {
-      sandbox.stub(kuzzle.repositories.role, 'loadMultiFromDatabase').rejects(new InternalError('Error'));
+      sandbox.stub(kuzzle.repositories.role, 'loadMultiFromDatabase').returns(Promise.reject(new InternalError('Error')));
       return should(kuzzle.repositories.role.loadRoles([-999, -998])).be.rejectedWith(InternalError);
     });
 
     it('should retrieve some persisted roles', () => {
-      sandbox.stub(kuzzle.internalEngine, 'mget').resolves({
+      sandbox.stub(kuzzle.internalEngine, 'mget').returns(Promise.resolve({
         hits: [{_id: 'persisted1', found: true, _source: persistedObject1},
               {_id: 'persisted2', found: true, _source: persistedObject2}]
-      });
+      }));
       return kuzzle.repositories.role.loadRoles(['persisted1', 'persisted2'])
         .then(results => {
           should(results).be.an.Array().and.have.length(2);
@@ -75,9 +75,9 @@ describe('Test: repositories/roleRepository', () => {
     });
 
     it('should retrieve the default roles', () => {
-      sandbox.stub(kuzzle.internalEngine, 'mget').resolves({
+      sandbox.stub(kuzzle.internalEngine, 'mget').returns(Promise.resolve({
         hits: [{_id: 'anonymous', found: true, _source: {}}]
-      });
+      }));
       return kuzzle.repositories.role.loadRoles(['anonymous'])
         .then(results =>{
           should(results).be.an.Array().and.have.length(1);
@@ -87,9 +87,9 @@ describe('Test: repositories/roleRepository', () => {
     });
 
     it('should retrieve only the roles that exist', () => {
-      sandbox.stub(kuzzle.internalEngine, 'mget').resolves({
+      sandbox.stub(kuzzle.internalEngine, 'mget').returns(Promise.resolve({
         hits: [{_id: 'anonymous', found: true, _source: {}}]
-      });
+      }));
       return kuzzle.repositories.role.loadRoles(['anonymous', 'idontexist'])
         .then(results => {
           should(results).be.an.Array().and.have.length(1);
@@ -106,7 +106,7 @@ describe('Test: repositories/roleRepository', () => {
 
     it('should load the role directly from memory if it\'s in memory', () => {
       sandbox.stub(kuzzle.repositories.role, 'roles', {roleId : {myRole : {}}});
-      sandbox.stub(kuzzle.repositories.role, 'loadOneFromDatabase').resolves();
+      sandbox.stub(kuzzle.repositories.role, 'loadOneFromDatabase').returns(Promise.resolve());
 
       return kuzzle.repositories.role.loadRole('roleId')
         .then((role) => {
@@ -117,7 +117,7 @@ describe('Test: repositories/roleRepository', () => {
 
     it('should load the role directly from DB if it\'s not in memory', () => {
       sandbox.stub(kuzzle.repositories.role, 'roles', {otherRoleId : {myRole : {}}});
-      sandbox.stub(kuzzle.repositories.role, 'loadOneFromDatabase').resolves({myRole : {}});
+      sandbox.stub(kuzzle.repositories.role, 'loadOneFromDatabase').returns(Promise.resolve({myRole : {}}));
 
       return kuzzle.repositories.role.loadRole('roleId')
         .then((role) => {
@@ -184,7 +184,7 @@ describe('Test: repositories/roleRepository', () => {
     });
 
     it('should reject if a profile uses the role about to be deleted', () => {
-      sandbox.stub(kuzzle.internalEngine, 'search').resolves({total: 1, hits: ['test']});
+      sandbox.stub(kuzzle.internalEngine, 'search').returns(Promise.resolve({total: 1, hits: ['test']}));
 
       return should(kuzzle.repositories.role.deleteRole({_id: 'test'})).rejectedWith(BadRequestError);
     });
@@ -192,8 +192,8 @@ describe('Test: repositories/roleRepository', () => {
     it('should call deleteFromDatabase and remove the role from memory', () => {
       sandbox.stub(kuzzle.repositories.role, 'roles', {myRole : {}});
 
-      sandbox.stub(kuzzle.repositories.role, 'deleteFromDatabase').resolves();
-      sandbox.stub(kuzzle.repositories.profile, 'search').resolves({total: 0});
+      sandbox.stub(kuzzle.repositories.role, 'deleteFromDatabase').returns(Promise.resolve());
+      sandbox.stub(kuzzle.repositories.profile, 'search').returns(Promise.resolve({total: 0}));
 
       return kuzzle.repositories.role.deleteRole({_id: 'myRole'})
         .then(() => {

@@ -24,7 +24,7 @@ describe('Test: hotelClerk.listSubscription', () => {
       }
     };
 
-    sandbox.stub(kuzzle.internalEngine, 'get').resolves({});
+    sandbox.stub(kuzzle.internalEngine, 'get').returns(Promise.resolve({}));
     return kuzzle.services.init({whitelist: []});
   });
 
@@ -41,7 +41,7 @@ describe('Test: hotelClerk.listSubscription', () => {
 
   it('should return a correct list according to subscribe on filter', () => {
 
-    sandbox.stub(kuzzle.repositories.user, 'load').resolves({_id: 'user', isActionAllowed: sandbox.stub().resolves(true)});
+    sandbox.stub(kuzzle.repositories.user, 'load').returns(Promise.resolve({_id: 'user', isActionAllowed: sandbox.stub().returns(Promise.resolve(true))}));
 
     kuzzle.hotelClerk.rooms[roomName] = {index, collection, roomId: 'foobar', customers: ['foo']};
 
@@ -67,9 +67,9 @@ describe('Test: hotelClerk.listSubscription', () => {
         index, collection: 'foo', roomId: 'foobar', customers: ['foo', 'bar']
       }
     };
-    sandbox.stub(kuzzle.repositories.user, 'load').resolves({_id: 'user', isActionAllowed: r => {
+    sandbox.stub(kuzzle.repositories.user, 'load').returns(Promise.resolve({_id: 'user', isActionAllowed: r => {
       return Promise.resolve(r.collection === 'foo');
-    }});
+    }}));
 
     return kuzzle.hotelClerk.listSubscriptions(context)
       .then(response => {
