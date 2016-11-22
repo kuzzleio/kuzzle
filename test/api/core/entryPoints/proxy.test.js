@@ -51,7 +51,8 @@ describe('Test: entryPoints/proxy', () => {
     should(spyListen.calledWith('connection')).be.true();
     should(spyListen.calledWith('disconnect')).be.true();
     should(spyListen.calledWith('error')).be.true();
-    should(spyListen.callCount).be.eql(4);
+    should(spyListen.calledWith('httpRequest')).be.true();
+    should(spyListen.callCount).be.eql(5);
   });
 
   it('should send a message on room "joinChannel" on joinChannel call', () => {

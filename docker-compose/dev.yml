@@ -2,7 +2,7 @@ version: '2'
 
 services:
   proxy:
-    image: kuzzleio/proxy
+    image: kuzzleio/proxy:develop
     ports:
       - "7511-7513:7511-7513"
 
@@ -25,7 +25,6 @@ services:
       - kuzzle_services__memoryStorage__node__host=redis
       - kuzzle_services__proxyBroker__host=proxy
       - NODE_ENV=development
-      - FEATURE_COVERAGE=1
 
   redis:
     image: redis:3.2
