@@ -177,30 +177,12 @@
   // Configuration for Kuzzle server
   /*
   "server": {
-    // * http disabled: Defaults to false. Set true to disable http support in Kuzzle
-    // * http host: <optional> host to bind to for incoming http connections
-    //   If unset or set to a falsy value (default), accepts connections on any
-    //   IPv6 address (::) when IPv6 is available, or an IPv4 address (0.0.0.0)
-    //   otherwise.
-    // * http port: port on which Kuzzle will expose its REST api.
-    //   If unset or set to a falsy value (default), Kuzzle will use a random
-    //   available port within the *ephemeral port range* defined by
-    //   /proc/sys/net/ipv4/ip_local_port_range.
-    // * http maxRequestSize: the size limit of a request. If it's a string, the
-         value is passed to the "bytes" library (https://www.npmjs.com/package/bytes).
-         If this is a number, then the value specifies the number of bytes.
     // * maxConcurrentRequests: Number of requests Kuzzle treats simultaneously.
     //   Requests received above this limit are bufferized.
     // * maxRetainedRequests: Maximum number of requests that can be bufferized.
     //   Requests received above this limit are discarded.
     // * warningRetainedRequestsLimit: Number of bufferized requests after
     //   which Kuzzle will throw warnings to the logger
-    "http": {
-      "disabled": false,
-      "host": false,
-      "port": false,
-      "maxRequestSize": "1MB"
-    },
     "maxConcurrentRequests": 50,
     "maxRetainedRequests": 50000,
     "warningRetainedRequestsLimit": 5000
@@ -302,8 +284,6 @@
     //   * host: the host on which the proxy can be reached. Can be a hostname,
     //     an IP address or an URI.
     //   * port: the port on which the proxy is listening
-    //   * socket: a Unix socket to connect to the proxy.
-    // either <"host", "port"> or "socket" must be supplied.
     "proxyBroker": {
       "host": "localhost",
       "port": 7331,

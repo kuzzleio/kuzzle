@@ -15,6 +15,7 @@ describe('/lib/api/kuzzle.js', () => {
     [
       'entryPoints',
       'funnel',
+      'router',
       'hooks',
       'indexCache',
       'internalEngine',
@@ -30,7 +31,7 @@ describe('/lib/api/kuzzle.js', () => {
     });
   });
 
-  it('should construct a kzzle server object with emit and listen event', (done) => {
+  it('should construct a kuzzle server object with emit and listen event', (done) => {
     kuzzle.on('event', () => {
       done();
     });
@@ -117,6 +118,9 @@ describe('/lib/api/kuzzle.js', () => {
             should(kuzzle.funnel.init)
               .be.calledOnce();
 
+            should(kuzzle.router.init)
+              .be.calledOnce();
+
             should(kuzzle.notifier.init)
               .be.calledOnce();
 
@@ -145,13 +149,14 @@ describe('/lib/api/kuzzle.js', () => {
               kuzzle.indexCache.init,
               kuzzle.pluginsManager.trigger,
               kuzzle.funnel.init,
+              kuzzle.router.init,
               kuzzle.notifier.init,
               kuzzle.statistics.init,
               kuzzle.hooks.init,
+              kuzzle.entryPoints.init,
               kuzzle.repositories.init,
               kuzzle.pluginsManager.trigger,
               kuzzle.cliController.init,
-              kuzzle.entryPoints.init,
               kuzzle.pluginsManager.trigger
             );
 
@@ -185,21 +190,9 @@ describe('/lib/api/kuzzle.js', () => {
         mock = new KuzzleMock();
         kuzzle = new Kuzzle();
 
-        [
-          'entryPoints',
-          'funnel',
-          'hooks',
-          'indexCache',
-          'internalEngine',
-          'notifier',
-          'pluginsManager',
-          'remoteActionsController',
-          'repositories',
-          'services',
-          'statistics'
-        ].forEach(k => {
-          kuzzle[k] = mock[k];
-        });
+      Kuzzle.__set__('console', {
+        error: sinon.spy()
+      });
 
         kuzzle.config.dump.enabled = true;
 
@@ -229,7 +222,6 @@ describe('/lib/api/kuzzle.js', () => {
         should(processRemoveAllListenersSpy.getCall(7).args[0]).be.exactly('SIGTRAP');
         should(processOnSpy.getCall(7).args[0]).be.exactly('SIGTRAP');
       });
-
     });
 
     it('does not really test anything but increases coverage', () => {

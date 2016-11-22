@@ -115,9 +115,6 @@ module.exports = {
   },
 
   server: {
-    http: {
-      maxRequestSize: '1MB'
-    },
     maxRequestHistorySize: 50,
     maxConcurrentRequests: 50,
     maxRetainedRequests: 50000,
@@ -190,5 +187,4 @@ module.exports = {
       ]
     }
   }
-
 };
