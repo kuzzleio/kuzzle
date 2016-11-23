@@ -17,7 +17,7 @@ describe('Test: managePlugins cli actions', () => {
   beforeEach(() => {
     kuzzle = new KuzzleMock();
     pkg = new PluginPackageMock();
-    kuzzle.pluginsManager.packages.getPackage.resolves(pkg);
+    kuzzle.pluginsManager.packages.getPackage.returns(Promise.resolve(pkg));
     release = sinon.spy();
 
     ManagePlugins.__set__({
@@ -52,11 +52,11 @@ describe('Test: managePlugins cli actions', () => {
   describe('--install', () => {
     it('should install a single plugin package if a plugin name is provided', () => {
 
-      pkg.install.resolves({
+      pkg.install.returns(Promise.resolve({
         success: true,
         name: 'banana',
         version: '42'
-      });
+      }));
 
       return managePlugins(new RequestObject({
         _id: 'plugin',
@@ -87,7 +87,7 @@ describe('Test: managePlugins cli actions', () => {
 
   describe('--get', () => {
     it('should return the definition of the plugin', () => {
-      kuzzle.pluginsManager.packages.definitions.resolves({foo: 'bar'});
+      kuzzle.pluginsManager.packages.definitions.returns(Promise.resolve({foo: 'bar'}));
 
       return managePlugins({
         data: {

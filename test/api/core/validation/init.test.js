@@ -1,5 +1,6 @@
 var
   should = require('should'),
+  Promise = require('bluebird'),
   sinon = require('sinon'),
   rewire = require('rewire'),
   mockRequire = require('mock-require'),
@@ -85,7 +86,7 @@ describe('Test: validation initialization', () => {
           }
         }
       },
-      getValidationConfigurationStub = sandbox.stub().resolves(configurationMock);
+      getValidationConfigurationStub = sandbox.stub().returns(Promise.resolve(configurationMock));
 
     beforeEach(() => {
       Validation.__set__('getValidationConfiguration', getValidationConfigurationStub);
@@ -110,7 +111,7 @@ describe('Test: validation initialization', () => {
 
     it('should build a specification if everything goes as expected', () => {
       validation.curateCollectionSpecification = sandbox.spy(function () {
-        return Promise.reject({an: 'error'});
+        return Promise.reject(new Error('error'));
       });
 
       return validation.curateSpecification()
@@ -132,7 +133,7 @@ describe('Test: validation initialization', () => {
   describe('#isValidSpecification', () => {
     it('should resolve true if the specification is correct', () => {
       var
-        curateCollectionSpecificationStub = sandbox.stub().resolves({});
+        curateCollectionSpecificationStub = sandbox.stub().returns(Promise.resolve({}));
 
       validation.curateCollectionSpecification = curateCollectionSpecificationStub;
 
@@ -145,7 +146,7 @@ describe('Test: validation initialization', () => {
 
     it('should resolve false if the specification is not correct', () => {
       var
-        curateCollectionSpecificationStub = sandbox.stub(validation, 'curateCollectionSpecification').rejects(new Error('Mocked error'));
+        curateCollectionSpecificationStub = sandbox.stub(validation, 'curateCollectionSpecification').returns(Promise.reject(new Error('Mocked error')));
 
       return validation.isValidSpecification('anIndex', 'aCollection', {a: 'bad specification'})
         .then(result => {
@@ -156,7 +157,7 @@ describe('Test: validation initialization', () => {
 
     it('should resolve false and provide errors if the specification is not correct and we want some verbose errors', () => {
       var
-        curateCollectionSpecificationStub = sandbox.stub(validation, 'curateCollectionSpecification').resolves({isValid: false, errors: ['some error']});
+        curateCollectionSpecificationStub = sandbox.stub(validation, 'curateCollectionSpecification').returns(Promise.resolve({isValid: false, errors: ['some error']}));
 
       return validation.isValidSpecification('anIndex', 'aCollection', {a: 'bad specification'}, true)
         .then(result => {
@@ -486,7 +487,7 @@ describe('Test: validation initialization', () => {
     it('should reject an error if validators are not valid', () => {
       var
         indexName = 'anIndex',
-        curateValidatorFilterStub = sandbox.spy(function () {return Promise.reject({an: 'error'});}),
+        curateValidatorFilterStub = sandbox.spy(function () {return Promise.reject(new Error('error'));}),
         collectionName = 'aCollection',
         collectionSpec = {
           validators: [
@@ -1004,8 +1005,8 @@ describe('Test: validation initialization', () => {
   describe('#curateValidatorFilter', () => {
     it('should return a promise if everything goes as expected', () => {
       var
-        registerStub = sandbox.stub().resolves({}),
-        validateStub = sandbox.stub().resolves({}),
+        registerStub = sandbox.stub().returns(Promise.resolve({})),
+        validateStub = sandbox.stub().returns(Promise.resolve({})),
         indexName = 'anIndex',
         collectionName= 'aCollection',
         validatorFilter = [{some: 'filters'}],
@@ -1034,8 +1035,8 @@ describe('Test: validation initialization', () => {
 
     it('should return a promise if everything goes as expected and avoid registration if dryRun is true', () => {
       var
-        registerStub = sandbox.stub().resolves({}),
-        validateStub = sandbox.stub().resolves({}),
+        registerStub = sandbox.stub().returns(Promise.resolve({})),
+        validateStub = sandbox.stub().returns(Promise.resolve({})),
         indexName = 'anIndex',
         collectionName= 'aCollection',
         validatorFilter = [{some: 'filters'}],

@@ -208,7 +208,7 @@ describe('Test: repositories/tokenRepository', () => {
     it('should reject the promise if an error occurred while fetching the user from the cache', () => {
       var token = jwt.sign({_id: 'auser'}, params.security.jwt.secret, {algorithm: params.security.jwt.algorithm});
 
-      sandbox.stub(tokenRepository, 'loadFromCache').rejects(new InternalError('Error'));
+      sandbox.stub(tokenRepository, 'loadFromCache').returns(Promise.reject(new InternalError('Error')));
 
       return should(tokenRepository.verifyToken(token)).be.rejectedWith(InternalError);
     });

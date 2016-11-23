@@ -1,5 +1,6 @@
 var
   sinon = require('sinon'),
+  Promise = require('bluebird'),
   should = require('should'),
   rewire = require('rewire'),
   Kuzzle = rewire('../../lib/api/kuzzle'),
@@ -244,7 +245,7 @@ describe('/lib/api/kuzzle.js', () => {
     it('does not really test anything but increases coverage', () => {
       var error = new Error('error');
 
-      kuzzle.internalEngine.init.rejects(error);
+      kuzzle.internalEngine.init.returns(Promise.reject(error));
 
       return should(kuzzle.start())
         .be.rejectedWith(error);

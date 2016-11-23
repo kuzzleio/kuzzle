@@ -324,7 +324,7 @@ describe('Test redis service', () => {
   });
 
   it('#getInfos should return a properly formatted response', () => {
-    sandbox.stub(redis.client, 'info').resolves(`redis_version:3.0.7
+    sandbox.stub(redis.client, 'info').returns(Promise.resolve(`redis_version:3.0.7
     redis_git_sha1:00000000
     redis_git_dirty:0
     redis_build_id:fcba39adccee99b1
@@ -416,7 +416,7 @@ describe('Test redis service', () => {
 # Keyspace
     db1:keys=5,expires=5,avg_ttl=3584283
     db5:keys=1,expires=0,avg_ttl=0
-    `);
+    `));
     return should(redis.getInfos()).be.fulfilled();
   });
 

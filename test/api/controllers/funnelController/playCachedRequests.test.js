@@ -49,7 +49,7 @@ describe('funnelController.playCachedRequests', () => {
     nextTickCalled = false;
     setTimeoutCalled = false;
 
-    sandbox.stub(kuzzle.internalEngine, 'get').resolves({});
+    sandbox.stub(kuzzle.internalEngine, 'get').returns(Promise.resolve({}));
     return kuzzle.services.init({whitelist: []})
       .then(() => {
         funnel = new FunnelController(kuzzle);

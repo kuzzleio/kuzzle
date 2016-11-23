@@ -122,7 +122,7 @@ describe('lib/api/controllers/cliController', () => {
 
     it('should send the response to the broker', () => {
       cli.init();
-      cli.actions.data.resolves('ok');
+      cli.actions.data.returns(Promise.resolve('ok'));
 
       return cli.onListenCB({
         requestId: 'test',
@@ -143,7 +143,7 @@ describe('lib/api/controllers/cliController', () => {
       var error = new Error('test');
 
       cli.init();
-      cli.actions.data.rejects(error);
+      cli.actions.data.returns(Promise.reject(error));
 
       return cli.onListenCB({
         requestId: 'test',

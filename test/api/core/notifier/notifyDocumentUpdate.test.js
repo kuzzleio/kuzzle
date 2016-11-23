@@ -57,7 +57,7 @@ describe('Test: notifier.notifyDocumentUpdate', () => {
   });
 
   beforeEach(() => {
-    sandbox.stub(kuzzle.internalEngine, 'get').resolves({});
+    sandbox.stub(kuzzle.internalEngine, 'get').returns(Promise.resolve({}));
     return kuzzle.services.init({whitelist: []})
       .then(() => {
         requestObject = new RequestObject({
@@ -91,7 +91,7 @@ describe('Test: notifier.notifyDocumentUpdate', () => {
     requestObject.data._id = 'addme';
 
     sandbox.stub(kuzzle.dsl, 'test').returns(['foobar']);
-    sandbox.stub(kuzzle.services.list.storageEngine, 'get').resolves({_id: 'addme', _source: requestObject.data.body});
+    sandbox.stub(kuzzle.services.list.storageEngine, 'get').returns(Promise.resolve({_id: 'addme', _source: requestObject.data.body}));
 
     return kuzzle.notifier.notifyDocumentUpdate(requestObject)
       .then(() => {
@@ -112,8 +112,8 @@ describe('Test: notifier.notifyDocumentUpdate', () => {
   it('should notify subscribers when an updated document left their scope', () => {
     requestObject.data._id = 'removeme';
 
-    sandbox.stub(kuzzle.dsl, 'test').resolves([]);
-    sandbox.stub(kuzzle.services.list.storageEngine, 'get').resolves({_id: 'removeme', _source: requestObject.data.body});
+    sandbox.stub(kuzzle.dsl, 'test').returns(Promise.resolve([]));
+    sandbox.stub(kuzzle.services.list.storageEngine, 'get').returns(Promise.resolve({_id: 'removeme', _source: requestObject.data.body}));
 
     return kuzzle.notifier.notifyDocumentUpdate(requestObject)
       .then(() => {

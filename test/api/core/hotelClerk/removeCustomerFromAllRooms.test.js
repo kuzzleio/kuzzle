@@ -1,5 +1,6 @@
 var
   should = require('should'),
+  Promise = require('bluebird'),
   sinon = require('sinon'),
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
   Dsl = require('../../../../lib/api/dsl'),
@@ -51,7 +52,7 @@ describe('Test: hotelClerk.removeCustomerFromAllRooms', () => {
   });
 
   it('should clean up customers, rooms object', () => {
-    sandbox.stub(kuzzle.dsl, 'remove').resolves();
+    sandbox.stub(kuzzle.dsl, 'remove').returns(Promise.resolve());
 
     return kuzzle.hotelClerk.removeCustomerFromAllRooms(connection)
       .then(() => {
@@ -70,7 +71,7 @@ describe('Test: hotelClerk.removeCustomerFromAllRooms', () => {
 
   it('should send a notification to other users connected on that room', () => {
     var
-      mockDsl = sandbox.mock(kuzzle.dsl).expects('remove').once().resolves();
+      mockDsl = sandbox.mock(kuzzle.dsl).expects('remove').once().returns(Promise.resolve());
 
     kuzzle.hotelClerk.rooms.foo.customers.push('another connection');
 
@@ -106,7 +107,7 @@ describe('Test: hotelClerk.removeCustomerFromAllRooms', () => {
   it('should log an error if a problem occurs while unsubscribing', function () {
     var error = new Error('Mocked error');
     this.timeout(500);
-    sandbox.stub(kuzzle.dsl, 'remove').rejects(error);
+    sandbox.stub(kuzzle.dsl, 'remove').returns(Promise.reject(error));
 
     return should(kuzzle.hotelClerk.removeCustomerFromAllRooms(connection)).be.rejectedWith(error);
   });

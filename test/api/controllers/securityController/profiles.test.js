@@ -16,12 +16,12 @@ describe('Test: security controller - profiles', () => {
   });
 
   beforeEach(() => {
-    sandbox.stub(kuzzle.internalEngine, 'get').resolves({});
+    sandbox.stub(kuzzle.internalEngine, 'get').returns(Promise.resolve({}));
     return kuzzle.services.init({whitelist: []})
       .then(() => kuzzle.funnel.init())
       .then(() => {
-        sandbox.stub(kuzzle.repositories.profile, 'buildProfileFromRequestObject').resolves();
-        sandbox.stub(kuzzle.repositories.profile, 'hydrate').resolves();
+        sandbox.stub(kuzzle.repositories.profile, 'buildProfileFromRequestObject').returns(Promise.resolve());
+        sandbox.stub(kuzzle.repositories.profile, 'hydrate').returns(Promise.resolve());
       });
   });
 
@@ -31,7 +31,7 @@ describe('Test: security controller - profiles', () => {
 
   describe('#createOrReplaceProfile', () => {
     it('should resolve to a responseObject on a createOrReplaceProfile call', () => {
-      sandbox.stub(kuzzle.repositories.profile, 'validateAndSaveProfile').resolves({_id: 'test', _source: {}});
+      sandbox.stub(kuzzle.repositories.profile, 'validateAndSaveProfile').returns(Promise.resolve({_id: 'test', _source: {}}));
       return kuzzle.funnel.controllers.security.createOrReplaceProfile(new RequestObject({
         body: {_id: 'test', policies: [{roleId: 'role1'}]}
       }))
@@ -43,7 +43,7 @@ describe('Test: security controller - profiles', () => {
 
     it('should reject with a response object in case of error', () => {
       var error = new Error('Mocked error');
-      sandbox.stub(kuzzle.repositories.profile, 'validateAndSaveProfile').rejects(error);
+      sandbox.stub(kuzzle.repositories.profile, 'validateAndSaveProfile').returns(Promise.reject(error));
       return should(kuzzle.funnel.controllers.security.createOrReplaceProfile(new RequestObject({
         body: {_id: 'test', policies: ['role1']}
       }))).be.rejectedWith(error);
@@ -53,14 +53,14 @@ describe('Test: security controller - profiles', () => {
   describe('#createProfile', () => {
     it('should reject when a profile already exists with the id', () => {
       var error = new Error('Mocked error');
-      sandbox.stub(kuzzle.repositories.profile, 'validateAndSaveProfile').rejects(error);
+      sandbox.stub(kuzzle.repositories.profile, 'validateAndSaveProfile').returns(Promise.reject(error));
       return should(kuzzle.funnel.controllers.security.createProfile(new RequestObject({
         body: {_id: 'test', policies: ['role1']}
       }))).be.rejectedWith(error);
     });
 
     it('should resolve to a responseObject on a createProfile call', () => {
-      sandbox.stub(kuzzle.repositories.profile, 'validateAndSaveProfile').resolves({_id: 'test', _source: {}});
+      sandbox.stub(kuzzle.repositories.profile, 'validateAndSaveProfile').returns(Promise.resolve({_id: 'test', _source: {}}));
       return should(kuzzle.funnel.controllers.security.createProfile(new RequestObject({
         body: {_id: 'test', policies: [{roleId:'role1'}]}
       }))).be.fulfilled();
@@ -69,7 +69,7 @@ describe('Test: security controller - profiles', () => {
 
   describe('#getProfile', () => {
     it('should resolve to a responseObject on a getProfile call', () => {
-      sandbox.stub(kuzzle.repositories.profile, 'loadProfile').resolves({_id: 'test', _source: {}});
+      sandbox.stub(kuzzle.repositories.profile, 'loadProfile').returns(Promise.resolve({_id: 'test', _source: {}}));
       return kuzzle.funnel.controllers.security.getProfile(new RequestObject({
         body: {_id: 'test'}
       }))
@@ -84,7 +84,7 @@ describe('Test: security controller - profiles', () => {
     });
 
     it('should reject NotFoundError on a getProfile call with a bad id', () => {
-      sandbox.stub(kuzzle.repositories.profile, 'loadProfile').resolves(null);
+      sandbox.stub(kuzzle.repositories.profile, 'loadProfile').returns(Promise.resolve(null));
       return should(kuzzle.funnel.controllers.security.getProfile(new RequestObject({
         body: {_id: 'test'}
       }))).be.rejectedWith(NotFoundError);
@@ -98,14 +98,14 @@ describe('Test: security controller - profiles', () => {
 
     it('should reject with a response object in case of error', () => {
       var error = new Error('Mocked error');
-      sandbox.stub(kuzzle.repositories.profile, 'loadMultiFromDatabase').rejects(error);
+      sandbox.stub(kuzzle.repositories.profile, 'loadMultiFromDatabase').returns(Promise.reject(error));
       return should(kuzzle.funnel.controllers.security.mGetProfiles(new RequestObject({
         body: {ids: ['test'] }
       }))).be.rejectedWith(error);
     });
 
     it('should resolve to a responseObject on a mGetProfiles call', () => {
-      sandbox.stub(kuzzle.repositories.profile, 'loadMultiFromDatabase').resolves([{_id: 'test', policies: [{roleId: 'role'}]}]);
+      sandbox.stub(kuzzle.repositories.profile, 'loadMultiFromDatabase').returns(Promise.resolve([{_id: 'test', policies: [{roleId: 'role'}]}]));
       return kuzzle.funnel.controllers.security.mGetProfiles(new RequestObject({
         body: {ids: ['test']}
       }))
@@ -121,7 +121,7 @@ describe('Test: security controller - profiles', () => {
     });
 
     it('should resolve to a responseObject with roles on a mGetProfiles call with hydrate', () => {
-      sandbox.stub(kuzzle.repositories.profile, 'loadMultiFromDatabase').resolves([{_id: 'test', _source: {}}]);
+      sandbox.stub(kuzzle.repositories.profile, 'loadMultiFromDatabase').returns(Promise.resolve([{_id: 'test', _source: {}}]));
       return kuzzle.funnel.controllers.security.mGetProfiles(new RequestObject({
         body: {ids: ['test'], hydrate: true}
       }))
@@ -136,7 +136,7 @@ describe('Test: security controller - profiles', () => {
 
   describe('#searchProfiles', () => {
     it('should return a ResponseObject containing an array of profiles on searchProfile call', () => {
-      sandbox.stub(kuzzle.repositories.profile, 'searchProfiles').resolves({hits: [{_id: 'test'}]});
+      sandbox.stub(kuzzle.repositories.profile, 'searchProfiles').returns(Promise.resolve({hits: [{_id: 'test'}]}));
       return kuzzle.funnel.controllers.security.searchProfiles(new RequestObject({
         body: {}
       }))
@@ -150,7 +150,7 @@ describe('Test: security controller - profiles', () => {
     });
 
     it('should return a ResponseObject containing an array of profiles on searchProfile call with hydrate', () => {
-      sandbox.stub(kuzzle.repositories.profile, 'searchProfiles').resolves({total: 1, hits: [{_id: 'test', policies: [ {roleId: 'default'} ]}]});
+      sandbox.stub(kuzzle.repositories.profile, 'searchProfiles').returns(Promise.resolve({total: 1, hits: [{_id: 'test', policies: [ {roleId: 'default'} ]}]}));
       return kuzzle.funnel.controllers.security.searchProfiles(new RequestObject({
         body: {
           policies: ['role1']
@@ -169,7 +169,7 @@ describe('Test: security controller - profiles', () => {
 
     it('should reject with a response object in case of error', () => {
       var error = new Error('Mocked error');
-      sandbox.stub(kuzzle.repositories.profile, 'searchProfiles').rejects(error);
+      sandbox.stub(kuzzle.repositories.profile, 'searchProfiles').returns(Promise.reject(error));
       return should(kuzzle.funnel.controllers.security.searchProfiles(new RequestObject({
         body: {policies: ['foo']}
       }))).be.rejectedWith(error);
@@ -178,8 +178,8 @@ describe('Test: security controller - profiles', () => {
 
   describe('#updateProfile', () => {
     it('should return a valid ResponseObject', () => {
-      sandbox.stub(kuzzle.repositories.profile, 'loadProfile').resolves({});
-      sandbox.stub(kuzzle.repositories.profile, 'validateAndSaveProfile').resolves({_id: 'test'});
+      sandbox.stub(kuzzle.repositories.profile, 'loadProfile').returns(Promise.resolve({}));
+      sandbox.stub(kuzzle.repositories.profile, 'validateAndSaveProfile').returns(Promise.resolve({_id: 'test'}));
 
       return kuzzle.funnel.controllers.security.updateProfile(new RequestObject({
         _id: 'test',
@@ -201,7 +201,7 @@ describe('Test: security controller - profiles', () => {
 
   describe('#deleteProfile', () => {
     it('should return response with on deleteProfile call', () => {
-      sandbox.stub(kuzzle.repositories.profile, 'deleteProfile').resolves({_id: 'test'});
+      sandbox.stub(kuzzle.repositories.profile, 'deleteProfile').returns(Promise.resolve({_id: 'test'}));
       return kuzzle.funnel.controllers.security.deleteProfile(new RequestObject({
         body: {_id: 'test'}
       }))
@@ -215,7 +215,7 @@ describe('Test: security controller - profiles', () => {
 
     it('should reject with a response object in case of error', () => {
       var error = new Error('Mocked error');
-      sandbox.stub(kuzzle.repositories.profile, 'deleteProfile').rejects(error);
+      sandbox.stub(kuzzle.repositories.profile, 'deleteProfile').returns(Promise.reject(error));
       return should(kuzzle.funnel.controllers.security.deleteProfile(new RequestObject({
         body: {_id: 'test'}
       }))).be.rejectedWith(error);
@@ -279,7 +279,7 @@ describe('Test: security controller - profiles', () => {
     });
 
     it('should reject NotFoundError on a getProfileRights call with a bad id', () => {
-      sandbox.stub(kuzzle.repositories.profile, 'loadProfile').resolves(null);
+      sandbox.stub(kuzzle.repositories.profile, 'loadProfile').returns(Promise.resolve(null));
       return should(kuzzle.funnel.controllers.security.getProfileRights(new RequestObject({
         body: {_id: 'test'}
       }))).be.rejectedWith(NotFoundError);

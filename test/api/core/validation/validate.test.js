@@ -330,7 +330,7 @@ describe('Test: validation.validate', () => {
         controllerName = 'write',
         actionName = 'update',
         filterId = 'someFilter',
-        testStub = sandbox.stub().resolves([filterId, 'anotherFilter']),
+        testStub = sandbox.stub().returns(Promise.resolve([filterId, 'anotherFilter'])),
         dsl = {test: testStub},
         id = 'anId',
         verbose = false,
@@ -373,7 +373,7 @@ describe('Test: validation.validate', () => {
         controllerName = 'aController',
         actionName = 'anAction',
         filterId = 'someFilter',
-        testStub = sandbox.stub().resolves([filterId, 'anotherFilter']),
+        testStub = sandbox.stub().returns(Promise.resolve([filterId, 'anotherFilter'])),
         dsl = {
           test: testStub
         },
@@ -411,7 +411,7 @@ describe('Test: validation.validate', () => {
         controllerName = 'aController',
         actionName = 'anAction',
         filterId = 'someFilter',
-        testStub = sandbox.stub().resolves(['anotherFilter']),
+        testStub = sandbox.stub().returns(Promise.resolve(['anotherFilter'])),
         dsl = {
           test: testStub
         },

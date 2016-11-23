@@ -9,8 +9,8 @@
     "kuzzle": "./bin/kuzzle"
   },
   "scripts": {
-    "test": "npm run --silent lint && npm run unit-testing --coverage && npm run functional-testing",
-    "unit-testing": "istanbul cover ./node_modules/mocha/bin/_mocha -- -R spec",
+    "test": "npm run --silent lint && npm run unit-testing && npm run functional-testing",
+    "unit-testing": "istanbul cover _mocha",
     "functional-testing": "npm run cucumber",
     "cucumber": "cucumber.js --fail-fast",
     "codecov": "codecov",
@@ -83,7 +83,6 @@
     "should": "11.1.0",
     "should-sinon": "0.0.5",
     "sinon": "1.17.6",
-    "sinon-as-promised": "^4.0.2",
     "socket.io-client": "1.4.8"
   },
   "engines": {

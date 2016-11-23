@@ -24,7 +24,7 @@ describe('PluginsManager: init()', () => {
       },
       spy = sinon.spy();
 
-    kuzzle.pluginsManager.packages.definitions.resolves(defs);
+    kuzzle.pluginsManager.packages.definitions.returns(Promise.resolve(defs));
 
     return PluginsManager.__with__({
       loadPlugins: spy

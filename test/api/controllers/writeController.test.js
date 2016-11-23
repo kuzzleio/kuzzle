@@ -27,7 +27,7 @@ describe('Test: write controller', () => {
     controller = new WriteController(kuzzle);
 
     requestObject = new RequestObject({body: {foo: 'bar'}}, {}, 'unit-test');
-    sinon.stub(requestObject, 'isValid').resolves();
+    sinon.stub(requestObject, 'isValid').returns(Promise.resolve());
   });
 
   describe('#create', () => {
@@ -168,7 +168,7 @@ describe('Test: write controller', () => {
     });
 
     it('should trigger a "create" notification if the docuemnt did not exist', () => {
-      engine.createOrReplace.resolves(Object.assign({}, foo, {created: true}));
+      engine.createOrReplace.returns(Promise.resolve(Object.assign({}, foo, {created: true})));
 
       return controller.createOrReplace(requestObject)
         .then(response => {
@@ -421,7 +421,7 @@ describe('Test: write controller', () => {
       };
 
       kuzzle.validation = {
-        validationPromise: sinon.stub().resolves(expected)
+        validationPromise: sinon.stub().returns(Promise.resolve(expected))
       };
 
       return controller.validate(requestObject)
@@ -461,7 +461,7 @@ describe('Test: write controller', () => {
       };
 
       kuzzle.validation = {
-        validationPromise: sinon.stub().resolves(expected)
+        validationPromise: sinon.stub().returns(Promise.resolve(expected))
       };
 
       return controller.validate(requestObject)

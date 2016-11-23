@@ -1,6 +1,7 @@
 var
   rewire = require('rewire'),
   should = require('should'),
+  Promise = require('bluebird'),
   sinon = require('sinon'),
   KuzzleMock = require('../../../mocks/kuzzle.mock'),
   PluginContext = rewire('../../../../lib/api/core/plugins/pluginContext'),
@@ -103,8 +104,8 @@ describe('Plugin Context', () => {
     beforeEach(() => {
       repository = {
         ObjectConstructor: sinon.stub().returns({}),
-        hydrate: sinon.stub().resolves(),
-        persist: sinon.stub().resolves()
+        hydrate: sinon.stub().returns(Promise.resolve()),
+        persist: sinon.stub().returns(Promise.resolve())
       };
     });
 

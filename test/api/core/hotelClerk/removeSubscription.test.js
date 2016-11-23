@@ -1,5 +1,6 @@
 var
   should = require('should'),
+  Promise = require('bluebird'),
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
@@ -54,6 +55,7 @@ describe('Test: hotelClerk.removeSubscription', () => {
         channels: ['barfoo']
       }
     };
+
   });
 
   afterEach(() => {
@@ -81,7 +83,7 @@ describe('Test: hotelClerk.removeSubscription', () => {
   });
 
   it('should not delete all subscriptions when we want to just remove one', () => {
-    var mock = sandbox.mock(kuzzle.dsl).expects('remove').once().resolves();
+    var mock = sandbox.mock(kuzzle.dsl).expects('remove').once().returns(Promise.resolve());
 
     return kuzzle.hotelClerk.removeSubscription(unsubscribeRequest, context)
       .finally(() => {
@@ -98,7 +100,7 @@ describe('Test: hotelClerk.removeSubscription', () => {
   });
 
   it('should clean up customers, rooms object', () => {
-    var mock = sandbox.mock(kuzzle.dsl).expects('remove').once().resolves();
+    var mock = sandbox.mock(kuzzle.dsl).expects('remove').once().returns(Promise.resolve());
 
     delete kuzzle.hotelClerk.rooms.bar;
     delete kuzzle.hotelClerk.customers[connection.id].bar;
@@ -144,7 +146,7 @@ describe('Test: hotelClerk.removeSubscription', () => {
   });
 
   it('should trigger a proxy:leaveChannel hook', function () {
-    sandbox.stub(kuzzle.dsl, 'remove').resolves();
+    sandbox.stub(kuzzle.dsl, 'remove').returns(Promise.resolve());
 
     return kuzzle.hotelClerk.removeSubscription(unsubscribeRequest, context)
       .then(() => {
