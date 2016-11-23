@@ -5,7 +5,9 @@ var
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
   BadRequestError = require.main.require('kuzzle-common-objects').Errors.badRequestError,
   NotFoundError = require.main.require('kuzzle-common-objects').Errors.notFoundError,
-  Kuzzle = require.main.require('lib/api/kuzzle');
+  Dsl = require('../../../../lib/api/dsl'),
+  HotelClerk = require('../../../../lib/api/core/hotelClerk'),
+  Kuzzle = require('../../../mocks/kuzzle.mock');
 
 describe('Test: hotelClerk.removeRooms', () => {
   var
@@ -29,6 +31,8 @@ describe('Test: hotelClerk.removeRooms', () => {
 
   beforeEach(() => {
     kuzzle = new Kuzzle();
+    kuzzle.hotelClerk = new HotelClerk(kuzzle);
+    kuzzle.dsl = new Dsl();
 
     context = {
       connection: connection,
@@ -37,8 +41,6 @@ describe('Test: hotelClerk.removeRooms', () => {
       }
     };
 
-    sandbox.stub(kuzzle.internalEngine, 'get').resolves({});
-    return kuzzle.services.init({whitelist: []});
   });
 
   afterEach(() => {

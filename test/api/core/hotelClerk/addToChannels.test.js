@@ -1,10 +1,10 @@
 var
   should = require('should'),
-  sinon = require('sinon'),
-  sandbox = sinon.sandbox.create(),
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
+  Dsl = require('../../../../lib/api/dsl'),
+  HotelClerk = require('../../../../lib/api/core/hotelClerk'),
   NotificationObject = require.main.require('lib/api/core/models/notificationObject'),
-  Kuzzle = require.main.require('lib/api/kuzzle');
+  Kuzzle = require('../../../mocks/kuzzle.mock');
 
 describe('Test: hotelClerk.addToChannels', () => {
   var
@@ -36,9 +36,8 @@ describe('Test: hotelClerk.addToChannels', () => {
 
   beforeEach(() => {
     kuzzle = new Kuzzle();
-    kuzzle.removeAllListeners();
-    sandbox.stub(kuzzle.internalEngine, 'get').resolves({});
-    return kuzzle.services.init({whitelist: []});
+    kuzzle.hotelClerk = new HotelClerk(kuzzle);
+    kuzzle.dsl = new Dsl();
   });
 
   it('should result in an empty array if the room does not exist', () => {

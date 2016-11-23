@@ -144,8 +144,7 @@ module.exports = {
     },
     internalBroker: {
       aliases: ['broker'],
-      host: 'localhost',
-      port: 7911,
+      socket: './run/broker.sock',
       retryInterval: 1000
     },
     proxyBroker: {
