@@ -27,6 +27,11 @@ function KuzzleMock () {
     register: sinon.stub().returns(Promise.resolve())
   };
 
+  this.gc = {
+    init: sinon.spy(),
+    run: sinon.spy()
+  };
+
   this.entryPoints = {
     http: {
       init: sinon.spy()
@@ -125,7 +130,8 @@ function KuzzleMock () {
       cleanAndPrepare: sinon.stub().returns(Promise.resolve()),
       cleanDb: sinon.stub().returns(Promise.resolve()),
       managePlugins: sinon.stub().returns(Promise.resolve()),
-      data: sinon.stub().returns(Promise.resolve())
+      data: sinon.stub().returns(Promise.resolve()),
+      dump: sinon.stub().returns(Promise.resolve())
     }
   };
 

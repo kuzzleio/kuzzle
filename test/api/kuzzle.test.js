@@ -21,6 +21,7 @@ describe('/lib/api/kuzzle.js', () => {
       'indexCache',
       'internalEngine',
       'notifier',
+      'gc',
       'pluginsManager',
       'cliController',
       'repositories',
