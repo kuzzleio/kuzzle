@@ -133,10 +133,9 @@ function KuzzleMock () {
 
   this.router = {
     execute: sinon.stub().returns(Promise.resolve(foo)),
-    initHttpRouter: sinon.spy(),
+    init: sinon.spy(),
     newConnection: sinon.stub().returns(Promise.resolve(foo)),
     removeConnection: sinon.spy(),
-    routeHttp: sinon.spy()
   };
 
   this.services = {

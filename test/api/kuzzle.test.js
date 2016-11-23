@@ -16,6 +16,7 @@ describe('/lib/api/kuzzle.js', () => {
     [
       'entryPoints',
       'funnel',
+      'router',
       'hooks',
       'indexCache',
       'internalEngine',
@@ -118,6 +119,9 @@ describe('/lib/api/kuzzle.js', () => {
             should(kuzzle.funnel.init)
               .be.calledOnce();
 
+            should(kuzzle.router.init)
+              .be.calledOnce();
+
             should(kuzzle.notifier.init)
               .be.calledOnce();
 
@@ -146,6 +150,7 @@ describe('/lib/api/kuzzle.js', () => {
               kuzzle.indexCache.init,
               kuzzle.pluginsManager.trigger,
               kuzzle.funnel.init,
+              kuzzle.router.init,
               kuzzle.notifier.init,
               kuzzle.statistics.init,
               kuzzle.hooks.init,
@@ -189,6 +194,7 @@ describe('/lib/api/kuzzle.js', () => {
         [
           'entryPoints',
           'funnel',
+          'router',
           'hooks',
           'indexCache',
           'internalEngine',
