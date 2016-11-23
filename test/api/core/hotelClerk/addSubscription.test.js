@@ -1,12 +1,11 @@
 var
   should = require('should'),
-  sinon = require('sinon'),
-  sandbox = sinon.sandbox.create(),
   Promise = require('bluebird'),
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
+  HotelClerk = require('../../../../lib/api/core/hotelClerk'),
   InternalError = require.main.require('kuzzle-common-objects').Errors.internalError,
   BadRequestError = require.main.require('kuzzle-common-objects').Errors.badRequestError,
-  Kuzzle = require.main.require('lib/api/kuzzle');
+  Kuzzle = require('../../../mocks/kuzzle.mock');
 
 describe('Test: hotelClerk.addSubscription', () => {
   var
@@ -29,8 +28,12 @@ describe('Test: hotelClerk.addSubscription', () => {
 
   beforeEach(() => {
     kuzzle = new Kuzzle();
-    sandbox.stub(kuzzle.internalEngine, 'get').returns(Promise.resolve({}));
-    return kuzzle.services.init({whitelist: []});
+    kuzzle.hotelClerk = new HotelClerk(kuzzle);
+
+    kuzzle.dsl.register.returns(Promise.resolve({
+      id: 'roomId',
+      diff: 'diff'
+    }));
   });
 
   it('should have object customers and rooms empty', () => {
@@ -95,7 +98,7 @@ describe('Test: hotelClerk.addSubscription', () => {
       });
   });
 
-  it('should trigger a proxy:joinChannel hook', done => {
+  it('should trigger a proxy:joinChannel hook', () => {
     var requestObject = new RequestObject({
       controller: 'subscribe',
       collection: collection,
@@ -103,14 +106,19 @@ describe('Test: hotelClerk.addSubscription', () => {
       body: filter
     });
 
-    kuzzle.once('proxy:joinChannel', (data) => {
-      should(data).be.an.Object();
-      should(data.channel).be.a.String();
-      should(data.id).be.eql(context.connection.id);
-      done();
-    });
+    return kuzzle.hotelClerk.addSubscription(requestObject, context)
+      .then(() => {
+        var data;
 
-    kuzzle.hotelClerk.addSubscription(requestObject, context).catch(e => done(e));
+        should(kuzzle.pluginsManager.trigger)
+          .be.calledWith('proxy:joinChannel');
+
+        data = kuzzle.pluginsManager.trigger.secondCall.args[1];
+
+        should(data).be.an.Object();
+        should(data.channel).be.a.String();
+        should(data.id).be.eql(context.connection.id);
+      });
   });
 
   it('should return the same response when the user has already subscribed to the filter', done => {
@@ -143,6 +151,7 @@ describe('Test: hotelClerk.addSubscription', () => {
         index: index,
         body: {badkeyword : {firstName: 'Ada'}}
       });
+    kuzzle.dsl.register.returns(Promise.reject(new Error('test')));
 
     pAddSubscription = kuzzle.hotelClerk.addSubscription(requestObject, context);
     return should(pAddSubscription).be.rejected();

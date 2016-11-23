@@ -3,7 +3,9 @@ var
   Promise = require('bluebird'),
   sinon = require('sinon'),
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
-  Kuzzle = require.main.require('lib/api/kuzzle');
+  Dsl = require('../../../../lib/api/dsl'),
+  HotelClerk = require('../../../../lib/api/core/hotelClerk'),
+  Kuzzle = require('../../../mocks/kuzzle.mock');
 
 describe('Test: hotelClerk.removeCustomerFromAllRooms', () => {
   var
@@ -13,11 +15,11 @@ describe('Test: hotelClerk.removeCustomerFromAllRooms', () => {
     index = '%test',
     sandbox;
 
-  before(() => {
-    kuzzle = new Kuzzle();
-  });
-
   beforeEach(() => {
+    kuzzle = new Kuzzle();
+    kuzzle.hotelClerk = new HotelClerk(kuzzle);
+    kuzzle.dsl = new Dsl();
+
     sandbox = sinon.sandbox.create();
 
     kuzzle.hotelClerk.customers[connection.id] = {
@@ -39,9 +41,6 @@ describe('Test: hotelClerk.removeCustomerFromAllRooms', () => {
         channels: ['barfoo']
       }
     };
-
-    sandbox.stub(kuzzle.internalEngine, 'get').returns(Promise.resolve({}));
-    return kuzzle.services.init({whitelist: []});
   });
 
   afterEach(() => {
@@ -53,34 +52,26 @@ describe('Test: hotelClerk.removeCustomerFromAllRooms', () => {
   });
 
   it('should clean up customers, rooms object', () => {
-    var mock = sandbox.mock(kuzzle.dsl).expects('remove').twice().returns(Promise.resolve());
-
-    sandbox.spy(kuzzle.notifier, 'notify');
+    sandbox.stub(kuzzle.dsl, 'remove').returns(Promise.resolve());
 
     return kuzzle.hotelClerk.removeCustomerFromAllRooms(connection)
-      .finally(() => {
-        try {
-          mock.verify();
-          should(kuzzle.notifier.notify.called).be.false();
+      .then(() => {
+        should(kuzzle.dsl.remove).be.calledTwice();
+        should(kuzzle.notifier.notify.called).be.false();
 
-          should(kuzzle.hotelClerk.rooms).be.an.Object();
-          should(kuzzle.hotelClerk.rooms).be.empty();
+        should(kuzzle.hotelClerk.rooms).be.an.Object();
+        should(kuzzle.hotelClerk.rooms).be.empty();
 
-          should(kuzzle.hotelClerk.customers).be.an.Object();
-          should(kuzzle.hotelClerk.customers).be.empty();
+        should(kuzzle.hotelClerk.customers).be.an.Object();
+        should(kuzzle.hotelClerk.customers).be.empty();
 
-          return Promise.resolve();
-        }
-        catch (error) {
-          return Promise.reject(error);
-        }
+        return Promise.resolve();
       });
   });
 
   it('should send a notification to other users connected on that room', () => {
     var
-      mockDsl = sandbox.mock(kuzzle.dsl).expects('remove').once().returns(Promise.resolve()),
-      mockNotify = sandbox.mock(kuzzle.notifier).expects('notify').once();
+      mockDsl = sandbox.mock(kuzzle.dsl).expects('remove').once().returns(Promise.resolve());
 
     kuzzle.hotelClerk.rooms.foo.customers.push('another connection');
 
@@ -88,19 +79,22 @@ describe('Test: hotelClerk.removeCustomerFromAllRooms', () => {
       .finally(() => {
         try {
           mockDsl.verify();
-          mockNotify.verify();
+
+          should(kuzzle.notifier.notify)
+            .be.calledOnce()
+            .be.calledWith(['foo']);
 
           // testing roomId argument
-          should(mockNotify.args[0][0]).match(['foo']);
+          should(kuzzle.notifier.notify.args[0][0]).match(['foo']);
 
           // testing requestObject argument
-          should(mockNotify.args[0][1]).be.instanceOf(RequestObject);
-          should(mockNotify.args[0][1].controller).be.exactly('subscribe');
-          should(mockNotify.args[0][1].action).be.exactly('off');
-          should(mockNotify.args[0][1].index).be.exactly(index);
+          should(kuzzle.notifier.notify.args[0][1]).be.instanceOf(RequestObject);
+          should(kuzzle.notifier.notify.args[0][1].controller).be.exactly('subscribe');
+          should(kuzzle.notifier.notify.args[0][1].action).be.exactly('off');
+          should(kuzzle.notifier.notify.args[0][1].index).be.exactly(index);
 
           // testing payload argument
-          should(mockNotify.args[0][2].count).be.exactly(1);
+          should(kuzzle.notifier.notify.args[0][2].count).be.exactly(1);
 
           return Promise.resolve();
         }

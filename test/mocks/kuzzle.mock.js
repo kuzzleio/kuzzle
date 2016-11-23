@@ -2,6 +2,7 @@ var
   _ = require('lodash'),
   sinon = require('sinon'),
   Kuzzle = require('../../lib/api/kuzzle'),
+  Promise = require('bluebird'),
   config = require('../../lib/config'),
   foo = {foo: 'bar'};
 
@@ -22,8 +23,20 @@ function KuzzleMock () {
   // we need a deep copy here
   this.config = _.merge({}, config);
 
+  this.dsl = {
+    register: sinon.stub().returns(Promise.resolve())
+  };
+
   this.entryPoints = {
-    init: sinon.spy()
+    http: {
+      init: sinon.spy()
+    },
+    init: sinon.spy(),
+    proxy: {
+      dispatch: sinon.spy(),
+      joinChannel: sinon.spy(),
+      leaveChannel: sinon.spy()
+    }
   };
 
   this.funnel = {
@@ -41,6 +54,7 @@ function KuzzleMock () {
   };
 
   this.hotelClerk = {
+    addToChannels: sinon.stub(),
     getRealtimeCollections: sinon.stub()
   };
 
@@ -74,8 +88,11 @@ function KuzzleMock () {
     updateMapping: sinon.stub().returns(Promise.resolve())
   };
 
+  this.once = sinon.stub();
+
   this.notifier = {
     init: sinon.spy(),
+    notify: sinon.spy(),
     notifyDocumentCreate: sinon.spy(),
     notifyDocumentDelete: sinon.spy(),
     notifyDocumentReplace: sinon.spy(),

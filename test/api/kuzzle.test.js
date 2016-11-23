@@ -101,6 +101,9 @@ describe('/lib/api/kuzzle.js', () => {
             should(kuzzle.pluginsManager.packages.bootstrap)
               .be.calledOnce();
 
+            should(kuzzle.validation.init)
+              .be.calledOnce();
+
             should(kuzzle.pluginsManager.init)
               .be.calledOnce();
 
@@ -144,6 +147,7 @@ describe('/lib/api/kuzzle.js', () => {
               kuzzle.internalEngine.init,
               kuzzle.internalEngine.bootstrap.all,
               kuzzle.pluginsManager.packages.bootstrap,
+              kuzzle.validation.init,
               kuzzle.pluginsManager.init,
               kuzzle.pluginsManager.run,
               kuzzle.services.init,
@@ -154,10 +158,10 @@ describe('/lib/api/kuzzle.js', () => {
               kuzzle.notifier.init,
               kuzzle.statistics.init,
               kuzzle.hooks.init,
-              kuzzle.entryPoints.init,
               kuzzle.repositories.init,
               kuzzle.pluginsManager.trigger,
               kuzzle.cliController.init,
+              kuzzle.entryPoints.init,
               kuzzle.pluginsManager.trigger
             );
 
