@@ -1,7 +1,6 @@
 var
   should = require('should'),
   sinon = require('sinon'),
-  sandbox = sinon.sandbox.create(),
   Kuzzle = require.main.require('lib/api/kuzzle'),
   Promise = require('bluebird'),
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
@@ -10,14 +9,17 @@ var
   PluginImplementationError = require.main.require('kuzzle-common-objects').Errors.pluginImplementationError;
 
 describe('Test: routerController', () => {
-  var kuzzle;
+  var
+    kuzzle,
+    sandbox;
 
   before(() => {
     kuzzle = new Kuzzle();
+    sandbox = sinon.sandbox.create();
   });
 
   beforeEach(() => {
-    sandbox.stub(kuzzle.internalEngine, 'get').resolves({});
+    sandbox.stub(kuzzle.internalEngine, 'get').returns(Promise.resolve({}));
     return kuzzle.services.init({whitelist: []})
       .then(() => {
         kuzzle.funnel.init();
@@ -98,13 +100,13 @@ describe('Test: routerController', () => {
         user = {
           _id: 'user',
           profileIds: ['profile'],
-          isActionAllowed: sinon.stub().resolves(true),
+          isActionAllowed: sinon.stub().returns(Promise.resolve(true)),
           getProfile: () => {
             return Promise.resolve({
               _id: 'profile',
               policies: [{roleId: 'role'}],
-              getRoles: sinon.stub().resolves([role]),
-              isActionAllowed: sinon.stub().resolves(true)
+              getRoles: sinon.stub().returns(Promise.resolve([role])),
+              isActionAllowed: sinon.stub().returns(Promise.resolve(true))
             });
           }
         };
@@ -121,11 +123,15 @@ describe('Test: routerController', () => {
         });
     });
 
-    it('should return a fulfilled promise with the right arguments', (done) => {
-      sandbox.stub(kuzzle.repositories.user, 'load').resolves({_id: 'user', isActionAllowed: sandbox.stub().resolves(true)});
+    it('should resolve the callback with the right arguments', (done) => {
+      sandbox.stub(kuzzle.repositories.user, 'load').returns(Promise.resolve({
+        _id: 'user',
+        isActionAllowed: sandbox.stub().returns(Promise.resolve(true))
+      }));
+
       kuzzle.repositories.token.verifyToken.restore();
-      sandbox.stub(kuzzle.repositories.token, 'verifyToken').resolves({user: 'user'});
-      sandbox.stub(kuzzle.funnel.controllers.read, 'listIndexes').resolves();
+      sandbox.stub(kuzzle.repositories.token, 'verifyToken').returns(Promise.resolve({user: 'user'}));
+      sandbox.stub(kuzzle.funnel.controllers.read, 'listIndexes').returns(Promise.resolve());
 
       kuzzle.router.execute(requestObject, { connection: { type: 'foo', id: 'bar' }, token: {user: 'user'} }, done);
     });

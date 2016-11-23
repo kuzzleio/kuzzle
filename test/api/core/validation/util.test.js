@@ -347,7 +347,7 @@ describe('Test: validation utilities', () => {
 
     it('should return the default configuration if nothing is returned from internal engine', () => {
       kuzzle.config.validation = genericMock;
-      kuzzle.internalEngine.search = sandbox.stub().resolves({hits: []});
+      kuzzle.internalEngine.search = sandbox.stub().returns(Promise.resolve({hits: []}));
 
       return getValidationConfiguration(kuzzle)
         .then(result => {
@@ -359,7 +359,7 @@ describe('Test: validation utilities', () => {
 
     it('should return an empty object if nothing is returned from internal engine and there is no configuration', () => {
       delete kuzzle.config.validation;
-      kuzzle.internalEngine.search = sandbox.stub().resolves({hits: []});
+      kuzzle.internalEngine.search = sandbox.stub().returns(Promise.resolve({hits: []}));
 
       return getValidationConfiguration(kuzzle)
         .then(result => {
@@ -412,7 +412,7 @@ describe('Test: validation utilities', () => {
           }
         };
 
-      kuzzle.internalEngine.search = sandbox.stub().resolves(internalEngineResponse);
+      kuzzle.internalEngine.search = sandbox.stub().returns(Promise.resolve(internalEngineResponse));
 
       return getValidationConfiguration(kuzzle)
         .then(result => {

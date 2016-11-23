@@ -3,6 +3,7 @@
  */
 var
   should = require('should'),
+  Promise = require('bluebird'),
   rewire = require('rewire'),
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
@@ -20,7 +21,7 @@ describe('Test: entryPoints/proxy', () => {
   });
 
   beforeEach(() => {
-    sandbox.stub(kuzzle.internalEngine, 'get').resolves({});
+    sandbox.stub(kuzzle.internalEngine, 'get').returns(Promise.resolve({}));
     return kuzzle.services.init({whitelist: []});
   });
 

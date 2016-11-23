@@ -1,5 +1,6 @@
 var
   should = require('should'),
+  Promise = require('bluebird'),
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
   Kuzzle = require.main.require('lib/api/kuzzle'),
@@ -17,12 +18,14 @@ describe('Test: core/indexCache', () => {
   });
 
   beforeEach(() => {
-    sandbox.stub(kuzzle.internalEngine, 'get').resolves({});
+    sandbox.stub(kuzzle.internalEngine, 'get').returns(Promise.resolve({}));
     return kuzzle.services.init({whitelist: []})
       .then(() => {
-        listIndexesStub = sandbox.stub(kuzzle.internalEngine, 'listIndexes').resolves(['foo']);
-        listCollectionsStub = sandbox.stub(kuzzle.internalEngine, 'listCollections').resolves(['bar', 'baz', 'qux']);
+        listIndexesStub = sandbox.stub(kuzzle.internalEngine, 'listIndexes').returns(Promise.resolve(['foo']));
+        listCollectionsStub = sandbox.stub(kuzzle.internalEngine, 'listCollections').returns(Promise.resolve(['bar', 'baz', 'qux']));
         indexCache = new IndexCache(kuzzle);
+
+        return null;
       });
   });
 

@@ -4,6 +4,7 @@
 var
   _ = require('lodash'),
   should = require('should'),
+  Promise = require('bluebird'),
   rewire = require('rewire'),
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
@@ -50,6 +51,10 @@ describe('Test: statistics core component', () => {
 
   afterEach(() => {
     sandbox.restore();
+
+    if (stats.timer) {
+      clearTimeout(stats.timer);
+    }
   });
 
 
@@ -170,8 +175,8 @@ describe('Test: statistics core component', () => {
     requestObject.data.body.startTime = lastFrame - 1000;
     requestObject.data.body.stopTime = new Date(new Date().getTime() + 100000);
 
-    sandbox.stub(kuzzle.services.list.internalCache, 'searchKeys').resolves(['stats/' + lastFrame, 'stats/'.concat(lastFrame + 100)]);
-    sandbox.stub(kuzzle.services.list.internalCache, 'mget').resolves([JSON.stringify(fakeStats), JSON.stringify(fakeStats)]);
+    sandbox.stub(kuzzle.services.list.internalCache, 'searchKeys').returns(Promise.resolve(['stats/' + lastFrame, 'stats/'.concat(lastFrame + 100)]));
+    sandbox.stub(kuzzle.services.list.internalCache, 'mget').returns(Promise.resolve([JSON.stringify(fakeStats), JSON.stringify(fakeStats)]));
 
     return stats.getStats(requestObject)
       .then(response => {
@@ -199,10 +204,10 @@ describe('Test: statistics core component', () => {
 
   it('should return all statistics because startTime is not defined', () => {
     stats.lastFrame = lastFrame;
-    requestObject.data.body.stopTime = new Date();
+    requestObject.data.body.stopTime = lastFrame + 1000;
 
-    sandbox.stub(kuzzle.services.list.internalCache, 'searchKeys').resolves(['stats/' + lastFrame, 'stats/'.concat(lastFrame + 100)]);
-    sandbox.stub(kuzzle.services.list.internalCache, 'mget').resolves([JSON.stringify(fakeStats), JSON.stringify(fakeStats)]);
+    sandbox.stub(kuzzle.services.list.internalCache, 'searchKeys').returns(Promise.resolve(['stats/' + lastFrame, 'stats/'.concat(lastFrame + 100)]));
+    sandbox.stub(kuzzle.services.list.internalCache, 'mget').returns(Promise.resolve([JSON.stringify(fakeStats), JSON.stringify(fakeStats)]));
 
     return stats.getStats(requestObject)
       .then(response => {
@@ -214,7 +219,7 @@ describe('Test: statistics core component', () => {
 
   it('should get the last frame from the cache when statistics snapshots have been taken', () => {
     stats.lastFrame = lastFrame;
-    sandbox.stub(kuzzle.services.list.internalCache, 'get').resolves(JSON.stringify(fakeStats));
+    sandbox.stub(kuzzle.services.list.internalCache, 'get').returns(Promise.resolve(JSON.stringify(fakeStats)));
 
     stats.getLastStats(requestObject)
       .then(response => {
@@ -243,8 +248,8 @@ describe('Test: statistics core component', () => {
   it('should return all saved statistics', () => {
     stats.lastFrame = lastFrame;
 
-    sandbox.stub(kuzzle.services.list.internalCache, 'searchKeys').resolves(['stats/' + lastFrame, 'stats/'.concat(lastFrame + 100)]);
-    sandbox.stub(kuzzle.services.list.internalCache, 'mget').resolves([JSON.stringify(fakeStats), JSON.stringify(fakeStats)]);
+    sandbox.stub(kuzzle.services.list.internalCache, 'searchKeys').returns(Promise.resolve(['stats/' + lastFrame, 'stats/'.concat(lastFrame + 100)]));
+    sandbox.stub(kuzzle.services.list.internalCache, 'mget').returns(Promise.resolve([JSON.stringify(fakeStats), JSON.stringify(fakeStats)]));
 
     return stats.getAllStats(requestObject)
       .then(response => {
@@ -273,7 +278,7 @@ describe('Test: statistics core component', () => {
   it('should write statistics frames in cache', () => {
     var
       writeStats = Statistics.__get__('writeStats'),
-      spy = sandbox.stub(kuzzle.services.list.internalCache, 'volatileSet').resolves();
+      spy = sandbox.stub(kuzzle.services.list.internalCache, 'volatileSet').returns(Promise.resolve());
 
     stats.currentStats = _.extend({}, fakeStats);
 
@@ -288,7 +293,7 @@ describe('Test: statistics core component', () => {
   it('should reject the promise if the cache returns an error', () => {
     stats.lastFrame = Date.now();
 
-    sandbox.stub(kuzzle.services.list.internalCache, 'get').rejects(new Error());
+    sandbox.stub(kuzzle.services.list.internalCache, 'get').returns(Promise.reject(new Error()));
 
     return should(stats.getLastStats(requestObject)).be.rejected();
   });

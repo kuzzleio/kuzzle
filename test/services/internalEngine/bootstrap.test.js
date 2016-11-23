@@ -28,7 +28,7 @@ describe('services/internalEngine/bootstrap.js', () => {
 
   describe('#all', () => {
     it('should call the proper submethods in proper order', () => {
-      sinon.stub(bootstrap, 'createCollections').resolves();
+      sinon.stub(bootstrap, 'createCollections').returns(Promise.resolve());
 
       return bootstrap.all()
         .then(() => {
@@ -66,7 +66,7 @@ describe('services/internalEngine/bootstrap.js', () => {
       var
         error = new Error('error message');
 
-      bootstrap.engine.createInternalIndex.rejects(error);
+      bootstrap.engine.createInternalIndex.returns(Promise.reject(error));
 
       bootstrap.all()
         .catch(err => {
@@ -92,7 +92,7 @@ describe('services/internalEngine/bootstrap.js', () => {
         'createRolesCollection',
         'createProfilesCollection',
         'createUsersCollection'
-      ].forEach(m => sinon.stub(bootstrap, m).resolves());
+      ].forEach(m => sinon.stub(bootstrap, m).returns(Promise.resolve()));
 
       return bootstrap.createCollections()
         .then(() => {
@@ -315,7 +315,7 @@ describe('services/internalEngine/bootstrap.js', () => {
 
   describe('#adminExists', () => {
     it('should return true if an admin exists', () => {
-      bootstrap.engine.search.resolves({total: 1});
+      bootstrap.engine.search.returns(Promise.resolve({total: 1}));
 
       return bootstrap.adminExists()
         .then(result => {
@@ -341,7 +341,7 @@ describe('services/internalEngine/bootstrap.js', () => {
     });
 
     it('should return false if no admin exists', () => {
-      bootstrap.engine.search.resolves({hits: {total: 0}});
+      bootstrap.engine.search.returns(Promise.resolve({hits: {total: 0}}));
 
       return bootstrap.adminExists()
         .then(result => {

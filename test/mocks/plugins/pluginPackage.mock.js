@@ -2,20 +2,20 @@ var
   sinon = require('sinon');
 
 function PluginPackageMock () {
-  this.dbConfiguration = sinon.stub().resolves();
-  this.delete = sinon.stub().resolves();
-  this.importConfigurationFromFile = sinon.stub().resolves();
-  this.install = sinon.stub().resolves();
+  this.dbConfiguration = sinon.stub().returns(Promise.resolve());
+  this.delete = sinon.stub().returns(Promise.resolve());
+  this.importConfigurationFromFile = sinon.stub().returns(Promise.resolve());
+  this.install = sinon.stub().returns(Promise.resolve());
   this.isInstalled = sinon.spy();
   this.localConfiguration = sinon.spy();
   this.localVersion = sinon.spy();
-  this.needsInstall = sinon.stub().resolves();
-  this.needsToBeDeleted = sinon.stub().resolves();
-  this.setActivate = sinon.stub().resolves();
-  this.setConfigurationProperty = sinon.stub().resolves();
+  this.needsInstall = sinon.stub().returns(Promise.resolve());
+  this.needsToBeDeleted = sinon.stub().returns(Promise.resolve());
+  this.setActivate = sinon.stub().returns(Promise.resolve());
+  this.setConfigurationProperty = sinon.stub().returns(Promise.resolve());
   this.setDefinition = sinon.stub().returns(this);
-  this.unsetConfigurationProperty = sinon.stub().resolves();
-  this.updateDbConfiguration = sinon.stub().resolves();
+  this.unsetConfigurationProperty = sinon.stub().returns(Promise.resolve());
+  this.updateDbConfiguration = sinon.stub().returns(Promise.resolve());
 }
 
 module.exports = PluginPackageMock;

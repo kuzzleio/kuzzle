@@ -43,7 +43,7 @@ describe('Test: lib/services/', () => {
 
     beforeEach(() => {
       r = Services.__set__({
-        registerService: sinon.stub().resolves()
+        registerService: sinon.stub().returns(Promise.resolve())
       });
       registerService = Services.__get__('registerService');
     });
@@ -103,7 +103,7 @@ describe('Test: lib/services/', () => {
 
     it('should return a rejected promise if something wrong occurred while fetching the configuration from the db', () => {
       var error = new Error('test');
-      kuzzle.internalEngine.get.rejects(error);
+      kuzzle.internalEngine.get.returns(Promise.reject(error));
 
       return should(services.init()).be.rejectedWith(error);
     });

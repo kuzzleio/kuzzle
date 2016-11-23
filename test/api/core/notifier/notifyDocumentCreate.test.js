@@ -7,9 +7,9 @@
  */
 var
   should = require('should'),
+  Promise = require('bluebird'),
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
-  Promise = require('bluebird'),
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
   Kuzzle = require.main.require('lib/api/kuzzle');
 
@@ -44,7 +44,7 @@ describe('Test: notifier.notifyDocumentCreate', () => {
   });
 
   beforeEach(() => {
-    sandbox.stub(kuzzle.internalEngine, 'get').resolves({});
+    sandbox.stub(kuzzle.internalEngine, 'get').returns(Promise.resolve({}));
     return kuzzle.services.init({whitelist: []})
       .then(() => {
         kuzzle.services.list.internalCache = mockupCacheService;
