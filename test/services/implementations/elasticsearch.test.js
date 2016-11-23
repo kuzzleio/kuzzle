@@ -452,7 +452,7 @@ describe('Test: ElasticSearch service', () => {
     });
   });
 
-  describe.only('#get', () => {
+  describe('#get', () => {
     it('should allow getting a single document', () => {
       var spy = sandbox.stub(elasticsearch.client, 'get').resolves({_source: {_kuzzle_info: {active: true}}});
 
