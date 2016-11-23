@@ -146,7 +146,7 @@ describe('Test: hotelClerk.removeSubscription', () => {
   });
 
   it('should trigger a proxy:leaveChannel hook', function () {
-    sandbox.stub(kuzzle.dsl, 'remove').resolves();
+    sandbox.stub(kuzzle.dsl, 'remove').returns(Promise.resolve());
 
     return kuzzle.hotelClerk.removeSubscription(unsubscribeRequest, context)
       .then(() => {
