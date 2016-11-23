@@ -2,9 +2,7 @@ var
   _ = require('lodash'),
   config = require('./config'),
   rp = require('request-promise'),
-  rewire = require('rewire'),
-  RouterController = rewire('../../lib/api/controllers/routerController.js'),
-  routes;
+  routes = require('../../lib/config/httpRoutes');
 
 var ApiREST = function () {
   this.world = null;
@@ -13,33 +11,8 @@ var ApiREST = function () {
 };
 
 ApiREST.prototype.init = function (world) {
-  if (routes === undefined) {
-    initRoutes.call(this);
-  }
-
   this.world = world;
 };
-
-/**
- * @this ApiREST
- */
-function initRoutes() {
-  var
-    context = {},
-    Router = function () {},
-    routerController = new RouterController({
-      pluginsManager: {
-        routes: []
-      },
-      config: require('../../default.config')
-    });
-
-  Router.prototype.use = Router.prototype.get = Router.prototype.post = Router.prototype.delete = Router.prototype.put = function () {};
-
-  routerController.initHttpRouter.call(context);
-
-  this.routes = routes = RouterController.__get__('routes');
-}
 
 ApiREST.prototype.getRequest = function (index, collection, controller, action, args) {
   var
@@ -72,7 +45,7 @@ ApiREST.prototype.getRequest = function (index, collection, controller, action, 
           return collection;
         }
 
-        if (match === ':id') {
+        if (match === ':_id') {
           if (args._id) {
             return args._id;
           }
@@ -86,7 +59,7 @@ ApiREST.prototype.getRequest = function (index, collection, controller, action, 
         }
 
         return '';
-      });
+      }).substring(1);
 
       // add extra aguments in the query string
       if (verb === 'GET') {
@@ -146,6 +119,7 @@ ApiREST.prototype.callApi = function (options) {
     options.headers = _.extend(options.headers, {authorization: 'Bearer ' + this.world.currentUser.token});
   }
   options.json = true;
+  options.forever = true;
 
   return rp(options);
 };
@@ -159,12 +133,12 @@ ApiREST.prototype.get = function (id, index) {
   return this.callApi(options);
 };
 
-ApiREST.prototype.search = function (filters, index, collection) {
+ApiREST.prototype.search = function (query, index, collection) {
   var options = {
     url: this.apiPath(((typeof index !== 'string') ? this.world.fakeIndex : index) + '/' +
                         ((typeof collection !== 'string') ? this.world.fakeCollection : collection) + '/_search'),
     method: 'POST',
-    body: filters
+    body: query
   };
 
   return this.callApi(options);
@@ -179,12 +153,12 @@ ApiREST.prototype.scroll = function (scrollId) {
   return this.callApi(options);
 };
 
-ApiREST.prototype.count = function (filters, index, collection) {
+ApiREST.prototype.count = function (query, index, collection) {
   var options = {
     url: this.apiPath(((typeof index !== 'string') ? this.world.fakeIndex : index) + '/' +
                         ((typeof collection !== 'string') ? this.world.fakeCollection : collection) + '/_count'),
     method: 'POST',
-    body: filters
+    body: query
   };
 
   return this.callApi(options);
@@ -260,11 +234,11 @@ ApiREST.prototype.deleteById = function (id, index) {
   return this.callApi(options);
 };
 
-ApiREST.prototype.deleteByQuery = function (filters, index, collection) {
+ApiREST.prototype.deleteByQuery = function (query, index, collection) {
   var options = {
     url: this.apiPath(((typeof index !== 'string') ? this.world.fakeIndex : index) + '/' + (collection || this.world.fakeCollection) + '/_query'),
     method: 'DELETE',
-    body: filters
+    body: query
   };
 
   return this.callApi(options);
@@ -542,6 +516,16 @@ ApiREST.prototype.deleteProfile = function (id) {
   return this.callApi(options);
 };
 
+ApiREST.prototype.searchValidations = function (body) {
+  var options = {
+    url: this.apiPath('validations/_search'),
+    method: 'POST',
+    body
+  };
+
+  return this.callApi(options);
+};
+
 ApiREST.prototype.getUser = function (id) {
   var options = {
     url: this.apiPath('users/' + id),
@@ -580,7 +564,7 @@ ApiREST.prototype.searchUsers = function (body) {
   return this.callApi({
     url: this.apiPath('users/_search'),
     method: 'POST',
-    body: { filter: body }
+    body: { query: body }
   });
 };
 

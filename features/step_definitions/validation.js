@@ -148,11 +148,15 @@ module.exports = function () {
     this.api.deleteSpecifications(idx, coll)
       .then(body => {
         this.statusCode = body.status;
-        return callback();
+        callback();
+
+        return null;
       })
       .catch(error => {
         this.statusCode = error.statusCode;
-        callback(error);
+        callback();
+
+        return null;
       });
   });
 

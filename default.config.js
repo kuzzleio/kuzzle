@@ -115,9 +115,6 @@ module.exports = {
   },
 
   server: {
-    http: {
-      maxRequestSize: '1MB'
-    },
     maxRequestHistorySize: 50,
     maxConcurrentRequests: 50,
     maxRetainedRequests: 50000,
@@ -161,13 +158,14 @@ module.exports = {
       backend: 'elasticsearch',
       host: 'localhost',
       port: 9200,
-      apiVersion: '2.3'
+      apiVersion: '5.0'
     },
 
     garbageCollector: {
       cleanInterval: 86400000,
       maxDelete: 1000
     }
+
   },
 
   stats: {
@@ -195,5 +193,4 @@ module.exports = {
       ]
     }
   }
-
 };

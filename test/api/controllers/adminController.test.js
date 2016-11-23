@@ -412,6 +412,33 @@ describe('Test: admin controller', () => {
     });
   });
 
+  describe('#refreshInternalIndex', () => {
+    it('should trigger the proper methods and resolve to a valid response', () => {
+      return adminController.refreshInternalIndex(requestObject)
+        .then(response => {
+          var
+            trigger = kuzzle.pluginsManager.trigger;
+
+          should(trigger).be.calledTwice();
+          should(trigger.firstCall).be.calledWith('data:beforeRefreshInternalIndex', requestObject);
+          should(trigger.secondCall).be.calledWith('data:afterRefreshInternalIndex');
+
+          should(kuzzle.internalEngine.refresh).be.calledOnce();
+
+          should(response).be.an.instanceOf(ResponseObject);
+          should(response).match({
+            status: 200,
+            error: null,
+            data: {
+              body: {
+                acknowledged: true
+              }
+            }
+          });
+        });
+    });
+  });
+
   describe('#getAutoRefresh', () => {
     it('should trigger the proper methods and resolve to a valid response', () => {
       return adminController.getAutoRefresh(requestObject)
@@ -487,7 +514,7 @@ describe('Test: admin controller', () => {
   });
 
   describe('#adminExists', () => {
-    it('should call search with right filter', () => {
+    it('should call search with right query', () => {
       return adminController.adminExists()
         .then(() => {
           should(kuzzle.internalEngine.bootstrap.adminExists).be.calledOnce();
@@ -681,6 +708,44 @@ describe('Test: admin controller', () => {
               data: {
                 body: {
                   foo: 'bar'
+                }
+              }
+            });
+            return Promise.resolve();
+          }
+          catch (error) {
+            return Promise.reject(error);
+          }
+        });
+    });
+  });
+
+  describe('#searchSpecifications', () => {
+    it('should call internalEngine with the right data', () => {
+      kuzzle.internalEngine.search = sandbox.stub().resolves({hits: [{_id: 'bar'}]});
+
+      requestObject.data.body = {
+        from: 0,
+        size: 1,
+        query: {
+          match_all: {}
+        }
+      };
+
+      return adminController.searchSpecifications(requestObject)
+        .then(response => {
+          try {
+            should(kuzzle.pluginsManager.trigger).be.calledTwice();
+            should(kuzzle.pluginsManager.trigger.firstCall).be.calledWith('data:beforeSearchSpecifications', requestObject);
+            should(kuzzle.pluginsManager.trigger.secondCall).be.calledWith('data:afterSearchSpecifications');
+            should(kuzzle.internalEngine.search).be.calledOnce();
+            should(kuzzle.internalEngine.search).be.calledWithMatch('validations', requestObject.data.body.query, requestObject.data.body.from, requestObject.data.body.size);
+            should(response).match({
+              status: 200,
+              error: null,
+              data: {
+                body: {
+                  hits: [{_id: 'bar'}]
                 }
               }
             });

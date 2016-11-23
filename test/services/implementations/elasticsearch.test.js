@@ -27,7 +27,7 @@ describe('Test: ElasticSearch service', () => {
     },
     filter,
     filterAfterActiveAdded,
-    raw_kuzzle_info;
+    rawKuzzleInfo;
 
 
   before(()=> {
@@ -40,8 +40,8 @@ describe('Test: ElasticSearch service', () => {
 
     filter = {
       query: {
-        filter: {
-          and: [
+        bool: {
+          query: [
             {
               term: {
                 city: 'NYC'
@@ -63,24 +63,26 @@ describe('Test: ElasticSearch service', () => {
       query: {
         bool: {
           must: filter.query,
-          filter: [
-            {
-              bool: {
-                should: [
-                  {
-                    term: {
-                      '_kuzzle_info.active': true
-                    }
-                  },
-                  {
-                    missing: {
-                      'field': '_kuzzle_info'
+          filter: {
+            bool: {
+              should: [
+                {
+                  term: {
+                    '_kuzzle_info.active': true
+                  }
+                },
+                {
+                  bool: {
+                    must_not: {
+                      exists: {
+                        'field': '_kuzzle_info'
+                      }
                     }
                   }
-                ]
-              }
+                }
+              ]
             }
-          ]
+          }
         }
       },
       sort: {},
@@ -88,27 +90,29 @@ describe('Test: ElasticSearch service', () => {
       aggs: {}
     };
 
-    raw_kuzzle_info = {
+    rawKuzzleInfo = {
       query: {
         bool: {
-          filter: [
-            {
-              bool: {
-                should: [
-                  {
-                    term: {
-                      '_kuzzle_info.active': true
-                    }
-                  },
-                  {
-                    missing: {
-                      'field': '_kuzzle_info'
+          filter: {
+            bool: {
+              should: [
+                {
+                  term: {
+                    '_kuzzle_info.active': true
+                  }
+                },
+                {
+                  bool: {
+                    must_not: {
+                      exists: {
+                        'field': '_kuzzle_info'
+                      }
                     }
                   }
-                ]
-              }
+                }
+              ]
             }
-          ]
+          }
         }
       }
     };
@@ -141,7 +145,7 @@ describe('Test: ElasticSearch service', () => {
         preparedData;
 
       requestObject.data._id = 'foobar';
-      preparedData = cleanData.call(elasticsearch, requestObject);
+      preparedData = cleanData.call(elasticsearch, requestObject, kuzzle);
 
       should(preparedData.type).be.exactly(requestObject.collection);
       should(preparedData.id).be.exactly(requestObject.data._id);
@@ -257,7 +261,7 @@ describe('Test: ElasticSearch service', () => {
   describe('#create', () => {
     it('should allow creating documents if the document does not already exists', () => {
       var
-        spy = sandbox.stub(elasticsearch.client, 'create').resolves({}),
+        spy = sandbox.stub(elasticsearch.client, 'index').resolves({}),
         refreshIndexIfNeeded = ES.__get__('refreshIndexIfNeeded'),
         refreshIndexSpy = sandbox.spy(refreshIndexIfNeeded);
 
@@ -329,7 +333,7 @@ describe('Test: ElasticSearch service', () => {
     it('should reject the create promise if elasticsearch throws an error', () => {
       var error = new Error('Mocked create error');
       sandbox.stub(elasticsearch.client, 'get').rejects(new Error('Mocked get error'));
-      sandbox.stub(elasticsearch.client, 'create').rejects(error);
+      sandbox.stub(elasticsearch.client, 'index').rejects(error);
 
       return should(elasticsearch.create(requestObject)).be.rejectedWith(error);
     });
@@ -526,7 +530,7 @@ describe('Test: ElasticSearch service', () => {
 
       return should(elasticsearch.count(requestObject)
         .then(() => {
-          should(spy.firstCall.args[0].body).be.deepEqual(raw_kuzzle_info);
+          should(spy.firstCall.args[0].body).be.deepEqual(rawKuzzleInfo);
         })
       ).be.fulfilled();
     });
@@ -537,10 +541,10 @@ describe('Test: ElasticSearch service', () => {
       requestObject.data.body = {};
       requestObject.data.query = {foo: 'bar'};
 
-      raw_kuzzle_info.query.bool.must = requestObject.data.query;
+      rawKuzzleInfo.query.bool.must = requestObject.data.query;
       return should(elasticsearch.count(requestObject)
         .then(() => {
-          should(spy.firstCall.args[0].body).be.deepEqual(raw_kuzzle_info);
+          should(spy.firstCall.args[0].body).be.deepEqual(rawKuzzleInfo);
         })
       ).be.fulfilled();
     });
@@ -620,6 +624,7 @@ describe('Test: ElasticSearch service', () => {
 
       spy = sandbox.stub(elasticsearch.client, 'update').rejects(esError);
 
+
       elasticsearch.update(requestObject)
         .catch((error) => {
           try{
@@ -696,7 +701,7 @@ describe('Test: ElasticSearch service', () => {
       var spy = sandbox.stub(elasticsearch.client, 'search').yields(null, {hits: {hits: [], total: 0}});
 
       delete requestObject.data.body;
-      requestObject.data.filter = {term: {firstName: 'no way any document can be returned with this filter'}};
+      requestObject.data.query = {term: {firstName: 'no way any document can be returned with this filter'}};
 
       return should(elasticsearch.deleteByQuery(requestObject)
         .then(result => {
@@ -724,20 +729,15 @@ describe('Test: ElasticSearch service', () => {
           .then(result => {
             var bulkData = spy.firstCall.args[0];
 
-            // elasticsearch.client.bulk
+            // elasticsearch.client.bullk
             should(bulkData.body).not.be.undefined().and.be.an.Array();
-            should(bulkData.body.length).be.exactly(mockupIds.length * 2);
+            should(bulkData.body.length).be.exactly(mockupIds.length);
 
             bulkData.body.forEach(cmd => {
               should(cmd).be.an.Object();
-              if (cmd.update) {
-                should(cmd.update).not.be.undefined().and.be.an.Object();
-                should(mockupIds.indexOf(cmd.update._id)).not.be.eql(-1);
-                should(cmd.update._type).be.exactly(requestObject.collection);
-              } else {
-                should(cmd.doc).not.be.undefined().and.be.an.Object();
-                should(cmd.doc._kuzzle_info.active).be.false();
-              }
+              should(cmd.delete).not.be.undefined().and.be.an.Object();
+              should(mockupIds.indexOf(cmd.delete._id)).not.be.eql(-1);
+              should(cmd.delete._type).be.exactly(requestObject.collection);
             });
 
             // elasticserach.deleteByQuery
@@ -758,22 +758,22 @@ describe('Test: ElasticSearch service', () => {
     });
 
     it('should return a rejected promise if the delete by query fails because of a bulk failure', () => {
-      sandbox.stub(elasticsearch.client, 'bulk').rejects({});
-
+      var error = new Error('Mocked error');
+      sandbox.stub(elasticsearch.client, 'bulk').rejects(error);
 
       requestObject.data.body = {};
 
       return ES.__with__({
         getAllIdsFromQuery: () => Promise.resolve(['foo', 'bar'])
       })(() => {
-        return should(elasticsearch.deleteByQuery(requestObject)).be.rejected();
+        return should(elasticsearch.deleteByQuery(requestObject)).be.rejectedWith(error);
       });
     });
 
     it('should return a rejected promise if the delete by query fails because the filter is null', () => {
       requestObject.data.body = null;
 
-      return should(elasticsearch.deleteByQuery(requestObject)).be.rejected();
+      return should(elasticsearch.deleteByQuery(requestObject)).be.rejectedWith(BadRequestError);
     });
   });
 
@@ -902,7 +902,7 @@ describe('Test: ElasticSearch service', () => {
           bulkData: []
         },
         consistency: 'foo',
-        refresh: true,
+        refresh: 'wait_for',
         routing: 'foo/bar',
         timeout: 999,
         fields: 'foo, bar, baz'
@@ -913,7 +913,7 @@ describe('Test: ElasticSearch service', () => {
           return elasticsearch.import(requestObject)
             .then(() => {
               should(spy.firstCall.args[0].consistency).be.exactly('foo');
-              should(spy.firstCall.args[0].refresh).be.exactly(true);
+              should(spy.firstCall.args[0].refresh).be.exactly('wait_for');
               should(spy.firstCall.args[0].routing).be.exactly('foo/bar');
               should(spy.firstCall.args[0].timeout).be.exactly(999);
               should(spy.firstCall.args[0].fields).be.exactly('foo, bar, baz');
@@ -1013,6 +1013,22 @@ describe('Test: ElasticSearch service', () => {
       sandbox.stub(elasticsearch.client, 'bulk').rejects(error);
 
       return should(elasticsearch.import(requestObject)).be.rejectedWith(error);
+    });
+
+    it('should return a rejected promise if bulk data try to write into internal index', () => {
+      requestObject.data.body = {
+        bulkData: [
+          {index: {_id: 1, _index: index}},
+          {firstName: 'foo'},
+          {index: {_id: 2, _index: '%kuzzle'}},
+          {firstName: 'bar'},
+          {update: {_id: 1, _index: index}},
+          {doc: {firstName: 'foobar'}},
+          {delete: {_id: 2, _index: index}}
+        ]
+      };
+
+      return should(elasticsearch.import(requestObject)).be.rejectedWith(BadRequestError);
     });
 
     it('should return a rejected promise if no body is provided', () => {
@@ -1478,7 +1494,7 @@ describe('Test: ElasticSearch service', () => {
 
             return Promise.resolve();
           }
-          catch(error) {
+          catch (error) {
             return Promise.reject(error);
           }
         });
@@ -1522,7 +1538,7 @@ describe('Test: ElasticSearch service', () => {
 
             return Promise.resolve();
           }
-          catch(error) {
+          catch (error) {
             return Promise.reject(error);
           }
         });

@@ -96,7 +96,10 @@ ApiWebsocket.prototype.send = function (msg, getAnswer, socketName) {
     return new Promise((resolve, reject) => {
       this.listSockets[socketName].once(msg.requestId, result => {
         if (result.error) {
-          let error = new Error(result.error);
+          let error = new Error(result.error.message);
+          Object.assign(error, result);
+
+          // used to fit with rest api (used with request-promise)
           error.details = result.error._source || {};
           error.statusCode = result.status;
           return reject(error);
