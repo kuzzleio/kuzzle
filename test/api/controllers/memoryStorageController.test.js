@@ -455,7 +455,7 @@ describe('Test: memoryStorage controller', () => {
     });
 
     it('should return a valid ResponseObject', () => {
-      var rq = new RequestObject({
+      var request = new RequestObject({
         controller: 'memoryStore',
         action: 'set',
         body: {
@@ -464,19 +464,20 @@ describe('Test: memoryStorage controller', () => {
         }
       });
 
-      return msController.set(rq)
+      return msController.set(request, {})
         .then(response => {
-          should(response).be.an.instanceOf(ResponseObject);
-          should(response.data.body.name).be.exactly('set');
-          should(response.data.body.args).length(2);
-          should(response.data.body.args[0]).be.exactly('myKey');
-          should(response.data.body.args[1]).be.eql(rq.data.body);
+          should(response.userContext).be.instanceof(Object);
+          should(response.responseObject).be.an.instanceOf(ResponseObject);
+          should(response.responseObject.data.body.name).be.exactly('set');
+          should(response.responseObject.data.body.args).length(2);
+          should(response.responseObject.data.body.args[0]).be.exactly('myKey');
+          should(response.responseObject.data.body.args[1]).be.eql(request.data.body);
         });
     });
 
     it('custom mapping checks - zrange', () => {
       var
-        rq = new RequestObject({
+        request = new RequestObject({
           controller: 'memoryStore',
           action: 'zrange',
           body: {
@@ -487,10 +488,12 @@ describe('Test: memoryStorage controller', () => {
           }
         });
 
-      return msController.zrange(rq)
+      return msController.zrange(request, {})
         .then(response => {
-          should(response.data.body.name).be.exactly('zrange');
-          should(response.data.body.args).be.eql([
+          should(response.userContext).be.instanceof(Object);
+          should(response.responseObject).be.an.instanceOf(ResponseObject);
+          should(response.responseObject.data.body.name).be.exactly('zrange');
+          should(response.responseObject.data.body.args).be.eql([
             'myKey',
             'startVal',
             'stopVal',
@@ -501,7 +504,7 @@ describe('Test: memoryStorage controller', () => {
 
     it('custom mapping checks - zrangebylex', () => {
       var
-        rq = new RequestObject({
+        request = new RequestObject({
           controller: 'memoryStore',
           action: 'zrangebylex',
           body: {
@@ -521,28 +524,32 @@ describe('Test: memoryStorage controller', () => {
           'countVal'
         ];
 
-      return msController.zrangebylex(rq)
+      return msController.zrangebylex(request, {})
         .then(response => {
-          should(response.data.body.name).be.exactly('zrangebylex');
-          should(response.data.body.args).be.eql(expected);
+          should(response.userContext).be.instanceof(Object);
+          should(response.responseObject).be.an.instanceOf(ResponseObject);
+          should(response.responseObject.data.body.name).be.exactly('zrangebylex');
+          should(response.responseObject.data.body.args).be.eql(expected);
 
-          rq.action = 'zrevrangebylex';
+          request.action = 'zrevrangebylex';
 
-          return msController.zrevrangebylex(rq);
+          return msController.zrevrangebylex(request, {});
         })
         .then(response => {
           expected[1] = expected[2];
           expected[2] = 'minVal';
 
-          should(response.data.body.name).be.exactly('zrevrangebylex');
-          should(response.data.body.args).be.eql(expected);
+          should(response.userContext).be.instanceof(Object);
+          should(response.responseObject).be.an.instanceOf(ResponseObject);
+          should(response.responseObject.data.body.name).be.exactly('zrevrangebylex');
+          should(response.responseObject.data.body.args).be.eql(expected);
 
         });
     });
 
     it('custom mapping checks - zrangebyscore', () => {
       var
-        rq = new RequestObject({
+        request = new RequestObject({
           controller: 'memoryStore',
           acion: 'zrangebyscore',
           body: {
@@ -564,25 +571,26 @@ describe('Test: memoryStorage controller', () => {
           'countVal'
         ];
 
-      return msController.zrangebyscore(rq)
+      return msController.zrangebyscore(request, {})
         .then(response => {
-          should(response.data.body.name).be.exactly('zrangebyscore');
-          should(response.data.body.args).be.eql(expected);
+          should(response.userContext).be.instanceof(Object);
+          should(response.responseObject).be.an.instanceOf(ResponseObject);
+          should(response.responseObject.data.body.name).be.exactly('zrangebyscore');
+          should(response.responseObject.data.body.args).be.eql(expected);
 
-          rq.action = 'zrevrangebyscore';
+          request.action = 'zrevrangebyscore';
 
-          return msController.zrevrangebyscore(rq);
+          return msController.zrevrangebyscore(request, {});
         })
         .then(response => {
           expected[1] = expected[2];
           expected[2] = 'minVal';
 
-          should(response.data.body.name).be.exactly('zrevrangebyscore');
-          should(response.data.body.args).be.eql(expected);
-
+          should(response.userContext).be.instanceof(Object);
+          should(response.responseObject).be.an.instanceOf(ResponseObject);
+          should(response.responseObject.data.body.name).be.exactly('zrevrangebyscore');
+          should(response.responseObject.data.body.args).be.eql(expected);
         });
     });
-
   });
-
 });

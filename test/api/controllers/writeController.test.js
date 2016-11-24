@@ -6,7 +6,7 @@ var
   KuzzleMock = require('../../mocks/kuzzle.mock'),
   WriteController = require('../../../lib/api/controllers/writeController');
 
-/*
+/**
  * Since we're sending voluntarily false requests, we expect most of these
  * calls to fail.
  */
@@ -58,8 +58,9 @@ describe('Test: write controller', () => {
               kuzzle.pluginsManager.trigger
             );
 
-            should(response).be.an.instanceOf(ResponseObject);
-            should(response).match({
+            should(response.userContext).be.instanceof(Object);
+            should(response.responseObject).be.an.instanceOf(ResponseObject);
+            should(response.responseObject).match({
               status: 200,
               error: null,
               data: {
@@ -78,7 +79,7 @@ describe('Test: write controller', () => {
 
   describe('#publish', () => {
     it('should trigger the proper methods and resolve to a valid response', () => {
-      return controller.publish(requestObject)
+      return controller.publish(requestObject, {})
         .then(response => {
           try {
             should(requestObject.isValid).be.calledOnce();
@@ -93,8 +94,9 @@ describe('Test: write controller', () => {
 
             should(trigger.secondCall).be.calledWith('data:afterPublish');
 
-            should(response).be.an.instanceOf(ResponseObject);
-            should(response).match({
+            should(response.userContext).be.instanceof(Object);
+            should(response.responseObject).be.an.instanceOf(ResponseObject);
+            should(response.responseObject).match({
               status: 200,
               error: null,
               data: {
@@ -120,13 +122,13 @@ describe('Test: write controller', () => {
 
   describe('#createOrReplace', () => {
     it('should trigger the proper methods and resolve to a valid response', () => {
-      return controller.createOrReplace(requestObject)
+      return controller.createOrReplace(requestObject, {})
         .then(response => {
           try {
             should(requestObject.isValid).be.calledOnce();
 
             should(trigger).be.calledTwice();
-            should(trigger.firstCall).be.calledWith('data:beforeCreateOrReplace', requestObject);
+            should(trigger.firstCall).be.calledWith('data:beforeCreateOrReplace', {requestObject, userContext: {}});
 
             should(kuzzle.validation.validate).be.calledOnce();
 
@@ -150,8 +152,9 @@ describe('Test: write controller', () => {
               trigger
             );
 
-            should(response).be.an.instanceOf(ResponseObject);
-            should(response).match({
+            should(response.userContext).be.instanceof(Object);
+            should(response.responseObject).be.an.instanceOf(ResponseObject);
+            should(response.responseObject).match({
               status: 200,
               error: null,
               data: {
@@ -170,7 +173,7 @@ describe('Test: write controller', () => {
     it('should trigger a "create" notification if the docuemnt did not exist', () => {
       engine.createOrReplace.returns(Promise.resolve(Object.assign({}, foo, {created: true})));
 
-      return controller.createOrReplace(requestObject)
+      return controller.createOrReplace(requestObject, {})
         .then(response => {
           try {
             should(requestObject.isValid).be.calledOnce();
@@ -181,7 +184,8 @@ describe('Test: write controller', () => {
             should(kuzzle.notifier.notifyDocumentCreate).be.calledWith(requestObject);
             should(kuzzle.notifier.notifyDocumentReplace).have.callCount(0);
 
-            should(response).be.an.instanceOf(ResponseObject);
+            should(response.userContext).be.instanceof(Object);
+            should(response.responseObject).be.an.instanceOf(ResponseObject);
 
             return Promise.resolve();
           }
@@ -200,7 +204,7 @@ describe('Test: write controller', () => {
             should(requestObject.isValid).be.calledOnce();
 
             should(trigger).be.calledTwice();
-            should(trigger.firstCall).be.calledWith('data:beforeUpdate', requestObject);
+            should(trigger.firstCall).be.calledWith('data:beforeUpdate', {requestObject, userContext: {token: {userId: '42'}}});
 
             should(kuzzle.validation.validate).be.calledOnce();
 
@@ -220,8 +224,9 @@ describe('Test: write controller', () => {
               trigger
             );
 
-            should(response).be.an.instanceOf(ResponseObject);
-            should(response).match({
+            should(response.userContext).be.instanceof(Object);
+            should(response.responseObject).be.an.instanceOf(ResponseObject);
+            should(response.responseObject).match({
               status: 200,
               error: null,
               data: {
@@ -240,13 +245,13 @@ describe('Test: write controller', () => {
 
   describe('#replace', () => {
     it('should trigger the proper methods and resolve to a valid response', () => {
-      return controller.replace(requestObject)
+      return controller.replace(requestObject, {})
         .then(response => {
           try {
             should(requestObject.isValid).be.calledOnce();
 
             should(trigger).be.calledTwice();
-            should(trigger.firstCall).be.calledWith('data:beforeReplace', requestObject);
+            should(trigger.firstCall).be.calledWith('data:beforeReplace', {requestObject, userContext: {}});
 
             should(kuzzle.validation.validate).be.calledOnce();
 
@@ -266,8 +271,9 @@ describe('Test: write controller', () => {
               trigger
             );
 
-            should(response).be.an.instanceOf(ResponseObject);
-            should(response).match({
+            should(response.userContext).be.instanceof(Object);
+            should(response.responseObject).be.an.instanceOf(ResponseObject);
+            should(response.responseObject).match({
               status: 200,
               error: null,
               data: {
@@ -287,13 +293,13 @@ describe('Test: write controller', () => {
 
   describe('#delete', () => {
     it('should trigger the proper methods and resolve to a valid response', () => {
-      return controller.delete(requestObject)
+      return controller.delete(requestObject, {})
         .then(response => {
           try {
             should(requestObject.isValid).have.callCount(0);
 
             should(trigger).be.calledTwice();
-            should(trigger.firstCall).be.calledWith('data:beforeDelete', requestObject);
+            should(trigger.firstCall).be.calledWith('data:beforeDelete', {requestObject, userContext: {}});
 
             should(engine.delete).be.calledOnce();
             should(engine.delete).be.calledWith(requestObject);
@@ -310,8 +316,9 @@ describe('Test: write controller', () => {
               trigger
             );
 
-            should(response).be.an.instanceOf(ResponseObject);
-            should(response).match({
+            should(response.userContext).be.instanceof(Object);
+            should(response.responseObject).be.an.instanceOf(ResponseObject);
+            should(response.responseObject).match({
               status: 200,
               error: null,
               data: {
@@ -330,11 +337,11 @@ describe('Test: write controller', () => {
 
   describe('#deleteByQuery', () => {
     it('should trigger the proper methods and resolve to a valid response', () => {
-      return controller.deleteByQuery(requestObject)
+      return controller.deleteByQuery(requestObject, {})
         .then(response => {
           try {
             should(trigger).be.calledTwice();
-            should(trigger.firstCall).be.calledWith('data:beforeDeleteByQuery', requestObject);
+            should(trigger.firstCall).be.calledWith('data:beforeDeleteByQuery', {requestObject, userContext: {}});
 
             should(engine.deleteByQuery).be.calledOnce();
             should(engine.deleteByQuery).be.calledWith(requestObject);
@@ -351,8 +358,9 @@ describe('Test: write controller', () => {
               trigger
             );
 
-            should(response).be.an.instanceOf(ResponseObject);
-            should(response).match({
+            should(response.userContext).be.instanceof(Object);
+            should(response.responseObject).be.an.instanceOf(ResponseObject);
+            should(response.responseObject).match({
               status: 200,
               error: null,
               data: {
@@ -374,7 +382,7 @@ describe('Test: write controller', () => {
 
   describe('#createCollection', () => {
     it('should trigger the proper methods and resolve to a valid response', () => {
-      return controller.createCollection(requestObject)
+      return controller.createCollection(requestObject, {})
         .then(response => {
           try {
             should(trigger).be.calledTwice();
@@ -395,8 +403,9 @@ describe('Test: write controller', () => {
               trigger
             );
 
-            should(response).be.an.instanceOf(ResponseObject);
-            should(response).match({
+            should(response.userContext).be.instanceof(Object);
+            should(response.responseObject).be.an.instanceOf(ResponseObject);
+            should(response.responseObject).match({
               status: 200,
               error: null,
               data: {
@@ -424,11 +433,13 @@ describe('Test: write controller', () => {
         validationPromise: sinon.stub().returns(Promise.resolve(expected))
       };
 
-      return controller.validate(requestObject)
+      return controller.validate(requestObject, {})
         .then(response => {
           try {
             should(kuzzle.validation.validationPromise).be.calledOnce();
-            should(response).match({
+            should(response.userContext).be.instanceof(Object);
+            should(response.responseObject).be.an.instanceOf(ResponseObject);
+            should(response.responseObject).match({
               status: 200,
               error: null,
               data: {
@@ -468,7 +479,9 @@ describe('Test: write controller', () => {
         .then(response => {
           try {
             should(kuzzle.validation.validationPromise).be.calledOnce();
-            should(response).match({
+            should(response.userContext).be.instanceof(Object);
+            should(response.responseObject).be.an.instanceOf(ResponseObject);
+            should(response.responseObject).match({
               status: 200,
               error: expected.errorMessages,
               data: {
@@ -484,5 +497,4 @@ describe('Test: write controller', () => {
         });
     });
   });
-
 });

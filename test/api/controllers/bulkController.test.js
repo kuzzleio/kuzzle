@@ -21,22 +21,23 @@ describe('Test the bulk controller', () => {
   });
 
   it('should trigger the proper methods and resolve to a valid response', () => {
-    return controller.import(requestObject)
+    return controller.import(requestObject, {})
       .then(response => {
         var
           engine = kuzzle.services.list.storageEngine,
           trigger = kuzzle.pluginsManager.trigger;
 
         should(trigger).be.calledTwice();
-        should(trigger.firstCall).be.calledWith('data:beforeBulkImport', requestObject);
+        should(trigger.firstCall).be.calledWith('data:beforeBulkImport', {requestObject, userContext: {}});
 
         should(engine.import).be.calledOnce();
         should(engine.import).be.calledWith(requestObject);
 
         should(trigger.secondCall).be.calledWith('data:afterBulkImport');
 
-        should(response).be.an.instanceOf(ResponseObject);
-        should(response).match({
+        should(response.userContext).be.instanceof(Object);
+        should(response.responseObject).be.an.instanceOf(ResponseObject);
+        should(response.responseObject).match({
           status: 200,
           error: null,
           data: {
@@ -51,9 +52,10 @@ describe('Test the bulk controller', () => {
 
     return controller.import(requestObject)
       .then(response => {
-        should(response).be.instanceOf(ResponseObject);
-        should(response.status).be.eql(206);
-        should(response.error).be.instanceOf(PartialError);
+        should(response.userContext).be.instanceof(Object);
+        should(response.responseObject).be.an.instanceOf(ResponseObject);
+        should(response.responseObject.status).be.eql(206);
+        should(response.responseObject.error).be.instanceOf(PartialError);
       });
   });
 

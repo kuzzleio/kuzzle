@@ -46,7 +46,8 @@ function KuzzleMock () {
         createFirstAdmin: sinon.spy()
       }
     },
-    init: sinon.spy()
+    init: sinon.spy(),
+    handleErrorDump: sinon.spy()
   };
 
   this.hooks = {

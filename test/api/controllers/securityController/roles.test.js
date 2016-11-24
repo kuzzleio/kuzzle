@@ -89,35 +89,32 @@ describe('Test: security controller - roles', () => {
     it('should resolve to a responseObject on a createOrReplaceRole call', () => {
       return kuzzle.funnel.controllers.security.createOrReplaceRole(new RequestObject({
         body: {_id: 'test', controllers: {}}
-      }))
-        .then(result => {
-          should(result).be.an.instanceOf(ResponseObject);
-          should(result.data.body._id).be.exactly('test');
+      }), {})
+        .then(response => {
+          should(response.userContext).be.instanceof(Object);
+          should(response.responseObject).be.an.instanceOf(ResponseObject);
+          should(response.responseObject.data.body._id).be.exactly('test');
         });
     });
 
     it('should reject with a response object in case of error', () => {
       return should(kuzzle.funnel.controllers.security.createOrReplaceRole(new RequestObject({
         body: {_id: 'alreadyExists', indexes: {}}
-      }))).be.rejectedWith(new Error('Mocked error'));
+      }), {})).be.rejectedWith(new Error('Mocked error'));
     });
   });
 
   describe('#createRole', () => {
     it('should reject when a role already exists with the id', () => {
-      var promise = kuzzle.funnel.controllers.security.createRole(new RequestObject({
+      return should(kuzzle.funnel.controllers.security.createRole(new RequestObject({
         body: {_id: 'alreadyExists', controllers: {}}
-      }));
-
-      return should(promise).be.rejectedWith(new Error('Mocked error'));
+      }), {})).be.rejectedWith(new Error('Mocked error'));
     });
 
     it('should resolve to a responseObject on a createRole call', () => {
-      var promise = kuzzle.funnel.controllers.security.createRole(new RequestObject({
+      return should(kuzzle.funnel.controllers.security.createRole(new RequestObject({
         body: {_id: 'test', controllers: {}}
-      }));
-
-      return should(promise).be.fulfilled();
+      }), {})).be.fulfilled();
     });
   });
 
@@ -125,41 +122,37 @@ describe('Test: security controller - roles', () => {
     it('should resolve to a responseObject on a getRole call', () => {
       return kuzzle.funnel.controllers.security.getRole(new RequestObject({
         body: {_id: 'test'}
-      }))
-        .then(result => {
-          should(result).be.an.instanceOf(ResponseObject);
-          should(result.data.body._id).be.exactly('test');
+      }), {})
+        .then(response => {
+          should(response.userContext).be.instanceof(Object);
+          should(response.responseObject).be.an.instanceOf(ResponseObject);
+          should(response.responseObject.data.body._id).be.exactly('test');
         });
     });
 
     it('should reject NotFoundError on a getRole call with a bad id', () => {
-      return should(kuzzle.funnel.controllers.security.getRole(new RequestObject({body: {_id: 'badId'}}))).be.rejected();
+      return should(kuzzle.funnel.controllers.security.getRole(new RequestObject({body: {_id: 'badId'}}), {})).be.rejected();
     });
   });
 
   describe('#mGetRoles', () => {
     it('should reject an error if no ids is provided', () => {
-      return should(kuzzle.funnel.controllers.security.mGetRoles(new RequestObject({body: {}}))).be.rejected();
+      return should(kuzzle.funnel.controllers.security.mGetRoles(new RequestObject({body: {}}), {})).be.rejected();
     });
 
     it('should reject with a response object if loading roles fails', () => {
-      var requestObject = new RequestObject({
-        body: {ids: ['test']}
-      });
-
       error = true;
 
-      return should(kuzzle.funnel.controllers.security.mGetRoles(requestObject)).be.rejected();
+      return should(kuzzle.funnel.controllers.security.mGetRoles(new RequestObject({body: {ids: ['test']}}), {})).be.rejected();
     });
 
     it('should resolve to a responseObject', done => {
-      kuzzle.funnel.controllers.security.mGetRoles(new RequestObject({
-        body: {ids: ['test']}
-      }))
-        .then(result => {
-          should(result).be.an.instanceOf(ResponseObject);
-          should(result.data.body.hits).be.an.Array();
-          should(result.data.body.hits).not.be.empty();
+      kuzzle.funnel.controllers.security.mGetRoles(new RequestObject({body: {ids: ['test']}}), {})
+        .then(response => {
+          should(response.userContext).be.instanceof(Object);
+          should(response.responseObject).be.an.instanceOf(ResponseObject);
+          should(response.responseObject.data.body.hits).be.an.Array();
+          should(response.responseObject.data.body.hits).not.be.empty();
 
           done();
         })
@@ -171,13 +164,12 @@ describe('Test: security controller - roles', () => {
 
   describe('#searchRoles', () => {
     it('should return response with an array of roles on searchRole call', () => {
-      return kuzzle.funnel.controllers.security.searchRoles(new RequestObject({
-        body: {_id: 'test'}
-      }))
-        .then(result => {
-          var jsonResponse = result.toJson();
+      return kuzzle.funnel.controllers.security.searchRoles(new RequestObject({body: {_id: 'test'}}))
+        .then(response => {
+          var jsonResponse = response.responseObject.toJson();
 
-          should(result).be.an.instanceOf(ResponseObject);
+          should(response.userContext).be.instanceof(Object);
+          should(response.responseObject).be.an.instanceOf(ResponseObject);
           should(jsonResponse.result.hits).be.an.Array();
           should(jsonResponse.result.hits[0]._id).be.exactly('test');
         });
@@ -186,9 +178,7 @@ describe('Test: security controller - roles', () => {
     it('should reject with a response object in case of error', () => {
       error = true;
 
-      return should(kuzzle.funnel.controllers.security.searchRoles(new RequestObject({
-        body: {_id: 'test'}
-      }))).be.rejected();
+      return should(kuzzle.funnel.controllers.security.searchRoles(new RequestObject({body: {_id: 'test'}}), {})).be.rejected();
     });
   });
 
@@ -204,13 +194,11 @@ describe('Test: security controller - roles', () => {
         return Promise.resolve(role);
       };
 
-      kuzzle.funnel.controllers.security.updateRole(new RequestObject({
-        _id: 'test',
-        body: { foo: 'bar' }
-      }), {})
+      kuzzle.funnel.controllers.security.updateRole(new RequestObject({_id: 'test',body: { foo: 'bar' }}), {})
         .then(response => {
-          should(response).be.an.instanceOf(ResponseObject);
-          should(response.data.body._id).be.exactly('test');
+          should(response.userContext).be.instanceof(Object);
+          should(response.responseObject).be.an.instanceOf(ResponseObject);
+          should(response.responseObject.data.body._id).be.exactly('test');
 
           done();
         })
@@ -218,18 +206,12 @@ describe('Test: security controller - roles', () => {
     });
 
     it('should reject the promise if no id is given', () => {
-      return should(kuzzle.funnel.controllers.security.updateRole(new RequestObject({
-        body: {}
-      }), {}))
+      return should(kuzzle.funnel.controllers.security.updateRole(new RequestObject({body: {}}), {}))
         .be.rejected();
     });
 
     it('should reject the promise if the role cannot be found in the database', () => {
-      return should(kuzzle.funnel.controllers.security.updateRole(new RequestObject({
-        _id: 'badId',
-        body: {}
-      }), {}))
-        .be.rejected();
+      return should(kuzzle.funnel.controllers.security.updateRole(new RequestObject({_id: 'badId',body: {}}), {})).be.rejected();
     });
   });
 
@@ -242,10 +224,7 @@ describe('Test: security controller - roles', () => {
       sandbox.stub(kuzzle.repositories.role, 'getRoleFromRequestObject').returns(role);
       spyDeleteRole = sandbox.stub(kuzzle.repositories.role, 'deleteRole');
 
-      kuzzle.funnel.controllers.security.deleteRole(new RequestObject({
-        _id: 'test',
-        body: {}
-      }))
+      kuzzle.funnel.controllers.security.deleteRole(new RequestObject({_id: 'test',body: {}}), {})
         .then(() => {
           should(spyDeleteRole.calledWith(role)).be.true();
           done();
@@ -253,11 +232,7 @@ describe('Test: security controller - roles', () => {
     });
 
     it('should reject the promise if attempting to delete one of the core roles', () => {
-      return should(kuzzle.funnel.controllers.security.deleteRole(new RequestObject({
-        _id: 'admin',
-        body: {}
-      }))).be.rejected();
+      return should(kuzzle.funnel.controllers.security.deleteRole(new RequestObject({_id: 'admin',body: {}}), {})).be.rejected();
     });
   });
-
 });
