@@ -18,7 +18,7 @@ module.exports = {
       activated: true
     },
     'kuzzle-plugin-auth-passport-local': {
-      version: '2.0.4',
+      version: '3.0.0',
       activated: true
     }
   },
