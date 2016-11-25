@@ -10,8 +10,8 @@ describe('Test main file for hooks managers', () => {
       'foo:baz': ['foo:bar', 'foo:baz']
     },
     hooksConfig = {
-      'data:beforeCreate': ['write:emit'],
-      'data:beforeUpdate': ['write:emit']
+      'data:beforeCreate': ['publish:add'],
+      'data:beforeCreateOrReplace': ['publish:add']
     };
 
   beforeEach(() => {
@@ -47,16 +47,16 @@ describe('Test main file for hooks managers', () => {
     };
     kuzzle.hooks.init();
 
-    should(kuzzle.hooks.list).have.property('write');
-    should(kuzzle.hooks.list.write).be.an.Object();
+    should(kuzzle.hooks.list).have.property('publish');
+    should(kuzzle.hooks.list.publish).be.an.Object();
 
     should(kuzzle.listeners('data:beforeCreate')).be.an.Array();
     should(kuzzle.listeners('data:beforeCreate').length).be.exactly(1);
-    should(kuzzle.listeners('data:beforeUpdate')).be.an.Array();
-    should(kuzzle.listeners('data:beforeUpdate').length).be.exactly(1);
+    should(kuzzle.listeners('data:beforeCreateOrReplace')).be.an.Array();
+    should(kuzzle.listeners('data:beforeCreateOrReplace').length).be.exactly(1);
 
     should(kuzzle.listeners('data:beforeCreate')[0]).be.a.Function();
-    should(kuzzle.listeners('data:beforeUpdate')[0]).be.a.Function();
+    should(kuzzle.listeners('data:beforeCreateOrReplace')[0]).be.a.Function();
 
   });
 });

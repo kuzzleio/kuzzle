@@ -126,7 +126,7 @@ describe('Test: data handler', () => {
   });
 
   it('should import both fixtures and mappings if required', () => {
-    var req = new RequestObject({
+    var request = new RequestObject({
       index: 'index',
       collection: 'collection',
       body: {
@@ -139,7 +139,7 @@ describe('Test: data handler', () => {
 
     kuzzle.services.list.storageEngine.import.returns(Promise.resolve({data: {body: 'response'}}));
 
-    return data(req)
+    return data(request)
       .then(() => {
         try {
           should(kuzzle.services.list.storageEngine.import).be.calledOnce();
