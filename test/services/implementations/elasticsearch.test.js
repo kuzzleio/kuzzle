@@ -5,16 +5,16 @@ const
   Promise = require('bluebird'),
   sinon = require('sinon'),
   rewire = require('rewire'),
-  Kuzzle = require.main.require('lib/api/kuzzle'),
   RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
   BadRequestError = require.main.require('kuzzle-common-objects').Errors.badRequestError,
   NotFoundError = require.main.require('kuzzle-common-objects').Errors.notFoundError,
   ESClientMock = require('../../mocks/services/elasticsearchClient.mock'),
+  KuzzleMock = require('../../mocks/kuzzle.mock'),
   ES = rewire('../../../lib/services/elasticsearch');
 
 describe('Test: ElasticSearch service', () => {
   let
-    kuzzle = {},
+    kuzzle,
     sandbox = sinon.sandbox.create(),
     index = '%test',
     collection = 'unit-tests-elasticsearch',
@@ -32,13 +32,9 @@ describe('Test: ElasticSearch service', () => {
     filterAfterActiveAdded,
     rawKuzzleInfo;
 
-
-  before(()=> {
-    kuzzle = new Kuzzle();
-  });
-
   beforeEach(() => {
     ES.__set__('buildClient', () => new ESClientMock());
+    kuzzle = new KuzzleMock();
     elasticsearch = new ES(kuzzle, {service: engineType}, kuzzle.config.services.db);
     elasticsearch.autoRefresh = {};
 
@@ -637,24 +633,21 @@ describe('Test: ElasticSearch service', () => {
         });
     });
 
-    it('should return a rejected promise with an Error if an update fails for unknown reason', done => {
+    it('should return a rejected promise with an Error if an update fails for unknown reason', () => {
       var esError = new Error('banana error');
-      var spyTrigger = sandbox.stub(kuzzle.pluginsManager, 'trigger');
 
       elasticsearch.client.update.returns(Promise.reject(esError));
 
-      elasticsearch.update(requestObject)
+      return elasticsearch.update(requestObject)
         .catch((error) => {
-          try{
-            should(spyTrigger.firstCall).be.calledWithExactly(
+          should(kuzzle.pluginsManager.trigger)
+            .be.calledWith(
               'log:warn',
               '[warning] unhandled elasticsearch error:\nbanana error'
             );
-            should(error).be.instanceOf(Error);
-            should(elasticsearch.client.update.firstCall.args[0].id).be.undefined();
-            done();
-          }
-          catch(e) { done(e); }
+
+          should(error).be.instanceOf(Error);
+          should(elasticsearch.client.update.firstCall.args[0].id).be.undefined();
         });
     });
   });
@@ -697,23 +690,23 @@ describe('Test: ElasticSearch service', () => {
   });
 
   describe('#deleteByQuery', () => {
-    it('should return an empty result array when no document has been deleted using a filter', () => {
+    it('should return an empty result array when no document has been deactivated using a filter', () => {
       elasticsearch.client.search.yields(null, {hits: {hits: [], total: 0}});
 
       delete requestObject.data.body;
       requestObject.data.query = {term: {firstName: 'no way any document can be returned with this filter'}};
 
-      return should(elasticsearch.deleteByQuery(requestObject)
+      return elasticsearch.deleteByQuery(requestObject)
         .then(result => {
           should(elasticsearch.client.search.firstCall.args[0].query).be.exactly(requestObject.data.query);
 
           // Ugly line in order to spot a random bug on this unit test
           should(result.ids).not.be.undefined().and.be.an.Array();
           should(result.ids.length).be.exactly(0);
-        })).be.fulfilled();
+        });
     });
 
-    it('should allow to delete documents using a provided filter', () => {
+    it('should allow to deactivate documents using a provided filter', () => {
       var
         refreshIndexIfNeeded = ES.__get__('refreshIndexIfNeeded'),
         refreshIndexSpy = sandbox.spy(refreshIndexIfNeeded),
@@ -724,21 +717,31 @@ describe('Test: ElasticSearch service', () => {
 
       return ES.__with__({
         getAllIdsFromQuery: getAllIdsStub,
-        refreshIndexIfNeeded: refreshIndexSpy
+        refreshIndexIfNeeded: refreshIndexSpy,
+        Date: {
+          now: () => 42
+        }
       })(() => {
-        return should(elasticsearch.deleteByQuery(requestObject)
+        return elasticsearch.deleteByQuery(requestObject)
           .then(result => {
             var bulkData = elasticsearch.client.bulk.firstCall.args[0];
 
             // elasticsearch.client.bullk
             should(bulkData.body).not.be.undefined().and.be.an.Array();
-            should(bulkData.body.length).be.exactly(mockupIds.length);
+            // (mockupIds.length * 2) because there is update requests with body
+            should(bulkData.body.length).be.exactly(mockupIds.length * 2);
 
             bulkData.body.forEach(cmd => {
               should(cmd).be.an.Object();
-              should(cmd.delete).not.be.undefined().and.be.an.Object();
-              should(mockupIds.indexOf(cmd.delete._id)).not.be.eql(-1);
-              should(cmd.delete._type).be.exactly(requestObject.collection);
+              if (cmd.update) {
+                should(cmd.update).not.be.undefined().and.be.an.Object();
+                should(mockupIds.indexOf(cmd.update._id)).not.be.eql(-1);
+                should(cmd.update._type).be.exactly(requestObject.collection);
+              }
+              if (cmd.doc) {
+                should(cmd.doc).not.be.undefined().and.be.an.Object();
+                should(cmd.doc).be.eql({_kuzzle_info: { active: false, deletedAt: 42 }});
+              }
             });
 
             // elasticserach.deleteByQuery
@@ -747,8 +750,7 @@ describe('Test: ElasticSearch service', () => {
 
             // refreshIndexIfNeeded
             should(refreshIndexSpy.calledOnce).be.true();
-          })
-        ).be.fulfilled();
+          });
       });
     });
 
@@ -780,14 +782,14 @@ describe('Test: ElasticSearch service', () => {
 
   describe('#deleteByQueryFromTrash', () => {
     it('should return an empty result array when no document has been deleted using a filter', () => {
-      var spy = sandbox.stub(elasticsearch.client, 'search').yields(null, {hits: {hits: [], total: 0}});
+      elasticsearch.client.search.yields(null, {hits: {hits: [], total: 0}});
 
       delete requestObject.data.body;
       requestObject.data.filter = {term: {firstName: 'no way any document can be returned with this filter'}};
 
       return should(elasticsearch.deleteByQueryFromTrash(requestObject)
         .then(result => {
-          should(spy.firstCall.args[0].query).be.exactly(requestObject.data.query);
+          should(elasticsearch.client.search.firstCall.args[0].query).be.exactly(requestObject.data.query);
 
           // Ugly line in order to spot a random bug on this unit test
           should(result.ids).not.be.undefined().and.be.an.Array();
@@ -800,10 +802,10 @@ describe('Test: ElasticSearch service', () => {
         refreshIndexIfNeeded = ES.__get__('refreshIndexIfNeeded'),
         refreshIndexSpy = sandbox.spy(refreshIndexIfNeeded),
         mockupIds = ['foo', 'bar', 'baz'],
-        spy = sandbox.stub(elasticsearch.client, 'bulk').resolves(mockupIds),
-        getAllIdsStub = sinon.stub().resolves(mockupIds);
+        getAllIdsStub = sinon.stub().returns(Promise.resolve(mockupIds));
 
-      sandbox.stub(elasticsearch.client, 'search').yields(null, {hits: {hits: [{_id: 'foo'}, {_id: 'bar'}, {_id: 'baz'}], total: mockupIds.length}});
+      elasticsearch.client.bulk.returns(Promise.resolve(mockupIds));
+      elasticsearch.client.search.yields(null, {hits: {hits: [{_id: 'foo'}, {_id: 'bar'}, {_id: 'baz'}], total: mockupIds.length}});
 
       return ES.__with__({
         getAllIdsFromQuery: getAllIdsStub,
@@ -811,7 +813,7 @@ describe('Test: ElasticSearch service', () => {
       })(() => {
         return should(elasticsearch.deleteByQueryFromTrash(requestObject)
           .then(result => {
-            var bulkData = spy.firstCall.args[0];
+            var bulkData = elasticsearch.client.bulk.firstCall.args[0];
 
             // elasticsearch.client.bulk
             should(bulkData.body).not.be.undefined().and.be.an.Array();
@@ -836,14 +838,14 @@ describe('Test: ElasticSearch service', () => {
     });
 
     it('should return a rejected promise if the delete by query fails because of a bad filter', () => {
-      sandbox.stub(elasticsearch.client, 'search').yields(new Error(), {});
+      elasticsearch.client.search.yields(new Error(), {});
 
       return should(elasticsearch.deleteByQuery(requestObject)).be.rejected();
     });
 
     it('should return a rejected promise if the delete by query fails because of a bulk failure', () => {
       var error = new Error('Mocked error');
-      sandbox.stub(elasticsearch.client, 'bulk').rejects(error);
+      elasticsearch.client.bulk.returns(Promise.reject(error));
 
       requestObject.data.body = {};
 
@@ -1023,7 +1025,7 @@ describe('Test: ElasticSearch service', () => {
         bulkData: [
           {index: {_id: 1, _index: index}},
           {firstName: 'foo'},
-          {index: {_id: 2, _index: '%kuzzle'}},
+          {index: {_id: 2, _index: kuzzle.internalEngine.index}},
           {firstName: 'bar'},
           {update: {_id: 1, _index: index}},
           {doc: {firstName: 'foobar'}},
@@ -1397,7 +1399,6 @@ describe('Test: ElasticSearch service', () => {
   describe('#setAutoRefresh', () => {
     it('should toggle the autoRefresh status', () => {
       var
-        spy = sandbox.stub(kuzzle.internalEngine, 'createOrReplace').returns(Promise.resolve({})),
         req = new RequestObject({
           index: requestObject.index,
           body: { autoRefresh: true }
@@ -1406,7 +1407,7 @@ describe('Test: ElasticSearch service', () => {
       return should(elasticsearch.setAutoRefresh(req)
         .then(response => {
           should(response).be.true();
-          should(spy.calledOnce).be.true();
+          should(kuzzle.internalEngine.createOrReplace.calledOnce).be.true();
 
           req.data.body.autoRefresh = false;
           return elasticsearch.setAutoRefresh(req);
@@ -1450,8 +1451,7 @@ describe('Test: ElasticSearch service', () => {
     it('should not block execution in case the index could not be refreshed', () => {
       var
         error = new Error('Mocked error'),
-        refreshIndexIfNeeded = ES.__get__('refreshIndexIfNeeded'),
-        pluginSpy = sandbox.spy(kuzzle.pluginsManager, 'trigger');
+        refreshIndexIfNeeded = ES.__get__('refreshIndexIfNeeded');
 
       elasticsearch.client.indices.refresh.returns(Promise.reject(error));
 
@@ -1459,7 +1459,7 @@ describe('Test: ElasticSearch service', () => {
 
       return should(refreshIndexIfNeeded.call(elasticsearch, { index: requestObject.index }, { foo: 'bar' })
         .then(response => {
-          should(pluginSpy.calledWith('log:error')).be.true();
+          should(kuzzle.pluginsManager.trigger.calledWith('log:error')).be.true();
           should(elasticsearch.client.indices.refresh.called).be.true();
           should(response).be.eql({ foo: 'bar' });
           return null;

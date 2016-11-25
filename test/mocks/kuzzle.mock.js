@@ -169,6 +169,10 @@ function KuzzleMock () {
         listen: sinon.spy(),
         send: sinon.spy()
       },
+      gc: {
+        init: sinon.spy(),
+        run: sinon.stub().returns(Promise.resolve({ids: []}))
+      },
       internalCache: {
         flushdb: sinon.stub().returns(Promise.resolve()),
         getInfos: sinon.stub().returns(Promise.resolve())
@@ -192,6 +196,7 @@ function KuzzleMock () {
         createOrReplace: sinon.stub().returns(Promise.resolve(foo)),
         delete: sinon.stub().returns(Promise.resolve(foo)),
         deleteByQuery: sinon.stub().returns(Promise.resolve(Object.assign({}, foo, {ids: 'responseIds'}))),
+        deleteByQueryFromTrash: sinon.stub().returns(Promise.resolve(Object.assign({}, foo, {ids: 'responseIds'}))),
         deleteIndex: sinon.stub().returns(Promise.resolve(foo)),
         deleteIndexes: sinon.stub().returns(Promise.resolve({deleted: ['a', 'e', 'i']})),
         getAutoRefresh: sinon.stub().returns(Promise.resolve(false)),
