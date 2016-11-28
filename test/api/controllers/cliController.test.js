@@ -52,9 +52,9 @@ describe('lib/api/controllers/cliController', () => {
       cli.init();
 
       should(cli.actions.adminExists)
-        .be.exactly(kuzzle.funnel.controllers.admin.adminExists);
+        .be.a.Function();
       should(cli.actions.createFirstAdmin)
-        .be.exactly(kuzzle.funnel.controllers.admin.createFirstAdmin);
+        .be.a.Function();
       should(cli.actions.cleanDb)
         .be.exactly(cleanDbStub);
       should(cli.actions.clearCache)

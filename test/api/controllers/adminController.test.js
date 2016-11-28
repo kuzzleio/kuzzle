@@ -597,7 +597,7 @@ describe('Test: admin controller', () => {
         }
       });
 
-      adminController.adminExists = sandbox.stub().returns(Promise.resolve({data: {body: {exists: false}}}));
+      adminController.adminExists = sandbox.stub().returns(Promise.resolve({responseObject: {data: {body: {exists: false}}}}));
 
       return adminController.createFirstAdmin(request, {})
         .then(() => {
@@ -622,7 +622,7 @@ describe('Test: admin controller', () => {
         }
       });
 
-      adminController.adminExists = sandbox.stub().returns(Promise.resolve({data: {body: {exists: false}}}));
+      adminController.adminExists = sandbox.stub().returns(Promise.resolve({responseObject: {data: {body: {exists: false}}}}));
       sandbox.stub(adminController, 'refreshIndex').returns(Promise.resolve({}));
 
       return adminController.createFirstAdmin(request, {})
