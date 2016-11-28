@@ -466,7 +466,7 @@ describe('Test: ElasticSearch service', () => {
     });
 
     it('should not throw error when "_source" is not defined', () => {
-      sandbox.stub(elasticsearch.client, 'get').resolves({foo: 'bar'});
+      elasticsearch.client.get.returns(Promise.resolve({foo: 'bar'}));
 
       delete requestObject.data.body;
       requestObject.data._id = createdDocumentId;

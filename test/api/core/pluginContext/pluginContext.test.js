@@ -202,7 +202,7 @@ describe('Plugin Context', () => {
             body: {some: 'request'}
           }),
           userContext = {some: 'context'},
-          error = {some: 'error'},
+          error = new Error('error'),
           callback = sinon.spy(
             (err, res) => {
               should(processRequestStub.firstCall.args[0]).be.eql(kuzzle);
