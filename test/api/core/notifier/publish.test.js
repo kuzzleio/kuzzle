@@ -35,7 +35,7 @@ describe('Test: notifier.publish', () => {
   });
 
   beforeEach(() => {
-    sandbox.stub(kuzzle.internalEngine, 'get').resolves({});
+    sandbox.stub(kuzzle.internalEngine, 'get').returns(Promise.resolve({}));
     return kuzzle.services.init({whitelist: []})
       .then(() => {
         request = {
@@ -48,8 +48,8 @@ describe('Test: notifier.publish', () => {
           metadata: {}
         };
         kuzzle.services.list.internalCache = internalCache;
-        spyInternalCacheAdd = sandbox.stub(kuzzle.services.list.internalCache, 'add').resolves({});
-        spyInternalCacheExpire = sandbox.stub(kuzzle.services.list.internalCache, 'expire').resolves({});
+        spyInternalCacheAdd = sandbox.stub(kuzzle.services.list.internalCache, 'add').returns(Promise.resolve({}));
+        spyInternalCacheExpire = sandbox.stub(kuzzle.services.list.internalCache, 'expire').returns(Promise.resolve({}));
         sandbox.stub(kuzzle.notifier, 'notify', (r, rq, n) => {notification = n;});
 
         notification = null;

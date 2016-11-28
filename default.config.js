@@ -18,7 +18,7 @@ module.exports = {
       activated: true
     },
     'kuzzle-plugin-auth-passport-local': {
-      version: '2.0.4',
+      gitUrl: 'https://github.com/kuzzleio/kuzzle-plugin-auth-passport-local',
       activated: true
     }
   },
@@ -144,8 +144,7 @@ module.exports = {
     },
     internalBroker: {
       aliases: ['broker'],
-      host: 'localhost',
-      port: 7911,
+      socket: './run/broker.sock',
       retryInterval: 1000
     },
     proxyBroker: {

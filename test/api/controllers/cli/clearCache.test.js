@@ -2,7 +2,6 @@ var
   should = require('should'),
   sinon = require('sinon');
 
-
 describe('Test: clear cache', () => {
   var
     clearCache,

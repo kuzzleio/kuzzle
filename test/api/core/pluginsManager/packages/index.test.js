@@ -37,7 +37,7 @@ describe('plugins/packages/index.js', () => {
         plugin4: { prop: 'test' }
       };
 
-      kuzzle.internalEngine.search.resolves({
+      kuzzle.internalEngine.search.returns(Promise.resolve({
         hits: [
           {
             _id: 'plugin2',
@@ -58,7 +58,7 @@ describe('plugins/packages/index.js', () => {
             }
           }
         ]
-      });
+      }));
 
       Package.prototype.localConfiguration.onSecondCall().returns({config: {foo: 'bar'}});
 
@@ -95,18 +95,18 @@ describe('plugins/packages/index.js', () => {
 
   describe('#bootstrap', () => {
     it('should check installation status for all packages', () => {
-      sinon.stub(packages, 'definitions').resolves({
+      sinon.stub(packages, 'definitions').returns(Promise.resolve({
         plugin1: {},
         plugin2: {},
         plugin3: {},
         plugin4: {}
-      });
+      }));
 
-      PluginPackageMock.prototype.needsToBeDeleted.resolves(false);
-      PluginPackageMock.prototype.needsToBeDeleted.onFirstCall().resolves(true);
+      PluginPackageMock.prototype.needsToBeDeleted.returns(Promise.resolve(false));
+      PluginPackageMock.prototype.needsToBeDeleted.onFirstCall().returns(Promise.resolve(true));
 
-      PluginPackageMock.prototype.needsInstall.resolves(false);
-      PluginPackageMock.prototype.needsInstall.onSecondCall().resolves(true);
+      PluginPackageMock.prototype.needsInstall.returns(Promise.resolve(false));
+      PluginPackageMock.prototype.needsInstall.onSecondCall().returns(Promise.resolve(true));
 
       return packages.bootstrap()
         .then(() => {
@@ -138,7 +138,7 @@ describe('plugins/packages/index.js', () => {
       var
         error = new Error('error message');
 
-      sinon.stub(packages, 'definitions').rejects(error);
+      sinon.stub(packages, 'definitions').returns(Promise.reject(error));
 
       packages.bootstrap()
         .catch(e => {
@@ -162,11 +162,11 @@ describe('plugins/packages/index.js', () => {
 
   describe('#getPackage', () => {
     it('should extends the given definition with the one in db and return a new valid package object', () => {
-      sinon.stub(packages, 'definitions').resolves({
+      sinon.stub(packages, 'definitions').returns(Promise.resolve({
         plugin: {
           foo: 'bar'
         }
-      });
+      }));
 
       return packages.getPackage('plugin', { prop: 42 })
         .then(result => {

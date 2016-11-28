@@ -2,7 +2,6 @@ var
   KuzzleMock = require('../../../mocks/kuzzle.mock'),
   should = require('should');
 
-
 describe('Test: clean database', () => {
   var
     cleanDb,

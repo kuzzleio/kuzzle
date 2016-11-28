@@ -13,14 +13,14 @@ describe('funnelController.playCachedRequests', () => {
     funnel,
     executeCalled,
     requestObject,
-    context,
+    userContext,
     callback,
     nextTickCalled,
     setTimeoutCalled,
     playCachedRequests;
 
   before(() => {
-    context = {
+    userContext = {
       connection: {id: 'connectionid'},
       token: null
     };
@@ -49,18 +49,18 @@ describe('funnelController.playCachedRequests', () => {
     nextTickCalled = false;
     setTimeoutCalled = false;
 
-    sandbox.stub(kuzzle.internalEngine, 'get').resolves({});
+    sandbox.stub(kuzzle.internalEngine, 'get').returns(Promise.resolve({}));
     return kuzzle.services.init({whitelist: []})
       .then(() => {
         funnel = new FunnelController(kuzzle);
         funnel.init();
         funnel.lastOverloadTime = 0;
         funnel.overloadWarned = true;
-        sandbox.stub(funnel, 'execute', (r, c, cb) => {
+        sandbox.stub(funnel, 'execute', (request, context, cb) => {
           executeCalled = true;
 
-          should(r).be.eql(requestObject);
-          should(c).be.eql(context);
+          should(request).be.eql(requestObject);
+          should(context).be.eql(userContext);
           should(cb).be.eql(callback);
         });
       });
@@ -135,7 +135,7 @@ describe('funnelController.playCachedRequests', () => {
     it('should resubmit a request and itself if there is room for a new request', () => {
       funnel.cachedRequests = 1;
       funnel.concurrentRequests = 0;
-      funnel.requestsCache = [{requestObject, context, callback}];
+      funnel.requestsCache = [{requestObject, userContext, callback}];
       playCachedRequests(kuzzle, funnel);
 
       should(nextTickCalled).be.true();

@@ -62,7 +62,7 @@ describe('plugins/packages/pluginPackage', () => {
 
   describe('#dbConfiguration', () => {
     it('should return the configuration stored in ES', () => {
-      kuzzle.internalEngine.get.resolves({
+      kuzzle.internalEngine.get.returns(Promise.resolve({
         _id: 'plugin',
         _source: {
           version: 'version',
@@ -70,7 +70,7 @@ describe('plugins/packages/pluginPackage', () => {
           url: 'url',
           gitUrl: 'not used'
         }
-      });
+      }));
 
       return pkg.dbConfiguration()
         .then(config => {
@@ -84,13 +84,13 @@ describe('plugins/packages/pluginPackage', () => {
     });
 
     it('should be back compatible with npmVersion and gitUrl notations', () => {
-      kuzzle.internalEngine.get.resolves({
+      kuzzle.internalEngine.get.returns(Promise.resolve({
         _id: 'plugin',
         _source: {
           npmVersion: 'npmVersion',
           gitUrl: 'gitUrl'
         }
-      });
+      }));
 
       return pkg.dbConfiguration()
         .then(config => {
@@ -108,10 +108,10 @@ describe('plugins/packages/pluginPackage', () => {
         foo: 'bar'
       };
 
-      kuzzle.internalEngine.createOrReplace.resolves({
+      kuzzle.internalEngine.createOrReplace.returns(Promise.resolve({
         _id: 'id',
         _source: 'source'
-      });
+      }));
 
       return pkg.updateDbConfiguration(config)
         .then(response => {
@@ -136,10 +136,10 @@ describe('plugins/packages/pluginPackage', () => {
 
   describe('#setActivate', () => {
     it('should toggle the activation status in ES', () => {
-      pkg.dbConfiguration = sandbox.stub().resolves({
+      pkg.dbConfiguration = sandbox.stub().returns(Promise.resolve({
         config: 'config'
-      });
-      pkg.updateDbConfiguration = sandbox.stub().resolves('OK');
+      }));
+      pkg.updateDbConfiguration = sandbox.stub().returns(Promise.resolve('OK'));
 
       return pkg.setActivate('activated')
         .then(response => {
@@ -164,9 +164,9 @@ describe('plugins/packages/pluginPackage', () => {
     });
 
     it('should do nothing if the packaged is marked as deleted', () => {
-      pkg.dbConfiguration = sandbox.stub().resolves({
+      pkg.dbConfiguration = sandbox.stub().returns(Promise.resolve({
         deleted: true
-      });
+      }));
       pkg.updateDbConfiguration = sinon.stub();
 
       return pkg.setActivate('activated')
@@ -243,7 +243,7 @@ describe('plugins/packages/pluginPackage', () => {
 
     it('should return true if no configuration is found in db', () => {
       pkg.isInstalled = sinon.stub().returns(true);
-      pkg.dbConfiguration = sinon.stub().rejects(new Error('Not Found'));
+      pkg.dbConfiguration = sinon.stub().returns(Promise.reject(new Error('Not Found')));
 
       return pkg.needsInstall()
         .then(result => {
@@ -253,7 +253,7 @@ describe('plugins/packages/pluginPackage', () => {
 
     it('should return true if no version is found in the configuration from db', () => {
       pkg.isInstalled = sinon.stub().returns(true);
-      pkg.dbConfiguration = sinon.stub().resolves({});
+      pkg.dbConfiguration = sinon.stub().returns(Promise.resolve({}));
 
       return pkg.needsInstall()
         .then(result => {
@@ -263,14 +263,14 @@ describe('plugins/packages/pluginPackage', () => {
 
     it('should reject the promise if some unexpected error occurred', () => {
       pkg.isInstalled = sinon.stub().returns(true);
-      pkg.dbConfiguration = sinon.stub().rejects(new Error('unexpected'));
+      pkg.dbConfiguration = sinon.stub().returns(Promise.reject(new Error('unexpected')));
 
       return should(pkg.needsInstall()).be.rejectedWith('unexpected');
     });
 
     it('should return fails if the package is marked as deleted', () => {
       pkg.isInstalled = sinon.stub().returns(true);
-      pkg.dbConfiguration = sinon.stub().resolves({deleted: true});
+      pkg.dbConfiguration = sinon.stub().returns(Promise.resolve({deleted: true}));
 
       return pkg.needsInstall()
         .then(result => {
@@ -280,9 +280,9 @@ describe('plugins/packages/pluginPackage', () => {
 
     it('should rely on compareVersion to get the result', () => {
       pkg.isInstalled = sinon.stub().returns(true);
-      pkg.dbConfiguration = sinon.stub().resolves({
+      pkg.dbConfiguration = sinon.stub().returns(Promise.resolve({
         version: 'db version'
-      });
+      }));
       pkg.localVersion = sinon.stub().returns('local version');
 
       return PluginPackage.__with__({
@@ -314,7 +314,7 @@ describe('plugins/packages/pluginPackage', () => {
 
     it('should return false if no db configuration was found', () => {
       pkg.isInstalled = sinon.stub().returns(true);
-      pkg.dbConfiguration = sinon.stub().rejects(new Error('Not Found'));
+      pkg.dbConfiguration = sinon.stub().returns(Promise.reject(new Error('Not Found')));
 
       return pkg.needsToBeDeleted()
         .then(result => {
@@ -324,7 +324,7 @@ describe('plugins/packages/pluginPackage', () => {
 
     it('should reject the promise if some unexpected error occurred', () => {
       pkg.isInstalled = sinon.stub().returns(true);
-      pkg.dbConfiguration = sinon.stub().rejects(new Error('unexpected'));
+      pkg.dbConfiguration = sinon.stub().returns(Promise.reject(new Error('unexpected')));
 
       return should(pkg.needsToBeDeleted())
         .be.rejectedWith('unexpected');
@@ -332,9 +332,9 @@ describe('plugins/packages/pluginPackage', () => {
 
     it('should return the deleted flag from the db', () => {
       pkg.isInstalled = sinon.stub().returns(true);
-      pkg.dbConfiguration = sinon.stub().resolves({
+      pkg.dbConfiguration = sinon.stub().returns(Promise.resolve({
         deleted: 0
-      });
+      }));
 
       return pkg.needsToBeDeleted()
         .then(result => {
@@ -367,7 +367,7 @@ describe('plugins/packages/pluginPackage', () => {
     beforeEach(() => {
       pkg.localVersion = sinon.stub().returns('local version');
       pkg.localConfiguration = sinon.stub().returns('local configuration');
-      pkg.updateDbConfiguration = sinon.stub().resolves();
+      pkg.updateDbConfiguration = sinon.stub().returns(Promise.resolve());
 
       exec = sinon.stub().yields(undefined, 'plugin@1.0.0 node_modules/plugin\n' +
         '├── lodash.create@3.1.1 (lodash._isiterateecall@3.0.9, lodash._basecreate@3.0.3, lodash._baseassign@3.2.0)\n' +
@@ -591,12 +591,12 @@ describe('plugins/packages/pluginPackage', () => {
 
   describe('#setConfigurationProperty', () => {
     it('should update the configuration in ES' , () => {
-      pkg.dbConfiguration = sinon.stub().resolves({
+      pkg.dbConfiguration = sinon.stub().returns(Promise.resolve({
         config: {
           foo: 'bar'
         }
-      });
-      pkg.updateDbConfiguration = sinon.stub().resolves({ _source: 'ok' });
+      }));
+      pkg.updateDbConfiguration = sinon.stub().returns(Promise.resolve({ _source: 'ok' }));
 
       return pkg.setConfigurationProperty({
         bar: 'baz'
@@ -619,7 +619,7 @@ describe('plugins/packages/pluginPackage', () => {
     });
 
     it('should do nothing if the plugin package is marked for deletion', () => {
-      pkg.dbConfiguration = sinon.stub().resolves({ deleted: true });
+      pkg.dbConfiguration = sinon.stub().returns(Promise.resolve({ deleted: true }));
       pkg.updateDbConfiguration = sinon.spy();
 
       return pkg.setConfigurationProperty({
@@ -644,12 +644,12 @@ describe('plugins/packages/pluginPackage', () => {
 
   describe('#unsetConfigurationProperty', () => {
     it('should update the configuration in db', () => {
-      pkg.dbConfiguration = sinon.stub().resolves({
+      pkg.dbConfiguration = sinon.stub().returns(Promise.resolve({
         config: {
           foo: 'bar'
         }
-      });
-      pkg.updateDbConfiguration = sinon.stub().resolves({_source: 'ok'});
+      }));
+      pkg.updateDbConfiguration = sinon.stub().returns(Promise.resolve({_source: 'ok'}));
 
       return pkg.unsetConfigurationProperty('foo')
         .then(() => {
@@ -668,15 +668,15 @@ describe('plugins/packages/pluginPackage', () => {
     });
 
     it('should reject the promise if the given key does not exist', () => {
-      pkg.dbConfiguration = sinon.stub().resolves({
+      pkg.dbConfiguration = sinon.stub().returns(Promise.resolve({
         config: {}
-      });
+      }));
       return should(pkg.unsetConfigurationProperty('foo'))
         .be.rejectedWith(BadRequestError, {message: 'Property foo not found in plugin configuration'});
     });
 
     it('should do nothing if the plugin package is marked for deletion', () => {
-      pkg.dbConfiguration = sinon.stub().resolves({deleted: true});
+      pkg.dbConfiguration = sinon.stub().returns(Promise.resolve({deleted: true}));
       pkg.updateDbConfiguration = sinon.spy();
 
       return pkg.unsetConfigurationProperty('koo')
@@ -726,7 +726,7 @@ describe('plugins/packages/pluginPackage', () => {
     });
 
     it('should update the db configuration using the file content', () => {
-      pkg.updateDbConfiguration = sinon.stub().resolves({_source: 'ok'});
+      pkg.updateDbConfiguration = sinon.stub().returns(Promise.resolve({_source: 'ok'}));
 
       return PluginPackage.__with__({
         fs: {

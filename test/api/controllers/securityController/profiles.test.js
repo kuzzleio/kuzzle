@@ -16,12 +16,12 @@ describe('Test: security controller - profiles', () => {
   });
 
   beforeEach(() => {
-    sandbox.stub(kuzzle.internalEngine, 'get').resolves({});
+    sandbox.stub(kuzzle.internalEngine, 'get').returns(Promise.resolve({}));
     return kuzzle.services.init({whitelist: []})
       .then(() => kuzzle.funnel.init())
       .then(() => {
-        sandbox.stub(kuzzle.repositories.profile, 'buildProfileFromRequestObject').resolves();
-        sandbox.stub(kuzzle.repositories.profile, 'hydrate').resolves();
+        sandbox.stub(kuzzle.repositories.profile, 'buildProfileFromRequestObject').returns(Promise.resolve());
+        sandbox.stub(kuzzle.repositories.profile, 'hydrate').returns(Promise.resolve());
       });
   });
 
@@ -31,135 +31,141 @@ describe('Test: security controller - profiles', () => {
 
   describe('#createOrReplaceProfile', () => {
     it('should resolve to a responseObject on a createOrReplaceProfile call', () => {
-      sandbox.stub(kuzzle.repositories.profile, 'validateAndSaveProfile').resolves({_id: 'test', _source: {}});
+      sandbox.stub(kuzzle.repositories.profile, 'validateAndSaveProfile').returns(Promise.resolve({_id: 'test', _source: {}}));
       return kuzzle.funnel.controllers.security.createOrReplaceProfile(new RequestObject({
         body: {_id: 'test', policies: [{roleId: 'role1'}]}
-      }))
-        .then(result => {
-          should(result).be.an.instanceOf(ResponseObject);
-          should(result.data.body._id).be.exactly('test');
+      }), {})
+        .then(response => {
+          should(response.responseObject).be.an.instanceOf(ResponseObject);
+          should(response.userContext).be.instanceof(Object);
+          should(response.responseObject.data.body._id).be.exactly('test');
         });
     });
 
     it('should reject with a response object in case of error', () => {
       var error = new Error('Mocked error');
-      sandbox.stub(kuzzle.repositories.profile, 'validateAndSaveProfile').rejects(error);
+      sandbox.stub(kuzzle.repositories.profile, 'validateAndSaveProfile').returns(Promise.reject(error));
       return should(kuzzle.funnel.controllers.security.createOrReplaceProfile(new RequestObject({
         body: {_id: 'test', policies: ['role1']}
-      }))).be.rejectedWith(error);
+      }), {})).be.rejectedWith(error);
     });
   });
 
   describe('#createProfile', () => {
     it('should reject when a profile already exists with the id', () => {
       var error = new Error('Mocked error');
-      sandbox.stub(kuzzle.repositories.profile, 'validateAndSaveProfile').rejects(error);
+      sandbox.stub(kuzzle.repositories.profile, 'validateAndSaveProfile').returns(Promise.reject(error));
       return should(kuzzle.funnel.controllers.security.createProfile(new RequestObject({
         body: {_id: 'test', policies: ['role1']}
-      }))).be.rejectedWith(error);
+      }), {})).be.rejectedWith(error);
     });
 
     it('should resolve to a responseObject on a createProfile call', () => {
-      sandbox.stub(kuzzle.repositories.profile, 'validateAndSaveProfile').resolves({_id: 'test', _source: {}});
+      sandbox.stub(kuzzle.repositories.profile, 'validateAndSaveProfile').returns(Promise.resolve({_id: 'test', _source: {}}));
       return should(kuzzle.funnel.controllers.security.createProfile(new RequestObject({
         body: {_id: 'test', policies: [{roleId:'role1'}]}
-      }))).be.fulfilled();
+      }), {})).be.fulfilled();
     });
   });
 
   describe('#getProfile', () => {
     it('should resolve to a responseObject on a getProfile call', () => {
-      sandbox.stub(kuzzle.repositories.profile, 'loadProfile').resolves({_id: 'test', _source: {}});
+      sandbox.stub(kuzzle.repositories.profile, 'loadProfile').returns(Promise.resolve({_id: 'test', _source: {}}));
       return kuzzle.funnel.controllers.security.getProfile(new RequestObject({
         body: {_id: 'test'}
-      }))
-        .then(result => {
-          should(result).be.an.instanceOf(ResponseObject);
-          should(result.data.body._id).be.exactly('test');
+      }, {}))
+        .then(response => {
+          should(response.userContext).be.instanceof(Object);
+          should(response.responseObject).be.an.instanceOf(ResponseObject);
+          should(response.responseObject.data.body._id).be.exactly('test');
         });
     });
 
     it('should reject to an error on a getProfile call without id', () => {
-      return should(kuzzle.funnel.controllers.security.getProfile(new RequestObject({body: {_id: ''}}))).be.rejected();
+      return should(kuzzle.funnel.controllers.security.getProfile(new RequestObject({body: {_id: ''}}), {})).be.rejected();
     });
 
     it('should reject NotFoundError on a getProfile call with a bad id', () => {
-      sandbox.stub(kuzzle.repositories.profile, 'loadProfile').resolves(null);
+      sandbox.stub(kuzzle.repositories.profile, 'loadProfile').returns(Promise.resolve(null));
       return should(kuzzle.funnel.controllers.security.getProfile(new RequestObject({
         body: {_id: 'test'}
-      }))).be.rejectedWith(NotFoundError);
+      }), {})).be.rejectedWith(NotFoundError);
     });
   });
 
   describe('#mGetProfiles', () => {
     it('should reject to an error on a mGetProfiles call without ids', () => {
-      return should(kuzzle.funnel.controllers.security.mGetProfiles(new RequestObject({body: {}}))).be.rejected();
+      return should(kuzzle.funnel.controllers.security.mGetProfiles(new RequestObject({body: {}}), {})).be.rejected();
     });
 
     it('should reject with a response object in case of error', () => {
       var error = new Error('Mocked error');
-      sandbox.stub(kuzzle.repositories.profile, 'loadMultiFromDatabase').rejects(error);
+      sandbox.stub(kuzzle.repositories.profile, 'loadMultiFromDatabase').returns(Promise.reject(error));
       return should(kuzzle.funnel.controllers.security.mGetProfiles(new RequestObject({
         body: {ids: ['test'] }
-      }))).be.rejectedWith(error);
+      })), {}).be.rejectedWith(error);
     });
 
     it('should resolve to a responseObject on a mGetProfiles call', () => {
-      sandbox.stub(kuzzle.repositories.profile, 'loadMultiFromDatabase').resolves([{_id: 'test', policies: [{roleId: 'role'}]}]);
+      sandbox.stub(kuzzle.repositories.profile, 'loadMultiFromDatabase').returns(Promise.resolve([{_id: 'test', policies: [{roleId: 'role'}]}]));
       return kuzzle.funnel.controllers.security.mGetProfiles(new RequestObject({
         body: {ids: ['test']}
-      }))
-        .then(result => {
-          should(result).be.an.instanceOf(ResponseObject);
-          should(result.data.body.hits).be.an.Array();
-          should(result.data.body.hits).not.be.empty();
-          should(result.data.body.hits[0]).be.an.Object();
-          should(result.data.body.hits[0]._source.policies).be.an.Array();
-          should(result.data.body.hits[0]._source.policies[0]).be.an.Object();
-          should(result.data.body.hits[0]._source.policies[0].roleId).be.an.String();
+      }), {})
+        .then(response => {
+          should(response.userContext).be.instanceof(Object);
+          should(response.responseObject).be.an.instanceOf(ResponseObject);
+          should(response.responseObject.data.body.hits).be.an.Array();
+          should(response.responseObject.data.body.hits).not.be.empty();
+          should(response.responseObject.data.body.hits[0]).be.an.Object();
+          should(response.responseObject.data.body.hits[0]._source.policies).be.an.Array();
+          should(response.responseObject.data.body.hits[0]._source.policies[0]).be.an.Object();
+          should(response.responseObject.data.body.hits[0]._source.policies[0].roleId).be.an.String();
         });
     });
 
     it('should resolve to a responseObject with roles on a mGetProfiles call with hydrate', () => {
-      sandbox.stub(kuzzle.repositories.profile, 'loadMultiFromDatabase').resolves([{_id: 'test', _source: {}}]);
+      sandbox.stub(kuzzle.repositories.profile, 'loadMultiFromDatabase').returns(Promise.resolve([{_id: 'test', _source: {}}]));
       return kuzzle.funnel.controllers.security.mGetProfiles(new RequestObject({
         body: {ids: ['test'], hydrate: true}
-      }))
-        .then(result => {
-          should(result).be.an.instanceOf(ResponseObject);
-          should(result.data.body.hits).be.an.Array();
-          should(result.data.body.hits).not.be.empty();
-          should(result.data.body.hits[0]).be.an.Object();
+      }), {})
+        .then(response => {
+          should(response.userContext).be.instanceof(Object);
+          should(response.responseObject).be.an.instanceOf(ResponseObject);
+          should(response.responseObject.data.body.hits).be.an.Array();
+          should(response.responseObject.data.body.hits).not.be.empty();
+          should(response.responseObject.data.body.hits[0]).be.an.Object();
         });
     });
   });
 
   describe('#searchProfiles', () => {
     it('should return a ResponseObject containing an array of profiles on searchProfile call', () => {
-      sandbox.stub(kuzzle.repositories.profile, 'searchProfiles').resolves({hits: [{_id: 'test'}]});
+      sandbox.stub(kuzzle.repositories.profile, 'searchProfiles').returns(Promise.resolve({hits: [{_id: 'test'}]}));
       return kuzzle.funnel.controllers.security.searchProfiles(new RequestObject({
         body: {}
-      }))
-        .then(result => {
-          var jsonResponse = result.toJson();
+      }), {})
+        .then(response => {
+          var jsonResponse = response.responseObject.toJson();
 
-          should(result).be.an.instanceOf(ResponseObject);
+          should(response.userContext).be.instanceof(Object);
+          should(response.responseObject).be.an.instanceOf(ResponseObject);
           should(jsonResponse.result.hits).be.an.Array();
           should(jsonResponse.result.hits[0]._id).be.exactly('test');
         });
     });
 
     it('should return a ResponseObject containing an array of profiles on searchProfile call with hydrate', () => {
-      sandbox.stub(kuzzle.repositories.profile, 'searchProfiles').resolves({total: 1, hits: [{_id: 'test', policies: [ {roleId: 'default'} ]}]});
+      sandbox.stub(kuzzle.repositories.profile, 'searchProfiles').returns(Promise.resolve({total: 1, hits: [{_id: 'test', policies: [ {roleId: 'default'} ]}]}));
       return kuzzle.funnel.controllers.security.searchProfiles(new RequestObject({
         body: {
           policies: ['role1']
         }
-      }))
-        .then(result => {
-          var jsonResponse = result.toJson();
+      }), {})
+        .then(response => {
+          var jsonResponse = response.responseObject.toJson();
 
-          should(result).be.an.instanceOf(ResponseObject);
+          should(response.userContext).be.instanceof(Object);
+          should(response.responseObject).be.an.instanceOf(ResponseObject);
           should(jsonResponse.result.hits).be.an.Array();
           should(jsonResponse.result.hits[0]._id).be.exactly('test');
           should(jsonResponse.result.hits[0]._source.policies).be.an.Array();
@@ -169,25 +175,26 @@ describe('Test: security controller - profiles', () => {
 
     it('should reject with a response object in case of error', () => {
       var error = new Error('Mocked error');
-      sandbox.stub(kuzzle.repositories.profile, 'searchProfiles').rejects(error);
+      sandbox.stub(kuzzle.repositories.profile, 'searchProfiles').returns(Promise.reject(error));
       return should(kuzzle.funnel.controllers.security.searchProfiles(new RequestObject({
         body: {policies: ['foo']}
-      }))).be.rejectedWith(error);
+      }), {})).be.rejectedWith(error);
     });
   });
 
   describe('#updateProfile', () => {
     it('should return a valid ResponseObject', () => {
-      sandbox.stub(kuzzle.repositories.profile, 'loadProfile').resolves({});
-      sandbox.stub(kuzzle.repositories.profile, 'validateAndSaveProfile').resolves({_id: 'test'});
+      sandbox.stub(kuzzle.repositories.profile, 'loadProfile').returns(Promise.resolve({}));
+      sandbox.stub(kuzzle.repositories.profile, 'validateAndSaveProfile').returns(Promise.resolve({_id: 'test'}));
 
       return kuzzle.funnel.controllers.security.updateProfile(new RequestObject({
         _id: 'test',
         body: { foo: 'bar' }
       }), {})
         .then(response => {
-          should(response).be.an.instanceOf(ResponseObject);
-          should(response.data.body._id).be.exactly('test');
+          should(response.userContext).be.instanceof(Object);
+          should(response.responseObject).be.an.instanceOf(ResponseObject);
+          should(response.responseObject.data.body._id).be.exactly('test');
         });
     });
 
@@ -201,24 +208,25 @@ describe('Test: security controller - profiles', () => {
 
   describe('#deleteProfile', () => {
     it('should return response with on deleteProfile call', () => {
-      sandbox.stub(kuzzle.repositories.profile, 'deleteProfile').resolves({_id: 'test'});
+      sandbox.stub(kuzzle.repositories.profile, 'deleteProfile').returns(Promise.resolve({_id: 'test'}));
       return kuzzle.funnel.controllers.security.deleteProfile(new RequestObject({
         body: {_id: 'test'}
-      }))
-        .then(result => {
-          var jsonResponse = result.toJson();
+      }), {})
+        .then(response => {
+          var jsonResponse = response.responseObject.toJson();
 
-          should(result).be.an.instanceOf(ResponseObject);
+          should(response.userContext).be.instanceof(Object);
+          should(response.responseObject).be.an.instanceOf(ResponseObject);
           should(jsonResponse.result._id).be.exactly('test');
         });
     });
 
     it('should reject with a response object in case of error', () => {
       var error = new Error('Mocked error');
-      sandbox.stub(kuzzle.repositories.profile, 'deleteProfile').rejects(error);
+      sandbox.stub(kuzzle.repositories.profile, 'deleteProfile').returns(Promise.reject(error));
       return should(kuzzle.funnel.controllers.security.deleteProfile(new RequestObject({
         body: {_id: 'test'}
-      }))).be.rejectedWith(error);
+      }), {})).be.rejectedWith(error);
     });
   });
 
@@ -246,15 +254,16 @@ describe('Test: security controller - profiles', () => {
       sandbox.stub(kuzzle.repositories.profile, 'loadProfile', loadProfileStub);
       return kuzzle.funnel.controllers.security.getProfileRights(new RequestObject({
         body: {_id: 'test'}
-      }))
-        .then(result => {
+      }), {})
+        .then(response => {
           var filteredItem;
 
-          should(result).be.an.instanceOf(ResponseObject);
-          should(result.data.body.hits).be.an.Array();
-          should(result.data.body.hits).length(2);
+          should(response.userContext).be.instanceof(Object);
+          should(response.responseObject).be.an.instanceOf(ResponseObject);
+          should(response.responseObject.data.body.hits).be.an.Array();
+          should(response.responseObject.data.body.hits).length(2);
 
-          filteredItem = result.data.body.hits.filter(item => {
+          filteredItem = response.responseObject.data.body.hits.filter(item => {
             return item.controller === 'read' &&
                     item.action === 'get' &&
                     item.index === 'foo' &&
@@ -263,7 +272,7 @@ describe('Test: security controller - profiles', () => {
           should(filteredItem).length(1);
           should(filteredItem[0].value).be.equal('allowed');
 
-          filteredItem = result.data.body.hits.filter(item => {
+          filteredItem = response.responseObject.data.body.hits.filter(item => {
             return item.controller === 'write' &&
                     item.action === 'delete' &&
                     item.index === '*' &&
@@ -275,14 +284,14 @@ describe('Test: security controller - profiles', () => {
     });
 
     it('should reject to an error on a getProfileRights call without id', () => {
-      return should(kuzzle.funnel.controllers.security.getProfileRights(new RequestObject({body: {_id: ''}}))).be.rejected();
+      return should(kuzzle.funnel.controllers.security.getProfileRights(new RequestObject({body: {_id: ''}}), {})).be.rejected();
     });
 
     it('should reject NotFoundError on a getProfileRights call with a bad id', () => {
-      sandbox.stub(kuzzle.repositories.profile, 'loadProfile').resolves(null);
+      sandbox.stub(kuzzle.repositories.profile, 'loadProfile').returns(Promise.resolve(null));
       return should(kuzzle.funnel.controllers.security.getProfileRights(new RequestObject({
         body: {_id: 'test'}
-      }))).be.rejectedWith(NotFoundError);
+      }), {})).be.rejectedWith(NotFoundError);
     });
   });
 

@@ -16,11 +16,11 @@ describe('funnelController.execute', () => {
     funnel,
     processRequestCalled,
     requestObject,
-    context,
+    userContext,
     requestReplayed;
 
   before(() => {
-    context = {
+    userContext = {
       connection: {id: 'connectionid'},
       token: null
     };
@@ -35,7 +35,10 @@ describe('funnelController.execute', () => {
         return Promise.reject(new Error('errored on purpose'));
       }
 
-      return Promise.resolve(new ResponseObject(funnelRequestObject));
+      return Promise.resolve({
+        responseObject: new ResponseObject(funnelRequestObject),
+        userContext: userContext
+      });
     });
 
     FunnelController.__set__('playCachedRequests', () => {
@@ -52,7 +55,7 @@ describe('funnelController.execute', () => {
       action: 'bar'
     });
 
-    sandbox.stub(kuzzle.internalEngine, 'get').resolves({});
+    sandbox.stub(kuzzle.internalEngine, 'get').returns(Promise.resolve({}));
     return kuzzle.services.init({whitelist: []})
       .then(() => {
         funnel = new FunnelController(kuzzle);
@@ -66,7 +69,7 @@ describe('funnelController.execute', () => {
 
   describe('#normal state', () => {
     it('should execute the request immediately if not overloaded', done => {
-      funnel.execute(requestObject, context, (err, res) => {
+      funnel.execute(requestObject, userContext, (err, res) => {
         try {
           should(err).be.null();
           should(res.status).be.exactly(200);
@@ -82,7 +85,7 @@ describe('funnelController.execute', () => {
     it('should forward any error occuring during the request execution', done => {
       requestObject.errorMe = true;
 
-      funnel.execute(requestObject, context, (err, res) => {
+      funnel.execute(requestObject, userContext, (err, res) => {
         try {
           should(err).be.instanceOf(Error);
           should(res.status).be.exactly(500);
@@ -107,7 +110,7 @@ describe('funnelController.execute', () => {
       });
 
       funnel.overloaded = true;
-      funnel.execute(requestObject, context, () => {
+      funnel.execute(requestObject, userContext, () => {
       });
     });
 
@@ -120,7 +123,7 @@ describe('funnelController.execute', () => {
 
       funnel.overloaded = true;
       funnel.lastWarningTime = Date.now() - 501;
-      funnel.execute(requestObject, context, () => {});
+      funnel.execute(requestObject, userContext, () => {});
     });
 
     it('should not fire the hook if one was fired less than 500ms ago', done => {
@@ -132,7 +135,7 @@ describe('funnelController.execute', () => {
 
       funnel.overloaded = true;
       funnel.lastWarningTime = Date.now() - 200;
-      funnel.execute(requestObject, context, () => {});
+      funnel.execute(requestObject, userContext, () => {});
       setTimeout(() => {
         kuzzle.off('server:overload', listener);
         done();
@@ -148,14 +151,14 @@ describe('funnelController.execute', () => {
 
       funnel.concurrentRequests = kuzzle.config.server.maxConcurrentRequests;
 
-      funnel.execute(requestObject, context, callback);
+      funnel.execute(requestObject, userContext, callback);
 
       setTimeout(() => {
         should(funnel.overloaded).be.true();
         should(requestReplayed).be.true();
         should(processRequestCalled).be.false();
         should(funnel.cachedRequests).be.eql(1);
-        should(funnel.requestsCache[0]).match({requestObject, context, callback});
+        should(funnel.requestsCache[0]).match({requestObject, userContext, callback});
         done();
       }, 100);
     });
@@ -168,14 +171,14 @@ describe('funnelController.execute', () => {
       funnel.concurrentRequests = kuzzle.config.server.maxConcurrentRequests;
       funnel.overloaded = true;
 
-      funnel.execute(requestObject, context, callback);
+      funnel.execute(requestObject, userContext, callback);
 
       setTimeout(() => {
         should(funnel.overloaded).be.true();
         should(requestReplayed).be.false();
         should(processRequestCalled).be.false();
         should(funnel.cachedRequests).be.eql(1);
-        should(funnel.requestsCache[0]).match({requestObject, context, callback});
+        should(funnel.requestsCache[0]).match({requestObject, userContext, callback});
         done();
       }, 100);
     });
@@ -187,7 +190,7 @@ describe('funnelController.execute', () => {
       funnel.cachedRequests = kuzzle.config.server.maxRetainedRequests;
       funnel.overloaded = true;
 
-      funnel.execute(requestObject, context, (err, res) => {
+      funnel.execute(requestObject, userContext, (err, res) => {
         should(funnel.overloaded).be.true();
         should(requestReplayed).be.false();
         should(processRequestCalled).be.false();
