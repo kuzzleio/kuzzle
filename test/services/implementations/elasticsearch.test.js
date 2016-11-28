@@ -461,6 +461,16 @@ describe('Test: ElasticSearch service', () => {
         })).be.fulfilled();
     });
 
+    it('should not throw error when "_source" is not defined', () => {
+      elasticsearch.client.get.returns(Promise.resolve({foo: 'bar'}));
+
+      delete requestObject.data.body;
+      requestObject.data._id = createdDocumentId;
+
+      return should(elasticsearch.get(requestObject))
+        .be.fulfilled();
+    });
+
     it('should reject requests when document is on inactive stat', () => {
       elasticsearch.client.get.returns(Promise.resolve({_source: {_kuzzle_info: {active: false}}}));
 
