@@ -13,7 +13,7 @@ describe('InternalEngine', () => {
 
   beforeEach(() => {
     reset = InternalEngine.__set__({
-      Elasticsearch: {
+      es: {
         errors: {
           NoConnections: sinon.stub()
         },
