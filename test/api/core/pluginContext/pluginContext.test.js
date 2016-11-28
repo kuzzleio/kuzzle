@@ -56,15 +56,27 @@ describe('Plugin Context', () => {
     });
 
     it('should expose the right accessors', () => {
-      should(context.log)
-        .be.an.instanceOf(Function);
+      var triggerCalled = 0;
 
-      context.log('warn', 'test');
-      should(kuzzle.pluginsManager.trigger)
-        .be.calledOnce()
-        .be.calledWithExactly('log:warn', 'test');
-      
-      
+      [
+        'silly',
+        'verbose',
+        'info',
+        'debug',
+        'warn',
+        'error'
+      ].forEach(level => {
+        should(context.log[level])
+          .be.an.instanceOf(Function);
+
+        context.log[level]('test');
+
+        should(kuzzle.pluginsManager.trigger)
+          .have.callCount(++triggerCalled);
+        should(kuzzle.pluginsManager.trigger.getCall(triggerCalled -1))
+          .be.calledWithExactly('log:' + level, 'test');
+      });
+
       should(context.accessors).be.an.Object().and.not.be.empty();
       should(context.accessors).have.properties(['passport', 'execute', 'users', 'validation']);
     });
