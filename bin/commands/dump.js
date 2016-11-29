@@ -15,9 +15,9 @@ module.exports = function commandDump (options) {
   console.log(notice('[ℹ] Creating dump file...'));
 
   kuzzle.cli.do('dump', {suffix: 'cli'})
-    .then(dumpPath => {
+    .then(request => {
       console.log(ok('[✔] Done!'));
-      console.log('\n' + warn(`[ℹ] Dump has been successfully generated in "${dumpPath.data.body}" folder`));
+      console.log('\n' + warn(`[ℹ] Dump has been successfully generated in "${request.result}" folder`));
       console.log(warn('[ℹ] You can send the folder to the kuzzle core team at support@kuzzle.io'));
       process.exit(0);
     })

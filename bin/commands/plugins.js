@@ -39,10 +39,10 @@ function commandPlugin (plugin, options) {
       console.log('');
 
       if (options.list) {
-        console.dir(res.data.body, {depth: null, colors: !options.parent.noColors});
+        console.dir(res.result, {depth: null, colors: !options.parent.noColors});
       }
       else if (options.install) {
-        if (res.data.body.success) {
+        if (res.success) {
           console.log(clcOk(`███ kuzzle-plugins: Plugin ${res.data.body.name}@${res.data.body.version}:\n${JSON.stringify(res.data.body.config, undefined, 2)}`));
         } else {
           console.log(clcError('███ kuzzle-plugins: An error occurred while installing plugin, for more information, please check kuzzle error logs'));
@@ -52,7 +52,7 @@ function commandPlugin (plugin, options) {
         console.log(clcOk('[✔] Successfully imported configuration'));
       }
       else {
-        console.dir(res.data.body, {depth: null, colors: !options.parent.noColors});
+        console.dir(res.result, {depth: null, colors: !options.parent.noColors});
       }
 
       if (options.parent.debug) {
@@ -71,9 +71,6 @@ function commandPlugin (plugin, options) {
    * Check the command-line validity.
    * Either this function completes successfully, or it exits the program
    * with a non-zero error code.
-   *
-   * @param plugin name
-   * @param options provided on the command-line (commander object)
    */
   function checkOptions() {
     var
