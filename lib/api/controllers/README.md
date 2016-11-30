@@ -12,12 +12,3 @@ A controller handles a specific part of the Kuzzle architecture.
 * securityController handles the abstraction on reading/writing data to manage rights, like Role, Profile and User. As default, Kuzzle use a specific index %kuzzle in Elasticsearch.
 
 Refer to [architecture documentation](http://kuzzle.io/guide/#architecture) for details.
-
-# Contributing
-
-If you want to create your own Controller, you must :
-
-* create the file in this directory
-* initialize it in [start.js](../start.js)
-* eventually add client requests routes in the routerController
-* add a service for your controller (see the section [contributing in services](../../services/README.md)) (if relevant)
