@@ -118,7 +118,7 @@ function commandCreateFirstAdmin (options) {
       process.exit(0);
     })
     .catch(err => {
-      console.error(clcError(err));
+      console.error(clcError(err.message));
       process.exit(1);
     });
 }
