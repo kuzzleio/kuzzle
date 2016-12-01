@@ -31,7 +31,7 @@ docker-compose -f docker-compose/debug.yml up
 
 You can now access to:
 
-* http://localhost:7511/api for the standard Kuzzle REST API
+* http://localhost:7511/api for the standard Kuzzle HTTP API
 * ws://localhost:7512 for the Socket.io API (needs the [Socket.io](https://github.com/kuzzleio/kuzzle-plugin-socketio) plugin installed)
 * http://127.0.0.1:8080/debug?port=7000 to debug the server
 * http://127.0.0.1:8081/debug?port=7001 to debug the worker

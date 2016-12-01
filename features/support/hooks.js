@@ -66,8 +66,8 @@ var myHooks = function () {
    *
    *  And we don't want to deal with destroyed worlds, this is all too messy. And dangerous.
    */
-  this.Before({tags: ['@usingREST']}, function (scenario, callback) {
-    this.api = setAPI(this, 'REST');
+  this.Before({tags: ['@usingHttp']}, function (scenario, callback) {
+    this.api = setAPI(this, 'Http');
     callback();
   });
 
@@ -138,7 +138,7 @@ function restApi () {
     W = require('./world'),
     world = new (new W()).World();
 
-  return setAPI(world, 'REST');
+  return setAPI(world, 'Http');
 
 }
 

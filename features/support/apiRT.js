@@ -2,7 +2,7 @@
  * This file contains the main API method for real-time protocols.
  * Avoid to add a new function in each api protocols when a new action in Kuzzle is added.
  *
- * NOTE: must be added in api REST because the apiREST file doesn't extend this ApiRT
+ * NOTE: must be added in api HTTP because the apiHttp file doesn't extend this ApiRT
  */
 
 var

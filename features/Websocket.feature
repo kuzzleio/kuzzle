@@ -1,7 +1,4 @@
 Feature: Test websocket API
-  As a user
-  I want to create/update/delete/search a document and test bulk import
-  Using WebSocket API
 
   @usingWebsocket
   Scenario: Get server information
@@ -88,7 +85,7 @@ Feature: Test websocket API
     Then I truncate the collection
     And I count 0 documents
 
-  @usingREST
+  @usingWebsocket
   Scenario: Search with scroll documents
     When I write the document "documentGrace"
     When I write the document "documentGrace"
@@ -363,7 +360,7 @@ Feature: Test websocket API
     When I log in as useradmin-id:testpwd expiring in 1h
     Then I am getting the current user, which matches {"_id":"#prefix#useradmin-id","_source":{"profileIds":["admin"]}}
     Then I log out
-    Then I am getting the current user, which matches {"_id":-1,"_source":{"profileIds":["anonymous"]}}
+    Then I am getting the current user, which matches {"_id":"-1","_source":{"profileIds":["anonymous"]}}
 
   @usingWebsocket @cleanSecurity
   Scenario: user updateSelf
@@ -374,7 +371,7 @@ Feature: Test websocket API
     Then I update current user with data {"foo":"bar"}
     Then I am getting the current user, which matches {"_id":"#prefix#useradmin-id","_source":{"profileIds":["admin"],"foo":"bar"}}
     Then I log out
-    Then I am getting the current user, which matches {"_id":-1,"_source":{"profileIds":["anonymous"]}}
+    Then I am getting the current user, which matches {"_id":"-1","_source":{"profileIds":["anonymous"]}}
 
   @usingWebsocket @cleanSecurity @unsubscribe
   Scenario: token expiration
@@ -574,7 +571,7 @@ Feature: Test websocket API
     Then The ms result should match the json 4
     When I call the append method of the memory storage with arguments
       """
-      { "_id": "#prefix#mykey", "body": "bar" }
+      { "_id": "#prefix#mykey", "body": { "value": "bar" }}
       """
     Then The ms result should match the json 4
     When I call the get method of the memory storage with arguments
@@ -604,11 +601,11 @@ Feature: Test websocket API
     Then The ms result should match the json null
     Given I call the set method of the memory storage with arguments
       """
-      { "_id": "#prefix#x", "body": "foobar" }
+      { "_id": "#prefix#x", "body": { "value": "foobar" }}
       """
     And I call the set method of the memory storage with arguments
       """
-      { "_id": "#prefix#y", "body": "abcdef" }
+      { "_id": "#prefix#y", "body": { "value": "abcdef" }}
       """
     When I call the mget method of the memory storage with arguments
       """
@@ -711,7 +708,7 @@ Feature: Test websocket API
     Then The ms result should match the regex .+
     Given I call the set method of the memory storage with arguments
       """
-      { "_id": "#prefix#foo", "body": "bar" }
+      { "_id": "#prefix#foo", "body": {"value": "bar" }}
       """
     And I call the rename method of the memory storage with arguments
       """
@@ -729,7 +726,7 @@ Feature: Test websocket API
     Then The ms result should match the json 0
     Given I call the set method of the memory storage with arguments
       """
-      { "_id": "#prefix#foo", "body": "Hello World" }
+      { "_id": "#prefix#foo", "body": {"value": "Hello World" }}
       """
     And I call the setrange method of the memory storage with arguments
       """
@@ -744,7 +741,7 @@ Feature: Test websocket API
       """
       {
         "_id": "#prefix#mykey",
-        "body": "Your base are belong to us"
+        "body": {"value": "Your base are belong to us"}
       }
       """
     When I call the strlen method of the memory storage with arguments
@@ -1428,7 +1425,7 @@ Feature: Test websocket API
     When I update the document with value "Josepha" in field "firstName"
     Then I find a document with "josepha" in field "firstName"
 
-  @usingREST @cleanValidations
+  @usingWebsocket @cleanValidations
   Scenario: Validation - getSpecification & updateSpecification
     When There is no specifications for index "kuzzle-test-index" and collection "kuzzle-collection-test"
     Then I put a not valid specification for index "kuzzle-test-index" and collection "kuzzle-collection-test"
@@ -1438,14 +1435,14 @@ Feature: Test websocket API
     And There is no error message
     And There is a specification for index "kuzzle-test-index" and collection "kuzzle-collection-test"
 
-  @usingREST @cleanValidations
+  @usingWebsocket @cleanValidations
   Scenario: Validation - validateSpecification
     When I post a valid specification
     Then There is no error message
     When I post an invalid specification
     Then There is an error message
 
-  @usingREST @cleanValidations
+  @usingWebsocket @cleanValidations
   Scenario: Validation - validateDocument
     When I put a valid specification for index "kuzzle-test-index" and collection "kuzzle-collection-test"
     Then There is no error message
@@ -1454,7 +1451,7 @@ Feature: Test websocket API
     When I post an invalid document
     Then There is an error message
 
-  @usingREST @cleanValidations
+  @usingWebsocket @cleanValidations
   Scenario: Validation - validateDocument
     When I put a valid specification for index "kuzzle-test-index" and collection "kuzzle-collection-test"
     Then There is no error message
@@ -1463,7 +1460,7 @@ Feature: Test websocket API
     When I post an invalid document
     Then There is an error message
 
-  @usingREST @cleanValidations
+  @usingWebsocket @cleanValidations
   Scenario: Validation - deleteSpecifications
     When I put a valid specification for index "kuzzle-test-index" and collection "kuzzle-collection-test"
     Then There is no error message
