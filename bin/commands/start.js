@@ -23,7 +23,6 @@ function commandStart (options) {
     error = string => options.parent.noColors ? string : clc.red(string),
     warn = string => options.parent.noColors ? string : clc.yellow(string),
     notice = string => options.parent.noColors ? string : clc.cyanBright(string),
-    ok = string => options.parent.noColors ? string : clc.green.bold(string),
     kuz = string => options.parent.noColors ? string : clc.greenBright.bold(string);
 
   if (process.env.FEATURE_COVERAGE === '1' || process.env.FEATURE_COVERAGE === 1) {
@@ -109,10 +108,7 @@ function commandStart (options) {
       console.log(kuz('[✔] Kuzzle server ready'));
       return kuzzle.internalEngine.bootstrap.adminExists()
         .then((res) => {
-          if (res) {
-            console.log(ok('[✔] It seems that you already have an admin account.'));
-          }
-          else {
+          if (!res) {
             console.log(notice('[ℹ] There is no administrator user yet. You can use the CLI or the back-office to create one.'));
             console.log(notice('[ℹ] Entering no-administrator mode: everyone has administrator rights.'));
           }

@@ -40,11 +40,11 @@ function commandReset (options) {
     }
   }
 
-  console.log(warn('[ℹ] You are about to reset Kuzzle and make it like a virgin.'));
+  console.log(warn('[ℹ] You are about to reset Kuzzle and wipe all stored data.'));
   console.log(warn('[ℹ] This operation cannot be undone.\n'));
 
   if (!params.noint) {
-    userIsSure = readlineSync.question('[❓] Are you sure? If so, please type "I am sure" (if not just press [Enter]): ') === 'I am sure';
+    userIsSure = readlineSync.question('[❓] Are you sure? If so, please type "I am sure": ') === 'I am sure';
   } else {
     // not intteractive mode
     userIsSure = true;
@@ -55,12 +55,14 @@ function commandReset (options) {
     return kuzzle.cli.do('cleanDb', {}, {debug: options.parent.debug})
       .then(() => {
         return kuzzle.cli.do('data', {
-          fixtures: fixturesContent,
-          mappings: mappingsContent
+          body: {
+            fixtures: fixturesContent,
+            mappings: mappingsContent
+          }
         }, {debug: options.parent.debug});
       })
       .then(() => {
-        console.log(ok('[✔] Kuzzle is now like a virgin, touched for the very first time!'));
+        console.log(ok('[✔] Kuzzle has been successfully reset'));
         process.exit(0);
       })
       .catch(err => {
@@ -69,7 +71,7 @@ function commandReset (options) {
       });
   }
 
-  console.log(notice('[ℹ] Nothing done: you do not look that sure...'));
+  console.log(notice('[ℹ] Aborted'));
 }
 
 module.exports = commandReset;
