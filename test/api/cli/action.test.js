@@ -3,7 +3,7 @@ var
   should = require('should'),
   sinon = require('sinon'),
   Action = rewire('../../../lib/api/cli/action'),
-  Request = require('kuzzle-common-objects').Request,
+  InternalError = require('kuzzle-common-objects').errors.InternalError,
   sandbox = sinon.sandbox.create();
 
 describe('Tests: cliController action client', () => {
@@ -123,13 +123,20 @@ describe('Tests: cliController action client', () => {
 
     it('should reject the deferred promise if some error was received', () => {
       var
-        error = {foo: 'bar'},
-        data = {error};
+        error = new Error('error'),
+        data = {
+          data: {
+            requestId: 'test'
+          },
+          options: {
+            error
+          }
+        };
 
       action.onListenCB(data);
 
       should(action.onError).be.calledOnce();
-      should(action.onError).be.calledWithExactly(error);
+      should(action.onError.firstCall.args[0]).instanceOf(InternalError);
       should(Action.__get__('clearTimeout')).be.calledOnce();
     });
 
