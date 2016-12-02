@@ -40,7 +40,7 @@ function commandReset (options) {
     }
   }
 
-  console.log(warn('[ℹ] You are about to reset Kuzzle and wipe all stored data.'));
+  console.log(warn('[ℹ] You are about to reset Kuzzle configuration and users'));
   console.log(warn('[ℹ] This operation cannot be undone.\n'));
 
   if (!params.noint) {
