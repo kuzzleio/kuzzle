@@ -81,7 +81,6 @@ module.exports = {
                 checkToken: true,
                 getCurrentUser: true,
                 getMyRights: true,
-                login: true,
                 logout: true,
                 updateSelf: true
               }
@@ -100,8 +99,7 @@ module.exports = {
                 checkToken: true,
                 getCurrentUser: true,
                 getMyRights: true,
-                login: true,
-                logout: true
+                login: true
               }
             },
             read: {
