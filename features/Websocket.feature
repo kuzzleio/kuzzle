@@ -581,12 +581,12 @@ Feature: Test websocket API
     Then The ms result should match the json "4bar"
     When I call the getrange method of the memory storage with arguments
       """
-      { "_id": "#prefix#mykey", "body": { "start": 1, "end": 2 }}
+      { "_id": "#prefix#mykey", "args": { "start": 1, "end": 2 }}
       """
     Then The ms result should match the json "ba"
     When I call the getbit method of the memory storage with arguments
       """
-      { "_id": "#prefix#mykey", "body": { "offset": 3 } }
+      { "_id": "#prefix#mykey", "args": { "offset": 3 } }
       """
     Then The ms result should match the json 1
     When I call the del method of the memory storage with arguments
@@ -609,7 +609,7 @@ Feature: Test websocket API
       """
     When I call the mget method of the memory storage with arguments
       """
-      { "_id": "#prefix#x", "body": { "keys": ["#prefix#y", "nonexisting"]}}
+      { "_id": "#prefix#x", "args": { "keys": ["#prefix#y", "nonexisting"]}}
       """
     Then The ms result should match the json ["foobar", "abcdef", null]
     When I call the bitop method of the memory storage with arguments
@@ -632,7 +632,7 @@ Feature: Test websocket API
     Then The ms result should match the json "goofev"
     When I call the bitpos method of the memory storage with arguments
       """
-      { "_id": "#prefix#x", "body": { "bit": 1 } }
+      { "_id": "#prefix#x", "args": { "bit": 1 } }
       """
     Then The ms result should match the json 1
     Given I call the set method of the memory storage with arguments
@@ -660,7 +660,7 @@ Feature: Test websocket API
       """
     When I call the mget method of the memory storage with arguments
       """
-      { "body": { "keys": [ "#prefix#foo", "#prefix#k2"] } }
+      { "args": { "keys": [ "#prefix#foo", "#prefix#k2"] } }
       """
     Then The ms result should match the json ["bar", "v2"]
     When I call the msetnx method of the memory storage with arguments
@@ -774,7 +774,7 @@ Feature: Test websocket API
     Then The ms result should match the json 3
     When I call the lindex method of the memory storage with arguments
       """
-      { "_id": "#prefix#list", "body": { "idx": 1 } }
+      { "_id": "#prefix#list", "args": { "idx": 1 } }
       """
     Then The ms result should match the json "abcd"
     When I call the linsert method of the memory storage with arguments
@@ -784,7 +784,7 @@ Feature: Test websocket API
     Then The ms result should match the json 4
     When I call the lrange method of the memory storage with arguments
       """
-       { "_id": "#prefix#list", "body": { "start": 2, "stop": 3  } }
+       { "_id": "#prefix#list", "args": { "start": 2, "stop": 3  } }
       """
     And The ms result should match the json [ "inserted", "5" ]
     When I call the llen method of the memory storage with arguments
@@ -808,7 +808,7 @@ Feature: Test websocket API
       """
     When I call the lindex method of the memory storage with arguments
       """
-      { "_id": "#prefix#list", "body": { "idx": 0 } }
+      { "_id": "#prefix#list", "args": { "idx": 0 } }
       """
     Then The ms result should match the json "first"
     When I call the lpushx method of the memory storage with arguments
@@ -826,7 +826,7 @@ Feature: Test websocket API
       """
     And I call the lrange method of the memory storage with arguments
       """
-      { "_id": "#prefix#list", "body": { "start": 0, "stop": -1  } }
+      { "_id": "#prefix#list", "args": { "start": 0, "stop": -1  } }
       """
     Then The ms result should match the json ["first", "abcd", "inserted", "5", "hello", "foo"]
     Given I call the lset method of the memory storage with arguments
@@ -835,7 +835,7 @@ Feature: Test websocket API
       """
     When I call the lindex method of the memory storage with arguments
       """
-      {"_id": "#prefix#list", "body": {"idx": 1}}
+      {"_id": "#prefix#list", "args": {"idx": 1}}
       """
     Then The ms result should match the json "replaced"
     Given I call the ltrim method of the memory storage with arguments
@@ -844,7 +844,7 @@ Feature: Test websocket API
       """
     When I call the lrange method of the memory storage with arguments
       """
-      { "_id": "#prefix#list", "body": { "start": 0, "stop": -1  } }
+      { "_id": "#prefix#list", "args": { "start": 0, "stop": -1  } }
       """
     Then The ms result should match the json ["inserted", "5"]
     When I call the rpop method of the memory storage with arguments
@@ -921,7 +921,7 @@ Feature: Test websocket API
     Then The ms result should match the json 1
     When I call the hget method of the memory storage with arguments
       """
-      { "_id": "#prefix#hash", "body": { "field": "foo" }}
+      { "_id": "#prefix#hash", "args": { "field": "foo" }}
       """
     Then The ms result should match the json "bar"
     When I call the hgetall method of the memory storage with arguments
@@ -978,7 +978,7 @@ Feature: Test websocket API
       """
     When I call the sdiff method of the memory storage with arguments
       """
-      { "_id": "#prefix#set2", "body": { "keys": [ "#prefix#set1"] }}
+      { "_id": "#prefix#set2", "args": { "keys": [ "#prefix#set1"] }}
       """
     Then The sorted ms result should match the json ["d", "e"]
     Given I call the sdiffstore method of the memory storage with arguments
@@ -992,7 +992,7 @@ Feature: Test websocket API
     Then The sorted ms result should match the json ["d", "e"]
     When I call the sinter method of the memory storage with arguments
       """
-      { "_id": "#prefix#set1", "body": { "keys": ["#prefix#set2"] }}
+      { "_id": "#prefix#set1", "args": { "keys": ["#prefix#set2"] }}
       """
     Then The ms result should match the json ["c"]
     Given I call the sinterstore method of the memory storage with arguments
@@ -1020,7 +1020,7 @@ Feature: Test websocket API
     Then The sorted ms result should match the json ["a", "b", "c", "d", "e"]
     When I call the sismember method of the memory storage with arguments
       """
-      {"_id": "#prefix#set", "body": { "member": 10 } }
+      {"_id": "#prefix#set", "args": { "member": 10 } }
       """
     Then The ms result should match the json 1
     Given I call the smove method of the memory storage with arguments
@@ -1102,7 +1102,7 @@ Feature: Test websocket API
       """
       {
         "_id": "#prefix#zset",
-        "body": {
+        "args": {
           "start": 0,
           "stop": -1,
           "withscores": true
@@ -1119,7 +1119,7 @@ Feature: Test websocket API
       """
       {
         "_id": "#prefix#zset",
-        "body": {
+        "args": {
           "min": "(1",
           "max": 3
         }
@@ -1140,7 +1140,7 @@ Feature: Test websocket API
       """
       {
         "_id": "#prefix#zset",
-        "body": {
+        "args": {
           "start": 0,
           "stop": -1,
           "withscores": true
@@ -1175,7 +1175,7 @@ Feature: Test websocket API
       """
       {
         "_id": "#prefix#zset3",
-        "body": { "start": 0, "stop": -1, "withscores": true }
+        "args": { "start": 0, "stop": -1, "withscores": true }
       }
       """
     Then The ms result should match the json ["uno", "2", "two", "8"]
@@ -1194,7 +1194,7 @@ Feature: Test websocket API
       """
       {
         "_id": "#prefix#zset3",
-        "body": { "start": 0, "stop": -1, "withscores": true }
+        "args": { "start": 0, "stop": -1, "withscores": true }
       }
       """
     Then The ms result should match the json ["one","2","uno","2","three","6","two","8"]
@@ -1222,7 +1222,7 @@ Feature: Test websocket API
       """
       {
         "_id": "#prefix#zset",
-        "body": {
+        "args": {
           "min": "[o",
           "max": "(v"
         }
@@ -1233,7 +1233,7 @@ Feature: Test websocket API
       """
       {
         "_id": "#prefix#zset",
-        "body": {
+        "args": {
           "min": "[o",
           "max": "(v"
         }
@@ -1254,7 +1254,7 @@ Feature: Test websocket API
       """
       {
         "_id": "#prefix#zset",
-        "body": { "start": 0, "stop": -1 }
+        "args": { "start": 0, "stop": -1 }
       }
       """
     Then The ms result should match the json ["five","four","zero"]
@@ -1281,7 +1281,7 @@ Feature: Test websocket API
       """
       {
         "_id": "#prefix#zset",
-        "body": {
+        "args": {
           "min": "(0",
           "max": "3",
           "offset": 1,
@@ -1295,7 +1295,7 @@ Feature: Test websocket API
       """
       {
         "_id": "#prefix#zset",
-        "body": {
+        "args": {
           "min": "(0",
           "max": "3",
           "offset": 1,
@@ -1307,7 +1307,7 @@ Feature: Test websocket API
     Then The ms result should match the json ["two", "2", "one", "1"]
     When I call the zscore method of the memory storage with arguments
       """
-      { "_id": "#prefix#zset", "body": { "member": "two" } }
+      { "_id": "#prefix#zset", "args": { "member": "two" } }
       """
     Then The ms result should match the json "2"
     When I call the zrem method of the memory storage with arguments
@@ -1318,7 +1318,7 @@ Feature: Test websocket API
       """
       {
         "_id": "#prefix#zset",
-        "body": { "start": 0, "stop": -1, "withscores": true }
+        "args": { "start": 0, "stop": -1, "withscores": true }
       }
       """
     Then The ms result should match the json ["zero", "0", "one", "1", "three", "3", "four", "4"]
@@ -1340,7 +1340,7 @@ Feature: Test websocket API
       """
       {
         "_id": "#prefix#zset",
-        "body": { "start": 0, "stop": -1, "withscores": true }
+        "args": { "start": 0, "stop": -1, "withscores": true }
       }
       """
     Then The ms result should match the json ["zero", "0", "one", "1", "four", "4"]
@@ -1389,7 +1389,7 @@ Feature: Test websocket API
       """
     When I call the pfcount method of the memory storage with arguments
       """
-      { "body": { "keys": [ "#prefix#hll", "#prefix#hll2"] } }
+      { "args": { "keys": [ "#prefix#hll", "#prefix#hll2"] } }
       """
     Then The ms result should match the json 11
     When I call the pfmerge method of the memory storage with arguments

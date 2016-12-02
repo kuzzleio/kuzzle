@@ -103,14 +103,15 @@ var apiSteps = function () {
 
   this.Then(/^I ?(don't)* find a document with "([^"]*)"(?: in field "([^"]*)")?(?: in index "([^"]*)")?(?: with scroll "([^"]*)")?$/, function (dont, value, field, index, scroll) {
     var query = {query: { match: { [field]: value }}};
+    var args = {};
 
     if (scroll) {
-      query.scroll = scroll;
-      query.from = 0;
-      query.size = 1;
+      args.scroll = scroll;
+      args.from = 0;
+      args.size = 1;
     }
 
-    return this.api.search(query, index)
+    return this.api.search(query, index, null, args)
       .then(body => {
         if (body.error !== null) {
           if (dont) {
@@ -141,7 +142,7 @@ var apiSteps = function () {
   this.Then(/^I ?(don't)* be able to scroll previous search$/, function (dont) {
     if (!this.scrollId) {
       if (!dont) {
-        return Promise.reject('No scroll id from previous search available');
+        return Promise.reject(new Error('No scroll id from previous search available'));
       }
 
       return Promise.resolve();
@@ -158,12 +159,12 @@ var apiSteps = function () {
         }
 
         if (body.result && body.result.hits && body.result.hits.length > 0) {
-          if (dont) { return Promise.reject('A document exists for the scrollId'); }
+          if (dont) { return Promise.reject(new Error('A document exists for the scrollId')); }
           return Promise.resolve();
         }
 
         if (dont) { return Promise.resolve(); }
-        return Promise.reject('No result for scrollId search');
+        return Promise.reject(new Error('No result for scrollId search'));
       })
       .catch(error => {
         if (dont) { return Promise.resolve(); }

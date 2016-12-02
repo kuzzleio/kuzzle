@@ -25,7 +25,12 @@ ApiHttp.prototype.getRequest = function (index, collection, controller, action, 
     args = {};
   }
   if (!args.body) {
-    args.body = {};
+    if (args.args) {
+      args.body = args.args;
+    }
+    else {
+      args.body = {};
+    }
   }
 
   routes.some(route => {
@@ -80,7 +85,7 @@ ApiHttp.prototype.getRequest = function (index, collection, controller, action, 
               queryString = queryString.concat(value.map(v => key + '=' + encodeURIComponent(v)));
             }
             else {
-              queryString.push(key + '=' + encodeURIComponent(args.body[key]));
+              queryString.push(key + '=' + encodeURIComponent(value));
             }
           });
 
@@ -147,7 +152,7 @@ ApiHttp.prototype.get = function (id, index) {
   return this.callApi(options);
 };
 
-ApiHttp.prototype.search = function (query, index, collection) {
+ApiHttp.prototype.search = function (query, index, collection, args) {
   var
     qs,
     options = {
@@ -157,21 +162,18 @@ ApiHttp.prototype.search = function (query, index, collection) {
       body: query
     };
 
-  if (query.scroll || query.from || query.size) {
+  if (args) {
     qs = [];
     options.url+= '?';
 
-    if (query.scroll) {
-      qs.push('scroll=' + query.scroll);
-      delete query.scroll;
+    if (args.scroll) {
+      qs.push('scroll=' + args.scroll);
     }
-    if (query.from) {
-      qs.push('from=' + query.from);
-      delete query.from;
+    if (args.from) {
+      qs.push('from=' + args.from);
     }
-    if (query.size) {
-      qs.push('size=' + query.size);
-      delete query.size;
+    if (args.size) {
+      qs.push('size=' + args.size);
     }
 
     options.url+= qs.join('&');

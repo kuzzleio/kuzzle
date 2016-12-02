@@ -59,6 +59,11 @@ ApiRT.prototype.createOrReplace = function (body, index, collection) {
       body: body
     };
 
+  if (body._id) {
+    msg._id = body._id;
+    delete body._id;
+  }
+
   return this.send(msg);
 };
 
@@ -71,6 +76,11 @@ ApiRT.prototype.replace = function (body, index, collection) {
       action: 'replace',
       body: body
     };
+
+  if (body._id) {
+    msg._id = body._id;
+    delete body._id;
+  }
 
   return this.send(msg);
 };
@@ -88,7 +98,7 @@ ApiRT.prototype.get = function (id, index) {
   return this.send(msg);
 };
 
-ApiRT.prototype.search = function (query, index, collection) {
+ApiRT.prototype.search = function (query, index, collection, args) {
   var
     msg = {
       controller: 'read',
@@ -98,6 +108,10 @@ ApiRT.prototype.search = function (query, index, collection) {
       body: query
     };
 
+  _.forEach(args, (item, k) => {
+    msg[k] = item;
+  });
+
   return this.send(msg);
 };
 
@@ -106,9 +120,7 @@ ApiRT.prototype.scroll = function (scrollId) {
     msg = {
       controller: 'read',
       action: 'scroll',
-      body: {
-        scrollId
-      }
+      scrollId
     };
 
   return this.send(msg);
@@ -418,9 +430,7 @@ ApiRT.prototype.logout = function(jwtToken) {
     msg = {
       controller: 'auth',
       action: 'logout',
-      headers: {
-        authorization: 'Bearer ' + jwtToken
-      }
+      jwt: jwtToken
     };
 
   return this.send(msg);
@@ -681,10 +691,21 @@ ApiRT.prototype.refreshIndex = function (index) {
 };
 
 ApiRT.prototype.callMemoryStorage = function (command, args) {
-  return this.send(_.extend({
+  var msg = {
     controller: 'ms',
     action: command
-  }, args));
+  };
+  _.forEach(args, (value, prop) => {
+    if (prop === 'args') {
+      _.forEach(value, (item, k) => {
+        msg[k] = item;
+      });
+    } else {
+      msg[prop] = value;
+    }
+  });
+
+  return this.send(msg);
 };
 
 ApiRT.prototype.setAutoRefresh = function (index, autoRefresh) {
@@ -763,6 +784,16 @@ ApiRT.prototype.deleteSpecifications = function (index, collection) {
     controller: 'admin',
     action : 'deleteSpecifications',
     body: null
+  });
+};
+
+ApiRT.prototype.postDocument = function (index, collection, document) {
+  return this.send({
+    index,
+    collection,
+    controller: 'write',
+    action: 'create',
+    body: document
   });
 };
 
