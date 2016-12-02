@@ -2,9 +2,9 @@ var
   should = require('should'),
   Promise = require('bluebird'),
   sinon = require('sinon'),
-  Kuzzle = require.main.require('lib/api/kuzzle'),
-  Profile = require.main.require('lib/api/core/models/security/profile'),
-  User = require.main.require('lib/api/core/models/security/user');
+  Kuzzle = require('../../../../../lib/api/kuzzle'),
+  Profile = require('../../../../../lib/api/core/models/security/profile'),
+  User = require('../../../../../lib/api/core/models/security/user');
 
 describe('Test: security/userTest', () => {
   var

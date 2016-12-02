@@ -10,10 +10,10 @@ var
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
   rewire = require('rewire'),
-  Kuzzle = require.main.require('lib/api/kuzzle'),
+  Kuzzle = require('../../../../lib/api/kuzzle'),
   Redis = rewire('../../../../lib/services/redis'),
   RedisClientMock = require('../../../mocks/services/redisClient.mock'),
-  RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject;
+  Request = require('kuzzle-common-objects').Request;
 
 describe('Test: notifier.publish', () => {
   var
@@ -65,7 +65,7 @@ describe('Test: notifier.publish', () => {
 
     sandbox.stub(kuzzle.dsl, 'test').returns(rooms);
 
-    result = kuzzle.notifier.publish(new RequestObject(request));
+    result = kuzzle.notifier.publish(new Request(request));
     should(result).match({published: true});
     should(notification.state).be.eql('done');
     should(notification.scope).be.eql('in');
@@ -83,7 +83,7 @@ describe('Test: notifier.publish', () => {
     sandbox.stub(kuzzle.dsl, 'test').returns(rooms);
 
     request.action = 'create';
-    kuzzle.notifier.publish(new RequestObject(request));
+    kuzzle.notifier.publish(new Request(request));
     should(notification.state).be.eql('pending');
     should(notification.scope).be.undefined();
     should(notification._id).be.eql(request._id);
@@ -100,7 +100,7 @@ describe('Test: notifier.publish', () => {
     sandbox.stub(kuzzle.dsl, 'test').returns(rooms);
 
     request.action = 'createOrReplace';
-    kuzzle.notifier.publish(new RequestObject(request));
+    kuzzle.notifier.publish(new Request(request));
     should(notification.state).be.eql('pending');
     should(notification.scope).be.undefined();
     should(notification._id).be.eql(request._id);
@@ -116,7 +116,7 @@ describe('Test: notifier.publish', () => {
     sandbox.stub(kuzzle.dsl, 'test').returns(rooms);
 
     request.action = 'replace';
-    kuzzle.notifier.publish(new RequestObject(request));
+    kuzzle.notifier.publish(new Request(request));
     should(notification.state).be.eql('pending');
     should(notification.scope).be.undefined();
     should(notification._id).be.eql(request._id);
@@ -133,7 +133,7 @@ describe('Test: notifier.publish', () => {
 
     sandbox.stub(kuzzle.dsl, 'test').returns([]);
 
-    result = kuzzle.notifier.publish(new RequestObject(request));
+    result = kuzzle.notifier.publish(new Request(request));
     should(result).match({published: true});
     should(notification).be.null();
     setTimeout(() => {

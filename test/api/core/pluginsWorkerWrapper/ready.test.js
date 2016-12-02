@@ -3,7 +3,7 @@ var
   rewire = require('rewire'),
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
-  PluginContext = require.main.require('lib/api/core/plugins/pluginContext'),
+  PluginContext = require('../../../../lib/api/core/plugins/pluginContext'),
   ready = rewire('../../../../lib/api/core/plugins/workerReady');
 
 describe('Test plugins Worker Wrapper', () => {

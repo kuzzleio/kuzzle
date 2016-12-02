@@ -2,7 +2,7 @@ var
   should = require('should'),
   Promise = require('bluebird'),
   sinon = require('sinon'),
-  RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
+  Request = require('kuzzle-common-objects').Request,
   Dsl = require('../../../../lib/api/dsl'),
   HotelClerk = require('../../../../lib/api/core/hotelClerk'),
   Kuzzle = require('../../../mocks/kuzzle.mock');
@@ -88,7 +88,7 @@ describe('Test: hotelClerk.removeCustomerFromAllRooms', () => {
           should(kuzzle.notifier.notify.args[0][0]).match(['foo']);
 
           // testing requestObject argument
-          should(kuzzle.notifier.notify.args[0][1]).be.instanceOf(RequestObject);
+          should(kuzzle.notifier.notify.args[0][1]).be.instanceOf(Request);
           should(kuzzle.notifier.notify.args[0][1].controller).be.exactly('subscribe');
           should(kuzzle.notifier.notify.args[0][1].action).be.exactly('off');
           should(kuzzle.notifier.notify.args[0][1].index).be.exactly(index);

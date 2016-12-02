@@ -3,9 +3,9 @@
 const
   should = require('should'),
   sinon = require('sinon'),
-  InternalError = require('kuzzle-common-objects').Errors.internalError,
-  HttpResponse = require.main.require('lib/api/core/entryPoints/httpResponse'),
-  Router = require.main.require('lib/api/core/httpRouter');
+  InternalError = require('kuzzle-common-objects').errors.InternalError,
+  HttpResponse = require('../../../../lib/api/core/entryPoints/httpResponse'),
+  Router = require('../../../../lib/api/core/httpRouter');
 
 describe('core/httpRouter', () => {
   let

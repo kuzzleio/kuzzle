@@ -2,9 +2,9 @@ var
   rewire = require('rewire'),
   should = require('should'),
   sinon = require('sinon'),
-  BadRequestError = require('kuzzle-common-objects').Errors.badRequestError,
+  BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,
   KuzzleMock = require('../../mocks/kuzzle.mock'),
-  NotFoundError = require('kuzzle-common-objects').Errors.notFoundError,
+  NotFoundError = require('kuzzle-common-objects').errors.NotFoundError,
   CliController = rewire('../../../lib/api/controllers/cliController');
 
 describe('lib/api/controllers/cliController', () => {
@@ -36,6 +36,7 @@ describe('lib/api/controllers/cliController', () => {
 
     kuzzle = new KuzzleMock();
 
+    // TODO something with ResponseObject
     reset = CliController.__set__({
       require: requireMock,
       ResponseObject: sinon.spy()

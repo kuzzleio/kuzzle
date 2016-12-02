@@ -10,8 +10,8 @@ var
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
   Promise = require('bluebird'),
-  RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
-  Kuzzle = require.main.require('lib/api/kuzzle');
+  Request = require('kuzzle-common-objects').Request,
+  Kuzzle = require('../../../../lib/api/kuzzle');
 
 describe('Test: notifier.notifyDocumentDelete', () => {
   var
@@ -49,7 +49,7 @@ describe('Test: notifier.notifyDocumentDelete', () => {
           notification.push(n);
         };
         notification = [];
-        requestObject = new RequestObject({
+        requestObject = new Request({
           controller: 'write',
           action: 'delete',
           requestId: 'foo',

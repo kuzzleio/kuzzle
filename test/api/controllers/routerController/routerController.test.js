@@ -1,12 +1,12 @@
 var
   should = require('should'),
   sinon = require('sinon'),
-  Kuzzle = require.main.require('lib/api/kuzzle'),
+  Kuzzle = require('../../../../lib/api/kuzzle'),
   Promise = require('bluebird'),
-  RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
-  Token = require.main.require('lib/api/core/models/security/token'),
-  Role = require.main.require('lib/api/core/models/security/role'),
-  PluginImplementationError = require.main.require('kuzzle-common-objects').Errors.pluginImplementationError;
+  Request = require('kuzzle-common-objects').Request,
+  Token = require('../../../../lib/api/core/models/security/token'),
+  Role = require('../../../../lib/api/core/models/security/role'),
+  PluginImplementationError = require('kuzzle-common-objects').errors.PluginImplementationError;
 
 describe('Test: routerController', () => {
   var
@@ -77,7 +77,7 @@ describe('Test: routerController', () => {
   describe('#execute', () => {
     var
       context,
-      requestObject = new RequestObject({
+      requestObject = new Request({
         controller: 'read',
         action: 'now'
       });

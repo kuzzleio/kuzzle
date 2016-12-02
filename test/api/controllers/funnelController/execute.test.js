@@ -3,10 +3,9 @@ var
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
   Promise = require('bluebird'),
-  RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
-  ResponseObject = require.main.require('kuzzle-common-objects').Models.responseObject,
-  ServiceUnavailableError = require.main.require('kuzzle-common-objects').Errors.serviceUnavailableError,
-  Kuzzle = require.main.require('lib/api/kuzzle'),
+  Request = require('kuzzle-common-objects').Request,
+  ServiceUnavailableError = require('kuzzle-common-objects').errors.ServiceUnavailableError,
+  Kuzzle = require('../../../../lib/api/kuzzle'),
   rewire = require('rewire'),
   FunnelController = rewire('../../../../lib/api/controllers/funnelController');
 
@@ -28,15 +27,16 @@ describe('funnelController.execute', () => {
     kuzzle = new Kuzzle();
     kuzzle.config.server.warnRetainedRequestsLimit = -1;
 
-    FunnelController.__set__('processRequest', (funnelKuzzle, controllers, funnelRequestObject) => {
+    FunnelController.__set__('processRequest', (funnelKuzzle, controllers, funnelRequest) => {
       processRequestCalled = true;
 
-      if (funnelRequestObject.errorMe) {
+      if (funnelRequest.errorMe) {
         return Promise.reject(new Error('errored on purpose'));
       }
 
+      // TODO something about it
       return Promise.resolve({
-        responseObject: new ResponseObject(funnelRequestObject),
+        responseObject: funnelRequest,
         userContext: userContext
       });
     });
@@ -50,7 +50,7 @@ describe('funnelController.execute', () => {
     processRequestCalled = false;
     requestReplayed = false;
 
-    requestObject = new RequestObject({
+    requestObject = new Request({
       controller: 'foo',
       action: 'bar'
     });

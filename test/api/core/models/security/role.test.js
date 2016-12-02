@@ -4,11 +4,11 @@ var
   sandbox = sinon.sandbox.create(),
   Promise = require('bluebird'),
   rewire = require('rewire'),
-  Kuzzle = require.main.require('lib/api/kuzzle'),
-  BadRequestError = require.main.require('kuzzle-common-objects').Errors.badRequestError,
-  RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
-  InternalError = require.main.require('kuzzle-common-objects').Errors.internalError,
-  ParseError = require.main.require('kuzzle-common-objects').Errors.parseError,
+  Kuzzle = require('../../../../../lib/api/kuzzle'),
+  BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,
+  Request = require('kuzzle-common-objects').Request,
+  InternalError = require('kuzzle-common-objects').errors.InternalError,
+  ParseError = require('kuzzle-common-objects').errors.ParseError,
   Role = rewire('../../../../../lib/api/core/models/security/role'),
   internalIndex;
 
@@ -472,7 +472,7 @@ describe('Test: security/roleTest', () => {
     it('should handle a custom right function', () => {
       var
         role = new Role(),
-        noMatchRequestObject = {
+        noMatchRequest = {
           collection: 'collection',
           controller: 'controller',
           action: 'noaction'
@@ -493,7 +493,7 @@ describe('Test: security/roleTest', () => {
         .then(isAllowed => {
           should(isAllowed).be.true();
 
-          return role.isActionAllowed(noMatchRequestObject, context, kuzzle);
+          return role.isActionAllowed(noMatchRequest, context, kuzzle);
         })
         .then(isAllowed => {
           should(isAllowed).be.false();
@@ -514,7 +514,7 @@ describe('Test: security/roleTest', () => {
       var
         roleAllow = new Role(),
         roleDeny = new Role(),
-        request = new RequestObject({
+        request = new Request({
           controller: 'read',
           action: 'get',
           requestId: 'foo',
@@ -576,7 +576,7 @@ describe('Test: security/roleTest', () => {
       var
         roleAllow = new Role(),
         roleDeny = new Role(),
-        request = new RequestObject({
+        request = new Request({
           controller: 'read',
           action: 'get',
           requestId: 'foo',
@@ -638,7 +638,7 @@ describe('Test: security/roleTest', () => {
       var
         roleAllow = new Role(),
         roleDeny = new Role(),
-        request = new RequestObject({
+        request = new Request({
           controller: 'read',
           action: 'get',
           requestId: 'foo',
@@ -715,7 +715,7 @@ describe('Test: security/roleTest', () => {
     it('should not allow bad method call', () => {
       var
         role = new Role(),
-        request = new RequestObject({
+        request = new Request({
           controller: 'read',
           action: 'get',
           requestId: 'foo',
@@ -752,7 +752,7 @@ describe('Test: security/roleTest', () => {
     it('should not allow if read method throws an error', () => {
       var
         role = new Role(),
-        request = new RequestObject({
+        request = new Request({
           controller: 'read',
           action: 'get',
           requestId: 'foo',
@@ -788,7 +788,7 @@ describe('Test: security/roleTest', () => {
     it('should not allow if collection is not specified', () => {
       var
         role = new Role(),
-        request = new RequestObject({
+        request = new Request({
           controller: 'read',
           action: 'get',
           requestId: 'foo',

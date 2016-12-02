@@ -1,8 +1,7 @@
 var
   should = require('should'),
   sinon = require('sinon'),
-  RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
-  ResponseObject = require.main.require('kuzzle-common-objects').Models.responseObject,
+  Request = require('kuzzle-common-objects').Request,
   KuzzleMock = require('../../mocks/kuzzle.mock'),
   WriteController = require('../../../lib/api/controllers/writeController');
 
@@ -26,7 +25,7 @@ describe('Test: write controller', () => {
     trigger = kuzzle.pluginsManager.trigger;
     controller = new WriteController(kuzzle);
 
-    requestObject = new RequestObject({body: {foo: 'bar'}}, {}, 'unit-test');
+    requestObject = new Request({body: {foo: 'bar'}}, {}, 'unit-test');
     sinon.stub(requestObject, 'isValid').returns(Promise.resolve());
   });
 
@@ -59,7 +58,7 @@ describe('Test: write controller', () => {
             );
 
             should(response.userContext).be.instanceof(Object);
-            should(response.responseObject).be.an.instanceOf(ResponseObject);
+            // TODO test response format
             should(response.responseObject).match({
               status: 200,
               error: null,
@@ -95,7 +94,7 @@ describe('Test: write controller', () => {
             should(trigger.secondCall).be.calledWith('data:afterPublish');
 
             should(response.userContext).be.instanceof(Object);
-            should(response.responseObject).be.an.instanceOf(ResponseObject);
+            // TODO test response format
             should(response.responseObject).match({
               status: 200,
               error: null,
@@ -153,7 +152,7 @@ describe('Test: write controller', () => {
             );
 
             should(response.userContext).be.instanceof(Object);
-            should(response.responseObject).be.an.instanceOf(ResponseObject);
+            // TODO test response format
             should(response.responseObject).match({
               status: 200,
               error: null,
@@ -185,7 +184,7 @@ describe('Test: write controller', () => {
             should(kuzzle.notifier.notifyDocumentReplace).have.callCount(0);
 
             should(response.userContext).be.instanceof(Object);
-            should(response.responseObject).be.an.instanceOf(ResponseObject);
+            // TODO test response format
 
             return Promise.resolve();
           }
@@ -225,7 +224,7 @@ describe('Test: write controller', () => {
             );
 
             should(response.userContext).be.instanceof(Object);
-            should(response.responseObject).be.an.instanceOf(ResponseObject);
+            // TODO test response format
             should(response.responseObject).match({
               status: 200,
               error: null,
@@ -272,7 +271,7 @@ describe('Test: write controller', () => {
             );
 
             should(response.userContext).be.instanceof(Object);
-            should(response.responseObject).be.an.instanceOf(ResponseObject);
+            // TODO test response format
             should(response.responseObject).match({
               status: 200,
               error: null,
@@ -317,7 +316,7 @@ describe('Test: write controller', () => {
             );
 
             should(response.userContext).be.instanceof(Object);
-            should(response.responseObject).be.an.instanceOf(ResponseObject);
+            // TODO test response format
             should(response.responseObject).match({
               status: 200,
               error: null,
@@ -359,7 +358,7 @@ describe('Test: write controller', () => {
             );
 
             should(response.userContext).be.instanceof(Object);
-            should(response.responseObject).be.an.instanceOf(ResponseObject);
+            // TODO test response format
             should(response.responseObject).match({
               status: 200,
               error: null,
@@ -404,7 +403,7 @@ describe('Test: write controller', () => {
             );
 
             should(response.userContext).be.instanceof(Object);
-            should(response.responseObject).be.an.instanceOf(ResponseObject);
+            // TODO test response format
             should(response.responseObject).match({
               status: 200,
               error: null,
@@ -438,7 +437,7 @@ describe('Test: write controller', () => {
           try {
             should(kuzzle.validation.validationPromise).be.calledOnce();
             should(response.userContext).be.instanceof(Object);
-            should(response.responseObject).be.an.instanceOf(ResponseObject);
+            // TODO test response format
             should(response.responseObject).match({
               status: 200,
               error: null,
@@ -480,7 +479,7 @@ describe('Test: write controller', () => {
           try {
             should(kuzzle.validation.validationPromise).be.calledOnce();
             should(response.userContext).be.instanceof(Object);
-            should(response.responseObject).be.an.instanceOf(ResponseObject);
+            // TODO test response format
             should(response.responseObject).match({
               status: 200,
               error: expected.errorMessages,

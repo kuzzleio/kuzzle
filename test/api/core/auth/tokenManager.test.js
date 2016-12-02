@@ -1,8 +1,8 @@
 var
   should = require('should'),
-  Kuzzle = require.main.require('lib/api/kuzzle'),
-  RequestObject = require('kuzzle-common-objects').Models.requestObject,
-  TokenManager = require.main.require('lib/api/core/auth/tokenManager');
+  Kuzzle = require('../../../../lib/api/kuzzle'),
+  Request = require('kuzzle-common-objects').Request,
+  TokenManager = require('../../../../lib/api/core/auth/tokenManager');
 
 describe('Test: token manager core component', () => {
   var
@@ -139,7 +139,7 @@ describe('Test: token manager core component', () => {
       should(subscriptionsCleaned).be.true();
       should(rooms).match(['room1', 'room2', 'room3']);
       should(connectionId).be.eql('foobar');
-      should(notification).be.instanceof(RequestObject);
+      should(notification).be.instanceof(Request);
       should(notification.requestId).be.eql('server notification');
       should(notification.controller).be.eql('auth');
       should(notification.action).be.eql('jwtTokenExpired');

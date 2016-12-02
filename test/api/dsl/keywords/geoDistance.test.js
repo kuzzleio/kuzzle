@@ -2,7 +2,7 @@
 
 var
   should = require('should'),
-  BadRequestError = require('kuzzle-common-objects').Errors.badRequestError,
+  BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,
   FieldOperand = require('../../../../lib/api/dsl/storage/objects/fieldOperand'),
   DSL = require('../../../../lib/api/dsl');
 

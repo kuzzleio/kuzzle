@@ -3,11 +3,11 @@ var
   Promise = require('bluebird'),
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
-  RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
-  BadRequestError = require.main.require('kuzzle-common-objects').Errors.badRequestError,
-  ForbiddenError = require.main.require('kuzzle-common-objects').Errors.forbiddenError,
-  UnauthorizedError = require.main.require('kuzzle-common-objects').Errors.unauthorizedError,
-  Kuzzle = require.main.require('lib/api/kuzzle'),
+  Request = require('kuzzle-common-objects').Request,
+  BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,
+  ForbiddenError = require('kuzzle-common-objects').errors.ForbiddenError,
+  UnauthorizedError = require('kuzzle-common-objects').errors.UnauthorizedError,
+  Kuzzle = require('../../../../lib/api/kuzzle'),
   rewire = require('rewire'),
   FunnelController = rewire('../../../../lib/api/controllers/funnelController');
 
@@ -47,7 +47,7 @@ describe('funnelController.processRequest', () => {
       action: 'create'
     };
 
-    var requestObject = new RequestObject(object);
+    var requestObject = new Request(object);
 
     return should(processRequest(kuzzle, kuzzle.funnel.controllers, requestObject, userContext)).be.rejectedWith(BadRequestError);
   });
@@ -57,7 +57,7 @@ describe('funnelController.processRequest', () => {
       controller: 'write'
     };
 
-    var requestObject = new RequestObject(object);
+    var requestObject = new Request(object);
 
     return should(processRequest(kuzzle, kuzzle.funnel.controllers, requestObject, userContext)).be.rejectedWith(BadRequestError);
   });
@@ -68,7 +68,7 @@ describe('funnelController.processRequest', () => {
       action: 'create'
     };
 
-    var requestObject = new RequestObject(object);
+    var requestObject = new Request(object);
 
     return should(processRequest(kuzzle, kuzzle.funnel.controllers, requestObject, userContext)).be.rejectedWith(BadRequestError);
   });
@@ -79,7 +79,7 @@ describe('funnelController.processRequest', () => {
       action: 'toto'
     };
 
-    var requestObject = new RequestObject(object);
+    var requestObject = new Request(object);
 
     return should(processRequest(kuzzle, kuzzle.funnel.controllers, requestObject, userContext)).be.rejectedWith(BadRequestError);
   });
@@ -90,7 +90,7 @@ describe('funnelController.processRequest', () => {
     sandbox.stub(kuzzle.repositories.token, 'verifyToken').returns(Promise.resolve({userId: -1}));
 
     return should(
-      processRequest(kuzzle, kuzzle.funnel.controllers, new RequestObject({
+      processRequest(kuzzle, kuzzle.funnel.controllers, new Request({
         controller: 'read',
         index: '@test',
         action: 'get'
@@ -106,7 +106,7 @@ describe('funnelController.processRequest', () => {
 
     return should(
       processRequest(kuzzle, kuzzle.funnel.controllers,
-        new RequestObject({
+        new Request({
           controller: 'read',
           index: '@test',
           action: 'get'
@@ -116,7 +116,7 @@ describe('funnelController.processRequest', () => {
   });
 
   it('should resolve the promise if everything is ok', () => {
-    var requestObject = new RequestObject({
+    var requestObject = new Request({
       requestId: 'requestId',
       controller: 'read',
       action: 'listIndexes',

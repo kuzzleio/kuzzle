@@ -5,9 +5,9 @@ var
   sinon = require('sinon'),
   KuzzleMock = require('../../../mocks/kuzzle.mock'),
   PluginContext = rewire('../../../../lib/api/core/plugins/pluginContext'),
-  PluginImplementationError = require('kuzzle-common-objects').Errors.pluginImplementationError,
-  RequestObject = require('kuzzle-common-objects').Models.requestObject,
-  BadRequestError = require('kuzzle-common-objects').Errors.badRequestError,
+  PluginImplementationError = require('kuzzle-common-objects').errors.PluginImplementationError,
+  Request = require('kuzzle-common-objects').Request,
+  BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,
   _ = require('lodash');
 
 describe('Plugin Context', () => {
@@ -27,23 +27,21 @@ describe('Plugin Context', () => {
 
     it('should expose the right constructors', () => {
       var
-        Dsl = require.main.require('lib/api/dsl'),
-        ResponseObject = require('kuzzle-common-objects').Models.responseObject;
+        Dsl = require('../../../../lib/api/dsl');
 
+      // TODO add new constructors
       should(context.constructors).be.an.Object().and.not.be.empty();
       should(context.constructors.Dsl).be.a.Function();
-      should(context.constructors.RequestObject).be.a.Function();
-      should(context.constructors.ResponseObject).be.a.Function();
+      should(context.constructors.Request).be.a.Function();
       should(context.constructors.BaseValidationType).be.a.Function();
 
       should(new context.constructors.Dsl).be.instanceOf(Dsl);
-      should(new context.constructors.RequestObject({})).be.instanceOf(RequestObject);
-      should(new context.constructors.ResponseObject).be.instanceOf(ResponseObject);
+      should(new context.constructors.Request({})).be.instanceOf(Request);
     });
 
     it('should expose all error objects as capitalized constructors', () => {
       var
-        errors = require('kuzzle-common-objects').Errors;
+        errors = require('kuzzle-common-objects').errors;
 
       should(context.errors).be.an.Object().and.not.be.empty();
 
@@ -198,7 +196,7 @@ describe('Plugin Context', () => {
 
       it('should call the callback with an error if something went wrong', () => {
         var
-          request = new RequestObject({
+          request = new Request({
             body: {some: 'request'}
           }),
           userContext = {some: 'context'},

@@ -1,6 +1,6 @@
 var
   should = require('should'),
-  Kuzzle = require.main.require('lib/api/kuzzle');
+  Kuzzle = require('../../lib/api/kuzzle');
 
 describe('Test main file for hooks managers', () => {
   var

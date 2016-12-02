@@ -8,8 +8,8 @@ var
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
   Kuzzle = require('../../../mocks/kuzzle.mock'),
-  Notifier = require.main.require('lib/api/core/notifier'),
-  NotificationObject = require.main.require('lib/api/core/models/notificationObject');
+  Notifier = require('../../../../lib/api/core/notifier'),
+  NotificationObject = require('../../../../lib/api/core/models/notificationObject');
 
 describe('Test: notifier.notify', () => {
   var

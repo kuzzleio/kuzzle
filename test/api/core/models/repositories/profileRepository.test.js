@@ -3,14 +3,14 @@ var
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
   should = require('should'),
-  Role = require.main.require('lib/api/core/models/security/role'),
-  Profile = require.main.require('lib/api/core/models/security/profile'),
-  BadRequestError = require.main.require('kuzzle-common-objects').Errors.badRequestError,
-  ForbiddenError = require.main.require('kuzzle-common-objects').Errors.forbiddenError,
-  InternalError = require.main.require('kuzzle-common-objects').Errors.internalError,
-  NotFoundError = require.main.require('kuzzle-common-objects').Errors.notFoundError,
-  RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
-  Kuzzle = require.main.require('lib/api/kuzzle');
+  Role = require('../../../../../lib/api/core/models/security/role'),
+  Profile = require('../../../../../lib/api/core/models/security/profile'),
+  BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,
+  ForbiddenError = require('kuzzle-common-objects').errors.ForbiddenError,
+  InternalError = require('kuzzle-common-objects').errors.InternalError,
+  NotFoundError = require('kuzzle-common-objects').errors.NotFoundError,
+  Request = require('kuzzle-common-objects').Request,
+  Kuzzle = require('../../../../../lib/api/kuzzle');
 
 describe('Test: repositories/profileRepository', () => {
   var
@@ -155,24 +155,24 @@ describe('Test: repositories/profileRepository', () => {
     });
   });
 
-  describe('#buildProfileFromRequestObject', () => {
+  describe('#buildProfileFromRequest', () => {
     it('should reject when no id is provided', () => {
-      var invalidProfileObject = new RequestObject({
+      var invalidProfileObject = new Request({
         body: {
           _id: ''
         }
       });
 
-      return should(kuzzle.repositories.profile.buildProfileFromRequestObject(invalidProfileObject))
+      return should(kuzzle.repositories.profile.buildProfileFromRequest(invalidProfileObject))
         .be.rejectedWith(BadRequestError);
     });
 
     it('should resolve to a valid Profile when a valid object is provided', () => {
-      var validProfileObject = new RequestObject({
+      var validProfileObject = new Request({
         body: testProfilePlain
       });
 
-      return kuzzle.repositories.profile.buildProfileFromRequestObject(validProfileObject)
+      return kuzzle.repositories.profile.buildProfileFromRequest(validProfileObject)
         .then(profile => should(profile).match(testProfilePlain));
     });
   });
@@ -192,7 +192,7 @@ describe('Test: repositories/profileRepository', () => {
 
   describe('#deleteProfile', () => {
     it('should reject when no id is provided', () => {
-      var invalidProfileObject = new RequestObject({
+      var invalidProfileObject = new Request({
         body: {
           _id: ''
         }
@@ -281,7 +281,7 @@ describe('Test: repositories/profileRepository', () => {
   });
 
   describe('#searchProfiles', () => {
-    it('should return a ResponseObject containing an array of profiles', () => {
+    it('should return a response containing an array of profiles', () => {
       sandbox.stub(kuzzle.repositories.profile, 'search').returns(Promise.resolve({
         hits: [{_id: 'test'}],
         total: 1

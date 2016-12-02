@@ -1,9 +1,9 @@
 var
   should = require('should'),
-  RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
-  Kuzzle = require.main.require('lib/api/kuzzle'),
-  BadRequestError = require.main.require('kuzzle-common-objects').Errors.badRequestError,
-  NotFoundError = require.main.require('kuzzle-common-objects').Errors.notFoundError;
+  Request = require('kuzzle-common-objects').Request,
+  Kuzzle = require('../../../../lib/api/kuzzle'),
+  BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,
+  NotFoundError = require('kuzzle-common-objects').errors.NotFoundError;
 
 describe('Test: hotelClerk.countSubscription', () => {
   var
@@ -14,7 +14,7 @@ describe('Test: hotelClerk.countSubscription', () => {
   });
 
   it('should reject the request if no room ID has been provided', () => {
-    var requestObject = new RequestObject({
+    var requestObject = new Request({
       body: {}
     });
 
@@ -22,7 +22,7 @@ describe('Test: hotelClerk.countSubscription', () => {
   });
 
   it('should reject the request if the provided room ID is unknown to Kuzzle', () => {
-    var requestObject = new RequestObject({
+    var requestObject = new Request({
       body: { roomId: 'foobar' }
     });
 
@@ -30,7 +30,7 @@ describe('Test: hotelClerk.countSubscription', () => {
   });
 
   it('should return the right subscriptions count when handling a correct request', () => {
-    var countRequest = new RequestObject({ body: { roomId: 'foobar'}});
+    var countRequest = new Request({ body: { roomId: 'foobar'}});
     kuzzle.hotelClerk.rooms.foobar = {customers: ['foo', 'bar']};
 
     return kuzzle.hotelClerk.countSubscription(countRequest)

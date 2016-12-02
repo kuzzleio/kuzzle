@@ -3,9 +3,8 @@ var
   should = require('should'),
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
-  Kuzzle = require.main.require('lib/api/kuzzle'),
-  RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
-  ResponseObject = require.main.require('kuzzle-common-objects').Models.responseObject;
+  Kuzzle = require('../../../lib/api/kuzzle'),
+  Request = require('kuzzle-common-objects').Request;
 
 describe('Test: security controller', () => {
   var
@@ -29,18 +28,18 @@ describe('Test: security controller', () => {
   });
 
   it('should resolve to a responseObject on a createOrUpdateRole call', () => {
-    return kuzzle.funnel.controllers.security.createOrReplaceRole(new RequestObject({
+    return kuzzle.funnel.controllers.security.createOrReplaceRole(new Request({
       body: { _id: 'test', indexes: {} }
     }))
       .then(response => {
         should(response.userContext).be.instanceof(Object);
-        should(response.responseObject).be.an.instanceOf(ResponseObject);
+        // TODO test response format
         should(response.responseObject.data.body._id).be.exactly('test');
       });
   });
 
   it('should be rejected if creating a profile with bad roles property form', () => {
-    return should(kuzzle.funnel.controllers.security.createOrReplaceProfile(new RequestObject({
+    return should(kuzzle.funnel.controllers.security.createOrReplaceProfile(new Request({
       body: { roleId: 'test', policies: 'not-an-array-roleIds' }
     }, {}))).be.rejected();
   });

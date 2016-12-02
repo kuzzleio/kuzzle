@@ -1,9 +1,8 @@
 var
   should = require('should'),
   BulkController = require('../../../lib/api/controllers/bulkController'),
-  RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
-  ResponseObject = require.main.require('kuzzle-common-objects').Models.responseObject,
-  PartialError = require.main.require('kuzzle-common-objects').Errors.partialError,
+  Request = require('kuzzle-common-objects').Request,
+  PartialError = require('kuzzle-common-objects').errors.PartialError,
   KuzzleMock = require('../../mocks/kuzzle.mock');
 
 describe('Test the bulk controller', () => {
@@ -11,7 +10,7 @@ describe('Test the bulk controller', () => {
     controller,
     kuzzle,
     foo = {foo: 'bar'},
-    requestObject = new RequestObject({ controller: 'bulk' }, { collection: 'unit-test-bulkController' }, 'unit-test'),
+    requestObject = new Request({ controller: 'bulk' }, { collection: 'unit-test-bulkController' }, 'unit-test'),
     stub;
 
   beforeEach(() => {
@@ -36,7 +35,7 @@ describe('Test the bulk controller', () => {
         should(trigger.secondCall).be.calledWith('data:afterBulkImport');
 
         should(response.userContext).be.instanceof(Object);
-        should(response.responseObject).be.an.instanceOf(ResponseObject);
+        // TODO test response format
         should(response.responseObject).match({
           status: 200,
           error: null,
@@ -53,7 +52,7 @@ describe('Test the bulk controller', () => {
     return controller.import(requestObject)
       .then(response => {
         should(response.userContext).be.instanceof(Object);
-        should(response.responseObject).be.an.instanceOf(ResponseObject);
+        // TODO test response format
         should(response.responseObject.status).be.eql(206);
         should(response.responseObject.error).be.instanceOf(PartialError);
       });

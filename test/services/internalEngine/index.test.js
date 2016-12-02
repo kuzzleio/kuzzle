@@ -4,7 +4,7 @@ var
   sinon = require('sinon'),
   InternalEngine = rewire('../../../lib/services/internalEngine'),
   KuzzleMock = require('../../mocks/kuzzle.mock'),
-  NotFoundError = require.main.require('kuzzle-common-objects').Errors.notFoundError;
+  NotFoundError = require('kuzzle-common-objects').errors.NotFoundError;
 
 describe('InternalEngine', () => {
   var

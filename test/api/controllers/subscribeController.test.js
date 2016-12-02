@@ -2,9 +2,8 @@ var
   should = require('should'),
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
-  Kuzzle = require.main.require('lib/api/kuzzle'),
-  RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
-  ResponseObject = require.main.require('kuzzle-common-objects').Models.responseObject;
+  Kuzzle = require('../../../lib/api/kuzzle'),
+  Request = require('kuzzle-common-objects').Request;
 
 describe('Test: subscribe controller', () => {
   var
@@ -16,7 +15,7 @@ describe('Test: subscribe controller', () => {
   });
 
   beforeEach(() => {
-    requestObject = new RequestObject({index: 'test', collection: 'collection', controller: 'subscribe'}, {}, 'unit-test');
+    requestObject = new Request({index: 'test', collection: 'collection', controller: 'subscribe'}, {}, 'unit-test');
     sandbox.stub(kuzzle.internalEngine, 'get').returns(Promise.resolve({}));
     return kuzzle.services.init({whitelist: []})
       .then(() => kuzzle.funnel.init());
@@ -32,7 +31,7 @@ describe('Test: subscribe controller', () => {
 
       return kuzzle.funnel.controllers.subscribe.on(requestObject, {})
         .then(response => {
-          should(response.responseObject).be.instanceOf(ResponseObject);
+          // TODO test response format
           should(response.userContext).be.instanceOf(Object);
         });
     });
@@ -49,7 +48,7 @@ describe('Test: subscribe controller', () => {
       sandbox.stub(kuzzle.hotelClerk, 'removeSubscription').returns(Promise.resolve());
       return kuzzle.funnel.controllers.subscribe.off(requestObject, {})
         .then(response => {
-          should(response.responseObject).be.instanceOf(ResponseObject);
+          // TODO test response format
           should(response.userContext).be.instanceOf(Object);
         });
     });
@@ -66,7 +65,7 @@ describe('Test: subscribe controller', () => {
       sandbox.stub(kuzzle.hotelClerk, 'countSubscription').returns(Promise.resolve());
       return kuzzle.funnel.controllers.subscribe.count(requestObject, {})
         .then(response => {
-          should(response.responseObject).be.instanceOf(ResponseObject);
+          // TODO test response format
           should(response.userContext).be.instanceOf(Object);
         });
     });
@@ -91,7 +90,7 @@ describe('Test: subscribe controller', () => {
       sandbox.stub(kuzzle.hotelClerk, 'listSubscriptions').returns(Promise.resolve());
       return kuzzle.funnel.controllers.subscribe.list(requestObject, {})
         .then(response => {
-          should(response.responseObject).be.instanceOf(ResponseObject);
+          // TODO test response format
           should(response.userContext).be.instanceOf(Object);
         });
     });
@@ -108,7 +107,7 @@ describe('Test: subscribe controller', () => {
       sandbox.stub(kuzzle.hotelClerk, 'join').returns(Promise.resolve());
       return kuzzle.funnel.controllers.subscribe.join(requestObject, {})
         .then(response => {
-          should(response.responseObject).be.instanceOf(ResponseObject);
+          // TODO test response format
           should(response.userContext).be.instanceOf(Object);
         });
     });

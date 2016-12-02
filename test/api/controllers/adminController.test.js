@@ -4,10 +4,9 @@ var
   sinon = require('sinon'),
   rewire = require('rewire'),
   AdminController = rewire('../../../lib/api/controllers/adminController'),
-  RequestObject = require('kuzzle-common-objects').Models.requestObject,
-  ResponseObject = require('kuzzle-common-objects').Models.responseObject,
-  BadRequestError = require('kuzzle-common-objects').Errors.badRequestError,
-  PartialError = require('kuzzle-common-objects').Errors.partialError,
+  Request = require('kuzzle-common-objects').Request,
+  BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,
+  PartialError = require('kuzzle-common-objects').errors.PartialError,
   KuzzleMock = require('../../mocks/kuzzle.mock'),
   sandbox = sinon.sandbox.create();
 
@@ -24,7 +23,7 @@ describe('Test: admin controller', () => {
     kuzzle = new KuzzleMock();
 
     adminController = new AdminController(kuzzle);
-    requestObject = new RequestObject({controller: 'admin'}, {index, collection}, 'unit-test');
+    requestObject = new Request({controller: 'admin'}, {index, collection}, 'unit-test');
   });
 
   afterEach(() => {
@@ -46,7 +45,7 @@ describe('Test: admin controller', () => {
           should(kuzzle.indexCache.add).be.calledWith(requestObject.index, requestObject.collection);
 
           should(response.userContext).be.instanceof(Object);
-          should(response.responseObject).be.an.instanceOf(ResponseObject);
+          // TODO test response format
           should(response.responseObject).match({
             status: 200,
             error: null,
@@ -70,7 +69,7 @@ describe('Test: admin controller', () => {
           should(kuzzle.services.list.storageEngine.getMapping).be.calledWith(requestObject);
 
           should(response.userContext).be.instanceof(Object);
-          should(response.responseObject).be.an.instanceOf(ResponseObject);
+          // TODO test response format
         });
     });
   });
@@ -87,7 +86,7 @@ describe('Test: admin controller', () => {
           should(kuzzle.statistics.getStats).be.calledWith(requestObject);
 
           should(response.userContext).be.instanceof(Object);
-          should(response.responseObject).be.an.instanceOf(ResponseObject);
+          // TODO test response format
           should(response.responseObject).match({
             status: 200,
             error: null,
@@ -113,7 +112,7 @@ describe('Test: admin controller', () => {
           should(kuzzle.statistics.getLastStats).be.calledOnce();
 
           should(response.userContext).be.instanceof(Object);
-          should(response.responseObject).be.an.instanceOf(ResponseObject);
+          // TODO test response format
           should(response.responseObject).match({
             status: 200,
             error: null,
@@ -138,7 +137,7 @@ describe('Test: admin controller', () => {
           should(kuzzle.statistics.getAllStats).be.calledWith(requestObject);
 
           should(response.userContext).be.instanceof(Object);
-          should(response.responseObject).be.an.instanceOf(ResponseObject);
+          // TODO test response format
           should(response.responseObject).match({
             status: 200,
             error: null,
@@ -167,7 +166,7 @@ describe('Test: admin controller', () => {
           should(truncate).be.calledWith(requestObject);
 
           should(response.userContext).be.instanceof(Object);
-          should(response.responseObject).be.an.instanceOf(ResponseObject);
+          // TODO test response format
           should(response.responseObject).match({
             status: 200,
             error: null,
@@ -221,7 +220,7 @@ describe('Test: admin controller', () => {
 
             should(trigger).be.calledTwice();
             should(trigger.firstCall).be.calledWith('data:beforeDeleteIndexes');
-            should(trigger.firstCall.args[1].requestObject).be.an.instanceOf(RequestObject);
+            should(trigger.firstCall.args[1].requestObject).be.an.instanceOf(Request);
             should(trigger.firstCall.args[1].requestObject).match({
               data: {
                 body: {
@@ -231,7 +230,7 @@ describe('Test: admin controller', () => {
             });
 
             should(engine.deleteIndexes).be.calledOnce();
-            should(engine.deleteIndexes.firstCall.args[0]).be.an.instanceOf(RequestObject);
+            should(engine.deleteIndexes.firstCall.args[0]).be.an.instanceOf(Request);
             should(engine.deleteIndexes.firstCall.args[0]).match({
               data: {
                 body: {
@@ -248,7 +247,7 @@ describe('Test: admin controller', () => {
             should(trigger.secondCall).be.calledWith('data:afterDeleteIndexes');
 
             should(response.userContext).be.instanceof(Object);
-            should(response.responseObject).be.an.instanceOf(ResponseObject);
+            // TODO test response format
             should(response.responseObject).match({
               status: 200,
               error: null,
@@ -285,7 +284,7 @@ describe('Test: admin controller', () => {
           should(trigger.secondCall).be.calledWith('data:afterCreateIndex');
 
           should(response.userContext).be.instanceof(Object);
-          should(response.responseObject).be.an.instanceOf(ResponseObject);
+          // TODO test response format
           should(response.responseObject).match({
             data: {
               body: foo
@@ -315,7 +314,7 @@ describe('Test: admin controller', () => {
           should(trigger.secondCall).be.calledWith('data:afterDeleteIndex');
 
           should(response.userContext).be.instanceof(Object);
-          should(response.responseObject).be.an.instanceOf(ResponseObject);
+          // TODO test response format
           should(response.responseObject).match({
             status: 200,
             error: null,
@@ -357,7 +356,7 @@ describe('Test: admin controller', () => {
           should(trigger.secondCall).be.calledWith('subscription:afterRemoveRooms');
 
           should(response.userContext).be.instanceof(Object);
-          should(response.responseObject).be.an.instanceOf(ResponseObject);
+          // TODO test response format
           should(response.responseObject).match({
             status: 200,
             error: null,
@@ -385,7 +384,7 @@ describe('Test: admin controller', () => {
           should(stub).be.calledWith(requestObject);
 
           should(response.userContext).be.instanceof(Object);
-          should(response.responseObject).be.an.instanceOf(ResponseObject);
+          // TODO test response format
           should(response.responseObject.error).be.an.instanceOf(PartialError);
           should(response.responseObject).match({
             status: 206,
@@ -412,7 +411,7 @@ describe('Test: admin controller', () => {
           should(trigger.secondCall).be.calledWith('data:afterRefreshIndex');
 
           should(response.userContext).be.instanceof(Object);
-          should(response.responseObject).be.an.instanceOf(ResponseObject);
+          // TODO test response format
           should(response.responseObject).match({
             status: 200,
             error: null,
@@ -438,7 +437,7 @@ describe('Test: admin controller', () => {
           should(kuzzle.internalEngine.refresh).be.calledOnce();
 
           should(response.userContext).be.instanceof(Object);
-          should(response.responseObject).be.an.instanceOf(ResponseObject);
+          // TODO test response format
           should(response.responseObject).match({
             status: 200,
             error: null,
@@ -469,7 +468,7 @@ describe('Test: admin controller', () => {
           should(trigger.secondCall).be.calledWith('data:afterGetAutoRefresh');
 
           should(response.userContext).be.instanceof(Object);
-          should(response.responseObject).be.an.instanceOf(ResponseObject);
+          // TODO test response format
           should(response.responseObject).match({
             status: 200,
             error: null,
@@ -502,7 +501,7 @@ describe('Test: admin controller', () => {
           should(trigger.secondCall).be.calledWith('data:afterSetAutoRefresh');
 
           should(response.userContext).be.instanceof(Object);
-          should(response.responseObject).be.an.instanceOf(ResponseObject);
+          // TODO test response format
           should(response.responseObject).match({
             status: 200,
             error: null,
@@ -577,7 +576,7 @@ describe('Test: admin controller', () => {
     });
 
     it('should do nothing if admin already exists', () => {
-      var request = new RequestObject({
+      var request = new Request({
         _id: 'toto',
         body: {
           password: 'pwd'
@@ -590,7 +589,7 @@ describe('Test: admin controller', () => {
     });
 
     it('should create the admin user and not reset roles & profiles if not asked to', () => {
-      var request = new RequestObject({
+      var request = new Request({
         _id: 'toto',
         body: {
           password: 'pwd'
@@ -614,7 +613,7 @@ describe('Test: admin controller', () => {
     });
 
     it('should create the admin user and reset roles & profiles if asked to', () => {
-      var request = new RequestObject({
+      var request = new Request({
         _id: 'toto',
         body: {
           password: 'pwd',

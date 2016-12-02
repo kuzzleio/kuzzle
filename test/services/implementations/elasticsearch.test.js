@@ -5,10 +5,10 @@ const
   Promise = require('bluebird'),
   sinon = require('sinon'),
   rewire = require('rewire'),
-  Kuzzle = require.main.require('lib/api/kuzzle'),
-  RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
-  BadRequestError = require.main.require('kuzzle-common-objects').Errors.badRequestError,
-  NotFoundError = require.main.require('kuzzle-common-objects').Errors.notFoundError,
+  Kuzzle = require('../../../lib/api/kuzzle'),
+  Request = require('kuzzle-common-objects').Request,
+  BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,
+  NotFoundError = require('kuzzle-common-objects').errors.NotFoundError,
   ESClientMock = require('../../mocks/services/elasticsearchClient.mock'),
   ES = rewire('../../../lib/services/elasticsearch');
 
@@ -121,7 +121,7 @@ describe('Test: ElasticSearch service', () => {
       }
     };
 
-    requestObject = new RequestObject({
+    requestObject = new Request({
       controller: 'write',
       action: 'create',
       requestId: 'foo',
@@ -1194,7 +1194,7 @@ describe('Test: ElasticSearch service', () => {
         .then(() => {
           var request = spy.firstCall.args[0];
 
-          should(request).be.an.instanceOf(RequestObject);
+          should(request).be.an.instanceOf(Request);
           should(request.data.body).be.Object().and.be.empty();
         })).be.fulfilled();
     });
@@ -1325,7 +1325,7 @@ describe('Test: ElasticSearch service', () => {
     it('should toggle the autoRefresh status', () => {
       var
         spy = sandbox.stub(kuzzle.internalEngine, 'createOrReplace').returns(Promise.resolve({})),
-        req = new RequestObject({
+        req = new Request({
           index: requestObject.index,
           body: { autoRefresh: true }
         });

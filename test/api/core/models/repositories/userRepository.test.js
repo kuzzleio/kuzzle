@@ -2,12 +2,12 @@ var
   Promise = require('bluebird'),
   _ = require('lodash'),
   should = require('should'),
-  Kuzzle = require.main.require('lib/api/kuzzle'),
-  InternalError = require.main.require('kuzzle-common-objects').Errors.internalError,
-  NotFoundError = require.main.require('kuzzle-common-objects').Errors.notFoundError,
-  Profile = require.main.require('lib/api/core/models/security/profile'),
-  User = require.main.require('lib/api/core/models/security/user'),
-  UserRepository = require.main.require('lib/api/core/models/repositories/userRepository');
+  Kuzzle = require('../../../../../lib/api/kuzzle'),
+  InternalError = require('kuzzle-common-objects').errors.InternalError,
+  NotFoundError = require('kuzzle-common-objects').errors.NotFoundError,
+  Profile = require('../../../../../lib/api/core/models/security/profile'),
+  User = require('../../../../../lib/api/core/models/security/user'),
+  UserRepository = require('../../../../../lib/api/core/models/repositories/userRepository');
 
 describe('Test: repositories/userRepository', () => {
   var

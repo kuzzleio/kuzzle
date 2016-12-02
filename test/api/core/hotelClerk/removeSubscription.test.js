@@ -3,9 +3,9 @@ var
   Promise = require('bluebird'),
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
-  RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
-  BadRequestError = require.main.require('kuzzle-common-objects').Errors.badRequestError,
-  NotFoundError = require.main.require('kuzzle-common-objects').Errors.notFoundError,
+  Request = require('kuzzle-common-objects').Request,
+  BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,
+  NotFoundError = require('kuzzle-common-objects').errors.NotFoundError,
   Dsl = require('../../../../lib/api/dsl'),
   HotelClerk = require('../../../../lib/api/core/hotelClerk'),
   Kuzzle = require('../../../mocks/kuzzle.mock');
@@ -28,7 +28,7 @@ describe('Test: hotelClerk.removeSubscription', () => {
     kuzzle.hotelClerk = new HotelClerk(kuzzle);
     kuzzle.dsl = new Dsl();
 
-    unsubscribeRequest = new RequestObject({
+    unsubscribeRequest = new Request({
       controller: 'subscribe',
       action: 'off',
       index: index,
@@ -135,7 +135,7 @@ describe('Test: hotelClerk.removeSubscription', () => {
         should(kuzzle.notifier.notify.args[0][0]).match(['foo']);
 
         // testing requestObject argument
-        should(kuzzle.notifier.notify.args[0][1]).be.instanceOf(RequestObject);
+        should(kuzzle.notifier.notify.args[0][1]).be.instanceOf(Request);
         should(kuzzle.notifier.notify.args[0][1].controller).be.exactly('subscribe');
         should(kuzzle.notifier.notify.args[0][1].action).be.exactly('off');
         should(kuzzle.notifier.notify.args[0][1].index).be.exactly(index);

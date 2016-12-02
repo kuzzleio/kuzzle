@@ -1,9 +1,9 @@
 var
   should = require('should'),
-  RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
+  Request = require('kuzzle-common-objects').Request,
   Dsl = require('../../../../lib/api/dsl'),
   HotelClerk = require('../../../../lib/api/core/hotelClerk'),
-  NotificationObject = require.main.require('lib/api/core/models/notificationObject'),
+  NotificationObject = require('../../../../lib/api/core/models/notificationObject'),
   Kuzzle = require('../../../mocks/kuzzle.mock');
 
 describe('Test: hotelClerk.addToChannels', () => {
@@ -54,18 +54,18 @@ describe('Test: hotelClerk.addToChannels', () => {
       channels = {};
 
     request.state = 'all';
-    kuzzle.hotelClerk.addSubscription(new RequestObject(request), context)
+    kuzzle.hotelClerk.addSubscription(new Request(request), context)
       .then(response => {
         roomId = response.roomId;
-        notification = new NotificationObject(response.roomId, new RequestObject({collection: 'foo', body: dataGrace}));
+        notification = new NotificationObject(response.roomId, new Request({collection: 'foo', body: dataGrace}));
         channels.all = response.channel;
         request.state = 'done';
-        return kuzzle.hotelClerk.addSubscription(new RequestObject(request), context);
+        return kuzzle.hotelClerk.addSubscription(new Request(request), context);
       })
       .then(response => {
         channels.done = response.channel;
         request.state = 'pending';
-        return kuzzle.hotelClerk.addSubscription(new RequestObject(request), context);
+        return kuzzle.hotelClerk.addSubscription(new Request(request), context);
       })
       .then(response => {
         var eligibleChannels = [];
@@ -102,23 +102,23 @@ describe('Test: hotelClerk.addToChannels', () => {
       channels = {};
 
     request.scope = 'all';
-    kuzzle.hotelClerk.addSubscription(new RequestObject(request), context)
+    kuzzle.hotelClerk.addSubscription(new Request(request), context)
       .then(response => {
         roomId = response.roomId;
-        notification = new NotificationObject(response.roomId, new RequestObject({collection: 'foo', body: dataGrace}));
+        notification = new NotificationObject(response.roomId, new Request({collection: 'foo', body: dataGrace}));
         channels.all = response.channel;
         request.scope = 'in';
-        return kuzzle.hotelClerk.addSubscription(new RequestObject(request), context);
+        return kuzzle.hotelClerk.addSubscription(new Request(request), context);
       })
       .then(response => {
         channels.in = response.channel;
         request.scope = 'out';
-        return kuzzle.hotelClerk.addSubscription(new RequestObject(request), context);
+        return kuzzle.hotelClerk.addSubscription(new Request(request), context);
       })
       .then(response => {
         channels.out = response.channel;
         request.scope = 'none';
-        return kuzzle.hotelClerk.addSubscription(new RequestObject(request), context);
+        return kuzzle.hotelClerk.addSubscription(new Request(request), context);
       })
       .then(response => {
         var eligibleChannels = [];
@@ -152,24 +152,24 @@ describe('Test: hotelClerk.addToChannels', () => {
       channels = {};
 
     request.users = 'all';
-    kuzzle.hotelClerk.addSubscription(new RequestObject(request), context)
+    kuzzle.hotelClerk.addSubscription(new Request(request), context)
       .then(response => {
         roomId = response.roomId;
-        notification = new NotificationObject(response.roomId, new RequestObject({collection: 'foo', body: dataGrace}));
+        notification = new NotificationObject(response.roomId, new Request({collection: 'foo', body: dataGrace}));
         notification.controller = 'subscribe';
         channels.all = response.channel;
         request.users = 'in';
-        return kuzzle.hotelClerk.addSubscription(new RequestObject(request), context);
+        return kuzzle.hotelClerk.addSubscription(new Request(request), context);
       })
       .then(response => {
         channels.in = response.channel;
         request.users = 'out';
-        return kuzzle.hotelClerk.addSubscription(new RequestObject(request), context);
+        return kuzzle.hotelClerk.addSubscription(new Request(request), context);
       })
       .then(response => {
         channels.out = response.channel;
         request.users = 'none';
-        return kuzzle.hotelClerk.addSubscription(new RequestObject(request), context);
+        return kuzzle.hotelClerk.addSubscription(new Request(request), context);
       })
       .then(response => {
         var eligibleChannels = [];

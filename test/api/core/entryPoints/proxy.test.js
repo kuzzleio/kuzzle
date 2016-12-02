@@ -7,10 +7,9 @@ var
   rewire = require('rewire'),
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
-  Kuzzle = require.main.require('lib/api/kuzzle'),
+  Kuzzle = require('../../../../lib/api/kuzzle'),
   KuzzleProxy = rewire('../../../../lib/api/core/entryPoints/kuzzleProxy'),
-  RequestObject = require('kuzzle-common-objects').Models.requestObject,
-  ResponseObject = require('kuzzle-common-objects').Models.responseObject;
+  Request = require('kuzzle-common-objects').Request;
 
 describe('Test: entryPoints/proxy', () => {
   var
@@ -118,7 +117,7 @@ describe('Test: entryPoints/proxy', () => {
     KuzzleProxy.__get__('onRequest').call({kuzzle: kuzzle}, data);
 
     requestObject = spyExecute.args[0][0];
-    should(requestObject).instanceOf(RequestObject);
+    should(requestObject).instanceOf(Request);
   });
 
   it('should call the funnel execute and send the response on broker on event onRequest', () => {
@@ -126,9 +125,9 @@ describe('Test: entryPoints/proxy', () => {
       data = {request: {}, context: {connection: {type: 'socketio', id: 'myid'}}},
       spySend = sandbox.stub(kuzzle.services.list.proxyBroker, 'send');
 
+    // TODO something
     sandbox.stub(kuzzle.funnel, 'execute', (requestObject, context, cb) => {
-      var responseObject = new ResponseObject(requestObject, {});
-      cb(null, responseObject);
+      cb(null, requestObject);
     });
     KuzzleProxy.__get__('onRequest').call({kuzzle: kuzzle}, data);
 

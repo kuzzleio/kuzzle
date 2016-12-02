@@ -1,9 +1,9 @@
 var
   Promise = require('bluebird'),
   should = require('should'),
-  Kuzzle = require.main.require('lib/api/kuzzle'),
-  InternalError = require.main.require('kuzzle-common-objects').Errors.internalError,
-  Repository = require.main.require('lib/api/core/models/repositories/repository');
+  Kuzzle = require('../../../../../lib/api/kuzzle'),
+  InternalError = require('kuzzle-common-objects').errors.InternalError,
+  Repository = require('../../../../../lib/api/core/models/repositories/repository');
 
 describe('Test: repositories/repository', () => {
   var

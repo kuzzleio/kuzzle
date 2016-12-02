@@ -10,13 +10,13 @@ var
   Promise = require('bluebird'),
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
-  RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
-  Kuzzle = require.main.require('lib/api/kuzzle');
+  Request = require('kuzzle-common-objects').Request,
+  Kuzzle = require('../../../../lib/api/kuzzle');
 
 describe('Test: notifier.notifyDocumentCreate', () => {
   var
     kuzzle,
-    requestObject = new RequestObject({
+    requestObject = new Request({
       controller: 'write',
       action: 'create',
       requestId: 'foo',

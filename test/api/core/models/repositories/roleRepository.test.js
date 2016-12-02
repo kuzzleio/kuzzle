@@ -3,11 +3,11 @@ var
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
   should = require('should'),
-  BadRequestError = require('kuzzle-common-objects').Errors.badRequestError,
-  InternalError = require.main.require('kuzzle-common-objects').Errors.internalError,
-  RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
-  Role = require.main.require('lib/api/core/models/security/role'),
-  Kuzzle = require.main.require('lib/api/kuzzle');
+  BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,
+  InternalError = require('kuzzle-common-objects').errors.InternalError,
+  Request = require('kuzzle-common-objects').Request,
+  Role = require('../../../../../lib/api/core/models/security/role'),
+  Kuzzle = require('../../../../../lib/api/kuzzle');
 
 describe('Test: repositories/roleRepository', () => {
   var
@@ -142,7 +142,7 @@ describe('Test: repositories/roleRepository', () => {
         return Promise.resolve();
       });
 
-      return kuzzle.repositories.role.searchRole(new RequestObject({body: {from: 1, size: 3}}))
+      return kuzzle.repositories.role.searchRole(new Request({body: {from: 1, size: 3}}))
         .then(() => {
           should(savedQuery).be.eql({query: {}});
           should(savedFrom).be.eql(1);
@@ -160,7 +160,7 @@ describe('Test: repositories/roleRepository', () => {
         return Promise.resolve();
       });
 
-      return kuzzle.repositories.role.searchRole(new RequestObject({body: {controllers: ['test']}}))
+      return kuzzle.repositories.role.searchRole(new Request({body: {controllers: ['test']}}))
         .then(() => {
           should(savedQuery).be.eql({
             query: {
@@ -203,7 +203,7 @@ describe('Test: repositories/roleRepository', () => {
     });
   });
 
-  describe('#getRoleFromRequestObject', () => {
+  describe('#getRoleFromRequest', () => {
     it('should build a valid role object', () => {
       var
         controllers = {
@@ -213,7 +213,7 @@ describe('Test: repositories/roleRepository', () => {
             }
           }
         },
-        requestObject = new RequestObject({
+        requestObject = new Request({
           collection: 'collection',
           controller: 'controller',
           action: 'action',
@@ -224,7 +224,7 @@ describe('Test: repositories/roleRepository', () => {
         }),
         role;
 
-      role = kuzzle.repositories.role.getRoleFromRequestObject(requestObject);
+      role = kuzzle.repositories.role.getRoleFromRequest(requestObject);
 
       should(role._id).be.exactly('roleId');
       should(role.controllers).be.eql(controllers);

@@ -3,7 +3,7 @@ var
   Promise = require('bluebird'),
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
-  Kuzzle = require.main.require('lib/api/kuzzle');
+  Kuzzle = require('../../../../lib/api/kuzzle');
 
 describe('Test: hotelClerk.listSubscription', () => {
   var

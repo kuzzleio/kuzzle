@@ -4,7 +4,7 @@ var
   rewire = require('rewire'),
   sinon = require('sinon'),
   PluginPackageMock = require('../../../mocks/plugins/pluginPackage.mock'),
-  RequestObject = require('kuzzle-common-objects').Models.requestObject,
+  Request = require('kuzzle-common-objects').Request,
   ManagePlugins = rewire('../../../../lib/api/controllers/cli/managePlugins');
 
 describe('Test: managePlugins cli actions', () => {
@@ -31,7 +31,7 @@ describe('Test: managePlugins cli actions', () => {
 
   describe('--list', () => {
     it('should return plugin packages definitions', () => {
-      return managePlugins(new RequestObject({
+      return managePlugins(new Request({
         body: {
           list: true
         }
@@ -58,7 +58,7 @@ describe('Test: managePlugins cli actions', () => {
         version: '42'
       }));
 
-      return managePlugins(new RequestObject({
+      return managePlugins(new Request({
         _id: 'plugin',
         body: { install: true, foo: 'bar' }
       }))

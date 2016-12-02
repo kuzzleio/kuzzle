@@ -2,7 +2,7 @@ var
   should = require('should'),
   sinon = require('sinon'),
   rewire = require('rewire'),
-  BadRequestError = require('kuzzle-common-objects').Errors.badRequestError,
+  BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,
   Validation = rewire('../../../../lib/api/core/validation'),
   KuzzleMock = require('../../../mocks/kuzzle.mock');
 

@@ -8,11 +8,11 @@ var
   rewire = require('rewire'),
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
-  Kuzzle = require.main.require('lib/api/kuzzle'),
+  Kuzzle = require('../../../lib/api/kuzzle'),
   Redis = rewire('../../../lib/services/redis'),
   RedisClientMock = require('../../mocks/services/redisClient.mock'),
-  RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
-  BadRequestError = require.main.require('kuzzle-common-objects').Errors.badRequestError,
+  Request = require('kuzzle-common-objects').Request,
+  BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,
   Statistics = rewire('../../../lib/api/core/statistics');
 
 describe('Test: statistics core component', () => {
@@ -38,7 +38,7 @@ describe('Test: statistics core component', () => {
   });
 
   beforeEach(() => {
-    requestObject = new RequestObject({
+    requestObject = new Request({
       controller: 'admin',
       action: '',
       requestId: 'foo',

@@ -2,9 +2,9 @@ var
   should = require('should'),
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
-  InternalError = require('kuzzle-common-objects').Errors.internalError,
+  InternalError = require('kuzzle-common-objects').errors.InternalError,
   KuzzleMock = require('../../../mocks/kuzzle.mock'),
-  RequestObject = require('kuzzle-common-objects').Models.requestObject,
+  Request = require('kuzzle-common-objects').Request,
   dataHandler = require('../../../../lib/api/controllers/cli/data');
 
 describe('Test: data handler', () => {
@@ -30,7 +30,7 @@ describe('Test: data handler', () => {
 
   it('should import fixtures if required', () => {
     var
-      req = new RequestObject({
+      req = new Request({
         index: 'index',
         collection: 'collection',
         body: {fixtures: fixtures}
@@ -59,7 +59,7 @@ describe('Test: data handler', () => {
 
   it('should reject the promise in case of partial errors when importing fixtures', () => {
     var
-      req = new RequestObject({
+      req = new Request({
         index: 'index',
         collection: 'collection',
         body: {
@@ -81,7 +81,7 @@ describe('Test: data handler', () => {
 
   it('should import mapping if required', () => {
     var
-      req = new RequestObject({
+      req = new Request({
         index: 'index',
         collection: 'collection',
         body: {mappings: {
@@ -126,7 +126,7 @@ describe('Test: data handler', () => {
   });
 
   it('should import both fixtures and mappings if required', () => {
-    var request = new RequestObject({
+    var request = new Request({
       index: 'index',
       collection: 'collection',
       body: {

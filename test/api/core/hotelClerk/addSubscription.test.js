@@ -1,10 +1,10 @@
 var
   should = require('should'),
   Promise = require('bluebird'),
-  RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
+  Request = require('kuzzle-common-objects').Request,
   HotelClerk = require('../../../../lib/api/core/hotelClerk'),
-  InternalError = require.main.require('kuzzle-common-objects').Errors.internalError,
-  BadRequestError = require.main.require('kuzzle-common-objects').Errors.badRequestError,
+  InternalError = require('kuzzle-common-objects').errors.InternalError,
+  BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,
   Kuzzle = require('../../../mocks/kuzzle.mock');
 
 describe('Test: hotelClerk.addSubscription', () => {
@@ -45,7 +45,7 @@ describe('Test: hotelClerk.addSubscription', () => {
   });
 
   it('should have the new room and customer', () => {
-    var requestObject = new RequestObject({
+    var requestObject = new Request({
       controller: 'subscribe',
       action: 'on',
       requestId: roomName,
@@ -99,7 +99,7 @@ describe('Test: hotelClerk.addSubscription', () => {
   });
 
   it('should trigger a proxy:joinChannel hook', () => {
-    var requestObject = new RequestObject({
+    var requestObject = new Request({
       controller: 'subscribe',
       collection: collection,
       index: index,
@@ -122,7 +122,7 @@ describe('Test: hotelClerk.addSubscription', () => {
   });
 
   it('should return the same response when the user has already subscribed to the filter', done => {
-    var requestObject = new RequestObject({
+    var requestObject = new Request({
       controller: 'subscribe',
       collection: collection,
       index: index,
@@ -144,7 +144,7 @@ describe('Test: hotelClerk.addSubscription', () => {
   it('should reject an error when a filter is unknown', () => {
     var
       pAddSubscription,
-      requestObject = new RequestObject({
+      requestObject = new Request({
         controller: 'subscribe',
         action: 'on',
         collection: collection,
@@ -160,7 +160,7 @@ describe('Test: hotelClerk.addSubscription', () => {
   it('should reject with an error if no index is provided', () => {
     var
       pAddSubscription,
-      requestObject = new RequestObject({
+      requestObject = new Request({
         controller: 'subscribe',
         action: 'on',
         collection,
@@ -174,7 +174,7 @@ describe('Test: hotelClerk.addSubscription', () => {
   it('should reject with an error if no collection is provided', () => {
     var
       pAddSubscription,
-      requestObject = new RequestObject({
+      requestObject = new Request({
         controller: 'subscribe',
         action: 'on',
         index,
@@ -188,7 +188,7 @@ describe('Test: hotelClerk.addSubscription', () => {
 
   it('should return the same room ID if the same filters are used', done => {
     var
-      requestObject1 = new RequestObject({
+      requestObject1 = new Request({
         controller: 'subscribe',
         collection: collection,
         index: index,
@@ -209,7 +209,7 @@ describe('Test: hotelClerk.addSubscription', () => {
           }
         }
       }),
-      requestObject2 = new RequestObject({
+      requestObject2 = new Request({
         controller: 'subscribe',
         collection: collection,
         index: index,
@@ -250,7 +250,7 @@ describe('Test: hotelClerk.addSubscription', () => {
 
   it('should allow subscribing with an empty filter', () => {
     var
-      requestObject = new RequestObject({
+      requestObject = new Request({
         controller: 'subscribe',
         index: index,
         collection: collection
@@ -263,7 +263,7 @@ describe('Test: hotelClerk.addSubscription', () => {
 
   it('should delay a room creation if it has been marked for destruction', done => {
     var
-      requestObject = new RequestObject({
+      requestObject = new Request({
         controller: 'subscribe',
         index: index,
         collection: collection
@@ -295,7 +295,7 @@ describe('Test: hotelClerk.addSubscription', () => {
   it('should allow to subscribe to an existing room', done => {
     var
       anotherRoomId,
-      requestObject1 = new RequestObject({
+      requestObject1 = new Request({
         controller: 'subscribe',
         index: index,
         collection: collection
@@ -315,7 +315,7 @@ describe('Test: hotelClerk.addSubscription', () => {
         }
       })
       .then(id => {
-        var requestObject2 = new RequestObject({
+        var requestObject2 = new Request({
           collection: collection,
           index: index,
           controller: 'subscribe',
@@ -350,7 +350,7 @@ describe('Test: hotelClerk.addSubscription', () => {
 
   it('#join should reject the promise if the room does not exist', () => {
     return should(kuzzle.hotelClerk.join(
-      new RequestObject({
+      new Request({
         collection: collection,
         index: index,
         controller: 'subscribe',
@@ -364,7 +364,7 @@ describe('Test: hotelClerk.addSubscription', () => {
 
   it('should reject the subscription if the given state argument is incorrect', () => {
     return should(kuzzle.hotelClerk.addSubscription(
-      new RequestObject({
+      new Request({
         collection: collection,
         controller: 'subscribe',
         action: 'on',
@@ -378,7 +378,7 @@ describe('Test: hotelClerk.addSubscription', () => {
 
   it('should reject the subscription if the given scope argument is incorrect', () => {
     return should(kuzzle.hotelClerk.addSubscription(
-      new RequestObject({
+      new Request({
         collection: collection,
         controller: 'subscribe',
         action: 'on',
@@ -392,7 +392,7 @@ describe('Test: hotelClerk.addSubscription', () => {
 
   it('should reject the subscription if the given users argument is incorrect', () => {
     return should(kuzzle.hotelClerk.addSubscription(
-      new RequestObject({
+      new Request({
         collection: collection,
         controller: 'subscribe',
         action: 'on',
@@ -406,13 +406,13 @@ describe('Test: hotelClerk.addSubscription', () => {
 
   it('should treat null/undefined filters as empty filters', done => {
     var
-      requestObject1 = new RequestObject({
+      requestObject1 = new Request({
         controller: 'subscribe',
         collection: collection,
         index: index,
         body: {}
       }),
-      requestObject2 = new RequestObject({
+      requestObject2 = new Request({
         controller: 'subscribe',
         collection: collection,
         index: index,

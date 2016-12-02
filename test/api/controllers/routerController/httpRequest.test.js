@@ -3,9 +3,8 @@
 const
   should = require('should'),
   sinon = require('sinon'),
-  HttpResponse = require.main.require('lib/api/core/entryPoints/httpResponse'),
-  RouterController = require.main.require('lib/api/controllers/routerController'),
-  ResponseObject = require('kuzzle-common-objects').Models.responseObject;
+  HttpResponse = require('../../../../lib/api/core/entryPoints/httpResponse'),
+  RouterController = require('../../../../lib/api/controllers/routerController');
 
 describe('Test: routerController.httpRequest', () => {
   let
@@ -19,7 +18,7 @@ describe('Test: routerController.httpRequest', () => {
     kuzzleStub = {
       config: {
         apiVersion: '1.0',
-        httpRoutes: require.main.require('lib/config/httpRoutes')
+        httpRoutes: require('../../../../lib/config/httpRoutes')
       },
       pluginsManager: {
         routes: [

@@ -10,8 +10,8 @@ var
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
   Promise = require('bluebird'),
-  RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
-  Kuzzle = require.main.require('lib/api/kuzzle');
+  Request = require('kuzzle-common-objects').Request,
+  Kuzzle = require('../../../../lib/api/kuzzle');
 
 describe('Test: notifier.notifyDocumentUpdate', () => {
   var
@@ -60,7 +60,7 @@ describe('Test: notifier.notifyDocumentUpdate', () => {
     sandbox.stub(kuzzle.internalEngine, 'get').returns(Promise.resolve({}));
     return kuzzle.services.init({whitelist: []})
       .then(() => {
-        requestObject = new RequestObject({
+        requestObject = new Request({
           controller: 'write',
           action: 'update',
           requestId: 'foo',

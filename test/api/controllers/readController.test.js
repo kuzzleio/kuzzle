@@ -3,8 +3,7 @@ var
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
   KuzzleMock = require('../../mocks/kuzzle.mock'),
-  RequestObject = require('kuzzle-common-objects').Models.requestObject,
-  ResponseObject = require('kuzzle-common-objects').Models.responseObject,
+  Request = require('kuzzle-common-objects').Request,
   ReadController = require('../../../lib/api/controllers/readController');
 
 describe('Test: read controller', () => {
@@ -16,7 +15,7 @@ describe('Test: read controller', () => {
   beforeEach(() => {
     kuzzle = new KuzzleMock();
     controller = new ReadController(kuzzle);
-    requestObject = new RequestObject({index: '%test', collection: 'unit-test-readcontroller'});
+    requestObject = new Request({index: '%test', collection: 'unit-test-readcontroller'});
   });
 
   afterEach(() => {
@@ -28,7 +27,7 @@ describe('Test: read controller', () => {
       return controller.search(requestObject, {})
         .then(response => {
           should(response.userContext).be.instanceof(Object);
-          should(response.responseObject).be.an.instanceOf(ResponseObject);
+          // TODO test response format
         });
     });
 
@@ -55,7 +54,7 @@ describe('Test: read controller', () => {
       return controller.scroll(requestObject, {})
         .then(response => {
           should(response.userContext).be.instanceof(Object);
-          should(response.responseObject).be.an.instanceOf(ResponseObject);
+          // TODO test response format
         });
     });
 
@@ -88,7 +87,7 @@ describe('Test: read controller', () => {
       return controller.get(requestObject, {})
         .then(response => {
           should(response.userContext).be.instanceof(Object);
-          should(response.responseObject).be.an.instanceOf(ResponseObject);
+          // TODO test response format
         });
     });
 
@@ -113,7 +112,7 @@ describe('Test: read controller', () => {
       return controller.count(requestObject, {})
         .then(response => {
           should(response.userContext).be.instanceof(Object);
-          should(response.responseObject).be.an.instanceOf(ResponseObject);
+          // TODO test response format
         });
     });
 
@@ -150,14 +149,14 @@ describe('Test: read controller', () => {
     });
 
     it('should resolve to a full collections list', () => {
-      requestObject = new RequestObject({index: 'index'}, {}, '');
+      requestObject = new Request({index: 'index'}, {}, '');
 
       return controller.listCollections(requestObject, userContext)
         .then(response => {
           should(kuzzle.hotelClerk.getRealtimeCollections).be.calledOnce();
           should(kuzzle.services.list.storageEngine.listCollections).be.calledOnce();
           should(response.userContext).be.instanceof(Object);
-          should(response.responseObject).be.an.instanceOf(ResponseObject);
+          // TODO test response format
           should(response.responseObject.data.body.type).be.exactly('all');
           should(response.responseObject.data.body.collections).not.be.undefined().and.be.an.Array();
           should(response.responseObject.data.body.collections).deepEqual([{name: 'bar', type: 'realtime'}, {name: 'foo', type: 'realtime'}, {name: 'foo', type: 'stored'}]);
@@ -175,18 +174,18 @@ describe('Test: read controller', () => {
     });
 
     it('should reject the request if an invalid "type" argument is provided', () => {
-      requestObject = new RequestObject({body: {type: 'foo'}}, {}, '');
+      requestObject = new Request({body: {type: 'foo'}}, {}, '');
 
       return should(controller.listCollections(requestObject, userContext)).be.rejected();
     });
 
     it('should only return stored collections with type = stored', () => {
-      requestObject = new RequestObject({body: {type: 'stored'}}, {}, '');
+      requestObject = new Request({body: {type: 'stored'}}, {}, '');
 
       return controller.listCollections(requestObject, userContext)
         .then(response => {
           should(response.userContext).be.instanceof(Object);
-          should(response.responseObject).be.an.instanceOf(ResponseObject);
+          // TODO test response format
           should(response.responseObject.data.body.type).be.exactly('stored');
           should(kuzzle.hotelClerk.getRealtimeCollections.called).be.false();
           should(kuzzle.services.list.storageEngine.listCollections.called).be.true();
@@ -194,12 +193,12 @@ describe('Test: read controller', () => {
     });
 
     it('should only return realtime collections with type = realtime', () => {
-      requestObject = new RequestObject({body: {type: 'realtime'}}, {}, '');
+      requestObject = new Request({body: {type: 'realtime'}}, {}, '');
 
       return controller.listCollections(requestObject, userContext)
         .then(response => {
           should(response.userContext).be.instanceof(Object);
-          should(response.responseObject).be.an.instanceOf(ResponseObject);
+          // TODO test response format
           should(response.responseObject.data.body.type).be.exactly('realtime');
           should(kuzzle.hotelClerk.getRealtimeCollections.called).be.true();
           should(kuzzle.services.list.storageEngine.listCollections.called).be.false();
@@ -207,7 +206,7 @@ describe('Test: read controller', () => {
     });
 
     it('should return a portion of the collection list if from and size are specified', () => {
-      requestObject = new RequestObject({index: 'index', body: {type: 'all', from: 2, size: 3}}, {}, '');
+      requestObject = new Request({index: 'index', body: {type: 'all', from: 2, size: 3}}, {}, '');
       kuzzle.services.list.storageEngine.listCollections.returns(Promise.resolve({collections: {stored: ['astored', 'bstored', 'cstored', 'dstored', 'estored']}}));
       kuzzle.hotelClerk.getRealtimeCollections.returns([
         {name: 'arealtime', index: 'index'}, {name: 'brealtime', index: 'index'}, {name: 'crealtime', index: 'index'}, {name: 'drealtime', index: 'index'}, {name: 'erealtime', index: 'index'}, {name: 'baz', index: 'wrong'}
@@ -215,7 +214,7 @@ describe('Test: read controller', () => {
 
       return controller.listCollections(requestObject, userContext).then(response => {
         should(response.userContext).be.instanceof(Object);
-        should(response.responseObject).be.an.instanceOf(ResponseObject);
+        // TODO test response format
         should(response.responseObject.data.body.collections).be.deepEqual([
           {name: 'brealtime', type: 'realtime'},
           {name: 'bstored', type: 'stored'},
@@ -228,14 +227,14 @@ describe('Test: read controller', () => {
     });
 
     it('should return a portion of the collection list if from is specified', () => {
-      requestObject = new RequestObject({index: 'index', body: {type: 'all', from: 8}}, {}, '');
+      requestObject = new Request({index: 'index', body: {type: 'all', from: 8}}, {}, '');
       kuzzle.services.list.storageEngine.listCollections.returns(Promise.resolve({collections: {stored: ['astored', 'bstored', 'cstored', 'dstored', 'estored']}}));
       kuzzle.hotelClerk.getRealtimeCollections.returns([
         {name: 'arealtime', index: 'index'}, {name: 'brealtime', index: 'index'}, {name: 'crealtime', index: 'index'}, {name: 'drealtime', index: 'index'}, {name: 'erealtime', index: 'index'}, {name: 'baz', index: 'wrong'}
       ]);
 
       return controller.listCollections(requestObject, userContext).then(response => {
-        should(response.responseObject).be.an.instanceOf(ResponseObject);
+        // TODO test response format
         should(response.responseObject.data.body.type).be.exactly('all');
         should(response.responseObject.data.body.collections).be.deepEqual([
           {name: 'erealtime', type: 'realtime'},
@@ -248,7 +247,7 @@ describe('Test: read controller', () => {
     });
 
     it('should return a portion of the collection list if size is specified', () => {
-      requestObject = new RequestObject({index: 'index', body: {type: 'all', size: 2}}, {}, '');
+      requestObject = new Request({index: 'index', body: {type: 'all', size: 2}}, {}, '');
       kuzzle.services.list.storageEngine.listCollections.returns(Promise.resolve({collections: {stored: ['astored', 'bstored', 'cstored', 'dstored', 'estored']}}));
       kuzzle.hotelClerk.getRealtimeCollections.returns([
         {name: 'arealtime', index: 'index'}, {name: 'brealtime', index: 'index'}, {name: 'crealtime', index: 'index'}, {name: 'drealtime', index: 'index'}, {name: 'erealtime', index: 'index'}, {name: 'baz', index: 'wrong'}
@@ -256,7 +255,7 @@ describe('Test: read controller', () => {
 
       return controller.listCollections(requestObject, userContext).then(response => {
         should(response.userContext).be.instanceof(Object);
-        should(response.responseObject).be.an.instanceOf(ResponseObject);
+        // TODO test response format
         should(response.responseObject.data.body.collections).be.deepEqual([
           {name: 'arealtime', type: 'realtime'},
           {name: 'astored', type: 'stored'}
@@ -270,13 +269,13 @@ describe('Test: read controller', () => {
 
     it('should reject with a response object if getting stored collections fails', () => {
       kuzzle.services.list.storageEngine.listCollections.returns(Promise.reject(new Error('foobar')));
-      requestObject = new RequestObject({body: {type: 'stored'}}, {}, '');
+      requestObject = new Request({body: {type: 'stored'}}, {}, '');
       return should(controller.listCollections(requestObject, userContext)).be.rejected();
     });
 
     it('should reject with a response object if getting all collections fails', () => {
       kuzzle.services.list.storageEngine.listCollections.returns(Promise.reject(new Error('foobar')));
-      requestObject = new RequestObject({body: {type: 'all'}}, {}, '');
+      requestObject = new Request({body: {type: 'all'}}, {}, '');
       return should(controller.listCollections(requestObject, userContext)).be.rejected();
     });
 
@@ -297,7 +296,7 @@ describe('Test: read controller', () => {
       return controller.now(requestObject)
         .then(response => {
           should(response.userContext).be.instanceof(Object);
-          should(response.responseObject).be.an.instanceOf(ResponseObject);
+          // TODO test response format
           should(response.responseObject.data).not.be.undefined();
           should(response.responseObject.data.body.now).not.be.undefined().and.be.a.Number();
         });
@@ -309,7 +308,7 @@ describe('Test: read controller', () => {
       return controller.listIndexes(requestObject, {})
         .then(response => {
           should(response.userContext).be.instanceof(Object);
-          should(response.responseObject).be.an.instanceOf(ResponseObject);
+          // TODO test response format
         });
     });
 
@@ -336,7 +335,7 @@ describe('Test: read controller', () => {
           var jsonResponse = response.responseObject.toJson();
 
           should(response.userContext).be.instanceof(Object);
-          should(response.responseObject).be.an.instanceOf(ResponseObject);
+          // TODO test response format
           should(jsonResponse.status).be.exactly(200);
           should(jsonResponse.error).be.null();
           should(jsonResponse.result).not.be.null();
@@ -364,7 +363,7 @@ describe('Test: read controller', () => {
       return controller.collectionExists(requestObject, {})
         .then(response => {
           should(response.userContext).be.instanceof(Object);
-          should(response.responseObject).be.an.instanceOf(ResponseObject);
+          // TODO test response format
           should(response.responseObject).match({
             error: null,
             data: {
@@ -389,7 +388,7 @@ describe('Test: read controller', () => {
       return controller.indexExists(requestObject, {})
         .then(response => {
           should(response.userContext).be.instanceof(Object);
-          should(response.responseObject).be.an.instanceOf(ResponseObject);
+          // TODO test response format
           should(response.responseObject).match({
             error: null,
             data: {

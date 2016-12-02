@@ -4,20 +4,19 @@ var
   jwt = require('jsonwebtoken'),
   ms = require('ms'),
   Promise = require('bluebird'),
-  /** @type {Params} */
+  /** @type KuzzleConfiguration */
   params = require('../../../lib/config'),
   passport = require('passport'),
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
   util = require('util'),
-  Kuzzle = require.main.require('lib/api/kuzzle'),
-  RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
-  ResponseObject = require.main.require('kuzzle-common-objects').Models.responseObject,
-  UnauthorizedError = require.main.require('kuzzle-common-objects').Errors.unauthorizedError,
-  InternalError = require.main.require('kuzzle-common-objects').Errors.internalError,
-  Token = require.main.require('lib/api/core/models/security/token'),
+  Kuzzle = require('../../../lib/api/kuzzle'),
+  Request = require('kuzzle-common-objects').Request,
+  UnauthorizedError = require('kuzzle-common-objects').errors.UnauthorizedError,
+  InternalError = require('kuzzle-common-objects').errors.InternalError,
+  Token = require('../../../lib/api/core/models/security/token'),
   userContext = {},
-  requestObject,
+  request,
   MockupStrategy;
 
 /**
@@ -31,6 +30,7 @@ MockupStrategy = function(name, verify) {
   this._verify = verify;
 
 };
+
 util.inherits(MockupStrategy, passport.Strategy);
 
 MockupStrategy.prototype.authenticate = function(req) {
@@ -64,7 +64,7 @@ describe('Test the auth controller', () => {
   });
 
   beforeEach(() => {
-    requestObject = new RequestObject({ controller: 'auth', action: 'login', body: {strategy: 'mockup', username: 'jdoe'} }, {}, 'unit-test');
+    request = new Request({ controller: 'auth', action: 'login', body: {strategy: 'mockup', username: 'jdoe'} });
     sandbox.stub(kuzzle.internalEngine, 'get').returns(Promise.resolve({}));
 
     return kuzzle.services.init({whitelist: []})
@@ -117,10 +117,10 @@ describe('Test the auth controller', () => {
     });
 
     it('should resolve to a valid jwt token if authentication succeed', () => {
-      sandbox.stub(kuzzle.passport, 'authenticate', request => Promise.resolve({_id: request.query.username}));
-      return kuzzle.funnel.controllers.auth.login(requestObject, {})
+      sandbox.stub(kuzzle.passport, 'authenticate', r => Promise.resolve({_id: r.query.username}));
+      return kuzzle.funnel.controllers.auth.login(request, {})
         .then(response => {
-          var decodedToken = jwt.verify(response.responseObject.data.body.jwt, params.security.jwt.secret);
+          var decodedToken = jwt.verify(response.jwt, params.security.jwt.secret);
           should(decodedToken._id).be.equal('jdoe');
         });
     });
@@ -128,9 +128,9 @@ describe('Test the auth controller', () => {
     it('should resolve to a redirect url', () => {
       sandbox.stub(kuzzle.passport, 'authenticate').returns(Promise.resolve({headers: {Location: 'http://github.com'}}));
 
-      return kuzzle.funnel.controllers.auth.login(requestObject, {})
+      return kuzzle.funnel.controllers.auth.login(request, {})
         .then(response => {
-          should(response.responseObject.data.body.headers.Location).be.equal('http://github.com');
+          should(response.headers.Location).be.equal('http://github.com');
         });
     });
 
@@ -141,9 +141,9 @@ describe('Test the auth controller', () => {
         return Promise.resolve('foo');
       });
 
-      delete requestObject.data.body.strategy;
+      delete request.data.body.strategy;
 
-      return kuzzle.funnel.controllers.auth.login(requestObject, {})
+      return kuzzle.funnel.controllers.auth.login(request, {})
         .then(() => {
           should(spy.calledOnce).be.true();
         });
@@ -152,10 +152,10 @@ describe('Test the auth controller', () => {
     it('should be able to set authentication expiration', function (done) {
       this.timeout(1200);
 
-      requestObject.data.body.expiresIn = '1s';
+      request.data.body.expiresIn = '1s';
 
-      sandbox.stub(kuzzle.passport, 'authenticate', request => Promise.resolve({_id: request.query.username}));
-      kuzzle.funnel.controllers.auth.login(requestObject, {connection: {id: 'banana'}})
+      sandbox.stub(kuzzle.passport, 'authenticate', r => Promise.resolve({_id: r.query.username}));
+      kuzzle.funnel.controllers.auth.login(request, {connection: {id: 'banana'}})
         .then(response => {
           var decodedToken = jwt.verify(response.responseObject.data.body.jwt, params.security.jwt.secret);
           should(decodedToken._id).be.equal('jdoe');
@@ -179,7 +179,7 @@ describe('Test the auth controller', () => {
         }
       };
 
-      requestObject.data.body.expiresIn = '1m';
+      request.data.body.expiresIn = '1m';
 
       kuzzle.repositories.token.generateToken.restore();
       sandbox.stub(kuzzle.tokenManager, 'add', token => {
@@ -188,13 +188,13 @@ describe('Test the auth controller', () => {
         should(token.expiresAt).be.approximately(Date.now() + token.ttl, 30);
       });
 
-      sandbox.stub(kuzzle.passport, 'authenticate', request => Promise.resolve({_id: request.query.username}));
-      return kuzzle.funnel.controllers.auth.login(requestObject, userContext);
+      sandbox.stub(kuzzle.passport, 'authenticate', r => Promise.resolve({_id: r.query.username}));
+      return kuzzle.funnel.controllers.auth.login(request, userContext);
     });
 
     it('should reject if authentication failure', () => {
       sandbox.stub(kuzzle.passport, 'authenticate').returns(Promise.reject(new Error('Mockup Wrapper Error')));
-      return kuzzle.funnel.controllers.auth.login(requestObject, {})
+      return kuzzle.funnel.controllers.auth.login(request, {})
         .then(() => should.fail('Authenticate should have reject'))
         .catch((error) => {
           should(error.message).be.exactly('Mockup Wrapper Error');
@@ -213,13 +213,11 @@ describe('Test the auth controller', () => {
 
       userContext = {connection: {id: 'papagaya'},token: t};
 
-      requestObject = new RequestObject({
+      request = new Request({
         controller: 'auth',
         action: 'logout',
-        header: {
-          authorization: 'Bearer ' + signedToken
-        }
-      }, {}, 'unit-test');
+        jwt: signedToken
+      });
 
       sandbox.stub(kuzzle.repositories.token, 'expire').returns(Promise.resolve());
 
@@ -229,9 +227,8 @@ describe('Test the auth controller', () => {
       var
         spy = sandbox.stub(kuzzle.pluginsManager, 'trigger', (event, data) => Promise.resolve(data));
 
-      return kuzzle.funnel.controllers.auth.logout(requestObject, userContext)
+      return kuzzle.funnel.controllers.auth.logout(request, userContext)
         .then(response => {
-          should(response.responseObject).be.an.instanceOf(ResponseObject);
           should(response.userContext).be.an.instanceOf(Object);
 
           should(spy.calledWith('auth:beforeLogout')).be.true();
@@ -248,7 +245,7 @@ describe('Test the auth controller', () => {
         }
       });
 
-      return should(kuzzle.funnel.controllers.auth.logout(requestObject, userContext)).be.rejectedWith(error);
+      return should(kuzzle.funnel.controllers.auth.logout(request, userContext)).be.rejectedWith(error);
     });
 
     it('should expire token', () => {
@@ -258,9 +255,8 @@ describe('Test the auth controller', () => {
         return Promise.resolve();
       });
 
-      return kuzzle.funnel.controllers.auth.logout(requestObject, userContext)
+      return kuzzle.funnel.controllers.auth.logout(request, userContext)
         .then(response => {
-          should(response.responseObject).be.instanceof(ResponseObject);
           should(response.responseObject).be.instanceof(Object);
         });
     });
@@ -269,17 +265,17 @@ describe('Test the auth controller', () => {
       var error = new Error('Mocked error');
       kuzzle.repositories.token.expire.restore();
       sandbox.stub(kuzzle.repositories.token, 'expire').returns(Promise.reject(error));
-      return should(kuzzle.funnel.controllers.auth.logout(requestObject, userContext)).be.rejectedWith(error);
+      return should(kuzzle.funnel.controllers.auth.logout(request, userContext)).be.rejectedWith(error);
     });
   });
 
   describe('#getCurrentUser', () => {
     it('should return the user given in the context', () => {
       var
-        request = new RequestObject({body: {}}),
+        req = new Request({body: {}}),
         uContext = {token: {userId: 'admin'}};
 
-      return kuzzle.funnel.controllers.auth.getCurrentUser(request, uContext)
+      return kuzzle.funnel.controllers.auth.getCurrentUser(req, uContext)
         .then(response => {
           should(response.responseObject.data.body._id).be.exactly('admin');
           should(response.responseObject.data.body._source.profileIds).be.eql(['admin']);
@@ -287,7 +283,7 @@ describe('Test the auth controller', () => {
     });
 
     it('should return a falsey response if the current user is unknown', () => {
-      return should(kuzzle.funnel.controllers.auth.getCurrentUser(new RequestObject({body: {}}), {token: { userId: 'unknown_user'}})).be.rejected();
+      return should(kuzzle.funnel.controllers.auth.getCurrentUser(new Request({body: {}}), {token: { userId: 'unknown_user'}})).be.rejected();
     });
   });
 
@@ -298,22 +294,21 @@ describe('Test the auth controller', () => {
       };
 
     beforeEach(() => {
-      requestObject = new RequestObject({action: 'checkToken', controller: 'auth'}, {body: {token: 'foobar'}});
+      request = new Request({action: 'checkToken', controller: 'auth'}, {body: {token: 'foobar'}});
     });
 
     it('should return a rejected promise if no token is provided', () => {
-      return should(kuzzle.funnel.controllers.auth.checkToken(new RequestObject({ body: {}}, {}))).be.rejected();
+      return should(kuzzle.funnel.controllers.auth.checkToken(new Request({ body: {}}))).be.rejected();
     });
 
     it('should return a valid response if the token is valid', () => {
       sandbox.stub(kuzzle.repositories.token, 'verifyToken', arg => {
-        should(arg).be.eql(requestObject.data.body.token);
+        should(arg).be.eql(request.data.body.token);
         return Promise.resolve(stubToken);
       });
 
-      return kuzzle.funnel.controllers.auth.checkToken(requestObject, {})
+      return kuzzle.funnel.controllers.auth.checkToken(request, {})
         .then(response => {
-          should(response.responseObject).be.instanceof(ResponseObject);
           should(response.userContext).be.instanceof(Object);
           should(response.responseObject.data.body.valid).be.true();
           should(response.responseObject.data.body.state).be.undefined();
@@ -323,15 +318,14 @@ describe('Test the auth controller', () => {
 
     it('should return a valid response if the token is not valid', () => {
       sandbox.stub(kuzzle.repositories.token, 'verifyToken', arg => {
-        should(arg).be.eql(requestObject.data.body.token);
+        should(arg).be.eql(request.data.body.token);
 
         return Promise.reject(new UnauthorizedError('foobar'));
       });
 
-      return kuzzle.funnel.controllers.auth.checkToken(requestObject, {})
+      return kuzzle.funnel.controllers.auth.checkToken(request, {})
         .then(response => {
           should(response.userContext).be.instanceof(Object);
-          should(response.responseObject).be.instanceof(ResponseObject);
           should(response.responseObject.data.body.valid).be.false();
           should(response.responseObject.data.body.state).be.eql('foobar');
           should(response.responseObject.data.body.expiresAt).be.undefined();
@@ -341,11 +335,11 @@ describe('Test the auth controller', () => {
     it('should return a rejected promise if an error occurs', () => {
       var error = new InternalError('Foobar');
       sandbox.stub(kuzzle.repositories.token, 'verifyToken', arg => {
-        should(arg).be.eql(requestObject.data.body.token);
+        should(arg).be.eql(request.data.body.token);
         return Promise.reject(error);
       });
 
-      return should(kuzzle.funnel.controllers.auth.checkToken(requestObject, {})).be.rejectedWith(error);
+      return should(kuzzle.funnel.controllers.auth.checkToken(request, {})).be.rejectedWith(error);
     });
   });
 
@@ -372,12 +366,11 @@ describe('Test the auth controller', () => {
       });
     });
 
-    it('should return a valid ResponseObject', () => {
-      return kuzzle.funnel.controllers.auth.updateSelf(new RequestObject({
+    it('should return a valid response', () => {
+      return kuzzle.funnel.controllers.auth.updateSelf(new Request({
         body: { foo: 'bar' }
       }), { token: { userId: 'admin', _id: 'admin' }})
         .then(response => {
-          should(response.responseObject).be.an.instanceOf(ResponseObject);
           should(response.userContext).be.instanceof(Object);
           should(persistOptions.database.method).be.exactly('update');
           should(response.responseObject.data.body._id).be.exactly('admin');
@@ -385,21 +378,21 @@ describe('Test the auth controller', () => {
     });
 
     it('should reject if profile is specified', () => {
-      should(kuzzle.funnel.controllers.auth.updateSelf(new RequestObject({body: {foo: 'bar', profileIds: ['test']}}), {token: {userId: 'admin', _id: 'admin'}})).be.rejected();
+      should(kuzzle.funnel.controllers.auth.updateSelf(new Request({body: {foo: 'bar', profileIds: ['test']}}), {token: {userId: 'admin', _id: 'admin'}})).be.rejected();
     });
 
     it('should reject if _id is specified in the body', () => {
-      should(kuzzle.funnel.controllers.auth.updateSelf(new RequestObject({body: { foo: 'bar', _id: 'test' }}), {token: {userId: 'admin', _id: 'admin'}})).be.rejected();
+      should(kuzzle.funnel.controllers.auth.updateSelf(new Request({body: { foo: 'bar', _id: 'test' }}), {token: {userId: 'admin', _id: 'admin'}})).be.rejected();
     });
 
     it('should reject a the promise if current user is anonymous', () => {
-      should(kuzzle.funnel.controllers.auth.updateSelf(new RequestObject({body: {foo: 'bar'}}), {token: {userId: {_id: -1},_id: null}})).be.rejected();
+      should(kuzzle.funnel.controllers.auth.updateSelf(new Request({body: {foo: 'bar'}}), {token: {userId: 'anonymous', _id: '-1'}})).be.rejected();
     });
   });
 
   describe('#getMyRights', () => {
     var
-      request = new RequestObject({body: {}}),
+      req = new Request({body: {}}),
       uContext = {token: {userId: 'test'}};
 
     it('should be able to get current user\'s rights', () => {
@@ -418,12 +411,11 @@ describe('Test the auth controller', () => {
 
       kuzzle.repositories.user.load.restore();
       sandbox.stub(kuzzle.repositories.user, 'load', loadUserStub);
-      return kuzzle.funnel.controllers.auth.getMyRights(request, uContext)
+      return kuzzle.funnel.controllers.auth.getMyRights(req, uContext)
         .then(response => {
           var filteredItem;
 
           should(response.userContext).be.instanceof(Object);
-          should(response.responseObject).be.an.instanceOf(ResponseObject);
           should(response.responseObject.data.body.hits).be.an.Array();
           should(response.responseObject.data.body.hits).length(2);
 

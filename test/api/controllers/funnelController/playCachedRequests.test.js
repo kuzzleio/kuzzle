@@ -2,8 +2,8 @@ var
   should = require('should'),
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
-  Kuzzle = require.main.require('lib/api/kuzzle'),
-  RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
+  Kuzzle = require('../../../../lib/api/kuzzle'),
+  Request = require('kuzzle-common-objects').Request,
   rewire = require('rewire'),
   FunnelController = rewire('../../../../lib/api/controllers/funnelController');
 
@@ -25,7 +25,7 @@ describe('funnelController.playCachedRequests', () => {
       token: null
     };
 
-    requestObject = new RequestObject({
+    requestObject = new Request({
       controller: 'foo',
       action: 'bar'
     });

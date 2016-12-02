@@ -3,9 +3,9 @@ var
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
   Promise = require('bluebird'),
-  Kuzzle = require.main.require('lib/api/kuzzle'),
-  Profile = require.main.require('lib/api/core/models/security/profile'),
-  Role = require.main.require('lib/api/core/models/security/role');
+  Kuzzle = require('../../../../../lib/api/kuzzle'),
+  Profile = require('../../../../../lib/api/core/models/security/profile'),
+  Role = require('../../../../../lib/api/core/models/security/role');
 
 describe('Test: security/profileTest', () => {
   var

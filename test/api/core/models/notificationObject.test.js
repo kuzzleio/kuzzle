@@ -3,13 +3,13 @@
  */
 var
   should = require('should'),
-  RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
-  NotificationObject = require.main.require('lib/api/core/models/notificationObject');
+  Request = require('kuzzle-common-objects').Request,
+  NotificationObject = require('../../../../lib/api/core/models/notificationObject');
 
 describe('Test: NotificationObject', () => {
   var
     roomId = 'fakeroomid',
-    requestObject = new RequestObject({
+    requestObject = new Request({
       controller: 'subscribe',
       action: 'count',
       index: 'fakeIndex',
