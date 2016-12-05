@@ -1,5 +1,4 @@
-var
-  BaseConstructor = require('../baseType');
+var BaseConstructor = require('../baseType');
 
 /**
  * @constructor

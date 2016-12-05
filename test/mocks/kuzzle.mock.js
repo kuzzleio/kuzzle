@@ -162,7 +162,7 @@ function KuzzleMock () {
       broker: {
         getInfos: sinon.stub().returns(Promise.resolve()),
         listen: sinon.spy(),
-        send: sinon.spy()
+        send: sinon.stub().returns(Promise.resolve())
       },
       internalCache: {
         flushdb: sinon.stub().returns(Promise.resolve()),

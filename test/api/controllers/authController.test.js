@@ -55,7 +55,7 @@ MockupStrategy.prototype.authenticate = function(req) {
   }
 };
 
-describe.only('Test the auth controller', () => {
+describe('Test the auth controller', () => {
   var
     kuzzle;
 

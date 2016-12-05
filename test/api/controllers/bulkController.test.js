@@ -10,7 +10,7 @@ describe('Test the bulk controller', () => {
     controller,
     kuzzle,
     foo = {foo: 'bar'},
-    requestObject = new Request({ controller: 'bulk' }, { collection: 'unit-test-bulkController' }, 'unit-test'),
+    request = new Request({controller: 'bulk', collection: 'unit-test-bulkController', body: {bulkData: 'fake'}}),
     stub;
 
   beforeEach(() => {
@@ -20,41 +20,26 @@ describe('Test the bulk controller', () => {
   });
 
   it('should trigger the proper methods and resolve to a valid response', () => {
-    return controller.import(requestObject, {})
+    return controller.import(request)
       .then(response => {
-        var
-          engine = kuzzle.services.list.storageEngine,
-          trigger = kuzzle.pluginsManager.trigger;
-
-        should(trigger).be.calledTwice();
-        should(trigger.firstCall).be.calledWith('data:beforeBulkImport', {requestObject, userContext: {}});
+        var engine = kuzzle.services.list.storageEngine;
 
         should(engine.import).be.calledOnce();
-        should(engine.import).be.calledWith(requestObject);
+        should(engine.import).be.calledWith(request);
 
-        should(trigger.secondCall).be.calledWith('data:afterBulkImport');
-
-        should(response.userContext).be.instanceof(Object);
-        // TODO test response format
-        should(response.responseObject).match({
-          status: 200,
-          error: null,
-          data: {
-            body: foo
-          }
-        });
+        should(response).be.instanceof(Object);
+        should(response).match(foo);
       });
   });
 
   it('should handle partial errors', () => {
     stub.returns(Promise.resolve({partialErrors: ['foo', 'bar']}));
 
-    return controller.import(requestObject)
+    return controller.import(request)
       .then(response => {
-        should(response.userContext).be.instanceof(Object);
-        // TODO test response format
-        should(response.responseObject.status).be.eql(206);
-        should(response.responseObject.error).be.instanceOf(PartialError);
+        should(response).be.instanceof(Object);
+        should(request.status).be.eql(206);
+        should(request.error).be.instanceOf(PartialError);
       });
   });
 

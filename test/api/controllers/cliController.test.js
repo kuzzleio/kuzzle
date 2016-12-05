@@ -19,8 +19,7 @@ describe('lib/api/controllers/cliController', () => {
     dataStub;
 
   beforeEach(() => {
-    var
-      requireMock = sinon.stub();
+    var requireMock = sinon.stub();
 
     cleanDbStub = sinon.stub();
     clearCacheStub = sinon.stub();
@@ -36,10 +35,8 @@ describe('lib/api/controllers/cliController', () => {
 
     kuzzle = new KuzzleMock();
 
-    // TODO something with ResponseObject
     reset = CliController.__set__({
-      require: requireMock,
-      ResponseObject: sinon.spy()
+      require: requireMock
     });
     cli = new CliController(kuzzle);
   });
@@ -52,20 +49,13 @@ describe('lib/api/controllers/cliController', () => {
     it('should set the actions and register itself to Kuzzle broker', () => {
       cli.init();
 
-      should(cli.actions.adminExists)
-        .be.a.Function();
-      should(cli.actions.createFirstAdmin)
-        .be.a.Function();
-      should(cli.actions.cleanDb)
-        .be.exactly(cleanDbStub);
-      should(cli.actions.clearCache)
-        .be.exactly(clearCacheStub);
-      should(cli.actions.managePlugins)
-        .be.exactly(managePluginsStub);
-      should(cli.actions.data)
-        .be.exactly(dataStub);
-      should(cli.actions.dump)
-        .be.exactly(dumpStub);
+      should(cli.actions.adminExists).be.a.Function();
+      should(cli.actions.createFirstAdmin).be.a.Function();
+      should(cli.actions.cleanDb).be.exactly(cleanDbStub);
+      should(cli.actions.clearCache).be.exactly(clearCacheStub);
+      should(cli.actions.managePlugins).be.exactly(managePluginsStub);
+      should(cli.actions.data).be.exactly(dataStub);
+      should(cli.actions.dump).be.exactly(dumpStub);
 
       should(kuzzle.services.list.broker.listen)
         .be.calledOnce()
@@ -79,85 +69,61 @@ describe('lib/api/controllers/cliController', () => {
 
   describe('#onListenCB', () => {
     it('should send an error if no action is provided', () => {
-      return cli.onListenCB({
-        requestId: 'test'
-      })
+      var rawRequest = {data: {requestId: 'test'}, options: {}};
+
+      cli.init();
+
+      return cli.onListenCB(rawRequest)
         .then(() => {
-          should(CliController.__get__('ResponseObject'))
-            .be.calledOnce()
-            .be.calledWithMatch({requestId: 'test'}, {
-              message: 'No action given.'
-            });
-
-          should(CliController.__get__('ResponseObject').firstCall.args[1])
-            .be.an.instanceOf(BadRequestError);
-
-          should(kuzzle.services.list.broker.send)
-            .be.calledOnce()
-            .be.calledWith('test', CliController.__get__('ResponseObject').returnValues[0]);
+          should(kuzzle.services.list.broker.send).be.calledOnce();
+          should(kuzzle.services.list.broker.send.firstCall.args[0]).be.eql('test');
+          should(kuzzle.services.list.broker.send.firstCall.args[1].options.error).be.instanceOf(NotFoundError);
         });
     });
 
     it('should send an error if the provided action does not exist', () => {
+      var rawRequest = {data: {requestId: 'test', action: 'invalid'}, options: {}};
+
       cli.init();
 
-      return cli.onListenCB({
-        requestId: 'test',
-        action: 'invalid'
-      })
+      return cli.onListenCB(rawRequest)
         .then(() => {
-          should(CliController.__get__('ResponseObject'))
-            .be.calledOnce()
-            .be.calledWithMatch({requestId: 'test'}, {
-              message: 'The action "invalid" does not exist.'
-            });
-
-          should(CliController.__get__('ResponseObject').firstCall.args[1])
-            .be.an.instanceOf(NotFoundError);
-
-          should(kuzzle.services.list.broker.send)
-            .be.calledOnce()
-            .be.calledWith('test', CliController.__get__('ResponseObject').returnValues[0]);
+          should(kuzzle.services.list.broker.send).be.calledOnce();
+          should(kuzzle.services.list.broker.send.firstCall.args[0]).be.eql('test');
+          should(kuzzle.services.list.broker.send.firstCall.args[1].options.error).be.instanceOf(NotFoundError);
         });
     });
 
     it('should send the response to the broker', () => {
+      var rawRequest = {data: {requestId: 'test', action: 'data'}, options: {}};
+
       cli.init();
       cli.actions.data.returns(Promise.resolve('ok'));
 
-      return cli.onListenCB({
-        requestId: 'test',
-        action: 'data'
-      })
+      return cli.onListenCB(rawRequest)
         .then(() => {
-          should(CliController.__get__('ResponseObject'))
-            .be.calledOnce()
-            .be.calledWithMatch({requestId: 'test'}, 'ok');
-
-          should(kuzzle.services.list.broker.send)
-            .be.calledOnce()
-            .be.calledWith('test', CliController.__get__('ResponseObject').returnValues[0]);
+          rawRequest.options.result = 'ok';
+          should(kuzzle.services.list.broker.send).be.calledOnce();
+          should(kuzzle.services.list.broker.send.firstCall.args[0]).be.eql('test');
+          should(kuzzle.services.list.broker.send.firstCall.args[1]).be.match(rawRequest);
         });
     });
 
     it('should send the error gotten from the controller back to the broker', () => {
-      var error = new Error('test');
+      var
+        rawRequest = {data: {requestId: 'test', action: 'data'}, options: {}},
+        error = new BadRequestError('test');
 
       cli.init();
       cli.actions.data.returns(Promise.reject(error));
 
-      return cli.onListenCB({
-        requestId: 'test',
-        action: 'data'
-      })
+      return cli.onListenCB(rawRequest)
         .then(() => {
-          should(CliController.__get__('ResponseObject'))
-            .be.calledOnce()
-            .be.calledWithMatch({requestId: 'test'}, error);
+          rawRequest.options.error = error;
 
-          should(kuzzle.services.list.broker.send)
-            .be.calledOnce()
-            .be.calledWith('test', CliController.__get__('ResponseObject').returnValues[0]);
+          should(kuzzle.services.list.broker.send).be.calledOnce();
+          should(kuzzle.services.list.broker.send.firstCall.args[0]).be.eql('test');
+          should(kuzzle.services.list.broker.send.firstCall.args[1]).be.match(rawRequest);
         });
     });
   });
