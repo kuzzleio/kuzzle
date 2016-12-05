@@ -174,7 +174,7 @@ function KuzzleMock () {
       },
       storageEngine: {
         get: sinon.stub().returns(Promise.resolve({
-          _source: foo
+          _source: {foo}
         })),
         getInfos: sinon.stub().returns(Promise.resolve()),
         getMapping: sinon.stub().returns(Promise.resolve(foo)),
@@ -195,8 +195,8 @@ function KuzzleMock () {
         listCollections: sinon.stub().returns(Promise.resolve()),
         refreshIndex: sinon.stub().returns(Promise.resolve(foo)),
         replace: sinon.stub().returns(Promise.resolve(foo)),
-        search: sinon.stub().returns(Promise.resolve()),
-        scroll: sinon.stub().returns(Promise.resolve()),
+        search: sinon.stub().returns(Promise.resolve(foo)),
+        scroll: sinon.stub().returns(Promise.resolve(foo)),
         setAutoRefresh: sinon.stub().returns(Promise.resolve(true)),
         truncateCollection: sinon.stub().returns(Promise.resolve(foo)),
         update: sinon.stub().returns(Promise.resolve(foo)),
