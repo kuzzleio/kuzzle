@@ -7,7 +7,7 @@ var
   Request = require('kuzzle-common-objects').Request,
   ManagePlugins = rewire('../../../../lib/api/controllers/cli/managePlugins');
 
-describe('Test: managePlugins cli actions', () => {
+describe.only('Test: managePlugins cli actions', () => {
   var
     managePlugins,
     pkg,
@@ -29,13 +29,34 @@ describe('Test: managePlugins cli actions', () => {
     managePlugins = ManagePlugins(kuzzle);
   });
 
+  it('should lock', () => {
+    return managePlugins(new Request({body: {}}))
+      .then(() => {
+        var lock = ManagePlugins.__get__('lockfile').lock;
+
+        try {
+          should(lock)
+            .be.calledOnce();
+
+          should(release)
+            .be.calledOnce();
+
+          sinon.assert.callOrder(
+            lock,
+            release
+          );
+
+          return Promise.resolve();
+        }
+        catch (error) {
+          return Promise.reject(error);
+        }
+      });
+  });
+
   describe('--list', () => {
     it('should return plugin packages definitions', () => {
-      return managePlugins(new Request({
-        body: {
-          list: true
-        }
-      }))
+      return managePlugins(new Request({list: true}))
         .then(() => {
           try {
             should(kuzzle.pluginsManager.packages.definitions).be.calledOnce();
@@ -52,16 +73,9 @@ describe('Test: managePlugins cli actions', () => {
   describe('--install', () => {
     it('should install a single plugin package if a plugin name is provided', () => {
 
-      pkg.install.returns(Promise.resolve({
-        success: true,
-        name: 'banana',
-        version: '42'
-      }));
+      pkg.install.returns(Promise.resolve({success: true, name: 'banana', version: '42'}));
 
-      return managePlugins(new Request({
-        _id: 'plugin',
-        body: { install: true, foo: 'bar' }
-      }))
+      return managePlugins(new Request({_id: 'plugin', install: true, foo: 'bar'}))
         .then(() => {
           try {
             should(kuzzle.pluginsManager.trigger.getCall(0))
@@ -89,14 +103,7 @@ describe('Test: managePlugins cli actions', () => {
     it('should return the definition of the plugin', () => {
       kuzzle.pluginsManager.packages.definitions.returns(Promise.resolve({foo: 'bar'}));
 
-      return managePlugins({
-        data: {
-          _id: 'foo',
-          body: {
-            get: true
-          }
-        }
-      })
+      return managePlugins(new Request({_id: 'foo', get: true}))
         .then(response => {
           try {
             should(response).be.exactly('bar');
@@ -115,14 +122,7 @@ describe('Test: managePlugins cli actions', () => {
 
   describe('--set', () => {
     it('should set the plugin config', () => {
-      return managePlugins({
-        data: {
-          _id: 'plugin',
-          body: {
-            set: '{"foo":"bar"}'
-          }
-        }
-      })
+      return managePlugins(new Request({_id: 'plugin', set: '{"foo":"bar"}'}))
         .then(() => {
           try {
             should(pkg.setConfigurationProperty)
@@ -140,28 +140,13 @@ describe('Test: managePlugins cli actions', () => {
     });
 
     it('should reject the promise if an invalid JSON configuration is given', () => {
-      return should(managePlugins({
-        data: {
-          _id: 'plugin',
-          body: {
-            set: '{ invalid json }'
-          }
-        }
-      }))
-        .be.rejectedWith(SyntaxError);
+      return should(managePlugins(new Request({_id: 'plugin', set: '{ invalid json }'}))).be.rejectedWith(SyntaxError);
     });
   });
 
   describe('--importConfig', () => {
     it('should call the package native method', () => {
-      return managePlugins({
-        data: {
-          _id: 'foo',
-          body: {
-            importConfig: 'file'
-          }
-        }
-      })
+      return managePlugins(new Request({_id: 'foo', importConfig: 'file'}))
       .then(() => {
         try {
           should(kuzzle.pluginsManager.packages.getPackage)
@@ -183,14 +168,7 @@ describe('Test: managePlugins cli actions', () => {
 
   describe('--unset', () => {
     it('should call the package delete method', () => {
-      return managePlugins({
-        data: {
-          _id: 'foo',
-          body: {
-            unset: 'bar'
-          }
-        }
-      })
+      return managePlugins(new Request({_id: 'foo', unset: 'bar'}))
         .then(() => {
           try {
             should(kuzzle.pluginsManager.packages.getPackage)
@@ -212,14 +190,7 @@ describe('Test: managePlugins cli actions', () => {
 
   describe('--replace', () => {
     it('should call the package replace method', () => {
-      return managePlugins({
-        data: {
-          _id: 'foo',
-          body: {
-            replace: '{"foo":"bar"}'
-          }
-        }
-      })
+      return managePlugins(new Request({_id: 'foo', replace: '{"foo":"bar"}'}))
         .then(() => {
           try {
             should(kuzzle.pluginsManager.packages.getPackage)
@@ -239,26 +210,13 @@ describe('Test: managePlugins cli actions', () => {
     });
 
     it('should reject the promise if an invalid JSON is given', () => {
-      return should(managePlugins({
-        data: {
-          _id: 'foo',
-          body: { replace: '{ invalid json }' }
-        }
-      }))
-        .be.rejectedWith(SyntaxError);
+      return should(managePlugins(new Request({_id: 'foo', replace: '{ invalid json }'}))).be.rejectedWith(SyntaxError);
     });
   });
 
   describe('--remove', () => {
     it('should call the package delete method', () => {
-      return managePlugins({
-        data: {
-          _id: 'foo',
-          body: {
-            remove: true
-          }
-        }
-      })
+      return managePlugins(new Request({_id: 'foo', remove: true}))
         .then(() => {
           try {
             should(kuzzle.pluginsManager.packages.getPackage)
@@ -279,14 +237,7 @@ describe('Test: managePlugins cli actions', () => {
 
   describe('--activate && --deactivate', () => {
     it('activate', () => {
-      return managePlugins({
-        data: {
-          _id: 'foo',
-          body: {
-            activate: true
-          }
-        }
-      })
+      return managePlugins(new Request({_id: 'foo', activate: true}))
         .then(() => {
           try {
             should(kuzzle.pluginsManager.packages.getPackage)
@@ -306,14 +257,7 @@ describe('Test: managePlugins cli actions', () => {
     });
 
     it('deactivate', () => {
-      return managePlugins({
-        data: {
-          _id: 'foo',
-          body: {
-            deactivate: true
-          }
-        }
-      })
+      return managePlugins(new Request({_id: 'foo', deactivate: true}))
         .then(() => {
           try {
             should(kuzzle.pluginsManager.packages.getPackage)
@@ -332,31 +276,4 @@ describe('Test: managePlugins cli actions', () => {
         });
     });
   });
-
-  it('should lock', () => {
-    return managePlugins({data: { body: {}}})
-      .then(() => {
-        var lock = ManagePlugins.__get__('lockfile').lock;
-
-        try {
-          should(lock)
-            .be.calledOnce();
-
-          should(release)
-            .be.calledOnce();
-
-          sinon.assert.callOrder(
-            lock,
-            release
-          );
-
-          return Promise.resolve();
-        }
-        catch (error) {
-          return Promise.reject(error);
-        }
-      });
-  });
-
-
 });

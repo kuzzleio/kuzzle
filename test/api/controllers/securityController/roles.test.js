@@ -40,7 +40,7 @@ describe('Test: security controller - roles', () => {
           }
 
           return Promise.resolve({
-            _index: kuzzle.config.internalIndex,
+            _index: kuzzle.internalEngine.index,
             _type: 'roles',
             _id: id,
             _source: {}
@@ -83,7 +83,7 @@ describe('Test: security controller - roles', () => {
   });
 
   describe('#createOrReplaceRole', () => {
-    it('should resolve to a responseObject on a createOrReplaceRole call', () => {
+    it('should resolve to an object on a createOrReplaceRole call', () => {
       return securityController.createOrReplaceRole(new Request({_id: 'test', body: {controllers: {}}}))
         .then(response => {
           should(response).be.instanceof(Object);
@@ -91,7 +91,7 @@ describe('Test: security controller - roles', () => {
         });
     });
 
-    it('should reject with a response object in case of error', () => {
+    it('should reject an error in case of error', () => {
       return should(securityController.createOrReplaceRole(new Request({_id: 'alreadyExists', body: {indexes: {}}})))
         .be.rejectedWith(new Error('Mocked error'));
     });
@@ -103,14 +103,14 @@ describe('Test: security controller - roles', () => {
         .be.rejectedWith(new Error('Mocked error'));
     });
 
-    it('should resolve to a responseObject on a createRole call', () => {
+    it('should resolve to an object on a createRole call', () => {
       return should(securityController.createRole(new Request({_id: 'test', body: {controllers: {}}})))
         .be.fulfilled();
     });
   });
 
   describe('#getRole', () => {
-    it('should resolve to a responseObject on a getRole call', () => {
+    it('should resolve to an object on a getRole call', () => {
       return securityController.getRole(new Request({_id: 'test'}))
         .then(response => {
           should(response).be.instanceof(Object);
@@ -130,13 +130,13 @@ describe('Test: security controller - roles', () => {
       }).throw(BadRequestError);
     });
 
-    it('should reject with a response object if loading roles fails', () => {
+    it('should reject an error if loading roles fails', () => {
       error = true;
 
       return should(securityController.mGetRoles(new Request({body: {ids: ['test']}}))).be.rejected();
     });
 
-    it('should resolve to a responseObject', done => {
+    it('should resolve to an object', done => {
       securityController.mGetRoles(new Request({body: {ids: ['test']}}))
         .then(response => {
           should(response).be.instanceof(Object);
@@ -161,7 +161,7 @@ describe('Test: security controller - roles', () => {
         });
     });
 
-    it('should reject with a response object in case of error', () => {
+    it('should reject an error in case of error', () => {
       error = true;
 
       return should(securityController.searchRoles(new Request({_id: 'test'}))).be.rejected();
@@ -190,7 +190,7 @@ describe('Test: security controller - roles', () => {
         .catch(err => { done(err); });
     });
 
-    it('should reject the promise if no id is given', () => {
+    it('should throw an error if no id is given', () => {
       return should(() => {
         securityController.updateRole(new Request({body: {}}));
       }).throw();

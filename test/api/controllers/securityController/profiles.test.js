@@ -71,7 +71,7 @@ describe('Test: security controller - profiles', () => {
         .be.fulfilled();
     });
 
-    it('should be rejected if creating a profile with bad roles property form', () => {
+    it('should throw an error if creating a profile with bad roles property form', () => {
       return should(() => {
         securityController.createOrReplaceProfile(new Request({body: {roleId: 'test', policies: 'not-an-array-roleIds'}}));
       }).throw(BadRequestError);
@@ -89,7 +89,7 @@ describe('Test: security controller - profiles', () => {
         });
     });
 
-    it('should reject to an error on a getProfile call without id', () => {
+    it('should throw an error on a getProfile call without id', () => {
       return should(() => {
         securityController.getProfile(new Request({_id: ''}));
       }).throw(BadRequestError);
@@ -102,7 +102,7 @@ describe('Test: security controller - profiles', () => {
   });
 
   describe('#mGetProfiles', () => {
-    it('should reject to an error on a mGetProfiles call without ids', () => {
+    it('should throw an error on a mGetProfiles call without ids', () => {
       return should(() => {
         securityController.mGetProfiles(new Request({body: {}}));
       }).throw(BadRequestError);
@@ -173,7 +173,7 @@ describe('Test: security controller - profiles', () => {
         });
     });
 
-    it('should reject with a response object in case of error', () => {
+    it('should reject an error in case of error', () => {
       var error = new Error('Mocked error');
 
       sandbox.stub(kuzzle.repositories.profile, 'searchProfiles').returns(Promise.reject(error));
@@ -194,7 +194,7 @@ describe('Test: security controller - profiles', () => {
         });
     });
 
-    it('should reject the promise if no id is given', () => {
+    it('should throw an error if no id is given', () => {
       return should(() => {
         securityController.updateProfile(new Request({body: {}}));
       }).throw(BadRequestError);

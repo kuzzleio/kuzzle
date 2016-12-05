@@ -33,7 +33,7 @@ describe('Test: read controller', () => {
         });
     });
 
-    it('should reject with a response object in case of error', () => {
+    it('should reject an error in case of error', () => {
       kuzzle.services.list.storageEngine.search.returns(Promise.reject(new Error('foobar')));
 
       return should(controller.search(request)).be.rejectedWith('foobar');
@@ -49,7 +49,7 @@ describe('Test: read controller', () => {
         });
     });
 
-    it('should reject with a response object in case of error', () => {
+    it('should reject an error in case of error', () => {
       kuzzle.services.list.storageEngine.scroll.returns(Promise.reject(new Error('foobar')));
 
       return should(controller.scroll(request)).be.rejectedWith('foobar');
@@ -69,7 +69,7 @@ describe('Test: read controller', () => {
         });
     });
 
-    it('should reject with a response object in case of error', () => {
+    it('should reject an error in case of error', () => {
       kuzzle.services.list.storageEngine.get.returns(Promise.reject(new Error('foobar')));
       return should(controller.get(request)).be.rejected();
     });
@@ -88,7 +88,7 @@ describe('Test: read controller', () => {
         });
     });
 
-    it('should reject with a response object in case of error', () => {
+    it('should reject an error in case of error', () => {
       kuzzle.services.list.storageEngine.count.returns(Promise.reject(new Error('foobar')));
       return should(controller.count(request)).be.rejected();
     });
@@ -219,13 +219,13 @@ describe('Test: read controller', () => {
     });
 
 
-    it('should reject with a response object if getting stored collections fails', () => {
+    it('should reject an error if getting stored collections fails', () => {
       kuzzle.services.list.storageEngine.listCollections.returns(Promise.reject(new Error('foobar')));
       request = new Request({index: 'index', type: 'stored'});
       return should(controller.listCollections(request)).be.rejected();
     });
 
-    it('should reject with a response object if getting all collections fails', () => {
+    it('should reject an error if getting all collections fails', () => {
       kuzzle.services.list.storageEngine.listCollections.returns(Promise.reject(new Error('foobar')));
       request = new Request({index: 'index', type: 'all'});
       return should(controller.listCollections(request)).be.rejected();
@@ -253,7 +253,7 @@ describe('Test: read controller', () => {
         });
     });
 
-    it('should reject with a response object in case of error', () => {
+    it('should reject an error in case of error', () => {
       kuzzle.services.list.storageEngine.listIndexes.returns(Promise.reject(new Error('foobar')));
       return should(controller.listIndexes(request)).be.rejected();
     });
@@ -277,7 +277,7 @@ describe('Test: read controller', () => {
         });
     });
 
-    it('should reject with a response object in case of error', () => {
+    it('should reject an error in case of error', () => {
       kuzzle.services.list.broker.getInfos.returns(Promise.reject(new Error('foobar')));
       return should(controller.serverInfo(request)).be.rejected();
     });

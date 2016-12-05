@@ -1,6 +1,7 @@
 var
   should = require('should'),
-  sinon = require('sinon');
+  sinon = require('sinon'),
+  Request = require('kuzzle-common-objects').Request;
 
 describe('Test: clear cache', () => {
   var
@@ -31,7 +32,7 @@ describe('Test: clear cache', () => {
   });
 
   it('should clean the internalStorage by default if no database name is provided', () => {
-    var request = {data: {body: {}}};
+    var request = new Request({});
 
     return clearCache(request)
       .then(() => {
@@ -41,7 +42,7 @@ describe('Test: clear cache', () => {
   });
 
   it('should clean explicitely the internalCache', () => {
-    var request = {data: {body: {database: 'internalCache'}}};
+    var request = new Request({database: 'internalCache'});
 
     return clearCache(request)
       .then(() => {
@@ -51,7 +52,7 @@ describe('Test: clear cache', () => {
   });
 
   it('should clean explicitely the memoryStorage', () => {
-    var request = {data: {body: {database: 'memoryStorage'}}};
+    var request = new Request({database: 'memoryStorage'});
 
     return clearCache(request)
       .then(() => {
@@ -61,7 +62,7 @@ describe('Test: clear cache', () => {
   });
 
   it('should return a rejected Promise if an unknown database name is provided', () => {
-    var request = {data: {body: {database: 'fake'}}};
+    var request = new Request({database: 'fake'});
 
     should(clearCache(request)).be.rejected();
   });
