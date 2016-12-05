@@ -2,7 +2,8 @@ var
   should = require('should'),
   sinon = require('sinon'),
   rewire = require('rewire'),
-  sandbox = sinon.sandbox.create();
+  sandbox = sinon.sandbox.create(),
+  Request = require('kuzzle-common-objects').Request;
 
 
 describe('Test: dump', () => {
@@ -67,15 +68,8 @@ describe('Test: dump', () => {
 
   it('should return computed dump path', done => {
     var expectedDumpPath = '/tmp/'.concat((new Date()).getFullYear()).concat('-tests');
-    var requestObject = {
-      data: {
-        body: {
-          sufix: 'tests'
-        }
-      }
-    };
 
-    dump(requestObject)
+    dump(new Request({suffix: 'tests'}))
       .then(dumpPath => {
         should(dumpPath).be.exactly(expectedDumpPath);
         done();

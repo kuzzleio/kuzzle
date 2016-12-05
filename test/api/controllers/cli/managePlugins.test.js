@@ -7,7 +7,7 @@ var
   Request = require('kuzzle-common-objects').Request,
   ManagePlugins = rewire('../../../../lib/api/controllers/cli/managePlugins');
 
-describe.only('Test: managePlugins cli actions', () => {
+describe('Test: managePlugins cli actions', () => {
   var
     managePlugins,
     pkg,
