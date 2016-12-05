@@ -36,7 +36,7 @@ describe('Test: subscribe controller', () => {
         });
     });
 
-    it('should reject with a response object in case of error', () => {
+    it('should reject an error in case of error', () => {
       var error = new Error('Mocked error');
       sandbox.stub(kuzzle.hotelClerk, 'addSubscription').returns(Promise.reject(error));
       return should(kuzzle.funnel.controllers.subscribe.on(requestObject, {})).be.rejectedWith(error);
@@ -53,7 +53,7 @@ describe('Test: subscribe controller', () => {
         });
     });
 
-    it('should reject with a response object in case of error', () => {
+    it('should reject an error in case of error', () => {
       var error = new Error('Mocked error');
       sandbox.stub(kuzzle.hotelClerk, 'removeSubscription').returns(Promise.reject(error));
       return should(kuzzle.funnel.controllers.subscribe.off(requestObject, {})).be.rejectedWith(error);
@@ -70,7 +70,7 @@ describe('Test: subscribe controller', () => {
         });
     });
 
-    it('should reject with a response object in case of error', () => {
+    it('should reject an error in case of error', () => {
       var error = new Error('Mocked error');
       sandbox.stub(kuzzle.hotelClerk, 'countSubscription').returns(Promise.reject(error));
       return should(kuzzle.funnel.controllers.subscribe.count(requestObject, {})).be.rejectedWith(error);
@@ -95,7 +95,7 @@ describe('Test: subscribe controller', () => {
         });
     });
 
-    it('should reject with a response object in case of error', () => {
+    it('should reject an error in case of error', () => {
       var error = new Error('Mocked error');
       sandbox.stub(kuzzle.hotelClerk, 'listSubscriptions').returns(Promise.reject(error));
       return should(kuzzle.funnel.controllers.subscribe.list(requestObject, {})).be.rejectedWith(error);
@@ -112,7 +112,7 @@ describe('Test: subscribe controller', () => {
         });
     });
 
-    it('should reject with a response object in case of error', () => {
+    it('should reject an error in case of error', () => {
       var error = new Error('Mocked error');
       sandbox.stub(kuzzle.hotelClerk, 'join').returns(Promise.reject(error));
       return should(kuzzle.funnel.controllers.subscribe.join(requestObject, {})).be.rejectedWith(error);

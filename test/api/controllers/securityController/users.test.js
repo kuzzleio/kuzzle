@@ -5,14 +5,18 @@ var
   sandbox = sinon.sandbox.create(),
   Kuzzle = require('../../../../lib/api/kuzzle'),
   Request = require('kuzzle-common-objects').Request,
-  NotFoundError = require('kuzzle-common-objects').errors.NotFoundError;
+  BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,
+  NotFoundError = require('kuzzle-common-objects').errors.NotFoundError,
+  SecurityController = require('../../../../lib/api/controllers/securityController');
 
 describe('Test: security controller - users', () => {
   var
-    kuzzle;
+    kuzzle,
+    securityController;
 
   before(() => {
     kuzzle = new Kuzzle();
+    securityController = new SecurityController(kuzzle);
   });
 
   beforeEach(() => {
@@ -45,12 +49,14 @@ describe('Test: security controller - users', () => {
   });
 
   describe('#getUser', () => {
-    it('should reject the promise if no id is given', () => {
-      return should(kuzzle.funnel.controllers.security.getUser(new Request({}), {})).be.rejected();
+    it('should throw an error if no id is given', () => {
+      return should(() => {
+        securityController.getUser(new Request({}));
+      }).throw(BadRequestError);
     });
 
     it('should reject with NotFoundError when the user is not found', () => {
-      var promise = kuzzle.funnel.controllers.security.getUser(new Request({body: {_id: 'i.dont.exist'}}), {});
+      var promise = securityController.getUser(new Request({_id: 'i.dont.exist'}));
 
       return should(promise).be.rejectedWith(NotFoundError);
     });
@@ -63,22 +69,20 @@ describe('Test: security controller - users', () => {
         total: 2
       }));
 
-      return kuzzle.funnel.controllers.security.searchUsers(new Request({body: {from: 0, size: 200}}), {})
+      return securityController.searchUsers(new Request({body: {from: 0, size: 200}}), {})
         .then(response => {
-          should(response.userContext).be.instanceof(Object);
-          // TODO test response format
-          should(response.responseObject.data.body).match({hits: [{_id: 'admin'}], total: 2});
+          should(response).be.instanceof(Object);
+          should(response).match({hits: [{_id: 'admin'}], total: 2});
         });
     });
 
-    it('should reject with a response object in case of error', () => {
+    it('should reject an error in case of error', () => {
       var error = new Error('Mocked error');
 
       sandbox.stub(kuzzle.repositories.user, 'search').returns(Promise.reject(error));
 
-      return should(kuzzle.funnel.controllers.security.searchUsers(new Request({
-        body: {hydrate: false}
-      }), {})).be.rejectedWith(error);
+      return should(securityController.searchUsers(new Request({body: {hydrate: false}})))
+        .be.rejectedWith(error);
     });
   });
 
@@ -86,43 +90,41 @@ describe('Test: security controller - users', () => {
     it('should return a valid responseObject', () => {
       sandbox.stub(kuzzle.repositories.user, 'delete').returns(Promise.resolve());
 
-      return kuzzle.funnel.controllers.security.deleteUser(new Request({
-        body: { _id: 'test' }
-      }), {})
+      return securityController.deleteUser(new Request({_id: 'test'}))
         .then(response => {
-          should(response.userContext).be.instanceof(Object);
-          // TODO test response format
-          should(response.responseObject.status).be.exactly(200);
+          should(response).be.instanceof(Object);
+          should(response._id).be.exactly('test');
         });
     });
 
-    it('should not resolve the promise when no id is given', () => {
-      return should(kuzzle.funnel.controllers.security.deleteUser(new Request({})), {}).be.rejected();
+    it('should throw an error when no id is given', () => {
+      return should(() => {
+        securityController.deleteUser(new Request({}));
+      }).throw(BadRequestError);
     });
 
-    it('should reject with a response object in case of error', () => {
+    it('should reject an error in case of error', () => {
       var error = new Error('Mocked error');
 
       sandbox.stub(kuzzle.repositories.user, 'delete').returns(Promise.reject(error));
 
-      return should(kuzzle.funnel.controllers.security.deleteUser(new Request({
-        body: {_id: 'test'}
-      }), {})).be.rejectedWith(error);
+      return should(securityController.deleteUser(new Request({_id: 'test'}))).be.rejectedWith(error);
     });
   });
 
   describe('#createUser', () => {
     it('should return a valid response', () => {
       var mock = sandbox.mock(kuzzle.repositories.user).expects('persist').once().returns(Promise.resolve({_id: 'test'}));
+
       sandbox.stub(kuzzle.repositories.user, 'hydrate').returns(Promise.resolve());
 
-      return kuzzle.funnel.controllers.security.createUser(new Request({
-        body: {_id: 'test', name: 'John Doe', profileIds: ['anonymous']}
-      }), {})
+      return securityController.createUser(new Request({
+        _id: 'test', body: {name: 'John Doe', profileIds: ['anonymous']}
+      }))
         .then(response => {
           mock.verify();
-          should(response.userContext).be.instanceof(Object);
-          // TODO test response format
+          should(response).be.instanceof(Object);
+          should(response).be.match({_id: 'test', _source: {}});
           should(mock.getCall(0).args[1]).match({database: {method: 'create'}});
         });
     });
@@ -132,22 +134,21 @@ describe('Test: security controller - users', () => {
         mockPersist = sandbox.mock(kuzzle.repositories.user).expects('persist').once().returns(Promise.resolve({_id: 'test'})),
         mockHydrate = sandbox.mock(kuzzle.repositories.user).expects('hydrate').once().returns(Promise.resolve());
 
-      return kuzzle.funnel.controllers.security.createUser(new Request({
-        body: {name: 'John Doe', profileIds: ['anonymous']}
-      }), {})
+      return securityController.createUser(new Request({body: {name: 'John Doe', profileIds: ['anonymous']}}))
         .then(response => {
           mockHydrate.verify();
           mockPersist.verify();
-          should(response.userContext).be.instanceof(Object);
-          // TODO test response format
+          should(response).be.instanceof(Object);
+          should(response).be.match({_id: 'test', _source: {}});
           should(mockPersist.getCall(0).args[1]).match({database: {method: 'create'}});
           should(mockHydrate.getCall(0).args[1]._id).match(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
         });
     });
 
-    it('should reject the promise if no profile is given', () => {
-      return should(kuzzle.funnel.controllers.security.createUser(new Request({body: {}}), {}))
-        .be.rejected();
+    it('should throw an error if no profile is given', () => {
+      return should(() => {
+        securityController.createUser(new Request({body: {}}));
+      }).throw(BadRequestError);
     });
   });
 
@@ -156,13 +157,13 @@ describe('Test: security controller - users', () => {
       var mock = sandbox.mock(kuzzle.repositories.user).expects('persist').once().returns(Promise.resolve({_id: 'test'}));
       sandbox.stub(kuzzle.repositories.user, 'hydrate').returns(Promise.resolve());
 
-      return kuzzle.funnel.controllers.security.createRestrictedUser(new Request({
+      return securityController.createRestrictedUser(new Request({
         body: {_id: 'test', name: 'John Doe'}
       }), {})
         .then(response => {
           mock.verify();
           should(response.userContext).be.instanceof(Object);
-          // TODO test response format
+          should(response).be.match({_id: 'test', _source: {}});
           should(mock.getCall(0).args[1]).match({database: {method: 'create'}});
         });
     });
@@ -172,24 +173,21 @@ describe('Test: security controller - users', () => {
         mockPersist = sandbox.mock(kuzzle.repositories.user).expects('persist').once().returns(Promise.resolve({_id: 'test'})),
         mockHydrate = sandbox.mock(kuzzle.repositories.user).expects('hydrate').once().returns(Promise.resolve());
 
-      return kuzzle.funnel.controllers.security.createRestrictedUser(new Request({
-        body: {name: 'John Doe'}
-      }), {})
+      return securityController.createRestrictedUser(new Request({body: {name: 'John Doe'}}))
         .then(response => {
           mockHydrate.verify();
           mockPersist.verify();
-          should(response.userContext).be.instanceof(Object);
-          // TODO test response format
+          should(response).be.instanceof(Object);
+          should(response).be.match({_id: 'test', _source: {}});
           should(mockPersist.getCall(0).args[1]).match({database: {method: 'create'}});
           should(mockHydrate.getCall(0).args[1]._id).match(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
         });
     });
 
-    it('should reject the promise if a profile is given', () => {
-      return should(kuzzle.funnel.controllers.security.createRestrictedUser(new Request({
-        body: {profileIds: ['foo']}
-      }), {}))
-        .be.rejected();
+    it('should throw an error if a profile is given', () => {
+      return should(() => {
+        securityController.createRestrictedUser(new Request({body: {profileIds: ['foo']}}));
+      }).throw(BadRequestError);
     });
   });
 
@@ -199,21 +197,19 @@ describe('Test: security controller - users', () => {
 
       sandbox.stub(kuzzle.repositories.profile, 'loadProfile').returns(Promise.resolve({_id: 'anonymous', _source: {}}));
 
-      return kuzzle.funnel.controllers.security.updateUser(new Request({
-        _id: 'test',
-        body: {foo: 'bar'}
-      }), {})
+      return securityController.updateUser(new Request({_id: 'test', body: {foo: 'bar'}}))
         .then(response => {
           mock.verify();
-          should(response.userContext).be.instanceof(Object);
-          // TODO test response format
+          should(response).be.instanceof(Object);
+          should(response).be.match({_id: 'test', _source: {}});
           should(mock.getCall(0).args[1]).match({database: {method: 'update'}});
-          should(response.responseObject.data.body._id).be.exactly('test');
         });
     });
 
-    it('should reject the promise if no id is given', () => {
-      return should(kuzzle.funnel.controllers.security.updateUser(new Request({body: {}}), {})).be.rejected();
+    it('should throw an error if no id is given', () => {
+      return should(() => {
+        securityController.updateUser(new Request({body: {}}));
+      }).throw(BadRequestError);
     });
 
     it('should update the profile correctly', () => {
@@ -222,16 +218,15 @@ describe('Test: security controller - users', () => {
       kuzzle.repositories.user.load.restore();
       sandbox.stub(kuzzle.repositories.user, 'load').returns(Promise.resolve({_id: 'test', profileId: 'default'}));
 
-      return kuzzle.funnel.controllers.security.updateUser(new Request({
+      return securityController.updateUser(new Request({
         _id: 'test',
         body: {profileIds: ['anonymous'], foo: 'bar'}
       }), {})
         .then(response => {
-          should(response.userContext).be.instanceof(Object);
-          // TODO test response format
-          should(response.responseObject.data.body._id).be.exactly('test');
-          should(response.responseObject.data.body._source.profile).be.an.instanceOf(Object);
-          should(response.responseObject.data.body._source.foo).be.exactly('bar');
+          should(response).be.instanceof(Object);
+          should(response._id).be.exactly('test');
+          should(response._source.profile).be.an.instanceOf(Object);
+          should(response._source.foo).be.exactly('bar');
         });
     });
   });
@@ -241,27 +236,24 @@ describe('Test: security controller - users', () => {
       sandbox.stub(kuzzle.repositories.user, 'hydrate').returns(Promise.resolve());
       sandbox.stub(kuzzle.repositories.user, 'persist').returns(Promise.resolve({_id: 'test'}));
 
-      return kuzzle.funnel.controllers.security.createOrReplaceUser(new Request({
-        body: {_id: 'test', profileIds: ['admin']}
-      }))
+      return securityController.createOrReplaceUser(new Request({_id: 'test', body: {profileIds: ['admin']}}))
         .then(response => {
-          should(response.userContext).be.instanceof(Object);
-          // TODO test response format
-          should(response.responseObject.status).be.exactly(200);
+          should(response).be.instanceof(Object);
+          should(response).be.match({_id: 'test', _source: {}});
         });
     });
 
     it('should reject the promise if no profile is given', () => {
-      return should(kuzzle.funnel.controllers.security.createOrReplaceUser(new Request({
-        _id: 'test'
-      }), {})).be.rejected();
+      return should(() => {
+        securityController.createOrReplaceUser(new Request({_id: 'test'}));
+      }).throw();
     });
   });
 
   describe('#getUserRights', () => {
-    it('should resolve to a responseObject on a getUserRights call', () => {
+    it('should resolve to an object on a getUserRights call', () => {
       var loadUserStub = userId => {
-        return {
+        return Promise.resolve({
           _id: userId,
           _source: {},
           getRights: () => {
@@ -276,21 +268,20 @@ describe('Test: security controller - users', () => {
               }
             };
           }
-        };
+        });
       };
 
       kuzzle.repositories.user.load.restore();
       sandbox.stub(kuzzle.repositories.user, 'load', loadUserStub);
-      return kuzzle.funnel.controllers.security.getUserRights(new Request({body: {_id: 'test'}}), {})
+      return securityController.getUserRights(new Request({_id: 'test'}))
         .then(response => {
           var filteredItem;
 
-          should(response.userContext).be.instanceof(Object);
-          // TODO test response format
-          should(response.responseObject.data.body.hits).be.an.Array();
-          should(response.responseObject.data.body.hits).length(2);
+          should(response).be.instanceof(Object);
+          should(response.hits).be.an.Array();
+          should(response.hits).length(2);
 
-          filteredItem = response.responseObject.data.body.hits.filter(item => {
+          filteredItem = response.hits.filter(item => {
             return item.controller === 'read' &&
                     item.action === 'get' &&
                     item.index === 'foo' &&
@@ -299,7 +290,7 @@ describe('Test: security controller - users', () => {
           should(filteredItem).length(1);
           should(filteredItem[0].value).be.equal('allowed');
 
-          filteredItem = response.responseObject.data.body.hits.filter(item => {
+          filteredItem = response.hits.filter(item => {
             return item.controller === 'write' &&
                    item.action === 'delete' &&
                    item.index === '*' &&
@@ -310,14 +301,14 @@ describe('Test: security controller - users', () => {
         });
     });
 
-    it('should reject to an error on a getUserRights call without id', () => {
-      return should(kuzzle.funnel.controllers.security.getUserRights(new Request({body: {_id: ''}}), {})).be.rejected();
+    it('should throw an error on a getUserRights call without id', () => {
+      return should(() => {
+        securityController.getUserRights(new Request({_id: ''}));
+      }).throw();
     });
 
     it('should reject NotFoundError on a getUserRights call with a bad id', () => {
-      return should(kuzzle.funnel.controllers.security.getUserRights(new Request({
-        body: { _id: 'i.dont.exist' }
-      }), {})).be.rejectedWith(NotFoundError);
+      return should(securityController.getUserRights(new Request({_id: 'i.dont.exist'}))).be.rejectedWith(NotFoundError);
     });
   });
 });

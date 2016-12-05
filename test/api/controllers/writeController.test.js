@@ -5,67 +5,47 @@ var
   KuzzleMock = require('../../mocks/kuzzle.mock'),
   WriteController = require('../../../lib/api/controllers/writeController');
 
-/**
- * Since we're sending voluntarily false requests, we expect most of these
- * calls to fail.
- */
-describe('Test: write controller', () => {
+describe.only('Test: write controller', () => {
   var
     foo = {foo: 'bar'},
+    /** @type WriteController */
     controller,
     kuzzle,
     engine,
-    trigger,
-    requestObject;
+    request;
 
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
     engine = kuzzle.services.list.storageEngine;
-    trigger = kuzzle.pluginsManager.trigger;
     controller = new WriteController(kuzzle);
 
-    requestObject = new Request({body: {foo: 'bar'}}, {}, 'unit-test');
-    sinon.stub(requestObject, 'isValid').returns(Promise.resolve());
+    request = new Request({body: {foo: 'bar'}});
   });
 
   describe('#create', () => {
-    it('should trigger the proper methods and resolve to a valid response', () => {
-      return controller.create(requestObject, {token: {userId: 42}})
+    it('should resolve to a valid response', () => {
+      request.input.resource.index = '%test';
+      request.input.resource.collection = 'test-collection';
+
+      return controller.create(request)
         .then(response => {
           try {
-            should(requestObject.isValid).be.calledOnce();
-
-            should(kuzzle.pluginsManager.trigger).be.calledTwice();
-            should(kuzzle.pluginsManager.trigger.firstCall).be.calledWith('data:beforeCreate');
-
-            should(kuzzle.validation.validate).be.calledOnce();
+            should(kuzzle.validation.validationPromise).be.calledOnce();
 
             should(engine.create).be.calledOnce();
-            should(engine.create).be.calledWith(requestObject);
+            should(engine.create).be.calledWith(request);
 
             should(kuzzle.notifier.notifyDocumentCreate).be.calledOnce();
-            should(kuzzle.notifier.notifyDocumentCreate).be.calledWith(requestObject, foo);
-
-            should(kuzzle.pluginsManager.trigger.secondCall).be.calledWith('data:afterCreate');
+            should(kuzzle.notifier.notifyDocumentCreate).be.calledWith(request, foo);
 
             sinon.assert.callOrder(
-              requestObject.isValid,
-              kuzzle.pluginsManager.trigger,
               engine.create,
-              kuzzle.notifier.notifyDocumentCreate,
-              kuzzle.pluginsManager.trigger
+              kuzzle.notifier.notifyDocumentCreate
             );
 
-            should(response.userContext).be.instanceof(Object);
-            // TODO test response format
-            should(response.responseObject).match({
-              status: 200,
-              error: null,
-              data: {
-                body: foo
-              }
-            });
+            should(response).be.instanceof(Object);
+            should(response).match(foo);
 
             return Promise.resolve();
           }
@@ -77,38 +57,20 @@ describe('Test: write controller', () => {
   });
 
   describe('#publish', () => {
-    it('should trigger the proper methods and resolve to a valid response', () => {
-      return controller.publish(requestObject, {})
+    it('should  resolve to a valid response', () => {
+      request.input.resource.index = '%test';
+      request.input.resource.collection = 'test-collection';
+
+      return controller.publish(request)
         .then(response => {
           try {
-            should(requestObject.isValid).be.calledOnce();
-
-            should(trigger).be.calledTwice();
-            should(trigger.firstCall).be.calledWith('data:beforePublish');
-
-            should(kuzzle.validation.validate).be.calledOnce();
+            should(kuzzle.validation.validationPromise).be.calledOnce();
 
             should(kuzzle.notifier.publish).be.calledOnce();
-            should(kuzzle.notifier.publish).be.calledWith(requestObject);
+            should(kuzzle.notifier.publish).be.calledWith(request);
 
-            should(trigger.secondCall).be.calledWith('data:afterPublish');
-
-            should(response.userContext).be.instanceof(Object);
-            // TODO test response format
-            should(response.responseObject).match({
-              status: 200,
-              error: null,
-              data: {
-                body: foo
-              }
-            });
-
-            sinon.assert.callOrder(
-              requestObject.isValid,
-              trigger,
-              kuzzle.notifier.publish,
-              trigger
-            );
+            should(response).be.instanceof(Object);
+            should(response).match(foo);
 
             return Promise.resolve();
           }
@@ -120,46 +82,33 @@ describe('Test: write controller', () => {
   });
 
   describe('#createOrReplace', () => {
-    it('should trigger the proper methods and resolve to a valid response', () => {
-      return controller.createOrReplace(requestObject, {})
+    it('should resolve to a valid response', () => {
+      request.input.resource.index = '%test';
+      request.input.resource.collection = 'test-collection';
+
+      return controller.createOrReplace(request)
         .then(response => {
           try {
-            should(requestObject.isValid).be.calledOnce();
 
-            should(trigger).be.calledTwice();
-            should(trigger.firstCall).be.calledWith('data:beforeCreateOrReplace', {requestObject, userContext: {}});
-
-            should(kuzzle.validation.validate).be.calledOnce();
+            should(kuzzle.validation.validationPromise).be.calledOnce();
 
             should(engine.createOrReplace).be.calledOnce();
-            should(engine.createOrReplace).be.calledWith(requestObject);
+            should(engine.createOrReplace).be.calledWith(request);
 
             should(kuzzle.indexCache.add).be.calledOnce();
-            should(kuzzle.indexCache.add).be.calledWith(requestObject.index, requestObject.collection);
+            should(kuzzle.indexCache.add).be.calledWith(request.input.resource.index, request.input.resource.collection);
 
             should(kuzzle.notifier.notifyDocumentReplace).be.calledOnce();
-            should(kuzzle.notifier.notifyDocumentReplace).be.calledWith(requestObject);
-
-            should(trigger.secondCall).be.calledWith('data:afterCreateOrReplace');
+            should(kuzzle.notifier.notifyDocumentReplace).be.calledWith(request);
 
             sinon.assert.callOrder(
-              requestObject.isValid,
-              trigger,
               engine.createOrReplace,
               kuzzle.indexCache.add,
-              kuzzle.notifier.notifyDocumentReplace,
-              trigger
+              kuzzle.notifier.notifyDocumentReplace
             );
 
-            should(response.userContext).be.instanceof(Object);
-            // TODO test response format
-            should(response.responseObject).match({
-              status: 200,
-              error: null,
-              data: {
-                body: foo
-              }
-            });
+            should(response).be.instanceof(Object);
+            should(response).match(foo);
 
             return Promise.resolve();
           }
@@ -169,22 +118,23 @@ describe('Test: write controller', () => {
         });
     });
 
-    it('should trigger a "create" notification if the docuemnt did not exist', () => {
+    it('should trigger a "create" notification if the document did not exist', () => {
+      request.input.resource.index = '%test';
+      request.input.resource.collection = 'test-collection';
+
       engine.createOrReplace.returns(Promise.resolve(Object.assign({}, foo, {created: true})));
 
-      return controller.createOrReplace(requestObject, {})
+      return controller.createOrReplace(request)
         .then(response => {
           try {
-            should(requestObject.isValid).be.calledOnce();
-            should(trigger).be.calledTwice();
             should(engine.createOrReplace).be.calledOnce();
 
             should(kuzzle.notifier.notifyDocumentCreate).be.calledOnce();
-            should(kuzzle.notifier.notifyDocumentCreate).be.calledWith(requestObject);
+            should(kuzzle.notifier.notifyDocumentCreate).be.calledWith(request);
             should(kuzzle.notifier.notifyDocumentReplace).have.callCount(0);
 
-            should(response.userContext).be.instanceof(Object);
-            // TODO test response format
+            should(response).be.instanceof(Object);
+            should(response).match({foo: foo.foo, created: true});
 
             return Promise.resolve();
           }
@@ -196,42 +146,29 @@ describe('Test: write controller', () => {
   });
 
   describe('#update', () => {
-    it('should trigger the proper methods and resolve to a valid response', () => {
-      return controller.update(requestObject, {token: {userId: '42'}})
+    it('should resolve to a valid response', () => {
+      request.input.resource.index = '%test';
+      request.input.resource.collection = 'test-collection';
+      request.input.resource._id = 'document-id';
+
+      return controller.update(request)
         .then(response => {
           try {
-            should(requestObject.isValid).be.calledOnce();
-
-            should(trigger).be.calledTwice();
-            should(trigger.firstCall).be.calledWith('data:beforeUpdate', {requestObject, userContext: {token: {userId: '42'}}});
-
-            should(kuzzle.validation.validate).be.calledOnce();
+            should(kuzzle.validation.validationPromise).be.calledOnce();
 
             should(engine.update).be.calledOnce();
-            should(engine.update).be.calledWith(requestObject);
+            should(engine.update).be.calledWith(request);
 
             should(kuzzle.notifier.notifyDocumentUpdate).be.calledOnce();
-            should(kuzzle.notifier.notifyDocumentUpdate).be.calledWith(requestObject);
-
-            should(trigger.secondCall).be.calledWith('data:afterUpdate');
+            should(kuzzle.notifier.notifyDocumentUpdate).be.calledWith(request);
 
             sinon.assert.callOrder(
-              requestObject.isValid,
-              trigger,
               engine.update,
-              kuzzle.notifier.notifyDocumentUpdate,
-              trigger
+              kuzzle.notifier.notifyDocumentUpdate
             );
 
-            should(response.userContext).be.instanceof(Object);
-            // TODO test response format
-            should(response.responseObject).match({
-              status: 200,
-              error: null,
-              data: {
-                body: foo
-              }
-            });
+            should(response).be.instanceof(Object);
+            should(response).match(foo);
 
             return Promise.resolve();
           }
@@ -243,42 +180,29 @@ describe('Test: write controller', () => {
   });
 
   describe('#replace', () => {
-    it('should trigger the proper methods and resolve to a valid response', () => {
-      return controller.replace(requestObject, {})
+    it('should resolve to a valid response', () => {
+      request.input.resource.index = '%test';
+      request.input.resource.collection = 'test-collection';
+      request.input.resource._id = 'document-id';
+
+      return controller.replace(request)
         .then(response => {
           try {
-            should(requestObject.isValid).be.calledOnce();
-
-            should(trigger).be.calledTwice();
-            should(trigger.firstCall).be.calledWith('data:beforeReplace', {requestObject, userContext: {}});
-
-            should(kuzzle.validation.validate).be.calledOnce();
+            should(kuzzle.validation.validationPromise).be.calledOnce();
 
             should(engine.replace).be.calledOnce();
-            should(engine.replace).be.calledWith(requestObject);
+            should(engine.replace).be.calledWith(request);
 
             should(kuzzle.notifier.notifyDocumentReplace).be.calledOnce();
-            should(kuzzle.notifier.notifyDocumentReplace).be.calledWith(requestObject);
-
-            should(trigger.secondCall).be.calledWith('data:afterReplace');
+            should(kuzzle.notifier.notifyDocumentReplace).be.calledWith(request);
 
             sinon.assert.callOrder(
-              requestObject.isValid,
-              trigger,
               engine.replace,
-              kuzzle.notifier.notifyDocumentReplace,
-              trigger
+              kuzzle.notifier.notifyDocumentReplace
             );
 
-            should(response.userContext).be.instanceof(Object);
-            // TODO test response format
-            should(response.responseObject).match({
-              status: 200,
-              error: null,
-              data: {
-                body: foo
-              }
-            });
+            should(response).be.instanceof(Object);
+            should(response).match(foo);
 
             return Promise.resolve();
           }
@@ -291,39 +215,27 @@ describe('Test: write controller', () => {
   });
 
   describe('#delete', () => {
-    it('should trigger the proper methods and resolve to a valid response', () => {
-      return controller.delete(requestObject, {})
+    it('should resolve to a valid response', () => {
+      request.input.resource.index = '%test';
+      request.input.resource.collection = 'test-collection';
+      request.input.resource._id = 'document-id';
+
+      return controller.delete(request)
         .then(response => {
           try {
-            should(requestObject.isValid).have.callCount(0);
-
-            should(trigger).be.calledTwice();
-            should(trigger.firstCall).be.calledWith('data:beforeDelete', {requestObject, userContext: {}});
-
             should(engine.delete).be.calledOnce();
-            should(engine.delete).be.calledWith(requestObject);
+            should(engine.delete).be.calledWith(request);
 
             should(kuzzle.notifier.notifyDocumentDelete).be.calledOnce();
-            should(kuzzle.notifier.notifyDocumentDelete).be.calledWith(requestObject);
-
-            should(trigger.secondCall).be.calledWith('data:afterDelete');
+            should(kuzzle.notifier.notifyDocumentDelete).be.calledWith(request);
 
             sinon.assert.callOrder(
-              trigger,
               engine.delete,
-              kuzzle.notifier.notifyDocumentDelete,
-              trigger
+              kuzzle.notifier.notifyDocumentDelete
             );
 
-            should(response.userContext).be.instanceof(Object);
-            // TODO test response format
-            should(response.responseObject).match({
-              status: 200,
-              error: null,
-              data: {
-                body: foo
-              }
-            });
+            should(response).be.instanceof(Object);
+            should(response).match(foo);
 
             return Promise.resolve();
           }
@@ -335,40 +247,27 @@ describe('Test: write controller', () => {
   });
 
   describe('#deleteByQuery', () => {
-    it('should trigger the proper methods and resolve to a valid response', () => {
-      return controller.deleteByQuery(requestObject, {})
+    it('should resolve to a valid response', () => {
+      request.input.resource.index = '%test';
+      request.input.resource.collection = 'test-collection';
+
+      return controller.deleteByQuery(request)
         .then(response => {
           try {
-            should(trigger).be.calledTwice();
-            should(trigger.firstCall).be.calledWith('data:beforeDeleteByQuery', {requestObject, userContext: {}});
 
             should(engine.deleteByQuery).be.calledOnce();
-            should(engine.deleteByQuery).be.calledWith(requestObject);
+            should(engine.deleteByQuery).be.calledWith(request);
 
             should(kuzzle.notifier.notifyDocumentDelete).be.calledOnce();
-            should(kuzzle.notifier.notifyDocumentDelete).be.calledWith(requestObject, 'responseIds');
-
-            should(trigger.secondCall).be.calledWith('data:afterDeleteByQuery');
+            should(kuzzle.notifier.notifyDocumentDelete).be.calledWith(request, 'responseIds');
 
             sinon.assert.callOrder(
-              trigger,
               engine.deleteByQuery,
-              kuzzle.notifier.notifyDocumentDelete,
-              trigger
+              kuzzle.notifier.notifyDocumentDelete
             );
 
-            should(response.userContext).be.instanceof(Object);
-            // TODO test response format
-            should(response.responseObject).match({
-              status: 200,
-              error: null,
-              data: {
-                body: {
-                  foo: 'bar',
-                  ids: 'responseIds'
-                }
-              }
-            });
+            should(response).be.instanceof(Object);
+            should(response).match(foo);
 
             return Promise.resolve();
           }
@@ -380,37 +279,26 @@ describe('Test: write controller', () => {
   });
 
   describe('#createCollection', () => {
-    it('should trigger the proper methods and resolve to a valid response', () => {
-      return controller.createCollection(requestObject, {})
+    it('should resolve to a valid response', () => {
+      request.input.resource.index = '%test';
+      request.input.resource.collection = 'test-collection';
+
+      return controller.createCollection(request)
         .then(response => {
           try {
-            should(trigger).be.calledTwice();
-            should(trigger.firstCall).be.calledWith('data:beforeCreateCollection');
-
             should(engine.createCollection).be.calledOnce();
-            should(engine.createCollection).be.calledWith(requestObject);
+            should(engine.createCollection).be.calledWith(request);
 
             should(kuzzle.indexCache.add).be.calledOnce();
-            should(kuzzle.indexCache.add).be.calledWith(requestObject.index, requestObject.collection);
-
-            should(trigger.secondCall).be.calledWith('data:afterCreateCollection');
+            should(kuzzle.indexCache.add).be.calledWith(request.input.resource.index, request.input.resource.collection);
 
             sinon.assert.callOrder(
-              trigger,
               engine.createCollection,
-              kuzzle.indexCache.add,
-              trigger
+              kuzzle.indexCache.add
             );
 
-            should(response.userContext).be.instanceof(Object);
-            // TODO test response format
-            should(response.responseObject).match({
-              status: 200,
-              error: null,
-              data: {
-                body: foo
-              }
-            });
+            should(response).be.instanceof(Object);
+            should(response).match(foo);
 
             return Promise.resolve();
           }
@@ -422,29 +310,26 @@ describe('Test: write controller', () => {
   });
 
   describe('#validateDocument', () => {
-    it('should trigger the proper method, send the right response with the right status code when the given document satisfy the specifications', () => {
+    it('should send the right response when the given document satisfy the specifications', () => {
       var expected = {
         errorMessages: {},
         validation: true
       };
 
+      request.input.resource.index = '%test';
+      request.input.resource.collection = 'test-collection';
+      request.input.resource._id = 'document-id';
+
       kuzzle.validation = {
         validationPromise: sinon.stub().returns(Promise.resolve(expected))
       };
 
-      return controller.validate(requestObject, {})
+      return controller.validate(request)
         .then(response => {
           try {
             should(kuzzle.validation.validationPromise).be.calledOnce();
-            should(response.userContext).be.instanceof(Object);
-            // TODO test response format
-            should(response.responseObject).match({
-              status: 200,
-              error: null,
-              data: {
-                body: expected
-              }
-            });
+            should(response).be.instanceof(Object);
+            should(response).match(expected);
 
             return Promise.resolve();
           }
@@ -454,7 +339,7 @@ describe('Test: write controller', () => {
         });
     });
 
-    it('should trigger the proper method, send the right response with the right status code when the given document do not satisfy the specifications', () => {
+    it('should send the right response when the given document do not satisfy the specifications', () => {
       var expected = {
         errorMessages: {
           fieldScope: {
@@ -470,23 +355,18 @@ describe('Test: write controller', () => {
         valid: false
       };
 
-      kuzzle.validation = {
-        validationPromise: sinon.stub().returns(Promise.resolve(expected))
-      };
+      request.input.resource.index = '%test';
+      request.input.resource.collection = 'test-collection';
+      request.input.resource._id = 'document-id';
 
-      return controller.validate(requestObject)
+      kuzzle.validation.validationPromise = sinon.stub().returns(Promise.resolve(expected));
+
+      return controller.validate(request)
         .then(response => {
           try {
             should(kuzzle.validation.validationPromise).be.calledOnce();
-            should(response.userContext).be.instanceof(Object);
-            // TODO test response format
-            should(response.responseObject).match({
-              status: 200,
-              error: expected.errorMessages,
-              data: {
-                body: expected
-              }
-            });
+            should(response).be.instanceof(Object);
+            should(response).match(expected);
 
             return Promise.resolve();
           }
