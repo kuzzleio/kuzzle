@@ -5,7 +5,7 @@ var
   KuzzleMock = require('../../mocks/kuzzle.mock'),
   WriteController = require('../../../lib/api/controllers/writeController');
 
-describe.only('Test: write controller', () => {
+describe('Test: write controller', () => {
   var
     foo = {foo: 'bar'},
     /** @type WriteController */
