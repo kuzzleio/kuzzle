@@ -8,7 +8,7 @@ var
   BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,
   SecurityController = require('../../../../lib/api/controllers/securityController');
 
-describe.only('Test: security controller - roles', () => {
+describe('Test: security controller - roles', () => {
   var
     kuzzle,
     error,

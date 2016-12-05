@@ -56,7 +56,8 @@ function KuzzleMock () {
 
   this.hotelClerk = {
     addToChannels: sinon.stub(),
-    getRealtimeCollections: sinon.stub()
+    getRealtimeCollections: sinon.stub(),
+    removeCustomerFromAllRooms: sinon.stub()
   };
 
   this.indexCache = {
@@ -138,6 +139,9 @@ function KuzzleMock () {
     role: {
       validateAndSaveRole: sinon.spy(function () {return Promise.resolve(arguments[0]);}),
       getRoleFromRequest: sinon.spy(function () {return Promise.resolve(arguments[0]);})
+    },
+    token: {
+      anonymous: sinon.stub().returns({_id: 'anonymous'})
     }
   };
 

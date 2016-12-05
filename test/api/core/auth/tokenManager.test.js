@@ -1,7 +1,9 @@
 var
   should = require('should'),
-  Kuzzle = require('../../../../lib/api/kuzzle'),
+  sinon = require('sinon'),
+  KuzzleMock = require('../../../mocks/kuzzle.mock'),
   Request = require('kuzzle-common-objects').Request,
+  RequestContext = require('kuzzle-common-objects').models.RequestContext,
   TokenManager = require('../../../../lib/api/core/auth/tokenManager');
 
 describe('Test: token manager core component', () => {
@@ -11,19 +13,19 @@ describe('Test: token manager core component', () => {
     contextStub,
     tokenManager;
 
-  before(() => {
-    kuzzle = new Kuzzle();
+  beforeEach(() => {
+    kuzzle = new KuzzleMock();
     kuzzle.hotelClerk.customers = {
-      'foobar': {
+      'connectionId': {
         'room1': {},
         'room2': {},
         'room3': {}
       }
     };
-    contextStub = {connection: {id: 'foobar'}};
-  });
+    contextStub = new RequestContext({
+      connectionId: 'connectionId'
+    });
 
-  beforeEach(() => {
     tokenManager = new TokenManager(kuzzle);
     token = {_id: 'foobar', expiresAt: Date.now()+1000};
   });
@@ -72,28 +74,6 @@ describe('Test: token manager core component', () => {
   });
 
   describe('#checkTokensValidity', () => {
-    var
-      notification,
-      rooms,
-      connectionId,
-      subscriptionsCleaned;
-
-    before(() => {
-      kuzzle.notifier.notify = (r, msg, cont, id) => {
-        rooms = r;
-        notification = msg;
-        connectionId = id;
-      };
-
-      kuzzle.hotelClerk.removeCustomerFromAllRooms = () => {subscriptionsCleaned = true; return Promise.resolve();};
-    });
-
-    beforeEach(() => {
-      notification = null;
-      rooms = null;
-      connectionId = '';
-      subscriptionsCleaned = false;
-    });
 
     it('should do nothing if no token has expired', () => {
       var
@@ -113,14 +93,18 @@ describe('Test: token manager core component', () => {
 
       tokenManager.checkTokensValidity();
 
-      should(notification).be.null();
-      should(subscriptionsCleaned).be.false();
+      should(kuzzle.notifier.notify)
+        .have.callCount(0);
+      should(kuzzle.hotelClerk.removeCustomerFromAllRooms)
+        .have.callCount(0);
+
       should(tokenManager.tokens.array.length).be.eql(2);
       should(tokenManager.tokens.array).match(stubTokens);
     });
 
     it('should clean up subscriptions upon a token expiration', () => {
       var
+        notification,
         stubTokens = {
           foo: {
             _id: 'foo',
@@ -132,17 +116,32 @@ describe('Test: token manager core component', () => {
           }
         };
 
+      kuzzle.hotelClerk.customers.connectionId = {
+        room1: true,
+        room2: true,
+        room3: true
+      };
+
       Object.keys(stubTokens).forEach(k => tokenManager.add(stubTokens[k], contextStub));
 
       tokenManager.checkTokensValidity();
 
-      should(subscriptionsCleaned).be.true();
-      should(rooms).match(['room1', 'room2', 'room3']);
-      should(connectionId).be.eql('foobar');
+      should(kuzzle.hotelClerk.removeCustomerFromAllRooms)
+        .be.calledOnce();
+      should(kuzzle.notifier.notify)
+        .be.calledOnce()
+        .be.calledWith([
+          'room1',
+          'room2',
+          'room3'
+        ]);
+      should(kuzzle.notifier.notify.firstCall.args[3])
+        .be.eql('connectionId');
+
+      notification = kuzzle.notifier.notify.firstCall.args[1];
       should(notification).be.instanceof(Request);
-      should(notification.requestId).be.eql('server notification');
-      should(notification.controller).be.eql('auth');
-      should(notification.action).be.eql('jwtTokenExpired');
+      should(notification.input.controller).be.eql('auth');
+      should(notification.input.action).be.eql('jwtTokenExpired');
       should(tokenManager.tokens.array.length).be.eql(1);
       should(tokenManager.tokens.array[0]).match(stubTokens.bar);
     });
@@ -160,13 +159,18 @@ describe('Test: token manager core component', () => {
           }
         };
 
-      contextStub = {connection: {id: 'this id matches nothing'}};
+      contextStub = new RequestContext({
+        connectionId: 'i dont exist'
+      });
       Object.keys(stubTokens).forEach(k => tokenManager.add(stubTokens[k], contextStub));
 
       tokenManager.checkTokensValidity();
 
-      should(subscriptionsCleaned).be.false();
-      should(notification).be.null();
+      should(kuzzle.hotelClerk.removeCustomerFromAllRooms)
+        .have.callCount(0);
+      should(kuzzle.notifier.notify)
+        .have.callCount(0);
+
       should(tokenManager.tokens.array.length).be.eql(1);
       should(tokenManager.tokens.array[0]).match(stubTokens.bar);
     });
