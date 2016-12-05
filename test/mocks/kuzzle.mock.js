@@ -134,6 +134,10 @@ function KuzzleMock () {
     init: sinon.stub().returns(Promise.resolve()),
     user: {
       load: sinon.stub().returns(Promise.resolve(foo))
+    },
+    role: {
+      validateAndSaveRole: sinon.spy(function () {return Promise.resolve(arguments[0]);}),
+      getRoleFromRequest: sinon.spy(function () {return Promise.resolve(arguments[0]);})
     }
   };
 
