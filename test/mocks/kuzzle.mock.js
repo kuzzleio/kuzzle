@@ -36,7 +36,8 @@ function KuzzleMock () {
   };
 
   this.dsl = {
-    register: sinon.stub().returns(Promise.resolve())
+    register: sinon.stub().returns(Promise.resolve()),
+    remove: sinon.stub().returns(Promise.resolve())
   };
 
   this.entryPoints = {
