@@ -42,7 +42,7 @@ describe('Test: token manager core component', () => {
     });
 
     it('should not add a token if the context connection does not contain an id', () => {
-      should(tokenManager.add(token, {connection: {}}));
+      should(tokenManager.add(token, {connectionId: null})).be.false();
     });
 
     it('should add the token if the context is properly formatted', () => {

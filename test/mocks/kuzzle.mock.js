@@ -23,6 +23,18 @@ function KuzzleMock () {
   // we need a deep copy here
   this.config = _.merge({}, config);
 
+  this.cliController = {
+    init: sinon.stub().returns(Promise.resolve()),
+    actions: {
+      adminExists: sinon.stub().returns(Promise.resolve()),
+      createFirstAdmin: sinon.stub().returns(Promise.resolve()),
+      cleanAndPrepare: sinon.stub().returns(Promise.resolve()),
+      cleanDb: sinon.stub().returns(Promise.resolve()),
+      managePlugins: sinon.stub().returns(Promise.resolve()),
+      data: sinon.stub().returns(Promise.resolve())
+    }
+  };
+
   this.dsl = {
     register: sinon.stub().returns(Promise.resolve())
   };
@@ -125,32 +137,6 @@ function KuzzleMock () {
     trigger: sinon.spy(function () {return Promise.resolve(arguments[1]);})
   };
 
-  this.cliController = {
-    init: sinon.stub().returns(Promise.resolve()),
-    actions: {
-      adminExists: sinon.stub().returns(Promise.resolve()),
-      createFirstAdmin: sinon.stub().returns(Promise.resolve()),
-      cleanAndPrepare: sinon.stub().returns(Promise.resolve()),
-      cleanDb: sinon.stub().returns(Promise.resolve()),
-      managePlugins: sinon.stub().returns(Promise.resolve()),
-      data: sinon.stub().returns(Promise.resolve())
-    }
-  };
-
-  this.repositories = {
-    init: sinon.stub().returns(Promise.resolve()),
-    user: {
-      load: sinon.stub().returns(Promise.resolve(foo))
-    },
-    role: {
-      validateAndSaveRole: sinon.spy(function () {return Promise.resolve(arguments[0]);}),
-      getRoleFromRequest: sinon.spy(function () {return Promise.resolve(arguments[0]);})
-    },
-    token: {
-      anonymous: sinon.stub().returns({_id: 'anonymous'})
-    }
-  };
-
   this.validation = {
     init: sinon.spy(),
     curateSpecification: sinon.spy(function () {return Promise.resolve();}),
@@ -160,15 +146,22 @@ function KuzzleMock () {
   };
 
   this.repositories = {
+    init: sinon.stub().returns(Promise.resolve()),
     profile: {
       load: sinon.stub().returns(Promise.resolve())
     },
     role: {
+      getRoleFromRequest: sinon.spy(function () {return Promise.resolve(arguments[0]);}),
       loadRole: sinon.stub().returns(Promise.resolve()),
-      loadRoles: sinon.stub().returns(Promise.resolve())
+      loadRoles: sinon.stub().returns(Promise.resolve()),
+      validateAndSaveRole: sinon.spy(function () {return Promise.resolve(arguments[0]);})
     },
     user: {
+      load: sinon.stub().returns(Promise.resolve(foo)),
       search: sinon.stub().returns(Promise.resolve())
+    },
+    token: {
+      anonymous: sinon.stub().returns({_id: 'anonymous'})
     }
   };
 
