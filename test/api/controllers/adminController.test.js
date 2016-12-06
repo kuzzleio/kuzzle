@@ -53,25 +53,14 @@ describe('Test: admin controller', () => {
   });
 
   describe('#updateUserMapping', () => {
-    it('should activate a hook on a mapping update call and add the collection to the cache', () => {
-      return adminController.updateUserMapping(requestObject, {})
+    it('should update the user mapping', () => {
+      return adminController.updateUserMapping(request)
         .then(response => {
-          should(kuzzle.pluginsManager.trigger).be.calledTwice();
-          should(kuzzle.pluginsManager.trigger.firstCall).be.calledWith('data:beforeUpdateUserMapping', {requestObject, userContext: {}});
-          should(kuzzle.pluginsManager.trigger.secondCall).be.calledWith('data:afterUpdateUserMapping');
-
           should(kuzzle.internalEngine.updateMapping).be.calledOnce();
-          should(kuzzle.internalEngine.updateMapping).be.calledWith('users', requestObject.data.body);
+          should(kuzzle.internalEngine.updateMapping).be.calledWith('users', request.input.body);
 
-          should(response.userContext).be.instanceof(Object);
-          should(response.responseObject).be.an.instanceOf(ResponseObject);
-          should(response.responseObject).match({
-            status: 200,
-            error: null,
-            data: {
-              body: foo
-            }
-          });
+          should(response).be.instanceof(Object);
+          should(response).match(foo);
         });
     });
   });
@@ -92,17 +81,13 @@ describe('Test: admin controller', () => {
 
   describe('#getUserMapping', () => {
     it('should fulfill with a response object', () => {
-      return adminController.getUserMapping(requestObject, {})
+      return adminController.getUserMapping(request)
         .then(response => {
-          should(kuzzle.pluginsManager.trigger).be.calledTwice();
-          should(kuzzle.pluginsManager.trigger.firstCall).be.calledWith('data:beforeGetUserMapping', {requestObject, userContext: {}});
-          should(kuzzle.pluginsManager.trigger.secondCall).be.calledWith('data:afterGetUserMapping');
-
           should(kuzzle.internalEngine.getMapping).be.calledOnce();
           should(kuzzle.internalEngine.getMapping).be.calledWith({index: kuzzle.internalEngine.index, type: 'users'});
 
-          should(response.userContext).be.instanceof(Object);
-          should(response.responseObject).be.an.instanceOf(ResponseObject);
+          should(response).be.instanceof(Object);
+          should(response).match({mapping: {}});
         });
     });
   });
