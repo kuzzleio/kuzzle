@@ -153,6 +153,19 @@ function KuzzleMock () {
     addType: sinon.spy()
   };
 
+  this.repositories = {
+    profile: {
+      load: sinon.stub().returns(Promise.resolve())
+    },
+    role: {
+      loadRole: sinon.stub().returns(Promise.resolve()),
+      loadRoles: sinon.stub().returns(Promise.resolve())
+    },
+    user: {
+      search: sinon.stub().returns(Promise.resolve())
+    }
+  };
+
   this.resetStorage = sinon.stub().returns(Promise.resolve());
 
   this.rootPath = '/kuzzle';
