@@ -18,7 +18,6 @@ describe('Test: routerController.httpRequest', () => {
   before(() => {
     kuzzleStub = {
       config: {
-        apiVersion: '1.0',
         httpRoutes: require('../../../../lib/config/httpRoutes')
       },
       pluginsManager: {
@@ -55,7 +54,7 @@ describe('Test: routerController.httpRequest', () => {
   });
 
   it('should register GET routes from the config/httpRoutes file', (done) => {
-    httpRequest.url = `/api/${kuzzleStub.config.apiVersion}/ms/_getrange/someId/start/end`;
+    httpRequest.url = '/ms/_getrange/someId/start/end';
     httpRequest.method = 'GET';
 
     routeController.router.route(httpRequest, result => {
@@ -76,7 +75,7 @@ describe('Test: routerController.httpRequest', () => {
   });
 
   it('should register POST routes from the config/httpRoutes file', (done) => {
-    httpRequest.url = `/api/${kuzzleStub.config.apiVersion}/profiles/foobar`;
+    httpRequest.url = '/profiles/foobar';
     httpRequest.method = 'POST';
     httpRequest.content = '{"profileId": "foobar"}';
 
@@ -98,7 +97,7 @@ describe('Test: routerController.httpRequest', () => {
   });
 
   it('should register PUT routes from the config/httpRoutes file', (done) => {
-    httpRequest.url = `/api/${kuzzleStub.config.apiVersion}/_updateSelf`;
+    httpRequest.url = '/_updateSelf';
     httpRequest.method = 'PUT';
     httpRequest.content = '{"foo": "bar"}';
 
@@ -120,7 +119,7 @@ describe('Test: routerController.httpRequest', () => {
   });
 
   it('should register DELETE routes from the config/httpRoutes file', (done) => {
-    httpRequest.url = `/api/${kuzzleStub.config.apiVersion}/foobar`;
+    httpRequest.url = '/foobar';
     httpRequest.method = 'DELETE';
 
     routeController.router.route(httpRequest, result => {
@@ -141,7 +140,7 @@ describe('Test: routerController.httpRequest', () => {
   });
 
   it('should register the base route /_serverInfo', (done) => {
-    httpRequest.url = '/api/_serverInfo';
+    httpRequest.url = '/_serverInfo';
     httpRequest.method = 'GET';
 
     routeController.router.route(httpRequest, result => {
@@ -162,7 +161,7 @@ describe('Test: routerController.httpRequest', () => {
   });
 
   it('should register the swagger JSON auto-generator route', (done) => {
-    httpRequest.url = '/api/swagger.json';
+    httpRequest.url = '/swagger.json';
     httpRequest.method = 'GET';
 
     routeController.router.route(httpRequest, result => {
@@ -180,7 +179,7 @@ describe('Test: routerController.httpRequest', () => {
   });
 
   it('should register the swagger YAML auto-generator route', (done) => {
-    httpRequest.url = '/api/swagger.yml';
+    httpRequest.url = '/swagger.yml';
     httpRequest.method = 'GET';
 
     routeController.router.route(httpRequest, result => {
@@ -198,7 +197,7 @@ describe('Test: routerController.httpRequest', () => {
   });
 
   it('should register plugins HTTP routes', (done) => {
-    httpRequest.url = `/api/${kuzzleStub.config.apiVersion}/_plugin/foo/bar/baz`;
+    httpRequest.url = '/_plugin/foo/bar/baz';
     httpRequest.method = 'GET';
 
     routeController.router.route(httpRequest, result => {
@@ -219,7 +218,7 @@ describe('Test: routerController.httpRequest', () => {
   });
 
   it('should return a 404 if the requested route does not exist', (done) => {
-    httpRequest.url = `/api/${kuzzleStub.config.apiVersion}/foo/bar`;
+    httpRequest.url = '/foo/bar';
     httpRequest.method = 'GET';
 
     routeController.router.route(httpRequest, result => {
@@ -228,7 +227,7 @@ describe('Test: routerController.httpRequest', () => {
         should(result.id).be.eql(httpRequest.requestId);
         should(result.type).be.eql('application/json');
         should(result.status).be.eql(404);
-        should(result.content).startWith('{"status":404,"error":{"status":404,"message":"API URL not found: /api/1.0/foo/bar"');
+        should(result.content).startWith('{"status":404,"error":{"status":404,"message":"API URL not found: /foo/bar"');
         done();
       }
       catch (e) {
