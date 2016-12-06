@@ -269,7 +269,6 @@ describe('Test: read controller', () => {
           should(response.serverInfo.kuzzle).be.and.Object();
           should(response.serverInfo.kuzzle.version).be.a.String();
           should(response.serverInfo.kuzzle.api).be.an.Object();
-          should(response.serverInfo.kuzzle.api.version).be.a.String();
           should(response.serverInfo.kuzzle.api.routes).be.an.Object();
           should(response.serverInfo.kuzzle.plugins).be.an.Object();
           should(response.serverInfo.kuzzle.system).be.an.Object();
