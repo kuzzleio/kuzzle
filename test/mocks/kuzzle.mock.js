@@ -178,8 +178,12 @@ function KuzzleMock () {
         send: sinon.stub().returns(Promise.resolve())
       },
       internalCache: {
+        expire: sinon.stub().returns(Promise.resolve()),
         flushdb: sinon.stub().returns(Promise.resolve()),
-        getInfos: sinon.stub().returns(Promise.resolve())
+        get: sinon.stub().returns(Promise.resolve(null)),
+        getInfos: sinon.stub().returns(Promise.resolve()),
+        set: sinon.stub().returns(Promise.resolve()),
+        volatileSet: sinon.stub().returns(Promise.resolve())
       },
       memoryStorage: {
         flushdb: sinon.stub().returns(Promise.resolve()),
@@ -225,6 +229,11 @@ function KuzzleMock () {
     getStats: sinon.stub().returns(Promise.resolve(foo)),
     init: sinon.spy(),
     dropConnection: sinon.stub()
+  };
+
+  this.tokenManager = {
+    add: sinon.stub(),
+    expire: sinon.stub().returns(Promise.resolve())
   };
 }
 
