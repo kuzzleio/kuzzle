@@ -4,9 +4,10 @@ var
   sinon = require('sinon'),
   Kuzzle = require('../../../../../lib/api/kuzzle'),
   Profile = require('../../../../../lib/api/core/models/security/profile'),
-  User = require('../../../../../lib/api/core/models/security/user');
+  User = require('../../../../../lib/api/core/models/security/user'),
+  Request = require('kuzzle-common-objects').Request;
 
-describe('Test: security/userTest', () => {
+describe.('Test: security/userTest', () => {
   var
     kuzzle,
     sandbox,
@@ -121,7 +122,7 @@ describe('Test: security/userTest', () => {
   });
 
   it('should use the isActionAlloed method from its profile', () => {
-    return user.isActionAllowed({}, {}, kuzzle)
+    return user.isActionAllowed(new Request({}), kuzzle)
       .then(isActionAllowed => {
         should(isActionAllowed).be.a.Boolean();
         should(isActionAllowed).be.true();
@@ -131,7 +132,7 @@ describe('Test: security/userTest', () => {
 
   it('should respond false if the user have no profileIds', () => {
     user.profileIds = [];
-    return user.isActionAllowed({}, {}, kuzzle)
+    return user.isActionAllowed(new Request({}), kuzzle)
       .then(isActionAllowed => {
         should(isActionAllowed).be.a.Boolean();
         should(isActionAllowed).be.false();
@@ -141,6 +142,6 @@ describe('Test: security/userTest', () => {
 
   it('should rejects if the loadProfiles throws an error', () => {
     sandbox.stub(user, 'getProfiles').returns(Promise.reject(new Error('error')));
-    return should(user.isActionAllowed({}, {}, kuzzle)).be.rejectedWith('error');
+    return should(user.isActionAllowed(new Request({}), kuzzle)).be.rejectedWith('error');
   });
 });
