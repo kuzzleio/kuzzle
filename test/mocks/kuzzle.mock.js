@@ -151,6 +151,7 @@ function KuzzleMock () {
     init: sinon.stub().returns(Promise.resolve()),
     profile: {
       load: sinon.stub().returns(Promise.resolve()),
+      loadProfiles: sinon.stub().returns(Promise.resolve()),
       searchProfiles: sinon.stub().returns(Promise.resolve())
     },
     role: {

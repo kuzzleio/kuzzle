@@ -1,11 +1,12 @@
 var
   Promise = require('bluebird'),
-  _ = require('lodash'),
   should = require('should'),
-  Kuzzle = require('../../../../../lib/api/kuzzle'),
+  sinon = require('sinon'),
+  sandbox = sinon.sandbox.create(),
+  KuzzleMock = require('../../../../mocks/kuzzle.mock'),
   InternalError = require('kuzzle-common-objects').errors.InternalError,
   NotFoundError = require('kuzzle-common-objects').errors.NotFoundError,
-  Profile = require('../../../../../lib/api/core/models/security/profile'),
+  Repository = require('../../../../../lib/api/core/models/repositories/repository'),
   User = require('../../../../../lib/api/core/models/security/user'),
   UserRepository = require('../../../../../lib/api/core/models/repositories/userRepository');
 
@@ -13,64 +14,15 @@ describe('Test: repositories/userRepository', () => {
   var
     kuzzle,
     userRepository,
+    userInCache,
+    userInDB,
     userInvalidProfile;
 
-  before(() => {
+  beforeEach(() => {
     var
       encryptedPassword = '5c4ec74fd64bb57c05b4948f3a7e9c7d450f069a',
-      mockCacheEngine,
-      mockDatabaseEngine,
-      mockProfileRepository,
-      userInCache,
-      userInDB;
+      repositoryLoadStub = sandbox.stub(Repository.prototype, 'load');
 
-    kuzzle = new Kuzzle();
-    mockCacheEngine = {
-      get: key => {
-        if (key === 'repos/' + userRepository.index + '/' + userRepository.collection + '/userInCache') {
-          return Promise.resolve(JSON.stringify(userInCache));
-        }
-        return Promise.resolve(null);
-      },
-      volatileSet: () => {return Promise.resolve('OK');},
-      expire: () => {return Promise.resolve('OK'); }
-    };
-
-    mockDatabaseEngine = {
-      get: (type, id) => {
-        if (id === 'userInDB') {
-          return Promise.resolve(userInDB);
-        }
-
-        return Promise.resolve(new NotFoundError('User not found in db'));
-      },
-      createOrReplace: () => Promise.resolve({})
-    };
-
-    mockProfileRepository = {
-      loadProfile: profileKey => {
-        var profile = new Profile();
-        if (profileKey === 'notfound') {
-          return Promise.resolve(null);
-        }
-        profile._id = profileKey;
-        return Promise.resolve(profile);
-      },
-      loadProfiles: profileKeys => {
-        var
-          profile,
-          profiles = [];
-
-        profileKeys.forEach(profileKey => {
-          profile = new Profile();
-          if (profileKey !== 'notfound') {
-            profile._id = profileKey;
-            profiles.push(_.assignIn({}, profile));
-          }
-        });
-        return Promise.resolve(profiles);
-      }
-    };
     userInCache = {
       _id: 'userInCache',
       name: 'Johnny Cash',
@@ -87,13 +39,26 @@ describe('Test: repositories/userRepository', () => {
       profileIds: ['notfound']
     };
 
-    kuzzle.repositories.profile = mockProfileRepository;
+    repositoryLoadStub.returns(Promise.resolve(null));
+    repositoryLoadStub
+      .withArgs('userInCache')
+      .returns(Promise.resolve(userInCache));
+    repositoryLoadStub
+      .withArgs('userInDB')
+      .returns(Promise.resolve(userInDB));
+    repositoryLoadStub
+      .withArgs('userInvalidProfile')
+      .returns(Promise.resolve(userInvalidProfile));
+
+    kuzzle = new KuzzleMock();
 
     userRepository = new UserRepository(kuzzle);
-    userRepository.init();
-    userRepository.cacheEngine = mockCacheEngine;
-    userRepository.databaseEngine = mockDatabaseEngine;
 
+    return userRepository.init();
+  });
+
+  afterEach(() => {
+    sandbox.restore();
   });
 
   describe('#constructor', () => {
@@ -106,8 +71,8 @@ describe('Test: repositories/userRepository', () => {
 
   describe('#anonymous', () => {
     it('should return a valid anonymous user', () => {
-      return userRepository.anonymous()
-        .then(user => assertIsAnonymous(user));
+      var user = userRepository.anonymous();
+      assertIsAnonymous(user);
     });
   });
 
@@ -138,6 +103,10 @@ describe('Test: repositories/userRepository', () => {
       var user = new User();
       user._id = 'admin';
 
+      kuzzle.repositories.profile.loadProfiles.returns(Promise.resolve([
+        {_id: 'admin'}
+      ]));
+
       return userRepository.hydrate(user, {profileIds: 'admin'})
         .then((result) => {
           should(result.profileIds).be.an.instanceOf(Array);
@@ -148,15 +117,32 @@ describe('Test: repositories/userRepository', () => {
     it('should reject the promise if the profile cannot be found', () => {
       var user = new User();
 
+      kuzzle.repositories.profile.loadProfiles.returns(Promise.resolve([]));
+
       return should(userRepository.hydrate(user, userInvalidProfile))
         .be.rejectedWith(NotFoundError);
+    });
+
+    it('should add the default profile if none is set', () => {
+      var user = new User();
+      user._id = 'foo';
+
+      kuzzle.repositories.profile.loadProfiles.returns(Promise.resolve([
+        {_id: 'default'}
+      ]));
+
+      userRepository.hydrate(user, {});
+
+      should(user.profileIds)
+        .match(['default']);
+
     });
   });
 
   describe('#load', () => {
     it('should return the anonymous user when the anonymous or -1 id is given', () => {
       return Promise.all([
-        userRepository.load(-1),
+        userRepository.load('-1'),
         userRepository.load('anonymous')
       ])
         .then(users => {
@@ -165,6 +151,10 @@ describe('Test: repositories/userRepository', () => {
     });
 
     it('should resolve to user if good credentials are given', () => {
+      kuzzle.repositories.profile.loadProfiles.returns(Promise.resolve([
+        {_id: userInCache.profileIds[0]}
+      ]));
+
       return userRepository.load('userInCache')
         .then(user => {
           should(user._id).be.exactly('userInCache');
@@ -175,6 +165,7 @@ describe('Test: repositories/userRepository', () => {
     });
 
     it('should resolve to "null" if username is not found', () => {
+
       return userRepository.load('unknownUser')
         .then(user => should(user).be.null());
     });
@@ -193,16 +184,15 @@ describe('Test: repositories/userRepository', () => {
 
   describe('#serializeToCache', () => {
     it('should return a valid plain object', () => {
-      return userRepository.anonymous()
-        .then(user => {
-          var result = userRepository.serializeToCache(user);
+      var
+        user = userRepository.anonymous(),
+        result = userRepository.serializeToCache(user);
 
-          should(result).not.be.an.instanceOf(User);
-          should(result).be.an.Object();
-          should(result._id).be.exactly(-1);
-          should(result.profileIds).be.an.Array();
-          should(result.profileIds[0]).be.exactly('anonymous');
-        });
+      should(result).not.be.an.instanceOf(User);
+      should(result).be.an.Object();
+      should(result._id).be.exactly('-1');
+      should(result.profileIds).be.an.Array();
+      should(result.profileIds[0]).be.exactly('anonymous');
     });
   });
 
@@ -218,27 +208,12 @@ describe('Test: repositories/userRepository', () => {
       should(user._id).match(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
     });
   });
-
-  describe('#defaultProfile', () => {
-    it('should add the default profile when the user do not have any profile set', () => {
-      var
-        user = new User();
-
-      userRepository = new UserRepository(kuzzle);
-
-      user.name = 'No Profile';
-      user._id = 'NoProfile';
-
-      return userRepository.hydrate(user, {})
-        .then(result => {
-          return should(result.profileIds[0]).be.eql('default');
-        });
-    });
-  });
 });
 
 function assertIsAnonymous (user) {
-  should(user._id).be.exactly(-1);
+  should(user)
+    .be.an.instanceOf(User);
+  should(user._id).be.exactly('-1');
   should(user.name).be.exactly('Anonymous');
   should(user.profileIds).be.an.instanceOf(Array);
   should(user.profileIds[0]).be.exactly('anonymous');
