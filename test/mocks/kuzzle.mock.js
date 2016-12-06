@@ -106,7 +106,8 @@ function KuzzleMock () {
     init: sinon.stub().returns(Promise.resolve()),
     refresh: sinon.stub().returns(Promise.resolve()),
     search: sinon.stub().returns(Promise.resolve()),
-    updateMapping: sinon.stub().returns(Promise.resolve())
+    updateMapping: sinon.stub().returns(Promise.resolve(foo)),
+    getMapping: sinon.stub().returns(Promise.resolve({internalIndex: {mappings: {users: {properties: {}}}}}))
   };
 
   this.once = sinon.stub();
@@ -150,6 +151,7 @@ function KuzzleMock () {
     init: sinon.stub().returns(Promise.resolve()),
     profile: {
       load: sinon.stub().returns(Promise.resolve()),
+      loadProfiles: sinon.stub().returns(Promise.resolve()),
       searchProfiles: sinon.stub().returns(Promise.resolve())
     },
     role: {
