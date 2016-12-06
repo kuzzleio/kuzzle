@@ -1,10 +1,5 @@
 'use strict';
 
-/**
- * Tests the notify function of the Notifier core component.
- * Besides the init() function, this is the only exposed method to the world, and this is the
- * central point of communication for the whole Kuzzle project.
- */
 var
   should = require('should'),
   sinon = require('sinon'),
@@ -44,7 +39,7 @@ describe('Test: notifier.publish', () => {
           requestId: 'foo',
           collection: 'bar',
           _id: 'I am fabulous',
-          body: { youAre: 'fabulous too' },
+          body: {youAre: 'fabulous too'},
           metadata: {}
         };
         kuzzle.services.list.internalCache = internalCache;
