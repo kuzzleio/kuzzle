@@ -18,7 +18,7 @@ module.exports = {
       activated: true
     },
     'kuzzle-plugin-auth-passport-local': {
-      gitUrl: 'https://github.com/kuzzleio/kuzzle-plugin-auth-passport-local',
+      version: '3.0.0',
       activated: true
     }
   },
