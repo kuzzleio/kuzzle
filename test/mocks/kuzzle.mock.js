@@ -47,7 +47,8 @@ function KuzzleMock () {
       }
     },
     init: sinon.spy(),
-    handleErrorDump: sinon.spy()
+    handleErrorDump: sinon.spy(),
+    execute: sinon.spy()
   };
 
   this.hooks = {
@@ -174,6 +175,10 @@ function KuzzleMock () {
     list: {
       broker: {
         getInfos: sinon.stub().returns(Promise.resolve()),
+        listen: sinon.spy(),
+        send: sinon.stub().returns(Promise.resolve())
+      },
+      proxyBroker: {
         listen: sinon.spy(),
         send: sinon.stub().returns(Promise.resolve())
       },
