@@ -7,7 +7,7 @@ var
   User = require('../../../../../lib/api/core/models/security/user'),
   Request = require('kuzzle-common-objects').Request;
 
-describe.('Test: security/userTest', () => {
+describe('Test: security/userTest', () => {
   var
     kuzzle,
     sandbox,
