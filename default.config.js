@@ -2,8 +2,6 @@
  * @class KuzzleConfiguration
  */
 module.exports = {
-  hooks: require('./lib/config/hooks'),
-
   httpRoutes: require('./lib/config/httpRoutes'),
 
   plugins: {

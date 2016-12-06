@@ -33,11 +33,14 @@ describe('Test: write controller', () => {
           try {
             should(kuzzle.validation.validationPromise).be.calledOnce();
 
+            should(kuzzle.notifier.publish).be.calledOnce();
+            should(kuzzle.notifier.publish).be.calledWith(request);
+
             should(engine.create).be.calledOnce();
             should(engine.create).be.calledWith(request);
 
             should(kuzzle.notifier.notifyDocumentCreate).be.calledOnce();
-            should(kuzzle.notifier.notifyDocumentCreate).be.calledWith(request, foo);
+            should(kuzzle.notifier.notifyDocumentCreate).be.calledWith(request);
 
             sinon.assert.callOrder(
               engine.create,
@@ -89,8 +92,10 @@ describe('Test: write controller', () => {
       return controller.createOrReplace(request)
         .then(response => {
           try {
-
             should(kuzzle.validation.validationPromise).be.calledOnce();
+
+            should(kuzzle.notifier.publish).be.calledOnce();
+            should(kuzzle.notifier.publish).be.calledWith(request);
 
             should(engine.createOrReplace).be.calledOnce();
             should(engine.createOrReplace).be.calledWith(request);
@@ -127,6 +132,11 @@ describe('Test: write controller', () => {
       return controller.createOrReplace(request)
         .then(response => {
           try {
+            should(kuzzle.validation.validationPromise).be.calledOnce();
+
+            should(kuzzle.notifier.publish).be.calledOnce();
+            should(kuzzle.notifier.publish).be.calledWith(request);
+
             should(engine.createOrReplace).be.calledOnce();
 
             should(kuzzle.notifier.notifyDocumentCreate).be.calledOnce();
@@ -190,6 +200,9 @@ describe('Test: write controller', () => {
           try {
             should(kuzzle.validation.validationPromise).be.calledOnce();
 
+            should(kuzzle.notifier.publish).be.calledOnce();
+            should(kuzzle.notifier.publish).be.calledWith(request);
+
             should(engine.replace).be.calledOnce();
             should(engine.replace).be.calledWith(request);
 
@@ -223,6 +236,9 @@ describe('Test: write controller', () => {
       return controller.delete(request)
         .then(response => {
           try {
+            should(kuzzle.notifier.publish).be.calledOnce();
+            should(kuzzle.notifier.publish).be.calledWith(request);
+
             should(engine.delete).be.calledOnce();
             should(engine.delete).be.calledWith(request);
 
