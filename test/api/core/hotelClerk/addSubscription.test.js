@@ -5,7 +5,7 @@ var
   HotelClerk = require('../../../../lib/api/core/hotelClerk'),
   InternalError = require('kuzzle-common-objects').errors.InternalError,
   BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,
-  Kuzzle = require('../../../mocks/kuzzle.mock');
+  KuzzleMock = require('../../../mocks/kuzzle.mock');
 
 describe('Test: hotelClerk.addSubscription', () => {
   var
@@ -28,7 +28,7 @@ describe('Test: hotelClerk.addSubscription', () => {
       connectionId,
       token: null
     };
-    kuzzle = new Kuzzle();
+    kuzzle = new KuzzleMock();
     kuzzle.hotelClerk = new HotelClerk(kuzzle);
 
     kuzzle.dsl.register.returns(Promise.resolve({

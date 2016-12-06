@@ -7,7 +7,7 @@ var
   should = require('should'),
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
-  Kuzzle = require('../../../mocks/kuzzle.mock'),
+  KuzzleMock = require('../../../mocks/kuzzle.mock'),
   Notifier = require('../../../../lib/api/core/notifier'),
   NotificationObject = require('../../../../lib/api/core/models/notificationObject');
 
@@ -24,7 +24,7 @@ describe('Test: notifier.notify', () => {
   });
 
   beforeEach(() => {
-    kuzzle = new Kuzzle();
+    kuzzle = new KuzzleMock();
     notification = new NotificationObject({}, {});
 
     dispatchStub = kuzzle.entryPoints.proxy.dispatch;

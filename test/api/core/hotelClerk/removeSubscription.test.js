@@ -4,18 +4,17 @@ var
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
   Request = require('kuzzle-common-objects').Request,
-  BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,
   NotFoundError = require('kuzzle-common-objects').errors.NotFoundError,
   Dsl = require('../../../../lib/api/dsl'),
   HotelClerk = require('../../../../lib/api/core/hotelClerk'),
-  Kuzzle = require('../../../mocks/kuzzle.mock');
+  KuzzleMock = require('../../../mocks/kuzzle.mock');
 
 describe('Test: hotelClerk.removeSubscription', () => {
   var
     kuzzle,
-    connection = {id: 'connectionid'},
+    connectionId = 'connectionid',
     context = {
-      connection: connection,
+      connectionId,
       user: null
     },
     index = 'test',
@@ -24,7 +23,7 @@ describe('Test: hotelClerk.removeSubscription', () => {
 
 
   beforeEach(() => {
-    kuzzle = new Kuzzle();
+    kuzzle = new KuzzleMock();
     kuzzle.hotelClerk = new HotelClerk(kuzzle);
     kuzzle.dsl = new Dsl();
 
@@ -34,22 +33,22 @@ describe('Test: hotelClerk.removeSubscription', () => {
       index: index,
       collection: collection,
       body: { roomId: 'foo' }
-    });
+    }, context);
 
-    kuzzle.hotelClerk.customers[connection.id] = {
+    kuzzle.hotelClerk.customers[connectionId] = {
       'foo': {},
       'bar': {}
     };
 
     kuzzle.hotelClerk.rooms = {
       'foo': {
-        customers: [connection.id],
+        customers: [connectionId],
         index,
         collection,
         channels: ['foobar']
       },
       'bar': {
-        customers: [connection.id],
+        customers: [connectionId],
         index,
         collection,
         channels: ['barfoo']
@@ -62,24 +61,9 @@ describe('Test: hotelClerk.removeSubscription', () => {
     sandbox.restore();
   });
 
-  it('should do nothing when a bad connectionId is given', () => {
-    var
-      badContext = {
-        connection: {id: 'unknown'},
-        user: null
-      };
-
-    return should(kuzzle.hotelClerk.removeSubscription(unsubscribeRequest, badContext)).be.rejectedWith(NotFoundError);
-  });
-
-  it('should do nothing when a badly formed unsubscribe request is provided', () => {
-    delete unsubscribeRequest.data.body;
-    return should(kuzzle.hotelClerk.removeSubscription(unsubscribeRequest, context)).be.rejectedWith(BadRequestError);
-  });
-
   it('should do nothing if a bad room name is given', () => {
-    unsubscribeRequest.data.body.roomId = 'qux';
-    return should(kuzzle.hotelClerk.removeSubscription(unsubscribeRequest, context)).be.rejectedWith(NotFoundError);
+    unsubscribeRequest.input.body.roomId = 'qux';
+    return should(kuzzle.hotelClerk.removeSubscription(unsubscribeRequest)).be.rejectedWith(NotFoundError);
   });
 
   it('should not delete all subscriptions when we want to just remove one', () => {
@@ -103,7 +87,7 @@ describe('Test: hotelClerk.removeSubscription', () => {
     var mock = sandbox.mock(kuzzle.dsl).expects('remove').once().returns(Promise.resolve());
 
     delete kuzzle.hotelClerk.rooms.bar;
-    delete kuzzle.hotelClerk.customers[connection.id].bar;
+    delete kuzzle.hotelClerk.customers[connectionId].bar;
 
     return kuzzle.hotelClerk.removeSubscription(unsubscribeRequest, context)
       .finally(() => {
@@ -136,9 +120,9 @@ describe('Test: hotelClerk.removeSubscription', () => {
 
         // testing requestObject argument
         should(kuzzle.notifier.notify.args[0][1]).be.instanceOf(Request);
-        should(kuzzle.notifier.notify.args[0][1].controller).be.exactly('subscribe');
-        should(kuzzle.notifier.notify.args[0][1].action).be.exactly('off');
-        should(kuzzle.notifier.notify.args[0][1].index).be.exactly(index);
+        should(kuzzle.notifier.notify.args[0][1].input.controller).be.exactly('subscribe');
+        should(kuzzle.notifier.notify.args[0][1].input.action).be.exactly('off');
+        should(kuzzle.notifier.notify.args[0][1].input.resource.index).be.exactly(index);
 
         // testing payload argument
         should(kuzzle.notifier.notify.args[0][2].count).be.exactly(1);
@@ -159,7 +143,7 @@ describe('Test: hotelClerk.removeSubscription', () => {
 
         should(data).be.an.Object();
         should(data.channel).be.a.String();
-        should(data.id).be.eql(context.connection.id);
+        should(data.connectionId).be.eql(context.connectionId);
       });
   });
 });

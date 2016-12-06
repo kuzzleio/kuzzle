@@ -3,39 +3,42 @@ var
   Promise = require('bluebird'),
   sinon = require('sinon'),
   Request = require('kuzzle-common-objects').Request,
+  RequestContext = require('kuzzle-common-objects').models.RequestContext,
   Dsl = require('../../../../lib/api/dsl'),
   HotelClerk = require('../../../../lib/api/core/hotelClerk'),
-  Kuzzle = require('../../../mocks/kuzzle.mock');
+  KuzzleMock = require('../../../mocks/kuzzle.mock');
 
 describe('Test: hotelClerk.removeCustomerFromAllRooms', () => {
   var
     kuzzle,
-    connection = {id: 'connectionid'},
+    connectionId = 'connectionid',
     collection = 'user',
     index = '%test',
-    sandbox;
+    sandbox,
+    context;
 
   beforeEach(() => {
-    kuzzle = new Kuzzle();
+    context = new RequestContext({connectionId});
+    kuzzle = new KuzzleMock();
     kuzzle.hotelClerk = new HotelClerk(kuzzle);
     kuzzle.dsl = new Dsl();
 
     sandbox = sinon.sandbox.create();
 
-    kuzzle.hotelClerk.customers[connection.id] = {
+    kuzzle.hotelClerk.customers[connectionId] = {
       'foo': {},
       'bar': {}
     };
 
     kuzzle.hotelClerk.rooms = {
       'foo': {
-        customers: [connection.id],
+        customers: [connectionId],
         index,
         collection,
         channels: ['foobar']
       },
       'bar': {
-        customers: [connection.id],
+        customers: [connectionId],
         index,
         collection,
         channels: ['barfoo']
@@ -48,13 +51,14 @@ describe('Test: hotelClerk.removeCustomerFromAllRooms', () => {
   });
 
   it('should do nothing when a bad connectionId is given', () => {
-    return should(kuzzle.hotelClerk.removeCustomerFromAllRooms({id: 'unknown'})).be.fulfilledWith(undefined);
+    context.connectionId = 'unknown';
+    return should(kuzzle.hotelClerk.removeCustomerFromAllRooms(context)).be.fulfilledWith(undefined);
   });
 
   it('should clean up customers, rooms object', () => {
     sandbox.stub(kuzzle.dsl, 'remove').returns(Promise.resolve());
 
-    return kuzzle.hotelClerk.removeCustomerFromAllRooms(connection)
+    return kuzzle.hotelClerk.removeCustomerFromAllRooms(context)
       .then(() => {
         should(kuzzle.dsl.remove).be.calledTwice();
         should(kuzzle.notifier.notify.called).be.false();
@@ -75,7 +79,7 @@ describe('Test: hotelClerk.removeCustomerFromAllRooms', () => {
 
     kuzzle.hotelClerk.rooms.foo.customers.push('another connection');
 
-    return kuzzle.hotelClerk.removeCustomerFromAllRooms(connection)
+    return kuzzle.hotelClerk.removeCustomerFromAllRooms(context)
       .finally(() => {
         try {
           mockDsl.verify();
@@ -89,9 +93,9 @@ describe('Test: hotelClerk.removeCustomerFromAllRooms', () => {
 
           // testing requestObject argument
           should(kuzzle.notifier.notify.args[0][1]).be.instanceOf(Request);
-          should(kuzzle.notifier.notify.args[0][1].controller).be.exactly('subscribe');
-          should(kuzzle.notifier.notify.args[0][1].action).be.exactly('off');
-          should(kuzzle.notifier.notify.args[0][1].index).be.exactly(index);
+          should(kuzzle.notifier.notify.args[0][1].input.controller).be.exactly('subscribe');
+          should(kuzzle.notifier.notify.args[0][1].input.action).be.exactly('off');
+          should(kuzzle.notifier.notify.args[0][1].input.resource.index).be.exactly(index);
 
           // testing payload argument
           should(kuzzle.notifier.notify.args[0][2].count).be.exactly(1);
@@ -109,6 +113,6 @@ describe('Test: hotelClerk.removeCustomerFromAllRooms', () => {
     this.timeout(500);
     sandbox.stub(kuzzle.dsl, 'remove').returns(Promise.reject(error));
 
-    return should(kuzzle.hotelClerk.removeCustomerFromAllRooms(connection)).be.rejectedWith(error);
+    return should(kuzzle.hotelClerk.removeCustomerFromAllRooms(context)).be.rejectedWith(error);
   });
 });
