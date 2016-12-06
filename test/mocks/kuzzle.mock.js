@@ -47,7 +47,8 @@ function KuzzleMock () {
       }
     },
     init: sinon.spy(),
-    handleErrorDump: sinon.spy()
+    handleErrorDump: sinon.spy(),
+    execute: sinon.spy()
   };
 
   this.hooks = {
@@ -57,7 +58,12 @@ function KuzzleMock () {
   this.hotelClerk = {
     addToChannels: sinon.stub(),
     getRealtimeCollections: sinon.stub(),
-    removeCustomerFromAllRooms: sinon.stub()
+    removeCustomerFromAllRooms: sinon.stub(),
+    addSubscription: sinon.stub().returns(Promise.resolve(foo)),
+    join: sinon.stub().returns(Promise.resolve(foo)),
+    removeSubscription: sinon.stub().returns(Promise.resolve(foo)),
+    countSubscription: sinon.stub().returns(Promise.resolve(foo)),
+    listSubscriptions: sinon.stub().returns(Promise.resolve(foo)),
   };
 
   this.indexCache = {
@@ -185,6 +191,10 @@ function KuzzleMock () {
         listen: sinon.spy(),
         send: sinon.stub().returns(Promise.resolve())
       },
+      proxyBroker: {
+        listen: sinon.spy(),
+        send: sinon.stub().returns(Promise.resolve())
+      },
       internalCache: {
         expire: sinon.stub().returns(Promise.resolve()),
         flushdb: sinon.stub().returns(Promise.resolve()),
@@ -231,10 +241,12 @@ function KuzzleMock () {
   };
 
   this.statistics = {
+    newConnection: sinon.stub(),
     getAllStats: sinon.stub().returns(Promise.resolve(foo)),
     getLastStats: sinon.stub().returns(Promise.resolve(foo)),
     getStats: sinon.stub().returns(Promise.resolve(foo)),
-    init: sinon.spy()
+    init: sinon.spy(),
+    dropConnection: sinon.stub()
   };
 
   this.tokenManager = {
