@@ -2,23 +2,22 @@ var
   should = require('should'),
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
-  Kuzzle = require('../../../lib/api/kuzzle'),
-  Request = require('kuzzle-common-objects').Request;
+  KuzzleMock = require('../../mocks/kuzzle.mock'),
+  SubscribeController = require('../../../lib/api/controllers/subscribeController'),
+  Request = require('kuzzle-common-objects').Request,
+  BadRequestError = require('kuzzle-common-objects').errors.BadRequestError;
 
 describe('Test: subscribe controller', () => {
   var
     kuzzle,
-    requestObject;
-
-  before(() => {
-    kuzzle = new Kuzzle();
-  });
+    request,
+    subscribeController,
+    foo = {foo: 'bar'};
 
   beforeEach(() => {
-    requestObject = new Request({index: 'test', collection: 'collection', controller: 'subscribe'}, {}, 'unit-test');
-    sandbox.stub(kuzzle.internalEngine, 'get').returns(Promise.resolve({}));
-    return kuzzle.services.init({whitelist: []})
-      .then(() => kuzzle.funnel.init());
+    kuzzle = new KuzzleMock();
+    subscribeController = new SubscribeController(kuzzle);
+    request = new Request({index: 'test', collection: 'collection', controller: 'subscribe', body: {}});
   });
 
   afterEach(() => {
@@ -26,103 +25,129 @@ describe('Test: subscribe controller', () => {
   });
 
   describe('#on', () => {
-    it('should forward new subscriptions to the hotelClerk core component', () => {
-      sandbox.stub(kuzzle.hotelClerk, 'addSubscription').returns(Promise.resolve());
+    it('should throw an error if index is not provided',() => {
+      request.input.resource.index = null;
 
-      return kuzzle.funnel.controllers.subscribe.on(requestObject, {})
-        .then(response => {
-          // TODO test response format
-          should(response.userContext).be.instanceOf(Object);
+      should(() => {
+        subscribeController.on(request);
+      }).throw(BadRequestError);
+    });
+
+    it('should throw an error if collection is not provided',() => {
+      request.input.resource.collection = null;
+
+      should(() => {
+        subscribeController.on(request);
+      }).throw(BadRequestError);
+    });
+
+    it('should throw an error if body is not provided',() => {
+      request.input.body = null;
+
+      should(() => {
+        subscribeController.on(request);
+      }).throw(BadRequestError);
+    });
+
+    it('should call the proper hotelClerk method',() => {
+      return subscribeController.on(request)
+        .then(result => {
+          should(result).be.match(foo);
+          should(kuzzle.hotelClerk.addSubscription).be.calledOnce();
+          should(kuzzle.hotelClerk.addSubscription).be.calledWith(request);
         });
-    });
-
-    it('should reject an error in case of error', () => {
-      var error = new Error('Mocked error');
-      sandbox.stub(kuzzle.hotelClerk, 'addSubscription').returns(Promise.reject(error));
-      return should(kuzzle.funnel.controllers.subscribe.on(requestObject, {})).be.rejectedWith(error);
-    });
-  });
-
-  describe('#off', () => {
-    it('should forward unsubscribes queries to the hotelClerk core component', () => {
-      sandbox.stub(kuzzle.hotelClerk, 'removeSubscription').returns(Promise.resolve());
-      return kuzzle.funnel.controllers.subscribe.off(requestObject, {})
-        .then(response => {
-          // TODO test response format
-          should(response.userContext).be.instanceOf(Object);
-        });
-    });
-
-    it('should reject an error in case of error', () => {
-      var error = new Error('Mocked error');
-      sandbox.stub(kuzzle.hotelClerk, 'removeSubscription').returns(Promise.reject(error));
-      return should(kuzzle.funnel.controllers.subscribe.off(requestObject, {})).be.rejectedWith(error);
-    });
-  });
-
-  describe('#count', () => {
-    it('should forward subscription counts queries to the hotelClerk core component', () => {
-      sandbox.stub(kuzzle.hotelClerk, 'countSubscription').returns(Promise.resolve());
-      return kuzzle.funnel.controllers.subscribe.count(requestObject, {})
-        .then(response => {
-          // TODO test response format
-          should(response.userContext).be.instanceOf(Object);
-        });
-    });
-
-    it('should reject an error in case of error', () => {
-      var error = new Error('Mocked error');
-      sandbox.stub(kuzzle.hotelClerk, 'countSubscription').returns(Promise.reject(error));
-      return should(kuzzle.funnel.controllers.subscribe.count(requestObject, {})).be.rejectedWith(error);
-    });
-  });
-
-  describe('#list', () => {
-    it('should trigger a hook and return a promise', function (done) {
-      this.timeout(50);
-      sandbox.stub(kuzzle.hotelClerk, 'listSubscriptions').returns(Promise.resolve());
-
-      kuzzle.once('subscription:beforeList', () => done());
-      kuzzle.funnel.controllers.subscribe.list(requestObject, {});
-    });
-
-    it('should forward subscription list query to the hotelClerk core component', () => {
-      sandbox.stub(kuzzle.hotelClerk, 'listSubscriptions').returns(Promise.resolve());
-      return kuzzle.funnel.controllers.subscribe.list(requestObject, {})
-        .then(response => {
-          // TODO test response format
-          should(response.userContext).be.instanceOf(Object);
-        });
-    });
-
-    it('should reject an error in case of error', () => {
-      var error = new Error('Mocked error');
-      sandbox.stub(kuzzle.hotelClerk, 'listSubscriptions').returns(Promise.reject(error));
-      return should(kuzzle.funnel.controllers.subscribe.list(requestObject, {})).be.rejectedWith(error);
     });
   });
 
   describe('#join', () => {
-    it('should forward subscription join query to the hotelClerk core component', () => {
-      sandbox.stub(kuzzle.hotelClerk, 'join').returns(Promise.resolve());
-      return kuzzle.funnel.controllers.subscribe.join(requestObject, {})
-        .then(response => {
-          // TODO test response format
-          should(response.userContext).be.instanceOf(Object);
+    it('should throw an error if body is not provided',() => {
+      request.input.body = null;
+
+      should(() => {
+        subscribeController.join(request);
+      }).throw(BadRequestError);
+    });
+
+    it('should throw an error if roomId is not provided',() => {
+      should(() => {
+        subscribeController.join(request);
+      }).throw(BadRequestError);
+    });
+
+    it('should call the proper hotelClerk method',() => {
+      request.input.body.roomId = 'foo';
+
+      return subscribeController.join(request)
+        .then(result => {
+          should(result).be.match(foo);
+          should(kuzzle.hotelClerk.join).be.calledOnce();
+          should(kuzzle.hotelClerk.join).be.calledWith(request);
         });
     });
+  });
 
-    it('should reject an error in case of error', () => {
-      var error = new Error('Mocked error');
-      sandbox.stub(kuzzle.hotelClerk, 'join').returns(Promise.reject(error));
-      return should(kuzzle.funnel.controllers.subscribe.join(requestObject, {})).be.rejectedWith(error);
+  describe('#off', () => {
+    it('should throw an error if body is not provided',() => {
+      request.input.body = null;
+
+      should(() => {
+        subscribeController.off(request);
+      }).throw(BadRequestError);
     });
 
-    it('should trigger a hook and return a promise', function (done) {
-      this.timeout(50);
-      sandbox.stub(kuzzle.hotelClerk, 'join').returns(Promise.resolve());
-      kuzzle.once('subscription:beforeJoin', () => done());
-      kuzzle.funnel.controllers.subscribe.join(requestObject, {});
+    it('should throw an error if roomId is not provided',() => {
+      should(() => {
+        subscribeController.off(request);
+      }).throw(BadRequestError);
+    });
+
+    it('should call the proper hotelClerk method',() => {
+      request.input.body.roomId = 'foo';
+
+      return subscribeController.off(request)
+        .then(result => {
+          should(result).be.match(foo);
+          should(kuzzle.hotelClerk.removeSubscription).be.calledOnce();
+          should(kuzzle.hotelClerk.removeSubscription).be.calledWith(request);
+        });
+    });
+  });
+
+  describe('#count', () => {
+    it('should throw an error if body is not provided',() => {
+      request.input.body = null;
+
+      should(() => {
+        subscribeController.count(request);
+      }).throw(BadRequestError);
+    });
+
+    it('should throw an error if roomId is not provided',() => {
+      should(() => {
+        subscribeController.count(request);
+      }).throw(BadRequestError);
+    });
+
+    it('should call the proper hotelClerk method',() => {
+      request.input.body.roomId = 'foo';
+
+      return subscribeController.count(request)
+        .then(result => {
+          should(result).be.match(foo);
+          should(kuzzle.hotelClerk.countSubscription).be.calledOnce();
+          should(kuzzle.hotelClerk.countSubscription).be.calledWith(request);
+        });
+    });
+  });
+
+  describe('#list', () => {
+    it('should call the proper hotelClerk method',() => {
+      return subscribeController.list(request)
+        .then(result => {
+          should(result).be.match(foo);
+          should(kuzzle.hotelClerk.listSubscriptions).be.calledOnce();
+          should(kuzzle.hotelClerk.listSubscriptions).be.calledWith(request);
+        });
     });
   });
 });

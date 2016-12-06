@@ -58,6 +58,11 @@ function KuzzleMock () {
     addToChannels: sinon.stub(),
     getRealtimeCollections: sinon.stub(),
     removeCustomerFromAllRooms: sinon.stub(),
+    addSubscription: sinon.stub().returns(Promise.resolve(foo)),
+    join: sinon.stub().returns(Promise.resolve(foo)),
+    removeSubscription: sinon.stub().returns(Promise.resolve(foo)),
+    countSubscription: sinon.stub().returns(Promise.resolve(foo)),
+    listSubscriptions: sinon.stub().returns(Promise.resolve(foo)),
   };
 
   this.indexCache = {
