@@ -8,7 +8,6 @@ var
   ProfileRepository = require('../../../../../lib/api/core/models/repositories/profileRepository'),
   BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,
   ForbiddenError = require('kuzzle-common-objects').errors.ForbiddenError,
-  InternalError = require('kuzzle-common-objects').errors.InternalError,
   NotFoundError = require('kuzzle-common-objects').errors.NotFoundError,
   Request = require('kuzzle-common-objects').Request,
   KuzzleMock = require('../../../../mocks/kuzzle.mock');
@@ -162,7 +161,7 @@ describe('Test: repositories/profileRepository', () => {
       return should(profileRepository.hydrate(p, {
         policies: [
           {roleId: 'notExistingRole'}
-          ]
+        ]
       })).be.rejectedWith(NotFoundError);
     });
 
@@ -309,7 +308,7 @@ describe('Test: repositories/profileRepository', () => {
               {terms: {'policies.roleId': ['role2']}}
             ]
           }
-      }});
+        }});
     });
   });
 
