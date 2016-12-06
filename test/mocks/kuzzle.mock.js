@@ -148,7 +148,8 @@ function KuzzleMock () {
   this.repositories = {
     init: sinon.stub().returns(Promise.resolve()),
     profile: {
-      load: sinon.stub().returns(Promise.resolve())
+      load: sinon.stub().returns(Promise.resolve()),
+      searchProfiles: sinon.stub().returns(Promise.resolve())
     },
     role: {
       getRoleFromRequest: sinon.spy(function () {return Promise.resolve(arguments[0]);}),
