@@ -57,7 +57,7 @@ function KuzzleMock () {
   this.hotelClerk = {
     addToChannels: sinon.stub(),
     getRealtimeCollections: sinon.stub(),
-    removeCustomerFromAllRooms: sinon.stub()
+    removeCustomerFromAllRooms: sinon.stub(),
   };
 
   this.indexCache = {
@@ -214,10 +214,12 @@ function KuzzleMock () {
   };
 
   this.statistics = {
+    newConnection: sinon.stub(),
     getAllStats: sinon.stub().returns(Promise.resolve(foo)),
     getLastStats: sinon.stub().returns(Promise.resolve(foo)),
     getStats: sinon.stub().returns(Promise.resolve(foo)),
-    init: sinon.spy()
+    init: sinon.spy(),
+    dropConnection: sinon.stub()
   };
 }
 
