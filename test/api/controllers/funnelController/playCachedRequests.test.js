@@ -12,22 +12,19 @@ describe('funnelController.playCachedRequests', () => {
     kuzzle,
     funnel,
     executeCalled,
-    requestObject,
-    userContext,
+    request,
     callback,
     nextTickCalled,
     setTimeoutCalled,
     playCachedRequests;
 
   before(() => {
-    userContext = {
-      connection: {id: 'connectionid'},
-      token: null
-    };
-
-    requestObject = new Request({
+    request = new Request({
       controller: 'foo',
       action: 'bar'
+    }, {
+      connection: {id: 'connectionid'},
+      token: null
     });
 
     callback = () => {};
@@ -56,11 +53,10 @@ describe('funnelController.playCachedRequests', () => {
         funnel.init();
         funnel.lastOverloadTime = 0;
         funnel.overloadWarned = true;
-        sandbox.stub(funnel, 'execute', (request, context, cb) => {
+        sandbox.stub(funnel, 'execute', (req, cb) => {
           executeCalled = true;
 
-          should(request).be.eql(requestObject);
-          should(context).be.eql(userContext);
+          should(req).be.eql(request);
           should(cb).be.eql(callback);
         });
       });
@@ -135,7 +131,7 @@ describe('funnelController.playCachedRequests', () => {
     it('should resubmit a request and itself if there is room for a new request', () => {
       funnel.cachedRequests = 1;
       funnel.concurrentRequests = 0;
-      funnel.requestsCache = [{requestObject, userContext, callback}];
+      funnel.requestsCache = [{request, callback}];
       playCachedRequests(kuzzle, funnel);
 
       should(nextTickCalled).be.true();

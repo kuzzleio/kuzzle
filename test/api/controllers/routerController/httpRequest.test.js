@@ -10,9 +10,10 @@ describe('Test: routerController.httpRequest', () => {
   let
     sandbox = sinon.sandbox.create(),
     kuzzleStub,
-    rq,
+    /** @type Request */
     response,
-    rc;
+    httpRequest,
+    routeController;
 
   before(() => {
     kuzzleStub = {
@@ -26,19 +27,21 @@ describe('Test: routerController.httpRequest', () => {
         ]
       },
       funnel: {
-        execute: function (r, c, cb) {
-          response = new ResponseObject(r, {status: 1234});
-          cb(null, response);
+        execute: function (request, cb) {
+          /** @type Request request */
+          response = request;
+          request.status = 1234;
+          cb(null, request);
         }
       }
     };
 
-    rc = new RouterController(kuzzleStub);
-    rc.init();
+    routeController = new RouterController(kuzzleStub);
+    routeController.init();
   });
 
   beforeEach(() => {
-    rq = {
+    httpRequest = {
       requestId: 'requestId',
       url: '',
       method: '',
@@ -52,18 +55,18 @@ describe('Test: routerController.httpRequest', () => {
   });
 
   it('should register GET routes from the config/httpRoutes file', (done) => {
-    rq.url = `/api/${kuzzleStub.config.apiVersion}/ms/_getrange/someId/start/end`;
-    rq.method = 'GET';
+    httpRequest.url = `/api/${kuzzleStub.config.apiVersion}/ms/_getrange/someId/start/end`;
+    httpRequest.method = 'GET';
 
-    rc.router.route(rq, result => {
+    routeController.router.route(httpRequest, result => {
       try {
-        should(response.controller).be.eql('ms');
-        should(response.action).be.eql('getrange');
+        should(response.input.controller).be.eql('ms');
+        should(response.input.action).be.eql('getrange');
         should(result).be.instanceOf(HttpResponse);
-        should(result.id).be.eql(rq.requestId);
+        should(result.id).be.eql(httpRequest.requestId);
         should(result.type).be.eql('application/json');
         should(result.status).be.eql(1234);
-        should(result.content).be.eql(JSON.stringify(response.toJson()));
+        should(result.content).be.eql(JSON.stringify(response.response));
         done();
       }
       catch (e) {
@@ -73,19 +76,19 @@ describe('Test: routerController.httpRequest', () => {
   });
 
   it('should register POST routes from the config/httpRoutes file', (done) => {
-    rq.url = `/api/${kuzzleStub.config.apiVersion}/profiles/foobar`;
-    rq.method = 'POST';
-    rq.content = '{"profileId": "foobar"}';
+    httpRequest.url = `/api/${kuzzleStub.config.apiVersion}/profiles/foobar`;
+    httpRequest.method = 'POST';
+    httpRequest.content = '{"profileId": "foobar"}';
 
-    rc.router.route(rq, result => {
+    routeController.router.route(httpRequest, result => {
       try {
-        should(response.controller).be.eql('security');
-        should(response.action).be.eql('updateProfile');
+        should(response.input.controller).be.eql('security');
+        should(response.input.action).be.eql('updateProfile');
         should(result).be.instanceOf(HttpResponse);
-        should(result.id).be.eql(rq.requestId);
+        should(result.id).be.eql(httpRequest.requestId);
         should(result.type).be.eql('application/json');
         should(result.status).be.eql(1234);
-        should(result.content).be.eql(JSON.stringify(response.toJson()));
+        should(result.content).be.eql(JSON.stringify(response.response));
         done();
       }
       catch (e) {
@@ -95,19 +98,19 @@ describe('Test: routerController.httpRequest', () => {
   });
 
   it('should register PUT routes from the config/httpRoutes file', (done) => {
-    rq.url = `/api/${kuzzleStub.config.apiVersion}/_updateSelf`;
-    rq.method = 'PUT';
-    rq.content = '{"foo": "bar"}';
+    httpRequest.url = `/api/${kuzzleStub.config.apiVersion}/_updateSelf`;
+    httpRequest.method = 'PUT';
+    httpRequest.content = '{"foo": "bar"}';
 
-    rc.router.route(rq, result => {
+    routeController.router.route(httpRequest, result => {
       try {
-        should(response.controller).be.eql('auth');
-        should(response.action).be.eql('updateSelf');
+        should(response.input.controller).be.eql('auth');
+        should(response.input.action).be.eql('updateSelf');
         should(result).be.instanceOf(HttpResponse);
-        should(result.id).be.eql(rq.requestId);
+        should(result.id).be.eql(httpRequest.requestId);
         should(result.type).be.eql('application/json');
         should(result.status).be.eql(1234);
-        should(result.content).be.eql(JSON.stringify(response.toJson()));
+        should(result.content).be.eql(JSON.stringify(response.response));
         done();
       }
       catch (e) {
@@ -117,18 +120,18 @@ describe('Test: routerController.httpRequest', () => {
   });
 
   it('should register DELETE routes from the config/httpRoutes file', (done) => {
-    rq.url = `/api/${kuzzleStub.config.apiVersion}/foobar`;
-    rq.method = 'DELETE';
+    httpRequest.url = `/api/${kuzzleStub.config.apiVersion}/foobar`;
+    httpRequest.method = 'DELETE';
 
-    rc.router.route(rq, result => {
+    routeController.router.route(httpRequest, result => {
       try {
-        should(response.controller).be.eql('admin');
-        should(response.action).be.eql('deleteIndex');
+        should(response.input.controller).be.eql('admin');
+        should(response.input.action).be.eql('deleteIndex');
         should(result).be.instanceOf(HttpResponse);
-        should(result.id).be.eql(rq.requestId);
+        should(result.id).be.eql(httpRequest.requestId);
         should(result.type).be.eql('application/json');
         should(result.status).be.eql(1234);
-        should(result.content).be.eql(JSON.stringify(response.toJson()));
+        should(result.content).be.eql(JSON.stringify(response.response));
         done();
       }
       catch (e) {
@@ -138,18 +141,18 @@ describe('Test: routerController.httpRequest', () => {
   });
 
   it('should register the base route /_serverInfo', (done) => {
-    rq.url = '/api/_serverInfo';
-    rq.method = 'GET';
+    httpRequest.url = '/api/_serverInfo';
+    httpRequest.method = 'GET';
 
-    rc.router.route(rq, result => {
+    routeController.router.route(httpRequest, result => {
       try {
-        should(response.controller).be.eql('read');
-        should(response.action).be.eql('serverInfo');
+        should(response.input.controller).be.eql('read');
+        should(response.input.action).be.eql('serverInfo');
         should(result).be.instanceOf(HttpResponse);
-        should(result.id).be.eql(rq.requestId);
+        should(result.id).be.eql(httpRequest.requestId);
         should(result.type).be.eql('application/json');
         should(result.status).be.eql(1234);
-        should(result.content).be.eql(JSON.stringify(response.toJson()));
+        should(result.content).be.eql(JSON.stringify(response.response));
         done();
       }
       catch (e) {
@@ -159,13 +162,13 @@ describe('Test: routerController.httpRequest', () => {
   });
 
   it('should register the swagger JSON auto-generator route', (done) => {
-    rq.url = '/api/swagger.json';
-    rq.method = 'GET';
+    httpRequest.url = '/api/swagger.json';
+    httpRequest.method = 'GET';
 
-    rc.router.route(rq, result => {
+    routeController.router.route(httpRequest, result => {
       try {
         should(result).be.instanceOf(HttpResponse);
-        should(result.id).be.eql(rq.requestId);
+        should(result.id).be.eql(httpRequest.requestId);
         should(result.type).be.eql('application/json');
         should(result.status).be.eql(200);
         done();
@@ -177,13 +180,13 @@ describe('Test: routerController.httpRequest', () => {
   });
 
   it('should register the swagger YAML auto-generator route', (done) => {
-    rq.url = '/api/swagger.yml';
-    rq.method = 'GET';
+    httpRequest.url = '/api/swagger.yml';
+    httpRequest.method = 'GET';
 
-    rc.router.route(rq, result => {
+    routeController.router.route(httpRequest, result => {
       try {
         should(result).be.instanceOf(HttpResponse);
-        should(result.id).be.eql(rq.requestId);
+        should(result.id).be.eql(httpRequest.requestId);
         should(result.type).be.eql('application/yaml');
         should(result.status).be.eql(200);
         done();
@@ -195,18 +198,18 @@ describe('Test: routerController.httpRequest', () => {
   });
 
   it('should register plugins HTTP routes', (done) => {
-    rq.url = `/api/${kuzzleStub.config.apiVersion}/_plugin/foo/bar/baz`;
-    rq.method = 'GET';
+    httpRequest.url = `/api/${kuzzleStub.config.apiVersion}/_plugin/foo/bar/baz`;
+    httpRequest.method = 'GET';
 
-    rc.router.route(rq, result => {
+    routeController.router.route(httpRequest, result => {
       try {
-        should(response.controller).be.eql('foo');
-        should(response.action).be.eql('bar');
+        should(response.input.controller).be.eql('foo');
+        should(response.input.action).be.eql('bar');
         should(result).be.instanceOf(HttpResponse);
-        should(result.id).be.eql(rq.requestId);
+        should(result.id).be.eql(httpRequest.requestId);
         should(result.type).be.eql('application/json');
         should(result.status).be.eql(1234);
-        should(result.content).be.eql(JSON.stringify(response.toJson()));
+        should(result.content).be.eql(JSON.stringify(response.response));
         done();
       }
       catch (e) {
@@ -216,16 +219,16 @@ describe('Test: routerController.httpRequest', () => {
   });
 
   it('should return a 404 if the requested route does not exist', (done) => {
-    rq.url = `/api/${kuzzleStub.config.apiVersion}/foo/bar`;
-    rq.method = 'GET';
+    httpRequest.url = `/api/${kuzzleStub.config.apiVersion}/foo/bar`;
+    httpRequest.method = 'GET';
 
-    rc.router.route(rq, result => {
+    routeController.router.route(httpRequest, result => {
       try {
         should(result).be.instanceOf(HttpResponse);
-        should(result.id).be.eql(rq.requestId);
+        should(result.id).be.eql(httpRequest.requestId);
         should(result.type).be.eql('application/json');
         should(result.status).be.eql(404);
-        should(result.content).startWith('{"status":404,"error":{"message":"API URL not found: /api/1.0/foo/bar"');
+        should(result.content).startWith('{"status":404,"error":{"status":404,"message":"API URL not found: /api/1.0/foo/bar"');
         done();
       }
       catch (e) {

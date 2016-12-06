@@ -13,10 +13,6 @@ var
 
 describe('funnelController.processRequest', () => {
   var
-    userContext = {
-      connection: {id: 'connectionid'},
-      token: null
-    },
     kuzzle,
     processRequest;
 
@@ -47,9 +43,9 @@ describe('funnelController.processRequest', () => {
       action: 'create'
     };
 
-    var requestObject = new Request(object);
+    var request = new Request(object);
 
-    return should(processRequest(kuzzle, kuzzle.funnel.controllers, requestObject, userContext)).be.rejectedWith(BadRequestError);
+    return should(processRequest(kuzzle, kuzzle.funnel, request)).be.rejectedWith(BadRequestError);
   });
 
   it('should reject the promise if no action is specified', () => {
@@ -57,9 +53,9 @@ describe('funnelController.processRequest', () => {
       controller: 'write'
     };
 
-    var requestObject = new Request(object);
+    var request = new Request(object);
 
-    return should(processRequest(kuzzle, kuzzle.funnel.controllers, requestObject, userContext)).be.rejectedWith(BadRequestError);
+    return should(processRequest(kuzzle, kuzzle.funnel, request)).be.rejectedWith(BadRequestError);
   });
 
   it('should reject the promise if the controller doesn\'t exist', () => {
@@ -68,9 +64,9 @@ describe('funnelController.processRequest', () => {
       action: 'create'
     };
 
-    var requestObject = new Request(object);
+    var request = new Request(object);
 
-    return should(processRequest(kuzzle, kuzzle.funnel.controllers, requestObject, userContext)).be.rejectedWith(BadRequestError);
+    return should(processRequest(kuzzle, kuzzle.funnel, request)).be.rejectedWith(BadRequestError);
   });
 
   it('should reject the promise if the action doesn\'t exist', () => {
@@ -79,9 +75,9 @@ describe('funnelController.processRequest', () => {
       action: 'toto'
     };
 
-    var requestObject = new Request(object);
+    var request = new Request(object);
 
-    return should(processRequest(kuzzle, kuzzle.funnel.controllers, requestObject, userContext)).be.rejectedWith(BadRequestError);
+    return should(processRequest(kuzzle, kuzzle.funnel, request)).be.rejectedWith(BadRequestError);
   });
 
   it('should reject the promise with UnauthorizedError if an anonymous user is not allowed to execute the action', () => {
@@ -89,14 +85,8 @@ describe('funnelController.processRequest', () => {
     sandbox.stub(kuzzle.repositories.user, 'load').returns(Promise.resolve({_id: -1, isActionAllowed: sandbox.stub().returns(Promise.resolve(false))}));
     sandbox.stub(kuzzle.repositories.token, 'verifyToken').returns(Promise.resolve({userId: -1}));
 
-    return should(
-      processRequest(kuzzle, kuzzle.funnel.controllers, new Request({
-        controller: 'read',
-        index: '@test',
-        action: 'get'
-      }),
-      userContext)
-    ).be.rejectedWith(UnauthorizedError);
+    return should(processRequest(kuzzle, kuzzle.funnel, new Request({controller: 'read', index: '@test', action: 'get'})))
+      .be.rejectedWith(UnauthorizedError);
   });
 
   it('should reject the promise with UnauthorizedError if an authenticated user is not allowed to execute the action', () => {
@@ -104,19 +94,12 @@ describe('funnelController.processRequest', () => {
     sandbox.stub(kuzzle.repositories.user, 'load').returns(Promise.resolve({_id: 'user', isActionAllowed: sandbox.stub().returns(Promise.resolve(false))}));
     sandbox.stub(kuzzle.repositories.token, 'verifyToken').returns(Promise.resolve({user: 'user'}));
 
-    return should(
-      processRequest(kuzzle, kuzzle.funnel.controllers,
-        new Request({
-          controller: 'read',
-          index: '@test',
-          action: 'get'
-        }),
-        userContext)
-    ).be.rejectedWith(ForbiddenError);
+    return should(processRequest(kuzzle, kuzzle.funnel, new Request({controller: 'read', index: '@test', action: 'get'})))
+      .be.rejectedWith(ForbiddenError);
   });
 
   it('should resolve the promise if everything is ok', () => {
-    var requestObject = new Request({
+    var request = new Request({
       requestId: 'requestId',
       controller: 'read',
       action: 'listIndexes',
@@ -128,6 +111,6 @@ describe('funnelController.processRequest', () => {
     sandbox.stub(kuzzle.repositories.token, 'verifyToken').returns(Promise.resolve({user: 'user'}));
     sandbox.stub(kuzzle.funnel.controllers.read, 'listIndexes').returns(Promise.resolve());
 
-    return processRequest(kuzzle, kuzzle.funnel.controllers, requestObject, userContext);
+    return processRequest(kuzzle, kuzzle.funnel, request);
   });
 });
