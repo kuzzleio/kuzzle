@@ -8,11 +8,8 @@ var
   sandbox = sinon.sandbox.create(),
   InternalError = require('kuzzle-common-objects').errors.InternalError,
   UnauthorizedError = require('kuzzle-common-objects').errors.UnauthorizedError,
-  Profile = require('../../../../../lib/api/core/models/security/profile'),
   Token = require('../../../../../lib/api/core/models/security/token'),
   User = require('../../../../../lib/api/core/models/security/user'),
-  Role = require('../../../../../lib/api/core/models/security/role'),
-  Repository = require('../../../../../lib/api/core/models/repositories/repository'),
   Request = require('kuzzle-common-objects').Request,
   RequestContext = require('kuzzle-common-objects').models.RequestContext,
   TokenRepository = require('../../../../../lib/api/core/models/repositories/tokenRepository');
@@ -178,9 +175,9 @@ describe('Test: repositories/tokenRepository', () => {
 
       user._id = 'userInCache';
       request = new Request({}, {
-          connectionId: 'connectionId',
-          user
-        });
+        connectionId: 'connectionId',
+        user
+      });
 
       tokenRepository.generateToken(user, request, {expiresIn: 'toto'})
         .catch(error => {

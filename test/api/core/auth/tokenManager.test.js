@@ -1,6 +1,5 @@
 var
   should = require('should'),
-  sinon = require('sinon'),
   KuzzleMock = require('../../../mocks/kuzzle.mock'),
   Request = require('kuzzle-common-objects').Request,
   RequestContext = require('kuzzle-common-objects').models.RequestContext,
