@@ -91,6 +91,13 @@ ApiWebsocket.prototype.send = function (msg, getAnswer, socketName) {
   if (listen) {
     return new Promise((resolve, reject) => {
       this.listSockets[socketName].once(msg.requestId, result => {
+        if (!result) {
+          let error = new Error('Returned result is null');
+          Object.assign(error, msg);
+
+          return reject(error);
+        }
+
         if (result.error) {
           let error = new Error(result.error.stack);
           Object.assign(error, result);

@@ -1,11 +1,10 @@
 Feature: Test websocket API
 
-  @usingWebsocket @cleanValidations
+  @usingWebsocket
   Scenario: Get server information
     When I get server informations
-    Then I can retrieve the Kuzzle API version
 
-  @usingWebsocket
+  @usingWebsocket @cleanValidations
   Scenario: Publish a realtime message
     When I publish a message
     Then I should receive a request id
