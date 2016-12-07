@@ -700,19 +700,13 @@ describe('Test: admin controller', () => {
       });
 
       return adminController.validateSpecifications(request, {})
-        .then(response => {
-
-          try {
-            should(response).match({
-              valid: false,
-              errors: 'some error'
-            });
-
-            return Promise.resolve();
-          }
-          catch (error) {
-            return Promise.reject(error);
-          }
+        .then(() => Promise.reject())
+        .catch((error) => {
+          should(request.result).match({
+            valid: false,
+            errors: 'some error'
+          });
+          should(error).be.eql(err);
         });
     });
   });
