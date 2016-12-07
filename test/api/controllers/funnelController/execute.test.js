@@ -154,8 +154,8 @@ describe('funnelController.execute', () => {
         should(funnel.overloaded).be.true();
         should(requestReplayed).be.true();
         should(processRequestCalled).be.false();
-        should(funnel.cachedRequests).be.eql(1);
-        should(funnel.requestsCache[0]).match({request, callback});
+        should(funnel.cachedItems).be.eql(1);
+        should(funnel.requestsCache.shift()).match({request, callback});
         done();
       }, 100);
     });
@@ -174,8 +174,8 @@ describe('funnelController.execute', () => {
         should(funnel.overloaded).be.true();
         should(requestReplayed).be.false();
         should(processRequestCalled).be.false();
-        should(funnel.cachedRequests).be.eql(1);
-        should(funnel.requestsCache[0]).match({request, callback});
+        should(funnel.cachedItems).be.eql(1);
+        should(funnel.requestsCache.shift()).match({request, callback});
         done();
       }, 100);
     });
@@ -184,15 +184,15 @@ describe('funnelController.execute', () => {
       this.timeout(500);
 
       funnel.concurrentRequests = kuzzle.config.server.maxConcurrentRequests;
-      funnel.cachedRequests = kuzzle.config.server.maxRetainedRequests;
+      funnel.cachedItems = kuzzle.config.server.maxRetainedRequests;
       funnel.overloaded = true;
 
       funnel.execute(request, (err, res) => {
         should(funnel.overloaded).be.true();
         should(requestReplayed).be.false();
         should(processRequestCalled).be.false();
-        should(funnel.cachedRequests).be.eql(kuzzle.config.server.maxRetainedRequests);
-        should(funnel.requestsCache).be.empty();
+        should(funnel.cachedItems).be.eql(kuzzle.config.server.maxRetainedRequests);
+        should(funnel.requestsCache.isEmpty()).be.true();
         should(err).be.instanceOf(ServiceUnavailableError);
         should(err.status).be.eql(503);
         should(res).be.instanceOf(Request);

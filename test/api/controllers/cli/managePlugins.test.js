@@ -86,7 +86,7 @@ describe('Test: managePlugins cli actions', () => {
 
             should(pkg.setDefinition)
               .be.calledOnce()
-              .be.calledWith({install: true, foo: 'bar'});
+              .be.calledWithMatch({install: true, foo: 'bar'});
 
             should(pkg.install).be.calledOnce();
 
