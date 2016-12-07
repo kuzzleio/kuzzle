@@ -24,8 +24,9 @@ Prerequisites:
 * [Docker](https://docs.docker.com/installation/#installation) (version >1.5.0)
 * [Docker Compose](https://docs.docker.com/compose/install/) (version >1.2.0)
 
-From Kuzzle's root directory:
+From Kuzzle's build repo:
 
+    $ wget https://raw.githubusercontent.com/kuzzleio/kuzzle-build/master/docker-compose/kuzzle-docker-compose.yml
     $ docker-compose up
 
 **Note:** Kuzzle need an access to the web to download plugins. If you are behind a proxy, you may use this [container](https://hub.docker.com/r/klabs/forgetproxy/) to configure docker accordingly.  
