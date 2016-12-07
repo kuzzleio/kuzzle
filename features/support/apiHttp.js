@@ -123,11 +123,11 @@ ApiHttp.prototype.getRequest = function (index, collection, controller, action, 
 ApiHttp.prototype.disconnect = function () {};
 
 ApiHttp.prototype.apiPath = function (path) {
-  return encodeURI(this.baseUri + '/api/1.0/' + path);
+  return encodeURI(this.baseUri + '/' + path);
 };
 
 ApiHttp.prototype.apiBasePath = function (path) {
-  return encodeURI(this.baseUri + '/api/' + path);
+  return encodeURI(this.baseUri + '/' + path);
 };
 
 ApiHttp.prototype.callApi = function (options) {

@@ -1,6 +1,6 @@
 Feature: Test HTTP API
 
-  @usingHttp
+  @usingHttp @cleanValidations
   Scenario: Get server information
     When I get server informations
     Then I can retrieve the Kuzzle API version
