@@ -1207,7 +1207,7 @@ describe('Test: ElasticSearch service', () => {
           var req = spy.firstCall.args[0];
 
           should(req).be.an.instanceOf(Request);
-          should(req.input.body).be.Object().and.be.empty();
+          should(req.input.body.query).be.Object().and.be.empty();
         })).be.fulfilled();
     });
   });
