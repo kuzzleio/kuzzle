@@ -8,7 +8,7 @@ const
  * @constructor
  */
 function ElasticsearchClientMock () {
-  this.bulk = sinon.stub();
+  this.bulk = sinon.stub().returns(Promise.resolve());
   this.count = sinon.stub();
   this.create = sinon.stub();
   this.delete = sinon.stub();

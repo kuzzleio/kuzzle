@@ -4,7 +4,7 @@ var
   Dsl = require('../../../../lib/api/dsl'),
   HotelClerk = require('../../../../lib/api/core/hotelClerk'),
   NotificationObject = require('../../../../lib/api/core/models/notificationObject'),
-  Kuzzle = require('../../../mocks/kuzzle.mock');
+  KuzzleMock = require('../../../mocks/kuzzle.mock');
 
 describe('Test: hotelClerk.addToChannels', () => {
   var
@@ -13,15 +13,7 @@ describe('Test: hotelClerk.addToChannels', () => {
       connection: {id: 'connectionid'},
       user: null
     },
-    request = {
-      controller: 'subscribe',
-      action: 'on',
-      requestId: 'foo',
-      index: 'index',
-      collection: 'bar',
-      body: {},
-      metadata: {}
-    },
+    request,
     dataGrace = {
       firstName: 'Grace',
       lastName: 'Hopper',
@@ -35,7 +27,16 @@ describe('Test: hotelClerk.addToChannels', () => {
     };
 
   beforeEach(() => {
-    kuzzle = new Kuzzle();
+    request = {
+      controller: 'subscribe',
+      action: 'on',
+      requestId: 'foo',
+      index: 'index',
+      collection: 'bar',
+      body: {},
+      metadata: {}
+    };
+    kuzzle = new KuzzleMock();
     kuzzle.hotelClerk = new HotelClerk(kuzzle);
     kuzzle.dsl = new Dsl();
   });

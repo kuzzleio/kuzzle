@@ -270,20 +270,18 @@ function cleanValidations(callback) {
       return this.api.searchValidations({
         query: {
           match_all: {}
-        },
-        from: 0,
-        size: 9999
+        }
       });
     })
     .then(results => {
       var
         promises = [],
-        regex = new RegExp('^' + this.idPrefix);
+        regex = new RegExp('^kuzzle-test-');
 
       results = results.result.hits.filter(r => r._id.match(regex)).map(r => r._id);
 
       results.forEach(id => {
-        promises.push(this.api.deleteSpecifications(id));
+        promises.push(this.api.deleteSpecifications(id.split('#')[0], id.split('#')[1]));
       });
 
       return Promise.all(promises)

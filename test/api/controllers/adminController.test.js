@@ -52,6 +52,19 @@ describe('Test: admin controller', () => {
     });
   });
 
+  describe('#updateUserMapping', () => {
+    it('should update the user mapping', () => {
+      return adminController.updateUserMapping(request)
+        .then(response => {
+          should(kuzzle.internalEngine.updateMapping).be.calledOnce();
+          should(kuzzle.internalEngine.updateMapping).be.calledWith('users', request.input.body);
+
+          should(response).be.instanceof(Object);
+          should(response).match(foo);
+        });
+    });
+  });
+
   describe('#getMapping', () => {
     it('should fulfill with a response object', () => {
       return adminController.getMapping(request, {})
@@ -62,6 +75,19 @@ describe('Test: admin controller', () => {
 
           should(response).be.instanceof(Object);
           should(response).match(foo);
+        });
+    });
+  });
+
+  describe('#getUserMapping', () => {
+    it('should fulfill with a response object', () => {
+      return adminController.getUserMapping(request)
+        .then(response => {
+          should(kuzzle.internalEngine.getMapping).be.calledOnce();
+          should(kuzzle.internalEngine.getMapping).be.calledWith({index: kuzzle.internalEngine.index, type: 'users'});
+
+          should(response).be.instanceof(Object);
+          should(response).match({mapping: {}});
         });
     });
   });
@@ -674,19 +700,13 @@ describe('Test: admin controller', () => {
       });
 
       return adminController.validateSpecifications(request, {})
-        .then(response => {
-
-          try {
-            should(response).match({
-              valid: false,
-              errors: 'some error'
-            });
-
-            return Promise.resolve();
-          }
-          catch (error) {
-            return Promise.reject(error);
-          }
+        .then(() => Promise.reject())
+        .catch((error) => {
+          should(request.result).match({
+            valid: false,
+            errors: 'some error'
+          });
+          should(error).be.eql(err);
         });
     });
   });

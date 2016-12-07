@@ -16,19 +16,15 @@ describe('Test: security/roleTest', () => {
   var
     kuzzle,
     context = {
-      connection: {type: 'test'},
-      token : {
-        user: {
-          _id: -1
-        }
-      }
+      protocol: 'test',
+      userId: '-1'
     },
-    requestObject = {
+    request = new Request({
       index: 'index',
       collection: 'collection',
       controller: 'controller',
       action: 'action'
-    },
+    }, context),
     documentAda = {
       _id: 'ada',
       found: true,
@@ -58,21 +54,21 @@ describe('Test: security/roleTest', () => {
     stubs = {
       storageEngine:{
         search: rq => {
-          if (rq.data.body.query.ids.values[0] !== 'foobar') {
+          if (rq.input.body.query.ids.values[0] !== 'foobar') {
             return Promise.resolve({hits: [documentAda]});
           }
           return Promise.resolve({hits: [documentFalseAda]});
         },
         get: rq => {
-          if (rq.data.id === 'reject') {
+          if (rq.input.resource._id === 'reject') {
             return Promise.reject(new InternalError('Our Error'));
-          } else if (rq.data.id !== 'foobar') {
+          } else if (rq.input.resource._id !== 'foobar') {
             return Promise.resolve(documentAda);
           }
           return Promise.resolve(documentFalseAda);
         },
         mget: rq => {
-          if (rq.data.body.ids[0] !== 'foobar') {
+          if (rq.input.body.ids[0] !== 'foobar') {
             return Promise.resolve({hits: [documentAda]});
           }
           return Promise.resolve({hits: [documentFalseAda]});
@@ -109,24 +105,24 @@ describe('Test: security/roleTest', () => {
         }
       };
 
-      return role.isActionAllowed(requestObject, context, kuzzle)
+      return role.isActionAllowed(request, kuzzle)
         .then(isAllowed => {
           should(isAllowed).be.false();
 
           delete role.controllers.controller.actions;
-          return role.isActionAllowed(requestObject, context, kuzzle);
+          return role.isActionAllowed(request, kuzzle);
         })
         .then(isAllowed => {
           should(isAllowed).be.false();
 
           delete role.controllers.controller;
-          return role.isActionAllowed(requestObject, context, kuzzle);
+          return role.isActionAllowed(request, kuzzle);
         })
         .then(isAllowed => {
           should(isAllowed).be.false();
 
           delete role.controllers;
-          return role.isActionAllowed(requestObject, context, kuzzle);
+          return role.isActionAllowed(request, kuzzle);
         })
         .then(isAllowed => {
           should(isAllowed).be.false();
@@ -145,7 +141,7 @@ describe('Test: security/roleTest', () => {
         }
       };
 
-      return should(role.isActionAllowed(requestObject, context, kuzzle)).be.fulfilledWith(true);
+      return should(role.isActionAllowed(request, kuzzle)).be.fulfilledWith(true);
     });
 
     it('should allow a wildcard action', () => {
@@ -158,16 +154,16 @@ describe('Test: security/roleTest', () => {
         }
       };
 
-      return should(role.isActionAllowed(requestObject, context, kuzzle)).be.fulfilledWith(true);
+      return should(role.isActionAllowed(request, kuzzle)).be.fulfilledWith(true);
     });
 
     it('should properly handle restrictions', () => {
       var
         role = new Role(),
-        rq = {
+        req = new Request({
           controller: 'controller',
           action: 'action'
-        },
+        }, context),
         restrictions = [
           {index: 'index1'},
           {index: 'index2', collections: ['collection1']},
@@ -182,46 +178,46 @@ describe('Test: security/roleTest', () => {
         }
       };
 
-      return role.isActionAllowed(rq, context, kuzzle)
+      return role.isActionAllowed(req, kuzzle)
         .then(isAllowed => {
           should(isAllowed).be.true();
           role.restrictedTo = restrictions;
-          return role.isActionAllowed(rq, context, kuzzle);
+          return role.isActionAllowed(req, kuzzle);
         })
         .then(isAllowed => {
           should(isAllowed).be.true();
-          rq.index = 'index';
-          return role.isActionAllowed(rq, context, kuzzle);
+          req.input.resource.index = 'index';
+          return role.isActionAllowed(req, kuzzle);
         })
         .then(isAllowed => {
           should(isAllowed).be.false();
-          rq.index = 'index1';
-          return role.isActionAllowed(rq, context, kuzzle);
+          req.input.resource.index = 'index1';
+          return role.isActionAllowed(req, kuzzle);
         })
         .then(isAllowed => {
           should(isAllowed).be.true();
-          rq.index = 'index2';
-          return role.isActionAllowed(rq, context, kuzzle);
+          req.input.resource.index = 'index2';
+          return role.isActionAllowed(req, kuzzle);
         })
         .then(isAllowed => {
           should(isAllowed).be.true();
-          rq.collection = 'collection';
-          return role.isActionAllowed(rq, context, kuzzle);
+          req.input.resource.collection = 'collection';
+          return role.isActionAllowed(req, kuzzle);
         })
         .then(isAllowed => {
           should(isAllowed).be.false();
-          rq.collection = 'collection1';
-          return role.isActionAllowed(rq, context, kuzzle);
+          req.input.resource.collection = 'collection1';
+          return role.isActionAllowed(req, kuzzle);
         })
         .then(isAllowed => {
           should(isAllowed).be.true();
-          rq.collection = 'collection2';
-          return role.isActionAllowed(rq, context, kuzzle);
+          req.input.resource.collection = 'collection2';
+          return role.isActionAllowed(req, kuzzle);
         })
         .then(isAllowed => {
           should(isAllowed).be.false();
-          rq.index = 'index3';
-          return role.isActionAllowed(rq, context, kuzzle);
+          req.input.resource.index = 'index3';
+          return role.isActionAllowed(req, kuzzle);
         })
         .then(isAllowed => {
           should(isAllowed).be.true();
@@ -231,12 +227,12 @@ describe('Test: security/roleTest', () => {
     it('should not allow any action on the internal index if no role has been explicitly set on it', () => {
       var
         role = new Role(),
-        rq = {
+        req = new Request({
           index: internalIndex,
           collection: 'collection',
           controller: 'controller',
           action: 'action'
-        },
+        }, context),
         restrictions = [
           {index: 'aaa', collections: ['aaa', 'bbb']}
         ];
@@ -249,16 +245,16 @@ describe('Test: security/roleTest', () => {
         }
       };
 
-      return role.isActionAllowed(rq, context, kuzzle)
+      return role.isActionAllowed(req, kuzzle)
         .then(isAllowed => {
           should(isAllowed).be.false();
           role.allowInternalIndex = true;
-          return role.isActionAllowed(rq, context, kuzzle);
+          return role.isActionAllowed(req, kuzzle);
         })
         .then(isAllowed => {
           should(isAllowed).be.true();
           role.restrictedTo = restrictions;
-          return role.isActionAllowed(rq, context, kuzzle);
+          return role.isActionAllowed(req, kuzzle);
         })
         .then(isAllowed => {
           should(isAllowed).be.false();
@@ -280,16 +276,16 @@ describe('Test: security/roleTest', () => {
         }
       };
 
-      return role.isActionAllowed(requestObject, context, kuzzle)
+      return role.isActionAllowed(request, kuzzle)
         .then(isAllowed => {
           should(isAllowed).be.false();
           role.controllers.controller.actions.action = true;
-          return role.isActionAllowed(requestObject, context, kuzzle);
+          return role.isActionAllowed(request, kuzzle);
         })
         .then(isAllowed => {
           should(isAllowed).be.true();
           role.controllers.controller.actions.action = false;
-          return role.isActionAllowed(requestObject, context, kuzzle);
+          return role.isActionAllowed(request, kuzzle);
         })
         .then(isAllowed => {
           should(isAllowed).be.false();
@@ -300,12 +296,12 @@ describe('Test: security/roleTest', () => {
       var
         roleAllow = new Role(),
         roleDeny = new Role(),
-        rq = {
+        req = new Request({
           controller: 'admin',
           action: 'createCollection',
           index: 'index',
           collection: 'collection'
-        };
+        }, context);
 
       roleAllow.controllers = {
         admin: {
@@ -325,10 +321,10 @@ describe('Test: security/roleTest', () => {
         }
       };
 
-      return roleAllow.isActionAllowed(rq, context, kuzzle)
+      return roleAllow.isActionAllowed(req, kuzzle)
         .then(isAllowed => {
           should(isAllowed).be.true();
-          return roleDeny.isActionAllowed(rq, context, kuzzle);
+          return roleDeny.isActionAllowed(req, kuzzle);
         })
         .then(isAllowed => {
           should(isAllowed).be.false();
@@ -340,12 +336,12 @@ describe('Test: security/roleTest', () => {
         roleAllow = new Role(),
         roleDeny1 = new Role(),
         roleDeny2 = new Role(),
-        rq = {
+        req = new Request({
           controller: 'write',
           action: 'create',
           index: 'index',
           collection: 'collection'
-        };
+        }, context);
 
       roleAllow.controllers = {
         admin: {
@@ -389,14 +385,14 @@ describe('Test: security/roleTest', () => {
         }
       };
 
-      return roleAllow.isActionAllowed(rq, context, kuzzle)
+      return roleAllow.isActionAllowed(req, kuzzle)
         .then(isAllowed => {
           should(isAllowed).be.true();
-          return roleDeny1.isActionAllowed(rq, context, kuzzle);
+          return roleDeny1.isActionAllowed(req, kuzzle);
         })
         .then(isAllowed => {
           should(isAllowed).be.false();
-          return roleDeny2.isActionAllowed(rq, context, kuzzle);
+          return roleDeny2.isActionAllowed(req, kuzzle);
         })
         .then(isAllowed => {
           should(isAllowed).be.false();
@@ -414,7 +410,7 @@ describe('Test: security/roleTest', () => {
         }
       };
 
-      return should(role.isActionAllowed(requestObject, context, kuzzle)).be.rejected();
+      return should(role.isActionAllowed(request, kuzzle)).be.rejected();
     });
 
     it('should reject if the closure function return a non boolean value', () => {
@@ -428,7 +424,7 @@ describe('Test: security/roleTest', () => {
         }
       };
 
-      return should(role.isActionAllowed(requestObject, context, kuzzle)).be.rejected();
+      return should(role.isActionAllowed(request, kuzzle)).be.rejected();
     });
 
     it('should reject if an invalid function is given', () => {
@@ -445,7 +441,7 @@ describe('Test: security/roleTest', () => {
         }
       };
 
-      return should(role.isActionAllowed(requestObject, context, kuzzle)).be.rejectedWith(ParseError);
+      return should(role.isActionAllowed(request, kuzzle)).be.rejectedWith(ParseError);
     });
 
     it('should reject if an invalid argument is given', () => {
@@ -455,10 +451,10 @@ describe('Test: security/roleTest', () => {
         '*': {
           actions: {
             '*': {
-              test: 'return args.document && args.document.id === $requestObject.data._id;',
+              test: 'return args.document && args.document.id === $request.input.resource._id;',
               args: {
                 document: {
-                  get: '$requestObject.data..id'
+                  get: '$request.input.resource.._id'
                 }
               }
             }
@@ -466,44 +462,44 @@ describe('Test: security/roleTest', () => {
         }
       };
 
-      return should(role.isActionAllowed(requestObject, context, kuzzle)).be.rejectedWith(ParseError);
+      return should(role.isActionAllowed(request, kuzzle)).be.rejectedWith(ParseError);
     });
 
     it('should handle a custom right function', () => {
       var
         role = new Role(),
-        noMatchRequest = {
+        noMatchRequest = new Request({
           collection: 'collection',
           controller: 'controller',
           action: 'noaction'
-        };
+        }, context);
 
       role.controllers = {
         '*': {
           actions: {
             '*': {
               args: {},
-              test: 'return $requestObject.action === \'action\'; '
+              test: 'return $request.input.action === \'action\'; '
             }
           }
         }
       };
 
-      return role.isActionAllowed(requestObject, context, kuzzle)
+      return role.isActionAllowed(request, kuzzle)
         .then(isAllowed => {
           should(isAllowed).be.true();
 
-          return role.isActionAllowed(noMatchRequest, context, kuzzle);
+          return role.isActionAllowed(noMatchRequest, kuzzle);
         })
         .then(isAllowed => {
           should(isAllowed).be.false();
           role.closures = {};
           role.controllers['*'].actions['*'] = {
             args: {},
-            test: 'return $requestObject.action !== \'action\'; '
+            test: 'return $request.input.action !== \'action\'; '
           };
 
-          return role.isActionAllowed(requestObject, context, kuzzle);
+          return role.isActionAllowed(request, kuzzle);
         })
         .then(isAllowed => {
           should(isAllowed).be.false();
@@ -514,16 +510,15 @@ describe('Test: security/roleTest', () => {
       var
         roleAllow = new Role(),
         roleDeny = new Role(),
-        request = new Request({
+        req = new Request({
           controller: 'read',
           action: 'get',
           requestId: 'foo',
           collection: 'barbar',
           index: 'bar',
-          body: {
-            _id: documentAda._id
-          }
-        });
+          _id: documentAda._id,
+          body: {}
+        }, context);
 
       roleAllow.controllers = {
         '*': {
@@ -538,7 +533,7 @@ describe('Test: security/roleTest', () => {
                   collection: 'barbar'
                 }
               },
-              test: 'return args.document && args.document.id === $requestObject.data._id;'
+              test: 'return args.document && args.document.id === $request.input.resource._id;'
             }
           }
         }
@@ -557,17 +552,17 @@ describe('Test: security/roleTest', () => {
                   collection: 'barbar'
                 }
               },
-              test: 'return args.document && args.document.id === $requestObject.data._id;'
+              test: 'return args.document && args.document.id === $request.input.resource._id;'
             }
           }
         }
       };
 
-      return roleAllow.isActionAllowed(request, context, kuzzle)
+      return roleAllow.isActionAllowed(req, kuzzle)
         .then(isAllowed => {
           should(isAllowed).be.true();
 
-          return roleDeny.isActionAllowed(request, context, kuzzle);
+          return roleDeny.isActionAllowed(req, kuzzle);
         })
         .then(isAllowed => should(isAllowed).be.false());
     });
@@ -576,16 +571,15 @@ describe('Test: security/roleTest', () => {
       var
         roleAllow = new Role(),
         roleDeny = new Role(),
-        request = new Request({
+        req = new Request({
           controller: 'read',
           action: 'get',
           requestId: 'foo',
           collection: 'barbar',
           index: 'bar',
-          body: {
-            _id: documentAda._id
-          }
-        });
+          _id: documentAda._id,
+          body: {}
+        }, context);
 
       roleAllow.controllers = {
         '*': {
@@ -600,7 +594,7 @@ describe('Test: security/roleTest', () => {
                   collection: 'barbar'
                 }
               },
-              test: 'return args.documents[0] && args.documents[0].id === $requestObject.data._id;'
+              test: 'return args.documents[0] && args.documents[0].id === $request.input.resource._id;'
             }
           }
         }
@@ -619,17 +613,17 @@ describe('Test: security/roleTest', () => {
                   collection: 'barbar'
                 }
               },
-              test: 'return args.documents[0] && args.documents[0].id === $requestObject.data._id;'
+              test: 'return args.documents[0] && args.documents[0].id === $request.input.resource._id;'
             }
           }
         }
       };
 
-      return roleAllow.isActionAllowed(request, context, kuzzle)
+      return roleAllow.isActionAllowed(req, kuzzle)
         .then(isAllowed => {
           should(isAllowed).be.true();
 
-          return roleDeny.isActionAllowed(request, context, kuzzle);
+          return roleDeny.isActionAllowed(req, kuzzle);
         })
         .then(isAllowed => should(isAllowed).be.false());
     });
@@ -638,16 +632,15 @@ describe('Test: security/roleTest', () => {
       var
         roleAllow = new Role(),
         roleDeny = new Role(),
-        request = new Request({
+        req = new Request({
           controller: 'read',
           action: 'get',
           requestId: 'foo',
           collection: 'barbar',
           index: 'bar',
-          body: {
-            _id: documentAda._id
-          }
-        });
+          _id: documentAda._id,
+          body: {}
+        }, context);
 
       roleAllow.controllers = {
         '*': {
@@ -660,7 +653,7 @@ describe('Test: security/roleTest', () => {
                       query: {
                         ids: {
                           values: [
-                            '$requestObject.data._id'
+                            '$request.input.resource._id'
                           ]
                         }
                       }
@@ -670,7 +663,7 @@ describe('Test: security/roleTest', () => {
                   collection: 'barbar'
                 }
               },
-              test: 'return args.documents[0] && args.documents[0].id === $requestObject.data._id;'
+              test: 'return args.documents[0] && args.documents[0].id === $request.input.resource._id;'
             }
           }
         }
@@ -697,17 +690,17 @@ describe('Test: security/roleTest', () => {
                   collection: 'barbar'
                 }
               },
-              test: 'return args.documents[0] && args.documents[0].id === $requestObject.data._id;'
+              test: 'return args.documents[0] && args.documents[0].id === $request.input.resource._id;'
             }
           }
         }
       };
 
-      return roleAllow.isActionAllowed(request, context, kuzzle)
+      return roleAllow.isActionAllowed(req, kuzzle)
         .then(isAllowed => {
           should(isAllowed).be.true();
 
-          return roleDeny.isActionAllowed(request, context, kuzzle);
+          return roleDeny.isActionAllowed(req, kuzzle);
         })
         .then(isAllowed => should(isAllowed).be.false());
     });
@@ -715,15 +708,14 @@ describe('Test: security/roleTest', () => {
     it('should not allow bad method call', () => {
       var
         role = new Role(),
-        request = new Request({
+        req = new Request({
           controller: 'read',
           action: 'get',
           requestId: 'foo',
           collection: 'barbar',
           index: 'bar',
-          body: {
-            _id: documentAda._id
-          }
+          _id: documentAda._id,
+          body: {}
         });
 
       role.controllers = {
@@ -739,29 +731,28 @@ describe('Test: security/roleTest', () => {
                   collection: 'barbar'
                 }
               },
-              test: 'return args.document && args.document.id === $requestObject.data._id;'
+              test: 'return args.document && args.document.id === $request.input.resource._id;'
             }
           }
         }
       };
 
-      return role.isActionAllowed(request, context, kuzzle)
+      return role.isActionAllowed(req, kuzzle)
         .then(isAllowed => should(isAllowed).be.false());
     });
 
     it('should not allow if read method throws an error', () => {
       var
         role = new Role(),
-        request = new Request({
+        req = new Request({
           controller: 'read',
           action: 'get',
           requestId: 'foo',
           collection: 'barbar',
           index: 'bar',
-          body: {
-            _id: 'reject'
-          }
-        });
+          _id: 'reject',
+          body: {}
+        }, context);
 
       role.controllers = {
         '*': {
@@ -776,28 +767,27 @@ describe('Test: security/roleTest', () => {
                   collection: 'barbar'
                 }
               },
-              test: 'return args.document && args.document.id === $requestObject.data._id;'
+              test: 'return args.document && args.document.id === $request.input.resource._id;'
             }
           }
         }
       };
 
-      return should(role.isActionAllowed(request, context, kuzzle)).be.fulfilledWith(false);
+      return should(role.isActionAllowed(req, kuzzle)).be.fulfilledWith(false);
     });
 
     it('should not allow if collection is not specified', () => {
       var
         role = new Role(),
-        request = new Request({
+        req = new Request({
           controller: 'read',
           action: 'get',
           requestId: 'foo',
           collection: 'barbar',
           index: 'bar',
-          body: {
-            _id: documentAda._id
-          }
-        });
+          _id: documentAda._id,
+          body: {}
+        }, context);
 
       role.controllers = {
         '*': {
@@ -811,13 +801,13 @@ describe('Test: security/roleTest', () => {
                   collection: 'barbar'
                 }
               },
-              test: 'return args.document && args.document.id === $requestObject.data._id;'
+              test: 'return args.document && args.document.id === $request.input.resource._id;'
             }
           }
         }
       };
 
-      return should(role.isActionAllowed(request, context, kuzzle)).be.fulfilledWith(false);
+      return should(role.isActionAllowed(req, kuzzle)).be.fulfilledWith(false);
     });
   });
 

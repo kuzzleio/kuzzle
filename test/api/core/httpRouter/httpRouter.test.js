@@ -5,7 +5,8 @@ const
   sinon = require('sinon'),
   InternalError = require('kuzzle-common-objects').errors.InternalError,
   HttpResponse = require('../../../../lib/api/core/entryPoints/httpResponse'),
-  Router = require('../../../../lib/api/core/httpRouter');
+  Router = require('../../../../lib/api/core/httpRouter'),
+  Request = require('kuzzle-common-objects').Request;
 
 describe('core/httpRouter', () => {
   let
@@ -63,38 +64,10 @@ describe('core/httpRouter', () => {
 
       router.route(rq, callback);
       should(handler.calledOnce).be.true();
-      should(handler.firstCall.args[0]).match({
-        requestId: rq.requestId,
-        headers: rq.headers,
-        data: {
-          body: {}
-        }
-      });
+      should(handler.firstCall.args[0]).be.instanceOf(Request);
     });
 
     it('should amend the request object if a body is found in the content', () => {
-      router.post('/foo/bar', handler);
-
-      rq.url = '/foo/bar';
-      rq.method = 'POST';
-      rq.headers['content-type'] = 'application/json';
-      rq.content = '{"id": "foobar", "body": {"foo": "bar"}}';
-
-      router.route(rq, callback);
-      should(handler.calledOnce).be.true();
-      should(handler.firstCall.args[0]).match({
-        requestId: rq.requestId,
-        headers: rq.headers,
-        data: {
-          id: 'foobar',
-          body: {
-            foo: 'bar'
-          }
-        }
-      });
-    });
-
-    it('should replace the request object body if a body is not found in the content', () => {
       router.post('/foo/bar', handler);
 
       rq.url = '/foo/bar';
@@ -104,15 +77,9 @@ describe('core/httpRouter', () => {
 
       router.route(rq, callback);
       should(handler.calledOnce).be.true();
-      should(handler.firstCall.args[0]).match({
-        requestId: rq.requestId,
-        headers: rq.headers,
-        data: {
-          body: {
-            foo: 'bar'
-          }
-        }
-      });
+      should(handler.firstCall.args[0].id).match(rq.requestId);
+      should(handler.firstCall.args[0].input.body).match({foo: 'bar'});
+      should(handler.firstCall.args[0].input.args['content-type']).eql('application/json');
     });
 
     it('should return dynamic values for parametric routes', () => {
@@ -125,17 +92,11 @@ describe('core/httpRouter', () => {
 
       router.route(rq, callback);
       should(handler.calledOnce).be.true();
-      should(handler.firstCall.args[0]).match({
-        requestId: rq.requestId,
-        headers: rq.headers,
-        data: {
-          body: {
-            foo: 'bar',
-            bar: 'hello',
-            baz: 'world'
-          }
-        }
-      });
+      should(handler.firstCall.args[0].id).match(rq.requestId);
+      should(handler.firstCall.args[0].input.body).match({foo: 'bar'});
+      should(handler.firstCall.args[0].input.args['content-type']).eql('application/json');
+      should(handler.firstCall.args[0].input.args.bar).eql('hello');
+      should(handler.firstCall.args[0].input.args.baz).eql('world');
     });
 
     it('should unnescape dynamic values for parametric routes', () => {
@@ -148,17 +109,11 @@ describe('core/httpRouter', () => {
 
       router.route(rq, callback);
       should(handler.calledOnce).be.true();
-      should(handler.firstCall.args[0]).match({
-        requestId: rq.requestId,
-        headers: rq.headers,
-        data: {
-          body: {
-            foo: 'bar',
-            bar: 'hello',
-            baz: '%world'
-          }
-        }
-      });
+      should(handler.firstCall.args[0].id).match(rq.requestId);
+      should(handler.firstCall.args[0].input.body).match({foo: 'bar'});
+      should(handler.firstCall.args[0].input.args['content-type']).eql('application/json; charset=utf-8');
+      should(handler.firstCall.args[0].input.args.bar).eql('hello');
+      should(handler.firstCall.args[0].input.args.baz).eql('%world');
     });
 
     it('should return an error if the HTTP method is unknown', () => {
@@ -167,7 +122,7 @@ describe('core/httpRouter', () => {
       rq.url = '/foo/bar';
       rq.method = 'FOOBAR';
       rq.headers['content-type'] = 'application/json';
-      rq.content = '{"id": "foobar", "body": {"foo": "bar"}}';
+      rq.content = '{"foo": "bar"}';
 
       router.route(rq, callback);
       should(handler.called).be.false();
@@ -178,7 +133,7 @@ describe('core/httpRouter', () => {
         type: 'application/json',
         status: 400
       });
-      should(callback.firstCall.args[0].content).startWith('{"status":400,"error":{"message":"Unrecognized HTTP method FOOBAR"');
+      should(callback.firstCall.args[0].content).startWith('{"status":400,"error":{"status":400,"message":"Unrecognized HTTP method FOOBAR"');
     });
 
     it('should return an error if unable to parse the incoming JSON content', () => {
@@ -187,7 +142,7 @@ describe('core/httpRouter', () => {
       rq.url = '/foo/bar';
       rq.method = 'POST';
       rq.headers['content-type'] = 'application/json';
-      rq.content = '"id": "foobar", "body": {"foo": "bar"}}';
+      rq.content = '{bad JSON syntax}';
 
       router.route(rq, callback);
       should(handler.called).be.false();
@@ -198,7 +153,7 @@ describe('core/httpRouter', () => {
         type: 'application/json',
         status: 400
       });
-      should(callback.firstCall.args[0].content).startWith('{"status":400,"error":{"message":"Unable to convert HTTP body to JSON');
+      should(callback.firstCall.args[0].content).startWith('{"status":400,"error":{"status":400,"message":"Unable to convert HTTP body to JSON');
     });
 
     it('should return an error if the content-type is not JSON', () => {
@@ -207,7 +162,7 @@ describe('core/httpRouter', () => {
       rq.url = '/foo/bar';
       rq.method = 'POST';
       rq.headers['content-type'] = 'application/foobar';
-      rq.content = '{"id": "foobar", "body": {"foo": "bar"}}';
+      rq.content = '{"foo": "bar"}';
 
       router.route(rq, callback);
       should(handler.called).be.false();
@@ -218,7 +173,7 @@ describe('core/httpRouter', () => {
         type: 'application/json',
         status: 400
       });
-      should(callback.firstCall.args[0].content).startWith('{"status":400,"error":{"message":"Invalid request content-type');
+      should(callback.firstCall.args[0].content).startWith('{"status":400,"error":{"status":400,"message":"Invalid request content-type');
     });
 
     it('should send an error if the charset is not utf-8', () => {
@@ -227,7 +182,7 @@ describe('core/httpRouter', () => {
       rq.url = '/foo/bar';
       rq.method = 'POST';
       rq.headers['content-type'] = 'application/json; charset=iso8859-1';
-      rq.content = '{"id": "foobar", "body": {"foo": "bar"}}';
+      rq.content = '{"foo": "bar"}';
 
       router.route(rq, callback);
       should(handler.called).be.false();
@@ -238,7 +193,7 @@ describe('core/httpRouter', () => {
         type: 'application/json',
         status: 400
       });
-      should(callback.firstCall.args[0].content).startWith('{"status":400,"error":{"message":"Invalid request charset');
+      should(callback.firstCall.args[0].content).startWith('{"status":400,"error":{"status":400,"message":"Invalid request charset');
     });
 
     it('should return an error if the route does not exist', () => {
@@ -247,7 +202,7 @@ describe('core/httpRouter', () => {
       rq.url = '/foo/bar';
       rq.method = 'PUT';
       rq.headers['content-type'] = 'application/foobar';
-      rq.content = '{"id": "foobar", "body": {"foo": "bar"}}';
+      rq.content = '{"foo": "bar"}';
 
       router.route(rq, callback);
       should(handler.called).be.false();
@@ -258,7 +213,7 @@ describe('core/httpRouter', () => {
         type: 'application/json',
         status: 404
       });
-      should(callback.firstCall.args[0].content).startWith('{"status":404,"error":{"message":"API URL not found');
+      should(callback.firstCall.args[0].content).startWith('{"status":404,"error":{"status":404,"message":"API URL not found');
     });
   });
 });

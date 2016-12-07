@@ -266,6 +266,7 @@ describe('Test: write controller', () => {
     it('should resolve to a valid response', () => {
       request.input.resource.index = '%test';
       request.input.resource.collection = 'test-collection';
+      request.input.body = {query: {some: 'query'}};
 
       return controller.deleteByQuery(request)
         .then(response => {
