@@ -23,6 +23,7 @@ function commandPlugin (plugin, options) {
     data.version = data.packageVersion;
     delete data.packageVersion;
   }
+
   data._id = plugin;
 
   if (options.install) {
