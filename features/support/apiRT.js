@@ -20,7 +20,7 @@ ApiRT.prototype.sendAndListen = function () {};
 ApiRT.prototype.create = function (body, index, collection, jwtToken) {
   var
     msg = {
-      controller: 'write',
+      controller: 'document',
       collection: collection || this.world.fakeCollection,
       index: index || this.world.fakeIndex,
       action: 'create',
@@ -39,7 +39,7 @@ ApiRT.prototype.create = function (body, index, collection, jwtToken) {
 ApiRT.prototype.publish = function (body, index) {
   var
     msg = {
-      controller: 'write',
+      controller: 'realtime',
       collection: this.world.fakeCollection,
       index: index || this.world.fakeIndex,
       action: 'publish',
@@ -52,7 +52,7 @@ ApiRT.prototype.publish = function (body, index) {
 ApiRT.prototype.createOrReplace = function (body, index, collection) {
   var
     msg = {
-      controller: 'write',
+      controller: 'document',
       collection: collection || this.world.fakeCollection,
       index: index || this.world.fakeIndex,
       action: 'createOrReplace',
@@ -70,7 +70,7 @@ ApiRT.prototype.createOrReplace = function (body, index, collection) {
 ApiRT.prototype.replace = function (body, index, collection) {
   var
     msg = {
-      controller: 'write',
+      controller: 'document',
       collection: collection || this.world.fakeCollection,
       index: index || this.world.fakeIndex,
       action: 'replace',
@@ -88,7 +88,7 @@ ApiRT.prototype.replace = function (body, index, collection) {
 ApiRT.prototype.get = function (id, index) {
   var
     msg = {
-      controller: 'read',
+      controller: 'document',
       collection: this.world.fakeCollection,
       index: index || this.world.fakeIndex,
       action: 'get',
@@ -101,7 +101,7 @@ ApiRT.prototype.get = function (id, index) {
 ApiRT.prototype.search = function (query, index, collection, args) {
   var
     msg = {
-      controller: 'read',
+      controller: 'document',
       collection: collection || this.world.fakeCollection,
       index: index || this.world.fakeIndex,
       action: 'search',
@@ -118,7 +118,7 @@ ApiRT.prototype.search = function (query, index, collection, args) {
 ApiRT.prototype.scroll = function (scrollId) {
   var
     msg = {
-      controller: 'read',
+      controller: 'document',
       action: 'scroll',
       scrollId
     };
@@ -129,7 +129,7 @@ ApiRT.prototype.scroll = function (scrollId) {
 ApiRT.prototype.count = function (query, index, collection) {
   var
     msg = {
-      controller: 'read',
+      controller: 'document',
       collection: collection || this.world.fakeCollection,
       index: index || this.world.fakeIndex,
       action: 'count',
@@ -142,7 +142,7 @@ ApiRT.prototype.count = function (query, index, collection) {
 ApiRT.prototype.update = function (id, body, index) {
   var
     msg = {
-      controller: 'write',
+      controller: 'document',
       collection: this.world.fakeCollection,
       index: index || this.world.fakeIndex,
       action: 'update',
@@ -156,7 +156,7 @@ ApiRT.prototype.update = function (id, body, index) {
 ApiRT.prototype.deleteById = function (id, index) {
   var
     msg = {
-      controller: 'write',
+      controller: 'document',
       collection: this.world.fakeCollection,
       index: index || this.world.fakeIndex,
       action: 'delete',
@@ -169,7 +169,7 @@ ApiRT.prototype.deleteById = function (id, index) {
 ApiRT.prototype.deleteByQuery = function (query, index, collection) {
   var
     msg = {
-      controller: 'write',
+      controller: 'document',
       collection: collection || this.world.fakeCollection,
       index: index || this.world.fakeIndex,
       action: 'deleteByQuery',
@@ -182,7 +182,7 @@ ApiRT.prototype.deleteByQuery = function (query, index, collection) {
 ApiRT.prototype.updateMapping = function (index) {
   var
     msg = {
-      controller: 'admin',
+      controller: 'collection',
       collection: this.world.fakeCollection,
       index: index || this.world.fakeIndex,
       action: 'updateMapping',
@@ -219,7 +219,7 @@ ApiRT.prototype.globalBulkImport = function (bulk) {
 ApiRT.prototype.subscribe = function (filters, client) {
   var
     msg = {
-      controller: 'subscribe',
+      controller: 'realtime',
       collection: this.world.fakeCollection,
       index: this.world.fakeIndex,
       action: 'on',
@@ -238,7 +238,7 @@ ApiRT.prototype.unsubscribe = function (room, clientId) {
   var
     msg = {
       clientId: clientId,
-      controller: 'subscribe',
+      controller: 'realtime',
       collection: this.world.fakeCollection,
       index: this.world.fakeIndex,
       action: 'off',
@@ -256,7 +256,7 @@ ApiRT.prototype.countSubscription = function () {
     clients = Object.keys(this.subscribedRooms),
     rooms = Object.keys(this.subscribedRooms[clients[0]]),
     msg = {
-      controller: 'subscribe',
+      controller: 'realtime',
       collection: this.world.fakeCollection,
       index: this.world.fakeIndex,
       action: 'count',
@@ -271,7 +271,7 @@ ApiRT.prototype.countSubscription = function () {
 ApiRT.prototype.getStats = function (dates) {
   var
     msg = {
-      controller: 'admin',
+      controller: 'server',
       action: 'getStats',
       body: dates
     };
@@ -282,7 +282,7 @@ ApiRT.prototype.getStats = function (dates) {
 ApiRT.prototype.getLastStats = function () {
   var
     msg = {
-      controller: 'admin',
+      controller: 'server',
       action: 'getLastStats'
     };
 
@@ -292,7 +292,7 @@ ApiRT.prototype.getLastStats = function () {
 ApiRT.prototype.getAllStats = function () {
   var
     msg = {
-      controller: 'admin',
+      controller: 'server',
       action: 'getAllStats'
     };
 
@@ -302,9 +302,9 @@ ApiRT.prototype.getAllStats = function () {
 ApiRT.prototype.listCollections = function (index, type) {
   var
     msg = {
-      controller: 'read',
+      controller: 'collection',
       index: index || this.world.fakeIndex,
-      action: 'listCollections',
+      action: 'list',
       body: {type}
     };
 
@@ -314,7 +314,7 @@ ApiRT.prototype.listCollections = function (index, type) {
 ApiRT.prototype.now = function () {
   var
     msg = {
-      controller: 'read',
+      controller: 'server',
       action: 'now'
     };
 
@@ -324,10 +324,10 @@ ApiRT.prototype.now = function () {
 ApiRT.prototype.truncateCollection = function (index, collection) {
   var
     msg = {
-      controller: 'admin',
+      controller: 'collection',
       collection: collection || this.world.fakeCollection,
       index: index || this.world.fakeIndex,
-      action: 'truncateCollection'
+      action: 'truncate'
     };
 
   return this.send(msg);
@@ -336,7 +336,7 @@ ApiRT.prototype.truncateCollection = function (index, collection) {
 ApiRT.prototype.listSubscriptions = function () {
   var
     msg = {
-      controller: 'subscribe',
+      controller: 'realtime',
       action: 'list'
     };
 
@@ -346,8 +346,8 @@ ApiRT.prototype.listSubscriptions = function () {
 ApiRT.prototype.deleteIndexes = function () {
   var
     msg = {
-      controller: 'admin',
-      action: 'deleteIndexes'
+      controller: 'index',
+      action: 'delete'
     };
 
   return this.send(msg);
@@ -356,8 +356,8 @@ ApiRT.prototype.deleteIndexes = function () {
 ApiRT.prototype.listIndexes = function () {
   var
     msg = {
-      controller: 'read',
-      action: 'listIndexes'
+      controller: 'index',
+      action: 'list'
     };
 
   return this.send(msg);
@@ -366,8 +366,8 @@ ApiRT.prototype.listIndexes = function () {
 ApiRT.prototype.createIndex = function (index) {
   var
     msg = {
-      controller: 'admin',
-      action: 'createIndex',
+      controller: 'index',
+      action: 'create',
       index: index
     };
 
@@ -377,22 +377,9 @@ ApiRT.prototype.createIndex = function (index) {
 ApiRT.prototype.deleteIndex = function (index) {
   var
     msg = {
-      controller: 'admin',
-      action: 'deleteIndex',
+      controller: 'index',
+      action: 'delete',
       index: index
-    };
-
-  return this.send(msg);
-};
-
-ApiRT.prototype.removeRooms = function (rooms, index) {
-  var
-    msg = {
-      controller: 'admin',
-      action: 'removeRooms',
-      collection: this.world.fakeCollection,
-      index: index || this.world.fakeIndex,
-      body: {rooms: rooms}
     };
 
   return this.send(msg);
@@ -574,7 +561,7 @@ ApiRT.prototype.deleteProfile = function (id) {
 ApiRT.prototype.searchValidations = function (body) {
   var
     msg = {
-      controller: 'admin',
+      controller: 'collection',
       action: 'searchSpecifications',
       body
     };
@@ -685,8 +672,8 @@ ApiRT.prototype.checkToken = function (token) {
 ApiRT.prototype.refreshIndex = function (index) {
   return this.send({
     index: index,
-    controller: 'admin',
-    action: 'refreshIndex'
+    controller: 'index',
+    action: 'refresh'
   });
 };
 
@@ -711,7 +698,7 @@ ApiRT.prototype.callMemoryStorage = function (command, args) {
 ApiRT.prototype.setAutoRefresh = function (index, autoRefresh) {
   return this.send({
     index: index,
-    controller: 'admin',
+    controller: 'index',
     action: 'setAutoRefresh',
     body: {
       autoRefresh: autoRefresh
@@ -722,7 +709,7 @@ ApiRT.prototype.setAutoRefresh = function (index, autoRefresh) {
 ApiRT.prototype.getAutoRefresh = function (index) {
   return this.send({
     index: index,
-    controller: 'admin',
+    controller: 'index',
     action: 'getAutoRefresh'
   });
 };
@@ -730,8 +717,8 @@ ApiRT.prototype.getAutoRefresh = function (index) {
 ApiRT.prototype.indexExists = function (index) {
   return this.send({
     index,
-    controller: 'read',
-    action: 'indexExists'
+    controller: 'index',
+    action: 'exists'
   });
 };
 
@@ -739,8 +726,8 @@ ApiRT.prototype.collectionExists = function (index, collection) {
   return this.send({
     index,
     collection,
-    controller: 'read',
-    action: 'collectionExists'
+    controller: 'collection',
+    action: 'exists'
   });
 };
 
@@ -748,7 +735,7 @@ ApiRT.prototype.getSpecifications = function (index, collection) {
   return this.send({
     index: index,
     collection: collection,
-    controller: 'admin',
+    controller: 'collection',
     action: 'getSpecifications'
   });
 };
@@ -757,7 +744,7 @@ ApiRT.prototype.updateSpecifications = function (specifications) {
   return this.send({
     index: null,
     collection: null,
-    controller: 'admin',
+    controller: 'collection',
     action : 'updateSpecifications',
     body: specifications
   });
@@ -767,7 +754,7 @@ ApiRT.prototype.validateSpecifications = function (specifications) {
   return this.send({
     index: null,
     collection: null,
-    controller: 'admin',
+    controller: 'collection',
     action : 'validateSpecifications',
     body: specifications
   });
@@ -781,7 +768,7 @@ ApiRT.prototype.deleteSpecifications = function (index, collection) {
   return this.send({
     index: index,
     collection: collection,
-    controller: 'admin',
+    controller: 'collection',
     action : 'deleteSpecifications',
     body: null
   });
@@ -791,7 +778,7 @@ ApiRT.prototype.postDocument = function (index, collection, document) {
   return this.send({
     index,
     collection,
-    controller: 'write',
+    controller: 'document',
     action: 'create',
     body: document
   });

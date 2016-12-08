@@ -257,9 +257,6 @@ Feature: Test websocket API
     Given A room subscription listening to "firstName" having value "Grace"
     And I get the list subscriptions
     Then In my list there is a collection "kuzzle-collection-test" with 2 room and 2 subscriber
-    When I remove the first room
-    And I get the list subscriptions
-    Then In my list there is a collection "kuzzle-collection-test" with 1 room and 1 subscriber
 
   @usingWebsocket
   Scenario: create additional index
