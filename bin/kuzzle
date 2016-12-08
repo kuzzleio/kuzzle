@@ -59,7 +59,6 @@ program
   .command('start')
   .description('start a Kuzzle instance')
   .option('-p, --port <port>', 'Kuzzle port number', parseInt)
-  .option('    --likeAvirgin', 'delete Kuzzle configuration and users from database')
   .option('    --fixtures <fixtures>', 'import some fixtures from file')
   .option('    --mappings <mappings>', 'load and apply mappings from file')
   .action(require('./commands/start'));

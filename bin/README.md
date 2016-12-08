@@ -27,7 +27,7 @@ will guide you through the creation process of the first admin user and fix the 
 # Reset Kuzzle
 
 ```
-$ kuzzle likeAvirgin 
+$ kuzzle reset 
 ```
 
 will allow you to reset Kuzzle and restore it as if it is freshly installed.
@@ -38,13 +38,13 @@ will allow you to reset Kuzzle and restore it as if it is freshly installed.
 You can perform a reset followed by a fixtures and/or mappings import by doing:
 
 ```
-$ kuzzle likeAvirgin --fixtures /path/to/the/fixtures/file.json --mappings /path/to/the/mappings/file.json
+$ kuzzle reset --fixtures /path/to/the/fixtures/file.json --mappings /path/to/the/mappings/file.json
 ```
 
 ## Reset the Kuzzle server from a script or cron
 
 ```
-$ kuzzle likeAvirgin --noint
+$ kuzzle reset --noint
 ```
 
 # Getting help
@@ -56,7 +56,7 @@ Try those:
 ```
 $ kuzzle --help
 $ kuzzle start --help
-$ kuzzle likeAvirgin --help
+$ kuzzle reset --help
 ```
 
 

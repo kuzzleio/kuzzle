@@ -33,20 +33,6 @@ function commandStart (options) {
   console.log(kuz('[ℹ] Starting Kuzzle server'));
 
   kuzzle.start(params)
-    // like a virgin
-    .then(() => {
-      var request;
-
-      if (params.likeAvirgin) {
-        request = new Request({
-          controller: 'cli',
-          action: 'cleanDb',
-          body: {}
-        });
-        return kuzzle.cliController.actions.cleanDb(kuzzle, request);
-      }
-      return Promise.resolve();
-    })
     // fixtures && mapping
     .then(() => {
       var
