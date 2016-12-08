@@ -1,6 +1,5 @@
 var
   clc = require('cli-color'),
-  childProcess = require('child_process'),
   Kuzzle = require('../../lib/api/kuzzle');
 
 /* eslint-disable no-console */
