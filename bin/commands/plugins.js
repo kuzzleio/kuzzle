@@ -39,7 +39,7 @@ function commandPlugin (plugin, options) {
       }
       else if (options.install) {
         if (res.result.success) {
-          console.log(clcOk(`███ kuzzle-plugins: Plugin ${res.data.body.name}@${res.data.body.version}:\n${JSON.stringify(res.data.body.config, undefined, 2)}`));
+          console.log(clcOk(`███ kuzzle-plugins: Plugin ${res.result.name}@${res.result.version}:\n${JSON.stringify(res.result.config, undefined, 2)}`));
         } else {
           console.log(clcError('███ kuzzle-plugins: An error occurred while installing plugin, for more information, please check kuzzle error logs'));
         }
