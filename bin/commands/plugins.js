@@ -13,11 +13,6 @@ function commandPlugin (plugin, options) {
     kuzzle = new Kuzzle(),
     data = {};
 
-  if (!childProcess.hasOwnProperty('execSync')) {
-    console.error(clcError('███ kuzzle-plugins: Make sure you\'re using Node version >= 0.12'));
-    process.exit(1);
-  }
-
   checkOptions();
 
   options.options.forEach(opt => {
@@ -64,6 +59,11 @@ function commandPlugin (plugin, options) {
     })
     .catch(err => {
       console.error(clcError(err.message));
+
+      if (err.stack) {
+        console.error(clcError(err.stack));
+      }
+      
       process.exit(err.status);
     });
 
