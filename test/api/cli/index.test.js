@@ -30,9 +30,9 @@ describe('Tests: api/cli/index.js', () => {
       should(cli.actions.createFirstAdmin).be.instanceOf(Action);
       should(cli.actions.data).be.instanceOf(Action);
       should(cli.actions.dump).be.instanceOf(Action);
-      should(cli.actions.manaPlugins).be.instanceOf(Action);
-      should(cli.actions.manaPlugins.timeout).be.eql(1000);
-      should(cli.actions.manaPlugins.timeOutCB).be.a.Function();
+      should(cli.actions.managePlugins).be.instanceOf(Action);
+      should(cli.actions.managePlugins.timeout).be.eql(1000);
+      should(cli.actions.managePlugins.timeOutCB).be.a.Function();
       should(cli.do).be.a.Function();
     });
   });
@@ -60,7 +60,7 @@ describe('Tests: api/cli/index.js', () => {
           timeoutCB,
           cli = new Cli(kuzzle);
 
-        timeoutCB = cli.actions.manaPlugins.timeOutCB;
+        timeoutCB = cli.actions.managePlugins.timeOutCB;
         should(timeoutCB).be.an.instanceOf(Function);
 
         // first call - should init maxTimeout and spent
