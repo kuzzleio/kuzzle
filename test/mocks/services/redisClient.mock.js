@@ -4,7 +4,10 @@ var
   redisCommands = getBuiltinCommands(),
   Promise = require('bluebird');
 
-
+/**
+ * @param err
+ * @constructor
+ */
 function RedisClientMock (err) {
   this.getBuiltinCommands = getBuiltinCommands;
 

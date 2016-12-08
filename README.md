@@ -9,7 +9,7 @@
 For UI and linked objects developers, Kuzzle is an open-source solution that handles all the data management
 (CRUD, real-time storage, search, high-level features, etc;).
 
-Kuzzle features are accessible through a secured API. It can be used through a large choice of protocols such as REST, Websocket or MQTT.
+Kuzzle features are accessible through a secured API. It can be used through a large choice of protocols such as HTTP, Websocket or MQTT.
 
 Kuzzle uses [Elasticsearch filter DSL](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-filters.html) (see [filters syntax](http://kuzzle.io/guide/#filtering-syntax) for more details) as filtering language, and [Redis](http://redis.io/) to manage filters cache.
 
@@ -55,7 +55,7 @@ Take a look at the documentationfor more installation ways. (Manual installation
 Your applications can now connect to Kuzzle. We provide a few ways to do this:
 
 * Using one of our [SDK](http://kuzzle.io/sdk-documentation/) ([Javascript](https://github.com/kuzzleio/sdk-javascript), [Android](https://github.com/kuzzleio/sdk-android), more coming soon...).
-* Directly, by accessing one of our [API](http://kuzzle.io/api-reference/) (REST, WebSocket, AMQP, MQTT or STOMP)
+* Directly, by accessing one of our [API](http://kuzzle.io/api-reference/) (HTTP, WebSocket and MQTT)
 
 You can also play with our [demos](http://kuzzle.io/demos-tutorials/) for a quick Kuzzle overview.
 

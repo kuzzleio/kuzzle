@@ -4,10 +4,9 @@ var
   sinon = require('sinon'),
   rewire = require('rewire'),
   AdminController = rewire('../../../lib/api/controllers/adminController'),
-  RequestObject = require('kuzzle-common-objects').Models.requestObject,
-  ResponseObject = require('kuzzle-common-objects').Models.responseObject,
-  BadRequestError = require('kuzzle-common-objects').Errors.badRequestError,
-  PartialError = require('kuzzle-common-objects').Errors.partialError,
+  Request = require('kuzzle-common-objects').Request,
+  BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,
+  PartialError = require('kuzzle-common-objects').errors.PartialError,
   KuzzleMock = require('../../mocks/kuzzle.mock'),
   sandbox = sinon.sandbox.create();
 
@@ -18,13 +17,18 @@ describe('Test: admin controller', () => {
     foo = {foo: 'bar'},
     index = '%text',
     collection = 'unit-test-adminController',
-    requestObject;
+    request;
 
   beforeEach(() => {
+    var data = {
+      controller: 'admin',
+      index,
+      collection
+    };
     kuzzle = new KuzzleMock();
 
     adminController = new AdminController(kuzzle);
-    requestObject = new RequestObject({controller: 'admin'}, {index, collection}, 'unit-test');
+    request = new Request(data);
   });
 
   afterEach(() => {
@@ -33,109 +37,70 @@ describe('Test: admin controller', () => {
 
   describe('#updateMapping', () => {
     it('should activate a hook on a mapping update call and add the collection to the cache', () => {
-      return adminController.updateMapping(requestObject, {})
+      return adminController.updateMapping(request, {})
         .then(response => {
-          should(kuzzle.pluginsManager.trigger).be.calledTwice();
-          should(kuzzle.pluginsManager.trigger.firstCall).be.calledWith('data:beforeUpdateMapping', {requestObject, userContext: {}});
-          should(kuzzle.pluginsManager.trigger.secondCall).be.calledWith('data:afterUpdateMapping');
 
           should(kuzzle.services.list.storageEngine.updateMapping).be.calledOnce();
-          should(kuzzle.services.list.storageEngine.updateMapping).be.calledWith(requestObject);
+          should(kuzzle.services.list.storageEngine.updateMapping).be.calledWith(request);
 
           should(kuzzle.indexCache.add).be.calledOnce();
-          should(kuzzle.indexCache.add).be.calledWith(requestObject.index, requestObject.collection);
+          should(kuzzle.indexCache.add).be.calledWith(request.input.resource.index, request.input.resource.collection);
 
-          should(response.userContext).be.instanceof(Object);
-          should(response.responseObject).be.an.instanceOf(ResponseObject);
-          should(response.responseObject).match({
-            status: 200,
-            error: null,
-            data: {
-              body: foo
-            }
-          });
+          should(response).be.instanceof(Object);
+          should(response).match(foo);
         });
     });
   });
 
   describe('#updateUserMapping', () => {
-    it('should activate a hook on a mapping update call and add the collection to the cache', () => {
-      return adminController.updateUserMapping(requestObject, {})
+    it('should update the user mapping', () => {
+      return adminController.updateUserMapping(request)
         .then(response => {
-          should(kuzzle.pluginsManager.trigger).be.calledTwice();
-          should(kuzzle.pluginsManager.trigger.firstCall).be.calledWith('data:beforeUpdateUserMapping', {requestObject, userContext: {}});
-          should(kuzzle.pluginsManager.trigger.secondCall).be.calledWith('data:afterUpdateUserMapping');
-
           should(kuzzle.internalEngine.updateMapping).be.calledOnce();
-          should(kuzzle.internalEngine.updateMapping).be.calledWith('users', requestObject.data.body);
+          should(kuzzle.internalEngine.updateMapping).be.calledWith('users', request.input.body);
 
-          should(response.userContext).be.instanceof(Object);
-          should(response.responseObject).be.an.instanceOf(ResponseObject);
-          should(response.responseObject).match({
-            status: 200,
-            error: null,
-            data: {
-              body: foo
-            }
-          });
+          should(response).be.instanceof(Object);
+          should(response).match(foo);
         });
     });
   });
 
   describe('#getMapping', () => {
     it('should fulfill with a response object', () => {
-      return adminController.getMapping(requestObject, {})
+      return adminController.getMapping(request, {})
         .then(response => {
-          should(kuzzle.pluginsManager.trigger).be.calledTwice();
-          should(kuzzle.pluginsManager.trigger.firstCall).be.calledWith('data:beforeGetMapping', {requestObject, userContext: {}});
-          should(kuzzle.pluginsManager.trigger.secondCall).be.calledWith('data:afterGetMapping');
 
           should(kuzzle.services.list.storageEngine.getMapping).be.calledOnce();
-          should(kuzzle.services.list.storageEngine.getMapping).be.calledWith(requestObject);
+          should(kuzzle.services.list.storageEngine.getMapping).be.calledWith(request);
 
-          should(response.userContext).be.instanceof(Object);
-          should(response.responseObject).be.an.instanceOf(ResponseObject);
+          should(response).be.instanceof(Object);
+          should(response).match(foo);
         });
     });
   });
 
   describe('#getUserMapping', () => {
     it('should fulfill with a response object', () => {
-      return adminController.getUserMapping(requestObject, {})
+      return adminController.getUserMapping(request)
         .then(response => {
-          should(kuzzle.pluginsManager.trigger).be.calledTwice();
-          should(kuzzle.pluginsManager.trigger.firstCall).be.calledWith('data:beforeGetUserMapping', {requestObject, userContext: {}});
-          should(kuzzle.pluginsManager.trigger.secondCall).be.calledWith('data:afterGetUserMapping');
-
           should(kuzzle.internalEngine.getMapping).be.calledOnce();
           should(kuzzle.internalEngine.getMapping).be.calledWith({index: kuzzle.internalEngine.index, type: 'users'});
 
-          should(response.userContext).be.instanceof(Object);
-          should(response.responseObject).be.an.instanceOf(ResponseObject);
+          should(response).be.instanceof(Object);
+          should(response).match({mapping: {}});
         });
     });
   });
 
   describe('#getStats', () => {
     it('should trigger the plugin manager and return a proper response', () => {
-      return adminController.getStats(requestObject, {})
+      return adminController.getStats(request, {})
         .then(response => {
-          should(kuzzle.pluginsManager.trigger).be.calledTwice();
-          should(kuzzle.pluginsManager.trigger.firstCall).be.calledWith('data:beforeGetStats', {requestObject, userContext: {}});
-          should(kuzzle.pluginsManager.trigger.secondCall).be.calledWith('data:afterGetStats');
-
           should(kuzzle.statistics.getStats).be.calledOnce();
-          should(kuzzle.statistics.getStats).be.calledWith(requestObject);
+          should(kuzzle.statistics.getStats).be.calledWith(request);
 
-          should(response.userContext).be.instanceof(Object);
-          should(response.responseObject).be.an.instanceOf(ResponseObject);
-          should(response.responseObject).match({
-            status: 200,
-            error: null,
-            data: {
-              body: foo
-            }
-          });
+          should(response).be.instanceof(Object);
+          should(response).match(foo);
         });
 
     });
@@ -143,50 +108,24 @@ describe('Test: admin controller', () => {
 
   describe('#getLastStats', () => {
     it('should trigger the proper methods and return a valid response', () => {
-      return adminController.getLastStats(requestObject, {})
+      return adminController.getLastStats(request, {})
         .then(response => {
-          var trigger = kuzzle.pluginsManager.trigger;
-
-          should(trigger).be.calledTwice();
-          should(trigger.firstCall).be.calledWith('data:beforeGetLastStats', {requestObject, userContext: {}});
-          should(trigger.secondCall).be.calledWith('data:afterGetLastStats');
-
           should(kuzzle.statistics.getLastStats).be.calledOnce();
 
-          should(response.userContext).be.instanceof(Object);
-          should(response.responseObject).be.an.instanceOf(ResponseObject);
-          should(response.responseObject).match({
-            status: 200,
-            error: null,
-            data: {
-              body: foo
-            }
-          });
+          should(response).be.instanceof(Object);
+          should(response).match(foo);
         });
     });
   });
 
   describe('#getAllStats', () => {
     it('should trigger the proper methods and return a valid response', () => {
-      return adminController.getAllStats(requestObject, {})
+      return adminController.getAllStats(request, {})
         .then(response => {
-          var trigger = kuzzle.pluginsManager.trigger;
-          should(trigger).be.calledTwice();
-          should(trigger.firstCall).be.calledWith('data:beforeGetAllStats', {requestObject, userContext: {}});
-          should(trigger.secondCall).be.calledWith('data:afterGetAllStats');
-
           should(kuzzle.statistics.getAllStats).be.calledOnce();
-          should(kuzzle.statistics.getAllStats).be.calledWith(requestObject);
 
-          should(response.userContext).be.instanceof(Object);
-          should(response.responseObject).be.an.instanceOf(ResponseObject);
-          should(response.responseObject).match({
-            status: 200,
-            error: null,
-            data: {
-              body: foo
-            }
-          });
+          should(response).be.instanceof(Object);
+          should(response).match(foo);
         });
 
     });
@@ -194,28 +133,15 @@ describe('Test: admin controller', () => {
 
   describe('#truncateCollection', () => {
     it('should trigger the proper methods and return a valid response', () => {
-      return adminController.truncateCollection(requestObject, {})
+      return adminController.truncateCollection(request, {})
         .then(response => {
-          var
-            truncate = kuzzle.services.list.storageEngine.truncateCollection,
-            trigger = kuzzle.pluginsManager.trigger;
-
-          should(trigger).be.calledTwice();
-          should(trigger.firstCall).be.calledWith('data:beforeTruncateCollection', {requestObject, userContext: {}});
-          should(trigger.secondCall).be.calledWith('data:afterTruncateCollection');
+          var truncate = kuzzle.services.list.storageEngine.truncateCollection;
 
           should(truncate).be.calledOnce();
-          should(truncate).be.calledWith(requestObject);
+          should(truncate).be.calledWith(request);
 
-          should(response.userContext).be.instanceof(Object);
-          should(response.responseObject).be.an.instanceOf(ResponseObject);
-          should(response.responseObject).match({
-            status: 200,
-            error: null,
-            data: {
-              body: foo
-            }
-          });
+          should(response).be.instanceof(Object);
+          should(response).match(foo);
         });
     });
   });
@@ -244,36 +170,24 @@ describe('Test: admin controller', () => {
     });
 
     it('should trigger the proper methods and return a valid response', () => {
-      requestObject.data.body = {
+      request.input.body = {
         indexes: ['a', 'c', 'e', 'g', 'i']
       };
+      request.context.token = {userId: '42'};
 
-      return adminController.deleteIndexes(requestObject, {token: {userId: 42}})
+      return adminController.deleteIndexes(request)
         .then(response => {
-          var
-            engine = kuzzle.services.list.storageEngine,
-            trigger = kuzzle.pluginsManager.trigger;
+          var engine = kuzzle.services.list.storageEngine;
 
           try {
             should(kuzzle.repositories.user.load).be.calledOnce();
-            should(kuzzle.repositories.user.load).be.calledWith(42);
+            should(kuzzle.repositories.user.load).be.calledWith('42');
 
             should(isActionAllowedStub).have.callCount(5);
 
-            should(trigger).be.calledTwice();
-            should(trigger.firstCall).be.calledWith('data:beforeDeleteIndexes');
-            should(trigger.firstCall.args[1].requestObject).be.an.instanceOf(RequestObject);
-            should(trigger.firstCall.args[1].requestObject).match({
-              data: {
-                body: {
-                  indexes: ['a', 'e', 'i']
-                }
-              }
-            });
-
             should(engine.deleteIndexes).be.calledOnce();
-            should(engine.deleteIndexes.firstCall.args[0]).be.an.instanceOf(RequestObject);
-            should(engine.deleteIndexes.firstCall.args[0]).match({
+            should(engine.deleteIndexes.firstCall.args[0]).be.an.instanceOf(Request);
+            should(engine.deleteIndexes.firstCall.args[0].serialize()).match({
               data: {
                 body: {
                   indexes: ['a', 'e', 'i']
@@ -286,19 +200,8 @@ describe('Test: admin controller', () => {
             should(kuzzle.indexCache.remove.getCall(1)).be.calledWith('e');
             should(kuzzle.indexCache.remove.getCall(2)).be.calledWith('i');
 
-            should(trigger.secondCall).be.calledWith('data:afterDeleteIndexes');
-
-            should(response.userContext).be.instanceof(Object);
-            should(response.responseObject).be.an.instanceOf(ResponseObject);
-            should(response.responseObject).match({
-              status: 200,
-              error: null,
-              data: {
-                body: {
-                  deleted: ['a', 'e', 'i']
-                }
-              }
-            });
+            should(response).be.instanceof(Object);
+            should(response).match({deleted: ['a', 'e', 'i']});
             return Promise.resolve();
           }
           catch (error) {
@@ -311,60 +214,33 @@ describe('Test: admin controller', () => {
 
   describe('#createIndex', () => {
     it('should trigger the proper methods and return a valid response', () => {
-      return adminController.createIndex(requestObject, {})
+      return adminController.createIndex(request, {})
         .then(response => {
-          var
-            createIndex = kuzzle.services.list.storageEngine.createIndex,
-            trigger = kuzzle.pluginsManager.trigger;
-
-          should(trigger).be.calledTwice();
-          should(trigger.firstCall).be.calledWith('data:beforeCreateIndex', {requestObject, userContext: {}});
+          var createIndex = kuzzle.services.list.storageEngine.createIndex;
 
           should(createIndex).be.calledOnce();
-          should(createIndex).be.calledWith(requestObject);
+          should(createIndex).be.calledWith(request);
 
-          should(trigger.secondCall).be.calledWith('data:afterCreateIndex');
-
-          should(response.userContext).be.instanceof(Object);
-          should(response.responseObject).be.an.instanceOf(ResponseObject);
-          should(response.responseObject).match({
-            data: {
-              body: foo
-            }
-          });
+          should(response).be.instanceof(Object);
+          should(response).match(foo);
         });
     });
   });
 
   describe('#deleteIndex', () => {
     it('should trigger the proper methods and return a valid response', () => {
-      return adminController.deleteIndex(requestObject, {})
+      return adminController.deleteIndex(request, {})
         .then(response => {
-          var
-            deleteIndex = kuzzle.services.list.storageEngine.deleteIndex,
-            trigger = kuzzle.pluginsManager.trigger;
-
-          should(trigger).be.calledTwice();
-          should(trigger.firstCall).be.calledWith('data:beforeDeleteIndex', {requestObject, userContext: {}});
+          var deleteIndex = kuzzle.services.list.storageEngine.deleteIndex;
 
           should(deleteIndex).be.calledOnce();
-          should(deleteIndex).be.calledWith(requestObject);
+          should(deleteIndex).be.calledWith(request);
 
           should(kuzzle.indexCache.remove).be.calledOnce();
-          should(kuzzle.indexCache.remove).be.calledWith(requestObject.index);
+          should(kuzzle.indexCache.remove).be.calledWith(request.input.resource.index);
 
-          should(trigger.secondCall).be.calledWith('data:afterDeleteIndex');
-
-          should(response.userContext).be.instanceof(Object);
-          should(response.responseObject).be.an.instanceOf(ResponseObject);
-          should(response.responseObject).match({
-            status: 200,
-            error: null,
-            data: {
-              body: foo
-            }
-          });
-
+          should(response).be.instanceof(Object);
+          should(response).match(foo);
         });
     });
   });
@@ -384,186 +260,110 @@ describe('Test: admin controller', () => {
     it('should trigger the proper methods and resolve to a valid response', () => {
       stub.returns(Promise.resolve(foo));
 
-      return adminController.removeRooms(requestObject, {})
+      return adminController.removeRooms(request, {})
         .then(response => {
-          var
-            trigger = kuzzle.pluginsManager.trigger;
-
-          should(trigger).be.calledTwice();
-          should(trigger.firstCall).be.calledWith('subscription:beforeRemoveRooms', {requestObject, userContext: {}});
-
           should(stub).be.calledOnce();
-          should(stub).be.calledWith(requestObject);
+          should(stub).be.calledWith(request);
 
-          should(trigger.secondCall).be.calledWith('subscription:afterRemoveRooms');
-
-          should(response.userContext).be.instanceof(Object);
-          should(response.responseObject).be.an.instanceOf(ResponseObject);
-          should(response.responseObject).match({
-            status: 200,
-            error: null,
-            data: {
-              body: foo
-            }
-          });
+          should(response).be.instanceof(Object);
+          should(response).match(foo);
         });
     });
 
     it('should handle partial errors', () => {
-      var
-        partialErrors = [
-          'error1',
-          'error2',
-          'error3'
-        ];
+      var partialErrors = ['error1', 'error2', 'error3'];
 
       stub.returns(Promise.resolve({partialErrors}));
 
-      return adminController.removeRooms(requestObject, {})
+      return adminController.removeRooms(request, {})
         .then(response => {
-          should(kuzzle.pluginsManager.trigger).be.calledTwice();
           should(stub).be.calledOnce();
-          should(stub).be.calledWith(requestObject);
+          should(stub).be.calledWith(request);
 
-          should(response.userContext).be.instanceof(Object);
-          should(response.responseObject).be.an.instanceOf(ResponseObject);
-          should(response.responseObject.error).be.an.instanceOf(PartialError);
-          should(response.responseObject).match({
-            status: 206,
-            error: {}
-          });
+          should(response).be.instanceof(Object);
+          should(request.error).be.an.instanceOf(PartialError);
+          should(request.status).be.an.eql(206);
+          should(response).match({partialErrors});
         });
     });
   });
 
   describe('#refreshIndex', () => {
     it('should trigger the proper methods and resolve to a valid response', () => {
-      return adminController.refreshIndex(requestObject, {})
+      return adminController.refreshIndex(request, {})
         .then(response => {
-          var
-            engine = kuzzle.services.list.storageEngine,
-            trigger = kuzzle.pluginsManager.trigger;
-
-          should(trigger).be.calledTwice();
-          should(trigger.firstCall).be.calledWith('data:beforeRefreshIndex', {requestObject, userContext: {}});
-
+          var engine = kuzzle.services.list.storageEngine;
           should(engine.refreshIndex).be.calledOnce();
-          should(engine.refreshIndex).be.calledWith(requestObject);
+          should(engine.refreshIndex).be.calledWith(request);
 
-          should(trigger.secondCall).be.calledWith('data:afterRefreshIndex');
-
-          should(response.userContext).be.instanceof(Object);
-          should(response.responseObject).be.an.instanceOf(ResponseObject);
-          should(response.responseObject).match({
-            status: 200,
-            error: null,
-            data: {
-              body: foo
-            }
-          });
+          should(response).be.instanceof(Object);
+          should(response).match(foo);
         });
     });
   });
 
   describe('#refreshInternalIndex', () => {
     it('should trigger the proper methods and resolve to a valid response', () => {
-      return adminController.refreshInternalIndex(requestObject, {})
+      return adminController.refreshInternalIndex(request, {})
         .then(response => {
-          var
-            trigger = kuzzle.pluginsManager.trigger;
-
-          should(trigger).be.calledTwice();
-          should(trigger.firstCall).be.calledWith('data:beforeRefreshInternalIndex', {requestObject, userContext: {}});
-          should(trigger.secondCall).be.calledWith('data:afterRefreshInternalIndex');
-
           should(kuzzle.internalEngine.refresh).be.calledOnce();
-
-          should(response.userContext).be.instanceof(Object);
-          should(response.responseObject).be.an.instanceOf(ResponseObject);
-          should(response.responseObject).match({
-            status: 200,
-            error: null,
-            data: {
-              body: {
-                acknowledged: true
-              }
-            }
-          });
+          should(response).be.instanceof(Object);
+          should(response).match({ acknowledged: true });
         });
     });
   });
 
   describe('#getAutoRefresh', () => {
     it('should trigger the proper methods and resolve to a valid response', () => {
-      return adminController.getAutoRefresh(requestObject, {})
+      return adminController.getAutoRefresh(request, {})
         .then(response => {
-          var
-            engine = kuzzle.services.list.storageEngine,
-            trigger = kuzzle.pluginsManager.trigger;
-
-          should(trigger).be.calledTwice();
-          should(trigger.firstCall).be.calledWith('data:beforeGetAutoRefresh', {requestObject, userContext: {}});
+          var engine = kuzzle.services.list.storageEngine;
 
           should(engine.getAutoRefresh).be.calledOnce();
-          should(engine.getAutoRefresh).be.calledWith(requestObject);
+          should(engine.getAutoRefresh).be.calledWith(request);
 
-          should(trigger.secondCall).be.calledWith('data:afterGetAutoRefresh');
-
-          should(response.userContext).be.instanceof(Object);
-          should(response.responseObject).be.an.instanceOf(ResponseObject);
-          should(response.responseObject).match({
-            status: 200,
-            error: null,
-            data: {
-              body: false
-            }
-          });
+          should(response).be.instanceof(Object);
+          should(response).match(false);
         });
     });
   });
 
   describe('#setAutoRefresh', () => {
     it('should trigger the proper methods and resolve to a valid response', () => {
-      requestObject.data.body = {
-        autoRefresh: true
-      };
+      request.input.body = {autoRefresh: true};
 
-      return adminController.setAutoRefresh(requestObject, {})
+      return adminController.setAutoRefresh(request, {})
         .then(response => {
-          var
-            engine = kuzzle.services.list.storageEngine,
-            trigger = kuzzle.pluginsManager.trigger;
-
-          should(trigger).be.calledTwice();
-          should(trigger.firstCall).be.calledWith('data:beforeSetAutoRefresh', {requestObject, userContext: {}});
+          var engine = kuzzle.services.list.storageEngine;
 
           should(engine.setAutoRefresh).be.calledOnce();
-          should(engine.setAutoRefresh).be.calledWith(requestObject);
+          should(engine.setAutoRefresh).be.calledWith(request);
 
-          should(trigger.secondCall).be.calledWith('data:afterSetAutoRefresh');
-
-          should(response.userContext).be.instanceof(Object);
-          should(response.responseObject).be.an.instanceOf(ResponseObject);
-          should(response.responseObject).match({
-            status: 200,
-            error: null,
-            data: {
-              body: true
-            }
-          });
+          should(response).be.instanceof(Object);
+          should(response).match({response: true});
         });
     });
 
-    it('should return a rejected promise if the reqest does not contain the autoRefresh field', () => {
-      return should(adminController.setAutoRefresh(requestObject, {}))
-        .be.rejectedWith(BadRequestError, {message: 'mandatory parameter "autoRefresh" not found.'});
+    it('should return a rejected promise if the request does not contain a body', () => {
+      return should(() => {
+        adminController.setAutoRefresh(request, {});
+      }).throw(BadRequestError);
+    });
+
+    it('should return a rejected promise if the request does not contain the autoRefresh field', () => {
+      request.input.body = {foo};
+
+      return should(() => {
+        adminController.setAutoRefresh(request, {});
+      }).throw(BadRequestError);
     });
 
     it('should reject the promise if the autoRefresh value is not a boolean', () => {
-      requestObject.data.body = {autoRefresh: -42};
+      request.input.body = {autoRefresh: -42};
 
-      return should(adminController.setAutoRefresh(requestObject, {}))
-        .be.rejectedWith(BadRequestError, {message: 'Invalid type for autoRefresh, expected Boolean got number'});
+      return should(() => {
+        adminController.setAutoRefresh(request, {});
+      }).throw(BadRequestError);
     });
   });
 
@@ -580,7 +380,7 @@ describe('Test: admin controller', () => {
 
       return adminController.adminExists()
         .then((response) => {
-          should(response.responseObject).match({data: {body: {exists: false}}});
+          should(response).match({ exists: false });
         });
     });
 
@@ -589,7 +389,7 @@ describe('Test: admin controller', () => {
 
       return adminController.adminExists()
         .then((response) => {
-          should(response.responseObject).match({data: {body: {exists: true}}});
+          should(response).match({ exists: true });
         });
     });
   });
@@ -618,63 +418,32 @@ describe('Test: admin controller', () => {
     });
 
     it('should do nothing if admin already exists', () => {
-      var request = new RequestObject({
-        _id: 'toto',
-        body: {
-          password: 'pwd'
-        }
-      });
+      adminController.adminExists = sandbox.stub().returns(Promise.resolve({exists: true}));
 
-      adminController.adminExists = sandbox.stub().returns(Promise.resolve({data: {body: {exists: true}}}));
-
-      return should(adminController.createFirstAdmin(request, {})).be.rejected();
+      return should(adminController.createFirstAdmin(new Request({_id: 'toto', body: {password: 'pwd'}}), {})).be.rejected();
     });
 
     it('should create the admin user and not reset roles & profiles if not asked to', () => {
-      var request = new RequestObject({
-        _id: 'toto',
-        body: {
-          password: 'pwd'
-        }
-      });
 
-      adminController.adminExists = sandbox.stub().returns(Promise.resolve({responseObject: {data: {body: {exists: false}}}}));
+      adminController.adminExists = sandbox.stub().returns(Promise.resolve({exists: false}));
 
-      return adminController.createFirstAdmin(request, {})
+      return adminController.createFirstAdmin(new Request({_id: 'toto', body: {password: 'pwd'}}))
         .then(() => {
           should(createOrReplaceUser).be.calledOnce();
-          should(createOrReplaceUser).be.calledWithMatch({
-            data: {
-              _id: 'toto',
-              body: {password: 'pwd', profileIds: ['admin']}
-            }
-          });
+          should(createOrReplaceUser.firstCall.args[0]).be.instanceOf(Request);
           should(resetRolesStub).have.callCount(0);
           should(resetProfilesStub).have.callCount(0);
         });
     });
 
     it('should create the admin user and reset roles & profiles if asked to', () => {
-      var request = new RequestObject({
-        _id: 'toto',
-        body: {
-          password: 'pwd',
-          reset: true
-        }
-      });
-
-      adminController.adminExists = sandbox.stub().returns(Promise.resolve({responseObject: {data: {body: {exists: false}}}}));
+      adminController.adminExists = sandbox.stub().returns(Promise.resolve({exists: false}));
       sandbox.stub(adminController, 'refreshIndex').returns(Promise.resolve({}));
 
-      return adminController.createFirstAdmin(request, {})
+      return adminController.createFirstAdmin(new Request({_id: 'toto', body: {password: 'pwd'}, reset: true}))
         .then(() => {
           should(createOrReplaceUser).be.calledOnce();
-          should(createOrReplaceUser).be.calledWithMatch({
-            data: {
-              _id: 'toto',
-              body: {password: 'pwd', profileIds: ['admin']}
-            }
-          });
+          should(createOrReplaceUser.firstCall.args[0]).be.instanceOf(Request);
           should(resetRolesStub).have.callCount(1);
           should(resetProfilesStub).have.callCount(1);
         });
@@ -748,23 +517,12 @@ describe('Test: admin controller', () => {
     it('should call internalEngine with the right id', () => {
       kuzzle.internalEngine.get = sandbox.stub().returns(Promise.resolve({_source: {foo: 'bar'}}));
 
-      return adminController.getSpecifications(requestObject, {})
+      return adminController.getSpecifications(request, {})
         .then(response => {
           try {
-            should(kuzzle.pluginsManager.trigger).be.calledTwice();
-            should(kuzzle.pluginsManager.trigger.firstCall).be.calledWith('data:beforeGetSpecifications', {requestObject, userContext: {}});
-            should(kuzzle.pluginsManager.trigger.secondCall).be.calledWith('data:afterGetSpecifications');
             should(kuzzle.internalEngine.get).be.calledOnce();
             should(kuzzle.internalEngine.get).be.calledWithMatch('validations', `${index}#${collection}`);
-            should(response.responseObject).match({
-              status: 200,
-              error: null,
-              data: {
-                body: {
-                  foo: 'bar'
-                }
-              }
-            });
+            should(response).match(foo);
             return Promise.resolve();
           }
           catch (error) {
@@ -778,31 +536,20 @@ describe('Test: admin controller', () => {
     it('should call internalEngine with the right data', () => {
       kuzzle.internalEngine.search = sandbox.stub().returns(Promise.resolve({hits: [{_id: 'bar'}]}));
 
-      requestObject.data.body = {
-        from: 0,
-        size: 1,
+      request.input.body = {
         query: {
           match_all: {}
         }
       };
+      request.input.args.from = 0;
+      request.input.args.size = 20;
 
-      return adminController.searchSpecifications(requestObject, {})
+      return adminController.searchSpecifications(request, {})
         .then(response => {
           try {
-            should(kuzzle.pluginsManager.trigger).be.calledTwice();
-            should(kuzzle.pluginsManager.trigger.firstCall).be.calledWith('data:beforeSearchSpecifications', {requestObject, userContext: {}});
-            should(kuzzle.pluginsManager.trigger.secondCall).be.calledWith('data:afterSearchSpecifications');
             should(kuzzle.internalEngine.search).be.calledOnce();
-            should(kuzzle.internalEngine.search).be.calledWithMatch('validations', requestObject.data.body.query, requestObject.data.body.from, requestObject.data.body.size);
-            should(response.responseObject).match({
-              status: 200,
-              error: null,
-              data: {
-                body: {
-                  hits: [{_id: 'bar'}]
-                }
-              }
-            });
+            should(kuzzle.internalEngine.search).be.calledWithMatch('validations', request.input.body.query, request.input.args.from, request.input.args.size);
+            should(response).match({hits: [{_id: 'bar'}]});
             return Promise.resolve();
           }
           catch (error) {
@@ -816,7 +563,7 @@ describe('Test: admin controller', () => {
     it('should create or replace specifications', () => {
       index = 'myindex';
       collection = 'mycollection';
-      requestObject.data.body = {
+      request.input.body = {
         myindex: {
           mycollection: {
             strict: true,
@@ -834,23 +581,14 @@ describe('Test: admin controller', () => {
       kuzzle.validation.isValidSpecification = sandbox.stub().returns(Promise.resolve({isValid: true}));
       kuzzle.validation.curateSpecification = sandbox.stub().returns(Promise.resolve());
 
-      return adminController.updateSpecifications(requestObject, {})
+      return adminController.updateSpecifications(request, {})
         .then(response => {
           try {
-            should(kuzzle.pluginsManager.trigger).be.calledThrice();
-            should(kuzzle.pluginsManager.trigger.firstCall).be.calledWith('data:beforeUpdateSpecifications', {requestObject, userContext: {}});
-            should(kuzzle.pluginsManager.trigger.secondCall).be.calledWith('data:afterUpdateSpecifications');
             should(kuzzle.internalEngine.refresh).be.calledOnce();
             should(kuzzle.validation.curateSpecification).be.called();
             should(kuzzle.internalEngine.createOrReplace).be.calledOnce();
             should(kuzzle.internalEngine.createOrReplace).be.calledWithMatch('validations', `${index}#${collection}`);
-            should(response.responseObject).match({
-              status: 200,
-              error: null,
-              data: {
-                body: requestObject.data.body
-              }
-            });
+            should(response).match(request.input.body);
 
             return Promise.resolve();
           }
@@ -863,7 +601,7 @@ describe('Test: admin controller', () => {
     it('should rejects and do not create or replace specifications if the specs are wrong', () => {
       index = 'myindex';
       collection = 'mycollection';
-      requestObject.data.body = {
+      request.input.body = {
         myindex: {
           mycollection: {
             strict: true,
@@ -884,11 +622,9 @@ describe('Test: admin controller', () => {
       }));
       kuzzle.validation.curateSpecification = sandbox.stub();
 
-      return adminController.updateSpecifications(requestObject, {})
+      return adminController.updateSpecifications(request, {})
         .catch(error => {
           try {
-            should(kuzzle.pluginsManager.trigger).be.calledOnce();
-            should(kuzzle.pluginsManager.trigger.firstCall).be.calledWith('data:beforeUpdateSpecifications', {requestObject, userContext: {}});
             should(kuzzle.internalEngine.refresh).not.be.called();
             should(kuzzle.validation.curateSpecification).not.be.called();
             should(kuzzle.internalEngine.createOrReplace).not.be.called();
@@ -908,7 +644,7 @@ describe('Test: admin controller', () => {
 
   describe('#validateSpecifications', () => {
     it('should call the right functions and respond with the right response', () => {
-      requestObject.data.body = {
+      request.input.body = {
         myindex: {
           mycollection: {
             strict: true,
@@ -924,22 +660,13 @@ describe('Test: admin controller', () => {
       };
 
       AdminController.__set__({
-        prepareSpecificationValidation: sandbox.stub().returns(Promise.resolve({error: false, specifications: requestObject.data.body}))
+        prepareSpecificationValidation: sandbox.stub().returns(Promise.resolve(request.input.body))
       });
 
-      return adminController.validateSpecifications(requestObject, {})
+      return adminController.validateSpecifications(request, {})
         .then(response => {
           try {
-            should(kuzzle.pluginsManager.trigger).be.calledTwice();
-            should(kuzzle.pluginsManager.trigger.firstCall).be.calledWith('data:beforeValidateSpecifications', {requestObject, userContext: {}});
-            should(kuzzle.pluginsManager.trigger.secondCall).be.calledWith('data:afterValidateSpecifications');
-            should(response.responseObject).match({
-              status: 200,
-              error: null,
-              data: {
-                body: requestObject.data.body
-              }
-            });
+            should(response).match({valid: true});
 
             return Promise.resolve();
           }
@@ -950,7 +677,8 @@ describe('Test: admin controller', () => {
     });
 
     it('should call the right functions and respond with the right response if there is an error', () => {
-      requestObject.data.body = {
+      var err = new Error('error');
+      request.input.body = {
         myindex: {
           mycollection: {
             strict: true,
@@ -965,40 +693,20 @@ describe('Test: admin controller', () => {
         }
       };
 
+      err.details = 'some error';
+
       AdminController.__set__({
-        prepareSpecificationValidation: sandbox.stub().returns(Promise.resolve({
-          error: true, responseObject: {
-            status: 400,
-            data: {body: requestObject.data.body}
-          }
-        }))
+        prepareSpecificationValidation: sandbox.stub().returns(Promise.reject(err))
       });
 
-      return adminController.validateSpecifications(requestObject, {})
-        .then(response => {
-
-          try {
-            should(kuzzle.pluginsManager.trigger).be.calledTwice();
-            should(kuzzle.pluginsManager.trigger.firstCall).be.calledWith('data:beforeValidateSpecifications', {requestObject, userContext: {}});
-            should(kuzzle.pluginsManager.trigger.secondCall).be.calledWith('data:afterValidateSpecifications');
-            should(response.responseObject).match({
-              status: 400,
-              error: {
-                message: 'Internal error',
-                _source: {
-                  body: requestObject.data.body
-                }
-              },
-              data: {
-                body: null
-              }
-            });
-
-            return Promise.resolve();
-          }
-          catch (error) {
-            return Promise.reject(error);
-          }
+      return adminController.validateSpecifications(request, {})
+        .then(() => Promise.reject())
+        .catch((error) => {
+          should(request.result).match({
+            valid: false,
+            errors: 'some error'
+          });
+          should(error).be.eql(err);
         });
     });
   });
@@ -1011,15 +719,12 @@ describe('Test: admin controller', () => {
       kuzzle.validation.specification[index] = {};
       kuzzle.validation.specification[index][collection] = {};
 
-      return adminController.deleteSpecifications(requestObject, {})
+      return adminController.deleteSpecifications(request, {})
         .then(response => {
 
           try {
             should(kuzzle.internalEngine.delete).be.calledOnce();
-            should(kuzzle.pluginsManager.trigger).be.calledThrice();
-            should(kuzzle.pluginsManager.trigger.firstCall).be.calledWith('data:beforeDeleteSpecifications', {requestObject, userContext: {}});
-            should(kuzzle.pluginsManager.trigger.secondCall).be.calledWith('data:afterDeleteSpecifications');
-            should(response.responseObject).match({status: 200});
+            should(response).match({});
 
             return Promise.resolve();
           }
@@ -1033,14 +738,11 @@ describe('Test: admin controller', () => {
       kuzzle.internalEngine.delete = sandbox.stub();
       kuzzle.validation.specification = {};
 
-      return adminController.deleteSpecifications(requestObject, {})
+      return adminController.deleteSpecifications(request, {})
         .then(response => {
           try {
             should(kuzzle.internalEngine.delete).not.be.called();
-            should(kuzzle.pluginsManager.trigger).be.calledThrice();
-            should(kuzzle.pluginsManager.trigger.firstCall).be.calledWith('data:beforeDeleteSpecifications', {requestObject, userContext: {}});
-            should(kuzzle.pluginsManager.trigger.secondCall).be.calledWith('data:afterDeleteSpecifications');
-            should(response.responseObject).match({status: 200});
+            should(response).match({});
 
             return Promise.resolve();
           }

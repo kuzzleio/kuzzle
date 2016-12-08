@@ -5,10 +5,11 @@ const
   Promise = require('bluebird'),
   sinon = require('sinon'),
   rewire = require('rewire'),
-  Kuzzle = require.main.require('lib/api/kuzzle'),
-  RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
-  BadRequestError = require.main.require('kuzzle-common-objects').Errors.badRequestError,
-  NotFoundError = require.main.require('kuzzle-common-objects').Errors.notFoundError,
+  KuzzleMock = require('../../mocks/kuzzle.mock'),
+  Request = require('kuzzle-common-objects').Request,
+  BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,
+  NotFoundError = require('kuzzle-common-objects').errors.NotFoundError,
+  KuzzleError = require('kuzzle-common-objects').errors.KuzzleError,
   ESClientMock = require('../../mocks/services/elasticsearchClient.mock'),
   ES = rewire('../../../lib/services/elasticsearch');
 
@@ -21,7 +22,7 @@ describe('Test: ElasticSearch service', () => {
     createdDocumentId = 'id-test',
     elasticsearch,
     engineType = 'storageEngine',
-    requestObject,
+    request,
     documentAda = {
       firstName: 'Ada',
       lastName: 'Lovelace',
@@ -33,11 +34,8 @@ describe('Test: ElasticSearch service', () => {
     rawKuzzleInfo;
 
 
-  before(()=> {
-    kuzzle = new Kuzzle();
-  });
-
   beforeEach(() => {
+    kuzzle = new KuzzleMock();
     ES.__set__('buildClient', () => new ESClientMock());
     elasticsearch = new ES(kuzzle, {service: engineType}, kuzzle.config.services.db);
     elasticsearch.autoRefresh = {};
@@ -121,13 +119,17 @@ describe('Test: ElasticSearch service', () => {
       }
     };
 
-    requestObject = new RequestObject({
+    request = new Request({
       controller: 'write',
       action: 'create',
       requestId: 'foo',
-      collection: collection,
-      index: index,
+      collection,
+      index,
       body: documentAda
+    }, {
+      token: {
+        userId: 'test'
+      }
     });
     elasticsearch.init();
   });
@@ -142,25 +144,28 @@ describe('Test: ElasticSearch service', () => {
     });
   });
 
-  describe('#cleanData', () => {
+  describe('#getElasticsearchRequest', () => {
     it('should prepare the data for elasticsearch', () => {
       var
-        cleanData = ES.__get__('cleanData'),
+        getElasticsearchRequest = ES.__get__('getElasticsearchRequest'),
         preparedData;
 
-      requestObject.data._id = 'foobar';
-      preparedData = cleanData.call(elasticsearch, requestObject, kuzzle);
+      request.input.resource._id = 'foobar';
+      ['unrecognizeed', 'from', 'size', 'scroll', 'scrollId', 'refresh'].forEach(arg => {
+        request.input.args[arg] = arg;
+      });
 
-      should(preparedData.type).be.exactly(requestObject.collection);
-      should(preparedData.id).be.exactly(requestObject.data._id);
+      preparedData = getElasticsearchRequest.call(elasticsearch, request, kuzzle);
+
+      should(preparedData.type).be.exactly(request.input.resource.collection);
+      should(preparedData.id).be.exactly(request.input.resource._id);
       should(preparedData._id).be.undefined();
-      should(preparedData.index).be.exactly(requestObject.index);
+      should(preparedData.index).be.exactly(request.input.resource.index);
 
-      // we expect all properties expect _id to be carried over the new data object
-      Object.keys(requestObject.data).forEach(member => {
-        if (member !== '_id') {
-          should(preparedData[member]).be.exactly(requestObject.data[member]);
-        }
+      should(preparedData)
+        .not.have.property('unrecognized');
+      ['from', 'size', 'scroll', 'scrollId', 'refresh'].forEach(arg => {
+        should(preparedData[arg]).be.exactly(arg);
       });
     });
   });
@@ -169,8 +174,8 @@ describe('Test: ElasticSearch service', () => {
     it('should be able to search documents', () => {
       elasticsearch.client.search.returns(Promise.resolve({total: 0, hits: []}));
 
-      requestObject.data.body = filter;
-      return elasticsearch.search(requestObject)
+      request.input.body = filter;
+      return elasticsearch.search(request)
         .then(result => {
           should(elasticsearch.client.search.firstCall.args[0].body).be.deepEqual(filterAfterActiveAdded);
           should(result).be.an.Object();
@@ -182,12 +187,12 @@ describe('Test: ElasticSearch service', () => {
     it('should be able to search with from/size and scroll arguments', () => {
       elasticsearch.client.search.returns(Promise.resolve({total: 0, hits: [], _scroll_id: 'banana42'}));
 
-      requestObject.data.body = filter;
-      requestObject.data.body.from = 0;
-      requestObject.data.body.size = 1;
-      requestObject.data.body.scroll = '30s';
+      request.input.body = filter;
+      request.input.args.from = 0;
+      request.input.args.size = 1;
+      request.input.args.scroll = '30s';
 
-      return elasticsearch.search(requestObject)
+      return elasticsearch.search(request)
         .then(result => {
           should(elasticsearch.client.search.firstCall.args[0]).be.deepEqual({
             from: 0,
@@ -207,7 +212,7 @@ describe('Test: ElasticSearch service', () => {
     it('should return a rejected promise if a search fails', done => {
       elasticsearch.client.search.returns(Promise.reject(new Error('Mocked error')));
 
-      elasticsearch.search(requestObject)
+      elasticsearch.search(request)
         .then(() => done('should have been rejected'))
         .catch(() => {
           try {
@@ -221,11 +226,12 @@ describe('Test: ElasticSearch service', () => {
 
   describe('#scroll', () => {
     it('should be able to scroll an old search', () => {
+      var req = new Request({
+        scrollId: 'banana42'
+      });
       elasticsearch.client.scroll.returns(Promise.resolve({total: 0, hits: []}));
 
-      requestObject.data.body = {scrollId: 'banana42'};
-
-      return elasticsearch.scroll(requestObject)
+      return elasticsearch.scroll(req)
         .then(result => {
           should(elasticsearch.client.scroll.firstCall.args[0]).be.deepEqual({scrollId: 'banana42'});
           should(result).be.an.Object();
@@ -237,9 +243,12 @@ describe('Test: ElasticSearch service', () => {
     it('should return a rejected promise if no scrollId is given', done => {
       elasticsearch.client.scroll.returns(Promise.resolve({total: 0, hits: []}));
 
-      requestObject.data.body = {};
+      request.input.body = {};
 
-      elasticsearch.scroll(requestObject)
+      elasticsearch.scroll(request)
+        .then(() => {
+          throw new Error('this should never happen');
+        })
         .catch(err => {
           try {
             should(err).be.an.instanceOf(BadRequestError);
@@ -253,8 +262,8 @@ describe('Test: ElasticSearch service', () => {
     it('should return a rejected promise if a scroll fails', () => {
       elasticsearch.client.scroll.returns(Promise.reject(new Error('error')));
 
-      requestObject.data.body.scrollId = 'foobar';
-      return should(elasticsearch.scroll(requestObject)).be.rejectedWith(Error, {message: 'error'});
+      request.input.args.scrollId = 'foobar';
+      return should(elasticsearch.scroll(request)).be.rejectedWith(Error, {message: 'error'});
     });
   });
 
@@ -263,9 +272,9 @@ describe('Test: ElasticSearch service', () => {
       sandbox.stub(elasticsearch, 'refreshIndex').returns(Promise.resolve());
       elasticsearch.client.index.returns(Promise.resolve({}));
 
-      elasticsearch.settings.autoRefresh[requestObject.index] = true;
+      elasticsearch.settings.autoRefresh[request.input.resource.index] = true;
 
-      return elasticsearch.create(requestObject)
+      return elasticsearch.create(request)
         .then(() => {
           let data = elasticsearch.client.index.firstCall.args[0];
 
@@ -275,8 +284,9 @@ describe('Test: ElasticSearch service', () => {
 
           should(elasticsearch.client.get).not.be.called();
 
-          should(elasticsearch.refreshIndex.calledOnce).be.true();
-          should(elasticsearch.refreshIndex.firstCall.args[0].index).be.eql(requestObject.index);
+          should(elasticsearch.refreshIndex)
+            .be.calledOnce();
+          should(elasticsearch.refreshIndex.firstCall.args[0].index).be.eql(request.index);
         });
     });
 
@@ -287,10 +297,10 @@ describe('Test: ElasticSearch service', () => {
 
       elasticsearch.client.index.returns(Promise.resolve({}));
       elasticsearch.client.get.returns(Promise.resolve({_source: {_kuzzle_info: {active: false}}}));
-      requestObject.data._id = 42;
+      request.input.resource._id = '42';
 
       return should(ES.__with__('refreshIndexIfNeeded', refreshIndexSpy)(() => {
-        return elasticsearch.create(requestObject)
+        return elasticsearch.create(request)
           .then(() => {
             var data = elasticsearch.client.index.firstCall.args[0];
 
@@ -313,10 +323,10 @@ describe('Test: ElasticSearch service', () => {
       error.displayName = 'NotFound';
 
       elasticsearch.client.get.returns(Promise.reject(error));
-      requestObject.data._id = 42;
+      request.input.resource._id = '42';
 
       return should(ES.__with__('refreshIndexIfNeeded', refreshIndexSpy)(() => {
-        return elasticsearch.create(requestObject)
+        return elasticsearch.create(request)
           .then(() => {
             var data = elasticsearch.client.create.firstCall.args[0];
 
@@ -333,27 +343,27 @@ describe('Test: ElasticSearch service', () => {
       var error = new Error('Mocked create error');
       elasticsearch.client.get.returns(Promise.reject(new Error('Mocked get error')));
 
-      requestObject.data._id = 'foobar';
+      request.input.resource._id = 'foobar';
 
-      return should(elasticsearch.create(requestObject)).be.rejectedWith(error);
+      return should(elasticsearch.create(request)).be.rejectedWith(error);
     });
 
     it('should reject the create promise if client.index throws an error', () => {
       var error = new Error('Mocked index error');
       elasticsearch.client.get.returns(Promise.resolve({_source: {_kuzzle_info: {active: false}}}));
       elasticsearch.client.index.returns(Promise.reject(error));
-      requestObject.data._id = '42';
+      request.input.resource._id = '42';
 
-      return should(elasticsearch.create(requestObject)).be.rejectedWith(error);
+      return should(elasticsearch.create(request)).be.rejectedWith(error);
     });
 
     it('should reject a promise if the document already exists', () => {
       var error = new Error('Mocked create error');
       elasticsearch.client.create.returns(Promise.reject(error));
       elasticsearch.client.get.returns(Promise.resolve({_source: {_kuzzle_info: {active: true}}}));
-      requestObject.data._id = 42;
+      request.input.resource._id = '42';
 
-      return should(elasticsearch.create(requestObject)).be.rejectedWith(error);
+      return should(elasticsearch.create(request)).be.rejectedWith(error);
     });
   });
 
@@ -364,11 +374,11 @@ describe('Test: ElasticSearch service', () => {
         refreshIndexSpy = sandbox.spy(refreshIndexIfNeeded);
 
       elasticsearch.client.index.returns(Promise.resolve({}));
-      requestObject.data._id = createdDocumentId;
+      request.input.resource._id = createdDocumentId;
 
       return should(
         ES.__with__('refreshIndexIfNeeded', refreshIndexSpy)(() => {
-          return elasticsearch.createOrReplace(requestObject)
+          return elasticsearch.createOrReplace(request)
             .then(() => {
               var data = elasticsearch.client.index.firstCall.args[0];
 
@@ -388,8 +398,8 @@ describe('Test: ElasticSearch service', () => {
 
       elasticsearch.client.index.returns(Promise.reject(error));
 
-      requestObject.data._id = createdDocumentId;
-      return should(elasticsearch.createOrReplace(requestObject)).be.rejectedWith(error);
+      request.input.resource._id = createdDocumentId;
+      return should(elasticsearch.createOrReplace(request)).be.rejectedWith(error);
     });
   });
 
@@ -402,11 +412,11 @@ describe('Test: ElasticSearch service', () => {
       elasticsearch.client.index.returns(Promise.resolve({}));
       elasticsearch.client.exists.returns(Promise.resolve(true));
 
-      requestObject.data._id = createdDocumentId;
+      request.input.resource._id = createdDocumentId;
 
       return should(
         ES.__with__('refreshIndexIfNeeded', refreshIndexSpy)(() => {
-          return elasticsearch.replace(requestObject)
+          return elasticsearch.replace(request)
             .then(() => {
               var data = elasticsearch.client.index.firstCall.args[0];
 
@@ -427,22 +437,22 @@ describe('Test: ElasticSearch service', () => {
       elasticsearch.client.exists.returns(Promise.resolve(true));
       elasticsearch.client.index.returns(Promise.reject(error));
 
-      requestObject.data._id = createdDocumentId;
+      request.input.resource._id = createdDocumentId;
 
-      return should(elasticsearch.replace(requestObject)).be.rejectedWith(error);
+      return should(elasticsearch.replace(request)).be.rejectedWith(error);
     });
 
     it('should throw a NotFoundError Exception if document already exists', done => {
       elasticsearch.client.exists.returns(Promise.resolve(false));
 
       kuzzle.indexes = {};
-      requestObject.data._id = createdDocumentId;
+      request.input.resource._id = createdDocumentId;
 
-      elasticsearch.replace(requestObject)
+      elasticsearch.replace(request)
         .catch(err => {
           try {
             should(err).be.an.instanceOf(NotFoundError);
-            should(err.message).be.exactly('Document with id ' + requestObject.data._id + ' not found.');
+            should(err.message).be.exactly('Document with id ' + request.input.resource._id + ' not found.');
             should(elasticsearch.client.index.called).be.false();
 
             done();
@@ -456,10 +466,10 @@ describe('Test: ElasticSearch service', () => {
     it('should allow getting a single document', () => {
       elasticsearch.client.get.returns(Promise.resolve({_source: {_kuzzle_info: {active: true}}}));
 
-      delete requestObject.data.body;
-      requestObject.data._id = createdDocumentId;
+      request.input.body = null;
+      request.input.resource._id = createdDocumentId;
 
-      return should(elasticsearch.get(requestObject)
+      return should(elasticsearch.get(request)
         .then(() => {
           should(elasticsearch.client.get.firstCall.args[0].id).be.exactly(createdDocumentId);
         })).be.fulfilled();
@@ -468,23 +478,23 @@ describe('Test: ElasticSearch service', () => {
     it('should not throw error when "_source" is not defined', () => {
       elasticsearch.client.get.returns(Promise.resolve({foo: 'bar'}));
 
-      delete requestObject.data.body;
-      requestObject.data._id = createdDocumentId;
+      request.input.body = null;
+      request.input.resource._id = createdDocumentId;
 
-      return should(elasticsearch.get(requestObject))
+      return should(elasticsearch.get(request))
         .be.fulfilled();
     });
 
     it('should reject requests when document is on inactive stat', () => {
       elasticsearch.client.get.returns(Promise.resolve({_source: {_kuzzle_info: {active: false}}}));
 
-      return should(elasticsearch.get(requestObject)).be.rejectedWith(NotFoundError);
+      return should(elasticsearch.get(request)).be.rejectedWith(NotFoundError);
     });
 
     it('should reject requests when the user search for a document with id _search', () => {
-      requestObject.data._id = '_search';
+      request.input.resource._id = '_search';
 
-      return should(elasticsearch.get(requestObject)).be.rejectedWith(BadRequestError);
+      return should(elasticsearch.get(request)).be.rejectedWith(BadRequestError);
     });
   });
 
@@ -492,7 +502,7 @@ describe('Test: ElasticSearch service', () => {
     it('should return a rejected promise if getting a single document fails', done => {
       elasticsearch.client.get.returns(Promise.reject(new Error('Mocked error')));
 
-      elasticsearch.get(requestObject)
+      elasticsearch.get(request)
         .catch(() => {
           try {
             should(elasticsearch.client.get.calledOnce).be.true();
@@ -506,9 +516,9 @@ describe('Test: ElasticSearch service', () => {
     it('should allow getting multiples documents', () => {
       elasticsearch.client.mget.returns(Promise.resolve({}));
 
-      requestObject.data = {body: {ids: [1, 2, 3]}};
+      request.input.body = {ids: ['1', '2', '3']};
 
-      return should(elasticsearch.mget(requestObject)
+      return should(elasticsearch.mget(request)
         .then(() => {
           should(elasticsearch.client.mget.firstCall.args[0].body.ids).be.an.Array();
         })
@@ -518,9 +528,9 @@ describe('Test: ElasticSearch service', () => {
     it('should return a rejected promise if getting some multiple documents fails', done => {
       elasticsearch.client.mget.returns(Promise.reject(new Error('Mocked error')));
 
-      requestObject.data.body = {};
+      request.input.body = {};
 
-      elasticsearch.mget(requestObject)
+      elasticsearch.mget(request)
         .catch(() => {
           try {
             should(elasticsearch.client.mget.firstCall.args[0].body.ids).be.undefined();
@@ -535,9 +545,9 @@ describe('Test: ElasticSearch service', () => {
     it('should allow counting documents using a provided filter', () => {
       elasticsearch.client.count.returns(Promise.resolve({}));
 
-      requestObject.data.body = {};
+      request.input.body = {};
 
-      return should(elasticsearch.count(requestObject)
+      return should(elasticsearch.count(request)
         .then(() => {
           should(elasticsearch.client.count.firstCall.args[0].body).be.deepEqual(rawKuzzleInfo);
         })
@@ -547,25 +557,26 @@ describe('Test: ElasticSearch service', () => {
     it('should allow counting objects using a query', () => {
       elasticsearch.client.count.returns(Promise.resolve({}));
 
-      requestObject.data.body = {};
-      requestObject.data.query = {foo: 'bar'};
+      request.input.body = {};
+      request.input.body = {query: {foo: 'bar'}};
+      rawKuzzleInfo.query.bool.must = request.input.body.query;
 
-      rawKuzzleInfo.query.bool.must = requestObject.data.query;
-      return should(elasticsearch.count(requestObject)
+      return elasticsearch.count(request)
         .then(() => {
+          should(elasticsearch.client.count)
+            .be.calledOnce();
+
           should(elasticsearch.client.count.firstCall.args[0].body).be.deepEqual(rawKuzzleInfo);
-        })
-      ).be.fulfilled();
+        });
     });
 
     it('should return a rejected promise if the count fails', () => {
       var error = new Error('Mocked error');
       elasticsearch.client.count.returns(Promise.reject(error));
 
-      requestObject.data.body = {};
-      requestObject.data.query = {foo: 'bar'};
+      request.input.body = {query: {foo: 'bar'}};
 
-      return should(elasticsearch.count(requestObject)).be.rejectedWith(error);
+      return should(elasticsearch.count(request)).be.rejectedWith(error);
     });
   });
 
@@ -577,11 +588,11 @@ describe('Test: ElasticSearch service', () => {
 
       elasticsearch.client.update.returns(Promise.resolve({}));
 
-      requestObject.data._id = createdDocumentId;
+      request.input.resource._id = createdDocumentId;
 
       return should(
         ES.__with__('refreshIndexIfNeeded', refreshIndexSpy)(() => {
-          return elasticsearch.update(requestObject)
+          return elasticsearch.update(request)
             .then(() => {
               var data = elasticsearch.client.update.firstCall.args[0];
               should(data.body.doc).be.exactly(documentAda);
@@ -607,7 +618,7 @@ describe('Test: ElasticSearch service', () => {
       esError.body.error['resource.id'] = 'bar';
       elasticsearch.client.update.returns(Promise.reject(esError));
 
-      elasticsearch.update(requestObject)
+      elasticsearch.update(request)
         .catch((error) => {
           try{
             should(error).be.instanceOf(NotFoundError);
@@ -633,7 +644,7 @@ describe('Test: ElasticSearch service', () => {
       elasticsearch.client.update.returns(Promise.reject(esError));
 
 
-      elasticsearch.update(requestObject)
+      elasticsearch.update(request)
         .catch((error) => {
           try{
             should(error).be.instanceOf(NotFoundError);
@@ -648,12 +659,13 @@ describe('Test: ElasticSearch service', () => {
     });
 
     it('should return a rejected promise with an Error if an update fails for unknown reason', done => {
-      var esError = new Error('banana error');
-      var spyTrigger = sandbox.stub(kuzzle.pluginsManager, 'trigger');
+      var
+        esError = new Error('banana error'),
+        spyTrigger = kuzzle.pluginsManager.trigger;
 
       elasticsearch.client.update.returns(Promise.reject(esError));
 
-      elasticsearch.update(requestObject)
+      elasticsearch.update(request)
         .catch((error) => {
           try{
             should(spyTrigger.firstCall).be.calledWithExactly(
@@ -677,12 +689,12 @@ describe('Test: ElasticSearch service', () => {
 
       elasticsearch.client.delete.returns(Promise.resolve({}));
 
-      delete requestObject.data.body;
-      requestObject.data._id = createdDocumentId;
+      request.input.body = null;
+      request.input.resource._id = createdDocumentId;
 
       return should(
         ES.__with__('refreshIndexIfNeeded', refreshIndexSpy)(() => {
-          return elasticsearch.delete(requestObject)
+          return elasticsearch.delete(request)
             .then(() => {
               should(elasticsearch.client.delete.firstCall.args[0].id).be.exactly(createdDocumentId);
 
@@ -695,7 +707,7 @@ describe('Test: ElasticSearch service', () => {
     it('should return a rejected promise if a delete fails', done => {
       elasticsearch.client.delete.returns(Promise.reject(new Error('Mocked error')));
 
-      elasticsearch.delete(requestObject)
+      elasticsearch.delete(request)
         .catch(() => {
           try {
             should(elasticsearch.client.delete.firstCall.args[0].id).be.undefined();
@@ -710,17 +722,20 @@ describe('Test: ElasticSearch service', () => {
     it('should return an empty result array when no document has been deleted using a filter', () => {
       elasticsearch.client.search.yields(null, {hits: {hits: [], total: 0}});
 
-      delete requestObject.data.body;
-      requestObject.data.query = {term: {firstName: 'no way any document can be returned with this filter'}};
+      request.input.body = {
+        query: {
+          term: {firstName: 'no way any document can be returned with this filter'}
+        }
+      };
 
-      return should(elasticsearch.deleteByQuery(requestObject)
+      return elasticsearch.deleteByQuery(request)
         .then(result => {
-          should(elasticsearch.client.search.firstCall.args[0].query).be.exactly(requestObject.data.query);
+          should(elasticsearch.client.search.firstCall.args[0].body.query).be.exactly(request.input.body.query);
 
           // Ugly line in order to spot a random bug on this unit test
           should(result.ids).not.be.undefined().and.be.an.Array();
           should(result.ids.length).be.exactly(0);
-        })).be.fulfilled();
+        });
     });
 
     it('should allow to delete documents using a provided filter', () => {
@@ -736,7 +751,7 @@ describe('Test: ElasticSearch service', () => {
         getAllIdsFromQuery: getAllIdsStub,
         refreshIndexIfNeeded: refreshIndexSpy
       })(() => {
-        return should(elasticsearch.deleteByQuery(requestObject)
+        return elasticsearch.deleteByQuery(request)
           .then(result => {
             var bulkData = elasticsearch.client.bulk.firstCall.args[0];
 
@@ -748,7 +763,7 @@ describe('Test: ElasticSearch service', () => {
               should(cmd).be.an.Object();
               should(cmd.delete).not.be.undefined().and.be.an.Object();
               should(mockupIds.indexOf(cmd.delete._id)).not.be.eql(-1);
-              should(cmd.delete._type).be.exactly(requestObject.collection);
+              should(cmd.delete._type).be.exactly(request.input.resource.collection);
             });
 
             // elasticserach.deleteByQuery
@@ -757,34 +772,33 @@ describe('Test: ElasticSearch service', () => {
 
             // refreshIndexIfNeeded
             should(refreshIndexSpy.calledOnce).be.true();
-          })
-        ).be.fulfilled();
+          });
       });
     });
 
     it('should return a rejected promise if the delete by query fails because of a bad filter', () => {
       elasticsearch.client.search.yields(new Error(), {});
 
-      return should(elasticsearch.deleteByQuery(requestObject)).be.rejected();
+      return should(elasticsearch.deleteByQuery(request)).be.rejected();
     });
 
-    it('should return a rejected promise if the delete by query fails because of a bulk failure', () => {
-      var error = new Error('Mocked error');
+    it('should reject the promise if the delete by query fails because of a bulk failure', () => {
+      var error = new KuzzleError('Mocked error');
       elasticsearch.client.bulk.returns(Promise.reject(error));
 
-      requestObject.data.body = {};
+      request.input.body.query = {some: 'query'};
 
       return ES.__with__({
         getAllIdsFromQuery: () => Promise.resolve(['foo', 'bar'])
       })(() => {
-        return should(elasticsearch.deleteByQuery(requestObject)).be.rejectedWith(error);
+        return should(elasticsearch.deleteByQuery(request)).be.rejectedWith(error);
       });
     });
 
     it('should return a rejected promise if the delete by query fails because the filter is null', () => {
-      requestObject.data.body = null;
+      request.input.body.query = null;
 
-      return should(elasticsearch.deleteByQuery(requestObject)).be.rejectedWith(BadRequestError);
+      return should(elasticsearch.deleteByQuery(request)).be.rejectedWith(BadRequestError);
     });
   });
 
@@ -796,7 +810,7 @@ describe('Test: ElasticSearch service', () => {
 
       elasticsearch.client.bulk.returns(Promise.resolve({}));
 
-      requestObject.data.body = {
+      request.input.body = {
         bulkData: [
           {index: {_id: 1, _type: collection, _index: index}},
           {firstName: 'foo'},
@@ -810,9 +824,9 @@ describe('Test: ElasticSearch service', () => {
 
       return should(
         ES.__with__('refreshIndexIfNeeded', refreshIndexSpy)(() => {
-          return elasticsearch.import(requestObject)
+          return elasticsearch.import(request)
             .then(() => {
-              should(elasticsearch.client.bulk.firstCall.args[0].body).be.exactly(requestObject.data.body.bulkData);
+              should(elasticsearch.client.bulk.firstCall.args[0].body).be.exactly(request.input.body.bulkData);
 
               should(refreshIndexSpy.calledOnce).be.true();
             });
@@ -827,32 +841,33 @@ describe('Test: ElasticSearch service', () => {
 
       elasticsearch.client.bulk.returns(Promise.resolve({}));
 
-      requestObject.data = {
-        body: {
-          bulkData: []
-        },
-        consistency: 'foo',
-        refresh: 'wait_for',
-        routing: 'foo/bar',
-        timeout: 999,
-        fields: 'foo, bar, baz'
+      request.input.body = {
+        bulkData: []
       };
+      request.input.args.consistency = 'foo';
+      request.input.args.refresh = 'wait_for';
+      request.input.args.routing = 'foo/bar';
+      request.input.args.timeout = 999;
+      request.input.args.fields = 'foo, bar, baz';
 
-      return should(
-        ES.__with__('refreshIndexIfNeeded', refreshIndexSpy)(() => {
-          return elasticsearch.import(requestObject)
-            .then(() => {
-              should(elasticsearch.client.bulk.firstCall.args[0].consistency).be.exactly('foo');
-              should(elasticsearch.client.bulk.firstCall.args[0].refresh).be.exactly('wait_for');
-              should(elasticsearch.client.bulk.firstCall.args[0].routing).be.exactly('foo/bar');
-              should(elasticsearch.client.bulk.firstCall.args[0].timeout).be.exactly(999);
-              should(elasticsearch.client.bulk.firstCall.args[0].fields).be.exactly('foo, bar, baz');
-              should(elasticsearch.client.bulk.firstCall.args[0].foo).be.undefined();
+      return ES.__with__('refreshIndexIfNeeded', refreshIndexSpy)(() => {
+        return elasticsearch.import(request)
+          .then(() => {
+            var arg = elasticsearch.client.bulk.firstCall.args[0];
 
-              should(refreshIndexSpy.calledOnce).be.true();
-            });
-        })
-      ).be.fulfilled();
+            should(arg)
+              .not.have.properties([
+                'consistency',
+                'routing',
+                'timeout',
+                'fields'
+              ]);
+            should(arg.refresh)
+              .be.exactly('wait_for');
+
+            should(refreshIndexSpy.calledOnce).be.true();
+          });
+      });
     });
 
     it('should raise a "Partial Error" response for bulk data import with some errors', () => {
@@ -864,7 +879,7 @@ describe('Test: ElasticSearch service', () => {
         }
       }));
 
-      requestObject.data.body = {
+      request.input.body = {
         bulkData: [
           {index: {_id: 1, _type: collection, _index: index}},
           {firstName: 'foo'},
@@ -877,9 +892,9 @@ describe('Test: ElasticSearch service', () => {
         ]
       };
 
-      return should(elasticsearch.import(requestObject)
+      return should(elasticsearch.import(request)
         .then(result => {
-          should(elasticsearch.client.bulk.firstCall.args[0].body).be.exactly(requestObject.data.body.bulkData);
+          should(elasticsearch.client.bulk.firstCall.args[0].body).be.exactly(request.input.body.bulkData);
 
           should(result.errors).be.true();
           should(result.partialErrors).be.an.Array().and.match([{status: 404}]).and.match([{error: /^DocumentMissingException/}]);
@@ -896,7 +911,7 @@ describe('Test: ElasticSearch service', () => {
         ]
       }));
 
-      requestObject.data.body = {
+      request.input.body = {
         bulkData: [
           {index: {_id: 1, _index: index}},
           {firstName: 'foo'},
@@ -908,7 +923,7 @@ describe('Test: ElasticSearch service', () => {
         ]
       };
 
-      return should(elasticsearch.import(requestObject)
+      return should(elasticsearch.import(request)
         .then(() => {
           var data = elasticsearch.client.bulk.firstCall.args[0];
 
@@ -928,7 +943,7 @@ describe('Test: ElasticSearch service', () => {
     it('should reject the import promise if elasticsearch throws an error', () => {
       var error = new Error('Mocked error');
 
-      requestObject.data.body = {
+      request.input.body = {
         bulkData: [
           {index: {_id: 1, _index: index}},
           {firstName: 'foo'},
@@ -942,15 +957,15 @@ describe('Test: ElasticSearch service', () => {
 
       elasticsearch.client.bulk.returns(Promise.reject(error));
 
-      return should(elasticsearch.import(requestObject)).be.rejectedWith(error);
+      return should(elasticsearch.import(request)).be.rejectedWith(error);
     });
 
     it('should return a rejected promise if bulk data try to write into internal index', () => {
-      requestObject.data.body = {
+      request.input.body = {
         bulkData: [
           {index: {_id: 1, _index: index}},
           {firstName: 'foo'},
-          {index: {_id: 2, _index: '%kuzzle'}},
+          {index: {_id: 2, _index: kuzzle.internalEngine.index}},
           {firstName: 'bar'},
           {update: {_id: 1, _index: index}},
           {doc: {firstName: 'foobar'}},
@@ -958,23 +973,20 @@ describe('Test: ElasticSearch service', () => {
         ]
       };
 
-      return should(elasticsearch.import(requestObject)).be.rejectedWith(BadRequestError);
-    });
+      elasticsearch.client.bulk.returns(Promise.resolve({}));
 
-    it('should return a rejected promise if no body is provided', () => {
-      delete requestObject.data.body;
-      return should(elasticsearch.import(requestObject)).be.rejectedWith(BadRequestError);
+      return should(elasticsearch.import(request)).be.rejectedWith(BadRequestError);
     });
 
     it('should return a rejected promise if body contains no bulkData parameter', () => {
-      delete requestObject.data.body.bulkData;
-      return should(elasticsearch.import(requestObject)).be.rejectedWith(BadRequestError);
+      request.input.body.bulkData = null;
+      return should(elasticsearch.import(request)).be.rejectedWith(BadRequestError);
     });
 
     it('should return a rejected promise if no type has been provided, locally or globally', () => {
-      delete requestObject.collection;
+      request.input.resource.collection = null;
 
-      requestObject.data.body = {
+      request.input.body = {
         bulkData: [
           {index: {_id: 1, _type: collection, _index: index}},
           {firstName: 'foo'},
@@ -988,13 +1000,13 @@ describe('Test: ElasticSearch service', () => {
 
       elasticsearch.client.bulk.returns(Promise.resolve({}));
 
-      return should(elasticsearch.import(requestObject)).be.rejectedWith(BadRequestError);
+      return should(elasticsearch.import(request)).be.rejectedWith(BadRequestError);
     });
 
     it('should return a rejected promise if no index has been provided, locally or globally', () => {
-      delete requestObject.index;
+      request.input.resource.index = null;
 
-      requestObject.data.body = {
+      request.input.body = {
         bulkData: [
           {index: {_id: 1, _type: collection, _index: index}},
           {firstName: 'foo'},
@@ -1008,7 +1020,7 @@ describe('Test: ElasticSearch service', () => {
 
       elasticsearch.client.bulk.returns(Promise.resolve({}));
 
-      return should(elasticsearch.import(requestObject)).be.rejected();
+      return should(elasticsearch.import(request)).be.rejected();
     });
   });
 
@@ -1016,15 +1028,15 @@ describe('Test: ElasticSearch service', () => {
     it('should have mapping capabilities', () => {
       elasticsearch.client.indices.putMapping.returns(Promise.resolve({}));
 
-      requestObject.data.body = {
+      request.input.body = {
         properties: {
           city: {type: 'string'}
         }
       };
 
-      return should(elasticsearch.updateMapping(requestObject)
+      return should(elasticsearch.updateMapping(request)
         .then(() => {
-          should(elasticsearch.client.indices.putMapping.firstCall.args[0].body).be.exactly(requestObject.data.body);
+          should(elasticsearch.client.indices.putMapping.firstCall.args[0].body).be.exactly(request.input.body);
         })).be.fulfilled();
     });
 
@@ -1041,7 +1053,7 @@ describe('Test: ElasticSearch service', () => {
 
       elasticsearch.client.indices.putMapping.returns(Promise.reject(error));
 
-      elasticsearch.updateMapping(requestObject)
+      elasticsearch.updateMapping(request)
         .catch((err) => {
           try {
             should(err).be.instanceOf(BadRequestError);
@@ -1065,10 +1077,10 @@ describe('Test: ElasticSearch service', () => {
 
       elasticsearch.client.indices.getMapping.returns(Promise.resolve(indiceResult));
 
-      return should(elasticsearch.getMapping(requestObject)
+      return should(elasticsearch.getMapping(request)
         .then(result => {
-          should(result[requestObject.index]).not.be.undefined();
-          should(result[requestObject.index].mappings).not.be.undefined();
+          should(result[index]).not.be.undefined();
+          should(result[index].mappings).not.be.undefined();
         })).be.fulfilled();
     });
 
@@ -1077,19 +1089,19 @@ describe('Test: ElasticSearch service', () => {
       mappings[index] = {mappings: {}};
       mappings[index].mappings[collection] = {};
 
-      requestObject.collection = 'foobar';
-      requestObject.index = 'kuzzle-unit-tests-fakeindex';
+      request.input.resource.collection = 'foobar';
+      request.input.resource.index = 'kuzzle-unit-tests-fakeindex';
 
       elasticsearch.client.indices.getMapping.returns(Promise.resolve(mappings));
 
-      return should(elasticsearch.getMapping(requestObject)).be.rejected();
+      return should(elasticsearch.getMapping(request)).be.rejected();
     });
 
     it('should reject the getMapping promise if elasticsearch throws an error', () => {
       var error = new Error('Mocked error');
       elasticsearch.client.indices.getMapping.returns(Promise.reject(error));
 
-      return should(elasticsearch.getMapping(requestObject)).be.rejectedWith(error);
+      return should(elasticsearch.getMapping(request)).be.rejectedWith(error);
     });
   });
 
@@ -1106,7 +1118,7 @@ describe('Test: ElasticSearch service', () => {
         }
       });
 
-      return should(getAllIdsFromQuery.call(elasticsearch, requestObject)
+      return should(getAllIdsFromQuery.call(elasticsearch, request)
         .then(result => {
           should(result).be.an.Array().and.match(ids);
           should(result.length).be.exactly(2);
@@ -1118,7 +1130,7 @@ describe('Test: ElasticSearch service', () => {
       var getAllIdsFromQuery = ES.__get__('getAllIdsFromQuery');
 
       elasticsearch.client.search.yields(new Error('rejected'));
-      return should(getAllIdsFromQuery.call(elasticsearch, requestObject)).be.rejectedWith('rejected');
+      return should(getAllIdsFromQuery.call(elasticsearch, request)).be.rejectedWith('rejected');
     });
 
     it('should scroll through result pages until getting all ids', () => {
@@ -1139,7 +1151,7 @@ describe('Test: ElasticSearch service', () => {
         }
       });
 
-      return should(getAllIdsFromQuery.call(elasticsearch, requestObject)
+      return should(getAllIdsFromQuery.call(elasticsearch, request)
         .then(result => {
           should(result).be.an.Array().and.match(ids);
           should(result.length).be.exactly(2);
@@ -1156,17 +1168,17 @@ describe('Test: ElasticSearch service', () => {
       mappings[index].mappings[collection] = {};
 
       elasticsearch.client.indices.getMapping.returns(Promise.resolve(mappings));
-      delete requestObject.data.body;
-      return should(elasticsearch.listCollections(requestObject)).be.fulfilled();
+      request.input.body = null;
+      return should(elasticsearch.listCollections(request)).be.fulfilled();
     });
 
     it('should reject the listCollections promise if elasticsearch throws an error', () => {
       var error = new Error('Mocked error');
       elasticsearch.client.indices.getMapping.returns(Promise.reject(error));
 
-      requestObject.index = 'kuzzle-unit-tests-fakeindex';
-      delete requestObject.data.body;
-      return should(elasticsearch.listCollections(requestObject)).be.rejectedWith(error);
+      request.input.resource.index = 'kuzzle-unit-tests-fakeindex';
+      request.input.body = null;
+      return should(elasticsearch.listCollections(request)).be.rejectedWith(error);
     });
   });
 
@@ -1174,15 +1186,15 @@ describe('Test: ElasticSearch service', () => {
     it('should allow creating a new collection', () => {
       elasticsearch.client.indices.putMapping.returns(Promise.resolve({}));
 
-      requestObject.collection = '%foobar';
-      return should(elasticsearch.createCollection(requestObject)).be.fulfilled();
+      request.input.resource.collection = '%foobar';
+      return should(elasticsearch.createCollection(request)).be.fulfilled();
     });
 
     it('should reject the createCollection promise if elasticsearch throws an error', () => {
       var error = new Error('Mocked error');
       elasticsearch.client.indices.putMapping.returns(Promise.reject(error));
 
-      return should(elasticsearch.createCollection(requestObject)).be.rejectedWith(error);
+      return should(elasticsearch.createCollection(request)).be.rejectedWith(error);
     });
   });
 
@@ -1190,12 +1202,12 @@ describe('Test: ElasticSearch service', () => {
     it('should allow truncating an existing collection', () => {
       var spy = sandbox.stub(elasticsearch, 'deleteByQuery').returns(Promise.resolve({}));
 
-      return should(elasticsearch.truncateCollection(requestObject)
+      return should(elasticsearch.truncateCollection(request)
         .then(() => {
-          var request = spy.firstCall.args[0];
+          var req = spy.firstCall.args[0];
 
-          should(request).be.an.instanceOf(RequestObject);
-          should(request.data.body).be.Object().and.be.empty();
+          should(req).be.an.instanceOf(Request);
+          should(req.input.body.query).be.Object().and.match({match_all: {}});
         })).be.fulfilled();
     });
   });
@@ -1206,9 +1218,9 @@ describe('Test: ElasticSearch service', () => {
 
       elasticsearch.client.cat.indices.returns(Promise.resolve('      \n %kuzzle      \n ' + index + ' \n  '));
 
-      requestObject.data.body.indexes = [index];
+      request.input.body = {indexes: [index]};
 
-      return should(elasticsearch.deleteIndexes(requestObject)
+      return should(elasticsearch.deleteIndexes(request)
         .then(() => {
           should(elasticsearch.client.indices.delete.firstCall.args[0]).be.an.Object().and.match({index: [index]});
         })
@@ -1218,14 +1230,15 @@ describe('Test: ElasticSearch service', () => {
     it('should return a rejected promise if the reset fails while deleting all indexes', () => {
       var
         error = new Error('Mocked delete error'),
-        indexes = { index: []};
+        indexes = {index: ['some index']};
 
+      request.input.body = {indexes: [index]};
       indexes[kuzzle.config.internalIndex] = [];
 
       elasticsearch.client.indices.getMapping.returns(Promise.resolve(indexes));
       elasticsearch.client.indices.delete.returns(Promise.reject(error));
 
-      return should(elasticsearch.deleteIndexes(requestObject)).be.rejectedWith(error);
+      return should(elasticsearch.deleteIndexes(request)).be.rejectedWith(error);
     });
   });
 
@@ -1233,9 +1246,9 @@ describe('Test: ElasticSearch service', () => {
     it('should be able to create index', () => {
       elasticsearch.client.indices.create.returns(Promise.resolve({}));
 
-      return should(elasticsearch.createIndex(requestObject)
+      return should(elasticsearch.createIndex(request)
         .then(() => {
-          should(elasticsearch.client.indices.create.firstCall.args[0].index).be.exactly(requestObject.index);
+          should(elasticsearch.client.indices.create.firstCall.args[0].index).be.exactly(request.input.resource.index);
         })).be.fulfilled();
     });
 
@@ -1243,7 +1256,7 @@ describe('Test: ElasticSearch service', () => {
       var error = new Error('Mocked error');
       elasticsearch.client.indices.create.returns(Promise.reject(error));
 
-      return should(elasticsearch.createIndex(requestObject)).be.rejectedWith(error);
+      return should(elasticsearch.createIndex(request)).be.rejectedWith(error);
     });
   });
 
@@ -1251,9 +1264,9 @@ describe('Test: ElasticSearch service', () => {
     it('should be able to delete index', () => {
       elasticsearch.client.indices.delete.returns(Promise.resolve({}));
 
-      return should(elasticsearch.deleteIndex(requestObject)
+      return should(elasticsearch.deleteIndex(request)
         .then(() => {
-          should(elasticsearch.client.indices.delete.firstCall.args[0].index).be.exactly(requestObject.index);
+          should(elasticsearch.client.indices.delete.firstCall.args[0].index).be.exactly(request.input.resource.index);
         })
       ).be.fulfilled();
     });
@@ -1261,7 +1274,7 @@ describe('Test: ElasticSearch service', () => {
     it('should reject the deleteIndex promise if elasticsearch throws an error', () => {
       elasticsearch.client.indices.delete.returns(Promise.reject(new Error()));
 
-      return should(elasticsearch.deleteIndex(requestObject)).be.rejected();
+      return should(elasticsearch.deleteIndex(request)).be.rejected();
     });
   });
 
@@ -1269,14 +1282,14 @@ describe('Test: ElasticSearch service', () => {
     it('should allow listing indexes', () => {
       elasticsearch.client.indices.getMapping.returns(Promise.resolve({indexes: []}));
 
-      return should(elasticsearch.listIndexes(requestObject)).be.fulfilled();
+      return should(elasticsearch.listIndexes(request)).be.fulfilled();
     });
 
     it('should reject the listIndexes promise if elasticsearch throws an error', () => {
       var error = new Error('Mocked error');
       elasticsearch.client.indices.getMapping.returns(Promise.reject(error));
 
-      return should(elasticsearch.listIndexes(requestObject)).be.rejectedWith(error);
+      return should(elasticsearch.listIndexes(request)).be.rejectedWith(error);
     });
   });
 
@@ -1289,15 +1302,15 @@ describe('Test: ElasticSearch service', () => {
       elasticsearch.client.cluster.health.returns(Promise.resolve(output));
       elasticsearch.client.info.returns(Promise.resolve(output));
 
-      return should(elasticsearch.getInfos(requestObject)).be.fulfilled();
+      return should(elasticsearch.getInfos(request)).be.fulfilled();
     });
   });
 
   describe('#refreshIndex', () => {
     it('should send a valid request to es client', () => {
-      elasticsearch.client.indices.refresh.returns(Promise.resolve(requestObject));
+      elasticsearch.client.indices.refresh = sandbox.spy((req) => Promise.resolve(req));
 
-      return elasticsearch.refreshIndex(requestObject)
+      return elasticsearch.refreshIndex(request)
         .then(data => {
           should(data.index).be.eql(index);
         });
@@ -1306,16 +1319,16 @@ describe('Test: ElasticSearch service', () => {
 
   describe('#getAutoRefresh', () => {
     it('should reflect the current autoRefresh status', () => {
-      return should(elasticsearch.getAutoRefresh(requestObject)
+      return should(elasticsearch.getAutoRefresh(request)
         .then(response => {
           should(response).be.false();
 
-          elasticsearch.settings.autoRefresh[requestObject.index] = true;
-          return elasticsearch.getAutoRefresh(requestObject);
+          elasticsearch.settings.autoRefresh[request.input.resource.index] = true;
+          return elasticsearch.getAutoRefresh(request);
         })
         .then(response => {
           should(response).be.true();
-          elasticsearch.settings.autoRefresh[requestObject.index] = false;
+          elasticsearch.settings.autoRefresh[request.input.resource.index] = false;
         })
       ).be.fulfilled();
     });
@@ -1324,18 +1337,19 @@ describe('Test: ElasticSearch service', () => {
   describe('#setAutoRefresh', () => {
     it('should toggle the autoRefresh status', () => {
       var
-        spy = sandbox.stub(kuzzle.internalEngine, 'createOrReplace').returns(Promise.resolve({})),
-        req = new RequestObject({
-          index: requestObject.index,
+        req = new Request({
+          index: request.index,
           body: { autoRefresh: true }
         });
+
+      kuzzle.internalEngine.createOrReplace = sandbox.stub().returns(Promise.resolve({}));
 
       return should(elasticsearch.setAutoRefresh(req)
         .then(response => {
           should(response).be.true();
-          should(spy.calledOnce).be.true();
+          should(kuzzle.internalEngine.createOrReplace.calledOnce).be.true();
 
-          req.data.body.autoRefresh = false;
+          req.input.body.autoRefresh = false;
           return elasticsearch.setAutoRefresh(req);
         })
         .then(response => {
@@ -1347,12 +1361,11 @@ describe('Test: ElasticSearch service', () => {
 
   describe('#refreshIndexIfNeeded', () => {
     it('should not refresh the index if autoRefresh is set to false', () => {
-      var
-        refreshIndexIfNeeded = ES.__get__('refreshIndexIfNeeded');
+      var refreshIndexIfNeeded = ES.__get__('refreshIndexIfNeeded');
 
       elasticsearch.client.indices.refresh.returns(Promise.resolve({}));
 
-      return should(refreshIndexIfNeeded.call(elasticsearch, { index: requestObject.index }, { foo: 'bar' })
+      return should(refreshIndexIfNeeded.call(elasticsearch, {index: request.input.resource.index}, {foo: 'bar'})
         .then(response => {
           should(elasticsearch.client.indices.refresh.called).be.false();
           should(response).be.eql({ foo: 'bar' });
@@ -1360,17 +1373,15 @@ describe('Test: ElasticSearch service', () => {
     });
 
     it('should refresh the index if asked to', () => {
-      var
-        refreshIndexIfNeeded = ES.__get__('refreshIndexIfNeeded');
+      var refreshIndexIfNeeded = ES.__get__('refreshIndexIfNeeded');
 
       elasticsearch.client.indices.refresh.returns(Promise.resolve({}));
+      elasticsearch.settings.autoRefresh[request.input.resource.index] = true;
 
-      elasticsearch.settings.autoRefresh[requestObject.index] = true;
-
-      return should(refreshIndexIfNeeded.call(elasticsearch, { index: requestObject.index }, { foo: 'bar' })
+      return should(refreshIndexIfNeeded.call(elasticsearch, {index: request.input.resource.index}, {foo: 'bar'})
         .then(response => {
           should(elasticsearch.client.indices.refresh.called).be.true();
-          should(response).be.eql({ foo: 'bar' });
+          should(response).be.eql({foo: 'bar'});
         })).be.fulfilled();
     });
 
@@ -1378,13 +1389,12 @@ describe('Test: ElasticSearch service', () => {
       var
         error = new Error('Mocked error'),
         refreshIndexIfNeeded = ES.__get__('refreshIndexIfNeeded'),
-        pluginSpy = sandbox.spy(kuzzle.pluginsManager, 'trigger');
+        pluginSpy = kuzzle.pluginsManager.trigger;
 
       elasticsearch.client.indices.refresh.returns(Promise.reject(error));
+      elasticsearch.settings.autoRefresh[request.input.resource.index] = true;
 
-      elasticsearch.settings.autoRefresh[requestObject.index] = true;
-
-      return should(refreshIndexIfNeeded.call(elasticsearch, { index: requestObject.index }, { foo: 'bar' })
+      return should(refreshIndexIfNeeded.call(elasticsearch, {index: request.input.resource.index}, {foo: 'bar'})
         .then(response => {
           should(pluginSpy.calledWith('log:error')).be.true();
           should(elasticsearch.client.indices.refresh.called).be.true();
@@ -1399,7 +1409,7 @@ describe('Test: ElasticSearch service', () => {
     it('should call es indices.exists method', () => {
       elasticsearch.client.indices.exists.returns(Promise.resolve(true));
 
-      return elasticsearch.indexExists(requestObject)
+      return elasticsearch.indexExists(request)
         .then(response => {
           try {
             should(response).be.true();
@@ -1425,7 +1435,7 @@ describe('Test: ElasticSearch service', () => {
 
       elasticsearch.client.indices.exists.returns(Promise.reject(error));
 
-      return elasticsearch.indexExists(requestObject)
+      return elasticsearch.indexExists(request)
         .then(() => {
           throw new Error('this should not occur');
         })
@@ -1441,7 +1451,7 @@ describe('Test: ElasticSearch service', () => {
     it('should call es indices.existType method', () => {
       elasticsearch.client.indices.existsType.returns(Promise.resolve(true));
 
-      return elasticsearch.collectionExists(requestObject)
+      return elasticsearch.collectionExists(request)
         .then(() => {
           try {
             should(elasticsearch.client.indices.existsType).be.calledOnce();
@@ -1467,7 +1477,7 @@ describe('Test: ElasticSearch service', () => {
 
       elasticsearch.client.indices.existsType.returns(Promise.reject(error));
 
-      return elasticsearch.collectionExists(requestObject)
+      return elasticsearch.collectionExists(request)
         .then(() => {
           throw new Error('this should not happen');
         })

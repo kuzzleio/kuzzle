@@ -2,10 +2,10 @@ var
   should = require('should'),
   passport = require('passport'),
   util = require('util'),
-  Kuzzle = require.main.require('lib/api/kuzzle'),
-  ForbiddenError = require.main.require('kuzzle-common-objects').Errors.forbiddenError,
-  PassportResponse = require.main.require('lib/api/core/auth/passportResponse'),
-  PassportWrapper = require.main.require('lib/api/core/auth/passportWrapper'),
+  Kuzzle = require('../../../../lib/api/kuzzle'),
+  ForbiddenError = require('kuzzle-common-objects').errors.ForbiddenError,
+  PassportResponse = require('../../../../lib/api/core/auth/passportResponse'),
+  PassportWrapper = require('../../../../lib/api/core/auth/passportWrapper'),
   MockupStrategy;
 
 /**

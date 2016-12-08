@@ -1,5 +1,6 @@
 var
   rc = require('rc'),
+  /** @type KuzzleConfiguration */
   kuzzleConfig = require('../../lib/config');
 
 module.exports = rc('kuzzle', {

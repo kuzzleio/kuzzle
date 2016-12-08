@@ -3,29 +3,31 @@ var
   Promise = require('bluebird'),
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
-  Kuzzle = require.main.require('lib/api/kuzzle');
+  KuzzleMock = require('../../../mocks/kuzzle.mock'),
+  HotelClerk = require('../../../../lib/api/core/hotelClerk'),
+  Request = require('kuzzle-common-objects').Request;
 
 describe('Test: hotelClerk.listSubscription', () => {
   var
     kuzzle,
-    connection = {id: 'connectionid'},
+    connectionId = 'connectionid',
     context,
+    request,
     roomName = 'roomName',
     index = '%test',
-    collection = 'user';
+    collection = 'user',
+    hotelClerk;
 
   beforeEach(() => {
-    kuzzle = new Kuzzle();
-
+    kuzzle = new KuzzleMock();
+    hotelClerk = new HotelClerk(kuzzle);
     context = {
-      connection: connection,
+      connectionId,
       token: {
-        user: 'user'
+        userId: 'user'
       }
     };
-
-    sandbox.stub(kuzzle.internalEngine, 'get').returns(Promise.resolve({}));
-    return kuzzle.services.init({whitelist: []});
+    request = new Request({}, context);
   });
 
   afterEach(() => {
@@ -33,19 +35,18 @@ describe('Test: hotelClerk.listSubscription', () => {
   });
 
   it('should return an empty object if there is no room', () => {
-    return kuzzle.hotelClerk.listSubscriptions(context)
+    return hotelClerk.listSubscriptions(request)
       .then(response => {
         should(response).be.empty().Object();
       });
   });
 
   it('should return a correct list according to subscribe on filter', () => {
+    kuzzle.repositories.user.load = sandbox.stub().returns(Promise.resolve({_id: 'user', isActionAllowed: sandbox.stub().returns(Promise.resolve(true))}));
 
-    sandbox.stub(kuzzle.repositories.user, 'load').returns(Promise.resolve({_id: 'user', isActionAllowed: sandbox.stub().returns(Promise.resolve(true))}));
+    hotelClerk.rooms[roomName] = {index, collection, roomId: 'foobar', customers: ['foo']};
 
-    kuzzle.hotelClerk.rooms[roomName] = {index, collection, roomId: 'foobar', customers: ['foo']};
-
-    return kuzzle.hotelClerk.listSubscriptions(context)
+    return hotelClerk.listSubscriptions(request)
       .then(response => {
         should(response).have.property(index);
         should(response[index]).have.property(collection);
@@ -56,7 +57,7 @@ describe('Test: hotelClerk.listSubscription', () => {
   });
 
   it('should return a correct list according to subscribe on filter and user right', () => {
-    kuzzle.hotelClerk.rooms = {
+    hotelClerk.rooms = {
       'foo': {
         index, collection: 'foo', roomId: 'foo', customers: ['foo']
       },
@@ -67,13 +68,12 @@ describe('Test: hotelClerk.listSubscription', () => {
         index, collection: 'foo', roomId: 'foobar', customers: ['foo', 'bar']
       }
     };
-    sandbox.stub(kuzzle.repositories.user, 'load').returns(Promise.resolve({_id: 'user', isActionAllowed: r => {
-      return Promise.resolve(r.collection === 'foo');
+    kuzzle.repositories.user.load = sandbox.stub().returns(Promise.resolve({_id: 'user', isActionAllowed: r => {
+      return Promise.resolve(r.input.resource.collection === 'foo');
     }}));
 
-    return kuzzle.hotelClerk.listSubscriptions(context)
+    return hotelClerk.listSubscriptions(request)
       .then(response => {
-        // user -> collection
         should(response).have.property(index);
         should(response[index]).have.property('foo');
         should(response[index].foo).have.property('foo');

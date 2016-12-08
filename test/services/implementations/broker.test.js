@@ -9,10 +9,10 @@ var
   WSClientMock = require('../../mocks/services/ws.mock'),
   WSServerMock = require('../../mocks/services/ws.server.mock'),
   BrokerFactory = rewire('../../../lib/services/broker'),
-  InternalError = require('kuzzle-common-objects').Errors.internalError,
-  WSBrokerClient = require.main.require('lib/services/broker/wsBrokerClient'),
+  InternalError = require('kuzzle-common-objects').errors.InternalError,
+  WSBrokerClient = require('../../../lib/services/broker/wsBrokerClient'),
   WSBrokerClientRewire = rewire('../../../lib/services/broker/wsBrokerClient'),
-  WSBrokerServer = require.main.require('lib/services/broker/wsBrokerServer'),
+  WSBrokerServer = require('../../../lib/services/broker/wsBrokerServer'),
   WSBrokerServerRewire = rewire('../../../lib/services/broker/wsBrokerServer');
 
 describe('Test: Internal broker', () => {

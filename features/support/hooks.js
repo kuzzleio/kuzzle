@@ -66,8 +66,8 @@ var myHooks = function () {
    *
    *  And we don't want to deal with destroyed worlds, this is all too messy. And dangerous.
    */
-  this.Before({tags: ['@usingREST']}, function (scenario, callback) {
-    this.api = setAPI(this, 'REST');
+  this.Before({tags: ['@usingHttp']}, function (scenario, callback) {
+    this.api = setAPI(this, 'Http');
     callback();
   });
 
@@ -138,7 +138,7 @@ function restApi () {
     W = require('./world'),
     world = new (new W()).World();
 
-  return setAPI(world, 'REST');
+  return setAPI(world, 'Http');
 
 }
 
@@ -244,7 +244,7 @@ function cleanSecurity (callback) {
 }
 
 function cleanRedis(callback) {
-  this.api.callMemoryStorage('keys', { body: { pattern: this.idPrefix + '*' } })
+  this.api.callMemoryStorage('keys', { args: { pattern: this.idPrefix + '*' } })
     .then(response => {
       if (_.isArray(response.result) && response.result.length) {
         return this.api.callMemoryStorage('del', { body: { keys: response.result } });
@@ -270,20 +270,18 @@ function cleanValidations(callback) {
       return this.api.searchValidations({
         query: {
           match_all: {}
-        },
-        from: 0,
-        size: 9999
+        }
       });
     })
     .then(results => {
       var
         promises = [],
-        regex = new RegExp('^' + this.idPrefix);
+        regex = new RegExp('^kuzzle-test-');
 
       results = results.result.hits.filter(r => r._id.match(regex)).map(r => r._id);
 
       results.forEach(id => {
-        promises.push(this.api.deleteSpecifications(id));
+        promises.push(this.api.deleteSpecifications(id.split('#')[0], id.split('#')[1]));
       });
 
       return Promise.all(promises)

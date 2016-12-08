@@ -2,17 +2,17 @@ var
   should = require('should'),
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
-  RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
-  BadRequestError = require.main.require('kuzzle-common-objects').Errors.badRequestError,
-  NotFoundError = require.main.require('kuzzle-common-objects').Errors.notFoundError,
+  Request = require('kuzzle-common-objects').Request,
+  BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,
+  NotFoundError = require('kuzzle-common-objects').errors.NotFoundError,
   Dsl = require('../../../../lib/api/dsl'),
   HotelClerk = require('../../../../lib/api/core/hotelClerk'),
-  Kuzzle = require('../../../mocks/kuzzle.mock');
+  KuzzleMock = require('../../../mocks/kuzzle.mock');
 
 describe('Test: hotelClerk.removeRooms', () => {
   var
     kuzzle,
-    connection = {id: 'connectionid'},
+    connectionId = 'connectionid',
     context,
     index = 'test',
     collection1 = 'user',
@@ -30,14 +30,14 @@ describe('Test: hotelClerk.removeRooms', () => {
 
 
   beforeEach(() => {
-    kuzzle = new Kuzzle();
+    kuzzle = new KuzzleMock();
     kuzzle.hotelClerk = new HotelClerk(kuzzle);
     kuzzle.dsl = new Dsl();
 
     context = {
-      connection: connection,
+      connectionId,
       token: {
-        user: ''
+        userId: ''
       }
     };
 
@@ -47,84 +47,60 @@ describe('Test: hotelClerk.removeRooms', () => {
     sandbox.restore();
   });
 
-  it('should reject an error if no index provided', () => {
-    var requestObject = new RequestObject({
-      controller: 'admin',
-      action: 'removeRooms',
-      index: undefined,
-      collection: collection1,
-      body: {}
-    });
-
-    return should(kuzzle.hotelClerk.removeRooms(requestObject)).rejectedWith(BadRequestError);
-  });
-
-  it('should reject an error if no collection provided', () => {
-    var requestObject = new RequestObject({
-      controller: 'admin',
-      action: 'removeRooms',
-      index: index,
-      collection: undefined,
-      body: {}
-    });
-
-    return should(kuzzle.hotelClerk.removeRooms(requestObject)).rejectedWith(BadRequestError);
-  });
-
   it('should reject an error if there is no subscription on this index', () => {
-    var requestObject = new RequestObject({
+    var request = new Request({
       controller: 'admin',
       action: 'removeRooms',
       index: index,
       collection: collection1,
       body: {}
-    });
+    }, context);
 
-    return should(kuzzle.hotelClerk.removeRooms(requestObject)).rejectedWith(NotFoundError);
+    return should(kuzzle.hotelClerk.removeRooms(request)).rejectedWith(NotFoundError);
   });
 
   it('should reject an error if there is no subscription on this collection', () => {
     var
-      requestObjectSubscribe = new RequestObject({
+      subscribeRequest = new Request({
         controller: 'subscribe',
         action: 'on',
         index: index,
         collection: collection1,
         body: {}
-      }),
-      requestObject = new RequestObject({
+      }, context),
+      removeRequest = new Request({
         controller: 'admin',
         action: 'removeRooms',
         index: index,
         collection: collection2,
         body: {}
-      });
+      }, context);
 
-    return kuzzle.hotelClerk.addSubscription(requestObjectSubscribe, context)
+    return kuzzle.hotelClerk.addSubscription(subscribeRequest)
       .then(() => {
-        return should(kuzzle.hotelClerk.removeRooms(requestObject)).rejectedWith(NotFoundError);
+        return should(kuzzle.hotelClerk.removeRooms(removeRequest)).rejectedWith(NotFoundError);
       });
   });
 
   it('should remove room in global subscription for provided collection', () => {
     var
-      requestObjectSubscribe = new RequestObject({
+      subscribeRequest = new Request({
         controller: 'subscribe',
         action: 'on',
         index: index,
         collection: collection1,
         body: {}
-      }),
-      requestObjectRemove = new RequestObject({
+      }, context),
+      removeRequest = new Request({
         controller: 'admin',
         action: 'removeRooms',
         index: index,
         collection: collection1,
         body: {}
-      });
+      }, context);
 
-    return kuzzle.hotelClerk.addSubscription(requestObjectSubscribe, context)
-      .then(() => kuzzle.hotelClerk.removeRooms(requestObjectRemove))
+    return kuzzle.hotelClerk.addSubscription(subscribeRequest)
+      .then(() => kuzzle.hotelClerk.removeRooms(removeRequest))
       .then(response => {
         should(response).have.property('acknowledge');
         should(response.acknowledge).be.true();
@@ -135,23 +111,23 @@ describe('Test: hotelClerk.removeRooms', () => {
 
   it('should remove room for subscription with filter for provided collection', () => {
     var
-      requestObjectSubscribe = new RequestObject({
+      subscribeRequest = new Request({
         controller: 'subscribe',
         action: 'on',
         index: index,
         collection: collection1,
         body: filter1
-      }),
-      requestObjectRemove = new RequestObject({
+      }, context),
+      removeRequest = new Request({
         controller: 'admin',
         action: 'removeRooms',
         index: index,
         collection: collection1,
         body: {}
-      });
+      }, context);
 
-    return kuzzle.hotelClerk.addSubscription(requestObjectSubscribe, context)
-      .then(() => kuzzle.hotelClerk.removeRooms(requestObjectRemove))
+    return kuzzle.hotelClerk.addSubscription(subscribeRequest)
+      .then(() => kuzzle.hotelClerk.removeRooms(removeRequest))
       .then(response => {
         should(response).have.property('acknowledge');
         should(response.acknowledge).be.true();
@@ -162,31 +138,31 @@ describe('Test: hotelClerk.removeRooms', () => {
 
   it('should remove room for global and filter subscription provided collection', () => {
     var
-      requestObjectSubscribeGlobal = new RequestObject({
+      globalSubscribeRequest = new Request({
         controller: 'subscribe',
         action: 'on',
         index: index,
         collection: collection1,
         body: {}
-      }),
-      requestObjectSubscribeFilter = new RequestObject({
+      }, context),
+      filterSubscribeRequest = new Request({
         controller: 'subscribe',
         action: 'on',
         index: index,
         collection: collection1,
         body: filter1
-      }),
-      requestObjectRemove = new RequestObject({
+      }, context),
+      removeRequest = new Request({
         controller: 'admin',
         action: 'removeRooms',
         index: index,
         collection: collection1,
         body: {}
-      });
+      }, context);
 
-    return kuzzle.hotelClerk.addSubscription(requestObjectSubscribeGlobal, context)
-      .then(() => kuzzle.hotelClerk.addSubscription(requestObjectSubscribeFilter, context))
-      .then(() => kuzzle.hotelClerk.removeRooms(requestObjectRemove))
+    return kuzzle.hotelClerk.addSubscription(globalSubscribeRequest)
+      .then(() => kuzzle.hotelClerk.addSubscription(filterSubscribeRequest))
+      .then(() => kuzzle.hotelClerk.removeRooms(removeRequest))
       .then(response => {
         should(response).have.property('acknowledge');
         should(response.acknowledge).be.true();
@@ -197,31 +173,31 @@ describe('Test: hotelClerk.removeRooms', () => {
 
   it('should remove only room for provided collection', () => {
     var
-      requestObjectSubscribeCollection1 = new RequestObject({
+      subscribeCollection1 = new Request({
         controller: 'subscribe',
         action: 'on',
         index: index,
         collection: collection1,
         body: {}
-      }),
-      requestObjectSubscribeCollection2 = new RequestObject({
+      }, context),
+      subscribeCollection2 = new Request({
         controller: 'subscribe',
         action: 'on',
         index: index,
         collection: collection2,
         body: {}
-      }),
-      requestObjectRemove = new RequestObject({
+      }, context),
+      removeRequest = new Request({
         controller: 'admin',
         action: 'removeRooms',
         index: index,
         collection: collection1,
         body: {}
-      });
+      }, context);
 
-    return kuzzle.hotelClerk.addSubscription(requestObjectSubscribeCollection1, context)
-      .then(() => kuzzle.hotelClerk.addSubscription(requestObjectSubscribeCollection2, context))
-      .then(() => kuzzle.hotelClerk.removeRooms(requestObjectRemove))
+    return kuzzle.hotelClerk.addSubscription(subscribeCollection1)
+      .then(() => kuzzle.hotelClerk.addSubscription(subscribeCollection2))
+      .then(() => kuzzle.hotelClerk.removeRooms(removeRequest))
       .then(response => {
         should(response).have.property('acknowledge');
         should(response.acknowledge).be.true();
@@ -233,59 +209,59 @@ describe('Test: hotelClerk.removeRooms', () => {
 
   it('should reject an error if room is provided but is not an array', () => {
     var
-      requestObjectSubscribeCollection1 = new RequestObject({
+      subscribeCollection1 = new Request({
         controller: 'subscribe',
         action: 'on',
         index: index,
         collection: collection1,
         body: {}
-      }),
-      requestObjectRemove = new RequestObject({
+      }, context),
+      removeRequest = new Request({
         controller: 'admin',
         action: 'removeRooms',
         index: index,
         collection: collection1,
         body: {rooms: {}}
-      });
+      }, context);
 
-    return kuzzle.hotelClerk.addSubscription(requestObjectSubscribeCollection1, context)
+    return kuzzle.hotelClerk.addSubscription(subscribeCollection1)
       .then(() => {
-        return should(kuzzle.hotelClerk.removeRooms(requestObjectRemove)).be.rejectedWith(BadRequestError);
+        return should(kuzzle.hotelClerk.removeRooms(removeRequest)).be.rejectedWith(BadRequestError);
       });
   });
 
   it('should remove only listed rooms for the collection', () => {
     var
       roomId,
-      requestObjectSubscribeFilter1 = new RequestObject({
+      subscribeFilter1 = new Request({
         controller: 'subscribe',
         action: 'on',
         index: index,
         collection: collection1,
         body: filter1
-      }),
-      requestObjectSubscribeFilter2 = new RequestObject({
+      }, context),
+      subscribeFilter2 = new Request({
         controller: 'subscribe',
         action: 'on',
         index: index,
         collection: collection1,
         body: filter2
-      }),
-      requestObjectRemove = new RequestObject({
+      }, context),
+      removeRequest = new Request({
         controller: 'admin',
         action: 'removeRooms',
         index: index,
         collection: collection1,
         body: {rooms: []}
-      });
+      }, context);
 
-    return kuzzle.hotelClerk.addSubscription(requestObjectSubscribeFilter1, context)
+    return kuzzle.hotelClerk.addSubscription(subscribeFilter1)
       .then(result => {
         roomId = result.roomId;
-        requestObjectRemove.data.body.rooms.push(roomId);
-        return kuzzle.hotelClerk.addSubscription(requestObjectSubscribeFilter2, context);
+        removeRequest.input.body.rooms.push(roomId);
+        return kuzzle.hotelClerk.addSubscription(subscribeFilter2);
       })
-      .then(() => kuzzle.hotelClerk.removeRooms(requestObjectRemove))
+      .then(() => kuzzle.hotelClerk.removeRooms(removeRequest))
       .then(() => {
         should(Object.keys(kuzzle.hotelClerk.rooms).length).be.exactly(1);
         should(kuzzle.hotelClerk.rooms[roomId]).be.undefined();
@@ -295,34 +271,34 @@ describe('Test: hotelClerk.removeRooms', () => {
   it('should return a response with partial error if a roomId doesn\'t correspond to the index', () => {
     var
       index2RoomName,
-      requestObjectSubscribe1 = new RequestObject({
+      subscribe1 = new Request({
         controller: 'subscribe',
         action: 'on',
         index: index,
         collection: collection1,
         body: {}
-      }),
-      requestObjectSubscribe2 = new RequestObject({
+      }, context),
+      subscribe2 = new Request({
         controller: 'subscribe',
         action: 'on',
         index: 'index2',
         collection: collection1,
         body: {}
-      }),
-      requestObjectRemove = new RequestObject({
+      }, context),
+      removeRequest = new Request({
         controller: 'admin',
         action: 'removeRooms',
         index: index,
         collection: collection1,
         body: {rooms: []}
-      });
+      }, context);
 
-    return kuzzle.hotelClerk.addSubscription(requestObjectSubscribe1, context)
-      .then(() => kuzzle.hotelClerk.addSubscription(requestObjectSubscribe2, context))
+    return kuzzle.hotelClerk.addSubscription(subscribe1)
+      .then(() => kuzzle.hotelClerk.addSubscription(subscribe2))
       .then(result => {
         index2RoomName = result.roomId;
-        requestObjectRemove.data.body.rooms.push(index2RoomName);
-        return kuzzle.hotelClerk.removeRooms(requestObjectRemove);
+        removeRequest.input.body.rooms.push(index2RoomName);
+        return kuzzle.hotelClerk.removeRooms(removeRequest);
       })
       .then((response) => {
         should(response.acknowledge).be.true();
@@ -334,21 +310,21 @@ describe('Test: hotelClerk.removeRooms', () => {
   it('should return a response with partial error if a roomId doesn\'t correspond to the collection', () => {
     var
       collection2RoomName,
-      requestObjectSubscribe1 = new RequestObject({
+      subscribe1 = new Request({
         controller: 'subscribe',
         action: 'on',
         index: index,
         collection: collection1,
         body: {}
-      }),
-      requestObjectSubscribe2 = new RequestObject({
+      }, context),
+      subscribe2 = new Request({
         controller: 'subscribe',
         action: 'on',
         index: index,
         collection: collection2,
         body: {}
-      }),
-      requestObjectRemove = new RequestObject({
+      }, context),
+      removeRequest = new Request({
         controller: 'admin',
         action: 'removeRooms',
         index: index,
@@ -356,12 +332,12 @@ describe('Test: hotelClerk.removeRooms', () => {
         body: {rooms: []}
       });
 
-    return kuzzle.hotelClerk.addSubscription(requestObjectSubscribe1, context)
-      .then(() => kuzzle.hotelClerk.addSubscription(requestObjectSubscribe2, context))
+    return kuzzle.hotelClerk.addSubscription(subscribe1, context)
+      .then(() => kuzzle.hotelClerk.addSubscription(subscribe2, context))
       .then(result => {
         collection2RoomName = result.roomId;
-        requestObjectRemove.data.body.rooms.push(collection2RoomName);
-        return kuzzle.hotelClerk.removeRooms(requestObjectRemove);
+        removeRequest.input.body.rooms.push(collection2RoomName);
+        return kuzzle.hotelClerk.removeRooms(removeRequest);
       })
       .then((response) => {
         should(response.acknowledge).be.true();
@@ -373,23 +349,23 @@ describe('Test: hotelClerk.removeRooms', () => {
   it('should return a response with partial error if a roomId doesn\'t exist', () => {
     var
       badRoomName = 'badRoomId',
-      requestObjectSubscribe = new RequestObject({
+      subscribeRequest = new Request({
         controller: 'subscribe',
         action: 'on',
         index: index,
         collection: collection1,
         body: {}
-      }),
-      requestObjectRemove = new RequestObject({
+      }, context),
+      removeRequest = new Request({
         controller: 'admin',
         action: 'removeRooms',
         index: index,
         collection: collection1,
         body: {rooms: [badRoomName]}
-      });
+      }, context);
 
-    return kuzzle.hotelClerk.addSubscription(requestObjectSubscribe, context)
-      .then(() => kuzzle.hotelClerk.removeRooms(requestObjectRemove))
+    return kuzzle.hotelClerk.addSubscription(subscribeRequest, context)
+      .then(() => kuzzle.hotelClerk.removeRooms(removeRequest))
       .then(response => {
         should(response.acknowledge).be.true();
         should(response.partialErrors.length).be.exactly(1);

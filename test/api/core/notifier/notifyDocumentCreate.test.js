@@ -1,22 +1,15 @@
-/**
- * The notifier core component can be directly invoked using the notify() function, but it also listens
- * to messages coming from workers.
- * And in particular, messages from the write worker(s), that need to be forwarded to the right listeners.
- *
- * This file tests the documents creation notifications.
- */
 var
   should = require('should'),
   Promise = require('bluebird'),
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
-  RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
-  Kuzzle = require.main.require('lib/api/kuzzle');
+  Request = require('kuzzle-common-objects').Request,
+  Kuzzle = require('../../../../lib/api/kuzzle');
 
 describe('Test: notifier.notifyDocumentCreate', () => {
   var
     kuzzle,
-    requestObject = new RequestObject({
+    request = new Request({
       controller: 'write',
       action: 'create',
       requestId: 'foo',
@@ -61,7 +54,7 @@ describe('Test: notifier.notifyDocumentCreate', () => {
   });
 
   it('should notify registered users when a document has been created with correct attributes', () => {
-    return kuzzle.notifier.notifyDocumentCreate(requestObject, newDocument)
+    return kuzzle.notifier.notifyDocumentCreate(request, newDocument)
       .then(() => {
         should(notifiedRooms).be.an.Array();
         should(notifiedRooms.length).be.exactly(1);
@@ -70,7 +63,7 @@ describe('Test: notifier.notifyDocumentCreate', () => {
         should(mockupCacheService.room).be.an.Array();
         should(mockupCacheService.room[0]).be.exactly('foobar');
 
-        should(savedResponse).be.exactly(requestObject);
+        should(savedResponse).be.exactly(request);
         should(notification).be.an.Object();
         should(notification._id).be.exactly(newDocument._id);
         should(notification._source).match(newDocument._source);

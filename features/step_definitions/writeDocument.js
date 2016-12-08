@@ -83,7 +83,7 @@ var apiSteps = function () {
           return Promise.reject(aBody.error);
         }
         if (!aBody.result) {
-          return Promise.reject('No result provided');
+          return Promise.reject(new Error('No result provided'));
         }
       });
   });

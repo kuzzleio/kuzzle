@@ -1,6 +1,5 @@
 var
   clc = require('cli-color'),
-  childProcess = require('child_process'),
   Kuzzle = require('../../lib/api/kuzzle');
 
 /* eslint-disable no-console */
@@ -13,11 +12,6 @@ function commandPlugin (plugin, options) {
     kuzzle = new Kuzzle(),
     data = {};
 
-  if (!childProcess.hasOwnProperty('execSync')) {
-    console.error(clcError('███ kuzzle-plugins: Make sure you\'re using Node version >= 0.12'));
-    process.exit(1);
-  }
-
   checkOptions();
 
   options.options.forEach(opt => {
@@ -28,6 +22,7 @@ function commandPlugin (plugin, options) {
     data.version = data.packageVersion;
     delete data.packageVersion;
   }
+
   data._id = plugin;
 
   if (options.install) {
@@ -39,11 +34,11 @@ function commandPlugin (plugin, options) {
       console.log('');
 
       if (options.list) {
-        console.dir(res.data.body, {depth: null, colors: !options.parent.noColors});
+        console.dir(res.result, {depth: null, colors: !options.parent.noColors});
       }
       else if (options.install) {
-        if (res.data.body.success) {
-          console.log(clcOk(`███ kuzzle-plugins: Plugin ${res.data.body.name}@${res.data.body.version}:\n${JSON.stringify(res.data.body.config, undefined, 2)}`));
+        if (res.result.success) {
+          console.log(clcOk(`███ kuzzle-plugins: Plugin ${res.result.name}@${res.result.version}:\n${JSON.stringify(res.result.config, undefined, 2)}`));
         } else {
           console.log(clcError('███ kuzzle-plugins: An error occurred while installing plugin, for more information, please check kuzzle error logs'));
         }
@@ -52,7 +47,7 @@ function commandPlugin (plugin, options) {
         console.log(clcOk('[✔] Successfully imported configuration'));
       }
       else {
-        console.dir(res.data.body, {depth: null, colors: !options.parent.noColors});
+        console.dir(res.result, {depth: null, colors: !options.parent.noColors});
       }
 
       if (options.parent.debug) {
@@ -64,6 +59,11 @@ function commandPlugin (plugin, options) {
     })
     .catch(err => {
       console.error(clcError(err.message));
+
+      if (err.stack) {
+        console.error(clcError(err.stack));
+      }
+
       process.exit(err.status);
     });
 
@@ -71,9 +71,6 @@ function commandPlugin (plugin, options) {
    * Check the command-line validity.
    * Either this function completes successfully, or it exits the program
    * with a non-zero error code.
-   *
-   * @param plugin name
-   * @param options provided on the command-line (commander object)
    */
   function checkOptions() {
     var

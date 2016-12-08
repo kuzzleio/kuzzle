@@ -4,6 +4,8 @@ var
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
   KuzzleMock = require('../../mocks/kuzzle.mock'),
+  Action = require('../../../lib/api/cli/action'),
+  /** @type CliActions|RewiredModule */
   Cli = rewire('../../../lib/api/cli/index');
 
 describe('Tests: api/cli/index.js', () => {
@@ -19,54 +21,23 @@ describe('Tests: api/cli/index.js', () => {
   });
 
   describe('#constructor', () => {
-
     it('should build proper properties', () => {
-      Cli.__with__({
-        initActions: sinon.spy()
-      })(() => {
-        var
-          stub = Cli.__get__('initActions'),
-          cli = new Cli(kuzzle);
-
-        should(cli.actions).eql({});
-        should(cli.do).be.a.Function();
-        should(stub).be.calledOnce();
-      });
-    });
-
-  });
-
-  describe('#initActions', () => {
-    var
-      initActions = Cli.__get__('initActions');
-
-    it('should set the client actions', () => {
-      var action = {foo: 'bar'};
-
-      Cli.__with__({
-        Action: sinon.stub().returns(action)
-      })(() => {
-        var
-          context = {actions: {}},
-          spy = Cli.__get__('Action');
-
-        initActions.call(context);
-
-        should(context.actions).match({
-          adminExists: action,
-          clearCache: action,
-          cleanDb: action,
-          createFirstAdmin: action,
-          managePlugins: action,
-          data: action,
-          dump: action
-        });
-        should(spy).have.callCount(7);
-      });
+      var cli = new Cli(kuzzle);
+      should(cli.actions).be.Object();
+      should(cli.actions.adminExists).be.instanceOf(Action);
+      should(cli.actions.clearCache).be.instanceOf(Action);
+      should(cli.actions.cleanDb).be.instanceOf(Action);
+      should(cli.actions.createFirstAdmin).be.instanceOf(Action);
+      should(cli.actions.data).be.instanceOf(Action);
+      should(cli.actions.dump).be.instanceOf(Action);
+      should(cli.actions.managePlugins).be.instanceOf(Action);
+      should(cli.actions.managePlugins.timeout).be.eql(1000);
+      should(cli.actions.managePlugins.timeOutCB).be.a.Function();
+      should(cli.do).be.a.Function();
     });
   });
 
-  describe('#initActions - managePlugins timeoutCB', () => {
+  describe('#managePlugins timeoutCB', () => {
     it('should set a custom timeoutCB for the managePlugins action', () => {
       var action = {
         foo: 'bar',
@@ -75,7 +46,6 @@ describe('Tests: api/cli/index.js', () => {
       };
 
       Cli.__with__({
-        Action: sinon.stub().returns(action),
         console: {
           error: sinon.spy()
         },
@@ -87,24 +57,11 @@ describe('Tests: api/cli/index.js', () => {
         }
       })(() => {
         var
-          context = {actions: {}},
-          initActions = Cli.__get__('initActions'),
-          managePluginsArgs,
-          timeoutCB;
+          timeoutCB,
+          cli = new Cli(kuzzle);
 
-        initActions.call(context);
-
-        should(Cli.__get__('Action'))
-          .be.have.callCount(7);
-
-        managePluginsArgs = Cli.__get__('Action').getCall(6).args[0];
-        should(managePluginsArgs).match({
-          timeout: 1000
-        });
-
-        timeoutCB = managePluginsArgs.timeOutCB;
-        should(timeoutCB)
-          .be.an.instanceOf(Function);
+        timeoutCB = cli.actions.managePlugins.timeOutCB;
+        should(timeoutCB).be.an.instanceOf(Function);
 
         // first call - should init maxTimeout and spent
         timeoutCB.call(action);
@@ -154,10 +111,6 @@ describe('Tests: api/cli/index.js', () => {
           error: sinon.spy()
         },
         require: requireStub,
-        PluginsManager: sinon.stub().returns({
-          init: sinon.stub().returns(Promise.resolve()),
-          run: sinon.stub().returns(Promise.resolve())
-        }),
         process: {
           exit: sinon.spy(),
           kill: sinon.spy()
@@ -178,7 +131,7 @@ describe('Tests: api/cli/index.js', () => {
 
     it('should send the action to the internalBroker', () => {
       var
-        data = {foo: 'bar'},
+        data = {foo: 'bar', requestId: 'test'},
         context = {
           kuzzle: kuzzle,
           actions: {
@@ -201,10 +154,14 @@ describe('Tests: api/cli/index.js', () => {
           should(kuzzle.services.list.broker.send).be.calledOnce();
           should(kuzzle.services.list.broker.send.firstCall.args[0]).be.exactly('cli-queue');
           should(kuzzle.services.list.broker.send.firstCall.args[1]).match({
-            controller: 'actions',
-            action: 'test',
             data: {
-              body: data
+              requestId: 'test',
+              controller: 'actions',
+              action: 'test',
+              foo: 'bar'
+            },
+            options: {
+              status: 102
             }
           });
           should(context.actions.test.initTimeout).be.calledOnce();

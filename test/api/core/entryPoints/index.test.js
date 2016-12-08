@@ -3,10 +3,10 @@
  */
 var
   should = require('should'),
-  Kuzzle = require.main.require('lib/api/kuzzle'),
+  Kuzzle = require('../../../../lib/api/kuzzle'),
   sandbox = require('sinon').sandbox.create(),
-  EntryPoints = require.main.require('lib/api/core/entryPoints'),
-  KuzzleProxy = require.main.require('lib/api/core/entryPoints/kuzzleProxy');
+  EntryPoints = require('../../../../lib/api/core/entryPoints'),
+  KuzzleProxy = require('../../../../lib/api/core/entryPoints/kuzzleProxy');
 
 describe('Test: core/entryPoints', () => {
   afterEach(() => {
