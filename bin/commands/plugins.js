@@ -63,7 +63,7 @@ function commandPlugin (plugin, options) {
       if (err.stack) {
         console.error(clcError(err.stack));
       }
-      
+
       process.exit(err.status);
     });
 
