@@ -31,12 +31,10 @@ docker-compose -f docker-compose/debug.yml up
 
 You can now access to:
 
-* http://localhost:7511/api for the standard Kuzzle HTTP API
-* ws://localhost:7512 for the Socket.io API (needs the [Socket.io](https://github.com/kuzzleio/kuzzle-plugin-socketio) plugin installed)
+* http://localhost:7511 for the standard Kuzzle HTTP API
+* ws://localhost:7512 for the Socket.io API
+* ws://localhost:7513 for the raw websocket API
 * http://127.0.0.1:8080/debug?port=7000 to debug the server
-* http://127.0.0.1:8081/debug?port=7001 to debug the worker
-
-**Note:** Because we have two different process for server and worker, you have to debug these two applications by accessing two URL (with port 8080 and port 8081).  
 
 Every times a modification is detected by [PM2](https://github.com/Unitech/pm2), the server is restarted and the debugger page is automatically refreshed with the code up to date and with previous placed breakpoints.
 
