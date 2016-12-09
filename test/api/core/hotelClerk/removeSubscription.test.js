@@ -29,7 +29,7 @@ describe('Test: hotelClerk.removeSubscription', () => {
 
     unsubscribeRequest = new Request({
       controller: 'realtime',
-      action: 'off',
+      action: 'unsubscribe',
       index: index,
       collection: collection,
       body: { roomId: 'foo' }
@@ -121,7 +121,7 @@ describe('Test: hotelClerk.removeSubscription', () => {
         // testing requestObject argument
         should(kuzzle.notifier.notify.args[0][1]).be.instanceOf(Request);
         should(kuzzle.notifier.notify.args[0][1].input.controller).be.exactly('realtime');
-        should(kuzzle.notifier.notify.args[0][1].input.action).be.exactly('off');
+        should(kuzzle.notifier.notify.args[0][1].input.action).be.exactly('unsubscribe');
         should(kuzzle.notifier.notify.args[0][1].input.resource.index).be.exactly(index);
 
         // testing payload argument

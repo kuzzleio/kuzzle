@@ -48,7 +48,7 @@ describe('Test: hotelClerk.addSubscription', () => {
   it('should have the new room and customer', () => {
     var request = new Request({
       controller: 'realtime',
-      action: 'on',
+      action: 'subscribe',
       requestId: roomName,
       index: index,
       collection: collection,
@@ -147,7 +147,7 @@ describe('Test: hotelClerk.addSubscription', () => {
       pAddSubscription,
       request = new Request({
         controller: 'realtime',
-        action: 'on',
+        action: 'subscribe',
         collection: collection,
         index: index,
         body: {badkeyword : {firstName: 'Ada'}}
@@ -163,7 +163,7 @@ describe('Test: hotelClerk.addSubscription', () => {
       pAddSubscription,
       request = new Request({
         controller: 'realtime',
-        action: 'on',
+        action: 'subscribe',
         collection,
         body: {}
       }, context);
@@ -177,7 +177,7 @@ describe('Test: hotelClerk.addSubscription', () => {
       pAddSubscription,
       request = new Request({
         controller: 'realtime',
-        action: 'on',
+        action: 'subscribe',
         index,
         body: {}
       }, context);
@@ -368,7 +368,7 @@ describe('Test: hotelClerk.addSubscription', () => {
     var request = new Request({
       collection: collection,
       controller: 'realtime',
-      action: 'on',
+      action: 'subscribe',
       body: {},
       state: 'foo'
     }, context);
@@ -380,7 +380,7 @@ describe('Test: hotelClerk.addSubscription', () => {
     var request = new Request({
       collection: collection,
       controller: 'realtime',
-      action: 'on',
+      action: 'subscribe',
       body: {},
       scope: 'foo'
     }, context);
@@ -392,7 +392,7 @@ describe('Test: hotelClerk.addSubscription', () => {
     var request = new Request({
       collection: collection,
       controller: 'realtime',
-      action: 'on',
+      action: 'subscribe',
       body: {},
       users: 'foo'
     }, context);

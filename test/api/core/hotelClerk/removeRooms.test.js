@@ -63,7 +63,7 @@ describe('Test: hotelClerk.removeRooms', () => {
     var
       subscribeRequest = new Request({
         controller: 'realtime',
-        action: 'on',
+        action: 'subscribe',
         index: index,
         collection: collection1,
         body: {}
@@ -86,7 +86,7 @@ describe('Test: hotelClerk.removeRooms', () => {
     var
       subscribeRequest = new Request({
         controller: 'realtime',
-        action: 'on',
+        action: 'subscribe',
         index: index,
         collection: collection1,
         body: {}
@@ -113,7 +113,7 @@ describe('Test: hotelClerk.removeRooms', () => {
     var
       subscribeRequest = new Request({
         controller: 'realtime',
-        action: 'on',
+        action: 'subscribe',
         index: index,
         collection: collection1,
         body: filter1
@@ -140,14 +140,14 @@ describe('Test: hotelClerk.removeRooms', () => {
     var
       globalSubscribeRequest = new Request({
         controller: 'realtime',
-        action: 'on',
+        action: 'subscribe',
         index: index,
         collection: collection1,
         body: {}
       }, context),
       filterSubscribeRequest = new Request({
         controller: 'realtime',
-        action: 'on',
+        action: 'subscribe',
         index: index,
         collection: collection1,
         body: filter1
@@ -175,14 +175,14 @@ describe('Test: hotelClerk.removeRooms', () => {
     var
       subscribeCollection1 = new Request({
         controller: 'realtime',
-        action: 'on',
+        action: 'subscribe',
         index: index,
         collection: collection1,
         body: {}
       }, context),
       subscribeCollection2 = new Request({
         controller: 'realtime',
-        action: 'on',
+        action: 'subscribe',
         index: index,
         collection: collection2,
         body: {}
@@ -211,7 +211,7 @@ describe('Test: hotelClerk.removeRooms', () => {
     var
       subscribeCollection1 = new Request({
         controller: 'realtime',
-        action: 'on',
+        action: 'subscribe',
         index: index,
         collection: collection1,
         body: {}
@@ -235,14 +235,14 @@ describe('Test: hotelClerk.removeRooms', () => {
       roomId,
       subscribeFilter1 = new Request({
         controller: 'realtime',
-        action: 'on',
+        action: 'subscribe',
         index: index,
         collection: collection1,
         body: filter1
       }, context),
       subscribeFilter2 = new Request({
         controller: 'realtime',
-        action: 'on',
+        action: 'subscribe',
         index: index,
         collection: collection1,
         body: filter2
@@ -273,14 +273,14 @@ describe('Test: hotelClerk.removeRooms', () => {
       index2RoomName,
       subscribe1 = new Request({
         controller: 'realtime',
-        action: 'on',
+        action: 'subscribe',
         index: index,
         collection: collection1,
         body: {}
       }, context),
       subscribe2 = new Request({
         controller: 'realtime',
-        action: 'on',
+        action: 'subscribe',
         index: 'index2',
         collection: collection1,
         body: {}
@@ -312,14 +312,14 @@ describe('Test: hotelClerk.removeRooms', () => {
       collection2RoomName,
       subscribe1 = new Request({
         controller: 'realtime',
-        action: 'on',
+        action: 'subscribe',
         index: index,
         collection: collection1,
         body: {}
       }, context),
       subscribe2 = new Request({
         controller: 'realtime',
-        action: 'on',
+        action: 'subscribe',
         index: index,
         collection: collection2,
         body: {}
@@ -351,7 +351,7 @@ describe('Test: hotelClerk.removeRooms', () => {
       badRoomName = 'badRoomId',
       subscribeRequest = new Request({
         controller: 'realtime',
-        action: 'on',
+        action: 'subscribe',
         index: index,
         collection: collection1,
         body: {}

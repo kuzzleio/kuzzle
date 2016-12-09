@@ -24,12 +24,12 @@ describe('Test: subscribe controller', () => {
     sandbox.restore();
   });
 
-  describe('#on', () => {
+  describe('#subscribe', () => {
     it('should throw an error if index is not provided',() => {
       request.input.resource.index = null;
 
       should(() => {
-        realtimeController.on(request);
+        realtimeController.subscribe(request);
       }).throw(BadRequestError);
     });
 
@@ -37,7 +37,7 @@ describe('Test: subscribe controller', () => {
       request.input.resource.collection = null;
 
       should(() => {
-        realtimeController.on(request);
+        realtimeController.subscribe(request);
       }).throw(BadRequestError);
     });
 
@@ -45,12 +45,12 @@ describe('Test: subscribe controller', () => {
       request.input.body = null;
 
       should(() => {
-        realtimeController.on(request);
+        realtimeController.subscribe(request);
       }).throw(BadRequestError);
     });
 
     it('should call the proper hotelClerk method',() => {
-      return realtimeController.on(request)
+      return realtimeController.subscribe(request)
         .then(result => {
           should(result).be.match(foo);
           should(kuzzle.hotelClerk.addSubscription).be.calledOnce();
@@ -86,25 +86,25 @@ describe('Test: subscribe controller', () => {
     });
   });
 
-  describe('#off', () => {
+  describe('#unsubscribe', () => {
     it('should throw an error if body is not provided',() => {
       request.input.body = null;
 
       should(() => {
-        realtimeController.off(request);
+        realtimeController.unsubscribe(request);
       }).throw(BadRequestError);
     });
 
     it('should throw an error if roomId is not provided',() => {
       should(() => {
-        realtimeController.off(request);
+        realtimeController.unsubscribe(request);
       }).throw(BadRequestError);
     });
 
     it('should call the proper hotelClerk method',() => {
       request.input.body.roomId = 'foo';
 
-      return realtimeController.off(request)
+      return realtimeController.unsubscribe(request)
         .then(result => {
           should(result).be.match(foo);
           should(kuzzle.hotelClerk.removeSubscription).be.calledOnce();

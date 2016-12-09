@@ -29,7 +29,7 @@ describe('Test: hotelClerk.addToChannels', () => {
   beforeEach(() => {
     request = {
       controller: 'realtime',
-      action: 'on',
+      action: 'subscribe',
       requestId: 'foo',
       index: 'index',
       collection: 'bar',
@@ -177,12 +177,12 @@ describe('Test: hotelClerk.addToChannels', () => {
 
         channels.none = response.channel;
 
-        notification.action = 'on';
+        notification.action = 'subscribe';
         kuzzle.hotelClerk.addToChannels(eligibleChannels, roomId, notification);
         should(eligibleChannels.length).be.exactly(2);
         should(eligibleChannels.sort()).match([channels.all, channels.in].sort());
 
-        notification.action = 'off';
+        notification.action = 'unsubscribe';
         eligibleChannels = [];
         kuzzle.hotelClerk.addToChannels(eligibleChannels, roomId, notification);
         should(eligibleChannels.length).be.exactly(2);

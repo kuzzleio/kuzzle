@@ -222,7 +222,7 @@ ApiRT.prototype.subscribe = function (filters, client) {
       controller: 'realtime',
       collection: this.world.fakeCollection,
       index: this.world.fakeIndex,
-      action: 'on',
+      action: 'subscribe',
       users: 'all',
       body: null
     };
@@ -241,7 +241,7 @@ ApiRT.prototype.unsubscribe = function (room, clientId) {
       controller: 'realtime',
       collection: this.world.fakeCollection,
       index: this.world.fakeIndex,
-      action: 'off',
+      action: 'unsubscribe',
       body: { roomId: room }
     };
 
