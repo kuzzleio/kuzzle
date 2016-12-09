@@ -28,7 +28,7 @@ describe('Test: hotelClerk.addToChannels', () => {
 
   beforeEach(() => {
     request = {
-      controller: 'subscribe',
+      controller: 'realtime',
       action: 'on',
       requestId: 'foo',
       index: 'index',
@@ -157,7 +157,7 @@ describe('Test: hotelClerk.addToChannels', () => {
       .then(response => {
         roomId = response.roomId;
         notification = new NotificationObject(response.roomId, new Request({collection: 'foo', body: dataGrace}));
-        notification.controller = 'subscribe';
+        notification.controller = 'realtime';
         channels.all = response.channel;
         request.users = 'in';
         return kuzzle.hotelClerk.addSubscription(new Request(request), context);

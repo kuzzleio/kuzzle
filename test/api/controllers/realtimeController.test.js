@@ -3,7 +3,7 @@ var
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
   KuzzleMock = require('../../mocks/kuzzle.mock'),
-  SubscribeController = require('../../../lib/api/controllers/subscribeController'),
+  RealtimeController = require('../../../lib/api/controllers/realtimeController'),
   Request = require('kuzzle-common-objects').Request,
   BadRequestError = require('kuzzle-common-objects').errors.BadRequestError;
 
@@ -11,13 +11,13 @@ describe('Test: subscribe controller', () => {
   var
     kuzzle,
     request,
-    subscribeController,
+    realtimeController,
     foo = {foo: 'bar'};
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
-    subscribeController = new SubscribeController(kuzzle);
-    request = new Request({index: 'test', collection: 'collection', controller: 'subscribe', body: {}});
+    realtimeController = new RealtimeController(kuzzle);
+    request = new Request({index: 'test', collection: 'collection', controller: 'realtime', body: {}});
   });
 
   afterEach(() => {
@@ -29,7 +29,7 @@ describe('Test: subscribe controller', () => {
       request.input.resource.index = null;
 
       should(() => {
-        subscribeController.on(request);
+        realtimeController.on(request);
       }).throw(BadRequestError);
     });
 
@@ -37,7 +37,7 @@ describe('Test: subscribe controller', () => {
       request.input.resource.collection = null;
 
       should(() => {
-        subscribeController.on(request);
+        realtimeController.on(request);
       }).throw(BadRequestError);
     });
 
@@ -45,12 +45,12 @@ describe('Test: subscribe controller', () => {
       request.input.body = null;
 
       should(() => {
-        subscribeController.on(request);
+        realtimeController.on(request);
       }).throw(BadRequestError);
     });
 
     it('should call the proper hotelClerk method',() => {
-      return subscribeController.on(request)
+      return realtimeController.on(request)
         .then(result => {
           should(result).be.match(foo);
           should(kuzzle.hotelClerk.addSubscription).be.calledOnce();
@@ -64,20 +64,20 @@ describe('Test: subscribe controller', () => {
       request.input.body = null;
 
       should(() => {
-        subscribeController.join(request);
+        realtimeController.join(request);
       }).throw(BadRequestError);
     });
 
     it('should throw an error if roomId is not provided',() => {
       should(() => {
-        subscribeController.join(request);
+        realtimeController.join(request);
       }).throw(BadRequestError);
     });
 
     it('should call the proper hotelClerk method',() => {
       request.input.body.roomId = 'foo';
 
-      return subscribeController.join(request)
+      return realtimeController.join(request)
         .then(result => {
           should(result).be.match(foo);
           should(kuzzle.hotelClerk.join).be.calledOnce();
@@ -91,20 +91,20 @@ describe('Test: subscribe controller', () => {
       request.input.body = null;
 
       should(() => {
-        subscribeController.off(request);
+        realtimeController.off(request);
       }).throw(BadRequestError);
     });
 
     it('should throw an error if roomId is not provided',() => {
       should(() => {
-        subscribeController.off(request);
+        realtimeController.off(request);
       }).throw(BadRequestError);
     });
 
     it('should call the proper hotelClerk method',() => {
       request.input.body.roomId = 'foo';
 
-      return subscribeController.off(request)
+      return realtimeController.off(request)
         .then(result => {
           should(result).be.match(foo);
           should(kuzzle.hotelClerk.removeSubscription).be.calledOnce();
@@ -118,20 +118,20 @@ describe('Test: subscribe controller', () => {
       request.input.body = null;
 
       should(() => {
-        subscribeController.count(request);
+        realtimeController.count(request);
       }).throw(BadRequestError);
     });
 
     it('should throw an error if roomId is not provided',() => {
       should(() => {
-        subscribeController.count(request);
+        realtimeController.count(request);
       }).throw(BadRequestError);
     });
 
     it('should call the proper hotelClerk method',() => {
       request.input.body.roomId = 'foo';
 
-      return subscribeController.count(request)
+      return realtimeController.count(request)
         .then(result => {
           should(result).be.match(foo);
           should(kuzzle.hotelClerk.countSubscription).be.calledOnce();
@@ -142,11 +142,36 @@ describe('Test: subscribe controller', () => {
 
   describe('#list', () => {
     it('should call the proper hotelClerk method',() => {
-      return subscribeController.list(request)
+      return realtimeController.list(request)
         .then(result => {
           should(result).be.match(foo);
           should(kuzzle.hotelClerk.listSubscriptions).be.calledOnce();
           should(kuzzle.hotelClerk.listSubscriptions).be.calledWith(request);
+        });
+    });
+  });
+
+  describe('#publish', () => {
+    it('should resolve to a valid response', () => {
+      request.input.resource.index = '%test';
+      request.input.resource.collection = 'test-collection';
+
+      return realtimeController.publish(request)
+        .then(response => {
+          try {
+            should(kuzzle.validation.validationPromise).be.calledOnce();
+
+            should(kuzzle.notifier.publish).be.calledOnce();
+            should(kuzzle.notifier.publish).be.calledWith(request);
+
+            should(response).be.instanceof(Object);
+            should(response).match(foo);
+
+            return Promise.resolve();
+          }
+          catch(error) {
+            return Promise.reject(error);
+          }
         });
     });
   });

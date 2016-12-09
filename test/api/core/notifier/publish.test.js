@@ -34,7 +34,7 @@ describe('Test: notifier.publish', () => {
     return kuzzle.services.init({whitelist: []})
       .then(() => {
         request = {
-          controller: 'write',
+          controller: 'realtime',
           action: 'publish',
           requestId: 'foo',
           collection: 'bar',
@@ -77,6 +77,7 @@ describe('Test: notifier.publish', () => {
   it('should cache the document in case of a create document request', (done) => {
     sandbox.stub(kuzzle.dsl, 'test').returns(rooms);
 
+    request.controller = 'document';
     request.action = 'create';
     kuzzle.notifier.publish(new Request(request));
     should(notification.state).be.eql('pending');
@@ -94,6 +95,7 @@ describe('Test: notifier.publish', () => {
   it('should cache the document in case of a createOrReplace document request', (done) => {
     sandbox.stub(kuzzle.dsl, 'test').returns(rooms);
 
+    request.controller = 'document';
     request.action = 'createOrReplace';
     kuzzle.notifier.publish(new Request(request));
     should(notification.state).be.eql('pending');
@@ -110,6 +112,7 @@ describe('Test: notifier.publish', () => {
   it('should cache the document in case of a replace document request', (done) => {
     sandbox.stub(kuzzle.dsl, 'test').returns(rooms);
 
+    request.controller = 'document';
     request.action = 'replace';
     kuzzle.notifier.publish(new Request(request));
     should(notification.state).be.eql('pending');

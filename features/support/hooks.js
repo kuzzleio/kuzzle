@@ -42,7 +42,7 @@ var myHooks = function () {
         .catch(error => {
           // Ignores deleteIndex errors if they occur because the deleted index
           // does not exists
-          if (error.error.status === 404 && error.error.action === 'deleteIndex') {
+          if (error.error.status === 404 && error.error.controller === 'index' && error.error.action === 'delete') {
             return callback();
           }
 

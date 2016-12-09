@@ -1,34 +1,108 @@
 var
   should = require('should'),
   sinon = require('sinon'),
-  Request = require('kuzzle-common-objects').Request,
+  sandbox = sinon.sandbox.create(),
   KuzzleMock = require('../../mocks/kuzzle.mock'),
-  WriteController = require('../../../lib/api/controllers/writeController');
+  Request = require('kuzzle-common-objects').Request,
+  DocumentController = require('../../../lib/api/controllers/documentController'),
+  foo = {foo: 'bar'};
 
-describe('Test: write controller', () => {
+describe('Test: document controller', () => {
   var
-    foo = {foo: 'bar'},
-    /** @type WriteController */
-    controller,
+    documentController,
     kuzzle,
-    engine,
-    request;
-
+    request,
+    engine;
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
     engine = kuzzle.services.list.storageEngine;
-    controller = new WriteController(kuzzle);
-
-    request = new Request({body: {foo: 'bar'}});
+    documentController = new DocumentController(kuzzle);
+    request = new Request({index: '%test', collection: 'unit-test-documentController'});
   });
+
+  afterEach(() => {
+    sandbox.restore();
+  });
+
+  describe('#search', () => {
+    it('should fulfill with an object', () => {
+      return documentController.search(request)
+        .then(response => {
+          should(response).be.instanceof(Object);
+          should(response).be.match(foo);
+        });
+    });
+
+    it('should reject an error in case of error', () => {
+      kuzzle.services.list.storageEngine.search.returns(Promise.reject(new Error('foobar')));
+
+      return should(documentController.search(request)).be.rejectedWith('foobar');
+    });
+  });
+
+  describe('#scroll', () => {
+    it('should fulfill with an object', () => {
+      return documentController.scroll(request)
+        .then(response => {
+          should(response).be.instanceof(Object);
+          should(response).be.match(foo);
+        });
+    });
+
+    it('should reject an error in case of error', () => {
+      kuzzle.services.list.storageEngine.scroll.returns(Promise.reject(new Error('foobar')));
+
+      return should(documentController.scroll(request)).be.rejectedWith('foobar');
+    });
+  });
+
+  describe('#get', () => {
+    beforeEach(() => {
+      request.input.resource._id = 'an id';
+    });
+
+    it('should fulfill with an object', () => {
+      return documentController.get(request)
+        .then(response => {
+          should(response).be.instanceof(Object);
+          should(response).be.match({_source: {foo}});
+        });
+    });
+
+    it('should reject an error in case of error', () => {
+      kuzzle.services.list.storageEngine.get.returns(Promise.reject(new Error('foobar')));
+      return should(documentController.get(request)).be.rejected();
+    });
+  });
+
+  describe('#count', () => {
+    beforeEach(() => {
+      request.input.body = {some: 'body'};
+    });
+
+    it('should fulfill with an object', () => {
+      return documentController.count(request)
+        .then(response => {
+          should(response).be.Number();
+          should(response).be.eql(42);
+        });
+    });
+
+    it('should reject an error in case of error', () => {
+      kuzzle.services.list.storageEngine.count.returns(Promise.reject(new Error('foobar')));
+      return should(documentController.count(request)).be.rejected();
+    });
+  });
+
 
   describe('#create', () => {
     it('should resolve to a valid response', () => {
       request.input.resource.index = '%test';
       request.input.resource.collection = 'test-collection';
+      request.input.body = {};
 
-      return controller.create(request)
+      return documentController.create(request)
         .then(response => {
           try {
             should(kuzzle.validation.validationPromise).be.calledOnce();
@@ -59,37 +133,13 @@ describe('Test: write controller', () => {
     });
   });
 
-  describe('#publish', () => {
-    it('should  resolve to a valid response', () => {
-      request.input.resource.index = '%test';
-      request.input.resource.collection = 'test-collection';
-
-      return controller.publish(request)
-        .then(response => {
-          try {
-            should(kuzzle.validation.validationPromise).be.calledOnce();
-
-            should(kuzzle.notifier.publish).be.calledOnce();
-            should(kuzzle.notifier.publish).be.calledWith(request);
-
-            should(response).be.instanceof(Object);
-            should(response).match(foo);
-
-            return Promise.resolve();
-          }
-          catch(error) {
-            return Promise.reject(error);
-          }
-        });
-    });
-  });
-
   describe('#createOrReplace', () => {
     it('should resolve to a valid response', () => {
       request.input.resource.index = '%test';
       request.input.resource.collection = 'test-collection';
+      request.input.body = {};
 
-      return controller.createOrReplace(request)
+      return documentController.createOrReplace(request)
         .then(response => {
           try {
             should(kuzzle.validation.validationPromise).be.calledOnce();
@@ -126,10 +176,11 @@ describe('Test: write controller', () => {
     it('should trigger a "create" notification if the document did not exist', () => {
       request.input.resource.index = '%test';
       request.input.resource.collection = 'test-collection';
+      request.input.body = {};
 
       engine.createOrReplace.returns(Promise.resolve(Object.assign({}, foo, {created: true})));
 
-      return controller.createOrReplace(request)
+      return documentController.createOrReplace(request)
         .then(response => {
           try {
             should(kuzzle.validation.validationPromise).be.calledOnce();
@@ -160,8 +211,9 @@ describe('Test: write controller', () => {
       request.input.resource.index = '%test';
       request.input.resource.collection = 'test-collection';
       request.input.resource._id = 'document-id';
+      request.input.body = {};
 
-      return controller.update(request)
+      return documentController.update(request)
         .then(response => {
           try {
             should(kuzzle.validation.validationPromise).be.calledOnce();
@@ -194,8 +246,9 @@ describe('Test: write controller', () => {
       request.input.resource.index = '%test';
       request.input.resource.collection = 'test-collection';
       request.input.resource._id = 'document-id';
+      request.input.body = {};
 
-      return controller.replace(request)
+      return documentController.replace(request)
         .then(response => {
           try {
             should(kuzzle.validation.validationPromise).be.calledOnce();
@@ -233,7 +286,7 @@ describe('Test: write controller', () => {
       request.input.resource.collection = 'test-collection';
       request.input.resource._id = 'document-id';
 
-      return controller.delete(request)
+      return documentController.delete(request)
         .then(response => {
           try {
             should(kuzzle.notifier.publish).be.calledOnce();
@@ -268,7 +321,7 @@ describe('Test: write controller', () => {
       request.input.resource.collection = 'test-collection';
       request.input.body = {query: {some: 'query'}};
 
-      return controller.deleteByQuery(request)
+      return documentController.deleteByQuery(request)
         .then(response => {
           try {
 
@@ -295,38 +348,7 @@ describe('Test: write controller', () => {
     });
   });
 
-  describe('#createCollection', () => {
-    it('should resolve to a valid response', () => {
-      request.input.resource.index = '%test';
-      request.input.resource.collection = 'test-collection';
-
-      return controller.createCollection(request)
-        .then(response => {
-          try {
-            should(engine.createCollection).be.calledOnce();
-            should(engine.createCollection).be.calledWith(request);
-
-            should(kuzzle.indexCache.add).be.calledOnce();
-            should(kuzzle.indexCache.add).be.calledWith(request.input.resource.index, request.input.resource.collection);
-
-            sinon.assert.callOrder(
-              engine.createCollection,
-              kuzzle.indexCache.add
-            );
-
-            should(response).be.instanceof(Object);
-            should(response).match(foo);
-
-            return Promise.resolve();
-          }
-          catch(error) {
-            return Promise.reject(error);
-          }
-        });
-    });
-  });
-
-  describe('#validateDocument', () => {
+  describe('#validate', () => {
     it('should send the right response when the given document satisfy the specifications', () => {
       var expected = {
         errorMessages: {},
@@ -336,12 +358,13 @@ describe('Test: write controller', () => {
       request.input.resource.index = '%test';
       request.input.resource.collection = 'test-collection';
       request.input.resource._id = 'document-id';
+      request.input.body = {};
 
       kuzzle.validation = {
         validationPromise: sinon.stub().returns(Promise.resolve(expected))
       };
 
-      return controller.validate(request)
+      return documentController.validate(request)
         .then(response => {
           try {
             should(kuzzle.validation.validationPromise).be.calledOnce();
@@ -375,10 +398,11 @@ describe('Test: write controller', () => {
       request.input.resource.index = '%test';
       request.input.resource.collection = 'test-collection';
       request.input.resource._id = 'document-id';
+      request.input.body = {};
 
       kuzzle.validation.validationPromise = sinon.stub().returns(Promise.resolve(expected));
 
-      return controller.validate(request)
+      return documentController.validate(request)
         .then(response => {
           try {
             should(kuzzle.validation.validationPromise).be.calledOnce();

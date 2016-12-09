@@ -47,7 +47,7 @@ describe('Test: hotelClerk.addSubscription', () => {
 
   it('should have the new room and customer', () => {
     var request = new Request({
-      controller: 'subscribe',
+      controller: 'realtime',
       action: 'on',
       requestId: roomName,
       index: index,
@@ -101,7 +101,7 @@ describe('Test: hotelClerk.addSubscription', () => {
 
   it('should trigger a proxy:joinChannel hook', () => {
     var request = new Request({
-      controller: 'subscribe',
+      controller: 'realtime',
       collection: collection,
       index: index,
       body: filter
@@ -124,7 +124,7 @@ describe('Test: hotelClerk.addSubscription', () => {
 
   it('should return the same response when the user has already subscribed to the filter', done => {
     var request = new Request({
-      controller: 'subscribe',
+      controller: 'realtime',
       collection: collection,
       index: index,
       body: filter
@@ -146,7 +146,7 @@ describe('Test: hotelClerk.addSubscription', () => {
     var
       pAddSubscription,
       request = new Request({
-        controller: 'subscribe',
+        controller: 'realtime',
         action: 'on',
         collection: collection,
         index: index,
@@ -162,7 +162,7 @@ describe('Test: hotelClerk.addSubscription', () => {
     var
       pAddSubscription,
       request = new Request({
-        controller: 'subscribe',
+        controller: 'realtime',
         action: 'on',
         collection,
         body: {}
@@ -176,7 +176,7 @@ describe('Test: hotelClerk.addSubscription', () => {
     var
       pAddSubscription,
       request = new Request({
-        controller: 'subscribe',
+        controller: 'realtime',
         action: 'on',
         index,
         body: {}
@@ -190,7 +190,7 @@ describe('Test: hotelClerk.addSubscription', () => {
   it('should return the same room ID if the same filters are used', done => {
     var
       request1 = new Request({
-        controller: 'subscribe',
+        controller: 'realtime',
         collection: collection,
         index: index,
         body: {
@@ -211,7 +211,7 @@ describe('Test: hotelClerk.addSubscription', () => {
         }
       }, context),
       request2 = new Request({
-        controller: 'subscribe',
+        controller: 'realtime',
         collection: collection,
         index: index,
         body: {
@@ -252,7 +252,7 @@ describe('Test: hotelClerk.addSubscription', () => {
   it('should allow subscribing with an empty filter', () => {
     var
       request = new Request({
-        controller: 'subscribe',
+        controller: 'realtime',
         index: index,
         collection: collection
       }, context);
@@ -263,12 +263,12 @@ describe('Test: hotelClerk.addSubscription', () => {
   it('should delay a room creation if it has been marked for destruction', done => {
     var
       request1 = new Request({
-        controller: 'subscribe',
+        controller: 'realtime',
         index: index,
         collection: collection
       }, context),
       request2 = new Request({
-        controller: 'subscribe',
+        controller: 'realtime',
         index: index,
         collection: collection
       }, {connectionId: 'anotherID', user: null});
@@ -300,7 +300,7 @@ describe('Test: hotelClerk.addSubscription', () => {
     var
       anotherRoomId,
       request1 = new Request({
-        controller: 'subscribe',
+        controller: 'realtime',
         index: index,
         collection: collection
       }, {connectionId: 'connection1', user: null});
@@ -322,7 +322,7 @@ describe('Test: hotelClerk.addSubscription', () => {
         var request2 = new Request({
           collection: collection,
           index: index,
-          controller: 'subscribe',
+          controller: 'realtime',
           action: 'join',
           body: {
             roomId: id
@@ -356,7 +356,7 @@ describe('Test: hotelClerk.addSubscription', () => {
     var request = new Request({
       collection: collection,
       index: index,
-      controller: 'subscribe',
+      controller: 'realtime',
       action: 'join',
       body: {roomId: 'no way I can exist'}
     }, context);
@@ -367,7 +367,7 @@ describe('Test: hotelClerk.addSubscription', () => {
   it('should reject the subscription if the given state argument is incorrect', () => {
     var request = new Request({
       collection: collection,
-      controller: 'subscribe',
+      controller: 'realtime',
       action: 'on',
       body: {},
       state: 'foo'
@@ -379,7 +379,7 @@ describe('Test: hotelClerk.addSubscription', () => {
   it('should reject the subscription if the given scope argument is incorrect', () => {
     var request = new Request({
       collection: collection,
-      controller: 'subscribe',
+      controller: 'realtime',
       action: 'on',
       body: {},
       scope: 'foo'
@@ -391,7 +391,7 @@ describe('Test: hotelClerk.addSubscription', () => {
   it('should reject the subscription if the given users argument is incorrect', () => {
     var request = new Request({
       collection: collection,
-      controller: 'subscribe',
+      controller: 'realtime',
       action: 'on',
       body: {},
       users: 'foo'
@@ -403,13 +403,13 @@ describe('Test: hotelClerk.addSubscription', () => {
   it('should treat null/undefined filters as empty filters', done => {
     var
       request1 = new Request({
-        controller: 'subscribe',
+        controller: 'realtime',
         collection: collection,
         index: index,
         body: {}
       }, context),
       request2 = new Request({
-        controller: 'subscribe',
+        controller: 'realtime',
         collection: collection,
         index: index,
         body: null

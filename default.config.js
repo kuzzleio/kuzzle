@@ -82,7 +82,7 @@ module.exports = {
                 updateSelf: true
               }
             },
-            read: {
+            server: {
               actions: {
                 serverInfo: true
               }
@@ -99,7 +99,7 @@ module.exports = {
                 login: true
               }
             },
-            read: {
+            server: {
               actions: {
                 serverInfo: true
               }

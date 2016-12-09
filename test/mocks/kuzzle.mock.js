@@ -14,7 +14,7 @@ function KuzzleMock () {
 
   for (k in this) {
     if (!this.hasOwnProperty(k)) {
-      this[k] = function () {               // eslint-disable-line no-loop-func
+      this[k] = function () { // eslint-disable-line no-loop-func
         throw new Error(`Kuzzle original property ${k} is not mocked`);
       };
     }
@@ -54,8 +54,10 @@ function KuzzleMock () {
 
   this.funnel = {
     controllers: {
-      admin: {
-        adminExists: sinon.spy(),
+      server: {
+        adminExists: sinon.stub(),
+      },
+      security: {
         createFirstAdmin: sinon.spy()
       }
     },

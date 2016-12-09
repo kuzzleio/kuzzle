@@ -118,7 +118,7 @@ describe('Test the auth controller', () => {
 
     it('should resolve to a valid jwt token if authentication succeed', () => {
       sandbox.stub(kuzzle.passport, 'authenticate', r => Promise.resolve({_id: r.query.username}));
-      return kuzzle.funnel.controllers.auth.login(request, {})
+      return kuzzle.funnel.controllers.auth.login(request)
         .then(response => {
           var decodedToken = jwt.verify(response.jwt, params.security.jwt.secret);
           should(decodedToken._id).be.equal('jdoe');
@@ -128,7 +128,7 @@ describe('Test the auth controller', () => {
     it('should resolve to a redirect url', () => {
       sandbox.stub(kuzzle.passport, 'authenticate').returns(Promise.resolve({headers: {Location: 'http://github.com'}}));
 
-      return kuzzle.funnel.controllers.auth.login(request, {})
+      return kuzzle.funnel.controllers.auth.login(request)
         .then(response => {
           should(response.headers.Location).be.equal('http://github.com');
         });
@@ -143,7 +143,7 @@ describe('Test the auth controller', () => {
 
       delete request.input.body.strategy;
 
-      return kuzzle.funnel.controllers.auth.login(request, {})
+      return kuzzle.funnel.controllers.auth.login(request)
         .then(() => {
           should(spy.calledOnce).be.true();
         });
@@ -189,7 +189,7 @@ describe('Test the auth controller', () => {
 
     it('should reject if authentication failure', () => {
       sandbox.stub(kuzzle.passport, 'authenticate').returns(Promise.reject(new Error('Mockup Wrapper Error')));
-      return kuzzle.funnel.controllers.auth.login(request, {})
+      return kuzzle.funnel.controllers.auth.login(request)
         .then(() => should.fail('Authenticate should have reject'))
         .catch((error) => {
           should(error.message).be.exactly('Mockup Wrapper Error');

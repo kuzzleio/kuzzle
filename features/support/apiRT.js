@@ -347,7 +347,7 @@ ApiRT.prototype.deleteIndexes = function () {
   var
     msg = {
       controller: 'index',
-      action: 'delete'
+      action: 'mdelete'
     };
 
   return this.send(msg);
@@ -388,8 +388,8 @@ ApiRT.prototype.deleteIndex = function (index) {
 ApiRT.prototype.getServerInfo = function () {
   var
     msg = {
-      controller: 'read',
-      action: 'serverInfo',
+      controller: 'server',
+      action: 'info',
       body: {}
     };
 

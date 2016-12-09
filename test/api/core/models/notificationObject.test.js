@@ -10,7 +10,7 @@ describe('Test: NotificationObject', () => {
   var
     roomId = 'fakeroomid',
     request = new Request({
-      controller: 'subscribe',
+      controller: 'realtime',
       action: 'count',
       index: 'fakeIndex',
       collection: 'fakecollection',
