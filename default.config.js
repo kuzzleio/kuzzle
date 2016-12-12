@@ -84,7 +84,7 @@ module.exports = {
             },
             server: {
               actions: {
-                serverInfo: true
+                info: true
               }
             }
           }
@@ -101,7 +101,7 @@ module.exports = {
             },
             server: {
               actions: {
-                serverInfo: true
+                info: true
               }
             }
           }
