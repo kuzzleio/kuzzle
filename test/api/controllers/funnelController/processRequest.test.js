@@ -85,7 +85,7 @@ describe('funnelController.processRequest', () => {
     sandbox.stub(kuzzle.repositories.user, 'load').returns(Promise.resolve({_id: -1, isActionAllowed: sandbox.stub().returns(Promise.resolve(false))}));
     sandbox.stub(kuzzle.repositories.token, 'verifyToken').returns(Promise.resolve({userId: -1}));
 
-    return should(processRequest(kuzzle, kuzzle.funnel, new Request({controller: 'read', index: '@test', action: 'get'})))
+    return should(processRequest(kuzzle, kuzzle.funnel, new Request({controller: 'document', index: '@test', action: 'get'})))
       .be.rejectedWith(UnauthorizedError);
   });
 
@@ -94,22 +94,22 @@ describe('funnelController.processRequest', () => {
     sandbox.stub(kuzzle.repositories.user, 'load').returns(Promise.resolve({_id: 'user', isActionAllowed: sandbox.stub().returns(Promise.resolve(false))}));
     sandbox.stub(kuzzle.repositories.token, 'verifyToken').returns(Promise.resolve({user: 'user'}));
 
-    return should(processRequest(kuzzle, kuzzle.funnel, new Request({controller: 'read', index: '@test', action: 'get'})))
+    return should(processRequest(kuzzle, kuzzle.funnel, new Request({controller: 'document', index: '@test', action: 'get'})))
       .be.rejectedWith(ForbiddenError);
   });
 
   it('should resolve the promise if everything is ok', () => {
     var request = new Request({
       requestId: 'requestId',
-      controller: 'read',
-      action: 'listIndexes',
+      controller: 'index',
+      action: 'list',
       collection: 'collection'
     });
 
     kuzzle.repositories.token.verifyToken.restore();
     sandbox.stub(kuzzle.repositories.user, 'load').returns(Promise.resolve({_id: 'user', isActionAllowed: sandbox.stub().returns(Promise.resolve(true))}));
     sandbox.stub(kuzzle.repositories.token, 'verifyToken').returns(Promise.resolve({user: 'user'}));
-    sandbox.stub(kuzzle.funnel.controllers.read, 'listIndexes').returns(Promise.resolve());
+    sandbox.stub(kuzzle.funnel.controllers.index, 'list').returns(Promise.resolve());
 
     return processRequest(kuzzle, kuzzle.funnel, request);
   });

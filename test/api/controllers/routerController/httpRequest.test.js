@@ -124,8 +124,8 @@ describe('Test: routerController.httpRequest', () => {
 
     routeController.router.route(httpRequest, result => {
       try {
-        should(response.input.controller).be.eql('admin');
-        should(response.input.action).be.eql('deleteIndex');
+        should(response.input.controller).be.eql('index');
+        should(response.input.action).be.eql('delete');
         should(result).be.instanceOf(HttpResponse);
         should(result.id).be.eql(httpRequest.requestId);
         should(result.type).be.eql('application/json');
@@ -145,8 +145,8 @@ describe('Test: routerController.httpRequest', () => {
 
     routeController.router.route(httpRequest, result => {
       try {
-        should(response.input.controller).be.eql('read');
-        should(response.input.action).be.eql('serverInfo');
+        should(response.input.controller).be.eql('server');
+        should(response.input.action).be.eql('info');
         should(result).be.instanceOf(HttpResponse);
         should(result.id).be.eql(httpRequest.requestId);
         should(result.type).be.eql('application/json');

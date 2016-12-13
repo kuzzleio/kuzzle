@@ -90,7 +90,7 @@ module.exports = function () {
       },
       role2: {
         controllers: {
-          'read': {
+          'document': {
             actions: {
               '*': true
             }
@@ -100,7 +100,7 @@ module.exports = function () {
       },
       role3: {
         controllers: {
-          'read': {
+          'document': {
             actions: {
               'search': true
             }
