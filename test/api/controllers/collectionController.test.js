@@ -220,6 +220,8 @@ describe('Test: collection controller', () => {
       return collectionController.updateSpecifications(request)
         .catch(error => {
           try {
+            should(kuzzle.pluginsManager.trigger).be.calledOnce();
+            should(kuzzle.pluginsManager.trigger.firstCall).be.calledWith('validation:error', 'Some errors with provided specifications.');
             should(kuzzle.internalEngine.refresh).not.be.called();
             should(kuzzle.validation.curateSpecification).not.be.called();
             should(kuzzle.internalEngine.createOrReplace).not.be.called();
@@ -255,24 +257,24 @@ describe('Test: collection controller', () => {
       };
 
       CollectionController.__set__({
-        prepareSpecificationValidation: sandbox.stub().returns(Promise.resolve(request.input.body))
+        validateGivenSpecifications: sandbox.stub().returns(Promise.resolve({valid: true}))
       });
 
       return collectionController.validateSpecifications(request)
         .then(response => {
-          try {
-            should(response).match({valid: true});
+          should(response).match({valid: true});
 
-            return Promise.resolve();
-          }
-          catch (error) {
-            return Promise.reject(error);
-          }
+          return Promise.resolve();
         });
     });
 
     it('should call the right functions and respond with the right response if there is an error', () => {
-      var err = new Error('error');
+      var errorResponse = {
+        valid: false,
+        details: ['bad bad is a bad type'],
+        message: 'Some error message'
+      };
+
       request.input.body = {
         myindex: {
           mycollection: {
@@ -288,20 +290,13 @@ describe('Test: collection controller', () => {
         }
       };
 
-      err.details = 'some error';
-
       CollectionController.__set__({
-        prepareSpecificationValidation: sandbox.stub().returns(Promise.reject(err))
+        validateGivenSpecifications: sandbox.stub().returns(Promise.resolve(errorResponse))
       });
 
       return collectionController.validateSpecifications(request)
-        .then(() => Promise.reject())
-        .catch((error) => {
-          should(request.result).match({
-            valid: false,
-            errors: 'some error'
-          });
-          should(error).be.eql(err);
+        .then(response => {
+          should(response).match(errorResponse);
         });
     });
   });

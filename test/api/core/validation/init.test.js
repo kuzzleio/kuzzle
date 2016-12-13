@@ -427,6 +427,25 @@ describe('Test: validation initialization', () => {
         .be.rejectedWith('an error');
     });
 
+    it('should reject an error if the field specification returns an error', () => {
+      var
+        indexName = 'anIndex',
+        collectionName = 'aCollection',
+        collectionSpec = {
+          fields: {
+            some: 'bad field'
+          }
+        },
+        dryRun = false;
+
+      checkAllowedPropertiesStub.returns(true);
+      Validation.__set__('checkAllowedProperties', checkAllowedPropertiesStub);
+      sandbox.stub(validation, 'structureCollectionValidation').returns({isValid: false, errors: ['an error']});
+
+      return should(validation.curateCollectionSpecification(indexName, collectionName, collectionSpec, dryRun))
+        .be.rejectedWith('an error');
+    });
+
     it('should reject an error if the field specification returns an error in verbose mode', () => {
       var
         indexName = 'anIndex',
