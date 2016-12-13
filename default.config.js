@@ -170,6 +170,7 @@ module.exports = {
   dump: {
     enabled: false,
     path: './dump/',
+    gcore: '/usr/bin/gcore',
     dateFormat: 'YYYYMMDD-HHmm',
     handledErrors: {
       enabled: true,
