@@ -11,7 +11,6 @@ const
   NotFoundError = require('kuzzle-common-objects').errors.NotFoundError,
   KuzzleError = require('kuzzle-common-objects').errors.KuzzleError,
   ESClientMock = require('../../mocks/services/elasticsearchClient.mock'),
-  KuzzleMock = require('../../mocks/kuzzle.mock'),
   ES = rewire('../../../lib/services/elasticsearch');
 
 describe('Test: ElasticSearch service', () => {
@@ -675,6 +674,7 @@ describe('Test: ElasticSearch service', () => {
 
           should(error).be.instanceOf(Error);
           should(elasticsearch.client.update.firstCall.args[0].id).be.undefined();
+          done();
         });
     });
   });
@@ -728,7 +728,7 @@ describe('Test: ElasticSearch service', () => {
 
       return elasticsearch.deleteByQuery(request)
         .then(result => {
-          should(elasticsearch.client.search.firstCall.args[0].query).be.exactly(request.data.query);
+          should(elasticsearch.client.search.firstCall.args[0]).be.not.undefined();
 
           // Ugly line in order to spot a random bug on this unit test
           should(result.ids).not.be.undefined().and.be.an.Array();
@@ -766,7 +766,7 @@ describe('Test: ElasticSearch service', () => {
               if (cmd.update) {
                 should(cmd.update).not.be.undefined().and.be.an.Object();
                 should(mockupIds.indexOf(cmd.update._id)).not.be.eql(-1);
-                should(cmd.update._type).be.exactly(request.collection);
+                should(cmd.update._type).be.exactly(request.input.resource.collection);
               }
               if (cmd.doc) {
                 should(cmd.doc).not.be.undefined().and.be.an.Object();
@@ -787,26 +787,26 @@ describe('Test: ElasticSearch service', () => {
     it('should return a rejected promise if the delete by query fails because of a bad filter', () => {
       elasticsearch.client.search.yields(new Error(), {});
 
-      return should(elasticsearch.deleteByQuery(requestObject)).be.rejected();
+      return should(elasticsearch.deleteByQuery(request)).be.rejected();
     });
 
     it('should return a rejected promise if the delete by query fails because of a bulk failure', () => {
-      var error = new Error('Mocked error');
+      var error = new KuzzleError('Mocked error');
       elasticsearch.client.bulk.returns(Promise.reject(error));
 
-      requestObject.data.body = {};
+      request.input.body.query = {some: 'query'};
 
       return ES.__with__({
         getAllIdsFromQuery: () => Promise.resolve(['foo', 'bar'])
       })(() => {
-        return should(elasticsearch.deleteByQuery(requestObject)).be.rejectedWith(error);
+        return should(elasticsearch.deleteByQuery(request)).be.rejectedWith(error);
       });
     });
 
     it('should return a rejected promise if the delete by query fails because the filter is null', () => {
-      requestObject.data.body = null;
+      request.input.body.query = null;
 
-      return should(elasticsearch.deleteByQuery(requestObject)).be.rejectedWith(BadRequestError);
+      return should(elasticsearch.deleteByQuery(request)).be.rejectedWith(BadRequestError);
     });
   });
 
@@ -814,10 +814,10 @@ describe('Test: ElasticSearch service', () => {
     it('should return an empty result array when no document has been deleted using a filter', () => {
       elasticsearch.client.search.yields(null, {hits: {hits: [], total: 0}});
 
-      delete requestObject.data.body;
-      requestObject.data.filter = {term: {firstName: 'no way any document can be returned with this filter'}};
+      delete request.input.body;
+      request.input.body.query = {term: {firstName: 'no way any document can be returned with this filter'}};
 
-      return should(elasticsearch.deleteByQueryFromTrash(requestObject)
+      return should(elasticsearch.deleteByQueryFromTrash(request)
         .then(result => {
           should(elasticsearch.client.search.firstCall.args[0].body.query).be.exactly(request.input.body.query);
 
@@ -838,8 +838,11 @@ describe('Test: ElasticSearch service', () => {
       elasticsearch.client.search.yields(null, {hits: {hits: [{_id: 'foo'}, {_id: 'bar'}, {_id: 'baz'}], total: mockupIds.length}});
 
       return ES.__with__({
-        getAllIdsFromQuery: getAllIdsStub,
-        refreshIndexIfNeeded: refreshIndexSpy
+        getPaginatedIdsFromQuery: getAllIdsStub,
+        refreshIndexIfNeeded: refreshIndexSpy,
+        Date: {
+          now: () => 42
+        }
       })(() => {
         return should(elasticsearch.deleteByQueryFromTrash(request)
           .then(result => {
@@ -862,7 +865,7 @@ describe('Test: ElasticSearch service', () => {
 
             // refreshIndexIfNeeded
             should(refreshIndexSpy.calledOnce).be.true();
-          });
+          }));
       });
     });
 

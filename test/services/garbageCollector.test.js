@@ -142,10 +142,11 @@ describe('Test: GarbageCollector service', () => {
             should(kuzzle.services.list.storageEngine.listCollections)
               .be.calledTwice();
 
-            should(kuzzle.services.list.storageEngine.listCollections.getCall(0).args[0].index)
+            console.log(kuzzle.services.list.storageEngine.listCollections.getCall(0).args[0].input.resource)
+            should(kuzzle.services.list.storageEngine.listCollections.getCall(0).args[0].input.resource.index)
               .be.exactly('index1');
 
-            should(kuzzle.services.list.storageEngine.listCollections.getCall(1).args[0].index)
+            should(kuzzle.services.list.storageEngine.listCollections.getCall(1).args[0].input.resource.index)
               .be.exactly('index2');
 
             should(ids)
@@ -159,6 +160,9 @@ describe('Test: GarbageCollector service', () => {
               ]});
 
             done();
+          })
+          .catch(error => {
+            done(error);
           });
       });
 
@@ -186,10 +190,10 @@ describe('Test: GarbageCollector service', () => {
             should(kuzzle.services.list.storageEngine.listCollections)
               .be.calledTwice();
 
-            should(kuzzle.services.list.storageEngine.listCollections.getCall(0).args[0].index)
+            should(kuzzle.services.list.storageEngine.listCollections.getCall(0).args[0].input.resource.index)
               .be.exactly('index1');
 
-            should(kuzzle.services.list.storageEngine.listCollections.getCall(1).args[0].index)
+            should(kuzzle.services.list.storageEngine.listCollections.getCall(1).args[0].input.resource.index)
               .be.exactly('index2');
 
             should(kuzzle.pluginsManager.trigger)
