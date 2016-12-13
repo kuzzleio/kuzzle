@@ -124,7 +124,7 @@
   - Fixed breaking changes between lodash 3.10 and 4.6
   - Fixed new errors fired by ESLint 2
   - Deactivated ESLint `consistent-return` rule, as it appears to be bugged for the moment
-  - Removed `async` use from `RequestObject.checkInformation`, as it was overkill
+  - Removed `async` use from `Request.checkInformation`, as it was overkill
 * Feature/docker switch to alpine #207
 * small doc refactor #213
 * Fix from/to dsl operators #211
