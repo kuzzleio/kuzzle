@@ -142,7 +142,6 @@ describe('Test: GarbageCollector service', () => {
             should(kuzzle.services.list.storageEngine.listCollections)
               .be.calledTwice();
 
-            console.log(kuzzle.services.list.storageEngine.listCollections.getCall(0).args[0].input.resource)
             should(kuzzle.services.list.storageEngine.listCollections.getCall(0).args[0].input.resource.index)
               .be.exactly('index1');
 
