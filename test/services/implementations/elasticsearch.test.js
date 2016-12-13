@@ -659,8 +659,7 @@ describe('Test: ElasticSearch service', () => {
 
     it('should return a rejected promise with an Error if an update fails for unknown reason', done => {
       var
-        esError = new Error('banana error'),
-        spyTrigger = kuzzle.pluginsManager.trigger;
+        esError = new Error('banana error');
 
       elasticsearch.client.update.returns(Promise.reject(esError));
 
