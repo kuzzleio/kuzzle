@@ -65,7 +65,7 @@ describe('Test: routerController.httpRequest', () => {
         should(result.id).be.eql(httpRequest.requestId);
         should(result.type).be.eql('application/json');
         should(result.status).be.eql(1234);
-        should(result.content).be.eql(JSON.stringify(response.response));
+        should(result.content).be.exactly(response.response);
         done();
       }
       catch (e) {
@@ -87,7 +87,7 @@ describe('Test: routerController.httpRequest', () => {
         should(result.id).be.eql(httpRequest.requestId);
         should(result.type).be.eql('application/json');
         should(result.status).be.eql(1234);
-        should(result.content).be.eql(JSON.stringify(response.response));
+        should(result.content).be.exactly(response.response);
         done();
       }
       catch (e) {
@@ -109,7 +109,7 @@ describe('Test: routerController.httpRequest', () => {
         should(result.id).be.eql(httpRequest.requestId);
         should(result.type).be.eql('application/json');
         should(result.status).be.eql(1234);
-        should(result.content).be.eql(JSON.stringify(response.response));
+        should(result.content).be.exactly(response.response);
         done();
       }
       catch (e) {
@@ -130,7 +130,7 @@ describe('Test: routerController.httpRequest', () => {
         should(result.id).be.eql(httpRequest.requestId);
         should(result.type).be.eql('application/json');
         should(result.status).be.eql(1234);
-        should(result.content).be.eql(JSON.stringify(response.response));
+        should(result.content).be.exactly(response.response);
         done();
       }
       catch (e) {
@@ -151,7 +151,7 @@ describe('Test: routerController.httpRequest', () => {
         should(result.id).be.eql(httpRequest.requestId);
         should(result.type).be.eql('application/json');
         should(result.status).be.eql(1234);
-        should(result.content).be.eql(JSON.stringify(response.response));
+        should(result.content).be.exactly(response.response);
         done();
       }
       catch (e) {
@@ -208,7 +208,7 @@ describe('Test: routerController.httpRequest', () => {
         should(result.id).be.eql(httpRequest.requestId);
         should(result.type).be.eql('application/json');
         should(result.status).be.eql(1234);
-        should(result.content).be.eql(JSON.stringify(response.response));
+        should(result.content).be.exactly(response.response);
         done();
       }
       catch (e) {
@@ -227,7 +227,7 @@ describe('Test: routerController.httpRequest', () => {
         should(result.id).be.eql(httpRequest.requestId);
         should(result.type).be.eql('application/json');
         should(result.status).be.eql(404);
-        should(result.content).startWith('{"status":404,"error":{"status":404,"message":"API URL not found: /foo/bar"');
+        should(JSON.stringify(result.content)).startWith('{"status":404,"error":{"status":404,"message":"API URL not found: /foo/bar"');
         done();
       }
       catch (e) {
