@@ -16,7 +16,7 @@ module.exports = {
       activated: true
     },
     'kuzzle-plugin-auth-passport-local': {
-      version: '3.0.1',
+      version: '3.0.2',
       activated: true
     }
   },
@@ -154,6 +154,11 @@ module.exports = {
       host: 'localhost',
       port: 9200,
       apiVersion: '5.0'
+    },
+
+    garbageCollector: {
+      cleanInterval: 86400000,
+      maxDelete: 1000
     }
 
   },
