@@ -2,8 +2,8 @@
 
 var
   should = require('should').noConflict(),
-  BadRequestError = require('kuzzle-common-objects').Errors.badRequestError,
-  NotFoundError = require('kuzzle-common-objects').Errors.notFoundError,
+  BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,
+  NotFoundError = require('kuzzle-common-objects').errors.NotFoundError,
   DSL = require('../../../lib/api/dsl');
 
 describe('DSL API', () => {

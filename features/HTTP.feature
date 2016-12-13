@@ -1,80 +1,76 @@
-Feature: Test REST API
-  As a user
-  I want to create/update/delete/search a document and test bulk import
-  Using REST API
+Feature: Test HTTP API
 
-  @usingREST
+  @usingHttp
   Scenario: Get server information
     When I get server informations
-    Then I can retrieve the Kuzzle API version
 
-  @usingREST
+  @usingHttp @cleanValidations
   Scenario: Publish a realtime message
     When I publish a message
     Then I should receive a request id
     Then I'm not able to get the document
     And I'm not able to get the document in index "kuzzle-test-index-alt"
 
-  @usingREST
+  @usingHttp
   Scenario: Create a new document and get it
     When I write the document
     Then I should receive a document id
     Then I'm able to get the document
     And I'm not able to get the document in index "kuzzle-test-index-alt"
 
-  @usingREST
+  @usingHttp
   Scenario: Create or Update a document
     When I write the document
     And I createOrReplace it
     Then I should have updated the document
 
-  @usingREST
+  @usingHttp
   Scenario: Replace a document
     When I write the document "documentGrace"
     Then I replace the document with "documentAda" document
     Then my document has the value "Ada" in field "firstName"
 
-  @usingREST
+  @usingHttp
   Scenario: Update a document
     When I write the document
     Then I update the document with value "foo" in field "firstName"
     Then my document has the value "foo" in field "firstName"
 
-  @usingREST
+  @usingHttp
   Scenario: Delete a document
     When I write the document
     Then I remove the document
     Then I'm not able to get the document
 
-  @usingREST
+  @usingHttp
   Scenario: Search a document
     When I write the document "documentGrace"
     And I refresh the index
     Then I find a document with "grace" in field "firstName"
     And I don't find a document with "grace" in field "firstName" in index "kuzzle-test-index-alt"
 
-  @usingREST
+  @usingHttp
   Scenario: Bulk import
     When I do a bulk import
     Then I can retrieve actions from bulk import
 
-  @usingREST
+  @usingHttp
   Scenario: Can't do a bulk import on internal index
     When I can't do a bulk import from index "%kuzzle"
 
-  @usingREST
+  @usingHttp
   Scenario: Global Bulk import
     When I do a global bulk import
     Then I can retrieve actions from bulk import
 
-  @usingREST
+  @usingHttp
   Scenario: Truncate collection
     When I write the document
     Then I refresh the index
     Then I truncate the collection
     Then I'm not able to get the document
 
-  @usingREST
+  @usingHttp
   Scenario: Count document
     When I write the document "documentGrace"
     When I write the document "documentAda"
@@ -86,7 +82,7 @@ Feature: Test REST API
     Then I truncate the collection
     And I count 0 documents
 
-  @usingREST
+  @usingHttp
   Scenario: Search with scroll documents
     When I write the document "documentGrace"
     When I write the document "documentGrace"
@@ -96,7 +92,7 @@ Feature: Test REST API
     Then I find a document with "Grace" in field "firstName" with scroll "5m"
     And I be able to scroll previous search
 
-  @usingREST
+  @usingHttp
   Scenario: Change mapping
     When I write the document "documentGrace"
     Then I don't find a document with "Grace" in field "firstName"
@@ -105,28 +101,28 @@ Feature: Test REST API
     And I refresh the index
     Then I find a document with "Grace" in field "newFirstName"
 
-  @usingREST
+  @usingHttp
   Scenario: Getting the last statistics frame
     When I get the last statistics frame
     Then I get at least 1 statistic frame
 
-  @usingREST
+  @usingHttp
   Scenario: Getting the statistics frame from a date
     When I get the statistics frame from a date
     Then I get at least 1 statistic frame
 
-  @usingREST
+  @usingHttp
   Scenario: Getting all statistics frame
     When I get all statistics frames
     Then I get at least 1 statistic frame
 
-  @usingREST
+  @usingHttp
   Scenario: list known stored collections
     When I write the document "documentGrace"
     And I list "stored" data collections
     Then I can find a stored collection kuzzle-collection-test
 
-  @usingREST
+  @usingHttp
   Scenario: Index and collection existence
     When I check if index "%kuzzle" exists
     Then The result should raise an error with message "Cannot operate on Kuzzle internal index "%kuzzle""
@@ -140,24 +136,24 @@ Feature: Test REST API
     When I check if collection "kuzzle-collection-test" exists on index "kuzzle-test-index"
     Then The result should match the json true
 
-  @usingREST
+  @usingHttp
   Scenario: list known realtime collections
     When I list "realtime" data collections
     Then I can not find a realtime collection
 
-  @usingREST
+  @usingHttp
   Scenario: get the Kuzzle timestamp
     When I get the server timestamp
     Then I can read the timestamp
 
-  @usingREST
+  @usingHttp
   Scenario: create additional index
     When I create an index named "kuzzle-test-index-new"
     Then I'm able to find the index named "kuzzle-test-index-new" in index list
     Then I'm not able to find the index named "my-undefined-index" in index list
     Then I'm able to delete the index named "kuzzle-test-index-new"
 
-  @usingREST @cleanSecurity
+  @usingHttp @cleanSecurity
   Scenario: login user
     Given I create a user "useradmin" with id "user1-id"
     When I log in as user1-id:testpwd expiring in 1h
@@ -169,11 +165,11 @@ Feature: Test REST API
     Then I check the JWT Token
     And The token is invalid
 
-  @usingREST @cleanSecurity
+  @usingHttp @cleanSecurity
   Scenario: create restricted user
     Then I create a restricted user "restricteduser1" with id "restricteduser1-id"
 
-  @usingREST @cleanSecurity
+  @usingHttp @cleanSecurity
   Scenario: Create/get/search/update/delete role
     When I create a new role "role1" with id "test"
     Then I'm able to find a role with id "test"
@@ -189,19 +185,19 @@ Feature: Test REST API
     Then I'm able to find "3" role by searching controller corresponding to role "role1"
     Then I'm able to find "1" role by searching controller corresponding to role "role1" from "0" to "1"
 
-  @usingREST @cleanSecurity
+  @usingHttp @cleanSecurity
   Scenario: create an invalid profile with unexisting role triggers an error
     Then I cannot create an invalid profile
 
-  @usingREST @cleanSecurity
+  @usingHttp @cleanSecurity
   Scenario: get profile without id triggers an error
     Then I cannot a profile without ID
 
-  @usingREST @cleanSecurity
+  @usingHttp @cleanSecurity
   Scenario: creating a profile with an empty set of roles triggers an error
     Then I cannot create a profile with an empty set of roles
 
-  @usingREST @cleanSecurity
+  @usingHttp @cleanSecurity
   Scenario: create, get and delete a profile
     Given I create a new role "role1" with id "role1"
     And I create a new role "role2" with id "role2"
@@ -210,7 +206,7 @@ Feature: Test REST API
     Given I delete the profile with id "my-new-profile"
     Then I'm not able to find the profile with id "my-new-profile"
 
-  @usingREST @cleanSecurity
+  @usingHttp @cleanSecurity
   Scenario: search and update profiles
     Given I create a new role "role1" with id "role1"
     And I create a new role "role2" with id "role2"
@@ -226,7 +222,7 @@ Feature: Test REST API
     Then I delete the profile "my-profile-1"
     Then I delete the profile "my-profile-2"
 
-  @usingREST @cleanSecurity
+  @usingHttp @cleanSecurity
   Scenario: get profile rights
     Given I create a new role "role1" with id "role1"
     And I create a new role "role2" with id "role2"
@@ -234,7 +230,7 @@ Feature: Test REST API
     Then I'm able to find rights for profile "profile2"
     Then I'm not able to find rights for profile "fake-profile"
 
-  @usingREST @cleanSecurity
+  @usingHttp @cleanSecurity
   Scenario: user crudl
     When I create a new role "role1" with id "role1"
     And I create a new role "role2" with id "role2"
@@ -250,9 +246,9 @@ Feature: Test REST API
     When I log in as useradmin-id:testpwd expiring in 1h
     Then I am getting the current user, which matches {"_id":"#prefix#useradmin-id","_source":{"profileIds":["admin"]}}
     Then I log out
-    Then I am getting the current user, which matches {"_id":-1,"_source":{"profileIds":["anonymous"]}}
+    Then I am getting the current user, which matches {"_id":"-1","_source":{"profileIds":["anonymous"]}}
 
-  @usingREST @cleanSecurity
+  @usingHttp @cleanSecurity
   Scenario: user updateSelf
     When I create a new user "useradmin" with id "useradmin-id"
     Then I am able to get the user "useradmin-id" matching {"_id":"#prefix#useradmin-id","_source":{"profileIds":["admin"]}}
@@ -261,9 +257,9 @@ Feature: Test REST API
     Then I update current user with data {"foo":"bar"}
     Then I am getting the current user, which matches {"_id":"#prefix#useradmin-id","_source":{"profileIds":["admin"],"foo":"bar"}}
     Then I log out
-    Then I am getting the current user, which matches {"_id":-1,"_source":{"profileIds":["anonymous"]}}
+    Then I am getting the current user, which matches {"_id":"-1","_source":{"profileIds":["anonymous"]}}
 
-  @usingREST @cleanSecurity
+  @usingHttp @cleanSecurity
   Scenario: user permissions
     Given I create a new role "role1" with id "role1"
     And I create a new role "role2" with id "role2"
@@ -365,7 +361,7 @@ Feature: Test REST API
     And I'm not allowed to count documents in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test-alt"
     Then I log out
 
-  @usingREST @cleanSecurity
+  @usingHttp @cleanSecurity
   Scenario: get user rights
     Given I create a new role "role1" with id "role1"
     And I create a new role "role2" with id "role2"
@@ -374,7 +370,7 @@ Feature: Test REST API
     Then I'm able to find rights for user "user2-id"
     Then I'm not able to find rights for user "fakeuser-id"
 
-  @usingREST @cleanSecurity
+  @usingHttp @cleanSecurity
   Scenario: get my rights
     Given I create a new role "role1" with id "role1"
     And I create a new role "role2" with id "role2"
@@ -383,7 +379,7 @@ Feature: Test REST API
     When I log in as user2-id:testpwd2 expiring in 1h
     Then I'm able to find my rights
 
-  @usingREST @cleanRedis
+  @usingHttp @cleanRedis
   Scenario: memory storage - misc
     When I call the info method of the memory storage with arguments
       """
@@ -409,7 +405,7 @@ Feature: Test REST API
       """
     Then The ms result should match the regex ^\d{10}$
 
-  @usingREST @cleanRedis
+  @usingHttp @cleanRedis
   Scenario: memory storage - scalars
     Given I call the set method of the memory storage with arguments
       """
@@ -453,7 +449,7 @@ Feature: Test REST API
     Then The ms result should match the json 4
     When I call the append method of the memory storage with arguments
       """
-      { "_id": "#prefix#mykey", "body": "bar" }
+      { "_id": "#prefix#mykey", "body": { "value": "bar" }}
       """
     Then The ms result should match the json 4
     When I call the get method of the memory storage with arguments
@@ -463,12 +459,12 @@ Feature: Test REST API
     Then The ms result should match the json "4bar"
     When I call the getrange method of the memory storage with arguments
       """
-      { "_id": "#prefix#mykey", "body": { "start": 1, "end": 2 }}
+      { "_id": "#prefix#mykey", "args": { "start": 1, "end": 2 }}
       """
     Then The ms result should match the json "ba"
     When I call the getbit method of the memory storage with arguments
       """
-      { "_id": "#prefix#mykey", "body": { "offset": 3 } }
+      { "_id": "#prefix#mykey", "args": { "offset": 3 } }
       """
     Then The ms result should match the json 1
     When I call the del method of the memory storage with arguments
@@ -483,15 +479,15 @@ Feature: Test REST API
     Then The ms result should match the json null
     Given I call the set method of the memory storage with arguments
       """
-      { "_id": "#prefix#x", "body": "foobar" }
+      { "_id": "#prefix#x", "body": { "value": "foobar" }}
       """
     And I call the set method of the memory storage with arguments
       """
-      { "_id": "#prefix#y", "body": "abcdef" }
+      { "_id": "#prefix#y", "body": { "value": "abcdef" }}
       """
     When I call the mget method of the memory storage with arguments
       """
-      { "_id": "#prefix#x", "body": { "keys": ["#prefix#y", "nonexisting"]}}
+      { "_id": "#prefix#x", "args": { "keys": ["#prefix#y", "nonexisting"]}}
       """
     Then The ms result should match the json ["foobar", "abcdef", null]
     When I call the bitop method of the memory storage with arguments
@@ -514,7 +510,7 @@ Feature: Test REST API
     Then The ms result should match the json "goofev"
     When I call the bitpos method of the memory storage with arguments
       """
-      { "_id": "#prefix#x", "body": { "bit": 1 } }
+      { "_id": "#prefix#x", "args": { "bit": 1 } }
       """
     Then The ms result should match the json 1
     Given I call the set method of the memory storage with arguments
@@ -542,7 +538,7 @@ Feature: Test REST API
       """
     When I call the mget method of the memory storage with arguments
       """
-      { "body": { "keys": [ "#prefix#foo", "#prefix#k2"] } }
+      { "args": { "keys": [ "#prefix#foo", "#prefix#k2"] } }
       """
     Then The ms result should match the json ["bar", "v2"]
     When I call the msetnx method of the memory storage with arguments
@@ -590,7 +586,7 @@ Feature: Test REST API
     Then The ms result should match the regex .+
     Given I call the set method of the memory storage with arguments
       """
-      { "_id": "#prefix#foo", "body": "bar" }
+      { "_id": "#prefix#foo", "body": {"value": "bar" }}
       """
     And I call the rename method of the memory storage with arguments
       """
@@ -608,7 +604,7 @@ Feature: Test REST API
     Then The ms result should match the json 0
     Given I call the set method of the memory storage with arguments
       """
-      { "_id": "#prefix#foo", "body": "Hello World" }
+      { "_id": "#prefix#foo", "body": {"value": "Hello World" }}
       """
     And I call the setrange method of the memory storage with arguments
       """
@@ -623,7 +619,7 @@ Feature: Test REST API
       """
       {
         "_id": "#prefix#mykey",
-        "body": "Your base are belong to us"
+        "body": {"value": "Your base are belong to us"}
       }
       """
     When I call the strlen method of the memory storage with arguments
@@ -647,7 +643,7 @@ Feature: Test REST API
       """
     Then The ms result should match the regex ^9[5-9]$
 
-  @usingREST @cleanRedis
+  @usingHttp @cleanRedis
   Scenario: memory storage - lists
     Given I call the rpush method of the memory storage with arguments
       """
@@ -656,7 +652,7 @@ Feature: Test REST API
     Then The ms result should match the json 3
     When I call the lindex method of the memory storage with arguments
       """
-      { "_id": "#prefix#list", "body": { "idx": 1 } }
+      { "_id": "#prefix#list", "args": { "idx": 1 } }
       """
     Then The ms result should match the json "abcd"
     When I call the linsert method of the memory storage with arguments
@@ -666,7 +662,7 @@ Feature: Test REST API
     Then The ms result should match the json 4
     When I call the lrange method of the memory storage with arguments
       """
-       { "_id": "#prefix#list", "body": { "start": 2, "stop": 3  } }
+       { "_id": "#prefix#list", "args": { "start": 2, "stop": 3  } }
       """
     And The ms result should match the json [ "inserted", "5" ]
     When I call the llen method of the memory storage with arguments
@@ -690,7 +686,7 @@ Feature: Test REST API
       """
     When I call the lindex method of the memory storage with arguments
       """
-      { "_id": "#prefix#list", "body": { "idx": 0 } }
+      { "_id": "#prefix#list", "args": { "idx": 0 } }
       """
     Then The ms result should match the json "first"
     When I call the lpushx method of the memory storage with arguments
@@ -708,7 +704,7 @@ Feature: Test REST API
       """
     And I call the lrange method of the memory storage with arguments
       """
-      { "_id": "#prefix#list", "body": { "start": 0, "stop": -1  } }
+      { "_id": "#prefix#list", "args": { "start": 0, "stop": -1  } }
       """
     Then The ms result should match the json ["first", "abcd", "inserted", "5", "hello", "foo"]
     Given I call the lset method of the memory storage with arguments
@@ -717,7 +713,7 @@ Feature: Test REST API
       """
     When I call the lindex method of the memory storage with arguments
       """
-      {"_id": "#prefix#list", "body": {"idx": 1}}
+      {"_id": "#prefix#list", "args": {"idx": 1}}
       """
     Then The ms result should match the json "replaced"
     Given I call the ltrim method of the memory storage with arguments
@@ -726,7 +722,7 @@ Feature: Test REST API
       """
     When I call the lrange method of the memory storage with arguments
       """
-      { "_id": "#prefix#list", "body": { "start": 0, "stop": -1  } }
+      { "_id": "#prefix#list", "args": { "start": 0, "stop": -1  } }
       """
     Then The ms result should match the json ["inserted", "5"]
     When I call the rpop method of the memory storage with arguments
@@ -786,7 +782,7 @@ Feature: Test REST API
       """
     Then The ms result should match the json "list"
 
-  @usingREST @cleanRedis
+  @usingHttp @cleanRedis
   Scenario: memory storage - hash
     Given I call the hset method of the memory storage with arguments
       """
@@ -803,7 +799,7 @@ Feature: Test REST API
     Then The ms result should match the json 1
     When I call the hget method of the memory storage with arguments
       """
-      { "_id": "#prefix#hash", "body": { "field": "foo" }}
+      { "_id": "#prefix#hash", "args": { "field": "foo" }}
       """
     Then The ms result should match the json "bar"
     When I call the hgetall method of the memory storage with arguments
@@ -838,7 +834,7 @@ Feature: Test REST API
       """
     Then The ms result should match the json "17.5"
 
-  @usingREST @cleanRedis
+  @usingHttp @cleanRedis
   Scenario: memory storage - sets
     Given I call the sadd method of the memory storage with arguments
       """
@@ -860,7 +856,7 @@ Feature: Test REST API
       """
     When I call the sdiff method of the memory storage with arguments
       """
-      { "_id": "#prefix#set2", "body": { "keys": [ "#prefix#set1"] }}
+      { "_id": "#prefix#set2", "args": { "keys": [ "#prefix#set1"] }}
       """
     Then The sorted ms result should match the json ["d", "e"]
     Given I call the sdiffstore method of the memory storage with arguments
@@ -874,7 +870,7 @@ Feature: Test REST API
     Then The sorted ms result should match the json ["d", "e"]
     When I call the sinter method of the memory storage with arguments
       """
-      { "_id": "#prefix#set1", "body": { "keys": ["#prefix#set2"] }}
+      { "_id": "#prefix#set1", "args": { "keys": ["#prefix#set2"] }}
       """
     Then The ms result should match the json ["c"]
     Given I call the sinterstore method of the memory storage with arguments
@@ -902,7 +898,7 @@ Feature: Test REST API
     Then The sorted ms result should match the json ["a", "b", "c", "d", "e"]
     When I call the sismember method of the memory storage with arguments
       """
-      {"_id": "#prefix#set", "body": { "member": 10 } }
+      {"_id": "#prefix#set", "args": { "member": 10 } }
       """
     Then The ms result should match the json 1
     Given I call the smove method of the memory storage with arguments
@@ -963,7 +959,7 @@ Feature: Test REST API
       """
     Then The ms result should match the json []
 
-  @usingREST @cleanRedis
+  @usingHttp @cleanRedis
   Scenario: memory storage - sorted sets
     Given I call the zadd method of the memory storage with arguments
       """
@@ -984,7 +980,7 @@ Feature: Test REST API
       """
       {
         "_id": "#prefix#zset",
-        "body": {
+        "args": {
           "start": 0,
           "stop": -1,
           "withscores": true
@@ -1001,7 +997,7 @@ Feature: Test REST API
       """
       {
         "_id": "#prefix#zset",
-        "body": {
+        "args": {
           "min": "(1",
           "max": 3
         }
@@ -1022,7 +1018,7 @@ Feature: Test REST API
       """
       {
         "_id": "#prefix#zset",
-        "body": {
+        "args": {
           "start": 0,
           "stop": -1,
           "withscores": true
@@ -1057,7 +1053,7 @@ Feature: Test REST API
       """
       {
         "_id": "#prefix#zset3",
-        "body": { "start": 0, "stop": -1, "withscores": true }
+        "args": { "start": 0, "stop": -1, "withscores": true }
       }
       """
     Then The ms result should match the json ["uno", "2", "two", "8"]
@@ -1076,7 +1072,7 @@ Feature: Test REST API
       """
       {
         "_id": "#prefix#zset3",
-        "body": { "start": 0, "stop": -1, "withscores": true }
+        "args": { "start": 0, "stop": -1, "withscores": true }
       }
       """
     Then The ms result should match the json ["one","2","uno","2","three","6","two","8"]
@@ -1104,7 +1100,7 @@ Feature: Test REST API
       """
       {
         "_id": "#prefix#zset",
-        "body": {
+        "args": {
           "min": "[o",
           "max": "(v"
         }
@@ -1115,7 +1111,7 @@ Feature: Test REST API
       """
       {
         "_id": "#prefix#zset",
-        "body": {
+        "args": {
           "min": "[o",
           "max": "(v"
         }
@@ -1136,7 +1132,7 @@ Feature: Test REST API
       """
       {
         "_id": "#prefix#zset",
-        "body": { "start": 0, "stop": -1 }
+        "args": { "start": 0, "stop": -1 }
       }
       """
     Then The ms result should match the json ["five","four","zero"]
@@ -1163,7 +1159,7 @@ Feature: Test REST API
       """
       {
         "_id": "#prefix#zset",
-        "body": {
+        "args": {
           "min": "(0",
           "max": "3",
           "offset": 1,
@@ -1177,7 +1173,7 @@ Feature: Test REST API
       """
       {
         "_id": "#prefix#zset",
-        "body": {
+        "args": {
           "min": "(0",
           "max": "3",
           "offset": 1,
@@ -1189,7 +1185,7 @@ Feature: Test REST API
     Then The ms result should match the json ["two", "2", "one", "1"]
     When I call the zscore method of the memory storage with arguments
       """
-      { "_id": "#prefix#zset", "body": { "member": "two" } }
+      { "_id": "#prefix#zset", "args": { "member": "two" } }
       """
     Then The ms result should match the json "2"
     When I call the zrem method of the memory storage with arguments
@@ -1200,7 +1196,7 @@ Feature: Test REST API
       """
       {
         "_id": "#prefix#zset",
-        "body": { "start": 0, "stop": -1, "withscores": true }
+        "args": { "start": 0, "stop": -1, "withscores": true }
       }
       """
     Then The ms result should match the json ["zero", "0", "one", "1", "three", "3", "four", "4"]
@@ -1222,12 +1218,12 @@ Feature: Test REST API
       """
       {
         "_id": "#prefix#zset",
-        "body": { "start": 0, "stop": -1, "withscores": true }
+        "args": { "start": 0, "stop": -1, "withscores": true }
       }
       """
     Then The ms result should match the json ["zero", "0", "one", "1", "four", "4"]
 
-  @usingREST @cleanRedis
+  @usingHttp @cleanRedis
   Scenario: memory storage - hyperloglog
 
     Given I call the pfadd method of the memory storage with arguments
@@ -1271,7 +1267,7 @@ Feature: Test REST API
       """
     When I call the pfcount method of the memory storage with arguments
       """
-      { "body": { "keys": [ "#prefix#hll", "#prefix#hll2"] } }
+      { "args": { "keys": [ "#prefix#hll", "#prefix#hll2"] } }
       """
     Then The ms result should match the json 11
     When I call the pfmerge method of the memory storage with arguments
@@ -1289,7 +1285,7 @@ Feature: Test REST API
       """
     Then The ms result should match the json 11
 
-  @usingREST
+  @usingHttp
   Scenario: autorefresh
     When I check the autoRefresh status
     Then The result should match the json false
@@ -1307,7 +1303,7 @@ Feature: Test REST API
     When I update the document with value "Josepha" in field "firstName"
     Then I find a document with "josepha" in field "firstName"
 
-  @usingREST @cleanValidations
+  @usingHttp @cleanValidations
   Scenario: Validation - getSpecification & updateSpecification
     When There is no specifications for index "kuzzle-test-index" and collection "kuzzle-collection-test"
     Then I put a not valid specification for index "kuzzle-test-index" and collection "kuzzle-collection-test"
@@ -1317,14 +1313,14 @@ Feature: Test REST API
     And There is no error message
     And There is a specification for index "kuzzle-test-index" and collection "kuzzle-collection-test"
 
-  @usingREST @cleanValidations
+  @usingHttp @cleanValidations
   Scenario: Validation - validateSpecification
     When I post a valid specification
     Then There is no error message
     When I post an invalid specification
     Then There is an error message
 
-  @usingREST @cleanValidations
+  @usingHttp @cleanValidations
   Scenario: Validation - validateDocument
     When I put a valid specification for index "kuzzle-test-index" and collection "kuzzle-collection-test"
     Then There is no error message
@@ -1333,7 +1329,7 @@ Feature: Test REST API
     When I post an invalid document
     Then There is an error message
 
-  @usingREST @cleanValidations
+  @usingHttp @cleanValidations
   Scenario: Validation - validateDocument
     When I put a valid specification for index "kuzzle-test-index" and collection "kuzzle-collection-test"
     Then There is no error message
@@ -1342,7 +1338,7 @@ Feature: Test REST API
     When I post an invalid document
     Then There is an error message
 
-  @usingREST @cleanValidations
+  @usingHttp @cleanValidations
   Scenario: Validation - deleteSpecifications
     When I put a valid specification for index "kuzzle-test-index" and collection "kuzzle-collection-test"
     Then There is no error message

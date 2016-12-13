@@ -1,5 +1,5 @@
 var
-  PassportResponse = require.main.require('lib/api/core/auth/passportResponse'),
+  PassportResponse = require('../../../../lib/api/core/auth/passportResponse'),
   sinon = require('sinon'),
   should = require('should');
 

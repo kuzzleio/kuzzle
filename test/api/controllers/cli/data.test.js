@@ -2,9 +2,9 @@ var
   should = require('should'),
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
-  InternalError = require('kuzzle-common-objects').Errors.internalError,
+  InternalError = require('kuzzle-common-objects').errors.InternalError,
   KuzzleMock = require('../../../mocks/kuzzle.mock'),
-  RequestObject = require('kuzzle-common-objects').Models.requestObject,
+  Request = require('kuzzle-common-objects').Request,
   dataHandler = require('../../../../lib/api/controllers/cli/data');
 
 describe('Test: data handler', () => {
@@ -30,7 +30,7 @@ describe('Test: data handler', () => {
 
   it('should import fixtures if required', () => {
     var
-      req = new RequestObject({
+      req = new Request({
         index: 'index',
         collection: 'collection',
         body: {fixtures: fixtures}
@@ -45,9 +45,9 @@ describe('Test: data handler', () => {
         try {
           should(response).be.eql(['response']);
           should(kuzzle.services.list.storageEngine.import).be.calledOnce();
-          should(importArg.index).be.exactly('index');
-          should(importArg.collection).be.exactly('collection');
-          should(importArg.data.body).be.eql({bulkData: fixtures.index.collection});
+          should(importArg.input.resource.index).be.exactly('index');
+          should(importArg.input.resource.collection).be.exactly('collection');
+          should(importArg.input.body).be.eql({bulkData: fixtures.index.collection});
 
           return Promise.resolve();
         }
@@ -59,7 +59,7 @@ describe('Test: data handler', () => {
 
   it('should reject the promise in case of partial errors when importing fixtures', () => {
     var
-      req = new RequestObject({
+      req = new Request({
         index: 'index',
         collection: 'collection',
         body: {
@@ -81,18 +81,26 @@ describe('Test: data handler', () => {
 
   it('should import mapping if required', () => {
     var
-      req = new RequestObject({
+      req = new Request({
         index: 'index',
         collection: 'collection',
-        body: {mappings: {
-          index1: {
-            col1: 'col1',
-            col2: 'col2'
-          },
-          index2: {
-            col1: 'col1'
+        body: {
+          mappings: {
+            index1: {
+              col1: {
+                mapping: 'col1'
+              },
+              col2: {
+                mapping: 'col2'
+              }
+            },
+            index2: {
+              col1: {
+                mapping: 'col1'
+              }
+            }
           }
-        }}
+        }
       });
 
     return data(req)
@@ -105,17 +113,17 @@ describe('Test: data handler', () => {
         try {
           should(kuzzle.services.list.storageEngine.updateMapping).be.calledThrice();
 
-          should(arg1.index).be.exactly('index1');
-          should(arg1.collection).be.exactly('col1');
-          should(arg1.data.body).be.eql('col1');
+          should(arg1.input.resource.index).be.exactly('index1');
+          should(arg1.input.resource.collection).be.exactly('col1');
+          should(arg1.input.body).be.eql({mapping: 'col1'});
 
-          should(arg2.index).be.exactly('index1');
-          should(arg2.collection).be.exactly('col2');
-          should(arg2.data.body).be.eql('col2');
+          should(arg2.input.resource.index).be.exactly('index1');
+          should(arg2.input.resource.collection).be.exactly('col2');
+          should(arg2.input.body).be.eql({mapping: 'col2'});
 
-          should(arg3.index).be.exactly('index2');
-          should(arg3.collection).be.exactly('col1');
-          should(arg3.data.body).be.eql('col1');
+          should(arg3.input.resource.index).be.exactly('index2');
+          should(arg3.input.resource.collection).be.exactly('col1');
+          should(arg3.input.body).be.eql({mapping: 'col1'});
 
           return Promise.resolve();
         }
@@ -126,13 +134,17 @@ describe('Test: data handler', () => {
   });
 
   it('should import both fixtures and mappings if required', () => {
-    var request = new RequestObject({
+    var request = new Request({
       index: 'index',
       collection: 'collection',
       body: {
         fixtures: fixtures,
         mappings: {
-          index: { collection: 'mapping' }
+          index: {
+            collection: {
+              mapping: 'mapping'
+            }
+          }
         }
       }
     });

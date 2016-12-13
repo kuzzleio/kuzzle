@@ -6,7 +6,7 @@ var
   sinon = require('sinon'),
   PluginsManager = rewire('../../../../lib/api/core/plugins/pluginsManager'),
   EventEmitter = require('eventemitter2').EventEmitter2,
-  GatewayTimeoutError = require.main.require('kuzzle-common-objects').Errors.gatewayTimeoutError;
+  GatewayTimeoutError = require('kuzzle-common-objects').errors.GatewayTimeoutError;
 
 describe('Test plugins manager run', () => {
   var
@@ -322,18 +322,17 @@ describe('Test plugins manager run', () => {
 
   it('should attach controller actions on kuzzle object', () => {
     plugin.object.controllers = {
-      'foo': 'FooController'
+      'foo': {
+        'actionName': 'functionName'
+      }
     };
 
-    plugin.object.FooController = () => {};
-    pluginMock.expects('FooController').once().calledOn(plugin.object);
+    plugin.object.functionName = () => {};
 
     return pluginsManager.run()
       .then(() => {
-        should.not.exist(pluginsManager.controllers['testPlugin/dfoo']);
-        should(pluginsManager.controllers['testPlugin/foo']).be.a.Function();
-        pluginsManager.controllers['testPlugin/foo']();
-        pluginMock.verify();
+        should(pluginsManager.controllers['testPlugin/foo']).be.an.Object();
+        should(pluginsManager.controllers['testPlugin/foo'].actionName).be.exactly(plugin.object.functionName);
       });
   });
 
@@ -343,7 +342,13 @@ describe('Test plugins manager run', () => {
       {verb: 'post', url: '/bar', controller: 'foo', action: 'bar'}
     ];
 
-    plugin.object.controllers = ['foo'];
+    plugin.object.controllers = {
+      'foo': {
+        'bar': 'functionName'
+      }
+    };
+
+    plugin.object.functionName = () => {};
 
     return pluginsManager.run()
       .then(() => {
@@ -358,6 +363,69 @@ describe('Test plugins manager run', () => {
         should(pluginsManager.routes[0].action)
           .be.equal(pluginsManager.routes[0].action)
           .and.be.equal('bar');
+      });
+  });
+
+  it('should abort the controller initialization if the controller object is incorrectly defined', () => {
+    plugin.object.controllers = {
+      'foo': 'bar'
+    };
+
+    return pluginsManager.run()
+      .then(() => {
+        should(pluginsManager.controllers['testPlugin/foo']).be.undefined();
+      });
+  });
+
+  it('should abort the controller initialization if one of the controller action is not correctly defined', () => {
+    plugin.object.controllers = {
+      'foo': {
+        'actionName': []
+      }
+    };
+
+    return pluginsManager.run()
+      .then(() => {
+        should(pluginsManager.controllers['testPlugin/foo']).be.undefined();
+      });
+  });
+
+  it('should abort the controller initialization if one of the controller action target does not exist', () => {
+    plugin.object.controllers = {
+      'foo': {
+        'actionName': 'functionName',
+        'anotherActionName': 'does not exist'
+      }
+    };
+
+    plugin.object.functionName = () => {};
+
+    return pluginsManager.run()
+      .then(() => {
+        should(pluginsManager.controllers['testPlugin/foo']).be.undefined();
+      });
+  });
+
+  it('should not add an invalid route to the API', () => {
+    plugin.object.routes = [
+      {invalid: 'get', url: '/bar/:name', controller: 'foo', action: 'bar'},
+      {verb: 'post', url: ['/bar'], controller: 'foo', action: 'bar'},
+      {verb: 'invalid', url: '/bar', controller: 'foo', action: 'bar'},
+      {verb: 'get', url: '/bar/:name', controller: 'foo', action: 'invalid'},
+      {verb: 'get', url: '/bar/:name', controller: 'invalid', action: 'bar'},
+    ];
+
+    plugin.object.controllers = {
+      'foo': {
+        'bar': 'functionName'
+      }
+    };
+
+    plugin.object.functionName = () => {};
+
+    return pluginsManager.run()
+      .then(() => {
+        should(pluginsManager.routes).be.an.Array().and.length(0);
       });
   });
 

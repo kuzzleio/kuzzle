@@ -5,7 +5,7 @@ var
   rc = require('rc'),
   params = rc('kuzzle'),
   Kuzzle = require('../../lib/api/kuzzle'),
-  RequestObject = require('kuzzle-common-objects').Models.requestObject,
+  Request = require('kuzzle-common-objects').Request,
   Promise = require('bluebird'),
   clc = require('cli-color'),
   coverage;
@@ -23,7 +23,6 @@ function commandStart (options) {
     error = string => options.parent.noColors ? string : clc.red(string),
     warn = string => options.parent.noColors ? string : clc.yellow(string),
     notice = string => options.parent.noColors ? string : clc.cyanBright(string),
-    ok = string => options.parent.noColors ? string : clc.green.bold(string),
     kuz = string => options.parent.noColors ? string : clc.greenBright.bold(string);
 
   if (process.env.FEATURE_COVERAGE === '1' || process.env.FEATURE_COVERAGE === 1) {
@@ -34,16 +33,6 @@ function commandStart (options) {
   console.log(kuz('[ℹ] Starting Kuzzle server'));
 
   kuzzle.start(params)
-    // like a virgin
-    .then(() => {
-      var request;
-
-      if (params.likeAvirgin) {
-        request = new RequestObject({controller: 'cli', action: 'cleanDb', body: {}});
-        return kuzzle.cliController.actions.cleanDb(kuzzle, request);
-      }
-      return Promise.resolve();
-    })
     // fixtures && mapping
     .then(() => {
       var
@@ -61,7 +50,7 @@ function commandStart (options) {
 
         Object.keys(fixtures).forEach(index => {
           Object.keys(fixtures[index]).forEach(collection => {
-            promises.push(kuzzle.services.list.storageEngine.import(new RequestObject({
+            promises.push(kuzzle.services.list.storageEngine.import(new Request({
               index,
               collection,
               body: {
@@ -90,7 +79,7 @@ function commandStart (options) {
 
         Object.keys(mappings).forEach(index => {
           Object.keys(mappings[index]).forEach(collection => {
-            promises.push(kuzzle.services.list.storageEngine.updateMapping(new RequestObject({
+            promises.push(kuzzle.services.list.storageEngine.updateMapping(new Request({
               index,
               collection,
               body: mappings[index][collection]
@@ -105,10 +94,7 @@ function commandStart (options) {
       console.log(kuz('[✔] Kuzzle server ready'));
       return kuzzle.internalEngine.bootstrap.adminExists()
         .then((res) => {
-          if (res) {
-            console.log(ok('[✔] It seems that you already have an admin account.'));
-          }
-          else {
+          if (!res) {
             console.log(notice('[ℹ] There is no administrator user yet. You can use the CLI or the back-office to create one.'));
             console.log(notice('[ℹ] Entering no-administrator mode: everyone has administrator rights.'));
           }

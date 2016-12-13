@@ -2,7 +2,7 @@
 
 var
   should = require('should'),
-  BadRequestError = require('kuzzle-common-objects').Errors.badRequestError,
+  BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,
   DSL = require('../../../../lib/api/dsl');
 
 describe('DSL.operands.bool', () => {

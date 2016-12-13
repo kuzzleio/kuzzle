@@ -1,5 +1,5 @@
 var
-  BadRequestError = require('kuzzle-common-objects').Errors.badRequestError,
+  BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
   rewire = require('rewire'),

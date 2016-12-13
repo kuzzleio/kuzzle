@@ -2,8 +2,6 @@
  * @class KuzzleConfiguration
  */
 module.exports = {
-  hooks: require('./lib/config/hooks'),
-
   httpRoutes: require('./lib/config/httpRoutes'),
 
   plugins: {
@@ -18,7 +16,7 @@ module.exports = {
       activated: true
     },
     'kuzzle-plugin-auth-passport-local': {
-      gitUrl: 'https://github.com/kuzzleio/kuzzle-plugin-auth-passport-local',
+      version: '3.0.2',
       activated: true
     }
   },
@@ -80,7 +78,6 @@ module.exports = {
                 checkToken: true,
                 getCurrentUser: true,
                 getMyRights: true,
-                login: true,
                 logout: true,
                 updateSelf: true
               }
@@ -99,8 +96,7 @@ module.exports = {
                 checkToken: true,
                 getCurrentUser: true,
                 getMyRights: true,
-                login: true,
-                logout: true
+                login: true
               }
             },
             read: {

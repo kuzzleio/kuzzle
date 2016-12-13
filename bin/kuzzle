@@ -25,15 +25,6 @@ program
   .description('clear internal caches in Redis')
   .action(require('./commands/clearCache'));
 
-// $ kuzzle likeAvirgin
-program
-  .command('likeAvirgin')
-  .description('delete Kuzzle configuration and users from database. Makes Kuzzle look like a virgin, touched for the very first time')
-  .option('--fixtures <fixtures>', 'import some fixtures from file')
-  .option('--mappings <mappings>', 'load and apply mappings from file')
-  .option('--noint', 'non interactive mode, will perform the reset immediately')
-  .action(require('./commands/reset'));
-
 // $ kuzzle plugins
 program
   .command('plugins')
@@ -54,12 +45,20 @@ program
   .option('-p, --path <path>', 'install plugin from the file system')
   .action(require('./commands/plugins'));
 
+// $ kuzzle reset
+program
+  .command('reset')
+  .description('delete Kuzzle configuration and users from database')
+  .option('--fixtures <fixtures>', 'import fixtures from file')
+  .option('--mappings <mappings>', 'load and apply mappings from file')
+  .option('--noint', 'non interactive mode')
+  .action(require('./commands/reset'));
+
 // $ kuzzle start
 program
   .command('start')
   .description('start a Kuzzle instance')
   .option('-p, --port <port>', 'Kuzzle port number', parseInt)
-  .option('    --likeAvirgin', 'delete Kuzzle configuration and users from database')
   .option('    --fixtures <fixtures>', 'import some fixtures from file')
   .option('    --mappings <mappings>', 'load and apply mappings from file')
   .action(require('./commands/start'));

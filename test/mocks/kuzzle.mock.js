@@ -23,8 +23,21 @@ function KuzzleMock () {
   // we need a deep copy here
   this.config = _.merge({}, config);
 
+  this.cliController = {
+    init: sinon.stub().returns(Promise.resolve()),
+    actions: {
+      adminExists: sinon.stub().returns(Promise.resolve()),
+      createFirstAdmin: sinon.stub().returns(Promise.resolve()),
+      cleanAndPrepare: sinon.stub().returns(Promise.resolve()),
+      cleanDb: sinon.stub().returns(Promise.resolve()),
+      managePlugins: sinon.stub().returns(Promise.resolve()),
+      data: sinon.stub().returns(Promise.resolve())
+    }
+  };
+
   this.dsl = {
-    register: sinon.stub().returns(Promise.resolve())
+    register: sinon.stub().returns(Promise.resolve()),
+    remove: sinon.stub().returns(Promise.resolve())
   };
 
   this.gc = {
@@ -52,7 +65,8 @@ function KuzzleMock () {
       }
     },
     init: sinon.spy(),
-    handleErrorDump: sinon.spy()
+    handleErrorDump: sinon.spy(),
+    execute: sinon.spy()
   };
 
   this.hooks = {
@@ -61,7 +75,13 @@ function KuzzleMock () {
 
   this.hotelClerk = {
     addToChannels: sinon.stub(),
-    getRealtimeCollections: sinon.stub()
+    getRealtimeCollections: sinon.stub(),
+    removeCustomerFromAllRooms: sinon.stub(),
+    addSubscription: sinon.stub().returns(Promise.resolve(foo)),
+    join: sinon.stub().returns(Promise.resolve(foo)),
+    removeSubscription: sinon.stub().returns(Promise.resolve(foo)),
+    countSubscription: sinon.stub().returns(Promise.resolve(foo)),
+    listSubscriptions: sinon.stub().returns(Promise.resolve(foo)),
   };
 
   this.indexCache = {
@@ -91,7 +111,8 @@ function KuzzleMock () {
     init: sinon.stub().returns(Promise.resolve()),
     refresh: sinon.stub().returns(Promise.resolve()),
     search: sinon.stub().returns(Promise.resolve()),
-    updateMapping: sinon.stub().returns(Promise.resolve())
+    updateMapping: sinon.stub().returns(Promise.resolve(foo)),
+    getMapping: sinon.stub().returns(Promise.resolve({internalIndex: {mappings: {users: {properties: {}}}}}))
   };
 
   this.once = sinon.stub();
@@ -151,6 +172,28 @@ function KuzzleMock () {
     addType: sinon.spy()
   };
 
+  this.repositories = {
+    init: sinon.stub().returns(Promise.resolve()),
+    profile: {
+      load: sinon.stub().returns(Promise.resolve()),
+      loadProfiles: sinon.stub().returns(Promise.resolve()),
+      searchProfiles: sinon.stub().returns(Promise.resolve())
+    },
+    role: {
+      getRoleFromRequest: sinon.spy(function () {return Promise.resolve(arguments[0]);}),
+      loadRole: sinon.stub().returns(Promise.resolve()),
+      loadRoles: sinon.stub().returns(Promise.resolve()),
+      validateAndSaveRole: sinon.spy(function () {return Promise.resolve(arguments[0]);})
+    },
+    user: {
+      load: sinon.stub().returns(Promise.resolve(foo)),
+      search: sinon.stub().returns(Promise.resolve())
+    },
+    token: {
+      anonymous: sinon.stub().returns({_id: 'anonymous'})
+    }
+  };
+
   this.resetStorage = sinon.stub().returns(Promise.resolve());
 
   this.rootPath = '/kuzzle';
@@ -168,15 +211,23 @@ function KuzzleMock () {
       broker: {
         getInfos: sinon.stub().returns(Promise.resolve()),
         listen: sinon.spy(),
-        send: sinon.spy()
+        send: sinon.stub().returns(Promise.resolve())
+      },
+      proxyBroker: {
+        listen: sinon.spy(),
+        send: sinon.stub().returns(Promise.resolve())
       },
       gc: {
         init: sinon.spy(),
         run: sinon.stub().returns(Promise.resolve({ids: []}))
       },
       internalCache: {
+        expire: sinon.stub().returns(Promise.resolve()),
         flushdb: sinon.stub().returns(Promise.resolve()),
-        getInfos: sinon.stub().returns(Promise.resolve())
+        get: sinon.stub().returns(Promise.resolve(null)),
+        getInfos: sinon.stub().returns(Promise.resolve()),
+        set: sinon.stub().returns(Promise.resolve()),
+        volatileSet: sinon.stub().returns(Promise.resolve())
       },
       memoryStorage: {
         flushdb: sinon.stub().returns(Promise.resolve()),
@@ -184,7 +235,7 @@ function KuzzleMock () {
       },
       storageEngine: {
         get: sinon.stub().returns(Promise.resolve({
-          _source: foo
+          _source: {foo}
         })),
         getInfos: sinon.stub().returns(Promise.resolve()),
         getMapping: sinon.stub().returns(Promise.resolve(foo)),
@@ -206,8 +257,8 @@ function KuzzleMock () {
         listCollections: sinon.stub().returns(Promise.resolve()),
         refreshIndex: sinon.stub().returns(Promise.resolve(foo)),
         replace: sinon.stub().returns(Promise.resolve(foo)),
-        search: sinon.stub().returns(Promise.resolve()),
-        scroll: sinon.stub().returns(Promise.resolve()),
+        search: sinon.stub().returns(Promise.resolve(foo)),
+        scroll: sinon.stub().returns(Promise.resolve(foo)),
         setAutoRefresh: sinon.stub().returns(Promise.resolve(true)),
         truncateCollection: sinon.stub().returns(Promise.resolve(foo)),
         update: sinon.stub().returns(Promise.resolve(foo)),
@@ -217,10 +268,17 @@ function KuzzleMock () {
   };
 
   this.statistics = {
+    newConnection: sinon.stub(),
     getAllStats: sinon.stub().returns(Promise.resolve(foo)),
     getLastStats: sinon.stub().returns(Promise.resolve(foo)),
     getStats: sinon.stub().returns(Promise.resolve(foo)),
-    init: sinon.spy()
+    init: sinon.spy(),
+    dropConnection: sinon.stub()
+  };
+
+  this.tokenManager = {
+    add: sinon.stub(),
+    expire: sinon.stub().returns(Promise.resolve())
   };
 }
 
