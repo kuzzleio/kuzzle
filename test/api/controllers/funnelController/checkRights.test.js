@@ -4,7 +4,6 @@ var
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
   Request = require('kuzzle-common-objects').Request,
-  BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,
   ForbiddenError = require('kuzzle-common-objects').errors.ForbiddenError,
   UnauthorizedError = require('kuzzle-common-objects').errors.UnauthorizedError,
   Kuzzle = require('../../../../lib/api/kuzzle');

@@ -23,7 +23,7 @@ describe('funnelController.processRequest', () => {
         ok: sinon.stub().returns(Promise.resolve()),
         fail: sinon.stub()
       }
-    }
+    };
   });
 
   beforeEach(() => {
