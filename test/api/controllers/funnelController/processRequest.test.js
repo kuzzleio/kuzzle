@@ -1,116 +1,140 @@
-var
+'use strict';
+
+const
   should = require('should'),
-  Promise = require('bluebird'),
   sinon = require('sinon'),
-  sandbox = sinon.sandbox.create(),
+  Promise = require('bluebird'),
   Request = require('kuzzle-common-objects').Request,
   BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,
-  ForbiddenError = require('kuzzle-common-objects').errors.ForbiddenError,
-  UnauthorizedError = require('kuzzle-common-objects').errors.UnauthorizedError,
-  Kuzzle = require('../../../../lib/api/kuzzle'),
-  rewire = require('rewire'),
-  FunnelController = rewire('../../../../lib/api/controllers/funnelController');
+  Kuzzle = require('../../../../lib/api/kuzzle');
 
 describe('funnelController.processRequest', () => {
-  var
+  let
     kuzzle,
-    processRequest;
+    sandbox;
 
   before(() => {
     kuzzle = new Kuzzle();
-    processRequest = FunnelController.__get__('processRequest');
+    sandbox = sinon.sandbox.create();
+
+    // injects fake controllers for unit tests
+    kuzzle.funnel.controllers = {
+      'fakeController': {
+        ok: sinon.stub().returns(Promise.resolve()),
+        fail: sinon.stub()
+      }
+    }
   });
 
   beforeEach(() => {
-    sandbox.stub(kuzzle.repositories.token, 'verifyToken', () => {
-      return Promise.resolve({
-        userId: 'user'
-      });
-    });
-    sandbox.stub(kuzzle.internalEngine, 'get').returns(Promise.resolve({}));
-    return kuzzle.services.init({whitelist: []})
-      .then(() => {
-        kuzzle.funnel.init();
-      });
+    sandbox.stub(kuzzle.statistics, 'startRequest');
+    sandbox.stub(kuzzle.statistics, 'completedRequest');
+    sandbox.stub(kuzzle.statistics, 'failedRequest');
+    kuzzle.funnel.requestHistory.clear();
   });
 
   afterEach(() => {
     sandbox.restore();
   });
 
-  it('should reject the promise if no controller is specified', () => {
+  it('should reject the promise if no controller is specified', done => {
     var object = {
       action: 'create'
     };
 
-    var request = new Request(object);
-
-    return should(processRequest(kuzzle, kuzzle.funnel, request)).be.rejectedWith(BadRequestError);
+    kuzzle.funnel.processRequest(new Request(object))
+      .then(() => done('should have failed'))
+      .catch(e => {
+        should(e).be.instanceOf(BadRequestError);
+        should(kuzzle.funnel.requestHistory.isEmpty()).be.true();
+        should(kuzzle.statistics.startRequest.called).be.false();
+        done();
+      });
   });
 
-  it('should reject the promise if no action is specified', () => {
+  it('should reject the promise if no action is specified', done => {
     var object = {
       controller: 'write'
     };
 
-    var request = new Request(object);
-
-    return should(processRequest(kuzzle, kuzzle.funnel, request)).be.rejectedWith(BadRequestError);
+    kuzzle.funnel.processRequest(new Request(object))
+      .then(() => done('should have failed'))
+      .catch(e => {
+        should(e).be.instanceOf(BadRequestError);
+        should(kuzzle.funnel.requestHistory.isEmpty()).be.true();
+        should(kuzzle.statistics.startRequest.called).be.false();
+        done();
+      });
   });
 
-  it('should reject the promise if the controller doesn\'t exist', () => {
+  it('should reject the promise if the controller doesn\'t exist', done => {
     var object = {
       controller: 'toto',
       action: 'create'
     };
 
-    var request = new Request(object);
-
-    return should(processRequest(kuzzle, kuzzle.funnel, request)).be.rejectedWith(BadRequestError);
+    kuzzle.funnel.processRequest(new Request(object))
+      .then(() => done('should have failed'))
+      .catch(e => {
+        should(e).be.instanceOf(BadRequestError);
+        should(kuzzle.funnel.requestHistory.isEmpty()).be.true();
+        should(kuzzle.statistics.startRequest.called).be.false();
+        done();
+      });
   });
 
-  it('should reject the promise if the action doesn\'t exist', () => {
+  it('should reject the promise if the action doesn\'t exist', done => {
     var object = {
-      controller: 'write',
-      action: 'toto'
+      controller: 'foo',
+      action: 'bar'
     };
 
-    var request = new Request(object);
-
-    return should(processRequest(kuzzle, kuzzle.funnel, request)).be.rejectedWith(BadRequestError);
+    kuzzle.funnel.processRequest(new Request(object))
+      .then(() => done('should have failed'))
+      .catch(e => {
+        should(e).be.instanceOf(BadRequestError);
+        should(kuzzle.funnel.requestHistory.isEmpty()).be.true();
+        should(kuzzle.statistics.startRequest.called).be.false();
+        done();
+      });
   });
 
-  it('should reject the promise with UnauthorizedError if an anonymous user is not allowed to execute the action', () => {
-    kuzzle.repositories.token.verifyToken.restore();
-    sandbox.stub(kuzzle.repositories.user, 'load').returns(Promise.resolve({_id: -1, isActionAllowed: sandbox.stub().returns(Promise.resolve(false))}));
-    sandbox.stub(kuzzle.repositories.token, 'verifyToken').returns(Promise.resolve({userId: -1}));
-
-    return should(processRequest(kuzzle, kuzzle.funnel, new Request({controller: 'document', index: '@test', action: 'get'})))
-      .be.rejectedWith(UnauthorizedError);
-  });
-
-  it('should reject the promise with UnauthorizedError if an authenticated user is not allowed to execute the action', () => {
-    kuzzle.repositories.token.verifyToken.restore();
-    sandbox.stub(kuzzle.repositories.user, 'load').returns(Promise.resolve({_id: 'user', isActionAllowed: sandbox.stub().returns(Promise.resolve(false))}));
-    sandbox.stub(kuzzle.repositories.token, 'verifyToken').returns(Promise.resolve({user: 'user'}));
-
-    return should(processRequest(kuzzle, kuzzle.funnel, new Request({controller: 'document', index: '@test', action: 'get'})))
-      .be.rejectedWith(ForbiddenError);
-  });
-
-  it('should resolve the promise if everything is ok', () => {
+  it('should resolve the promise if everything is ok', done => {
     var request = new Request({
-      requestId: 'requestId',
-      controller: 'index',
-      action: 'list',
-      collection: 'collection'
+      controller: 'fakeController',
+      action: 'ok',
     });
 
-    kuzzle.repositories.token.verifyToken.restore();
-    sandbox.stub(kuzzle.repositories.user, 'load').returns(Promise.resolve({_id: 'user', isActionAllowed: sandbox.stub().returns(Promise.resolve(true))}));
-    sandbox.stub(kuzzle.repositories.token, 'verifyToken').returns(Promise.resolve({user: 'user'}));
-    sandbox.stub(kuzzle.funnel.controllers.index, 'list').returns(Promise.resolve());
+    kuzzle.funnel.processRequest(request)
+      .then(response => {
+        should(response).be.exactly(request);
+        should(kuzzle.funnel.requestHistory.toArray()).match([request]);
+        should(kuzzle.statistics.startRequest.called).be.true();
+        should(kuzzle.statistics.completedRequest.called).be.true();
+        should(kuzzle.statistics.failedRequest.called).be.false();
+        done();
+      })
+      .catch(e => done(e));
+  });
 
-    return processRequest(kuzzle, kuzzle.funnel, request);
+  it('should reject the promise if a controller action fails', done => {
+    var request = new Request({
+      controller: 'fakeController',
+      action: 'fail',
+    });
+
+    kuzzle.funnel.controllers.fakeController.fail.returns(Promise.reject(new Error('rejected')));
+
+    kuzzle.funnel.processRequest(request)
+      .then(() => done('should have failed'))
+      .catch(e => {
+        should(e).be.instanceOf(Error);
+        should(e.message).be.eql('rejected');
+        should(kuzzle.funnel.requestHistory.toArray()).match([request]);
+        should(kuzzle.statistics.startRequest.called).be.true();
+        should(kuzzle.statistics.completedRequest.called).be.false();
+        should(kuzzle.statistics.failedRequest.called).be.true();
+        done();
+      });
   });
 });
