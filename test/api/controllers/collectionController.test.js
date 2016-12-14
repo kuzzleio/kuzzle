@@ -257,7 +257,15 @@ describe('Test: collection controller', () => {
       };
 
       CollectionController.__set__({
-        validateGivenSpecifications: sandbox.stub().returns(Promise.resolve({valid: true}))
+        createSpecificationList: sandbox.stub().returns(Promise.resolve({
+          _id: 'indexcollection',
+          _source: {
+            validation: 'validation',
+            index: 'index',
+            collection: 'collection'
+          }
+        })),
+        validateSpecificationList: sandbox.stub().returns(Promise.resolve({valid: true}))
       });
 
       return collectionController.validateSpecifications(request)
@@ -291,7 +299,15 @@ describe('Test: collection controller', () => {
       };
 
       CollectionController.__set__({
-        validateGivenSpecifications: sandbox.stub().returns(Promise.resolve(errorResponse))
+        createSpecificationList: sandbox.stub().returns(Promise.resolve({
+          _id: 'indexcollection',
+          _source: {
+            validation: 'validation',
+            index: 'index',
+            collection: 'collection'
+          }
+        })),
+        validateSpecificationList: sandbox.stub().returns(Promise.resolve(errorResponse))
       });
 
       return collectionController.validateSpecifications(request)
