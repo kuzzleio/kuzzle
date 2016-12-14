@@ -332,7 +332,7 @@ describe('Test plugins manager run', () => {
     return pluginsManager.run()
       .then(() => {
         should(pluginsManager.controllers['testPlugin/foo']).be.an.Object();
-        should(pluginsManager.controllers['testPlugin/foo'].actionName).be.exactly(plugin.object.functionName);
+        should(pluginsManager.controllers['testPlugin/foo'].actionName).be.eql(plugin.object.functionName.bind(plugin.object));
       });
   });
 
