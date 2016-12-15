@@ -23,17 +23,20 @@ describe('Test: ElasticSearch service', () => {
     elasticsearch,
     engineType = 'storageEngine',
     request,
-    documentAda = {
-      firstName: 'Ada',
-      lastName: 'Lovelace',
-      city: 'London',
-      hobby: 'computer'
-    },
+    documentAda,
     filter,
     filterAfterActiveAdded,
     rawKuzzleInfo;
 
   beforeEach(() => {
+    // prevents embarking _kuzzle_info data from previous tests
+    documentAda = {
+      firstName: 'Ada',
+      lastName: 'Lovelace',
+      city: 'London',
+      hobby: 'computer'
+    };
+
     kuzzle = new KuzzleMock();
     ES.__set__('buildClient', () => new ESClientMock());
     elasticsearch = new ES(kuzzle, {service: engineType}, kuzzle.config.services.db);
@@ -66,22 +69,11 @@ describe('Test: ElasticSearch service', () => {
           must: filter.query,
           filter: {
             bool: {
-              should: [
-                {
-                  term: {
-                    '_kuzzle_info.active': true
-                  }
-                },
-                {
-                  bool: {
-                    must_not: {
-                      exists: {
-                        'field': '_kuzzle_info'
-                      }
-                    }
-                  }
+              must_not: {
+                term: {
+                  '_kuzzle_info.active': false
                 }
-              ]
+              }
             }
           }
         }
@@ -96,22 +88,11 @@ describe('Test: ElasticSearch service', () => {
         bool: {
           filter: {
             bool: {
-              should: [
-                {
-                  term: {
-                    '_kuzzle_info.active': true
-                  }
-                },
-                {
-                  bool: {
-                    must_not: {
-                      exists: {
-                        'field': '_kuzzle_info'
-                      }
-                    }
-                  }
+              must_not: {
+                term: {
+                  '_kuzzle_info.active': false
                 }
-              ]
+              }
             }
           }
         }
@@ -594,7 +575,13 @@ describe('Test: ElasticSearch service', () => {
           return elasticsearch.update(request)
             .then(() => {
               var data = elasticsearch.client.update.firstCall.args[0];
+
               should(data.body.doc).be.exactly(documentAda);
+              should(data.body.doc._kuzzle_info).be.an.Object();
+              should(data.body.doc._kuzzle_info.updatedAt).be.a.Number();
+              should(data.body.doc._kuzzle_info.updater).be.eql('test');
+              should(data.body.doc._kuzzle_info.active).be.true();
+
               should(data.id).be.exactly(createdDocumentId);
 
               should(refreshIndexSpy.calledOnce).be.true();
@@ -716,14 +703,16 @@ describe('Test: ElasticSearch service', () => {
   });
 
   describe('#deleteByQuery', () => {
-    it('should return an empty result array when no document has been deactivated using a filter', () => {
-      elasticsearch.client.search.yields(null, {hits: {hits: [], total: 0}});
-
+    beforeEach(() => {
       request.input.body = {
         query: {
-          term: {firstName: 'no way any document can be returned with this filter'}
+          term: {firstName: 'foobar'}
         }
       };
+    });
+
+    it('should return an empty result array when no document has been deactivated using a filter', () => {
+      elasticsearch.client.search.yields(null, {hits: {hits: [], total: 0}});
 
       return elasticsearch.deleteByQuery(request)
         .then(result => {
