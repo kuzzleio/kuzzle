@@ -5,7 +5,6 @@ var
   Promise = require('bluebird'),
   Request = require('kuzzle-common-objects').Request,
   ServiceUnavailableError = require('kuzzle-common-objects').errors.ServiceUnavailableError,
-  InternalError = require('kuzzle-common-objects').errors.InternalError,
   Kuzzle = require('../../../../lib/api/kuzzle'),
   rewire = require('rewire'),
   FunnelController = rewire('../../../../lib/api/controllers/funnelController');
@@ -14,25 +13,12 @@ describe('funnelController.execute', () => {
   var
     kuzzle,
     funnel,
-    processRequestCalled,
     request,
-    requestReplayed,
-    errorMe;
+    requestReplayed;
 
   before(() => {
-
     kuzzle = new Kuzzle();
     kuzzle.config.server.warningRetainedRequestsLimit = -1;
-
-    FunnelController.__set__('processRequest', (funnelKuzzle, controllers, funnelRequest) => {
-      processRequestCalled = true;
-
-      if (errorMe) {
-        return Promise.reject(new InternalError('errored on purpose'));
-      }
-
-      return Promise.resolve(funnelRequest);
-    });
 
     FunnelController.__set__('playCachedRequests', () => {
       requestReplayed = true;
@@ -40,10 +26,6 @@ describe('funnelController.execute', () => {
   });
 
   beforeEach(() => {
-    errorMe = false;
-    processRequestCalled = false;
-    requestReplayed = false;
-
     request = new Request({
       controller: 'foo',
       action: 'bar'
@@ -52,11 +34,19 @@ describe('funnelController.execute', () => {
       token: null
     });
 
+    requestReplayed = false;
+
     sandbox.stub(kuzzle.internalEngine, 'get').returns(Promise.resolve({}));
     return kuzzle.services.init({whitelist: []})
       .then(() => {
         funnel = new FunnelController(kuzzle);
         funnel.init();
+
+        funnel.checkRights = sinon.stub().returns(Promise.resolve());
+        funnel.processRequest = (r) => Promise.resolve(r);
+        sinon.spy(funnel, 'processRequest');
+
+        return null;
       });
   });
 
@@ -72,7 +62,7 @@ describe('funnelController.execute', () => {
           // 102 is the default status of a request, it should be 200 when coming out from the execute
           should(res.status).be.exactly(102);
           should(res).be.instanceOf(Request);
-          should(processRequestCalled).be.true();
+          should(funnel.processRequest.calledOnce).be.true();
           done();
         } catch (error) {
           done(error);
@@ -81,16 +71,15 @@ describe('funnelController.execute', () => {
     });
 
     it('should forward any error occuring during the request execution', done => {
-      errorMe = true;
+      funnel.checkRights = sinon.stub().returns(Promise.reject(new Error('errored')));
 
       funnel.execute(request, (err, res) => {
         try {
           should(err).be.instanceOf(Error);
           should(res.status).be.exactly(500);
-          should(res.error.message).be.exactly('errored on purpose');
-          should(processRequestCalled).be.true();
+          should(res.error.message).be.exactly('errored');
+          should(funnel.processRequest.calledOnce).be.false();
           should(funnel.overloaded).be.false();
-          should(requestReplayed).be.false();
           done();
         } catch (error) {
           done(error);
@@ -153,7 +142,7 @@ describe('funnelController.execute', () => {
       setTimeout(() => {
         should(funnel.overloaded).be.true();
         should(requestReplayed).be.true();
-        should(processRequestCalled).be.false();
+        should(funnel.processRequest.called).be.false();
         should(funnel.cachedItems).be.eql(1);
         should(funnel.requestsCache.shift()).match({request, callback});
         done();
@@ -173,7 +162,7 @@ describe('funnelController.execute', () => {
       setTimeout(() => {
         should(funnel.overloaded).be.true();
         should(requestReplayed).be.false();
-        should(processRequestCalled).be.false();
+        should(funnel.processRequest.called).be.false();
         should(funnel.cachedItems).be.eql(1);
         should(funnel.requestsCache.shift()).match({request, callback});
         done();
@@ -190,7 +179,7 @@ describe('funnelController.execute', () => {
       funnel.execute(request, (err, res) => {
         should(funnel.overloaded).be.true();
         should(requestReplayed).be.false();
-        should(processRequestCalled).be.false();
+        should(funnel.processRequest.called).be.false();
         should(funnel.cachedItems).be.eql(kuzzle.config.server.maxRetainedRequests);
         should(funnel.requestsCache.isEmpty()).be.true();
         should(err).be.instanceOf(ServiceUnavailableError);
