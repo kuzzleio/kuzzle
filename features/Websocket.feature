@@ -1436,7 +1436,7 @@ Feature: Test websocket API
     When I post a valid specification
     Then There is no error message
     When I post an invalid specification
-    Then There is an error message
+    Then There is an error message in the response body
 
   @usingWebsocket @cleanValidations
   Scenario: Validation - validateDocument

@@ -79,17 +79,30 @@ module.exports = function () {
       });
   });
 
-  this.Then(/^There is (an)?(no)? error message$/, {}, function(an, no, callback) {
-    if (this.statusCode === 200) {
-      if (no) {
+  this.Then(/^There is (an)?(no)? error message( in the response body)?$/, {}, function(noError, withError, inBody, callback) {
+    if (this.statusCode !== 200) {
+      if (noError) {
+        if (inBody) {
+          // we should always have a 200 response status, error whould be in the response body
+          return callback(new Error('Status code is ' + this.statusCode + ', but 200 was expected'));
+        }
         return callback();
       }
-      return callback(new Error('Status code is not 200, but ' + this.statusCode));
+      return callback(new Error('Status code is ' + this.statusCode + ', but 200 was expected'));
     }
-    if (an) {
-      return callback();
+
+    // Status is 200
+    if (noError) {
+      if (inBody) {
+        if (this.body.result.valid === false && this.body.result.details && this.body.result.description) {
+          return callback();
+        }
+        return callback(new Error(JSON.stringify(this.body)));
+      }
+      return callback(new Error('Status code is ' + this.statusCode + ', but an error was expected'));
     }
-    return callback(new Error('Status code is ' + this.statusCode + ', but an error message was expected'));
+
+    return callback();
   });
 
   this.When(/^I post a(n in)? ?valid specification$/, {}, function(not, callback) {
@@ -104,17 +117,16 @@ module.exports = function () {
     this.api.validateSpecifications(specifications)
       .then(body => {
         this.statusCode = body.status;
-        if (not) {
-          return callback(new Error(JSON.stringify(body)));
-        }
+        this.body = body;
+
+        // an invalid specification is not a bad request, the request may go well despite of an invalid spec
+        // according to this, we should always have a 200 status if no other internal nor access error occure
+
         return callback();
       })
       .catch(error => {
         this.statusCode = error.statusCode;
-        if (not) {
-          return callback();
-        }
-        callback(error);
+        return callback(error);
       });
   });
 
