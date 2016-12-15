@@ -133,7 +133,16 @@ describe('core/httpRouter', () => {
         type: 'application/json',
         status: 400
       });
-      should(callback.firstCall.args[0].content).startWith('{"status":400,"error":{"status":400,"message":"Unrecognized HTTP method FOOBAR"');
+
+      should(callback.firstCall.args[0].content.toJSON()).match({
+        status: 400,
+        error: {
+          status: 400,
+          message: 'Unrecognized HTTP method FOOBAR'
+        },
+        requestId: 'requestId',
+        result: null
+      });
     });
 
     it('should return an error if unable to parse the incoming JSON content', () => {
@@ -153,7 +162,16 @@ describe('core/httpRouter', () => {
         type: 'application/json',
         status: 400
       });
-      should(callback.firstCall.args[0].content).startWith('{"status":400,"error":{"status":400,"message":"Unable to convert HTTP body to JSON');
+
+      should(callback.firstCall.args[0].content.toJSON()).match({
+        status: 400,
+        error: {
+          status: 400,
+          message: 'Unable to convert HTTP body to JSON'
+        },
+        requestId: 'requestId',
+        result: null
+      });
     });
 
     it('should return an error if the content-type is not JSON', () => {
@@ -173,7 +191,16 @@ describe('core/httpRouter', () => {
         type: 'application/json',
         status: 400
       });
-      should(callback.firstCall.args[0].content).startWith('{"status":400,"error":{"status":400,"message":"Invalid request content-type');
+
+      should(callback.firstCall.args[0].content.toJSON()).match({
+        status: 400,
+        error: {
+          status: 400,
+          message: 'Invalid request content-type. Expected "application/json", got: "application/foobar"'
+        },
+        requestId: 'requestId',
+        result: null
+      });
     });
 
     it('should send an error if the charset is not utf-8', () => {
@@ -193,7 +220,16 @@ describe('core/httpRouter', () => {
         type: 'application/json',
         status: 400
       });
-      should(callback.firstCall.args[0].content).startWith('{"status":400,"error":{"status":400,"message":"Invalid request charset');
+
+      should(callback.firstCall.args[0].content.toJSON()).match({
+        status: 400,
+        error: {
+          status: 400,
+          message: 'Invalid request charset. Expected "utf-8", got: "iso8859-1"'
+        },
+        requestId: 'requestId',
+        result: null
+      });
     });
 
     it('should return an error if the route does not exist', () => {
@@ -201,7 +237,7 @@ describe('core/httpRouter', () => {
 
       rq.url = '/foo/bar';
       rq.method = 'PUT';
-      rq.headers['content-type'] = 'application/foobar';
+      rq.headers['content-type'] = 'application/json';
       rq.content = '{"foo": "bar"}';
 
       router.route(rq, callback);
@@ -213,7 +249,16 @@ describe('core/httpRouter', () => {
         type: 'application/json',
         status: 404
       });
-      should(callback.firstCall.args[0].content).startWith('{"status":404,"error":{"status":404,"message":"API URL not found');
+
+      should(callback.firstCall.args[0].content.toJSON()).match({
+        status: 404,
+        error: {
+          status: 404,
+          message: 'API URL not found: /foo/bar'
+        },
+        requestId: 'requestId',
+        result: null
+      });
     });
   });
 });
