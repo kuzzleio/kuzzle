@@ -18,7 +18,10 @@ describe('Test: routerController.httpRequest', () => {
   before(() => {
     kuzzleStub = {
       config: {
-        httpRoutes: require('../../../../lib/config/httpRoutes')
+        http: {
+          routes: require('../../../../lib/config/httpRoutes'),
+          accessControlAllowOrigin: 'foobar'
+        }
       },
       pluginsManager: {
         routes: [
@@ -63,7 +66,8 @@ describe('Test: routerController.httpRequest', () => {
         should(response.input.action).be.eql('getrange');
         should(result).be.instanceOf(HttpResponse);
         should(result.id).be.eql(httpRequest.requestId);
-        should(result.type).be.eql('application/json');
+        should(result.content.headers['content-type']).be.eql('application/json');
+        should(result.content.headers['Access-Control-Allow-Origin']).be.eql('foobar');
         should(result.status).be.eql(1234);
         should(result.content).be.exactly(response.response);
         done();
@@ -85,7 +89,7 @@ describe('Test: routerController.httpRequest', () => {
         should(response.input.action).be.eql('updateProfile');
         should(result).be.instanceOf(HttpResponse);
         should(result.id).be.eql(httpRequest.requestId);
-        should(result.type).be.eql('application/json');
+        should(result.content.headers['content-type']).be.eql('application/json');
         should(result.status).be.eql(1234);
         should(result.content).be.exactly(response.response);
         done();
@@ -107,7 +111,7 @@ describe('Test: routerController.httpRequest', () => {
         should(response.input.action).be.eql('updateSelf');
         should(result).be.instanceOf(HttpResponse);
         should(result.id).be.eql(httpRequest.requestId);
-        should(result.type).be.eql('application/json');
+        should(result.content.headers['content-type']).be.eql('application/json');
         should(result.status).be.eql(1234);
         should(result.content).be.exactly(response.response);
         done();
@@ -128,7 +132,7 @@ describe('Test: routerController.httpRequest', () => {
         should(response.input.action).be.eql('delete');
         should(result).be.instanceOf(HttpResponse);
         should(result.id).be.eql(httpRequest.requestId);
-        should(result.type).be.eql('application/json');
+        should(result.content.headers['content-type']).be.eql('application/json');
         should(result.status).be.eql(1234);
         should(result.content).be.exactly(response.response);
         done();
@@ -149,7 +153,7 @@ describe('Test: routerController.httpRequest', () => {
         should(response.input.action).be.eql('info');
         should(result).be.instanceOf(HttpResponse);
         should(result.id).be.eql(httpRequest.requestId);
-        should(result.type).be.eql('application/json');
+        should(result.content.headers['content-type']).be.eql('application/json');
         should(result.status).be.eql(1234);
         should(result.content).be.exactly(response.response);
         done();
@@ -168,7 +172,7 @@ describe('Test: routerController.httpRequest', () => {
       try {
         should(result).be.instanceOf(HttpResponse);
         should(result.id).be.eql(httpRequest.requestId);
-        should(result.type).be.eql('application/json');
+        should(result.content.headers['content-type']).be.eql('application/json');
         should(result.status).be.eql(200);
         done();
       }
@@ -186,7 +190,7 @@ describe('Test: routerController.httpRequest', () => {
       try {
         should(result).be.instanceOf(HttpResponse);
         should(result.id).be.eql(httpRequest.requestId);
-        should(result.type).be.eql('application/yaml');
+        should(result.content.headers['content-type']).be.eql('application/yaml');
         should(result.status).be.eql(200);
         done();
       }
@@ -206,7 +210,7 @@ describe('Test: routerController.httpRequest', () => {
         should(response.input.action).be.eql('bar');
         should(result).be.instanceOf(HttpResponse);
         should(result.id).be.eql(httpRequest.requestId);
-        should(result.type).be.eql('application/json');
+        should(result.content.headers['content-type']).be.eql('application/json');
         should(result.status).be.eql(1234);
         should(result.content).be.exactly(response.response);
         done();
@@ -225,9 +229,9 @@ describe('Test: routerController.httpRequest', () => {
       try {
         should(result).be.instanceOf(HttpResponse);
         should(result.id).be.eql(httpRequest.requestId);
-        should(result.type).be.eql('application/json');
+        should(result.content.headers['content-type']).be.eql('application/json');
         should(result.status).be.eql(404);
-        should(JSON.stringify(result.content)).startWith('{"status":404,"error":{"status":404,"message":"API URL not found: /foo/bar"');
+        should(JSON.stringify(result.content.error)).startWith('{"status":404,"message":"API URL not found: /foo/bar"');
         done();
       }
       catch (e) {
