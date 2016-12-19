@@ -44,7 +44,7 @@
     "json-stable-stringify": "1.0.1",
     "json2yaml": "^1.1.0",
     "jsonwebtoken": "^7.1.7",
-    "kuzzle-common-objects": "^2.0.1",
+    "kuzzle-common-objects": "^2.1.0",
     "lodash": "4.16.3",
     "mkdirp": "0.5.1",
     "moment": "2.15.1",
