@@ -88,11 +88,11 @@ describe('funnelController.execute', () => {
     });
   });
 
-  describe('#server:overload hook', () => {
+  describe('#core:overload hook', () => {
     it('should fire the hook the first time Kuzzle is in overloaded state', /** @this {Mocha} */ function (done) {
       this.timeout(500);
 
-      kuzzle.once('server:overload', () => {
+      kuzzle.once('core:overload', () => {
         done();
       });
 
@@ -103,7 +103,7 @@ describe('funnelController.execute', () => {
     it('should fire the hook if the last one was fired more than 500ms ago', /** @this {Mocha} */ function (done) {
       this.timeout(500);
 
-      kuzzle.once('server:overload', () => {
+      kuzzle.once('core:overload', () => {
         done();
       });
 
@@ -114,16 +114,16 @@ describe('funnelController.execute', () => {
 
     it('should not fire the hook if one was fired less than 500ms ago', done => {
       var listener = () => {
-        done(new Error('server:overload hook fired unexpectedly'));
+        done(new Error('core:overload hook fired unexpectedly'));
       };
 
-      kuzzle.once('server:overload', listener);
+      kuzzle.once('core:overload', listener);
 
       funnel.overloaded = true;
       funnel.lastWarningTime = Date.now() - 200;
       funnel.execute(request, () => {});
       setTimeout(() => {
-        kuzzle.off('server:overload', listener);
+        kuzzle.off('core:overload', listener);
         done();
       }, 200);
     });
