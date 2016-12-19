@@ -24,7 +24,6 @@ fi
 
 echo "[$(date --rfc-3339 seconds)] - Starting Kuzzle..."
 
-pm2 start --silent /config/pm2.json
-nohup node-inspector --web-port=8080 --debug-port=7000 > /dev/null 2>&1&
+pm2 start /config/pm2.json
 pm2 sendSignal -s SIGUSR1 KuzzleServer
-pm2 logs --lines 0 --raw
+pm2 logs --lines 2
