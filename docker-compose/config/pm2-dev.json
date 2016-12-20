@@ -5,6 +5,6 @@
     "args"         : ["start"],
     "watch"        : ["lib", "config", "bin", "default.config.js"],
     "ignore_watch" : ["node_modules"],
-    "node_args": "--debug=7000"
+    "node_args": "--inspect"
   }]
 }
