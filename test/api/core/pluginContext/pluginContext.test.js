@@ -36,7 +36,7 @@ describe('Plugin Context', () => {
       should(context.constructors.BaseValidationType).be.a.Function();
 
       should(new context.constructors.Dsl).be.instanceOf(Dsl);
-      should(new context.constructors.Request({})).be.instanceOf(Request);
+      should(new context.constructors.Request(new Request({}), {})).be.instanceOf(Request);
     });
 
     it('should expose all error objects as capitalized constructors', () => {
