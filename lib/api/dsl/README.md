@@ -1,5 +1,22 @@
 # Kuzzle real-time engine
 
+**Table of contents:**
+
+  - [How it works](#how-it-works)
+    - [Vocabulary](#vocabulary)
+    - [Filter registration](#filter-registration)
+    - [Storage and indexation](#storage-and-indexation)
+    - [Matching](#matching)
+    - [Deleting a filter](#deleting-a-filter)
+  - [API](#api)
+    - [`exists(index, collection)`](#existsindex-collection)
+    - [`getFilterIds(index, collection)`](#getfilteridsindex-collection)
+    - [`register(index, collection, filters)`](#registerindex-collection-filters)
+    - [`remove(filterId)`](#removefilterid)
+    - [`test(index, collection, data, [documentId])`](#testindex-collection-data-documentid)
+    - [`validate(filters)`](#validatefilters)
+
+
 ## How it works
 
 ### Vocabulary
