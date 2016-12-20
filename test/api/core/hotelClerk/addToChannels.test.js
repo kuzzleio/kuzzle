@@ -153,24 +153,24 @@ describe('Test: hotelClerk.addToChannels', () => {
       channels = {};
 
     request.users = 'all';
-    kuzzle.hotelClerk.addSubscription(new Request(request), context)
+    kuzzle.hotelClerk.addSubscription(new Request(request))
       .then(response => {
         roomId = response.roomId;
-        notification = new NotificationObject(response.roomId, new Request({collection: 'foo', body: dataGrace}));
+        notification = new NotificationObject(response.roomId, new Request({collection: 'foo', body: dataGrace}), {});
         notification.controller = 'realtime';
         channels.all = response.channel;
         request.users = 'in';
-        return kuzzle.hotelClerk.addSubscription(new Request(request), context);
+        return kuzzle.hotelClerk.addSubscription(new Request(request));
       })
       .then(response => {
         channels.in = response.channel;
         request.users = 'out';
-        return kuzzle.hotelClerk.addSubscription(new Request(request), context);
+        return kuzzle.hotelClerk.addSubscription(new Request(request));
       })
       .then(response => {
         channels.out = response.channel;
         request.users = 'none';
-        return kuzzle.hotelClerk.addSubscription(new Request(request), context);
+        return kuzzle.hotelClerk.addSubscription(new Request(request));
       })
       .then(response => {
         var eligibleChannels = [];
