@@ -43,7 +43,7 @@ describe('Test: lib/services/', () => {
 
     beforeEach(() => {
       r = Services.__set__({
-        registerService: sinon.stub().resolves()
+        registerService: sinon.stub().returns(Promise.resolve())
       });
       registerService = Services.__get__('registerService');
     });
@@ -55,14 +55,22 @@ describe('Test: lib/services/', () => {
     it('should register the services', () => {
       return services.init()
         .then(() => {
-          should(Object.keys(kuzzle.config.services).length).be.greaterThan(2);
 
-          Object.keys(kuzzle.config.services)
-            .filter(key => key !== 'common')
-            .forEach(service => {
-              should(kuzzle.internalEngine.get).be.calledWith('services', service);
-              should(registerService).be.calledWith(service);
-            });
+          try {
+            should(Object.keys(kuzzle.config.services).length).be.greaterThan(2);
+
+            Object.keys(kuzzle.config.services)
+              .filter(key => key !== 'common')
+              .forEach(service => {
+                should(kuzzle.internalEngine.get).be.calledWith('services', service);
+                should(registerService).be.calledWith(service);
+              });
+
+            return Promise.resolve();
+          }
+          catch(error) {
+            return Promise.reject(error);
+          }
         });
     });
 
@@ -75,20 +83,27 @@ describe('Test: lib/services/', () => {
 
       return services.init()
         .then(() => {
-          should(Object.keys(kuzzle.config.services).length).be.greaterThan(2);
+          try {
+            should(Object.keys(kuzzle.config.services).length).be.greaterThan(2);
 
-          Object.keys(kuzzle.config.services)
-            .filter(key => key !== 'common')
-            .forEach(service => {
-              should(kuzzle.internalEngine.get).be.calledWith('services', service);
-              should(registerService).be.calledWith(service);
-            });
+            Object.keys(kuzzle.config.services)
+              .filter(key => key !== 'common')
+              .forEach(service => {
+                should(kuzzle.internalEngine.get).be.calledWith('services', service);
+                should(registerService).be.calledWith(service);
+              });
+
+            return Promise.resolve();
+          }
+          catch(err) {
+            return Promise.reject(err);
+          }
         });
     });
 
     it('should return a rejected promise if something wrong occurred while fetching the configuration from the db', () => {
       var error = new Error('test');
-      kuzzle.internalEngine.get.rejects(error);
+      kuzzle.internalEngine.get.returns(Promise.reject(error));
 
       return should(services.init()).be.rejectedWith(error);
     });
@@ -102,9 +117,16 @@ describe('Test: lib/services/', () => {
 
       return services.init({whitelist: ['ok', 'alsoOk']})
         .then(() => {
-          should(registerService).be.calledWith('ok', {service: 'ok'}, true);
-          should(registerService).be.calledWith('alsoOk', {service: 'alsoOk'}, true);
-          should(registerService).be.calledWith('notOk', {service: 'notOk'}, false);
+          try {
+            should(registerService).be.calledWith('ok', {service: 'ok'}, true);
+            should(registerService).be.calledWith('alsoOk', {service: 'alsoOk'}, true);
+            should(registerService).be.calledWith('notOk', {service: 'notOk'}, false);
+
+            return Promise.resolve();
+          }
+          catch(error) {
+            return Promise.reject(error);
+          }
         });
     });
 
@@ -117,9 +139,16 @@ describe('Test: lib/services/', () => {
 
       return services.init({blacklist: ['notOk']})
         .then(() => {
-          should(registerService).be.calledWith('ok', {service: 'ok'}, true);
-          should(registerService).be.calledWith('alsoOk', {service: 'alsoOk'}, true);
-          should(registerService).be.calledWith('notOk', {service: 'notOk'}, false);
+          try {
+            should(registerService).be.calledWith('ok', {service: 'ok'}, true);
+            should(registerService).be.calledWith('alsoOk', {service: 'alsoOk'}, true);
+            should(registerService).be.calledWith('notOk', {service: 'notOk'}, false);
+
+            return Promise.resolve();
+          }
+          catch(error) {
+            return Promise.reject(error);
+          }
         });
     });
 
@@ -143,8 +172,15 @@ describe('Test: lib/services/', () => {
 
       return registerService.call(context, 'serviceName', options, false)
         .then(() => {
-          should(Services.__get__('require')).be.calledOnce();
-          should(Services.__get__('require')).be.calledWith('./serviceName');
+          try {
+            should(Services.__get__('require')).be.calledOnce();
+            should(Services.__get__('require')).be.calledWith('./serviceName');
+
+            return Promise.resolve();
+          }
+          catch(error) {
+            return Promise.reject(error);
+          }
         });
     });
 
@@ -155,8 +191,15 @@ describe('Test: lib/services/', () => {
 
       return registerService.call(context, 'serviceName', options, false)
         .then(() => {
-          should(Services.__get__('require')).be.calledOnce();
-          should(Services.__get__('require')).be.calledWith('./backend');
+          try {
+            should(Services.__get__('require')).be.calledOnce();
+            should(Services.__get__('require')).be.calledWith('./backend');
+
+            return Promise.resolve();
+          }
+          catch(error) {
+            return Promise.reject(error);
+          }
         });
     });
 
@@ -173,14 +216,21 @@ describe('Test: lib/services/', () => {
         .then(() => {
           var req = Services.__get__('require');
 
-          should(req).be.calledThrice();
-          should(req).be.calledWith('./serviceName');
+          try {
+            should(req).be.calledThrice();
+            should(req).be.calledWith('./serviceName');
 
-          should(context.list).have.properties([
-            'someAlias',
-            'someOtherAlias',
-            'andYetAnotherOne'
-          ]);
+            should(context.list).have.properties([
+              'someAlias',
+              'someOtherAlias',
+              'andYetAnotherOne'
+            ]);
+
+            return Promise.resolve();
+          }
+          catch(error) {
+            return Promise.reject(error);
+          }
         });
     });
 

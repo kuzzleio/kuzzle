@@ -5,31 +5,24 @@ var
   rc = require('rc'),
   params = rc('kuzzle'),
   Kuzzle = require('../../lib/api/kuzzle'),
-  RequestObject = require('kuzzle-common-objects').Models.requestObject,
+  Request = require('kuzzle-common-objects').Request,
   Promise = require('bluebird'),
   clc = require('cli-color'),
-  coverage,
-  kuzzleLogo = `
-      ▄▄▄▄▄      ▄███▄      ▄▄▄▄
-   ▄█████████▄▄█████████▄▄████████▄
-  ██████████████████████████████████
-   ▀██████████████████████████████▀
-    ▄███████████████████████████▄
-  ▄███████████████████████████████▄
- ▀█████████████████████████████████▀
-   ▀██▀        ▀██████▀       ▀██▀
-          ██     ████    ██
-                ▄████▄
-                ▀████▀
-                  ▀▀`;
+  coverage;
+  /*kuzzleLogo = `
+                       ______     _____    
+     _  ___   _ _____ |__  / |   | ____|   
+    | |/ / | | |__  /   / /| |   |  _|     
+    | ' /| | | | / /   / /_| |___| |_      
+    | . \\| |_| |/ /_  /____|_____|_____| 
+    |_|\\_\\\\___//____|    SERVER READY`;*/
 
-module.exports = function (options) {
+function commandStart (options) {
   var
     kuzzle = new Kuzzle(),
     error = string => options.parent.noColors ? string : clc.red(string),
     warn = string => options.parent.noColors ? string : clc.yellow(string),
     notice = string => options.parent.noColors ? string : clc.cyanBright(string),
-    ok = string => options.parent.noColors ? string : clc.green.bold(string),
     kuz = string => options.parent.noColors ? string : clc.greenBright.bold(string);
 
   if (process.env.FEATURE_COVERAGE === '1' || process.env.FEATURE_COVERAGE === 1) {
@@ -37,61 +30,71 @@ module.exports = function (options) {
     console.log(warn('Hook loader for coverage - ensure this is not production!'));
     coverage.hookLoader(__dirname+'/../lib');
   }
-  console.log(kuz('Starting Kuzzle'));
+  console.log(kuz('[ℹ] Starting Kuzzle server'));
 
   kuzzle.start(params)
-    .then(() => {
-      var request;
-
-      if (params.likeAvirgin) {
-        request = new RequestObject({controller: 'remoteActions', action: 'cleanDb', body: {}});
-        return kuzzle.remoteActionsController.actions.cleanDb(kuzzle, request);
-      }
-      return Promise.resolve();
-    })
+    // fixtures && mapping
     .then(() => {
       var
-        request,
-        data = {};
+        fixtures,
+        promises = [];
 
       if (params.fixtures) {
         try {
-          JSON.parse(fs.readFileSync(params.fixtures, 'utf8'));
+          fixtures = JSON.parse(fs.readFileSync(params.fixtures, 'utf8'));
         }
         catch (e) {
           console.log(error('[✖] The file ' + params.fixtures + ' cannot be opened... aborting.'));
           process.exit(1);
         }
-        data.fixtures = params.fixtures;
+
+        Object.keys(fixtures).forEach(index => {
+          Object.keys(fixtures[index]).forEach(collection => {
+            promises.push(kuzzle.services.list.storageEngine.import(new Request({
+              index,
+              collection,
+              body: {
+                bulkData: fixtures[index][collection]
+              }
+            })));
+          });
+        });
+
+        return Promise.all(promises);
       }
+    })
+    .then(() => {
+      var
+        mappings,
+        promises = [];
 
       if (params.mappings) {
         try {
-          JSON.parse(fs.readFileSync(params.mappings, 'utf8'));
+          mappings = JSON.parse(fs.readFileSync(params.mappings, 'utf8'));
         }
         catch (e) {
           console.log(error('[✖] The file ' + params.mappings + ' cannot be opened... aborting.'));
           process.exit(1);
         }
-        data.mappings = params.mappings;
-      }
 
-      request = new RequestObject({controller: 'remoteActions', action: 'prepareDb', body: data});
-      return kuzzle.remoteActionsController.actions.prepareDb(request)
-        .catch(() => Promise.resolve());
+        Object.keys(mappings).forEach(index => {
+          Object.keys(mappings[index]).forEach(collection => {
+            promises.push(kuzzle.services.list.storageEngine.updateMapping(new Request({
+              index,
+              collection,
+              body: mappings[index][collection]
+            })));
+          });
+        });
+
+        return Promise.all(promises);
+      }
     })
     .then(() => {
-      console.log(kuzzleLogo);
-      console.log(`
- ████████████████████████████████████
- ██         KUZZLE IS READY        ██
- ████████████████████████████████████`);
-      return kuzzle.remoteActionsController.actions.adminExists()
+      console.log(kuz('[✔] Kuzzle server ready'));
+      return kuzzle.internalEngine.bootstrap.adminExists()
         .then((res) => {
-          if (res.data.body.exists) {
-            console.log(ok('[✔] It seems that you already have an admin account.'));
-          }
-          else {
+          if (!res) {
             console.log(notice('[ℹ] There is no administrator user yet. You can use the CLI or the back-office to create one.'));
             console.log(notice('[ℹ] Entering no-administrator mode: everyone has administrator rights.'));
           }
@@ -101,4 +104,6 @@ module.exports = function (options) {
       console.error(err.stack);
       process.exit(1);
     });
-};
+}
+
+module.exports = commandStart;

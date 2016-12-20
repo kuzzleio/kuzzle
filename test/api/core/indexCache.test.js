@@ -1,12 +1,15 @@
 var
   should = require('should'),
+  Promise = require('bluebird'),
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
-  Kuzzle = require.main.require('lib/api/kuzzle'),
+  Kuzzle = require('../../../lib/api/kuzzle'),
   IndexCache = require.main.require('lib/api/core/indexCache');
 
 describe('Test: core/indexCache', () => {
   var
+    listIndexesStub,
+    listCollectionsStub,
     indexCache,
     kuzzle;
 
@@ -15,16 +18,14 @@ describe('Test: core/indexCache', () => {
   });
 
   beforeEach(() => {
-    sandbox.stub(kuzzle.internalEngine, 'get').resolves({});
+    sandbox.stub(kuzzle.internalEngine, 'get').returns(Promise.resolve({}));
     return kuzzle.services.init({whitelist: []})
       .then(() => {
-        sandbox.stub(kuzzle.services.list.storageEngine, 'listIndexes').resolves({ indexes: ['foo'] });
-        sandbox.stub(kuzzle.services.list.storageEngine, 'listCollections').resolves({
-          collections: {
-            stored: ['bar', 'baz', 'qux']
-          }
-        });
+        listIndexesStub = sandbox.stub(kuzzle.internalEngine, 'listIndexes').returns(Promise.resolve(['foo']));
+        listCollectionsStub = sandbox.stub(kuzzle.internalEngine, 'listCollections').returns(Promise.resolve(['bar', 'baz', 'qux']));
         indexCache = new IndexCache(kuzzle);
+
+        return null;
       });
   });
 
@@ -37,6 +38,8 @@ describe('Test: core/indexCache', () => {
       indexCache.init();
 
       setTimeout(() => {
+        should(listIndexesStub.calledOnce).be.true();
+        should(listCollectionsStub.calledOnce).be.true();
         should(indexCache.indexes).be.an.Object().and.have.keys('foo');
         should(indexCache.indexes.foo).be.an.Array().and.match(['bar', 'baz', 'qux']);
         done();

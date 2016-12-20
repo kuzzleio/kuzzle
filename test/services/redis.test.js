@@ -40,9 +40,16 @@ describe('Test redis service', () => {
     return Redis.__with__('buildClient', () => myRedisClient)(() => {
       return myRedis.init()
         .then(() => {
-          should(myRedis).have.property('client');
-          should(myRedis.client).be.an.Object();
-          should(spy).not.be.called();
+          try {
+            should(myRedis).have.property('client');
+            should(myRedis.client).be.an.Object();
+            should(spy).not.be.called();
+
+            return Promise.resolve();
+          }
+          catch(error) {
+            return Promise.reject(error);
+          }
         });
     });
   });
@@ -56,9 +63,16 @@ describe('Test redis service', () => {
     return Redis.__with__('buildClient', () => myRedisClient)(() => {
       return myRedis.init()
         .then(() => {
-          should(myRedis).have.property('client');
-          should(myRedis.client).be.an.Object();
-          should(spy).be.calledWith(1);
+          try {
+            should(myRedis).have.property('client');
+            should(myRedis.client).be.an.Object();
+            should(spy).be.calledWith(1);
+
+            return Promise.resolve();
+          }
+          catch(error) {
+            return Promise.reject(error);
+          }
         });
     });
   });
@@ -72,9 +86,16 @@ describe('Test redis service', () => {
     return Redis.__with__('buildClient', () => myRedisClient)(() => {
       return myRedis.init()
         .then(() => {
-          should(myRedis).have.property('client');
-          should(myRedis.client).be.an.Object();
-          should(spy).not.be.called();
+          try {
+            should(myRedis).have.property('client');
+            should(myRedis.client).be.an.Object();
+            should(spy).not.be.called();
+
+            return Promise.resolve();
+          }
+          catch(error) {
+            return Promise.reject(error);
+          }
         });
     });
   });
@@ -82,7 +103,7 @@ describe('Test redis service', () => {
   it('should raise an error if unable to connect', () => {
     var testredis = new Redis(kuzzle, {service: dbname}, {});
 
-    return Redis.__with__('buildClient', () => new RedisClientMock('connection error'))(() => {
+    return Redis.__with__('buildClient', () => new RedisClientMock(new Error('connection error')))(() => {
       return should(testredis.init()).be.rejected();
     });
   });
@@ -108,72 +129,135 @@ describe('Test redis service', () => {
   it('should resolve 1 when add a key with one value', () => {
     return redis.add('foo', 'bar')
       .then(req => {
-        should(req.name).be.exactly('sadd');
-        should(req.args).be.eql([['foo', 'bar']]);
+        try {
+          should(req.name).be.exactly('sadd');
+          should(req.args).be.eql([['foo', 'bar']]);
+
+          return Promise.resolve();
+        }
+        catch(error) {
+          return Promise.reject(error);
+        }
       });
   });
 
   it('should resolve 2 when add a key with an array with 2 values', () => {
     return redis.add('foo', ['bar', 'baz'])
       .then(req => {
-        should(req.name).be.exactly('sadd');
-        should(req.args).be.eql([['foo', 'bar', 'baz']]);
+        try {
+          should(req.name).be.exactly('sadd');
+          should(req.args).be.eql([['foo', 'bar', 'baz']]);
+
+          return Promise.resolve();
+        }
+        catch(error) {
+          return Promise.reject(error);
+        }
       });
   });
 
   it('should remove a specific value for a key', () => {
     return redis.remove('foo', 'bar')
       .then(req => {
-        should(req.name).be.exactly('srem');
-        should(req.args).be.eql(['foo', 'bar']);
+        try {
+          should(req.name).be.exactly('srem');
+          should(req.args).be.eql(['foo', 'bar']);
+
+          return Promise.resolve();
+        }
+        catch(error) {
+          return Promise.reject(error);
+        }
       });
   });
 
   it('should remove several values for a key', () => {
     return redis.remove('foo', ['bar', 'baz'])
       .then(req => {
-        should(req.name).be.exactly('srem');
-        should(req.args).be.eql(['foo', ['bar', 'baz']]);
+        try {
+          should(req.name).be.exactly('srem');
+          should(req.args).be.eql(['foo', ['bar', 'baz']]);
+
+          return Promise.resolve();
+        }
+        catch(error) {
+          return Promise.reject(error);
+        }
       });
   });
 
   it('should remove the key', () => {
     return redis.remove('foo')
       .then(req => {
-        should(req.name).be.exactly('del');
-        should(req.args).be.eql(['foo']);
+        try {
+          should(req.name).be.exactly('del');
+          should(req.args).be.eql(['foo']);
+
+          return Promise.resolve();
+        }
+        catch(error) {
+          return Promise.reject(error);
+        }
       });
   });
 
   it('should search values for a specific key', () => {
     return redis.search('foo')
       .then(req => {
-        should(req.name).be.exactly('smembers');
-        should(req.args).be.eql(['foo']);
+        try {
+          should(req.name).be.exactly('smembers');
+          should(req.args).be.eql(['foo']);
+
+          return Promise.resolve();
+        }
+        catch(error) {
+          return Promise.reject(error);
+        }
       });
   });
 
   it('should add a volatile key', () => {
     return redis.volatileSet('foo', 'bar', 10)
       .then(req => {
-        should(req.name).be.exactly('setex');
-        should(req.args).be.eql(['foo', 10, 'bar']);
+        try {
+          should(req.name).be.exactly('setex');
+          should(req.args).be.eql(['foo', 10, 'bar']);
+
+          return Promise.resolve();
+        }
+        catch(error) {
+          return Promise.reject(error);
+        }
       });
   });
 
   it('should allow getting a single key value', () => {
     return redis.get('foo')
       .then(req => {
-        should(req.name).be.exactly('get');
-        should(req.args).be.eql(['foo']);
+        try {
+          should(req.name).be.exactly('get');
+          should(req.args).be.eql(['foo']);
+
+          return Promise.resolve();
+        }
+        catch(error) {
+          return Promise.reject(error);
+        }
       });
   });
 
   it('should retrieve values from multiple keys', () => {
     return redis.mget(['foo', 'baz'])
       .then(req => {
-        should(req.name).be.exactly('mget');
-        should(req.args).be.eql([['foo', 'baz']]);
+        try {
+          should(req.name).be.exactly('mget');
+          should(req.args).be.eql([['foo', 'baz']]);
+
+          return Promise.resolve();
+        }
+        catch(error) {
+          return Promise.reject(error);
+        }
       });
   });
 
@@ -184,35 +268,63 @@ describe('Test redis service', () => {
   it('should allow listing keys using pattern matching', () => {
     return redis.searchKeys('s*')
       .then(keys => {
-        should(keys).be.eql(['s0', 's1', 's2', 's3', 's4', 's5', 's6', 's7', 's8', 's9']);
+        try {
+          should(keys).be.eql(['s0', 's1', 's2', 's3', 's4', 's5', 's6', 's7', 's8', 's9']);
+
+          return Promise.resolve();
+        }
+        catch(error) {
+          return Promise.reject(error);
+        }
       });
   });
 
   it('should retrieve all stored keys of a database', () => {
     return redis.getAllKeys()
       .then(keys => {
-        should(keys).be.eql(['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']);
+        try {
+          should(keys).be.eql(['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']);
+
+          return Promise.resolve();
+        }
+        catch(error) {
+          return Promise.reject(error);
+        }
       });
   });
 
   it('#set should set a single value', () => {
     return redis.set('foo', 'bar')
       .then(req => {
-        should(req.name).be.exactly('set');
-        should(req.args).be.eql(['foo', 'bar']);
+        try {
+          should(req.name).be.exactly('set');
+          should(req.args).be.eql(['foo', 'bar']);
+
+          return Promise.resolve();
+        }
+        catch(error) {
+          return Promise.reject(error);
+        }
       });
   });
 
   it('#expireAt should allow to set a ttl based on a timestamp', () => {
     return redis.expireAt('foo', 999)
       .then(req => {
-        should(req.name).be.exactly('expireat');
-        should(req.args).be.eql(['foo', 999]);
+        try {
+          should(req.name).be.exactly('expireat');
+          should(req.args).be.eql(['foo', 999]);
+
+          return Promise.resolve();
+        }
+        catch(error) {
+          return Promise.reject(error);
+        }
       });
   });
 
   it('#getInfos should return a properly formatted response', () => {
-    sandbox.stub(redis.client, 'info').resolves(`redis_version:3.0.7
+    sandbox.stub(redis.client, 'info').returns(Promise.resolve(`redis_version:3.0.7
     redis_git_sha1:00000000
     redis_git_dirty:0
     redis_build_id:fcba39adccee99b1
@@ -304,7 +416,7 @@ describe('Test redis service', () => {
 # Keyspace
     db1:keys=5,expires=5,avg_ttl=3584283
     db5:keys=1,expires=0,avg_ttl=0
-    `);
+    `));
     return should(redis.getInfos()).be.fulfilled();
   });
 

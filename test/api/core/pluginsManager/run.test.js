@@ -6,8 +6,7 @@ var
   sinon = require('sinon'),
   PluginsManager = rewire('../../../../lib/api/core/plugins/pluginsManager'),
   EventEmitter = require('eventemitter2').EventEmitter2,
-  GatewayTimeoutError = require.main.require('kuzzle-common-objects').Errors.gatewayTimeoutError,
-  workerPrefix = PluginsManager.__get__('workerPrefix');
+  GatewayTimeoutError = require('kuzzle-common-objects').errors.GatewayTimeoutError;
 
 describe('Test plugins manager run', () => {
   var
@@ -21,7 +20,7 @@ describe('Test plugins manager run', () => {
   before(() => {
     pm2Mock = function () {
       var universalProcess = {
-        name: workerPrefix + 'testPlugin',
+        name: params.plugins.common.workerPrefix + 'testPlugin',
         pm_id: 42
       };
 
@@ -323,18 +322,17 @@ describe('Test plugins manager run', () => {
 
   it('should attach controller actions on kuzzle object', () => {
     plugin.object.controllers = {
-      'foo': 'FooController'
+      'foo': {
+        'actionName': 'functionName'
+      }
     };
 
-    plugin.object.FooController = () => {};
-    pluginMock.expects('FooController').once().calledOn(plugin.object);
+    plugin.object.functionName = () => {};
 
     return pluginsManager.run()
       .then(() => {
-        should.not.exist(pluginsManager.controllers['testPlugin/dfoo']);
-        should(pluginsManager.controllers['testPlugin/foo']).be.a.Function();
-        pluginsManager.controllers['testPlugin/foo']();
-        pluginMock.verify();
+        should(pluginsManager.controllers['testPlugin/foo']).be.an.Object();
+        should(pluginsManager.controllers['testPlugin/foo'].actionName).be.eql(plugin.object.functionName.bind(plugin.object));
       });
   });
 
@@ -344,7 +342,13 @@ describe('Test plugins manager run', () => {
       {verb: 'post', url: '/bar', controller: 'foo', action: 'bar'}
     ];
 
-    plugin.object.controllers = ['foo'];
+    plugin.object.controllers = {
+      'foo': {
+        'bar': 'functionName'
+      }
+    };
+
+    plugin.object.functionName = () => {};
 
     return pluginsManager.run()
       .then(() => {
@@ -359,6 +363,69 @@ describe('Test plugins manager run', () => {
         should(pluginsManager.routes[0].action)
           .be.equal(pluginsManager.routes[0].action)
           .and.be.equal('bar');
+      });
+  });
+
+  it('should abort the controller initialization if the controller object is incorrectly defined', () => {
+    plugin.object.controllers = {
+      'foo': 'bar'
+    };
+
+    return pluginsManager.run()
+      .then(() => {
+        should(pluginsManager.controllers['testPlugin/foo']).be.undefined();
+      });
+  });
+
+  it('should abort the controller initialization if one of the controller action is not correctly defined', () => {
+    plugin.object.controllers = {
+      'foo': {
+        'actionName': []
+      }
+    };
+
+    return pluginsManager.run()
+      .then(() => {
+        should(pluginsManager.controllers['testPlugin/foo']).be.undefined();
+      });
+  });
+
+  it('should abort the controller initialization if one of the controller action target does not exist', () => {
+    plugin.object.controllers = {
+      'foo': {
+        'actionName': 'functionName',
+        'anotherActionName': 'does not exist'
+      }
+    };
+
+    plugin.object.functionName = () => {};
+
+    return pluginsManager.run()
+      .then(() => {
+        should(pluginsManager.controllers['testPlugin/foo']).be.undefined();
+      });
+  });
+
+  it('should not add an invalid route to the API', () => {
+    plugin.object.routes = [
+      {invalid: 'get', url: '/bar/:name', controller: 'foo', action: 'bar'},
+      {verb: 'post', url: ['/bar'], controller: 'foo', action: 'bar'},
+      {verb: 'invalid', url: '/bar', controller: 'foo', action: 'bar'},
+      {verb: 'get', url: '/bar/:name', controller: 'foo', action: 'invalid'},
+      {verb: 'get', url: '/bar/:name', controller: 'invalid', action: 'bar'},
+    ];
+
+    plugin.object.controllers = {
+      'foo': {
+        'bar': 'functionName'
+      }
+    };
+
+    plugin.object.functionName = () => {};
+
+    return pluginsManager.run()
+      .then(() => {
+        should(pluginsManager.routes).be.an.Array().and.length(0);
       });
   });
 
@@ -394,9 +461,16 @@ describe('Test plugins manager run', () => {
     return pluginsManager.run()
       .then(() => {
         pm2Mock.triggerOnBus('initialized');
-        should(pluginsManager.workers[workerPrefix + 'testPlugin']).be.an.Object();
-        should(pluginsManager.workers[workerPrefix + 'testPlugin'].pmIds).be.an.Object();
-        should(pluginsManager.workers[workerPrefix + 'testPlugin'].pmIds.getSize()).be.equal(1);
+        try {
+          should(pluginsManager.workers[params.plugins.common.workerPrefix + 'testPlugin']).be.an.Object();
+          should(pluginsManager.workers[params.plugins.common.workerPrefix + 'testPlugin'].pmIds).be.an.Object();
+          should(pluginsManager.workers[params.plugins.common.workerPrefix + 'testPlugin'].pmIds.getSize()).be.equal(1);
+      
+          return Promise.resolve();
+        }
+        catch (error) {
+          return Promise.reject(error);
+        }
       });
   });
 
@@ -407,13 +481,20 @@ describe('Test plugins manager run', () => {
 
     return pluginsManager.run()
       .then(() => {
-        pm2Mock.triggerOnBus('initialized');
-        should(pluginsManager.workers[workerPrefix + 'testPlugin']).be.an.Object();
-        should(pluginsManager.workers[workerPrefix + 'testPlugin'].pmIds).be.an.Object();
-        should(pluginsManager.workers[workerPrefix + 'testPlugin'].pmIds.getSize()).be.equal(1);
+        try {
+          pm2Mock.triggerOnBus('initialized');
+          should(pluginsManager.workers[params.plugins.common.workerPrefix + 'testPlugin']).be.an.Object();
+          should(pluginsManager.workers[params.plugins.common.workerPrefix + 'testPlugin'].pmIds).be.an.Object();
+          should(pluginsManager.workers[params.plugins.common.workerPrefix + 'testPlugin'].pmIds.getSize()).be.equal(1);
 
-        pm2Mock.triggerOnBus('process:event');
-        should.not.exist(pluginsManager.workers[workerPrefix + 'testPlugin']);
+          pm2Mock.triggerOnBus('process:event');
+          should.not.exist(pluginsManager.workers[params.plugins.common.workerPrefix + 'testPlugin']);
+      
+          return Promise.resolve();
+        }
+        catch (error) {
+          return Promise.reject(error);
+        }
       });
   });
 
@@ -428,19 +509,26 @@ describe('Test plugins manager run', () => {
 
     return pluginsManager.run()
       .then(() => {
-        pm2Mock.triggerOnBus('initialized');
+        try {
+          pm2Mock.triggerOnBus('initialized');
 
-        should(pluginsManager.workers[workerPrefix + 'testPlugin']).be.an.Object();
-        should(pluginsManager.workers[workerPrefix + 'testPlugin'].pmIds).be.an.Object();
-        should(pluginsManager.workers[workerPrefix + 'testPlugin'].pmIds.getSize()).be.equal(1);
+          should(pluginsManager.workers[params.plugins.common.workerPrefix + 'testPlugin']).be.an.Object();
+          should(pluginsManager.workers[params.plugins.common.workerPrefix + 'testPlugin'].pmIds).be.an.Object();
+          should(pluginsManager.workers[params.plugins.common.workerPrefix + 'testPlugin'].pmIds.getSize()).be.equal(1);
 
-        triggerWorkers.call(pluginsManager, 'foo:bar', {
-          'firstName': 'Ada'
-        });
+          triggerWorkers.call(pluginsManager, 'foo:bar', {
+            'firstName': 'Ada'
+          });
 
-        should(pm2Mock.getSentMessages()).be.an.Array().and.length(1);
-        should(pm2Mock.getSentMessages()[0]).be.an.Object();
-        should(pm2Mock.getSentMessages()[0].data.message.firstName).be.equal('Ada');
+          should(pm2Mock.getSentMessages()).be.an.Array().and.length(1);
+          should(pm2Mock.getSentMessages()[0]).be.an.Object();
+          should(pm2Mock.getSentMessages()[0].data.message.firstName).be.equal('Ada');
+      
+          return Promise.resolve();
+        }
+        catch (error) {
+          return Promise.reject(error);
+        }
       });
   });
 

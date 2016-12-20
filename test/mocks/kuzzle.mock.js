@@ -2,6 +2,7 @@ var
   _ = require('lodash'),
   sinon = require('sinon'),
   Kuzzle = require('../../lib/api/kuzzle'),
+  Promise = require('bluebird'),
   config = require('../../lib/config'),
   foo = {foo: 'bar'};
 
@@ -13,7 +14,7 @@ function KuzzleMock () {
 
   for (k in this) {
     if (!this.hasOwnProperty(k)) {
-      this[k] = function () {               // eslint-disable-line no-loop-func
+      this[k] = function () { // eslint-disable-line no-loop-func
         throw new Error(`Kuzzle original property ${k} is not mocked`);
       };
     }
@@ -22,23 +23,112 @@ function KuzzleMock () {
   // we need a deep copy here
   this.config = _.merge({}, config);
 
+  this.cliController = {
+    init: sinon.stub().returns(Promise.resolve()),
+    actions: {
+      adminExists: sinon.stub().returns(Promise.resolve()),
+      createFirstAdmin: sinon.stub().returns(Promise.resolve()),
+      cleanAndPrepare: sinon.stub().returns(Promise.resolve()),
+      cleanDb: sinon.stub().returns(Promise.resolve()),
+      managePlugins: sinon.stub().returns(Promise.resolve()),
+      data: sinon.stub().returns(Promise.resolve())
+    }
+  };
+
+  this.dsl = {
+    register: sinon.stub().returns(Promise.resolve()),
+    remove: sinon.stub().returns(Promise.resolve())
+  };
+
+  this.gc = {
+    init: sinon.spy(),
+    run: sinon.spy()
+  };
+
+  this.entryPoints = {
+    http: {
+      init: sinon.spy()
+    },
+    init: sinon.spy(),
+    proxy: {
+      dispatch: sinon.spy(),
+      joinChannel: sinon.spy(),
+      leaveChannel: sinon.spy()
+    }
+  };
+
+  this.funnel = {
+    controllers: {
+      server: {
+        adminExists: sinon.stub(),
+      },
+      security: {
+        createFirstAdmin: sinon.spy()
+      }
+    },
+    init: sinon.spy(),
+    handleErrorDump: sinon.spy(),
+    execute: sinon.spy(),
+    processRequest: sinon.stub(),
+    checkRights: sinon.stub()
+  };
+
+  this.hooks = {
+    init: sinon.spy()
+  };
+
+  this.hotelClerk = {
+    addToChannels: sinon.stub(),
+    getRealtimeCollections: sinon.stub(),
+    removeCustomerFromAllRooms: sinon.stub(),
+    addSubscription: sinon.stub().returns(Promise.resolve(foo)),
+    join: sinon.stub().returns(Promise.resolve(foo)),
+    removeSubscription: sinon.stub().returns(Promise.resolve(foo)),
+    countSubscription: sinon.stub().returns(Promise.resolve(foo)),
+    listSubscriptions: sinon.stub().returns(Promise.resolve(foo)),
+  };
+
   this.indexCache = {
-    add: sinon.spy(),
-    remove: sinon.spy()
+    add: sinon.stub(),
+    exists: sinon.stub(),
+    init: sinon.stub().returns(Promise.resolve()),
+    initInternal: sinon.stub().returns(Promise.resolve()),
+    remove: sinon.stub(),
+    reset: sinon.stub()
   };
 
   this.internalEngine = {
-    get: sinon.stub().resolves(foo),
+    bootstrap: {
+      adminExists: sinon.stub().returns(Promise.resolve(true)),
+      all: sinon.stub().returns(Promise.resolve()),
+      createCollections: sinon.stub().returns(Promise.resolve()),
+      createRolesCollection: sinon.stub().returns(Promise.resolve()),
+      createProfilesCollection: sinon.stub().returns(Promise.resolve()),
+      createUsersCollection: sinon.stub().returns(Promise.resolve()),
+      createPluginsCollection: sinon.stub().returns(Promise.resolve())
+    },
+    createInternalIndex: sinon.stub().returns(Promise.resolve()),
+    createOrReplace: sinon.stub().returns(Promise.resolve()),
+    deleteIndex: sinon.stub().returns(Promise.resolve()),
+    get: sinon.stub().returns(Promise.resolve(foo)),
     index: 'internalIndex',
-    init: sinon.stub().resolves()
+    init: sinon.stub().returns(Promise.resolve()),
+    refresh: sinon.stub().returns(Promise.resolve()),
+    search: sinon.stub().returns(Promise.resolve()),
+    updateMapping: sinon.stub().returns(Promise.resolve(foo)),
+    getMapping: sinon.stub().returns(Promise.resolve({internalIndex: {mappings: {users: {properties: {}}}}}))
   };
 
+  this.once = sinon.stub();
+
   this.notifier = {
+    init: sinon.spy(),
+    notify: sinon.spy(),
     notifyDocumentCreate: sinon.spy(),
     notifyDocumentDelete: sinon.spy(),
     notifyDocumentReplace: sinon.spy(),
     notifyDocumentUpdate: sinon.spy(),
-    publish: sinon.stub().resolves(foo)
+    publish: sinon.stub().returns(Promise.resolve(foo))
   };
 
   this.passport = {
@@ -46,52 +136,153 @@ function KuzzleMock () {
   };
 
   this.pluginsManager = {
+    init: sinon.stub().returns(Promise.resolve()),
+    packages: {
+      bootstrap: sinon.stub().returns(Promise.resolve()),
+      definitions: sinon.stub().returns(Promise.resolve([])),
+      getPackage: sinon.stub().returns(Promise.resolve()),
+    },
+    plugins: {},
+    run: sinon.stub().returns(Promise.resolve()),
+    getPluginsConfig: sinon.stub().returns({}),
     trigger: sinon.spy(function () {return Promise.resolve(arguments[1]);})
   };
 
-  this.repositories = {
-    user: {
-      load: sinon.stub().resolves(foo)
+  this.cliController = {
+    init: sinon.stub().returns(Promise.resolve()),
+    actions: {
+      adminExists: sinon.stub().returns(Promise.resolve()),
+      createFirstAdmin: sinon.stub().returns(Promise.resolve()),
+      cleanAndPrepare: sinon.stub().returns(Promise.resolve()),
+      cleanDb: sinon.stub().returns(Promise.resolve()),
+      managePlugins: sinon.stub().returns(Promise.resolve()),
+      data: sinon.stub().returns(Promise.resolve()),
+      dump: sinon.stub().returns(Promise.resolve())
     }
   };
 
+  this.repositories = {
+    init: sinon.stub().returns(Promise.resolve()),
+    user: {
+      load: sinon.stub().returns(Promise.resolve(foo))
+    }
+  };
+
+  this.validation = {
+    init: sinon.spy(),
+    curateSpecification: sinon.spy(function () {return Promise.resolve();}),
+    validate: sinon.spy(function () {return Promise.resolve(arguments[0]);}),
+    validationPromise: sinon.spy(function () {return Promise.resolve(arguments[0]);}),
+    addType: sinon.spy()
+  };
+
+  this.repositories = {
+    init: sinon.stub().returns(Promise.resolve()),
+    profile: {
+      load: sinon.stub().returns(Promise.resolve()),
+      loadProfiles: sinon.stub().returns(Promise.resolve()),
+      searchProfiles: sinon.stub().returns(Promise.resolve())
+    },
+    role: {
+      getRoleFromRequest: sinon.spy(function () {return Promise.resolve(arguments[0]);}),
+      loadRole: sinon.stub().returns(Promise.resolve()),
+      loadRoles: sinon.stub().returns(Promise.resolve()),
+      validateAndSaveRole: sinon.spy(function () {return Promise.resolve(arguments[0]);})
+    },
+    user: {
+      load: sinon.stub().returns(Promise.resolve(foo)),
+      search: sinon.stub().returns(Promise.resolve())
+    },
+    token: {
+      anonymous: sinon.stub().returns({_id: 'anonymous'})
+    }
+  };
+
+  this.resetStorage = sinon.stub().returns(Promise.resolve());
+
+  this.rootPath = '/kuzzle';
+
   this.router = {
-    execute: sinon.stub().resolves(foo),
-    initHttpRouter: sinon.spy(),
-    newConnection: sinon.stub().resolves(foo),
+    execute: sinon.stub().returns(Promise.resolve(foo)),
+    init: sinon.spy(),
+    newConnection: sinon.stub().returns(Promise.resolve(foo)),
     removeConnection: sinon.spy(),
-    routeHttp: sinon.spy()
   };
 
   this.services = {
+    init: sinon.stub().returns(Promise.resolve()),
     list: {
+      broker: {
+        getInfos: sinon.stub().returns(Promise.resolve()),
+        listen: sinon.spy(),
+        send: sinon.stub().returns(Promise.resolve())
+      },
+      proxyBroker: {
+        listen: sinon.spy(),
+        send: sinon.stub().returns(Promise.resolve())
+      },
+      gc: {
+        init: sinon.spy(),
+        run: sinon.stub().returns(Promise.resolve({ids: []}))
+      },
+      internalCache: {
+        expire: sinon.stub().returns(Promise.resolve()),
+        flushdb: sinon.stub().returns(Promise.resolve()),
+        get: sinon.stub().returns(Promise.resolve(null)),
+        getInfos: sinon.stub().returns(Promise.resolve()),
+        set: sinon.stub().returns(Promise.resolve()),
+        volatileSet: sinon.stub().returns(Promise.resolve())
+      },
+      memoryStorage: {
+        flushdb: sinon.stub().returns(Promise.resolve()),
+        getInfos: sinon.stub().returns(Promise.resolve())
+      },
       storageEngine: {
-        getMapping: sinon.stub().resolves(foo),
-        listIndexes: sinon.stub().resolves({indexes: ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i']}),
-        create: sinon.stub().resolves(foo),
-        createCollection: sinon.stub().resolves(foo),
-        createIndex: sinon.stub().resolves(foo),
-        createOrReplace: sinon.stub().resolves(foo),
-        delete: sinon.stub().resolves(foo),
-        deleteByQuery: sinon.stub().resolves(Object.assign({}, foo, {ids: 'responseIds'})),
-        deleteIndex: sinon.stub().resolves(foo),
-        deleteIndexes: sinon.stub().resolves({deleted: ['a', 'e', 'i']}),
-        getAutoRefresh: sinon.stub().resolves(false),
-        import: sinon.stub().resolves(foo),
-        refreshIndex: sinon.stub().resolves(foo),
-        replace: sinon.stub().resolves(foo),
-        setAutoRefresh: sinon.stub().resolves(true),
-        truncateCollection: sinon.stub().resolves(foo),
-        update: sinon.stub().resolves(foo),
-        updateMapping: sinon.stub().resolves(foo)
+        get: sinon.stub().returns(Promise.resolve({
+          _source: {foo}
+        })),
+        getInfos: sinon.stub().returns(Promise.resolve()),
+        getMapping: sinon.stub().returns(Promise.resolve(foo)),
+        listIndexes: sinon.stub().returns(Promise.resolve({indexes: ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i']})),
+        collectionExists: sinon.stub().returns(Promise.resolve()),
+        count: sinon.stub().returns(Promise.resolve(42)),
+        create: sinon.stub().returns(Promise.resolve(foo)),
+        createCollection: sinon.stub().returns(Promise.resolve(foo)),
+        createIndex: sinon.stub().returns(Promise.resolve(foo)),
+        createOrReplace: sinon.stub().returns(Promise.resolve(foo)),
+        delete: sinon.stub().returns(Promise.resolve(foo)),
+        deleteByQuery: sinon.stub().returns(Promise.resolve(Object.assign({}, foo, {ids: 'responseIds'}))),
+        deleteByQueryFromTrash: sinon.stub().returns(Promise.resolve(Object.assign({}, foo, {ids: 'responseIds'}))),
+        deleteIndex: sinon.stub().returns(Promise.resolve(foo)),
+        deleteIndexes: sinon.stub().returns(Promise.resolve({deleted: ['a', 'e', 'i']})),
+        getAutoRefresh: sinon.stub().returns(Promise.resolve(false)),
+        import: sinon.stub().returns(Promise.resolve(foo)),
+        indexExists: sinon.stub().returns(Promise.resolve()),
+        listCollections: sinon.stub().returns(Promise.resolve()),
+        refreshIndex: sinon.stub().returns(Promise.resolve(foo)),
+        replace: sinon.stub().returns(Promise.resolve(foo)),
+        search: sinon.stub().returns(Promise.resolve(foo)),
+        scroll: sinon.stub().returns(Promise.resolve(foo)),
+        setAutoRefresh: sinon.stub().returns(Promise.resolve(true)),
+        truncateCollection: sinon.stub().returns(Promise.resolve(foo)),
+        update: sinon.stub().returns(Promise.resolve(foo)),
+        updateMapping: sinon.stub().returns(Promise.resolve(foo))
       }
     }
   };
 
   this.statistics = {
-    getAllStats: sinon.stub().resolves(foo),
-    getLastStats: sinon.stub().resolves(foo),
-    getStats: sinon.stub().resolves(foo)
+    newConnection: sinon.stub(),
+    getAllStats: sinon.stub().returns(Promise.resolve(foo)),
+    getLastStats: sinon.stub().returns(Promise.resolve(foo)),
+    getStats: sinon.stub().returns(Promise.resolve(foo)),
+    init: sinon.spy(),
+    dropConnection: sinon.stub()
+  };
+
+  this.tokenManager = {
+    add: sinon.stub(),
+    expire: sinon.stub().returns(Promise.resolve())
   };
 }
 

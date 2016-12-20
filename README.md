@@ -9,7 +9,7 @@
 For UI and linked objects developers, Kuzzle is an open-source solution that handles all the data management
 (CRUD, real-time storage, search, high-level features, etc;).
 
-Kuzzle features are accessible through a secured API. It can be used through a large choice of protocols such as REST, Websocket or MQTT.
+Kuzzle features are accessible through a secured API. It can be used through a large choice of protocols such as HTTP, Websocket or MQTT.
 
 Kuzzle uses [Elasticsearch filter DSL](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-filters.html) (see [filters syntax](http://kuzzle.io/guide/#filtering-syntax) for more details) as filtering language, and [Redis](http://redis.io/) to manage filters cache.
 
@@ -24,9 +24,10 @@ Prerequisites:
 * [Docker](https://docs.docker.com/installation/#installation) (version >1.5.0)
 * [Docker Compose](https://docs.docker.com/compose/install/) (version >1.2.0)
 
-From Kuzzle's root directory:
+From Kuzzle's build repo:
 
-    $ docker-compose up
+    $ wget https://raw.githubusercontent.com/kuzzleio/kuzzle-build/master/docker-compose/kuzzle-docker-compose.yml
+    $ docker-compose -f kuzzle-docker-compose.yml up
 
 **Note:** Kuzzle need an access to the web to download plugins. If you are behind a proxy, you may use this [container](https://hub.docker.com/r/klabs/forgetproxy/) to configure docker accordingly.  
 More information about plugins [here](http://kuzzle.io/guide/#plugins)
@@ -55,7 +56,7 @@ Take a look at the documentationfor more installation ways. (Manual installation
 Your applications can now connect to Kuzzle. We provide a few ways to do this:
 
 * Using one of our [SDK](http://kuzzle.io/sdk-documentation/) ([Javascript](https://github.com/kuzzleio/sdk-javascript), [Android](https://github.com/kuzzleio/sdk-android), more coming soon...).
-* Directly, by accessing one of our [API](http://kuzzle.io/api-reference/) (REST, WebSocket, AMQP, MQTT or STOMP)
+* Directly, by accessing one of our [API](http://kuzzle.io/api-reference/) (HTTP, WebSocket and MQTT)
 
 You can also play with our [demos](http://kuzzle.io/demos-tutorials/) for a quick Kuzzle overview.
 

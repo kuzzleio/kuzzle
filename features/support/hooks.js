@@ -42,7 +42,7 @@ var myHooks = function () {
         .catch(error => {
           // Ignores deleteIndex errors if they occur because the deleted index
           // does not exists
-          if (error.error.status === 404 && error.error.action === 'deleteIndex') {
+          if (error.error.status === 404 && error.error.controller === 'index' && error.error.action === 'delete') {
             return callback();
           }
 
@@ -66,8 +66,8 @@ var myHooks = function () {
    *
    *  And we don't want to deal with destroyed worlds, this is all too messy. And dangerous.
    */
-  this.Before({tags: ['@usingREST']}, function (scenario, callback) {
-    this.api = setAPI(this, 'REST');
+  this.Before({tags: ['@usingHttp']}, function (scenario, callback) {
+    this.api = setAPI(this, 'Http');
     callback();
   });
 
@@ -113,6 +113,12 @@ var myHooks = function () {
   this.After({tags: ['@cleanRedis']}, function (scenario, callback) {
     cleanRedis.call(this, callback);
   });
+  this.Before({tags: ['@cleanValidations']}, function (scenario, callback) {
+    cleanValidations.call(this, callback);
+  });
+  this.After({tags: ['@cleanValidations']}, function (scenario, callback) {
+    cleanValidations.call(this, callback);
+  });
 };
 
 module.exports = myHooks;
@@ -132,7 +138,7 @@ function restApi () {
     W = require('./world'),
     world = new (new W()).World();
 
-  return setAPI(world, 'REST');
+  return setAPI(world, 'Http');
 
 }
 
@@ -148,25 +154,82 @@ function cleanSecurity (callback) {
       }
     })
     .then(() => {
-      return this.api.deleteByQuery(
-        { filter: { regexp: { _uid: 'users.' + this.idPrefix + '.*' } } },
-        '%kuzzle',
-        'users'
-      );
+      return this.api.searchUsers({
+        query: {
+          match_all: {}
+        },
+        from: 0,
+        size: 9999
+      });
+    })
+    .then(results => {
+      var
+        promises = [],
+        regex = new RegExp('^' + this.idPrefix);
+
+      results = results.result.hits.filter(r => r._id.match(regex)).map(r => r._id);
+
+      results.forEach(id => {
+        promises.push(this.api.deleteUser(id));
+      });
+
+      return Promise.all(promises)
+        .catch(() => {
+          // discard errors
+          return Promise.resolve();
+        });
     })
     .then(() => {
-      return this.api.deleteByQuery(
-        { filter: { regexp: { _uid: 'profiles.' + this.idPrefix + '.*' } } },
-        '%kuzzle',
-        'profiles'
-      );
+      return this.api.searchProfiles({
+        query: {
+          match_all: {}
+        },
+        from: 0,
+        size: 9999
+      });
+    })
+    .then(results => {
+      var
+        promises = [],
+        regex = new RegExp('^' + this.idPrefix);
+
+      results = results.result.hits.filter(r => r._id.match(regex)).map(r => r._id);
+
+      results.forEach(id => {
+        promises.push(this.api.deleteProfile(id));
+      });
+
+      return Promise.all(promises)
+        .catch(() => {
+          // discard errors
+          return Promise.resolve();
+        });
     })
     .then(() => {
-      return this.api.deleteByQuery(
-        {filter: { regexp: { _uid: 'roles.' + this.idPrefix + '.*' } } },
-        '%kuzzle',
-        'roles'
-      );
+      return this.api.searchRoles({
+        query: {
+          match_all: {}
+        },
+        from: 0,
+        size: 9999
+      });
+    })
+    .then(results => {
+      var
+        promises = [],
+        regex = new RegExp('^' + this.idPrefix);
+
+      results = results.result.hits.filter(r => r._id.match(regex)).map(r => r._id);
+
+      results.forEach(id => {
+        promises.push(this.api.deleteRole(id));
+      });
+
+      return Promise.all(promises)
+        .catch(() => {
+          // discard errors
+          return Promise.resolve();
+        });
     })
     .then(() => {
       callback();
@@ -181,17 +244,56 @@ function cleanSecurity (callback) {
 }
 
 function cleanRedis(callback) {
-  this.api.callMemoryStorage('keys', { body: { pattern: this.idPrefix + '*' } })
+  this.api.callMemoryStorage('keys', { args: { pattern: this.idPrefix + '*' } })
     .then(response => {
       if (_.isArray(response.result) && response.result.length) {
         return this.api.callMemoryStorage('del', { body: { keys: response.result } });
       }
 
-      return;
+      return null;
     })
     .then(() => {
       callback();
     })
     .catch(error => callback(error));
-
 }
+
+
+function cleanValidations(callback) {
+  this.api.listIndexes()
+    .then(response => {
+      if (response.result.indexes.indexOf('%kuzzle') === -1) {
+        return Promise.reject(new ReferenceError('%kuzzle index not found'));
+      }
+    })
+    .then(() => {
+      return this.api.searchValidations({
+        query: {
+          match_all: {}
+        }
+      });
+    })
+    .then(results => {
+      var
+        promises = [],
+        regex = new RegExp('^kuzzle-test-');
+
+      results = results.result.hits.filter(r => r._id.match(regex)).map(r => r._id);
+
+      results.forEach(id => {
+        promises.push(this.api.deleteSpecifications(id.split('#')[0], id.split('#')[1]));
+      });
+
+      return Promise.all(promises)
+        .catch(() => {
+          // discard errors
+          return Promise.resolve();
+        });
+    })
+    .then(() => {
+      callback();
+    })
+    .catch(error => callback(error));
+}
+
+

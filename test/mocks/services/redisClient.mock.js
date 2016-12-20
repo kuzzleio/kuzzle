@@ -4,7 +4,10 @@ var
   redisCommands = getBuiltinCommands(),
   Promise = require('bluebird');
 
-
+/**
+ * @param err
+ * @constructor
+ */
 function RedisClientMock (err) {
   this.getBuiltinCommands = getBuiltinCommands;
 
@@ -38,7 +41,7 @@ function RedisClientMock (err) {
     };
   });
 
-  this.select = this.SELECT = (key, callback) => key > 16 ? callback('Unknown database') : callback(null);
+  this.select = this.SELECT = (key, callback) => key > 16 ? callback(new Error('Unknown database')) : callback(null);
 
   this.flushdb = this.FLUSHDB = callback => callback(null);
 

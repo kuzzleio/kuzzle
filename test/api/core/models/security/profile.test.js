@@ -3,19 +3,20 @@ var
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
   Promise = require('bluebird'),
-  Kuzzle = require.main.require('lib/api/kuzzle'),
-  Profile = require.main.require('lib/api/core/models/security/profile'),
-  Role = require.main.require('lib/api/core/models/security/role');
+  Kuzzle = require('../../../../../lib/api/kuzzle'),
+  Profile = require('../../../../../lib/api/core/models/security/profile'),
+  Role = require('../../../../../lib/api/core/models/security/role'),
+  Request = require('kuzzle-common-objects').Request;
 
 describe('Test: security/profileTest', () => {
   var
-    context = {connection: null, user: null},
-    requestObject = {
+    context = {connectionId: null, userId: null},
+    request = new Request({
       index: 'index',
       collection: 'collection',
       controller: 'controller',
       action: 'action'
-    },
+    }, context),
     kuzzle;
 
   before(() => {
@@ -29,7 +30,7 @@ describe('Test: security/profileTest', () => {
   it('should disallow any action when no role be found', () => {
     var profile = new Profile();
 
-    return should(profile.isActionAllowed(requestObject, context)).be.fulfilledWith(false);
+    return should(profile.isActionAllowed(request)).be.fulfilledWith(false);
   });
 
   it('should allow the action if one of the roles allows it', () => {
@@ -39,8 +40,6 @@ describe('Test: security/profileTest', () => {
         disallowAllRole: new Role(),
         allowActionRole: new Role()
       };
-
-    context = {connection: null, user: null};
 
     roles.disallowAllRole._id = 'disallowAllRole';
     roles.disallowAllRole.controllers = {
@@ -64,12 +63,12 @@ describe('Test: security/profileTest', () => {
 
     sandbox.stub(kuzzle.repositories.role, 'loadRole', roleId => Promise.resolve(roles[roleId]));
 
-    return profile.isActionAllowed(requestObject, context, kuzzle)
+    return profile.isActionAllowed(request, kuzzle)
       .then(isAllowed => {
         should(isAllowed).be.false();
 
         profile.policies.push({roleId: 'allowActionRole'});
-        return profile.isActionAllowed(requestObject, context, kuzzle);
+        return profile.isActionAllowed(request, kuzzle);
       })
       .then(isAllowed => {
         should(isAllowed).be.true();
@@ -86,7 +85,7 @@ describe('Test: security/profileTest', () => {
           }
         ];
 
-        return profile.isActionAllowed(requestObject, context, kuzzle);
+        return profile.isActionAllowed(request, kuzzle);
       })
       .then(isAllowed => should(isAllowed).be.false());
   });

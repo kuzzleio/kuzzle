@@ -2,8 +2,8 @@ var
   should = require('should'),
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
-  Kuzzle = require.main.require('lib/api/kuzzle'),
-  RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
+  Kuzzle = require('../../../../lib/api/kuzzle'),
+  Request = require('kuzzle-common-objects').Request,
   rewire = require('rewire'),
   FunnelController = rewire('../../../../lib/api/controllers/funnelController');
 
@@ -12,22 +12,18 @@ describe('funnelController.playCachedRequests', () => {
     kuzzle,
     funnel,
     executeCalled,
-    requestObject,
-    context,
+    request,
     callback,
-    nextTickCalled,
     setTimeoutCalled,
     playCachedRequests;
 
   before(() => {
-    context = {
-      connection: {id: 'connectionid'},
-      token: null
-    };
-
-    requestObject = new RequestObject({
+    request = new Request({
       controller: 'foo',
       action: 'bar'
+    }, {
+      connection: {id: 'connectionid'},
+      token: null
     });
 
     callback = () => {};
@@ -37,30 +33,24 @@ describe('funnelController.playCachedRequests', () => {
       setTimeoutCalled = true;
     });
 
-    FunnelController.__set__('process', {
-      nextTick: () => { nextTickCalled = true; }
-    });
-
     playCachedRequests = FunnelController.__get__('playCachedRequests');
   });
 
   beforeEach(() => {
     executeCalled = false;
-    nextTickCalled = false;
     setTimeoutCalled = false;
 
-    sandbox.stub(kuzzle.internalEngine, 'get').resolves({});
+    sandbox.stub(kuzzle.internalEngine, 'get').returns(Promise.resolve({}));
     return kuzzle.services.init({whitelist: []})
       .then(() => {
         funnel = new FunnelController(kuzzle);
         funnel.init();
         funnel.lastOverloadTime = 0;
         funnel.overloadWarned = true;
-        sandbox.stub(funnel, 'execute', (r, c, cb) => {
+        sandbox.stub(funnel, 'execute', (req, cb) => {
           executeCalled = true;
 
-          should(r).be.eql(requestObject);
-          should(c).be.eql(context);
+          should(req).be.eql(request);
           should(cb).be.eql(callback);
         });
       });
@@ -76,7 +66,6 @@ describe('funnelController.playCachedRequests', () => {
 
       kuzzle.once('log:info', msg => {
         should(funnel.overloaded).be.false();
-        should(nextTickCalled).be.false();
         should(setTimeoutCalled).be.false();
         should(msg).startWith('End of overloaded state');
         done();
@@ -92,7 +81,6 @@ describe('funnelController.playCachedRequests', () => {
 
     kuzzle.once('log:info', msg => {
       should(funnel.overloaded).be.false();
-      should(nextTickCalled).be.false();
       should(setTimeoutCalled).be.false();
       should(msg).startWith('End of overloaded state');
       done();
@@ -114,7 +102,6 @@ describe('funnelController.playCachedRequests', () => {
 
     setTimeout(() => {
       should(funnel.overloaded).be.false();
-      should(nextTickCalled).be.false();
       should(setTimeoutCalled).be.false();
       kuzzle.removeAllListeners('log:info');
       done();
@@ -123,24 +110,24 @@ describe('funnelController.playCachedRequests', () => {
 
   describe('#replaying requests', () => {
     it('should do nothing if there is no room to replay request yet', () => {
-      funnel.cachedRequests = 1;
+      funnel.cachedItems = 1;
       funnel.concurrentRequests = kuzzle.config.server.maxConcurrentRequests;
       playCachedRequests(kuzzle, funnel);
 
-      should(nextTickCalled).be.false();
       should(setTimeoutCalled).be.true();
       should(executeCalled).be.false();
     });
 
-    it('should resubmit a request and itself if there is room for a new request', () => {
-      funnel.cachedRequests = 1;
+    it('should resubmit a request and end the overload state if there is no cached request left', () => {
+      funnel.cachedItems = 1;
       funnel.concurrentRequests = 0;
-      funnel.requestsCache = [{requestObject, context, callback}];
+      funnel.overloaded = true;
+      funnel.requestsCache = [{request, callback}];
       playCachedRequests(kuzzle, funnel);
 
-      should(nextTickCalled).be.true();
       should(setTimeoutCalled).be.false();
       should(executeCalled).be.true();
+      should(funnel.overloaded).be.false();
     });
   });
 });

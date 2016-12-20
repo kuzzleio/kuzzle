@@ -6,6 +6,13 @@
   // file location to customize Kuzzle configuration
   // -------------------------------------------------------------------------
 
+  // The HTTP section lets you configure how Kuzzle should handle HTTP requests
+  "http": {
+    // accessControlAllowOrigin: sets the Access-Control-Allow-Origin header used to
+    //     send responses to the client
+    //     (see https://developer.mozilla.org/en-US/docs/Web/HTTP/Access_control_CORS)
+    "accessControlAllowOrigin": "*"
+  },
 
   // The plugins section let you define which plugins should be loaded on
   // Kuzzle first start.
@@ -14,11 +21,13 @@
   /*
   "plugins": {
     // [Common]
+    //   * workerPrefix: process name prefix for plugins worker
     //   * pipeWarnTime: time in ms after which a warning will be emitted to
     //     the logger if the pipe action has not completed
     //   * pipeTimeout: time in ms after which a pipe action will be killed
     //     if it has not completed
     "common": {
+      "workerPrefix": "kpw:",
       "pipeWarnTime": 40,
       "pipeTimeout": 250
     },
@@ -32,11 +41,11 @@
     //   * from a local directory: the location of the package must be
     //     specified using the "path" property
     "kuzzle-plugin-logger": {
-      "npmVersion": "2.0.4",
+      "version": "2.0.5",
       "activated": true
     },
     "kuzzle-plugin-auth-passport-local": {
-      "npmVersion": "2.0.4",
+      "version": "2.0.4",
       "activated": true
     }
   },
@@ -67,6 +76,10 @@
   // mechanism
   /*
   "security": {
+    // [restrictedProfileIds]
+    // The profileIds applied to a user created with the route
+    // users/_createRestricted
+    restrictedProfileIds: ['default'],
     // [jwt]
     // configuration for npm
     // [jsonwebtoken package](https://github.com/auth0/node-jsonwebtoken)
@@ -171,23 +184,12 @@
   // Configuration for Kuzzle server
   /*
   "server": {
-    // * http port: port on which Kuzzle will expose its REST api.
-    //   If unset or set to a falsy value (default), Kuzzle will use a random
-    //   available port within the *ephemeral port range* defined by
-    //   /proc/sys/net/ipv4/ip_local_port_range.
-    // * http maxRequestSize: the size limit of a request. If it's a string, the
-         value is passed to the "bytes" library (https://www.npmjs.com/package/bytes).
-         If this is a number, then the value specifies the number of bytes.
     // * maxConcurrentRequests: Number of requests Kuzzle treats simultaneously.
     //   Requests received above this limit are bufferized.
     // * maxRetainedRequests: Maximum number of requests that can be bufferized.
     //   Requests received above this limit are discarded.
     // * warningRetainedRequestsLimit: Number of bufferized requests after
     //   which Kuzzle will throw warnings to the logger
-    "http": {
-      "port": false,
-      "maxRequestSize": "1MB"
-    },
     "maxConcurrentRequests": 50,
     "maxRetainedRequests": 50000,
     "warningRetainedRequestsLimit": 5000
@@ -311,16 +313,49 @@
     },
     */
 
-    // Configuration for Kuzzle internal statistics module
-    //   * ttl: Time in s for which the statistics framed are stored
-    //   * statsInterval: Time in s between statistics framed are comitted to
-    //     the cache engine
-    /*
-    "stats": {
-      "ttl": 3600,
-      "statsInterval": 10
-    }
-    */
+  // Configuration for Kuzzle internal statistics module
+  //   * ttl: Time in s for which the statistics framed are stored
+  //   * statsInterval: Time in s between statistics framed are comitted to
+  //     the cache engine
+  /*
+  "stats": {
+    "ttl": 3600,
+    "statsInterval": 10
   }
+  */
 
+  // [validation]
+  // Defines the specifications used to validate data.
+  // Please refer to the guide for more information.
+  /*
+  validation: {
+  }
+  */
+
+  // [dump]
+  // Defines how kuzzle handle crash information
+  //  * enabled: Boolean to enable/disable dumping information when kuzzle crash
+  //  * path: Directory path where the dumps are stored
+  //  * dateFormat: Format used to generate dump name (see http://momentjs.com for formats)
+  //  * handledErrors: Used to generate dump on known errors (does not restart kuzzle)
+  //    * enabled: Boolean to enable/disable dumping information when handled error occurs
+  //    * whitelist: Array of error type to trigger a dump generation
+  /*
+  dump: {
+    enabled: false,
+    path: './dump/',
+    dateFormat: 'YYYYMMDD-HHmm',
+    handledErrors: {
+      enabled: true,
+      whitelist: [
+        'Error',
+        'RangeError',
+        'TypeError',
+        'KuzzleError',
+        'InternalError',
+        'PluginImplementationError'
+      ]
+    }
+  }
+  */
 }

@@ -75,9 +75,9 @@ This method tries to load documents matching the given ids from the databaseEngi
 
 ### parameters
 
-* *object* filter
+* *object* query
 
-The filter sent to the databaseEngine in order to retrieve documents.
+The query sent to the databaseEngine in order to retrieve documents.
 
 * *Integer* from
 
@@ -89,7 +89,7 @@ Number of hits to return (default: 20).
 
 ### returns
 
-Returns a promise that resolves a ResponseObject that contains a list of documents from databaseEngine.
+Returns a promise that resolves to an object that contains a list of documents from databaseEngine.
 
 
 ## loadFromCache
@@ -116,30 +116,6 @@ If no key is given to the method, defaults to *collection* + '/' + id.
 ### returns
 
 Returns a promise that resolves to the *ObjectConstructor* instance if a matching document could be found in the cache, or *null* if no document could be found.
-
-## hydrate
-
-```javascript
-Repository.prototype.hydrate = function (object, data) {...}
-```
-
-This method updates a given *ObjectConstructor* object with the data taken from the data object.
-
-### parameters
-
-* *ObjectConstructor* object
-
-The object to hydrate.
-
-* *object* data
-
-An object containing the values to populate the *ObjectConstructor* instance with.
-
-In case data is an instance of ResponseObject, only the business information is extracted.
-
-### returns
-
-Returns a promise that resolves to an *ObjectConstructor* instance.
 
 ## persistToDB
 

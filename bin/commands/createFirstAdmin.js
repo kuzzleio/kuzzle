@@ -60,7 +60,7 @@ function confirm (username, resetRoles) {
   return Promise.resolve(readlineSync.keyInYN(clcQuestion(msg)));
 }
 
-module.exports = function (options) {
+function commandCreateFirstAdmin (options) {
   var
     username,
     password,
@@ -72,9 +72,9 @@ module.exports = function (options) {
     clcError = clcOk = clcQuestion = string => string;
   }
 
-  return kuzzle.remoteActions.do('adminExists', params)
+  return kuzzle.cli.do('adminExists', params)
     .then(adminExists => {
-      if (adminExists.data.body.exists) {
+      if (adminExists.result.exists) {
         console.log('An administrator account already exists.');
         process.exit(0);
       }
@@ -100,10 +100,12 @@ module.exports = function (options) {
         process.exit(0);
       }
 
-      return kuzzle.remoteActions.do('createFirstAdmin', {
+      return kuzzle.cli.do('createFirstAdmin', {
         _id: username,
-        password,
-        reset: resetRoles
+        body: {
+          password,
+          reset: resetRoles
+        }
       }, {pid: params.pid, debug: options.parent.debug});
     })
     .then(() => {
@@ -118,7 +120,9 @@ module.exports = function (options) {
       process.exit(0);
     })
     .catch(err => {
-      console.error(clcError(err));
+      console.error(clcError(err.message));
       process.exit(1);
     });
-};
+}
+
+module.exports = commandCreateFirstAdmin;

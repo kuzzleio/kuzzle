@@ -1,9 +1,8 @@
 var
   should = require('should'),
   BulkController = require('../../../lib/api/controllers/bulkController'),
-  RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
-  ResponseObject = require.main.require('kuzzle-common-objects').Models.responseObject,
-  PartialError = require.main.require('kuzzle-common-objects').Errors.partialError,
+  Request = require('kuzzle-common-objects').Request,
+  PartialError = require('kuzzle-common-objects').errors.PartialError,
   KuzzleMock = require('../../mocks/kuzzle.mock');
 
 describe('Test the bulk controller', () => {
@@ -11,7 +10,7 @@ describe('Test the bulk controller', () => {
     controller,
     kuzzle,
     foo = {foo: 'bar'},
-    requestObject = new RequestObject({ controller: 'bulk' }, { collection: 'unit-test-bulkController' }, 'unit-test'),
+    request = new Request({controller: 'bulk', collection: 'unit-test-bulkController', body: {bulkData: 'fake'}}),
     stub;
 
   beforeEach(() => {
@@ -21,39 +20,26 @@ describe('Test the bulk controller', () => {
   });
 
   it('should trigger the proper methods and resolve to a valid response', () => {
-    return controller.import(requestObject)
+    return controller.import(request)
       .then(response => {
-        var
-          engine = kuzzle.services.list.storageEngine,
-          trigger = kuzzle.pluginsManager.trigger;
-
-        should(trigger).be.calledTwice();
-        should(trigger.firstCall).be.calledWith('data:beforeBulkImport', requestObject);
+        var engine = kuzzle.services.list.storageEngine;
 
         should(engine.import).be.calledOnce();
-        should(engine.import).be.calledWith(requestObject);
+        should(engine.import).be.calledWith(request);
 
-        should(trigger.secondCall).be.calledWith('data:afterBulkImport');
-
-        should(response).be.an.instanceOf(ResponseObject);
-        should(response).match({
-          status: 200,
-          error: null,
-          data: {
-            body: foo
-          }
-        });
+        should(response).be.instanceof(Object);
+        should(response).match(foo);
       });
   });
 
   it('should handle partial errors', () => {
-    stub.resolves({partialErrors: ['foo', 'bar']});
+    stub.returns(Promise.resolve({partialErrors: ['foo', 'bar']}));
 
-    return controller.import(requestObject)
+    return controller.import(request)
       .then(response => {
-        should(response).be.instanceOf(ResponseObject);
-        should(response.status).be.eql(206);
-        should(response.error).be.instanceOf(PartialError);
+        should(response).be.instanceof(Object);
+        should(request.status).be.eql(206);
+        should(request.error).be.instanceOf(PartialError);
       });
   });
 

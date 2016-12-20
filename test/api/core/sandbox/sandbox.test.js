@@ -1,8 +1,8 @@
 var
   should = require('should'),
   rewire = require('rewire'),
-  InternalError = require.main.require('kuzzle-common-objects').Errors.internalError,
-  GatewayTimeoutError = require.main.require('kuzzle-common-objects').Errors.gatewayTimeoutError,
+  InternalError = require('kuzzle-common-objects').errors.InternalError,
+  GatewayTimeoutError = require('kuzzle-common-objects').errors.GatewayTimeoutError,
   Sandbox = rewire('../../../../lib/api/core/sandbox');
 
 describe('Test: sandbox/sandboxTest', () => {
@@ -14,7 +14,7 @@ describe('Test: sandbox/sandboxTest', () => {
     }
 
     if (sandbox.child !== undefined && sandbox.child.connected && sandbox.child.kill) {
-      sandbox.child.kill();
+      sandbox.child.kill('SIGKILL');
     }
   });
 
@@ -66,7 +66,7 @@ describe('Test: sandbox/sandboxTest', () => {
 
       /** @type {Sandbox} */
       sandbox = new LocalSandbox();
-      sandbox.timeout = 10000;
+      sandbox.timeout = 500;
 
       sandbox.run({
         code: 'while(true) {}'
@@ -86,7 +86,6 @@ describe('Test: sandbox/sandboxTest', () => {
         should(result).be.false();
 
         revert();
-        sandbox.child.kill();
         clearInterval(timer);
         timer = null;
 
@@ -112,7 +111,7 @@ describe('Test: sandbox/sandboxTest', () => {
 
       /** @type {Sandbox} */
       anotherSandbox = new LocalSandbox();
-      anotherSandbox.timeout = 10000;
+      anotherSandbox.timeout = 500;
 
       anotherSandbox.run({
         code: 'while(true) {}'
@@ -142,7 +141,7 @@ describe('Test: sandbox/sandboxTest', () => {
         should(result).be.true();
 
         revert();
-        anotherSandbox.child.kill();
+        anotherSandbox.child.kill('SIGKILL');
         clearInterval(timer);
         timer = null;
 

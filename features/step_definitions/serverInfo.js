@@ -15,15 +15,6 @@ var apiSteps = function () {
       })
       .catch(error => callback(error));
   });
-
-  this.Then(/^I can retrieve the Kuzzle API version$/, function(callback) {
-    if (this.result.serverInfo && this.result.serverInfo.kuzzle && this.result.serverInfo.kuzzle.api) {
-      this.apiVersion = this.result.serverInfo.kuzzle.api;
-      return callback();
-    }
-
-    callback(new Error('Unable to retrieve the API version from server informations'));
-  });
 };
 
 module.exports = apiSteps;

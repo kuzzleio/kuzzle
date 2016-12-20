@@ -1,18 +1,10 @@
-/**
- * The notifier core component can be directly invoked using the notify() function, but it also listens
- * to messages coming from workers.
- * And in particular, messages from the write worker(s), that need to be forwarded to the right listeners.
- *
- * This file tests the documents replace notifications.
- */
 var
   should = require('should'),
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
   Promise = require('bluebird'),
-  RequestObject = require.main.require('kuzzle-common-objects').Models.requestObject,
-  Kuzzle = require.main.require('lib/api/kuzzle');
-
+  Request = require('kuzzle-common-objects').Request,
+  Kuzzle = require('../../../../lib/api/kuzzle');
 
 describe('Test: notifier.notifyDocumentReplace', () => {
   var
@@ -52,7 +44,7 @@ describe('Test: notifier.notifyDocumentReplace', () => {
       }
     },
     kuzzle,
-    requestObject,
+    request,
     notified = 0,
     notification;
 
@@ -61,16 +53,16 @@ describe('Test: notifier.notifyDocumentReplace', () => {
   });
 
   beforeEach(() => {
-    sandbox.stub(kuzzle.internalEngine, 'get').resolves({});
+    sandbox.stub(kuzzle.internalEngine, 'get').returns(Promise.resolve({}));
     return kuzzle.services.init({whitelist: []})
       .then(() => {
-        requestObject = new RequestObject({
+        request = new Request({
           controller: 'write',
           action: 'replace',
           requestId: 'foo',
           collection: 'bar',
           _id: 'Sir Isaac Newton is the deadliest son-of-a-bitch in space',
-          body: { foo: 'bar' }
+          body: {foo: 'bar'}
         });
         kuzzle.services.list.internalCache = mockupCacheService;
         kuzzle.notifier.notify = (rooms, r, n) => {
@@ -90,12 +82,12 @@ describe('Test: notifier.notifyDocumentReplace', () => {
   });
 
   it('should notify subscribers when a replaced document entered their scope', () => {
-    requestObject.requestId = 'addme';
+    request.id = 'addme';
 
-    return kuzzle.notifier.notifyDocumentReplace(requestObject)
+    return kuzzle.notifier.notifyDocumentReplace(request)
       .then(() => {
         should(notified).be.exactly(1);
-        should(mockupCacheService.addId).be.exactly('notif/' + requestObject.data._id);
+        should(mockupCacheService.addId).be.exactly('notif/' + request.input.resource._id);
         should(mockupCacheService.room).be.an.Array();
         should(mockupCacheService.room[0]).be.exactly('foobar');
         should(mockupCacheService.removeId).be.undefined();
@@ -103,24 +95,25 @@ describe('Test: notifier.notifyDocumentReplace', () => {
         should(notification.scope).be.exactly('in');
         should(notification.action).be.exactly('update');
         should(notification.state).be.eql('done');
-        should(notification._id).be.eql(requestObject.data._id);
-        should(notification._source).be.eql(requestObject.data.body);
+        should(notification._id).be.eql(request.input.resource._id);
+        should(notification._source).be.eql(request.input.body);
       });
   });
 
   it('should notify subscribers when an updated document left their scope', () => {
-    requestObject.data._id = 'removeme';
-    return kuzzle.notifier.notifyDocumentReplace(requestObject)
+    request.input.resource._id = 'removeme';
+
+    return kuzzle.notifier.notifyDocumentReplace(request)
       .then(() => {
         should(notified).be.exactly(1);
         should(mockupCacheService.addId).be.undefined();
         should(mockupCacheService.room).be.undefined();
-        should(mockupCacheService.removeId).be.exactly('notif/' + requestObject.data._id);
+        should(mockupCacheService.removeId).be.exactly('notif/' + request.input.resource._id);
 
         should(notification.scope).be.exactly('out');
         should(notification.action).be.exactly('update');
         should(notification.state).be.eql('done');
-        should(notification._id).be.eql(requestObject.data._id);
+        should(notification._id).be.eql(request.input.resource._id);
         should(notification._source).be.undefined();
       });
   });

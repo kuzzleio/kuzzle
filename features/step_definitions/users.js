@@ -3,10 +3,20 @@ var
   async = require('async');
 
 module.exports = function () {
-  this.When(/^I (can't )?create a (new )?user "(.*?)" with id "(.*?)"$/, {timeout: 20000}, function (not, isNew, user, id, callback) {
+  this.When(/^I (can't )?create a (new )?(restricted )?user "(.*?)" with id "(.*?)"$/, {timeout: 20000}, function (not, isNew, isRestricted, user, id, callback) {
     var
       userObject = this.users[user],
-      method = isNew ? 'createUser' : 'createOrReplaceUser';
+      method;
+
+    if (isRestricted) {
+      method = 'createRestrictedUser';
+    }
+    else if (isNew) {
+      method = 'createUser';
+    }
+    else {
+      method = 'createOrReplaceUser';
+    }
 
     id = this.idPrefix + id;
 
@@ -61,7 +71,7 @@ module.exports = function () {
 
   });
 
-  this.Then(/^I search for {(.*?)} and find (\d+) users(?: matching {(.*?)})?$/, function (filter, count, match, callback) {
+  this.Then(/^I search for {(.*?)} and find (\d+) users(?: matching {(.*?)})?$/, function (query, count, match, callback) {
     var run;
 
     if (count) {
@@ -69,9 +79,9 @@ module.exports = function () {
     }
 
     run = (cb) => {
-      filter = filter.replace(/#prefix#/g, this.idPrefix);
+      query = query.replace(/#prefix#/g, this.idPrefix);
 
-      this.api.searchUsers(JSON.parse('{' + filter + '}'))
+      this.api.searchUsers(JSON.parse('{' + query + '}'))
         .then(body => {
           var matchFunc;
 

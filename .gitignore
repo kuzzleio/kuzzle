@@ -3,11 +3,10 @@ node_modules
 npm-debug.log*
 .node_history
 # Exclude coverage report
-!/coverage/
-/coverage/*
-!/coverage/scripts
+coverage
 # Plugin config folder
 config/plugins/
+dump
 
 # IDE
 .idea
@@ -27,6 +26,8 @@ docker-compose-custom.yml
 
 # Kuzzle
 /*.log
+/run
+!/run/.keep
 
 #swagger
 kuzzle-swagger.*

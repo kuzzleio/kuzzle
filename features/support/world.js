@@ -90,7 +90,7 @@ module.exports = function () {
       },
       role2: {
         controllers: {
-          'read': {
+          'document': {
             actions: {
               '*': true
             }
@@ -100,7 +100,7 @@ module.exports = function () {
       },
       role3: {
         controllers: {
-          'read': {
+          'document': {
             actions: {
               'search': true
             }
@@ -194,6 +194,9 @@ module.exports = function () {
       user6: {
         profileIds: [this.idPrefix + 'profile6'],
         password: 'testpwd6'
+      },
+      restricteduser1: {
+        password: 'testpwd1'
       },
       unexistingprofile: {
         name: 'John Doe',

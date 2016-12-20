@@ -1,9 +1,8 @@
 var
   should = require('should'),
   rewire = require('rewire'),
-  Promise = require('bluebird'),
   sinon = require('sinon'),
-  Kuzzle = require.main.require('lib/api/kuzzle'),
+  KuzzleMock = require('../../../mocks/kuzzle.mock'),
   PluginsManager = rewire('../../../../lib/api/core/plugins/pluginsManager');
 
 describe('PluginsManager: init()', () => {
@@ -11,43 +10,40 @@ describe('PluginsManager: init()', () => {
     kuzzle,
     pluginsManager;
 
-  before(() => {
-    kuzzle = new Kuzzle();
+  beforeEach(() => {
+    kuzzle = new KuzzleMock();
     pluginsManager = new PluginsManager(kuzzle);
+    pluginsManager.packages = kuzzle.pluginsManager.packages;
   });
 
   it('should load plugins at init', () => {
-    var loadPluginsStub = sinon.stub();
-
-    return PluginsManager.__with__({
-      getPluginsList: () => {
-        return Promise.resolve({
-          plugin1: {foo: 'bar'},
-          plugin2: {foo: 'baz'}
-        });
+    var
+      defs = {
+        plugin1: {foo: 'bar'},
+        plugin2: {foo: 'baz'}
       },
-      loadPlugins: loadPluginsStub
-    })(() => {
-      return pluginsManager.init()
-        .then(() => {
-          should(loadPluginsStub.called).be.true();
-          should(pluginsManager.plugins).match({ plugin1: { foo: 'bar' }, plugin2: { foo: 'baz' } });
-        });
-    });
-  });
+      spy = sinon.spy();
 
-  it('should discard a plugin if it fails to load', () => {
+    kuzzle.pluginsManager.packages.definitions.returns(Promise.resolve(defs));
+
     return PluginsManager.__with__({
-      getPluginsList: () => {
-        return Promise.resolve({
-          plugin1: {foo: 'bar'},
-          plugin2: {foo: 'baz'}
-        });
-      }
+      loadPlugins: spy
     })(() => {
       return pluginsManager.init()
         .then(() => {
-          should(pluginsManager.plugins).match({});
+          try {
+            should(kuzzle.pluginsManager.packages.definitions)
+              .be.calledOnce();
+
+            should(spy)
+              .be.calledOnce()
+              .be.calledWith(defs);
+
+            return Promise.resolve();
+          }
+          catch (error) {
+            return Promise.reject(error);
+          }
         });
     });
   });

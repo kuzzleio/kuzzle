@@ -3,7 +3,7 @@ var
   rewire = require('rewire'),
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
-  PluginContext = require.main.require('lib/api/core/plugins/pluginContext'),
+  PluginContext = require('../../../../lib/api/core/plugins/pluginContext'),
   ready = rewire('../../../../lib/api/core/plugins/workerReady');
 
 describe('Test plugins Worker Wrapper', () => {
@@ -39,6 +39,13 @@ describe('Test plugins Worker Wrapper', () => {
       processOn = sandbox.stub().callsArgWith(1, {
         topic: 'initialize',
         data: {
+          kuzzleConfig: {
+            plugins: {
+              common: {
+                workerPrefix: 'kpw:'
+              }
+            }
+          },
           config,
           isDummy: 'am I a dummy?'
         }

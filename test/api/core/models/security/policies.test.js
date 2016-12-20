@@ -1,6 +1,6 @@
 var
   should = require('should'),
-  Policies = require.main.require('lib/api/core/models/security/policies');
+  Policies = require('../../../../../lib/api/core/models/security/policies');
 
 
 describe('Test: security/policiesTest', () => {

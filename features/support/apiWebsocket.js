@@ -1,5 +1,6 @@
+'use strict';
+
 var
-  _ = require('lodash'),
   config = require('./config'),
   Promise = require('bluebird'),
   uuid = require('node-uuid'),
@@ -54,8 +55,8 @@ ApiWebsocket.prototype.disconnect = function () {
 ApiWebsocket.prototype.unsubscribe = function (room, socketName) {
   var
     msg = {
-      controller: 'subscribe',
-      action: 'off',
+      controller: 'realtime',
+      action: 'unsubscribe',
       collection: this.world.fakeCollection,
       index: this.world.fakeIndex,
       body: { roomId: room }
@@ -80,10 +81,7 @@ ApiWebsocket.prototype.send = function (msg, getAnswer, socketName) {
   msg.metadata = this.world.metadata;
 
   if (this.world.currentUser && this.world.currentUser.token) {
-    if (!msg.headers) {
-      msg.headers = {};
-    }
-    msg.headers = _.extend(msg.headers, {authorization: 'Bearer ' + this.world.currentUser.token});
+    msg.jwt = this.world.currentUser.token;
   }
 
   socketName = initSocket.call(this, socketName);
@@ -93,9 +91,21 @@ ApiWebsocket.prototype.send = function (msg, getAnswer, socketName) {
   if (listen) {
     return new Promise((resolve, reject) => {
       this.listSockets[socketName].once(msg.requestId, result => {
+        if (!result) {
+          let error = new Error('Returned result is null');
+          Object.assign(error, msg);
+
+          return reject(error);
+        }
+
         if (result.error) {
-          result.error.statusCode = result.status;
-          return reject(result.error);
+          let error = new Error(result.error.stack);
+          Object.assign(error, result);
+
+          // used to fit with rest api (used with request-promise)
+          error.details = result.error._source || {};
+          error.statusCode = result.status;
+          return reject(error);
         }
 
         resolve(result);

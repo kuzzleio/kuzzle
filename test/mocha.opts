@@ -1,7 +1,7 @@
--b
--r sinon-as-promised
--r should-sinon
+--bail
+--require should-sinon
 --reporter spec
 --recursive
+--no-exit
 --slow 2000
 --timeout 10000
