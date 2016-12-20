@@ -39,6 +39,10 @@ describe('Plugin Context', () => {
       should(new context.constructors.Request(new Request({}), {})).be.instanceOf(Request);
     });
 
+    it('should throw when trying to instante a Request object without providing a request object', () => {
+      should(function () { new context.constructors.Request({}); }).throw(PluginImplementationError);
+    });
+
     it('should expose all error objects as capitalized constructors', () => {
       var
         errors = require('kuzzle-common-objects').errors;
