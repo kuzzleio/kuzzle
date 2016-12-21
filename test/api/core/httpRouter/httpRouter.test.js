@@ -5,7 +5,6 @@ const
   sinon = require('sinon'),
   KuzzleMock = require('../../../mocks/kuzzle.mock'),
   InternalError = require('kuzzle-common-objects').errors.InternalError,
-  HttpResponse = require('../../../../lib/api/core/entryPoints/httpResponse'),
   Router = require('../../../../lib/api/core/httpRouter'),
   Request = require('kuzzle-common-objects').Request;
 
@@ -124,23 +123,20 @@ describe('core/httpRouter', () => {
       rq.method = 'OPTIONS';
       rq.headers['content-type'] = 'application/json';
 
-      router.route(rq, callback);
+      router.route(rq, response => {
+        should(handler.called)
+          .be.false();
 
-      setTimeout(() => {
-        should(handler.called).be.false();
-        should(callback.calledOnce).be.true();
-        should(callback.firstCall.args[0]).be.instanceOf(HttpResponse);
-        should(callback.firstCall.args[0]).match({
-          id: rq.requestId,
+        should(response).match({
+          requestId: rq.requestId,
           status: 200
         });
 
-        should(callback.firstCall.args[0]).have.property('content');
-        should(callback.firstCall.args[0].content.toJSON()).match({
+        should(response.toJSON()).match({
           raw: false,
+          status: 200,
           requestId: rq.requestId,
           content: {
-            status: 200,
             error: null,
             requestId: 'requestId',
             result: {}
@@ -153,13 +149,12 @@ describe('core/httpRouter', () => {
           }
         });
 
-        should(kuzzleMock.pluginsManager.trigger.calledOnce).be.true();
-        should(kuzzleMock.pluginsManager.trigger.calledWith('http:options', sinon.match.instanceOf(Request))).be.true();
         done();
-      }, 20);
+
+      });
     });
 
-    it('should return an error if the HTTP method is unknown', () => {
+    it('should return an error if the HTTP method is unknown', (done) => {
       router.post('/foo/bar', handler);
 
       rq.url = '/foo/bar';
@@ -167,38 +162,37 @@ describe('core/httpRouter', () => {
       rq.headers['content-type'] = 'application/json';
       rq.content = '{"foo": "bar"}';
 
-      router.route(rq, callback);
-      should(handler.called).be.false();
-      should(callback.calledOnce).be.true();
-      should(callback.firstCall.args[0]).be.instanceOf(HttpResponse);
-      should(callback.firstCall.args[0]).match({
-        id: rq.requestId,
-        status: 400
+      router.route(rq, response => {
+        should(handler)
+          .have.callCount(0);
+
+        should(response.toJSON())
+          .match({
+            raw: false,
+            status: 400,
+            requestId: rq.requestId,
+            content: {
+              error: {
+                status: 400,
+                message: 'Unrecognized HTTP method FOOBAR'
+              },
+              requestId: 'requestId',
+              result: null
+            },
+            headers: {
+              'content-type': 'application/json',
+              'Access-Control-Allow-Origin': '*',
+              'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS',
+              'Access-Control-Allow-Headers': 'Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With'
+            }
+          });
+
+        done();
       });
 
-      should(callback.firstCall.args[0]).have.property('content');
-      should(callback.firstCall.args[0].content.toJSON()).match({
-        raw: false,
-        requestId: rq.requestId,
-        content: {
-          status: 400,
-          error: {
-            status: 400,
-            message: 'Unrecognized HTTP method FOOBAR'
-          },
-          requestId: 'requestId',
-          result: null
-        },
-        headers: {
-          'content-type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS',
-          'Access-Control-Allow-Headers': 'Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With'
-        }
-      });
     });
 
-    it('should return an error if unable to parse the incoming JSON content', () => {
+    it('should return an error if unable to parse the incoming JSON content', (done) => {
       router.post('/foo/bar', handler);
 
       rq.url = '/foo/bar';
@@ -206,38 +200,34 @@ describe('core/httpRouter', () => {
       rq.headers['content-type'] = 'application/json';
       rq.content = '{bad JSON syntax}';
 
-      router.route(rq, callback);
-      should(handler.called).be.false();
-      should(callback.calledOnce).be.true();
-      should(callback.firstCall.args[0]).be.instanceOf(HttpResponse);
-      should(callback.firstCall.args[0]).match({
-        id: rq.requestId,
-        status: 400
-      });
+      router.route(rq, response => {
+        should(handler.called).be.false();
 
-      should(callback.firstCall.args[0]).have.property('content');
-      should(callback.firstCall.args[0].content.toJSON()).match({
-        raw: false,
-        requestId: rq.requestId,
-        content: {
+        should(response.toJSON()).be.match({
+          raw: false,
           status: 400,
-          error: {
-            status: 400,
-            message: 'Unable to convert HTTP body to JSON'
+          requestId: rq.requestId,
+          content: {
+            error: {
+              status: 400,
+              message: 'Unable to convert HTTP body to JSON'
+            },
+            requestId: 'requestId',
+            result: null
           },
-          requestId: 'requestId',
-          result: null
-        },
-        headers: {
-          'content-type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS',
-          'Access-Control-Allow-Headers': 'Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With'
-        }
+          headers: {
+            'content-type': 'application/json',
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With'
+          }
+        });
+
+        done();
       });
     });
 
-    it('should return an error if the content-type is not JSON', () => {
+    it('should return an error if the content-type is not JSON', (done) => {
       router.post('/foo/bar', handler);
 
       rq.url = '/foo/bar';
@@ -245,38 +235,34 @@ describe('core/httpRouter', () => {
       rq.headers['content-type'] = 'application/foobar';
       rq.content = '{"foo": "bar"}';
 
-      router.route(rq, callback);
-      should(handler.called).be.false();
-      should(callback.calledOnce).be.true();
-      should(callback.firstCall.args[0]).be.instanceOf(HttpResponse);
-      should(callback.firstCall.args[0]).match({
-        id: rq.requestId,
-        status: 400
-      });
+      router.route(rq, response => {
+        should(handler.called).be.false();
 
-      should(callback.firstCall.args[0]).have.property('content');
-      should(callback.firstCall.args[0].content.toJSON()).match({
-        raw: false,
-        requestId: rq.requestId,
-        content: {
+        should(response.toJSON()).match({
+          raw: false,
           status: 400,
-          error: {
-            status: 400,
-            message: 'Invalid request content-type. Expected "application/json", got: "application/foobar"'
+          requestId: rq.requestId,
+          content: {
+            error: {
+              status: 400,
+              message: 'Invalid request content-type. Expected "application/json", got: "application/foobar"'
+            },
+            requestId: 'requestId',
+            result: null
           },
-          requestId: 'requestId',
-          result: null
-        },
-        headers: {
-          'content-type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS',
-          'Access-Control-Allow-Headers': 'Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With'
-        }
+          headers: {
+            'content-type': 'application/json',
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With'
+          }
+        });
+
+        done();
       });
     });
 
-    it('should send an error if the charset is not utf-8', () => {
+    it('should send an error if the charset is not utf-8', (done) => {
       router.post('/foo/bar', handler);
 
       rq.url = '/foo/bar';
@@ -284,38 +270,36 @@ describe('core/httpRouter', () => {
       rq.headers['content-type'] = 'application/json; charset=iso8859-1';
       rq.content = '{"foo": "bar"}';
 
-      router.route(rq, callback);
-      should(handler.called).be.false();
-      should(callback.calledOnce).be.true();
-      should(callback.firstCall.args[0]).be.instanceOf(HttpResponse);
-      should(callback.firstCall.args[0]).match({
-        id: rq.requestId,
-        status: 400
+      router.route(rq, response => {
+        should(handler.called).be.false();
+
+        should(response.toJSON()).match({
+          raw: false,
+          status: 400,
+          requestId: rq.requestId,
+          content: {
+            error: {
+              status: 400,
+              message: 'Invalid request charset. Expected "utf-8", got: "iso8859-1"'
+            },
+            requestId: 'requestId',
+            result: null
+          },
+          headers: {
+            'content-type': 'application/json',
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With'
+          }
+        });
+
+        done();
+
       });
 
-      should(callback.firstCall.args[0]).have.property('content');
-      should(callback.firstCall.args[0].content.toJSON()).match({
-        raw: false,
-        requestId: rq.requestId,
-        content: {
-          status: 400,
-          error: {
-            status: 400,
-            message: 'Invalid request charset. Expected "utf-8", got: "iso8859-1"'
-          },
-          requestId: 'requestId',
-          result: null
-        },
-        headers: {
-          'content-type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS',
-          'Access-Control-Allow-Headers': 'Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With'
-        }
-      });
     });
 
-    it('should return an error if the route does not exist', () => {
+    it('should return an error if the route does not exist', (done) => {
       router.post('/foo/bar', handler);
 
       rq.url = '/foo/bar';
@@ -323,34 +307,30 @@ describe('core/httpRouter', () => {
       rq.headers['content-type'] = 'application/json';
       rq.content = '{"foo": "bar"}';
 
-      router.route(rq, callback);
-      should(handler.called).be.false();
-      should(callback.calledOnce).be.true();
-      should(callback.firstCall.args[0]).be.instanceOf(HttpResponse);
-      should(callback.firstCall.args[0]).match({
-        id: rq.requestId,
-        status: 404
-      });
+      router.route(rq, response => {
+        should(handler.called).be.false();
 
-      should(callback.firstCall.args[0]).have.property('content');
-      should(callback.firstCall.args[0].content.toJSON()).match({
-        raw: false,
-        requestId: rq.requestId,
-        content: {
+        should(response.toJSON()).match({
+          raw: false,
           status: 404,
-          error: {
-            status: 404,
-            message: 'API URL not found: /foo/bar'
+          requestId: rq.requestId,
+          content: {
+            error: {
+              status: 404,
+              message: 'API URL not found: /foo/bar'
+            },
+            requestId: 'requestId',
+            result: null
           },
-          requestId: 'requestId',
-          result: null
-        },
-        headers: {
-          'content-type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS',
-          'Access-Control-Allow-Headers': 'Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With'
-        }
+          headers: {
+            'content-type': 'application/json',
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With'
+          }
+        });
+
+        done();
       });
     });
   });
