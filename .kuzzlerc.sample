@@ -6,6 +6,13 @@
   // file location to customize Kuzzle configuration
   // -------------------------------------------------------------------------
 
+  // The HTTP section lets you configure how Kuzzle should handle HTTP requests
+  "http": {
+    // accessControlAllowOrigin: sets the Access-Control-Allow-Origin header used to
+    //     send responses to the client
+    //     (see https://developer.mozilla.org/en-US/docs/Web/HTTP/Access_control_CORS)
+    "accessControlAllowOrigin": "*"
+  },
 
   // The plugins section let you define which plugins should be loaded on
   // Kuzzle first start.

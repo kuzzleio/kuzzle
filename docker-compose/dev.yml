@@ -19,6 +19,7 @@ services:
       - elasticsearch
     ports:
       - "8080:8080"
+      - "9229:9229"
     environment:
       - kuzzle_services__db__host=elasticsearch
       - kuzzle_services__internalCache__node__host=redis

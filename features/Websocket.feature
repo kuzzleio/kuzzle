@@ -193,10 +193,10 @@ Feature: Test websocket API
   Scenario: Subscription notifications
     Given A room subscription listening to "lastName" having value "Hopper" with socket "client1"
     Given A room subscription listening to "lastName" having value "Hopper" with socket "client2"
-    Then I should receive a "on" notification
+    Then I should receive a "subscribe" notification
     And The notification should have metadata
     Then I unsubscribe socket "client1"
-    And I should receive a "off" notification
+    And I should receive a "unsubscribe" notification
     And The notification should have metadata
 
   @usingWebsocket
@@ -257,9 +257,6 @@ Feature: Test websocket API
     Given A room subscription listening to "firstName" having value "Grace"
     And I get the list subscriptions
     Then In my list there is a collection "kuzzle-collection-test" with 2 room and 2 subscriber
-    When I remove the first room
-    And I get the list subscriptions
-    Then In my list there is a collection "kuzzle-collection-test" with 1 room and 1 subscriber
 
   @usingWebsocket
   Scenario: create additional index
@@ -1439,7 +1436,7 @@ Feature: Test websocket API
     When I post a valid specification
     Then There is no error message
     When I post an invalid specification
-    Then There is an error message
+    Then There is an error message in the response body
 
   @usingWebsocket @cleanValidations
   Scenario: Validation - validateDocument

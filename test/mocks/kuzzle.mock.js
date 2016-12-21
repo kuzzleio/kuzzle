@@ -14,7 +14,7 @@ function KuzzleMock () {
 
   for (k in this) {
     if (!this.hasOwnProperty(k)) {
-      this[k] = function () {               // eslint-disable-line no-loop-func
+      this[k] = function () { // eslint-disable-line no-loop-func
         throw new Error(`Kuzzle original property ${k} is not mocked`);
       };
     }
@@ -40,6 +40,11 @@ function KuzzleMock () {
     remove: sinon.stub().returns(Promise.resolve())
   };
 
+  this.gc = {
+    init: sinon.spy(),
+    run: sinon.spy()
+  };
+
   this.entryPoints = {
     http: {
       init: sinon.spy()
@@ -54,14 +59,18 @@ function KuzzleMock () {
 
   this.funnel = {
     controllers: {
-      admin: {
-        adminExists: sinon.spy(),
+      server: {
+        adminExists: sinon.stub(),
+      },
+      security: {
         createFirstAdmin: sinon.spy()
       }
     },
     init: sinon.spy(),
     handleErrorDump: sinon.spy(),
-    execute: sinon.spy()
+    execute: sinon.spy(),
+    processRequest: sinon.stub(),
+    checkRights: sinon.stub()
   };
 
   this.hooks = {
@@ -139,6 +148,26 @@ function KuzzleMock () {
     trigger: sinon.spy(function () {return Promise.resolve(arguments[1]);})
   };
 
+  this.cliController = {
+    init: sinon.stub().returns(Promise.resolve()),
+    actions: {
+      adminExists: sinon.stub().returns(Promise.resolve()),
+      createFirstAdmin: sinon.stub().returns(Promise.resolve()),
+      cleanAndPrepare: sinon.stub().returns(Promise.resolve()),
+      cleanDb: sinon.stub().returns(Promise.resolve()),
+      managePlugins: sinon.stub().returns(Promise.resolve()),
+      data: sinon.stub().returns(Promise.resolve()),
+      dump: sinon.stub().returns(Promise.resolve())
+    }
+  };
+
+  this.repositories = {
+    init: sinon.stub().returns(Promise.resolve()),
+    user: {
+      load: sinon.stub().returns(Promise.resolve(foo))
+    }
+  };
+
   this.validation = {
     init: sinon.spy(),
     curateSpecification: sinon.spy(function () {return Promise.resolve();}),
@@ -192,6 +221,10 @@ function KuzzleMock () {
         listen: sinon.spy(),
         send: sinon.stub().returns(Promise.resolve())
       },
+      gc: {
+        init: sinon.spy(),
+        run: sinon.stub().returns(Promise.resolve({ids: []}))
+      },
       internalCache: {
         expire: sinon.stub().returns(Promise.resolve()),
         flushdb: sinon.stub().returns(Promise.resolve()),
@@ -219,6 +252,7 @@ function KuzzleMock () {
         createOrReplace: sinon.stub().returns(Promise.resolve(foo)),
         delete: sinon.stub().returns(Promise.resolve(foo)),
         deleteByQuery: sinon.stub().returns(Promise.resolve(Object.assign({}, foo, {ids: 'responseIds'}))),
+        deleteByQueryFromTrash: sinon.stub().returns(Promise.resolve(Object.assign({}, foo, {ids: 'responseIds'}))),
         deleteIndex: sinon.stub().returns(Promise.resolve(foo)),
         deleteIndexes: sinon.stub().returns(Promise.resolve({deleted: ['a', 'e', 'i']})),
         getAutoRefresh: sinon.stub().returns(Promise.resolve(false)),

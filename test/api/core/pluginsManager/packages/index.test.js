@@ -133,31 +133,6 @@ describe('plugins/packages/index.js', () => {
           }
         });
     });
-
-    it('should output the error to the console in case something goes wrong', done => {
-      var
-        error = new Error('error message');
-
-      sinon.stub(packages, 'definitions').returns(Promise.reject(error));
-
-      packages.bootstrap()
-        .catch(e => {
-          try {
-            should(PluginPackagesManager.__get__('console.error'))
-              .be.calledOnce()
-              .be.calledWith(error, error.stack);
-
-            should(e).be.exactly(error);
-
-            done();
-
-            return Promise.resolve();
-          }
-          catch (err) {
-            return Promise.reject(err);
-          }
-        });
-    });
   });
 
   describe('#getPackage', () => {

@@ -28,8 +28,8 @@ describe('Test: hotelClerk.addToChannels', () => {
 
   beforeEach(() => {
     request = {
-      controller: 'subscribe',
-      action: 'on',
+      controller: 'realtime',
+      action: 'subscribe',
       requestId: 'foo',
       index: 'index',
       collection: 'bar',
@@ -153,36 +153,36 @@ describe('Test: hotelClerk.addToChannels', () => {
       channels = {};
 
     request.users = 'all';
-    kuzzle.hotelClerk.addSubscription(new Request(request), context)
+    kuzzle.hotelClerk.addSubscription(new Request(request))
       .then(response => {
         roomId = response.roomId;
-        notification = new NotificationObject(response.roomId, new Request({collection: 'foo', body: dataGrace}));
-        notification.controller = 'subscribe';
+        notification = new NotificationObject(response.roomId, new Request({collection: 'foo', body: dataGrace}), {});
+        notification.controller = 'realtime';
         channels.all = response.channel;
         request.users = 'in';
-        return kuzzle.hotelClerk.addSubscription(new Request(request), context);
+        return kuzzle.hotelClerk.addSubscription(new Request(request));
       })
       .then(response => {
         channels.in = response.channel;
         request.users = 'out';
-        return kuzzle.hotelClerk.addSubscription(new Request(request), context);
+        return kuzzle.hotelClerk.addSubscription(new Request(request));
       })
       .then(response => {
         channels.out = response.channel;
         request.users = 'none';
-        return kuzzle.hotelClerk.addSubscription(new Request(request), context);
+        return kuzzle.hotelClerk.addSubscription(new Request(request));
       })
       .then(response => {
         var eligibleChannels = [];
 
         channels.none = response.channel;
 
-        notification.action = 'on';
+        notification.action = 'subscribe';
         kuzzle.hotelClerk.addToChannels(eligibleChannels, roomId, notification);
         should(eligibleChannels.length).be.exactly(2);
         should(eligibleChannels.sort()).match([channels.all, channels.in].sort());
 
-        notification.action = 'off';
+        notification.action = 'unsubscribe';
         eligibleChannels = [];
         kuzzle.hotelClerk.addToChannels(eligibleChannels, roomId, notification);
         should(eligibleChannels.length).be.exactly(2);

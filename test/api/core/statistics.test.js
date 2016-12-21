@@ -37,7 +37,7 @@ describe('Test: statistics core component', () => {
 
   beforeEach(() => {
     request = new Request({
-      controller: 'admin',
+      controller: 'server',
       action: '',
       requestId: 'foo',
       collection: '',

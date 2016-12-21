@@ -2,7 +2,16 @@
  * @class KuzzleConfiguration
  */
 module.exports = {
-  httpRoutes: require('./lib/config/httpRoutes'),
+  /*
+   routes: list of Kuzzle API exposed HTTP routes
+   accessControlAllowOrigin: sets the Access-Control-Allow-Origin header used to
+       send responses to the client
+       (see https://developer.mozilla.org/en-US/docs/Web/HTTP/Access_control_CORS)
+   */
+  http: {
+    routes: require('./lib/config/httpRoutes'),
+    accessControlAllowOrigin: '*'
+  },
 
   plugins: {
     common: {
@@ -16,7 +25,7 @@ module.exports = {
       activated: true
     },
     'kuzzle-plugin-auth-passport-local': {
-      version: '3.0.1',
+      version: '3.0.2',
       activated: true
     }
   },
@@ -82,9 +91,9 @@ module.exports = {
                 updateSelf: true
               }
             },
-            read: {
+            server: {
               actions: {
-                serverInfo: true
+                info: true
               }
             }
           }
@@ -99,9 +108,9 @@ module.exports = {
                 login: true
               }
             },
-            read: {
+            server: {
               actions: {
-                serverInfo: true
+                info: true
               }
             }
           }
@@ -154,6 +163,11 @@ module.exports = {
       host: 'localhost',
       port: 9200,
       apiVersion: '5.0'
+    },
+
+    garbageCollector: {
+      cleanInterval: 86400000,
+      maxDelete: 1000
     }
 
   },

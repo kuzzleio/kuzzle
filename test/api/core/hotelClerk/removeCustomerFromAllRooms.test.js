@@ -93,8 +93,8 @@ describe('Test: hotelClerk.removeCustomerFromAllRooms', () => {
 
           // testing requestObject argument
           should(kuzzle.notifier.notify.args[0][1]).be.instanceOf(Request);
-          should(kuzzle.notifier.notify.args[0][1].input.controller).be.exactly('subscribe');
-          should(kuzzle.notifier.notify.args[0][1].input.action).be.exactly('off');
+          should(kuzzle.notifier.notify.args[0][1].input.controller).be.exactly('realtime');
+          should(kuzzle.notifier.notify.args[0][1].input.action).be.exactly('unsubscribe');
           should(kuzzle.notifier.notify.args[0][1].input.resource.index).be.exactly(index);
 
           // testing payload argument

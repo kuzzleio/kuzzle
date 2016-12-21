@@ -23,18 +23,20 @@ describe('Test: ElasticSearch service', () => {
     elasticsearch,
     engineType = 'storageEngine',
     request,
+    documentAda,
+    filter,
+    filterAfterActiveAdded,
+    rawKuzzleInfo;
+
+  beforeEach(() => {
+    // prevents embarking _kuzzle_info data from previous tests
     documentAda = {
       firstName: 'Ada',
       lastName: 'Lovelace',
       city: 'London',
       hobby: 'computer'
-    },
-    filter,
-    filterAfterActiveAdded,
-    rawKuzzleInfo;
+    };
 
-
-  beforeEach(() => {
     kuzzle = new KuzzleMock();
     ES.__set__('buildClient', () => new ESClientMock());
     elasticsearch = new ES(kuzzle, {service: engineType}, kuzzle.config.services.db);
@@ -67,22 +69,11 @@ describe('Test: ElasticSearch service', () => {
           must: filter.query,
           filter: {
             bool: {
-              should: [
-                {
-                  term: {
-                    '_kuzzle_info.active': true
-                  }
-                },
-                {
-                  bool: {
-                    must_not: {
-                      exists: {
-                        'field': '_kuzzle_info'
-                      }
-                    }
-                  }
+              must_not: {
+                term: {
+                  '_kuzzle_info.active': false
                 }
-              ]
+              }
             }
           }
         }
@@ -97,22 +88,11 @@ describe('Test: ElasticSearch service', () => {
         bool: {
           filter: {
             bool: {
-              should: [
-                {
-                  term: {
-                    '_kuzzle_info.active': true
-                  }
-                },
-                {
-                  bool: {
-                    must_not: {
-                      exists: {
-                        'field': '_kuzzle_info'
-                      }
-                    }
-                  }
+              must_not: {
+                term: {
+                  '_kuzzle_info.active': false
                 }
-              ]
+              }
             }
           }
         }
@@ -595,7 +575,13 @@ describe('Test: ElasticSearch service', () => {
           return elasticsearch.update(request)
             .then(() => {
               var data = elasticsearch.client.update.firstCall.args[0];
+
               should(data.body.doc).be.exactly(documentAda);
+              should(data.body.doc._kuzzle_info).be.an.Object();
+              should(data.body.doc._kuzzle_info.updatedAt).be.a.Number();
+              should(data.body.doc._kuzzle_info.updater).be.eql('test');
+              should(data.body.doc._kuzzle_info.active).be.true();
+
               should(data.id).be.exactly(createdDocumentId);
 
               should(refreshIndexSpy.calledOnce).be.true();
@@ -660,23 +646,21 @@ describe('Test: ElasticSearch service', () => {
 
     it('should return a rejected promise with an Error if an update fails for unknown reason', done => {
       var
-        esError = new Error('banana error'),
-        spyTrigger = kuzzle.pluginsManager.trigger;
+        esError = new Error('banana error');
 
       elasticsearch.client.update.returns(Promise.reject(esError));
 
       elasticsearch.update(request)
         .catch((error) => {
-          try{
-            should(spyTrigger.firstCall).be.calledWithExactly(
+          should(kuzzle.pluginsManager.trigger)
+            .be.calledWith(
               'log:warn',
               '[warning] unhandled elasticsearch error:\nbanana error'
             );
-            should(error).be.instanceOf(Error);
-            should(elasticsearch.client.update.firstCall.args[0].id).be.undefined();
-            done();
-          }
-          catch(e) { done(e); }
+
+          should(error).be.instanceOf(Error);
+          should(elasticsearch.client.update.firstCall.args[0].id).be.undefined();
+          done();
         });
     });
   });
@@ -719,18 +703,20 @@ describe('Test: ElasticSearch service', () => {
   });
 
   describe('#deleteByQuery', () => {
-    it('should return an empty result array when no document has been deleted using a filter', () => {
-      elasticsearch.client.search.yields(null, {hits: {hits: [], total: 0}});
-
+    beforeEach(() => {
       request.input.body = {
         query: {
-          term: {firstName: 'no way any document can be returned with this filter'}
+          term: {firstName: 'foobar'}
         }
       };
+    });
+
+    it('should return an empty result array when no document has been deactivated using a filter', () => {
+      elasticsearch.client.search.yields(null, {hits: {hits: [], total: 0}});
 
       return elasticsearch.deleteByQuery(request)
         .then(result => {
-          should(elasticsearch.client.search.firstCall.args[0].body.query).be.exactly(request.input.body.query);
+          should(elasticsearch.client.search.firstCall.args[0]).be.not.undefined();
 
           // Ugly line in order to spot a random bug on this unit test
           should(result.ids).not.be.undefined().and.be.an.Array();
@@ -738,7 +724,7 @@ describe('Test: ElasticSearch service', () => {
         });
     });
 
-    it('should allow to delete documents using a provided filter', () => {
+    it('should allow to deactivate documents using a provided filter', () => {
       var
         refreshIndexIfNeeded = ES.__get__('refreshIndexIfNeeded'),
         refreshIndexSpy = sandbox.spy(refreshIndexIfNeeded),
@@ -749,13 +735,108 @@ describe('Test: ElasticSearch service', () => {
 
       return ES.__with__({
         getAllIdsFromQuery: getAllIdsStub,
-        refreshIndexIfNeeded: refreshIndexSpy
+        refreshIndexIfNeeded: refreshIndexSpy,
+        Date: {
+          now: () => 42
+        }
       })(() => {
         return elasticsearch.deleteByQuery(request)
           .then(result => {
             var bulkData = elasticsearch.client.bulk.firstCall.args[0];
 
             // elasticsearch.client.bullk
+            should(bulkData.body).not.be.undefined().and.be.an.Array();
+            // (mockupIds.length * 2) because there is update requests with body
+            should(bulkData.body.length).be.exactly(mockupIds.length * 2);
+
+            bulkData.body.forEach(cmd => {
+              should(cmd).be.an.Object();
+              if (cmd.update) {
+                should(cmd.update).not.be.undefined().and.be.an.Object();
+                should(mockupIds.indexOf(cmd.update._id)).not.be.eql(-1);
+                should(cmd.update._type).be.exactly(request.input.resource.collection);
+              }
+              if (cmd.doc) {
+                should(cmd.doc).not.be.undefined().and.be.an.Object();
+                should(cmd.doc).be.eql({_kuzzle_info: { active: false, deletedAt: 42 }});
+              }
+            });
+
+            // elasticserach.deleteByQuery
+            should(result.ids).not.be.undefined().and.be.an.Array();
+            should(result.ids).match(mockupIds);
+
+            // refreshIndexIfNeeded
+            should(refreshIndexSpy.calledOnce).be.true();
+          });
+      });
+    });
+
+    it('should return a rejected promise if the delete by query fails because of a bad filter', () => {
+      elasticsearch.client.search.yields(new Error(), {});
+
+      return should(elasticsearch.deleteByQuery(request)).be.rejected();
+    });
+
+    it('should return a rejected promise if the delete by query fails because of a bulk failure', () => {
+      var error = new KuzzleError('Mocked error');
+      elasticsearch.client.bulk.returns(Promise.reject(error));
+
+      request.input.body.query = {some: 'query'};
+
+      return ES.__with__({
+        getAllIdsFromQuery: () => Promise.resolve(['foo', 'bar'])
+      })(() => {
+        return should(elasticsearch.deleteByQuery(request)).be.rejectedWith(error);
+      });
+    });
+
+    it('should return a rejected promise if the delete by query fails because the filter is null', () => {
+      request.input.body.query = null;
+
+      return should(elasticsearch.deleteByQuery(request)).be.rejectedWith(BadRequestError);
+    });
+  });
+
+  describe('#deleteByQueryFromTrash', () => {
+    it('should return an empty result array when no document has been deleted using a filter', () => {
+      elasticsearch.client.search.yields(null, {hits: {hits: [], total: 0}});
+
+      delete request.input.body;
+      request.input.body.query = {term: {firstName: 'no way any document can be returned with this filter'}};
+
+      return should(elasticsearch.deleteByQueryFromTrash(request)
+        .then(result => {
+          should(elasticsearch.client.search.firstCall.args[0].body.query).be.exactly(request.input.body.query);
+
+          // Ugly line in order to spot a random bug on this unit test
+          should(result.ids).not.be.undefined().and.be.an.Array();
+          should(result.ids.length).be.exactly(0);
+        })).be.fulfilled();
+    });
+
+    it('should allow to delete inactive documents using a provided filter from the trash', () => {
+      var
+        refreshIndexIfNeeded = ES.__get__('refreshIndexIfNeeded'),
+        refreshIndexSpy = sandbox.spy(refreshIndexIfNeeded),
+        mockupIds = ['foo', 'bar', 'baz'],
+        getAllIdsStub = sinon.stub().returns(Promise.resolve(mockupIds));
+
+      elasticsearch.client.bulk.returns(Promise.resolve(mockupIds));
+      elasticsearch.client.search.yields(null, {hits: {hits: [{_id: 'foo'}, {_id: 'bar'}, {_id: 'baz'}], total: mockupIds.length}});
+
+      return ES.__with__({
+        getPaginatedIdsFromQuery: getAllIdsStub,
+        refreshIndexIfNeeded: refreshIndexSpy,
+        Date: {
+          now: () => 42
+        }
+      })(() => {
+        return should(elasticsearch.deleteByQueryFromTrash(request)
+          .then(result => {
+            var bulkData = elasticsearch.client.bulk.firstCall.args[0];
+
+            // elasticsearch.client.bulk
             should(bulkData.body).not.be.undefined().and.be.an.Array();
             should(bulkData.body.length).be.exactly(mockupIds.length);
 
@@ -772,7 +853,7 @@ describe('Test: ElasticSearch service', () => {
 
             // refreshIndexIfNeeded
             should(refreshIndexSpy.calledOnce).be.true();
-          });
+          }));
       });
     });
 

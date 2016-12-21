@@ -352,7 +352,7 @@ ApiHttp.prototype.listCollections = function (index, type) {
   index = index || this.world.fakeIndex;
 
   options = {
-    url: this.apiPath(index + '/_listCollections'),
+    url: this.apiPath(index + '/_list'),
     method: 'GET'
   };
 
@@ -383,7 +383,7 @@ ApiHttp.prototype.truncateCollection = function (index, collection) {
 
 ApiHttp.prototype.listIndexes = function () {
   var options = {
-    url: this.apiPath('_listIndexes'),
+    url: this.apiPath('_list'),
     method: 'GET'
   };
 
@@ -392,7 +392,7 @@ ApiHttp.prototype.listIndexes = function () {
 
 ApiHttp.prototype.deleteIndexes = function () {
   var options = {
-    url: this.apiPath('_deleteIndexes'),
+    url: this.apiPath('_mdelete'),
     method: 'DELETE'
   };
 
@@ -677,19 +677,19 @@ ApiHttp.prototype.callMemoryStorage = function (command, args) {
 };
 
 ApiHttp.prototype.getAutoRefresh = function (index) {
-  return this.callApi(this.getRequest(index, null, 'admin', 'getAutoRefresh'));
+  return this.callApi(this.getRequest(index, null, 'index', 'getAutoRefresh'));
 };
 
 ApiHttp.prototype.setAutoRefresh = function (index, autoRefresh) {
-  return this.callApi(this.getRequest(index, null, 'admin', 'setAutoRefresh', {body: {autoRefresh}}));
+  return this.callApi(this.getRequest(index, null, 'index', 'setAutoRefresh', {body: {autoRefresh}}));
 };
 
 ApiHttp.prototype.indexExists = function (index) {
-  return this.callApi(this.getRequest(index, null, 'read', 'indexExists'));
+  return this.callApi(this.getRequest(index, null, 'index', 'exists'));
 };
 
 ApiHttp.prototype.collectionExists = function (index, collection) {
-  return this.callApi(this.getRequest(index, collection, 'read', 'collectionExists'));
+  return this.callApi(this.getRequest(index, collection, 'collection', 'exists'));
 };
 
 ApiHttp.prototype.getSpecifications = function (index, collection) {

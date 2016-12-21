@@ -55,8 +55,8 @@ ApiWebsocket.prototype.disconnect = function () {
 ApiWebsocket.prototype.unsubscribe = function (room, socketName) {
   var
     msg = {
-      controller: 'subscribe',
-      action: 'off',
+      controller: 'realtime',
+      action: 'unsubscribe',
       collection: this.world.fakeCollection,
       index: this.world.fakeIndex,
       body: { roomId: room }

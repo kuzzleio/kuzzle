@@ -7,7 +7,6 @@ var
   PluginContext = rewire('../../../../lib/api/core/plugins/pluginContext'),
   PluginImplementationError = require('kuzzle-common-objects').errors.PluginImplementationError,
   Request = require('kuzzle-common-objects').Request,
-  BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,
   _ = require('lodash');
 
 describe('Plugin Context', () => {
@@ -37,7 +36,11 @@ describe('Plugin Context', () => {
       should(context.constructors.BaseValidationType).be.a.Function();
 
       should(new context.constructors.Dsl).be.instanceOf(Dsl);
-      should(new context.constructors.Request({})).be.instanceOf(Request);
+      should(new context.constructors.Request(new Request({}), {})).be.instanceOf(Request);
+    });
+
+    it('should throw when trying to instante a Request object without providing a request object', () => {
+      should(function () { new context.constructors.Request({}); }).throw(PluginImplementationError);
     });
 
     it('should expose all error objects as capitalized constructors', () => {
@@ -177,107 +180,54 @@ describe('Plugin Context', () => {
           }
         });
     });
-
-    describe('#execute', () => {
-      var
-        execute = PluginContext.__get__('execute'),
-        processRequest,
-        processRequestStub;
-
-      beforeEach(() => {
-        processRequestStub = sinon.stub();
-        processRequest = PluginContext.__get__('processRequest');
-        PluginContext.__set__('processRequest', processRequestStub);
-      });
-
-      afterEach(() => {
-        PluginContext.__set__('processRequest', processRequest);
-      });
-
-      it('should call the callback with a result if everything went well', done => {
-        var
-          request = new Request({requestId: 'request'}, {connectionId: 'connectionid'}),
-          callback = sinon.spy((err, res) => {
-            should(callback).be.calledOnce();
-            should(err).be.null();
-            should(res).match(request);
-
-            should(processRequestStub.firstCall.args[0]).be.eql(kuzzle);
-            should(processRequestStub.firstCall.args[1]).be.eql(request);
-
-            done();
-          });
-
-        processRequestStub.returns(Promise.resolve(request));
-
-        return execute.bind(kuzzle)(request, callback);
-      });
-
-      it('should call the callback with an error if something went wrong', done => {
-        var
-          request = new Request({body: {some: 'request'}}, {connectionId: 'connectionid'}),
-          error = new Error('error'),
-          callback = sinon.spy(
-            (err, res) => {
-              should(processRequestStub.firstCall.args[0]).be.eql(kuzzle);
-              should(processRequestStub.firstCall.args[1]).be.eql(request);
-
-              should(callback).be.calledOnce();
-              should(err).match(error);
-              should(res).match({});
-
-              return Promise.resolve().then(() => {
-                // allows handleErrorDump to be called
-                should(kuzzle.funnel.handleErrorDump).be.calledOnce();
-                should(kuzzle.funnel.handleErrorDump.firstCall.args[0]).match(error);
-
-                done();
-              });
-            });
-
-        processRequestStub.returns(Promise.reject(error));
-
-        return execute.bind(kuzzle)(request, callback);
-      });
-    });
-
-    describe('#processRequest', () => {
-      var
-        processRequest;
-
-      beforeEach(() => {
-        processRequest = PluginContext.__get__('processRequest');
-        kuzzle.funnel.controllers.customController = {
-          customAction: sinon.stub().returns(Promise.resolve())
-        };
-      });
-
-      it('should call a controller properly', () => {
-        var
-          request = new Request({
-            controller: 'customController',
-            action: 'customAction'
-          }, {connectionId: 'connectionid'});
-
-        return processRequest(kuzzle, request)
-          .then(() => {
-            should(kuzzle.funnel.controllers.customController.customAction).be.calledOnce();
-            should(kuzzle.funnel.controllers.customController.customAction.firstCall.args[0]).match(request);
-          });
-      });
-
-      it('should reject a promise if the requestObject has invalid information', () => {
-        var
-          request = new Request({
-            controller: 'customController',
-            action: 'notExistingAction'
-          }, {connectionId: 'connectionid'});
-
-        should(
-          processRequest(kuzzle, request)
-        ).be.rejectedWith(BadRequestError);
-      });
-    });
   });
 
+  describe('#execute', () => {
+    var
+      execute = PluginContext.__get__('execute');
+
+    it('should call the callback with a result if everything went well', done => {
+      var
+        request = new Request({requestId: 'request'}, {connectionId: 'connectionid'}),
+        callback = sinon.spy((err, res) => {
+          should(callback).be.calledOnce();
+          should(err).be.null();
+          should(res).match(request);
+
+          should(kuzzle.funnel.processRequest.firstCall.args[0]).be.eql(request);
+
+          done();
+        });
+
+      kuzzle.funnel.processRequest.returns(Promise.resolve(request));
+
+      return execute.bind(kuzzle)(request, callback);
+    });
+
+    it('should call the callback with an error if something went wrong', done => {
+      var
+        request = new Request({body: {some: 'request'}}, {connectionId: 'connectionid'}),
+        error = new Error('error'),
+        callback = sinon.spy(
+          (err, res) => {
+            should(kuzzle.funnel.processRequest.firstCall.args[0]).be.eql(request);
+
+            should(callback).be.calledOnce();
+            should(err).match(error);
+            should(res).match({});
+
+            return Promise.resolve().then(() => {
+              // allows handleErrorDump to be called
+              should(kuzzle.funnel.handleErrorDump).be.calledOnce();
+              should(kuzzle.funnel.handleErrorDump.firstCall.args[0]).match(error);
+
+              done();
+            });
+          });
+
+      kuzzle.funnel.processRequest.returns(Promise.reject(error));
+
+      return execute.bind(kuzzle)(request, callback);
+    });
+  });
 });

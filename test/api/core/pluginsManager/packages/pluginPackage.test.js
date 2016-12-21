@@ -1,5 +1,6 @@
 var
   BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,
+  NotFoundError = require('kuzzle-common-objects').errors.NotFoundError,
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
   rewire = require('rewire'),
@@ -243,7 +244,7 @@ describe('plugins/packages/pluginPackage', () => {
 
     it('should return true if no configuration is found in db', () => {
       pkg.isInstalled = sinon.stub().returns(true);
-      pkg.dbConfiguration = sinon.stub().returns(Promise.reject(new Error('Not Found')));
+      pkg.dbConfiguration = sinon.stub().returns(Promise.reject(new NotFoundError('Not Found')));
 
       return pkg.needsInstall()
         .then(result => {
@@ -314,7 +315,7 @@ describe('plugins/packages/pluginPackage', () => {
 
     it('should return false if no db configuration was found', () => {
       pkg.isInstalled = sinon.stub().returns(true);
-      pkg.dbConfiguration = sinon.stub().returns(Promise.reject(new Error('Not Found')));
+      pkg.dbConfiguration = sinon.stub().returns(Promise.reject(new NotFoundError('Not Found')));
 
       return pkg.needsToBeDeleted()
         .then(result => {

@@ -49,7 +49,7 @@ describe('Test: hotelClerk.removeRooms', () => {
 
   it('should reject an error if there is no subscription on this index', () => {
     var request = new Request({
-      controller: 'admin',
+      controller: 'none',
       action: 'removeRooms',
       index: index,
       collection: collection1,
@@ -62,14 +62,14 @@ describe('Test: hotelClerk.removeRooms', () => {
   it('should reject an error if there is no subscription on this collection', () => {
     var
       subscribeRequest = new Request({
-        controller: 'subscribe',
-        action: 'on',
+        controller: 'realtime',
+        action: 'subscribe',
         index: index,
         collection: collection1,
         body: {}
       }, context),
       removeRequest = new Request({
-        controller: 'admin',
+        controller: 'none',
         action: 'removeRooms',
         index: index,
         collection: collection2,
@@ -85,14 +85,14 @@ describe('Test: hotelClerk.removeRooms', () => {
   it('should remove room in global subscription for provided collection', () => {
     var
       subscribeRequest = new Request({
-        controller: 'subscribe',
-        action: 'on',
+        controller: 'realtime',
+        action: 'subscribe',
         index: index,
         collection: collection1,
         body: {}
       }, context),
       removeRequest = new Request({
-        controller: 'admin',
+        controller: 'none',
         action: 'removeRooms',
         index: index,
         collection: collection1,
@@ -112,14 +112,14 @@ describe('Test: hotelClerk.removeRooms', () => {
   it('should remove room for subscription with filter for provided collection', () => {
     var
       subscribeRequest = new Request({
-        controller: 'subscribe',
-        action: 'on',
+        controller: 'realtime',
+        action: 'subscribe',
         index: index,
         collection: collection1,
         body: filter1
       }, context),
       removeRequest = new Request({
-        controller: 'admin',
+        controller: 'none',
         action: 'removeRooms',
         index: index,
         collection: collection1,
@@ -139,21 +139,21 @@ describe('Test: hotelClerk.removeRooms', () => {
   it('should remove room for global and filter subscription provided collection', () => {
     var
       globalSubscribeRequest = new Request({
-        controller: 'subscribe',
-        action: 'on',
+        controller: 'realtime',
+        action: 'subscribe',
         index: index,
         collection: collection1,
         body: {}
       }, context),
       filterSubscribeRequest = new Request({
-        controller: 'subscribe',
-        action: 'on',
+        controller: 'realtime',
+        action: 'subscribe',
         index: index,
         collection: collection1,
         body: filter1
       }, context),
       removeRequest = new Request({
-        controller: 'admin',
+        controller: 'none',
         action: 'removeRooms',
         index: index,
         collection: collection1,
@@ -174,21 +174,21 @@ describe('Test: hotelClerk.removeRooms', () => {
   it('should remove only room for provided collection', () => {
     var
       subscribeCollection1 = new Request({
-        controller: 'subscribe',
-        action: 'on',
+        controller: 'realtime',
+        action: 'subscribe',
         index: index,
         collection: collection1,
         body: {}
       }, context),
       subscribeCollection2 = new Request({
-        controller: 'subscribe',
-        action: 'on',
+        controller: 'realtime',
+        action: 'subscribe',
         index: index,
         collection: collection2,
         body: {}
       }, context),
       removeRequest = new Request({
-        controller: 'admin',
+        controller: 'none',
         action: 'removeRooms',
         index: index,
         collection: collection1,
@@ -210,14 +210,14 @@ describe('Test: hotelClerk.removeRooms', () => {
   it('should reject an error if room is provided but is not an array', () => {
     var
       subscribeCollection1 = new Request({
-        controller: 'subscribe',
-        action: 'on',
+        controller: 'realtime',
+        action: 'subscribe',
         index: index,
         collection: collection1,
         body: {}
       }, context),
       removeRequest = new Request({
-        controller: 'admin',
+        controller: 'none',
         action: 'removeRooms',
         index: index,
         collection: collection1,
@@ -234,21 +234,21 @@ describe('Test: hotelClerk.removeRooms', () => {
     var
       roomId,
       subscribeFilter1 = new Request({
-        controller: 'subscribe',
-        action: 'on',
+        controller: 'realtime',
+        action: 'subscribe',
         index: index,
         collection: collection1,
         body: filter1
       }, context),
       subscribeFilter2 = new Request({
-        controller: 'subscribe',
-        action: 'on',
+        controller: 'realtime',
+        action: 'subscribe',
         index: index,
         collection: collection1,
         body: filter2
       }, context),
       removeRequest = new Request({
-        controller: 'admin',
+        controller: 'none',
         action: 'removeRooms',
         index: index,
         collection: collection1,
@@ -272,21 +272,21 @@ describe('Test: hotelClerk.removeRooms', () => {
     var
       index2RoomName,
       subscribe1 = new Request({
-        controller: 'subscribe',
-        action: 'on',
+        controller: 'realtime',
+        action: 'subscribe',
         index: index,
         collection: collection1,
         body: {}
       }, context),
       subscribe2 = new Request({
-        controller: 'subscribe',
-        action: 'on',
+        controller: 'realtime',
+        action: 'subscribe',
         index: 'index2',
         collection: collection1,
         body: {}
       }, context),
       removeRequest = new Request({
-        controller: 'admin',
+        controller: 'none',
         action: 'removeRooms',
         index: index,
         collection: collection1,
@@ -311,21 +311,21 @@ describe('Test: hotelClerk.removeRooms', () => {
     var
       collection2RoomName,
       subscribe1 = new Request({
-        controller: 'subscribe',
-        action: 'on',
+        controller: 'realtime',
+        action: 'subscribe',
         index: index,
         collection: collection1,
         body: {}
       }, context),
       subscribe2 = new Request({
-        controller: 'subscribe',
-        action: 'on',
+        controller: 'realtime',
+        action: 'subscribe',
         index: index,
         collection: collection2,
         body: {}
       }, context),
       removeRequest = new Request({
-        controller: 'admin',
+        controller: 'none',
         action: 'removeRooms',
         index: index,
         collection: collection1,
@@ -350,14 +350,14 @@ describe('Test: hotelClerk.removeRooms', () => {
     var
       badRoomName = 'badRoomId',
       subscribeRequest = new Request({
-        controller: 'subscribe',
-        action: 'on',
+        controller: 'realtime',
+        action: 'subscribe',
         index: index,
         collection: collection1,
         body: {}
       }, context),
       removeRequest = new Request({
-        controller: 'admin',
+        controller: 'none',
         action: 'removeRooms',
         index: index,
         collection: collection1,
