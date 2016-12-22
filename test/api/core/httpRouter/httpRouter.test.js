@@ -122,7 +122,10 @@ describe('core/httpRouter', () => {
     it('should trigger an event when handling an OPTIONS HTTP method', done => {
       rq.url = '/';
       rq.method = 'OPTIONS';
-      rq.headers['content-type'] = 'application/json';
+      rq.headers = {
+        'content-type': 'application/json',
+        foo: 'bar'
+      };
 
       router.route(rq, callback);
 
@@ -155,6 +158,7 @@ describe('core/httpRouter', () => {
 
         should(kuzzleMock.pluginsManager.trigger.calledOnce).be.true();
         should(kuzzleMock.pluginsManager.trigger.calledWith('http:options', sinon.match.instanceOf(Request))).be.true();
+        should(kuzzleMock.pluginsManager.trigger.firstCall.args[1].input.args.foo).eql('bar');
         done();
       }, 20);
     });
