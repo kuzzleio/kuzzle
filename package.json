@@ -33,6 +33,7 @@
     "compare-versions": "^3.0.0",
     "crypto-md5": "^1.0.0",
     "denque": "^1.1.0",
+    "dumpme": "^1.0.0",
     "easy-circular-list": "^1.0.13",
     "elasticsearch": "12.0.1",
     "espresso-logic-minimizer": "^1.0.5",
