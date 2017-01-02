@@ -156,6 +156,7 @@ describe('core/httpRouter', () => {
         should(kuzzleMock.pluginsManager.trigger.calledWith('http:options', sinon.match.instanceOf(Request))).be.true();
         should(kuzzleMock.pluginsManager.trigger.firstCall.args[1].input.args.foo).eql('bar');
         done();
+      });
     });
 
     it('should return an error if the HTTP method is unknown', (done) => {
@@ -195,7 +196,7 @@ describe('core/httpRouter', () => {
       });
     });
 
-    it('should return an error if unable to parse the incoming JSON content', () => {
+    it('should return an error if unable to parse the incoming JSON content', (done) => {
       router.post('/foo/bar', handler);
 
       rq.url = '/foo/bar';
