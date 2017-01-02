@@ -106,11 +106,7 @@ describe('Test: ElasticSearch service', () => {
       collection,
       index,
       body: documentAda
-    }, {
-      token: {
-        userId: 'test'
-      }
-    });
+    }, {token: {userId: 'test'}, user: {_id: 'test'}});
     elasticsearch.init();
   });
 
