@@ -2,6 +2,22 @@
 
 # Current
 
+
+
+# 1.0.0-RC8
+
+* https://github.com/kuzzleio/kuzzle/releases/tag/1.0.0-RC8
+
+### Breaking changes
+
+* Events: Normalize memoryStorage events to ms events #582
+* Events, Controller and Actions: Controllers and actions refactor #569
+* Events, Plugin, HTTP routes and internals: Harmonization of the Request and result handling #559
+* Internal: Moved default docker-compose.yml file in [kuzzle-build](https://github.com/kuzzleio/kuzzle-build) #566
+* Internal: New real-time engine #510
+* Plugin: Controller plugins definition #563
+* API: Protect internal index in elasticsearch service #538
+
 # 1.0.0-RC7
 
 * https://github.com/kuzzleio/kuzzle/releases/tag/1.0.0-RC7
