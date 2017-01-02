@@ -121,7 +121,10 @@ describe('core/httpRouter', () => {
     it('should trigger an event when handling an OPTIONS HTTP method', done => {
       rq.url = '/';
       rq.method = 'OPTIONS';
-      rq.headers['content-type'] = 'application/json';
+      rq.headers = {
+        'content-type': 'application/json',
+        foo: 'bar'
+      };
 
       router.route(rq, response => {
         should(handler.called)
@@ -149,9 +152,10 @@ describe('core/httpRouter', () => {
           }
         });
 
+        should(kuzzleMock.pluginsManager.trigger.calledOnce).be.true();
+        should(kuzzleMock.pluginsManager.trigger.calledWith('http:options', sinon.match.instanceOf(Request))).be.true();
+        should(kuzzleMock.pluginsManager.trigger.firstCall.args[1].input.args.foo).eql('bar');
         done();
-
-      });
     });
 
     it('should return an error if the HTTP method is unknown', (done) => {
@@ -189,10 +193,9 @@ describe('core/httpRouter', () => {
 
         done();
       });
-
     });
 
-    it('should return an error if unable to parse the incoming JSON content', (done) => {
+    it('should return an error if unable to parse the incoming JSON content', () => {
       router.post('/foo/bar', handler);
 
       rq.url = '/foo/bar';
@@ -296,7 +299,6 @@ describe('core/httpRouter', () => {
         done();
 
       });
-
     });
 
     it('should return an error if the route does not exist', (done) => {

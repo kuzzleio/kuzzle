@@ -34,12 +34,7 @@ describe('Test: hotelClerk.removeRooms', () => {
     kuzzle.hotelClerk = new HotelClerk(kuzzle);
     kuzzle.dsl = new Dsl();
 
-    context = {
-      connectionId,
-      token: {
-        userId: ''
-      }
-    };
+    context = {connectionId, token: {userId: ''}, user: {_id: ''}};
 
   });
 
