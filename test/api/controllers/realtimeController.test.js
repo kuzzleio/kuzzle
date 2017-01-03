@@ -17,7 +17,8 @@ describe('Test: subscribe controller', () => {
   beforeEach(() => {
     kuzzle = new KuzzleMock();
     realtimeController = new RealtimeController(kuzzle);
-    request = new Request({index: 'test', collection: 'collection', controller: 'realtime', body: {}});
+    request = new Request({index: 'test', collection: 'collection', controller: 'realtime', body: {}}, {user: {_id: '42'}});
+    kuzzle.repositories.user.anonymous = sinon.stub();
   });
 
   afterEach(() => {
@@ -142,6 +143,8 @@ describe('Test: subscribe controller', () => {
 
   describe('#list', () => {
     it('should call the proper hotelClerk method',() => {
+      kuzzle.repositories.user.anonymous.returns({_id: '-1'});
+
       return realtimeController.list(request)
         .then(result => {
           should(result).be.match(foo);

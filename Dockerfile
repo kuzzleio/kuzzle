@@ -12,6 +12,7 @@ RUN apt-get update && apt-get install -y \
       curl \
       git \
       g++ \
+      gdb \
       python \
     && npm install \
     && apt-get clean \
