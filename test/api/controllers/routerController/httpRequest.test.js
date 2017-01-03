@@ -79,8 +79,8 @@ describe('Test: routerController.httpRequest', () => {
   });
 
   it('should register POST routes from the config/httpRoutes file', (done) => {
-    httpRequest.url = '/profiles/foobar';
-    httpRequest.method = 'POST';
+    httpRequest.url = '/profiles/foobar/_update';
+    httpRequest.method = 'PUT';
     httpRequest.content = '{"profileId": "foobar"}';
 
     routeController.router.route(httpRequest, result => {

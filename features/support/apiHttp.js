@@ -225,7 +225,7 @@ ApiHttp.prototype.create = function (body, index, collection, jwtToken) {
 
 ApiHttp.prototype.publish = function (body, index) {
   var options = {
-    url: this.apiPath(((typeof index !== 'string') ? this.world.fakeIndex : index) + '/' + this.world.fakeCollection),
+    url: this.apiPath(((typeof index !== 'string') ? this.world.fakeIndex : index) + '/' + this.world.fakeCollection + '/_publish'),
     method: 'POST',
     body
   };
@@ -401,8 +401,8 @@ ApiHttp.prototype.deleteIndexes = function () {
 
 ApiHttp.prototype.createIndex = function (index) {
   var options = {
-    url: this.apiPath(index),
-    method: 'PUT'
+    url: this.apiPath(index + '/_create'),
+    method: 'POST'
   };
 
   return this.callApi(options);
@@ -734,7 +734,7 @@ ApiHttp.prototype.validateDocument = function (index, collection, document) {
 ApiHttp.prototype.postDocument = function (index, collection, document) {
   var options = {
     url: this.apiPath(index + '/' + collection + '/_create'),
-    method: 'PUT',
+    method: 'POST',
     body: document
   };
 
