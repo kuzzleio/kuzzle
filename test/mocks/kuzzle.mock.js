@@ -70,7 +70,8 @@ function KuzzleMock () {
     handleErrorDump: sinon.spy(),
     execute: sinon.spy(),
     processRequest: sinon.stub(),
-    checkRights: sinon.stub()
+    checkRights: sinon.stub(),
+    getEventName: sinon.spy()
   };
 
   this.hooks = {
