@@ -1,4 +1,11 @@
 /**
+ * /!\ DO NOT MODIFY THIS FILE
+ *
+ * To customize your Kuzzle installation, create a
+ * ".kuzzlerc" file and put your overrides there.
+ * Please check the ".kuzzlerc.sample" file to get
+ * started.
+ *
  * @class KuzzleConfiguration
  */
 module.exports = {
