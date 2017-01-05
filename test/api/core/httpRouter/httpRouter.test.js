@@ -130,11 +130,6 @@ describe('core/httpRouter', () => {
         should(handler.called)
           .be.false();
 
-        should(response).match({
-          requestId: rq.requestId,
-          status: 200
-        });
-
         should(response.toJSON()).match({
           raw: false,
           status: 200,
@@ -156,6 +151,7 @@ describe('core/httpRouter', () => {
         should(kuzzleMock.pluginsManager.trigger.calledWith('http:options', sinon.match.instanceOf(Request))).be.true();
         should(kuzzleMock.pluginsManager.trigger.firstCall.args[1].input.args.foo).eql('bar');
         done();
+        process.exit(0);
       });
     });
 
