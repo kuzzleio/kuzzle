@@ -59,9 +59,8 @@ describe('Test: security controller - profiles', () => {
       var error = new Error('Mocked error');
       sandbox.stub(kuzzle.repositories.profile, 'validateAndSaveProfile').returns(Promise.reject(error));
 
-      return should(securityController.createProfile(new Request({
-        body: {_id: 'test', policies: ['role1']}
-      }))).be.rejectedWith(error);
+      return should(securityController.createProfile(new Request({_id: 'test',body: {policies: ['role1']}})))
+        .be.rejectedWith(error);
     });
 
     it('should resolve to an object on a createProfile call', () => {
@@ -73,7 +72,7 @@ describe('Test: security controller - profiles', () => {
 
     it('should throw an error if creating a profile with bad roles property form', () => {
       return should(() => {
-        securityController.createOrReplaceProfile(new Request({body: {roleId: 'test', policies: 'not-an-array-roleIds'}}));
+        securityController.createOrReplaceProfile(new Request({_id: 'badTest', body: {roleId: 'test', policies: 'not-an-array-roleIds'}}));
       }).throw(BadRequestError);
     });
   });

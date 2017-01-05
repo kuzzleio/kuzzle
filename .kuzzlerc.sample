@@ -41,7 +41,7 @@
     //   * from a local directory: the location of the package must be
     //     specified using the "path" property
     "kuzzle-plugin-logger": {
-      "version": "2.0.5",
+      "version": "2.0.7",
       "activated": true
     },
     "kuzzle-plugin-auth-passport-local": {
