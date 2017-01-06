@@ -242,6 +242,7 @@ function KuzzleMock () {
         get: sinon.stub().returns(Promise.resolve({
           _source: {foo}
         })),
+        mget: sinon.stub(),
         getInfos: sinon.stub().returns(Promise.resolve()),
         getMapping: sinon.stub().returns(Promise.resolve(foo)),
         listIndexes: sinon.stub().returns(Promise.resolve({indexes: ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i']})),

@@ -476,7 +476,7 @@ ApiHttp.prototype.getRole = function (id) {
 
 ApiHttp.prototype.mGetRoles = function (body) {
   var options = {
-    url: this.apiPath('roles/_mget'),
+    url: this.apiPath('roles/_mGet'),
     method: 'POST',
     body
   };
@@ -533,7 +533,7 @@ ApiHttp.prototype.getProfileRights = function (id) {
 
 ApiHttp.prototype.mGetProfiles = function (body) {
   var options = {
-    url: this.apiPath('profiles/_mget'),
+    url: this.apiPath('profiles/_mGet'),
     method: 'POST',
     body
   };
