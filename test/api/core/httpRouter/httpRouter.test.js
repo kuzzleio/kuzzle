@@ -151,7 +151,6 @@ describe('core/httpRouter', () => {
         should(kuzzleMock.pluginsManager.trigger.calledWith('http:options', sinon.match.instanceOf(Request))).be.true();
         should(kuzzleMock.pluginsManager.trigger.firstCall.args[1].input.args.foo).eql('bar');
         done();
-        process.exit(0);
       });
     });
 
