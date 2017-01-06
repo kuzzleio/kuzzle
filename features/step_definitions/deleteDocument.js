@@ -53,6 +53,27 @@ var apiSteps = function () {
       callback();
     });
   });
+
+  this.Then(/^I remove the documents '([^']+)'( and get partial errors)?$/, function (documents, withErrors, callback) {
+    documents = JSON.parse(documents);
+
+    this.api.mDelete({ids: documents})
+      .then(response => {
+        if (response.error !== null && !withErrors) {
+          callback(response.error.message);
+          return false;
+        }
+        else if(response.errors === null && withErrors) {
+          callback('Should get partial error');
+          return false;
+        }
+
+        callback();
+      })
+      .catch(function (error) {
+        callback(error);
+      });
+  });
 };
 
 module.exports = apiSteps;

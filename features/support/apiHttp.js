@@ -4,10 +4,18 @@ var
   rp = require('request-promise'),
   routes = require('../../lib/config/httpRoutes');
 
+/**
+ * @constructor
+ */
 var ApiHttp = function () {
   this.world = null;
 
   this.baseUri = `${config.scheme}://${config.host}:${config.ports.rest}`;
+
+  this.util = {
+    getIndex: index => typeof index !== 'string' ? this.world.fakeIndex : index,
+    getCollection: collection => typeof collection !== 'string' ? this.world.fakeCollection : collection
+  };
 };
 
 ApiHttp.prototype.init = function (world) {
@@ -145,8 +153,18 @@ ApiHttp.prototype.callApi = function (options) {
 
 ApiHttp.prototype.get = function (id, index) {
   var options = {
-    url: this.apiPath(((typeof index !== 'string') ? this.world.fakeIndex : index) + '/' + this.world.fakeCollection + '/' + id),
+    url: this.apiPath(this.util.getIndex(index) + '/' + this.world.fakeCollection + '/' + id),
     method: 'GET'
+  };
+
+  return this.callApi(options);
+};
+
+ApiHttp.prototype.mGet = function(body, index, collection) {
+  var options = {
+    url: this.apiPath(this.util.getIndex(index) + '/' + this.util.getCollection(collection) + '/_mGet'),
+    method: 'POST',
+    body
   };
 
   return this.callApi(options);
@@ -156,8 +174,7 @@ ApiHttp.prototype.search = function (query, index, collection, args) {
   var
     qs,
     options = {
-      url: this.apiPath(((typeof index !== 'string') ? this.world.fakeIndex : index) + '/' +
-                          ((typeof collection !== 'string') ? this.world.fakeCollection : collection) + '/_search'),
+      url: this.apiPath(this.util.getIndex(index) + '/' + this.util.getCollection(collection) + '/_search'),
       method: 'POST',
       body: query
     };
@@ -193,8 +210,7 @@ ApiHttp.prototype.scroll = function (scrollId) {
 
 ApiHttp.prototype.count = function (query, index, collection) {
   var options = {
-    url: this.apiPath(((typeof index !== 'string') ? this.world.fakeIndex : index) + '/' +
-                        ((typeof collection !== 'string') ? this.world.fakeCollection : collection) + '/_count'),
+    url: this.apiPath(this.util.getIndex(index) + '/' + this.util.getCollection(collection) + '/_count'),
     method: 'POST',
     body: query
   };
@@ -202,14 +218,29 @@ ApiHttp.prototype.count = function (query, index, collection) {
   return this.callApi(options);
 };
 
-ApiHttp.prototype.create = function (body, index, collection, jwtToken) {
+ApiHttp.prototype.create = function (body, index, collection, jwtToken, id) {
+  var
+    url = id
+      ? this.apiPath(this.util.getIndex(index) + '/' + this.util.getCollection(collection) + '/' + id + '/_create')
+      : this.apiPath(this.util.getIndex(index) + '/' + this.util.getCollection(collection) + '/_create'),
+    options = {
+      url: url,
+      method: 'POST',
+      body
+    };
+
+  if (jwtToken) {
+    options.headers = {
+      authorization: 'Bearer ' + jwtToken
+    };
+  }
+
+  return this.callApi(options);
+};
+
+ApiHttp.prototype.mCreate = function (body, index, collection, jwtToken) {
   var options = {
-    url: this.apiPath(
-      ((typeof index !== 'string') ? this.world.fakeIndex : index) +
-      '/' +
-      ((typeof collection !== 'string') ? this.world.fakeCollection : collection) +
-      '/_create'
-    ),
+    url: this.apiPath(this.util.getIndex(index) + '/' + this.util.getCollection(collection) + '/_mCreate'),
     method: 'POST',
     body
   };
@@ -225,7 +256,7 @@ ApiHttp.prototype.create = function (body, index, collection, jwtToken) {
 
 ApiHttp.prototype.publish = function (body, index) {
   var options = {
-    url: this.apiPath(((typeof index !== 'string') ? this.world.fakeIndex : index) + '/' + this.world.fakeCollection + '/_publish'),
+    url: this.apiPath(this.util.getIndex(index) + '/' + this.world.fakeCollection + '/_publish'),
     method: 'POST',
     body
   };
@@ -235,31 +266,51 @@ ApiHttp.prototype.publish = function (body, index) {
 
 ApiHttp.prototype.createOrReplace = function (body, index, collection) {
   var options = {
-    url: this.apiPath(((typeof index !== 'string') ? this.world.fakeIndex : index) + '/' + ((typeof collection !== 'string') ? this.world.fakeCollection : collection) + '/' + body._id),
+    url: this.apiPath(this.util.getIndex(index) + '/' + this.util.getCollection(collection) + '/' + body._id),
     method: 'PUT',
     body
   };
 
   delete body._id;
+
+  return this.callApi(options);
+};
+
+ApiHttp.prototype.mCreateOrReplace = function (body, index, collection) {
+  var options = {
+    url: this.apiPath(this.util.getIndex(index) + '/' + this.util.getCollection(collection) + '/_mCreateOrReplace'),
+    method: 'PUT',
+    body
+  };
 
   return this.callApi(options);
 };
 
 ApiHttp.prototype.replace = function (body, index, collection) {
   var options = {
-    url: this.apiPath(((typeof index !== 'string') ? this.world.fakeIndex : index) + '/' + ((typeof collection !== 'string') ? this.world.fakeCollection : collection) + '/' + body._id + '/_replace'),
+    url: this.apiPath(this.util.getIndex(index) + '/' + this.util.getCollection(collection) + '/' + body._id + '/_replace'),
     method: 'PUT',
     body
   };
 
   delete body._id;
+
+  return this.callApi(options);
+};
+
+ApiHttp.prototype.mReplace = function (body, index, collection) {
+  var options = {
+    url: this.apiPath(this.util.getIndex(index) + '/' + this.util.getCollection(collection) + '/_mReplace'),
+    method: 'PUT',
+    body
+  };
 
   return this.callApi(options);
 };
 
 ApiHttp.prototype.update = function (id, body, index) {
   var options = {
-    url: this.apiPath(((typeof index !== 'string') ? this.world.fakeIndex : index) + '/' + this.world.fakeCollection + '/' + id + '/_update'),
+    url: this.apiPath(this.util.getIndex(index) + '/' + this.world.fakeCollection + '/' + id + '/_update'),
     method: 'PUT',
     body
   };
@@ -269,10 +320,30 @@ ApiHttp.prototype.update = function (id, body, index) {
   return this.callApi(options);
 };
 
+ApiHttp.prototype.mUpdate = function (body, index, collection) {
+  var options = {
+    url: this.apiPath(this.util.getIndex(index) + '/' + this.util.getCollection(collection) + '/_mUpdate'),
+    method: 'PUT',
+    body
+  };
+
+  return this.callApi(options);
+};
+
 ApiHttp.prototype.deleteById = function (id, index) {
   var options = {
-    url: this.apiPath(((typeof index !== 'string') ? this.world.fakeIndex : index) + '/' + this.world.fakeCollection + '/' + id),
+    url: this.apiPath(this.util.getIndex(index) + '/' + this.world.fakeCollection + '/' + id),
     method: 'DELETE'
+  };
+
+  return this.callApi(options);
+};
+
+ApiHttp.prototype.mDelete = function (body, index, collection) {
+  var options = {
+    url: this.apiPath(this.util.getIndex(index) + '/' + this.util.getCollection(collection) + '/_mDelete'),
+    method: 'DELETE',
+    body
   };
 
   return this.callApi(options);
@@ -280,7 +351,7 @@ ApiHttp.prototype.deleteById = function (id, index) {
 
 ApiHttp.prototype.deleteByQuery = function (query, index, collection) {
   var options = {
-    url: this.apiPath(((typeof index !== 'string') ? this.world.fakeIndex : index) + '/' + (collection || this.world.fakeCollection) + '/_query'),
+    url: this.apiPath(this.util.getIndex(index) + '/' + this.util.getCollection(collection) + '/_query'),
     method: 'DELETE',
     body: query
   };
@@ -290,7 +361,7 @@ ApiHttp.prototype.deleteByQuery = function (query, index, collection) {
 
 ApiHttp.prototype.bulkImport = function (bulk, index) {
   var options = {
-    url: this.apiPath(((typeof index !== 'string') ? this.world.fakeIndex : index) + '/' + this.world.fakeCollection + '/_bulk'),
+    url: this.apiPath(this.util.getIndex(index) + '/' + this.world.fakeCollection + '/_bulk'),
     method: 'POST',
     body: {bulkData: bulk}
   };
@@ -310,7 +381,7 @@ ApiHttp.prototype.globalBulkImport = function (bulk) {
 
 ApiHttp.prototype.updateMapping = function (index) {
   var options = {
-    url: this.apiPath(((typeof index !== 'string') ? this.world.fakeIndex : index) + '/' + this.world.fakeCollection + '/_mapping'),
+    url: this.apiPath(this.util.getIndex(index) + '/' + this.world.fakeCollection + '/_mapping'),
     method: 'PUT',
     body: this.world.schema
   };
@@ -374,7 +445,7 @@ ApiHttp.prototype.now = function () {
 
 ApiHttp.prototype.truncateCollection = function (index, collection) {
   var options = {
-    url: this.apiPath(((typeof index !== 'string') ? this.world.fakeIndex : index) + '/' + (collection || this.world.fakeCollection) + '/_truncate'),
+    url: this.apiPath(this.util.getIndex(index) + '/' + this.util.getCollection(collection) + '/_truncate'),
     method: 'DELETE'
   };
 
