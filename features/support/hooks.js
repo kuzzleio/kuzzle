@@ -1,11 +1,14 @@
-var
+'use strict';
+
+const
   _ = require('lodash'),
   async = require('async'),
-  Promise = require('bluebird');
+  Promise = require('bluebird'),
+  requestErrors = require('request-promise/errors');
 
-var myHooks = function () {
+const myHooks = function () {
   this.registerHandler('BeforeFeature', (event, callback) => {
-    var
+    const
       api = restApi(),
       fixtures = require('../fixtures/functionalTestsFixtures.json'),
       promises = [];
@@ -26,7 +29,7 @@ var myHooks = function () {
   });
 
   this.registerHandler('AfterFeature', (event, callback) => {
-    var
+    const
       api = restApi(),
       promises = [];
 
@@ -40,9 +43,8 @@ var myHooks = function () {
       Promise.all(promises)
         .then(() => callback())
         .catch(error => {
-          // Ignores deleteIndex errors if they occur because the deleted index
-          // does not exists
-          if (error.error.status === 404 && error.error.controller === 'index' && error.error.action === 'delete') {
+          // Ignore 404 errors
+          if (error instanceof requestErrors.StatusCodeError && error.statusCode === 404) {
             return callback();
           }
 
@@ -156,7 +158,9 @@ function cleanSecurity (callback) {
     .then(() => {
       return this.api.searchUsers({
         query: {
-          match_all: {}
+          match_all: {
+            boost: 1
+          }
         },
         from: 0,
         size: 9999
@@ -182,7 +186,9 @@ function cleanSecurity (callback) {
     .then(() => {
       return this.api.searchProfiles({
         query: {
-          match_all: {}
+          match_all: {
+            boost: 1
+          }
         },
         from: 0,
         size: 9999
@@ -208,7 +214,9 @@ function cleanSecurity (callback) {
     .then(() => {
       return this.api.searchRoles({
         query: {
-          match_all: {}
+          match_all: {
+            boost: 1
+          }
         },
         from: 0,
         size: 9999
@@ -258,31 +266,32 @@ function cleanRedis(callback) {
     .catch(error => callback(error));
 }
 
-
 function cleanValidations(callback) {
   this.api.listIndexes()
-    .then(response => {
-      if (response.result.indexes.indexOf('%kuzzle') === -1) {
+    .then(body => {
+      if (body.result.indexes.indexOf('%kuzzle') === -1) {
         return Promise.reject(new ReferenceError('%kuzzle index not found'));
       }
     })
     .then(() => {
       return this.api.searchValidations({
         query: {
-          match_all: {}
+          match_all: {
+            boost: 1
+          }
         }
       });
     })
-    .then(results => {
+    .then(body => {
       var
         promises = [],
         regex = new RegExp('^kuzzle-test-');
 
-      results = results.result.hits.filter(r => r._id.match(regex)).map(r => r._id);
-
-      results.forEach(id => {
-        promises.push(this.api.deleteSpecifications(id.split('#')[0], id.split('#')[1]));
-      });
+      body.result.hits
+        .filter(r => r._id.match(regex)).map(r => r._id)
+        .forEach(id => {
+          promises.push(this.api.deleteSpecifications(id.split('#')[0], id.split('#')[1]));
+        });
 
       return Promise.all(promises)
         .catch(() => {
