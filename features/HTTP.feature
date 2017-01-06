@@ -95,8 +95,8 @@ Feature: Test HTTP API
     When I write the document "documentGrace" with id "Grace"
     When I write the document "documentAda" with id "Ada"
     Then I count 2 documents
-    Then I remove the documents '["Grace", "Not exist"]' and get partial errors
-    And I count 1 documents
+    Then I remove the documents '["Grace", "Ada", "Not exist"]' and get partial errors
+    And I count 0 documents
 
   @usingHttp
   Scenario: create multiple documents

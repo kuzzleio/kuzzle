@@ -97,7 +97,7 @@ describe('Test: document controller', () => {
   describe('#mGet', () => {
     it('should fulfill with an array of documents', () => {
       request.input.body = {ids: ['anId', 'anotherId']};
-      kuzzle.services.list.storageEngine.mget.returns(Promise.resolve(request.input.body.ids));
+      kuzzle.services.list.storageEngine.mget.returns(Promise.resolve({hits: request.input.body.ids}));
 
 
       return documentController.mGet(request)
@@ -267,6 +267,26 @@ describe('Test: document controller', () => {
       };
 
       return documentController.mUpdate(request)
+        .then(result => {
+          should(result).match({hits: [{result: 'updated'}, {result: 'updated'}], total: 2});
+        });
+    });
+
+    it('mReplace should fulfill with an object', () => {
+      kuzzle.funnel.processRequest = sandbox.spy(function () {
+        arguments[0].setResult({result: 'updated'});
+
+        return Promise.resolve(arguments[0]);
+      });
+
+      request.input.body = {
+        documents: [
+          {_id: 'documentId', body: {some: 'body'}},
+          {_id: 'anotherDocumentId', body: {some: 'body'}}
+        ]
+      };
+
+      return documentController.mReplace(request)
         .then(result => {
           should(result).match({hits: [{result: 'updated'}, {result: 'updated'}], total: 2});
         });
