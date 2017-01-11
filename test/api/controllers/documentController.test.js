@@ -41,7 +41,7 @@ describe('Test: document controller', () => {
 
       return should(() => {
         documentController.search(request);
-      }).throw('search on multiple indexes is not available.');
+      }).throw('document:search on multiple indexes is not available.');
     });
 
     it('should throw an error if collection contains a comma', () => {
@@ -49,7 +49,7 @@ describe('Test: document controller', () => {
 
       return should(() => {
         documentController.search(request);
-      }).throw('search on multiple collections is not available.');
+      }).throw('document:search on multiple collections is not available.');
     });
 
     it('should reject an error in case of error', () => {
@@ -108,11 +108,13 @@ describe('Test: document controller', () => {
 
     it('should throw an error if ids is not an array', () => {
       request.input.body = {ids: 'not an array'};
+      request.input.controller = 'document';
+      request.input.action = 'mGet';
 
 
       return should(() => {
         documentController.mGet(request);
-      }).throw('document:mGet must specify an array of "ids"');
+      }).throw('document:mGet must specify the body attribute "ids" of type "array".');
     });
   });
 
@@ -223,13 +225,13 @@ describe('Test: document controller', () => {
     });
 
     it('mCreate should throw an error if documents field is not an array', () => {
-      request.input.body = {
-        documents: 'not an array'
-      };
+      request.input.body = {documents: 'not an array'};
+      request.input.controller = 'document';
+      request.input.action = 'mCreate';
 
       return should(() => {
         documentController.mCreate(request);
-      }).throw('document:mCreate must specify an array of "documents".');
+      }).throw('document:mCreate must specify the body attribute "documents" of type "array".');
     });
 
     it('mCreateOrReplace should fulfill with an object', () => {
@@ -517,13 +519,13 @@ describe('Test: document controller', () => {
     });
 
     it('should throw an error if documents field is not an array', () => {
-      request.input.body = {
-        ids: 'not an array'
-      };
+      request.input.body = {ids: 'not an array'};
+      request.input.controller = 'document';
+      request.input.action = 'mDelete';
 
       return should(() => {
         documentController.mDelete(request);
-      }).throw('document:mDelete must specify an array of "ids".');
+      }).throw('document:mDelete must specify the body attribute "ids" of type "array".');
     });
   });
 

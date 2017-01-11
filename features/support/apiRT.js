@@ -46,7 +46,7 @@ ApiRT.prototype.mCreate = function (body, index, collection, jwtToken) {
       controller: 'document',
       collection: collection || this.world.fakeCollection,
       index: index || this.world.fakeIndex,
-      action: '_mCreate',
+      action: 'mCreate',
       body
     };
 
@@ -209,6 +209,19 @@ ApiRT.prototype.update = function (id, body, index) {
       index: index || this.world.fakeIndex,
       action: 'update',
       _id: id,
+      body: body
+    };
+
+  return this.send(msg);
+};
+
+ApiRT.prototype.mUpdate = function (body, index, collection) {
+  var
+    msg = {
+      controller: 'document',
+      collection: collection || this.world.fakeCollection,
+      index: index || this.world.fakeIndex,
+      action: 'mUpdate',
       body: body
     };
 
