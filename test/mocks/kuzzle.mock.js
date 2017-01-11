@@ -195,7 +195,8 @@ function KuzzleMock () {
       search: sinon.stub().returns(Promise.resolve())
     },
     token: {
-      anonymous: sinon.stub().returns({_id: 'anonymous'})
+      anonymous: sinon.stub().returns({_id: 'anonymous'}),
+      verifyToken: sinon.stub().returns(Promise.resolve())
     }
   };
 
@@ -273,12 +274,15 @@ function KuzzleMock () {
   };
 
   this.statistics = {
+    completedRequest: sinon.spy(),
     newConnection: sinon.stub(),
+    failedRequest: sinon.spy(),
     getAllStats: sinon.stub().returns(Promise.resolve(foo)),
     getLastStats: sinon.stub().returns(Promise.resolve(foo)),
     getStats: sinon.stub().returns(Promise.resolve(foo)),
     init: sinon.spy(),
-    dropConnection: sinon.stub()
+    dropConnection: sinon.stub(),
+    startRequest: sinon.spy()
   };
 
   this.tokenManager = {
