@@ -53,19 +53,6 @@ describe('Test: collection controller', () => {
     });
   });
 
-  describe('#updateUserMapping', () => {
-    it('should update the user mapping', () => {
-      return collectionController.updateUserMapping(request)
-        .then(response => {
-          should(kuzzle.internalEngine.updateMapping).be.calledOnce();
-          should(kuzzle.internalEngine.updateMapping).be.calledWith('users', request.input.body);
-
-          should(response).be.instanceof(Object);
-          should(response).match(foo);
-        });
-    });
-  });
-
   describe('#getMapping', () => {
     it('should fulfill with a response object', () => {
       return collectionController.getMapping(request)
@@ -76,19 +63,6 @@ describe('Test: collection controller', () => {
 
           should(response).be.instanceof(Object);
           should(response).match(foo);
-        });
-    });
-  });
-
-  describe('#getUserMapping', () => {
-    it('should fulfill with a response object', () => {
-      return collectionController.getUserMapping(request)
-        .then(response => {
-          should(kuzzle.internalEngine.getMapping).be.calledOnce();
-          should(kuzzle.internalEngine.getMapping).be.calledWith({index: kuzzle.internalEngine.index, type: 'users'});
-
-          should(response).be.instanceof(Object);
-          should(response).match({mapping: {}});
         });
     });
   });
