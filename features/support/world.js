@@ -73,6 +73,20 @@ module.exports = function () {
       }
     };
 
+    this.securitySchema = {
+      properties: {
+        foo: {
+          type: 'string',
+          copy_to: 'bar'
+        },
+        bar: {
+          type: 'string',
+          store: true,
+          index: 'not_analyzed'
+        }
+      }
+    };
+
     this.metadata = {
       iwant: 'to break free',
       we: ['will', 'rock', 'you']

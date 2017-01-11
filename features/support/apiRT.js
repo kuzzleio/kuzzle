@@ -192,6 +192,69 @@ ApiRT.prototype.updateMapping = function (index) {
   return this.send(msg);
 };
 
+ApiRT.prototype.getProfileMapping = function () {
+  var
+    msg = {
+      controller: 'security',
+      action: 'getProfileMapping'
+    };
+
+  return this.send(msg);
+};
+
+ApiRT.prototype.updateProfileMapping = function () {
+  var
+    msg = {
+      controller: 'security',
+      action: 'updateProfileMapping',
+      body: this.world.securitySchema
+    };
+
+  return this.send(msg);
+};
+
+ApiRT.prototype.getRoleMapping = function () {
+  var
+    msg = {
+      controller: 'security',
+      action: 'getRoleMapping'
+    };
+
+  return this.send(msg);
+};
+
+ApiRT.prototype.updateRoleMapping = function () {
+  var
+    msg = {
+      controller: 'security',
+      action: 'updateRoleMapping',
+      body: this.world.securitySchema
+    };
+
+  return this.send(msg);
+};
+
+ApiRT.prototype.getUserMapping = function () {
+  var
+    msg = {
+      controller: 'security',
+      action: 'getUserMapping'
+    };
+
+  return this.send(msg);
+};
+
+ApiRT.prototype.updateUserMapping = function () {
+  var
+    msg = {
+      controller: 'security',
+      action: 'updateUserMapping',
+      body: this.world.securitySchema
+    };
+
+  return this.send(msg);
+};
+
 ApiRT.prototype.bulkImport = function (bulk, index, collection) {
   var
     msg = {

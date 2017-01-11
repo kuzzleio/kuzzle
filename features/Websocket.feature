@@ -282,6 +282,15 @@ Feature: Test websocket API
     Then I create a restricted user "restricteduser1" with id "restricteduser1-id"
 
   @usingWebsocket @cleanSecurity
+  Scenario: Role mapping
+    Given I get the role schema
+    Then The mapping should contain "controllers" field of type "object"
+    When I change the role schema
+    Then I get the role schema
+    Then The mapping should contain "foo" field of type "text"
+    And The mapping should contain "bar" field of type "keyword"
+
+  @usingWebsocket @cleanSecurity
   Scenario: Create/get/search/update/delete role
     When I create a new role "role1" with id "test"
     Then I'm able to find a role with id "test"
@@ -308,6 +317,16 @@ Feature: Test websocket API
   @usingWebsocket @cleanSecurity
   Scenario: creating a profile with an empty set of roles triggers an error
     Then I cannot create a profile with an empty set of roles
+
+  @usingWebsocket @cleanSecurity
+  Scenario: Profile mapping
+    Given I get the profile schema
+    Then The mapping should contain a nested "policies" field with property "_id" of type "keyword"
+    And The mapping should contain a nested "policies" field with property "roleId" of type "text"
+    When I change the profile schema
+    Then I get the profile schema
+    Then The mapping should contain "foo" field of type "text"
+    And The mapping should contain "bar" field of type "keyword"
 
   @usingWebsocket @cleanSecurity
   Scenario: create, get and delete a profile
@@ -339,6 +358,16 @@ Feature: Test websocket API
     And I create a new profile "profile2" with id "profile2"
     Then I'm able to find rights for profile "profile2"
     Then I'm not able to find rights for profile "fake-profile"
+
+  @usingWebsocket @cleanSecurity
+  Scenario: User mapping
+    Given I get the user schema
+    Then The mapping should contain "password" field of type "keyword"
+    And The mapping should contain "profileIds" field of type "keyword"
+    When I change the user schema
+    Then I get the user schema
+    Then The mapping should contain "foo" field of type "text"
+    And The mapping should contain "bar" field of type "keyword"
 
   @usingWebsocket @cleanSecurity
   Scenario: user crudl

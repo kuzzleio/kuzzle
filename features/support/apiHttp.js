@@ -323,6 +323,63 @@ ApiHttp.prototype.updateMapping = function (index) {
   return this.callApi(options);
 };
 
+ApiHttp.prototype.getProfileMapping = function () {
+  var options = {
+    url: this.apiPath('/profiles/_mapping'),
+    method: 'GET'
+  };
+
+  return this.callApi(options);
+};
+
+ApiHttp.prototype.updateProfileMapping = function () {
+  var options = {
+    url: this.apiPath('/profiles/_mapping'),
+    method: 'PUT',
+    body: this.world.securitySchema
+  };
+
+  return this.callApi(options);
+};
+
+ApiHttp.prototype.getRoleMapping = function () {
+  var options = {
+    url: this.apiPath('/roles/_mapping'),
+    method: 'GET'
+  };
+
+  return this.callApi(options);
+};
+
+ApiHttp.prototype.updateRoleMapping = function () {
+  var options = {
+    url: this.apiPath('/roles/_mapping'),
+    method: 'PUT',
+    body: this.world.securitySchema
+  };
+
+  return this.callApi(options);
+};
+
+ApiHttp.prototype.getUserMapping = function () {
+  var options = {
+    url: this.apiPath('/users/_mapping'),
+    method: 'GET'
+  };
+
+  return this.callApi(options);
+};
+
+ApiHttp.prototype.updateUserMapping = function () {
+  var options = {
+    url: this.apiPath('/users/_mapping'),
+    method: 'PUT',
+    body: this.world.securitySchema
+  };
+
+  return this.callApi(options);
+};
+
 ApiHttp.prototype.getStats = function (dates) {
   var options = {
     url: this.apiPath('_getStats'),

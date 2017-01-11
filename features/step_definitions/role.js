@@ -2,6 +2,44 @@ var
   async = require('async');
 
 var apiSteps = function () {
+  this.When(/^I get the role schema$/, function (callback) {
+    this.api.getRoleMapping()
+      .then(function (response) {
+        if (response.error) {
+          return callback(new Error(response.error.message));
+        }
+
+        if (!response.result) {
+          return callback(new Error('No result provided'));
+        }
+
+        if (!response.result.mapping) {
+          return callback(new Error('No mapping provided'));
+        }
+
+        this.result = response.result.mapping;
+        callback();
+      }.bind(this))
+      .catch(function (error) {
+        callback(error);
+      });
+  });
+
+  this.Then(/^I change the role schema$/, function (callback) {
+    this.api.updateRoleMapping()
+      .then(body => {
+        if (body.error !== null) {
+          callback(new Error(body.error.message));
+          return false;
+        }
+
+        callback();
+      })
+      .catch(function (error) {
+        callback(new Error(error));
+      });
+  });
+
   this.When(/^I create a new role "([^"]*)" with id "([^"]*)"$/, function (role, id, callback) {
     if (!this.roles[role]) {
       return callback('Fixture for role ' + role + ' does not exist');

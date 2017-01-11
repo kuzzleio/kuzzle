@@ -3,6 +3,44 @@ var
   async = require('async');
 
 module.exports = function () {
+  this.When(/^I get the user schema$/, function (callback) {
+    this.api.getUserMapping()
+      .then(function (response) {
+        if (response.error) {
+          return callback(new Error(response.error.message));
+        }
+
+        if (!response.result) {
+          return callback(new Error('No result provided'));
+        }
+
+        if (!response.result.mapping) {
+          return callback(new Error('No mapping provided'));
+        }
+
+        this.result = response.result.mapping;
+        callback();
+      }.bind(this))
+      .catch(function (error) {
+        callback(error);
+      });
+  });
+
+  this.Then(/^I change the user schema$/, function (callback) {
+    this.api.updateUserMapping()
+      .then(body => {
+        if (body.error !== null) {
+          callback(new Error(body.error.message));
+          return false;
+        }
+
+        callback();
+      })
+      .catch(function (error) {
+        callback(new Error(error));
+      });
+  });
+
   this.When(/^I (can't )?create a (new )?(restricted )?user "(.*?)" with id "(.*?)"$/, {timeout: 20000}, function (not, isNew, isRestricted, user, id, callback) {
     var
       userObject = this.users[user],
