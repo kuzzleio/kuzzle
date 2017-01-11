@@ -126,21 +126,21 @@ describe('Test: security controller - roles', () => {
     });
   });
 
-  describe('#mGetRoles', () => {
+  describe('#mGetRole', () => {
     it('should throw an error if no ids is provided', () => {
       return should(() => {
-        securityController.mGetRoles(new Request({body: {}}));
+        securityController.mGetRole(new Request({body: {}}));
       }).throw(BadRequestError);
     });
 
     it('should reject an error if loading roles fails', () => {
       error = true;
 
-      return should(securityController.mGetRoles(new Request({body: {ids: ['test']}}))).be.rejected();
+      return should(securityController.mGetRole(new Request({body: {ids: ['test']}}))).be.rejected();
     });
 
     it('should resolve to an object', done => {
-      securityController.mGetRoles(new Request({body: {ids: ['test']}}))
+      securityController.mGetRole(new Request({body: {ids: ['test']}}))
         .then(response => {
           should(response).be.instanceof(Object);
           should(response.hits).be.an.Array();

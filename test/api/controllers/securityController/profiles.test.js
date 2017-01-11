@@ -103,10 +103,10 @@ describe('Test: security controller - profiles', () => {
     });
   });
 
-  describe('#mGetProfiles', () => {
-    it('should throw an error on a mGetProfiles call without ids', () => {
+  describe('#mGetProfile', () => {
+    it('should throw an error on a mGetProfile call without ids', () => {
       return should(() => {
-        securityController.mGetProfiles(new Request({body: {}}));
+        securityController.mGetProfile(new Request({body: {}}));
       }).throw(BadRequestError);
     });
 
@@ -115,13 +115,13 @@ describe('Test: security controller - profiles', () => {
 
       sandbox.stub(kuzzle.repositories.profile, 'loadMultiFromDatabase').returns(Promise.reject(error));
 
-      return should(securityController.mGetProfiles(new Request({body: {ids: ['test']}}))).be.rejectedWith(error);
+      return should(securityController.mGetProfile(new Request({body: {ids: ['test']}}))).be.rejectedWith(error);
     });
 
-    it('should resolve to an object on a mGetProfiles call', () => {
+    it('should resolve to an object on a mGetProfile call', () => {
       sandbox.stub(kuzzle.repositories.profile, 'loadMultiFromDatabase').returns(Promise.resolve([{_id: 'test', policies: [{roleId: 'role'}]}]));
 
-      return securityController.mGetProfiles(new Request({body: {ids: ['test']}}))
+      return securityController.mGetProfile(new Request({body: {ids: ['test']}}))
         .then(response => {
           should(response).be.instanceof(Object);
           should(response.hits).be.an.Array();
@@ -133,10 +133,10 @@ describe('Test: security controller - profiles', () => {
         });
     });
 
-    it('should resolve to an object with roles on a mGetProfiles call with hydrate', () => {
+    it('should resolve to an object with roles on a mGetProfile call with hydrate', () => {
       sandbox.stub(kuzzle.repositories.profile, 'loadMultiFromDatabase').returns(Promise.resolve([{_id: 'test', _source: {}}]));
 
-      return securityController.mGetProfiles(new Request({
+      return securityController.mGetProfile(new Request({
         body: {ids: ['test'], hydrate: true}
       }))
         .then(response => {
