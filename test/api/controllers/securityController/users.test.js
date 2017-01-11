@@ -1,4 +1,7 @@
+'use strict';
+
 var
+  rewire = require('rewire'),
   Promise = require('bluebird'),
   should = require('should'),
   sinon = require('sinon'),
@@ -7,7 +10,7 @@ var
   Request = require('kuzzle-common-objects').Request,
   BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,
   NotFoundError = require('kuzzle-common-objects').errors.NotFoundError,
-  SecurityController = require('../../../../lib/api/controllers/securityController');
+  SecurityController = rewire('../../../../lib/api/controllers/securityController');
 
 describe('Test: security controller - users', () => {
   var
@@ -309,6 +312,25 @@ describe('Test: security controller - users', () => {
 
     it('should reject NotFoundError on a getUserRights call with a bad id', () => {
       return should(securityController.getUserRights(new Request({_id: 'i.dont.exist'}))).be.rejectedWith(NotFoundError);
+    });
+  });
+
+  describe('#mDeleteUser', () => {
+    it('should forward its args to mDelete', () => {
+      const spy = sinon.spy();
+
+      SecurityController.__with__({
+        mDelete: spy
+      })(() => {
+        const
+          request = new Request({});
+
+        securityController.mDeleteUser(request);
+
+        should(spy)
+          .be.calledOnce()
+          .be.calledWith(kuzzle, 'user', request);
+      });
     });
   });
 });
