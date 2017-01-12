@@ -138,6 +138,11 @@ ApiHttp.prototype.apiBasePath = function (path) {
   return encodeURI(this.baseUri + '/' + path);
 };
 
+/**
+ *
+ * @param options
+ * @return {Promise.<IncomingMessage>}
+ */
 ApiHttp.prototype.callApi = function (options) {
   if (this.world.currentUser && this.world.currentUser.token) {
     if (!options.headers) {

@@ -79,8 +79,8 @@ describe('Test: routerController.httpRequest', () => {
   });
 
   it('should register POST routes from the config/httpRoutes file', (done) => {
-    httpRequest.url = '/profiles/foobar/_update';
-    httpRequest.method = 'PUT';
+    httpRequest.url = '/profiles/foobar';
+    httpRequest.method = 'POST';
     httpRequest.content = '{"profileId": "foobar"}';
 
     routeController.router.route(httpRequest, result => {
@@ -231,7 +231,8 @@ describe('Test: routerController.httpRequest', () => {
         should(result.id).be.eql(httpRequest.requestId);
         should(result.content.headers['content-type']).be.eql('application/json');
         should(result.status).be.eql(404);
-        should(JSON.stringify(result.content.error)).startWith('{"status":404,"message":"API URL not found: /foo/bar"');
+        should(result.error.message)
+          .be.eql('API URL not found: /foo/bar');
         done();
       }
       catch (e) {
