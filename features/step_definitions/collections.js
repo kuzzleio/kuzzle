@@ -45,7 +45,7 @@ var apiSteps = function () {
     callback('Expected to find the collection <' + collection + '> in this collections list: ' + JSON.stringify(this.result.collections));
   });
 
-  this.Then(/^I change the schema(?: in index "([^"]*)")?$/, function (index, callback) {
+  this.Then(/^I change the mapping(?: in index "([^"]*)")?$/, function (index, callback) {
     this.api.updateMapping()
       .then(body => {
         if (body.error !== null) {

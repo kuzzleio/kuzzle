@@ -2,7 +2,7 @@ var
   async = require('async');
 
 var apiSteps = function () {
-  this.When(/^I get the profile schema$/, function (callback) {
+  this.When(/^I get the profile mapping$/, function (callback) {
     this.api.getProfileMapping()
       .then(function (response) {
         if (response.error) {
@@ -25,7 +25,7 @@ var apiSteps = function () {
       });
   });
 
-  this.Then(/^I change the profile schema$/, function (callback) {
+  this.Then(/^I change the profile mapping$/, function (callback) {
     this.api.updateProfileMapping()
       .then(body => {
         if (body.error !== null) {

@@ -317,7 +317,7 @@ ApiHttp.prototype.updateMapping = function (index) {
   var options = {
     url: this.apiPath(((typeof index !== 'string') ? this.world.fakeIndex : index) + '/' + this.world.fakeCollection + '/_mapping'),
     method: 'PUT',
-    body: this.world.schema
+    body: this.world.mapping
   };
 
   return this.callApi(options);
@@ -336,7 +336,7 @@ ApiHttp.prototype.updateProfileMapping = function () {
   var options = {
     url: this.apiPath('/profiles/_mapping'),
     method: 'PUT',
-    body: this.world.securitySchema
+    body: this.world.securitymapping
   };
 
   return this.callApi(options);
@@ -355,7 +355,7 @@ ApiHttp.prototype.updateRoleMapping = function () {
   var options = {
     url: this.apiPath('/roles/_mapping'),
     method: 'PUT',
-    body: this.world.securitySchema
+    body: this.world.securitymapping
   };
 
   return this.callApi(options);
@@ -374,7 +374,7 @@ ApiHttp.prototype.updateUserMapping = function () {
   var options = {
     url: this.apiPath('/users/_mapping'),
     method: 'PUT',
-    body: this.world.securitySchema
+    body: this.world.securitymapping
   };
 
   return this.callApi(options);

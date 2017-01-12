@@ -2,7 +2,7 @@ var
   async = require('async');
 
 var apiSteps = function () {
-  this.When(/^I get the role schema$/, function (callback) {
+  this.When(/^I get the role mapping$/, function (callback) {
     this.api.getRoleMapping()
       .then(function (response) {
         if (response.error) {
@@ -25,7 +25,7 @@ var apiSteps = function () {
       });
   });
 
-  this.Then(/^I change the role schema$/, function (callback) {
+  this.Then(/^I change the role mapping$/, function (callback) {
     this.api.updateRoleMapping()
       .then(body => {
         if (body.error !== null) {

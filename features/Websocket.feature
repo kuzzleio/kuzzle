@@ -98,7 +98,7 @@ Feature: Test websocket API
   Scenario: Change mapping
     When I write the document "documentGrace"
     Then I don't find a document with "Grace" in field "firstName"
-    Then I change the schema
+    Then I change the mapping
     When I write the document "documentGrace"
     And I refresh the index
     Then I find a document with "Grace" in field "newFirstName"
@@ -283,10 +283,10 @@ Feature: Test websocket API
 
   @usingWebsocket @cleanSecurity
   Scenario: Role mapping
-    Given I get the role schema
+    Given I get the role mapping
     Then The mapping should contain "controllers" field of type "object"
-    When I change the role schema
-    Then I get the role schema
+    When I change the role mapping
+    Then I get the role mapping
     Then The mapping should contain "foo" field of type "text"
     And The mapping should contain "bar" field of type "keyword"
 
@@ -320,11 +320,11 @@ Feature: Test websocket API
 
   @usingWebsocket @cleanSecurity
   Scenario: Profile mapping
-    Given I get the profile schema
+    Given I get the profile mapping
     Then The mapping should contain a nested "policies" field with property "_id" of type "keyword"
     And The mapping should contain a nested "policies" field with property "roleId" of type "text"
-    When I change the profile schema
-    Then I get the profile schema
+    When I change the profile mapping
+    Then I get the profile mapping
     Then The mapping should contain "foo" field of type "text"
     And The mapping should contain "bar" field of type "keyword"
 
@@ -361,11 +361,11 @@ Feature: Test websocket API
 
   @usingWebsocket @cleanSecurity
   Scenario: User mapping
-    Given I get the user schema
+    Given I get the user mapping
     Then The mapping should contain "password" field of type "keyword"
     And The mapping should contain "profileIds" field of type "keyword"
-    When I change the user schema
-    Then I get the user schema
+    When I change the user mapping
+    Then I get the user mapping
     Then The mapping should contain "foo" field of type "text"
     And The mapping should contain "bar" field of type "keyword"
 

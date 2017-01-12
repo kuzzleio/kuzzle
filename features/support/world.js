@@ -59,7 +59,7 @@ module.exports = function () {
     ];
 
 
-    this.schema = {
+    this.mapping = {
       properties: {
         firstName: {
           type: 'string',
@@ -73,7 +73,7 @@ module.exports = function () {
       }
     };
 
-    this.securitySchema = {
+    this.securitymapping = {
       properties: {
         foo: {
           type: 'string',

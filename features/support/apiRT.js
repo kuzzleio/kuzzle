@@ -186,7 +186,7 @@ ApiRT.prototype.updateMapping = function (index) {
       collection: this.world.fakeCollection,
       index: index || this.world.fakeIndex,
       action: 'updateMapping',
-      body: this.world.schema
+      body: this.world.mapping
     };
 
   return this.send(msg);
@@ -207,7 +207,7 @@ ApiRT.prototype.updateProfileMapping = function () {
     msg = {
       controller: 'security',
       action: 'updateProfileMapping',
-      body: this.world.securitySchema
+      body: this.world.securitymapping
     };
 
   return this.send(msg);
@@ -228,7 +228,7 @@ ApiRT.prototype.updateRoleMapping = function () {
     msg = {
       controller: 'security',
       action: 'updateRoleMapping',
-      body: this.world.securitySchema
+      body: this.world.securitymapping
     };
 
   return this.send(msg);
@@ -249,7 +249,7 @@ ApiRT.prototype.updateUserMapping = function () {
     msg = {
       controller: 'security',
       action: 'updateUserMapping',
-      body: this.world.securitySchema
+      body: this.world.securitymapping
     };
 
   return this.send(msg);

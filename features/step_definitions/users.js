@@ -3,7 +3,7 @@ var
   async = require('async');
 
 module.exports = function () {
-  this.When(/^I get the user schema$/, function (callback) {
+  this.When(/^I get the user mapping$/, function (callback) {
     this.api.getUserMapping()
       .then(function (response) {
         if (response.error) {
@@ -26,7 +26,7 @@ module.exports = function () {
       });
   });
 
-  this.Then(/^I change the user schema$/, function (callback) {
+  this.Then(/^I change the user mapping$/, function (callback) {
     this.api.updateUserMapping()
       .then(body => {
         if (body.error !== null) {
