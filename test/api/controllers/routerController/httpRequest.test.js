@@ -3,7 +3,6 @@
 const
   should = require('should'),
   sinon = require('sinon'),
-  HttpResponse = require('../../../../lib/api/core/entryPoints/httpResponse'),
   RouterController = require('../../../../lib/api/controllers/routerController');
 
 describe('Test: routerController.httpRequest', () => {
