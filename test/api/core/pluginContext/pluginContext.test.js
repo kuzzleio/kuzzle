@@ -1,4 +1,6 @@
-var
+'use strict';
+
+const
   rewire = require('rewire'),
   should = require('should'),
   Promise = require('bluebird'),
@@ -41,6 +43,39 @@ describe('Plugin Context', () => {
 
     it('should throw when trying to instante a Request object without providing a request object', () => {
       should(function () { new context.constructors.Request({}); }).throw(PluginImplementationError);
+    });
+
+    it('should replicate the right request information', () => {
+      let
+        request = new Request({
+          action: 'action',
+          controller: 'controller',
+          foobar: 'foobar',
+          _id: '_id',
+          index: 'index',
+          collection: 'collection',
+          result: 'result',
+          error: new Error('error'),
+          status: 666,
+          jwt: 'jwt'
+        }, {
+          protocol: 'protocol',
+          connectionId: 'connectionId'
+        }),
+        pluginRequest = new context.constructors.Request(request, {});
+
+      should(pluginRequest.context.protocol).be.eql(request.context.protocol);
+      should(pluginRequest.context.connectionId).be.eql(request.context.connectionId);
+      should(pluginRequest.result).be.null();
+      should(pluginRequest.error).be.null();
+      should(pluginRequest.status).be.eql(102);
+      should(pluginRequest.input.action).be.null();
+      should(pluginRequest.input.controller).be.null();
+      should(pluginRequest.input.jwt).be.eql(request.input.jwt);
+      should(pluginRequest.input.args.foobar).be.eql(request.input.args.foobar);
+      should(pluginRequest.input.resource._id).be.eql(request.input.resource._id);
+      should(pluginRequest.input.resource.index).be.eql(request.input.resource.index);
+      should(pluginRequest.input.resource.collection).be.eql(request.input.resource.collection);
     });
 
     it('should expose all error objects as capitalized constructors', () => {

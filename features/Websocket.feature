@@ -85,6 +85,74 @@ Feature: Test websocket API
     And I count 0 documents
 
   @usingWebsocket
+  Scenario: delete multiple documents with no error
+    When I write the document "documentGrace" with id "Grace"
+    When I write the document "documentAda" with id "Ada"
+    Then I count 2 documents
+    Then I remove the documents '["Grace", "Ada"]'
+    And I count 0 documents
+
+  @usingWebsocket
+  Scenario: delete multiple documents with partial errors
+    When I write the document "documentGrace" with id "Grace"
+    When I write the document "documentAda" with id "Ada"
+    Then I count 2 documents
+    Then I remove the documents '["Grace", "Ada", "Not exist"]' and get partial errors
+    And I count 0 documents
+
+  @usingWebsocket
+  Scenario: create multiple documents
+    When I create multiple documents '{"Ada": "documentAda", "Grace": "documentGrace"}'
+    Then I count 2 documents
+    Then I truncate the collection
+    And I count 0 documents
+
+  @usingWebsocket
+  Scenario: replace multiple documents
+    When I create multiple documents '{"Ada": "documentAda", "Grace": "documentGrace"}'
+    Then I count 2 documents
+    Then I replace multiple documents '{"Ada": "documentGrace", "Grace": "documentAda"}'
+    Then I count 2 documents
+    Then I truncate the collection
+    And I count 0 documents
+
+  @usingWebsocket
+  Scenario: replace multiple documents with partial errors
+    When I create multiple documents '{"Ada": "documentAda", "Grace": "documentGrace"}'
+    Then I count 2 documents
+    Then I replace multiple documents '{"Ada": "documentGrace", "Not Exist": "documentAda"}' and get partial errors
+    Then I count 2 documents
+    Then I truncate the collection
+    And I count 0 documents
+
+  @usingWebsocket
+  Scenario: update multiple documents
+    When I create multiple documents '{"Ada": "documentAda", "Grace": "documentGrace"}'
+    Then I count 2 documents
+    Then I update multiple documents '{"Ada": "documentGrace", "Grace": "documentAda"}'
+    Then I count 2 documents
+    Then I truncate the collection
+    And I count 0 documents
+
+  @usingWebsocket
+  Scenario: create and replace multiple documents
+    Then I count 0 documents
+    When I createOrReplace multiple documents '{"Ada": "documentAda", "Grace": "documentGrace"}'
+    Then I count 2 documents
+    Then I createOrReplace multiple documents '{"Ada": "documentGrace", "Grace": "documentAda"}'
+    Then I count 2 documents
+    Then I truncate the collection
+    And I count 0 documents
+
+  @usingWebsocket
+  Scenario: get multiple documents
+    When I create multiple documents '{"Ada": "documentAda", "Grace": "documentGrace"}'
+    Then I count 2 documents
+    Then I get 2 documents '["Ada", "Grace"]'
+    Then I truncate the collection
+    And I count 0 documents
+
+  @usingWebsocket
   Scenario: Search with scroll documents
     When I write the document "documentGrace"
     When I write the document "documentGrace"

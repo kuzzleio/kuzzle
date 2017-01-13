@@ -102,7 +102,7 @@ var apiSteps = function () {
   });
 
   this.Then(/^I ?(don't)* find a document with "([^"]*)"(?: in field "([^"]*)")?(?: in index "([^"]*)")?(?: with scroll "([^"]*)")?$/, function (dont, value, field, index, scroll) {
-    var query = {query: { match: { [field]: value }}};
+    var query = {query: { match: { [field]: (value === 'true' ? true : value) }}};
     var args = {};
 
     if (scroll) {
@@ -172,7 +172,6 @@ var apiSteps = function () {
       });
   });
 
-
   this.Then(/^I should receive a document id$/, function (callback) {
     if (this.result && this.result._id) {
       callback();
@@ -180,6 +179,27 @@ var apiSteps = function () {
     }
 
     callback(new Error('No id information in returned object'));
+  });
+
+  this.Then(/^I get ([\d]+) documents '([^']+)'?$/, function (count, documents, callback) {
+    documents = JSON.parse(documents);
+
+    this.api.mGet({ids: documents})
+      .then(response => {
+        if (response.error !== null) {
+          callback(response.error.message);
+          return false;
+        }
+        else if(response.result.total !== Number.parseInt(count)) {
+          callback('Document count (' + response.result.total + ') not as expected (' + count + ')');
+          return false;
+        }
+
+        callback();
+      })
+      .catch(function (error) {
+        callback(error);
+      });
   });
 };
 
