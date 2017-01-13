@@ -33,7 +33,14 @@ describe('Test: security controller - users', () => {
   describe('#updateUserMapping', () => {
     var foo = {foo: 'bar'};
 
+    it('should throw a BadRequestError if the body is missing', () => {
+      return should(() => {
+        securityController.updateUserMapping(request);
+      }).throw(BadRequestError);
+    });
+
     it('should update the user mapping', () => {
+      request.input.body = foo;
       return securityController.updateUserMapping(request)
         .then(response => {
           should(kuzzle.internalEngine.updateMapping).be.calledOnce();

@@ -34,7 +34,14 @@ describe('Test: security controller - profiles', () => {
   describe('#updateProfileMapping', () => {
     var foo = {foo: 'bar'};
 
+    it('should throw a BadRequestError if the body is missing', () => {
+      return should(() => {
+        securityController.updateProfileMapping(request);
+      }).throw(BadRequestError);
+    });
+
     it('should update the profile mapping', () => {
+      request.input.body = foo;
       return securityController.updateProfileMapping(request)
         .then(response => {
           should(kuzzle.internalEngine.updateMapping).be.calledOnce();

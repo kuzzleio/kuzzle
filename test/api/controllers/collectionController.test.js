@@ -37,7 +37,14 @@ describe('Test: collection controller', () => {
 
 
   describe('#updateMapping', () => {
+    it('should throw a BadRequestError if the body is missing', () => {
+      return should(() => {
+        collectionController.updateMapping(request);
+      }).throw(BadRequestError);
+    });
+
     it('should activate a hook on a mapping update call and add the collection to the cache', () => {
+      request.input.body = {foo: 'bar'};
       return collectionController.updateMapping(request)
         .then(response => {
 

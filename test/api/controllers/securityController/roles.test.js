@@ -32,7 +32,14 @@ describe('Test: security controller - roles', () => {
   describe('#updateRoleMapping', () => {
     var foo = {foo: 'bar'};
 
+    it('should throw a BadRequestError if the body is missing', () => {
+      return should(() => {
+        securityController.updateRoleMapping(request);
+      }).throw(BadRequestError);
+    });
+
     it('should update the role mapping', () => {
+      request.input.body = foo;
       return securityController.updateRoleMapping(request)
         .then(response => {
           should(kuzzle.internalEngine.updateMapping).be.calledOnce();
