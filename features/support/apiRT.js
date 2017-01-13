@@ -17,14 +17,37 @@ var
 ApiRT.prototype.send = function () {};
 ApiRT.prototype.sendAndListen = function () {};
 
-ApiRT.prototype.create = function (body, index, collection, jwtToken) {
+ApiRT.prototype.create = function (body, index, collection, jwtToken, id) {
   var
     msg = {
       controller: 'document',
       collection: collection || this.world.fakeCollection,
       index: index || this.world.fakeIndex,
       action: 'create',
-      body: body
+      body
+    };
+
+  if (id) {
+    msg._id = id;
+  }
+
+  if (jwtToken !== undefined) {
+    msg.headers = {
+      authorization :'Bearer ' + jwtToken
+    };
+  }
+
+  return this.send(msg);
+};
+
+ApiRT.prototype.mCreate = function (body, index, collection, jwtToken) {
+  var
+    msg = {
+      controller: 'document',
+      collection: collection || this.world.fakeCollection,
+      index: index || this.world.fakeIndex,
+      action: 'mCreate',
+      body
     };
 
   if (jwtToken !== undefined) {
@@ -67,6 +90,19 @@ ApiRT.prototype.createOrReplace = function (body, index, collection) {
   return this.send(msg);
 };
 
+ApiRT.prototype.mCreateOrReplace = function (body, index, collection) {
+  var
+    msg = {
+      controller: 'document',
+      collection: collection || this.world.fakeCollection,
+      index: index || this.world.fakeIndex,
+      action: 'mCreateOrReplace',
+      body: body
+    };
+
+  return this.send(msg);
+};
+
 ApiRT.prototype.replace = function (body, index, collection) {
   var
     msg = {
@@ -85,6 +121,19 @@ ApiRT.prototype.replace = function (body, index, collection) {
   return this.send(msg);
 };
 
+ApiRT.prototype.mReplace = function (body, index, collection) {
+  var
+    msg = {
+      controller: 'document',
+      collection: collection || this.world.fakeCollection,
+      index: index || this.world.fakeIndex,
+      action: 'mReplace',
+      body: body
+    };
+
+  return this.send(msg);
+};
+
 ApiRT.prototype.get = function (id, index) {
   var
     msg = {
@@ -93,6 +142,19 @@ ApiRT.prototype.get = function (id, index) {
       index: index || this.world.fakeIndex,
       action: 'get',
       _id: id
+    };
+
+  return this.send(msg);
+};
+
+ApiRT.prototype.mGet = function(body, index, collection) {
+  var
+    msg = {
+      controller: 'document',
+      collection: collection || this.world.fakeCollection,
+      index: index || this.world.fakeIndex,
+      action: 'mGet',
+      body
     };
 
   return this.send(msg);
@@ -153,6 +215,19 @@ ApiRT.prototype.update = function (id, body, index) {
   return this.send(msg);
 };
 
+ApiRT.prototype.mUpdate = function (body, index, collection) {
+  var
+    msg = {
+      controller: 'document',
+      collection: collection || this.world.fakeCollection,
+      index: index || this.world.fakeIndex,
+      action: 'mUpdate',
+      body: body
+    };
+
+  return this.send(msg);
+};
+
 ApiRT.prototype.deleteById = function (id, index) {
   var
     msg = {
@@ -161,6 +236,19 @@ ApiRT.prototype.deleteById = function (id, index) {
       index: index || this.world.fakeIndex,
       action: 'delete',
       _id: id
+    };
+
+  return this.send(msg);
+};
+
+ApiRT.prototype.mDelete = function (body, index, collection) {
+  var
+    msg = {
+      controller: 'document',
+      collection: collection || this.world.fakeCollection,
+      index: index || this.world.fakeIndex,
+      action: 'mDelete',
+      body
     };
 
   return this.send(msg);
