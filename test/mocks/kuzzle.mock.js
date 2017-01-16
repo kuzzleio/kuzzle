@@ -116,8 +116,7 @@ function KuzzleMock () {
     init: sinon.stub().returns(Promise.resolve()),
     refresh: sinon.stub().returns(Promise.resolve()),
     search: sinon.stub().returns(Promise.resolve()),
-    updateMapping: sinon.stub().returns(Promise.resolve(foo)),
-    getMapping: sinon.stub().returns(Promise.resolve({internalIndex: {mappings: {users: {properties: {}}}}}))
+    updateMapping: sinon.stub().returns(Promise.resolve(foo))
   };
 
   this.once = sinon.stub();

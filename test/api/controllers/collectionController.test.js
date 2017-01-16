@@ -37,7 +37,14 @@ describe('Test: collection controller', () => {
 
 
   describe('#updateMapping', () => {
+    it('should throw a BadRequestError if the body is missing', () => {
+      return should(() => {
+        collectionController.updateMapping(request);
+      }).throw(BadRequestError);
+    });
+
     it('should activate a hook on a mapping update call and add the collection to the cache', () => {
+      request.input.body = {foo: 'bar'};
       return collectionController.updateMapping(request)
         .then(response => {
 
@@ -46,19 +53,6 @@ describe('Test: collection controller', () => {
 
           should(kuzzle.indexCache.add).be.calledOnce();
           should(kuzzle.indexCache.add).be.calledWith(request.input.resource.index, request.input.resource.collection);
-
-          should(response).be.instanceof(Object);
-          should(response).match(foo);
-        });
-    });
-  });
-
-  describe('#updateUserMapping', () => {
-    it('should update the user mapping', () => {
-      return collectionController.updateUserMapping(request)
-        .then(response => {
-          should(kuzzle.internalEngine.updateMapping).be.calledOnce();
-          should(kuzzle.internalEngine.updateMapping).be.calledWith('users', request.input.body);
 
           should(response).be.instanceof(Object);
           should(response).match(foo);
@@ -76,19 +70,6 @@ describe('Test: collection controller', () => {
 
           should(response).be.instanceof(Object);
           should(response).match(foo);
-        });
-    });
-  });
-
-  describe('#getUserMapping', () => {
-    it('should fulfill with a response object', () => {
-      return collectionController.getUserMapping(request)
-        .then(response => {
-          should(kuzzle.internalEngine.getMapping).be.calledOnce();
-          should(kuzzle.internalEngine.getMapping).be.calledWith({index: kuzzle.internalEngine.index, type: 'users'});
-
-          should(response).be.instanceof(Object);
-          should(response).match({mapping: {}});
         });
     });
   });

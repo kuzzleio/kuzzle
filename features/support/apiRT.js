@@ -274,7 +274,70 @@ ApiRT.prototype.updateMapping = function (index) {
       collection: this.world.fakeCollection,
       index: index || this.world.fakeIndex,
       action: 'updateMapping',
-      body: this.world.schema
+      body: this.world.mapping
+    };
+
+  return this.send(msg);
+};
+
+ApiRT.prototype.getProfileMapping = function () {
+  var
+    msg = {
+      controller: 'security',
+      action: 'getProfileMapping'
+    };
+
+  return this.send(msg);
+};
+
+ApiRT.prototype.updateProfileMapping = function () {
+  var
+    msg = {
+      controller: 'security',
+      action: 'updateProfileMapping',
+      body: this.world.securitymapping
+    };
+
+  return this.send(msg);
+};
+
+ApiRT.prototype.getRoleMapping = function () {
+  var
+    msg = {
+      controller: 'security',
+      action: 'getRoleMapping'
+    };
+
+  return this.send(msg);
+};
+
+ApiRT.prototype.updateRoleMapping = function () {
+  var
+    msg = {
+      controller: 'security',
+      action: 'updateRoleMapping',
+      body: this.world.securitymapping
+    };
+
+  return this.send(msg);
+};
+
+ApiRT.prototype.getUserMapping = function () {
+  var
+    msg = {
+      controller: 'security',
+      action: 'getUserMapping'
+    };
+
+  return this.send(msg);
+};
+
+ApiRT.prototype.updateUserMapping = function () {
+  var
+    msg = {
+      controller: 'security',
+      action: 'updateUserMapping',
+      body: this.world.securitymapping
     };
 
   return this.send(msg);
