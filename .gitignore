@@ -28,6 +28,8 @@ docker-compose-custom.yml
 /*.log
 /run
 !/run/.keep
+/plugins/
+!/plugins/*/.gitkeep
 
 #swagger
 kuzzle-swagger.*
