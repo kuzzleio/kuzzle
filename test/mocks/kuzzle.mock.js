@@ -144,7 +144,7 @@ function KuzzleMock () {
     },
     plugins: {},
     run: sinon.stub().returns(Promise.resolve()),
-    getPluginsConfig: sinon.stub().returns({}),
+    getPluginsFeatures: sinon.stub().returns({}),
     trigger: sinon.spy(function () {return Promise.resolve(arguments[1]);})
   };
 

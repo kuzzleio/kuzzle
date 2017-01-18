@@ -29,22 +29,9 @@ describe('PluginsManager: init()', () => {
     return PluginsManager.__with__({
       loadPlugins: spy
     })(() => {
-      return pluginsManager.init()
-        .then(() => {
-          try {
-            should(kuzzle.pluginsManager.packages.definitions)
-              .be.calledOnce();
-
-            should(spy)
-              .be.calledOnce()
-              .be.calledWith(defs);
-
-            return Promise.resolve();
-          }
-          catch (error) {
-            return Promise.reject(error);
-          }
-        });
+      pluginsManager.init()
+      should(spy)
+        .be.calledOnce()
     });
   });
 });
