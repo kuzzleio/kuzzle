@@ -137,11 +137,6 @@ function KuzzleMock () {
 
   this.pluginsManager = {
     init: sinon.stub().returns(Promise.resolve()),
-    packages: {
-      bootstrap: sinon.stub().returns(Promise.resolve()),
-      definitions: sinon.stub().returns(Promise.resolve([])),
-      getPackage: sinon.stub().returns(Promise.resolve()),
-    },
     plugins: {},
     run: sinon.stub().returns(Promise.resolve()),
     getPluginsFeatures: sinon.stub().returns({}),
