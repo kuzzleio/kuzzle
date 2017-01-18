@@ -17,19 +17,14 @@ describe('PluginsManager: init()', () => {
   });
 
   it('should load plugins at init', () => {
-    var
-      defs = {
-        plugin1: {foo: 'bar'},
-        plugin2: {foo: 'baz'}
-      },
-      spy = sinon.spy();
+    var spy = sinon.spy();
 
     return PluginsManager.__with__({
       loadPlugins: spy
     })(() => {
-      pluginsManager.init()
+      pluginsManager.init();
       should(spy)
-        .be.calledOnce()
+        .be.calledOnce();
     });
   });
 });
