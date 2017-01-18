@@ -26,14 +26,8 @@ module.exports = {
       pipeWarnTime: 40,
       pipeTimeout: 250
     },
-
     'kuzzle-plugin-logger': {
-      version: '2.0.7',
-      activated: true
-    },
-    'kuzzle-plugin-auth-passport-local': {
-      version: '3.0.2',
-      activated: true
+      threads: 1
     }
   },
 
