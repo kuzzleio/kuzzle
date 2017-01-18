@@ -59,13 +59,27 @@ module.exports = function () {
     ];
 
 
-    this.schema = {
+    this.mapping = {
       properties: {
         firstName: {
           type: 'string',
           copy_to: 'newFirstName'
         },
         newFirstName: {
+          type: 'string',
+          store: true,
+          index: 'not_analyzed'
+        }
+      }
+    };
+
+    this.securitymapping = {
+      properties: {
+        foo: {
+          type: 'string',
+          copy_to: 'bar'
+        },
+        bar: {
           type: 'string',
           store: true,
           index: 'not_analyzed'

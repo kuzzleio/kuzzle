@@ -2,7 +2,7 @@ sudo: required
 services:
   - docker
 script:
-  - sudo sysctl -w vm.max_map_count=262144 && docker-compose -f docker-compose/test.yml run kuzzle
+  - bash test/travis.sh
 notifications:
   webhooks:
     urls:

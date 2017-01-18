@@ -54,4 +54,37 @@ module.exports = function () {
       return callback(err);
     }
   });
+
+  this.Then(/^The mapping should contain a nested "(.*?)" field with property "(.*?)" of type "(.*?)"$/, function (field, prop, type, callback) {
+    if (! this.result[field]) {
+      return callback(new Error('Field ' + field + ' not found in mapping'));
+    }
+    if (! this.result[field].properties) {
+      return callback(new Error('No properties found for field ' + field));
+    }
+    if (! this.result[field].properties[prop]) {
+      return callback(new Error(field + '.' + prop + ' not found in mapping'));
+    }
+    if (! this.result[field].properties[prop].type) {
+      return callback(new Error('No type found for field ' + field + '.' + prop));
+    }
+    if (this.result[field].properties[prop].type !== type) {
+      return callback(new Error('Bad type for field ' + field + '.' + prop + ':\nExpected: ' + type + '\nActual: ' + this.result[field].type));
+    }
+    callback();
+  });
+
+  this.Then(/^The mapping should contain "(.*?)" field of type "(.*?)"$/, function (field, type, callback) {
+    if (! this.result[field]) {
+      return callback(new Error('Field ' + field + ' not found in mapping'));
+    }
+    if (! this.result[field].type) {
+      return callback(new Error('No type found for field ' + field));
+    }
+    if (this.result[field].type !== type) {
+      return callback(new Error('Bad type for field ' + field + ':\nExpected: ' + type + '\nActual: ' + this.result[field].type));
+    }
+    callback();
+  });
+
 };

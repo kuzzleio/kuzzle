@@ -2,6 +2,44 @@ var
   async = require('async');
 
 var apiSteps = function () {
+  this.When(/^I get the profile mapping$/, function (callback) {
+    this.api.getProfileMapping()
+      .then(function (response) {
+        if (response.error) {
+          return callback(new Error(response.error.message));
+        }
+
+        if (!response.result) {
+          return callback(new Error('No result provided'));
+        }
+
+        if (!response.result.mapping) {
+          return callback(new Error('No mapping provided'));
+        }
+
+        this.result = response.result.mapping;
+        callback();
+      }.bind(this))
+      .catch(function (error) {
+        callback(error);
+      });
+  });
+
+  this.Then(/^I change the profile mapping$/, function (callback) {
+    this.api.updateProfileMapping()
+      .then(body => {
+        if (body.error !== null) {
+          callback(new Error(body.error.message));
+          return false;
+        }
+
+        callback();
+      })
+      .catch(function (error) {
+        callback(new Error(error));
+      });
+  });
+
   this.When(/^I create a new profile "([^"]*)" with id "([^"]*)"$/, {timeout: 20 * 1000}, function (profile, id, callback) {
     if (!this.profiles[profile]) {
       return callback('Fixture for profile ' + profile + ' does not exists');

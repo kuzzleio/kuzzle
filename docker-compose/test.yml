@@ -2,7 +2,7 @@ version: '2'
 
 services:
   proxy:
-    image: kuzzleio/proxy:develop
+    image: kuzzleio/proxy${DOCKER_PROXY_TAG}
     ports:
       - "7511-7513:7511-7513"
 
