@@ -224,7 +224,7 @@ var apiSteps = function () {
 
     main = function (callbackAsync) {
       setTimeout(() => {
-        this.api.mGetRole(body)
+        this.api.mGetRoles(body)
           .then(response => {
             if (response.error) {
               callbackAsync(response.error.message);

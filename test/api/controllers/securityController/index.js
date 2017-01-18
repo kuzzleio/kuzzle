@@ -20,8 +20,8 @@ describe('/api/controllers/security', () => {
     const mDelete = SecurityController.__get__('mDelete');
 
     it('should fail if the request has no body', () => {
-      should(() => mDelete(kuzzle, 'type', new Request({})))
-        .throw(BadRequestError, {message: 'security:Type must specify a body.'});
+      should(() => mDelete(kuzzle, 'type', new Request({controller: 'security', action: 'type'})))
+        .throw(BadRequestError, {message: 'security:type must specify a body.'});
     });
 
     it('should fail if the request has no id', () => {
@@ -30,7 +30,7 @@ describe('/api/controllers/security', () => {
       });
 
       should(() => mDelete(kuzzle, 'type', request))
-        .throw(BadRequestError, {message: 'security:Type must specify a body attribute "ids".'});
+        .throw(BadRequestError, {message: 'null:null must specify a body attribute "ids".'});
 
     });
 
@@ -42,7 +42,7 @@ describe('/api/controllers/security', () => {
       });
 
       should(() => mDelete(kuzzle, 'type', request))
-        .throw(BadRequestError, {message: 'security:Type "body.ids" must be an array'});
+        .throw(BadRequestError, {message: 'null:null must specify the body attribute "ids" of type "array".'});
     });
 
     it('should return the input ids if everything went fine', () => {

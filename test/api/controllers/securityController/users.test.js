@@ -333,10 +333,7 @@ describe('Test: security controller - users', () => {
       SecurityController.__with__({
         mDelete: spy
       })(() => {
-        const
-          request = new Request({});
-
-        securityController.mDeleteUser(request);
+        securityController.mDeleteUsers(request);
 
         should(spy)
           .be.calledOnce()

@@ -285,7 +285,7 @@ var apiSteps = function () {
 
     main = function (callbackAsync) {
       setTimeout(() => {
-        this.api.mGetProfile(body)
+        this.api.mGetProfiles(body)
           .then(response => {
             if (response.error) {
               callbackAsync(response.error.message);

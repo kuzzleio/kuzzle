@@ -1,4 +1,5 @@
 var
+  rewire = require('rewire'),
   should = require('should'),
   Promise = require('bluebird'),
   sinon = require('sinon'),
@@ -6,7 +7,7 @@ var
   KuzzleMock = require('../../../mocks/kuzzle.mock'),
   Request = require('kuzzle-common-objects').Request,
   BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,
-  SecurityController = require('../../../../lib/api/controllers/securityController');
+  SecurityController = rewire('../../../../lib/api/controllers/securityController');
 
 describe('Test: security controller - roles', () => {
   var
@@ -225,8 +226,6 @@ describe('Test: security controller - roles', () => {
       SecurityController.__with__({
         mDelete: spy
       })(() => {
-        const request = new Request({});
-
         securityController.mDeleteRoles(request);
 
         should(spy)
