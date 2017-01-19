@@ -1,4 +1,5 @@
 var
+  rewire = require('rewire'),
   should = require('should'),
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
@@ -6,7 +7,7 @@ var
   Request = require('kuzzle-common-objects').Request,
   BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,
   NotFoundError = require('kuzzle-common-objects').errors.NotFoundError,
-  SecurityController = require('../../../../lib/api/controllers/securityController');
+  SecurityController = rewire('../../../../lib/api/controllers/securityController');
 
 describe('Test: security controller - profiles', () => {
   var
@@ -52,7 +53,6 @@ describe('Test: security controller - profiles', () => {
         });
     });
   });
-
 
   describe('#getProfileMapping', () => {
     it('should fulfill with a response object', () => {
@@ -313,6 +313,23 @@ describe('Test: security controller - profiles', () => {
       kuzzle.repositories.profile.loadProfile = sandbox.stub().returns(Promise.resolve(null));
 
       return should(securityController.getProfileRights(new Request({_id: 'test'}))).be.rejectedWith(NotFoundError);
+    });
+  });
+
+  describe('#mDeleteProfiles', () => {
+    it('should call forward to mDelete', () => {
+      SecurityController.__with__({
+        mDelete: sinon.spy()
+      })(() => {
+        const
+          mDelete = SecurityController.__get__('mDelete');
+
+        securityController.mDeleteProfiles(request);
+
+        should(mDelete)
+          .be.calledOnce()
+          .be.calledWith(kuzzle, 'profile', request);
+      });
     });
   });
 });
