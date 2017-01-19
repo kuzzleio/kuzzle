@@ -597,11 +597,11 @@ ApiRT.prototype.getRole = function (id) {
   return this.send(msg);
 };
 
-ApiRT.prototype.mGetRole = function (body) {
+ApiRT.prototype.mGetRoles = function (body) {
   var
     msg = {
       controller: 'security',
-      action: 'mGetRole',
+      action: 'mGetRoles',
       body: body
     };
 
@@ -664,11 +664,11 @@ ApiRT.prototype.getProfileRights = function (id) {
   return this.send(msg);
 };
 
-ApiRT.prototype.mGetProfile = function (body) {
+ApiRT.prototype.mGetProfiles = function (body) {
   var
     msg = {
       controller: 'security',
-      action: 'mGetProfile',
+      action: 'mGetProfiles',
       body: body
     };
 
