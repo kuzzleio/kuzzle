@@ -12,6 +12,8 @@ describe('lib/api/controllers/cliController', () => {
     kuzzle,
     cli,
     reset,
+    adminExistsStub,
+    createFirstAdminStub,
     cleanDbStub,
     clearCacheStub,
     managePluginsStub,
@@ -21,12 +23,16 @@ describe('lib/api/controllers/cliController', () => {
   beforeEach(() => {
     var requireMock = sinon.stub();
 
+    adminExistsStub = sinon.stub();
+    createFirstAdminStub = sinon.stub();
     cleanDbStub = sinon.stub();
     clearCacheStub = sinon.stub();
     managePluginsStub = sinon.stub();
     dataStub = sinon.stub();
     dumpStub = sinon.stub();
 
+    requireMock.withArgs('./cli/adminExists').returns(() => adminExistsStub);
+    requireMock.withArgs('./cli/createFirstAdmin').returns(() => createFirstAdminStub);
     requireMock.withArgs('./cli/cleanDb').returns(() => cleanDbStub);
     requireMock.withArgs('./cli/clearCache').returns(() => clearCacheStub);
     requireMock.withArgs('./cli/managePlugins').returns(() => managePluginsStub);
@@ -49,8 +55,8 @@ describe('lib/api/controllers/cliController', () => {
     it('should set the actions and register itself to Kuzzle broker', () => {
       cli.init();
 
-      should(cli.actions.adminExists).be.a.Function();
-      should(cli.actions.createFirstAdmin).be.a.Function();
+      should(cli.actions.adminExists).be.exactly(adminExistsStub);
+      should(cli.actions.createFirstAdmin).be.exactly(createFirstAdminStub);
       should(cli.actions.cleanDb).be.exactly(cleanDbStub);
       should(cli.actions.clearCache).be.exactly(clearCacheStub);
       should(cli.actions.managePlugins).be.exactly(managePluginsStub);

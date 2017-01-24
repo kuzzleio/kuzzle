@@ -106,11 +106,7 @@ describe('Test: ElasticSearch service', () => {
       collection,
       index,
       body: documentAda
-    }, {
-      token: {
-        userId: 'test'
-      }
-    });
+    }, {token: {userId: 'test'}, user: {_id: 'test'}});
     elasticsearch.init();
   });
 
@@ -338,12 +334,10 @@ describe('Test: ElasticSearch service', () => {
     });
 
     it('should reject a promise if the document already exists', () => {
-      var error = new Error('Mocked create error');
-      elasticsearch.client.create.returns(Promise.reject(error));
       elasticsearch.client.get.returns(Promise.resolve({_source: {_kuzzle_info: {active: true}}}));
       request.input.resource._id = '42';
 
-      return should(elasticsearch.create(request)).be.rejectedWith(error);
+      return should(elasticsearch.create(request)).be.rejectedWith(BadRequestError);
     });
   });
 

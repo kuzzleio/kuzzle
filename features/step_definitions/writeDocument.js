@@ -2,11 +2,15 @@ var
   Promise = require('bluebird');
 
 var apiSteps = function () {
-  this.When(/^I ?(can't)* write the document ?(?:"([^"]*)")?(?: in index "([^"]*)")?$/, function (cant, documentName, index, callback) {
+  this.When(/^I ?(can't)* write the document ?(?:"([^"]*)")?(?: in index "([^"]*)")?( with id "[^"]+")?$/, function (cant, documentName, index, id, callback) {
     var
       document = this[documentName] || this.documentGrace;
 
-    this.api.create(document, index)
+    if (id) {
+      id = id.replace(/^ with id "([^"]+)"$/, '$1');
+    }
+
+    this.api.create(document, index, null, null, id)
       .then(function (body) {
         if (body.error) {
           if (cant) {
@@ -105,6 +109,110 @@ var apiSteps = function () {
         }
 
         this.updatedResult = body.result;
+        callback();
+      })
+      .catch(function (error) {
+        callback(error);
+      });
+  });
+
+  this.When(/^I create multiple documents '([^']+)'( and get partial errors)?$/, function (documents, withErrors, callback) {
+    var body = {documents: []};
+    documents = JSON.parse(documents);
+
+    Object.keys(documents).forEach(key => {
+      body.documents.push({_id: key, body: this[documents[key]]});
+    });
+
+    this.api.mCreate(body)
+      .then(response => {
+        if (response.error !== null && !withErrors) {
+          callback(response.error.message);
+          return false;
+        }
+        else if(response.errors === null && withErrors) {
+          callback('Should get partial error');
+          return false;
+        }
+
+        callback();
+      })
+      .catch(function (error) {
+        callback(error);
+      });
+  });
+
+  this.When(/^I replace multiple documents '([^']+)'( and get partial errors)?$/, function (documents, withErrors, callback) {
+    var body = {documents: []};
+    documents = JSON.parse(documents);
+
+    Object.keys(documents).forEach(key => {
+      body.documents.push({_id: key, body: this[documents[key]]});
+    });
+
+    this.api.mReplace(body)
+      .then(response => {
+        if (response.error !== null && !withErrors) {
+          callback(response.error.message);
+          return false;
+        }
+        else if(response.errors === null && withErrors) {
+          callback('Should get partial error');
+          return false;
+        }
+
+        callback();
+      })
+      .catch(function (error) {
+        callback(error);
+      });
+  });
+
+  this.When(/^I update multiple documents '([^']+)'( and get partial errors)?$/, function (documents, withErrors, callback) {
+    var body = {documents: []};
+    documents = JSON.parse(documents);
+
+    Object.keys(documents).forEach(key => {
+      body.documents.push({_id: key, body: this[documents[key]]});
+    });
+
+    this.api.mUpdate(body)
+      .then(response => {
+        if (response.error !== null && !withErrors) {
+          callback(response.error.message);
+          return false;
+        }
+        else if(response.errors === null && withErrors) {
+          callback('Should get partial error');
+          return false;
+        }
+
+        callback();
+      })
+      .catch(function (error) {
+        callback(error);
+      });
+  });
+
+  this.When(/^I createOrReplace multiple documents '([^']+)'( and get partial errors)?$/, function (documents, withErrors, callback) {
+    var body = {documents: []};
+    documents = JSON.parse(documents);
+
+    Object.keys(documents).forEach(key => {
+      body.documents.push({_id: key, body: this[documents[key]]});
+    });
+
+    this.api.mCreateOrReplace(body)
+      .then(response => {
+        if (response.error !== null && !withErrors) {
+          callback(response.error.message);
+          return false;
+        }
+        else if(response.errors === null && withErrors) {
+          callback('Should get partial error');
+          return false;
+        }
+
         callback();
       })
       .catch(function (error) {

@@ -1,4 +1,11 @@
 /**
+ * /!\ DO NOT MODIFY THIS FILE
+ *
+ * To customize your Kuzzle installation, create a
+ * ".kuzzlerc" file and put your overrides there.
+ * Please check the ".kuzzlerc.sample" file to get
+ * started.
+ *
  * @class KuzzleConfiguration
  */
 module.exports = {
@@ -21,7 +28,7 @@ module.exports = {
     },
 
     'kuzzle-plugin-logger': {
-      version: '2.0.5',
+      version: '2.0.7',
       activated: true
     },
     'kuzzle-plugin-auth-passport-local': {
@@ -184,6 +191,7 @@ module.exports = {
   dump: {
     enabled: false,
     path: './dump/',
+    gcore: 'gcore',
     dateFormat: 'YYYYMMDD-HHmm',
     handledErrors: {
       enabled: true,
