@@ -4,6 +4,7 @@ ELASTIC_HOST=${kuzzle_services__db__host:-elasticsearch}
 ELASTIC_PORT=${kuzzle_services__db__port:-9200}
 
 npm install
+docker-compose/scripts/install-plugins.sh
 
 echo "[$(date --rfc-3339 seconds)] - Waiting for elasticsearch to be available"
 while ! curl -f -s -o /dev/null "http://$ELASTIC_HOST:$ELASTIC_PORT"
