@@ -63,7 +63,7 @@ describe('PluginsManager: loadPlugins()', () => {
         existsSync: () => {
           return true;
         },
-        lstatSync: () => {
+        statSync: () => {
           return {
             isSymbolicLink: () => {
               return true;
@@ -100,7 +100,7 @@ describe('PluginsManager: loadPlugins()', () => {
         existsSync: () => {
           return true;
         },
-        lstatSync: () => {
+        statSync: () => {
           return {
             isSymbolicLink: () => {
               return true;
@@ -148,7 +148,7 @@ describe('PluginsManager: loadPlugins()', () => {
         existsSync: () => {
           return false;
         },
-        lstatSync: () => {
+        statSync: () => {
           return {
             isSymbolicLink: () => {
               return false;
