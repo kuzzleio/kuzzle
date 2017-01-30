@@ -294,7 +294,9 @@
     "proxyBroker": {
       "host": "localhost",
       "port": 7331,
-      "retryInterval": 1000
+      "retryInterval": 1000,
+      "pingTimeout": 50,
+      "pingInterval", 60000
     },
     // [db]
     // The database layer is by default relying on elasticsearch and is
