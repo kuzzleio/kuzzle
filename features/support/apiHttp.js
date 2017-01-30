@@ -664,7 +664,7 @@ ApiHttp.prototype.getProfileRights = function (id) {
   return this.callApi(options);
 };
 
-ApiHttp.prototype.mGetProfiles = function (body) {
+ApiHttp.prototype.mGetProfiles= function (body) {
   var options = {
     url: this.apiPath('profiles/_mGet'),
     method: 'POST',
