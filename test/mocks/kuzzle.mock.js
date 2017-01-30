@@ -69,7 +69,7 @@ function KuzzleMock () {
     init: sinon.spy(),
     handleErrorDump: sinon.spy(),
     execute: sinon.spy(),
-    processRequest: sinon.stub(),
+    processRequest: sinon.stub().returns(Promise.resolve()),
     checkRights: sinon.stub(),
     getEventName: sinon.spy()
   };
@@ -137,14 +137,9 @@ function KuzzleMock () {
 
   this.pluginsManager = {
     init: sinon.stub().returns(Promise.resolve()),
-    packages: {
-      bootstrap: sinon.stub().returns(Promise.resolve()),
-      definitions: sinon.stub().returns(Promise.resolve([])),
-      getPackage: sinon.stub().returns(Promise.resolve()),
-    },
     plugins: {},
     run: sinon.stub().returns(Promise.resolve()),
-    getPluginsConfig: sinon.stub().returns({}),
+    getPluginsFeatures: sinon.stub().returns({}),
     trigger: sinon.spy(function () {return Promise.resolve(arguments[1]);})
   };
 

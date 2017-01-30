@@ -119,7 +119,8 @@ describe('Test plugins manager run', () => {
 
     PluginsManager.__set__('console', {
       log: () => {},
-      error: () => {}
+      error: () => {},
+      warn: () => {},
     });
 
     PluginsManager.__set__('pm2', pm2Mock);
@@ -141,8 +142,7 @@ describe('Test plugins manager run', () => {
       object: {
         init: () => {}
       },
-      config: {},
-      activated: true
+      config: {}
     };
 
     pluginMock = sandbox.mock(plugin.object);
@@ -154,7 +154,6 @@ describe('Test plugins manager run', () => {
   });
 
   it('should do nothing on run if plugin is not activated', () => {
-    plugin.activated = false;
     pluginMock.expects('init').never();
 
     return pluginsManager.run()
@@ -465,7 +464,7 @@ describe('Test plugins manager run', () => {
           should(pluginsManager.workers[params.plugins.common.workerPrefix + 'testPlugin']).be.an.Object();
           should(pluginsManager.workers[params.plugins.common.workerPrefix + 'testPlugin'].pmIds).be.an.Object();
           should(pluginsManager.workers[params.plugins.common.workerPrefix + 'testPlugin'].pmIds.getSize()).be.equal(1);
-      
+
           return Promise.resolve();
         }
         catch (error) {
@@ -489,7 +488,7 @@ describe('Test plugins manager run', () => {
 
           pm2Mock.triggerOnBus('process:event');
           should.not.exist(pluginsManager.workers[params.plugins.common.workerPrefix + 'testPlugin']);
-      
+
           return Promise.resolve();
         }
         catch (error) {
@@ -523,7 +522,7 @@ describe('Test plugins manager run', () => {
           should(pm2Mock.getSentMessages()).be.an.Array().and.length(1);
           should(pm2Mock.getSentMessages()[0]).be.an.Object();
           should(pm2Mock.getSentMessages()[0].data.message.firstName).be.equal('Ada');
-      
+
           return Promise.resolve();
         }
         catch (error) {

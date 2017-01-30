@@ -98,9 +98,6 @@ describe('/lib/api/kuzzle.js', () => {
             should(kuzzle.internalEngine.bootstrap.all)
               .be.calledOnce();
 
-            should(kuzzle.pluginsManager.packages.bootstrap)
-              .be.calledOnce();
-
             should(kuzzle.validation.init)
               .be.calledOnce();
 
@@ -143,7 +140,6 @@ describe('/lib/api/kuzzle.js', () => {
             sinon.assert.callOrder(
               kuzzle.internalEngine.init,
               kuzzle.internalEngine.bootstrap.all,
-              kuzzle.pluginsManager.packages.bootstrap,
               kuzzle.validation.init,
               kuzzle.pluginsManager.init,
               kuzzle.pluginsManager.run,

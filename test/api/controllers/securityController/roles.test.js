@@ -1,4 +1,5 @@
 var
+  rewire = require('rewire'),
   should = require('should'),
   Promise = require('bluebird'),
   sinon = require('sinon'),
@@ -6,7 +7,7 @@ var
   KuzzleMock = require('../../../mocks/kuzzle.mock'),
   Request = require('kuzzle-common-objects').Request,
   BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,
-  SecurityController = require('../../../../lib/api/controllers/securityController');
+  SecurityController = rewire('../../../../lib/api/controllers/securityController');
 
 describe('Test: security controller - roles', () => {
   var
@@ -215,6 +216,22 @@ describe('Test: security controller - roles', () => {
     it('should reject the promise if attempting to delete one of the core roles', () => {
       kuzzle.repositories.role.deleteRole = sandbox.stub().returns(Promise.reject(new Error('admin is one of the basic roles of Kuzzle, you cannot delete it, but you can edit it.')));
       return should(securityController.deleteRole(new Request({_id: 'admin',body: {}}))).be.rejected();
+    });
+  });
+
+  describe('#mDeleteRoles', () => {
+    it('should forward its args to mDelete', () => {
+      const spy = sinon.spy();
+
+      SecurityController.__with__({
+        mDelete: spy
+      })(() => {
+        securityController.mDeleteRoles(request);
+
+        should(spy)
+          .be.calledOnce()
+          .be.calledWith(kuzzle, 'role', request);
+      });
     });
   });
 });
