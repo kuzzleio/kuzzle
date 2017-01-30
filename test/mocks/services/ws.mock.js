@@ -37,6 +37,8 @@ function WSMock (server) {
 
   this.close = sinon.spy();
 
+  this.ping = sinon.spy();
+
   this.send = sinon.spy(data => {
     this.emit('message', data);
   });

@@ -15,7 +15,7 @@ var
   WSBrokerServer = require('../../../lib/services/broker/wsBrokerServer'),
   WSBrokerServerRewire = rewire('../../../lib/services/broker/wsBrokerServer');
 
-describe('Test: Internal broker', () => {
+describe.only('Test: Internal broker', () => {
   var
     clock,
     server,
