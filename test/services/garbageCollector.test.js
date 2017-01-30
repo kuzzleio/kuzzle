@@ -71,7 +71,7 @@ describe('Test: GarbageCollector service', () => {
           .be.calledOnce();
 
         should(setTimeoutStub.getCall(0).args[0])
-          .be.exactly(gc.run);
+          .be.eql(gc.run.bind(gc));
 
         should(setTimeoutStub.getCall(0).args[1])
           .be.exactly(OneHour);
@@ -235,7 +235,7 @@ describe('Test: GarbageCollector service', () => {
           .be.calledOnce();
 
         should(setTimeoutStub.getCall(0).args[0])
-          .be.exactly(gc.run);
+          .be.eql(gc.run.bind(gc));
 
         should(setTimeoutStub.getCall(0).args[1])
           .be.exactly(OneDay);
@@ -257,7 +257,7 @@ describe('Test: GarbageCollector service', () => {
           .be.calledOnce();
 
         should(setTimeoutStub.getCall(0).args[0])
-          .be.exactly(gc.run);
+          .be.eql(gc.run.bind(gc));
 
         should(setTimeoutStub.getCall(0).args[1])
           .be.exactly(100);
