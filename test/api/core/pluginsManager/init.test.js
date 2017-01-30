@@ -3,6 +3,7 @@ var
   rewire = require('rewire'),
   sinon = require('sinon'),
   KuzzleMock = require('../../../mocks/kuzzle.mock'),
+  path = require('path'),
   PluginsManager = rewire('../../../../lib/api/core/plugins/pluginsManager');
 
 describe('PluginsManager: init()', () => {
@@ -13,38 +14,170 @@ describe('PluginsManager: init()', () => {
   beforeEach(() => {
     kuzzle = new KuzzleMock();
     pluginsManager = new PluginsManager(kuzzle);
-    pluginsManager.packages = kuzzle.pluginsManager.packages;
   });
 
   it('should load plugins at init', () => {
-    var
-      defs = {
-        plugin1: {foo: 'bar'},
-        plugin2: {foo: 'baz'}
-      },
-      spy = sinon.spy();
-
-    kuzzle.pluginsManager.packages.definitions.returns(Promise.resolve(defs));
+    var spy = sinon.spy();
 
     return PluginsManager.__with__({
       loadPlugins: spy
     })(() => {
-      return pluginsManager.init()
-        .then(() => {
-          try {
-            should(kuzzle.pluginsManager.packages.definitions)
-              .be.calledOnce();
+      pluginsManager.init();
+      should(spy)
+        .be.calledOnce();
+    });
+  });
+});
 
-            should(spy)
-              .be.calledOnce()
-              .be.calledWith(defs);
+describe('PluginsManager: loadPlugins()', () => {
+  var
+    kuzzle,
+    pluginsManager;
 
-            return Promise.resolve();
-          }
-          catch (error) {
-            return Promise.reject(error);
-          }
-        });
+  beforeEach(() => {
+    kuzzle = new KuzzleMock();
+    pluginsManager = new PluginsManager(kuzzle);
+  });
+
+  it('should return an empty object if no plugins are enabled', () => {
+    return PluginsManager.__with__({
+      fs: {
+        readdirSync: () => {
+          return [];
+        }
+      }
+    })(() => {
+      pluginsManager.init();
+      should(pluginsManager.plugins)
+        .be.eql({});
+    });
+  });
+
+  it('should show a console error message if a malformed plugin is enabled', () => {
+    let consoleSpy = sinon.spy();
+    return PluginsManager.__with__({
+      fs: {
+        readdirSync: () => {
+          return ['kuzzle-plugin-test'];
+        },
+        existsSync: () => {
+          return true;
+        },
+        statSync: () => {
+          return {
+            isSymbolicLink: () => {
+              return true;
+            },
+            isDirectory: () => {
+              return true;
+            }
+          };
+        }
+      },
+      loadPluginFromPackageJson: () => {
+        throw new Error('oh crap!');
+      },
+      loadPluginFromDirectory: () => {
+        throw new Error('oh crap!');
+      },
+      console: {
+        error: consoleSpy
+      }
+    })(() => {
+      pluginsManager.init();
+      should(consoleSpy)
+        .be.calledOnce();
+    });
+  });
+
+  it('should return a well-formed plugin instance if a valid node-module plugin is enabled', () => {
+    const pluginName = 'kuzzle-plugin-test';
+    return PluginsManager.__with__({
+      fs: {
+        readdirSync: () => {
+          return ['kuzzle-plugin-test'];
+        },
+        existsSync: () => {
+          return true;
+        },
+        statSync: () => {
+          return {
+            isSymbolicLink: () => {
+              return true;
+            },
+            isDirectory: () => {
+              return true;
+            }
+          };
+        }
+      },
+      require: (arg) => {
+        if (path.extname(arg) === '.json') {
+          return {
+            name: pluginName
+          };
+        }
+        return function () {
+          return {
+            kikou: 'LOL'
+          };
+        };
+      }
+    })(() => {
+      pluginsManager.init();
+      should(pluginsManager.plugins[pluginName])
+        .be.Object();
+      should(pluginsManager.plugins[pluginName])
+        .have.keys('name', 'object', 'config', 'path');
+      should(pluginsManager.plugins[pluginName].name)
+        .be.eql(pluginName);
+      should(pluginsManager.plugins[pluginName].object)
+        .be.ok();
+      should(pluginsManager.plugins[pluginName].path)
+        .be.ok();
+    });
+  });
+
+  it('should return a well-formed plugin instance if a valid requireable plugin is enabled', () => {
+    const pluginName = 'kuzzle-plugin-test';
+    return PluginsManager.__with__({
+      fs: {
+        readdirSync: () => {
+          return ['kuzzle-plugin-test'];
+        },
+        existsSync: () => {
+          return false;
+        },
+        statSync: () => {
+          return {
+            isSymbolicLink: () => {
+              return false;
+            },
+            isDirectory: () => {
+              return true;
+            }
+          };
+        }
+      },
+      require: () => {
+        return function () {
+          return {
+            kikou: 'LOL'
+          };
+        };
+      }
+    })(() => {
+      pluginsManager.init();
+      should(pluginsManager.plugins[pluginName])
+        .be.Object();
+      should(pluginsManager.plugins[pluginName])
+        .have.keys('name', 'object', 'config', 'path');
+      should(pluginsManager.plugins[pluginName].name)
+        .be.eql(pluginName);
+      should(pluginsManager.plugins[pluginName].object)
+        .be.ok();
+      should(pluginsManager.plugins[pluginName].path)
+        .be.ok();
     });
   });
 });

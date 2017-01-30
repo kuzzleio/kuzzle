@@ -16,7 +16,6 @@ describe('lib/api/controllers/cliController', () => {
     createFirstAdminStub,
     cleanDbStub,
     clearCacheStub,
-    managePluginsStub,
     dumpStub,
     dataStub;
 
@@ -27,7 +26,6 @@ describe('lib/api/controllers/cliController', () => {
     createFirstAdminStub = sinon.stub();
     cleanDbStub = sinon.stub();
     clearCacheStub = sinon.stub();
-    managePluginsStub = sinon.stub();
     dataStub = sinon.stub();
     dumpStub = sinon.stub();
 
@@ -35,7 +33,6 @@ describe('lib/api/controllers/cliController', () => {
     requireMock.withArgs('./cli/createFirstAdmin').returns(() => createFirstAdminStub);
     requireMock.withArgs('./cli/cleanDb').returns(() => cleanDbStub);
     requireMock.withArgs('./cli/clearCache').returns(() => clearCacheStub);
-    requireMock.withArgs('./cli/managePlugins').returns(() => managePluginsStub);
     requireMock.withArgs('./cli/data').returns(() => dataStub);
     requireMock.withArgs('./cli/dump').returns(() => dumpStub);
 
@@ -59,7 +56,6 @@ describe('lib/api/controllers/cliController', () => {
       should(cli.actions.createFirstAdmin).be.exactly(createFirstAdminStub);
       should(cli.actions.cleanDb).be.exactly(cleanDbStub);
       should(cli.actions.clearCache).be.exactly(clearCacheStub);
-      should(cli.actions.managePlugins).be.exactly(managePluginsStub);
       should(cli.actions.data).be.exactly(dataStub);
       should(cli.actions.dump).be.exactly(dumpStub);
 

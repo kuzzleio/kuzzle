@@ -25,26 +25,6 @@ program
   .description('clear internal caches in Redis')
   .action(require('./commands/clearCache'));
 
-// $ kuzzle plugins
-program
-  .command('plugins')
-  .arguments('[name]')
-  .description('manage plugins')
-  .option('    --list', 'list currently installed plugins')
-  .option('    --install', 'install a new plugin package from npm repository if [name] is provided or from --path or --url options')
-  .option('    --remove', 'remove plugin [name] from Kuzzle')
-  .option('    --activate', 'mark the plugin as "activated"')
-  .option('    --deactivate', 'mark the plugin as "deactivated"')
-  .option('    --importConfig <file>', 'import plugin [name] configuration from <file>')
-  .option('    --get', 'get plugin [name] configuration stored in Kuzzle')
-  .option('    --set <JSONObject> [name]', 'merge plugin [name] configuration with JSONObject')
-  .option('    --unset <property>', 'unset property from the plugin configuration')
-  .option('    --replace <JSONObject>', 'erase the plugin configuration and apply JSONObject instead')
-  .option('-v, --packageVersion <version>', 'plugin <version> to install (npm repository or git only)')
-  .option('-u, --url <url>', 'install plugin from a git repository or a remote tarball')
-  .option('-p, --path <path>', 'install plugin from the file system')
-  .action(require('./commands/plugins'));
-
 // $ kuzzle reset
 program
   .command('reset')
