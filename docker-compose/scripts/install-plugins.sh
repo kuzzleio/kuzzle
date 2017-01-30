@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 WORKING_DIR=$(pwd)
 PLUGINS_DIR=plugins/enabled
 
