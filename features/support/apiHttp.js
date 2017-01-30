@@ -204,9 +204,9 @@ ApiHttp.prototype.search = function (query, index, collection, args) {
   return this.callApi(options);
 };
 
-ApiHttp.prototype.scroll = function (scrollId) {
+ApiHttp.prototype.scroll = function (scrollId, scroll = '1m') {
   var options = {
-    url: this.apiPath('_scroll/'.concat(scrollId)),
+    url: this.apiPath(`_scroll/${scrollId}?${scroll}`),
     method: 'POST'
   };
 
