@@ -504,7 +504,7 @@ describe('Test: Internal broker', () => {
 
             done();
           })
-          .catch(err => done(err))
+          .catch(err => done(err));
       });
 
       it('should send ping request to server once connected', done => {
@@ -524,9 +524,9 @@ describe('Test: Internal broker', () => {
             should(client._pingRequestIntervalId)
               .be.equal(null, 'ping interval should not be registered until pong result has come');
 
-            done()
+            done();
           })
-          .catch(err => done(err))
+          .catch(err => done(err));
       });
 
       it('should clear ping timeout once pong is received', done => {
@@ -548,9 +548,9 @@ describe('Test: Internal broker', () => {
             should(client._pingRequestTimeoutId)
               .be.equal(null, 'ping response timeout should be cleared due to pong response');
 
-            done()
+            done();
           })
-          .catch(err => done(err))
+          .catch(err => done(err));
       });
 
       it('should delay new ping request once pong is received', done => {
@@ -577,18 +577,18 @@ describe('Test: Internal broker', () => {
             should(socket.ping)
               .be.calledTwice();
 
-            done()
+            done();
           })
-          .catch(err => done(err))
+          .catch(err => done(err));
       });
 
       it('should emit an error if pong response timed out', done => {
         let clientConnected = client.init();
         let socket = client.client.socket;
-        let errorRaised = false
+        let errorRaised = false;
 
         socket.on('error', () => {
-          errorRaised = true
+          errorRaised = true;
         });
 
         socket.emit('open', 1);
@@ -606,16 +606,16 @@ describe('Test: Internal broker', () => {
             should(errorRaised)
               .be.equal(true, 'error must be raised due to ping timeout');
 
-            done()
+            done();
           })
-          .catch(err => done(err))
+          .catch(err => done(err));
       });
 
       it('should clear ping timeout and interval if socket received an error', done => {
         let clientConnected = client.init();
         let socket = client.client.socket;
         let fakePongListener = function fakePongListener() {};
-        let pongListeners
+        let pongListeners;
 
         client._pingRequestIntervalId = 'fakeIntervalId';
         client._pingRequestTimeoutId = 'fakeTimeoutId';
@@ -640,14 +640,14 @@ describe('Test: Internal broker', () => {
 
             done();
           })
-          .catch(err => done(err))
+          .catch(err => done(err));
       });
 
       it('should clear ping timeout and interval if socket got disconnected', done => {
         let clientConnected = client.init();
         let socket = client.client.socket;
         let fakePongListener = function fakePongListener() {};
-        let pongListeners
+        let pongListeners;
 
         client._pingRequestIntervalId = 'fakeIntervalId';
         client._pingRequestTimeoutId = 'fakeTimeoutId';
@@ -672,10 +672,9 @@ describe('Test: Internal broker', () => {
 
             done();
           })
-          .catch(err => done(err))
+          .catch(err => done(err));
       });
-    })
-
+    });
   });
 
   describe('Server', () => {
