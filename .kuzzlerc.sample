@@ -283,7 +283,9 @@
       "aliases": ["broker"],
       "host": "localhost",
       "port": 7911,
-      "retryInterval": 1000
+      "retryInterval": 1000,
+      "pingTimeout": 50,
+      "pingInterval": 60000
     },
     // [proxyBroker]
     // The proxy broker is used to communicate between the Proxy and Kuzzle
