@@ -63,6 +63,9 @@ describe('Test: document controller', () => {
 
   describe('#scroll', () => {
     it('should fulfill with an object', () => {
+      request.input.args.scroll = '1m';
+      request.input.args.scrollId = 'SomeScrollIdentifier';
+
       return documentController.scroll(request)
         .then(response => {
           should(response).be.instanceof(Object);
@@ -71,6 +74,9 @@ describe('Test: document controller', () => {
     });
 
     it('should reject an error in case of error', () => {
+      request.input.args.scroll = '1m';
+      request.input.args.scrollId = 'SomeScrollIdentifier';
+
       kuzzle.services.list.storageEngine.scroll.returns(Promise.reject(new Error('foobar')));
 
       return should(documentController.scroll(request)).be.rejectedWith('foobar');

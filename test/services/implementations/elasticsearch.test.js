@@ -216,25 +216,6 @@ describe('Test: ElasticSearch service', () => {
         });
     });
 
-    it('should return a rejected promise if no scrollId is given', done => {
-      elasticsearch.client.scroll.returns(Promise.resolve({total: 0, hits: []}));
-
-      request.input.body = {};
-
-      elasticsearch.scroll(request)
-        .then(() => {
-          throw new Error('this should never happen');
-        })
-        .catch(err => {
-          try {
-            should(err).be.an.instanceOf(BadRequestError);
-            should(err.message).be.exactly('The action scroll can\'t be done without a scrollId');
-            done();
-          }
-          catch(e) { done(e); }
-        });
-    });
-
     it('should return a rejected promise if a scroll fails', () => {
       elasticsearch.client.scroll.returns(Promise.reject(new Error('error')));
 
