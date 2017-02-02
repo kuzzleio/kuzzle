@@ -4,11 +4,13 @@ var
   should = require('should'),
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
+  Promise = require('bluebird'),
   KuzzleMock = require('../../mocks/kuzzle.mock'),
   Request = require('kuzzle-common-objects').Request,
   DocumentController = require('../../../lib/api/controllers/documentController'),
   foo = {foo: 'bar'},
   InternalError = require('kuzzle-common-objects').errors.InternalError,
+  ServiceUnavailableError = require('kuzzle-common-objects').errors.ServiceUnavailableError,
   PartialError = require('kuzzle-common-objects').errors.PartialError;
 
 describe('Test: document controller', () => {
@@ -242,6 +244,30 @@ describe('Test: document controller', () => {
       }).throw('document:mCreate must specify the body attribute "documents" of type "array".');
     });
 
+    it('mCreate should return a rejected promise if Kuzzle is overloaded', done => {
+      kuzzle.funnel.processRequest = sandbox.spy(function () {
+        arguments[0].setResult({result: 'updated'});
+
+        return Promise.resolve(arguments[0]);
+      });
+
+      kuzzle.funnel.getRequestSlot.onSecondCall().yields(new ServiceUnavailableError('overloaded'));
+
+      request.input.body = {
+        documents: [
+          {_id: 'documentId', body: {some: 'body'}},
+          {_id: 'anotherDocumentId', body: {some: 'body'}}
+        ]
+      };
+
+      documentController.mCreate(request)
+        .then(() => done(new Error('Expected test to fail')))
+        .catch(err => {
+          should(err).be.instanceof(ServiceUnavailableError);
+          done();
+        });
+    });
+
     it('mCreateOrReplace should fulfill with an object', () => {
       kuzzle.funnel.processRequest = sandbox.spy(function () {
         arguments[0].setResult({result: 'updated'});
@@ -259,6 +285,30 @@ describe('Test: document controller', () => {
       return documentController.mCreateOrReplace(request)
         .then(result => {
           should(result).match({hits: [{result: 'updated'}, {result: 'updated'}], total: 2});
+        });
+    });
+
+    it('mCreateOrReplace should return a rejected promise if Kuzzle is overloaded', done => {
+      kuzzle.funnel.processRequest = sandbox.spy(function () {
+        arguments[0].setResult({result: 'updated'});
+
+        return Promise.resolve(arguments[0]);
+      });
+
+      kuzzle.funnel.getRequestSlot.onSecondCall().yields(new ServiceUnavailableError('overloaded'));
+
+      request.input.body = {
+        documents: [
+          {_id: 'documentId', body: {some: 'body'}},
+          {_id: 'anotherDocumentId', body: {some: 'body'}}
+        ]
+      };
+
+      documentController.mCreateOrReplace(request)
+        .then(() => done(new Error('Expected test to fail')))
+        .catch(err => {
+          should(err).be.instanceof(ServiceUnavailableError);
+          done();
         });
     });
 
@@ -282,6 +332,30 @@ describe('Test: document controller', () => {
         });
     });
 
+    it('mCreateOrReplace should return a rejected promise if Kuzzle is overloaded', done => {
+      kuzzle.funnel.processRequest = sandbox.spy(function () {
+        arguments[0].setResult({result: 'updated'});
+
+        return Promise.resolve(arguments[0]);
+      });
+
+      kuzzle.funnel.getRequestSlot.onSecondCall().yields(new ServiceUnavailableError('overloaded'));
+
+      request.input.body = {
+        documents: [
+          {_id: 'documentId', body: {some: 'body'}},
+          {_id: 'anotherDocumentId', body: {some: 'body'}}
+        ]
+      };
+
+      documentController.mUpdate(request)
+        .then(() => done(new Error('Expected test to fail')))
+        .catch(err => {
+          should(err).be.instanceof(ServiceUnavailableError);
+          done();
+        });
+    });
+
     it('mReplace should fulfill with an object', () => {
       kuzzle.funnel.processRequest = sandbox.spy(function () {
         arguments[0].setResult({result: 'updated'});
@@ -299,6 +373,30 @@ describe('Test: document controller', () => {
       return documentController.mReplace(request)
         .then(result => {
           should(result).match({hits: [{result: 'updated'}, {result: 'updated'}], total: 2});
+        });
+    });
+
+    it('mCreateOrReplace should return a rejected promise if Kuzzle is overloaded', done => {
+      kuzzle.funnel.processRequest = sandbox.spy(function () {
+        arguments[0].setResult({result: 'updated'});
+
+        return Promise.resolve(arguments[0]);
+      });
+
+      kuzzle.funnel.getRequestSlot.onSecondCall().yields(new ServiceUnavailableError('overloaded'));
+
+      request.input.body = {
+        documents: [
+          {_id: 'documentId', body: {some: 'body'}},
+          {_id: 'anotherDocumentId', body: {some: 'body'}}
+        ]
+      };
+
+      documentController.mReplace(request)
+        .then(() => done(new Error('Expected test to fail')))
+        .catch(err => {
+          should(err).be.instanceof(ServiceUnavailableError);
+          done();
         });
     });
   });
@@ -534,6 +632,24 @@ describe('Test: document controller', () => {
       return should(() => {
         documentController.mDelete(request);
       }).throw('document:mDelete must specify the body attribute "ids" of type "array".');
+    });
+
+    it('should return a rejected promise if Kuzzle is overloaded', done => {
+      kuzzle.funnel.processRequest = sandbox.spy(function () {
+        arguments[0].setResult({result: 'deleted'});
+
+        return Promise.resolve(arguments[0]);
+      });
+
+      request.input.body = {ids: ['documentId', 'anotherDocumentId']};
+      kuzzle.funnel.getRequestSlot.onSecondCall().yields(new ServiceUnavailableError('overloaded'));
+
+      documentController.mDelete(request)
+        .then(() => done(new Error('Expected test to fail')))
+        .catch(err => {
+          should(err).be.instanceof(ServiceUnavailableError);
+          done();
+        });
     });
   });
 
