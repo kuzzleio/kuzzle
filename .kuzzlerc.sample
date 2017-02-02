@@ -184,10 +184,10 @@
   // Configuration for Kuzzle server
   /*
   "server": {
-    // * maxConcurrentRequests: Number of requests Kuzzle treats simultaneously.
-    //   Requests received above this limit are bufferized.
+    // * maxConcurrentRequests: Number of requests Kuzzle processes simultaneously.
+    //   Requests received above this limit are bufferized until a slot is freed
     // * maxRetainedRequests: Maximum number of requests that can be bufferized.
-    //   Requests received above this limit are discarded.
+    //   Requests received above this limit are discarded with a 503 error
     // * warningRetainedRequestsLimit: Number of bufferized requests after
     //   which Kuzzle will throw warnings to the logger
     "maxConcurrentRequests": 50,
