@@ -1,8 +1,10 @@
 const
   rewire = require('rewire'),
   should = require('should'),
+  Promise = require('bluebird'),
   BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,
   InternalError = require('kuzzle-common-objects').errors.InternalError,
+  ServiceUnavailableError = require('kuzzle-common-objects').errors.ServiceUnavailableError,
   KuzzleMock = require('../../../mocks/kuzzle.mock'),
   PartialError = require('kuzzle-common-objects').errors.PartialError,
   Request = require('kuzzle-common-objects').Request,
@@ -43,6 +45,27 @@ describe('/api/controllers/security', () => {
 
       should(() => mDelete(kuzzle, 'type', request))
         .throw(BadRequestError, {message: 'null:null must specify the body attribute "ids" of type "array".'});
+    });
+
+    it('should fail if kuzzle is overloaded', done => {
+      const request = new Request({
+        body: {
+          ids: [
+            'foo',
+            'bar',
+            'baz'
+          ]
+        }
+      });
+
+      kuzzle.funnel.getRequestSlot.onThirdCall().yields(new ServiceUnavailableError('overloaded'));
+
+      mDelete(kuzzle, 'type', request)
+        .then(() => done(new Error('API call should have failed')))
+        .catch(err => {
+          should(err).be.instanceof(ServiceUnavailableError);
+          done();
+        });
     });
 
     it('should return the input ids if everything went fine', () => {
