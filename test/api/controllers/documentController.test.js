@@ -244,7 +244,7 @@ describe('Test: document controller', () => {
       }).throw('document:mCreate must specify the body attribute "documents" of type "array".');
     });
 
-    it('mCreate should return a rejected promise if Kuzzle is overloaded', done => {
+    it('mCreate should return a rejected promise if Kuzzle is overloaded', () => {
       kuzzle.funnel.processRequest = sandbox.spy(function () {
         arguments[0].setResult({result: 'updated'});
 
@@ -260,11 +260,11 @@ describe('Test: document controller', () => {
         ]
       };
 
-      documentController.mCreate(request)
-        .then(() => done(new Error('Expected test to fail')))
-        .catch(err => {
-          should(err).be.instanceof(ServiceUnavailableError);
-          done();
+      return documentController.mCreate(request)
+        .then(result => {
+          should(result.total).be.eql(1, 'Only 1 document should have been created');
+          should(request.status).be.eql(206);
+          should(request.error).be.instanceof(PartialError);
         });
     });
 
@@ -288,7 +288,7 @@ describe('Test: document controller', () => {
         });
     });
 
-    it('mCreateOrReplace should return a rejected promise if Kuzzle is overloaded', done => {
+    it('mCreateOrReplace should return a rejected promise if Kuzzle is overloaded', () => {
       kuzzle.funnel.processRequest = sandbox.spy(function () {
         arguments[0].setResult({result: 'updated'});
 
@@ -304,11 +304,11 @@ describe('Test: document controller', () => {
         ]
       };
 
-      documentController.mCreateOrReplace(request)
-        .then(() => done(new Error('Expected test to fail')))
-        .catch(err => {
-          should(err).be.instanceof(ServiceUnavailableError);
-          done();
+      return documentController.mCreateOrReplace(request)
+        .then(result => {
+          should(result.total).be.eql(1, 'Only 1 document should have been created');
+          should(request.status).be.eql(206);
+          should(request.error).be.instanceof(PartialError);
         });
     });
 
@@ -332,7 +332,7 @@ describe('Test: document controller', () => {
         });
     });
 
-    it('mCreateOrReplace should return a rejected promise if Kuzzle is overloaded', done => {
+    it('mCreateOrReplace should return a rejected promise if Kuzzle is overloaded', () => {
       kuzzle.funnel.processRequest = sandbox.spy(function () {
         arguments[0].setResult({result: 'updated'});
 
@@ -348,11 +348,11 @@ describe('Test: document controller', () => {
         ]
       };
 
-      documentController.mUpdate(request)
-        .then(() => done(new Error('Expected test to fail')))
-        .catch(err => {
-          should(err).be.instanceof(ServiceUnavailableError);
-          done();
+      return documentController.mUpdate(request)
+        .then(result => {
+          should(result.total).be.eql(1, 'Only 1 document should have been created');
+          should(request.status).be.eql(206);
+          should(request.error).be.instanceof(PartialError);
         });
     });
 
@@ -376,7 +376,7 @@ describe('Test: document controller', () => {
         });
     });
 
-    it('mCreateOrReplace should return a rejected promise if Kuzzle is overloaded', done => {
+    it('mReplace should return a rejected promise if Kuzzle is overloaded', () => {
       kuzzle.funnel.processRequest = sandbox.spy(function () {
         arguments[0].setResult({result: 'updated'});
 
@@ -392,11 +392,11 @@ describe('Test: document controller', () => {
         ]
       };
 
-      documentController.mReplace(request)
-        .then(() => done(new Error('Expected test to fail')))
-        .catch(err => {
-          should(err).be.instanceof(ServiceUnavailableError);
-          done();
+      return documentController.mReplace(request)
+        .then(result => {
+          should(result.total).be.eql(1, 'Only 1 document should have been created');
+          should(request.status).be.eql(206);
+          should(request.error).be.instanceof(PartialError);
         });
     });
   });
@@ -634,7 +634,7 @@ describe('Test: document controller', () => {
       }).throw('document:mDelete must specify the body attribute "ids" of type "array".');
     });
 
-    it('should return a rejected promise if Kuzzle is overloaded', done => {
+    it('should return a rejected promise if Kuzzle is overloaded', () => {
       kuzzle.funnel.processRequest = sandbox.spy(function () {
         arguments[0].setResult({result: 'deleted'});
 
@@ -644,11 +644,11 @@ describe('Test: document controller', () => {
       request.input.body = {ids: ['documentId', 'anotherDocumentId']};
       kuzzle.funnel.getRequestSlot.onSecondCall().yields(new ServiceUnavailableError('overloaded'));
 
-      documentController.mDelete(request)
-        .then(() => done(new Error('Expected test to fail')))
-        .catch(err => {
-          should(err).be.instanceof(ServiceUnavailableError);
-          done();
+      return documentController.mDelete(request)
+        .then(result => {
+          should(result.length).be.eql(1, 'Only 1 document should have been deleted');
+          should(request.status).be.eql(206);
+          should(request.error).be.instanceof(PartialError);
         });
     });
   });

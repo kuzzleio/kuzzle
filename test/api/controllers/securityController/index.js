@@ -47,7 +47,7 @@ describe('/api/controllers/security', () => {
         .throw(BadRequestError, {message: 'null:null must specify the body attribute "ids" of type "array".'});
     });
 
-    it('should fail if kuzzle is overloaded', done => {
+    it('should fail if kuzzle is overloaded', () => {
       const request = new Request({
         body: {
           ids: [
@@ -60,11 +60,11 @@ describe('/api/controllers/security', () => {
 
       kuzzle.funnel.getRequestSlot.onThirdCall().yields(new ServiceUnavailableError('overloaded'));
 
-      mDelete(kuzzle, 'type', request)
-        .then(() => done(new Error('API call should have failed')))
-        .catch(err => {
-          should(err).be.instanceof(ServiceUnavailableError);
-          done();
+      return mDelete(kuzzle, 'type', request)
+        .then(result => {
+          should(result.length).be.eql(2, 'Only 1 document should have been deleted');
+          should(request.status).be.eql(206);
+          should(request.error).be.instanceof(PartialError);
         });
     });
 
