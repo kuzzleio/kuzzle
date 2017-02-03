@@ -68,6 +68,24 @@ describe('/api/controllers/security', () => {
         });
     });
 
+    it('should throw an error if the number of documents to get exceeds server configuration', () => {
+      const request = new Request({
+        body: {
+          ids: [
+            'foo',
+            'bar',
+            'baz'
+          ]
+        }
+      });
+
+      kuzzle.config.server.maxMultiActionsCount = 1;
+
+      return should(() => {
+        mDelete(kuzzle, 'type', request);
+      }).throw('Number of delete to perform exceeds the server configured value (1)');
+    });
+
     it('should return the input ids if everything went fine', () => {
       const request = new Request({
         body: {
