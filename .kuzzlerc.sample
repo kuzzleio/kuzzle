@@ -237,7 +237,7 @@
     //    ],
     //    "name": "kuzzle"
     //  }
-    },
+    //},
     // 3. using a redis cluster (cf. http://redis.io/topics/cluster-spec):
     //   nodes: array of master nodes of the cluster
     //     * host: The host on which the Redis node can be reached.
