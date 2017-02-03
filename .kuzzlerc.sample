@@ -18,7 +18,6 @@
   // Kuzzle first start.
   // cf: Kuzzle documentation on http://kuzzle.io/guide/#plugins for more
   // information on managing plugins
-  /*
   "plugins": {
     // [Common]
     //   * workerPrefix: process name prefix for plugins worker
@@ -49,18 +48,14 @@
       "activated": true
     }
   },
-  */
 
   // The queues used in Kuzzle internal communication
-  /*
   "queues": {
     "remoteActionQueue": "remote-action-queue"
   },
-  */
 
   // The repositories are used internally by Kuzzle to store its data (users,
   // permissions, configuration etc.)
-  /*
   "repositories": {
     // [Common]
     //   * cacheTTL: the time in the objects should be kepts in cache
@@ -70,16 +65,14 @@
       "cacheTTL": 1440
     }
   },
-  */
 
   // The security section contains the configuration for Kuzzle permissions
   // mechanism
-  /*
   "security": {
     // [restrictedProfileIds]
     // The profileIds applied to a user created with the route
     // users/_createRestricted
-    restrictedProfileIds: ['default'],
+    "restrictedProfileIds": ["default"],
     // [jwt]
     // configuration for npm
     // [jsonwebtoken package](https://github.com/auth0/node-jsonwebtoken)
@@ -179,10 +172,8 @@
       }
     }
   },
-  */
 
   // Configuration for Kuzzle server
-  /*
   "server": {
     // * maxConcurrentRequests: Number of requests Kuzzle processes simultaneously.
     //   Requests received above this limit are bufferized until a slot is freed
@@ -190,14 +181,16 @@
     //   Requests received above this limit are discarded with a 503 error
     // * warningRetainedRequestsLimit: Number of bufferized requests after
     //   which Kuzzle will throw warnings to the logger
+    // * maxMultiActionsCount: the maximum number of actions that can be performed
+    //   when using a multi-action controller call (document:mCreate, document:mDelete,
+    //   security:mDelete, ...)
     "maxConcurrentRequests": 50,
     "maxRetainedRequests": 50000,
-    "warningRetainedRequestsLimit": 5000
+    "warningRetainedRequestsLimit": 5000,
+    "maxMultiActionsCount": 1000
   },
-  */
 
   // The services are the external components Kuzzle relies on.
-  /*
   "services": {
     // [common]
     //   * defaultInitTimeout: Time in ms after which a service is considered
@@ -256,7 +249,7 @@
       "nodes": [
         {"host": "redis-1", "port": 6379},
         {"host": "redis-2", "port": 6379},
-        {"host": "redis-3', "port": 6379}
+        {"host": "redis-3", "port": 6379}
       ]
     },
 
@@ -310,27 +303,23 @@
       "host": "elasticsearch",
       "port": 9200,
       "apiVersion": "2.3"
-    },
-    */
+    }
+  },
 
   // Configuration for Kuzzle internal statistics module
   //   * ttl: Time in s for which the statistics framed are stored
   //   * statsInterval: Time in s between statistics framed are comitted to
   //     the cache engine
-  /*
   "stats": {
     "ttl": 3600,
     "statsInterval": 10
-  }
-  */
+  },
 
   // [validation]
   // Defines the specifications used to validate data.
   // Please refer to the guide for more information.
-  /*
-  validation: {
-  }
-  */
+  "validation": {
+  },
 
   // [dump]
   // Defines how kuzzle handle crash information
@@ -341,23 +330,21 @@
   //  * handledErrors: Used to generate dump on known errors (does not restart kuzzle)
   //    * enabled: Boolean to enable/disable dumping information when handled error occurs
   //    * whitelist: Array of error type to trigger a dump generation
-  /*
-  dump: {
-    enabled: false,
-    path: './dump/',
-    gcore: '/usr/bin/gcore',
-    dateFormat: 'YYYYMMDD-HHmm',
-    handledErrors: {
-      enabled: true,
-      whitelist: [
-        'Error',
-        'RangeError',
-        'TypeError',
-        'KuzzleError',
-        'InternalError',
-        'PluginImplementationError'
+  "dump": {
+    "enabled": false,
+    "path": "./dump/",
+    "gcore": "/usr/bin/gcore",
+    "dateFormat": "YYYYMMDD-HHmm",
+    "handledErrors": {
+      "enabled": true,
+      "whitelist": [
+        "Error",
+        "RangeError",
+        "TypeError",
+        "KuzzleError",
+        "InternalError",
+        "PluginImplementationError"
       ]
     }
   }
-  */
 }
