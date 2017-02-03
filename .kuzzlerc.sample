@@ -177,13 +177,15 @@
   "server": {
     // * maxConcurrentRequests: Number of requests Kuzzle processes simultaneously.
     //   Requests received above this limit are bufferized until a slot is freed
+    //   This value should be kept low to avoid overloading Kuzzle's event loop.
     // * maxRetainedRequests: Maximum number of requests that can be bufferized.
     //   Requests received above this limit are discarded with a 503 error
     // * warningRetainedRequestsLimit: Number of bufferized requests after
     //   which Kuzzle will throw warnings to the logger
     // * maxMultiActionsCount: the maximum number of actions that can be performed
     //   when using a multi-action controller call (document:mCreate, document:mDelete,
-    //   security:mDelete, ...)
+    //   security:mDelete, ...).
+    //   This value cannot be more than 80% of the value configured in maxRetainedRequests
     "maxConcurrentRequests": 50,
     "maxRetainedRequests": 50000,
     "warningRetainedRequestsLimit": 5000,
