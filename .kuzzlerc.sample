@@ -298,13 +298,13 @@
     //     hostname, an URI or an IP address.
     //   * port: The port on which elasticsearch is listening
     //   * apiVersion: The version of elasticsearch to use. The only supported
-    //     value for this setting is "2.3" for the moment
+    //     value for this setting is "5.0" for the moment
     "db": {
       "backend": "elasticsearch",
       "aliases": ["storageEngine"],
       "host": "elasticsearch",
       "port": 9200,
-      "apiVersion": "2.3"
+      "apiVersion": "5.0"
     }
   },
 
