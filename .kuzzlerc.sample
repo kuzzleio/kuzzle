@@ -227,16 +227,16 @@
     //       * port: The port on which the sentinel is running
     //     * name: a group of Redis instances composed of a master and one or more slaves
     //   database: (optional) the ID of the redis database (default: 0)
-    "internalCache": {
-      "backend": "redis",
-      "node": {
-        "sentinels": [
-          {"host": "sentinel-host-1", "port": 26379},
-          {"host": "sentinel-host-2", "port": 26379},
-          {"host": "sentinel-host-3", "port": 26379}
-        ],
-        "name": "kuzzle"
-      }
+    //"internalCache": {
+    //  "backend": "redis",
+    //  "node": {
+    //    "sentinels": [
+    //      {"host": "sentinel-host-1", "port": 26379},
+    //      {"host": "sentinel-host-2", "port": 26379},
+    //      {"host": "sentinel-host-3", "port": 26379}
+    //    ],
+    //    "name": "kuzzle"
+    //  }
     },
     // 3. using a redis cluster (cf. http://redis.io/topics/cluster-spec):
     //   nodes: array of master nodes of the cluster
@@ -244,14 +244,14 @@
     //       Can take an IP address, an URI or a hostname
     //     * port: The port on which Redis is running
     // (NB: in cluster mode, Redis uses only 1 database)
-    "internalCache": {
-      "backend": "redis",
-      "nodes": [
-        {"host": "redis-1", "port": 6379},
-        {"host": "redis-2", "port": 6379},
-        {"host": "redis-3", "port": 6379}
-      ]
-    },
+    //"internalCache": {
+    //  "backend": "redis",
+    //  "nodes": [
+    //    {"host": "redis-1", "port": 6379},
+    //    {"host": "redis-2", "port": 6379},
+    //    {"host": "redis-3", "port": 6379}
+    //  ]
+    //},
 
     // [memoryStorage]
     // The Redis memoryStorage Engine
