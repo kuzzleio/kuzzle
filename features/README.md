@@ -10,10 +10,3 @@ See the [Getting Started](../README.md) documentation for more information about
 
     $ npm run functional-testing
 
-If your Kuzzle instance uses a different configuration than the default one, you can make these tests point at other locations by editing the `.kuzzlerc` file at the root directory.
-
-## Running Functional Tests and report test coverage
-
-    $ npm run functional-testing && npm run crawl-coverage
-
-Coverage report will be stored in HTML human readable format: ```coverage/features/coverage.html```
