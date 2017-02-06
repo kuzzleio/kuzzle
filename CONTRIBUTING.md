@@ -33,7 +33,7 @@ How to run the development stack (needs Docker 1.10+ and Docker Compose 1.8+):
 docker-compose -f docker-compose/dev.yml up
 ```
 
-You can now access to `http://localhost` for the standard Kuzzle HTTP, WebSocket and Socket.io APIs
+You can now access to `http://localhost:7511` for the standard Kuzzle HTTP, WebSocket and Socket.io APIs
 
 Everytime a modification is detected in the source files, the server is automatically restarted and a new debug URL is provided.
 
