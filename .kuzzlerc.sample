@@ -279,11 +279,16 @@
     //   * host: Host of Kuzzle server. Change this if you want to use the CLI
     //     from a different host than the one Kuzzle is running on.
     //   * port: Port on which Kuzzle broker exposes itself.
+    //   * retryInterval: Time (in millisconds) on which kuzzle try to reconnect to the broker server when connection is lost
+    //   * pingTimeout: Time (in milliseconds) on which kuzzle consider a timed out connection unless pong response has been received
+    //   * pingInterval: Time (in milliseconds) on which kuzzle sent ping requests
     "internalBroker": {
       "aliases": ["broker"],
       "host": "localhost",
       "port": 7911,
-      "retryInterval": 1000
+      "retryInterval": 1000,
+      "pingTimeout": 50,
+      "pingInterval": 60000
     },
     // [proxyBroker]
     // The proxy broker is used to communicate between the Proxy and Kuzzle
@@ -291,10 +296,15 @@
     //   * host: the host on which the proxy can be reached. Can be a hostname,
     //     an IP address or an URI.
     //   * port: the port on which the proxy is listening
+    //   * retryInterval: Time (in millisconds) on which kuzzle try to reconnect to the broker server when connection is lost
+    //   * pingTimeout: Time (in milliseconds) on which kuzzle consider a timed out connection unless pong response has been received
+    //   * pingInterval: Time (in milliseconds) on which kuzzle sent ping requests
     "proxyBroker": {
       "host": "localhost",
       "port": 7331,
-      "retryInterval": 1000
+      "retryInterval": 1000,
+      "pingTimeout": 50,
+      "pingInterval": 60000
     },
     // [db]
     // The database layer is by default relying on elasticsearch and is
