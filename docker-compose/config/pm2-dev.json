@@ -3,8 +3,8 @@
     "name"         : "KuzzleServer",
     "script"       : "bin/kuzzle",
     "args"         : ["start"],
-    "watch"        : ["lib", "config", "bin", "default.config.js"],
-    "ignore_watch" : ["node_modules"],
-    "node_args": "--inspect"
+    "watch"        : ["lib", "config", "bin", "default.config.js", "plugins/enabled"],
+    "ignore_watch" : ["node_modules", "plugins/enabled/**/.git"],
+    "node_args"    : "--inspect"
   }]
 }
