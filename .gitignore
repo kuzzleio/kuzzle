@@ -24,6 +24,7 @@ docker-compose-custom.yml
 *~
 .*.swp
 .tags
+.sonar
 
 # Kuzzle
 .kuzzlerc
