@@ -25,7 +25,7 @@ virtualmachine:
     # List of ports to be forwarded to your host:
     # override with empty array if you do not want to forward ports
     # (in that case, you will need a private IP address to use Kuzzle - see above)
-    forwarded_port: { 7511: 7511, 8081: 7511, 7512: 7512, 1883: 1883, 5672: 5672, 15672: 15672, 61613: 61613 }
+    forwarded_port: { 7511: 7511, 8081: 7511, 1883: 1883, 5672: 5672, 15672: 15672, 61613: 61613 }
 
   ### END Network Settings
 
