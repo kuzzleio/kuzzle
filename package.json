@@ -9,7 +9,7 @@
   },
   "scripts": {
     "test": "npm run --silent lint && npm run unit-testing && npm run functional-testing",
-    "unit-testing": "nyc --reporter=text --reporter=lcov mocha",
+    "unit-testing": "nyc --reporter=text-summary --reporter=lcov mocha",
     "functional-testing": "npm run cucumber",
     "cucumber": "cucumber.js --fail-fast",
     "codecov": "codecov",
