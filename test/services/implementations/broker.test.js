@@ -576,8 +576,9 @@ describe('Test: Internal broker', () => {
 
             clock.tick(60001);
 
-            should(socket.ping)
-              .be.calledTwice();
+            should(socket.ping).be.calledTwice();
+
+            return null;
           });
       });
 
@@ -604,6 +605,8 @@ describe('Test: Internal broker', () => {
 
             should(errorRaised)
               .be.equal(true, 'error must be raised due to ping timeout');
+
+            return null;
           });
       });
 
@@ -633,6 +636,8 @@ describe('Test: Internal broker', () => {
 
             should(client._pingRequestTimeoutId)
               .be.equal(null, 'old ping timeout id should be cleared');
+
+            return null;
           });
       });
 
@@ -662,6 +667,8 @@ describe('Test: Internal broker', () => {
 
             should(client._pingRequestTimeoutId)
               .be.equal(null, 'old ping timeout id should be cleared');
+
+            return null;
           });
       });
     });
@@ -1110,7 +1117,7 @@ describe('Test: Internal broker', () => {
           sinon.spy()
         ];
 
-        removeClient.call(server, clientSocket);
+        removeClient(server, clientSocket);
 
         should(server.rooms).be.eql({ });
         should(server.rooms).be.empty();
@@ -1215,7 +1222,7 @@ describe('Test: Internal broker', () => {
           clientSocket.emit('close', 1, 'test');
 
           should(removeClientSpy).be.calledOnce();
-          should(removeClientSpy).be.calledWith(clientSocket);
+          should(removeClientSpy).be.calledWith(server, clientSocket);
 
           should(kuzzle.pluginsManager.trigger.lastCall).be.calledWith('log:info', 'client disconnected [1] test');
         });
@@ -1234,9 +1241,7 @@ describe('Test: Internal broker', () => {
         should(server.pluginsManager.trigger.lastCall).be.calledWith('log:error');
         should(server.onErrorHandlers[0]).be.calledOnce();
       });
-
     });
-
   });
 });
 
