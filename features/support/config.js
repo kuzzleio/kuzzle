@@ -6,5 +6,5 @@ var
 module.exports = rc('kuzzle', {
   scheme: 'http',
   host: kuzzleConfig.services.proxyBroker.host,
-  port: 7511
+  port: 7512
 });
