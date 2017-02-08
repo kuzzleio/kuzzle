@@ -1,4 +1,6 @@
-var
+'use strict';
+
+const
   path = require('path'),
   Promise = require('bluebird'),
   rewire = require('rewire'),
@@ -16,7 +18,7 @@ var
   WSBrokerServerRewire = rewire('../../../lib/services/broker/wsBrokerServer');
 
 describe('Test: Internal broker', () => {
-  var
+  let
     clock,
     server,
     kuzzle;
@@ -301,7 +303,7 @@ describe('Test: Internal broker', () => {
           }
         };
 
-        WSBrokerClientRewire.__get__('emit').call(client);
+        WSBrokerClientRewire.__get__('emit')(client);
 
         should(client.pluginsManager.trigger)
           .be.calledOnce()
@@ -553,13 +555,13 @@ describe('Test: Internal broker', () => {
           .catch(err => done(err));
       });
 
-      it('should delay new ping request once pong is received', done => {
+      it('should delay new ping request once pong is received', () => {
         let clientConnected = client.init();
         let socket = client.client.socket;
 
         socket.emit('open', 1);
 
-        clientConnected
+        return clientConnected
           .then(() => {
             should(socket.ping)
               .be.calledOnce();
@@ -576,13 +578,10 @@ describe('Test: Internal broker', () => {
 
             should(socket.ping)
               .be.calledTwice();
-
-            done();
-          })
-          .catch(err => done(err));
+          });
       });
 
-      it('should emit an error if pong response timed out', done => {
+      it('should emit an error if pong response timed out', () => {
         let clientConnected = client.init();
         let socket = client.client.socket;
         let errorRaised = false;
@@ -593,7 +592,7 @@ describe('Test: Internal broker', () => {
 
         socket.emit('open', 1);
 
-        clientConnected
+        return clientConnected
           .then(() => {
             should(socket.ping)
               .be.calledOnce();
@@ -605,13 +604,10 @@ describe('Test: Internal broker', () => {
 
             should(errorRaised)
               .be.equal(true, 'error must be raised due to ping timeout');
-
-            done();
-          })
-          .catch(err => done(err));
+          });
       });
 
-      it('should clear ping timeout and interval if socket received an error', done => {
+      it('should clear ping timeout and interval if socket received an error', () => {
         let clientConnected = client.init();
         let socket = client.client.socket;
         let fakePongListener = function fakePongListener() {};
@@ -623,7 +619,7 @@ describe('Test: Internal broker', () => {
 
         socket.emit('open', 1);
 
-        clientConnected
+        return clientConnected
           .then(() => {
             socket.emit('error', new Error('test errors'));
 
@@ -637,13 +633,10 @@ describe('Test: Internal broker', () => {
 
             should(client._pingRequestTimeoutId)
               .be.equal(null, 'old ping timeout id should be cleared');
-
-            done();
-          })
-          .catch(err => done(err));
+          });
       });
 
-      it('should clear ping timeout and interval if socket got disconnected', done => {
+      it('should clear ping timeout and interval if socket got disconnected', () => {
         let clientConnected = client.init();
         let socket = client.client.socket;
         let fakePongListener = function fakePongListener() {};
@@ -655,7 +648,7 @@ describe('Test: Internal broker', () => {
 
         socket.emit('open', 1);
 
-        clientConnected
+        return clientConnected
           .then(() => {
             socket.emit('close', 1);
 
@@ -669,10 +662,7 @@ describe('Test: Internal broker', () => {
 
             should(client._pingRequestTimeoutId)
               .be.equal(null, 'old ping timeout id should be cleared');
-
-            done();
-          })
-          .catch(err => done(err));
+          });
       });
     });
   });

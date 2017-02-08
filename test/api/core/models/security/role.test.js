@@ -1,4 +1,6 @@
-var
+'use strict';
+
+const
   should = require('should'),
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
@@ -9,11 +11,11 @@ var
   Request = require('kuzzle-common-objects').Request,
   InternalError = require('kuzzle-common-objects').errors.InternalError,
   ParseError = require('kuzzle-common-objects').errors.ParseError,
-  Role = rewire('../../../../../lib/api/core/models/security/role'),
-  internalIndex;
+  Role = rewire('../../../../../lib/api/core/models/security/role');
 
 describe('Test: security/roleTest', () => {
-  var
+  let
+    internalIndex,
     kuzzle,
     context = {
       protocol: 'test',
