@@ -1,17 +1,16 @@
 'use strict';
 
+const ROLE_MODULE_PATH = '../../../../../lib/api/core/models/security/role';
+
 const
   should = require('should'),
-  sinon = require('sinon'),
-  sandbox = sinon.sandbox.create(),
+  mockrequire = require('mock-require'),
   Promise = require('bluebird'),
-  rewire = require('rewire'),
-  Kuzzle = require('../../../../../lib/api/kuzzle'),
+  Kuzzle = require('../../../../mocks/kuzzle.mock'),
   BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,
   Request = require('kuzzle-common-objects').Request,
-  InternalError = require('kuzzle-common-objects').errors.InternalError,
   ParseError = require('kuzzle-common-objects').errors.ParseError,
-  Role = rewire('../../../../../lib/api/core/models/security/role');
+  Role = require(ROLE_MODULE_PATH);
 
 describe('Test: security/roleTest', () => {
   let
@@ -52,48 +51,11 @@ describe('Test: security/roleTest', () => {
         city: 'London',
         hobby: 'computer'
       }
-    },
-    stubs = {
-      storageEngine:{
-        search: rq => {
-          if (rq.input.body.query.ids.values[0] !== 'foobar') {
-            return Promise.resolve({hits: [documentAda]});
-          }
-          return Promise.resolve({hits: [documentFalseAda]});
-        },
-        get: rq => {
-          if (rq.input.resource._id === 'reject') {
-            return Promise.reject(new InternalError('Our Error'));
-          } else if (rq.input.resource._id !== 'foobar') {
-            return Promise.resolve(documentAda);
-          }
-          return Promise.resolve(documentFalseAda);
-        },
-        mget: rq => {
-          if (rq.input.body.ids[0] !== 'foobar') {
-            return Promise.resolve({hits: [documentAda]});
-          }
-          return Promise.resolve({hits: [documentFalseAda]});
-        }
-      }
     };
+
   before(() => {
     kuzzle = new Kuzzle();
     internalIndex = kuzzle.internalEngine.index;
-  });
-
-  beforeEach(() => {
-    sandbox.stub(kuzzle.internalEngine, 'get').returns(Promise.resolve({}));
-    return kuzzle.services.init({whitelist: []})
-      .then(() => {
-        sandbox.stub(kuzzle.services.list.storageEngine, 'get', stubs.storageEngine.get);
-        sandbox.stub(kuzzle.services.list.storageEngine, 'mget', stubs.storageEngine.mget);
-        sandbox.stub(kuzzle.services.list.storageEngine, 'search', stubs.storageEngine.search);
-      });
-  });
-
-  afterEach(() => {
-    sandbox.restore();
   });
 
   describe('#isActionAllowed', () => {
@@ -509,20 +471,28 @@ describe('Test: security/roleTest', () => {
     });
 
     it('should allow/deny rights using custom function with args using get', () => {
-      var
-        roleAllow = new Role(),
-        roleDeny = new Role(),
-        req = new Request({
-          controller: 'read',
+      let
+        role = new Role(),
+        allowed = new Request({
+          controller: 'document',
           action: 'get',
           requestId: 'foo',
           collection: 'barbar',
           index: 'bar',
           _id: documentAda._id,
           body: {}
+        }, context),
+        denied = new Request({
+          controller: 'document',
+          action: 'get',
+          requestId: 'foo',
+          collection: 'barbar',
+          index: 'bar',
+          _id: documentFalseAda._id,
+          body: {}
         }, context);
 
-      roleAllow.controllers = {
+      role.controllers = {
         '*': {
           actions: {
             '*': {
@@ -541,49 +511,40 @@ describe('Test: security/roleTest', () => {
         }
       };
 
-      roleDeny.controllers = {
-        '*': {
-          actions: {
-            '*': {
-              args: {
-                document: {
-                  action: {
-                    get: 'foobar'
-                  },
-                  index: 'bar',
-                  collection: 'barbar'
-                }
-              },
-              test: 'return args.document && args.document.id === $request.input.resource._id;'
-            }
-          }
-        }
-      };
+      kuzzle.services.list.storageEngine.get.returns(Promise.resolve(documentAda));
 
-      return roleAllow.isActionAllowed(req, kuzzle)
+      return role.isActionAllowed(allowed, kuzzle)
         .then(isAllowed => {
           should(isAllowed).be.true();
 
-          return roleDeny.isActionAllowed(req, kuzzle);
+          return role.isActionAllowed(denied, kuzzle);
         })
         .then(isAllowed => should(isAllowed).be.false());
     });
 
     it('should allow/deny rights using custom function with args using mget', () => {
       var
-        roleAllow = new Role(),
-        roleDeny = new Role(),
-        req = new Request({
-          controller: 'read',
+        role = new Role(),
+        allowed = new Request({
+          controller: 'document',
           action: 'get',
           requestId: 'foo',
           collection: 'barbar',
           index: 'bar',
           _id: documentAda._id,
           body: {}
+        }, context),
+        denied = new Request({
+          controller: 'document',
+          action: 'get',
+          requestId: 'foo',
+          collection: 'barbar',
+          index: 'bar',
+          _id: documentFalseAda._id,
+          body: {}
         }, context);
 
-      roleAllow.controllers = {
+      role.controllers = {
         '*': {
           actions: {
             '*': {
@@ -602,39 +563,21 @@ describe('Test: security/roleTest', () => {
         }
       };
 
-      roleDeny.controllers = {
-        '*': {
-          actions: {
-            '*': {
-              args: {
-                documents: {
-                  action: {
-                    mget: ['foobar']
-                  },
-                  index: 'bar',
-                  collection: 'barbar'
-                }
-              },
-              test: 'return args.documents[0] && args.documents[0].id === $request.input.resource._id;'
-            }
-          }
-        }
-      };
+      kuzzle.services.list.storageEngine.mget.returns(Promise.resolve({hits: [documentAda]}));
 
-      return roleAllow.isActionAllowed(req, kuzzle)
+      return role.isActionAllowed(allowed, kuzzle)
         .then(isAllowed => {
           should(isAllowed).be.true();
 
-          return roleDeny.isActionAllowed(req, kuzzle);
+          return role.isActionAllowed(denied, kuzzle);
         })
         .then(isAllowed => should(isAllowed).be.false());
     });
 
     it('should allow/deny rights using custom function with args using search', () => {
       var
-        roleAllow = new Role(),
-        roleDeny = new Role(),
-        req = new Request({
+        role = new Role(),
+        allowed = new Request({
           controller: 'read',
           action: 'get',
           requestId: 'foo',
@@ -642,9 +585,18 @@ describe('Test: security/roleTest', () => {
           index: 'bar',
           _id: documentAda._id,
           body: {}
+        }, context),
+        denied = new Request({
+          controller: 'read',
+          action: 'get',
+          requestId: 'foo',
+          collection: 'barbar',
+          index: 'bar',
+          _id: documentFalseAda._id,
+          body: {}
         }, context);
 
-      roleAllow.controllers = {
+      role.controllers = {
         '*': {
           actions: {
             '*': {
@@ -671,38 +623,13 @@ describe('Test: security/roleTest', () => {
         }
       };
 
-      roleDeny.controllers = {
-        '*': {
-          actions: {
-            '*': {
-              args: {
-                documents: {
-                  action: {
-                    search: {
-                      query: {
-                        ids: {
-                          values: [
-                            'foobar'
-                          ]
-                        }
-                      }
-                    }
-                  },
-                  index: 'bar',
-                  collection: 'barbar'
-                }
-              },
-              test: 'return args.documents[0] && args.documents[0].id === $request.input.resource._id;'
-            }
-          }
-        }
-      };
+      kuzzle.services.list.storageEngine.search.returns(Promise.resolve({hits: [documentAda]}));
 
-      return roleAllow.isActionAllowed(req, kuzzle)
+      return role.isActionAllowed(allowed, kuzzle)
         .then(isAllowed => {
           should(isAllowed).be.true();
 
-          return roleDeny.isActionAllowed(req, kuzzle);
+          return role.isActionAllowed(denied, kuzzle);
         })
         .then(isAllowed => should(isAllowed).be.false());
     });
@@ -932,79 +859,74 @@ describe('Test: security/roleTest', () => {
       return should(role.validateDefinition(context)).be.rejected();
     });
 
-    it('should reject the promise if the sandbox thew an error', () => {
-      var foo =
-        Role.__with__({
-          Sandbox: function () {
-            this.run = () => Promise.reject(new Error('our unit test error'));
-          }
-        })(() => {
-          var role = new Role();
+    it('should reject the promise if the sandbox throws an error', () => {
+      mockrequire('../../../../../lib/api/core/sandbox', function () {
+        this.run = function () { return Promise.reject(new Error('unit test error')); };
+      });
 
-          role.controllers = {
-            controller: {
-              actions: {
-                action: {
-                  args: {},
-                  test: 'a string'
-                }
-              }
+      let role = new (mockrequire.reRequire(ROLE_MODULE_PATH))();
+
+      mockrequire.stopAll();
+
+      role.controllers = {
+        controller: {
+          actions: {
+            action: {
+              args: {},
+              test: 'a string'
             }
-          };
+          }
+        }
+      };
 
-          return role.validateDefinition(context);
-        });
-
-      return should(foo).be.rejectedWith(Error, {message: 'our unit test error'});
+      return should(role.validateDefinition()).be.rejectedWith(Error, {message: 'unit test error'});
     });
 
     it('should reject the promise if the sandbox does not resolve to a boolean', () => {
-      var foo =
-        Role.__with__({
-          Sandbox: function () {
-            this.run = () => Promise.resolve({result: 'I am not a boolean'});
-          }
-        })(() => {
-          var role = new Role();
-          role.controllers = {
-            controller: {
-              actions: {
-                action: {
-                  args: {},
-                  test: 'a string'
-                }
-              }
+      mockrequire('../../../../../lib/api/core/sandbox', function () {
+        this.run = function () { return Promise.resolve({result: 'I am not a boolean'}); };
+      });
+
+      let role = new (mockrequire.reRequire(ROLE_MODULE_PATH))();
+
+      mockrequire.stopAll();
+
+      role.controllers = {
+        controller: {
+          actions: {
+            action: {
+              args: {},
+              test: 'a string'
             }
-          };
+          }
+        }
+      };
 
-          return role.validateDefinition(context);
-        });
-
-      return should(foo).be.rejectedWith(BadRequestError, {message: 'Invalid definition for controller,action. Error executing function'});
+      return should(role.validateDefinition()).be.rejectedWith(BadRequestError, {message: 'Invalid definition for controller,action. Error executing function'});
     });
 
     it('should resolve the promise if the sandbox returned a boolean', () => {
-      return Role.__with__({
-        Sandbox: function () {
-          this.run = () => Promise.resolve({ result: true });
-        }
-      })(() => {
-        var role = new Role();
-        role.controllers = {
-          controller: {
-            actions: {
-              action: {
-                args: {},
-                test: 'a string'
-              }
+      mockrequire('../../../../../lib/api/core/sandbox', function () {
+        this.run = function () { return Promise.resolve({ result: true }); };
+      });
+
+      let role = new (mockrequire.reRequire(ROLE_MODULE_PATH))();
+
+      mockrequire.stopAll();
+
+      role.controllers = {
+        controller: {
+          actions: {
+            action: {
+              args: {},
+              test: 'a string'
             }
           }
-        };
+        }
+      };
 
-        return role.validateDefinition(context);
-      })
-      .then(result => should(result).be.true());
+      return role.validateDefinition()
+        .then(result => should(result).be.true());
     });
   });
 });
-
