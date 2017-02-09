@@ -126,7 +126,7 @@ describe('Tests: api/cli/index.js', () => {
           should(err).be.exactly(error);
           should(Cli.__get__('console.error'))
             .be.calledOnce()
-            .be.calledWith(error.stack);
+            .be.calledWith(error.message, error.stack);
         });
     });
   });
