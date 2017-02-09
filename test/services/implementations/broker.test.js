@@ -709,6 +709,7 @@ describe('Test: Internal broker', () => {
       beforeEach(() => {
         reset = WSBrokerServerRewire.__set__({
           fs: {
+            existsSync: sinon.stub().returns(true),
             unlinkSync: sinon.spy()
           },
           http: {
@@ -781,6 +782,19 @@ describe('Test: Internal broker', () => {
           .have.length(2);
       });
 
+      it('should throw if an invalid path if given for a unix socket', () => {
+        WSBrokerServerRewire.__set__({
+          fs: {
+            existsSync: sinon.stub().returns(false)
+          }
+        });
+
+        return should(() => {
+          server = new WSBrokerServerRewire('broker', {socket: '/invalid/path/socket'}, kuzzle.pluginsManager);
+          server.ws(() => {});
+        })
+          .throw(InternalError, {message: 'Invalid configuration provided for broker. Could not find /invalid/path directory.'});
+      });
 
       it('should create a unix socket based Websocket server', () => {
         var
@@ -802,7 +816,7 @@ describe('Test: Internal broker', () => {
 
         should(httpServer.listen)
           .be.calledOnce()
-          .be.calledWith('socket');
+          .be.calledWith(path.resolve('.', 'socket'));
 
         // Errors handling
 
@@ -832,7 +846,7 @@ describe('Test: Internal broker', () => {
 
         should(WSBrokerServerRewire.__get__('fs.unlinkSync'))
           .be.calledOnce()
-          .be.calledWith('socket');
+          .be.calledWith(path.resolve('.', 'socket'));
 
         should(httpServer.listen)
           .be.calledTwice();

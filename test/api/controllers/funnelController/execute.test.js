@@ -98,7 +98,7 @@ describe('funnelController.execute', () => {
       funnel.execute(request, () => {
         should(kuzzle.pluginsManager.trigger)
           .be.calledOnce()
-          .be.calledWith('log:error', error.stack);
+          .be.calledWith('log:error', error.message + '\n' + error.stack);
         done();
 
       });

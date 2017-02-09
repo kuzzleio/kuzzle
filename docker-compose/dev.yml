@@ -4,7 +4,7 @@ services:
   proxy:
     image: kuzzleio/proxy:develop
     ports:
-      - "7511-7513:7511-7513"
+      - "7512:7512"
 
   kuzzle:
     image: kuzzleio/dev
