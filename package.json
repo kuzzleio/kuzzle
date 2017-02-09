@@ -84,7 +84,7 @@
     "should": "11.1.0",
     "should-sinon": "0.0.5",
     "sinon": "1.17.6",
-    "socket.io-client": "1.4.8"
+    "socket.io-client": "1.7.2"
   },
   "engines": {
     "node": ">= 4.4.5",
