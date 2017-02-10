@@ -5,7 +5,6 @@ var
   sandbox = sinon.sandbox.create(),
   Request = require('kuzzle-common-objects').Request;
 
-
 describe('Test: dump', () => {
   var
     writeFileSyncSpy,
@@ -25,7 +24,7 @@ describe('Test: dump', () => {
     writeFileSyncSpy = sandbox.spy();
     copySyncSpy = sandbox.spy();
     mkdirpSyncSpy = sandbox.spy();
-    coreSpy = sandbox.spy();
+    coreSpy = sandbox.stub().returns({});
     consoleLogSpy = sandbox.spy();
     getAllStatsSpy = sandbox.stub().returns(Promise.resolve({hits: [{stats: 42}]}));
 
@@ -37,7 +36,7 @@ describe('Test: dump', () => {
         }
       },
       pluginsManager: {
-        getPluginsConfig: () => { return {'foo': {}}; },
+        getPluginsFeatures: () => { return {'foo': {}}; },
         plugins: {
           'foo': {}
         }
@@ -58,7 +57,8 @@ describe('Test: dump', () => {
       sync: mkdirpSyncSpy
     });
 
-    dump.__set__('core', coreSpy);
+    dump.__set__('dumpme', coreSpy);
+
     dump.__set__('console', {
       log: consoleLogSpy
     });
@@ -105,7 +105,7 @@ describe('Test: dump', () => {
         should(writeFileSyncSpy.getCall(4).args[0]).be.exactly(baseDumpPath.concat('/statistics.json'));
         should(writeFileSyncSpy.getCall(4).args[1]).be.exactly(JSON.stringify([{stats: 42}], null, ' ').concat('\n'));
 
-        should(coreSpy.getCall(0).args[0]).be.exactly(baseDumpPath.concat('/core'));
+        should(coreSpy.firstCall.calledWith('gcore', baseDumpPath.concat('/core'))).be.true();
 
         should(copySyncSpy.getCall(0).args[0]).be.exactly(process.argv[0]);
         should(copySyncSpy.getCall(0).args[1]).be.exactly(baseDumpPath.concat('/node'));

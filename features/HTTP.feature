@@ -83,6 +83,62 @@ Feature: Test HTTP API
     And I count 0 documents
 
   @usingHttp
+  Scenario: delete multiple documents with no error
+    When I write the document "documentGrace" with id "Grace"
+    When I write the document "documentAda" with id "Ada"
+    Then I count 2 documents
+    Then I remove the documents '["Grace", "Ada"]'
+    And I count 0 documents
+
+  @usingHttp
+  Scenario: delete multiple documents with partial errors
+    When I write the document "documentGrace" with id "Grace"
+    When I write the document "documentAda" with id "Ada"
+    Then I count 2 documents
+    Then I remove the documents '["Grace", "Ada", "Not exist"]' and get partial errors
+    And I count 0 documents
+
+  @usingHttp
+  Scenario: create multiple documents
+    When I create multiple documents '{"Ada": "documentAda", "Grace": "documentGrace"}'
+    Then I count 2 documents
+
+  @usingHttp
+  Scenario: replace multiple documents
+    When I create multiple documents '{"Ada": "documentAda", "Grace": "documentGrace"}'
+    Then I count 2 documents
+    Then I replace multiple documents '{"Ada": "documentGrace", "Grace": "documentAda"}'
+    Then I count 2 documents
+
+  @usingHttp
+  Scenario: replace multiple documents with partial errors
+    When I create multiple documents '{"Ada": "documentAda", "Grace": "documentGrace"}'
+    Then I count 2 documents
+    Then I replace multiple documents '{"Ada": "documentGrace", "Not Exist": "documentAda"}' and get partial errors
+    Then I count 2 documents
+
+  @usingHttp
+  Scenario: update multiple documents
+    When I create multiple documents '{"Ada": "documentAda", "Grace": "documentGrace"}'
+    Then I count 2 documents
+    Then I update multiple documents '{"Ada": "documentGrace", "Grace": "documentAda"}'
+    Then I count 2 documents
+
+  @usingHttp
+  Scenario: create and replace multiple documents
+    Then I count 0 documents
+    When I createOrReplace multiple documents '{"Ada": "documentAda", "Grace": "documentGrace"}'
+    Then I count 2 documents
+    Then I createOrReplace multiple documents '{"Ada": "documentGrace", "Grace": "documentAda"}'
+    Then I count 2 documents
+
+  @usingHttp
+  Scenario: get multiple documents
+    When I create multiple documents '{"Ada": "documentAda", "Grace": "documentGrace"}'
+    Then I count 2 documents
+    Then I get 2 documents '["Ada", "Grace"]'
+
+  @usingHttp
   Scenario: Search with scroll documents
     When I write the document "documentGrace"
     When I write the document "documentGrace"
@@ -96,7 +152,7 @@ Feature: Test HTTP API
   Scenario: Change mapping
     When I write the document "documentGrace"
     Then I don't find a document with "Grace" in field "firstName"
-    Then I change the schema
+    Then I change the mapping
     When I write the document "documentGrace"
     And I refresh the index
     Then I find a document with "Grace" in field "newFirstName"
@@ -170,6 +226,15 @@ Feature: Test HTTP API
     Then I create a restricted user "restricteduser1" with id "restricteduser1-id"
 
   @usingHttp @cleanSecurity
+  Scenario: Role mapping
+    Given I get the role mapping
+    Then The mapping should contain "controllers" field of type "object"
+    When I change the role mapping
+    Then I get the role mapping
+    Then The mapping should contain "foo" field of type "text"
+    And The mapping should contain "bar" field of type "keyword"
+
+  @usingHttp @cleanSecurity
   Scenario: Create/get/search/update/delete role
     When I create a new role "role1" with id "test"
     Then I'm able to find a role with id "test"
@@ -196,6 +261,16 @@ Feature: Test HTTP API
   @usingHttp @cleanSecurity
   Scenario: creating a profile with an empty set of roles triggers an error
     Then I cannot create a profile with an empty set of roles
+
+  @usingHttp @cleanSecurity
+  Scenario: Profile mapping
+    Given I get the profile mapping
+    Then The mapping should contain a nested "policies" field with property "_id" of type "keyword"
+    And The mapping should contain a nested "policies" field with property "roleId" of type "text"
+    When I change the profile mapping
+    Then I get the profile mapping
+    Then The mapping should contain "foo" field of type "text"
+    And The mapping should contain "bar" field of type "keyword"
 
   @usingHttp @cleanSecurity
   Scenario: create, get and delete a profile
@@ -229,6 +304,16 @@ Feature: Test HTTP API
     And I create a new profile "profile2" with id "profile2"
     Then I'm able to find rights for profile "profile2"
     Then I'm not able to find rights for profile "fake-profile"
+
+  @usingHttp @cleanSecurity
+  Scenario: User mapping
+    Given I get the user mapping
+    Then The mapping should contain "password" field of type "keyword"
+    And The mapping should contain "profileIds" field of type "keyword"
+    When I change the user mapping
+    Then I get the user mapping
+    Then The mapping should contain "foo" field of type "text"
+    And The mapping should contain "bar" field of type "keyword"
 
   @usingHttp @cleanSecurity
   Scenario: user crudl

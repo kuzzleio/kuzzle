@@ -236,7 +236,21 @@ describe('Plugin Context', () => {
 
       kuzzle.funnel.processRequest.returns(Promise.resolve(request));
 
-      return execute.bind(kuzzle)(request, callback);
+      execute.bind(kuzzle)(request, callback);
+    });
+
+    it('should resolve a Promise with a result if everything went well', () => {
+      var
+        request = new Request({requestId: 'request'}, {connectionId: 'connectionid'});
+
+      kuzzle.funnel.processRequest.returns(Promise.resolve(request));
+
+      return execute.bind(kuzzle)(request)
+        .then(res => {
+          should(res).match(request);
+
+          should(kuzzle.funnel.processRequest.firstCall.args[0]).be.eql(request);
+        });
     });
 
     it('should call the callback with an error if something went wrong', done => {
@@ -262,7 +276,28 @@ describe('Plugin Context', () => {
 
       kuzzle.funnel.processRequest.returns(Promise.reject(error));
 
-      return execute.bind(kuzzle)(request, callback);
+      execute.bind(kuzzle)(request, callback);
+    });
+
+    it('should reject a Promise with an error if something went wrong', () => {
+      var
+        request = new Request({body: {some: 'request'}}, {connectionId: 'connectionid'}),
+        error = new Error('error');
+
+      kuzzle.funnel.processRequest.returns(Promise.reject(error));
+
+      return execute.bind(kuzzle)(request)
+        .catch((err) => {
+          should(kuzzle.funnel.processRequest.firstCall.args[0]).be.eql(request);
+
+          should(err).match(error);
+
+          return Promise.resolve().then(() => {
+            // allows handleErrorDump to be called
+            should(kuzzle.funnel.handleErrorDump).be.calledOnce();
+            should(kuzzle.funnel.handleErrorDump.firstCall.args[0]).match(error);
+          });
+        });
     });
   });
 });

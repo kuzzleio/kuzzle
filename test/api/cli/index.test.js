@@ -30,68 +30,7 @@ describe('Tests: api/cli/index.js', () => {
       should(cli.actions.createFirstAdmin).be.instanceOf(Action);
       should(cli.actions.data).be.instanceOf(Action);
       should(cli.actions.dump).be.instanceOf(Action);
-      should(cli.actions.managePlugins).be.instanceOf(Action);
-      should(cli.actions.managePlugins.timeout).be.eql(1000);
-      should(cli.actions.managePlugins.timeOutCB).be.a.Function();
       should(cli.do).be.a.Function();
-    });
-  });
-
-  describe('#managePlugins timeoutCB', () => {
-    it('should set a custom timeoutCB for the managePlugins action', () => {
-      var action = {
-        foo: 'bar',
-        timeout: 1000,
-        initTimeout: sinon.spy()
-      };
-
-      Cli.__with__({
-        console: {
-          error: sinon.spy()
-        },
-        process: {
-          exit: sinon.spy(),
-          stdout: {
-            write: sinon.spy()
-          }
-        }
-      })(() => {
-        var
-          timeoutCB,
-          cli = new Cli(kuzzle);
-
-        timeoutCB = cli.actions.managePlugins.timeOutCB;
-        should(timeoutCB).be.an.instanceOf(Function);
-
-        // first call - should init maxTimeout and spent
-        timeoutCB.call(action);
-
-        should(action.timeout).be.exactly(1000);
-        should(action.maxTimeout).be.exactly(5 * 60 * 1000);
-        should(action.spent).be.exactly(action.timeout * 2);
-        should(Cli.__get__('process.stdout.write'))
-          .be.calledOnce()
-          .be.calledWith('.');
-        should(Cli.__get__('console.error'))
-          .have.callCount(0);
-
-        // second call after max timeout is reached
-        action.spent = (5 * 60 * 1000);
-        timeoutCB.call(action);
-
-        should(action.spent).be.exactly(5 * 60 * 1000 + action.timeout);
-        // no additional call on process.stdout.write
-        should(Cli.__get__('process.stdout.write'))
-          .be.calledOnce()
-          .be.calledWith('.');
-        should(Cli.__get__('console.error'))
-          .be.calledOnce()
-          .be.calledWith('ERROR: No response from Kuzzle within ̀300s. Exiting');
-        should(Cli.__get__('process.exit'))
-          .be.calledOnce()
-          .be.calledWith(1);
-
-      });
     });
   });
 
@@ -187,7 +126,7 @@ describe('Tests: api/cli/index.js', () => {
           should(err).be.exactly(error);
           should(Cli.__get__('console.error'))
             .be.calledOnce()
-            .be.calledWith(error.stack);
+            .be.calledWith(error.message, error.stack);
         });
     });
   });

@@ -1,4 +1,6 @@
-var
+'use strict';
+
+const
   path = require('path'),
   Promise = require('bluebird'),
   rewire = require('rewire'),
@@ -16,7 +18,7 @@ var
   WSBrokerServerRewire = rewire('../../../lib/services/broker/wsBrokerServer');
 
 describe('Test: Internal broker', () => {
-  var
+  let
     clock,
     server,
     kuzzle;
@@ -301,7 +303,7 @@ describe('Test: Internal broker', () => {
           }
         };
 
-        WSBrokerClientRewire.__get__('emit').call(client);
+        WSBrokerClientRewire.__get__('emit')(client);
 
         should(client.pluginsManager.trigger)
           .be.calledOnce()
@@ -423,7 +425,7 @@ describe('Test: Internal broker', () => {
 
         clock.tick(20000);
 
-        should(socket.listeners.close[0]).have.callCount(3);
+        should(socket.__events.close[0]).have.callCount(3);
         should(closeSpy).have.callCount(3);
         should(connectSpy).be.calledOnce();
         should(client.onCloseHandlers[0]).be.calledThrice();
@@ -443,7 +445,7 @@ describe('Test: Internal broker', () => {
 
         clock.tick(20000);
 
-        should(socket.listeners.error[0]).be.have.callCount(3);
+        should(socket.__events.error[0]).be.have.callCount(3);
         should(closeSpy).be.have.callCount(3);
         should(client.client.state).be.exactly('retrying');
         should(connectSpy).be.calledOnce();
@@ -464,6 +466,212 @@ describe('Test: Internal broker', () => {
 
     });
 
+    describe('#ping/pong keep-alive', () => {
+      beforeEach(() => {
+        client.onConnectHandlers = [];
+        client.onCloseHandlers = [];
+        client.onErrorHandlers = [];
+
+        client.ws = () => new WSClientMock();
+
+        return Promise.all([server.init()]);
+      });
+
+      it('should clear ping timeout and interval once connected', done => {
+        let clientConnected = client.init();
+        let socket = client.client.socket;
+        let fakePongListener = function fakePongListener() {};
+
+        client._pingRequestIntervalId = 'fakeIntervalId';
+        client._pingRequestTimeoutId = 'fakeTimeoutId';
+        socket.on('pong', fakePongListener);
+        
+        socket.emit('open', 1);
+
+        clientConnected
+          .then(() => {
+            let pongListeners = socket.listeners('pong');
+
+            should(pongListeners.length)
+              .be.equal(1, 'previous pong handler must not be stacked with new one');
+
+            should(pongListeners[0])
+              .be.not.eql(fakePongListener, 'previous pong handler must be cleared, but still present');
+
+            should(client._pingRequestIntervalId)
+              .be.not.equal('fakeIntervalId', 'old ping interval id should be erased');
+
+            should(client._pingRequestTimeoutId)
+              .be.not.equal('fakeTimeoutId', 'old ping timeout id should be erased');
+
+            done();
+          })
+          .catch(err => done(err));
+      });
+
+      it('should send ping request to server once connected', done => {
+        let clientConnected = client.init();
+        let socket = client.client.socket;
+
+        socket.emit('open', 1);
+
+        clientConnected
+          .then(() => {
+            should(socket.ping)
+              .be.calledOnce();
+
+            should(client._pingRequestTimeoutId)
+              .be.not.equal(null, 'ping response timeout should be registered');
+
+            should(client._pingRequestIntervalId)
+              .be.equal(null, 'ping interval should not be registered until pong result has come');
+
+            done();
+          })
+          .catch(err => done(err));
+      });
+
+      it('should clear ping timeout once pong is received', done => {
+        let clientConnected = client.init();
+        let socket = client.client.socket;
+
+        socket.emit('open', 1);
+
+        clientConnected
+          .then(() => {
+            should(socket.ping)
+              .be.calledOnce();
+
+            should(client._pingRequestTimeoutId)
+              .be.not.equal(null, 'ping response timeout should be registered');
+
+            socket.emit('pong', 1);
+
+            should(client._pingRequestTimeoutId)
+              .be.equal(null, 'ping response timeout should be cleared due to pong response');
+
+            done();
+          })
+          .catch(err => done(err));
+      });
+
+      it('should delay new ping request once pong is received', () => {
+        let clientConnected = client.init();
+        let socket = client.client.socket;
+
+        socket.emit('open', 1);
+
+        return clientConnected
+          .then(() => {
+            should(socket.ping)
+              .be.calledOnce();
+
+            should(client._pingRequestIntervalId)
+              .be.equal(null, 'ping interval should not be registered until pong is received');
+
+            socket.emit('pong', 1);
+
+            should(client._pingRequestIntervalId)
+              .be.not.equal(null, 'ping interval should be registered due to pong response');
+
+            clock.tick(60001);
+
+            should(socket.ping).be.calledTwice();
+
+            return null;
+          });
+      });
+
+      it('should emit an error if pong response timed out', () => {
+        let clientConnected = client.init();
+        let socket = client.client.socket;
+        let errorRaised = false;
+
+        socket.on('error', () => {
+          errorRaised = true;
+        });
+
+        socket.emit('open', 1);
+
+        return clientConnected
+          .then(() => {
+            should(socket.ping)
+              .be.calledOnce();
+
+            should(client._pingRequestTimeoutId)
+              .be.not.equal(null, 'ping response timeout should be registered');
+
+            clock.tick(51);
+
+            should(errorRaised)
+              .be.equal(true, 'error must be raised due to ping timeout');
+
+            return null;
+          });
+      });
+
+      it('should clear ping timeout and interval if socket received an error', () => {
+        let clientConnected = client.init();
+        let socket = client.client.socket;
+        let fakePongListener = function fakePongListener() {};
+        let pongListeners;
+
+        client._pingRequestIntervalId = 'fakeIntervalId';
+        client._pingRequestTimeoutId = 'fakeTimeoutId';
+        socket.on('pong', fakePongListener);
+
+        socket.emit('open', 1);
+
+        return clientConnected
+          .then(() => {
+            socket.emit('error', new Error('test errors'));
+
+            pongListeners = socket.listeners('pong');
+
+            should(pongListeners.length)
+              .be.equal(0, 'previous pong handler must be cleared');
+
+            should(client._pingRequestIntervalId)
+              .be.equal(null, 'old ping interval id should be cleared');
+
+            should(client._pingRequestTimeoutId)
+              .be.equal(null, 'old ping timeout id should be cleared');
+
+            return null;
+          });
+      });
+
+      it('should clear ping timeout and interval if socket got disconnected', () => {
+        let clientConnected = client.init();
+        let socket = client.client.socket;
+        let fakePongListener = function fakePongListener() {};
+        let pongListeners;
+
+        client._pingRequestIntervalId = 'fakeIntervalId';
+        client._pingRequestTimeoutId = 'fakeTimeoutId';
+        socket.on('pong', fakePongListener);
+
+        socket.emit('open', 1);
+
+        return clientConnected
+          .then(() => {
+            socket.emit('close', 1);
+
+            pongListeners = socket.listeners('pong');
+
+            should(pongListeners.length)
+              .be.equal(0, 'previous pong handler must be cleared');
+
+            should(client._pingRequestIntervalId)
+              .be.equal(null, 'old ping interval id should be cleared');
+
+            should(client._pingRequestTimeoutId)
+              .be.equal(null, 'old ping timeout id should be cleared');
+
+            return null;
+          });
+      });
+    });
   });
 
   describe('Server', () => {
@@ -501,6 +709,7 @@ describe('Test: Internal broker', () => {
       beforeEach(() => {
         reset = WSBrokerServerRewire.__set__({
           fs: {
+            existsSync: sinon.stub().returns(true),
             unlinkSync: sinon.spy()
           },
           http: {
@@ -573,6 +782,19 @@ describe('Test: Internal broker', () => {
           .have.length(2);
       });
 
+      it('should throw if an invalid path if given for a unix socket', () => {
+        WSBrokerServerRewire.__set__({
+          fs: {
+            existsSync: sinon.stub().returns(false)
+          }
+        });
+
+        return should(() => {
+          server = new WSBrokerServerRewire('broker', {socket: '/invalid/path/socket'}, kuzzle.pluginsManager);
+          server.ws(() => {});
+        })
+          .throw(InternalError, {message: 'Invalid configuration provided for broker. Could not find /invalid/path directory.'});
+      });
 
       it('should create a unix socket based Websocket server', () => {
         var
@@ -594,7 +816,7 @@ describe('Test: Internal broker', () => {
 
         should(httpServer.listen)
           .be.calledOnce()
-          .be.calledWith('socket');
+          .be.calledWith(path.resolve('.', 'socket'));
 
         // Errors handling
 
@@ -624,7 +846,7 @@ describe('Test: Internal broker', () => {
 
         should(WSBrokerServerRewire.__get__('fs.unlinkSync'))
           .be.calledOnce()
-          .be.calledWith('socket');
+          .be.calledWith(path.resolve('.', 'socket'));
 
         should(httpServer.listen)
           .be.calledTwice();
@@ -699,17 +921,17 @@ describe('Test: Internal broker', () => {
         response = server.broadcast('test', {foo: 'bar'}, client2.client.socket);
 
         should(response).be.exactly(2);
-        should(client1.client.socket.listeners.message[0]).be.calledOnce();
-        should(client1.client.socket.listeners.message[0]).be.calledWith(JSON.stringify({
+        should(client1.client.socket.__events.message[0]).be.calledOnce();
+        should(client1.client.socket.__events.message[0]).be.calledWith(JSON.stringify({
           room: 'test',
           data: { foo: 'bar' }
         }));
-        should(client3.client.socket.listeners.message[0]).be.calledOnce();
-        should(client3.client.socket.listeners.message[0]).be.calledWith(JSON.stringify({
+        should(client3.client.socket.__events.message[0]).be.calledOnce();
+        should(client3.client.socket.__events.message[0]).be.calledWith(JSON.stringify({
           room: 'test',
           data: { foo: 'bar' }
         }));
-        should(client2.client.socket.listeners.message[0]).callCount(0);
+        should(client2.client.socket.__events.message[0]).callCount(0);
       });
 
       it('should trigger the plugin manager if an error occured', () => {
@@ -767,16 +989,16 @@ describe('Test: Internal broker', () => {
           room: 'test',
           data: { foo: 'bar' }
         }));
-        should(client2.client.socket.listeners.message[0]).be.calledOnce();
-        should(client2.client.socket.listeners.message[0]).be.calledWith(JSON.stringify({
+        should(client2.client.socket.__events.message[0]).be.calledOnce();
+        should(client2.client.socket.__events.message[0]).be.calledWith(JSON.stringify({
           room: 'test',
           data: { foo: 'bar' }
         }));
 
         should(client1.client.socket.send).callCount(0);
-        should(client1.client.socket.listeners.message[0]).callCount(0);
+        should(client1.client.socket.__events.message[0]).callCount(0);
         should(client3.client.socket.send).callCount(0);
-        should(client3.client.socket.listeners.message[0]).callCount(0);
+        should(client3.client.socket.__events.message[0]).callCount(0);
       });
 
     });
@@ -909,7 +1131,7 @@ describe('Test: Internal broker', () => {
           sinon.spy()
         ];
 
-        removeClient.call(server, clientSocket);
+        removeClient(server, clientSocket);
 
         should(server.rooms).be.eql({ });
         should(server.rooms).be.empty();
@@ -1014,7 +1236,7 @@ describe('Test: Internal broker', () => {
           clientSocket.emit('close', 1, 'test');
 
           should(removeClientSpy).be.calledOnce();
-          should(removeClientSpy).be.calledWith(clientSocket);
+          should(removeClientSpy).be.calledWith(server, clientSocket);
 
           should(kuzzle.pluginsManager.trigger.lastCall).be.calledWith('log:info', 'client disconnected [1] test');
         });
@@ -1033,9 +1255,7 @@ describe('Test: Internal broker', () => {
         should(server.pluginsManager.trigger.lastCall).be.calledWith('log:error');
         should(server.onErrorHandlers[0]).be.calledOnce();
       });
-
     });
-
   });
 });
 

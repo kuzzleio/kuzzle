@@ -1,4 +1,11 @@
 /**
+ * /!\ DO NOT MODIFY THIS FILE
+ *
+ * To customize your Kuzzle installation, create a
+ * ".kuzzlerc" file and put your overrides there.
+ * Please check the ".kuzzlerc.sample" file to get
+ * started.
+ *
  * @class KuzzleConfiguration
  */
 module.exports = {
@@ -19,14 +26,8 @@ module.exports = {
       pipeWarnTime: 40,
       pipeTimeout: 250
     },
-
     'kuzzle-plugin-logger': {
-      version: '2.0.5',
-      activated: true
-    },
-    'kuzzle-plugin-auth-passport-local': {
-      version: '3.0.2',
-      activated: true
+      threads: 1
     }
   },
 
@@ -119,11 +120,13 @@ module.exports = {
     }
   },
 
-  server: {
-    maxRequestHistorySize: 50,
-    maxConcurrentRequests: 50,
-    maxRetainedRequests: 50000,
-    warningRetainedRequestsLimit: 5000
+  limits: {
+    requestsHistorySize: 50,
+    concurrentRequests: 50,
+    requestsBufferSize: 50000,
+    requestsBufferWarningThreshold: 5000,
+    documentsFetchCount: 1000,
+    documentsWriteCount: 200
   },
 
   services: {
@@ -184,6 +187,7 @@ module.exports = {
   dump: {
     enabled: false,
     path: './dump/',
+    gcore: 'gcore',
     dateFormat: 'YYYYMMDD-HHmm',
     handledErrors: {
       enabled: true,

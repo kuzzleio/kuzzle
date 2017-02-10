@@ -240,17 +240,12 @@ describe('Test the auth controller', () => {
 
   describe('#getCurrentUser', () => {
     it('should return the user given in the context', () => {
-      var req = new Request({body: {}}, {token: {userId: 'admin'}});
+      var req = new Request({body: {}}, {token: {userId: 'admin'}, user: {_id: 'admin'}});
 
       return kuzzle.funnel.controllers.auth.getCurrentUser(req)
         .then(response => {
-          should(response._id).be.exactly('admin');
-          should(response._source.profileIds).be.eql(['admin']);
+          should(response).match(req.context.user);
         });
-    });
-
-    it('should return a falsey response if the current user is unknown', () => {
-      return should(kuzzle.funnel.controllers.auth.getCurrentUser(new Request({body: {}}, {token: { userId: 'unknown_user'}}))).be.rejected();
     });
   });
 
@@ -335,7 +330,10 @@ describe('Test the auth controller', () => {
     });
 
     it('should return a valid response', () => {
-      return kuzzle.funnel.controllers.auth.updateSelf(new Request({body: {foo: 'bar'}}, {token: {userId: 'admin', _id: 'admin'}}))
+      return kuzzle.funnel.controllers.auth.updateSelf(new Request(
+        {body: {foo: 'bar'}},
+        {token: {userId: 'admin', _id: 'admin'}, user: {_id: 'admin'}}
+      ))
         .then(response => {
           should(response).be.instanceof(Object);
           should(persistOptions.database.method).be.exactly('update');
@@ -347,7 +345,7 @@ describe('Test the auth controller', () => {
       should(() => {
         kuzzle.funnel.controllers.auth.updateSelf(new Request(
           {body: {foo: 'bar', profileIds: ['test']}},
-          {token: {userId: 'admin', _id: 'admin'}}
+          {token: {userId: 'admin', _id: 'admin'}, user: {_id: 'admin'}}
         ));
       }).throw(BadRequestError);
     });
@@ -356,37 +354,30 @@ describe('Test the auth controller', () => {
       should(() => {
         kuzzle.funnel.controllers.auth.updateSelf(new Request(
           {body: {foo: 'bar', _id: 'test'}},
-          {token: {userId: 'admin', _id: 'admin'}}
+          {token: {userId: 'admin', _id: 'admin'}, user: {_id: 'admin'}}
         ));
       }).throw(BadRequestError);
     });
 
     it('should throw an error if current user is anonymous', () => {
       should(() => {
-        kuzzle.funnel.controllers.auth.updateSelf(new Request({body: {foo: 'bar'}}, {token: {userId: '-1'}}));
+        kuzzle.funnel.controllers.auth.updateSelf(new Request({body: {foo: 'bar'}}, {token: {userId: '-1'}, user: {_id: '-1'}}));
       }).throw(UnauthorizedError);
     });
   });
 
   describe('#getMyRights', () => {
-    var req = new Request({body: {}}, {token: {userId: 'test'}});
+    var req = new Request({body: {}}, {token: {userId: 'test'}, user: {
+      _id: 'test',
+      getRights: () => {
+        return Promise.resolve({
+          rights1: {controller: 'read', action: 'get', index: 'foo', collection: 'bar', value: 'allowed'},
+          rights2: {controller: 'write', action: 'delete', index: '*', collection: '*', value: 'conditional'}
+        });
+      }
+    }});
 
     it('should be able to get current user\'s rights', () => {
-      var loadUserStub = userId => {
-        return Promise.resolve({
-          _id: userId,
-          _source: {},
-          getRights: () => {
-            return {
-              rights1: {controller: 'read', action: 'get', index: 'foo', collection: 'bar', value: 'allowed'},
-              rights2: {controller: 'write', action: 'delete', index: '*', collection: '*', value: 'conditional'}
-            };
-          }
-        });
-      };
-
-      kuzzle.repositories.user.load.restore();
-      sandbox.stub(kuzzle.repositories.user, 'load', loadUserStub);
       return kuzzle.funnel.controllers.auth.getMyRights(req)
         .then(response => {
           var filteredItem;
@@ -397,18 +388,18 @@ describe('Test the auth controller', () => {
 
           filteredItem = response.hits.filter(item => {
             return item.controller === 'read' &&
-                    item.action === 'get' &&
-                    item.index === 'foo' &&
-                    item.collection === 'bar';
+              item.action === 'get' &&
+              item.index === 'foo' &&
+              item.collection === 'bar';
           });
           should(filteredItem).length(1);
           should(filteredItem[0].value).be.equal('allowed');
 
           filteredItem = response.hits.filter(item => {
             return item.controller === 'write' &&
-                    item.action === 'delete' &&
-                    item.index === '*' &&
-                    item.collection === '*';
+              item.action === 'delete' &&
+              item.index === '*' &&
+              item.collection === '*';
           });
           should(filteredItem).length(1);
           should(filteredItem[0].value).be.equal('conditional');

@@ -4,7 +4,7 @@ services:
   proxy:
     image: kuzzleio/proxy:develop
     ports:
-      - "7511-7513:7511-7513"
+      - "7512:7512"
 
   kuzzle:
     image: kuzzleio/dev
@@ -26,9 +26,10 @@ services:
       - kuzzle_services__memoryStorage__node__host=redis
       - kuzzle_services__proxyBroker__host=proxy
       - NODE_ENV=development
+      - DEBUG=kuzzle:*
 
   redis:
     image: redis:3.2
 
   elasticsearch:
-    image: elasticsearch:5.0
+    image: elasticsearch:5.1

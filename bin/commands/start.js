@@ -7,8 +7,7 @@ var
   Kuzzle = require('../../lib/api/kuzzle'),
   Request = require('kuzzle-common-objects').Request,
   Promise = require('bluebird'),
-  clc = require('cli-color'),
-  coverage;
+  clc = require('cli-color');
   /*kuzzleLogo = `
                        ______     _____    
      _  ___   _ _____ |__  / |   | ____|   
@@ -21,15 +20,9 @@ function commandStart (options) {
   var
     kuzzle = new Kuzzle(),
     error = string => options.parent.noColors ? string : clc.red(string),
-    warn = string => options.parent.noColors ? string : clc.yellow(string),
     notice = string => options.parent.noColors ? string : clc.cyanBright(string),
     kuz = string => options.parent.noColors ? string : clc.greenBright.bold(string);
 
-  if (process.env.FEATURE_COVERAGE === '1' || process.env.FEATURE_COVERAGE === 1) {
-    coverage = require('istanbul-middleware');
-    console.log(warn('Hook loader for coverage - ensure this is not production!'));
-    coverage.hookLoader(__dirname+'/../lib');
-  }
   console.log(kuz('[ℹ] Starting Kuzzle server'));
 
   kuzzle.start(params)
@@ -101,7 +94,7 @@ function commandStart (options) {
         });
     })
     .catch(err => {
-      console.error(err.stack);
+      console.error(err.message, err.stack);
       process.exit(1);
     });
 }

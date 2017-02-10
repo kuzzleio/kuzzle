@@ -8,97 +8,84 @@
 
   // The HTTP section lets you configure how Kuzzle should handle HTTP requests
   "http": {
-    // accessControlAllowOrigin: sets the Access-Control-Allow-Origin header used to
-    //     send responses to the client
-    //     (see https://developer.mozilla.org/en-US/docs/Web/HTTP/Access_control_CORS)
+    // * accessControlAllowOrigin:
+    //    sets the default Access-Control-Allow-Origin HTTP
+    //    header used to send responses to the client
+    //    (see https://developer.mozilla.org/en-US/docs/Web/HTTP/Access_control_CORS)
     "accessControlAllowOrigin": "*"
   },
 
-  // The plugins section let you define which plugins should be loaded on
-  // Kuzzle first start.
-  // cf: Kuzzle documentation on http://kuzzle.io/guide/#plugins for more
-  // information on managing plugins
-  /*
+  // The plugins section lets you define plugins behaviors
+  // (see http://kuzzle.io/guide/#plugins)
   "plugins": {
     // [Common]
-    //   * workerPrefix: process name prefix for plugins worker
-    //   * pipeWarnTime: time in ms after which a warning will be emitted to
-    //     the logger if the pipe action has not completed
-    //   * pipeTimeout: time in ms after which a pipe action will be killed
-    //     if it has not completed
+    //   * workerPrefix:
+    //       Process name prefix for plugin workers
+    //   * pipeWarnTime:
+    //        Warning time threshold (in milliseconds)
+    //        on a pipe plugin action
+    //   * pipeTimeout:
+    //        Maximum execution time (in milliseconds)
+    //        of a pipe plugin action
     "common": {
       "workerPrefix": "kpw:",
       "pipeWarnTime": 40,
       "pipeTimeout": 250
     },
 
-    // Each next block entry is a plugin configuration.
-    // A plugin can be installed from 3 different sources:
-    //   * from a npm package: the entry must be the package name in npm and
-    //     the version must be specified usind the "npmVersion" property
-    //   * from a git repository: the git repository url must be specified
-    //     using the "gitUrl" property
-    //   * from a local directory: the location of the package must be
-    //     specified using the "path" property
+    // The following blocks configure plugins
     "kuzzle-plugin-logger": {
-      "version": "2.0.5",
-      "activated": true
-    },
-    "kuzzle-plugin-auth-passport-local": {
-      "version": "2.0.4",
-      "activated": true
+      threads: 1
     }
   },
-  */
 
-  // The queues used in Kuzzle internal communication
-  /*
+  // Queue names used by Kuzzle internal communications
   "queues": {
     "remoteActionQueue": "remote-action-queue"
   },
-  */
 
   // The repositories are used internally by Kuzzle to store its data (users,
   // permissions, configuration etc.)
-  /*
   "repositories": {
     // [Common]
-    //   * cacheTTL: the time in the objects should be kepts in cache
-    // Decreasing this value will lower Redis memory and disk consumption at
-    // the cost of increasing the queries rate to the database
+    //   * cacheTTL:
+    //      Time to live (in seconds) of cached objects.
+    //      Decreasing this value will lower Redis memory and
+    //      disk consumption, at the cost of increasing
+    //      queries rate to the database and response times
     "common": {
       "cacheTTL": 1440
     }
   },
-  */
 
   // The security section contains the configuration for Kuzzle permissions
   // mechanism
-  /*
   "security": {
     // [restrictedProfileIds]
-    // The profileIds applied to a user created with the route
+    // The profileIds applied to a user created with the API route
     // users/_createRestricted
-    restrictedProfileIds: ['default'],
+    "restrictedProfileIds": ["default"],
     // [jwt]
     // configuration for npm
     // [jsonwebtoken package](https://github.com/auth0/node-jsonwebtoken)
     //
-    //   * algorithm: hash/encryption method used to sign the token
-    //   * expiresIn: expressed in seconds or a rouchg/ms compatible string
-    //   * secret: a string or buffer containing either the secret for HMAC
-    //     algorithms, or the PEM encoded private key for RSA and ECDSA.
-    //     Please set this value to a private string
+    //   * algorithm:
+    //      hash/encryption method used to sign the token
+    //   * expiresIn:
+    //      Token default expiration time
+    //      (interpreted by https://www.npmjs.com/package/ms)
+    //   * secret:
+    //      String or buffer data containing either the secret for HMAC
+    //      algorithms, or the PEM encoded private key for RSA and ECDSA.
     "jwt": {
       "algorithm": "HS256",
       "expiresIn": "1h",
       "secret": "Change me"
     },
     // [default]
-    // The default role described here defines the permissions for the
-    // anonymous user until an administrator user is created.
-    // By default, all users are granted all permissions until an administrator
-    // is defined.
+    // The default role defines permissions for all users,
+    // until an administrator configures the backend rights
+    // By default, all users are granted all permissions
     "default": {
       "role": {
         "controllers": {
@@ -115,8 +102,7 @@
     // CLI or the Back Office.
     //
     // By default, the admin user is granted all permissions.
-    // Anonymous and non-administrator users are restricted to the "serverInfo"
-    // action.
+    // Anonymous and non-administrator users have their rights restricted
     "standard": {
       "profiles": {
         "admin": {
@@ -146,14 +132,13 @@
                 "checkToken": true,
                 "getCurrentUser": true,
                 "getMyRights": true,
-                "login": true,
                 "logout": true,
                 "updateSelf": true
               }
             },
-            "read": {
+            "server": {
               "actions": {
-                "serverInfo": true
+                "info": true
               }
             }
           }
@@ -165,13 +150,12 @@
                 "checkToken": true,
                 "getCurrentUser": true,
                 "getMyRights": true,
-                "login": true,
-                "logout": true
+                "login": true
               }
             },
-            "read": {
+            "server": {
               "actions": {
-                "serverInfo": true
+                "info": true
               }
             }
           }
@@ -179,31 +163,47 @@
       }
     }
   },
-  */
 
-  // Configuration for Kuzzle server
-  /*
-  "server": {
-    // * maxConcurrentRequests: Number of requests Kuzzle treats simultaneously.
-    //   Requests received above this limit are bufferized.
-    // * maxRetainedRequests: Maximum number of requests that can be bufferized.
-    //   Requests received above this limit are discarded.
-    // * warningRetainedRequestsLimit: Number of bufferized requests after
-    //   which Kuzzle will throw warnings to the logger
-    "maxConcurrentRequests": 50,
-    "maxRetainedRequests": 50000,
-    "warningRetainedRequestsLimit": 5000
+  // Kuzzle configured limits
+  "limits": {
+    // * concurrentRequests:
+    //      Number of requests Kuzzle processes simultaneously.
+    //      Requests received above this limit are bufferized until a slot is freed
+    //      This value should be kept low to avoid overloading Kuzzle's event loop.
+    // * requestsBufferSize:
+    //      Maximum number of requests that can be bufferized.
+    //      Requests received above this limit are discarded with a 503 error
+    // * requestsBufferWarningThreshold:
+    //      Number of bufferized requests after
+    //      which Kuzzle will throw 'core:overload' events
+    //      (see http://docs.kuzzle.io/plugin-reference/#core)
+    // * requestHistorySize:
+    //      Completed API requests history. For debug and support purposes
+    // * documentsFetchCount:
+    //      Maximum number of documents that can be fetched by a single API
+    //      request.This value cannot exceed 9999 and cannot be higher
+    //      than 80% of the requestsBufferSize value
+    // * documentsWriteCount:
+    //      Maximum number of documents that can be written by a single API
+    //      request.This value cannot exceed 9999 and cannot be higher
+    //      than 80% of the requestsBufferSize value
+    "concurrentRequests": 50,
+    "requestsBufferSize": 50000,
+    "requestsBufferWarningThreshold": 5000,
+    "requestsHistorySize": 50,
+    "documentsFetchCount": 1000,
+    "documentsWriteCount": 200
   },
-  */
 
   // The services are the external components Kuzzle relies on.
-  /*
   "services": {
     // [common]
-    //   * defaultInitTimeout: Time in ms after which a service is considered
-    //     failing if it has not init.
-    //   * retryInterval: Default interval in ms between Kuzzle tries to init
-    //     the service again on first failure.
+    //   * defaultInitTimeout:
+    //       Time in ms after which a service is considered
+    //       failing if it has not init.
+    //   * retryInterval:
+    //       Default interval in ms between Kuzzle tries to init
+    //       the service again on first failure.
     "common": {
       "defaultInitTimeout": 10000,
       "retryInterval": 1000
@@ -215,10 +215,13 @@
     //
     // 1. using a single Redis database:
     //   node:
-    //     * host: The host on which Redis can be reached.
-    //       Can take an IP address, an URI or a hostname
-    //     * port: The port on which Redis is running
-    //   database: (optional) the ID of the redis database (default: 0)
+    //     * host:
+    //         The host on which Redis can be reached.
+    //         Can take an IP address, an URI or a hostname
+    //     * port:
+    //         The port on which Redis is running its database:
+    //     * (optional) database:
+    //         ID of the redis database (default: 0)
     "internalCache": {
       "backend": "redis",
       "node": {
@@ -226,44 +229,53 @@
         "port": 6379
       }
     },
-    // 2. using a master/slaves Redis instance with Redis sentinels (cf. http://redis.io/topics/sentinel):
-    //   node:
-    //     * sentinels: array of sentinels instances:
-    //       * host: the host on which the sentinel can be reached.
-    //         Can take an IP address, an URI or a hostname
-    //       * port: The port on which the sentinel is running
-    //     * name: a group of Redis instances composed of a master and one or more slaves
-    //   database: (optional) the ID of the redis database (default: 0)
-    "internalCache": {
-      "backend": "redis",
-      "node": {
-        "sentinels": [
-          {"host": "sentinel-host-1", "port": 26379},
-          {"host": "sentinel-host-2", "port": 26379},
-          {"host": "sentinel-host-3", "port": 26379}
-        ],
-        "name": "kuzzle"
-      }
-    },
+    // 2. using a master/slaves Redis instance with Redis sentinels
+    //    (cf. http://redis.io/topics/sentinel):
+    //   * node:
+    //     * sentinels:
+    //         array of sentinels instances:
+    //           * host:
+    //               Host name/address of the sentinel server
+    //               Can be an IP address, an URI or a hostname
+    //           * port:
+    //               Network port opened by Redis on the sentinel server
+    //     * name:
+    //         Group of Redis instances composed of a master and one
+    //         or more slaves
+    //     * (optional) database:
+    //         ID of the redis database (default: 0)
+    //"internalCache": {
+    //  "backend": "redis",
+    //  "node": {
+    //    "sentinels": [
+    //      {"host": "sentinel-host-1", "port": 26379},
+    //      {"host": "sentinel-host-2", "port": 26379},
+    //      {"host": "sentinel-host-3", "port": 26379}
+    //    ],
+    //    "name": "kuzzle"
+    //  }
+    //},
     // 3. using a redis cluster (cf. http://redis.io/topics/cluster-spec):
-    //   nodes: array of master nodes of the cluster
-    //     * host: The host on which the Redis node can be reached.
-    //       Can take an IP address, an URI or a hostname
-    //     * port: The port on which Redis is running
-    // (NB: in cluster mode, Redis uses only 1 database)
-    "internalCache": {
-      "backend": "redis",
-      "nodes": [
-        {"host": "redis-1", "port": 6379},
-        {"host": "redis-2", "port": 6379},
-        {"host": "redis-3', "port": 6379}
-      ]
-    },
+    //   * nodes: array of master nodes of the cluster
+    //     * host:
+    //         Host name/address of a redis cluster node
+    //         Can be an IP address, an URI or a hostname
+    //     * port:
+    //        Network port opened by the redis cluster node
+    //"internalCache": {
+    //  "backend": "redis",
+    //  "nodes": [
+    //    {"host": "redis-1", "port": 6379},
+    //    {"host": "redis-2", "port": 6379},
+    //    {"host": "redis-3", "port": 6379}
+    //  ]
+    //},
 
     // [memoryStorage]
     // The Redis memoryStorage Engine
     // (see "internalCache" above for sample settings)
-    // (NB: by default, the memoryStorage uses the same redis server as internalCache, on database number "5")
+    // By default, the memoryStorage engine uses the same redis server
+    // than internalCache, on database ID "5"
     "memoryStorage": {
       "backend": "redis",
       "database": 5,
@@ -276,86 +288,124 @@
     // [internalBroker]
     // The internalBroker is used for internal Kuzzle communication,
     // notably to transport messages between the CLI and the server.
-    //   * host: Host of Kuzzle server. Change this if you want to use the CLI
-    //     from a different host than the one Kuzzle is running on.
-    //   * port: Port on which Kuzzle broker exposes itself.
+    //   * host:
+    //       Host name of a Kuzzle server. Change this only if you want to use
+    //       the CLI from a distant host.
+    //   * port:
+    //       Network port to open for internal communications
+    //   * retryInterval:
+    //       Time interval (in millisconds) between reconnections retries
+    //       when the connection to the broker server has been lost
+    //   * pingTimeout:
+    //       Timeout (in milliseconds) of a ping request. If reached, Kuzzle
+    //       marks its connection to the distant host as lost.
+    //   * pingInterval:
+    //       Time (in milliseconds) between ping requests
     "internalBroker": {
       "aliases": ["broker"],
       "host": "localhost",
       "port": 7911,
-      "retryInterval": 1000
+      "retryInterval": 1000,
+      "pingTimeout": 50,
+      "pingInterval": 60000
     },
     // [proxyBroker]
     // The proxy broker is used to communicate between the Proxy and Kuzzle
     // server.
-    //   * host: the host on which the proxy can be reached. Can be a hostname,
-    //     an IP address or an URI.
-    //   * port: the port on which the proxy is listening
+    //   * host:
+    //       Host name/address of a Kuzzle proxy server.
+    //       Can be a hostname, an IP address or an URI.
+    //   * port:
+    //       Network port opened by the Kuzzle proxy server
+    //   * retryInterval:
+    //       Time interval (in millisconds) between reconnections retries
+    //       when the connection to the broker server has been lost
+    //   * pingTimeout:
+    //       Timeout (in milliseconds) of a ping request. If reached, Kuzzle
+    //       marks its connection to the distant host as lost.
+    //   * pingInterval:
+    //       Time (in milliseconds) between ping requests
     "proxyBroker": {
       "host": "localhost",
       "port": 7331,
-      "retryInterval": 1000
+      "retryInterval": 1000,
+      "pingTimeout": 50,
+      "pingInterval": 60000
     },
     // [db]
-    // The database layer is by default relying on elasticsearch and is
-    // currently the only available backend.
-    //   * host: The host on which elasticsearch can be reached. Can be a
-    //     hostname, an URI or an IP address.
-    //   * port: The port on which elasticsearch is listening
-    //   * apiVersion: The version of elasticsearch to use. The only supported
-    //     value for this setting is "2.3" for the moment
+    // The database layer is by default relying on Elasticsearch and is
+    // currently the only available database layer.
+    //   * host:
+    //       Host name/address of a Elasticsearch server.
+    //       Can be a hostname, an URI or an IP address.
+    //   * port:
+    //       Network port opened by the Elasticsearch server
+    //   * apiVersion:
+    //      The version of Elasticsearch API to use.
+    //      Kuzzle currently only supports Elasticsearch API "5.x"
     "db": {
       "backend": "elasticsearch",
       "aliases": ["storageEngine"],
       "host": "elasticsearch",
       "port": 9200,
-      "apiVersion": "2.3"
-    },
-    */
+      "apiVersion": "5.0"
+    }
+  },
 
-  // Configuration for Kuzzle internal statistics module
-  //   * ttl: Time in s for which the statistics framed are stored
-  //   * statsInterval: Time in s between statistics framed are comitted to
-  //     the cache engine
-  /*
+  // Configuration of the Kuzzle's internal statistics module
+  //   * ttl:
+  //      Time to live (in seconds) of a statistics frame
+  //   * statsInterval:
+  //      Time (in seconds) between statistics snapshots
   "stats": {
     "ttl": 3600,
     "statsInterval": 10
-  }
-  */
+  },
 
   // [validation]
   // Defines the specifications used to validate data.
   // Please refer to the guide for more information.
-  /*
-  validation: {
-  }
-  */
+  // (http://docs.kuzzle.io/guide/#data-validation)
+  "validation": {
+  },
 
   // [dump]
-  // Defines how kuzzle handle crash information
-  //  * enabled: Boolean to enable/disable dumping information when kuzzle crash
-  //  * path: Directory path where the dumps are stored
-  //  * dateFormat: Format used to generate dump name (see http://momentjs.com for formats)
-  //  * handledErrors: Used to generate dump on known errors (does not restart kuzzle)
-  //    * enabled: Boolean to enable/disable dumping information when handled error occurs
-  //    * whitelist: Array of error type to trigger a dump generation
-  /*
-  dump: {
-    enabled: false,
-    path: './dump/',
-    dateFormat: 'YYYYMMDD-HHmm',
-    handledErrors: {
-      enabled: true,
-      whitelist: [
-        'Error',
-        'RangeError',
-        'TypeError',
-        'KuzzleError',
-        'InternalError',
-        'PluginImplementationError'
+  // Kuzzle provides diagnostic tools, enabling analysis, support
+  // and debugging on unexpected events (errors, crashes)
+  // DO NOT disable this feature if you bought enterprise support
+  //  * enabled:
+  //      Enable/disable informations dump on crash or on errors
+  //      (see below)
+  //  * path:
+  //      Directory path where the dumps are stored
+  //  * gcore:
+  //      Location of the "gcore" binary
+  //  * dateFormat:
+  //      Format used to generate dump names
+  //      (see http://momentjs.com for formats)
+  //  * handledErrors:
+  //      Creates a dump whenever an error belonging to the
+  //      provided list is generated
+  //       * enabled:
+  //          Enable/disable dumps on generated errors.
+  //          If disabled, dumps will only occur on crashes.
+  //       * whitelist:
+  //          List of error types triggering a dump
+  "dump": {
+    "enabled": true,
+    "path": "./dump/",
+    "gcore": "/usr/bin/gcore",
+    "dateFormat": "YYYYMMDD-HHmm",
+    "handledErrors": {
+      "enabled": true,
+      "whitelist": [
+        "Error",
+        "RangeError",
+        "TypeError",
+        "KuzzleError",
+        "InternalError",
+        "PluginImplementationError"
       ]
     }
   }
-  */
 }

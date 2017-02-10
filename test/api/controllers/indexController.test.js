@@ -44,15 +44,6 @@ describe('Test: index controller', () => {
       isActionAllowedStub.onCall(3).returns(Promise.resolve(false));
       isActionAllowedStub.returns(Promise.resolve(true));
 
-      kuzzle.repositories = {
-        user: {
-          load: sinon.spy(() => {
-            return Promise.resolve({
-              isActionAllowed: isActionAllowedStub
-            });
-          })
-        }
-      };
       indexController = new IndexController(kuzzle);
     });
 
@@ -61,15 +52,15 @@ describe('Test: index controller', () => {
         indexes: ['a', 'c', 'e', 'g', 'i']
       };
       request.context.token = {userId: '42'};
+      request.context.user = {
+        isActionAllowed: isActionAllowedStub
+      };
 
       return indexController.mDelete(request)
         .then(response => {
           var engine = kuzzle.services.list.storageEngine;
 
           try {
-            should(kuzzle.repositories.user.load).be.calledOnce();
-            should(kuzzle.repositories.user.load).be.calledWith('42');
-
             should(isActionAllowedStub).have.callCount(5);
 
             should(engine.deleteIndexes).be.calledOnce();

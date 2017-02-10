@@ -15,7 +15,7 @@ var initSocket = function (socketName) {
   }
 
   if (!this.listSockets[socketName]) {
-    socket = io(`${config.scheme}://${config.host}:${config.ports.io}`, {
+    socket = io(`${config.scheme}://${config.host}:${config.port}`, {
       'force new connection': true
     });
     this.listSockets[socketName] = socket;
@@ -98,7 +98,7 @@ ApiWebsocket.prototype.send = function (msg, getAnswer, socketName) {
           return reject(error);
         }
 
-        if (result.error) {
+        if (result.error && result.status !== 206) {
           let error = new Error(result.error.stack);
           Object.assign(error, result);
 

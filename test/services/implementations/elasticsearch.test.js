@@ -106,11 +106,7 @@ describe('Test: ElasticSearch service', () => {
       collection,
       index,
       body: documentAda
-    }, {
-      token: {
-        userId: 'test'
-      }
-    });
+    }, {token: {userId: 'test'}, user: {_id: 'test'}});
     elasticsearch.init();
   });
 
@@ -220,25 +216,6 @@ describe('Test: ElasticSearch service', () => {
         });
     });
 
-    it('should return a rejected promise if no scrollId is given', done => {
-      elasticsearch.client.scroll.returns(Promise.resolve({total: 0, hits: []}));
-
-      request.input.body = {};
-
-      elasticsearch.scroll(request)
-        .then(() => {
-          throw new Error('this should never happen');
-        })
-        .catch(err => {
-          try {
-            should(err).be.an.instanceOf(BadRequestError);
-            should(err.message).be.exactly('The action scroll can\'t be done without a scrollId');
-            done();
-          }
-          catch(e) { done(e); }
-        });
-    });
-
     it('should return a rejected promise if a scroll fails', () => {
       elasticsearch.client.scroll.returns(Promise.reject(new Error('error')));
 
@@ -338,12 +315,10 @@ describe('Test: ElasticSearch service', () => {
     });
 
     it('should reject a promise if the document already exists', () => {
-      var error = new Error('Mocked create error');
-      elasticsearch.client.create.returns(Promise.reject(error));
       elasticsearch.client.get.returns(Promise.resolve({_source: {_kuzzle_info: {active: true}}}));
       request.input.resource._id = '42';
 
-      return should(elasticsearch.create(request)).be.rejectedWith(error);
+      return should(elasticsearch.create(request)).be.rejectedWith(BadRequestError);
     });
   });
 

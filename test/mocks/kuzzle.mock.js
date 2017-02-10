@@ -1,4 +1,6 @@
-var
+'use strict';
+
+const
   _ = require('lodash'),
   sinon = require('sinon'),
   Kuzzle = require('../../lib/api/kuzzle'),
@@ -10,11 +12,9 @@ var
  * @constructor
  */
 function KuzzleMock () {
-  var k;
-
-  for (k in this) {
+  for (let k in this) {
     if (!this.hasOwnProperty(k)) {
-      this[k] = function () { // eslint-disable-line no-loop-func
+      this[k] = function () {
         throw new Error(`Kuzzle original property ${k} is not mocked`);
       };
     }
@@ -67,10 +67,12 @@ function KuzzleMock () {
       }
     },
     init: sinon.spy(),
+    getRequestSlot: sinon.stub().yields(null),
     handleErrorDump: sinon.spy(),
     execute: sinon.spy(),
-    processRequest: sinon.stub(),
-    checkRights: sinon.stub()
+    processRequest: sinon.stub().returns(Promise.resolve()),
+    checkRights: sinon.stub(),
+    getEventName: sinon.spy()
   };
 
   this.hooks = {
@@ -115,8 +117,7 @@ function KuzzleMock () {
     init: sinon.stub().returns(Promise.resolve()),
     refresh: sinon.stub().returns(Promise.resolve()),
     search: sinon.stub().returns(Promise.resolve()),
-    updateMapping: sinon.stub().returns(Promise.resolve(foo)),
-    getMapping: sinon.stub().returns(Promise.resolve({internalIndex: {mappings: {users: {properties: {}}}}}))
+    updateMapping: sinon.stub().returns(Promise.resolve(foo))
   };
 
   this.once = sinon.stub();
@@ -137,14 +138,9 @@ function KuzzleMock () {
 
   this.pluginsManager = {
     init: sinon.stub().returns(Promise.resolve()),
-    packages: {
-      bootstrap: sinon.stub().returns(Promise.resolve()),
-      definitions: sinon.stub().returns(Promise.resolve([])),
-      getPackage: sinon.stub().returns(Promise.resolve()),
-    },
     plugins: {},
     run: sinon.stub().returns(Promise.resolve()),
-    getPluginsConfig: sinon.stub().returns({}),
+    getPluginsFeatures: sinon.stub().returns({}),
     trigger: sinon.spy(function () {return Promise.resolve(arguments[1]);})
   };
 
@@ -194,7 +190,8 @@ function KuzzleMock () {
       search: sinon.stub().returns(Promise.resolve())
     },
     token: {
-      anonymous: sinon.stub().returns({_id: 'anonymous'})
+      anonymous: sinon.stub().returns({_id: 'anonymous'}),
+      verifyToken: sinon.stub().returns(Promise.resolve())
     }
   };
 
@@ -241,6 +238,7 @@ function KuzzleMock () {
         get: sinon.stub().returns(Promise.resolve({
           _source: {foo}
         })),
+        mget: sinon.stub(),
         getInfos: sinon.stub().returns(Promise.resolve()),
         getMapping: sinon.stub().returns(Promise.resolve(foo)),
         listIndexes: sinon.stub().returns(Promise.resolve({indexes: ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i']})),
@@ -272,12 +270,15 @@ function KuzzleMock () {
   };
 
   this.statistics = {
+    completedRequest: sinon.spy(),
     newConnection: sinon.stub(),
+    failedRequest: sinon.spy(),
     getAllStats: sinon.stub().returns(Promise.resolve(foo)),
     getLastStats: sinon.stub().returns(Promise.resolve(foo)),
     getStats: sinon.stub().returns(Promise.resolve(foo)),
     init: sinon.spy(),
-    dropConnection: sinon.stub()
+    dropConnection: sinon.stub(),
+    startRequest: sinon.spy()
   };
 
   this.tokenManager = {
