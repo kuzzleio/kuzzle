@@ -7,6 +7,7 @@ var
   Request = require('kuzzle-common-objects').Request,
   BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,
   NotFoundError = require('kuzzle-common-objects').errors.NotFoundError,
+  SizeLimitError = require('kuzzle-common-objects').errors.SizeLimitError,
   SecurityController = rewire('../../../../lib/api/controllers/securityController');
 
 describe('Test: security controller - profiles', () => {
@@ -204,6 +205,16 @@ describe('Test: security controller - profiles', () => {
           should(response.hits[0]._source.policies).be.an.Array();
           should(response.hits[0]._source.policies[0].roleId).be.exactly('default');
         });
+    });
+
+    it('should throw an error if the number of documents per page exceeds server limits', () => {
+      kuzzle.config.limits.documentsFetchCount = 1;
+
+      let request = new Request({body: {policies: ['role1']}});
+      request.input.args.from = 0;
+      request.input.args.size = 10;
+
+      return should(() => securityController.searchProfiles(request)).throw(SizeLimitError);
     });
 
     it('should reject an error in case of error', () => {
