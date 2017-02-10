@@ -56,6 +56,13 @@ describe('Test: document controller', () => {
       }).throw('document:search on multiple collections is not available.');
     });
 
+    it('should throw an error if the size argument exceeds server configuration', () => {
+      kuzzle.config.limits.documentsFetchCount = 1;
+      request.input.args.size = 10;
+
+      return should(() => documentController.search(request)).throw('document:search cannot fetch more documents than the server configured limit (1)');
+    });
+
     it('should reject an error in case of error', () => {
       kuzzle.services.list.storageEngine.search.returns(Promise.reject(new Error('foobar')));
 
@@ -128,7 +135,7 @@ describe('Test: document controller', () => {
     });
 
     it('should throw an error if the number of documents to get exceeds server configuration', () => {
-      kuzzle.config.server.maxMultiActionsCount = 1;
+      kuzzle.config.limits.documentsFetchCount = 1;
       request.input.body = {ids: ['anId', 'anotherId']};
       kuzzle.services.list.storageEngine.mget.returns(Promise.resolve({hits: request.input.body.ids}));
 
@@ -262,11 +269,11 @@ describe('Test: document controller', () => {
         ]
       };
 
-      kuzzle.config.server.maxMultiActionsCount = 1;
+      kuzzle.config.limits.documentsWriteCount = 1;
 
       return should(() => {
         documentController.mCreate(request);
-      }).throw('Number of actions to perform exceeds the server configured value (1)');
+      }).throw('Number of documents to update exceeds the server configured value (1)');
     });
 
     it('mCreate should return a rejected promise if Kuzzle is overloaded', () => {
@@ -345,11 +352,11 @@ describe('Test: document controller', () => {
         ]
       };
 
-      kuzzle.config.server.maxMultiActionsCount = 1;
+      kuzzle.config.limits.documentsWriteCount = 1;
 
       return should(() => {
         documentController.mCreateOrReplace(request);
-      }).throw('Number of actions to perform exceeds the server configured value (1)');
+      }).throw('Number of documents to update exceeds the server configured value (1)');
     });
 
     it('mUpdate should fulfill with an object', () => {
@@ -404,11 +411,11 @@ describe('Test: document controller', () => {
         ]
       };
 
-      kuzzle.config.server.maxMultiActionsCount = 1;
+      kuzzle.config.limits.documentsWriteCount = 1;
 
       return should(() => {
         documentController.mUpdate(request);
-      }).throw('Number of actions to perform exceeds the server configured value (1)');
+      }).throw('Number of documents to update exceeds the server configured value (1)');
     });
 
     it('mReplace should fulfill with an object', () => {
@@ -463,11 +470,11 @@ describe('Test: document controller', () => {
         ]
       };
 
-      kuzzle.config.server.maxMultiActionsCount = 1;
+      kuzzle.config.limits.documentsWriteCount = 1;
 
       return should(() => {
         documentController.mReplace(request);
-      }).throw('Number of actions to perform exceeds the server configured value (1)');
+      }).throw('Number of documents to update exceeds the server configured value (1)');
     });
   });
 
@@ -724,7 +731,7 @@ describe('Test: document controller', () => {
 
     it('mDelete should throw an error if number of actions exceeds server configuration', () => {
       request.input.body = {ids: ['documentId', 'anotherDocumentId']};
-      kuzzle.config.server.maxMultiActionsCount = 1;
+      kuzzle.config.limits.documentsWriteCount = 1;
 
       return should(() => {
         documentController.mDelete(request);

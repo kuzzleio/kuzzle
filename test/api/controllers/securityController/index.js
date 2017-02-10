@@ -79,7 +79,7 @@ describe('/api/controllers/security', () => {
         }
       });
 
-      kuzzle.config.server.maxMultiActionsCount = 1;
+      kuzzle.config.limits.documentsWriteCount = 1;
 
       return should(() => {
         mDelete(kuzzle, 'type', request);

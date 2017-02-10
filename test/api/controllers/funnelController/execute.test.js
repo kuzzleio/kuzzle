@@ -25,7 +25,7 @@ describe('funnelController.execute', () => {
     });
 
     kuzzle = new KuzzleMock();
-    kuzzle.config.server.warningRetainedRequestsLimit = -1;
+    kuzzle.config.limits.requestsBufferWarningThreshold = -1;
 
     request = new Request({
       controller: 'foo',
@@ -141,11 +141,11 @@ describe('funnelController.execute', () => {
   });
 
   describe('#overloaded state', () => {
-    it('should enter overloaded state if the maxConcurrentRequests property is reached', () => {
+    it('should enter overloaded state if the concurrentRequests property is reached', () => {
       const
         callback = () => {};
 
-      funnel.concurrentRequests = kuzzle.config.server.maxConcurrentRequests;
+      funnel.concurrentRequests = kuzzle.config.limits.concurrentRequests;
 
       funnel.execute(request, callback);
 
@@ -160,7 +160,7 @@ describe('funnelController.execute', () => {
     it('should not relaunch the request replayer background task if already in overloaded state', () => {
       const callback = () => {};
 
-      funnel.concurrentRequests = kuzzle.config.server.maxConcurrentRequests;
+      funnel.concurrentRequests = kuzzle.config.limits.concurrentRequests;
       funnel.overloaded = true;
 
       funnel.execute(request, callback);
@@ -173,9 +173,9 @@ describe('funnelController.execute', () => {
         .have.callCount(0);
     });
 
-    it('should discard the request if the maxRetainedRequests property is reached', (done) => {
-      funnel.concurrentRequests = kuzzle.config.server.maxConcurrentRequests;
-      funnel.cachedItems = kuzzle.config.server.maxRetainedRequests;
+    it('should discard the request if the requestsBufferSize property is reached', (done) => {
+      funnel.concurrentRequests = kuzzle.config.limits.concurrentRequests;
+      funnel.cachedItems = kuzzle.config.limits.requestsBufferSize;
       funnel.overloaded = true;
 
       funnel.execute(request, (err, res) => {
@@ -183,7 +183,7 @@ describe('funnelController.execute', () => {
         should(FunnelController.__get__('playCachedRequests'))
           .have.callCount(0);
         should(funnel.processRequest.called).be.false();
-        should(funnel.cachedItems).be.eql(kuzzle.config.server.maxRetainedRequests);
+        should(funnel.cachedItems).be.eql(kuzzle.config.limits.requestsBufferSize);
         should(funnel.requestsCache.isEmpty()).be.true();
         should(err).be.instanceOf(ServiceUnavailableError);
         should(err.status).be.eql(503);
