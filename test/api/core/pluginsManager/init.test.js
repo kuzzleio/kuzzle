@@ -1,4 +1,6 @@
-var
+'use strict';
+
+const
   should = require('should'),
   rewire = require('rewire'),
   sinon = require('sinon'),
@@ -7,7 +9,7 @@ var
   PluginsManager = rewire('../../../../lib/api/core/plugins/pluginsManager');
 
 describe('PluginsManager: init()', () => {
-  var
+  let
     kuzzle,
     pluginsManager;
 

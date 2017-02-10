@@ -10,7 +10,7 @@ var
 var ApiHttp = function () {
   this.world = null;
 
-  this.baseUri = `${config.scheme}://${config.host}:${config.ports.rest}`;
+  this.baseUri = `${config.scheme}://${config.host}:${config.port}`;
 
   this.util = {
     getIndex: index => typeof index !== 'string' ? this.world.fakeIndex : index,

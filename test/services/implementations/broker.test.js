@@ -1,4 +1,6 @@
-var
+'use strict';
+
+const
   path = require('path'),
   Promise = require('bluebird'),
   rewire = require('rewire'),
@@ -16,7 +18,7 @@ var
   WSBrokerServerRewire = rewire('../../../lib/services/broker/wsBrokerServer');
 
 describe('Test: Internal broker', () => {
-  var
+  let
     clock,
     server,
     kuzzle;
@@ -301,7 +303,7 @@ describe('Test: Internal broker', () => {
           }
         };
 
-        WSBrokerClientRewire.__get__('emit').call(client);
+        WSBrokerClientRewire.__get__('emit')(client);
 
         should(client.pluginsManager.trigger)
           .be.calledOnce()
@@ -553,13 +555,13 @@ describe('Test: Internal broker', () => {
           .catch(err => done(err));
       });
 
-      it('should delay new ping request once pong is received', done => {
+      it('should delay new ping request once pong is received', () => {
         let clientConnected = client.init();
         let socket = client.client.socket;
 
         socket.emit('open', 1);
 
-        clientConnected
+        return clientConnected
           .then(() => {
             should(socket.ping)
               .be.calledOnce();
@@ -574,15 +576,13 @@ describe('Test: Internal broker', () => {
 
             clock.tick(60001);
 
-            should(socket.ping)
-              .be.calledTwice();
+            should(socket.ping).be.calledTwice();
 
-            done();
-          })
-          .catch(err => done(err));
+            return null;
+          });
       });
 
-      it('should emit an error if pong response timed out', done => {
+      it('should emit an error if pong response timed out', () => {
         let clientConnected = client.init();
         let socket = client.client.socket;
         let errorRaised = false;
@@ -593,7 +593,7 @@ describe('Test: Internal broker', () => {
 
         socket.emit('open', 1);
 
-        clientConnected
+        return clientConnected
           .then(() => {
             should(socket.ping)
               .be.calledOnce();
@@ -606,12 +606,11 @@ describe('Test: Internal broker', () => {
             should(errorRaised)
               .be.equal(true, 'error must be raised due to ping timeout');
 
-            done();
-          })
-          .catch(err => done(err));
+            return null;
+          });
       });
 
-      it('should clear ping timeout and interval if socket received an error', done => {
+      it('should clear ping timeout and interval if socket received an error', () => {
         let clientConnected = client.init();
         let socket = client.client.socket;
         let fakePongListener = function fakePongListener() {};
@@ -623,7 +622,7 @@ describe('Test: Internal broker', () => {
 
         socket.emit('open', 1);
 
-        clientConnected
+        return clientConnected
           .then(() => {
             socket.emit('error', new Error('test errors'));
 
@@ -638,12 +637,11 @@ describe('Test: Internal broker', () => {
             should(client._pingRequestTimeoutId)
               .be.equal(null, 'old ping timeout id should be cleared');
 
-            done();
-          })
-          .catch(err => done(err));
+            return null;
+          });
       });
 
-      it('should clear ping timeout and interval if socket got disconnected', done => {
+      it('should clear ping timeout and interval if socket got disconnected', () => {
         let clientConnected = client.init();
         let socket = client.client.socket;
         let fakePongListener = function fakePongListener() {};
@@ -655,7 +653,7 @@ describe('Test: Internal broker', () => {
 
         socket.emit('open', 1);
 
-        clientConnected
+        return clientConnected
           .then(() => {
             socket.emit('close', 1);
 
@@ -670,9 +668,8 @@ describe('Test: Internal broker', () => {
             should(client._pingRequestTimeoutId)
               .be.equal(null, 'old ping timeout id should be cleared');
 
-            done();
-          })
-          .catch(err => done(err));
+            return null;
+          });
       });
     });
   });
@@ -712,6 +709,7 @@ describe('Test: Internal broker', () => {
       beforeEach(() => {
         reset = WSBrokerServerRewire.__set__({
           fs: {
+            existsSync: sinon.stub().returns(true),
             unlinkSync: sinon.spy()
           },
           http: {
@@ -784,6 +782,19 @@ describe('Test: Internal broker', () => {
           .have.length(2);
       });
 
+      it('should throw if an invalid path if given for a unix socket', () => {
+        WSBrokerServerRewire.__set__({
+          fs: {
+            existsSync: sinon.stub().returns(false)
+          }
+        });
+
+        return should(() => {
+          server = new WSBrokerServerRewire('broker', {socket: '/invalid/path/socket'}, kuzzle.pluginsManager);
+          server.ws(() => {});
+        })
+          .throw(InternalError, {message: 'Invalid configuration provided for broker. Could not find /invalid/path directory.'});
+      });
 
       it('should create a unix socket based Websocket server', () => {
         var
@@ -805,7 +816,7 @@ describe('Test: Internal broker', () => {
 
         should(httpServer.listen)
           .be.calledOnce()
-          .be.calledWith('socket');
+          .be.calledWith(path.resolve('.', 'socket'));
 
         // Errors handling
 
@@ -835,7 +846,7 @@ describe('Test: Internal broker', () => {
 
         should(WSBrokerServerRewire.__get__('fs.unlinkSync'))
           .be.calledOnce()
-          .be.calledWith('socket');
+          .be.calledWith(path.resolve('.', 'socket'));
 
         should(httpServer.listen)
           .be.calledTwice();
@@ -1120,7 +1131,7 @@ describe('Test: Internal broker', () => {
           sinon.spy()
         ];
 
-        removeClient.call(server, clientSocket);
+        removeClient(server, clientSocket);
 
         should(server.rooms).be.eql({ });
         should(server.rooms).be.empty();
@@ -1225,7 +1236,7 @@ describe('Test: Internal broker', () => {
           clientSocket.emit('close', 1, 'test');
 
           should(removeClientSpy).be.calledOnce();
-          should(removeClientSpy).be.calledWith(clientSocket);
+          should(removeClientSpy).be.calledWith(server, clientSocket);
 
           should(kuzzle.pluginsManager.trigger.lastCall).be.calledWith('log:info', 'client disconnected [1] test');
         });
@@ -1244,9 +1255,7 @@ describe('Test: Internal broker', () => {
         should(server.pluginsManager.trigger.lastCall).be.calledWith('log:error');
         should(server.onErrorHandlers[0]).be.calledOnce();
       });
-
     });
-
   });
 });
 

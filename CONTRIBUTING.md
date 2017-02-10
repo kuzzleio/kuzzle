@@ -26,14 +26,14 @@ We use most of the [NPM Coding Style](https://docs.npmjs.com/misc/coding-style) 
 
 For development only, we built a specific docker-compose file: `docker-compose/dev.yml`. You can use it to profile, debug, test a variable on the fly, add breakpoints and so on, thanks to [chrome-devtools](https://developer.chrome.com/devtools).  
 Check the logs at the start of Kuzzle using the development docker image to get the appropriate debug URL.
-  
+
 How to run the development stack (needs Docker 1.10+ and Docker Compose 1.8+):
 
 ```
 docker-compose -f docker-compose/dev.yml up
 ```
 
-You can now access to `http://localhost:7511` for the standard Kuzzle HTTP, WebSocket and Socket.io APIs
+You can now access to `http://localhost:7512` for the standard Kuzzle HTTP, WebSocket and Socket.io APIs
 
 Everytime a modification is detected in the source files, the server is automatically restarted and a new debug URL is provided.
 
