@@ -98,6 +98,16 @@ describe('Test: security controller - users', () => {
         });
     });
 
+    it('should throw an error if the number of documents per page exceeds server limits', () => {
+      kuzzle.config.limits.documentsFetchCount = 1;
+
+      let request = new Request({body: {policies: ['role1']}});
+      request.input.args.from = 0;
+      request.input.args.size = 10;
+
+      return should(() => securityController.searchUsers(request)).throw(SizeLimitError);
+    });
+
     it('should reject an error in case of error', () => {
       var error = new Error('Mocked error');
       kuzzle.repositories.user.search = sandbox.stub().returns(Promise.reject(error));

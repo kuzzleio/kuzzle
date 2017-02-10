@@ -109,6 +109,15 @@ describe('Test: collection controller', () => {
   });
 
   describe('#searchSpecifications', () => {
+    it('should throw if the page size exceeds server limitations', () => {
+      kuzzle.config.limits.documentsFetchCount = 1;
+      request.input.args.from = 0;
+      request.input.args.size = 20;
+
+      return should(() => collectionController.searchSpecifications(request))
+        .throw('collection:searchSpecifications cannot fetch more documents than the server configured limit (1)');
+    });
+
     it('should call internalEngine with the right data', () => {
       kuzzle.internalEngine.search = sandbox.stub().returns(Promise.resolve({hits: [{_id: 'bar'}]}));
 

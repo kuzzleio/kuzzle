@@ -157,6 +157,16 @@ describe('Test: security controller - roles', () => {
         });
     });
 
+    it('should throw an error if the number of documents per page exceeds server limits', () => {
+      kuzzle.config.limits.documentsFetchCount = 1;
+
+      let request = new Request({body: {policies: ['role1']}});
+      request.input.args.from = 0;
+      request.input.args.size = 10;
+
+      return should(() => securityController.searchRoles(request)).throw(SizeLimitError);
+    });
+
     it('should reject an error in case of error', () => {
       kuzzle.repositories.role.searchRole = sandbox.stub().returns(Promise.reject(new Error('')));
       return should(securityController.searchRoles(new Request({_id: 'test'}))).be.rejected();

@@ -26,6 +26,7 @@ docker-compose-custom.yml
 .tags
 
 # Kuzzle
+.kuzzlerc
 /*.log
 /run
 !/run/.keep
