@@ -102,7 +102,7 @@ describe('Test: security controller - users', () => {
     it('should throw an error if the number of documents per page exceeds server limits', () => {
       kuzzle.config.limits.documentsFetchCount = 1;
 
-      let request = new Request({body: {policies: ['role1']}});
+      request = new Request({body: {policies: ['role1']}});
       request.input.args.from = 0;
       request.input.args.size = 10;
 
