@@ -44,12 +44,13 @@ describe('DSL API', () => {
         .then(result => {
           should(result).be.an.Object();
           should(result.diff).be.an.Object().and.match({
-            ftAdd:
-            { i: 'i',
+            ftAdd: { i: 'i',
               c: 'c',
-              f:
-                [ [ { exists: { field: 'bar' }, not: true } ],
-                  [ { equals: { foo: 'bar' }, not: true } ] ] }
+              f: [
+                [ { exists: { field: 'bar' }, not: true } ],
+                [ { equals: { foo: 'bar' }, not: true } ]
+              ]
+            }
           });
 
           should(result.id).be.a.String();

@@ -1,4 +1,6 @@
-var
+'use strict';
+
+const
   should = require('should'),
   /** @type {Params} */
   params = require('../../../../lib/config'),
@@ -9,7 +11,7 @@ var
   GatewayTimeoutError = require('kuzzle-common-objects').errors.GatewayTimeoutError;
 
 describe('Test plugins manager run', () => {
-  var
+  let
     sandbox,
     plugin,
     pluginMock,
@@ -515,7 +517,7 @@ describe('Test plugins manager run', () => {
           should(pluginsManager.workers[params.plugins.common.workerPrefix + 'testPlugin'].pmIds).be.an.Object();
           should(pluginsManager.workers[params.plugins.common.workerPrefix + 'testPlugin'].pmIds.getSize()).be.equal(1);
 
-          triggerWorkers.call(pluginsManager, 'foo:bar', {
+          triggerWorkers(pluginsManager.workers, 'foo:bar', {
             'firstName': 'Ada'
           });
 

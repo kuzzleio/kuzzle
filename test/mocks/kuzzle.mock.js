@@ -1,4 +1,6 @@
-var
+'use strict';
+
+const
   _ = require('lodash'),
   sinon = require('sinon'),
   Kuzzle = require('../../lib/api/kuzzle'),
@@ -10,11 +12,9 @@ var
  * @constructor
  */
 function KuzzleMock () {
-  var k;
-
-  for (k in this) {
+  for (let k in this) {
     if (!this.hasOwnProperty(k)) {
-      this[k] = function () { // eslint-disable-line no-loop-func
+      this[k] = function () {
         throw new Error(`Kuzzle original property ${k} is not mocked`);
       };
     }
@@ -67,6 +67,7 @@ function KuzzleMock () {
       }
     },
     init: sinon.spy(),
+    getRequestSlot: sinon.stub().yields(null),
     handleErrorDump: sinon.spy(),
     execute: sinon.spy(),
     processRequest: sinon.stub().returns(Promise.resolve()),

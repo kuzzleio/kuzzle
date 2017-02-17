@@ -7,6 +7,7 @@ var
   KuzzleMock = require('../../../mocks/kuzzle.mock'),
   Request = require('kuzzle-common-objects').Request,
   BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,
+  SizeLimitError = require('kuzzle-common-objects').errors.SizeLimitError,
   SecurityController = rewire('../../../../lib/api/controllers/securityController');
 
 describe('Test: security controller - roles', () => {
@@ -149,17 +150,30 @@ describe('Test: security controller - roles', () => {
         total: 1
       }));
 
-      return securityController.searchRoles(new Request({body: {_id: 'test'}}))
+      return securityController.searchRoles(new Request({body: {controllers: ['foo', 'bar']}}))
         .then(response => {
           should(response).be.instanceof(Object);
           should(response.hits).be.an.Array();
           should(response.hits[0]._id).be.exactly('test');
+          should(kuzzle.repositories.role.searchRole)
+            .be.calledOnce()
+            .be.calledWith(['foo', 'bar']);
         });
+    });
+
+    it('should throw an error if the number of documents per page exceeds server limits', () => {
+      kuzzle.config.limits.documentsFetchCount = 1;
+
+      request = new Request({body: {policies: ['role1']}});
+      request.input.args.from = 0;
+      request.input.args.size = 10;
+
+      return should(() => securityController.searchRoles(request)).throw(SizeLimitError);
     });
 
     it('should reject an error in case of error', () => {
       kuzzle.repositories.role.searchRole = sandbox.stub().returns(Promise.reject(new Error('')));
-      return should(securityController.searchRoles(new Request({_id: 'test'}))).be.rejected();
+      return should(securityController.searchRoles(new Request({body: {controllers: ['foo', 'bar']}}))).be.rejected();
     });
   });
 

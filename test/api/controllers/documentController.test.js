@@ -4,11 +4,13 @@ var
   should = require('should'),
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
+  Promise = require('bluebird'),
   KuzzleMock = require('../../mocks/kuzzle.mock'),
   Request = require('kuzzle-common-objects').Request,
   DocumentController = require('../../../lib/api/controllers/documentController'),
   foo = {foo: 'bar'},
   InternalError = require('kuzzle-common-objects').errors.InternalError,
+  ServiceUnavailableError = require('kuzzle-common-objects').errors.ServiceUnavailableError,
   PartialError = require('kuzzle-common-objects').errors.PartialError;
 
 describe('Test: document controller', () => {
@@ -52,6 +54,13 @@ describe('Test: document controller', () => {
       return should(() => {
         documentController.search(request);
       }).throw('document:search on multiple collections is not available.');
+    });
+
+    it('should throw an error if the size argument exceeds server configuration', () => {
+      kuzzle.config.limits.documentsFetchCount = 1;
+      request.input.args.size = 10;
+
+      return should(() => documentController.search(request)).throw('document:search cannot fetch more documents than the server configured limit (1)');
     });
 
     it('should reject an error in case of error', () => {
@@ -123,6 +132,16 @@ describe('Test: document controller', () => {
       return should(() => {
         documentController.mGet(request);
       }).throw('document:mGet must specify the body attribute "ids" of type "array".');
+    });
+
+    it('should throw an error if the number of documents to get exceeds server configuration', () => {
+      kuzzle.config.limits.documentsFetchCount = 1;
+      request.input.body = {ids: ['anId', 'anotherId']};
+      kuzzle.services.list.storageEngine.mget.returns(Promise.resolve({hits: request.input.body.ids}));
+
+      return should(() => {
+        documentController.mGet(request);
+      }).throw('Number of gets to perform exceeds the server configured value (1)');
     });
   });
 
@@ -242,6 +261,45 @@ describe('Test: document controller', () => {
       }).throw('document:mCreate must specify the body attribute "documents" of type "array".');
     });
 
+    it('mCreate should throw an error if number of actions exceeds server configuration', () => {
+      request.input.body = {
+        documents: [
+          {_id: 'documentId', body: {some: 'body'}},
+          {_id: 'anotherDocumentId', body: {some: 'body'}}
+        ]
+      };
+
+      kuzzle.config.limits.documentsWriteCount = 1;
+
+      return should(() => {
+        documentController.mCreate(request);
+      }).throw('Number of documents to update exceeds the server configured value (1)');
+    });
+
+    it('mCreate should return a rejected promise if Kuzzle is overloaded', () => {
+      kuzzle.funnel.processRequest = sandbox.spy(function () {
+        arguments[0].setResult({result: 'updated'});
+
+        return Promise.resolve(arguments[0]);
+      });
+
+      kuzzle.funnel.getRequestSlot.onSecondCall().yields(new ServiceUnavailableError('overloaded'));
+
+      request.input.body = {
+        documents: [
+          {_id: 'documentId', body: {some: 'body'}},
+          {_id: 'anotherDocumentId', body: {some: 'body'}}
+        ]
+      };
+
+      return documentController.mCreate(request)
+        .then(result => {
+          should(result.total).be.eql(1, 'Only 1 document should have been created');
+          should(request.status).be.eql(206);
+          should(request.error).be.instanceof(PartialError);
+        });
+    });
+
     it('mCreateOrReplace should fulfill with an object', () => {
       kuzzle.funnel.processRequest = sandbox.spy(function () {
         arguments[0].setResult({result: 'updated'});
@@ -260,6 +318,45 @@ describe('Test: document controller', () => {
         .then(result => {
           should(result).match({hits: [{result: 'updated'}, {result: 'updated'}], total: 2});
         });
+    });
+
+    it('mCreateOrReplace should return a rejected promise if Kuzzle is overloaded', () => {
+      kuzzle.funnel.processRequest = sandbox.spy(function () {
+        arguments[0].setResult({result: 'updated'});
+
+        return Promise.resolve(arguments[0]);
+      });
+
+      kuzzle.funnel.getRequestSlot.onSecondCall().yields(new ServiceUnavailableError('overloaded'));
+
+      request.input.body = {
+        documents: [
+          {_id: 'documentId', body: {some: 'body'}},
+          {_id: 'anotherDocumentId', body: {some: 'body'}}
+        ]
+      };
+
+      return documentController.mCreateOrReplace(request)
+        .then(result => {
+          should(result.total).be.eql(1, 'Only 1 document should have been created');
+          should(request.status).be.eql(206);
+          should(request.error).be.instanceof(PartialError);
+        });
+    });
+
+    it('mCreateOrReplace should throw an error if number of actions exceeds server configuration', () => {
+      request.input.body = {
+        documents: [
+          {_id: 'documentId', body: {some: 'body'}},
+          {_id: 'anotherDocumentId', body: {some: 'body'}}
+        ]
+      };
+
+      kuzzle.config.limits.documentsWriteCount = 1;
+
+      return should(() => {
+        documentController.mCreateOrReplace(request);
+      }).throw('Number of documents to update exceeds the server configured value (1)');
     });
 
     it('mUpdate should fulfill with an object', () => {
@@ -282,6 +379,45 @@ describe('Test: document controller', () => {
         });
     });
 
+    it('mUpdate should return a rejected promise if Kuzzle is overloaded', () => {
+      kuzzle.funnel.processRequest = sandbox.spy(function () {
+        arguments[0].setResult({result: 'updated'});
+
+        return Promise.resolve(arguments[0]);
+      });
+
+      kuzzle.funnel.getRequestSlot.onSecondCall().yields(new ServiceUnavailableError('overloaded'));
+
+      request.input.body = {
+        documents: [
+          {_id: 'documentId', body: {some: 'body'}},
+          {_id: 'anotherDocumentId', body: {some: 'body'}}
+        ]
+      };
+
+      return documentController.mUpdate(request)
+        .then(result => {
+          should(result.total).be.eql(1, 'Only 1 document should have been created');
+          should(request.status).be.eql(206);
+          should(request.error).be.instanceof(PartialError);
+        });
+    });
+
+    it('mUpdate should throw an error if number of actions exceeds server configuration', () => {
+      request.input.body = {
+        documents: [
+          {_id: 'documentId', body: {some: 'body'}},
+          {_id: 'anotherDocumentId', body: {some: 'body'}}
+        ]
+      };
+
+      kuzzle.config.limits.documentsWriteCount = 1;
+
+      return should(() => {
+        documentController.mUpdate(request);
+      }).throw('Number of documents to update exceeds the server configured value (1)');
+    });
+
     it('mReplace should fulfill with an object', () => {
       kuzzle.funnel.processRequest = sandbox.spy(function () {
         arguments[0].setResult({result: 'updated'});
@@ -300,6 +436,45 @@ describe('Test: document controller', () => {
         .then(result => {
           should(result).match({hits: [{result: 'updated'}, {result: 'updated'}], total: 2});
         });
+    });
+
+    it('mReplace should return a rejected promise if Kuzzle is overloaded', () => {
+      kuzzle.funnel.processRequest = sandbox.spy(function () {
+        arguments[0].setResult({result: 'updated'});
+
+        return Promise.resolve(arguments[0]);
+      });
+
+      kuzzle.funnel.getRequestSlot.onSecondCall().yields(new ServiceUnavailableError('overloaded'));
+
+      request.input.body = {
+        documents: [
+          {_id: 'documentId', body: {some: 'body'}},
+          {_id: 'anotherDocumentId', body: {some: 'body'}}
+        ]
+      };
+
+      return documentController.mReplace(request)
+        .then(result => {
+          should(result.total).be.eql(1, 'Only 1 document should have been created');
+          should(request.status).be.eql(206);
+          should(request.error).be.instanceof(PartialError);
+        });
+    });
+
+    it('mReplace should throw an error if number of actions exceeds server configuration', () => {
+      request.input.body = {
+        documents: [
+          {_id: 'documentId', body: {some: 'body'}},
+          {_id: 'anotherDocumentId', body: {some: 'body'}}
+        ]
+      };
+
+      kuzzle.config.limits.documentsWriteCount = 1;
+
+      return should(() => {
+        documentController.mReplace(request);
+      }).throw('Number of documents to update exceeds the server configured value (1)');
     });
   });
 
@@ -534,6 +709,33 @@ describe('Test: document controller', () => {
       return should(() => {
         documentController.mDelete(request);
       }).throw('document:mDelete must specify the body attribute "ids" of type "array".');
+    });
+
+    it('should return a rejected promise if Kuzzle is overloaded', () => {
+      kuzzle.funnel.processRequest = sandbox.spy(function () {
+        arguments[0].setResult({result: 'deleted'});
+
+        return Promise.resolve(arguments[0]);
+      });
+
+      request.input.body = {ids: ['documentId', 'anotherDocumentId']};
+      kuzzle.funnel.getRequestSlot.onSecondCall().yields(new ServiceUnavailableError('overloaded'));
+
+      return documentController.mDelete(request)
+        .then(result => {
+          should(result.length).be.eql(1, 'Only 1 document should have been deleted');
+          should(request.status).be.eql(206);
+          should(request.error).be.instanceof(PartialError);
+        });
+    });
+
+    it('mDelete should throw an error if number of actions exceeds server configuration', () => {
+      request.input.body = {ids: ['documentId', 'anotherDocumentId']};
+      kuzzle.config.limits.documentsWriteCount = 1;
+
+      return should(() => {
+        documentController.mDelete(request);
+      }).throw('Number of delete to perform exceeds the server configured value (1)');
     });
   });
 

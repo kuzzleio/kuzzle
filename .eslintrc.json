@@ -55,5 +55,8 @@
     "es6": true,
     "mocha": true
   },
+  "parserOptions": {
+    "sourceType": "module"
+  },
   "extends": "eslint:recommended"
 }

@@ -10,6 +10,7 @@ var
   Request = require('kuzzle-common-objects').Request,
   BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,
   NotFoundError = require('kuzzle-common-objects').errors.NotFoundError,
+  SizeLimitError = require('kuzzle-common-objects').errors.SizeLimitError,
   SecurityController = rewire('../../../../lib/api/controllers/securityController');
 
 describe('Test: security controller - users', () => {
@@ -96,6 +97,16 @@ describe('Test: security controller - users', () => {
           should(response).be.instanceof(Object);
           should(response).match({hits: [{_id: 'admin'}], total: 2});
         });
+    });
+
+    it('should throw an error if the number of documents per page exceeds server limits', () => {
+      kuzzle.config.limits.documentsFetchCount = 1;
+
+      request = new Request({body: {policies: ['role1']}});
+      request.input.args.from = 0;
+      request.input.args.size = 10;
+
+      return should(() => securityController.searchUsers(request)).throw(SizeLimitError);
     });
 
     it('should reject an error in case of error', () => {

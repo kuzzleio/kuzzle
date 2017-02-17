@@ -120,11 +120,13 @@ module.exports = {
     }
   },
 
-  server: {
-    maxRequestHistorySize: 50,
-    maxConcurrentRequests: 50,
-    maxRetainedRequests: 50000,
-    warningRetainedRequestsLimit: 5000
+  limits: {
+    requestsHistorySize: 50,
+    concurrentRequests: 50,
+    requestsBufferSize: 50000,
+    requestsBufferWarningThreshold: 5000,
+    documentsFetchCount: 1000,
+    documentsWriteCount: 200
   },
 
   services: {
