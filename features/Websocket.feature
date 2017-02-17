@@ -707,7 +707,7 @@ Feature: Test websocket API
     Then The ms result should match the json ["foobar", "abcdef", null]
     When I call the bitop method of the memory storage with arguments
       """
-      { "body": { "operation": "AND", "destkey": "#prefix#dest", "keys": [ "#prefix#x", "#prefix#y" ] } }
+      { "_id": "#prefix#dest", "body": { "operation": "AND", "keys": [ "#prefix#x", "#prefix#y" ] } }
       """
     And I call the get method of the memory storage with arguments
       """
@@ -716,13 +716,23 @@ Feature: Test websocket API
     Then The ms result should match the json "`bc`ab"
     When I call the bitop method of the memory storage with arguments
       """
-      { "body": { "operation": "OR", "destkey": "#prefix#dest", "keys": [ "#prefix#x", "#prefix#y" ] } }
+      { "_id": "#prefix#dest", "body": { "operation": "OR", "keys": [ "#prefix#x", "#prefix#y" ] } }
       """
     And I call the get method of the memory storage with arguments
       """
       { "_id": "#prefix#dest" }
       """
     Then The ms result should match the json "goofev"
+    When I call the bitcount method of the memory storage with arguments
+      """
+      { "_id": "#prefix#x" }
+      """
+    Then The ms result should match the json 26
+    When I call the bitcount method of the memory storage with arguments
+      """
+      { "_id": "#prefix#x", "body": { "start": 0, "end": 3 } }
+      """
+    Then The ms result should match the json 19
     When I call the bitpos method of the memory storage with arguments
       """
       { "_id": "#prefix#x", "args": { "bit": 1 } }
