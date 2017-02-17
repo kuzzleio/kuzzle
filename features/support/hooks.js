@@ -212,15 +212,7 @@ function cleanSecurity (callback) {
         });
     })
     .then(() => {
-      return this.api.searchRoles({
-        query: {
-          match_all: {
-            boost: 1
-          }
-        },
-        from: 0,
-        size: 9999
-      });
+      return this.api.searchRoles();
     })
     .then(results => {
       var

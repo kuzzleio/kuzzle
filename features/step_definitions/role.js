@@ -144,19 +144,13 @@ var apiSteps = function () {
       });
   });
 
-  this.Then(/^I'm able to find "(\d*)" role by searching controller corresponding to role "([^"]*)"(?: from "([^"]*)" to "([^"]*)")?$/, function (count, role, from, size, callback) {
+  this.Then(/^I'm able to find "(\d*)" role by searching controller "([^"]*)"(?: from "([^"]*)" to "([^"]*)")?$/, function (count, controller, from, size, callback) {
     var
       main,
-      controller,
       body;
 
-    if (!this.roles[role]) {
-      return callback('Fixture for role ' + role + ' does not exist');
-    }
-
-    // todo : This test seams to have been wrongly adapted, controller variable is undefined
     body = {
-      controllers : [controller],
+      controllers : controller.split(','),
       from: from || 0,
       size: size || 999
     };
@@ -171,11 +165,11 @@ var apiSteps = function () {
             }
 
             if (!aBody.result.hits) {
-              aBody.result.hits = aBody.result.hits.query(doc => doc._id.indexOf(this.idPrefix));
+              return callbackAsync('Expected ' + count + ' roles, get 0');
+            }
 
-              if (aBody.result.hits.length !== parseInt(count)) {
-                return callbackAsync('Expected ' + count + ' roles, get ' + aBody.result.hits.length);
-              }
+            if (aBody.result.hits.length !== parseInt(count)) {
+              return callbackAsync('Expected ' + count + ' roles, get ' + aBody.result.hits.length);
             }
 
             callbackAsync();

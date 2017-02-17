@@ -121,6 +121,38 @@ module.exports = function () {
           },
           'auth': {actions: {logout: true}}
         }
+      },
+      foo: {
+        controllers: {
+          'foo': {
+            actions: {
+              '*': true
+            }
+          }
+        }
+      },
+      bar: {
+        controllers: {
+          'bar': {
+            actions: {
+              '*': true
+            }
+          }
+        }
+      },
+      foobar: {
+        controllers: {
+          'foo': {
+            actions: {
+              '*': true
+            }
+          },
+          'bar': {
+            actions: {
+              '*': true
+            }
+          }
+        }
       }
     };
 
