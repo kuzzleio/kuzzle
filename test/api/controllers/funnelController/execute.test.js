@@ -41,7 +41,7 @@ describe('funnelController.execute', () => {
         bar: sinon.spy()
       }
     };
-    funnel.checkRights = sinon.stub().returns(Promise.resolve());
+    funnel.checkRights = sinon.stub().returns(Promise.resolve(request));
     funnel.processRequest = sinon.stub().returnsArg(0);
   });
 
