@@ -600,7 +600,7 @@ Feature: Test HTTP API
     Then The ms result should match the json 26
     When I call the bitcount method of the memory storage with arguments
       """
-      { "_id": "#prefix#x", "body": { "start": 0, "end": 3 } }
+      { "_id": "#prefix#x", "start": 0, "end": 3 }
       """
     Then The ms result should match the json 19
     When I call the bitpos method of the memory storage with arguments
