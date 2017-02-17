@@ -94,7 +94,7 @@ function commandStart (options) {
         });
     })
     .catch(err => {
-      console.error(err.stack);
+      console.error(err.message, err.stack);
       process.exit(1);
     });
 }

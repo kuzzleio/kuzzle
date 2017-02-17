@@ -8,7 +8,7 @@ var
  */
 function WSServerMock () {
   this.clients = [];
-  this.listeners = { };
+  this.__events = {};
 
   this.close = sinon.spy(() => {
     this.clients.forEach(client => {
@@ -21,10 +21,10 @@ function WSServerMock () {
   this.on = (event, cb) => {
     cb = sinon.spy(cb);
 
-    if (!this.listeners[event]) {
-      this.listeners[event] = [];
+    if (!this.__events[event]) {
+      this.__events[event] = [];
     }
-    this.listeners[event].push(cb);
+    this.__events[event].push(cb);
 
     return EventEmitter.prototype.on.call(this, event, cb);
   };

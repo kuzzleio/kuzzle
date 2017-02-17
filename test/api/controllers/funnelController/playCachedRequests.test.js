@@ -111,7 +111,7 @@ describe('funnelController.playCachedRequests', () => {
   describe('#replaying requests', () => {
     it('should do nothing if there is no room to replay request yet', () => {
       funnel.cachedItems = 1;
-      funnel.concurrentRequests = kuzzle.config.server.maxConcurrentRequests;
+      funnel.concurrentRequests = kuzzle.config.limits.concurrentRequests;
       playCachedRequests(kuzzle, funnel);
 
       should(setTimeoutCalled).be.true();

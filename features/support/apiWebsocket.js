@@ -15,7 +15,7 @@ var initSocket = function (socketName) {
   }
 
   if (!this.listSockets[socketName]) {
-    socket = io(`${config.scheme}://${config.host}:${config.ports.io}`, {
+    socket = io(`${config.scheme}://${config.host}:${config.port}`, {
       'force new connection': true
     });
     this.listSockets[socketName] = socket;

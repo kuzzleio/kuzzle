@@ -2,6 +2,16 @@
 
 # Current
 
+# 1.0.0-RC9
+
+* https://github.com/kuzzleio/kuzzle/releases/tag/1.0.0-RC9
+
+### Breaking changes
+
+* Plugin: full refactoring of the plugin management and installation: #609 #633
+* HTTP: Some routes are redefined to comply more with method meanings: #603 #607 #616
+* Controllers: `getUserMapping` and `setUserMapping` actions moved from `collection` to `security` controller #624
+* Controllers: rename action `mGetProfiles` and `mGetRoles` to respectively `mGetProfile` and `mGetRole` #623
 
 
 # 1.0.0-RC8
@@ -27,7 +37,7 @@
 * CLI: `service` commands removed #405
 * Kuzzle `bulk`.`import` action now expects a `body.bulkData` property that contains an array #387
 * DSL: `term` and `terms` operators are repectively replaced by `equals`and `in` #392
-* DSL: filters ids cannot be set manually anymore #401 
+* DSL: filters ids cannot be set manually anymore #401
 
 # 1.0.0-RC6.2
 
@@ -44,7 +54,7 @@
 ### Breaking changes
 
 * Rename a couple of DSL keywords to avoid confusion with Elasticsearch's DSL #392
-* Remove `createFilterId` from the real-time engine exposed methods. The filter's unique ID is now returned by the `register` method #401 
+* Remove `createFilterId` from the real-time engine exposed methods. The filter's unique ID is now returned by the `register` method #401
 
 
 # 1.0.0-RC5
