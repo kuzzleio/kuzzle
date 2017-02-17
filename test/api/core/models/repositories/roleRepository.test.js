@@ -150,12 +150,13 @@ describe('Test: repositories/roleRepository', () => {
   describe('#searchRole', () => {
     it('should parse the given query', () => {
       var
-        args = {from: 10, size: 5},
-        controllers = ['foo', 'bar'];
+        controllers = ['foo', 'bar'],
+        from = 10,
+        size = 5;
 
       roleRepository.search = sinon.stub();
 
-      roleRepository.searchRole(controllers, args);
+      roleRepository.searchRole(controllers, from, size);
       should(roleRepository.search)
         .be.calledOnce()
         .be.calledWith({
@@ -169,8 +170,8 @@ describe('Test: repositories/roleRepository', () => {
             }
           }
         },
-        args.from,
-        args.size
+        from,
+        size
         );
     });
   });
