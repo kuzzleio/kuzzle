@@ -1,4 +1,6 @@
-var
+'use strict';
+
+const
   Promise = require('bluebird'),
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
@@ -10,7 +12,7 @@ var
   RoleRepository = require('../../../../../lib/api/core/models/repositories/roleRepository');
 
 describe('Test: repositories/roleRepository', () => {
-  var
+  let
     kuzzle,
     roleRepository;
 
@@ -27,8 +29,7 @@ describe('Test: repositories/roleRepository', () => {
 
   describe('#loadRoles', () => {
     it('should return in memory roles', () => {
-      var
-        role = {foo: 'bar'};
+      const role = {foo: 'bar'};
 
       roleRepository.roles.foo = role;
       roleRepository.loadMultiFromDatabase = sinon.stub();
@@ -43,8 +44,7 @@ describe('Test: repositories/roleRepository', () => {
     });
 
     it('should complete unfetched default roles from config', () => {
-      var
-        role = {foo: 'bar'};
+      const role = {foo: 'bar'};
 
       roleRepository.roles.foo = role;
       roleRepository.loadMultiFromDatabase = sinon.stub();
@@ -80,7 +80,7 @@ describe('Test: repositories/roleRepository', () => {
     });
 
     it('should load roles from memory & database', () => {
-      var
+      const
         role1 = new Role(),
         role2 = new Role(),
         role3 = new Role(),
@@ -118,8 +118,7 @@ describe('Test: repositories/roleRepository', () => {
     });
 
     it('should load the role directly from memory if it\'s in memory', () => {
-      var
-        role = {foo: 'bar'};
+      const role = {foo: 'bar'};
 
       roleRepository.roles.foo = role;
 
@@ -131,8 +130,7 @@ describe('Test: repositories/roleRepository', () => {
     });
 
     it('should load the role directly from DB if it\'s not in memory', () => {
-      var
-        role = {_id: 'foobar'};
+      const role = {_id: 'foobar'};
 
       roleRepository.loadOneFromDatabase = sinon.stub().returns(Promise.resolve(role));
 
@@ -148,38 +146,95 @@ describe('Test: repositories/roleRepository', () => {
   });
 
   describe('#searchRole', () => {
-    it('should parse the given query', () => {
-      var
-        controllers = ['foo', 'bar'],
-        from = 10,
-        size = 5;
-
-      roleRepository.search = sinon.stub();
-
-      roleRepository.searchRole(controllers, from, size);
-      should(roleRepository.search)
-        .be.calledOnce()
-        .be.calledWith({
-          query: {
-            bool: {
-              should: [
-                {exists: {field: 'controllers.foo'}},
-                {exists: {field: 'controllers.bar'}},
-                {exists: {field: 'controllers.*'}}
-              ]
+    it('should filter the role list with the given controllers', () => {
+      const roles = {
+        default: {
+          _id: 'default',
+          controllers: {
+            '*': {
+              actions: {
+                '*': true
+              }
             }
           }
         },
-        from,
-        size
-        );
+        foo: {
+          _id: 'foo',
+          controllers: {
+            foo: {
+              actions: {
+                '*': true
+              }
+            }
+          }
+        },
+        bar: {
+          _id: 'bar',
+          controllers: {
+            bar: {
+              actions: {
+                '*': true
+              }
+            }
+          }
+        },
+        foobar: {
+          _id: 'foobar',
+          controllers: {
+            foo: {
+              actions: {
+                '*': true
+              }
+            },
+            bar: {
+              actions: {
+                '*': true
+              }
+            }
+          }
+        }
+      };
+
+      roleRepository.search = sinon.stub().returns(Promise.resolve({
+        total: 4,
+        hits: [
+          roles.default,
+          roles.foo,
+          roles.bar,
+          roles.foobar
+        ]
+      }));
+
+      return roleRepository.searchRole(['foo'])
+        .then(result => {
+          should(result.total).be.exactly(3);
+          should(result.hits.length).be.exactly(3);
+          should(result.hits).match([roles.default, roles.foo, roles.foobar]);
+          return roleRepository.searchRole(['bar']);
+        })
+        .then(result => {
+          should(result.total).be.exactly(3);
+          should(result.hits.length).be.exactly(3);
+          should(result.hits).match([roles.default, roles.bar, roles.foobar]);
+          return roleRepository.searchRole(['foo', 'bar']);
+        })
+        .then(result => {
+          should(result.total).be.exactly(4);
+          should(result.hits.length).be.exactly(4);
+          should(result.hits).match([roles.default, roles.foo, roles.bar, roles.foobar]);
+          return roleRepository.searchRole(['baz']);
+        })
+        .then(result => {
+          should(result.total).be.exactly(1);
+          should(result.hits.length).be.exactly(1);
+          should(result.hits).match([roles.default]);
+        });
     });
   });
 
   describe('#deleteRole', () => {
     it('should reject if trying to delete a reserved role', () => {
-      var
-        role = new Role();
+      const role = new Role();
       role._id = 'admin';
 
       return should(roleRepository.deleteRole(role))
@@ -200,8 +255,7 @@ describe('Test: repositories/roleRepository', () => {
     });
 
     it('should call deleteFromDatabase and remove the role from memory', () => {
-      var
-        role = new Role();
+      const role = new Role();
       role._id = 'foo';
 
       kuzzle.repositories.profile.searchProfiles.returns(Promise.resolve({total: 0}));
@@ -221,7 +275,7 @@ describe('Test: repositories/roleRepository', () => {
 
   describe('#getRoleFromRequest', () => {
     it('should build a valid role object', () => {
-      var
+      const
         controllers = {
           controller: {
             actions: {
@@ -238,9 +292,7 @@ describe('Test: repositories/roleRepository', () => {
             controllers: controllers
           }
         }),
-        role;
-
-      role = roleRepository.getRoleFromRequest(request);
+        role = roleRepository.getRoleFromRequest(request);
 
       should(role._id).be.exactly('roleId');
       should(role.controllers).be.eql(controllers);
@@ -249,7 +301,7 @@ describe('Test: repositories/roleRepository', () => {
 
   describe('#validateAndSaveRole', () => {
     it('should persist the role to the database when ok', () => {
-      var
+      const
         controllers = {
           controller: {
             actions: {
