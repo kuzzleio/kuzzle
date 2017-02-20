@@ -1,5 +1,6 @@
-var
-  _ = require('lodash'),
+'use strict';
+
+const
   should = require('should'),
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
@@ -12,8 +13,10 @@ var
   MemoryStorageController = rewire('../../../lib/api/controllers/memoryStorageController.js');
 
 describe('Test: memoryStorage controller', () => {
-  var
-    dbname = 'unit-tests',
+  const
+    dbname = 'unit-tests';
+
+  let
     msController,
     called,
     extractArgumentsFromRequest,
@@ -27,7 +30,7 @@ describe('Test: memoryStorage controller', () => {
     kuzzle;
 
   before(() => {
-    var
+    const
       wrapped = f => {
         return function () {
           if (called === undefined) {
@@ -117,22 +120,9 @@ describe('Test: memoryStorage controller', () => {
   });
 
   describe('#constructor', () => {
-    it('should not expose blacklisted methods', () => {
-      var blacklist = MemoryStorageController.__get__('blacklist');
-      should(blacklist).be.an.Array();
-      should(blacklist).not.be.empty();
-
-      blacklist.forEach(command => {
-        should(msController[command]).be.undefined();
-      });
-    });
-
     it('should construct the allowed functions', () => {
-      var
-        blacklisted = MemoryStorageController.__get__('blacklist'),
-        allowed = _.difference(kuzzle.services.list.memoryStorage.commands, blacklisted);
+      const allowed = Object.keys(origMapping);
 
-      should(allowed).be.an.Array();
       should(allowed).not.be.empty();
 
       allowed.forEach(command => {
@@ -472,7 +462,7 @@ describe('Test: memoryStorage controller', () => {
     });
 
     it('custom mapping checks - zrange', () => {
-      var
+      const
         req = new Request({
           controller: 'memoryStore',
           action: 'zrange',
@@ -495,7 +485,7 @@ describe('Test: memoryStorage controller', () => {
     });
 
     it('custom mapping checks - zrangebylex', () => {
-      var
+      const
         req = new Request({
           controller: 'memoryStore',
           action: 'zrangebylex',
@@ -520,9 +510,17 @@ describe('Test: memoryStorage controller', () => {
           should(response.name).be.exactly('zrangebylex');
           should(response.args).be.eql(expected);
 
-          req.action = 'zrevrangebylex';
+          const zrevrangeRequest = new Request({
+            controller: 'memoryStore',
+            action: 'zrevrangebylex',
+            _id: 'myKey',
+            min: 'minVal',
+            max: 'maxVal',
+            offset: 'offsetVal',
+            count: 'countVal'
+          });
 
-          return msController.zrevrangebylex(req);
+          return msController.zrevrangebylex(zrevrangeRequest);
         })
         .then(response => {
           expected[1] = expected[2];
@@ -531,12 +529,11 @@ describe('Test: memoryStorage controller', () => {
           should(response).be.instanceof(Object);
           should(response.name).be.exactly('zrevrangebylex');
           should(response.args).be.eql(expected);
-
         });
     });
 
     it('custom mapping checks - zrangebyscore', () => {
-      var
+      const
         req = new Request({
           controller: 'memoryStore',
           action: 'zrangebyscore',
@@ -563,9 +560,18 @@ describe('Test: memoryStorage controller', () => {
           should(response.name).be.exactly('zrangebyscore');
           should(response.args).be.eql(expected);
 
-          req.action = 'zrevrangebyscore';
+          const zrevrangebyscore = new Request({
+            controller: 'memoryStore',
+            action: 'zrevrangebyscore',
+            _id: 'myKey',
+            min: 'minVal',
+            max: 'maxVal',
+            withscores: true,
+            offset: 'offsetVal',
+            count: 'countVal'
+          });
 
-          return msController.zrevrangebyscore(req);
+          return msController.zrevrangebyscore(zrevrangebyscore);
         })
         .then(response => {
           expected[1] = expected[2];
