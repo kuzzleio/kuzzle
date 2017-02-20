@@ -131,7 +131,8 @@ describe('Test: ElasticSearch service', () => {
         request.input.args[arg] = arg;
       });
 
-      preparedData = getElasticsearchRequest.call(elasticsearch, request, kuzzle);
+      preparedData = getElasticsearchRequest.call(elasticsearch, request, kuzzle,
+        ['from', 'size', 'scroll', 'scrollId', 'refresh']);
 
       should(preparedData.type).be.exactly(request.input.resource.collection);
       should(preparedData.id).be.exactly(request.input.resource._id);
