@@ -60,7 +60,7 @@ var apiSteps = function () {
       });
   });
 
-  this.Then(/^I'm ?(not)* able to find a role with id "([^"]*)"(?: with role "([^"]*)")?$/, function (not, id, role, callback) {
+  this.Then(/^I'm ?(not)* able to find a role with id "([^"]*)"(?: equivalent to role "([^"]*)")?$/, function (not, id, role, callback) {
     var
       controller,
       main;
