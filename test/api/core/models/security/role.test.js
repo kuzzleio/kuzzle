@@ -188,7 +188,7 @@ describe('Test: security/roleTest', () => {
         });
     });
 
-    it('should not allow any action on the internal index if no role has been explicitly set on it', () => {
+    it('should not allow any action on the internal index', () => {
       var
         role = new Role(),
         req = new Request({
@@ -196,10 +196,7 @@ describe('Test: security/roleTest', () => {
           collection: 'collection',
           controller: 'controller',
           action: 'action'
-        }, context),
-        restrictions = [
-          {index: 'aaa', collections: ['aaa', 'bbb']}
-        ];
+        }, context);
 
       role.controllers = {
         '*': {
@@ -210,16 +207,6 @@ describe('Test: security/roleTest', () => {
       };
 
       return role.isActionAllowed(req, kuzzle)
-        .then(isAllowed => {
-          should(isAllowed).be.false();
-          role.allowInternalIndex = true;
-          return role.isActionAllowed(req, kuzzle);
-        })
-        .then(isAllowed => {
-          should(isAllowed).be.true();
-          role.restrictedTo = restrictions;
-          return role.isActionAllowed(req, kuzzle);
-        })
         .then(isAllowed => {
           should(isAllowed).be.false();
         });

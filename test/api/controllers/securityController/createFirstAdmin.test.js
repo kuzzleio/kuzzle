@@ -130,8 +130,7 @@ describe('Test: security controller - createFirstAdmin', () => {
             should(createOrReplace).have.callCount(3);
             should(createOrReplace.firstCall).be.calledWithMatch('profiles', 'admin', {
               policies: [{
-                roleId: 'admin',
-                allowInternalIndex: true
+                roleId: 'admin'
               }]
             });
             should(createOrReplace.secondCall).be.calledWithMatch('profiles', 'anonymous', {policies: [{roleId: 'anonymous'}]});

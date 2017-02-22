@@ -62,7 +62,7 @@ module.exports = {
     standard: {
       profiles: {
         admin: {
-          policies: [ {roleId: 'admin', allowInternalIndex: true} ]
+          policies: [ {roleId: 'admin'} ]
         },
         default: {
           policies: [ {roleId: 'default'} ]

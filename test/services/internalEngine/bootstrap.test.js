@@ -231,13 +231,13 @@ describe('services/internalEngine/bootstrap.js', () => {
             should(bootstrap.engine.createOrReplace)
               .be.calledThrice()
               .be.calledWithMatch('profiles', 'admin', {
-                policies: [{roleId: 'admin', allowInternalIndex: true}]
+                policies: [{roleId: 'admin'}]
               })
               .be.calledWithMatch('profiles', 'default', {
-                policies: [{roleId: 'default', allowInternalIndex: true}]
+                policies: [{roleId: 'default'}]
               })
               .be.calledWithMatch('profiles', 'anonymous', {
-                policies: [{roleId: 'anonymous', allowInternalIndex: true}]
+                policies: [{roleId: 'anonymous'}]
               });
 
             should(kuzzle.indexCache.add)
