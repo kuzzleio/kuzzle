@@ -219,7 +219,7 @@ describe('services/internalEngine/bootstrap.js', () => {
                 properties: {
                   policies: {
                     properties: {
-                      _id: {
+                      roleId: {
                         index: 'not_analyzed',
                         type: 'string'
                       }
