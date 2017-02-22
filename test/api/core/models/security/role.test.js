@@ -14,7 +14,6 @@ const
 
 describe('Test: security/roleTest', () => {
   let
-    internalIndex,
     kuzzle,
     context = {
       protocol: 'test',
@@ -55,7 +54,6 @@ describe('Test: security/roleTest', () => {
 
   before(() => {
     kuzzle = new Kuzzle();
-    internalIndex = kuzzle.internalEngine.index;
   });
 
   describe('#isActionAllowed', () => {
@@ -185,30 +183,6 @@ describe('Test: security/roleTest', () => {
         })
         .then(isAllowed => {
           should(isAllowed).be.true();
-        });
-    });
-
-    it('should not allow any action on the internal index', () => {
-      var
-        role = new Role(),
-        req = new Request({
-          index: internalIndex,
-          collection: 'collection',
-          controller: 'controller',
-          action: 'action'
-        }, context);
-
-      role.controllers = {
-        '*': {
-          actions: {
-            '*': true
-          }
-        }
-      };
-
-      return role.isActionAllowed(req, kuzzle)
-        .then(isAllowed => {
-          should(isAllowed).be.false();
         });
     });
 
