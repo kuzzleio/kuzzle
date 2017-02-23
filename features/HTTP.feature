@@ -250,6 +250,7 @@ Feature: Test HTTP API
     And I create a new role "foo" with id "test3"
     Then I'm able to do a multi get with "test,test2,test3" and get "3" roles
     Then I'm able to find "6" role by searching controller "foo"
+    And I'm able to find "2" role by searching controller "foo" from "1" to "3" 
     And I'm able to find "4" role by searching controller "bar"
 
   @usingHttp @cleanSecurity

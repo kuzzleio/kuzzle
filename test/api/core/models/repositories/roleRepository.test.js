@@ -228,6 +228,28 @@ describe('Test: repositories/roleRepository', () => {
           should(result.total).be.exactly(1);
           should(result.hits.length).be.exactly(1);
           should(result.hits).match([roles.default]);
+          return roleRepository.searchRole(['foo'], 1);
+        })
+        .then(result => {
+          should(result.total).be.exactly(3);
+          should(result.hits.length).be.exactly(2);
+          should(result.hits).match([roles.foo, roles.foobar]);
+          should(result.hits).not.match([roles.default]);
+          return roleRepository.searchRole(['foo'], 0, 2);
+        })
+        .then(result => {
+          should(result.total).be.exactly(3);
+          should(result.hits.length).be.exactly(2);
+          should(result.hits).match([roles.default, roles.foo]);
+          should(result.hits).not.match([roles.foobar]);
+          return roleRepository.searchRole(['foo', 'bar'], 1, 2);
+        })
+        .then(result => {
+          should(result.total).be.exactly(4);
+          should(result.hits.length).be.exactly(2);
+          should(result.hits).match([roles.foo, roles.bar]);
+          should(result.hits).not.match([roles.default]);
+          should(result.hits).not.match([roles.foobar]);
         });
     });
   });
