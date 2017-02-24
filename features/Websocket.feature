@@ -759,7 +759,7 @@ Feature: Test websocket API
     Then The ms result should match the json null
     Given I call the mset method of the memory storage with arguments
       """
-      { "_id": "#prefix#foo", "body": { "value": "bar", "values": ["#prefix#k1", "v1", "#prefix#k2", "v2"] }}
+      { "body": {"entries": [{"key": "#prefix#foo", "value": "bar"}, {"key":"#prefix#k1", "value": "v1"}, {"key":"#prefix#k2", "value":"v2"}]}}
       """
     When I call the mget method of the memory storage with arguments
       """
@@ -768,7 +768,7 @@ Feature: Test websocket API
     Then The ms result should match the json ["bar", "v2"]
     When I call the msetnx method of the memory storage with arguments
       """
-      { "body": { "values": ["#prefix#k1", "v1bis", "#prefix#foo", "barbis"] }}
+      { "body": { "entries": [{"key":"#prefix#k1", "value":"v1bis"}, {"key":"#prefix#foo", "value":"barbis"}] }}
       """
     Then The ms result should match the json 0
     Given I call the setex method of the memory storage with arguments
@@ -829,19 +829,6 @@ Feature: Test websocket API
     Then The ms result should match the json 0
     Given I call the set method of the memory storage with arguments
       """
-      { "_id": "#prefix#foo", "body": {"value": "Hello World" }}
-      """
-    And I call the setrange method of the memory storage with arguments
-      """
-      { "_id": "#prefix#foo", "body": { "offset": 6, "value": "Kuzzle" }}
-      """
-    When I call the get method of the memory storage with arguments
-      """
-      { "_id": "#prefix#foo" }
-      """
-    Then The ms result should match the json "Hello Kuzzle"
-    Given I call the set method of the memory storage with arguments
-      """
       {
         "_id": "#prefix#mykey",
         "body": {"value": "Your base are belong to us"}
@@ -872,7 +859,7 @@ Feature: Test websocket API
   Scenario: memory storage - lists
     Given I call the rpush method of the memory storage with arguments
       """
-      { "_id": "#prefix#list", "body": { "value": 1, "values": [ "abcd", 5 ] }}
+      { "_id": "#prefix#list", "body": { "values": [ 1, "abcd", 5 ] }}
       """
     Then The ms result should match the json 3
     When I call the lindex method of the memory storage with arguments
@@ -907,7 +894,7 @@ Feature: Test websocket API
     Then The ms result should match the json 3
     Given I call the lpush method of the memory storage with arguments
       """
-      { "_id": "#prefix#list", "body": { "value": "first" }}
+      { "_id": "#prefix#list", "body": { "values": ["first"] }}
       """
     When I call the lindex method of the memory storage with arguments
       """
@@ -934,7 +921,7 @@ Feature: Test websocket API
     Then The ms result should match the json ["first", "abcd", "inserted", "5", "hello", "foo"]
     Given I call the lset method of the memory storage with arguments
       """
-      {"_id": "#prefix#list", "body": { "idx": 1, "value": "replaced"}}
+      {"_id": "#prefix#list", "body": { "index": 1, "value": "replaced"}}
       """
     When I call the lindex method of the memory storage with arguments
       """
@@ -962,7 +949,7 @@ Feature: Test websocket API
     Then The ms result should match the json "inserted"
     Given I call the del method of the memory storage with arguments
       """
-      { "_id": "#prefix#list" }
+      { "body": { "keys": ["#prefix#list"] } }
       """
     And I call the rpush method of the memory storage with arguments
       """
@@ -972,19 +959,13 @@ Feature: Test websocket API
       """
       {
         "body": {
-          "values": [
-            "#prefix#o_1",
-            "object1",
-            "#prefix#o_2",
-            "object2",
-            "#prefix#o_3",
-            "object3",
-            "#prefix#w_1",
-            2,
-            "#prefix#w_2",
-            3,
-            "#prefix#w_3",
-            1
+          "entries": [
+            {"key":"#prefix#o_1", "value":"object1"},
+            {"key":"#prefix#o_2", "value":"object2"},
+            {"key":"#prefix#o_3", "value":"object3"},
+            {"key":"#prefix#w_1","value":2},
+            {"key":"#prefix#w_2","value":3},
+            {"key":"#prefix#w_3","value":1}
           ]
         }
       }
@@ -995,7 +976,7 @@ Feature: Test websocket API
         "_id": "#prefix#list",
         "body": {
           "by": "#prefix#w_*",
-          "get": "#prefix#o_*",
+          "get": ["#prefix#o_*"],
           "direction": "DESC"
         }
       }
@@ -1015,11 +996,21 @@ Feature: Test websocket API
       """
     And I call the hmset method of the memory storage with arguments
       """
-      {"_id":"#prefix#hash","body":{"values":["k1","v1","k2","v2","k3","v3","k4",10]}}
+      {
+        "_id":"#prefix#hash",
+        "body": {
+          "entries": [
+            {"field": "k1", "value": "v1"},
+            {"field": "k2", "value": "v2"},
+            {"field": "k3", "value": "v3"},
+            {"field": "k4", "value": 10}
+          ]
+        }
+      }
       """
     When I call the hdel method of the memory storage with arguments
       """
-      {"_id":"#prefix#hash", "body": { "field": "k3" } }
+      {"_id":"#prefix#hash", "body": { "fields": ["k3"] } }
       """
     Then The ms result should match the json 1
     When I call the hget method of the memory storage with arguments
@@ -1063,7 +1054,7 @@ Feature: Test websocket API
   Scenario: memory storage - sets
     Given I call the sadd method of the memory storage with arguments
       """
-      { "_id": "#prefix#set", "body": { "member": "foobar", "members": [ "v1", 5, 10, 10] }}
+      { "_id": "#prefix#set", "body": { "members": ["foobar", "v1", 5, 10, 10] }}
       """
     Then The ms result should match the json 4
     When I call the scard method of the memory storage with arguments
@@ -1095,12 +1086,12 @@ Feature: Test websocket API
     Then The sorted ms result should match the json ["d", "e"]
     When I call the sinter method of the memory storage with arguments
       """
-      { "_id": "#prefix#set1", "args": { "keys": ["#prefix#set2"] }}
+      { "args": { "keys": ["#prefix#set1", "#prefix#set2"] }}
       """
     Then The ms result should match the json ["c"]
     Given I call the sinterstore method of the memory storage with arguments
       """
-      { "_id": "#prefix#set1", "body": { "destination": "#prefix#set3", "keys": ["#prefix#set2"] }}
+      { "body": { "destination": "#prefix#set3", "keys": ["#prefix#set1", "#prefix#set2"] }}
       """
     When I call the smembers method of the memory storage with arguments
       """
@@ -1109,12 +1100,12 @@ Feature: Test websocket API
     Then The ms result should match the json ["c"]
     When I call the sunion method of the memory storage with arguments
       """
-      { "_id": "#prefix#set1", "body": { "keys": ["#prefix#set2"] }}
+      { "body": { "keys": ["#prefix#set1", "#prefix#set2"] }}
       """
     Then The sorted ms result should match the json ["a", "b", "c", "d", "e"]
     Given I call the sunionstore method of the memory storage with arguments
       """
-      { "_id": "#prefix#set1", "body": { "destination": "#prefix#set3", "keys": ["#prefix#set2"] }}
+      { "body": { "destination": "#prefix#set3", "keys": ["#prefix#set1", "#prefix#set2"] }}
       """
     When I call the smembers method of the memory storage with arguments
       """
