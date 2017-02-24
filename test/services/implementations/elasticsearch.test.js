@@ -628,12 +628,6 @@ describe('Test: ElasticSearch service', () => {
 
       elasticsearch.update(request)
         .catch((error) => {
-          should(kuzzle.pluginsManager.trigger)
-            .be.calledWith(
-              'log:warn',
-              '[warning] unhandled elasticsearch error:\nbanana error'
-            );
-
           should(error).be.instanceOf(Error);
           should(elasticsearch.client.update.firstCall.args[0].id).be.undefined();
           done();
