@@ -606,6 +606,13 @@ Feature: Test websocket API
       { "_id": "#prefix#mykey", "body": { "value": "999" }}
       """
     Then The ms result should match the json 0
+    When I call the scan method of the memory storage with arguments
+      """
+      {
+        "args": { "cursor": 0, "match": "#prefix*" }
+      }
+      """
+    Then The ms result should match the json [0, "#prefix#mykey"]
     When I call the touch method of the memory storage with arguments
       """
       { "body": { "keys": ["#prefix#mykey"] } }

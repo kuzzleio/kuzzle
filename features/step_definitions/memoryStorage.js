@@ -1,21 +1,12 @@
-var
+'use strict';
+
+const
   Promise = require('bluebird'),
   should = require('should');
 
-
 module.exports = function () {
-
   this.When(/^I call the (.*?) method of the memory storage with arguments$/, function (command, args) {
-    var realArgs;
-
-    if (args && args !== '') {
-      try{
-        realArgs = JSON.parse(args.replace(/#prefix#/g, this.idPrefix));
-      }
-      catch(err) {
-        return Promise.reject(err);
-      }
-    }
+    let realArgs = args ? JSON.parse(args.replace(/#prefix#/g, this.idPrefix)) : args;
 
     return this.api.callMemoryStorage(command, realArgs)
       .then(response => {
@@ -29,8 +20,16 @@ module.exports = function () {
       });
   });
 
+  this.When(/^I scan the database using the (.+?) method$/, function (command) {
+    let realArgs = args ? JSON.parse(args.replace(/#prefix#/g, this.idPrefix)) : args;
+
+    this.memoryStorageResult = null;
+
+    return scanRedis(this.api.callMemoryStorage, this.idPrefix, command, 0);
+  });
+
   this.Then(/^The (sorted )?ms result should match the (regex|json) (.*?)$/, function (sorted, type, pattern, callback) {
-    var
+    let
       regex,
       val = this.memoryStorageResult.result;
 
@@ -61,3 +60,31 @@ module.exports = function () {
     }
   });
 };
+
+
+/**
+ * Executes on of the *scan family command, recursively, until
+ * the scan completes
+ *
+ * @param {function} apiExecute - function to call to execute the scan
+ * @param {string} prefix - functional tests keys prefix
+ * @param {string} command - name of the scan command (scan, hscan, sscan, zscan)
+ * @param {number} cursor - scan's cursor position
+ */
+function scanRedis (apiExecute, prefix, command, cursor) {
+  return apiExecute(command, {cursor, match: `${prefix}*`})
+    .then(response => {
+      if (response.error) {
+        return Promise.reject(response.error);
+      }
+
+      if (this.memoryStorageResult === null) {
+        this.memoryStorageResult = response;
+      }
+      else {
+        this.memoryStorageResult.result.push(...response.result.slice(1));
+      }
+
+      return response.result[0] === 0 ? response : scanRedis(apiExecute, prefix, command, response.result[0]);
+    });
+}
