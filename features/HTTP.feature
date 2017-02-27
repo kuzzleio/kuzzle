@@ -471,11 +471,16 @@ Feature: Test HTTP API
       { "_id": "#prefix#mykey", "body": { "value": "999" }}
       """
     Then The ms result should match the json 1
-    Given I call the setnx method of the memory storage with arguments
+    When I call the setnx method of the memory storage with arguments
       """
       { "_id": "#prefix#mykey", "body": { "value": "999" }}
       """
     Then The ms result should match the json 0
+    When I call the touch method of the memory storage with arguments
+      """
+      { "body": { "keys": ["#prefix#mykey"] } }
+      """
+    Then The ms result should match the json 1
     When I call the incrbyfloat method of the memory storage with arguments
       """
       { "_id": "#prefix#mykey", "body": { "value": -0.5 }}
