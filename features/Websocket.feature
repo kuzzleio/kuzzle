@@ -866,6 +866,16 @@ Feature: Test websocket API
       { "_id": "#prefix#list"}
       """
     Then The ms result should match the json 3
+    When I call the rpushx method of the memory storage with arguments
+      """
+      { "_id": "#prefix#list", "body": { "value": "foobar" } }
+      """
+    Then The ms result should match the json 4
+    When I call the rpushx method of the memory storage with arguments
+      """
+      { "_id": "nonexisting", "body": { "value": "foobar" } }
+      """
+    Then The ms result should match the json 0
     Given I call the lpush method of the memory storage with arguments
       """
       { "_id": "#prefix#list", "body": { "values": ["first"] }}
@@ -892,7 +902,7 @@ Feature: Test websocket API
       """
       { "_id": "#prefix#list", "args": { "start": 0, "stop": -1  } }
       """
-    Then The ms result should match the json ["first", "abcd", "inserted", "5", "hello", "foo"]
+    Then The ms result should match the json ["first", "abcd", "inserted", "5", "foobar", "hello", "foo"]
     Given I call the lset method of the memory storage with arguments
       """
       {"_id": "#prefix#list", "body": { "index": 1, "value": "replaced"}}
