@@ -641,6 +641,56 @@ describe('Test: memoryStorage controller', () => {
       should(() => msController.expire(req)).throw(BadRequestError);
     });
 
+    it('custom mapping checks - geoadd', () => {
+      const
+        req = new Request({
+          _id: 'myKey',
+          body: {}
+        });
+
+      should(() => msController.geoadd(req)).throw(BadRequestError);
+
+      req.input.body.points = [];
+      should(() => msController.geoadd(req)).throw(BadRequestError);
+
+      req.input.body.points = ['foo'];
+      should(() => msController.geoadd(req)).throw(BadRequestError);
+
+      req.input.body.points = [{name: 'foo', lon: '13.361389'}];
+      should(() => msController.geoadd(req)).throw(BadRequestError);
+
+      req.input.body.points = [{name: 'foo', lat: '38.115556'}];
+      should(() => msController.geoadd(req)).throw(BadRequestError);
+
+      req.input.body.points = [{lon: '13.361389', lat: '38.115556'}];
+      should(() => msController.geoadd(req)).throw(BadRequestError);
+
+      req.input.body.points = [{name: 'foo', lon: 'foo', lat: '38.115556'}];
+      should(() => msController.geoadd(req)).throw(BadRequestError);
+
+      req.input.body.points = [{name: 'foo', lon: '13.361389', lat: 'bar'}];
+      should(() => msController.geoadd(req)).throw(BadRequestError);
+
+      req.input.body.points = [
+        {name: 'palermo', lon: '13.361389', lat: '38.115556'},
+        {name: 'catania', lon: '15.087269', lat: '37.502669'}
+      ];
+
+      return msController.geoadd(req)
+        .then(response => {
+          should(response.name).be.exactly('geoadd');
+          should(response.args).be.eql([
+            'myKey',
+            '13.361389',
+            '38.115556',
+            'palermo',
+            '15.087269',
+            '37.502669',
+            'catania'
+          ]);
+        });
+    });
+
     it('custom mapping checks - geohash', () => {
       const 
         req = new Request({
@@ -666,8 +716,8 @@ describe('Test: memoryStorage controller', () => {
       const
         req = new Request({
           _id: 'myKey',
-          longitude: 42,
-          latitude: 13,
+          lon: 42,
+          lat: 13,
           distance: 37,
           unit: 'km',
           options: ['withcoord', 'withdist', 'count', 25, 'asc']
