@@ -1544,6 +1544,73 @@ Feature: Test websocket API
       """
     Then The ms result should match the json 11
 
+  @usingHttp @cleanRedis
+  Scenario: memory storage - geospatial
+    Given I call the geoadd method of the memory storage with arguments
+      """
+      {
+        "_id": "#prefix#geo",
+        "body": {
+          "points": [
+              {"lon": 13.361389, "lat": 38.115556, "name": "Palermo"},
+              {"lon": 15.087269, "lat": 37.502669, "name": "Catania"}
+          ]
+        }
+      }
+      """
+    Then The ms result should match the json 2
+    When I call the geodist method of the memory storage with arguments
+      """
+      {
+        "_id": "#prefix#geo",
+        "args": { "member1": "Palermo", "member2": "Catania" }
+      }
+      """
+    Then The ms result should match the json "166274.1516"
+    When I call the geohash method of the memory storage with arguments
+      """
+      {
+        "_id": "#prefix#geo",
+        "args": { "members": ["Palermo", "Catania"] }
+      }
+      """
+    Then The ms result should match the json ["sqc8b49rny0","sqdtr74hyu0"]
+    When I call the geopos method of the memory storage with arguments
+      """
+      {
+        "_id": "#prefix#geo",
+        "args": { "members": ["Palermo", "Catania"] }
+      }
+      """
+    Then The ms result should match the json [["13.36138933897018433","38.11555639549629859"],["15.08726745843887329","37.50266842333162032"]]
+    When I call the georadius method of the memory storage with arguments
+      """
+      {
+        "_id": "#prefix#geo",
+        "args": { "lon": 15, "lat": 37, "distance": 100, "unit": "km" }
+      }
+      """
+    Then The ms result should match the json ["Catania"]
+    When I call the geoadd method of the memory storage with arguments
+      """
+      {
+        "_id": "#prefix#geo",
+        "body": {
+          "points": [
+              {"lon": 13.583333, "lat": 37.316667, "name": "Agrigento"}
+          ]
+        }
+      }
+      """
+    When I call the georadiusbymember method of the memory storage with arguments
+      """
+      {
+        "_id": "#prefix#geo",
+        "args": { "member": "Agrigento", "distance": 100, "unit": "km" }
+      }
+      """
+    Then The ms result should match the json ["Agrigento", "Palermo"]
+
   @usingWebsocket
   Scenario: autorefresh
     When I check the autoRefresh status
