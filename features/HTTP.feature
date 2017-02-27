@@ -1233,6 +1233,22 @@ Feature: Test HTTP API
       }
       """
     Then The ms result should match the json ["five","four","zero"]
+    When I call the zremrangebyrank method of the memory storage with arguments
+      """
+      {
+        "_id": "#prefix#zset",
+        "body": { "start": 1, "stop": 2 }
+      }
+      """
+    Then The ms result should match the json 2
+    When I call the zrange method of the memory storage with arguments
+      """
+      {
+        "_id": "#prefix#zset",
+        "args": { "start": 0, "stop": -1 }
+      }
+      """
+    Then The ms result should match the json ["five"]
     Given I call the del method of the memory storage with arguments
       """
       { "body": { "keys": ["#prefix#zset"] } }
