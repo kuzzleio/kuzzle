@@ -23,7 +23,7 @@ ApiHttp.prototype.init = function (world) {
 };
 
 ApiHttp.prototype.getRequest = function (index, collection, controller, action, args) {
-  var
+  let
     url = '',
     queryString = [],
     verb = 'GET',
@@ -42,8 +42,7 @@ ApiHttp.prototype.getRequest = function (index, collection, controller, action, 
   }
 
   routes.some(route => {
-    var
-      hits = [];
+    let hits = [];
 
     // Try / Catch mechanism avoids to match routes that have not all
     // the mandatory arguments for the route
@@ -87,13 +86,13 @@ ApiHttp.prototype.getRequest = function (index, collection, controller, action, 
         // add extra aguments in the query string
         if (verb === 'GET') {
           _.difference(Object.keys(args.body), hits).forEach(key => {
-            var value = args.body[key];
+            const value = args.body[key];
 
             if (_.isArray(value)) {
-              queryString = queryString.concat(value.map(v => key + '=' + encodeURIComponent(v)));
+              queryString.push(...value.map(v => `${key}=${v}`));
             }
             else {
-              queryString.push(key + '=' + encodeURIComponent(value));
+              queryString.push(`${key}=${value}`);
             }
           });
 
