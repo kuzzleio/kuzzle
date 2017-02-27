@@ -982,11 +982,21 @@ Feature: Test websocket API
         }
       }
       """
+    When I call the hexists method of the memory storage with arguments
+      """
+      {"_id": "#prefix#hash", "args": { "field": "k3" } }
+      """
+    Then The ms result should match the json 1
     When I call the hdel method of the memory storage with arguments
       """
       {"_id":"#prefix#hash", "body": { "fields": ["k3"] } }
       """
     Then The ms result should match the json 1
+    When I call the hexists method of the memory storage with arguments
+      """
+      {"_id": "#prefix#hash", "args": { "field": "k3" } }
+      """
+    Then The ms result should match the json 0
     When I call the hget method of the memory storage with arguments
       """
       { "_id": "#prefix#hash", "args": { "field": "foo" }}
