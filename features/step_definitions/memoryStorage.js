@@ -20,12 +20,19 @@ module.exports = function () {
       });
   });
 
-  this.When(/^I scan the database using the (.+?) method$/, function (command) {
-    let realArgs = args ? JSON.parse(args.replace(/#prefix#/g, this.idPrefix)) : args;
+  this.When(/^I scan the database using the (.+?) method with arguments$/, function (command, args) {
+    const parsed = JSON.parse(args.replace(/#prefix#/g, this.idPrefix));
+
+    if (parsed.args) {
+      parsed.args.cursor = 0;
+    }
+    else {
+      parsed.args = {cursor: 0};
+    }
 
     this.memoryStorageResult = null;
 
-    return scanRedis(this.api.callMemoryStorage, this.idPrefix, command, 0);
+    return scanRedis(this, command, parsed);
   });
 
   this.Then(/^The (sorted )?ms result should match the (regex|json) (.*?)$/, function (sorted, type, pattern, callback) {
@@ -66,25 +73,28 @@ module.exports = function () {
  * Executes on of the *scan family command, recursively, until
  * the scan completes
  *
- * @param {function} apiExecute - function to call to execute the scan
- * @param {string} prefix - functional tests keys prefix
+ * @param {object} world - functional tests global object
  * @param {string} command - name of the scan command (scan, hscan, sscan, zscan)
- * @param {number} cursor - scan's cursor position
+ * @param {object} args - scan arguments
+ * @return {Promise<object>}
  */
-function scanRedis (apiExecute, prefix, command, cursor) {
-  return apiExecute(command, {cursor, match: `${prefix}*`})
+function scanRedis (world, command, args) {
+  return world.api.callMemoryStorage(command, args)
     .then(response => {
       if (response.error) {
         return Promise.reject(response.error);
       }
 
-      if (this.memoryStorageResult === null) {
-        this.memoryStorageResult = response;
+      if (world.memoryStorageResult === null) {
+        world.memoryStorageResult = {result: response.result[1]};
       }
       else {
-        this.memoryStorageResult.result.push(...response.result.slice(1));
+        world.memoryStorageResult.result.push(...response.result[1]);
       }
 
-      return response.result[0] === 0 ? response : scanRedis(apiExecute, prefix, command, response.result[0]);
+      // advance the cursor to its next position
+      args.args.cursor = Number.parseInt(response.result[0]);
+
+      return args.args.cursor === 0 ? world.memoryStorageResult : scanRedis(world, command, args);
     });
 }

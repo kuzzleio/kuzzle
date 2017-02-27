@@ -814,11 +814,34 @@ describe('Test: memoryStorage controller', () => {
         });
     });
 
-    it('custom mapping checks - mset', () => {
+    it('custom mapping checks - scan', () => {
       const
         req = new Request({
           cursor: 0,
           match: ['foobar']
+        });
+
+      should(() => msController.scan(req)).throw(BadRequestError);
+
+      req.input.args.match = 'foobar';
+      req.input.args.count = 'foobar';
+      should(() => msController.scan(req)).throw(BadRequestError);
+
+      req.input.args.count = 3;
+
+      return msController.scan(req)
+        .then(response => {
+          should(response.name).be.exactly('scan');
+          should(response.args).be.eql([0, 'MATCH', 'foobar', 'COUNT', 3]);
+        });
+    });
+
+    it('custom mapping checks - sscan', () => {
+      const
+        req = new Request({
+          cursor: 0,
+          match: ['foobar'],
+          _id: 'key'
         });
 
       should(() => msController.sscan(req)).throw(BadRequestError);
@@ -832,7 +855,7 @@ describe('Test: memoryStorage controller', () => {
       return msController.sscan(req)
         .then(response => {
           should(response.name).be.exactly('sscan');
-          should(response.args).be.eql([0, 'MATCH', 'foobar', 'COUNT', 3]);
+          should(response.args).be.eql(['key', 0, 'MATCH', 'foobar', 'COUNT', 3]);
         });
     });
 

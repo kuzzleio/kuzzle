@@ -476,6 +476,11 @@ Feature: Test HTTP API
       { "_id": "#prefix#mykey", "body": { "value": "999" }}
       """
     Then The ms result should match the json 0
+    When I scan the database using the scan method with arguments
+      """
+      { "args": { "cursor": 0, "match": "#prefix#*" } }
+      """
+    Then The ms result should match the json ["#prefix#mykey"]
     When I call the touch method of the memory storage with arguments
       """
       { "body": { "keys": ["#prefix#mykey"] } }
@@ -872,6 +877,11 @@ Feature: Test HTTP API
         }
       }
       """
+    When I scan the database using the hscan method with arguments
+      """
+      { "_id": "#prefix#hash" }
+      """
+    Then The ms result should match the json ["foo", "bar", "k1", "v1", "k2", "v2", "k3", "v3", "k4", "10"]
     When I call the hexists method of the memory storage with arguments
       """
       {"_id": "#prefix#hash", "args": { "field": "k3" } }
@@ -931,6 +941,11 @@ Feature: Test HTTP API
       { "_id": "#prefix#set", "body": { "members": ["foobar", "v1", 5, 10, 10] }}
       """
     Then The ms result should match the json 4
+    When I scan the database using the sscan method with arguments
+      """
+      { "_id": "#prefix#set" }
+      """
+    Then The sorted ms result should match the json ["10","5","foobar","v1"]
     When I call the scard method of the memory storage with arguments
       """
       {"_id": "#prefix#set"}
@@ -1064,6 +1079,11 @@ Feature: Test HTTP API
         }
       }
       """
+    When I scan the database using the zscan method with arguments
+      """
+      { "_id": "#prefix#zset" }
+      """
+    Then The ms result should match the json ["one", "1", "uno", "1", "two", "2", "three", "3"]
     When I call the zrange method of the memory storage with arguments
       """
       {
