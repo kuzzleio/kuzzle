@@ -595,36 +595,10 @@ Feature: Test websocket API
     Then I'm able to find my rights
 
   @usingWebsocket @cleanRedis
-  Scenario: memory storage - misc
-    When I call the info method of the memory storage with arguments
-      """
-      """
-    Then The ms result should match the regex ^# Server\r\nredis_version:
-    # this test erases the whole index. commented for safety
-    # Given I call the set method of the memory storage with arguments
-    #  """
-    #    { "_id": "#prefix#mykey", "body": { "value": 10 } }
-    #  """
-    # Then I call the flushdb method of the memory storage with arguments
-    #  """
-    #    {}
-    #  """
-    # Then I call the keys method of the memory storage with arguments
-    #    """
-    #      { "body": { "pattern": "*" } }
-    #    """
-    # And The ms result should match the json null
-    When I call the lastsave method of the memory storage with arguments
-      """
-      {}
-      """
-    Then The ms result should match the regex ^\d{10}$
-
-  @usingWebsocket @cleanRedis
   Scenario: memory storage - scalars
     Given I call the set method of the memory storage with arguments
       """
-      { "_id": "#prefix#mykey", "body": { "value": 999 }}
+      { "_id": "#prefix#mykey", "body": { "value": "999" }}
       """
     Then The ms result should match the json "OK"
     When I call the incrbyfloat method of the memory storage with arguments
@@ -684,7 +658,7 @@ Feature: Test websocket API
     Then The ms result should match the json 1
     When I call the del method of the memory storage with arguments
       """
-      { "_id": "#prefix#mykey" }
+      { "body": { "keys": ["#prefix#mykey"] } }
       """
     Then The ms result should match the json 1
     When I call the get method of the memory storage with arguments
@@ -702,7 +676,7 @@ Feature: Test websocket API
       """
     When I call the mget method of the memory storage with arguments
       """
-      { "_id": "#prefix#x", "args": { "keys": ["#prefix#y", "nonexisting"]}}
+      { "args": { "keys": ["#prefix#x", "#prefix#y", "nonexisting"]}}
       """
     Then The ms result should match the json ["foobar", "abcdef", null]
     When I call the bitop method of the memory storage with arguments
@@ -740,11 +714,11 @@ Feature: Test websocket API
     Then The ms result should match the json 1
     Given I call the set method of the memory storage with arguments
       """
-      { "_id": "#prefix#mykey", "body": { "value": 10 } }
+      { "_id": "#prefix#mykey", "body": { "value": "10" } }
       """
     When I call the exists method of the memory storage with arguments
       """
-      { "_id": "#prefix#mykey", "body": { "keys": [ "i", "dont", "exist" ] } }
+      { "args": {"keys": [ "#prefix#mykey", "i", "dont", "exist" ] } }
       """
     Then The ms result should match the json 1
     When I call the expire method of the memory storage with arguments
@@ -1100,7 +1074,7 @@ Feature: Test websocket API
     Then The ms result should match the json ["c"]
     When I call the sunion method of the memory storage with arguments
       """
-      { "body": { "keys": ["#prefix#set1", "#prefix#set2"] }}
+      { "args": { "keys": ["#prefix#set1", "#prefix#set2"] }}
       """
     Then The sorted ms result should match the json ["a", "b", "c", "d", "e"]
     Given I call the sunionstore method of the memory storage with arguments
@@ -1133,7 +1107,7 @@ Feature: Test websocket API
     Then The ms result should match the json ["a", "b", "c"]
     Given I call the del method of the memory storage with arguments
       """
-      { "_id": "#prefix#set" }
+      { "body": { "keys": ["#prefix#set"] } }
       """
     And I call the sadd method of the memory storage with arguments
       """
@@ -1146,7 +1120,7 @@ Feature: Test websocket API
     Then The ms result should match the json ["23", "54", "99"]
     When I call the sort method of the memory storage with arguments
       """
-      { "_id": "#prefix#set", "body": { "offset": 1, "count": 2, "direction": "DESC" }}
+      { "_id": "#prefix#set", "body": { "limit": {"offset": 1, "count": 2}, "direction": "DESC" }}
       """
     Then The ms result should match the json ["54", "23"]
     When I call the srandmember method of the memory storage with arguments
@@ -1164,8 +1138,7 @@ Feature: Test websocket API
       {
         "_id": "#prefix#set",
         "body": {
-          "member": 54,
-          "members": [ 23, 99 ]
+          "members": [ 54, 23, 99 ]
         }
       }
       """
@@ -1182,9 +1155,8 @@ Feature: Test websocket API
       {
         "_id": "#prefix#zset",
         "body": {
-          "score": 1,
-          "member": "one",
-          "values": [
+          "elements": [
+            { "score": 1, "member": "one" },
             { "score": 1, "member": "uno" },
             { "score": 3, "member": "three" },
             { "score": 2, "member": "two" }
@@ -1199,7 +1171,7 @@ Feature: Test websocket API
         "args": {
           "start": 0,
           "stop": -1,
-          "withscores": true
+          "options": ["withscores"]
         }
       }
       """
@@ -1237,7 +1209,7 @@ Feature: Test websocket API
         "args": {
           "start": 0,
           "stop": -1,
-          "withscores": true
+          "options": ["withscores"]
         }
       }
       """
@@ -1247,7 +1219,7 @@ Feature: Test websocket API
       {
         "_id": "#prefix#zset2",
         "body": {
-          "values": [
+          "elements": [
             { "score": 2, "member": "two" },
             { "score": 1, "member": "uno" }
           ]
@@ -1257,8 +1229,8 @@ Feature: Test websocket API
     And I call the zinterstore method of the memory storage with arguments
       """
       {
+        "_id": "#prefix#zset3",
         "body": {
-          "destination": "#prefix#zset3",
           "keys": [ "#prefix#zset", "#prefix#zset2" ],
           "weights": [ 2, 1 ],
           "aggregate": "max"
@@ -1269,15 +1241,20 @@ Feature: Test websocket API
       """
       {
         "_id": "#prefix#zset3",
-        "args": { "start": 0, "stop": -1, "withscores": true }
+        "args": {
+          "start": 0,
+          "stop": -1,
+          "options": ["withscores"]
+        }
       }
       """
     Then The ms result should match the json ["uno", "2", "two", "8"]
     Given I call the zunionstore method of the memory storage with arguments
       """
       {
+        "_id": "#prefix#zset3",
         "body": {
-          "destination": "#prefix#zset3",
+          "_id": "#prefix#zset3",
           "keys": [ "#prefix#zset", "#prefix#zset2" ],
           "weights": [ 2, 1 ],
           "aggregate": "max"
@@ -1288,20 +1265,24 @@ Feature: Test websocket API
       """
       {
         "_id": "#prefix#zset3",
-        "args": { "start": 0, "stop": -1, "withscores": true }
+        "args": {
+          "start": 0,
+          "stop": -1,
+          "options": ["withscores"]
+        }
       }
       """
     Then The ms result should match the json ["one","2","uno","2","three","6","two","8"]
     Given I call the del method of the memory storage with arguments
       """
-      { "_id": "#prefix#zset" }
+      { "body": { "keys": ["#prefix#zset"] } }
       """
     And I call the zadd method of the memory storage with arguments
       """
       {
         "_id": "#prefix#zset",
         "body": {
-          "values": [
+          "elements": [
             { "score": 0, "member": "zero" },
             { "score": 0, "member": "one" },
             { "score": 0, "member": "two" },
@@ -1354,14 +1335,14 @@ Feature: Test websocket API
     Then The ms result should match the json ["five","four","zero"]
     Given I call the del method of the memory storage with arguments
       """
-      { "_id": "#prefix#zset" }
+      { "body": { "keys": ["#prefix#zset"] } }
       """
     And I call the zadd method of the memory storage with arguments
       """
       {
         "_id": "#prefix#zset",
         "body": {
-          "values": [
+          "elements": [
             { "score": 0, "member": "zero" },
             { "score": 1, "member": "one" },
             { "score": 2, "member": "two" },
@@ -1378,9 +1359,8 @@ Feature: Test websocket API
         "args": {
           "min": "(0",
           "max": "3",
-          "offset": 1,
-          "count": 5,
-          "withscores": true
+          "limit": [1, 5],
+          "options": ["withscores"]
         }
       }
       """
@@ -1392,9 +1372,8 @@ Feature: Test websocket API
         "args": {
           "min": "(0",
           "max": "3",
-          "offset": 1,
-          "count": 5,
-          "withscores": true
+          "limit": [1, 5],
+          "options": ["withscores"]
         }
       }
       """
@@ -1406,19 +1385,19 @@ Feature: Test websocket API
     Then The ms result should match the json "2"
     When I call the zrem method of the memory storage with arguments
       """
-      { "_id": "#prefix#zset", "body": { "member": "two" } }
+      { "_id": "#prefix#zset", "body": { "members": ["two"] } }
       """
     And I call the zrange method of the memory storage with arguments
       """
       {
         "_id": "#prefix#zset",
-        "args": { "start": 0, "stop": -1, "withscores": true }
+        "args": { "start": 0, "stop": -1, "options": ["withscores"] }
       }
       """
     Then The ms result should match the json ["zero", "0", "one", "1", "three", "3", "four", "4"]
     Given I call the zadd method of the memory storage with arguments
       """
-      { "_id": "#prefix#zset", "body": { "score": 2, "member": "two" } }
+      { "_id": "#prefix#zset", "body": { "elements": [{"score": 2, "member": "two"}] } }
       """
     When I call the zremrangebyscore method of the memory storage with arguments
       """
@@ -1434,7 +1413,7 @@ Feature: Test websocket API
       """
       {
         "_id": "#prefix#zset",
-        "args": { "start": 0, "stop": -1, "withscores": true }
+        "args": { "start": 0, "stop": -1, "options": ["withscores"] }
       }
       """
     Then The ms result should match the json ["zero", "0", "one", "1", "four", "4"]
@@ -1447,8 +1426,7 @@ Feature: Test websocket API
       {
         "_id": "#prefix#hll",
         "body": {
-          "element": "a",
-          "elements": [ "b", "c", "d", "e", "f", "g" ]
+          "elements": [ "a", "b", "c", "d", "e", "f", "g" ]
         }
       }
       """
@@ -1458,15 +1436,14 @@ Feature: Test websocket API
       {
         "_id": "#prefix#hll",
         "body": {
-          "element": "a",
-          "elements": [ "b", "f", "g" ]
+          "elements": [ "a", "b", "f", "g" ]
         }
       }
       """
     Then The ms result should match the json 0
     When I call the pfcount method of the memory storage with arguments
       """
-      { "_id": "#prefix#hll" }
+      { "args": { "keys": ["#prefix#hll"] } }
       """
     Then The ms result should match the json 7
     Given I call the pfadd method of the memory storage with arguments
@@ -1489,15 +1466,15 @@ Feature: Test websocket API
     When I call the pfmerge method of the memory storage with arguments
       """
       {
+        "_id": "#prefix#hll3",
         "body": {
-          "destkey": "#prefix#hll3",
-          "sourcekeys": [ "#prefix#hll", "#prefix#hll2" ]
+          "sources": [ "#prefix#hll", "#prefix#hll2" ]
         }
       }
       """
     And I call the pfcount method of the memory storage with arguments
       """
-      { "_id": "#prefix#hll3" }
+      { "args": { "keys": ["#prefix#hll3"] } }
       """
     Then The ms result should match the json 11
 

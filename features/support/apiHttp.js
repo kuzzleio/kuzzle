@@ -1,4 +1,4 @@
-var
+const
   _ = require('lodash'),
   config = require('./config'),
   rp = require('request-promise'),
@@ -7,7 +7,7 @@ var
 /**
  * @constructor
  */
-var ApiHttp = function () {
+function ApiHttp () {
   this.world = null;
 
   this.baseUri = `${config.scheme}://${config.host}:${config.port}`;
@@ -16,7 +16,9 @@ var ApiHttp = function () {
     getIndex: index => typeof index !== 'string' ? this.world.fakeIndex : index,
     getCollection: collection => typeof collection !== 'string' ? this.world.fakeCollection : collection
   };
-};
+
+  return this;
+}
 
 ApiHttp.prototype.init = function (world) {
   this.world = world;
@@ -156,7 +158,7 @@ ApiHttp.prototype.callApi = function (options) {
 };
 
 ApiHttp.prototype.get = function (id, index) {
-  var options = {
+  const options = {
     url: this.apiPath(this.util.getIndex(index) + '/' + this.world.fakeCollection + '/' + id),
     method: 'GET'
   };
@@ -165,7 +167,7 @@ ApiHttp.prototype.get = function (id, index) {
 };
 
 ApiHttp.prototype.mGet = function(body, index, collection) {
-  var options = {
+  const options = {
     url: this.apiPath(this.util.getIndex(index) + '/' + this.util.getCollection(collection) + '/_mGet'),
     method: 'POST',
     body
@@ -175,8 +177,7 @@ ApiHttp.prototype.mGet = function(body, index, collection) {
 };
 
 ApiHttp.prototype.search = function (query, index, collection, args) {
-  var
-    qs,
+  const
     options = {
       url: this.apiPath(this.util.getIndex(index) + '/' + this.util.getCollection(collection) + '/_search'),
       method: 'POST',
@@ -184,8 +185,8 @@ ApiHttp.prototype.search = function (query, index, collection, args) {
     };
 
   if (args) {
-    qs = [];
-    options.url+= '?';
+    let qs = [];
+    options.url += '?';
 
     if (args.scroll) {
       qs.push('scroll=' + args.scroll);
@@ -204,7 +205,7 @@ ApiHttp.prototype.search = function (query, index, collection, args) {
 };
 
 ApiHttp.prototype.scroll = function (scrollId, scroll = '1m') {
-  var options = {
+  const options = {
     url: this.apiPath(`_scroll/${scrollId}?scroll=${scroll}`),
     method: 'POST'
   };
@@ -213,7 +214,7 @@ ApiHttp.prototype.scroll = function (scrollId, scroll = '1m') {
 };
 
 ApiHttp.prototype.count = function (query, index, collection) {
-  var options = {
+  const options = {
     url: this.apiPath(this.util.getIndex(index) + '/' + this.util.getCollection(collection) + '/_count'),
     method: 'POST',
     body: query
@@ -223,7 +224,7 @@ ApiHttp.prototype.count = function (query, index, collection) {
 };
 
 ApiHttp.prototype.create = function (body, index, collection, jwtToken, id) {
-  var
+  const
     url = id
       ? this.apiPath(this.util.getIndex(index) + '/' + this.util.getCollection(collection) + '/' + id + '/_create')
       : this.apiPath(this.util.getIndex(index) + '/' + this.util.getCollection(collection) + '/_create'),
@@ -243,7 +244,7 @@ ApiHttp.prototype.create = function (body, index, collection, jwtToken, id) {
 };
 
 ApiHttp.prototype.mCreate = function (body, index, collection, jwtToken) {
-  var options = {
+  const options = {
     url: this.apiPath(this.util.getIndex(index) + '/' + this.util.getCollection(collection) + '/_mCreate'),
     method: 'POST',
     body
@@ -259,7 +260,7 @@ ApiHttp.prototype.mCreate = function (body, index, collection, jwtToken) {
 };
 
 ApiHttp.prototype.publish = function (body, index) {
-  var options = {
+  const options = {
     url: this.apiPath(this.util.getIndex(index) + '/' + this.world.fakeCollection + '/_publish'),
     method: 'POST',
     body
@@ -269,7 +270,7 @@ ApiHttp.prototype.publish = function (body, index) {
 };
 
 ApiHttp.prototype.createOrReplace = function (body, index, collection) {
-  var options = {
+  const options = {
     url: this.apiPath(this.util.getIndex(index) + '/' + this.util.getCollection(collection) + '/' + body._id),
     method: 'PUT',
     body
@@ -281,7 +282,7 @@ ApiHttp.prototype.createOrReplace = function (body, index, collection) {
 };
 
 ApiHttp.prototype.mCreateOrReplace = function (body, index, collection) {
-  var options = {
+  const options = {
     url: this.apiPath(this.util.getIndex(index) + '/' + this.util.getCollection(collection) + '/_mCreateOrReplace'),
     method: 'PUT',
     body
@@ -291,7 +292,7 @@ ApiHttp.prototype.mCreateOrReplace = function (body, index, collection) {
 };
 
 ApiHttp.prototype.replace = function (body, index, collection) {
-  var options = {
+  const options = {
     url: this.apiPath(this.util.getIndex(index) + '/' + this.util.getCollection(collection) + '/' + body._id + '/_replace'),
     method: 'PUT',
     body
@@ -303,7 +304,7 @@ ApiHttp.prototype.replace = function (body, index, collection) {
 };
 
 ApiHttp.prototype.mReplace = function (body, index, collection) {
-  var options = {
+  const options = {
     url: this.apiPath(this.util.getIndex(index) + '/' + this.util.getCollection(collection) + '/_mReplace'),
     method: 'PUT',
     body
@@ -313,7 +314,7 @@ ApiHttp.prototype.mReplace = function (body, index, collection) {
 };
 
 ApiHttp.prototype.update = function (id, body, index) {
-  var options = {
+  const options = {
     url: this.apiPath(this.util.getIndex(index) + '/' + this.world.fakeCollection + '/' + id + '/_update'),
     method: 'PUT',
     body
@@ -325,7 +326,7 @@ ApiHttp.prototype.update = function (id, body, index) {
 };
 
 ApiHttp.prototype.mUpdate = function (body, index, collection) {
-  var options = {
+  const options = {
     url: this.apiPath(this.util.getIndex(index) + '/' + this.util.getCollection(collection) + '/_mUpdate'),
     method: 'PUT',
     body
@@ -335,7 +336,7 @@ ApiHttp.prototype.mUpdate = function (body, index, collection) {
 };
 
 ApiHttp.prototype.deleteById = function (id, index) {
-  var options = {
+  const options = {
     url: this.apiPath(this.util.getIndex(index) + '/' + this.world.fakeCollection + '/' + id),
     method: 'DELETE'
   };
@@ -344,7 +345,7 @@ ApiHttp.prototype.deleteById = function (id, index) {
 };
 
 ApiHttp.prototype.mDelete = function (body, index, collection) {
-  var options = {
+  const options = {
     url: this.apiPath(this.util.getIndex(index) + '/' + this.util.getCollection(collection) + '/_mDelete'),
     method: 'DELETE',
     body
@@ -354,7 +355,7 @@ ApiHttp.prototype.mDelete = function (body, index, collection) {
 };
 
 ApiHttp.prototype.deleteByQuery = function (query, index, collection) {
-  var options = {
+  const options = {
     url: this.apiPath(this.util.getIndex(index) + '/' + this.util.getCollection(collection) + '/_query'),
     method: 'DELETE',
     body: query
@@ -364,7 +365,7 @@ ApiHttp.prototype.deleteByQuery = function (query, index, collection) {
 };
 
 ApiHttp.prototype.bulkImport = function (bulk, index) {
-  var options = {
+  const options = {
     url: this.apiPath(this.util.getIndex(index) + '/' + this.world.fakeCollection + '/_bulk'),
     method: 'POST',
     body: {bulkData: bulk}
@@ -374,7 +375,7 @@ ApiHttp.prototype.bulkImport = function (bulk, index) {
 };
 
 ApiHttp.prototype.globalBulkImport = function (bulk) {
-  var options = {
+  const options = {
     url: this.apiPath('_bulk'),
     method: 'POST',
     body: {bulkData: bulk}
@@ -384,7 +385,7 @@ ApiHttp.prototype.globalBulkImport = function (bulk) {
 };
 
 ApiHttp.prototype.updateMapping = function (index) {
-  var options = {
+  const options = {
     url: this.apiPath(this.util.getIndex(index) + '/' + this.world.fakeCollection + '/_mapping'),
     method: 'PUT',
     body: this.world.mapping
@@ -394,7 +395,7 @@ ApiHttp.prototype.updateMapping = function (index) {
 };
 
 ApiHttp.prototype.getProfileMapping = function () {
-  var options = {
+  const options = {
     url: this.apiPath('/profiles/_mapping'),
     method: 'GET'
   };
@@ -403,7 +404,7 @@ ApiHttp.prototype.getProfileMapping = function () {
 };
 
 ApiHttp.prototype.updateProfileMapping = function () {
-  var options = {
+  const options = {
     url: this.apiPath('/profiles/_mapping'),
     method: 'PUT',
     body: this.world.securitymapping
@@ -413,7 +414,7 @@ ApiHttp.prototype.updateProfileMapping = function () {
 };
 
 ApiHttp.prototype.getRoleMapping = function () {
-  var options = {
+  const options = {
     url: this.apiPath('/roles/_mapping'),
     method: 'GET'
   };
@@ -422,7 +423,7 @@ ApiHttp.prototype.getRoleMapping = function () {
 };
 
 ApiHttp.prototype.updateRoleMapping = function () {
-  var options = {
+  const options = {
     url: this.apiPath('/roles/_mapping'),
     method: 'PUT',
     body: this.world.securitymapping
@@ -432,7 +433,7 @@ ApiHttp.prototype.updateRoleMapping = function () {
 };
 
 ApiHttp.prototype.getUserMapping = function () {
-  var options = {
+  const options = {
     url: this.apiPath('/users/_mapping'),
     method: 'GET'
   };
@@ -441,7 +442,7 @@ ApiHttp.prototype.getUserMapping = function () {
 };
 
 ApiHttp.prototype.updateUserMapping = function () {
-  var options = {
+  const options = {
     url: this.apiPath('/users/_mapping'),
     method: 'PUT',
     body: this.world.securitymapping
@@ -451,7 +452,7 @@ ApiHttp.prototype.updateUserMapping = function () {
 };
 
 ApiHttp.prototype.getStats = function (dates) {
-  var options = {
+  const options = {
     url: this.apiPath('_getStats'),
     method: 'POST',
     body: dates
@@ -461,7 +462,7 @@ ApiHttp.prototype.getStats = function (dates) {
 };
 
 ApiHttp.prototype.getLastStats = function () {
-  var options = {
+  const options = {
     url: this.apiPath('_getLastStats'),
     method: 'GET'
   };
@@ -470,7 +471,7 @@ ApiHttp.prototype.getLastStats = function () {
 };
 
 ApiHttp.prototype.getAllStats = function () {
-  var options = {
+  const options = {
     url: this.apiPath('_getAllStats'),
     method: 'GET'
   };
@@ -479,12 +480,8 @@ ApiHttp.prototype.getAllStats = function () {
 };
 
 ApiHttp.prototype.listCollections = function (index, type) {
-  var options;
-
-  index = index || this.world.fakeIndex;
-
-  options = {
-    url: this.apiPath(index + '/_list'),
+  const options = {
+    url: this.apiPath((index || this.world.fakeIndex) + '/_list'),
     method: 'GET'
   };
 
@@ -496,7 +493,7 @@ ApiHttp.prototype.listCollections = function (index, type) {
 };
 
 ApiHttp.prototype.now = function () {
-  var options = {
+  const options = {
     url: this.apiPath('_now'),
     method: 'GET'
   };
@@ -505,7 +502,7 @@ ApiHttp.prototype.now = function () {
 };
 
 ApiHttp.prototype.truncateCollection = function (index, collection) {
-  var options = {
+  const options = {
     url: this.apiPath(this.util.getIndex(index) + '/' + this.util.getCollection(collection) + '/_truncate'),
     method: 'DELETE'
   };
@@ -514,7 +511,7 @@ ApiHttp.prototype.truncateCollection = function (index, collection) {
 };
 
 ApiHttp.prototype.listIndexes = function () {
-  var options = {
+  const options = {
     url: this.apiPath('_list'),
     method: 'GET'
   };
@@ -523,7 +520,7 @@ ApiHttp.prototype.listIndexes = function () {
 };
 
 ApiHttp.prototype.deleteIndexes = function () {
-  var options = {
+  const options = {
     url: this.apiPath('_mdelete'),
     method: 'DELETE'
   };
@@ -532,7 +529,7 @@ ApiHttp.prototype.deleteIndexes = function () {
 };
 
 ApiHttp.prototype.createIndex = function (index) {
-  var options = {
+  const options = {
     url: this.apiPath(index + '/_create'),
     method: 'POST'
   };
@@ -541,7 +538,7 @@ ApiHttp.prototype.createIndex = function (index) {
 };
 
 ApiHttp.prototype.deleteIndex = function (index) {
-  var options = {
+  const options = {
     url: this.apiPath(index),
     method: 'DELETE'
   };
@@ -550,7 +547,7 @@ ApiHttp.prototype.deleteIndex = function (index) {
 };
 
 ApiHttp.prototype.getServerInfo = function () {
-  var options = {
+  const options = {
     url: this.apiBasePath('_serverInfo'),
     method: 'GET'
   };
@@ -562,7 +559,7 @@ ApiHttp.prototype.getServerInfo = function () {
 };
 
 ApiHttp.prototype.login = function (strategy, credentials) {
-  var options = {
+  const options = {
     url: this.apiPath('_login'),
     method: 'POST',
     body: {
@@ -576,7 +573,7 @@ ApiHttp.prototype.login = function (strategy, credentials) {
 };
 
 ApiHttp.prototype.logout = function (jwtToken) {
-  var options = {
+  const options = {
     url: this.apiPath('_logout'),
     method: 'GET',
     headers: {
@@ -588,7 +585,7 @@ ApiHttp.prototype.logout = function (jwtToken) {
 };
 
 ApiHttp.prototype.createOrReplaceRole = function (id, body) {
-  var options = {
+  const options = {
     url: this.apiPath('roles/' + id),
     method: 'PUT',
     body
@@ -598,7 +595,7 @@ ApiHttp.prototype.createOrReplaceRole = function (id, body) {
 };
 
 ApiHttp.prototype.getRole = function (id) {
-  var options = {
+  const options = {
     url: this.apiPath('roles/' + id),
     method: 'GET'
   };
@@ -607,7 +604,7 @@ ApiHttp.prototype.getRole = function (id) {
 };
 
 ApiHttp.prototype.mGetRoles = function (body) {
-  var options = {
+  const options = {
     url: this.apiPath('roles/_mGet'),
     method: 'POST',
     body
@@ -617,7 +614,7 @@ ApiHttp.prototype.mGetRoles = function (body) {
 };
 
 ApiHttp.prototype.searchRoles = function (body) {
-  var options = {
+  const options = {
     url: this.apiPath('roles/_search'),
     method: 'POST',
     body
@@ -627,7 +624,7 @@ ApiHttp.prototype.searchRoles = function (body) {
 };
 
 ApiHttp.prototype.deleteRole = function (id) {
-  var options = {
+  const options = {
     url: this.apiPath('roles/' + id),
     method: 'DELETE'
   };
@@ -636,7 +633,7 @@ ApiHttp.prototype.deleteRole = function (id) {
 };
 
 ApiHttp.prototype.createOrReplaceProfile = function (id, body) {
-  var options = {
+  const options = {
     url: this.apiPath('profiles/' + id),
     method: 'PUT',
     body
@@ -646,7 +643,7 @@ ApiHttp.prototype.createOrReplaceProfile = function (id, body) {
 };
 
 ApiHttp.prototype.getProfile = function (id) {
-  var options = {
+  const options = {
     url: this.apiPath('profiles/' + id),
     method: 'GET'
   };
@@ -655,7 +652,7 @@ ApiHttp.prototype.getProfile = function (id) {
 };
 
 ApiHttp.prototype.getProfileRights = function (id) {
-  var options = {
+  const options = {
     url: this.apiPath('profiles/' + id + '/_rights'),
     method: 'GET'
   };
@@ -664,7 +661,7 @@ ApiHttp.prototype.getProfileRights = function (id) {
 };
 
 ApiHttp.prototype.mGetProfiles= function (body) {
-  var options = {
+  const options = {
     url: this.apiPath('profiles/_mGet'),
     method: 'POST',
     body
@@ -674,7 +671,7 @@ ApiHttp.prototype.mGetProfiles= function (body) {
 };
 
 ApiHttp.prototype.searchProfiles = function (body) {
-  var options = {
+  const options = {
     url: this.apiPath('profiles/_search'),
     method: 'POST',
     body
@@ -684,7 +681,7 @@ ApiHttp.prototype.searchProfiles = function (body) {
 };
 
 ApiHttp.prototype.deleteProfile = function (id) {
-  var options = {
+  const options = {
     url: this.apiPath('profiles/' + id),
     method: 'DELETE'
   };
@@ -693,7 +690,7 @@ ApiHttp.prototype.deleteProfile = function (id) {
 };
 
 ApiHttp.prototype.searchValidations = function (body) {
-  var options = {
+  const options = {
     url: this.apiPath('validations/_search'),
     method: 'POST',
     body
@@ -703,7 +700,7 @@ ApiHttp.prototype.searchValidations = function (body) {
 };
 
 ApiHttp.prototype.getUser = function (id) {
-  var options = {
+  const options = {
     url: this.apiPath('users/' + id),
     method: 'GET'
   };
@@ -712,7 +709,7 @@ ApiHttp.prototype.getUser = function (id) {
 };
 
 ApiHttp.prototype.getUserRights = function (id) {
-  var options = {
+  const options = {
     url: this.apiPath('users/' + id + '/_rights'),
     method: 'GET'
   };
@@ -728,7 +725,7 @@ ApiHttp.prototype.getCurrentUser = function () {
 };
 
 ApiHttp.prototype.getMyRights = function () {
-  var options = {
+  const options = {
     url: this.apiPath('users/_me/_rights'),
     method: 'GET'
   };
@@ -760,7 +757,7 @@ ApiHttp.prototype.createOrReplaceUser = function (body, id) {
 };
 
 ApiHttp.prototype.createUser = function (body, id) {
-  var options = {
+  const options = {
     url: this.apiPath('users/' + id + '/_create'),
     method: 'POST',
     body
@@ -770,7 +767,7 @@ ApiHttp.prototype.createUser = function (body, id) {
 };
 
 ApiHttp.prototype.createRestrictedUser = function (body, id) {
-  var options = {
+  const options = {
     url: this.apiPath('users/' + id + '/_createRestricted'),
     method: 'POST',
     body
@@ -780,7 +777,7 @@ ApiHttp.prototype.createRestrictedUser = function (body, id) {
 };
 
 ApiHttp.prototype.updateSelf = function (body) {
-  var options = {
+  const options = {
     url: this.apiPath('_updateSelf'),
     method: 'PUT',
     body
@@ -825,7 +822,7 @@ ApiHttp.prototype.collectionExists = function (index, collection) {
 };
 
 ApiHttp.prototype.getSpecifications = function (index, collection) {
-  var options = {
+  const options = {
     url: this.apiPath(index + '/' + collection + '/_specifications'),
     method: 'GET'
   };
@@ -834,7 +831,7 @@ ApiHttp.prototype.getSpecifications = function (index, collection) {
 };
 
 ApiHttp.prototype.updateSpecifications = function (specifications) {
-  var options = {
+  const options = {
     url: this.apiPath('_specifications'),
     method: 'PUT',
     body: specifications
@@ -844,7 +841,7 @@ ApiHttp.prototype.updateSpecifications = function (specifications) {
 };
 
 ApiHttp.prototype.validateSpecifications = function (specifications) {
-  var options = {
+  const options = {
     url: this.apiPath('_validateSpecifications'),
     method: 'POST',
     body: specifications
@@ -854,7 +851,7 @@ ApiHttp.prototype.validateSpecifications = function (specifications) {
 };
 
 ApiHttp.prototype.validateDocument = function (index, collection, document) {
-  var options = {
+  const options = {
     url: this.apiPath(index + '/' + collection + '/_validate'),
     method: 'POST',
     body: document
@@ -864,7 +861,7 @@ ApiHttp.prototype.validateDocument = function (index, collection, document) {
 };
 
 ApiHttp.prototype.postDocument = function (index, collection, document) {
-  var options = {
+  const options = {
     url: this.apiPath(index + '/' + collection + '/_create'),
     method: 'POST',
     body: document
@@ -874,7 +871,7 @@ ApiHttp.prototype.postDocument = function (index, collection, document) {
 };
 
 ApiHttp.prototype.deleteSpecifications = function (index, collection) {
-  var options = {
+  const options = {
     url: this.apiPath(index + '/' + collection + '/_specifications'),
     method: 'DELETE'
   };
