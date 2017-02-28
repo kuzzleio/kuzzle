@@ -265,8 +265,7 @@ Feature: Test HTTP API
   @usingHttp @cleanSecurity
   Scenario: Profile mapping
     Given I get the profile mapping
-    Then The mapping should contain a nested "policies" field with property "_id" of type "keyword"
-    And The mapping should contain a nested "policies" field with property "roleId" of type "text"
+    Then The mapping should contain a nested "policies" field with property "roleId" of type "keyword"
     When I change the profile mapping
     Then I get the profile mapping
     Then The mapping should contain "foo" field of type "text"
