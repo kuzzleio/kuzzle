@@ -369,14 +369,11 @@ describe('Test: repositories/profileRepository', () => {
       profileRepository.searchProfiles(['role1', 'role2']);
       should(profileRepository.search)
         .be.calledTwice()
-        .be.calledWith({query: {
-          bool: {
-            should: [
-              {terms: {'policies.roleId': ['role1']}},
-              {terms: {'policies.roleId': ['role2']}}
-            ]
+        .be.calledWith({
+          query: {
+            terms: {'policies.roleId': ['role1', 'role2']}
           }
-        }});
+        });
     });
   });
 
