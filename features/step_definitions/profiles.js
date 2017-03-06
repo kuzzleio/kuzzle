@@ -197,12 +197,12 @@ var apiSteps = function () {
 
   this.Then(/^I'm able to find "([\d]*)" profiles(?: containing the role with id "([^"]*)")?$/, function (profilesCount, roleId, callback) {
     var body = {
-        policies: []
+        roles: []
       },
       main;
 
     if (roleId) {
-      body.policies.push(this.idPrefix + roleId);
+      body.roles.push(this.idPrefix + roleId);
     }
 
     main = function (callbackAsync) {
