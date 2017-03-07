@@ -131,4 +131,26 @@ describe('funnelController.processRequest', () => {
         done();
       });
   });
+
+  it('should not trigger an event if the request has already triggered it', () => {
+    const request = new Request({
+      controller: 'fakeController',
+      action: 'ok',
+    });
+
+    request.triggers('fakeController:beforeOk');
+
+    return should(funnel.processRequest(request)
+      .then(response => {
+        should(response).be.exactly(request);
+        should(funnel.requestHistory.toArray()).match([request]);
+        should(kuzzle.pluginsManager.trigger).not.be.calledWith('fakeController:beforeOk');
+        should(kuzzle.pluginsManager.trigger).calledWith('fakeController:afterOk');
+        should(kuzzle.pluginsManager.trigger.calledWithMatch('request:onSuccess', request)).be.true();
+        should(kuzzle.pluginsManager.trigger.calledWithMatch('request:onError', request)).be.false();
+        should(kuzzle.statistics.startRequest.called).be.true();
+        should(kuzzle.statistics.completedRequest.called).be.true();
+        should(kuzzle.statistics.failedRequest.called).be.false();
+      })).be.fulfilled();
+  });
 });

@@ -44,7 +44,7 @@
     "json-stable-stringify": "1.0.1",
     "json2yaml": "^1.1.0",
     "jsonwebtoken": "^7.2.1",
-    "kuzzle-common-objects": "^2.1.3",
+    "kuzzle-common-objects": "git://github.com/kuzzleio/kuzzle-common-objects.git#2.x",
     "lodash": "4.17.4",
     "mkdirp": "0.5.1",
     "moment": "2.17.1",
@@ -86,8 +86,7 @@
     "socket.io-client": "1.7.2"
   },
   "engines": {
-    "node": ">= 4.4.5",
-    "npm": ">= 2.14.4"
+    "node": ">= 6.9.1"
   },
   "license": "Apache-2.0"
 }
