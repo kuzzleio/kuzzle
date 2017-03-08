@@ -185,11 +185,6 @@ function cleanSecurity (callback) {
     })
     .then(() => {
       return this.api.searchProfiles({
-        query: {
-          match_all: {
-            boost: 1
-          }
-        },
         from: 0,
         size: 9999
       });

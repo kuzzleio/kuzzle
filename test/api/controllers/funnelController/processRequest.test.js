@@ -28,62 +28,60 @@ describe('funnelController.processRequest', () => {
   });
 
   it('should reject the promise if no controller is specified', done => {
-    const object = {
-      action: 'create'
-    };
+    const request = new Request({action: 'create'});
 
-    funnel.processRequest(new Request(object))
+    funnel.processRequest(request)
       .then(() => done('should have failed'))
       .catch(e => {
         should(e).be.instanceOf(BadRequestError);
         should(funnel.requestHistory.isEmpty()).be.true();
+        should(kuzzle.pluginsManager.trigger.calledWithMatch('request:onSuccess', request)).be.false();
+        should(kuzzle.pluginsManager.trigger.calledWithMatch('request:onError', request)).be.false();
         should(kuzzle.statistics.startRequest.called).be.false();
         done();
       });
   });
 
   it('should reject the promise if no action is specified', done => {
-    const object = {
-      controller: 'document'
-    };
+    const request = new Request({controller: 'document'});
 
-    funnel.processRequest(new Request(object))
+    funnel.processRequest(request)
       .then(() => done('should have failed'))
       .catch(e => {
         should(e).be.instanceOf(BadRequestError);
         should(funnel.requestHistory.isEmpty()).be.true();
+        should(kuzzle.pluginsManager.trigger.calledWithMatch('request:onSuccess', request)).be.false();
+        should(kuzzle.pluginsManager.trigger.calledWithMatch('request:onError', request)).be.false();
         should(kuzzle.statistics.startRequest.called).be.false();
         done();
       });
   });
 
   it('should reject the promise if the controller doesn\'t exist', done => {
-    const object = {
-      controller: 'foobar',
-      action: 'create'
-    };
+    const request = new Request({controller: 'foobar', action: 'create'});
 
-    funnel.processRequest(new Request(object))
+    funnel.processRequest(request)
       .then(() => done('should have failed'))
       .catch(e => {
         should(e).be.instanceOf(BadRequestError);
         should(funnel.requestHistory.isEmpty()).be.true();
+        should(kuzzle.pluginsManager.trigger.calledWithMatch('request:onSuccess', request)).be.false();
+        should(kuzzle.pluginsManager.trigger.calledWithMatch('request:onError', request)).be.false();
         should(kuzzle.statistics.startRequest.called).be.false();
         done();
       });
   });
 
   it('should reject the promise if the action doesn\'t exist', done => {
-    const object = {
-      controller: 'foo',
-      action: 'bar'
-    };
+    const request = new Request({controller: 'foo', action: 'bar'});
 
-    funnel.processRequest(new Request(object))
+    funnel.processRequest(request)
       .then(() => done('should have failed'))
       .catch(e => {
         should(e).be.instanceOf(BadRequestError);
         should(funnel.requestHistory.isEmpty()).be.true();
+        should(kuzzle.pluginsManager.trigger.calledWithMatch('request:onSuccess', request)).be.false();
+        should(kuzzle.pluginsManager.trigger.calledWithMatch('request:onError', request)).be.false();
         should(kuzzle.statistics.startRequest.called).be.false();
         done();
       });
@@ -101,6 +99,8 @@ describe('funnelController.processRequest', () => {
         should(funnel.requestHistory.toArray()).match([request]);
         should(kuzzle.pluginsManager.trigger).calledWith('fakeController:beforeOk');
         should(kuzzle.pluginsManager.trigger).calledWith('fakeController:afterOk');
+        should(kuzzle.pluginsManager.trigger.calledWithMatch('request:onSuccess', request)).be.true();
+        should(kuzzle.pluginsManager.trigger.calledWithMatch('request:onError', request)).be.false();
         should(kuzzle.statistics.startRequest.called).be.true();
         should(kuzzle.statistics.completedRequest.called).be.true();
         should(kuzzle.statistics.failedRequest.called).be.false();
@@ -123,6 +123,8 @@ describe('funnelController.processRequest', () => {
         should(funnel.requestHistory.toArray()).match([request]);
         should(kuzzle.pluginsManager.trigger).calledWith('fakeController:beforeFail');
         should(kuzzle.pluginsManager.trigger).not.be.calledWith('fakeController:afterFail');
+        should(kuzzle.pluginsManager.trigger.calledWithMatch('request:onSuccess', request)).be.false();
+        should(kuzzle.pluginsManager.trigger.calledWithMatch('request:onError', request)).be.true();
         should(kuzzle.statistics.startRequest.called).be.true();
         should(kuzzle.statistics.completedRequest.called).be.false();
         should(kuzzle.statistics.failedRequest.called).be.true();
@@ -144,6 +146,8 @@ describe('funnelController.processRequest', () => {
         should(funnel.requestHistory.toArray()).match([request]);
         should(kuzzle.pluginsManager.trigger).not.be.calledWith('fakeController:beforeOk');
         should(kuzzle.pluginsManager.trigger).calledWith('fakeController:afterOk');
+        should(kuzzle.pluginsManager.trigger.calledWithMatch('request:onSuccess', request)).be.true();
+        should(kuzzle.pluginsManager.trigger.calledWithMatch('request:onError', request)).be.false();
         should(kuzzle.statistics.startRequest.called).be.true();
         should(kuzzle.statistics.completedRequest.called).be.true();
         should(kuzzle.statistics.failedRequest.called).be.false();

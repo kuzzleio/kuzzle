@@ -197,7 +197,7 @@ describe('Test: security controller - profiles', () => {
     it('should return a object containing an array of profiles on searchProfile call with hydrate', () => {
       kuzzle.repositories.profile.searchProfiles = sandbox.stub().returns(Promise.resolve({total: 1, hits: [{_id: 'test', policies: [ {roleId: 'default'} ]}]}));
 
-      return securityController.searchProfiles(new Request({body: {policies: ['role1']}}))
+      return securityController.searchProfiles(new Request({body: {roles: ['role1']}}))
         .then(response => {
           should(response).be.instanceof(Object);
           should(response.hits).be.an.Array();
@@ -210,7 +210,7 @@ describe('Test: security controller - profiles', () => {
     it('should throw an error if the number of documents per page exceeds server limits', () => {
       kuzzle.config.limits.documentsFetchCount = 1;
 
-      request = new Request({body: {policies: ['role1']}});
+      request = new Request({body: {roles: ['role1']}});
       request.input.args.from = 0;
       request.input.args.size = 10;
 

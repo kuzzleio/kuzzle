@@ -131,7 +131,8 @@ describe('Test: ElasticSearch service', () => {
         request.input.args[arg] = arg;
       });
 
-      preparedData = getElasticsearchRequest.call(elasticsearch, request, kuzzle);
+      preparedData = getElasticsearchRequest.call(elasticsearch, request, kuzzle,
+        ['from', 'size', 'scroll', 'scrollId', 'refresh']);
 
       should(preparedData.type).be.exactly(request.input.resource.collection);
       should(preparedData.id).be.exactly(request.input.resource._id);
@@ -627,12 +628,6 @@ describe('Test: ElasticSearch service', () => {
 
       elasticsearch.update(request)
         .catch((error) => {
-          should(kuzzle.pluginsManager.trigger)
-            .be.calledWith(
-              'log:warn',
-              '[warning] unhandled elasticsearch error:\nbanana error'
-            );
-
           should(error).be.instanceOf(Error);
           should(elasticsearch.client.update.firstCall.args[0].id).be.undefined();
           done();
