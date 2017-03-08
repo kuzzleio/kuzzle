@@ -72,7 +72,7 @@ describe('Test: document controller', () => {
 
   describe('#scroll', () => {
     it('should fulfill with an object', () => {
-      request.input.body = {scroll: '1m'};
+      request.input.args.scroll = '1m';
       request.input.args.scrollId = 'SomeScrollIdentifier';
 
       return documentController.scroll(request)
@@ -83,7 +83,7 @@ describe('Test: document controller', () => {
     });
 
     it('should reject an error in case of error', () => {
-      request.input.body = {scroll: '1m'};
+      request.input.args.scroll = '1m';
       request.input.args.scrollId = 'SomeScrollIdentifier';
 
       kuzzle.services.list.storageEngine.scroll.returns(Promise.reject(new Error('foobar')));
