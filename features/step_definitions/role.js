@@ -124,7 +124,7 @@ var apiSteps = function () {
     });
   });
 
-  this.When(/^I update the role with id "([^"]*)" with role "([^"]*)"$/, function (id, role, callback) {
+  this.When(/^I update the role "([^"]*)" with the test content "([^"]*)"$/, function (id, role, callback) {
     if (!this.roles[role]) {
       return callback('Fixture for role ' + role + ' not exists');
     }
