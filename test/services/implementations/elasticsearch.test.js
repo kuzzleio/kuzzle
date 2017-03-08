@@ -149,7 +149,20 @@ describe('Test: ElasticSearch service', () => {
 
   describe('#search', () => {
     it('should be able to search documents', () => {
-      elasticsearch.client.search.returns(Promise.resolve({total: 0, hits: []}));
+      elasticsearch.client.search.returns(Promise.resolve({total: 0, hits: [{_id: 'foo', _source: {foo: 'bar'}}]}));
+
+      request.input.body = filter;
+      return elasticsearch.search(request)
+        .then(result => {
+          should(elasticsearch.client.search.firstCall.args[0].body).be.deepEqual(filterAfterActiveAdded);
+          should(result).be.an.Object();
+          should(result.total).be.exactly(0);
+          should(result.hits).be.an.Array();
+        });
+    });
+
+    it('should handle search results without a _source property', () => {
+      elasticsearch.client.search.returns(Promise.resolve({total: 0, hits: [{_id: 'foo'}]}));
 
       request.input.body = filter;
       return elasticsearch.search(request)
