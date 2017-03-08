@@ -348,7 +348,11 @@
       "aliases": ["storageEngine"],
       "host": "elasticsearch",
       "port": 9200,
-      "apiVersion": "5.0"
+      "apiVersion": "5.0",
+      "defaults": {
+        // Time to live of a paginated search
+        "scrollTTL": "15s"
+      }
     }
   },
 

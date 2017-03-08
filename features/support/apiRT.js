@@ -177,13 +177,13 @@ ApiRT.prototype.search = function (query, index, collection, args) {
   return this.send(msg);
 };
 
-ApiRT.prototype.scroll = function (scrollId, scroll = '1m') {
+ApiRT.prototype.scroll = function (scrollId, scroll) {
   const
     msg = {
       controller: 'document',
       action: 'scroll',
       scrollId,
-      body: {scroll}
+      scroll
     };
 
   return this.send(msg);

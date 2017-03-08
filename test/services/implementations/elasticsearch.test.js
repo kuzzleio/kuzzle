@@ -202,14 +202,14 @@ describe('Test: ElasticSearch service', () => {
 
   describe('#scroll', () => {
     it('should be able to scroll an old search', () => {
-      var req = new Request({
+      const req = new Request({
         scrollId: 'banana42'
       });
       elasticsearch.client.scroll.returns(Promise.resolve({total: 0, hits: []}));
 
       return elasticsearch.scroll(req)
         .then(result => {
-          should(elasticsearch.client.scroll.firstCall.args[0]).be.deepEqual({scrollId: 'banana42'});
+          should(elasticsearch.client.scroll.firstCall.args[0]).be.deepEqual({scrollId: 'banana42', scroll: '15s'});
           should(result).be.an.Object();
           should(result.total).be.exactly(0);
           should(result.hits).be.an.Array();
