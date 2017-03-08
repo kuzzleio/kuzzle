@@ -144,20 +144,20 @@ var apiSteps = function () {
       });
   });
 
-  this.Then(/^I'm able to find "(\d*)" role by searching controller "([^"]*)"(?: from "([^"]*)" to "([^"]*)")?$/, function (count, controller, from, size, callback) {
+  this.Then(/^I'm able to find "(\d*)" role by searching controller "([^"]*)"(?: with maximum "([^"]*)" results starting from "([^"]*)")?$/, function (count, controller, size, from, callback) {
     var
       main,
-      body;
-
-    body = {
-      controllers : controller.split(','),
-      from: from || 0,
-      size: size || 999
-    };
+      body = {
+        controllers : controller.split(',')
+      },
+      args = {
+        from: from || 0,
+        size: size || 999
+      };
 
     main = function (callbackAsync) {
       setTimeout(() => {
-        this.api.searchRoles(body)
+        this.api.searchRoles(body, args)
           .then(aBody => {
             if (aBody.error) {
               callbackAsync(aBody.error.message);
