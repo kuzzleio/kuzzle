@@ -165,7 +165,10 @@ module.exports = {
       backend: 'elasticsearch',
       host: 'localhost',
       port: 9200,
-      apiVersion: '5.0'
+      apiVersion: '5.0',
+      defaults: {
+        scrollTTL: '15s'
+      }
     },
 
     garbageCollector: {

@@ -5,7 +5,7 @@
  * NOTE: must be added in api HTTP because the apiHttp file doesn't extend this ApiRT
  */
 
-var
+const
   _ = require('lodash'),
   ApiRT = function () {
     this.world = null;
@@ -18,7 +18,7 @@ ApiRT.prototype.send = function () {};
 ApiRT.prototype.sendAndListen = function () {};
 
 ApiRT.prototype.create = function (body, index, collection, jwtToken, id) {
-  var
+  const
     msg = {
       controller: 'document',
       collection: collection || this.world.fakeCollection,
@@ -41,7 +41,7 @@ ApiRT.prototype.create = function (body, index, collection, jwtToken, id) {
 };
 
 ApiRT.prototype.mCreate = function (body, index, collection, jwtToken) {
-  var
+  const
     msg = {
       controller: 'document',
       collection: collection || this.world.fakeCollection,
@@ -60,7 +60,7 @@ ApiRT.prototype.mCreate = function (body, index, collection, jwtToken) {
 };
 
 ApiRT.prototype.publish = function (body, index) {
-  var
+  const
     msg = {
       controller: 'realtime',
       collection: this.world.fakeCollection,
@@ -73,7 +73,7 @@ ApiRT.prototype.publish = function (body, index) {
 };
 
 ApiRT.prototype.createOrReplace = function (body, index, collection) {
-  var
+  const
     msg = {
       controller: 'document',
       collection: collection || this.world.fakeCollection,
@@ -91,7 +91,7 @@ ApiRT.prototype.createOrReplace = function (body, index, collection) {
 };
 
 ApiRT.prototype.mCreateOrReplace = function (body, index, collection) {
-  var
+  const
     msg = {
       controller: 'document',
       collection: collection || this.world.fakeCollection,
@@ -104,7 +104,7 @@ ApiRT.prototype.mCreateOrReplace = function (body, index, collection) {
 };
 
 ApiRT.prototype.replace = function (body, index, collection) {
-  var
+  const
     msg = {
       controller: 'document',
       collection: collection || this.world.fakeCollection,
@@ -122,7 +122,7 @@ ApiRT.prototype.replace = function (body, index, collection) {
 };
 
 ApiRT.prototype.mReplace = function (body, index, collection) {
-  var
+  const
     msg = {
       controller: 'document',
       collection: collection || this.world.fakeCollection,
@@ -135,7 +135,7 @@ ApiRT.prototype.mReplace = function (body, index, collection) {
 };
 
 ApiRT.prototype.get = function (id, index) {
-  var
+  const
     msg = {
       controller: 'document',
       collection: this.world.fakeCollection,
@@ -148,7 +148,7 @@ ApiRT.prototype.get = function (id, index) {
 };
 
 ApiRT.prototype.mGet = function(body, index, collection) {
-  var
+  const
     msg = {
       controller: 'document',
       collection: collection || this.world.fakeCollection,
@@ -161,7 +161,7 @@ ApiRT.prototype.mGet = function(body, index, collection) {
 };
 
 ApiRT.prototype.search = function (query, index, collection, args) {
-  var
+  const
     msg = {
       controller: 'document',
       collection: collection || this.world.fakeCollection,
@@ -177,8 +177,8 @@ ApiRT.prototype.search = function (query, index, collection, args) {
   return this.send(msg);
 };
 
-ApiRT.prototype.scroll = function (scrollId, scroll = '1m') {
-  var
+ApiRT.prototype.scroll = function (scrollId, scroll) {
+  const
     msg = {
       controller: 'document',
       action: 'scroll',
@@ -190,7 +190,7 @@ ApiRT.prototype.scroll = function (scrollId, scroll = '1m') {
 };
 
 ApiRT.prototype.count = function (query, index, collection) {
-  var
+  const
     msg = {
       controller: 'document',
       collection: collection || this.world.fakeCollection,
@@ -203,7 +203,7 @@ ApiRT.prototype.count = function (query, index, collection) {
 };
 
 ApiRT.prototype.update = function (id, body, index) {
-  var
+  const
     msg = {
       controller: 'document',
       collection: this.world.fakeCollection,
@@ -217,7 +217,7 @@ ApiRT.prototype.update = function (id, body, index) {
 };
 
 ApiRT.prototype.mUpdate = function (body, index, collection) {
-  var
+  const
     msg = {
       controller: 'document',
       collection: collection || this.world.fakeCollection,
@@ -230,7 +230,7 @@ ApiRT.prototype.mUpdate = function (body, index, collection) {
 };
 
 ApiRT.prototype.deleteById = function (id, index) {
-  var
+  const
     msg = {
       controller: 'document',
       collection: this.world.fakeCollection,
@@ -243,7 +243,7 @@ ApiRT.prototype.deleteById = function (id, index) {
 };
 
 ApiRT.prototype.mDelete = function (body, index, collection) {
-  var
+  const
     msg = {
       controller: 'document',
       collection: collection || this.world.fakeCollection,
@@ -256,7 +256,7 @@ ApiRT.prototype.mDelete = function (body, index, collection) {
 };
 
 ApiRT.prototype.deleteByQuery = function (query, index, collection) {
-  var
+  const
     msg = {
       controller: 'document',
       collection: collection || this.world.fakeCollection,
@@ -269,7 +269,7 @@ ApiRT.prototype.deleteByQuery = function (query, index, collection) {
 };
 
 ApiRT.prototype.updateMapping = function (index) {
-  var
+  const
     msg = {
       controller: 'collection',
       collection: this.world.fakeCollection,
@@ -282,7 +282,7 @@ ApiRT.prototype.updateMapping = function (index) {
 };
 
 ApiRT.prototype.getProfileMapping = function () {
-  var
+  const
     msg = {
       controller: 'security',
       action: 'getProfileMapping'
@@ -292,7 +292,7 @@ ApiRT.prototype.getProfileMapping = function () {
 };
 
 ApiRT.prototype.updateProfileMapping = function () {
-  var
+  const
     msg = {
       controller: 'security',
       action: 'updateProfileMapping',
@@ -303,7 +303,7 @@ ApiRT.prototype.updateProfileMapping = function () {
 };
 
 ApiRT.prototype.getRoleMapping = function () {
-  var
+  const
     msg = {
       controller: 'security',
       action: 'getRoleMapping'
@@ -313,7 +313,7 @@ ApiRT.prototype.getRoleMapping = function () {
 };
 
 ApiRT.prototype.updateRoleMapping = function () {
-  var
+  const
     msg = {
       controller: 'security',
       action: 'updateRoleMapping',
@@ -324,7 +324,7 @@ ApiRT.prototype.updateRoleMapping = function () {
 };
 
 ApiRT.prototype.getUserMapping = function () {
-  var
+  const
     msg = {
       controller: 'security',
       action: 'getUserMapping'
@@ -334,7 +334,7 @@ ApiRT.prototype.getUserMapping = function () {
 };
 
 ApiRT.prototype.updateUserMapping = function () {
-  var
+  const
     msg = {
       controller: 'security',
       action: 'updateUserMapping',
@@ -345,7 +345,7 @@ ApiRT.prototype.updateUserMapping = function () {
 };
 
 ApiRT.prototype.bulkImport = function (bulk, index, collection) {
-  var
+  const
     msg = {
       controller: 'bulk',
       collection: collection || this.world.fakeCollection,
@@ -358,7 +358,7 @@ ApiRT.prototype.bulkImport = function (bulk, index, collection) {
 };
 
 ApiRT.prototype.globalBulkImport = function (bulk) {
-  var
+  const
     msg = {
       controller: 'bulk',
       action: 'import',
@@ -369,7 +369,7 @@ ApiRT.prototype.globalBulkImport = function (bulk) {
 };
 
 ApiRT.prototype.subscribe = function (filters, client) {
-  var
+  const
     msg = {
       controller: 'realtime',
       collection: this.world.fakeCollection,
@@ -387,7 +387,7 @@ ApiRT.prototype.subscribe = function (filters, client) {
 };
 
 ApiRT.prototype.unsubscribe = function (room, clientId) {
-  var
+  const
     msg = {
       clientId: clientId,
       controller: 'realtime',
@@ -404,7 +404,7 @@ ApiRT.prototype.unsubscribe = function (room, clientId) {
 };
 
 ApiRT.prototype.countSubscription = function () {
-  var
+  const
     clients = Object.keys(this.subscribedRooms),
     rooms = Object.keys(this.subscribedRooms[clients[0]]),
     msg = {
@@ -421,7 +421,7 @@ ApiRT.prototype.countSubscription = function () {
 };
 
 ApiRT.prototype.getStats = function (dates) {
-  var
+  const
     msg = {
       controller: 'server',
       action: 'getStats',
@@ -432,7 +432,7 @@ ApiRT.prototype.getStats = function (dates) {
 };
 
 ApiRT.prototype.getLastStats = function () {
-  var
+  const
     msg = {
       controller: 'server',
       action: 'getLastStats'
@@ -442,7 +442,7 @@ ApiRT.prototype.getLastStats = function () {
 };
 
 ApiRT.prototype.getAllStats = function () {
-  var
+  const
     msg = {
       controller: 'server',
       action: 'getAllStats'
@@ -452,7 +452,7 @@ ApiRT.prototype.getAllStats = function () {
 };
 
 ApiRT.prototype.listCollections = function (index, type) {
-  var
+  const
     msg = {
       controller: 'collection',
       index: index || this.world.fakeIndex,
@@ -464,7 +464,7 @@ ApiRT.prototype.listCollections = function (index, type) {
 };
 
 ApiRT.prototype.now = function () {
-  var
+  const
     msg = {
       controller: 'server',
       action: 'now'
@@ -474,7 +474,7 @@ ApiRT.prototype.now = function () {
 };
 
 ApiRT.prototype.truncateCollection = function (index, collection) {
-  var
+  const
     msg = {
       controller: 'collection',
       collection: collection || this.world.fakeCollection,
@@ -486,7 +486,7 @@ ApiRT.prototype.truncateCollection = function (index, collection) {
 };
 
 ApiRT.prototype.listSubscriptions = function () {
-  var
+  const
     msg = {
       controller: 'realtime',
       action: 'list'
@@ -496,7 +496,7 @@ ApiRT.prototype.listSubscriptions = function () {
 };
 
 ApiRT.prototype.deleteIndexes = function () {
-  var
+  const
     msg = {
       controller: 'index',
       action: 'mdelete'
@@ -506,7 +506,7 @@ ApiRT.prototype.deleteIndexes = function () {
 };
 
 ApiRT.prototype.listIndexes = function () {
-  var
+  const
     msg = {
       controller: 'index',
       action: 'list'
@@ -516,7 +516,7 @@ ApiRT.prototype.listIndexes = function () {
 };
 
 ApiRT.prototype.createIndex = function (index) {
-  var
+  const
     msg = {
       controller: 'index',
       action: 'create',
@@ -527,7 +527,7 @@ ApiRT.prototype.createIndex = function (index) {
 };
 
 ApiRT.prototype.deleteIndex = function (index) {
-  var
+  const
     msg = {
       controller: 'index',
       action: 'delete',
@@ -538,7 +538,7 @@ ApiRT.prototype.deleteIndex = function (index) {
 };
 
 ApiRT.prototype.getServerInfo = function () {
-  var
+  const
     msg = {
       controller: 'server',
       action: 'info',
@@ -549,7 +549,7 @@ ApiRT.prototype.getServerInfo = function () {
 };
 
 ApiRT.prototype.login = function (strategy, credentials) {
-  var
+  const
     msg = {
       controller: 'auth',
       action: 'login',
@@ -565,7 +565,7 @@ ApiRT.prototype.login = function (strategy, credentials) {
 };
 
 ApiRT.prototype.logout = function(jwtToken) {
-  var
+  const
     msg = {
       controller: 'auth',
       action: 'logout',
@@ -576,7 +576,7 @@ ApiRT.prototype.logout = function(jwtToken) {
 };
 
 ApiRT.prototype.createOrReplaceRole = function (id, body) {
-  var
+  const
     msg = {
       controller: 'security',
       action: 'createOrReplaceRole',
@@ -588,7 +588,7 @@ ApiRT.prototype.createOrReplaceRole = function (id, body) {
 };
 
 ApiRT.prototype.getRole = function (id) {
-  var
+  const
     msg = {
       controller: 'security',
       action: 'getRole',
@@ -599,7 +599,7 @@ ApiRT.prototype.getRole = function (id) {
 };
 
 ApiRT.prototype.mGetRoles = function (body) {
-  var
+  const
     msg = {
       controller: 'security',
       action: 'mGetRoles',
@@ -610,7 +610,7 @@ ApiRT.prototype.mGetRoles = function (body) {
 };
 
 ApiRT.prototype.searchRoles = function (body) {
-  var
+  const
     msg = {
       controller: 'security',
       action: 'searchRoles',
@@ -621,7 +621,7 @@ ApiRT.prototype.searchRoles = function (body) {
 };
 
 ApiRT.prototype.deleteRole = function (id) {
-  var
+  const
     msg = {
       controller: 'security',
       action: 'deleteRole',
@@ -632,7 +632,7 @@ ApiRT.prototype.deleteRole = function (id) {
 };
 
 ApiRT.prototype.createOrReplaceRole = function (id, body) {
-  var
+  const
     msg = {
       controller: 'security',
       action: 'createOrReplaceRole',
@@ -644,7 +644,7 @@ ApiRT.prototype.createOrReplaceRole = function (id, body) {
 };
 
 ApiRT.prototype.getProfile = function (id) {
-  var
+  const
     msg = {
       controller: 'security',
       action: 'getProfile',
@@ -655,7 +655,7 @@ ApiRT.prototype.getProfile = function (id) {
 };
 
 ApiRT.prototype.getProfileRights = function (id) {
-  var
+  const
     msg = {
       controller: 'security',
       action: 'getProfileRights',
@@ -666,7 +666,7 @@ ApiRT.prototype.getProfileRights = function (id) {
 };
 
 ApiRT.prototype.mGetProfiles = function (body) {
-  var
+  const
     msg = {
       controller: 'security',
       action: 'mGetProfiles',
@@ -677,7 +677,7 @@ ApiRT.prototype.mGetProfiles = function (body) {
 };
 
 ApiRT.prototype.createOrReplaceProfile = function (id, body) {
-  var
+  const
     msg = {
       controller: 'security',
       action: 'createOrReplaceProfile',
@@ -689,7 +689,7 @@ ApiRT.prototype.createOrReplaceProfile = function (id, body) {
 };
 
 ApiRT.prototype.searchProfiles = function (body) {
-  var
+  const
     msg = {
       controller: 'security',
       action: 'searchProfiles',
@@ -700,7 +700,7 @@ ApiRT.prototype.searchProfiles = function (body) {
 };
 
 ApiRT.prototype.deleteProfile = function (id) {
-  var
+  const
     msg = {
       controller: 'security',
       action: 'deleteProfile',
@@ -711,7 +711,7 @@ ApiRT.prototype.deleteProfile = function (id) {
 };
 
 ApiRT.prototype.searchValidations = function (body) {
-  var
+  const
     msg = {
       controller: 'collection',
       action: 'searchSpecifications',
@@ -788,7 +788,7 @@ ApiRT.prototype.updateSelf = function (body) {
 };
 
 ApiRT.prototype.createUser = function (body, id) {
-  var msg = {
+  const msg = {
     controller: 'security',
     action: 'createUser',
     body: body
@@ -801,7 +801,7 @@ ApiRT.prototype.createUser = function (body, id) {
 };
 
 ApiRT.prototype.createRestrictedUser = function (body, id) {
-  var msg = {
+  const msg = {
     controller: 'security',
     action: 'createRestrictedUser',
     body: body
@@ -830,7 +830,7 @@ ApiRT.prototype.refreshIndex = function (index) {
 };
 
 ApiRT.prototype.callMemoryStorage = function (command, args) {
-  var msg = {
+  const msg = {
     controller: 'ms',
     action: command
   };

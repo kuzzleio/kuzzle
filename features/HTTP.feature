@@ -146,7 +146,7 @@ Feature: Test HTTP API
     When I write the document "documentGrace"
     And I refresh the index
     Then I find a document with "Grace" in field "firstName" with scroll "5m"
-    And I be able to scroll previous search
+    And I am able to scroll previous search
 
   @usingHttp
   Scenario: Change mapping
