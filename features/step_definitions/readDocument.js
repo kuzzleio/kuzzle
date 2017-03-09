@@ -139,9 +139,9 @@ var apiSteps = function () {
       });
   });
 
-  this.Then(/^I ?(don't)* be able to scroll previous search$/, function (dont) {
+  this.Then(/^I am ?(not)* able to scroll previous search$/, function (not) {
     if (!this.scrollId) {
-      if (!dont) {
+      if (!not) {
         return Promise.reject(new Error('No scroll id from previous search available'));
       }
 
@@ -151,7 +151,7 @@ var apiSteps = function () {
     return this.api.scroll(this.scrollId)
       .then(body => {
         if (body.error !== null) {
-          if (dont) {
+          if (not) {
             return Promise.resolve();
           }
 
@@ -159,15 +159,15 @@ var apiSteps = function () {
         }
 
         if (body.result && body.result.hits && body.result.hits.length > 0) {
-          if (dont) { return Promise.reject(new Error('A document exists for the scrollId')); }
+          if (not) { return Promise.reject(new Error('A document exists for the scrollId')); }
           return Promise.resolve();
         }
 
-        if (dont) { return Promise.resolve(); }
+        if (not) { return Promise.resolve(); }
         return Promise.reject(new Error('No result for scrollId search'));
       })
       .catch(error => {
-        if (dont) { return Promise.resolve(); }
+        if (not) { return Promise.resolve(); }
         return Promise.reject(error);
       });
   });

@@ -44,7 +44,7 @@ ApiHttp.prototype.getRequest = function (index, collection, controller, action, 
   }
 
   routes.some(route => {
-    let hits = [];
+    const hits = [];
 
     // Try / Catch mechanism avoids to match routes that have not all
     // the mandatory arguments for the route
@@ -204,11 +204,15 @@ ApiHttp.prototype.search = function (query, index, collection, args) {
   return this.callApi(options);
 };
 
-ApiHttp.prototype.scroll = function (scrollId, scroll = '1m') {
+ApiHttp.prototype.scroll = function (scrollId, scroll) {
   const options = {
-    url: this.apiPath(`_scroll/${scrollId}?scroll=${scroll}`),
-    method: 'POST'
+    url: this.apiPath(`_scroll/${scrollId}`),
+    method: 'GET'
   };
+
+  if (scroll) {
+    options.url += '?scroll=' + scroll;
+  }
 
   return this.callApi(options);
 };
@@ -479,9 +483,9 @@ ApiHttp.prototype.getAllStats = function () {
   return this.callApi(options);
 };
 
-ApiHttp.prototype.listCollections = function (index, type) {
+ApiHttp.prototype.listCollections = function (index = this.world.fakeIndex, type) {
   const options = {
-    url: this.apiPath((index || this.world.fakeIndex) + '/_list'),
+    url: this.apiPath(index + '/_list'),
     method: 'GET'
   };
 
@@ -619,6 +623,7 @@ ApiHttp.prototype.searchRoles = function (body, args) {
     method: 'POST',
     body
   };
+
   if (args) {
     let qs = [];
     options.url += '?';
