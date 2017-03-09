@@ -146,31 +146,111 @@ describe('Test: repositories/roleRepository', () => {
   });
 
   describe('#searchRole', () => {
-    it('should parse the given query', () => {
-      const
-        controllers = ['foo', 'bar'],
-        from = 10,
-        size = 5;
-
-      roleRepository.search = sinon.stub();
-
-      roleRepository.searchRole(controllers, from, size);
-      should(roleRepository.search)
-        .be.calledOnce()
-        .be.calledWith({
-          query: {
-            bool: {
-              should: [
-                {exists: {field: 'controllers.foo'}},
-                {exists: {field: 'controllers.bar'}},
-                {exists: {field: 'controllers.*'}}
-              ]
+    it('should filter the role list with the given controllers', () => {
+      const roles = {
+        default: {
+          _id: 'default',
+          controllers: {
+            '*': {
+              actions: {
+                '*': true
+              }
             }
           }
         },
-        from,
-        size
-        );
+        foo: {
+          _id: 'foo',
+          controllers: {
+            foo: {
+              actions: {
+                '*': true
+              }
+            }
+          }
+        },
+        bar: {
+          _id: 'bar',
+          controllers: {
+            bar: {
+              actions: {
+                '*': true
+              }
+            }
+          }
+        },
+        foobar: {
+          _id: 'foobar',
+          controllers: {
+            foo: {
+              actions: {
+                '*': true
+              }
+            },
+            bar: {
+              actions: {
+                '*': true
+              }
+            }
+          }
+        }
+      };
+
+      roleRepository.search = sinon.stub().returns(Promise.resolve({
+        total: 4,
+        hits: [
+          roles.default,
+          roles.foo,
+          roles.bar,
+          roles.foobar
+        ]
+      }));
+
+      return roleRepository.searchRole(['foo'])
+        .then(result => {
+          should(result.total).be.exactly(3);
+          should(result.hits.length).be.exactly(3);
+          should(result.hits).match([roles.default, roles.foo, roles.foobar]);
+          return roleRepository.searchRole(['bar']);
+        })
+        .then(result => {
+          should(result.total).be.exactly(3);
+          should(result.hits.length).be.exactly(3);
+          should(result.hits).match([roles.default, roles.bar, roles.foobar]);
+          return roleRepository.searchRole(['foo', 'bar']);
+        })
+        .then(result => {
+          should(result.total).be.exactly(4);
+          should(result.hits.length).be.exactly(4);
+          should(result.hits).match([roles.default, roles.foo, roles.bar, roles.foobar]);
+          return roleRepository.searchRole(['baz']);
+        })
+        .then(result => {
+          should(result.total).be.exactly(1);
+          should(result.hits.length).be.exactly(1);
+          should(result.hits).match([roles.default]);
+          return roleRepository.searchRole(['foo'], 1);
+        })
+        .then(result => {
+          should(result.total).be.exactly(3);
+          should(result.hits.length).be.exactly(2);
+          should(result.hits).match([roles.foo, roles.foobar]);
+          should(result.hits).not.match([roles.default]);
+          return roleRepository.searchRole(['foo'], 0, 2);
+        })
+        .then(result => {
+          should(result.total).be.exactly(3);
+          should(result.hits.length).be.exactly(2);
+          should(result.hits).match([roles.default, roles.foo]);
+          should(result.hits).not.match([roles.foobar]);
+          return roleRepository.searchRole(['foo', 'bar'], 1, 2);
+        })
+        .then(result => {
+          should(result.total).be.exactly(4);
+          should(result.hits.length).be.exactly(2);
+          should(result.hits).match([roles.foo, roles.bar]);
+          should(result.hits).not.match([roles.default]);
+          should(result.hits).not.match([roles.foobar]);
+        });
     });
   });
 

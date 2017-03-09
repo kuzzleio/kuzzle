@@ -613,12 +613,25 @@ ApiHttp.prototype.mGetRoles = function (body) {
   return this.callApi(options);
 };
 
-ApiHttp.prototype.searchRoles = function (body) {
+ApiHttp.prototype.searchRoles = function (body, args) {
   const options = {
     url: this.apiPath('roles/_search'),
     method: 'POST',
     body
   };
+  if (args) {
+    let qs = [];
+    options.url += '?';
+
+    if (args.from) {
+      qs.push('from=' + args.from);
+    }
+    if (args.size) {
+      qs.push('size=' + args.size);
+    }
+
+    options.url+= qs.join('&');
+  }
 
   return this.callApi(options);
 };

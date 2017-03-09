@@ -609,13 +609,17 @@ ApiRT.prototype.mGetRoles = function (body) {
   return this.send(msg);
 };
 
-ApiRT.prototype.searchRoles = function (body) {
+ApiRT.prototype.searchRoles = function (body, args) {
   var
     msg = {
       controller: 'security',
       action: 'searchRoles',
       body: body
     };
+
+  _.forEach(args, (item, k) => {
+    msg[k] = item;
+  });
 
   return this.send(msg);
 };
