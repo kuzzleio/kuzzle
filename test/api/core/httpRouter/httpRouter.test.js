@@ -127,8 +127,7 @@ describe('core/httpRouter', () => {
       };
 
       router.route(rq, response => {
-        should(handler.called)
-          .be.false();
+        should(handler.called).be.false();
 
         should(response.toJSON()).match({
           raw: false,
@@ -139,17 +138,39 @@ describe('core/httpRouter', () => {
             requestId: 'requestId',
             result: {}
           },
-          headers: {
-            'content-type': 'application/json',
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS',
-            'Access-Control-Allow-Headers': 'Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With'
-          }
+          headers: router.defaultHeaders
         });
 
         should(kuzzleMock.pluginsManager.trigger.calledOnce).be.true();
         should(kuzzleMock.pluginsManager.trigger.calledWith('http:options', sinon.match.instanceOf(Request))).be.true();
         should(kuzzleMock.pluginsManager.trigger.firstCall.args[1].input.args.foo).eql('bar');
+        done();
+      });
+    });
+
+    it('should register a default / route with the HEAD verb', done => {
+      rq.url = '/';
+      rq.method = 'HEAD';
+      rq.headers = {
+        'content-type': 'application/json',
+        foo: 'bar'
+      };
+
+      router.route(rq, response => {
+        should(handler.called).be.false();
+
+        should(response.toJSON()).match({
+          raw: false,
+          status: 200,
+          requestId: rq.requestId,
+          content: {
+            error: null,
+            requestId: 'requestId',
+            result: {}
+          },
+          headers: router.defaultHeaders
+        });
+
         done();
       });
     });
@@ -179,12 +200,7 @@ describe('core/httpRouter', () => {
               requestId: 'requestId',
               result: null
             },
-            headers: {
-              'content-type': 'application/json',
-              'Access-Control-Allow-Origin': '*',
-              'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS',
-              'Access-Control-Allow-Headers': 'Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With'
-            }
+            headers: router.defaultHeaders
           });
 
         done();
@@ -214,12 +230,7 @@ describe('core/httpRouter', () => {
             requestId: 'requestId',
             result: null
           },
-          headers: {
-            'content-type': 'application/json',
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS',
-            'Access-Control-Allow-Headers': 'Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With'
-          }
+          headers: router.defaultHeaders
         });
 
         done();
@@ -249,12 +260,7 @@ describe('core/httpRouter', () => {
             requestId: 'requestId',
             result: null
           },
-          headers: {
-            'content-type': 'application/json',
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS',
-            'Access-Control-Allow-Headers': 'Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With'
-          }
+          headers: router.defaultHeaders
         });
 
         done();
@@ -284,12 +290,7 @@ describe('core/httpRouter', () => {
             requestId: 'requestId',
             result: null
           },
-          headers: {
-            'content-type': 'application/json',
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS',
-            'Access-Control-Allow-Headers': 'Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With'
-          }
+          headers: router.defaultHeaders
         });
 
         done();
@@ -320,12 +321,7 @@ describe('core/httpRouter', () => {
             requestId: 'requestId',
             result: null
           },
-          headers: {
-            'content-type': 'application/json',
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS',
-            'Access-Control-Allow-Headers': 'Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With'
-          }
+          headers: router.defaultHeaders
         });
 
         done();
