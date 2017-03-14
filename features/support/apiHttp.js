@@ -556,10 +556,16 @@ ApiHttp.prototype.getServerInfo = function () {
     method: 'GET'
   };
 
-  return this.callApi(options)
-    .then(res => {
-      return res;
-    });
+  return this.callApi(options);
+};
+
+ApiHttp.prototype.getServerConfig = function () {
+  const options = {
+    url: this.apiBasePath('_getConfig'),
+    method: 'GET'
+  };
+
+  return this.callApi(options);
 };
 
 ApiHttp.prototype.login = function (strategy, credentials) {

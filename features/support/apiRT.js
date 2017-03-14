@@ -548,6 +548,18 @@ ApiRT.prototype.getServerInfo = function () {
   return this.send(msg);
 };
 
+ApiRT.prototype.getServerConfig = function () {
+  const
+    msg = {
+      controller: 'server',
+      action: 'getConfig',
+      body: {}
+    };
+
+  return this.send(msg);
+};
+
+
 ApiRT.prototype.login = function (strategy, credentials) {
   const
     msg = {
