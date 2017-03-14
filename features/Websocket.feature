@@ -4,6 +4,10 @@ Feature: Test websocket API
   Scenario: Get server information
     When I get server informations
 
+  @usingWebsocket
+  Scenario: Get server configuration
+    When I get server configuration
+
   @usingWebsocket @cleanValidations
   Scenario: Publish a realtime message
     When I publish a message
