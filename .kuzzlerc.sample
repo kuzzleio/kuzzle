@@ -407,8 +407,7 @@
         "RangeError",
         "TypeError",
         "KuzzleError",
-        "InternalError",
-        "PluginImplementationError"
+        "InternalError"
       ]
     }
   }

@@ -199,8 +199,7 @@ module.exports = {
         'RangeError',
         'TypeError',
         'KuzzleError',
-        'InternalError',
-        'PluginImplementationError'
+        'InternalError'
       ]
     }
   }
