@@ -30,7 +30,6 @@
     "cli-color": "^1.1.0",
     "commander": "2.9.0",
     "compare-versions": "^3.0.0",
-    "crypto-md5": "^1.0.0",
     "debug": "^2.6.0",
     "denque": "^1.1.1",
     "dumpme": "^1.0.0",
