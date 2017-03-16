@@ -1,4 +1,4 @@
-var
+const
   sinon = require('sinon'),
   Promise = require('bluebird'),
   should = require('should'),
@@ -7,10 +7,10 @@ var
   KuzzleMock = require('../mocks/kuzzle.mock');
 
 describe('/lib/api/kuzzle.js', () => {
-  var kuzzle;
+  let kuzzle;
 
   beforeEach(() => {
-    var mock = new KuzzleMock();
+    let mock = new KuzzleMock();
     kuzzle = new Kuzzle();
 
     [

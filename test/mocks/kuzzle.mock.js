@@ -233,6 +233,7 @@ function KuzzleMock () {
         get: sinon.stub().returns(Promise.resolve(null)),
         getInfos: sinon.stub().returns(Promise.resolve()),
         set: sinon.stub().returns(Promise.resolve()),
+        setnx: sinon.stub().returns(Promise.resolve()),
         volatileSet: sinon.stub().returns(Promise.resolve())
       },
       memoryStorage: {
