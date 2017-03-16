@@ -17,7 +17,7 @@ describe('Test: ElasticSearch service', () => {
   let
     kuzzle = {},
     sandbox = sinon.sandbox.create(),
-    index = '%test',
+    index = 'test',
     collection = 'unit-tests-elasticsearch',
     createdDocumentId = 'id-test',
     elasticsearch,
@@ -1481,7 +1481,7 @@ describe('Test: ElasticSearch service', () => {
             should(elasticsearch.client.indices.exists).be.calledOnce();
 
             should(elasticsearch.client.indices.exists.firstCall.args[0]).match({
-              index: '%test'
+              index: 'test'
             });
 
             return Promise.resolve();
