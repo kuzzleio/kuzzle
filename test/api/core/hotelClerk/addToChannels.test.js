@@ -1,4 +1,5 @@
-var
+require('reify');
+const
   should = require('should'),
   Request = require('kuzzle-common-objects').Request,
   Dsl = require('../../../../lib/api/dsl'),
@@ -7,7 +8,7 @@ var
   KuzzleMock = require('../../../mocks/kuzzle.mock');
 
 describe('Test: hotelClerk.addToChannels', () => {
-  var
+  let
     kuzzle,
     context = {
       connection: {id: 'connectionid'},
@@ -42,14 +43,14 @@ describe('Test: hotelClerk.addToChannels', () => {
   });
 
   it('should result in an empty array if the room does not exist', () => {
-    var result = [];
+    let result = [];
 
     kuzzle.hotelClerk.addToChannels(result, 'foo', {});
     should(result).be.an.Array().and.be.empty();
   });
 
   it('should push the right channels depending on the response state', done => {
-    var
+    let
       roomId,
       notification,
       channels = {};
@@ -69,7 +70,7 @@ describe('Test: hotelClerk.addToChannels', () => {
         return kuzzle.hotelClerk.addSubscription(new Request(request), context);
       })
       .then(response => {
-        var eligibleChannels = [];
+        let eligibleChannels = [];
 
         channels.pending = response.channel;
         notification.state = 'done';

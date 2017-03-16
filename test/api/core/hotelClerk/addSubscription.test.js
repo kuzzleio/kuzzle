@@ -1,4 +1,6 @@
-var
+'use strict';
+
+const
   should = require('should'),
   Promise = require('bluebird'),
   Request = require('kuzzle-common-objects').Request,
@@ -8,7 +10,7 @@ var
   KuzzleMock = require('../../../mocks/kuzzle.mock');
 
 describe('Test: hotelClerk.addSubscription', () => {
-  var
+  let
     kuzzle,
     roomId,
     channel,
@@ -143,7 +145,7 @@ describe('Test: hotelClerk.addSubscription', () => {
   });
 
   it('should reject an error when a filter is unknown', () => {
-    var
+    let
       pAddSubscription,
       request = new Request({
         controller: 'realtime',

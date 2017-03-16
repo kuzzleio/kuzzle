@@ -39,6 +39,7 @@
     "espresso-logic-minimizer": "^1.0.5",
     "eventemitter2": "^3.0.0",
     "fs-extra": "^1.0.0",
+    "highwayhash": "^2.1.0",
     "ioredis": "^2.5.0",
     "js-combinatorics": "^0.5.2",
     "json-stable-stringify": "1.0.1",
