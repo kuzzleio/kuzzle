@@ -12,13 +12,13 @@ const
   _ = require('lodash');
 
 describe('Plugin Context', () => {
-  var
+  let
     kuzzle,
     context;
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
-    context = new PluginContext(kuzzle);
+    context = new PluginContext(kuzzle, 'pluginName');
   });
 
   describe('#constructor', () => {
@@ -27,8 +27,7 @@ describe('Plugin Context', () => {
     });
 
     it('should expose the right constructors', () => {
-      var
-        Dsl = require('../../../../lib/api/dsl');
+      const Dsl = require('../../../../lib/api/dsl');
 
       should(context.constructors).be.an.Object().and.not.be.empty();
       should(context.constructors.Dsl).be.a.Function();
@@ -79,21 +78,18 @@ describe('Plugin Context', () => {
     });
 
     it('should expose all error objects as capitalized constructors', () => {
-      var
-        errors = require('kuzzle-common-objects').errors;
+      const errors = require('kuzzle-common-objects').errors;
 
       should(context.errors).be.an.Object().and.not.be.empty();
 
       _.forOwn(errors, (constructor, name) => {
-        var capitalized = _.upperFirst(name);
-
-        should(context.errors[capitalized]).be.a.Function();
-        should(new context.errors[capitalized]('foo')).be.instanceOf(constructor);
+        should(context.errors[name]).be.a.Function();
+        should(new context.errors[name]('foo')).be.instanceOf(constructor);
       });
     });
 
     it('should expose the right accessors', () => {
-      var triggerCalled = 0;
+      let triggerCalled = 0;
 
       [
         'silly',
@@ -115,20 +111,35 @@ describe('Plugin Context', () => {
       });
 
       should(context.accessors).be.an.Object().and.not.be.empty();
-      should(context.accessors).have.properties(['passport', 'execute', 'users', 'validation']);
+      should(context.accessors).have.properties(['passport', 'execute', 'users', 'validation', 'storage']);
     });
 
     it('should expose a correctly constructed validation accessor', () => {
-      var validation = context.accessors.validation;
+      const validation = context.accessors.validation;
 
       should(validation.addType).be.eql(kuzzle.validation.addType.bind(kuzzle.validation));
       should(validation.validate).be.eql(kuzzle.validation.validationPromise.bind(kuzzle.validation));
     });
 
     it('should expose a correctly execute accessor', () => {
-      var execute = context.accessors.execute;
+      const execute = context.accessors.execute;
 
       should(execute).be.a.Function();
+    });
+
+    it('should expose a correctly constructed storage accessor', () => {
+      const storage = context.accessors.storage;
+
+      should(storage.bootstrap).be.a.Function();
+      should(storage.createCollection).be.a.Function();
+      should(storage.search).be.a.Function();
+      should(storage.get).be.a.Function();
+      should(storage.mGet).be.a.Function();
+      should(storage.delete).be.a.Function();
+      should(storage.create).be.a.Function();
+      should(storage.createOrReplace).be.a.Function();
+      should(storage.replace).be.a.Function();
+      should(storage.update).be.a.Function();
     });
 
     it('should expose a users.load accessor', () => {
@@ -154,9 +165,8 @@ describe('Plugin Context', () => {
   });
 
   describe('#createUser', () => {
-    var
-      repository,
-      createUser = PluginContext.__get__('createUser');
+    let repository;
+    const createUser = PluginContext.__get__('createUser');
 
     beforeEach(() => {
       repository = {
@@ -218,11 +228,10 @@ describe('Plugin Context', () => {
   });
 
   describe('#execute', () => {
-    var
-      execute = PluginContext.__get__('execute');
+    const execute = PluginContext.__get__('execute');
 
     it('should call the callback with a result if everything went well', done => {
-      var
+      const
         request = new Request({requestId: 'request'}, {connectionId: 'connectionid'}),
         callback = sinon.spy((err, res) => {
           should(callback).be.calledOnce();
@@ -240,8 +249,7 @@ describe('Plugin Context', () => {
     });
 
     it('should resolve a Promise with a result if everything went well', () => {
-      var
-        request = new Request({requestId: 'request'}, {connectionId: 'connectionid'});
+      const request = new Request({requestId: 'request'}, {connectionId: 'connectionid'});
 
       kuzzle.funnel.processRequest.returns(Promise.resolve(request));
 
@@ -254,7 +262,7 @@ describe('Plugin Context', () => {
     });
 
     it('should call the callback with an error if something went wrong', done => {
-      var
+      const
         request = new Request({body: {some: 'request'}}, {connectionId: 'connectionid'}),
         error = new Error('error'),
         callback = sinon.spy(
@@ -280,7 +288,7 @@ describe('Plugin Context', () => {
     });
 
     it('should reject a Promise with an error if something went wrong', () => {
-      var
+      const
         request = new Request({body: {some: 'request'}}, {connectionId: 'connectionid'}),
         error = new Error('error');
 
