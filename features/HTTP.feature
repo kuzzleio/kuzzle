@@ -4,6 +4,10 @@ Feature: Test HTTP API
   Scenario: Get server information
     When I get server informations
 
+  @usingHttp
+  Scenario: Get server configuration
+    When I get server configuration
+
   @usingHttp @cleanValidations
   Scenario: Publish a realtime message
     When I publish a message
