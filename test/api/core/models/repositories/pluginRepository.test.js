@@ -1,4 +1,5 @@
 const
+  _ = require('lodash'),
   should = require('should'),
   sandbox = require('sinon').sandbox.create(),
   PluginRepository = require('../../../../../lib/api/core/models/repositories/pluginRepository'),
@@ -35,8 +36,13 @@ describe('models/repositories/pluginRepository', () => {
   });
 
   describe('#serializeToDatabase', () => {
-    it('should call serializeToCache', () => {
-      should(pluginRepository.serializeToDatabase(someObject)).be.deepEqual(pluginRepository.serializeToCache(someObject));
+    it('should copy the argument and remove _id from the copy serializeToCache', () => {
+      let copy = {};
+      _.assign(copy, someObject);
+
+      delete copy._id;
+
+      should(pluginRepository.serializeToDatabase(someObject)).be.deepEqual(copy);
     });
   });
 
