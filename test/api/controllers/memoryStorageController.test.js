@@ -291,10 +291,7 @@ describe('Test: memoryStorage controller', () => {
             alpha: true,
             direction: 'DESC',
             by: 'pattern',
-            limit: {
-              offset: 10,
-              count: 20
-            },
+            limit: [10, 20],
             get: ['pattern1', 'pattern2'],
             store: 'storeParam'
           }
@@ -310,22 +307,22 @@ describe('Test: memoryStorage controller', () => {
       let req = new Request({
         _id: 'myKey',
         body: {
-          limit: [10, 20]
+          limit: {offset: 10, count: 20}
         }
       });
 
       should(() => extractArgumentsFromRequestForSort(req)).throw(BadRequestError);
 
-      req.input.body.limit = {count: 10};
+      req.input.body.limit = [10];
       should(() => extractArgumentsFromRequestForSort(req)).throw(BadRequestError);
 
-      req.input.body.limit = {offset: 20};
+      req.input.body.limit = [10, 'foo'];
       should(() => extractArgumentsFromRequestForSort(req)).throw(BadRequestError);
 
-      req.input.body.limit = {count: 'foobar', offset: 20};
+      req.input.body.limit = [null, 20];
       should(() => extractArgumentsFromRequestForSort(req)).throw(BadRequestError);
 
-      req.input.body.limit = {count: 10, offset: [20]};
+      req.input.body.limit = [10, [20]];
       should(() => extractArgumentsFromRequestForSort(req)).throw(BadRequestError);
     });
 

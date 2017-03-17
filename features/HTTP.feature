@@ -1042,7 +1042,7 @@ Feature: Test HTTP API
     Then The ms result should match the json ["23", "54", "99"]
     When I call the sort method of the memory storage with arguments
       """
-      { "_id": "#prefix#set", "body": { "limit": {"offset": 1, "count": 2}, "direction": "DESC" }}
+      { "_id": "#prefix#set", "body": { "limit": [1, 2], "direction": "DESC" }}
       """
     Then The ms result should match the json ["54", "23"]
     When I call the srandmember method of the memory storage with arguments
