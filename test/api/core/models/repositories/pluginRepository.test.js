@@ -5,7 +5,7 @@ const
   PluginRepository = require('../../../../../lib/api/core/models/repositories/pluginRepository'),
   Data = require('../../../../../lib/api/core/models/plugin/data'),
   KuzzleMock = require('../../../../mocks/kuzzle.mock'),
-  InternalError = require('kuzzle-common-objects').errors.InternalError;
+  PluginImplementationError = require('kuzzle-common-objects').errors.PluginImplementationError;
 
 describe('models/repositories/pluginRepository', () => {
   const
@@ -100,7 +100,7 @@ describe('models/repositories/pluginRepository', () => {
 
   describe('#error', () => {
     it('should reject an error if collection is not provided', () => {
-      return should(pluginRepository.create(someObject)).be.rejectedWith(InternalError);
+      return should(pluginRepository.create(someObject)).be.rejectedWith(PluginImplementationError);
     });
   });
 });
