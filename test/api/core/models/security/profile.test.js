@@ -1,26 +1,33 @@
-var
+'use strict';
+
+const
   should = require('should'),
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
   Promise = require('bluebird'),
-  Kuzzle = require('../../../../../lib/api/kuzzle'),
+  Kuzzle = require('../../../../mocks/kuzzle.mock'),
   Profile = require('../../../../../lib/api/core/models/security/profile'),
   Role = require('../../../../../lib/api/core/models/security/role'),
   Request = require('kuzzle-common-objects').Request;
 
 describe('Test: security/profileTest', () => {
-  var
+  const
     context = {connectionId: null, userId: null},
     request = new Request({
       index: 'index',
       collection: 'collection',
       controller: 'controller',
       action: 'action'
-    }, context),
+    }, context);
+  let
     kuzzle;
 
   before(() => {
     kuzzle = new Kuzzle();
+
+    // Replace the KuzzleMock stub by an empty function,
+    // as we need to stub this one in the following tests
+    kuzzle.repositories.role.loadRole = () => {};
   });
 
   afterEach(() => {
@@ -28,13 +35,13 @@ describe('Test: security/profileTest', () => {
   });
 
   it('should disallow any action when no role be found', () => {
-    var profile = new Profile();
+    const profile = new Profile();
 
     return should(profile.isActionAllowed(request)).be.fulfilledWith(false);
   });
 
   it('should allow the action if one of the roles allows it', () => {
-    var
+    const
       profile = new Profile(),
       roles = {
         disallowAllRole: new Role(),
@@ -91,7 +98,7 @@ describe('Test: security/profileTest', () => {
   });
 
   it('should retrieve the good rights list', () => {
-    var
+    const
       profile = new Profile(),
       role1 = new Role(),
       role2 = new Role(),
@@ -135,7 +142,7 @@ describe('Test: security/profileTest', () => {
 
     return profile.getRights(kuzzle)
       .then(rights => {
-        var filteredItem;
+        let filteredItem;
 
         should(rights).be.an.Object();
         rights = Object.keys(rights).reduce((array, item) => array.concat(rights[item]), []);
@@ -188,8 +195,6 @@ describe('Test: security/profileTest', () => {
           return item.controller === 'read' && item.action === 'listIndexes';
         });
         should(filteredItem).length(0);
-
       });
   });
-
 });
