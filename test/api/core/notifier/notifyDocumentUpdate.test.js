@@ -1,13 +1,16 @@
-var
+'use strict';
+
+const
   should = require('should'),
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
   Promise = require('bluebird'),
   Request = require('kuzzle-common-objects').Request,
-  Kuzzle = require('../../../../lib/api/kuzzle');
+  Kuzzle = require('../../../mocks/kuzzle.mock'),
+  Notifier = require.main.require('lib/api/core/notifier');
 
 describe('Test: notifier.notifyDocumentUpdate', () => {
-  var
+  let
     mockupCacheService = {
       addId: undefined,
       removeId: undefined,
@@ -41,16 +44,18 @@ describe('Test: notifier.notifyDocumentUpdate', () => {
       }
     },
     kuzzle,
+    notifier,
     request,
     notified = 0,
     notification;
 
   before(() => {
     kuzzle = new Kuzzle();
+    notifier = new Notifier(kuzzle);
   });
 
   beforeEach(() => {
-    sandbox.stub(kuzzle.internalEngine, 'get').returns(Promise.resolve({}));
+    kuzzle.internalEngine.get.returns(Promise.resolve({}));
     return kuzzle.services.init({whitelist: []})
       .then(() => {
         request = new Request({
@@ -63,7 +68,7 @@ describe('Test: notifier.notifyDocumentUpdate', () => {
         });
 
         kuzzle.services.list.internalCache = mockupCacheService;
-        kuzzle.notifier.notify = function (rooms, r, n) {
+        notifier.notify = function (rooms, r, n) {
           if (rooms.length > 0) {
             notified++;
             notification = n;
@@ -83,10 +88,10 @@ describe('Test: notifier.notifyDocumentUpdate', () => {
   it('should notify subscribers when an updated document entered their scope', () => {
     request.input.resource._id = 'addme';
 
-    sandbox.stub(kuzzle.dsl, 'test').returns(['foobar']);
-    sandbox.stub(kuzzle.services.list.storageEngine, 'get').returns(Promise.resolve({_id: 'addme', _source: request.input.body}));
+    kuzzle.dsl.test.returns(['foobar']);
+    kuzzle.services.list.storageEngine.get.returns(Promise.resolve({_id: 'addme', _source: request.input.body}));
 
-    return kuzzle.notifier.notifyDocumentUpdate(request)
+    return notifier.notifyDocumentUpdate(request)
       .then(() => {
         should(notified).be.exactly(1);
         should(mockupCacheService.addId).be.exactly('notif/' + request.input.resource._id);
@@ -105,10 +110,10 @@ describe('Test: notifier.notifyDocumentUpdate', () => {
   it('should notify subscribers when an updated document left their scope', () => {
     request.input.resource._id = 'removeme';
 
-    sandbox.stub(kuzzle.dsl, 'test').returns(Promise.resolve([]));
-    sandbox.stub(kuzzle.services.list.storageEngine, 'get').returns(Promise.resolve({_id: 'removeme', _source: request.input.body}));
+    kuzzle.dsl.test.returns(Promise.resolve([]));
+    kuzzle.services.list.storageEngine.get.returns(Promise.resolve({_id: 'removeme', _source: request.input.body}));
 
-    return kuzzle.notifier.notifyDocumentUpdate(request)
+    return notifier.notifyDocumentUpdate(request)
       .then(() => {
         should(notified).be.exactly(1);
         should(mockupCacheService.addId).be.undefined();
