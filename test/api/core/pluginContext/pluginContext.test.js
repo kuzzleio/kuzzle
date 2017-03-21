@@ -12,6 +12,7 @@ const
   _ = require('lodash');
 
 describe('Plugin Context', () => {
+  const someCollection = 'someCollection';
   let
     kuzzle,
     context;
@@ -27,6 +28,7 @@ describe('Plugin Context', () => {
     });
 
     it('should expose the right constructors', () => {
+      let repository;
       const Dsl = require('../../../../lib/api/dsl');
 
       should(context.constructors).be.an.Object().and.not.be.empty();
@@ -35,9 +37,21 @@ describe('Plugin Context', () => {
       should(context.constructors.RequestContext).be.a.Function();
       should(context.constructors.RequestInput).be.a.Function();
       should(context.constructors.BaseValidationType).be.a.Function();
+      should(context.constructors.Repository).be.a.Function();
 
       should(new context.constructors.Dsl).be.instanceOf(Dsl);
       should(new context.constructors.Request(new Request({}), {})).be.instanceOf(Request);
+
+      repository = new context.constructors.Repository(someCollection);
+
+      should(repository.search).be.a.Function();
+      should(repository.get).be.a.Function();
+      should(repository.mGet).be.a.Function();
+      should(repository.delete).be.a.Function();
+      should(repository.create).be.a.Function();
+      should(repository.createOrReplace).be.a.Function();
+      should(repository.replace).be.a.Function();
+      should(repository.update).be.a.Function();
     });
 
     it('should throw when trying to instante a Request object without providing a request object', () => {
@@ -132,14 +146,6 @@ describe('Plugin Context', () => {
 
       should(storage.bootstrap).be.a.Function();
       should(storage.createCollection).be.a.Function();
-      should(storage.search).be.a.Function();
-      should(storage.get).be.a.Function();
-      should(storage.mGet).be.a.Function();
-      should(storage.delete).be.a.Function();
-      should(storage.create).be.a.Function();
-      should(storage.createOrReplace).be.a.Function();
-      should(storage.replace).be.a.Function();
-      should(storage.update).be.a.Function();
     });
 
     it('should expose a users.load accessor', () => {
