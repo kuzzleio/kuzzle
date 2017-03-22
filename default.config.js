@@ -167,6 +167,7 @@ module.exports = {
       port: 9200,
       apiVersion: '5.0',
       defaults: {
+        onUpdateConflictRetries: 0,
         scrollTTL: '15s'
       }
     },
