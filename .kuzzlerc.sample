@@ -350,6 +350,9 @@
       "port": 9200,
       "apiVersion": "5.0",
       "defaults": {
+        // Number of retries to attempt on an update conflict
+        // before throwing an error
+        "onUpdateConflictRetries": 0,
         // Time to live of a paginated search
         "scrollTTL": "15s"
       }
