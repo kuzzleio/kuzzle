@@ -552,7 +552,33 @@ describe('Test: ElasticSearch service', () => {
         });
     });
 
-    it('should handle the onUpdateConflictRetries option', () => {
+    it('should handle the retryOnConflict optional argument', () => {
+      const refreshIndexSpy = sandbox.spy(elasticsearch, 'refreshIndexIfNeeded');
+
+      elasticsearch.config.defaults.onUpdateConflictRetries = 42;
+      elasticsearch.client.update.returns(Promise.resolve({}));
+
+      request.input.resource._id = createdDocumentId;
+      request.input.args.retryOnConflict = 13;
+
+      return elasticsearch.update(request)
+        .then(() => {
+          const data = elasticsearch.client.update.firstCall.args[0];
+
+          should(data.retryOnConflict).be.eql(13);
+          should(data.body.doc).be.exactly(documentAda);
+          should(data.body.doc._kuzzle_info).be.an.Object();
+          should(data.body.doc._kuzzle_info.updatedAt).be.a.Number();
+          should(data.body.doc._kuzzle_info.updater).be.eql('test');
+          should(data.body.doc._kuzzle_info.active).be.true();
+
+          should(data.id).be.exactly(createdDocumentId);
+
+          should(refreshIndexSpy.calledOnce).be.true();
+        });
+    });
+
+    it('should handle the onUpdateConflictRetries default configuration', () => {
       const refreshIndexSpy = sandbox.spy(elasticsearch, 'refreshIndexIfNeeded');
       
       elasticsearch.config.defaults.onUpdateConflictRetries = 42;
