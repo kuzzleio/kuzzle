@@ -130,7 +130,7 @@ describe('Test: ElasticSearch service', () => {
         request.input.args[arg] = arg;
       });
 
-      let preparedData = getElasticsearchRequest(request, kuzzle,
+      let preparedData = getElasticsearchRequest(request,
         ['from', 'size', 'scroll', 'scrollId', 'refresh']);
 
       should(preparedData.type).be.exactly(request.input.resource.collection);
