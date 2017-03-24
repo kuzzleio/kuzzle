@@ -134,7 +134,7 @@ describe('Test: repositories/userRepository', () => {
       userRepository.hydrate(user, {});
 
       should(user.profileIds)
-        .match(['default']);
+        .match(kuzzle.config.security.restrictedProfileIds);
 
     });
   });

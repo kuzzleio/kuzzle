@@ -150,11 +150,6 @@ function cleanSecurity (callback) {
   }
 
   this.api.listIndexes()
-    .then(response => {
-      if (response.result.indexes.indexOf('%kuzzle') === -1) {
-        return Promise.reject(new ReferenceError('%kuzzle index not found'));
-      }
-    })
     .then(() => {
       return this.api.searchUsers({
         query: {
@@ -230,10 +225,6 @@ function cleanSecurity (callback) {
       callback();
     })
     .catch(error => {
-      if (error instanceof ReferenceError && error.message === '%kuzzle index not found') {
-        // The %kuzzle index is not created yet. Is not a problem if the tests are run for the first time.
-        return callback();
-      }
       callback(error.message ? error.message : error);
     });
 }
@@ -255,11 +246,6 @@ function cleanRedis(callback) {
 
 function cleanValidations(callback) {
   this.api.listIndexes()
-    .then(body => {
-      if (body.result.indexes.indexOf('%kuzzle') === -1) {
-        return Promise.reject(new ReferenceError('%kuzzle index not found'));
-      }
-    })
     .then(() => {
       return this.api.searchValidations({
         query: {
