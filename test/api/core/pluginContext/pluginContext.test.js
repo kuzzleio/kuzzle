@@ -164,58 +164,49 @@ describe('Plugin Context', () => {
 
         context.accessors.users.create();
         should(PluginContext.__get__('createUser')).be.calledOnce();
-        should(PluginContext.__get__('createUser')).be.calledWith(kuzzle.repositories.user);
+        should(PluginContext.__get__('createUser')).be.calledWith(kuzzle);
       });
     });
 
   });
 
   describe('#createUser', () => {
-    let repository;
     const createUser = PluginContext.__get__('createUser');
 
-    beforeEach(() => {
-      repository = {
-        ObjectConstructor: sinon.stub().returns({}),
-        hydrate: sinon.stub().returns(Promise.resolve()),
-        persist: sinon.stub().returns(Promise.resolve())
-      };
-    });
-
     it('should reject user creation with incorrect name argument', () => {
-      return should(createUser(repository, ['incorrect']))
+      return should(createUser(kuzzle, ['incorrect']))
         .be.rejectedWith(PluginImplementationError);
     });
 
     it('should reject user creation with incorrect userInfo argument', () => {
-      return should(createUser(repository, 'foo', ['incorrect']))
+      return should(createUser(kuzzle, 'foo', ['incorrect']))
         .be.rejectedWith(PluginImplementationError);
     });
 
     it('should allow to create a user', () => {
-      return createUser(repository, 'foo', 'profile', {foo: 'bar'})
+      return createUser(kuzzle, 'foo', 'profile', {foo: 'bar'})
         .then(response => {
           try {
-            should(repository.ObjectConstructor).be.calledOnce();
+            should(kuzzle.repositories.user.ObjectConstructor).be.calledOnce();
 
-            should(repository.hydrate).be.calledOnce();
-            should(repository.hydrate).be.calledWith({}, {
+            should(kuzzle.repositories.user.hydrate).be.calledOnce();
+            should(kuzzle.repositories.user.hydrate).be.calledWith({}, {
               _id: 'foo',
               foo: 'bar',
               profileIds: ['profile']
             });
 
-            should(repository.persist).be.calledOnce();
-            should(repository.persist.firstCall.args[1]).be.eql({
+            should(kuzzle.repositories.user.persist).be.calledOnce();
+            should(kuzzle.repositories.user.persist.firstCall.args[1]).be.eql({
               database: {
                 method: 'create'
               }
             });
 
             sinon.assert.callOrder(
-              repository.ObjectConstructor,
-              repository.hydrate,
-              repository.persist
+              kuzzle.repositories.user.ObjectConstructor,
+              kuzzle.repositories.user.hydrate,
+              kuzzle.repositories.user.persist
             );
 
             should(response).be.eql({
