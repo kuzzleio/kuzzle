@@ -35,7 +35,8 @@ function KuzzleMock () {
       cleanAndPrepare: sinon.stub().returns(Promise.resolve()),
       cleanDb: sinon.stub().returns(Promise.resolve()),
       managePlugins: sinon.stub().returns(Promise.resolve()),
-      data: sinon.stub().returns(Promise.resolve())
+      data: sinon.stub().returns(Promise.resolve()),
+      dump: sinon.stub().returns(Promise.resolve())
     }
   };
 
@@ -159,34 +160,6 @@ function KuzzleMock () {
     trigger: sinon.spy(function () {return Promise.resolve(arguments[1]);})
   };
 
-  this.cliController = {
-    init: sinon.stub().returns(Promise.resolve()),
-    actions: {
-      adminExists: sinon.stub().returns(Promise.resolve()),
-      createFirstAdmin: sinon.stub().returns(Promise.resolve()),
-      cleanAndPrepare: sinon.stub().returns(Promise.resolve()),
-      cleanDb: sinon.stub().returns(Promise.resolve()),
-      managePlugins: sinon.stub().returns(Promise.resolve()),
-      data: sinon.stub().returns(Promise.resolve()),
-      dump: sinon.stub().returns(Promise.resolve())
-    }
-  };
-
-  this.repositories = {
-    init: sinon.stub().returns(Promise.resolve()),
-    user: {
-      load: sinon.stub().returns(Promise.resolve(foo))
-    }
-  };
-
-  this.validation = {
-    init: sinon.spy(),
-    curateSpecification: sinon.spy(function () {return Promise.resolve();}),
-    validate: sinon.spy(function () {return Promise.resolve(arguments[0]);}),
-    validationPromise: sinon.spy(function () {return Promise.resolve(arguments[0]);}),
-    addType: sinon.spy()
-  };
-
   this.repositories = {
     init: sinon.stub().returns(Promise.resolve()),
     profile: {
@@ -202,12 +175,24 @@ function KuzzleMock () {
     },
     user: {
       load: sinon.stub().returns(Promise.resolve(foo)),
-      search: sinon.stub().returns(Promise.resolve())
+      search: sinon.stub().returns(Promise.resolve()),
+      ObjectConstructor: sinon.stub().returns({}),
+      hydrate: sinon.stub().returns(Promise.resolve()),
+      persist: sinon.stub().returns(Promise.resolve())
     },
     token: {
       anonymous: sinon.stub().returns({_id: 'anonymous'}),
       verifyToken: sinon.stub().returns(Promise.resolve())
     }
+  };
+
+
+  this.validation = {
+    init: sinon.spy(),
+    curateSpecification: sinon.spy(function () {return Promise.resolve();}),
+    validate: sinon.spy(function () {return Promise.resolve(arguments[0]);}),
+    validationPromise: sinon.spy(function () {return Promise.resolve(arguments[0]);}),
+    addType: sinon.spy()
   };
 
   this.resetStorage = sinon.stub().returns(Promise.resolve());
