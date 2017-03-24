@@ -30,6 +30,7 @@ describe('funnelController.processRequest', () => {
       .catch(err => {
         should(err).be.instanceof(UnauthorizedError);
         should(kuzzle.pluginsManager.trigger.calledWithMatch('request:onAuthorized', request)).be.false();
+        should(kuzzle.pluginsManager.trigger.calledWithMatch('request:onUnauthorized', request)).be.true();
         done();
       });
   });
@@ -44,6 +45,7 @@ describe('funnelController.processRequest', () => {
       .catch(err => {
         should(err).be.instanceof(ForbiddenError);
         should(kuzzle.pluginsManager.trigger.calledWithMatch('request:onAuthorized', request)).be.false();
+        should(kuzzle.pluginsManager.trigger.calledWithMatch('request:onUnauthorized', request)).be.true();
         done();
       });
   });
@@ -61,6 +63,7 @@ describe('funnelController.processRequest', () => {
     return funnel.checkRights(request)
       .then(() => {
         should(kuzzle.pluginsManager.trigger.calledWithMatch('request:onAuthorized', request)).be.true();
+        should(kuzzle.pluginsManager.trigger.calledWithMatch('request:onUnauthorized', request)).be.false();
       });
   });
 });

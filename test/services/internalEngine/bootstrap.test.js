@@ -280,7 +280,7 @@ describe('services/internalEngine/bootstrap.js', () => {
                     type: 'keyword'
                   },
                   password: {
-                    index: 'no',
+                    index: false,
                     type: 'keyword'
                   }
                 }

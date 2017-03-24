@@ -1,6 +1,7 @@
 'use strict';
 
 const
+  crypto = require('crypto'),
   _ = require('lodash'),
   sinon = require('sinon'),
   Kuzzle = require('../../lib/api/kuzzle'),
@@ -20,6 +21,8 @@ function KuzzleMock () {
     }
   }
 
+  this.hashKey = crypto.randomBytes(32);
+
   // we need a deep copy here
   this.config = _.merge({}, config);
 
@@ -37,6 +40,7 @@ function KuzzleMock () {
   };
 
   this.dsl = {
+    test: sinon.stub().returns([]),
     register: sinon.stub().returns(Promise.resolve()),
     remove: sinon.stub().returns(Promise.resolve())
   };
@@ -208,11 +212,13 @@ function KuzzleMock () {
         run: sinon.stub().returns(Promise.resolve({ids: []}))
       },
       internalCache: {
+        add: sinon.stub().returns(Promise.resolve()),
         expire: sinon.stub().returns(Promise.resolve()),
         flushdb: sinon.stub().returns(Promise.resolve()),
         get: sinon.stub().returns(Promise.resolve(null)),
         getInfos: sinon.stub().returns(Promise.resolve()),
         set: sinon.stub().returns(Promise.resolve()),
+        setnx: sinon.stub().returns(Promise.resolve()),
         volatileSet: sinon.stub().returns(Promise.resolve())
       },
       memoryStorage: {

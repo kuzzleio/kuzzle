@@ -1,4 +1,4 @@
-var
+const
   should = require('should'),
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
@@ -10,7 +10,7 @@ var
   KuzzleMock = require('../../../mocks/kuzzle.mock');
 
 describe('Test: hotelClerk.removeRooms', () => {
-  var
+  let
     kuzzle,
     connectionId = 'connectionid',
     context,
@@ -43,7 +43,7 @@ describe('Test: hotelClerk.removeRooms', () => {
   });
 
   it('should reject an error if there is no subscription on this index', () => {
-    var request = new Request({
+    const request = new Request({
       controller: 'none',
       action: 'removeRooms',
       index: index,
@@ -55,7 +55,7 @@ describe('Test: hotelClerk.removeRooms', () => {
   });
 
   it('should reject an error if there is no subscription on this collection', () => {
-    var
+    const
       subscribeRequest = new Request({
         controller: 'realtime',
         action: 'subscribe',
@@ -78,7 +78,7 @@ describe('Test: hotelClerk.removeRooms', () => {
   });
 
   it('should remove room in global subscription for provided collection', () => {
-    var
+    const
       subscribeRequest = new Request({
         controller: 'realtime',
         action: 'subscribe',
@@ -105,7 +105,7 @@ describe('Test: hotelClerk.removeRooms', () => {
   });
 
   it('should remove room for subscription with filter for provided collection', () => {
-    var
+    const
       subscribeRequest = new Request({
         controller: 'realtime',
         action: 'subscribe',
@@ -132,7 +132,7 @@ describe('Test: hotelClerk.removeRooms', () => {
   });
 
   it('should remove room for global and filter subscription provided collection', () => {
-    var
+    const
       globalSubscribeRequest = new Request({
         controller: 'realtime',
         action: 'subscribe',
@@ -167,7 +167,7 @@ describe('Test: hotelClerk.removeRooms', () => {
   });
 
   it('should remove only room for provided collection', () => {
-    var
+    const
       subscribeCollection1 = new Request({
         controller: 'realtime',
         action: 'subscribe',
@@ -203,7 +203,7 @@ describe('Test: hotelClerk.removeRooms', () => {
   });
 
   it('should reject an error if room is provided but is not an array', () => {
-    var
+    const
       subscribeCollection1 = new Request({
         controller: 'realtime',
         action: 'subscribe',
@@ -226,8 +226,8 @@ describe('Test: hotelClerk.removeRooms', () => {
   });
 
   it('should remove only listed rooms for the collection', () => {
-    var
-      roomId,
+    let roomId;
+    const
       subscribeFilter1 = new Request({
         controller: 'realtime',
         action: 'subscribe',
@@ -264,8 +264,8 @@ describe('Test: hotelClerk.removeRooms', () => {
   });
 
   it('should return a response with partial error if a roomId doesn\'t correspond to the index', () => {
-    var
-      index2RoomName,
+    let index2RoomName;
+    const
       subscribe1 = new Request({
         controller: 'realtime',
         action: 'subscribe',
@@ -303,8 +303,8 @@ describe('Test: hotelClerk.removeRooms', () => {
   });
 
   it('should return a response with partial error if a roomId doesn\'t correspond to the collection', () => {
-    var
-      collection2RoomName,
+    let collection2RoomName;
+    const
       subscribe1 = new Request({
         controller: 'realtime',
         action: 'subscribe',
@@ -342,8 +342,8 @@ describe('Test: hotelClerk.removeRooms', () => {
   });
 
   it('should return a response with partial error if a roomId doesn\'t exist', () => {
-    var
-      badRoomName = 'badRoomId',
+    let badRoomName = 'badRoomId';
+    const
       subscribeRequest = new Request({
         controller: 'realtime',
         action: 'subscribe',
