@@ -295,11 +295,11 @@ Feature: Test websocket API
   @usingWebsocket
   Scenario: Index and collection existence
     When I check if index "%kuzzle" exists
-    Then The result should raise an error with message "Cannot operate on Kuzzle internal index "%kuzzle""
+    Then The result should raise an error with message "Indexes starting with a "%" are reserved for internal use. Cannot process index %kuzzle."
     When I check if index "idontexist" exists
     Then The result should match the json false
     When I check if collection "users" exists on index "%kuzzle"
-    Then The result should raise an error with message "Cannot operate on Kuzzle internal index "%kuzzle""
+    Then The result should raise an error with message "Indexes starting with a "%" are reserved for internal use. Cannot process index %kuzzle."
     When I write the document "documentGrace"
     When I check if index "kuzzle-test-index" exists
     Then The result should match the json true
