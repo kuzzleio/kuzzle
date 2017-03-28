@@ -1,4 +1,6 @@
-var
+'use strict';
+
+const
   rewire = require('rewire'),
   should = require('should'),
   sinon = require('sinon'),
@@ -11,7 +13,7 @@ var
   SecurityController = rewire('../../../../lib/api/controllers/securityController');
 
 describe('Test: security controller - profiles', () => {
-  var
+  let
     kuzzle,
     request,
     securityController;
@@ -34,7 +36,7 @@ describe('Test: security controller - profiles', () => {
   });
 
   describe('#updateProfileMapping', () => {
-    var foo = {foo: 'bar'};
+    const foo = {foo: 'bar'};
 
     it('should throw a BadRequestError if the body is missing', () => {
       return should(() => {
@@ -80,7 +82,7 @@ describe('Test: security controller - profiles', () => {
     });
 
     it('should reject with an object in case of error', () => {
-      var error = new Error('Mocked error');
+      const error = new Error('Mocked error');
 
       kuzzle.repositories.profile.validateAndSaveProfile = sandbox.stub().returns(Promise.reject(error));
 
@@ -91,7 +93,7 @@ describe('Test: security controller - profiles', () => {
 
   describe('#createProfile', () => {
     it('should reject when a profile already exists with the id', () => {
-      var error = new Error('Mocked error');
+      const error = new Error('Mocked error');
       kuzzle.repositories.profile.validateAndSaveProfile = sandbox.stub().returns(Promise.reject(error));
 
       return should(securityController.createProfile(new Request({_id: 'test',body: {policies: ['role1']}})))
@@ -143,7 +145,7 @@ describe('Test: security controller - profiles', () => {
     });
 
     it('should reject with an object in case of error', () => {
-      var error = new Error('Mocked error');
+      const error = new Error('Mocked error');
 
       kuzzle.repositories.profile.loadMultiFromDatabase = sandbox.stub().returns(Promise.reject(error));
 
@@ -185,17 +187,27 @@ describe('Test: security controller - profiles', () => {
       kuzzle.repositories.profile.searchProfiles = sandbox.stub().returns(Promise.resolve({hits: [{_id: 'test'}]}));
 
       return securityController.searchProfiles(new Request({
-        body: {}
+        body: {},
+        from: 13,
+        size: 42,
+        scroll: 'foo'
       }))
         .then(response => {
           should(response).be.instanceof(Object);
           should(response.hits).be.an.Array();
           should(response.hits[0]._id).be.exactly('test');
+          should(kuzzle.repositories.profile.searchProfiles).be.calledWithMatch([], {from: 13, size: 42, scroll: 'foo'});
         });
     });
 
-    it('should return a object containing an array of profiles on searchProfile call with hydrate', () => {
-      kuzzle.repositories.profile.searchProfiles = sandbox.stub().returns(Promise.resolve({total: 1, hits: [{_id: 'test', policies: [ {roleId: 'default'} ]}]}));
+    it('should return an object containing an array of profiles on searchProfile call with hydrate', () => {
+      kuzzle.repositories.profile.searchProfiles = sandbox.stub().returns(Promise.resolve({
+        total: 1,
+        hits: [
+          {_id: 'test', policies: [ {roleId: 'default'} ]}
+        ],
+        scrollId: 'foobar'
+      }));
 
       return securityController.searchProfiles(new Request({body: {roles: ['role1']}}))
         .then(response => {
@@ -204,6 +216,9 @@ describe('Test: security controller - profiles', () => {
           should(response.hits[0]._id).be.exactly('test');
           should(response.hits[0]._source.policies).be.an.Array();
           should(response.hits[0]._source.policies[0].roleId).be.exactly('default');
+          should(response.total).be.eql(1);
+          should(response.scrollId).be.eql('foobar');
+          should(kuzzle.repositories.profile.searchProfiles).be.calledWithMatch(['role1'], {});
         });
     });
 
@@ -218,11 +233,63 @@ describe('Test: security controller - profiles', () => {
     });
 
     it('should reject an error in case of error', () => {
-      var error = new Error('Mocked error');
+      const error = new Error('Mocked error');
 
       kuzzle.repositories.profile.searchProfiles = sandbox.stub().returns(Promise.reject(error));
 
       return should(securityController.searchProfiles(new Request({body: {policies: ['foo']}}))).be.rejectedWith(error);
+    });
+  });
+
+  describe('#scrollProfiles', () => {
+    it('should throw if no scrollId is provided', () => {
+      const request = new Request({});
+
+      should(() => securityController.scrollProfiles(request)).throw(BadRequestError, {message: 'Missing "scrollId" argument'});
+    });
+
+    it('should return an object containing an array of profiles and a scrollId', () => {
+      kuzzle.repositories.profile.scroll = sandbox.stub().returns(Promise.resolve({
+        total: 1,
+        hits: [
+          {_id: 'test', policies: [ {roleId: 'default'} ]}
+        ],
+        scrollId: 'foobar'
+      }));
+
+      return securityController.scrollProfiles(new Request({scrollId: 'foobar'}))
+        .then(response => {
+          should(response).be.instanceof(Object);
+          should(response.hits).be.an.Array();
+          should(response.hits[0]._id).be.exactly('test');
+          should(response.hits[0]._source.policies).be.an.Array();
+          should(response.hits[0]._source.policies[0].roleId).be.exactly('default');
+          should(response.total).be.eql(1);
+          should(response.scrollId).be.eql('foobar');
+          should(kuzzle.repositories.profile.scroll).be.calledWithMatch('foobar', undefined);
+        });
+    });
+
+    it('should handle an optional scroll argument', () => {
+      kuzzle.repositories.profile.scroll = sandbox.stub().returns(Promise.resolve({
+        total: 1,
+        hits: [
+          {_id: 'test', policies: [ {roleId: 'default'} ]}
+        ],
+        scrollId: 'foobar'
+      }));
+
+      return securityController.scrollProfiles(new Request({scrollId: 'foobar', scroll: '4s'}))
+        .then(response => {
+          should(response).be.instanceof(Object);
+          should(response.hits).be.an.Array();
+          should(response.hits[0]._id).be.exactly('test');
+          should(response.hits[0]._source.policies).be.an.Array();
+          should(response.hits[0]._source.policies[0].roleId).be.exactly('default');
+          should(response.total).be.eql(1);
+          should(response.scrollId).be.eql('foobar');
+          should(kuzzle.repositories.profile.scroll).be.calledWithMatch('foobar', '4s');
+        });
     });
   });
 
@@ -257,7 +324,7 @@ describe('Test: security controller - profiles', () => {
     });
 
     it('should reject with an error in case of error', () => {
-      var error = new Error('Mocked error');
+      const error = new Error('Mocked error');
 
       kuzzle.repositories.profile.deleteProfile = sandbox.stub().returns(Promise.reject(error));
 
@@ -288,13 +355,11 @@ describe('Test: security controller - profiles', () => {
 
       return securityController.getProfileRights(new Request({_id: 'test'}))
         .then(response => {
-          var filteredItem;
-
           should(response).be.instanceof(Object);
           should(response.hits).be.an.Array();
           should(response.hits).length(2);
 
-          filteredItem = response.hits.filter(item => {
+          let filteredItem = response.hits.filter(item => {
             return item.controller === 'read' &&
                     item.action === 'get' &&
                     item.index === 'foo' &&

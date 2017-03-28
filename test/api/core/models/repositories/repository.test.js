@@ -354,6 +354,18 @@ describe('Test: repositories/repository', () => {
         });
     });
 
+    it('should inject back the scroll id, if there is one', () => {
+      kuzzle.internalEngine.search = sandbox.stub().returns(Promise.resolve({hits: [dbPojo], total: 1, _scroll_id: 'foobar'}));
+
+      return repository.search({query:'noquery'}, 0, 10, false)
+        .then(response => {
+          should(response).be.an.Object();
+          should(response.hits).be.an.Array();
+          should(response.total).be.exactly(1);
+        });
+    });
+
+
     it('should return an list if no hits', () => {
       kuzzle.internalEngine.search = sandbox.stub().returns(Promise.resolve({hits: [], total: 0}));
 

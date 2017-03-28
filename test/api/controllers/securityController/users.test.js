@@ -1,6 +1,6 @@
 'use strict';
 
-var
+const
   rewire = require('rewire'),
   Promise = require('bluebird'),
   should = require('should'),
@@ -14,7 +14,7 @@ var
   SecurityController = rewire('../../../../lib/api/controllers/securityController');
 
 describe('Test: security controller - users', () => {
-  var
+  let
     kuzzle,
     request,
     securityController;
@@ -35,7 +35,7 @@ describe('Test: security controller - users', () => {
   });
 
   describe('#updateUserMapping', () => {
-    var foo = {foo: 'bar'};
+    const foo = {foo: 'bar'};
 
     it('should throw a BadRequestError if the body is missing', () => {
       return should(() => {
@@ -87,34 +87,104 @@ describe('Test: security controller - users', () => {
 
   describe('#searchUsers', () => {
     it('should return a valid responseObject', () => {
+      const request = new Request({
+        body: { query: {foo: 'bar' }},
+        from: 13,
+        size: 42,
+        scroll: 'foo'
+      });
+
       kuzzle.repositories.user.search = sandbox.stub().returns(Promise.resolve({
         hits: [{_id: 'admin', _source: { profileIds: ['admin'] }}],
-        total: 2
+        total: 2,
+        scrollId: 'foobar'
       }));
 
-      return securityController.searchUsers(new Request({body: {from: 0, size: 200}}), {})
+      return securityController.searchUsers(request)
         .then(response => {
+          should(kuzzle.repositories.user.search).be.calledWithMatch({foo: 'bar'}, {from: 13, size: 42, scroll: 'foo'});
           should(response).be.instanceof(Object);
-          should(response).match({hits: [{_id: 'admin'}], total: 2});
+          should(response).match({hits: [{_id: 'admin'}], total: 2, scrollId: 'foobar'});
+        });
+    });
+
+    it('should handle empty body requests', () => {
+      const request = new Request({});
+
+      kuzzle.repositories.user.search = sandbox.stub().returns(Promise.resolve({
+        hits: [{_id: 'admin', _source: { profileIds: ['admin'] }}],
+        total: 2,
+        scrollId: 'foobar'
+      }));
+
+      return securityController.searchUsers(request)
+        .then(response => {
+          should(kuzzle.repositories.user.search).be.calledWithMatch({}, {});
+          should(response).be.instanceof(Object);
+          should(response).match({hits: [{_id: 'admin'}], total: 2, scrollId: 'foobar'});
         });
     });
 
     it('should throw an error if the number of documents per page exceeds server limits', () => {
       kuzzle.config.limits.documentsFetchCount = 1;
 
-      request = new Request({body: {policies: ['role1']}});
-      request.input.args.from = 0;
-      request.input.args.size = 10;
+      request = new Request({
+        body: {policies: ['role1']},
+        from: 0,
+        size: 10
+      });
 
       return should(() => securityController.searchUsers(request)).throw(SizeLimitError);
     });
 
     it('should reject an error in case of error', () => {
-      var error = new Error('Mocked error');
+      const error = new Error('Mocked error');
       kuzzle.repositories.user.search = sandbox.stub().returns(Promise.reject(error));
 
       return should(securityController.searchUsers(new Request({body: {hydrate: false}})))
         .be.rejectedWith(error);
+    });
+  });
+
+  describe('#scrollUsers', () => {
+    it('should throw if no scrollId is provided', () => {
+      const request = new Request({});
+
+      should(() => securityController.scrollUsers(request)).throw(BadRequestError, {message: 'Missing "scrollId" argument'});
+    });
+
+    it('should reformat search results correctly', () => {
+      const request = new Request({scrollId: 'foobar'});
+
+      kuzzle.repositories.user.scroll = sandbox.stub().returns(Promise.resolve({
+        hits: [{_id: 'admin', _source: { profileIds: ['admin'] }}],
+        total: 2,
+        scrollId: 'foobar'
+      }));
+
+      return securityController.scrollUsers(request)
+        .then(response => {
+          should(kuzzle.repositories.user.scroll).be.calledWithMatch('foobar', undefined);
+          should(response).be.instanceof(Object);
+          should(response).match({hits: [{_id: 'admin'}], total: 2, scrollId: 'foobar'});
+        });
+    });
+
+    it('should handle the scroll argument', () => {
+      const request = new Request({scrollId: 'foobar', scroll: 'qux'});
+
+      kuzzle.repositories.user.scroll = sandbox.stub().returns(Promise.resolve({
+        hits: [{_id: 'admin', _source: { profileIds: ['admin'] }}],
+        total: 2,
+        scrollId: 'foobar'
+      }));
+
+      return securityController.scrollUsers(request)
+        .then(response => {
+          should(kuzzle.repositories.user.scroll).be.calledWithMatch('foobar', 'qux');
+          should(response).be.instanceof(Object);
+          should(response).match({hits: [{_id: 'admin'}], total: 2, scrollId: 'foobar'});
+        });
     });
   });
 
@@ -136,7 +206,7 @@ describe('Test: security controller - users', () => {
     });
 
     it('should reject an error in case of error', () => {
-      var error = new Error('Mocked error');
+      const error = new Error('Mocked error');
 
       kuzzle.repositories.user.delete = sandbox.stub().returns(Promise.reject(error));
 
@@ -299,13 +369,11 @@ describe('Test: security controller - users', () => {
 
       return securityController.getUserRights(new Request({_id: 'test'}))
         .then(response => {
-          var filteredItem;
-
           should(response).be.instanceof(Object);
           should(response.hits).be.an.Array();
           should(response.hits).length(2);
 
-          filteredItem = response.hits.filter(item => {
+          let filteredItem = response.hits.filter(item => {
             return item.controller === 'read' &&
                     item.action === 'get' &&
                     item.index === 'foo' &&

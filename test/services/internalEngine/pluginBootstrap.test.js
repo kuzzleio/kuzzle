@@ -33,7 +33,7 @@ describe('services/internalEngine/pluginBootstrap.js', () => {
 
   describe('#constructor', () => {
     it('should set the engine to kuzzle internal engine', () => {
-      should(bootstrap.engine).be.exactly(engine);
+      should(bootstrap.db).be.exactly(engine);
     });
   });
 
@@ -54,7 +54,7 @@ describe('services/internalEngine/pluginBootstrap.js', () => {
             should(engine.updateMapping)
               .be.calledTwice();
 
-            should(bootstrap.engine.refresh)
+            should(bootstrap.db.refresh)
               .be.calledOnce();
 
             should(kuzzle.indexCache.add)
