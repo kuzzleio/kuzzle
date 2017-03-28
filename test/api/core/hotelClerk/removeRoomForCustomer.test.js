@@ -11,9 +11,10 @@ const
 describe ('lib/core/hotelclerck:removeRoomForCustomer', () => {
   let
     context,
-    cleanupRooms,       // eslint-disable-line no-unused-vars
+    cleanUpRooms,       // eslint-disable-line no-unused-vars
     removeRoomForCustomers,
-    requestContext;
+    requestContext,
+    reset;
 
   beforeEach(() => {
     context = {
@@ -29,7 +30,11 @@ describe ('lib/core/hotelclerck:removeRoomForCustomer', () => {
       },
       kuzzle: new KuzzleMock()
     };
-    cleanupRooms = sinon.stub().returns(Promise.resolve());
+
+    cleanUpRooms = sinon.stub().returns(Promise.resolve());
+    reset = HotelClerk.__set__({
+      cleanUpRooms
+    });
 
     requestContext = new RequestContext({
       connectionId: 'connectionId',
@@ -37,6 +42,10 @@ describe ('lib/core/hotelclerck:removeRoomForCustomer', () => {
     });
 
     removeRoomForCustomers = HotelClerk.__get__('removeRoomForCustomer').bind(context);
+  });
+
+  afterEach(() => {
+    reset();
   });
 
   it('should reject if the connection cannot be found', () => {
@@ -58,6 +67,9 @@ describe ('lib/core/hotelclerck:removeRoomForCustomer', () => {
       .then(roomId => {
         should(context.customers)
           .be.empty();
+
+        should(cleanUpRooms)
+          .be.calledOnce();
 
         should(roomId)
           .be.eql('roomId');
