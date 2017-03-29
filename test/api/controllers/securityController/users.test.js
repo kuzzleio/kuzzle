@@ -87,7 +87,7 @@ describe('Test: security controller - users', () => {
 
   describe('#searchUsers', () => {
     it('should return a valid responseObject', () => {
-      const request = new Request({
+      request = new Request({
         body: { query: {foo: 'bar' }},
         from: 13,
         size: 42,
@@ -109,15 +109,13 @@ describe('Test: security controller - users', () => {
     });
 
     it('should handle empty body requests', () => {
-      const request = new Request({});
-
       kuzzle.repositories.user.search = sandbox.stub().returns(Promise.resolve({
         hits: [{_id: 'admin', _source: { profileIds: ['admin'] }}],
         total: 2,
         scrollId: 'foobar'
       }));
 
-      return securityController.searchUsers(request)
+      return securityController.searchUsers(new Request({}))
         .then(response => {
           should(kuzzle.repositories.user.search).be.calledWithMatch({}, {});
           should(response).be.instanceof(Object);
@@ -148,13 +146,11 @@ describe('Test: security controller - users', () => {
 
   describe('#scrollUsers', () => {
     it('should throw if no scrollId is provided', () => {
-      const request = new Request({});
-
-      should(() => securityController.scrollUsers(request)).throw(BadRequestError, {message: 'Missing "scrollId" argument'});
+      should(() => securityController.scrollUsers(new Request({}))).throw(BadRequestError, {message: 'Missing "scrollId" argument'});
     });
 
     it('should reformat search results correctly', () => {
-      const request = new Request({scrollId: 'foobar'});
+      request = new Request({scrollId: 'foobar'});
 
       kuzzle.repositories.user.scroll = sandbox.stub().returns(Promise.resolve({
         hits: [{_id: 'admin', _source: { profileIds: ['admin'] }}],
@@ -171,7 +167,7 @@ describe('Test: security controller - users', () => {
     });
 
     it('should handle the scroll argument', () => {
-      const request = new Request({scrollId: 'foobar', scroll: 'qux'});
+      request = new Request({scrollId: 'foobar', scroll: 'qux'});
 
       kuzzle.repositories.user.scroll = sandbox.stub().returns(Promise.resolve({
         hits: [{_id: 'admin', _source: { profileIds: ['admin'] }}],

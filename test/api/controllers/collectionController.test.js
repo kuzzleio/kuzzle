@@ -156,9 +156,7 @@ describe('Test: collection controller', () => {
 
   describe('#scrollSpecifications', () => {
     it('should throw if no scrollId is provided', () => {
-      const request = new Request({});
-
-      should(() => collectionController.scrollSpecifications(request)).throw(BadRequestError, {message: 'Missing "scrollId" argument'});
+      should(() => collectionController.scrollSpecifications(new Request({}))).throw(BadRequestError, {message: 'Missing "scrollId" argument'});
     });
 
     it('should call internalEngine with the right data', () => {

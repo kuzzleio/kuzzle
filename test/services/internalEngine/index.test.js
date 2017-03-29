@@ -64,7 +64,7 @@ describe('InternalEngine', () => {
         collection = 'collection',
         query = { 'some': 'filters' };
 
-      kuzzle.internalEngine.client.search.returns(Promise.resolve({hits: { hits: ['foo', 'bar'] }, total: 123}));
+      kuzzle.internalEngine.client.search.returns(Promise.resolve({hits: { hits: ['foo', 'bar'], total: 123}}));
 
       return kuzzle.internalEngine.search(collection, query, {from: 0, size: 20, scroll: 'foo'})
         .then(result => {
@@ -99,7 +99,7 @@ describe('InternalEngine', () => {
         collection = 'collection',
         query = { query: {'some': 'filters' }};
 
-      kuzzle.internalEngine.client.search.returns(Promise.resolve({hits: { hits: ['foo', 'bar'] }, total: 123}));
+      kuzzle.internalEngine.client.search.returns(Promise.resolve({hits: { hits: ['foo', 'bar'], total: 123}}));
 
       return kuzzle.internalEngine.search(collection, query, {from: 0, size: 20, scroll: 'foo'})
         .then(result => {
@@ -107,15 +107,15 @@ describe('InternalEngine', () => {
             should(kuzzle.internalEngine.client.search)
               .be.calledOnce()
               .be.calledWithMatch({
-              index: kuzzle.internalEngine.index,
-              type: collection,
-              from: 0,
-              size: 20,
-              scroll: 'foo',
-              body: {
-                query: query.query
-              }
-            });
+                index: kuzzle.internalEngine.index,
+                type: collection,
+                from: 0,
+                size: 20,
+                scroll: 'foo',
+                body: {
+                  query: query.query
+                }
+              });
 
             should(kuzzle.services.list.internalCache.psetex).not.be.called();
             should(result).be.an.Object().and.not.be.empty();
@@ -132,7 +132,7 @@ describe('InternalEngine', () => {
     it('should perform a search on an empty filter if the filters argument is missing', () => {
       const collection = 'collection';
 
-      kuzzle.internalEngine.client.search.returns(Promise.resolve({hits: {hits: ['foo', 'bar']}, total: 123}));
+      kuzzle.internalEngine.client.search.returns(Promise.resolve({hits: {hits: ['foo', 'bar'], total: 123}}));
 
       return kuzzle.internalEngine.search(collection)
         .then(result => {
@@ -163,9 +163,9 @@ describe('InternalEngine', () => {
 
       kuzzle.internalEngine.client.search.returns(Promise.resolve({
         hits: {
+          total: 123,
           hits: ['foo', 'bar']
         },
-        total: 123,
         _scroll_id: 'foobar'
       }));
 
@@ -175,15 +175,15 @@ describe('InternalEngine', () => {
             should(kuzzle.internalEngine.client.search)
               .be.calledOnce()
               .be.calledWithMatch({
-              index: kuzzle.internalEngine.index,
-              type: collection,
-              from: 0,
-              size: 20,
-              scroll: '45s',
-              body: {
-                query: query
-              }
-            });
+                index: kuzzle.internalEngine.index,
+                type: collection,
+                from: 0,
+                size: 20,
+                scroll: '45s',
+                body: {
+                  query: query
+                }
+              });
 
             should(kuzzle.services.list.internalCache.psetex).be.calledWithMatch('collection', 45000, 0);
             should(result).be.an.Object().and.not.be.empty();
@@ -205,9 +205,9 @@ describe('InternalEngine', () => {
 
       kuzzle.internalEngine.client.search.returns(Promise.resolve({
         hits: {
+          total: 123,
           hits: ['foo', 'bar']
         },
-        total: 123,
         _scroll_id: 'foobar'
       }));
 
@@ -217,15 +217,15 @@ describe('InternalEngine', () => {
             should(kuzzle.internalEngine.client.search)
               .be.calledOnce()
               .be.calledWithMatch({
-              index: kuzzle.internalEngine.index,
-              type: collection,
-              from: 0,
-              size: 20,
-              scroll: 'foobar',
-              body: {
-                query: query
-              }
-            });
+                index: kuzzle.internalEngine.index,
+                type: collection,
+                from: 0,
+                size: 20,
+                scroll: 'foobar',
+                body: {
+                  query: query
+                }
+              });
 
             should(kuzzle.services.list.internalCache.psetex).be.calledWithMatch(
               'collection',
@@ -259,9 +259,9 @@ describe('InternalEngine', () => {
 
       kuzzle.internalEngine.client.scroll.returns(Promise.resolve({
         hits: {
+          total: 123,
           hits: ['foo', 'bar']
         },
-        total: 123,
         _scroll_id: 'foobar'
       }));
 
@@ -300,8 +300,8 @@ describe('InternalEngine', () => {
       kuzzle.internalEngine.client.scroll.returns(Promise.resolve({
         hits: {
           hits: ['foo', 'bar'],
+          total: 123
         },
-        total: 123,
         _scroll_id: 'foobar'
       }));
 
@@ -313,9 +313,9 @@ describe('InternalEngine', () => {
             should(kuzzle.internalEngine.client.scroll)
               .be.calledOnce()
               .be.calledWithMatch({
-              scrollId: 'foobar',
-              scroll: kuzzle.config.services.db.defaults.scrollTTL
-            });
+                scrollId: 'foobar',
+                scroll: kuzzle.config.services.db.defaults.scrollTTL
+              });
 
             should(kuzzle.services.list.internalCache.pexpire).be.calledWithMatch(
               'collection',
@@ -339,9 +339,9 @@ describe('InternalEngine', () => {
 
       kuzzle.internalEngine.client.scroll.returns(Promise.resolve({
         hits: {
-          hits: ['foo', 'bar']
+          hits: ['foo', 'bar'],
+          total: 123
         },
-        total: 123,
         _scroll_id: 'foobar'
       }));
 
@@ -353,9 +353,9 @@ describe('InternalEngine', () => {
             should(kuzzle.internalEngine.client.scroll)
               .be.calledOnce()
               .be.calledWithMatch({
-              scrollId: 'foobar',
-              scroll: 'foo'
-            });
+                scrollId: 'foobar',
+                scroll: 'foo'
+              });
 
             should(kuzzle.services.list.internalCache.pexpire).be.calledWithMatch(
               'collection',
@@ -379,9 +379,9 @@ describe('InternalEngine', () => {
 
       kuzzle.internalEngine.client.scroll.returns(Promise.resolve({
         hits: {
+          total: 123,
           hits: ['foo', 'bar']
         },
-        total: 123,
         _scroll_id: 'foobar'
       }));
 
