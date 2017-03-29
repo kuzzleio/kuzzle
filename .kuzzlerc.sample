@@ -27,10 +27,14 @@
     //   * pipeTimeout:
     //        Maximum execution time (in milliseconds)
     //        of a pipe plugin action
+    //   * initTimeout:
+    //        Maximum execution time (in milliseconds)
+    //        of a plugin initialization
     "common": {
       "workerPrefix": "kpw:",
       "pipeWarnTime": 40,
-      "pipeTimeout": 250
+      "pipeTimeout": 250,
+      "initTimeout": 2000
     },
 
     // The following blocks configure plugins
