@@ -147,30 +147,31 @@ const apiSteps = function () {
 
     let main = function (callbackAsync) {
       setTimeout(() => {
-        this.api.searchProfiles(body).then(response => {
-          if (response.error) {
-            return callbackAsync(new Error(response.error.message));
-          }
-
-          if (!response.result) {
-            return callbackAsync(new Error('Malformed response (no error, no result)'));
-          }
-
-          if (!Array.isArray(response.result.hits)) {
-            return callbackAsync(new Error('Malformed response (hits is not an array)'));
-          }
-
-          if (!response.result.hits) {
-            response.result.hits = response.result.hits.filter(doc => doc._id.indexOf(this.idPrefix));
-
-            if (response.result.hits.length !== parseInt(profilesCount)) {
-              return callbackAsync(`Expected ${profilesCount} profiles. Got ${response.result.hits.length}`);
+        this.api.searchProfiles(body)
+          .then(response => {
+            if (response.error) {
+              return callbackAsync(new Error(response.error.message));
             }
-          }
 
-          callbackAsync();
-        })
-        .catch(err => callbackAsync(err));
+            if (!response.result) {
+              return callbackAsync(new Error('Malformed response (no error, no result)'));
+            }
+
+            if (!Array.isArray(response.result.hits)) {
+              return callbackAsync(new Error('Malformed response (hits is not an array)'));
+            }
+
+            if (!response.result.hits) {
+              response.result.hits = response.result.hits.filter(doc => doc._id.indexOf(this.idPrefix));
+
+              if (response.result.hits.length !== parseInt(profilesCount)) {
+                return callbackAsync(`Expected ${profilesCount} profiles. Got ${response.result.hits.length}`);
+              }
+            }
+
+            callbackAsync();
+          })
+          .catch(err => callbackAsync(err));
       }, 200);
     };
 
@@ -229,6 +230,40 @@ const apiSteps = function () {
 
       callback();
     });
+  });
+
+  this.Given(/^A scrolled search on profiles$/, function () {
+    this.scrollId = null;
+
+    return this.api.searchProfiles({roles: []}, {scroll: '1m'})
+      .then(response => {
+        if (response.error) {
+          throw new Error(response.error.message);
+        }
+
+        if (!response.result.scrollId) {
+          throw new Error('No scrollId returned by the searchProfile query');
+        }
+
+        this.scrollId = response.result.scrollId;
+      });
+  });
+
+  this.Then(/^I am able to perform a scrollProfiles request$/, function () {
+    if (!this.scrollId) {
+      throw new Error('No previous scrollId found');
+    }
+
+    return this.api.scrollProfiles(this.scrollId)
+      .then(response => {
+        if (response.error) {
+          throw new Error(response.error.message);
+        }
+
+        if (['hits', 'scrollId', 'total'].some(prop => response.result[prop] === undefined)) {
+          throw new Error('Incomplete scroll results');
+        }
+      });
   });
 };
 

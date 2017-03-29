@@ -178,4 +178,38 @@ module.exports = function () {
         }
       });
   });
+
+  this.Given(/^A scrolled search on users$/, function () {
+    this.scrollId = null;
+
+    return this.api.searchUsers({}, {scroll: '1m'})
+      .then(response => {
+        if (response.error) {
+          throw new Error(response.error.message);
+        }
+
+        if (!response.result.scrollId) {
+          throw new Error('No scrollId returned by the searchProfile query');
+        }
+
+        this.scrollId = response.result.scrollId;
+      });
+  });
+
+  this.Then(/^I am able to perform a scrollUsers request$/, function () {
+    if (!this.scrollId) {
+      throw new Error('No previous scrollId found');
+    }
+
+    return this.api.scrollUsers(this.scrollId)
+      .then(response => {
+        if (response.error) {
+          throw new Error(response.error.message);
+        }
+
+        if (['hits', 'scrollId', 'total'].some(prop => response.result[prop] === undefined)) {
+          throw new Error('Incomplete scroll results');
+        }
+      });
+  });
 };

@@ -704,15 +704,26 @@ ApiRT.prototype.createOrReplaceProfile = function (id, body) {
   return this.send(msg);
 };
 
-ApiRT.prototype.searchProfiles = function (body) {
-  const
-    msg = {
-      controller: 'security',
-      action: 'searchProfiles',
-      body: body
-    };
+ApiRT.prototype.searchProfiles = function (body, args) {
+  let msg = {
+    controller: 'security',
+    action: 'searchProfiles',
+    body: body
+  };
+
+  if (args) {
+    Object.assign(msg, args);
+  }
 
   return this.send(msg);
+};
+
+ApiRT.prototype.scrollProfiles = function (scrollId) {
+  return this.send({
+    controller: 'security',
+    action: 'scrollProfiles',
+    scrollId
+  });
 };
 
 ApiRT.prototype.deleteProfile = function (id) {
@@ -721,17 +732,6 @@ ApiRT.prototype.deleteProfile = function (id) {
       controller: 'security',
       action: 'deleteProfile',
       _id: id
-    };
-
-  return this.send(msg);
-};
-
-ApiRT.prototype.searchValidations = function (body) {
-  const
-    msg = {
-      controller: 'collection',
-      action: 'searchSpecifications',
-      body
     };
 
   return this.send(msg);
@@ -768,13 +768,27 @@ ApiRT.prototype.getMyRights = function (id) {
   });
 };
 
-ApiRT.prototype.searchUsers = function (body) {
-  return this.send({
+ApiRT.prototype.searchUsers = function (body, args) {
+  const msg = {
     controller: 'security',
     action: 'searchUsers',
     body: {
       query: body
     }
+  };
+
+  if (args) {
+    Object.assign(msg, args);
+  }
+
+  return this.send(msg);
+};
+
+ApiRT.prototype.scrollUsers = function (scrollId) {
+  return this.send({
+    controller: 'security',
+    action: 'scrollUsers',
+    scrollId
   });
 };
 
@@ -925,6 +939,28 @@ ApiRT.prototype.validateSpecifications = function (specifications) {
     controller: 'collection',
     action : 'validateSpecifications',
     body: specifications
+  });
+};
+
+ApiRT.prototype.searchSpecifications = function (body, args) {
+  let msg = {
+    controller: 'collection',
+    action: 'searchSpecifications',
+    body: body
+  };
+
+  if (args) {
+    Object.assign(msg, args);
+  }
+
+  return this.send(msg);
+};
+
+ApiRT.prototype.scrollSpecifications = function (scrollId) {
+  return this.send({
+    controller: 'collection',
+    action: 'scrollSpecifications',
+    scrollId
   });
 };
 
