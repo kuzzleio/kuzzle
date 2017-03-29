@@ -346,30 +346,32 @@ describe('Test: repositories/repository', () => {
     it('should return a list from database', () => {
       kuzzle.internalEngine.search = sandbox.stub().returns(Promise.resolve({hits: [dbPojo], total: 1}));
 
-      return repository.search({query:'noquery'}, 0, 10, false)
+      return repository.search({query:'noquery'})
         .then(response => {
           should(response).be.an.Object();
           should(response.hits).be.an.Array();
           should(response.total).be.exactly(1);
+          should(kuzzle.internalEngine.search).be.calledWithMatch(repository.collection, {query:'noquery'}, {});
         });
     });
 
     it('should inject back the scroll id, if there is one', () => {
-      kuzzle.internalEngine.search = sandbox.stub().returns(Promise.resolve({hits: [dbPojo], total: 1, _scroll_id: 'foobar'}));
+      kuzzle.internalEngine.search = sandbox.stub().returns(Promise.resolve({hits: [dbPojo], total: 1, scrollId: 'foobar'}));
 
-      return repository.search({query:'noquery'}, 0, 10, false)
+      return repository.search({query:'noquery'}, {from: 13, size: 42, scroll: '45s'})
         .then(response => {
           should(response).be.an.Object();
           should(response.hits).be.an.Array();
           should(response.total).be.exactly(1);
+          should(response.scrollId).be.eql('foobar');
+          should(kuzzle.internalEngine.search).be.calledWithMatch(repository.collection, {query:'noquery'}, {from: 13, size: 42, scroll: '45s'});
         });
     });
 
-
-    it('should return an list if no hits', () => {
+    it('should return a list if no hits', () => {
       kuzzle.internalEngine.search = sandbox.stub().returns(Promise.resolve({hits: [], total: 0}));
 
-      return repository.search({empty:true}, 0, 10, false)
+      return repository.search({})
         .then(response => {
           should(response).be.an.Object();
           should(response.hits).be.an.Array();
@@ -383,7 +385,55 @@ describe('Test: repositories/repository', () => {
 
       kuzzle.internalEngine.search = sandbox.stub().returns(Promise.reject(error));
 
-      return should(repository.search({error:true}, 0, 10, false)).be.rejectedWith(error);
+      return should(repository.search({})).be.rejectedWith(error);
+    });
+  });
+
+  describe('#scroll', () => {
+    it('should return a list from database', () => {
+      kuzzle.internalEngine.scroll = sandbox.stub().returns(Promise.resolve({hits: [dbPojo], total: 1}));
+
+      return repository.scroll('foo')
+        .then(response => {
+          should(response).be.an.Object();
+          should(response.hits).be.an.Array();
+          should(response.total).be.exactly(1);
+          should(kuzzle.internalEngine.scroll).be.calledWithMatch(repository.collection, 'foo', undefined);
+        });
+    });
+
+    it('should inject back the scroll id', () => {
+      kuzzle.internalEngine.scroll = sandbox.stub().returns(Promise.resolve({hits: [dbPojo], total: 1, scrollId: 'foobar'}));
+
+      return repository.scroll('foo', 'bar')
+        .then(response => {
+          should(response).be.an.Object();
+          should(response.hits).be.an.Array();
+          should(response.total).be.exactly(1);
+          should(response.scrollId).be.eql('foobar');
+          should(kuzzle.internalEngine.scroll).be.calledWithMatch(repository.collection, 'foo', 'bar');
+        });
+    });
+
+    it('should return a list if no hits', () => {
+      kuzzle.internalEngine.scroll = sandbox.stub().returns(Promise.resolve({hits: [], total: 0, scrollId: 'foobar'}));
+
+      return repository.scroll({})
+        .then(response => {
+          should(response).be.an.Object();
+          should(response.hits).be.an.Array();
+          should(response.hits).be.empty();
+          should(response.total).be.exactly(0);
+          should(response.scrollId).be.eql('foobar');
+        });
+    });
+
+    it('should be rejected with an error if something goes wrong', () => {
+      const error = new Error('Mocked error');
+
+      kuzzle.internalEngine.scroll = sandbox.stub().returns(Promise.reject(error));
+
+      return should(repository.scroll('foo')).be.rejectedWith(error);
     });
   });
 });

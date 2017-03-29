@@ -64,7 +64,7 @@ describe('InternalEngine', () => {
         collection = 'collection',
         query = { 'some': 'filters' };
 
-      kuzzle.internalEngine.client.search.returns(Promise.resolve({hits: { hits: ['foo', 'bar'], total: 123}}));
+      kuzzle.internalEngine.client.search.returns(Promise.resolve({hits: { hits: ['foo', 'bar'] }, total: 123}));
 
       return kuzzle.internalEngine.search(collection, query, {from: 0, size: 20, scroll: 'foo'})
         .then(result => {
@@ -99,7 +99,7 @@ describe('InternalEngine', () => {
         collection = 'collection',
         query = { query: {'some': 'filters' }};
 
-      kuzzle.internalEngine.client.search.returns(Promise.resolve({hits: { hits: ['foo', 'bar'], total: 123}}));
+      kuzzle.internalEngine.client.search.returns(Promise.resolve({hits: { hits: ['foo', 'bar'] }, total: 123}));
 
       return kuzzle.internalEngine.search(collection, query, {from: 0, size: 20, scroll: 'foo'})
         .then(result => {
@@ -163,9 +163,9 @@ describe('InternalEngine', () => {
 
       kuzzle.internalEngine.client.search.returns(Promise.resolve({
         hits: {
-          hits: ['foo', 'bar'],
-          total: 123
+          hits: ['foo', 'bar']
         },
+        total: 123,
         _scroll_id: 'foobar'
       }));
 
@@ -189,7 +189,7 @@ describe('InternalEngine', () => {
             should(result).be.an.Object().and.not.be.empty();
             should(result.total).be.eql(123);
             should(result.hits).be.an.Array().and.match(['foo', 'bar']);
-            should(result._scroll_id).be.eql('foobar');
+            should(result.scrollId).be.eql('foobar');
             return Promise.resolve();
           }
           catch(error) {
@@ -205,9 +205,9 @@ describe('InternalEngine', () => {
 
       kuzzle.internalEngine.client.search.returns(Promise.resolve({
         hits: {
-          hits: ['foo', 'bar'],
-          total: 123
+          hits: ['foo', 'bar']
         },
+        total: 123,
         _scroll_id: 'foobar'
       }));
 
@@ -235,7 +235,7 @@ describe('InternalEngine', () => {
             should(result).be.an.Object().and.not.be.empty();
             should(result.total).be.eql(123);
             should(result.hits).be.an.Array().and.match(['foo', 'bar']);
-            should(result._scroll_id).be.eql('foobar');
+            should(result.scrollId).be.eql('foobar');
             return Promise.resolve();
           }
           catch(error) {
@@ -259,9 +259,9 @@ describe('InternalEngine', () => {
 
       kuzzle.internalEngine.client.scroll.returns(Promise.resolve({
         hits: {
-          hits: ['foo', 'bar'],
-          total: 123
+          hits: ['foo', 'bar']
         },
+        total: 123,
         _scroll_id: 'foobar'
       }));
 
@@ -284,7 +284,7 @@ describe('InternalEngine', () => {
             should(result).be.an.Object().and.not.be.empty();
             should(result.total).be.eql(123);
             should(result.hits).be.an.Array().and.match(['foo', 'bar']);
-            should(result._scroll_id).be.eql('foobar');
+            should(result.scrollId).be.eql('foobar');
             return Promise.resolve();
           }
           catch(error) {
@@ -300,8 +300,8 @@ describe('InternalEngine', () => {
       kuzzle.internalEngine.client.scroll.returns(Promise.resolve({
         hits: {
           hits: ['foo', 'bar'],
-          total: 123
         },
+        total: 123,
         _scroll_id: 'foobar'
       }));
 
@@ -324,7 +324,7 @@ describe('InternalEngine', () => {
             should(result).be.an.Object().and.not.be.empty();
             should(result.total).be.eql(123);
             should(result.hits).be.an.Array().and.match(['foo', 'bar']);
-            should(result._scroll_id).be.eql('foobar');
+            should(result.scrollId).be.eql('foobar');
             return Promise.resolve();
           }
           catch(error) {
@@ -339,9 +339,9 @@ describe('InternalEngine', () => {
 
       kuzzle.internalEngine.client.scroll.returns(Promise.resolve({
         hits: {
-          hits: ['foo', 'bar'],
-          total: 123
+          hits: ['foo', 'bar']
         },
+        total: 123,
         _scroll_id: 'foobar'
       }));
 
@@ -364,7 +364,7 @@ describe('InternalEngine', () => {
             should(result).be.an.Object().and.not.be.empty();
             should(result.total).be.eql(123);
             should(result.hits).be.an.Array().and.match(['foo', 'bar']);
-            should(result._scroll_id).be.eql('foobar');
+            should(result.scrollId).be.eql('foobar');
             return Promise.resolve();
           }
           catch(error) {
@@ -379,9 +379,9 @@ describe('InternalEngine', () => {
 
       kuzzle.internalEngine.client.scroll.returns(Promise.resolve({
         hits: {
-          hits: ['foo', 'bar'],
-          total: 123
+          hits: ['foo', 'bar']
         },
+        total: 123,
         _scroll_id: 'foobar'
       }));
 
