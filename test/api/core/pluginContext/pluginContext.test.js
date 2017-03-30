@@ -125,7 +125,7 @@ describe('Plugin Context', () => {
       });
 
       should(context.accessors).be.an.Object().and.not.be.empty();
-      should(context.accessors).have.properties(['passport', 'execute', 'users', 'validation', 'storage']);
+      should(context.accessors).have.properties(['registerStrategy', 'execute', 'users', 'validation', 'storage']);
     });
 
     it('should expose a correctly constructed validation accessor', () => {
