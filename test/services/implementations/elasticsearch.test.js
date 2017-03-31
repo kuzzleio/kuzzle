@@ -121,20 +121,20 @@ describe('Test: ElasticSearch service', () => {
     });
   });
 
-  describe('#getElasticsearchRequest', () => {
+  describe('#initESRequest', () => {
     it('should prepare the data for elasticsearch', () => {
-      const getElasticsearchRequest = ES.__get__('getElasticsearchRequest');
+      const initESRequest = ES.__get__('initESRequest');
 
       request.input.resource._id = 'foobar';
-      ['unrecognizeed', 'from', 'size', 'scroll', 'scrollId', 'refresh'].forEach(arg => {
+      ['unrecognized', 'from', 'size', 'scroll', 'scrollId', 'refresh'].forEach(arg => {
         request.input.args[arg] = arg;
       });
 
-      let preparedData = getElasticsearchRequest(request,
+      let preparedData = initESRequest(request,
         ['from', 'size', 'scroll', 'scrollId', 'refresh']);
 
       should(preparedData.type).be.exactly(request.input.resource.collection);
-      should(preparedData.id).be.exactly(request.input.resource._id);
+      should(preparedData.id).be.undefined();
       should(preparedData._id).be.undefined();
       should(preparedData.index).be.exactly(request.input.resource.index);
 
@@ -143,6 +143,14 @@ describe('Test: ElasticSearch service', () => {
       ['from', 'size', 'scroll', 'scrollId', 'refresh'].forEach(arg => {
         should(preparedData[arg]).be.exactly(arg);
       });
+    });
+
+    it('should throw if attempting to access to an internal index', () => {
+      const initESRequest = ES.__get__('initESRequest');
+
+      request.input.resource.index = '%foobar';
+
+      should(() => initESRequest(request)).throw(BadRequestError);
     });
   });
 
@@ -449,13 +457,13 @@ describe('Test: ElasticSearch service', () => {
 
   describe('#mget', () => {
     it('should return a rejected promise if getting a single document fails', done => {
-      elasticsearch.client.get.returns(Promise.reject(new Error('Mocked error')));
+      elasticsearch.client.mget.returns(Promise.reject(new Error('Mocked error')));
 
-      elasticsearch.get(request)
+      elasticsearch.mget(request)
         .catch(() => {
           try {
-            should(elasticsearch.client.get.calledOnce).be.true();
-            should(elasticsearch.client.get.firstCall.args[0].id).be.undefined();
+            should(elasticsearch.client.mget.calledOnce).be.true();
+            should(elasticsearch.client.mget.firstCall.args[0].id).be.undefined();
             done();
           }
           catch(e) { done(e); }
@@ -622,7 +630,7 @@ describe('Test: ElasticSearch service', () => {
           try{
             should(error).be.instanceOf(NotFoundError);
             should(error.message).be.equal('foo: bar');
-            should(elasticsearch.client.update.firstCall.args[0].id).be.undefined();
+            should(elasticsearch.client.update.firstCall.args[0].id).be.null();
             done();
           }
           catch(e) { done(e); }
@@ -650,25 +658,20 @@ describe('Test: ElasticSearch service', () => {
             should(error.message).be.equal('Index "banana" does not exist, please create it first');
             should(error.internalError).eql(esError);
             should(error.service).be.equal('elasticsearch');
-            should(elasticsearch.client.update.firstCall.args[0].id).be.undefined();
+            should(elasticsearch.client.update.firstCall.args[0].id).be.null();
             done();
           }
           catch(e) { done(e); }
         });
     });
 
-    it('should return a rejected promise with an Error if an update fails for unknown reason', done => {
+    it('should return a rejected promise with an Error if an update fails for unknown reason', () => {
       const
         esError = new Error('banana error');
 
       elasticsearch.client.update.returns(Promise.reject(esError));
 
-      elasticsearch.update(request)
-        .catch((error) => {
-          should(error).be.instanceOf(Error);
-          should(elasticsearch.client.update.firstCall.args[0].id).be.undefined();
-          done();
-        });
+      return should(elasticsearch.update(request)).be.rejected();
     });
   });
 
@@ -688,17 +691,10 @@ describe('Test: ElasticSearch service', () => {
         });
     });
 
-    it('should return a rejected promise if a delete fails', done => {
+    it('should return a rejected promise if a delete fails', () => {
       elasticsearch.client.delete.returns(Promise.reject(new Error('Mocked error')));
 
-      elasticsearch.delete(request)
-        .catch(() => {
-          try {
-            should(elasticsearch.client.delete.firstCall.args[0].id).be.undefined();
-            done();
-          }
-          catch(e) { done(e); }
-        });
+      return should(elasticsearch.delete(request)).be.rejected();
     });
   });
 
@@ -716,7 +712,7 @@ describe('Test: ElasticSearch service', () => {
 
       return elasticsearch.deleteByQuery(request)
         .then(result => {
-          should(elasticsearch.client.search.firstCall.args[0]).be.not.undefined();
+          should(elasticsearch.client.search.firstCall.args[0]).not.be.undefined();
 
           // Ugly line in order to spot a random bug on this unit test
           should(result.ids).not.be.undefined().and.be.an.Array();
@@ -1332,6 +1328,12 @@ describe('Test: ElasticSearch service', () => {
 
       return should(elasticsearch.createIndex(request)).be.rejectedWith(error);
     });
+
+    it('should throw if attempting to create an internal index', () => {
+      request.input.resource.index = '%foobar';
+
+      should(() => elasticsearch.createIndex(request)).throw(BadRequestError);
+    });
   });
 
   describe('#deleteIndex', () => {
@@ -1348,6 +1350,12 @@ describe('Test: ElasticSearch service', () => {
       elasticsearch.client.indices.delete.returns(Promise.reject(new Error()));
 
       return should(elasticsearch.deleteIndex(request)).be.rejected();
+    });
+
+    it('should throw if attempting to delete an internal index', () => {
+      request.input.resource.index = '%foobar';
+
+      should(() => elasticsearch.deleteIndex(request)).throw(BadRequestError);
     });
   });
 
@@ -1388,6 +1396,12 @@ describe('Test: ElasticSearch service', () => {
           should(data.index).be.eql(index);
         });
     });
+
+    it('should throw if attempting to refresh an internal index', () => {
+      request.input.resource.index = '%foobar';
+
+      should(() => elasticsearch.refreshIndex(request)).throw(BadRequestError);
+    });
   });
 
   describe('#getAutoRefresh', () => {
@@ -1403,6 +1417,12 @@ describe('Test: ElasticSearch service', () => {
           should(response).be.true();
           elasticsearch.settings.autoRefresh[request.input.resource.index] = false;
         });
+    });
+
+    it('should throw if attempting to get the AutoRefresh status on an internal index', () => {
+      request.input.resource.index = '%foobar';
+
+      should(() => elasticsearch.getAutoRefresh(request)).throw(BadRequestError);
     });
   });
 
@@ -1427,6 +1447,12 @@ describe('Test: ElasticSearch service', () => {
         .then(response => {
           should(response).be.false();
         });
+    });
+
+    it('should throw if attempting to set the AutoRefresh option on an internal index', () => {
+      request.input.resource.index = '%foobar';
+
+      should(() => elasticsearch.setAutoRefresh(request)).throw(BadRequestError);
     });
   });
 
