@@ -1,4 +1,6 @@
-var
+'use strict';
+
+const
   Promise = require('bluebird'),
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
@@ -10,7 +12,7 @@ var
   RoleRepository = require('../../../../../lib/api/core/models/repositories/roleRepository');
 
 describe('Test: repositories/roleRepository', () => {
-  var
+  let
     kuzzle,
     roleRepository;
 
@@ -27,8 +29,7 @@ describe('Test: repositories/roleRepository', () => {
 
   describe('#loadRoles', () => {
     it('should return in memory roles', () => {
-      var
-        role = {foo: 'bar'};
+      const role = {foo: 'bar'};
 
       roleRepository.roles.foo = role;
       roleRepository.loadMultiFromDatabase = sinon.stub();
@@ -43,8 +44,7 @@ describe('Test: repositories/roleRepository', () => {
     });
 
     it('should complete unfetched default roles from config', () => {
-      var
-        role = {foo: 'bar'};
+      const role = {foo: 'bar'};
 
       roleRepository.roles.foo = role;
       roleRepository.loadMultiFromDatabase = sinon.stub();
@@ -80,7 +80,7 @@ describe('Test: repositories/roleRepository', () => {
     });
 
     it('should load roles from memory & database', () => {
-      var
+      const
         role1 = new Role(),
         role2 = new Role(),
         role3 = new Role(),
@@ -118,8 +118,7 @@ describe('Test: repositories/roleRepository', () => {
     });
 
     it('should load the role directly from memory if it\'s in memory', () => {
-      var
-        role = {foo: 'bar'};
+      const role = {foo: 'bar'};
 
       roleRepository.roles.foo = role;
 
@@ -131,8 +130,7 @@ describe('Test: repositories/roleRepository', () => {
     });
 
     it('should load the role directly from DB if it\'s not in memory', () => {
-      var
-        role = {_id: 'foobar'};
+      const role = {_id: 'foobar'};
 
       roleRepository.loadOneFromDatabase = sinon.stub().returns(Promise.resolve(role));
 
@@ -148,47 +146,135 @@ describe('Test: repositories/roleRepository', () => {
   });
 
   describe('#searchRole', () => {
-    it('should parse the given query', () => {
-      var
-        controllers = ['foo', 'bar'],
-        from = 10,
-        size = 5;
-
-      roleRepository.search = sinon.stub();
-
-      roleRepository.searchRole(controllers, from, size);
-      should(roleRepository.search)
-        .be.calledOnce()
-        .be.calledWith({
-          query: {
-            bool: {
-              should: [
-                {exists: {field: 'controllers.foo'}},
-                {exists: {field: 'controllers.bar'}},
-                {exists: {field: 'controllers.*'}}
-              ]
+    it('should filter the role list with the given controllers', () => {
+      const roles = {
+        default: {
+          _id: 'default',
+          controllers: {
+            '*': {
+              actions: {
+                '*': true
+              }
             }
           }
         },
-        from,
-        size
-        );
+        foo: {
+          _id: 'foo',
+          controllers: {
+            foo: {
+              actions: {
+                '*': true
+              }
+            }
+          }
+        },
+        bar: {
+          _id: 'bar',
+          controllers: {
+            bar: {
+              actions: {
+                '*': true
+              }
+            }
+          }
+        },
+        foobar: {
+          _id: 'foobar',
+          controllers: {
+            foo: {
+              actions: {
+                '*': true
+              }
+            },
+            bar: {
+              actions: {
+                '*': true
+              }
+            }
+          }
+        }
+      };
+
+      roleRepository.search = sinon.stub().returns(Promise.resolve({
+        total: 4,
+        hits: [
+          roles.default,
+          roles.foo,
+          roles.bar,
+          roles.foobar
+        ]
+      }));
+
+      return roleRepository.searchRole(['foo'])
+        .then(result => {
+          should(result.total).be.exactly(3);
+          should(result.hits.length).be.exactly(3);
+          should(result.hits).match([roles.default, roles.foo, roles.foobar]);
+          return roleRepository.searchRole(['bar']);
+        })
+        .then(result => {
+          should(result.total).be.exactly(3);
+          should(result.hits.length).be.exactly(3);
+          should(result.hits).match([roles.default, roles.bar, roles.foobar]);
+          return roleRepository.searchRole(['foo', 'bar']);
+        })
+        .then(result => {
+          should(result.total).be.exactly(4);
+          should(result.hits.length).be.exactly(4);
+          should(result.hits).match([roles.default, roles.foo, roles.bar, roles.foobar]);
+          return roleRepository.searchRole(['baz']);
+        })
+        .then(result => {
+          should(result.total).be.exactly(1);
+          should(result.hits.length).be.exactly(1);
+          should(result.hits).match([roles.default]);
+          return roleRepository.searchRole(['foo'], 1);
+        })
+        .then(result => {
+          should(result.total).be.exactly(3);
+          should(result.hits.length).be.exactly(2);
+          should(result.hits).match([roles.foo, roles.foobar]);
+          should(result.hits).not.match([roles.default]);
+          return roleRepository.searchRole(['foo'], 0, 2);
+        })
+        .then(result => {
+          should(result.total).be.exactly(3);
+          should(result.hits.length).be.exactly(2);
+          should(result.hits).match([roles.default, roles.foo]);
+          should(result.hits).not.match([roles.foobar]);
+          return roleRepository.searchRole(['foo', 'bar'], 1, 2);
+        })
+        .then(result => {
+          should(result.total).be.exactly(4);
+          should(result.hits.length).be.exactly(2);
+          should(result.hits).match([roles.foo, roles.bar]);
+          should(result.hits).not.match([roles.default]);
+          should(result.hits).not.match([roles.foobar]);
+        });
     });
   });
 
   describe('#deleteRole', () => {
-    it('should reject if trying to delete a reserved role', () => {
-      var
-        role = new Role();
+    it('should reject and not trigger any event if trying to delete a reserved role', done => {
+      let role = new Role();
       role._id = 'admin';
 
-      return should(roleRepository.deleteRole(role))
-        .be.rejectedWith(BadRequestError, {
-          message: 'admin is one of the basic roles of Kuzzle, you cannot delete it, but you can edit it.'
+      roleRepository.deleteRole(role)
+        .then(() => {
+          done(new Error('The promise is not rejected'));
+        })
+        .catch(e => {
+          should(e).be.an.instanceOf(BadRequestError);
+          should(e.message).be.exactly('admin is one of the basic roles of Kuzzle, you cannot delete it, but you can edit it.');
+          should(kuzzle.pluginsManager.trigger).not.be.called();
+          done();
+        })
+        .catch(e => {
+          done(e);
         });
     });
 
-    it('should reject if a profile uses the role about to be deleted', () => {
+    it('should reject and not trigger any event if a profile uses the role about to be deleted', done => {
       kuzzle.repositories.profile.searchProfiles.returns(Promise.resolve({
         total: 1,
         hits: [
@@ -196,12 +282,23 @@ describe('Test: repositories/roleRepository', () => {
         ]
       }));
 
-      return should(roleRepository.deleteRole({_id: 'test'})).rejectedWith(BadRequestError);
+      roleRepository.deleteRole({_id: 'test'})
+        .then(() => {
+          done(new Error('The promise is not rejected'));
+        })
+        .catch(e => {
+          should(e).be.an.instanceOf(BadRequestError);
+          should(e.message).be.exactly('The role "test" cannot be deleted since it is used by some profile.');
+          should(kuzzle.pluginsManager.trigger).not.be.called();
+          done();
+        })
+        .catch(e => {
+          done(e);
+        });
     });
 
-    it('should call deleteFromDatabase and remove the role from memory', () => {
-      var
-        role = new Role();
+    it('should call deleteFromDatabase, remove the role from memory and trigger a "core:roleRepository:delete" event', () => {
+      const role = new Role();
       role._id = 'foo';
 
       kuzzle.repositories.profile.searchProfiles.returns(Promise.resolve({total: 0}));
@@ -215,13 +312,45 @@ describe('Test: repositories/roleRepository', () => {
             .be.calledWith('foo');
           should(roleRepository.roles)
             .not.have.property('foo');
+          should(kuzzle.pluginsManager.trigger)
+            .be.calledOnce()
+            .be.calledWith('core:roleRepository:delete', {_id: 'foo'});
         });
+    });
+  });
+
+  describe('#serializeToDatabase', () => {
+    it('should return a plain flat object', () => {
+      let
+        result,
+        controllers = {
+          controller: {
+            actions: {
+              action: true
+            }
+          }
+        },
+        role = new Role();
+
+      role._id = 'test';
+      role.controllers = controllers;
+
+      result = roleRepository.serializeToDatabase(role);
+
+
+      should(result).not.be.an.instanceOf(Role);
+      should(result).be.an.Object();
+      should(result.controllers).be.an.Object();
+      should(result.controllers).match(controllers);
+      should(result).not.have.property('_id');
+      should(result).not.have.property('restrictedTo');
+      should(result).not.have.property('closures');
     });
   });
 
   describe('#getRoleFromRequest', () => {
     it('should build a valid role object', () => {
-      var
+      const
         controllers = {
           controller: {
             actions: {
@@ -238,9 +367,7 @@ describe('Test: repositories/roleRepository', () => {
             controllers: controllers
           }
         }),
-        role;
-
-      role = roleRepository.getRoleFromRequest(request);
+        role = roleRepository.getRoleFromRequest(request);
 
       should(role._id).be.exactly('roleId');
       should(role.controllers).be.eql(controllers);
@@ -248,8 +375,8 @@ describe('Test: repositories/roleRepository', () => {
   });
 
   describe('#validateAndSaveRole', () => {
-    it('should persist the role to the database when ok', () => {
-      var
+    it('should persist the role to the database and trigger a "core:roleRepository:save" event when ok', () => {
+      const
         controllers = {
           controller: {
             actions: {
@@ -268,6 +395,9 @@ describe('Test: repositories/roleRepository', () => {
           should(roleRepository.persistToDatabase)
             .be.calledOnce()
             .be.calledWith(role);
+          should(kuzzle.pluginsManager.trigger)
+            .be.calledOnce()
+            .be.calledWith('core:roleRepository:save', {_id: 'test', controllers: controllers});
         });
     });
   });

@@ -83,18 +83,46 @@ describe('Test: security controller - createFirstAdmin', () => {
   });
 
   describe('#resetRoles', () => {
-    it('should call createOrReplace roles with all default roles', () => {
-      var
-        createOrReplace = sandbox.stub().returns(Promise.resolve()),
+    it('should call validateAndSaveRole with all default roles', () => {
+      const
+        validateAndSaveRole = sandbox.stub().returns(Promise.resolve()),
         mock = {
-          internalEngine: {
-            createOrReplace
+          repositories: {
+            role: {
+              validateAndSaveRole
+            }
           },
           config: {
             security: {
               standard: {
                 roles: {
-                  admin: 'admin', default: 'default', anonymous: 'anonymous'
+                  admin: {
+                    controllers: {
+                      foo: {
+                        actions: {
+                          bar: true
+                        }
+                      }
+                    }
+                  },
+                  default: {
+                    controllers: {
+                      baz: {
+                        actions: {
+                          yolo: true
+                        }
+                      }
+                    }
+                  },
+                  anonymous: {
+                    controllers: {
+                      anon: {
+                        actions: {
+                          ymous: true
+                        }
+                      }
+                    }
+                  }
                 }
               }
             }
@@ -104,10 +132,10 @@ describe('Test: security controller - createFirstAdmin', () => {
       return SecurityController.__get__('resetRoles').call(mock)
         .then(() => {
           try {
-            should(createOrReplace).have.callCount(3);
-            should(createOrReplace.firstCall).be.calledWith('roles', 'admin', 'admin');
-            should(createOrReplace.secondCall).be.calledWith('roles', 'default', 'default');
-            should(createOrReplace.thirdCall).be.calledWith('roles', 'anonymous', 'anonymous');
+            should(validateAndSaveRole).have.callCount(3);
+            should(validateAndSaveRole.firstCall).be.calledWithMatch({_id: 'admin', controllers: {foo: {actions: {bar: true}}}});
+            should(validateAndSaveRole.secondCall).be.calledWithMatch({_id: 'default', controllers: {baz: {actions: {yolo: true}}}});
+            should(validateAndSaveRole.thirdCall).be.calledWithMatch({_id: 'anonymous', controllers: {anon: {actions: {ymous: true}}}});
             return Promise.resolve();
           }
           catch (error) {
@@ -118,24 +146,28 @@ describe('Test: security controller - createFirstAdmin', () => {
   });
 
   describe('#resetProfiles', () => {
-    it('should call createOrReplace profiles with all default profiles and rights policies', () => {
-      var
-        createOrReplace = sandbox.stub().returns(Promise.resolve()),
-        mock = {internalEngine: {createOrReplace}};
+    it('should call validateAndSaveProfile with all default profiles and rights policies', () => {
+      const
+        validateAndSaveProfile = sandbox.stub().returns(Promise.resolve()),
+        mock = {repositories: {profile: {validateAndSaveProfile}}};
 
       return SecurityController.__get__('resetProfiles').call(mock)
         .then(() => {
 
           try {
-            should(createOrReplace).have.callCount(3);
-            should(createOrReplace.firstCall).be.calledWithMatch('profiles', 'admin', {
-              policies: [{
-                roleId: 'admin',
-                allowInternalIndex: true
-              }]
+            should(validateAndSaveProfile).have.callCount(3);
+            should(validateAndSaveProfile.firstCall).be.calledWithMatch({
+              _id: 'admin',
+              policies: [{roleId: 'admin'}]
             });
-            should(createOrReplace.secondCall).be.calledWithMatch('profiles', 'anonymous', {policies: [{roleId: 'anonymous'}]});
-            should(createOrReplace.thirdCall).be.calledWithMatch('profiles', 'default', {policies: [{roleId: 'default'}]});
+            should(validateAndSaveProfile.secondCall).be.calledWithMatch({
+              _id: 'default',
+              policies: [{roleId: 'default'}]
+            });
+            should(validateAndSaveProfile.thirdCall).be.calledWithMatch({
+              _id: 'anonymous',
+              policies: [{roleId: 'anonymous'}]
+            });
             return Promise.resolve();
           }
           catch (error) {

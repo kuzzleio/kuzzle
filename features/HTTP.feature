@@ -4,6 +4,10 @@ Feature: Test HTTP API
   Scenario: Get server information
     When I get server informations
 
+  @usingHttp
+  Scenario: Get server configuration
+    When I get server configuration
+
   @usingHttp @cleanValidations
   Scenario: Publish a realtime message
     When I publish a message
@@ -146,7 +150,7 @@ Feature: Test HTTP API
     When I write the document "documentGrace"
     And I refresh the index
     Then I find a document with "Grace" in field "firstName" with scroll "5m"
-    And I be able to scroll previous search
+    And I am able to scroll previous search
 
   @usingHttp
   Scenario: Change mapping
@@ -181,11 +185,11 @@ Feature: Test HTTP API
   @usingHttp
   Scenario: Index and collection existence
     When I check if index "%kuzzle" exists
-    Then The result should raise an error with message "Cannot operate on Kuzzle internal index "%kuzzle""
+    Then The result should raise an error with message "Indexes starting with a "%" are reserved for internal use. Cannot process index %kuzzle."
     When I check if index "idontexist" exists
     Then The result should match the json false
     When I check if collection "users" exists on index "%kuzzle"
-    Then The result should raise an error with message "Cannot operate on Kuzzle internal index "%kuzzle""
+    Then The result should raise an error with message "Indexes starting with a "%" are reserved for internal use. Cannot process index %kuzzle."
     When I write the document "documentGrace"
     When I check if index "kuzzle-test-index" exists
     Then The result should match the json true
@@ -236,19 +240,23 @@ Feature: Test HTTP API
 
   @usingHttp @cleanSecurity
   Scenario: Create/get/search/update/delete role
-    When I create a new role "role1" with id "test"
+    When I create a new role "foo" with id "test"
     Then I'm able to find a role with id "test"
-    And I update the role with id "test" with role "role2"
-    Then I'm able to find a role with id "test" with role "role2"
-    Then I'm able to find "1" role by searching controller corresponding to role "role2"
+    And I update the role "test" with the test content "bar"
+    Then I'm able to find a role with id "test" equivalent to role "bar"
+    Then I'm able to find "3" role by searching controller "foo"
+    And I'm able to find "4" role by searching controller "foo,bar"
+    And I'm able to find "4" role by searching controller "bar"
     And I delete the role with id "test"
     Then I'm not able to find a role with id "test"
-    Then I create a new role "role1" with id "test"
-    And I create a new role "role1" with id "test2"
-    And I create a new role "role1" with id "test3"
+    Then I create a new role "foobar" with id "test"
+    And I create a new role "foo" with id "test2"
+    And I create a new role "foo" with id "test3"
     Then I'm able to do a multi get with "test,test2,test3" and get "3" roles
-    Then I'm able to find "3" role by searching controller corresponding to role "role1"
-    Then I'm able to find "1" role by searching controller corresponding to role "role1" from "0" to "1"
+    Then I'm able to find "6" role by searching controller "foo"
+    And I'm able to find "3" role by searching controller "foo" with maximum "3" results starting from "1"
+    And I'm able to find "2" role by searching controller "foo" with maximum "10" results starting from "4"
+    And I'm able to find "4" role by searching controller "bar"
 
   @usingHttp @cleanSecurity
   Scenario: create an invalid profile with unexisting role triggers an error
@@ -265,8 +273,7 @@ Feature: Test HTTP API
   @usingHttp @cleanSecurity
   Scenario: Profile mapping
     Given I get the profile mapping
-    Then The mapping should contain a nested "policies" field with property "_id" of type "keyword"
-    And The mapping should contain a nested "policies" field with property "roleId" of type "text"
+    Then The mapping should contain a nested "policies" field with property "roleId" of type "keyword"
     When I change the profile mapping
     Then I get the profile mapping
     Then The mapping should contain "foo" field of type "text"
@@ -465,38 +472,27 @@ Feature: Test HTTP API
     Then I'm able to find my rights
 
   @usingHttp @cleanRedis
-  Scenario: memory storage - misc
-    When I call the info method of the memory storage with arguments
-      """
-      """
-    Then The ms result should match the regex ^# Server\r\nredis_version:
-    # this test erases the whole index. commented for safety
-    # Given I call the set method of the memory storage with arguments
-    #  """
-    #    { "_id": "#prefix#mykey", "body": { "value": 10 } }
-    #  """
-    # Then I call the flushdb method of the memory storage with arguments
-    #  """
-    #    {}
-    #  """
-    # Then I call the keys method of the memory storage with arguments
-    #    """
-    #      { "body": { "pattern": "*" } }
-    #    """
-    # And The ms result should match the json null
-    When I call the lastsave method of the memory storage with arguments
-      """
-      {}
-      """
-    Then The ms result should match the regex ^\d{10}$
-
-  @usingHttp @cleanRedis
   Scenario: memory storage - scalars
-    Given I call the set method of the memory storage with arguments
+    Given I call the setnx method of the memory storage with arguments
       """
-      { "_id": "#prefix#mykey", "body": { "value": 999 }}
+      { "_id": "#prefix#mykey", "body": { "value": "999" }}
       """
-    Then The ms result should match the json "OK"
+    Then The ms result should match the json 1
+    When I call the setnx method of the memory storage with arguments
+      """
+      { "_id": "#prefix#mykey", "body": { "value": "999" }}
+      """
+    Then The ms result should match the json 0
+    When I scan the database using the scan method with arguments
+      """
+      { "args": { "cursor": 0, "match": "#prefix#*" } }
+      """
+    Then The ms result should match the json ["#prefix#mykey"]
+    When I call the touch method of the memory storage with arguments
+      """
+      { "body": { "keys": ["#prefix#mykey"] } }
+      """
+    Then The ms result should match the json 1
     When I call the incrbyfloat method of the memory storage with arguments
       """
       { "_id": "#prefix#mykey", "body": { "value": -0.5 }}
@@ -554,7 +550,7 @@ Feature: Test HTTP API
     Then The ms result should match the json 1
     When I call the del method of the memory storage with arguments
       """
-      { "_id": "#prefix#mykey" }
+      { "body": {"keys": ["#prefix#mykey"]} }
       """
     Then The ms result should match the json 1
     When I call the get method of the memory storage with arguments
@@ -572,12 +568,12 @@ Feature: Test HTTP API
       """
     When I call the mget method of the memory storage with arguments
       """
-      { "_id": "#prefix#x", "args": { "keys": ["#prefix#y", "nonexisting"]}}
+      { "args": { "keys": ["#prefix#x", "#prefix#y", "nonexisting"]}}
       """
     Then The ms result should match the json ["foobar", "abcdef", null]
     When I call the bitop method of the memory storage with arguments
       """
-      { "body": { "operation": "AND", "destkey": "#prefix#dest", "keys": [ "#prefix#x", "#prefix#y" ] } }
+      { "_id": "#prefix#dest", "body": { "operation": "AND", "keys": [ "#prefix#x", "#prefix#y" ] } }
       """
     And I call the get method of the memory storage with arguments
       """
@@ -586,13 +582,23 @@ Feature: Test HTTP API
     Then The ms result should match the json "`bc`ab"
     When I call the bitop method of the memory storage with arguments
       """
-      { "body": { "operation": "OR", "destkey": "#prefix#dest", "keys": [ "#prefix#x", "#prefix#y" ] } }
+      { "_id": "#prefix#dest", "body": { "operation": "OR", "keys": [ "#prefix#x", "#prefix#y" ] } }
       """
     And I call the get method of the memory storage with arguments
       """
       { "_id": "#prefix#dest" }
       """
     Then The ms result should match the json "goofev"
+    When I call the bitcount method of the memory storage with arguments
+      """
+      { "_id": "#prefix#x" }
+      """
+    Then The ms result should match the json 26
+    When I call the bitcount method of the memory storage with arguments
+      """
+      { "_id": "#prefix#x", "body": {"start": 0, "end": 3} }
+      """
+    Then The ms result should match the json 19
     When I call the bitpos method of the memory storage with arguments
       """
       { "_id": "#prefix#x", "args": { "bit": 1 } }
@@ -600,11 +606,11 @@ Feature: Test HTTP API
     Then The ms result should match the json 1
     Given I call the set method of the memory storage with arguments
       """
-      { "_id": "#prefix#mykey", "body": { "value": 10 } }
+      { "_id": "#prefix#mykey", "body": { "value": "10" } }
       """
     When I call the exists method of the memory storage with arguments
       """
-      { "_id": "#prefix#mykey", "body": { "keys": [ "i", "dont", "exist" ] } }
+      { "args": {"keys": [ "#prefix#mykey", "i", "dont", "exist" ] } }
       """
     Then The ms result should match the json 1
     When I call the expire method of the memory storage with arguments
@@ -619,7 +625,7 @@ Feature: Test HTTP API
     Then The ms result should match the json null
     Given I call the mset method of the memory storage with arguments
       """
-      { "_id": "#prefix#foo", "body": { "value": "bar", "values": ["#prefix#k1", "v1", "#prefix#k2", "v2"] }}
+      { "body": {"entries": [{"key": "#prefix#foo", "value": "bar"}, {"key":"#prefix#k1", "value": "v1"}, {"key":"#prefix#k2", "value":"v2"}]}}
       """
     When I call the mget method of the memory storage with arguments
       """
@@ -628,7 +634,7 @@ Feature: Test HTTP API
     Then The ms result should match the json ["bar", "v2"]
     When I call the msetnx method of the memory storage with arguments
       """
-      { "body": { "values": ["#prefix#k1", "v1bis", "#prefix#foo", "barbis"] }}
+      { "body": { "entries": [{"key":"#prefix#k1", "value":"v1bis"}, {"key":"#prefix#foo", "value":"barbis"}] }}
       """
     Then The ms result should match the json 0
     Given I call the setex method of the memory storage with arguments
@@ -689,19 +695,6 @@ Feature: Test HTTP API
     Then The ms result should match the json 0
     Given I call the set method of the memory storage with arguments
       """
-      { "_id": "#prefix#foo", "body": {"value": "Hello World" }}
-      """
-    And I call the setrange method of the memory storage with arguments
-      """
-      { "_id": "#prefix#foo", "body": { "offset": 6, "value": "Kuzzle" }}
-      """
-    When I call the get method of the memory storage with arguments
-      """
-      { "_id": "#prefix#foo" }
-      """
-    Then The ms result should match the json "Hello Kuzzle"
-    Given I call the set method of the memory storage with arguments
-      """
       {
         "_id": "#prefix#mykey",
         "body": {"value": "Your base are belong to us"}
@@ -732,7 +725,7 @@ Feature: Test HTTP API
   Scenario: memory storage - lists
     Given I call the rpush method of the memory storage with arguments
       """
-      { "_id": "#prefix#list", "body": { "value": 1, "values": [ "abcd", 5 ] }}
+      { "_id": "#prefix#list", "body": { "values": [ 1, "abcd", 5 ] }}
       """
     Then The ms result should match the json 3
     When I call the lindex method of the memory storage with arguments
@@ -765,9 +758,19 @@ Feature: Test HTTP API
       { "_id": "#prefix#list"}
       """
     Then The ms result should match the json 3
+    When I call the rpushx method of the memory storage with arguments
+      """
+      { "_id": "#prefix#list", "body": { "value": "foobar" } }
+      """
+    Then The ms result should match the json 4
+    When I call the rpushx method of the memory storage with arguments
+      """
+      { "_id": "nonexisting", "body": { "value": "foobar" } }
+      """
+    Then The ms result should match the json 0
     Given I call the lpush method of the memory storage with arguments
       """
-      { "_id": "#prefix#list", "body": { "value": "first" }}
+      { "_id": "#prefix#list", "body": { "values": ["first"] }}
       """
     When I call the lindex method of the memory storage with arguments
       """
@@ -791,10 +794,10 @@ Feature: Test HTTP API
       """
       { "_id": "#prefix#list", "args": { "start": 0, "stop": -1  } }
       """
-    Then The ms result should match the json ["first", "abcd", "inserted", "5", "hello", "foo"]
+    Then The ms result should match the json ["first", "abcd", "inserted", "5", "foobar", "hello", "foo"]
     Given I call the lset method of the memory storage with arguments
       """
-      {"_id": "#prefix#list", "body": { "idx": 1, "value": "replaced"}}
+      {"_id": "#prefix#list", "body": { "index": 1, "value": "replaced"}}
       """
     When I call the lindex method of the memory storage with arguments
       """
@@ -822,7 +825,7 @@ Feature: Test HTTP API
     Then The ms result should match the json "inserted"
     Given I call the del method of the memory storage with arguments
       """
-      { "_id": "#prefix#list" }
+      { "body": { "keys": ["#prefix#list"] } }
       """
     And I call the rpush method of the memory storage with arguments
       """
@@ -832,19 +835,13 @@ Feature: Test HTTP API
       """
       {
         "body": {
-          "values": [
-            "#prefix#o_1",
-            "object1",
-            "#prefix#o_2",
-            "object2",
-            "#prefix#o_3",
-            "object3",
-            "#prefix#w_1",
-            2,
-            "#prefix#w_2",
-            3,
-            "#prefix#w_3",
-            1
+          "entries": [
+            {"key":"#prefix#o_1", "value":"object1"},
+            {"key":"#prefix#o_2", "value":"object2"},
+            {"key":"#prefix#o_3", "value":"object3"},
+            {"key":"#prefix#w_1","value":2},
+            {"key":"#prefix#w_2","value":3},
+            {"key":"#prefix#w_3","value":1}
           ]
         }
       }
@@ -855,7 +852,7 @@ Feature: Test HTTP API
         "_id": "#prefix#list",
         "body": {
           "by": "#prefix#w_*",
-          "get": "#prefix#o_*",
+          "get": ["#prefix#o_*"],
           "direction": "DESC"
         }
       }
@@ -875,13 +872,38 @@ Feature: Test HTTP API
       """
     And I call the hmset method of the memory storage with arguments
       """
-      {"_id":"#prefix#hash","body":{"values":["k1","v1","k2","v2","k3","v3","k4",10]}}
+      {
+        "_id":"#prefix#hash",
+        "body": {
+          "entries": [
+            {"field": "k1", "value": "v1"},
+            {"field": "k2", "value": "v2"},
+            {"field": "k3", "value": "v3"},
+            {"field": "k4", "value": 10}
+          ]
+        }
+      }
       """
-    When I call the hdel method of the memory storage with arguments
+    When I scan the database using the hscan method with arguments
       """
-      {"_id":"#prefix#hash", "body": { "field": "k3" } }
+      { "_id": "#prefix#hash" }
+      """
+    Then The ms result should match the json ["foo", "bar", "k1", "v1", "k2", "v2", "k3", "v3", "k4", "10"]
+    When I call the hexists method of the memory storage with arguments
+      """
+      {"_id": "#prefix#hash", "args": { "field": "k3" } }
       """
     Then The ms result should match the json 1
+    When I call the hdel method of the memory storage with arguments
+      """
+      {"_id":"#prefix#hash", "body": { "fields": ["k3"] } }
+      """
+    Then The ms result should match the json 1
+    When I call the hexists method of the memory storage with arguments
+      """
+      {"_id": "#prefix#hash", "args": { "field": "k3" } }
+      """
+    Then The ms result should match the json 0
     When I call the hget method of the memory storage with arguments
       """
       { "_id": "#prefix#hash", "args": { "field": "foo" }}
@@ -923,9 +945,14 @@ Feature: Test HTTP API
   Scenario: memory storage - sets
     Given I call the sadd method of the memory storage with arguments
       """
-      { "_id": "#prefix#set", "body": { "member": "foobar", "members": [ "v1", 5, 10, 10] }}
+      { "_id": "#prefix#set", "body": { "members": ["foobar", "v1", 5, 10, 10] }}
       """
     Then The ms result should match the json 4
+    When I scan the database using the sscan method with arguments
+      """
+      { "_id": "#prefix#set" }
+      """
+    Then The sorted ms result should match the json ["10","5","foobar","v1"]
     When I call the scard method of the memory storage with arguments
       """
       {"_id": "#prefix#set"}
@@ -955,12 +982,12 @@ Feature: Test HTTP API
     Then The sorted ms result should match the json ["d", "e"]
     When I call the sinter method of the memory storage with arguments
       """
-      { "_id": "#prefix#set1", "args": { "keys": ["#prefix#set2"] }}
+      { "args": { "keys": ["#prefix#set1", "#prefix#set2"] }}
       """
     Then The ms result should match the json ["c"]
     Given I call the sinterstore method of the memory storage with arguments
       """
-      { "_id": "#prefix#set1", "body": { "destination": "#prefix#set3", "keys": ["#prefix#set2"] }}
+      { "body": { "destination": "#prefix#set3", "keys": ["#prefix#set1", "#prefix#set2"] }}
       """
     When I call the smembers method of the memory storage with arguments
       """
@@ -969,12 +996,12 @@ Feature: Test HTTP API
     Then The ms result should match the json ["c"]
     When I call the sunion method of the memory storage with arguments
       """
-      { "_id": "#prefix#set1", "body": { "keys": ["#prefix#set2"] }}
+      { "args": { "keys": ["#prefix#set1", "#prefix#set2"] }}
       """
     Then The sorted ms result should match the json ["a", "b", "c", "d", "e"]
     Given I call the sunionstore method of the memory storage with arguments
       """
-      { "_id": "#prefix#set1", "body": { "destination": "#prefix#set3", "keys": ["#prefix#set2"] }}
+      { "body": { "destination": "#prefix#set3", "keys": ["#prefix#set1", "#prefix#set2"] }}
       """
     When I call the smembers method of the memory storage with arguments
       """
@@ -1002,7 +1029,7 @@ Feature: Test HTTP API
     Then The ms result should match the json ["a", "b", "c"]
     Given I call the del method of the memory storage with arguments
       """
-      { "_id": "#prefix#set" }
+      { "body": { "keys": ["#prefix#set"] } }
       """
     And I call the sadd method of the memory storage with arguments
       """
@@ -1015,7 +1042,7 @@ Feature: Test HTTP API
     Then The ms result should match the json ["23", "54", "99"]
     When I call the sort method of the memory storage with arguments
       """
-      { "_id": "#prefix#set", "body": { "offset": 1, "count": 2, "direction": "DESC" }}
+      { "_id": "#prefix#set", "body": { "limit": [1, 2], "direction": "DESC" }}
       """
     Then The ms result should match the json ["54", "23"]
     When I call the srandmember method of the memory storage with arguments
@@ -1033,8 +1060,7 @@ Feature: Test HTTP API
       {
         "_id": "#prefix#set",
         "body": {
-          "member": 54,
-          "members": [ 23, 99 ]
+          "members": [ 54, 23, 99 ]
         }
       }
       """
@@ -1051,9 +1077,8 @@ Feature: Test HTTP API
       {
         "_id": "#prefix#zset",
         "body": {
-          "score": 1,
-          "member": "one",
-          "values": [
+          "elements": [
+            { "score": 1, "member": "one" },
             { "score": 1, "member": "uno" },
             { "score": 3, "member": "three" },
             { "score": 2, "member": "two" }
@@ -1061,6 +1086,11 @@ Feature: Test HTTP API
         }
       }
       """
+    When I scan the database using the zscan method with arguments
+      """
+      { "_id": "#prefix#zset" }
+      """
+    Then The ms result should match the json ["one", "1", "uno", "1", "two", "2", "three", "3"]
     When I call the zrange method of the memory storage with arguments
       """
       {
@@ -1068,7 +1098,7 @@ Feature: Test HTTP API
         "args": {
           "start": 0,
           "stop": -1,
-          "withscores": true
+          "options": ["withscores"]
         }
       }
       """
@@ -1106,7 +1136,7 @@ Feature: Test HTTP API
         "args": {
           "start": 0,
           "stop": -1,
-          "withscores": true
+          "options": ["withscores"]
         }
       }
       """
@@ -1116,7 +1146,7 @@ Feature: Test HTTP API
       {
         "_id": "#prefix#zset2",
         "body": {
-          "values": [
+          "elements": [
             { "score": 2, "member": "two" },
             { "score": 1, "member": "uno" }
           ]
@@ -1126,8 +1156,8 @@ Feature: Test HTTP API
     And I call the zinterstore method of the memory storage with arguments
       """
       {
+        "_id": "#prefix#zset3",
         "body": {
-          "destination": "#prefix#zset3",
           "keys": [ "#prefix#zset", "#prefix#zset2" ],
           "weights": [ 2, 1 ],
           "aggregate": "max"
@@ -1138,15 +1168,20 @@ Feature: Test HTTP API
       """
       {
         "_id": "#prefix#zset3",
-        "args": { "start": 0, "stop": -1, "withscores": true }
+        "args": {
+          "start": 0,
+          "stop": -1,
+          "options": ["withscores"]
+        }
       }
       """
     Then The ms result should match the json ["uno", "2", "two", "8"]
     Given I call the zunionstore method of the memory storage with arguments
       """
       {
+        "_id": "#prefix#zset3",
         "body": {
-          "destination": "#prefix#zset3",
+          "_id": "#prefix#zset3",
           "keys": [ "#prefix#zset", "#prefix#zset2" ],
           "weights": [ 2, 1 ],
           "aggregate": "max"
@@ -1157,20 +1192,24 @@ Feature: Test HTTP API
       """
       {
         "_id": "#prefix#zset3",
-        "args": { "start": 0, "stop": -1, "withscores": true }
+        "args": {
+          "start": 0,
+          "stop": -1,
+          "options": ["withscores"]
+        }
       }
       """
     Then The ms result should match the json ["one","2","uno","2","three","6","two","8"]
     Given I call the del method of the memory storage with arguments
       """
-      { "_id": "#prefix#zset" }
+      { "body": { "keys": ["#prefix#zset"] } }
       """
     And I call the zadd method of the memory storage with arguments
       """
       {
         "_id": "#prefix#zset",
         "body": {
-          "values": [
+          "elements": [
             { "score": 0, "member": "zero" },
             { "score": 0, "member": "one" },
             { "score": 0, "member": "two" },
@@ -1221,16 +1260,32 @@ Feature: Test HTTP API
       }
       """
     Then The ms result should match the json ["five","four","zero"]
+    When I call the zremrangebyrank method of the memory storage with arguments
+      """
+      {
+        "_id": "#prefix#zset",
+        "body": { "start": 1, "stop": 2 }
+      }
+      """
+    Then The ms result should match the json 2
+    When I call the zrange method of the memory storage with arguments
+      """
+      {
+        "_id": "#prefix#zset",
+        "args": { "start": 0, "stop": -1 }
+      }
+      """
+    Then The ms result should match the json ["five"]
     Given I call the del method of the memory storage with arguments
       """
-      { "_id": "#prefix#zset" }
+      { "body": { "keys": ["#prefix#zset"] } }
       """
     And I call the zadd method of the memory storage with arguments
       """
       {
         "_id": "#prefix#zset",
         "body": {
-          "values": [
+          "elements": [
             { "score": 0, "member": "zero" },
             { "score": 1, "member": "one" },
             { "score": 2, "member": "two" },
@@ -1247,9 +1302,8 @@ Feature: Test HTTP API
         "args": {
           "min": "(0",
           "max": "3",
-          "offset": 1,
-          "count": 5,
-          "withscores": true
+          "limit": [1, 5],
+          "options": ["withscores"]
         }
       }
       """
@@ -1261,9 +1315,8 @@ Feature: Test HTTP API
         "args": {
           "min": "(0",
           "max": "3",
-          "offset": 1,
-          "count": 5,
-          "withscores": true
+          "limit": [1, 5],
+          "options": ["withscores"]
         }
       }
       """
@@ -1275,19 +1328,19 @@ Feature: Test HTTP API
     Then The ms result should match the json "2"
     When I call the zrem method of the memory storage with arguments
       """
-      { "_id": "#prefix#zset", "body": { "member": "two" } }
+      { "_id": "#prefix#zset", "body": { "members": ["two"] } }
       """
     And I call the zrange method of the memory storage with arguments
       """
       {
         "_id": "#prefix#zset",
-        "args": { "start": 0, "stop": -1, "withscores": true }
+        "args": { "start": 0, "stop": -1, "options": ["withscores"] }
       }
       """
     Then The ms result should match the json ["zero", "0", "one", "1", "three", "3", "four", "4"]
     Given I call the zadd method of the memory storage with arguments
       """
-      { "_id": "#prefix#zset", "body": { "score": 2, "member": "two" } }
+      { "_id": "#prefix#zset", "body": { "elements": [{"score": 2, "member": "two"}] } }
       """
     When I call the zremrangebyscore method of the memory storage with arguments
       """
@@ -1303,21 +1356,19 @@ Feature: Test HTTP API
       """
       {
         "_id": "#prefix#zset",
-        "args": { "start": 0, "stop": -1, "withscores": true }
+        "args": { "start": 0, "stop": -1, "options": ["withscores"] }
       }
       """
     Then The ms result should match the json ["zero", "0", "one", "1", "four", "4"]
 
   @usingHttp @cleanRedis
   Scenario: memory storage - hyperloglog
-
     Given I call the pfadd method of the memory storage with arguments
       """
       {
         "_id": "#prefix#hll",
         "body": {
-          "element": "a",
-          "elements": [ "b", "c", "d", "e", "f", "g" ]
+          "elements": [ "a", "b", "c", "d", "e", "f", "g" ]
         }
       }
       """
@@ -1327,15 +1378,14 @@ Feature: Test HTTP API
       {
         "_id": "#prefix#hll",
         "body": {
-          "element": "a",
-          "elements": [ "b", "f", "g" ]
+          "elements": [ "a", "b", "f", "g" ]
         }
       }
       """
     Then The ms result should match the json 0
     When I call the pfcount method of the memory storage with arguments
       """
-      { "_id": "#prefix#hll" }
+      { "args": { "keys": ["#prefix#hll"] } }
       """
     Then The ms result should match the json 7
     Given I call the pfadd method of the memory storage with arguments
@@ -1358,17 +1408,84 @@ Feature: Test HTTP API
     When I call the pfmerge method of the memory storage with arguments
       """
       {
+        "_id": "#prefix#hll3",
         "body": {
-          "destkey": "#prefix#hll3",
-          "sourcekeys": [ "#prefix#hll", "#prefix#hll2" ]
+          "sources": [ "#prefix#hll", "#prefix#hll2" ]
         }
       }
       """
     And I call the pfcount method of the memory storage with arguments
       """
-      { "_id": "#prefix#hll3" }
+      { "args": { "keys": ["#prefix#hll3"] } }
       """
     Then The ms result should match the json 11
+
+  @usingHttp @cleanRedis
+  Scenario: memory storage - geospatial
+    Given I call the geoadd method of the memory storage with arguments
+      """
+      {
+        "_id": "#prefix#geo",
+        "body": {
+          "points": [
+              {"lon": 13.361389, "lat": 38.115556, "name": "Palermo"},
+              {"lon": 15.087269, "lat": 37.502669, "name": "Catania"}
+          ]
+        }
+      }
+      """
+    Then The ms result should match the json 2
+    When I call the geodist method of the memory storage with arguments
+      """
+      {
+        "_id": "#prefix#geo",
+        "args": { "member1": "Palermo", "member2": "Catania" }
+      }
+      """
+    Then The ms result should match the json "166274.1516"
+    When I call the geohash method of the memory storage with arguments
+      """
+      {
+        "_id": "#prefix#geo",
+        "args": { "members": ["Palermo", "Catania"] }
+      }
+      """
+    Then The ms result should match the json ["sqc8b49rny0","sqdtr74hyu0"]
+    When I call the geopos method of the memory storage with arguments
+      """
+      {
+        "_id": "#prefix#geo",
+        "args": { "members": ["Palermo", "Catania"] }
+      }
+      """
+    Then The ms result should match the json [["13.36138933897018433","38.11555639549629859"],["15.08726745843887329","37.50266842333162032"]]
+    When I call the georadius method of the memory storage with arguments
+      """
+      {
+        "_id": "#prefix#geo",
+        "args": { "lon": 15, "lat": 37, "distance": 100, "unit": "km" }
+      }
+      """
+    Then The ms result should match the json ["Catania"]
+    When I call the geoadd method of the memory storage with arguments
+      """
+      {
+        "_id": "#prefix#geo",
+        "body": {
+          "points": [
+              {"lon": 13.583333, "lat": 37.316667, "name": "Agrigento"}
+          ]
+        }
+      }
+      """
+    When I call the georadiusbymember method of the memory storage with arguments
+      """
+      {
+        "_id": "#prefix#geo",
+        "args": { "member": "Agrigento", "distance": 100, "unit": "km" }
+      }
+      """
+    Then The ms result should match the json ["Agrigento", "Palermo"]
 
   @usingHttp
   Scenario: autorefresh

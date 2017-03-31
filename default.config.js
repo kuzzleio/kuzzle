@@ -62,7 +62,7 @@ module.exports = {
     standard: {
       profiles: {
         admin: {
-          policies: [ {roleId: 'admin', allowInternalIndex: true} ]
+          policies: [ {roleId: 'admin'} ]
         },
         default: {
           policies: [ {roleId: 'default'} ]
@@ -165,7 +165,11 @@ module.exports = {
       backend: 'elasticsearch',
       host: 'localhost',
       port: 9200,
-      apiVersion: '5.0'
+      apiVersion: '5.0',
+      defaults: {
+        onUpdateConflictRetries: 0,
+        scrollTTL: '15s'
+      }
     },
 
     garbageCollector: {
@@ -196,8 +200,7 @@ module.exports = {
         'RangeError',
         'TypeError',
         'KuzzleError',
-        'InternalError',
-        'PluginImplementationError'
+        'InternalError'
       ]
     }
   }

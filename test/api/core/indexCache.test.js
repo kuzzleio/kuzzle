@@ -3,30 +3,36 @@ var
   Promise = require('bluebird'),
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
-  Kuzzle = require('../../../lib/api/kuzzle'),
+  KuzzleMock = require('../../mocks/kuzzle.mock'),
   IndexCache = require.main.require('lib/api/core/indexCache');
 
 describe('Test: core/indexCache', () => {
   var
     listIndexesStub,
     listCollectionsStub,
+    getMappingStub,
     indexCache,
     kuzzle;
 
   before(() => {
-    kuzzle = new Kuzzle();
+    kuzzle = new KuzzleMock();
   });
 
   beforeEach(() => {
-    sandbox.stub(kuzzle.internalEngine, 'get').returns(Promise.resolve({}));
-    return kuzzle.services.init({whitelist: []})
-      .then(() => {
-        listIndexesStub = sandbox.stub(kuzzle.internalEngine, 'listIndexes').returns(Promise.resolve(['foo']));
-        listCollectionsStub = sandbox.stub(kuzzle.internalEngine, 'listCollections').returns(Promise.resolve(['bar', 'baz', 'qux']));
-        indexCache = new IndexCache(kuzzle);
+    const internalMapping = {
+      foo: {
+        mappings: {
+          bar: 'first',
+          baz: 'second',
+          qux: 'third'
+        }
+      }
+    };
 
-        return null;
-      });
+    listIndexesStub = kuzzle.internalEngine.listIndexes.returns(Promise.resolve(['foo']));
+    listCollectionsStub = kuzzle.internalEngine.listCollections.returns(Promise.resolve(['bar', 'baz', 'qux']));
+    getMappingStub = kuzzle.internalEngine.getMapping.returns(Promise.resolve(internalMapping));
+    indexCache = new IndexCache(kuzzle);
   });
 
   afterEach(() => {
@@ -34,16 +40,25 @@ describe('Test: core/indexCache', () => {
   });
 
   describe('#init', () => {
-    it('should initialize the index cache properly', done => {
-      indexCache.init();
+    it('should initialize the index cache properly', () => {
+      return indexCache.init()
+        .then(() => {
+          should(listIndexesStub.calledOnce).be.true();
+          should(listCollectionsStub.calledOnce).be.true();
+          should(indexCache.indexes).be.an.Object().and.have.keys('foo');
+          should(indexCache.indexes.foo).be.an.Array().and.match(['bar', 'baz', 'qux']);
+        });
+    });
+  });
 
-      setTimeout(() => {
-        should(listIndexesStub.calledOnce).be.true();
-        should(listCollectionsStub.calledOnce).be.true();
-        should(indexCache.indexes).be.an.Object().and.have.keys('foo');
-        should(indexCache.indexes.foo).be.an.Array().and.match(['bar', 'baz', 'qux']);
-        done();
-      }, 20);
+  describe('#initInternal', () => {
+    it('should initialize the internal index cache properly', () => {
+      return indexCache.initInternal(kuzzle.internalEngine)
+        .then(() => {
+          should(getMappingStub.calledOnce).be.true();
+          should(indexCache.indexes).be.an.Object().and.have.keys('foo');
+          should(indexCache.indexes.foo).be.an.Array().and.match(['bar', 'baz', 'qux']);
+        });
     });
   });
 

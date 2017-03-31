@@ -219,9 +219,8 @@ describe('services/internalEngine/bootstrap.js', () => {
                 properties: {
                   policies: {
                     properties: {
-                      _id: {
-                        index: 'not_analyzed',
-                        type: 'string'
+                      roleId: {
+                        type: 'keyword'
                       }
                     }
                   }
@@ -231,13 +230,13 @@ describe('services/internalEngine/bootstrap.js', () => {
             should(bootstrap.engine.createOrReplace)
               .be.calledThrice()
               .be.calledWithMatch('profiles', 'admin', {
-                policies: [{roleId: 'admin', allowInternalIndex: true}]
+                policies: [{roleId: 'admin'}]
               })
               .be.calledWithMatch('profiles', 'default', {
-                policies: [{roleId: 'default', allowInternalIndex: true}]
+                policies: [{roleId: 'default'}]
               })
               .be.calledWithMatch('profiles', 'anonymous', {
-                policies: [{roleId: 'anonymous', allowInternalIndex: true}]
+                policies: [{roleId: 'anonymous'}]
               });
 
             should(kuzzle.indexCache.add)
@@ -278,12 +277,11 @@ describe('services/internalEngine/bootstrap.js', () => {
               .be.calledWithMatch('users', {
                 properties: {
                   profileIds: {
-                    index: 'not_analyzed',
-                    type: 'string'
+                    type: 'keyword'
                   },
                   password: {
-                    index: 'no',
-                    type: 'string'
+                    index: false,
+                    type: 'keyword'
                   }
                 }
               });
