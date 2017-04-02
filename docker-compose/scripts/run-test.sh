@@ -28,5 +28,6 @@ fi
 echo "[$(date --rfc-3339 seconds)] - Starting Kuzzle..."
 
 pm2 start --silent /config/pm2.json
+pm2 logs &
 npm test
 npm run codecov
