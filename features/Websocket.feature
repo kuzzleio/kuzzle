@@ -28,7 +28,7 @@ Feature: Test websocket API
     And I createOrReplace it
     Then I should have updated the document
     And I should receive a "update" notification
-    And The notification should have metadata
+    And The notification should have volatile
 
   @usingWebsocket
   Scenario: Replace a document
@@ -181,7 +181,7 @@ Feature: Test websocket API
     When I write the document "documentGrace"
     Then I should receive a "create" notification
     And The notification should have a "_source" member
-    And The notification should have metadata
+    And The notification should have volatile
 
   @usingWebsocket @unsubscribe
   Scenario: Document creation notifications with not exists
@@ -189,7 +189,7 @@ Feature: Test websocket API
     When I write the document "documentGrace"
     Then I should receive a "create" notification
     And The notification should have a "_source" member
-    And The notification should have metadata
+    And The notification should have volatile
 
   @usingWebsocket @unsubscribe
   Scenario: Document delete notifications
@@ -198,7 +198,7 @@ Feature: Test websocket API
     Then I remove the document
     Then I should receive a "delete" notification
     And The notification should not have a "_source" member
-    And The notification should have metadata
+    And The notification should have volatile
 
   @usingWebsocket @unsubscribe
   Scenario: Document update: new document notification
@@ -207,7 +207,7 @@ Feature: Test websocket API
     Then I update the document with value "Hopper" in field "lastName"
     Then I should receive a "update" notification
     And The notification should have a "_source" member
-    And The notification should have metadata
+    And The notification should have volatile
 
   @usingWebsocket @unsubscribe
   Scenario: Document update: removed document notification
@@ -216,7 +216,7 @@ Feature: Test websocket API
     Then I update the document with value "Foo" in field "lastName"
     Then I should receive a "update" notification
     And The notification should not have a "_source" member
-    And The notification should have metadata
+    And The notification should have volatile
 
   @usingWebsocket @unsubscribe
   Scenario: Document replace: new document notification
@@ -225,7 +225,7 @@ Feature: Test websocket API
     Then I replace the document with "documentGrace" document
     Then I should receive a "update" notification
     And The notification should have a "_source" member
-    And The notification should have metadata
+    And The notification should have volatile
 
   @usingWebsocket @unsubscribe
   Scenario: Document replace: removed document notification
@@ -234,7 +234,7 @@ Feature: Test websocket API
     Then I replace the document with "documentAda" document
     Then I should receive a "update" notification
     And The notification should not have a "_source" member
-    And The notification should have metadata
+    And The notification should have volatile
 
   @usingWebsocket @unsubscribe
   Scenario: Subscribe to a collection
@@ -242,7 +242,7 @@ Feature: Test websocket API
     When I write the document "documentGrace"
     Then I should receive a "create" notification
     And The notification should have a "_source" member
-    And The notification should have metadata
+    And The notification should have volatile
 
   @usingWebsocket @unsubscribe
   Scenario: Delete a document with a query
@@ -253,7 +253,7 @@ Feature: Test websocket API
     Then I remove documents with field "info.hobby" equals to value "computer"
     Then I should receive a "delete" notification
     And The notification should not have a "_source" member
-    And The notification should have metadata
+    And The notification should have volatile
 
   @usingWebsocket @unsubscribe
   Scenario: Count how many subscription on a room
@@ -266,10 +266,10 @@ Feature: Test websocket API
     Given A room subscription listening to "lastName" having value "Hopper" with socket "client1"
     Given A room subscription listening to "lastName" having value "Hopper" with socket "client2"
     Then I should receive a "subscribe" notification
-    And The notification should have metadata
+    And The notification should have volatile
     Then I unsubscribe socket "client1"
     And I should receive a "unsubscribe" notification
-    And The notification should have metadata
+    And The notification should have volatile
 
   @usingWebsocket
   Scenario: Getting the last statistics frame
