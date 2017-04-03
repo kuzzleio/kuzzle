@@ -87,7 +87,7 @@ module.exports = function () {
       }
     };
 
-    this.metadata = {
+    this.volatile = {
       iwant: 'to break free',
       we: ['will', 'rock', 'you']
     };
