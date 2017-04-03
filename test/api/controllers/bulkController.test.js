@@ -20,7 +20,7 @@ describe('Test the bulk controller', () => {
   });
 
   it('should trigger the proper methods and resolve to a valid response', () => {
-    return controller.import(request)
+    return controller.bulkImport(request)
       .then(response => {
         var engine = kuzzle.services.list.storageEngine;
 
@@ -35,7 +35,7 @@ describe('Test the bulk controller', () => {
   it('should handle partial errors', () => {
     stub.returns(Promise.resolve({partialErrors: ['foo', 'bar']}));
 
-    return controller.import(request)
+    return controller.bulkImport(request)
       .then(response => {
         should(response).be.instanceof(Object);
         should(request.status).be.eql(206);
