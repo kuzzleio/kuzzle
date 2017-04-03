@@ -1,4 +1,6 @@
-var
+'use strict';
+
+const
   rewire = require('rewire'),
   sinon = require('sinon'),
   should = require('should'),
@@ -6,7 +8,7 @@ var
   Bootstrap = rewire('../../../lib/services/internalEngine/bootstrap');
 
 describe('services/internalEngine/bootstrap.js', () => {
-  var
+  let
     kuzzle,
     bootstrap;
 
@@ -22,7 +24,7 @@ describe('services/internalEngine/bootstrap.js', () => {
 
   describe('#constructor', () => {
     it('should set the engine to kuzzle internal engine', () => {
-      should(bootstrap.engine).be.exactly(kuzzle.internalEngine);
+      should(bootstrap.db).be.exactly(kuzzle.internalEngine);
     });
   });
 
@@ -34,23 +36,23 @@ describe('services/internalEngine/bootstrap.js', () => {
         .then(() => {
 
           try {
-            should(bootstrap.engine.createInternalIndex)
+            should(bootstrap.db.createInternalIndex)
               .be.calledOnce();
 
             should(bootstrap.createCollections)
               .be.calledOnce();
 
-            should(bootstrap.engine.refresh)
+            should(bootstrap.db.refresh)
               .be.calledOnce();
 
             should(kuzzle.indexCache.add)
               .be.calledOnce()
-              .be.calledWithExactly(bootstrap.engine.index);
+              .be.calledWithExactly(bootstrap.db.index);
 
             sinon.assert.callOrder(
-              bootstrap.engine.createInternalIndex,
+              bootstrap.db.createInternalIndex,
               bootstrap.createCollections,
-              bootstrap.engine.refresh,
+              bootstrap.db.refresh,
               kuzzle.indexCache.add
             );
 
@@ -63,15 +65,13 @@ describe('services/internalEngine/bootstrap.js', () => {
     });
 
     it('should print errors to the console', done => {
-      var
-        error = new Error('error message');
+      const error = new Error('error message');
 
-      bootstrap.engine.createInternalIndex.returns(Promise.reject(error));
+      bootstrap.db.createInternalIndex.returns(Promise.reject(error));
 
       bootstrap.all()
         .catch(err => {
-          var
-            spy = Bootstrap.__get__('console.error');
+          const spy = Bootstrap.__get__('console.error');
 
           should(err).be.exactly(error);
 
@@ -128,7 +128,7 @@ describe('services/internalEngine/bootstrap.js', () => {
       return bootstrap.createRolesCollection()
         .then(() => {
           try {
-            should(bootstrap.engine.updateMapping)
+            should(bootstrap.db.updateMapping)
               .be.calledOnce()
               .be.calledWithMatch('roles', {
                 properties: {
@@ -136,9 +136,9 @@ describe('services/internalEngine/bootstrap.js', () => {
                 }
               });
 
-            should(bootstrap.engine.createOrReplace)
+            should(bootstrap.db.createOrReplace)
               .be.calledThrice();
-            should(bootstrap.engine.createOrReplace)
+            should(bootstrap.db.createOrReplace)
               .be.calledWithExactly('roles', 'admin', kuzzle.config.security.default.role)
               .be.calledWithExactly('roles', 'default', kuzzle.config.security.default.role)
               .be.calledWithExactly('roles', 'anonymous', kuzzle.config.security.default.role);
@@ -157,7 +157,7 @@ describe('services/internalEngine/bootstrap.js', () => {
       return bootstrap.createRolesCollection()
         .then(() => {
           try {
-            should(bootstrap.engine.updateMapping)
+            should(bootstrap.db.updateMapping)
               .have.callCount(0);
 
             return Promise.resolve();
@@ -174,7 +174,7 @@ describe('services/internalEngine/bootstrap.js', () => {
       return bootstrap.createPluginsCollection()
         .then(() => {
           try {
-            should(bootstrap.engine.updateMapping)
+            should(bootstrap.db.updateMapping)
               .be.calledOnce()
               .be.calledWithMatch('plugins', {
                 properties: {
@@ -196,7 +196,7 @@ describe('services/internalEngine/bootstrap.js', () => {
       return bootstrap.createPluginsCollection()
         .then(() => {
           try {
-            should(bootstrap.engine.updateMapping)
+            should(bootstrap.db.updateMapping)
               .have.callCount(0);
 
             return Promise.resolve();
@@ -213,7 +213,7 @@ describe('services/internalEngine/bootstrap.js', () => {
       return bootstrap.createProfilesCollection()
         .then(() => {
           try {
-            should(bootstrap.engine.updateMapping)
+            should(bootstrap.db.updateMapping)
               .be.calledOnce()
               .be.calledWithMatch('profiles', {
                 properties: {
@@ -227,7 +227,7 @@ describe('services/internalEngine/bootstrap.js', () => {
                 }
               });
 
-            should(bootstrap.engine.createOrReplace)
+            should(bootstrap.db.createOrReplace)
               .be.calledThrice()
               .be.calledWithMatch('profiles', 'admin', {
                 policies: [{roleId: 'admin'}]
@@ -256,7 +256,7 @@ describe('services/internalEngine/bootstrap.js', () => {
       return bootstrap.createProfilesCollection()
         .then(() => {
           try {
-            should(bootstrap.engine.updateMapping)
+            should(bootstrap.db.updateMapping)
               .have.callCount(0);
             return Promise.resolve();
           }
@@ -272,7 +272,7 @@ describe('services/internalEngine/bootstrap.js', () => {
       return bootstrap.createUsersCollection()
         .then(() => {
           try {
-            should(bootstrap.engine.updateMapping)
+            should(bootstrap.db.updateMapping)
               .be.calledOnce()
               .be.calledWithMatch('users', {
                 properties: {
@@ -300,7 +300,7 @@ describe('services/internalEngine/bootstrap.js', () => {
       return bootstrap.createUsersCollection()
         .then(() => {
           try {
-            should(bootstrap.engine.updateMapping)
+            should(bootstrap.db.updateMapping)
               .have.callCount(0);
             return Promise.resolve();
           }
@@ -313,12 +313,12 @@ describe('services/internalEngine/bootstrap.js', () => {
 
   describe('#adminExists', () => {
     it('should return true if an admin exists', () => {
-      bootstrap.engine.search.returns(Promise.resolve({total: 1}));
+      bootstrap.db.search.returns(Promise.resolve({total: 1}));
 
       return bootstrap.adminExists()
         .then(result => {
           try {
-            should(bootstrap.engine.search)
+            should(bootstrap.db.search)
               .be.calledOnce()
               .be.calledWithMatch('users', {
                 query: {
@@ -326,7 +326,7 @@ describe('services/internalEngine/bootstrap.js', () => {
                     profileIds: ['admin']
                   }
                 }
-              }, 0, 0);
+              }, {from: 0, size: 0});
 
             should(result).be.true();
 
@@ -339,7 +339,7 @@ describe('services/internalEngine/bootstrap.js', () => {
     });
 
     it('should return false if no admin exists', () => {
-      bootstrap.engine.search.returns(Promise.resolve({hits: {total: 0}}));
+      bootstrap.db.search.returns(Promise.resolve({hits: {total: 0}}));
 
       return bootstrap.adminExists()
         .then(result => {
