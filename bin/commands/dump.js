@@ -14,7 +14,7 @@ module.exports = function commandDump (options) {
 
   console.log(notice('[ℹ] Creating dump file...'));
 
-  kuzzle.cli.do('dump', {suffix: 'cli'})
+  kuzzle.cli.doAction('dump', {suffix: 'cli'})
     .then(request => {
       console.log(ok('[✔] Done!'));
       console.log('\n' + warn(`[ℹ] Dump has been successfully generated in "${request.result}" folder`));

@@ -41,7 +41,7 @@ function commandClearCache (database, options) {
 
   if (userIsSure) {
     console.log(notice('[ℹ] Processing...\n'));
-    return kuzzle.cli.do('clearCache', data)
+    return kuzzle.cli.doAction('clearCache', data)
       .then(() => {
         console.log(ok('[✔] Done!'));
         process.exit(0);

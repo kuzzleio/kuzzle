@@ -72,7 +72,7 @@ function commandCreateFirstAdmin (options) {
     clcError = clcOk = clcQuestion = string => string;
   }
 
-  return kuzzle.cli.do('adminExists', {})
+  return kuzzle.cli.doAction('adminExists', {})
     .then(adminExists => {
       if (adminExists.result.exists) {
         console.log('An administrator account already exists.');
@@ -100,7 +100,7 @@ function commandCreateFirstAdmin (options) {
         process.exit(0);
       }
 
-      return kuzzle.cli.do('createFirstAdmin', {
+      return kuzzle.cli.doAction('createFirstAdmin', {
         _id: username,
         reset: resetRoles,
         body: {

@@ -52,9 +52,9 @@ function commandReset (options) {
 
   if (userIsSure) {
     console.log(notice('[ℹ] Processing...\n'));
-    return kuzzle.cli.do('cleanDb', {}, {debug: options.parent.debug})
+    return kuzzle.cli.doAction('cleanDb', {}, {debug: options.parent.debug})
       .then(() => {
-        return kuzzle.cli.do('data', {
+        return kuzzle.cli.doAction('data', {
           body: {
             fixtures: fixturesContent,
             mappings: mappingsContent
