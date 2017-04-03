@@ -10,7 +10,7 @@ if [ "${TRAVIS_PULL_REQUEST}" != "false" ]; then
   sonar-scanner \
     -Dsonar.host.url=https://sonarqube.kaliop.net \
     -Dsonar.analysis.mode=preview \
-    -Dsonar.profile=NodeJS \
+    -Dsonar.profile=Kuzzle \
     -Dsonar.projectVersion="$PACKAGE_VERSION" \
     -Dsonar.login="$SONAR_TOKEN" \
     -Dsonar.github.pullRequest="$TRAVIS_PULL_REQUEST" \
