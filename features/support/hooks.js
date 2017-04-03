@@ -247,7 +247,7 @@ function cleanRedis(callback) {
 function cleanValidations(callback) {
   this.api.listIndexes()
     .then(() => {
-      return this.api.searchValidations({
+      return this.api.searchSpecifications({
         query: {
           match_all: {
             boost: 1

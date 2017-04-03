@@ -1,4 +1,6 @@
-var
+'use strict';
+
+const
   Promise = require('bluebird'),
   should = require('should'),
   sinon = require('sinon'),
@@ -9,7 +11,7 @@ var
   sandbox = sinon.sandbox.create();
 
 describe('Test: security controller - createFirstAdmin', () => {
-  var
+  let
     adminController,
     kuzzle;
 
@@ -23,7 +25,7 @@ describe('Test: security controller - createFirstAdmin', () => {
   });
 
   describe('#createFirstAdmin', () => {
-    var
+    let
       reset,
       resetRolesStub,
       resetProfilesStub,
@@ -87,49 +89,36 @@ describe('Test: security controller - createFirstAdmin', () => {
       const
         validateAndSaveRole = sandbox.stub().returns(Promise.resolve()),
         mock = {
-          repositories: {
-            role: {
-              validateAndSaveRole
+          admin: {
+            controllers: {
+              foo: {
+                actions: {
+                  bar: true
+                }
+              }
             }
           },
-          config: {
-            security: {
-              standard: {
-                roles: {
-                  admin: {
-                    controllers: {
-                      foo: {
-                        actions: {
-                          bar: true
-                        }
-                      }
-                    }
-                  },
-                  default: {
-                    controllers: {
-                      baz: {
-                        actions: {
-                          yolo: true
-                        }
-                      }
-                    }
-                  },
-                  anonymous: {
-                    controllers: {
-                      anon: {
-                        actions: {
-                          ymous: true
-                        }
-                      }
-                    }
-                  }
+          default: {
+            controllers: {
+              baz: {
+                actions: {
+                  yolo: true
+                }
+              }
+            }
+          },
+          anonymous: {
+            controllers: {
+              anon: {
+                actions: {
+                  ymous: true
                 }
               }
             }
           }
         };
 
-      return SecurityController.__get__('resetRoles').call(mock)
+      return SecurityController.__get__('resetRoles')(mock, {validateAndSaveRole})
         .then(() => {
           try {
             should(validateAndSaveRole).have.callCount(3);
@@ -148,10 +137,9 @@ describe('Test: security controller - createFirstAdmin', () => {
   describe('#resetProfiles', () => {
     it('should call validateAndSaveProfile with all default profiles and rights policies', () => {
       const
-        validateAndSaveProfile = sandbox.stub().returns(Promise.resolve()),
-        mock = {repositories: {profile: {validateAndSaveProfile}}};
+        validateAndSaveProfile = sandbox.stub().returns(Promise.resolve());
 
-      return SecurityController.__get__('resetProfiles').call(mock)
+      return SecurityController.__get__('resetProfiles')({validateAndSaveProfile})
         .then(() => {
 
           try {

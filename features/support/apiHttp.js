@@ -694,11 +694,27 @@ ApiHttp.prototype.mGetProfiles= function (body) {
   return this.callApi(options);
 };
 
-ApiHttp.prototype.searchProfiles = function (body) {
+ApiHttp.prototype.searchProfiles = function (body, args) {
   const options = {
     url: this.apiPath('profiles/_search'),
     method: 'POST',
     body
+  };
+
+  if (args) {
+    let first = true;
+    Object.keys(args).forEach(arg => {
+      options.url += (first ? '?' : '&') + `${arg}=${args[arg]}`;
+    });
+  }
+
+  return this.callApi(options);
+};
+
+ApiHttp.prototype.scrollProfiles = function (scrollId) {
+  const options = {
+    url: this.apiPath('profiles/_scroll/' + scrollId),
+    method: 'GET'
   };
 
   return this.callApi(options);
@@ -708,16 +724,6 @@ ApiHttp.prototype.deleteProfile = function (id) {
   const options = {
     url: this.apiPath('profiles/' + id),
     method: 'DELETE'
-  };
-
-  return this.callApi(options);
-};
-
-ApiHttp.prototype.searchValidations = function (body) {
-  const options = {
-    url: this.apiPath('validations/_search'),
-    method: 'POST',
-    body
   };
 
   return this.callApi(options);
@@ -757,12 +763,30 @@ ApiHttp.prototype.getMyRights = function () {
   return this.callApi(options);
 };
 
-ApiHttp.prototype.searchUsers = function (body) {
-  return this.callApi({
+ApiHttp.prototype.searchUsers = function (body, args) {
+  const options = {
     url: this.apiPath('users/_search'),
     method: 'POST',
     body: { query: body }
-  });
+  };
+
+  if (args) {
+    let first = true;
+    Object.keys(args).forEach(arg => {
+      options.url += (first ? '?' : '&') + `${arg}=${args[arg]}`;
+    });
+  }
+
+  return this.callApi(options);
+};
+
+ApiHttp.prototype.scrollUsers = function (scrollId) {
+  const options = {
+    url: this.apiPath('users/_scroll/' + scrollId),
+    method: 'GET'
+  };
+
+  return this.callApi(options);
 };
 
 ApiHttp.prototype.deleteUser = function (id) {
@@ -869,6 +893,32 @@ ApiHttp.prototype.validateSpecifications = function (specifications) {
     url: this.apiPath('_validateSpecifications'),
     method: 'POST',
     body: specifications
+  };
+
+  return this.callApi(options);
+};
+
+ApiHttp.prototype.searchSpecifications = function (body, args) {
+  const options = {
+    url: this.apiPath('validations/_search'),
+    method: 'POST',
+    body
+  };
+
+  if (args) {
+    let first = true;
+    Object.keys(args).forEach(arg => {
+      options.url += (first ? '?' : '&') + `${arg}=${args[arg]}`;
+    });
+  }
+
+  return this.callApi(options);
+};
+
+ApiHttp.prototype.scrollSpecifications = function (scrollId) {
+  const options = {
+    url: this.apiPath('validations/_scroll/' + scrollId),
+    method: 'GET'
   };
 
   return this.callApi(options);

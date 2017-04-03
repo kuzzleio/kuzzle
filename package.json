@@ -48,7 +48,7 @@
     "lodash": "4.17.4",
     "mkdirp": "0.5.1",
     "moment": "2.17.1",
-    "ms": "^0.7.2",
+    "ms": "^1.0.0",
     "ngeohash": "0.6.0",
     "node-interval-tree": "^1.0.0",
     "node-units": "0.1.7",

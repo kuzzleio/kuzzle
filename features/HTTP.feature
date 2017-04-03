@@ -301,6 +301,8 @@ Feature: Test HTTP API
     Given I update the profile with id "my-profile-2" by adding the role "role1"
     Then I'm able to find "2" profiles
     Then I'm able to find "2" profiles containing the role with id "role1"
+    Given A scrolled search on profiles
+    Then I am able to perform a scrollProfiles request
     Then I delete the profile "my-profile-1"
     Then I delete the profile "my-profile-2"
 
@@ -333,6 +335,8 @@ Feature: Test HTTP API
     Then I am able to get the user "useradmin-id" matching {"_id":"#prefix#useradmin-id","_source":{"profileIds":["admin"]}}
     Then I am able to get the user "user2-id" matching {"_id":"#prefix#user2-id","_source":{"profileIds":["#prefix#profile2"]}}
     Then I search for {"ids":{"type": "users", "values":["#prefix#useradmin-id", "#prefix#user2-id"]}} and find 2 users
+    Given A scrolled search on users
+    Then I am able to perform a scrollUsers request
     Then I delete the user "user2-id"
     Then I search for {"ids":{"type": "users", "values":["#prefix#useradmin-id"]}} and find 1 users matching {"_id":"#prefix#useradmin-id","_source":{"name":{"first":"David","last":"Bowie"}}}
     When I log in as useradmin-id:testpwd expiring in 1h
@@ -1530,6 +1534,17 @@ Feature: Test HTTP API
     Then There is no error message
     When I post an invalid document
     Then There is an error message
+
+  @usingHttp @cleanValidations
+  Scenario: Validation - searchSpecifications
+    Then I put a valid specification for index "kuzzle-test-index" and collection "kuzzle-collection-test"
+    Then I find 1 specifications
+
+  @usingHttp @cleanValidations
+  Scenario: Validation - scrollSpecifications
+    Then I put a valid specification for index "kuzzle-test-index" and collection "kuzzle-collection-test"
+    Then I find 1 specifications with scroll "1m"
+    Then I am able to perform a scrollSpecifications request
 
   @usingHttp @cleanValidations
   Scenario: Validation - validateDocument
