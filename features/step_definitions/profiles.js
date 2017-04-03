@@ -1,295 +1,216 @@
-var
-  async = require('async');
+'use strict';
 
-var apiSteps = function () {
-  this.When(/^I get the profile mapping$/, function (callback) {
-    this.api.getProfileMapping()
-      .then(function (response) {
+const async = require('async');
+
+const apiSteps = function () {
+  this.When(/^I get the profile mapping$/, function () {
+    return this.api.getProfileMapping()
+      .then(response => {
         if (response.error) {
-          return callback(new Error(response.error.message));
+          throw new Error(response.error.message);
         }
 
         if (!response.result) {
-          return callback(new Error('No result provided'));
+          throw new Error('No result provided');
         }
 
         if (!response.result.mapping) {
-          return callback(new Error('No mapping provided'));
+          throw new Error('No mapping provided');
         }
 
         this.result = response.result.mapping;
-        callback();
-      }.bind(this))
-      .catch(function (error) {
-        callback(error);
       });
   });
 
-  this.Then(/^I change the profile mapping$/, function (callback) {
-    this.api.updateProfileMapping()
+  this.Then(/^I change the profile mapping$/, function () {
+    return this.api.updateProfileMapping()
       .then(body => {
         if (body.error !== null) {
-          callback(new Error(body.error.message));
-          return false;
+          throw new Error(body.error.message);
         }
-
-        callback();
-      })
-      .catch(function (error) {
-        callback(new Error(error));
       });
   });
 
-  this.When(/^I create a new profile "([^"]*)" with id "([^"]*)"$/, {timeout: 20 * 1000}, function (profile, id, callback) {
+  this.When(/^I create a new profile "([^"]*)" with id "([^"]*)"$/, {timeout: 20 * 1000}, function (profile, id) {
     if (!this.profiles[profile]) {
-      return callback('Fixture for profile ' + profile + ' does not exists');
+      throw new Error('Fixture for profile ' + profile + ' does not exists');
     }
 
     id = this.idPrefix + id;
 
-    this.api.createOrReplaceProfile(id, this.profiles[profile])
+    return this.api.createOrReplaceProfile(id, this.profiles[profile])
       .then(body => {
         if (body.error) {
-          callback(new Error(body.error.message));
-          return false;
+          throw new Error(body.error.message);
         }
-
-        callback();
-      })
-      .catch(function (error) {
-        callback(error);
       });
   });
 
   this.Then(/^I cannot create an invalid profile$/, {timeout: 20 * 1000}, function (callback) {
     this.api.createOrReplaceProfile('invalid-profile', this.profiles.invalidProfile)
-      .then(body => {
-        if (body.error) {
-          callback();
-          return true;
-        }
-
+      .then(() => {
         callback(new Error('Creating profile with unexisting role succeeded. Expected to throw.'));
       })
-      .catch(function () {
-        callback();
-      });
+      .catch(() => callback());
   });
 
   this.Then(/^I cannot create a profile with an empty set of roles$/, {timeout: 20 * 1000}, function (callback) {
     this.api.createOrReplaceProfile('invalid-profile', this.profiles.empty)
-      .then(body => {
-        if (body.error) {
-          callback();
-          return true;
-        }
-
+      .then(() => {
         callback(new Error('Creating profile without roles succeeded. Expected to throw.'));
       })
-      .catch(function () {
-        callback();
-      });
+      .catch(() => callback());
   });
 
   this.Then(/^I cannot a profile without ID$/, function (callback) {
     this.api.getProfile('')
-      .then(body => {
-        if (body.error) {
-          callback();
-          return true;
-        }
-
+      .then(() => {
         callback(new Error('Getting profile without id succeeded. Expected to throw.'));
       })
-      .catch(() => {
-        callback();
-      });
+      .catch(() => callback());
   });
 
 
   this.Then(/^I'm ?(not)* able to find the profile with id "([^"]*)"(?: with profile "([^"]*)")?$/, {timeout: 20 * 1000}, function (not, id, profile, callback) {
-    var
-      main;
-
     if (profile && !this.profiles[profile]) {
-      return callback('Fixture for profile ' + profile + ' not exists');
+      return callback(new Error('Fixture for profile ' + profile + ' not exists'));
     }
 
     id = this.idPrefix + id;
 
-    main = function (callbackAsync) {
+    let main = function (callbackAsync) {
       setTimeout(() => {
         this.api.getProfile(id)
           .then(body => {
             if (body.error) {
-              return callbackAsync(body.error.message);
+              return callbackAsync(new Error(body.error.message));
             }
 
             if (not) {
-              return callbackAsync(`Profile with id ${id} exists`);
+              return callbackAsync(new Error(`Profile with id ${id} exists`));
             }
 
             callbackAsync();
           })
-          .catch(error => {
-            if (not) {
-              return callback();
-            }
-
-            callback(error);
-          });
+          .catch(error => callback(not ? null : error));
       }, 20); // end setTimeout
     };
 
     async.retry(20, main.bind(this), function (err) {
       if (err) {
-        callback(new Error(err));
-        return false;
+        return callback(err);
       }
 
       callback();
     });
   });
 
-  this.Then(/^I'm ?(not)* able to find rights for profile "([^"]*)"$/, {timeout: 20 * 1000}, function (not, id, callback) {
+  this.Then(/^I'm ?(not)* able to find rights for profile "([^"]*)"$/, {timeout: 20 * 1000}, function (not, id) {
     id = this.idPrefix + id;
 
-    this.api.getProfileRights(id)
+    return this.api.getProfileRights(id)
       .then(body => {
         if (body.error) {
-          return callback(body.error.message);
+          throw new Error(body.error.message);
         }
 
         if (not) {
-          return callback(`Profile with id ${id} exists`);
+          throw new Error(`Profile with id ${id} exists`);
         }
-
-        callback();
       })
-      .catch(error => {
-        if (not) {
-          return callback();
+      .catch(err => {
+        if (!not || err.statusCode !== 404) {
+          return Promise.reject(err);
         }
-
-        callback(error);
       });
-
   });
 
-  this.When(/^I delete the profile (?:with id )?"([^"]*)"$/, function (id, callback) {
+  this.When(/^I delete the profile (?:with id )?"([^"]*)"$/, function (id) {
     if (id) {
       id = this.idPrefix + id;
     }
 
-    this.api.deleteProfile(id)
+    return this.api.deleteProfile(id)
       .then(body => {
         if (body.error) {
-          callback(new Error(body.error.message));
-          return false;
+          throw new Error(body.error.message);
         }
-
-        callback();
-      })
-      .catch(function (error) {
-        callback(error);
       });
   });
 
   this.Then(/^I'm able to find "([\d]*)" profiles(?: containing the role with id "([^"]*)")?$/, function (profilesCount, roleId, callback) {
-    var body = {
-        roles: []
-      },
-      main;
+    const body = {roles: []};
 
     if (roleId) {
       body.roles.push(this.idPrefix + roleId);
     }
 
-    main = function (callbackAsync) {
+    let main = function (callbackAsync) {
       setTimeout(() => {
-
-        this.api.searchProfiles(body).then(response => {
-
-          if (response.error) {
-            callbackAsync(new Error(response.error.message));
-            return false;
-          }
-
-          if (!response.result) {
-            callbackAsync(new Error('Malformed response (no error, no result)'));
-            return false;
-          }
-
-          if (!Array.isArray(response.result.hits)) {
-            callbackAsync(new Error('Malformed response (hits is not an array)'));
-            return false;
-          }
-
-          if (!response.result.hits) {
-            response.result.hits = response.result.hits.filter(doc => doc._id.indexOf(this.idPrefix));
-
-            if (response.result.hits.length !== parseInt(profilesCount)) {
-              return callbackAsync(`Expected ${profilesCount} profiles. Got ${response.result.hits.length}`);
+        this.api.searchProfiles(body)
+          .then(response => {
+            if (response.error) {
+              return callbackAsync(new Error(response.error.message));
             }
-          }
 
-          callbackAsync();
-        })
-        .catch(function (error) {
-          callbackAsync(error);
-        });
+            if (!response.result) {
+              return callbackAsync(new Error('Malformed response (no error, no result)'));
+            }
+
+            if (!Array.isArray(response.result.hits)) {
+              return callbackAsync(new Error('Malformed response (hits is not an array)'));
+            }
+
+            if (!response.result.hits) {
+              response.result.hits = response.result.hits.filter(doc => doc._id.indexOf(this.idPrefix));
+
+              if (response.result.hits.length !== parseInt(profilesCount)) {
+                return callbackAsync(`Expected ${profilesCount} profiles. Got ${response.result.hits.length}`);
+              }
+            }
+
+            callbackAsync();
+          })
+          .catch(err => callbackAsync(err));
       }, 200);
     };
 
     async.retry(20, main.bind(this), function (err) {
       if (err) {
-        callback(new Error(err));
-        return false;
+        return callback(new Error(err));
       }
 
       callback();
     });
   });
 
-  this.Given(/^I update the profile with id "([^"]*)" by adding the role "([^"]*)"$/, {timeout: 20 * 1000}, function (profileId, roleId, callback) {
+  this.Given(/^I update the profile with id "([^"]*)" by adding the role "([^"]*)"$/, {timeout: 20 * 1000}, function (profileId, roleId) {
     if (!this.roles[roleId]) {
-      return callback('Fixture for role ' + roleId + ' does not exists');
+      throw new Error('Fixture for role ' + roleId + ' does not exists');
     }
+
     roleId = this.idPrefix + roleId;
     profileId = this.idPrefix + profileId;
 
-    this.api.createOrReplaceProfile(profileId, {
-      policies: [{roleId: roleId}]
-    })
-    .then(response => {
-      if (response.error) {
-        callback(new Error(response.error.message));
-        return false;
-      }
-
-      callback();
-    })
-    .catch(error => {
-      callback(error);
-    });
+    return this.api.createOrReplaceProfile(profileId, {policies: [{roleId: roleId}]})
+      .then(response => {
+        if (response.error) {
+          throw new Error(response.error.message);
+        }
+      });
   });
 
   this.Then(/^I'm able to do a multi get with "([^"]*)" and get "(\d*)" profiles$/, function (profiles, count, callback) {
-    var
-      main,
-      body;
-
-    body = {
+    let body = {
       ids: profiles.split(',').map(roleId => this.idPrefix + roleId)
     };
 
-    main = function (callbackAsync) {
+    let main = function (callbackAsync) {
       setTimeout(() => {
         this.api.mGetProfiles(body)
           .then(response => {
             if (response.error) {
-              callbackAsync(response.error.message);
-              return false;
+              return callbackAsync(response.error.message);
             }
 
             if (!response.result.hits || response.result.hits.length !== parseInt(count)) {
@@ -298,20 +219,51 @@ var apiSteps = function () {
 
             callbackAsync();
           })
-          .catch(function (error) {
-            callbackAsync(error);
-          });
+          .catch(err => callbackAsync(err));
       }, 100); // end setTimeout
     };
 
     async.retry(20, main.bind(this), function (err) {
       if (err) {
-        callback(new Error(err));
-        return false;
+        return callback(err);
       }
 
       callback();
     });
+  });
+
+  this.Given(/^A scrolled search on profiles$/, function () {
+    this.scrollId = null;
+
+    return this.api.searchProfiles({roles: []}, {scroll: '1m'})
+      .then(response => {
+        if (response.error) {
+          throw new Error(response.error.message);
+        }
+
+        if (!response.result.scrollId) {
+          throw new Error('No scrollId returned by the searchProfile query');
+        }
+
+        this.scrollId = response.result.scrollId;
+      });
+  });
+
+  this.Then(/^I am able to perform a scrollProfiles request$/, function () {
+    if (!this.scrollId) {
+      throw new Error('No previous scrollId found');
+    }
+
+    return this.api.scrollProfiles(this.scrollId)
+      .then(response => {
+        if (response.error) {
+          throw new Error(response.error.message);
+        }
+
+        if (['hits', 'scrollId', 'total'].some(prop => response.result[prop] === undefined)) {
+          throw new Error('Incomplete scroll results');
+        }
+      });
   });
 };
 
