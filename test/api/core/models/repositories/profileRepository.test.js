@@ -359,12 +359,13 @@ describe('Test: repositories/profileRepository', () => {
 
   describe('#searchProfiles', () => {
     it('should call search', () => {
+      const opts = {from: 13, size: 42, scroll: 'foo'};
       profileRepository.search = sinon.spy();
 
-      profileRepository.searchProfiles(false, 'from', 'size');
+      profileRepository.searchProfiles(false, opts);
       should(profileRepository.search)
         .be.calledOnce()
-        .be.calledWith({query: {}}, 'from', 'size');
+        .be.calledWith({query: {}}, opts);
 
       profileRepository.searchProfiles(['role1', 'role2']);
       should(profileRepository.search)
