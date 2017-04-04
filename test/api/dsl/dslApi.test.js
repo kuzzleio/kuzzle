@@ -74,7 +74,7 @@ describe('DSL API', () => {
         .then(result => {
           let bool = {
             bool: {
-              must_not: [
+              should_not: [
                 {exists: { field: 'bar' }},
                 {equals: { foo: 'bar' }}
               ]
