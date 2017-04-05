@@ -90,6 +90,27 @@ var apiSteps = function () {
       })
       .catch(err => callback(err));
   });
+
+  this.Then(/^I get the registrated authentication strategies$/, function (callback) {
+    this.api.getAuthenticationStrategies()
+      .then(response => {
+        if (response.error) {
+          return callback(new Error(response.error.message));
+        }
+
+        if (!response.result) {
+          return callback(new Error('No result provided'));
+        }
+
+        if (!response.result.authenticationStrategies || !Array.isArray(response.result.authenticationStrategies)) {
+          return callback(new Error('Invalid response format'));
+        }
+
+        this.result = response.result;
+        callback();
+      })
+      .catch(error => callback(error));
+  });
 };
 
 module.exports = apiSteps;

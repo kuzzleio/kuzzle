@@ -1564,3 +1564,7 @@ Feature: Test HTTP API
     And There is no specifications for index "kuzzle-test-index" and collection "kuzzle-collection-test"
     When I delete the specifications again for index "kuzzle-test-index" and collection "kuzzle-collection-test"
     Then There is no error message
+
+  @usingHttp
+  Scenario: Get authentication strategies
+    Then I get the registrated authentication strategies

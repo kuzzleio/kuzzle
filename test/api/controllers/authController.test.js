@@ -406,4 +406,14 @@ describe('Test the auth controller', () => {
         });
     });
   });
+
+  describe('#getAuthenticationStrategies', () => {
+    it('should return a valid response', () => {
+      return kuzzle.funnel.controllers.auth.getStrategies()
+        .then(response => {
+          should(response).be.instanceof(Object);
+          should(response).have.property('authenticationStrategies').instanceof(Array);
+        });
+    });
+  });
 });

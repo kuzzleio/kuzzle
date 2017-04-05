@@ -729,6 +729,15 @@ ApiHttp.prototype.deleteProfile = function (id) {
   return this.callApi(options);
 };
 
+ApiHttp.prototype.getAuthenticationStrategies = function () {
+  const options = {
+    url: this.apiPath('_authenticationStrategies'),
+    method: 'GET'
+  };
+
+  return this.callApi(options);
+};
+
 ApiHttp.prototype.getUser = function (id) {
   const options = {
     url: this.apiPath('users/' + id),

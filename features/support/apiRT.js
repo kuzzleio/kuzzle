@@ -737,6 +737,14 @@ ApiRT.prototype.deleteProfile = function (id) {
   return this.send(msg);
 };
 
+ApiRT.prototype.getAuthenticationStrategies = function () {
+  return this.send({
+    controller: 'auth',
+    action: 'getStrategies',
+    body: {}
+  });
+};
+
 ApiRT.prototype.getUser = function (id) {
   return this.send({
     controller: 'security',
