@@ -220,7 +220,11 @@ describe('Test: repositories/tokenRepository', () => {
 
   describe('#deleteByUserId', () => {
     it('should delete the tokens associated to a user identifier', () => {
-      kuzzle.services.list.internalCache.searchKeys.returns(Promise.resolve(['foo#foo', 'foo#bar', 'foo#baz']));
+      kuzzle.services.list.internalCache.searchKeys.returns(Promise.resolve([
+        'repos/internalIndex/token/foo#foo',
+        'repos/internalIndex/token/foo#bar',
+        'repos/internalIndex/token/foo#baz'
+      ]));
 
       return tokenRepository.deleteByUserId('foo')
         .then(() => {
@@ -231,7 +235,11 @@ describe('Test: repositories/tokenRepository', () => {
     });
 
     it('should not delete tokens if the internal cache return a false positive', () => {
-      kuzzle.services.list.internalCache.searchKeys.returns(Promise.resolve(['foo#foo', 'foo#bar#bar', 'foo#baz']));
+      kuzzle.services.list.internalCache.searchKeys.returns(Promise.resolve([
+        'repos/internalIndex/token/foo#foo',
+        'repos/internalIndex/token/foo#bar#bar',
+        'repos/internalIndex/token/foo#baz'
+      ]));
 
       return tokenRepository.deleteByUserId('foo')
         .then(() => {
