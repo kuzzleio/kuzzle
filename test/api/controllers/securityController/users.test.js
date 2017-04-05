@@ -323,25 +323,6 @@ describe('Test: security controller - users', () => {
     });
   });
 
-  describe('#createOrReplaceUser', () => {
-    it('should return a valid responseObject', () => {
-      kuzzle.repositories.user.hydrate = sandbox.stub().returns(Promise.resolve());
-      kuzzle.repositories.user.persist = sandbox.stub().returns(Promise.resolve({_id: 'test'}));
-
-      return securityController.createOrReplaceUser(new Request({_id: 'test', body: {profileIds: ['admin']}}))
-        .then(response => {
-          should(response).be.instanceof(Object);
-          should(response).be.match({_id: 'test', _source: {}});
-        });
-    });
-
-    it('should reject the promise if no profile is given', () => {
-      return should(() => {
-        securityController.createOrReplaceUser(new Request({_id: 'test'}));
-      }).throw();
-    });
-  });
-
   describe('#getUserRights', () => {
     it('should resolve to an object on a getUserRights call', () => {
       kuzzle.repositories.user.load = userId => {
