@@ -1,6 +1,6 @@
 'use strict';
 
-var
+const
   should = require('should'),
   BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,
   DSL = require('../../../../lib/api/dsl');
@@ -90,7 +90,7 @@ describe('DSL.operands.bool', () => {
               },
               {
                 not: {
-                  and: [
+                  or: [
                     { equals: { city: 'NYC' } }
                   ]
                 }
@@ -103,7 +103,7 @@ describe('DSL.operands.bool', () => {
               },
               {
                 not: {
-                  or: [
+                  and: [
                     { regexp: { hobby: { value: '^.*ball', flags: 'i' } } }
                   ]
                 }
