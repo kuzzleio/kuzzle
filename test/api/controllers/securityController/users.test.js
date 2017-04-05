@@ -185,8 +185,8 @@ describe('Test: security controller - users', () => {
   });
 
   describe('#deleteUser', () => {
-    it('should return a valid responseObject', () => {
-      kuzzle.repositories.user.delete = sandbox.stub().returns(Promise.resolve());
+    it('should return a valid response', () => {
+      kuzzle.repositories.user.delete = sandbox.stub().returns(Promise.resolve({_id: 'test'}));
 
       return securityController.deleteUser(new Request({_id: 'test'}))
         .then(response => {
