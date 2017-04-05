@@ -849,14 +849,14 @@ ApiHttp.prototype.checkToken = function (token) {
 
   return this.callApi(request)
     .then(response => {
-      if (token !== null) {
+      if (_token !== null) {
         this.world.currentUser.token = _token;
       }
 
       return response;
     })
     .catch(error => {
-      if (token !== null) {
+      if (_token !== null) {
         this.world.currentUser.token = _token;
       }
 
