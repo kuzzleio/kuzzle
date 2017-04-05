@@ -220,32 +220,50 @@ describe('Test: repositories/tokenRepository', () => {
 
   describe('#deleteByUserId', () => {
     it('should delete the tokens associated to a user identifier', () => {
+      sinon.stub(tokenRepository, 'refreshCacheTTL');
       kuzzle.services.list.internalCache.searchKeys.returns(Promise.resolve([
         'repos/internalIndex/token/foo#foo',
         'repos/internalIndex/token/foo#bar',
         'repos/internalIndex/token/foo#baz'
       ]));
 
+      kuzzle.services.list.internalCache.get.onFirstCall().returns(Promise.resolve(JSON.stringify({userId: 'foo', _id: 'foo', expiresAt: 1})));
+      kuzzle.services.list.internalCache.get.onSecondCall().returns(Promise.resolve(JSON.stringify({userId: 'foo', _id: 'bar', expiresAt: 2})));
+      kuzzle.services.list.internalCache.get.onThirdCall().returns(Promise.resolve(JSON.stringify({userId: 'foo', _id: 'baz', expiresAt: 3})));
+
       return tokenRepository.deleteByUserId('foo')
         .then(() => {
-          should(kuzzle.services.list.internalCache.remove).calledWith('repos/internalIndex/token/foo');
-          should(kuzzle.services.list.internalCache.remove).calledWith('repos/internalIndex/token/bar');
-          should(kuzzle.services.list.internalCache.remove).calledWith('repos/internalIndex/token/baz');
+          should(kuzzle.services.list.internalCache.expire).calledWith('repos/internalIndex/token/foo', -1);
+          should(kuzzle.services.list.internalCache.expire).calledWith('repos/internalIndex/token/bar', -1);
+          should(kuzzle.services.list.internalCache.expire).calledWith('repos/internalIndex/token/baz', -1);
+          should(kuzzle.tokenManager.expire).calledWithMatch({userId: 'foo', _id: 'foo', expiresAt: 1});
+          should(kuzzle.tokenManager.expire).calledWithMatch({userId: 'foo', _id: 'bar', expiresAt: 2});
+          should(kuzzle.tokenManager.expire).calledWithMatch({userId: 'foo', _id: 'baz', expiresAt: 3});
         });
     });
 
     it('should not delete tokens if the internal cache return a false positive', () => {
+      sinon.stub(tokenRepository, 'refreshCacheTTL');
       kuzzle.services.list.internalCache.searchKeys.returns(Promise.resolve([
         'repos/internalIndex/token/foo#foo',
         'repos/internalIndex/token/foo#bar#bar',
         'repos/internalIndex/token/foo#baz'
       ]));
 
+      kuzzle.services.list.internalCache.get.onFirstCall().returns(Promise.resolve(JSON.stringify({userId: 'foo', _id: 'foo', expiresAt: 1})));
+      kuzzle.services.list.internalCache.get.onSecondCall().returns(Promise.resolve(JSON.stringify({userId: 'foo', _id: 'baz', expiresAt: 2})));
+
       return tokenRepository.deleteByUserId('foo')
         .then(() => {
-          should(kuzzle.services.list.internalCache.remove.callCount).be.eql(2);
-          should(kuzzle.services.list.internalCache.remove).calledWith('repos/internalIndex/token/foo');
-          should(kuzzle.services.list.internalCache.remove).calledWith('repos/internalIndex/token/baz');
+          should(kuzzle.services.list.internalCache.get.callCount).be.eql(2);
+          should(kuzzle.services.list.internalCache.expire.callCount).be.eql(2);
+          should(kuzzle.services.list.internalCache.expire).calledWith('repos/internalIndex/token/foo', -1);
+          should(kuzzle.services.list.internalCache.expire).calledWith('repos/internalIndex/token/baz', -1);
+
+          should(kuzzle.tokenManager.expire.callCount).be.eql(2);
+          should(kuzzle.tokenManager.expire).calledWithMatch({userId: 'foo', _id: 'foo', expiresAt: 1});
+          should(kuzzle.tokenManager.expire).calledWithMatch({userId: 'foo', _id: 'baz', expiresAt: 2});
+
         });
     });
   });
