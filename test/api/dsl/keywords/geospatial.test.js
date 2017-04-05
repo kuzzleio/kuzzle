@@ -1,6 +1,6 @@
 'use strict';
 
-var
+const
   should = require('should'),
   DSL = require('../../../../lib/api/dsl');
 
