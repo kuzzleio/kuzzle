@@ -149,7 +149,8 @@ function KuzzleMock () {
   };
 
   this.passport = {
-    use: sinon.spy()
+    use: sinon.stub(),
+    authenticate: sinon.stub().returns(Promise.resolve({}))
   };
 
   this.pluginsManager = {
@@ -178,11 +179,15 @@ function KuzzleMock () {
       search: sinon.stub().returns(Promise.resolve()),
       ObjectConstructor: sinon.stub().returns({}),
       hydrate: sinon.stub().returns(Promise.resolve()),
-      persist: sinon.stub().returns(Promise.resolve())
+      persist: sinon.stub().returns(Promise.resolve({})),
+      anonymous: sinon.stub().returns({_id: '-1'})
     },
     token: {
       anonymous: sinon.stub().returns({_id: 'anonymous'}),
-      verifyToken: sinon.stub().returns(Promise.resolve())
+      verifyToken: sinon.stub().returns(Promise.resolve()),
+      generateToken: sinon.stub().returns(Promise.resolve({})),
+      expire: sinon.stub().returns(Promise.resolve()),
+      deleteByUserId: sinon.stub().returns(Promise.resolve())
     }
   };
 
@@ -224,6 +229,7 @@ function KuzzleMock () {
       },
       internalCache: {
         add: sinon.stub().returns(Promise.resolve()),
+        del: sinon.stub().returns(Promise.resolve()),
         exists: sinon.stub().returns(Promise.resolve()),
         expire: sinon.stub().returns(Promise.resolve()),
         flushdb: sinon.stub().returns(Promise.resolve()),
@@ -233,6 +239,7 @@ function KuzzleMock () {
         pexpire: sinon.stub().returns(Promise.resolve()),
         psetex: sinon.stub().returns(Promise.resolve()),
         remove: sinon.stub().returns(Promise.resolve()),
+        searchKeys: sinon.stub().returns(Promise.resolve([])),
         set: sinon.stub().returns(Promise.resolve()),
         setnx: sinon.stub().returns(Promise.resolve()),
         volatileSet: sinon.stub().returns(Promise.resolve())
