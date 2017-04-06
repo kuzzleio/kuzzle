@@ -24,7 +24,8 @@ module.exports = {
     common: {
       workerPrefix: 'kpw:',
       pipeWarnTime: 40,
-      pipeTimeout: 250
+      pipeTimeout: 250,
+      initTimeout: 2000,
     },
     'kuzzle-plugin-logger': {
       threads: 1
