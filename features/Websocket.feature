@@ -351,6 +351,17 @@ Feature: Test websocket API
     And The token is invalid
 
   @usingWebsocket @cleanSecurity
+  Scenario: user token deletion
+    Given I create a user "useradmin" with id "user1-id"
+    When I log in as user1-id:testpwd expiring in 1h
+    Then I write the document
+    Then I check the JWT Token
+    And The token is valid
+    Then I delete the user "user1-id"
+    Then I check the JWT Token
+    And The token is invalid
+
+  @usingWebsocket @cleanSecurity
   Scenario: create restricted user
     Then I create a restricted user "restricteduser1" with id "restricteduser1-id"
 
