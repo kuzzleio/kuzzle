@@ -852,11 +852,28 @@ ApiRT.prototype.createRestrictedUser = function (body, id) {
 };
 
 ApiRT.prototype.checkToken = function (token) {
-  return this.send({
-    controller: 'auth',
-    action: 'checkToken',
-    body: {token}
-  });
+  let _token = null;
+
+  if (this.world.currentUser && this.world.currentUser.token) {
+    _token = this.world.currentUser.token;
+    this.world.currentUser.token = null;
+  }
+
+  return this.send({controller: 'auth', action: 'checkToken', body: {token}})
+    .then(response => {
+      if (_token !== null) {
+        this.world.currentUser.token = _token;
+      }
+
+      return response;
+    })
+    .catch(error => {
+      if (_token !== null) {
+        this.world.currentUser.token = _token;
+      }
+
+      return Promise.reject(error);
+    });
 };
 
 ApiRT.prototype.refreshIndex = function (index) {
