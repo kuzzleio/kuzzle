@@ -731,7 +731,7 @@ ApiHttp.prototype.deleteProfile = function (id) {
 
 ApiHttp.prototype.getAuthenticationStrategies = function () {
   const options = {
-    url: this.apiPath('_authenticationStrategies'),
+    url: this.apiPath('strategies'),
     method: 'GET'
   };
 

@@ -102,7 +102,7 @@ var apiSteps = function () {
           return callback(new Error('No result provided'));
         }
 
-        if (!response.result.authenticationStrategies || !Array.isArray(response.result.authenticationStrategies)) {
+        if (!response.result || !Array.isArray(response.result)) {
           return callback(new Error('Invalid response format'));
         }
 
