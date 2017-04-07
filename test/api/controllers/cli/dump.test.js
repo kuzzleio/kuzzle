@@ -36,7 +36,7 @@ describe('Test: dump', () => {
         dump: {
           history: {
             coredump: 3,
-            traces: 5
+            reports: 5
           },
           path: '/tmp',
           dateFormat: 'YYYY'
@@ -147,14 +147,14 @@ describe('Test: dump', () => {
         .then(() => should(fsStub.readdirSync).not.be.called());
     });
 
-    it('should not delete traces nor coredumps if limits are not reached', () => {
+    it('should not delete reports nor coredumps if limits are not reached', () => {
       fsStub.readdirSync.returns(['foo', 'bar']);
 
       return dump()
         .then(() => should(fsStub.removeSync).not.be.called());
     });
 
-    it('should delete traces directories if over the limit', () => {
+    it('should delete reports directories if over the limit', () => {
       fsStub.statSync.onSecondCall().returns({
         isDirectory: () => false,
         birthtime: new Date('1979-11-13 01:13')
@@ -175,9 +175,9 @@ describe('Test: dump', () => {
         });
     });
 
-    it('should delete coredumps in traces directories, if over the limit', () => {
+    it('should delete coredumps in reports directories, if over the limit', () => {
       // do not let directory removals interfers with coredump removals
-      kuzzle.config.dump.history.traces = 100;
+      kuzzle.config.dump.history.reports = 100;
 
       fsStub.readdirSync.returns([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
 

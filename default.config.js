@@ -193,7 +193,7 @@ module.exports = {
     enabled: true,
     history: {
       coredump: 3,
-      traces: 5
+      reports: 5
     },
     path: './dump/',
     gcore: 'gcore',

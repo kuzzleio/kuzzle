@@ -414,9 +414,8 @@
   //          Core dumps weight usually between 1 and 2GB,
   //          so make sure you have enough space to store
   //          the provided number of coredumps.
-  //      * traces:
-  //          Maximum number of traces dumped
-  //          (i.e. dump directories).
+  //      * reports:
+  //          Maximum number of reports directories
   //  * path:
   //      Directory path where the dumps are stored
   //  * gcore:
@@ -436,7 +435,7 @@
     "enabled": true,
     "history": {
       "coredump": 3,
-      "traces": 10
+      "reports": 10
     },
     "path": "./dump/",
     "gcore": "/usr/bin/gcore",
