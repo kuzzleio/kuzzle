@@ -1,36 +1,43 @@
-var
+const
   should = require('should'),
   sinon = require('sinon'),
-  rewire = require('rewire'),
-  sandbox = sinon.sandbox.create(),
+  mockrequire = require('mock-require'),
   Request = require('kuzzle-common-objects').Request;
 
 describe('Test: dump', () => {
-  var
-    writeFileSyncSpy,
-    copySyncSpy,
-    mkdirpSyncSpy,
-    coreSpy,
-    consoleLogSpy,
-    getAllStatsSpy,
+  let
+    fsStub,
+    coreStub,
+    getAllStatsStub,
     dump,
     kuzzle;
 
   afterEach(() => {
-    sandbox.restore();
+    mockrequire.stopAll();
   });
 
   beforeEach(() => {
-    writeFileSyncSpy = sandbox.spy();
-    copySyncSpy = sandbox.spy();
-    mkdirpSyncSpy = sandbox.spy();
-    coreSpy = sandbox.stub().returns({});
-    consoleLogSpy = sandbox.spy();
-    getAllStatsSpy = sandbox.stub().returns(Promise.resolve({hits: [{stats: 42}]}));
+    fsStub = {
+      constants: {},
+      accessSync: sinon.stub(),
+      copySync: sinon.stub(),
+      statSync: sinon.stub(),
+      mkdirsSync: sinon.stub(),
+      readdirSync: sinon.stub(),
+      removeSync: sinon.stub(),
+      writeFileSync: sinon.stub()
+    };
+
+    coreStub = sinon.stub().returns({});
+    getAllStatsStub = sinon.stub().returns(Promise.resolve({hits: [{stats: 42}]}));
 
     kuzzle = {
       config: {
         dump: {
+          history: {
+            coredump: 3,
+            traces: 5
+          },
           path: '/tmp',
           dateFormat: 'YYYY'
         }
@@ -42,89 +49,152 @@ describe('Test: dump', () => {
         }
       },
       statistics: {
-        getAllStats: getAllStatsSpy
+        getAllStats: getAllStatsStub
       }
     };
 
-    dump = rewire('../../../../lib/api/controllers/cli/dump');
+    mockrequire('fs-extra', fsStub);
+    mockrequire('dumpme', coreStub);
 
-    dump.__set__('fs', {
-      writeFileSync: writeFileSyncSpy,
-      copySync: copySyncSpy
-    });
-
-    dump.__set__('mkdirp', {
-      sync: mkdirpSyncSpy
-    });
-
-    dump.__set__('dumpme', coreSpy);
-
-    dump.__set__('console', {
-      log: consoleLogSpy
-    });
-
-    dump = dump(kuzzle);
+    const dumpfactory = mockrequire.reRequire('../../../../lib/api/controllers/cli/dump');
+    dump = dumpfactory(kuzzle);
   });
 
-  it('should return computed dump path', done => {
-    var expectedDumpPath = '/tmp/'.concat((new Date()).getFullYear()).concat('-tests');
+  describe('#dump', () => {
+    beforeEach(() => {
+      // deactivating the cleanUpHistory method
+      fsStub.accessSync.throws(new Error('deactivated'));
+    });
 
-    dump(new Request({suffix: 'tests'}))
-      .then(dumpPath => {
-        should(dumpPath).be.exactly(expectedDumpPath);
-        done();
-      })
-      .catch(error => done(error));
+    it('should return computed dump path', () => {
+      const expectedDumpPath = '/tmp/'.concat((new Date()).getFullYear()).concat('-tests');
+
+      return dump(new Request({suffix: 'tests'}))
+        .then(dumpPath => should(dumpPath).be.exactly(expectedDumpPath));
+    });
+
+    it('should generate dump files', () => {
+      let
+        processDump,
+        osDump,
+        baseDumpPath = '/tmp/'.concat((new Date()).getFullYear());
+
+      return dump()
+        .then(() => {
+          should(fsStub.mkdirsSync).be.calledOnce();
+          should(fsStub.mkdirsSync.getCall(0).args[0]).be.exactly(baseDumpPath);
+
+          should(fsStub.writeFileSync.getCall(0).args[0]).be.exactly(baseDumpPath.concat('/config.json'));
+          should(fsStub.writeFileSync.getCall(0).args[1]).be.exactly(JSON.stringify(kuzzle.config, null, ' ').concat('\n'));
+
+          should(fsStub.writeFileSync.getCall(1).args[0]).be.exactly(baseDumpPath.concat('/plugins.json'));
+          should(fsStub.writeFileSync.getCall(1).args[1]).be.exactly(JSON.stringify(kuzzle.pluginsManager.plugins, null, ' ').concat('\n'));
+
+          should(fsStub.writeFileSync.getCall(2).args[0]).be.exactly(baseDumpPath.concat('/nodejs.json'));
+          processDump = JSON.parse(fsStub.writeFileSync.getCall(2).args[1]);
+          should(processDump).have.keys('env', 'config', 'argv', 'versions', 'release', 'moduleLoadList');
+
+          should(fsStub.writeFileSync.getCall(3).args[0]).be.exactly(baseDumpPath.concat('/os.json'));
+          osDump = JSON.parse(fsStub.writeFileSync.getCall(3).args[1]);
+          should(osDump).have.keys('platform', 'loadavg', 'uptime', 'cpus', 'mem', 'networkInterfaces');
+          should(osDump.mem).have.keys('total', 'free');
+
+          should(fsStub.writeFileSync.getCall(4).args[0]).be.exactly(baseDumpPath.concat('/statistics.json'));
+          should(fsStub.writeFileSync.getCall(4).args[1]).be.exactly(JSON.stringify([{stats: 42}], null, ' ').concat('\n'));
+
+          should(coreStub.firstCall.calledWith('gcore', baseDumpPath.concat('/core'))).be.true();
+
+          should(fsStub.copySync.getCall(0).args[0]).be.exactly(process.argv[0]);
+          should(fsStub.copySync.getCall(0).args[1]).be.exactly(baseDumpPath.concat('/node'));
+        });
+    });
+
+    it('should copy pm2 logs files if any', () => {
+      const baseDumpPath = '/tmp/'.concat((new Date()).getFullYear());
+      process.env.pm_log_path = '/tmp/logs/pm2.logs';
+
+      return dump()
+        .then(() => {
+          should(fsStub.copySync.getCall(0).args[0]).be.exactly('/tmp/logs');
+          should(fsStub.copySync.getCall(0).args[1]).be.exactly(baseDumpPath.concat('/logs'));
+        });
+    });
+
+    it('should copy pm2 logs and error files if any', () => {
+      const baseDumpPath = '/tmp/'.concat((new Date()).getFullYear());
+      process.env.pm_err_log_path = '/foo/bar/baz.log';
+
+      return dump()
+        .then(() => {
+          should(fsStub.copySync.getCall(0).args[0]).be.exactly('/foo/bar');
+          should(fsStub.copySync.getCall(0).args[1]).be.exactly(baseDumpPath.concat('/logs'));
+        });
+    });
   });
 
-  it('should generate dump files', done => {
-    var
-      processDump,
-      osDump,
-      baseDumpPath = '/tmp/'.concat((new Date()).getFullYear());
+  describe('#cleanHistory', () => {
+    beforeEach(() => {
+      fsStub.statSync.returns({
+        isDirectory: () => true,
+        birthtime: new Date('1979-12-28 14:56')
+      });
+    });
 
-    dump()
-      .then(() => {
-        should(mkdirpSyncSpy.getCall(0).args[0]).be.exactly(baseDumpPath);
+    it('should do nothing if the dump path is not reachable', () => {
+      fsStub.accessSync.throws(new Error('foobar'));
 
-        should(writeFileSyncSpy.getCall(0).args[0]).be.exactly(baseDumpPath.concat('/config.json'));
-        should(writeFileSyncSpy.getCall(0).args[1]).be.exactly(JSON.stringify(kuzzle.config, null, ' ').concat('\n'));
+      return dump()
+        .then(() => should(fsStub.readdirSync).not.be.called());
+    });
 
-        should(writeFileSyncSpy.getCall(1).args[0]).be.exactly(baseDumpPath.concat('/plugins.json'));
-        should(writeFileSyncSpy.getCall(1).args[1]).be.exactly(JSON.stringify(kuzzle.pluginsManager.plugins, null, ' ').concat('\n'));
+    it('should not delete traces nor coredumps if limits are not reached', () => {
+      fsStub.readdirSync.returns(['foo', 'bar']);
 
-        should(writeFileSyncSpy.getCall(2).args[0]).be.exactly(baseDumpPath.concat('/nodejs.json'));
-        processDump = JSON.parse(writeFileSyncSpy.getCall(2).args[1]);
-        should(processDump).have.keys('env', 'config', 'argv', 'versions', 'release', 'moduleLoadList');
+      return dump()
+        .then(() => should(fsStub.removeSync).not.be.called());
+    });
 
-        should(writeFileSyncSpy.getCall(3).args[0]).be.exactly(baseDumpPath.concat('/os.json'));
-        osDump = JSON.parse(writeFileSyncSpy.getCall(3).args[1]);
-        should(osDump).have.keys('platform', 'loadavg', 'uptime', 'cpus', 'mem', 'networkInterfaces');
-        should(osDump.mem).have.keys('total', 'free');
+    it('should delete traces directories if over the limit', () => {
+      fsStub.statSync.onSecondCall().returns({
+        isDirectory: () => false,
+        birthtime: new Date('1979-11-13 01:13')
+      });
 
-        should(writeFileSyncSpy.getCall(4).args[0]).be.exactly(baseDumpPath.concat('/statistics.json'));
-        should(writeFileSyncSpy.getCall(4).args[1]).be.exactly(JSON.stringify([{stats: 42}], null, ' ').concat('\n'));
+      fsStub.readdirSync.returns([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+      fsStub.accessSync.throws(new Error('no coredump here'));
+      fsStub.accessSync.onFirstCall().returns();
 
-        should(coreSpy.firstCall.calledWith('gcore', baseDumpPath.concat('/core'))).be.true();
+      return dump()
+        .then(() => {
+          // readdir returns 9 directory + 1 non-directory
+          // the limit is set to 5, so we should remove
+          // (9 - 5 + 1) directories
+          // (+1 because we are about to create a new one,
+          // and we don't want the limit to be exceeded)
+          should(fsStub.removeSync.callCount).be.eql(5);
+        });
+    });
 
-        should(copySyncSpy.getCall(0).args[0]).be.exactly(process.argv[0]);
-        should(copySyncSpy.getCall(0).args[1]).be.exactly(baseDumpPath.concat('/node'));
-        done();
-      })
-      .catch(error => done(error));
-  });
+    it('should delete coredumps in traces directories, if over the limit', () => {
+      // do not let directory removals interfers with coredump removals
+      kuzzle.config.dump.history.traces = 100;
 
-  it('should copy pm2 logs files if any', done => {
-    var baseDumpPath = '/tmp/'.concat((new Date()).getFullYear());
-    process.env.pm_log_path = '/tmp/logs/pm2.logs';
+      fsStub.readdirSync.returns([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
 
-    dump()
-      .then(() => {
-        should(copySyncSpy.getCall(0).args[0]).be.exactly('/tmp/logs');
-        should(copySyncSpy.getCall(0).args[1]).be.exactly(baseDumpPath.concat('/logs'));
-        done();
-      })
-      .catch(error => done(error));
+      // throws every 2 calls (the 1st one does not count)
+      for(let i = 1; i < 10; i+=2) {
+        fsStub.accessSync.onCall(i).throws(new Error('no coredump here'));
+      }
+
+      return dump()
+        .then(() => {
+          // 10 directories, 1 coredump per 2 directories = 5 dumps in total
+          // The limit is set to 3, so the method should remove
+          // (5 - 3 + 1) = 3 coredumps
+          // (+1 because we're about to create a new coredump)
+          should(fsStub.removeSync.callCount).be.eql(3);
+        });
+    });
   });
 });
 

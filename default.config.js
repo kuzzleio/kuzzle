@@ -190,7 +190,11 @@ module.exports = {
   },
 
   dump: {
-    enabled: false,
+    enabled: true,
+    history: {
+      coredump: 3,
+      traces: 5
+    },
     path: './dump/',
     gcore: 'gcore',
     dateFormat: 'YYYYMMDD-HHmm',
