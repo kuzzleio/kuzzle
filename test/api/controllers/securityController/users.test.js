@@ -185,8 +185,8 @@ describe('Test: security controller - users', () => {
   });
 
   describe('#deleteUser', () => {
-    it('should return a valid responseObject', () => {
-      kuzzle.repositories.user.delete = sandbox.stub().returns(Promise.resolve());
+    it('should return a valid response', () => {
+      kuzzle.repositories.user.delete = sandbox.stub().returns(Promise.resolve({_id: 'test'}));
 
       return securityController.deleteUser(new Request({_id: 'test'}))
         .then(response => {
@@ -320,25 +320,6 @@ describe('Test: security controller - users', () => {
           should(response._source.profile).be.an.instanceOf(Object);
           should(response._source.foo).be.exactly('bar');
         });
-    });
-  });
-
-  describe('#createOrReplaceUser', () => {
-    it('should return a valid responseObject', () => {
-      kuzzle.repositories.user.hydrate = sandbox.stub().returns(Promise.resolve());
-      kuzzle.repositories.user.persist = sandbox.stub().returns(Promise.resolve({_id: 'test'}));
-
-      return securityController.createOrReplaceUser(new Request({_id: 'test', body: {profileIds: ['admin']}}))
-        .then(response => {
-          should(response).be.instanceof(Object);
-          should(response).be.match({_id: 'test', _source: {}});
-        });
-    });
-
-    it('should reject the promise if no profile is given', () => {
-      return should(() => {
-        securityController.createOrReplaceUser(new Request({_id: 'test'}));
-      }).throw();
     });
   });
 
