@@ -27,10 +27,14 @@
     //   * pipeTimeout:
     //        Maximum execution time (in milliseconds)
     //        of a pipe plugin action
+    //   * initTimeout:
+    //        Maximum execution time (in milliseconds)
+    //        of a plugin initialization
     "common": {
       "workerPrefix": "kpw:",
       "pipeWarnTime": 40,
-      "pipeTimeout": 250
+      "pipeTimeout": 250,
+      "initTimeout": 2000
     },
 
     // The following blocks configure plugins
@@ -404,6 +408,14 @@
   //  * enabled:
   //      Enable/disable informations dump on crash or on errors
   //      (see below)
+  //  * history:
+  //      * coredump:
+  //          Maximum number of core dumps to keep.
+  //          Core dumps weight usually between 1 and 2GB,
+  //          so make sure you have enough space to store
+  //          the provided number of coredumps.
+  //      * reports:
+  //          Maximum number of reports directories
   //  * path:
   //      Directory path where the dumps are stored
   //  * gcore:
@@ -421,6 +433,10 @@
   //          List of error types triggering a dump
   "dump": {
     "enabled": true,
+    "history": {
+      "coredump": 3,
+      "reports": 10
+    },
     "path": "./dump/",
     "gcore": "/usr/bin/gcore",
     "dateFormat": "YYYYMMDD-HHmm",

@@ -24,7 +24,8 @@ module.exports = {
     common: {
       workerPrefix: 'kpw:',
       pipeWarnTime: 40,
-      pipeTimeout: 250
+      pipeTimeout: 250,
+      initTimeout: 2000,
     },
     'kuzzle-plugin-logger': {
       threads: 1
@@ -189,7 +190,11 @@ module.exports = {
   },
 
   dump: {
-    enabled: false,
+    enabled: true,
+    history: {
+      coredump: 3,
+      reports: 5
+    },
     path: './dump/',
     gcore: 'gcore',
     dateFormat: 'YYYYMMDD-HHmm',
