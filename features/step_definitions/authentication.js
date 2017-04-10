@@ -106,6 +106,10 @@ var apiSteps = function () {
           return callback(new Error('Invalid response format'));
         }
 
+        if (response.result.indexOf('local') === -1) {
+          return callback(new Error('The default \'local\' authentication strategy wasn\'t found in the list of registrated strategies'));
+        }
+
         this.result = response.result;
         callback();
       })
