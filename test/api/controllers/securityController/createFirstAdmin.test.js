@@ -29,7 +29,7 @@ describe('Test: security controller - createFirstAdmin', () => {
       reset,
       resetRolesStub,
       resetProfilesStub,
-      createOrReplaceUser;
+      createUser;
 
     beforeEach(() => {
       reset = SecurityController.__set__({
@@ -38,9 +38,9 @@ describe('Test: security controller - createFirstAdmin', () => {
       });
       resetRolesStub = SecurityController.__get__('resetRoles');
       resetProfilesStub = SecurityController.__get__('resetProfiles');
-      createOrReplaceUser = sandbox.stub().returns(Promise.resolve());
+      createUser = sandbox.stub().returns(Promise.resolve());
 
-      kuzzle.funnel.controllers.security.createOrReplaceUser = createOrReplaceUser;
+      kuzzle.funnel.controllers.security.createUser = createUser;
     });
 
     afterEach(() => {
@@ -61,8 +61,8 @@ describe('Test: security controller - createFirstAdmin', () => {
 
       return adminController.createFirstAdmin(new Request({_id: 'toto', body: {password: 'pwd'}}))
         .then(() => {
-          should(createOrReplaceUser).be.calledOnce();
-          should(createOrReplaceUser.firstCall.args[0]).be.instanceOf(Request);
+          should(createUser).be.calledOnce();
+          should(createUser.firstCall.args[0]).be.instanceOf(Request);
           should(resetRolesStub).have.callCount(0);
           should(resetProfilesStub).have.callCount(0);
         });
@@ -76,8 +76,8 @@ describe('Test: security controller - createFirstAdmin', () => {
 
       return adminController.createFirstAdmin(new Request({_id: 'toto', body: {password: 'pwd'}, reset: true}))
         .then(() => {
-          should(createOrReplaceUser).be.calledOnce();
-          should(createOrReplaceUser.firstCall.args[0]).be.instanceOf(Request);
+          should(createUser).be.calledOnce();
+          should(createUser.firstCall.args[0]).be.instanceOf(Request);
           should(resetRolesStub).have.callCount(1);
           should(resetProfilesStub).have.callCount(1);
         });

@@ -33,18 +33,17 @@ module.exports = function () {
       });
   });
 
-  this.When(/^I (can't )?create a (new )?(restricted )?user "(.*?)" with id "(.*?)"$/, {timeout: 20000}, function (not, isNew, isRestricted, user, id, callback) {
-    const userObject = this.users[user];
-    let method;
+
+  this.When(/^I (can't )?create a (restricted )?user "(.*?)" with id "(.*?)"$/, {timeout: 20000}, function (not, isRestricted, user, id, callback) {
+    var
+      userObject = this.users[user],
+      method;
 
     if (isRestricted) {
       method = 'createRestrictedUser';
     }
-    else if (isNew) {
-      method = 'createUser';
-    }
     else {
-      method = 'createOrReplaceUser';
+      method = 'createUser';
     }
 
     id = this.idPrefix + id;
