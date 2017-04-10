@@ -77,7 +77,7 @@ describe('funnelController.processRequest', () => {
   it('should resolve the promise if everything is ok', () => {
     const request = new Request({
       controller: 'fakeController',
-      action: 'ok',
+      action: 'ok'
     });
 
     return should(funnel.processRequest(request)
@@ -94,7 +94,7 @@ describe('funnelController.processRequest', () => {
       })).be.fulfilled();
   });
 
-  it('should reject the promise if a controller action fails', done => {
+  it('should reject the promise if a controller action fails', () => {
     const request = new Request({
       controller: 'fakeController',
       action: 'fail',
@@ -102,8 +102,10 @@ describe('funnelController.processRequest', () => {
 
     funnel.controllers.fakeController.fail.returns(Promise.reject(new Error('rejected')));
 
-    funnel.processRequest(request)
-      .then(() => done('should have failed'))
+    return funnel.processRequest(request)
+      .then(() => {
+        throw new Error('You shall not pass');
+      })
       .catch(e => {
         should(e).be.instanceOf(Error);
         should(e.message).be.eql('rejected');
@@ -115,11 +117,10 @@ describe('funnelController.processRequest', () => {
         should(kuzzle.statistics.startRequest.called).be.true();
         should(kuzzle.statistics.completedRequest.called).be.false();
         should(kuzzle.statistics.failedRequest.called).be.true();
-        done();
       });
   });
 
-  it('should wrap a Node error on a plugin action failure', done => {
+  it('should wrap a Node error on a plugin action failure', () => {
     const request = new Request({
       controller: 'fakePlugin/controller',
       action: 'fail',
@@ -127,8 +128,10 @@ describe('funnelController.processRequest', () => {
 
     funnel.pluginsControllers['fakePlugin/controller'].fail.returns(Promise.reject(new Error('rejected')));
 
-    funnel.processRequest(request)
-      .then(() => done('should have failed'))
+    return funnel.processRequest(request)
+      .then(() => {
+        throw new Error('You shall not pass');
+      })
       .catch(e => {
         should(e).be.instanceOf(PluginImplementationError);
         should(e.message).startWith('rejected');
@@ -140,7 +143,6 @@ describe('funnelController.processRequest', () => {
         should(kuzzle.statistics.startRequest.called).be.true();
         should(kuzzle.statistics.completedRequest.called).be.false();
         should(kuzzle.statistics.failedRequest.called).be.true();
-        done();
       });
   });
 
