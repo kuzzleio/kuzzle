@@ -266,4 +266,16 @@ describe('Test the auth controller', () => {
         });
     });
   });
+
+  describe('#getAuthenticationStrategies', () => {
+    it('should return a valid response', () => {
+      should(kuzzle.pluginsManager.listStrategies).be.a.Function();
+
+      return authController.getStrategies()
+        .then(result => {
+          should(kuzzle.pluginsManager.listStrategies).calledOnce();
+          should(result).be.instanceof(Array).of.length(0);
+        });
+    });
+  });
 });
