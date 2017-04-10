@@ -9,7 +9,8 @@ const
   PluginContext = rewire('../../../../lib/api/core/plugins/pluginContext'),
   PluginImplementationError = require('kuzzle-common-objects').errors.PluginImplementationError,
   Request = require('kuzzle-common-objects').Request,
-  _ = require('lodash');
+  _ = require('lodash'),
+  PassportStrategy = require('passport-strategy');
 
 describe('Plugin Context', () => {
   const someCollection = 'someCollection';
@@ -303,6 +304,16 @@ describe('Plugin Context', () => {
             should(kuzzle.funnel.handleErrorDump.firstCall.args[0]).match(error);
           });
         });
+    });
+
+    it('should register correctly each authentication strategies to the pluginManager', () => {
+      let registerStrategy = context.accessors.registerStrategy;
+      kuzzle.pluginsManager.registeredStrategies = [];
+
+      should(registerStrategy).be.a.Function();
+
+      registerStrategy(PassportStrategy, 'local', context, function() {});
+      should(kuzzle.pluginsManager.registeredStrategies).match(['local']);
     });
   });
 });
