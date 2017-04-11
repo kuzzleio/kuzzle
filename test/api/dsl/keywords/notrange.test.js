@@ -1,6 +1,6 @@
 'use strict';
 
-var
+const
   should = require('should'),
   FieldOperand = require('../../../../lib/api/dsl/storage/objects/fieldOperand'),
   DSL = require('../../../../lib/api/dsl');
@@ -126,17 +126,22 @@ describe('DSL.keyword.notrange', () => {
         });
     });
 
-    it('should return an empty array if the document does not contain the registered field', () => {
-      return dsl.register('index', 'collection', {not: {range: {foo: {lt: -10}}}})
+    it('should return all notrange filters attached to the field if the document does not contain the registered field', () => {
+      return dsl.register('i', 'c', {not: {range: {foo: {lt: -10}}}})
+        .then(() => dsl.register('i', 'c', {not: {range: {foo: {gt: 42}}}}))
+        .then(() => dsl.register('i', 'c', {not: {range: {foo: {gte: -20, lt: 9999999}}}}))
         .then(() => {
-          should(dsl.test('index', 'collection', {bar: 105})).be.an.Array().and.be.empty();
+          should(dsl.test('i', 'c', {bar: 105}))
+            .be.an.Array()
+            .length(3);
         });
     });
 
-    it('should return an empty array if the document searched field is not a number', () => {
+    it('should return all notrange filters attached to the field if the document searched field is not a number', () => {
       return dsl.register('index', 'collection', {not: {range: {foo: {lt: -10}}}})
-        .then(() => {
-          should(dsl.test('index', 'collection', {bar: 'baz'})).be.an.Array().and.be.empty();
+        .then(response => {
+          should(dsl.test('index', 'collection', {bar: 'baz'}))
+            .be.eql([response.id]);
         });
     });
   });
