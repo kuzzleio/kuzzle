@@ -5,6 +5,7 @@ const
   should = require('should'),
   Promise = require('bluebird'),
   BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,
+  FunnelController = require('../../../../lib/api/controllers/funnelController'),
   InternalError = require('kuzzle-common-objects').errors.InternalError,
   ServiceUnavailableError = require('kuzzle-common-objects').errors.ServiceUnavailableError,
   KuzzleMock = require('../../../mocks/kuzzle.mock'),
@@ -14,10 +15,12 @@ const
 
 describe('/api/controllers/security', () => {
   let
+    funnelController,
     kuzzle;
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
+    funnelController = new FunnelController(kuzzle);
   });
 
   describe('#mDelete', () => {
@@ -60,7 +63,18 @@ describe('/api/controllers/security', () => {
         }
       });
 
-      kuzzle.funnel.getRequestSlot.onThirdCall().yields(new ServiceUnavailableError('overloaded'));
+      kuzzle.funnel.mExecute = funnelController.mExecute.bind(kuzzle.funnel);
+      kuzzle.funnel.processRequest = req => Promise.resolve(req);
+      let callCount = 0;
+      kuzzle.funnel.getRequestSlot = req => {
+        if (callCount > 1) {
+          req.setError(new ServiceUnavailableError('overloaded'));
+          return false;
+        }
+
+        callCount++;
+        return true;
+      };
 
       return mDelete(kuzzle, 'type', request)
         .then(result => {
@@ -99,6 +113,8 @@ describe('/api/controllers/security', () => {
         }
       });
 
+      kuzzle.funnel.mExecute = (req, cb) => cb(null, req);
+
       return mDelete(kuzzle, 'type', request)
         .then(ids => {
           should(ids)
@@ -119,8 +135,17 @@ describe('/api/controllers/security', () => {
           }
         });
 
-      kuzzle.funnel.processRequest
-        .onCall(1).returns(Promise.reject(error));
+      kuzzle.funnel.kuzzle = kuzzle;
+      kuzzle.funnel.mExecute = funnelController.mExecute.bind(kuzzle.funnel);
+      kuzzle.funnel._executeError = funnelController._executeError.bind(kuzzle.funnel);
+
+      let callCount = 0;
+      kuzzle.funnel.processRequest = req => {
+        if (callCount++ === 1) {
+          return Promise.reject(error);
+        }
+        return Promise.resolve(req);
+      };
 
       return mDelete(kuzzle, 'type', request)
         .then(() => {
