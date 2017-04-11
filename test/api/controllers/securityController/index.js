@@ -65,14 +65,14 @@ describe('/api/controllers/security', () => {
 
       kuzzle.funnel.mExecute = funnelController.mExecute.bind(kuzzle.funnel);
       kuzzle.funnel.processRequest = req => Promise.resolve(req);
+
       let callCount = 0;
       kuzzle.funnel.getRequestSlot = req => {
-        if (callCount > 1) {
+        if (callCount++ === 1) {
           req.setError(new ServiceUnavailableError('overloaded'));
           return false;
         }
 
-        callCount++;
         return true;
       };
 
@@ -135,17 +135,13 @@ describe('/api/controllers/security', () => {
           }
         });
 
-      kuzzle.funnel.kuzzle = kuzzle;
-      kuzzle.funnel.mExecute = funnelController.mExecute.bind(kuzzle.funnel);
-      kuzzle.funnel._executeError = funnelController._executeError.bind(kuzzle.funnel);
-
-      let callCount = 0;
-      kuzzle.funnel.processRequest = req => {
-        if (callCount++ === 1) {
-          return Promise.reject(error);
-        }
-        return Promise.resolve(req);
-      };
+      kuzzle.funnel.mExecute.yields(null, new Request({_id: 'test'}));
+      kuzzle.funnel.mExecute
+        .onSecondCall().yields(null, (() => {
+          const req = new Request({_id: 'bar'});
+          req.setError(error);
+          return req;
+        })());
 
       return mDelete(kuzzle, 'type', request)
         .then(() => {

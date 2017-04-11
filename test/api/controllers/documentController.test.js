@@ -1,6 +1,6 @@
 'use strict';
 
-var
+const
   should = require('should'),
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
@@ -207,9 +207,7 @@ describe('Test: document controller', () => {
 
   describe('#doMultipleActions', () => {
     it('mCreate should fulfill with an object', () => {
-      kuzzle.funnel.mExecute.yields(null, {
-        result: 'created'
-      });
+      kuzzle.funnel.mExecute.yields(null, {result: 'created'});
 
       request.input.body = {
         documents: [
@@ -275,12 +273,10 @@ describe('Test: document controller', () => {
 
       let callCount = 0;
       kuzzle.funnel.getRequestSlot = req => {
-        if (callCount > 0) {
+        if (callCount++ > 0) {
           req.setError(new ServiceUnavailableError('overloaded'));
           return false;
         }
-
-        callCount++;
         return true;
       };
 
@@ -321,12 +317,10 @@ describe('Test: document controller', () => {
 
       let callCount = 0;
       kuzzle.funnel.getRequestSlot = req => {
-        if (callCount > 0) {
+        if (callCount++ > 0) {
           req.setError(new ServiceUnavailableError('overloaded'));
           return false;
         }
-
-        callCount++;
         return true;
       };
 
@@ -382,12 +376,11 @@ describe('Test: document controller', () => {
 
       let callCount = 0;
       kuzzle.funnel.getRequestSlot = req => {
-        if (callCount > 0) {
+        if (callCount++ > 0) {
           req.setError(new ServiceUnavailableError('overloaded'));
           return false;
         }
 
-        callCount++;
         return true;
       };
 
@@ -443,12 +436,11 @@ describe('Test: document controller', () => {
 
       let callCount = 0;
       kuzzle.funnel.getRequestSlot = req => {
-        if (callCount > 0) {
+        if (callCount++ > 0) {
           req.setError(new ServiceUnavailableError('overloaded'));
           return false;
         }
 
-        callCount++;
         return true;
       };
 
@@ -669,7 +661,6 @@ describe('Test: document controller', () => {
 
   describe('#mDelete', () => {
     it('should fulfill with an object', () => {
-
       kuzzle.funnel.mExecute
         .onFirstCall().yields(null, new Request({
           _id: 'documentId'
@@ -721,12 +712,11 @@ describe('Test: document controller', () => {
 
       let callCount = 0;
       kuzzle.funnel.getRequestSlot = req => {
-        if (callCount > 0) {
+        if (callCount++ > 0) {
           req.setError(new ServiceUnavailableError('overloaded'));
           return false;
         }
 
-        callCount++;
         return true;
       };
 
