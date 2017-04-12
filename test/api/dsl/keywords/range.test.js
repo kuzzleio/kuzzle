@@ -185,6 +185,14 @@ describe('DSL.keyword.range', () => {
           should(dsl.test('index', 'collection', {bar: 'baz'})).be.an.Array().and.be.empty();
         });
     });
+
+    it('should consider 0 as a valid value', () => {
+      return dsl.register('i', 'c', {range: {foo: {lt: 42}}})
+        .then(response => {
+          should(dsl.test('i', 'c', {foo: 0}))
+            .be.eql([response.id]);
+        });
+    });
   });
 
   describe('#removal', () => {

@@ -1,6 +1,6 @@
 'use strict';
 
-var
+const
   should = require('should'),
   BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,
   FieldOperand = require('../../../../lib/api/dsl/storage/objects/fieldOperand'),
@@ -8,7 +8,7 @@ var
   DSL = require('../../../../lib/api/dsl');
 
 describe('DSL.keyword.notequals', () => {
-  var dsl;
+  let dsl;
 
   beforeEach(() => {
     dsl = new DSL();
@@ -27,8 +27,8 @@ describe('DSL.keyword.notequals', () => {
       return should(dsl.validate({not: {equals: {foo: ['bar']}}})).be.rejectedWith(BadRequestError);
     });
 
-    it('should reject filters with number argument', () => {
-      return should(dsl.validate({not: {equals: {foo: 42}}})).be.rejectedWith(BadRequestError);
+    it('should validate filters with number argument', () => {
+      return should(dsl.validate({not: {equals: {foo: 42}}})).be.fulfilledWith(true);
     });
 
     it('should reject filters with object argument', () => {
@@ -39,12 +39,12 @@ describe('DSL.keyword.notequals', () => {
       return should(dsl.validate({not: {equals: {foo: undefined}}})).be.rejectedWith(BadRequestError);
     });
 
-    it('should reject filters with null argument', () => {
-      return should(dsl.validate({not: {equals: {foo: null}}})).be.rejectedWith(BadRequestError);
+    it('should validate filters with null argument', () => {
+      return should(dsl.validate({not: {equals: {foo: null}}})).be.fulfilledWith(true);
     });
 
-    it('should reject filters with boolean argument', () => {
-      return should(dsl.validate({not: {equals: {foo: true}}})).be.rejectedWith(BadRequestError);
+    it('should validate filters with boolean argument', () => {
+      return should(dsl.validate({not: {equals: {foo: true}}})).be.fulfilledWith(true);
     });
 
     it('should validate filters with a string argument', () => {
@@ -172,6 +172,44 @@ describe('DSL.keyword.notequals', () => {
           should(dsl.test('index', 'foobar', {foo: 'qux'})).be.an.Array().and.empty();
         });
     });
+
+    it('should match even if another field was hit before', () => {
+      return dsl.register('i', 'c', {not: {equals: {a: 'Jennifer Cardini'}}})
+        .then(dsl.register('i', 'c', {not: {equals: {b: 'Shonky'}}}))
+        .then(() => {
+          should(dsl.test('i', 'c', {a: 'Jennifer Cardini'}))
+            .be.an.Array()
+            .length(1);
+        });
+    });
+
+    it('should match 0 equality', () => {
+      return dsl.register('i', 'c', {not: {equals: {a: 0}}})
+        .then(() => {
+          should(dsl.test('i', 'c', {a: 0}))
+            .be.an.Array()
+            .be.empty();
+        });
+    });
+
+    it('should match false equality', () => {
+      return dsl.register('i', 'c', {not: {equals: {a: false}}})
+        .then(() => {
+          should(dsl.test('i', 'c', {a: false}))
+            .be.an.Array()
+            .be.empty();
+        });
+    });
+
+    it('should match null equality', () => {
+      return dsl.register('i', 'c', {not: {equals: {a: null}}})
+        .then(() => {
+          should(dsl.test('i', 'c', {a: null}))
+            .be.an.Array()
+            .be.empty();
+        });
+    });
+
   });
 
   describe('#removal', () => {

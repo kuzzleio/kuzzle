@@ -66,7 +66,7 @@ describe('Test the auth controller', () => {
 
       return authController.login(request)
         .then(() => {
-          should(kuzzle.passport.authenticate).calledWith({query: request.input.body}, 'local');
+          should(kuzzle.passport.authenticate).calledWith({query: request.input.body, original: request}, 'local');
         });
     });
 
