@@ -151,6 +151,7 @@ ApiHttp.prototype.callApi = function (options) {
     }
     options.headers = _.extend(options.headers, {authorization: 'Bearer ' + this.world.currentUser.token});
   }
+
   options.json = true;
   options.forever = true;
 
@@ -647,13 +648,21 @@ ApiHttp.prototype.searchRoles = function (body, args) {
   return this.callApi(options);
 };
 
-ApiHttp.prototype.deleteRole = function (id) {
-  const options = {
-    url: this.apiPath('roles/' + id),
+ApiHttp.prototype.deleteRole = function (id, waitFor = false) {
+  return this.callApi({
+    url: this.apiPath('roles/' + id + (waitFor ? '?refresh=wait_for' : '')),
     method: 'DELETE'
-  };
+  });
+};
 
-  return this.callApi(options);
+ApiHttp.prototype.deleteRoles = function (ids, waitFor = false) {
+  return this.callApi({
+    url: this.apiPath('roles/_mDelete' + (waitFor ? '?refresh=wait_for' : '')),
+    method: 'POST',
+    body: {
+      ids
+    }
+  });
 };
 
 ApiHttp.prototype.createOrReplaceProfile = function (id, body) {
@@ -694,17 +703,20 @@ ApiHttp.prototype.mGetProfiles= function (body) {
   return this.callApi(options);
 };
 
-ApiHttp.prototype.searchProfiles = function (body, args) {
+ApiHttp.prototype.searchProfiles = function (query, args) {
   const options = {
     url: this.apiPath('profiles/_search'),
     method: 'POST',
-    body
+    body: {
+      query
+    }
   };
 
   if (args) {
     let first = true;
     Object.keys(args).forEach(arg => {
       options.url += (first ? '?' : '&') + `${arg}=${args[arg]}`;
+      first = false;
     });
   }
 
@@ -720,10 +732,38 @@ ApiHttp.prototype.scrollProfiles = function (scrollId) {
   return this.callApi(options);
 };
 
+
+ApiHttp.prototype.deleteProfile = function (id, waitFor = false) {
+  return this.callApi({
+    url: this.apiPath('profiles/' + id + (waitFor ? '?refresh=wait_for' : '')),
+    method: 'DELETE'
+  });
+};
+
+
+ApiHttp.prototype.deleteProfiles = function (ids, waitFor = false) {
+  return this.callApi({
+    url: this.apiPath('profiles/_mDelete' + (waitFor ? '?refresh=wait_for' : '')),
+    method: 'POST',
+    body: {
+      ids
+    }
+  });
+};
+
 ApiHttp.prototype.deleteProfile = function (id) {
   const options = {
     url: this.apiPath('profiles/' + id),
     method: 'DELETE'
+  };
+
+  return this.callApi(options);
+};
+
+ApiHttp.prototype.getAuthenticationStrategies = function () {
+  const options = {
+    url: this.apiPath('strategies'),
+    method: 'GET'
   };
 
   return this.callApi(options);
@@ -763,17 +803,20 @@ ApiHttp.prototype.getMyRights = function () {
   return this.callApi(options);
 };
 
-ApiHttp.prototype.searchUsers = function (body, args) {
+ApiHttp.prototype.searchUsers = function (query, args) {
   const options = {
     url: this.apiPath('users/_search'),
     method: 'POST',
-    body: { query: body }
+    body: {
+      query
+    }
   };
 
   if (args) {
     let first = true;
     Object.keys(args).forEach(arg => {
       options.url += (first ? '?' : '&') + `${arg}=${args[arg]}`;
+      first = false;
     });
   }
 
@@ -789,18 +832,20 @@ ApiHttp.prototype.scrollUsers = function (scrollId) {
   return this.callApi(options);
 };
 
-ApiHttp.prototype.deleteUser = function (id) {
+ApiHttp.prototype.deleteUser = function (id, waitFor = false) {
   return this.callApi({
-    url: this.apiPath('users/' + id),
+    url: this.apiPath('users/' + id + (waitFor ? '?refresh=wait_for' : '')),
     method: 'DELETE'
   });
 };
 
-ApiHttp.prototype.createOrReplaceUser = function (body, id) {
+ApiHttp.prototype.deleteUsers = function (ids, waitFor = false) {
   return this.callApi({
-    url: this.apiPath('users/' + id),
-    method: 'PUT',
-    body
+    url: this.apiPath('users/_mDelete' + (waitFor ? '?refresh=wait_for' : '')),
+    method: 'POST',
+    body: {
+      ids
+    }
   });
 };
 
@@ -835,16 +880,45 @@ ApiHttp.prototype.updateSelf = function (body) {
 };
 
 ApiHttp.prototype.checkToken = function (token) {
-  return this.callApi({
+  let _token = null;
+  const request = {
     url: this.apiPath('_checkToken'),
     method: 'POST',
     body: {token}
-  });
+  };
+
+  if (this.world.currentUser && this.world.currentUser.token) {
+    _token = this.world.currentUser.token;
+    this.world.currentUser.token = null;
+  }
+
+  return this.callApi(request)
+    .then(response => {
+      if (_token !== null) {
+        this.world.currentUser.token = _token;
+      }
+
+      return response;
+    })
+    .catch(error => {
+      if (_token !== null) {
+        this.world.currentUser.token = _token;
+      }
+
+      return Promise.reject(error);
+    });
 };
 
 ApiHttp.prototype.refreshIndex = function (index) {
   return this.callApi({
     url: this.apiPath(index + '/_refresh'),
+    method: 'POST'
+  });
+};
+
+ApiHttp.prototype.refreshInternalIndex = function () {
+  return this.callApi({
+    url: this.apiPath('_refreshInternal'),
     method: 'POST'
   });
 };
@@ -909,6 +983,7 @@ ApiHttp.prototype.searchSpecifications = function (body, args) {
     let first = true;
     Object.keys(args).forEach(arg => {
       options.url += (first ? '?' : '&') + `${arg}=${args[arg]}`;
+      first = false;
     });
   }
 

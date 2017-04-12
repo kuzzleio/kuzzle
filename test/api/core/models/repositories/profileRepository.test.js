@@ -365,7 +365,7 @@ describe('Test: repositories/profileRepository', () => {
       profileRepository.searchProfiles(false, opts);
       should(profileRepository.search)
         .be.calledOnce()
-        .be.calledWith({query: {}}, opts);
+        .be.calledWith({query: {match_all: {}}}, opts);
 
       profileRepository.searchProfiles(['role1', 'role2']);
       should(profileRepository.search)

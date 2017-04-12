@@ -62,13 +62,12 @@ module.exports = function () {
     this.mapping = {
       properties: {
         firstName: {
-          type: 'string',
+          type: 'text',
           copy_to: 'newFirstName'
         },
         newFirstName: {
-          type: 'string',
-          store: true,
-          index: 'not_analyzed'
+          type: 'keyword',
+          store: true
         }
       }
     };
@@ -76,13 +75,12 @@ module.exports = function () {
     this.securitymapping = {
       properties: {
         foo: {
-          type: 'string',
+          type: 'text',
           copy_to: 'bar'
         },
         bar: {
-          type: 'string',
-          store: true,
-          index: 'not_analyzed'
+          type: 'keyword',
+          store: true
         }
       }
     };

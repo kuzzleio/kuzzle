@@ -1,6 +1,6 @@
 'use strict';
 
-var
+const
   should = require('should'),
   BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,
   FieldOperand = require('../../../../lib/api/dsl/storage/objects/fieldOperand'),
@@ -25,7 +25,7 @@ describe('DSL.keyword.geoDistance', () => {
 
   beforeEach(() => {
     dsl = new DSL();
-    standardize = dsl.transformer.standardizer.standardize;
+    standardize = dsl.transformer.standardizer.standardize.bind(dsl.transformer.standardizer);
   });
 
   describe('#validation/standardization', () => {

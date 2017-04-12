@@ -283,7 +283,8 @@ Feature: Test websocket API
 
   @usingWebsocket
   Scenario: Getting all statistics frame
-    When I get all statistics frames
+    When I get server informations
+    And I get all statistics frames
     Then I get at least 1 statistic frame
 
   @usingWebsocket
@@ -346,6 +347,17 @@ Feature: Test websocket API
     And The token is valid
     Then I logout
     Then I can't write the document
+    Then I check the JWT Token
+    And The token is invalid
+
+  @usingWebsocket @cleanSecurity
+  Scenario: user token deletion
+    Given I create a user "useradmin" with id "user1-id"
+    When I log in as user1-id:testpwd expiring in 1h
+    Then I write the document
+    Then I check the JWT Token
+    And The token is valid
+    Then I delete the user "user1-id"
     Then I check the JWT Token
     And The token is invalid
 
@@ -453,9 +465,9 @@ Feature: Test websocket API
     When I create a new role "role1" with id "role1"
     And I create a new role "role2" with id "role2"
     And I create a new profile "profile2" with id "profile2"
-    And I create a new user "useradmin" with id "useradmin-id"
+    And I create a user "useradmin" with id "useradmin-id"
     And I create a user "user2" with id "user2-id"
-    And I can't create a new user "user2" with id "useradmin-id"
+    And I can't create a user "user2" with id "useradmin-id"
     Then I am able to get the user "useradmin-id" matching {"_id":"#prefix#useradmin-id","_source":{"profileIds":["admin"]}}
     Then I am able to get the user "user2-id" matching {"_id":"#prefix#user2-id","_source":{"profileIds":["#prefix#profile2"]}}
     Then I search for {"ids":{"type": "users", "values":["#prefix#useradmin-id", "#prefix#user2-id"]}} and find 2 users
@@ -470,7 +482,7 @@ Feature: Test websocket API
 
   @usingWebsocket @cleanSecurity
   Scenario: user updateSelf
-    When I create a new user "useradmin" with id "useradmin-id"
+    When I create a user "useradmin" with id "useradmin-id"
     Then I am able to get the user "useradmin-id" matching {"_id":"#prefix#useradmin-id","_source":{"profileIds":["admin"]}}
     When I log in as useradmin-id:testpwd expiring in 1h
     Then I am getting the current user, which matches {"_id":"#prefix#useradmin-id","_source":{"profileIds":["admin"]}}
@@ -498,12 +510,12 @@ Feature: Test websocket API
     And I create a new profile "profile4" with id "profile4"
     And I create a new profile "profile5" with id "profile5"
     And I create a new profile "profile6" with id "profile6"
-    And I create a new user "user1" with id "user1-id"
-    And I create a new user "user2" with id "user2-id"
-    And I create a new user "user3" with id "user3-id"
-    And I create a new user "user4" with id "user4-id"
-    And I create a new user "user5" with id "user5-id"
-    And I create a new user "user6" with id "user6-id"
+    And I create a user "user1" with id "user1-id"
+    And I create a user "user2" with id "user2-id"
+    And I create a user "user3" with id "user3-id"
+    And I create a user "user4" with id "user4-id"
+    And I create a user "user5" with id "user5-id"
+    And I create a user "user6" with id "user6-id"
     When I log in as user1-id:testpwd1 expiring in 1h
     Then I'm allowed to create a document in index "kuzzle-test-index" and collection "kuzzle-collection-test"
     And I'm allowed to create a document in index "kuzzle-test-index" and collection "kuzzle-collection-test-alt"
@@ -1698,3 +1710,6 @@ Feature: Test websocket API
     When I delete the specifications again for index "kuzzle-test-index" and collection "kuzzle-collection-test"
     Then There is no error message
 
+  @usingWebsocket
+  Scenario: Get authentication strategies
+    Then I get the registrated authentication strategies
