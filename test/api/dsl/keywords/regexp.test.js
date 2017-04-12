@@ -1,6 +1,6 @@
 'use strict';
 
-var
+const
   should = require('should'),
   BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,
   FieldOperand = require('../../../../lib/api/dsl/storage/objects/fieldOperand'),
@@ -8,7 +8,7 @@ var
   DSL = require('../../../../lib/api/dsl');
 
 describe('DSL.keyword.regexp', () => {
-  var dsl;
+  let dsl;
 
   beforeEach(() => {
     dsl = new DSL();
@@ -43,12 +43,42 @@ describe('DSL.keyword.regexp', () => {
       return should(dsl.validate({regexp: {foo: {value: 'foo(', flags: 'i'}}})).be.rejectedWith(BadRequestError);
     });
 
+    it('should reject filters with invalid flags', () => {
+      return should(dsl.validate({
+        regexp: {
+          foo: {
+            value: 'a',
+            flags: 'INVALID'
+          }
+        }
+      }))
+        .be.rejectedWith(BadRequestError);
+    });
+
     it('should validate a well-formed regular expression filter w/ flags', () => {
       return should(dsl.validate({regexp: {foo: {value: 'foo', flags: 'i'}}})).be.fulfilledWith(true);
     });
 
     it('should validate a well-formed regular expression filter without flags', () => {
       return should(dsl.validate({regexp: {foo: {value: 'foo'}}})).be.fulfilledWith(true);
+    });
+
+    it('should accept a simplified form', () => {
+      return dsl.validate({regexp: {
+        foo: '^bar'
+      }})
+        .then(response => {
+          should(response).be.true();
+        });
+    });
+
+    it('should reject an invalid simple form regex', () => {
+      return should(dsl.validate({
+        regexp: {
+          foo: '++'
+        }
+      }))
+        .be.rejectedWith(BadRequestError);
     });
   });
 
