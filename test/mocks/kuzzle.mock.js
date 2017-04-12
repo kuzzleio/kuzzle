@@ -158,7 +158,8 @@ function KuzzleMock () {
     plugins: {},
     run: sinon.stub().returns(Promise.resolve()),
     getPluginsFeatures: sinon.stub().returns({}),
-    trigger: sinon.spy(function () {return Promise.resolve(arguments[1]);})
+    trigger: sinon.spy(function () {return Promise.resolve(arguments[1]);}),
+    listStrategies: sinon.stub().returns(Promise.resolve([])),
   };
 
   this.repositories = {

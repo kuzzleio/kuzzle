@@ -66,7 +66,7 @@ describe('Test the auth controller', () => {
 
       return authController.login(request)
         .then(() => {
-          should(kuzzle.passport.authenticate).calledWith({query: request.input.body}, 'local');
+          should(kuzzle.passport.authenticate).calledWith({query: request.input.body, original: request}, 'local');
         });
     });
 
@@ -263,6 +263,18 @@ describe('Test the auth controller', () => {
           });
           should(filteredItem).length(1);
           should(filteredItem[0].value).be.equal('conditional');
+        });
+    });
+  });
+
+  describe('#getAuthenticationStrategies', () => {
+    it('should return a valid response', () => {
+      should(kuzzle.pluginsManager.listStrategies).be.a.Function();
+
+      return authController.getStrategies()
+        .then(result => {
+          should(kuzzle.pluginsManager.listStrategies).calledOnce();
+          should(result).be.instanceof(Array).of.length(0);
         });
     });
   });

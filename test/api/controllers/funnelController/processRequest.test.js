@@ -94,6 +94,32 @@ describe('funnelController.processRequest', () => {
       })).be.fulfilled();
   });
 
+  it('should not trigger request:onSuccess on a subrequest', () => {
+    const
+      subrequest = new Request({
+        controller: 'fakeController',
+        action: 'ok',
+      }),
+      request = new Request({});
+
+    subrequest.origin = request;
+
+    return should(funnel.processRequest(subrequest)
+      .then(response => {
+        should(response).be.exactly(subrequest);
+        should(funnel.requestHistory.toArray()).match([subrequest]);
+        should(kuzzle.pluginsManager.trigger).calledWith('fakeController:beforeOk');
+        should(kuzzle.pluginsManager.trigger).calledWith('fakeController:afterOk');
+        should(kuzzle.pluginsManager.trigger.calledWithMatch('request:onSuccess', subrequest)).be.false();
+        should(kuzzle.pluginsManager.trigger.calledWithMatch('request:onError', subrequest)).be.false();
+        should(kuzzle.pluginsManager.trigger.calledWithMatch('request:onSuccess', request)).be.false();
+        should(kuzzle.pluginsManager.trigger.calledWithMatch('request:onError', request)).be.false();
+        should(kuzzle.statistics.startRequest.called).be.true();
+        should(kuzzle.statistics.completedRequest.called).be.true();
+        should(kuzzle.statistics.failedRequest.called).be.false();
+      })).be.fulfilled();
+  });
+
   it('should reject the promise if a controller action fails', () => {
     const request = new Request({
       controller: 'fakeController',
@@ -119,6 +145,39 @@ describe('funnelController.processRequest', () => {
         should(kuzzle.statistics.failedRequest.called).be.true();
       });
   });
+
+  it('should not trigger a request:onError on a subrequest', () => {
+    const
+      request = new Request({}),
+      subrequest = new Request({
+        controller: 'fakeController',
+        action: 'fail',
+      });
+
+    subrequest.origin = request;
+
+    funnel.controllers.fakeController.fail.returns(Promise.reject(new Error('rejected')));
+
+    funnel.processRequest(subrequest)
+      .then(() => {
+        throw new Error('You shall not pass');
+      })
+      .catch(e => {
+        should(e).be.instanceOf(Error);
+        should(e.message).be.eql('rejected');
+        should(funnel.requestHistory.toArray()).match([subrequest]);
+        should(kuzzle.pluginsManager.trigger).calledWith('fakeController:beforeFail');
+        should(kuzzle.pluginsManager.trigger).not.be.calledWith('fakeController:afterFail');
+        should(kuzzle.pluginsManager.trigger.calledWithMatch('request:onSuccess', subrequest)).be.false();
+        should(kuzzle.pluginsManager.trigger.calledWithMatch('request:onError', subrequest)).be.false();
+        should(kuzzle.pluginsManager.trigger.calledWithMatch('request:onSuccess', request)).be.false();
+        should(kuzzle.pluginsManager.trigger.calledWithMatch('request:onError', request)).be.false();
+        should(kuzzle.statistics.startRequest.called).be.true();
+        should(kuzzle.statistics.completedRequest.called).be.false();
+        should(kuzzle.statistics.failedRequest.called).be.true();
+      });
+  });
+
 
   it('should wrap a Node error on a plugin action failure', () => {
     const request = new Request({

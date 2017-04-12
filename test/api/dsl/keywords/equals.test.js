@@ -1,13 +1,13 @@
 'use strict';
 
-var
+const
   should = require('should'),
   BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,
   FieldOperand = require('../../../../lib/api/dsl/storage/objects/fieldOperand'),
   DSL = require('../../../../lib/api/dsl');
 
 describe('DSL.keyword.equals', () => {
-  var dsl;
+  let dsl;
 
   beforeEach(() => {
     dsl = new DSL();
@@ -26,8 +26,8 @@ describe('DSL.keyword.equals', () => {
       return should(dsl.validate({equals: {foo: ['bar']}})).be.rejectedWith(BadRequestError);
     });
 
-    it('should reject filters with number argument', () => {
-      return should(dsl.validate({equals: {foo: 42}})).be.rejectedWith(BadRequestError);
+    it('should validate filters with number argument', () => {
+      return should(dsl.validate({equals: {foo: 42}})).be.fulfilledWith(true);
     });
 
     it('should reject filters with object argument', () => {
@@ -38,12 +38,12 @@ describe('DSL.keyword.equals', () => {
       return should(dsl.validate({equals: {foo: undefined}})).be.rejectedWith(BadRequestError);
     });
 
-    it('should reject filters with null argument', () => {
-      return should(dsl.validate({equals: {foo: null}})).be.rejectedWith(BadRequestError);
+    it('should validate filters with null argument', () => {
+      return should(dsl.validate({equals: {foo: null}})).be.fulfilledWith(true);
     });
 
-    it('should reject filters with boolean argument', () => {
-      return should(dsl.validate({equals: {foo: true}})).be.rejectedWith(BadRequestError);
+    it('should validate filters with boolean argument', () => {
+      return should(dsl.validate({equals: {foo: true}})).be.fulfilledWith(true);
     });
 
     it('should validate filters with a string argument', () => {
@@ -69,7 +69,7 @@ describe('DSL.keyword.equals', () => {
 
           should(dsl.storage.foPairs.index.collection.equals).be.instanceOf(FieldOperand);
           should(dsl.storage.foPairs.index.collection.equals.keys.array).match(['foo']);
-          should(dsl.storage.foPairs.index.collection.equals.fields.foo.bar).match([subfilter]);
+          should(dsl.storage.foPairs.index.collection.equals.fields.foo.get('bar')).match([subfilter]);
         });
     });
 
@@ -87,8 +87,8 @@ describe('DSL.keyword.equals', () => {
 
           should(dsl.storage.foPairs.index.collection.equals).be.instanceOf(FieldOperand);
           should(dsl.storage.foPairs.index.collection.equals.keys.array).match(['foo']);
-          should(dsl.storage.foPairs.index.collection.equals.fields.foo.bar).match([barSubfilter]);
-          should(dsl.storage.foPairs.index.collection.equals.fields.foo.qux).match([quxSubfilter]);
+          should(dsl.storage.foPairs.index.collection.equals.fields.foo.get('bar')).match([barSubfilter]);
+          should(dsl.storage.foPairs.index.collection.equals.fields.foo.get('qux')).match([quxSubfilter]);
         });
     });
 
@@ -106,8 +106,8 @@ describe('DSL.keyword.equals', () => {
 
           should(dsl.storage.foPairs.index.collection.equals).be.instanceOf(FieldOperand);
           should(dsl.storage.foPairs.index.collection.equals.keys.array).match(['foo']);
-          should(dsl.storage.foPairs.index.collection.equals.fields.foo.bar).match([barSubfilter, multiSubfilter]);
-          should(dsl.storage.foPairs.index.collection.equals.fields.foo.qux).match([multiSubfilter]);
+          should(dsl.storage.foPairs.index.collection.equals.fields.foo.get('bar')).match([barSubfilter, multiSubfilter]);
+          should(dsl.storage.foPairs.index.collection.equals.fields.foo.get('qux')).match([multiSubfilter]);
         });
     });
   });
@@ -116,7 +116,7 @@ describe('DSL.keyword.equals', () => {
     it('should match a document with the subscribed keyword', () => {
       return dsl.register('index', 'collection', {equals: {foo: 'bar'}})
         .then(subscription => {
-          var result = dsl.test('index', 'collection', {foo: 'bar'});
+          const result = dsl.test('index', 'collection', {foo: 'bar'});
 
           should(result).be.an.Array().and.not.empty();
           should(result[0]).be.eql(subscription.id);
@@ -170,6 +170,34 @@ describe('DSL.keyword.equals', () => {
           should(dsl.test('index', 'foobar', {foo: 'qux'})).be.an.Array().and.empty();
         });
     });
+
+    it('should match 0 equality', () => {
+      return dsl.register('i', 'c', {equals: {a: 0}})
+        .then(() => {
+          should(dsl.test('i', 'c', {a: 0}))
+            .be.an.Array()
+            .length(1);
+        });
+    });
+
+    it('should match false equality', () => {
+      return dsl.register('i', 'c', {equals: {a: false}})
+        .then(() => {
+          should(dsl.test('i', 'c', {a: false}))
+            .be.an.Array()
+            .length(1);
+        });
+    });
+
+    it('should match null equality', () => {
+      return dsl.register('i', 'c', {equals: {a: null}})
+        .then(() => {
+          should(dsl.test('i', 'c', {a: null}))
+            .be.an.Array()
+            .length(1);
+        });
+    });
+
   });
 
   describe('#removal', () => {
@@ -200,8 +228,8 @@ describe('DSL.keyword.equals', () => {
         .then(() => {
           should(dsl.storage.foPairs.index.collection.equals).be.instanceOf(FieldOperand);
           should(dsl.storage.foPairs.index.collection.equals.keys.array).match(['foo']);
-          should(dsl.storage.foPairs.index.collection.equals.fields.foo.bar).match([multiSubfilter]);
-          should(dsl.storage.foPairs.index.collection.equals.fields.foo.qux).match([multiSubfilter]);
+          should(dsl.storage.foPairs.index.collection.equals.fields.foo.get('bar')).match([multiSubfilter]);
+          should(dsl.storage.foPairs.index.collection.equals.fields.foo.get('qux')).match([multiSubfilter]);
         });
     });
 
@@ -223,8 +251,8 @@ describe('DSL.keyword.equals', () => {
         .then(() => {
           should(dsl.storage.foPairs.index.collection.equals).be.instanceOf(FieldOperand);
           should(dsl.storage.foPairs.index.collection.equals.keys.array).match(['foo']);
-          should(dsl.storage.foPairs.index.collection.equals.fields.foo.bar).match([barSubfilter]);
-          should(dsl.storage.foPairs.index.collection.equals.fields.foo.qux).be.undefined();
+          should(dsl.storage.foPairs.index.collection.equals.fields.foo.get('bar')).match([barSubfilter]);
+          should(dsl.storage.foPairs.index.collection.equals.fields.foo.get('qux')).be.undefined();
         });
     });
 
@@ -241,14 +269,14 @@ describe('DSL.keyword.equals', () => {
         })
         .then(subscription => {
           should(dsl.storage.foPairs.index.collection.equals.keys.array).match(['baz', 'foo']);
-          should(dsl.storage.foPairs.index.collection.equals.fields.baz.qux).be.an.Array().and.not.empty();
+          should(dsl.storage.foPairs.index.collection.equals.fields.baz.get('qux')).be.an.Array().and.not.empty();
           idToRemove = subscription.id;
           return dsl.remove(idToRemove);
         })
         .then(() => {
           should(dsl.storage.foPairs.index.collection.equals).be.instanceOf(FieldOperand);
           should(dsl.storage.foPairs.index.collection.equals.keys.array).match(['foo']);
-          should(dsl.storage.foPairs.index.collection.equals.fields.foo.bar).match([barSubfilter]);
+          should(dsl.storage.foPairs.index.collection.equals.fields.foo.get('bar')).match([barSubfilter]);
           should(dsl.storage.foPairs.index.collection.equals.fields.baz).be.undefined();
         });
     });

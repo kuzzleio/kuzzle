@@ -785,6 +785,14 @@ ApiRT.prototype.deleteProfile = function (id) {
   return this.send(msg);
 };
 
+ApiRT.prototype.getAuthenticationStrategies = function () {
+  return this.send({
+    controller: 'auth',
+    action: 'getStrategies',
+    body: {}
+  });
+};
+
 ApiRT.prototype.deleteProfiles = function (ids, waitFor = false) {
   const msg = {
     controller: 'security',
