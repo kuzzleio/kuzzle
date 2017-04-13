@@ -77,37 +77,19 @@ describe('DSL.operands.bool', () => {
         .then(result => {
           should(result).match({
             and: [
-              {
-                and: [
-                  {
-                    or: [
-                      { equals: { firstName: 'Grace' } },
-                      { equals: { firstName: 'Ada' } }
-                    ]
-                  },
-                  { range: { age: { gte: 36, lt: 85 } } }
-                ]
-              },
-              {
-                not: {
-                  or: [
-                    { equals: { city: 'NYC' } }
-                  ]
-                }
-              },
-              {
-                or: [
-                  { equals: { hobby: 'computer' } },
-                  { exists: { field: 'lastName' } }
-                ]
-              },
-              {
-                not: {
-                  and: [
-                    { regexp: { hobby: { value: '^.*ball', flags: 'i' } } }
-                  ]
-                }
-              }
+              {or: [
+                {equals: {firstName: 'Grace'}},
+                {equals: {firstName: 'Ada'}}
+              ]},
+              {or: [
+                {equals: {hobby: 'computer'}},
+                {exists: {field: 'lastName'}}
+              ]},
+              {and: [
+                {range: {age: {gte: 36, lt: 85}}},
+                {not: {equals: {city: 'NYC'}}},
+                {not: {regexp: {hobby: {value: '^.*ball', flags: 'i'}}}}
+              ]}
             ]
           });
         });

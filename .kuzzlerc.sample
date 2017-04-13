@@ -15,6 +15,42 @@
     "accessControlAllowOrigin": "*"
   },
 
+  // Kuzzle configured limits
+  "limits": {
+    // * concurrentRequests:
+    //      Number of requests Kuzzle processes simultaneously.
+    //      Requests received above this limit are bufferized until a slot is freed
+    //      This value should be kept low to avoid overloading Kuzzle's event loop.
+    // * documentsFetchCount:
+    //      Maximum number of documents that can be fetched by a single API
+    //      request.This value cannot exceed 9999 and cannot be higher
+    //      than 80% of the requestsBufferSize value
+    // * documentsWriteCount:
+    //      Maximum number of documents that can be written by a single API
+    //      request.This value cannot exceed 9999 and cannot be higher
+    //      than 80% of the requestsBufferSize value
+    // * requestsBufferSize:
+    //      Maximum number of requests that can be bufferized.
+    //      Requests received above this limit are discarded with a 503 error
+    // * requestsBufferWarningThreshold:
+    //      Number of bufferized requests after
+    //      which Kuzzle will throw 'core:overload' events
+    //      (see http://docs.kuzzle.io/plugin-reference/#core)
+    // * requestHistorySize:
+    //      Completed API requests history. For debug and support purposes
+    // * subscriptionConditionsCount
+    //      Maximum number of conditions a subcription filter can contain
+    //      NB: A condition is either a "simple" operator (anything but and, or and bool)
+    //      or a boolean condition that contains only simple operators.
+    "concurrentRequests": 50,
+    "documentsFetchCount": 1000,
+    "documentsWriteCount": 200,
+    "requestsBufferSize": 50000,
+    "requestsBufferWarningThreshold": 5000,
+    "requestsHistorySize": 50,
+    "subscriptionConditionsCount": 16
+  },
+
   // The plugins section lets you define plugins behaviors
   // (see http://kuzzle.io/guide/#plugins)
   "plugins": {
@@ -166,37 +202,6 @@
         }
       }
     }
-  },
-
-  // Kuzzle configured limits
-  "limits": {
-    // * concurrentRequests:
-    //      Number of requests Kuzzle processes simultaneously.
-    //      Requests received above this limit are bufferized until a slot is freed
-    //      This value should be kept low to avoid overloading Kuzzle's event loop.
-    // * requestsBufferSize:
-    //      Maximum number of requests that can be bufferized.
-    //      Requests received above this limit are discarded with a 503 error
-    // * requestsBufferWarningThreshold:
-    //      Number of bufferized requests after
-    //      which Kuzzle will throw 'core:overload' events
-    //      (see http://docs.kuzzle.io/plugin-reference/#core)
-    // * requestHistorySize:
-    //      Completed API requests history. For debug and support purposes
-    // * documentsFetchCount:
-    //      Maximum number of documents that can be fetched by a single API
-    //      request.This value cannot exceed 9999 and cannot be higher
-    //      than 80% of the requestsBufferSize value
-    // * documentsWriteCount:
-    //      Maximum number of documents that can be written by a single API
-    //      request.This value cannot exceed 9999 and cannot be higher
-    //      than 80% of the requestsBufferSize value
-    "concurrentRequests": 50,
-    "requestsBufferSize": 50000,
-    "requestsBufferWarningThreshold": 5000,
-    "requestsHistorySize": 50,
-    "documentsFetchCount": 1000,
-    "documentsWriteCount": 200
   },
 
   // The services are the external components Kuzzle relies on.
