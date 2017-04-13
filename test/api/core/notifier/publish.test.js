@@ -27,7 +27,7 @@ describe('Test: notifier.publish', () => {
       collection: 'bar',
       _id: 'I am fabulous',
       body: {youAre: 'fabulous too'},
-      metadata: {}
+      volatile: {}
     };
 
     sandbox.stub(notifier, 'notify', (r, rq, n) => {notification = n;});
