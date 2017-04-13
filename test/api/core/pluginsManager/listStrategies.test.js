@@ -76,4 +76,14 @@ describe('Test plugins manager listStrategies', () => {
       Object.keys(plugins).forEach(p => plugins[p].object.init());
     }).throw(PluginImplementationError);
   });
+
+  it('should register correctly each authentication strategies to the pluginManager', () => {
+    let registerStrategy = PluginsManager.__get__('registerStrategy');
+    kuzzle.pluginsManager.registeredStrategies = [];
+
+    should(registerStrategy).be.a.Function();
+
+    registerStrategy(PassportStrategy, 'local', context, function() {});
+    should(kuzzle.pluginsManager.registeredStrategies).match(['local']);
+  });
 });

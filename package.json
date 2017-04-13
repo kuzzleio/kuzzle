@@ -76,6 +76,7 @@
     "mock-require": "^2.0.1",
     "nyc": "^10.1.2",
     "parser-yaml": "^0.1.1",
+    "passport-strategy": "^1.0.0",
     "request": "^2.79.0",
     "request-promise": "^4.1.1",
     "rewire": "2.5.2",
