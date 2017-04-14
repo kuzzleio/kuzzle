@@ -182,4 +182,11 @@ describe('PluginsManager: loadPlugins()', () => {
         .be.ok();
     });
   });
+  describe('Test plugins manager listStrategies', () => {
+    it('should return a list of registrated authentication strategies', () => {
+      pluginsManager.registeredStrategies = ['strategy'];
+
+      should(pluginsManager.listStrategies()).be.an.Array().of.length(1);
+    });
+  });
 });

@@ -243,7 +243,8 @@ describe('Test: security controller - profiles', () => {
 
   describe('#scrollProfiles', () => {
     it('should throw if no scrollId is provided', () => {
-      should(() => securityController.scrollProfiles(new Request({}))).throw(BadRequestError, {message: 'Missing "scrollId" argument'});
+      should(() => securityController.scrollProfiles(new Request({controller: 'security', action: 'scrollProfiles'})))
+        .throw(BadRequestError, {message: 'security:scrollProfiles must specify a scrollId.'});
     });
 
     it('should return an object containing an array of profiles and a scrollId', () => {

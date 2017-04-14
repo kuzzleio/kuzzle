@@ -146,7 +146,8 @@ describe('Test: security controller - users', () => {
 
   describe('#scrollUsers', () => {
     it('should throw if no scrollId is provided', () => {
-      should(() => securityController.scrollUsers(new Request({}))).throw(BadRequestError, {message: 'Missing "scrollId" argument'});
+      should(() => securityController.scrollUsers(new Request({controller: 'security', action: 'scrollUsers'})))
+        .throw(BadRequestError, {message: 'security:scrollUsers must specify a scrollId.'});
     });
 
     it('should reformat search results correctly', () => {
@@ -216,7 +217,10 @@ describe('Test: security controller - users', () => {
       kuzzle.repositories.user.hydrate = sandbox.stub().returns(Promise.resolve());
 
       return securityController.createUser(new Request({
-        _id: 'test', body: {name: 'John Doe', profileIds: ['anonymous']}
+        _id: 'test',
+        body: {
+          content: {name: 'John Doe', profileIds: ['anonymous']}
+        }
       }))
         .then(response => {
           should(kuzzle.repositories.user.persist).be.calledOnce();
@@ -230,7 +234,14 @@ describe('Test: security controller - users', () => {
       kuzzle.repositories.user.persist = sandbox.stub().returns(Promise.resolve({_id: 'test'}));
       kuzzle.repositories.user.hydrate = sandbox.stub().returns(Promise.resolve());
 
-      return securityController.createUser(new Request({body: {name: 'John Doe', profileIds: ['anonymous']}}))
+      return securityController.createUser(new Request({
+        body: {
+          content: {
+            name: 'John Doe',
+            profileIds: ['anonymous']
+          }
+        }
+      }))
         .then(response => {
           should(kuzzle.repositories.user.persist).be.calledOnce();
           should(kuzzle.repositories.user.hydrate).be.calledOnce();
@@ -254,7 +265,7 @@ describe('Test: security controller - users', () => {
       kuzzle.repositories.user.hydrate = sandbox.stub().returns(Promise.resolve());
 
       return securityController.createRestrictedUser(new Request({
-        body: {_id: 'test', name: 'John Doe'}
+        body: {content: {_id: 'test', name: 'John Doe'}}
       }), {})
         .then(response => {
           should(kuzzle.repositories.user.persist).be.calledOnce();
@@ -268,7 +279,7 @@ describe('Test: security controller - users', () => {
       kuzzle.repositories.user.persist = sandbox.stub().returns(Promise.resolve({_id: 'test'}));
       kuzzle.repositories.user.hydrate = sandbox.stub().returns(Promise.resolve());
 
-      return securityController.createRestrictedUser(new Request({body: {name: 'John Doe'}}))
+      return securityController.createRestrictedUser(new Request({body: {content: {name: 'John Doe'}}}))
         .then(response => {
           should(kuzzle.repositories.user.persist).be.calledOnce();
           should(kuzzle.repositories.user.hydrate).be.calledOnce();
@@ -281,7 +292,7 @@ describe('Test: security controller - users', () => {
 
     it('should throw an error if a profile is given', () => {
       return should(() => {
-        securityController.createRestrictedUser(new Request({body: {profileIds: ['foo']}}));
+        securityController.createRestrictedUser(new Request({body: {content: {profileIds: ['foo']}}}));
       }).throw(BadRequestError);
     });
   });

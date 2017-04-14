@@ -24,7 +24,7 @@ describe('Test: document controller', () => {
     kuzzle = new KuzzleMock();
     engine = kuzzle.services.list.storageEngine;
     documentController = new DocumentController(kuzzle);
-    request = new Request({index: '%test', collection: 'unit-test-documentController'});
+    request = new Request({controller: 'document', index: '%test', collection: 'unit-test-documentController'});
   });
 
   afterEach(() => {
@@ -44,6 +44,7 @@ describe('Test: document controller', () => {
       request.input.resource.index = '%test,anotherIndex';
 
       return should(() => {
+        request.input.action = 'search';
         documentController.search(request);
       }).throw('document:search on multiple indexes is not available.');
     });
@@ -52,6 +53,7 @@ describe('Test: document controller', () => {
       request.input.resource.collection = 'unit-test-documentController,anotherCollection';
 
       return should(() => {
+        request.input.action = 'search';
         documentController.search(request);
       }).throw('document:search on multiple collections is not available.');
     });
@@ -59,6 +61,7 @@ describe('Test: document controller', () => {
     it('should throw an error if the size argument exceeds server configuration', () => {
       kuzzle.config.limits.documentsFetchCount = 1;
       request.input.args.size = 10;
+      request.input.action = 'search';
 
       return should(() => documentController.search(request)).throw('document:search cannot fetch more documents than the server configured limit (1)');
     });
@@ -140,8 +143,10 @@ describe('Test: document controller', () => {
       kuzzle.services.list.storageEngine.mget.returns(Promise.resolve({hits: request.input.body.ids}));
 
       return should(() => {
+        request.input.action = 'mGet';
+
         documentController.mGet(request);
-      }).throw('Number of gets to perform exceeds the server configured value (1)');
+      }).throw('document:mGet Number of gets to perform exceeds the server configured value (1)');
     });
   });
 
@@ -268,12 +273,14 @@ describe('Test: document controller', () => {
           {_id: 'anotherDocumentId', body: {some: 'body'}}
         ]
       };
+      request.input.controller = 'document';
+      request.input.action = 'mCreate';
 
       kuzzle.config.limits.documentsWriteCount = 1;
 
       return should(() => {
         documentController.mCreate(request);
-      }).throw('Number of documents to update exceeds the server configured value (1)');
+      }).throw('document:mCreate Number of documents to update exceeds the server configured value (1)');
     });
 
     it('mCreate should return a rejected promise if Kuzzle is overloaded', () => {
@@ -351,12 +358,13 @@ describe('Test: document controller', () => {
           {_id: 'anotherDocumentId', body: {some: 'body'}}
         ]
       };
+      request.input.action = 'mCreateOrReplace';
 
       kuzzle.config.limits.documentsWriteCount = 1;
 
       return should(() => {
         documentController.mCreateOrReplace(request);
-      }).throw('Number of documents to update exceeds the server configured value (1)');
+      }).throw('document:mCreateOrReplace Number of documents to update exceeds the server configured value (1)');
     });
 
     it('mUpdate should fulfill with an object', () => {
@@ -410,12 +418,13 @@ describe('Test: document controller', () => {
           {_id: 'anotherDocumentId', body: {some: 'body'}}
         ]
       };
+      request.input.action = 'mUpdate';
 
       kuzzle.config.limits.documentsWriteCount = 1;
 
       return should(() => {
         documentController.mUpdate(request);
-      }).throw('Number of documents to update exceeds the server configured value (1)');
+      }).throw('document:mUpdate Number of documents to update exceeds the server configured value (1)');
     });
 
     it('mReplace should fulfill with an object', () => {
@@ -469,12 +478,13 @@ describe('Test: document controller', () => {
           {_id: 'anotherDocumentId', body: {some: 'body'}}
         ]
       };
+      request.input.action = 'mReplace';
 
       kuzzle.config.limits.documentsWriteCount = 1;
 
       return should(() => {
         documentController.mReplace(request);
-      }).throw('Number of documents to update exceeds the server configured value (1)');
+      }).throw('document:mReplace Number of documents to update exceeds the server configured value (1)');
     });
   });
 
@@ -731,11 +741,12 @@ describe('Test: document controller', () => {
 
     it('mDelete should throw an error if number of actions exceeds server configuration', () => {
       request.input.body = {ids: ['documentId', 'anotherDocumentId']};
+      request.input.action = 'mDelete';
       kuzzle.config.limits.documentsWriteCount = 1;
 
       return should(() => {
         documentController.mDelete(request);
-      }).throw('Number of delete to perform exceeds the server configured value (1)');
+      }).throw('document:mDelete Number of delete to perform exceeds the server configured value (1)');
     });
   });
 

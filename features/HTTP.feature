@@ -216,8 +216,8 @@ Feature: Test HTTP API
 
   @usingHttp @cleanSecurity
   Scenario: login user
-    Given I create a user "useradmin" with id "user1-id"
-    When I log in as user1-id:testpwd expiring in 1h
+    Given I create a user "useradmin" with id "useradmin-id"
+    When I log in as useradmin:testpwd expiring in 1h
     Then I write the document
     Then I check the JWT Token
     And The token is valid
@@ -228,12 +228,12 @@ Feature: Test HTTP API
 
   @usingHttp @cleanSecurity
   Scenario: user token deletion
-    Given I create a user "useradmin" with id "user1-id"
-    When I log in as user1-id:testpwd expiring in 1h
+    Given I create a user "useradmin" with id "useradmin-id"
+    When I log in as useradmin:testpwd expiring in 1h
     Then I write the document
     Then I check the JWT Token
     And The token is valid
-    Then I delete the user "user1-id"
+    Then I delete the user "useradmin-id"
     Then I check the JWT Token
     And The token is invalid
 
@@ -351,7 +351,7 @@ Feature: Test HTTP API
     Then I am able to perform a scrollUsers request
     Then I delete the user "user2-id"
     Then I search for {"ids":{"type": "users", "values":["#prefix#useradmin-id"]}} and find 1 users matching {"_id":"#prefix#useradmin-id","_source":{"name":{"first":"David","last":"Bowie"}}}
-    When I log in as useradmin-id:testpwd expiring in 1h
+    When I log in as useradmin:testpwd expiring in 1h
     Then I am getting the current user, which matches {"_id":"#prefix#useradmin-id","_source":{"profileIds":["admin"]}}
     Then I log out
     Then I am getting the current user, which matches {"_id":"-1","_source":{"profileIds":["anonymous"]}}
@@ -360,7 +360,7 @@ Feature: Test HTTP API
   Scenario: user updateSelf
     When I create a user "useradmin" with id "useradmin-id"
     Then I am able to get the user "useradmin-id" matching {"_id":"#prefix#useradmin-id","_source":{"profileIds":["admin"]}}
-    When I log in as useradmin-id:testpwd expiring in 1h
+    When I log in as useradmin:testpwd expiring in 1h
     Then I am getting the current user, which matches {"_id":"#prefix#useradmin-id","_source":{"profileIds":["admin"]}}
     Then I update current user with data {"foo":"bar"}
     Then I am getting the current user, which matches {"_id":"#prefix#useradmin-id","_source":{"profileIds":["admin"],"foo":"bar"}}
@@ -384,7 +384,7 @@ Feature: Test HTTP API
     And I create a user "user4" with id "user4-id"
     And I create a user "user5" with id "user5-id"
     And I create a user "user6" with id "user6-id"
-    When I log in as user1-id:testpwd1 expiring in 1h
+    When I log in as user1:testpwd1 expiring in 1h
     Then I'm allowed to create a document in index "kuzzle-test-index" and collection "kuzzle-collection-test"
     And I'm allowed to create a document in index "kuzzle-test-index" and collection "kuzzle-collection-test-alt"
     And I'm allowed to create a document in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test"
@@ -398,7 +398,7 @@ Feature: Test HTTP API
     And I'm allowed to count documents in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test"
     And I'm allowed to count documents in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test-alt"
     Then I log out
-    When I log in as user2-id:testpwd2 expiring in 1h
+    When I log in as user2:testpwd2 expiring in 1h
     Then I'm allowed to create a document in index "kuzzle-test-index" and collection "kuzzle-collection-test"
     And I'm allowed to create a document in index "kuzzle-test-index" and collection "kuzzle-collection-test-alt"
     And I'm not allowed to create a document in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test"
@@ -412,7 +412,7 @@ Feature: Test HTTP API
     And I'm allowed to count documents in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test"
     And I'm allowed to count documents in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test-alt"
     Then I log out
-    When I log in as user3-id:testpwd3 expiring in 1h
+    When I log in as user3:testpwd3 expiring in 1h
     Then I'm not allowed to create a document in index "kuzzle-test-index" and collection "kuzzle-collection-test"
     And I'm not allowed to create a document in index "kuzzle-test-index" and collection "kuzzle-collection-test-alt"
     And I'm not allowed to create a document in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test"
@@ -426,7 +426,7 @@ Feature: Test HTTP API
     And I'm allowed to count documents in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test"
     And I'm not allowed to count documents in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test-alt"
     Then I log out
-    When I log in as user4-id:testpwd4 expiring in 1h
+    When I log in as user4:testpwd4 expiring in 1h
     Then I'm not allowed to create a document in index "kuzzle-test-index" and collection "kuzzle-collection-test"
     And I'm not allowed to create a document in index "kuzzle-test-index" and collection "kuzzle-collection-test-alt"
     And I'm not allowed to create a document in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test"
@@ -440,7 +440,7 @@ Feature: Test HTTP API
     And I'm not allowed to count documents in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test"
     And I'm not allowed to count documents in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test-alt"
     Then I log out
-    When I log in as user5-id:testpwd5 expiring in 1h
+    When I log in as user5:testpwd5 expiring in 1h
     Then I'm not allowed to create a document in index "kuzzle-test-index" and collection "kuzzle-collection-test"
     And I'm not allowed to create a document in index "kuzzle-test-index" and collection "kuzzle-collection-test-alt"
     And I'm not allowed to create a document in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test"
@@ -454,7 +454,7 @@ Feature: Test HTTP API
     And I'm not allowed to count documents in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test"
     And I'm not allowed to count documents in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test-alt"
     Then I log out
-    When I log in as user6-id:testpwd6 expiring in 1h
+    When I log in as user6:testpwd6 expiring in 1h
     Then I'm not allowed to create a document in index "kuzzle-test-index" and collection "kuzzle-collection-test"
     And I'm not allowed to create a document in index "kuzzle-test-index" and collection "kuzzle-collection-test-alt"
     And I'm not allowed to create a document in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test"
@@ -484,7 +484,7 @@ Feature: Test HTTP API
     And I create a new role "role2" with id "role2"
     And I create a new profile "profile2" with id "profile2"
     And I create a user "user2" with id "user2-id"
-    When I log in as user2-id:testpwd2 expiring in 1h
+    When I log in as user2:testpwd2 expiring in 1h
     Then I'm able to find my rights
 
   @usingHttp @cleanRedis

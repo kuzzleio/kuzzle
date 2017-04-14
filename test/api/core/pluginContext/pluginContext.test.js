@@ -125,7 +125,7 @@ describe('Plugin Context', () => {
       });
 
       should(context.accessors).be.an.Object().and.not.be.empty();
-      should(context.accessors).have.properties(['registerStrategy', 'execute', 'users', 'validation', 'storage']);
+      should(context.accessors).have.properties(['execute', 'validation', 'storage']);
     });
 
     it('should expose a correctly constructed validation accessor', () => {
@@ -146,14 +146,6 @@ describe('Plugin Context', () => {
 
       should(storage.bootstrap).be.a.Function();
       should(storage.createCollection).be.a.Function();
-    });
-
-    it('should expose a users.load accessor', () => {
-      should(context.accessors.users).be.an.Object();
-      should(context.accessors.users.load).be.a.Function();
-
-      context.accessors.users.load();
-      should(kuzzle.repositories.user.load).be.calledOnce();
     });
   });
 

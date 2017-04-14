@@ -78,14 +78,16 @@ describe('/api/controllers/security', () => {
             'bar',
             'baz'
           ]
-        }
+        },
+        controller: 'security',
+        action: 'mDeleteUsers'
       });
 
       kuzzle.config.limits.documentsWriteCount = 1;
 
       return should(() => {
         mDelete(kuzzle, 'type', request);
-      }).throw('Number of delete to perform exceeds the server configured value (1)');
+      }).throw('security:mDeleteUsers Number of delete to perform exceeds the server configured value (1)');
     });
 
     it('should return the input ids if everything went fine', () => {
