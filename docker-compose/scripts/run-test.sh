@@ -6,6 +6,7 @@ ELASTIC_HOST=${kuzzle_services__db__host:-elasticsearch}
 ELASTIC_PORT=${kuzzle_services__db__port:-9200}
 
 npm install
+npm install --only=dev
 docker-compose/scripts/install-plugins.sh
 
 echo "[$(date --rfc-3339 seconds)] - Waiting for elasticsearch to be available"
@@ -28,5 +29,8 @@ fi
 echo "[$(date --rfc-3339 seconds)] - Starting Kuzzle..."
 
 pm2 start --silent /config/pm2.json
-npm test
+
+npm run --silent lint
+npm run unit-testing
 npm run codecov
+npm run functional-testing

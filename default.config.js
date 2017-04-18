@@ -20,6 +20,16 @@ module.exports = {
     accessControlAllowOrigin: '*'
   },
 
+  limits: {
+    concurrentRequests: 50,
+    documentsFetchCount: 1000,
+    documentsWriteCount: 200,
+    requestsHistorySize: 50,
+    requestsBufferSize: 50000,
+    requestsBufferWarningThreshold: 5000,
+    subscriptionConditionsCount: 16
+  },
+
   plugins: {
     common: {
       workerPrefix: 'kpw:',
@@ -47,7 +57,7 @@ module.exports = {
     jwt: {
       algorithm: 'HS256',
       expiresIn: '1h',
-      secret: 'Kuzzle rocks'
+      secret: null
     },
     default: {
       role: {
@@ -119,15 +129,6 @@ module.exports = {
         }
       }
     }
-  },
-
-  limits: {
-    requestsHistorySize: 50,
-    concurrentRequests: 50,
-    requestsBufferSize: 50000,
-    requestsBufferWarningThreshold: 5000,
-    documentsFetchCount: 1000,
-    documentsWriteCount: 200
   },
 
   services: {
