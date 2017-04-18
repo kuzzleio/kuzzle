@@ -117,10 +117,12 @@
     //   * secret:
     //      String or buffer data containing either the secret for HMAC
     //      algorithms, or the PEM encoded private key for RSA and ECDSA.
+    //      If left to null (default), Kuzzle will autogenerate a random
+    //      seed (can only be used with HMAC algorithms).
     "jwt": {
       "algorithm": "HS256",
       "expiresIn": "1h",
-      "secret": "Change me"
+      "secret": null
     },
     // [default]
     // The default role defines permissions for all users,
