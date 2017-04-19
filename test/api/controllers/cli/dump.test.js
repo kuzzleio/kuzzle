@@ -10,7 +10,8 @@ describe('Test: dump', () => {
     coreStub,
     getAllStatsStub,
     dump,
-    kuzzle;
+    kuzzle,
+    globStub;
 
   afterEach(() => {
     mockrequire.stopAll();
@@ -25,11 +26,15 @@ describe('Test: dump', () => {
       mkdirsSync: sinon.stub(),
       readdirSync: sinon.stub(),
       removeSync: sinon.stub(),
-      writeFileSync: sinon.stub()
+      writeFileSync: sinon.stub(),
+      createReadStream: sinon.stub().returns({pipe: sinon.stub().returnsThis(), on: sinon.stub().callsArgWith(1)}),
+      createWriteStream: sinon.stub(),
+      unlink: sinon.stub()
     };
 
     coreStub = sinon.stub().returns({});
     getAllStatsStub = sinon.stub().returns(Promise.resolve({hits: [{stats: 42}]}));
+    globStub = sinon.stub().callsArgWith(1, null, ['core']);
 
     kuzzle = {
       config: {
@@ -55,6 +60,7 @@ describe('Test: dump', () => {
 
     mockrequire('fs-extra', fsStub);
     mockrequire('dumpme', coreStub);
+    mockrequire('glob', globStub);
 
     const dumpfactory = mockrequire.reRequire('../../../../lib/api/controllers/cli/dump');
     dump = dumpfactory(kuzzle);
