@@ -110,6 +110,10 @@ describe('Test: dump', () => {
 
           should(coreStub.firstCall.calledWith('gcore', baseDumpPath.concat('/core'))).be.true();
 
+          should(fsStub.createReadStream.getCall(0).args[0]).be.exactly('core');
+          should(fsStub.createWriteStream).be.calledOnce();
+          should(fsStub.createReadStream().pipe).be.called(2);
+
           should(fsStub.copySync.getCall(0).args[0]).be.exactly(process.argv[0]);
           should(fsStub.copySync.getCall(0).args[1]).be.exactly(baseDumpPath.concat('/node'));
         });
