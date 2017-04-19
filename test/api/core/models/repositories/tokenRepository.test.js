@@ -26,6 +26,7 @@ describe('Test: repositories/tokenRepository', () => {
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
+    kuzzle.config.security.jwt.secret = 'test-secret';
     tokenRepository = new TokenRepository(kuzzle);
 
     return tokenRepository.init();

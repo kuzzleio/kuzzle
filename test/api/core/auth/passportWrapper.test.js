@@ -85,7 +85,7 @@ describe('Test the passport Wrapper', () => {
   });
 
   it('should reject in case of authenticate error', () => {
-    return should(passportWrapper.authenticate({body: {username: 'jdoe'}}, 'error')).be.rejectedWith('Bad Credentials');
+    return should(passportWrapper.authenticate({body: {username: 'jdoe'}}, 'error')).be.rejectedWith(/^Bad Credentials/);
   });
 
   it('should return a PassportResponse if the strategy calls a HTTP redirection', () => {

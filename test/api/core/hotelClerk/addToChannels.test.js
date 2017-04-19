@@ -35,7 +35,7 @@ describe('Test: hotelClerk.addToChannels', () => {
       index: 'index',
       collection: 'bar',
       body: {},
-      metadata: {}
+      volatile: {}
     };
     kuzzle = new KuzzleMock();
     kuzzle.hotelClerk = new HotelClerk(kuzzle);

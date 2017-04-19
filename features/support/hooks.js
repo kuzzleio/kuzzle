@@ -36,19 +36,22 @@ const myHooks = function () {
     // give a little time to run the After hook before proceeding
     setTimeout(() => {
       [api.world.fakeIndex, api.world.fakeAltIndex, api.world.fakeNewIndex].forEach(index => {
-        promises.push(api.deleteIndex(index));
+        promises.push(api.deleteIndex(index)
+          .catch(error => {
+            // Ignore 404 errors
+            if (error instanceof requestErrors.StatusCodeError && error.statusCode === 404) {
+              return Promise.resolve();
+            }
+
+            return Promise.reject(new Error(error));
+          }));
         promises.push(api.setAutoRefresh(index, false));
       });
 
       Promise.all(promises)
         .then(() => callback())
         .catch(error => {
-          // Ignore 404 errors
-          if (error instanceof requestErrors.StatusCodeError && error.statusCode === 404) {
-            return callback();
-          }
-
-          callback(new Error(error));
+          callback(error);
         });
     }, 0);
   });
@@ -115,18 +118,21 @@ const myHooks = function () {
   this.After({tags: ['@cleanRedis']}, function (scenario, callback) {
     cleanRedis.call(this, callback);
   });
+
   this.Before({tags: ['@cleanValidations']}, function (scenario, callback) {
     cleanValidations.call(this, callback);
   });
+
   this.After({tags: ['@cleanValidations']}, function (scenario, callback) {
     cleanValidations.call(this, callback);
   });
+
 };
 
 module.exports = myHooks;
 
 function setAPI (world, apiName) {
-  var
+  const
     Api = require('./api' + apiName),
     api = new Api();
 
@@ -136,7 +142,7 @@ function setAPI (world, apiName) {
 }
 
 function restApi () {
-  var
+  const
     W = require('./world'),
     world = new (new W()).World();
 
@@ -151,28 +157,19 @@ function cleanSecurity (callback) {
 
   this.api.listIndexes()
     .then(() => {
+      return this.api.refreshInternalIndex();
+    })
+    .then(() => {
       return this.api.searchUsers({
-        query: {
-          match_all: {
-            boost: 1
-          }
-        },
-        from: 0,
-        size: 9999
-      });
+        match_all: {}
+      }, {from: 0, size: 999});
     })
     .then(results => {
-      var
-        promises = [],
-        regex = new RegExp('^' + this.idPrefix);
+      const regex = new RegExp('^' + this.idPrefix);
 
       results = results.result.hits.filter(r => r._id.match(regex)).map(r => r._id);
 
-      results.forEach(id => {
-        promises.push(this.api.deleteUser(id));
-      });
-
-      return Promise.all(promises)
+      return results.length > 0 ? this.api.deleteUsers(results, true) : Promise.resolve()
         .catch(() => {
           // discard errors
           return Promise.resolve();
@@ -180,42 +177,32 @@ function cleanSecurity (callback) {
     })
     .then(() => {
       return this.api.searchProfiles({
+        match_all: {}
+      }, {
         from: 0,
-        size: 9999
+        size: 999
       });
     })
     .then(results => {
-      var
-        promises = [],
-        regex = new RegExp('^' + this.idPrefix);
+      const regex = new RegExp('^' + this.idPrefix);
 
       results = results.result.hits.filter(r => r._id.match(regex)).map(r => r._id);
 
-      results.forEach(id => {
-        promises.push(this.api.deleteProfile(id));
-      });
-
-      return Promise.all(promises)
+      return results.length > 0 ? this.api.deleteProfiles(results, true) : Promise.resolve()
         .catch(() => {
           // discard errors
           return Promise.resolve();
         });
     })
     .then(() => {
-      return this.api.searchRoles();
+      return this.api.searchRoles({});
     })
     .then(results => {
-      var
-        promises = [],
-        regex = new RegExp('^' + this.idPrefix);
+      const regex = new RegExp('^' + this.idPrefix);
 
       results = results.result.hits.filter(r => r._id.match(regex)).map(r => r._id);
 
-      results.forEach(id => {
-        promises.push(this.api.deleteRole(id));
-      });
-
-      return Promise.all(promises)
+      return results.length > 0 ? this.api.deleteRoles(results, true) : Promise.resolve()
         .catch(() => {
           // discard errors
           return Promise.resolve();
@@ -238,44 +225,22 @@ function cleanRedis(callback) {
 
       return null;
     })
-    .then(() => {
-      callback();
-    })
-    .catch(error => callback(error));
+    .then(response => callback(null, response))
+    .catch(callback);
 }
 
 function cleanValidations(callback) {
-  this.api.listIndexes()
-    .then(() => {
-      return this.api.searchSpecifications({
-        query: {
-          match_all: {
-            boost: 1
-          }
-        }
-      });
-    })
-    .then(body => {
-      var
-        promises = [],
-        regex = new RegExp('^kuzzle-test-');
-
-      body.result.hits
-        .filter(r => r._id.match(regex)).map(r => r._id)
-        .forEach(id => {
-          promises.push(this.api.deleteSpecifications(id.split('#')[0], id.split('#')[1]));
-        });
-
-      return Promise.all(promises)
-        .catch(() => {
-          // discard errors
-          return Promise.resolve();
-        });
-    })
-    .then(() => {
-      callback();
-    })
-    .catch(error => callback(error));
+  this.api.searchSpecifications({
+    query: {
+      match_all: { boost: 1 }
+    }
+  })
+    .then(body => Promise.all(body.result.hits
+      .filter(r => r._id.match(/^kuzzle-test-/))
+      .map(r => this.api.deleteSpecifications(r._id.split('#')[0], r._id.split('#')[1]))
+    ))
+    .then(response => callback(null, response))
+    .catch(callback);
 }
 
 

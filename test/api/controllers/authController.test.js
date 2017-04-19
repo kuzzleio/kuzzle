@@ -3,7 +3,6 @@ const
   jwt = require('jsonwebtoken'),
   Bluebird = require('bluebird'),
   /** @type KuzzleConfiguration */
-  params = require('../../../lib/config'),
   AuthController = require('../../../lib/api/controllers/authController'),
   Kuzzle = require('../../mocks/kuzzle.mock'),
   Request = require('kuzzle-common-objects').Request,
@@ -22,6 +21,7 @@ describe('Test the auth controller', () => {
 
   beforeEach(() => {
     kuzzle = new Kuzzle();
+    kuzzle.config.security.jwt.secret = 'test-secret';
 
     request = new Request({
       controller: 'auth',
@@ -66,7 +66,7 @@ describe('Test the auth controller', () => {
 
       return authController.login(request)
         .then(() => {
-          should(kuzzle.passport.authenticate).calledWith({query: request.input.body}, 'local');
+          should(kuzzle.passport.authenticate).calledWith({query: request.input.body, original: request}, 'local');
         });
     });
 
@@ -98,7 +98,7 @@ describe('Test the auth controller', () => {
   describe('#logout', () => {
     beforeEach(() => {
       const
-        signedToken = jwt.sign({_id: 'admin'}, params.security.jwt.secret, {algorithm: params.security.jwt.algorithm}),
+        signedToken = jwt.sign({_id: 'admin'}, kuzzle.config.security.jwt.secret, {algorithm: kuzzle.config.security.jwt.algorithm}),
         t = new Token();
 
       t._id = signedToken;
@@ -263,6 +263,18 @@ describe('Test the auth controller', () => {
           });
           should(filteredItem).length(1);
           should(filteredItem[0].value).be.equal('conditional');
+        });
+    });
+  });
+
+  describe('#getAuthenticationStrategies', () => {
+    it('should return a valid response', () => {
+      should(kuzzle.pluginsManager.listStrategies).be.a.Function();
+
+      return authController.getStrategies()
+        .then(result => {
+          should(kuzzle.pluginsManager.listStrategies).calledOnce();
+          should(result).be.instanceof(Array).of.length(0);
         });
     });
   });

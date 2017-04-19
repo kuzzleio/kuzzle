@@ -78,7 +78,7 @@ ApiWebsocket.prototype.send = function (msg, getAnswer, socketName) {
     msg.requestId = uuid.v4();
   }
 
-  msg.metadata = this.world.metadata;
+  msg.volatile = this.world.volatile;
 
   if (this.world.currentUser && this.world.currentUser.token) {
     msg.jwt = this.world.currentUser.token;
@@ -124,7 +124,7 @@ ApiWebsocket.prototype.sendAndListen = function (msg, socketName) {
     msg.requestId = uuid.v4();
   }
 
-  msg.metadata = this.world.metadata;
+  msg.volatile = this.world.volatile;
 
   socketName = initSocket.call(this, socketName);
   this.listSockets[socketName].emit(routename, msg);
