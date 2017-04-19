@@ -150,7 +150,8 @@ function KuzzleMock () {
 
   this.passport = {
     use: sinon.stub(),
-    authenticate: sinon.stub().returns(Promise.resolve({}))
+    authenticate: sinon.stub().returns(Promise.resolve({})),
+    injectAuthenticateOptions: sinon.stub()
   };
 
   this.pluginsManager = {
@@ -159,7 +160,9 @@ function KuzzleMock () {
     run: sinon.stub().returns(Promise.resolve()),
     getPluginsFeatures: sinon.stub().returns({}),
     trigger: sinon.spy(function () {return Promise.resolve(arguments[1]);}),
-    listStrategies: sinon.stub().returns(Promise.resolve([])),
+    listStrategies: sinon.stub().returns([]),
+    getStrategyMethod: sinon.stub().returns(sinon.stub()),
+    registeredStrategies: []
   };
 
   this.repositories = {

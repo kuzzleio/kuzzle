@@ -10,6 +10,7 @@ const
   Request = require('kuzzle-common-objects').Request,
   BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,
   NotFoundError = require('kuzzle-common-objects').errors.NotFoundError,
+  InternalError = require('kuzzle-common-objects').errors.InternalError,
   SizeLimitError = require('kuzzle-common-objects').errors.SizeLimitError,
   SecurityController = rewire('../../../../lib/api/controllers/securityController');
 
@@ -19,19 +20,16 @@ describe('Test: security controller - users', () => {
     request,
     securityController;
 
-  before(() => {
+  beforeEach(() => {
     kuzzle = new KuzzleMock();
     securityController = new SecurityController(kuzzle);
-  });
-
-  beforeEach(() => {
     request = new Request({controller: 'security'});
-    kuzzle.internalEngine.getMapping = sinon.stub().returns(Promise.resolve({internalIndex: {mappings: {users: {properties: {}}}}}));
+    kuzzle.internalEngine.getMapping = sandbox.stub().returns(Promise.resolve({internalIndex: {mappings: {users: {properties: {}}}}}));
     kuzzle.internalEngine.get = sandbox.stub().returns(Promise.resolve({}));
   });
 
   afterEach(() => {
-    sandbox.restore();
+    sandbox.reset();
   });
 
   describe('#updateUserMapping', () => {
@@ -213,6 +211,7 @@ describe('Test: security controller - users', () => {
 
   describe('#createUser', () => {
     it('should return a valid response', () => {
+      kuzzle.repositories.user.load = sandbox.stub().returns(Promise.resolve(kuzzle.repositories.user.anonymous()));
       kuzzle.repositories.user.persist = sandbox.stub().returns(Promise.resolve({_id: 'test'}));
       kuzzle.repositories.user.hydrate = sandbox.stub().returns(Promise.resolve());
 
@@ -231,6 +230,7 @@ describe('Test: security controller - users', () => {
     });
 
     it('should compute a user id if none is provided', () => {
+      kuzzle.repositories.user.load = sandbox.stub().returns(Promise.resolve(kuzzle.repositories.user.anonymous()));
       kuzzle.repositories.user.persist = sandbox.stub().returns(Promise.resolve({_id: 'test'}));
       kuzzle.repositories.user.hydrate = sandbox.stub().returns(Promise.resolve());
 
@@ -252,15 +252,136 @@ describe('Test: security controller - users', () => {
         });
     });
 
+    it('should reject an error if user already exists', () => {
+      kuzzle.repositories.user.load = sandbox.stub().returns(Promise.resolve({_id: 'test'}));
+
+      return should(securityController.createUser(new Request({
+        _id: 'test',
+        body: {
+          content: {name: 'John Doe', profileIds: ['anonymous']}
+        }
+      }))).be.rejectedWith(BadRequestError);
+    });
+
     it('should throw an error if no profile is given', () => {
       return should(() => {
-        securityController.createUser(new Request({body: {}}));
+        securityController.createUser(new Request({body: {content: {}}}));
       }).throw(BadRequestError);
+    });
+
+    it('should throw an error if profileIds is not an array', () => {
+      return should(() => {
+        securityController.createUser(new Request({body: {content: {profileIds: 'notAnArray'}}}));
+      }).throw(BadRequestError);
+    });
+  });
+
+  describe('#persistUserAndStrategies', () => {
+    it('should reject an error if a strategy is unknown', () => {
+      kuzzle.repositories.user.load = sandbox.stub().returns(Promise.resolve(kuzzle.repositories.user.anonymous()));
+      kuzzle.pluginsManager.listStrategies = sandbox.stub().returns(['someStrategy']);
+
+      return should(securityController.createUser(new Request({
+        _id: 'test',
+        body: {
+          content: {name: 'John Doe', profileIds: ['anonymous']},
+          credentials: {unknownStrategy: {some: 'credentials'}}
+        }
+      }))).be.rejectedWith(BadRequestError);
+    });
+
+    it('should reject an error if credentials don\'t validate the strategy', () => {
+      const methodStub = sandbox.stub().returns(Promise.reject(new Error('some error')));
+      kuzzle.repositories.user.load = sandbox.stub().returns(Promise.resolve(kuzzle.repositories.user.anonymous()));
+      kuzzle.pluginsManager.listStrategies = sandbox.stub().returns(['someStrategy']);
+      kuzzle.pluginsManager.getStrategyMethod = sandbox.stub().returns(methodStub);
+
+      return should(securityController.createUser(new Request({
+        _id: 'test',
+        body: {
+          content: {name: 'John Doe', profileIds: ['anonymous']},
+          credentials: {someStrategy: {some: 'credentials'}}
+        }
+      }))).be.rejectedWith(BadRequestError);
+    });
+
+    it('should throw an error and try to delete if credentials don\'t create properly', () => {
+      const
+        validateStub = sandbox.stub().returns(Promise.resolve()),
+        createStub = sandbox.stub().returns(Promise.reject(new Error('some error'))),
+        deleteStub = sandbox.stub().returns(Promise.resolve());
+
+      kuzzle.repositories.user.load = sandbox.stub().returns(Promise.resolve(kuzzle.repositories.user.anonymous()));
+      kuzzle.pluginsManager.listStrategies = sandbox.stub().returns(['someStrategy']);
+      kuzzle.pluginsManager.getStrategyMethod = sandbox.stub();
+
+      kuzzle.pluginsManager.getStrategyMethod
+        .onFirstCall().returns(validateStub)
+        .onSecondCall().returns(createStub)
+        .onThirdCall().returns(deleteStub);
+
+      return should(securityController.createUser(new Request({
+        _id: 'test',
+        body: {
+          content: {name: 'John Doe', profileIds: ['anonymous']},
+          credentials: {someStrategy: {some: 'credentials'}}
+        }
+      }))).rejectedWith(InternalError);
+    });
+
+    it('should intercept errors during deletion of a recovery phase', () => {
+      const
+        validateStub = sandbox.stub().returns(Promise.resolve()),
+        createStub = sandbox.stub().returns(Promise.reject(new Error('some error'))),
+        deleteStub = sandbox.stub().returns(Promise.reject(new Error('some error')));
+
+      kuzzle.repositories.user.load = sandbox.stub().returns(Promise.resolve(kuzzle.repositories.user.anonymous()));
+      kuzzle.pluginsManager.listStrategies = sandbox.stub().returns(['someStrategy']);
+      kuzzle.pluginsManager.getStrategyMethod = sandbox.stub();
+
+      kuzzle.pluginsManager.getStrategyMethod
+        .onFirstCall().returns(validateStub)
+        .onSecondCall().returns(createStub)
+        .onThirdCall().returns(deleteStub);
+
+      return should(securityController.createUser(new Request({
+        _id: 'test',
+        body: {
+          content: {name: 'John Doe', profileIds: ['anonymous']},
+          credentials: {someStrategy: {some: 'credentials'}}
+        }
+      }))).rejectedWith(InternalError);
+    });
+
+    it('should revert credential creations if user creation fails', () => {
+      const
+        validateStub = sandbox.stub().returns(Promise.resolve()),
+        createStub = sandbox.stub().returns(Promise.resolve()),
+        deleteStub = sandbox.stub().returns(Promise.resolve());
+
+      kuzzle.repositories.user.load = sandbox.stub().returns(Promise.resolve(kuzzle.repositories.user.anonymous()));
+      kuzzle.pluginsManager.listStrategies = sandbox.stub().returns(['someStrategy']);
+      kuzzle.pluginsManager.getStrategyMethod = sandbox.stub();
+      kuzzle.repositories.user.persist = sandbox.stub().returns(Promise.reject(new Error('some error')));
+
+      kuzzle.pluginsManager.getStrategyMethod
+        .onFirstCall().returns(validateStub)
+        .onSecondCall().returns(createStub)
+        .onThirdCall().returns(deleteStub);
+
+      return should(securityController.createUser(new Request({
+        _id: 'test',
+        body: {
+          content: {name: 'John Doe', profileIds: ['anonymous']},
+          credentials: {someStrategy: {some: 'credentials'}}
+        }
+      }))).rejectedWith(InternalError);
     });
   });
 
   describe('#createRestrictedUser', () => {
     it('should return a valid response', () => {
+      kuzzle.repositories.user.load = sandbox.stub().returns(Promise.resolve(kuzzle.repositories.user.anonymous()));
       kuzzle.repositories.user.persist = sandbox.stub().returns(Promise.resolve({_id: 'test'}));
       kuzzle.repositories.user.hydrate = sandbox.stub().returns(Promise.resolve());
 
@@ -276,6 +397,7 @@ describe('Test: security controller - users', () => {
     });
 
     it('should compute a user id if none is provided', () => {
+      kuzzle.repositories.user.load = sandbox.stub().returns(Promise.resolve(kuzzle.repositories.user.anonymous()));
       kuzzle.repositories.user.persist = sandbox.stub().returns(Promise.resolve({_id: 'test'}));
       kuzzle.repositories.user.hydrate = sandbox.stub().returns(Promise.resolve());
 
