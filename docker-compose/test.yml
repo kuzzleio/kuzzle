@@ -22,8 +22,8 @@ services:
       - kuzzle_services__internalCache__node__host=redis
       - kuzzle_services__memoryStorage__node__host=redis
       - kuzzle_services__proxyBroker__host=proxy
-      - NODE_ENV=development
-      - DEBUG=kuzzle:*
+      - NODE_ENV=production
+      - DEBUG=
       # Travis env var must be propagated into the container
       - TRAVIS
       - TRAVIS_COMMIT

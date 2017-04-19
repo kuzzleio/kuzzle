@@ -118,12 +118,15 @@ const myHooks = function () {
   this.After({tags: ['@cleanRedis']}, function (scenario, callback) {
     cleanRedis.call(this, callback);
   });
+
   this.Before({tags: ['@cleanValidations']}, function (scenario, callback) {
     cleanValidations.call(this, callback);
   });
+
   this.After({tags: ['@cleanValidations']}, function (scenario, callback) {
     cleanValidations.call(this, callback);
   });
+
 };
 
 module.exports = myHooks;
@@ -209,7 +212,6 @@ function cleanSecurity (callback) {
       callback();
     })
     .catch(error => {
-      console.error(error);
       callback(error.message ? error.message : error);
     });
 }
@@ -223,44 +225,22 @@ function cleanRedis(callback) {
 
       return null;
     })
-    .then(() => {
-      callback();
-    })
-    .catch(error => callback(error));
+    .then(response => callback(null, response))
+    .catch(callback);
 }
 
 function cleanValidations(callback) {
-  this.api.listIndexes()
-    .then(() => {
-      return this.api.searchSpecifications({
-        query: {
-          match_all: {
-            boost: 1
-          }
-        }
-      });
-    })
-    .then(body => {
-      const
-        promises = [],
-        regex = new RegExp('^kuzzle-test-');
-
-      body.result.hits
-        .filter(r => r._id.match(regex)).map(r => r._id)
-        .forEach(id => {
-          promises.push(this.api.deleteSpecifications(id.split('#')[0], id.split('#')[1]));
-        });
-
-      return Promise.all(promises)
-        .catch(() => {
-          // discard errors
-          return Promise.resolve();
-        });
-    })
-    .then(() => {
-      callback();
-    })
-    .catch(error => callback(error));
+  this.api.searchSpecifications({
+    query: {
+      match_all: { boost: 1 }
+    }
+  })
+    .then(body => Promise.all(body.result.hits
+      .filter(r => r._id.match(/^kuzzle-test-/))
+      .map(r => this.api.deleteSpecifications(r._id.split('#')[0], r._id.split('#')[1]))
+    ))
+    .then(response => callback(null, response))
+    .catch(callback);
 }
 
 

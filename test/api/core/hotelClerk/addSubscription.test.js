@@ -55,7 +55,7 @@ describe('Test: hotelClerk.addSubscription', () => {
       index: index,
       collection: collection,
       body: filter,
-      metadata: {
+      volatile: {
         foo: 'bar',
         bar: [ 'foo', 'bar', 'baz', 'qux']
       }
@@ -83,7 +83,7 @@ describe('Test: hotelClerk.addSubscription', () => {
           customer = kuzzle.hotelClerk.customers[connectionId];
           should(customer).be.an.Object();
           should(customer).not.be.empty();
-          should(customer[roomId]).not.be.undefined().and.match(request.input.metadata);
+          should(customer[roomId]).not.be.undefined().and.match(request.input.volatile);
 
           should(kuzzle.hotelClerk.rooms[roomId].channels).be.an.Object().and.not.be.undefined();
           should(Object.keys(kuzzle.hotelClerk.rooms[roomId].channels).length).be.exactly(1);
