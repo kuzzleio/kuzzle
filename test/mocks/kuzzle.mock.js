@@ -113,7 +113,8 @@ function KuzzleMock () {
       createRolesCollection: sinon.stub().returns(Promise.resolve()),
       createProfilesCollection: sinon.stub().returns(Promise.resolve()),
       createUsersCollection: sinon.stub().returns(Promise.resolve()),
-      createPluginsCollection: sinon.stub().returns(Promise.resolve())
+      createPluginsCollection: sinon.stub().returns(Promise.resolve()),
+      delete: sinon.stub().returns(Promise.resolve())
     },
     create: sinon.stub().returns(Promise.resolve()),
     createInternalIndex: sinon.stub().returns(Promise.resolve()),
