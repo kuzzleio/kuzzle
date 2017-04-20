@@ -240,7 +240,7 @@ describe('Test: security/roleTest', () => {
       roleDeny.controllers = {
         admin: {
           actions: {
-            createInedx: false,
+            createIndex: false,
             createCollection: true
           }
         }
@@ -323,7 +323,6 @@ describe('Test: security/roleTest', () => {
           should(isAllowed).be.false();
         });
     });
-
 
     it('should reject if the rights configuration is not either a boolean or a closure', () => {
       var role = new Role();

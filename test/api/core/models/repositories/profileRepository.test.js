@@ -411,6 +411,33 @@ describe('Test: repositories/profileRepository', () => {
             .be.calledWith('core:profileRepository:save', {_id: testProfile._id, policies: testProfile.policies});
         });
     });
+
+    it('should reject if we try to remove the anonymous role from the anonymous profile', () => {
+      const profile = new Profile();
+      profile._id = 'anonymous';
+      profile.policies = [
+        {roleId: 'test'},
+        {roleId: 'another'}
+      ];
+
+      return should(profileRepository.validateAndSaveProfile(profile))
+        .be.rejectedWith(BadRequestError, {message: 'Anonymous profile must include the anonymous role'});
+    });
+
+    it('should accept to update the anonymous profile if the anonymous role is still in', () => {
+      const profile = new Profile();
+      profile._id = 'anonymous';
+      profile.policies = [
+        {roleId: 'test'},
+        {roleId: 'anonymous'}
+      ];
+
+      return profileRepository.validateAndSaveProfile(profile)
+        .then(response => {
+          should(response._id)
+            .be.eql('anonymous');
+        });
+    });
   });
 
 });
