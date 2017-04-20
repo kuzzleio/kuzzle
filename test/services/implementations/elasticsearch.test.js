@@ -894,7 +894,7 @@ describe('Test: ElasticSearch service', () => {
         ]
       };
 
-      return elasticsearch.import(request)
+      return elasticsearch.bulkImport(request)
         .then(() => {
           should(elasticsearch.client.bulk.firstCall.args[0].body).be.exactly(request.input.body.bulkData);
           should(refreshIndexSpy.calledOnce).be.true();
@@ -915,7 +915,7 @@ describe('Test: ElasticSearch service', () => {
       request.input.args.timeout = 999;
       request.input.args.fields = 'foo, bar, baz';
 
-      return elasticsearch.import(request)
+      return elasticsearch.bulkImport(request)
         .then(() => {
           const arg = elasticsearch.client.bulk.firstCall.args[0];
 
@@ -955,7 +955,7 @@ describe('Test: ElasticSearch service', () => {
         ]
       };
 
-      return elasticsearch.import(request)
+      return elasticsearch.bulkImport(request)
         .then(result => {
           should(elasticsearch.client.bulk.firstCall.args[0].body).be.exactly(request.input.body.bulkData);
 
@@ -986,7 +986,7 @@ describe('Test: ElasticSearch service', () => {
         ]
       };
 
-      return elasticsearch.import(request)
+      return elasticsearch.bulkImport(request)
         .then(() => {
           const data = elasticsearch.client.bulk.firstCall.args[0];
 
@@ -1020,7 +1020,7 @@ describe('Test: ElasticSearch service', () => {
 
       elasticsearch.client.bulk.returns(Promise.reject(error));
 
-      return should(elasticsearch.import(request)).be.rejectedWith(error);
+      return should(elasticsearch.bulkImport(request)).be.rejectedWith(error);
     });
 
     it('should return a rejected promise if bulk data try to write into internal index', () => {
@@ -1038,12 +1038,12 @@ describe('Test: ElasticSearch service', () => {
 
       elasticsearch.client.bulk.returns(Promise.resolve({}));
 
-      return should(elasticsearch.import(request)).be.rejectedWith(BadRequestError);
+      return should(elasticsearch.bulkImport(request)).be.rejectedWith(BadRequestError);
     });
 
     it('should return a rejected promise if body contains no bulkData parameter', () => {
       request.input.body.bulkData = null;
-      return should(elasticsearch.import(request)).be.rejectedWith(BadRequestError);
+      return should(elasticsearch.bulkImport(request)).be.rejectedWith(BadRequestError);
     });
 
     it('should return a rejected promise if no type has been provided, locally or globally', () => {
@@ -1063,7 +1063,7 @@ describe('Test: ElasticSearch service', () => {
 
       elasticsearch.client.bulk.returns(Promise.resolve({}));
 
-      return should(elasticsearch.import(request)).be.rejectedWith(BadRequestError);
+      return should(elasticsearch.bulkImport(request)).be.rejectedWith(BadRequestError);
     });
 
     it('should return a rejected promise if no index has been provided, locally or globally', () => {
@@ -1083,7 +1083,7 @@ describe('Test: ElasticSearch service', () => {
 
       elasticsearch.client.bulk.returns(Promise.resolve({}));
 
-      return should(elasticsearch.import(request)).be.rejected();
+      return should(elasticsearch.bulkImport(request)).be.rejected();
     });
   });
 

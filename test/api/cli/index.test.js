@@ -30,7 +30,7 @@ describe('Tests: api/cli/index.js', () => {
       should(cli.actions.createFirstAdmin).be.instanceOf(Action);
       should(cli.actions.data).be.instanceOf(Action);
       should(cli.actions.dump).be.instanceOf(Action);
-      should(cli.do).be.a.Function();
+      should(cli.doAction).be.a.Function();
     });
   });
 
@@ -85,7 +85,7 @@ describe('Tests: api/cli/index.js', () => {
           }
         };
 
-      return cli.do.call(context, 'test', {})
+      return cli.doAction.call(context, 'test', {})
         .then(response => {
           should(response).be.exactly('promise');
           should(kuzzle.services.list.broker.listen).be.calledOnce();
@@ -121,7 +121,7 @@ describe('Tests: api/cli/index.js', () => {
 
       kuzzle.internalEngine.init.returns(Promise.reject(error));
 
-      return cli.do.call(context, 'action', 'data', {debug: true})
+      return cli.doAction.call(context, 'action', 'data', {debug: true})
         .catch(err => {
           should(err).be.exactly(error);
           should(Cli.__get__('console.error'))

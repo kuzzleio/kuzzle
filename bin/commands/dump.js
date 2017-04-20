@@ -1,11 +1,32 @@
+/*
+ * Kuzzle, a backend software, self-hostable and ready to use
+ * to power modern apps
+ *
+ * Copyright 2017 Kuzzle
+ * mailto: support AT kuzzle.io
+ * website: http://kuzzle.io
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 /* eslint-disable no-console */
 
-var
+const
   clc = require('cli-color'),
   Kuzzle = require('../../lib/api/kuzzle');
 
 module.exports = function commandDump (options) {
-  var
+  const
     error = string => options.parent.noColors ? string : clc.red(string),
     ok = string => options.parent.noColors ? string: clc.green.bold(string),
     notice = string => options.parent.noColors ? string : clc.cyanBright(string),
@@ -14,7 +35,7 @@ module.exports = function commandDump (options) {
 
   console.log(notice('[ℹ] Creating dump file...'));
 
-  kuzzle.cli.do('dump', {suffix: 'cli'})
+  kuzzle.cli.doAction('dump', {suffix: 'cli'})
     .then(request => {
       console.log(ok('[✔] Done!'));
       console.log('\n' + warn(`[ℹ] Dump has been successfully generated in "${request.result}" folder`));
@@ -22,7 +43,7 @@ module.exports = function commandDump (options) {
       process.exit(0);
     })
     .catch(err => {
-      console.log(error('[✖]', err));
+      console.log(error(`[✖] ${err}`));
       process.exit(1);
     });
 };
