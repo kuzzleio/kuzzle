@@ -24,7 +24,6 @@ docker-compose-custom.yml
 *~
 .*.swp
 .tags
-.sonar
 
 # Kuzzle
 .kuzzlerc
@@ -34,6 +33,10 @@ docker-compose-custom.yml
 
 #swagger
 kuzzle-swagger.*
+
+#sonarqube
+.sonar
+.scannerwork
 
 #plugins
 plugins/available/*
