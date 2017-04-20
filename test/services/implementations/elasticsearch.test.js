@@ -679,20 +679,20 @@ describe('Test: ElasticSearch service', () => {
     it('should allow to delete a document', () => {
       const refreshIndexSpy = sandbox.spy(elasticsearch, 'refreshIndexIfNeeded');
 
-      elasticsearch.client.delete.returns(Promise.resolve({}));
+      elasticsearch.client.update.returns(Promise.resolve({}));
 
       request.input.body = null;
       request.input.resource._id = createdDocumentId;
 
       return elasticsearch.delete(request)
         .then(() => {
-          should(elasticsearch.client.delete.firstCall.args[0].id).be.exactly(createdDocumentId);
+          should(elasticsearch.client.update.firstCall.args[0].id).be.exactly(createdDocumentId);
           should(refreshIndexSpy.calledOnce).be.true();
         });
     });
 
     it('should return a rejected promise if a delete fails', () => {
-      elasticsearch.client.delete.returns(Promise.reject(new Error('Mocked error')));
+      elasticsearch.client.update.returns(Promise.reject(new Error('Mocked error')));
 
       return should(elasticsearch.delete(request)).be.rejected();
     });
@@ -752,7 +752,7 @@ describe('Test: ElasticSearch service', () => {
               }
               if (cmd.doc) {
                 should(cmd.doc).not.be.undefined().and.be.an.Object();
-                should(cmd.doc).be.eql({_kuzzle_info: { active: false, deletedAt: 42 }});
+                should(cmd.doc).be.eql({_kuzzle_info: { active: false, deletedAt: 42, updater: 'test' }});
               }
             });
 
