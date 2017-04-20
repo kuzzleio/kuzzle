@@ -207,6 +207,25 @@ describe('Test: security controller - users', () => {
 
       return should(securityController.deleteUser(new Request({_id: 'test'}))).be.rejectedWith(error);
     });
+
+    it('should delete user credentials', () => {
+      const
+        existsMethod = sandbox.stub().returns(Promise.resolve(true)),
+        deleteMethod = sandbox.stub().returns(Promise.resolve());
+      kuzzle.pluginsManager.listStrategies = sandbox.stub().returns(['someStrategy']);
+      kuzzle.pluginsManager.getStrategyMethod = sandbox.stub();
+      kuzzle.repositories.user.delete = sandbox.stub().returns(Promise.resolve({_id: 'test'}));
+
+      kuzzle.pluginsManager.getStrategyMethod
+        .onFirstCall().returns(existsMethod)
+        .onSecondCall().returns(deleteMethod);
+
+      return securityController.deleteUser(new Request({_id: 'test'}))
+        .then(response => {
+          should(response).be.instanceof(Object);
+          should(response._id).be.exactly('test');
+        });
+    });
   });
 
   describe('#createUser', () => {

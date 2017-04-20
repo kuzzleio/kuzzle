@@ -203,7 +203,7 @@ describe('Test: security controller - credentials', () => {
         });
     });
 
-    it('should resolve to an empty object if getInfo method is provided', () => {
+    it('should resolve to an empty object if getInfo method is not provided', () => {
       const methodStub = sinon.stub().returns(Promise.resolve({foo: 'bar'}));
       request = new Request({
         controller: 'security',
