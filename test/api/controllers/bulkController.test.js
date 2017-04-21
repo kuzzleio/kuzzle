@@ -1,4 +1,4 @@
-var
+const
   should = require('should'),
   BulkController = require('../../../lib/api/controllers/bulkController'),
   Request = require('kuzzle-common-objects').Request,
@@ -6,7 +6,7 @@ var
   KuzzleMock = require('../../mocks/kuzzle.mock');
 
 describe('Test the bulk controller', () => {
-  var
+  let
     controller,
     kuzzle,
     foo = {foo: 'bar'},
@@ -20,9 +20,9 @@ describe('Test the bulk controller', () => {
   });
 
   it('should trigger the proper methods and resolve to a valid response', () => {
-    return controller.bulkImport(request)
+    return controller.import(request)
       .then(response => {
-        var engine = kuzzle.services.list.storageEngine;
+        const engine = kuzzle.services.list.storageEngine;
 
         should(engine.import).be.calledOnce();
         should(engine.import).be.calledWith(request);
@@ -35,12 +35,11 @@ describe('Test the bulk controller', () => {
   it('should handle partial errors', () => {
     stub.returns(Promise.resolve({partialErrors: ['foo', 'bar']}));
 
-    return controller.bulkImport(request)
+    return controller.import(request)
       .then(response => {
         should(response).be.instanceof(Object);
         should(request.status).be.eql(206);
         should(request.error).be.instanceOf(PartialError);
       });
   });
-
 });

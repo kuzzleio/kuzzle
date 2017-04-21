@@ -1,13 +1,10 @@
-var
+const
   should = require('should'),
   Policies = require('../../../../../lib/api/core/models/security/policies');
 
-
 describe('Test: security/policiesTest', () => {
-
   it('should correclty merge policies', () => {
-    var
-      result;
+    let result;
 
     result = Policies.merge(undefined, {value: 'allowed'});
     should(result.value).be.equal('allowed');
