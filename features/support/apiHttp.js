@@ -832,6 +832,14 @@ ApiHttp.prototype.scrollUsers = function (scrollId) {
   return this.callApi(options);
 };
 
+ApiHttp.prototype.replaceUser = function (id, body) {
+  return this.callApi({
+    url: this.apiPath('users/' + id + '/_replace'),
+    method: 'PUT',
+    body
+  });
+};
+
 ApiHttp.prototype.deleteUser = function (id, waitFor = false) {
   return this.callApi({
     url: this.apiPath('users/' + id + (waitFor ? '?refresh=wait_for' : '')),

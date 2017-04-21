@@ -128,6 +128,15 @@ module.exports = function () {
     });
   });
 
+  this.Then(/^I replace the user "(.*?)" with data {(.*?)}$/, function (id, data) {
+    return this.api.replaceUser(this.idPrefix + id, JSON.parse('{' + data + '}'))
+      .then(body => {
+        if (body.error) {
+          throw new Error(body.error.message);
+        }
+      });
+  });
+
   this.Then(/^I delete the user "(.*?)"$/, function (id) {
     return this.api.deleteUser(this.idPrefix + id)
       .then(body => {

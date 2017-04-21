@@ -864,6 +864,15 @@ ApiRT.prototype.scrollUsers = function (scrollId) {
   });
 };
 
+ApiRT.prototype.replaceUser = function (id, body) {
+  return this.send({
+    controller: 'security',
+    action: 'replaceUser',
+    _id: id,
+    body
+  });
+};
+
 ApiRT.prototype.deleteUser = function (id, waitFor = false) {
   const msg = {
     controller: 'security',
