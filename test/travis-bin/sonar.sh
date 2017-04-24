@@ -6,11 +6,9 @@ PACKAGE_VERSION=$(cat package.json | grep version | head -1 | awk -F: '{ print $
 
 if [ "${TRAVIS_PULL_REQUEST}" != "false" ]; then
   echo "Running sonar scanner"
-echo "*** SONAR TOKEN: "
-echo $(echo "${SONAR_TOKEN}" | cut -c 1-5)...
 
-echo "*** SONAR GITHUB TOKEN: "
-echo $(echo "${SONAR_GITHUB_TOKEN}" | cut -c 1-5)...
+  # Ignore Travis skipping sonarqube
+  unset SONARQUBE_SKIPPED
 
   sonar-scanner \
     -Dsonar.analysis.mode=preview \
