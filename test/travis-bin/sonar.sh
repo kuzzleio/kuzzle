@@ -14,7 +14,6 @@ echo "==== TRAVIS SONAR CONFIG: "
 cat /home/travis/.sonarscanner/sonar-scanner-2.8/conf/sonar-scanner.properties
 
 
-
 echo sonar-scanner \
     -Dsonar.host.url=https://sonarqube.kaliop.net \
     -Dsonar.projectKey=kuzzle:server \
@@ -23,8 +22,11 @@ echo sonar-scanner \
     -Dsonar.projectVersion="$PACKAGE_VERSION" \
     -Dsonar.login="..." \
     -Dsonar.github.pullRequest="$TRAVIS_PULL_REQUEST" \
-    -Dsonar.github.oauth="$..." \
+    -Dsonar.github.oauth="..." \
     -Dsonar.github.repository="$TRAVIS_REPO_SLUG"
+
+echo "SONAR VERSION: "
+  sonar-scanner --version
 
 
   sonar-scanner \
@@ -34,8 +36,9 @@ echo sonar-scanner \
     -Dsonar.analysis.mode=preview \
     -Dsonar.projectVersion="$PACKAGE_VERSION" \
     -Dsonar.login="$SONAR_TOKEN" \
-    -Dsonar.github.pullRequest="$TRAVIS_PULL_REQUEST" \
-    -Dsonar.github.oauth="$SONAR_GITHUB_TOKEN" \
-    -Dsonar.github.repository="$TRAVIS_REPO_SLUG"
+    -X
+#    -Dsonar.github.pullRequest="$TRAVIS_PULL_REQUEST" \
+#    -Dsonar.github.oauth="$SONAR_GITHUB_TOKEN" \
+#    -Dsonar.github.repository="$TRAVIS_REPO_SLUG"
 fi
 
