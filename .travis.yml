@@ -1,23 +1,17 @@
 dist: trusty
 sudo: required
 jdk: oraclejdk8
-
 services:
-  - docker
-
+- docker
 script:
-  - bash test/travis-bin/run-tests.sh
-  - bash test/travis-bin/sonar.sh
-  
+- bash test/travis-bin/run-tests.sh
+- bash test/travis-bin/sonar.sh
 cache:
-  directories:
-    – $HOME/.m2
-    – $HOME/.sonar/cache
-
+  directories: "– $HOME/.m2 – $HOME/.sonar/cache"
 notifications:
   webhooks:
     urls:
-      - https://webhooks.gitter.im/e/8e145155fbaaf37cffea
+    - https://webhooks.gitter.im/e/8e145155fbaaf37cffea
     on_success: change
     on_failure: always
     on_start: never
@@ -27,13 +21,9 @@ notifications:
     on_success: never
     on_failure: always
     on_start: never
-
 addons:
   sonarqube:
-    branches:
-      - master
-      - rc.x
     token:
-      secure: BM+uIcn3x36YOQG1AN9XxKEHn5f5NejhWw3SAsxk4JsdFzOSPO67PBoJ8ACM8vl0Y0/f/zUIg0iYxd91NTTjhPSfXF3x6QZBDWwXwRQmLjBmwWS17QC7GbqTuAJ4/CXASxjntcsebT7FpRXx8apUVwW3CbB4f4Y8nf0No0Okq73fvcRejedCD0pC1L7n7H5X4xXJ+/CfXVnUc0jUZkMa5x2umEbSfGz27X7uqvfGkjMTAdzO7aQTBei423Y+sqG1U0thJepipxlEfaFR4r9tJ0qc6oIZsUMXn6ywjFNhNPvKImmLSvVlUFzINFotKtNr9AQiBjISOqRUhVLOm8tWAoLlQtm0mO1jsLQ68MrYPKPpb1ZZfXneRtxiWlZqSgGiU8fs7mxjOyfBIhk+avDpVNIS5QP0n1UhfEhBeOOkXl+zqqnbu4GMxnkVfI4zToLxYS+mpC8WWGZTbNoGhRPh5I4tfqc1YvQ4UzBz8rBO5yJOLyiaNd9py51zSXhfDZcv9786EqUX9m/ZixNyB2ncPQGgx5wbePD4cd8+5LC9Or0EAbba/QM4TbYS9XQ0iVnwT7PjnN3wc/twWhifVu1Zuwnh6YUxovhmU2jveN/hE+UwGT6Ls65cSFl3ar1Y03Q75sh69SvN1kGJUpL5EVQpcmFT5m8lCUumI1BVfYMICgg=
+      secure: qBNJ5FgLHRi6iam3Ytr6UtwX5YJlymRVxz7qaGzI2RPEgqg+tKVDiV8pxWn2Zmj3zoUaduIc2CbRdteSL4ZsTSV5Q5zymQlGYTDJWKcm0QSinXAW0xh6Lry99rtHMuFu240fa2gAhKyNETVgfY7Y7rXMQD6p32ATDtcCBd8jAy5SAhgxOki7MzpxXH6higyCVtuK8MSSqY+Q9D8vJrjNfRYEPb9KFUX4kXvuH1b0+ptwAeOKpnvmnZUiYzZ8jHT0kuhzCIMK3QwylFx+ApQmE3DLsXc1Y0wPOkjDEXsZmIYiPZy6az92ItpkEJr9QaU7XGjWEHEgj9J+6AhUtDWJ2yqZI02sK/Dg2eF5NR0hJ5SjIzGdUan9innEgl5hMegzyMUgipwowNwJECKxU2SUQYL75fuZMS5vE9X+DxfHxfevOtUz4OpTeYR8BSQkVUCFR1ctcU4gDRALLc8us1OOjAMa3WinBhL20am8fN3g/tl0BkChXbR5V0Eeno8DWDJaot65NahbbzbZKwyEcQyuH1Vzwok1+Yrh+pJgKOstjq2kW1rb/AthSTrtOcR1WM5r7XUha/momu2E2T8pJG9YaEpBCHQexucPzdiRDnM5uTooQufx+idGT93dHCt96j9Hpbj84/0wpXKwNLaVP2ZpjcBX4MStauBtmYJdMhhBzrA=
     github_token:
-      secure: Dg9fFhRkuRLgZRJHWWnZ341gASYDuf5wg0VJ8uGEsKiic45SKwj0DAm6d/XqRLAtXznaR+65LaCRAZDgWTlFlExTXvUDgBPcc3oUhwDGjcK1q03ArV+13wlADuxTtbft5Zz5r4k/01i+EfX6a+ehg7ZDM1jEdPqiXheQjmcumVSnJjtz5cApYgQBTjztA9wYImxSpEiUqDwfOHzZQvtHUSkt00NadnvbLn8ZYlqwhsjihy36aaVmkiME4SwC71Y8Sp9OvHUJbgSEV24hQtB2ExQF9XSFfUch6VbbWO9E9JmIcNwIzSa8/gUdQyQU92sSP9Uh6o993MokHHkZ9pXkpIJyoTgac4b6CSMAYA+BPadvKyjVeFx7qS3caxDB38qvasW0raMAGzzuNwEOdOd0nxDZDMfGcLBIW+FfG3cjZQMognotMTRTzjuHxfuP7+gw5809hLak63tvDrAFenKL8tcQChRiJ2nVqcrrly59EX1jhRWdZR2GS0BGpcbX1s/49Jyieriwo/VKt+fhaZPjtyvGNwJFVekBUrPJ7lgBgPB/UfbbaG7iRPU7YCZg4MwFtuvVcXfCpz26IEFvhEr3Opwhg+N+GJdnlUusmRjXtdDTmTNdoEurhR4zHMrLPrKQ/BagdkyrZefsFf/zMqhv8wTfW2vI16tnZYO7tV28uTg=
+      secure: E9RFVrCmEzphD/FWz/aIuzazK2iZE+lmIZ+qcvIo78ndEelvJQ0/VtkyvclBpKcFBQc+AJJpke6CAprEyCvz8Puj4L9XbSkRDhz5PGBfB8gxTDqgkrUpH3KVGqWx1/KJ/KjkZgMNb4FHwqD0vmlxnhAkdwwyRWzcdWUjqluwY0xQbbvJ7vS7BoJAmf5MLyb0Q65nW6NhGfSf16fNSACnp4Xbd3VdfGAOQL9X01dKVTV0GAPMrqs+QKhKOvZC/fRT0qXLXKyGqYc/nyoBwFZGBwSykdTDXZwR+ylnbRNgHRZxoBsmjscskeDf2kgKvTxkXbF3Ij1utBb7n0ocCN43lt5l4cZEdyDfuwzY+eeDHF61SWs42cKfef5fmsb2wb3Vel/+HnYs9grYdAOG0RcpIioll2Tj5CLWSbIJfhBuq1cQA3mu6m3klj+IM4D2HVBXlMF9c6YqlyCKJ4w5Kd+Q4K5THcARulXZdjHqk173/Ud2CgCqpsjSkvIMHReuyuijDUcRk4BTBGDipeDbF4sPcoaZX2MwNxnULMbi4D8WJr78w0IZ3kC1zSFXlmw0mSxothdjXL0jAMyQi28vKMW4YX+yAXgbIf/Wmg8sfe2nHw9RpE3PakQZwg+++QU7Rfv930LSf2Fg0s0vcSDWsAsM0nwAo4l/ONrHDiC/IDyYbBw=
