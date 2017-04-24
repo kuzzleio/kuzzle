@@ -14,7 +14,8 @@ describe('PluginsManager: strategy management', () => {
     pluginsManager,
     plugin,
     pluginManagerStrategy,
-    sandbox = sinon.sandbox.create();
+    sandbox = sinon.sandbox.create(),
+    foo = {foo: 'bar'};
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
@@ -113,7 +114,12 @@ describe('PluginsManager: strategy management', () => {
       PluginsManager.__set__('console', consoleMock);
     });
 
-    it('should add the strategy in authentications if the strategy is well defined', () => {
+    it('should add the strategy in authentications if the strategy is well defined', done => {
+      let verifyAdapter;
+
+      plugin.existsFunction = sandbox.stub().returns(foo);
+      plugin.verifyFunction = sandbox.stub().returns(Promise.resolve(foo));
+
       injectAuthentication(kuzzle, authentications, plugin, pluginName);
       should(authentications.someStrategy.strategy).be.deepEqual(plugin.strategies.someStrategy);
       should(authentications.someStrategy.methods.exists).be.Function();
@@ -122,7 +128,56 @@ describe('PluginsManager: strategy management', () => {
       should(authentications.someStrategy.methods.delete).be.Function();
       should(authentications.someStrategy.methods.getInfo).be.Function();
       should(authentications.someStrategy.methods.validate).be.Function();
+      should(plugin.strategies.someStrategy.config.constructor).be.calledOnce();
+      should(plugin.strategies.someStrategy.config.constructor).be.calledWithNew();
+
+      verifyAdapter = plugin.strategies.someStrategy.config.constructor.firstCall.args[1];
+
+      authentications.someStrategy.methods.exists(foo)
+        .then(result => {
+          should(result).be.deepEqual(foo);
+          should(plugin.existsFunction).be.calledOnce();
+          verifyAdapter({}, (error) => {
+            if (error) {
+              done(error);
+            }
+            else {
+              done();
+            }
+          });
+        });
     });
+
+    it('method invocation should intercept a thrown error to transform it into PluginImplementationError', () => {
+      plugin.existsFunction = sandbox.stub().throws(new Error('some error'));
+
+      injectAuthentication(kuzzle, authentications, plugin, pluginName);
+      should(authentications.someStrategy.strategy).be.deepEqual(plugin.strategies.someStrategy);
+      should(authentications.someStrategy.methods.exists).be.Function();
+      should(authentications.someStrategy.methods.create).be.Function();
+      should(authentications.someStrategy.methods.update).be.Function();
+      should(authentications.someStrategy.methods.delete).be.Function();
+      should(authentications.someStrategy.methods.getInfo).be.Function();
+      should(authentications.someStrategy.methods.validate).be.Function();
+
+      return should(authentications.someStrategy.methods.exists(foo)).be.rejectedWith(PluginImplementationError);
+    });
+
+    it('method invocation should intercept a rejected error to transform it into PluginImplementationError', () => {
+      plugin.existsFunction = sandbox.stub().returns(Promise.reject(new Error('some error')));
+
+      injectAuthentication(kuzzle, authentications, plugin, pluginName);
+      should(authentications.someStrategy.strategy).be.deepEqual(plugin.strategies.someStrategy);
+      should(authentications.someStrategy.methods.exists).be.Function();
+      should(authentications.someStrategy.methods.create).be.Function();
+      should(authentications.someStrategy.methods.update).be.Function();
+      should(authentications.someStrategy.methods.delete).be.Function();
+      should(authentications.someStrategy.methods.getInfo).be.Function();
+      should(authentications.someStrategy.methods.validate).be.Function();
+
+      return should(authentications.someStrategy.methods.exists(foo)).be.rejectedWith(PluginImplementationError);
+    });
+
 
     it('should print an error in the console if strategies is not an object', () => {
       plugin.strategies = {};
