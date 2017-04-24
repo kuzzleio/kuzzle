@@ -6,10 +6,11 @@ PACKAGE_VERSION=$(cat package.json | grep version | head -1 | awk -F: '{ print $
 
 if [ "${TRAVIS_PULL_REQUEST}" != "false" ]
 then
-  echo "Running sonar scanner"
+  echo "=== Running sonar scanner"
 
   # Unset travis pre-set parameters, which are more harmful than anything
   unset SONARQUBE_SCANNER_PARAMS
+  unset SONARQUBE_SKIPPED
 
   sonar-scanner \
     -Dsonar.host.url=https://sonarqube.kaliop.net \
