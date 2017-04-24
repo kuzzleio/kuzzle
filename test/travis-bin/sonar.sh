@@ -6,14 +6,12 @@ PACKAGE_VERSION=$(cat package.json | grep version | head -1 | awk -F: '{ print $
 
 if [ "${TRAVIS_PULL_REQUEST}" != "false" ]; then
   echo "Running sonar scanner"
-echo "*** SONAR TOKEN: "
-echo $(echo "${SONAR_TOKEN}" | cut -c 1-5)...
-
-echo "*** SONAR GITHUB TOKEN: "
-echo $(echo "${SONAR_GITHUB_TOKEN}" | cut -c 1-5)...
 
   sonar-scanner \
     -Dsonar.host.url=https://sonarqube.kaliop.net \
+    -Dsonar.projectKey=kuzzle:server \
+    -Dsonar.projectName="Kuzzle Server" \
+    -Dsonar.sources=lib \
     -Dsonar.analysis.mode=preview \
     -Dsonar.projectVersion="$PACKAGE_VERSION" \
     -Dsonar.login="$SONAR_TOKEN" \
