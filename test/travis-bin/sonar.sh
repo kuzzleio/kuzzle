@@ -28,6 +28,11 @@ echo sonar-scanner \
 echo "SONAR VERSION: "
   sonar-scanner --version
 
+echo "======= ENV "
+env | grep -iv token
+echo "============"
+
+exit 0
 
   sonar-scanner \
     -Dsonar.host.url=https://sonarqube.kaliop.net \
@@ -36,6 +41,7 @@ echo "SONAR VERSION: "
     -Dsonar.analysis.mode=preview \
     -Dsonar.projectVersion="$PACKAGE_VERSION" \
     -Dsonar.login="$SONAR_TOKEN" \
+    -Dsonar.language=js \
     -X
 #    -Dsonar.github.pullRequest="$TRAVIS_PULL_REQUEST" \
 #    -Dsonar.github.oauth="$SONAR_GITHUB_TOKEN" \
