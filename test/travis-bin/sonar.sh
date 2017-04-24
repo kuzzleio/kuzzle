@@ -13,6 +13,7 @@ echo "*** SONAR GITHUB TOKEN: "
 echo $(echo "${SONAR_GITHUB_TOKEN}" | cut -c 1-5)...
 
   sonar-scanner \
+    -Dsonar.host.url=https://sonarqube.kaliop.net \
     -Dsonar.analysis.mode=preview \
     -Dsonar.projectVersion="$PACKAGE_VERSION" \
     -Dsonar.login="$SONAR_TOKEN" \
