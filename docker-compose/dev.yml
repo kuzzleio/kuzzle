@@ -13,6 +13,8 @@ services:
       - "..:/var/app"
       - "./scripts/run-dev.sh:/run.sh"
       - "./config/pm2-dev.json:/config/pm2.json"
+    cap_add:
+      - SYS_PTRACE
     depends_on:
       - proxy
       - redis
