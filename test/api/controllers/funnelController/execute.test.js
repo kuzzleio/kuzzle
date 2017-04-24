@@ -103,7 +103,7 @@ describe('funnelController.execute', () => {
   describe('#core:overload hook', () => {
     it('should fire the hook the first time Kuzzle is in overloaded state', /** @this {Mocha} */ () => {
       funnel.overloaded = true;
-      funnel.requestsCache = Array(kuzzle.config.limits.requestsBufferWarningThreshold + 1);
+      funnel.requestsCacheQueue = Array(kuzzle.config.limits.requestsBufferWarningThreshold + 1);
 
       funnel.execute(request, () => {});
 
@@ -147,8 +147,10 @@ describe('funnelController.execute', () => {
 
       should(funnel.overloaded).be.true();
       should(funnel.processRequest.called).be.false();
-      should(funnel.requestsCache.length).be.eql(1);
-      should(funnel.requestsCache.shift()).eql(new (FunnelController.__get__('CacheItem'))(request, callback));
+      should(funnel.requestsCacheQueue.length).be.eql(1);
+      should(funnel.requestsCacheQueue.shift())
+        .eql(request.id);
+      should(funnel.requestsCacheById[request.id]).eql(new (FunnelController.__get__('CacheItem'))(request, callback));
       should(funnel._playCachedRequests)
         .be.calledOnce();
     });
@@ -177,8 +179,11 @@ describe('funnelController.execute', () => {
 
       should(funnel.overloaded).be.true();
       should(funnel.processRequest.called).be.false();
-      should(funnel.requestsCache.length).be.eql(1);
-      should(funnel.requestsCache.shift()).match({request, callback});
+      should(funnel.requestsCacheQueue.length).be.eql(1);
+      should(funnel.requestsCacheQueue.shift())
+        .be.eql(request.id);
+      should(funnel.requestsCacheById[request.id])
+        .match({request, callback});
       should(funnel._playCachedRequests)
         .have.callCount(0);
     });
@@ -193,13 +198,13 @@ describe('funnelController.execute', () => {
         funnel.execute(request, callback);
       }
 
-      should(funnel.requestsCache.length)
+      should(funnel.requestsCacheQueue.length)
         .eql(1);
     });
 
     it('should discard the request if the requestsBufferSize property is reached', (done) => {
       funnel.concurrentRequests = kuzzle.config.limits.concurrentRequests;
-      funnel.requestsCache = Array(kuzzle.config.limits.requestsBufferSize);
+      funnel.requestsCacheQueue = Array(kuzzle.config.limits.requestsBufferSize);
       funnel.overloaded = true;
 
       funnel.execute(request, (err, res) => {
@@ -207,7 +212,7 @@ describe('funnelController.execute', () => {
         should(funnel._playCachedRequests)
           .have.callCount(0);
         should(funnel.processRequest.called).be.false();
-        should(funnel.requestsCache.length).be.eql(kuzzle.config.limits.requestsBufferSize);
+        should(funnel.requestsCacheQueue.length).be.eql(kuzzle.config.limits.requestsBufferSize);
         should(err).be.instanceOf(ServiceUnavailableError);
         should(err.status).be.eql(503);
         should(res).be.instanceOf(Request);
