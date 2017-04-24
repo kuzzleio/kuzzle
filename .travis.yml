@@ -23,6 +23,8 @@ notifications:
     on_start: never
 addons:
   sonarqube:
+    branches:
+      - /.*/
 env:
   global:
   - secure: hE0QOdmV0YmD9seoxiRa/5dWMATfhAs083b6iqq9dMQwB9fh65l32kr0woKES91tfmUejf22VPrb2Gge8uijFpGySiwWO5pUiVc+Lgtr/vF6zKgyASxdH3IJ4wstNcsR2jjRfmBStiDx5eNJOBx2vlo9gtFvB2p9176GKnj66flANEb7mt5+ak9xVOZ4gf9PpQBzlnX7a3Y1M18dvySHWNSbGwHMdn2EcljjqZGBcvBRALRIDQVf1gYBxBT6WUzUjeHouR+oM5bd5iOdmJfOSj/bMnsUhUrTBndDdEEwLAAbwEAkfy17HX8SeiiIlepm4PHcgZnJp92jzRX97/61zu03pwBMU7qRvzDCZYQl6Hy2sXNoP7Bp4ztJvgiLYe6lskrJslihVMozN6q1GZKFB4cppwqzJIGPzMXj3UbgWvgv2lC81dVlxLh/GYRHyDW9zRMTBOAN7sPb76gEXTpUgnUrIzacYR99ZwQ5Cyh/4ChW6tK7eT+UmgAR+PaCalZppf11hlyYcFhW2Gbcf2CW/BkzAqZsZpnnETJ9h0hBykG0cwj0nnEHESmntvVtAfXagjobJO1D+p0w9jQg+M9FRjpilXXZIYgJVVAy5K/4xB5JuB/WmSMH3ypzcmOTj2ULySCbNmRCPiJCdhcXeI9dU5DyDV19+VK1nAYfEjrPH04=
