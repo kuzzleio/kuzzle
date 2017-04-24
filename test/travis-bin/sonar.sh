@@ -28,11 +28,7 @@ echo sonar-scanner \
 echo "SONAR VERSION: "
   sonar-scanner --version
 
-echo "======= ENV "
-env | grep -iv token
-echo "============"
-
-exit 0
+unset SONARQUBE_SCANNER_PARAMS
 
   sonar-scanner \
     -Dsonar.host.url=https://sonarqube.kaliop.net \
