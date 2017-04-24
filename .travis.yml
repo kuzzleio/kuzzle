@@ -5,7 +5,7 @@ services:
 - docker
 script:
 - bash test/travis-bin/run-tests.sh
-- bash test/travis-bin/sonar.sh
+- sonar-scanner
 cache:
   directories: "– $HOME/.m2 – $HOME/.sonar/cache"
 notifications:
