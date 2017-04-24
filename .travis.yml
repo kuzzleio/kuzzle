@@ -24,8 +24,9 @@ notifications:
 addons:
   sonarqube:
     branches:
-      - master
-      - /.*/
+      only:
+        - master
+        - /.*/
     token:
       secure: qBNJ5FgLHRi6iam3Ytr6UtwX5YJlymRVxz7qaGzI2RPEgqg+tKVDiV8pxWn2Zmj3zoUaduIc2CbRdteSL4ZsTSV5Q5zymQlGYTDJWKcm0QSinXAW0xh6Lry99rtHMuFu240fa2gAhKyNETVgfY7Y7rXMQD6p32ATDtcCBd8jAy5SAhgxOki7MzpxXH6higyCVtuK8MSSqY+Q9D8vJrjNfRYEPb9KFUX4kXvuH1b0+ptwAeOKpnvmnZUiYzZ8jHT0kuhzCIMK3QwylFx+ApQmE3DLsXc1Y0wPOkjDEXsZmIYiPZy6az92ItpkEJr9QaU7XGjWEHEgj9J+6AhUtDWJ2yqZI02sK/Dg2eF5NR0hJ5SjIzGdUan9innEgl5hMegzyMUgipwowNwJECKxU2SUQYL75fuZMS5vE9X+DxfHxfevOtUz4OpTeYR8BSQkVUCFR1ctcU4gDRALLc8us1OOjAMa3WinBhL20am8fN3g/tl0BkChXbR5V0Eeno8DWDJaot65NahbbzbZKwyEcQyuH1Vzwok1+Yrh+pJgKOstjq2kW1rb/AthSTrtOcR1WM5r7XUha/momu2E2T8pJG9YaEpBCHQexucPzdiRDnM5uTooQufx+idGT93dHCt96j9Hpbj84/0wpXKwNLaVP2ZpjcBX4MStauBtmYJdMhhBzrA=
     github_token:
