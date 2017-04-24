@@ -25,7 +25,7 @@ addons:
   sonarqube:
     branches:
     - master
-    - "/.*\\.x$/"
+    - rc.x
     token:
       secure: Ke1YeIgYseFQ2xxwVWR4+iNYxov3n1mvfTe/5cOQdkw0WNHdnmzwtQkGJoDAIhLHbxdDJtVdvj7xty4Dazq4UlsZbaEqVoiRcVElA7jFUcseC7iv6uLkI4COIgWiHE1NuyArVvdvDl3J70S5VIXqWTnSlPIYG2EO8ADFjzBcCBLrjOeaEle22XhZWqwwxIA4r7Z9VRbqNnQF884Dy5p3Dt9PP9qx8ctNlzuOIZ9yb5IWrdlg2+XxbAZ6q6KoPyAarviUKSPfdcjkcUwX7xq9zCOTmzSlVcjH8/9aRR3xw1tnyxR6JtQ7+UDHBVaNzCdQjB63Ie5tj+eg79tCRPbVXRWGYYMat2O+JFT7WLJ5LokTMfPI0yLWN6KleRrzLTokESNeHKR+SOdVx2hw5PacDJkhDEvf43n/GpTLlZeWhz2jLbdgXzYE6L4Lh3ArRe2c60aslfgXSeaXVonyVl5t/UX71yhvEJqJJ32sBAuXjVXdJw4ZULweSJRwsLYE2zttrxcix66IOrPjzCkdeuloGTfpVRHB7Fc5x2Rz8in7ps6VJp2AP971lCfemlbaK69jzO9OnlgdIH7OYfW/etYnClr93o5xssSR1Jw9lfPL+29I4lFlr0P+FJt/Sox4Zk5RCLEZaPEpWXCzm9+ZgVjyyeSF0N0C+rKGxffHwd3tvio=
     github_token:
