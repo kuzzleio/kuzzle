@@ -1,6 +1,7 @@
 'use strict';
 
 const
+  Bluebird = require('bluebird'),
   rewire = require('rewire'),
   sinon = require('sinon'),
   should = require('should'),
@@ -64,25 +65,24 @@ describe('services/internalEngine/bootstrap.js', () => {
         });
     });
 
-    it('should print errors to the console', done => {
-      const error = new Error('error message');
+    it('should respect lock', () => {
+      const lockStub = sinon.stub(bootstrap, 'lock');
+      lockStub.returns(Bluebird.resolve(false));
+      lockStub.onSecondCall().returns(Bluebird.resolve(true));
 
-      bootstrap.db.createInternalIndex.returns(Promise.reject(error));
-
-      bootstrap.all()
-        .catch(err => {
-          const spy = Bootstrap.__get__('console.error');
-
-          should(err).be.exactly(error);
-
-          should(spy)
-            .be.calledOnce()
-            .be.calledWithExactly(error, error.stack);
-
-          done();
+      return Bluebird.all([
+        bootstrap.all(),
+        bootstrap.all()
+      ])
+        .then(() => {
+          should(kuzzle.internalEngine.createInternalIndex)
+            .be.calledOnce();
+          should(kuzzle.config.security.jwt.secret)
+            .be.String()
+            .not.be.empty();
         });
-
     });
+
   });
 
   describe('#createCollections', () => {
@@ -121,7 +121,6 @@ describe('services/internalEngine/bootstrap.js', () => {
         });
     });
   });
-
 
   describe('#createRolesCollection', () => {
     it('should create mapping and add default roles', () => {
@@ -354,6 +353,51 @@ describe('services/internalEngine/bootstrap.js', () => {
         });
     });
 
+  });
+
+  describe('#jwtSecret', () => {
+    it('should use given config if any', () => {
+      kuzzle.config.security.jwt.secret = 'mysecret';
+
+      return bootstrap.all()
+        .then(() => {
+          should(kuzzle.config.security.jwt.secret)
+            .be.eql('mysecret');
+        });
+    });
+
+    it('should take an existing seed from the db', () => {
+      kuzzle.internalEngine.create
+        .withArgs('config', 'security.jwt.secret')
+        .returns(Bluebird.reject(new Error('test')));
+      kuzzle.internalEngine.get
+        .withArgs('config', 'security.jwt.secret')
+        .returns(Bluebird.resolve({
+          _source: {
+            seed: '42'
+          }
+        }));
+
+      return bootstrap.all()
+        .then(() => {
+          should(kuzzle.config.security.jwt.secret)
+            .be.eql('42');
+        });
+    });
+
+    it('should autogenerate a jwt secret if none found', () => {
+      kuzzle.internalEngine.create
+        .withArgs('config', 'security.jwt.secret')
+        .returns(Bluebird.resolve());
+
+      return bootstrap.all()
+        .then(() => {
+          should(kuzzle.config.security.jwt.secret)
+            .be.a.String()
+            .and.have.length(1024);
+        });
+
+    });
   });
 
 });
