@@ -39,10 +39,7 @@ function WSMock (server) {
 
   this.ping = sinon.spy();
 
-  this.send = sinon.spy(data => {
-    this.emit('message', data);
-  });
-
+  this.send = sinon.spy();
 }
 
 util.inherits(WSMock, EventEmitter);

@@ -1,31 +1,55 @@
-var
+const
   rewire = require('rewire'),
+  mockrequire = require('mock-require'),
   BaseType = require('../../../../../lib/api/core/validation/baseType'),
-  GeoShapeType = rewire('../../../../../lib/api/core/validation/types/geoShape'),
   should = require('should'),
   sinon = require('sinon');
 
 describe('Test: validation/types/geoShape', () => {
-  var
-    geoShapeType = new GeoShapeType(),
+  let
+    GeoShapeType,
+    geoShapeType,
     sandbox = sinon.sandbox.create(),
-    isPoint = GeoShapeType.__get__('isPoint'),
-    isPolygonPart = GeoShapeType.__get__('isPolygonPart'),
-    isLine = GeoShapeType.__get__('isLine'),
-    isPolygon = GeoShapeType.__get__('isPolygon'),
-    isEnvelope = GeoShapeType.__get__('isEnvelope'),
-    isPointEqual = GeoShapeType.__get__('isPointEqual'),
-    checkStructure = geoShapeType.checkStructure,
-    recursiveShapeValidation = geoShapeType.recursiveShapeValidation;
+    convertDistanceStub = sandbox.stub(),
+    isPoint,
+    isPolygonPart,
+    isLine,
+    isPolygon,
+    isEnvelope,
+    isPointEqual,
+    checkStructure,
+    recursiveShapeValidation;
+
+  before(() => {
+    mockrequire('node-units', {convert: convertDistanceStub});
+    mockrequire.reRequire('../../../../../lib/api/dsl/util/convertDistance');
+    GeoShapeType = rewire('../../../../../lib/api/core/validation/types/geoShape');
+
+    isPoint = GeoShapeType.__get__('isPoint');
+    isPolygonPart = GeoShapeType.__get__('isPolygonPart');
+    isLine = GeoShapeType.__get__('isLine');
+    isPolygon = GeoShapeType.__get__('isPolygon');
+    isEnvelope = GeoShapeType.__get__('isEnvelope');
+    isPointEqual = GeoShapeType.__get__('isPointEqual');
+  });
+
+  after(() => {
+    mockrequire.stopAll();
+  });
 
   beforeEach(() => {
     sandbox.reset();
+    convertDistanceStub.returns(1234);
     GeoShapeType.__set__('isPoint', isPoint);
     GeoShapeType.__set__('isLine', isLine);
     GeoShapeType.__set__('isPolygon', isPolygon);
     GeoShapeType.__set__('isPolygonPart', isPolygonPart);
     GeoShapeType.__set__('isEnvelope', isEnvelope);
     GeoShapeType.__set__('isPointEqual', isPointEqual);
+
+    geoShapeType = new GeoShapeType();
+    checkStructure = geoShapeType.checkStructure;
+    recursiveShapeValidation = geoShapeType.recursiveShapeValidation;
   });
 
   it('should derivate from BaseType', () => {
@@ -46,13 +70,12 @@ describe('Test: validation/types/geoShape', () => {
   });
 
   describe('#validate', () => {
-
     afterEach(() => {
       geoShapeType.recursiveShapeValidation = recursiveShapeValidation;
     });
 
     it('should call recursiveShapeValidation', () => {
-      var recursiveShapeValidationStub = sandbox.stub();
+      const recursiveShapeValidationStub = sandbox.stub();
       geoShapeType.recursiveShapeValidation = recursiveShapeValidationStub;
 
       geoShapeType.validate({shapeTypes: ['shape']});
@@ -63,9 +86,7 @@ describe('Test: validation/types/geoShape', () => {
   });
 
   describe('#recursiveShapeValidation', () => {
-    var
-      checkStructureStub = sandbox.stub(),
-      convertDistanceStub = sandbox.stub();
+    const checkStructureStub = sandbox.stub();
 
     before(() => {
       GeoShapeType.__set__('convertDistance', convertDistanceStub);
@@ -80,7 +101,7 @@ describe('Test: validation/types/geoShape', () => {
     });
 
     it('should return false if structure is not valid', () => {
-      var
+      const
         errorMessages = [],
         allowedShapes = ['allowed'],
         shape = {
@@ -95,7 +116,7 @@ describe('Test: validation/types/geoShape', () => {
     });
 
     it('should return true if point is valid', () => {
-      var
+      const
         isPointStub = sandbox.stub().returns(true),
         allowedShapes = ['point'],
         shape = {
@@ -111,7 +132,7 @@ describe('Test: validation/types/geoShape', () => {
     });
 
     it('should return true if linestring is valid', () => {
-      var
+      const
         isLineStub = sandbox.stub().returns(true),
         allowedShapes = ['linestring'],
         shape = {
@@ -127,7 +148,7 @@ describe('Test: validation/types/geoShape', () => {
     });
 
     it('should return true if polygon is valid', () => {
-      var
+      const
         isPolygonStub = sandbox.stub().returns(true),
         allowedShapes = ['polygon'],
         shape = {
@@ -143,7 +164,7 @@ describe('Test: validation/types/geoShape', () => {
     });
 
     it('should return true if geometrycollection is valid', () => {
-      var
+      const
         isPointStub = sandbox.stub().returns(true),
         allowedShapes = ['geometrycollection'],
         shape = {
@@ -164,7 +185,7 @@ describe('Test: validation/types/geoShape', () => {
     });
 
     it('should return true if envelope is valid', () => {
-      var
+      const
         isEnvelopeStub = sandbox.stub().returns(true),
         allowedShapes = ['envelope'],
         shape = {
@@ -180,7 +201,7 @@ describe('Test: validation/types/geoShape', () => {
     });
 
     it('should return true if circle is valid', () => {
-      var
+      const
         isPointStub = sandbox.stub().returns(true),
         allowedShapes = ['circle'],
         shape = {
@@ -198,7 +219,7 @@ describe('Test: validation/types/geoShape', () => {
     });
 
     it('should return true if circle is valid', () => {
-      var
+      const
         isPointStub = sandbox.stub().returns(true),
         allowedShapes = ['circle'],
         shape = {
@@ -215,7 +236,7 @@ describe('Test: validation/types/geoShape', () => {
     });
 
     it('should return true if all points of a multipoint is valid', () => {
-      var
+      const
         isPointStub = sandbox.stub().returns(true),
         allowedShapes = ['multipoint'],
         shape = {
@@ -231,7 +252,7 @@ describe('Test: validation/types/geoShape', () => {
     });
 
     it('should return false if one point of a multipoint is not valid', () => {
-      var
+      const
         isPointStub = sandbox.stub().returns(false),
         allowedShapes = ['multipoint'],
         shape = {
@@ -247,7 +268,7 @@ describe('Test: validation/types/geoShape', () => {
     });
 
     it('should return false if polygon has a bad "orientation" value', () => {
-      var
+      const
         isPolygonStub = sandbox.stub().returns(true),
         errorMessages = [],
         allowedShapes = ['polygon'],
@@ -266,7 +287,7 @@ describe('Test: validation/types/geoShape', () => {
     });
 
     it('should return false if geometrycollection is not valid', () => {
-      var
+      const
         errorMessages = [],
         isPointStub = sandbox.stub().returns(false),
         allowedShapes = ['geometrycollection'],
@@ -289,7 +310,7 @@ describe('Test: validation/types/geoShape', () => {
     });
 
     it('should return false if the radius of circle is not valid', () => {
-      var
+      const
         errorMessages = [],
         isPointStub = sandbox.stub().returns(true),
         allowedShapes = ['circle'],
@@ -308,7 +329,7 @@ describe('Test: validation/types/geoShape', () => {
     });
 
     it('should return false if the radius of circle is not valid', () => {
-      var
+      const
         errorMessages = [],
         isPointStub = sandbox.stub().returns(true),
         allowedShapes = ['circle'],
@@ -328,7 +349,7 @@ describe('Test: validation/types/geoShape', () => {
     });
 
     it('should return false if the radius of circle is not valid', () => {
-      var
+      const
         errorMessages = [],
         isPointStub = sandbox.stub().returns(true),
         allowedShapes = ['circle'],
@@ -350,7 +371,7 @@ describe('Test: validation/types/geoShape', () => {
 
   describe('#checkStructure', () => {
     it('should return true if structure is valid', () => {
-      var
+      const
         allowedShapes = ['allowed'],
         shape = {
           'type': 'allowed',
@@ -361,7 +382,7 @@ describe('Test: validation/types/geoShape', () => {
     });
 
     it('should return false has no defined type', () => {
-      var
+      const
         errorMessages = [],
         allowedShapes = ['allowed'],
         shape = {
@@ -373,7 +394,7 @@ describe('Test: validation/types/geoShape', () => {
     });
 
     it('should return false if the argument has not allowed properties', () => {
-      var
+      const
         errorMessages = [],
         allowedShapes = ['allowed'],
         shape = {
@@ -387,7 +408,7 @@ describe('Test: validation/types/geoShape', () => {
     });
 
     it('should return false if the type is not allowed', () => {
-      var
+      const
         errorMessages = [],
         allowedShapes = ['allowed'],
         shape = {
@@ -400,7 +421,7 @@ describe('Test: validation/types/geoShape', () => {
     });
 
     it('should return false if geometrycollection provides coordinates', () => {
-      var
+      const
         errorMessages = [],
         allowedShapes = ['geometrycollection'],
         shape = {
@@ -414,7 +435,7 @@ describe('Test: validation/types/geoShape', () => {
     });
 
     it('should return false if "coordinates" property not valid', () => {
-      var
+      const
         errorMessages = [],
         allowedShapes = ['allowed'],
         shape = {
@@ -427,7 +448,7 @@ describe('Test: validation/types/geoShape', () => {
     });
 
     it('should return false if a circle shape does not define a radius', () => {
-      var
+      const
         errorMessages = [],
         allowedShapes = ['circle'],
         shape = {
@@ -440,7 +461,7 @@ describe('Test: validation/types/geoShape', () => {
     });
 
     it('should return false if "radius" property is defined without beeing in a circle context', () => {
-      var
+      const
         errorMessages = [],
         allowedShapes = ['allowed'],
         shape = {
@@ -454,7 +475,7 @@ describe('Test: validation/types/geoShape', () => {
     });
 
     it('should return false if "orientation" property is defined without beeing in a polygon context', () => {
-      var
+      const
         errorMessages = [],
         allowedShapes = ['allowed'],
         shape = {
@@ -468,7 +489,7 @@ describe('Test: validation/types/geoShape', () => {
     });
 
     it('should return false if "geometries" property is defined without beeing in a geometrycollection context', () => {
-      var
+      const
         errorMessages = [],
         allowedShapes = ['allowed'],
         shape = {
@@ -482,7 +503,7 @@ describe('Test: validation/types/geoShape', () => {
     });
 
     it('should return false if "geometries" property is not defined properly within a geometrycollection context', () => {
-      var
+      const
         errorMessages = [],
         allowedShapes = ['geometrycollection'],
         shape = {
@@ -497,7 +518,7 @@ describe('Test: validation/types/geoShape', () => {
 
   describe('#validateFieldSpecification', () => {
     it('should set the typeOptions to all shapes if shapeTypes is not defined', () => {
-      var
+      const
         expectedTypeOptions = {
           shapeTypes: [
             'point', 'linestring', 'polygon', 'multipoint', 'multilinestring',
@@ -509,7 +530,7 @@ describe('Test: validation/types/geoShape', () => {
     });
 
     it('should return the typeOptions if shapeTypes is provided and valid', () => {
-      var typeOptions = {shapeTypes: ['point', 'linestring']};
+      const typeOptions = {shapeTypes: ['point', 'linestring']};
       should(geoShapeType.validateFieldSpecification(typeOptions)).be.deepEqual(typeOptions);
     });
 
@@ -524,36 +545,31 @@ describe('Test: validation/types/geoShape', () => {
 
   describe('#isPoint', () => {
     it('should return true if the argument is a point', () => {
-      var
-        point = [10, 20];
+      const point = [10, 20];
 
       should(GeoShapeType.__get__('isPoint')(point)).be.true();
     });
 
     it('should return false if the argument is not an array', () => {
-      var
-        point = 'not a point';
+      const point = 'not a point';
 
       should(GeoShapeType.__get__('isPoint')(point)).be.false();
     });
 
     it('should return false if the argument has not 2 elements', () => {
-      var
-        point = [10];
+      const point = [10];
 
       should(GeoShapeType.__get__('isPoint')(point)).be.false();
     });
 
     it('should return false if the point is out of boundaries', () => {
-      var
-        point = [190, 20];
+      const point = [190, 20];
 
       should(GeoShapeType.__get__('isPoint')(point)).be.false();
     });
 
     it('should return false if the point is out of boundaries', () => {
-      var
-        point = [20, 100];
+      const point = [20, 100];
 
       should(GeoShapeType.__get__('isPoint')(point)).be.false();
     });
@@ -561,7 +577,7 @@ describe('Test: validation/types/geoShape', () => {
 
   describe('#isPointEqual', () => {
     it('should return true if the points are equal', () => {
-      var
+      const
         pointA = [10, 20],
         pointB = [10, 20];
 
@@ -569,7 +585,7 @@ describe('Test: validation/types/geoShape', () => {
     });
 
     it('should return false if the points are not equal', () => {
-      var
+      const
         pointA = [10, 20],
         pointB = [20, 30];
 
@@ -578,11 +594,10 @@ describe('Test: validation/types/geoShape', () => {
   });
 
   describe('#isLine', () => {
-    var
-      isPointStub = sandbox.stub();
+    const isPointStub = sandbox.stub();
 
     it('should return true if the argument has the expected format', () => {
-      var line = ['one', 'two'];
+      const line = ['one', 'two'];
 
       isPointStub.returns(true);
       GeoShapeType.__set__('isPoint', isPointStub);
@@ -592,13 +607,13 @@ describe('Test: validation/types/geoShape', () => {
     });
 
     it('should return false if the argument has not at least 2 elements', () => {
-      var line = ['one'];
+      const line = ['one'];
 
       should(GeoShapeType.__get__('isLine')(line)).be.false();
     });
 
     it('should return false if one of the element is not a point', () => {
-      var line = ['one', 'two'];
+      const line = ['one', 'two'];
 
       isPointStub.returns(false);
       GeoShapeType.__set__('isPoint', isPointStub);
@@ -609,12 +624,12 @@ describe('Test: validation/types/geoShape', () => {
   });
 
   describe('#isPolygonPart', () => {
-    var
+    const
       isLineStub = sandbox.stub(),
       isPointEqualStub = sandbox.stub();
 
     it('should return true if the argument has the expected format', () => {
-      var polygonPart = ['one', 'two', 'three', 'four'];
+      const polygonPart = ['one', 'two', 'three', 'four'];
 
       isLineStub.returns(true);
       isPointEqualStub.returns(true);
@@ -627,13 +642,13 @@ describe('Test: validation/types/geoShape', () => {
     });
 
     it('should return false if the argument is not an array', () => {
-      var polygonPart = 'not an array';
+      const polygonPart = 'not an array';
 
       should(GeoShapeType.__get__('isPolygonPart')(polygonPart)).be.false();
     });
 
     it('should return false if the argument is not a line', () => {
-      var polygonPart = ['one', 'two', 'three', 'four'];
+      const polygonPart = ['one', 'two', 'three', 'four'];
 
       isLineStub.returns(false);
       GeoShapeType.__set__('isLine', isLineStub);
@@ -643,7 +658,7 @@ describe('Test: validation/types/geoShape', () => {
     });
 
     it('should return false if the argument has not its first and last point equal', () => {
-      var polygonPart = ['one', 'two', 'three', 'four'];
+      const polygonPart = ['one', 'two', 'three', 'four'];
 
       isLineStub.returns(true);
       isPointEqualStub.returns(false);
@@ -656,18 +671,17 @@ describe('Test: validation/types/geoShape', () => {
     });
 
     it('should return false if the argument has not at least 4 elements', () => {
-      var polygonPart = ['one', 'two', 'three'];
+      const polygonPart = ['one', 'two', 'three'];
 
       should(GeoShapeType.__get__('isPolygonPart')(polygonPart)).be.false();
     });
   });
 
   describe('#isPolygon', () => {
-    var
-      isPolygonPartStub = sandbox.stub();
+    const isPolygonPartStub = sandbox.stub();
 
     it('should return true if the argument has the expected format', () => {
-      var polygon = ['one', 'two', 'three'];
+      const polygon = ['one', 'two', 'three'];
 
       isPolygonPartStub.returns(true);
       GeoShapeType.__set__('isPolygonPart', isPolygonPartStub);
@@ -677,7 +691,7 @@ describe('Test: validation/types/geoShape', () => {
     });
 
     it('should return false if one of the element is not a polygon part', () => {
-      var polygon = ['one', 'two', 'three'];
+      const polygon = ['one', 'two', 'three'];
 
       isPolygonPartStub.returns(false);
       GeoShapeType.__set__('isPolygonPart', isPolygonPartStub);
@@ -687,7 +701,7 @@ describe('Test: validation/types/geoShape', () => {
     });
 
     it('should return false if the argument is not an array', () => {
-      var polygon = 'not an array';
+      const polygon = 'not an array';
 
       GeoShapeType.__set__('isPolygonPart', isPolygonPartStub);
 
@@ -697,11 +711,10 @@ describe('Test: validation/types/geoShape', () => {
   });
 
   describe('#isEnvelope', () => {
-    var
-      isPointStub = sandbox.stub();
+    const isPointStub = sandbox.stub();
 
     it('should return true if the argument has the expected format', () => {
-      var envelope = ['one', 'two'];
+      const envelope = ['one', 'two'];
 
       isPointStub.returns(true);
       GeoShapeType.__set__('isPoint', isPointStub);
@@ -711,7 +724,7 @@ describe('Test: validation/types/geoShape', () => {
     });
 
     it('should return false if one of the element is not a point', () => {
-      var envelope = ['one', 'two'];
+      const envelope = ['one', 'two'];
 
       isPointStub.returns(false);
       GeoShapeType.__set__('isPoint', isPointStub);
@@ -721,7 +734,7 @@ describe('Test: validation/types/geoShape', () => {
     });
 
     it('should return false if there is not 2 elements in the argument array', () => {
-      var envelope = ['one'];
+      const envelope = ['one'];
 
       GeoShapeType.__set__('isPoint', isPointStub);
 
