@@ -10,7 +10,8 @@ describe('Test: dump', () => {
     coreStub,
     getAllStatsStub,
     dump,
-    kuzzle;
+    kuzzle,
+    globStub;
 
   afterEach(() => {
     mockrequire.stopAll();
@@ -25,11 +26,15 @@ describe('Test: dump', () => {
       mkdirsSync: sinon.stub(),
       readdirSync: sinon.stub(),
       removeSync: sinon.stub(),
-      writeFileSync: sinon.stub()
+      writeFileSync: sinon.stub(),
+      createReadStream: sinon.stub().returns({pipe: sinon.stub().returnsThis(), on: sinon.stub().callsArgWith(1)}),
+      createWriteStream: sinon.stub(),
+      unlink: sinon.stub()
     };
 
     coreStub = sinon.stub().returns({});
     getAllStatsStub = sinon.stub().returns(Promise.resolve({hits: [{stats: 42}]}));
+    globStub = sinon.stub().callsArgWith(1, null, ['core']);
 
     kuzzle = {
       config: {
@@ -55,6 +60,7 @@ describe('Test: dump', () => {
 
     mockrequire('fs-extra', fsStub);
     mockrequire('dumpme', coreStub);
+    mockrequire('glob', globStub);
 
     const dumpfactory = mockrequire.reRequire('../../../../lib/api/controllers/cli/dump');
     dump = dumpfactory(kuzzle);
@@ -103,6 +109,10 @@ describe('Test: dump', () => {
           should(fsStub.writeFileSync.getCall(4).args[1]).be.exactly(JSON.stringify([{stats: 42}], null, ' ').concat('\n'));
 
           should(coreStub.firstCall.calledWith('gcore', baseDumpPath.concat('/core'))).be.true();
+
+          should(fsStub.createReadStream.getCall(0).args[0]).be.exactly('core');
+          should(fsStub.createWriteStream).be.calledOnce();
+          should(fsStub.createReadStream().pipe).be.called(2);
 
           should(fsStub.copySync.getCall(0).args[0]).be.exactly(process.argv[0]);
           should(fsStub.copySync.getCall(0).args[1]).be.exactly(baseDumpPath.concat('/node'));

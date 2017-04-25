@@ -1,10 +1,9 @@
 'use strict';
 
 const
-  rewire = require('rewire'),
+  mockrequire = require('mock-require'),
   should = require('should'),
   sinon = require('sinon'),
-  InternalEngine = rewire('../../../lib/services/internalEngine'),
   KuzzleMock = require('../../mocks/kuzzle.mock'),
   NotFoundError = require('kuzzle-common-objects').errors.NotFoundError,
   ms = require('ms');
@@ -12,44 +11,47 @@ const
 describe('InternalEngine', () => {
   let
     kuzzle,
-    reset;
+    InternalEngine;
 
-  beforeEach(() => {
-    reset = InternalEngine.__set__({
-      es: {
-        errors: {
-          NoConnections: sinon.stub()
-        },
-        Client: function () {
-          this.indices = {
-            create: sinon.stub().returns(Promise.resolve()),
-            delete: sinon.stub().returns(Promise.resolve()),
-            exists: sinon.stub().returns(Promise.resolve()),
-            getMapping: sinon.stub().returns(Promise.resolve()),
-            putMapping: sinon.stub().returns(Promise.resolve()),
-            refresh: sinon.stub().returns(Promise.resolve())
-          };
+  before(() => {
+    mockrequire('elasticsearch', {
+      errors: {
+        NoConnections: sinon.stub()
+      },
+      Client: function () {
+        this.indices = {
+          create: sinon.stub().returns(Promise.resolve()),
+          delete: sinon.stub().returns(Promise.resolve()),
+          exists: sinon.stub().returns(Promise.resolve()),
+          getMapping: sinon.stub().returns(Promise.resolve()),
+          putMapping: sinon.stub().returns(Promise.resolve()),
+          refresh: sinon.stub().returns(Promise.resolve())
+        };
 
-          this.create = sinon.stub().returns(Promise.resolve());
-          this.delete = sinon.stub().returns(Promise.resolve());
-          this.exists = sinon.stub().returns(Promise.resolve());
-          this.get = sinon.stub().returns(Promise.resolve());
-          this.index = sinon.stub().returns(Promise.resolve());
-          this.mget = sinon.stub().returns(Promise.resolve());
-          this.scroll = sinon.stub().returns(Promise.resolve());
-          this.search = sinon.stub().returns(Promise.resolve());
-          this.update = sinon.stub().returns(Promise.resolve());
-        }
+        this.create = sinon.stub().returns(Promise.resolve());
+        this.delete = sinon.stub().returns(Promise.resolve());
+        this.exists = sinon.stub().returns(Promise.resolve());
+        this.get = sinon.stub().returns(Promise.resolve());
+        this.index = sinon.stub().returns(Promise.resolve());
+        this.mget = sinon.stub().returns(Promise.resolve());
+        this.scroll = sinon.stub().returns(Promise.resolve());
+        this.search = sinon.stub().returns(Promise.resolve());
+        this.update = sinon.stub().returns(Promise.resolve());
       }
     });
+
+    InternalEngine = mockrequire.reRequire('../../../lib/services/internalEngine');
+  });
+
+  beforeEach(() => {
     kuzzle = new KuzzleMock();
     kuzzle.internalEngine = new InternalEngine(kuzzle);
 
     return kuzzle.internalEngine.init();
   });
 
-  afterEach(() => {
-    reset();
+  after(() => {
+    mockrequire.stopAll();
   });
 
   describe('#init', () => {
