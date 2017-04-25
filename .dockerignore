@@ -4,3 +4,5 @@ vagrant
 Vagrantfile
 .git
 .idea
+.sonar
+sonar-project.properties

@@ -1,8 +1,13 @@
+dist: trusty
 sudo: required
+jdk: oraclejdk8
 services:
-  - docker
+- docker
 script:
-  - bash test/travis.sh
+- bash test/travis-bin/run-tests.sh
+- bash test/travis-bin/sonar.sh
+cache:
+  directories: "– $HOME/.m2 – $HOME/.sonar/cache"
 notifications:
   webhooks:
     urls:
@@ -16,3 +21,5 @@ notifications:
     on_success: never
     on_failure: always
     on_start: never
+addons:
+  sonarqube: true
