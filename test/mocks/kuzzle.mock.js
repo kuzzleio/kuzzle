@@ -1,6 +1,7 @@
 'use strict';
 
 const
+  crypto = require('crypto'),
   _ = require('lodash'),
   sinon = require('sinon'),
   Kuzzle = require('../../lib/api/kuzzle'),
@@ -9,6 +10,7 @@ const
   foo = {foo: 'bar'};
 
 /**
+ * @class KuzzleMock
  * @constructor
  */
 function KuzzleMock () {
@@ -19,6 +21,8 @@ function KuzzleMock () {
       };
     }
   }
+
+  this.hashKey = crypto.randomBytes(32);
 
   // we need a deep copy here
   this.config = _.merge({}, config);
@@ -31,11 +35,13 @@ function KuzzleMock () {
       cleanAndPrepare: sinon.stub().returns(Promise.resolve()),
       cleanDb: sinon.stub().returns(Promise.resolve()),
       managePlugins: sinon.stub().returns(Promise.resolve()),
-      data: sinon.stub().returns(Promise.resolve())
+      data: sinon.stub().returns(Promise.resolve()),
+      dump: sinon.stub().returns(Promise.resolve())
     }
   };
 
   this.dsl = {
+    test: sinon.stub().returns([]),
     register: sinon.stub().returns(Promise.resolve()),
     remove: sinon.stub().returns(Promise.resolve())
   };
@@ -67,7 +73,7 @@ function KuzzleMock () {
       }
     },
     init: sinon.spy(),
-    getRequestSlot: sinon.stub().yields(null),
+    getRequestSlot: sinon.stub().returns(true),
     handleErrorDump: sinon.spy(),
     execute: sinon.spy(),
     mExecute: sinon.stub(),
@@ -110,15 +116,25 @@ function KuzzleMock () {
       createUsersCollection: sinon.stub().returns(Promise.resolve()),
       createPluginsCollection: sinon.stub().returns(Promise.resolve())
     },
+    create: sinon.stub().returns(Promise.resolve()),
     createInternalIndex: sinon.stub().returns(Promise.resolve()),
     createOrReplace: sinon.stub().returns(Promise.resolve()),
+    delete: sinon.stub().returns(Promise.resolve()),
     deleteIndex: sinon.stub().returns(Promise.resolve()),
+    expire: sinon.stub().returns(Promise.resolve()),
     get: sinon.stub().returns(Promise.resolve(foo)),
+    mget: sinon.stub().returns(Promise.resolve({hits: [foo]})),
     index: 'internalIndex',
     init: sinon.stub().returns(Promise.resolve()),
+    listCollections: sinon.stub(),
+    listIndexes: sinon.stub(),
+    persist: sinon.stub().returns(Promise.resolve()),
     refresh: sinon.stub().returns(Promise.resolve()),
+    replace: sinon.stub().returns(Promise.resolve()),
     search: sinon.stub().returns(Promise.resolve()),
-    updateMapping: sinon.stub().returns(Promise.resolve(foo))
+    update: sinon.stub().returns(Promise.resolve()),
+    updateMapping: sinon.stub().returns(Promise.resolve(foo)),
+    getMapping: sinon.stub()
   };
 
   this.once = sinon.stub();
@@ -134,7 +150,8 @@ function KuzzleMock () {
   };
 
   this.passport = {
-    use: sinon.spy()
+    use: sinon.stub(),
+    authenticate: sinon.stub().returns(Promise.resolve({}))
   };
 
   this.pluginsManager = {
@@ -142,35 +159,8 @@ function KuzzleMock () {
     plugins: {},
     run: sinon.stub().returns(Promise.resolve()),
     getPluginsFeatures: sinon.stub().returns({}),
-    trigger: sinon.spy(function () {return Promise.resolve(arguments[1]);})
-  };
-
-  this.cliController = {
-    init: sinon.stub().returns(Promise.resolve()),
-    actions: {
-      adminExists: sinon.stub().returns(Promise.resolve()),
-      createFirstAdmin: sinon.stub().returns(Promise.resolve()),
-      cleanAndPrepare: sinon.stub().returns(Promise.resolve()),
-      cleanDb: sinon.stub().returns(Promise.resolve()),
-      managePlugins: sinon.stub().returns(Promise.resolve()),
-      data: sinon.stub().returns(Promise.resolve()),
-      dump: sinon.stub().returns(Promise.resolve())
-    }
-  };
-
-  this.repositories = {
-    init: sinon.stub().returns(Promise.resolve()),
-    user: {
-      load: sinon.stub().returns(Promise.resolve(foo))
-    }
-  };
-
-  this.validation = {
-    init: sinon.spy(),
-    curateSpecification: sinon.spy(function () {return Promise.resolve();}),
-    validate: sinon.spy(function () {return Promise.resolve(arguments[0]);}),
-    validationPromise: sinon.spy(function () {return Promise.resolve(arguments[0]);}),
-    addType: sinon.spy()
+    trigger: sinon.spy(function () {return Promise.resolve(arguments[1]);}),
+    listStrategies: sinon.stub().returns(Promise.resolve([])),
   };
 
   this.repositories = {
@@ -188,12 +178,28 @@ function KuzzleMock () {
     },
     user: {
       load: sinon.stub().returns(Promise.resolve(foo)),
-      search: sinon.stub().returns(Promise.resolve())
+      search: sinon.stub().returns(Promise.resolve()),
+      ObjectConstructor: sinon.stub().returns({}),
+      hydrate: sinon.stub().returns(Promise.resolve()),
+      persist: sinon.stub().returns(Promise.resolve({})),
+      anonymous: sinon.stub().returns({_id: '-1'})
     },
     token: {
       anonymous: sinon.stub().returns({_id: 'anonymous'}),
-      verifyToken: sinon.stub().returns(Promise.resolve())
+      verifyToken: sinon.stub().returns(Promise.resolve()),
+      generateToken: sinon.stub().returns(Promise.resolve({})),
+      expire: sinon.stub().returns(Promise.resolve()),
+      deleteByUserId: sinon.stub().returns(Promise.resolve())
     }
+  };
+
+
+  this.validation = {
+    init: sinon.spy(),
+    curateSpecification: sinon.spy(function () {return Promise.resolve();}),
+    validate: sinon.spy(function () {return Promise.resolve(arguments[0]);}),
+    validationPromise: sinon.spy(function () {return Promise.resolve(arguments[0]);}),
+    addType: sinon.spy()
   };
 
   this.resetStorage = sinon.stub().returns(Promise.resolve());
@@ -224,11 +230,20 @@ function KuzzleMock () {
         run: sinon.stub().returns(Promise.resolve({ids: []}))
       },
       internalCache: {
+        add: sinon.stub().returns(Promise.resolve()),
+        del: sinon.stub().returns(Promise.resolve()),
+        exists: sinon.stub().returns(Promise.resolve()),
         expire: sinon.stub().returns(Promise.resolve()),
         flushdb: sinon.stub().returns(Promise.resolve()),
         get: sinon.stub().returns(Promise.resolve(null)),
         getInfos: sinon.stub().returns(Promise.resolve()),
+        persist: sinon.stub().returns(Promise.resolve()),
+        pexpire: sinon.stub().returns(Promise.resolve()),
+        psetex: sinon.stub().returns(Promise.resolve()),
+        remove: sinon.stub().returns(Promise.resolve()),
+        searchKeys: sinon.stub().returns(Promise.resolve([])),
         set: sinon.stub().returns(Promise.resolve()),
+        setnx: sinon.stub().returns(Promise.resolve()),
         volatileSet: sinon.stub().returns(Promise.resolve())
       },
       memoryStorage: {

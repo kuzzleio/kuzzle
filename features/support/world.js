@@ -62,13 +62,12 @@ module.exports = function () {
     this.mapping = {
       properties: {
         firstName: {
-          type: 'string',
+          type: 'text',
           copy_to: 'newFirstName'
         },
         newFirstName: {
-          type: 'string',
-          store: true,
-          index: 'not_analyzed'
+          type: 'keyword',
+          store: true
         }
       }
     };
@@ -76,18 +75,17 @@ module.exports = function () {
     this.securitymapping = {
       properties: {
         foo: {
-          type: 'string',
+          type: 'text',
           copy_to: 'bar'
         },
         bar: {
-          type: 'string',
-          store: true,
-          index: 'not_analyzed'
+          type: 'keyword',
+          store: true
         }
       }
     };
 
-    this.metadata = {
+    this.volatile = {
       iwant: 'to break free',
       we: ['will', 'rock', 'you']
     };
@@ -120,6 +118,38 @@ module.exports = function () {
             }
           },
           'auth': {actions: {logout: true}}
+        }
+      },
+      foo: {
+        controllers: {
+          'foo': {
+            actions: {
+              '*': true
+            }
+          }
+        }
+      },
+      bar: {
+        controllers: {
+          'bar': {
+            actions: {
+              '*': true
+            }
+          }
+        }
+      },
+      foobar: {
+        controllers: {
+          'foo': {
+            actions: {
+              '*': true
+            }
+          },
+          'bar': {
+            actions: {
+              '*': true
+            }
+          }
         }
       }
     };

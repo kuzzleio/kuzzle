@@ -46,28 +46,28 @@ var apiSteps = function () {
     }
   });
 
-  this.Then(/^The notification should have metadata$/, function (callback) {
+  this.Then(/^The notification should have volatile/, function (callback) {
     var
       diff = false;
 
-    if (!this.api.responses.metadata) {
-      return callback('Expected metadata in the notification but none was found');
+    if (!this.api.responses.volatile) {
+      return callback('Expected volatile in the notification but none was found');
     }
 
-    diff = Object.keys(this.metadata).length !== Object.keys(this.api.responses.metadata).length;
+    diff = Object.keys(this.volatile).length !== Object.keys(this.api.responses.volatile).length;
 
-    Object.keys(this.metadata).forEach(key => {
+    Object.keys(this.volatile).forEach(key => {
       if (!diff) {
-        if (!this.api.responses.metadata[key]) {
+        if (!this.api.responses.volatile[key]) {
           diff = true;
         } else {
-          diff = JSON.stringify(this.metadata[key]).localeCompare(JSON.stringify(this.api.responses.metadata[key])) !== 0;
+          diff = JSON.stringify(this.volatile[key]).localeCompare(JSON.stringify(this.api.responses.volatile[key])) !== 0;
         }
       }
     });
 
     if (diff) {
-      callback('Expected ' + JSON.stringify(this.api.responses.metadata) + ' to match ' + JSON.stringify(this.metadata));
+      callback('Expected ' + JSON.stringify(this.api.responses.volatile) + ' to match ' + JSON.stringify(this.volatile));
     } else {
       callback();
     }

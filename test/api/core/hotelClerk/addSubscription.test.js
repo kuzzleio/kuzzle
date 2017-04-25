@@ -1,4 +1,6 @@
-var
+'use strict';
+
+const
   should = require('should'),
   Promise = require('bluebird'),
   Request = require('kuzzle-common-objects').Request,
@@ -8,7 +10,7 @@ var
   KuzzleMock = require('../../../mocks/kuzzle.mock');
 
 describe('Test: hotelClerk.addSubscription', () => {
-  var
+  let
     kuzzle,
     roomId,
     channel,
@@ -53,7 +55,7 @@ describe('Test: hotelClerk.addSubscription', () => {
       index: index,
       collection: collection,
       body: filter,
-      metadata: {
+      volatile: {
         foo: 'bar',
         bar: [ 'foo', 'bar', 'baz', 'qux']
       }
@@ -81,7 +83,7 @@ describe('Test: hotelClerk.addSubscription', () => {
           customer = kuzzle.hotelClerk.customers[connectionId];
           should(customer).be.an.Object();
           should(customer).not.be.empty();
-          should(customer[roomId]).not.be.undefined().and.match(request.input.metadata);
+          should(customer[roomId]).not.be.undefined().and.match(request.input.volatile);
 
           should(kuzzle.hotelClerk.rooms[roomId].channels).be.an.Object().and.not.be.undefined();
           should(Object.keys(kuzzle.hotelClerk.rooms[roomId].channels).length).be.exactly(1);
@@ -143,7 +145,7 @@ describe('Test: hotelClerk.addSubscription', () => {
   });
 
   it('should reject an error when a filter is unknown', () => {
-    var
+    let
       pAddSubscription,
       request = new Request({
         controller: 'realtime',

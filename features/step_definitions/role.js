@@ -60,7 +60,7 @@ var apiSteps = function () {
       });
   });
 
-  this.Then(/^I'm ?(not)* able to find a role with id "([^"]*)"(?: with role "([^"]*)")?$/, function (not, id, role, callback) {
+  this.Then(/^I'm ?(not)* able to find a role with id "([^"]*)"(?: equivalent to role "([^"]*)")?$/, function (not, id, role, callback) {
     var
       controller,
       main;
@@ -124,7 +124,7 @@ var apiSteps = function () {
     });
   });
 
-  this.When(/^I update the role with id "([^"]*)" with role "([^"]*)"$/, function (id, role, callback) {
+  this.When(/^I update the role "([^"]*)" with the test content "([^"]*)"$/, function (id, role, callback) {
     if (!this.roles[role]) {
       return callback('Fixture for role ' + role + ' not exists');
     }
@@ -144,26 +144,20 @@ var apiSteps = function () {
       });
   });
 
-  this.Then(/^I'm able to find "(\d*)" role by searching controller corresponding to role "([^"]*)"(?: from "([^"]*)" to "([^"]*)")?$/, function (count, role, from, size, callback) {
+  this.Then(/^I'm able to find "(\d*)" role by searching controller "([^"]*)"(?: with maximum "([^"]*)" results starting from "([^"]*)")?$/, function (count, controller, size, from, callback) {
     var
       main,
-      controller,
-      body;
-
-    if (!this.roles[role]) {
-      return callback('Fixture for role ' + role + ' does not exist');
-    }
-
-    // todo : This test seams to have been wrongly adapted, controller variable is undefined
-    body = {
-      controllers : [controller],
-      from: from || 0,
-      size: size || 999
-    };
+      body = {
+        controllers : controller.split(',')
+      },
+      args = {
+        from: from || 0,
+        size: size || 999
+      };
 
     main = function (callbackAsync) {
       setTimeout(() => {
-        this.api.searchRoles(body)
+        this.api.searchRoles(body, args)
           .then(aBody => {
             if (aBody.error) {
               callbackAsync(aBody.error.message);
@@ -171,11 +165,11 @@ var apiSteps = function () {
             }
 
             if (!aBody.result.hits) {
-              aBody.result.hits = aBody.result.hits.query(doc => doc._id.indexOf(this.idPrefix));
+              return callbackAsync('Expected ' + count + ' roles, get 0');
+            }
 
-              if (aBody.result.hits.length !== parseInt(count)) {
-                return callbackAsync('Expected ' + count + ' roles, get ' + aBody.result.hits.length);
-              }
+            if (aBody.result.hits.length !== parseInt(count)) {
+              return callbackAsync('Expected ' + count + ' roles, get ' + aBody.result.hits.length);
             }
 
             callbackAsync();

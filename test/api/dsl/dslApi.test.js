@@ -74,7 +74,7 @@ describe('DSL API', () => {
         .then(result => {
           let bool = {
             bool: {
-              must_not: [
+              should_not: [
                 {exists: { field: 'bar' }},
                 {equals: { foo: 'bar' }}
               ]
@@ -189,7 +189,7 @@ describe('DSL API', () => {
           should(sfs).be.an.Array();
           should(sfs.length).be.eql(1);
           should(sfs[0].filters.length).be.eql(2);
-          should(sfs[0].filters.map(f => f.id).sort()).match(ids.sort());
+          should(sfs[0].filters.map(f => f.id).sort()).match(Array.from(ids).sort());
 
           sf = sfs[0];
           return dsl.remove(subscription.id);

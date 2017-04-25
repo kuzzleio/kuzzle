@@ -1,5 +1,9 @@
+'use strict';
+
+const async = require('async');
+
 module.exports = function () {
-  var
+  const
     validSpecifications = {
       strict: true,
       fields: {
@@ -28,8 +32,9 @@ module.exports = function () {
     };
 
   this.When(/^There is (no)?(a)? specifications? for index "([^"]*)" and collection "([^"]*)"$/, {}, function(no, some, index, collection, callback) {
-    var idx = index ? index : this.fakeIndex;
-    var coll = collection ? collection : this.fakeCollection;
+    const
+      idx = index ? index : this.fakeIndex,
+      coll = collection ? collection : this.fakeCollection;
 
     this.api.getSpecifications(idx, coll)
       .then(body => {
@@ -45,22 +50,18 @@ module.exports = function () {
         }
         return callback();
       })
-      .catch(function (error) {
-        if (no) {
-          return callback();
-        }
-
-        callback(error);
-      });
+      .catch(error => callback(no ? null : error));
   });
 
   this.Then(/^I put a (not )?valid specification for index "([^"]*)" and collection "([^"]*)"$/, {}, function(not, index, collection, callback) {
-    var idx = index ? index : this.fakeIndex;
-    var coll = collection ? collection : this.fakeCollection;
-    var specifications = {};
-
-    specifications[idx] = {};
-    specifications[idx][coll] = not ? notValidSpecifications : validSpecifications;
+    const
+      idx = index ? index : this.fakeIndex,
+      coll = collection ? collection : this.fakeCollection,
+      specifications = {
+        [idx]: {
+          [coll]: not ? notValidSpecifications : validSpecifications
+        }
+      };
 
     this.api.updateSpecifications(specifications)
       .then(body => {
@@ -106,13 +107,14 @@ module.exports = function () {
   });
 
   this.When(/^I post a(n in)? ?valid specification$/, {}, function(not, callback) {
-    var
+    const
       index = this.fakeIndex,
       collection = this.fakeCollection,
-      specifications = {};
-
-    specifications[index] = {};
-    specifications[index][collection] = not ? notValidSpecifications : validSpecifications;
+      specifications = {
+        [index]: {
+          [collection]: not ? notValidSpecifications : validSpecifications
+        }
+      };
 
     this.api.validateSpecifications(specifications)
       .then(body => {
@@ -131,7 +133,7 @@ module.exports = function () {
   });
 
   this.When(/^I post a(n in)? ?valid document/, {}, function(not, callback) {
-    var
+    const
       index = this.fakeIndex,
       collection = this.fakeCollection,
       document = not ? notValidDocument : validDocument;
@@ -154,8 +156,9 @@ module.exports = function () {
   });
 
   this.When(/^I delete the specifications (again )?for index "([^"]*)" and collection "([^"]*)"$/, {}, function(again, index, collection, callback) {
-    var idx = index ? index : this.fakeIndex;
-    var coll = collection ? collection : this.fakeCollection;
+    const
+      idx = index ? index : this.fakeIndex,
+      coll = collection ? collection : this.fakeCollection;
 
     this.api.deleteSpecifications(idx, coll)
       .then(body => {
@@ -172,4 +175,61 @@ module.exports = function () {
       });
   });
 
+  this.Then(/^I find (\d+) specifications(?: with scroll "([^"]+)")?/, function (hits, scroll, callback) {
+    this.scrollId = null;
+
+    hits = Number.parseInt(hits);
+
+    let search = function (callbackAsync) {
+      setTimeout(() => {
+        this.api.searchSpecifications({}, scroll && {scroll})
+          .then(response => {
+            if (response.error) {
+              return callbackAsync(new Error(response.error.message));
+            }
+
+            if (scroll && !response.result.scrollId) {
+              return callbackAsync(new Error('No scrollId returned by the searchProfile query'));
+            }
+
+            if (response.result.hits === undefined || response.result.total === undefined) {
+              return callbackAsync(new Error('Malformed search results'));
+            }
+
+            if (response.result.hits.length !== hits || response.result.total !== hits) {
+              return callbackAsync(new Error(`Wrong number of results. Expected: ${hits}, got ${response.result.hits.length} (or ${response.result.total})`));
+            }
+
+            this.scrollId = response.result.scrollId;
+            callbackAsync();
+          })
+          .catch(err => callbackAsync(err));
+      }, 200);
+    };
+
+    async.retry(20, search.bind(this), function (err) {
+      if (err) {
+        return callback(new Error(err));
+      }
+
+      callback();
+    });
+  });
+
+  this.Then(/^I am able to perform a scrollSpecifications request$/, function () {
+    if (!this.scrollId) {
+      throw new Error('No previous scrollId found');
+    }
+
+    return this.api.scrollSpecifications(this.scrollId)
+      .then(response => {
+        if (response.error) {
+          throw new Error(response.error.message);
+        }
+
+        if (['hits', 'scrollId', 'total'].some(prop => response.result[prop] === undefined)) {
+          throw new Error('Incomplete scroll results');
+        }
+      });
+  });
 };

@@ -1,29 +1,32 @@
-var
+const
   jwt = require('jsonwebtoken'),
-  Promise = require('bluebird'),
+  Bluebird = require('bluebird'),
   should = require('should'),
-  /** @type {Params} */
   KuzzleMock = require('../../../../mocks/kuzzle.mock'),
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
-  InternalError = require('kuzzle-common-objects').errors.InternalError,
-  UnauthorizedError = require('kuzzle-common-objects').errors.UnauthorizedError,
   Token = require('../../../../../lib/api/core/models/security/token'),
   User = require('../../../../../lib/api/core/models/security/user'),
   Request = require('kuzzle-common-objects').Request,
   RequestContext = require('kuzzle-common-objects').models.RequestContext,
-  TokenRepository = require('../../../../../lib/api/core/models/repositories/tokenRepository');
+  TokenRepository = require('../../../../../lib/api/core/models/repositories/tokenRepository'),
+  {
+    InternalError: KuzzleInternalError,
+    UnauthorizedError
+  } = require('kuzzle-common-objects').errors;
 
 describe('Test: repositories/tokenRepository', () => {
-  var
+  const
     context = new RequestContext({
       connectionId: 'papagayo'
-    }),
+    });
+  let
     kuzzle,
     tokenRepository;
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
+    kuzzle.config.security.jwt.secret = 'test-secret';
     tokenRepository = new TokenRepository(kuzzle);
 
     return tokenRepository.init();
@@ -35,7 +38,7 @@ describe('Test: repositories/tokenRepository', () => {
 
   describe('#constructor', () => {
     it('should take into account the options given', () => {
-      var repository = new TokenRepository(kuzzle, { ttl: 1000 });
+      const repository = new TokenRepository(kuzzle, { ttl: 1000 });
 
       should(repository.ttl).be.exactly(1000);
     });
@@ -43,7 +46,7 @@ describe('Test: repositories/tokenRepository', () => {
 
   describe('#anonymous', () => {
     it('should return a valid anonymous token', () => {
-      var anonymous = tokenRepository.anonymous();
+      const anonymous = tokenRepository.anonymous();
 
       assertIsAnonymous(anonymous);
     });
@@ -51,10 +54,9 @@ describe('Test: repositories/tokenRepository', () => {
 
   describe('#hydrate', () => {
     it('should return the given token if the given data is not a valid object', () => {
-      var
-        t = new Token();
+      const t = new Token();
 
-      return Promise.all([
+      return Bluebird.all([
         tokenRepository.hydrate(t, null),
         tokenRepository.hydrate(t),
         tokenRepository.hydrate(t, 'a scalar')
@@ -63,7 +65,7 @@ describe('Test: repositories/tokenRepository', () => {
     });
 
     it('should return the anonymous token if no _id is set', done => {
-      var token = new Token();
+      const token = new Token();
 
       tokenRepository.hydrate(token, {})
         .then(result => {
@@ -85,10 +87,7 @@ describe('Test: repositories/tokenRepository', () => {
     });
 
     it('should reject the token if the uuid is not known', () => {
-      var
-        token;
-
-      token = jwt.sign({_id: -99999}, kuzzle.config.security.jwt.secret, {algorithm: kuzzle.config.security.jwt.algorithm});
+      const token = jwt.sign({_id: -99999}, kuzzle.config.security.jwt.secret, {algorithm: kuzzle.config.security.jwt.algorithm});
 
       return should(tokenRepository.verifyToken(token)).be.rejectedWith(UnauthorizedError, {
         message: 'Invalid token'
@@ -96,7 +95,7 @@ describe('Test: repositories/tokenRepository', () => {
     });
 
     it('shoud reject the promise if the jwt is expired', () => {
-      var token = jwt.sign({_id: -1}, kuzzle.config.security.jwt.secret, {algorithm: kuzzle.config.security.jwt.algorithm, expiresIn: 0});
+      const token = jwt.sign({_id: -1}, kuzzle.config.security.jwt.secret, {algorithm: kuzzle.config.security.jwt.algorithm, expiresIn: 0});
 
       return should(tokenRepository.verifyToken(token)).be.rejectedWith(UnauthorizedError, {
         details: {
@@ -106,11 +105,11 @@ describe('Test: repositories/tokenRepository', () => {
     });
 
     it('should reject the promise if an error occurred while fetching the user from the cache', () => {
-      var token = jwt.sign({_id: 'auser'}, kuzzle.config.security.jwt.secret, {algorithm: kuzzle.config.security.jwt.algorithm});
+      const token = jwt.sign({_id: 'auser'}, kuzzle.config.security.jwt.secret, {algorithm: kuzzle.config.security.jwt.algorithm});
 
-      sandbox.stub(tokenRepository, 'loadFromCache').returns(Promise.reject(new InternalError('Error')));
+      sandbox.stub(tokenRepository, 'loadFromCache').returns(Bluebird.reject(new KuzzleInternalError('Error')));
 
-      return should(tokenRepository.verifyToken(token)).be.rejectedWith(InternalError);
+      return should(tokenRepository.verifyToken(token)).be.rejectedWith(KuzzleInternalError);
     });
 
     it('should load the anonymous user if the token is null', () => {
@@ -121,97 +120,88 @@ describe('Test: repositories/tokenRepository', () => {
 
   describe('#generateToken', () => {
     it('should reject the promise if the username is null', () => {
-      return should(tokenRepository.generateToken(null)).be.rejectedWith(InternalError);
+      return should(tokenRepository.generateToken(null)).be.rejectedWith(KuzzleInternalError);
     });
 
     it('should reject the promise if the context is null', () => {
-      return should(tokenRepository.generateToken(new User(), null)).be.rejectedWith(InternalError);
+      const user = new User();
+
+      user._id = 'foobar';
+
+      return should(tokenRepository.generateToken(user, new Request({}))).be.rejectedWith(KuzzleInternalError);
     });
 
     it('should reject the promise if an error occurred while generating the token', () => {
-      var algorithm = kuzzle.config.security.jwt.algorithm;
+      const
+        user = new User(),
+        request = new Request({}, context);
 
-      kuzzle.config.security.jwt.algorithm = 'fake JWT ALgorithm';
+      user._id = 'foobar';
 
-      return should(tokenRepository.generateToken(new User(), context)
-        .catch(err => {
-          kuzzle.config.security.jwt.algorithm = algorithm;
-
-          return Promise.reject(err);
-        })).be.rejectedWith(InternalError);
+      return should(tokenRepository.generateToken(user, request, {expiresIn: 'foo'}))
+        .be.rejectedWith(KuzzleInternalError, {message: 'Error while generating token'});
     });
 
-    it('should resolve to the good jwt token for a given username', done => {
-      var
+    it('should resolve to the good jwt token for a given username', () => {
+      const
         user = new User(),
         checkToken = jwt.sign({_id: 'userInCache'}, kuzzle.config.security.jwt.secret, {
           algorithm: kuzzle.config.security.jwt.algorithm,
           expiresIn: kuzzle.config.security.jwt.expiresIn
-        }),
-        request;
+        });
 
       user._id = 'userInCache';
-      request = new Request({}, {
-        connectionId: 'connectionId',
-        user
+
+      const request = new Request({}, {
+        user,
+        connectionId: 'connectionId'
       });
 
-      tokenRepository.generateToken(user, request)
+      return tokenRepository.generateToken(user, request)
         .then(token => {
           should(token).be.an.instanceOf(Token);
           should(token._id).be.exactly(checkToken);
-
-          done();
-        })
-        .catch(error => {
-          done(error);
         });
     });
 
     it('should return an internal error if an error occurs when generating token', () => {
-      var
-        user = new User(),
-        request;
+      const user = new User();
 
       user._id = 'userInCache';
-      request = new Request({}, {
+
+      const request = new Request({}, {
         connectionId: 'connectionId',
         user
       });
 
-      tokenRepository.generateToken(user, request, {expiresIn: 'toto'})
-        .catch(error => {
-          should(error).be.an.instanceOf(InternalError);
-          should(error.message).be.exactly('Error while generating token');
-        });
-    });
+      kuzzle.services.list.internalCache.volatileSet.returns(Promise.reject(new Error('error')));
 
+      return should(tokenRepository.generateToken(user, request))
+        .be.rejectedWith(KuzzleInternalError, {message: 'Unable to generate token for unknown user'});
+    });
   });
 
   describe('#serializeToCache', () => {
     it('should return a valid plain object', () => {
-      var
+      const
         token = tokenRepository.anonymous(),
-        result;
-
-      result = tokenRepository.serializeToCache(token);
+        result = tokenRepository.serializeToCache(token);
 
       should(result).not.be.an.instanceOf(Token);
       should(result).be.an.Object();
-      should(result._id).be.exactly(undefined);
+      should(result._id).be.exactly(null);
       should(result.userId).be.exactly('-1');
     });
   });
 
   describe('#expire', () => {
     it('should be able to expires a token', () => {
-      var
-        user = new User(),
-        request,
-        token;
+      const user = new User();
+      let token;
 
       user._id = 'userInCache';
-      request = new Request({}, {
+
+      const request = new Request({}, {
         connectionId: 'connectionId',
         user
       });
@@ -229,9 +219,58 @@ describe('Test: repositories/tokenRepository', () => {
     });
   });
 
+  describe('#deleteByUserId', () => {
+    it('should delete the tokens associated to a user identifier', () => {
+      sinon.stub(tokenRepository, 'refreshCacheTTL');
+      kuzzle.services.list.internalCache.searchKeys.returns(Promise.resolve([
+        'repos/internalIndex/token/foo#foo',
+        'repos/internalIndex/token/foo#bar',
+        'repos/internalIndex/token/foo#baz'
+      ]));
+
+      kuzzle.services.list.internalCache.get.onFirstCall().returns(Promise.resolve(JSON.stringify({userId: 'foo', _id: 'foo', expiresAt: 1})));
+      kuzzle.services.list.internalCache.get.onSecondCall().returns(Promise.resolve(JSON.stringify({userId: 'foo', _id: 'bar', expiresAt: 2})));
+      kuzzle.services.list.internalCache.get.onThirdCall().returns(Promise.resolve(JSON.stringify({userId: 'foo', _id: 'baz', expiresAt: 3})));
+
+      return tokenRepository.deleteByUserId('foo')
+        .then(() => {
+          should(kuzzle.services.list.internalCache.expire).calledWith('repos/internalIndex/token/foo', -1);
+          should(kuzzle.services.list.internalCache.expire).calledWith('repos/internalIndex/token/bar', -1);
+          should(kuzzle.services.list.internalCache.expire).calledWith('repos/internalIndex/token/baz', -1);
+          should(kuzzle.tokenManager.expire).calledWithMatch({userId: 'foo', _id: 'foo', expiresAt: 1});
+          should(kuzzle.tokenManager.expire).calledWithMatch({userId: 'foo', _id: 'bar', expiresAt: 2});
+          should(kuzzle.tokenManager.expire).calledWithMatch({userId: 'foo', _id: 'baz', expiresAt: 3});
+        });
+    });
+
+    it('should not delete tokens if the internal cache return a false positive', () => {
+      sinon.stub(tokenRepository, 'refreshCacheTTL');
+      kuzzle.services.list.internalCache.searchKeys.returns(Promise.resolve([
+        'repos/internalIndex/token/foo#foo',
+        'repos/internalIndex/token/foo#bar#bar',
+        'repos/internalIndex/token/foo#baz'
+      ]));
+
+      kuzzle.services.list.internalCache.get.onFirstCall().returns(Promise.resolve(JSON.stringify({userId: 'foo', _id: 'foo', expiresAt: 1})));
+      kuzzle.services.list.internalCache.get.onSecondCall().returns(Promise.resolve(JSON.stringify({userId: 'foo', _id: 'baz', expiresAt: 2})));
+
+      return tokenRepository.deleteByUserId('foo')
+        .then(() => {
+          should(kuzzle.services.list.internalCache.get.callCount).be.eql(2);
+          should(kuzzle.services.list.internalCache.expire.callCount).be.eql(2);
+          should(kuzzle.services.list.internalCache.expire).calledWith('repos/internalIndex/token/foo', -1);
+          should(kuzzle.services.list.internalCache.expire).calledWith('repos/internalIndex/token/baz', -1);
+
+          should(kuzzle.tokenManager.expire.callCount).be.eql(2);
+          should(kuzzle.tokenManager.expire).calledWithMatch({userId: 'foo', _id: 'foo', expiresAt: 1});
+          should(kuzzle.tokenManager.expire).calledWithMatch({userId: 'foo', _id: 'baz', expiresAt: 2});
+
+        });
+    });
+  });
 });
 
 function assertIsAnonymous (token) {
-  should(token._id).be.undefined();
+  should(token._id).be.null();
   should(token.userId).be.exactly('-1');
 }

@@ -5,7 +5,7 @@ const ROLE_MODULE_PATH = '../../../../../lib/api/core/models/security/role';
 const
   should = require('should'),
   mockrequire = require('mock-require'),
-  Promise = require('bluebird'),
+  Bluebird = require('bluebird'),
   Kuzzle = require('../../../../mocks/kuzzle.mock'),
   BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,
   Request = require('kuzzle-common-objects').Request,
@@ -14,7 +14,6 @@ const
 
 describe('Test: security/roleTest', () => {
   let
-    internalIndex,
     kuzzle,
     context = {
       protocol: 'test',
@@ -55,12 +54,11 @@ describe('Test: security/roleTest', () => {
 
   before(() => {
     kuzzle = new Kuzzle();
-    internalIndex = kuzzle.internalEngine.index;
   });
 
   describe('#isActionAllowed', () => {
     it('should disallow any action when no matching entry can be found', () => {
-      var
+      const
         role = new Role();
 
       role.controllers = {
@@ -95,7 +93,7 @@ describe('Test: security/roleTest', () => {
     });
 
     it('should allow an action explicitely set to true', () => {
-      var role = new Role();
+      const role = new Role();
 
       role.controllers = {
         controller: {
@@ -109,7 +107,7 @@ describe('Test: security/roleTest', () => {
     });
 
     it('should allow a wildcard action', () => {
-      var role = new Role();
+      const role = new Role();
       role.controllers = {
         '*': {
           actions: {
@@ -122,7 +120,7 @@ describe('Test: security/roleTest', () => {
     });
 
     it('should properly handle restrictions', () => {
-      var
+      const
         role = new Role(),
         req = new Request({
           controller: 'controller',
@@ -188,45 +186,8 @@ describe('Test: security/roleTest', () => {
         });
     });
 
-    it('should not allow any action on the internal index if no role has been explicitly set on it', () => {
-      var
-        role = new Role(),
-        req = new Request({
-          index: internalIndex,
-          collection: 'collection',
-          controller: 'controller',
-          action: 'action'
-        }, context),
-        restrictions = [
-          {index: 'aaa', collections: ['aaa', 'bbb']}
-        ];
-
-      role.controllers = {
-        '*': {
-          actions: {
-            '*': true
-          }
-        }
-      };
-
-      return role.isActionAllowed(req, kuzzle)
-        .then(isAllowed => {
-          should(isAllowed).be.false();
-          role.allowInternalIndex = true;
-          return role.isActionAllowed(req, kuzzle);
-        })
-        .then(isAllowed => {
-          should(isAllowed).be.true();
-          role.restrictedTo = restrictions;
-          return role.isActionAllowed(req, kuzzle);
-        })
-        .then(isAllowed => {
-          should(isAllowed).be.false();
-        });
-    });
-
     it('should properly handle overridden permissions', () => {
-      var role = new Role();
+      const role = new Role();
       role.controllers = {
         '*': {
           actions: {
@@ -257,7 +218,7 @@ describe('Test: security/roleTest', () => {
     });
 
     it('should allow/deny collection creation according to index creation right', () => {
-      var
+      const
         roleAllow = new Role(),
         roleDeny = new Role(),
         req = new Request({
@@ -296,7 +257,7 @@ describe('Test: security/roleTest', () => {
     });
 
     it('should allow/deny document creation according to index/collection creation right', () => {
-      var
+      const
         roleAllow = new Role(),
         roleDeny1 = new Role(),
         roleDeny2 = new Role(),
@@ -365,7 +326,7 @@ describe('Test: security/roleTest', () => {
 
 
     it('should reject if the rights configuration is not either a boolean or a closure', () => {
-      var role = new Role();
+      const role = new Role();
       role.controllers = {
         '*': {
           actions: {
@@ -378,7 +339,7 @@ describe('Test: security/roleTest', () => {
     });
 
     it('should reject if the closure function return a non boolean value', () => {
-      var role = new Role();
+      const role = new Role();
 
       role.controllers = {
         '*': {
@@ -392,7 +353,7 @@ describe('Test: security/roleTest', () => {
     });
 
     it('should reject if an invalid function is given', () => {
-      var role = new Role();
+      const role = new Role();
 
       role.controllers = {
         '*': {
@@ -409,7 +370,7 @@ describe('Test: security/roleTest', () => {
     });
 
     it('should reject if an invalid argument is given', () => {
-      var role = new Role();
+      const role = new Role();
 
       role.controllers = {
         '*': {
@@ -430,7 +391,7 @@ describe('Test: security/roleTest', () => {
     });
 
     it('should handle a custom right function', () => {
-      var
+      const
         role = new Role(),
         noMatchRequest = new Request({
           collection: 'collection',
@@ -511,7 +472,7 @@ describe('Test: security/roleTest', () => {
         }
       };
 
-      kuzzle.services.list.storageEngine.get.returns(Promise.resolve(documentAda));
+      kuzzle.services.list.storageEngine.get.returns(Bluebird.resolve(documentAda));
 
       return role.isActionAllowed(allowed, kuzzle)
         .then(isAllowed => {
@@ -523,7 +484,7 @@ describe('Test: security/roleTest', () => {
     });
 
     it('should allow/deny rights using custom function with args using mget', () => {
-      var
+      const
         role = new Role(),
         allowed = new Request({
           controller: 'document',
@@ -563,7 +524,7 @@ describe('Test: security/roleTest', () => {
         }
       };
 
-      kuzzle.services.list.storageEngine.mget.returns(Promise.resolve({hits: [documentAda]}));
+      kuzzle.services.list.storageEngine.mget.returns(Bluebird.resolve({hits: [documentAda]}));
 
       return role.isActionAllowed(allowed, kuzzle)
         .then(isAllowed => {
@@ -575,7 +536,7 @@ describe('Test: security/roleTest', () => {
     });
 
     it('should allow/deny rights using custom function with args using search', () => {
-      var
+      const
         role = new Role(),
         allowed = new Request({
           controller: 'read',
@@ -623,7 +584,7 @@ describe('Test: security/roleTest', () => {
         }
       };
 
-      kuzzle.services.list.storageEngine.search.returns(Promise.resolve({hits: [documentAda]}));
+      kuzzle.services.list.storageEngine.search.returns(Bluebird.resolve({hits: [documentAda]}));
 
       return role.isActionAllowed(allowed, kuzzle)
         .then(isAllowed => {
@@ -635,7 +596,7 @@ describe('Test: security/roleTest', () => {
     });
 
     it('should not allow bad method call', () => {
-      var
+      const
         role = new Role(),
         req = new Request({
           controller: 'read',
@@ -671,7 +632,7 @@ describe('Test: security/roleTest', () => {
     });
 
     it('should not allow if read method throws an error', () => {
-      var
+      const
         role = new Role(),
         req = new Request({
           controller: 'read',
@@ -706,7 +667,7 @@ describe('Test: security/roleTest', () => {
     });
 
     it('should not allow if collection is not specified', () => {
-      var
+      const
         role = new Role(),
         req = new Request({
           controller: 'read',
@@ -742,72 +703,72 @@ describe('Test: security/roleTest', () => {
 
   describe('#validateDefinition', () => {
     it('should reject the promise if the controllers definition is not an object', () => {
-      var role = new Role();
+      const role = new Role();
       role.controllers = true;
 
       return should(role.validateDefinition(context)).be.rejectedWith(BadRequestError, {message: 'The "controllers" definition must be an object'});
     });
 
     it('should reject the promise if the controllers definition is empty', () => {
-      var role = new Role();
+      const role = new Role();
       role.controllers = {};
 
       return should(role.validateDefinition(context)).be.rejectedWith(BadRequestError, {message: 'The "controllers" definition cannot be empty'});
     });
 
     it('should reject the promise if the controller element is not an object', () => {
-      var role = new Role();
+      const role = new Role();
       role.controllers = {
         '*': true
       };
 
-      return should(role.validateDefinition(context)).be.rejectedWith(BadRequestError, {message: 'Invalid definition for *. Must be an object'});
+      return should(role.validateDefinition(context)).be.rejectedWith(BadRequestError, {message: 'Invalid definition for [*]. Must be an object'});
     });
 
     it('should reject the promise if the controller element is empty', () => {
-      var role = new Role();
+      const role = new Role();
       role.controllers = {
         '*': {}
       };
 
-      return should(role.validateDefinition(context)).be.rejectedWith(BadRequestError, {message: 'Invalid definition for *. Cannot be empty'});
+      return should(role.validateDefinition(context)).be.rejectedWith(BadRequestError, {message: 'Invalid definition for [*]. Cannot be empty'});
     });
 
     it('should reject the promise if the actions attribute is missing', () => {
-      var role = new Role();
+      const role = new Role();
       role.controllers = {
         controller: {
           a: true
         }
       };
 
-      return should(role.validateDefinition(context)).be.rejectedWith(BadRequestError, {message: 'Invalid definition for controller. `actions` attribute missing'});
+      return should(role.validateDefinition(context)).be.rejectedWith(BadRequestError, {message: 'Invalid definition for [controller]: "actions" attribute missing'});
     });
 
     it('should reject the promise is the actions attribute is not an object', () => {
-      var role = new Role();
+      const role = new Role();
       role.controllers = {
         controller: {
           actions: true
         }
       };
 
-      return should(role.validateDefinition(context)).be.rejectedWith(BadRequestError, {message: 'Invalid definition for controller. `actions` attribute must be an object'});
+      return should(role.validateDefinition(context)).be.rejectedWith(BadRequestError, {message: 'Invalid definition for [controller]: "actions" attribute must be an object'});
     });
 
     it('should reject the promise if the actions attribute is empty', () => {
-      var role = new Role();
+      const role = new Role();
       role.controllers = {
         controller: {
           actions: {}
         }
       };
 
-      return should(role.validateDefinition(context)).be.rejectedWith(BadRequestError, {message: 'Invalid definition for controller. `actions` attribute cannot be empty'});
+      return should(role.validateDefinition(context)).be.rejectedWith(BadRequestError, {message: 'Invalid definition for [controller]: "actions" attribute cannot be empty'});
     });
 
     it('should reject the promise if the action right is neither a boolean or an object', () => {
-      var role = new Role();
+      const role = new Role();
       role.controllers = {
         controller: {
           actions: {
@@ -816,11 +777,11 @@ describe('Test: security/roleTest', () => {
         }
       };
 
-      return should(role.validateDefinition(context)).be.rejectedWith(BadRequestError, {message: 'Invalid definition for controller,action. Must be a boolean or an object'});
+      return should(role.validateDefinition(context)).be.rejectedWith(BadRequestError, {message: 'Invalid definition for [controller, action]. Must be a boolean or an object'});
     });
 
     it('should validate if only boolean rights are given', () => {
-      var role = new Role();
+      const role = new Role();
       role.controllers = {
         controller1: {
           actions: {
@@ -839,7 +800,7 @@ describe('Test: security/roleTest', () => {
     });
 
     it('should reject the promise if the closure does not contain a "test" attribute', () => {
-      var role = new Role();
+      const role = new Role();
       role.indexes = {
         '*': {
           collections: {
@@ -861,7 +822,7 @@ describe('Test: security/roleTest', () => {
 
     it('should reject the promise if the sandbox throws an error', () => {
       mockrequire('../../../../../lib/api/core/sandbox', function () {
-        this.run = function () { return Promise.reject(new Error('unit test error')); };
+        this.run = function () { return Bluebird.reject(new Error('unit test error')); };
       });
 
       let role = new (mockrequire.reRequire(ROLE_MODULE_PATH))();
@@ -884,7 +845,7 @@ describe('Test: security/roleTest', () => {
 
     it('should reject the promise if the sandbox does not resolve to a boolean', () => {
       mockrequire('../../../../../lib/api/core/sandbox', function () {
-        this.run = function () { return Promise.resolve({result: 'I am not a boolean'}); };
+        this.run = function () { return Bluebird.resolve({result: 'I am not a boolean'}); };
       });
 
       let role = new (mockrequire.reRequire(ROLE_MODULE_PATH))();
@@ -902,12 +863,12 @@ describe('Test: security/roleTest', () => {
         }
       };
 
-      return should(role.validateDefinition()).be.rejectedWith(BadRequestError, {message: 'Invalid definition for controller,action. Error executing function'});
+      return should(role.validateDefinition()).be.rejectedWith(BadRequestError, {message: 'Invalid definition for [controller, action]. Error executing function'});
     });
 
     it('should resolve the promise if the sandbox returned a boolean', () => {
       mockrequire('../../../../../lib/api/core/sandbox', function () {
-        this.run = function () { return Promise.resolve({ result: true }); };
+        this.run = function () { return Bluebird.resolve({ result: true }); };
       });
 
       let role = new (mockrequire.reRequire(ROLE_MODULE_PATH))();

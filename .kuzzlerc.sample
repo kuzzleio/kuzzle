@@ -15,6 +15,42 @@
     "accessControlAllowOrigin": "*"
   },
 
+  // Kuzzle configured limits
+  "limits": {
+    // * concurrentRequests:
+    //      Number of requests Kuzzle processes simultaneously.
+    //      Requests received above this limit are bufferized until a slot is freed
+    //      This value should be kept low to avoid overloading Kuzzle's event loop.
+    // * documentsFetchCount:
+    //      Maximum number of documents that can be fetched by a single API
+    //      request.This value cannot exceed 9999 and cannot be higher
+    //      than 80% of the requestsBufferSize value
+    // * documentsWriteCount:
+    //      Maximum number of documents that can be written by a single API
+    //      request.This value cannot exceed 9999 and cannot be higher
+    //      than 80% of the requestsBufferSize value
+    // * requestsBufferSize:
+    //      Maximum number of requests that can be bufferized.
+    //      Requests received above this limit are discarded with a 503 error
+    // * requestsBufferWarningThreshold:
+    //      Number of bufferized requests after
+    //      which Kuzzle will throw 'core:overload' events
+    //      (see http://docs.kuzzle.io/plugin-reference/#core)
+    // * requestHistorySize:
+    //      Completed API requests history. For debug and support purposes
+    // * subscriptionConditionsCount
+    //      Maximum number of conditions a subcription filter can contain
+    //      NB: A condition is either a "simple" operator (anything but and, or and bool)
+    //      or a boolean condition that contains only simple operators.
+    "concurrentRequests": 50,
+    "documentsFetchCount": 1000,
+    "documentsWriteCount": 200,
+    "requestsBufferSize": 50000,
+    "requestsBufferWarningThreshold": 5000,
+    "requestsHistorySize": 50,
+    "subscriptionConditionsCount": 16
+  },
+
   // The plugins section lets you define plugins behaviors
   // (see http://kuzzle.io/guide/#plugins)
   "plugins": {
@@ -27,10 +63,14 @@
     //   * pipeTimeout:
     //        Maximum execution time (in milliseconds)
     //        of a pipe plugin action
+    //   * initTimeout:
+    //        Maximum execution time (in milliseconds)
+    //        of a plugin initialization
     "common": {
       "workerPrefix": "kpw:",
       "pipeWarnTime": 40,
-      "pipeTimeout": 250
+      "pipeTimeout": 250,
+      "initTimeout": 2000
     },
 
     // The following blocks configure plugins
@@ -77,10 +117,12 @@
     //   * secret:
     //      String or buffer data containing either the secret for HMAC
     //      algorithms, or the PEM encoded private key for RSA and ECDSA.
+    //      If left to null (default), Kuzzle will autogenerate a random
+    //      seed (can only be used with HMAC algorithms).
     "jwt": {
       "algorithm": "HS256",
       "expiresIn": "1h",
-      "secret": "Change me"
+      "secret": null
     },
     // [default]
     // The default role defines permissions for all users,
@@ -106,7 +148,7 @@
     "standard": {
       "profiles": {
         "admin": {
-          "policies": [ {"roleId": "admin", "allowInternalIndex": true} ]
+          "policies": [ {"roleId": "admin"} ]
         },
         "default": {
           "policies": [ {"roleId": "default"} ]
@@ -162,37 +204,6 @@
         }
       }
     }
-  },
-
-  // Kuzzle configured limits
-  "limits": {
-    // * concurrentRequests:
-    //      Number of requests Kuzzle processes simultaneously.
-    //      Requests received above this limit are bufferized until a slot is freed
-    //      This value should be kept low to avoid overloading Kuzzle's event loop.
-    // * requestsBufferSize:
-    //      Maximum number of requests that can be bufferized.
-    //      Requests received above this limit are discarded with a 503 error
-    // * requestsBufferWarningThreshold:
-    //      Number of bufferized requests after
-    //      which Kuzzle will throw 'core:overload' events
-    //      (see http://docs.kuzzle.io/plugin-reference/#core)
-    // * requestHistorySize:
-    //      Completed API requests history. For debug and support purposes
-    // * documentsFetchCount:
-    //      Maximum number of documents that can be fetched by a single API
-    //      request.This value cannot exceed 9999 and cannot be higher
-    //      than 80% of the requestsBufferSize value
-    // * documentsWriteCount:
-    //      Maximum number of documents that can be written by a single API
-    //      request.This value cannot exceed 9999 and cannot be higher
-    //      than 80% of the requestsBufferSize value
-    "concurrentRequests": 50,
-    "requestsBufferSize": 50000,
-    "requestsBufferWarningThreshold": 5000,
-    "requestsHistorySize": 50,
-    "documentsFetchCount": 1000,
-    "documentsWriteCount": 200
   },
 
   // The services are the external components Kuzzle relies on.
@@ -352,6 +363,9 @@
       "port": 9200,
       "apiVersion": "5.0",
       "defaults": {
+        // Number of retries to attempt on an update conflict
+        // before throwing an error
+        "onUpdateConflictRetries": 0,
         // Time to live of a paginated search
         "scrollTTL": "15s"
       }
@@ -401,6 +415,14 @@
   //  * enabled:
   //      Enable/disable informations dump on crash or on errors
   //      (see below)
+  //  * history:
+  //      * coredump:
+  //          Maximum number of core dumps to keep.
+  //          Core dumps weight usually between 1 and 2GB,
+  //          so make sure you have enough space to store
+  //          the provided number of coredumps.
+  //      * reports:
+  //          Maximum number of reports directories
   //  * path:
   //      Directory path where the dumps are stored
   //  * gcore:
@@ -418,6 +440,10 @@
   //          List of error types triggering a dump
   "dump": {
     "enabled": true,
+    "history": {
+      "coredump": 3,
+      "reports": 10
+    },
     "path": "./dump/",
     "gcore": "/usr/bin/gcore",
     "dateFormat": "YYYYMMDD-HHmm",
@@ -428,8 +454,7 @@
         "RangeError",
         "TypeError",
         "KuzzleError",
-        "InternalError",
-        "PluginImplementationError"
+        "InternalError"
       ]
     }
   }

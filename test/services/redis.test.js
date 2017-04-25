@@ -1,4 +1,4 @@
-var
+const
   should = require('should'),
   rewire = require('rewire'),
   Redis = rewire('../../lib/services/redis'),
@@ -8,9 +8,8 @@ var
   sinon = require('sinon'),
   RedisClientMock = require('../mocks/services/redisClient.mock');
 
-
 describe('Test redis service', () => {
-  var
+  let
     kuzzle,
     dbname = 'unit-tests',
     redis,
@@ -32,7 +31,7 @@ describe('Test redis service', () => {
   });
 
   it('should init a redis client with default (0) database', () => {
-    var
+    const
       myRedis = new Redis(kuzzle, {service: dbname}, {}),
       myRedisClient = new RedisClientMock(),
       spy = sandbox.spy(myRedisClient, 'select');
@@ -41,8 +40,8 @@ describe('Test redis service', () => {
       return myRedis.init()
         .then(() => {
           try {
-            should(myRedis).have.property('client');
-            should(myRedis.client).be.an.Object();
+            should(myRedis).have.property('_client');
+            should(myRedis._client).be.an.Object();
             should(spy).not.be.called();
 
             return Promise.resolve();
@@ -55,7 +54,7 @@ describe('Test redis service', () => {
   });
 
   it('should select the good database at init if > 0', () => {
-    var
+    const
       myRedis = new Redis(kuzzle, {service: dbname}, {database: 1}),
       myRedisClient = new RedisClientMock(),
       spy = sandbox.spy(myRedisClient, 'select');
@@ -64,8 +63,8 @@ describe('Test redis service', () => {
       return myRedis.init()
         .then(() => {
           try {
-            should(myRedis).have.property('client');
-            should(myRedis.client).be.an.Object();
+            should(myRedis).have.property('_client');
+            should(myRedis._client).be.an.Object();
             should(spy).be.calledWith(1);
 
             return Promise.resolve();
@@ -78,7 +77,7 @@ describe('Test redis service', () => {
   });
 
   it('should not flush publicCache', () => {
-    var
+    const
       myRedis = new Redis(kuzzle, {service: dbname}, {}),
       myRedisClient = new RedisClientMock(),
       spy = sandbox.spy(myRedisClient, 'flushdb');
@@ -87,8 +86,8 @@ describe('Test redis service', () => {
       return myRedis.init()
         .then(() => {
           try {
-            should(myRedis).have.property('client');
-            should(myRedis.client).be.an.Object();
+            should(myRedis).have.property('_client');
+            should(myRedis._client).be.an.Object();
             should(spy).not.be.called();
 
             return Promise.resolve();
@@ -101,7 +100,7 @@ describe('Test redis service', () => {
   });
 
   it('should raise an error if unable to connect', () => {
-    var testredis = new Redis(kuzzle, {service: dbname}, {});
+    const testredis = new Redis(kuzzle, {service: dbname}, {});
 
     return Redis.__with__('buildClient', () => new RedisClientMock(new Error('connection error')))(() => {
       return should(testredis.init()).be.rejected();
@@ -109,8 +108,7 @@ describe('Test redis service', () => {
   });
 
   it('should raise an error if unable to select the database', () => {
-    var
-      testredis = new Redis(kuzzle, {service: dbname}, {database: 17});
+    const testredis = new Redis(kuzzle, {service: dbname}, {database: 17});
 
     return Redis.__with__('buildClient', () => new RedisClientMock())(() => {
       return should(testredis.init()).be.rejected();
@@ -324,7 +322,7 @@ describe('Test redis service', () => {
   });
 
   it('#getInfos should return a properly formatted response', () => {
-    sandbox.stub(redis.client, 'info').returns(Promise.resolve(`redis_version:3.0.7
+    sandbox.stub(redis._client, 'info').returns(Promise.resolve(`redis_version:3.0.7
     redis_git_sha1:00000000
     redis_git_dirty:0
     redis_build_id:fcba39adccee99b1
@@ -421,17 +419,11 @@ describe('Test redis service', () => {
   });
 
   it('should implement all canonical methods', () => {
-    redisCommands.forEach(command => {
-      if(command === 'client') {
-        return true;
-      }
-
-      should(redis[command]).be.a.Function();
-    });
+    redisCommands.forEach(command => should(redis[command]).be.a.Function());
   });
 
   it('should build a client instance of Cluster if several nodes are defined', () => {
-    var config = {
+    const config = {
       nodes: [
         {host: 'foobar', port: 6379, lazyConnect: true}
       ]
@@ -444,7 +436,7 @@ describe('Test redis service', () => {
   });
 
   it('should build a client instance of Redis if only one node is defined', () => {
-    var config = {
+    const config = {
       node: {host: 'foobar', port: 6379, lazyConnect: true},
     };
 
