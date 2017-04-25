@@ -9,3 +9,4 @@ if [ "${TRAVIS_BRANCH}" != "master" ]; then
 fi
 
 docker-compose -f docker-compose/test.yml run kuzzle
+

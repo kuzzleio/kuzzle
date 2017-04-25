@@ -1,13 +1,13 @@
-var
+const
   rewire = require('rewire'),
   should = require('should'),
   sinon = require('sinon'),
-  Promise = require('bluebird'),
+  Bluebird = require('bluebird'),
   KuzzleMock = require('../mocks/kuzzle.mock'),
   Services = rewire('../../lib/services');
 
 describe('Test: lib/services/', () => {
-  var
+  let
     clock,
     kuzzle,
     reset,
@@ -37,13 +37,13 @@ describe('Test: lib/services/', () => {
   });
 
   describe('#init', () => {
-    var
+    let
       r,
       registerService;
 
     beforeEach(() => {
       r = Services.__set__({
-        registerService: sinon.stub().returns(Promise.resolve())
+        registerService: sinon.stub().returns(Bluebird.resolve())
       });
       registerService = Services.__get__('registerService');
     });
@@ -66,20 +66,20 @@ describe('Test: lib/services/', () => {
                 should(registerService).be.calledWith(service);
               });
 
-            return Promise.resolve();
+            return Bluebird.resolve();
           }
           catch(error) {
-            return Promise.reject(error);
+            return Bluebird.reject(error);
           }
         });
     });
 
     it('should still return a resolved promise if some services do not have any configuration in db', () => {
-      var error = new Error('test');
+      const error = new Error('test');
       error.status = 404;
 
-      kuzzle.internalEngine.get.onCall(0).returns(Promise.reject(error));
-      kuzzle.internalEngine.get.returns(Promise.resolve({_source: {foo: 'bar'}}));
+      kuzzle.internalEngine.get.onCall(0).returns(Bluebird.reject(error));
+      kuzzle.internalEngine.get.returns(Bluebird.resolve({_source: {foo: 'bar'}}));
 
       return services.init()
         .then(() => {
@@ -93,17 +93,17 @@ describe('Test: lib/services/', () => {
                 should(registerService).be.calledWith(service);
               });
 
-            return Promise.resolve();
+            return Bluebird.resolve();
           }
           catch(err) {
-            return Promise.reject(err);
+            return Bluebird.reject(err);
           }
         });
     });
 
     it('should return a rejected promise if something wrong occurred while fetching the configuration from the db', () => {
-      var error = new Error('test');
-      kuzzle.internalEngine.get.returns(Promise.reject(error));
+      const error = new Error('test');
+      kuzzle.internalEngine.get.returns(Bluebird.reject(error));
 
       return should(services.init()).be.rejectedWith(error);
     });
@@ -122,10 +122,10 @@ describe('Test: lib/services/', () => {
             should(registerService).be.calledWith('alsoOk', {service: 'alsoOk'}, true);
             should(registerService).be.calledWith('notOk', {service: 'notOk'}, false);
 
-            return Promise.resolve();
+            return Bluebird.resolve();
           }
           catch(error) {
-            return Promise.reject(error);
+            return Bluebird.reject(error);
           }
         });
     });
@@ -144,10 +144,10 @@ describe('Test: lib/services/', () => {
             should(registerService).be.calledWith('alsoOk', {service: 'alsoOk'}, true);
             should(registerService).be.calledWith('notOk', {service: 'notOk'}, false);
 
-            return Promise.resolve();
+            return Bluebird.resolve();
           }
           catch(error) {
-            return Promise.reject(error);
+            return Bluebird.reject(error);
           }
         });
     });
@@ -155,7 +155,7 @@ describe('Test: lib/services/', () => {
   });
 
   describe('#registerService', () => {
-    var
+    let
       context,
       options = {},
       registerService = Services.__get__('registerService');
@@ -176,10 +176,10 @@ describe('Test: lib/services/', () => {
             should(Services.__get__('require')).be.calledOnce();
             should(Services.__get__('require')).be.calledWith('./serviceName');
 
-            return Promise.resolve();
+            return Bluebird.resolve();
           }
           catch(error) {
-            return Promise.reject(error);
+            return Bluebird.reject(error);
           }
         });
     });
@@ -195,10 +195,10 @@ describe('Test: lib/services/', () => {
             should(Services.__get__('require')).be.calledOnce();
             should(Services.__get__('require')).be.calledWith('./backend');
 
-            return Promise.resolve();
+            return Bluebird.resolve();
           }
           catch(error) {
-            return Promise.reject(error);
+            return Bluebird.reject(error);
           }
         });
     });
@@ -214,7 +214,7 @@ describe('Test: lib/services/', () => {
 
       return registerService.call(context, 'serviceName', options, false)
         .then(() => {
-          var req = Services.__get__('require');
+          const req = Services.__get__('require');
 
           try {
             should(req).be.calledThrice();
@@ -226,10 +226,10 @@ describe('Test: lib/services/', () => {
               'andYetAnotherOne'
             ]);
 
-            return Promise.resolve();
+            return Bluebird.resolve();
           }
           catch(error) {
-            return Promise.reject(error);
+            return Bluebird.reject(error);
           }
         });
     });
@@ -237,13 +237,11 @@ describe('Test: lib/services/', () => {
     it('should return a rejected promise if the service did not init in time', () => {
       return Services.__with__({
         require: () => function () {
-          this.init = () => new Promise(() => {});
+          this.init = () => Bluebird.resolve(() => {});
         }
       })(() => {
-        var r;
-
         kuzzle.config.services.serviceName = {};
-        r = registerService.call(context, 'serviceName', {timeout: 1000}, true);
+        const r = registerService.call(context, 'serviceName', {timeout: 1000}, true);
 
         clock.tick(1000);
 
@@ -252,11 +250,11 @@ describe('Test: lib/services/', () => {
     });
 
     it('should return a rejected promise if some error was thrown during init', () => {
-      var error = new Error('test');
+      const error = new Error('test');
 
       return Services.__with__({
         require: () => function () {
-          this.init = () => Promise.reject(error);
+          this.init = () => Bluebird.reject(error);
         }
       })(() => {
         kuzzle.config.services.serviceName = {};
