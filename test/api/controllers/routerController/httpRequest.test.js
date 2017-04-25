@@ -56,7 +56,7 @@ describe('Test: routerController.httpRequest', () => {
   });
 
   it('should register GET routes from the config/httpRoutes file', (done) => {
-    httpRequest.url = '/ms/_getrange/someId/start/end';
+    httpRequest.url = '/ms/_getrange/someId?start=start&end=end';
     httpRequest.method = 'GET';
 
     routeController.router.route(httpRequest, result => {

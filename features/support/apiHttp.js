@@ -7,7 +7,7 @@ const
 /**
  * @constructor
  */
-const ApiHttp = function () {
+function ApiHttp () {
   this.world = null;
 
   this.baseUri = `${config.scheme}://${config.host}:${config.port}`;
@@ -16,7 +16,9 @@ const ApiHttp = function () {
     getIndex: index => typeof index !== 'string' ? this.world.fakeIndex : index,
     getCollection: collection => typeof collection !== 'string' ? this.world.fakeCollection : collection
   };
-};
+
+  return this;
+}
 
 ApiHttp.prototype.init = function (world) {
   this.world = world;
@@ -42,8 +44,7 @@ ApiHttp.prototype.getRequest = function (index, collection, controller, action, 
   }
 
   routes.some(route => {
-    const
-      hits = [];
+    const hits = [];
 
     // Try / Catch mechanism avoids to match routes that have not all
     // the mandatory arguments for the route
@@ -90,10 +91,10 @@ ApiHttp.prototype.getRequest = function (index, collection, controller, action, 
             const value = args.body[key];
 
             if (_.isArray(value)) {
-              queryString = queryString.concat(value.map(v => key + '=' + encodeURIComponent(v)));
+              queryString.push(...value.map(v => `${key}=${v}`));
             }
             else {
-              queryString.push(key + '=' + encodeURIComponent(value));
+              queryString.push(`${key}=${value}`);
             }
           });
 
@@ -150,6 +151,7 @@ ApiHttp.prototype.callApi = function (options) {
     }
     options.headers = _.extend(options.headers, {authorization: 'Bearer ' + this.world.currentUser.token});
   }
+
   options.json = true;
   options.forever = true;
 
@@ -176,7 +178,6 @@ ApiHttp.prototype.mGet = function(body, index, collection) {
 };
 
 ApiHttp.prototype.search = function (query, index, collection, args) {
-  let qs;
   const
     options = {
       url: this.apiPath(this.util.getIndex(index) + '/' + this.util.getCollection(collection) + '/_search'),
@@ -185,8 +186,8 @@ ApiHttp.prototype.search = function (query, index, collection, args) {
     };
 
   if (args) {
-    qs = [];
-    options.url+= '?';
+    let qs = [];
+    options.url += '?';
 
     if (args.scroll) {
       qs.push('scroll=' + args.scroll);
@@ -556,10 +557,16 @@ ApiHttp.prototype.getServerInfo = function () {
     method: 'GET'
   };
 
-  return this.callApi(options)
-    .then(res => {
-      return res;
-    });
+  return this.callApi(options);
+};
+
+ApiHttp.prototype.getServerConfig = function () {
+  const options = {
+    url: this.apiBasePath('_getConfig'),
+    method: 'GET'
+  };
+
+  return this.callApi(options);
 };
 
 ApiHttp.prototype.login = function (strategy, credentials) {
@@ -617,23 +624,45 @@ ApiHttp.prototype.mGetRoles = function (body) {
   return this.callApi(options);
 };
 
-ApiHttp.prototype.searchRoles = function (body) {
+ApiHttp.prototype.searchRoles = function (body, args) {
   const options = {
     url: this.apiPath('roles/_search'),
     method: 'POST',
     body
   };
 
+  if (args) {
+    let qs = [];
+    options.url += '?';
+
+    if (args.from) {
+      qs.push('from=' + args.from);
+    }
+    if (args.size) {
+      qs.push('size=' + args.size);
+    }
+
+    options.url+= qs.join('&');
+  }
+
   return this.callApi(options);
 };
 
-ApiHttp.prototype.deleteRole = function (id) {
-  const options = {
-    url: this.apiPath('roles/' + id),
+ApiHttp.prototype.deleteRole = function (id, waitFor = false) {
+  return this.callApi({
+    url: this.apiPath('roles/' + id + (waitFor ? '?refresh=wait_for' : '')),
     method: 'DELETE'
-  };
+  });
+};
 
-  return this.callApi(options);
+ApiHttp.prototype.deleteRoles = function (ids, waitFor = false) {
+  return this.callApi({
+    url: this.apiPath('roles/_mDelete' + (waitFor ? '?refresh=wait_for' : '')),
+    method: 'POST',
+    body: {
+      ids
+    }
+  });
 };
 
 ApiHttp.prototype.createOrReplaceProfile = function (id, body) {
@@ -674,14 +703,52 @@ ApiHttp.prototype.mGetProfiles= function (body) {
   return this.callApi(options);
 };
 
-ApiHttp.prototype.searchProfiles = function (body) {
+ApiHttp.prototype.searchProfiles = function (query, args) {
   const options = {
     url: this.apiPath('profiles/_search'),
     method: 'POST',
-    body
+    body: {
+      query
+    }
+  };
+
+  if (args) {
+    let first = true;
+    Object.keys(args).forEach(arg => {
+      options.url += (first ? '?' : '&') + `${arg}=${args[arg]}`;
+      first = false;
+    });
+  }
+
+  return this.callApi(options);
+};
+
+ApiHttp.prototype.scrollProfiles = function (scrollId) {
+  const options = {
+    url: this.apiPath('profiles/_scroll/' + scrollId),
+    method: 'GET'
   };
 
   return this.callApi(options);
+};
+
+
+ApiHttp.prototype.deleteProfile = function (id, waitFor = false) {
+  return this.callApi({
+    url: this.apiPath('profiles/' + id + (waitFor ? '?refresh=wait_for' : '')),
+    method: 'DELETE'
+  });
+};
+
+
+ApiHttp.prototype.deleteProfiles = function (ids, waitFor = false) {
+  return this.callApi({
+    url: this.apiPath('profiles/_mDelete' + (waitFor ? '?refresh=wait_for' : '')),
+    method: 'POST',
+    body: {
+      ids
+    }
+  });
 };
 
 ApiHttp.prototype.deleteProfile = function (id) {
@@ -693,11 +760,10 @@ ApiHttp.prototype.deleteProfile = function (id) {
   return this.callApi(options);
 };
 
-ApiHttp.prototype.searchValidations = function (body) {
+ApiHttp.prototype.getAuthenticationStrategies = function () {
   const options = {
-    url: this.apiPath('validations/_search'),
-    method: 'POST',
-    body
+    url: this.apiPath('strategies'),
+    method: 'GET'
   };
 
   return this.callApi(options);
@@ -737,26 +803,49 @@ ApiHttp.prototype.getMyRights = function () {
   return this.callApi(options);
 };
 
-ApiHttp.prototype.searchUsers = function (body) {
-  return this.callApi({
+ApiHttp.prototype.searchUsers = function (query, args) {
+  const options = {
     url: this.apiPath('users/_search'),
     method: 'POST',
-    body: { query: body }
-  });
+    body: {
+      query
+    }
+  };
+
+  if (args) {
+    let first = true;
+    Object.keys(args).forEach(arg => {
+      options.url += (first ? '?' : '&') + `${arg}=${args[arg]}`;
+      first = false;
+    });
+  }
+
+  return this.callApi(options);
 };
 
-ApiHttp.prototype.deleteUser = function (id) {
+ApiHttp.prototype.scrollUsers = function (scrollId) {
+  const options = {
+    url: this.apiPath('users/_scroll/' + scrollId),
+    method: 'GET'
+  };
+
+  return this.callApi(options);
+};
+
+ApiHttp.prototype.deleteUser = function (id, waitFor = false) {
   return this.callApi({
-    url: this.apiPath('users/' + id),
+    url: this.apiPath('users/' + id + (waitFor ? '?refresh=wait_for' : '')),
     method: 'DELETE'
   });
 };
 
-ApiHttp.prototype.createOrReplaceUser = function (body, id) {
+ApiHttp.prototype.deleteUsers = function (ids, waitFor = false) {
   return this.callApi({
-    url: this.apiPath('users/' + id),
-    method: 'PUT',
-    body
+    url: this.apiPath('users/_mDelete' + (waitFor ? '?refresh=wait_for' : '')),
+    method: 'POST',
+    body: {
+      ids
+    }
   });
 };
 
@@ -791,16 +880,45 @@ ApiHttp.prototype.updateSelf = function (body) {
 };
 
 ApiHttp.prototype.checkToken = function (token) {
-  return this.callApi({
+  let _token = null;
+  const request = {
     url: this.apiPath('_checkToken'),
     method: 'POST',
     body: {token}
-  });
+  };
+
+  if (this.world.currentUser && this.world.currentUser.token) {
+    _token = this.world.currentUser.token;
+    this.world.currentUser.token = null;
+  }
+
+  return this.callApi(request)
+    .then(response => {
+      if (_token !== null) {
+        this.world.currentUser.token = _token;
+      }
+
+      return response;
+    })
+    .catch(error => {
+      if (_token !== null) {
+        this.world.currentUser.token = _token;
+      }
+
+      return Promise.reject(error);
+    });
 };
 
 ApiHttp.prototype.refreshIndex = function (index) {
   return this.callApi({
     url: this.apiPath(index + '/_refresh'),
+    method: 'POST'
+  });
+};
+
+ApiHttp.prototype.refreshInternalIndex = function () {
+  return this.callApi({
+    url: this.apiPath('_refreshInternal'),
     method: 'POST'
   });
 };
@@ -849,6 +967,33 @@ ApiHttp.prototype.validateSpecifications = function (specifications) {
     url: this.apiPath('_validateSpecifications'),
     method: 'POST',
     body: specifications
+  };
+
+  return this.callApi(options);
+};
+
+ApiHttp.prototype.searchSpecifications = function (body, args) {
+  const options = {
+    url: this.apiPath('validations/_search'),
+    method: 'POST',
+    body
+  };
+
+  if (args) {
+    let first = true;
+    Object.keys(args).forEach(arg => {
+      options.url += (first ? '?' : '&') + `${arg}=${args[arg]}`;
+      first = false;
+    });
+  }
+
+  return this.callApi(options);
+};
+
+ApiHttp.prototype.scrollSpecifications = function (scrollId) {
+  const options = {
+    url: this.apiPath('validations/_scroll/' + scrollId),
+    method: 'GET'
   };
 
   return this.callApi(options);

@@ -20,11 +20,22 @@ module.exports = {
     accessControlAllowOrigin: '*'
   },
 
+  limits: {
+    concurrentRequests: 50,
+    documentsFetchCount: 1000,
+    documentsWriteCount: 200,
+    requestsHistorySize: 50,
+    requestsBufferSize: 50000,
+    requestsBufferWarningThreshold: 5000,
+    subscriptionConditionsCount: 16
+  },
+
   plugins: {
     common: {
       workerPrefix: 'kpw:',
       pipeWarnTime: 40,
-      pipeTimeout: 250
+      pipeTimeout: 250,
+      initTimeout: 2000,
     },
     'kuzzle-plugin-logger': {
       threads: 1
@@ -46,7 +57,7 @@ module.exports = {
     jwt: {
       algorithm: 'HS256',
       expiresIn: '1h',
-      secret: 'Kuzzle rocks'
+      secret: null
     },
     default: {
       role: {
@@ -62,7 +73,7 @@ module.exports = {
     standard: {
       profiles: {
         admin: {
-          policies: [ {roleId: 'admin', allowInternalIndex: true} ]
+          policies: [ {roleId: 'admin'} ]
         },
         default: {
           policies: [ {roleId: 'default'} ]
@@ -120,15 +131,6 @@ module.exports = {
     }
   },
 
-  limits: {
-    requestsHistorySize: 50,
-    concurrentRequests: 50,
-    requestsBufferSize: 50000,
-    requestsBufferWarningThreshold: 5000,
-    documentsFetchCount: 1000,
-    documentsWriteCount: 200
-  },
-
   services: {
     common: {
       defaultInitTimeout: 10000,
@@ -167,6 +169,7 @@ module.exports = {
       port: 9200,
       apiVersion: '5.0',
       defaults: {
+        onUpdateConflictRetries: 0,
         scrollTTL: '15s'
       }
     },
@@ -189,6 +192,10 @@ module.exports = {
 
   dump: {
     enabled: false,
+    history: {
+      coredump: 3,
+      reports: 5
+    },
     path: './dump/',
     gcore: 'gcore',
     dateFormat: 'YYYYMMDD-HHmm',
@@ -199,8 +206,7 @@ module.exports = {
         'RangeError',
         'TypeError',
         'KuzzleError',
-        'InternalError',
-        'PluginImplementationError'
+        'InternalError'
       ]
     }
   }

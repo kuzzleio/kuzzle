@@ -1,4 +1,6 @@
-var
+'use strict';
+
+const
   rewire = require('rewire'),
   should = require('should'),
   Promise = require('bluebird'),
@@ -11,7 +13,7 @@ var
   SecurityController = rewire('../../../../lib/api/controllers/securityController');
 
 describe('Test: security controller - roles', () => {
-  var
+  let
     kuzzle,
     request,
     securityController;
@@ -32,7 +34,7 @@ describe('Test: security controller - roles', () => {
   });
 
   describe('#updateRoleMapping', () => {
-    var foo = {foo: 'bar'};
+    const foo = {foo: 'bar'};
 
     it('should throw a BadRequestError if the body is missing', () => {
       return should(() => {
@@ -150,11 +152,14 @@ describe('Test: security controller - roles', () => {
         total: 1
       }));
 
-      return securityController.searchRoles(new Request({body: {_id: 'test'}}))
+      return securityController.searchRoles(new Request({body: {controllers: ['foo', 'bar']}}))
         .then(response => {
           should(response).be.instanceof(Object);
           should(response.hits).be.an.Array();
           should(response.hits[0]._id).be.exactly('test');
+          should(kuzzle.repositories.role.searchRole)
+            .be.calledOnce()
+            .be.calledWith(['foo', 'bar']);
         });
     });
 
@@ -170,7 +175,7 @@ describe('Test: security controller - roles', () => {
 
     it('should reject an error in case of error', () => {
       kuzzle.repositories.role.searchRole = sandbox.stub().returns(Promise.reject(new Error('')));
-      return should(securityController.searchRoles(new Request({_id: 'test'}))).be.rejected();
+      return should(securityController.searchRoles(new Request({body: {controllers: ['foo', 'bar']}}))).be.rejected();
     });
   });
 
@@ -211,8 +216,7 @@ describe('Test: security controller - roles', () => {
 
   describe('#deleteRole', () => {
     it('should return response with on deleteRole call', done => {
-      var
-        role = {my: 'role'};
+      const role = {my: 'role'};
 
       kuzzle.repositories.role.getRoleFromRequest = sandbox.stub().returns(role);
       kuzzle.repositories.role.deleteRole = sandbox.stub().returns(Promise.resolve());

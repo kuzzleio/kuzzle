@@ -24,9 +24,9 @@ describe('Test: document controller', () => {
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
-    funnelController = new FunnelController(kuzzle);
     engine = kuzzle.services.list.storageEngine;
     documentController = new DocumentController(kuzzle);
+    funnelController = new FunnelController(kuzzle);
     request = new Request({index: '%test', collection: 'unit-test-documentController'});
   });
 

@@ -1,4 +1,7 @@
-var
+'use strict';
+
+const
+  Bluebird = require('bluebird'),
   rewire = require('rewire'),
   sinon = require('sinon'),
   should = require('should'),
@@ -6,7 +9,7 @@ var
   Bootstrap = rewire('../../../lib/services/internalEngine/bootstrap');
 
 describe('services/internalEngine/bootstrap.js', () => {
-  var
+  let
     kuzzle,
     bootstrap;
 
@@ -22,7 +25,7 @@ describe('services/internalEngine/bootstrap.js', () => {
 
   describe('#constructor', () => {
     it('should set the engine to kuzzle internal engine', () => {
-      should(bootstrap.engine).be.exactly(kuzzle.internalEngine);
+      should(bootstrap.db).be.exactly(kuzzle.internalEngine);
     });
   });
 
@@ -34,23 +37,23 @@ describe('services/internalEngine/bootstrap.js', () => {
         .then(() => {
 
           try {
-            should(bootstrap.engine.createInternalIndex)
+            should(bootstrap.db.createInternalIndex)
               .be.calledOnce();
 
             should(bootstrap.createCollections)
               .be.calledOnce();
 
-            should(bootstrap.engine.refresh)
+            should(bootstrap.db.refresh)
               .be.calledOnce();
 
             should(kuzzle.indexCache.add)
               .be.calledOnce()
-              .be.calledWithExactly(bootstrap.engine.index);
+              .be.calledWithExactly(bootstrap.db.index);
 
             sinon.assert.callOrder(
-              bootstrap.engine.createInternalIndex,
+              bootstrap.db.createInternalIndex,
               bootstrap.createCollections,
-              bootstrap.engine.refresh,
+              bootstrap.db.refresh,
               kuzzle.indexCache.add
             );
 
@@ -62,27 +65,24 @@ describe('services/internalEngine/bootstrap.js', () => {
         });
     });
 
-    it('should print errors to the console', done => {
-      var
-        error = new Error('error message');
+    it('should respect lock', () => {
+      const lockStub = sinon.stub(bootstrap, 'lock');
+      lockStub.returns(Bluebird.resolve(false));
+      lockStub.onSecondCall().returns(Bluebird.resolve(true));
 
-      bootstrap.engine.createInternalIndex.returns(Promise.reject(error));
-
-      bootstrap.all()
-        .catch(err => {
-          var
-            spy = Bootstrap.__get__('console.error');
-
-          should(err).be.exactly(error);
-
-          should(spy)
-            .be.calledOnce()
-            .be.calledWithExactly(error, error.stack);
-
-          done();
+      return Bluebird.all([
+        bootstrap.all(),
+        bootstrap.all()
+      ])
+        .then(() => {
+          should(kuzzle.internalEngine.createInternalIndex)
+            .be.calledOnce();
+          should(kuzzle.config.security.jwt.secret)
+            .be.String()
+            .not.be.empty();
         });
-
     });
+
   });
 
   describe('#createCollections', () => {
@@ -122,13 +122,12 @@ describe('services/internalEngine/bootstrap.js', () => {
     });
   });
 
-
   describe('#createRolesCollection', () => {
     it('should create mapping and add default roles', () => {
       return bootstrap.createRolesCollection()
         .then(() => {
           try {
-            should(bootstrap.engine.updateMapping)
+            should(bootstrap.db.updateMapping)
               .be.calledOnce()
               .be.calledWithMatch('roles', {
                 properties: {
@@ -136,9 +135,9 @@ describe('services/internalEngine/bootstrap.js', () => {
                 }
               });
 
-            should(bootstrap.engine.createOrReplace)
+            should(bootstrap.db.createOrReplace)
               .be.calledThrice();
-            should(bootstrap.engine.createOrReplace)
+            should(bootstrap.db.createOrReplace)
               .be.calledWithExactly('roles', 'admin', kuzzle.config.security.default.role)
               .be.calledWithExactly('roles', 'default', kuzzle.config.security.default.role)
               .be.calledWithExactly('roles', 'anonymous', kuzzle.config.security.default.role);
@@ -157,7 +156,7 @@ describe('services/internalEngine/bootstrap.js', () => {
       return bootstrap.createRolesCollection()
         .then(() => {
           try {
-            should(bootstrap.engine.updateMapping)
+            should(bootstrap.db.updateMapping)
               .have.callCount(0);
 
             return Promise.resolve();
@@ -174,7 +173,7 @@ describe('services/internalEngine/bootstrap.js', () => {
       return bootstrap.createPluginsCollection()
         .then(() => {
           try {
-            should(bootstrap.engine.updateMapping)
+            should(bootstrap.db.updateMapping)
               .be.calledOnce()
               .be.calledWithMatch('plugins', {
                 properties: {
@@ -196,7 +195,7 @@ describe('services/internalEngine/bootstrap.js', () => {
       return bootstrap.createPluginsCollection()
         .then(() => {
           try {
-            should(bootstrap.engine.updateMapping)
+            should(bootstrap.db.updateMapping)
               .have.callCount(0);
 
             return Promise.resolve();
@@ -213,31 +212,30 @@ describe('services/internalEngine/bootstrap.js', () => {
       return bootstrap.createProfilesCollection()
         .then(() => {
           try {
-            should(bootstrap.engine.updateMapping)
+            should(bootstrap.db.updateMapping)
               .be.calledOnce()
               .be.calledWithMatch('profiles', {
                 properties: {
                   policies: {
                     properties: {
-                      _id: {
-                        index: 'not_analyzed',
-                        type: 'string'
+                      roleId: {
+                        type: 'keyword'
                       }
                     }
                   }
                 }
               });
 
-            should(bootstrap.engine.createOrReplace)
+            should(bootstrap.db.createOrReplace)
               .be.calledThrice()
               .be.calledWithMatch('profiles', 'admin', {
-                policies: [{roleId: 'admin', allowInternalIndex: true}]
+                policies: [{roleId: 'admin'}]
               })
               .be.calledWithMatch('profiles', 'default', {
-                policies: [{roleId: 'default', allowInternalIndex: true}]
+                policies: [{roleId: 'default'}]
               })
               .be.calledWithMatch('profiles', 'anonymous', {
-                policies: [{roleId: 'anonymous', allowInternalIndex: true}]
+                policies: [{roleId: 'anonymous'}]
               });
 
             should(kuzzle.indexCache.add)
@@ -257,7 +255,7 @@ describe('services/internalEngine/bootstrap.js', () => {
       return bootstrap.createProfilesCollection()
         .then(() => {
           try {
-            should(bootstrap.engine.updateMapping)
+            should(bootstrap.db.updateMapping)
               .have.callCount(0);
             return Promise.resolve();
           }
@@ -273,17 +271,16 @@ describe('services/internalEngine/bootstrap.js', () => {
       return bootstrap.createUsersCollection()
         .then(() => {
           try {
-            should(bootstrap.engine.updateMapping)
+            should(bootstrap.db.updateMapping)
               .be.calledOnce()
               .be.calledWithMatch('users', {
                 properties: {
                   profileIds: {
-                    index: 'not_analyzed',
-                    type: 'string'
+                    type: 'keyword'
                   },
                   password: {
-                    index: 'no',
-                    type: 'string'
+                    index: false,
+                    type: 'keyword'
                   }
                 }
               });
@@ -302,7 +299,7 @@ describe('services/internalEngine/bootstrap.js', () => {
       return bootstrap.createUsersCollection()
         .then(() => {
           try {
-            should(bootstrap.engine.updateMapping)
+            should(bootstrap.db.updateMapping)
               .have.callCount(0);
             return Promise.resolve();
           }
@@ -315,12 +312,12 @@ describe('services/internalEngine/bootstrap.js', () => {
 
   describe('#adminExists', () => {
     it('should return true if an admin exists', () => {
-      bootstrap.engine.search.returns(Promise.resolve({total: 1}));
+      bootstrap.db.search.returns(Promise.resolve({total: 1}));
 
       return bootstrap.adminExists()
         .then(result => {
           try {
-            should(bootstrap.engine.search)
+            should(bootstrap.db.search)
               .be.calledOnce()
               .be.calledWithMatch('users', {
                 query: {
@@ -328,7 +325,7 @@ describe('services/internalEngine/bootstrap.js', () => {
                     profileIds: ['admin']
                   }
                 }
-              }, 0, 0);
+              }, {from: 0, size: 0});
 
             should(result).be.true();
 
@@ -341,7 +338,7 @@ describe('services/internalEngine/bootstrap.js', () => {
     });
 
     it('should return false if no admin exists', () => {
-      bootstrap.engine.search.returns(Promise.resolve({hits: {total: 0}}));
+      bootstrap.db.search.returns(Promise.resolve({hits: {total: 0}}));
 
       return bootstrap.adminExists()
         .then(result => {
@@ -356,6 +353,51 @@ describe('services/internalEngine/bootstrap.js', () => {
         });
     });
 
+  });
+
+  describe('#jwtSecret', () => {
+    it('should use given config if any', () => {
+      kuzzle.config.security.jwt.secret = 'mysecret';
+
+      return bootstrap.all()
+        .then(() => {
+          should(kuzzle.config.security.jwt.secret)
+            .be.eql('mysecret');
+        });
+    });
+
+    it('should take an existing seed from the db', () => {
+      kuzzle.internalEngine.create
+        .withArgs('config', 'security.jwt.secret')
+        .returns(Bluebird.reject(new Error('test')));
+      kuzzle.internalEngine.get
+        .withArgs('config', 'security.jwt.secret')
+        .returns(Bluebird.resolve({
+          _source: {
+            seed: '42'
+          }
+        }));
+
+      return bootstrap.all()
+        .then(() => {
+          should(kuzzle.config.security.jwt.secret)
+            .be.eql('42');
+        });
+    });
+
+    it('should autogenerate a jwt secret if none found', () => {
+      kuzzle.internalEngine.create
+        .withArgs('config', 'security.jwt.secret')
+        .returns(Bluebird.resolve());
+
+      return bootstrap.all()
+        .then(() => {
+          should(kuzzle.config.security.jwt.secret)
+            .be.a.String()
+            .and.have.length(1024);
+        });
+
+    });
   });
 
 });

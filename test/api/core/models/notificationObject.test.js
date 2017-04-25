@@ -34,7 +34,7 @@ describe('Test: NotificationObject', () => {
     should(response.status).be.a.Number().and.be.eql(200);
     should(response.action).be.exactly(request.input.action);
     should(response.controller).be.exactly(request.input.controller);
-    should(response.metadata).match(request.input.metadata);
+    should(response.volatile).match(request.input.volatile);
     should(response.protocol).be.exactly(request.context.protocol);
     should(response.requestId).be.exactly(request.id);
     should(response.timestamp).be.exactly(request.timestamp);
@@ -54,7 +54,7 @@ describe('Test: NotificationObject', () => {
     should(response.status).be.a.Number().and.be.eql(200);
     should(response.action).be.exactly(request.input.action);
     should(response.controller).be.exactly(request.input.controller);
-    should(response.metadata).match(request.input.metadata);
+    should(response.volatile).match(request.input.volatile);
     should(response.protocol).be.exactly(request.context.protocol);
     should(response.requestId).be.exactly(request.id);
     should(response.timestamp).be.exactly(request.timestamp);
@@ -74,7 +74,7 @@ describe('Test: NotificationObject', () => {
     should(response.status).be.a.Number().and.be.eql(200);
     should(response.action).be.exactly(request.input.action);
     should(response.controller).be.exactly(request.input.controller);
-    should(response.metadata).match(request.input.metadata);
+    should(response.volatile).match(request.input.volatile);
     should(response.protocol).be.exactly(request.context.protocol);
     should(response.requestId).be.exactly(request.id);
     should(response.timestamp).be.exactly(request.timestamp);

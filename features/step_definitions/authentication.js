@@ -90,6 +90,31 @@ var apiSteps = function () {
       })
       .catch(err => callback(err));
   });
+
+  this.Then(/^I get the registrated authentication strategies$/, function (callback) {
+    this.api.getAuthenticationStrategies()
+      .then(response => {
+        if (response.error) {
+          return callback(new Error(response.error.message));
+        }
+
+        if (!response.result) {
+          return callback(new Error('No result provided'));
+        }
+
+        if (!response.result || !Array.isArray(response.result)) {
+          return callback(new Error('Invalid response format'));
+        }
+
+        if (response.result.indexOf('local') === -1) {
+          return callback(new Error('The default \'local\' authentication strategy wasn\'t found in the list of registrated strategies'));
+        }
+
+        this.result = response.result;
+        callback();
+      })
+      .catch(error => callback(error));
+  });
 };
 
 module.exports = apiSteps;

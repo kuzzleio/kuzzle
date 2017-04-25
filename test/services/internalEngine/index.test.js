@@ -1,51 +1,57 @@
-var
-  rewire = require('rewire'),
+'use strict';
+
+const
+  mockrequire = require('mock-require'),
   should = require('should'),
   sinon = require('sinon'),
-  InternalEngine = rewire('../../../lib/services/internalEngine'),
   KuzzleMock = require('../../mocks/kuzzle.mock'),
-  NotFoundError = require('kuzzle-common-objects').errors.NotFoundError;
+  NotFoundError = require('kuzzle-common-objects').errors.NotFoundError,
+  ms = require('ms');
 
 describe('InternalEngine', () => {
-  var
+  let
     kuzzle,
-    reset;
+    InternalEngine;
 
-  beforeEach(() => {
-    reset = InternalEngine.__set__({
-      es: {
-        errors: {
-          NoConnections: sinon.stub()
-        },
-        Client: function () {
-          this.indices = {
-            create: sinon.stub().returns(Promise.resolve()),
-            delete: sinon.stub().returns(Promise.resolve()),
-            exists: sinon.stub().returns(Promise.resolve()),
-            getMapping: sinon.stub().returns(Promise.resolve()),
-            putMapping: sinon.stub().returns(Promise.resolve()),
-            refresh: sinon.stub().returns(Promise.resolve())
-          };
+  before(() => {
+    mockrequire('elasticsearch', {
+      errors: {
+        NoConnections: sinon.stub()
+      },
+      Client: function () {
+        this.indices = {
+          create: sinon.stub().returns(Promise.resolve()),
+          delete: sinon.stub().returns(Promise.resolve()),
+          exists: sinon.stub().returns(Promise.resolve()),
+          getMapping: sinon.stub().returns(Promise.resolve()),
+          putMapping: sinon.stub().returns(Promise.resolve()),
+          refresh: sinon.stub().returns(Promise.resolve())
+        };
 
-          this.create = sinon.stub().returns(Promise.resolve());
-          this.delete = sinon.stub().returns(Promise.resolve());
-          this.exists = sinon.stub().returns(Promise.resolve());
-          this.get = sinon.stub().returns(Promise.resolve());
-          this.index = sinon.stub().returns(Promise.resolve());
-          this.mget = sinon.stub().returns(Promise.resolve());
-          this.search = sinon.stub().returns(Promise.resolve());
-          this.update = sinon.stub().returns(Promise.resolve());
-        }
+        this.create = sinon.stub().returns(Promise.resolve());
+        this.delete = sinon.stub().returns(Promise.resolve());
+        this.exists = sinon.stub().returns(Promise.resolve());
+        this.get = sinon.stub().returns(Promise.resolve());
+        this.index = sinon.stub().returns(Promise.resolve());
+        this.mget = sinon.stub().returns(Promise.resolve());
+        this.scroll = sinon.stub().returns(Promise.resolve());
+        this.search = sinon.stub().returns(Promise.resolve());
+        this.update = sinon.stub().returns(Promise.resolve());
       }
     });
+
+    InternalEngine = mockrequire.reRequire('../../../lib/services/internalEngine');
+  });
+
+  beforeEach(() => {
     kuzzle = new KuzzleMock();
     kuzzle.internalEngine = new InternalEngine(kuzzle);
 
     return kuzzle.internalEngine.init();
   });
 
-  afterEach(() => {
-    reset();
+  after(() => {
+    mockrequire.stopAll();
   });
 
   describe('#init', () => {
@@ -56,13 +62,13 @@ describe('InternalEngine', () => {
 
   describe('#search', () => {
     it('should harmonize search results', () => {
-      var
+      const
         collection = 'collection',
         query = { 'some': 'filters' };
 
       kuzzle.internalEngine.client.search.returns(Promise.resolve({hits: { hits: ['foo', 'bar'], total: 123}}));
 
-      return kuzzle.internalEngine.search(collection, query)
+      return kuzzle.internalEngine.search(collection, query, {from: 0, size: 20, scroll: 'foo'})
         .then(result => {
           try {
             should(kuzzle.internalEngine.client.search)
@@ -70,13 +76,15 @@ describe('InternalEngine', () => {
               .be.calledWithMatch({
                 index: kuzzle.internalEngine.index,
                 type: collection,
+                from: 0,
+                size: 20,
+                scroll: 'foo',
                 body: {
-                  query: query,
-                  from: 0,
-                  size: 20
+                  query: query
                 }
               });
 
+            should(kuzzle.services.list.internalCache.psetex).not.be.called();
             should(result).be.an.Object().and.not.be.empty();
             should(result.total).be.eql(123);
             should(result.hits).be.an.Array().and.match(['foo', 'bar']);
@@ -88,14 +96,14 @@ describe('InternalEngine', () => {
         });
     });
 
-    it('should harmonize search results', () => {
-      var
+    it('should take the query from subqueries object', () => {
+      const
         collection = 'collection',
-        query = { query: {'some': 'filters'} };
+        query = { query: {'some': 'filters' }};
 
       kuzzle.internalEngine.client.search.returns(Promise.resolve({hits: { hits: ['foo', 'bar'], total: 123}}));
 
-      return kuzzle.internalEngine.search(collection, query)
+      return kuzzle.internalEngine.search(collection, query, {from: 0, size: 20, scroll: 'foo'})
         .then(result => {
           try {
             should(kuzzle.internalEngine.client.search)
@@ -103,13 +111,15 @@ describe('InternalEngine', () => {
               .be.calledWithMatch({
                 index: kuzzle.internalEngine.index,
                 type: collection,
+                from: 0,
+                size: 20,
+                scroll: 'foo',
                 body: {
-                  query: query.query,
-                  from: 0,
-                  size: 20
+                  query: query.query
                 }
               });
 
+            should(kuzzle.services.list.internalCache.psetex).not.be.called();
             should(result).be.an.Object().and.not.be.empty();
             should(result.total).be.eql(123);
             should(result.hits).be.an.Array().and.match(['foo', 'bar']);
@@ -122,10 +132,9 @@ describe('InternalEngine', () => {
     });
 
     it('should perform a search on an empty filter if the filters argument is missing', () => {
-      var
-        collection = 'collection';
+      const collection = 'collection';
 
-      kuzzle.internalEngine.client.search.returns(Promise.resolve({hits: {hits: ['foo', 'bar']}, total: 123}));
+      kuzzle.internalEngine.client.search.returns(Promise.resolve({hits: {hits: ['foo', 'bar'], total: 123}}));
 
       return kuzzle.internalEngine.search(collection)
         .then(result => {
@@ -135,13 +144,10 @@ describe('InternalEngine', () => {
 
             should(kuzzle.internalEngine.client.search.calledWithMatch({
               index: kuzzle.internalEngine.index,
-              type: collection,
-              body: {
-                from: 0,
-                size: 20
-              }
+              type: collection
             })).be.true();
 
+            should(kuzzle.services.list.internalCache.psetex).not.be.called();
             should(result).be.an.Object().and.not.be.empty();
             should(result.total).be.eql(123);
             should(result.hits).be.an.Array().and.match(['foo', 'bar']);
@@ -152,17 +158,244 @@ describe('InternalEngine', () => {
         });
     });
 
+    it('should save the scroll id in the cache engine for further uses', () => {
+      const
+        collection = 'collection',
+        query = {};
+
+      kuzzle.internalEngine.client.search.returns(Promise.resolve({
+        hits: {
+          total: 123,
+          hits: ['foo', 'bar']
+        },
+        _scroll_id: 'foobar'
+      }));
+
+      return kuzzle.internalEngine.search(collection, query, {from: 0, size: 20, scroll: '45s'})
+        .then(result => {
+          try {
+            should(kuzzle.internalEngine.client.search)
+              .be.calledOnce()
+              .be.calledWithMatch({
+                index: kuzzle.internalEngine.index,
+                type: collection,
+                from: 0,
+                size: 20,
+                scroll: '45s',
+                body: {
+                  query: query
+                }
+              });
+
+            should(kuzzle.services.list.internalCache.psetex).be.calledWithMatch('collection', 45000, 0);
+            should(result).be.an.Object().and.not.be.empty();
+            should(result.total).be.eql(123);
+            should(result.hits).be.an.Array().and.match(['foo', 'bar']);
+            should(result.scrollId).be.eql('foobar');
+            return Promise.resolve();
+          }
+          catch(error) {
+            return Promise.reject(error);
+          }
+        });
+    });
+
+    it('should save the scroll id with a default ttl if the provided one is not parseable', () => {
+      const
+        collection = 'collection',
+        query = {};
+
+      kuzzle.internalEngine.client.search.returns(Promise.resolve({
+        hits: {
+          total: 123,
+          hits: ['foo', 'bar']
+        },
+        _scroll_id: 'foobar'
+      }));
+
+      return kuzzle.internalEngine.search(collection, query, {from: 0, size: 20, scroll: 'foobar'})
+        .then(result => {
+          try {
+            should(kuzzle.internalEngine.client.search)
+              .be.calledOnce()
+              .be.calledWithMatch({
+                index: kuzzle.internalEngine.index,
+                type: collection,
+                from: 0,
+                size: 20,
+                scroll: 'foobar',
+                body: {
+                  query: query
+                }
+              });
+
+            should(kuzzle.services.list.internalCache.psetex).be.calledWithMatch(
+              'collection',
+              ms(kuzzle.config.services.db.defaults.scrollTTL),
+              0
+            );
+            should(result).be.an.Object().and.not.be.empty();
+            should(result.total).be.eql(123);
+            should(result.hits).be.an.Array().and.match(['foo', 'bar']);
+            should(result.scrollId).be.eql('foobar');
+            return Promise.resolve();
+          }
+          catch(error) {
+            return Promise.reject(error);
+          }
+        });
+    });
+
     it('should rejects the promise if the search fails', () => {
-      var error = new Error('Mocked error');
+      const error = new Error('Mocked error');
       kuzzle.internalEngine.client.search.returns(Promise.reject(error));
 
       return should(kuzzle.internalEngine.search('foo')).be.rejectedWith(error);
     });
   });
 
+  describe('#scroll', () => {
+    it('should return a properly formatted result upon a successful scroll call', () => {
+      const
+        collection = 'collection';
+
+      kuzzle.internalEngine.client.scroll.returns(Promise.resolve({
+        hits: {
+          total: 123,
+          hits: ['foo', 'bar']
+        },
+        _scroll_id: 'foobar'
+      }));
+
+      kuzzle.services.list.internalCache.exists.returns(Promise.resolve(1));
+
+      return kuzzle.internalEngine.scroll(collection, 'foobar', '45s')
+        .then(result => {
+          try {
+            should(kuzzle.internalEngine.client.scroll)
+              .be.calledOnce()
+              .be.calledWithMatch({
+                scrollId: 'foobar',
+                scroll: '45s'
+              });
+
+            should(kuzzle.services.list.internalCache.pexpire).be.calledWithMatch(
+              'collection',
+              45000
+            );
+            should(result).be.an.Object().and.not.be.empty();
+            should(result.total).be.eql(123);
+            should(result.hits).be.an.Array().and.match(['foo', 'bar']);
+            should(result.scrollId).be.eql('foobar');
+            return Promise.resolve();
+          }
+          catch(error) {
+            return Promise.reject(error);
+          }
+        });
+    });
+
+    it('should set the new scroll TTL to the default TTL if none is provided', () => {
+      const
+        collection = 'collection';
+
+      kuzzle.internalEngine.client.scroll.returns(Promise.resolve({
+        hits: {
+          hits: ['foo', 'bar'],
+          total: 123
+        },
+        _scroll_id: 'foobar'
+      }));
+
+      kuzzle.services.list.internalCache.exists.returns(Promise.resolve(1));
+
+      return kuzzle.internalEngine.scroll(collection, 'foobar')
+        .then(result => {
+          try {
+            should(kuzzle.internalEngine.client.scroll)
+              .be.calledOnce()
+              .be.calledWithMatch({
+                scrollId: 'foobar',
+                scroll: kuzzle.config.services.db.defaults.scrollTTL
+              });
+
+            should(kuzzle.services.list.internalCache.pexpire).be.calledWithMatch(
+              'collection',
+              ms(kuzzle.config.services.db.defaults.scrollTTL)
+            );
+            should(result).be.an.Object().and.not.be.empty();
+            should(result.total).be.eql(123);
+            should(result.hits).be.an.Array().and.match(['foo', 'bar']);
+            should(result.scrollId).be.eql('foobar');
+            return Promise.resolve();
+          }
+          catch(error) {
+            return Promise.reject(error);
+          }
+        });
+    });
+
+    it('should set the new scroll TTL to the default TTL if the one provided is not parseable', () => {
+      const
+        collection = 'collection';
+
+      kuzzle.internalEngine.client.scroll.returns(Promise.resolve({
+        hits: {
+          hits: ['foo', 'bar'],
+          total: 123
+        },
+        _scroll_id: 'foobar'
+      }));
+
+      kuzzle.services.list.internalCache.exists.returns(Promise.resolve(1));
+
+      return kuzzle.internalEngine.scroll(collection, 'foobar', 'foo')
+        .then(result => {
+          try {
+            should(kuzzle.internalEngine.client.scroll)
+              .be.calledOnce()
+              .be.calledWithMatch({
+                scrollId: 'foobar',
+                scroll: 'foo'
+              });
+
+            should(kuzzle.services.list.internalCache.pexpire).be.calledWithMatch(
+              'collection',
+              ms(kuzzle.config.services.db.defaults.scrollTTL)
+            );
+            should(result).be.an.Object().and.not.be.empty();
+            should(result.total).be.eql(123);
+            should(result.hits).be.an.Array().and.match(['foo', 'bar']);
+            should(result.scrollId).be.eql('foobar');
+            return Promise.resolve();
+          }
+          catch(error) {
+            return Promise.reject(error);
+          }
+        });
+    });
+
+    it('should throw if the scroll id is unknown', () => {
+      const
+        collection = 'collection';
+
+      kuzzle.internalEngine.client.scroll.returns(Promise.resolve({
+        hits: {
+          total: 123,
+          hits: ['foo', 'bar']
+        },
+        _scroll_id: 'foobar'
+      }));
+
+      kuzzle.services.list.internalCache.exists.returns(Promise.resolve(0));
+
+      return should(kuzzle.internalEngine.scroll(collection, 'foobar')).be.rejectedWith(NotFoundError, {message: 'Non-existing or expired scroll identifier'});
+    });
+  });
+
   describe('#get', () => {
     it('should return elasticsearch response', () => {
-      var
+      const
         collection = 'foo',
         id = 'bar';
 
@@ -189,7 +422,7 @@ describe('InternalEngine', () => {
     });
 
     it('should reject the promise if getting the document fails', () => {
-      var error = new Error('Mocked error');
+      const error = new Error('Mocked error');
       kuzzle.internalEngine.client.get.returns(Promise.reject(error));
       return should(kuzzle.internalEngine.get('foo', 'bar')).be.rejectedWith(error);
     });
@@ -197,7 +430,7 @@ describe('InternalEngine', () => {
 
   describe('#mget', () => {
     it('should return elasticsearch response', () => {
-      var
+      const
         collection = 'foo',
         ids = ['bar', 'qux'];
 
@@ -227,7 +460,7 @@ describe('InternalEngine', () => {
     });
 
     it('should reject the promise if getting the document fails', () => {
-      var error = new Error('Mocked error');
+      const error = new Error('Mocked error');
       kuzzle.internalEngine.client.mget.returns(Promise.reject(error));
       return should(kuzzle.internalEngine.mget('foo', ['bar'])).be.rejectedWith(error);
     });
@@ -235,7 +468,7 @@ describe('InternalEngine', () => {
 
   describe('#create', () => {
     it('should return a properly constructed response', () => {
-      var
+      const
         collection = 'foo',
         id = 'bar',
         content = {'foo': 'bar'};
@@ -266,7 +499,7 @@ describe('InternalEngine', () => {
     });
 
     it('should reject the promise if creating the document fails', () => {
-      var error = new Error('Mocked error');
+      const error = new Error('Mocked error');
       kuzzle.internalEngine.client.create.returns(Promise.reject(error));
       return should(kuzzle.internalEngine.create('foo', 'bar', {'baz': 'qux'})).be.rejectedWith(error);
     });
@@ -274,7 +507,7 @@ describe('InternalEngine', () => {
 
   describe('#createOrReplace', () => {
     it('should return a properly constructed response', () => {
-      var
+      const
         collection = 'foo',
         id = 'bar',
         content = {'foo': 'bar'};
@@ -304,7 +537,7 @@ describe('InternalEngine', () => {
     });
 
     it('should reject the promise if creating the document fails', () => {
-      var error = new Error('Mocked error');
+      const error = new Error('Mocked error');
       kuzzle.internalEngine.client.index.returns(Promise.reject(error));
       return should(kuzzle.internalEngine.createOrReplace('foo', 'bar', {'baz': 'qux'})).be.rejectedWith(error);
     });
@@ -312,7 +545,7 @@ describe('InternalEngine', () => {
 
   describe('#update', () => {
     it('should return a properly constructed response', () => {
-      var
+      const
         collection = 'foo',
         id = 'bar',
         content = {'foo': 'bar'};
@@ -345,7 +578,7 @@ describe('InternalEngine', () => {
     });
 
     it('should reject the promise if creating the document fails', () => {
-      var error = new Error('Mocked error');
+      const error = new Error('Mocked error');
       kuzzle.internalEngine.client.update.returns(Promise.reject(error));
       return should(kuzzle.internalEngine.update('foo', 'bar', {'baz': 'qux'})).be.rejectedWith(error);
     });
@@ -353,7 +586,7 @@ describe('InternalEngine', () => {
 
   describe('#replace', () => {
     it('should replace the document content if it exists', () => {
-      var
+      const
         collection = 'foo',
         id = 'bar',
         content = {'foo': 'bar'};
@@ -389,7 +622,7 @@ describe('InternalEngine', () => {
     });
 
     it('should rejects the promise if the replace action fails', () => {
-      var error = new Error('Mocked error');
+      const error = new Error('Mocked error');
       kuzzle.internalEngine.client.exists.returns(Promise.resolve(true));
       kuzzle.internalEngine.client.index.returns(Promise.reject(error));
       return should(kuzzle.internalEngine.replace('foo', 'bar', {'baz': 'qux'})).be.rejectedWith(error);
@@ -398,7 +631,7 @@ describe('InternalEngine', () => {
 
   describe('#delete', () => {
     it('should forward the delete action to elasticsearch', () => {
-      var
+      const
         collection = 'foo',
         id = 'bar';
 
@@ -424,7 +657,7 @@ describe('InternalEngine', () => {
     });
 
     it('should reject the promise if deleting the document fails', () => {
-      var error = new Error('Mocked error');
+      const error = new Error('Mocked error');
       kuzzle.internalEngine.client.delete.returns(Promise.reject(error));
       return should(kuzzle.internalEngine.delete('foo', 'bar')).be.rejectedWith(error);
     });
@@ -432,7 +665,7 @@ describe('InternalEngine', () => {
 
   describe('#createInternalIndex', () => {
     it('should forward the request to elasticsearch', () => {
-      var
+      const
         createStub = kuzzle.internalEngine.client.indices.create,
         existsStub = kuzzle.internalEngine.client.indices.exists.returns(Promise.resolve(false));
 
@@ -453,7 +686,7 @@ describe('InternalEngine', () => {
     });
 
     it('should not try to create an existing index', () => {
-      var
+      const
         createStub = kuzzle.internalEngine.client.indices.create,
         existsStub = kuzzle.internalEngine.client.indices.exists.returns(Promise.resolve(true));
 
@@ -473,7 +706,7 @@ describe('InternalEngine', () => {
     });
 
     it('should reject the promise if creating the internal index fails', () => {
-      var error = new Error('Mocked error');
+      const error = new Error('Mocked error');
       kuzzle.internalEngine.client.indices.exists.returns(Promise.resolve(false));
       kuzzle.internalEngine.client.indices.create.returns(Promise.reject(error));
 
@@ -545,7 +778,7 @@ describe('InternalEngine', () => {
 
   describe('#getMapping', () => {
     it('should forward the request to elasticseach', () => {
-      var data = {foo: 'bar'};
+      const data = {foo: 'bar'};
 
       return kuzzle.internalEngine.getMapping(data)
         .then(() => {
@@ -584,7 +817,7 @@ describe('InternalEngine', () => {
 
   describe('#updateMapping', () => {
     it('should forward the request to elasticsearch', () => {
-      var
+      const
         type = 'collection',
         mapping = {foo: 'bar'};
 
@@ -627,5 +860,4 @@ describe('InternalEngine', () => {
         });
     });
   });
-
 });

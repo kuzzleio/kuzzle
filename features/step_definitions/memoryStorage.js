@@ -1,21 +1,12 @@
-var
+'use strict';
+
+const
   Promise = require('bluebird'),
   should = require('should');
 
-
 module.exports = function () {
-
   this.When(/^I call the (.*?) method of the memory storage with arguments$/, function (command, args) {
-    var realArgs;
-
-    if (args && args !== '') {
-      try{
-        realArgs = JSON.parse(args.replace(/#prefix#/g, this.idPrefix));
-      }
-      catch(err) {
-        return Promise.reject(err);
-      }
-    }
+    let realArgs = args ? JSON.parse(args.replace(/#prefix#/g, this.idPrefix)) : args;
 
     return this.api.callMemoryStorage(command, realArgs)
       .then(response => {
@@ -29,8 +20,23 @@ module.exports = function () {
       });
   });
 
+  this.When(/^I scan the database using the (.+?) method with arguments$/, function (command, args) {
+    const parsed = JSON.parse(args.replace(/#prefix#/g, this.idPrefix));
+
+    if (parsed.args) {
+      parsed.args.cursor = 0;
+    }
+    else {
+      parsed.args = {cursor: 0};
+    }
+
+    this.memoryStorageResult = null;
+
+    return scanRedis(this, command, parsed);
+  });
+
   this.Then(/^The (sorted )?ms result should match the (regex|json) (.*?)$/, function (sorted, type, pattern, callback) {
-    var
+    let
       regex,
       val = this.memoryStorageResult.result;
 
@@ -61,3 +67,34 @@ module.exports = function () {
     }
   });
 };
+
+
+/**
+ * Executes on of the *scan family command, recursively, until
+ * the scan completes
+ *
+ * @param {object} world - functional tests global object
+ * @param {string} command - name of the scan command (scan, hscan, sscan, zscan)
+ * @param {object} args - scan arguments
+ * @return {Promise<object>}
+ */
+function scanRedis (world, command, args) {
+  return world.api.callMemoryStorage(command, args)
+    .then(response => {
+      if (response.error) {
+        return Promise.reject(response.error);
+      }
+
+      if (world.memoryStorageResult === null) {
+        world.memoryStorageResult = {result: response.result[1]};
+      }
+      else {
+        world.memoryStorageResult.result.push(...response.result[1]);
+      }
+
+      // advance the cursor to its next position
+      args.args.cursor = Number.parseInt(response.result[0]);
+
+      return args.args.cursor === 0 ? world.memoryStorageResult : scanRedis(world, command, args);
+    });
+}

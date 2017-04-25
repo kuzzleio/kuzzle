@@ -1,6 +1,6 @@
 'use strict';
 
-var
+const
   should = require('should'),
   sinon = require('sinon'),
   FieldOperand = require('../../../../lib/api/dsl/storage/objects/fieldOperand'),
@@ -8,7 +8,7 @@ var
   DSL = require('../../../../lib/api/dsl');
 
 describe('DSL.keyword.notregexp', () => {
-  var dsl;
+  let dsl;
 
   beforeEach(() => {
     dsl = new DSL();
@@ -43,17 +43,19 @@ describe('DSL.keyword.notregexp', () => {
     it('should match a document if its registered field does not match the regexp', () => {
       return dsl.register('index', 'collection', {not: {regexp: {foo: {value: '^\\w{2}oba\\w$', flags: 'i'}}}})
         .then(subscription => {
-          var result = dsl.test('index', 'collection', {foo: 'bar'});
+          const result = dsl.test('index', 'collection', {foo: 'bar'});
 
           should(result).be.an.Array().and.not.empty();
           should(result[0]).be.eql(subscription.id);
         });
     });
 
-    it('should not match if the document does not contain the registered field', () => {
+    it('should match if the document does not contain the registered field', () => {
       return dsl.register('index', 'collection', {not: {regexp: {foo: {value: '^\\w{2}oba\\w$', flags: 'i'}}}})
         .then(() => {
-          should(dsl.test('index', 'collection', {bar: 'qux'})).be.an.Array().and.empty();
+          should(dsl.test('index', 'collection', {bar: 'qux'}))
+            .be.an.Array()
+            .and.have.length(1);
         });
     });
 

@@ -1,12 +1,12 @@
 'use strict';
 
-var
+const
   should = require('should'),
   sinon = require('sinon'),
   DSL = require('../../../../lib/api/dsl');
 
 describe('DSL.keyword.missing', () => {
-  var dsl;
+  let dsl;
 
   beforeEach(() => {
     dsl = new DSL();
@@ -14,7 +14,7 @@ describe('DSL.keyword.missing', () => {
 
   describe('#standardization', () => {
     it('should return a "not exists" condition', () => {
-      let spy = sinon.spy(dsl.transformer.standardizer.dsl, 'exists');
+      let spy = sinon.spy(dsl.transformer.standardizer, 'exists');
 
       return dsl.transformer.standardizer.standardize({missing: {field: 'foo'}})
         .then(result => {
