@@ -1,6 +1,27 @@
+/*
+ * Kuzzle, a backend software, self-hostable and ready to use
+ * to power modern apps
+ *
+ * Copyright 2015-2017 Kuzzle
+ * mailto: support AT kuzzle.io
+ * website: http://kuzzle.io
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 /* eslint-disable no-console */
 
-var
+const
   rc = require('rc'),
   params = rc('kuzzle'),
   Kuzzle = require('../../lib/api/kuzzle'),
@@ -8,30 +29,25 @@ var
   clc = require('cli-color');
 
 function commandClearCache (database, options) {
-  var
-    error,
-    warn,
-    notice,
-    ok,
-    question,
-    userIsSure = false,
-    data = {},
-    kuzzle = new Kuzzle();
+  let
+    opts = options,
+    db = database,
+    userIsSure;
 
   if (options === undefined) {
-    options = database;
-    database = null;
+    opts = database;
+    db = null;
   }
 
-  data.database = database;
+  const data = {database: db};
 
-  error = string => options.parent.noColors ? string : clc.red(string);
-  warn = string => options.parent.noColors ? string : clc.yellow(string);
-  notice = string => options.parent.noColors ? string : clc.cyanBright(string);
-  ok = string => options.parent.noColors ? string: clc.green.bold(string);
-  question = string => options.parent.noColors ? string : clc.whiteBright(string);
+  const error = string => opts.parent.noColors ? string : clc.red(string);
+  const warn = string => opts.parent.noColors ? string : clc.yellow(string);
+  const notice = string => opts.parent.noColors ? string : clc.cyanBright(string);
+  const ok = string => opts.parent.noColors ? string: clc.green.bold(string);
+  const question = string => opts.parent.noColors ? string : clc.whiteBright(string);
 
-  if (database === 'memoryStorage') {
+  if (db === 'memoryStorage') {
     console.log(warn('[ℹ] You are about to clear Kuzzle memoryStorage database.'));
     console.log(warn('[ℹ] This operation cannot be undone.\n'));
     userIsSure = params.noint || readlineSync.question('[❓] Are you sure? If so, please type "I am sure" (if not just press [Enter]): ') === 'I am sure';
@@ -40,14 +56,16 @@ function commandClearCache (database, options) {
   }
 
   if (userIsSure) {
+    const kuzzle = new Kuzzle();
+
     console.log(notice('[ℹ] Processing...\n'));
-    return kuzzle.cli.do('clearCache', data)
+    return kuzzle.cli.doAction('clearCache', data)
       .then(() => {
         console.log(ok('[✔] Done!'));
         process.exit(0);
       })
       .catch(err => {
-        console.log(error('[✖]', err));
+        console.log(error(`[✖] ${err}`));
         process.exit(1);
       });
   }
