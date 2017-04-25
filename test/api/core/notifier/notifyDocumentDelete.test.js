@@ -1,16 +1,16 @@
 'use strict';
 
-var
+const
   should = require('should'),
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
-  Promise = require('bluebird'),
+  Bluebird = require('bluebird'),
   Request = require('kuzzle-common-objects').Request,
   Kuzzle = require('../../../mocks/kuzzle.mock'),
   Notifier = require.main.require('lib/api/core/notifier');
 
 describe('Test: notifier.notifyDocumentDelete', () => {
-  var
+  let
     kuzzle,
     request,
     notification,
@@ -19,15 +19,15 @@ describe('Test: notifier.notifyDocumentDelete', () => {
 
       remove: function (id) {
         this.id = id;
-        return Promise.resolve({});
+        return Bluebird.resolve({});
       },
 
       search: function (id) {
         if (id === 'errorme') {
-          return Promise.reject(new Error());
+          return Bluebird.reject(new Error());
         }
 
-        return Promise.resolve(['']);
+        return Bluebird.resolve(['']);
       }
     },
     notifier;
@@ -38,7 +38,7 @@ describe('Test: notifier.notifyDocumentDelete', () => {
   });
 
   beforeEach(() => {
-    kuzzle.internalEngine.get.returns(Promise.resolve({}));
+    kuzzle.internalEngine.get.returns(Bluebird.resolve({}));
     return kuzzle.services.init({whitelist: []})
       .then(() => {
         kuzzle.services.list.internalCache = mockupCacheService;
