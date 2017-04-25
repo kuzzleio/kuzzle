@@ -191,7 +191,7 @@ module.exports = {
   },
 
   dump: {
-    enabled: true,
+    enabled: false,
     history: {
       coredump: 3,
       reports: 5
