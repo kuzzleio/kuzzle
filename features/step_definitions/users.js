@@ -129,7 +129,7 @@ module.exports = function () {
   });
 
   this.Then(/^I delete the user "(.*?)"$/, function (id) {
-    return this.api.deleteUser(this.idPrefix + id)
+    return this.api.deleteUser(this.idPrefix + id, true)
       .then(body => {
         if (body.error) {
           throw new Error(body.error.message);
