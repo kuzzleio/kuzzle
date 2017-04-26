@@ -317,9 +317,11 @@ describe('Test the auth controller', () => {
             should(methodStub.firstCall.args[0]).be.eql(request);
             should(methodStub.firstCall.args[1]).be.deepEqual({some: 'credentials'});
             should(methodStub.firstCall.args[2]).be.eql('someUserId');
+            should(methodStub.firstCall.args[3]).be.eql('someStrategy');
             should(methodStub.secondCall.args[0]).be.eql(request);
             should(methodStub.secondCall.args[1]).be.deepEqual({some: 'credentials'});
             should(methodStub.secondCall.args[2]).be.eql('someUserId');
+            should(methodStub.secondCall.args[3]).be.eql('someStrategy');
           });
       });
     });
@@ -354,9 +356,11 @@ describe('Test the auth controller', () => {
             should(methodStub.firstCall.args[0]).be.eql(request);
             should(methodStub.firstCall.args[1]).be.deepEqual({some: 'credentials'});
             should(methodStub.firstCall.args[2]).be.eql('someUserId');
+            should(methodStub.firstCall.args[3]).be.eql('someStrategy');
             should(methodStub.secondCall.args[0]).be.eql(request);
             should(methodStub.secondCall.args[1]).be.deepEqual({some: 'credentials'});
             should(methodStub.secondCall.args[2]).be.eql('someUserId');
+            should(methodStub.secondCall.args[3]).be.eql('someStrategy');
           });
       });
     });
@@ -385,6 +389,7 @@ describe('Test the auth controller', () => {
             should(methodStub).be.calledOnce();
             should(methodStub.firstCall.args[0]).be.eql(request);
             should(methodStub.firstCall.args[1]).be.eql('someUserId');
+            should(methodStub.firstCall.args[2]).be.eql('someStrategy');
           });
       });
     });
@@ -417,6 +422,7 @@ describe('Test the auth controller', () => {
             should(methodStub.firstCall.args[0]).be.eql(request);
             should(methodStub.firstCall.args[1]).be.deepEqual({some: 'credentials'});
             should(methodStub.firstCall.args[2]).be.eql('someUserId');
+            should(methodStub.firstCall.args[3]).be.eql('someStrategy');
           });
       });
     });
@@ -445,6 +451,7 @@ describe('Test the auth controller', () => {
             should(methodStub).be.calledOnce();
             should(methodStub.firstCall.args[0]).be.eql(request);
             should(methodStub.firstCall.args[1]).be.eql('someUserId');
+            should(methodStub.firstCall.args[2]).be.eql('someStrategy');
           });
       });
     });
@@ -477,6 +484,7 @@ describe('Test the auth controller', () => {
             should(methodStub).be.calledOnce();
             should(methodStub.firstCall.args[0]).be.eql(request);
             should(methodStub.firstCall.args[1]).be.eql('someUserId');
+            should(methodStub.firstCall.args[2]).be.eql('someStrategy');
           });
       });
 

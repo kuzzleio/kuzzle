@@ -35,7 +35,7 @@ module.exports = {
       workerPrefix: 'kpw:',
       pipeWarnTime: 40,
       pipeTimeout: 250,
-      initTimeout: 2000,
+      initTimeout: 10000,
     },
     'kuzzle-plugin-logger': {
       threads: 1
@@ -167,7 +167,7 @@ module.exports = {
       backend: 'elasticsearch',
       host: 'localhost',
       port: 9200,
-      apiVersion: '5.0',
+      apiVersion: '5.x',
       defaults: {
         onUpdateConflictRetries: 0,
         scrollTTL: '15s'
