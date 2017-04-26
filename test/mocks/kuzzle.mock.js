@@ -73,9 +73,10 @@ function KuzzleMock () {
       }
     },
     init: sinon.spy(),
-    getRequestSlot: sinon.stub().yields(null),
+    getRequestSlot: sinon.stub().returns(true),
     handleErrorDump: sinon.spy(),
     execute: sinon.spy(),
+    mExecute: sinon.stub(),
     processRequest: sinon.stub().returns(Promise.resolve()),
     checkRights: sinon.stub(),
     getEventName: sinon.spy()
