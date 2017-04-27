@@ -13,9 +13,7 @@
     "functional-testing": "npm run cucumber",
     "cucumber": "cucumber.js --fail-fast",
     "codecov": "codecov",
-    "lint": "eslint --max-warnings=0 ./lib ./bin ./test ./features",
-    "preversion": "git checkout master && git pull",
-    "postversion": "git push && git push --tags"
+    "lint": "eslint --max-warnings=0 ./lib ./bin ./test ./features"
   },
   "directories": {
     "lib": "lib"
