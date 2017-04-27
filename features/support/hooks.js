@@ -155,65 +155,32 @@ function cleanSecurity (callback) {
     delete this.currentUser;
   }
 
-  this.api.listIndexes()
-    .then(() => {
-      return this.api.refreshInternalIndex();
-    })
-    .then(() => {
-      return this.api.searchUsers({
-        match_all: {}
-      }, {from: 0, size: 999});
-    })
+  return this.api.refreshInternalIndex()
+    .then(() => this.api.searchUsers({match_all: {}}, {from: 0, size: 999}))
     .then(results => {
       const regex = new RegExp('^' + this.idPrefix);
+      results = results.result.hits
+        .filter(r => r._id.match(regex))
+        .map(r => r._id);
 
-      results = results.result.hits.filter(r => r._id.match(regex)).map(r => r._id);
-
-      return results.length > 0 ? this.api.deleteUsers(results, true) : Promise.resolve()
-        .catch(() => {
-          // discard errors
-          return Promise.resolve();
-        });
+      return results.length > 0 ? this.api.deleteUsers(results, true) : Promise.resolve();
     })
-    .then(() => {
-      return this.api.searchProfiles({
-        match_all: {}
-      }, {
-        from: 0,
-        size: 999
-      });
-    })
+    .then(() => this.api.searchProfiles({match_all: {}}, {from: 0, size: 999}))
     .then(results => {
       const regex = new RegExp('^' + this.idPrefix);
-
       results = results.result.hits.filter(r => r._id.match(regex)).map(r => r._id);
 
-      return results.length > 0 ? this.api.deleteProfiles(results, true) : Promise.resolve()
-        .catch(() => {
-          // discard errors
-          return Promise.resolve();
-        });
+      return results.length > 0 ? this.api.deleteProfiles(results, true) : Promise.resolve();
     })
-    .then(() => {
-      return this.api.searchRoles({});
-    })
+    .then(() => this.api.searchRoles({match_all: {}}, {from: 0, size: 999}))
     .then(results => {
       const regex = new RegExp('^' + this.idPrefix);
-
       results = results.result.hits.filter(r => r._id.match(regex)).map(r => r._id);
 
-      return results.length > 0 ? this.api.deleteRoles(results, true) : Promise.resolve()
-        .catch(() => {
-          // discard errors
-          return Promise.resolve();
-        });
+      return results.length > 0 ? this.api.deleteRoles(results, true) : Promise.resolve();
     })
-    .then(() => {
-      callback();
-    })
-    .catch(error => {
-      callback(error.message ? error.message : error);
-    });
+    .then(() => callback(null))
+    .catch(callback);
 }
 
 function cleanRedis(callback) {
