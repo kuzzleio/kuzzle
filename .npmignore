@@ -11,6 +11,8 @@ ssl
 nbproject
 .git
 .gitignore
+.sonar
+sonar-project.properties
 .tmp
 .jshintrc
 .editorconfig

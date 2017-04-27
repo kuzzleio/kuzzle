@@ -34,6 +34,10 @@ docker-compose-custom.yml
 #swagger
 kuzzle-swagger.*
 
+#sonarqube
+.sonar
+.scannerwork
+
 #plugins
 plugins/available/*
 !plugins/available/kuzzle-plugin-auth-passport-local

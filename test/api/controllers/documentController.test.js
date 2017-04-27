@@ -1,6 +1,6 @@
 'use strict';
 
-var
+const
   should = require('should'),
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
@@ -8,6 +8,7 @@ var
   KuzzleMock = require('../../mocks/kuzzle.mock'),
   Request = require('kuzzle-common-objects').Request,
   DocumentController = require('../../../lib/api/controllers/documentController'),
+  FunnelController = require('../../../lib/api/controllers/funnelController'),
   foo = {foo: 'bar'},
   InternalError = require('kuzzle-common-objects').errors.InternalError,
   ServiceUnavailableError = require('kuzzle-common-objects').errors.ServiceUnavailableError,
@@ -15,8 +16,9 @@ var
   PartialError = require('kuzzle-common-objects').errors.PartialError;
 
 describe('Test: document controller', () => {
-  var
+  let
     documentController,
+    funnelController,
     kuzzle,
     request,
     engine;
@@ -25,6 +27,7 @@ describe('Test: document controller', () => {
     kuzzle = new KuzzleMock();
     engine = kuzzle.services.list.storageEngine;
     documentController = new DocumentController(kuzzle);
+    funnelController = new FunnelController(kuzzle);
     request = new Request({index: '%test', collection: 'unit-test-documentController'});
   });
 
@@ -239,11 +242,7 @@ describe('Test: document controller', () => {
 
   describe('#doMultipleActions', () => {
     it('mCreate should fulfill with an object', () => {
-      kuzzle.funnel.processRequest = sandbox.spy(function () {
-        arguments[0].setResult({result: 'created'});
-
-        return Promise.resolve(arguments[0]);
-      });
+      kuzzle.funnel.mExecute.yields(null, {result: 'created'});
 
       request.input.body = {
         documents: [
@@ -254,22 +253,14 @@ describe('Test: document controller', () => {
 
       return documentController.mCreate(request)
         .then(result => {
-          should(result).match({hits: [{result: 'created'}, {result: 'created'}], total: 2});
+          should(result).match({hits: ['created', 'created'], total: 2});
         });
     });
 
     it('mCreate should set a partial error if one of the action fails', () => {
-      let callCount = 0;
-      kuzzle.funnel.processRequest = sandbox.spy(function () {
-        if (callCount > 0) {
-          return Promise.reject(new InternalError('some error'));
-        }
-
-        arguments[0].setResult({result: 'created'});
-        callCount++;
-
-        return Promise.resolve(arguments[0]);
-      });
+      kuzzle.funnel.mExecute.yields(null, {error: new InternalError('some error')});
+      kuzzle.funnel.mExecute
+        .onFirstCall().yields(null, {result: 'created'});
 
       request.input.body = {
         documents: [
@@ -280,7 +271,7 @@ describe('Test: document controller', () => {
 
       return documentController.mCreate(request)
         .then(result => {
-          should(result).match({hits: [{result: 'created'}], total: 1});
+          should(result).match({hits: ['created'], total: 1});
           should(request.error).be.instanceOf(PartialError);
           should(request.status).be.eql(206);
         });
@@ -312,13 +303,17 @@ describe('Test: document controller', () => {
     });
 
     it('mCreate should return a rejected promise if Kuzzle is overloaded', () => {
-      kuzzle.funnel.processRequest = sandbox.spy(function () {
-        arguments[0].setResult({result: 'updated'});
+      kuzzle.funnel.mExecute = funnelController.mExecute.bind(kuzzle.funnel);
+      kuzzle.funnel.processRequest.returns(Promise.resolve({result: 'updated'}));
 
-        return Promise.resolve(arguments[0]);
-      });
-
-      kuzzle.funnel.getRequestSlot.onSecondCall().yields(new ServiceUnavailableError('overloaded'));
+      let callCount = 0;
+      kuzzle.funnel.getRequestSlot = req => {
+        if (callCount++ > 0) {
+          req.setError(new ServiceUnavailableError('overloaded'));
+          return false;
+        }
+        return true;
+      };
 
       request.input.body = {
         documents: [
@@ -336,11 +331,7 @@ describe('Test: document controller', () => {
     });
 
     it('mCreateOrReplace should fulfill with an object', () => {
-      kuzzle.funnel.processRequest = sandbox.spy(function () {
-        arguments[0].setResult({result: 'updated'});
-
-        return Promise.resolve(arguments[0]);
-      });
+      kuzzle.funnel.mExecute.yields(null, {result: 'updated'});
 
       request.input.body = {
         documents: [
@@ -351,18 +342,22 @@ describe('Test: document controller', () => {
 
       return documentController.mCreateOrReplace(request)
         .then(result => {
-          should(result).match({hits: [{result: 'updated'}, {result: 'updated'}], total: 2});
+          should(result).match({hits: ['updated', 'updated'], total: 2});
         });
     });
 
     it('mCreateOrReplace should return a rejected promise if Kuzzle is overloaded', () => {
-      kuzzle.funnel.processRequest = sandbox.spy(function () {
-        arguments[0].setResult({result: 'updated'});
+      kuzzle.funnel.mExecute = funnelController.mExecute.bind(kuzzle.funnel);
+      kuzzle.funnel.processRequest.returns(Promise.resolve({result: 'updated'}));
 
-        return Promise.resolve(arguments[0]);
-      });
-
-      kuzzle.funnel.getRequestSlot.onSecondCall().yields(new ServiceUnavailableError('overloaded'));
+      let callCount = 0;
+      kuzzle.funnel.getRequestSlot = req => {
+        if (callCount++ > 0) {
+          req.setError(new ServiceUnavailableError('overloaded'));
+          return false;
+        }
+        return true;
+      };
 
       request.input.body = {
         documents: [
@@ -395,11 +390,7 @@ describe('Test: document controller', () => {
     });
 
     it('mUpdate should fulfill with an object', () => {
-      kuzzle.funnel.processRequest = sandbox.spy(function () {
-        arguments[0].setResult({result: 'updated'});
-
-        return Promise.resolve(arguments[0]);
-      });
+      kuzzle.funnel.mExecute.yields(null, {result: 'updated'});
 
       request.input.body = {
         documents: [
@@ -410,18 +401,23 @@ describe('Test: document controller', () => {
 
       return documentController.mUpdate(request)
         .then(result => {
-          should(result).match({hits: [{result: 'updated'}, {result: 'updated'}], total: 2});
+          should(result).match({hits: ['updated', 'updated'], total: 2});
         });
     });
 
     it('mUpdate should return a rejected promise if Kuzzle is overloaded', () => {
-      kuzzle.funnel.processRequest = sandbox.spy(function () {
-        arguments[0].setResult({result: 'updated'});
+      kuzzle.funnel.mExecute = funnelController.mExecute.bind(kuzzle.funnel);
+      kuzzle.funnel.processRequest.returns(Promise.resolve({result: 'updated'}));
 
-        return Promise.resolve(arguments[0]);
-      });
+      let callCount = 0;
+      kuzzle.funnel.getRequestSlot = req => {
+        if (callCount++ > 0) {
+          req.setError(new ServiceUnavailableError('overloaded'));
+          return false;
+        }
 
-      kuzzle.funnel.getRequestSlot.onSecondCall().yields(new ServiceUnavailableError('overloaded'));
+        return true;
+      };
 
       request.input.body = {
         documents: [
@@ -454,11 +450,7 @@ describe('Test: document controller', () => {
     });
 
     it('mReplace should fulfill with an object', () => {
-      kuzzle.funnel.processRequest = sandbox.spy(function () {
-        arguments[0].setResult({result: 'updated'});
-
-        return Promise.resolve(arguments[0]);
-      });
+      kuzzle.funnel.mExecute.yields(null, {result: 'updated'});
 
       request.input.body = {
         documents: [
@@ -469,18 +461,23 @@ describe('Test: document controller', () => {
 
       return documentController.mReplace(request)
         .then(result => {
-          should(result).match({hits: [{result: 'updated'}, {result: 'updated'}], total: 2});
+          should(result).match({hits: ['updated', 'updated'], total: 2});
         });
     });
 
     it('mReplace should return a rejected promise if Kuzzle is overloaded', () => {
-      kuzzle.funnel.processRequest = sandbox.spy(function () {
-        arguments[0].setResult({result: 'updated'});
+      kuzzle.funnel.mExecute = funnelController.mExecute.bind(kuzzle.funnel);
+      kuzzle.funnel.processRequest.returns(Promise.resolve({result: 'updated'}));
 
-        return Promise.resolve(arguments[0]);
-      });
+      let callCount = 0;
+      kuzzle.funnel.getRequestSlot = req => {
+        if (callCount++ > 0) {
+          req.setError(new ServiceUnavailableError('overloaded'));
+          return false;
+        }
 
-      kuzzle.funnel.getRequestSlot.onSecondCall().yields(new ServiceUnavailableError('overloaded'));
+        return true;
+      };
 
       request.input.body = {
         documents: [
@@ -699,11 +696,13 @@ describe('Test: document controller', () => {
 
   describe('#mDelete', () => {
     it('should fulfill with an object', () => {
-      kuzzle.funnel.processRequest = sandbox.spy(function () {
-        arguments[0].setResult({result: 'deleted'});
-
-        return Promise.resolve(arguments[0]);
-      });
+      kuzzle.funnel.mExecute
+        .onFirstCall().yields(null, new Request({
+          _id: 'documentId'
+        }))
+        .onSecondCall().yields(null, new Request({
+          _id: 'anotherDocumentId'
+        }));
 
       request.input.body = {ids: ['documentId', 'anotherDocumentId']};
 
@@ -714,17 +713,13 @@ describe('Test: document controller', () => {
     });
 
     it('should set a partial error if one of the action fails', () => {
-      let callCount = 0;
-      kuzzle.funnel.processRequest = sandbox.spy(function () {
-        if (callCount > 0) {
-          return Promise.reject(new InternalError('some error'));
-        }
-
-        arguments[0].setResult({result: 'deleted'});
-        callCount++;
-
-        return Promise.resolve(arguments[0]);
-      });
+      kuzzle.funnel.mExecute
+        .onFirstCall().yields(null, new Request({_id: 'documentId'}))
+        .onSecondCall().yields(null, (() => {
+          const req = new Request({_id: 'anotherDocumentId'});
+          req.setError(new InternalError('some error'));
+          return req;
+        })());
 
       request.input.body = {ids: ['documentId', 'anotherDocumentId']};
 
@@ -747,14 +742,20 @@ describe('Test: document controller', () => {
     });
 
     it('should return a rejected promise if Kuzzle is overloaded', () => {
-      kuzzle.funnel.processRequest = sandbox.spy(function () {
-        arguments[0].setResult({result: 'deleted'});
+      kuzzle.funnel.mExecute = funnelController.mExecute.bind(kuzzle.funnel);
+      kuzzle.funnel.processRequest = req => Promise.resolve(req);
 
-        return Promise.resolve(arguments[0]);
-      });
+      let callCount = 0;
+      kuzzle.funnel.getRequestSlot = req => {
+        if (callCount++ > 0) {
+          req.setError(new ServiceUnavailableError('overloaded'));
+          return false;
+        }
+
+        return true;
+      };
 
       request.input.body = {ids: ['documentId', 'anotherDocumentId']};
-      kuzzle.funnel.getRequestSlot.onSecondCall().yields(new ServiceUnavailableError('overloaded'));
 
       return documentController.mDelete(request)
         .then(result => {

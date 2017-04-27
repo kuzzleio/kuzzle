@@ -1,13 +1,13 @@
-var
-  BaseType = require('../../../../../lib/api/core/validation/baseType'),
+const
+  NumericType = require('../../../../../lib/api/core/validation/types/numeric'),
   IntegerType = require('../../../../../lib/api/core/validation/types/integer'),
   should = require('should');
 
 describe('Test: validation/types/integer', () => {
-  var integerType = new IntegerType();
+  const integerType = new IntegerType();
 
-  it('should derivate from BaseType', () => {
-    should(BaseType.prototype.isPrototypeOf(integerType)).be.true();
+  it('should derivate from NumericType', () => {
+    should(NumericType.prototype.isPrototypeOf(integerType)).be.true();
   });
 
   it('should construct properly', () => {
@@ -24,7 +24,7 @@ describe('Test: validation/types/integer', () => {
   });
 
   describe('#validate', () => {
-    var
+    const
       emptyTypeOptions = {},
       rangeTypeOptions = {
         range: {
@@ -42,28 +42,28 @@ describe('Test: validation/types/integer', () => {
     });
 
     it('should return false if fieldValue is not a number', () => {
-      var errorMessages = [];
+      const errorMessages = [];
 
       should(integerType.validate(emptyTypeOptions, 'a string', errorMessages)).be.false();
-      should(errorMessages).be.deepEqual(['The field must be an integer.']);
+      should(errorMessages).be.deepEqual(['The field must be a number.']);
     });
 
     it('should return false if fieldValue is not an integer', () => {
-      var errorMessages = [];
+      const errorMessages = [];
 
       should(integerType.validate(emptyTypeOptions, 42.42, errorMessages)).be.false();
       should(errorMessages).be.deepEqual(['The field must be an integer.']);
     });
 
     it('should return false if fieldValue is below min', () => {
-      var errorMessages = [];
+      const errorMessages = [];
 
       should(integerType.validate(rangeTypeOptions, 40, errorMessages)).be.false();
       should(errorMessages).be.deepEqual(['The value is lesser than the minimum.']);
     });
 
     it('should return false if fieldValue is above max', () => {
-      var errorMessages = [];
+      const errorMessages = [];
 
       should(integerType.validate(rangeTypeOptions, 43, errorMessages)).be.false();
       should(errorMessages).be.deepEqual(['The value is greater than the maximum.']);
