@@ -137,6 +137,13 @@ Feature: Test HTTP API
     Then I count 2 documents
 
   @usingHttp
+  Scenario: Checking that documents exist or not
+    When I write the document with id "documentGrace"
+    Then I check that the document "documentGrace" exists
+    Then I remove the document
+    Then I check that the document "documentGrace" doesn't exists
+
+  @usingHttp
   Scenario: get multiple documents
     When I create multiple documents '{"Ada": "documentAda", "Grace": "documentGrace"}'
     Then I count 2 documents

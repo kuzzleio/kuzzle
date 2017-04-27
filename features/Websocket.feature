@@ -148,6 +148,13 @@ Feature: Test websocket API
     Then I truncate the collection
     And I count 0 documents
 
+  @usingHttp
+  Scenario: Checking that documents exist or not
+    When I write the document with id "documentGrace"
+    Then I check that the document "documentGrace" exists
+    Then I remove the document
+    Then I check that the document "documentGrace" doesn't exists
+
   @usingWebsocket
   Scenario: get multiple documents
     When I create multiple documents '{"Ada": "documentAda", "Grace": "documentGrace"}'

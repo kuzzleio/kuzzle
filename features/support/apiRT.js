@@ -134,6 +134,19 @@ ApiRT.prototype.mReplace = function (body, index, collection) {
   return this.send(msg);
 };
 
+ApiRT.prototype.exists = function (id, index) {
+  const
+    msg = {
+      controller: 'document',
+      collection: this.world.fakeCollection,
+      index: index || this.world.fakeIndex,
+      action: 'get',
+      _id: id
+    };
+
+  return this.send(msg);
+};
+
 ApiRT.prototype.get = function (id, index) {
   const
     msg = {
