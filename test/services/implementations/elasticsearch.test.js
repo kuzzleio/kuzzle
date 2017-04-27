@@ -350,7 +350,7 @@ describe.only('Test: ElasticSearch service', () => {
       elasticsearch.client.index.returns(Bluebird.resolve({}));
 
       return should(elasticsearch.create(request)).be.rejectedWith(PreconditionError);
-    })
+    });
   });
 
   describe('#createOrReplace', () => {
