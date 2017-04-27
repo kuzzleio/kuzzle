@@ -7,14 +7,17 @@ const
   rewire = require('rewire'),
   KuzzleMock = require('../../mocks/kuzzle.mock'),
   Request = require('kuzzle-common-objects').Request,
-  BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,
-  NotFoundError = require('kuzzle-common-objects').errors.NotFoundError,
-  KuzzleError = require('kuzzle-common-objects').errors.KuzzleError,
-  ExternalServiceError = require('kuzzle-common-objects').errors.ExternalServiceError,
+  {
+    BadRequestError,
+    NotFoundError,
+    KuzzleError,
+    ExternalServiceError,
+    PreconditionError
+  } = require('kuzzle-common-objects').errors,
   ESClientMock = require('../../mocks/services/elasticsearchClient.mock'),
   ES = rewire('../../../lib/services/elasticsearch');
 
-describe('Test: ElasticSearch service', () => {
+describe.only('Test: ElasticSearch service', () => {
   let
     kuzzle = {},
     sandbox = sinon.sandbox.create(),
@@ -248,6 +251,7 @@ describe('Test: ElasticSearch service', () => {
   describe('#create', () => {
     it('should allow creating documents if the document does not already exists', () => {
       sandbox.stub(elasticsearch, 'refreshIndex').returns(Bluebird.resolve());
+      elasticsearch.kuzzle.indexCache.exists.returns(true);
       elasticsearch.client.index.returns(Bluebird.resolve({}));
 
       elasticsearch.settings.autoRefresh[request.input.resource.index] = true;
@@ -272,6 +276,7 @@ describe('Test: ElasticSearch service', () => {
       const
         refreshIndexSpy = sandbox.spy(elasticsearch, 'refreshIndexIfNeeded');
 
+      elasticsearch.kuzzle.indexCache.exists.returns(true);
       elasticsearch.client.index.returns(Bluebird.resolve({}));
       elasticsearch.client.get.returns(Bluebird.resolve({_source: {_kuzzle_info: {active: false}}}));
       request.input.resource._id = '42';
@@ -293,6 +298,7 @@ describe('Test: ElasticSearch service', () => {
         error = new Error('Mocked error'),
         refreshIndexSpy = sandbox.spy(elasticsearch, 'refreshIndexIfNeeded');
 
+      elasticsearch.kuzzle.indexCache.exists.returns(true);
       elasticsearch.client.create.returns(Bluebird.resolve({}));
       error.displayName = 'NotFound';
 
@@ -314,6 +320,7 @@ describe('Test: ElasticSearch service', () => {
     it('should reject the create promise if elasticsearch throws an error', () => {
       const error = new Error('Mocked create error');
       elasticsearch.client.get.returns(Bluebird.reject(new Error('Mocked get error')));
+      elasticsearch.kuzzle.indexCache.exists.returns(true);
 
       request.input.resource._id = 'foobar';
 
@@ -322,6 +329,7 @@ describe('Test: ElasticSearch service', () => {
 
     it('should reject the create promise if client.index throws an error', () => {
       const error = new Error('Mocked index error');
+      elasticsearch.kuzzle.indexCache.exists.returns(true);
       elasticsearch.client.get.returns(Bluebird.resolve({_source: {_kuzzle_info: {active: false}}}));
       elasticsearch.client.index.returns(Bluebird.reject(error));
       request.input.resource._id = '42';
@@ -330,16 +338,25 @@ describe('Test: ElasticSearch service', () => {
     });
 
     it('should reject a promise if the document already exists', () => {
+      elasticsearch.kuzzle.indexCache.exists.returns(true);
       elasticsearch.client.get.returns(Bluebird.resolve({_source: {_kuzzle_info: {active: true}}}));
       request.input.resource._id = '42';
 
       return should(elasticsearch.create(request)).be.rejectedWith(BadRequestError);
     });
+
+    it('should reject if index or collection don\'t exist', () => {
+      elasticsearch.kuzzle.indexCache.exists.returns(false);
+      elasticsearch.client.index.returns(Bluebird.resolve({}));
+
+      return should(elasticsearch.create(request)).be.rejectedWith(PreconditionError);
+    })
   });
 
   describe('#createOrReplace', () => {
     it('should support createOrReplace capability', () => {
       const refreshIndexSpy = sandbox.spy(elasticsearch, 'refreshIndexIfNeeded');
+      elasticsearch.kuzzle.indexCache.exists.returns(true);
 
       elasticsearch.client.index.returns(Bluebird.resolve({}));
       request.input.resource._id = createdDocumentId;
@@ -360,10 +377,20 @@ describe('Test: ElasticSearch service', () => {
     it('should reject the createOrReplace promise if elasticsearch throws an error', () => {
       const error = new Error('Mocked error');
 
+      elasticsearch.kuzzle.indexCache.exists.returns(true);
       elasticsearch.client.index.returns(Bluebird.reject(error));
 
       request.input.resource._id = createdDocumentId;
       return should(elasticsearch.createOrReplace(request)).be.rejectedWith(error);
+    });
+
+    it('should reject if index or collection don\'t exist', () => {
+      elasticsearch.kuzzle.indexCache.exists.returns(false);
+
+      elasticsearch.client.index.returns(Bluebird.resolve({}));
+      request.input.resource._id = createdDocumentId;
+
+      return should(elasticsearch.createOrReplace(request)).be.rejectedWith(PreconditionError);
     });
   });
 
@@ -373,6 +400,7 @@ describe('Test: ElasticSearch service', () => {
 
       elasticsearch.client.index.returns(Bluebird.resolve({}));
       elasticsearch.client.exists.returns(Bluebird.resolve(true));
+      elasticsearch.kuzzle.indexCache.exists.returns(true);
 
       request.input.resource._id = createdDocumentId;
 
@@ -394,28 +422,41 @@ describe('Test: ElasticSearch service', () => {
 
       elasticsearch.client.exists.returns(Bluebird.resolve(true));
       elasticsearch.client.index.returns(Bluebird.reject(error));
+      elasticsearch.kuzzle.indexCache.exists.returns(true);
 
       request.input.resource._id = createdDocumentId;
 
       return should(elasticsearch.replace(request)).be.rejectedWith(error);
     });
 
-    it('should throw a NotFoundError Exception if document already exists', done => {
+    it('should reject if index or collection don\'t exist', () => {
       elasticsearch.client.exists.returns(Bluebird.resolve(false));
+      elasticsearch.kuzzle.indexCache.exists.returns(false);
 
-      kuzzle.indexes = {};
       request.input.resource._id = createdDocumentId;
 
-      elasticsearch.replace(request)
-        .catch(err => {
-          try {
-            should(err).be.an.instanceOf(NotFoundError);
-            should(err.message).be.exactly(`Document with id "${request.input.resource._id}" not found.`);
-            should(elasticsearch.client.index.called).be.false();
+      return should(elasticsearch.replace(request)).be.rejectedWith(PreconditionError);
+    });
 
-            done();
-          }
-          catch(e) { done(e); }
+    it('should support replace capability', () => {
+      const refreshIndexSpy = sandbox.spy(elasticsearch, 'refreshIndexIfNeeded');
+
+      elasticsearch.client.index.returns(Bluebird.resolve({}));
+      elasticsearch.client.exists.returns(Bluebird.resolve(true));
+      elasticsearch.kuzzle.indexCache.exists.returns(true);
+
+      request.input.resource._id = createdDocumentId;
+
+      return elasticsearch.replace(request)
+        .then(() => {
+          const data = elasticsearch.client.index.firstCall.args[0];
+
+          should(data.index).be.exactly(index);
+          should(data.type).be.exactly(collection);
+          should(data.body).be.exactly(documentAda);
+          should(data.id).be.exactly(createdDocumentId);
+
+          should(refreshIndexSpy.calledOnce).be.true();
         });
     });
   });
@@ -880,6 +921,7 @@ describe('Test: ElasticSearch service', () => {
       const
         refreshIndexSpy = sandbox.spy(elasticsearch, 'refreshIndexIfNeeded');
 
+      elasticsearch.kuzzle.indexCache.exists.returns(true);
       elasticsearch.client.bulk.returns(Bluebird.resolve({}));
 
       request.input.body = {
@@ -934,6 +976,7 @@ describe('Test: ElasticSearch service', () => {
     });
 
     it('should raise a "Partial Error" response for bulk data import with some errors', () => {
+      elasticsearch.kuzzle.indexCache.exists.returns(true);
       elasticsearch.client.bulk.returns(Bluebird.resolve({
         errors: true,
         items: {
@@ -965,6 +1008,7 @@ describe('Test: ElasticSearch service', () => {
     });
 
     it('should override the type with the collection if one has been specified in the request', () => {
+      elasticsearch.kuzzle.indexCache.exists.returns(true);
       elasticsearch.client.bulk.returns(Bluebird.resolve({
         items: [
           {index: {_id: 1, _index: index, _type: collection}},
@@ -1005,6 +1049,7 @@ describe('Test: ElasticSearch service', () => {
 
     it('should reject the import promise if elasticsearch throws an error', () => {
       const error = new Error('Mocked error');
+      elasticsearch.kuzzle.indexCache.exists.returns(true);
 
       request.input.body = {
         bulkData: [
@@ -1024,6 +1069,7 @@ describe('Test: ElasticSearch service', () => {
     });
 
     it('should return a rejected promise if bulk data try to write into internal index', () => {
+      elasticsearch.kuzzle.indexCache.exists.returns(true);
       request.input.body = {
         bulkData: [
           {index: {_id: 1, _index: index}},
@@ -1042,11 +1088,13 @@ describe('Test: ElasticSearch service', () => {
     });
 
     it('should return a rejected promise if body contains no bulkData parameter', () => {
+      elasticsearch.kuzzle.indexCache.exists.returns(true);
       request.input.body.bulkData = null;
       return should(elasticsearch.import(request)).be.rejectedWith(BadRequestError);
     });
 
     it('should return a rejected promise if no type has been provided, locally or globally', () => {
+      elasticsearch.kuzzle.indexCache.exists.returns(true);
       request.input.resource.collection = null;
 
       request.input.body = {
@@ -1067,6 +1115,7 @@ describe('Test: ElasticSearch service', () => {
     });
 
     it('should return a rejected promise if no index has been provided, locally or globally', () => {
+      elasticsearch.kuzzle.indexCache.exists.returns(true);
       request.input.resource.index = null;
 
       request.input.body = {
@@ -1084,6 +1133,24 @@ describe('Test: ElasticSearch service', () => {
       elasticsearch.client.bulk.returns(Bluebird.resolve({}));
 
       return should(elasticsearch.import(request)).be.rejected();
+    });
+
+    it('should rejected if index and/or collection don\'t exist', () => {
+      elasticsearch.kuzzle.indexCache.exists.returns(false);
+      request.input.resource.index = null;
+
+      request.input.body = {
+        bulkData: [
+          {index: {_id: 1, _type: collection, _index: index}},
+          {firstName: 'foo'},
+          {index: {_id: 2, _type: collection, _index: index}},
+          {firstName: 'bar'},
+        ]
+      };
+
+      elasticsearch.client.bulk.returns(Bluebird.resolve({}));
+
+      return should(elasticsearch.import(request)).be.rejectedWith(PreconditionError);
     });
   });
 
@@ -1256,6 +1323,7 @@ describe('Test: ElasticSearch service', () => {
   describe('#createCollection', () => {
     it('should allow creating a new collection', () => {
       elasticsearch.client.indices.putMapping.returns(Bluebird.resolve({}));
+      elasticsearch.kuzzle.indexCache.exists.returns(true);
 
       request.input.resource.collection = '%foobar';
       return elasticsearch.createCollection(request);
@@ -1264,8 +1332,17 @@ describe('Test: ElasticSearch service', () => {
     it('should reject the createCollection promise if elasticsearch throws an error', () => {
       const error = new Error('Mocked error');
       elasticsearch.client.indices.putMapping.returns(Bluebird.reject(error));
+      elasticsearch.kuzzle.indexCache.exists.returns(true);
 
       return should(elasticsearch.createCollection(request)).be.rejectedWith(error);
+    });
+
+    it('should reject if index doesn\'t exist', () => {
+      elasticsearch.client.indices.putMapping.returns(Bluebird.resolve({}));
+      elasticsearch.kuzzle.indexCache.exists.returns(false);
+
+      request.input.resource.collection = '%foobar';
+      return should(elasticsearch.createCollection(request)).be.rejectedWith(PreconditionError);
     });
   });
 
