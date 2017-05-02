@@ -1,6 +1,6 @@
 'use strict';
 
-var
+const
   should = require('should'),
   BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,
   FieldOperand = require('../../../../lib/api/dsl/storage/objects/fieldOperand'),
@@ -69,9 +69,11 @@ describe('DSL.keyword.range', () => {
           should(store).be.instanceOf(FieldOperand);
           should(store.keys.array).match(['foo']);
           should(store.fields.foo.count).be.eql(1);
-          should(store.fields.foo.subfilters[subfilter.id].subfilter).match(subfilter);
-          should(store.fields.foo.subfilters[subfilter.id].low).approximately(42, 1e-9);
-          should(store.fields.foo.subfilters[subfilter.id].high).approximately(100, 1e-9);
+
+          const conditionId = Object.keys(store.fields.foo.subfilters[subfilter.id])[0];
+          should(store.fields.foo.subfilters[subfilter.id][conditionId].subfilter).match(subfilter);
+          should(store.fields.foo.subfilters[subfilter.id][conditionId].low).approximately(42, 1e-9);
+          should(store.fields.foo.subfilters[subfilter.id][conditionId].high).approximately(100, 1e-9);
           should(store.fields.foo.tree).be.an.Object();
         });
     });
@@ -94,13 +96,17 @@ describe('DSL.keyword.range', () => {
           should(store.keys.array).match(['foo']);
           should(store.fields.foo.count).be.eql(2);
 
-          should(store.fields.foo.subfilters[sf1.id].subfilter).match(sf1);
-          should(store.fields.foo.subfilters[sf1.id].low).approximately(42, 1e-9);
-          should(store.fields.foo.subfilters[sf1.id].high).approximately(100, 1e-9);
+          let conditionId = Object.keys(store.fields.foo.subfilters[sf1.id])[0];
+          should(store.fields.foo.subfilters[sf1.id][conditionId].subfilter).match(sf1);
+          should(store.fields.foo.subfilters[sf1.id][conditionId].low).approximately(42, 1e-9);
+          should(store.fields.foo.subfilters[sf1.id][conditionId].high).approximately(100, 1e-9);
 
-          should(store.fields.foo.subfilters[sf2.id].subfilter).match(sf2);
-          should(store.fields.foo.subfilters[sf2.id].low).approximately(10, 1e-9);
-          should(store.fields.foo.subfilters[sf2.id].high).approximately(78, 1e-9);
+          conditionId = Object.keys(store.fields.foo.subfilters[sf2.id])[0];
+          should(store.fields.foo.subfilters[sf2.id][conditionId].subfilter).match(sf2);
+          should(store.fields.foo.subfilters[sf2.id][conditionId].low)
+            .be.exactly(10);
+          should(store.fields.foo.subfilters[sf2.id][conditionId].high)
+            .be.exactly(78);
 
           should(store.fields.foo.tree).be.an.Object();
         });
@@ -213,7 +219,12 @@ describe('DSL.keyword.range', () => {
         .then(subscription => {
           idToRemove = subscription.id;
 
-          return dsl.register('index', 'collection', {range: {foo: {gte: 42, lte: 110}}});
+          return dsl.register('index', 'collection', {
+            and: [
+              {range: {foo: {gte: 42, lte: 110}}},
+              {range: {foo: {lt: 50}}}
+            ]
+          });
         })
         .then(subscription => {
           multiSubfilter = dsl.storage.filters[subscription.id].subfilters[0];
@@ -223,10 +234,12 @@ describe('DSL.keyword.range', () => {
         .then(() => {
           should(dsl.storage.foPairs.index.collection.range).be.instanceOf(FieldOperand);
           should(dsl.storage.foPairs.index.collection.range.keys.array).match(['foo']);
-          should(dsl.storage.foPairs.index.collection.range.fields.foo.count).eql(1);
-          should(dsl.storage.foPairs.index.collection.range.fields.foo.subfilters[multiSubfilter.id].subfilter).match(multiSubfilter);
-          should(dsl.storage.foPairs.index.collection.range.fields.foo.subfilters[multiSubfilter.id].low).eql(42);
-          should(dsl.storage.foPairs.index.collection.range.fields.foo.subfilters[multiSubfilter.id].high).eql(110);
+          should(dsl.storage.foPairs.index.collection.range.fields.foo.count).eql(2);
+
+          const conditionId = Object.keys(dsl.storage.foPairs.index.collection.range.fields.foo.subfilters[multiSubfilter.id])[0];
+          should(dsl.storage.foPairs.index.collection.range.fields.foo.subfilters[multiSubfilter.id][conditionId].subfilter).match(multiSubfilter);
+          should(dsl.storage.foPairs.index.collection.range.fields.foo.subfilters[multiSubfilter.id][conditionId].low).eql(42);
+          should(dsl.storage.foPairs.index.collection.range.fields.foo.subfilters[multiSubfilter.id][conditionId].high).eql(110);
           should(dsl.storage.foPairs.index.collection.range.fields.foo.subfilters[idToRemove]).be.undefined();
         });
     });
@@ -251,9 +264,11 @@ describe('DSL.keyword.range', () => {
           should(dsl.storage.foPairs.index.collection.range).be.instanceOf(FieldOperand);
           should(dsl.storage.foPairs.index.collection.range.keys.array).match(['foo']);
           should(dsl.storage.foPairs.index.collection.range.fields.foo.count).eql(1);
-          should(dsl.storage.foPairs.index.collection.range.fields.foo.subfilters[multiSubfilter.id].subfilter).match(multiSubfilter);
-          should(dsl.storage.foPairs.index.collection.range.fields.foo.subfilters[multiSubfilter.id].low).eql(42);
-          should(dsl.storage.foPairs.index.collection.range.fields.foo.subfilters[multiSubfilter.id].high).eql(110);
+
+          const conditionId = Object.keys(dsl.storage.foPairs.index.collection.range.fields.foo.subfilters[multiSubfilter.id])[0];
+          should(dsl.storage.foPairs.index.collection.range.fields.foo.subfilters[multiSubfilter.id][conditionId].subfilter).match(multiSubfilter);
+          should(dsl.storage.foPairs.index.collection.range.fields.foo.subfilters[multiSubfilter.id][conditionId].low).eql(42);
+          should(dsl.storage.foPairs.index.collection.range.fields.foo.subfilters[multiSubfilter.id][conditionId].high).eql(110);
           should(dsl.storage.foPairs.index.collection.range.fields.bar).be.undefined();
         });
     });
