@@ -303,6 +303,14 @@ module.exports = function () {
           }
         }
       },
+      nocredentialuser: {
+        content: {
+          name: {
+            first: 'Non Connectable',
+            last: 'User'
+          }
+        }
+      },
       unexistingprofile: {
         content: {
           name: {
@@ -320,6 +328,13 @@ module.exports = function () {
           },
           profileIds: [null]
         }
+      }
+    };
+
+    this.credentials = {
+      nocredentialuser: {
+        username: this.idPrefix + 'nocredentialuser',
+        password: 'testpwd1'
       }
     };
 

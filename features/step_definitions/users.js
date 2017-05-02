@@ -33,7 +33,6 @@ module.exports = function () {
       });
   });
 
-
   this.When(/^I (can't )?create a (restricted )?user "(.*?)" with id "(.*?)"$/, {timeout: 20000}, function (not, isRestricted, user, id, callback) {
     var
       userObject = this.users[user],
