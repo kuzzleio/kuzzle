@@ -1573,6 +1573,7 @@ Feature: Test HTTP API
     Then There is no error message
     When I delete the specifications for index "kuzzle-test-index" and collection "kuzzle-collection-test"
     Then There is no error message
+    Then I wait 1s
     And There is no specifications for index "kuzzle-test-index" and collection "kuzzle-collection-test"
     When I delete the specifications again for index "kuzzle-test-index" and collection "kuzzle-collection-test"
     Then There is no error message

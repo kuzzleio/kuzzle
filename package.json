@@ -61,7 +61,7 @@
     "sorted-array": "^2.0.1",
     "utf-8-validate": "^3.0.1",
     "validator": "^6.2.1",
-    "ws": "2.0.2"
+    "ws": "2.3.1"
   },
   "repository": {
     "type": "git",
