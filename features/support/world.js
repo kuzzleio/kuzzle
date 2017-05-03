@@ -308,7 +308,8 @@ module.exports = function () {
           name: {
             first: 'Non Connectable',
             last: 'User'
-          }
+          },
+          profileIds: ['admin']
         }
       },
       unexistingprofile: {

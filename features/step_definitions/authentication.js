@@ -1,5 +1,5 @@
 var apiSteps = function () {
-  this.When(/^I log in as (.*?):(.*?) expiring in (.*?)$/, function (login, password, expiration, callback) {
+  this.When(/^I( can't)? log in as (.*?):(.*?) expiring in (.*?)$/, function (cant, login, password, expiration, callback) {
     this.api.login('local', {username: this.idPrefix + login, password: password, expiresIn: expiration})
       .then(body => {
         if (body.error) {
@@ -21,7 +21,7 @@ var apiSteps = function () {
           this.currentUser = {};
         }
 
-        this.currentToken = { jwt: body.result.jwt };
+        this.currentToken = {jwt: body.result.jwt};
         this.currentUser.token = body.result.jwt;
 
         callback();

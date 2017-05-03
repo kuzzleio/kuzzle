@@ -1,4 +1,5 @@
 const
+  Bluebird = require('bluebird'),
   _ = require('lodash'),
   config = require('./config'),
   rp = require('request-promise'),
@@ -155,7 +156,7 @@ ApiHttp.prototype.callApi = function (options) {
   options.json = true;
   options.forever = true;
 
-  return rp(options);
+  return Bluebird.resolve(rp(options));
 };
 
 ApiHttp.prototype.get = function (id, index) {
@@ -1079,7 +1080,7 @@ ApiHttp.prototype.getCredentials = function (strategy, userId) {
 ApiHttp.prototype.hasCredentials = function (strategy, userId, body) {
   const options = {
     url : this.apiPath('credentials/' + strategy + '/' + userId + '/_exists'),
-    method: 'POST',
+    method: 'GET',
     body
   };
 

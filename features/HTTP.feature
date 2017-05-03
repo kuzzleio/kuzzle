@@ -488,18 +488,18 @@ Feature: Test HTTP API
     Then I'm able to find my rights
 
   @usingHttp @cleanSecurity
-  Scenario: CRUD user credentials
-    Given I create a user "nocredentialuser" with id "nocredentialuser-id"
-    Then I validate local credentials of user nocredentialuser
-    Then I create local credentials of user nocredentialuser
-    Then I check if local credentials exist for user nocredentialuser
+  Scenario: user credentials crudl
+    Given I create a user "nocredentialuser" with id "nocredentialuser-id" and wait for refresh
+    Then I validate local credentials of user nocredentialuser with id nocredentialuser-id
+    Then I create local credentials of user nocredentialuser with id nocredentialuser-id
+    Then I check if local credentials exist for user nocredentialuser with id nocredentialuser-id
     Then I log in as nocredentialuser:testpwd1 expiring in 1h
     Then I log out
-    Then I update local credentials password to "testpwd2" for user nocredentialuser
-    Then I log in as nocredentialuser:testpwd1 expiring in 1h
+    Then I update local credentials password to "testpwd2" for user with id nocredentialuser-id
+    Then I log in as nocredentialuser:testpwd2 expiring in 1h
     Then I log out
-    Then I delete local credentials of user nocredentialuser
-    Then I can't log in
+    Then I delete local credentials of user with id nocredentialuser-id
+    Then I can't log in as nocredentialuser:testpwd2 expiring in 1h
 
 
   @usingHttp @cleanRedis
