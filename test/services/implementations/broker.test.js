@@ -216,7 +216,7 @@ describe('Test: Internal broker', () => {
     });
 
     describe('#listen & #unsubscribe', () => {
-      it('should only store the handler if the client is not connected', (done) => {
+      it('should only store the handler if the client is not connected', () => {
         const cb = sinon.stub();
 
         client.listen('room', cb);
