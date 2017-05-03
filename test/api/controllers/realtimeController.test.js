@@ -1,4 +1,4 @@
-var
+const
   should = require('should'),
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
@@ -8,7 +8,7 @@ var
   BadRequestError = require('kuzzle-common-objects').errors.BadRequestError;
 
 describe('Test: subscribe controller', () => {
-  var
+  let
     kuzzle,
     request,
     realtimeController,
@@ -64,15 +64,13 @@ describe('Test: subscribe controller', () => {
     it('should throw an error if body is not provided',() => {
       request.input.body = null;
 
-      should(() => {
-        realtimeController.join(request);
-      }).throw(BadRequestError);
+      return should(() => realtimeController.join(request))
+        .throw(BadRequestError);
     });
 
     it('should throw an error if roomId is not provided',() => {
-      should(() => {
-        realtimeController.join(request);
-      }).throw(BadRequestError);
+      return should(() => realtimeController.join(request))
+        .throw(BadRequestError);
     });
 
     it('should call the proper hotelClerk method',() => {
