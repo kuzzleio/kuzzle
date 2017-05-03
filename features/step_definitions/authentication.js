@@ -1,5 +1,5 @@
 var apiSteps = function () {
-  this.When(/^I( can't)? log in as (.*?):(.*?) expiring in (.*?)$/, function (cant, login, password, expiration, callback) {
+  this.When(/^I( can't)? log in as (.*?):(.*?) expiring in (.*?)$/, function (cantLogin, login, password, expiration, callback) {
     this.api.login('local', {username: this.idPrefix + login, password: password, expiresIn: expiration})
       .then(body => {
         if (body.error) {
@@ -27,7 +27,12 @@ var apiSteps = function () {
         callback();
       })
       .catch(function (error) {
-        callback(error.message);
+        if (cantLogin && error.statusCode === 403) {
+          callback();
+        }
+        else {
+          callback(error.message);
+        }
       });
   });
 

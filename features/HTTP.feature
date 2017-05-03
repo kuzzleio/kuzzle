@@ -489,16 +489,35 @@ Feature: Test HTTP API
 
   @usingHttp @cleanSecurity
   Scenario: user credentials crudl
-    Given I create a user "nocredentialuser" with id "nocredentialuser-id" and wait for refresh
+    Given I create a user "nocredentialuser" with id "nocredentialuser-id"
     Then I validate local credentials of user nocredentialuser with id nocredentialuser-id
     Then I create local credentials of user nocredentialuser with id nocredentialuser-id
     Then I check if local credentials exist for user nocredentialuser with id nocredentialuser-id
+    Then I get local credentials of user nocredentialuser with id nocredentialuser-id
     Then I log in as nocredentialuser:testpwd1 expiring in 1h
     Then I log out
     Then I update local credentials password to "testpwd2" for user with id nocredentialuser-id
     Then I log in as nocredentialuser:testpwd2 expiring in 1h
     Then I log out
     Then I delete local credentials of user with id nocredentialuser-id
+    Then I can't log in as nocredentialuser:testpwd2 expiring in 1h
+
+  @usingHttp @cleanSecurity
+  Scenario: current user credentials crudl
+    Given I create a user "nocredentialuser" with id "nocredentialuser-id"
+    Then I create local credentials of user nocredentialuser with id nocredentialuser-id
+    Then I log in as nocredentialuser:testpwd1 expiring in 1h
+    Then I validate my local credentials
+    Then I delete my local credentials
+    Then I check if i have no local credentials
+    Then I create my local credentials
+    Then I check if i have local credentials
+    Then I get my local credentials
+    Then I update my local credentials password to "testpwd2"
+    Then I log out
+    Then I log in as nocredentialuser:testpwd2 expiring in 1h
+    Then I delete my local credentials
+    Then I log out
     Then I can't log in as nocredentialuser:testpwd2 expiring in 1h
 
 

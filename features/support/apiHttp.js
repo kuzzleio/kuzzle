@@ -1077,11 +1077,10 @@ ApiHttp.prototype.getCredentials = function (strategy, userId) {
   return this.callApi(options);
 };
 
-ApiHttp.prototype.hasCredentials = function (strategy, userId, body) {
+ApiHttp.prototype.hasCredentials = function (strategy, userId) {
   const options = {
     url : this.apiPath('credentials/' + strategy + '/' + userId + '/_exists'),
-    method: 'GET',
-    body
+    method: 'GET'
   };
 
   return this.callApi(options);
@@ -1099,7 +1098,7 @@ ApiHttp.prototype.createMyCredentials = function (strategy, body) {
 
 ApiHttp.prototype.updateMyCredentials = function (strategy, body) {
   const options = {
-    url : this.apiPath('credentials/' + strategy + '/_me/_create'),
+    url : this.apiPath('credentials/' + strategy + '/_me/_update'),
     method: 'PUT',
     body
   };
@@ -1135,11 +1134,10 @@ ApiHttp.prototype.getMyCredentials = function (strategy) {
   return this.callApi(options);
 };
 
-ApiHttp.prototype.hasMyCredentials = function (strategy, body) {
+ApiHttp.prototype.hasMyCredentials = function (strategy) {
   const options = {
     url : this.apiPath('credentials/' + strategy + '/_me/_exists'),
-    method: 'GET',
-    body
+    method: 'GET'
   };
 
   return this.callApi(options);

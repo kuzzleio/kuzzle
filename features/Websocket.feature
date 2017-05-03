@@ -619,6 +619,39 @@ Feature: Test websocket API
     When I log in as user2:testpwd2 expiring in 1h
     Then I'm able to find my rights
 
+  @usingWebsocket @cleanSecurity
+  Scenario: user credentials crudl
+    Given I create a user "nocredentialuser" with id "nocredentialuser-id"
+    Then I validate local credentials of user nocredentialuser with id nocredentialuser-id
+    Then I create local credentials of user nocredentialuser with id nocredentialuser-id
+    Then I check if local credentials exist for user nocredentialuser with id nocredentialuser-id
+    Then I get local credentials of user nocredentialuser with id nocredentialuser-id
+    Then I log in as nocredentialuser:testpwd1 expiring in 1h
+    Then I log out
+    Then I update local credentials password to "testpwd2" for user with id nocredentialuser-id
+    Then I log in as nocredentialuser:testpwd2 expiring in 1h
+    Then I log out
+    Then I delete local credentials of user with id nocredentialuser-id
+    Then I can't log in as nocredentialuser:testpwd2 expiring in 1h
+
+  @usingWebsocket @cleanSecurity
+  Scenario: current user credentials crudl
+    Given I create a user "nocredentialuser" with id "nocredentialuser-id"
+    Then I create local credentials of user nocredentialuser with id nocredentialuser-id
+    Then I log in as nocredentialuser:testpwd1 expiring in 1h
+    Then I validate my local credentials
+    Then I delete my local credentials
+    Then I check if i have no local credentials
+    Then I create my local credentials
+    Then I check if i have local credentials
+    Then I get my local credentials
+    Then I update my local credentials password to "testpwd2"
+    Then I log out
+    Then I log in as nocredentialuser:testpwd2 expiring in 1h
+    Then I delete my local credentials
+    Then I log out
+    Then I can't log in as nocredentialuser:testpwd2 expiring in 1h
+
   @usingWebsocket @cleanRedis
   Scenario: memory storage - scalars
     Given I call the setnx method of the memory storage with arguments
