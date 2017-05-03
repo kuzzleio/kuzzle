@@ -103,7 +103,7 @@ describe('Test: Internal broker', () => {
         cb();
       };
 
-      client = new WSBrokerClient('internalBroker', kuzzle.config.services.internalBroker, kuzzle.pluginsManager);
+      client = new WSBrokerClient('internalBroker', kuzzle.config.services.internalBroker, kuzzle.pluginsManager, true);
       client.ws = () => new WSClientMock(server.wss);
     });
 
@@ -232,6 +232,36 @@ describe('Test: Internal broker', () => {
         should(client.client.socket).be.null();
       });
 
+      it('should only store the handler if the client is connecting', (done) => {
+        const cb = sinon.stub();
+
+        should(client.client.socket).be.null();
+
+        server.init()
+          .then(() => client.init())
+          .then(() => {
+            // force socket to be in connecting state
+            client.client.socket.readyState = WS.CONNECTING;
+
+            client.listen('room', cb);
+            should(client.handlers).be.eql({
+              room: [cb]
+            });
+
+            should(client.client.socket).not.be.null();
+            should(client.client.socket.send.callCount).be.eql(0);
+
+            client.unsubscribe('room');
+            should(client.handlers).be.eql({});
+
+            should(client.client.socket).not.be.null();
+            should(client.client.socket.send.callCount).be.eql(0);
+
+            done();
+          })
+          .catch(err => done(err));
+      });
+
       it('should store the handler and notify the server if the client is connected', (done) => {
         const cb = sinon.stub();
 
@@ -240,11 +270,16 @@ describe('Test: Internal broker', () => {
         server.init()
           .then(() => client.init())
           .then(() => {
+            // force socket to be in opened state
+            client.client.socket.readyState = WS.OPEN;
+
             client.listen('room', cb);
 
             should(client.handlers).be.eql({
               room: [cb]
             });
+
+            should(client.client.socket).not.be.null();
 
             should(client.client.socket.send.firstCall).be.calledWith(JSON.stringify({
               action: 'listen',
