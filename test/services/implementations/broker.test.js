@@ -216,7 +216,7 @@ describe('Test: Internal broker', () => {
     });
 
     describe('#listen & #unsubscribe', () => {
-      it('should store the handler and send the request to the server once the client is connected', (done) => {
+      it('should only store the handler if the client is not connected', (done) => {
         const cb = sinon.stub();
 
         client.listen('room', cb);
@@ -230,16 +230,31 @@ describe('Test: Internal broker', () => {
         should(client.handlers).be.eql({});
 
         should(client.client.socket).be.null();
+      });
+
+      it('should store the handler and notify the server if the client is connected', (done) => {
+        const cb = sinon.stub();
+
+        should(client.client.socket).be.null();
 
         server.init()
           .then(() => client.init())
           .then(() => {
-            should(client.client.socket.send).be.calledTwice();
+            client.listen('room', cb);
+
+            should(client.handlers).be.eql({
+              room: [cb]
+            });
 
             should(client.client.socket.send.firstCall).be.calledWith(JSON.stringify({
               action: 'listen',
               room: 'room'
             }));
+
+            client.unsubscribe('room');
+
+            should(client.handlers).be.eql({});
+
             should(client.client.socket.send.secondCall).be.calledWith(JSON.stringify({
               action: 'unsubscribe',
               room: 'room'
