@@ -118,7 +118,7 @@ describe('PluginsManager: strategy management', () => {
       let verifyAdapter;
 
       plugin.existsFunction = sandbox.stub().returns(foo);
-      plugin.verifyFunction = sandbox.stub().returns(Promise.resolve(foo));
+      plugin.verifyFunction = sandbox.stub().returns(Promise.resolve('foo'));
 
       injectAuthentication(kuzzle, authentications, plugin, pluginName);
       should(authentications.someStrategy.strategy).be.deepEqual(plugin.strategies.someStrategy);

@@ -27,7 +27,7 @@ var apiSteps = function () {
         callback();
       })
       .catch(function (error) {
-        if (cantLogin && error.statusCode === 403) {
+        if (cantLogin && error.statusCode === 401) {
           callback();
         }
         else {
