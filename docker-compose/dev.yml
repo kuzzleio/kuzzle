@@ -29,6 +29,11 @@ services:
       - kuzzle_services__proxyBroker__host=proxy
       - NODE_ENV=development
       - DEBUG=kuzzle:*
+      - DEBUG_DEPTH=0
+      - DEBUG_MAX_ARRAY_LENGTH=100
+      - DEBUG_EXPAND=off
+      - DEBUG_SHOW_HIDDEN=on
+      - DEBUG_COLORS=on
 
   redis:
     image: redis:3.2
