@@ -240,7 +240,7 @@ describe('Test: security/roleTest', () => {
       roleDeny.controllers = {
         admin: {
           actions: {
-            createInedx: false,
+            createIndex: false,
             createCollection: true
           }
         }
@@ -323,7 +323,6 @@ describe('Test: security/roleTest', () => {
           should(isAllowed).be.false();
         });
     });
-
 
     it('should reject if the rights configuration is not either a boolean or a closure', () => {
       const role = new Role();
@@ -722,7 +721,7 @@ describe('Test: security/roleTest', () => {
         '*': true
       };
 
-      return should(role.validateDefinition(context)).be.rejectedWith(BadRequestError, {message: 'Invalid definition for [*]. Must be an object'});
+      return should(role.validateDefinition(context)).be.rejectedWith(BadRequestError, {message: 'Invalid definition for [*]: must be an object'});
     });
 
     it('should reject the promise if the controller element is empty', () => {
@@ -731,7 +730,7 @@ describe('Test: security/roleTest', () => {
         '*': {}
       };
 
-      return should(role.validateDefinition(context)).be.rejectedWith(BadRequestError, {message: 'Invalid definition for [*]. Cannot be empty'});
+      return should(role.validateDefinition(context)).be.rejectedWith(BadRequestError, {message: 'Invalid definition for [*]: cannot be empty'});
     });
 
     it('should reject the promise if the actions attribute is missing', () => {
@@ -777,7 +776,7 @@ describe('Test: security/roleTest', () => {
         }
       };
 
-      return should(role.validateDefinition(context)).be.rejectedWith(BadRequestError, {message: 'Invalid definition for [controller, action]. Must be a boolean or an object'});
+      return should(role.validateDefinition(context)).be.rejectedWith(BadRequestError, {message: 'Invalid definition for [controller, action]: must be a boolean or an object'});
     });
 
     it('should validate if only boolean rights are given', () => {
@@ -863,7 +862,7 @@ describe('Test: security/roleTest', () => {
         }
       };
 
-      return should(role.validateDefinition()).be.rejectedWith(BadRequestError, {message: 'Invalid definition for [controller, action]. Error executing function'});
+      return should(role.validateDefinition()).be.rejectedWith(BadRequestError, {message: 'Invalid definition for [controller, action]: error executing function'});
     });
 
     it('should resolve the promise if the sandbox returned a boolean', () => {
