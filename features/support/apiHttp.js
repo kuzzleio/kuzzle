@@ -1134,7 +1134,7 @@ ApiHttp.prototype.getMyCredentials = function (strategy) {
   return this.callApi(options);
 };
 
-ApiHttp.prototype.hasMyCredentials = function (strategy) {
+ApiHttp.prototype.credentialsExist = function (strategy) {
   const options = {
     url : this.apiPath('credentials/' + strategy + '/_me/_exists'),
     method: 'GET'

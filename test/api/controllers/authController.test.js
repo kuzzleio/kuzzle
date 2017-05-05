@@ -365,7 +365,7 @@ describe('Test the auth controller', () => {
       });
     });
 
-    describe('#hasMyCredentials', () => {
+    describe('#credentialsExist', () => {
       it('should call the plugin exists method', () => {
         const methodStub = sinon.stub().returns(Promise.resolve({foo: 'bar'}));
         request = new Request({
@@ -380,7 +380,7 @@ describe('Test the auth controller', () => {
         kuzzle.pluginsManager.listStrategies = sandbox.stub().returns(['someStrategy']);
         kuzzle.pluginsManager.getStrategyMethod = sandbox.stub().returns(methodStub);
 
-        return authController.hasMyCredentials(request)
+        return authController.credentialsExist(request)
           .then(result => {
             should(result).be.deepEqual({foo: 'bar'});
             should(kuzzle.pluginsManager.getStrategyMethod).be.calledOnce();
@@ -444,7 +444,7 @@ describe('Test the auth controller', () => {
 
         return authController.deleteMyCredentials(request)
           .then(result => {
-            should(result).be.deepEqual({foo: 'bar'});
+            should(result).be.deepEqual({acknowledged: true});
             should(kuzzle.pluginsManager.getStrategyMethod).be.calledOnce();
             should(kuzzle.pluginsManager.getStrategyMethod.firstCall.args[0]).be.eql('someStrategy');
             should(kuzzle.pluginsManager.getStrategyMethod.firstCall.args[1]).be.eql('delete');

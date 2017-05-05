@@ -1198,10 +1198,10 @@ ApiRT.prototype.getMyCredentials = function (strategy) {
   });
 };
 
-ApiRT.prototype.hasMyCredentials = function (strategy, body) {
+ApiRT.prototype.credentialsExist = function (strategy, body) {
   return this.send({
     controller: 'auth',
-    action: 'hasMyCredentials',
+    action: 'credentialsExist',
     strategy,
     body
   });

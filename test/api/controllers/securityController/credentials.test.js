@@ -170,7 +170,7 @@ describe('Test: security controller - credentials', () => {
 
       return securityController.deleteCredentials(request)
         .then(result => {
-          should(result).be.deepEqual({foo: 'bar'});
+          should(result).be.deepEqual({acknowledged: true});
           should(kuzzle.pluginsManager.getStrategyMethod).be.calledOnce();
           should(kuzzle.pluginsManager.getStrategyMethod.firstCall.args[0]).be.eql('someStrategy');
           should(kuzzle.pluginsManager.getStrategyMethod.firstCall.args[1]).be.eql('delete');

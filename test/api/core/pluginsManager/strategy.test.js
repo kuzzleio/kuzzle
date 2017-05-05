@@ -33,16 +33,16 @@ describe('PluginsManager: strategy management', () => {
             authenticateOptions: {
               someAuthenticate: 'options'
             },
-            verify: 'verifyFunction',
             fields: ['aField', 'anotherField']
           },
           methods: {
-            exists: 'existsFunction',
             create: 'createFunction',
-            update: 'updateFunction',
             delete: 'deleteFunction',
+            exists: 'existsFunction',
             getInfo: 'getInfoFunction',
-            validate: 'validateFunction'
+            update: 'updateFunction',
+            validate: 'validateFunction',
+            verify: 'verifyFunction'
           }
         }
       },
@@ -278,7 +278,7 @@ describe('PluginsManager: strategy management', () => {
     });
 
     it('should print an error in the console if the "verify" config is not provided', () => {
-      delete plugin.strategies.someStrategy.config.verify;
+      delete plugin.strategies.someStrategy.methods.verify;
 
       injectAuthentication(kuzzle, authentications, plugin, pluginName);
 

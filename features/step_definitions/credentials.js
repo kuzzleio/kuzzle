@@ -135,7 +135,7 @@ module.exports = function () {
   });
 
   this.When(/^I check if i have( no)? ([^ ]+) credentials$/, function (noCredentials, strategy) {
-    return this.api.hasMyCredentials(strategy, this.credentials[defaultUser])
+    return this.api.credentialsExist(strategy, this.credentials[defaultUser])
       .then(response => {
         if (response.error !== null) {
           throw new Error(response.error.message);
