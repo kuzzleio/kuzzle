@@ -526,19 +526,4 @@ describe('Test plugins manager run', () => {
         }
       });
   });
-
-  it('should delete plugin workers at initialization', function (done) {
-    plugin.config.threads = 1;
-    pluginsManager.isServer = true;
-    pluginsManager.isDummy = false;
-
-    pm2Mock.initializeList();
-
-    pluginsManager.run()
-      .then(() => {
-        should(pm2Mock.getProcessList()).length(1);
-        should(pm2Mock.getProcessList()[0].process.pm_id).not.equal(42);
-        done();
-      });
-  });
 });
