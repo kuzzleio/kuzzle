@@ -32,5 +32,5 @@ pm2 start --silent /config/pm2.json
 
 npm run --silent lint
 npm run unit-testing
-npm run functional-testing
 npm run codecov
+npm run functional-testing
