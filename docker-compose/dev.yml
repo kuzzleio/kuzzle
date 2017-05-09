@@ -5,8 +5,6 @@ services:
     image: kuzzleio/proxy:develop
     ports:
       - "7512:7512"
-    environment:
-    - DEBUG=kuzzle-proxy:*
 
   kuzzle:
     image: kuzzleio/dev
