@@ -1,5 +1,6 @@
 const
   mockrequire = require('mock-require'),
+  rewire = require('rewire'),
   sinon = require('sinon'),
   should = require('should'),
   KuzzleMock = require('../../../mocks/kuzzle.mock'),
@@ -16,11 +17,20 @@ describe('CLI Action: shutdown', () => {
     kuzzle = new KuzzleMock();
 
     pm2Mock = {
-      delete: sinon.stub()
+      delete: sinon.stub(),
+      list: sinon.stub().yields(null, [])
     };
 
     mockrequire('pm2', pm2Mock);
-    PluginsManager = mockrequire.reRequire('../../../../lib/api/core/plugins/pluginsManager');
+    mockrequire.reRequire('../../../../lib/api/core/plugins/pluginsManager');
+    PluginsManager = rewire('../../../../lib/api/core/plugins/pluginsManager');
+
+    PluginsManager.__set__({
+      console: {
+        log: sinon.stub()
+      },
+      setTimeout: sinon.spy(function (...args) { setImmediate(args[0]); })
+    });
 
     pluginsManager = new PluginsManager(kuzzle);
   });
@@ -59,5 +69,40 @@ describe('CLI Action: shutdown', () => {
 
         should(pluginsManager.workers).be.empty();
       });
+  });
+
+  it('should wait for worker plugins to shut down before resolving the promise', done => {
+    pm2Mock.list.yields(null, [{pm_id: 'foo'}, {pm_id: 'bar'}]);
+
+    pluginsManager.workers = {
+      foo: {
+        pmIds: new Circularlist(['foo'])
+      }
+    };
+
+    const promise = pluginsManager.shutdownWorkers();
+
+    setTimeout(() => {
+      should(promise.isFulfilled()).be.false();
+
+      pm2Mock.list.yields(null, [{pm_id: 'bar'}]);
+
+      setTimeout(() => {
+        should(promise.isFulfilled()).be.true();
+        done();
+      }, 100);
+    }, 100);
+  });
+
+  it('should resolve immediately if unable to get the process list from PM2', () => {
+    pm2Mock.list.yields(new Error('foobar'), [{pm_id: 'foo'}, {pm_id: 'bar'}]);
+
+    pluginsManager.workers = {
+      foo: {
+        pmIds: new Circularlist(['foo'])
+      }
+    };
+
+    return should(pluginsManager.shutdownWorkers()).fulfilled();
   });
 });
