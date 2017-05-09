@@ -36,6 +36,7 @@ describe('PluginsManager: strategy management', () => {
             fields: ['aField', 'anotherField']
           },
           methods: {
+            afterRegister: 'afterRegisterFunction',
             create: 'createFunction',
             delete: 'deleteFunction',
             exists: 'existsFunction',
@@ -46,13 +47,14 @@ describe('PluginsManager: strategy management', () => {
           }
         }
       },
-      verifyFunction: sandbox.stub(),
-      existsFunction: sandbox.stub(),
+      afterRegisterFunction: sandbox.stub(),
       createFunction: sandbox.stub(),
-      updateFunction: sandbox.stub(),
+      existsFunction: sandbox.stub(),
       deleteFunction: sandbox.stub(),
       getInfoFunction: sandbox.stub(),
-      validateFunction: sandbox.stub()
+      updateFunction: sandbox.stub(),
+      validateFunction: sandbox.stub(),
+      verifyFunction: sandbox.stub()
     };
 
     pluginManagerStrategy = {
@@ -63,7 +65,8 @@ describe('PluginsManager: strategy management', () => {
         update: plugin.updateFunction,
         delete: plugin.deleteFunction,
         getInfo: plugin.getInfoFunction,
-        validate: plugin.validateFunction
+        validate: plugin.validateFunction,
+        afterRegister: plugin.afterRegisterFunction
       }
     };
 
@@ -122,6 +125,10 @@ describe('PluginsManager: strategy management', () => {
 
       injectAuthentication(kuzzle, authentications, plugin, pluginName);
       should(authentications.someStrategy.strategy).be.deepEqual(plugin.strategies.someStrategy);
+      should(authentications.someStrategy.methods.afterRegister).be.Function();
+      should(plugin.afterRegisterFunction).be.calledOnce();
+      should(plugin.afterRegisterFunction.firstCall.args[0]).be.eql('someStrategy');
+      should(plugin.afterRegisterFunction.firstCall.args[1]).be.instanceOf(plugin.strategies.someStrategy.config.constructor);
       should(authentications.someStrategy.methods.exists).be.Function();
       should(authentications.someStrategy.methods.create).be.Function();
       should(authentications.someStrategy.methods.update).be.Function();
