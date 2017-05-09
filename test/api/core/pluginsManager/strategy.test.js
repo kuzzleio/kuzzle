@@ -127,8 +127,7 @@ describe('PluginsManager: strategy management', () => {
       should(authentications.someStrategy.strategy).be.deepEqual(plugin.strategies.someStrategy);
       should(authentications.someStrategy.methods.afterRegister).be.Function();
       should(plugin.afterRegisterFunction).be.calledOnce();
-      should(plugin.afterRegisterFunction.firstCall.args[0]).be.eql('someStrategy');
-      should(plugin.afterRegisterFunction.firstCall.args[1]).be.instanceOf(plugin.strategies.someStrategy.config.constructor);
+      should(plugin.afterRegisterFunction.firstCall.args[0]).be.instanceOf(plugin.strategies.someStrategy.config.constructor);
       should(authentications.someStrategy.methods.exists).be.Function();
       should(authentications.someStrategy.methods.create).be.Function();
       should(authentications.someStrategy.methods.update).be.Function();
