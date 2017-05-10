@@ -37,6 +37,8 @@ kuzzle-swagger.*
 #sonarqube
 .sonar
 .scannerwork
+.sonarlint
+/sonarlint.json
 
 #plugins
 plugins/available/*
