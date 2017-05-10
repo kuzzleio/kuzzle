@@ -5,8 +5,8 @@ const
   Promise = require('bluebird'),
   Request = require('kuzzle-common-objects').Request,
   HotelClerk = require('../../../../lib/api/core/hotelClerk'),
-  InternalError = require('kuzzle-common-objects').errors.InternalError,
   BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,
+  NotFoundError = require('kuzzle-common-objects').errors.NotFoundError,
   KuzzleMock = require('../../../mocks/kuzzle.mock');
 
 describe('Test: hotelClerk.addSubscription', () => {
@@ -355,7 +355,7 @@ describe('Test: hotelClerk.addSubscription', () => {
   });
 
   it('#join should reject the promise if the room does not exist', () => {
-    var request = new Request({
+    const request = new Request({
       collection: collection,
       index: index,
       controller: 'realtime',
@@ -363,7 +363,8 @@ describe('Test: hotelClerk.addSubscription', () => {
       body: {roomId: 'no way I can exist'}
     }, context);
 
-    return should(kuzzle.hotelClerk.join(request)).be.rejectedWith(InternalError);
+    return should(kuzzle.hotelClerk.join(request))
+      .be.rejectedWith(NotFoundError);
   });
 
   it('should reject the subscription if the given state argument is incorrect', () => {

@@ -4,6 +4,7 @@ var
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
   KuzzleMock = require('../../../../mocks/kuzzle.mock'),
+  BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,
   InternalError = require('kuzzle-common-objects').errors.InternalError,
   NotFoundError = require('kuzzle-common-objects').errors.NotFoundError,
   Repository = require('../../../../../lib/api/core/models/repositories/repository'),
@@ -206,6 +207,15 @@ describe('Test: repositories/userRepository', () => {
 
       should(user._id).not.be.empty();
       should(user._id).match(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
+    });
+
+    it('should reject if we try to remove the anonymous profile from the anonymous user', () => {
+      const user = new User();
+      user._id = '-1';
+      user.profileIds = ['test'];
+
+      return should(userRepository.persist(user))
+        .be.rejectedWith(BadRequestError, {message: 'Anonymous user must be assigned the anonymous profile'});
     });
   });
 });

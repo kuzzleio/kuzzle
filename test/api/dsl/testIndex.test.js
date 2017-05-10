@@ -196,5 +196,43 @@ describe('#TestTables (== DSL filter indexes)', () => {
         });
     });
 
+    // https://github.com/kuzzleio/kuzzle/issues/824
+    it('should remove a filter on which several conditions are set for the same field', () => {
+      const filter = {
+        and: [
+          {
+            not: {
+              range: {
+                foo: {lt: 42}
+              }
+            }
+          },
+          {
+            not: {
+              range: {
+                foo: {lt: 50}
+              }
+            }
+          },
+          {
+            not: {
+              range: {
+                foo: {lt: 2}
+              }
+            }
+          }
+        ]
+      };
+
+      let roomId;
+
+      return dsl.register('i', 'c', filter)
+        .then(response => {
+          roomId = response.id;
+
+          return dsl.remove(roomId);
+        });
+    });
+
   });
 });
