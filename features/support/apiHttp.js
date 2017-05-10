@@ -1,5 +1,4 @@
 const
-  Bluebird = require('bluebird'),
   _ = require('lodash'),
   config = require('./config'),
   rp = require('request-promise'),
@@ -156,7 +155,7 @@ ApiHttp.prototype.callApi = function (options) {
   options.json = true;
   options.forever = true;
 
-  return Bluebird.resolve(rp(options));
+  return rp(options);
 };
 
 ApiHttp.prototype.get = function (id, index) {
