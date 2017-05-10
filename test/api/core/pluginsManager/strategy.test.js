@@ -40,6 +40,7 @@ describe('PluginsManager: strategy management', () => {
             create: 'createFunction',
             delete: 'deleteFunction',
             exists: 'existsFunction',
+            getById: 'getByIdFunction',
             getInfo: 'getInfoFunction',
             update: 'updateFunction',
             validate: 'validateFunction',
@@ -51,6 +52,7 @@ describe('PluginsManager: strategy management', () => {
       createFunction: sandbox.stub(),
       existsFunction: sandbox.stub(),
       deleteFunction: sandbox.stub(),
+      getByIdFunction: sandbox.stub(),
       getInfoFunction: sandbox.stub(),
       updateFunction: sandbox.stub(),
       validateFunction: sandbox.stub(),
@@ -64,6 +66,7 @@ describe('PluginsManager: strategy management', () => {
         create: plugin.createFunction,
         update: plugin.updateFunction,
         delete: plugin.deleteFunction,
+        getById: plugin.getByIdFunction,
         getInfo: plugin.getInfoFunction,
         validate: plugin.validateFunction,
         afterRegister: plugin.afterRegisterFunction
@@ -132,6 +135,7 @@ describe('PluginsManager: strategy management', () => {
       should(authentications.someStrategy.methods.create).be.Function();
       should(authentications.someStrategy.methods.update).be.Function();
       should(authentications.someStrategy.methods.delete).be.Function();
+      should(authentications.someStrategy.methods.getById).be.Function();
       should(authentications.someStrategy.methods.getInfo).be.Function();
       should(authentications.someStrategy.methods.validate).be.Function();
       should(plugin.strategies.someStrategy.config.constructor).be.calledOnce();
