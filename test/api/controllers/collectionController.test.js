@@ -116,7 +116,7 @@ describe('Test: collection controller', () => {
       request.input.action = 'searchSpecifications';
 
       return should(() => collectionController.searchSpecifications(request))
-        .throw('collection:searchSpecifications Search page size exceeds server configured documents limit (1)');
+        .throw('Search page size exceeds server configured documents limit (1)');
     });
 
     it('should call internalEngine with the right data', () => {
@@ -158,7 +158,7 @@ describe('Test: collection controller', () => {
   describe('#scrollSpecifications', () => {
     it('should throw if no scrollId is provided', () => {
       should(() => collectionController.scrollSpecifications(new Request({controller: 'collection', action: 'scrollSpecifications'})))
-        .throw(BadRequestError, {message: 'collection:scrollSpecifications must specify a scrollId.'});
+        .throw(BadRequestError, {message: 'The request must specify a scrollId.'});
     });
 
     it('should call internalEngine with the right data', () => {

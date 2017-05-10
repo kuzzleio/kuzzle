@@ -145,7 +145,7 @@ describe('Test: security controller - users', () => {
   describe('#scrollUsers', () => {
     it('should throw if no scrollId is provided', () => {
       should(() => securityController.scrollUsers(new Request({controller: 'security', action: 'scrollUsers'})))
-        .throw(BadRequestError, {message: 'security:scrollUsers must specify a scrollId.'});
+        .throw(BadRequestError, {message: 'The request must specify a scrollId.'});
     });
 
     it('should reformat search results correctly', () => {
