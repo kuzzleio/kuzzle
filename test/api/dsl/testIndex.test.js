@@ -134,7 +134,10 @@ describe('#TestTables (== DSL filter indexes)', () => {
           should(filter.fidx).be.eql(1);
           should(filter.subfilters[0].cidx).be.eql(1);
           should(dsl.storage.testTables.i.c.clength).be.eql(2);
-          should(dsl.storage.testTables.i.c.removedFilters.array).match([0]);
+          should(dsl.storage.testTables.i.c.removedFilters)
+            .match({ [id1]: true });
+          should(dsl.storage.testTables.i.c.removedFiltersCount)
+            .be.eql(1);
           should(dsl.storage.testTables.i.c.removedConditions.array.length).be.eql(1);
           should(dsl.storage.testTables.i.c.reindexing).be.true();
 
@@ -143,7 +146,10 @@ describe('#TestTables (== DSL filter indexes)', () => {
           should(filter.fidx).be.eql(0);
           should(filter.subfilters[0].cidx).be.eql(0);
           should(dsl.storage.testTables.i.c.clength).be.eql(1);
-          should(dsl.storage.testTables.i.c.removedFilters.array).be.empty();
+          should(dsl.storage.testTables.i.c.removedFilters)
+            .be.empty();
+          should(dsl.storage.testTables.i.c.removedFiltersCount)
+            .be.eql(0);
           should(dsl.storage.testTables.i.c.removedConditions.array).be.empty();
           should(dsl.storage.testTables.i.c.reindexing).be.false();
 
@@ -187,6 +193,44 @@ describe('#TestTables (== DSL filter indexes)', () => {
         })
         .then(() => {
           return dsl.remove(room2);
+        });
+    });
+
+    // https://github.com/kuzzleio/kuzzle/issues/824
+    it('should remove a filter on which several conditions are set for the same field', () => {
+      const filter = {
+        and: [
+          {
+            not: {
+              range: {
+                foo: {lt: 42}
+              }
+            }
+          },
+          {
+            not: {
+              range: {
+                foo: {lt: 50}
+              }
+            }
+          },
+          {
+            not: {
+              range: {
+                foo: {lt: 2}
+              }
+            }
+          }
+        ]
+      };
+
+      let roomId;
+
+      return dsl.register('i', 'c', filter)
+        .then(response => {
+          roomId = response.id;
+
+          return dsl.remove(roomId);
         });
     });
 

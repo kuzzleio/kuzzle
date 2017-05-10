@@ -23,9 +23,14 @@ describe('DSL.keyword.notrange', () => {
           should(store).be.instanceOf(FieldOperand);
           should(store.keys.array).match(['foo']);
           should(store.fields.foo.count).be.eql(1);
-          should(store.fields.foo.subfilters[subfilter.id].subfilter).match(subfilter);
-          should(store.fields.foo.subfilters[subfilter.id].low).approximately(42, 1e-9);
-          should(store.fields.foo.subfilters[subfilter.id].high).approximately(100, 1e-9);
+          should(store.fields.foo.subfilters)
+            .be.an.Object()
+            .have.property(subfilter.id);
+
+          const conditionId = Object.keys(store.fields.foo.subfilters[subfilter.id])[0];
+          should(store.fields.foo.subfilters[subfilter.id][conditionId].subfilter).match(subfilter);
+          should(store.fields.foo.subfilters[subfilter.id][conditionId].low).approximately(42, 1e-9);
+          should(store.fields.foo.subfilters[subfilter.id][conditionId].high).approximately(100, 1e-9);
           should(store.fields.foo.tree).be.an.Object();
         });
     });
@@ -37,7 +42,12 @@ describe('DSL.keyword.notrange', () => {
         .then(subscription => {
           sf1 = dsl.storage.filters[subscription.id].subfilters[0];
 
-          return dsl.register('index', 'collection', {not: {range: {foo: {gte: 10, lte: 78}}}});
+          return dsl.register('index', 'collection', {
+            and: [
+              {not: {range: {foo: {gte: 10, lte: 78}}}},
+              {not: {range: {foo: {gt: 0, lt: 50}}}}
+            ]
+          });
         })
         .then(subscription => {
           let
@@ -46,15 +56,34 @@ describe('DSL.keyword.notrange', () => {
 
           should(store).be.instanceOf(FieldOperand);
           should(store.keys.array).match(['foo']);
-          should(store.fields.foo.count).be.eql(2);
+          should(store.fields.foo.count).be.eql(3);
 
-          should(store.fields.foo.subfilters[sf1.id].subfilter).match(sf1);
-          should(store.fields.foo.subfilters[sf1.id].low).approximately(42, 1e-9);
-          should(store.fields.foo.subfilters[sf1.id].high).approximately(100, 1e-9);
+          let conditionId = Object.keys(store.fields.foo.subfilters[sf1.id])[0];
 
-          should(store.fields.foo.subfilters[sf2.id].subfilter).match(sf2);
-          should(store.fields.foo.subfilters[sf2.id].low).approximately(10, 1e-9);
-          should(store.fields.foo.subfilters[sf2.id].high).approximately(78, 1e-9);
+          should(Object.keys(store.fields.foo.subfilters[sf1.id]).length)
+            .eql(1);
+          should(store.fields.foo.subfilters[sf1.id][conditionId].subfilter).match(sf1);
+          should(store.fields.foo.subfilters[sf1.id][conditionId].low)
+            .be.exactly(42);
+          should(store.fields.foo.subfilters[sf1.id][conditionId].high)
+            .be.exactly(100);
+
+          should(Object.keys(store.fields.foo.subfilters[sf2.id]).length)
+            .be.eql(2);
+
+          conditionId = Object.keys(store.fields.foo.subfilters[sf2.id])[0];
+          should(store.fields.foo.subfilters[sf2.id][conditionId].subfilter).match(sf2);
+          should(store.fields.foo.subfilters[sf2.id][conditionId].low)
+            .be.approximately(10, 1e-9);
+          should(store.fields.foo.subfilters[sf2.id][conditionId].high)
+            .be.approximately(78, 1e-9);
+
+          conditionId = Object.keys(store.fields.foo.subfilters[sf2.id])[1];
+          should(store.fields.foo.subfilters[sf2.id][conditionId].subfilter).match(sf2);
+          should(store.fields.foo.subfilters[sf2.id][conditionId].low)
+            .be.exactly(0);
+          should(store.fields.foo.subfilters[sf2.id][conditionId].high)
+            .be.exactly(50);
 
           should(store.fields.foo.tree).be.an.Object();
         });
@@ -175,9 +204,11 @@ describe('DSL.keyword.notrange', () => {
           should(dsl.storage.foPairs.index.collection.notrange).be.instanceOf(FieldOperand);
           should(dsl.storage.foPairs.index.collection.notrange.keys.array).match(['foo']);
           should(dsl.storage.foPairs.index.collection.notrange.fields.foo.count).eql(1);
-          should(dsl.storage.foPairs.index.collection.notrange.fields.foo.subfilters[multiSubfilter.id].subfilter).match(multiSubfilter);
-          should(dsl.storage.foPairs.index.collection.notrange.fields.foo.subfilters[multiSubfilter.id].low).eql(42);
-          should(dsl.storage.foPairs.index.collection.notrange.fields.foo.subfilters[multiSubfilter.id].high).eql(110);
+
+          const conditionId = Object.keys(dsl.storage.foPairs.index.collection.notrange.fields.foo.subfilters[multiSubfilter.id])[0];
+          should(dsl.storage.foPairs.index.collection.notrange.fields.foo.subfilters[multiSubfilter.id][conditionId].subfilter).match(multiSubfilter);
+          should(dsl.storage.foPairs.index.collection.notrange.fields.foo.subfilters[multiSubfilter.id][conditionId].low).eql(42);
+          should(dsl.storage.foPairs.index.collection.notrange.fields.foo.subfilters[multiSubfilter.id][conditionId].high).eql(110);
           should(dsl.storage.foPairs.index.collection.notrange.fields.foo.subfilters[idToRemove]).be.undefined();
         });
     });
@@ -202,9 +233,11 @@ describe('DSL.keyword.notrange', () => {
           should(dsl.storage.foPairs.index.collection.notrange).be.instanceOf(FieldOperand);
           should(dsl.storage.foPairs.index.collection.notrange.keys.array).match(['foo']);
           should(dsl.storage.foPairs.index.collection.notrange.fields.foo.count).eql(1);
-          should(dsl.storage.foPairs.index.collection.notrange.fields.foo.subfilters[multiSubfilter.id].subfilter).match(multiSubfilter);
-          should(dsl.storage.foPairs.index.collection.notrange.fields.foo.subfilters[multiSubfilter.id].low).eql(42);
-          should(dsl.storage.foPairs.index.collection.notrange.fields.foo.subfilters[multiSubfilter.id].high).eql(110);
+
+          const conditionId = Object.keys(dsl.storage.foPairs.index.collection.notrange.fields.foo.subfilters[multiSubfilter.id])[0];
+          should(dsl.storage.foPairs.index.collection.notrange.fields.foo.subfilters[multiSubfilter.id][conditionId].subfilter).match(multiSubfilter);
+          should(dsl.storage.foPairs.index.collection.notrange.fields.foo.subfilters[multiSubfilter.id][conditionId].low).eql(42);
+          should(dsl.storage.foPairs.index.collection.notrange.fields.foo.subfilters[multiSubfilter.id][conditionId].high).eql(110);
           should(dsl.storage.foPairs.index.collection.notrange.fields.bar).be.undefined();
         });
     });

@@ -375,6 +375,81 @@ describe('Test: repositories/roleRepository', () => {
   });
 
   describe('#validateAndSaveRole', () => {
+    it('should reject if we update the anonymous with a role it cannot log with - case 1', () => {
+      const
+        bad1 = {
+          controller: {
+            actions: {
+              action: true
+            }
+          }
+        },
+        role = new Role();
+
+      role._id = 'anonymous';
+      role.controllers = bad1;
+
+      return should(roleRepository.validateAndSaveRole(role))
+        .be.rejectedWith(BadRequestError);
+    });
+
+    it('should reject if we update the anonymous with a role it cannot log with - case 2', () => {
+      const
+        bad = {
+          '*': {
+            actions: {
+              '*': false
+            }
+          }
+        },
+        role = new Role();
+
+      role._id = 'anonymous';
+      role.controllers = bad;
+
+      return should(roleRepository.validateAndSaveRole(role))
+        .be.rejectedWith(BadRequestError);
+    });
+
+    it('should reject if we update the anonymous with a role it cannot log with - case 3', () => {
+      const
+        bad = {
+          auth: {
+            actions: {
+              login: false
+            }
+          }
+        },
+        role = new Role();
+
+      role._id = 'anonymous';
+      role.controllers = bad;
+
+      return should(roleRepository.validateAndSaveRole(role))
+        .be.rejectedWith(BadRequestError);
+    });
+
+    it('should allow updating the anonymous as long as it can log in', () => {
+      const
+        rights = {
+          '*': {
+            actions: {
+              login: true
+            }
+          }
+        },
+        role = new Role();
+
+      role._id = 'anonymous';
+      role.controllers = rights;
+
+      return roleRepository.validateAndSaveRole(role)
+        .then(response => {
+          should(response._id)
+            .be.eql('anonymous');
+        });
+    });
+
     it('should persist the role to the database and trigger a "core:roleRepository:save" event when ok', () => {
       const
         controllers = {
