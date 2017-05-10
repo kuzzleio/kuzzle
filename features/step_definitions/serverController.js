@@ -1,4 +1,4 @@
-var apiSteps = function () {
+function apiSteps () {
   this.When(/^I get server informations$/, function (callback) {
     this.api.getServerInfo()
       .then(body => {
@@ -8,6 +8,16 @@ var apiSteps = function () {
 
         if (!body.result) {
           return callback(new Error('No result provided'));
+        }
+
+        try {
+          const routeInfo = body.result.serverInfo.kuzzle.api.routes.server.info;
+          if (!routeInfo || routeInfo.controller !== 'server' || routeInfo.action !== 'info') {
+            return callback(new Error('Unexpected/incorrect serverInfo content'));
+          }
+        }
+        catch(e) {
+          callback(e);
         }
 
         this.result = body.result;
@@ -32,6 +42,6 @@ var apiSteps = function () {
       })
       .catch(error => callback(error));
   });
-};
+}
 
 module.exports = apiSteps;
