@@ -626,6 +626,7 @@ Feature: Test websocket API
     Then I create local credentials of user nocredentialuser with id nocredentialuser-id
     Then I check if local credentials exist for user nocredentialuser with id nocredentialuser-id
     Then I get local credentials of user nocredentialuser with id nocredentialuser-id
+    Then I get local credentials of user nocredentialuser by id nocredentialuser
     Then I log in as nocredentialuser:testpwd1 expiring in 1h
     Then I log out
     Then I update local credentials password to "testpwd2" for user with id nocredentialuser-id

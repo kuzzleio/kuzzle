@@ -68,6 +68,21 @@ module.exports = function () {
       });
   });
 
+  this.When(/^I get ([^ ]+) credentials of user ([a-zA-Z0-9]+) by id ([a-zA-Z0-9-]+)$/, function (strategy, user, id) {
+    id = this.idPrefix + id;
+
+    return this.api.getCredentialsById(strategy, id)
+      .then(response => {
+        if (response.error !== null) {
+          throw new Error(response.error.message);
+        }
+
+        if (response.result.username !== this.credentials[user].username) {
+          throw new Error(`username missmatch: got ${response.result.username} instead of ${this.credentials[user].username}`);
+        }
+      });
+  });
+
   this.When(/^I check if ([^ ]+) credentials exist for user ([a-zA-Z0-9]+) with id ([a-zA-Z0-9-]+)$/, function (strategy, user, id) {
     id = this.idPrefix + id;
 

@@ -1146,6 +1146,15 @@ ApiRT.prototype.getCredentials = function (strategy, userId) {
   });
 };
 
+ApiRT.prototype.getCredentialsById = function (strategy, userId) {
+  return this.send({
+    controller: 'security',
+    action: 'getCredentialsById',
+    strategy,
+    _id: userId
+  });
+};
+
 ApiRT.prototype.hasCredentials = function (strategy, userId) {
   return this.send({
     controller: 'security',

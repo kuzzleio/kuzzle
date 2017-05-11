@@ -1076,6 +1076,15 @@ ApiHttp.prototype.getCredentials = function (strategy, userId) {
   return this.callApi(options);
 };
 
+ApiHttp.prototype.getCredentialsById = function (strategy, userId) {
+  const options = {
+    url : this.apiPath('credentials/' + strategy + '/' + userId + '/_byId'),
+    method: 'GET'
+  };
+
+  return this.callApi(options);
+};
+
 ApiHttp.prototype.hasCredentials = function (strategy, userId) {
   const options = {
     url : this.apiPath('credentials/' + strategy + '/' + userId + '/_exists'),

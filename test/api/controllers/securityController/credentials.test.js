@@ -234,6 +234,58 @@ describe('Test: security controller - credentials', () => {
     });
   });
 
+  describe('#getCredentialsById', () => {
+    it('should call the plugin getById method if it is provided', () => {
+      const methodStub = sinon.stub().returns(Promise.resolve({foo: 'bar'}));
+      request = new Request({
+        controller: 'security',
+        action: 'getCredentials',
+        strategy: 'someStrategy',
+        _id: 'someUserId',
+      });
+      kuzzle.pluginsManager.listStrategies = sandbox.stub().returns(['someStrategy']);
+      kuzzle.pluginsManager.hasStrategyMethod = sandbox.stub().returns(true);
+      kuzzle.pluginsManager.getStrategyMethod = sandbox.stub().returns(methodStub);
+
+      return securityController.getCredentialsById(request)
+        .then(result => {
+          should(result).be.deepEqual({foo: 'bar'});
+          should(kuzzle.pluginsManager.hasStrategyMethod).be.calledOnce();
+          should(kuzzle.pluginsManager.hasStrategyMethod.firstCall.args[0]).be.eql('someStrategy');
+          should(kuzzle.pluginsManager.hasStrategyMethod.firstCall.args[1]).be.eql('getById');
+          should(kuzzle.pluginsManager.getStrategyMethod).be.calledOnce();
+          should(kuzzle.pluginsManager.getStrategyMethod.firstCall.args[0]).be.eql('someStrategy');
+          should(kuzzle.pluginsManager.getStrategyMethod.firstCall.args[1]).be.eql('getById');
+          should(methodStub).be.calledOnce();
+          should(methodStub.firstCall.args[0]).be.eql(request);
+          should(methodStub.firstCall.args[1]).be.eql('someUserId');
+          should(methodStub.firstCall.args[2]).be.eql('someStrategy');
+        });
+    });
+
+    it('should resolve to an empty object if getById method is not provided', () => {
+      const methodStub = sinon.stub().returns(Promise.resolve({foo: 'bar'}));
+      request = new Request({
+        controller: 'security',
+        action: 'getCredentials',
+        strategy: 'someStrategy',
+        _id: 'someUserId',
+      });
+      kuzzle.pluginsManager.listStrategies = sandbox.stub().returns(['someStrategy']);
+      kuzzle.pluginsManager.hasStrategyMethod = sandbox.stub().returns(false);
+      kuzzle.pluginsManager.getStrategyMethod = sandbox.stub().returns(methodStub);
+
+      return securityController.getCredentialsById(request)
+        .then(result => {
+          should(result).be.deepEqual({});
+          should(kuzzle.pluginsManager.hasStrategyMethod).be.calledOnce();
+          should(kuzzle.pluginsManager.hasStrategyMethod.firstCall.args[0]).be.eql('someStrategy');
+          should(kuzzle.pluginsManager.hasStrategyMethod.firstCall.args[1]).be.eql('getById');
+          should(kuzzle.pluginsManager.getStrategyMethod.callCount).be.eql(0);
+        });
+    });
+  });
+
   describe('#getCredentialFields', () => {
     it('should return the list of a strategy\'s fields', () => {
       request = new Request({
