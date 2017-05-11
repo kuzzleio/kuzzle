@@ -151,6 +151,10 @@ describe('Test plugins manager run', () => {
     sandbox.restore();
   });
 
+  after(() => {
+    mockrequire.stopAll();
+  });
+
   it('should do nothing on run if plugin is not activated', () => {
     pluginMock.expects('init').never();
 

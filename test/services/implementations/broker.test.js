@@ -44,6 +44,7 @@ describe('Test: Internal broker', () => {
 
   after(() => {
     clock.restore();
+    mockrequire.stopAll();
   });
 
   describe('Internal broker general constructor', () => {
