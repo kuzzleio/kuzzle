@@ -8,7 +8,9 @@ const
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
   should = require('should'),
+  WS = require('ws'),
   CircularList = require('easy-circular-list'),
+  KuzzleMock = require('../../mocks/kuzzle.mock'),
   WSClientMock = require('../../mocks/services/ws.mock'),
   WSServerMock = require('../../mocks/services/ws.server.mock'),
   BrokerFactory = rewire('../../../lib/services/broker'),
@@ -25,19 +27,11 @@ describe('Test: Internal broker', () => {
     kuzzle;
 
   before(() => {
-    kuzzle = {
-      config: {
-        services: {
-          internalBroker: {
-            host: 'host',
-            port: 'port',
-            retryInterval: 1000
-          }
-        }
-      },
-      pluginsManager: {
-        trigger: sinon.stub()
-      }
+    kuzzle = new KuzzleMock();
+    kuzzle.config.services.internalBroker = {
+      host: 'host',
+      port: 'port',
+      retryInterval: 1000
     };
 
     clock = sinon.useFakeTimers(new Date().getTime());
@@ -109,7 +103,7 @@ describe('Test: Internal broker', () => {
         cb();
       };
 
-      client = new WSBrokerClient('internalBroker', kuzzle.config.services.internalBroker, kuzzle.pluginsManager);
+      client = new WSBrokerClient('internalBroker', kuzzle.config.services.internalBroker, kuzzle.pluginsManager, true);
       client.ws = () => new WSClientMock(server.wss);
     });
 
@@ -164,7 +158,6 @@ describe('Test: Internal broker', () => {
           .then(() => client.init())
           .then(response => {
             should(response).be.an.instanceOf(WSClientMock);
-            should(client.client.state).be.exactly('connected');
 
             // callbacks initiated by the client
             should(client.client.socket.on.firstCall).be.calledWith('message');
@@ -179,14 +172,14 @@ describe('Test: Internal broker', () => {
 
             // triggers
             should(kuzzle.pluginsManager.trigger.callCount).be.exactly(1);
-            should(kuzzle.pluginsManager.trigger.firstCall).be.calledWith('internalBroker:connected', 'Connected to Kuzzle server');
+            should(kuzzle.pluginsManager.trigger.firstCall).be.calledWith('internalBroker:connected', client.server.address);
           });
       });
 
       it ('should return the current promise if already called', () => {
         let beforeInitOnCalls;
 
-        return Bluebird.all([server.init(),client.init()])
+        return Bluebird.all([server.init(), client.init()])
           .then(() => {
             beforeInitOnCalls = client.client.socket.on.callCount;
             return client.init();
@@ -195,9 +188,13 @@ describe('Test: Internal broker', () => {
       });
 
       it('should wait for the broker server until the connection is established', (done) => {
-        let state = '';
+        let errorCount = 0;
 
         sinon.spy(client, '_connect');
+
+        client.onErrorHandlers.push(() => {
+          errorCount++;
+        });
 
         // we init the client before the server.
         // The promise is resolved once the server is up and the connection is established
@@ -205,86 +202,126 @@ describe('Test: Internal broker', () => {
         client.init()
           .then(response => {
             should(response).be.an.instanceOf(WSClientMock);
-            should(client.client.state).be.exactly('connected');
-            should(state).be.exactly('retrying');
             should(client._connect.callCount).be.exactly(2);
+            should(errorCount).be.exactly(1);
             done();
           })
           .catch(err => done(err));
 
         server.init()
           .then(() => {
-            state = client.client.state; // should be "retrying", as the client should have already tried to reach the server without success
             clock.tick(kuzzle.config.services.internalBroker.retryInterval); // should trigger a new client.init() call
           });
       });
     });
 
     describe('#listen & #unsubscribe', () => {
-      beforeEach(() => Bluebird.all([server.init(),client.init()]));
-
-      it('should log an error if listen is called while no socket is defined', () => {
-        client.client.socket = null;
-
-        client.listen();
-
-        should(client.pluginsManager.trigger)
-          .be.calledWith('log:error', 'No socket for broker internalBroker');
-
-      });
-
-      it ('should store the cb and send the request to the server', () => {
+      it('should only store the handler if the client is not connected', () => {
         const cb = sinon.stub();
 
-        // listen
         client.listen('room', cb);
 
         should(client.handlers).be.eql({
           room: [cb]
         });
-        should(client.client.socket.send).be.calledOnce();
-        should(client.client.socket.send).be.calledWith(JSON.stringify({
-          room: 'room',
-          action: 'listen'
-        }));
 
-        // unsubscribe
         client.unsubscribe('room');
 
         should(client.handlers).be.eql({});
-        should(client.client.socket.send).be.calledTwice();
-        should(client.client.socket.send.secondCall.args[0]).be.eql(JSON.stringify({
-          room: 'room',
-          action: 'unsubscribe'
-        }));
+
+        should(client.client.socket).be.null();
       });
 
-      it('should do nothing if socket is null', () => {
-        client.client.socket = null;
+      it('should only store the handler if the client is connecting', (done) => {
+        const cb = sinon.stub();
 
-        should(client.unsubscribe('room')).be.eql(false);
-        should(kuzzle.pluginsManager.trigger.callCount).be.eql(2);
+        should(client.client.socket).be.null();
+
+        server.init()
+          .then(() => client.init())
+          .then(() => {
+            // force socket to be in connecting state
+            client.client.socket.readyState = WS.CONNECTING;
+
+            client.listen('room', cb);
+            should(client.handlers).be.eql({
+              room: [cb]
+            });
+
+            should(client.client.socket).not.be.null();
+            should(client.client.socket.send.callCount).be.eql(0);
+
+            client.unsubscribe('room');
+            should(client.handlers).be.eql({});
+
+            should(client.client.socket).not.be.null();
+            should(client.client.socket.send.callCount).be.eql(0);
+
+            done();
+          })
+          .catch(err => done(err));
+      });
+
+      it('should store the handler and notify the server if the client is connected', (done) => {
+        const cb = sinon.stub();
+
+        should(client.client.socket).be.null();
+
+        server.init()
+          .then(() => client.init())
+          .then(() => {
+            // force socket to be in opened state
+            client.client.socket.readyState = WS.OPEN;
+
+            client.listen('room', cb);
+
+            should(client.handlers).be.eql({
+              room: [cb]
+            });
+
+            should(client.client.socket).not.be.null();
+
+            should(client.client.socket.send.firstCall).be.calledWith(JSON.stringify({
+              action: 'listen',
+              room: 'room'
+            }));
+
+            client.unsubscribe('room');
+
+            should(client.handlers).be.eql({});
+
+            should(client.client.socket.send.secondCall).be.calledWith(JSON.stringify({
+              action: 'unsubscribe',
+              room: 'room'
+            }));
+
+            done();
+          })
+          .catch(err => done(err));
       });
     });
 
     describe('#close', () => {
       beforeEach(() => Bluebird.all([server.init(),client.init()]));
 
-      it('should close the socket', () => {
+      it('should close the socket if it was open', () => {
         const socket = client.client.socket;
+
+        socket.readyState = WS.OPEN;
 
         client.close();
 
-        should(client.client.state).be.exactly('disconnected');
         should(socket.close).be.calledOnce();
         should(client.client.socket).be.null();
       });
 
-      it('should do nothing if socket is null', () => {
-        client.client.socket = null;
+      it('should reset the promise', () => {
+        should(client.client.connected.promise.isFulfilled()).be.eql(true);
 
-        should(client.close()).be.eql(false);
-        should(kuzzle.pluginsManager.trigger.callCount).be.eql(2);
+        client.close();
+
+        should(client.client.connected.promise.isFulfilled()).be.eql(false);
+        should(client.client.socket).be.null();
       });
     });
 
@@ -381,32 +418,19 @@ describe('Test: Internal broker', () => {
         should(client.pluginsManager.trigger).be.calledWith('log:warn', '[internalBroker] Node is connected while it was previously already.');
       });
 
-      it('on close should do nothing if :close was explicitly called', () => {
+      it('on close event should try to reconnect', () => {
         const socket = client.client.socket;
 
-        client.client.state = 'disconnected';
+        sinon.spy(client, 'retryConnection');
 
         socket.emit('close', 1);
 
-        should(client.client.socket).be.an.instanceOf(WSClientMock);
-      });
-
-      it('on close should not try to reconnect if explicitly asked so', () => {
-        const socket = client.client.socket;
-
-        client.reconnect = false;
-        client.state = 'connected';
-        client.retryTimer = 'something';
-
-        socket.emit('close', 1);
-
-        should(client.client.socket).be.null();
-        should(client.retryTimer).be.null();
+        should(client.retryConnection).be.calledOnce();
       });
 
       it('on close should try reconnecting if :close was not explicitly called', () => {
         const
-          connectSpy = sandbox.spy(client, '_connect'),
+          retrySpy = sandbox.spy(client, 'retryConnection'),
           closeSpy = sandbox.spy(client, 'close'),
           socket = client.client.socket;
 
@@ -414,53 +438,39 @@ describe('Test: Internal broker', () => {
 
         // calling multiple times to check only one retry is issued
         socket.emit('close', 1);
-        client.client.state = 'test';
         socket.emit('close', 1);
-        client.client.state = 'test';
         socket.emit('close', 1);
-        client.client.state = 'test';
 
         clock.tick(20000);
 
-        should(socket.__events.close[0]).have.callCount(3);
-        should(closeSpy).have.callCount(3);
-        should(connectSpy).be.calledOnce();
-        should(client.onCloseHandlers[0]).be.calledThrice();
+        should(socket.__events.close[0]).be.calledThrice();
+        
+        should(closeSpy).be.calledOnce();
+        should(retrySpy).be.calledOnce();
+        should(client.onCloseHandlers[0]).be.calledOnce();
       });
 
       it('on error should set the client state to retrying and retry to connect', () => {
         const
-          connectSpy = sandbox.spy(client, '_connect'),
+          retrySpy = sandbox.spy(client, 'retryConnection'),
           closeSpy = sandbox.spy(client, 'close'),
           socket = client.client.socket;
 
         client.onErrorHandlers.push(sinon.spy());
 
+        // calling multiple times to check only one retry is issued
         socket.emit('error', new Error('test'));
         socket.emit('error', new Error('test'));
         socket.emit('error', new Error('test'));
 
         clock.tick(20000);
 
-        should(socket.__events.error[0]).be.have.callCount(3);
-        should(closeSpy).be.have.callCount(3);
-        should(client.client.state).be.exactly('retrying');
-        should(connectSpy).be.calledOnce();
-        should(client.onErrorHandlers[0]).be.calledThrice();
+        should(socket.__events.error[0]).be.calledThrice();
+
+        should(closeSpy).be.calledOnce();
+        should(retrySpy).be.calledOnce();
+        should(client.onErrorHandlers[0]).be.calledOnce();
       });
-
-      it('on error should not try to reconnect if asked so', () => {
-        const socket = client.client.socket;
-
-        client.reconnect = false;
-        client.retryTimer = 'something';
-
-        socket.emit('error', 1);
-
-        should(client.client.socket).be.null();
-        should(client.retryTimer).be.null();
-      });
-
     });
 
     describe('#ping/pong keep-alive', () => {
@@ -579,16 +589,15 @@ describe('Test: Internal broker', () => {
           });
       });
 
-      it('should emit an error if pong response timed out', () => {
+      it('should retry to connect if pong response timed out', () => {
         let clientConnected = client.init();
         let socket = client.client.socket;
-        let errorRaised = false;
 
-        socket.on('error', () => {
-          errorRaised = true;
-        });
+        sandbox.spy(client, 'retryConnection');
 
         socket.emit('open', 1);
+
+        socket.readyState = WS.OPEN;
 
         return clientConnected
           .then(() => {
@@ -600,8 +609,8 @@ describe('Test: Internal broker', () => {
 
             clock.tick(51);
 
-            should(errorRaised)
-              .be.equal(true, 'error must be raised due to ping timeout');
+            should(client.retryConnection)
+              .be.calledOnce();
 
             return null;
           });
