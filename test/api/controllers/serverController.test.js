@@ -4,7 +4,7 @@ var
   sinon = require('sinon'),
   ServerController = require('../../../lib/api/controllers/serverController'),
   Request = require('kuzzle-common-objects').Request,
-  ExternalServiceError = require('kuzzle-common-objects').errors.ExternalServiceError,
+  ServiceUnavailableError = require('kuzzle-common-objects').errors.ServiceUnavailableError,
   KuzzleMock = require('../../mocks/kuzzle.mock'),
   sandbox = sinon.sandbox.create();
 
@@ -111,46 +111,66 @@ describe('Test: server controller', () => {
       kuzzle.services.list.storageEngine.getInfos.returns(Bluebird.resolve({status: 'green'}));
     });
 
-    it('should return "ok" if storageEngine status is "green" and Redis is OK', () => {
+    it('should return a 200 response with status "green" if storageEngine status is "green" and Redis is OK', () => {
       return serverController.healthCheck(request)
         .then(response => {
-          should(response).be.instanceof(Object);
-          should(response.status).be.exactly('ok');
+          should(request.response.error).be.null();
+          should(response.status).be.exactly('green');
         });
     });
 
-    it('should return "ok" if storageEngine status is "yellow" and Redis is OK', () => {
+    it('should return a 200 response with status "green" if storageEngine status is "yellow" and Redis is OK', () => {
       kuzzle.services.list.storageEngine.getInfos.returns(Bluebird.resolve({status: 'yellow'}));
 
       return serverController.healthCheck(request)
         .then(response => {
-          should(response).be.instanceof(Object);
-          should(response.status).be.exactly('ok');
+          should(request.response.error).be.null();
+          should(response.status).be.exactly('green');
         });
     });
 
-    it('should throw an ExternalServiceError if storageEngine status is "red"', () => {
+    it('should return a 503 response with status "red" if storageEngine status is "red"', () => {
       kuzzle.services.list.storageEngine.getInfos.returns(Bluebird.resolve({status: 'red'}));
 
-      return should(serverController.healthCheck(request)).be.rejectedWith(ExternalServiceError);
+      return serverController.healthCheck(request)
+        .then(response => {
+          should(request.response.error).be.instanceOf(ServiceUnavailableError);
+          should(request.response.status).be.exactly(503);
+          should(response.status).be.exactly('red');
+        });
     });
 
-    it('should throw an ExternalServiceError if storageEngine is KO', () => {
+    it('should return a 503 response with status "red" if storageEngine is KO', () => {
       kuzzle.services.list.storageEngine.getInfos.returns(Bluebird.reject(new Error()));
 
-      return should(serverController.healthCheck(request)).be.rejectedWith(ExternalServiceError);
+      return serverController.healthCheck(request)
+        .then(response => {
+          should(request.response.error).be.instanceOf(ServiceUnavailableError);
+          should(request.response.status).be.exactly(503);
+          should(response.status).be.exactly('red');
+        });
     });
 
-    it('should throw an ExternalServiceError if memoryStorage is KO', () => {
+    it('should return a 503 response with status "red" if memoryStorage is KO', () => {
       kuzzle.services.list.memoryStorage.getInfos.returns(Bluebird.reject(new Error()));
 
-      return should(serverController.healthCheck(request)).be.rejectedWith(ExternalServiceError);
+      return serverController.healthCheck(request)
+        .then(response => {
+          should(request.response.error).be.instanceOf(ServiceUnavailableError);
+          should(request.response.status).be.exactly(503);
+          should(response.status).be.exactly('red');
+        });
     });
 
-    it('should throw an ExternalServiceError if internalCache is KO', () => {
+    it('should return a 503 response with status "red" if internalCache is KO', () => {
       kuzzle.services.list.internalCache.getInfos.returns(Bluebird.reject(new Error()));
 
-      return should(serverController.healthCheck(request)).be.rejectedWith(ExternalServiceError);
+      return serverController.healthCheck(request)
+        .then(response => {
+          should(request.response.error).be.instanceOf(ServiceUnavailableError);
+          should(request.response.status).be.exactly(503);
+          should(response.status).be.exactly('red');
+        });
     });
   });
 
