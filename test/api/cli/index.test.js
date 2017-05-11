@@ -21,6 +21,10 @@ describe('Tests: api/cli/index.js', () => {
     sandbox.restore();
   });
 
+  after(() => {
+    mockrequire.stopAll();
+  });
+
   describe('#constructor', () => {
     it('should build proper properties', () => {
       const cli = new Cli(kuzzle);
