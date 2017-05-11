@@ -160,7 +160,7 @@ describe('Test: server controller', () => {
                 action: 'publicMethod',
                 controller: 'foobar',
                 http: {
-                  url: '/foobar',
+                  url: '_plugin/foobar',
                   verb: 'BAR'
                 }
               },
