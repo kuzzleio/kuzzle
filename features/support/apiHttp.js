@@ -497,6 +497,15 @@ ApiHttp.prototype.listCollections = function (index = this.world.fakeIndex, type
   return this.callApi(options);
 };
 
+ApiHttp.prototype.healthCheck = function () {
+  const options = {
+    url: this.apiPath('_healthCheck'),
+    method: 'GET'
+  };
+
+  return this.callApi(options);
+};
+
 ApiHttp.prototype.now = function () {
   const options = {
     url: this.apiPath('_now'),

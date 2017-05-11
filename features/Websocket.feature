@@ -1,6 +1,10 @@
 Feature: Test websocket API
 
   @usingWebsocket
+  Scenario: Check server Health
+    When I check server health
+
+  @usingWebsocket
   Scenario: Get server information
     When I get server informations
 
