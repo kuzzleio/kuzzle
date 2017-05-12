@@ -116,6 +116,9 @@ describe('Test: server controller', () => {
         .then(response => {
           should(request.response.error).be.null();
           should(response.status).be.exactly('green');
+          should(response.services.internalCache).be.exactly('green');
+          should(response.services.memoryStorage).be.exactly('green');
+          should(response.services.storageEngine).be.exactly('green');
         });
     });
 
@@ -126,6 +129,9 @@ describe('Test: server controller', () => {
         .then(response => {
           should(request.response.error).be.null();
           should(response.status).be.exactly('green');
+          should(response.services.internalCache).be.exactly('green');
+          should(response.services.memoryStorage).be.exactly('green');
+          should(response.services.storageEngine).be.exactly('green');
         });
     });
 
@@ -137,6 +143,9 @@ describe('Test: server controller', () => {
           should(request.response.error).be.instanceOf(ServiceUnavailableError);
           should(request.response.status).be.exactly(503);
           should(response.status).be.exactly('red');
+          should(response.services.internalCache).be.exactly('green');
+          should(response.services.memoryStorage).be.exactly('green');
+          should(response.services.storageEngine).be.exactly('red');
         });
     });
 
@@ -148,6 +157,9 @@ describe('Test: server controller', () => {
           should(request.response.error).be.instanceOf(ServiceUnavailableError);
           should(request.response.status).be.exactly(503);
           should(response.status).be.exactly('red');
+          should(response.services.internalCache).be.exactly('green');
+          should(response.services.memoryStorage).be.exactly('green');
+          should(response.services.storageEngine).be.exactly('red');
         });
     });
 
@@ -159,6 +171,9 @@ describe('Test: server controller', () => {
           should(request.response.error).be.instanceOf(ServiceUnavailableError);
           should(request.response.status).be.exactly(503);
           should(response.status).be.exactly('red');
+          should(response.services.internalCache).be.exactly('green');
+          should(response.services.memoryStorage).be.exactly('red');
+          should(response.services.storageEngine).be.exactly('green');
         });
     });
 
@@ -170,6 +185,9 @@ describe('Test: server controller', () => {
           should(request.response.error).be.instanceOf(ServiceUnavailableError);
           should(request.response.status).be.exactly(503);
           should(response.status).be.exactly('red');
+          should(response.services.internalCache).be.exactly('red');
+          should(response.services.memoryStorage).be.exactly('green');
+          should(response.services.storageEngine).be.exactly('green');
         });
     });
   });
