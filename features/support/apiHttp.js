@@ -542,6 +542,15 @@ ApiHttp.prototype.createIndex = function (index) {
   return this.callApi(options);
 };
 
+ApiHttp.prototype.createCollection = function (index, collection) {
+  const options = {
+    url: this.apiPath(`${index}/${collection}`),
+    method: 'PUT'
+  };
+
+  return this.callApi(options);
+};
+
 ApiHttp.prototype.deleteIndex = function (index) {
   const options = {
     url: this.apiPath(index),

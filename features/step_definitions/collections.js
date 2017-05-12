@@ -79,6 +79,25 @@ var apiSteps = function () {
   this.When(/I check if collection "(.*?)" exists on index "(.*?)"$/, function (collection, index, cb) {
     return stepUtils.getReturn.call(this, 'collectionExists', index, collection, cb);
   });
+
+  this.When(/I create a collection named "([^"]*)" in index "([^"]*)"$/, function (collection, index, callback) {
+    this.api.createCollection(index, collection)
+      .then(body => {
+        if (body.error) {
+          callback(new Error(body.error.message));
+          return false;
+        }
+
+        if (!body.result) {
+          callback(new Error('No result provided'));
+          return false;
+        }
+
+        this.result = body.result;
+        callback();
+      })
+      .catch(error => callback(error));
+  });
 };
 
 module.exports = apiSteps;

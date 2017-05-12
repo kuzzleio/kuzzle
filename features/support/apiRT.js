@@ -526,6 +526,18 @@ ApiRT.prototype.createIndex = function (index) {
   return this.send(msg);
 };
 
+ApiRT.prototype.createCollection = function (index, collection) {
+  const
+    msg = {
+      controller: 'index',
+      action: 'create',
+      index,
+      collection
+    };
+
+  return this.send(msg);
+};
+
 ApiRT.prototype.deleteIndex = function (index) {
   const
     msg = {

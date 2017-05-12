@@ -22,6 +22,9 @@ const myHooks = function () {
       }));
 
       promises.push(() => api.createIndex(index));
+      console.log(this.fakeCollection);
+      promises.push(() => api.createCollection(index, api.world.fakeCollection));
+      promises.push(() => api.createCollection(index, api.world.fakeAltCollection));
       promises.push(() => api.refreshIndex(index));
     });
 
