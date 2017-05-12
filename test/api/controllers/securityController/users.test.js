@@ -295,7 +295,7 @@ describe('Test: security controller - users', () => {
     });
   });
 
-  describe('#persistUserAndStrategies', () => {
+  describe('#persistUserAndCredentials', () => {
     it('should reject an error if a strategy is unknown', () => {
       kuzzle.repositories.user.load = sandbox.stub().returns(Promise.resolve(kuzzle.repositories.user.anonymous()));
       kuzzle.pluginsManager.listStrategies = sandbox.stub().returns(['someStrategy']);
