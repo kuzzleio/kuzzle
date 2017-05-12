@@ -17,7 +17,8 @@ describe('lib/api/controllers/cliController', () => {
     cleanDbStub,
     clearCacheStub,
     dumpStub,
-    dataStub;
+    dataStub,
+    shutdownStub;
 
   beforeEach(() => {
     const requireMock = sinon.stub();
@@ -35,6 +36,7 @@ describe('lib/api/controllers/cliController', () => {
     requireMock.withArgs('./cli/clearCache').returns(() => clearCacheStub);
     requireMock.withArgs('./cli/data').returns(() => dataStub);
     requireMock.withArgs('./cli/dump').returns(() => dumpStub);
+    requireMock.withArgs('./cli/shutdown').returns(() => shutdownStub);
 
     kuzzle = new KuzzleMock();
 

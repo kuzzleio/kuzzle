@@ -1,6 +1,6 @@
 'use strict';
 
-var
+const
   should = require('should').noConflict(),
   BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,
   NotFoundError = require('kuzzle-common-objects').errors.NotFoundError,
