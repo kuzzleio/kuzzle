@@ -37,15 +37,14 @@ kuzzle-swagger.*
 #sonarqube
 .sonar
 .scannerwork
+.sonarlint
+/sonarlint.json
 
 #plugins
 plugins/available/*
 !plugins/available/kuzzle-plugin-auth-passport-local
 !plugins/available/kuzzle-plugin-logger
-!plugins/available/.keep
-
 
 plugins/enabled/*
 !plugins/enabled/kuzzle-plugin-auth-passport-local
 !plugins/enabled/kuzzle-plugin-logger
-!plugins/enabled/.keep

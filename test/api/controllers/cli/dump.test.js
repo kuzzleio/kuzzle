@@ -1,4 +1,5 @@
 const
+  path = require('path'),
   should = require('should'),
   sinon = require('sinon'),
   mockrequire = require('mock-require'),
@@ -19,22 +20,33 @@ describe('Test: dump', () => {
 
   beforeEach(() => {
     fsStub = {
-      constants: {},
       accessSync: sinon.stub(),
+      constants: {},
       copySync: sinon.stub(),
-      statSync: sinon.stub(),
-      mkdirsSync: sinon.stub(),
-      readdirSync: sinon.stub(),
-      removeSync: sinon.stub(),
-      writeFileSync: sinon.stub(),
       createReadStream: sinon.stub().returns({pipe: sinon.stub().returnsThis(), on: sinon.stub().callsArgWith(1)}),
       createWriteStream: sinon.stub(),
-      unlink: sinon.stub()
+      ensureDirSync: sinon.stub(),
+      mkdirsSync: sinon.stub(),
+      readdir: sinon.stub(),
+      readdirSync: sinon.stub(),
+      removeSync: sinon.stub(),
+      unlink: sinon.stub(),
+      unlinkSync: sinon.stub(),
+      stat: sinon.stub(),
+      statSync: sinon.stub(),
+      writeFileSync: sinon.stub(),
     };
 
     coreStub = sinon.stub().returns({});
     getAllStatsStub = sinon.stub().returns(Promise.resolve({hits: [{stats: 42}]}));
-    globStub = sinon.stub().callsArgWith(1, null, ['core']);
+
+    const globMock = function (pattern, cb) {
+      if (typeof cb === 'function') {
+        return cb(null, ['core']);
+      }
+    };
+    globMock.sync = sinon.stub();
+    globStub = sinon.spy(globMock);
 
     kuzzle = {
       config: {
@@ -119,25 +131,44 @@ describe('Test: dump', () => {
         });
     });
 
-    it('should copy pm2 logs files if any', () => {
-      const baseDumpPath = '/tmp/'.concat((new Date()).getFullYear());
-      process.env.pm_log_path = '/tmp/logs/pm2.logs';
-
-      return dump()
-        .then(() => {
-          should(fsStub.copySync.getCall(0).args[0]).be.exactly('/tmp/logs');
-          should(fsStub.copySync.getCall(0).args[1]).be.exactly(baseDumpPath.concat('/logs'));
-        });
-    });
-
     it('should copy pm2 logs and error files if any', () => {
       const baseDumpPath = '/tmp/'.concat((new Date()).getFullYear());
       process.env.pm_err_log_path = '/foo/bar/baz.log';
 
+      fsStub.readdir.yields(null, ['baz.log', 'baz-42.log', 'bar.log']);
+
+      fsStub.stat
+        .yields(new Error('test'));
+      fsStub.stat
+        .onFirstCall()
+        .yields(null, {
+          ctime: 42
+        });
+      fsStub.stat
+        .onSecondCall()
+        .yields(null, {
+          ctime: 0
+        });
+      fsStub.stat
+        .onThirdCall()
+        .yields(null, {
+          ctime: 3
+        });
+
       return dump()
         .then(() => {
-          should(fsStub.copySync.getCall(0).args[0]).be.exactly('/foo/bar');
-          should(fsStub.copySync.getCall(0).args[1]).be.exactly(baseDumpPath.concat('/logs'));
+          should(fsStub.createReadStream)
+            .be.calledWith('/foo/bar/baz.log')
+            .be.calledWith('/foo/bar/bar.log');
+          should(fsStub.createWriteStream)
+            .be.calledWith(baseDumpPath + '/logs/baz.gz')
+            .be.calledWith(baseDumpPath + '/logs/bar.gz');
+        })
+        .catch(e => {
+          throw e;
+        })
+        .finally(() => {
+          delete process.env.pm_err_log_path;
         });
     });
   });
@@ -172,7 +203,11 @@ describe('Test: dump', () => {
 
       fsStub.readdirSync.returns([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
       fsStub.accessSync.throws(new Error('no coredump here'));
-      fsStub.accessSync.onFirstCall().returns();
+      fsStub.accessSync
+        .withArgs('/tmp', 0)
+        .returns();
+
+      globStub.sync.returns([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
 
       return dump()
         .then(() => {
@@ -190,19 +225,25 @@ describe('Test: dump', () => {
       kuzzle.config.dump.history.reports = 100;
 
       fsStub.readdirSync.returns([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+      globStub.sync = sinon.spy(pattern => [path.join(path.dirname(pattern), 'core.gz')]);
 
-      // throws every 2 calls (the 1st one does not count)
-      for(let i = 1; i < 10; i+=2) {
-        fsStub.accessSync.onCall(i).throws(new Error('no coredump here'));
-      }
+      fsStub.accessSync.throws(new Error('no coredump here'));
+      fsStub.accessSync
+        .withArgs('/tmp', 0)
+        .returns();
 
       return dump()
         .then(() => {
-          // 10 directories, 1 coredump per 2 directories = 5 dumps in total
-          // The limit is set to 3, so the method should remove
-          // (5 - 3 + 1) = 3 coredumps
-          // (+1 because we're about to create a new coredump)
-          should(fsStub.removeSync.callCount).be.eql(3);
+          for (let i = 1; i < 8; i++) {
+            should(globStub.sync)
+              .be.calledWith(`/tmp/${i}/core*`);
+            should(fsStub.unlinkSync)
+              .be.calledWith(`/tmp/${i}/core.gz`);
+          }
+          for (let i = 9; i < 11; i++) {
+            should(globStub.sync)
+              .not.be.calledWith(`/tmp/${i}/core*`);
+          }
         });
     });
   });

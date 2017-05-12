@@ -55,6 +55,12 @@ program
   .option('--noint', 'non interactive mode')
   .action(require('./commands/reset'));
 
+// $ kuzzle shutdown
+program
+  .command('shutdown')
+  .description('gracefully exits after processing remaining requests')
+  .action(require('./commands/shutdown'));
+
 // $ kuzzle start
 program
   .command('start')

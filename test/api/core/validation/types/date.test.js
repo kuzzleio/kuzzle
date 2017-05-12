@@ -33,6 +33,10 @@ describe('Test: validation/types/date', () => {
     dateType = new DateType();
   });
 
+  after(() => {
+    mockrequire.stopAll();
+  });
+
   it('should derivate from BaseType', () => {
     should(BaseType.prototype.isPrototypeOf(dateType)).be.true();
   });

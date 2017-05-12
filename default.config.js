@@ -9,6 +9,29 @@
  * @class KuzzleConfiguration
  */
 module.exports = {
+
+  dump: {
+    enabled: true,
+    history: {
+      coredump: 3,
+      reports: 5
+    },
+    path: './dump/',
+    gcore: 'gcore',
+    dateFormat: 'YYYYMMDD-HHmmss',
+    handledErrors: {
+      enabled: true,
+      whitelist: [
+        // 'Error',
+        'RangeError',
+        'TypeError',
+        'KuzzleError',
+        'InternalError'
+      ],
+      minInterval: 10 * 60 * 1000
+    }
+  },
+
   /*
    routes: list of Kuzzle API exposed HTTP routes
    accessControlAllowOrigin: sets the Access-Control-Allow-Origin header used to
@@ -188,26 +211,6 @@ module.exports = {
 
   /** @type {DocumentSpecification} */
   validation: {
-  },
-
-  dump: {
-    enabled: true,
-    history: {
-      coredump: 3,
-      reports: 5
-    },
-    path: './dump/',
-    gcore: 'gcore',
-    dateFormat: 'YYYYMMDD-HHmm',
-    handledErrors: {
-      enabled: true,
-      whitelist: [
-        // 'Error',
-        'RangeError',
-        'TypeError',
-        'KuzzleError',
-        'InternalError'
-      ]
-    }
   }
+
 };

@@ -27,6 +27,10 @@ describe('PluginsManager', () => {
     pluginsManager = new PluginsManager(kuzzle);
   });
 
+  after(() => {
+    mockrequire.stopAll();
+  });
+
   describe('#init', () => {
     it('should load plugins at init', () => {
       pluginsManager.init();
