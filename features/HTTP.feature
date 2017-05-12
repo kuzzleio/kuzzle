@@ -1,6 +1,10 @@
 Feature: Test HTTP API
 
   @usingHttp
+  Scenario: Check server Health
+    When I check server health
+
+  @usingHttp
   Scenario: Get server information
     When I get server informations
 

@@ -463,6 +463,16 @@ ApiRT.prototype.listCollections = function (index, type) {
   return this.send(msg);
 };
 
+ApiRT.prototype.healthCheck = function () {
+  const
+    msg = {
+      controller: 'server',
+      action: 'healthCheck'
+    };
+
+  return this.send(msg);
+};
+
 ApiRT.prototype.now = function () {
   const
     msg = {
