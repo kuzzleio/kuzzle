@@ -630,6 +630,7 @@ Feature: Test websocket API
     Then I log in as nocredentialuser:testpwd1 expiring in 1h
     Then I log out
     Then I update local credentials password to "testpwd2" for user with id nocredentialuser-id
+    Then I can't log in as nocredentialuser:testpwd1 expiring in 1h
     Then I log in as nocredentialuser:testpwd2 expiring in 1h
     Then I log out
     Then I delete local credentials of user with id nocredentialuser-id
@@ -648,6 +649,7 @@ Feature: Test websocket API
     Then I get my local credentials
     Then I update my local credentials password to "testpwd2"
     Then I log out
+    Then I can't log in as nocredentialuser:testpwd1 expiring in 1h
     Then I log in as nocredentialuser:testpwd2 expiring in 1h
     Then I delete my local credentials
     Then I log out
