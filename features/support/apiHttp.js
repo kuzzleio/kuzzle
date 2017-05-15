@@ -158,6 +158,15 @@ ApiHttp.prototype.callApi = function (options) {
   return rp(options);
 };
 
+ApiHttp.prototype.exists = function (id, index) {
+  const options = {
+    url: this.apiPath(this.util.getIndex(index) + '/' + this.world.fakeCollection + '/' + id + '/_exists'),
+    method: 'GET'
+  };
+
+  return this.callApi(options);
+};
+
 ApiHttp.prototype.get = function (id, index) {
   const options = {
     url: this.apiPath(this.util.getIndex(index) + '/' + this.world.fakeCollection + '/' + id),

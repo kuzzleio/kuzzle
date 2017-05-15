@@ -12,6 +12,7 @@ const
   foo = {foo: 'bar'},
   InternalError = require('kuzzle-common-objects').errors.InternalError,
   ServiceUnavailableError = require('kuzzle-common-objects').errors.ServiceUnavailableError,
+  NotFoundError = require('kuzzle-common-objects').errors.NotFoundError,
   PartialError = require('kuzzle-common-objects').errors.PartialError;
 
 describe('Test: document controller', () => {
@@ -92,6 +93,40 @@ describe('Test: document controller', () => {
       kuzzle.services.list.storageEngine.scroll.returns(Promise.reject(new Error('foobar')));
 
       return should(documentController.scroll(request)).be.rejectedWith('foobar');
+    });
+  });
+
+  describe('#exists', () => {
+    beforeEach(() => {
+      request.input.resource._id = 'foo';
+    });
+
+    it('should fullfill with a boolean', () => {
+      request.input.resource._id = 'foo';
+
+      return documentController.exists(request)
+        .then(response => {
+          should(response).be.a.Boolean();
+          should(response).be.true();
+        });
+    });
+
+    it('should return false if the document doesn\'t exist', () => {
+      request.input.resource._id = 'ghost';
+
+      engine.get.returns(Promise.reject(new NotFoundError('foobar')));
+
+      return documentController.exists(request)
+        .then(response => {
+          should(response).be.a.Boolean();
+          should(response).be.false();
+        });
+    });
+
+    it('should reject with an error in case of error', () => {
+      engine.get.returns(Promise.reject(new Error('foobar')));
+
+      return should(documentController.exists(request)).be.rejected();
     });
   });
 

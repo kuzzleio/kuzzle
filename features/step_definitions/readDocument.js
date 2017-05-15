@@ -201,6 +201,20 @@ var apiSteps = function () {
         callback(error);
       });
   });
+
+  this.Then(/^I check that the document "([^"]*)" ?(doesn't)* exists$/, function (id, doesnt, callback) {
+    this.api.exists(id)
+      .then(response => {
+        if (response.result) {
+          return (doesnt === undefined) ? callback() : callback(new Error('The document exists'));
+        }
+
+        return (doesnt === undefined) ? callback(new Error('The document doesn\'t exists')) : callback();
+      })
+      .catch(function (error) {
+        callback(error);
+      });
+  });
 };
 
 module.exports = apiSteps;
