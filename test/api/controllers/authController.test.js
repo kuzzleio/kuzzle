@@ -26,8 +26,8 @@ describe('Test the auth controller', () => {
     request = new Request({
       controller: 'auth',
       action: 'login',
+      strategy: 'mockup',
       body: {
-        strategy: 'mockup',
         username: 'jdoe'
       }
     });
@@ -61,13 +61,11 @@ describe('Test the auth controller', () => {
         });
     });
 
-    it('should use local strategy if no one is set', () => {
-      delete request.input.body.strategy;
+    it('should throw if no strategy is specified', () => {
+      delete request.input.args.strategy;
 
-      return authController.login(request)
-        .then(() => {
-          should(kuzzle.passport.authenticate).calledWith({query: request.input.body, original: request}, 'local');
-        });
+      return should(() => {authController.login(request);})
+        .throw();
     });
 
     it('should be able to set authentication expiration', () => {

@@ -565,8 +565,8 @@ ApiRT.prototype.login = function (strategy, credentials) {
     msg = {
       controller: 'auth',
       action: 'login',
+      strategy: strategy,
       body: {
-        strategy: strategy,
         username: credentials.username,
         password: credentials.password,
         expiresIn: credentials.expiresIn
