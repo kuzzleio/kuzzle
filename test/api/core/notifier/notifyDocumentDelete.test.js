@@ -14,20 +14,15 @@ describe('Test: notifier.notifyDocumentDelete', () => {
     kuzzle,
     request,
     notification,
-    mockupCacheService = {
+    mockupStorageEngineService = {
       id: undefined,
 
-      remove: function (id) {
-        this.id = id;
-        return Bluebird.resolve({});
-      },
-
-      search: function (id) {
-        if (id === 'errorme') {
+      get: function (inputRequest) {
+        if (inputRequest._id === 'errorme') {
           return Bluebird.reject(new Error());
         }
 
-        return Bluebird.resolve(['']);
+        return Bluebird.resolve({_source: {}, _id: inputRequest.input.resource._id});
       }
     },
     notifier;
@@ -41,8 +36,8 @@ describe('Test: notifier.notifyDocumentDelete', () => {
     kuzzle.internalEngine.get.returns(Bluebird.resolve({}));
     return kuzzle.services.init({whitelist: []})
       .then(() => {
-        kuzzle.services.list.internalCache = mockupCacheService;
-        kuzzle.notifier.notify = (rooms, r, n) => {
+        kuzzle.services.list.storageEngine = mockupStorageEngineService ;
+        notifier.notify = (rooms, r, n) => {
           should(r).be.exactly(request);
           notification.push(n);
         };
@@ -70,14 +65,13 @@ describe('Test: notifier.notifyDocumentDelete', () => {
 
   it('should notify when a document has been deleted', () => {
     return notifier.notifyDocumentDelete(request, ['foobar'])
-      .then(() => {
-        should(mockupCacheService.id).be.exactly('notif/foobar');
-
+      .then(id => {
+        should(id[0]).be.exactly('foobar');
         should(notification.length).be.eql(1);
         should(notification[0].scope).be.exactly('out');
         should(notification[0].action).be.exactly('delete');
-        should(notification[0]._id).be.exactly('foobar');
         should(notification[0].state).be.exactly('done');
+        should(notification[0]._id).be.exactly('foobar');
       });
   });
 
