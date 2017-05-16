@@ -35,6 +35,7 @@ class KuzzleMock extends Kuzzle {
       remove: sinon.stub().returns(Bluebird.resolve())
     };
 
+
     this.entryPoints = {
       http: {
         init: sinon.spy()
@@ -104,7 +105,8 @@ class KuzzleMock extends Kuzzle {
         createRolesCollection: sinon.stub().returns(Bluebird.resolve()),
         createProfilesCollection: sinon.stub().returns(Bluebird.resolve()),
         createUsersCollection: sinon.stub().returns(Bluebird.resolve()),
-        createPluginsCollection: sinon.stub().returns(Bluebird.resolve())
+        createPluginsCollection: sinon.stub().returns(Bluebird.resolve()),
+        delete: sinon.stub().returns(Bluebird.resolve())
       },
       create: sinon.stub().returns(Bluebird.resolve()),
       createInternalIndex: sinon.stub().returns(Bluebird.resolve()),
@@ -141,7 +143,8 @@ class KuzzleMock extends Kuzzle {
 
     this.passport = {
       use: sinon.stub(),
-      authenticate: sinon.stub().returns(Bluebird.resolve({}))
+      authenticate: sinon.stub().returns(Bluebird.resolve({})),
+      injectAuthenticateOptions: sinon.stub()
     };
 
     this.pluginsManager = {
@@ -150,7 +153,9 @@ class KuzzleMock extends Kuzzle {
       run: sinon.stub().returns(Bluebird.resolve()),
       getPluginsFeatures: sinon.stub().returns({}),
       trigger: sinon.spy(function () {return Bluebird.resolve(arguments[1]);}),
-      listStrategies: sinon.stub().returns(Bluebird.resolve([])),
+      listStrategies: sinon.stub().returns([]),
+      getStrategyMethod: sinon.stub().returns(sinon.stub()),
+      registeredStrategies: [],
       shutdownWorkers: sinon.stub().returns(Bluebird.resolve())
     };
 

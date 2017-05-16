@@ -1046,4 +1046,127 @@ ApiHttp.prototype.deleteSpecifications = function (index, collection) {
   return this.callApi(options);
 };
 
+ApiHttp.prototype.createCredentials = function (strategy, userId, body) {
+  const options = {
+    url : this.apiPath('credentials/' + strategy + '/' + userId + '/_create'),
+    method: 'POST',
+    body
+  };
+
+  return this.callApi(options);
+};
+
+ApiHttp.prototype.updateCredentials = function (strategy, userId, body) {
+  const options = {
+    url : this.apiPath('credentials/' + strategy + '/' + userId + '/_update'),
+    method: 'PUT',
+    body
+  };
+
+  return this.callApi(options);
+};
+
+ApiHttp.prototype.validateCredentials = function (strategy, userId, body) {
+  const options = {
+    url : this.apiPath('credentials/' + strategy + '/' + userId + '/_validate'),
+    method: 'POST',
+    body
+  };
+
+  return this.callApi(options);
+};
+
+ApiHttp.prototype.deleteCredentials = function (strategy, userId) {
+  const options = {
+    url : this.apiPath('credentials/' + strategy + '/' + userId),
+    method: 'DELETE'
+  };
+
+  return this.callApi(options);
+};
+
+ApiHttp.prototype.getCredentials = function (strategy, userId) {
+  const options = {
+    url : this.apiPath('credentials/' + strategy + '/' + userId),
+    method: 'GET'
+  };
+
+  return this.callApi(options);
+};
+
+ApiHttp.prototype.getCredentialsById = function (strategy, userId) {
+  const options = {
+    url : this.apiPath('credentials/' + strategy + '/' + userId + '/_byId'),
+    method: 'GET'
+  };
+
+  return this.callApi(options);
+};
+
+ApiHttp.prototype.hasCredentials = function (strategy, userId) {
+  const options = {
+    url : this.apiPath('credentials/' + strategy + '/' + userId + '/_exists'),
+    method: 'GET'
+  };
+
+  return this.callApi(options);
+};
+
+ApiHttp.prototype.createMyCredentials = function (strategy, body) {
+  const options = {
+    url : this.apiPath('credentials/' + strategy + '/_me/_create'),
+    method: 'POST',
+    body
+  };
+
+  return this.callApi(options);
+};
+
+ApiHttp.prototype.updateMyCredentials = function (strategy, body) {
+  const options = {
+    url : this.apiPath('credentials/' + strategy + '/_me/_update'),
+    method: 'PUT',
+    body
+  };
+
+  return this.callApi(options);
+};
+
+ApiHttp.prototype.validateMyCredentials = function (strategy, body) {
+  const options = {
+    url : this.apiPath('credentials/' + strategy + '/_me/_validate'),
+    method: 'POST',
+    body
+  };
+
+  return this.callApi(options);
+};
+
+ApiHttp.prototype.deleteMyCredentials = function (strategy) {
+  const options = {
+    url : this.apiPath('credentials/' + strategy + '/_me'),
+    method: 'DELETE'
+  };
+
+  return this.callApi(options);
+};
+
+ApiHttp.prototype.getMyCredentials = function (strategy) {
+  const options = {
+    url : this.apiPath('credentials/' + strategy + '/_me'),
+    method: 'GET'
+  };
+
+  return this.callApi(options);
+};
+
+ApiHttp.prototype.credentialsExist = function (strategy) {
+  const options = {
+    url : this.apiPath('credentials/' + strategy + '/_me/_exists'),
+    method: 'GET'
+  };
+
+  return this.callApi(options);
+};
+
 module.exports = ApiHttp;

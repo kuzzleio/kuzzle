@@ -40,7 +40,7 @@ describe('Test: security controller - createFirstAdmin', () => {
       resetProfilesStub = SecurityController.__get__('resetProfiles');
       createUser = sandbox.stub().returns(Promise.resolve());
 
-      kuzzle.funnel.controllers.security.createUser = createUser;
+      adminController.createUser = createUser;
     });
 
     afterEach(() => {
@@ -51,15 +51,23 @@ describe('Test: security controller - createFirstAdmin', () => {
       kuzzle.funnel.controllers.server.adminExists = sandbox.stub().returns(Promise.resolve({exists: true}));
 
       return should(adminController.createFirstAdmin(new Request({
+        controller: 'security',
+        action: 'createFirstAdmin',
         _id: 'toto',
-        body: {password: 'pwd'}
+        body: {content: {password: 'pwd'}}
       }), {})).be.rejected();
     });
 
     it('should create the admin user and not reset roles & profiles if not asked to', () => {
       kuzzle.funnel.controllers.server.adminExists = sandbox.stub().returns(Promise.resolve({exists: false}));
+      kuzzle.repositories.user.load = sandbox.stub().returns(Promise.resolve(kuzzle.repositories.user.anonymous()));
 
-      return adminController.createFirstAdmin(new Request({_id: 'toto', body: {password: 'pwd'}}))
+      return adminController.createFirstAdmin(new Request({
+        controller: 'security',
+        action: 'createFirstAdmin',
+        _id: 'toto',
+        body: {content: {password: 'pwd'}}
+      }))
         .then(() => {
           should(createUser).be.calledOnce();
           should(createUser.firstCall.args[0]).be.instanceOf(Request);
@@ -70,11 +78,19 @@ describe('Test: security controller - createFirstAdmin', () => {
 
     it('should create the admin user and reset roles & profiles if asked to', () => {
       kuzzle.funnel.controllers.server.adminExists = sandbox.stub().returns(Promise.resolve({exists: false}));
+      kuzzle.repositories.user.load = sandbox.stub().returns(Promise.resolve(kuzzle.repositories.user.anonymous()));
+
       kuzzle.funnel.controllers.index = {
         refreshInternal: sandbox.stub().returns(Promise.resolve({}))
       };
 
-      return adminController.createFirstAdmin(new Request({_id: 'toto', body: {password: 'pwd'}, reset: true}))
+      return adminController.createFirstAdmin(new Request({
+        controller: 'security',
+        action: 'createFirstAdmin',
+        _id: 'toto',
+        body: {content: {password: 'pwd'}},
+        reset: true
+      }))
         .then(() => {
           should(createUser).be.calledOnce();
           should(createUser.firstCall.args[0]).be.instanceOf(Request);

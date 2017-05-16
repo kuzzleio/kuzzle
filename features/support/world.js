@@ -202,53 +202,140 @@ module.exports = function () {
 
     this.users = {
       useradmin: {
-        name: {
-          first: 'David',
-          last: 'Bowie',
-          real: 'David Robert Jones'
+        content: {
+          name: {
+            first: 'David',
+            last: 'Bowie',
+            real: 'David Robert Jones'
+          },
+          profileIds: ['admin']
         },
-        profileIds: ['admin'],
-        password: 'testpwd'
+        credentials: {
+          local: {
+            username: this.idPrefix + 'useradmin',
+            password: 'testpwd'
+          }
+        }
       },
       user1: {
-        profileIds: [this.idPrefix + 'profile1'],
-        password: 'testpwd1'
+        content: {
+          profileIds: [this.idPrefix + 'profile1']
+        },
+        credentials: {
+          local: {
+            username: this.idPrefix + 'user1',
+            password: 'testpwd1'
+          }
+        }
       },
       user2: {
-        name: {
-          first: 'Steve',
-          last: 'Wozniak'
+        content: {
+          name: {
+            first: 'Steve',
+            last: 'Wozniak'
+          },
+          hobby: 'Segway Polo',
+          profileIds: [this.idPrefix + 'profile2']
         },
-        hobby: 'Segway Polo',
-        profileIds: [this.idPrefix + 'profile2'],
-        password: 'testpwd2'
+        credentials: {
+          local: {
+            username: this.idPrefix + 'user2',
+            password: 'testpwd2'
+          }
+        }
       },
       user3: {
-        profileIds: [this.idPrefix + 'profile3'],
-        password: 'testpwd3'
+        content: {
+          profileIds: [this.idPrefix + 'profile3']
+        },
+        credentials: {
+          local: {
+            username: this.idPrefix + 'user3',
+            password: 'testpwd3'
+          }
+        }
       },
       user4: {
-        profileIds: [this.idPrefix + 'profile4'],
-        password: 'testpwd4'
+        content: {
+          profileIds: [this.idPrefix + 'profile4']
+        },
+        credentials: {
+          local: {
+            username: this.idPrefix + 'user4',
+            password: 'testpwd4'
+          }
+        }
       },
       user5: {
-        profileIds: [this.idPrefix + 'profile5'],
-        password: 'testpwd5'
+        content: {
+          profileIds: [this.idPrefix + 'profile5']
+        },
+        password: 'testpwd5',
+        credentials: {
+          local: {
+            username: this.idPrefix + 'user5',
+            password: 'testpwd5'
+          }
+        }
       },
       user6: {
-        profileIds: [this.idPrefix + 'profile6'],
-        password: 'testpwd6'
+        content: {
+          profileIds: [this.idPrefix + 'profile6']
+        },
+        credentials: {
+          local: {
+            username: this.idPrefix + 'user6',
+            password: 'testpwd6'
+          }
+        }
       },
       restricteduser1: {
-        password: 'testpwd1'
+        content: {
+          name: {
+            first: 'Restricted',
+            last: 'User'
+          }
+        },
+        credentials: {
+          local: {
+            username: this.idPrefix + 'restricteduser1',
+            password: 'testpwd1'
+          }
+        }
+      },
+      nocredentialuser: {
+        content: {
+          name: {
+            first: 'Non Connectable',
+            last: 'User'
+          },
+          profileIds: ['admin']
+        }
       },
       unexistingprofile: {
-        name: 'John Doe',
-        profileIds: [this.idPrefix + 'i-dont-exist']
+        content: {
+          name: {
+            first: 'John',
+            last: 'Doe'
+          },
+          profileIds: [this.idPrefix + 'i-dont-exist']
+        }
       },
       invalidprofileType: {
-        name: 'John Doe',
-        profileIds: [null]
+        content: {
+          name: {
+            first: 'John',
+            last: 'Doe'
+          },
+          profileIds: [null]
+        }
+      }
+    };
+
+    this.credentials = {
+      nocredentialuser: {
+        username: this.idPrefix + 'nocredentialuser',
+        password: 'testpwd1'
       }
     };
 

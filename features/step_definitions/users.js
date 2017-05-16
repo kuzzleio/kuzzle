@@ -33,7 +33,6 @@ module.exports = function () {
       });
   });
 
-
   this.When(/^I (can't )?create a (restricted )?user "(.*?)" with id "(.*?)"$/, {timeout: 20000}, function (not, isRestricted, user, id, callback) {
     var
       userObject = this.users[user],
@@ -129,7 +128,7 @@ module.exports = function () {
   });
 
   this.Then(/^I delete the user "(.*?)"$/, function (id) {
-    return this.api.deleteUser(this.idPrefix + id)
+    return this.api.deleteUser(this.idPrefix + id, true)
       .then(body => {
         if (body.error) {
           throw new Error(body.error.message);
