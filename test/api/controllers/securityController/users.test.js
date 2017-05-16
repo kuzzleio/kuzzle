@@ -12,6 +12,7 @@ const
   NotFoundError = require('kuzzle-common-objects').errors.NotFoundError,
   InternalError = require('kuzzle-common-objects').errors.InternalError,
   SizeLimitError = require('kuzzle-common-objects').errors.SizeLimitError,
+  PreconditionError = require('kuzzle-common-objects').errors.PreconditionError,
   SecurityController = rewire('../../../../lib/api/controllers/securityController');
 
 describe('Test: security controller - users', () => {
@@ -230,7 +231,7 @@ describe('Test: security controller - users', () => {
 
   describe('#createUser', () => {
     it('should return a valid response', () => {
-      kuzzle.repositories.user.load = sandbox.stub().returns(Promise.resolve(kuzzle.repositories.user.anonymous()));
+      kuzzle.repositories.user.load = sandbox.stub().returns(Promise.resolve(null));
       kuzzle.repositories.user.persist = sandbox.stub().returns(Promise.resolve({_id: 'test'}));
       kuzzle.repositories.user.hydrate = sandbox.stub().returns(Promise.resolve());
 
@@ -249,7 +250,7 @@ describe('Test: security controller - users', () => {
     });
 
     it('should compute a user id if none is provided', () => {
-      kuzzle.repositories.user.load = sandbox.stub().returns(Promise.resolve(kuzzle.repositories.user.anonymous()));
+      kuzzle.repositories.user.load = sandbox.stub().returns(Promise.resolve(null));
       kuzzle.repositories.user.persist = sandbox.stub().returns(Promise.resolve({_id: 'test'}));
       kuzzle.repositories.user.hydrate = sandbox.stub().returns(Promise.resolve());
 
@@ -279,7 +280,7 @@ describe('Test: security controller - users', () => {
         body: {
           content: {name: 'John Doe', profileIds: ['anonymous']}
         }
-      }))).be.rejectedWith(BadRequestError);
+      }))).be.rejectedWith(PreconditionError);
     });
 
     it('should throw an error if no profile is given', () => {
@@ -297,7 +298,7 @@ describe('Test: security controller - users', () => {
 
   describe('#persistUserAndCredentials', () => {
     it('should reject an error if a strategy is unknown', () => {
-      kuzzle.repositories.user.load = sandbox.stub().returns(Promise.resolve(kuzzle.repositories.user.anonymous()));
+      kuzzle.repositories.user.load = sandbox.stub().returns(Promise.resolve(null));
       kuzzle.pluginsManager.listStrategies = sandbox.stub().returns(['someStrategy']);
 
       return should(securityController.createUser(new Request({
@@ -311,7 +312,7 @@ describe('Test: security controller - users', () => {
 
     it('should reject an error if credentials don\'t validate the strategy', () => {
       const methodStub = sandbox.stub().returns(Promise.reject(new Error('some error')));
-      kuzzle.repositories.user.load = sandbox.stub().returns(Promise.resolve(kuzzle.repositories.user.anonymous()));
+      kuzzle.repositories.user.load = sandbox.stub().returns(Promise.resolve(null));
       kuzzle.pluginsManager.listStrategies = sandbox.stub().returns(['someStrategy']);
       kuzzle.pluginsManager.getStrategyMethod = sandbox.stub().returns(methodStub);
 
@@ -330,7 +331,7 @@ describe('Test: security controller - users', () => {
         createStub = sandbox.stub().returns(Promise.reject(new Error('some error'))),
         deleteStub = sandbox.stub().returns(Promise.resolve());
 
-      kuzzle.repositories.user.load = sandbox.stub().returns(Promise.resolve(kuzzle.repositories.user.anonymous()));
+      kuzzle.repositories.user.load = sandbox.stub().returns(Promise.resolve(null));
       kuzzle.pluginsManager.listStrategies = sandbox.stub().returns(['someStrategy']);
       kuzzle.pluginsManager.getStrategyMethod = sandbox.stub();
 
@@ -354,7 +355,7 @@ describe('Test: security controller - users', () => {
         createStub = sandbox.stub().returns(Promise.reject(new Error('some error'))),
         deleteStub = sandbox.stub().returns(Promise.reject(new Error('some error')));
 
-      kuzzle.repositories.user.load = sandbox.stub().returns(Promise.resolve(kuzzle.repositories.user.anonymous()));
+      kuzzle.repositories.user.load = sandbox.stub().returns(Promise.resolve(null));
       kuzzle.pluginsManager.listStrategies = sandbox.stub().returns(['someStrategy']);
       kuzzle.pluginsManager.getStrategyMethod = sandbox.stub();
 
@@ -378,7 +379,7 @@ describe('Test: security controller - users', () => {
         createStub = sandbox.stub().returns(Promise.resolve()),
         deleteStub = sandbox.stub().returns(Promise.resolve());
 
-      kuzzle.repositories.user.load = sandbox.stub().returns(Promise.resolve(kuzzle.repositories.user.anonymous()));
+      kuzzle.repositories.user.load = sandbox.stub().returns(Promise.resolve(null));
       kuzzle.pluginsManager.listStrategies = sandbox.stub().returns(['someStrategy']);
       kuzzle.pluginsManager.getStrategyMethod = sandbox.stub();
       kuzzle.repositories.user.persist = sandbox.stub().returns(Promise.reject(new Error('some error')));
@@ -400,7 +401,7 @@ describe('Test: security controller - users', () => {
 
   describe('#createRestrictedUser', () => {
     it('should return a valid response', () => {
-      kuzzle.repositories.user.load = sandbox.stub().returns(Promise.resolve(kuzzle.repositories.user.anonymous()));
+      kuzzle.repositories.user.load = sandbox.stub().returns(Promise.resolve(null));
       kuzzle.repositories.user.persist = sandbox.stub().returns(Promise.resolve({_id: 'test'}));
       kuzzle.repositories.user.hydrate = sandbox.stub().returns(Promise.resolve());
 
@@ -416,7 +417,7 @@ describe('Test: security controller - users', () => {
     });
 
     it('should compute a user id if none is provided', () => {
-      kuzzle.repositories.user.load = sandbox.stub().returns(Promise.resolve(kuzzle.repositories.user.anonymous()));
+      kuzzle.repositories.user.load = sandbox.stub().returns(Promise.resolve(null));
       kuzzle.repositories.user.persist = sandbox.stub().returns(Promise.resolve({_id: 'test'}));
       kuzzle.repositories.user.hydrate = sandbox.stub().returns(Promise.resolve());
 
