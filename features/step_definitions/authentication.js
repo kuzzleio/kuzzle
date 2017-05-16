@@ -24,7 +24,12 @@ var apiSteps = function () {
         this.currentToken = {jwt: body.result.jwt};
         this.currentUser.token = body.result.jwt;
 
-        callback();
+        if (cantLogin) {
+          callback('Should not be able to login');
+        }
+        else {
+          callback();
+        }
       })
       .catch(function (error) {
         if (cantLogin && error.statusCode === 401) {
