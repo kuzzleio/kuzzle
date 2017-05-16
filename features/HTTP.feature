@@ -368,6 +368,20 @@ Feature: Test HTTP API
     Then I am getting the current user, which matches {"_id":"-1","_source":{"profileIds":["anonymous"]}}
 
   @usingHttp @cleanSecurity
+  Scenario: user replace
+    When I create a user "useradmin" with id "useradmin-id"
+    Then I am able to get the user "useradmin-id" matching {"_id":"#prefix#useradmin-id","_source":{"profileIds":["admin"]}}
+    Then I create a new role "role1" with id "role1"
+    Then I create a new profile "profile1" with id "profile1"
+    Then I create a user "user1" with id "user1-id"
+    When I log in as useradmin-id:testpwd expiring in 1h
+    Then I am getting the current user, which matches {"_id":"#prefix#useradmin-id","_source":{"profileIds":["admin"]}}
+    Then I replace the user "user1-id" with data {"profileIds":["anonymous"],"foo":"bar"}
+    Then I am able to get the user "user1-id" matching {"_id":"#prefix#user1-id","_source":{"profileIds":["anonymous"],"foo":"bar"}}
+    Then I log out
+    Then I am getting the current user, which matches {"_id":"-1","_source":{"profileIds":["anonymous"]}}
+
+  @usingHttp @cleanSecurity
   Scenario: user updateSelf
     When I create a user "useradmin" with id "useradmin-id"
     Then I am able to get the user "useradmin-id" matching {"_id":"#prefix#useradmin-id","_source":{"profileIds":["admin"]}}

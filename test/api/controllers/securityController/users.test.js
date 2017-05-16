@@ -55,7 +55,6 @@ describe('Test: security controller - users', () => {
     });
   });
 
-
   describe('#getUserMapping', () => {
     it('should fulfill with a response object', () => {
       return securityController.getUserMapping(request)
@@ -473,6 +472,37 @@ describe('Test: security controller - users', () => {
           should(response._source.profile).be.an.instanceOf(Object);
           should(response._source.foo).be.exactly('bar');
         });
+    });
+  });
+
+  describe('#replaceUser', () => {
+    it('should return an error if the request is invalid', () => {
+      return should(() => {
+        securityController.replaceUser(new Request({_id: 'test'}));
+      }).throw(BadRequestError);
+    });
+
+    it('should replace the user correctly', () => {
+      kuzzle.repositories.user.persist = sandbox.stub().returns(Promise.resolve({_id: 'test', profileIds: ['anonymous'], foo: 'bar'}));
+      kuzzle.repositories.user.load = userId => Promise.resolve({_id: userId, _source: {}});
+
+      return securityController.replaceUser(new Request({
+        _id: 'test',
+        body: {profileIds: ['anonymous'], foo: 'bar'}
+      }), {})
+        .then(response => {
+          should(response).be.instanceOf(Object);
+          should(response).match({
+            _id: 'test',
+            _source: {profileIds: ['anonymous']}
+          });
+        });
+    });
+
+    it('should return an error if the user is not found', () => {
+      kuzzle.repositories.user.load = sandbox.stub().returns(Promise.resolve(null));
+
+      return should(securityController.replaceUser(new Request({_id: 'i.dont.exist', body: {profileIds: ['anonymous']}}))).be.rejectedWith(NotFoundError);
     });
   });
 
