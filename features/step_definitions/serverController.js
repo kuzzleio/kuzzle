@@ -1,4 +1,4 @@
-var apiSteps = function () {
+function apiSteps () {
   this.When(/^I check server health$/, function (callback) {
     this.api.healthCheck()
       .then(body => {
@@ -31,6 +31,16 @@ var apiSteps = function () {
           return callback(new Error('No result provided'));
         }
 
+        try {
+          const routeInfo = body.result.serverInfo.kuzzle.api.routes.server.info;
+          if (!routeInfo || routeInfo.controller !== 'server' || routeInfo.action !== 'info') {
+            return callback(new Error('Unexpected/incorrect serverInfo content'));
+          }
+        }
+        catch(e) {
+          callback(e);
+        }
+
         this.result = body.result;
         callback();
       })
@@ -53,6 +63,6 @@ var apiSteps = function () {
       })
       .catch(error => callback(error));
   });
-};
+}
 
 module.exports = apiSteps;

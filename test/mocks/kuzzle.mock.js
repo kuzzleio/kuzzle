@@ -57,6 +57,8 @@ class KuzzleMock extends Kuzzle {
           createFirstAdmin: sinon.spy()
         }
       },
+      pluginsControllers: {
+      },
       init: sinon.spy(),
       getRequestSlot: sinon.stub().returns(true),
       handleErrorDump: sinon.spy(),

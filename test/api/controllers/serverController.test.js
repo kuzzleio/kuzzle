@@ -1,4 +1,4 @@
-var
+const
   Bluebird = require('bluebird'),
   should = require('should'),
   sinon = require('sinon'),
@@ -9,7 +9,7 @@ var
   sandbox = sinon.sandbox.create();
 
 describe('Test: server controller', () => {
-  var
+  let
     serverController,
     kuzzle,
     foo = {foo: 'bar'},
@@ -18,7 +18,7 @@ describe('Test: server controller', () => {
     request;
 
   beforeEach(() => {
-    var data = {
+    const data = {
       controller: 'server',
       index,
       collection
@@ -194,6 +194,31 @@ describe('Test: server controller', () => {
 
   describe('#info', () => {
     it('should return a properly formatted server information object', () => {
+      class Foo {
+        constructor() {
+          this.qux = 'not a function';
+          this.baz = function () {};
+        }
+        _privateMethod() {}
+        publicMethod() {}
+      }
+
+      kuzzle.funnel.controllers = {
+        foo: new Foo()
+      };
+
+      kuzzle.funnel.pluginsControllers = {
+        foobar: {
+          _privateMethod: function () {},
+          publicMethod: function () {},
+          anotherMethod: function () {},
+          notAnAction: 3.14
+        }
+      };
+
+      kuzzle.config.http.routes.push({verb: 'foo', action: 'publicMethod', controller: 'foo', url: '/u/r/l'});
+      kuzzle.pluginsManager.routes = [{verb: 'bar', action: 'publicMethod', controller: 'foobar', url: '/foobar'}];
+
       return serverController.info()
         .then(response => {
           should(response).be.instanceof(Object);
@@ -202,7 +227,36 @@ describe('Test: server controller', () => {
           should(response.serverInfo.kuzzle).be.and.Object();
           should(response.serverInfo.kuzzle.version).be.a.String();
           should(response.serverInfo.kuzzle.api).be.an.Object();
-          should(response.serverInfo.kuzzle.api.routes).be.an.Object();
+          should(response.serverInfo.kuzzle.api.routes).match({
+            foo: {
+              publicMethod: {
+                action: 'publicMethod',
+                controller: 'foo',
+                http: {
+                  url: '/u/r/l',
+                  verb: 'FOO'
+                }
+              },
+              baz: {
+                action: 'baz',
+                controller: 'foo'
+              }
+            },
+            foobar: {
+              publicMethod: {
+                action: 'publicMethod',
+                controller: 'foobar',
+                http: {
+                  url: '_plugin/foobar',
+                  verb: 'BAR'
+                }
+              },
+              anotherMethod: {
+                action: 'anotherMethod',
+                controller: 'foobar'
+              }
+            }
+          });
           should(response.serverInfo.kuzzle.plugins).be.an.Object();
           should(response.serverInfo.kuzzle.system).be.an.Object();
           should(response.serverInfo.services).be.an.Object();
