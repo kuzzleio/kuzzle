@@ -26,6 +26,10 @@ describe('Test: validation initialization', () => {
     sandbox.reset();
   });
 
+  afterEach(() => {
+    mockRequire.stopAll();
+  });
+
   it('should have the expected structure', () => {
     should(validation.kuzzle).be.eql(kuzzle);
     should(validation.types).be.an.Object();

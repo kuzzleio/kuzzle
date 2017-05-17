@@ -158,6 +158,15 @@ ApiHttp.prototype.callApi = function (options) {
   return rp(options);
 };
 
+ApiHttp.prototype.exists = function (id, index) {
+  const options = {
+    url: this.apiPath(this.util.getIndex(index) + '/' + this.world.fakeCollection + '/' + id + '/_exists'),
+    method: 'GET'
+  };
+
+  return this.callApi(options);
+};
+
 ApiHttp.prototype.get = function (id, index) {
   const options = {
     url: this.apiPath(this.util.getIndex(index) + '/' + this.world.fakeCollection + '/' + id),
@@ -497,6 +506,15 @@ ApiHttp.prototype.listCollections = function (index = this.world.fakeIndex, type
   return this.callApi(options);
 };
 
+ApiHttp.prototype.healthCheck = function () {
+  const options = {
+    url: this.apiPath('_healthCheck'),
+    method: 'GET'
+  };
+
+  return this.callApi(options);
+};
+
 ApiHttp.prototype.now = function () {
   const options = {
     url: this.apiPath('_now'),
@@ -831,6 +849,14 @@ ApiHttp.prototype.scrollUsers = function (scrollId) {
   return this.callApi(options);
 };
 
+ApiHttp.prototype.replaceUser = function (id, body) {
+  return this.callApi({
+    url: this.apiPath('users/' + id + '/_replace'),
+    method: 'PUT',
+    body
+  });
+};
+
 ApiHttp.prototype.deleteUser = function (id, waitFor = false) {
   return this.callApi({
     url: this.apiPath('users/' + id + (waitFor ? '?refresh=wait_for' : '')),
@@ -1022,6 +1048,129 @@ ApiHttp.prototype.deleteSpecifications = function (index, collection) {
   const options = {
     url: this.apiPath(index + '/' + collection + '/_specifications'),
     method: 'DELETE'
+  };
+
+  return this.callApi(options);
+};
+
+ApiHttp.prototype.createCredentials = function (strategy, userId, body) {
+  const options = {
+    url : this.apiPath('credentials/' + strategy + '/' + userId + '/_create'),
+    method: 'POST',
+    body
+  };
+
+  return this.callApi(options);
+};
+
+ApiHttp.prototype.updateCredentials = function (strategy, userId, body) {
+  const options = {
+    url : this.apiPath('credentials/' + strategy + '/' + userId + '/_update'),
+    method: 'PUT',
+    body
+  };
+
+  return this.callApi(options);
+};
+
+ApiHttp.prototype.validateCredentials = function (strategy, userId, body) {
+  const options = {
+    url : this.apiPath('credentials/' + strategy + '/' + userId + '/_validate'),
+    method: 'POST',
+    body
+  };
+
+  return this.callApi(options);
+};
+
+ApiHttp.prototype.deleteCredentials = function (strategy, userId) {
+  const options = {
+    url : this.apiPath('credentials/' + strategy + '/' + userId),
+    method: 'DELETE'
+  };
+
+  return this.callApi(options);
+};
+
+ApiHttp.prototype.getCredentials = function (strategy, userId) {
+  const options = {
+    url : this.apiPath('credentials/' + strategy + '/' + userId),
+    method: 'GET'
+  };
+
+  return this.callApi(options);
+};
+
+ApiHttp.prototype.getCredentialsById = function (strategy, userId) {
+  const options = {
+    url : this.apiPath('credentials/' + strategy + '/' + userId + '/_byId'),
+    method: 'GET'
+  };
+
+  return this.callApi(options);
+};
+
+ApiHttp.prototype.hasCredentials = function (strategy, userId) {
+  const options = {
+    url : this.apiPath('credentials/' + strategy + '/' + userId + '/_exists'),
+    method: 'GET'
+  };
+
+  return this.callApi(options);
+};
+
+ApiHttp.prototype.createMyCredentials = function (strategy, body) {
+  const options = {
+    url : this.apiPath('credentials/' + strategy + '/_me/_create'),
+    method: 'POST',
+    body
+  };
+
+  return this.callApi(options);
+};
+
+ApiHttp.prototype.updateMyCredentials = function (strategy, body) {
+  const options = {
+    url : this.apiPath('credentials/' + strategy + '/_me/_update'),
+    method: 'PUT',
+    body
+  };
+
+  return this.callApi(options);
+};
+
+ApiHttp.prototype.validateMyCredentials = function (strategy, body) {
+  const options = {
+    url : this.apiPath('credentials/' + strategy + '/_me/_validate'),
+    method: 'POST',
+    body
+  };
+
+  return this.callApi(options);
+};
+
+ApiHttp.prototype.deleteMyCredentials = function (strategy) {
+  const options = {
+    url : this.apiPath('credentials/' + strategy + '/_me'),
+    method: 'DELETE'
+  };
+
+  return this.callApi(options);
+};
+
+ApiHttp.prototype.getMyCredentials = function (strategy) {
+  const options = {
+    url : this.apiPath('credentials/' + strategy + '/_me'),
+    method: 'GET'
+  };
+
+  return this.callApi(options);
+};
+
+ApiHttp.prototype.credentialsExist = function (strategy) {
+  const options = {
+    url : this.apiPath('credentials/' + strategy + '/_me/_exists'),
+    method: 'GET'
   };
 
   return this.callApi(options);

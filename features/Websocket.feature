@@ -1,6 +1,10 @@
 Feature: Test websocket API
 
   @usingWebsocket
+  Scenario: Check server Health
+    When I check server health
+
+  @usingWebsocket
   Scenario: Get server information
     When I get server informations
 
@@ -147,6 +151,13 @@ Feature: Test websocket API
     Then I count 2 documents
     Then I truncate the collection
     And I count 0 documents
+
+  @usingHttp
+  Scenario: Checking that documents exist or not
+    When I write the document with id "documentGrace"
+    Then I check that the document "documentGrace" exists
+    Then I remove the document
+    Then I check that the document "documentGrace" doesn't exists
 
   @usingWebsocket
   Scenario: get multiple documents
@@ -341,7 +352,7 @@ Feature: Test websocket API
   @usingWebsocket @cleanSecurity
   Scenario: login user
     Given I create a user "useradmin" with id "useradmin-id"
-    When I log in as useradmin-id:testpwd expiring in 1h
+    When I log in as useradmin:testpwd expiring in 1h
     Then I write the document
     Then I check the JWT Token
     And The token is valid
@@ -352,12 +363,12 @@ Feature: Test websocket API
 
   @usingWebsocket @cleanSecurity
   Scenario: user token deletion
-    Given I create a user "useradmin" with id "user1-id"
-    When I log in as user1-id:testpwd expiring in 1h
+    Given I create a user "useradmin" with id "useradmin-id"
+    When I log in as useradmin:testpwd expiring in 1h
     Then I write the document
     Then I check the JWT Token
     And The token is valid
-    Then I delete the user "user1-id"
+    Then I delete the user "useradmin-id"
     Then I check the JWT Token
     And The token is invalid
 
@@ -475,8 +486,22 @@ Feature: Test websocket API
     Then I am able to perform a scrollUsers request
     Then I delete the user "user2-id"
     Then I search for {"ids":{"type": "users", "values":["#prefix#useradmin-id"]}} and find 1 users matching {"_id":"#prefix#useradmin-id","_source":{"name":{"first":"David","last":"Bowie"}}}
+    When I log in as useradmin:testpwd expiring in 1h
+    Then I am getting the current user, which matches {"_id":"#prefix#useradmin-id","_source":{"profileIds":["admin"]},"strategies":["local"]}
+    Then I log out
+    Then I am getting the current user, which matches {"_id":"-1","_source":{"profileIds":["anonymous"]}}
+
+  @usingWebsocket @cleanSecurity
+  Scenario: user replace
+    When I create a user "useradmin" with id "useradmin-id"
+    Then I am able to get the user "useradmin-id" matching {"_id":"#prefix#useradmin-id","_source":{"profileIds":["admin"]}}
+    Then I create a new role "role1" with id "role1"
+    Then I create a new profile "profile1" with id "profile1"
+    Then I create a user "user1" with id "user1-id"
     When I log in as useradmin-id:testpwd expiring in 1h
     Then I am getting the current user, which matches {"_id":"#prefix#useradmin-id","_source":{"profileIds":["admin"]}}
+    Then I replace the user "user1-id" with data {"profileIds":["anonymous"],"foo":"bar"}
+    Then I am able to get the user "user1-id" matching {"_id":"#prefix#user1-id","_source":{"profileIds":["anonymous"],"foo":"bar"}}
     Then I log out
     Then I am getting the current user, which matches {"_id":"-1","_source":{"profileIds":["anonymous"]}}
 
@@ -484,7 +509,7 @@ Feature: Test websocket API
   Scenario: user updateSelf
     When I create a user "useradmin" with id "useradmin-id"
     Then I am able to get the user "useradmin-id" matching {"_id":"#prefix#useradmin-id","_source":{"profileIds":["admin"]}}
-    When I log in as useradmin-id:testpwd expiring in 1h
+    When I log in as useradmin:testpwd expiring in 1h
     Then I am getting the current user, which matches {"_id":"#prefix#useradmin-id","_source":{"profileIds":["admin"]}}
     Then I update current user with data {"foo":"bar"}
     Then I am getting the current user, which matches {"_id":"#prefix#useradmin-id","_source":{"profileIds":["admin"],"foo":"bar"}}
@@ -494,8 +519,8 @@ Feature: Test websocket API
   @usingWebsocket @cleanSecurity @unsubscribe
   Scenario: token expiration
     Given A room subscription listening to "lastName" having value "Hopper"
-    Given I create a user "useradmin" with id "user1-id"
-    When I log in as user1-id:testpwd expiring in 1s
+    Given I create a user "useradmin" with id "useradmin-id"
+    When I log in as useradmin:testpwd expiring in 1s
     Then I wait 1s
     And I should receive a "jwtTokenExpired" notification
 
@@ -516,7 +541,7 @@ Feature: Test websocket API
     And I create a user "user4" with id "user4-id"
     And I create a user "user5" with id "user5-id"
     And I create a user "user6" with id "user6-id"
-    When I log in as user1-id:testpwd1 expiring in 1h
+    When I log in as user1:testpwd1 expiring in 1h
     Then I'm allowed to create a document in index "kuzzle-test-index" and collection "kuzzle-collection-test"
     And I'm allowed to create a document in index "kuzzle-test-index" and collection "kuzzle-collection-test-alt"
     And I'm allowed to create a document in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test"
@@ -530,7 +555,7 @@ Feature: Test websocket API
     And I'm allowed to count documents in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test"
     And I'm allowed to count documents in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test-alt"
     Then I log out
-    When I log in as user2-id:testpwd2 expiring in 1h
+    When I log in as user2:testpwd2 expiring in 1h
     Then I'm allowed to create a document in index "kuzzle-test-index" and collection "kuzzle-collection-test"
     And I'm allowed to create a document in index "kuzzle-test-index" and collection "kuzzle-collection-test-alt"
     And I'm not allowed to create a document in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test"
@@ -544,7 +569,7 @@ Feature: Test websocket API
     And I'm allowed to count documents in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test"
     And I'm allowed to count documents in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test-alt"
     Then I log out
-    When I log in as user3-id:testpwd3 expiring in 1h
+    When I log in as user3:testpwd3 expiring in 1h
     Then I'm not allowed to create a document in index "kuzzle-test-index" and collection "kuzzle-collection-test"
     And I'm not allowed to create a document in index "kuzzle-test-index" and collection "kuzzle-collection-test-alt"
     And I'm not allowed to create a document in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test"
@@ -558,7 +583,7 @@ Feature: Test websocket API
     And I'm allowed to count documents in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test"
     And I'm not allowed to count documents in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test-alt"
     Then I log out
-    When I log in as user4-id:testpwd4 expiring in 1h
+    When I log in as user4:testpwd4 expiring in 1h
     Then I'm not allowed to create a document in index "kuzzle-test-index" and collection "kuzzle-collection-test"
     And I'm not allowed to create a document in index "kuzzle-test-index" and collection "kuzzle-collection-test-alt"
     And I'm not allowed to create a document in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test"
@@ -572,7 +597,7 @@ Feature: Test websocket API
     And I'm not allowed to count documents in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test"
     And I'm not allowed to count documents in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test-alt"
     Then I log out
-    When I log in as user5-id:testpwd5 expiring in 1h
+    When I log in as user5:testpwd5 expiring in 1h
     Then I'm not allowed to create a document in index "kuzzle-test-index" and collection "kuzzle-collection-test"
     And I'm not allowed to create a document in index "kuzzle-test-index" and collection "kuzzle-collection-test-alt"
     And I'm not allowed to create a document in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test"
@@ -586,7 +611,7 @@ Feature: Test websocket API
     And I'm not allowed to count documents in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test"
     And I'm not allowed to count documents in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test-alt"
     Then I log out
-    When I log in as user6-id:testpwd6 expiring in 1h
+    When I log in as user6:testpwd6 expiring in 1h
     Then I'm not allowed to create a document in index "kuzzle-test-index" and collection "kuzzle-collection-test"
     And I'm not allowed to create a document in index "kuzzle-test-index" and collection "kuzzle-collection-test-alt"
     And I'm not allowed to create a document in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test"
@@ -616,8 +641,44 @@ Feature: Test websocket API
     And I create a new role "role2" with id "role2"
     And I create a new profile "profile2" with id "profile2"
     And I create a user "user2" with id "user2-id"
-    When I log in as user2-id:testpwd2 expiring in 1h
+    When I log in as user2:testpwd2 expiring in 1h
     Then I'm able to find my rights
+
+  @usingWebsocket @cleanSecurity
+  Scenario: user credentials crudl
+    Given I create a user "nocredentialuser" with id "nocredentialuser-id"
+    Then I validate local credentials of user nocredentialuser with id nocredentialuser-id
+    Then I create local credentials of user nocredentialuser with id nocredentialuser-id
+    Then I check if local credentials exist for user nocredentialuser with id nocredentialuser-id
+    Then I get local credentials of user nocredentialuser with id nocredentialuser-id
+    Then I get local credentials of user nocredentialuser by id nocredentialuser
+    Then I log in as nocredentialuser:testpwd1 expiring in 1h
+    Then I log out
+    Then I update local credentials password to "testpwd2" for user with id nocredentialuser-id
+    Then I can't log in as nocredentialuser:testpwd1 expiring in 1h
+    Then I log in as nocredentialuser:testpwd2 expiring in 1h
+    Then I log out
+    Then I delete local credentials of user with id nocredentialuser-id
+    Then I can't log in as nocredentialuser:testpwd2 expiring in 1h
+
+  @usingWebsocket @cleanSecurity
+  Scenario: current user credentials crudl
+    Given I create a user "nocredentialuser" with id "nocredentialuser-id"
+    Then I create local credentials of user nocredentialuser with id nocredentialuser-id
+    Then I log in as nocredentialuser:testpwd1 expiring in 1h
+    Then I validate my local credentials
+    Then I delete my local credentials
+    Then I check if i have no local credentials
+    Then I create my local credentials
+    Then I check if i have local credentials
+    Then I get my local credentials
+    Then I update my local credentials password to "testpwd2"
+    Then I log out
+    Then I can't log in as nocredentialuser:testpwd1 expiring in 1h
+    Then I log in as nocredentialuser:testpwd2 expiring in 1h
+    Then I delete my local credentials
+    Then I log out
+    Then I can't log in as nocredentialuser:testpwd2 expiring in 1h
 
   @usingWebsocket @cleanRedis
   Scenario: memory storage - scalars

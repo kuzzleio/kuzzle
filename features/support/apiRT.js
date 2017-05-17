@@ -134,6 +134,19 @@ ApiRT.prototype.mReplace = function (body, index, collection) {
   return this.send(msg);
 };
 
+ApiRT.prototype.exists = function (id, index) {
+  const
+    msg = {
+      controller: 'document',
+      collection: this.world.fakeCollection,
+      index: index || this.world.fakeIndex,
+      action: 'get',
+      _id: id
+    };
+
+  return this.send(msg);
+};
+
 ApiRT.prototype.get = function (id, index) {
   const
     msg = {
@@ -458,6 +471,16 @@ ApiRT.prototype.listCollections = function (index, type) {
       index: index || this.world.fakeIndex,
       action: 'list',
       body: {type}
+    };
+
+  return this.send(msg);
+};
+
+ApiRT.prototype.healthCheck = function () {
+  const
+    msg = {
+      controller: 'server',
+      action: 'healthCheck'
     };
 
   return this.send(msg);
@@ -864,6 +887,15 @@ ApiRT.prototype.scrollUsers = function (scrollId) {
   });
 };
 
+ApiRT.prototype.replaceUser = function (id, body) {
+  return this.send({
+    controller: 'security',
+    action: 'replaceUser',
+    _id: id,
+    body
+  });
+};
+
 ApiRT.prototype.deleteUser = function (id, waitFor = false) {
   const msg = {
     controller: 'security',
@@ -1095,6 +1127,124 @@ ApiRT.prototype.postDocument = function (index, collection, document) {
     controller: 'document',
     action: 'create',
     body: document
+  });
+};
+
+ApiRT.prototype.createCredentials = function (strategy, userId, body) {
+  return this.send({
+    controller: 'security',
+    action: 'createCredentials',
+    strategy,
+    body,
+    _id: userId
+  });
+};
+
+ApiRT.prototype.updateCredentials = function (strategy, userId, body) {
+  return this.send({
+    controller: 'security',
+    action: 'updateCredentials',
+    strategy,
+    body,
+    _id: userId
+  });
+};
+
+ApiRT.prototype.validateCredentials = function (strategy, userId, body) {
+  return this.send({
+    controller: 'security',
+    action: 'validateCredentials',
+    strategy,
+    body,
+    _id: userId
+  });
+};
+
+ApiRT.prototype.deleteCredentials = function (strategy, userId) {
+  return this.send({
+    controller: 'security',
+    action: 'deleteCredentials',
+    strategy,
+    _id: userId
+  });
+};
+
+ApiRT.prototype.getCredentials = function (strategy, userId) {
+  return this.send({
+    controller: 'security',
+    action: 'getCredentials',
+    strategy,
+    _id: userId
+  });
+};
+
+ApiRT.prototype.getCredentialsById = function (strategy, userId) {
+  return this.send({
+    controller: 'security',
+    action: 'getCredentialsById',
+    strategy,
+    _id: userId
+  });
+};
+
+ApiRT.prototype.hasCredentials = function (strategy, userId) {
+  return this.send({
+    controller: 'security',
+    action: 'hasCredentials',
+    strategy,
+    _id: userId
+  });
+};
+
+ApiRT.prototype.createMyCredentials = function (strategy, body) {
+  return this.send({
+    controller: 'auth',
+    action: 'createMyCredentials',
+    strategy,
+    body
+  });
+};
+
+ApiRT.prototype.updateMyCredentials = function (strategy, body) {
+  return this.send({
+    controller: 'auth',
+    action: 'updateMyCredentials',
+    strategy,
+    body
+  });
+};
+
+ApiRT.prototype.validateMyCredentials = function (strategy, body) {
+  return this.send({
+    controller: 'auth',
+    action: 'validateMyCredentials',
+    strategy,
+    body
+  });
+};
+
+ApiRT.prototype.deleteMyCredentials = function (strategy) {
+  return this.send({
+    controller: 'auth',
+    action: 'deleteMyCredentials',
+    strategy
+  });
+};
+
+ApiRT.prototype.getMyCredentials = function (strategy) {
+  return this.send({
+    controller: 'auth',
+    action: 'getMyCredentials',
+    strategy
+  });
+};
+
+ApiRT.prototype.credentialsExist = function (strategy, body) {
+  return this.send({
+    controller: 'auth',
+    action: 'credentialsExist',
+    strategy,
+    body
   });
 };
 

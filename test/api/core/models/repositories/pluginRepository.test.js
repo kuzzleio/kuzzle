@@ -97,4 +97,17 @@ describe('models/repositories/pluginRepository', () => {
         });
     });
   });
+
+  describe('#delete', () => {
+    it('should call parent method delete with proper arguments', () => {
+      const deleteStub = kuzzle.internalEngine.delete;
+
+      return pluginRepository.delete('someId', {refresh: 'wait_for'})
+        .then(() => {
+          should(deleteStub.firstCall.args[0]).be.exactly(someCollection);
+          should(deleteStub.firstCall.args[1]).be.exactly('someId');
+          should(deleteStub.firstCall.args[2]).be.deepEqual({refresh: 'wait_for'});
+        });
+    });
+  });
 });

@@ -1,10 +1,11 @@
 const
+  sinon = require('sinon'),
   should = require('should'),
   jwt = require('jsonwebtoken'),
   Bluebird = require('bluebird'),
   /** @type KuzzleConfiguration */
   AuthController = require('../../../lib/api/controllers/authController'),
-  Kuzzle = require('../../mocks/kuzzle.mock'),
+  KuzzleMock = require('../../mocks/kuzzle.mock'),
   Request = require('kuzzle-common-objects').Request,
   Token = require('../../../lib/api/core/models/security/token'),
   {
@@ -20,7 +21,7 @@ describe('Test the auth controller', () => {
     authController;
 
   beforeEach(() => {
-    kuzzle = new Kuzzle();
+    kuzzle = new KuzzleMock();
     kuzzle.config.security.jwt.secret = 'test-secret';
 
     request = new Request({
@@ -274,6 +275,241 @@ describe('Test the auth controller', () => {
           should(kuzzle.pluginsManager.listStrategies).calledOnce();
           should(result).be.instanceof(Array).of.length(0);
         });
+    });
+  });
+
+  describe('Credentials', () => {
+    let sandbox = sinon.sandbox.create();
+
+    afterEach(() => {
+      sandbox.restore();
+    });
+
+    describe('#createMyCredentials', () => {
+      it('should call the plugin create method', () => {
+        const methodStub = sinon.stub().returns(Promise.resolve({foo: 'bar'}));
+        request = new Request({
+          controller: 'security',
+          action: 'createCredentials',
+          strategy: 'someStrategy',
+          body: {
+            some: 'credentials'
+          }
+        }, {
+          user: {
+            _id: 'someUserId'
+          }
+        });
+        kuzzle.pluginsManager.listStrategies = sandbox.stub().returns(['someStrategy']);
+        kuzzle.pluginsManager.getStrategyMethod = sandbox.stub().returns(methodStub);
+
+        return authController.createMyCredentials(request)
+          .then(result => {
+            should(result).be.deepEqual({foo: 'bar'});
+            should(kuzzle.pluginsManager.getStrategyMethod).be.calledTwice();
+            should(kuzzle.pluginsManager.getStrategyMethod.firstCall.args[0]).be.eql('someStrategy');
+            should(kuzzle.pluginsManager.getStrategyMethod.firstCall.args[1]).be.eql('create');
+            should(kuzzle.pluginsManager.getStrategyMethod.secondCall.args[0]).be.eql('someStrategy');
+            should(kuzzle.pluginsManager.getStrategyMethod.secondCall.args[1]).be.eql('validate');
+            should(methodStub).be.calledTwice();
+            should(methodStub.firstCall.args[0]).be.eql(request);
+            should(methodStub.firstCall.args[1]).be.deepEqual({some: 'credentials'});
+            should(methodStub.firstCall.args[2]).be.eql('someUserId');
+            should(methodStub.firstCall.args[3]).be.eql('someStrategy');
+            should(methodStub.secondCall.args[0]).be.eql(request);
+            should(methodStub.secondCall.args[1]).be.deepEqual({some: 'credentials'});
+            should(methodStub.secondCall.args[2]).be.eql('someUserId');
+            should(methodStub.secondCall.args[3]).be.eql('someStrategy');
+          });
+      });
+    });
+
+    describe('#updateMyCredentials', () => {
+      it('should call the plugin update method', () => {
+        const methodStub = sinon.stub().returns(Promise.resolve({foo: 'bar'}));
+        request = new Request({
+          controller: 'security',
+          action: 'createCredentials',
+          strategy: 'someStrategy',
+          body: {
+            some: 'credentials'
+          }
+        }, {
+          user: {
+            _id: 'someUserId'
+          }
+        });
+        kuzzle.pluginsManager.listStrategies = sandbox.stub().returns(['someStrategy']);
+        kuzzle.pluginsManager.getStrategyMethod = sandbox.stub().returns(methodStub);
+
+        return authController.updateMyCredentials(request)
+          .then(result => {
+            should(result).be.deepEqual({foo: 'bar'});
+            should(kuzzle.pluginsManager.getStrategyMethod).be.calledTwice();
+            should(kuzzle.pluginsManager.getStrategyMethod.firstCall.args[0]).be.eql('someStrategy');
+            should(kuzzle.pluginsManager.getStrategyMethod.firstCall.args[1]).be.eql('update');
+            should(kuzzle.pluginsManager.getStrategyMethod.secondCall.args[0]).be.eql('someStrategy');
+            should(kuzzle.pluginsManager.getStrategyMethod.secondCall.args[1]).be.eql('validate');
+            should(methodStub).be.calledTwice();
+            should(methodStub.firstCall.args[0]).be.eql(request);
+            should(methodStub.firstCall.args[1]).be.deepEqual({some: 'credentials'});
+            should(methodStub.firstCall.args[2]).be.eql('someUserId');
+            should(methodStub.firstCall.args[3]).be.eql('someStrategy');
+            should(methodStub.secondCall.args[0]).be.eql(request);
+            should(methodStub.secondCall.args[1]).be.deepEqual({some: 'credentials'});
+            should(methodStub.secondCall.args[2]).be.eql('someUserId');
+            should(methodStub.secondCall.args[3]).be.eql('someStrategy');
+          });
+      });
+    });
+
+    describe('#credentialsExist', () => {
+      it('should call the plugin exists method', () => {
+        const methodStub = sinon.stub().returns(Promise.resolve({foo: 'bar'}));
+        request = new Request({
+          controller: 'security',
+          action: 'hasCredentials',
+          strategy: 'someStrategy'
+        }, {
+          user: {
+            _id: 'someUserId'
+          }
+        });
+        kuzzle.pluginsManager.listStrategies = sandbox.stub().returns(['someStrategy']);
+        kuzzle.pluginsManager.getStrategyMethod = sandbox.stub().returns(methodStub);
+
+        return authController.credentialsExist(request)
+          .then(result => {
+            should(result).be.deepEqual({foo: 'bar'});
+            should(kuzzle.pluginsManager.getStrategyMethod).be.calledOnce();
+            should(kuzzle.pluginsManager.getStrategyMethod.firstCall.args[0]).be.eql('someStrategy');
+            should(kuzzle.pluginsManager.getStrategyMethod.firstCall.args[1]).be.eql('exists');
+            should(methodStub).be.calledOnce();
+            should(methodStub.firstCall.args[0]).be.eql(request);
+            should(methodStub.firstCall.args[1]).be.eql('someUserId');
+            should(methodStub.firstCall.args[2]).be.eql('someStrategy');
+          });
+      });
+    });
+
+    describe('#validateMyCredentials', () => {
+      it('should call the plugin validate method', () => {
+        const methodStub = sinon.stub().returns(Promise.resolve({foo: 'bar'}));
+        request = new Request({
+          controller: 'security',
+          action: 'validateCredentials',
+          strategy: 'someStrategy',
+          body: {
+            some: 'credentials'
+          }
+        }, {
+          user: {
+            _id: 'someUserId'
+          }
+        });
+        kuzzle.pluginsManager.listStrategies = sandbox.stub().returns(['someStrategy']);
+        kuzzle.pluginsManager.getStrategyMethod = sandbox.stub().returns(methodStub);
+
+        return authController.validateMyCredentials(request)
+          .then(result => {
+            should(result).be.deepEqual({foo: 'bar'});
+            should(kuzzle.pluginsManager.getStrategyMethod).be.calledOnce();
+            should(kuzzle.pluginsManager.getStrategyMethod.firstCall.args[0]).be.eql('someStrategy');
+            should(kuzzle.pluginsManager.getStrategyMethod.firstCall.args[1]).be.eql('validate');
+            should(methodStub).be.calledOnce();
+            should(methodStub.firstCall.args[0]).be.eql(request);
+            should(methodStub.firstCall.args[1]).be.deepEqual({some: 'credentials'});
+            should(methodStub.firstCall.args[2]).be.eql('someUserId');
+            should(methodStub.firstCall.args[3]).be.eql('someStrategy');
+          });
+      });
+    });
+
+    describe('#deleteMyCredentials', () => {
+      it('should call the plugin delete method', () => {
+        const methodStub = sinon.stub().returns(Promise.resolve({foo: 'bar'}));
+        request = new Request({
+          controller: 'security',
+          action: 'deleteCredentials',
+          strategy: 'someStrategy'
+        }, {
+          user: {
+            _id: 'someUserId'
+          }
+        });
+        kuzzle.pluginsManager.listStrategies = sandbox.stub().returns(['someStrategy']);
+        kuzzle.pluginsManager.getStrategyMethod = sandbox.stub().returns(methodStub);
+
+        return authController.deleteMyCredentials(request)
+          .then(result => {
+            should(result).be.deepEqual({acknowledged: true});
+            should(kuzzle.pluginsManager.getStrategyMethod).be.calledOnce();
+            should(kuzzle.pluginsManager.getStrategyMethod.firstCall.args[0]).be.eql('someStrategy');
+            should(kuzzle.pluginsManager.getStrategyMethod.firstCall.args[1]).be.eql('delete');
+            should(methodStub).be.calledOnce();
+            should(methodStub.firstCall.args[0]).be.eql(request);
+            should(methodStub.firstCall.args[1]).be.eql('someUserId');
+            should(methodStub.firstCall.args[2]).be.eql('someStrategy');
+          });
+      });
+    });
+
+    describe('#getMyCredentials', () => {
+      it('should call the plugin getInfo method if it is provided', () => {
+        const methodStub = sinon.stub().returns(Promise.resolve({foo: 'bar'}));
+        request = new Request({
+          controller: 'security',
+          action: 'getCredentials',
+          strategy: 'someStrategy'
+        }, {
+          user: {
+            _id: 'someUserId'
+          }
+        });
+        kuzzle.pluginsManager.listStrategies = sandbox.stub().returns(['someStrategy']);
+        kuzzle.pluginsManager.hasStrategyMethod = sandbox.stub().returns(true);
+        kuzzle.pluginsManager.getStrategyMethod = sandbox.stub().returns(methodStub);
+
+        return authController.getMyCredentials(request)
+          .then(result => {
+            should(result).be.deepEqual({foo: 'bar'});
+            should(kuzzle.pluginsManager.hasStrategyMethod).be.calledOnce();
+            should(kuzzle.pluginsManager.hasStrategyMethod.firstCall.args[0]).be.eql('someStrategy');
+            should(kuzzle.pluginsManager.hasStrategyMethod.firstCall.args[1]).be.eql('getInfo');
+            should(kuzzle.pluginsManager.getStrategyMethod).be.calledOnce();
+            should(kuzzle.pluginsManager.getStrategyMethod.firstCall.args[0]).be.eql('someStrategy');
+            should(kuzzle.pluginsManager.getStrategyMethod.firstCall.args[1]).be.eql('getInfo');
+            should(methodStub).be.calledOnce();
+            should(methodStub.firstCall.args[0]).be.eql(request);
+            should(methodStub.firstCall.args[1]).be.eql('someUserId');
+            should(methodStub.firstCall.args[2]).be.eql('someStrategy');
+          });
+      });
+
+      it('should resolve to an empty object if getInfo method is not provided', () => {
+        const methodStub = sinon.stub().returns(Promise.resolve({foo: 'bar'}));
+        request = new Request({
+          controller: 'security',
+          action: 'getCredentials',
+          strategy: 'someStrategy'
+        }, {
+          user: {
+            _id: 'someUserId'
+          }
+        });
+        kuzzle.pluginsManager.listStrategies = sandbox.stub().returns(['someStrategy']);
+        kuzzle.pluginsManager.hasStrategyMethod = sandbox.stub().returns(false);
+        kuzzle.pluginsManager.getStrategyMethod = sandbox.stub().returns(methodStub);
+
+        return authController.getMyCredentials(request)
+          .then(result => {
+            should(result).be.deepEqual({});
+            should(kuzzle.pluginsManager.hasStrategyMethod).be.calledOnce();
+            should(kuzzle.pluginsManager.hasStrategyMethod.firstCall.args[0]).be.eql('someStrategy');
+            should(kuzzle.pluginsManager.hasStrategyMethod.firstCall.args[1]).be.eql('getInfo');
+            should(kuzzle.pluginsManager.getStrategyMethod.callCount).be.eql(0);
+          });
+      });
     });
   });
 });

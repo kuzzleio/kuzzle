@@ -13,9 +13,7 @@
     "functional-testing": "npm run cucumber",
     "cucumber": "cucumber.js --fail-fast",
     "codecov": "codecov",
-    "lint": "eslint --max-warnings=0 ./lib ./bin ./test ./features",
-    "preversion": "git checkout master && git pull",
-    "postversion": "git push && git push --tags"
+    "lint": "eslint --max-warnings=0 ./lib ./bin ./test ./features"
   },
   "directories": {
     "lib": "lib"
@@ -45,7 +43,7 @@
     "json-stable-stringify": "1.0.1",
     "json2yaml": "^1.1.0",
     "jsonwebtoken": "^7.2.1",
-    "kuzzle-common-objects": "3.0.0",
+    "kuzzle-common-objects": "3.0.3",
     "lodash": "4.17.4",
     "moment": "2.17.1",
     "ms": "^1.0.0",
@@ -54,7 +52,7 @@
     "node-units": "0.1.7",
     "node-uuid": "1.4.7",
     "passport": "0.3.2",
-    "pm2": "2.4.0",
+    "pm2": "2.4.6",
     "proper-lockfile": "^2.0.0",
     "rc": "1.1.6",
     "readline-sync": "^1.4.6",
@@ -63,7 +61,7 @@
     "sorted-array": "^2.0.1",
     "utf-8-validate": "^3.0.1",
     "validator": "^6.2.1",
-    "ws": "2.0.2"
+    "ws": "2.3.1"
   },
   "repository": {
     "type": "git",
@@ -77,6 +75,7 @@
     "mock-require": "^2.0.1",
     "nyc": "^10.1.2",
     "parser-yaml": "^0.1.1",
+    "passport-strategy": "^1.0.0",
     "request": "^2.79.0",
     "request-promise": "^4.1.1",
     "rewire": "2.5.2",

@@ -151,6 +151,10 @@ describe('Test plugins manager run', () => {
     sandbox.restore();
   });
 
+  after(() => {
+    mockrequire.stopAll();
+  });
+
   it('should do nothing on run if plugin is not activated', () => {
     pluginMock.expects('init').never();
 
@@ -524,21 +528,6 @@ describe('Test plugins manager run', () => {
         catch (error) {
           return Promise.reject(error);
         }
-      });
-  });
-
-  it('should delete plugin workers at initialization', function (done) {
-    plugin.config.threads = 1;
-    pluginsManager.isServer = true;
-    pluginsManager.isDummy = false;
-
-    pm2Mock.initializeList();
-
-    pluginsManager.run()
-      .then(() => {
-        should(pm2Mock.getProcessList()).length(1);
-        should(pm2Mock.getProcessList()[0].process.pm_id).not.equal(42);
-        done();
       });
   });
 });
