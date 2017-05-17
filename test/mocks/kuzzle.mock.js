@@ -210,7 +210,9 @@ class KuzzleMock extends Kuzzle {
         },
         proxyBroker: {
           listen: sinon.spy(),
-          send: sinon.stub().returns(Bluebird.resolve())
+          onConnectHandlers: [],
+          send: sinon.stub().returns(Bluebird.resolve()),
+
         },
         gc: {
           init: sinon.spy(),

@@ -1,6 +1,6 @@
 'use strict';
 
-var
+const
   should = require('should'),
   SortedArray = require('sorted-array'),
   FieldOperand = require('../../../../lib/api/dsl/storage/objects/fieldOperand'),
@@ -200,10 +200,8 @@ describe('DSL.keyword.notgeospatial', () => {
     });
 
     it('should destroy the whole structure when removing the last item', () => {
-      return dsl.remove(filterId)
-        .then(() => {
-          should(dsl.storage.foPairs).be.an.Object().and.be.empty();
-        });
+      dsl.remove(filterId);
+      should(dsl.storage.foPairs).be.an.Object().and.be.empty();
     });
 
     it('should remove a single subfilter from a multi-filter condition', () => {

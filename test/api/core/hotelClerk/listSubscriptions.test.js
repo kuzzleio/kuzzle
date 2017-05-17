@@ -1,6 +1,6 @@
-var
+const
   should = require('should'),
-  Promise = require('bluebird'),
+  Bluebird = require('bluebird'),
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
   KuzzleMock = require('../../../mocks/kuzzle.mock'),
@@ -8,18 +8,20 @@ var
   Request = require('kuzzle-common-objects').Request;
 
 describe('Test: hotelClerk.listSubscription', () => {
-  var
+  let
     kuzzle,
     connectionId = 'connectionid',
     context,
     request,
-    roomName = 'roomName',
     index = '%test',
     collection = 'user',
     hotelClerk;
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
+    kuzzle.dsl.storage = {
+      filtersIndex: {}
+    };
     hotelClerk = new HotelClerk(kuzzle);
     context = {
       connectionId,
@@ -44,50 +46,113 @@ describe('Test: hotelClerk.listSubscription', () => {
   it('should return a correct list according to subscribe on filter', () => {
     request.context.user = {
       _id: 'user',
-      isActionAllowed: sandbox.stub().returns(Promise.resolve(true))
+      isActionAllowed: sandbox.stub().returns(Bluebird.resolve(true))
     };
 
-    hotelClerk.rooms[roomName] = {index, collection, roomId: 'foobar', customers: ['foo']};
+    kuzzle.dsl.storage.filtersIndex = {
+      index: {
+        collection: [
+          'foo',
+          'bar'
+        ]
+      },
+      anotherIndex: {
+        anotherCollection: ['baz']
+      }
+    };
+    hotelClerk.rooms = {
+      foo: {
+        index,
+        collection,
+        customers: new Set(['a', 'b', 'c'])
+      },
+      bar: {
+        index,
+        collection,
+        customers: new Set(['a', 'd'])
+      },
+      baz: {
+        index: 'anotherIndex',
+        collection: 'anotherCollection',
+        customers: new Set(['a', 'c'])
+      }
+    };
 
     return hotelClerk.listSubscriptions(request)
       .then(response => {
-        should(response).have.property(index);
-        should(response[index]).have.property(collection);
-        should(response[index][collection]).not.have.property('totalGlobals');
-        should(response[index][collection]).have.property(roomName);
-        should(response[index][collection][roomName]).be.equal(1);
+        should(response)
+          .match({
+            index: {
+              collection: {
+                foo: 3,
+                bar: 2
+              }
+            },
+            anotherIndex: {
+              anotherCollection: {
+                baz: 2
+              }
+            }
+          });
       });
   });
 
   it('should return a correct list according to subscribe on filter and user right', () => {
+    kuzzle.dsl.storage.filtersIndex = {
+      index: {
+        collection: ['foo', 'bar'],
+        forbidden: ['foo']
+      },
+      anotherIndex: {
+        anotherCollection: ['baz']
+      },
+      andAnotherOne: {
+        collection: ['foobar']
+      }
+    };
     hotelClerk.rooms = {
-      'foo': {
-        index, collection: 'foo', roomId: 'foo', customers: ['foo']
+      foo: {
+        customers: new Set(['a', 'b', 'c'])
       },
-      'bar': {
-        index, collection: 'bar', roomId: 'bar', customers: ['bar']
+      bar: {
+        customers: new Set(['b', 'd', 'e', 'f'])
       },
-      'foobar': {
-        index, collection: 'foo', roomId: 'foobar', customers: ['foo', 'bar']
+      baz: {
+        customers: new Set(['d', 'e'])
+      },
+      foobar: {
+        customers: new Set(['a', 'c'])
       }
     };
 
     request.context.user = {
       _id: 'user',
-      isActionAllowed: sandbox.spy(r => Promise.resolve(r.input.resource.collection === 'foo'))
+      isActionAllowed: sandbox.stub().returns(Bluebird.resolve(true))
     };
+    request.context.user.isActionAllowed
+      .onSecondCall()
+      .returns(Bluebird.resolve(false));
+    request.context.user.isActionAllowed
+      .onThirdCall()
+      .returns(Bluebird.resolve(false));
 
     return hotelClerk.listSubscriptions(request)
       .then(response => {
-        should(response).have.property(index);
-        should(response[index]).have.property('foo');
-        should(response[index].foo).have.property('foo');
-        should(response[index].foo).have.property('foobar');
-        should(response[index].foo.foo).be.equal(1);
-        should(response[index].foo.foobar).be.equal(2);
-
-        // should not return the collection bar
-        should(response[index]).not.have.property('bar');
+        should(response)
+          .match({
+            index: {
+              collection: {
+                foo: 3,
+                bar: 4
+              }
+            },
+            andAnotherOne: {
+              collection: {
+                foobar: 2
+              }
+            }
+          });
       });
+
   });
 });

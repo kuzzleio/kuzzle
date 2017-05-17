@@ -1,7 +1,7 @@
 /**
  * This component initializes
  */
-var
+const
   should = require('should'),
   rewire = require('rewire'),
   sinon = require('sinon'),
@@ -12,7 +12,7 @@ var
   RequestContext = require('kuzzle-common-objects').models.RequestContext;
 
 describe('Test: entryPoints/proxy', () => {
-  var
+  let
     kuzzle,
     entryPoint;
 
@@ -93,7 +93,7 @@ describe('Test: entryPoints/proxy', () => {
   });
 
   it('should call the router removeConnection on event onDisconnect', () => {
-    var data = {data: {}, options: {connectionId: 'myId', protocol: 'socketio'}};
+    const data = {data: {}, options: {connectionId: 'myId', protocol: 'socketio'}};
 
     KuzzleProxy.__get__('onDisconnect').call(entryPoint, data);
 

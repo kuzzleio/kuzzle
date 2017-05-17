@@ -169,7 +169,8 @@ describe('DSL API', () => {
 
   describe('#remove', () => {
     it('should reject if the filter ID does not exist', () => {
-      return should(dsl.remove('foo')).be.rejectedWith(NotFoundError);
+      return should(() => dsl.remove('foo'))
+        .throw(NotFoundError);
     });
 
     it('should unsubscribe a filter from a multi-filter subfilter', () => {
