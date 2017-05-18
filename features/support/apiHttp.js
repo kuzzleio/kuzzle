@@ -589,10 +589,9 @@ ApiHttp.prototype.getServerConfig = function () {
 
 ApiHttp.prototype.login = function (strategy, credentials) {
   const options = {
-    url: this.apiPath('_login'),
+    url: this.apiPath(`_login/${strategy}`),
     method: 'POST',
     body: {
-      strategy: strategy,
       username: credentials.username,
       password: credentials.password
     }
@@ -604,7 +603,7 @@ ApiHttp.prototype.login = function (strategy, credentials) {
 ApiHttp.prototype.logout = function (jwtToken) {
   const options = {
     url: this.apiPath('_logout'),
-    method: 'GET',
+    method: 'POST',
     headers: {
       authorization: 'Bearer ' + jwtToken
     }
