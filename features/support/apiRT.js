@@ -589,10 +589,10 @@ ApiRT.prototype.login = function (strategy, credentials) {
       controller: 'auth',
       action: 'login',
       strategy: strategy,
+      expiresIn: credentials.expiresIn,
       body: {
         username: credentials.username,
-        password: credentials.password,
-        expiresIn: credentials.expiresIn
+        password: credentials.password
       }
     };
 
