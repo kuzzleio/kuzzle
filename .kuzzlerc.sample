@@ -326,16 +326,19 @@
     //   * host:
     //       Host name/address of a Kuzzle proxy server.
     //       Can be a hostname, an IP address or an URI.
-    //   * port:
-    //       Network port opened by the Kuzzle proxy server
-    //   * retryInterval:
-    //       Time interval (in millisconds) between reconnections retries
-    //       when the connection to the broker server has been lost
     //   * pingTimeout:
     //       Timeout (in milliseconds) of a ping request. If reached, Kuzzle
     //       marks its connection to the distant host as lost.
     //   * pingInterval:
     //       Time (in milliseconds) between ping requests
+    //   * port:
+    //       Network port opened by the Kuzzle proxy server
+    //   * retryClientListDelay
+    //       Time after which (in milliseconds) Kuzzle should ask the proxy to
+    //       send the list of clients back after a disconnection (default 1s).
+    //   * retryInterval:
+    //       Time interval (in millisconds) between reconnections retries
+    //       when the connection to the broker server has been lost
     "proxyBroker": {
       "host": "localhost",
       "port": 7331,
