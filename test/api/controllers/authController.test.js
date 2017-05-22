@@ -30,7 +30,8 @@ describe('Test the auth controller', () => {
       strategy: 'mockup',
       body: {
         username: 'jdoe'
-      }
+      },
+      foo: 'bar'
     });
 
     authController = new AuthController(kuzzle);
@@ -62,6 +63,12 @@ describe('Test the auth controller', () => {
         });
     });
 
+    it('should call passport.authenticate with input body and query string', () => {
+      authController.login(request);
+      should(kuzzle.passport.authenticate).be.calledOnce();
+      should(kuzzle.passport.authenticate).be.calledWithMatch({body: {username: 'jdoe'}, query: {foo: 'bar'}});
+    });
+
     it('should throw if no strategy is specified', () => {
       delete request.input.args.strategy;
 
@@ -78,7 +85,7 @@ describe('Test the auth controller', () => {
 
       kuzzle.repositories.token.generateToken.returns(Bluebird.resolve(token));
 
-      request.input.body.expiresIn = '1s';
+      request.input.args.expiresIn = '1s';
 
       return authController.login(request)
         .then(response => {
