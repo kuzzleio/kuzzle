@@ -8,6 +8,7 @@ const
   KuzzleMock = require('../../mocks/kuzzle.mock'),
   Request = require('kuzzle-common-objects').Request,
   Token = require('../../../lib/api/core/models/security/token'),
+  User = require('../../../lib/api/core/models/security/user'),
   {
     UnauthorizedError,
     BadRequestError,
@@ -18,11 +19,15 @@ describe('Test the auth controller', () => {
   let
     request,
     kuzzle,
+    user,
     authController;
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
     kuzzle.config.security.jwt.secret = 'test-secret';
+
+    user = new User();
+    kuzzle.passport.authenticate.returns(Bluebird.resolve(user));
 
     request = new Request({
       controller: 'auth',
@@ -50,16 +55,19 @@ describe('Test the auth controller', () => {
       return authController.login(request)
         .then(response => {
           should(response).match({_id: 'foobar', jwt: 'foo'});
-          should(kuzzle.repositories.token.generateToken).calledWith({}, request, {});
+          should(kuzzle.repositories.token.generateToken).calledWith(user, request, {});
         });
     });
 
     it('should resolve to a redirect url', () => {
-      kuzzle.passport.authenticate.returns(Bluebird.resolve({headers: {Location: 'http://github.com'}}));
+      kuzzle.passport.authenticate.returns(Bluebird.resolve({headers: {Location: 'http://github.com'}, statusCode: 302}));
 
       return authController.login(request)
         .then(response => {
           should(response.headers.Location).be.equal('http://github.com');
+          should(response.statusCode).be.equal(302);
+          should(request.status).be.equal(302);
+          should(request.response).match({status: 302, result: response, headers: {Location: 'http://github.com'}});
         });
     });
 
@@ -90,7 +98,7 @@ describe('Test the auth controller', () => {
       return authController.login(request)
         .then(response => {
           should(response).match({_id: 'foobar', jwt: 'foo'});
-          should(kuzzle.repositories.token.generateToken).calledWith({}, request, {expiresIn: '1s'});
+          should(kuzzle.repositories.token.generateToken).calledWith(user, request, {expiresIn: '1s'});
         });
     });
 
