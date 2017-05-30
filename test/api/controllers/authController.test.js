@@ -54,20 +54,36 @@ describe('Test the auth controller', () => {
 
       return authController.login(request)
         .then(response => {
+          should(kuzzle.pluginsManager.trigger).calledWith('auth:strategyAuthenticated', {strategy: 'mockup', content: user});
           should(response).match({_id: 'foobar', jwt: 'foo'});
           should(kuzzle.repositories.token.generateToken).calledWith(user, request, {});
         });
     });
 
-    it('should resolve to a redirect url', () => {
-      kuzzle.passport.authenticate.returns(Bluebird.resolve({headers: {Location: 'http://github.com'}, statusCode: 302}));
+    it('should modify the result according to auth:strategyAuthenticated pipe events', () => {
+      kuzzle.pluginsManager.trigger = sinon.stub().withArgs('auth:strategyAuthenticated').returns({strategy: 'foobar', content: {foo: 'bar'}});
 
       return authController.login(request)
         .then(response => {
+          should(kuzzle.pluginsManager.trigger).calledWith('auth:strategyAuthenticated', {strategy: 'mockup', content: user});
+          should(response).match({foo: 'bar'});
+          should(kuzzle.repositories.token.generateToken).not.be.called();
+        });
+    });
+
+    it('should handle startegy\'s headers and status code in case of multi-step authentication strategy', () => {
+      const redir = {headers: {Location: 'http://github.com'}, statusCode: 302};
+
+      kuzzle.passport.authenticate.returns(Bluebird.resolve(redir));
+
+      return authController.login(request)
+        .then(response => {
+          should(kuzzle.pluginsManager.trigger).not.be.called();
           should(response.headers.Location).be.equal('http://github.com');
           should(response.statusCode).be.equal(302);
           should(request.status).be.equal(302);
           should(request.response).match({status: 302, result: response, headers: {Location: 'http://github.com'}});
+          should(kuzzle.repositories.token.generateToken).not.be.called();
         });
     });
 
