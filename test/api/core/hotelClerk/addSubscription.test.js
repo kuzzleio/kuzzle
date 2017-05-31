@@ -262,42 +262,6 @@ describe('Test: hotelClerk.addSubscription', () => {
     return should(kuzzle.hotelClerk.addSubscription(request)).be.fulfilled();
   });
 
-  it('should delay a room creation if it has been marked for destruction', done => {
-    var
-      request1 = new Request({
-        controller: 'realtime',
-        index: index,
-        collection: collection
-      }, context),
-      request2 = new Request({
-        controller: 'realtime',
-        index: index,
-        collection: collection
-      }, {connectionId: 'anotherID', user: null});
-
-    kuzzle.hotelClerk.addSubscription(request1)
-      .then(response => {
-        kuzzle.hotelClerk.rooms[response.roomId].destroyed = true;
-
-        kuzzle.hotelClerk.addSubscription(request2)
-          .then(recreated => {
-            should(recreated.roomId).be.exactly(response.roomId);
-            should(kuzzle.hotelClerk.rooms[recreated.roomId].destroyed).be.undefined();
-            should(kuzzle.hotelClerk.rooms[recreated.roomId].customers.length).be.exactly(1);
-            should(kuzzle.hotelClerk.rooms[recreated.roomId].customers).match(['anotherID']);
-            done();
-
-            return null;
-          })
-          .catch(error => done(error));
-
-        process.nextTick(() => delete kuzzle.hotelClerk.rooms[response.roomId]);
-
-        return null;
-      })
-      .catch(error => done(error));
-  });
-
   it('should allow to subscribe to an existing room', done => {
     var
       anotherRoomId,
@@ -354,7 +318,7 @@ describe('Test: hotelClerk.addSubscription', () => {
 
   });
 
-  it('#join should reject the promise if the room does not exist', () => {
+  it('#join should throw if the room does not exist', () => {
     const request = new Request({
       collection: collection,
       index: index,
@@ -363,8 +327,8 @@ describe('Test: hotelClerk.addSubscription', () => {
       body: {roomId: 'no way I can exist'}
     }, context);
 
-    return should(kuzzle.hotelClerk.join(request))
-      .be.rejectedWith(NotFoundError);
+    return should(() => kuzzle.hotelClerk.join(request))
+      .throw(NotFoundError);
   });
 
   it('should reject the subscription if the given state argument is incorrect', () => {

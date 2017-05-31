@@ -15,15 +15,18 @@ describe('Test: hotelClerk.countSubscription', () => {
   it('should reject the request if the provided room ID is unknown to Kuzzle', () => {
     const request = new Request({body: {roomId: 'foobar'}});
 
-    return should(kuzzle.hotelClerk.countSubscription(request)).be.rejectedWith(NotFoundError, {message: 'The room Id "foobar" does not exist'});
+    return should(() => kuzzle.hotelClerk.countSubscription(request))
+      .throw(NotFoundError, {message: 'The room Id "foobar" does not exist'});
   });
 
   it('should return the right subscriptions count when handling a correct request', () => {
     const request = new Request({body: {roomId: 'foobar'}});
 
-    kuzzle.hotelClerk.rooms.foobar = {customers: ['foo', 'bar']};
+    kuzzle.hotelClerk.rooms.foobar = {customers: new Set(['foo', 'bar'])};
 
-    return kuzzle.hotelClerk.countSubscription(request)
-      .then(response => should(response.count).be.exactly(2));
+    const response = kuzzle.hotelClerk.countSubscription(request);
+
+    should(response.count)
+      .be.exactly(2);
   });
 });

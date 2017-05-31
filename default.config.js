@@ -183,7 +183,8 @@ module.exports = {
     proxyBroker: {
       host: 'localhost',
       port: 7331,
-      retryInterval: 1000
+      retryInterval: 1000,
+      resendClientListDelay: 1000
     },
     db: {
       aliases: ['storageEngine'],
