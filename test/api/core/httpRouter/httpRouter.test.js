@@ -69,6 +69,21 @@ describe('core/httpRouter', () => {
       should(handler.firstCall.args[0]).be.instanceOf(Request);
     });
 
+    it('should init request.context with the good values', () => {
+      router.post('/foo/bar', handler);
+
+      rq.url = '/foo/bar';
+      rq.headers.foo = 'bar';
+      rq.method = 'POST';
+
+      router.route(rq, callback);
+      should(handler.calledOnce).be.true();
+      should(handler.firstCall.args[0]).be.instanceOf(Request);
+      should(handler.firstCall.args[0].context.protocol).be.exactly('http');
+      should(handler.firstCall.args[0].context.connectionId).be.exactly('requestId');
+      should(handler.firstCall.args[0].input.headers).match({foo: 'bar'});
+    });
+
     it('should amend the request object if a body is found in the content', () => {
       router.post('/foo/bar', handler);
 
