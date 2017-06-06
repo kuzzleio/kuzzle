@@ -3,14 +3,14 @@
 const
   should = require('should').noConflict(),
   BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,
-  NotFoundError = require('kuzzle-common-objects').errors.NotFoundError,
-  DSL = require('../../../lib/api/dsl');
+  Dsl = require('../../../lib/api/dsl'),
+  sinon = require('sinon');
 
 describe('DSL API', () => {
   let dsl;
 
   beforeEach(() => {
-    dsl = new DSL();
+    dsl = new Dsl();
   });
 
   describe('#prototypes', () => {
@@ -168,9 +168,12 @@ describe('DSL API', () => {
   });
 
   describe('#remove', () => {
-    it('should reject if the filter ID does not exist', () => {
-      return should(() => dsl.remove('foo'))
-        .throw(NotFoundError);
+    it('should do nothing if the filter id does not exist', () => {
+      dsl._removeFromTestTables = sinon.spy();
+
+      dsl.remove('foo');
+      should(dsl._removeFromTestTables)
+        .have.callCount(0);
     });
 
     it('should unsubscribe a filter from a multi-filter subfilter', () => {
