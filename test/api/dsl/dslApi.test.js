@@ -3,14 +3,14 @@
 const
   should = require('should').noConflict(),
   BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,
-  DSL = require('../../../lib/api/dsl'),
+  Dsl = require('../../../lib/api/dsl'),
   sinon = require('sinon');
 
 describe('DSL API', () => {
   let dsl;
 
   beforeEach(() => {
-    dsl = new DSL();
+    dsl = new Dsl();
   });
 
   describe('#prototypes', () => {
