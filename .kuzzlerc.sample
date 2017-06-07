@@ -19,27 +19,27 @@
   "limits": {
     // * concurrentRequests:
     //      Number of requests Kuzzle processes simultaneously.
-    //      Requests received above this limit are bufferized until a slot is freed
+    //      Requests received above this limit are buffered until a slot is freed
     //      This value should be kept low to avoid overloading Kuzzle's event loop.
     // * documentsFetchCount:
     //      Maximum number of documents that can be fetched by a single API
-    //      request.This value cannot exceed 9999 and cannot be higher
+    //      request. This value cannot exceed 9999 and cannot be higher
     //      than 80% of the requestsBufferSize value
     // * documentsWriteCount:
     //      Maximum number of documents that can be written by a single API
-    //      request.This value cannot exceed 9999 and cannot be higher
+    //      request. This value cannot exceed 9999 and cannot be higher
     //      than 80% of the requestsBufferSize value
     // * requestsBufferSize:
-    //      Maximum number of requests that can be bufferized.
+    //      Maximum number of requests that can be buffered.
     //      Requests received above this limit are discarded with a 503 error
     // * requestsBufferWarningThreshold:
-    //      Number of bufferized requests after
+    //      Number of buffered requests after
     //      which Kuzzle will throw 'core:overload' events
     //      (see http://docs.kuzzle.io/plugin-reference/#core)
     // * requestHistorySize:
     //      Completed API requests history. For debug and support purposes
     // * subscriptionConditionsCount
-    //      Maximum number of conditions a subcription filter can contain
+    //      Maximum number of conditions a subscription filter can contain
     //      NB: A condition is either a "simple" operator (anything but and, or and bool)
     //      or a boolean condition that contains only simple operators.
     "concurrentRequests": 50,
@@ -285,8 +285,8 @@
     // [memoryStorage]
     // The Redis memoryStorage Engine
     // (see "internalCache" above for sample settings)
-    // By default, the memoryStorage engine uses the same redis server
-    // than internalCache, on database ID "5"
+    // By default, the memoryStorage engine uses the same Redis server
+    // as internalCache, on database ID "5"
     "memoryStorage": {
       "backend": "redis",
       "database": 5,
@@ -305,7 +305,7 @@
     //   * port:
     //       Network port to open for internal communications
     //   * retryInterval:
-    //       Time interval (in millisconds) between reconnections retries
+    //       Time interval (in milliseconds) between reconnection retries
     //       when the connection to the broker server has been lost
     //   * pingTimeout:
     //       Timeout (in milliseconds) of a ping request. If reached, Kuzzle
@@ -337,7 +337,7 @@
     //       Time after which (in milliseconds) Kuzzle should ask the proxy to
     //       send the list of clients back after a disconnection (default 1s).
     //   * retryInterval:
-    //       Time interval (in millisconds) between reconnections retries
+    //       Time interval (in milliseconds) between reconnection retries
     //       when the connection to the broker server has been lost
     "proxyBroker": {
       "host": "localhost",
@@ -416,7 +416,7 @@
   // and debugging on unexpected events (errors, crashes)
   // DO NOT disable this feature if you bought enterprise support
   //  * enabled:
-  //      Enable/disable informations dump on crash or on errors
+  //      Enable/disable information dump on crash or on errors
   //      (see below)
   //  * history:
   //      * coredump:
