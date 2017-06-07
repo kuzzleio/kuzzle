@@ -17,32 +17,32 @@ Feature: Test HTTP API
 
   @usingHttp
   Scenario: Create a new document and get it
-    And I write the document
+    When I write the document
     Then I should receive a document id
     Then I'm able to get the document
     And I'm not able to get the document in index "kuzzle-test-index-alt"
 
   @usingHttp
   Scenario: Create or Update a document
-    And I write the document
+    When I write the document
     And I createOrReplace it
     Then I should have updated the document
 
   @usingHttp
   Scenario: Replace a document
-    And I write the document "documentGrace"
+    When I write the document "documentGrace"
     Then I replace the document with "documentAda" document
     Then my document has the value "Ada" in field "firstName"
 
   @usingHttp
   Scenario: Update a document
-    And I write the document
+    When I write the document
     Then I update the document with value "foo" in field "firstName"
     Then my document has the value "foo" in field "firstName"
 
   @usingHttp
   Scenario: Delete a document
-    And I write the document
+    When I write the document
     Then I remove the document
     Then I'm not able to get the document
 
