@@ -51,7 +51,8 @@ describe('Test: hotelClerk.removeRooms', () => {
       body: {}
     }, context);
 
-    return should(kuzzle.hotelClerk.removeRooms(request)).rejectedWith(NotFoundError);
+    return should(() => kuzzle.hotelClerk.removeRooms(request))
+      .throw(NotFoundError);
   });
 
   it('should reject an error if there is no subscription on this collection', () => {
@@ -73,7 +74,8 @@ describe('Test: hotelClerk.removeRooms', () => {
 
     return kuzzle.hotelClerk.addSubscription(subscribeRequest)
       .then(() => {
-        return should(kuzzle.hotelClerk.removeRooms(removeRequest)).rejectedWith(NotFoundError);
+        return should(() => kuzzle.hotelClerk.removeRooms(removeRequest))
+          .throw(NotFoundError);
       });
   });
 
@@ -95,10 +97,10 @@ describe('Test: hotelClerk.removeRooms', () => {
       }, context);
 
     return kuzzle.hotelClerk.addSubscription(subscribeRequest)
-      .then(() => kuzzle.hotelClerk.removeRooms(removeRequest))
-      .then(response => {
-        should(response).have.property('acknowledge');
-        should(response.acknowledge).be.true();
+      .then(() => {
+        const response = kuzzle.hotelClerk.removeRooms(removeRequest);
+        should(response).have.property('acknowledged');
+        should(response.acknowledged).be.true();
 
         should(kuzzle.hotelClerk.rooms).be.empty().Object();
       });
@@ -124,8 +126,8 @@ describe('Test: hotelClerk.removeRooms', () => {
     return kuzzle.hotelClerk.addSubscription(subscribeRequest)
       .then(() => kuzzle.hotelClerk.removeRooms(removeRequest))
       .then(response => {
-        should(response).have.property('acknowledge');
-        should(response.acknowledge).be.true();
+        should(response).have.property('acknowledged');
+        should(response.acknowledged).be.true();
 
         should(kuzzle.hotelClerk.rooms).be.empty().Object();
       });
@@ -157,10 +159,10 @@ describe('Test: hotelClerk.removeRooms', () => {
 
     return kuzzle.hotelClerk.addSubscription(globalSubscribeRequest)
       .then(() => kuzzle.hotelClerk.addSubscription(filterSubscribeRequest))
-      .then(() => kuzzle.hotelClerk.removeRooms(removeRequest))
-      .then(response => {
-        should(response).have.property('acknowledge');
-        should(response.acknowledge).be.true();
+      .then(() => {
+        const response = kuzzle.hotelClerk.removeRooms(removeRequest);
+        should(response).have.property('acknowledged');
+        should(response.acknowledged).be.true();
 
         should(kuzzle.hotelClerk.rooms).be.empty().Object();
       });
@@ -194,15 +196,15 @@ describe('Test: hotelClerk.removeRooms', () => {
       .then(() => kuzzle.hotelClerk.addSubscription(subscribeCollection2))
       .then(() => kuzzle.hotelClerk.removeRooms(removeRequest))
       .then(response => {
-        should(response).have.property('acknowledge');
-        should(response.acknowledge).be.true();
+        should(response).have.property('acknowledged');
+        should(response.acknowledged).be.true();
 
         should(kuzzle.hotelClerk.rooms).be.Object();
         should(Object.keys(kuzzle.hotelClerk.rooms).length).be.exactly(1);
       });
   });
 
-  it('should reject an error if room is provided but is not an array', () => {
+  it('should throw if room is provided but is not an array', () => {
     const
       subscribeCollection1 = new Request({
         controller: 'realtime',
@@ -221,7 +223,8 @@ describe('Test: hotelClerk.removeRooms', () => {
 
     return kuzzle.hotelClerk.addSubscription(subscribeCollection1)
       .then(() => {
-        return should(kuzzle.hotelClerk.removeRooms(removeRequest)).be.rejectedWith(BadRequestError);
+        return should(() => kuzzle.hotelClerk.removeRooms(removeRequest))
+          .throw(BadRequestError);
       });
   });
 
@@ -293,10 +296,10 @@ describe('Test: hotelClerk.removeRooms', () => {
       .then(result => {
         index2RoomName = result.roomId;
         removeRequest.input.body.rooms.push(index2RoomName);
-        return kuzzle.hotelClerk.removeRooms(removeRequest);
-      })
-      .then((response) => {
-        should(response.acknowledge).be.true();
+
+        const response = kuzzle.hotelClerk.removeRooms(removeRequest);
+
+        should(response.acknowledged).be.true();
         should(response.partialErrors.length).be.exactly(1);
         should(response.partialErrors).be.an.Array().and.match([`The room ${index2RoomName} does not match index ${index}`]);
       });
@@ -332,10 +335,9 @@ describe('Test: hotelClerk.removeRooms', () => {
       .then(result => {
         collection2RoomName = result.roomId;
         removeRequest.input.body.rooms.push(collection2RoomName);
-        return kuzzle.hotelClerk.removeRooms(removeRequest);
-      })
-      .then((response) => {
-        should(response.acknowledge).be.true();
+
+        const response = kuzzle.hotelClerk.removeRooms(removeRequest);
+        should(response.acknowledged).be.true();
         should(response.partialErrors.length).be.exactly(1);
         should(response.partialErrors).be.an.Array().and.match([`The room ${collection2RoomName} does not match collection ${collection1}`]);
       });
@@ -360,9 +362,9 @@ describe('Test: hotelClerk.removeRooms', () => {
       }, context);
 
     return kuzzle.hotelClerk.addSubscription(subscribeRequest, context)
-      .then(() => kuzzle.hotelClerk.removeRooms(removeRequest))
-      .then(response => {
-        should(response.acknowledge).be.true();
+      .then(() => {
+        const response = kuzzle.hotelClerk.removeRooms(removeRequest);
+        should(response.acknowledged).be.true();
         should(response.partialErrors.length).be.exactly(1);
         should(response.partialErrors).be.an.Array().and.match(['No room with id ' + badRoomName]);
       });

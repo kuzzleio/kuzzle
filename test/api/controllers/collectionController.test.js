@@ -113,6 +113,7 @@ describe('Test: collection controller', () => {
       kuzzle.config.limits.documentsFetchCount = 1;
       request.input.args.from = 0;
       request.input.args.size = 20;
+      request.input.action = 'searchSpecifications';
 
       return should(() => collectionController.searchSpecifications(request))
         .throw('Search page size exceeds server configured documents limit (1)');
@@ -156,7 +157,8 @@ describe('Test: collection controller', () => {
 
   describe('#scrollSpecifications', () => {
     it('should throw if no scrollId is provided', () => {
-      should(() => collectionController.scrollSpecifications(new Request({}))).throw(BadRequestError, {message: 'Missing "scrollId" argument'});
+      should(() => collectionController.scrollSpecifications(new Request({controller: 'collection', action: 'scrollSpecifications'})))
+        .throw(BadRequestError, {message: 'The request must specify a scrollId.'});
     });
 
     it('should call internalEngine with the right data', () => {
@@ -412,11 +414,7 @@ describe('Test: collection controller', () => {
   describe('#list', () => {
     beforeEach(() => {
       kuzzle.services.list.storageEngine.listCollections.returns(Promise.resolve({collections: {stored: ['foo']}}));
-      kuzzle.hotelClerk.getRealtimeCollections.returns([
-        {name: 'foo', index: 'index'},
-        {name: 'bar', index: 'index'},
-        {name: 'baz', index: 'wrong'}
-      ]);
+      kuzzle.hotelClerk.getRealtimeCollections.returns(['foo', 'bar']);
     });
 
     it('should resolve to a full collections list', () => {
@@ -468,9 +466,7 @@ describe('Test: collection controller', () => {
     it('should return a portion of the collection list if from and size are specified', () => {
       request = new Request({index: 'index', type: 'all', from: 2, size: 3});
       kuzzle.services.list.storageEngine.listCollections.returns(Promise.resolve({collections: {stored: ['astored', 'bstored', 'cstored', 'dstored', 'estored']}}));
-      kuzzle.hotelClerk.getRealtimeCollections.returns([
-        {name: 'arealtime', index: 'index'}, {name: 'brealtime', index: 'index'}, {name: 'crealtime', index: 'index'}, {name: 'drealtime', index: 'index'}, {name: 'erealtime', index: 'index'}, {name: 'baz', index: 'wrong'}
-      ]);
+      kuzzle.hotelClerk.getRealtimeCollections.returns(['arealtime', 'brealtime', 'crealtime', 'drealtime', 'erealtime']);
 
       return collectionController.list(request)
         .then(response => {
@@ -489,9 +485,7 @@ describe('Test: collection controller', () => {
     it('should return a portion of the collection list if from is specified', () => {
       request = new Request({index: 'index', type: 'all', from: 8});
       kuzzle.services.list.storageEngine.listCollections.returns(Promise.resolve({collections: {stored: ['astored', 'bstored', 'cstored', 'dstored', 'estored']}}));
-      kuzzle.hotelClerk.getRealtimeCollections.returns([
-        {name: 'arealtime', index: 'index'}, {name: 'brealtime', index: 'index'}, {name: 'crealtime', index: 'index'}, {name: 'drealtime', index: 'index'}, {name: 'erealtime', index: 'index'}, {name: 'baz', index: 'wrong'}
-      ]);
+      kuzzle.hotelClerk.getRealtimeCollections.returns(['arealtime', 'brealtime', 'crealtime', 'drealtime', 'erealtime']);
 
       return collectionController.list(request)
         .then(response => {
@@ -511,14 +505,7 @@ describe('Test: collection controller', () => {
       kuzzle.services.list.storageEngine.listCollections.returns(Promise.resolve({
         collections: {stored: ['astored', 'bstored', 'cstored', 'dstored', 'estored']}
       }));
-      kuzzle.hotelClerk.getRealtimeCollections.returns([
-        {name: 'arealtime', index: 'index'},
-        {name: 'brealtime', index: 'index'},
-        {name: 'crealtime', index: 'index'},
-        {name: 'drealtime', index: 'index'},
-        {name: 'erealtime', index: 'index'},
-        {name: 'baz', index: 'wrong'}
-      ]);
+      kuzzle.hotelClerk.getRealtimeCollections.returns(['arealtime', 'brealtime', 'crealtime', 'drealtime', 'erealtime']);
 
       return collectionController.list(request)
         .then(response => {

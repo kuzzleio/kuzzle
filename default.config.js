@@ -9,6 +9,29 @@
  * @class KuzzleConfiguration
  */
 module.exports = {
+
+  dump: {
+    enabled: true,
+    history: {
+      coredump: 3,
+      reports: 5
+    },
+    path: './dump/',
+    gcore: 'gcore',
+    dateFormat: 'YYYYMMDD-HHmmss',
+    handledErrors: {
+      enabled: true,
+      whitelist: [
+        // 'Error',
+        'RangeError',
+        'TypeError',
+        'KuzzleError',
+        'InternalError'
+      ],
+      minInterval: 10 * 60 * 1000
+    }
+  },
+
   /*
    routes: list of Kuzzle API exposed HTTP routes
    accessControlAllowOrigin: sets the Access-Control-Allow-Origin header used to
@@ -35,7 +58,7 @@ module.exports = {
       workerPrefix: 'kpw:',
       pipeWarnTime: 40,
       pipeTimeout: 250,
-      initTimeout: 2000,
+      initTimeout: 10000,
     },
     'kuzzle-plugin-logger': {
       threads: 1
@@ -160,14 +183,15 @@ module.exports = {
     proxyBroker: {
       host: 'localhost',
       port: 7331,
-      retryInterval: 1000
+      retryInterval: 1000,
+      resendClientListDelay: 1000
     },
     db: {
       aliases: ['storageEngine'],
       backend: 'elasticsearch',
       host: 'localhost',
       port: 9200,
-      apiVersion: '5.0',
+      apiVersion: '5.x',
       defaults: {
         onUpdateConflictRetries: 0,
         scrollTTL: '15s'
@@ -188,26 +212,6 @@ module.exports = {
 
   /** @type {DocumentSpecification} */
   validation: {
-  },
-
-  dump: {
-    enabled: true,
-    history: {
-      coredump: 3,
-      reports: 5
-    },
-    path: './dump/',
-    gcore: 'gcore',
-    dateFormat: 'YYYYMMDD-HHmm',
-    handledErrors: {
-      enabled: true,
-      whitelist: [
-        // 'Error',
-        'RangeError',
-        'TypeError',
-        'KuzzleError',
-        'InternalError'
-      ]
-    }
   }
+
 };

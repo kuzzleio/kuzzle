@@ -27,6 +27,10 @@ describe('PluginsManager', () => {
     pluginsManager = new PluginsManager(kuzzle);
   });
 
+  after(() => {
+    mockrequire.stopAll();
+  });
+
   describe('#init', () => {
     it('should load plugins at init', () => {
       pluginsManager.init();
@@ -98,6 +102,13 @@ describe('PluginsManager', () => {
       should(pluginsManager.plugins[name].name).be.eql(name);
       should(pluginsManager.plugins[name].object).be.ok();
       should(pluginsManager.plugins[name].path).be.ok();
+    });
+  });
+  describe('Test plugins manager listStrategies', () => {
+    it('should return a list of registrated authentication strategies', () => {
+      pluginsManager.registeredStrategies = ['strategy'];
+
+      should(pluginsManager.listStrategies()).be.an.Array().of.length(1);
     });
   });
 });

@@ -122,8 +122,15 @@ function commandCreateFirstAdmin (options) {
         _id: username,
         reset: resetRoles,
         body: {
-          username,
-          password
+          content: {
+
+          },
+          credentials: {
+            local: {
+              username,
+              password
+            }
+          }
         }
       }, {pid: params.pid, debug: options.parent.debug});
     })
