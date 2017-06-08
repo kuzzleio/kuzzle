@@ -34,7 +34,7 @@ describe('Test: Internal broker', () => {
       retryInterval: 1000
     };
 
-    clock = sinon.useFakeTimers(new Date().getTime());
+    clock = sinon.useFakeTimers(Date.now());
   });
 
   beforeEach(() =>{
@@ -1027,8 +1027,8 @@ describe('Test: Internal broker', () => {
       it('should never resolve unless a client connects', () => {
         const response = server.waitForClients('test');
 
-        // wait 1h
-        clock.tick(1000 * 3600);
+        // wait 30m
+        clock.tick(1000 * 1800);
         should(response.isPending()).be.true();
 
         server.rooms = { test: true };

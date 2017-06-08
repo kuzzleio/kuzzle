@@ -15,7 +15,11 @@ function ElasticsearchClientMock () {
   this.exists = sinon.stub();
   this.get = sinon.stub();
   this.index = sinon.stub();
-  this.info = sinon.stub().returns(Promise.resolve({}));
+  this.info = sinon.stub().returns(Promise.resolve({
+    version: {
+      number: '5.4.0'
+    }
+  }));
   this.mget = sinon.stub();
   this.update = sinon.stub();
   this.search = sinon.stub();

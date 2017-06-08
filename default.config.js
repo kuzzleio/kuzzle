@@ -189,9 +189,10 @@ module.exports = {
     db: {
       aliases: ['storageEngine'],
       backend: 'elasticsearch',
-      host: 'localhost',
-      port: 9200,
-      apiVersion: '5.x',
+      client: {
+        host: 'http://localhost:9200',
+        apiVersion: '5.x'
+      },
       defaults: {
         onUpdateConflictRetries: 0,
         scrollTTL: '15s'
