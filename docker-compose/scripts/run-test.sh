@@ -30,7 +30,7 @@ echo "[$(date --rfc-3339 seconds)] - Starting Kuzzle..."
 
 pm2 start --silent /config/pm2.json
 
-#npm run --silent lint
-#npm run unit-testing
-#npm run codecov
+npm run --silent lint
+npm run unit-testing
+npm run codecov
 npm run functional-testing
