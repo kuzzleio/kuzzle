@@ -3,8 +3,6 @@ version: '2'
 services:
   proxy:
     image: kuzzleio/proxy${DOCKER_PROXY_TAG}
-    ports:
-      - "7512:7512"
 
   kuzzle:
     image: kuzzleio/dev
@@ -20,7 +18,7 @@ services:
       - redis
       - elasticsearch
     environment:
-      - kuzzle_services__db__host=elasticsearch
+      - kuzzle_services__db__client__host=http://elasticsearch:9200
       - kuzzle_services__internalCache__node__host=redis
       - kuzzle_services__memoryStorage__node__host=redis
       - kuzzle_services__proxyBroker__host=proxy

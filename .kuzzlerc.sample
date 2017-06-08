@@ -349,22 +349,18 @@
     // [db]
     // The database layer is by default relying on Elasticsearch and is
     // currently the only available database layer.
-    // sample settings for Elasticsearch service (see also https://www.elastic.co/guide/en/elasticsearch/client/javascript-api/current/configuration.html):
-    // 1. using a single Elasticsearch server:
-    //   * host:
-    //       Host name/address of a Elasticsearch server.
-    //       Can be a hostname, an URI or an IP address.
-    //   * port:
-    //       Network port opened by the Elasticsearch server
-    //   * apiVersion:
-    //      The version of Elasticsearch API to use.
-    //      Kuzzle currently only supports Elasticsearch API "5.x"
+    //   * client:
+    //       Elasticsearch constructor options.
+    //       cf https://www.elastic.co/guide/en/elasticsearch/client/javascript-api/current/configuration.html
+    //       for detailed documentation
     "db": {
       "backend": "elasticsearch",
       "aliases": ["storageEngine"],
-      "host": "elasticsearch",
-      "port": 9200,
-      "apiVersion": "5.0",
+      "client": {
+        "host": "elasticsearch",
+        "port": 9200,
+        "apiVersion": "5.x"
+      },
       "defaults": {
         // Number of retries to attempt on an update conflict
         // before throwing an error
