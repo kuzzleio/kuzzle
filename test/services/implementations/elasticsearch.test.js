@@ -17,7 +17,7 @@ const
   ESClientMock = require('../../mocks/services/elasticsearchClient.mock'),
   ES = rewire('../../../lib/services/elasticsearch');
 
-describe.only('Test: ElasticSearch service', () => {
+describe('Test: ElasticSearch service', () => {
   let
     kuzzle = {},
     sandbox = sinon.sandbox.create(),
