@@ -141,11 +141,11 @@ var apiSteps = function () {
 
   this.Then(/^I am ?(not)* able to scroll previous search$/, function (not) {
     if (!this.scrollId) {
-      if (!not) {
-        return Promise.reject(new Error('No scroll id from previous search available'));
+      if (not) {
+        return Promise.resolve();
       }
 
-      return Promise.resolve();
+      return Promise.reject(new Error('No scroll id from previous search available'));
     }
 
     return this.api.scroll(this.scrollId)

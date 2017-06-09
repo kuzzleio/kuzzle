@@ -37,4 +37,12 @@ services:
     image: redis:3.2
 
   elasticsearch:
-    image: elasticsearch:5.1
+    image: docker.elastic.co/elasticsearch/elasticsearch:5.4.1
+    environment:
+      - cluster.name=kuzzle
+      # disable xpack
+      - xpack.security.enabled=false
+      - xpack.monitoring.enabled=false
+      - xpack.graph.enabled=false
+      - xpack.watcher.enabled=false
+
