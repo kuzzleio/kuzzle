@@ -54,7 +54,8 @@ class KuzzleMock extends Kuzzle {
           adminExists: sinon.stub(),
         },
         security: {
-          createFirstAdmin: sinon.spy()
+          createFirstAdmin: sinon.spy(),
+          deleteUser: sinon.spy()
         }
       },
       pluginsControllers: {
@@ -177,6 +178,7 @@ class KuzzleMock extends Kuzzle {
       user: {
         load: sinon.stub().returns(Bluebird.resolve(foo)),
         search: sinon.stub().returns(Bluebird.resolve()),
+        scroll: sinon.stub().returns(Bluebird.resolve()),
         ObjectConstructor: sinon.stub().returns({}),
         hydrate: sinon.stub().returns(Bluebird.resolve()),
         persist: sinon.stub().returns(Bluebird.resolve({})),
@@ -190,8 +192,6 @@ class KuzzleMock extends Kuzzle {
         deleteByUserId: sinon.stub().returns(Bluebird.resolve())
       }
     };
-
-    this.resetStorage = sinon.stub().returns(Bluebird.resolve());
 
     this.rootPath = '/kuzzle';
 

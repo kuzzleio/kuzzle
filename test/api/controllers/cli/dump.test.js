@@ -87,7 +87,7 @@ describe('Test: dump', () => {
     it('should return computed dump path', () => {
       const expectedDumpPath = '/tmp/'.concat((new Date()).getFullYear()).concat('-tests');
 
-      return dump(new Request({suffix: 'tests'}))
+      return dump(new Request({suffix: 'tests'}), sinon.stub())
         .then(dumpPath => should(dumpPath).be.exactly(expectedDumpPath));
     });
 
@@ -97,7 +97,7 @@ describe('Test: dump', () => {
         osDump,
         baseDumpPath = '/tmp/'.concat((new Date()).getFullYear());
 
-      return dump()
+      return dump(null, sinon.stub())
         .then(() => {
           should(fsStub.mkdirsSync).be.calledOnce();
           should(fsStub.mkdirsSync.getCall(0).args[0]).be.exactly(baseDumpPath);
@@ -155,7 +155,7 @@ describe('Test: dump', () => {
           ctime: 3
         });
 
-      return dump()
+      return dump(null, sinon.stub())
         .then(() => {
           should(fsStub.createReadStream)
             .be.calledWith('/foo/bar/baz.log')
@@ -184,14 +184,14 @@ describe('Test: dump', () => {
     it('should do nothing if the dump path is not reachable', () => {
       fsStub.accessSync.throws(new Error('foobar'));
 
-      return dump()
+      return dump(null, sinon.stub())
         .then(() => should(fsStub.readdirSync).not.be.called());
     });
 
     it('should not delete reports nor coredumps if limits are not reached', () => {
       fsStub.readdirSync.returns(['foo', 'bar']);
 
-      return dump()
+      return dump(null, sinon.stub())
         .then(() => should(fsStub.removeSync).not.be.called());
     });
 
@@ -209,7 +209,7 @@ describe('Test: dump', () => {
 
       globStub.sync.returns([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
 
-      return dump()
+      return dump(null, sinon.stub())
         .then(() => {
           // readdir returns 9 directory + 1 non-directory
           // the limit is set to 5, so we should remove
@@ -232,7 +232,7 @@ describe('Test: dump', () => {
         .withArgs('/tmp', 0)
         .returns();
 
-      return dump()
+      return dump(null, sinon.stub())
         .then(() => {
           for (let i = 1; i < 8; i++) {
             should(globStub.sync)

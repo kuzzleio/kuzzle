@@ -76,8 +76,11 @@ describe('Tests: api/cli/index.js', () => {
       return cli.doAction.call(context, 'test', {})
         .then(response => {
           should(response).be.exactly('promise');
-          should(kuzzle.services.list.broker.listen).be.calledOnce();
-          should(kuzzle.services.list.broker.listen.firstCall.args[1]).be.a.Function();
+          should(kuzzle.services.list.broker.listen).be.calledTwice();
+          should(kuzzle.services.list.broker.listen.getCall(0).args[0]).be.eql('status-test');
+          should(kuzzle.services.list.broker.listen.getCall(0).args[1]).be.a.Function();
+          should(kuzzle.services.list.broker.listen.getCall(1).args[0]).be.eql('test');
+          should(kuzzle.services.list.broker.listen.getCall(1).args[1]).be.a.Function();
           should(kuzzle.services.list.broker.send).be.calledOnce();
           should(kuzzle.services.list.broker.send.firstCall.args[0]).be.exactly('cli-queue');
           should(kuzzle.services.list.broker.send.firstCall.args[1]).match({

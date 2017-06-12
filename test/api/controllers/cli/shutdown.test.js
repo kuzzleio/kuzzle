@@ -41,10 +41,6 @@ describe('CLI Action: shutdown', () => {
 
     shutdownFactory.__set__({
       process: processMock,
-      console: {
-        warn: sinon.stub(),
-        error: sinon.stub()
-      },
       // prevent waiting seconds for unit tests
       setTimeout: sinon.spy(function (...args) { setImmediate(args[0]); })
     });
@@ -59,7 +55,7 @@ describe('CLI Action: shutdown', () => {
   it('should exit immediately if unable to retrieve the PM2 process list', done => {
     pm2Mock.list.yields(new Error('foo'));
 
-    shutdown()
+    shutdown(null, sinon.stub())
       .then(() => {
         setTimeout(() => {
           should(kuzzle.entryPoints.proxy.dispatch)
@@ -78,7 +74,7 @@ describe('CLI Action: shutdown', () => {
   it('should exit immediately if kuzzle was not started with PM2', done => {
     pm2Mock.list.yields(null, []);
 
-    shutdown()
+    shutdown(null, sinon.stub())
       .then(() => {
         setTimeout(() => {
           should(kuzzle.entryPoints.proxy.dispatch)
@@ -103,7 +99,7 @@ describe('CLI Action: shutdown', () => {
       }
     }]);
 
-    shutdown()
+    shutdown(null, sinon.stub())
       .then(() => {
         setTimeout(() => {
           should(kuzzle.entryPoints.proxy.dispatch)
@@ -126,7 +122,7 @@ describe('CLI Action: shutdown', () => {
       pm2_env: {}
     }]);
 
-    shutdown()
+    shutdown(null, sinon.stub())
       .then(() => {
         // should wait until called a second time by PM2
         setTimeout(() => {
@@ -139,7 +135,7 @@ describe('CLI Action: shutdown', () => {
           should(pm2Mock.restart).not.be.called();
           should(kuzzle.pluginsManager.shutdownWorkers).not.be.called();
 
-          shutdown();
+          shutdown(null, sinon.stub());
 
           setTimeout(() => {
             should(kuzzle.entryPoints.proxy.dispatch)
@@ -164,7 +160,7 @@ describe('CLI Action: shutdown', () => {
 
     pm2Mock.list.yields(new Error('foo'));
 
-    shutdown()
+    shutdown(null, sinon.stub())
       .then(() => {
         setTimeout(() => {
           should(remainingChanged).be.true();

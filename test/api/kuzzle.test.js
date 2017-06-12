@@ -40,38 +40,6 @@ describe('/lib/api/kuzzle.js', () => {
     kuzzle.emit('event', {});
   });
 
-  describe('#resetStorage', () => {
-    it('should erase the internal ES & Redis dbs', () => {
-      return kuzzle.resetStorage()
-        .then(() => {
-          should(kuzzle.pluginsManager.trigger)
-            .be.calledOnce()
-            .be.calledWithExactly('log:warn', 'Kuzzle::resetStorage called');
-
-          should(kuzzle.internalEngine.deleteIndex).be.calledOnce();
-          should(kuzzle.services.list.internalCache.flushdb).be.calledOnce();
-          should(kuzzle.services.list.memoryStorage.flushdb).be.calledOnce();
-
-          should(kuzzle.indexCache.remove)
-            .be.calledOnce()
-            .be.calledWithExactly('internalIndex');
-
-          should(kuzzle.internalEngine.bootstrap.all).be.calledOnce();
-          should(kuzzle.validation).be.an.Object();
-          should(kuzzle.start).be.a.Function();
-
-          sinon.assert.callOrder(
-            kuzzle.pluginsManager.trigger,
-            kuzzle.internalEngine.deleteIndex,
-            kuzzle.services.list.internalCache.flushdb,
-            kuzzle.services.list.memoryStorage.flushdb,
-            kuzzle.indexCache.remove,
-            kuzzle.internalEngine.bootstrap.all
-          );
-        });
-    });
-  });
-
   describe('#start', () => {
     it('should init the components in proper order', () => {
       return kuzzle.start()
