@@ -558,8 +558,6 @@ Feature: Test websocket API
     When I log in as user2:testpwd2 expiring in 1h
     Then I'm allowed to create a document in index "kuzzle-test-index" and collection "kuzzle-collection-test"
     And I'm allowed to create a document in index "kuzzle-test-index" and collection "kuzzle-collection-test-alt"
-    And I'm not allowed to create a document in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test"
-    And I'm not allowed to create a document in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test-alt"
     And I'm allowed to search for documents in index "kuzzle-test-index" and collection "kuzzle-collection-test"
     And I'm allowed to search for documents in index "kuzzle-test-index" and collection "kuzzle-collection-test-alt"
     And I'm allowed to search for documents in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test"
@@ -572,8 +570,6 @@ Feature: Test websocket API
     When I log in as user3:testpwd3 expiring in 1h
     Then I'm not allowed to create a document in index "kuzzle-test-index" and collection "kuzzle-collection-test"
     And I'm not allowed to create a document in index "kuzzle-test-index" and collection "kuzzle-collection-test-alt"
-    And I'm not allowed to create a document in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test"
-    And I'm not allowed to create a document in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test-alt"
     And I'm not allowed to search for documents in index "kuzzle-test-index" and collection "kuzzle-collection-test"
     And I'm not allowed to search for documents in index "kuzzle-test-index" and collection "kuzzle-collection-test-alt"
     And I'm allowed to search for documents in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test"

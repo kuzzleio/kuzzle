@@ -20,10 +20,15 @@ const myHooks = function () {
           // ignoring errors
           .catch(() => resolve({}));
       }));
-
-      promises.push(() => api.createIndex(index));
-      promises.push(() => api.refreshIndex(index));
     });
+
+    promises.push(() => api.createIndex(api.world.fakeIndex));
+    promises.push(() => api.createCollection(api.world.fakeIndex, api.world.fakeCollection));
+    promises.push(() => api.createCollection(api.world.fakeIndex, api.world.fakeAltCollection));
+
+    promises.push(() => api.createIndex(api.world.fakeAltIndex));
+    promises.push(() => api.createCollection(api.world.fakeAltIndex, api.world.fakeCollection));
+    promises.push(() => api.createCollection(api.world.fakeAltIndex, api.world.fakeAltCollection));
 
     Promise.each(promises, promise => promise()).asCallback(callback);
   });
