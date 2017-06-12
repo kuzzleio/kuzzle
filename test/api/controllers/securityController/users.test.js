@@ -2,17 +2,19 @@
 
 const
   rewire = require('rewire'),
-  Promise = require('bluebird'),
+  Bluebird = require('bluebird'),
   should = require('should'),
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
   KuzzleMock = require('../../../mocks/kuzzle.mock'),
   Request = require('kuzzle-common-objects').Request,
-  BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,
-  NotFoundError = require('kuzzle-common-objects').errors.NotFoundError,
-  InternalError = require('kuzzle-common-objects').errors.InternalError,
-  SizeLimitError = require('kuzzle-common-objects').errors.SizeLimitError,
-  PreconditionError = require('kuzzle-common-objects').errors.PreconditionError,
+  {
+    BadRequestError,
+    NotFoundError,
+    InternalError: KuzzleInternalError,
+    SizeLimitError,
+    PreconditionError,
+  } = require('kuzzle-common-objects').errors,
   SecurityController = rewire('../../../../lib/api/controllers/securityController');
 
 describe('Test: security controller - users', () => {
@@ -25,8 +27,8 @@ describe('Test: security controller - users', () => {
     kuzzle = new KuzzleMock();
     securityController = new SecurityController(kuzzle);
     request = new Request({controller: 'security'});
-    kuzzle.internalEngine.getMapping = sandbox.stub().returns(Promise.resolve({internalIndex: {mappings: {users: {properties: {}}}}}));
-    kuzzle.internalEngine.get = sandbox.stub().returns(Promise.resolve({}));
+    kuzzle.internalEngine.getMapping = sandbox.stub().returns(Bluebird.resolve({internalIndex: {mappings: {users: {properties: {}}}}}));
+    kuzzle.internalEngine.get = sandbox.stub().returns(Bluebird.resolve({}));
   });
 
   afterEach(() => {
@@ -76,7 +78,7 @@ describe('Test: security controller - users', () => {
     });
 
     it('should reject with NotFoundError when the user is not found', () => {
-      kuzzle.repositories.user.load = sandbox.stub().returns(Promise.resolve(null));
+      kuzzle.repositories.user.load = sandbox.stub().returns(Bluebird.resolve(null));
 
       return should(securityController.getUser(new Request({_id: 'i.dont.exist'})))
         .be.rejectedWith(NotFoundError);
@@ -92,7 +94,7 @@ describe('Test: security controller - users', () => {
         scroll: 'foo'
       });
 
-      kuzzle.repositories.user.search = sandbox.stub().returns(Promise.resolve({
+      kuzzle.repositories.user.search = sandbox.stub().returns(Bluebird.resolve({
         hits: [{_id: 'admin', _source: { profileIds: ['admin'] }}],
         total: 2,
         scrollId: 'foobar'
@@ -107,7 +109,7 @@ describe('Test: security controller - users', () => {
     });
 
     it('should handle empty body requests', () => {
-      kuzzle.repositories.user.search = sandbox.stub().returns(Promise.resolve({
+      kuzzle.repositories.user.search = sandbox.stub().returns(Bluebird.resolve({
         hits: [{_id: 'admin', _source: { profileIds: ['admin'] }}],
         total: 2,
         scrollId: 'foobar'
@@ -135,7 +137,7 @@ describe('Test: security controller - users', () => {
 
     it('should reject an error in case of error', () => {
       const error = new Error('Mocked error');
-      kuzzle.repositories.user.search = sandbox.stub().returns(Promise.reject(error));
+      kuzzle.repositories.user.search = sandbox.stub().returns(Bluebird.reject(error));
 
       return should(securityController.searchUsers(new Request({body: {hydrate: false}})))
         .be.rejectedWith(error);
@@ -151,7 +153,7 @@ describe('Test: security controller - users', () => {
     it('should reformat search results correctly', () => {
       request = new Request({scrollId: 'foobar'});
 
-      kuzzle.repositories.user.scroll = sandbox.stub().returns(Promise.resolve({
+      kuzzle.repositories.user.scroll = sandbox.stub().returns(Bluebird.resolve({
         hits: [{_id: 'admin', _source: { profileIds: ['admin'] }}],
         total: 2,
         scrollId: 'foobar'
@@ -168,7 +170,7 @@ describe('Test: security controller - users', () => {
     it('should handle the scroll argument', () => {
       request = new Request({scrollId: 'foobar', scroll: 'qux'});
 
-      kuzzle.repositories.user.scroll = sandbox.stub().returns(Promise.resolve({
+      kuzzle.repositories.user.scroll = sandbox.stub().returns(Bluebird.resolve({
         hits: [{_id: 'admin', _source: { profileIds: ['admin'] }}],
         total: 2,
         scrollId: 'foobar'
@@ -185,7 +187,7 @@ describe('Test: security controller - users', () => {
 
   describe('#deleteUser', () => {
     it('should return a valid response', () => {
-      kuzzle.repositories.user.delete = sandbox.stub().returns(Promise.resolve({_id: 'test'}));
+      kuzzle.repositories.user.delete = sandbox.stub().returns(Bluebird.resolve({_id: 'test'}));
 
       return securityController.deleteUser(new Request({_id: 'test'}))
         .then(response => {
@@ -203,18 +205,18 @@ describe('Test: security controller - users', () => {
     it('should reject an error in case of error', () => {
       const error = new Error('Mocked error');
 
-      kuzzle.repositories.user.delete = sandbox.stub().returns(Promise.reject(error));
+      kuzzle.repositories.user.delete = sandbox.stub().returns(Bluebird.reject(error));
 
       return should(securityController.deleteUser(new Request({_id: 'test'}))).be.rejectedWith(error);
     });
 
     it('should delete user credentials', () => {
       const
-        existsMethod = sandbox.stub().returns(Promise.resolve(true)),
-        deleteMethod = sandbox.stub().returns(Promise.resolve());
+        existsMethod = sandbox.stub().returns(Bluebird.resolve(true)),
+        deleteMethod = sandbox.stub().returns(Bluebird.resolve());
       kuzzle.pluginsManager.listStrategies = sandbox.stub().returns(['someStrategy']);
       kuzzle.pluginsManager.getStrategyMethod = sandbox.stub();
-      kuzzle.repositories.user.delete = sandbox.stub().returns(Promise.resolve({_id: 'test'}));
+      kuzzle.repositories.user.delete = sandbox.stub().returns(Bluebird.resolve({_id: 'test'}));
 
       kuzzle.pluginsManager.getStrategyMethod
         .onFirstCall().returns(existsMethod)
@@ -230,9 +232,9 @@ describe('Test: security controller - users', () => {
 
   describe('#createUser', () => {
     it('should return a valid response', () => {
-      kuzzle.repositories.user.load = sandbox.stub().returns(Promise.resolve(null));
-      kuzzle.repositories.user.persist = sandbox.stub().returns(Promise.resolve({_id: 'test'}));
-      kuzzle.repositories.user.hydrate = sandbox.stub().returns(Promise.resolve());
+      kuzzle.repositories.user.load = sandbox.stub().returns(Bluebird.resolve(null));
+      kuzzle.repositories.user.persist = sandbox.stub().returns(Bluebird.resolve({_id: 'test'}));
+      kuzzle.repositories.user.hydrate = sandbox.stub().returns(Bluebird.resolve());
 
       return securityController.createUser(new Request({
         _id: 'test',
@@ -249,9 +251,9 @@ describe('Test: security controller - users', () => {
     });
 
     it('should compute a user id if none is provided', () => {
-      kuzzle.repositories.user.load = sandbox.stub().returns(Promise.resolve(null));
-      kuzzle.repositories.user.persist = sandbox.stub().returns(Promise.resolve({_id: 'test'}));
-      kuzzle.repositories.user.hydrate = sandbox.stub().returns(Promise.resolve());
+      kuzzle.repositories.user.load = sandbox.stub().returns(Bluebird.resolve(null));
+      kuzzle.repositories.user.persist = sandbox.stub().returns(Bluebird.resolve({_id: 'test'}));
+      kuzzle.repositories.user.hydrate = sandbox.stub().returns(Bluebird.resolve());
 
       return securityController.createUser(new Request({
         body: {
@@ -272,7 +274,7 @@ describe('Test: security controller - users', () => {
     });
 
     it('should reject an error if user already exists', () => {
-      kuzzle.repositories.user.load = sandbox.stub().returns(Promise.resolve({_id: 'test'}));
+      kuzzle.repositories.user.load = sandbox.stub().returns(Bluebird.resolve({_id: 'test'}));
 
       return should(securityController.createUser(new Request({
         _id: 'test',
@@ -297,7 +299,7 @@ describe('Test: security controller - users', () => {
 
   describe('#persistUserAndCredentials', () => {
     it('should reject an error if a strategy is unknown', () => {
-      kuzzle.repositories.user.load = sandbox.stub().returns(Promise.resolve(null));
+      kuzzle.repositories.user.load = sandbox.stub().returns(Bluebird.resolve(null));
       kuzzle.pluginsManager.listStrategies = sandbox.stub().returns(['someStrategy']);
 
       return should(securityController.createUser(new Request({
@@ -310,10 +312,17 @@ describe('Test: security controller - users', () => {
     });
 
     it('should reject an error if credentials don\'t validate the strategy', () => {
-      const methodStub = sandbox.stub().returns(Promise.reject(new Error('some error')));
-      kuzzle.repositories.user.load = sandbox.stub().returns(Promise.resolve(null));
+      kuzzle.repositories.user.load = sandbox.stub().returns(Bluebird.resolve(null));
       kuzzle.pluginsManager.listStrategies = sandbox.stub().returns(['someStrategy']);
-      kuzzle.pluginsManager.getStrategyMethod = sandbox.stub().returns(methodStub);
+      kuzzle.pluginsManager.getStrategyMethod = sandbox.stub();
+
+      kuzzle.pluginsManager.getStrategyMethod
+        .withArgs('someStrategy', 'exists')
+        .returns(sinon.stub().returns(Bluebird.resolve(false)));
+
+      kuzzle.pluginsManager.getStrategyMethod
+        .withArgs('someStrategy', 'validate')
+        .returns(sinon.stub().returns(Bluebird.reject(new Error('error'))));
 
       return should(securityController.createUser(new Request({
         _id: 'test',
@@ -324,20 +333,14 @@ describe('Test: security controller - users', () => {
       }))).be.rejectedWith(BadRequestError);
     });
 
-    it('should throw an error and try to delete if credentials don\'t create properly', () => {
-      const
-        validateStub = sandbox.stub().returns(Promise.resolve()),
-        createStub = sandbox.stub().returns(Promise.reject(new Error('some error'))),
-        deleteStub = sandbox.stub().returns(Promise.resolve());
-
-      kuzzle.repositories.user.load = sandbox.stub().returns(Promise.resolve(null));
+    it('should reject if credentials already exist on the provided user id', () => {
+      kuzzle.repositories.user.load = sandbox.stub().returns(Bluebird.resolve(null));
       kuzzle.pluginsManager.listStrategies = sandbox.stub().returns(['someStrategy']);
       kuzzle.pluginsManager.getStrategyMethod = sandbox.stub();
 
       kuzzle.pluginsManager.getStrategyMethod
-        .onFirstCall().returns(validateStub)
-        .onSecondCall().returns(createStub)
-        .onThirdCall().returns(deleteStub);
+        .withArgs('someStrategy', 'exists')
+        .returns(sinon.stub().returns(Bluebird.resolve(true)));
 
       return should(securityController.createUser(new Request({
         _id: 'test',
@@ -345,23 +348,49 @@ describe('Test: security controller - users', () => {
           content: {name: 'John Doe', profileIds: ['anonymous']},
           credentials: {someStrategy: {some: 'credentials'}}
         }
-      }))).rejectedWith(InternalError);
+      }))).be.rejectedWith(KuzzleInternalError);
+    });
+
+    it('should throw an error and try to delete if credentials don\'t create properly', () => {
+      const
+        validateStub = sandbox.stub().returns(Bluebird.resolve()),
+        existsStub = sandbox.stub().returns(Bluebird.resolve(false)),
+        createStub = sandbox.stub().returns(Bluebird.reject(new Error('some error'))),
+        deleteStub = sandbox.stub().returns(Bluebird.resolve());
+
+      kuzzle.repositories.user.load = sandbox.stub().returns(Bluebird.resolve(null));
+      kuzzle.pluginsManager.listStrategies = sandbox.stub().returns(['someStrategy']);
+      kuzzle.pluginsManager.getStrategyMethod = sandbox.stub();
+
+      kuzzle.pluginsManager.getStrategyMethod.withArgs('someStrategy', 'validate').returns(validateStub);
+      kuzzle.pluginsManager.getStrategyMethod.withArgs('someStrategy', 'exists').returns(existsStub);
+      kuzzle.pluginsManager.getStrategyMethod.withArgs('someStrategy', 'create').returns(createStub);
+      kuzzle.pluginsManager.getStrategyMethod.withArgs('someStrategy', 'delete').returns(deleteStub);
+
+      return should(securityController.createUser(new Request({
+        _id: 'test',
+        body: {
+          content: {name: 'John Doe', profileIds: ['anonymous']},
+          credentials: {someStrategy: {some: 'credentials'}}
+        }
+      }))).rejectedWith(KuzzleInternalError);
     });
 
     it('should intercept errors during deletion of a recovery phase', () => {
       const
-        validateStub = sandbox.stub().returns(Promise.resolve()),
-        createStub = sandbox.stub().returns(Promise.reject(new Error('some error'))),
-        deleteStub = sandbox.stub().returns(Promise.reject(new Error('some error')));
+        validateStub = sandbox.stub().returns(Bluebird.resolve()),
+        existsStub = sandbox.stub().returns(Bluebird.resolve(false)),
+        createStub = sandbox.stub().returns(Bluebird.reject(new Error('some error'))),
+        deleteStub = sandbox.stub().returns(Bluebird.reject(new Error('some error')));
 
-      kuzzle.repositories.user.load = sandbox.stub().returns(Promise.resolve(null));
+      kuzzle.repositories.user.load = sandbox.stub().returns(Bluebird.resolve(null));
       kuzzle.pluginsManager.listStrategies = sandbox.stub().returns(['someStrategy']);
       kuzzle.pluginsManager.getStrategyMethod = sandbox.stub();
 
-      kuzzle.pluginsManager.getStrategyMethod
-        .onFirstCall().returns(validateStub)
-        .onSecondCall().returns(createStub)
-        .onThirdCall().returns(deleteStub);
+      kuzzle.pluginsManager.getStrategyMethod.withArgs('someStrategy', 'validate').returns(validateStub);
+      kuzzle.pluginsManager.getStrategyMethod.withArgs('someStrategy', 'exists').returns(existsStub);
+      kuzzle.pluginsManager.getStrategyMethod.withArgs('someStrategy', 'create').returns(createStub);
+      kuzzle.pluginsManager.getStrategyMethod.withArgs('someStrategy', 'delete').returns(deleteStub);
 
       return should(securityController.createUser(new Request({
         _id: 'test',
@@ -369,24 +398,25 @@ describe('Test: security controller - users', () => {
           content: {name: 'John Doe', profileIds: ['anonymous']},
           credentials: {someStrategy: {some: 'credentials'}}
         }
-      }))).rejectedWith(InternalError);
+      }))).rejectedWith(KuzzleInternalError);
     });
 
     it('should revert credential creations if user creation fails', () => {
       const
-        validateStub = sandbox.stub().returns(Promise.resolve()),
-        createStub = sandbox.stub().returns(Promise.resolve()),
-        deleteStub = sandbox.stub().returns(Promise.resolve());
+        validateStub = sandbox.stub().returns(Bluebird.resolve()),
+        existsStub = sandbox.stub().returns(Bluebird.resolve(false)),
+        createStub = sandbox.stub().returns(Bluebird.resolve()),
+        deleteStub = sandbox.stub().returns(Bluebird.resolve());
 
-      kuzzle.repositories.user.load = sandbox.stub().returns(Promise.resolve(null));
+      kuzzle.repositories.user.load = sandbox.stub().returns(Bluebird.resolve(null));
       kuzzle.pluginsManager.listStrategies = sandbox.stub().returns(['someStrategy']);
       kuzzle.pluginsManager.getStrategyMethod = sandbox.stub();
-      kuzzle.repositories.user.persist = sandbox.stub().returns(Promise.reject(new Error('some error')));
+      kuzzle.repositories.user.persist = sandbox.stub().returns(Bluebird.reject(new Error('some error')));
 
-      kuzzle.pluginsManager.getStrategyMethod
-        .onFirstCall().returns(validateStub)
-        .onSecondCall().returns(createStub)
-        .onThirdCall().returns(deleteStub);
+      kuzzle.pluginsManager.getStrategyMethod.withArgs('someStrategy', 'validate').returns(validateStub);
+      kuzzle.pluginsManager.getStrategyMethod.withArgs('someStrategy', 'exists').returns(existsStub);
+      kuzzle.pluginsManager.getStrategyMethod.withArgs('someStrategy', 'create').returns(createStub);
+      kuzzle.pluginsManager.getStrategyMethod.withArgs('someStrategy', 'delete').returns(deleteStub);
 
       return should(securityController.createUser(new Request({
         _id: 'test',
@@ -394,15 +424,15 @@ describe('Test: security controller - users', () => {
           content: {name: 'John Doe', profileIds: ['anonymous']},
           credentials: {someStrategy: {some: 'credentials'}}
         }
-      }))).rejectedWith(InternalError);
+      }))).rejectedWith(KuzzleInternalError);
     });
   });
 
   describe('#createRestrictedUser', () => {
     it('should return a valid response', () => {
-      kuzzle.repositories.user.load = sandbox.stub().returns(Promise.resolve(null));
-      kuzzle.repositories.user.persist = sandbox.stub().returns(Promise.resolve({_id: 'test'}));
-      kuzzle.repositories.user.hydrate = sandbox.stub().returns(Promise.resolve());
+      kuzzle.repositories.user.load = sandbox.stub().returns(Bluebird.resolve(null));
+      kuzzle.repositories.user.persist = sandbox.stub().returns(Bluebird.resolve({_id: 'test'}));
+      kuzzle.repositories.user.hydrate = sandbox.stub().returns(Bluebird.resolve());
 
       return securityController.createRestrictedUser(new Request({
         body: {content: {_id: 'test', name: 'John Doe'}}
@@ -416,9 +446,9 @@ describe('Test: security controller - users', () => {
     });
 
     it('should compute a user id if none is provided', () => {
-      kuzzle.repositories.user.load = sandbox.stub().returns(Promise.resolve(null));
-      kuzzle.repositories.user.persist = sandbox.stub().returns(Promise.resolve({_id: 'test'}));
-      kuzzle.repositories.user.hydrate = sandbox.stub().returns(Promise.resolve());
+      kuzzle.repositories.user.load = sandbox.stub().returns(Bluebird.resolve(null));
+      kuzzle.repositories.user.persist = sandbox.stub().returns(Bluebird.resolve({_id: 'test'}));
+      kuzzle.repositories.user.hydrate = sandbox.stub().returns(Bluebird.resolve());
 
       return securityController.createRestrictedUser(new Request({body: {content: {name: 'John Doe'}}}))
         .then(response => {
@@ -440,8 +470,8 @@ describe('Test: security controller - users', () => {
 
   describe('#updateUser', () => {
     it('should return a valid response', () => {
-      kuzzle.repositories.user.persist = sandbox.stub().returns(Promise.resolve({_id: 'test'}));
-      kuzzle.repositories.profile.loadProfile = sandbox.stub().returns(Promise.resolve({_id: 'anonymous', _source: {}}));
+      kuzzle.repositories.user.persist = sandbox.stub().returns(Bluebird.resolve({_id: 'test'}));
+      kuzzle.repositories.profile.loadProfile = sandbox.stub().returns(Bluebird.resolve({_id: 'anonymous', _source: {}}));
 
       return securityController.updateUser(new Request({_id: 'test', body: {foo: 'bar'}}))
         .then(response => {
@@ -459,8 +489,8 @@ describe('Test: security controller - users', () => {
     });
 
     it('should update the profile correctly', () => {
-      kuzzle.repositories.user.persist = sandbox.stub().returns(Promise.resolve({_id: 'test', profileIds: ['anonymous'], foo: 'bar'}));
-      kuzzle.repositories.profile.loadProfile = sandbox.stub().returns(Promise.resolve({_id: 'default', _source: {}}));
+      kuzzle.repositories.user.persist = sandbox.stub().returns(Bluebird.resolve({_id: 'test', profileIds: ['anonymous'], foo: 'bar'}));
+      kuzzle.repositories.profile.loadProfile = sandbox.stub().returns(Bluebird.resolve({_id: 'default', _source: {}}));
 
       return securityController.updateUser(new Request({
         _id: 'test',
@@ -483,8 +513,8 @@ describe('Test: security controller - users', () => {
     });
 
     it('should replace the user correctly', () => {
-      kuzzle.repositories.user.persist = sandbox.stub().returns(Promise.resolve({_id: 'test', profileIds: ['anonymous'], foo: 'bar'}));
-      kuzzle.repositories.user.load = userId => Promise.resolve({_id: userId, _source: {}});
+      kuzzle.repositories.user.persist = sandbox.stub().returns(Bluebird.resolve({_id: 'test', profileIds: ['anonymous'], foo: 'bar'}));
+      kuzzle.repositories.user.load = userId => Bluebird.resolve({_id: userId, _source: {}});
 
       return securityController.replaceUser(new Request({
         _id: 'test',
@@ -500,7 +530,7 @@ describe('Test: security controller - users', () => {
     });
 
     it('should return an error if the user is not found', () => {
-      kuzzle.repositories.user.load = sandbox.stub().returns(Promise.resolve(null));
+      kuzzle.repositories.user.load = sandbox.stub().returns(Bluebird.resolve(null));
 
       return should(securityController.replaceUser(new Request({_id: 'i.dont.exist', body: {profileIds: ['anonymous']}}))).be.rejectedWith(NotFoundError);
     });
@@ -509,7 +539,7 @@ describe('Test: security controller - users', () => {
   describe('#getUserRights', () => {
     it('should resolve to an object on a getUserRights call', () => {
       kuzzle.repositories.user.load = userId => {
-        return Promise.resolve({
+        return Bluebird.resolve({
           _id: userId,
           _source: {},
           getRights: () => {
@@ -560,7 +590,7 @@ describe('Test: security controller - users', () => {
     });
 
     it('should reject NotFoundError on a getUserRights call with a bad id', () => {
-      kuzzle.repositories.user.load = sandbox.stub().returns(Promise.resolve(null));
+      kuzzle.repositories.user.load = sandbox.stub().returns(Bluebird.resolve(null));
       return should(securityController.getUserRights(new Request({_id: 'i.dont.exist'}))).be.rejectedWith(NotFoundError);
     });
   });
