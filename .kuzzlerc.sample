@@ -357,8 +357,7 @@
       "backend": "elasticsearch",
       "aliases": ["storageEngine"],
       "client": {
-        "host": "elasticsearch",
-        "port": 9200,
+        "host": "http://localhost:9200",
         "apiVersion": "5.x"
       },
       "defaults": {
