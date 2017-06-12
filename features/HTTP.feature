@@ -340,8 +340,7 @@ Feature: Test HTTP API
   @usingHttp @cleanSecurity
   Scenario: User mapping
     Given I get the user mapping
-    Then The mapping should contain "password" field of type "keyword"
-    And The mapping should contain "profileIds" field of type "keyword"
+X    Then The mapping should contain "profileIds" field of type "keyword"
     When I change the user mapping
     Then I get the user mapping
     Then The mapping should contain "foo" field of type "text"

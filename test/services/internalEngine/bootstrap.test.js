@@ -277,10 +277,6 @@ describe('services/internalEngine/bootstrap.js', () => {
                 properties: {
                   profileIds: {
                     type: 'keyword'
-                  },
-                  password: {
-                    index: false,
-                    type: 'keyword'
                   }
                 }
               });
