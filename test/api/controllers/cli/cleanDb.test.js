@@ -23,7 +23,6 @@ describe('Test: clean database', () => {
         should(kuzzle.repositories.user.scroll.called).be.false();
         should(kuzzle.internalEngine.deleteIndex).be.calledOnce();
         should(kuzzle.services.list.internalCache.flushdb).be.calledOnce();
-        should(kuzzle.services.list.memoryStorage.flushdb).be.calledOnce();
 
         should(kuzzle.indexCache.remove)
           .be.calledOnce()
@@ -36,7 +35,6 @@ describe('Test: clean database', () => {
         sinon.assert.callOrder(
           kuzzle.internalEngine.deleteIndex,
           kuzzle.services.list.internalCache.flushdb,
-          kuzzle.services.list.memoryStorage.flushdb,
           kuzzle.indexCache.remove,
           kuzzle.internalEngine.bootstrap.all
         );
