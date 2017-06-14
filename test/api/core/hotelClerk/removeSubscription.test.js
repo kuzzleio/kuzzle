@@ -132,20 +132,4 @@ describe('Test: hotelClerk.removeSubscription', () => {
     // testing payload argument
     should(kuzzle.notifier.notify.args[0][2].count).be.exactly(1);
   });
-
-  it('should trigger a proxy:leaveChannel hook', function () {
-    kuzzle.dsl.remove = sinon.stub();
-
-    kuzzle.hotelClerk.removeSubscription(unsubscribeRequest, context);
-
-    should(kuzzle.pluginsManager.trigger)
-      .be.calledWith('proxy:leaveChannel');
-
-    const data = kuzzle.pluginsManager.trigger.secondCall.args[1];
-
-    should(data).be.an.Object();
-    should(data.channel).be.a.String();
-    should(data.connectionId).be.eql(context.connectionId);
-  });
-
 });
