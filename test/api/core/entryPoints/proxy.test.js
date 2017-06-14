@@ -47,7 +47,7 @@ describe('Test: entryPoints/proxy', () => {
   });
 
   it('should send a message on room "joinChannel" on joinChannel call', () => {
-    var data = {my: 'data'};
+    const data = {my: 'data'};
 
     entryPoint.joinChannel(data);
     should(kuzzle.services.list.proxyBroker.send).be.calledWith('joinChannel', data);
@@ -55,29 +55,15 @@ describe('Test: entryPoints/proxy', () => {
   });
 
   it('should send a message on room "leaveChannel" on leaveChannel call', () => {
-    var data = {my: 'data'};
+    const data = {my: 'data'};
 
     entryPoint.leaveChannel(data);
     should(kuzzle.services.list.proxyBroker.send).be.calledWith('leaveChannel', data);
     should(kuzzle.services.list.proxyBroker.send).be.calledOnce();
   });
 
-  it('should call the funnel execute on event onRequest', () => {
-    var data = {data: {}, options: {connectionId: 'myId', protocol: 'socketio'}};
-
-    kuzzle.funnel.execute = sandbox.spy((req, cb) => {
-      cb(null, req);
-    });
-
-    KuzzleProxy.__get__('onRequest').call(entryPoint, data);
-
-    should(kuzzle.funnel.execute).be.calledOnce();
-    should(kuzzle.funnel.execute.firstCall.args[0]).be.instanceOf(Request);
-    should(kuzzle.services.list.proxyBroker.send).be.calledWith('response');
-  });
-
   it('should send a message on room "notify" on notify call', () => {
-    var data = {my: 'data'};
+    const data = {my: 'data'};
 
     entryPoint.dispatch('notify', data);
     should(kuzzle.services.list.proxyBroker.send).be.calledWith('notify', data);
@@ -85,7 +71,7 @@ describe('Test: entryPoints/proxy', () => {
   });
 
   it('should send a message on room "broadcast" on broadcast call', () => {
-    var data = {my: 'data'};
+    const data = {my: 'data'};
 
     entryPoint.dispatch('broadcast', data);
     should(kuzzle.services.list.proxyBroker.send).be.calledWith('broadcast', data);
@@ -101,10 +87,109 @@ describe('Test: entryPoints/proxy', () => {
   });
 
   it('should call the router newConnection on event onConnection', () => {
-    var data = {data: {}, options: {connectionId: 'myId', protocol: 'socketio'}};
+    const data = {data: {}, options: {connectionId: 'myId', protocol: 'socketio'}};
 
     KuzzleProxy.__get__('onConnection').call(entryPoint, data);
 
     should(kuzzle.router.newConnection.firstCall.args[0]).be.instanceOf(RequestContext);
+  });
+
+  describe('#onRequest', () => {
+    it('should execute the API call through the funnel controller', () => {
+      const data = {
+        data: {requestId: 'foobar', timestamp: 12345}, 
+        options: {connectionId: 'myId', protocol: 'socketio'}
+      };
+      let request;
+
+      kuzzle.funnel.execute = sandbox.spy((req, cb) => {
+        request = req;
+        cb(null, req);
+      });
+
+      KuzzleProxy.__get__('onRequest').call(entryPoint, data);
+
+      should(kuzzle.funnel.execute).be.calledOnce();
+      should(kuzzle.funnel.execute.firstCall.args[0]).be.instanceOf(Request);
+      should(kuzzle.services.list.proxyBroker.send).be.calledOnce();
+      const brokerArgs = kuzzle.services.list.proxyBroker.send.firstCall.args;
+
+      should(brokerArgs.length).be.eql(2);
+      should(brokerArgs[0]).be.eql('response');
+      should(brokerArgs[1]).be.an.Object().and.match(request.response.toJSON());
+    });
+
+    it('should send back to the proxy a response with the same id than the one received', () => {
+      const data = {
+        data: {requestId: 'foobar', timestamp: 12345}, 
+        options: {connectionId: 'myId', protocol: 'socketio'}
+      };
+      let request;
+
+      kuzzle.funnel.execute = sandbox.spy((req, cb) => {
+        request = req;
+        cb(null, new Request({}));
+      });
+
+      KuzzleProxy.__get__('onRequest').call(entryPoint, data);
+
+      should(kuzzle.funnel.execute).be.calledOnce();
+      should(kuzzle.funnel.execute.firstCall.args[0]).be.instanceOf(Request);
+      should(kuzzle.services.list.proxyBroker.send).be.calledOnce();
+      const brokerArgs = kuzzle.services.list.proxyBroker.send.firstCall.args;
+
+      should(brokerArgs.length).be.eql(2);
+      should(brokerArgs[0]).be.eql('response');
+      should(brokerArgs[1].requestId).be.eql(request.id);
+      should(brokerArgs[1].content.requestId).be.eql(request.id);
+    });
+  });
+
+  describe('#onHttpRequest', () => {
+    it('should execute the API call through the HTTP router', () => {
+      const message = {
+        requestId: 'foobar'
+      };
+
+      kuzzle.router.router.route = sandbox.spy((msg, cb) => {
+        should(msg).be.eql(message);
+        cb(new Request(message));
+      });
+
+      KuzzleProxy.__get__('onHttpRequest').call(entryPoint, message);
+
+      should(kuzzle.router.router.route).be.calledOnce();
+      should(kuzzle.router.router.route.firstCall.args[0]).be.eql(message);
+      should(kuzzle.services.list.proxyBroker.send).be.calledOnce();
+      const brokerArgs = kuzzle.services.list.proxyBroker.send.firstCall.args;
+
+      should(brokerArgs.length).be.eql(2);
+      should(brokerArgs[0]).be.eql('httpResponse');
+      should(brokerArgs[1]).be.an.Object();
+    });
+
+    it('should return to the proxy a response with the same id than the provided message', () => {
+      const message = {
+        requestId: 'foobar'
+      };
+
+      kuzzle.router.router.route = sandbox.spy((msg, cb) => {
+        should(msg).be.eql(message);
+        cb(new Request({requestId: 'new and useless id'}));
+      });
+
+      KuzzleProxy.__get__('onHttpRequest').call(entryPoint, message);
+
+      should(kuzzle.router.router.route).be.calledOnce();
+      should(kuzzle.router.router.route.firstCall.args[0]).be.eql(message);
+      should(kuzzle.services.list.proxyBroker.send).be.calledOnce();
+      const brokerArgs = kuzzle.services.list.proxyBroker.send.firstCall.args;
+
+      should(brokerArgs.length).be.eql(2);
+      should(brokerArgs[0]).be.eql('httpResponse');
+      should(brokerArgs[1]).be.an.Object();
+      should(brokerArgs[1].requestId).be.eql(message.requestId);
+      should(brokerArgs[1].content.requestId).be.eql(message.requestId);
+    });
   });
 });

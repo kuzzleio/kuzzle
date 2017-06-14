@@ -141,10 +141,10 @@ describe('core/httpRouter', () => {
         foo: 'bar'
       };
 
-      router.route(rq, response => {
+      router.route(rq, result => {
         should(handler.called).be.false();
 
-        should(response.toJSON()).match({
+        should(result.response.toJSON()).match({
           raw: false,
           status: 200,
           requestId: rq.requestId,
@@ -171,10 +171,10 @@ describe('core/httpRouter', () => {
         foo: 'bar'
       };
 
-      router.route(rq, response => {
+      router.route(rq, result => {
         should(handler.called).be.false();
 
-        should(response.toJSON()).match({
+        should(result.response.toJSON()).match({
           raw: false,
           status: 200,
           requestId: rq.requestId,
@@ -198,11 +198,11 @@ describe('core/httpRouter', () => {
       rq.headers['content-type'] = 'application/json';
       rq.content = '{"foo": "bar"}';
 
-      router.route(rq, response => {
+      router.route(rq, result => {
         should(handler)
           .have.callCount(0);
 
-        should(response.toJSON())
+        should(result.response.toJSON())
           .match({
             raw: false,
             status: 400,
@@ -230,10 +230,10 @@ describe('core/httpRouter', () => {
       rq.headers['content-type'] = 'application/json';
       rq.content = '{bad JSON syntax}';
 
-      router.route(rq, response => {
+      router.route(rq, result => {
         should(handler.called).be.false();
 
-        should(response.toJSON()).be.match({
+        should(result.response.toJSON()).be.match({
           raw: false,
           status: 400,
           requestId: rq.requestId,
@@ -260,10 +260,10 @@ describe('core/httpRouter', () => {
       rq.headers['content-type'] = 'application/foobar';
       rq.content = '{"foo": "bar"}';
 
-      router.route(rq, response => {
+      router.route(rq, result => {
         should(handler.called).be.false();
 
-        should(response.toJSON()).match({
+        should(result.response.toJSON()).match({
           raw: false,
           status: 400,
           requestId: rq.requestId,
@@ -290,10 +290,10 @@ describe('core/httpRouter', () => {
       rq.headers['content-type'] = 'application/json; charset=iso8859-1';
       rq.content = '{"foo": "bar"}';
 
-      router.route(rq, response => {
+      router.route(rq, result => {
         should(handler.called).be.false();
 
-        should(response.toJSON()).match({
+        should(result.response.toJSON()).match({
           raw: false,
           status: 400,
           requestId: rq.requestId,
@@ -321,10 +321,10 @@ describe('core/httpRouter', () => {
       rq.headers['content-type'] = 'application/json';
       rq.content = '{"foo": "bar"}';
 
-      router.route(rq, response => {
+      router.route(rq, result => {
         should(handler.called).be.false();
 
-        should(response.toJSON()).match({
+        should(result.response.toJSON()).match({
           raw: false,
           status: 404,
           requestId: rq.requestId,

@@ -200,6 +200,11 @@ class KuzzleMock extends Kuzzle {
       init: sinon.spy(),
       newConnection: sinon.stub().returns(Bluebird.resolve(foo)),
       removeConnection: sinon.spy(),
+      router: {
+        router: {
+          route: sinon.stub()
+        }
+      }
     };
 
     this.services = {
