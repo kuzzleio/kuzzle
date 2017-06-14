@@ -8,7 +8,11 @@ const
   params = require('../../../../lib/config'),
   sinon = require('sinon'),
   EventEmitter = require('eventemitter2').EventEmitter2,
-  GatewayTimeoutError = require('kuzzle-common-objects').errors.GatewayTimeoutError;
+  {
+    KuzzleError,
+    GatewayTimeoutError,
+    PluginImplementationError
+  } = require('kuzzle-common-objects').errors;
 
 describe('Test plugins manager run', () => {
   let
@@ -281,11 +285,27 @@ describe('Test plugins manager run', () => {
 
     plugin.object.foo = () => {};
 
-    pluginMock.expects('foo').once().callsArgWith(1, new Error('foobar'));
+    pluginMock.expects('foo').once().callsArgWith(1, new KuzzleError('foobar'));
 
     return should(pluginsManager.run()
       .then(() => pluginsManager.trigger('foo:bar'))
-      .then(() => pluginMock.verify())).be.rejectedWith(Error, {message: 'foobar'});
+      .then(() => pluginMock.verify())).be.rejectedWith(KuzzleError, {message: 'foobar'});
+  });
+
+  it('should embed a non-KuzzleError error in a PluginImplementationError', () => {
+    plugin.object.pipes = {
+      'foo:bar': 'foo'
+    };
+
+    plugin.object.foo = () => {};
+
+    pluginMock.expects('foo').once().callsArgWith(1, 'foobar');
+
+    return should(pluginsManager.run()
+      .then(() => pluginsManager.trigger('foo:bar'))
+      .then(() => pluginMock.verify())).be.rejectedWith(PluginImplementationError, {
+        message: new PluginImplementationError('foobar').message
+      });
   });
 
   it('should log a warning in case a pipe plugin exceeds the warning delay', () => {
