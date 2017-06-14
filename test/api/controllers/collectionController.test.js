@@ -382,7 +382,7 @@ describe('Test: collection controller', () => {
 
           try {
             should(kuzzle.internalEngine.delete).be.calledOnce();
-            should(response).match({});
+            should(response).match(true);
 
             return Promise.resolve();
           }
@@ -400,7 +400,7 @@ describe('Test: collection controller', () => {
         .then(response => {
           try {
             should(kuzzle.internalEngine.delete).not.be.called();
-            should(response).match({});
+            should(response).match(true);
 
             return Promise.resolve();
           }
