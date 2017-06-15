@@ -61,6 +61,7 @@ describe('funnelController.processRequest', () => {
     should(funnel.requestHistory.isEmpty()).be.true();
     should(kuzzle.pluginsManager.trigger.calledWithMatch('request:onSuccess', request)).be.false();
     should(kuzzle.pluginsManager.trigger.calledWithMatch('request:onError', request)).be.false();
+    should(kuzzle.pluginsManager.trigger.calledWithMatch('fakeController:errorCreate', request)).be.false();
     should(kuzzle.statistics.startRequest.called).be.false();
   });
 
@@ -71,6 +72,7 @@ describe('funnelController.processRequest', () => {
     should(funnel.requestHistory.isEmpty()).be.true();
     should(kuzzle.pluginsManager.trigger.calledWithMatch('request:onSuccess', request)).be.false();
     should(kuzzle.pluginsManager.trigger.calledWithMatch('request:onError', request)).be.false();
+    should(kuzzle.pluginsManager.trigger.calledWithMatch('fakePlugin/controller:errorCreate', request)).be.false();
     should(kuzzle.statistics.startRequest.called).be.false();
   });
 
@@ -88,6 +90,7 @@ describe('funnelController.processRequest', () => {
         should(kuzzle.pluginsManager.trigger).calledWith('fakeController:afterOk');
         should(kuzzle.pluginsManager.trigger.calledWithMatch('request:onSuccess', request)).be.true();
         should(kuzzle.pluginsManager.trigger.calledWithMatch('request:onError', request)).be.false();
+        should(kuzzle.pluginsManager.trigger.calledWithMatch('fakeController:errorOk', request)).be.false();
         should(kuzzle.statistics.startRequest.called).be.true();
         should(kuzzle.statistics.completedRequest.called).be.true();
         should(kuzzle.statistics.failedRequest.called).be.false();
@@ -114,6 +117,7 @@ describe('funnelController.processRequest', () => {
         should(kuzzle.pluginsManager.trigger.calledWithMatch('request:onError', subrequest)).be.false();
         should(kuzzle.pluginsManager.trigger.calledWithMatch('request:onSuccess', request)).be.false();
         should(kuzzle.pluginsManager.trigger.calledWithMatch('request:onError', request)).be.false();
+        should(kuzzle.pluginsManager.trigger.calledWithMatch('fakeController:errorOk', request)).be.false();
         should(kuzzle.statistics.startRequest.called).be.true();
         should(kuzzle.statistics.completedRequest.called).be.true();
         should(kuzzle.statistics.failedRequest.called).be.false();
@@ -140,6 +144,7 @@ describe('funnelController.processRequest', () => {
         should(kuzzle.pluginsManager.trigger).not.be.calledWith('fakeController:afterFail');
         should(kuzzle.pluginsManager.trigger.calledWithMatch('request:onSuccess', request)).be.false();
         should(kuzzle.pluginsManager.trigger.calledWithMatch('request:onError', request)).be.true();
+        should(kuzzle.pluginsManager.trigger.calledWithMatch('fakeController:errorFail', request)).be.true();
         should(kuzzle.statistics.startRequest.called).be.true();
         should(kuzzle.statistics.completedRequest.called).be.false();
         should(kuzzle.statistics.failedRequest.called).be.true();
@@ -172,6 +177,7 @@ describe('funnelController.processRequest', () => {
         should(kuzzle.pluginsManager.trigger.calledWithMatch('request:onError', subrequest)).be.false();
         should(kuzzle.pluginsManager.trigger.calledWithMatch('request:onSuccess', request)).be.false();
         should(kuzzle.pluginsManager.trigger.calledWithMatch('request:onError', request)).be.false();
+        should(kuzzle.pluginsManager.trigger.calledWithMatch('fakeController:errorFail', request)).be.false();
         should(kuzzle.statistics.startRequest.called).be.true();
         should(kuzzle.statistics.completedRequest.called).be.false();
         should(kuzzle.statistics.failedRequest.called).be.true();
@@ -199,6 +205,7 @@ describe('funnelController.processRequest', () => {
         should(kuzzle.pluginsManager.trigger).not.be.calledWith('fakePlugin/controller:afterFail');
         should(kuzzle.pluginsManager.trigger.calledWithMatch('request:onSuccess', request)).be.false();
         should(kuzzle.pluginsManager.trigger.calledWithMatch('request:onError', request)).be.true();
+        should(kuzzle.pluginsManager.trigger.calledWithMatch('fakePlugin/controller:errorFail', request)).be.true();
         should(kuzzle.statistics.startRequest.called).be.true();
         should(kuzzle.statistics.completedRequest.called).be.false();
         should(kuzzle.statistics.failedRequest.called).be.true();
@@ -221,6 +228,7 @@ describe('funnelController.processRequest', () => {
         should(kuzzle.pluginsManager.trigger).calledWith('fakeController:afterOk');
         should(kuzzle.pluginsManager.trigger.calledWithMatch('request:onSuccess', request)).be.true();
         should(kuzzle.pluginsManager.trigger.calledWithMatch('request:onError', request)).be.false();
+        should(kuzzle.pluginsManager.trigger.calledWithMatch('fakeController:errorOk', request)).be.false();
         should(kuzzle.statistics.startRequest.called).be.true();
         should(kuzzle.statistics.completedRequest.called).be.true();
         should(kuzzle.statistics.failedRequest.called).be.false();
