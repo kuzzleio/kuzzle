@@ -155,4 +155,53 @@ describe('Test: hotelClerk.listSubscription', () => {
       });
 
   });
+
+  it('should skip non-existing rooms from the dsl', () => {
+    kuzzle.dsl.storage.filtersIndex = {
+      index: {
+        collection: ['foo', 'bar'],
+        forbidden: ['foo']
+      },
+      anotherIndex: {
+        anotherCollection: ['baz']
+      },
+      andAnotherOne: {
+        collection: ['foobar']
+      }
+    };
+    hotelClerk.rooms = {
+      foobar: {
+        customers: new Set(['a', 'c'])
+      }
+    };
+
+    let i = 0;
+    request.context.user = {
+      _id: 'user',
+      isActionAllowed: () => Bluebird.delay(0) // <- do not delete the room within the same event loop
+        .then(() => {
+          i++;
+          if (i === 1) {
+            delete kuzzle.dsl.storage.filtersIndex.index.collection;
+          }
+          if (i === 2) {
+            delete kuzzle.dsl.storage.filtersIndex.anotherIndex;
+          }
+          return Bluebird.resolve(true);
+        })
+    };
+
+    return hotelClerk.listSubscriptions(request)
+      .then(response => {
+        should(response)
+          .eql({
+            andAnotherOne: {
+              collection: {
+                foobar: 2
+              }
+            }
+          });
+      });
+  });
+
 });
