@@ -63,11 +63,11 @@ describe('Test: routerController.httpRequest', () => {
       try {
         should(response.input.controller).be.eql('ms');
         should(response.input.action).be.eql('getrange');
-        should(result.requestId).be.eql(httpRequest.requestId);
-        should(result.headers['content-type']).be.eql('application/json');
-        should(result.headers['Access-Control-Allow-Origin']).be.eql('foobar');
-        should(result.status).be.eql(1234);
-        should(result).be.exactly(response.response);
+        should(result.response.requestId).be.eql(httpRequest.requestId);
+        should(result.response.headers['content-type']).be.eql('application/json');
+        should(result.response.headers['Access-Control-Allow-Origin']).be.eql('foobar');
+        should(result.response.status).be.eql(1234);
+        should(result.response).be.exactly(response.response);
         done();
       }
       catch (e) {
@@ -85,10 +85,10 @@ describe('Test: routerController.httpRequest', () => {
       try {
         should(response.input.controller).be.eql('security');
         should(response.input.action).be.eql('updateProfile');
-        should(result.requestId).be.eql(httpRequest.requestId);
-        should(result.headers['content-type']).be.eql('application/json');
-        should(result.status).be.eql(1234);
-        should(result).be.exactly(response.response);
+        should(result.response.requestId).be.eql(httpRequest.requestId);
+        should(result.response.headers['content-type']).be.eql('application/json');
+        should(result.response.status).be.eql(1234);
+        should(result.response).be.exactly(response.response);
         done();
       }
       catch (e) {
@@ -106,10 +106,10 @@ describe('Test: routerController.httpRequest', () => {
       try {
         should(response.input.controller).be.eql('auth');
         should(response.input.action).be.eql('updateSelf');
-        should(result.requestId).be.eql(httpRequest.requestId);
-        should(result.headers['content-type']).be.eql('application/json');
-        should(result.status).be.eql(1234);
-        should(result).be.exactly(response.response);
+        should(result.response.requestId).be.eql(httpRequest.requestId);
+        should(result.response.headers['content-type']).be.eql('application/json');
+        should(result.response.status).be.eql(1234);
+        should(result.response).be.exactly(response.response);
         done();
       }
       catch (e) {
@@ -126,10 +126,10 @@ describe('Test: routerController.httpRequest', () => {
       try {
         should(response.input.controller).be.eql('index');
         should(response.input.action).be.eql('delete');
-        should(result.requestId).be.eql(httpRequest.requestId);
-        should(result.headers['content-type']).be.eql('application/json');
-        should(result.status).be.eql(1234);
-        should(result).be.exactly(response.response);
+        should(result.response.requestId).be.eql(httpRequest.requestId);
+        should(result.response.headers['content-type']).be.eql('application/json');
+        should(result.response.status).be.eql(1234);
+        should(result.response).be.exactly(response.response);
         done();
       }
       catch (e) {
@@ -146,10 +146,10 @@ describe('Test: routerController.httpRequest', () => {
       try {
         should(response.input.controller).be.eql('server');
         should(response.input.action).be.eql('info');
-        should(result.requestId).be.eql(httpRequest.requestId);
-        should(result.headers['content-type']).be.eql('application/json');
-        should(result.status).be.eql(1234);
-        should(result).be.exactly(response.response);
+        should(result.response.requestId).be.eql(httpRequest.requestId);
+        should(result.response.headers['content-type']).be.eql('application/json');
+        should(result.response.status).be.eql(1234);
+        should(result.response).be.exactly(response.response);
         done();
       }
       catch (e) {
@@ -164,9 +164,9 @@ describe('Test: routerController.httpRequest', () => {
 
     routeController.router.route(httpRequest, result => {
       try {
-        should(result.requestId).be.eql(httpRequest.requestId);
-        should(result.headers['content-type']).be.eql('application/json');
-        should(result.status).be.eql(200);
+        should(result.response.requestId).be.eql(httpRequest.requestId);
+        should(result.response.headers['content-type']).be.eql('application/json');
+        should(result.response.status).be.eql(200);
         done();
       }
       catch (e) {
@@ -181,9 +181,9 @@ describe('Test: routerController.httpRequest', () => {
 
     routeController.router.route(httpRequest, result => {
       try {
-        should(result.requestId).be.eql(httpRequest.requestId);
-        should(result.headers['content-type']).be.eql('application/yaml');
-        should(result.status).be.eql(200);
+        should(result.response.requestId).be.eql(httpRequest.requestId);
+        should(result.response.headers['content-type']).be.eql('application/yaml');
+        should(result.response.status).be.eql(200);
         done();
       }
       catch (e) {
@@ -200,10 +200,10 @@ describe('Test: routerController.httpRequest', () => {
       try {
         should(response.input.controller).be.eql('foo');
         should(response.input.action).be.eql('bar');
-        should(result.requestId).be.eql(httpRequest.requestId);
-        should(result.headers['content-type']).be.eql('application/json');
-        should(result.status).be.eql(1234);
-        should(result).be.exactly(response.response);
+        should(result.response.requestId).be.eql(httpRequest.requestId);
+        should(result.response.headers['content-type']).be.eql('application/json');
+        should(result.response.status).be.eql(1234);
+        should(result.response).be.exactly(response.response);
         done();
       }
       catch (e) {
@@ -218,10 +218,10 @@ describe('Test: routerController.httpRequest', () => {
 
     routeController.router.route(httpRequest, result => {
       try {
-        should(result.requestId).be.eql(httpRequest.requestId);
-        should(result.headers['content-type']).be.eql('application/json');
-        should(result.status).be.eql(404);
-        should(result.error.message).be.eql('API URL not found: /foo/bar');
+        should(result.response.requestId).be.eql(httpRequest.requestId);
+        should(result.response.headers['content-type']).be.eql('application/json');
+        should(result.response.status).be.eql(404);
+        should(result.response.error.message).be.eql('API URL not found: /foo/bar');
         done();
       }
       catch (e) {
