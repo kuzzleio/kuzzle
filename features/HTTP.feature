@@ -27,7 +27,7 @@ Feature: Test HTTP API
     And I'm not able to get the document in index "kuzzle-test-index-alt"
 
   @usingHttp
-  Scenario: Create or Update a document
+  Scenario: Create or Replace a document
     When I write the document
     And I createOrReplace it
     Then I should have updated the document

@@ -69,13 +69,13 @@ describe('Test: hotelClerk.removeCustomerFromAllRooms', () => {
     kuzzle.hotelClerk.removeCustomerFromAllRooms(context);
 
     should(kuzzle.dsl.remove).be.calledOnce();
-    should(kuzzle.notifier.notify)
-      .be.called();
+    should(kuzzle.notifier.notifyUser).be.calledOnce();
     // testing requestObject argument
-    should(kuzzle.notifier.notify.args[0][1]).be.instanceOf(Request);
-    should(kuzzle.notifier.notify.args[0][1].input.controller).be.exactly('realtime');
-    should(kuzzle.notifier.notify.args[0][1].input.action).be.exactly('unsubscribe');
-    should(kuzzle.notifier.notify.args[0][1].input.resource.index).be.exactly(index);
+    should(kuzzle.notifier.notifyUser.args[0][1]).be.instanceOf(Request);
+    should(kuzzle.notifier.notifyUser.args[0][1].input.controller).be.exactly('realtime');
+    should(kuzzle.notifier.notifyUser.args[0][1].input.action).be.exactly('unsubscribe');
+    should(kuzzle.notifier.notifyUser.args[0][1].input.resource.index).be.exactly(index);
+    should(kuzzle.notifier.notifyUser.args[0][2]).be.exactly('out');
 
     should(kuzzle.hotelClerk.rooms)
       .match({
