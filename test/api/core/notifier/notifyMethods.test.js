@@ -91,7 +91,7 @@ describe('notify methods', () => {
 
           const notification = kuzzle.entryPoints.proxy.dispatch.firstCall.args[1].payload;
 
-          should(notification.toJSON()).match({
+          should(notification).match({
             status: 200,
             type: 'document',
             requestId: request.id,
@@ -108,7 +108,7 @@ describe('notify methods', () => {
           });
 
           should(kuzzle.pluginsManager.trigger.callCount).be.eql(2);
-          should(kuzzle.pluginsManager.trigger.getCall(0).args).match(['notify:document', content]);
+          should(kuzzle.pluginsManager.trigger.getCall(0).args).match(['notify:document', notification]);
           should(kuzzle.pluginsManager.trigger.getCall(1).args).match(['notify:dispatch', notification]);
           cb();
         }
@@ -191,7 +191,7 @@ describe('notify methods', () => {
 
           const notification = kuzzle.entryPoints.proxy.dispatch.firstCall.args[1].payload;
 
-          should(notification.toJSON()).match({
+          should(notification).match({
             status: 200,
             type: 'user',
             timestamp: request.timestamp,
@@ -206,7 +206,7 @@ describe('notify methods', () => {
           });
 
           should(kuzzle.pluginsManager.trigger.callCount).be.eql(2);
-          should(kuzzle.pluginsManager.trigger.getCall(0).args).match(['notify:user', content]);
+          should(kuzzle.pluginsManager.trigger.getCall(0).args).match(['notify:user', notification]);
           should(kuzzle.pluginsManager.trigger.getCall(1).args).match(['notify:dispatch', notification]);
           cb();
         }
