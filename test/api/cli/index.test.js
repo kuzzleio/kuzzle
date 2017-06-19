@@ -1,5 +1,6 @@
 const
   mockrequire = require('mock-require'),
+  rewire = require('rewire'),
   should = require('should'),
   sinon = require('sinon'),
   Bluebird = require('bluebird'),
@@ -52,7 +53,16 @@ describe('Tests: api/cli/index.js', () => {
         };
       });
 
-      Cli = mockrequire.reRequire('../../../lib/api/cli/index');
+      mockrequire.reRequire('../../../lib/api/cli/index');
+
+      // disable console.log
+      Cli = rewire('../../../lib/api/cli/index');
+      Cli.__set__({
+        console: {
+          log: sinon.stub()
+        }
+      });
+      
       cli = new Cli(kuzzle);
     });
 

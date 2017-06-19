@@ -163,7 +163,7 @@ describe('funnelController.processRequest', () => {
 
     funnel.controllers.fakeController.fail.returns(Promise.reject(new Error('rejected')));
 
-    funnel.processRequest(subrequest)
+    return funnel.processRequest(subrequest)
       .then(() => {
         throw new Error('You shall not pass');
       })

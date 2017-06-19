@@ -1,12 +1,11 @@
-var
+const
   should = require('should'),
   KuzzleMock = require('../../../mocks/kuzzle.mock'),
-  Request = require('kuzzle-common-objects').Request,
   RequestContext = require('kuzzle-common-objects').models.RequestContext,
   TokenManager = require('../../../../lib/api/core/auth/tokenManager');
 
 describe('Test: token manager core component', () => {
-  var
+  let
     kuzzle,
     token,
     contextStub,
@@ -75,7 +74,7 @@ describe('Test: token manager core component', () => {
   describe('#checkTokensValidity', () => {
 
     it('should do nothing if no token has expired', () => {
-      var
+      const
         now = Date.now(),
         stubTokens = [
           {
@@ -92,7 +91,7 @@ describe('Test: token manager core component', () => {
 
       tokenManager.checkTokensValidity();
 
-      should(kuzzle.notifier.notify)
+      should(kuzzle.notifier.notifyServer)
         .have.callCount(0);
       should(kuzzle.hotelClerk.removeCustomerFromAllRooms)
         .have.callCount(0);
@@ -102,8 +101,7 @@ describe('Test: token manager core component', () => {
     });
 
     it('should clean up subscriptions upon a token expiration', () => {
-      var
-        notification,
+      const
         stubTokens = {
           foo: {
             _id: 'foo',
@@ -127,26 +125,16 @@ describe('Test: token manager core component', () => {
 
       should(kuzzle.hotelClerk.removeCustomerFromAllRooms)
         .be.calledOnce();
-      should(kuzzle.notifier.notify)
+      should(kuzzle.notifier.notifyServer)
         .be.calledOnce()
-        .be.calledWith([
-          'room1',
-          'room2',
-          'room3'
-        ]);
-      should(kuzzle.notifier.notify.firstCall.args[3])
-        .be.eql('connectionId');
+        .be.calledWith(['room1', 'room2', 'room3'], 'connectionId', 'TokenExpired', 'Authentication Token Expired');
 
-      notification = kuzzle.notifier.notify.firstCall.args[1];
-      should(notification).be.instanceof(Request);
-      should(notification.input.controller).be.eql('auth');
-      should(notification.input.action).be.eql('jwtTokenExpired');
       should(tokenManager.tokens.array.length).be.eql(1);
       should(tokenManager.tokens.array[0]).match(stubTokens.bar);
     });
 
     it('should behave correctly if the token does not match any subscription', () => {
-      var
+      const
         stubTokens = {
           foo: {
             _id: 'foo',
@@ -167,7 +155,7 @@ describe('Test: token manager core component', () => {
 
       should(kuzzle.hotelClerk.removeCustomerFromAllRooms)
         .have.callCount(0);
-      should(kuzzle.notifier.notify)
+      should(kuzzle.notifier.notifyServer)
         .have.callCount(0);
 
       should(tokenManager.tokens.array.length).be.eql(1);
