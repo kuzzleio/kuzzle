@@ -1,4 +1,5 @@
 const
+  async = require('async'),
   should = require('should'),
   Request = require('kuzzle-common-objects').Request,
   KuzzleMock = require('../../../mocks/kuzzle.mock'),
@@ -53,16 +54,16 @@ describe('notify methods', () => {
     it('should do nothing if the provided rooms list is empty', done => {
       notifier.notifyDocument([], request, 'scope', 'state', 'action', { some: 'content'});
 
-      setTimeout(() => {
+      async.retry({times: 20, interval: 20}, cb => {
         try {
           should(kuzzle.entryPoints.proxy.dispatch.called).be.false();
           should(kuzzle.pluginsManager.trigger.called).be.false();
-          done();
+          cb();
         }
         catch(e) {
-          done(e);
+          cb(e);
         }
-      }, 20);
+      }, done);
     });
 
     it('should notify the right channels', done => {
@@ -76,7 +77,7 @@ describe('notify methods', () => {
         content
       );
 
-      setTimeout(() => {
+      async.retry({times: 20, interval: 20}, cb => {
         try {
           should(kuzzle.entryPoints.proxy.dispatch).calledOnce();
 
@@ -109,12 +110,12 @@ describe('notify methods', () => {
           should(kuzzle.pluginsManager.trigger.callCount).be.eql(2);
           should(kuzzle.pluginsManager.trigger.getCall(0).args).match(['notify:document', content]);
           should(kuzzle.pluginsManager.trigger.getCall(1).args).match(['notify:dispatch', notification]);
-          done();
+          cb();
         }
         catch (e) {
-          done(e);
+          cb(e);
         }
-      }, 20);
+      }, done);
     });
 
     it('should not notify if no channel match the provided scope/state arguments', done => {
@@ -128,16 +129,16 @@ describe('notify methods', () => {
         content
       );
 
-      setTimeout(() => {
+      async.retry({times: 20, interval: 20}, cb => {
         try {
           should(kuzzle.entryPoints.proxy.dispatch.called).be.false();
           should(kuzzle.pluginsManager.trigger.called).be.false();
-          done();
+          cb();
         }
         catch(e) {
-          done(e);
+          cb(e);
         }
-      }, 20);
+      }, done);
     });
   });
 
@@ -145,38 +146,38 @@ describe('notify methods', () => {
     it('should ignore non-existing rooms', done => {
       notifier.notifyUser('IAMERROR', request, 'all', {});
 
-      setTimeout(() => {
+      async.retry({times: 20, interval: 20}, cb => {
         try {
           should(kuzzle.entryPoints.proxy.dispatch.called).be.false();
           should(kuzzle.pluginsManager.trigger.called).be.false();
-          done();
+          cb();
         }
         catch(e) {
-          done(e);
+          cb(e);
         }
-      }, 20);
+      }, done);
     });
 
     it('should not notify if no channel match the provided arguments', done => {
       notifier.notifyUser('nonMatching', request, 'all', {});
 
-      setTimeout(() => {
+      async.retry({times: 20, interval: 20}, cb => {
         try {
           should(kuzzle.entryPoints.proxy.dispatch.called).be.false();
           should(kuzzle.pluginsManager.trigger.called).be.false();
-          done();
+          cb();
         }
         catch(e) {
-          done(e);
+          cb(e);
         }
-      }, 20);
+      }, done);
     });
 
     it('should notify the right channels', done => {
       const content = {some: 'content'};
       notifier.notifyUser('matchingSome', request, 'out' , content);
 
-      setTimeout(() => {
+      async.retry({times: 20, interval: 20}, cb => {
         try {
           should(kuzzle.entryPoints.proxy.dispatch).calledOnce();
 
@@ -207,12 +208,12 @@ describe('notify methods', () => {
           should(kuzzle.pluginsManager.trigger.callCount).be.eql(2);
           should(kuzzle.pluginsManager.trigger.getCall(0).args).match(['notify:user', content]);
           should(kuzzle.pluginsManager.trigger.getCall(1).args).match(['notify:dispatch', notification]);
-          done();
+          cb();
         }
         catch (e) {
-          done(e);
+          cb(e);
         }
-      }, 20);
+      }, done);
     });
   });
 
@@ -220,37 +221,37 @@ describe('notify methods', () => {
     it('should do nothing if the provided rooms list is empty', done => {
       notifier.notifyServer([], 'foobar', 'type', 'message');
 
-      setTimeout(() => {
+      async.retry({times: 20, interval: 20}, cb => {
         try {
           should(kuzzle.entryPoints.proxy.dispatch.called).be.false();
           should(kuzzle.pluginsManager.trigger.called).be.false();
-          done();
+          cb();
         }
         catch(e) {
-          done(e);
+          cb(e);
         }
-      }, 20);
+      }, done);
     });
 
     it('should ignore non-existing rooms', done => {
       notifier.notifyServer(['IAMERROR'], 'foobar', 'type', 'message');
 
-      setTimeout(() => {
+      async.retry({times: 20, interval: 20}, cb => {
         try {
           should(kuzzle.entryPoints.proxy.dispatch.called).be.false();
           should(kuzzle.pluginsManager.trigger.called).be.false();
-          done();
+          cb();
         }
         catch(e) {
-          done(e);
+          cb(e);
         }
-      }, 20);
+      }, done);
     });
 
     it('should notify on all subscribed channels', done => {
       notifier.notifyServer(['nonMatching', 'alwaysMatching'], 'foobar', 'type', 'message');
 
-      setTimeout(() => {
+      async.retry({times: 20, interval: 20}, cb => {
         try {
           should(kuzzle.entryPoints.proxy.dispatch).calledOnce();
 
@@ -273,12 +274,12 @@ describe('notify methods', () => {
           should(kuzzle.pluginsManager.trigger.callCount).be.eql(2);
           should(kuzzle.pluginsManager.trigger.getCall(0).args).match(['notify:server', notification]);
           should(kuzzle.pluginsManager.trigger.getCall(1).args).match(['notify:dispatch', notification]);
-          done();
+          cb();
         }
         catch (e) {
-          done(e);
+          cb(e);
         }
-      }, 20);
+      }, done);
     });
   });
 });

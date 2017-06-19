@@ -1,6 +1,7 @@
 'use strict';
 
 const
+  async = require('async'),
   should = require('should'),
   sinon = require('sinon'),
   Kuzzle = require('../../../mocks/kuzzle.mock'),
@@ -43,11 +44,16 @@ describe('Test: notifier.publish', () => {
         _id: rawRequest._id
       });
 
-    setTimeout(() => {
-      should(kuzzle.services.list.internalCache.add).not.be.called();
-      should(kuzzle.services.list.internalCache.expire).not.be.called();
-      done();
-    }, 20);
+    async.retry({times: 20, interval: 20}, cb => {
+      try {
+        should(kuzzle.services.list.internalCache.add).not.be.called();
+        should(kuzzle.services.list.internalCache.expire).not.be.called();
+        cb();
+      }
+      catch (e) {
+        cb(e);
+      }
+    }, done);
   });
 
   it('should cache the document in case of a create document rawRequest', (done) => {
@@ -65,11 +71,16 @@ describe('Test: notifier.publish', () => {
         _id: rawRequest._id
       });
 
-    setTimeout(() => {
-      should(kuzzle.services.list.internalCache.add).be.calledOnce();
-      should(kuzzle.services.list.internalCache.expire).be.calledOnce();
-      done();
-    }, 20);
+    async.retry({times: 20, interval: 20}, cb => {
+      try {
+        should(kuzzle.services.list.internalCache.add).be.calledOnce();
+        should(kuzzle.services.list.internalCache.expire).be.calledOnce();
+        cb();
+      }
+      catch(e) {
+        cb(e);
+      }
+    }, done);
   });
 
   it('should cache the document in case of a createOrReplace document rawRequest', (done) => {
@@ -87,11 +98,16 @@ describe('Test: notifier.publish', () => {
         _id: rawRequest._id
       });
 
-    setTimeout(() => {
-      should(kuzzle.services.list.internalCache.add).be.calledOnce();
-      should(kuzzle.services.list.internalCache.expire).be.calledOnce();
-      done();
-    }, 20);
+    async.retry({times: 20, interval: 20}, cb => {
+      try {
+        should(kuzzle.services.list.internalCache.add).be.calledOnce();
+        should(kuzzle.services.list.internalCache.expire).be.calledOnce();
+        cb();
+      }
+      catch(e) {
+        cb(e);
+      }
+    }, done);
   });
 
   it('should cache the document in case of a replace document rawRequest', (done) => {
@@ -109,11 +125,16 @@ describe('Test: notifier.publish', () => {
         _id: rawRequest._id
       });
 
-    setTimeout(() => {
-      should(kuzzle.services.list.internalCache.add).be.calledOnce();
-      should(kuzzle.services.list.internalCache.expire).be.calledOnce();
-      done();
-    }, 20);
+    async.retry({times: 20, interval: 20}, cb => {
+      try {
+        should(kuzzle.services.list.internalCache.add).be.calledOnce();
+        should(kuzzle.services.list.internalCache.expire).be.calledOnce();
+        cb();
+      }
+      catch(e) {
+        cb(e);
+      }
+    }, done);
   });
 
   it('should do nothing if there is no room to notify', (done) => {
@@ -126,10 +147,15 @@ describe('Test: notifier.publish', () => {
     should(notifier.notifyDocument.called).be.false();
     should(result).match({published: true});
 
-    setTimeout(() => {
-      should(kuzzle.services.list.internalCache.add).not.be.called();
-      should(kuzzle.services.list.internalCache.expire).not.be.called();
-      done();
-    }, 20);
+    async.retry({times: 20, interval: 20}, cb => {
+      try {
+        should(kuzzle.services.list.internalCache.add).not.be.called();
+        should(kuzzle.services.list.internalCache.expire).not.be.called();
+        cb();
+      }
+      catch(e) {
+        cb(e);
+      }
+    }, done);
   });
 });
