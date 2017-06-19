@@ -81,7 +81,7 @@
     "rewire": "2.5.2",
     "should": "11.2.1",
     "should-sinon": "0.0.5",
-    "sinon": "2.3.2",
+    "sinon": "^1.17.7",
     "socket.io-client": "2.0.1"
   },
   "engines": {
