@@ -44,6 +44,8 @@ function apiSteps () {
       callback();
     }
     else {
+      console.log('Notification received:');
+      console.dir(this.api.responses.result[member], {colors: true, depth: null});
       callback('The document was ' + (not ? 'not ' : '') + 'supposed to contain the member "' + member + '"');
     }
   });
