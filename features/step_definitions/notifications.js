@@ -5,18 +5,13 @@ function apiSteps () {
     const main = callbackAsync => {
       setTimeout(() => {
         if (this.api.responses) {
-          if (this.api.responses.error) {
-            callbackAsync('An error occurred ' + this.api.response.error.toString());
-            return false;
-          }
-
           if (this.api.responses.type !== type) {
             callbackAsync(`Wrong notification type received: ${this.api.responses.type}. Expected: ${type}`);
             return false;
           }
 
           if (this.api.responses[field] !== value) {
-            callbackAsync(`Expected notification field "${field}" to be equal to "${value}", but got "${this.api.responses[field]}" instead.`);
+            return callbackAsync(`Expected notification field "${field}" to be equal to "${value}", but got "${this.api.responses[field]}" instead.`);
           }
 
           callbackAsync();
