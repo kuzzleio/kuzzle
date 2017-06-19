@@ -175,22 +175,6 @@ describe('PluginsManager: strategy management', () => {
       return should(authentications.someStrategy.methods.exists(foo)).be.rejectedWith(PluginImplementationError);
     });
 
-    it('method invocation should intercept a rejected error to transform it into PluginImplementationError', () => {
-      plugin.existsFunction = sandbox.stub().returns(Promise.reject(new Error('some error')));
-
-      injectAuthentication(kuzzle, authentications, plugin, pluginName);
-      should(authentications.someStrategy.strategy).be.deepEqual(plugin.strategies.someStrategy);
-      should(authentications.someStrategy.methods.exists).be.Function();
-      should(authentications.someStrategy.methods.create).be.Function();
-      should(authentications.someStrategy.methods.update).be.Function();
-      should(authentications.someStrategy.methods.delete).be.Function();
-      should(authentications.someStrategy.methods.getInfo).be.Function();
-      should(authentications.someStrategy.methods.validate).be.Function();
-
-      return should(authentications.someStrategy.methods.exists(foo)).be.rejectedWith(PluginImplementationError);
-    });
-
-
     it('should print an error in the console if strategies is not an object', () => {
       plugin.strategies = {};
 

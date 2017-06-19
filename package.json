@@ -50,7 +50,7 @@
     "node-units": "0.1.7",
     "node-uuid": "1.4.8",
     "passport": "0.3.2",
-    "pm2": "2.4.6",
+    "pm2": "^2.5.0",
     "rc": "1.2.1",
     "readline-sync": "^1.4.7",
     "reify": "^0.11.24",
@@ -66,7 +66,7 @@
   "devDependencies": {
     "codecov": "2.2.0",
     "cucumber": "^2.0.0-rc.9",
-    "eslint": "3.19.0",
+    "eslint": "^3.19.0",
     "mocha": "3.4.2",
     "mock-require": "^2.0.2",
     "nyc": "^11.0.2",
@@ -76,7 +76,7 @@
     "should": "11.2.1",
     "should-sinon": "0.0.5",
     "sinon": "^1.17.7",
-    "socket.io-client": "2.0.1"
+    "socket.io-client": "^2.0.3"
   },
   "engines": {
     "node": ">= 6.9.1"

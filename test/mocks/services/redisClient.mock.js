@@ -15,7 +15,7 @@ function RedisClientMock (err) {
     var Stream = function () {
       setTimeout(() => {
         var
-          prefix = options && options.match ? options.match.replace(/[\*\?]/g, '') : 'k',
+          prefix = options && options.match ? options.match.replace(/[*?]/g, '') : 'k',
           i,
           keys = [];
 
