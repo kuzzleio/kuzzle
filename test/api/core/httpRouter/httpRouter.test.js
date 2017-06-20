@@ -69,6 +69,21 @@ describe('core/httpRouter', () => {
       should(handler.firstCall.args[0]).be.instanceOf(Request);
     });
 
+    it('should init request.context with the good values', () => {
+      router.post('/foo/bar', handler);
+
+      rq.url = '/foo/bar';
+      rq.headers.foo = 'bar';
+      rq.method = 'POST';
+
+      router.route(rq, callback);
+      should(handler.calledOnce).be.true();
+      should(handler.firstCall.args[0]).be.instanceOf(Request);
+      should(handler.firstCall.args[0].context.protocol).be.exactly('http');
+      should(handler.firstCall.args[0].context.connectionId).be.exactly('requestId');
+      should(handler.firstCall.args[0].input.headers).match({foo: 'bar'});
+    });
+
     it('should amend the request object if a body is found in the content', () => {
       router.post('/foo/bar', handler);
 
@@ -126,11 +141,10 @@ describe('core/httpRouter', () => {
         foo: 'bar'
       };
 
-      router.route(rq, response => {
-        should(handler.called)
-          .be.false();
+      router.route(rq, result => {
+        should(handler.called).be.false();
 
-        should(response.toJSON()).match({
+        should(result.response.toJSON()).match({
           raw: false,
           status: 200,
           requestId: rq.requestId,
@@ -139,17 +153,39 @@ describe('core/httpRouter', () => {
             requestId: 'requestId',
             result: {}
           },
-          headers: {
-            'content-type': 'application/json',
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS',
-            'Access-Control-Allow-Headers': 'Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With'
-          }
+          headers: router.defaultHeaders
         });
 
         should(kuzzleMock.pluginsManager.trigger.calledOnce).be.true();
         should(kuzzleMock.pluginsManager.trigger.calledWith('http:options', sinon.match.instanceOf(Request))).be.true();
         should(kuzzleMock.pluginsManager.trigger.firstCall.args[1].input.args.foo).eql('bar');
+        done();
+      });
+    });
+
+    it('should register a default / route with the HEAD verb', done => {
+      rq.url = '/';
+      rq.method = 'HEAD';
+      rq.headers = {
+        'content-type': 'application/json',
+        foo: 'bar'
+      };
+
+      router.route(rq, result => {
+        should(handler.called).be.false();
+
+        should(result.response.toJSON()).match({
+          raw: false,
+          status: 200,
+          requestId: rq.requestId,
+          content: {
+            error: null,
+            requestId: 'requestId',
+            result: {}
+          },
+          headers: router.defaultHeaders
+        });
+
         done();
       });
     });
@@ -162,11 +198,11 @@ describe('core/httpRouter', () => {
       rq.headers['content-type'] = 'application/json';
       rq.content = '{"foo": "bar"}';
 
-      router.route(rq, response => {
+      router.route(rq, result => {
         should(handler)
           .have.callCount(0);
 
-        should(response.toJSON())
+        should(result.response.toJSON())
           .match({
             raw: false,
             status: 400,
@@ -179,12 +215,7 @@ describe('core/httpRouter', () => {
               requestId: 'requestId',
               result: null
             },
-            headers: {
-              'content-type': 'application/json',
-              'Access-Control-Allow-Origin': '*',
-              'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS',
-              'Access-Control-Allow-Headers': 'Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With'
-            }
+            headers: router.defaultHeaders
           });
 
         done();
@@ -199,10 +230,10 @@ describe('core/httpRouter', () => {
       rq.headers['content-type'] = 'application/json';
       rq.content = '{bad JSON syntax}';
 
-      router.route(rq, response => {
+      router.route(rq, result => {
         should(handler.called).be.false();
 
-        should(response.toJSON()).be.match({
+        should(result.response.toJSON()).be.match({
           raw: false,
           status: 400,
           requestId: rq.requestId,
@@ -214,12 +245,7 @@ describe('core/httpRouter', () => {
             requestId: 'requestId',
             result: null
           },
-          headers: {
-            'content-type': 'application/json',
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS',
-            'Access-Control-Allow-Headers': 'Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With'
-          }
+          headers: router.defaultHeaders
         });
 
         done();
@@ -234,10 +260,10 @@ describe('core/httpRouter', () => {
       rq.headers['content-type'] = 'application/foobar';
       rq.content = '{"foo": "bar"}';
 
-      router.route(rq, response => {
+      router.route(rq, result => {
         should(handler.called).be.false();
 
-        should(response.toJSON()).match({
+        should(result.response.toJSON()).match({
           raw: false,
           status: 400,
           requestId: rq.requestId,
@@ -249,12 +275,7 @@ describe('core/httpRouter', () => {
             requestId: 'requestId',
             result: null
           },
-          headers: {
-            'content-type': 'application/json',
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS',
-            'Access-Control-Allow-Headers': 'Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With'
-          }
+          headers: router.defaultHeaders
         });
 
         done();
@@ -269,10 +290,10 @@ describe('core/httpRouter', () => {
       rq.headers['content-type'] = 'application/json; charset=iso8859-1';
       rq.content = '{"foo": "bar"}';
 
-      router.route(rq, response => {
+      router.route(rq, result => {
         should(handler.called).be.false();
 
-        should(response.toJSON()).match({
+        should(result.response.toJSON()).match({
           raw: false,
           status: 400,
           requestId: rq.requestId,
@@ -284,12 +305,7 @@ describe('core/httpRouter', () => {
             requestId: 'requestId',
             result: null
           },
-          headers: {
-            'content-type': 'application/json',
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS',
-            'Access-Control-Allow-Headers': 'Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With'
-          }
+          headers: router.defaultHeaders
         });
 
         done();
@@ -305,10 +321,10 @@ describe('core/httpRouter', () => {
       rq.headers['content-type'] = 'application/json';
       rq.content = '{"foo": "bar"}';
 
-      router.route(rq, response => {
+      router.route(rq, result => {
         should(handler.called).be.false();
 
-        should(response.toJSON()).match({
+        should(result.response.toJSON()).match({
           raw: false,
           status: 404,
           requestId: rq.requestId,
@@ -320,12 +336,7 @@ describe('core/httpRouter', () => {
             requestId: 'requestId',
             result: null
           },
-          headers: {
-            'content-type': 'application/json',
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS',
-            'Access-Control-Allow-Headers': 'Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With'
-          }
+          headers: router.defaultHeaders
         });
 
         done();

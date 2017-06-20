@@ -1,144 +1,38 @@
-var
-  Promise = require('bluebird'),
+const
+  _ = require('lodash'),
   should = require('should'),
-  Kuzzle = require('../../../../../lib/api/kuzzle'),
+  sandbox = require('sinon').sandbox.create(),
+  KuzzleMock = require('../../../../mocks/kuzzle.mock'),
   InternalError = require('kuzzle-common-objects').errors.InternalError,
   Repository = require('../../../../../lib/api/core/models/repositories/repository');
 
 describe('Test: repositories/repository', () => {
-  var
+  let
     kuzzle,
-    forwardedObject,
-    persistedObject,
+    /** @type {Repository} */
     repository,
     ObjectConstructor,
-    mockCacheEngine,
-    mockDatabaseEngine,
-    cachedObject,
-    uncachedObject;
-
-  /**
-   * @constructor
-   */
-  ObjectConstructor = function () {
-    this.type = 'testObject';
-  };
-
-  persistedObject = new ObjectConstructor();
-  persistedObject._id = -1;
-  persistedObject.name = 'persisted';
-
-  cachedObject = new ObjectConstructor();
-  cachedObject._id = -2;
-  cachedObject.name = 'cached';
-
-  uncachedObject = new ObjectConstructor();
-  uncachedObject._id = -3;
-  uncachedObject.name = 'uncached';
-
-  mockCacheEngine = {
-    get: key => {
-      if (key === 'repos/' + repository.index + '/' + repository.collection + '/persisted') {
-        return Promise.resolve(JSON.stringify(persistedObject));
-      }
-      if (key === 'repos/' + repository.index + '/' + repository.collection + '/cached') {
-        return Promise.resolve(JSON.stringify(cachedObject));
-      }
-      if (key === 'repos/' + repository.index + '/' + repository.collection + '/error') {
-        return Promise.reject(new InternalError('Error'));
-      }
-      if (key === 'repos/' + repository.index + '/' + repository.collection + '/string') {
-        return Promise.resolve('a string');
-      }
-
-      return Promise.resolve(null);
-    },
-    set: (key, value) => { forwardedObject = {op: 'set', key: key, value: JSON.parse(value)}; return Promise.resolve('OK'); },
-    volatileSet: (key, value, ttl) => { forwardedObject = {op: 'volatileSet', key: key, value: JSON.parse(value), ttl: ttl }; return Promise.resolve('OK'); },
-    expire: (key, ttl) => { forwardedObject = {op: 'expire', key: key, ttl: ttl}; return Promise.resolve('OK'); },
-    persist: key => { forwardedObject = {op: 'persist', key: key}; return Promise.resolve('OK'); }
-  };
-
-  mockDatabaseEngine = {
-    get: (type, id) => {
-      if (id === 'persisted') {
-        return Promise.resolve(persistedObject);
-      }
-
-      if (id === 'uncached') {
-        return Promise.resolve(uncachedObject);
-      }
-
-      if (id === 'cached') {
-        return Promise.resolve(uncachedObject);
-      }
-
-      if (id === 'source') {
-        return Promise.resolve({_id:'theId', _source: {foo: 'bar'}});
-      }
-
-      if (id === 'error') {
-        return Promise.reject(new InternalError('Error'));
-      }
-
-      return Promise.resolve({found: false});
-    },
-    mget: (type, ids) => {
-      var
-        promises = [];
-
-      ids.forEach(id => {
-        promises.push(mockDatabaseEngine.get(repository.collection, id));
-      });
-
-      return Promise.all(promises)
-        .then(results => {
-          var
-            result = results
-              .map(r => {
-                return {
-                  found: (r.found === undefined) ? true : r.found,
-                  _source: {name: r.name},
-                  _id: r._id
-                };
-              });
-
-          return {hits: result};
-        });
-    },
-    search: (type, query) => {
-      if (query.empty) {
-        return Promise.resolve({});
-      }
-      if (query.error) {
-        return Promise.reject(new Error('Mocked error'));
-      }
-      return Promise.resolve({hits: [{_id: 'role', _source: {controllers: {}}}], total: 1});
-    },
-    createOrReplace: (type, id, content) => {
-      forwardedObject = {type, id, content};
-      return Promise.resolve(content);
-    },
-    delete: (type, id) => {
-      forwardedObject = {type, id};
-      return Promise.resolve(id);
-    }
-  };
+    dbPojo = {_id: 'someId', _source: {some: 'source'}, found: true},
+    cachePojo = {_id: 'someId', some: 'source'};
 
   before(() => {
-    kuzzle = new Kuzzle();
+
+    /**
+     * @constructor
+     */
+    ObjectConstructor = function () {};
+  });
+
+  beforeEach(() => {
+    sandbox.reset();
+
+    kuzzle = new KuzzleMock();
 
     repository = new Repository(kuzzle);
     repository.index = '%test';
     repository.collection = 'repository';
     repository.init({});
-  });
-
-  beforeEach(() => {
-    forwardedObject = null;
     repository.ObjectConstructor = ObjectConstructor;
-    repository.databaseEngine = mockDatabaseEngine;
-    repository.cacheEngine = mockCacheEngine;
   });
 
   describe('#loadOneFromDatabase', () => {
@@ -148,29 +42,25 @@ describe('Test: repositories/repository', () => {
     });
 
     it('should reject the promise in case of error', () => {
+      kuzzle.internalEngine.get = sandbox.stub().returns(Promise.reject(new InternalError('error')));
+
       return should(repository.loadOneFromDatabase('error')).be.rejectedWith(InternalError);
     });
 
     it('should return a valid ObjectConstructor instance if found', () => {
+      kuzzle.internalEngine.get = sandbox.stub().returns(Promise.resolve(dbPojo));
       return repository.loadOneFromDatabase('persisted')
         .then(result => {
           should(result).be.instanceOf(ObjectConstructor);
-          should(result._id).be.exactly(-1);
-          should(result.name).be.exactly('persisted');
-        });
-    });
-
-    it('should handle correctly the responses containing _id and _source', () => {
-      return repository.loadOneFromDatabase('source')
-        .then(result => {
-          should(result._id).be.exactly('theId');
-          should(result.foo).be.exactly('bar');
+          should(result._id).be.exactly('someId');
+          should(result.some).be.exactly('source');
         });
     });
   });
 
   describe('#loadMultiFromDatabase', () => {
     it('should return an empty array for an non existing id', () => {
+      kuzzle.internalEngine.mget = sandbox.stub().returns(Promise.resolve({hits: []}));
       return repository.loadMultiFromDatabase([-999, -998, -997])
         .then(results => should(results).be.an.Array().and.have.length(0));
     });
@@ -180,29 +70,33 @@ describe('Test: repositories/repository', () => {
     });
 
     it('should return a list of plain object', () => {
-      return repository.loadMultiFromDatabase(['persisted'])
+      kuzzle.internalEngine.mget = sandbox.stub().returns(Promise.resolve({hits: [dbPojo, dbPojo]}));
+
+      return repository.loadMultiFromDatabase(['persisted', 'persisted'])
         .then(results => {
           should(results).be.an.Array();
           should(results).not.be.empty();
 
           results.forEach(result => {
-            should(result).be.instanceOf(Object);
-            should(result._id).be.exactly(-1);
-            should(result.name).be.exactly('persisted');
+            should(result).be.instanceOf(ObjectConstructor);
+            should(result._id).be.exactly('someId');
+            should(result.some).be.exactly('source');
           });
         });
     });
 
     it('should handle list of objects as an argument', () => {
-      return repository.loadMultiFromDatabase([{_id:'persisted'}])
+      kuzzle.internalEngine.mget = sandbox.stub().returns(Promise.resolve({hits: [dbPojo, dbPojo]}));
+
+      return repository.loadMultiFromDatabase([{_id:'persisted'}, {_id:'persisted'}])
         .then(results => {
           should(results).be.an.Array();
           should(results).not.be.empty();
 
           results.forEach(result => {
-            should(result).be.instanceOf(Object);
-            should(result._id).be.exactly(-1);
-            should(result.name).be.exactly('persisted');
+            should(result).be.instanceOf(ObjectConstructor);
+            should(result._id).be.exactly('someId');
+            should(result.some).be.exactly('source');
           });
         });
     });
@@ -218,25 +112,32 @@ describe('Test: repositories/repository', () => {
 
   describe('#loadFromCache', () => {
     it('should return null for an non-existing id', () => {
+      kuzzle.services.list.internalCache.get = sandbox.stub().returns(Promise.resolve(null));
+
       return repository.loadFromCache(-999)
         .then(result => should(result).be.null());
     });
 
     it('should reject the promise in case of error', () => {
+      kuzzle.services.list.internalCache.get = sandbox.stub().returns(Promise.reject(new InternalError('error')));
+
       return should(repository.loadFromCache('error')).be.rejectedWith(InternalError);
     });
 
     it('should reject the promise when loading an incorrect object', () => {
+      kuzzle.services.list.internalCache.get = sandbox.stub().returns(Promise.resolve('bad type'));
+
       return should(repository.loadFromCache('string')).be.rejectedWith(InternalError);
     });
 
     it('should return a valid ObjectConstructor instance if found', () => {
+      kuzzle.services.list.internalCache.get = sandbox.stub().returns(Promise.resolve(JSON.stringify(cachePojo)));
+
       return repository.loadFromCache('persisted')
         .then(result => {
-          should(result).be.an.instanceOf(ObjectConstructor);
-          should(result._id).be.exactly(-1);
-          should(result.name).be.exactly('persisted');
-          should(result.type).be.exactly('testObject');
+          should(result).be.instanceOf(ObjectConstructor);
+          should(result._id).be.exactly('someId');
+          should(result.some).be.exactly('source');
         });
     });
   });
@@ -248,52 +149,61 @@ describe('Test: repositories/repository', () => {
     });
 
     it('should reject the promise in case of error', () => {
+      kuzzle.services.list.internalCache.get = sandbox.stub().returns(Promise.reject(new InternalError('error')));
+
       return should(repository.load('error')).be.rejectedWith(InternalError);
     });
 
     it('should reject the promise when loading an incorrect object', () => {
+      kuzzle.services.list.internalCache.get = sandbox.stub().returns(Promise.resolve('bad type'));
+
       return should(repository.load('string')).be.rejectedWith(InternalError);
     });
 
     it('should return a valid ObjectConstructor instance if found', () => {
+      kuzzle.services.list.internalCache.get = sandbox.stub().returns(Promise.resolve(null));
+      kuzzle.internalEngine.get = sandbox.stub().returns(Promise.resolve(dbPojo));
+
       return repository.load('persisted')
         .then(result => {
           should(result).be.an.instanceOf(ObjectConstructor);
-          should(result._id).be.exactly(-1);
-          should(result.name).be.exactly('persisted');
-          should(result.type).be.exactly('testObject');
+          should(result._id).be.exactly('someId');
+          should(result.some).be.exactly('source');
         });
     });
 
     it('should return a valid ObjectConstructor instance if found only in cache', () => {
+      kuzzle.services.list.internalCache.get = sandbox.stub().returns(Promise.resolve(JSON.stringify(cachePojo)));
+
       return repository.load('cached')
         .then(result => {
           should(result).be.an.instanceOf(ObjectConstructor);
-          should(result._id).be.exactly(-2);
-          should(result.name).be.exactly('cached');
-          should(result.type).be.exactly('testObject');
+          should(result._id).be.exactly('someId');
+          should(result.some).be.exactly('source');
         });
     });
 
     it('should return a valid ObjectConstructor instance if found only in databaseEngine', () => {
+      kuzzle.services.list.internalCache.get = sandbox.stub().returns(Promise.resolve(null));
+      kuzzle.internalEngine.get = sandbox.stub().returns(Promise.resolve(dbPojo));
+
       return repository.load('uncached')
         .then(result => {
           should(result).be.an.instanceOf(ObjectConstructor);
-          should(result._id).be.exactly(-3);
-          should(result.name).be.exactly('uncached');
-          should(result.type).be.exactly('testObject');
+          should(result._id).be.exactly('someId');
+          should(result.some).be.exactly('source');
         });
     });
 
     it('should get content only from databaseEngine if cacheEngine is null', () => {
       repository.cacheEngine = null;
+      kuzzle.internalEngine.get = sandbox.stub().returns(Promise.resolve(dbPojo));
 
-      return repository.load('cached')
+      return repository.load('no-cache')
         .then(result => {
           should(result).be.an.instanceOf(ObjectConstructor);
-          should(result._id).be.exactly(-3);
-          should(result.name).be.exactly('uncached');
-          should(result.type).be.exactly('testObject');
+          should(result._id).be.exactly('someId');
+          should(result.some).be.exactly('source');
         });
     });
 
@@ -307,89 +217,161 @@ describe('Test: repositories/repository', () => {
 
   describe('#persistToDatabase', () => {
     it('should call the createOrReplace method of internal Engine', () => {
-      return repository.persistToDatabase(persistedObject)
+      const createOrReplaceStub = kuzzle.internalEngine.createOrReplace;
+      const object = {_id: 'someId', some: 'source'};
+
+      return repository.persistToDatabase(object)
         .then(() => {
-          should(forwardedObject.content).be.eql(persistedObject);
-          should(forwardedObject.type).be.eql(repository.collection);
-          should(forwardedObject.id).be.eql(persistedObject._id);
+          should(createOrReplaceStub.firstCall.args[0]).be.eql(repository.collection);
+          should(createOrReplaceStub.firstCall.args[1]).be.exactly('someId');
+          should(createOrReplaceStub.firstCall.args[2]).be.deepEqual(repository.serializeToDatabase(object));
         });
     });
   });
 
   describe('#deleteFromDatabase', () => {
-    it('should construct a valid requestObject', () => {
-      return repository.deleteFromDatabase('test')
+    it('should call a database deletion properly', () => {
+      const deleteStub = kuzzle.internalEngine.delete;
+
+      return repository.deleteFromDatabase('someId')
         .then(() => {
-          should(forwardedObject).match({
-            id: 'test',
-            type: repository.collection
-          });
+          should(deleteStub.firstCall.args[0]).be.eql(repository.collection);
+          should(deleteStub.firstCall.args[1]).be.exactly('someId');
+        });
+    });
+  });
+
+  describe('#deleteFromCache', () => {
+    it('should call a cache deletion properly', () => {
+      const removeStub = kuzzle.services.list.internalCache.remove;
+
+      return repository.deleteFromCache('someId')
+        .then(() => {
+          should(removeStub.firstCall.args[0]).be.exactly(repository.getCacheKey('someId'));
+        });
+    });
+  });
+
+  describe('#delete', () => {
+    it('should delete an object from both cache and database when pertinent', () => {
+      const deleteStub = kuzzle.internalEngine.delete;
+      const removeStub = kuzzle.services.list.internalCache.remove;
+
+      return repository.delete('someId')
+        .then(() => {
+          should(removeStub).be.calledOnce();
+          should(removeStub.firstCall.args[0]).be.exactly(repository.getCacheKey('someId'));
+          should(deleteStub).be.calledOnce();
+          should(deleteStub.firstCall.args[0]).be.eql(repository.collection);
+          should(deleteStub.firstCall.args[1]).be.exactly('someId');
         });
     });
   });
 
   describe('#persistToCache', () => {
     it('should set the object if the ttl is false', () => {
-      repository.persistToCache(persistedObject, {ttl: false});
+      const setStub = kuzzle.services.list.internalCache.set;
 
-      should(forwardedObject.op).be.exactly('set');
-      should(forwardedObject.value).match(persistedObject);
+      return repository.persistToCache(cachePojo, {ttl: false, key: 'someKey'})
+        .then(() => {
+          should(setStub.firstCall.args[0]).be.eql('someKey');
+          should(setStub.firstCall.args[1]).be.eql(JSON.stringify(cachePojo));
+        });
     });
 
     it('should set the object with a ttl by default', () => {
-      repository.persistToCache(persistedObject, {ttl: 500});
+      const volatileSetStub = kuzzle.services.list.internalCache.volatileSet;
 
-      should(forwardedObject.op).be.exactly('volatileSet');
-      should(forwardedObject.value).match(persistedObject);
-      should(forwardedObject.ttl).be.exactly(500);
+      return repository.persistToCache(cachePojo, {ttl: 500, key: 'someKey'})
+        .then(() => {
+          should(volatileSetStub.firstCall.args[0]).be.eql('someKey');
+          should(volatileSetStub.firstCall.args[1]).be.eql(JSON.stringify(cachePojo));
+          should(volatileSetStub.firstCall.args[2]).be.eql(500);
+        });
     });
   });
 
   describe('#refreshCacheTTL', () => {
     it('should persist the object if the ttl is set to false', () => {
-      repository.refreshCacheTTL(persistedObject, {ttl: false});
+      const persistStub = kuzzle.services.list.internalCache.persist;
 
-      should(forwardedObject.op).be.exactly('persist');
+      repository.refreshCacheTTL(cachePojo, {ttl: false});
+
+      should(persistStub.firstCall.args[0]).be.eql(repository.getCacheKey(cachePojo._id, repository.collection));
     });
 
     it('should refresh the ttl if not passed falsed', () => {
-      repository.refreshCacheTTL(persistedObject, {ttl: 500});
+      const expireStub = kuzzle.services.list.internalCache.expire;
 
-      should(forwardedObject.op).be.exactly('expire');
-      should(forwardedObject.ttl).be.exactly(500);
+      repository.refreshCacheTTL(cachePojo, {ttl: 500});
+
+      should(expireStub.firstCall.args[0]).be.eql(repository.getCacheKey(cachePojo._id, repository.collection));
+      should(expireStub.firstCall.args[1]).be.eql(500);
     });
+  });
 
+  describe('#expireFromCache', () => {
+    it('should expire the object', () => {
+      const expireStub = kuzzle.services.list.internalCache.expire;
+
+      repository.expireFromCache(cachePojo);
+
+      should(expireStub.firstCall.args[0]).be.eql(repository.getCacheKey(cachePojo._id, repository.collection));
+      should(expireStub.firstCall.args[1]).be.eql(-1);
+    });
   });
 
   describe('#serializeToCache', () => {
     it('should return the same object', () => {
-      var serialized = repository.serializeToCache(persistedObject);
+      const object = new ObjectConstructor();
+      _.assign(object, cachePojo._source, {_id: cachePojo._id});
 
-      should(Object.keys(serialized).length).be.exactly(Object.keys(persistedObject).length);
-      Object.keys(repository.serializeToCache(persistedObject)).forEach(key => {
-        should(persistedObject[key]).be.exactly(serialized[key]);
+      const serialized = repository.serializeToCache(object);
+
+      should(Object.keys(serialized).length).be.exactly(Object.keys(object).length);
+      Object.keys(repository.serializeToCache(object)).forEach(key => {
+        should(object[key]).be.exactly(serialized[key]);
       });
+      should(typeof object).be.equal('object');
     });
   });
 
   describe('#serializeToDatabase', () => {
     it('should return the same object', () => {
-      should(repository.serializeToDatabase(persistedObject)).be.exactly(persistedObject);
+      should(repository.serializeToDatabase(cachePojo)).be.exactly(cachePojo);
     });
   });
 
   describe('#search', () => {
     it('should return a list from database', () => {
-      return repository.search({query:'noquery'}, 0, 10, false)
+      kuzzle.internalEngine.search = sandbox.stub().returns(Promise.resolve({hits: [dbPojo], total: 1}));
+
+      return repository.search({query:'noquery'})
         .then(response => {
           should(response).be.an.Object();
           should(response.hits).be.an.Array();
           should(response.total).be.exactly(1);
+          should(kuzzle.internalEngine.search).be.calledWithMatch(repository.collection, {query:'noquery'}, {});
         });
     });
 
-    it('should return an list if no hits', () => {
-      return repository.search({empty:true}, 0, 10, false)
+    it('should inject back the scroll id, if there is one', () => {
+      kuzzle.internalEngine.search = sandbox.stub().returns(Promise.resolve({hits: [dbPojo], total: 1, scrollId: 'foobar'}));
+
+      return repository.search({query:'noquery'}, {from: 13, size: 42, scroll: '45s'})
+        .then(response => {
+          should(response).be.an.Object();
+          should(response.hits).be.an.Array();
+          should(response.total).be.exactly(1);
+          should(response.scrollId).be.eql('foobar');
+          should(kuzzle.internalEngine.search).be.calledWithMatch(repository.collection, {query:'noquery'}, {from: 13, size: 42, scroll: '45s'});
+        });
+    });
+
+    it('should return a list if no hits', () => {
+      kuzzle.internalEngine.search = sandbox.stub().returns(Promise.resolve({hits: [], total: 0}));
+
+      return repository.search({})
         .then(response => {
           should(response).be.an.Object();
           should(response.hits).be.an.Array();
@@ -399,7 +381,59 @@ describe('Test: repositories/repository', () => {
     });
 
     it('should be rejected with an error if something goes wrong', () => {
-      return should(repository.search({error:true}, 0, 10, false)).be.rejectedWith(new Error('Mocked error'));
+      const error = new Error('Mocked error');
+
+      kuzzle.internalEngine.search = sandbox.stub().returns(Promise.reject(error));
+
+      return should(repository.search({})).be.rejectedWith(error);
+    });
+  });
+
+  describe('#scroll', () => {
+    it('should return a list from database', () => {
+      kuzzle.internalEngine.scroll = sandbox.stub().returns(Promise.resolve({hits: [dbPojo], total: 1}));
+
+      return repository.scroll('foo')
+        .then(response => {
+          should(response).be.an.Object();
+          should(response.hits).be.an.Array();
+          should(response.total).be.exactly(1);
+          should(kuzzle.internalEngine.scroll).be.calledWithMatch(repository.collection, 'foo', undefined);
+        });
+    });
+
+    it('should inject back the scroll id', () => {
+      kuzzle.internalEngine.scroll = sandbox.stub().returns(Promise.resolve({hits: [dbPojo], total: 1, scrollId: 'foobar'}));
+
+      return repository.scroll('foo', 'bar')
+        .then(response => {
+          should(response).be.an.Object();
+          should(response.hits).be.an.Array();
+          should(response.total).be.exactly(1);
+          should(response.scrollId).be.eql('foobar');
+          should(kuzzle.internalEngine.scroll).be.calledWithMatch(repository.collection, 'foo', 'bar');
+        });
+    });
+
+    it('should return a list if no hits', () => {
+      kuzzle.internalEngine.scroll = sandbox.stub().returns(Promise.resolve({hits: [], total: 0, scrollId: 'foobar'}));
+
+      return repository.scroll({})
+        .then(response => {
+          should(response).be.an.Object();
+          should(response.hits).be.an.Array();
+          should(response.hits).be.empty();
+          should(response.total).be.exactly(0);
+          should(response.scrollId).be.eql('foobar');
+        });
+    });
+
+    it('should be rejected with an error if something goes wrong', () => {
+      const error = new Error('Mocked error');
+
+      kuzzle.internalEngine.scroll = sandbox.stub().returns(Promise.reject(error));
+
+      return should(repository.scroll('foo')).be.rejectedWith(error);
     });
   });
 });

@@ -1,6 +1,6 @@
 'use strict';
 
-var
+const
   should = require('should'),
   SortedArray = require('sorted-array'),
   FieldOperand = require('../../../../lib/api/dsl/storage/objects/fieldOperand'),
@@ -176,8 +176,10 @@ describe('DSL.keyword.notgeospatial', () => {
       should(dsl.test('index', 'collection', {foo: {lat: 'foo', lon: 'bar'}})).be.an.Array().and.be.empty();
     });
 
-    it('should return an empty array if the document does not contain the registered field', () => {
-      should(dsl.test('index', 'collection', {bar: {lat: 43.6073913, lon: 3.9109057}})).be.an.Array().and.be.empty();
+    it('should return all subscriptions if the document does not contain the registered field', () => {
+      should(dsl.test('index', 'collection', {bar: {lat: 43.6073913, lon: 3.9109057}}))
+        .be.an.Array()
+        .and.has.length(4);
     });
 
     it('should reject a shape if the point is right on its border', () => {
@@ -198,10 +200,8 @@ describe('DSL.keyword.notgeospatial', () => {
     });
 
     it('should destroy the whole structure when removing the last item', () => {
-      return dsl.remove(filterId)
-        .then(() => {
-          should(dsl.storage.foPairs).be.an.Object().and.be.empty();
-        });
+      dsl.remove(filterId);
+      should(dsl.storage.foPairs).be.an.Object().and.be.empty();
     });
 
     it('should remove a single subfilter from a multi-filter condition', () => {

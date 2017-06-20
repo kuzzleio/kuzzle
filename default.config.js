@@ -9,6 +9,29 @@
  * @class KuzzleConfiguration
  */
 module.exports = {
+
+  dump: {
+    enabled: true,
+    history: {
+      coredump: 3,
+      reports: 5
+    },
+    path: './dump/',
+    gcore: 'gcore',
+    dateFormat: 'YYYYMMDD-HHmmss',
+    handledErrors: {
+      enabled: true,
+      whitelist: [
+        // 'Error',
+        'RangeError',
+        'TypeError',
+        'KuzzleError',
+        'InternalError'
+      ],
+      minInterval: 10 * 60 * 1000
+    }
+  },
+
   /*
    routes: list of Kuzzle API exposed HTTP routes
    accessControlAllowOrigin: sets the Access-Control-Allow-Origin header used to
@@ -20,11 +43,22 @@ module.exports = {
     accessControlAllowOrigin: '*'
   },
 
+  limits: {
+    concurrentRequests: 50,
+    documentsFetchCount: 1000,
+    documentsWriteCount: 200,
+    requestsHistorySize: 50,
+    requestsBufferSize: 50000,
+    requestsBufferWarningThreshold: 5000,
+    subscriptionConditionsCount: 16
+  },
+
   plugins: {
     common: {
       workerPrefix: 'kpw:',
       pipeWarnTime: 40,
-      pipeTimeout: 250
+      pipeTimeout: 250,
+      initTimeout: 10000,
     },
     'kuzzle-plugin-logger': {
       threads: 1
@@ -46,7 +80,7 @@ module.exports = {
     jwt: {
       algorithm: 'HS256',
       expiresIn: '1h',
-      secret: 'Kuzzle rocks'
+      secret: null
     },
     default: {
       role: {
@@ -62,7 +96,7 @@ module.exports = {
     standard: {
       profiles: {
         admin: {
-          policies: [ {roleId: 'admin', allowInternalIndex: true} ]
+          policies: [ {roleId: 'admin'} ]
         },
         default: {
           policies: [ {roleId: 'default'} ]
@@ -120,15 +154,6 @@ module.exports = {
     }
   },
 
-  limits: {
-    requestsHistorySize: 50,
-    concurrentRequests: 50,
-    requestsBufferSize: 50000,
-    requestsBufferWarningThreshold: 5000,
-    documentsFetchCount: 1000,
-    documentsWriteCount: 200
-  },
-
   services: {
     common: {
       defaultInitTimeout: 10000,
@@ -158,15 +183,18 @@ module.exports = {
     proxyBroker: {
       host: 'localhost',
       port: 7331,
-      retryInterval: 1000
+      retryInterval: 1000,
+      resendClientListDelay: 1000
     },
     db: {
       aliases: ['storageEngine'],
       backend: 'elasticsearch',
-      host: 'localhost',
-      port: 9200,
-      apiVersion: '5.0',
+      client: {
+        host: 'http://localhost:9200',
+        apiVersion: '5.x'
+      },
       defaults: {
+        onUpdateConflictRetries: 0,
         scrollTTL: '15s'
       }
     },
@@ -185,23 +213,6 @@ module.exports = {
 
   /** @type {DocumentSpecification} */
   validation: {
-  },
-
-  dump: {
-    enabled: false,
-    path: './dump/',
-    gcore: 'gcore',
-    dateFormat: 'YYYYMMDD-HHmm',
-    handledErrors: {
-      enabled: true,
-      whitelist: [
-        // 'Error',
-        'RangeError',
-        'TypeError',
-        'KuzzleError',
-        'InternalError',
-        'PluginImplementationError'
-      ]
-    }
   }
+
 };

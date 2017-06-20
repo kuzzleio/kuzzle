@@ -1,4 +1,4 @@
-var
+const
   rewire = require('rewire'),
   should = require('should'),
   sinon = require('sinon'),
@@ -8,7 +8,7 @@ var
   CliController = rewire('../../../lib/api/controllers/cliController');
 
 describe('lib/api/controllers/cliController', () => {
-  var
+  let
     kuzzle,
     cli,
     reset,
@@ -17,10 +17,11 @@ describe('lib/api/controllers/cliController', () => {
     cleanDbStub,
     clearCacheStub,
     dumpStub,
-    dataStub;
+    dataStub,
+    shutdownStub;
 
   beforeEach(() => {
-    var requireMock = sinon.stub();
+    const requireMock = sinon.stub();
 
     adminExistsStub = sinon.stub();
     createFirstAdminStub = sinon.stub();
@@ -35,6 +36,7 @@ describe('lib/api/controllers/cliController', () => {
     requireMock.withArgs('./cli/clearCache').returns(() => clearCacheStub);
     requireMock.withArgs('./cli/data').returns(() => dataStub);
     requireMock.withArgs('./cli/dump').returns(() => dumpStub);
+    requireMock.withArgs('./cli/shutdown').returns(() => shutdownStub);
 
     kuzzle = new KuzzleMock();
 
@@ -50,6 +52,7 @@ describe('lib/api/controllers/cliController', () => {
 
   describe('#init', () => {
     it('should set the actions and register itself to Kuzzle broker', () => {
+      cli.onListenCB = {bind: sinon.stub().returns('foobar')};
       cli.init();
 
       should(cli.actions.adminExists).be.exactly(adminExistsStub);
@@ -61,7 +64,8 @@ describe('lib/api/controllers/cliController', () => {
 
       should(kuzzle.services.list.broker.listen)
         .be.calledOnce()
-        .be.calledWith(kuzzle.config.queues.cliQueue, cli.onListenCB);
+        .be.calledWith(kuzzle.config.queues.cliQueue, 'foobar');
+      should(cli.onListenCB.bind).calledWith(cli);
 
       should(kuzzle.pluginsManager.trigger)
         .be.calledOnce()
@@ -71,7 +75,7 @@ describe('lib/api/controllers/cliController', () => {
 
   describe('#onListenCB', () => {
     it('should send an error if no action is provided', () => {
-      var rawRequest = {data: {requestId: 'test'}, options: {}};
+      const rawRequest = {data: {requestId: 'test'}, options: {}};
 
       cli.init();
 
@@ -84,7 +88,7 @@ describe('lib/api/controllers/cliController', () => {
     });
 
     it('should send an error if the provided action does not exist', () => {
-      var rawRequest = {data: {requestId: 'test', action: 'invalid'}, options: {}};
+      const rawRequest = {data: {requestId: 'test', action: 'invalid'}, options: {}};
 
       cli.init();
 
@@ -97,7 +101,7 @@ describe('lib/api/controllers/cliController', () => {
     });
 
     it('should send the response to the broker', () => {
-      var rawRequest = {data: {requestId: 'test', action: 'data'}, options: {}};
+      const rawRequest = {data: {requestId: 'test', action: 'data'}, options: {}};
 
       cli.init();
       cli.actions.data.returns(Promise.resolve('ok'));
@@ -112,7 +116,7 @@ describe('lib/api/controllers/cliController', () => {
     });
 
     it('should send the error gotten from the controller back to the broker', () => {
-      var
+      const
         rawRequest = {data: {requestId: 'test', action: 'data'}, options: {}},
         error = new BadRequestError('test');
 

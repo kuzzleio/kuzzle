@@ -7,7 +7,7 @@ var
 
 describe('Test plugins manager trigger', () => {
   before(() => {
-    PluginsManager.__set__('console', {log: () => {}, error: () => {}});
+    PluginsManager.__set__('console', {log: () => {}, error: () => {}, warn: () => {}});
   });
 
   it('should trigger hooks event', function (done) {

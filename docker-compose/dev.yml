@@ -1,4 +1,4 @@
-version: '2'
+version: '3'
 
 services:
   proxy:
@@ -13,23 +13,37 @@ services:
       - "..:/var/app"
       - "./scripts/run-dev.sh:/run.sh"
       - "./config/pm2-dev.json:/config/pm2.json"
+    cap_add:
+      - SYS_PTRACE
     depends_on:
       - proxy
       - redis
       - elasticsearch
     ports:
-      - "8080:8080"
       - "9229:9229"
     environment:
-      - kuzzle_services__db__host=elasticsearch
+      - kuzzle_services__db__client__host=http://elasticsearch:9200
       - kuzzle_services__internalCache__node__host=redis
       - kuzzle_services__memoryStorage__node__host=redis
       - kuzzle_services__proxyBroker__host=proxy
       - NODE_ENV=development
-      - DEBUG=kuzzle:*
+      - DEBUG="${DEBUG:-kuzzle:*}"
+      - DEBUG_DEPTH=${DEBUG_DEPTH:-0}
+      - DEBUG_MAX_ARRAY_LENGTH=${DEBUG_MAX_ARRAY:-100}
+      - DEBUG_EXPAND=${DEBUG_EXPAND:-off}
+      - DEBUG_SHOW_HIDDEN={$DEBUG_SHOW_HIDDEN:-on}
+      - DEBUG_COLORS=${DEBUG_COLORS:-on}
 
   redis:
     image: redis:3.2
 
   elasticsearch:
-    image: elasticsearch:5.1
+    image: docker.elastic.co/elasticsearch/elasticsearch:5.4.1
+    environment:
+      - cluster.name=kuzzle
+      # disable xpack
+      - xpack.security.enabled=false
+      - xpack.monitoring.enabled=false
+      - xpack.graph.enabled=false
+      - xpack.watcher.enabled=false
+

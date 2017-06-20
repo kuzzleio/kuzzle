@@ -1,5 +1,5 @@
 var apiSteps = function () {
-  this.When(/^I log in as (.*?):(.*?) expiring in (.*?)$/, function (login, password, expiration, callback) {
+  this.When(/^I( can't)? log in as (.*?):(.*?) expiring in (.*?)$/, function (cantLogin, login, password, expiration, callback) {
     this.api.login('local', {username: this.idPrefix + login, password: password, expiresIn: expiration})
       .then(body => {
         if (body.error) {
@@ -21,13 +21,23 @@ var apiSteps = function () {
           this.currentUser = {};
         }
 
-        this.currentToken = { jwt: body.result.jwt };
+        this.currentToken = {jwt: body.result.jwt};
         this.currentUser.token = body.result.jwt;
 
-        callback();
+        if (cantLogin) {
+          callback('Should not be able to login');
+        }
+        else {
+          callback();
+        }
       })
       .catch(function (error) {
-        callback(error.message);
+        if (cantLogin && error.statusCode === 401) {
+          callback();
+        }
+        else {
+          callback(error.message);
+        }
       });
   });
 
@@ -89,6 +99,31 @@ var apiSteps = function () {
         callback();
       })
       .catch(err => callback(err));
+  });
+
+  this.Then(/^I get the registrated authentication strategies$/, function (callback) {
+    this.api.getAuthenticationStrategies()
+      .then(response => {
+        if (response.error) {
+          return callback(new Error(response.error.message));
+        }
+
+        if (!response.result) {
+          return callback(new Error('No result provided'));
+        }
+
+        if (!response.result || !Array.isArray(response.result)) {
+          return callback(new Error('Invalid response format'));
+        }
+
+        if (response.result.indexOf('local') === -1) {
+          return callback(new Error('The default \'local\' authentication strategy wasn\'t found in the list of registrated strategies'));
+        }
+
+        this.result = response.result;
+        callback();
+      })
+      .catch(error => callback(error));
   });
 };
 

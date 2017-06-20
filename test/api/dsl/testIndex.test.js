@@ -10,7 +10,7 @@
  * the tested document/message.
  */
 
-var
+const
   should = require('should'),
   sinon = require('sinon'),
   Promise = require('bluebird'),
@@ -134,7 +134,10 @@ describe('#TestTables (== DSL filter indexes)', () => {
           should(filter.fidx).be.eql(1);
           should(filter.subfilters[0].cidx).be.eql(1);
           should(dsl.storage.testTables.i.c.clength).be.eql(2);
-          should(dsl.storage.testTables.i.c.removedFilters.array).match([0]);
+          should(dsl.storage.testTables.i.c.removedFilters)
+            .match({ [id1]: true });
+          should(dsl.storage.testTables.i.c.removedFiltersCount)
+            .be.eql(1);
           should(dsl.storage.testTables.i.c.removedConditions.array.length).be.eql(1);
           should(dsl.storage.testTables.i.c.reindexing).be.true();
 
@@ -143,7 +146,10 @@ describe('#TestTables (== DSL filter indexes)', () => {
           should(filter.fidx).be.eql(0);
           should(filter.subfilters[0].cidx).be.eql(0);
           should(dsl.storage.testTables.i.c.clength).be.eql(1);
-          should(dsl.storage.testTables.i.c.removedFilters.array).be.empty();
+          should(dsl.storage.testTables.i.c.removedFilters)
+            .be.empty();
+          should(dsl.storage.testTables.i.c.removedFiltersCount)
+            .be.eql(0);
           should(dsl.storage.testTables.i.c.removedConditions.array).be.empty();
           should(dsl.storage.testTables.i.c.reindexing).be.false();
 
@@ -164,5 +170,69 @@ describe('#TestTables (== DSL filter indexes)', () => {
           should(dsl.storage.testTables.i.c.reindexing).be.false();
         });
     });
+
+    // https://github.com/kuzzleio/kuzzle/issues/740
+    it('issue #740 Unhandled Exception on room removal', () => {
+      let
+        room1,
+        room2;
+
+      return dsl.register('index', 'collection', {
+        or: [
+          {equals: {foo: 'bar'}},
+          {exists: {field: 'foo'}}
+        ]
+      })
+        .then(response => {
+          room1 = response.id;
+          return dsl.register('index', 'collection', {equals: {foo: 'bar'}});
+        })
+        .then(response => {
+          room2 = response.id;
+          return dsl.remove(room1);
+        })
+        .then(() => {
+          return dsl.remove(room2);
+        });
+    });
+
+    // https://github.com/kuzzleio/kuzzle/issues/824
+    it('should remove a filter on which several conditions are set for the same field', () => {
+      const filter = {
+        and: [
+          {
+            not: {
+              range: {
+                foo: {lt: 42}
+              }
+            }
+          },
+          {
+            not: {
+              range: {
+                foo: {lt: 50}
+              }
+            }
+          },
+          {
+            not: {
+              range: {
+                foo: {lt: 2}
+              }
+            }
+          }
+        ]
+      };
+
+      let roomId;
+
+      return dsl.register('i', 'c', filter)
+        .then(response => {
+          roomId = response.id;
+
+          return dsl.remove(roomId);
+        });
+    });
+
   });
 });

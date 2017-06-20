@@ -1,5 +1,5 @@
-var
-  Promise = require('bluebird'),
+const
+  Bluebird = require('bluebird'),
   should = require('should'),
   sinon = require('sinon'),
   IndexController = require('../../../lib/api/controllers/indexController'),
@@ -9,7 +9,7 @@ var
   sandbox = sinon.sandbox.create();
 
 describe('Test: index controller', () => {
-  var
+  let
     indexController,
     kuzzle,
     foo = {foo: 'bar'},
@@ -18,7 +18,7 @@ describe('Test: index controller', () => {
     request;
 
   beforeEach(() => {
-    var data = {
+    const data = {
       controller: 'index',
       index,
       collection
@@ -34,15 +34,15 @@ describe('Test: index controller', () => {
   });
 
   describe('#mDelete', () => {
-    var isActionAllowedStub;
+    let isActionAllowedStub;
 
     beforeEach(() => {
       isActionAllowedStub = sinon.stub();
-      isActionAllowedStub.onCall(0).returns(Promise.resolve(true));
-      isActionAllowedStub.onCall(1).returns(Promise.resolve(false));
-      isActionAllowedStub.onCall(2).returns(Promise.resolve(true));
-      isActionAllowedStub.onCall(3).returns(Promise.resolve(false));
-      isActionAllowedStub.returns(Promise.resolve(true));
+      isActionAllowedStub.onCall(0).returns(Bluebird.resolve(true));
+      isActionAllowedStub.onCall(1).returns(Bluebird.resolve(false));
+      isActionAllowedStub.onCall(2).returns(Bluebird.resolve(true));
+      isActionAllowedStub.onCall(3).returns(Bluebird.resolve(false));
+      isActionAllowedStub.returns(Bluebird.resolve(true));
 
       indexController = new IndexController(kuzzle);
     });
@@ -58,7 +58,7 @@ describe('Test: index controller', () => {
 
       return indexController.mDelete(request)
         .then(response => {
-          var engine = kuzzle.services.list.storageEngine;
+          const engine = kuzzle.services.list.storageEngine;
 
           try {
             should(isActionAllowedStub).have.callCount(5);
@@ -80,10 +80,10 @@ describe('Test: index controller', () => {
 
             should(response).be.instanceof(Object);
             should(response).match({deleted: ['a', 'e', 'i']});
-            return Promise.resolve();
+            return Bluebird.resolve();
           }
           catch (error) {
-            return Promise.reject(error);
+            return Bluebird.reject(error);
           }
         });
     });
@@ -93,7 +93,7 @@ describe('Test: index controller', () => {
     it('should trigger the proper methods and return a valid response', () => {
       return indexController.create(request)
         .then(response => {
-          var createIndex = kuzzle.services.list.storageEngine.createIndex;
+          const createIndex = kuzzle.services.list.storageEngine.createIndex;
 
           should(createIndex).be.calledOnce();
           should(createIndex).be.calledWith(request);
@@ -108,7 +108,7 @@ describe('Test: index controller', () => {
     it('should trigger the proper methods and return a valid response', () => {
       return indexController.delete(request)
         .then(response => {
-          var deleteIndex = kuzzle.services.list.storageEngine.deleteIndex;
+          const deleteIndex = kuzzle.services.list.storageEngine.deleteIndex;
 
           should(deleteIndex).be.calledOnce();
           should(deleteIndex).be.calledWith(request);
@@ -126,7 +126,7 @@ describe('Test: index controller', () => {
     it('should trigger the proper methods and resolve to a valid response', () => {
       return indexController.refresh(request)
         .then(response => {
-          var engine = kuzzle.services.list.storageEngine;
+          const engine = kuzzle.services.list.storageEngine;
           should(engine.refreshIndex).be.calledOnce();
           should(engine.refreshIndex).be.calledWith(request);
 
@@ -151,7 +151,7 @@ describe('Test: index controller', () => {
     it('should trigger the proper methods and resolve to a valid response', () => {
       return indexController.getAutoRefresh(request)
         .then(response => {
-          var engine = kuzzle.services.list.storageEngine;
+          const engine = kuzzle.services.list.storageEngine;
 
           should(engine.getAutoRefresh).be.calledOnce();
           should(engine.getAutoRefresh).be.calledWith(request);
@@ -168,7 +168,7 @@ describe('Test: index controller', () => {
 
       return indexController.setAutoRefresh(request)
         .then(response => {
-          var engine = kuzzle.services.list.storageEngine;
+          const engine = kuzzle.services.list.storageEngine;
 
           should(engine.setAutoRefresh).be.calledOnce();
           should(engine.setAutoRefresh).be.calledWith(request);
@@ -211,14 +211,14 @@ describe('Test: index controller', () => {
     });
 
     it('should reject an error in case of error', () => {
-      kuzzle.services.list.storageEngine.listIndexes.returns(Promise.reject(new Error('foobar')));
+      kuzzle.services.list.storageEngine.listIndexes.returns(Bluebird.reject(new Error('foobar')));
       return should(indexController.list(request)).be.rejected();
     });
   });
 
   describe('#exists', () => {
     it('should call the storagEngine', () => {
-      kuzzle.services.list.storageEngine.indexExists.returns(Promise.resolve(foo));
+      kuzzle.services.list.storageEngine.indexExists.returns(Bluebird.resolve(foo));
       return indexController.exists(request)
         .then(response => {
           should(response).match(foo);

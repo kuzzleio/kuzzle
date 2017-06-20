@@ -26,7 +26,7 @@ describe('DSL.keyword.geoDistanceRange', () => {
 
   beforeEach(() => {
     dsl = new DSL();
-    standardize = dsl.transformer.standardizer.standardize;
+    standardize = dsl.transformer.standardizer.standardize.bind(dsl.transformer.standardizer);
   });
 
   describe('#validation/standardization', () => {

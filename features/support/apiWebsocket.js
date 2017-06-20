@@ -1,21 +1,19 @@
 'use strict';
 
-var
+const
   config = require('./config'),
-  Promise = require('bluebird'),
+  Bluebird = require('bluebird'),
   uuid = require('node-uuid'),
   io = require('socket.io-client'),
   ApiRT = require('./apiRT');
 
-var initSocket = function (socketName) {
-  var socket;
-
+function initSocket (socketName) {
   if (!socketName) {
     socketName = 'client1';
   }
 
   if (!this.listSockets[socketName]) {
-    socket = io(`${config.scheme}://${config.host}:${config.port}`, {
+    const socket = io(`${config.scheme}://${config.host}:${config.port}`, {
       'force new connection': true
     });
     this.listSockets[socketName] = socket;
@@ -27,12 +25,12 @@ var initSocket = function (socketName) {
   }
 
   return socketName;
-};
+}
 
-/** CONSTRUCT **/
-var ApiWebsocket = function () {
+function ApiWebsocket () {
   ApiRT.call(this);
-};
+}
+
 ApiWebsocket.prototype = new ApiRT();
 
 /** SPECIFIC FOR WEBSOCKET */
@@ -53,7 +51,7 @@ ApiWebsocket.prototype.disconnect = function () {
 };
 
 ApiWebsocket.prototype.unsubscribe = function (room, socketName) {
-  var
+  const
     msg = {
       controller: 'realtime',
       action: 'unsubscribe',
@@ -66,11 +64,12 @@ ApiWebsocket.prototype.unsubscribe = function (room, socketName) {
 
   this.listSockets[socketName].removeListener(this.subscribedRooms[socketName][room].channel, this.subscribedRooms[socketName][room].listener);
   delete this.subscribedRooms[socketName][room];
+  this.responses = null;
   return this.send(msg, false, socketName);
 };
 
 ApiWebsocket.prototype.send = function (msg, getAnswer, socketName) {
-  var
+  const
     routename = 'kuzzle',
     listen = (getAnswer !== undefined) ? getAnswer : true;
 
@@ -78,7 +77,7 @@ ApiWebsocket.prototype.send = function (msg, getAnswer, socketName) {
     msg.requestId = uuid.v4();
   }
 
-  msg.metadata = this.world.metadata;
+  msg.volatile = this.world.volatile;
 
   if (this.world.currentUser && this.world.currentUser.token) {
     msg.jwt = this.world.currentUser.token;
@@ -89,7 +88,7 @@ ApiWebsocket.prototype.send = function (msg, getAnswer, socketName) {
   this.listSockets[socketName].emit(routename, msg);
 
   if (listen) {
-    return new Promise((resolve, reject) => {
+    return new Bluebird((resolve, reject) => {
       this.listSockets[socketName].once(msg.requestId, result => {
         if (!result) {
           let error = new Error('Returned result is null');
@@ -113,25 +112,25 @@ ApiWebsocket.prototype.send = function (msg, getAnswer, socketName) {
     });
   }
 
-  return Promise.resolve({});
+  return Bluebird.resolve({});
 };
 
 ApiWebsocket.prototype.sendAndListen = function (msg, socketName) {
-  var
+  const
     routename = 'kuzzle';
 
   if (!msg.requestId) {
     msg.requestId = uuid.v4();
   }
 
-  msg.metadata = this.world.metadata;
+  msg.volatile = this.world.volatile;
 
   socketName = initSocket.call(this, socketName);
   this.listSockets[socketName].emit(routename, msg);
 
-  return new Promise((resolve, reject) => {
+  return new Bluebird((resolve, reject) => {
     this.listSockets[socketName].once(msg.requestId, response => {
-      var listener = document => {
+      const listener = document => {
         this.responses = document;
       };
 

@@ -1,14 +1,15 @@
-var
-  Promise = require('bluebird'),
+const
+  Bluebird = require('bluebird'),
   should = require('should'),
   sinon = require('sinon'),
   ServerController = require('../../../lib/api/controllers/serverController'),
   Request = require('kuzzle-common-objects').Request,
+  ServiceUnavailableError = require('kuzzle-common-objects').errors.ServiceUnavailableError,
   KuzzleMock = require('../../mocks/kuzzle.mock'),
   sandbox = sinon.sandbox.create();
 
 describe('Test: server controller', () => {
-  var
+  let
     serverController,
     kuzzle,
     foo = {foo: 'bar'},
@@ -17,7 +18,7 @@ describe('Test: server controller', () => {
     request;
 
   beforeEach(() => {
-    var data = {
+    const data = {
       controller: 'server',
       index,
       collection
@@ -76,7 +77,7 @@ describe('Test: server controller', () => {
     });
 
     it('should return false if there is no result', () => {
-      kuzzle.internalEngine.bootstrap.adminExists.returns(Promise.resolve(false));
+      kuzzle.internalEngine.bootstrap.adminExists.returns(Bluebird.resolve(false));
 
       return serverController.adminExists()
         .then((response) => {
@@ -85,7 +86,7 @@ describe('Test: server controller', () => {
     });
 
     it('should return true if there is result', () => {
-      kuzzle.internalEngine.bootstrap.adminExists.returns(Promise.resolve(true));
+      kuzzle.internalEngine.bootstrap.adminExists.returns(Bluebird.resolve(true));
 
       return serverController.adminExists()
         .then((response) => {
@@ -105,8 +106,119 @@ describe('Test: server controller', () => {
     });
   });
 
+  describe('#healthCheck', () => {
+    beforeEach(() => {
+      kuzzle.services.list.storageEngine.getInfos.returns(Bluebird.resolve({status: 'green'}));
+    });
+
+    it('should return a 200 response with status "green" if storageEngine status is "green" and Redis is OK', () => {
+      return serverController.healthCheck(request)
+        .then(response => {
+          should(request.response.error).be.null();
+          should(response.status).be.exactly('green');
+          should(response.services.internalCache).be.exactly('green');
+          should(response.services.memoryStorage).be.exactly('green');
+          should(response.services.storageEngine).be.exactly('green');
+        });
+    });
+
+    it('should return a 200 response with status "green" if storageEngine status is "yellow" and Redis is OK', () => {
+      kuzzle.services.list.storageEngine.getInfos.returns(Bluebird.resolve({status: 'yellow'}));
+
+      return serverController.healthCheck(request)
+        .then(response => {
+          should(request.response.error).be.null();
+          should(response.status).be.exactly('green');
+          should(response.services.internalCache).be.exactly('green');
+          should(response.services.memoryStorage).be.exactly('green');
+          should(response.services.storageEngine).be.exactly('green');
+        });
+    });
+
+    it('should return a 503 response with status "red" if storageEngine status is "red"', () => {
+      kuzzle.services.list.storageEngine.getInfos.returns(Bluebird.resolve({status: 'red'}));
+
+      return serverController.healthCheck(request)
+        .then(response => {
+          should(request.response.error).be.instanceOf(ServiceUnavailableError);
+          should(request.response.status).be.exactly(503);
+          should(response.status).be.exactly('red');
+          should(response.services.internalCache).be.exactly('green');
+          should(response.services.memoryStorage).be.exactly('green');
+          should(response.services.storageEngine).be.exactly('red');
+        });
+    });
+
+    it('should return a 503 response with status "red" if storageEngine is KO', () => {
+      kuzzle.services.list.storageEngine.getInfos.returns(Bluebird.reject(new Error()));
+
+      return serverController.healthCheck(request)
+        .then(response => {
+          should(request.response.error).be.instanceOf(ServiceUnavailableError);
+          should(request.response.status).be.exactly(503);
+          should(response.status).be.exactly('red');
+          should(response.services.internalCache).be.exactly('green');
+          should(response.services.memoryStorage).be.exactly('green');
+          should(response.services.storageEngine).be.exactly('red');
+        });
+    });
+
+    it('should return a 503 response with status "red" if memoryStorage is KO', () => {
+      kuzzle.services.list.memoryStorage.getInfos.returns(Bluebird.reject(new Error()));
+
+      return serverController.healthCheck(request)
+        .then(response => {
+          should(request.response.error).be.instanceOf(ServiceUnavailableError);
+          should(request.response.status).be.exactly(503);
+          should(response.status).be.exactly('red');
+          should(response.services.internalCache).be.exactly('green');
+          should(response.services.memoryStorage).be.exactly('red');
+          should(response.services.storageEngine).be.exactly('green');
+        });
+    });
+
+    it('should return a 503 response with status "red" if internalCache is KO', () => {
+      kuzzle.services.list.internalCache.getInfos.returns(Bluebird.reject(new Error()));
+
+      return serverController.healthCheck(request)
+        .then(response => {
+          should(request.response.error).be.instanceOf(ServiceUnavailableError);
+          should(request.response.status).be.exactly(503);
+          should(response.status).be.exactly('red');
+          should(response.services.internalCache).be.exactly('red');
+          should(response.services.memoryStorage).be.exactly('green');
+          should(response.services.storageEngine).be.exactly('green');
+        });
+    });
+  });
+
   describe('#info', () => {
     it('should return a properly formatted server information object', () => {
+      class Foo {
+        constructor() {
+          this.qux = 'not a function';
+          this.baz = function () {};
+        }
+        _privateMethod() {}
+        publicMethod() {}
+      }
+
+      kuzzle.funnel.controllers = {
+        foo: new Foo()
+      };
+
+      kuzzle.funnel.pluginsControllers = {
+        foobar: {
+          _privateMethod: function () {},
+          publicMethod: function () {},
+          anotherMethod: function () {},
+          notAnAction: 3.14
+        }
+      };
+
+      kuzzle.config.http.routes.push({verb: 'foo', action: 'publicMethod', controller: 'foo', url: '/u/r/l'});
+      kuzzle.pluginsManager.routes = [{verb: 'bar', action: 'publicMethod', controller: 'foobar', url: '/foobar'}];
+
       return serverController.info()
         .then(response => {
           should(response).be.instanceof(Object);
@@ -115,7 +227,36 @@ describe('Test: server controller', () => {
           should(response.serverInfo.kuzzle).be.and.Object();
           should(response.serverInfo.kuzzle.version).be.a.String();
           should(response.serverInfo.kuzzle.api).be.an.Object();
-          should(response.serverInfo.kuzzle.api.routes).be.an.Object();
+          should(response.serverInfo.kuzzle.api.routes).match({
+            foo: {
+              publicMethod: {
+                action: 'publicMethod',
+                controller: 'foo',
+                http: {
+                  url: '/u/r/l',
+                  verb: 'FOO'
+                }
+              },
+              baz: {
+                action: 'baz',
+                controller: 'foo'
+              }
+            },
+            foobar: {
+              publicMethod: {
+                action: 'publicMethod',
+                controller: 'foobar',
+                http: {
+                  url: '_plugin/foobar',
+                  verb: 'BAR'
+                }
+              },
+              anotherMethod: {
+                action: 'anotherMethod',
+                controller: 'foobar'
+              }
+            }
+          });
           should(response.serverInfo.kuzzle.plugins).be.an.Object();
           should(response.serverInfo.kuzzle.system).be.an.Object();
           should(response.serverInfo.services).be.an.Object();
@@ -123,7 +264,7 @@ describe('Test: server controller', () => {
     });
 
     it('should reject an error in case of error', () => {
-      kuzzle.services.list.broker.getInfos.returns(Promise.reject(new Error('foobar')));
+      kuzzle.services.list.broker.getInfos.returns(Bluebird.reject(new Error('foobar')));
       return should(serverController.info()).be.rejected();
     });
   });

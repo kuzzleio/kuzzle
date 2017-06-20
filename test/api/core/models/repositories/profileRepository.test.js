@@ -1,19 +1,23 @@
-var
-  Promise = require('bluebird'),
+'use strict';
+
+const
+  Bluebird = require('bluebird'),
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
   should = require('should'),
   Role = require('../../../../../lib/api/core/models/security/role'),
   Profile = require('../../../../../lib/api/core/models/security/profile'),
   ProfileRepository = require('../../../../../lib/api/core/models/repositories/profileRepository'),
-  BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,
-  ForbiddenError = require('kuzzle-common-objects').errors.ForbiddenError,
-  NotFoundError = require('kuzzle-common-objects').errors.NotFoundError,
+  {
+    BadRequestError,
+    ForbiddenError,
+    NotFoundError
+  } = require('kuzzle-common-objects').errors,
   Request = require('kuzzle-common-objects').Request,
   KuzzleMock = require('../../../../mocks/kuzzle.mock');
 
 describe('Test: repositories/profileRepository', () => {
-  var
+  let
     kuzzle,
     profileRepository,
     testProfile;
@@ -52,8 +56,7 @@ describe('Test: repositories/profileRepository', () => {
     });
 
     it('should return a profile from memory cache', () => {
-      var
-        p = {foo: 'bar'};
+      const p = {foo: 'bar'};
       profileRepository.profiles.foo = p;
 
       return profileRepository.loadProfile('foo')
@@ -64,7 +67,7 @@ describe('Test: repositories/profileRepository', () => {
     });
 
     it('should return null if the profile does not exist', () => {
-      kuzzle.internalEngine.get.returns(Promise.reject(new NotFoundError('Not found')));
+      kuzzle.internalEngine.get.returns(Bluebird.reject(new NotFoundError('Not found')));
 
       return profileRepository.loadProfile('idontexist')
         .then(result => {
@@ -73,9 +76,9 @@ describe('Test: repositories/profileRepository', () => {
     });
 
     it('should load a profile from the db', () => {
-      var p = {foo: 'bar'};
+      const p = {foo: 'bar'};
 
-      profileRepository.load = sinon.stub().returns(Promise.resolve(p));
+      profileRepository.load = sinon.stub().returns(Bluebird.resolve(p));
 
       return profileRepository.loadProfile('foo')
         .then(profile => {
@@ -115,7 +118,7 @@ describe('Test: repositories/profileRepository', () => {
     });
 
     it('should load profiles', () => {
-      var
+      const
         p1 = {foo: 'bar'},
         p2 = {bar: 'baz'},
         p3 = {baz: 'foo'};
@@ -137,7 +140,7 @@ describe('Test: repositories/profileRepository', () => {
 
   describe('#buildProfileFromRequest', () => {
     it('should resolve to a valid Profile when a valid object is provided', () => {
-      var
+      const
         profile = {
           foo: 'bar'
         },
@@ -154,9 +157,9 @@ describe('Test: repositories/profileRepository', () => {
   describe('#hydrate', () => {
 
     it('should throw if the profile contains unexisting roles', () => {
-      var p = new Profile();
+      const p = new Profile();
 
-      kuzzle.repositories.role.loadRoles.returns(Promise.resolve([]));
+      kuzzle.repositories.role.loadRoles.returns(Bluebird.resolve([]));
 
       return should(profileRepository.hydrate(p, {
         policies: [
@@ -166,9 +169,9 @@ describe('Test: repositories/profileRepository', () => {
     });
 
     it('should set role default when none is given', () => {
-      var p = new Profile();
+      const p = new Profile();
 
-      kuzzle.repositories.role.loadRoles.returns(Promise.resolve([
+      kuzzle.repositories.role.loadRoles.returns(Bluebird.resolve([
         {_id: 'default'}
       ]));
 
@@ -179,9 +182,9 @@ describe('Test: repositories/profileRepository', () => {
     });
 
     it('should unnest _source properties', () => {
-      var p = new Profile();
+      const p = new Profile();
 
-      kuzzle.repositories.role.loadRoles.returns(Promise.resolve([
+      kuzzle.repositories.role.loadRoles.returns(Bluebird.resolve([
         {_id: 'default'}
       ]));
 
@@ -198,31 +201,112 @@ describe('Test: repositories/profileRepository', () => {
   });
 
   describe('#deleteProfile', () => {
-    it('should reject when no id is provided', () => {
-      var invalidProfileObject = new Request({
+    it('should reject and not trigger any event when no id is provided', done => {
+      const invalidProfileObject = new Request({
         body: {
           _id: ''
         }
       });
 
-      return should(profileRepository.deleteProfile(invalidProfileObject))
-        .be.rejectedWith(BadRequestError);
+      profileRepository.deleteProfile(invalidProfileObject)
+        .then(() => {
+          done(new Error('The promise is not rejected'));
+        })
+        .catch(e => {
+          should(e).be.an.instanceOf(BadRequestError);
+          should(kuzzle.pluginsManager.trigger).not.be.called();
+          done();
+        })
+        .catch(e => {
+          done(e);
+        });
     });
 
-    it('should reject if a user uses the profile about to be deleted', () => {
-      kuzzle.repositories.user.search.returns(Promise.resolve({
+    it('should reject and not trigger any event if a user uses the profile about to be deleted', done => {
+      kuzzle.repositories.user.search.returns(Bluebird.resolve({
         total: 1
       }));
 
-      return should(profileRepository.deleteProfile({_id: 'test'})).rejectedWith(ForbiddenError);
+      profileRepository.deleteProfile({_id: 'test'})
+        .then(() => {
+          done(new Error('The promise is not rejected'));
+        })
+        .catch(e => {
+          should(e).be.an.instanceOf(ForbiddenError);
+          should(kuzzle.pluginsManager.trigger).not.be.called();
+          done();
+        })
+        .catch(e => {
+          done(e);
+        });
+    });
+
+    it('should reject and not trigger any event when trying to delete admin', done => {
+      const profile = {
+        _id: 'admin',
+        policies: [ {roleId: 'admin'} ]
+      };
+
+      profileRepository.deleteProfile(profile)
+        .then(() => {
+          done(new Error('The promise is not rejected'));
+        })
+        .catch(e => {
+          should(e).be.an.instanceOf(BadRequestError);
+          should(kuzzle.pluginsManager.trigger).not.be.called();
+          done();
+        })
+        .catch(e => {
+          done(e);
+        });
+    });
+
+    it('should reject and not trigger any event when trying to delete default', done => {
+      const profile = {
+        _id: 'default',
+        policies: [ {roleId: 'default'} ]
+      };
+
+      profileRepository.deleteProfile(profile)
+        .then(() => {
+          done(new Error('The promise is not rejected'));
+        })
+        .catch(e => {
+          should(e).be.an.instanceOf(BadRequestError);
+          should(kuzzle.pluginsManager.trigger).not.be.called();
+          done();
+        })
+        .catch(e => {
+          done(e);
+        });
+    });
+
+    it('should reject and not trigger any event when trying to delete anonymous', done => {
+      const profile = {
+        _id: 'anonymous',
+        policies: [ {roleId: 'anonymous'} ]
+      };
+
+      profileRepository.deleteProfile(profile)
+        .then(() => {
+          done(new Error('The promise is not rejected'));
+        })
+        .catch(e => {
+          should(e).be.an.instanceOf(BadRequestError);
+          should(kuzzle.pluginsManager.trigger).not.be.called();
+          done();
+        })
+        .catch(e => {
+          done(e);
+        });
     });
 
     it('should return a raw delete response after deleting', () => {
-      var response = {_id: 'testprofile'};
+      const response = {_id: 'testprofile'};
 
-      kuzzle.repositories.user.search.returns(Promise.resolve({}));
-      profileRepository.deleteFromCache = sinon.stub().returns(Promise.resolve());
-      profileRepository.deleteFromDatabase = sinon.stub().returns(Promise.resolve(response));
+      kuzzle.repositories.user.search.returns(Bluebird.resolve({}));
+      profileRepository.deleteFromCache = sinon.stub().returns(Bluebird.resolve());
+      profileRepository.deleteFromDatabase = sinon.stub().returns(Bluebird.resolve(response));
 
       return profileRepository.deleteProfile(testProfile)
         .then(r => {
@@ -231,51 +315,37 @@ describe('Test: repositories/profileRepository', () => {
         });
     });
 
-    it('should reject when trying to delete admin', () => {
-      var profile = {
-        _id: 'admin',
-        policies: [ {roleId: 'admin'} ]
-      };
+    it('should call deleteFromDatabase, remove the profile from memory and trigger a "core:profileRepository:delete" event', () => {
+      kuzzle.repositories.user.search.returns(Bluebird.resolve({}));
+      profileRepository.deleteFromCache = sinon.stub().returns(Bluebird.resolve());
+      profileRepository.deleteFromDatabase = sinon.stub().returns(Bluebird.resolve({acknowledge: true}));
+      profileRepository.profiles.foo = true;
 
-      return should(profileRepository.deleteProfile(profile))
-        .be.rejectedWith(BadRequestError);
-    });
-
-    it('should reject when trying to delete default', () => {
-      var profile = {
-        _id: 'default',
-        policies: [ {roleId: 'default'} ]
-      };
-
-      return should(profileRepository.deleteProfile(profile))
-        .be.rejectedWith(BadRequestError);
-    });
-
-    it('should reject when trying to delete anonymous', () => {
-      var profile = {
-        _id: 'anonymous',
-        policies: [ {roleId: 'anonymous'} ]
-      };
-
-      return should(profileRepository.deleteProfile(profile))
-        .be.rejectedWith(BadRequestError);
+      return profileRepository.deleteProfile({_id: 'foo'})
+        .then(() => {
+          should(profileRepository.deleteFromDatabase)
+            .be.calledOnce()
+            .be.calledWith('foo');
+          should(profileRepository.profiles)
+            .not.have.property('foo');
+          should(kuzzle.pluginsManager.trigger)
+            .be.calledOnce()
+            .be.calledWith('core:profileRepository:delete', {_id: 'foo'});
+        });
     });
   });
 
   describe('#serializeToDatabase', () => {
     it('should return a plain flat object', () => {
-      var
-        profile = testProfile,
-        result;
+      const profile = testProfile;
 
       profile.getRoles(kuzzle);
 
-      result = profileRepository.serializeToDatabase(profile);
-
+      let result = profileRepository.serializeToDatabase(profile);
 
       should(result).not.be.an.instanceOf(Profile);
       should(result).be.an.Object();
-      should(profile._id).be.exactly('foo');
+      should(result).not.have.property('_id');
       should(result.policies).be.an.Array();
       should(result.policies).have.length(2);
       should(result.policies[0]).be.an.Object();
@@ -285,44 +355,52 @@ describe('Test: repositories/profileRepository', () => {
       should(result.policies[1]).be.an.Object();
       should(result.policies[1]).not.be.an.instanceOf(Role);
       should(result.policies[1].roleId).be.exactly('test2');
-      should(result.policies[1]).not.have.property('restrictedRo');
+      should(result.policies[1]).not.have.property('restrictedTo');
     });
   });
 
   describe('#searchProfiles', () => {
     it('should call search', () => {
+      const opts = {from: 13, size: 42, scroll: 'foo'};
       profileRepository.search = sinon.spy();
 
-      profileRepository.searchProfiles(false, 'from', 'size');
+      profileRepository.searchProfiles(false, opts);
       should(profileRepository.search)
         .be.calledOnce()
-        .be.calledWith({query: {}}, 'from', 'size');
+        .be.calledWith({query: {match_all: {}}}, opts);
 
       profileRepository.searchProfiles(['role1', 'role2']);
       should(profileRepository.search)
         .be.calledTwice()
-        .be.calledWith({query: {
-          bool: {
-            should: [
-              {terms: {'policies.roleId': ['role1']}},
-              {terms: {'policies.roleId': ['role2']}}
-            ]
+        .be.calledWith({
+          query: {
+            terms: {'policies.roleId': ['role1', 'role2']}
           }
-        }});
+        });
     });
   });
 
   describe('#validateAndSaveProfile', () => {
-    it('should reject when no id is provided', () => {
-      var invalidProfile = new Profile();
+    it('should reject and not trigger any event when no id is provided', done => {
+      const invalidProfile = new Profile();
       invalidProfile._id = '';
 
-      return should(profileRepository.validateAndSaveProfile(invalidProfile))
-        .be.rejectedWith(BadRequestError);
+      profileRepository.validateAndSaveProfile(invalidProfile)
+        .then(() => {
+          done(new Error('The promise is not rejected'));
+        })
+        .catch(e => {
+          should(e).be.an.instanceOf(BadRequestError);
+          should(kuzzle.pluginsManager.trigger).not.be.called();
+          done();
+        })
+        .catch(e => {
+          done(e);
+        });
     });
 
-    it('should properly persist the profile', () => {
-      profileRepository.persistToDatabase = sinon.stub();
+    it('should properly persist the profile and trigger a "core:profileRepository:save" event when ok', () => {
+      profileRepository.persistToDatabase = sinon.stub().returns(Bluebird.resolve(null));
 
       return profileRepository.validateAndSaveProfile(testProfile)
         .then((result) => {
@@ -330,6 +408,36 @@ describe('Test: repositories/profileRepository', () => {
             .be.exactly(testProfile);
           should(profileRepository.profiles.foo)
             .be.exactly(testProfile);
+          should(kuzzle.pluginsManager.trigger)
+            .be.calledOnce()
+            .be.calledWith('core:profileRepository:save', {_id: testProfile._id, policies: testProfile.policies});
+        });
+    });
+
+    it('should reject if we try to remove the anonymous role from the anonymous profile', () => {
+      const profile = new Profile();
+      profile._id = 'anonymous';
+      profile.policies = [
+        {roleId: 'test'},
+        {roleId: 'another'}
+      ];
+
+      return should(profileRepository.validateAndSaveProfile(profile))
+        .be.rejectedWith(BadRequestError, {message: 'Anonymous profile must include the anonymous role'});
+    });
+
+    it('should accept to update the anonymous profile if the anonymous role is still in', () => {
+      const profile = new Profile();
+      profile._id = 'anonymous';
+      profile.policies = [
+        {roleId: 'test'},
+        {roleId: 'anonymous'}
+      ];
+
+      return profileRepository.validateAndSaveProfile(profile)
+        .then(response => {
+          should(response._id)
+            .be.eql('anonymous');
         });
     });
   });

@@ -1,4 +1,6 @@
-var
+'use strict';
+
+const
   Promise = require('bluebird'),
   should = require('should'),
   sinon = require('sinon'),
@@ -9,7 +11,7 @@ var
   sandbox = sinon.sandbox.create();
 
 describe('Test: security controller - createFirstAdmin', () => {
-  var
+  let
     adminController,
     kuzzle;
 
@@ -23,11 +25,11 @@ describe('Test: security controller - createFirstAdmin', () => {
   });
 
   describe('#createFirstAdmin', () => {
-    var
+    let
       reset,
       resetRolesStub,
       resetProfilesStub,
-      createOrReplaceUser;
+      createUser;
 
     beforeEach(() => {
       reset = SecurityController.__set__({
@@ -36,9 +38,9 @@ describe('Test: security controller - createFirstAdmin', () => {
       });
       resetRolesStub = SecurityController.__get__('resetRoles');
       resetProfilesStub = SecurityController.__get__('resetProfiles');
-      createOrReplaceUser = sandbox.stub().returns(Promise.resolve());
+      createUser = sandbox.stub().returns(Promise.resolve());
 
-      kuzzle.funnel.controllers.security.createOrReplaceUser = createOrReplaceUser;
+      adminController.createUser = createUser;
     });
 
     afterEach(() => {
@@ -49,18 +51,26 @@ describe('Test: security controller - createFirstAdmin', () => {
       kuzzle.funnel.controllers.server.adminExists = sandbox.stub().returns(Promise.resolve({exists: true}));
 
       return should(adminController.createFirstAdmin(new Request({
+        controller: 'security',
+        action: 'createFirstAdmin',
         _id: 'toto',
-        body: {password: 'pwd'}
+        body: {content: {password: 'pwd'}}
       }), {})).be.rejected();
     });
 
     it('should create the admin user and not reset roles & profiles if not asked to', () => {
       kuzzle.funnel.controllers.server.adminExists = sandbox.stub().returns(Promise.resolve({exists: false}));
+      kuzzle.repositories.user.load = sandbox.stub().returns(Promise.resolve(kuzzle.repositories.user.anonymous()));
 
-      return adminController.createFirstAdmin(new Request({_id: 'toto', body: {password: 'pwd'}}))
+      return adminController.createFirstAdmin(new Request({
+        controller: 'security',
+        action: 'createFirstAdmin',
+        _id: 'toto',
+        body: {content: {password: 'pwd'}}
+      }))
         .then(() => {
-          should(createOrReplaceUser).be.calledOnce();
-          should(createOrReplaceUser.firstCall.args[0]).be.instanceOf(Request);
+          should(createUser).be.calledOnce();
+          should(createUser.firstCall.args[0]).be.instanceOf(Request);
           should(resetRolesStub).have.callCount(0);
           should(resetProfilesStub).have.callCount(0);
         });
@@ -68,14 +78,22 @@ describe('Test: security controller - createFirstAdmin', () => {
 
     it('should create the admin user and reset roles & profiles if asked to', () => {
       kuzzle.funnel.controllers.server.adminExists = sandbox.stub().returns(Promise.resolve({exists: false}));
+      kuzzle.repositories.user.load = sandbox.stub().returns(Promise.resolve(kuzzle.repositories.user.anonymous()));
+
       kuzzle.funnel.controllers.index = {
         refreshInternal: sandbox.stub().returns(Promise.resolve({}))
       };
 
-      return adminController.createFirstAdmin(new Request({_id: 'toto', body: {password: 'pwd'}, reset: true}))
+      return adminController.createFirstAdmin(new Request({
+        controller: 'security',
+        action: 'createFirstAdmin',
+        _id: 'toto',
+        body: {content: {password: 'pwd'}},
+        reset: true
+      }))
         .then(() => {
-          should(createOrReplaceUser).be.calledOnce();
-          should(createOrReplaceUser.firstCall.args[0]).be.instanceOf(Request);
+          should(createUser).be.calledOnce();
+          should(createUser.firstCall.args[0]).be.instanceOf(Request);
           should(resetRolesStub).have.callCount(1);
           should(resetProfilesStub).have.callCount(1);
         });
@@ -83,31 +101,46 @@ describe('Test: security controller - createFirstAdmin', () => {
   });
 
   describe('#resetRoles', () => {
-    it('should call createOrReplace roles with all default roles', () => {
-      var
-        createOrReplace = sandbox.stub().returns(Promise.resolve()),
+    it('should call validateAndSaveRole with all default roles', () => {
+      const
+        validateAndSaveRole = sandbox.stub().returns(Promise.resolve()),
         mock = {
-          internalEngine: {
-            createOrReplace
+          admin: {
+            controllers: {
+              foo: {
+                actions: {
+                  bar: true
+                }
+              }
+            }
           },
-          config: {
-            security: {
-              standard: {
-                roles: {
-                  admin: 'admin', default: 'default', anonymous: 'anonymous'
+          default: {
+            controllers: {
+              baz: {
+                actions: {
+                  yolo: true
+                }
+              }
+            }
+          },
+          anonymous: {
+            controllers: {
+              anon: {
+                actions: {
+                  ymous: true
                 }
               }
             }
           }
         };
 
-      return SecurityController.__get__('resetRoles').call(mock)
+      return SecurityController.__get__('resetRoles')(mock, {validateAndSaveRole})
         .then(() => {
           try {
-            should(createOrReplace).have.callCount(3);
-            should(createOrReplace.firstCall).be.calledWith('roles', 'admin', 'admin');
-            should(createOrReplace.secondCall).be.calledWith('roles', 'default', 'default');
-            should(createOrReplace.thirdCall).be.calledWith('roles', 'anonymous', 'anonymous');
+            should(validateAndSaveRole).have.callCount(3);
+            should(validateAndSaveRole.firstCall).be.calledWithMatch({_id: 'admin', controllers: {foo: {actions: {bar: true}}}});
+            should(validateAndSaveRole.secondCall).be.calledWithMatch({_id: 'default', controllers: {baz: {actions: {yolo: true}}}});
+            should(validateAndSaveRole.thirdCall).be.calledWithMatch({_id: 'anonymous', controllers: {anon: {actions: {ymous: true}}}});
             return Promise.resolve();
           }
           catch (error) {
@@ -118,24 +151,27 @@ describe('Test: security controller - createFirstAdmin', () => {
   });
 
   describe('#resetProfiles', () => {
-    it('should call createOrReplace profiles with all default profiles and rights policies', () => {
-      var
-        createOrReplace = sandbox.stub().returns(Promise.resolve()),
-        mock = {internalEngine: {createOrReplace}};
+    it('should call validateAndSaveProfile with all default profiles and rights policies', () => {
+      const
+        validateAndSaveProfile = sandbox.stub().returns(Promise.resolve());
 
-      return SecurityController.__get__('resetProfiles').call(mock)
+      return SecurityController.__get__('resetProfiles')({validateAndSaveProfile})
         .then(() => {
 
           try {
-            should(createOrReplace).have.callCount(3);
-            should(createOrReplace.firstCall).be.calledWithMatch('profiles', 'admin', {
-              policies: [{
-                roleId: 'admin',
-                allowInternalIndex: true
-              }]
+            should(validateAndSaveProfile).have.callCount(3);
+            should(validateAndSaveProfile.firstCall).be.calledWithMatch({
+              _id: 'admin',
+              policies: [{roleId: 'admin'}]
             });
-            should(createOrReplace.secondCall).be.calledWithMatch('profiles', 'anonymous', {policies: [{roleId: 'anonymous'}]});
-            should(createOrReplace.thirdCall).be.calledWithMatch('profiles', 'default', {policies: [{roleId: 'default'}]});
+            should(validateAndSaveProfile.secondCall).be.calledWithMatch({
+              _id: 'default',
+              policies: [{roleId: 'default'}]
+            });
+            should(validateAndSaveProfile.thirdCall).be.calledWithMatch({
+              _id: 'anonymous',
+              policies: [{roleId: 'anonymous'}]
+            });
             return Promise.resolve();
           }
           catch (error) {

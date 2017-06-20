@@ -1,143 +1,161 @@
 'use strict';
 
-var
+const
+  async = require('async'),
   should = require('should'),
   sinon = require('sinon'),
-  sandbox = sinon.sandbox.create(),
-  rewire = require('rewire'),
-  Kuzzle = require('../../../../lib/api/kuzzle'),
-  Redis = rewire('../../../../lib/services/redis'),
-  RedisClientMock = require('../../../mocks/services/redisClient.mock'),
+  Kuzzle = require('../../../mocks/kuzzle.mock'),
+  Notifier = require('../../../../lib/api/core/notifier'),
   Request = require('kuzzle-common-objects').Request;
 
 describe('Test: notifier.publish', () => {
-  var
-    dbname = 'unit-tests',
+  let
     kuzzle,
-    internalCache,
-    notification,
-    request,
-    spyInternalCacheAdd,
-    spyInternalCacheExpire,
+    notifier,
+    rawRequest,
     rooms = ['foo'];
 
-  before(() => {
-    kuzzle = new Kuzzle();
-    internalCache = new Redis(kuzzle, {service: dbname}, kuzzle.config.services.internalCache);
-    return Redis.__with__('buildClient', () => new RedisClientMock())(() => {
-      return internalCache.init();
-    });
-  });
-
   beforeEach(() => {
-    sandbox.stub(kuzzle.internalEngine, 'get').returns(Promise.resolve({}));
-    return kuzzle.services.init({whitelist: []})
-      .then(() => {
-        request = {
-          controller: 'realtime',
-          action: 'publish',
-          requestId: 'foo',
-          collection: 'bar',
-          _id: 'I am fabulous',
-          body: {youAre: 'fabulous too'},
-          metadata: {}
-        };
-        kuzzle.services.list.internalCache = internalCache;
-        spyInternalCacheAdd = sandbox.stub(kuzzle.services.list.internalCache, 'add').returns(Promise.resolve({}));
-        spyInternalCacheExpire = sandbox.stub(kuzzle.services.list.internalCache, 'expire').returns(Promise.resolve({}));
-        sandbox.stub(kuzzle.notifier, 'notify', (r, rq, n) => {notification = n;});
+    kuzzle = new Kuzzle();
+    notifier = new Notifier(kuzzle);
 
-        notification = null;
-      });
-  });
+    rawRequest = {
+      controller: 'realtime',
+      action: 'publish',
+      collection: 'bar',
+      _id: 'I am fabulous',
+      body: {youAre: 'fabulous too'},
+      volatile: {}
+    };
 
-  afterEach(() => {
-    sandbox.restore();
+    notifier.notifyDocument = sinon.stub();
   });
 
   it('should publish messages', (done) => {
-    let result;
+    kuzzle.dsl.test.returns(rooms);
 
-    sandbox.stub(kuzzle.dsl, 'test').returns(rooms);
+    const request = new Request(rawRequest);
+    should(notifier.publish(request, 'foo', 'bar')).match({published: true});
 
-    result = kuzzle.notifier.publish(new Request(request));
-    should(result).match({published: true});
-    should(notification.state).be.eql('done');
-    should(notification.scope).be.eql('in');
-    should(notification._id).be.eql(request._id);
-    should(notification._source).be.eql(request.body);
+    should(notifier.notifyDocument)
+      .calledOnce()
+      .calledWith(rooms, request, 'foo', 'bar', rawRequest.action, {
+        _source: rawRequest.body,
+        _id: rawRequest._id
+      });
 
-    setTimeout(() => {
-      should(spyInternalCacheAdd.called).be.false();
-      should(spyInternalCacheExpire.called).be.false();
-      done();
-    }, 20);
+    async.retry({times: 20, interval: 20}, cb => {
+      try {
+        should(kuzzle.services.list.internalCache.add).not.be.called();
+        should(kuzzle.services.list.internalCache.expire).not.be.called();
+        cb();
+      }
+      catch (e) {
+        cb(e);
+      }
+    }, done);
   });
 
-  it('should cache the document in case of a create document request', (done) => {
-    sandbox.stub(kuzzle.dsl, 'test').returns(rooms);
+  it('should cache the document in case of a create document rawRequest', (done) => {
+    kuzzle.dsl.test.returns(rooms);
 
-    request.controller = 'document';
-    request.action = 'create';
-    kuzzle.notifier.publish(new Request(request));
-    should(notification.state).be.eql('pending');
-    should(notification.scope).be.undefined();
-    should(notification._id).be.eql(request._id);
-    should(notification._source).be.eql(request.body);
+    rawRequest.controller = 'document';
+    rawRequest.action = 'create';
+    const request = new Request(rawRequest);
+    should(notifier.publish(request, 'foo', 'bar')).match({published: true});
 
-    setTimeout(() => {
-      should(spyInternalCacheAdd.calledOnce).be.true();
-      should(spyInternalCacheExpire.calledOnce).be.true();
-      done();
-    }, 20);
+    should(notifier.notifyDocument)
+      .calledOnce()
+      .calledWith(rooms, request, 'foo', 'bar', rawRequest.action, {
+        _source: rawRequest.body,
+        _id: rawRequest._id
+      });
+
+    async.retry({times: 20, interval: 20}, cb => {
+      try {
+        should(kuzzle.services.list.internalCache.add).be.calledOnce();
+        should(kuzzle.services.list.internalCache.expire).be.calledOnce();
+        cb();
+      }
+      catch(e) {
+        cb(e);
+      }
+    }, done);
   });
 
-  it('should cache the document in case of a createOrReplace document request', (done) => {
-    sandbox.stub(kuzzle.dsl, 'test').returns(rooms);
+  it('should cache the document in case of a createOrReplace document rawRequest', (done) => {
+    kuzzle.dsl.test.returns(rooms);
 
-    request.controller = 'document';
-    request.action = 'createOrReplace';
-    kuzzle.notifier.publish(new Request(request));
-    should(notification.state).be.eql('pending');
-    should(notification.scope).be.undefined();
-    should(notification._id).be.eql(request._id);
-    should(notification._source).be.eql(request.body);
-    setTimeout(() => {
-      should(spyInternalCacheAdd.calledOnce).be.true();
-      should(spyInternalCacheExpire.calledOnce).be.true();
-      done();
-    }, 20);
+    rawRequest.controller = 'document';
+    rawRequest.action = 'createOrReplace';
+    const request = new Request(rawRequest);
+    should(notifier.publish(request, 'foo', 'bar')).match({published: true});
+
+    should(notifier.notifyDocument)
+      .calledOnce()
+      .calledWith(rooms, request, 'foo', 'bar', rawRequest.action, {
+        _source: rawRequest.body,
+        _id: rawRequest._id
+      });
+
+    async.retry({times: 20, interval: 20}, cb => {
+      try {
+        should(kuzzle.services.list.internalCache.add).be.calledOnce();
+        should(kuzzle.services.list.internalCache.expire).be.calledOnce();
+        cb();
+      }
+      catch(e) {
+        cb(e);
+      }
+    }, done);
   });
 
-  it('should cache the document in case of a replace document request', (done) => {
-    sandbox.stub(kuzzle.dsl, 'test').returns(rooms);
+  it('should cache the document in case of a replace document rawRequest', (done) => {
+    kuzzle.dsl.test.returns(rooms);
 
-    request.controller = 'document';
-    request.action = 'replace';
-    kuzzle.notifier.publish(new Request(request));
-    should(notification.state).be.eql('pending');
-    should(notification.scope).be.undefined();
-    should(notification._id).be.eql(request._id);
-    should(notification._source).be.eql(request.body);
-    setTimeout(() => {
-      should(spyInternalCacheAdd.calledOnce).be.true();
-      should(spyInternalCacheExpire.calledOnce).be.true();
-      done();
-    }, 20);
+    rawRequest.controller = 'document';
+    rawRequest.action = 'replace';
+    const request = new Request(rawRequest);
+    should(notifier.publish(request, 'foo', 'bar')).match({published: true});
+
+    should(notifier.notifyDocument)
+      .calledOnce()
+      .calledWith(rooms, request, 'foo', 'bar', rawRequest.action, {
+        _source: rawRequest.body,
+        _id: rawRequest._id
+      });
+
+    async.retry({times: 20, interval: 20}, cb => {
+      try {
+        should(kuzzle.services.list.internalCache.add).be.calledOnce();
+        should(kuzzle.services.list.internalCache.expire).be.calledOnce();
+        cb();
+      }
+      catch(e) {
+        cb(e);
+      }
+    }, done);
   });
 
   it('should do nothing if there is no room to notify', (done) => {
     let result;
 
-    sandbox.stub(kuzzle.dsl, 'test').returns([]);
+    kuzzle.dsl.test.returns([]);
 
-    result = kuzzle.notifier.publish(new Request(request));
+    result = notifier.publish(new Request(rawRequest), 'foo', 'bar');
+
+    should(notifier.notifyDocument.called).be.false();
     should(result).match({published: true});
-    should(notification).be.null();
-    setTimeout(() => {
-      should(spyInternalCacheAdd.called).be.false();
-      should(spyInternalCacheExpire.called).be.false();
-      done();
-    }, 20);
+
+    async.retry({times: 20, interval: 20}, cb => {
+      try {
+        should(kuzzle.services.list.internalCache.add).not.be.called();
+        should(kuzzle.services.list.internalCache.expire).not.be.called();
+        cb();
+      }
+      catch(e) {
+        cb(e);
+      }
+    }, done);
   });
 });

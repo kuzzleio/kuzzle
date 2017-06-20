@@ -1,40 +1,41 @@
-var
+const
   should = require('should'),
-  Kuzzle = require('../../../../lib/api/kuzzle');
+  KuzzleMock = require('../../../mocks/kuzzle.mock'),
+  HotelClerck = require('../../../../lib/api/core/hotelClerk');
 
 describe('Test: hotelClerk.getRealtimeCollections', () => {
-  var
-    index = 'foo',
-    kuzzle;
+  let
+    kuzzle,
+    hotelClerk;
 
   beforeEach(() => {
-    kuzzle = new Kuzzle();
+    kuzzle = new KuzzleMock();
+    kuzzle.dsl.storage = {
+      filtersIndex: {}
+    };
+
+    hotelClerk = new HotelClerck(kuzzle);
   });
 
   it('should return an empty array if there is no subscription', () => {
-    should(kuzzle.hotelClerk.getRealtimeCollections()).be.an.Array().and.be.empty();
+    should(hotelClerk.getRealtimeCollections('index'))
+      .be.an.Array()
+      .and.be.empty();
   });
 
   it('should return an array of unique collection names', () => {
-    kuzzle.hotelClerk.rooms = {
-      foo: {
-        collection: 'foo',
-        index: index
+    kuzzle.dsl.storage.filtersIndex = {
+      index: {
+        foo: true,
+        bar: true,
       },
-      bar: {
-        collection: 'bar',
-        index: index
-      },
-      foobar: {
-        collection: 'foo',
-        index: index
-      },
-      barfoo: {
-        collection: 'barfoo',
-        index: index
+      anotherIndex: {
+        baz: true
       }
     };
 
-    should(kuzzle.hotelClerk.getRealtimeCollections()).be.an.Array().and.match([{name: 'foo', index: index}, {name: 'bar', index: index}, {name: 'barfoo', index: index}]);
+    const collections = hotelClerk.getRealtimeCollections('index');
+    should(collections)
+      .match(['foo', 'bar']);
   });
 });

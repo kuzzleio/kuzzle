@@ -16,14 +16,9 @@ describe('funnelController.execute', () => {
     clock,
     kuzzle,
     funnel,
-    request,
-    reset;
+    request;
 
   beforeEach(() => {
-    reset = FunnelController.__set__({
-      playCachedRequests: sinon.spy()
-    });
-
     kuzzle = new KuzzleMock();
     kuzzle.config.limits.requestsBufferWarningThreshold = -1;
 
@@ -43,10 +38,10 @@ describe('funnelController.execute', () => {
     };
     funnel.checkRights = sinon.stub().returns(Promise.resolve(request));
     funnel.processRequest = sinon.stub().returnsArg(0);
+    sinon.stub(funnel, '_playCachedRequests');
   });
 
   afterEach(() => {
-    reset();
   });
 
   after(() => {
@@ -108,6 +103,7 @@ describe('funnelController.execute', () => {
   describe('#core:overload hook', () => {
     it('should fire the hook the first time Kuzzle is in overloaded state', /** @this {Mocha} */ () => {
       funnel.overloaded = true;
+      funnel.requestsCacheQueue = Array(kuzzle.config.limits.requestsBufferWarningThreshold + 1);
 
       funnel.execute(request, () => {});
 
@@ -151,10 +147,26 @@ describe('funnelController.execute', () => {
 
       should(funnel.overloaded).be.true();
       should(funnel.processRequest.called).be.false();
-      should(funnel.cachedItems).be.eql(1);
-      should(funnel.requestsCache.shift()).match({request, callback});
-      should(FunnelController.__get__('playCachedRequests'))
+      should(funnel.requestsCacheQueue.length).be.eql(1);
+      should(funnel.requestsCacheQueue.shift())
+        .eql(request.id);
+      should(funnel.requestsCacheById[request.id]).eql(new (FunnelController.__get__('CacheItem'))(request, callback));
+      should(funnel._playCachedRequests)
         .be.calledOnce();
+    });
+
+    it('should not execute a cached request', () => {
+      const callback = sinon.spy();
+
+      funnel.concurrentRequests = kuzzle.config.limits.concurrentRequests;
+
+      funnel.execute(request, callback);
+
+      should(callback)
+        .have.callCount(0);
+
+      should(funnel.processRequest)
+        .have.callCount(0);
     });
 
     it('should not relaunch the request replayer background task if already in overloaded state', () => {
@@ -167,24 +179,40 @@ describe('funnelController.execute', () => {
 
       should(funnel.overloaded).be.true();
       should(funnel.processRequest.called).be.false();
-      should(funnel.cachedItems).be.eql(1);
-      should(funnel.requestsCache.shift()).match({request, callback});
-      should(FunnelController.__get__('playCachedRequests'))
+      should(funnel.requestsCacheQueue.length).be.eql(1);
+      should(funnel.requestsCacheQueue.shift())
+        .be.eql(request.id);
+      should(funnel.requestsCacheById[request.id])
+        .match({request, callback});
+      should(funnel._playCachedRequests)
         .have.callCount(0);
+    });
+
+    it('should not play a cached request multiple times', () => {
+      const callback = () => {};
+
+      funnel.concurrentRequests = kuzzle.config.limits.concurrentRequests + 1;
+      funnel.overloaded = true;
+
+      for (let i = 0; i < 5; i++) {
+        funnel.execute(request, callback);
+      }
+
+      should(funnel.requestsCacheQueue.length)
+        .eql(1);
     });
 
     it('should discard the request if the requestsBufferSize property is reached', (done) => {
       funnel.concurrentRequests = kuzzle.config.limits.concurrentRequests;
-      funnel.cachedItems = kuzzle.config.limits.requestsBufferSize;
+      funnel.requestsCacheQueue = Array(kuzzle.config.limits.requestsBufferSize);
       funnel.overloaded = true;
 
       funnel.execute(request, (err, res) => {
         should(funnel.overloaded).be.true();
-        should(FunnelController.__get__('playCachedRequests'))
+        should(funnel._playCachedRequests)
           .have.callCount(0);
         should(funnel.processRequest.called).be.false();
-        should(funnel.cachedItems).be.eql(kuzzle.config.limits.requestsBufferSize);
-        should(funnel.requestsCache.isEmpty()).be.true();
+        should(funnel.requestsCacheQueue.length).be.eql(kuzzle.config.limits.requestsBufferSize);
         should(err).be.instanceOf(ServiceUnavailableError);
         should(err.status).be.eql(503);
         should(res).be.instanceOf(Request);
@@ -193,5 +221,38 @@ describe('funnelController.execute', () => {
       });
     });
   });
+
+  describe('#playCachedRequests', () => {
+    beforeEach(() => {
+      funnel._playCachedRequests.restore();
+    });
+
+    it('should eventually play cached requests', (done) => {
+      funnel.concurrentRequests = kuzzle.config.limits.concurrentRequests;
+      funnel.execute(request, done);
+
+      funnel.concurrentRequests = 0;
+    });
+
+    it('should play cached request in order', (done) => {
+      const
+        secondRequest = Object.assign({}, request, {id: 'req-2'}),
+        firstCallback = sinon.spy(),
+        secondCallback = () => {
+          should(firstCallback).be.calledOnce();
+          should(funnel.overloaded)
+            .be.false();
+          done();
+        };
+
+      funnel.concurrentRequests = kuzzle.config.limits.concurrentRequests;
+      funnel.execute(request, firstCallback);
+      funnel.execute(secondRequest, secondCallback);
+
+      funnel.concurrentRequests = 0;
+    });
+
+  });
+
 });
 

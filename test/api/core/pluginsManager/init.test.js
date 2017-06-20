@@ -2,184 +2,113 @@
 
 const
   should = require('should'),
-  rewire = require('rewire'),
+  mockrequire = require('mock-require'),
   sinon = require('sinon'),
-  KuzzleMock = require('../../../mocks/kuzzle.mock'),
-  path = require('path'),
-  PluginsManager = rewire('../../../../lib/api/core/plugins/pluginsManager');
+  KuzzleMock = require('../../../mocks/kuzzle.mock');
 
-describe('PluginsManager: init()', () => {
+describe('PluginsManager', () => {
   let
-    kuzzle,
-    pluginsManager;
+    PluginsManager,
+    pluginsManager,
+    fsStub,
+    kuzzle;
 
   beforeEach(() => {
+    fsStub = {
+      readdirSync: sinon.stub().returns([]),
+      accessSync: sinon.stub(),
+      statSync: sinon.stub()
+    };
+
+    mockrequire('fs', fsStub);
+    PluginsManager = mockrequire.reRequire('../../../../lib/api/core/plugins/pluginsManager');
+
     kuzzle = new KuzzleMock();
     pluginsManager = new PluginsManager(kuzzle);
   });
 
-  it('should load plugins at init', () => {
-    var spy = sinon.spy();
-
-    return PluginsManager.__with__({
-      loadPlugins: spy
-    })(() => {
-      pluginsManager.init();
-      should(spy)
-        .be.calledOnce();
-    });
-  });
-});
-
-describe('PluginsManager: loadPlugins()', () => {
-  var
-    kuzzle,
-    pluginsManager;
-
-  beforeEach(() => {
-    kuzzle = new KuzzleMock();
-    pluginsManager = new PluginsManager(kuzzle);
+  after(() => {
+    mockrequire.stopAll();
   });
 
-  it('should return an empty object if no plugins are enabled', () => {
-    return PluginsManager.__with__({
-      fs: {
-        readdirSync: () => {
-          return [];
-        }
-      }
-    })(() => {
+  describe('#init', () => {
+    it('should load plugins at init', () => {
       pluginsManager.init();
-      should(pluginsManager.plugins)
-        .be.eql({});
+      should(fsStub.readdirSync.calledOnce).be.true();
+      should(pluginsManager.plugins).be.an.Object().and.be.empty();
     });
   });
 
-  it('should show a console error message if a malformed plugin is enabled', () => {
-    let consoleSpy = sinon.spy();
-    return PluginsManager.__with__({
-      fs: {
-        readdirSync: () => {
-          return ['kuzzle-plugin-test'];
-        },
-        existsSync: () => {
-          return true;
-        },
-        statSync: () => {
-          return {
-            isSymbolicLink: () => {
-              return true;
-            },
-            isDirectory: () => {
-              return true;
-            }
-          };
-        }
-      },
-      loadPluginFromPackageJson: () => {
-        throw new Error('oh crap!');
-      },
-      loadPluginFromDirectory: () => {
-        throw new Error('oh crap!');
-      },
-      console: {
-        error: consoleSpy
-      }
-    })(() => {
+  describe('#loadPlugins', () => {
+    it('should discard a plugin if loading it from package.json fails', () => {
+      fsStub.readdirSync.returns(['kuzzle-plugin-test']);
+      fsStub.statSync.returns({
+        isDirectory: () => true
+      });
+
+      should(() => pluginsManager.init()).not.throw();
+      should(pluginsManager.plugins).be.empty();
+    });
+
+    it('should discard a plugin if loading it from a directory fails', () => {
+      fsStub.accessSync.throws(new Error('package.json does not exist'));
+      fsStub.readdirSync.returns(['kuzzle-plugin-test']);
+      fsStub.statSync.returns({
+        isDirectory: () => true
+      });
+
+      should(() => pluginsManager.init()).not.throw();
+      should(pluginsManager.plugins).be.empty();
+    });
+
+    it('should return a well-formed plugin instance if a valid node-module plugin is enabled', () => {
+      fsStub.readdirSync.returns(['kuzzle-plugin-test']);
+      fsStub.statSync.returns({
+        isDirectory: () => true
+      });
+
+      const name = 'kuzzle-plugin-test';
+      mockrequire('/kuzzle/plugins/enabled/kuzzle-plugin-test', function () {});
+      mockrequire('/kuzzle/plugins/enabled/kuzzle-plugin-test/package.json', {name});
+      PluginsManager = mockrequire.reRequire('../../../../lib/api/core/plugins/pluginsManager');
+
+      pluginsManager = new PluginsManager(kuzzle);
+
       pluginsManager.init();
-      should(consoleSpy)
-        .be.calledOnce();
+      should(pluginsManager.plugins[name]).be.Object();
+      should(pluginsManager.plugins[name]).have.keys('name', 'object', 'config', 'path');
+      should(pluginsManager.plugins[name].name).be.eql(name);
+      should(pluginsManager.plugins[name].object).be.ok();
+      should(pluginsManager.plugins[name].path).be.ok();
+    });
+
+    it('should return a well-formed plugin instance if a valid requireable plugin is enabled', () => {
+      const name = 'kuzzle-plugin-test';
+      fsStub.readdirSync.returns(['kuzzle-plugin-test']);
+      fsStub.accessSync.throws(new Error('package.json does not exist'));
+      fsStub.statSync.returns({
+        isDirectory: () => true
+      });
+
+      mockrequire('/kuzzle/plugins/enabled/kuzzle-plugin-test', function () {});
+      mockrequire('/kuzzle/plugins/enabled/kuzzle-plugin-test/package.json', {name});
+      PluginsManager = mockrequire.reRequire('../../../../lib/api/core/plugins/pluginsManager');
+
+      pluginsManager = new PluginsManager(kuzzle);
+
+      pluginsManager.init();
+      should(pluginsManager.plugins[name]).be.Object();
+      should(pluginsManager.plugins[name]).have.keys('name', 'object', 'config', 'path');
+      should(pluginsManager.plugins[name].name).be.eql(name);
+      should(pluginsManager.plugins[name].object).be.ok();
+      should(pluginsManager.plugins[name].path).be.ok();
     });
   });
+  describe('Test plugins manager listStrategies', () => {
+    it('should return a list of registrated authentication strategies', () => {
+      pluginsManager.registeredStrategies = ['strategy'];
 
-  it('should return a well-formed plugin instance if a valid node-module plugin is enabled', () => {
-    const pluginName = 'kuzzle-plugin-test';
-    return PluginsManager.__with__({
-      fs: {
-        readdirSync: () => {
-          return ['kuzzle-plugin-test'];
-        },
-        existsSync: () => {
-          return true;
-        },
-        statSync: () => {
-          return {
-            isSymbolicLink: () => {
-              return true;
-            },
-            isDirectory: () => {
-              return true;
-            }
-          };
-        }
-      },
-      require: (arg) => {
-        if (path.extname(arg) === '.json') {
-          return {
-            name: pluginName
-          };
-        }
-        return function () {
-          return {
-            kikou: 'LOL'
-          };
-        };
-      }
-    })(() => {
-      pluginsManager.init();
-      should(pluginsManager.plugins[pluginName])
-        .be.Object();
-      should(pluginsManager.plugins[pluginName])
-        .have.keys('name', 'object', 'config', 'path');
-      should(pluginsManager.plugins[pluginName].name)
-        .be.eql(pluginName);
-      should(pluginsManager.plugins[pluginName].object)
-        .be.ok();
-      should(pluginsManager.plugins[pluginName].path)
-        .be.ok();
-    });
-  });
-
-  it('should return a well-formed plugin instance if a valid requireable plugin is enabled', () => {
-    const pluginName = 'kuzzle-plugin-test';
-    return PluginsManager.__with__({
-      fs: {
-        readdirSync: () => {
-          return ['kuzzle-plugin-test'];
-        },
-        existsSync: () => {
-          return false;
-        },
-        statSync: () => {
-          return {
-            isSymbolicLink: () => {
-              return false;
-            },
-            isDirectory: () => {
-              return true;
-            }
-          };
-        }
-      },
-      require: () => {
-        return function () {
-          return {
-            kikou: 'LOL'
-          };
-        };
-      }
-    })(() => {
-      pluginsManager.init();
-      should(pluginsManager.plugins[pluginName])
-        .be.Object();
-      should(pluginsManager.plugins[pluginName])
-        .have.keys('name', 'object', 'config', 'path');
-      should(pluginsManager.plugins[pluginName].name)
-        .be.eql(pluginName);
-      should(pluginsManager.plugins[pluginName].object)
-        .be.ok();
-      should(pluginsManager.plugins[pluginName].path)
-        .be.ok();
+      should(pluginsManager.listStrategies()).be.an.Array().of.length(1);
     });
   });
 });

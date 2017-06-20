@@ -1,28 +1,34 @@
-var
+const
+  mockrequire = require('mock-require'),
   rewire = require('rewire'),
   should = require('should'),
   sinon = require('sinon'),
+  Bluebird = require('bluebird'),
   sandbox = sinon.sandbox.create(),
   KuzzleMock = require('../../mocks/kuzzle.mock'),
-  Action = require('../../../lib/api/cli/action'),
-  /** @type CliActions|RewiredModule */
-  Cli = rewire('../../../lib/api/cli/index');
+  Action = require('../../../lib/api/cli/action');
 
 describe('Tests: api/cli/index.js', () => {
-  var
-    kuzzle;
+  let
+    kuzzle,
+    Cli;
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
+    Cli = require('../../../lib/api/cli/index');
   });
 
   afterEach(() => {
     sandbox.restore();
   });
 
+  after(() => {
+    mockrequire.stopAll();
+  });
+
   describe('#constructor', () => {
     it('should build proper properties', () => {
-      var cli = new Cli(kuzzle);
+      const cli = new Cli(kuzzle);
       should(cli.actions).be.Object();
       should(cli.actions.adminExists).be.instanceOf(Action);
       should(cli.actions.clearCache).be.instanceOf(Action);
@@ -30,49 +36,41 @@ describe('Tests: api/cli/index.js', () => {
       should(cli.actions.createFirstAdmin).be.instanceOf(Action);
       should(cli.actions.data).be.instanceOf(Action);
       should(cli.actions.dump).be.instanceOf(Action);
-      should(cli.do).be.a.Function();
+      should(cli.doAction).be.a.Function();
     });
   });
 
   describe('#do', () => {
-    var
-      cli,
-      reset;
+    let cli;
 
     beforeEach(() => {
-      var requireStub = sinon.stub();
-      requireStub.withArgs('../../config').returns(kuzzle.config);
-      requireStub.returns();
-
-      reset = Cli.__set__({
-        console: {
-          log: sinon.spy(),
-          error: sinon.spy()
-        },
-        require: requireStub,
-        process: {
-          exit: sinon.spy(),
-          kill: sinon.spy()
-        },
-        InternalBroker: sinon.stub().returns({
-          init: sinon.stub().returns(Promise.resolve()),
-          listen: sinon.spy(),
-          broadcast: sinon.spy(),
-          send: sinon.spy()
-        })
+      mockrequire('../../../lib/services/internalBroker', function () {
+        return {
+          init: sinon.stub().returns(Bluebird.resolve()),
+          listen: sinon.stub(),
+          broadcast: sinon.stub(),
+          send: sinon.stub()
+        };
       });
+
+      mockrequire.reRequire('../../../lib/api/cli/index');
+
+      // disable console.log
+      Cli = rewire('../../../lib/api/cli/index');
+      Cli.__set__({
+        console: {
+          log: sinon.stub()
+        }
+      });
+      
       cli = new Cli(kuzzle);
     });
 
-    afterEach(() => {
-      reset();
-    });
-
     it('should send the action to the internalBroker', () => {
-      var
+      const
         data = {foo: 'bar', requestId: 'test'},
         context = {
-          kuzzle: kuzzle,
+          kuzzle,
           actions: {
             test: {
               onListenCB: sinon.spy(),
@@ -85,11 +83,14 @@ describe('Tests: api/cli/index.js', () => {
           }
         };
 
-      return cli.do.call(context, 'test', {})
+      return cli.doAction.call(context, 'test', {})
         .then(response => {
           should(response).be.exactly('promise');
-          should(kuzzle.services.list.broker.listen).be.calledOnce();
-          should(kuzzle.services.list.broker.listen.firstCall.args[1]).be.a.Function();
+          should(kuzzle.services.list.broker.listen).be.calledTwice();
+          should(kuzzle.services.list.broker.listen.getCall(0).args[0]).be.eql('status-test');
+          should(kuzzle.services.list.broker.listen.getCall(0).args[1]).be.a.Function();
+          should(kuzzle.services.list.broker.listen.getCall(1).args[0]).be.eql('test');
+          should(kuzzle.services.list.broker.listen.getCall(1).args[1]).be.a.Function();
           should(kuzzle.services.list.broker.send).be.calledOnce();
           should(kuzzle.services.list.broker.send.firstCall.args[0]).be.exactly('cli-queue');
           should(kuzzle.services.list.broker.send.firstCall.args[1]).match({
@@ -108,10 +109,11 @@ describe('Tests: api/cli/index.js', () => {
 
     });
 
-    it('should output the error to the console if any', () => {
-      var
+    it('should reject the promise in case of error', () => {
+      const
         error = new Error('test'),
         context = {
+          kuzzle,
           actions: {
             action: {
               onListenCB: sinon.spy()
@@ -119,16 +121,9 @@ describe('Tests: api/cli/index.js', () => {
           }
         };
 
-      kuzzle.internalEngine.init.returns(Promise.reject(error));
+      kuzzle.internalEngine.init.returns(Bluebird.reject(error));
 
-      return cli.do.call(context, 'action', 'data', {debug: true})
-        .catch(err => {
-          should(err).be.exactly(error);
-          should(Cli.__get__('console.error'))
-            .be.calledOnce()
-            .be.calledWith(error.message, error.stack);
-        });
+      return should(cli.doAction.call(context, 'action', 'data', {debug: true})).be.rejectedWith(error);
     });
   });
-
 });

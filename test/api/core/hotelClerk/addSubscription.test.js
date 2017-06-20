@@ -1,14 +1,16 @@
-var
+'use strict';
+
+const
   should = require('should'),
   Promise = require('bluebird'),
   Request = require('kuzzle-common-objects').Request,
   HotelClerk = require('../../../../lib/api/core/hotelClerk'),
-  InternalError = require('kuzzle-common-objects').errors.InternalError,
   BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,
+  NotFoundError = require('kuzzle-common-objects').errors.NotFoundError,
   KuzzleMock = require('../../../mocks/kuzzle.mock');
 
 describe('Test: hotelClerk.addSubscription', () => {
-  var
+  let
     kuzzle,
     roomId,
     channel,
@@ -46,14 +48,14 @@ describe('Test: hotelClerk.addSubscription', () => {
   });
 
   it('should have the new room and customer', () => {
-    var request = new Request({
+    const request = new Request({
       controller: 'realtime',
       action: 'subscribe',
       requestId: roomName,
       index: index,
       collection: collection,
       body: filter,
-      metadata: {
+      volatile: {
         foo: 'bar',
         bar: [ 'foo', 'bar', 'baz', 'qux']
       }
@@ -61,8 +63,6 @@ describe('Test: hotelClerk.addSubscription', () => {
 
     return kuzzle.hotelClerk.addSubscription(request)
       .then(response => {
-        var customer;
-
         try {
           should(kuzzle.hotelClerk.rooms).be.an.Object();
           should(kuzzle.hotelClerk.rooms).not.be.empty();
@@ -78,10 +78,10 @@ describe('Test: hotelClerk.addSubscription', () => {
 
           roomId = kuzzle.hotelClerk.rooms[response.roomId].id;
 
-          customer = kuzzle.hotelClerk.customers[connectionId];
+          const customer = kuzzle.hotelClerk.customers[connectionId];
           should(customer).be.an.Object();
           should(customer).not.be.empty();
-          should(customer[roomId]).not.be.undefined().and.match(request.input.metadata);
+          should(customer[roomId]).not.be.undefined().and.match(request.input.volatile);
 
           should(kuzzle.hotelClerk.rooms[roomId].channels).be.an.Object().and.not.be.undefined();
           should(Object.keys(kuzzle.hotelClerk.rooms[roomId].channels).length).be.exactly(1);
@@ -99,37 +99,14 @@ describe('Test: hotelClerk.addSubscription', () => {
       });
   });
 
-  it('should trigger a proxy:joinChannel hook', () => {
-    var request = new Request({
-      controller: 'realtime',
-      collection: collection,
-      index: index,
-      body: filter
-    }, context);
-
-    return kuzzle.hotelClerk.addSubscription(request)
-      .then(() => {
-        var data;
-
-        should(kuzzle.pluginsManager.trigger)
-          .be.calledWith('proxy:joinChannel');
-
-        data = kuzzle.pluginsManager.trigger.secondCall.args[1];
-
-        should(data).be.an.Object();
-        should(data.channel).be.a.String();
-        should(data.connectionId).be.eql(context.connectionId);
-      });
-  });
-
   it('should return the same response when the user has already subscribed to the filter', done => {
-    var request = new Request({
+    const request = new Request({
       controller: 'realtime',
       collection: collection,
       index: index,
       body: filter
     }, context);
-    var response;
+    let response;
 
     kuzzle.hotelClerk.addSubscription(request)
       .then(result => {
@@ -143,7 +120,7 @@ describe('Test: hotelClerk.addSubscription', () => {
   });
 
   it('should reject an error when a filter is unknown', () => {
-    var
+    let
       pAddSubscription,
       request = new Request({
         controller: 'realtime',
@@ -159,36 +136,32 @@ describe('Test: hotelClerk.addSubscription', () => {
   });
 
   it('should reject with an error if no index is provided', () => {
-    var
-      pAddSubscription,
-      request = new Request({
-        controller: 'realtime',
-        action: 'subscribe',
-        collection,
-        body: {}
-      }, context);
+    const request = new Request({
+      controller: 'realtime',
+      action: 'subscribe',
+      collection,
+      body: {}
+    }, context);
 
-    pAddSubscription = kuzzle.hotelClerk.addSubscription(request);
+    const pAddSubscription = kuzzle.hotelClerk.addSubscription(request);
     return should(pAddSubscription).be.rejectedWith(BadRequestError);
   });
 
   it('should reject with an error if no collection is provided', () => {
-    var
-      pAddSubscription,
-      request = new Request({
-        controller: 'realtime',
-        action: 'subscribe',
-        index,
-        body: {}
-      }, context);
+    const request = new Request({
+      controller: 'realtime',
+      action: 'subscribe',
+      index,
+      body: {}
+    }, context);
 
-    pAddSubscription = kuzzle.hotelClerk.addSubscription(request);
+    const pAddSubscription = kuzzle.hotelClerk.addSubscription(request);
     return should(pAddSubscription).be.rejectedWith(BadRequestError);
   });
 
 
   it('should return the same room ID if the same filters are used', done => {
-    var
+    const
       request1 = new Request({
         controller: 'realtime',
         collection: collection,
@@ -232,8 +205,8 @@ describe('Test: hotelClerk.addSubscription', () => {
             }
           ]
         }
-      }, context),
-      response;
+      }, context);
+    let response;
 
     kuzzle.hotelClerk.addSubscription(request1)
       .then(result => {
@@ -250,7 +223,7 @@ describe('Test: hotelClerk.addSubscription', () => {
   });
 
   it('should allow subscribing with an empty filter', () => {
-    var
+    const
       request = new Request({
         controller: 'realtime',
         index: index,
@@ -260,50 +233,14 @@ describe('Test: hotelClerk.addSubscription', () => {
     return should(kuzzle.hotelClerk.addSubscription(request)).be.fulfilled();
   });
 
-  it('should delay a room creation if it has been marked for destruction', done => {
-    var
-      request1 = new Request({
-        controller: 'realtime',
-        index: index,
-        collection: collection
-      }, context),
-      request2 = new Request({
-        controller: 'realtime',
-        index: index,
-        collection: collection
-      }, {connectionId: 'anotherID', user: null});
-
-    kuzzle.hotelClerk.addSubscription(request1)
-      .then(response => {
-        kuzzle.hotelClerk.rooms[response.roomId].destroyed = true;
-
-        kuzzle.hotelClerk.addSubscription(request2)
-          .then(recreated => {
-            should(recreated.roomId).be.exactly(response.roomId);
-            should(kuzzle.hotelClerk.rooms[recreated.roomId].destroyed).be.undefined();
-            should(kuzzle.hotelClerk.rooms[recreated.roomId].customers.length).be.exactly(1);
-            should(kuzzle.hotelClerk.rooms[recreated.roomId].customers).match(['anotherID']);
-            done();
-
-            return null;
-          })
-          .catch(error => done(error));
-
-        process.nextTick(() => delete kuzzle.hotelClerk.rooms[response.roomId]);
-
-        return null;
-      })
-      .catch(error => done(error));
-  });
-
   it('should allow to subscribe to an existing room', done => {
-    var
-      anotherRoomId,
+    const
       request1 = new Request({
         controller: 'realtime',
         index: index,
         collection: collection
       }, {connectionId: 'connection1', user: null});
+    let anotherRoomId;
 
     kuzzle.hotelClerk.addSubscription(request1)
       .then(result => {
@@ -319,7 +256,7 @@ describe('Test: hotelClerk.addSubscription', () => {
         }
       })
       .then(id => {
-        var request2 = new Request({
+        const request2 = new Request({
           collection: collection,
           index: index,
           controller: 'realtime',
@@ -352,8 +289,8 @@ describe('Test: hotelClerk.addSubscription', () => {
 
   });
 
-  it('#join should reject the promise if the room does not exist', () => {
-    var request = new Request({
+  it('#join should throw if the room does not exist', () => {
+    const request = new Request({
       collection: collection,
       index: index,
       controller: 'realtime',
@@ -361,11 +298,12 @@ describe('Test: hotelClerk.addSubscription', () => {
       body: {roomId: 'no way I can exist'}
     }, context);
 
-    return should(kuzzle.hotelClerk.join(request)).be.rejectedWith(InternalError);
+    return should(() => kuzzle.hotelClerk.join(request))
+      .throw(NotFoundError);
   });
 
   it('should reject the subscription if the given state argument is incorrect', () => {
-    var request = new Request({
+    const request = new Request({
       collection: collection,
       controller: 'realtime',
       action: 'subscribe',
@@ -377,7 +315,7 @@ describe('Test: hotelClerk.addSubscription', () => {
   });
 
   it('should reject the subscription if the given scope argument is incorrect', () => {
-    var request = new Request({
+    const request = new Request({
       collection: collection,
       controller: 'realtime',
       action: 'subscribe',
@@ -389,7 +327,7 @@ describe('Test: hotelClerk.addSubscription', () => {
   });
 
   it('should reject the subscription if the given users argument is incorrect', () => {
-    var request = new Request({
+    const request = new Request({
       collection: collection,
       controller: 'realtime',
       action: 'subscribe',
@@ -401,7 +339,7 @@ describe('Test: hotelClerk.addSubscription', () => {
   });
 
   it('should treat null/undefined filters as empty filters', done => {
-    var
+    const
       request1 = new Request({
         controller: 'realtime',
         collection: collection,
@@ -413,8 +351,8 @@ describe('Test: hotelClerk.addSubscription', () => {
         collection: collection,
         index: index,
         body: null
-      }, context),
-      response;
+      }, context);
+    let response;
 
     kuzzle.hotelClerk.addSubscription(request1)
       .then(result => {

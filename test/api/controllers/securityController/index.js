@@ -1,3 +1,5 @@
+'use strict';
+
 const
   rewire = require('rewire'),
   should = require('should'),
@@ -26,7 +28,7 @@ describe('/api/controllers/security', () => {
 
     it('should fail if the request has no body', () => {
       should(() => mDelete(kuzzle, 'type', new Request({controller: 'security', action: 'type'})))
-        .throw(BadRequestError, {message: 'security:type must specify a body.'});
+        .throw(BadRequestError, {message: 'The request must specify a body.'});
     });
 
     it('should fail if the request has no id', () => {
@@ -35,7 +37,7 @@ describe('/api/controllers/security', () => {
       });
 
       should(() => mDelete(kuzzle, 'type', request))
-        .throw(BadRequestError, {message: 'null:null must specify a body attribute "ids".'});
+        .throw(BadRequestError, {message: 'The request must specify a body attribute "ids".'});
 
     });
 
@@ -47,7 +49,7 @@ describe('/api/controllers/security', () => {
       });
 
       should(() => mDelete(kuzzle, 'type', request))
-        .throw(BadRequestError, {message: 'null:null must specify the body attribute "ids" of type "array".'});
+        .throw(BadRequestError, {message: 'The request must specify the body attribute "ids" of type "array".'});
     });
 
     it('should fail if kuzzle is overloaded', () => {
@@ -90,7 +92,9 @@ describe('/api/controllers/security', () => {
             'bar',
             'baz'
           ]
-        }
+        },
+        controller: 'security',
+        action: 'mDeleteUsers'
       });
 
       kuzzle.config.limits.documentsWriteCount = 1;

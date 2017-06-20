@@ -3,8 +3,6 @@ version: '2'
 services:
   proxy:
     image: kuzzleio/proxy${DOCKER_PROXY_TAG}
-    ports:
-      - "7512:7512"
 
   kuzzle:
     image: kuzzleio/dev
@@ -13,17 +11,19 @@ services:
       - "..:/var/app"
       - "./scripts/run-test.sh:/run.sh"
       - "./config/pm2.json:/config/pm2.json"
+    cap_add:
+      - SYS_PTRACE
     depends_on:
       - proxy
       - redis
       - elasticsearch
     environment:
-      - kuzzle_services__db__host=elasticsearch
+      - kuzzle_services__db__client__host=http://elasticsearch:9200
       - kuzzle_services__internalCache__node__host=redis
       - kuzzle_services__memoryStorage__node__host=redis
       - kuzzle_services__proxyBroker__host=proxy
-      - NODE_ENV=development
-      - DEBUG=kuzzle:*
+      - NODE_ENV=production
+      - DEBUG=
       # Travis env var must be propagated into the container
       - TRAVIS
       - TRAVIS_COMMIT
@@ -37,4 +37,12 @@ services:
     image: redis:3.2
 
   elasticsearch:
-    image: elasticsearch:5.1
+    image: docker.elastic.co/elasticsearch/elasticsearch:5.4.1
+    environment:
+      - cluster.name=kuzzle
+      # disable xpack
+      - xpack.security.enabled=false
+      - xpack.monitoring.enabled=false
+      - xpack.graph.enabled=false
+      - xpack.watcher.enabled=false
+

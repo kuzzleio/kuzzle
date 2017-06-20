@@ -1,4 +1,4 @@
-var
+const
   Promise = require('bluebird'),
   should = require('should'),
   sinon = require('sinon'),
@@ -10,7 +10,7 @@ var
   sandbox = sinon.sandbox.create();
 
 describe('Test: collection controller', () => {
-  var
+  let
     collectionController,
     kuzzle,
     foo = {foo: 'bar'},
@@ -20,7 +20,7 @@ describe('Test: collection controller', () => {
     engine;
 
   beforeEach(() => {
-    var data = {
+    const data = {
       controller: 'collection',
       index,
       collection
@@ -78,7 +78,7 @@ describe('Test: collection controller', () => {
     it('should trigger the proper methods and return a valid response', () => {
       return collectionController.truncate(request)
         .then(response => {
-          var truncate = kuzzle.services.list.storageEngine.truncateCollection;
+          const truncate = kuzzle.services.list.storageEngine.truncateCollection;
 
           should(truncate).be.calledOnce();
           should(truncate).be.calledWith(request);
@@ -113,29 +113,91 @@ describe('Test: collection controller', () => {
       kuzzle.config.limits.documentsFetchCount = 1;
       request.input.args.from = 0;
       request.input.args.size = 20;
+      request.input.action = 'searchSpecifications';
 
       return should(() => collectionController.searchSpecifications(request))
-        .throw('collection:searchSpecifications cannot fetch more documents than the server configured limit (1)');
+        .throw('Search page size exceeds server configured documents limit (1)');
     });
 
     it('should call internalEngine with the right data', () => {
-      kuzzle.internalEngine.search = sandbox.stub().returns(Promise.resolve({hits: [{_id: 'bar'}]}));
+      kuzzle.internalEngine.search = sandbox.stub().returns(Promise.resolve({
+        hits: [{_id: 'bar'}],
+        scrollId: 'foobar',
+        total: 123
+      }));
 
-      request.input.body = {
-        query: {
-          match_all: {}
-        }
-      };
-      request.input.args.from = 0;
-      request.input.args.size = 20;
+      request = new Request({
+        body: {
+          query: {
+            match_all: {}
+          }
+        },
+        from: 0,
+        size: 20,
+        scroll: '15s'
+      });
 
       return collectionController.searchSpecifications(request)
         .then(response => {
           try {
             should(kuzzle.internalEngine.search).be.calledOnce();
-            should(kuzzle.internalEngine.search).be.calledWithMatch('validations', request.input.body.query, request.input.args.from, request.input.args.size);
-            should(response).match({hits: [{_id: 'bar'}]});
-            return Promise.resolve();
+            should(kuzzle.internalEngine.search).be.calledWithMatch('validations', request.input.body.query, {
+              from: request.input.args.from,
+              size: request.input.args.size,
+              scroll: request.input.args.scroll
+            });
+            should(response).match({total: 123, scrollId: 'foobar', hits: [{_id: 'bar'}]});
+          }
+          catch (error) {
+            return Promise.reject(error);
+          }
+        });
+    });
+  });
+
+  describe('#scrollSpecifications', () => {
+    it('should throw if no scrollId is provided', () => {
+      should(() => collectionController.scrollSpecifications(new Request({controller: 'collection', action: 'scrollSpecifications'})))
+        .throw(BadRequestError, {message: 'The request must specify a scrollId.'});
+    });
+
+    it('should call internalEngine with the right data', () => {
+      kuzzle.internalEngine.scroll = sandbox.stub().returns(Promise.resolve({
+        hits: [{_id: 'bar'}],
+        scrollId: 'foobar',
+        total: 123
+      }));
+
+      request = new Request({scrollId: 'foobar'});
+
+      return collectionController.scrollSpecifications(request)
+        .then(response => {
+          try {
+            should(kuzzle.internalEngine.scroll).be.calledOnce();
+            should(kuzzle.internalEngine.scroll).be.calledWithMatch('validations', 'foobar', undefined);
+            should(response).match({total: 123, scrollId: 'foobar', hits: [{_id: 'bar'}]});
+          }
+          catch (error) {
+            return Promise.reject(error);
+          }
+        });
+    });
+
+    it('should handle the optional scroll argument', () => {
+      kuzzle.internalEngine.scroll = sandbox.stub().returns(Promise.resolve({
+        hits: [{_id: 'bar'}],
+        scrollId: 'foobar',
+        total: 123
+      }));
+
+      request = new Request({scrollId: 'foobar', scroll: 'qux'});
+
+      return collectionController.scrollSpecifications(request)
+        .then(response => {
+          try {
+            should(kuzzle.internalEngine.scroll).be.calledOnce();
+            should(kuzzle.internalEngine.scroll).be.calledWithMatch('validations', 'foobar', 'qux');
+            should(response).match({total: 123, scrollId: 'foobar', hits: [{_id: 'bar'}]});
           }
           catch (error) {
             return Promise.reject(error);
@@ -267,7 +329,7 @@ describe('Test: collection controller', () => {
     });
 
     it('should call the right functions and respond with the right response if there is an error', () => {
-      var errorResponse = {
+      const errorResponse = {
         valid: false,
         details: ['bad bad is a bad type'],
         message: 'Some error message'
@@ -320,7 +382,7 @@ describe('Test: collection controller', () => {
 
           try {
             should(kuzzle.internalEngine.delete).be.calledOnce();
-            should(response).match({});
+            should(response).match({acknowledged: true});
 
             return Promise.resolve();
           }
@@ -338,7 +400,7 @@ describe('Test: collection controller', () => {
         .then(response => {
           try {
             should(kuzzle.internalEngine.delete).not.be.called();
-            should(response).match({});
+            should(response).match({acknowledged: true});
 
             return Promise.resolve();
           }
@@ -352,11 +414,7 @@ describe('Test: collection controller', () => {
   describe('#list', () => {
     beforeEach(() => {
       kuzzle.services.list.storageEngine.listCollections.returns(Promise.resolve({collections: {stored: ['foo']}}));
-      kuzzle.hotelClerk.getRealtimeCollections.returns([
-        {name: 'foo', index: 'index'},
-        {name: 'bar', index: 'index'},
-        {name: 'baz', index: 'wrong'}
-      ]);
+      kuzzle.hotelClerk.getRealtimeCollections.returns(['foo', 'bar']);
     });
 
     it('should resolve to a full collections list', () => {
@@ -408,9 +466,7 @@ describe('Test: collection controller', () => {
     it('should return a portion of the collection list if from and size are specified', () => {
       request = new Request({index: 'index', type: 'all', from: 2, size: 3});
       kuzzle.services.list.storageEngine.listCollections.returns(Promise.resolve({collections: {stored: ['astored', 'bstored', 'cstored', 'dstored', 'estored']}}));
-      kuzzle.hotelClerk.getRealtimeCollections.returns([
-        {name: 'arealtime', index: 'index'}, {name: 'brealtime', index: 'index'}, {name: 'crealtime', index: 'index'}, {name: 'drealtime', index: 'index'}, {name: 'erealtime', index: 'index'}, {name: 'baz', index: 'wrong'}
-      ]);
+      kuzzle.hotelClerk.getRealtimeCollections.returns(['arealtime', 'brealtime', 'crealtime', 'drealtime', 'erealtime']);
 
       return collectionController.list(request)
         .then(response => {
@@ -429,9 +485,7 @@ describe('Test: collection controller', () => {
     it('should return a portion of the collection list if from is specified', () => {
       request = new Request({index: 'index', type: 'all', from: 8});
       kuzzle.services.list.storageEngine.listCollections.returns(Promise.resolve({collections: {stored: ['astored', 'bstored', 'cstored', 'dstored', 'estored']}}));
-      kuzzle.hotelClerk.getRealtimeCollections.returns([
-        {name: 'arealtime', index: 'index'}, {name: 'brealtime', index: 'index'}, {name: 'crealtime', index: 'index'}, {name: 'drealtime', index: 'index'}, {name: 'erealtime', index: 'index'}, {name: 'baz', index: 'wrong'}
-      ]);
+      kuzzle.hotelClerk.getRealtimeCollections.returns(['arealtime', 'brealtime', 'crealtime', 'drealtime', 'erealtime']);
 
       return collectionController.list(request)
         .then(response => {
@@ -451,14 +505,7 @@ describe('Test: collection controller', () => {
       kuzzle.services.list.storageEngine.listCollections.returns(Promise.resolve({
         collections: {stored: ['astored', 'bstored', 'cstored', 'dstored', 'estored']}
       }));
-      kuzzle.hotelClerk.getRealtimeCollections.returns([
-        {name: 'arealtime', index: 'index'},
-        {name: 'brealtime', index: 'index'},
-        {name: 'crealtime', index: 'index'},
-        {name: 'drealtime', index: 'index'},
-        {name: 'erealtime', index: 'index'},
-        {name: 'baz', index: 'wrong'}
-      ]);
+      kuzzle.hotelClerk.getRealtimeCollections.returns(['arealtime', 'brealtime', 'crealtime', 'drealtime', 'erealtime']);
 
       return collectionController.list(request)
         .then(response => {

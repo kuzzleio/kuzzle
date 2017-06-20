@@ -1,31 +1,33 @@
-var
+'use strict';
+
+require('reify');
+
+const
   should = require('should'),
-  Promise = require('bluebird'),
+  Bluebird = require('bluebird'),
   sinon = require('sinon'),
-  rewire = require('rewire'),
   mockRequire = require('mock-require'),
-  Validation = rewire('../../../../lib/api/core/validation'),
   KuzzleMock = require('../../../mocks/kuzzle.mock');
 
 describe('Test: validation initialization', () => {
-  var
+  let
+    Validation,
     validation,
     sandbox = sinon.sandbox.create(),
-    getValidationConfiguration = Validation.__get__('getValidationConfiguration'),
-    checkAllowedProperties = Validation.__get__('checkAllowedProperties'),
-    curateStructuredFields = Validation.__get__('curateStructuredFields'),
-    Dsl = Validation.__get__('Dsl'),
     kuzzle;
 
   beforeEach(() => {
-    kuzzle = new KuzzleMock();
-    validation = new Validation(kuzzle);
-    sandbox.reset();
     mockRequire.stopAll();
-    Validation.__set__('getValidationConfiguration', getValidationConfiguration);
-    Validation.__set__('checkAllowedProperties', checkAllowedProperties);
-    Validation.__set__('curateStructuredFields', curateStructuredFields);
-    Validation.__set__('Dsl', Dsl);
+    kuzzle = new KuzzleMock();
+
+    Validation = mockRequire.reRequire('../../../../lib/api/core/validation');
+    validation = new Validation(kuzzle);
+
+    sandbox.reset();
+  });
+
+  afterEach(() => {
+    mockRequire.stopAll();
   });
 
   it('should have the expected structure', () => {
@@ -38,7 +40,7 @@ describe('Test: validation initialization', () => {
   });
 
   it('should add the type provided in defaultTypesFiles', () => {
-    var
+    const
       validationStub = sandbox.spy(() => {}),
       addTypeStub = sandbox.stub();
 
@@ -60,6 +62,9 @@ describe('Test: validation initialization', () => {
       mockRequire('../../../../lib/api/core/validation/types/'+ fileName, validationStub);
     });
 
+    Validation = mockRequire.reRequire('../../../../lib/api/core/validation');
+    validation = new Validation(kuzzle);
+
     validation.addType = addTypeStub;
 
     validation.init();
@@ -68,9 +73,8 @@ describe('Test: validation initialization', () => {
     should(addTypeStub.callCount).be.eql(13);
   });
 
-
   describe('#curateSpecification', () => {
-    var
+    const
       configurationMock = {
         anIndex: {
           aCollection: {
@@ -85,16 +89,22 @@ describe('Test: validation initialization', () => {
             another: 'specification'
           }
         }
-      },
-      getValidationConfigurationStub = sandbox.stub().returns(Promise.resolve(configurationMock));
+      };
 
     beforeEach(() => {
-      Validation.__set__('getValidationConfiguration', getValidationConfigurationStub);
+      kuzzle.internalEngine.search.returns(Bluebird.resolve({
+        hits: [
+          {_source: {index: 'anIndex', collection: 'aCollection', validation: {a: 'specification'}}},
+          {_source: {index: 'anIndex', collection: 'anotherCollection', validation: {another: 'specification'}}},
+          {_source: {index: 'anotherIndex', collection: 'anotherCollection', validation: {another: 'specification'}}},
+        ],
+        length: 3
+      }));
     });
 
     it('should build a specification if everything goes as expected', () => {
       validation.curateCollectionSpecification = sandbox.spy(function () {
-        return Promise.resolve(arguments[2]);
+        return Bluebird.resolve(arguments[2]);
       });
 
       return validation.curateSpecification()
@@ -111,7 +121,7 @@ describe('Test: validation initialization', () => {
 
     it('should build a specification if everything goes as expected', () => {
       validation.curateCollectionSpecification = sandbox.spy(function () {
-        return Promise.reject(new Error('error'));
+        return Bluebird.reject(new Error('error'));
       });
 
       return validation.curateSpecification()
@@ -132,8 +142,8 @@ describe('Test: validation initialization', () => {
 
   describe('#isValidSpecification', () => {
     it('should resolve true if the specification is correct', () => {
-      var
-        curateCollectionSpecificationStub = sandbox.stub().returns(Promise.resolve({}));
+      const
+        curateCollectionSpecificationStub = sandbox.stub().returns(Bluebird.resolve({}));
 
       validation.curateCollectionSpecification = curateCollectionSpecificationStub;
 
@@ -145,8 +155,8 @@ describe('Test: validation initialization', () => {
     });
 
     it('should resolve false if the specification is not correct', () => {
-      var
-        curateCollectionSpecificationStub = sandbox.stub(validation, 'curateCollectionSpecification').returns(Promise.reject(new Error('Mocked error')));
+      const
+        curateCollectionSpecificationStub = sandbox.stub(validation, 'curateCollectionSpecification').returns(Bluebird.reject(new Error('Mocked error')));
 
       return validation.isValidSpecification('anIndex', 'aCollection', {a: 'bad specification'})
         .then(result => {
@@ -156,8 +166,8 @@ describe('Test: validation initialization', () => {
     });
 
     it('should resolve false and provide errors if the specification is not correct and we want some verbose errors', () => {
-      var
-        curateCollectionSpecificationStub = sandbox.stub(validation, 'curateCollectionSpecification').returns(Promise.resolve({isValid: false, errors: ['some error']}));
+      const
+        curateCollectionSpecificationStub = sandbox.stub(validation, 'curateCollectionSpecification').returns(Bluebird.resolve({isValid: false, errors: ['some error']}));
 
       return validation.isValidSpecification('anIndex', 'aCollection', {a: 'bad specification'}, true)
         .then(result => {
@@ -170,7 +180,7 @@ describe('Test: validation initialization', () => {
 
   describe('#addType', () => {
     it('should add a type with children properly', () => {
-      var
+      const
         validationType = {
           validate: () => {},
           typeName: 'aType',
@@ -184,7 +194,7 @@ describe('Test: validation initialization', () => {
     });
 
     it('should add a type with children properly', () => {
-      var
+      const
         validationType = {
           validate: () => {},
           typeName: 'aType',
@@ -200,7 +210,7 @@ describe('Test: validation initialization', () => {
     });
 
     it('should not override an existing type', () => {
-      var
+      const
         validationType = {
           validate: () => {},
           typeName: 'aType',
@@ -220,7 +230,7 @@ describe('Test: validation initialization', () => {
 
 
     it('should reject a type without name', () => {
-      var
+      const
         validationType = {
           validate: () => {},
           validateFieldSpecification: () => {},
@@ -236,7 +246,7 @@ describe('Test: validation initialization', () => {
     });
 
     it('should reject a type without validate function', () => {
-      var
+      const
         validationType = {
           typeName: 'aType',
           validateFieldSpecification: () => {},
@@ -252,7 +262,7 @@ describe('Test: validation initialization', () => {
     });
 
     it('should reject a type without validateFieldSpecification function', () => {
-      var
+      const
         validationType = {
           typeName: 'aType',
           validate: () => {},
@@ -268,7 +278,7 @@ describe('Test: validation initialization', () => {
     });
 
     it('should reject a type without getStrictness function when allowChildren is true', () => {
-      var
+      const
         validationType = {
           typeName: 'aType',
           validate: () => {},
@@ -286,11 +296,11 @@ describe('Test: validation initialization', () => {
   });
 
   describe('#curateCollectionSpecification', () => {
-    var
+    const
       checkAllowedPropertiesStub = sandbox.stub();
 
     it('should return a default specification if there an empty collection specification is provided', () => {
-      var
+      const
         indexName = 'anIndex',
         collectionName = 'aCollection',
         collectionSpec = {
@@ -303,7 +313,6 @@ describe('Test: validation initialization', () => {
         };
 
       checkAllowedPropertiesStub.returns(true);
-      Validation.__set__('checkAllowedProperties', checkAllowedPropertiesStub);
 
       return validation.curateCollectionSpecification(indexName, collectionName, collectionSpec, dryRun)
         .then(returnedSpec => {
@@ -312,7 +321,7 @@ describe('Test: validation initialization', () => {
     });
 
     it('should reject an error if the collection specification provides a not allowed property', () => {
-      var
+      const
         indexName = 'anIndex',
         collectionName = 'aCollection',
         collectionSpec = {
@@ -321,14 +330,13 @@ describe('Test: validation initialization', () => {
         dryRun = false;
 
       checkAllowedPropertiesStub.returns(false);
-      Validation.__set__('checkAllowedProperties', checkAllowedPropertiesStub);
 
       return should(validation.curateCollectionSpecification(indexName, collectionName, collectionSpec, dryRun))
         .be.rejectedWith('anIndex.aCollection: the collection specification has invalid properties.');
     });
 
     it('should reject an error if the collection specification provides a not allowed property in verbose mode', () => {
-      var
+      const
         indexName = 'anIndex',
         collectionName = 'aCollection',
         collectionSpec = {
@@ -338,7 +346,6 @@ describe('Test: validation initialization', () => {
         verboseErrors = true;
 
       checkAllowedPropertiesStub.returns(false);
-      Validation.__set__('checkAllowedProperties', checkAllowedPropertiesStub);
 
       return validation.curateCollectionSpecification(indexName, collectionName, collectionSpec, dryRun, verboseErrors)
         .then(response => {
@@ -349,7 +356,7 @@ describe('Test: validation initialization', () => {
     });
 
     it('should return structured fields when a collection specification is provided', () => {
-      var
+      const
         indexName = 'anIndex',
         structureCollectionValidationStub = sandbox.spy(function () {return arguments[0].fields;}),
         collectionName = 'aCollection',
@@ -368,7 +375,6 @@ describe('Test: validation initialization', () => {
         };
 
       checkAllowedPropertiesStub.returns(true);
-      Validation.__set__('checkAllowedProperties', checkAllowedPropertiesStub);
       validation.structureCollectionValidation = structureCollectionValidationStub;
 
       return validation.curateCollectionSpecification(indexName, collectionName, collectionSpec, dryRun)
@@ -378,7 +384,7 @@ describe('Test: validation initialization', () => {
     });
 
     it('should return structured fields when a collection specification is provided even in verbose mode', () => {
-      var
+      const
         indexName = 'anIndex',
         structureCollectionValidationStub = sandbox.spy(function () {return arguments[0].fields;}),
         collectionName = 'aCollection',
@@ -398,7 +404,6 @@ describe('Test: validation initialization', () => {
         };
 
       checkAllowedPropertiesStub.returns(true);
-      Validation.__set__('checkAllowedProperties', checkAllowedPropertiesStub);
       validation.structureCollectionValidation = structureCollectionValidationStub;
 
       return validation.curateCollectionSpecification(indexName, collectionName, collectionSpec, dryRun, verboseErrors)
@@ -408,7 +413,7 @@ describe('Test: validation initialization', () => {
     });
 
     it('should reject an error if the field specification throws an error', () => {
-      var
+      const
         indexName = 'anIndex',
         structureCollectionValidationStub = sandbox.stub().throws(new Error('an error')),
         collectionName = 'aCollection',
@@ -420,7 +425,6 @@ describe('Test: validation initialization', () => {
         dryRun = false;
 
       checkAllowedPropertiesStub.returns(true);
-      Validation.__set__('checkAllowedProperties', checkAllowedPropertiesStub);
       validation.structureCollectionValidation = structureCollectionValidationStub;
 
       return should(validation.curateCollectionSpecification(indexName, collectionName, collectionSpec, dryRun))
@@ -428,7 +432,7 @@ describe('Test: validation initialization', () => {
     });
 
     it('should reject an error if the field specification returns an error', () => {
-      var
+      const
         indexName = 'anIndex',
         collectionName = 'aCollection',
         collectionSpec = {
@@ -439,7 +443,6 @@ describe('Test: validation initialization', () => {
         dryRun = false;
 
       checkAllowedPropertiesStub.returns(true);
-      Validation.__set__('checkAllowedProperties', checkAllowedPropertiesStub);
       sandbox.stub(validation, 'structureCollectionValidation').returns({isValid: false, errors: ['an error']});
 
       return should(validation.curateCollectionSpecification(indexName, collectionName, collectionSpec, dryRun))
@@ -447,7 +450,7 @@ describe('Test: validation initialization', () => {
     });
 
     it('should reject an error if the field specification returns an error in verbose mode', () => {
-      var
+      const
         indexName = 'anIndex',
         collectionName = 'aCollection',
         collectionSpec = {
@@ -461,7 +464,6 @@ describe('Test: validation initialization', () => {
       sandbox.stub(validation, 'structureCollectionValidation').returns({isValid: false, errors: ['an error']});
 
       checkAllowedPropertiesStub.returns(true);
-      Validation.__set__('checkAllowedProperties', checkAllowedPropertiesStub);
 
       return validation.curateCollectionSpecification(indexName, collectionName, collectionSpec, dryRun, verboseErrors)
         .catch(error => {
@@ -472,9 +474,9 @@ describe('Test: validation initialization', () => {
     });
 
     it('should return a treated collection specification if validators are valid', () => {
-      var
+      const
         indexName = 'anIndex',
-        curateValidatorFilterStub = sandbox.spy(function () {return Promise.resolve({id: 'aFilterId'});}),
+        curateValidatorFilterStub = sandbox.spy(function () {return Bluebird.resolve({id: 'aFilterId'});}),
         collectionName = 'aCollection',
         collectionSpec = {
           validators: [
@@ -490,7 +492,6 @@ describe('Test: validation initialization', () => {
         };
 
       checkAllowedPropertiesStub.returns(true);
-      Validation.__set__('checkAllowedProperties', checkAllowedPropertiesStub);
       validation.curateValidatorFilter = curateValidatorFilterStub;
 
       return validation.curateCollectionSpecification(indexName, collectionName, collectionSpec, dryRun)
@@ -504,9 +505,9 @@ describe('Test: validation initialization', () => {
     });
 
     it('should reject an error if validators are not valid', () => {
-      var
+      const
         indexName = 'anIndex',
-        curateValidatorFilterStub = sandbox.spy(function () {return Promise.reject(new Error('error'));}),
+        curateValidatorFilterStub = sandbox.spy(function () {return Bluebird.reject(new Error('error'));}),
         collectionName = 'aCollection',
         collectionSpec = {
           validators: [
@@ -516,7 +517,6 @@ describe('Test: validation initialization', () => {
         dryRun = false;
 
       checkAllowedPropertiesStub.returns(true);
-      Validation.__set__('checkAllowedProperties', checkAllowedPropertiesStub);
       validation.curateValidatorFilter = curateValidatorFilterStub;
 
       return should(validation.curateCollectionSpecification(indexName, collectionName, collectionSpec, dryRun))
@@ -526,40 +526,42 @@ describe('Test: validation initialization', () => {
 
   describe('#structureCollectionValidation', () => {
     it('should return a structured collection specification if configuration is correct', () => {
-      var
-        curateFieldSpecificationStub = sandbox.spy(function () {return {isValid: true, fieldSpec: arguments[0]};}),
-        curateStructuredFieldsStub = sandbox.spy(function () {return arguments[1];}),
+      const
+        curateFieldSpecificationStub = sandbox.spy(function (...args) {return {isValid: true, fieldSpec: args[0]};}),
         collectionSpec = {
           fields: {
-            aField: {a: 'field'},
+            aField: {a: 'field', type: 'foo'},
             anotherField: {another: 'field'},
             'aField/aSubField': {a: 'subField'}
           }
         },
         expectedRawFields = {
-          1: [{a: 'field', path: ['aField'], depth: 1}, {another: 'field', path: ['anotherField'], depth: 1}],
-          2: [{a: 'subField', path: ['aField', 'aSubField'], depth: 2}]
+          children: {
+            aField: {
+              a: 'field',
+              type: 'foo',
+              path: [ 'aField' ],
+              depth: 1,
+              children: { aSubField: { a: 'subField', path: [ 'aField', 'aSubField' ], depth: 2 } }
+            },
+            anotherField: { another: 'field', path: [ 'anotherField' ], depth: 1 }
+          },
+          root: true
         };
 
+      validation.typeAllowsChildren.push('foo');
       validation.curateFieldSpecification = curateFieldSpecificationStub;
-      Validation.__set__('curateStructuredFields', curateStructuredFieldsStub);
 
       should(validation.structureCollectionValidation(collectionSpec)).be.deepEqual(expectedRawFields);
       should(curateFieldSpecificationStub.callCount).be.eql(3);
-      should(curateStructuredFieldsStub.callCount).be.eql(1);
-      should(curateStructuredFieldsStub.args[0][1]).be.deepEqual(expectedRawFields);
-      should(curateStructuredFieldsStub.args[0][2]).be.eql(2);
     });
 
     it('should return an empty object if no field is specified', () => {
-      var
-        collectionSpec = {fields: {}};
-
-      should(validation.structureCollectionValidation(collectionSpec)).be.deepEqual({});
+      should(validation.structureCollectionValidation({fields: {}})).be.deepEqual({});
     });
 
     it('should throw an error if one of the field curation throws an error', () => {
-      var
+      const
         curateFieldSpecificationStub = sandbox.stub().throws(new Error('an error')),
         collectionSpec = {
           fields: {
@@ -581,7 +583,7 @@ describe('Test: validation initialization', () => {
     });
 
     it('should return an error array if one of the field curation returns an error in verbose mode', () => {
-      var
+      const
         curateFieldSpecificationStub = sandbox.stub(),
         indexName = 'anIndex',
         collectionName = 'aCollection',
@@ -592,8 +594,7 @@ describe('Test: validation initialization', () => {
             anotherField: {another: 'field'},
             'aField/aSubField': {a: 'subField'}
           }
-        },
-        response;
+        };
 
       curateFieldSpecificationStub.onCall(0).returns({isValid: false, errors: ['error one']});
       curateFieldSpecificationStub.onCall(1).returns({isValid: false, errors: ['error two']});
@@ -601,7 +602,7 @@ describe('Test: validation initialization', () => {
 
       validation.curateFieldSpecification = curateFieldSpecificationStub;
 
-      response = validation.structureCollectionValidation(collectionSpec, indexName, collectionName, verboseErrors);
+      const response = validation.structureCollectionValidation(collectionSpec, indexName, collectionName, verboseErrors);
 
       should(response.isValid).be.false();
       should(response.errors.length).be.eql(3);
@@ -615,7 +616,7 @@ describe('Test: validation initialization', () => {
   });
 
   describe('#curateFieldSpecification', () => {
-    var
+    const
       curateFieldSpecificationFormat = sandbox.stub().returns({isValid: true});
 
     beforeEach(() => {
@@ -623,7 +624,7 @@ describe('Test: validation initialization', () => {
     });
 
     it('should validate and curate field specifications with default configuration', () => {
-      var
+      const
         typeValidateSpecValidation = sandbox.stub().returns({}),
         fieldSpec = {
           type: 'string'
@@ -646,7 +647,7 @@ describe('Test: validation initialization', () => {
     });
 
     it('should validate, curate field specifications and use returned typeOptions of the field validation', () => {
-      var
+      const
         genericMock = {foo: 'bar'},
         typeValidateSpecValidation = sandbox.stub().returns(genericMock),
         fieldSpec = {
@@ -670,7 +671,7 @@ describe('Test: validation initialization', () => {
     });
 
     it('should throw an error if type validation returns false', () => {
-      var
+      const
         typeValidateSpecValidation = sandbox.stub().returns(false),
         fieldSpec = {
           type: 'string'
@@ -684,25 +685,23 @@ describe('Test: validation initialization', () => {
     });
 
     it('should return an error if type validation returns false with verbose mode', () => {
-      var
+      const
         typeValidateSpecValidation = sandbox.stub().returns(true),
-        checkAllowedPropertiesStub = sandbox.stub().returns(false),
         fieldSpec = {
-          type: 'string'
-        },
-        response;
+          type: 'string',
+          typeOptions: 'foobar'
+        };
 
       validation.types.string = {validateFieldSpecification: typeValidateSpecValidation};
-      Validation.__set__('checkAllowedProperties', checkAllowedPropertiesStub);
 
-      response = validation.curateFieldSpecification(fieldSpec, 'anIndex', 'aCollection', 'aField', true);
+      const response = validation.curateFieldSpecification(fieldSpec, 'anIndex', 'aCollection', 'aField', true);
       should(response.isValid).be.false();
       should(response.errors.length).be.eql(1);
       should(response.errors[0]).eql('Field anIndex.aCollection.aField of type string is not specified properly');
     });
 
     it('should validate typeOptions from the field type', () => {
-      var
+      const
         typeValidateSpecValidation = sandbox.stub().returns({some: 'options'}),
         fieldSpec = {
           type: 'string',
@@ -733,7 +732,7 @@ describe('Test: validation initialization', () => {
     });
 
     it('should throw an error if an option of typeOptions is invalid', () => {
-      var
+      const
         typeValidateSpecValidation = sandbox.stub().returns(true),
         fieldSpec = {
           type: 'string',
@@ -753,7 +752,7 @@ describe('Test: validation initialization', () => {
     });
 
     it('should throw an error if an option of typeOptions is invalid', () => {
-      var
+      const
         anError = {an: 'error'},
         typeValidateSpecValidation = sandbox.stub().throws(anError),
         fieldSpec = {
@@ -773,42 +772,31 @@ describe('Test: validation initialization', () => {
       }).throw(anError);
     });
 
-    it('should returns an error if a field specification format is invalid in verbose mode', () => {
-      var
+    it('should return an error if a field specification format is invalid in verbose mode', () => {
+      const
         anError = {isValid: false, errors: ['an error']},
-        curateFieldSpecificationFormatLocalStub = sandbox.stub().returns({isValid: false, errors: ['an error']}),
         fieldSpec = {
           type: 'string',
           typeOptions: {
             some: 'options'
           }
-        },
-        response;
+        };
 
-      validation.curateFieldSpecificationFormat = curateFieldSpecificationFormatLocalStub;
+      validation.curateFieldSpecificationFormat = sandbox.stub().returns({isValid: false, errors: ['an error']});
 
-      response = validation.curateFieldSpecification(fieldSpec, 'anIndex', 'aCollection', 'aField', true);
+      const response = validation.curateFieldSpecification(fieldSpec, 'anIndex', 'aCollection', 'aField', true);
 
       should(response).be.deepEqual(anError);
     });
   });
 
   describe('#curateFieldSpecificationFormat', () => {
-    var
-      checkAllowedPropertiesStub = sandbox.stub();
-
-    beforeEach(() => {
-      Validation.__set__('checkAllowedProperties', checkAllowedPropertiesStub);
-    });
-
     it('should throw an error if the field specification contains not allowed fields', () => {
-      var
+      const
         fieldSpec = {
           type: 'string',
           foo: 'bar'
         };
-
-      checkAllowedPropertiesStub.returns(false);
 
       should(() => {
         validation.curateFieldSpecificationFormat(fieldSpec);
@@ -816,7 +804,7 @@ describe('Test: validation initialization', () => {
     });
 
     it('should return an error if the field specification is wrong in verbose mode', () => {
-      var
+      const
         fieldSpec = {
           type: 'aType',
           foo: 'bar'
@@ -824,12 +812,9 @@ describe('Test: validation initialization', () => {
         indexName = 'anIndex',
         collectionName = 'aCollection',
         fieldName = 'aField',
-        verboseErrors = true,
-        response;
+        verboseErrors = true;
 
-      checkAllowedPropertiesStub.returns(false);
-
-      response = validation.curateFieldSpecificationFormat(fieldSpec, indexName, collectionName, fieldName, verboseErrors);
+      const response = validation.curateFieldSpecificationFormat(fieldSpec, indexName, collectionName, fieldName, verboseErrors);
       should(response.isValid).be.false();
       should(response.errors.length).be.eql(2);
       should(response.errors).be.eql([
@@ -839,12 +824,10 @@ describe('Test: validation initialization', () => {
     });
 
     it('should throw an error if the field specification does not contain all mandatory fields', () => {
-      var
+      const
         fieldSpec = {
           mandatory: true
         };
-
-      checkAllowedPropertiesStub.returns(true);
 
       should(() => {
         validation.curateFieldSpecificationFormat(fieldSpec);
@@ -852,13 +835,7 @@ describe('Test: validation initialization', () => {
     });
 
     it('should throw an error if the field specification contains a not recognized type', () => {
-      var
-        fieldSpec = {
-          type: 'not_recognized',
-          foo: 'bar'
-        };
-
-      checkAllowedPropertiesStub.returns(true);
+      const fieldSpec = {type: 'not_recognized'};
 
       validation.types = {
         string: 'aType'
@@ -870,17 +847,13 @@ describe('Test: validation initialization', () => {
     });
 
     it('should throw an error if the multivalued field is malformed', () => {
-      var
+      const
         fieldSpec = {
           type: 'string',
           multivalued: {
             foo: 'bar'
           }
         };
-
-      checkAllowedPropertiesStub
-        .onFirstCall().returns(true)
-        .onSecondCall().returns(false);
 
       validation.types = {
         string: 'aType'
@@ -892,15 +865,11 @@ describe('Test: validation initialization', () => {
     });
 
     it('should throw an error if the multivalued field is malformed', () => {
-      var
+      const
         fieldSpec = {
           type: 'string',
           multivalued: {}
         };
-
-      checkAllowedPropertiesStub
-        .onFirstCall().returns(true)
-        .onSecondCall().returns(true);
 
       validation.types = {
         string: 'aType'
@@ -912,7 +881,7 @@ describe('Test: validation initialization', () => {
     });
 
     it('should throw an error if the multivalued field is malformed', () => {
-      var
+      const
         fieldSpec = {
           type: 'string',
           multivalued: {
@@ -920,10 +889,6 @@ describe('Test: validation initialization', () => {
             minCount: 42
           }
         };
-
-      checkAllowedPropertiesStub
-        .onFirstCall().returns(true)
-        .onSecondCall().returns(true);
 
       validation.types = {
         string: 'aType'
@@ -935,7 +900,7 @@ describe('Test: validation initialization', () => {
     });
 
     it('should throw an error if the multivalued field is malformed', () => {
-      var
+      const
         fieldSpec = {
           type: 'string',
           multivalued: {
@@ -943,10 +908,6 @@ describe('Test: validation initialization', () => {
             maxCount: 42
           }
         };
-
-      checkAllowedPropertiesStub
-        .onFirstCall().returns(true)
-        .onSecondCall().returns(true);
 
       validation.types = {
         string: 'aType'
@@ -958,7 +919,7 @@ describe('Test: validation initialization', () => {
     });
 
     it('should throw an error if the multivalued field is malformed', () => {
-      var
+      const
         fieldSpec = {
           type: 'string',
           multivalued: {
@@ -967,10 +928,6 @@ describe('Test: validation initialization', () => {
             maxCount: 42
           }
         };
-
-      checkAllowedPropertiesStub
-        .onFirstCall().returns(true)
-        .onSecondCall().returns(true);
 
       validation.types = {
         string: 'aType'
@@ -982,14 +939,10 @@ describe('Test: validation initialization', () => {
     });
 
     it('should return true if specification is well formed', () => {
-      var
+      const
         fieldSpec = {
           type: 'string'
         };
-
-      checkAllowedPropertiesStub
-        .onFirstCall().returns(true)
-        .onSecondCall().returns(true);
 
       validation.types = {
         string: 'aType'
@@ -999,7 +952,7 @@ describe('Test: validation initialization', () => {
     });
 
     it('should return true if specification is well formed', () => {
-      var
+      const
         fieldSpec = {
           type: 'string',
           multivalued: {
@@ -1008,10 +961,6 @@ describe('Test: validation initialization', () => {
             maxCount: 42
           }
         };
-
-      checkAllowedPropertiesStub
-        .onFirstCall().returns(true)
-        .onSecondCall().returns(true);
 
       validation.types = {
         string: 'aType'
@@ -1023,9 +972,9 @@ describe('Test: validation initialization', () => {
 
   describe('#curateValidatorFilter', () => {
     it('should return a promise if everything goes as expected', () => {
-      var
-        registerStub = sandbox.stub().returns(Promise.resolve({})),
-        validateStub = sandbox.stub().returns(Promise.resolve({})),
+      const
+        registerStub = sandbox.stub().returns(Bluebird.resolve({})),
+        validateStub = sandbox.stub().returns(Bluebird.resolve({})),
         indexName = 'anIndex',
         collectionName= 'aCollection',
         validatorFilter = [{some: 'filters'}],
@@ -1053,9 +1002,9 @@ describe('Test: validation initialization', () => {
     });
 
     it('should return a promise if everything goes as expected and avoid registration if dryRun is true', () => {
-      var
-        registerStub = sandbox.stub().returns(Promise.resolve({})),
-        validateStub = sandbox.stub().returns(Promise.resolve({})),
+      const
+        registerStub = sandbox.stub().returns(Bluebird.resolve({})),
+        validateStub = sandbox.stub().returns(Bluebird.resolve({})),
         indexName = 'anIndex',
         collectionName= 'aCollection',
         validatorFilter = [{some: 'filters'}],

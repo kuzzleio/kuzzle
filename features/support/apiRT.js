@@ -7,6 +7,7 @@
 
 const
   _ = require('lodash'),
+  Bluebird = require('bluebird'),
   ApiRT = function () {
     this.world = null;
     this.clientId = null;
@@ -129,6 +130,19 @@ ApiRT.prototype.mReplace = function (body, index, collection) {
       index: index || this.world.fakeIndex,
       action: 'mReplace',
       body: body
+    };
+
+  return this.send(msg);
+};
+
+ApiRT.prototype.exists = function (id, index) {
+  const
+    msg = {
+      controller: 'document',
+      collection: this.world.fakeCollection,
+      index: index || this.world.fakeIndex,
+      action: 'get',
+      _id: id
     };
 
   return this.send(msg);
@@ -399,7 +413,7 @@ ApiRT.prototype.unsubscribe = function (room, clientId) {
 
   this.subscribedRooms[clientId][room].close();
   delete this.subscribedRooms[clientId];
-
+  this.responses = null;
   return this.send(msg, false);
 };
 
@@ -458,6 +472,16 @@ ApiRT.prototype.listCollections = function (index, type) {
       index: index || this.world.fakeIndex,
       action: 'list',
       body: {type}
+    };
+
+  return this.send(msg);
+};
+
+ApiRT.prototype.healthCheck = function () {
+  const
+    msg = {
+      controller: 'server',
+      action: 'healthCheck'
     };
 
   return this.send(msg);
@@ -526,6 +550,18 @@ ApiRT.prototype.createIndex = function (index) {
   return this.send(msg);
 };
 
+ApiRT.prototype.createCollection = function (index, collection) {
+  const
+    msg = {
+      controller: 'index',
+      action: 'create',
+      index,
+      collection
+    };
+
+  return this.send(msg);
+};
+
 ApiRT.prototype.deleteIndex = function (index) {
   const
     msg = {
@@ -548,16 +584,28 @@ ApiRT.prototype.getServerInfo = function () {
   return this.send(msg);
 };
 
+ApiRT.prototype.getServerConfig = function () {
+  const
+    msg = {
+      controller: 'server',
+      action: 'getConfig',
+      body: {}
+    };
+
+  return this.send(msg);
+};
+
+
 ApiRT.prototype.login = function (strategy, credentials) {
   const
     msg = {
       controller: 'auth',
       action: 'login',
+      strategy: strategy,
+      expiresIn: credentials.expiresIn,
       body: {
-        strategy: strategy,
         username: credentials.username,
-        password: credentials.password,
-        expiresIn: credentials.expiresIn
+        password: credentials.password
       }
     };
 
@@ -609,24 +657,47 @@ ApiRT.prototype.mGetRoles = function (body) {
   return this.send(msg);
 };
 
-ApiRT.prototype.searchRoles = function (body) {
+ApiRT.prototype.searchRoles = function (body, args) {
   const
     msg = {
       controller: 'security',
       action: 'searchRoles',
-      body: body
+      body
     };
+
+  _.forEach(args, (item, k) => {
+    msg[k] = item;
+  });
 
   return this.send(msg);
 };
 
-ApiRT.prototype.deleteRole = function (id) {
-  const
-    msg = {
-      controller: 'security',
-      action: 'deleteRole',
-      _id: id
-    };
+ApiRT.prototype.deleteRole = function (id, waitFor = false) {
+  const msg = {
+    controller: 'security',
+    action: 'deleteRole',
+    _id: id
+  };
+
+  if (waitFor) {
+    msg.refresh = 'wait_for';
+  }
+
+  return this.send(msg);
+};
+
+ApiRT.prototype.deleteRoles = function (ids, waitFor = false) {
+  const msg = {
+    controller: 'security',
+    action: 'mDeleteRoles',
+    body: {
+      ids
+    }
+  };
+
+  if (waitFor) {
+    msg.refresh = 'wait_for';
+  }
 
   return this.send(msg);
 };
@@ -688,15 +759,55 @@ ApiRT.prototype.createOrReplaceProfile = function (id, body) {
   return this.send(msg);
 };
 
-ApiRT.prototype.searchProfiles = function (body) {
+ApiRT.prototype.searchProfiles = function (body, args) {
+  let msg = {
+    controller: 'security',
+    action: 'searchProfiles',
+    body: body
+  };
+
+  if (args) {
+    Object.assign(msg, args);
+  }
+};
+
+ApiRT.prototype.searchProfiles = function (query, args) {
   const
     msg = {
       controller: 'security',
       action: 'searchProfiles',
-      body: body
+      body: {
+        query
+      }
     };
 
+  _.forEach(args, (item, k) => {
+    msg[k] = item;
+  });
+
   return this.send(msg);
+};
+
+ApiRT.prototype.deleteProfile = function (id, waitFor = false) {
+  const msg = {
+    controller: 'security',
+    action: 'deleteProfile',
+    _id: id
+  };
+
+  if (waitFor) {
+    msg.refresh = 'wait_for';
+  }
+
+  return this.send(msg);
+};
+
+ApiRT.prototype.scrollProfiles = function (scrollId) {
+  return this.send({
+    controller: 'security',
+    action: 'scrollProfiles',
+    scrollId
+  });
 };
 
 ApiRT.prototype.deleteProfile = function (id) {
@@ -710,13 +821,26 @@ ApiRT.prototype.deleteProfile = function (id) {
   return this.send(msg);
 };
 
-ApiRT.prototype.searchValidations = function (body) {
-  const
-    msg = {
-      controller: 'collection',
-      action: 'searchSpecifications',
-      body
-    };
+ApiRT.prototype.getAuthenticationStrategies = function () {
+  return this.send({
+    controller: 'auth',
+    action: 'getStrategies',
+    body: {}
+  });
+};
+
+ApiRT.prototype.deleteProfiles = function (ids, waitFor = false) {
+  const msg = {
+    controller: 'security',
+    action: 'mDeleteProfiles',
+    body: {
+      ids
+    }
+  };
+
+  if (waitFor) {
+    msg.refresh = 'wait_for';
+  }
 
   return this.send(msg);
 };
@@ -752,31 +876,67 @@ ApiRT.prototype.getMyRights = function (id) {
   });
 };
 
-ApiRT.prototype.searchUsers = function (body) {
-  return this.send({
+ApiRT.prototype.searchUsers = function (query, args) {
+  const msg = {
     controller: 'security',
     action: 'searchUsers',
     body: {
-      query: body
+      query
     }
+  };
+
+  if (args) {
+    Object.assign(msg, args);
+  }
+
+  return this.send(msg);
+};
+
+ApiRT.prototype.scrollUsers = function (scrollId) {
+  return this.send({
+    controller: 'security',
+    action: 'scrollUsers',
+    scrollId
   });
 };
 
-ApiRT.prototype.deleteUser = function (id) {
+ApiRT.prototype.replaceUser = function (id, body) {
   return this.send({
+    controller: 'security',
+    action: 'replaceUser',
+    _id: id,
+    body
+  });
+};
+
+ApiRT.prototype.deleteUser = function (id, waitFor = false) {
+  const msg = {
     controller: 'security',
     action: 'deleteUser',
     _id: id
-  });
+  };
+
+  if (waitFor) {
+    msg.refresh = 'wait_for';
+  }
+
+  return this.send(msg);
 };
 
-ApiRT.prototype.createOrReplaceUser = function (body, id) {
-  return this.send({
+ApiRT.prototype.deleteUsers = function (ids, waitFor = false) {
+  const msg = {
     controller: 'security',
-    action: 'createOrReplaceUser',
-    body: body,
-    _id: id
-  });
+    action: 'mDeleteUsers',
+    body: {
+      ids
+    }
+  };
+
+  if (waitFor) {
+    msg.refresh = 'wait_for';
+  }
+
+  return this.send(msg);
 };
 
 ApiRT.prototype.updateSelf = function (body) {
@@ -793,6 +953,7 @@ ApiRT.prototype.createUser = function (body, id) {
     action: 'createUser',
     body: body
   };
+
   if (id !== undefined) {
     msg._id = id;
   }
@@ -814,11 +975,28 @@ ApiRT.prototype.createRestrictedUser = function (body, id) {
 };
 
 ApiRT.prototype.checkToken = function (token) {
-  return this.send({
-    controller: 'auth',
-    action: 'checkToken',
-    body: {token}
-  });
+  let _token = null;
+
+  if (this.world.currentUser && this.world.currentUser.token) {
+    _token = this.world.currentUser.token;
+    this.world.currentUser.token = null;
+  }
+
+  return this.send({controller: 'auth', action: 'checkToken', body: {token}})
+    .then(response => {
+      if (_token !== null) {
+        this.world.currentUser.token = _token;
+      }
+
+      return response;
+    })
+    .catch(error => {
+      if (_token !== null) {
+        this.world.currentUser.token = _token;
+      }
+
+      return Bluebird.reject(error);
+    });
 };
 
 ApiRT.prototype.refreshIndex = function (index) {
@@ -826,6 +1004,13 @@ ApiRT.prototype.refreshIndex = function (index) {
     index: index,
     controller: 'index',
     action: 'refresh'
+  });
+};
+
+ApiRT.prototype.refreshInternalIndex = function () {
+  return this.send({
+    controller: 'index',
+    action: 'refreshInternal'
   });
 };
 
@@ -912,6 +1097,28 @@ ApiRT.prototype.validateSpecifications = function (specifications) {
   });
 };
 
+ApiRT.prototype.searchSpecifications = function (body, args) {
+  let msg = {
+    controller: 'collection',
+    action: 'searchSpecifications',
+    body: body
+  };
+
+  if (args) {
+    Object.assign(msg, args);
+  }
+
+  return this.send(msg);
+};
+
+ApiRT.prototype.scrollSpecifications = function (scrollId) {
+  return this.send({
+    controller: 'collection',
+    action: 'scrollSpecifications',
+    scrollId
+  });
+};
+
 ApiRT.prototype.validateDocument = function (index, collection, document) {
   return this.create(document, index, collection);
 };
@@ -933,6 +1140,124 @@ ApiRT.prototype.postDocument = function (index, collection, document) {
     controller: 'document',
     action: 'create',
     body: document
+  });
+};
+
+ApiRT.prototype.createCredentials = function (strategy, userId, body) {
+  return this.send({
+    controller: 'security',
+    action: 'createCredentials',
+    strategy,
+    body,
+    _id: userId
+  });
+};
+
+ApiRT.prototype.updateCredentials = function (strategy, userId, body) {
+  return this.send({
+    controller: 'security',
+    action: 'updateCredentials',
+    strategy,
+    body,
+    _id: userId
+  });
+};
+
+ApiRT.prototype.validateCredentials = function (strategy, userId, body) {
+  return this.send({
+    controller: 'security',
+    action: 'validateCredentials',
+    strategy,
+    body,
+    _id: userId
+  });
+};
+
+ApiRT.prototype.deleteCredentials = function (strategy, userId) {
+  return this.send({
+    controller: 'security',
+    action: 'deleteCredentials',
+    strategy,
+    _id: userId
+  });
+};
+
+ApiRT.prototype.getCredentials = function (strategy, userId) {
+  return this.send({
+    controller: 'security',
+    action: 'getCredentials',
+    strategy,
+    _id: userId
+  });
+};
+
+ApiRT.prototype.getCredentialsById = function (strategy, userId) {
+  return this.send({
+    controller: 'security',
+    action: 'getCredentialsById',
+    strategy,
+    _id: userId
+  });
+};
+
+ApiRT.prototype.hasCredentials = function (strategy, userId) {
+  return this.send({
+    controller: 'security',
+    action: 'hasCredentials',
+    strategy,
+    _id: userId
+  });
+};
+
+ApiRT.prototype.createMyCredentials = function (strategy, body) {
+  return this.send({
+    controller: 'auth',
+    action: 'createMyCredentials',
+    strategy,
+    body
+  });
+};
+
+ApiRT.prototype.updateMyCredentials = function (strategy, body) {
+  return this.send({
+    controller: 'auth',
+    action: 'updateMyCredentials',
+    strategy,
+    body
+  });
+};
+
+ApiRT.prototype.validateMyCredentials = function (strategy, body) {
+  return this.send({
+    controller: 'auth',
+    action: 'validateMyCredentials',
+    strategy,
+    body
+  });
+};
+
+ApiRT.prototype.deleteMyCredentials = function (strategy) {
+  return this.send({
+    controller: 'auth',
+    action: 'deleteMyCredentials',
+    strategy
+  });
+};
+
+ApiRT.prototype.getMyCredentials = function (strategy) {
+  return this.send({
+    controller: 'auth',
+    action: 'getMyCredentials',
+    strategy
+  });
+};
+
+ApiRT.prototype.credentialsExist = function (strategy, body) {
+  return this.send({
+    controller: 'auth',
+    action: 'credentialsExist',
+    strategy,
+    body
   });
 };
 

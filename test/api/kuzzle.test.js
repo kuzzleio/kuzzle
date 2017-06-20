@@ -1,16 +1,16 @@
-var
+const
   sinon = require('sinon'),
-  Promise = require('bluebird'),
+  Bluebird = require('bluebird'),
   should = require('should'),
   rewire = require('rewire'),
   Kuzzle = rewire('../../lib/api/kuzzle'),
   KuzzleMock = require('../mocks/kuzzle.mock');
 
 describe('/lib/api/kuzzle.js', () => {
-  var kuzzle;
+  let kuzzle;
 
   beforeEach(() => {
-    var mock = new KuzzleMock();
+    let mock = new KuzzleMock();
     kuzzle = new Kuzzle();
 
     [
@@ -40,134 +40,48 @@ describe('/lib/api/kuzzle.js', () => {
     kuzzle.emit('event', {});
   });
 
-  describe('#resetStorage', () => {
-    it('should erase the internal ES & Redis dbs', () => {
-      return kuzzle.resetStorage()
-        .then(() => {
-          try {
-            should(kuzzle.pluginsManager.trigger)
-              .be.calledOnce()
-              .be.calledWithExactly('log:warn', 'Kuzzle::resetStorage called');
-
-            should(kuzzle.internalEngine.deleteIndex)
-              .be.calledOnce();
-
-            should(kuzzle.services.list.internalCache.flushdb)
-              .be.calledOnce();
-
-            should(kuzzle.services.list.memoryStorage.flushdb)
-              .be.calledOnce();
-
-            should(kuzzle.indexCache.remove)
-              .be.calledOnce()
-              .be.calledWithExactly('internalIndex');
-
-            should(kuzzle.internalEngine.bootstrap.all)
-              .be.calledOnce();
-
-            should(kuzzle.validation).be.an.Object();
-
-            should(kuzzle.start).be.a.Function();
-
-            sinon.assert.callOrder(
-              kuzzle.pluginsManager.trigger,
-              kuzzle.internalEngine.deleteIndex,
-              kuzzle.services.list.internalCache.flushdb,
-              kuzzle.services.list.memoryStorage.flushdb,
-              kuzzle.indexCache.remove,
-              kuzzle.internalEngine.bootstrap.all
-            );
-
-            return Promise.resolve();
-          }
-          catch(error) {
-            return Promise.reject(error);
-          }
-        });
-    });
-  });
-
   describe('#start', () => {
     it('should init the components in proper order', () => {
       return kuzzle.start()
         .then(() => {
-          try {
-            should(kuzzle.internalEngine.init)
-              .be.calledOnce();
+          should(kuzzle.internalEngine.init).be.calledOnce();
+          should(kuzzle.internalEngine.bootstrap.all).be.calledOnce();
+          should(kuzzle.validation.init).be.calledOnce();
+          should(kuzzle.pluginsManager.init).be.calledOnce();
+          should(kuzzle.pluginsManager.run).be.calledOnce();
+          should(kuzzle.services.init).be.calledOnce();
+          should(kuzzle.indexCache.init).be.calledOnce();
+          should(kuzzle.pluginsManager.trigger).be.called();
+          should(kuzzle.funnel.init).be.calledOnce();
+          should(kuzzle.router.init).be.calledOnce();
+          should(kuzzle.statistics.init).be.calledOnce();
+          should(kuzzle.entryPoints.init).be.calledOnce();
+          should(kuzzle.repositories.init).be.calledOnce();
+          should(kuzzle.cliController.init).be.calledOnce();
 
-            should(kuzzle.internalEngine.bootstrap.all)
-              .be.calledOnce();
-
-            should(kuzzle.validation.init)
-              .be.calledOnce();
-
-            should(kuzzle.pluginsManager.init)
-              .be.calledOnce();
-
-            should(kuzzle.pluginsManager.run)
-              .be.calledOnce();
-
-            should(kuzzle.services.init)
-              .be.calledOnce();
-
-            should(kuzzle.indexCache.init)
-              .be.calledOnce();
-
-            should(kuzzle.pluginsManager.trigger)
-              .be.called();
-
-            should(kuzzle.funnel.init)
-              .be.calledOnce();
-
-            should(kuzzle.router.init)
-              .be.calledOnce();
-
-            should(kuzzle.notifier.init)
-              .be.calledOnce();
-
-            should(kuzzle.statistics.init)
-              .be.calledOnce();
-
-            should(kuzzle.entryPoints.init)
-              .be.calledOnce();
-
-            should(kuzzle.repositories.init)
-              .be.calledOnce();
-
-            should(kuzzle.cliController.init)
-              .be.calledOnce();
-
-            sinon.assert.callOrder(
-              kuzzle.internalEngine.init,
-              kuzzle.internalEngine.bootstrap.all,
-              kuzzle.validation.init,
-              kuzzle.pluginsManager.init,
-              kuzzle.pluginsManager.run,
-              kuzzle.services.init,
-              kuzzle.indexCache.init,
-              kuzzle.pluginsManager.trigger,
-              kuzzle.funnel.init,
-              kuzzle.router.init,
-              kuzzle.notifier.init,
-              kuzzle.statistics.init,
-              kuzzle.repositories.init,
-              kuzzle.pluginsManager.trigger,
-              kuzzle.cliController.init,
-              kuzzle.entryPoints.init,
-              kuzzle.pluginsManager.trigger
-            );
-
-            return Promise.resolve();
-          }
-          catch(error) {
-            return Promise.reject(error);
-          }
+          sinon.assert.callOrder(
+            kuzzle.internalEngine.init,
+            kuzzle.internalEngine.bootstrap.all,
+            kuzzle.validation.init,
+            kuzzle.pluginsManager.init,
+            kuzzle.pluginsManager.run,
+            kuzzle.services.init,
+            kuzzle.indexCache.init,
+            kuzzle.pluginsManager.trigger,
+            kuzzle.funnel.init,
+            kuzzle.router.init,
+            kuzzle.statistics.init,
+            kuzzle.repositories.init,
+            kuzzle.pluginsManager.trigger,
+            kuzzle.cliController.init,
+            kuzzle.entryPoints.init,
+            kuzzle.pluginsManager.trigger
+          );
         });
-
     });
 
     it('should start all services and register errors handlers if enabled on kuzzle.start', () => {
-      var
+      let
         mock,
         processExitSpy = sinon.spy(),
         processOnSpy = sinon.spy(),
@@ -235,12 +149,11 @@ describe('/lib/api/kuzzle.js', () => {
     });
 
     it('does not really test anything but increases coverage', () => {
-      var error = new Error('error');
+      const error = new Error('error');
 
-      kuzzle.internalEngine.init.returns(Promise.reject(error));
+      kuzzle.internalEngine.init.returns(Bluebird.reject(error));
 
-      return should(kuzzle.start())
-        .be.rejectedWith(error);
+      return should(kuzzle.start()).be.rejectedWith(error);
     });
   });
 });

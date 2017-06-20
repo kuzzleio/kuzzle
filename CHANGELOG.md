@@ -1,3 +1,122 @@
+# [1.0.0](https://github.com/kuzzleio/kuzzle/releases/tag/1.0.0) (2017-06-20)
+
+### Compatibility
+
+| Kuzzle | Proxy |
+|--------|-------|
+| 1.0.0 | 1.0.0 |
+
+#### Breaking changes
+
+- [ [#882](https://github.com/kuzzleio/kuzzle/pull/882) ] Modernize notifier core module   ([scottinet](https://github.com/scottinet))
+- [ [#879](https://github.com/kuzzleio/kuzzle/pull/879) ] Remove obsolete "proxy:*" events   ([scottinet](https://github.com/scottinet))
+- [ [#815](https://github.com/kuzzleio/kuzzle/pull/815) ] Prevent dynamic collection/index creation   ([AnthonySendra](https://github.com/AnthonySendra))
+- [ [#859](https://github.com/kuzzleio/kuzzle/pull/859) ] Use native elasticsearch constructor options   ([benoitvidis](https://github.com/benoitvidis))
+- [ [#845](https://github.com/kuzzleio/kuzzle/pull/845) ] Re-add HTTP GET route for user login   ([ballinette](https://github.com/ballinette))
+- [ [#840](https://github.com/kuzzleio/kuzzle/pull/840) ] Login API reshape   ([xbill82](https://github.com/xbill82))
+- [ [#804](https://github.com/kuzzleio/kuzzle/pull/804) ] Refactor authentication plugin structure   ([dbengsch](https://github.com/dbengsch))
+- [ [#771](https://github.com/kuzzleio/kuzzle/pull/771) ] Rename _kuzzle_info and metadata   ([AnthonySendra](https://github.com/AnthonySendra))
+- [ [#753](https://github.com/kuzzleio/kuzzle/pull/753) ] Fixes #745 DSL.not* should match when the field is missing   ([benoitvidis](https://github.com/benoitvidis))
+- [ [#778](https://github.com/kuzzleio/kuzzle/pull/778) ] Remove the route security:createOrReplaceUser    ([dbengsch](https://github.com/dbengsch))
+- [ [#764](https://github.com/kuzzleio/kuzzle/pull/764) ] Inject the request in authentication verify callbacks   ([scottinet](https://github.com/scottinet))
+- [ [#723](https://github.com/kuzzleio/kuzzle/pull/723) ] Implement the PluginContext "storage" accessor   ([dbengsch](https://github.com/dbengsch))
+- [ [#710](https://github.com/kuzzleio/kuzzle/pull/710) ] Remove ES 2.x support and enforce use of ES 5+   ([dbengsch](https://github.com/dbengsch))
+- [ [#698](https://github.com/kuzzleio/kuzzle/pull/698) ] The security/searchProfiles has a misleading argument   ([dbengsch](https://github.com/dbengsch))
+- [ [#680](https://github.com/kuzzleio/kuzzle/pull/680) ] Standardization of the memory storage API   ([scottinet](https://github.com/scottinet))
+
+#### Bug fixes
+
+- [ [#884](https://github.com/kuzzleio/kuzzle/pull/884) ] Force uri to not ends with a slash (registration & requests)   ([stafyniaksacha](https://github.com/stafyniaksacha))
+- [ [#878](https://github.com/kuzzleio/kuzzle/pull/878) ] Embeds non-KuzzleError errors from pipe plugins in PluginImplementationError error   ([scottinet](https://github.com/scottinet))
+- [ [#877](https://github.com/kuzzleio/kuzzle/pull/877) ] Fix Kuzzle returning an unknown request id to the proxy   ([scottinet](https://github.com/scottinet))
+- [ [#867](https://github.com/kuzzleio/kuzzle/pull/867) ] Fix incoherent behaviors regarding user credentials management   ([scottinet](https://github.com/scottinet))
+- [ [#842](https://github.com/kuzzleio/kuzzle/pull/842) ] Fix unhandled errors on client disconnect   ([benoitvidis](https://github.com/benoitvidis))
+- [ [#847](https://github.com/kuzzleio/kuzzle/pull/847) ] Fix response headers after authentication step using HTTP   ([ballinette](https://github.com/ballinette))
+- [ [#828](https://github.com/kuzzleio/kuzzle/pull/828) ] Fixes broker consistency    ([stafyniaksacha](https://github.com/stafyniaksacha))
+- [ [#823](https://github.com/kuzzleio/kuzzle/pull/823) ] Fix missing notifications   ([benoitvidis](https://github.com/benoitvidis))
+- [ [#825](https://github.com/kuzzleio/kuzzle/pull/825) ] Fix unhandled exception on unsubscribing multiple range operators   ([benoitvidis](https://github.com/benoitvidis))
+- [ [#827](https://github.com/kuzzleio/kuzzle/pull/827) ] Fix elasticsearch unhandled 404 error   ([stafyniaksacha](https://github.com/stafyniaksacha))
+- [ [#820](https://github.com/kuzzleio/kuzzle/pull/820) ] Fix internal error on realtime:join   ([benoitvidis](https://github.com/benoitvidis))
+- [ [#817](https://github.com/kuzzleio/kuzzle/pull/817) ] Kuzzle fails to install on older Linux kernels   ([scottinet](https://github.com/scottinet))
+- [ [#810](https://github.com/kuzzleio/kuzzle/pull/810) ] Fix Kuzzle crash report on a beforeAction plugin error   ([scottinet](https://github.com/scottinet))
+- [ [#792](https://github.com/kuzzleio/kuzzle/pull/792) ] Fix Multiple concurrent requests being executed multiple times   ([benoitvidis](https://github.com/benoitvidis))
+- [ [#797](https://github.com/kuzzleio/kuzzle/pull/797) ] DSL - Allow simple form for "regexp" operator   ([benoitvidis](https://github.com/benoitvidis))
+- [ [#798](https://github.com/kuzzleio/kuzzle/pull/798) ] Fix elasticsearch error parser which crash when error got no body   ([stafyniaksacha](https://github.com/stafyniaksacha))
+- [ [#783](https://github.com/kuzzleio/kuzzle/pull/783) ] Fix dsl & canonization heap space exhaustion   ([benoitvidis](https://github.com/benoitvidis))
+- [ [#788](https://github.com/kuzzleio/kuzzle/pull/788) ] Prevent crash reports on controller plugins bugs   ([scottinet](https://github.com/scottinet))
+- [ [#753](https://github.com/kuzzleio/kuzzle/pull/753) ] Fixes #745 DSL.not* should match when the field is missing   ([benoitvidis](https://github.com/benoitvidis))
+- [ [#784](https://github.com/kuzzleio/kuzzle/pull/784) ] Wrap authentication errors in PluginImplementationError object   ([scottinet](https://github.com/scottinet))
+- [ [#752](https://github.com/kuzzleio/kuzzle/pull/752) ] Disable Redis cache in profile and role repositories   ([dbengsch](https://github.com/dbengsch))
+- [ [#777](https://github.com/kuzzleio/kuzzle/pull/777) ] Revoke associated JWTs on user deletion   ([scottinet](https://github.com/scottinet))
+- [ [#767](https://github.com/kuzzleio/kuzzle/pull/767) ] DSL "bool" & "not" factorization fix   ([benoitvidis](https://github.com/benoitvidis))
+- [ [#751](https://github.com/kuzzleio/kuzzle/pull/751) ] TypeError exception when removing a subscription   ([benoitvidis](https://github.com/benoitvidis))
+- [ [#727](https://github.com/kuzzleio/kuzzle/pull/727) ] Fix the way we default the profile if it is not set   ([dbengsch](https://github.com/dbengsch))
+- [ [#738](https://github.com/kuzzleio/kuzzle/pull/738) ] [HOTFIX] Remove customer subscriptions on disconnection   ([benoitvidis](https://github.com/benoitvidis))
+- [ [#725](https://github.com/kuzzleio/kuzzle/pull/725) ] Elasticsearch 5 expects index property in mapping to be a boolean   ([dbengsch](https://github.com/dbengsch))
+- [ [#718](https://github.com/kuzzleio/kuzzle/pull/718) ] Allow to define 0 for thread in plugin config   ([AnthonySendra](https://github.com/AnthonySendra))
+- [ [#715](https://github.com/kuzzleio/kuzzle/pull/715) ] Fix server:getConfig route   ([scottinet](https://github.com/scottinet))
+- [ [#684](https://github.com/kuzzleio/kuzzle/pull/684) ] Fix security:searchRole API route   ([ballinette](https://github.com/ballinette))
+- [ [#704](https://github.com/kuzzleio/kuzzle/pull/704) ] Missing PartialError serialization   ([scottinet](https://github.com/scottinet))
+- [ [#701](https://github.com/kuzzleio/kuzzle/pull/701) ] Fix bug:websocketClient clear ping timer on close if socket is down   ([benoitvidis](https://github.com/benoitvidis))
+- [ [#693](https://github.com/kuzzleio/kuzzle/pull/693) ] Use repositories.validateAndSave* method to reset profiles and roles at createFirstAdmin action   ([ballinette](https://github.com/ballinette))
+- [ [#688](https://github.com/kuzzleio/kuzzle/pull/688) ] Fix mapping for profile:   ([ballinette](https://github.com/ballinette))
+- [ [#683](https://github.com/kuzzleio/kuzzle/pull/683) ] Add new request events   ([scottinet](https://github.com/scottinet))
+- [ [#671](https://github.com/kuzzleio/kuzzle/pull/671) ] Protect document creation to avoid collision with http routes   ([dbengsch](https://github.com/dbengsch))
+- [ [#674](https://github.com/kuzzleio/kuzzle/pull/674) ] Prevent plugins infinite loop caused by triggered before/after events   ([scottinet](https://github.com/scottinet))
+
+#### New features
+
+- [ [#807](https://github.com/kuzzleio/kuzzle/pull/807) ] Adds a replaceUser route   ([samniisan](https://github.com/samniisan))
+- [ [#821](https://github.com/kuzzleio/kuzzle/pull/821) ] Add Document:exists route   ([samniisan](https://github.com/samniisan))
+- [ [#838](https://github.com/kuzzleio/kuzzle/pull/838) ] Add healthCheck action   ([ballinette](https://github.com/ballinette))
+- [ [#833](https://github.com/kuzzleio/kuzzle/pull/833) ] Graceful shutdown implementation   ([scottinet](https://github.com/scottinet))
+- [ [#780](https://github.com/kuzzleio/kuzzle/pull/780) ] Added a new route to list registrated plugin passport strategies   ([samniisan](https://github.com/samniisan))
+- [ [#750](https://github.com/kuzzleio/kuzzle/pull/750) ] Add methods scrollUsers, scrollProfiles and scrollSpecifications   ([scottinet](https://github.com/scottinet))
+- [ [#723](https://github.com/kuzzleio/kuzzle/pull/723) ] Implement the PluginContext "storage" accessor   ([dbengsch](https://github.com/dbengsch))
+
+#### Enhancements
+
+- [ [#869](https://github.com/kuzzleio/kuzzle/pull/869) ] Add new trigger on error   ([AnthonySendra](https://github.com/AnthonySendra))
+- [ [#873](https://github.com/kuzzleio/kuzzle/pull/873) ] Add trigger pipe after authentication   ([ballinette](https://github.com/ballinette))
+- [ [#859](https://github.com/kuzzleio/kuzzle/pull/859) ] Use native elasticsearch constructor options   ([benoitvidis](https://github.com/benoitvidis))
+- [ [#844](https://github.com/kuzzleio/kuzzle/pull/844) ] Add HTTP request headers to request context   ([ballinette](https://github.com/ballinette))
+- [ [#840](https://github.com/kuzzleio/kuzzle/pull/840) ] Login API reshape   ([xbill82](https://github.com/xbill82))
+- [ [#806](https://github.com/kuzzleio/kuzzle/pull/806) ] Delete now deactivate a document and notify by filters   ([jenow](https://github.com/jenow))
+- [ [#839](https://github.com/kuzzleio/kuzzle/pull/839) ] Improve healthCheck result message   ([ballinette](https://github.com/ballinette))
+- [ [#809](https://github.com/kuzzleio/kuzzle/pull/809) ] Anonymous should always be able to log in   ([benoitvidis](https://github.com/benoitvidis))
+- [ [#799](https://github.com/kuzzleio/kuzzle/pull/799) ] Autogenerate JWT salt   ([benoitvidis](https://github.com/benoitvidis))
+- [ [#771](https://github.com/kuzzleio/kuzzle/pull/771) ] Rename _kuzzle_info and metadata   ([AnthonySendra](https://github.com/AnthonySendra))
+- [ [#786](https://github.com/kuzzleio/kuzzle/pull/786) ] Add crash reports history limits   ([scottinet](https://github.com/scottinet))
+- [ [#749](https://github.com/kuzzleio/kuzzle/pull/749) ] Wait plugin initialization with promises   ([dbengsch](https://github.com/dbengsch))
+- [ [#748](https://github.com/kuzzleio/kuzzle/pull/748) ] Enable to setup kuzzle with a Elasticsearch cluster   ([ballinette](https://github.com/ballinette))
+- [ [#741](https://github.com/kuzzleio/kuzzle/pull/741) ] Make ES actions responsible of retrieving their id and body attributes   ([scottinet](https://github.com/scottinet))
+- [ [#739](https://github.com/kuzzleio/kuzzle/pull/739) ] Keep track of previously run requests   ([scottinet](https://github.com/scottinet))
+- [ [#734](https://github.com/kuzzleio/kuzzle/pull/734) ] Improve Elasticsearch errors handling   ([scottinet](https://github.com/scottinet))
+- [ [#736](https://github.com/kuzzleio/kuzzle/pull/736) ] Add a new request:onUnauthorized global event   ([scottinet](https://github.com/scottinet))
+- [ [#706](https://github.com/kuzzleio/kuzzle/pull/706) ] Add support for HTTP HEAD requests   ([scottinet](https://github.com/scottinet))
+- [ [#695](https://github.com/kuzzleio/kuzzle/pull/695) ] Add new role & profile core events   ([ballinette](https://github.com/ballinette))
+- [ [#689](https://github.com/kuzzleio/kuzzle/pull/689) ] Remove usage of `allowInternalIndex` within policies   ([ballinette](https://github.com/ballinette))
+- [ [#673](https://github.com/kuzzleio/kuzzle/pull/673) ] Add error stacktrace when a plugin fails to load   ([scottinet](https://github.com/scottinet))
+
+#### Others
+
+- [ [#826](https://github.com/kuzzleio/kuzzle/pull/826) ] Improve debug function to allow toggle one/multiple lines   ([stafyniaksacha](https://github.com/stafyniaksacha))
+- [ [#732](https://github.com/kuzzleio/kuzzle/pull/732) ] Hotfix test that randomly break due to randomness introduced by highwayhash   ([dbengsch](https://github.com/dbengsch))
+- [ [#717](https://github.com/kuzzleio/kuzzle/pull/717) ] Remove PluginImplementationError from the diagtools whitelist   ([scottinet](https://github.com/scottinet))
+- [ [#658](https://github.com/kuzzleio/kuzzle/pull/658) ] Enable hot reload on plugins   ([stafyniaksacha](https://github.com/stafyniaksacha))
+- [ [#647](https://github.com/kuzzleio/kuzzle/pull/647) ] Elasticsearch emits unnecessary log events   ([dbengsch](https://github.com/dbengsch))
+- [ [#686](https://github.com/kuzzleio/kuzzle/pull/686) ] Add extraParams argument to getElasticsearchRequest   ([xbill82](https://github.com/xbill82))
+- [ [#675](https://github.com/kuzzleio/kuzzle/pull/675) ] Update node prerequisite in package.json   ([scottinet](https://github.com/scottinet))
+- [ [#661](https://github.com/kuzzleio/kuzzle/pull/661) ] Protect against multi-index and multi-collection search requests   ([dbengsch](https://github.com/dbengsch))
+- [ [#654](https://github.com/kuzzleio/kuzzle/pull/654) ] Improve separation of concern on roleRepository::searchRole() method   ([ballinette](https://github.com/ballinette))
+
+#### Securities
+
+- [ [#799](https://github.com/kuzzleio/kuzzle/pull/799) ] Autogenerate JWT salt   ([benoitvidis](https://github.com/benoitvidis))
+- [ [#721](https://github.com/kuzzleio/kuzzle/pull/721) ] Replace MD5 with HighwayHash   ([scottinet](https://github.com/scottinet))
+- [ [#719](https://github.com/kuzzleio/kuzzle/pull/719) ] Do not export sensitive configuration on server:getConfig API route   ([scottinet](https://github.com/scottinet))
+---
+
 *__note:__ the # at the end of lines are the pull request numbers on GitHub*
 
 # Current

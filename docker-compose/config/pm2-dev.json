@@ -3,8 +3,8 @@
     "name"         : "KuzzleServer",
     "script"       : "bin/kuzzle",
     "args"         : ["start"],
-    "watch"        : ["lib", "config", "bin", "default.config.js"],
-    "ignore_watch" : ["node_modules"],
-    "node_args": "--inspect"
+    "watch"        : ["lib/**/*.js", "default.config.js", "plugins/enabled/**/*.js"],
+    "node_args"    : "--inspect",
+    "kill_timeout" : 15000
   }]
 }
