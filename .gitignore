@@ -2,9 +2,12 @@
 node_modules
 npm-debug.log*
 .node_history
+.reify-cache
+
 # Exclude coverage report
 coverage
 .nyc_output
+
 # Plugin config folder
 config/plugins/
 dump
