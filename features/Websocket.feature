@@ -26,12 +26,12 @@ Feature: Test websocket API
     And I'm not able to get the document in index "kuzzle-test-index-alt"
 
   @usingWebsocket @unsubscribe
-  Scenario: Create or Update a document
+  Scenario: Create or Replace a document
     Given A room subscription listening to "info.city" having value "NYC"
     When I write the document "documentGrace"
     And I createOrReplace it
     Then I should have updated the document
-    And I should receive a "update" notification
+    And I should receive a document notification with field action equal to "replace"
     And The notification should have volatile
 
   @usingWebsocket
@@ -190,7 +190,7 @@ Feature: Test websocket API
   Scenario: Document creation notifications
     Given A room subscription listening to "info.city" having value "NYC"
     When I write the document "documentGrace"
-    Then I should receive a "create" notification
+    Then I should receive a document notification with field action equal to "create"
     And The notification should have a "_source" member
     And The notification should have volatile
 
@@ -198,7 +198,7 @@ Feature: Test websocket API
   Scenario: Document creation notifications with not exists
     Given A room subscription listening field "toto" doesn't exists
     When I write the document "documentGrace"
-    Then I should receive a "create" notification
+    Then I should receive a document notification with field action equal to "create"
     And The notification should have a "_source" member
     And The notification should have volatile
 
@@ -207,7 +207,7 @@ Feature: Test websocket API
     Given A room subscription listening to "info.city" having value "NYC"
     When I write the document "documentGrace"
     Then I remove the document
-    Then I should receive a "delete" notification
+    Then I should receive a document notification with field action equal to "delete"
     And The notification should not have a "_source" member
     And The notification should have volatile
 
@@ -216,7 +216,7 @@ Feature: Test websocket API
     Given A room subscription listening to "info.hobby" having value "computer"
     When I write the document "documentAda"
     Then I update the document with value "Hopper" in field "lastName"
-    Then I should receive a "update" notification
+    Then I should receive a document notification with field action equal to "update"
     And The notification should have a "_source" member
     And The notification should have volatile
 
@@ -225,7 +225,7 @@ Feature: Test websocket API
     Given A room subscription listening to "lastName" having value "Hopper"
     When I write the document "documentGrace"
     Then I update the document with value "Foo" in field "lastName"
-    Then I should receive a "update" notification
+    Then I should receive a document notification with field action equal to "update"
     And The notification should not have a "_source" member
     And The notification should have volatile
 
@@ -234,7 +234,7 @@ Feature: Test websocket API
     Given A room subscription listening to "info.hobby" having value "computer"
     When I write the document "documentAda"
     Then I replace the document with "documentGrace" document
-    Then I should receive a "update" notification
+    Then I should receive a document notification with field action equal to "replace"
     And The notification should have a "_source" member
     And The notification should have volatile
 
@@ -243,7 +243,7 @@ Feature: Test websocket API
     Given A room subscription listening to "info.city" having value "NYC"
     When I write the document "documentGrace"
     Then I replace the document with "documentAda" document
-    Then I should receive a "update" notification
+    Then I should receive a document notification with field action equal to "replace"
     And The notification should not have a "_source" member
     And The notification should have volatile
 
@@ -251,7 +251,7 @@ Feature: Test websocket API
   Scenario: Subscribe to a collection
     Given A room subscription listening to the whole collection
     When I write the document "documentGrace"
-    Then I should receive a "create" notification
+    Then I should receive a document notification with field action equal to "create"
     And The notification should have a "_source" member
     And The notification should have volatile
 
@@ -262,7 +262,7 @@ Feature: Test websocket API
     And I write the document "documentAda"
     And I refresh the index
     Then I remove documents with field "info.hobby" equals to value "computer"
-    Then I should receive a "delete" notification
+    Then I should receive a document notification with field action equal to "delete"
     And The notification should not have a "_source" member
     And The notification should have volatile
 
@@ -276,10 +276,10 @@ Feature: Test websocket API
   Scenario: Subscription notifications
     Given A room subscription listening to "lastName" having value "Hopper" with socket "client1"
     Given A room subscription listening to "lastName" having value "Hopper" with socket "client2"
-    Then I should receive a "subscribe" notification
+    Then I should receive a user notification with field action equal to "subscribe"
     And The notification should have volatile
     Then I unsubscribe socket "client1"
-    And I should receive a "unsubscribe" notification
+    And I should receive a user notification with field action equal to "unsubscribe"
     And The notification should have volatile
 
   @usingWebsocket
@@ -521,7 +521,7 @@ Feature: Test websocket API
     Given I create a user "useradmin" with id "useradmin-id"
     When I log in as useradmin:testpwd expiring in 1s
     Then I wait 1s
-    And I should receive a "jwtTokenExpired" notification
+    And I should receive a TokenExpired notification with field message equal to "Authentication Token Expired"
 
   @usingWebsocket @cleanSecurity
   Scenario: user permissions

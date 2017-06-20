@@ -9,7 +9,6 @@ const
   foo = {foo: 'bar'};
 
 class KuzzleMock extends Kuzzle {
-
   constructor () {
     super();
 
@@ -81,7 +80,6 @@ class KuzzleMock extends Kuzzle {
     };
 
     this.hotelClerk = {
-      addToChannels: sinon.stub(),
       getRealtimeCollections: sinon.stub(),
       removeCustomerFromAllRooms: sinon.stub(),
       addSubscription: sinon.stub().returns(Bluebird.resolve(foo)),
@@ -136,7 +134,9 @@ class KuzzleMock extends Kuzzle {
 
     this.notifier = {
       init: sinon.spy(),
-      notify: sinon.spy(),
+      notifyUser: sinon.spy(),
+      notifyServer: sinon.spy(),
+      notifyDocument: sinon.spy(),
       notifyDocumentCreate: sinon.spy(),
       notifyDocumentDelete: sinon.spy(),
       notifyDocumentReplace: sinon.spy(),
@@ -237,6 +237,7 @@ class KuzzleMock extends Kuzzle {
           pexpire: sinon.stub().returns(Bluebird.resolve()),
           psetex: sinon.stub().returns(Bluebird.resolve()),
           remove: sinon.stub().returns(Bluebird.resolve()),
+          search: sinon.stub().returns(Bluebird.resolve()),
           searchKeys: sinon.stub().returns(Bluebird.resolve([])),
           set: sinon.stub().returns(Bluebird.resolve()),
           setnx: sinon.stub().returns(Bluebird.resolve()),

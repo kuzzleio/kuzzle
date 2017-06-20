@@ -1,7 +1,7 @@
 'use strict';
 
 const
-  Promise = require('bluebird'),
+  Bluebird = require('bluebird'),
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
   should = require('should'),
@@ -93,7 +93,7 @@ describe('Test: repositories/roleRepository', () => {
 
       roleRepository.roles.role3 = role3;
 
-      roleRepository.loadMultiFromDatabase = sinon.stub().returns(Promise.resolve([role1, role2, role4]));
+      roleRepository.loadMultiFromDatabase = sinon.stub().returns(Bluebird.resolve([role1, role2, role4]));
 
       return roleRepository.loadRoles(['role1', 'role2', 'role3', 'role4'])
         .then(result => {
@@ -132,7 +132,7 @@ describe('Test: repositories/roleRepository', () => {
     it('should load the role directly from DB if it\'s not in memory', () => {
       const role = {_id: 'foobar'};
 
-      roleRepository.loadOneFromDatabase = sinon.stub().returns(Promise.resolve(role));
+      roleRepository.loadOneFromDatabase = sinon.stub().returns(Bluebird.resolve(role));
 
       return roleRepository.loadRole('foo')
         .then(result => {
@@ -195,7 +195,7 @@ describe('Test: repositories/roleRepository', () => {
         }
       };
 
-      roleRepository.search = sinon.stub().returns(Promise.resolve({
+      roleRepository.search = sinon.stub().returns(Bluebird.resolve({
         total: 4,
         hits: [
           roles.default,
@@ -275,7 +275,7 @@ describe('Test: repositories/roleRepository', () => {
     });
 
     it('should reject and not trigger any event if a profile uses the role about to be deleted', done => {
-      kuzzle.repositories.profile.searchProfiles.returns(Promise.resolve({
+      kuzzle.repositories.profile.searchProfiles.returns(Bluebird.resolve({
         total: 1,
         hits: [
           'test'
@@ -301,8 +301,8 @@ describe('Test: repositories/roleRepository', () => {
       const role = new Role();
       role._id = 'foo';
 
-      kuzzle.repositories.profile.searchProfiles.returns(Promise.resolve({total: 0}));
-      roleRepository.deleteFromDatabase = sinon.stub().returns(Promise.resolve());
+      kuzzle.repositories.profile.searchProfiles.returns(Bluebird.resolve({total: 0}));
+      roleRepository.deleteFromDatabase = sinon.stub().returns(Bluebird.resolve(null));
       roleRepository.roles.foo = true;
 
       return roleRepository.deleteRole(role)
@@ -463,7 +463,7 @@ describe('Test: repositories/roleRepository', () => {
       role._id = 'test';
       role.controllers = controllers;
 
-      roleRepository.persistToDatabase = sinon.stub().returns(Promise.resolve());
+      roleRepository.persistToDatabase = sinon.stub().returns(Bluebird.resolve());
 
       return roleRepository.validateAndSaveRole(role)
         .then(() => {

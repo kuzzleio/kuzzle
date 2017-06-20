@@ -7,6 +7,7 @@
 
 const
   _ = require('lodash'),
+  Bluebird = require('bluebird'),
   ApiRT = function () {
     this.world = null;
     this.clientId = null;
@@ -412,7 +413,7 @@ ApiRT.prototype.unsubscribe = function (room, clientId) {
 
   this.subscribedRooms[clientId][room].close();
   delete this.subscribedRooms[clientId];
-
+  this.responses = null;
   return this.send(msg, false);
 };
 
@@ -994,7 +995,7 @@ ApiRT.prototype.checkToken = function (token) {
         this.world.currentUser.token = _token;
       }
 
-      return Promise.reject(error);
+      return Bluebird.reject(error);
     });
 };
 

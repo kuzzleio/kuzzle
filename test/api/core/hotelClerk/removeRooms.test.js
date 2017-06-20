@@ -1,3 +1,6 @@
+// Allow the "import ... from" ES6 syntax used in the DSL
+require('reify');
+
 const
   should = require('should'),
   sinon = require('sinon'),
@@ -103,6 +106,7 @@ describe('Test: hotelClerk.removeRooms', () => {
         should(response.acknowledged).be.true();
 
         should(kuzzle.hotelClerk.rooms).be.empty().Object();
+        return null;
       });
   });
 
@@ -165,6 +169,8 @@ describe('Test: hotelClerk.removeRooms', () => {
         should(response.acknowledged).be.true();
 
         should(kuzzle.hotelClerk.rooms).be.empty().Object();
+
+        return null;
       });
   });
 

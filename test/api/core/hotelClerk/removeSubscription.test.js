@@ -1,3 +1,6 @@
+// Allow the "import ... from" ES6 syntax used in the DSL
+require('reify');
+
 const
   should = require('should'),
   sinon = require('sinon'),
@@ -75,7 +78,7 @@ describe('Test: hotelClerk.removeSubscription', () => {
     should(kuzzle.dsl.remove)
       .be.calledOnce();
 
-    should(kuzzle.notifier.notify.called).be.false();
+    should(kuzzle.notifier.notifyUser.called).be.false();
 
     should(kuzzle.hotelClerk.rooms).be.an.Object();
     should(kuzzle.hotelClerk.rooms).have.property('bar');
@@ -99,7 +102,7 @@ describe('Test: hotelClerk.removeSubscription', () => {
       .be.calledOnce()
       .be.calledWith(unsubscribeRequest.input.body.roomId);
 
-    should(kuzzle.notifier.notify.called).be.false();
+    should(kuzzle.notifier.notifyUser.called).be.false();
 
     should(kuzzle.hotelClerk.rooms).be.an.Object();
     should(kuzzle.hotelClerk.rooms).be.empty();
@@ -117,19 +120,23 @@ describe('Test: hotelClerk.removeSubscription', () => {
     should(kuzzle.dsl.remove)
       .have.callCount(0);
 
-    should(kuzzle.notifier.notify)
+    should(kuzzle.notifier.notifyUser)
       .be.calledOnce();
 
     // testing roomId argument
-    should(kuzzle.notifier.notify.args[0][0]).match(['foo']);
+    should(kuzzle.notifier.notifyUser.args[0][0]).be.eql('foo');
 
-    // testing requestObject argument
-    should(kuzzle.notifier.notify.args[0][1]).be.instanceOf(Request);
-    should(kuzzle.notifier.notify.args[0][1].input.controller).be.exactly('realtime');
-    should(kuzzle.notifier.notify.args[0][1].input.action).be.exactly('unsubscribe');
-    should(kuzzle.notifier.notify.args[0][1].input.resource.index).be.exactly(index);
+    // testing request argument
+    should(kuzzle.notifier.notifyUser.args[0][1]).be.instanceOf(Request);
+    should(kuzzle.notifier.notifyUser.args[0][1].input.controller).be.exactly('realtime');
+    should(kuzzle.notifier.notifyUser.args[0][1].input.action).be.exactly('unsubscribe');
+    should(kuzzle.notifier.notifyUser.args[0][1].input.resource.index).be.exactly(index);
+
+
+    // testing scope argument
+    should(kuzzle.notifier.notifyUser.args[0][2]).be.eql('out');
 
     // testing payload argument
-    should(kuzzle.notifier.notify.args[0][2].count).be.exactly(1);
+    should(kuzzle.notifier.notifyUser.args[0][3].count).be.exactly(1);
   });
 });

@@ -1,16 +1,18 @@
 'use strict';
 
 const
-  Promise = require('bluebird'),
+  Bluebird = require('bluebird'),
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
   should = require('should'),
   Role = require('../../../../../lib/api/core/models/security/role'),
   Profile = require('../../../../../lib/api/core/models/security/profile'),
   ProfileRepository = require('../../../../../lib/api/core/models/repositories/profileRepository'),
-  BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,
-  ForbiddenError = require('kuzzle-common-objects').errors.ForbiddenError,
-  NotFoundError = require('kuzzle-common-objects').errors.NotFoundError,
+  {
+    BadRequestError,
+    ForbiddenError,
+    NotFoundError
+  } = require('kuzzle-common-objects').errors,
   Request = require('kuzzle-common-objects').Request,
   KuzzleMock = require('../../../../mocks/kuzzle.mock');
 
@@ -65,7 +67,7 @@ describe('Test: repositories/profileRepository', () => {
     });
 
     it('should return null if the profile does not exist', () => {
-      kuzzle.internalEngine.get.returns(Promise.reject(new NotFoundError('Not found')));
+      kuzzle.internalEngine.get.returns(Bluebird.reject(new NotFoundError('Not found')));
 
       return profileRepository.loadProfile('idontexist')
         .then(result => {
@@ -76,7 +78,7 @@ describe('Test: repositories/profileRepository', () => {
     it('should load a profile from the db', () => {
       const p = {foo: 'bar'};
 
-      profileRepository.load = sinon.stub().returns(Promise.resolve(p));
+      profileRepository.load = sinon.stub().returns(Bluebird.resolve(p));
 
       return profileRepository.loadProfile('foo')
         .then(profile => {
@@ -157,7 +159,7 @@ describe('Test: repositories/profileRepository', () => {
     it('should throw if the profile contains unexisting roles', () => {
       const p = new Profile();
 
-      kuzzle.repositories.role.loadRoles.returns(Promise.resolve([]));
+      kuzzle.repositories.role.loadRoles.returns(Bluebird.resolve([]));
 
       return should(profileRepository.hydrate(p, {
         policies: [
@@ -169,7 +171,7 @@ describe('Test: repositories/profileRepository', () => {
     it('should set role default when none is given', () => {
       const p = new Profile();
 
-      kuzzle.repositories.role.loadRoles.returns(Promise.resolve([
+      kuzzle.repositories.role.loadRoles.returns(Bluebird.resolve([
         {_id: 'default'}
       ]));
 
@@ -182,7 +184,7 @@ describe('Test: repositories/profileRepository', () => {
     it('should unnest _source properties', () => {
       const p = new Profile();
 
-      kuzzle.repositories.role.loadRoles.returns(Promise.resolve([
+      kuzzle.repositories.role.loadRoles.returns(Bluebird.resolve([
         {_id: 'default'}
       ]));
 
@@ -221,7 +223,7 @@ describe('Test: repositories/profileRepository', () => {
     });
 
     it('should reject and not trigger any event if a user uses the profile about to be deleted', done => {
-      kuzzle.repositories.user.search.returns(Promise.resolve({
+      kuzzle.repositories.user.search.returns(Bluebird.resolve({
         total: 1
       }));
 
@@ -302,9 +304,9 @@ describe('Test: repositories/profileRepository', () => {
     it('should return a raw delete response after deleting', () => {
       const response = {_id: 'testprofile'};
 
-      kuzzle.repositories.user.search.returns(Promise.resolve({}));
-      profileRepository.deleteFromCache = sinon.stub().returns(Promise.resolve());
-      profileRepository.deleteFromDatabase = sinon.stub().returns(Promise.resolve(response));
+      kuzzle.repositories.user.search.returns(Bluebird.resolve({}));
+      profileRepository.deleteFromCache = sinon.stub().returns(Bluebird.resolve());
+      profileRepository.deleteFromDatabase = sinon.stub().returns(Bluebird.resolve(response));
 
       return profileRepository.deleteProfile(testProfile)
         .then(r => {
@@ -314,9 +316,9 @@ describe('Test: repositories/profileRepository', () => {
     });
 
     it('should call deleteFromDatabase, remove the profile from memory and trigger a "core:profileRepository:delete" event', () => {
-      kuzzle.repositories.user.search.returns(Promise.resolve({}));
-      profileRepository.deleteFromCache = sinon.stub().returns(Promise.resolve());
-      profileRepository.deleteFromDatabase = sinon.stub().returns(Promise.resolve());
+      kuzzle.repositories.user.search.returns(Bluebird.resolve({}));
+      profileRepository.deleteFromCache = sinon.stub().returns(Bluebird.resolve());
+      profileRepository.deleteFromDatabase = sinon.stub().returns(Bluebird.resolve({acknowledge: true}));
       profileRepository.profiles.foo = true;
 
       return profileRepository.deleteProfile({_id: 'foo'})
@@ -398,7 +400,7 @@ describe('Test: repositories/profileRepository', () => {
     });
 
     it('should properly persist the profile and trigger a "core:profileRepository:save" event when ok', () => {
-      profileRepository.persistToDatabase = sinon.stub();
+      profileRepository.persistToDatabase = sinon.stub().returns(Bluebird.resolve(null));
 
       return profileRepository.validateAndSaveProfile(testProfile)
         .then((result) => {
