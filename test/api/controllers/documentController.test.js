@@ -28,7 +28,7 @@ describe('Test: document controller', () => {
     engine = kuzzle.services.list.storageEngine;
     documentController = new DocumentController(kuzzle);
     funnelController = new FunnelController(kuzzle);
-    request = new Request({controller: 'document',index: '%test', collection: 'unit-test-documentController'});
+    request = new Request({controller: 'document', index: '%test', collection: 'unit-test-documentController'});
   });
 
   afterEach(() => {
