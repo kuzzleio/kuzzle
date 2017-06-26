@@ -34,6 +34,7 @@ function commandStart (options) {
   const
     kuzzle = new Kuzzle(),
     error = string => options.parent.noColors ? string : clc.red(string),
+    warn = string => options.parent.noColors ? string : clc.yellow(string),
     notice = string => options.parent.noColors ? string : clc.cyanBright(string),
     kuz = string => options.parent.noColors ? string : clc.greenBright.bold(string);
 
@@ -100,13 +101,13 @@ function commandStart (options) {
       return kuzzle.internalEngine.bootstrap.adminExists()
         .then(res => {
           if (!res) {
-            console.log(notice('[ℹ] There is no administrator user yet. You can use the CLI or the back-office to create one.'));
-            console.log(notice('[ℹ] Entering no-administrator mode: everyone has administrator rights.'));
+            console.log(warn('[!] [WARNING] There is no administrator user yet: everyone has administrator rights.'));
+            console.log(notice('[ℹ] You can use the CLI or the back-office to create the first administrator user.'));
           }
         });
     })
     .catch(err => {
-      console.error(err.message, err.stack);
+      console.error(error(err.stack));
       process.exit(1);
     });
 }

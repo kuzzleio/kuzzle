@@ -163,7 +163,7 @@ describe('Test plugins manager run', () => {
     pluginMock.expects('init').never();
 
     return pluginsManager.run()
-      .then(() => pluginMock.verify());
+      .catch(() => pluginMock.verify());
   });
 
   it('should attach event hook on kuzzle object', () => {
@@ -387,28 +387,22 @@ describe('Test plugins manager run', () => {
       });
   });
 
-  it('should abort the controller initialization if the controller object is incorrectly defined', () => {
+  it('should abort the plugin initialization if the controller object is incorrectly defined', () => {
     plugin.object.controllers = {
       'foo': 'bar'
     };
 
-    return pluginsManager.run()
-      .then(() => {
-        should(pluginsManager.controllers['testPlugin/foo']).be.undefined();
-      });
+    should(pluginsManager.run()).be.rejected();
   });
 
-  it('should abort the controller initialization if one of the controller action is not correctly defined', () => {
+  it('should abort the plugin initialization if one of the controller action is not correctly defined', () => {
     plugin.object.controllers = {
       'foo': {
         'actionName': []
       }
     };
 
-    return pluginsManager.run()
-      .then(() => {
-        should(pluginsManager.controllers['testPlugin/foo']).be.undefined();
-      });
+    should(pluginsManager.run()).be.rejected();
   });
 
   it('should abort the controller initialization if one of the controller action target does not exist', () => {
@@ -421,10 +415,7 @@ describe('Test plugins manager run', () => {
 
     plugin.object.functionName = () => {};
 
-    return pluginsManager.run()
-      .then(() => {
-        should(pluginsManager.controllers['testPlugin/foo']).be.undefined();
-      });
+    should(pluginsManager.run()).be.rejected();
   });
 
   it('should not add an invalid route to the API', () => {
@@ -444,14 +435,24 @@ describe('Test plugins manager run', () => {
 
     plugin.object.functionName = () => {};
 
+    should(pluginsManager.run()).be.rejected();
+  });
+
+  it('should not initialize plugin workers if "threadable" property is not defined', () => {
+    plugin.config.threads = 2;
+    plugin.object.threadable = undefined;
+
+    pluginsManager.isServer = true;
+    pluginsManager.isDummy = false;
+
     return pluginsManager.run()
-      .then(() => {
-        should(pluginsManager.routes).be.an.Array().and.length(0);
-      });
+      .then(() => should(pm2Mock.getProcessList()).be.an.Array().and.length(0));
   });
 
   it('should initialize plugin workers if some are defined', () => {
     plugin.config.threads = 2;
+    plugin.object.threadable = true;
+
     pluginsManager.isServer = true;
     pluginsManager.isDummy = false;
 
@@ -461,6 +462,8 @@ describe('Test plugins manager run', () => {
 
   it('should send an initialize message to the process when ready is received', () => {
     plugin.config.threads = 1;
+    plugin.object.threadable = true;
+
     pluginsManager.isServer = true;
     pluginsManager.isDummy = false;
 
@@ -476,6 +479,8 @@ describe('Test plugins manager run', () => {
 
   it('should add worker to list when initialized is received', () => {
     plugin.config.threads = 1;
+    plugin.object.threadable = true;
+
     pluginsManager.isServer = true;
     pluginsManager.isDummy = false;
 
@@ -497,6 +502,8 @@ describe('Test plugins manager run', () => {
 
   it('should remove a worker to list when process:event exit is received', () => {
     plugin.config.threads = 1;
+    plugin.object.threadable = true;
+
     pluginsManager.isServer = true;
     pluginsManager.isDummy = false;
 
@@ -522,6 +529,8 @@ describe('Test plugins manager run', () => {
   it('should receive the triggered message', () => {
     const triggerWorkers = PluginsManager.__get__('triggerWorkers');
     plugin.config.threads = 1;
+    plugin.object.threadable = true;
+
     plugin.config.hooks = {
       'foo:bar': 'foobar'
     };

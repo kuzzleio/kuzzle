@@ -21,6 +21,7 @@ describe('PluginsManager', () => {
     };
 
     mockrequire('fs', fsStub);
+
     PluginsManager = mockrequire.reRequire('../../../../lib/api/core/plugins/pluginsManager');
 
     kuzzle = new KuzzleMock();
@@ -40,24 +41,24 @@ describe('PluginsManager', () => {
   });
 
   describe('#loadPlugins', () => {
-    it('should discard a plugin if loading it from package.json fails', () => {
+    it('should reject all plugin initialization if an error occurs when loading it from package.json', () => {
       fsStub.readdirSync.returns(['kuzzle-plugin-test']);
       fsStub.statSync.returns({
         isDirectory: () => true
       });
 
-      should(() => pluginsManager.init()).not.throw();
+      should(() => pluginsManager.init()).throw();
       should(pluginsManager.plugins).be.empty();
     });
 
-    it('should discard a plugin if loading it from a directory fails', () => {
+    it('should reject all plugin initialization if an error occurs when loading it from a directory', () => {
       fsStub.accessSync.throws(new Error('package.json does not exist'));
       fsStub.readdirSync.returns(['kuzzle-plugin-test']);
       fsStub.statSync.returns({
         isDirectory: () => true
       });
 
-      should(() => pluginsManager.init()).not.throw();
+      should(() => pluginsManager.init()).throw();
       should(pluginsManager.plugins).be.empty();
     });
 
