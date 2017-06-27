@@ -25,14 +25,13 @@ const
   fs = require('fs'),
   rc = require('rc'),
   params = rc('kuzzle'),
-  Kuzzle = require('../../lib/api/kuzzle'),
   Request = require('kuzzle-common-objects').Request,
   Bluebird = require('bluebird'),
   clc = require('cli-color');
 
 function commandStart (options) {
   const
-    kuzzle = new Kuzzle(),
+    kuzzle = new (require('../../lib/api/kuzzle'))(),
     error = string => options.parent.noColors ? string : clc.red(string),
     notice = string => options.parent.noColors ? string : clc.cyanBright(string),
     kuz = string => options.parent.noColors ? string : clc.greenBright.bold(string);

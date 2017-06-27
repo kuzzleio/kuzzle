@@ -70,7 +70,7 @@ program
   .option('    --mappings <mappings>', 'load and apply mappings from file')
   .action(require('./commands/start'));
 
-// $ kuzzle createFirstAdmin
+// $ kuzzle dump
 program
   .command('dump')
   .description('create a dump of current state of kuzzle')
