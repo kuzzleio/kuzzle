@@ -496,13 +496,22 @@ describe('Test: security controller - users', () => {
       return securityController.updateUser(new Request({
         _id: 'test',
         body: {profileIds: ['anonymous'], foo: 'bar'}
-      }), {})
+      }))
         .then(response => {
           should(response).be.instanceof(Object);
           should(response._id).be.exactly('test');
           should(response._source.profile).be.an.instanceOf(Object);
           should(response._source.foo).be.exactly('bar');
         });
+    });
+
+    it('should return an error if an unknown profile is provided', () => {
+      return should(() => {
+        securityController.updateUser(new Request({
+          _id: 'test',
+          body: {profileIds: ['foobar']}
+        })).throw(NotFoundError);
+      });
     });
   });
 
