@@ -2,7 +2,7 @@
 
 const
   should = require('should'),
-  Promise = require('bluebird'),
+  Bluebird = require('bluebird'),
   Request = require('kuzzle-common-objects').Request,
   HotelClerk = require('../../../../lib/api/core/hotelClerk'),
   BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,
@@ -33,7 +33,7 @@ describe('Test: hotelClerk.addSubscription', () => {
     kuzzle = new KuzzleMock();
     kuzzle.hotelClerk = new HotelClerk(kuzzle);
 
-    kuzzle.dsl.register.returns(Promise.resolve({
+    kuzzle.dsl.register.returns(Bluebird.resolve({
       id: 'roomId',
       diff: 'diff'
     }));
@@ -63,39 +63,32 @@ describe('Test: hotelClerk.addSubscription', () => {
 
     return kuzzle.hotelClerk.addSubscription(request)
       .then(response => {
-        try {
-          should(kuzzle.hotelClerk.rooms).be.an.Object();
-          should(kuzzle.hotelClerk.rooms).not.be.empty();
+        should(kuzzle.hotelClerk.rooms).be.an.Object();
+        should(kuzzle.hotelClerk.rooms).not.be.empty();
 
-          should(kuzzle.hotelClerk.customers).be.an.Object();
-          should(kuzzle.hotelClerk.customers).not.be.empty();
+        should(kuzzle.hotelClerk.customers).be.an.Object();
+        should(kuzzle.hotelClerk.customers).not.be.empty();
 
-          should(response).be.an.Object();
-          should(response).have.property('roomId');
-          should(response).have.property('channel');
-          should(kuzzle.hotelClerk.rooms[response.roomId]).be.an.Object();
-          should(kuzzle.hotelClerk.rooms[response.roomId]).not.be.empty();
+        should(response).be.an.Object();
+        should(response).have.property('roomId');
+        should(response).have.property('channel');
+        should(kuzzle.hotelClerk.rooms[response.roomId]).be.an.Object();
+        should(kuzzle.hotelClerk.rooms[response.roomId]).not.be.empty();
 
-          roomId = kuzzle.hotelClerk.rooms[response.roomId].id;
+        roomId = kuzzle.hotelClerk.rooms[response.roomId].id;
 
-          const customer = kuzzle.hotelClerk.customers[connectionId];
-          should(customer).be.an.Object();
-          should(customer).not.be.empty();
-          should(customer[roomId]).not.be.undefined().and.match(request.input.volatile);
+        const customer = kuzzle.hotelClerk.customers[connectionId];
+        should(customer).be.an.Object();
+        should(customer).not.be.empty();
+        should(customer[roomId]).not.be.undefined().and.match(request.input.volatile);
 
-          should(kuzzle.hotelClerk.rooms[roomId].channels).be.an.Object().and.not.be.undefined();
-          should(Object.keys(kuzzle.hotelClerk.rooms[roomId].channels).length).be.exactly(1);
+        should(kuzzle.hotelClerk.rooms[roomId].channels).be.an.Object().and.not.be.undefined();
+        should(Object.keys(kuzzle.hotelClerk.rooms[roomId].channels).length).be.exactly(1);
 
-          channel = Object.keys(kuzzle.hotelClerk.rooms[roomId].channels)[0];
-          should(kuzzle.hotelClerk.rooms[roomId].channels[channel].scope).not.be.undefined().and.be.exactly('all');
-          should(kuzzle.hotelClerk.rooms[roomId].channels[channel].state).not.be.undefined().and.be.exactly('done');
-          should(kuzzle.hotelClerk.rooms[roomId].channels[channel].users).not.be.undefined().and.be.exactly('none');
-
-          return Promise.resolve();
-        }
-        catch (error) {
-          return Promise.reject(error);
-        }
+        channel = Object.keys(kuzzle.hotelClerk.rooms[roomId].channels)[0];
+        should(kuzzle.hotelClerk.rooms[roomId].channels[channel].scope).not.be.undefined().and.be.exactly('all');
+        should(kuzzle.hotelClerk.rooms[roomId].channels[channel].state).not.be.undefined().and.be.exactly('done');
+        should(kuzzle.hotelClerk.rooms[roomId].channels[channel].users).not.be.undefined().and.be.exactly('none');
       });
   });
 
@@ -129,7 +122,7 @@ describe('Test: hotelClerk.addSubscription', () => {
         index: index,
         body: {badkeyword : {firstName: 'Ada'}}
       }, context);
-    kuzzle.dsl.register.returns(Promise.reject(new Error('test')));
+    kuzzle.dsl.normalize.returns(Bluebird.reject(new Error('test')));
 
     pAddSubscription = kuzzle.hotelClerk.addSubscription(request);
     return should(pAddSubscription).be.rejected();
@@ -160,7 +153,7 @@ describe('Test: hotelClerk.addSubscription', () => {
   });
 
 
-  it('should return the same room ID if the same filters are used', done => {
+  it('should return the same room ID if the same filters are used', () => {
     const
       request1 = new Request({
         controller: 'realtime',
@@ -208,17 +201,13 @@ describe('Test: hotelClerk.addSubscription', () => {
       }, context);
     let response;
 
-    kuzzle.hotelClerk.addSubscription(request1)
+    return kuzzle.hotelClerk.addSubscription(request1)
       .then(result => {
         response = result;
         return kuzzle.hotelClerk.addSubscription(request2);
       })
       .then(result => {
         should(result.roomId).be.exactly(response.roomId);
-        done();
-      })
-      .catch(error => {
-        done(error);
       });
   });
 
@@ -233,7 +222,7 @@ describe('Test: hotelClerk.addSubscription', () => {
     return should(kuzzle.hotelClerk.addSubscription(request)).be.fulfilled();
   });
 
-  it('should allow to subscribe to an existing room', done => {
+  it('should allow to subscribe to an existing room', () => {
     const
       request1 = new Request({
         controller: 'realtime',
@@ -242,18 +231,13 @@ describe('Test: hotelClerk.addSubscription', () => {
       }, {connectionId: 'connection1', user: null});
     let anotherRoomId;
 
-    kuzzle.hotelClerk.addSubscription(request1)
+    return kuzzle.hotelClerk.addSubscription(request1)
       .then(result => {
-        try {
-          should(result).be.an.Object();
-          should(result).have.property('channel');
-          should(result).have.property('roomId');
+        should(result).be.an.Object();
+        should(result).have.property('channel');
+        should(result).have.property('roomId');
 
-          return Promise.resolve(result.roomId);
-        }
-        catch (error) {
-          return Promise.reject(error);
-        }
+        return result.roomId;
       })
       .then(id => {
         const request2 = new Request({
@@ -271,22 +255,10 @@ describe('Test: hotelClerk.addSubscription', () => {
         return kuzzle.hotelClerk.join(request2);
       })
       .then(result => {
-        try {
-          should(result).be.an.Object();
-          should(result).have.property('roomId', anotherRoomId);
-          should(result).have.property('channel');
-          done();
-
-          return Promise.resolve();
-        }
-        catch (error) {
-          return Promise.reject(error);
-        }
-      })
-      .catch(error => {
-        done(error);
+        should(result).be.an.Object();
+        should(result).have.property('roomId', anotherRoomId);
+        should(result).have.property('channel');
       });
-
   });
 
   it('#join should throw if the room does not exist', () => {
@@ -338,7 +310,7 @@ describe('Test: hotelClerk.addSubscription', () => {
     return should(kuzzle.hotelClerk.addSubscription(request)).be.rejectedWith(BadRequestError);
   });
 
-  it('should treat null/undefined filters as empty filters', done => {
+  it('should treat null/undefined filters as empty filters', () => {
     const
       request1 = new Request({
         controller: 'realtime',
@@ -354,24 +326,13 @@ describe('Test: hotelClerk.addSubscription', () => {
       }, context);
     let response;
 
-    kuzzle.hotelClerk.addSubscription(request1)
+    return kuzzle.hotelClerk.addSubscription(request1)
       .then(result => {
         response = result;
         return kuzzle.hotelClerk.addSubscription(request2);
       })
       .then(result => {
-        try {
-          should(result.roomId).be.exactly(response.roomId);
-          done();
-
-          return Promise.resolve();
-        }
-        catch (error) {
-          return Promise.reject(error);
-        }
-      })
-      .catch(error => {
-        done(error);
+        should(result.roomId).be.exactly(response.roomId);
       });
   });
 });

@@ -31,7 +31,9 @@ class KuzzleMock extends Kuzzle {
     this.dsl = {
       test: sinon.stub().returns([]),
       register: sinon.stub().returns(Bluebird.resolve()),
-      remove: sinon.stub().returns(Bluebird.resolve())
+      remove: sinon.stub().returns(Bluebird.resolve()),
+      normalize: sinon.stub().returns(Bluebird.resolve({})),
+      store: sinon.stub().returns({id: 'foobar'})
     };
 
 

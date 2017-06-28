@@ -42,13 +42,18 @@
     //      Maximum number of conditions a subscription filter can contain
     //      NB: A condition is either a "simple" operator (anything but and, or and bool)
     //      or a boolean condition that contains only simple operators.
+    // * subscriptionRooms
+    //      Maximum number of different subscription rooms 
+    //      (i.e. different index+collection+filters subscription configurations)
+    //      Depends primarily on available memory.
     "concurrentRequests": 50,
     "documentsFetchCount": 1000,
     "documentsWriteCount": 200,
     "requestsBufferSize": 50000,
     "requestsBufferWarningThreshold": 5000,
     "requestsHistorySize": 50,
-    "subscriptionConditionsCount": 16
+    "subscriptionConditionsCount": 16,
+    "subscriptionRooms": 1000000
   },
 
   // The plugins section lets you define plugins behaviors
