@@ -125,7 +125,17 @@ describe('Test plugins manager run', () => {
     }();
 
     mockrequire('pm2', pm2Mock);
+
     PluginsManager = rewire('../../../../lib/api/core/plugins/pluginsManager');
+    
+    // making it quiet
+    PluginsManager.__set__({
+      console: {
+        log: sinon.stub(),
+        error: sinon.stub(),
+        warn: sinon.stub()
+      }
+    });
   });
 
   beforeEach(() => {
@@ -157,13 +167,6 @@ describe('Test plugins manager run', () => {
 
   after(() => {
     mockrequire.stopAll();
-  });
-
-  it('should do nothing on run if plugin is not activated', () => {
-    pluginMock.expects('init').never();
-
-    return pluginsManager.run()
-      .then(() => pluginMock.verify());
   });
 
   it('should attach event hook on kuzzle object', () => {
@@ -318,7 +321,7 @@ describe('Test plugins manager run', () => {
     };
 
     plugin.object.foo = () => {};
-    fooStub = sandbox.stub(plugin.object, 'foo', function (ev, cb) {
+    fooStub = sandbox.stub(plugin.object, 'foo').callsFake(function (ev, cb) {
       setTimeout(() => cb(), 50);
     });
 
