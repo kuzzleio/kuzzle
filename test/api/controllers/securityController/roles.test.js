@@ -130,7 +130,7 @@ describe('Test: security controller - roles', () => {
     });
 
     it('should resolve to an object', done => {
-      kuzzle.repositories.role.loadMultiFromDatabase = sandbox.stub().returns(Promise.resolve([{_id: 'test', _source: null}]));
+      kuzzle.repositories.role.loadMultiFromDatabase = sandbox.stub().returns(Promise.resolve([{_id: 'test', _source: null, _meta: {}}]));
       securityController.mGetRoles(new Request({body: {ids: ['test']}}))
         .then(response => {
           should(response).be.instanceof(Object);
