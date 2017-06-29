@@ -13,6 +13,7 @@ describe('Test plugins manager trigger', () => {
   it('should trigger hooks event', function (done) {
     var
       kuzzle = new EventEmitter({
+        verboseMemoryLeak: true,
         wildcard: true,
         maxListeners: 30,
         delimiter: ':'
