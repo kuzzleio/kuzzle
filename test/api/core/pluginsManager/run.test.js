@@ -141,10 +141,13 @@ describe('Test plugins manager run', () => {
     sandbox = sinon.sandbox.create();
 
     plugin = {
+      name: '',
+      path: '',
       object: {
         init: () => {}
       },
-      config: {}
+      config: {},
+      manifest: {}
     };
 
     pluginMock = sandbox.mock(plugin.object);
@@ -157,13 +160,6 @@ describe('Test plugins manager run', () => {
 
   after(() => {
     mockrequire.stopAll();
-  });
-
-  it('should do nothing on run if plugin is not activated', () => {
-    pluginMock.expects('init').never();
-
-    return pluginsManager.run()
-      .catch(() => pluginMock.verify());
   });
 
   it('should attach event hook on kuzzle object', () => {
@@ -309,7 +305,7 @@ describe('Test plugins manager run', () => {
   });
 
   it('should log a warning in case a pipe plugin exceeds the warning delay', () => {
-    var
+    let
       spy = sandbox.spy(kuzzle, 'emit'),
       fooStub;
 
@@ -438,20 +434,8 @@ describe('Test plugins manager run', () => {
     should(pluginsManager.run()).be.rejected();
   });
 
-  it('should not initialize plugin workers if "threadable" property is not defined', () => {
-    plugin.config.threads = 2;
-    plugin.object.threadable = undefined;
-
-    pluginsManager.isServer = true;
-    pluginsManager.isDummy = false;
-
-    return pluginsManager.run()
-      .then(() => should(pm2Mock.getProcessList()).be.an.Array().and.length(0));
-  });
-
   it('should initialize plugin workers if some are defined', () => {
     plugin.config.threads = 2;
-    plugin.object.threadable = true;
 
     pluginsManager.isServer = true;
     pluginsManager.isDummy = false;
@@ -462,7 +446,6 @@ describe('Test plugins manager run', () => {
 
   it('should send an initialize message to the process when ready is received', () => {
     plugin.config.threads = 1;
-    plugin.object.threadable = true;
 
     pluginsManager.isServer = true;
     pluginsManager.isDummy = false;
@@ -479,7 +462,6 @@ describe('Test plugins manager run', () => {
 
   it('should add worker to list when initialized is received', () => {
     plugin.config.threads = 1;
-    plugin.object.threadable = true;
 
     pluginsManager.isServer = true;
     pluginsManager.isDummy = false;
@@ -502,7 +484,6 @@ describe('Test plugins manager run', () => {
 
   it('should remove a worker to list when process:event exit is received', () => {
     plugin.config.threads = 1;
-    plugin.object.threadable = true;
 
     pluginsManager.isServer = true;
     pluginsManager.isDummy = false;
@@ -529,7 +510,6 @@ describe('Test plugins manager run', () => {
   it('should receive the triggered message', () => {
     const triggerWorkers = PluginsManager.__get__('triggerWorkers');
     plugin.config.threads = 1;
-    plugin.object.threadable = true;
 
     plugin.config.hooks = {
       'foo:bar': 'foobar'

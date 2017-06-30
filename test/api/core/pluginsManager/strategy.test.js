@@ -127,7 +127,7 @@ describe('PluginsManager: strategy management', () => {
         kuid: 'foo'
       }));
 
-      injectAuthentication(kuzzle, authentications, plugin, pluginName);
+      should(injectAuthentication(kuzzle, authentications, plugin, pluginName)).be.true();
       should(authentications.someStrategy.strategy).be.deepEqual(plugin.strategies.someStrategy);
       should(authentications.someStrategy.methods.afterRegister).be.Function();
       should(plugin.afterRegisterFunction).be.calledOnce();
@@ -162,7 +162,7 @@ describe('PluginsManager: strategy management', () => {
     it('method invocation should intercept a thrown error to transform it into PluginImplementationError', () => {
       plugin.existsFunction = sandbox.stub().throws(new Error('some error'));
 
-      injectAuthentication(kuzzle, authentications, plugin, pluginName);
+      should(injectAuthentication(kuzzle, authentications, plugin, pluginName)).be.true();
       should(authentications.someStrategy.strategy).be.deepEqual(plugin.strategies.someStrategy);
       should(authentications.someStrategy.methods.exists).be.Function();
       should(authentications.someStrategy.methods.create).be.Function();
@@ -177,7 +177,7 @@ describe('PluginsManager: strategy management', () => {
     it('should print an error in the console if strategies is not an object', () => {
       plugin.strategies = {};
 
-      injectAuthentication(kuzzle, authentications, plugin, pluginName);
+      should(injectAuthentication(kuzzle, authentications, plugin, pluginName)).be.false();
 
       should(consoleMock.warn).be.calledOnce();
       should(consoleMock.warn.firstCall.args[0]).be.eql('\u001b[33m[!] [WARNING][Plugin Manager]: Unable to inject strategies from plugin "\u001b[1msome-plugin-name\u001b[22m": The plugin must provide an object "\u001b[1mstrategies\u001b[22m".\u001b[39m');
@@ -185,7 +185,7 @@ describe('PluginsManager: strategy management', () => {
 
     it('should print an error in the console if the strategy is not an object', () => {
       plugin.strategies.someStrategy = 'notAnObject';
-      injectAuthentication(kuzzle, authentications, plugin, pluginName);
+      should(injectAuthentication(kuzzle, authentications, plugin, pluginName)).be.false();
 
       should(consoleMock.warn).be.calledOnce();
       should(consoleMock.warn.firstCall.args[0]).be.eql('\u001b[33m[!] [WARNING][Plugin Manager]: Unable to inject strategies from plugin "\u001b[1msome-plugin-name\u001b[22m": The plugin must provide an object for strategy "\u001b[1msomeStrategy\u001b[22m".\u001b[39m');
@@ -194,7 +194,7 @@ describe('PluginsManager: strategy management', () => {
     it('should print an error in the console if methods are not specified', () => {
       plugin.strategies.someStrategy.methods = 'notAnObject';
 
-      injectAuthentication(kuzzle, authentications, plugin, pluginName);
+      should(injectAuthentication(kuzzle, authentications, plugin, pluginName)).be.false();
 
       should(consoleMock.warn).be.calledOnce();
       should(consoleMock.warn.firstCall.args[0]).be.eql('\u001b[33m[!] [WARNING][Plugin Manager]: Unable to inject strategies from plugin "\u001b[1msome-plugin-name\u001b[22m": The plugin must provide a "\u001b[1mmethods\u001b[22m" object in strategies[\'\u001b[1msomeStrategy\u001b[22m\'] property.\u001b[39m');
@@ -203,7 +203,7 @@ describe('PluginsManager: strategy management', () => {
     it('should print an error in the console if config are not specified', () => {
       plugin.strategies.someStrategy.config = 'notAnObject';
 
-      injectAuthentication(kuzzle, authentications, plugin, pluginName);
+      should(injectAuthentication(kuzzle, authentications, plugin, pluginName)).be.false();
 
       should(consoleMock.warn).be.calledOnce();
       should(consoleMock.warn.firstCall.args[0]).be.eql('\u001b[33m[!] [WARNING][Plugin Manager]: Unable to inject strategies from plugin "\u001b[1msome-plugin-name\u001b[22m": The plugin must provide a "\u001b[1mconfig\u001b[22m" object in strategies[\'\u001b[1msomeStrategy\u001b[22m\'] property.\u001b[39m');
@@ -212,7 +212,7 @@ describe('PluginsManager: strategy management', () => {
     it('should print an error in the console if a mandatory method is not specified', () => {
       delete plugin.strategies.someStrategy.methods.exists;
 
-      injectAuthentication(kuzzle, authentications, plugin, pluginName);
+      should(injectAuthentication(kuzzle, authentications, plugin, pluginName)).be.false();
 
       should(consoleMock.warn).be.calledOnce();
       should(consoleMock.warn.firstCall.args[0]).be.eql('\u001b[33m[!] [WARNING][Plugin Manager]: Unable to inject strategies from plugin "\u001b[1msome-plugin-name\u001b[22m": The plugin must provide a method "\u001b[1mexists\u001b[22m" in strategy configuration.\u001b[39m');
@@ -221,7 +221,7 @@ describe('PluginsManager: strategy management', () => {
     it('should print an error in the console if a mandatory method is not available in the plugin object', () => {
       delete plugin.existsFunction;
 
-      injectAuthentication(kuzzle, authentications, plugin, pluginName);
+      should(injectAuthentication(kuzzle, authentications, plugin, pluginName)).be.false();
 
       should(consoleMock.warn).be.calledOnce();
       should(consoleMock.warn.firstCall.args[0]).be.eql('\u001b[33m[!] [WARNING][Plugin Manager]: Unable to inject strategies from plugin "\u001b[1msome-plugin-name\u001b[22m": The plugin property "\u001b[1mexistsFunction\u001b[22m" must be a function.\u001b[39m');
@@ -230,7 +230,7 @@ describe('PluginsManager: strategy management', () => {
     it('should print an error in the console if the getInfo method is specified but the method is not available in the plugin object', () => {
       delete plugin.getInfoFunction;
 
-      injectAuthentication(kuzzle, authentications, plugin, pluginName);
+      should(injectAuthentication(kuzzle, authentications, plugin, pluginName)).be.false();
 
       should(consoleMock.warn).be.calledOnce();
       should(consoleMock.warn.firstCall.args[0]).be.eql('\u001b[33m[!] [WARNING][Plugin Manager]: Unable to inject strategies from plugin "\u001b[1msome-plugin-name\u001b[22m": The plugin property "\u001b[1mgetInfoFunction\u001b[22m" must be a function.\u001b[39m');
@@ -239,7 +239,7 @@ describe('PluginsManager: strategy management', () => {
     it('should print an error in the console if the strategy constructor is not provided', () => {
       plugin.strategies.someStrategy.config.constructor = 'notAFunction';
 
-      injectAuthentication(kuzzle, authentications, plugin, pluginName);
+      should(injectAuthentication(kuzzle, authentications, plugin, pluginName)).be.false();
 
       should(consoleMock.warn).be.calledOnce();
       should(consoleMock.warn.firstCall.args[0]).be.eql('\u001b[33m[!] [WARNING][Plugin Manager]: Unable to inject strategies from plugin "\u001b[1msome-plugin-name\u001b[22m": The constructor of the strategy "\u001b[1msomeStrategy\u001b[22m" must be a function.\u001b[39m');
@@ -248,7 +248,7 @@ describe('PluginsManager: strategy management', () => {
     it('should print an error in the console if the "strategyOptions" config is not provided', () => {
       delete plugin.strategies.someStrategy.config.strategyOptions;
 
-      injectAuthentication(kuzzle, authentications, plugin, pluginName);
+      should(injectAuthentication(kuzzle, authentications, plugin, pluginName)).be.false();
 
       should(consoleMock.warn).be.calledOnce();
       should(consoleMock.warn.firstCall.args[0]).be.eql('\u001b[33m[!] [WARNING][Plugin Manager]: Unable to inject strategies from plugin "\u001b[1msome-plugin-name\u001b[22m": The "\u001b[1mstrategyOptions\u001b[22m" of the strategy "\u001b[1msomeStrategy\u001b[22m" must be an object.\u001b[39m');
@@ -257,7 +257,7 @@ describe('PluginsManager: strategy management', () => {
     it('should print an error in the console if the "authenticateOptions" config is not provided', () => {
       delete plugin.strategies.someStrategy.config.authenticateOptions;
 
-      injectAuthentication(kuzzle, authentications, plugin, pluginName);
+      should(injectAuthentication(kuzzle, authentications, plugin, pluginName)).be.false();
 
       should(consoleMock.warn).be.calledOnce();
       should(consoleMock.warn.firstCall.args[0]).be.eql('\u001b[33m[!] [WARNING][Plugin Manager]: Unable to inject strategies from plugin "\u001b[1msome-plugin-name\u001b[22m": The "\u001b[1mauthenticateOptions\u001b[22m" of the strategy "\u001b[1msomeStrategy\u001b[22m" must be an object.\u001b[39m');
@@ -266,7 +266,7 @@ describe('PluginsManager: strategy management', () => {
     it('should print an error in the console if the "fields" config is not provided', () => {
       delete plugin.strategies.someStrategy.config.fields;
 
-      injectAuthentication(kuzzle, authentications, plugin, pluginName);
+      should(injectAuthentication(kuzzle, authentications, plugin, pluginName)).be.false();
 
       should(consoleMock.warn).be.calledOnce();
       should(consoleMock.warn.firstCall.args[0]).be.eql('\u001b[33m[!] [WARNING][Plugin Manager]: Unable to inject strategies from plugin "\u001b[1msome-plugin-name\u001b[22m": The "\u001b[1mfields\u001b[22m" of the strategy "\u001b[1msomeStrategy\u001b[22m" must be an array.\u001b[39m');
@@ -275,7 +275,7 @@ describe('PluginsManager: strategy management', () => {
     it('should print an error in the console if the "verify" config is not provided', () => {
       delete plugin.strategies.someStrategy.methods.verify;
 
-      injectAuthentication(kuzzle, authentications, plugin, pluginName);
+      should(injectAuthentication(kuzzle, authentications, plugin, pluginName)).be.false();
 
       should(consoleMock.warn).be.calledOnce();
       should(consoleMock.warn.firstCall.args[0]).be.eql('\u001b[33m[!] [WARNING][Plugin Manager]: Unable to inject strategies from plugin "\u001b[1msome-plugin-name\u001b[22m": The plugin must provide a method "\u001b[1mverify\u001b[22m" in strategy configuration.\u001b[39m');
@@ -284,17 +284,18 @@ describe('PluginsManager: strategy management', () => {
     it('should print an error in the console if the "verify" method is not available in the plugin object', () => {
       delete plugin.verifyFunction;
 
-      injectAuthentication(kuzzle, authentications, plugin, pluginName);
+      should(injectAuthentication(kuzzle, authentications, plugin, pluginName)).be.false();
 
       should(consoleMock.warn).be.calledOnce();
       should(consoleMock.warn.firstCall.args[0]).be.eql('\u001b[33m[!] [WARNING][Plugin Manager]: Unable to inject strategies from plugin "\u001b[1msome-plugin-name\u001b[22m": The plugin property "\u001b[1mverifyFunction\u001b[22m" must be a function.\u001b[39m');
     });
 
     it('should throw an error if a strategy is registered twice', () => {
-      should(() => {
-        injectAuthentication(kuzzle, authentications, plugin, pluginName);
-        injectAuthentication(kuzzle, authentications, plugin, pluginName);
-      }).throw(PluginImplementationError);
+      should(injectAuthentication(kuzzle, authentications, plugin, pluginName)).be.true();
+      should(injectAuthentication(kuzzle, authentications, plugin, pluginName)).be.false();
+
+      should(consoleMock.warn).be.calledOnce();
+      should(consoleMock.warn.firstCall.args[0]).be.eql('\u001b[33m[!] [WARNING][Plugin Manager]: Unable to inject strategies from plugin "\u001b[1msome-plugin-name\u001b[22m": An authentication strategy "\u001b[1msomeStrategy\u001b[22m" has already been registered.\u001b[39m');
     });
   });
 });

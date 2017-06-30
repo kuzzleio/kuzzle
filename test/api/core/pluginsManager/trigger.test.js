@@ -1,4 +1,4 @@
-var
+const
   /** @type {Params} */
   params = require('../../../../lib/config'),
   rewire = require('rewire'),
