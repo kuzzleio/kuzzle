@@ -141,7 +141,7 @@ describe('Test plugins manager run', () => {
     sandbox = sinon.sandbox.create();
 
     plugin = {
-      name: '',
+      name: 'testPlugin',
       path: '',
       object: {
         init: () => {}
