@@ -95,7 +95,7 @@ describe('Test: security controller - users', () => {
       });
 
       kuzzle.repositories.user.search = sandbox.stub().returns(Bluebird.resolve({
-        hits: [{_id: 'admin', _source: { profileIds: ['admin'] }}],
+        hits: [{_id: 'admin', _source: { profileIds: ['admin'] }, _meta: {}}],
         total: 2,
         scrollId: 'foobar'
       }));
@@ -110,7 +110,7 @@ describe('Test: security controller - users', () => {
 
     it('should handle empty body requests', () => {
       kuzzle.repositories.user.search = sandbox.stub().returns(Bluebird.resolve({
-        hits: [{_id: 'admin', _source: { profileIds: ['admin'] }}],
+        hits: [{_id: 'admin', _source: { profileIds: ['admin'] }, _meta: {}}],
         total: 2,
         scrollId: 'foobar'
       }));
@@ -154,7 +154,7 @@ describe('Test: security controller - users', () => {
       request = new Request({scrollId: 'foobar'});
 
       kuzzle.repositories.user.scroll = sandbox.stub().returns(Bluebird.resolve({
-        hits: [{_id: 'admin', _source: { profileIds: ['admin'] }}],
+        hits: [{_id: 'admin', _source: { profileIds: ['admin'] }, _meta: {}}],
         total: 2,
         scrollId: 'foobar'
       }));
@@ -171,7 +171,7 @@ describe('Test: security controller - users', () => {
       request = new Request({scrollId: 'foobar', scroll: 'qux'});
 
       kuzzle.repositories.user.scroll = sandbox.stub().returns(Bluebird.resolve({
-        hits: [{_id: 'admin', _source: { profileIds: ['admin'] }}],
+        hits: [{_id: 'admin', _source: { profileIds: ['admin'] }, _meta: {}}],
         total: 2,
         scrollId: 'foobar'
       }));
@@ -246,7 +246,7 @@ describe('Test: security controller - users', () => {
           should(kuzzle.repositories.user.persist).be.calledOnce();
           should(kuzzle.repositories.user.persist.firstCall.args[1]).match({database: {method: 'create'}});
           should(response).be.instanceof(Object);
-          should(response).be.match({_id: 'test', _source: {}});
+          should(response).be.match({_id: 'test', _source: {}, _meta: {}});
         });
     });
 
@@ -267,7 +267,7 @@ describe('Test: security controller - users', () => {
           should(kuzzle.repositories.user.persist).be.calledOnce();
           should(kuzzle.repositories.user.hydrate).be.calledOnce();
           should(response).be.instanceof(Object);
-          should(response).be.match({_id: 'test', _source: {}});
+          should(response).be.match({_id: 'test', _source: {}, _meta: {}});
           should(kuzzle.repositories.user.persist.firstCall.args[1]).match({database: {method: 'create'}});
           should(kuzzle.repositories.user.hydrate.firstCall.args[1]._id).match(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
         });
@@ -440,7 +440,7 @@ describe('Test: security controller - users', () => {
         .then(response => {
           should(kuzzle.repositories.user.persist).be.calledOnce();
           should(response.userContext).be.instanceof(Object);
-          should(response).be.match({_id: 'test', _source: {}});
+          should(response).be.match({_id: 'test', _source: {}, _meta: {}});
           should(kuzzle.repositories.user.persist.firstCall.args[1]).match({database: {method: 'create'}});
         });
     });
@@ -455,7 +455,7 @@ describe('Test: security controller - users', () => {
           should(kuzzle.repositories.user.persist).be.calledOnce();
           should(kuzzle.repositories.user.hydrate).be.calledOnce();
           should(response).be.instanceof(Object);
-          should(response).be.match({_id: 'test', _source: {}});
+          should(response).be.match({_id: 'test', _source: {}, _meta: {}});
           should(kuzzle.repositories.user.persist.firstCall.args[1]).match({database: {method: 'create'}});
           should(kuzzle.repositories.user.hydrate.firstCall.args[1]._id).match(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
         });
@@ -471,13 +471,13 @@ describe('Test: security controller - users', () => {
   describe('#updateUser', () => {
     it('should return a valid response', () => {
       kuzzle.repositories.user.persist = sandbox.stub().returns(Bluebird.resolve({_id: 'test'}));
-      kuzzle.repositories.profile.loadProfile = sandbox.stub().returns(Bluebird.resolve({_id: 'anonymous', _source: {}}));
+      kuzzle.repositories.profile.loadProfile = sandbox.stub().returns(Bluebird.resolve({_id: 'anonymous', _source: {}, _meta: {}}));
 
       return securityController.updateUser(new Request({_id: 'test', body: {foo: 'bar'}}))
         .then(response => {
           should(kuzzle.repositories.user.persist).be.calledOnce();
           should(response).be.instanceof(Object);
-          should(response).be.match({_id: 'test', _source: {}});
+          should(response).be.match({_id: 'test', _source: {}, _meta: {}});
           should(kuzzle.repositories.user.persist.firstCall.args[1]).match({database: {method: 'update'}});
         });
     });
@@ -490,7 +490,7 @@ describe('Test: security controller - users', () => {
 
     it('should update the profile correctly', () => {
       kuzzle.repositories.user.persist = sandbox.stub().returns(Bluebird.resolve({_id: 'test', profileIds: ['anonymous'], foo: 'bar'}));
-      kuzzle.repositories.profile.loadProfile = sandbox.stub().returns(Bluebird.resolve({_id: 'default', _source: {}}));
+      kuzzle.repositories.profile.loadProfile = sandbox.stub().returns(Bluebird.resolve({_id: 'default', _source: {}, _meta: {}}));
 
       return securityController.updateUser(new Request({
         _id: 'test',
@@ -501,6 +501,7 @@ describe('Test: security controller - users', () => {
           should(response._id).be.exactly('test');
           should(response._source.profile).be.an.instanceOf(Object);
           should(response._source.foo).be.exactly('bar');
+          should(response._meta).be.an.instanceOf(Object);
         });
     });
   });
@@ -514,7 +515,7 @@ describe('Test: security controller - users', () => {
 
     it('should replace the user correctly', () => {
       kuzzle.repositories.user.persist = sandbox.stub().returns(Bluebird.resolve({_id: 'test', profileIds: ['anonymous'], foo: 'bar'}));
-      kuzzle.repositories.user.load = userId => Bluebird.resolve({_id: userId, _source: {}});
+      kuzzle.repositories.user.load = userId => Bluebird.resolve({_id: userId, _source: {}, _meta: {}});
 
       return securityController.replaceUser(new Request({
         _id: 'test',
@@ -524,7 +525,8 @@ describe('Test: security controller - users', () => {
           should(response).be.instanceOf(Object);
           should(response).match({
             _id: 'test',
-            _source: {profileIds: ['anonymous']}
+            _source: {profileIds: ['anonymous']},
+            _meta: {}
           });
         });
     });
