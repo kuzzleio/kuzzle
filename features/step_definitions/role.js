@@ -165,11 +165,11 @@ var apiSteps = function () {
             }
 
             if (!aBody.result.hits) {
-              return callbackAsync('Expected ' + count + ' roles, get 0');
+              return callbackAsync('Expected ' + count + ' roles, got 0');
             }
 
             if (aBody.result.hits.length !== parseInt(count)) {
-              return callbackAsync('Expected ' + count + ' roles, get ' + aBody.result.hits.length);
+              return callbackAsync('Expected ' + count + ' roles, got ' + aBody.result.hits.length);
             }
 
             callbackAsync();
