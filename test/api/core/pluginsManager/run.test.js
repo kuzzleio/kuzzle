@@ -130,6 +130,7 @@ describe('Test plugins manager run', () => {
 
   beforeEach(() => {
     kuzzle = new EventEmitter({
+      verboseMemoryLeak: true,
       wildcard: true,
       maxListeners: 30,
       delimiter: ':'
