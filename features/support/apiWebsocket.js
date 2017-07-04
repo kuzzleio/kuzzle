@@ -3,7 +3,7 @@
 const
   config = require('./config'),
   Bluebird = require('bluebird'),
-  uuid = require('node-uuid'),
+  uuid = require('uuid/v4'),
   io = require('socket.io-client'),
   ApiRT = require('./apiRT');
 
@@ -74,7 +74,7 @@ ApiWebsocket.prototype.send = function (msg, getAnswer, socketName) {
     listen = (getAnswer !== undefined) ? getAnswer : true;
 
   if (!msg.requestId) {
-    msg.requestId = uuid.v4();
+    msg.requestId = uuid();
   }
 
   msg.volatile = this.world.volatile;
@@ -120,7 +120,7 @@ ApiWebsocket.prototype.sendAndListen = function (msg, socketName) {
     routename = 'kuzzle';
 
   if (!msg.requestId) {
-    msg.requestId = uuid.v4();
+    msg.requestId = uuid();
   }
 
   msg.volatile = this.world.volatile;
