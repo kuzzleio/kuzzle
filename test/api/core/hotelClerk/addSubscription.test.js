@@ -196,4 +196,11 @@ describe('Test: hotelClerk.addSubscription', () => {
 
     return should(hotelClerk.addSubscription(request)).be.rejectedWith(SizeLimitError);
   });
+
+  it('should impose no limit to the number of rooms if the limit is set to 0', () => {
+    kuzzle.config.limits.subscriptionRooms = 0;
+    hotelClerk.roomsCount = Number.MAX_SAFE_INTEGER - 1;
+
+    return should(hotelClerk.addSubscription(request)).be.fulfilled();
+  });
 });

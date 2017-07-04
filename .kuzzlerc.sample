@@ -46,6 +46,7 @@
     //      Maximum number of different subscription rooms 
     //      (i.e. different index+collection+filters subscription configurations)
     //      Depends primarily on available memory.
+    //      If set to 0, an unlimited number of rooms can be created
     "concurrentRequests": 50,
     "documentsFetchCount": 1000,
     "documentsWriteCount": 200,
