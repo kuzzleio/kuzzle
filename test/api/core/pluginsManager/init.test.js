@@ -68,7 +68,6 @@ describe('PluginsManager', () => {
       should(pluginsManager.plugins[instanceName].manifest).be.eql({
         name: undefined,
         version: '1.0.0',
-        threadable: true,
         privileged: false,
         kuzzleVersion: '1.x'
       });
@@ -80,8 +79,7 @@ describe('PluginsManager', () => {
       const instanceName = 'kuzzle-plugin-test';
       const manifest = {
         name: 'plugin-42',
-        version: '1.2.0',
-        threadable: false
+        version: '1.2.0'
       };
 
       fsStub.readdirSync.returns(['kuzzle-plugin-test']);
@@ -100,7 +98,6 @@ describe('PluginsManager', () => {
       should(pluginsManager.plugins[instanceName].manifest).be.eql({
         name: manifest.name,
         version: manifest.version,
-        threadable: manifest.threadable,
         privileged: false,
         kuzzleVersion: '1.x'
       });
@@ -156,56 +153,6 @@ describe('PluginsManager', () => {
       should(pluginsManager.plugins[instanceName].path).be.ok();
     });
 
-    it('should throw if trying to register a non compatible worker plugin', () => {
-      const instanceName = 'kuzzle-plugin-test';
-      const manifest = {
-        threadable: true
-      };
-
-      kuzzle.config.plugins[instanceName] = {
-        threads: 2
-      };
-
-      fsStub.readdirSync.returns(['kuzzle-plugin-test']);
-      fsStub.statSync.returns({
-        isDirectory: () => true
-      });
-
-      mockrequire('/kuzzle/plugins/enabled/kuzzle-plugin-test', function () {
-        return {
-          pipes: {foo: 'bar'}
-        };
-      });
-      mockrequire('/kuzzle/plugins/enabled/kuzzle-plugin-test/manifest.json', manifest);
-
-      pluginsManager = new PluginsManager(kuzzle);
-
-      should(() => pluginsManager.init()).throw(/the plugin "kuzzle-plugin-test" is configured to run as worker but this plugin register non threadable features \(pipes, controllers, routes, strategies\)/i);
-    });
-
-    it('should throw if trying to set a worker plugin which does not support multi-threading', () => {
-      const instanceName = 'kuzzle-plugin-test';
-      const manifest = {
-        threadable: false
-      };
-
-      kuzzle.config.plugins[instanceName] = {
-        threads: 2
-      };
-
-      fsStub.readdirSync.returns(['kuzzle-plugin-test']);
-      fsStub.statSync.returns({
-        isDirectory: () => true
-      });
-
-      mockrequire('/kuzzle/plugins/enabled/kuzzle-plugin-test', function () {});
-      mockrequire('/kuzzle/plugins/enabled/kuzzle-plugin-test/manifest.json', manifest);
-
-      pluginsManager = new PluginsManager(kuzzle);
-
-      should(() => pluginsManager.init()).throw(/the plugin "kuzzle-plugin-test" is configured to run as worker but this plugin does not support multi-threading/i);
-    });
-
     it('should throw if trying to set a privileged plugin which does not support privileged mode', () => {
       const instanceName = 'kuzzle-plugin-test';
       const manifest = {
@@ -226,10 +173,10 @@ describe('PluginsManager', () => {
 
       pluginsManager = new PluginsManager(kuzzle);
 
-      should(() => pluginsManager.init()).throw(/the plugin "kuzzle-plugin-test" is configured to run as privileged mode but it does not support privileged mode/i);
+      should(() => pluginsManager.init()).throw(/the plugin "kuzzle-plugin-test" is configured to run in privileged mode, but it does not seem to support it/i);
     });
 
-    it('should throw if a plugin require to be in a privileged mode but user has not acknowleged this', () => {
+    it('should throw if a plugin require to be in a privileged mode but user has not acknowledged this', () => {
       const instanceName = 'kuzzle-plugin-test';
       const manifest = {
         privileged: true
@@ -249,7 +196,14 @@ describe('PluginsManager', () => {
 
       pluginsManager = new PluginsManager(kuzzle);
 
-      should(() => pluginsManager.init()).throw(/the plugin "kuzzle-plugin-test" need to run in privileged mode to work, you have to explicitly set "privileged: true" in it configuration/i);
+      should(() => pluginsManager.init()).throw(/the plugin "kuzzle-plugin-test" needs to run in privileged mode to work, you have to explicitly set "privileged: true" in its configuration/i);
+    });
+
+    it('should reject all plugin initialization if an error occurs when loading a non requireable directory', () => {
+      fsStub.readdirSync.throws();
+
+      should(() => pluginsManager.init()).throw(/unable to load plugins from directory/i);
+      should(pluginsManager.plugins).be.empty();
     });
 
     it('should reject all plugin initialization if an error occurs when loading a non requireable directory', () => {
@@ -260,7 +214,7 @@ describe('PluginsManager', () => {
 
       mockrequire('/kuzzle/plugins/enabled/kuzzle-plugin-test', undefined);
 
-      should(() => pluginsManager.init()).throw(/unable to require plugin "kuzzle-plugin-test" from directory "\/kuzzle\/plugins\/enabled\/kuzzle-plugin-test"/i);
+      should(() => pluginsManager.init()).throw(/unable to require plugin "kuzzle-plugin-test" from directory/i);
       should(pluginsManager.plugins).be.empty();
     });
   });

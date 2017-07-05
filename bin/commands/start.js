@@ -103,11 +103,12 @@ function commandStart (options) {
           if (!res) {
             console.log(warn('[!] [WARNING] There is no administrator user yet: everyone has administrator rights.'));
             console.log(notice('[ℹ] You can use the CLI or the back-office to create the first administrator user.'));
+            console.log(notice('    For more information: http://docs.kuzzle.io/guide/essentials/security'));
           }
         });
     })
     .catch(err => {
-      console.error(error(err.stack));
+      console.error(error(`[x] [ERROR] ${err.stack}`));
       process.exit(1);
     });
 }

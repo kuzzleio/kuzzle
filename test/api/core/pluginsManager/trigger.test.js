@@ -10,8 +10,8 @@ describe('Test plugins manager trigger', () => {
     PluginsManager.__set__('console', {log: () => {}, error: () => {}, warn: () => {}});
   });
 
-  it('should trigger hooks event', function (done) {
-    var
+  it('should trigger hooks with wildcard event', function (done) {
+    let
       kuzzle = new EventEmitter({
         wildcard: true,
         maxListeners: 30,
