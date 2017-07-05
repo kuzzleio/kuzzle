@@ -39,7 +39,8 @@ describe('Test: notifier.notifyDocumentUpdate', () => {
     kuzzle.dsl.test.returns(['foo']);
     kuzzle.services.list.storageEngine.get.returns(Bluebird.resolve({
       _id: request.input.resource._id,
-      _source: request.input.body
+      _source: {foo: 'bar'},
+      _meta: request.input.body._kuzzle_info
     }));
 
     kuzzle.services.list.internalCache.search.returns(Bluebird.resolve(['foo', 'bar']));
@@ -50,11 +51,11 @@ describe('Test: notifier.notifyDocumentUpdate', () => {
 
         should(kuzzle.dsl.test)
           .calledOnce()
-          .calledWith('foo', 'bar', request.input.body, request.input.resource._id);
+          .calledWith('foo', 'bar', {foo: 'bar'}, request.input.resource._id);
 
         should(notifier.notifyDocument.callCount).be.eql(2);
         should(notifier.notifyDocument.getCall(0)).calledWith(['foo'], request, 'in', 'done', 'update', {
-          _meta: {'canIhas': 'cheezburgers?'},
+          _meta: {canIhas: 'cheezburgers?'},
           _source: {foo: 'bar'},
           _id: request.input.resource._id
         });
