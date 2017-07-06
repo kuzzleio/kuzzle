@@ -66,38 +66,6 @@ describe('PluginsManager', () => {
       should(pluginsManager.plugins[instanceName].name).be.eql(instanceName);
       should(pluginsManager.plugins[instanceName].config).be.eql({});
       should(pluginsManager.plugins[instanceName].manifest).be.eql({
-        name: undefined,
-        version: '1.0.0',
-        privileged: false,
-        kuzzleVersion: '1.x'
-      });
-      should(pluginsManager.plugins[instanceName].object).be.ok();
-      should(pluginsManager.plugins[instanceName].path).be.ok();
-    });
-
-    it('should load plugin manifest if exists', () => {
-      const instanceName = 'kuzzle-plugin-test';
-      const manifest = {
-        name: 'plugin-42',
-        version: '1.2.0'
-      };
-
-      fsStub.readdirSync.returns(['kuzzle-plugin-test']);
-      fsStub.statSync.returns({
-        isDirectory: () => true
-      });
-
-      mockrequire('/kuzzle/plugins/enabled/kuzzle-plugin-test', function () {});
-      mockrequire('/kuzzle/plugins/enabled/kuzzle-plugin-test/manifest.json', manifest);
-
-      should(() => pluginsManager.init()).not.throw();
-      should(pluginsManager.plugins[instanceName]).be.Object();
-      should(pluginsManager.plugins[instanceName]).have.keys('name', 'object', 'config', 'manifest', 'path');
-      should(pluginsManager.plugins[instanceName].name).be.eql(instanceName);
-      should(pluginsManager.plugins[instanceName].config).be.eql({});
-      should(pluginsManager.plugins[instanceName].manifest).be.eql({
-        name: manifest.name,
-        version: manifest.version,
         privileged: false,
         kuzzleVersion: '1.x'
       });
@@ -108,7 +76,6 @@ describe('PluginsManager', () => {
     it('should reject plugin initialization if a plugin require another version of kuzzle core', () => {
       const name = 'plugin-42';
       const manifest = {
-        name,
         kuzzleVersion: '5.x'
       };
 
