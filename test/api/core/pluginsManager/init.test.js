@@ -74,7 +74,6 @@ describe('PluginsManager', () => {
     });
 
     it('should reject plugin initialization if a plugin require another version of kuzzle core', () => {
-      const name = 'plugin-42';
       const manifest = {
         kuzzleVersion: '5.x'
       };
