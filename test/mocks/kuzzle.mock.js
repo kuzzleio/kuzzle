@@ -154,12 +154,11 @@ class KuzzleMock extends Kuzzle {
       init: sinon.stub().returns(Bluebird.resolve()),
       plugins: {},
       run: sinon.stub().returns(Bluebird.resolve()),
-      getPluginsFeatures: sinon.stub().returns({}),
+      getPluginsDescription: sinon.stub().returns({}),
       trigger: sinon.spy(function () {return Bluebird.resolve(arguments[1]);}),
       listStrategies: sinon.stub().returns([]),
       getStrategyMethod: sinon.stub().returns(sinon.stub()),
-      registeredStrategies: [],
-      shutdownWorkers: sinon.stub().returns(Bluebird.resolve())
+      registeredStrategies: []
     };
 
     this.repositories = {
