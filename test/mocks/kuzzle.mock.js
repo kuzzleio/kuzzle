@@ -31,7 +31,9 @@ class KuzzleMock extends Kuzzle {
     this.dsl = {
       test: sinon.stub().returns([]),
       register: sinon.stub().returns(Bluebird.resolve()),
-      remove: sinon.stub().returns(Bluebird.resolve())
+      remove: sinon.stub().returns(Bluebird.resolve()),
+      normalize: sinon.stub().returns(Bluebird.resolve({id: 'foobar'})),
+      store: sinon.stub().returns({id: 'foobar'})
     };
 
 
@@ -155,7 +157,7 @@ class KuzzleMock extends Kuzzle {
       plugins: {},
       run: sinon.stub().returns(Bluebird.resolve()),
       getPluginsFeatures: sinon.stub().returns({}),
-      trigger: sinon.spy(function () {return Bluebird.resolve(arguments[1]);}),
+      trigger: sinon.spy((...args) => Bluebird.resolve(args[1])),
       listStrategies: sinon.stub().returns([]),
       getStrategyMethod: sinon.stub().returns(sinon.stub()),
       registeredStrategies: [],

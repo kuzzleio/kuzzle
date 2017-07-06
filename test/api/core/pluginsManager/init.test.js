@@ -3,6 +3,7 @@
 const
   should = require('should'),
   mockrequire = require('mock-require'),
+  rewire = require('rewire'),
   sinon = require('sinon'),
   KuzzleMock = require('../../../mocks/kuzzle.mock');
 
@@ -21,7 +22,17 @@ describe('PluginsManager', () => {
     };
 
     mockrequire('fs', fsStub);
-    PluginsManager = mockrequire.reRequire('../../../../lib/api/core/plugins/pluginsManager');
+    mockrequire.reRequire('../../../../lib/api/core/plugins/pluginsManager');
+    PluginsManager = rewire('../../../../lib/api/core/plugins/pluginsManager');
+
+    // making it quiet
+    PluginsManager.__set__({
+      console: {
+        log: sinon.stub(),
+        error: sinon.stub(),
+        warn: sinon.stub()
+      }
+    });
 
     kuzzle = new KuzzleMock();
     pluginsManager = new PluginsManager(kuzzle);
