@@ -22,12 +22,11 @@
 /* eslint-disable no-console */
 
 const
-  Kuzzle = require('../../lib/api/kuzzle'),
   clc = require('cli-color');
 
 function commandShutdown(options) {
   const
-    kuzzle = new Kuzzle(),
+    kuzzle = new (require('../../lib/api/kuzzle'))(),
     notice = string => options.parent.noColors ? string : clc.cyanBright(string),
     error = string => options.parent.noColors ? string : clc.red(string);
 

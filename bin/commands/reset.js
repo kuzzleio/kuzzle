@@ -24,14 +24,13 @@
 const
   rc = require('rc'),
   params = rc('kuzzle'),
-  Kuzzle = require('../../lib/api/kuzzle'),
   readlineSync = require('readline-sync'),
   fs = require('fs'),
   clc = require('cli-color');
 
 function commandReset (options) {
   const
-    kuzzle = new Kuzzle(),
+    kuzzle = new (require('../../lib/api/kuzzle'))(),
     error = string => options.parent.noColors ? string : clc.red(string),
     warn = string => options.parent.noColors ? string : clc.yellow(string),
     notice = string => options.parent.noColors ? string : clc.cyanBright(string),

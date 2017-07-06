@@ -184,7 +184,8 @@ class KuzzleMock extends Kuzzle {
         ObjectConstructor: sinon.stub().returns({}),
         hydrate: sinon.stub().returns(Bluebird.resolve()),
         persist: sinon.stub().returns(Bluebird.resolve({})),
-        anonymous: sinon.stub().returns({_id: '-1'})
+        anonymous: sinon.stub().returns({_id: '-1'}),
+        delete: sinon.stub().returns(Bluebird.resolve())
       },
       token: {
         anonymous: sinon.stub().returns({_id: 'anonymous'}),

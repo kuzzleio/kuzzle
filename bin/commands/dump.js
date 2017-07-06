@@ -22,8 +22,7 @@
 /* eslint-disable no-console */
 
 const
-  clc = require('cli-color'),
-  Kuzzle = require('../../lib/api/kuzzle');
+  clc = require('cli-color');
 
 module.exports = function commandDump (options) {
   const
@@ -31,7 +30,7 @@ module.exports = function commandDump (options) {
     ok = string => options.parent.noColors ? string: clc.green.bold(string),
     notice = string => options.parent.noColors ? string : clc.cyanBright(string),
     warn = string => options.parent.noColors ? string : clc.yellow(string),
-    kuzzle = new Kuzzle();
+    kuzzle = new (require('../../lib/api/kuzzle'))();
 
   console.log(notice('[ℹ] Creating dump file...'));
 
