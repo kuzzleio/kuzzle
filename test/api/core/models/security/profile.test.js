@@ -68,7 +68,7 @@ describe('Test: security/profileTest', () => {
 
     profile.policies = [{roleId: 'disallowAllRole'}];
 
-    sandbox.stub(kuzzle.repositories.role, 'loadRole', roleId => Promise.resolve(roles[roleId]));
+    sandbox.stub(kuzzle.repositories.role, 'loadRole').callsFake(roleId => Promise.resolve(roles[roleId]));
 
     return profile.isActionAllowed(request, kuzzle)
       .then(isAllowed => {
@@ -138,7 +138,7 @@ describe('Test: security/profileTest', () => {
     };
     profile.policies.push({roleId: role3._id});
 
-    sandbox.stub(kuzzle.repositories.role, 'loadRole', roleId => Promise.resolve(roles[roleId]));
+    sandbox.stub(kuzzle.repositories.role, 'loadRole').callsFake(roleId => Promise.resolve(roles[roleId]));
 
     return profile.getRights(kuzzle)
       .then(rights => {

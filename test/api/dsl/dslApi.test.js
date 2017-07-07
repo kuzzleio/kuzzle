@@ -1,5 +1,7 @@
 'use strict';
 
+require('reify');
+
 const
   should = require('should').noConflict(),
   BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,

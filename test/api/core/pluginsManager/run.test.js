@@ -25,6 +25,15 @@ describe('Test plugins manager run', () => {
 
   before(() => {
     PluginsManager = rewire('../../../../lib/api/core/plugins/pluginsManager');
+    
+    // making it quiet
+    PluginsManager.__set__({
+      console: {
+        log: sinon.stub(),
+        error: sinon.stub(),
+        warn: sinon.stub()
+      }
+    });
   });
 
   beforeEach(() => {
@@ -213,7 +222,7 @@ describe('Test plugins manager run', () => {
     };
 
     plugin.object.foo = () => {};
-    fooStub = sandbox.stub(plugin.object, 'foo', function (ev, cb) {
+    fooStub = sandbox.stub(plugin.object, 'foo').callsFake(function (ev, cb) {
       setTimeout(() => cb(), 50);
     });
 
