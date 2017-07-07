@@ -78,24 +78,7 @@ describe('funnelController.execute', () => {
         should(res.error.message).be.exactly('test');
         should(funnel.processRequest.calledOnce).be.false();
         should(funnel.overloaded).be.false();
-        should(kuzzle.pluginsManager.trigger)
-          .be.calledOnce()
-          .be.calledWith('log:error', error);
         done();
-      });
-    });
-
-    it('should forward the error stack in case a native error was thrown', done => {
-      const error = new Error('test');
-
-      funnel.checkRights.returns(Promise.reject(error));
-
-      funnel.execute(request, () => {
-        should(kuzzle.pluginsManager.trigger)
-          .be.calledOnce()
-          .be.calledWith('log:error', error.message + '\n' + error.stack);
-        done();
-
       });
     });
   });
