@@ -65,7 +65,6 @@ describe('CLI Action: shutdown', () => {
           should(processMock.exit).calledOnce().calledWith(0);
           should(pm2Mock.delete).not.be.called();
           should(pm2Mock.restart).not.be.called();
-          should(kuzzle.pluginsManager.shutdownWorkers).calledOnce();
           done();
         }, 50);
       });
@@ -84,7 +83,6 @@ describe('CLI Action: shutdown', () => {
           should(processMock.exit).calledOnce().calledWith(0);
           should(pm2Mock.delete).not.be.called();
           should(pm2Mock.restart).not.be.called();
-          should(kuzzle.pluginsManager.shutdownWorkers).calledOnce();
           done();
         }, 50);
       });
@@ -109,7 +107,6 @@ describe('CLI Action: shutdown', () => {
           should(processMock.exit).not.be.called();
           should(pm2Mock.delete).not.be.called();
           should(pm2Mock.restart).be.calledOnce().calledWith('foobar');
-          should(kuzzle.pluginsManager.shutdownWorkers).calledOnce();
           done();
         }, 50);
       });
@@ -133,7 +130,6 @@ describe('CLI Action: shutdown', () => {
           should(processMock.exit).not.be.called();
           should(pm2Mock.delete).be.calledOnce().calledWith('foobar');
           should(pm2Mock.restart).not.be.called();
-          should(kuzzle.pluginsManager.shutdownWorkers).not.be.called();
 
           shutdown(null, sinon.stub());
 
@@ -145,7 +141,6 @@ describe('CLI Action: shutdown', () => {
             should(processMock.exit).be.calledOnce().calledWith(0);
             should(pm2Mock.delete).be.calledOnce().calledWith('foobar');
             should(pm2Mock.restart).not.be.called();
-            should(kuzzle.pluginsManager.shutdownWorkers).be.calledOnce();
             done();
           }, 200);
         }, 50);
@@ -171,7 +166,6 @@ describe('CLI Action: shutdown', () => {
           should(processMock.exit).calledOnce().calledWith(0);
           should(pm2Mock.delete).not.be.called();
           should(pm2Mock.restart).not.be.called();
-          should(kuzzle.pluginsManager.shutdownWorkers).calledOnce();
           done();
         }, 50);
       });
@@ -184,7 +178,6 @@ describe('CLI Action: shutdown', () => {
       should(pm2Mock.delete).not.be.called();
       should(pm2Mock.restart).not.be.called();
       should(processMock.exit).not.be.called();
-      should(kuzzle.pluginsManager.shutdownWorkers).not.be.called();
 
       kuzzle.funnel.remainingRequests = 0;
       remainingChanged = true;
