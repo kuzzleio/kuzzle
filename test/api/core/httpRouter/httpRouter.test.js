@@ -74,6 +74,8 @@ describe('core/httpRouter', () => {
 
       rq.url = '/foo/bar';
       rq.headers.foo = 'bar';
+      rq.headers.Authorization = 'Bearer jwtFoobar';
+      rq.headers['X-Kuzzle-Volatile'] = '{"modifiedBy": "John Doe", "reason": "foobar"}';
       rq.method = 'POST';
 
       router.route(rq, callback);
@@ -81,7 +83,12 @@ describe('core/httpRouter', () => {
       should(handler.firstCall.args[0]).be.instanceOf(Request);
       should(handler.firstCall.args[0].context.protocol).be.exactly('http');
       should(handler.firstCall.args[0].context.connectionId).be.exactly('requestId');
-      should(handler.firstCall.args[0].input.headers).match({foo: 'bar'});
+      should(handler.firstCall.args[0].input.headers).be.eql({
+        foo: 'bar',
+        Authorization: 'Bearer jwtFoobar',
+        'X-Kuzzle-Volatile': '{"modifiedBy": "John Doe", "reason": "foobar"}'});
+      should(handler.firstCall.args[0].input.jwt).be.exactly('jwtFoobar');
+      should(handler.firstCall.args[0].input.volatile).be.eql({modifiedBy: 'John Doe', reason: 'foobar'});
     });
 
     it('should amend the request object if a body is found in the content', () => {
