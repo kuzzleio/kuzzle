@@ -2,7 +2,7 @@
 
 const
   should = require('should'),
-  Promise = require('bluebird'),
+  Bluebird = require('bluebird'),
   sinon = require('sinon'),
   Request = require('kuzzle-common-objects').Request,
   ForbiddenError = require('kuzzle-common-objects').errors.ForbiddenError,
@@ -22,8 +22,8 @@ describe('funnelController.processRequest', () => {
 
   it('should reject the promise with UnauthorizedError if an anonymous user is not allowed to execute the action', done => {
     let request = new Request({controller: 'document', index: '@test', action: 'get'});
-    kuzzle.repositories.user.load.returns(Promise.resolve({_id: -1, isActionAllowed: sinon.stub().returns(Promise.resolve(false))}));
-    kuzzle.repositories.token.verifyToken.returns(Promise.resolve({userId: -1}));
+    kuzzle.repositories.user.load.returns(Bluebird.resolve({_id: -1, isActionAllowed: sinon.stub().returns(Bluebird.resolve(false))}));
+    kuzzle.repositories.token.verifyToken.returns(Bluebird.resolve({userId: -1}));
 
     funnel.checkRights(request)
       .then(() => should.fail('fulfilled promise', 'rejected promise'))
@@ -37,8 +37,8 @@ describe('funnelController.processRequest', () => {
 
   it('should reject the promise with UnauthorizedError if an authenticated user is not allowed to execute the action', done => {
     let request = new Request({controller: 'document', index: '@test', action: 'get'});
-    kuzzle.repositories.user.load.returns(Promise.resolve({_id: 'user', isActionAllowed: sinon.stub().returns(Promise.resolve(false))}));
-    kuzzle.repositories.token.verifyToken.returns(Promise.resolve({user: 'user'}));
+    kuzzle.repositories.user.load.returns(Bluebird.resolve({_id: 'user', isActionAllowed: sinon.stub().returns(Bluebird.resolve(false))}));
+    kuzzle.repositories.token.verifyToken.returns(Bluebird.resolve({user: 'user'}));
 
     funnel.checkRights(request)
       .then(() => should.fail('fulfilled promise', 'rejected promise'))
@@ -57,8 +57,8 @@ describe('funnelController.processRequest', () => {
       action: 'list'
     });
 
-    kuzzle.repositories.user.load.returns(Promise.resolve({_id: 'user', isActionAllowed: sinon.stub().returns(Promise.resolve(true))}));
-    kuzzle.repositories.token.verifyToken.returns(Promise.resolve({user: 'user'}));
+    kuzzle.repositories.user.load.returns(Bluebird.resolve({_id: 'user', isActionAllowed: sinon.stub().returns(Bluebird.resolve(true))}));
+    kuzzle.repositories.token.verifyToken.returns(Bluebird.resolve({user: 'user'}));
 
     return funnel.checkRights(request)
       .then(() => {
