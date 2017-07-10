@@ -199,6 +199,7 @@ class KuzzleMock extends Kuzzle {
 
     this.router = {
       execute: sinon.stub().returns(Bluebird.resolve(foo)),
+      isConnectionAlive: sinon.stub().returns(true),
       init: sinon.spy(),
       newConnection: sinon.stub().returns(Bluebird.resolve(foo)),
       removeConnection: sinon.spy(),
