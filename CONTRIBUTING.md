@@ -37,11 +37,11 @@ You can now access to `http://localhost:7512` for the standard Kuzzle HTTP, WebS
 
 Everytime a modification is detected in the source files, the server is automatically restarted and a new debug URL is provided.
 
-# Create a plugin
+## Create a plugin
 
 See our [plugins documentation](http://docs.kuzzle.io/plugin-reference/)
 
-# Running Tests
+## Running Tests
    
 ### With a running Kuzzle inside a docker container
 
