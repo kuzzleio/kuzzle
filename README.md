@@ -41,7 +41,7 @@ Check our [complete installation guide on docs.kuzzle.io](http://docs.kuzzle.io/
 
 ## Quick start with Kuzzle
 
-* [Install kuzzle](http://docs.kuzzle.io/guide/essentials/installing-kuzzle/)
+* [Install and start Kuzzle server](http://docs.kuzzle.io/guide/essentials/installing-kuzzle/)
 * [Choose a SDK](http://docs.kuzzle.io/sdk-reference/)
 * Build your application without carring about your backend !
 
