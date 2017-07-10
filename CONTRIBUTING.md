@@ -40,3 +40,24 @@ Everytime a modification is detected in the source files, the server is automati
 # Create a plugin
 
 See our [plugins documentation](http://docs.kuzzle.io/plugin-reference/)
+
+# Running Tests
+   
+### With a running Kuzzle inside a docker container
+
+Because functional tests need a running Kuzzle environment, if you're using docker to run Kuzzle, then they can only be started from inside a Kuzzle container.
+
+    $ docker exec -ti <kuzzle docker image> npm test
+
+### Using docker, without any Kuzzle instance running
+
+A docker-compose script is available to run tests on a non-running Kuzzle. This script will pop a Kuzzle stack using Docker, automatically run tests, and exit once done.
+
+    $ docker-compose -f docker-compose/test.yml up
+
+### With a manually installed and running Kuzzle
+
+From the Kuzzle source directory, launch the following command line:
+
+    $ npm test
+    
