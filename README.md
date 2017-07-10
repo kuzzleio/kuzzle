@@ -92,6 +92,21 @@ Feel free to report issues, ask for features or even make pull requests !
 
 Check our [contributing documentation](./CONTRIBUTING.md) to know about our coding and pull requests rules
 
+## Join our community
+
+* Follow us on [twitter](https://twitter.com/kuzzleio) to get latest news
+* Register to our monthly [newsletter](http://eepurl.com/bxRxpr) to get highlighed news
+* Visit our [blog](http://kuzzle.io/blog) to be informed about what we are doing
+* Come chat with us on [gitter](https://gitter.im/kuzzleio/kuzzle)
+* Ask technical questions on [stack overflow](https://stackoverflow.com/search?q=kuzzle)
+
+## Kuzzle Enterprise
+
+Kuzzle Enterprise is production-proof, and provides all the business-critical features your need for your business, as
+the scalability, the high-availability (multi-nodes), probes for BI, diagnostic tools & professional services,
+
+[Compare editions to learn more](http://kuzzle.io/kuzzle-enterprise)
+
 ## License
 
 Kuzzle is published under [Apache 2 License](./LICENSE.md).
