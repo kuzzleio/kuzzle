@@ -29,7 +29,16 @@ Check the logs at the start of Kuzzle using the development docker image to get 
 
 How to run the development stack (needs Docker 1.10+ and Docker Compose 1.8+):
 
-```
+```bash
+# clone this repository
+git clone git@github.com:kuzzleio/kuzzle.git
+cd kuzzle
+
+# don't forget to retreive default plugins embeded in submodules
+git submodule init
+git submodule update
+
+# start kuzzle with development tools enabled
 docker-compose -f docker-compose/dev.yml up
 ```
 
