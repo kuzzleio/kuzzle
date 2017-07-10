@@ -83,7 +83,8 @@ kuzzle
 * [Full documentation](http://docs.kuzzle.io/)
 * [SDK Reference](http://docs.kuzzle.io/sdk-reference/)
 * [API Documentation](http://docs.kuzzle.io/api-documentation/)  
-* [Data Validation Documentation](http://docs.kuzzle.io/validation-reference/)  
+* [Data Validation Documentation](http://docs.kuzzle.io/validation-reference/) 
+* [View release notes](https://github.com/kuzzleio/kuzzle/releases)
 
 ## Contributing to Kuzzle
 
