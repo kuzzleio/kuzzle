@@ -4,7 +4,7 @@
 
 ![logo](http://kuzzle.io/themes/kuzzleio/images/kuzzle-logo-blue-500.png)
 
-# Why Kuzzle ?
+## Why Kuzzle ?
 
 Kuzzle is a ready-to-use, **on-premises backend** that enables you to manage your persistent data and be notified in real-time on whatever happens to it. It also provides you with a flexible and powerful user-management system.
 
@@ -16,7 +16,7 @@ Kuzzle enables you to build modern web applications and complex IoT networks in 
 * **Extensible**: fit Kuzzle to your needs by leveraging the plugin system.
 
 
-# Installation
+## Installation
 
 ### Docker install
 
@@ -39,7 +39,7 @@ You can get detailed information about how to [start kuzzle with docker on docs.
 
 Check our [complete installation guide on docs.kuzzle.io](http://docs.kuzzle.io/guide/essentials/installing-kuzzle/#manually)
 
-# Quick start with Kuzzle
+## Quick start with Kuzzle
 
 * [Install kuzzle](http://docs.kuzzle.io/guide/essentials/installing-kuzzle/)
 * [Choose a SDK](http://docs.kuzzle.io/sdk-reference/)
