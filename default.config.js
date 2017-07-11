@@ -9,7 +9,6 @@
  * @class KuzzleConfiguration
  */
 module.exports = {
-
   dump: {
     enabled: true,
     history: {
@@ -22,7 +21,6 @@ module.exports = {
     handledErrors: {
       enabled: true,
       whitelist: [
-        // 'Error',
         'RangeError',
         'TypeError',
         'KuzzleError',
@@ -50,7 +48,8 @@ module.exports = {
     requestsHistorySize: 50,
     requestsBufferSize: 50000,
     requestsBufferWarningThreshold: 5000,
-    subscriptionConditionsCount: 16
+    subscriptionConditionsCount: 16,
+    subscriptionRooms: 1000000
   },
 
   plugins: {

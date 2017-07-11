@@ -58,25 +58,6 @@ describe('/lib/api/kuzzle.js', () => {
           should(kuzzle.entryPoints.init).be.calledOnce();
           should(kuzzle.repositories.init).be.calledOnce();
           should(kuzzle.cliController.init).be.calledOnce();
-
-          sinon.assert.callOrder(
-            kuzzle.internalEngine.init,
-            kuzzle.internalEngine.bootstrap.all,
-            kuzzle.validation.init,
-            kuzzle.pluginsManager.init,
-            kuzzle.pluginsManager.run,
-            kuzzle.services.init,
-            kuzzle.indexCache.init,
-            kuzzle.pluginsManager.trigger,
-            kuzzle.funnel.init,
-            kuzzle.router.init,
-            kuzzle.statistics.init,
-            kuzzle.repositories.init,
-            kuzzle.pluginsManager.trigger,
-            kuzzle.cliController.init,
-            kuzzle.entryPoints.init,
-            kuzzle.pluginsManager.trigger
-          );
         });
     });
 

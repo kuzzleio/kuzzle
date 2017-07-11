@@ -3,7 +3,7 @@
 const
   should = require('should'),
   sinon = require('sinon'),
-  Promise = require('bluebird'),
+  Bluebird = require('bluebird'),
   Request = require('kuzzle-common-objects').Request,
   ServiceUnavailableError = require('kuzzle-common-objects').errors.ServiceUnavailableError,
   KuzzleMock = require('../../../mocks/kuzzle.mock'),
@@ -36,7 +36,7 @@ describe('funnelController.execute', () => {
         bar: sinon.spy()
       }
     };
-    funnel.checkRights = sinon.stub().returns(Promise.resolve(request));
+    funnel.checkRights = sinon.stub().returns(Bluebird.resolve(request));
     funnel.processRequest = sinon.stub().returnsArg(0);
     sinon.stub(funnel, '_playCachedRequests');
   });
@@ -70,7 +70,7 @@ describe('funnelController.execute', () => {
 
     it('should forward any error occurring during the request execution', done => {
       const error = new ServiceUnavailableError('test');
-      funnel.checkRights = sinon.stub().returns(Promise.reject(error));
+      funnel.checkRights = sinon.stub().returns(Bluebird.reject(error));
 
       funnel.execute(request, (err, res) => {
         should(err).be.instanceOf(Error);
@@ -78,24 +78,7 @@ describe('funnelController.execute', () => {
         should(res.error.message).be.exactly('test');
         should(funnel.processRequest.calledOnce).be.false();
         should(funnel.overloaded).be.false();
-        should(kuzzle.pluginsManager.trigger)
-          .be.calledOnce()
-          .be.calledWith('log:error', error);
         done();
-      });
-    });
-
-    it('should forward the error stack in case a native error was thrown', done => {
-      const error = new Error('test');
-
-      funnel.checkRights.returns(Promise.reject(error));
-
-      funnel.execute(request, () => {
-        should(kuzzle.pluginsManager.trigger)
-          .be.calledOnce()
-          .be.calledWith('log:error', error.message + '\n' + error.stack);
-        done();
-
       });
     });
   });
@@ -202,15 +185,14 @@ describe('funnelController.execute', () => {
         .eql(1);
     });
 
-    it('should discard the request if the requestsBufferSize property is reached', (done) => {
+    it('should discard the request if the requestsBufferSize property is reached', done => {
       funnel.concurrentRequests = kuzzle.config.limits.concurrentRequests;
       funnel.requestsCacheQueue = Array(kuzzle.config.limits.requestsBufferSize);
       funnel.overloaded = true;
 
       funnel.execute(request, (err, res) => {
         should(funnel.overloaded).be.true();
-        should(funnel._playCachedRequests)
-          .have.callCount(0);
+        should(funnel._playCachedRequests).have.callCount(0);
         should(funnel.processRequest.called).be.false();
         should(funnel.requestsCacheQueue.length).be.eql(kuzzle.config.limits.requestsBufferSize);
         should(err).be.instanceOf(ServiceUnavailableError);
@@ -219,6 +201,19 @@ describe('funnelController.execute', () => {
         should(res.status).be.eql(503);
         done();
       });
+    });
+
+    it('should discard a request if the associated connection is no longer active', () => {
+      const cb = sinon.stub();
+      kuzzle.router.isConnectionAlive.returns(false);
+
+      funnel.pendingRequests[request.id] = true;
+      funnel.checkRights.throws(new Error('funnel.checkRights should not have been called'));
+
+      should(funnel.execute(request, cb)).be.eql(0);
+      should(funnel.checkRights.called).be.false();
+      should(cb.called).be.false();
+      should(funnel.pendingRequests[request.id]).be.undefined();
     });
   });
 
