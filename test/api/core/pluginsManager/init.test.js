@@ -61,14 +61,51 @@ describe('PluginsManager', () => {
       should(pluginsManager.plugins).be.empty();
     });
 
+    it('should reject all plugin initialization if a plugin does not contain package.json', () => {
+      PluginsManager.__with__({
+        require: moduleName => {
+          if (moduleName.indexOf('package.json') > -1) {
+            throw new Error('oh crap!');
+          }
+        }
+      })(() => {
+        pluginsManager = new PluginsManager(kuzzle);
+        fsStub.readdirSync.returns(['kuzzle-plugin-test']);
+        fsStub.statSync.returns({
+          isDirectory () {
+            return true;
+          }
+        });
+        should(() => pluginsManager.init()).throw(/Unable to load plugin from path "kuzzle-plugin-test"; No package.json found./i);
+        should(pluginsManager.plugins).be.empty();
+      });
+    });
+
+    it('should throw if a plugin with the same name already exists', () => {
+      const instanceName = 'kuzzle-plugin-test';
+      pluginsManager = new PluginsManager(kuzzle);
+      fsStub.readdirSync.returns([instanceName, 'another-plugin']);
+      fsStub.statSync.returns({
+        isDirectory: () => true
+      });
+      mockrequire('/kuzzle/plugins/enabled/kuzzle-plugin-test', function () {});
+      mockrequire('/kuzzle/plugins/enabled/kuzzle-plugin-test/package.json', { name: instanceName});
+      mockrequire('/kuzzle/plugins/enabled/another-plugin/package.json', { name: instanceName});
+      PluginsManager = mockrequire.reRequire('../../../../lib/api/core/plugins/pluginsManager');
+
+      should(() => pluginsManager.init()).throw(/A plugin named kuzzle-plugin-test already exists/);
+    });
+
     it('should return a well-formed plugin instance if a valid requireable plugin is enabled', () => {
       const instanceName = 'kuzzle-plugin-test';
+      pluginsManager = new PluginsManager(kuzzle);
       fsStub.readdirSync.returns(['kuzzle-plugin-test']);
       fsStub.statSync.returns({
         isDirectory: () => true
       });
-
       mockrequire('/kuzzle/plugins/enabled/kuzzle-plugin-test', function () {});
+      mockrequire('/kuzzle/plugins/enabled/kuzzle-plugin-test/package.json', { name: 'kuzzle-plugin-test' });
+      PluginsManager = mockrequire.reRequire('../../../../lib/api/core/plugins/pluginsManager');
 
       should(() => pluginsManager.init()).not.throw();
       should(pluginsManager.plugins[instanceName]).be.Object();
@@ -83,7 +120,7 @@ describe('PluginsManager', () => {
       should(pluginsManager.plugins[instanceName].path).be.ok();
     });
 
-    it('should reject plugin initialization if a plugin require another version of kuzzle core', () => {
+    it('should reject plugin initialization if a plugin requires another version of kuzzle core', () => {
       const manifest = {
         kuzzleVersion: '5.x'
       };
@@ -94,6 +131,7 @@ describe('PluginsManager', () => {
       });
 
       mockrequire('/kuzzle/plugins/enabled/kuzzle-plugin-test', function () {});
+      mockrequire('/kuzzle/plugins/enabled/kuzzle-plugin-test/package.json', { name: 'kuzzle-plugin-test' });
       mockrequire('/kuzzle/plugins/enabled/kuzzle-plugin-test/manifest.json', manifest);
       PluginsManager = mockrequire.reRequire('../../../../lib/api/core/plugins/pluginsManager');
 
@@ -117,6 +155,8 @@ describe('PluginsManager', () => {
       });
 
       mockrequire('/kuzzle/plugins/enabled/kuzzle-plugin-test', function () {});
+      mockrequire('/kuzzle/plugins/enabled/kuzzle-plugin-test/package.json', { name: 'kuzzle-plugin-test' });
+      PluginsManager = mockrequire.reRequire('../../../../lib/api/core/plugins/pluginsManager');
 
       pluginsManager = new PluginsManager(kuzzle);
 
@@ -146,13 +186,15 @@ describe('PluginsManager', () => {
 
       mockrequire('/kuzzle/plugins/enabled/kuzzle-plugin-test', function () {});
       mockrequire('/kuzzle/plugins/enabled/kuzzle-plugin-test/manifest.json', manifest);
+      mockrequire('/kuzzle/plugins/enabled/kuzzle-plugin-test/package.json', { name: 'kuzzle-plugin-test' });
+      PluginsManager = mockrequire.reRequire('../../../../lib/api/core/plugins/pluginsManager');
 
       pluginsManager = new PluginsManager(kuzzle);
 
       should(() => pluginsManager.init()).throw(/the plugin "kuzzle-plugin-test" is configured to run in privileged mode, but it does not seem to support it/i);
     });
 
-    it('should throw if a plugin require to be in a privileged mode but user has not acknowledged this', () => {
+    it('should throw if a plugin requires to be in a privileged mode but user has not acknowledged this', () => {
       const instanceName = 'kuzzle-plugin-test';
       const manifest = {
         privileged: true
@@ -169,6 +211,8 @@ describe('PluginsManager', () => {
 
       mockrequire('/kuzzle/plugins/enabled/kuzzle-plugin-test', function () {});
       mockrequire('/kuzzle/plugins/enabled/kuzzle-plugin-test/manifest.json', manifest);
+      mockrequire('/kuzzle/plugins/enabled/kuzzle-plugin-test/package.json', { name: 'kuzzle-plugin-test' });
+      PluginsManager = mockrequire.reRequire('../../../../lib/api/core/plugins/pluginsManager');
 
       pluginsManager = new PluginsManager(kuzzle);
 
@@ -189,6 +233,8 @@ describe('PluginsManager', () => {
       });
 
       mockrequire('/kuzzle/plugins/enabled/kuzzle-plugin-test', undefined);
+      mockrequire('/kuzzle/plugins/enabled/kuzzle-plugin-test/package.json', { name: 'kuzzle-plugin-test' });
+      PluginsManager = mockrequire.reRequire('../../../../lib/api/core/plugins/pluginsManager');
 
       should(() => pluginsManager.init()).throw(/unable to require plugin "kuzzle-plugin-test" from directory/i);
       should(pluginsManager.plugins).be.empty();
