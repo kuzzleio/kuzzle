@@ -1,8 +1,11 @@
-var should = require('should');
+const
+  {
+    defineSupportCode
+  } = require('cucumber'),
+  should = require('should');
 
-module.exports = function () {
-
-  this.Then(/^The (sorted )?result should match the (regex|json) (.*?)$/, function (sorted, type, pattern, callback) {
+defineSupportCode(function ({Then}) {
+  Then(/^The (sorted )?result should match the (regex|json) (.*?)$/, function (sorted, type, pattern, callback) {
     var
       regex,
       val = this.result.result;
@@ -38,7 +41,7 @@ module.exports = function () {
     }
   });
 
-  this.Then(/^The result should raise an error with message "(.*?)"$/, function (message, callback) {
+  Then(/^The result should raise an error with message "(.*?)"$/, function (message, callback) {
     var
       val = this.result.error.error || this.result.error;
 
@@ -55,7 +58,7 @@ module.exports = function () {
     }
   });
 
-  this.Then(/^The mapping should contain a nested "(.*?)" field with property "(.*?)" of type "(.*?)"$/, function (field, prop, type, callback) {
+  Then(/^The mapping should contain a nested "(.*?)" field with property "(.*?)" of type "(.*?)"$/, function (field, prop, type, callback) {
     if (! this.result[field]) {
       return callback(new Error('Field ' + field + ' not found in mapping'));
     }
@@ -74,7 +77,7 @@ module.exports = function () {
     callback();
   });
 
-  this.Then(/^The mapping should contain "(.*?)" field of type "(.*?)"$/, function (field, type, callback) {
+  Then(/^The mapping should contain "(.*?)" field of type "(.*?)"$/, function (field, type, callback) {
     if (! this.result[field]) {
       return callback(new Error('Field ' + field + ' not found in mapping'));
     }
@@ -86,5 +89,5 @@ module.exports = function () {
     }
     callback();
   });
+});
 
-};

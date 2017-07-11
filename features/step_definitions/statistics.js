@@ -1,5 +1,10 @@
-var apiSteps = function () {
-  this.When(/^I get the last statistics frame$/, function (callback) {
+const
+  {
+    defineSupportCode
+  } = require('cucumber');
+
+defineSupportCode(function ({When, Then}) {
+  When(/^I get the last statistics frame$/, function (callback) {
     this.api.getLastStats()
       .then(function (response) {
         if (response.error) {
@@ -18,7 +23,7 @@ var apiSteps = function () {
       });
   });
 
-  this.When(/^I get the statistics frame from a date$/, function (callback) {
+  When(/^I get the statistics frame from a date$/, function (callback) {
     this.api.getStats({startTime: new Date().getTime()-1000000, stopTime: undefined})
       .then(function (response) {
         if (response.error) {
@@ -37,7 +42,7 @@ var apiSteps = function () {
       });
   });
 
-  this.When(/^I get all statistics frames$/, function (callback) {
+  When(/^I get all statistics frames$/, function (callback) {
     this.api.getAllStats()
       .then(function (response) {
         if (response.error) {
@@ -56,7 +61,7 @@ var apiSteps = function () {
       });
   });
 
-  this.Then(/^I get at least 1 statistic frame$/, function (callback) {
+  Then(/^I get at least 1 statistic frame$/, function (callback) {
     if (!this.result) {
       return callback('Expected a statistics result, got: ' + this.result);
     }
@@ -79,6 +84,5 @@ var apiSteps = function () {
 
     callback('Expected at least 1 statistic frame, found: ' + this.result);
   });
-};
+});
 
-module.exports = apiSteps;

@@ -1,8 +1,11 @@
-var
+const
+  {
+    defineSupportCode
+  } = require('cucumber'),
   async = require('async');
 
-var apiSteps = function () {
-  this.Then(/^I can retrieve actions from bulk import$/, function (callback) {
+defineSupportCode(function ({Then, When}) {
+  Then(/^I can retrieve actions from bulk import$/, function (callback) {
     var main = function (callbackAsync) {
       setTimeout(() => {
         // execute in parallel both tests: test if create/update work well and test if delete works well
@@ -71,7 +74,7 @@ var apiSteps = function () {
     });
   });
 
-  this.When(/^I ?(can't)* do a bulk import(?: from index "([^"]*)")?$/, function (not, index, callback) {
+  When(/^I ?(can't)* do a bulk import(?: from index "([^"]*)")?$/, function (not, index, callback) {
     this.api.bulkImport(this.bulk, index)
       .then(body => {
         if (body.error !== null) {
@@ -98,7 +101,7 @@ var apiSteps = function () {
       });
   });
 
-  this.When(/^I do a global bulk import$/, function (callback) {
+  When(/^I do a global bulk import$/, function (callback) {
     this.api.globalBulkImport(this.globalBulk)
       .then(body => {
         if (body.error !== null) {
@@ -112,6 +115,5 @@ var apiSteps = function () {
         callback(error);
       });
   });
-};
+});
 
-module.exports = apiSteps;

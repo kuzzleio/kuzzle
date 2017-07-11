@@ -39,7 +39,7 @@ describe('PluginsManager', () => {
     });
   });
 
-  describe('#loadPlugins', () => {
+  describe('#loadMoreProtocols', () => {
     it('should discard a plugin if loading it from package.json fails', () => {
       fsStub.readdirSync.returns(['kuzzle-plugin-test']);
       fsStub.statSync.returns({

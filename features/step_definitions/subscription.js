@@ -1,26 +1,25 @@
-var apiSteps = function () {
-  this.Given(/^A room subscription listening to "([^"]*)" having value "([^"]*)"(?: with socket "([^"]*)")?$/, function (key, value, socketName, callback) {
-    var filter = {
+const
+  {
+    defineSupportCode
+  } = require('cucumber');
+
+defineSupportCode(function ({Given, Then}) {
+  Given(/^A room subscription listening to "([^"]*)" having value "([^"]*)"(?: with socket "([^"]*)")?$/, function (key, value, socketName) {
+    const filter = {
       equals: {
         [key]: value
       }
     };
 
-    this.api.subscribe(filter, socketName)
+    return this.api.subscribe(filter, socketName)
       .then(body => {
-        if (body.error !== null) {
-          callback(new Error(body.error.message));
-          return false;
+        if (body.error) {
+          throw body.error;
         }
-
-        callback();
-      })
-      .catch(function (error) {
-        callback(new Error(error));
       });
   });
 
-  this.Given(/^A room subscription listening to the whole collection$/, function (callback) {
+  Given(/^A room subscription listening to the whole collection$/, function (callback) {
     this.api.subscribe({})
       .then(body => {
         if (body.error !== null) {
@@ -35,7 +34,7 @@ var apiSteps = function () {
       });
   });
 
-  this.Given(/^A room subscription listening field "([^"]*)" doesn't exists$/, function (key, callback) {
+  Given(/^A room subscription listening field "([^"]*)" doesn't exists$/, function (key, callback) {
     var filter = {not: {exists: {field : key}}};
 
     this.api.subscribe(filter)
@@ -52,7 +51,7 @@ var apiSteps = function () {
       });
   });
 
-  this.Then(/^I unsubscribe(?: socket "([^"]*)")?/, function (socketName, callback) {
+  Then(/^I unsubscribe(?: socket "([^"]*)")?/, function (socketName, callback) {
     var rooms;
 
     if (socketName) {
@@ -80,7 +79,7 @@ var apiSteps = function () {
   /**
    * Remove room subscription
    */
-  this.Then(/^I remove the first room(?: for socket "([^"]*)")?/, function (socketName, callback) {
+  Then(/^I remove the first room(?: for socket "([^"]*)")?/, function (socketName, callback) {
     var rooms;
 
     if (socketName) {
@@ -105,7 +104,7 @@ var apiSteps = function () {
       });
   });
 
-  this.Then(/^I can count "([^"]*)" subscription/, function (number, callback) {
+  Then(/^I can count "([^"]*)" subscription/, function (number, callback) {
     this.api.countSubscription()
       .then(function (response) {
         if (response.error) {
@@ -127,7 +126,7 @@ var apiSteps = function () {
       });
   });
 
-  this.Then(/^I get the list subscriptions$/, function (callback) {
+  Then(/^I get the list subscriptions$/, function (callback) {
     this.api.listSubscriptions()
       .then(response => {
         if (response.error) {
@@ -146,7 +145,7 @@ var apiSteps = function () {
       });
   });
 
-  this.Then(/^In my list there is a collection "([^"]*)" with ([\d]*) room and ([\d]*) subscriber$/, function(collection, countRooms, countSubscribers, callback) {
+  Then(/^In my list there is a collection "([^"]*)" with ([\d]*) room and ([\d]*) subscriber$/, function(collection, countRooms, countSubscribers, callback) {
     var
       rooms = Object.keys(this.result[this.fakeIndex][collection]),
       count = 0;
@@ -173,6 +172,5 @@ var apiSteps = function () {
 
     callback();
   });
-};
+});
 
-module.exports = apiSteps;

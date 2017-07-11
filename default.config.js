@@ -154,6 +154,45 @@ module.exports = {
     }
   },
 
+  server: {
+    entryPoints: {
+      embedded: true,
+      proxy: false
+    },
+    proxy: {
+      host: 'localhost',
+      port: 7331,
+      retryInterval: 1000,
+      resendClientListDelay: 1000
+    },
+    logs: {
+      transports: [
+        {
+          transport: 'console',
+          level: 'info',
+          stderrLevels: []
+        }
+      ],
+      accessLogFormat: 'combined',
+      accessLogIpOffset: 0
+    },
+    maxRequestSize: '1MB',
+    port: 7512,
+    protocols: {
+      http: {
+        enabled: true,
+        maxFormFileSize: '1MB'
+      },
+      socketio: {
+        enabled: true,
+        origins: '*:*'
+      },
+      websocket: {
+        enabled: true
+      }
+    }
+  },
+
   services: {
     common: {
       defaultInitTimeout: 10000,
@@ -179,12 +218,6 @@ module.exports = {
       aliases: ['broker'],
       socket: './run/broker.sock',
       retryInterval: 1000
-    },
-    proxyBroker: {
-      host: 'localhost',
-      port: 7331,
-      retryInterval: 1000,
-      resendClientListDelay: 1000
     },
     db: {
       aliases: ['storageEngine'],

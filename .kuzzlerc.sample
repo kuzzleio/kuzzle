@@ -206,7 +206,111 @@
     }
   },
 
-  // The services are the external components Kuzzle relies on.
+  // Kuzzle server is the entry point for incoming requests
+  "server": {
+    // [entryPoints]
+    // list of available entry points for Kuzzle.
+    // Posible values:
+    //  - embedded: Kuzzle can run on its own and does not require any
+    //    external component to process requests
+    //  - proxy: Kuzzle will connect to a Kuzzle proxy and process requests
+    //    coming from it
+    // Entry points can be combined.
+    "entryPoints": {
+      "embedded": true,
+      "proxy": false
+    },
+
+    // [proxy]
+    // A Kuzzle proxy can be used to forward requests to Kuzzle.
+    //   * host:
+    //       Host name/address of a Kuzzle proxy server.
+    //       Can be a hostname, an IP address or an URI.
+    //   * pingTimeout:
+    //       Timeout (in milliseconds) of a ping request. If reached, Kuzzle
+    //       marks its connection to the distant host as lost.
+    //   * pingInterval:
+    //       Time (in milliseconds) between ping requests
+    //   * port:
+    //       Network port opened by the Kuzzle proxy server
+    //   * retryClientListDelay
+    //       Time after which (in milliseconds) Kuzzle should ask the proxy to
+    //       send the list of clients back after a disconnection (default 1s).
+    //   * retryInterval:
+    //       Time interval (in milliseconds) between reconnection retries
+    //       when the connection to the broker server has been lost
+    "proxy": {
+      "host": "localhost",
+      "port": 7331,
+      "resendClientListDelay": 1000,
+      "retryInterval": 1000
+    },
+
+    // [logs] (embedded only)
+    // Configuration section for Kuzzle access logs
+    //   * transports:
+    //       An array of Winston transports configurations to output access
+    //       logs. Possible transport types are: console, file, elasticsearch
+    //       and syslog.
+    //       Please refer to https://github.com/winstonjs/winston/blob/master/docs/transports.md
+    //       for more information on transports configuration.
+    //   * accessLogFormat:
+    //       Access log format.
+    //       Currently supported are "combined" (=Apache combined logs format) and
+    //       "logstash".
+    //       "logstash" will output the whole request input to JSON, ready to
+    //       be consumed by logstash agent.
+    //   * accessLogIpOffset:
+    //       The offset to use as the client ip, from the FORWARDED-FOR chain,
+    //       beginning from the right (0 = the ip address of the last
+    //       client|proxy which connected to Kuzzle
+    "logs": {
+      "transports": [
+        {
+          "transport": "console",
+          "level": "info",
+          "stderrLevels": []
+        }
+      ],
+      "accessLogFormat": "combined",
+      "accessLogIpOffset": 0
+    },
+    // (embedded only)
+    //   * maxRequestSize:
+    //     The maxium size of an incoming request. Units can be expressed in
+    //     bytes ("b" or none), kilobytes ("kb"), megabytes ("mb"), gigabytes
+    //     ("gb") or terabytes ("tb")
+    //   * port:
+    //     The port on which Kuzzle should bind to
+    //
+    "maxRequestSize": "1mb",
+    "port": 7512,
+    // [protocols] (embedded only)
+    // protocols accepted by Kuzzle.
+    // protocols can be extended using plugins and configured in this section.
+    "protocols": {
+      // * maxFormFileSize:
+      //   maximum size of documents sent via http forms
+      "http": {
+        "enabled": true,
+        "maxFormFileSize": "1mb"
+      },
+      // * origins:
+      //   value of Access-Control-Allow-Origin header to answer the
+      //   upgrade request
+      "socketio": {
+        "enabled": true,
+        "origins": '*:*'
+      },
+      "websocket": {
+        "enabled": true
+      }
+    }
+
+  },
+
+
+  // Services are the external components Kuzzle relies on.
   "services": {
     // [common]
     //   * defaultInitTimeout:
@@ -316,32 +420,6 @@
       "aliases": ["broker"],
       "host": "localhost",
       "port": 7911,
-      "retryInterval": 1000,
-      "pingTimeout": 50,
-      "pingInterval": 60000
-    },
-    // [proxyBroker]
-    // The proxy broker is used to communicate between the Proxy and Kuzzle
-    // server.
-    //   * host:
-    //       Host name/address of a Kuzzle proxy server.
-    //       Can be a hostname, an IP address or an URI.
-    //   * pingTimeout:
-    //       Timeout (in milliseconds) of a ping request. If reached, Kuzzle
-    //       marks its connection to the distant host as lost.
-    //   * pingInterval:
-    //       Time (in milliseconds) between ping requests
-    //   * port:
-    //       Network port opened by the Kuzzle proxy server
-    //   * retryClientListDelay
-    //       Time after which (in milliseconds) Kuzzle should ask the proxy to
-    //       send the list of clients back after a disconnection (default 1s).
-    //   * retryInterval:
-    //       Time interval (in milliseconds) between reconnection retries
-    //       when the connection to the broker server has been lost
-    "proxyBroker": {
-      "host": "localhost",
-      "port": 7331,
       "retryInterval": 1000,
       "pingTimeout": 50,
       "pingInterval": 60000

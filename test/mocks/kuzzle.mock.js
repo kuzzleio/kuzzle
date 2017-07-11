@@ -36,15 +36,26 @@ class KuzzleMock extends Kuzzle {
 
 
     this.entryPoints = {
-      http: {
-        init: sinon.spy()
-      },
+      dispatch: sinon.spy(),
+      entryPoints: [
+        {
+          dispatch: sinon.spy(),
+          init: sinon.stub().returns(Bluebird.resolve()),
+          joinChannel: sinon.spy(),
+          leaveChannel: sinon.spy(),
+          send: sinon.spy()
+        },
+        {
+          dispatch: sinon.spy(),
+          init: sinon.stub().returns(Bluebird.resolve()),
+          joinChannel: sinon.spy(),
+          leaveChannel: sinon.spy(),
+          send: sinon.spy()
+        }
+      ],
       init: sinon.spy(),
-      proxy: {
-        dispatch: sinon.spy(),
-        joinChannel: sinon.spy(),
-        leaveChannel: sinon.spy()
-      }
+      joinChannel: sinon.spy(),
+      leaveChannel: sinon.spy()
     };
 
     this.funnel = {
@@ -201,10 +212,8 @@ class KuzzleMock extends Kuzzle {
       init: sinon.spy(),
       newConnection: sinon.stub().returns(Bluebird.resolve(foo)),
       removeConnection: sinon.spy(),
-      router: {
-        router: {
-          route: sinon.stub()
-        }
+      http: {
+        route: sinon.stub()
       }
     };
 
@@ -215,12 +224,6 @@ class KuzzleMock extends Kuzzle {
           getInfos: sinon.stub().returns(Bluebird.resolve()),
           listen: sinon.spy(),
           send: sinon.stub().returns(Bluebird.resolve())
-        },
-        proxyBroker: {
-          listen: sinon.spy(),
-          onConnectHandlers: [],
-          send: sinon.stub().returns(Bluebird.resolve()),
-
         },
         gc: {
           init: sinon.spy(),

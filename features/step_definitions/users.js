@@ -1,11 +1,12 @@
-'use strict';
-
 const
+  {
+    defineSupportCode
+  } = require('cucumber'),
   _ = require('lodash'),
   async = require('async');
 
-module.exports = function () {
-  this.When(/^I get the user mapping$/, function () {
+defineSupportCode(function ({When, Then, Given}) {
+  When(/^I get the user mapping$/, function () {
     return this.api.getUserMapping()
       .then(response => {
         if (response.error) {
@@ -24,7 +25,7 @@ module.exports = function () {
       });
   });
 
-  this.Then(/^I change the user mapping$/, function () {
+  Then(/^I change the user mapping$/, function () {
     return this.api.updateUserMapping()
       .then(body => {
         if (body.error !== null) {
@@ -33,7 +34,7 @@ module.exports = function () {
       });
   });
 
-  this.When(/^I (can't )?create a (restricted )?user "(.*?)" with id "(.*?)"$/, {timeout: 20000}, function (not, isRestricted, user, id, callback) {
+  When(/^I (can't )?create a (restricted )?user "(.*?)" with id "(.*?)"$/, {timeout: 20000}, function (not, isRestricted, user, id, callback) {
     var
       userObject = this.users[user],
       method;
@@ -64,7 +65,7 @@ module.exports = function () {
       .catch(error => callback(not ? null : error));
   });
 
-  this.Then(/^I am able to get the user "(.*?)"(?: matching {(.*)})?$/, function (id, match) {
+  Then(/^I am able to get the user "(.*?)"(?: matching {(.*)})?$/, function (id, match) {
     id = this.idPrefix + id;
 
     return this.api.getUser(id)
@@ -85,7 +86,7 @@ module.exports = function () {
       });
   });
 
-  this.Then(/^I search for {(.*?)} and find (\d+) users(?: matching {(.*?)})?$/, function (query, count, match, callback) {
+  Then(/^I search for {(.*?)} and find (\d+) users(?: matching {(.*?)})?$/, function (query, count, match, callback) {
     if (count) {
       count = parseInt(count);
     }
@@ -127,7 +128,7 @@ module.exports = function () {
     });
   });
 
-  this.Then(/^I replace the user "(.*?)" with data {(.*?)}$/, function (id, data) {
+  Then(/^I replace the user "(.*?)" with data {(.*?)}$/, function (id, data) {
     return this.api.replaceUser(this.idPrefix + id, JSON.parse('{' + data + '}'))
       .then(body => {
         if (body.error) {
@@ -136,7 +137,7 @@ module.exports = function () {
       });
   });
 
-  this.Then(/^I delete the user "(.*?)"$/, function (id) {
+  Then(/^I delete the user "(.*?)"$/, function (id) {
     return this.api.deleteUser(this.idPrefix + id, true)
       .then(body => {
         if (body.error) {
@@ -145,7 +146,7 @@ module.exports = function () {
       });
   });
 
-  this.Then(/^I am getting the current user, which matches \{(.*?)}$/, function (match) {
+  Then(/^I am getting the current user, which matches \{(.*?)}$/, function (match) {
     return this.api.getCurrentUser()
       .then(body => {
         if (body.error) {
@@ -159,7 +160,7 @@ module.exports = function () {
       });
   });
 
-  this.Then(/^I'm ?(not)* able to find rights for user "([^"]*)"$/, function (not, id, callback) {
+  Then(/^I'm ?(not)* able to find rights for user "([^"]*)"$/, function (not, id, callback) {
     id = this.idPrefix + id;
 
     this.api.getUserRights(id)
@@ -177,7 +178,7 @@ module.exports = function () {
       .catch(error => callback(not ? null : error));
   });
 
-  this.Then(/^I'm able to find my rights$/, function () {
+  Then(/^I'm able to find my rights$/, function () {
     return this.api.getMyRights()
       .then(body => {
         if (body.error) {
@@ -186,7 +187,7 @@ module.exports = function () {
       });
   });
 
-  this.Given(/^A scrolled search on users$/, function () {
+  Given(/^A scrolled search on users$/, function () {
     this.scrollId = null;
 
     return this.api.searchUsers({}, {scroll: '1m'})
@@ -203,7 +204,7 @@ module.exports = function () {
       });
   });
 
-  this.Then(/^I am able to perform a scrollUsers request$/, function () {
+  Then(/^I am able to perform a scrollUsers request$/, function () {
     if (!this.scrollId) {
       throw new Error('No previous scrollId found');
     }
@@ -219,4 +220,5 @@ module.exports = function () {
         }
       });
   });
-};
+});
+

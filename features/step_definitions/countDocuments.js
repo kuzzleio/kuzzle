@@ -1,8 +1,11 @@
-var
+const
+  {
+    defineSupportCode
+  } = require('cucumber'),
   async = require('async');
 
-var apiSteps = function () {
-  this.Then(/^I count ([\d]*) documents(?: in index "([^"]*)")?$/, function (number, index, callback) {
+defineSupportCode(function ({Then}) {
+  Then(/^I count ([\d]*) documents(?: in index "([^"]*)")?$/, function (number, index, callback) {
     var main = function (callbackAsync) {
       setTimeout(() => {
         this.api.count({}, index)
@@ -32,7 +35,7 @@ var apiSteps = function () {
     });
   });
 
-  this.Then(/^I count ([\d]*) documents with "([^"]*)" in field "([^"]*)(?: in index "([^"]*)")?"/, function (number, value, field, index, callback) {
+  Then(/^I count ([\d]*) documents with "([^"]*)" in field "([^"]*)(?: in index "([^"]*)")?"/, function (number, value, field, index, callback) {
     var main = function (callbackAsync) {
       setTimeout(function () {
         var query = {
@@ -72,7 +75,5 @@ var apiSteps = function () {
       callback();
     });
   });
+});
 
-};
-
-module.exports = apiSteps;

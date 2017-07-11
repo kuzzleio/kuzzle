@@ -1,5 +1,10 @@
-var apiSteps = function () {
-  this.When(/^I get the server timestamp$/, function(callback) {
+const
+  {
+    defineSupportCode
+  } = require('cucumber');
+
+defineSupportCode(function ({When, Then}) {
+  When(/^I get the server timestamp$/, function(callback) {
     this.api.now()
       .then(response => {
         if (response.error) {
@@ -16,13 +21,12 @@ var apiSteps = function () {
       .catch(error => callback(error));
   });
 
-  this.Then(/^I can read the timestamp$/, function(callback) {
+  Then(/^I can read the timestamp$/, function(callback) {
     if (!this.result.now || !Number.isInteger(this.result.now)) {
       return callback('Expected a timestamp result, got: ' + this.result);
     }
 
     callback();
   });
-};
+});
 
-module.exports = apiSteps;
