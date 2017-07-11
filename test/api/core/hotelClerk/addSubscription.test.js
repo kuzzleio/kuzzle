@@ -2,6 +2,7 @@
 
 const
   should = require('should'),
+  sinon = require('sinon'),
   Bluebird = require('bluebird'),
   Request = require('kuzzle-common-objects').Request,
   HotelClerk = require('../../../../lib/api/core/hotelClerk'),
@@ -202,5 +203,12 @@ describe('Test: hotelClerk.addSubscription', () => {
     hotelClerk.roomsCount = Number.MAX_SAFE_INTEGER - 1;
 
     return should(hotelClerk.addSubscription(request)).be.fulfilled();
+  });
+
+  it('should discard the request if the associated connection is no longer active', () => {
+    kuzzle.router.isConnectionAlive.returns(false);
+    hotelClerk._createRoom = sinon.stub().throws(new Error('Should not have been called'));
+
+    return hotelClerk.addSubscription(request);
   });
 });
