@@ -24,7 +24,7 @@ If you are running Docker and just want to get your own Kuzzle running, you can 
 
 Prerequisites:
 
-* [Docker](https://docs.docker.com/engine/installation/) (version >1.13.0)
+* [Docker](https://docs.docker.com/engine/installation/) (version >1.7.0)
 * [Docker Compose](https://docs.docker.com/compose/install/) (version >1.10.0)
 
 From Kuzzle's build repo:
@@ -43,7 +43,7 @@ Check our [complete installation guide on docs.kuzzle.io](http://docs.kuzzle.io/
 
 * [Install and start Kuzzle server](http://docs.kuzzle.io/guide/essentials/installing-kuzzle/)
 * [Choose a SDK](http://docs.kuzzle.io/sdk-reference/)
-* Build your application without carring about your backend !
+* Build your application without caring about your backend !
 
 Check the [**Getting started page on docs.kuzzle.io**](http://docs.kuzzle.io/guide/getting-started/)
 
