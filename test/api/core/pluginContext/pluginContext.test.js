@@ -125,7 +125,7 @@ describe('Plugin Context', () => {
       });
 
       should(context.accessors).be.an.Object().and.not.be.empty();
-      should(context.accessors).have.properties(['execute', 'validation', 'storage']);
+      should(context.accessors).have.properties(['execute', 'validation', 'storage', 'trigger']);
     });
 
     it('should expose a correctly constructed validation accessor', () => {
@@ -141,11 +141,41 @@ describe('Plugin Context', () => {
       should(execute).be.a.Function();
     });
 
+    it('should expose correctly a trigger accessor', () => {
+      const trigger = context.accessors.trigger;
+
+      should(trigger).be.a.Function();
+    });
+
     it('should expose a correctly constructed storage accessor', () => {
       const storage = context.accessors.storage;
 
       should(storage.bootstrap).be.a.Function();
       should(storage.createCollection).be.a.Function();
+    });
+  });
+
+  describe('#trigger', () => {
+    it('should trigger a log:error if eventName contains a colon', () => {
+      const trigger = kuzzle.pluginsManager.trigger;
+      context.accessors.trigger('event:with:colons');
+      should(trigger).be.calledWith('log:error');
+    });
+
+    it('should call trigger with the given event name and payload', () => {
+      const trigger = kuzzle.pluginsManager.trigger;
+      const eventName = 'backHome';
+      const payload = {
+        question: 'who\'s is this motorcycle?',
+        answer: 'it\'s a chopper, baby.',
+        anotherQuestion: 'who\'s is this chopper, then?',
+        anotherAnswer: 'it\'s Zed\'s',
+        yetAnotherQuestion: 'who\'s Zed?',
+        yetAnotherAnswer: 'Zed\'s dead, baby, Zed\'s dead.'
+      };
+
+      context.accessors.trigger(eventName, payload);
+      should(trigger).be.calledWithExactly(`plugin-pluginName:${eventName}`, payload);
     });
   });
 
