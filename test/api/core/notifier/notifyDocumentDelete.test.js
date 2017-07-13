@@ -39,7 +39,7 @@ describe('Test: notifier.notifyDocumentDelete', () => {
   it('should notify when a document has been deleted', () => {
     const
       stillAlive = {
-        _kuzzle_info: {
+        _meta: {
           'This is a triumph': 'I\'m making a not here: HUGE SUCCESS',
           'It\'s hard to overstate': 'my satisfaction',
           'Aperture Science': 'We do what we must, because we can',
@@ -51,19 +51,21 @@ describe('Test: notifier.notifyDocumentDelete', () => {
           'And the science gets done': 'and you make a neat gun',
           'For the people who are': 'still alive'
         },
-        'I\'m not even angry': 'I\'m being so sincere right now',
-        'Even though you broke my heart': 'and killed me',
-        'And tore me to pieces': 'And threw every piece into A FIRE',
-        'As they burned it hurt because': 'I was so happy for you',
+        _source: {
+          'I\'m not even angry': 'I\'m being so sincere right now',
+          'Even though you broke my heart': 'and killed me',
+          'And tore me to pieces': 'And threw every piece into A FIRE',
+          'As they burned it hurt because': 'I was so happy for you',
 
-        'Now these points of data': 'make a beautiful line',
-        'We\'re out of beta': 'we\'re releasing on time',
-        'And I\'m GLAD I got burned': 'think of all the things we learned',
-        'For the people who are': 'still alive'
+          'Now these points of data': 'make a beautiful line',
+          'We\'re out of beta': 'we\'re releasing on time',
+          'And I\'m GLAD I got burned': 'think of all the things we learned',
+          'For the people who are': 'still alive'
+        }
       };
 
     kuzzle.dsl.test.returns(['foo', 'bar']);
-    kuzzle.services.list.storageEngine.get.returns(Bluebird.resolve({_id: 'foobar', _source: stillAlive}));
+    kuzzle.services.list.storageEngine.get.returns(Bluebird.resolve({_id: 'foobar', _source: stillAlive._source, _meta: stillAlive._meta}));
 
     return notifier.notifyDocumentDelete(request, ['foobar'])
       .then(id => {
@@ -72,7 +74,7 @@ describe('Test: notifier.notifyDocumentDelete', () => {
         should(notifier.notifyDocument)
           .calledOnce()
           .calledWith(['foo', 'bar'], request, 'out', 'done', 'delete', {
-            _meta: stillAlive._kuzzle_info,
+            _meta: stillAlive._meta,
             _id: 'foobar'
           });
       });
