@@ -1,6 +1,7 @@
 'use strict';
 
 const
+  Bluebird = require('bluebird'),
   {
     InternalError: KuzzleInternalError
   } = require('kuzzle-common-objects').errors,
@@ -140,41 +141,47 @@ describe('lib/core/api/core/entrypoints/embedded/index', () => {
   describe('#init', () => {
     it('should call proper methods in order', () => {
       entrypoint.initLogger = sinon.spy();
-      entrypoint.loadMoreProtocols = sinon.spy();
+      entrypoint.loadMoreProtocols = sinon.stub().returns(Bluebird.resolve());
 
-      entrypoint.init();
-      should(entrypoint.initLogger)
-        .be.calledOnce();
+      return entrypoint.init()
+        .then(() => {
+          should(entrypoint.initLogger)
+            .be.calledOnce();
 
-      should(entrypoint.httpServer)
-        .be.an.Object();
-      should(httpMock.createServer)
-        .be.calledOnce();
-      should(httpMock.createServer.firstCall.returnValue.listen)
-        .be.calledOnce()
-        .be.calledWith(kuzzle.config.server.port, kuzzle.config.server.host);
+          should(entrypoint.httpServer)
+            .be.an.Object();
+          should(httpMock.createServer)
+            .be.calledOnce();
+          should(httpMock.createServer.firstCall.returnValue.listen)
+            .be.calledOnce()
+            .be.calledWith(kuzzle.config.server.port, kuzzle.config.server.host);
 
-      should(entrypoint.protocols.http.init)
-        .be.calledOnce();
-      should(entrypoint.protocols.websocket.init)
-        .be.calledOnce();
-      should(entrypoint.protocols.socketio.init)
-        .be.calledOnce();
+          should(entrypoint.protocols.http.init)
+            .be.calledOnce();
+          should(entrypoint.protocols.websocket.init)
+            .be.calledOnce();
+          should(entrypoint.protocols.socketio.init)
+            .be.calledOnce();
 
-      should(entrypoint.loadMoreProtocols)
-        .be.calledOnce();
+          should(entrypoint.loadMoreProtocols)
+            .be.calledOnce();
+        });
     });
 
-    it('should log and rethrow if an error occured', () => {
+    it('should log and reject if an error occured', () => {
       const error = new Error('test');
 
       entrypoint.loadMoreProtocols = sinon.stub().throws(error);
 
-      should(() => entrypoint.init())
-        .throw(error);
-      should(kuzzle.pluginsManager.trigger)
-        .be.calledOnce()
-        .be.calledWith('log:error', error);
+      return entrypoint.init()
+        .then(() => {
+          throw new Error('should not happen');
+        })
+        .catch(() => {
+          should(kuzzle.pluginsManager.trigger)
+            .be.calledOnce()
+            .be.calledWith('log:error', error);
+        });
     });
   });
 

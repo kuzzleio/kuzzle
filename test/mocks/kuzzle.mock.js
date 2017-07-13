@@ -14,6 +14,7 @@ class KuzzleMock extends Kuzzle {
 
     // we need a deep copy here
     this.config = _.merge({}, config);
+    this.config.server.entryPoints.proxy = true;
 
     this.cliController = {
       init: sinon.stub().returns(Bluebird.resolve()),

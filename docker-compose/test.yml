@@ -8,7 +8,7 @@ services:
 
   kuzzle:
     image: kuzzleio/dev
-    command: sh -c 'chmod 755 /run.sh && /run.sh; tail -f /dev/null'
+    command: sh -c 'chmod 755 /run.sh && /run.sh'
     volumes:
       - "..:/var/app"
       - "./scripts/run-test.sh:/run.sh"
