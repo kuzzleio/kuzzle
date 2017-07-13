@@ -40,7 +40,6 @@ describe('Test: notifier.publish', () => {
     should(notifier.notifyDocument)
       .calledOnce()
       .calledWith(rooms, request, 'foo', 'bar', rawRequest.action, {
-        _meta: {},
         _source: rawRequest.body,
         _id: rawRequest._id
       });
@@ -68,7 +67,6 @@ describe('Test: notifier.publish', () => {
     should(notifier.notifyDocument)
       .calledOnce()
       .calledWith(rooms, request, 'foo', 'bar', rawRequest.action, {
-        _meta: {},
         _source: rawRequest.body,
         _id: rawRequest._id
       });
@@ -96,7 +94,6 @@ describe('Test: notifier.publish', () => {
     should(notifier.notifyDocument)
       .calledOnce()
       .calledWith(rooms, request, 'foo', 'bar', rawRequest.action, {
-        _meta: {},
         _source: rawRequest.body,
         _id: rawRequest._id
       });
@@ -124,7 +121,6 @@ describe('Test: notifier.publish', () => {
     should(notifier.notifyDocument)
       .calledOnce()
       .calledWith(rooms, request, 'foo', 'bar', rawRequest.action, {
-        _meta: {},
         _source: rawRequest.body,
         _id: rawRequest._id
       });
