@@ -30,5 +30,14 @@ notifications:
     on_failure: always
     on_start: never
 
+deploy:
+  provider: npm
+  email: support@kuzzle.io
+  api_key:
+    secure: euSme8FvrgBTvLOZ4RrTYCntyVH4s9/8F44GD0t4s4Myo/lUWxWbMPueqWh1KXNwLvkYpm/z7c0xep9g+bz8pWGG2QiSDraBlBVR2BJwWMg/J2eb0bXSe4Ovo/7xlgn1y+2NTagoj6ZS8qG+cMrKP1FLeE7B7RUFbGCMEy0s6m+Kky0t3+nvWvHBhROrNgcMO/X/O/zN4c2MMiUztTeBclVHh5JONzbJXqGzCBBAI+vZWOeh+8eF9QLK+FV98KXJ29ATwzCpBTkoYumj680uFuEloDU0nb/026Bv9U0lmcsSU0W5z50MfKdOnJqfMqBjdaYUZ5eSdstC7yLRxG3uoDP7zrJCqBCszF7jaOtaanqayl7eTMgCm7MduryhsI2ujqGgkzfQwY9W6jQhL1/hrJHPmzgpvXhgwILyr54rTR7Gu3+VcxNrlBp6h2OBU1pMsB7Xcay4/GlOqkFnTnpybDD2/ykAZQwDafCa4o6GzpcIzQSDxIfCADGcVyg6DFkduE8dIbP8e5z4AXX19i3sqJmK5JhY9OW6xTXI41cfWvFN4DwUBlnxm3632jg+kDGY+cKh9hfdjrm7OEfB2uHMNz4Oodt2MnVkTfw/DfBLTfpPB+/YsqDaSjF+PNuNyWSOm+Re7lUlJ4zEpbRDO7JRe/g81HKWdH/G3bzFwHAddwI=
+  on:
+    repo: kuzzleio/kuzzle
+    branch: master
+
 addons:
   sonarqube: true
