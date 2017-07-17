@@ -232,11 +232,11 @@
     //   * host:
     //       Host name/address of a Kuzzle proxy server.
     //       Can be a hostname, an IP address or an URI.
+    //   * pingInterval:
+    //       Time (in milliseconds) between ping requests
     //   * pingTimeout:
     //       Timeout (in milliseconds) of a ping request. If reached, Kuzzle
     //       marks its connection to the distant host as lost.
-    //   * pingInterval:
-    //       Time (in milliseconds) between ping requests
     //   * port:
     //       Network port opened by the Kuzzle proxy server
     //   * retryClientListDelay
@@ -248,6 +248,8 @@
     "proxy": {
       "host": "localhost",
       "port": 7331,
+      "pingInterval": 60000,
+      "pingTimeout": 50,
       "resendClientListDelay": 1000,
       "retryInterval": 1000
     },
@@ -414,18 +416,18 @@
     //   * retryInterval:
     //       Time interval (in milliseconds) between reconnection retries
     //       when the connection to the broker server has been lost
+    //   * pingInterval:
+    //       Time (in milliseconds) between ping requests
     //   * pingTimeout:
     //       Timeout (in milliseconds) of a ping request. If reached, Kuzzle
     //       marks its connection to the distant host as lost.
-    //   * pingInterval:
-    //       Time (in milliseconds) between ping requests
     "internalBroker": {
       "aliases": ["broker"],
       "host": "localhost",
-      "port": 7911,
-      "retryInterval": 1000,
+      "pingInterval": 60000,
       "pingTimeout": 50,
-      "pingInterval": 60000
+      "port": 7911,
+      "retryInterval": 1000
     },
     // [db]
     // The database layer is by default relying on Elasticsearch and is
