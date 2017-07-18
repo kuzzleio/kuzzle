@@ -58,7 +58,7 @@ describe('CLI Action: shutdown', () => {
     shutdown(null, sinon.stub())
       .then(() => {
         setTimeout(() => {
-          should(kuzzle.entryPoints.proxy.dispatch)
+          should(kuzzle.entryPoints.dispatch)
             .calledOnce()
             .calledWith('shutdown');
 
@@ -76,7 +76,7 @@ describe('CLI Action: shutdown', () => {
     shutdown(null, sinon.stub())
       .then(() => {
         setTimeout(() => {
-          should(kuzzle.entryPoints.proxy.dispatch)
+          should(kuzzle.entryPoints.dispatch)
             .calledOnce()
             .calledWith('shutdown');
 
@@ -100,7 +100,7 @@ describe('CLI Action: shutdown', () => {
     shutdown(null, sinon.stub())
       .then(() => {
         setTimeout(() => {
-          should(kuzzle.entryPoints.proxy.dispatch)
+          should(kuzzle.entryPoints.dispatch)
             .calledOnce()
             .calledWith('shutdown');
 
@@ -123,7 +123,7 @@ describe('CLI Action: shutdown', () => {
       .then(() => {
         // should wait until called a second time by PM2
         setTimeout(() => {
-          should(kuzzle.entryPoints.proxy.dispatch)
+          should(kuzzle.entryPoints.dispatch)
             .calledOnce()
             .calledWith('shutdown');
 
@@ -134,7 +134,7 @@ describe('CLI Action: shutdown', () => {
           shutdown(null, sinon.stub());
 
           setTimeout(() => {
-            should(kuzzle.entryPoints.proxy.dispatch)
+            should(kuzzle.entryPoints.dispatch)
               .calledOnce()
               .calledWith('shutdown');
 
@@ -159,7 +159,7 @@ describe('CLI Action: shutdown', () => {
       .then(() => {
         setTimeout(() => {
           should(remainingChanged).be.true();
-          should(kuzzle.entryPoints.proxy.dispatch)
+          should(kuzzle.entryPoints.dispatch)
             .calledOnce()
             .calledWith('shutdown');
 
@@ -171,7 +171,7 @@ describe('CLI Action: shutdown', () => {
       });
 
     setTimeout(() => {
-      should(kuzzle.entryPoints.proxy.dispatch)
+      should(kuzzle.entryPoints.dispatch)
         .calledOnce()
         .calledWith('shutdown');
 

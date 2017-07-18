@@ -1,12 +1,12 @@
 'use strict';
 
 const
+  mockrequire = require('mock-require'),
   rewire = require('rewire'),
   should = require('should'),
   Promise = require('bluebird'),
   sinon = require('sinon'),
   KuzzleMock = require('../../../mocks/kuzzle.mock'),
-  PluginContext = rewire('../../../../lib/api/core/plugins/pluginContext'),
   PluginImplementationError = require('kuzzle-common-objects').errors.PluginImplementationError,
   Request = require('kuzzle-common-objects').Request,
   _ = require('lodash');
@@ -15,9 +15,20 @@ describe('Plugin Context', () => {
   const someCollection = 'someCollection';
   let
     kuzzle,
-    context;
+    context,
+    PluginContext;
 
   beforeEach(() => {
+    mockrequire('../../../../lib/services/internalEngine', function () {
+      this.init = sinon.spy();
+      this.bootstrap = {
+        all: sinon.spy(),
+        createCollection: sinon.spy()
+      };
+    });
+    mockrequire.reRequire('../../../../lib/api/core/plugins/pluginContext');
+    PluginContext = rewire('../../../../lib/api/core/plugins/pluginContext');
+
     kuzzle = new KuzzleMock();
     context = new PluginContext(kuzzle, 'pluginName');
   });
@@ -180,7 +191,11 @@ describe('Plugin Context', () => {
   });
 
   describe('#execute', () => {
-    const execute = PluginContext.__get__('execute');
+    let execute;
+
+    beforeEach(() => {
+      execute = PluginContext.__get__('execute');
+    });
 
     it('should call the callback with a result if everything went well', done => {
       const

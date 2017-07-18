@@ -1,9 +1,11 @@
-'use strict';
+const
+  {
+    defineSupportCode
+  } = require('cucumber'),
+  async = require('async');
 
-const async = require('async');
-
-const apiSteps = function () {
-  this.When(/^I get the profile mapping$/, function () {
+defineSupportCode(function ({Given, When, Then}) {
+  When(/^I get the profile mapping$/, function () {
     return this.api.getProfileMapping()
       .then(response => {
         if (response.error) {
@@ -22,7 +24,7 @@ const apiSteps = function () {
       });
   });
 
-  this.Then(/^I change the profile mapping$/, function () {
+  Then(/^I change the profile mapping$/, function () {
     return this.api.updateProfileMapping()
       .then(body => {
         if (body.error !== null) {
@@ -31,7 +33,7 @@ const apiSteps = function () {
       });
   });
 
-  this.When(/^I create a new profile "([^"]*)" with id "([^"]*)"$/, {timeout: 20 * 1000}, function (profile, id) {
+  When(/^I create a new profile "([^"]*)" with id "([^"]*)"$/, {timeout: 20 * 1000}, function (profile, id) {
     if (!this.profiles[profile]) {
       throw new Error('Fixture for profile ' + profile + ' does not exists');
     }
@@ -46,7 +48,7 @@ const apiSteps = function () {
       });
   });
 
-  this.Then(/^I cannot create an invalid profile$/, {timeout: 20 * 1000}, function (callback) {
+  Then(/^I cannot create an invalid profile$/, {timeout: 20 * 1000}, function (callback) {
     this.api.createOrReplaceProfile('invalid-profile', this.profiles.invalidProfile)
       .then(() => {
         callback(new Error('Creating profile with unexisting role succeeded. Expected to throw.'));
@@ -54,7 +56,7 @@ const apiSteps = function () {
       .catch(() => callback());
   });
 
-  this.Then(/^I cannot create a profile with an empty set of roles$/, {timeout: 20 * 1000}, function (callback) {
+  Then(/^I cannot create a profile with an empty set of roles$/, {timeout: 20 * 1000}, function (callback) {
     this.api.createOrReplaceProfile('invalid-profile', this.profiles.empty)
       .then(() => {
         callback(new Error('Creating profile without roles succeeded. Expected to throw.'));
@@ -62,7 +64,7 @@ const apiSteps = function () {
       .catch(() => callback());
   });
 
-  this.Then(/^I cannot a profile without ID$/, function (callback) {
+  Then(/^I cannot a profile without ID$/, function (callback) {
     this.api.getProfile('')
       .then(() => {
         callback(new Error('Getting profile without id succeeded. Expected to throw.'));
@@ -70,8 +72,7 @@ const apiSteps = function () {
       .catch(() => callback());
   });
 
-
-  this.Then(/^I'm ?(not)* able to find the profile with id "([^"]*)"(?: with profile "([^"]*)")?$/, {timeout: 20 * 1000}, function (not, id, profile, callback) {
+  Then(/^I'm ?(not)* able to find the profile with id "([^"]*)"(?: with profile "([^"]*)")?$/, {timeout: 20 * 1000}, function (not, id, profile, callback) {
     if (profile && !this.profiles[profile]) {
       return callback(new Error('Fixture for profile ' + profile + ' not exists'));
     }
@@ -105,7 +106,7 @@ const apiSteps = function () {
     });
   });
 
-  this.Then(/^I'm ?(not)* able to find rights for profile "([^"]*)"$/, {timeout: 20 * 1000}, function (not, id) {
+  Then(/^I'm ?(not)* able to find rights for profile "([^"]*)"$/, {timeout: 20 * 1000}, function (not, id) {
     id = this.idPrefix + id;
 
     return this.api.getProfileRights(id)
@@ -125,7 +126,7 @@ const apiSteps = function () {
       });
   });
 
-  this.When(/^I delete the profile (?:with id )?"([^"]*)"$/, function (id) {
+  When(/^I delete the profile (?:with id )?"([^"]*)"$/, function (id) {
     if (id) {
       id = this.idPrefix + id;
     }
@@ -138,7 +139,7 @@ const apiSteps = function () {
       });
   });
 
-  this.Then(/^I'm able to find "([\d]*)" profiles(?: containing the role with id "([^"]*)")?$/, function (profilesCount, roleId, callback) {
+  Then(/^I'm able to find "([\d]*)" profiles(?: containing the role with id "([^"]*)")?$/, function (profilesCount, roleId, callback) {
     const body = {roles: []};
 
     if (roleId) {
@@ -184,7 +185,7 @@ const apiSteps = function () {
     });
   });
 
-  this.Given(/^I update the profile with id "([^"]*)" by adding the role "([^"]*)"$/, {timeout: 20 * 1000}, function (profileId, roleId) {
+  Given(/^I update the profile with id "([^"]*)" by adding the role "([^"]*)"$/, {timeout: 20 * 1000}, function (profileId, roleId) {
     if (!this.roles[roleId]) {
       throw new Error('Fixture for role ' + roleId + ' does not exists');
     }
@@ -200,7 +201,7 @@ const apiSteps = function () {
       });
   });
 
-  this.Then(/^I'm able to do a multi get with "([^"]*)" and get "(\d*)" profiles$/, function (profiles, count, callback) {
+  Then(/^I'm able to do a multi get with "([^"]*)" and get "(\d*)" profiles$/, function (profiles, count, callback) {
     let body = {
       ids: profiles.split(',').map(roleId => this.idPrefix + roleId)
     };
@@ -232,7 +233,7 @@ const apiSteps = function () {
     });
   });
 
-  this.Given(/^A scrolled search on profiles$/, function () {
+  Given(/^A scrolled search on profiles$/, function () {
     this.scrollId = null;
 
     return this.api.searchProfiles({roles: []}, {scroll: '1m'})
@@ -249,7 +250,7 @@ const apiSteps = function () {
       });
   });
 
-  this.Then(/^I am able to perform a scrollProfiles request$/, function () {
+  Then(/^I am able to perform a scrollProfiles request$/, function () {
     if (!this.scrollId) {
       throw new Error('No previous scrollId found');
     }
@@ -265,6 +266,5 @@ const apiSteps = function () {
         }
       });
   });
-};
+});
 
-module.exports = apiSteps;

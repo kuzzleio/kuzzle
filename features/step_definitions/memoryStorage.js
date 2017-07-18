@@ -1,17 +1,18 @@
-'use strict';
-
 const
-  Promise = require('bluebird'),
+  {
+    defineSupportCode
+  } = require('cucumber'),
+  Bluebird = require('bluebird'),
   should = require('should');
 
-module.exports = function () {
-  this.When(/^I call the (.*?) method of the memory storage with arguments$/, function (command, args) {
+defineSupportCode(function ({When, Then}) {
+  When(/^I call the (.*?) method of the memory storage with arguments$/, function (command, args) {
     let realArgs = args ? JSON.parse(args.replace(/#prefix#/g, this.idPrefix)) : args;
 
     return this.api.callMemoryStorage(command, realArgs)
       .then(response => {
         if (response.error) {
-          return Promise.reject(response.error);
+          return Bluebird.reject(response.error);
         }
 
         this.memoryStorageResult = response;
@@ -20,7 +21,7 @@ module.exports = function () {
       });
   });
 
-  this.When(/^I scan the database using the (.+?) method with arguments$/, function (command, args) {
+  When(/^I scan the database using the (.+?) method with arguments$/, function (command, args) {
     const parsed = JSON.parse(args.replace(/#prefix#/g, this.idPrefix));
 
     if (parsed.args) {
@@ -35,7 +36,7 @@ module.exports = function () {
     return scanRedis(this, command, parsed);
   });
 
-  this.Then(/^The (sorted )?ms result should match the (regex|json) (.*?)$/, function (sorted, type, pattern, callback) {
+  Then(/^The (sorted )?ms result should match the (regex|json) (.*?)$/, function (sorted, type, pattern, callback) {
     let
       regex,
       val = this.memoryStorageResult.result;
@@ -66,8 +67,7 @@ module.exports = function () {
       }
     }
   });
-};
-
+});
 
 /**
  * Executes on of the *scan family command, recursively, until
@@ -76,13 +76,13 @@ module.exports = function () {
  * @param {object} world - functional tests global object
  * @param {string} command - name of the scan command (scan, hscan, sscan, zscan)
  * @param {object} args - scan arguments
- * @return {Promise<object>}
+ * @return {Bluebird<object>}
  */
 function scanRedis (world, command, args) {
   return world.api.callMemoryStorage(command, args)
     .then(response => {
       if (response.error) {
-        return Promise.reject(response.error);
+        return Bluebird.reject(response.error);
       }
 
       if (world.memoryStorageResult === null) {

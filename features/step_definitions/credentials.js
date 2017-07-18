@@ -1,9 +1,12 @@
-'use strict';
+const
+  {
+    defineSupportCode
+  } = require('cucumber');
 
 const defaultUser = 'nocredentialuser';
 
-module.exports = function () {
-  this.When(/^I create ([^ ]+) credentials of user ([a-zA-Z0-9]+) with id ([a-zA-Z0-9-]+)$/, function (strategy, user, id) {
+defineSupportCode(function ({When}) {
+  When(/^I create ([^ ]+) credentials of user ([a-zA-Z0-9]+) with id ([a-zA-Z0-9-]+)$/, function (strategy, user, id) {
     id = this.idPrefix + id;
 
     return this.api.createCredentials(strategy, id, this.credentials[user])
@@ -14,7 +17,7 @@ module.exports = function () {
       });
   });
 
-  this.When(/^I update ([^ ]+) credentials password to "([^"]+)" for user with id ([a-zA-Z0-9-]+)$/, function (strategy, password, id) {
+  When(/^I update ([^ ]+) credentials password to "([^"]+)" for user with id ([a-zA-Z0-9-]+)$/, function (strategy, password, id) {
     id = this.idPrefix + id;
 
     return this.api.updateCredentials(strategy, id, {
@@ -27,7 +30,7 @@ module.exports = function () {
       });
   });
 
-  this.When(/^I validate ([^ ]+) credentials of user ([a-zA-Z0-9]+) with id ([a-zA-Z0-9-]+)$/, function (strategy, user, id) {
+  When(/^I validate ([^ ]+) credentials of user ([a-zA-Z0-9]+) with id ([a-zA-Z0-9-]+)$/, function (strategy, user, id) {
     id = this.idPrefix + id;
 
     return this.api.validateCredentials(strategy, id, this.credentials[user])
@@ -42,7 +45,7 @@ module.exports = function () {
       });
   });
 
-  this.When(/^I delete ([^ ]+) credentials of user with id ([a-zA-Z0-9-]+)$/, function (strategy, id) {
+  When(/^I delete ([^ ]+) credentials of user with id ([a-zA-Z0-9-]+)$/, function (strategy, id) {
     id = this.idPrefix + id;
 
     return this.api.deleteCredentials(strategy, id)
@@ -53,7 +56,7 @@ module.exports = function () {
       });
   });
 
-  this.When(/^I get ([^ ]+) credentials of user ([a-zA-Z0-9]+) with id ([a-zA-Z0-9-]+)$/, function (strategy, user, id) {
+  When(/^I get ([^ ]+) credentials of user ([a-zA-Z0-9]+) with id ([a-zA-Z0-9-]+)$/, function (strategy, user, id) {
     id = this.idPrefix + id;
 
     return this.api.getCredentials(strategy, id)
@@ -68,7 +71,7 @@ module.exports = function () {
       });
   });
 
-  this.When(/^I get ([^ ]+) credentials of user ([a-zA-Z0-9]+) by id ([a-zA-Z0-9-]+)$/, function (strategy, user, id) {
+  When(/^I get ([^ ]+) credentials of user ([a-zA-Z0-9]+) by id ([a-zA-Z0-9-]+)$/, function (strategy, user, id) {
     id = this.idPrefix + id;
 
     return this.api.getCredentialsById(strategy, id)
@@ -83,7 +86,7 @@ module.exports = function () {
       });
   });
 
-  this.When(/^I check if ([^ ]+) credentials exist for user ([a-zA-Z0-9]+) with id ([a-zA-Z0-9-]+)$/, function (strategy, user, id) {
+  When(/^I check if ([^ ]+) credentials exist for user ([a-zA-Z0-9]+) with id ([a-zA-Z0-9-]+)$/, function (strategy, user, id) {
     id = this.idPrefix + id;
 
     return this.api.hasCredentials(strategy, id)
@@ -98,7 +101,7 @@ module.exports = function () {
       });
   });
 
-  this.When(/^I create my ([^ ]+) credentials$/, function (strategy) {
+  When(/^I create my ([^ ]+) credentials$/, function (strategy) {
     return this.api.createMyCredentials(strategy, this.credentials[defaultUser])
       .then(response => {
         if (response.error !== null) {
@@ -107,7 +110,7 @@ module.exports = function () {
       });
   });
 
-  this.When(/^I update my ([^ ]+) credentials password to "([^"]+)"$/, function (strategy, password) {
+  When(/^I update my ([^ ]+) credentials password to "([^"]+)"$/, function (strategy, password) {
     return this.api.updateMyCredentials(strategy, {
       password
     })
@@ -118,7 +121,7 @@ module.exports = function () {
       });
   });
 
-  this.When(/^I validate my ([^ ]+) credentials$/, function (strategy) {
+  When(/^I validate my ([^ ]+) credentials$/, function (strategy) {
     return this.api.validateMyCredentials(strategy, this.credentials[defaultUser])
       .then(response => {
         if (response.error !== null) {
@@ -127,7 +130,7 @@ module.exports = function () {
       });
   });
 
-  this.When(/^I delete my ([^ ]+) credentials$/, function (strategy) {
+  When(/^I delete my ([^ ]+) credentials$/, function (strategy) {
     return this.api.deleteMyCredentials(strategy)
       .then(response => {
         if (response.error !== null) {
@@ -136,7 +139,7 @@ module.exports = function () {
       });
   });
 
-  this.When(/^I get my ([^ ]+) credentials$/, function (strategy) {
+  When(/^I get my ([^ ]+) credentials$/, function (strategy) {
     return this.api.getMyCredentials(strategy)
       .then(response => {
         if (response.error !== null) {
@@ -149,7 +152,7 @@ module.exports = function () {
       });
   });
 
-  this.When(/^I check if i have( no)? ([^ ]+) credentials$/, function (noCredentials, strategy) {
+  When(/^I check if i have( no)? ([^ ]+) credentials$/, function (noCredentials, strategy) {
     return this.api.credentialsExist(strategy, this.credentials[defaultUser])
       .then(response => {
         if (response.error !== null) {
@@ -164,4 +167,6 @@ module.exports = function () {
         }
       });
   });
-};
+
+});
+

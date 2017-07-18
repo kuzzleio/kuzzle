@@ -1,6 +1,38 @@
-module.exports = function () {
-  this.World = function World () {
-    this.api = null;
+const
+  {defineSupportCode} = require('cucumber'),
+  HttpApi = require('./api/http'),
+  SocketIoApi = require('./api/socketio'),
+  WebSocketApi = require('./api/websocket');
+
+let
+  _init;
+
+class KWorld {
+  constructor ({parameters}) {
+    this.config = Object.assign({
+      protocol: 'websocket',
+      host: 'localhost',
+      port: 7512
+    }, parameters || {});
+
+    switch (this.config.protocol) {
+      case 'http':
+        this.api = new HttpApi(this);
+        break;
+      case 'socketio':
+        this.api = new SocketIoApi(this);
+        break;
+      default:
+        // websocket
+        this.api = new WebSocketApi(this);
+        this.config.protocol = 'websocket';
+    }
+
+    if (!_init) {
+      console.log(`[${this.config.protocol}] ${this.config.host}:${this.config.port}`);
+      _init = true;
+    }
+
     this.kuzzleConfig = require('../../lib/config');
     this.idPrefix = 'kuzzle-functional-tests-';
 
@@ -340,5 +372,11 @@ module.exports = function () {
     };
 
     this.memoryStorageResult = null;
-  };
-};
+  }
+}
+
+defineSupportCode(function({setWorldConstructor}) {
+  setWorldConstructor(KWorld);
+});
+
+module.exports = KWorld;
