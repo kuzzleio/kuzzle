@@ -1,12 +1,12 @@
 'use strict';
 
 const
+  mockrequire = require('mock-require'),
   rewire = require('rewire'),
   should = require('should'),
   Promise = require('bluebird'),
   sinon = require('sinon'),
   KuzzleMock = require('../../../mocks/kuzzle.mock'),
-  PluginContext = rewire('../../../../lib/api/core/plugins/pluginContext'),
   PluginImplementationError = require('kuzzle-common-objects').errors.PluginImplementationError,
   Request = require('kuzzle-common-objects').Request,
   _ = require('lodash');
@@ -15,9 +15,20 @@ describe('Plugin Context', () => {
   const someCollection = 'someCollection';
   let
     kuzzle,
-    context;
+    context,
+    PluginContext;
 
   beforeEach(() => {
+    mockrequire('../../../../lib/services/internalEngine', function () {
+      this.init = sinon.spy();
+      this.bootstrap = {
+        all: sinon.spy(),
+        createCollection: sinon.spy()
+      };
+    });
+    mockrequire.reRequire('../../../../lib/api/core/plugins/pluginContext');
+    PluginContext = rewire('../../../../lib/api/core/plugins/pluginContext');
+
     kuzzle = new KuzzleMock();
     context = new PluginContext(kuzzle, 'pluginName');
   });
@@ -125,7 +136,7 @@ describe('Plugin Context', () => {
       });
 
       should(context.accessors).be.an.Object().and.not.be.empty();
-      should(context.accessors).have.properties(['execute', 'validation', 'storage']);
+      should(context.accessors).have.properties(['execute', 'validation', 'storage', 'trigger']);
     });
 
     it('should expose a correctly constructed validation accessor', () => {
@@ -141,6 +152,12 @@ describe('Plugin Context', () => {
       should(execute).be.a.Function();
     });
 
+    it('should expose correctly a trigger accessor', () => {
+      const trigger = context.accessors.trigger;
+
+      should(trigger).be.a.Function();
+    });
+
     it('should expose a correctly constructed storage accessor', () => {
       const storage = context.accessors.storage;
 
@@ -149,8 +166,36 @@ describe('Plugin Context', () => {
     });
   });
 
+  describe('#trigger', () => {
+    it('should trigger a log:error if eventName contains a colon', () => {
+      const trigger = kuzzle.pluginsManager.trigger;
+      context.accessors.trigger('event:with:colons');
+      should(trigger).be.calledWith('log:error');
+    });
+
+    it('should call trigger with the given event name and payload', () => {
+      const trigger = kuzzle.pluginsManager.trigger;
+      const eventName = 'backHome';
+      const payload = {
+        question: 'who\'s is this motorcycle?',
+        answer: 'it\'s a chopper, baby.',
+        anotherQuestion: 'who\'s is this chopper, then?',
+        anotherAnswer: 'it\'s Zed\'s',
+        yetAnotherQuestion: 'who\'s Zed?',
+        yetAnotherAnswer: 'Zed\'s dead, baby, Zed\'s dead.'
+      };
+
+      context.accessors.trigger(eventName, payload);
+      should(trigger).be.calledWithExactly(`plugin-pluginName:${eventName}`, payload);
+    });
+  });
+
   describe('#execute', () => {
-    const execute = PluginContext.__get__('execute');
+    let execute;
+
+    beforeEach(() => {
+      execute = PluginContext.__get__('execute');
+    });
 
     it('should call the callback with a result if everything went well', done => {
       const

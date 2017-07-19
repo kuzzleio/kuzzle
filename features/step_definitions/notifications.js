@@ -1,7 +1,11 @@
-const async = require('async');
+const
+  {
+    defineSupportCode
+  } = require('cucumber'),
+  async = require('async');
 
-function apiSteps () {
-  this.Then(/^I should receive a ?(.*?) notification with field ?(.*?) equal to "([^"]*)"$/, function (type, field, value, callback) {
+defineSupportCode(function ({Then}) {
+  Then(/^I should receive a ?(.*?) notification with field ?(.*?) equal to "([^"]*)"$/, function (type, field, value, callback) {
     const main = callbackAsync => {
       setTimeout(() => {
         if (this.api.responses) {
@@ -34,7 +38,7 @@ function apiSteps () {
     });
   });
 
-  this.Then(/^The notification should ?(not)* have a "([^"]*)" member/, function (not, member, callback) {
+  Then(/^The notification should ?(not)* have a "([^"]*)" member/, function (not, member, callback) {
     if ((this.api.responses.result[member] || not) && !(this.api.responses.result[member] && not)) {
       callback();
     }
@@ -45,7 +49,7 @@ function apiSteps () {
     }
   });
 
-  this.Then(/^The notification should have volatile/, function (callback) {
+  Then(/^The notification should have volatile/, function (callback) {
     if (!this.api.responses.volatile) {
       return callback('Expected volatile in the notification but none was found');
     }
@@ -69,6 +73,5 @@ function apiSteps () {
     }
 
   });
-}
+});
 
-module.exports = apiSteps;

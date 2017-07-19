@@ -11,6 +11,3 @@ Manages the room subscription process, made either by clients or by Kuzzle itsel
 
 ## notifier.js
 Critical module used by Kuzzle and its workers to send notifications to subscribed rooms.
-
-## workerListener.js
-Module dedicated to forwarding workers responses back to their original users

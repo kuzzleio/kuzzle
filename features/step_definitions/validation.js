@@ -1,8 +1,10 @@
-'use strict';
+const
+  {
+    defineSupportCode
+  } = require('cucumber'),
+  async = require('async');
 
-const async = require('async');
-
-module.exports = function () {
+defineSupportCode(function ({When, Then}) {
   const
     validSpecifications = {
       strict: true,
@@ -31,7 +33,7 @@ module.exports = function () {
       myField: 'fooBarBaz'
     };
 
-  this.When(/^There is (no)?(a)? specifications? for index "([^"]*)" and collection "([^"]*)"$/, {}, function(no, some, index, collection, callback) {
+  When(/^There is (no)?(a)? specifications? for index "([^"]*)" and collection "([^"]*)"$/, {}, function(no, some, index, collection, callback) {
     const
       idx = index ? index : this.fakeIndex,
       coll = collection ? collection : this.fakeCollection;
@@ -53,7 +55,7 @@ module.exports = function () {
       .catch(error => callback(no ? null : error));
   });
 
-  this.Then(/^I put a (not )?valid specification for index "([^"]*)" and collection "([^"]*)"$/, {}, function(not, index, collection, callback) {
+  Then(/^I put a (not )?valid specification for index "([^"]*)" and collection "([^"]*)"$/, {}, function(not, index, collection, callback) {
     const
       idx = index ? index : this.fakeIndex,
       coll = collection ? collection : this.fakeCollection,
@@ -80,7 +82,7 @@ module.exports = function () {
       });
   });
 
-  this.Then(/^There is (an)?(no)? error message( in the response body)?$/, {}, function(noError, withError, inBody, callback) {
+  Then(/^There is (an)?(no)? error message( in the response body)?$/, {}, function(noError, withError, inBody, callback) {
     if (this.statusCode !== 200) {
       if (noError) {
         if (inBody) {
@@ -106,7 +108,7 @@ module.exports = function () {
     return callback();
   });
 
-  this.When(/^I post a(n in)? ?valid specification$/, {}, function(not, callback) {
+  When(/^I post a(n in)? ?valid specification$/, {}, function(not, callback) {
     const
       index = this.fakeIndex,
       collection = this.fakeCollection,
@@ -132,7 +134,7 @@ module.exports = function () {
       });
   });
 
-  this.When(/^I post a(n in)? ?valid document/, {}, function(not, callback) {
+  When(/^I post a(n in)? ?valid document/, {}, function(not, callback) {
     const
       index = this.fakeIndex,
       collection = this.fakeCollection,
@@ -155,7 +157,7 @@ module.exports = function () {
       });
   });
 
-  this.When(/^I delete the specifications (again )?for index "([^"]*)" and collection "([^"]*)"$/, {}, function(again, index, collection, callback) {
+  When(/^I delete the specifications (again )?for index "([^"]*)" and collection "([^"]*)"$/, {}, function(again, index, collection, callback) {
     const
       idx = index ? index : this.fakeIndex,
       coll = collection ? collection : this.fakeCollection;
@@ -175,7 +177,7 @@ module.exports = function () {
       });
   });
 
-  this.Then(/^I find (\d+) specifications(?: with scroll "([^"]+)")?/, function (hits, scroll, callback) {
+  Then(/^I find (\d+) specifications(?: with scroll "([^"]+)")?/, function (hits, scroll, callback) {
     this.scrollId = null;
 
     hits = Number.parseInt(hits);
@@ -216,7 +218,7 @@ module.exports = function () {
     });
   });
 
-  this.Then(/^I am able to perform a scrollSpecifications request$/, function () {
+  Then(/^I am able to perform a scrollSpecifications request$/, function () {
     if (!this.scrollId) {
       throw new Error('No previous scrollId found');
     }
@@ -232,4 +234,5 @@ module.exports = function () {
         }
       });
   });
-};
+});
+

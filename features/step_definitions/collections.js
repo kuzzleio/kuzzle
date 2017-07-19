@@ -1,7 +1,11 @@
-var stepUtils = require('../support/stepUtils');
+const
+  {
+    defineSupportCode
+  } = require('cucumber'),
+  stepUtils = require('../support/stepUtils');
 
-var apiSteps = function () {
-  this.When(/^I list "([^"]*)" data collections(?: in index "([^"]*)")?$/, function (type, index, callback) {
+defineSupportCode(function ({When, Then}) {
+  When(/^I list "([^"]*)" data collections(?: in index "([^"]*)")?$/, function (type, index, callback) {
     this.api.listCollections(index, type)
       .then(response => {
         if (response.error) {
@@ -19,7 +23,7 @@ var apiSteps = function () {
       .catch(error => callback(error));
   });
 
-  this.Then(/^I can ?(not)* find a ?(.*?) collection ?(.*)$/, function (not, type, collection, callback) {
+  Then(/^I can ?(not)* find a ?(.*?) collection ?(.*)$/, function (not, type, collection, callback) {
     if (!this.result.collections) {
       return callback('Expected a collections list result, got: ' + this.result);
     }
@@ -45,7 +49,7 @@ var apiSteps = function () {
     callback('Expected to find the collection <' + collection + '> in this collections list: ' + JSON.stringify(this.result.collections));
   });
 
-  this.Then(/^I change the mapping(?: in index "([^"]*)")?$/, function (index, callback) {
+  Then(/^I change the mapping(?: in index "([^"]*)")?$/, function (index, callback) {
     this.api.updateMapping()
       .then(body => {
         if (body.error !== null) {
@@ -60,7 +64,7 @@ var apiSteps = function () {
       });
   });
 
-  this.Then(/^I truncate the collection(?: "(.*?)")?(?: in index "([^"]*)")?$/, function (collection, index, callback) {
+  Then(/^I truncate the collection(?: "(.*?)")?(?: in index "([^"]*)")?$/, function (collection, index, callback) {
     this.api.truncateCollection(index, collection)
       .then(body => {
         if (body.error !== null) {
@@ -72,13 +76,12 @@ var apiSteps = function () {
       .catch(error => callback(error));
   });
 
-  this.When(/^I check if index "(.*?)" exists$/, function (index, cb) {
+  When(/^I check if index "(.*?)" exists$/, function (index, cb) {
     return stepUtils.getReturn.call(this, 'indexExists', index, cb);
   });
 
-  this.When(/I check if collection "(.*?)" exists on index "(.*?)"$/, function (collection, index, cb) {
+  When(/I check if collection "(.*?)" exists on index "(.*?)"$/, function (collection, index, cb) {
     return stepUtils.getReturn.call(this, 'collectionExists', index, collection, cb);
   });
-};
+});
 
-module.exports = apiSteps;

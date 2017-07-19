@@ -1,8 +1,11 @@
-var
+const
+  {
+    defineSupportCode
+  } = require('cucumber'),
   async = require('async');
 
-var apiSteps = function () {
-  this.Then(/^I remove the document(?: in index "([^"]*)")?$/, function (index, callback) {
+defineSupportCode(function ({Then}) {
+  Then(/^I remove the document(?: in index "([^"]*)")?$/, function (index, callback) {
     this.api.deleteById(this.result._id, index)
       .then(body => {
         if (body.error !== null) {
@@ -17,7 +20,7 @@ var apiSteps = function () {
       });
   });
 
-  this.Then(/^I remove documents with field "([^"]*)" equals to value "([^"]*)"(?: in index "([^"]*)")?$/, function (field, value, index, callback) {
+  Then(/^I remove documents with field "([^"]*)" equals to value "([^"]*)"(?: in index "([^"]*)")?$/, function (field, value, index, callback) {
     var main = function (callbackAsync) {
       setTimeout(function () {
         var query = { query: { match: {} } };
@@ -54,7 +57,7 @@ var apiSteps = function () {
     });
   });
 
-  this.Then(/^I remove the documents '([^']+)'( and get partial errors)?$/, function (documents, withErrors, callback) {
+  Then(/^I remove the documents '([^']+)'( and get partial errors)?$/, function (documents, withErrors, callback) {
     documents = JSON.parse(documents);
 
     this.api.mDelete({ids: documents})
@@ -74,6 +77,5 @@ var apiSteps = function () {
         callback(error);
       });
   });
-};
+});
 
-module.exports = apiSteps;

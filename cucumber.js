@@ -19,21 +19,16 @@
  * limitations under the License.
  */
 
-const KuzzleProxy = require('./kuzzleProxy');
+'use strict';
 
 /**
- * @class EntryPoints
- * @param {Kuzzle} kuzzle
+ * Cucumber profiles
  */
-class EntryPoints {
-  constructor(kuzzle) {
-    this.kuzzle = kuzzle;
-    this.proxy = new KuzzleProxy(kuzzle);
-  }
-
-  init() {
-    this.proxy.init();
-  }
-}
-
-module.exports = EntryPoints;
+module.exports = {
+  httpEmbedded: '--fail-fast --tags "not @realtime" --world-parameters \'{"protocol": "http", "port": 7512}\'',
+  socketioEmbedded: '--fail-fast --world-parameters \'{"protocol": "socketio", "port": 7512}\'',
+  websocketEmbedded: '--fail-fast --world-parameters \'{"protocol": "websocket", "port": 7512}\'',
+  httpProxy: '--fail-fast --tags "not @realtime" --world-parameters \'{"protocol": "http", "port": 7513}\'',
+  socketioProxy: '--fail-fast --world-parameters \'{"protocol": "socketio", "port": 7513}\'',
+  websocketProxy: '--fail-fast --world-parameters \'{"protocol": "websocket", "port": 7513}\''
+};

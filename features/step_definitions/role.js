@@ -1,8 +1,11 @@
-var
+const
+  {
+    defineSupportCode
+  } = require('cucumber'),
   async = require('async');
 
-var apiSteps = function () {
-  this.When(/^I get the role mapping$/, function (callback) {
+defineSupportCode(function ({When, Then}) {
+  When(/^I get the role mapping$/, function (callback) {
     this.api.getRoleMapping()
       .then(function (response) {
         if (response.error) {
@@ -25,7 +28,7 @@ var apiSteps = function () {
       });
   });
 
-  this.Then(/^I change the role mapping$/, function (callback) {
+  Then(/^I change the role mapping$/, function (callback) {
     this.api.updateRoleMapping()
       .then(body => {
         if (body.error !== null) {
@@ -40,7 +43,7 @@ var apiSteps = function () {
       });
   });
 
-  this.When(/^I create a new role "([^"]*)" with id "([^"]*)"$/, function (role, id, callback) {
+  When(/^I create a new role "([^"]*)" with id "([^"]*)"$/, function (role, id, callback) {
     if (!this.roles[role]) {
       return callback('Fixture for role ' + role + ' does not exist');
     }
@@ -60,7 +63,7 @@ var apiSteps = function () {
       });
   });
 
-  this.Then(/^I'm ?(not)* able to find a role with id "([^"]*)"(?: equivalent to role "([^"]*)")?$/, function (not, id, role, callback) {
+  Then(/^I'm ?(not)* able to find a role with id "([^"]*)"(?: equivalent to role "([^"]*)")?$/, function (not, id, role, callback) {
     var
       controller,
       main;
@@ -124,7 +127,7 @@ var apiSteps = function () {
     });
   });
 
-  this.When(/^I update the role "([^"]*)" with the test content "([^"]*)"$/, function (id, role, callback) {
+  When(/^I update the role "([^"]*)" with the test content "([^"]*)"$/, function (id, role, callback) {
     if (!this.roles[role]) {
       return callback('Fixture for role ' + role + ' not exists');
     }
@@ -144,7 +147,7 @@ var apiSteps = function () {
       });
   });
 
-  this.Then(/^I'm able to find "(\d*)" role by searching controller "([^"]*)"(?: with maximum "([^"]*)" results starting from "([^"]*)")?$/, function (count, controller, size, from, callback) {
+  Then(/^I'm able to find "(\d*)" role by searching controller "([^"]*)"(?: with maximum "([^"]*)" results starting from "([^"]*)")?$/, function (count, controller, size, from, callback) {
     var
       main,
       body = {
@@ -165,11 +168,11 @@ var apiSteps = function () {
             }
 
             if (!aBody.result.hits) {
-              return callbackAsync('Expected ' + count + ' roles, get 0');
+              return callbackAsync('Expected ' + count + ' roles, got 0');
             }
 
             if (aBody.result.hits.length !== parseInt(count)) {
-              return callbackAsync('Expected ' + count + ' roles, get ' + aBody.result.hits.length);
+              return callbackAsync('Expected ' + count + ' roles, got ' + aBody.result.hits.length);
             }
 
             callbackAsync();
@@ -190,7 +193,7 @@ var apiSteps = function () {
     });
   });
 
-  this.When(/^I delete the role (?:with id )?"([^"]*)"$/, function (id, callback) {
+  When(/^I delete the role (?:with id )?"([^"]*)"$/, function (id, callback) {
     id = this.idPrefix + id;
 
     this.api.deleteRole(id)
@@ -207,7 +210,7 @@ var apiSteps = function () {
       });
   });
 
-  this.Then(/^I'm able to do a multi get with "([^"]*)" and get "(\d*)" roles$/, function (roles, count, callback) {
+  Then(/^I'm able to do a multi get with "([^"]*)" and get "(\d*)" roles$/, function (roles, count, callback) {
     var
       main,
       body;
@@ -247,7 +250,7 @@ var apiSteps = function () {
     });
   });
 
-  this.Then(/^I'm ?(not)* allowed to create a document in index "([^"]*)" and collection "([^"]*)"$/, function (not, index, collection, callback) {
+  Then(/^I'm ?(not)* allowed to create a document in index "([^"]*)" and collection "([^"]*)"$/, function (not, index, collection, callback) {
     var
       document = this.documentGrace;
 
@@ -276,7 +279,7 @@ var apiSteps = function () {
       });
   });
 
-  this.Then(/^I'm ?(not)* allowed to search for documents in index "([^"]*)" and collection "([^"]*)"$/, function (not, index, collection, callback) {
+  Then(/^I'm ?(not)* allowed to search for documents in index "([^"]*)" and collection "([^"]*)"$/, function (not, index, collection, callback) {
     this.api.search({}, index, collection)
       .then(body => {
         if (not) {
@@ -298,7 +301,7 @@ var apiSteps = function () {
       });
   });
 
-  this.Then(/^I'm ?(not)* allowed to count documents in index "([^"]*)" and collection "([^"]*)"$/, function (not, index, collection, callback) {
+  Then(/^I'm ?(not)* allowed to count documents in index "([^"]*)" and collection "([^"]*)"$/, function (not, index, collection, callback) {
     this.api.count({}, index, collection)
       .then(body => {
         if (not) {
@@ -319,6 +322,5 @@ var apiSteps = function () {
         callback(error);
       });
   });
-};
+});
 
-module.exports = apiSteps;

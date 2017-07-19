@@ -1,46 +1,43 @@
-var
-  Promise = require('bluebird');
+const
+  {
+    defineSupportCode
+  } = require('cucumber'),
+  Bluebird = require('bluebird');
 
-var apiSteps = function () {
-  this.When(/^I ?(can't)* write the document ?(?:"([^"]*)")?(?: in index "([^"]*)")?( with id "[^"]+")?$/, function (cant, documentName, index, id, callback) {
-    var
+defineSupportCode(function ({Then, When}) {
+  When(/^I ?(can't)* write the document ?(?:"([^"]*)")?(?: in index "([^"]*)")?( with id "[^"]+")?$/, function (cant, documentName, index, id) {
+    const
       document = this[documentName] || this.documentGrace;
 
     if (id) {
       id = id.replace(/^ with id "([^"]+)"$/, '$1');
     }
 
-    this.api.create(document, index, null, null, id)
-      .then(function (body) {
+    return this.api.create(document, index, null, null, id)
+      .then(body => {
         if (body.error) {
           if (cant) {
-            callback();
-            return true;
+            return Bluebird.resolve();
           }
-
-          callback(body.error);
-          return false;
+          throw body.error;
         }
 
         if (!body.result) {
-          callback(new Error('No result provided'));
-          return false;
+          throw new Error(`No result: ${JSON.stringify(body)}`);
         }
 
         this.result = body.result;
-        callback();
-      }.bind(this))
-      .catch(function (error) {
+      })
+      .catch(err => {
         if (cant) {
-          callback();
-          return true;
+          return;
         }
-        callback(error);
+        throw err;
       });
   });
 
-  this.When(/^I createOrReplace it$/, function (callback) {
-    var document = JSON.parse(JSON.stringify(this.documentGrace));
+  When(/^I createOrReplace it$/, function (callback) {
+    const document = JSON.parse(JSON.stringify(this.documentGrace));
 
     document._id = this.result._id;
 
@@ -64,7 +61,7 @@ var apiSteps = function () {
       });
   });
 
-  this.Then(/^I should have updated the document$/, function (callback) {
+  Then(/^I should have updated the document$/, function (callback) {
     if (this.updatedResult._id === this.result._id && this.updatedResult._version === (this.result._version + 1)) {
       this.result = this.updatedResult;
       callback();
@@ -76,7 +73,7 @@ var apiSteps = function () {
       'Received document: ' + JSON.stringify(this.updatedResult)));
   });
 
-  this.Then(/^I update the document with value "([^"]*)" in field "([^"]*)"(?: in index "([^"]*)")?$/, function (value, field, index) {
+  Then(/^I update the document with value "([^"]*)" in field "([^"]*)"(?: in index "([^"]*)")?$/, function (value, field, index) {
     var body = {
       [field]: value
     };
@@ -84,15 +81,15 @@ var apiSteps = function () {
     return this.api.update(this.result._id, body, index)
       .then(aBody => {
         if (aBody.error) {
-          return Promise.reject(aBody.error);
+          return Bluebird.reject(aBody.error);
         }
         if (!aBody.result) {
-          return Promise.reject(new Error('No result provided'));
+          return Bluebird.reject(new Error('No result provided'));
         }
       });
   });
 
-  this.Then(/^I replace the document with "([^"]*)" document$/, function (documentName, callback) {
+  Then(/^I replace the document with "([^"]*)" document$/, function (documentName, callback) {
     var document = JSON.parse(JSON.stringify(this[documentName]));
 
     document._id = this.result._id;
@@ -116,7 +113,7 @@ var apiSteps = function () {
       });
   });
 
-  this.When(/^I create multiple documents '([^']+)'( and get partial errors)?$/, function (documents, withErrors, callback) {
+  When(/^I create multiple documents '([^']+)'( and get partial errors)?$/, function (documents, withErrors, callback) {
     var body = {documents: []};
     documents = JSON.parse(documents);
 
@@ -142,7 +139,7 @@ var apiSteps = function () {
       });
   });
 
-  this.When(/^I replace multiple documents '([^']+)'( and get partial errors)?$/, function (documents, withErrors, callback) {
+  When(/^I replace multiple documents '([^']+)'( and get partial errors)?$/, function (documents, withErrors, callback) {
     var body = {documents: []};
     documents = JSON.parse(documents);
 
@@ -168,7 +165,7 @@ var apiSteps = function () {
       });
   });
 
-  this.When(/^I update multiple documents '([^']+)'( and get partial errors)?$/, function (documents, withErrors, callback) {
+  When(/^I update multiple documents '([^']+)'( and get partial errors)?$/, function (documents, withErrors, callback) {
     var body = {documents: []};
     documents = JSON.parse(documents);
 
@@ -194,7 +191,7 @@ var apiSteps = function () {
       });
   });
 
-  this.When(/^I createOrReplace multiple documents '([^']+)'( and get partial errors)?$/, function (documents, withErrors, callback) {
+  When(/^I createOrReplace multiple documents '([^']+)'( and get partial errors)?$/, function (documents, withErrors, callback) {
     var body = {documents: []};
     documents = JSON.parse(documents);
 
@@ -219,6 +216,5 @@ var apiSteps = function () {
         callback(error);
       });
   });
-};
+});
 
-module.exports = apiSteps;
