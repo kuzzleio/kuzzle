@@ -72,7 +72,7 @@ kuzzle
         console.log('message received from kuzzle:', result)
     })
     
-// Creating a document from an other app will notify all subscribers
+// Creating a document from another app will notify all subscribers
 kuzzle
     .collection('mycollection', 'myindex')
     .createDocument(document)
