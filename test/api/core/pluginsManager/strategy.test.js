@@ -178,7 +178,7 @@ describe('PluginsManager: strategy management', () => {
       plugin.object.strategies = {};
 
       should(() => pluginsManager._initAuthentication(plugin))
-        .throw(/the plugin must provide an object "strategies"/i);
+        .throw(/The exposed "strategies" plugin property must be a non-empty object/i);
     });
 
     it('should print an error in the console if the strategy is not an object', () => {
