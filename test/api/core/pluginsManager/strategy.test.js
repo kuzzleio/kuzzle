@@ -77,7 +77,8 @@ describe('PluginsManager: strategy management', () => {
         getInfo: plugin.object.getInfoFunction,
         validate: plugin.object.validateFunction,
         afterRegister: plugin.object.afterRegisterFunction
-      }
+      },
+      owner: plugin.name
     };
 
     pluginsManager.strategies.someStrategy = pluginManagerStrategy;
@@ -264,6 +265,24 @@ describe('PluginsManager: strategy management', () => {
 
       should(() => pluginsManager._initAuthentication(plugin))
         .throw(/an authentication strategy "someStrategy" has already been registered/i);
+    });
+  });
+
+  describe('#unregisterStrategy', () => {
+    it('should remove a strategy using its provided name', () => {
+      pluginsManager.unregisterStrategy(plugin.name, 'someStrategy');
+      should(pluginsManager.strategies).be.an.Object().and.be.empty();
+      should(kuzzle.passport.unuse).calledWith('someStrategy');
+    });
+
+    it('should throw if the strategy does not exist', () => {
+      should(() => pluginsManager.unregisterStrategy(plugin.name, 'foobar'))
+        .throw(/Cannot remove strategy foobar: strategy does not exist/i);
+    });
+
+    it('should throw if not the owner of the strategy', () => {
+      should(() => pluginsManager.unregisterStrategy('Frank William Abagnale Jr.', 'someStrategy'))
+        .throw(/Cannot remove strategy someStrategy: owned by another plugin/i);
     });
   });
 });
