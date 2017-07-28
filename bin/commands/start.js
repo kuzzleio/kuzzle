@@ -42,6 +42,32 @@ function commandStart (options) {
   kuzzle.start(params)
     // fixtures && mapping
     .then(() => {
+      if (params.mappings) {
+        let mappings;
+        const promises = [];
+
+        try {
+          mappings = JSON.parse(fs.readFileSync(params.mappings, 'utf8'));
+        }
+        catch (e) {
+          console.log(error(`[✖] The file ${params.mappings} cannot be parsed. Abort.`));
+          process.exit(1);
+        }
+
+        Object.keys(mappings).forEach(index => {
+          Object.keys(mappings[index]).forEach(collection => {
+            promises.push(kuzzle.services.list.storageEngine.updateMapping(new Request({
+              index,
+              collection,
+              body: mappings[index][collection]
+            })));
+          });
+        });
+
+        return Bluebird.all(promises);
+      }
+    })
+    .then(() => {
       if (params.fixtures) {
         let fixtures;
         const promises = [];
@@ -50,7 +76,7 @@ function commandStart (options) {
           fixtures = JSON.parse(fs.readFileSync(params.fixtures, 'utf8'));
         }
         catch (e) {
-          console.log(error(`[✖] The file ${params.fixtures} cannot be opened. Abort.`));
+          console.log(error(`[✖] The file ${params.fixtures} cannot be parsed. Abort.`));
           process.exit(1);
         }
 
@@ -62,32 +88,6 @@ function commandStart (options) {
               body: {
                 bulkData: fixtures[index][collection]
               }
-            })));
-          });
-        });
-
-        return Bluebird.all(promises);
-      }
-    })
-    .then(() => {
-      if (params.mappings) {
-        let mappings;
-        const promises = [];
-
-        try {
-          mappings = JSON.parse(fs.readFileSync(params.mappings, 'utf8'));
-        }
-        catch (e) {
-          console.log(error(`[✖] The file ${params.mappings} cannot be opened. Abort.`));
-          process.exit(1);
-        }
-
-        Object.keys(mappings).forEach(index => {
-          Object.keys(mappings[index]).forEach(collection => {
-            promises.push(kuzzle.services.list.storageEngine.updateMapping(new Request({
-              index,
-              collection,
-              body: mappings[index][collection]
             })));
           });
         });
