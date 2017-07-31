@@ -294,6 +294,11 @@ describe('Plugin Context', () => {
       return result
         .then(() => {
           should(kuzzle.pluginsManager.registerStrategy).calledWith('pluginName', 'foo', mockedStrategy);
+          should(kuzzle.pluginsManager.trigger).calledWith('core:auth:strategyAdded', {
+            pluginName: 'pluginName',
+            name: 'foo',
+            strategy: mockedStrategy
+          });
         });
     });
 
@@ -316,6 +321,10 @@ describe('Plugin Context', () => {
       return result
         .then(() => {
           should(kuzzle.pluginsManager.unregisterStrategy).calledWith('pluginName', 'foo');
+          should(kuzzle.pluginsManager.trigger).calledWith('core:auth:strategyRemoved', {
+            pluginName: 'pluginName',
+            name: 'foo'
+          });
         });
     });
 
