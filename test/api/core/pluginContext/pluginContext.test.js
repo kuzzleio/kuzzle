@@ -4,7 +4,7 @@ const
   mockrequire = require('mock-require'),
   rewire = require('rewire'),
   should = require('should'),
-  Promise = require('bluebird'),
+  Bluebird = require('bluebird'),
   sinon = require('sinon'),
   KuzzleMock = require('../../../mocks/kuzzle.mock'),
   PluginImplementationError = require('kuzzle-common-objects').errors.PluginImplementationError,
@@ -65,7 +65,7 @@ describe('Plugin Context', () => {
       should(repository.update).be.a.Function();
     });
 
-    it('should throw when trying to instante a Request object without providing a request object', () => {
+    it('should throw when trying to instantiate a Request object without providing a request object', () => {
       should(function () { new context.constructors.Request({}); }).throw(PluginImplementationError);
     });
 
@@ -136,33 +136,40 @@ describe('Plugin Context', () => {
       });
 
       should(context.accessors).be.an.Object().and.not.be.empty();
-      should(context.accessors).have.properties(['execute', 'validation', 'storage', 'trigger']);
+      should(context.accessors).have.properties(['execute', 'validation', 'storage', 'trigger', 'strategies']);
     });
 
-    it('should expose a correctly constructed validation accessor', () => {
+    it('should expose a data validation accessor', () => {
       const validation = context.accessors.validation;
 
       should(validation.addType).be.eql(kuzzle.validation.addType.bind(kuzzle.validation));
       should(validation.validate).be.eql(kuzzle.validation.validationPromise.bind(kuzzle.validation));
     });
 
-    it('should expose a correctly execute accessor', () => {
+    it('should expose an API execution accessor', () => {
       const execute = context.accessors.execute;
 
       should(execute).be.a.Function();
     });
 
-    it('should expose correctly a trigger accessor', () => {
+    it('should expose an event trigger accessor', () => {
       const trigger = context.accessors.trigger;
 
       should(trigger).be.a.Function();
     });
 
-    it('should expose a correctly constructed storage accessor', () => {
+    it('should expose a private storage accessor', () => {
       const storage = context.accessors.storage;
 
       should(storage.bootstrap).be.a.Function();
       should(storage.createCollection).be.a.Function();
+    });
+
+    it('should expose an authentication strategies management accessor', () => {
+      const strategies = context.accessors.strategies;
+
+      should(strategies.add).be.a.Function();
+      should(strategies.remove).be.a.Function();
     });
   });
 
@@ -177,9 +184,9 @@ describe('Plugin Context', () => {
       const trigger = kuzzle.pluginsManager.trigger;
       const eventName = 'backHome';
       const payload = {
-        question: 'who\'s is this motorcycle?',
+        question: 'whose motorcycle is this?',
         answer: 'it\'s a chopper, baby.',
-        anotherQuestion: 'who\'s is this chopper, then?',
+        anotherQuestion: 'whose chopper is this, then?',
         anotherAnswer: 'it\'s Zed\'s',
         yetAnotherQuestion: 'who\'s Zed?',
         yetAnotherAnswer: 'Zed\'s dead, baby, Zed\'s dead.'
@@ -210,7 +217,7 @@ describe('Plugin Context', () => {
           done();
         });
 
-      kuzzle.funnel.processRequest.returns(Promise.resolve(request));
+      kuzzle.funnel.processRequest.returns(Bluebird.resolve(request));
 
       execute.bind(kuzzle)(request, callback);
     });
@@ -218,7 +225,7 @@ describe('Plugin Context', () => {
     it('should resolve a Promise with a result if everything went well', () => {
       const request = new Request({requestId: 'request'}, {connectionId: 'connectionid'});
 
-      kuzzle.funnel.processRequest.returns(Promise.resolve(request));
+      kuzzle.funnel.processRequest.returns(Bluebird.resolve(request));
 
       return execute.bind(kuzzle)(request)
         .then(res => {
@@ -240,7 +247,7 @@ describe('Plugin Context', () => {
             should(err).match(error);
             should(res).match({});
 
-            return Promise.resolve().then(() => {
+            return Bluebird.resolve().then(() => {
               // allows handleErrorDump to be called
               should(kuzzle.funnel.handleErrorDump).be.calledOnce();
               should(kuzzle.funnel.handleErrorDump.firstCall.args[0]).match(error);
@@ -249,7 +256,7 @@ describe('Plugin Context', () => {
             });
           });
 
-      kuzzle.funnel.processRequest.returns(Promise.reject(error));
+      kuzzle.funnel.processRequest.returns(Bluebird.reject(error));
 
       execute.bind(kuzzle)(request, callback);
     });
@@ -259,7 +266,7 @@ describe('Plugin Context', () => {
         request = new Request({body: {some: 'request'}}, {connectionId: 'connectionid'}),
         error = new Error('error');
 
-      kuzzle.funnel.processRequest.returns(Promise.reject(error));
+      kuzzle.funnel.processRequest.returns(Bluebird.reject(error));
 
       return execute.bind(kuzzle)(request)
         .catch((err) => {
@@ -267,12 +274,69 @@ describe('Plugin Context', () => {
 
           should(err).match(error);
 
-          return Promise.resolve().then(() => {
+          return Bluebird.resolve().then(() => {
             // allows handleErrorDump to be called
             should(kuzzle.funnel.handleErrorDump).be.calledOnce();
             should(kuzzle.funnel.handleErrorDump.firstCall.args[0]).match(error);
           });
         });
+    });
+  });
+
+  describe('#strategies', () => {
+    it('should allow to add a strategy and link it to its owner plugin', () => {
+      const 
+        mockedStrategy = {},
+        result = context.accessors.strategies.add('foo', mockedStrategy);
+
+      should(result).be.a.Promise();
+      
+      return result
+        .then(() => {
+          should(kuzzle.pluginsManager.registerStrategy).calledWith('pluginName', 'foo', mockedStrategy);
+          should(kuzzle.pluginsManager.trigger).calledWith('core:auth:strategyAdded', {
+            pluginName: 'pluginName',
+            name: 'foo',
+            strategy: mockedStrategy
+          });
+        });
+    });
+
+    it('should reject the promise if the strategy registration throws', () => {
+      const error = new Error('foobar');
+      kuzzle.pluginsManager.registerStrategy.throws(error);
+
+      const result = context.accessors.strategies.add('foo', {});
+
+      should(result).be.a.Promise();
+
+      return should(result).be.rejectedWith(error);
+    });
+
+    it('should allow to remove a strategy', () => {
+      const result = context.accessors.strategies.remove('foo');
+
+      should(result).be.a.Promise();
+      
+      return result
+        .then(() => {
+          should(kuzzle.pluginsManager.unregisterStrategy).calledWith('pluginName', 'foo');
+          should(kuzzle.pluginsManager.trigger).calledWith('core:auth:strategyRemoved', {
+            pluginName: 'pluginName',
+            name: 'foo'
+          });
+        });
+    });
+
+    it('should reject the promise if the strategy removal throws', () => {
+      const error = new Error('foobar');
+      kuzzle.pluginsManager.unregisterStrategy.throws(error);
+
+      const result = context.accessors.strategies.remove('foo');
+
+      should(result).be.a.Promise();
+
+      return should(result).be.rejectedWith(error);
     });
   });
 });

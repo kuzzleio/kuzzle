@@ -27,6 +27,7 @@ describe('PluginsManager: strategy management', () => {
     kuzzle = new KuzzleMock();
     /** @type {PluginsManager} */
     pluginsManager = new PluginsManager(kuzzle);
+    pluginsManager.plugins[plugin.name] = plugin;
 
     plugin.object = {
       strategies: {
@@ -76,10 +77,11 @@ describe('PluginsManager: strategy management', () => {
         getInfo: plugin.object.getInfoFunction,
         validate: plugin.object.validateFunction,
         afterRegister: plugin.object.afterRegisterFunction
-      }
+      },
+      owner: plugin.name
     };
 
-    pluginsManager.authentications.someStrategy = pluginManagerStrategy;
+    pluginsManager.strategies.someStrategy = pluginManagerStrategy;
 
     sandbox.reset();
   });
@@ -108,7 +110,6 @@ describe('PluginsManager: strategy management', () => {
 
   describe('#initAuthentication', () => {
     let
-      initAuthentication,
       consoleMock;
 
     beforeEach(() => {
@@ -117,37 +118,34 @@ describe('PluginsManager: strategy management', () => {
         warn: sandbox.stub(),
         error: sandbox.stub()
       };
-      pluginsManager.authentications = {};
-      initAuthentication = PluginsManager.__get__('initAuthentication');
+      pluginsManager.strategies = {};
       PluginsManager.__set__('console', consoleMock);
     });
 
-    it('should add the strategy in authentications if the strategy is well defined', done => {
+    it('should add the strategy in strategies if it is well-formed', done => {
       let verifyAdapter;
 
       plugin.object.existsFunction = sandbox.stub().returns(foo);
-      plugin.object.verifyFunction = sandbox.stub().returns(Promise.resolve({
-        kuid: 'foo'
-      }));
+      plugin.object.verifyFunction = sandbox.stub().returns(Promise.resolve({kuid: 'foo'}));
 
-      initAuthentication(pluginsManager, plugin);
-      should(pluginsManager.authentications.someStrategy.strategy).be.deepEqual(plugin.object.strategies.someStrategy);
-      should(pluginsManager.authentications.someStrategy.methods.afterRegister).be.Function();
+      pluginsManager._initAuthentication(plugin);
+      should(pluginsManager.strategies.someStrategy.strategy).be.deepEqual(plugin.object.strategies.someStrategy);
+      should(pluginsManager.strategies.someStrategy.methods.afterRegister).be.Function();
       should(plugin.object.afterRegisterFunction).be.calledOnce();
       should(plugin.object.afterRegisterFunction.firstCall.args[0]).be.instanceOf(plugin.object.strategies.someStrategy.config.constructor);
-      should(pluginsManager.authentications.someStrategy.methods.exists).be.Function();
-      should(pluginsManager.authentications.someStrategy.methods.create).be.Function();
-      should(pluginsManager.authentications.someStrategy.methods.update).be.Function();
-      should(pluginsManager.authentications.someStrategy.methods.delete).be.Function();
-      should(pluginsManager.authentications.someStrategy.methods.getById).be.Function();
-      should(pluginsManager.authentications.someStrategy.methods.getInfo).be.Function();
-      should(pluginsManager.authentications.someStrategy.methods.validate).be.Function();
+      should(pluginsManager.strategies.someStrategy.methods.exists).be.Function();
+      should(pluginsManager.strategies.someStrategy.methods.create).be.Function();
+      should(pluginsManager.strategies.someStrategy.methods.update).be.Function();
+      should(pluginsManager.strategies.someStrategy.methods.delete).be.Function();
+      should(pluginsManager.strategies.someStrategy.methods.getById).be.Function();
+      should(pluginsManager.strategies.someStrategy.methods.getInfo).be.Function();
+      should(pluginsManager.strategies.someStrategy.methods.validate).be.Function();
       should(plugin.object.strategies.someStrategy.config.constructor).be.calledOnce();
       should(plugin.object.strategies.someStrategy.config.constructor).be.calledWithNew();
 
       verifyAdapter = plugin.object.strategies.someStrategy.config.constructor.firstCall.args[1];
 
-      pluginsManager.authentications.someStrategy.methods.exists(foo)
+      pluginsManager.strategies.someStrategy.methods.exists(foo)
         .then(result => {
           should(result).be.deepEqual(foo);
           should(plugin.object.existsFunction).be.calledOnce();
@@ -165,113 +163,126 @@ describe('PluginsManager: strategy management', () => {
     it('method invocation should intercept a thrown error to transform it into PluginImplementationError', () => {
       plugin.object.existsFunction = sandbox.stub().throws(new Error('some error'));
 
-      initAuthentication(pluginsManager, plugin);
-      should(pluginsManager.authentications.someStrategy.strategy).be.deepEqual(plugin.object.strategies.someStrategy);
-      should(pluginsManager.authentications.someStrategy.methods.exists).be.Function();
-      should(pluginsManager.authentications.someStrategy.methods.create).be.Function();
-      should(pluginsManager.authentications.someStrategy.methods.update).be.Function();
-      should(pluginsManager.authentications.someStrategy.methods.delete).be.Function();
-      should(pluginsManager.authentications.someStrategy.methods.getInfo).be.Function();
-      should(pluginsManager.authentications.someStrategy.methods.validate).be.Function();
+      pluginsManager._initAuthentication(plugin);
+      should(pluginsManager.strategies.someStrategy.strategy).be.deepEqual(plugin.object.strategies.someStrategy);
+      should(pluginsManager.strategies.someStrategy.methods.exists).be.Function();
+      should(pluginsManager.strategies.someStrategy.methods.create).be.Function();
+      should(pluginsManager.strategies.someStrategy.methods.update).be.Function();
+      should(pluginsManager.strategies.someStrategy.methods.delete).be.Function();
+      should(pluginsManager.strategies.someStrategy.methods.getInfo).be.Function();
+      should(pluginsManager.strategies.someStrategy.methods.validate).be.Function();
 
-      return should(pluginsManager.authentications.someStrategy.methods.exists(foo)).be.rejectedWith(PluginImplementationError);
+      return should(pluginsManager.strategies.someStrategy.methods.exists(foo)).be.rejectedWith(PluginImplementationError);
     });
 
     it('should print an error in the console if strategies is not an object', () => {
       plugin.object.strategies = {};
 
-      should(() => initAuthentication(pluginsManager, plugin))
-        .throw(/the plugin must provide an object "strategies"/i);
+      should(() => pluginsManager._initAuthentication(plugin))
+        .throw(/The exposed "strategies" plugin property must be a non-empty object/i);
     });
 
     it('should print an error in the console if the strategy is not an object', () => {
       plugin.object.strategies.someStrategy = 'notAnObject';
 
-      should(() => initAuthentication(pluginsManager, plugin))
-        .throw(/the plugin must provide an object for strategy "someStrategy"/i);
+      should(() => pluginsManager._initAuthentication(plugin))
+        .throw(/Invalid properties for strategy "someStrategy": must be an object/i);
     });
 
     it('should print an error in the console if methods are not specified', () => {
       plugin.object.strategies.someStrategy.methods = 'notAnObject';
 
-      should(() => initAuthentication(pluginsManager, plugin))
-        .throw(/the plugin must provide a "methods" object in strategies\['someStrategy'\] property/i);
+      should(() => pluginsManager._initAuthentication(plugin))
+        .throw(/"methods" object missing from the strategy 'someStrategy' properties/i);
     });
 
     it('should print an error in the console if config are not specified', () => {
       plugin.object.strategies.someStrategy.config = 'notAnObject';
 
-      should(() => initAuthentication(pluginsManager, plugin))
-        .throw(/he plugin must provide a "config" object in strategies\['someStrategy'\] property/i);
+      should(() => pluginsManager._initAuthentication(plugin))
+        .throw(/"config" object missing from the strategy 'someStrategy' properties/i);
     });
 
     it('should print an error in the console if a mandatory method is not specified', () => {
       delete plugin.object.strategies.someStrategy.methods.exists;
 
-      should(() => initAuthentication(pluginsManager, plugin))
-        .throw(/the plugin must provide a method "exists" in strategy configuration/i);
+      should(() => pluginsManager._initAuthentication(plugin))
+        .throw(/Missing method "exists" in the strategy 'someStrategy' properties/i);
     });
 
     it('should print an error in the console if a mandatory method is not available in the plugin object', () => {
-      delete plugin.object.existsFunction;
+      ['exists', 'create', 'update', 'delete', 'validate', 'verify'].forEach(methodName => {
+        const 
+          fnName = methodName + 'Function',
+          save = plugin.object[fnName];
 
-      should(() => initAuthentication(pluginsManager, plugin))
-        .throw(/the plugin property "existsFunction" must be a function/i);
+        delete plugin.object[fnName];
+
+        should(() => pluginsManager._initAuthentication(plugin))
+          .throw(new RegExp(`The strategy method "${fnName}" must point to a plugin function`, 'i'));
+
+        plugin.object[fnName] = save;
+      });
     });
 
-    it('should print an error in the console if the getInfo method is specified but the method is not available in the plugin object', () => {
+    it('should print an error in the console if an optional method is specified but does not point to a function', () => {
       delete plugin.object.getInfoFunction;
 
-      should(() => initAuthentication(pluginsManager, plugin))
-        .throw(/the plugin property "getInfoFunction" must be a function/i);
+      should(() => pluginsManager._initAuthentication(plugin))
+        .throw(/The strategy method "getInfoFunction" must be a function/i);
     });
 
     it('should print an error in the console if the strategy constructor is not provided', () => {
       plugin.object.strategies.someStrategy.config.constructor = 'notAFunction';
 
-      should(() => initAuthentication(pluginsManager, plugin))
-        .throw(/the constructor of the strategy "someStrategy" must be a function/i);
+      should(() => pluginsManager._initAuthentication(plugin))
+        .throw(/The constructor of the strategy "someStrategy" must be a function/i);
     });
 
     it('should print an error in the console if the "strategyOptions" config is not provided', () => {
       delete plugin.object.strategies.someStrategy.config.strategyOptions;
 
-      should(() => initAuthentication(pluginsManager, plugin))
-        .throw(/the "strategyOptions" of the strategy "someStrategy" must be an object/i);
+      should(() => pluginsManager._initAuthentication(plugin))
+        .throw(/the "strategyOptions" object of the strategy "someStrategy" must be an object/i);
     });
 
     it('should print an error in the console if the "authenticateOptions" config is not provided', () => {
       delete plugin.object.strategies.someStrategy.config.authenticateOptions;
 
-      should(() => initAuthentication(pluginsManager, plugin))
-        .throw(/the "authenticateOptions" of the strategy "someStrategy" must be an object/i);
+      should(() => pluginsManager._initAuthentication(plugin))
+        .throw(/the "authenticateOptions" object of the strategy "someStrategy" must be an object/i);
     });
 
     it('should print an error in the console if the "fields" config is not provided', () => {
       delete plugin.object.strategies.someStrategy.config.fields;
 
-      should(() => initAuthentication(pluginsManager, plugin))
-        .throw(/the "fields" of the strategy "someStrategy" must be an array/i);
-    });
-    it('should print an error in the console if the "verify" config is not provided', () => {
-      delete plugin.object.strategies.someStrategy.methods.verify;
-
-      should(() => initAuthentication(pluginsManager, plugin))
-        .throw(/the plugin must provide a method "verify" in strategy configuration/i);
-    });
-
-    it('should print an error in the console if the "verify" method is not available in the plugin object', () => {
-      delete plugin.object.verifyFunction;
-
-      should(() => initAuthentication(pluginsManager, plugin))
-        .throw(/the plugin property "verifyFunction" must be a function/i);
+      should(() => pluginsManager._initAuthentication(plugin))
+        .throw(/the "fields" property of the strategy "someStrategy" must be an array/i);
     });
 
     it('should throw an error if a strategy is registered twice', () => {
-      initAuthentication(pluginsManager, plugin);
+      pluginsManager._initAuthentication(plugin);
 
-      should(() => initAuthentication(pluginsManager, plugin))
+      should(() => pluginsManager._initAuthentication(plugin))
         .throw(/an authentication strategy "someStrategy" has already been registered/i);
+    });
+  });
+
+  describe('#unregisterStrategy', () => {
+    it('should remove a strategy using its provided name', () => {
+      pluginsManager.unregisterStrategy(plugin.name, 'someStrategy');
+      should(pluginsManager.strategies).be.an.Object().and.be.empty();
+      should(kuzzle.passport.unuse).calledWith('someStrategy');
+    });
+
+    it('should throw if the strategy does not exist', () => {
+      should(() => pluginsManager.unregisterStrategy(plugin.name, 'foobar'))
+        .throw(/Cannot remove strategy foobar: strategy does not exist/i);
+    });
+
+    it('should throw if not the owner of the strategy', () => {
+      should(() => pluginsManager.unregisterStrategy('Frank William Abagnale Jr.', 'someStrategy'))
+        .throw(/Cannot remove strategy someStrategy: owned by another plugin/i);
     });
   });
 });

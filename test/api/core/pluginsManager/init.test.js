@@ -242,9 +242,11 @@ describe('PluginsManager', () => {
   });
   describe('Test plugins manager listStrategies', () => {
     it('should return a list of registrated authentication strategies', () => {
-      pluginsManager.registeredStrategies = ['strategy'];
+      pluginsManager.strategies = {foo: {strategy: {}, methods: {}}};
 
-      should(pluginsManager.listStrategies()).be.an.Array().of.length(1);
+      const strategies = pluginsManager.listStrategies();
+      should(strategies).be.an.Array().of.length(1);
+      should(strategies).match(['foo']);
     });
   });
 });
