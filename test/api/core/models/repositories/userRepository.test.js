@@ -1,28 +1,31 @@
-var
-  Promise = require('bluebird'),
+const
+  Bluebird = require('bluebird'),
   should = require('should'),
   sinon = require('sinon'),
-  sandbox = sinon.sandbox.create(),
   KuzzleMock = require('../../../../mocks/kuzzle.mock'),
-  BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,
-  InternalError = require('kuzzle-common-objects').errors.InternalError,
-  NotFoundError = require('kuzzle-common-objects').errors.NotFoundError,
   Repository = require('../../../../../lib/api/core/models/repositories/repository'),
   User = require('../../../../../lib/api/core/models/security/user'),
-  UserRepository = require('../../../../../lib/api/core/models/repositories/userRepository');
+  UserRepository = require('../../../../../lib/api/core/models/repositories/userRepository'),
+  {
+    BadRequestError,
+    InternalError: KuzzleInternalError,
+    NotFoundError,
+  } = require('kuzzle-common-objects').errors;
 
 describe('Test: repositories/userRepository', () => {
-  var
+  let
     kuzzle,
     userRepository,
     userInCache,
     userInDB,
-    userInvalidProfile;
+    userInvalidProfile,
+    repositoryLoadStub;
 
   beforeEach(() => {
-    var
-      encryptedPassword = '5c4ec74fd64bb57c05b4948f3a7e9c7d450f069a',
-      repositoryLoadStub = sandbox.stub(Repository.prototype, 'load');
+    const
+      encryptedPassword = '5c4ec74fd64bb57c05b4948f3a7e9c7d450f069a';
+    
+    repositoryLoadStub = sinon.stub(Repository.prototype, 'load');
 
     userInCache = {
       _id: 'userInCache',
@@ -40,16 +43,16 @@ describe('Test: repositories/userRepository', () => {
       profileIds: ['notfound']
     };
 
-    repositoryLoadStub.returns(Promise.resolve(null));
+    repositoryLoadStub.returns(Bluebird.resolve(null));
     repositoryLoadStub
       .withArgs('userInCache')
-      .returns(Promise.resolve(userInCache));
+      .returns(Bluebird.resolve(userInCache));
     repositoryLoadStub
       .withArgs('userInDB')
-      .returns(Promise.resolve(userInDB));
+      .returns(Bluebird.resolve(userInDB));
     repositoryLoadStub
       .withArgs('userInvalidProfile')
-      .returns(Promise.resolve(userInvalidProfile));
+      .returns(Bluebird.resolve(userInvalidProfile));
 
     kuzzle = new KuzzleMock();
 
@@ -59,12 +62,12 @@ describe('Test: repositories/userRepository', () => {
   });
 
   afterEach(() => {
-    sandbox.restore();
+    repositoryLoadStub.restore();
   });
 
   describe('#constructor', () => {
     it('should take into account the options given', () => {
-      var repository = new UserRepository(kuzzle, { ttl: 1000 });
+      const repository = new UserRepository(kuzzle, { ttl: 1000 });
 
       should(repository.ttl).be.exactly(1000);
     });
@@ -72,17 +75,16 @@ describe('Test: repositories/userRepository', () => {
 
   describe('#anonymous', () => {
     it('should return a valid anonymous user', () => {
-      var user = userRepository.anonymous();
+      const user = userRepository.anonymous();
       assertIsAnonymous(user);
     });
   });
 
   describe('#hydrate', () => {
     it('should return the given user if the given data is not a valid object', () => {
-      var
-        u = new User();
+      const u = new User();
 
-      return Promise.all([
+      return Bluebird.all([
         userRepository.hydrate(u, null),
         userRepository.hydrate(u),
         userRepository.hydrate(u, 'a scalar')
@@ -93,7 +95,7 @@ describe('Test: repositories/userRepository', () => {
     });
 
     it('should return the anonymous user if no _id is set', () => {
-      var user = new User();
+      const user = new User();
       user.profileIds = 'a profile';
 
       return userRepository.hydrate(user, {})
@@ -101,10 +103,10 @@ describe('Test: repositories/userRepository', () => {
     });
 
     it('should convert a profileIds string into array', () => {
-      var user = new User();
+      const user = new User();
       user._id = 'admin';
 
-      kuzzle.repositories.profile.loadProfiles.returns(Promise.resolve([
+      kuzzle.repositories.profile.loadProfiles.returns(Bluebird.resolve([
         {_id: 'admin'}
       ]));
 
@@ -116,33 +118,31 @@ describe('Test: repositories/userRepository', () => {
     });
 
     it('should reject the promise if the profile cannot be found', () => {
-      var user = new User();
+      const user = new User();
 
-      kuzzle.repositories.profile.loadProfiles.returns(Promise.resolve([]));
+      kuzzle.repositories.profile.loadProfiles.returns(Bluebird.resolve([]));
 
       return should(userRepository.hydrate(user, userInvalidProfile))
         .be.rejectedWith(NotFoundError);
     });
 
     it('should add the default profile if none is set', () => {
-      var user = new User();
+      const user = new User();
       user._id = 'foo';
 
-      kuzzle.repositories.profile.loadProfiles.returns(Promise.resolve([
+      kuzzle.repositories.profile.loadProfiles.returns(Bluebird.resolve([
         {_id: 'default'}
       ]));
 
-      userRepository.hydrate(user, {});
-
-      should(user.profileIds)
-        .match(kuzzle.config.security.restrictedProfileIds);
+      return userRepository.hydrate(user, {})
+        .then(() => should(user.profileIds).match(kuzzle.config.security.restrictedProfileIds));
 
     });
   });
 
   describe('#load', () => {
     it('should return the anonymous user when the anonymous or -1 id is given', () => {
-      return Promise.all([
+      return Bluebird.all([
         userRepository.load('-1'),
         userRepository.load('anonymous')
       ])
@@ -152,7 +152,7 @@ describe('Test: repositories/userRepository', () => {
     });
 
     it('should resolve to user if good credentials are given', () => {
-      kuzzle.repositories.profile.loadProfiles.returns(Promise.resolve([
+      kuzzle.repositories.profile.loadProfiles.returns(Bluebird.resolve([
         {_id: userInCache.profileIds[0]}
       ]));
 
@@ -172,20 +172,20 @@ describe('Test: repositories/userRepository', () => {
     });
 
     it('should reject the promise if an error occurred while fetching the user', () => {
-      userRepository.load = () => Promise.reject(new InternalError('Error'));
+      userRepository.load = () => Bluebird.reject(new KuzzleInternalError('Error'));
 
       return should(userRepository.load('userInCache')
         .catch(err => {
           delete userRepository.load;
 
-          return Promise.reject(err);
-        })).be.rejectedWith(InternalError);
+          return Bluebird.reject(err);
+        })).be.rejectedWith(KuzzleInternalError);
     });
   });
 
   describe('#serializeToCache', () => {
     it('should return a valid plain object', () => {
-      var
+      const
         user = userRepository.anonymous(),
         result = userRepository.serializeToCache(user);
 
@@ -199,7 +199,7 @@ describe('Test: repositories/userRepository', () => {
 
   describe('#persist', () => {
     it('should compute a user id if not set', () => {
-      var user = new User();
+      const user = new User();
       user.name = 'John Doe';
       user.profileIds = ['a profile'];
 
