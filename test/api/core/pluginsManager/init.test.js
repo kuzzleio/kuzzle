@@ -90,7 +90,7 @@ describe('PluginsManager', () => {
       });
       mockrequire('/kuzzle/plugins/enabled/kuzzle-plugin-test', function () {});
       mockrequire('/kuzzle/plugins/enabled/kuzzle-plugin-test/package.json', { name: instanceName});
-      mockrequire('/kuzzle/plugins/enabled/another-plugin/package.json', { name: instanceName});
+      mockrequire('/kuzzle/plugins/enabled/another-plugin/package.json', { name: instanceName.toUpperCase()});
       PluginsManager = mockrequire.reRequire('../../../../lib/api/core/plugins/pluginsManager');
 
       should(() => pluginsManager.init()).throw(/A plugin named kuzzle-plugin-test already exists/);
@@ -169,6 +169,35 @@ describe('PluginsManager', () => {
       should(pluginsManager.plugins[instanceName].path).be.ok();
     });
 
+
+    it('should lowercase plugin names and configuration must be case insensitive', () => {
+      const instanceName = 'tHiS-Is-sO-l33t';
+      const config = {
+        foo: 'bar'
+      };
+
+      kuzzle.config.plugins['ThIs-iS-So-L33T'] = config;
+
+      fsStub.readdirSync.returns(['kuzzle-plugin-test']);
+      fsStub.statSync.returns({
+        isDirectory: () => true
+      });
+
+      mockrequire('/kuzzle/plugins/enabled/kuzzle-plugin-test', function () {});
+      mockrequire('/kuzzle/plugins/enabled/kuzzle-plugin-test/package.json', { name: instanceName });
+      PluginsManager = mockrequire.reRequire('../../../../lib/api/core/plugins/pluginsManager');
+
+      pluginsManager = new PluginsManager(kuzzle);
+
+      should(() => pluginsManager.init()).not.throw();
+      should(pluginsManager.plugins[instanceName.toLowerCase()]).be.Object();
+      should(pluginsManager.plugins[instanceName.toLowerCase()]).have.keys('name', 'object', 'config', 'manifest', 'path');
+      should(pluginsManager.plugins[instanceName.toLowerCase()].name).be.eql(instanceName.toLowerCase());
+      should(pluginsManager.plugins[instanceName.toLowerCase()].config).be.eql(config);
+      should(pluginsManager.plugins[instanceName.toLowerCase()].object).be.ok();
+      should(pluginsManager.plugins[instanceName.toLowerCase()].path).be.ok();
+    });
+
     it('should throw if trying to set a privileged plugin which does not support privileged mode', () => {
       const instanceName = 'kuzzle-plugin-test';
       const manifest = {
@@ -240,6 +269,7 @@ describe('PluginsManager', () => {
       should(pluginsManager.plugins).be.empty();
     });
   });
+
   describe('Test plugins manager listStrategies', () => {
     it('should return a list of registrated authentication strategies', () => {
       pluginsManager.strategies = {foo: {strategy: {}, methods: {}}};
