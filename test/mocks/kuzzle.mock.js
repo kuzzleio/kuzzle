@@ -14,6 +14,7 @@ class KuzzleMock extends Kuzzle {
 
     // we need a deep copy here
     this.config = _.merge({}, config);
+    this.config.server.entryPoints.proxy = true;
 
     this.cliController = {
       init: sinon.stub().returns(Bluebird.resolve()),
@@ -31,20 +32,33 @@ class KuzzleMock extends Kuzzle {
     this.dsl = {
       test: sinon.stub().returns([]),
       register: sinon.stub().returns(Bluebird.resolve()),
-      remove: sinon.stub().returns(Bluebird.resolve())
+      remove: sinon.stub().returns(Bluebird.resolve()),
+      normalize: sinon.stub().returns(Bluebird.resolve({id: 'foobar'})),
+      store: sinon.stub().returns({id: 'foobar'})
     };
 
 
     this.entryPoints = {
-      http: {
-        init: sinon.spy()
-      },
+      dispatch: sinon.spy(),
+      entryPoints: [
+        {
+          dispatch: sinon.spy(),
+          init: sinon.stub().returns(Bluebird.resolve()),
+          joinChannel: sinon.spy(),
+          leaveChannel: sinon.spy(),
+          send: sinon.spy()
+        },
+        {
+          dispatch: sinon.spy(),
+          init: sinon.stub().returns(Bluebird.resolve()),
+          joinChannel: sinon.spy(),
+          leaveChannel: sinon.spy(),
+          send: sinon.spy()
+        }
+      ],
       init: sinon.spy(),
-      proxy: {
-        dispatch: sinon.spy(),
-        joinChannel: sinon.spy(),
-        leaveChannel: sinon.spy()
-      }
+      joinChannel: sinon.spy(),
+      leaveChannel: sinon.spy()
     };
 
     this.funnel = {
@@ -154,12 +168,11 @@ class KuzzleMock extends Kuzzle {
       init: sinon.stub().returns(Bluebird.resolve()),
       plugins: {},
       run: sinon.stub().returns(Bluebird.resolve()),
-      getPluginsFeatures: sinon.stub().returns({}),
-      trigger: sinon.spy(function () {return Bluebird.resolve(arguments[1]);}),
+      getPluginsDescription: sinon.stub().returns({}),
+      trigger: sinon.spy((...args) => Bluebird.resolve(args[1])),
       listStrategies: sinon.stub().returns([]),
       getStrategyMethod: sinon.stub().returns(sinon.stub()),
-      registeredStrategies: [],
-      shutdownWorkers: sinon.stub().returns(Bluebird.resolve())
+      registeredStrategies: []
     };
 
     this.repositories = {
@@ -182,7 +195,8 @@ class KuzzleMock extends Kuzzle {
         ObjectConstructor: sinon.stub().returns({}),
         hydrate: sinon.stub().returns(Bluebird.resolve()),
         persist: sinon.stub().returns(Bluebird.resolve({})),
-        anonymous: sinon.stub().returns({_id: '-1'})
+        anonymous: sinon.stub().returns({_id: '-1'}),
+        delete: sinon.stub().returns(Bluebird.resolve())
       },
       token: {
         anonymous: sinon.stub().returns({_id: 'anonymous'}),
@@ -197,13 +211,12 @@ class KuzzleMock extends Kuzzle {
 
     this.router = {
       execute: sinon.stub().returns(Bluebird.resolve(foo)),
+      isConnectionAlive: sinon.stub().returns(true),
       init: sinon.spy(),
       newConnection: sinon.stub().returns(Bluebird.resolve(foo)),
       removeConnection: sinon.spy(),
-      router: {
-        router: {
-          route: sinon.stub()
-        }
+      http: {
+        route: sinon.stub()
       }
     };
 
@@ -214,12 +227,6 @@ class KuzzleMock extends Kuzzle {
           getInfos: sinon.stub().returns(Bluebird.resolve()),
           listen: sinon.spy(),
           send: sinon.stub().returns(Bluebird.resolve())
-        },
-        proxyBroker: {
-          listen: sinon.spy(),
-          onConnectHandlers: [],
-          send: sinon.stub().returns(Bluebird.resolve()),
-
         },
         gc: {
           init: sinon.spy(),

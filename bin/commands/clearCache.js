@@ -24,7 +24,6 @@
 const
   rc = require('rc'),
   params = rc('kuzzle'),
-  Kuzzle = require('../../lib/api/kuzzle'),
   readlineSync = require('readline-sync'),
   clc = require('cli-color');
 
@@ -56,7 +55,7 @@ function commandClearCache (database, options) {
   }
 
   if (userIsSure) {
-    const kuzzle = new Kuzzle();
+    const kuzzle = new (require('../../lib/api/kuzzle'))();
 
     console.log(notice('[ℹ] Processing...\n'));
     return kuzzle.cli.doAction('clearCache', data)

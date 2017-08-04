@@ -12,7 +12,13 @@ describe('PluginsManager: strategy management', () => {
   let
     kuzzle,
     pluginsManager,
-    plugin,
+    plugin = {
+      name: 'some-plugin-name',
+      path: {},
+      object: null,
+      config: {},
+      manifest: {}
+    },
     pluginManagerStrategy,
     sandbox = sinon.sandbox.create(),
     foo = {foo: 'bar'};
@@ -22,7 +28,7 @@ describe('PluginsManager: strategy management', () => {
     /** @type {PluginsManager} */
     pluginsManager = new PluginsManager(kuzzle);
 
-    plugin = {
+    plugin.object = {
       strategies: {
         someStrategy: {
           config: {
@@ -60,16 +66,16 @@ describe('PluginsManager: strategy management', () => {
     };
 
     pluginManagerStrategy = {
-      strategy: plugin.strategies.someStrategy,
+      strategy: plugin.object.strategies.someStrategy,
       methods: {
-        exists: plugin.existsFunction,
-        create: plugin.createFunction,
-        update: plugin.updateFunction,
-        delete: plugin.deleteFunction,
-        getById: plugin.getByIdFunction,
-        getInfo: plugin.getInfoFunction,
-        validate: plugin.validateFunction,
-        afterRegister: plugin.afterRegisterFunction
+        exists: plugin.object.existsFunction,
+        create: plugin.object.createFunction,
+        update: plugin.object.updateFunction,
+        delete: plugin.object.deleteFunction,
+        getById: plugin.object.getByIdFunction,
+        getInfo: plugin.object.getInfoFunction,
+        validate: plugin.object.validateFunction,
+        afterRegister: plugin.object.afterRegisterFunction
       }
     };
 
@@ -100,55 +106,51 @@ describe('PluginsManager: strategy management', () => {
     });
   });
 
-  describe('#injectAuthentication', () => {
+  describe('#initAuthentication', () => {
     let
-      authentications,
-      injectAuthentication,
+      initAuthentication,
       consoleMock;
-    const
-      pluginName = 'some-plugin-name',
-      errorPrefix = `[Plugin Manager] Error initializing plugin ${pluginName}:`,
-      strategyName = 'someStrategy';
 
     beforeEach(() => {
       consoleMock = {
         log: sandbox.stub(),
+        warn: sandbox.stub(),
         error: sandbox.stub()
       };
-      authentications = {};
-      injectAuthentication = PluginsManager.__get__('injectAuthentication');
+      pluginsManager.authentications = {};
+      initAuthentication = PluginsManager.__get__('initAuthentication');
       PluginsManager.__set__('console', consoleMock);
     });
 
     it('should add the strategy in authentications if the strategy is well defined', done => {
       let verifyAdapter;
 
-      plugin.existsFunction = sandbox.stub().returns(foo);
-      plugin.verifyFunction = sandbox.stub().returns(Promise.resolve({
+      plugin.object.existsFunction = sandbox.stub().returns(foo);
+      plugin.object.verifyFunction = sandbox.stub().returns(Promise.resolve({
         kuid: 'foo'
       }));
 
-      injectAuthentication(kuzzle, authentications, plugin, pluginName);
-      should(authentications.someStrategy.strategy).be.deepEqual(plugin.strategies.someStrategy);
-      should(authentications.someStrategy.methods.afterRegister).be.Function();
-      should(plugin.afterRegisterFunction).be.calledOnce();
-      should(plugin.afterRegisterFunction.firstCall.args[0]).be.instanceOf(plugin.strategies.someStrategy.config.constructor);
-      should(authentications.someStrategy.methods.exists).be.Function();
-      should(authentications.someStrategy.methods.create).be.Function();
-      should(authentications.someStrategy.methods.update).be.Function();
-      should(authentications.someStrategy.methods.delete).be.Function();
-      should(authentications.someStrategy.methods.getById).be.Function();
-      should(authentications.someStrategy.methods.getInfo).be.Function();
-      should(authentications.someStrategy.methods.validate).be.Function();
-      should(plugin.strategies.someStrategy.config.constructor).be.calledOnce();
-      should(plugin.strategies.someStrategy.config.constructor).be.calledWithNew();
+      initAuthentication(pluginsManager, plugin);
+      should(pluginsManager.authentications.someStrategy.strategy).be.deepEqual(plugin.object.strategies.someStrategy);
+      should(pluginsManager.authentications.someStrategy.methods.afterRegister).be.Function();
+      should(plugin.object.afterRegisterFunction).be.calledOnce();
+      should(plugin.object.afterRegisterFunction.firstCall.args[0]).be.instanceOf(plugin.object.strategies.someStrategy.config.constructor);
+      should(pluginsManager.authentications.someStrategy.methods.exists).be.Function();
+      should(pluginsManager.authentications.someStrategy.methods.create).be.Function();
+      should(pluginsManager.authentications.someStrategy.methods.update).be.Function();
+      should(pluginsManager.authentications.someStrategy.methods.delete).be.Function();
+      should(pluginsManager.authentications.someStrategy.methods.getById).be.Function();
+      should(pluginsManager.authentications.someStrategy.methods.getInfo).be.Function();
+      should(pluginsManager.authentications.someStrategy.methods.validate).be.Function();
+      should(plugin.object.strategies.someStrategy.config.constructor).be.calledOnce();
+      should(plugin.object.strategies.someStrategy.config.constructor).be.calledWithNew();
 
-      verifyAdapter = plugin.strategies.someStrategy.config.constructor.firstCall.args[1];
+      verifyAdapter = plugin.object.strategies.someStrategy.config.constructor.firstCall.args[1];
 
-      authentications.someStrategy.methods.exists(foo)
+      pluginsManager.authentications.someStrategy.methods.exists(foo)
         .then(result => {
           should(result).be.deepEqual(foo);
-          should(plugin.existsFunction).be.calledOnce();
+          should(plugin.object.existsFunction).be.calledOnce();
           verifyAdapter({}, (error) => {
             if (error) {
               done(error);
@@ -161,141 +163,115 @@ describe('PluginsManager: strategy management', () => {
     });
 
     it('method invocation should intercept a thrown error to transform it into PluginImplementationError', () => {
-      plugin.existsFunction = sandbox.stub().throws(new Error('some error'));
+      plugin.object.existsFunction = sandbox.stub().throws(new Error('some error'));
 
-      injectAuthentication(kuzzle, authentications, plugin, pluginName);
-      should(authentications.someStrategy.strategy).be.deepEqual(plugin.strategies.someStrategy);
-      should(authentications.someStrategy.methods.exists).be.Function();
-      should(authentications.someStrategy.methods.create).be.Function();
-      should(authentications.someStrategy.methods.update).be.Function();
-      should(authentications.someStrategy.methods.delete).be.Function();
-      should(authentications.someStrategy.methods.getInfo).be.Function();
-      should(authentications.someStrategy.methods.validate).be.Function();
+      initAuthentication(pluginsManager, plugin);
+      should(pluginsManager.authentications.someStrategy.strategy).be.deepEqual(plugin.object.strategies.someStrategy);
+      should(pluginsManager.authentications.someStrategy.methods.exists).be.Function();
+      should(pluginsManager.authentications.someStrategy.methods.create).be.Function();
+      should(pluginsManager.authentications.someStrategy.methods.update).be.Function();
+      should(pluginsManager.authentications.someStrategy.methods.delete).be.Function();
+      should(pluginsManager.authentications.someStrategy.methods.getInfo).be.Function();
+      should(pluginsManager.authentications.someStrategy.methods.validate).be.Function();
 
-      return should(authentications.someStrategy.methods.exists(foo)).be.rejectedWith(PluginImplementationError);
+      return should(pluginsManager.authentications.someStrategy.methods.exists(foo)).be.rejectedWith(PluginImplementationError);
     });
 
     it('should print an error in the console if strategies is not an object', () => {
-      plugin.strategies = {};
+      plugin.object.strategies = {};
 
-      injectAuthentication(kuzzle, authentications, plugin, pluginName);
-
-      should(consoleMock.error).be.calledOnce();
-      should(consoleMock.error.firstCall.args[0]).be.eql(`${errorPrefix} The plugin must provide an object "strategies".`);
+      should(() => initAuthentication(pluginsManager, plugin))
+        .throw(/the plugin must provide an object "strategies"/i);
     });
 
     it('should print an error in the console if the strategy is not an object', () => {
-      plugin.strategies.someStrategy = 'notAnObject';
-      injectAuthentication(kuzzle, authentications, plugin, pluginName);
+      plugin.object.strategies.someStrategy = 'notAnObject';
 
-      should(consoleMock.error).be.calledOnce();
-      should(consoleMock.error.firstCall.args[0]).be.eql(`${errorPrefix} The plugin must provide an object for strategy "${strategyName}".`);
+      should(() => initAuthentication(pluginsManager, plugin))
+        .throw(/the plugin must provide an object for strategy "someStrategy"/i);
     });
 
     it('should print an error in the console if methods are not specified', () => {
-      plugin.strategies.someStrategy.methods = 'notAnObject';
+      plugin.object.strategies.someStrategy.methods = 'notAnObject';
 
-      injectAuthentication(kuzzle, authentications, plugin, pluginName);
-
-      should(consoleMock.error).be.calledOnce();
-      should(consoleMock.error.firstCall.args[0]).be.eql(`${errorPrefix} The plugin must provide a "methods" object in strategies['${strategyName}'] property.`);
+      should(() => initAuthentication(pluginsManager, plugin))
+        .throw(/the plugin must provide a "methods" object in strategies\['someStrategy'\] property/i);
     });
 
     it('should print an error in the console if config are not specified', () => {
-      plugin.strategies.someStrategy.config = 'notAnObject';
+      plugin.object.strategies.someStrategy.config = 'notAnObject';
 
-      injectAuthentication(kuzzle, authentications, plugin, pluginName);
-
-      should(consoleMock.error).be.calledOnce();
-      should(consoleMock.error.firstCall.args[0]).be.eql(`${errorPrefix} The plugin must provide a "config" object in strategies['${strategyName}'] property.`);
+      should(() => initAuthentication(pluginsManager, plugin))
+        .throw(/he plugin must provide a "config" object in strategies\['someStrategy'\] property/i);
     });
 
     it('should print an error in the console if a mandatory method is not specified', () => {
-      delete plugin.strategies.someStrategy.methods.exists;
+      delete plugin.object.strategies.someStrategy.methods.exists;
 
-      injectAuthentication(kuzzle, authentications, plugin, pluginName);
-
-      should(consoleMock.error).be.calledOnce();
-      should(consoleMock.error.firstCall.args[0]).be.eql(`${errorPrefix} The plugin must provide a method "exists" in strategy configuration.`);
+      should(() => initAuthentication(pluginsManager, plugin))
+        .throw(/the plugin must provide a method "exists" in strategy configuration/i);
     });
 
     it('should print an error in the console if a mandatory method is not available in the plugin object', () => {
-      delete plugin.existsFunction;
+      delete plugin.object.existsFunction;
 
-      injectAuthentication(kuzzle, authentications, plugin, pluginName);
-
-      should(consoleMock.error).be.calledOnce();
-      should(consoleMock.error.firstCall.args[0]).be.eql(`${errorPrefix} The plugin property "existsFunction" must be a function.`);
+      should(() => initAuthentication(pluginsManager, plugin))
+        .throw(/the plugin property "existsFunction" must be a function/i);
     });
 
     it('should print an error in the console if the getInfo method is specified but the method is not available in the plugin object', () => {
-      delete plugin.getInfoFunction;
+      delete plugin.object.getInfoFunction;
 
-      injectAuthentication(kuzzle, authentications, plugin, pluginName);
-
-      should(consoleMock.error).be.calledOnce();
-      should(consoleMock.error.firstCall.args[0]).be.eql(`${errorPrefix} The plugin property "getInfoFunction" must be a function.`);
+      should(() => initAuthentication(pluginsManager, plugin))
+        .throw(/the plugin property "getInfoFunction" must be a function/i);
     });
 
     it('should print an error in the console if the strategy constructor is not provided', () => {
-      plugin.strategies.someStrategy.config.constructor = 'notAFunction';
+      plugin.object.strategies.someStrategy.config.constructor = 'notAFunction';
 
-      injectAuthentication(kuzzle, authentications, plugin, pluginName);
-
-      should(consoleMock.error).be.calledOnce();
-      should(consoleMock.error.firstCall.args[0]).be.eql(`${errorPrefix} The constructor of the strategy "${strategyName}" must be a function.`);
+      should(() => initAuthentication(pluginsManager, plugin))
+        .throw(/the constructor of the strategy "someStrategy" must be a function/i);
     });
 
     it('should print an error in the console if the "strategyOptions" config is not provided', () => {
-      delete plugin.strategies.someStrategy.config.strategyOptions;
+      delete plugin.object.strategies.someStrategy.config.strategyOptions;
 
-      injectAuthentication(kuzzle, authentications, plugin, pluginName);
-
-      should(consoleMock.error).be.calledOnce();
-      should(consoleMock.error.firstCall.args[0]).be.eql(`${errorPrefix} The "strategyOptions" of the strategy "${strategyName}" must be an object.`);
+      should(() => initAuthentication(pluginsManager, plugin))
+        .throw(/the "strategyOptions" of the strategy "someStrategy" must be an object/i);
     });
 
     it('should print an error in the console if the "authenticateOptions" config is not provided', () => {
-      delete plugin.strategies.someStrategy.config.authenticateOptions;
+      delete plugin.object.strategies.someStrategy.config.authenticateOptions;
 
-      injectAuthentication(kuzzle, authentications, plugin, pluginName);
-
-      should(consoleMock.error).be.calledOnce();
-      should(consoleMock.error.firstCall.args[0]).be.eql(`${errorPrefix} The "authenticateOptions" of the strategy "${strategyName}" must be an object.`);
+      should(() => initAuthentication(pluginsManager, plugin))
+        .throw(/the "authenticateOptions" of the strategy "someStrategy" must be an object/i);
     });
 
     it('should print an error in the console if the "fields" config is not provided', () => {
-      delete plugin.strategies.someStrategy.config.fields;
+      delete plugin.object.strategies.someStrategy.config.fields;
 
-      injectAuthentication(kuzzle, authentications, plugin, pluginName);
-
-      should(consoleMock.error).be.calledOnce();
-      should(consoleMock.error.firstCall.args[0]).be.eql(`${errorPrefix} The "fields" of the strategy "${strategyName}" must be an array.`);
+      should(() => initAuthentication(pluginsManager, plugin))
+        .throw(/the "fields" of the strategy "someStrategy" must be an array/i);
     });
-
     it('should print an error in the console if the "verify" config is not provided', () => {
-      delete plugin.strategies.someStrategy.methods.verify;
+      delete plugin.object.strategies.someStrategy.methods.verify;
 
-      injectAuthentication(kuzzle, authentications, plugin, pluginName);
-
-      should(consoleMock.error).be.calledOnce();
-      should(consoleMock.error.firstCall.args[0]).be.eql(`${errorPrefix} The plugin must provide a method "verify" in strategy configuration.`);
+      should(() => initAuthentication(pluginsManager, plugin))
+        .throw(/the plugin must provide a method "verify" in strategy configuration/i);
     });
 
     it('should print an error in the console if the "verify" method is not available in the plugin object', () => {
-      delete plugin.verifyFunction;
+      delete plugin.object.verifyFunction;
 
-      injectAuthentication(kuzzle, authentications, plugin, pluginName);
-
-      should(consoleMock.error).be.calledOnce();
-      should(consoleMock.error.firstCall.args[0]).be.eql(`${errorPrefix} The plugin property "verifyFunction" must be a function.`);
+      should(() => initAuthentication(pluginsManager, plugin))
+        .throw(/the plugin property "verifyFunction" must be a function/i);
     });
 
     it('should throw an error if a strategy is registered twice', () => {
-      should(() => {
-        injectAuthentication(kuzzle, authentications, plugin, pluginName);
-        injectAuthentication(kuzzle, authentications, plugin, pluginName);
-      }).throw(PluginImplementationError);
+      initAuthentication(pluginsManager, plugin);
+
+      should(() => initAuthentication(pluginsManager, plugin))
+        .throw(/an authentication strategy "someStrategy" has already been registered/i);
     });
   });
 });

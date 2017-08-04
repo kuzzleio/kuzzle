@@ -5,6 +5,7 @@ const
   should = require('should'),
   sinon = require('sinon'),
   KuzzleMock = require('../../mocks/kuzzle.mock'),
+  ESClientMock = require('../../mocks/services/elasticsearchClient.mock'),
   NotFoundError = require('kuzzle-common-objects').errors.NotFoundError,
   ms = require('ms');
 
@@ -18,26 +19,7 @@ describe('InternalEngine', () => {
       errors: {
         NoConnections: sinon.stub()
       },
-      Client: function () {
-        this.indices = {
-          create: sinon.stub().returns(Promise.resolve()),
-          delete: sinon.stub().returns(Promise.resolve()),
-          exists: sinon.stub().returns(Promise.resolve()),
-          getMapping: sinon.stub().returns(Promise.resolve()),
-          putMapping: sinon.stub().returns(Promise.resolve()),
-          refresh: sinon.stub().returns(Promise.resolve())
-        };
-
-        this.create = sinon.stub().returns(Promise.resolve());
-        this.delete = sinon.stub().returns(Promise.resolve());
-        this.exists = sinon.stub().returns(Promise.resolve());
-        this.get = sinon.stub().returns(Promise.resolve());
-        this.index = sinon.stub().returns(Promise.resolve());
-        this.mget = sinon.stub().returns(Promise.resolve());
-        this.scroll = sinon.stub().returns(Promise.resolve());
-        this.search = sinon.stub().returns(Promise.resolve());
-        this.update = sinon.stub().returns(Promise.resolve());
-      }
+      Client: ESClientMock
     });
 
     InternalEngine = mockrequire.reRequire('../../../lib/services/internalEngine');

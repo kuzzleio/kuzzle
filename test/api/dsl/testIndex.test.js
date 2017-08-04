@@ -1,5 +1,7 @@
 'use strict';
 
+require('reify');
+
 /**
  * These test cases are dedicated to check that subscriptions indexation,
  * removal and re-indexation are well-performed
@@ -13,7 +15,7 @@
 const
   should = require('should'),
   sinon = require('sinon'),
-  Promise = require('bluebird'),
+  Bluebird = require('bluebird'),
   DSL = require('../../../lib/api/dsl');
 
 describe('#TestTables (== DSL filter indexes)', () => {
@@ -66,7 +68,7 @@ describe('#TestTables (== DSL filter indexes)', () => {
             promises.push(dsl.register('i', 'c', {exists: {field: `${i}`}}));
           }
 
-          return Promise.all(promises);
+          return Bluebird.all(promises);
         })
         .then(() => {
           let promises = [];
@@ -78,7 +80,7 @@ describe('#TestTables (== DSL filter indexes)', () => {
             promises.push(dsl.register('i', 'c', {exists: {field: `secondPass_${i}`}}));
           }
 
-          return Promise.all(promises);
+          return Bluebird.all(promises);
         })
         .then(() => {
           should(dsl.storage.testTables.i.c.clength).be.eql(31);
@@ -134,10 +136,8 @@ describe('#TestTables (== DSL filter indexes)', () => {
           should(filter.fidx).be.eql(1);
           should(filter.subfilters[0].cidx).be.eql(1);
           should(dsl.storage.testTables.i.c.clength).be.eql(2);
-          should(dsl.storage.testTables.i.c.removedFilters)
-            .match({ [id1]: true });
-          should(dsl.storage.testTables.i.c.removedFiltersCount)
-            .be.eql(1);
+          should(dsl.storage.testTables.i.c.removedFilters.has(id1)).be.true();
+          should(dsl.storage.testTables.i.c.removedFilters.size).be.eql(1);
           should(dsl.storage.testTables.i.c.removedConditions.array.length).be.eql(1);
           should(dsl.storage.testTables.i.c.reindexing).be.true();
 
@@ -146,10 +146,7 @@ describe('#TestTables (== DSL filter indexes)', () => {
           should(filter.fidx).be.eql(0);
           should(filter.subfilters[0].cidx).be.eql(0);
           should(dsl.storage.testTables.i.c.clength).be.eql(1);
-          should(dsl.storage.testTables.i.c.removedFilters)
-            .be.empty();
-          should(dsl.storage.testTables.i.c.removedFiltersCount)
-            .be.eql(0);
+          should(dsl.storage.testTables.i.c.removedFilters).be.empty();
           should(dsl.storage.testTables.i.c.removedConditions.array).be.empty();
           should(dsl.storage.testTables.i.c.reindexing).be.false();
 
@@ -164,7 +161,7 @@ describe('#TestTables (== DSL filter indexes)', () => {
         promises.push(dsl.register('i', 'c', {exists: {field: `${i}`}}));
       }
 
-      return Promise.all(promises)
+      return Bluebird.all(promises)
         .then(() => dsl.remove(Object.keys(dsl.storage.filters)[0]))
         .then(() => {
           should(dsl.storage.testTables.i.c.reindexing).be.false();

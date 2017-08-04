@@ -1,9 +1,12 @@
-var
+const
+  {
+    defineSupportCode
+  } = require('cucumber'),
   async = require('async'),
-  Promise = require('bluebird');
+  Bluebird = require('bluebird');
 
-var apiSteps = function () {
-  this.Then(/^I'm ?(not)* able to get the document(?: in index "([^"]*)")?$/, function (not, index, callback) {
+defineSupportCode(function ({Then}) {
+  Then(/^I'm ?(not)* able to get the document(?: in index "([^"]*)")?$/, function (not, index, callback) {
     var main = function (callbackAsync) {
       this.api.get(this.result._id, index)
         .then(body => {
@@ -58,7 +61,7 @@ var apiSteps = function () {
     });
   });
 
-  this.Then(/^my document has the value "([^"]*)" in field "([^"]*)"$/, function (value, field, callback) {
+  Then(/^my document has the value "([^"]*)" in field "([^"]*)"$/, function (value, field, callback) {
     var main = function (callbackAsync) {
       setTimeout(function () {
         this.api.get(this.result._id)
@@ -101,7 +104,7 @@ var apiSteps = function () {
     });
   });
 
-  this.Then(/^I ?(don't)* find a document with "([^"]*)"(?: in field "([^"]*)")?(?: in index "([^"]*)")?(?: with scroll "([^"]*)")?$/, function (dont, value, field, index, scroll) {
+  Then(/^I ?(don't)* find a document with "([^"]*)"(?: in field "([^"]*)")?(?: in index "([^"]*)")?(?: with scroll "([^"]*)")?$/, function (dont, value, field, index, scroll) {
     var query = {query: { match: { [field]: (value === 'true' ? true : value) }}};
     var args = {};
 
@@ -115,10 +118,10 @@ var apiSteps = function () {
       .then(body => {
         if (body.error !== null) {
           if (dont) {
-            return Promise.resolve();
+            return Bluebird.resolve();
           }
 
-          return Promise.reject(body.error);
+          return Bluebird.reject(body.error);
         }
 
         if (body.result && body.result._scroll_id) {
@@ -126,53 +129,53 @@ var apiSteps = function () {
         }
 
         if (body.result && body.result.hits && body.result.total !== 0) {
-          if (dont) { return Promise.reject(new Error('A document exists for the query')); }
-          return Promise.resolve();
+          if (dont) { return Bluebird.reject(new Error('A document exists for the query')); }
+          return Bluebird.resolve();
         }
 
-        if (dont) { return Promise.resolve(); }
-        return Promise.reject(new Error('No result for query search'));
+        if (dont) { return Bluebird.resolve(); }
+        return Bluebird.reject(new Error('No result for query search'));
       })
       .catch(error => {
-        if (dont) { return Promise.resolve(); }
-        return Promise.reject(error);
+        if (dont) { return Bluebird.resolve(); }
+        return Bluebird.reject(error);
       });
   });
 
-  this.Then(/^I am ?(not)* able to scroll previous search$/, function (not) {
+  Then(/^I am ?(not)* able to scroll previous search$/, function (not) {
     if (!this.scrollId) {
       if (not) {
-        return Promise.resolve();
+        return Bluebird.resolve();
       }
 
-      return Promise.reject(new Error('No scroll id from previous search available'));
+      return Bluebird.reject(new Error('No scroll id from previous search available'));
     }
 
     return this.api.scroll(this.scrollId)
       .then(body => {
         if (body.error !== null) {
           if (not) {
-            return Promise.resolve();
+            return Bluebird.resolve();
           }
 
-          return Promise.reject(body.error);
+          return Bluebird.reject(body.error);
         }
 
         if (body.result && body.result.hits && body.result.hits.length > 0) {
-          if (not) { return Promise.reject(new Error('A document exists for the scrollId')); }
-          return Promise.resolve();
+          if (not) { return Bluebird.reject(new Error('A document exists for the scrollId')); }
+          return Bluebird.resolve();
         }
 
-        if (not) { return Promise.resolve(); }
-        return Promise.reject(new Error('No result for scrollId search'));
+        if (not) { return Bluebird.resolve(); }
+        return Bluebird.reject(new Error('No result for scrollId search'));
       })
       .catch(error => {
-        if (not) { return Promise.resolve(); }
-        return Promise.reject(error);
+        if (not) { return Bluebird.resolve(); }
+        return Bluebird.reject(error);
       });
   });
 
-  this.Then(/^I should receive a document id$/, function (callback) {
+  Then(/^I should receive a document id$/, function (callback) {
     if (this.result && this.result._id) {
       callback();
       return false;
@@ -181,7 +184,7 @@ var apiSteps = function () {
     callback(new Error('No id information in returned object'));
   });
 
-  this.Then(/^I get ([\d]+) documents '([^']+)'?$/, function (count, documents, callback) {
+  Then(/^I get ([\d]+) documents '([^']+)'?$/, function (count, documents, callback) {
     documents = JSON.parse(documents);
 
     this.api.mGet({ids: documents})
@@ -202,7 +205,7 @@ var apiSteps = function () {
       });
   });
 
-  this.Then(/^I check that the document "([^"]*)" ?(doesn't)* exists$/, function (id, doesnt, callback) {
+  Then(/^I check that the document "([^"]*)" ?(doesn't)* exists$/, function (id, doesnt, callback) {
     this.api.exists(id)
       .then(response => {
         if (response.result) {
@@ -215,6 +218,5 @@ var apiSteps = function () {
         callback(error);
       });
   });
-};
+});
 
-module.exports = apiSteps;

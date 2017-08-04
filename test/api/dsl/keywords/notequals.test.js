@@ -1,5 +1,7 @@
 'use strict';
 
+require('reify');
+
 const
   should = require('should'),
   BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,
@@ -175,7 +177,7 @@ describe('DSL.keyword.notequals', () => {
 
     it('should match even if another field was hit before', () => {
       return dsl.register('i', 'c', {not: {equals: {a: 'Jennifer Cardini'}}})
-        .then(dsl.register('i', 'c', {not: {equals: {b: 'Shonky'}}}))
+        .then(() => dsl.register('i', 'c', {not: {equals: {b: 'Shonky'}}}))
         .then(() => {
           should(dsl.test('i', 'c', {a: 'Jennifer Cardini'}))
             .be.an.Array()

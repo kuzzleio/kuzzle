@@ -1,31 +1,32 @@
-Feature: Test websocket API
+Feature: Kuzzle functional tests
 
-  @usingWebsocket
   Scenario: Check server Health
     When I check server health
 
-  @usingWebsocket
   Scenario: Get server information
     When I get server informations
 
-  @usingWebsocket
   Scenario: Get server configuration
     When I get server configuration
 
-  @usingWebsocket @cleanValidations
+  @validation
   Scenario: Publish a realtime message
     When I publish a message
     Then I should receive a request id
     Then I'm not able to get the document
 
-  @usingWebsocket
   Scenario: Create a new document and get it
     When I write the document
     Then I should receive a document id
     Then I'm able to get the document
     And I'm not able to get the document in index "kuzzle-test-index-alt"
 
-  @usingWebsocket @unsubscribe
+  Scenario: Create or Replace a document (no notification)
+    When I write the document "documentGrace"
+    And I createOrReplace it
+    Then I should have updated the document
+
+  @realtime
   Scenario: Create or Replace a document
     Given A room subscription listening to "info.city" having value "NYC"
     When I write the document "documentGrace"
@@ -34,53 +35,44 @@ Feature: Test websocket API
     And I should receive a document notification with field action equal to "replace"
     And The notification should have volatile
 
-  @usingWebsocket
   Scenario: Replace a document
     When I write the document "documentGrace"
     Then I replace the document with "documentAda" document
     Then my document has the value "Ada" in field "firstName"
 
-  @usingWebsocket
   Scenario: Update a document
     When I write the document
     Then I update the document with value "foo" in field "firstName"
     Then my document has the value "foo" in field "firstName"
 
-  @usingWebsocket
   Scenario: Delete a document
     When I write the document
     Then I remove the document
     Then I'm not able to get the document
 
-  @usingWebsocket
   Scenario: Search a document
     When I write the document "documentGrace"
     And I refresh the index
     Then I find a document with "grace" in field "firstName"
     And I don't find a document with "grace" in field "firstName" in index "kuzzle-test-index-alt"
 
-  @usingWebsocket
   Scenario: Bulk import
     When I do a bulk import
     Then I can retrieve actions from bulk import
 
-  @usingWebsocket
   Scenario: Can't do a bulk import on internal index
     When I can't do a bulk import from index "%kuzzle"
 
-  @usingWebsocket
   Scenario: Global Bulk import
     When I do a global bulk import
     Then I can retrieve actions from bulk import
 
-  @usingWebsocket
   Scenario: Truncate collection
     When I write the document
     Then I refresh the index
     Then I truncate the collection
     Then I'm not able to get the document
 
-  @usingWebsocket
   Scenario: Count document
     When I write the document "documentGrace"
     When I write the document "documentAda"
@@ -92,7 +84,6 @@ Feature: Test websocket API
     Then I truncate the collection
     And I count 0 documents
 
-  @usingWebsocket
   Scenario: delete multiple documents with no error
     When I write the document "documentGrace" with id "Grace"
     When I write the document "documentAda" with id "Ada"
@@ -100,7 +91,6 @@ Feature: Test websocket API
     Then I remove the documents '["Grace", "Ada"]'
     And I count 0 documents
 
-  @usingWebsocket
   Scenario: delete multiple documents with partial errors
     When I write the document "documentGrace" with id "Grace"
     When I write the document "documentAda" with id "Ada"
@@ -108,14 +98,12 @@ Feature: Test websocket API
     Then I remove the documents '["Grace", "Ada", "Not exist"]' and get partial errors
     And I count 0 documents
 
-  @usingWebsocket
   Scenario: create multiple documents
     When I create multiple documents '{"Ada": "documentAda", "Grace": "documentGrace"}'
     Then I count 2 documents
     Then I truncate the collection
     And I count 0 documents
 
-  @usingWebsocket
   Scenario: replace multiple documents
     When I create multiple documents '{"Ada": "documentAda", "Grace": "documentGrace"}'
     Then I count 2 documents
@@ -124,7 +112,6 @@ Feature: Test websocket API
     Then I truncate the collection
     And I count 0 documents
 
-  @usingWebsocket
   Scenario: replace multiple documents with partial errors
     When I create multiple documents '{"Ada": "documentAda", "Grace": "documentGrace"}'
     Then I count 2 documents
@@ -133,7 +120,6 @@ Feature: Test websocket API
     Then I truncate the collection
     And I count 0 documents
 
-  @usingWebsocket
   Scenario: update multiple documents
     When I create multiple documents '{"Ada": "documentAda", "Grace": "documentGrace"}'
     Then I count 2 documents
@@ -142,7 +128,6 @@ Feature: Test websocket API
     Then I truncate the collection
     And I count 0 documents
 
-  @usingWebsocket
   Scenario: create and replace multiple documents
     Then I count 0 documents
     When I createOrReplace multiple documents '{"Ada": "documentAda", "Grace": "documentGrace"}'
@@ -152,14 +137,12 @@ Feature: Test websocket API
     Then I truncate the collection
     And I count 0 documents
 
-  @usingHttp
   Scenario: Checking that documents exist or not
     When I write the document with id "documentGrace"
     Then I check that the document "documentGrace" exists
     Then I remove the document
     Then I check that the document "documentGrace" doesn't exists
 
-  @usingWebsocket
   Scenario: get multiple documents
     When I create multiple documents '{"Ada": "documentAda", "Grace": "documentGrace"}'
     Then I count 2 documents
@@ -167,7 +150,6 @@ Feature: Test websocket API
     Then I truncate the collection
     And I count 0 documents
 
-  @usingWebsocket
   Scenario: Search with scroll documents
     When I write the document "documentGrace"
     When I write the document "documentGrace"
@@ -177,7 +159,6 @@ Feature: Test websocket API
     Then I find a document with "Grace" in field "firstName" with scroll "5m"
     And I am able to scroll previous search
 
-  @usingWebsocket
   Scenario: Change mapping
     When I write the document "documentGrace"
     Then I don't find a document with "Grace" in field "firstName"
@@ -186,7 +167,7 @@ Feature: Test websocket API
     And I refresh the index
     Then I find a document with "Grace" in field "newFirstName"
 
-  @usingWebsocket @unsubscribe
+  @realtime
   Scenario: Document creation notifications
     Given A room subscription listening to "info.city" having value "NYC"
     When I write the document "documentGrace"
@@ -194,7 +175,7 @@ Feature: Test websocket API
     And The notification should have a "_source" member
     And The notification should have volatile
 
-  @usingWebsocket @unsubscribe
+  @realtime
   Scenario: Document creation notifications with not exists
     Given A room subscription listening field "toto" doesn't exists
     When I write the document "documentGrace"
@@ -202,7 +183,7 @@ Feature: Test websocket API
     And The notification should have a "_source" member
     And The notification should have volatile
 
-  @usingWebsocket @unsubscribe
+  @realtime
   Scenario: Document delete notifications
     Given A room subscription listening to "info.city" having value "NYC"
     When I write the document "documentGrace"
@@ -211,7 +192,7 @@ Feature: Test websocket API
     And The notification should not have a "_source" member
     And The notification should have volatile
 
-  @usingWebsocket @unsubscribe
+  @realtime
   Scenario: Document update: new document notification
     Given A room subscription listening to "info.hobby" having value "computer"
     When I write the document "documentAda"
@@ -220,7 +201,7 @@ Feature: Test websocket API
     And The notification should have a "_source" member
     And The notification should have volatile
 
-  @usingWebsocket @unsubscribe
+  @realtime
   Scenario: Document update: removed document notification
     Given A room subscription listening to "lastName" having value "Hopper"
     When I write the document "documentGrace"
@@ -229,7 +210,7 @@ Feature: Test websocket API
     And The notification should not have a "_source" member
     And The notification should have volatile
 
-  @usingWebsocket @unsubscribe
+  @realtime
   Scenario: Document replace: new document notification
     Given A room subscription listening to "info.hobby" having value "computer"
     When I write the document "documentAda"
@@ -238,7 +219,7 @@ Feature: Test websocket API
     And The notification should have a "_source" member
     And The notification should have volatile
 
-  @usingWebsocket @unsubscribe
+  @realtime
   Scenario: Document replace: removed document notification
     Given A room subscription listening to "info.city" having value "NYC"
     When I write the document "documentGrace"
@@ -247,7 +228,7 @@ Feature: Test websocket API
     And The notification should not have a "_source" member
     And The notification should have volatile
 
-  @usingWebsocket @unsubscribe
+  @realtime
   Scenario: Subscribe to a collection
     Given A room subscription listening to the whole collection
     When I write the document "documentGrace"
@@ -255,7 +236,7 @@ Feature: Test websocket API
     And The notification should have a "_source" member
     And The notification should have volatile
 
-  @usingWebsocket @unsubscribe
+  @realtime
   Scenario: Delete a document with a query
     Given A room subscription listening to "info.city" having value "NYC"
     When I write the document "documentGrace"
@@ -266,13 +247,13 @@ Feature: Test websocket API
     And The notification should not have a "_source" member
     And The notification should have volatile
 
-  @usingWebsocket @unsubscribe
+  @realtime
   Scenario: Count how many subscription on a room
     Given A room subscription listening to "lastName" having value "Hopper" with socket "client1"
     Given A room subscription listening to "lastName" having value "Hopper" with socket "client2"
     Then I can count "2" subscription
 
-  @usingWebsocket @unsubscribe
+  @realtime
   Scenario: Subscription notifications
     Given A room subscription listening to "lastName" having value "Hopper" with socket "client1"
     Given A room subscription listening to "lastName" having value "Hopper" with socket "client2"
@@ -282,29 +263,24 @@ Feature: Test websocket API
     And I should receive a user notification with field action equal to "unsubscribe"
     And The notification should have volatile
 
-  @usingWebsocket
   Scenario: Getting the last statistics frame
     When I get the last statistics frame
     Then I get at least 1 statistic frame
 
-  @usingWebsocket
   Scenario: Getting the statistics frame from a date
     When I get the statistics frame from a date
     Then I get at least 1 statistic frame
 
-  @usingWebsocket
   Scenario: Getting all statistics frame
     When I get server informations
     And I get all statistics frames
     Then I get at least 1 statistic frame
 
-  @usingWebsocket
   Scenario: list known stored collections
     When I write the document "documentGrace"
     And I list "stored" data collections
     Then I can find a stored collection kuzzle-collection-test
 
-  @usingWebsocket
   Scenario: Index and collection existence
     When I check if index "%kuzzle" exists
     Then The result should raise an error with message "Indexes starting with a "%" are reserved for internal use. Cannot process index %kuzzle."
@@ -318,38 +294,36 @@ Feature: Test websocket API
     When I check if collection "kuzzle-collection-test" exists on index "kuzzle-test-index"
     Then The result should match the json true
 
-  @usingWebsocket @unsubscribe
+  @realtime
   Scenario: list known realtime collections
     Given A room subscription listening to "lastName" having value "Hopper"
     When I list "realtime" data collections
     Then I can find a realtime collection kuzzle-collection-test
 
-  @usingWebsocket
   Scenario: get the Kuzzle timestamp
     When I get the server timestamp
     Then I can read the timestamp
 
-  @usingWebsocket @unsubscribe
+  @realtime
   Scenario: get list of subscriptions
     Given A room subscription listening to "lastName" having value "Hopper"
     And I get the list subscriptions
     Then In my list there is a collection "kuzzle-collection-test" with 1 room and 1 subscriber
 
-  @usingWebsocket @unsubscribe
+  @realtime
   Scenario: remove a specific room in subscriptions
     Given A room subscription listening to "lastName" having value "Hopper"
     Given A room subscription listening to "firstName" having value "Grace"
     And I get the list subscriptions
     Then In my list there is a collection "kuzzle-collection-test" with 2 room and 2 subscriber
 
-  @usingWebsocket
   Scenario: create additional index
     When I create an index named "kuzzle-test-index-new"
     Then I'm able to find the index named "kuzzle-test-index-new" in index list
     Then I'm not able to find the index named "my-undefined-index" in index list
     Then I'm able to delete the index named "kuzzle-test-index-new"
 
-  @usingWebsocket @cleanSecurity
+  @security
   Scenario: login user
     Given I create a user "useradmin" with id "useradmin-id"
     When I log in as useradmin:testpwd expiring in 1h
@@ -361,7 +335,7 @@ Feature: Test websocket API
     Then I check the JWT Token
     And The token is invalid
 
-  @usingWebsocket @cleanSecurity
+  @security
   Scenario: user token deletion
     Given I create a user "useradmin" with id "useradmin-id"
     When I log in as useradmin:testpwd expiring in 1h
@@ -372,11 +346,11 @@ Feature: Test websocket API
     Then I check the JWT Token
     And The token is invalid
 
-  @usingWebsocket @cleanSecurity
+  @security
   Scenario: create restricted user
     Then I create a restricted user "restricteduser1" with id "restricteduser1-id"
 
-  @usingWebsocket @cleanSecurity
+  @security
   Scenario: Role mapping
     Given I get the role mapping
     Then The mapping should contain "controllers" field of type "object"
@@ -385,7 +359,7 @@ Feature: Test websocket API
     Then The mapping should contain "foo" field of type "text"
     And The mapping should contain "bar" field of type "keyword"
 
-  @usingWebsocket @cleanSecurity
+  @security
   Scenario: Create/get/search/update/delete role
     When I create a new role "foo" with id "test"
     Then I'm able to find a role with id "test"
@@ -405,19 +379,19 @@ Feature: Test websocket API
     And I'm able to find "2" role by searching controller "foo" with maximum "10" results starting from "4"
     And I'm able to find "4" role by searching controller "bar"
 
-  @usingWebsocket @cleanSecurity
+  @security
   Scenario: create an invalid profile with unexisting role triggers an error
     Then I cannot create an invalid profile
 
-  @usingWebsocket @cleanSecurity
+  @security
   Scenario: get profile without id triggers an error
     Then I cannot a profile without ID
 
-  @usingWebsocket @cleanSecurity
+  @security
   Scenario: creating a profile with an empty set of roles triggers an error
     Then I cannot create a profile with an empty set of roles
 
-  @usingWebsocket @cleanSecurity
+  @security
   Scenario: Profile mapping
     Given I get the profile mapping
     Then The mapping should contain a nested "policies" field with property "roleId" of type "keyword"
@@ -426,7 +400,7 @@ Feature: Test websocket API
     Then The mapping should contain "foo" field of type "text"
     And The mapping should contain "bar" field of type "keyword"
 
-  @usingWebsocket @cleanSecurity
+  @security
   Scenario: create, get and delete a profile
     Given I create a new role "role1" with id "role1"
     And I create a new role "role2" with id "role2"
@@ -435,7 +409,7 @@ Feature: Test websocket API
     Given I delete the profile with id "my-new-profile"
     Then I'm not able to find the profile with id "my-new-profile"
 
-  @usingWebsocket @cleanSecurity
+  @security
   Scenario: search and update profiles
     Given I create a new role "role1" with id "role1"
     And I create a new role "role2" with id "role2"
@@ -453,7 +427,7 @@ Feature: Test websocket API
     Then I delete the profile "my-profile-1"
     Then I delete the profile "my-profile-2"
 
-  @usingWebsocket @cleanSecurity
+  @security
   Scenario: get profile rights
     Given I create a new role "role1" with id "role1"
     And I create a new role "role2" with id "role2"
@@ -461,7 +435,7 @@ Feature: Test websocket API
     Then I'm able to find rights for profile "profile2"
     Then I'm not able to find rights for profile "fake-profile"
 
-  @usingWebsocket @cleanSecurity
+  @security
   Scenario: User mapping
     Given I get the user mapping
     Then The mapping should contain "profileIds" field of type "keyword"
@@ -470,7 +444,7 @@ Feature: Test websocket API
     Then The mapping should contain "foo" field of type "text"
     And The mapping should contain "bar" field of type "keyword"
 
-  @usingWebsocket @cleanSecurity
+  @security
   Scenario: user crudl
     When I create a new role "role1" with id "role1"
     And I create a new role "role2" with id "role2"
@@ -490,7 +464,7 @@ Feature: Test websocket API
     Then I log out
     Then I am getting the current user, which matches {"_id":"-1","_source":{"profileIds":["anonymous"]}}
 
-  @usingWebsocket @cleanSecurity
+  @security
   Scenario: user replace
     When I create a user "useradmin" with id "useradmin-id"
     Then I am able to get the user "useradmin-id" matching {"_id":"#prefix#useradmin-id","_source":{"profileIds":["admin"]}}
@@ -504,7 +478,7 @@ Feature: Test websocket API
     Then I log out
     Then I am getting the current user, which matches {"_id":"-1","_source":{"profileIds":["anonymous"]}}
 
-  @usingWebsocket @cleanSecurity
+  @security
   Scenario: user updateSelf
     When I create a user "useradmin" with id "useradmin-id"
     Then I am able to get the user "useradmin-id" matching {"_id":"#prefix#useradmin-id","_source":{"profileIds":["admin"]}}
@@ -515,15 +489,15 @@ Feature: Test websocket API
     Then I log out
     Then I am getting the current user, which matches {"_id":"-1","_source":{"profileIds":["anonymous"]}}
 
-  @usingWebsocket @cleanSecurity @unsubscribe
+  @security @realtime
   Scenario: token expiration
     Given A room subscription listening to "lastName" having value "Hopper"
     Given I create a user "useradmin" with id "useradmin-id"
     When I log in as useradmin:testpwd expiring in 1s
-    Then I wait 1s
+    Then I wait 2s
     And I should receive a TokenExpired notification with field message equal to "Authentication Token Expired"
 
-  @usingWebsocket @cleanSecurity
+  @security
   Scenario: user permissions
     Given I create a new role "role1" with id "role1"
     And I create a new role "role2" with id "role2"
@@ -621,7 +595,7 @@ Feature: Test websocket API
     And I'm not allowed to count documents in index "kuzzle-test-index-alt" and collection "kuzzle-collection-test-alt"
     Then I log out
 
-  @usingWebsocket @cleanSecurity
+  @security
   Scenario: get user rights
     Given I create a new role "role1" with id "role1"
     And I create a new role "role2" with id "role2"
@@ -630,7 +604,7 @@ Feature: Test websocket API
     Then I'm able to find rights for user "user2-id"
     Then I'm not able to find rights for user "fakeuser-id"
 
-  @usingWebsocket @cleanSecurity
+  @security
   Scenario: get my rights
     Given I create a new role "role1" with id "role1"
     And I create a new role "role2" with id "role2"
@@ -639,7 +613,7 @@ Feature: Test websocket API
     When I log in as user2:testpwd2 expiring in 1h
     Then I'm able to find my rights
 
-  @usingWebsocket @cleanSecurity
+  @security
   Scenario: user credentials crudl
     Given I create a user "nocredentialuser" with id "nocredentialuser-id"
     Then I validate local credentials of user nocredentialuser with id nocredentialuser-id
@@ -656,7 +630,7 @@ Feature: Test websocket API
     Then I delete local credentials of user with id nocredentialuser-id
     Then I can't log in as nocredentialuser:testpwd2 expiring in 1h
 
-  @usingWebsocket @cleanSecurity
+  @security
   Scenario: current user credentials crudl
     Given I create a user "nocredentialuser" with id "nocredentialuser-id"
     Then I create local credentials of user nocredentialuser with id nocredentialuser-id
@@ -675,7 +649,7 @@ Feature: Test websocket API
     Then I log out
     Then I can't log in as nocredentialuser:testpwd2 expiring in 1h
 
-  @usingWebsocket @cleanRedis
+  @redis
   Scenario: memory storage - scalars
     Given I call the setnx method of the memory storage with arguments
       """
@@ -800,7 +774,7 @@ Feature: Test websocket API
     Then The ms result should match the json 26
     When I call the bitcount method of the memory storage with arguments
       """
-      { "_id": "#prefix#x", "start": 0, "end": 3 }
+      { "_id": "#prefix#x", "args": {"start": 0, "end": 3} }
       """
     Then The ms result should match the json 19
     When I call the bitpos method of the memory storage with arguments
@@ -925,7 +899,7 @@ Feature: Test websocket API
       """
     Then The ms result should match the regex ^9[5-9]$
 
-  @usingWebsocket @cleanRedis
+  @redis
   Scenario: memory storage - lists
     Given I call the rpush method of the memory storage with arguments
       """
@@ -1068,7 +1042,7 @@ Feature: Test websocket API
       """
     Then The ms result should match the json "list"
 
-  @usingWebsocket @cleanRedis
+  @redis
   Scenario: memory storage - hash
     Given I call the hset method of the memory storage with arguments
       """
@@ -1123,12 +1097,12 @@ Feature: Test websocket API
       { "_id": "#prefix#hash", "body": { "field": "foo", "value": "bar2" }}
       """
     Then The ms result should match the json 0
-    # redis 3.2+ only
-    # When I call the hstrlen method of the memory storage with arguments
-    #    """
-    #    { "_id": "#prefix#hash", "body": { "field": "foo" }}
-    #    """
-    # Then The ms result should match the json 3
+   # redis 3.2+ only
+   # When I call the hstrlen method of the memory storage with arguments
+   #    """
+   #    { "_id": "#prefix#hash", "body": { "field": "foo" }}
+   #    """
+   # Then The ms result should match the json 3
     When I call the hvals method of the memory storage with arguments
       """
       { "_id": "#prefix#hash" }
@@ -1145,7 +1119,7 @@ Feature: Test websocket API
       """
     Then The ms result should match the json "17.5"
 
-  @usingWebsocket @cleanRedis
+  @redis
   Scenario: memory storage - sets
     Given I call the sadd method of the memory storage with arguments
       """
@@ -1274,7 +1248,7 @@ Feature: Test websocket API
       """
     Then The ms result should match the json []
 
-  @usingWebsocket @cleanRedis
+  @redis
   Scenario: memory storage - sorted sets
     Given I call the zadd method of the memory storage with arguments
       """
@@ -1565,7 +1539,7 @@ Feature: Test websocket API
       """
     Then The ms result should match the json ["zero", "0", "one", "1", "four", "4"]
 
-  @usingWebsocket @cleanRedis
+  @redis
   Scenario: memory storage - hyperloglog
 
     Given I call the pfadd method of the memory storage with arguments
@@ -1625,7 +1599,7 @@ Feature: Test websocket API
       """
     Then The ms result should match the json 11
 
-  @usingHttp @cleanRedis
+  @redis
   Scenario: memory storage - geospatial
     Given I call the geoadd method of the memory storage with arguments
       """
@@ -1692,7 +1666,7 @@ Feature: Test websocket API
       """
     Then The ms result should match the json ["Agrigento", "Palermo"]
 
-  @usingWebsocket
+
   Scenario: autorefresh
     When I check the autoRefresh status
     Then The result should match the json false
@@ -1710,7 +1684,7 @@ Feature: Test websocket API
     When I update the document with value "Josepha" in field "firstName"
     Then I find a document with "josepha" in field "firstName"
 
-  @usingWebsocket @cleanValidations
+  @validation
   Scenario: Validation - getSpecification & updateSpecification
     When There is no specifications for index "kuzzle-test-index" and collection "kuzzle-collection-test"
     Then I put a not valid specification for index "kuzzle-test-index" and collection "kuzzle-collection-test"
@@ -1720,14 +1694,14 @@ Feature: Test websocket API
     And There is no error message
     And There is a specification for index "kuzzle-test-index" and collection "kuzzle-collection-test"
 
-  @usingWebsocket @cleanValidations
+  @validation
   Scenario: Validation - validateSpecification
     When I post a valid specification
     Then There is no error message
     When I post an invalid specification
     Then There is an error message in the response body
 
-  @usingWebsocket @cleanValidations
+  @validation
   Scenario: Validation - validateDocument
     When I put a valid specification for index "kuzzle-test-index" and collection "kuzzle-collection-test"
     Then There is no error message
@@ -1736,18 +1710,18 @@ Feature: Test websocket API
     When I post an invalid document
     Then There is an error message
 
-  @usingHttp @cleanValidations
+  @validation
   Scenario: Validation - searchSpecifications
     Then I put a valid specification for index "kuzzle-test-index" and collection "kuzzle-collection-test"
     Then I find 1 specifications
 
-  @usingHttp @cleanValidations
+  @validation
   Scenario: Validation - scrollSpecifications
     Then I put a valid specification for index "kuzzle-test-index" and collection "kuzzle-collection-test"
     Then I find 1 specifications with scroll "1m"
     Then I am able to perform a scrollSpecifications request
 
-  @usingWebsocket @cleanValidations
+  @validation
   Scenario: Validation - validateDocument
     When I put a valid specification for index "kuzzle-test-index" and collection "kuzzle-collection-test"
     Then There is no error message
@@ -1756,7 +1730,7 @@ Feature: Test websocket API
     When I post an invalid document
     Then There is an error message
 
-  @usingWebsocket @cleanValidations
+  @validation
   Scenario: Validation - deleteSpecifications
     When I put a valid specification for index "kuzzle-test-index" and collection "kuzzle-collection-test"
     Then There is no error message
@@ -1766,6 +1740,6 @@ Feature: Test websocket API
     When I delete the specifications again for index "kuzzle-test-index" and collection "kuzzle-collection-test"
     Then There is no error message
 
-  @usingWebsocket
+
   Scenario: Get authentication strategies
     Then I get the registrated authentication strategies

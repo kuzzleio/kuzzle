@@ -21,115 +21,24 @@ describe('Test plugins manager run', () => {
     plugin,
     pluginMock,
     kuzzle,
-    pluginsManager,
-    pm2Mock;
+    pluginsManager;
 
   before(() => {
-    pm2Mock = function () {
-      const universalProcess = {
-        name: params.plugins.common.workerPrefix + 'testPlugin',
-        pm_id: 42
-      };
-
-      const busData = {
-        'initialized': {
-          process: universalProcess,
-          data: {
-            events: [
-              'foo:bar'
-            ]
-          }
-        },
-        'process:event': {
-          event: 'exit',
-          process: universalProcess
-        },
-        'ready': {
-          process: universalProcess
-        }
-      };
-
-      let
-        busListeners,
-        processList,
-        uniqueness,
-        sentMessages;
-
-      return {
-        connect: function (callback) {
-          callback();
-        },
-        list: function (callback) {
-          callback(null, processList.map(item => item.process));
-        },
-        delete: function (pmId, callback) {
-          processList = processList.filter(item => {
-            return item.process.pm_id !== pmId;
-          });
-          callback(null);
-        },
-        start: function (processSpec, callback) {
-          for(let i = 0; i < processSpec.instances; i++) {
-            processList.push({
-              process: {
-                name: processSpec.name,
-                pm_id: uniqueness++
-              }
-            });
-          }
-          callback();
-        },
-        launchBus: function (callback) {
-          callback(null, {
-            on: function (event, cb) {
-              const wrapper = function (data) {
-                cb(data);
-              };
-              if (!busListeners[event]) {
-                busListeners[event] = [];
-              }
-              busListeners[event].push(wrapper);
-            }
-          });
-        },
-        sendDataToProcessId: function (processId, data, callback) {
-          sentMessages.push(data);
-          callback(null);
-        },
-        /** Mock only methods */
-        resetMock: () => {
-          busListeners = {};
-          processList = [];
-          uniqueness = 0;
-          sentMessages = [];
-        },
-        getProcessList: () => {
-          return processList;
-        },
-        getSentMessages: function() {
-          return sentMessages;
-        },
-        // Should be used to trigger a particular event on the bus
-        triggerOnBus: function (event) {
-          if (busListeners[event]) {
-            busListeners[event].forEach(item => {
-              item(busData[event]);
-            });
-          }
-        },
-        initializeList: () => {
-          processList = [{process: universalProcess}];
-        }
-        /** END - Mock only methods */
-      };
-    }();
-
-    mockrequire('pm2', pm2Mock);
     PluginsManager = rewire('../../../../lib/api/core/plugins/pluginsManager');
+    
+    // making it quiet
+    PluginsManager.__set__({
+      console: {
+        log: sinon.stub(),
+        error: sinon.stub(),
+        warn: sinon.stub()
+      }
+    });
   });
 
   beforeEach(() => {
     kuzzle = new EventEmitter({
+      verboseMemoryLeak: true,
       wildcard: true,
       maxListeners: 30,
       delimiter: ':'
@@ -137,14 +46,16 @@ describe('Test plugins manager run', () => {
     kuzzle.config = { plugins: params.plugins };
 
     pluginsManager = new PluginsManager(kuzzle);
-    pm2Mock.resetMock();
     sandbox = sinon.sandbox.create();
 
     plugin = {
+      name: 'testPlugin',
+      path: '',
       object: {
         init: () => {}
       },
-      config: {}
+      config: {},
+      manifest: {}
     };
 
     pluginMock = sandbox.mock(plugin.object);
@@ -157,13 +68,6 @@ describe('Test plugins manager run', () => {
 
   after(() => {
     mockrequire.stopAll();
-  });
-
-  it('should do nothing on run if plugin is not activated', () => {
-    pluginMock.expects('init').never();
-
-    return pluginsManager.run()
-      .then(() => pluginMock.verify());
   });
 
   it('should attach event hook on kuzzle object', () => {
@@ -309,7 +213,7 @@ describe('Test plugins manager run', () => {
   });
 
   it('should log a warning in case a pipe plugin exceeds the warning delay', () => {
-    var
+    let
       spy = sandbox.spy(kuzzle, 'emit'),
       fooStub;
 
@@ -318,7 +222,7 @@ describe('Test plugins manager run', () => {
     };
 
     plugin.object.foo = () => {};
-    fooStub = sandbox.stub(plugin.object, 'foo', function (ev, cb) {
+    fooStub = sandbox.stub(plugin.object, 'foo').callsFake(function (ev, cb) {
       setTimeout(() => cb(), 50);
     });
 
@@ -387,28 +291,22 @@ describe('Test plugins manager run', () => {
       });
   });
 
-  it('should abort the controller initialization if the controller object is incorrectly defined', () => {
+  it('should abort the plugin initialization if the controller object is incorrectly defined', () => {
     plugin.object.controllers = {
       'foo': 'bar'
     };
 
-    return pluginsManager.run()
-      .then(() => {
-        should(pluginsManager.controllers['testPlugin/foo']).be.undefined();
-      });
+    should(pluginsManager.run()).be.rejected();
   });
 
-  it('should abort the controller initialization if one of the controller action is not correctly defined', () => {
+  it('should abort the plugin initialization if one of the controller action is not correctly defined', () => {
     plugin.object.controllers = {
       'foo': {
         'actionName': []
       }
     };
 
-    return pluginsManager.run()
-      .then(() => {
-        should(pluginsManager.controllers['testPlugin/foo']).be.undefined();
-      });
+    should(pluginsManager.run()).be.rejected();
   });
 
   it('should abort the controller initialization if one of the controller action target does not exist', () => {
@@ -421,10 +319,7 @@ describe('Test plugins manager run', () => {
 
     plugin.object.functionName = () => {};
 
-    return pluginsManager.run()
-      .then(() => {
-        should(pluginsManager.controllers['testPlugin/foo']).be.undefined();
-      });
+    should(pluginsManager.run()).be.rejected();
   });
 
   it('should not add an invalid route to the API', () => {
@@ -444,110 +339,6 @@ describe('Test plugins manager run', () => {
 
     plugin.object.functionName = () => {};
 
-    return pluginsManager.run()
-      .then(() => {
-        should(pluginsManager.routes).be.an.Array().and.length(0);
-      });
-  });
-
-  it('should initialize plugin workers if some are defined', () => {
-    plugin.config.threads = 2;
-    pluginsManager.isServer = true;
-    pluginsManager.isDummy = false;
-
-    return pluginsManager.run()
-      .then(() => should(pm2Mock.getProcessList()).be.an.Array().and.length(2));
-  });
-
-  it('should send an initialize message to the process when ready is received', () => {
-    plugin.config.threads = 1;
-    pluginsManager.isServer = true;
-    pluginsManager.isDummy = false;
-
-    return pluginsManager.run()
-      .then(() => {
-        var messages;
-        pm2Mock.triggerOnBus('ready');
-        messages = pm2Mock.getSentMessages();
-        should(messages).be.an.Array().and.length(1);
-        should(messages[0].topic).be.equal('initialize');
-      });
-  });
-
-  it('should add worker to list when initialized is received', () => {
-    plugin.config.threads = 1;
-    pluginsManager.isServer = true;
-    pluginsManager.isDummy = false;
-
-    return pluginsManager.run()
-      .then(() => {
-        pm2Mock.triggerOnBus('initialized');
-        try {
-          should(pluginsManager.workers[params.plugins.common.workerPrefix + 'testPlugin']).be.an.Object();
-          should(pluginsManager.workers[params.plugins.common.workerPrefix + 'testPlugin'].pmIds).be.an.Object();
-          should(pluginsManager.workers[params.plugins.common.workerPrefix + 'testPlugin'].pmIds.getSize()).be.equal(1);
-
-          return Promise.resolve();
-        }
-        catch (error) {
-          return Promise.reject(error);
-        }
-      });
-  });
-
-  it('should remove a worker to list when process:event exit is received', () => {
-    plugin.config.threads = 1;
-    pluginsManager.isServer = true;
-    pluginsManager.isDummy = false;
-
-    return pluginsManager.run()
-      .then(() => {
-        try {
-          pm2Mock.triggerOnBus('initialized');
-          should(pluginsManager.workers[params.plugins.common.workerPrefix + 'testPlugin']).be.an.Object();
-          should(pluginsManager.workers[params.plugins.common.workerPrefix + 'testPlugin'].pmIds).be.an.Object();
-          should(pluginsManager.workers[params.plugins.common.workerPrefix + 'testPlugin'].pmIds.getSize()).be.equal(1);
-
-          pm2Mock.triggerOnBus('process:event');
-          should.not.exist(pluginsManager.workers[params.plugins.common.workerPrefix + 'testPlugin']);
-
-          return Promise.resolve();
-        }
-        catch (error) {
-          return Promise.reject(error);
-        }
-      });
-  });
-
-  it('should receive the triggered message', () => {
-    const triggerWorkers = PluginsManager.__get__('triggerWorkers');
-    plugin.config.threads = 1;
-    plugin.config.hooks = {
-      'foo:bar': 'foobar'
-    };
-    pluginsManager.isServer = true;
-    pluginsManager.isDummy = false;
-
-    return pluginsManager.run()
-      .then(() => {
-        try {
-          pm2Mock.triggerOnBus('initialized');
-
-          should(pluginsManager.workers[params.plugins.common.workerPrefix + 'testPlugin']).be.an.Object();
-          should(pluginsManager.workers[params.plugins.common.workerPrefix + 'testPlugin'].pmIds).be.an.Object();
-          should(pluginsManager.workers[params.plugins.common.workerPrefix + 'testPlugin'].pmIds.getSize()).be.equal(1);
-
-          triggerWorkers(pluginsManager.workers, 'foo:bar', {'firstName': 'Ada'});
-
-          should(pm2Mock.getSentMessages()).be.an.Array().and.length(1);
-          should(pm2Mock.getSentMessages()[0]).be.an.Object();
-          should(pm2Mock.getSentMessages()[0].data.message.firstName).be.equal('Ada');
-
-          return Promise.resolve();
-        }
-        catch (error) {
-          return Promise.reject(error);
-        }
-      });
+    should(pluginsManager.run()).be.rejected();
   });
 });

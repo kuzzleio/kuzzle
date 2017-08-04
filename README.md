@@ -4,76 +4,110 @@
 
 ![logo](http://kuzzle.io/themes/kuzzleio/images/kuzzle-logo-blue-500.png)
 
-**A backend software, self-hostable and ready to use to power modern apps**
+## Why Kuzzle ?
 
-# Installation
+Kuzzle is a ready-to-use, **on-premises backend** that enables you to manage your persistent data and be notified in real-time on whatever happens to it. It also provides you with a flexible and powerful user-management system.
 
-## Using Docker
+Kuzzle enables you to build modern web applications and complex IoT networks in no time.
+
+* **Persisted data**: store your data and perform advanced searches on it.
+* **Real-time notifications**: subscribe to fine-grained subsets of data.
+* **User Management**: login, logout and security rules are no more a burden.
+* **Extensible**: fit Kuzzle to your needs by leveraging the plugin system.
+
+
+## Installation
+
+### Docker install
 
 If you are running Docker and just want to get your own Kuzzle running, you can use the provided docker-compose file.
 
 Prerequisites:
 
 * [Docker](https://docs.docker.com/engine/installation/) (version >1.10.0)
-* [Docker Compose](https://docs.docker.com/compose/install/) (version >1.8.0)
+* [Docker Compose](https://docs.docker.com/compose/install/) (version >1.7)
 
 From Kuzzle's build repo:
 
     $ sudo sysctl -w vm.max_map_count=262144
     $ wget http://kuzzle.io/docker-compose.yml
     $ docker-compose up
-
-
-## Manual install
-
-Check our complete installation guide [here](http://docs.kuzzle.io/guide/#manually-on-linux)
-
-
-# Using Kuzzle
-
-To use Kuzzle, all you have to do is to download one of our SDKs and use it in your application. Simple as that!  
-Check our complete [SDK Reference](http://docs.kuzzle.io/sdk-reference/) for further informations.
-
-You can also interface with Kuzzle directly, using its [exposed API](http://docs.kuzzle.io/api-reference/)  
-
-# Running Tests
-   
-### With a running Kuzzle inside a docker container
-
-Because functional tests need a running Kuzzle environment, if you're using docker to run Kuzzle, then they can only be started from inside a Kuzzle container.
-
-    $ docker exec -ti <kuzzle docker image> npm test
-
-### Using docker, without any Kuzzle instance running
-
-A docker-compose script is available to run tests on a non-running Kuzzle. This script will pop a Kuzzle stack using Docker, automatically run tests, and exit once done.
-
-    $ docker-compose -f docker-compose/test.yml up
-
-### With a manually installed and running Kuzzle
-
-From the Kuzzle source directory, launch the following command line:
-
-    $ npm test
     
-# Contributing to Kuzzle
+You can get detailed information about how to [start kuzzle with docker on docs.kuzzle.io](http://docs.kuzzle.io/guide/essentials/installing-kuzzle/#docker)
 
-You're welcome to contribute to Kuzzle! To do so:
+### Manual install
 
-1. fork our Kuzzle repository and install default plugins:
+Check our [complete installation guide on docs.kuzzle.io](http://docs.kuzzle.io/guide/essentials/installing-kuzzle/#manually)
 
+## Quick start with Kuzzle
+
+* [Install and start Kuzzle server](http://docs.kuzzle.io/guide/essentials/installing-kuzzle/)
+* [Choose a SDK](http://docs.kuzzle.io/sdk-reference/)
+* Build your application without caring about your backend !
+
+Check the [**Getting started page on docs.kuzzle.io**](http://docs.kuzzle.io/guide/getting-started/)
+
+### NodeJS Sample
+
+```bash
+npm install kuzzle-sdk
 ```
-$ git submodule init
-$ git submodule update
+
+```javascript
+const 
+    Kuzzle = require('kuzzle-sdk'),
+    kuzzle = new Kuzzle('http://localhost:7512')
+
+const filter = {
+    exists: {
+        field: 'message'
+    }
+}
+
+// Subscribe to data changes in an app
+kuzzle
+    .collection('mycollection', 'myindex')
+    .subscribe(filter, function(error, result) {
+        // triggered each time a document is updated !
+        console.log('message received from kuzzle:', result)
+    })
+    
+// Creating a document from another app will notify all subscribers
+kuzzle
+    .collection('mycollection', 'myindex')
+    .createDocument(document)
 ```
 
-2. Check our [contributing documentation](./CONTRIBUTING.md) to know about our coding and pull requests rules
+### Usefull links
 
+* [Full documentation](http://docs.kuzzle.io/)
+* [SDK Reference](http://docs.kuzzle.io/sdk-reference/)
+* [API Documentation](http://docs.kuzzle.io/api-documentation/)  
+* [Data Validation Documentation](http://docs.kuzzle.io/validation-reference/) 
+* [View release notes](https://github.com/kuzzleio/kuzzle/releases)
 
-# Full documentation
+## Contributing to Kuzzle
 
-See [full documentation](http://docs.kuzzle.io/)
+You're welcome to contribute to Kuzzle!
+Feel free to report issues, ask for features or even make pull requests ! 
 
-# License
+Check our [contributing documentation](./CONTRIBUTING.md) to know about our coding and pull requests rules
 
-Kuzzle is published under [Apache 2 License](LICENSE.md).
+## Join our community
+
+* Follow us on [twitter](https://twitter.com/kuzzleio) to get latest news
+* Register to our monthly [newsletter](http://eepurl.com/bxRxpr) to get highlighed news
+* Visit our [blog](http://kuzzle.io/blog) to be informed about what we are doing
+* Come chat with us on [gitter](https://gitter.im/kuzzleio/kuzzle)
+* Ask technical questions on [stack overflow](https://stackoverflow.com/search?q=kuzzle)
+
+## Kuzzle Enterprise
+
+Kuzzle Enterprise is production-proof, and provides all the business-critical features your need for your business, as
+the scalability, the high-availability (multi-nodes), probes for BI, diagnostic tools & professional services,
+
+[Compare editions to learn more](http://kuzzle.io/kuzzle-enterprise)
+
+## License
+
+Kuzzle is published under [Apache 2 License](./LICENSE.md).

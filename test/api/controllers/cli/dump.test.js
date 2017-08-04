@@ -60,7 +60,7 @@ describe('Test: dump', () => {
         }
       },
       pluginsManager: {
-        getPluginsFeatures: () => { return {'foo': {}}; },
+        getPluginsDescription: () => { return {'foo': {}}; },
         plugins: {
           'foo': {}
         }

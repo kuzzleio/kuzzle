@@ -1,5 +1,10 @@
-var apiSteps = function () {
-  this.When(/^I( can't)? log in as (.*?):(.*?) expiring in (.*?)$/, function (cantLogin, login, password, expiration, callback) {
+const
+  {
+    defineSupportCode
+  } = require('cucumber');
+
+defineSupportCode(function ({Then, When}) {
+  When(/^I( can't)? log in as (.*?):(.*?) expiring in (.*?)$/, function (cantLogin, login, password, expiration, callback) {
     this.api.login('local', {username: this.idPrefix + login, password: password, expiresIn: expiration})
       .then(body => {
         if (body.error) {
@@ -41,7 +46,7 @@ var apiSteps = function () {
       });
   });
 
-  this.Then(/^I log ?out$/, function (callback) {
+  Then(/^I log ?out$/, function (callback) {
     if (!this.currentUser || !this.currentUser.token) {
       callback(new Error('Cannot retrieve jwt token'));
       return false;
@@ -61,7 +66,7 @@ var apiSteps = function () {
       });
   });
 
-  this.Then(/^I check the JWT Token$/, function (callback) {
+  Then(/^I check the JWT Token$/, function (callback) {
     if (!this.currentToken || !this.currentToken.jwt) {
       return callback(new Error('Cannot retrieve the JWT token'));
     }
@@ -78,7 +83,7 @@ var apiSteps = function () {
       .catch(err => callback(err));
   });
 
-  this.Then(/^The token is (.*?)$/, function (state, callback) {
+  Then(/^The token is (.*?)$/, function (state, callback) {
     if (!this.currentToken || !this.currentToken.tokenValidity) {
       return callback(new Error('Cannot check the JWT token validity'));
     }
@@ -89,8 +94,8 @@ var apiSteps = function () {
 
     callback(new Error('Expected token to be ' + state + ', got: ' + JSON.stringify(this.currentToken.tokenValidity)));
   });
-  
-  this.Then(/^I update current user with data \{(.*?)}$/, function (dataBody, callback) {
+
+  Then(/^I update current user with data \{(.*?)}$/, function (dataBody, callback) {
     this.api.updateSelf(JSON.parse('{' + dataBody + '}'))
       .then(body => {
         if (body.error) {
@@ -101,7 +106,7 @@ var apiSteps = function () {
       .catch(err => callback(err));
   });
 
-  this.Then(/^I get the registrated authentication strategies$/, function (callback) {
+  Then(/^I get the registrated authentication strategies$/, function (callback) {
     this.api.getAuthenticationStrategies()
       .then(response => {
         if (response.error) {
@@ -125,6 +130,5 @@ var apiSteps = function () {
       })
       .catch(error => callback(error));
   });
-};
+});
 
-module.exports = apiSteps;

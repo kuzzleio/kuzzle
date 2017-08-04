@@ -1,23 +1,18 @@
-var
+const
   should = require('should'),
-  sinon = require('sinon'),
   KuzzleMock = require('../../../mocks/kuzzle.mock'),
   RouterController = require('../../../../lib/api/controllers/routerController'),
   PluginImplementationError = require('kuzzle-common-objects').errors.PluginImplementationError,
   RequestContext = require('kuzzle-common-objects').models.RequestContext;
 
 describe('Test: routerController', () => {
-  var
-    kuzzle,
-    sandbox,
-    routerController,
+  const
     protocol = 'foo',
-    connectionId = 'bar',
+    connectionId = 'bar';
+  let
+    kuzzle,
+    routerController,
     requestContext;
-
-  before(() => {
-    sandbox = sinon.sandbox.create();
-  });
 
   beforeEach(() => {
     requestContext = new RequestContext({
@@ -28,17 +23,11 @@ describe('Test: routerController', () => {
     routerController = new RouterController(kuzzle);
   });
 
-  afterEach(() => {
-    sandbox.restore();
-  });
-
   describe('#newConnection', () => {
     it('should have registered the connection', () => {
-      var context;
-
       routerController.newConnection(requestContext);
 
-      context = routerController.connections[connectionId];
+      const context = routerController.connections[connectionId];
       should(context).be.instanceOf(RequestContext);
       should(context.connectionId).be.eql(connectionId);
       should(context.protocol).be.eql(protocol);
@@ -107,6 +96,24 @@ describe('Test: routerController', () => {
       should(kuzzle.pluginsManager.trigger).be.calledOnce();
       should(kuzzle.pluginsManager.trigger.firstCall.args[0]).be.eql('log:error');
       should(kuzzle.pluginsManager.trigger.firstCall.args[1]).be.instanceOf(PluginImplementationError);
+    });
+  });
+
+  describe('#isConnectionActive', () => {
+    it('should resolve to false if the connection is unknown', () => {
+      should(routerController.isConnectionAlive(requestContext)).be.false();
+    });
+
+    it('should interact correctly with newConnection/removeConnection', () => {
+      routerController.newConnection(requestContext);
+      should(routerController.isConnectionAlive(requestContext)).be.true();
+      routerController.removeConnection(requestContext);
+      should(routerController.isConnectionAlive(requestContext)).be.false();
+    });
+
+    it('should always return true on HTTP connections', () => {
+      requestContext.protocol = 'http';
+      should(routerController.isConnectionAlive(requestContext)).be.true();
     });
   });
 });

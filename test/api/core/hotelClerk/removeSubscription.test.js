@@ -4,16 +4,15 @@ require('reify');
 const
   should = require('should'),
   sinon = require('sinon'),
-  sandbox = sinon.sandbox.create(),
   Request = require('kuzzle-common-objects').Request,
   NotFoundError = require('kuzzle-common-objects').errors.NotFoundError,
-  Dsl = require('../../../../lib/api/dsl'),
   HotelClerk = require('../../../../lib/api/core/hotelClerk'),
   KuzzleMock = require('../../../mocks/kuzzle.mock');
 
 describe('Test: hotelClerk.removeSubscription', () => {
   let
     kuzzle,
+    hotelClerk,
     connectionId = 'connectionid',
     context = {
       connectionId,
@@ -26,8 +25,7 @@ describe('Test: hotelClerk.removeSubscription', () => {
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
-    kuzzle.hotelClerk = new HotelClerk(kuzzle);
-    kuzzle.dsl = new Dsl();
+    hotelClerk = new HotelClerk(kuzzle);
 
     unsubscribeRequest = new Request({
       controller: 'realtime',
@@ -37,12 +35,12 @@ describe('Test: hotelClerk.removeSubscription', () => {
       body: { roomId: 'foo' }
     }, context);
 
-    kuzzle.hotelClerk.customers[connectionId] = {
+    hotelClerk.customers[connectionId] = {
       'foo': {},
       'bar': {}
     };
 
-    kuzzle.hotelClerk.rooms = {
+    hotelClerk.rooms = {
       'foo': {
         customers: new Set([connectionId]),
         index,
@@ -57,44 +55,40 @@ describe('Test: hotelClerk.removeSubscription', () => {
       }
     };
 
+    hotelClerk.roomsCount = 2;
   });
 
-  afterEach(() => {
-    sandbox.restore();
-  });
-
-  it('should do nothing if a bad room name is given', () => {
+  it('should throw if a bad room name is given', () => {
     unsubscribeRequest.input.body.roomId = 'qux';
-    return should(() => kuzzle.hotelClerk.removeSubscription(unsubscribeRequest))
+    return should(() => hotelClerk.removeSubscription(unsubscribeRequest))
       .throw(NotFoundError);
   });
 
   it('should not delete all subscriptions when we want to just remove one', () => {
-    kuzzle.dsl.remove = sinon.stub();
-    const response = kuzzle.hotelClerk.removeSubscription(unsubscribeRequest, context);
-    should(response)
-      .be.exactly(unsubscribeRequest.input.body.roomId);
+    const response = hotelClerk.removeSubscription(unsubscribeRequest, context);
+    
+    should(response).be.exactly(unsubscribeRequest.input.body.roomId);
 
-    should(kuzzle.dsl.remove)
-      .be.calledOnce();
+    should(kuzzle.dsl.remove).be.calledOnce();
 
     should(kuzzle.notifier.notifyUser.called).be.false();
 
-    should(kuzzle.hotelClerk.rooms).be.an.Object();
-    should(kuzzle.hotelClerk.rooms).have.property('bar');
-    should(kuzzle.hotelClerk.rooms).not.have.property('foo');
+    should(hotelClerk.roomsCount).be.eql(1);
 
-    should(kuzzle.hotelClerk.customers).be.an.Object();
-    should(kuzzle.hotelClerk.customers).not.be.empty();
+    should(hotelClerk.rooms).be.an.Object();
+    should(hotelClerk.rooms).have.property('bar');
+    should(hotelClerk.rooms).not.have.property('foo');
+
+    should(hotelClerk.customers).be.an.Object();
+    should(hotelClerk.customers).not.be.empty();
   });
 
   it('should clean up customers, rooms object', () => {
-    kuzzle.dsl.remove = sinon.stub();
+    delete hotelClerk.rooms.bar;
+    delete hotelClerk.customers[connectionId].bar;
+    hotelClerk.roomsCount = 1;
 
-    delete kuzzle.hotelClerk.rooms.bar;
-    delete kuzzle.hotelClerk.customers[connectionId].bar;
-
-    const response = kuzzle.hotelClerk.removeSubscription(unsubscribeRequest, context);
+    const response = hotelClerk.removeSubscription(unsubscribeRequest, context);
     should(response)
       .be.exactly(unsubscribeRequest.input.body.roomId);
 
@@ -104,24 +98,20 @@ describe('Test: hotelClerk.removeSubscription', () => {
 
     should(kuzzle.notifier.notifyUser.called).be.false();
 
-    should(kuzzle.hotelClerk.rooms).be.an.Object();
-    should(kuzzle.hotelClerk.rooms).be.empty();
-
-    should(kuzzle.hotelClerk.customers).be.an.Object();
-    should(kuzzle.hotelClerk.customers).be.empty();
+    should(hotelClerk.rooms).be.an.Object().and.be.empty();
+    should(hotelClerk.customers).be.an.Object().and.be.empty();
+    should(hotelClerk.roomsCount).be.eql(0);
   });
 
   it('should send a notification to other users connected on that room', () => {
     kuzzle.dsl.remove = sinon.spy();
 
-    kuzzle.hotelClerk.rooms.foo.customers.add('another connection');
-    kuzzle.hotelClerk.removeSubscription(unsubscribeRequest, context);
+    hotelClerk.rooms.foo.customers.add('another connection');
+    hotelClerk.removeSubscription(unsubscribeRequest, context);
 
-    should(kuzzle.dsl.remove)
-      .have.callCount(0);
-
-    should(kuzzle.notifier.notifyUser)
-      .be.calledOnce();
+    should(kuzzle.dsl.remove.called).be.false();
+    should(kuzzle.notifier.notifyUser).be.calledOnce();
+    should(hotelClerk.roomsCount).be.eql(2);
 
     // testing roomId argument
     should(kuzzle.notifier.notifyUser.args[0][0]).be.eql('foo');

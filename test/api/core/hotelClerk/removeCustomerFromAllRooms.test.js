@@ -3,13 +3,13 @@ const
   sinon = require('sinon'),
   Request = require('kuzzle-common-objects').Request,
   RequestContext = require('kuzzle-common-objects').models.RequestContext,
-  Dsl = require('../../../../lib/api/dsl'),
   HotelClerk = require('../../../../lib/api/core/hotelClerk'),
   KuzzleMock = require('../../../mocks/kuzzle.mock');
 
 describe('Test: hotelClerk.removeCustomerFromAllRooms', () => {
   let
     kuzzle,
+    hotelClerk,
     connectionId = 'connectionid',
     collection = 'user',
     index = '%test',
@@ -18,10 +18,9 @@ describe('Test: hotelClerk.removeCustomerFromAllRooms', () => {
   beforeEach(() => {
     context = new RequestContext({connectionId});
     kuzzle = new KuzzleMock();
-    kuzzle.hotelClerk = new HotelClerk(kuzzle);
-    kuzzle.dsl = new Dsl();
+    hotelClerk = new HotelClerk(kuzzle);
 
-    kuzzle.hotelClerk.customers = {
+    hotelClerk.customers = {
       [connectionId]: {
         foo: null,
         bar: {volatile: 'data'}
@@ -34,7 +33,7 @@ describe('Test: hotelClerk.removeCustomerFromAllRooms', () => {
       }
     };
 
-    kuzzle.hotelClerk.rooms = {
+    hotelClerk.rooms = {
       'foo': {
         customers: new Set([connectionId, 'a', 'b']),
         index,
@@ -48,36 +47,32 @@ describe('Test: hotelClerk.removeCustomerFromAllRooms', () => {
         channels: ['barfoo']
       }
     };
-  });
 
-  afterEach(() => {
-    sinon.restore();
+    hotelClerk.roomsCount = 2;
   });
 
   it('should do nothing when a bad connectionId is given', () => {
     context.connectionId = 'unknown';
-    kuzzle.hotelClerk._removeRoomForCustomer = sinon.stub();
+    hotelClerk._removeRoomForCustomer = sinon.stub();
 
-    kuzzle.hotelClerk.removeCustomerFromAllRooms(context);
-    should(kuzzle.hotelClerk._removeRoomForCustomer)
-      .not.be.called();
+    hotelClerk.removeCustomerFromAllRooms(context);
+    should(hotelClerk._removeRoomForCustomer).not.be.called();
+    should(hotelClerk.roomsCount).be.eql(2);
   });
 
   it('should clean up customers, rooms object', () => {
-    kuzzle.dsl.remove = sinon.stub();
-
-    kuzzle.hotelClerk.removeCustomerFromAllRooms(context);
+    hotelClerk.removeCustomerFromAllRooms(context);
 
     should(kuzzle.dsl.remove).be.calledOnce();
     should(kuzzle.notifier.notifyUser).be.calledOnce();
-    // testing requestObject argument
+
     should(kuzzle.notifier.notifyUser.args[0][1]).be.instanceOf(Request);
     should(kuzzle.notifier.notifyUser.args[0][1].input.controller).be.exactly('realtime');
     should(kuzzle.notifier.notifyUser.args[0][1].input.action).be.exactly('unsubscribe');
     should(kuzzle.notifier.notifyUser.args[0][1].input.resource.index).be.exactly(index);
     should(kuzzle.notifier.notifyUser.args[0][2]).be.exactly('out');
 
-    should(kuzzle.hotelClerk.rooms)
+    should(hotelClerk.rooms)
       .match({
         foo: {
           customers: new Set(['a', 'b']),
@@ -85,8 +80,9 @@ describe('Test: hotelClerk.removeCustomerFromAllRooms', () => {
           collection
         }
       });
+    should(hotelClerk.rooms.bar).be.undefined();
 
-    should(kuzzle.hotelClerk.customers)
+    should(hotelClerk.customers)
       .match({
         a: {
           foo: null
@@ -95,15 +91,20 @@ describe('Test: hotelClerk.removeCustomerFromAllRooms', () => {
           foo: null
         }
       });
+
+    should(hotelClerk.roomsCount).be.eql(1);
   });
 
   it('should log an error if a problem occurs while unsubscribing', function () {
     const error = new Error('Mocked error');
     kuzzle.dsl.remove = sinon.stub().throws(error);
 
-    kuzzle.hotelClerk.removeCustomerFromAllRooms(context);
+    hotelClerk.removeCustomerFromAllRooms(context);
 
-    should(kuzzle.pluginsManager.trigger)
-      .be.calledWith('log:error', error);
+    should(kuzzle.pluginsManager.trigger).be.calledWith('log:error', error);
+
+    // the room should be removed from the hotel clerk even if the dsl fails
+    should(hotelClerk.roomsCount).be.eql(1);
+    should(hotelClerk.rooms.bar).be.undefined();
   });
 });

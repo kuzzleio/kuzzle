@@ -25,15 +25,15 @@ const
   fs = require('fs'),
   rc = require('rc'),
   params = rc('kuzzle'),
-  Kuzzle = require('../../lib/api/kuzzle'),
   Request = require('kuzzle-common-objects').Request,
   Bluebird = require('bluebird'),
   clc = require('cli-color');
 
 function commandStart (options) {
   const
-    kuzzle = new Kuzzle(),
+    kuzzle = new (require('../../lib/api/kuzzle'))(),
     error = string => options.parent.noColors ? string : clc.red(string),
+    warn = string => options.parent.noColors ? string : clc.yellow(string),
     notice = string => options.parent.noColors ? string : clc.cyanBright(string),
     kuz = string => options.parent.noColors ? string : clc.greenBright.bold(string);
 
@@ -100,13 +100,14 @@ function commandStart (options) {
       return kuzzle.internalEngine.bootstrap.adminExists()
         .then(res => {
           if (!res) {
-            console.log(notice('[ℹ] There is no administrator user yet. You can use the CLI or the back-office to create one.'));
-            console.log(notice('[ℹ] Entering no-administrator mode: everyone has administrator rights.'));
+            console.log(warn('[!] [WARNING] There is no administrator user yet: everyone has administrator rights.'));
+            console.log(notice('[ℹ] You can use the CLI or the back-office to create the first administrator user.'));
+            console.log(notice('    For more information: http://docs.kuzzle.io/guide/essentials/security'));
           }
         });
     })
     .catch(err => {
-      console.error(err.message, err.stack);
+      console.error(error(`[x] [ERROR] ${err.stack}`));
       process.exit(1);
     });
 }

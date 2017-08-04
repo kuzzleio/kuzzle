@@ -895,7 +895,7 @@ describe('Test: ElasticSearch service', () => {
       elasticsearch.client.search.yields(null, {hits: {hits: [{_id: 'foo'}, {_id: 'bar'}, {_id: 'baz'}], total: mockupIds.length}});
 
       return ES.__with__({
-        getPaginatedIdsFromQuery: getAllIdsStub,
+        getAllIdsFromQuery: getAllIdsStub,
         Date: {
           now: () => 42
         }

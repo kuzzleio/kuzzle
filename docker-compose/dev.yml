@@ -2,9 +2,9 @@ version: '3'
 
 services:
   proxy:
-    image: kuzzleio/proxy:develop
+    image: kuzzleio/proxy
     ports:
-      - "7512:7512"
+      - "7513:7512"
 
   kuzzle:
     image: kuzzleio/dev
@@ -16,18 +16,19 @@ services:
     cap_add:
       - SYS_PTRACE
     depends_on:
-      - proxy
       - redis
       - elasticsearch
     ports:
+      - "7512:7512"
       - "9229:9229"
     environment:
       - kuzzle_services__db__client__host=http://elasticsearch:9200
       - kuzzle_services__internalCache__node__host=redis
       - kuzzle_services__memoryStorage__node__host=redis
-      - kuzzle_services__proxyBroker__host=proxy
-      - NODE_ENV=development
-      - DEBUG="${DEBUG:-kuzzle:*}"
+      - kuzzle_server__entryPoints__proxy=true
+      - kuzzle_server__proxy__host=proxy
+      - NODE_ENV=${NODE_ENV:-development}
+      - DEBUG=${DEBUG:-kuzzle:*}
       - DEBUG_DEPTH=${DEBUG_DEPTH:-0}
       - DEBUG_MAX_ARRAY_LENGTH=${DEBUG_MAX_ARRAY:-100}
       - DEBUG_EXPAND=${DEBUG_EXPAND:-off}

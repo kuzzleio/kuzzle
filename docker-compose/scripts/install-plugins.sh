@@ -1,17 +1,18 @@
 #!/usr/bin/env bash
 
-WORKING_DIR=$(pwd)
-PLUGINS_DIR=plugins/enabled
+working_dir=$(pwd)
+plugins_dir="plugins/enabled"
+protocols_dir="protocols/enabled"
+
+cd "$working_dir"
 
 # npm install plugins
-for plugin in $WORKING_DIR/$PLUGINS_DIR/*
-do
-  if [ -d $plugin ]
-  then
-    echo 'Installing dependencies for plugin' $(basename $plugin)
-    cd $plugin
+for target in ${plugins_dir}/* ${protocols_dir}/* ; do
+  if [ -d "$target" ]; then
+    echo 'Installing dependencies for ' $(basename "$target")
+    cd "$target"
     npm install
+    cd "$working_dir"
   fi
 done
 
-cd $WORKING_DIR

@@ -1,5 +1,10 @@
-var apiSteps = function () {
-  this.When(/^I publish a message$/, function (callback) {
+const
+  {
+    defineSupportCode
+  } = require('cucumber');
+
+defineSupportCode(function ({When, Then}) {
+  When(/^I publish a message$/, function (callback) {
     this.api.publish(this.documentGrace)
       .then(body => {
         if (body.error) {
@@ -20,7 +25,7 @@ var apiSteps = function () {
       });
   });
 
-  this.Then(/^I should receive a request id$/, function (callback) {
+  Then(/^I should receive a request id$/, function (callback) {
     if (this.result && this.result.requestId) {
       callback();
       return false;
@@ -28,6 +33,5 @@ var apiSteps = function () {
 
     callback(new Error('No request id returned'));
   });
-};
+});
 
-module.exports = apiSteps;

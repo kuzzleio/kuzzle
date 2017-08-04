@@ -56,7 +56,7 @@ describe('notify methods', () => {
 
       async.retry({times: 20, interval: 20}, cb => {
         try {
-          should(kuzzle.entryPoints.proxy.dispatch.called).be.false();
+          should(kuzzle.entryPoints.dispatch.called).be.false();
           should(kuzzle.pluginsManager.trigger.called).be.false();
           cb();
         }
@@ -79,17 +79,17 @@ describe('notify methods', () => {
 
       async.retry({times: 20, interval: 20}, cb => {
         try {
-          should(kuzzle.entryPoints.proxy.dispatch).calledOnce();
+          should(kuzzle.entryPoints.dispatch).calledOnce();
 
-          should(kuzzle.entryPoints.proxy.dispatch.firstCall.args[0]).be.eql('broadcast');
+          should(kuzzle.entryPoints.dispatch.firstCall.args[0]).be.eql('broadcast');
           
-          should(kuzzle.entryPoints.proxy.dispatch.firstCall.args[1].channels)
+          should(kuzzle.entryPoints.dispatch.firstCall.args[1].channels)
             .match(['matching_all', 'matching_out', 'matching_pending', 'always']);
 
-          should(kuzzle.entryPoints.proxy.dispatch.firstCall.args[1].payload)
+          should(kuzzle.entryPoints.dispatch.firstCall.args[1].payload)
             .be.instanceof(Notification.Document);
 
-          const notification = kuzzle.entryPoints.proxy.dispatch.firstCall.args[1].payload;
+          const notification = kuzzle.entryPoints.dispatch.firstCall.args[1].payload;
 
           should(notification).match({
             status: 200,
@@ -131,7 +131,7 @@ describe('notify methods', () => {
 
       async.retry({times: 20, interval: 20}, cb => {
         try {
-          should(kuzzle.entryPoints.proxy.dispatch.called).be.false();
+          should(kuzzle.entryPoints.dispatch.called).be.false();
           should(kuzzle.pluginsManager.trigger.called).be.false();
           cb();
         }
@@ -148,7 +148,7 @@ describe('notify methods', () => {
 
       async.retry({times: 20, interval: 20}, cb => {
         try {
-          should(kuzzle.entryPoints.proxy.dispatch.called).be.false();
+          should(kuzzle.entryPoints.dispatch.called).be.false();
           should(kuzzle.pluginsManager.trigger.called).be.false();
           cb();
         }
@@ -163,7 +163,7 @@ describe('notify methods', () => {
 
       async.retry({times: 20, interval: 20}, cb => {
         try {
-          should(kuzzle.entryPoints.proxy.dispatch.called).be.false();
+          should(kuzzle.entryPoints.dispatch.called).be.false();
           should(kuzzle.pluginsManager.trigger.called).be.false();
           cb();
         }
@@ -179,17 +179,17 @@ describe('notify methods', () => {
 
       async.retry({times: 20, interval: 20}, cb => {
         try {
-          should(kuzzle.entryPoints.proxy.dispatch).calledOnce();
+          should(kuzzle.entryPoints.dispatch).calledOnce();
 
-          should(kuzzle.entryPoints.proxy.dispatch.firstCall.args[0]).be.eql('broadcast');
+          should(kuzzle.entryPoints.dispatch.firstCall.args[0]).be.eql('broadcast');
           
-          should(kuzzle.entryPoints.proxy.dispatch.firstCall.args[1].channels)
+          should(kuzzle.entryPoints.dispatch.firstCall.args[1].channels)
             .match(['matching_all', 'matching_userOut']);
 
-          should(kuzzle.entryPoints.proxy.dispatch.firstCall.args[1].payload)
+          should(kuzzle.entryPoints.dispatch.firstCall.args[1].payload)
             .be.instanceof(Notification.User);
 
-          const notification = kuzzle.entryPoints.proxy.dispatch.firstCall.args[1].payload;
+          const notification = kuzzle.entryPoints.dispatch.firstCall.args[1].payload;
 
           should(notification).match({
             status: 200,
@@ -223,7 +223,7 @@ describe('notify methods', () => {
 
       async.retry({times: 20, interval: 20}, cb => {
         try {
-          should(kuzzle.entryPoints.proxy.dispatch.called).be.false();
+          should(kuzzle.entryPoints.dispatch.called).be.false();
           should(kuzzle.pluginsManager.trigger.called).be.false();
           cb();
         }
@@ -238,7 +238,7 @@ describe('notify methods', () => {
 
       async.retry({times: 20, interval: 20}, cb => {
         try {
-          should(kuzzle.entryPoints.proxy.dispatch.called).be.false();
+          should(kuzzle.entryPoints.dispatch.called).be.false();
           should(kuzzle.pluginsManager.trigger.called).be.false();
           cb();
         }
@@ -253,16 +253,16 @@ describe('notify methods', () => {
 
       async.retry({times: 20, interval: 20}, cb => {
         try {
-          should(kuzzle.entryPoints.proxy.dispatch).calledOnce();
+          should(kuzzle.entryPoints.dispatch).calledOnce();
 
-          should(kuzzle.entryPoints.proxy.dispatch.firstCall.args[0]).be.eql('notify');
+          should(kuzzle.entryPoints.dispatch.firstCall.args[0]).be.eql('notify');
           
-          should(kuzzle.entryPoints.proxy.dispatch.firstCall.args[1].connectionId).be.eql('foobar');
+          should(kuzzle.entryPoints.dispatch.firstCall.args[1].connectionId).be.eql('foobar');
 
-          should(kuzzle.entryPoints.proxy.dispatch.firstCall.args[1].channels)
+          should(kuzzle.entryPoints.dispatch.firstCall.args[1].channels)
             .match(['foobar', 'always']);
 
-          const notification = kuzzle.entryPoints.proxy.dispatch.firstCall.args[1].payload;
+          const notification = kuzzle.entryPoints.dispatch.firstCall.args[1].payload;
 
           should(notification).match({
             status: 200,

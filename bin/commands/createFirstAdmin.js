@@ -26,8 +26,6 @@ const
   Bluebird = require('bluebird'),
   readlineSync = require('readline-sync'),
   rc = require('rc'),
-  Kuzzle = require('../../lib/api/kuzzle'),
-  kuzzle = new Kuzzle(),
   params = rc('kuzzle');
 
 let
@@ -79,6 +77,7 @@ function confirm (username, resetRoles) {
 }
 
 function commandCreateFirstAdmin (options) {
+  const kuzzle = new (require('../../lib/api/kuzzle'))();
   let
     username,
     password,

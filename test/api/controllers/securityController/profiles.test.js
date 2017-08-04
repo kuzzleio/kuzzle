@@ -72,7 +72,7 @@ describe('Test: security controller - profiles', () => {
 
   describe('#createOrReplaceProfile', () => {
     it('should resolve to an object on a createOrReplaceProfile call', () => {
-      kuzzle.repositories.profile.validateAndSaveProfile = sandbox.stub().returns(Promise.resolve({_id: 'test', _source: {}}));
+      kuzzle.repositories.profile.validateAndSaveProfile = sandbox.stub().returns(Promise.resolve({_id: 'test', _source: {}, _meta: {}}));
 
       return securityController.createOrReplaceProfile(new Request({_id: 'test', body: {policies: [{roleId: 'role1'}]}}))
         .then(response => {
@@ -101,7 +101,7 @@ describe('Test: security controller - profiles', () => {
     });
 
     it('should resolve to an object on a createProfile call', () => {
-      kuzzle.repositories.profile.validateAndSaveProfile = sandbox.stub().returns(Promise.resolve({_id: 'test', _source: {}}));
+      kuzzle.repositories.profile.validateAndSaveProfile = sandbox.stub().returns(Promise.resolve({_id: 'test', _source: {}, _meta: {}}));
 
       return should(securityController.createProfile(new Request({_id: 'test', body: {policies: [{roleId:'role1'}]}})))
         .be.fulfilled();
@@ -116,7 +116,7 @@ describe('Test: security controller - profiles', () => {
 
   describe('#getProfile', () => {
     it('should resolve to an object on a getProfile call', () => {
-      kuzzle.repositories.profile.loadProfile = sandbox.stub().returns(Promise.resolve({_id: 'test', _source: {}}));
+      kuzzle.repositories.profile.loadProfile = sandbox.stub().returns(Promise.resolve({_id: 'test', _source: {}, _meta: {}}));
 
       return securityController.getProfile(new Request({_id: 'test'}))
         .then(response => {
@@ -168,7 +168,7 @@ describe('Test: security controller - profiles', () => {
     });
 
     it('should resolve to an object with roles on a mGetProfiles call with hydrate', () => {
-      kuzzle.repositories.profile.loadMultiFromDatabase = sandbox.stub().returns(Promise.resolve([{_id: 'test', _source: {}}]));
+      kuzzle.repositories.profile.loadMultiFromDatabase = sandbox.stub().returns(Promise.resolve([{_id: 'test', _source: {}, _meta: {}}]));
 
       return securityController.mGetProfiles(new Request({
         body: {ids: ['test'], hydrate: true}
@@ -216,6 +216,7 @@ describe('Test: security controller - profiles', () => {
           should(response.hits[0]._id).be.exactly('test');
           should(response.hits[0]._source.policies).be.an.Array();
           should(response.hits[0]._source.policies[0].roleId).be.exactly('default');
+          should(response.hits[0]._meta).be.instanceof(Object);
           should(response.total).be.eql(1);
           should(response.scrollId).be.eql('foobar');
           should(kuzzle.repositories.profile.searchProfiles).be.calledWithMatch(['role1'], {});
@@ -263,6 +264,7 @@ describe('Test: security controller - profiles', () => {
           should(response.hits[0]._id).be.exactly('test');
           should(response.hits[0]._source.policies).be.an.Array();
           should(response.hits[0]._source.policies[0].roleId).be.exactly('default');
+          should(response.hits[0]._meta).be.instanceof(Object);
           should(response.total).be.eql(1);
           should(response.scrollId).be.eql('foobar');
           should(kuzzle.repositories.profile.scroll).be.calledWithMatch('foobar', undefined);
@@ -285,6 +287,7 @@ describe('Test: security controller - profiles', () => {
           should(response.hits[0]._id).be.exactly('test');
           should(response.hits[0]._source.policies).be.an.Array();
           should(response.hits[0]._source.policies[0].roleId).be.exactly('default');
+          should(response.hits[0]._meta).be.instanceof(Object);
           should(response.total).be.eql(1);
           should(response.scrollId).be.eql('foobar');
           should(kuzzle.repositories.profile.scroll).be.calledWithMatch('foobar', '4s');

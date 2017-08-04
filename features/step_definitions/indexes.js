@@ -1,9 +1,12 @@
-var
+const
+  {
+    defineSupportCode
+  } = require('cucumber'),
   async = require('async'),
-  Promise = require('bluebird');
+  Bluebird = require('bluebird');
 
-var apiSteps = function () {
-  this.When(/^I create an index named "([^"]*)"$/, function (index, callback) {
+defineSupportCode(function ({When, Then}) {
+  When(/^I create an index named "([^"]*)"$/, function (index, callback) {
     this.api.createIndex(index)
       .then(body => {
         if (body.error) {
@@ -22,7 +25,7 @@ var apiSteps = function () {
       .catch(error => callback(error));
   });
 
-  this.Then(/^I'm ?(not)* able to find the index named "([^"]*)" in index list$/, function (not, index, callback) {
+  Then(/^I'm ?(not)* able to find the index named "([^"]*)" in index list$/, function (not, index, callback) {
     var main = function (callbackAsync) {
       this.api.listIndexes()
         .then(body => {
@@ -88,7 +91,7 @@ var apiSteps = function () {
     });
   });
 
-  this.Then(/^I'm able to delete the index named "([^"]*)"$/, function (index, callback) {
+  Then(/^I'm able to delete the index named "([^"]*)"$/, function (index, callback) {
     this.api.deleteIndex(index)
       .then(body => {
         if (body.error) {
@@ -106,7 +109,7 @@ var apiSteps = function () {
       .catch(error => callback(error));
   });
 
-  this.Then(/^I refresh the index( ".*?")?$/, function (index, callback) {
+  Then(/^I refresh the index( ".*?")?$/, function (index, callback) {
     var
       idx = index ? index : this.fakeIndex;
 
@@ -127,7 +130,7 @@ var apiSteps = function () {
       .catch(error => callback(error));
   });
 
-  this.When(/^I (enable|disable) the autoRefresh(?: on the index "(.*?)")?$/, function (enable, index) {
+  When(/^I (enable|disable) the autoRefresh(?: on the index "(.*?)")?$/, function (enable, index) {
     var
       idx = index ? index : this.fakeIndex,
       autoRefresh = (enable === 'enable');
@@ -135,7 +138,7 @@ var apiSteps = function () {
     return this.api.setAutoRefresh(idx, autoRefresh)
       .then(body => {
         if (body.error) {
-          return Promise.reject(new Error(body.error.message));
+          return Bluebird.reject(new Error(body.error.message));
         }
 
         this.result = body;
@@ -144,14 +147,14 @@ var apiSteps = function () {
       });
   });
 
-  this.Then(/^I check the autoRefresh status(?: on the index "(.*?)")?$/, function (index) {
+  Then(/^I check the autoRefresh status(?: on the index "(.*?)")?$/, function (index) {
     var
       idx = index ? index : this.fakeIndex;
 
     return this.api.getAutoRefresh(idx)
       .then(body => {
         if (body.error) {
-          return Promise.reject(body.error);
+          return Bluebird.reject(body.error);
         }
 
         this.result = body;
@@ -159,8 +162,5 @@ var apiSteps = function () {
         return body;
       });
   });
+});
 
-
-};
-
-module.exports = apiSteps;

@@ -616,11 +616,8 @@ describe('Test: validation initialization', () => {
   });
 
   describe('#curateFieldSpecification', () => {
-    const
-      curateFieldSpecificationFormat = sandbox.stub().returns({isValid: true});
-
     beforeEach(() => {
-      validation.curateFieldSpecificationFormat = curateFieldSpecificationFormat;
+      validation.curateFieldSpecificationFormat = sandbox.stub().returns({isValid: true});
     });
 
     it('should validate and curate field specifications with default configuration', () => {

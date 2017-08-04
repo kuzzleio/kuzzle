@@ -29,7 +29,16 @@ Check the logs at the start of Kuzzle using the development docker image to get 
 
 How to run the development stack (needs Docker 1.10+ and Docker Compose 1.8+):
 
-```
+```bash
+# clone this repository
+git clone git@github.com:kuzzleio/kuzzle.git
+cd kuzzle
+
+# don't forget to retreive default plugins embeded in submodules
+git submodule init
+git submodule update
+
+# start kuzzle with development tools enabled
 docker-compose -f docker-compose/dev.yml up
 ```
 
@@ -37,6 +46,27 @@ You can now access to `http://localhost:7512` for the standard Kuzzle HTTP, WebS
 
 Everytime a modification is detected in the source files, the server is automatically restarted and a new debug URL is provided.
 
-# Create a plugin
+## Create a plugin
 
 See our [plugins documentation](http://docs.kuzzle.io/plugin-reference/)
+
+## Running Tests
+   
+### With a running Kuzzle inside a docker container
+
+Because functional tests need a running Kuzzle environment, if you're using docker to run Kuzzle, then they can only be started from inside a Kuzzle container.
+
+    $ docker exec -ti <kuzzle docker image> npm test
+
+### Using docker, without any Kuzzle instance running
+
+A docker-compose script is available to run tests on a non-running Kuzzle. This script will pop a Kuzzle stack using Docker, automatically run tests, and exit once done.
+
+    $ docker-compose -f docker-compose/test.yml up
+
+### With a manually installed and running Kuzzle
+
+From the Kuzzle source directory, launch the following command line:
+
+    $ npm test
+    

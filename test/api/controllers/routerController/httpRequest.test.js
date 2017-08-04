@@ -59,7 +59,7 @@ describe('Test: routerController.httpRequest', () => {
     httpRequest.url = '/ms/_getrange/someId?start=start&end=end';
     httpRequest.method = 'GET';
 
-    routeController.router.route(httpRequest, result => {
+    routeController.http.route(httpRequest, result => {
       try {
         should(response.input.controller).be.eql('ms');
         should(response.input.action).be.eql('getrange');
@@ -81,7 +81,7 @@ describe('Test: routerController.httpRequest', () => {
     httpRequest.method = 'PUT';
     httpRequest.content = '{"profileId": "foobar"}';
 
-    routeController.router.route(httpRequest, result => {
+    routeController.http.route(httpRequest, result => {
       try {
         should(response.input.controller).be.eql('security');
         should(response.input.action).be.eql('updateProfile');
@@ -102,7 +102,7 @@ describe('Test: routerController.httpRequest', () => {
     httpRequest.method = 'PUT';
     httpRequest.content = '{"foo": "bar"}';
 
-    routeController.router.route(httpRequest, result => {
+    routeController.http.route(httpRequest, result => {
       try {
         should(response.input.controller).be.eql('auth');
         should(response.input.action).be.eql('updateSelf');
@@ -122,7 +122,7 @@ describe('Test: routerController.httpRequest', () => {
     httpRequest.url = '/foobar';
     httpRequest.method = 'DELETE';
 
-    routeController.router.route(httpRequest, result => {
+    routeController.http.route(httpRequest, result => {
       try {
         should(response.input.controller).be.eql('index');
         should(response.input.action).be.eql('delete');
@@ -142,7 +142,7 @@ describe('Test: routerController.httpRequest', () => {
     httpRequest.url = '/_serverInfo';
     httpRequest.method = 'GET';
 
-    routeController.router.route(httpRequest, result => {
+    routeController.http.route(httpRequest, result => {
       try {
         should(response.input.controller).be.eql('server');
         should(response.input.action).be.eql('info');
@@ -162,7 +162,7 @@ describe('Test: routerController.httpRequest', () => {
     httpRequest.url = '/swagger.json';
     httpRequest.method = 'GET';
 
-    routeController.router.route(httpRequest, result => {
+    routeController.http.route(httpRequest, result => {
       try {
         should(result.response.requestId).be.eql(httpRequest.requestId);
         should(result.response.headers['content-type']).be.eql('application/json');
@@ -179,7 +179,7 @@ describe('Test: routerController.httpRequest', () => {
     httpRequest.url = '/swagger.yml';
     httpRequest.method = 'GET';
 
-    routeController.router.route(httpRequest, result => {
+    routeController.http.route(httpRequest, result => {
       try {
         should(result.response.requestId).be.eql(httpRequest.requestId);
         should(result.response.headers['content-type']).be.eql('application/yaml');
@@ -196,7 +196,7 @@ describe('Test: routerController.httpRequest', () => {
     httpRequest.url = '/_plugin/foo/bar/baz';
     httpRequest.method = 'GET';
 
-    routeController.router.route(httpRequest, result => {
+    routeController.http.route(httpRequest, result => {
       try {
         should(response.input.controller).be.eql('foo');
         should(response.input.action).be.eql('bar');
@@ -216,7 +216,7 @@ describe('Test: routerController.httpRequest', () => {
     httpRequest.url = '/foo/bar';
     httpRequest.method = 'GET';
 
-    routeController.router.route(httpRequest, result => {
+    routeController.http.route(httpRequest, result => {
       try {
         should(result.response.requestId).be.eql(httpRequest.requestId);
         should(result.response.headers['content-type']).be.eql('application/json');
