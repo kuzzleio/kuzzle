@@ -261,11 +261,25 @@ describe('PluginsManager', () => {
         isDirectory: () => true
       });
 
+      mockrequire('/kuzzle/plugins/enabled/kuzzle-plugin-test', function () { throw new Error('foobar'); });
+      mockrequire('/kuzzle/plugins/enabled/kuzzle-plugin-test/package.json', { name: 'kuzzle-plugin-test' });
+      PluginsManager = mockrequire.reRequire('../../../../lib/api/core/plugins/pluginsManager');
+
+      should(() => pluginsManager.init()).throw(/foobar/);
+      should(pluginsManager.plugins).be.empty();
+    });
+
+    it('should reject all plugin initialization if a plugin is not a constructor', () => {
+      fsStub.readdirSync.returns(['kuzzle-plugin-test']);
+      fsStub.statSync.returns({
+        isDirectory: () => true
+      });
+
       mockrequire('/kuzzle/plugins/enabled/kuzzle-plugin-test', undefined);
       mockrequire('/kuzzle/plugins/enabled/kuzzle-plugin-test/package.json', { name: 'kuzzle-plugin-test' });
       PluginsManager = mockrequire.reRequire('../../../../lib/api/core/plugins/pluginsManager');
 
-      should(() => pluginsManager.init()).throw(/unable to require plugin "kuzzle-plugin-test" from directory/i);
+      should(() => pluginsManager.init()).throw(/Plugin kuzzle-plugin-test is not a constructor/i);
       should(pluginsManager.plugins).be.empty();
     });
   });
