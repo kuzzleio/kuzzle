@@ -25,7 +25,7 @@ const
   rc = require('rc'),
   params = rc('kuzzle'),
   readlineSync = require('readline-sync'),
-  clc = require('cli-color');
+  ColorOutput = require('./colorOutput');
 
 function commandClearCache (database, options) {
   let
@@ -38,38 +38,33 @@ function commandClearCache (database, options) {
     db = null;
   }
 
+  const cout = new ColorOutput(opts);
   const data = {database: db};
 
-  const error = string => opts.parent.noColors ? string : clc.red(string);
-  const warn = string => opts.parent.noColors ? string : clc.yellow(string);
-  const notice = string => opts.parent.noColors ? string : clc.cyanBright(string);
-  const ok = string => opts.parent.noColors ? string: clc.green.bold(string);
-  const question = string => opts.parent.noColors ? string : clc.whiteBright(string);
-
   if (db === 'memoryStorage') {
-    console.log(warn('[ℹ] You are about to clear Kuzzle memoryStorage database.'));
-    console.log(warn('[ℹ] This operation cannot be undone.\n'));
+    console.log(cout.warn('[ℹ] You are about to clear Kuzzle memoryStorage database.'));
+    console.log(cout.warn('[ℹ] This operation cannot be undone.\n'));
     userIsSure = params.noint || readlineSync.question('[❓] Are you sure? If so, please type "I am sure" (if not just press [Enter]): ') === 'I am sure';
   } else {
-    userIsSure = readlineSync.keyInYN(question('[❓] Do you want to clear Kuzzle internal cache?'));
+    userIsSure = readlineSync.keyInYN(cout.question('[❓] Do you want to clear Kuzzle internal cache?'));
   }
 
   if (userIsSure) {
     const kuzzle = new (require('../../lib/api/kuzzle'))();
 
-    console.log(notice('[ℹ] Processing...\n'));
+    console.log(cout.notice('[ℹ] Processing...\n'));
     return kuzzle.cli.doAction('clearCache', data)
       .then(() => {
-        console.log(ok('[✔] Done!'));
+        console.log(cout.ok('[✔] Done!'));
         process.exit(0);
       })
       .catch(err => {
-        console.log(error(`[✖] ${err}`));
+        console.log(cout.error(`[✖] ${err}`));
         process.exit(1);
       });
   }
 
-  console.log(notice('[ℹ] Nothing have been done... you do not look that sure...'));
+  console.log(cout.notice('[ℹ] Nothing have been done... you do not look that sure...'));
 }
 
 module.exports = commandClearCache;
