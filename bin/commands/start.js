@@ -27,17 +27,14 @@ const
   params = rc('kuzzle'),
   Request = require('kuzzle-common-objects').Request,
   Bluebird = require('bluebird'),
-  clc = require('cli-color');
+  ColorOutput = require('./colorOutput');
 
 function commandStart (options) {
   const
     kuzzle = new (require('../../lib/api/kuzzle'))(),
-    error = string => options.parent.noColors ? string : clc.red(string),
-    warn = string => options.parent.noColors ? string : clc.yellow(string),
-    notice = string => options.parent.noColors ? string : clc.cyanBright(string),
-    kuz = string => options.parent.noColors ? string : clc.greenBright.bold(string);
+    cout = new ColorOutput(options);
 
-  console.log(kuz('[ℹ] Starting Kuzzle server'));
+  console.log(cout.kuz('[ℹ] Starting Kuzzle server'));
 
   kuzzle.start(params)
     // fixtures && mapping
@@ -50,7 +47,7 @@ function commandStart (options) {
           mappings = JSON.parse(fs.readFileSync(params.mappings, 'utf8'));
         }
         catch (e) {
-          console.log(error(`[✖] The file ${params.mappings} cannot be parsed. Abort.`));
+          console.log(cout.error(`[✖] The file ${params.mappings} cannot be parsed. Abort.`));
           process.exit(1);
         }
 
@@ -76,7 +73,7 @@ function commandStart (options) {
           fixtures = JSON.parse(fs.readFileSync(params.fixtures, 'utf8'));
         }
         catch (e) {
-          console.log(error(`[✖] The file ${params.fixtures} cannot be parsed. Abort.`));
+          console.log(cout.error(`[✖] The file ${params.fixtures} cannot be parsed. Abort.`));
           process.exit(1);
         }
 
@@ -96,18 +93,18 @@ function commandStart (options) {
       }
     })
     .then(() => {
-      console.log(kuz('[✔] Kuzzle server ready'));
+      console.log(cout.kuz('[✔] Kuzzle server ready'));
       return kuzzle.internalEngine.bootstrap.adminExists()
         .then(res => {
           if (!res) {
-            console.log(warn('[!] [WARNING] There is no administrator user yet: everyone has administrator rights.'));
-            console.log(notice('[ℹ] You can use the CLI or the back-office to create the first administrator user.'));
-            console.log(notice('    For more information: http://docs.kuzzle.io/guide/essentials/security'));
+            console.log(cout.warn('[!] [WARNING] There is no administrator user yet: everyone has administrator rights.'));
+            console.log(cout.notice('[ℹ] You can use the CLI or the back-office to create the first administrator user.'));
+            console.log(cout.notice('    For more information: http://docs.kuzzle.io/guide/essentials/security'));
           }
         });
     })
     .catch(err => {
-      console.error(error(`[x] [ERROR] ${err.stack}`));
+      console.error(cout.error(`[x] [ERROR] ${err.stack}`));
       process.exit(1);
     });
 }
