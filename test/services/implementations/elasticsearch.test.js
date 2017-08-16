@@ -11,10 +11,10 @@ const
     BadRequestError,
     NotFoundError,
     KuzzleError,
-    ExternalServiceError,
     PreconditionError
   } = require('kuzzle-common-objects').errors,
   ESClientMock = require('../../mocks/services/elasticsearchClient.mock'),
+  ESCommon = require('../../../lib/util/esCommon'),
   ES = rewire('../../../lib/services/elasticsearch');
 
 describe('Test: ElasticSearch service', () => {
@@ -651,7 +651,7 @@ describe('Test: ElasticSearch service', () => {
 
     it('should handle the onUpdateConflictRetries default configuration', () => {
       const refreshIndexSpy = sandbox.spy(elasticsearch, 'refreshIndexIfNeeded');
-      
+
       elasticsearch.config.defaults.onUpdateConflictRetries = 42;
       elasticsearch.client.update.returns(Bluebird.resolve({}));
       elasticsearch.kuzzle.indexCache.exists.returns(true);
@@ -1634,7 +1634,7 @@ describe('Test: ElasticSearch service', () => {
     it('should format the error', () => {
       const
         error = new Error('test'),
-        spy = sandbox.spy(elasticsearch, 'formatESError');
+        spy = sandbox.spy(ESCommon, 'formatESError');
 
       elasticsearch.client.indices.exists.returns(Bluebird.reject(error));
 
@@ -1676,7 +1676,7 @@ describe('Test: ElasticSearch service', () => {
     it('should format errors', () => {
       const
         error = new Error('test'),
-        spy = sinon.spy(elasticsearch, 'formatESError');
+        spy = sinon.spy(ESCommon, 'formatESError');
 
       elasticsearch.client.indices.existsType.returns(Bluebird.reject(error));
 
@@ -1690,30 +1690,5 @@ describe('Test: ElasticSearch service', () => {
             .be.calledWith(error);
         });
     });
-  });
-
-  describe('#formatESError', () => {
-    it('should convert any unknown error to a ExternalServiceError instance', () => {
-      const
-        error = new Error('test');
-
-      error.displayName = 'foobar';
-
-      const formatted = elasticsearch.formatESError(error);
-
-      should(formatted).be.instanceOf(ExternalServiceError);
-      should(formatted.message).be.eql('test');
-    });
-  });
-
-  it('should handle version conflict errors', () => {
-    const error = new Error('[version_conflict_engine_exception] [data][AVrbg0eg90VMe4Z_dG8j]: version conflict, current version [153] is different than the one provided [152], with { index_uuid="iDrU6CfZSO6CghM1t6dl0A" & shard="2" & index="userglobaldata" }');
-
-    error.displayName = 'Conflict';
-
-    const formatted = elasticsearch.formatESError(error);
-
-    should(formatted).be.instanceOf(ExternalServiceError);
-    should(formatted.message).be.eql('Unable to modify document "AVrbg0eg90VMe4Z_dG8j": cluster sync failed (too many simultaneous changes applied)');
   });
 });
