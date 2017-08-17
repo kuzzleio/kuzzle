@@ -46,13 +46,12 @@ describe('DSL API', () => {
         .then(result => {
           should(result).be.an.Object();
           should(result.diff).be.an.Object().and.match({
-            ftAdd: { i: 'i',
-              c: 'c',
-              f: [
-                [ { exists: { field: 'bar' }, not: true } ],
-                [ { equals: { foo: 'bar' }, not: true } ]
-              ]
-            }
+            index: 'i',
+            collection: 'c',
+            filters: [
+              [ { exists: { field: 'bar' }, not: true } ],
+              [ { equals: { foo: 'bar' }, not: true } ]
+            ]
           });
 
           should(result.id).be.a.String();
@@ -83,13 +82,20 @@ describe('DSL API', () => {
             }
           };
 
-          should(result.diff).be.false();
+          should(result.diff)
+            .eql({
+              index: 'i',
+              collection: 'c',
+              filters: [
+                [ {exists: {field: 'bar'}, not: true}],
+                [ {equals: {foo: 'bar'}, not: true}]
+              ]
+            });
           should(result.id).be.eql(id);
 
           return dsl.register('i', 'c', bool);
         })
         .then(result => {
-          should(result.diff).be.false();
           should(result.id).be.eql(id);
         });
     });
