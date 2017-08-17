@@ -3,7 +3,7 @@
 const
   should = require('should'),
   sinon = require('sinon'),
-  Promise = require('bluebird'),
+  Bluebird = require('bluebird'),
   Request = require('kuzzle-common-objects').Request,
   FunnelController = require('../../../../lib/api/controllers/funnelController'),
   KuzzleMock = require('../../../mocks/kuzzle.mock'),
@@ -21,14 +21,14 @@ describe('funnelController.processRequest', () => {
     // injects fake controllers for unit tests
     funnel.controllers = {
       'fakeController': {
-        ok: sinon.stub().returns(Promise.resolve()),
+        ok: sinon.stub().returns(Bluebird.resolve()),
         fail: sinon.stub()
       }
     };
 
     funnel.pluginsControllers = {
       'fakePlugin/controller': {
-        ok: sinon.stub().returns(Promise.resolve()),
+        ok: sinon.stub().returns(Bluebird.resolve()),
         fail: sinon.stub()
       }
     };
@@ -130,7 +130,7 @@ describe('funnelController.processRequest', () => {
       action: 'fail',
     });
 
-    funnel.controllers.fakeController.fail.returns(Promise.reject(new Error('rejected')));
+    funnel.controllers.fakeController.fail.returns(Bluebird.reject(new Error('rejected')));
 
     return funnel.processRequest(request)
       .then(() => {
@@ -161,7 +161,7 @@ describe('funnelController.processRequest', () => {
 
     subrequest.origin = request;
 
-    funnel.controllers.fakeController.fail.returns(Promise.reject(new Error('rejected')));
+    funnel.controllers.fakeController.fail.returns(Bluebird.reject(new Error('rejected')));
 
     return funnel.processRequest(subrequest)
       .then(() => {
@@ -191,7 +191,7 @@ describe('funnelController.processRequest', () => {
       action: 'fail',
     });
 
-    funnel.pluginsControllers['fakePlugin/controller'].fail.returns(Promise.reject(new Error('rejected')));
+    funnel.pluginsControllers['fakePlugin/controller'].fail.returns(Bluebird.reject(new Error('rejected')));
 
     return funnel.processRequest(request)
       .then(() => {
