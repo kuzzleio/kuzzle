@@ -1,6 +1,6 @@
 'use strict';
 
-var
+const
   should = require('should'),
   BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,
   FieldOperand = require('../../../../lib/api/dsl/storage/objects/fieldOperand'),
@@ -84,13 +84,13 @@ describe('DSL.keyword.notexists', () => {
         .then(subscription => {
           barSubfilter = dsl.storage.filters[subscription.id].subfilters[0];
 
-          return dsl.register('index', 'collection', {and: [{equals: {foo: 'qux'}}, {not: {exists: {field: 'foo'}}}]});
+          return dsl.register('index', 'collection', {and: [{equals: {baz: 'qux'}}, {not: {exists: {field: 'foo'}}}]});
         })
         .then(subscription => {
           let quxSubfilter = dsl.storage.filters[subscription.id].subfilters[0];
 
           should(dsl.storage.foPairs.index.collection.notexists).be.instanceOf(FieldOperand);
-          should(dsl.storage.foPairs.index.collection.notexists.keys.array).match(['foo']);
+          should(dsl.storage.foPairs.index.collection.notexists.keys.array).eql(['foo']);
           should(dsl.storage.foPairs.index.collection.notexists.fields.foo).match([barSubfilter, quxSubfilter]);
         });
     });
@@ -163,7 +163,7 @@ describe('DSL.keyword.notexists', () => {
         .then(subscription => {
           idToRemove = subscription.id;
 
-          return dsl.register('index', 'collection', {and: [{equals: {foo: 'qux'}}, {not: {exists: {field: 'foo'}}}]});
+          return dsl.register('index', 'collection', {and: [{equals: {baz: 'qux'}}, {not: {exists: {field: 'foo'}}}]});
         })
         .then(subscription => {
           multiSubfilter = dsl.storage.filters[subscription.id].subfilters[0];
@@ -172,7 +172,7 @@ describe('DSL.keyword.notexists', () => {
         })
         .then(() => {
           should(dsl.storage.foPairs.index.collection.notexists).be.instanceOf(FieldOperand);
-          should(dsl.storage.foPairs.index.collection.notexists.keys.array).match(['foo']);
+          should(dsl.storage.foPairs.index.collection.notexists.keys.array).eql(['foo']);
           should(dsl.storage.foPairs.index.collection.notexists.fields.foo).match([multiSubfilter]);
         });
     });
