@@ -314,6 +314,11 @@ describe('Test: security controller - profiles', () => {
     });
   });
 
+  it('should reject the promise if the profile cannot be found in the database', () => {
+    kuzzle.repositories.profile.loadProfile = sandbox.stub().returns(Promise.resolve(null));
+    return should(securityController.updateProfile(new Request({_id: 'badId', body: {}, context: {action: 'updateProfile'}}))).be.rejected();
+  });
+
   describe('#deleteProfile', () => {
     it('should return an object with on deleteProfile call', () => {
       kuzzle.repositories.profile.deleteProfile = sandbox.stub().returns(Promise.resolve({_id: 'test'}));

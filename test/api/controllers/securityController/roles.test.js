@@ -210,7 +210,7 @@ describe('Test: security controller - roles', () => {
 
     it('should reject the promise if the role cannot be found in the database', () => {
       kuzzle.repositories.role.loadRole = sandbox.stub().returns(Promise.resolve(null));
-      return should(securityController.updateRole(new Request({_id: 'badId',body: {}}))).be.rejected();
+      return should(securityController.updateRole(new Request({_id: 'badId', body: {}, context: {action: 'updateRole'}}))).be.rejected();
     });
   });
 

@@ -506,6 +506,11 @@ describe('Test: security controller - users', () => {
         });
     });
 
+    it('should reject the promise if the user cannot be found in the database', () => {
+      kuzzle.repositories.user.load = sandbox.stub().returns(Promise.resolve(null));
+      return should(securityController.updateUser(new Request({_id: 'badId', body: {}, context: {action: 'updateProfile'}}))).be.rejected();
+    });
+
     it('should return an error if an unknown profile is provided', () => {
       return should(() => {
         securityController.updateUser(new Request({
