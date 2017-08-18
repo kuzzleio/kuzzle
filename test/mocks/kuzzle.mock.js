@@ -80,7 +80,8 @@ class KuzzleMock extends Kuzzle {
       mExecute: sinon.stub(),
       processRequest: sinon.stub().returns(Bluebird.resolve()),
       checkRights: sinon.stub(),
-      getEventName: sinon.spy()
+      getEventName: sinon.spy(),
+      executePluginRequest: sinon.stub()
     };
 
     this.gc = {

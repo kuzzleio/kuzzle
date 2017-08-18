@@ -65,8 +65,8 @@ describe('Plugin Context', () => {
       should(repository.update).be.a.Function();
     });
 
-    it('should throw when trying to instantiate a Request object without providing a request object', () => {
-      should(function () { new context.constructors.Request({}); }).throw(PluginImplementationError);
+    it('should throw when trying to instantiate a Request object without providing any data', () => {
+      should(function () { new context.constructors.Request(); }).throw(PluginImplementationError);
     });
 
     it('should replicate the right request information', () => {
@@ -208,30 +208,36 @@ describe('Plugin Context', () => {
       const
         request = new Request({requestId: 'request'}, {connectionId: 'connectionid'}),
         callback = sinon.spy((err, res) => {
-          should(callback).be.calledOnce();
-          should(err).be.null();
-          should(res).match(request);
-
-          should(kuzzle.funnel.processRequest.firstCall.args[0]).be.eql(request);
-
-          done();
+          try {
+            should(callback).be.calledOnce();
+            should(err).be.null();
+            should(res).match(request);
+            should(kuzzle.funnel.executePluginRequest).calledWithMatch(request, true, sinon.match.func);
+            done();
+          }
+          catch(e) {
+            done(e);
+          }
         });
 
-      kuzzle.funnel.processRequest.returns(Bluebird.resolve(request));
+      kuzzle.funnel.executePluginRequest.yields(null, request);
 
-      execute.bind(kuzzle)(request, callback);
+      should(execute(kuzzle, request, callback)).not.be.a.Promise();
     });
 
     it('should resolve a Promise with a result if everything went well', () => {
       const request = new Request({requestId: 'request'}, {connectionId: 'connectionid'});
 
-      kuzzle.funnel.processRequest.returns(Bluebird.resolve(request));
+      kuzzle.funnel.executePluginRequest.yields(null, request);
 
-      return execute.bind(kuzzle)(request)
+      const ret = execute(kuzzle, request);
+
+      should(ret).be.a.Promise();
+
+      return ret
         .then(res => {
           should(res).match(request);
-
-          should(kuzzle.funnel.processRequest.firstCall.args[0]).be.eql(request);
+          should(kuzzle.funnel.executePluginRequest).calledWithMatch(request, true, sinon.match.func);
         });
     });
 
@@ -241,24 +247,21 @@ describe('Plugin Context', () => {
         error = new Error('error'),
         callback = sinon.spy(
           (err, res) => {
-            should(kuzzle.funnel.processRequest.firstCall.args[0]).be.eql(request);
-
-            should(callback).be.calledOnce();
-            should(err).match(error);
-            should(res).match({});
-
-            return Bluebird.resolve().then(() => {
-              // allows handleErrorDump to be called
-              should(kuzzle.funnel.handleErrorDump).be.calledOnce();
-              should(kuzzle.funnel.handleErrorDump.firstCall.args[0]).match(error);
-
+            try {
+              should(kuzzle.funnel.executePluginRequest).calledWithMatch(request, true, sinon.match.func);
+              should(callback).be.calledOnce();
+              should(err).match(error);
+              should(res).be.undefined();
               done();
-            });
+            }
+            catch(e) {
+              done(e);
+            }
           });
 
-      kuzzle.funnel.processRequest.returns(Bluebird.reject(error));
+      kuzzle.funnel.executePluginRequest.yields(error);
 
-      execute.bind(kuzzle)(request, callback);
+      execute(kuzzle, request, callback);
     });
 
     it('should reject a Promise with an error if something went wrong', () => {
@@ -266,19 +269,12 @@ describe('Plugin Context', () => {
         request = new Request({body: {some: 'request'}}, {connectionId: 'connectionid'}),
         error = new Error('error');
 
-      kuzzle.funnel.processRequest.returns(Bluebird.reject(error));
+      kuzzle.funnel.executePluginRequest.yields(error);
 
-      return execute.bind(kuzzle)(request)
-        .catch((err) => {
-          should(kuzzle.funnel.processRequest.firstCall.args[0]).be.eql(request);
-
+      return execute(kuzzle, request)
+        .catch(err => {
+          should(kuzzle.funnel.executePluginRequest).calledWithMatch(request, true, sinon.match.func);
           should(err).match(error);
-
-          return Bluebird.resolve().then(() => {
-            // allows handleErrorDump to be called
-            should(kuzzle.funnel.handleErrorDump).be.calledOnce();
-            should(kuzzle.funnel.handleErrorDump.firstCall.args[0]).match(error);
-          });
         });
     });
   });
