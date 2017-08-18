@@ -4,7 +4,6 @@ const
   mockrequire = require('mock-require'),
   rewire = require('rewire'),
   should = require('should'),
-  Bluebird = require('bluebird'),
   sinon = require('sinon'),
   KuzzleMock = require('../../../mocks/kuzzle.mock'),
   PluginImplementationError = require('kuzzle-common-objects').errors.PluginImplementationError,
@@ -100,6 +99,14 @@ describe('Plugin Context', () => {
       should(pluginRequest.input.resource._id).be.eql(request.input.resource._id);
       should(pluginRequest.input.resource.index).be.eql(request.input.resource.index);
       should(pluginRequest.input.resource.collection).be.eql(request.input.resource.collection);
+    });
+
+    it('should allow building a request without providing another one', () => {
+      const rq = new context.constructors.Request({controller: 'foo', action: 'bar'});
+
+      should(rq).be.instanceOf(Request);
+      should(rq.input.action).be.eql('bar');
+      should(rq.input.controller).be.eql('foo');
     });
 
     it('should expose all error objects as capitalized constructors', () => {
@@ -198,12 +205,6 @@ describe('Plugin Context', () => {
   });
 
   describe('#execute', () => {
-    let execute;
-
-    beforeEach(() => {
-      execute = PluginContext.__get__('execute');
-    });
-
     it('should call the callback with a result if everything went well', done => {
       const
         request = new Request({requestId: 'request'}, {connectionId: 'connectionid'}),
@@ -222,7 +223,7 @@ describe('Plugin Context', () => {
 
       kuzzle.funnel.executePluginRequest.yields(null, request);
 
-      should(execute(kuzzle, request, callback)).not.be.a.Promise();
+      should(context.accessors.execute(request, callback)).not.be.a.Promise();
     });
 
     it('should resolve a Promise with a result if everything went well', () => {
@@ -230,7 +231,7 @@ describe('Plugin Context', () => {
 
       kuzzle.funnel.executePluginRequest.yields(null, request);
 
-      const ret = execute(kuzzle, request);
+      const ret = context.accessors.execute(request);
 
       should(ret).be.a.Promise();
 
@@ -261,7 +262,7 @@ describe('Plugin Context', () => {
 
       kuzzle.funnel.executePluginRequest.yields(error);
 
-      execute(kuzzle, request, callback);
+      context.accessors.execute(request, callback);
     });
 
     it('should reject a Promise with an error if something went wrong', () => {
@@ -271,11 +272,66 @@ describe('Plugin Context', () => {
 
       kuzzle.funnel.executePluginRequest.yields(error);
 
-      return execute(kuzzle, request)
+      return context.accessors.execute(request)
         .catch(err => {
           should(kuzzle.funnel.executePluginRequest).calledWithMatch(request, true, sinon.match.func);
           should(err).match(error);
         });
+    });
+
+    it('should resolve to an error if no Request object is provided', done => {
+      const
+        callback = sinon.spy(
+          (err, res) => {
+            try {
+              should(kuzzle.funnel.executePluginRequest.called).be.false();
+              should(callback).be.calledOnce();
+              should(err).be.instanceOf(PluginImplementationError);
+              should(err.message).startWith('Invalid argument: a Request object must be supplied');
+              should(res).be.undefined();
+              done();
+            }
+            catch(e) {
+              done(e);
+            }
+          });
+
+      context.accessors.execute({}, callback);
+    });
+
+    it('should reject if no Request object is provided', () => {
+      return should(context.accessors.execute({})).be.rejectedWith(
+        /Invalid argument: a Request object must be supplied/
+      );
+    });
+
+    it('should resolve to an error if an improper overloadProtect flag is supplied', done => {
+      const
+        request = new Request({body: {some: 'request'}}, {connectionId: 'connectionid'}),
+        callback = sinon.spy(
+          (err, res) => {
+            try {
+              should(kuzzle.funnel.executePluginRequest.called).be.false();
+              should(callback).be.calledOnce();
+              should(err).be.instanceOf(PluginImplementationError);
+              should(err.message).startWith('Invalid argument: the overload protection flag must be a boolean');
+              should(res).be.undefined();
+              done();
+            }
+            catch(e) {
+              done(e);
+            }
+          });
+
+      context.accessors.execute(request, 'foobar', callback);
+    });
+
+    it('should reject if an invalid overloadProtect flag is provided', () => {
+      const request = new Request({body: {some: 'request'}}, {connectionId: 'connectionid'});
+
+      return should(context.accessors.execute(request, 'foobar')).be.rejectedWith(
+        /Invalid argument: the overload protection flag must be a boolean/
+      );
     });
   });
 
