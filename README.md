@@ -18,20 +18,11 @@ Kuzzle enables you to build modern web applications and complex IoT networks in 
 
 ## Installation
 
-### Docker install
+### Quick install
 
-If you are running Docker and just want to get your own Kuzzle running, you can use the provided docker-compose file.
+The easyest way to setup a kuzzle server for Linux-like systems without prerequisites is to download and run our installation script:
 
-Prerequisites:
-
-* [Docker](https://docs.docker.com/engine/installation/) (version >1.10.0)
-* [Docker Compose](https://docs.docker.com/compose/install/) (version >1.7)
-
-From Kuzzle's build repo:
-
-    $ sudo sysctl -w vm.max_map_count=262144
-    $ wget http://kuzzle.io/docker-compose.yml
-    $ docker-compose up
+    $ sudo bash -c "$(curl http://get.kuzzle.io/)"
     
 You can get detailed information about how to [start kuzzle with docker on docs.kuzzle.io](http://docs.kuzzle.io/guide/essentials/installing-kuzzle/#docker)
 
