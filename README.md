@@ -22,8 +22,10 @@ Kuzzle enables you to build modern web applications and complex IoT networks in 
 
 The easyest way to setup a kuzzle server for Linux-like systems without prerequisites is to download and run our installation script:
 
-    $ sudo bash -c "$(curl http://get.kuzzle.io/)"
-    
+```bash
+$ sudo bash -c "$(curl http://get.kuzzle.io/)"
+```
+
 You can get detailed information about how to [start kuzzle with docker on docs.kuzzle.io](http://docs.kuzzle.io/guide/essentials/installing-kuzzle/#docker)
 
 ### Manual install
