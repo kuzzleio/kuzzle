@@ -446,7 +446,7 @@
       "aliases": ["storageEngine"],
       "client": {
         "host": "http://localhost:9200",
-        "apiVersion": "5.x"
+        "apiVersion": "5.4"
       },
       "defaults": {
         // Number of retries to attempt on an update conflict

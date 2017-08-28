@@ -221,14 +221,14 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
         should(request.removeAllListeners).be.calledTwice();
         should(protocol._replyWithError)
           .be.calledWithMatch(/^[0-9a-z-]+$/,
-          {
-            url: request.url,
-            method: request.method
-          },
-          response,
-          {
-            message: 'Error: maximum HTTP file size exceeded'
-          });
+            {
+              url: request.url,
+              method: request.method
+            },
+            response,
+            {
+              message: 'Error: maximum HTTP file size exceeded'
+            });
       });
     });
 
